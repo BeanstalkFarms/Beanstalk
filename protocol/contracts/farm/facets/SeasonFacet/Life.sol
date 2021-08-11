@@ -58,7 +58,7 @@ contract Life {
 
     function incentiveTime() internal view returns (uint256) {
         uint256 timestamp = block.timestamp.sub(
-            s.season.start.add(s.season.period.mul(season().sub(1)))
+            s.season.start.add(s.season.period.mul(season()))
         );
         if (timestamp > 300) timestamp = 300;
         return timestamp;
