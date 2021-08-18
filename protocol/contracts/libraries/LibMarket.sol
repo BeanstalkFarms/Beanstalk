@@ -84,7 +84,7 @@ library LibMarket {
             al.minBeanAmount
         );
         (bool success,) = msg.sender.call{ value: msg.value.sub(ethDeposited) }("");
-        require(success, "Market: Refund failed");
+        require(success, "Market: Refund failed.");
         return (beansDeposited, liquidity);
     }
 

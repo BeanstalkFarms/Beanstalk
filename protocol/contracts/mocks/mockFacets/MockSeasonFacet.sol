@@ -157,11 +157,7 @@ contract MockSeasonFacet is SeasonFacet {
 
     function resetState() public {
         uint32 _s = season();
-        for (uint32 j = 0; j <= _s; j++) {
-            delete s.seasons[j];
-            delete s.sops[j];
-            delete s.rbs[j];
-        }
+        for (uint32 j = 0; j <= _s; j++) delete s.sops[j];
         resetStateNoSeason();
     }
 
@@ -197,15 +193,14 @@ contract MockSeasonFacet is SeasonFacet {
         uint256 endSoil,
         uint256 intPrice,
         bool raining,
-        bool rainStalk
+        bool rainRoots
     ) public {
         s.r.raining = raining;
-        s.r.stalk = rainStalk ? 1 : 0;
+        s.r.roots = rainRoots ? 1 : 0;
         s.f.pods = pods;
         s.w.lastDSoil = lastDSoil;
         s.w.startSoil = startSoil;
         stepWeather(intPrice.mul(1e16), endSoil);
     }
-
 
 }

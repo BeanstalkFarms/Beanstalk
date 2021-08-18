@@ -7,13 +7,13 @@ pragma experimental ABIEncoderV2;
 
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
-import {AppStorage} from "../farm/AppStorage.sol";
 import "../interfaces/IBean.sol";
 import "../interfaces/IWETH.sol";
-import {LibMarket} from "../libraries/LibMarket.sol";
 import "../mocks/MockToken.sol";
 import "../mocks/MockUniswapV2Pair.sol";
 import "../mocks/MockUniswapV2Router.sol";
+import {AppStorage} from "../farm/AppStorage.sol";
+import {LibMarket} from "../libraries/LibMarket.sol";
 
 /**
  * @author Publius

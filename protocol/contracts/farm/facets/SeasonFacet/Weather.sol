@@ -142,20 +142,24 @@ contract Weather is Silo {
         }
         else if (!s.r.raining) {
             s.r.raining = true;
+            s.sops[season()] = s.sops[s.r.start];
             s.r.start = season();
-            s.r.stalk = s.s.stalk.sub(s.si.stalk);
             s.r.pods = s.f.pods;
-            s.r.stalkBase = s.si.stalkBase;
-            s.r.increaseStalk = s.si.stalk;
+            s.r.roots = s.s.roots;
         }
         else if (season() >= s.r.start.add(C.getRainTime())) {
-            if (s.r.stalk > 0) sop();
+            if (s.r.roots > 0) sop();
         }
     }
 
     function sop() private {
-        uint256 newBeans = calculateSopBeans();
-        if (newBeans < s.s.stalk.div(1e12) || newBeans == 0) return;
+        (uint256 newBeans, uint256 newEth) = calculateSopBeansAndEth();
+        if (
+            newEth <= s.s.roots.div(1e20) ||
+            (s.sop.base > 0 && newBeans.mul(s.sop.base).div(s.sop.weth).div(s.r.roots) == 0)
+        )
+            return;
+
         mintToSilo(newBeans);
         uint256 ethBought = LibMarket.sellToWETH(newBeans, 0);
         uint256 newHarvestable = 0;
@@ -168,15 +172,21 @@ contract Weather is Silo {
         emit SeasonOfPlenty(season(), ethBought, newHarvestable);
     }
 
-    function calculateSopBeans() private view returns (uint256) {
+    function calculateSopBeansAndEth() private view returns (uint256, uint256) {
         (uint256 ethBeanPool, uint256 beansBeanPool) = reserves();
         (uint256 ethUSDCPool, uint256 usdcUSDCPool) = pegReserves();
 
         uint256 newBeans = sqrt(ethBeanPool.mul(beansBeanPool).mul(usdcUSDCPool).div(ethUSDCPool));
-        if (newBeans <= beansBeanPool) return 0;
+        if (newBeans <= beansBeanPool) return (0,0);
         uint256 beans = newBeans.sub(beansBeanPool);
-        beans = beans.mul(10000).div(9985);
-        return beans.add(1);
+        beans = beans.mul(10000).div(9985).add(1);
+
+        uint256 beansWithFee = beans.mul(997);
+        uint256 numerator = beansWithFee.mul(ethBeanPool);
+        uint256 denominator = beansBeanPool.mul(1000).add(beansWithFee);
+        uint256 eth = numerator / denominator;
+
+        return (beans, eth);
     }
 
     /**

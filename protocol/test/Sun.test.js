@@ -44,7 +44,7 @@ describe('Sun', function () {
         await this.bean.mint(this.pair.address, this.testData.beansInPool)
         await this.silo.incrementDepositedBeansE(this.testData.beansInSilo)
         await this.field.incrementTotalSoilEE(this.testData.soil)
-        await this.silo.incrementBalanceOfStalkE(userAddress, '1', '100000')
+        await this.silo.depositSiloAssetsE(userAddress, '1', '100000')
         await this.field.incrementTotalPodsE((parseInt(this.testData.unripenedPods) + parseInt(this.testData.harvestablePods)).toString())
         await this.field.incrementTotalHarvestableE(this.testData.harvestablePods)
         this.pair.simulateTrade(this.testData.beansInPool, this.testData.ethInPool+'000000000000')

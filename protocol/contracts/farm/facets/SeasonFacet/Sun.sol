@@ -49,7 +49,7 @@ contract Sun is Weather {
         uint256 price = beanPrice.mul(1e18).div(usdcPrice).asUint256();
         uint256 newSilo;
 
-        if (currentBeans < targetBeans && targetBeans.sub(currentBeans) >= s.s.stalk.div(1e12)) {
+        if (currentBeans < targetBeans) {
             newSilo = growSupply(targetBeans.sub(currentBeans), price);
         } else if (currentBeans > targetBeans) {
             shrinkSupply(currentBeans.sub(targetBeans), price);

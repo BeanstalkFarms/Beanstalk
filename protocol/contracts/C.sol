@@ -53,6 +53,7 @@ library C {
     uint256 private constant SEEDS_PER_BEAN = 2;
     uint256 private constant SEEDS_PER_LP_BEAN = 4;
     uint256 private constant STALK_PER_BEAN = 10000;
+    uint256 private constant ROOTS_BASE = 1e12;
 
     // Field
     uint256 private constant SOIL_MAX_RATIO_CAP = 25e16; // 25%
@@ -165,6 +166,10 @@ library C {
 
     function getStalkPerLPSeed() internal pure returns (uint256) {
       return STALK_PER_BEAN/SEEDS_PER_LP_BEAN;
+    }
+
+    function getRootsBase() internal pure returns (uint256) {
+        return ROOTS_BASE;
     }
 
 }

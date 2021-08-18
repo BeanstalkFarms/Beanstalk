@@ -21,8 +21,8 @@ contract GovernanceFacet is VotingBooth {
     using Decimal for Decimal.D256;
 
     event Proposal(address indexed account, uint32 indexed bip, uint256 indexed start, uint256 period);
-    event Vote(address indexed account, uint32 indexed bip, uint256 stalk, uint256 seeds);
-    event Unvote(address indexed account, uint32 indexed bip, uint256 stalk, uint256 seeds);
+    event Vote(address indexed account, uint32 indexed bip, uint256 roots);
+    event Unvote(address indexed account, uint32 indexed bip, uint256 roots);
     event Commit(address indexed account, uint32 indexed bip);
     event Incentivization(address indexed account, uint256 beans);
     event Pause(address account, uint256 timestamp);
@@ -67,32 +67,27 @@ contract GovernanceFacet is VotingBooth {
 
     function vote(uint32 bip) public {
         require(isNominated(bip), "Governance: Not nominated.");
-        require(balanceOfStalk(msg.sender) > 0, "Governance: Must have Stalk.");
+        require(balanceOfRoots(msg.sender) > 0, "Governance: Must have Stalk.");
         require(isActive(bip), "Governance: Ended.");
         require(!voted(msg.sender, bip), "Governance: Already voted.");
-
-        updateBip(bip);
-        LibInternal.updateSilo(msg.sender);
 
         recordVote(msg.sender, bip);
         placeLock(msg.sender, bip);
 
-        emit Vote(msg.sender, bip, balanceOfStalk(msg.sender), balanceOfSeeds(msg.sender));
+        emit Vote(msg.sender, bip, balanceOfRoots(msg.sender));
     }
 
     function unvote(uint32 bip) external {
         require(isNominated(bip), "Governance: Not nominated.");
-        require(balanceOfStalk(msg.sender) > 0, "Governance: Must have Stalk.");
+        require(balanceOfRoots(msg.sender) > 0, "Governance: Must have Stalk.");
         require(isActive(bip), "Governance: Ended.");
         require(voted(msg.sender, bip), "Governance: Not voted.");
         require(proposer(bip) != msg.sender, "Governance: Is proposer.");
 
-        updateBip(bip);
-        LibInternal.updateSilo(msg.sender);
         unrecordVote(msg.sender, bip);
         removeLock(msg.sender, bip);
 
-        emit Unvote(msg.sender, bip, balanceOfStalk(msg.sender), balanceOfSeeds(msg.sender));
+        emit Unvote(msg.sender, bip, balanceOfRoots(msg.sender));
     }
 
     /**
@@ -108,9 +103,10 @@ contract GovernanceFacet is VotingBooth {
             "Governance: Must have majority."
         );
 
+        s.g.bips[bip].executed = true;
+
         cutBip(bip);
         pauseOrUnpauseBip(bip);
-        s.g.bips[bip].executed = true;
 
         incentivize(msg.sender, true, bip, C.getCommitIncentive());
         emit Commit(msg.sender, bip);
@@ -127,11 +123,11 @@ contract GovernanceFacet is VotingBooth {
             "Governance: Must have super majority."
         );
 
-        cutBip(bip);
-        pauseOrUnpauseBip(bip);
-
         endBip(bip);
         s.g.bips[bip].executed = true;
+
+        cutBip(bip);
+        pauseOrUnpauseBip(bip);
 
         incentivize(msg.sender, false, bip, C.getCommitIncentive());
         emit Commit(msg.sender, bip);
@@ -146,10 +142,10 @@ contract GovernanceFacet is VotingBooth {
             "Governance: Must have super majority."
         );
 
-        pauseOrUnpauseBip(bip);
-
         endBip(bip);
         s.g.bips[bip].executed = true;
+
+        pauseOrUnpauseBip(bip);
 
         incentivize(msg.sender, false, bip, C.getCommitIncentive());
         emit Commit(msg.sender, bip);
@@ -159,25 +155,6 @@ contract GovernanceFacet is VotingBooth {
         if (compound) amount = LibIncentive.fracExp(amount, 100, incentiveTime(bipId), 2);
         IBean(s.c.bean).mint(account, amount);
         emit Incentivization(account, amount);
-    }
-
-    /**
-     * Update
-    **/
-
-    function updateBip(uint32 bipId) public payable {
-        require(!isEnded(bipId), "Governance: BIP ended.");
-        uint32 updated = s.g.bips[bipId].updated;
-
-        if (updated < s.season.current) {
-            if (updated < s.si.lastSupplyIncrease) {
-                (uint256 increaseBase, uint256 stalkBase) = increaseBasesFor(bipId);
-                s.g.bips[bipId].increaseBase = increaseBase;
-                s.g.bips[bipId].stalkBase = stalkBase;
-            }
-            s.g.bips[bipId].stalk = s.g.bips[bipId].stalk.add(rewardedStalkFor(bipId));
-            s.g.bips[bipId].updated = s.season.current;
-        }
     }
 
     /**

@@ -9,10 +9,9 @@ import "../interfaces/IDiamondCut.sol";
 
 /**
  * @author Publius
- * @title App Storage defines the state object for Beanstalk.
+ * @title App Storage Old defines the legacy state object for Beanstalk. It is used for migration.
 **/
-contract Account {
-
+contract AccountOld {
     struct Field {
         mapping(uint256 => uint256) plots;
         mapping(address => uint256) podAllowances;
@@ -31,8 +30,7 @@ contract Account {
 
     struct SeasonOfPlenty {
         uint256 base;
-        uint256 roots;
-        uint256 basePerRoot;
+        uint256 stalk;
     }
 
     struct State {
@@ -42,14 +40,40 @@ contract Account {
         Silo s;
         uint32 lockedUntil;
         uint32 lastUpdate;
-        uint32 lastSop;
-        uint32 lastRain;
+        uint32 lastSupplyIncrease;
         SeasonOfPlenty sop;
-        uint256 roots;
     }
 }
 
-contract Storage {
+contract SeasonOld {
+    struct Global {
+        uint32 current;
+        uint256 start;
+        uint256 period;
+        uint256 timestamp;
+    }
+
+    struct State {
+        uint256 increaseBase;
+        uint256 stalkBase;
+        uint32 next;
+    }
+
+    struct SeasonOfPlenty {
+        uint256 base;
+        uint256 increaseBase;
+        uint32 rainSeason;
+        uint32 next;
+    }
+
+    struct ResetBases {
+        uint256 increaseMultiple;
+        uint256 stalkMultiple;
+        uint256 sopMultiple;
+    }
+}
+
+contract StorageOld {
     struct Contracts {
         address bean;
         address pair;
@@ -70,13 +94,17 @@ contract Storage {
 
     struct Bip {
         address proposer;
+        uint256 seeds;
+        uint256 stalk;
+        uint256 increaseBase;
+        uint256 stalkBase;
+        uint32 updated;
         uint32 start;
         uint32 period;
         bool executed;
         int pauseOrUnpause;
         uint128 timestamp;
-        uint256 roots;
-        uint256 endTotalRoots;
+        uint256 endTotalStalk;
     }
 
     struct DiamondCut {
@@ -101,8 +129,11 @@ contract Storage {
     }
 
     struct IncreaseSilo {
-        uint256 beans;
+        uint32 lastSupplyIncrease;
+        uint256 increase;
+        uint256 increaseBase;
         uint256 stalk;
+        uint256 stalkBase;
     }
 
     struct SeasonOfPlenty {
@@ -114,10 +145,7 @@ contract Storage {
     struct Silo {
         uint256 stalk;
         uint256 seeds;
-        uint256 roots;
     }
-
-    // Season
 
     struct Oracle {
         bool initialized;
@@ -131,14 +159,9 @@ contract Storage {
         uint32 start;
         bool raining;
         uint256 pods;
-        uint256 roots;
-    }
-
-    struct Season {
-        uint32 current;
-        uint256 start;
-        uint256 period;
-        uint256 timestamp;
+        uint256 stalk;
+        uint256 stalkBase;
+        uint256 increaseStalk;
     }
 
     struct Weather {
@@ -153,30 +176,25 @@ contract Storage {
     }
 }
 
-struct AppStorage {
+struct AppStorageOld {
     uint8 index;
     int8[32] cases;
     bool paused;
     uint128 pausedAt;
-    Storage.Season season;
-    Storage.Contracts c;
-    Storage.Field f;
-    Storage.Governance g;
-    Storage.Oracle o;
-    Storage.Rain r;
-    Storage.Silo s;
-    uint256 depreciated1;
-    Storage.Weather w;
-    Storage.AssetSilo bean;
-    Storage.AssetSilo lp;
-    Storage.IncreaseSilo si;
-    Storage.SeasonOfPlenty sop;
-    uint256 depreciated2;
-    uint256 depreciated3;
-    uint256 depreciated4;
-    uint256 depreciated5;
-    uint256 depreciated6;
-    mapping (uint32 => uint256) sops;
-    mapping (address => Account.State) a;
-    uint32 bip0Start;
+    SeasonOld.Global season;
+    StorageOld.Contracts c;
+    StorageOld.Field f;
+    StorageOld.Governance g;
+    StorageOld.Oracle o;
+    StorageOld.Rain r;
+    StorageOld.Silo s;
+    StorageOld.Weather w;
+    StorageOld.AssetSilo bean;
+    StorageOld.AssetSilo lp;
+    StorageOld.IncreaseSilo si;
+    StorageOld.SeasonOfPlenty sop;
+    mapping (uint32 => SeasonOld.State) seasons;
+    mapping (uint32 => SeasonOld.SeasonOfPlenty) sops;
+    mapping (uint32 => SeasonOld.ResetBases) rbs;
+    mapping (address => AccountOld.State) a;
 }

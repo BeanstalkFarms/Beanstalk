@@ -59,18 +59,17 @@ contract LPSilo is SiloEntrance {
         require(lpb > 0, "Silo: No Beans under LP.");
         incrementDepositedLP(amount);
         uint256 seeds = lpb.mul(C.getSeedsPerLPBean());
-        if (season() == _s) incrementBalanceOfStalk(msg.sender, seeds, lpb.mul(10000));
-        else incrementBalanceOfStalk(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)));
+        if (season() == _s) depositSiloAssets(msg.sender, seeds, lpb.mul(10000));
+        else depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)));
 
         addLPDeposit(msg.sender, _s, amount, lpb.mul(C.getSeedsPerLPBean()));
-        incrementBipStalk(msg.sender, lpb.mul(C.getSeedsPerLPBean()), lpb.mul(10000));
 
         LibCheck.lpBalanceCheck();
     }
 
     function _withdrawLP(uint32[] calldata crates, uint256[] calldata amounts) internal {
         updateSilo(msg.sender);
-        require(crates.length == amounts.length, "Silo: Crates, amount are diff lengths.");
+        require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         (
             uint256 lpRemoved,
             uint256 stalkRemoved,
@@ -79,7 +78,7 @@ contract LPSilo is SiloEntrance {
         uint32 arrivalSeason = season() + C.getSiloWithdrawSeasons();
         addLPWithdrawal(msg.sender, arrivalSeason, lpRemoved);
         decrementDepositedLP(lpRemoved);
-        decrementBalanceOfStalk(msg.sender, seedsRemoved, stalkRemoved);
+        withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
         updateBalanceOfRainStalk(msg.sender);
 
         LibCheck.lpBalanceCheck();
@@ -142,4 +141,5 @@ contract LPSilo is SiloEntrance {
         s.lp.withdrawn = s.lp.withdrawn.add(amount);
         emit LPWithdraw(msg.sender, arrivalSeason, amount);
     }
+    
 }
