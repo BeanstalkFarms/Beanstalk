@@ -342,7 +342,7 @@ async function upgradeWithNewFacets ({
       }
     }
     diamondCut.push([
-      ethers.constants.AddressZeo,
+      ethers.constants.AddressZero,
       FacetCutAction.Remove,
       selectorsToRemove
     ])
@@ -403,8 +403,7 @@ async function upgradeWithNewFacets ({
       if (verbose)console.log('Using init facet: ' + initFacet.address)
     }
     functionCall = initFacet.interface.encodeFunctionData('init', initArgs)
-    if (verbose) console.log('Function call: ')
-    if (verbose) console.log(functionCall)
+    if (verbose) console.log(`Function call: ${functionCall}`)
     initFacetAddress = initFacet.address
   }
   let result;
@@ -416,7 +415,7 @@ async function upgradeWithNewFacets ({
     }
   }
   if (bip) {
-    result = governance.propose(diamondCut, initFacetAddress, functionCall, p);
+    result = governance.connect(account).propose(diamondCut, initFacetAddress, functionCall, p);
   } else {
     result = await diamondCutFacet.connect(account).diamondCut(
       diamondCut,

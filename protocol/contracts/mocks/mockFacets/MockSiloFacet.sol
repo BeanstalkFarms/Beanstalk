@@ -16,9 +16,9 @@ contract MockSiloFacet is SiloFacet {
 
     using SafeMath for uint256;
 
-    function incrementBalanceOfStalkE(address account, uint256 base, uint256 amount) public {
+    function depositSiloAssetsE(address account, uint256 base, uint256 amount) public {
         updateSilo(account);
-        incrementBalanceOfStalk(account, base, amount);
+        depositSiloAssets(account, base, amount);
     }
     function incrementDepositedBeansE(uint256 amount) public {
         s.bean.deposited = s.bean.deposited.add(amount);
@@ -29,7 +29,7 @@ contract MockSiloFacet is SiloFacet {
         for (uint32 i = 0; i <= season(); i++) {
             beans = beans.add(s.a[account].bean.deposits[i]);
         }
-        return beans.add(balanceOfIncrease(account));
+        return beans;
     }
 
     function balanceOfDepositedLP(address account) public view returns (uint256) {
@@ -38,6 +38,15 @@ contract MockSiloFacet is SiloFacet {
             beans = beans.add(s.a[account].lp.deposits[i]);
         }
         return beans;
+    }
+
+    function balanceOfRootStalk(address account) public view returns (uint256) {
+        if (s.s.roots == 0) return 0;
+        return s.a[account].roots.mul(s.s.stalk).div(s.s.roots);
+    }
+
+    function balanceOfRawStalk(address account) public view returns (uint256) {
+        return s.a[account].s.stalk;
     }
 
     function beanDeposits(address account) public view returns (

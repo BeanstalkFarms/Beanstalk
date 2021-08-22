@@ -42,7 +42,7 @@ contract Life {
 
     // Time
 
-     function time() external view returns (Season.Global memory) {
+     function time() external view returns (Storage.Season memory) {
          return s.season;
      }
 

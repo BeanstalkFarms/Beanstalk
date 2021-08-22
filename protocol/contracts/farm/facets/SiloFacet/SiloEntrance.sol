@@ -25,99 +25,110 @@ contract SiloEntrance is SiloExit {
     **/
 
     function updateSilo(address account) public payable {
-        if (s.a[account].s.stalk > 0) {
-            updateSop(account);
-            uint256 beans = claimIncrease(account);
-            rewardStalk(account);
-            claimSeeds(account, beans);
-        }
+        uint256 farmableStalk;
+        uint32 update = lastUpdate(account);
+        if (update > 0 && update <= s.bip0Start) update = migrateBip0(account);
+        if (s.a[account].s.seeds > 0) farmableStalk = balanceOfGrownStalk(account);
+        if (s.a[account].roots > 0 && update < season()) {
+            farmSops(account);
+            farmBeans(account);
+        } else if (s.a[account].roots == 0) s.a[account].lastSop = s.r.start;
+        if (farmableStalk > 0) incrementBalanceOfStalk(account, farmableStalk);
         s.a[account].lastUpdate = season();
     }
 
-    function updateSop(address account) private {
-        if (lastSeasonOfPlenty() > lastUpdate(account))
-            s.a[account].sop.base = s.a[account].sop.base.add(plentyBaseForStalk(account));
-        if (s.r.raining && s.r.start > lastUpdate(account))
-            s.a[account].sop.stalk =
-                s.a[account].s.stalk.add(s.a[account].s.seeds.mul(s.r.start-lastUpdate(account)-1));
+    function migrateBip0(address account) private returns (uint32) {
+        uint32 update = s.bip0Start;
+
+        s.a[account].lastUpdate = update;
+        s.a[account].roots = balanceOfMigrationRoots(account);
+
+        delete s.a[account].sop;
+        delete s.a[account].lastSop;
+        delete s.a[account].lastRain;
+
+        return update;
     }
 
-    function claimIncrease(address account) private returns (uint256) {
-        if (lastSupplyIncrease() <= lastUpdate(account)) return 0;
-        if (s.si.stalkBase == 0 || s.si.increaseBase == 0) return 0;
-
-        IncreaseBases memory b = increaseBasesForAccount(account);
-        uint256 _stalk;
-
-        if (b.rainBase > 0) {
-            _stalk = b.rainBase.mul(s.r.increaseStalk).div(s.r.stalkBase);
-            s.r.increaseStalk = s.r.increaseStalk.sub(_stalk);
-            s.r.stalkBase = s.r.stalkBase.sub(b.rainBase);
-            s.r.stalk = s.r.stalk.add(_stalk);
-            s.a[account].sop.stalk = s.a[account].sop.stalk.add(_stalk);
+    function farmBeans(address account) private {
+        uint256 beans = balanceOfFarmableBeans(account);
+        if (beans > 0) {
+            uint256 stalk = balanceOfFarmableStalkFromBeans(account, beans);
+            uint256 seeds = beans.mul(C.getSeedsPerBean());
+            uint32 _s = uint32(stalk.div(seeds));
+            _s = season() - _s;
+            Account.State storage a = s.a[account];
+            s.si.beans = s.si.beans.sub(beans);
+            s.si.stalk = s.si.stalk.sub(stalk);
+            a.s.seeds = a.s.seeds.add(seeds);
+            a.s.stalk = a.s.stalk.add(beans.mul(C.getStalkPerBean())).add(stalk);
+            addBeanDeposit(account, _s, beans);
         }
-
-        s.a[account].sop.base = s.a[account].sop.base.add(b.plentyBase);
-        uint256 beans = b.increaseBase.mul(s.si.increase).div(s.si.increaseBase);
-        uint256 rewardedStalk = balanceOfRewardedIncreaseStalk(b.stalkBase, b.increaseBase);
-        _stalk = rewardedStalk.add(beans.mul(10000));
-        if (beans > 0) rewardedStalk = depositIncrease(account, beans, rewardedStalk);
-
-        updateVotedBipsIncrease(
-            account,
-            beans.mul(C.getSeedsPerBean()),
-            _stalk.sub(rewardedStalk),
-            b.increaseBase,
-            b.stalkBase
-        );
-
-        s.si.stalkBase = s.si.stalkBase.sub(b.stalkBase);
-        s.si.stalk = s.si.stalk.sub(_stalk).add(rewardedStalk);
-        s.si.increaseBase = s.si.increaseBase.sub(b.increaseBase);
-        s.si.increase = s.si.increase.sub(beans);
-        s.a[account].s.stalk = s.a[account].s.stalk.add(_stalk).sub(rewardedStalk);
-        return beans;
     }
 
-    function depositIncrease(address account, uint256 beans, uint256 rewardedStalk)
-        private
-        returns (uint256)
-    {
-        uint32 rewardedSeason = uint32(rewardedStalk.div(beans.mul(C.getSeedsPerBean())));
-        rewardedStalk = rewardedStalk.sub(uint256(rewardedSeason).mul(beans).mul(C.getSeedsPerBean()));
-        rewardedSeason = season() - rewardedSeason;
-        uint256 previousSeasonBeans = rewardedStalk.div(C.getSeedsPerBean());
-        rewardedStalk = rewardedStalk.sub(previousSeasonBeans.mul(C.getSeedsPerBean()));
-        addBeanDeposit(account, rewardedSeason, beans.sub(previousSeasonBeans));
-        addBeanDeposit(account, rewardedSeason-1, previousSeasonBeans);
-        return rewardedStalk;
-    }
-
-    function rewardStalk(address account) private {
-        if (s.a[account].s.seeds > 0)
-            s.a[account].s.stalk = s.a[account].s.stalk.add(balanceOfRewardedStalk(account));
-    }
-
-    function claimSeeds(address account, uint256 beans) private {
-        s.a[account].s.seeds = s.a[account].s.seeds.add(beans.mul(C.getSeedsPerBean()));
+    function farmSops(address account) internal {
+        if (s.sop.last > lastUpdate(account) || s.sops[s.a[account].lastRain] > 0) {
+            s.a[account].sop.base = balanceOfPlentyBase(account);
+            s.a[account].lastSop = s.sop.last;
+        }
+        if (s.r.raining) {
+            if (s.r.start > lastUpdate(account)) {
+                s.a[account].lastRain = s.r.start;
+                s.a[account].sop.roots = s.a[account].roots;
+            }
+            if (s.sop.last == s.r.start) s.a[account].sop.basePerRoot = s.sops[s.sop.last];
+        } else if (s.a[account].lastRain > 0) {
+            s.a[account].lastRain = 0;
+        }
     }
 
     /**
      * Silo
     **/
 
-    function incrementBalanceOfStalk(address account, uint256 seeds, uint256 stalk) internal {
-        s.s.seeds = s.s.seeds.add(seeds);
-        s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
-        s.s.stalk = s.s.stalk.add(stalk);
-        s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
+    function depositSiloAssets(address account, uint256 seeds, uint256 stalk) internal {
+        incrementBalanceOfStalk(account, stalk);
+        incrementBalanceOfSeeds(account, seeds);
     }
 
-    function decrementBalanceOfStalk(address account, uint256 seeds, uint256 stalk) internal {
+    function incrementBalanceOfSeeds(address account, uint256 seeds) internal {
+        s.s.seeds = s.s.seeds.add(seeds);
+        s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
+    }
+
+    function incrementBalanceOfStalk(address account, uint256 stalk) internal {
+        uint256 roots;
+        if (s.s.roots == 0) roots = stalk.mul(C.getRootsBase());
+        else roots = s.s.roots.mul(stalk).div(totalStalk());
+
+        s.s.stalk = s.s.stalk.add(stalk);
+        s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
+
+        s.s.roots = s.s.roots.add(roots);
+        s.a[account].roots = s.a[account].roots.add(roots);
+
+        incrementBipRoots(account, roots);
+    }
+
+    function withdrawSiloAssets(address account, uint256 seeds, uint256 stalk) internal {
+        decrementBalanceOfStalk(account, stalk);
+        decrementBalanceOfSeeds(account, seeds);
+    }
+
+    function decrementBalanceOfSeeds(address account, uint256 seeds) internal {
         s.s.seeds = s.s.seeds.sub(seeds);
         s.a[account].s.seeds = s.a[account].s.seeds.sub(seeds);
+    }
+
+    function decrementBalanceOfStalk(address account, uint256 stalk) internal {
+        if (stalk == 0) return;
+        uint256 roots = s.a[account].roots.mul(stalk).sub(1).div(s.a[account].s.stalk).add(1);
+
         s.s.stalk = s.s.stalk.sub(stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
+
+        s.s.roots = s.s.roots.sub(roots);
+        s.a[account].roots = s.a[account].roots.sub(roots);
     }
 
     function addBeanDeposit(address account, uint32 _s, uint256 amount) internal {
@@ -125,58 +136,30 @@ contract SiloEntrance is SiloExit {
         emit BeanDeposit(account, _s, amount);
     }
 
-    /**
-     * Season of Plenty
-    **/
-
-    function updateBalanceOfRainStalk(address account) internal {
-        if (!s.r.raining) return;
-        if (s.a[account].s.stalk < s.a[account].sop.stalk) {
-            s.r.stalk = s.r.stalk.sub(s.a[account].sop.stalk.sub(s.a[account].s.stalk));
-            s.a[account].sop.stalk = s.a[account].s.stalk;
-        }
-    }
-
-    /**
-     * Governance
-    **/
-
-    function incrementBipStalk(address account, uint256 seeds, uint256 stalk) internal {
-        if (s.a[account].lockedUntil >= season()) {
-            for (uint256 i = 0; i < s.g.activeBips.length; i++) {
-                uint32 bip = s.g.activeBips[i];
-                if (s.g.voted[bip][account]) {
-                    s.g.bips[bip].stalk = s.g.bips[bip].stalk.add(stalk);
-                    s.g.bips[bip].seeds = s.g.bips[bip].seeds.add(seeds);
-                }
-            }
-        }
-    }
-
-    function updateVotedBipsIncrease(
-        address account,
-        uint256 seeds,
-        uint256 stalk,
-        uint256 increaseBase,
-        uint256 stalkBase
-    )
-        private
-    {
-        for (uint256 i = 0; i < s.g.activeBips.length; i++) {
-            uint32 bip = s.g.activeBips[i];
-            if (s.g.voted[bip][account]) {
-                LibInternal.updateBip(bip);
-                s.g.bips[bip].stalk = s.g.bips[bip].stalk.add(stalk);
-                s.g.bips[bip].seeds = s.g.bips[bip].seeds.add(seeds);
-                s.g.bips[bip].increaseBase = s.g.bips[bip].increaseBase.sub(increaseBase);
-                s.g.bips[bip].stalkBase = s.g.bips[bip].stalkBase.sub(stalkBase);
-            }
-        }
+    function incrementDepositedBeans(uint256 amount) internal {
+        s.bean.deposited = s.bean.deposited.add(amount);
     }
 
     modifier notLocked(address account) {
         require(!(locked(account)),"locked");
         _;
+    }
+
+    function updateBalanceOfRainStalk(address account) internal {
+        if (!s.r.raining) return;
+        if (s.a[account].roots < s.a[account].sop.roots) {
+            s.r.roots = s.r.roots.sub(s.a[account].sop.roots.sub(s.a[account].roots));
+            s.a[account].sop.roots = s.a[account].roots;
+        }
+    }
+
+    function incrementBipRoots(address account, uint256 roots) internal {
+        if (s.a[account].lockedUntil >= season()) {
+            for (uint256 i = 0; i < s.g.activeBips.length; i++) {
+                uint32 bip = s.g.activeBips[i];
+                if (s.g.voted[bip][account]) s.g.bips[bip].roots = s.g.bips[bip].roots.add(roots);
+            }
+        }
     }
 
 }

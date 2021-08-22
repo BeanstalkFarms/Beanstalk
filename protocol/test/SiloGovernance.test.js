@@ -4,14 +4,15 @@ const { deploy } = require('../scripts/deploy.js')
 const { upgradeWithNewFacets } = require('../scripts/diamond.js')
 const { BigNumber } = require('bignumber.js')
 const { expect } = require('chai')
-const { printTestCrates } = require('./utils/print.js')
+const { printTestCrates, printCrates, print } = require('./utils/print.js')
 const { parseJson, incrementTime } = require('./utils/helpers.js')
-const { ZERO_ADDRESS, MAX_UINT256 } = require('./utils/constants.js')
+const { MIN_PLENTY_BASE, ZERO_ADDRESS, MAX_UINT256 } = require('./utils/constants.js')
 
 // Set the test data
 const [columns, tests] = parseJson('./coverage_data/siloGovernance.json')
-var numberTests = tests.length
 var startTest = 0
+var numberTests = tests.length-startTest
+// numberTests = 1
 
 const users = ['userAddress', 'user2Address', 'ownerAddress', 'otherAddress']
 
@@ -131,21 +132,16 @@ describe('Silo', function () {
 
         for (var i = 0; i < this.testData.functionsCalled.length; i++) {
           this.testData.functionsCalled[i] = this.testData.functionsCalled[i].replace('Address','')
-          // if (this.testData.functionsCalled[i].substring(0,6) !== 'expect') console.log('\t' + this.testData.functionsCalled[i])
           this.result = await eval(this.testData.functionsCalled[i])
         }
-
       })
       it('updates user\'s silo balances', async function () {
         expect(await this.pair.balanceOf(userAddress)).to.eq(this.testData.userCirculatingLP)
         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(this.testData.userTotalSeeds)
         expect(await this.silo.balanceOfStalk(userAddress)).to.eq(this.testData.userTotalStalk)
-        expect(await this.silo.balanceOfIncrease(userAddress)).to.eq(this.testData.userUnclaimedBeans)
+        expect(await this.silo.balanceOfRoots(userAddress)).to.eq(this.testData.userRoots)
         expect(await this.silo.balanceOfDepositedBeans(userAddress)).to.eq(this.testData.userTotalSiloBeans)
         expect(await this.silo.balanceOfDepositedLP(userAddress)).to.eq(this.testData.userLPInSilo)
-        const rewardedStalk = new BigNumber(await this.silo.balanceOfRewardedStalk(userAddress))
-        const increaseStalk = new BigNumber(await this.silo.balanceOfIncreaseStalk(userAddress))
-        expect(rewardedStalk.plus(increaseStalk).toString()).to.eq(this.testData.userRewardedStalk)
       })
 
       it('updates user\'s crates', async function () {
@@ -157,12 +153,9 @@ describe('Silo', function () {
         expect(await this.pair.balanceOf(user2Address)).to.eq(this.testData.user2CirculatingLP)
         expect(await this.silo.balanceOfStalk(user2Address)).to.eq(this.testData.user2TotalStalk)
         expect(await this.silo.balanceOfSeeds(user2Address)).to.eq(this.testData.user2TotalSeeds)
-        expect(await this.silo.balanceOfIncrease(user2Address)).to.eq(this.testData.user2UnclaimedBeans)
+        expect(await this.silo.balanceOfRoots(user2Address)).to.eq(this.testData.user2Roots)
         expect(await this.silo.balanceOfDepositedBeans(user2Address)).to.eq(this.testData.user2TotalSiloBeans)
         expect(await this.silo.balanceOfDepositedLP(user2Address)).to.eq(this.testData.user2LPInSilo)
-        const rewardedStalk = new BigNumber(await this.silo.balanceOfRewardedStalk(user2Address))
-        const increaseStalk = new BigNumber(await this.silo.balanceOfIncreaseStalk(user2Address))
-        expect(rewardedStalk.plus(increaseStalk).toString()).to.eq(this.testData.user2RewardedStalk)
       })
 
       it('updates user2\'s crates', async function () {
@@ -174,12 +167,9 @@ describe('Silo', function () {
         expect(await this.pair.balanceOf(otherAddress)).to.eq(this.testData.otherCirculatingLP)
         expect(await this.silo.balanceOfStalk(otherAddress)).to.eq(this.testData.otherTotalStalk)
         expect(await this.silo.balanceOfSeeds(otherAddress)).to.eq(this.testData.otherTotalSeeds)
-        expect(await this.silo.balanceOfIncrease(otherAddress)).to.eq(this.testData.otherUnclaimedBeans)
+        expect(await this.silo.balanceOfRoots(otherAddress)).to.eq(this.testData.otherRoots)
         expect(await this.silo.balanceOfDepositedBeans(otherAddress)).to.eq(this.testData.otherTotalSiloBeans)
         expect(await this.silo.balanceOfDepositedLP(otherAddress)).to.eq(this.testData.otherLPInSilo)
-        const rewardedStalk = new BigNumber(await this.silo.balanceOfRewardedStalk(otherAddress))
-        const increaseStalk = new BigNumber(await this.silo.balanceOfIncreaseStalk(otherAddress))
-        expect(rewardedStalk.plus(increaseStalk).toString()).to.eq(this.testData.otherRewardedStalk)
       })
 
       it('updates other\'s crates', async function () {
@@ -196,34 +186,39 @@ describe('Silo', function () {
 
         expect(await this.silo.totalStalk()).to.eq(this.testData.totalStalk)
         expect(await this.silo.totalSeeds()).to.eq(this.testData.totalSeeds)
+        expect(await this.silo.totalRoots()).to.eq(this.testData.totalRoots)
       })
 
       it ('updates the sop balances', async function () {
-        const userBase = await this.silo.balanceOfPlentyBase(userAddress)
-        const user2Base = await this.silo.balanceOfPlentyBase(user2Address)
-        const otherBase = await this.silo.balanceOfPlentyBase(otherAddress)
-        const totalUser = userBase.add(user2Base).add(otherBase)
         const sops = await this.silo.seasonsOfPlenty()
-        expect(sops.base.toString()).to.eq(totalUser.toString())
-        expect(await this.weth.balanceOf(this.silo.address)).to.eq(sops.weth.toString())
+        if (sops.base.toString() !== '0') {
+          const userBase = await this.silo.balanceOfPlentyBase(userAddress)
+          const user2Base = await this.silo.balanceOfPlentyBase(user2Address)
+          const otherBase = await this.silo.balanceOfPlentyBase(otherAddress)
+          const totalUser = userBase.add(user2Base).add(otherBase)
+          const totalBase = (new BN(totalUser.toString())).add(new BN(MIN_PLENTY_BASE))
+          const sops = await this.silo.seasonsOfPlenty()
+          expect(sops.base.toString()).to.eq(totalBase.toString())
+          expect(await this.weth.balanceOf(this.silo.address)).to.eq(sops.weth.toString())
+        }
       })
 
       it('updates weth after claim', async function () {
-        for (let i = 0; i < users.length; i++) {
-          const uAddress = eval(users[i])
-          const u = eval(users[i].replace('Address',''))
-          const weth = await this.silo.balanceOfEth(uAddress)
-          if (weth.gt(0)) {
-            const beforeEth = await ethers.provider.getBalance(uAddress)
-            await this.claim.connect(u).claimEth()
-            const afterEth = await ethers.provider.getBalance(uAddress)
-            expect(weth.toString()).to.eq(afterEth.sub(beforeEth).toString())
+        let sops = await this.silo.seasonsOfPlenty()
+        if (sops.base.toString() !== '0') {
+          for (let i = 0; i < users.length; i++) {
+            const uAddress = eval(users[i])
+            const u = eval(users[i].replace('Address',''))
+            const weth = await this.silo.balanceOfEth(uAddress)
+            if (weth.gt(0)) {
+              this.result = await this.claim.connect(u).claimEth()
+            }
           }
+          sops = await this.silo.seasonsOfPlenty()
+          expect(sops.base).to.eq(MIN_PLENTY_BASE)
+          expect(sops.weth).to.eq('1')
+          expect(await this.weth.balanceOf(this.silo.address)).to.eq('1')
         }
-        const sops = await this.silo.seasonsOfPlenty()
-        expect(sops.base).to.eq('0')
-        expect(sops.weth).to.eq('0')
-        expect(await this.weth.balanceOf(this.silo.address)).to.eq('0')
       })
 
       it('pauses or unpauses the system', async function () {
@@ -237,16 +232,12 @@ describe('Silo', function () {
           const bipId = bipData[0]
           const bip = await this.governance.bip(bipId)
           expect(bip.proposer).to.eq(eval(bipData[5]))
-          expect(bip.seeds).to.eq(bipData[7])
-          expect(bip.stalk).to.eq(bipData[6])
-          expect(bip.increaseBase).to.eq(bipData[8])
-          expect(bip.stalkBase).to.eq(bipData[9])
-          expect(bip.updated.toString()).to.eq(bipData[1])
           expect(bip.start.toString()).to.eq(bipData[2])
           expect(bip.period.toString()).to.eq(bipData[3])
           expect(bip.executed).to.eq(bipData[11])
           expect(bip.pauseOrUnpause).to.eq(bipData[12])
-          expect(bip.endTotalStalk).to.eq(bipData[13])
+          expect(bip.roots).to.eq(bipData[15])
+          expect(bip.endTotalRoots).to.eq(bipData[16])
         }
       })
 

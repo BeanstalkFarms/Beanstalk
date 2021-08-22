@@ -1,3 +1,12 @@
+async function printSopSeasons(season) {
+  const s = await this.season.season()
+  for (let i = 0; i < s; i++) {
+    const sop = await season.seasonOfPlenty(i);
+    console.log(`Season: ${i}, Sop: ${sop}`);
+  }
+  console.log("====================================")
+}
+
 async function print(f){
   console.log((await f).toString());
 }
@@ -6,44 +15,61 @@ async function printS(s,f){
   console.log(s + ": " + (await f).toString());
 }
 
-async function printSops(silo, season) {
+async function printSops(silo) {
   const sops = await silo.seasonsOfPlenty();
-  console.log("====================================")
+  console.log('---------------------------------------------')
   console.log("Season of Plenty:")
   console.log(`Weth: ${sops.weth}`);
   console.log(`Base: ${sops.base}`);
-  let sop = await season.seasonOfPlenty(sops.last);
-  let rbs = await season.resetBase(sops.last);
-  if (sops.last > 0) printSop(sops.last, sop, rbs)
-  while (sop.next > 0) {
-    const s = sop.next
-    sop = await season.seasonOfPlenty(sop.next);
-    rbs = await season.resetBase(sop.next);
-    printSop(s, sop, rbs)
-  }
-  console.log("====================================")
-}
-function printSop(season, sop, rbs) {
-  console.log(`\nSop at Season: ${season}`)
-  console.log(`Base: ${sop.base}`)
-  console.log(`Increase Base: ${sop.increaseBase}`)
-  console.log(`Reset Base: ${rbs.sopMultiple}`)
-  console.log(`Next: ${sop.next}`)
+  console.log(`Season: ${sops.last}`);
+  console.log('---------------------------------------------')
 }
 
-async function printSeasonIncrease(season, silo) {
-  const _s = await season.season();
-  const seasonIncrease = await season.seasonIncrease(_s);
-  const supplyIncreases = await silo.supplyIncreases();
-  console.log("-----------------------------------------------")
-  console.log(`Season: ${_s}`)
-  console.log(`Increase per Base: ${seasonIncrease.increaseBase}`)
-  console.log(`Stalk per Base: ${seasonIncrease.stalkBase}`)
-  console.log(`Total Increase Base: ${supplyIncreases.increaseBase}`)
-  console.log(`Total Increase: ${supplyIncreases.increase}`)
-  console.log(`Total Stalk Base: ${supplyIncreases.stalkBase}`)
-  console.log(`Total Stalk: ${supplyIncreases.stalk}`)
-  console.log("-----------------------------------------------")
+async function printSeasonIncrease(silo) {
+  console.log('---------------------------------------------')
+  console.log('Supply Increases:')
+  console.log(`Total Beans: ${await silo.totalFarmableBeans()}`)
+  console.log(`Total Stalk: ${await silo.totalFarmableStalk()}`)
+  console.log('---------------------------------------------')
+}
+
+async function printRain(season) {
+  const rain = await season.rain();
+  console.log('---------------------------------------------')
+  console.log('Rain:')
+  console.log(`Raining: ${rain.raining}`)
+  console.log(`Start: ${rain.start}`)
+  console.log(`Pods: ${rain.pods}`)
+  console.log(`Stalk: ${rain.roots}`)
+  console.log('---------------------------------------------')
+}
+
+async function printWeather(season) {
+  const weather = await season.weather();
+  console.log('---------------------------------------------')
+  console.log('Weather:')
+  console.log(`startSoil ${weather.startSoil}`)
+  console.log(`lastDSoil ${weather.lastDSoil}`)
+  console.log(`lastSoilPercent ${weather.lastSoilPercent}`)
+  console.log(`lastSowTime ${weather.lastSowTime}`)
+  console.log(`nextSowTime ${weather.nextSowTime}`)
+  console.log(`yield ${weather.yield}`)
+  console.log(`didSowBelowMin ${weather.didSowBelowMin}`)
+  console.log(`didSowFaster ${weather.didSowFaster}`)
+  console.log('---------------------------------------------')
+}
+
+
+async function printAccount(account, silo) {
+  console.log('---------------------------------------------')
+  console.log(`Account: ${account}`)
+  console.log(`Stalk: ${await silo.balanceOfStalk(account)}`)
+  console.log(`Seeds: ${await silo.balanceOfSeeds(account)}`)
+  console.log(`Plenty: ${await silo.balanceOfPlentyBase(account)}`)
+  console.log(`Roots: ${await silo.balanceOfRoots(account)}`)
+  console.log(`Last Update: ${await silo.lastUpdate(account)}`)
+  console.log(`Stalk: ${await silo.lockedUntil(account)}`)
+  console.log('---------------------------------------------')
 }
 
 function printSetOfCrates(cratesName, seasons, crates, seedCrates) {
@@ -83,11 +109,25 @@ function printTestCrates(userName, data) {
     console.log(userName," LPTransits",data.LPTransitDeposits[userName])
 }
 
+async function printCrate(silo, address, index) {
+  const crate = await silo.beanCrate(address,index);
+  console.log("Printing Bean Crate: Supply: " + crate[0] + ", Sesson: " + crate[1]);
+}
+
+async function printLPCrate(silo, address, index) {
+  const crate = await silo.lpCrate(address,index);
+  console.log("Printing LP Crate: Supply: " + crate[0] + ", Sesson: " + crate[1]);
+}
+
 exports.print = print
 exports.printS = printS
 exports.printSops = printSops
-exports.printSop = printSop
+exports.printSopSeasons = printSopSeasons
 exports.printSeasonIncrease = printSeasonIncrease
 exports.printSetOfCrates = printSetOfCrates
 exports.printCrates = printCrates
+exports.printCrate = printCrate
 exports.printTestCrates = printTestCrates
+exports.printRain = printRain
+exports.printWeather = printWeather
+exports.printAccount = printAccount

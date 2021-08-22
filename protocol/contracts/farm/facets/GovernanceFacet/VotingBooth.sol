@@ -22,18 +22,12 @@ contract VotingBooth is Bip {
 
     function recordVote(address account, uint32 bipId) internal {
         s.g.voted[bipId][account] = true;
-        s.g.bips[bipId].stalk = s.g.bips[bipId].stalk.add(s.a[account].s.stalk);
-        if (s.g.bips[bipId].stalk > s.s.stalk) s.g.bips[bipId].stalk = s.s.stalk;
-        s.g.bips[bipId].seeds = s.g.bips[bipId].seeds.add(s.a[account].s.seeds);
-        if (s.g.bips[bipId].seeds > s.s.seeds) s.g.bips[bipId].seeds = s.s.seeds;
+        s.g.bips[bipId].roots = s.g.bips[bipId].roots.add(balanceOfRoots(account));
     }
 
     function unrecordVote(address account, uint32 bipId) internal {
         s.g.voted[bipId][account] = false;
-        if (s.a[account].s.stalk > s.g.bips[bipId].stalk) s.g.bips[bipId].stalk = 0;
-        else s.g.bips[bipId].stalk = s.g.bips[bipId].stalk.sub(s.a[account].s.stalk);
-        if (s.a[account].s.seeds > s.g.bips[bipId].seeds) s.g.bips[bipId].seeds = 0;
-        else s.g.bips[bipId].seeds = s.g.bips[bipId].seeds.sub(s.a[account].s.seeds);
+        s.g.bips[bipId].roots = s.g.bips[bipId].roots.sub(balanceOfRoots(account));
     }
 
     function placeLock(address account, uint32 bipId) internal {
