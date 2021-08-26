@@ -13,11 +13,11 @@
 
 ### Problem:
 
-In Beanstalk version 1.0.1, Gas costs for Silo Members to update their Silo are extremely high and increase over time. The method Beanstalk currently uses to calculate compounding interest limits access to smaller Silo Members through prohibitive costs.
+In Beanstalk version 1.0.1, gas costs for Silo Members to update their Silo are extremely high and increase over time. The method Beanstalk currently uses to calculate compounding interest limits access to smaller Silo Members through prohibitive costs.
 
 ### Proposed Solution:
 
-A new method to reward compounding interest to Silo Members for a fixed Gas cost.
+A new method to reward compounding interest to Silo Members for a fixed gas cost.
 
 ### Proposed Functional Changes:
 
@@ -33,7 +33,7 @@ All Unclaimed ETH from Seasons of Plenty will be forfeited and divided equally t
 
 ### Analysis:
 
-Beanstalk version 1.0.1 requires calculating geometric series (supply increases and Seasons of Plenty) on top of an arithmetic series (Stalk per Season). Due to the slow rate of growth of Stalk from Seeds, the marginal Gas costs required for this calculation are rarely worth the marginal change in interest received.
+Beanstalk version 1.0.1 requires calculating geometric series (supply increases and Seasons of Plenty) on top of an arithmetic series (Stalk per Season). Due to the slow rate of growth of Stalk from Seeds, the marginal gas costs required for this calculation are rarely worth the marginal change in interest received.
 
 This BIP will allow for Silo updates in O(1), no matter how many supply increases and Seasons of Plenty have occurred. Gas costs no longer increase over time.
 
@@ -76,4 +76,4 @@ Roots: Roots are added as an internal variable that tracks a user's ownership of
 
 ### Effective
 
-Effective immediately upon commit. 
+Effective immediately upon commit.
