@@ -53,16 +53,27 @@ contract SiloEntrance is SiloExit {
     function farmBeans(address account) private {
         uint256 beans = balanceOfFarmableBeans(account);
         if (beans > 0) {
-            uint256 stalk = balanceOfFarmableStalkFromBeans(account, beans);
+            uint256 stalk = balanceOfGrownFarmableStalk(account, beans);
             uint256 seeds = beans.mul(C.getSeedsPerBean());
             uint32 _s = uint32(stalk.div(seeds));
+            uint256 leftoverStalk = stalk.sub(seeds.mul(_s));
             _s = season() - _s;
+            uint256 previousSeasonBeans = 0;
+            if (_s > 1) {
+                previousSeasonBeans = leftoverStalk.div(C.getSeedsPerBean());
+                leftoverStalk = leftoverStalk.sub(previousSeasonBeans.mul(C.getSeedsPerBean()));
+            }
+
+            stalk = stalk.sub(leftoverStalk);
+
             Account.State storage a = s.a[account];
             s.si.beans = s.si.beans.sub(beans);
             s.si.stalk = s.si.stalk.sub(stalk);
             a.s.seeds = a.s.seeds.add(seeds);
             a.s.stalk = a.s.stalk.add(beans.mul(C.getStalkPerBean())).add(stalk);
-            addBeanDeposit(account, _s, beans);
+
+            addBeanDeposit(account, _s, beans.sub(previousSeasonBeans));
+            if (previousSeasonBeans > 0) addBeanDeposit(account, _s-1, previousSeasonBeans);
         }
     }
 
