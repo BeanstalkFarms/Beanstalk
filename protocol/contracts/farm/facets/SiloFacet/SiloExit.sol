@@ -111,9 +111,13 @@ contract SiloExit {
         if (beans == 0) return 0;
         uint256 seeds = beans.mul(C.getSeedsPerBean());
         uint256 stalk = balanceOfGrownFarmableStalk(account, beans);
-        uint256 leftoverStalk = stalk.sub(stalk.div(seeds).mul(seeds));
-        uint256 previousSeasonBeans = leftoverStalk.div(C.getSeedsPerBean());
-        leftoverStalk = leftoverStalk.sub(previousSeasonBeans.mul(C.getSeedsPerBean()));
+        uint32 _s = uint32(stalk.div(seeds));
+        if (_s >= season()) _s = season()-1;
+        uint256 leftoverStalk = stalk.sub(seeds.mul(_s));
+        if (_s < season()-1) {
+            uint256 previousSeasonBeans = leftoverStalk.div(C.getSeedsPerBean());
+            leftoverStalk = leftoverStalk.sub(previousSeasonBeans.mul(C.getSeedsPerBean()));
+        }
         return stalk.sub(leftoverStalk);
     }
 

@@ -56,6 +56,7 @@ contract SiloEntrance is SiloExit {
             uint256 stalk = balanceOfGrownFarmableStalk(account, beans);
             uint256 seeds = beans.mul(C.getSeedsPerBean());
             uint32 _s = uint32(stalk.div(seeds));
+            if (_s >= season()) _s = season()-1;
             uint256 leftoverStalk = stalk.sub(seeds.mul(_s));
             _s = season() - _s;
             uint256 previousSeasonBeans = 0;
