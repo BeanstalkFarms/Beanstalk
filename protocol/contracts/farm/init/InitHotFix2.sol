@@ -6,7 +6,7 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import {AppStorage} from "./AppStorage.sol";
+import {AppStorage} from "../AppStorage.sol";
 
 contract InitHotFix2 {
     AppStorage internal s;

@@ -22,12 +22,15 @@ contract MockUniswapV2Pair {
 
     uint public constant MINIMUM_LIQUIDITY = 10**3;
 
+    bytes4 private constant SELECTOR = bytes4(keccak256(bytes('transfer(address,uint256)')));
+
     uint112 private reserve0;           // uses single storage slot, accessible via getReserves
     uint112 private reserve1;           // uses single storage slot, accessible via getReserves
     uint256 private liquidity;
     address private token;
+    address private token2;
 
-    uint32  private blockTimestampLast;
+    uint32 private blockTimestampLast;
     uint public price0CumulativeLast;
     uint public price1CumulativeLast;
 
@@ -35,13 +38,17 @@ contract MockUniswapV2Pair {
       token = _token;
     }
 
-    function getReserves() external view returns (uint112, uint112, uint32) {
+    function getReserves() public view returns (uint112, uint112, uint32) {
         return (reserve0, reserve1, blockTimestampLast);
     }
 
     function mint(address to) external returns (uint) {
         _mint(to, liquidity);
         return liquidity;
+    }
+
+    function setToken2(address _token2) external returns (uint) {
+        token2 = _token2;
     }
 
     function setReserves(uint112 newReserve0, uint112 newReserve1) external {
@@ -57,6 +64,26 @@ contract MockUniswapV2Pair {
         reserve0 = newReserve0;
         reserve1 = newReserve1;
         liquidity = newLiquidity;
+    }
+
+    function getToken() external view returns (address) {
+        return token;
+    }
+
+    function burn(address to) external returns (uint amount0, uint amount1) {
+        (uint112 _reserve0, uint112 _reserve1,) = getReserves();
+        address _token0 = token;
+        address _token1 = token2;
+        uint balance0 = IERC20(_token0).balanceOf(address(this));
+        uint balance1 = IERC20(_token1).balanceOf(address(this));
+        uint liquidity = balanceOf(address(this));
+
+        amount0 = liquidity.mul(balance0) / _totalSupply;
+        amount1 = liquidity.mul(balance1) / _totalSupply;
+        require(amount0 > 0 && amount1 > 0, 'UniswapV2: INSUFFICIENT_LIQUIDITY_BURNED');
+        _burn(address(this), liquidity);
+        _safeTransfer(_token0, to, amount0);
+        _safeTransfer(_token1, to, amount1);
     }
 
     function faucet(address account, uint256 amount) external returns (bool) {
@@ -288,6 +315,11 @@ contract MockUniswapV2Pair {
 
     function min(uint x, uint y) internal pure returns (uint z) {
         z = x < y ? x : y;
+    }
+
+    function _safeTransfer(address token, address to, uint value) private {
+        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(SELECTOR, to, value));
+        require(success && (data.length == 0 || abi.decode(data, (bool))), 'UniswapV2: TRANSFER_FAILED');
     }
 
     // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)

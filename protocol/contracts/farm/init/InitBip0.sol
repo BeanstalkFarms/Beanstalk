@@ -6,9 +6,9 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import {AppStorage} from "./AppStorage.sol";
-import {AppStorageOld, StorageOld} from "./AppStorageOld.sol";
-import "../C.sol";
+import {AppStorage} from "../AppStorage.sol";
+import {AppStorageOld, StorageOld} from "../AppStorageOld.sol";
+import "../../C.sol";
 
 /**
  * @author Publius

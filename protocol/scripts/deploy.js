@@ -33,15 +33,45 @@ async function main (scriptName, verbose=true, mock=false) {
   let totalGasUsed = ethers.BigNumber.from('0')
   let receipt
   const name = 'Beanstalk'
+  
 
-  async function deployFacets (verbose,...facets) {
+  async function deployFacets (verbose,
+    facets,
+    libraryNames = [],
+    facetLibraries = {},
+  ) {
     const instances = []
+    const libraries = {}
+
+    for (const name of libraryNames) {
+      if (verbose) console.log(`Deploying: ${name}`)
+      let libraryFactory = await ethers.getContractFactory(name)
+      libraryFactory = await libraryFactory.deploy()
+      await libraryFactory.deployed()
+      const receipt = await libraryFactory.deployTransaction.wait()
+      if (verbose) console.log(`${name} deploy gas used: ` + strDisplay(receipt.gasUsed))
+      console.log(`Deployed at ${libraryFactory.address}`)
+      libraries[name] = libraryFactory.address
+    }
+
     for (let facet of facets) {
       let constructorArgs = []
       if (Array.isArray(facet)) {
         ;[facet, constructorArgs] = facet
       }
-      const factory = await ethers.getContractFactory(facet)
+      let factory;
+      if (facetLibraries[facet] !== undefined) {
+        let facetLibrary = Object.keys(libraries).reduce((acc,val) => {
+          if (facetLibraries[name].includes(val)) acc[val] = libraries[val];
+          return acc;
+        }, {});
+        factory = await ethers.getContractFactory(facet, {
+          libraries: facetLibrary
+        },
+        );
+      } else {
+        factory = await ethers.getContractFactory(facet)
+      }
       const facetInstance = await factory.deploy(...constructorArgs)
       await facetInstance.deployed()
       const tx = facetInstance.deployTransaction
@@ -61,20 +91,32 @@ async function main (scriptName, verbose=true, mock=false) {
     claimFacet
   ] = mock ? await deployFacets(
       verbose,
-      'MockSeasonFacet',
+      ['MockSeasonFacet',
       'MockOracleFacet',
       'MockFieldFacet',
       'MockSiloFacet',
       'MockGovernanceFacet',
-      'ClaimFacet'
+      'MockClaimFacet'],
+      ["LibClaim"],
+      {
+        "MockSiloFacet": ["LibClaim"],
+        "MockFieldFacet": ["LibClaim"],
+        "MockClaimFacet": ["LibClaim"]
+      },
     ) : await deployFacets(
       verbose,
-      'SeasonFacet',
+      ['SeasonFacet',
       'OracleFacet',
       'FieldFacet',
       'SiloFacet',
       'GovernanceFacet',
-      'ClaimFacet'
+      'ClaimFacet']
+      ["LibClaim"],
+      {
+        "SiloFacet": ["LibClaim"],
+        "FieldFacet": ["LibClaim"],
+        "ClaimFacet": ["LibClaim"]
+      },
     )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/InitDiamond.sol:InitDiamond'
   // eslint-disable-next-line no-unused-vars

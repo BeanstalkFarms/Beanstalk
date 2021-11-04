@@ -17,7 +17,7 @@ import "./MockWETH.sol";
 contract MockUniswapV2Router {
     using SafeMath for uint256;
     address private _pair;
-    address private _weth;
+    address payable private _weth;
 
     constructor() {
         _weth = address(new MockWETH());
@@ -45,6 +45,38 @@ contract MockUniswapV2Router {
             (bool success,) = msg.sender.call{ value: msg.value.sub(amountETH) }("");
             require(success, "MockUniV2Router: Refund failed.");
         }
+    }
+
+    function addLiquidity(
+        address tokenA,
+        address tokenB,
+        uint amountADesired,
+        uint amountBDesired,
+        uint amountAMin,
+        uint amountBMin,
+        address to,
+        uint deadline
+    ) external returns (uint amountA, uint amountB, uint liquidity) {
+        (amountA, amountB) = _addLiquidity(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin);
+        MockToken(tokenA).transferFrom(msg.sender, address(this), amountA);
+        MockToken(tokenB).transferFrom(msg.sender, address(this), amountB);
+        liquidity = IUniswapV2Pair(_pair).mint(to);
+    }
+
+    function removeLiquidity(
+        address tokenA,
+        address tokenB,
+        uint liquidity,
+        uint amountAMin,
+        uint amountBMin,
+        address to,
+        uint deadline
+    ) public virtual returns (uint amountA, uint amountB) {
+        IUniswapV2Pair(_pair).transferFrom(msg.sender, _pair, liquidity); // send liquidity to pair
+        (uint amount0, uint amount1) = IUniswapV2Pair(_pair).burn(to);
+        (amountA, amountB) = tokenA == IUniswapV2Pair(_pair).token0() ? (amount0, amount1) : (amount1, amount0);
+        require(amountA >= amountAMin, 'UniswapV2Router: INSUFFICIENT_A_AMOUNT');
+        require(amountB >= amountBMin, 'UniswapV2Router: INSUFFICIENT_B_AMOUNT');
     }
 
     function _addLiquidity(
@@ -90,13 +122,30 @@ contract MockUniswapV2Router {
         returns (uint[] memory)
     {
         uint amountOut = getAmountOut(amountIn, path);
-        require(amountOut > amountOutMin, "MockUniV2Router: INSUFFICIENT_INPUT_AMOUNT.");
-        MockToken(path[0]).transferFrom(msg.sender, address(this), amountIn);
+        require(amountOut >= amountOutMin, "MockUniV2Router: INSUFFICIENT_INPUT_AMOUNT.");
+        MockToken(path[0]).burnFrom(msg.sender, amountIn);
         MockToken(path[1]).mint(msg.sender, amountOut);
         uint[] memory amounts = new uint[](2);
         amounts[0] = amountIn;
         amounts[1] = amountOut;
         return amounts;
+    }
+
+    function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline)
+        external
+        payable
+        returns (uint[] memory amounts)
+    {
+        require(path[0] == _weth, 'UniswapV2Router: INVALID_PATH');
+        uint256 amountOut = getAmountOut(msg.value, path);
+        amounts = new uint[](2);
+        amounts[0] = msg.value;
+        amounts[1] = amountOut;
+        require(amounts[1] >= amountOutMin, 'UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT');
+        MockWETH(_weth).deposit{value: amounts[0]}();
+        MockWETH(_weth).burn(amounts[0]);
+        MockToken(path[1]).mint(msg.sender, amounts[1]);
+        
     }
 
     function getAmountOut(uint amountIn, address[] calldata path)
@@ -110,18 +159,41 @@ contract MockUniswapV2Router {
             (reserve1, reserve0);
         require(amountIn > 0, "MockUniV2Router: INSUFFICIENT_INPUT_AMOUNT.");
         require(reserveIn > 0 && reserveOut > 0, "MockUniV2Router: INSUFFICIENT_LIQUIDITY.");
-        uint amountInWithFee = amountIn.mul(997);
-        uint numerator = amountInWithFee.mul(reserveOut);
-        uint denominator = reserveIn.mul(1000).add(amountInWithFee);
+        uint numerator = amountIn.mul(reserveOut);
+        uint denominator = reserveIn.add(amountIn);
         amountOut = numerator / denominator;
     }
 
+    function getReserves(address tokenA, address tokenB) internal view returns (uint reserveA, uint reserveB) {
+        (uint reserve0, uint reserve1,) = IUniswapV2Pair(_pair).getReserves();
+        (reserveA, reserveB) = tokenA == IUniswapV2Pair(_pair).token0() ? (reserve0, reserve1) : (reserve1, reserve0);
+    }
+
+    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) internal view returns (uint amountIn) {
+        require(amountOut > 0, 'UniswapV2Library: INSUFFICIENT_OUTPUT_AMOUNT');
+        require(reserveIn > 0 && reserveOut > 0, 'UniswapV2Library: INSUFFICIENT_LIQUIDITY');
+        uint numerator = reserveIn.mul(amountOut);
+        uint denominator = reserveOut.sub(amountOut);
+        amountIn = (numerator / denominator).add(1);
+    }
+
+    function getAmountsIn(uint amountOut, address[] memory path) public view returns (uint[] memory amounts) {
+        require(path.length == 2, 'UniswapV2Library: INVALID_PATH');
+        amounts = new uint[](path.length);
+        amounts[1] = amountOut;
+        (uint reserveIn, uint reserveOut) = getReserves(path[0], path[1]);
+        amounts[0] = getAmountIn(amounts[1], reserveIn, reserveOut);
+    }
+
+    
+
     function pair() public view returns (address) {
         return _pair;
-    }
+}
 
     function setPair(address ppair) public {
         _pair = ppair;
+        MockUniswapV2Pair(_pair).setToken2(_weth);
     }
 
     function WETH() public view returns (address){

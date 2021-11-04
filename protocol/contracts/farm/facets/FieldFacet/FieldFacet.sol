@@ -6,6 +6,7 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./PodTransfer.sol";
+import "../../../libraries/LibClaim.sol";
 
 /**
  * @author Publius
@@ -23,28 +24,29 @@ contract FieldFacet is PodTransfer {
      * Sow
     **/
 
-    function claimAndSowBeans(uint256 amount, LibInternal.Claim calldata claim)
+    function claimAndSowBeans(uint256 amount, LibClaim.Claim calldata claim)
         external
         returns (uint256)
     {
-        LibInternal.claim(claim);
-        return sowBeans(amount);
+        allocateBeans(claim, amount);
+        return _sowBeans(amount);
     }
 
     function claimBuyAndSowBeans(
         uint256 amount,
         uint256 buyAmount,
-        LibInternal.Claim calldata claim
+        LibClaim.Claim calldata claim
     )
         external
         payable
         returns (uint256)
     {
-        LibInternal.claim(claim);
-        return buyAndSowBeans(amount, buyAmount);
+        allocateBeans(claim, amount);
+        uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
+        return _sowBeans(amount.add(boughtAmount));
     }
 
-    function sowBeans(uint256 amount) public returns (uint256) {
+    function sowBeans(uint256 amount) external returns (uint256) {
         bean().transferFrom(msg.sender, address(this), amount);
         return _sowBeans(amount);
     }
@@ -81,6 +83,10 @@ contract FieldFacet is PodTransfer {
         require(spender != address(0), "Field: Pod Approve to 0 address.");
         setAllowancePods(msg.sender, spender, amount);
         emit PodApproval(msg.sender, spender, amount);
+    }
+
+    function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {
+        LibMarket.transferAllocatedBeans(LibClaim.claim(c, true), transferBeans);
     }
 
 }
