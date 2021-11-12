@@ -66,25 +66,13 @@ library LibInternal {
         require(success, "Silo: updateBip failed.");
     }
 
-    function stalkFor(uint32 bip) internal returns (uint256) {
+    function stalkFor(uint32 bip) internal returns (uint256 stalk) {
         DiamondStorage storage ds = diamondStorage();
         bytes4 functionSelector = bytes4(keccak256("stalkFor(uint32)"));
         address facet = ds.selectorToFacetAndPosition[functionSelector].facetAddress;
         bytes memory myFunctionCall = abi.encodeWithSelector(functionSelector, bip);
         (bool success, bytes memory data) = address(facet).delegatecall(myFunctionCall);
         require(success, "Governance: stalkFor failed.");
-        uint stalk;
         assembly { stalk := mload(add(data, add(0x20, 0))) }
-        return stalk;
     }
-
-    function claim(Claim calldata c) internal {
-        DiamondStorage storage ds = diamondStorage();
-        bytes4 functionSelector = bytes4(keccak256("claim((uint32[],uint32[],uint256[],bool,bool,uint256,uint256))"));
-        address facet = ds.selectorToFacetAndPosition[functionSelector].facetAddress;
-        bytes memory myFunctionCall = abi.encodeWithSelector(functionSelector, c);
-        (bool success,) = address(facet).delegatecall(myFunctionCall);
-        require(success, "Claim: claim failed.");
-    }
-
 }

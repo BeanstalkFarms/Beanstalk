@@ -5,21 +5,21 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {AppStorage} from "./AppStorage.sol";
-import {IERC165} from "../interfaces/IERC165.sol";
-import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
-import {IDiamondLoupe} from "../interfaces/IDiamondLoupe.sol";
-import {IERC173} from "../interfaces/IERC173.sol";
-import {LibDiamond} from "../libraries/LibDiamond.sol";
-import {LibMarket} from "../libraries/LibMarket.sol";
-import "../C.sol";
-import "../interfaces/IBean.sol";
-import "../interfaces/IWETH.sol";
+import {AppStorage} from "../AppStorage.sol";
+import {IERC165} from "../../interfaces/IERC165.sol";
+import {IDiamondCut} from "../../interfaces/IDiamondCut.sol";
+import {IDiamondLoupe} from "../../interfaces/IDiamondLoupe.sol";
+import {IERC173} from "../../interfaces/IERC173.sol";
+import {LibDiamond} from "../../libraries/LibDiamond.sol";
+import {LibMarket} from "../../libraries/LibMarket.sol";
+import "../../C.sol";
+import "../../interfaces/IBean.sol";
+import "../../interfaces/IWETH.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
-import "../Bean.sol";
-import "../mocks/MockToken.sol";
+import "../../Bean.sol";
+import "../../mocks/MockToken.sol";
 
 /**
  * @author Publius
