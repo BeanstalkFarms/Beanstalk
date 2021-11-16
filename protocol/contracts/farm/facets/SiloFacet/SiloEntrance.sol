@@ -30,8 +30,8 @@ contract SiloEntrance is SiloExit {
         if (update > 0 && update <= s.bip0Start) update = migrateBip0(account);
         if (s.a[account].s.seeds > 0) farmableStalk = balanceOfGrownStalk(account);
         if (s.a[account].roots > 0 && update < season()) {
-            farmSops(account);
-            farmBeans(account);
+            farmSops(account, update);
+            farmBeans(account, update);
         } else if (s.a[account].roots == 0) s.a[account].lastSop = s.r.start;
         if (farmableStalk > 0) incrementBalanceOfStalk(account, farmableStalk);
         s.a[account].lastUpdate = season();
@@ -50,41 +50,45 @@ contract SiloEntrance is SiloExit {
         return update;
     }
 
-    function farmBeans(address account) private {
-        uint256 beans = balanceOfFarmableBeans(account);
+    function farmBeans(address account, uint256 update) private {
+        uint256 unclaimedRoots = balanceOfUnclaimedRoots(account);
+        uint256 beans = balanceOfFarmableBeansFromUnclaimedRoots(unclaimedRoots);
+        if (beans > 0) {
+            s.si.beans = s.si.beans.sub(beans);
+            s.unclaimedRoots = s.unclaimedRoots.sub(unclaimedRoots);
+        }
+        if (update > 0 && update < s.hotFix3Start) {
+            uint256 depBeans = balanceOfLegacyFarmableBeans(account);
+            if (depBeans > 0) {
+                beans = beans.add(depBeans);
+                s.legSI.beans = s.legSI.beans.sub(depBeans);
+            }
+        }
         if (beans > 0) {
             uint256 stalk = balanceOfGrownFarmableStalk(account, beans);
             uint256 seeds = beans.mul(C.getSeedsPerBean());
             uint32 _s = uint32(stalk.div(seeds));
             if (_s >= season()) _s = season()-1;
-            uint256 leftoverStalk = stalk.sub(seeds.mul(_s));
+            stalk = seeds.mul(_s);
             _s = season() - _s;
-            uint256 previousSeasonBeans = 0;
-            if (_s > 1) {
-                previousSeasonBeans = leftoverStalk.div(C.getSeedsPerBean());
-                leftoverStalk = leftoverStalk.sub(previousSeasonBeans.mul(C.getSeedsPerBean()));
-            }
-
-            stalk = stalk.sub(leftoverStalk);
 
             Account.State storage a = s.a[account];
-            s.si.beans = s.si.beans.sub(beans);
             s.si.stalk = s.si.stalk.sub(stalk);
             a.s.seeds = a.s.seeds.add(seeds);
             a.s.stalk = a.s.stalk.add(beans.mul(C.getStalkPerBean())).add(stalk);
+            a.lastSIs = s.season.sis;
 
-            addBeanDeposit(account, _s, beans.sub(previousSeasonBeans));
-            if (previousSeasonBeans > 0) addBeanDeposit(account, _s-1, previousSeasonBeans);
+            addBeanDeposit(account, _s, beans);
         }
     }
 
-    function farmSops(address account) internal {
-        if (s.sop.last > lastUpdate(account) || s.sops[s.a[account].lastRain] > 0) {
+    function farmSops(address account, uint32 update) internal {
+        if (s.sop.last > update || s.sops[s.a[account].lastRain] > 0) {
             s.a[account].sop.base = balanceOfPlentyBase(account);
             s.a[account].lastSop = s.sop.last;
         }
         if (s.r.raining) {
-            if (s.r.start > lastUpdate(account)) {
+            if (s.r.start > update) {
                 s.a[account].lastRain = s.r.start;
                 s.a[account].sop.roots = s.a[account].roots;
             }

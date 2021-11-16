@@ -64,7 +64,7 @@ contract SiloExit {
     }
 
     function totalFarmableBeans() public view returns (uint256) {
-        return s.si.beans;
+        return s.legSI.beans.add(s.si.beans);
     }
 
     function totalFarmableStalk() public view returns (uint256) {
@@ -94,12 +94,28 @@ contract SiloExit {
         return balanceOfFarmableStalkFromBeans(account, farmableBeans);
     }
 
-    function balanceOfFarmableBeans(address account) public view returns (uint256) {
+    function balanceOfFarmableBeans(address account) public view returns (uint256 beans) {
+        return balanceOfFarmableBeansFromUnclaimedRoots(
+            balanceOfUnclaimedRoots(account)
+        ).add(balanceOfLegacyFarmableBeans(account));
+    }
+
+    function balanceOfFarmableBeansFromUnclaimedRoots(uint256 roots) public view returns (uint256 beans) {
         if (s.s.roots == 0 || s.si.beans == 0) return 0;
-        uint256 stalk = totalStalk().sub(s.si.stalk).mul(balanceOfRoots(account)).div(s.s.roots);
+        beans = roots.mul(s.si.beans).div(s.unclaimedRoots);
+    }
+
+    function balanceOfUnclaimedRoots(address account) public view returns (uint256 roots) {
+        uint256 sis = s.season.sis.sub(s.a[account].lastSIs);
+        return balanceOfRoots(account).mul(sis);
+    }
+
+    function balanceOfLegacyFarmableBeans(address account) public view returns (uint256) {
+        if (s.s.roots == 0 || s.legSI.beans == 0) return 0;
+        uint256 stalk = s.legSI.stalk.mul(balanceOfRoots(account)).div(s.legSI.roots);
         if (stalk <= s.a[account].s.stalk) return 0;
         uint256 beans = stalk.sub(s.a[account].s.stalk).div(C.getStalkPerBean());
-        if (beans > s.si.beans) return s.si.beans;
+        if (beans > s.legSI.beans) return s.legSI.beans;
         return beans;
     }
 
@@ -113,12 +129,7 @@ contract SiloExit {
         uint256 stalk = balanceOfGrownFarmableStalk(account, beans);
         uint32 _s = uint32(stalk.div(seeds));
         if (_s >= season()) _s = season()-1;
-        uint256 leftoverStalk = stalk.sub(seeds.mul(_s));
-        if (_s < season()-1) {
-            uint256 previousSeasonBeans = leftoverStalk.div(C.getSeedsPerBean());
-            leftoverStalk = leftoverStalk.sub(previousSeasonBeans.mul(C.getSeedsPerBean()));
-        }
-        return stalk.sub(leftoverStalk);
+        return seeds.mul(_s);
     }
 
     function balanceOfGrownFarmableStalk(address account, uint256 beans) internal view returns (uint256) {
@@ -139,6 +150,22 @@ contract SiloExit {
 
     function lastUpdate(address account) public view returns (uint32) {
         return s.a[account].lastUpdate;
+    }
+
+    function lastSupplyIncreases(address account) public view returns (uint32) {
+        return s.a[account].lastSIs;
+    }
+
+    function supplyIncreases() external view returns (uint32) {
+        return s.season.sis;
+    }
+
+    function unclaimedRoots() external view returns (uint256) {
+        return s.unclaimedRoots;
+    }
+
+    function legacySupplyIncrease() external view returns (Storage.LegacyIncreaseSilo memory) {
+        return s.legSI;
     }
 
     /**
