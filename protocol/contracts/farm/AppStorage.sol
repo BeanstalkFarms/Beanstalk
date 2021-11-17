@@ -44,6 +44,7 @@ contract Account {
         uint32 lastUpdate;
         uint32 lastSop;
         uint32 lastRain;
+        uint32 lastSIs;
         SeasonOfPlenty sop;
         uint256 roots;
     }
@@ -105,6 +106,12 @@ contract Storage {
         uint256 stalk;
     }
 
+    struct LegacyIncreaseSilo {
+        uint256 beans;
+        uint256 stalk;
+        uint256 roots;
+    }
+
     struct SeasonOfPlenty {
         uint256 weth;
         uint256 base;
@@ -136,6 +143,7 @@ contract Storage {
 
     struct Season {
         uint32 current;
+        uint32 sis;
         uint256 start;
         uint256 period;
         uint256 timestamp;
@@ -171,12 +179,11 @@ struct AppStorage {
     Storage.AssetSilo lp;
     Storage.IncreaseSilo si;
     Storage.SeasonOfPlenty sop;
+    Storage.LegacyIncreaseSilo legSI;
+    uint256 unclaimedRoots;
     uint256 depreciated2;
-    uint256 depreciated3;
-    uint256 depreciated4;
-    uint256 depreciated5;
-    uint256 depreciated6;
     mapping (uint32 => uint256) sops;
     mapping (address => Account.State) a;
     uint32 bip0Start;
+    uint32 hotFix3Start;
 }

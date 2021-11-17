@@ -332,6 +332,7 @@ async function upgradeWithNewFacets ({
   selectorsToAdd = {},
   initFacetName = undefined,
   initArgs = [],
+  libraries = {},
   bip = false,
   object = false,
   p=0,
@@ -349,17 +350,18 @@ async function upgradeWithNewFacets ({
   const existingFacets = await diamondLoupeFacet.facets()
   const undeployed = []
   const deployed = []
-  const libraries = {}
   if (verbose) console.log('Deploying Libraries')
   for (const name of libraryNames) {
-    if (verbose) console.log(`Deploying: ${name}`)
-    let libraryFactory = await ethers.getContractFactory(name)
-    libraryFactory = await libraryFactory.deploy()
-    await libraryFactory.deployed()
-    const receipt = await libraryFactory.deployTransaction.wait()
-    if (verbose) console.log(`${name} deploy gas used: ` + strDisplay(receipt.gasUsed))
-    console.log(`Deployed at ${libraryFactory.address}`)
-    libraries[name] = libraryFactory.address
+    if (!Object.keys(libraries).includes(name)) {
+      if (verbose) console.log(`Deploying: ${name}`)
+      let libraryFactory = await ethers.getContractFactory(name)
+      libraryFactory = await libraryFactory.deploy()
+      await libraryFactory.deployed()
+      const receipt = await libraryFactory.deployTransaction.wait()
+      if (verbose) console.log(`${name} deploy gas used: ` + strDisplay(receipt.gasUsed))
+      if (verbose) console.log(`Deployed at ${libraryFactory.address}`)
+      libraries[name] = libraryFactory.address
+    }
   }
   if (verbose) console.log('\nDeploying Facets')
   for (const name of facetNames) {
@@ -477,6 +479,9 @@ async function upgradeWithNewFacets ({
   if (verbose) {
     console.log('------')
     console.log('Upgrade transaction hash: ' + result.hash)
+    const receipt = await result.wait();
+    console.log(`Diamond Cut Gas Used: ` + strDisplay(receipt.gasUsed));
+
   }
   return result
 }

@@ -50,7 +50,7 @@ async function main (scriptName, verbose=true, mock=false) {
       await libraryFactory.deployed()
       const receipt = await libraryFactory.deployTransaction.wait()
       if (verbose) console.log(`${name} deploy gas used: ` + strDisplay(receipt.gasUsed))
-      console.log(`Deployed at ${libraryFactory.address}`)
+      if (verbose) console.log(`Deployed at ${libraryFactory.address}`)
       libraries[name] = libraryFactory.address
     }
 
@@ -62,7 +62,7 @@ async function main (scriptName, verbose=true, mock=false) {
       let factory;
       if (facetLibraries[facet] !== undefined) {
         let facetLibrary = Object.keys(libraries).reduce((acc,val) => {
-          if (facetLibraries[name].includes(val)) acc[val] = libraries[val];
+          if (facetLibraries[facet].includes(val)) acc[val] = libraries[val];
           return acc;
         }, {});
         factory = await ethers.getContractFactory(facet, {

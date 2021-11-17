@@ -24,7 +24,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function mockStepSilo(uint256 amount) public {
-        if ((s.s.seeds == 0 && s.s.stalk == 0) || amount < s.s.stalk.div(1e12)) {
+        if ((s.s.seeds == 0 && s.s.stalk == 0)) {
             stepSilo(0);
             return;
         }
@@ -174,7 +174,9 @@ contract MockSeasonFacet is SeasonFacet {
         delete s.w;
         delete s.g;
         delete s.r;
+        delete s.legSI;
         delete s.season;
+        delete s.unclaimedRoots;
         s.season.start = block.timestamp;
         s.season.timestamp = uint32(block.timestamp % 2 ** 32);
         delete s.sop;
