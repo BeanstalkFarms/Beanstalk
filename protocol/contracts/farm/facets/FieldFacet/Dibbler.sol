@@ -29,28 +29,19 @@ contract Dibbler {
      * Shed
     **/
 
-    function _sow(uint256 amount, address account) internal returns (uint256) {
+    function _sow(uint256 amount) internal returns (uint256) {
         require(amount > 0, "Field: Must purchase non-zero amount.");
         s.f.soil = s.f.soil.sub(amount, "Field: Not enough outstanding Soil.");
         uint256 pods = beansToPods(amount, s.w.yield);
-        sowPlot(account, amount, pods);
-        s.f.pods = s.f.pods.add(pods);
-        saveSowTime();
-        return pods;
-    }
-
-    function _sowNoSoil(uint256 amount, address account) internal returns (uint256) {
-        require(amount > 0, "Field: Must purchase non-zero amount.");
-        uint256 pods = beansToPods(amount, s.w.yield);
-        sowPlot(account, amount, pods);
-        s.f.pods = s.f.pods.add(pods);
+        sowPlot(msg.sender, amount, pods);
+        s.f.pods = s.f.pods.add(amount);
         saveSowTime();
         return pods;
     }
 
     function sowPlot(address account, uint256 beans, uint256 pods) internal {
         s.a[account].field.plots[s.f.pods] = pods;
-        emit Sow(account, s.f.pods, beans, pods);
+        emit Sow(msg.sender, s.f.pods, beans, pods);
     }
 
     function beansToPods(uint256 beanstalks, uint256 y) internal pure returns (uint256) {
@@ -64,7 +55,8 @@ contract Dibbler {
 
     function saveSowTime() private {
         uint256 totalBeanSupply = bean().totalSupply();
-        if (totalSoil() >= totalBeanSupply.div(C.getComplexWeatherDenominator())) return;
+        uint256 minTotalSoil = C.getMinSoilRatioCap().mul(bean().totalSupply()).div(1e18);
+        if (s.f.soil >= minTotalSoil) return;
 
         uint256 sowTime = block.timestamp.sub(s.season.timestamp);
         s.w.nextSowTime = uint32(sowTime);

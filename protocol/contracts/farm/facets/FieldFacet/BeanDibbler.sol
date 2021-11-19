@@ -60,8 +60,12 @@ contract BeanDibbler is Dibbler {
     **/
 
     function _sowBeans(uint256 amount) internal returns (uint256 pods) {
-        pods = _sow(amount, msg.sender);
+        pods = _sow(amount);
         bean().burn(amount);
         LibCheck.beanBalanceCheck();
+    }
+
+    function burn(uint256 amount) private {
+        bean().burn(amount);
     }
 }
