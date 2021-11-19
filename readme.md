@@ -35,14 +35,31 @@ The following facets are part of the [diamond functionality](https://github.com/
 
 ## Setup
 1. clone the repository
-2. cd into the protocol repository
+2. run `cd protocol` to enter the protocol repository
 3. run `npm install`
-4. in `hardhat.config.js`, add your alchemy/infura key as `API_KEY`, set the correct base url as `URL` and add your private key as `PRIVATE_KEY `
 5. run `npx hardhat compile`
 
 ## Testing
+1. make sure you are in the `protocol` repository
 1. run `npm test` to run all coverage tests
 2. run `npx hardhat coverage` to run all coverage tests and generate a coverage report
+
+
+## Developing
+
+### Overview
+As Beanstalk implements EIP-2535, Beanstalk is upgraded through a `diamondCut` function call.
+There are two different ways a `diamondCut` can apply code to Beanstalk:
+1. adding/replacing/removing functions
+    * Functions being added/replaced are implemented in smart contracts referred to as `facets`. Facets are no different than a normal smart contract with callable functions. In order to share a state, Facets can only define 1 internal state variable: The `AppStorage` struct defined in `AppStorage.sol`.
+2. calling the `init` function of a smart contract
+    * This is a one time action and will be called when the `diamondCut` is executed. There can be 1 `init` call per `diamondCut`.
+
+### Creating a new facet
+For this tutorial, we are going to create a new facet called `SampleFacet`. In your own implementation replace iterations of the word `Sample` with the name of the Facet you want to create. 
+1. make sure you are in the `protocol` repository
+2. in `protocol/farm/facets/`, create a new folder called `SampleFacet`
+3. within the `SampleFacet` folder create a file called `SampleFacet.sol`.
 
 ## Versions
 Code Version: `1.3.0` <br>

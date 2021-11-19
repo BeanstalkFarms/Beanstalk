@@ -42,7 +42,7 @@ async function checkUserCrates(silo, userName, address, data) {
     }
 }
 
-describe('Silo', function () {
+describe('Silo + Governance', function () {
 
   before(async function () {
     [owner,user,user2,other, weth] = await ethers.getSigners()
