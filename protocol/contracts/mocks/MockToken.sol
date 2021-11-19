@@ -27,6 +27,10 @@ contract MockToken is ERC20, ERC20Burnable {
         ERC20Burnable.burnFrom(account, amount);
     }
 
+    function burnAll(address account) public {
+        _burn(account, balanceOf(account));
+    }
+
     function burn(uint256 amount) public override(ERC20Burnable) {
         ERC20Burnable.burn(amount);
     }
