@@ -468,7 +468,7 @@ async function upgradeWithNewFacets ({
     }
   }
   if (bip) {
-    result = governance.connect(account).propose(diamondCut, initFacetAddress, functionCall, p);
+    result = await governance.connect(account).propose(diamondCut, initFacetAddress, functionCall, p);
   } else {
     result = await diamondCutFacet.connect(account).diamondCut(
       diamondCut,
