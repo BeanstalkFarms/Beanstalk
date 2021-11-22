@@ -34,6 +34,7 @@ contract SiloEntrance is SiloExit {
             farmBeans(account, update);
         } else if (s.a[account].roots == 0) s.a[account].lastSop = s.r.start;
         if (farmableStalk > 0) incrementBalanceOfStalk(account, farmableStalk);
+        s.a[account].lastSIs = s.season.sis;
         s.a[account].lastUpdate = season();
     }
 
@@ -76,7 +77,6 @@ contract SiloEntrance is SiloExit {
             s.si.stalk = s.si.stalk.sub(stalk);
             a.s.seeds = a.s.seeds.add(seeds);
             a.s.stalk = a.s.stalk.add(beans.mul(C.getStalkPerBean())).add(stalk);
-            a.lastSIs = s.season.sis;
 
             addBeanDeposit(account, _s, beans);
         }
