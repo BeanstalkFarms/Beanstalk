@@ -159,6 +159,11 @@ contract Storage {
         bool didSowBelowMin;
         bool didSowFaster;
     }
+
+    struct Listing {
+        uint232 expiry;
+        uint24 price;
+    }
 }
 
 struct AppStorage {
@@ -186,4 +191,5 @@ struct AppStorage {
     mapping (address => Account.State) a;
     uint32 bip0Start;
     uint32 hotFix3Start;
+    mapping(uint => Storage.Listing) listings;
 }
