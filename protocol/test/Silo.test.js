@@ -1,4 +1,3 @@
-const { expectRevert } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 
@@ -661,7 +660,7 @@ describe('Silo', function () {
 
     describe('crate balance too low', function () {
       it('reverts', async function () {
-        await expectRevert(this.silo.connect(user).convertAddAndDepositLP('0',['1500','900','1'], [2], [1500],{value: '1'}), "Silo: Crate balance too low.");
+        await expect(this.silo.connect(user).convertAddAndDepositLP('0',['1500','900','1'], [2], [1500],{value: '1'})).to.be.revertedWith('Silo: Crate balance too low.');
       });
     })
 

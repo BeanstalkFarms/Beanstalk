@@ -64,10 +64,10 @@ describe('BIP2', function () {
 
     describe('claim', function () {
       beforeEach(async function () {
-        const beans = new BigNumber(await this.bean.balanceOf(userAddress))
+        const beans = await this.bean.balanceOf(userAddress)
         this.result = await this.claim.connect(user).claim([['27'],[],[],false,true,'0','0'])
-        const newBeans = new BigNumber(await this.bean.balanceOf(userAddress))
-        this.claimedBeans = newBeans.minus(beans)
+        const newBeans = await this.bean.balanceOf(userAddress)
+        this.claimedBeans = newBeans.sub(beans)
       });
 
       it('properly claims beans', async function () {
@@ -78,10 +78,10 @@ describe('BIP2', function () {
     describe('claim and allocate', function () {
       describe('exact allocate', async function () {
         beforeEach(async function () {
-          const beans = new BigNumber(await this.bean.balanceOf(userAddress))
+          const beans = await this.bean.balanceOf(userAddress)
           this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],[],false,true,'0','0'], '1000')
-          const newBeans = new BigNumber(await this.bean.balanceOf(userAddress))
-          this.claimedBeans = newBeans.minus(beans)
+          const newBeans = await this.bean.balanceOf(userAddress)
+          this.claimedBeans = newBeans.sub(beans)
         });
         it('properly claims beans', async function () {
           expect(this.claimedBeans.toString()).to.equal('0');
@@ -93,10 +93,10 @@ describe('BIP2', function () {
 
       describe('exact LP allocate', async function () {
         beforeEach(async function () {
-          const beans = new BigNumber(await this.bean.balanceOf(userAddress))
+          const beans = await this.bean.balanceOf(userAddress)
           this.result = await this.claim.connect(user).claimWithAllocationE([[],['27'],[],false,true,'0','0'], '1000')
-          const newBeans = new BigNumber(await this.bean.balanceOf(userAddress))
-          this.claimedBeans = newBeans.minus(beans)
+          const newBeans = await this.bean.balanceOf(userAddress)
+          this.claimedBeans = newBeans.sub(beans)
         });
         it('properly claims beans', async function () {
           expect(this.claimedBeans.toString()).to.equal('0');
@@ -111,10 +111,10 @@ describe('BIP2', function () {
 
       describe('under allocate', async function () {
         beforeEach(async function () {
-          const beans = new BigNumber(await this.bean.balanceOf(userAddress))
+          const beans = await this.bean.balanceOf(userAddress)
           this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],[],false,true,'0','0'], '500')
-          const newBeans = new BigNumber(await this.bean.balanceOf(userAddress))
-          this.claimedBeans = newBeans.minus(beans)
+          const newBeans = await this.bean.balanceOf(userAddress)
+          this.claimedBeans = newBeans.sub(beans)
         });
         it('properly claims beans', async function () {
           expect(this.claimedBeans.toString()).to.equal('500');
@@ -126,10 +126,10 @@ describe('BIP2', function () {
 
       describe('over allocate', async function () {
         beforeEach(async function () {
-          const beans = new BigNumber(await this.bean.balanceOf(userAddress))
+          const beans = await this.bean.balanceOf(userAddress)
           this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],[],false,true,'0','0'], '1500')
-          const newBeans = new BigNumber(await this.bean.balanceOf(userAddress))
-          this.claimedBeans = newBeans.minus(beans)
+          const newBeans = await this.bean.balanceOf(userAddress)
+          this.claimedBeans = newBeans.sub(beans)
         });
         it('properly claims beans', async function () {
           expect(this.claimedBeans.toString()).to.equal('-500');
@@ -141,10 +141,10 @@ describe('BIP2', function () {
 
       describe('multiple allocate', async function () {
         beforeEach(async function () {
-          const beans = new BigNumber(await this.bean.balanceOf(userAddress))
+          const beans = await this.bean.balanceOf(userAddress)
           this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],['0'],false,true,'0','0'], '1500')
-          const newBeans = new BigNumber(await this.bean.balanceOf(userAddress))
-          this.claimedBeans = newBeans.minus(beans)
+          const newBeans = await this.bean.balanceOf(userAddress)
+          this.claimedBeans = newBeans.sub(beans)
         });
         it('properly claims beans', async function () {
           expect(this.claimedBeans.toString()).to.equal('500');
@@ -157,10 +157,10 @@ describe('BIP2', function () {
 
     describe('claim and deposit Beans', function () {
       beforeEach(async function () {
-        const beans = new BigNumber(await this.bean.balanceOf(userAddress))
+        const beans = await this.bean.balanceOf(userAddress)
         this.result = await this.silo.connect(user).claimAndDepositBeans('1000', [['27'],[],[],false,true,'0','0'])
-        const newBeans = new BigNumber(await this.bean.balanceOf(userAddress)) 
-        this.claimedBeans = newBeans.minus(beans)
+        const newBeans = await this.bean.balanceOf(userAddress)
+        this.claimedBeans = newBeans.sub(beans)
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('0');
@@ -173,10 +173,10 @@ describe('BIP2', function () {
 
     describe('claim buy and deposit Beans', function () {
       beforeEach(async function () {
-        const beans = new BigNumber(await this.bean.balanceOf(userAddress))
+        const beans = await this.bean.balanceOf(userAddress)
         this.result = await this.silo.connect(user).claimBuyAndDepositBeans('1000', '990', [['27'],[],[],false,true,'0','0'], {value: '1'})
-        const newBeans = new BigNumber(await this.bean.balanceOf(userAddress)) 
-        this.claimedBeans = newBeans.minus(beans)
+        const newBeans = await this.bean.balanceOf(userAddress)
+        this.claimedBeans = newBeans.sub(beans)
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('0');
@@ -189,10 +189,10 @@ describe('BIP2', function () {
 
     describe('claim and sow Beans', function () {
       beforeEach(async function () {
-        const beans = new BigNumber(await this.bean.balanceOf(userAddress))
+        const beans = await this.bean.balanceOf(userAddress)
         this.result = await this.field.connect(user).claimAndSowBeans('1000', [['27'],[],[],false,true,'0','0'])
-        const newBeans = new BigNumber(await this.bean.balanceOf(userAddress)) 
-        this.claimedBeans = newBeans.minus(beans)
+        const newBeans = await this.bean.balanceOf(userAddress)
+        this.claimedBeans = newBeans.sub(beans)
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('0');
@@ -205,10 +205,10 @@ describe('BIP2', function () {
 
     describe('claim, buy and sow Beans', function () {
       beforeEach(async function () {
-        const beans = new BigNumber(await this.bean.balanceOf(userAddress))
+        const beans = await this.bean.balanceOf(userAddress)
         this.result = await this.field.connect(user).claimBuyAndSowBeans('1000', '990', [['27'],[],[],false,true,'0','0'], {value: '1'})
-        const newBeans = new BigNumber(await this.bean.balanceOf(userAddress)) 
-        this.claimedBeans = newBeans.minus(beans)
+        const newBeans = await this.bean.balanceOf(userAddress)
+        this.claimedBeans = newBeans.sub(beans)
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('0');
@@ -221,10 +221,10 @@ describe('BIP2', function () {
 
     describe('claim and deposit LP', function () {
       beforeEach(async function () {
-        const beans = new BigNumber(await this.bean.balanceOf(userAddress))
+        const beans = await this.bean.balanceOf(userAddress)
         this.silo.connect(user).claimAndDepositLP('1',[['27'],[],[],false,true,'0','0']);
-        const newBeans = new BigNumber(await this.bean.balanceOf(userAddress)) 
-        this.claimedBeans = newBeans.minus(beans)
+        const newBeans = await this.bean.balanceOf(userAddress)
+        this.claimedBeans = newBeans.sub(beans)
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('1000');
@@ -233,10 +233,10 @@ describe('BIP2', function () {
 
     describe('claim add and deposit LP, exact allocation', function () {
       beforeEach(async function () {
-        const beans = new BigNumber(await this.bean.balanceOf(userAddress))
+        const beans = await this.bean.balanceOf(userAddress)
         this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['1000','1000','1'],[['27'],[],[],false,true,'0','0'], {value: '1'});
-        const newBeans = new BigNumber(await this.bean.balanceOf(userAddress)) 
-        this.claimedBeans = newBeans.minus(beans)
+        const newBeans = await this.bean.balanceOf(userAddress)
+        this.claimedBeans = newBeans.sub(beans)
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('0');
@@ -248,10 +248,10 @@ describe('BIP2', function () {
 
     describe('claim add and deposit LP, over allocation', function () {
       beforeEach(async function () {
-        const beans = new BigNumber(await this.bean.balanceOf(userAddress))
+        const beans = await this.bean.balanceOf(userAddress)
         this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['1000','1000','1'],[['27'],[],['0'],false,true,'0','0'], {value: '1'});
-        const newBeans = new BigNumber(await this.bean.balanceOf(userAddress)) 
-        this.claimedBeans = newBeans.minus(beans)
+        const newBeans = await this.bean.balanceOf(userAddress)
+        this.claimedBeans = newBeans.sub(beans)
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('1000');
@@ -263,10 +263,10 @@ describe('BIP2', function () {
 
     describe('claim add and deposit LP, under allocation', function () {
       beforeEach(async function () {
-        const beans = new BigNumber(await this.bean.balanceOf(userAddress))
+        const beans = await this.bean.balanceOf(userAddress)
         this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['2000','2000','2'],[['27'],[],[],false,true,'0','0'], {value: '2'});
-        const newBeans = new BigNumber(await this.bean.balanceOf(userAddress)) 
-        this.claimedBeans = newBeans.minus(beans)
+        const newBeans = await this.bean.balanceOf(userAddress)
+        this.claimedBeans = newBeans.sub(beans)
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('-1000');
@@ -278,10 +278,10 @@ describe('BIP2', function () {
 
     describe('claim add buy Beans and deposit LP, exact allocation', function () {
       beforeEach(async function () {
-        const beans = new BigNumber(await this.bean.balanceOf(userAddress))
+        const beans = await this.bean.balanceOf(userAddress)
         this.result = this.silo.connect(user).claimAddAndDepositLP('0','1000','0', ['2000','2000','2'],[['27'],[],[],false,true,'0','0'], {value: '4'});
-        const newBeans = new BigNumber(await this.bean.balanceOf(userAddress)) 
-        this.claimedBeans = newBeans.minus(beans)
+        const newBeans = await this.bean.balanceOf(userAddress)
+        this.claimedBeans = newBeans.sub(beans)
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('0');
@@ -293,10 +293,10 @@ describe('BIP2', function () {
 
     describe('claim add buy ETH and deposit LP, exact allocation', function () {
       beforeEach(async function () {
-        const beans = new BigNumber(await this.bean.balanceOf(userAddress))
+        const beans = await this.bean.balanceOf(userAddress)
         this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','1',['2000','2000','2'],[['27'],[],['0'],false,true,'0','0'], {value: '1'});
-        const newBeans = new BigNumber(await this.bean.balanceOf(userAddress)) 
-        this.claimedBeans = newBeans.minus(beans)
+        const newBeans = await this.bean.balanceOf(userAddress)
+        this.claimedBeans = newBeans.sub(beans)
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('-1011');
