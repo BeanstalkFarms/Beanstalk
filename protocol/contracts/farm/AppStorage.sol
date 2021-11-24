@@ -106,7 +106,7 @@ contract Storage {
         uint256 stalk;
     }
 
-    struct LegacyIncreaseSilo {
+    struct V1IncreaseSilo {
         uint256 beans;
         uint256 stalk;
         uint256 roots;
@@ -179,9 +179,9 @@ struct AppStorage {
     Storage.AssetSilo lp;
     Storage.IncreaseSilo si;
     Storage.SeasonOfPlenty sop;
-    Storage.LegacyIncreaseSilo legSI;
+    Storage.V1IncreaseSilo v1SI;
     uint256 unclaimedRoots;
-    uint256 depreciated2;
+    uint256 v2SIBeans;
     mapping (uint32 => uint256) sops;
     mapping (address => Account.State) a;
     uint32 bip0Start;
