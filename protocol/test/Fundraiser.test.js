@@ -4,42 +4,32 @@ const { deploy } = require('../scripts/deploy.js')
 const { BigNumber } = require('bignumber.js')
 const { print } = require('./utils/print.js')
 
-let user,user2,owner;
-let userAddress, ownerAddress, user2Address;
+let user, user2, owner;
+let userAddress, ownerAddress, user2Address, fundraiserAddress;
 
-describe('BIP2', function () {
+describe('Fundraiser', function () {
   before(async function () {
-    [owner,user,user2] = await ethers.getSigners();
+    [owner,user,user2, fundraiser] = await ethers.getSigners();
     userAddress = user.address;
     user2Address = user2.address;
+    fundraiserAddress = fundraiser.address;
     const contracts = await deploy("Test", false, true);
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
-    this.claim = await ethers.getContractAt('MockClaimFacet', this.diamond.address)
-    this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
-    this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair)
-    this.pegPair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pegPair)
     this.bean = await ethers.getContractAt('MockToken', contracts.bean)
-    this.weth = await ethers.getContractAt('MockToken', contracts.weth)
+    this.fundraiser = await ethers.getContractAt('MockFundraiserFacet', this.diamond.address)
+
+    let tokenFacet = await ethers.getContractFactory('MockToken')
+    this.token = await tokenFacet.deploy('MockToken', 'TOKEN')
+    await this.token.deployed()
 
     await this.season.siloSunrise(0)
     await this.bean.mint(userAddress, '1000000000')
     await this.bean.mint(user2Address, '1000000000')
-    await this.bean.mint(this.pair.address, '100000')
-    await this.weth.mint(this.pair.address, '100')
-    await this.pair.connect(user).approve(this.silo.address, '100000000000')
-    await this.pair.connect(user2).approve(this.silo.address, '100000000000')
-    await this.bean.connect(user).approve(this.silo.address, '100000000000')
-    await this.bean.connect(user2).approve(this.silo.address, '100000000000')
-    await this.pair.faucet(userAddress, '100');
-    await this.pair.set('100000', '100','1');
-
-    await user.sendTransaction({
-        to: this.weth.address,
-        value: ethers.utils.parseEther("1.0")
-    });
+    await this.token.mint(userAddress, '1000000000')
+    await this.token.mint(user2Address, '1000000000')
   });
 
   beforeEach (async function () {
@@ -50,29 +40,58 @@ describe('BIP2', function () {
     await this.season.siloSunrise(0)
   });
 
-  describe('claimBeans', function () {
-    beforeEach(async function () {
-      await this.silo.connect(user).depositBeans('1000')
-      await this.silo.connect(user).depositLP('1')
-      await this.field.incrementTotalSoilEE('5000')
-      await this.field.connect(user).sowBeans('1000')
-      await this.field.incrementTotalHarvestableE('1000')
-      await this.silo.connect(user).withdrawBeans([2],['1000'])
-      await this.silo.connect(user).withdrawLP([2],['1'])
-      await this.season.farmSunrises('25')
+  describe('create fundraiser', function () {
+    describe('reverts if not owner', async function () {
+      it('reverts ', async function () {
+        await expect(this.fundraiser.createFundraiser(fundraiserAddress, this.token.address, '1000')).to.be.revertedWith('Fundraiser: sender must be Beanstalk.')
+      });
     });
 
-    describe('claim', function () {
+    describe('create a fundraiser', async function () {
       beforeEach(async function () {
-        const beans = await this.bean.balanceOf(userAddress)
-        this.result = await this.claim.connect(user).claim([['27'],[],[],false,true,'0','0'])
-        const newBeans = await this.bean.balanceOf(userAddress)
-        this.claimedBeans = newBeans.minus(beans)
+        this.result = await this.fundraiser.createFundraiserE(fundraiserAddress, this.token.address, '1000');
       });
 
-      it('properly claims beans', async function () {
-        expect(this.claimedBeans.toString()).to.equal('1000');
+      it('gets listed as a fundraiser', async function () {
+        expect(await this.fundraiser.remainingFunding(0)).to.be.equal('1000')
+        expect(await this.fundraiser.totalFunding(0)).to.be.equal('1000')
+        expect(await this.fundraiser.fundingToken(0)).to.be.equal(this.token.address)
       });
+
+      it('emits a CreateFundraiser event', async function () {
+        await expect(this.result).to.emit(this.fundraiser, 'CreateFundraiser').withArgs(0, fundraiserAddress, this.token.address, '1000');
+      })
+    });
+
+    describe('create 2 fundraisers', async function () {
+      beforeEach(async function () {
+        await this.fundraiser.createFundraiserE(fundraiserAddress, this.token.address, '1000');
+        this.result = await this.fundraiser.createFundraiserE(fundraiserAddress, this.token.address, '1000');
+      });
+
+      it('gets listed as a fundraiser', async function () {
+        expect(await this.fundraiser.remainingFunding(1)).to.be.equal('1000')
+        expect(await this.fundraiser.totalFunding(1)).to.be.equal('1000')
+        expect(await this.fundraiser.fundingToken(1)).to.be.equal(this.token.address)
+      });
+
+      it('emits a CreateFundraiser event', async function () {
+        await expect(this.result).to.emit(this.fundraiser, 'CreateFundraiser').withArgs(1, fundraiserAddress, this.token.address, '1000');
+      })
+    });
+  });
+
+  describe('fund fundraiser', async function () {
+    beforeEach(async function () {
+      console.log(this.token.address);
+      await this.fundraiser.createFundraiserE(fundraiserAddress, this.token.address, '1000');
+      this.result = await this.fundraiser.connect(user).fund(0, '500');
+    });
+
+    it('subtracts from totals', async function () {
+      expect(await this.fundraiser.remainingFunding(0)).to.be.equal('500')
+      expect(await this.fundraiser.totalFunding(0)).to.be.equal('1000')
+      expect(await this.fundraiser.fundingToken(0)).to.be.equal(this.token.address)
     });
   });
 });

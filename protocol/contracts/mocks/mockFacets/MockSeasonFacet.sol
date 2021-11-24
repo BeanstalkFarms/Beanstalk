@@ -166,6 +166,10 @@ contract MockSeasonFacet is SeasonFacet {
             delete s.g.bips[i];
             delete s.g.diamondCuts[i];
         }
+
+        for (uint32 i = 0; i < s.fundraiserIndex; i++) {
+            delete s.fundraisers[i];
+        }
         delete s.f;
         delete s.bean;
         delete s.lp;
@@ -177,6 +181,7 @@ contract MockSeasonFacet is SeasonFacet {
         delete s.legSI;
         delete s.season;
         delete s.unclaimedRoots;
+        delete s.fundraiserIndex;
         s.season.start = block.timestamp;
         s.season.timestamp = uint32(block.timestamp % 2 ** 32);
         delete s.sop;
