@@ -41,15 +41,7 @@ contract Silo is Life {
     // Silo
 
     function stepSilo(uint256 amount) internal {
-        rewardStalk();
         rewardBeans(amount);
-    }
-
-    function rewardStalk() private {
-        if (s.si.beans == 0) return;
-        uint256 newStalk = s.si.beans.mul(C.getSeedsPerBean());
-        s.s.stalk = s.s.stalk.add(newStalk);
-        s.si.stalk = s.si.stalk.add(newStalk);
     }
 
     function rewardBeans(uint256 amount) private {
@@ -58,8 +50,6 @@ contract Silo is Life {
         s.si.beans = s.si.beans.add(amount);
         s.bean.deposited = s.bean.deposited.add(amount);
         s.s.seeds = s.s.seeds.add(amount.mul(C.getSeedsPerBean()));
-        s.unclaimedRoots = s.unclaimedRoots.add(s.s.roots);
-        s.season.sis = s.season.sis + 1;
     }
 
     // Season of Plenty
