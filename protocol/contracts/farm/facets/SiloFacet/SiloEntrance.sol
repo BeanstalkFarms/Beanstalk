@@ -25,15 +25,17 @@ contract SiloEntrance is SiloExit {
     **/
 
     function updateSilo(address account) public payable {
-        uint256 farmableStalk;
+        uint256 grownStalk;
         uint32 update = lastUpdate(account);
-        if (update > 0 && update <= s.bip0Start) update = migrateBip0(account);
-        if (s.a[account].s.seeds > 0) farmableStalk = balanceOfGrownStalk(account);
+        if (s.a[account].s.seeds > 0) grownStalk = balanceOfGrownStalk(account);
         if (s.a[account].roots > 0 && update < season()) {
             farmSops(account, update);
             farmBeans(account, update);
-        } else if (s.a[account].roots == 0) s.a[account].lastSop = s.r.start;
-        if (farmableStalk > 0) incrementBalanceOfStalk(account, farmableStalk);
+        } else if (s.a[account].roots == 0) {
+            s.a[account].lastSop = s.r.start;
+            s.a[account].lastSIs = s.season.sis;
+        }
+        if (grownStalk > 0) incrementBalanceOfStalk(account, grownStalk);
         s.a[account].lastUpdate = season();
     }
 
@@ -50,36 +52,41 @@ contract SiloEntrance is SiloExit {
         return update;
     }
 
-    function farmBeans(address account, uint256 update) private {
-        uint256 unclaimedRoots = balanceOfUnclaimedRoots(account);
-        uint256 beans = balanceOfFarmableBeansFromUnclaimedRoots(unclaimedRoots);
+    function farmBeans(address account, uint32 update) private {
+        if (s.a[account].lastSIs < s.season.sis) {
+            farmLegacyBeans(account, update);
+        }
+
+        uint256 accountStalk = s.a[account].s.stalk;
+        uint256 beans = balanceOfFarmableBeansV3(account, accountStalk);
         if (beans > 0) {
             s.si.beans = s.si.beans.sub(beans);
-            s.unclaimedRoots = s.unclaimedRoots.sub(unclaimedRoots);
-        }
-        if (update > 0 && update < s.hotFix3Start) {
-            uint256 depBeans = balanceOfLegacyFarmableBeans(account);
-            if (depBeans > 0) {
-                beans = beans.add(depBeans);
-                s.legSI.beans = s.legSI.beans.sub(depBeans);
-            }
-        }
-        if (beans > 0) {
-            uint256 stalk = balanceOfGrownFarmableStalk(account, beans);
             uint256 seeds = beans.mul(C.getSeedsPerBean());
-            uint32 _s = uint32(stalk.div(seeds));
-            if (_s >= season()) _s = season()-1;
-            stalk = seeds.mul(_s);
-            _s = season() - _s;
-
             Account.State storage a = s.a[account];
-            s.si.stalk = s.si.stalk.sub(stalk);
-            a.s.seeds = a.s.seeds.add(seeds);
-            a.s.stalk = a.s.stalk.add(beans.mul(C.getStalkPerBean())).add(stalk);
-            a.lastSIs = s.season.sis;
-
-            addBeanDeposit(account, _s, beans);
+            s.a[account].s.seeds = a.s.seeds.add(seeds);
+            s.a[account].s.stalk = accountStalk.add(beans.mul(C.getStalkPerBean()));
+            addBeanDeposit(account, season(), beans);
         }
+    }
+
+    function farmLegacyBeans(address account, uint32 update) private {
+        uint256 beans;
+        if (update < s.hotFix3Start) {
+            beans = balanceOfFarmableBeansV1(account);
+            if (beans > 0) s.v1SI.beans = s.v1SI.beans.sub(beans);
+        }
+
+        uint256 unclaimedRoots = balanceOfUnclaimedRoots(account);
+        uint256 beansV2 = balanceOfFarmableBeansV2(unclaimedRoots);
+        beans = beans.add(beansV2);
+        if (beansV2 > 0) s.v2SIBeans = s.v2SIBeans.sub(beansV2);
+        s.unclaimedRoots = s.unclaimedRoots.sub(unclaimedRoots);
+        s.a[account].lastSIs = s.season.sis;
+
+        uint256 seeds = beans.mul(C.getSeedsPerBean());
+        s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
+        s.a[account].s.stalk = s.a[account].s.stalk.add(beans.mul(C.getStalkPerBean()));
+        addBeanDeposit(account, season(), beans);
     }
 
     function farmSops(address account, uint32 update) internal {
