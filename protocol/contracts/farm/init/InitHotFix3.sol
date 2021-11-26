@@ -12,9 +12,9 @@ contract InitHotFix3 {
 
     function init() external {
         s.hotFix3Start = s.season.current;
-        s.legSI.stalk = s.s.stalk - s.si.stalk;
-        s.legSI.roots = s.s.roots;
-        s.legSI.beans = s.si.beans;
+        s.v1SI.stalk = s.s.stalk - s.si.stalk;
+        s.v1SI.roots = s.s.roots;
+        s.v1SI.beans = s.si.beans;
         s.si.beans = 0;
     }
 

@@ -174,7 +174,7 @@ contract MockSeasonFacet is SeasonFacet {
         delete s.w;
         delete s.g;
         delete s.r;
-        delete s.legSI;
+        delete s.v1SI;
         delete s.season;
         delete s.unclaimedRoots;
         s.season.start = block.timestamp;
