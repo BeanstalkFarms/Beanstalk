@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/SeasonFacet/SeasonFacet.sol";
 import "../../libraries/Decimal.sol";
+import "../MockToken.sol";
 
 /**
  * @author Publius
@@ -168,6 +169,7 @@ contract MockSeasonFacet is SeasonFacet {
         }
 
         for (uint32 i = 0; i < s.fundraiserIndex; i++) {
+            MockToken(s.fundraisers[i].token).burn(MockToken(s.fundraisers[i].token).balanceOf(address(this)));
             delete s.fundraisers[i];
         }
         delete s.f;

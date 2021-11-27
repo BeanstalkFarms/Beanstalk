@@ -160,7 +160,7 @@ contract Storage {
         bool didSowFaster;
     }
 
-    struct Fundraisers {
+    struct Fundraiser {
         address payee;
         address token;
         uint256 total;
@@ -193,6 +193,6 @@ struct AppStorage {
     mapping (address => Account.State) a;
     uint32 bip0Start;
     uint32 hotFix3Start;
-    mapping (uint32 => Storage.Fundraisers) fundraisers;
+    mapping (uint32 => Storage.Fundraiser) fundraisers;
     uint32 fundraiserIndex;
 }

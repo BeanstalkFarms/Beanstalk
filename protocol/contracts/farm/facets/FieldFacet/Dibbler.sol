@@ -34,7 +34,16 @@ contract Dibbler {
         s.f.soil = s.f.soil.sub(amount, "Field: Not enough outstanding Soil.");
         uint256 pods = beansToPods(amount, s.w.yield);
         sowPlot(account, amount, pods);
-        s.f.pods = s.f.pods.add(amount);
+        s.f.pods = s.f.pods.add(pods);
+        saveSowTime();
+        return pods;
+    }
+
+    function _sowNoSoil(uint256 amount, address account) internal returns (uint256) {
+        require(amount > 0, "Field: Must purchase non-zero amount.");
+        uint256 pods = beansToPods(amount, s.w.yield);
+        sowPlot(account, amount, pods);
+        s.f.pods = s.f.pods.add(pods);
         saveSowTime();
         return pods;
     }
