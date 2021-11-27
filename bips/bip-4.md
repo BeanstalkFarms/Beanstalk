@@ -1,4 +1,4 @@
-# BIP-4: Trail of Bits Audit; Fundraisers
+# BIP-4: Trail of Bits Audit and Fundraisers
 
 - [Summary](#summary)
 - [Problem](#problem)
