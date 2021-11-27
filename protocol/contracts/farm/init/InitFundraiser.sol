@@ -9,7 +9,7 @@ import {IBean} from "../../interfaces/IBean.sol";
 
 /**
  * @author Publius
- * @title InitBip4 runs the code for BIP-4.
+ * @title InitFundraiser creates a fundraiser.
 **/
 
 interface IBS {
