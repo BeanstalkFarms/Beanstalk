@@ -108,6 +108,14 @@ contract MockSeasonFacet is SeasonFacet {
             s.season.timestamp = block.timestamp;
         }
     }
+    
+    function getWithdrawBuffer() public view returns (uint8) {
+            return s.season.withdrawBuffer;
+    }
+
+    function getCurrentSeason() public view returns (uint256) {
+            return s.season.current;
+    }
 
     function setYieldE(uint32 number) public {
         s.w.yield = number;
