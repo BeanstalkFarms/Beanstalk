@@ -47,6 +47,7 @@ contract SeasonFacet is Sun {
 
         stepGovernance();
         stepSeason();
+        decrementWithdrawBuffer();
         snapshotSeason(price);
         stepWeather(price, s.f.soil);
         uint256 increase = stepSun(beanPrice, usdcPrice);
@@ -60,6 +61,12 @@ contract SeasonFacet is Sun {
 
     function stepSeason() private {
         s.season.current += 1;
+    }
+    
+    function decrementWithdrawBuffer() private {
+            if (s.season.current % 168 == 0 && s.season.withdrawBuffer > 4) {
+                s.season.withdrawBuffer -= 1;
+            }
     }
 
     function snapshotSeason(uint256 price) private {
