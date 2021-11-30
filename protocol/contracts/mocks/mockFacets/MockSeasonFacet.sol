@@ -116,6 +116,17 @@ contract MockSeasonFacet is SeasonFacet {
     function getCurrentSeason() public view returns (uint256) {
             return s.season.current;
     }
+    
+    function weekSunrise() public {
+            teleportSunrise(168);
+            decrementWithdrawBuffer();
+    }
+
+    function decrementSunrise(uint256 week) public {
+            for (uint256 i = 0; i < week; i++) {
+                    weekSunrise();
+            }
+    }
 
     function setYieldE(uint32 number) public {
         s.w.yield = number;
