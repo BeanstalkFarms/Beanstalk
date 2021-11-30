@@ -200,7 +200,8 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.timestamp = uint32(block.timestamp % 2 ** 32);
         delete s.sop;
         s.s.stalk = 0;
-        s.s.seeds = 0 ;
+        s.s.seeds = 0;
+        s.season.withdrawBuffer = 25;
         s.season.current = 1;
         s.paused = false;
         bean().burn(bean().balanceOf(address(this)));
