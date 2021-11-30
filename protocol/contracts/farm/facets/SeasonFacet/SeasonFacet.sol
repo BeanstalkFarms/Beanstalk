@@ -63,7 +63,7 @@ contract SeasonFacet is Sun {
         s.season.current += 1;
     }
     
-    function decrementWithdrawBuffer() private {
+    function decrementWithdrawBuffer() internal {
             if (s.season.current % 168 == 0 && s.season.withdrawBuffer > 4) {
                 s.season.withdrawBuffer -= 1;
             }
