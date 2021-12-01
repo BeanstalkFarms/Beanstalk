@@ -7,11 +7,14 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../AppStorage.sol";
-
+import "../../../interfaces/IBean.sol";
+import "../../../libraries/LibMarket.sol";
+import "../../../libraries/LibClaim.sol";
+import "../FieldFacet/FieldFacet.sol";
 
 /**
  * @author Beanjoyer
- * @title TODO
+ * @title Pod Marketplace v1
 **/
 
 contract MarketplaceFacet {
@@ -20,8 +23,10 @@ contract MarketplaceFacet {
 
     AppStorage s;
 
-    event CreateListing(address indexed account, uint256 indexed index, uint24 price, uint232 expiry);
-    event PlotTransfer(address indexed buyer, address indexed seller, uint256 indexed index, uint price, uint256 amount);
+    event CreateListing(address indexed account, uint256 indexed index, uint24 pricePerPod, uint232 expiry);
+    event PlotTransfer(address indexed buyer, address indexed seller, uint256 indexed index, uint24 pricePerPod, uint256 amount);
+    event ListingCancelled(address indexed account, uint256 indexed index);
+
 
     function insertPlot(address account, uint256 id, uint256 amount) internal {
         s.a[account].field.plots[id] = amount;
@@ -33,59 +38,125 @@ contract MarketplaceFacet {
         else s.a[account].field.plots[id] = start;
         if (end != amount) s.a[account].field.plots[id.add(end)] = amount.sub(end);
     }
-    function list(uint index, uint24 price, uint232 harvestExpiration) public {
+    
+    function listPlot(uint index, uint24 pricePerPod, uint232 harvestExpiration) public {
     
         require(s.a[msg.sender].field.plots[index] > 0, "Field: Plot not owned by user.");
-        require(price > 0);
+        require(pricePerPod > 0);
 
         uint232 expiry = uint232(s.f.harvestable.add(harvestExpiration));
 
-        s.listings[index].expiry = expiry;
-        s.listings[index].price = price;
+        s.listedPlots[index].expiry = expiry;
+        s.listedPlots[index].price = pricePerPod;
 
-    
-        emit CreateListing(msg.sender, index, price, expiry);
+        emit CreateListing(msg.sender, index, pricePerPod, expiry);
     }
 
     function listing (uint256 index) public view returns (Storage.Listing memory) {
-       return s.listings[index];
+       return s.listedPlots[index];
     }
 
-    function buyListing(uint index, address payable recipient) public payable {
+    // change such that the buy supports partial buys of plots
+    // so add "amount" parameter and use that as purchase amount,
+    // transfering partial plots and emitting such event
+    // do the same with buyListingWithEth
+    function buyListingWithBeans(uint index, address recipient) public {
 
 
-        Storage.Listing storage listing = s.listings[index];
-
+        Storage.Listing storage listing = s.listedPlots[index];
+        uint232 harvestable = uint232(s.f.harvestable);
         uint amount = s.a[recipient].field.plots[index];
 
-        uint232 harvestable = uint232(s.f.harvestable);
+        uint costInBeans = (listing.price * amount) / 1000000;
 
         require(msg.sender != address(0), "Field: Transfer from 0 address.");
         require(recipient != address(0), "Field: Transfer to 0 address.");
-        require(msg.value >= listing.price, "Field: Value sent too low");
         require(harvestable <= listing.expiry, "Field: Listing has expired");
 
-        (bool success, ) = recipient.call{value: amount}("");
-        require(success, "WETH: ETH transfer failed");
+        require(bean().balanceOf(msg.sender) >= costInBeans, "Field: Not enough beans to purchase.");
+
+        bean().transferFrom(msg.sender, recipient, costInBeans);
 
         insertPlot(msg.sender,index,amount);
         removePlot(recipient,index,0,amount);
 
-        delete s.listings[index];
+        delete s.listedPlots[index];
 
         emit PlotTransfer(msg.sender, recipient, index, msg.value, amount);
        
     }
+    
+    // refactor so that code used by both buyListingWithBeans and this is 
+    // put in a reusable function
+    function buyListingWithEth(uint index, address payable recipient) public {
 
-    // offer 
-    // place in pod line, price, quantity 
+        Storage.Listing storage listing = s.listedPlots[index];
+        uint232 harvestable = uint232(s.f.harvestable);
+        uint amount = s.a[recipient].field.plots[index];
+
+        // need to divide by 1E6 to account for double decimals?
+        uint costInBeans = (listing.price * amount) / 1000000;
 
 
-    // do i want to list my plot for sale?
-    // instantly sell for $.25 
-
-    // 
-    // buy plots in beans
+        require(msg.sender != address(0), "Field: Transfer from 0 address.");
+        require(recipient != address(0), "Field: Transfer to 0 address.");
+        require(harvestable <= listing.expiry, "Field: Listing has expired");
 
 
+        (uint256 ethAmount, uint256 beanAmount) = LibMarket._buy(buyBeanAmount, msg.value, recipient);
+        (bool success,) = msg.sender.call{ value: msg.value.sub(ethAmount) }("");
+        require(success, "Market: Refund failed.");
+        require(beanAmount >= costInBeans);
+ 
+        uint amount = s.a[recipient].field.plots[index];
+
+        insertPlot(msg.sender,index,amount);
+        removePlot(recipient,index,0,amount);
+
+        delete s.listedPlots[index];
+
+        emit PlotTransfer(msg.sender, recipient, amount);
+       
+    }
+
+    function cancelListing(uint index) public {
+        require(s.a[msg.sender].field.plots[index] > 0, "Field: Plot not owned by user.");
+        delete s.listedPlots[index];
+        emit ListingCancelled(msg.sender, index);
+    }
+
+    function claimAndBuyListing(uint256 amount, LibClaim.Claim calldata claim, uint index, address payable recipient) public  {
+        FieldFacet.allocateBeans(claim, amount);
+        buyListingWithBeans(index,recipient);
+    }
+
+
+    // Buy offers are the other side to the marketplace, in which a user an list
+    // an offer to buy, and then users can fill this buy with their plots
+
+
+    // functionlistBuyOffer(uint256 maxPlaceInLine, uint24 maxPricePerPod, uint232 maxAmountPods) public  {
+
+        //require
+
+        s.buyOffers[s.buyOfferIndex].maxAmountPods = maxAmountPods;
+        s.buyOffers[s.buyOfferIndex].price = maxPricePerPod;
+        s.buyOffers[s.buyOfferIndex].maxPlaceInLine = maxPlaceInLine;
+
+
+        s.buyOfferIndex = s.buyOfferIndex + 1;
+    // }
+
+    // function cancelOffer() public  {
+
+    // }
+
+    // function meetBuyOffer() public  {
+
+    // }
+    
+
+    function bean() internal view returns (IBean) {
+        return IBean(s.c.bean);
+    }
 }
