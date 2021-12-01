@@ -165,7 +165,9 @@ contract SiloEntrance is SiloExit {
         s.bean.deposited = s.bean.deposited.add(amount);
     }
 
-    modifier notLocked(address account) {
+    /// @notice Examines whether a given account has voted for a BIP
+    /// @param account The address for the modifier to check if they have voted
+    modifier hasVoted(address account) {
         require(!(locked(account)),"locked");
         _;
     }
@@ -187,6 +189,9 @@ contract SiloEntrance is SiloExit {
         }
     }
 
+    /// @notice Decrements the given amount of roots from bips that have been voted on by a given account
+    /// @param account The address of the account to have their bip roots decremented
+    /// @param roots The amount of roots for the given account to be decremented from
     function decrementBipRoots(address account, uint256 roots) internal {
         if (s.a[account].lockedUntil >= season()) {
             for (uint256 i = 0; i < s.g.activeBips.length; i++) {
