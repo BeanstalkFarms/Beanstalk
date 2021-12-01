@@ -152,6 +152,8 @@ contract SiloEntrance is SiloExit {
 
         s.s.roots = s.s.roots.sub(roots);
         s.a[account].roots = s.a[account].roots.sub(roots);
+
+        decrementBipRoots(account, roots);
     }
 
     function addBeanDeposit(address account, uint32 _s, uint256 amount) internal {
@@ -181,6 +183,15 @@ contract SiloEntrance is SiloExit {
             for (uint256 i = 0; i < s.g.activeBips.length; i++) {
                 uint32 bip = s.g.activeBips[i];
                 if (s.g.voted[bip][account]) s.g.bips[bip].roots = s.g.bips[bip].roots.add(roots);
+            }
+        }
+    }
+
+    function decrementBipRoots(address account, uint256 roots) internal {
+        if (s.a[account].lockedUntil >= season()) {
+            for (uint256 i = 0; i < s.g.activeBips.length; i++) {
+                uint32 bip = s.g.activeBips[i];
+                if (s.g.voted[bip][account]) s.g.bips[bip].roots = s.g.bips[bip].roots.sub(roots);
             }
         }
     }
