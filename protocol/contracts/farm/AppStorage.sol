@@ -164,6 +164,12 @@ contract Storage {
         uint232 expiry;
         uint24 price;
     }
+
+    struct BuyOffer {
+        uint232 maxAmountPods;
+        uint24 price;
+        uint256 maxPlaceInLine; 
+    }
 }
 
 struct AppStorage {
@@ -191,5 +197,8 @@ struct AppStorage {
     mapping (address => Account.State) a;
     uint32 bip0Start;
     uint32 hotFix3Start;
-    mapping(uint => Storage.Listing) listings;
+    mapping(uint => Storage.Listing) listedPlots;
+    uint32 buyOfferIndex;
+    mapping(uint32 => Storage.BuyOffer) buyOffers;
+
 }
