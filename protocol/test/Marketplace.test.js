@@ -39,18 +39,40 @@ describe('Marketplace', function () {
       await this.field.incrementTotalSoilEE('1000');
       await this.field.connect(user).sowBeans('1000');
 
-      this.result = await this.marketplace.connect(user).list('0', '1', '1000000');
+      this.result = await this.marketplace.connect(user).listPlot('0', '500000', '1000000');
     });
 
     it('Emits a List event', async function () {
       expect(this.result).to.emit(this.marketplace, 'CreateListing').withArgs(userAddress, '0', 1, '1000000');
     });
 
-    it('Lists the product', async function () {
+    it('Lists the Plot', async function () {
       const listing = await this.marketplace.listing(0);
       expect(listing.price).to.equal(1);
       expect(listing.expiry).to.equal('1000000');
     });
+
+    it('Buys Listing', async function () {
+      await this.marketplace.connect(user2).buyListingWithBeans(0,user);
+      //
+    });
+
+    it('Buy Listing Fails after Expiry', async function () {
+      //
+    });
+
+    it('Buy Listing with Ethereum', async function () {
+      //
+    });
+
+    it('Buy Listing non-listed Index', async function () {
+      //
+    });
+
+    it('Buy Listing wrong recipient', async function () {
+      //
+    });
+
 
   });
 
