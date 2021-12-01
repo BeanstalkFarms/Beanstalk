@@ -136,15 +136,11 @@ contract MarketplaceFacet {
 
 
     // functionlistBuyOffer(uint256 maxPlaceInLine, uint24 maxPricePerPod, uint232 maxAmountPods) public  {
-
-        //require
-
-        s.buyOffers[s.buyOfferIndex].maxAmountPods = maxAmountPods;
-        s.buyOffers[s.buyOfferIndex].price = maxPricePerPod;
-        s.buyOffers[s.buyOfferIndex].maxPlaceInLine = maxPlaceInLine;
-
-
-        s.buyOfferIndex = s.buyOfferIndex + 1;
+        // require
+        // s.buyOffers[s.buyOfferIndex].maxAmountPods = maxAmountPods;
+        // s.buyOffers[s.buyOfferIndex].price = maxPricePerPod;
+        // s.buyOffers[s.buyOfferIndex].maxPlaceInLine = maxPlaceInLine;
+        // s.buyOfferIndex = s.buyOfferIndex + 1;
     // }
 
     // function cancelOffer() public  {
