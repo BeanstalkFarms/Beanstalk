@@ -86,26 +86,25 @@ describe('Governance', function () {
       await propose(owner, this.governance, this.bip);
 
       await this.governance.connect(user).vote(0);
-      await this.governance.connect(user).voteList([1, 2, 3]);
+      await this.governance.connect(user).voteAll([1, 2, 3]);
       await this.governance.connect(user).vote(4);
       await this.governance.connect(user).unvote(1);
-      await this.governance.connect(user).unvoteList([2, 3, 4]);
+      await this.governance.connect(user).unvoteAll([2, 3, 4]);
 
       await this.governance.connect(user2).vote(0);
       await this.governance.connect(user2).vote(1);
       await this.governance.connect(user2).vote(2);
-      await this.governance.connect(user2).unvoteList([0, 1, 2]);
+      await this.governance.connect(user2).unvoteAll([0, 1, 2]);
 
       await this.governance.connect(user3).vote(0);
       await this.governance.connect(user3).vote(1);
-      await this.governance.connect(user3).voteUnvoteList([0, 1, 2]);
+      await this.governance.connect(user3).voteUnvoteAll([0, 1, 2]);
     });
 
     it('sets vote counter correctly', async function () {
-      expect(await this.governance.rootsFor(0)).to.be.equal(await this.silo.totalRoots());
-      expect(await this.governance.rootsFor(1)).to.be.equal(await this.silo.balanceOfRoots(userAddress));
-      expect(await this.governance.rootsFor(2)).to.be.equal(await this.silo.balanceOfRoots(userAddress));
-      expect(await this.governance.rootsFor(3)).to.be.equal(await this.silo.balanceOfRoots(userAddress));
+      expect(await this.governance.rootsFor(1)).to.be.equal(await this.silo.balanceOfRoots(ownerAddress));
+      expect(await this.governance.rootsFor(3)).to.be.equal(await this.silo.balanceOfRoots(ownerAddress));
+      expect(await this.governance.rootsFor(4)).to.be.equal(await this.silo.balanceOfRoots(ownerAddress));
     });
 
     it('is active', async function () {
@@ -142,9 +141,5 @@ describe('Governance', function () {
       expect(await this.silo.locked(user2Address)).to.equal(false);
     });
 
-    // it('unvoteVoteList emits correct event', async function () {
-    //   await expect(this.governance.connect(user3).voteUnvoteList([0, 1, 2])).to.emit(this.governance, 'VoteList')
-    //   .withArgs(user3Address, [0, 1, 2], [false, false, true], (await this.silo.balanceOfRoots(user3Address)));
-    // })
   });
 });
