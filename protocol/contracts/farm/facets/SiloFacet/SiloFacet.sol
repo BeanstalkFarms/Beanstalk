@@ -117,6 +117,27 @@ contract SiloFacet is BeanSilo {
         require(buyBeanAmount == 0 || buyEthAmount == 0, "Silo: Silo: Cant buy Ether and Beans.");
         _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al, c);
     }
+
+    function convertDepositedBeans(
+        uint256 maxConvertBeans, 
+        uint256 minConvertBeans, 
+        uint256 maxSellBeans, 
+        uint32[] memory crates,
+        uint256[] memory amounts
+    )
+        public 
+    {
+        updateSilo(msg.sender);
+        (uint256 lp, uint256 lpb, uint256 beansConverted) = LibMarket.sellToPegAndAddLiquidity(maxConvertBeans, minConvertBeans, maxSellBeans);
+        (,uint256 stalkRemoved) = _withdrawBeansForConvert(crates, amounts, beansConverted);
+        stalkRemoved = stalkRemoved.sub(lpb);
+        uint32 _s = uint32(stalkRemoved.div(lpb.mul(C.getSeedsPerBean())));
+        _s = uint32(season().sub(_s));
+
+        __depositLP(lp, lpb, season());
+        LibCheck.beanBalanceCheck();
+        updateBalanceOfRainStalk(msg.sender);
+    }
     
     function _addAndDepositLP(
         uint256 lp,
@@ -129,6 +150,19 @@ contract SiloFacet is BeanSilo {
         uint256 boughtLP = LibMarket.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, al);
         if (lp>0) pair().transferFrom(msg.sender, address(this), lp);
         _depositLP(lp.add(boughtLP));
+    }
+
+    function claimConvertAddAndDepositLP(
+        uint256 lp,
+        LibMarket.AddLiquidity calldata al,
+        uint32[] memory crates,
+        uint256[] memory amounts,
+        LibClaim.Claim calldata claim
+    )
+        external
+        payable
+    {
+        _convertAddAndDepositLP(lp, al, crates, amounts, LibClaim.claim(claim, true));
     }
 
     /*
