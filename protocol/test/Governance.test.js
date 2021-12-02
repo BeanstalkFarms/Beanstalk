@@ -102,7 +102,12 @@ describe('Governance', function () {
     });
 
     it('sets vote counter correctly', async function () {
+      const ownerRoots = await this.silo.balanceOfRoots(ownerAddress);
+      const userRoots = await this.silo.balanceOfRoots(userAddress);
+      expect(await this.governance.rootsFor(0)).to.be.equal(ownerRoots.add(userRoots))
       expect(await this.governance.rootsFor(1)).to.be.equal(await this.silo.balanceOfRoots(ownerAddress));
+      const user3Roots = await this.silo.balanceOfRoots(user3Address);
+      expect(await this.governance.rootsFor(2)).to.be.equal(ownerRoots.add(user3Roots));
       expect(await this.governance.rootsFor(3)).to.be.equal(await this.silo.balanceOfRoots(ownerAddress));
       expect(await this.governance.rootsFor(4)).to.be.equal(await this.silo.balanceOfRoots(ownerAddress));
     });
