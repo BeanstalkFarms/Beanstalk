@@ -55,7 +55,10 @@ contract LPSilo is SiloEntrance {
 
     function _depositLP(uint256 amount, uint32 _s) internal {
         updateSilo(msg.sender);
-        uint256 lpb = lpToLPBeans(amount);
+        __depositLP(amount, lpToLPBeans(amount), _s);
+    }
+
+    function __depositLP(uint256 amount, uint256 lpb, uint32 _s) internal {
         require(lpb > 0, "Silo: No Beans under LP.");
         incrementDepositedLP(amount);
         uint256 seeds = lpb.mul(C.getSeedsPerLPBean());
