@@ -21,7 +21,7 @@ contract MockClaimFacet is ClaimFacet {
         public
         payable
     {
-        LibMarket.transferAllocatedBeans(LibClaim.claim(c, true), beansAllocated);
+        LibMarket.transferAllocatedBeans(beansAllocated);
     }
 
 }
