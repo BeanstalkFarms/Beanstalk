@@ -47,6 +47,7 @@ contract Account {
         uint32 lastSIs;
         SeasonOfPlenty sop;
         uint256 roots;
+        uint256 claimableBeans;
     }
 }
 
