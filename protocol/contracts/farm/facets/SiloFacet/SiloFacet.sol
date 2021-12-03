@@ -180,7 +180,7 @@ contract SiloFacet is BeanSilo {
             bean().transfer(msg.sender, w.beansTransferred.sub(amountFromWallet).add(allocatedBeans));
         else if (w.beansTransferred < amountFromWallet) {
             uint256 transferAmount = amountFromWallet.sub(w.beansTransferred);
-            LibMarket.transferAllocatedBeans(allocatedBeans, transferAmount);
+            LibMarket.transferAllocatedBeans(transferAmount);
         }
         w.i = w.stalkRemoved.sub(w.beansRemoved.mul(C.getStalkPerBean()));
         w.i = w.i.div(lpToLPBeans(lp.add(w.newLP)), "Silo: No LP Beans.");
@@ -221,7 +221,7 @@ contract SiloFacet is BeanSilo {
     }
 
     function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {
-        LibMarket.transferAllocatedBeans(LibClaim.claim(c, true), transferBeans);
+        LibMarket.transferAllocatedBeans(transferBeans);
     }
 
 }
