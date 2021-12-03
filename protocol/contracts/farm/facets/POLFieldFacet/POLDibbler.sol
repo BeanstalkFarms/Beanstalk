@@ -24,7 +24,7 @@ contract POLDibbler is Dibbler {
 
     function _sowPOL(uint256 amount, uint256 value) internal returns (uint256) {
         require(intPrice() > 0, "POLField: Price < 1.");
-        return _sow(value);
+        return _sow(value, msg.sender);
         emit AddPOL(msg.sender, s.c.pair, amount);
     }
 
