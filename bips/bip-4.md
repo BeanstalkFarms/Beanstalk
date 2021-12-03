@@ -11,7 +11,7 @@
 
 - Hire Trail of Bits to perform a code audit on Beanstalk.
 - Establish a "Fundraiser" process that allows Beanstalk to efficiently raise capital in a decentralized manner to make payments in another stablecoin.
-- Mint 347,400 Beans and create the first Fundraiser to raise 347,400 USDC in exchange for the 347,400 Beans to pay for the Trail of Bits audit.
+- Mint 347,440 Beans and create the first Fundraiser to raise 347,440 USDC in exchange for the 347,440 Beans to pay for the Trail of Bits audit.
 
 ## Problem:
 
@@ -33,7 +33,7 @@ Publius has connected with Trail of Bits. Trail of Bits is a world class compute
 
 Trail of Bits has also expressed interest in maintaining a continuous relationship with Beanstalk.
 
-Upon passage of this BIP and payment of 347,400 USDC, Trail of Bits will perform an initial audit for Beanstalk and retain a continuous relationship with Beanstalk to review future versions of the code. 
+Upon passage of this BIP and payment of 347,440 USDC, Trail of Bits will perform an initial audit for Beanstalk and retain a continuous relationship with Beanstalk to review future versions of the code. 
 
 ### Paying for the Audit
 
@@ -53,13 +53,13 @@ Anyone can participate in a Fundraiser by sending up to X of Y to the Fundraiser
 
 The cost of the contract (initial audit, and then reviewal of BIPs for a period of time) is 320,000 USDC, paid upfront. 24,000 USDC are paid in the future, after the first 8 engineer-weeks have been used. There is a 1% payment fee added on top, because Trail of Bits requires payment through BitPay.
 
-Upon approval, this BIP will mint 347,400 Beans to fund the Trail of Bits audit. Upon deployment of the Fundraiser, anyone can sell USDC to Beanstalk in exchange for sown Beans. For each of the first 347,400 USDC sent to the FundraiserFacet, 1 Bean will be sown and the corresponding Pods returned to the sender based on the Weather at the time of the sow.
+Upon approval, this BIP will mint 347,440 Beans to fund the Trail of Bits audit. Upon deployment of the Fundraiser, anyone can sell USDC to Beanstalk in exchange for sown Beans. For each of the first 347,440 USDC sent to the FundraiserFacet, 1 Bean will be sown and the corresponding Pods returned to the sender based on the Weather at the time of the sow.
 
-Upon completion of the sale of all 347,400 Beans for 347,400 USDC, Publius will submit the initial 320,000 USDC payment to Trail of Bits. Publius will make the final payment when appropriate.
+Upon completion of the sale of all 347,440 Beans for 347,440 USDC, Publius will submit the initial 320,000 USDC payment to Trail of Bits. Publius will make the final payment when appropriate.
 
 ## Fundraiser Rationale:
 
-347,400 Beans may seem like a lot of money for an audit, but we have been told explicitly from larger potential investors that a Trail of Bits audit goes a long way. Furthermore, the Bean farmer that connected us with Trail of Bits have stated they are willing to fill the entire Fundraiser for 347,400 USDC. However, given that we want Beanstalk to operate in the most decentralized way possible, we do not want to give any particular investor priority in supplying funds. Therefore, anyone can supply USDC to the Fundraiser in exchange for a sown Bean. 
+347,440 Beans may seem like a lot of money for an audit, but we have been told explicitly from larger potential investors that a Trail of Bits audit goes a long way. Furthermore, the Bean farmer that connected us with Trail of Bits have stated they are willing to fill the entire Fundraiser for 347,440 USDC. However, given that we want Beanstalk to operate in the most decentralized way possible, we do not want to give any particular investor priority in supplying funds. Therefore, anyone can supply USDC to the Fundraiser in exchange for a sown Bean. 
 
 ## User Interface:
 
