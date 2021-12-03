@@ -86,7 +86,7 @@ contract FieldFacet is PodTransfer {
     }
 
     function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {
-        LibMarket.transferAllocatedBeans(LibClaim.claim(c, true), transferBeans);
+        LibMarket.transferAllocatedBeans(transferBeans);
     }
 
 }
