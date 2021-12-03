@@ -126,7 +126,7 @@ library LibMarket {
 
     function addAndDepositLiquidity(uint256 allocatedBeans, AddLiquidity calldata al) internal returns (uint256) {
         DiamondStorage storage ds = diamondStorage();
-        transferAllocatedBeans(allocatedBeans, al.beanAmount);
+        transferAllocatedBeans(al.beanAmount);
         (uint256 beans, uint256 liquidity) = addLiquidity(al);
         if (al.beanAmount > beans) IBean(ds.bean).transfer(msg.sender, al.beanAmount.sub(beans));
         return liquidity;
@@ -164,7 +164,7 @@ library LibMarket {
         uint256[] memory amounts = IUniswapV2Router02(ds.router).getAmountsIn(buyBeanAmount, path);
         (uint256 ethSold, uint256 beans) = _buyWithWETH(buyBeanAmount, amounts[0], address(this));
         if (al.beanAmount > buyBeanAmount) {
-            transferAllocatedBeans(allocatedBeans, al.beanAmount.sub(buyBeanAmount));
+            transferAllocatedBeans(al.beanAmount.sub(buyBeanAmount));
             beans = beans.add(al.beanAmount.sub(buyBeanAmount));
         } else if (allocatedBeans > 0) {
             IBean(ds.bean).transfer(msg.sender, allocatedBeans);
@@ -192,7 +192,7 @@ library LibMarket {
     {
         DiamondStorage storage ds = diamondStorage();
         uint256 sellBeans = _amountIn(buyWethAmount);
-        transferAllocatedBeans(allocatedBeans, al.beanAmount.add(sellBeans));
+        transferAllocatedBeans(al.beanAmount.add(sellBeans));
         (uint256 beansSold, uint256 wethBought) = _sell(sellBeans, buyWethAmount, address(this));
         if (msg.value > 0) IWETH(ds.weth).deposit{value: msg.value}();
         (uint256 beans, uint256 ethAdded, uint256 liquidity) = _addLiquidityWETH(
@@ -315,17 +315,18 @@ library LibMarket {
         return amounts[0];
     }
 
-    function transferAllocatedBeans(uint256 allocatedBeans, uint256 transferBeans) internal {
-        DiamondStorage storage ds = diamondStorage();
-        if (allocatedBeans == 0) {
+    function transferAllocatedBeans(uint256 transferBeans) internal {
+        DiamondStorage storage ds = diamondStorage(); // Delete ds and use s.c.[x] and compare gas cost
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        if (s.a[msg.sender].claimableBeans == 0) {
             IBean(ds.bean).transferFrom(msg.sender, address(this), transferBeans);
         }
-        else if (allocatedBeans >= transferBeans) {
+        else if (s.a[msg.sender].claimableBeans >= transferBeans) {
             emit BeanAllocation(msg.sender, transferBeans);
-            if (allocatedBeans > transferBeans) IBean(ds.bean).transfer(msg.sender, allocatedBeans.sub(transferBeans));
+            if (s.a[msg.sender].claimableBeans > transferBeans) IBean(ds.bean).transfer(msg.sender, s.a[msg.sender].claimableBeans.sub(transferBeans));
         } else {
-            emit BeanAllocation(msg.sender, allocatedBeans);
-            IBean(ds.bean).transferFrom(msg.sender, address(this), transferBeans.sub(allocatedBeans));
+            emit BeanAllocation(msg.sender, s.a[msg.sender].claimableBeans);
+            IBean(ds.bean).transferFrom(msg.sender, address(this), transferBeans.sub(s.a[msg.sender].claimableBeans));
         }
     }
 
