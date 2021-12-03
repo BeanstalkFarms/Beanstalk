@@ -221,6 +221,7 @@ contract SiloFacet is BeanSilo {
     }
 
     function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {
+        LibClaim.claim(c, true);
         LibMarket.transferAllocatedBeans(transferBeans);
     }
 
