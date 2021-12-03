@@ -9,6 +9,7 @@ import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "../interfaces/IBean.sol";
 import "../interfaces/IWETH.sol";
+import "./LibAppStorage.sol";
 
 /**
  * @author Publius
