@@ -50,7 +50,10 @@ library LibClaim {
             else claimLP(c.lpWithdrawals);
         }
         if (c.claimEth) claimEth();
-        if (!allocate) IBean(s.c.bean).transfer(msg.sender, beansClaimed);
+        if (allocate) s.a[msg.sender].claimableBeans += beansClaimed;
+        else {
+            IBean(s.c.bean).transfer(msg.sender, beansClaimed);
+            }
     }
 
     // Claim Beans
