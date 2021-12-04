@@ -31,14 +31,6 @@ contract MockLPFieldFacet is LPFieldFacet {
         s.f.pods = s.f.pods.add(pods);
     }
 
-    // function resetAllowances(address[] memory accounts) public {
-    //     for (uint i = 0; i < accounts.length; i++) {
-    //         for (uint j = 0; j < accounts.length; j++) {
-    //             setAllowancePods(accounts[i], accounts[j], 0);
-    //         }
-    //     }
-    // }
-
     function incrementTotalSoil(uint256 amount) internal {
         s.f.soil = s.f.soil.add(amount);
     }
