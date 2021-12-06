@@ -317,7 +317,7 @@ library LibMarket {
     }
 
     function transferAllocatedBeans(uint256 transferBeans, uint256 beansToWallet) internal {
-        DiamondStorage storage ds = diamondStorage();
+        DiamondStorage storage ds = diamondStorage(); // deleting this access results in negligible gas reduction
 	AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.a[msg.sender].claimableBeans == 0) {
             IBean(ds.bean).transferFrom(msg.sender, address(this), transferBeans);
