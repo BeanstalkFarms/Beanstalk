@@ -109,14 +109,6 @@ contract MockSeasonFacet is SeasonFacet {
         }
     }
     
-    function getWithdrawBuffer() public view returns (uint8) {
-            return s.season.withdrawBuffer;
-    }
-
-    function getCurrentSeason() public view returns (uint256) {
-            return s.season.current;
-    }
-    
     function weekSunrise() public {
             teleportSunrise(168);
             decrementWithdrawBuffer();
