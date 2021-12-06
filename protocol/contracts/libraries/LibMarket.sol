@@ -34,7 +34,6 @@ library LibMarket {
     using SafeMath for uint256;
 
     bytes32 private constant MARKET_STORAGE_POSITION = keccak256("diamond.standard.market.storage");
-    uint constant UINT_256_MAX = 2e56 - 1;
 
     function diamondStorage() internal pure returns (DiamondStorage storage ds) {
         bytes32 position = MARKET_STORAGE_POSITION;
