@@ -23,10 +23,6 @@ contract MockClaimFacet is ClaimFacet {
         payable
     {
         LibClaim.claim(c, 0);
-        LibMarket.transferAllocatedBeans(beansAllocated, 0);
-    }
-    function getClaimableBeans() public view returns (uint256) {
-	AppStorage storage s = LibAppStorage.diamondStorage();
-	return s.a[msg.sender].claimableBeans;
+        LibMarket.transferAllocatedBeans(beansAllocated, c.beansToWallet);
     }
 }
