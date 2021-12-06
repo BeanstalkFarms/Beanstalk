@@ -89,7 +89,8 @@ async function main (scriptName, verbose=true, mock=false) {
     siloFacet,
     governanceFacet,
     claimFacet,
-    fundraiserFacet
+    fundraiserFacet,
+    lpfieldFacet
   ] = mock ? await deployFacets(
       verbose,
       ['MockSeasonFacet',
@@ -98,12 +99,14 @@ async function main (scriptName, verbose=true, mock=false) {
       'MockSiloFacet',
       'MockGovernanceFacet',
       'MockClaimFacet',
-      'MockFundraiserFacet'],
+      'MockFundraiserFacet',
+      'MockLPFieldFacet'],
       ["LibClaim"],
       {
         "MockSiloFacet": ["LibClaim"],
         "MockFieldFacet": ["LibClaim"],
-        "MockClaimFacet": ["LibClaim"]
+        "MockClaimFacet": ["LibClaim"],
+        "MockLPFieldFacet": ["LibClaim"]
       },
     ) : await deployFacets(
       verbose,
@@ -113,12 +116,14 @@ async function main (scriptName, verbose=true, mock=false) {
       'SiloFacet',
       'GovernanceFacet',
       'ClaimFacet',
-      'FundraiserFacet']
+      'FundraiserFacet',
+      'LPFieldFacet']
       ["LibClaim"],
       {
         "SiloFacet": ["LibClaim"],
         "FieldFacet": ["LibClaim"],
-        "ClaimFacet": ["LibClaim"]
+        "ClaimFacet": ["LibClaim"],
+        "LPFieldFacet": ["LibClaim"]
       },
     )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/InitDiamond.sol:InitDiamond'
@@ -141,7 +146,8 @@ async function main (scriptName, verbose=true, mock=false) {
       ['SiloFacet', siloFacet],
       ['GovernanceFacet', governanceFacet],
       ['ClaimFacet', claimFacet],
-      ['FundraiserFacet', fundraiserFacet]
+      ['FundraiserFacet', fundraiserFacet],
+      ['LPFieldFacet', lpfieldFacet]
     ],
     owner: account,
     args: args,
@@ -185,6 +191,7 @@ async function main (scriptName, verbose=true, mock=false) {
     governanceFacet: governanceFacet,
     claimFacet: claimFacet,
     fundraiserFacet, fundraiserFacet,
+    lpfieldFacet, lpfieldFacet,
     pair: pair,
     pegPair: pegPair,
     weth: weth,
