@@ -25,10 +25,9 @@ contract ClaimFacet {
     event BeanAllocation(address indexed account, uint256 beans);
 
     AppStorage private s;
-    uint256 constant UINT_256_MAX = 2e56 - 1;
 
     function claim(LibClaim.Claim calldata c) public payable returns (uint256 beansClaimed) {
-        beansClaimed = LibClaim.claim(c, UINT_256_MAX);
+        beansClaimed = LibClaim.claim(c, c.beansToWallet);
         LibCheck.balanceCheck();
     }
 
@@ -62,5 +61,10 @@ contract ClaimFacet {
 
     function claimEth() public {
         LibClaim.claimEth();
+    }
+
+    function getClaimableBeans() public view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return s.a[msg.sender].claimableBeans;
     }
 }
