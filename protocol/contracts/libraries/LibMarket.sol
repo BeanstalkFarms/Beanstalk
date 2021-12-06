@@ -34,6 +34,7 @@ library LibMarket {
     using SafeMath for uint256;
 
     bytes32 private constant MARKET_STORAGE_POSITION = keccak256("diamond.standard.market.storage");
+    uint constant UINT_256_MAX = 2e56 - 1;
 
     function diamondStorage() internal pure returns (DiamondStorage storage ds) {
         bytes32 position = MARKET_STORAGE_POSITION;
@@ -127,7 +128,7 @@ library LibMarket {
 
     function addAndDepositLiquidity(uint256 allocatedBeans, AddLiquidity calldata al) internal returns (uint256) {
         DiamondStorage storage ds = diamondStorage();
-        transferAllocatedBeans(al.beanAmount);
+        transferAllocatedBeans(al.beanAmount, 0);
         (uint256 beans, uint256 liquidity) = addLiquidity(al);
         if (al.beanAmount > beans) IBean(ds.bean).transfer(msg.sender, al.beanAmount.sub(beans));
         return liquidity;
@@ -165,7 +166,7 @@ library LibMarket {
         uint256[] memory amounts = IUniswapV2Router02(ds.router).getAmountsIn(buyBeanAmount, path);
         (uint256 ethSold, uint256 beans) = _buyWithWETH(buyBeanAmount, amounts[0], address(this));
         if (al.beanAmount > buyBeanAmount) {
-            transferAllocatedBeans(al.beanAmount.sub(buyBeanAmount));
+            transferAllocatedBeans(al.beanAmount.sub(buyBeanAmount), 0);
             beans = beans.add(al.beanAmount.sub(buyBeanAmount));
         } else if (allocatedBeans > 0) {
             IBean(ds.bean).transfer(msg.sender, allocatedBeans);
@@ -193,7 +194,7 @@ library LibMarket {
     {
         DiamondStorage storage ds = diamondStorage();
         uint256 sellBeans = _amountIn(buyWethAmount);
-        transferAllocatedBeans(al.beanAmount.add(sellBeans));
+        transferAllocatedBeans(al.beanAmount.add(sellBeans), 0);
         (uint256 beansSold, uint256 wethBought) = _sell(sellBeans, buyWethAmount, address(this));
         if (msg.value > 0) IWETH(ds.weth).deposit{value: msg.value}();
         (uint256 beans, uint256 ethAdded, uint256 liquidity) = _addLiquidityWETH(
@@ -316,19 +317,30 @@ library LibMarket {
         return amounts[0];
     }
 
-    function transferAllocatedBeans(uint256 transferBeans) internal {
-        DiamondStorage storage ds = diamondStorage(); // Delete ds and use s.c.[x] and compare gas cost
-        AppStorage storage s = LibAppStorage.diamondStorage();
+    function transferAllocatedBeans(uint256 transferBeans, uint256 beansToWallet) internal {
+        DiamondStorage storage ds = diamondStorage();
+	AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.a[msg.sender].claimableBeans == 0) {
             IBean(ds.bean).transferFrom(msg.sender, address(this), transferBeans);
         }
         else if (s.a[msg.sender].claimableBeans >= transferBeans) {
-            emit BeanAllocation(msg.sender, transferBeans);
-            if (s.a[msg.sender].claimableBeans > transferBeans) IBean(ds.bean).transfer(msg.sender, s.a[msg.sender].claimableBeans.sub(transferBeans));
-        } else {
+	    emit BeanAllocation(msg.sender, transferBeans);
+		if (beansToWallet == 0) {
+		s.a[msg.sender].claimableBeans = s.a[msg.sender].claimableBeans.sub(transferBeans);
+	    }
+	    else if (s.a[msg.sender].claimableBeans >= transferBeans.add(beansToWallet)) {
+		IBean(ds.bean).transfer(msg.sender, beansToWallet);
+		s.a[msg.sender].claimableBeans = s.a[msg.sender].claimableBeans.sub(beansToWallet.add(transferBeans));
+	    }
+	    else {
+		IBean(ds.bean).transfer(msg.sender, s.a[msg.sender].claimableBeans.sub(transferBeans));
+		s.a[msg.sender].claimableBeans = 0;
+	    }
+        }
+	else {
             emit BeanAllocation(msg.sender, s.a[msg.sender].claimableBeans);
             IBean(ds.bean).transferFrom(msg.sender, address(this), transferBeans.sub(s.a[msg.sender].claimableBeans));
+	    s.a[msg.sender].claimableBeans = 0;
         }
     }
-
 }
