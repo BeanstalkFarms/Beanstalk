@@ -68,6 +68,8 @@ describe('BIP2', function () {
         this.result = await this.claim.connect(user).claim([['27'],[],[],false,true,'0','0'])
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        const claimableBeans = await this.claim.connect(user).getClaimableBeans()
+        console.log(claimableBeans.toString())
       });
 
       it('properly claims beans', async function () {
@@ -82,6 +84,8 @@ describe('BIP2', function () {
           this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],[],false,true,'0','0'], '1000')
           const newBeans = await this.bean.balanceOf(userAddress)
           this.claimedBeans = newBeans.sub(beans)
+          const claimableBeans = await this.claim.connect(user).getClaimableBeans()
+          console.log(claimableBeans.toString())
         });
         it('properly claims beans', async function () {
           expect(this.claimedBeans.toString()).to.equal('0');
@@ -97,6 +101,8 @@ describe('BIP2', function () {
           this.result = await this.claim.connect(user).claimWithAllocationE([[],['27'],[],false,true,'0','0'], '1000')
           const newBeans = await this.bean.balanceOf(userAddress)
           this.claimedBeans = newBeans.sub(beans)
+          const claimableBeans = await this.claim.connect(user).getClaimableBeans()
+          console.log(claimableBeans.toString())
         });
         it('properly claims beans', async function () {
           expect(this.claimedBeans.toString()).to.equal('0');
@@ -115,6 +121,8 @@ describe('BIP2', function () {
           this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],[],false,true,'0','0'], '500')
           const newBeans = await this.bean.balanceOf(userAddress)
           this.claimedBeans = newBeans.sub(beans)
+          const claimableBeans = await this.claim.connect(user).getClaimableBeans()
+          console.log(claimableBeans.toString())
         });
         it('properly claims beans', async function () {
           expect(this.claimedBeans.toString()).to.equal('500');
@@ -130,6 +138,8 @@ describe('BIP2', function () {
           this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],[],false,true,'0','0'], '1500')
           const newBeans = await this.bean.balanceOf(userAddress)
           this.claimedBeans = newBeans.sub(beans)
+          const claimableBeans = await this.claim.connect(user).getClaimableBeans()
+          console.log(claimableBeans.toString())
         });
         it('properly claims beans', async function () {
           expect(this.claimedBeans.toString()).to.equal('-500');
@@ -145,6 +155,8 @@ describe('BIP2', function () {
           this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],['0'],false,true,'0','0'], '1500')
           const newBeans = await this.bean.balanceOf(userAddress)
           this.claimedBeans = newBeans.sub(beans)
+          const claimableBeans = await this.claim.connect(user).getClaimableBeans()
+          console.log(claimableBeans.toString())
         });
         it('properly claims beans', async function () {
           expect(this.claimedBeans.toString()).to.equal('500');
@@ -161,6 +173,8 @@ describe('BIP2', function () {
         this.result = await this.silo.connect(user).claimAndDepositBeans('1000', [['27'],[],[],false,true,'0','0'])
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        const claimableBeans = await this.claim.connect(user).getClaimableBeans()
+          console.log(claimableBeans.toString())
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('0');
@@ -177,6 +191,8 @@ describe('BIP2', function () {
         this.result = await this.silo.connect(user).claimBuyAndDepositBeans('1000', '990', [['27'],[],[],false,true,'0','0'], {value: '1'})
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        const claimableBeans = await this.claim.connect(user).getClaimableBeans()
+        console.log(claimableBeans.toString())
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('0');
@@ -193,6 +209,8 @@ describe('BIP2', function () {
         this.result = await this.field.connect(user).claimAndSowBeans('1000', [['27'],[],[],false,true,'0','0'])
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        const claimableBeans = await this.claim.connect(user).getClaimableBeans()
+        console.log(claimableBeans.toString())
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('0');
@@ -209,6 +227,8 @@ describe('BIP2', function () {
         this.result = await this.field.connect(user).claimBuyAndSowBeans('1000', '990', [['27'],[],[],false,true,'0','0'], {value: '1'})
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        const claimableBeans = await this.claim.connect(user).getClaimableBeans()
+        console.log(claimableBeans.toString())
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('0');
@@ -225,6 +245,8 @@ describe('BIP2', function () {
         this.silo.connect(user).claimAndDepositLP('1',[['27'],[],[],false,true,'0','0']);
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        const claimableBeans = await this.claim.connect(user).getClaimableBeans()
+        console.log(claimableBeans.toString())
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('1000');
@@ -237,6 +259,8 @@ describe('BIP2', function () {
         this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['1000','1000','1'],[['27'],[],[],false,true,'0','0'], {value: '1'});
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        const claimableBeans = await this.claim.connect(user).getClaimableBeans()
+        console.log(claimableBeans.toString())
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('0');
@@ -252,6 +276,8 @@ describe('BIP2', function () {
         this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['1000','1000','1'],[['27'],[],['0'],false,true,'0','0'], {value: '1'});
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        const claimableBeans = await this.claim.connect(user).getClaimableBeans()
+        console.log(claimableBeans.toString())
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('1000');
@@ -267,6 +293,8 @@ describe('BIP2', function () {
         this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['2000','2000','2'],[['27'],[],[],false,true,'0','0'], {value: '2'});
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        const claimableBeans = await this.claim.connect(user).getClaimableBeans()
+        console.log(claimableBeans.toString())
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('-1000');
@@ -282,6 +310,8 @@ describe('BIP2', function () {
         this.result = this.silo.connect(user).claimAddAndDepositLP('0','1000','0', ['2000','2000','2'],[['27'],[],[],false,true,'0','0'], {value: '4'});
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        const claimableBeans = await this.claim.connect(user).getClaimableBeans()
+        console.log(claimableBeans.toString())
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('0');
@@ -297,6 +327,8 @@ describe('BIP2', function () {
         this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','1',['2000','2000','2'],[['27'],[],['0'],false,true,'0','0'], {value: '1'});
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        const claimableBeans = await this.claim.connect(user).getClaimableBeans()
+        console.log(claimableBeans.toString())
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('-1011');
