@@ -87,5 +87,13 @@ contract SeasonFacet is Sun {
         mintToAccount(account, incentive);
         emit Incentivization(account, incentive);
     }
+    
+    function getWithdrawBuffer() public view returns (uint8) {
+            return s.season.withdrawBuffer;
+    }
+
+    function getCurrentSeason() public view returns (uint256) {
+            return s.season.current;
+    }
 
 }
