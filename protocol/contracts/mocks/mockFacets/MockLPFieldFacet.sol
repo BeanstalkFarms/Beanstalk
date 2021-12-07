@@ -9,30 +9,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/POLFieldFacet/LPFieldFacet.sol";
 
 /**
- * @author Publius
+ * @author dantrinh
  * @title Mock Field Facet
 **/
-contract MockLPFieldFacet is LPFieldFacet {
-
-    using SafeMath for uint256;
-
-    function incrementTotalHarvestableE(uint256 amount) public {
-        bean().mint(address(this), amount);
-        s.f.harvestable = s.f.harvestable.add(amount);
-    }
-
-    function incrementTotalPodsE(uint256 amount) public {
-        s.f.pods = s.f.pods + amount;
-    }
-
-    function setFieldAmountsE(uint256 soil, uint256 harvestable, uint256 pods) public {
-        incrementTotalSoil(soil);
-        s.f.harvestable = s.f.harvestable.add(harvestable);
-        s.f.pods = s.f.pods.add(pods);
-    }
-
-    function incrementTotalSoil(uint256 amount) internal {
-        s.f.soil = s.f.soil.add(amount);
-    }
-
-}
+contract MockLPFieldFacet is LPFieldFacet {}
