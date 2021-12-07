@@ -75,6 +75,9 @@ describe('BIP2', function () {
       it('properly claims beans', async function () {
         expect(this.claimableBeans.toString()).to.equal('1000');
       });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('1000');
+      });
     });
 
     describe('claim and allocate', function () {
@@ -84,6 +87,7 @@ describe('BIP2', function () {
           this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],[],false,true,'0','0', '0'], '1000')
           const newBeans = await this.bean.balanceOf(userAddress)
           this.claimedBeans = newBeans.sub(beans)
+	  this.claimableBeans = await this.claim.connect(user).getClaimableBeans()
         });
         it('properly claims beans', async function () {
           expect(this.claimedBeans.toString()).to.equal('0');
@@ -91,6 +95,9 @@ describe('BIP2', function () {
         it('properly allocates beans', async function () {
           expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
         });
+	it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
+      });
       });
 
       describe('exact LP allocate', async function () {
@@ -99,6 +106,7 @@ describe('BIP2', function () {
           this.result = await this.claim.connect(user).claimWithAllocationE([[],['27'],[],false,true,'0','0', '0'], '1000')
           const newBeans = await this.bean.balanceOf(userAddress)
           this.claimedBeans = newBeans.sub(beans)
+          this.claimableBeans = await this.claim.connect(user).getClaimableBeans()
         });
         it('properly claims beans', async function () {
           expect(this.claimedBeans.toString()).to.equal('0');
@@ -108,6 +116,9 @@ describe('BIP2', function () {
         })
         it('properly allocates beans', async function () {
           expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
+        });
+	it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
         });
       });
 
@@ -127,6 +138,9 @@ describe('BIP2', function () {
         it('properly allocates beans', async function () {
           expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '500');
         });
+	it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('500');
+        });
       });
 
       describe('over allocate', async function () {
@@ -135,12 +149,16 @@ describe('BIP2', function () {
           this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],[],false,true,'0','0', '0'], '1500')
           const newBeans = await this.bean.balanceOf(userAddress)
           this.claimedBeans = newBeans.sub(beans)
-        });
+	  this.claimableBeans = await this.claim.connect(user).getClaimableBeans()
+	});
         it('properly claims beans', async function () {
           expect(this.claimedBeans.toString()).to.equal('-500');
         });
         it('properly allocates beans', async function () {
           expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
+        });
+	it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('-500');
         });
       });
 
@@ -160,6 +178,9 @@ describe('BIP2', function () {
         it('properly allocates beans', async function () {
           expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1500');
         });
+	it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('500');
+        });
       });
     });
 
@@ -178,6 +199,9 @@ describe('BIP2', function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
         expect(this.result).to.emit(this.silo , 'BeanDeposit').withArgs(userAddress, '27', '1000');
       });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
+      });
     });
 
     describe('claim buy and deposit Beans', function () {
@@ -194,6 +218,9 @@ describe('BIP2', function () {
       it('properly allocates beans', async function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
         expect(this.result).to.emit(this.silo, 'BeanDeposit').withArgs(userAddress, '27', '1990');
+      });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
       });
     });
 
@@ -212,6 +239,9 @@ describe('BIP2', function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
         expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, '1000', '1000', '1000');
       });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
+      });
     });
 
     describe('claim, buy and sow Beans', function () {
@@ -229,6 +259,9 @@ describe('BIP2', function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
         expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, '1000', '1990', '1990');
       });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
+      });
     });
 
     describe('claim and deposit LP', function () {
@@ -241,6 +274,9 @@ describe('BIP2', function () {
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('1000');
+      });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('1000');
       });
     });
 
@@ -257,6 +293,9 @@ describe('BIP2', function () {
       });
       it('properly allocates beans', async function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
+      });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
       });
     });
 
@@ -276,6 +315,9 @@ describe('BIP2', function () {
       it('properly allocates beans', async function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
       });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('1000');
+      });
     });
 
     describe('claim add and deposit LP, under allocation', function () {
@@ -291,6 +333,9 @@ describe('BIP2', function () {
       });
       it('properly allocates beans', async function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
+      });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('-1000');
       });
     });
 
@@ -308,6 +353,9 @@ describe('BIP2', function () {
       it('properly allocates beans', async function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
       });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
+      });
     });
 
     describe('claim add buy ETH and deposit LP, exact allocation', function () {
@@ -323,6 +371,9 @@ describe('BIP2', function () {
       });
       it('properly allocates beans', async function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '2000');
+      });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('-1011');
       });
     });
   });
