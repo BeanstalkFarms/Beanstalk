@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/POLFieldFacet/LPFieldFacet.sol";
 
 /**
- * @author dantrinh
+ * @author Publius
  * @title Mock Field Facet
 **/
 contract MockLPFieldFacet is LPFieldFacet {}
