@@ -41,6 +41,16 @@ contract LPFieldFacet is POLDibbler {
         _sowLP(amount);
     }
 
+    /// @notice Sows both LP and Beans simultaneously into the Field while also creating POL
+    /// @param bean_amount Designated amount of Beans to sow
+    /// @param lp_amount Designated amount of LPs to sow 
+    /// 
+    function sowLPAndBeans(uint256 lp_amount, uint256 bean_amount) public {
+        bean().transferFrom(msg.sender, address(this), bean_amount);
+        pair().transferFrom(msg.sender, address(this), lp_amount);
+        _sowLPAndBeans(lp_amount, bean_amount);
+    }
+
     function addAndSowLP(uint256 lp,
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
@@ -67,6 +77,18 @@ contract LPFieldFacet is POLDibbler {
 
     function _sowLP(uint256 amount) internal {
         _sowPOL(amount, lpToLPBeans(amount));
+    }
+
+    /// @notice Sow both LP and Beans simultaneously into the Field
+    /// @param bean_amount Designated amount of Beans to sow
+    /// @param lp_amount Designated amount of LPs to sow 
+    ///  
+    function _sowLPAndBeans(uint256 lp_amount, uint256 bean_amount) internal {
+        bean().burn(bean_amount);
+        LibCheck.beanBalanceCheck();
+        require(intPrice() > 0, "POLField: Price < 1.");
+        _sow(lpToLPBeans(lp_amount).add(bean_amount), msg.sender);
+        emit AddPOL(msg.sender, s.c.pair, lp_amount);
     }
 
     /**

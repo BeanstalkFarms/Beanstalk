@@ -88,10 +88,11 @@ describe('LPField Test', function () {
     beforeEach(async function () {
       await this.silo.connect(user).depositBeans('1000')
       await this.silo.connect(user).depositLP('10')
+      console.log(`${await this.season.season()}`);
       await this.field.setFieldAmountsE('1000000', '0', '0')
       await this.field.incrementTotalHarvestableE('1000')
-      await this.silo.connect(user).withdrawBeans([1, 2],['1000', '1000'])
-      await this.silo.connect(user).withdrawLP([1, 2],['5', '5'])
+      await this.silo.connect(user).withdrawBeans([2],['1000'])
+      await this.silo.connect(user).withdrawLP([2],['5'])
       await this.season.farmSunrises('25')
     });
 
@@ -99,12 +100,14 @@ describe('LPField Test', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
         // Convert LP flag enabled
-        this.result = await this.lpfield.connect(user).claimAndSowLP('1', [[],['1'],[],false,true,'0','0'])
+        console.log(`${await this.silo.lpDeposit(userAddress, 2)}`);
+        this.result = await this.lpfield.connect(user).claimAndSowLP('1', [['27'],['27'],[],false,false,'0','0'])
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        console.log(`${await this.pair.balanceOf(userAddress)}`);
       });
       it('properly claims lp', async function () {
-        expect(this.claimedBeans.toString()).to.equal('0');
+        expect(this.claimedBeans.toString()).to.equal('1000');
       });
       it('properly allocates lp', async function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
