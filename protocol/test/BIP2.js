@@ -273,7 +273,7 @@ describe('BIP2', function () {
         this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
       });
       it('properly claims beans', async function () {
-        expect(this.claimedBeans.toString()).to.equal('1000');
+        expect(this.claimableBeans.toString()).to.equal('1000');
       });
       it('no beans created or destroyed', async function () {
         expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('1000');
