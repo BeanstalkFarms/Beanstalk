@@ -63,8 +63,8 @@ contract ClaimFacet {
         LibClaim.claimEth();
     }
 
-    function getClaimableBeans() public view returns (uint256) {
+    function claimableBeans(address user) public view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.a[msg.sender].claimableBeans;
+        return s.a[user].claimableBeans;
     }
 }
