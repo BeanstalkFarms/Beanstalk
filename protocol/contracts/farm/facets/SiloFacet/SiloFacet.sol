@@ -25,8 +25,6 @@ contract SiloFacet is BeanSilo {
 
     // Deposit
 
-    uint256 constant UINT_256_MAX = 2e56 - 1;
-
     function claimAndDepositBeans(uint256 amount, LibClaim.Claim calldata claim) external {
         allocateBeans(claim, amount);
         _depositBeans(amount);
@@ -76,7 +74,7 @@ contract SiloFacet is BeanSilo {
         notLocked(msg.sender)
         external
     {
-        LibClaim.claim(claim, UINT_256_MAX);
+        LibClaim.claim(claim, claim.beansToWallet);
         _withdrawBeans(crates, amounts);
     }
 
@@ -85,7 +83,7 @@ contract SiloFacet is BeanSilo {
     */
 
     function claimAndDepositLP(uint256 amount, LibClaim.Claim calldata claim) external {
-        LibClaim.claim(claim, UINT_256_MAX);
+        LibClaim.claim(claim, claim.beansToWallet);
         depositLP(amount);
     }
 
@@ -208,7 +206,7 @@ contract SiloFacet is BeanSilo {
         notLocked(msg.sender)
         external
     {
-        LibClaim.claim(claim, UINT_256_MAX);
+        LibClaim.claim(claim, claim.beansToWallet);
         _withdrawLP(crates, amounts);
     }
 
