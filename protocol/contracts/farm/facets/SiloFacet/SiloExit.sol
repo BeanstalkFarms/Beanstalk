@@ -194,15 +194,15 @@ contract SiloExit {
      * Governance
     **/
 
-    function lockedUntil(address account) public view returns (uint32) {
+    function votedUntil(address account) public view returns (uint32) {
         if (locked(account)) {
-            return s.a[account].lockedUntil;
+            return s.a[account].votedUntil;
         }
         return 0;
     }
 
     function locked(address account) public view returns (bool) {
-        if (s.a[account].lockedUntil >= season()) {
+        if (s.a[account].votedUntil >= season()) {
             for (uint256 i = 0; i < s.g.activeBips.length; i++) {
                     uint32 activeBip = s.g.activeBips[i];
                     if (s.g.voted[activeBip][account]) {

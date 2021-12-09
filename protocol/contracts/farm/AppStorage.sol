@@ -40,7 +40,7 @@ contract Account {
         AssetSilo bean;
         AssetSilo lp;
         Silo s;
-        uint32 lockedUntil;
+        uint32 votedUntil;
         uint32 lastUpdate;
         uint32 lastSop;
         uint32 lastRain;

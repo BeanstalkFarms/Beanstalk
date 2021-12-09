@@ -73,7 +73,7 @@ contract GovernanceFacet is VotingBooth {
         require(!voted(msg.sender, bip), "Governance: Already voted.");
 
         recordVote(msg.sender, bip);
-        placeLock(msg.sender, bip);
+        placeVotedUntil(msg.sender, bip);
 
         emit Vote(msg.sender, bip, balanceOfRoots(msg.sender));
     }
@@ -85,6 +85,8 @@ contract GovernanceFacet is VotingBooth {
         
         bool[] memory vote_types = new bool[](bip_list.length);
         uint i = 0;
+        uint32 lock = s.a[msg.sender].votedUntil;
+
         for (i = 0; i < bip_list.length; i++) {
             uint32 bip = bip_list[i];
             require(isNominated(bip), "Governance: Not nominated.");
@@ -94,13 +96,11 @@ contract GovernanceFacet is VotingBooth {
             vote_types[i] = true;
 
             // Place timelocks
-            uint32 lock = s.a[msg.sender].lockedUntil;
             uint32 newLock = startFor(bip) + periodFor(bip);
-            if (newLock > lock) {
-                s.a[msg.sender].lockedUntil = newLock;
-            }
+            if (newLock > lock) lock = newLock;
         }
 
+        s.a[msg.sender].votedUntil = lock;
         emit VoteList(msg.sender, bip_list, vote_types, balanceOfRoots(msg.sender));
     }
 
@@ -112,7 +112,7 @@ contract GovernanceFacet is VotingBooth {
         require(proposer(bip) != msg.sender, "Governance: Is proposer.");
 
         unrecordVote(msg.sender, bip);
-        removeLock(msg.sender, bip);
+        updateVotedUntil(msg.sender);
 
         emit Unvote(msg.sender, bip, balanceOfRoots(msg.sender));
     }
@@ -133,19 +133,9 @@ contract GovernanceFacet is VotingBooth {
             require(proposer(bip) != msg.sender, "Governance: Is proposer.");
             unrecordVote(msg.sender, bip);
             vote_types[i] = false;
-
-            //Remove timelocks
-            uint32 lastSeason = 0;
-            for (uint256 i = 0; i < actives.length; i++) {
-                uint32 activeBip = actives[i];
-                if (activeBip != bip && s.g.voted[activeBip][msg.sender]) {
-                    uint32 bipEnd = startFor(bip) + periodFor(bip);
-                    if (bipEnd > lastSeason) lastSeason = bipEnd;
-                }
-            }
-            s.a[msg.sender].lockedUntil = lastSeason;
         }
 
+        updateVotedUntil(msg.sender);
         emit VoteList(msg.sender, bip_list, vote_types, balanceOfRoots(msg.sender));
     }
 
@@ -167,31 +157,13 @@ contract GovernanceFacet is VotingBooth {
                 require(proposer(bip) != msg.sender, "Governance: Is proposer.");
                 unrecordVote(msg.sender, bip);
                 vote_types[i] = false;
-
-                //Remove timelocks
-                uint32 lastSeason = 0;
-                for (uint256 i = 0; i < actives.length; i++) {
-                    uint32 activeBip = actives[i];
-                    if (activeBip != bip && s.g.voted[activeBip][msg.sender]) {
-                        uint32 bipEnd = startFor(bip) + periodFor(bip);
-                        if (bipEnd > lastSeason) lastSeason = bipEnd;
-                    }
-                }
-                s.a[msg.sender].lockedUntil = lastSeason;
             } else {
                 // Handle Vote
                 recordVote(msg.sender, bip);
                 vote_types[i] = true;
-
-                // Place timelocks
-                uint32 lock = s.a[msg.sender].lockedUntil;
-                uint32 newLock = startFor(bip) + periodFor(bip);
-                if (newLock > lock) {
-                    s.a[msg.sender].lockedUntil = newLock;
-                }
             }
         }
-
+        updateVotedUntil(msg.sender);
         emit VoteList(msg.sender, bip_list, vote_types, balanceOfRoots(msg.sender));
     }
 
