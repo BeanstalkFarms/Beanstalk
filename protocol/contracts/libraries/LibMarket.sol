@@ -125,7 +125,7 @@ library LibMarket {
         require(success, "WETH: ETH transfer failed");
     }
 
-    function addAndDepositLiquidity(uint256 allocatedBeans, AddLiquidity calldata al) internal returns (uint256) {
+    function addAndDepositLiquidity(AddLiquidity calldata al) internal returns (uint256) {
         DiamondStorage storage ds = diamondStorage();
         transferAllocatedBeans(al.beanAmount, 0);
         (uint256 beans, uint256 liquidity) = addLiquidity(al);
@@ -136,7 +136,6 @@ library LibMarket {
     function swapAndAddLiquidity(
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
-        uint256 allocatedBeans,
         LibMarket.AddLiquidity calldata al
     )
         internal
@@ -144,16 +143,20 @@ library LibMarket {
     {
         uint256 boughtLP;
         if (buyBeanAmount > 0)
-            boughtLP = LibMarket.buyBeansAndAddLiquidity(buyBeanAmount, allocatedBeans, al);
+            boughtLP = LibMarket.buyBeansAndAddLiquidity(buyBeanAmount, al);
         else if (buyEthAmount > 0)
-            boughtLP = LibMarket.buyEthAndAddLiquidity(buyEthAmount, allocatedBeans, al);
+            boughtLP = LibMarket.buyEthAndAddLiquidity(buyEthAmount, al);
         else
-            boughtLP = LibMarket.addAndDepositLiquidity(allocatedBeans, al);
+            boughtLP = LibMarket.addAndDepositLiquidity(al);
         return boughtLP;
     }
 
 
-    function buyBeansAndAddLiquidity(uint256 buyBeanAmount, uint256 allocatedBeans, AddLiquidity calldata al)
+    // al.buyBeanAmount is the amount of beans the user wants to add to LP
+    // buyBeanAmount is the amount of beans the person bought to contribute to LP. Note that
+    // buyBean amount will AT BEST be equal to al.buyBeanAmount because of slippage.
+    // Otherwise, it will almost always be less than al.buyBean amount
+    function buyBeansAndAddLiquidity(uint256 buyBeanAmount, AddLiquidity calldata al)
         internal
         returns (uint256)
     {
@@ -164,11 +167,10 @@ library LibMarket {
         path[1] = ds.bean;
         uint256[] memory amounts = IUniswapV2Router02(ds.router).getAmountsIn(buyBeanAmount, path);
         (uint256 ethSold, uint256 beans) = _buyWithWETH(buyBeanAmount, amounts[0], address(this));
-        if (al.beanAmount > buyBeanAmount) {
+        // If beans bought does not cover the amount of money to move to LP
+	if (al.beanAmount > buyBeanAmount) {
             transferAllocatedBeans(al.beanAmount.sub(buyBeanAmount), 0);
             beans = beans.add(al.beanAmount.sub(buyBeanAmount));
-        } else if (allocatedBeans > 0) {
-            IBean(ds.bean).transfer(msg.sender, allocatedBeans);
         }
         uint256 liquidity; uint256 ethAdded;
         (beans, ethAdded, liquidity) = _addLiquidityWETH(
@@ -187,7 +189,9 @@ library LibMarket {
         return liquidity;
     }
 
-    function buyEthAndAddLiquidity(uint256 buyWethAmount, uint256 allocatedBeans, AddLiquidity calldata al)
+    // This function is called when user sends more value of BEAN than ETH to LP.
+    // Value of BEAN is converted to equivalent value of ETH.
+    function buyEthAndAddLiquidity(uint256 buyWethAmount, AddLiquidity calldata al)
         internal
         returns (uint256)
     {
