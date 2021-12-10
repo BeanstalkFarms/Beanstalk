@@ -72,7 +72,6 @@ describe('Governance', function () {
     await this.season.resetState();
     await this.season.siloSunrise(0);
     await this.silo.depositSiloAssetsE(userAddress, '500', '1000000');
-    await this.silo.depositSiloAssetsE(user2Address, '500', '1000000');
     await this.silo.depositSiloAssetsE(user3Address, '500', '1000000');
     await this.silo.depositSiloAssetsE(ownerAddress, '500', '1000000');
   });
@@ -83,22 +82,8 @@ describe('Governance', function () {
       await propose(owner, this.governance, this.bip);
       await propose(owner, this.governance, this.bip);
       await propose(owner, this.governance, this.bip);
-      await propose(owner, this.governance, this.bip);
 
       await this.governance.connect(user).vote(0);
-      await this.governance.connect(user).voteAll([1, 2, 3]);
-      await this.governance.connect(user).vote(4);
-      await this.governance.connect(user).unvote(1);
-      await this.governance.connect(user).unvoteAll([2, 3, 4]);
-
-      await this.governance.connect(user2).vote(0);
-      await this.governance.connect(user2).vote(1);
-      await this.governance.connect(user2).vote(2);
-      await this.governance.connect(user2).unvoteAll([0, 1, 2]);
-
-      await this.governance.connect(user3).vote(0);
-      await this.governance.connect(user3).vote(1);
-      await this.governance.connect(user3).voteUnvoteAll([0, 1, 2]);
     });
 
     it('sets vote counter correctly', async function () {
@@ -106,10 +91,7 @@ describe('Governance', function () {
       const userRoots = await this.silo.balanceOfRoots(userAddress);
       expect(await this.governance.rootsFor(0)).to.be.equal(ownerRoots.add(userRoots))
       expect(await this.governance.rootsFor(1)).to.be.equal(await this.silo.balanceOfRoots(ownerAddress));
-      const user3Roots = await this.silo.balanceOfRoots(user3Address);
-      expect(await this.governance.rootsFor(2)).to.be.equal(ownerRoots.add(user3Roots));
       expect(await this.governance.rootsFor(3)).to.be.equal(await this.silo.balanceOfRoots(ownerAddress));
-      expect(await this.governance.rootsFor(4)).to.be.equal(await this.silo.balanceOfRoots(ownerAddress));
     });
 
     it('is active', async function () {
@@ -120,23 +102,102 @@ describe('Governance', function () {
       expect(activeBips[3]).to.eq(3);
     });
 
+    it('reverts an invalid vote properly in voteList', async function () {
+      await expect(this.governance.connect(user).voteAll([0, 1, 2, 3])).to.be.revertedWith('Governance: Already voted.');
+    });
+
+    it('reverts a voter without stalk properly in voteList', async function () {
+      await expect(this.governance.connect(user2).voteAll([2, 3])).to.be.revertedWith('Governance: Must have Stalk.');;
+    });
+
+    it('reverts a voter after the bip is no longer active in voteList', async function () {
+      // 168
+      await this.season.farmSunrises('169')
+      await expect(this.governance.connect(user).voteAll([2, 3])).to.be.revertedWith('Governance: Ended.');
+    });
+
+    it('reverts a non nominated vote in voteList', async function(){
+      await expect(this.governance.connect(user).voteAll([5])).to.be.revertedWith('Governance: Not nominated.');
+    });
+
     it('records vote in voteList', async function () {
       expect(await this.governance.voted(userAddress, 0)).to.equal(true);
     });
 
-    it('records unvotes in voteList', async function () {
+    it('records multiple votes in voteList', async function () {
+      await this.governance.connect(user3).voteAll([0, 1, 2]);
+      expect(await this.governance.voted(user3Address, 0)).to.equal(true);
+      expect(await this.governance.voted(user3Address, 1)).to.equal(true);
+      expect(await this.governance.voted(user3Address, 2)).to.equal(true);
+    });
+
+    it('reverts a proposer vote properly in unvoteList', async function () {
+      await expect(this.governance.connect(owner).unvoteAll([0])).to.be.revertedWith('Governance: Is proposer.');;
+    });
+
+    it('reverts an invalid vote properly in unvoteList', async function () {
+      await expect(this.governance.connect(user).unvoteAll([2, 3])).to.be.revertedWith('Governance: Not voted.');;
+    });
+
+    it('reverts an unvoter without stalk properly in unvoteList', async function () {
+      await expect(this.governance.connect(user2).unvoteAll([2, 3])).to.be.revertedWith('Governance: Must have Stalk.');;
+    });
+
+    it('reverts a proposer vote properly in unvoteList', async function () {
+      await expect(this.governance.connect(owner).unvoteAll([0])).to.be.revertedWith('Governance: Is proposer.');;
+    });
+
+    it('reverts a voter after the bip is no longer active in voteList', async function () {
+      // 168
+      await this.season.farmSunrises('169')
+      await expect(this.governance.connect(user).unvoteAll([2, 3])).to.be.revertedWith('Governance: Ended.');
+    });
+
+    it('reverts a non nominated vote in voteList', async function(){
+      await expect(this.governance.connect(user).unvoteAll([5])).to.be.revertedWith('Governance: Not nominated.');
+    });
+
+    it('records single unvote in unvoteList', async function () {
+      await this.governance.connect(user).unvoteAll([0]);
+      expect(await this.governance.voted(userAddress, 0)).to.equal(false);
+    });
+
+    it('records multiple unvotes in unvoteList', async function () {
+      
+      await this.governance.connect(user).voteAll([1, 2, 3]);
+      await this.governance.connect(user).unvote(1);
+      await this.governance.connect(user).unvoteAll([0, 2, 3]);
       expect(await this.governance.voted(userAddress, 1)).to.equal(false);
       expect(await this.governance.voted(userAddress, 2)).to.equal(false);
       expect(await this.governance.voted(userAddress, 3)).to.equal(false);
-      expect(await this.governance.voted(userAddress, 4)).to.equal(false);
+    });
 
-      expect(await this.governance.voted(user2Address, 0)).to.equal(false);
-      expect(await this.governance.voted(user2Address, 1)).to.equal(false);
+    it('reverts a voter without stalk properly in voteList', async function () {
+      await expect(this.governance.connect(user2).voteUnvoteAll([2, 3])).to.be.revertedWith('Governance: Must have Stalk.');;
+    });
 
+    it('reverts a proposer vote properly in voteUnvoteAll', async function () {
+      await expect(this.governance.connect(owner).voteUnvoteAll([0])).to.be.revertedWith('Governance: Is proposer.');;
+    });
+
+    it('reverts a voter after the bip is no longer active in voteList', async function () {
+      // 168
+      await this.season.farmSunrises('169')
+      await expect(this.governance.connect(user).voteUnvoteAll([2, 3])).to.be.revertedWith('Governance: Ended.');
+    });
+
+    it('reverts a non nominated vote in voteList', async function(){
+      await expect(this.governance.connect(user).voteUnvoteAll([5])).to.be.revertedWith('Governance: Not nominated.');
+    });
+
+    it('records single votes and unvotes in voteUnvoteAll', async function() {
+      await this.governance.connect(user3).vote(0);
+      await this.governance.connect(user3).vote(1);
+      await this.governance.connect(user3).voteUnvoteAll([0, 1, 2]);
       expect(await this.governance.voted(user3Address, 0)).to.equal(false);
       expect(await this.governance.voted(user3Address, 1)).to.equal(false);
       expect(await this.governance.voted(user3Address, 2)).to.equal(true);
-    })
+    });
 
     it('voter cant unvote', async function () {
       expect(await this.silo.locked(userAddress)).to.equal(true);
