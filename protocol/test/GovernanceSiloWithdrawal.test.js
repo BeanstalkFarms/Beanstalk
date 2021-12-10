@@ -115,6 +115,12 @@ describe('Governance', function () {
       expect(await this.silo.balanceOfStalk(userAddress)).to.eq('1000000');
     })
 
+    it('roots and stalk are correct after proposer withdraws under the min required for a bip', async function () {
+      await this.silo.withdrawSiloAssetsE(ownerAddress, '500', '500000');
+      expect(await this.silo.balanceOfStalk(userAddress)).to.eq('500000');
+      expect(await this.governance.rootsFor(0)).to.be.equal(await this.silo.balanceOfRoots(ownerAddress));
+    })
+
     it('roots are correct after supply increases', async function () {
       await this.season.siloSunrise(1000000);
       expect(await this.governance.rootsFor(1)).to.be.equal(await this.silo.totalRoots());
