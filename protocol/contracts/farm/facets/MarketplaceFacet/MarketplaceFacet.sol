@@ -23,7 +23,7 @@ contract MarketplaceFacet {
 
     AppStorage s;
 
-    event CreateListing(address indexed account, uint256 indexed index, uint24 pricePerPod, uint232 expiry);
+    event ListingCreated(address indexed account, uint256 indexed index, uint24 pricePerPod, uint232 expiry);
     event PlotTransfer(address indexed buyer, address indexed seller, uint256 indexed index, uint24 pricePerPod, uint256 amount);
     event ListingCancelled(address indexed account, uint256 indexed index);
 
@@ -49,7 +49,7 @@ contract MarketplaceFacet {
         s.listedPlots[index].expiry = expiry;
         s.listedPlots[index].price = pricePerPod;
 
-        emit CreateListing(msg.sender, index, pricePerPod, expiry);
+        emit ListingCreated(msg.sender, index, pricePerPod, expiry);
     }
 
     function listing (uint256 index) public view returns (Storage.Listing memory) {
@@ -60,63 +60,46 @@ contract MarketplaceFacet {
     // so add "amount" parameter and use that as purchase amount,
     // transfering partial plots and emitting such event
     // do the same with buyListingWithEth
-    function buyListingWithBeans(uint index, address recipient) public {
+    function buyListing(uint index, address recipient, uint amount) public {
 
 
         Storage.Listing storage listing = s.listedPlots[index];
         uint232 harvestable = uint232(s.f.harvestable);
-        uint amount = s.a[recipient].field.plots[index];
 
-        uint costInBeans = (listing.price * amount) / 1000000;
+        uint plotSize = s.a[recipient].field.plots[index];
 
         require(msg.sender != address(0), "Field: Transfer from 0 address.");
         require(recipient != address(0), "Field: Transfer to 0 address.");
         require(harvestable <= listing.expiry, "Field: Listing has expired");
+        require(plotSize >= amount, "Field: Pod range too long.");
 
+        uint costInBeans = (listing.price * amount) / 1000000;
         require(bean().balanceOf(msg.sender) >= costInBeans, "Field: Not enough beans to purchase.");
 
         bean().transferFrom(msg.sender, recipient, costInBeans);
 
-        insertPlot(msg.sender,index,amount);
-        removePlot(recipient,index,0,amount);
+        insertPlot(msg.sender,index,amountPods);
+        removePlot(recipient,index,0,amountPods);
 
-        delete s.listedPlots[index];
+        // only delete if amount = plotSize
+        // else adjust the index - dont know how to handle this on frontend just yet
+        // if plotTransfer index = listing index on frontend
+        // can adjust the amount sold and the index
+        // delete s.listedPlots[index];
 
         emit PlotTransfer(msg.sender, recipient, index, msg.value, amount);
        
     }
     
-    // refactor so that code used by both buyListingWithBeans and this is 
-    // put in a reusable function
-    function buyListingWithEth(uint index, address payable recipient) public {
+
+    function buyBeansAndListing(uint index, address payable recipient, uint amount, uint buyBeanAmount) public {
 
         Storage.Listing storage listing = s.listedPlots[index];
-        uint232 harvestable = uint232(s.f.harvestable);
-        uint amount = s.a[recipient].field.plots[index];
-
-        // need to divide by 1E6 to account for double decimals?
-        uint costInBeans = (listing.price * amount) / 1000000;
-
-
-        require(msg.sender != address(0), "Field: Transfer from 0 address.");
-        require(recipient != address(0), "Field: Transfer to 0 address.");
-        require(harvestable <= listing.expiry, "Field: Listing has expired");
-
-
         (uint256 ethAmount, uint256 beanAmount) = LibMarket._buy(buyBeanAmount, msg.value, recipient);
         (bool success,) = msg.sender.call{ value: msg.value.sub(ethAmount) }("");
         require(success, "Market: Refund failed.");
-        require(beanAmount >= costInBeans);
- 
-        uint amount = s.a[recipient].field.plots[index];
 
-        insertPlot(msg.sender,index,amount);
-        removePlot(recipient,index,0,amount);
-
-        delete s.listedPlots[index];
-
-        emit PlotTransfer(msg.sender, recipient, amount);
-       
+        buyListing(index, recipient, amount);
     }
 
     function cancelListing(uint index) public {
@@ -125,7 +108,7 @@ contract MarketplaceFacet {
         emit ListingCancelled(msg.sender, index);
     }
 
-    function claimAndBuyListing(uint256 amount, LibClaim.Claim calldata claim, uint index, address payable recipient) public  {
+    function buyBeansAndListing(uint256 amount, LibClaim.Claim calldata claim, uint index, address payable recipient) public  {
         FieldFacet.allocateBeans(claim, amount);
         buyListingWithBeans(index,recipient);
     }
