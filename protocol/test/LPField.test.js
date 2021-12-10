@@ -130,51 +130,6 @@ describe('LPField Test', function () {
         expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, '1000', '1990', '1990');
       });
     });
-
-    describe('claim, buy and sow LP, over allocation', function () {
-      beforeEach(async function () {
-        const beans = await this.bean.balanceOf(userAddress)
-        this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['1000','1000','1'],[['27'],[],['0'],false,true,'0','0'], {value: '1'});
-        const newBeans = await this.bean.balanceOf(userAddress)
-        this.claimedBeans = newBeans.sub(beans)
-      });
-      it('properly claims beans', async function () {
-        expect(this.claimedBeans.toString()).to.equal('1000');
-      });
-      it('properly allocates beans', async function () {
-        expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
-      });
-    });
-
-    describe('claim, buy and sow LP, under allocation', function () {
-      beforeEach(async function () {
-        const beans = await this.bean.balanceOf(userAddress)
-        this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['2000','2000','2'],[['27'],[],[],false,true,'0','0'], {value: '2'});
-        const newBeans = await this.bean.balanceOf(userAddress)
-        this.claimedBeans = newBeans.sub(beans)
-      });
-      it('properly claims beans', async function () {
-        expect(this.claimedBeans.toString()).to.equal('-1000');
-      });
-      it('properly allocates beans', async function () {
-        expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
-      });
-    });
-
-    describe('add and sow LP, exact allocation', function () {
-      beforeEach(async function () {
-        const beans = await this.bean.balanceOf(userAddress)
-        this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['1000','1000','1'],[['27'],[],[],false,true,'0','0'], {value: '1'});
-        const newBeans = await this.bean.balanceOf(userAddress)
-        this.claimedBeans = newBeans.sub(beans)
-      });
-      it('properly claims beans', async function () {
-        expect(this.claimedBeans.toString()).to.equal('0');
-      });
-      it('properly allocates beans', async function () {
-        expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
-      });
-    });
-
+    
   });
 });
