@@ -9,6 +9,7 @@ import "./SiloExit.sol";
 import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibMarket.sol";
+import "../../../libraries/Decimal.sol";
 
 /**
  * @author Publius
@@ -17,6 +18,7 @@ import "../../../libraries/LibMarket.sol";
 contract SiloEntrance is SiloExit {
 
     using SafeMath for uint256;
+    using Decimal for Decimal.D256;
 
     event BeanDeposit(address indexed account, uint256 season, uint256 beans);
 
@@ -198,19 +200,20 @@ contract SiloEntrance is SiloExit {
             for (uint256 i = 0; i < s.g.activeBips.length; i++) {
                 uint32 bip = s.g.activeBips[i];
                 if (s.g.voted[bip][account]) s.g.bips[bip].roots = s.g.bips[bip].roots.sub(roots);
-                if (s.g.bips[bipId].proposer == account) require(proposerCanWithdraw(account, s.g.bips[bip].roots),  "Proposer must have the min amount left in the BIP");
+            }
+            if (s.a[account].proposedUntil >= season()) {
+                require(canPropose(account),  "Proposer must have the min amount left in the BIP");
             }
         }
     }
 
     /// @notice Checks whether the account have the min roots required for a BIP
     /// @param account The address of the account to check roots balance
-    /// @param roots_balance_left The amount of roots left after withdrawal, which we will compare against
-    function proposerCanWithdraw(address account, uint256 roots_balance_left) internal view returns (bool) {
-        if (s.s.roots == 0 || roots_balance_left == 0) {
+    function canPropose(address account) internal view returns (bool) {
+        if (totalRoots() == 0 || balanceOfRoots(account) == 0) {
             return false;
         }
-        Decimal.D256 memory stake = Decimal.ratio(roots_balance_left, s.s.roots);
+        Decimal.D256 memory stake = Decimal.ratio(balanceOfRoots(account), totalRoots());
         return stake.greaterThan(C.getGovernanceProposalThreshold());
     }
 
