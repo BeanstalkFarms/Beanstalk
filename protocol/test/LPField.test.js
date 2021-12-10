@@ -110,15 +110,31 @@ describe('LPField Test', function () {
         expect(this.claimedBeans.toString()).to.equal('1000');
       });
       it('properly allocates lp', async function () {
-        expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
-        expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, '1000', '1000', '1000');
+        expect(this.result).to.emit(this.lpfield, 'AddPOL').withArgs(userAddress, '1000', '1000');
+      });
+    });
+
+    describe('add and sow LP, exact allocation', function () {
+      beforeEach(async function () {
+        const beans = await this.bean.balanceOf(userAddress)
+        this.result = await this.lpfield.connect(user).addAndSowLP('1', '1000', '0', ['1000', '1000', '0'])
+        const newBeans = await this.bean.balanceOf(userAddress)
+        this.claimedBeans = newBeans.sub(beans)
+      });
+
+      it('should revert because we are trying to buy both beans and lp', async function() {
+        expect(await this.lpfield.connect(user).addAndSowLP('1', '8000', '2', ['5000', '4000', '1'])).to.be.revertedWith('Silo: Silo: Cant buy Ether and Beans.')
+      })
+
+      it('properly claims beans', async function () {
+        expect(this.claimedBeans.toString()).to.equal('0');
       });
     });
 
     describe('claim, buy and sow LP, exact allocation', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.result = await this.lpfield.connect(user).claimAddAndSowLP('1', '8000', '2', ['5000', '4000', '1'], [['27'],[],[],false,true,'0','0'])
+        this.result = await this.lpfield.connect(user).claimAddAndSowLP('1', '8000', '2', ['5000', '4000', '1'], [['27'],[],[],false,false,'0','0'])
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
       });
@@ -130,6 +146,6 @@ describe('LPField Test', function () {
         expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, '1000', '1990', '1990');
       });
     });
-    
+
   });
 });
