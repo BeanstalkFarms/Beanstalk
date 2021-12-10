@@ -95,7 +95,13 @@ describe('Governance', function () {
       expect(await this.governance.rootsFor(3)).to.be.equal(await this.silo.balanceOfRoots(ownerAddress));
     });
 
-    it('removes the stalk correctly from silo', async function () {
+    it('removes the stalk correctly from silo after one withdrawal', async function () {
+      expect(await this.silo.balanceOfStalk(userAddress)).to.eq('500000');
+    })
+
+    it('roots and stalk are correct after one deposit and withdrawal', async function () {
+      await this.silo.depositSiloAssetsE(userAddress, '500', '1000000');
+      await this.silo.withdrawSiloAssetsE(userAddress, '500', '1000000');
       expect(await this.silo.balanceOfStalk(userAddress)).to.eq('500000');
     })
 
