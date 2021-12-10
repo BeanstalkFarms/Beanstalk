@@ -192,7 +192,8 @@ contract UpdateSilo is SiloExit {
         }
     }
 
-    /// @notice Decrements the given amount of roots from bips that have been voted on by a given account
+    /// @notice Decrements the given amount of roots from bips that have been voted on by a given account and
+    /// checks whether the account is a proposer and if he/she are then they need to have the min roots required
     /// @param account The address of the account to have their bip roots decremented
     /// @param roots The amount of roots for the given account to be decremented from
     function decrementBipRoots(address account, uint256 roots) internal {
@@ -200,8 +201,20 @@ contract UpdateSilo is SiloExit {
             for (uint256 i = 0; i < s.g.activeBips.length; i++) {
                 uint32 bip = s.g.activeBips[i];
                 if (s.g.voted[bip][account]) s.g.bips[bip].roots = s.g.bips[bip].roots.sub(roots);
+                if (s.g.bips[bipId].proposer == account) require(proposerCanWithdraw(account, s.g.bips[bip].roots),  "Proposer must have the min amount left in the BIP");
             }
         }
+    }
+
+    /// @notice Checks whether the account have the min roots required for a BIP
+    /// @param account The address of the account to check roots balance
+    /// @param roots_balance_left The amount of roots left after withdrawal, which we will compare against
+    function proposerCanWithdraw(address account, uint256 roots_balance_left) internal view returns (bool) {
+        if (s.s.roots == 0 || roots_balance_left == 0) {
+            return false;
+        }
+        Decimal.D256 memory stake = Decimal.ratio(roots_balance_left, s.s.roots);
+        return stake.greaterThan(C.getGovernanceProposalThreshold());
     }
 
 }
