@@ -43,12 +43,15 @@ contract BeanSilo is LPSilo {
      * Internal
     **/
 
-    function _depositBeans(uint256 amount) internal {
+    function _depositBeans(uint256 amount, uint32 _s) internal {
         require(amount > 0, "Silo: No beans.");
         updateSilo(msg.sender);
         incrementDepositedBeans(amount);
-        depositSiloAssets(msg.sender, amount.mul(C.getSeedsPerBean()), amount.mul(C.getStalkPerBean()));
-        addBeanDeposit(msg.sender, season(), amount);
+        uint256 stalk = amount.mul(C.getStalkPerBean());
+        uint256 seeds = amount.mul(C.getSeedsPerBean());
+        if (_s < season()) stalk = stalk.add(stalkReward(seeds, season()-_s));
+        depositSiloAssets(msg.sender, seeds, stalk);
+        addBeanDeposit(msg.sender, _s, amount);
         LibCheck.beanBalanceCheck();
     }
 
@@ -97,6 +100,7 @@ contract BeanSilo is LPSilo {
         }
         decrementDepositedBeans(beansRemoved);
         withdrawSiloAssets(msg.sender, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved);
+        stalkRemoved = stalkRemoved.sub(beansRemoved.mul(C.getStalkPerBean()));
         emit BeanRemove(msg.sender, crates, amounts, beansRemoved);
         return (beansRemoved, stalkRemoved);
     }

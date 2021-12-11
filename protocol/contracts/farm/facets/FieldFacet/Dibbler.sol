@@ -64,7 +64,7 @@ contract Dibbler {
 
     function saveSowTime() private {
         uint256 totalBeanSupply = bean().totalSupply();
-        if (totalSoil() >= totalBeanSupply.div(C.getComplexWeatherDenominator())) return;
+        if (s.f.soil >= totalBeanSupply.div(C.getComplexWeatherDenominator())) return;
 
         uint256 sowTime = block.timestamp.sub(s.season.timestamp);
         s.w.nextSowTime = uint32(sowTime);

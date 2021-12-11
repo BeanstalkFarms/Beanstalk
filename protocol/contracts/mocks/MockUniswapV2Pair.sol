@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/lib/contracts/libraries/FixedPoint.sol";
 import "../interfaces/IBean.sol";
 
+
 /**
  * @author Publius
  * @title Mock Uniswap V2 Pair
@@ -91,7 +92,7 @@ contract MockUniswapV2Pair {
         return true;
     }
 
-    function burnBeans(address bean) external {
+    function burnTokens(address bean) external {
       IBean(bean).burn(IBean(bean).balanceOf(address(this)));
     }
 

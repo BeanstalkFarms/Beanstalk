@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "./BeanSilo.sol";
 import "../../../libraries/LibClaim.sol";
+import "../../../libraries/LibConvert.sol";
 
 /**
  * @author Publius
@@ -27,7 +28,7 @@ contract SiloFacet is BeanSilo {
 
     function claimAndDepositBeans(uint256 amount, LibClaim.Claim calldata claim) external {
         allocateBeans(claim, amount);
-        _depositBeans(amount);
+        _depositBeans(amount, season());
     }
 
     function claimBuyAndDepositBeans(
@@ -40,18 +41,18 @@ contract SiloFacet is BeanSilo {
     {
         allocateBeans(claim, amount);
         uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
-        _depositBeans(boughtAmount.add(amount));
+        _depositBeans(boughtAmount.add(amount), season());
     }
 
     function depositBeans(uint256 amount) public {
         bean().transferFrom(msg.sender, address(this), amount);
-        _depositBeans(amount);
+        _depositBeans(amount, season());
     }
 
     function buyAndDepositBeans(uint256 amount, uint256 buyAmount) public payable {
         uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
         if (amount > 0) bean().transferFrom(msg.sender, address(this), amount);
-        _depositBeans(boughtAmount.add(amount));
+        _depositBeans(boughtAmount.add(amount), season());
     }
 
     // Withdraw
@@ -116,27 +117,6 @@ contract SiloFacet is BeanSilo {
     {
         require(buyBeanAmount == 0 || buyEthAmount == 0, "Silo: Silo: Cant buy Ether and Beans.");
         _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, 0, al);
-    }
-
-    function convertDepositedBeans(
-        uint256 maxConvertBeans, 
-        uint256 minConvertBeans, 
-        uint256 maxSellBeans, 
-        uint32[] memory crates,
-        uint256[] memory amounts
-    )
-        public 
-    {
-        updateSilo(msg.sender);
-        (uint256 lp, uint256 lpb, uint256 beansConverted) = LibMarket.sellToPegAndAddLiquidity(maxConvertBeans, minConvertBeans, maxSellBeans);
-        (,uint256 stalkRemoved) = _withdrawBeansForConvert(crates, amounts, beansConverted);
-        stalkRemoved = stalkRemoved.sub(lpb);
-        uint32 _s = uint32(stalkRemoved.div(lpb.mul(C.getSeedsPerBean())));
-        _s = uint32(season().sub(_s));
-
-        __depositLP(lp, lpb, season());
-        LibCheck.beanBalanceCheck();
-        updateBalanceOfRainStalk(msg.sender);
     }
     
     function _addAndDepositLP(
@@ -204,8 +184,7 @@ contract SiloFacet is BeanSilo {
             uint256 transferAmount = amountFromWallet.sub(w.beansTransferred);
             LibMarket.transferAllocatedBeans(allocatedBeans, transferAmount);
         }
-        w.i = w.stalkRemoved.sub(w.beansRemoved.mul(C.getStalkPerBean()));
-        w.i = w.i.div(lpToLPBeans(lp.add(w.newLP)), "Silo: No LP Beans.");
+        w.i = w.stalkRemoved.div(lpToLPBeans(lp.add(w.newLP)), "Silo: No LP Beans.");
 
         uint32 depositSeason = uint32(season().sub(w.i.div(C.getSeedsPerLPBean())));
 
@@ -246,4 +225,57 @@ contract SiloFacet is BeanSilo {
         LibMarket.transferAllocatedBeans(LibClaim.claim(c, true), transferBeans);
     }
 
+    function convertDepositedBeans(
+        uint256 beans,
+        uint256 minLP,
+        uint32[] memory crates,
+        uint256[] memory amounts
+    )
+        external 
+    {
+        updateSilo(msg.sender);
+        (uint256 lp, uint256 beansConverted) = LibConvert.sellToPegAndAddLiquidity(beans, minLP);
+        (uint256 beansRemoved, uint256 stalkRemoved) = _withdrawBeansForConvert(crates, amounts, beansConverted);
+        require(beansRemoved == beansConverted, "Silo: Wrong Beans removed.");
+        uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(C.getSeedsPerLPBean())));
+        _s = getDepositSeason(_s);
+
+        __depositLP(lp, beansConverted, _s);
+        LibCheck.balanceCheck();
+        updateBalanceOfRainStalk(msg.sender);
+    }   
+
+    function convertDepositedLP(
+        uint256 lp,
+        uint256 minBeans,
+        uint32[] memory crates,
+        uint256[] memory amounts
+    )
+        external
+    {
+        updateSilo(msg.sender);
+        (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
+        (uint256 lpRemoved, uint256 stalkRemoved) = _withdrawLPForConvert(crates, amounts, lpConverted);
+        require(lpRemoved == lpConverted, "Silo: Wrong LP removed.");
+        uint32 _s = uint32(stalkRemoved.div(beans.mul(C.getSeedsPerBean())));
+        _s = getDepositSeason(_s);
+        _depositBeans(beans, _s);
+        LibCheck.balanceCheck();
+        updateBalanceOfRainStalk(msg.sender);
+    }
+
+    function lpToPeg() external view returns (uint256 lp) {
+        return LibConvert.lpToPeg();
+    }
+
+    function beansToPeg() external view returns (uint256 beans) {
+        (uint256 ethReserve, uint256 beanReserve) = reserves();
+        return LibConvert.beansToPeg(ethReserve, beanReserve);
+    }
+
+    function getDepositSeason(uint32 _s) internal view returns (uint32) {
+        uint32 __s = season();
+        if (_s >= __s) _s = __s - 1;
+        return uint32(__s.sub(_s));
+    }
 }
