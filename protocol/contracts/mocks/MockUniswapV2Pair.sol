@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/lib/contracts/libraries/FixedPoint.sol";
 import "../interfaces/IBean.sol";
 
+
 /**
  * @author Publius
  * @title Mock Uniswap V2 Pair

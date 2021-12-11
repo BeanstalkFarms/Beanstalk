@@ -17,6 +17,7 @@ import "./LibAppStorage.sol";
  * @author Publius
  * @title Lib Convert
 **/
+
 library LibConvert {
 
     using SafeMath for uint256;
