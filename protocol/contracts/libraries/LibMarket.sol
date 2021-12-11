@@ -7,7 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
-import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "../interfaces/IBean.sol";
 import "../interfaces/IWETH.sol";
 import "./LibAppStorage.sol";
@@ -358,63 +357,6 @@ library LibMarket {
             IBean(s.c.bean).transfer(msg.sender, beansToWallet);
             s.a[msg.sender].claimableBeans = claimableBeans.sub(beansToWallet);
         }
-    }
-
-    function sellToPegAndAddLiquidity(uint256 maxConvertBeans, uint256 minConvertBeans, uint256 maxSellBeans)
-        internal
-        returns (uint256 lp, uint256 lpb, uint256 beansConverted)
-    {
-        DiamondStorage storage ds = diamondStorage();
-        (uint256 ethReserve, uint256 beanReserve) = reserves();
-        uint256 sellBeans = getBeansToPeg(ethReserve, beanReserve);
-        if (sellBeans < maxSellBeans) sellBeans = maxSellBeans;
-        lpb = getAmountOutAndQuote(sellBeans, beanReserve, ethReserve);
-        require(sellBeans+lpb >= minConvertBeans, "Market: convert below min.");
-        require(sellBeans+lpb < minConvertBeans, "Market: convert above min.");
-        (uint256 beansSold, uint256 wethBought) = _sell(sellBeans, 0, address(this));
-        (beansConverted,, lp) = _addLiquidityWETH(
-            wethBought,
-            maxConvertBeans.sub(beansSold),
-            0,
-            0
-        );
-        lpb = beansConverted*2;
-        beansConverted = beansConverted + beansSold;
-    }
-
-
-    // given an input amount of an asset and pair reserves, returns the maximum output amount of the other asset
-    function getAmountOutAndQuote(uint amountIn, uint reserveIn, uint reserveOut) private pure returns (uint amountOutIn) {
-        require(amountIn > 0, 'UniswapV2Library: INSUFFICIENT_INPUT_AMOUNT');
-        require(reserveIn > 0 && reserveOut > 0, 'UniswapV2Library: INSUFFICIENT_LIQUIDITY');
-        uint amountInWithFee = amountIn.mul(997);
-        uint numerator = amountInWithFee.mul(reserveOut);
-        uint denominator = reserveIn.mul(1000).add(amountInWithFee);
-        uint amountOut = numerator / denominator;
-        amountOutIn = amountOut.mul(reserveIn + amountIn) / (reserveOut - amountOut);
-    }
-
-    function getBeansToPeg(uint ethBeanPool, uint beansBeanPool) private view returns (uint256 beans) {
-        (uint256 ethUSDCPool, uint256 usdcUSDCPool) = reserves();
-
-        uint256 newBeans = sqrt(ethBeanPool.mul(beansBeanPool).mul(usdcUSDCPool).div(ethUSDCPool));
-        if (newBeans <= beansBeanPool) return 0;
-           beans = newBeans - beansBeanPool;
-        beans = beans.mul(10000).div(9985);
-    }
-
-    // (ethereum, beans)
-    function reserves() public view returns (uint256, uint256) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(s.c.pair).getReserves();
-        return (s.index == 0 ? reserve1 : reserve0, s.index == 0 ? reserve0 : reserve1);
-    }
-
-    // (ethereum, usdc)
-    function pegReserves() public view returns (uint256, uint256) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(s.c.pegPair).getReserves();
-        return (reserve1, reserve0);
     }
 
     /**
