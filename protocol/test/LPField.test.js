@@ -100,18 +100,38 @@ describe('LPField Test', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
         // Convert LP flag enabled
-        console.log(`${await this.silo.lpDeposit(userAddress, 2)}`);
         this.result = await this.lpfield.connect(user).claimAndSowLP('1', [['27'],['27'],[],false,false,'0','0'])
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
         console.log(`${await this.pair.balanceOf(userAddress)}`);
       });
+
       it('properly claims lp', async function () {
         expect(this.claimedBeans.toString()).to.equal('1000');
       });
+
       it('properly allocates lp', async function () {
         expect(this.result).to.emit(this.lpfield, 'AddPOL').withArgs(userAddress, '1000', '1000');
       });
+    });
+
+    describe('claim and sow multiple LPs', function () {
+      beforeEach(async function () {
+        const beans = await this.bean.balanceOf(userAddress)
+        // Convert LP flag enabled
+        const lpTokens = await this.pair.balanceOf(userAddress);
+        console.log(`${await this.pair.balanceOf(userAddress)}` + "sowing Lps");
+        this.result = await this.lpfield.connect(user).claimAndSowLP('2', [['27'],['27'],[],false,false,'0','0'])
+        const newBeans = await this.bean.balanceOf(userAddress)
+        this.claimedBeans = newBeans.sub(beans)
+        const newLpTokens = await this.pair.balanceOf(userAddress);
+        this.claimedLps = newLpTokens.sub(lpTokens);      
+      });
+
+      it('properly claims 2 LP', async function () {
+        expect(this.claimedLps.toString()).to.equal('5');
+      });
+
     });
 
     describe('add and sow LP, exact allocation', function () {
