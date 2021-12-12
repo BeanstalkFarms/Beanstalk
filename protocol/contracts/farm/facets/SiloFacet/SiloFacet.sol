@@ -7,7 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import "./BeanSilo.sol";
 import "../../../libraries/LibClaim.sol";
-import "../../../libraries/LibMarket.sol";
 
 /**
  * @author Publius
