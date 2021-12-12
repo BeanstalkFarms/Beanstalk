@@ -92,13 +92,13 @@ contract SiloFacet is BeanSilo {
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
         LibMarket.AddLiquidity calldata al,
-        LibClaim.Claim calldata claim
+	LibClaim.Claim calldata claim
     )
         external
         payable
     {
         LibClaim.claim(claim, 0);
-        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al);
+        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al, claim);
     }
 
     function depositLP(uint256 amount) public {
@@ -109,22 +109,24 @@ contract SiloFacet is BeanSilo {
     function addAndDepositLP(uint256 lp,
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
-        LibMarket.AddLiquidity calldata al
+        LibMarket.AddLiquidity calldata al,
+	LibClaim.Claim calldata c
     )
         public
         payable
     {
         require(buyBeanAmount == 0 || buyEthAmount == 0, "Silo: Silo: Cant buy Ether and Beans.");
-        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al);
+        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al, c);
     }
 
     function _addAndDepositLP(uint256 lp,
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
-        LibMarket.AddLiquidity calldata al
+        LibMarket.AddLiquidity calldata al,
+	LibClaim.Claim calldata c
     )
         internal {
-        uint256 boughtLP = LibMarket.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, al);
+        uint256 boughtLP = LibMarket.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, al, c);
         if (lp>0) pair().transferFrom(msg.sender, address(this), lp);
         _depositLP(lp.add(boughtLP), season());
 
