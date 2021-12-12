@@ -49,10 +49,6 @@ contract LPSilo is UpdateSilo {
         updateSilo(msg.sender);
         uint32 _s = season();
         uint256 lpb = LibLPSilo.lpToLPBeans(amount);
-        __depositLP(amount, lpToLPBeans(amount), _s);
-    }
-
-    function __depositLP(uint256 amount, uint256 lpb, uint32 _s) internal {
         require(lpb > 0, "Silo: No Beans under LP.");
         LibLPSilo.incrementDepositedLP(amount);
         uint256 seeds = lpb.mul(C.getSeedsPerLPBean());

@@ -219,4 +219,5 @@ contract UpdateSilo is SiloExit {
         Decimal.D256 memory stake = Decimal.ratio(balanceOfRoots(account), totalRoots());
         return stake.greaterThan(C.getGovernanceProposalThreshold());
     }
+
 }
