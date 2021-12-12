@@ -19,7 +19,7 @@ import "../../../C.sol";
  * @author Publius
  * @title Silo Exit
 **/
-contract SiloExit {
+contract SiloExit is SiloEntrance {
 
     AppStorage internal s;
 
