@@ -5,22 +5,13 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./SiloEntrance.sol";
+import "./UpdateSilo.sol";
 
 /**
  * @author Publius
  * @title LP Silo
 **/
-contract LPSilo is SiloEntrance {
-
-    struct WithdrawState {
-        uint256 newLP;
-        uint256 beansAdded;
-        uint256 beansTransferred;
-        uint256 beansRemoved;
-        uint256 stalkRemoved;
-        uint256 i;
-    }
+contract LPSilo is UpdateSilo {
 
     using SafeMath for uint256;
     using SafeMath for uint32;
@@ -53,12 +44,10 @@ contract LPSilo is SiloEntrance {
      * Internal
     **/
 
-    function _depositLP(uint256 amount, uint32 _s) internal {
+    function _depositLP(uint256 amount) internal {
         updateSilo(msg.sender);
-        __depositLP(amount, lpToLPBeans(amount), _s);
-    }
-
-    function __depositLP(uint256 amount, uint256 lpb, uint32 _s) internal {
+        uint32 _s = season();
+        uint256 lpb = lpToLPBeans(amount);
         require(lpb > 0, "Silo: No Beans under LP.");
         incrementDepositedLP(amount);
         uint256 seeds = lpb.mul(C.getSeedsPerLPBean());
@@ -144,41 +133,4 @@ contract LPSilo is SiloEntrance {
         s.lp.withdrawn = s.lp.withdrawn.add(amount);
         emit LPWithdraw(msg.sender, arrivalSeason, amount);
     }
-
-    function _withdrawLPForConvert(
-        uint32[] memory crates,
-        uint256[] memory amounts,
-        uint256 maxLP
-    )
-        internal
-        returns (uint256 lpRemoved, uint256 stalkRemoved)
-    {
-        require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
-        uint256 seedsRemoved;
-        uint256 depositLP;
-        uint256 depositSeeds;
-        uint256 i = 0;
-        while ((i < crates.length) && (lpRemoved < maxLP)) {
-            if (lpRemoved.add(amounts[i]) < maxLP)
-                (depositLP, depositSeeds) = removeLPDeposit(msg.sender, crates[i], amounts[i]);
-            else
-                (depositLP, depositSeeds) = removeLPDeposit(msg.sender, crates[i], maxLP.sub(lpRemoved));
-            lpRemoved = lpRemoved.add(depositLP);
-            seedsRemoved = seedsRemoved.add(depositSeeds);
-            stalkRemoved = stalkRemoved.add(depositSeeds.mul(C.getStalkPerLPSeed()).add(
-                stalkReward(depositSeeds, season()-crates[i]
-            )));
-            i++;
-        }
-        if (i > 0) amounts[i.sub(1)] = depositLP;
-        while (i < crates.length) {
-            amounts[i] = 0;
-            i++;
-        }
-        decrementDepositedLP(lpRemoved);
-        withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
-        stalkRemoved = stalkRemoved.sub(seedsRemoved.mul(C.getStalkPerLPSeed()));
-        emit LPRemove(msg.sender, crates, amounts, lpRemoved);
-    }
-    
 }

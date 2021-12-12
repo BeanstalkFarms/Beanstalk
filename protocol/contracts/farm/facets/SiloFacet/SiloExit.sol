@@ -7,21 +7,18 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
-import "../../../C.sol";
 import "../../../interfaces/IWETH.sol";
-import "../../AppStorage.sol";
 import "../../../interfaces/IBean.sol";
+import "./SiloEntrance.sol";
 
 /**
  * @author Publius
  * @title Silo Exit
 **/
-contract SiloExit {
+contract SiloExit is SiloEntrance {
 
     using SafeMath for uint256;
     using SafeMath for uint32;
-
-    AppStorage internal s;
 
     /**
      * Contracts
@@ -29,22 +26,6 @@ contract SiloExit {
 
     function weth() public view returns (IWETH) {
         return IWETH(s.c.weth);
-    }
-
-    function index() internal view returns (uint8) {
-        return s.index;
-    }
-
-    function pair() internal view returns (IUniswapV2Pair) {
-        return IUniswapV2Pair(s.c.pair);
-    }
-
-    function bean() internal view returns (IBean) {
-        return IBean(s.c.bean);
-    }
-
-    function season() internal view returns (uint32) {
-        return s.season.current;
     }
 
     /**
@@ -194,6 +175,11 @@ contract SiloExit {
      * Governance
     **/
 
+    modifier notLocked(address account) {
+        require(!(locked(account)),"locked");
+        _;
+    }
+
     function lockedUntil(address account) public view returns (uint32) {
         if (locked(account)) {
             return s.a[account].lockedUntil;
@@ -211,24 +197,6 @@ contract SiloExit {
             }
         }
         return false;
-    }
-
-    /**
-     * Shed
-    **/
-
-    function reserves() internal view returns (uint256, uint256) {
-        (uint112 reserve0, uint112 reserve1,) = pair().getReserves();
-        return (index() == 0 ? reserve1 : reserve0,index() == 0 ? reserve0 : reserve1);
-    }
-
-    function lpToLPBeans(uint256 amount) internal view returns (uint256) {
-        (,uint256 beanReserve) = reserves();
-        return amount.mul(beanReserve).mul(2).div(pair().totalSupply());
-    }
-
-    function stalkReward(uint256 seeds, uint32 seasons) internal pure returns (uint256) {
-        return seeds.mul(seasons);
     }
 
     /**

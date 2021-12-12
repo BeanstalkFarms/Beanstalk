@@ -14,6 +14,7 @@ describe('Convert', function () {
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
+    this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
     this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair);
     this.pegPair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pegPair);
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
@@ -49,17 +50,17 @@ describe('Convert', function () {
 
     describe('calclates beans to peg', async function () {
       it('p > 1', async function () {
-        expect(await this.silo.beansToPeg()).to.be.equal('10015');
+        expect(await this.convert.beansToPeg()).to.be.equal('10015');
       });
 
       it('p = 1', async function () {
         await this.pair.simulateTrade('20000', '20000');
-        expect(await this.silo.beansToPeg()).to.be.equal('0');
+        expect(await this.convert.beansToPeg()).to.be.equal('0');
       });
 
       it('p < 1', async function () {
         await this.pair.simulateTrade('40000', '10000');
-        expect(await this.silo.beansToPeg()).to.be.equal('0');
+        expect(await this.convert.beansToPeg()).to.be.equal('0');
       });
     });
 
@@ -67,19 +68,19 @@ describe('Convert', function () {
       it('p > 1', async function () {
         await this.pair.simulateTrade('10000', '40000');
         await this.pair.faucet(this.silo.address, '10000')
-        expect(await this.silo.lpToPeg()).to.be.equal('0');
+        expect(await this.convert.lpToPeg()).to.be.equal('0');
       });
 
       it('p = 1', async function () {
         await this.pair.faucet(this.silo.address, '10000')
         await this.pair.simulateTrade('20000', '20000');
-        expect(await this.silo.lpToPeg()).to.be.equal('0');
+        expect(await this.convert.lpToPeg()).to.be.equal('0');
       });
 
       it('p < 1', async function () {
         await this.pair.simulateTrade('40000', '10000');
         await this.pair.faucet(this.silo.address, '10000')
-        expect(await this.silo.lpToPeg()).to.be.equal('5003');
+        expect(await this.convert.lpToPeg()).to.be.equal('5003');
       });
     })
 
@@ -87,7 +88,7 @@ describe('Convert', function () {
       it('not enough LP', async function () {
         await this.silo.connect(user).depositBeans('20000');
         await this.pair.simulateTrade('10000', '40000');
-        await expect(this.silo.connect(user).convertDepositedBeans('5000','2',['2'],['20000']))
+        await expect(this.convert.connect(user).convertDepositedBeans('5000','2',['2'],['20000']))
           .to.be.revertedWith('Convert: Not enough LP.');
         await this.pair.set('10000', '40000', '1');
       });
@@ -95,7 +96,7 @@ describe('Convert', function () {
       it('p >= 1', async function () {
         await this.silo.connect(user).depositBeans('1000');
         await this.pair.simulateTrade('20000', '20000');
-        await expect(this.silo.connect(user).convertDepositedBeans('100','1',['1'],['1000']))
+        await expect(this.convert.connect(user).convertDepositedBeans('100','1',['1'],['1000']))
           .to.be.revertedWith('Convert: P must be > 1.');
       });
     });
@@ -104,7 +105,7 @@ describe('Convert', function () {
       beforeEach(async function () {
         await this.silo.connect(user).depositBeans('1000');
         await this.pair.simulateTrade('10000', '40000');
-        this.result = await this.silo.connect(user).convertDepositedBeans('1000','1',['2'],['1000']);
+        this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2'],['1000']);
       });
   
       it('properly updates total values', async function () {
@@ -132,7 +133,7 @@ describe('Convert', function () {
       beforeEach(async function () {
         await this.silo.connect(user).depositBeans('20000');
         await this.pair.simulateTrade('19000', '21000');
-        this.result = await this.silo.connect(user).convertDepositedBeans('10000','1',['2'],['20000']);
+        this.result = await this.convert.connect(user).convertDepositedBeans('10000','1',['2'],['20000']);
       });
   
       it('properly updates total values', async function () {
@@ -161,7 +162,7 @@ describe('Convert', function () {
         await this.silo.connect(user).depositBeans('1000');
         await this.pair.simulateTrade('10000', '40000');
         await this.season.siloSunrise(0);
-        this.result = await this.silo.connect(user).convertDepositedBeans('1000','1',['2'],['1000']);
+        this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2'],['1000']);
       });
   
       it('properly updates total values', async function () {
@@ -191,7 +192,7 @@ describe('Convert', function () {
         await this.pair.simulateTrade('10000', '40000');
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
-        this.result = await this.silo.connect(user).convertDepositedBeans('1000','1',['2'],['1000']);
+        this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2'],['1000']);
       });
   
       it('properly updates total values', async function () {
@@ -221,7 +222,7 @@ describe('Convert', function () {
         await this.pair.simulateTrade('10000', '40000');
         await this.season.siloSunrise(0);
         await this.silo.connect(user).depositBeans('1000');
-        this.result = await this.silo.connect(user).convertDepositedBeans('1000','1',['2','3'],['500','500']);
+        this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2','3'],['500','500']);
       });
   
       it('properly updates total values', async function () {
@@ -259,13 +260,13 @@ describe('Convert', function () {
       it('p >= 1', async function () {
         await this.pair.simulateTrade('10000', '40000');
         await this.silo.connect(user).depositLP('1');
-        await expect(this.silo.connect(user).convertDepositedLP('1','100',['2'],['1']))
+        await expect(this.convert.connect(user).convertDepositedLP('1','100',['2'],['1']))
           .to.be.revertedWith('Convert: P must be < 1.');
       });
       it('beans below min', async function () {
         await this.pair.set('40000', '10000', '1');
         await this.silo.connect(user).depositLP('1');
-        await expect(this.silo.connect(user).convertDepositedLP('1','1000',['2'],['1']))
+        await expect(this.convert.connect(user).convertDepositedLP('1','1000',['2'],['1']))
           .to.be.revertedWith('Convert: Not enough Beans.');
       });
     })
@@ -274,7 +275,7 @@ describe('Convert', function () {
       beforeEach(async function () {
         await this.pair.simulateTrade('40000', '10000');
         await this.silo.connect(user).depositLP('1');
-        this.result = await this.silo.connect(user).convertDepositedLP('1','100',['2'],['1']);
+        this.result = await this.convert.connect(user).convertDepositedLP('1','100',['2'],['1']);
       });
   
       it('properly updates total values', async function () {
@@ -304,7 +305,7 @@ describe('Convert', function () {
         await this.pair.simulateTrade('200000', '50000');
         await this.silo.connect(user).depositLP('1');
         await this.season.siloSunrise(0);
-        this.result = await this.silo.connect(user).convertDepositedLP('1','100',['2'],['1']);
+        this.result = await this.convert.connect(user).convertDepositedLP('1','100',['2'],['1']);
       });
   
       it('properly updates total values', async function () {
@@ -335,7 +336,7 @@ describe('Convert', function () {
         await this.silo.connect(user).depositLP('2');
         await this.season.siloSunrise(0);
         await this.silo.connect(user).depositLP('1');
-        this.result = await this.silo.connect(user).convertDepositedLP('2','100',['3','2'],['1','1']);
+        this.result = await this.convert.connect(user).convertDepositedLP('2','100',['3','2'],['1','1']);
       });
   
       it('properly updates total values', async function () {
