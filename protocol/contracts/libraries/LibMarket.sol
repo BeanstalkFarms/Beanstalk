@@ -10,6 +10,7 @@ import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "../interfaces/IBean.sol";
 import "../interfaces/IWETH.sol";
 import "./LibAppStorage.sol";
+import "./LibClaim.sol";
 
 /**
  * @author Publius
@@ -136,16 +137,17 @@ library LibMarket {
     function swapAndAddLiquidity(
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
-        LibMarket.AddLiquidity calldata al
+        LibMarket.AddLiquidity calldata al,
+	LibClaim.Claim calldata c
     )
         internal
         returns (uint256)
     {
         uint256 boughtLP;
         if (buyBeanAmount > 0)
-            boughtLP = LibMarket.buyBeansAndAddLiquidity(buyBeanAmount, al);
+            boughtLP = LibMarket.buyBeansAndAddLiquidity(buyBeanAmount, al, c);
         else if (buyEthAmount > 0)
-            boughtLP = LibMarket.buyEthAndAddLiquidity(buyEthAmount, al);
+            boughtLP = LibMarket.buyEthAndAddLiquidity(buyEthAmount, al, c);
         else
             boughtLP = LibMarket.addAndDepositLiquidity(al);
         return boughtLP;
@@ -156,7 +158,7 @@ library LibMarket {
     // buyBeanAmount is the amount of beans the person bought to contribute to LP. Note that
     // buyBean amount will AT BEST be equal to al.buyBeanAmount because of slippage.
     // Otherwise, it will almost always be less than al.buyBean amount
-    function buyBeansAndAddLiquidity(uint256 buyBeanAmount, AddLiquidity calldata al)
+    function buyBeansAndAddLiquidity(uint256 buyBeanAmount, AddLiquidity calldata al, LibClaim.Claim calldata c)
         internal
         returns (uint256)
     {
@@ -169,7 +171,7 @@ library LibMarket {
         (uint256 ethSold, uint256 beans) = _buyWithWETH(buyBeanAmount, amounts[0], address(this));
         // If beans bought does not cover the amount of money to move to LP
 	if (al.beanAmount > buyBeanAmount) {
-            transferAllocatedBeans(al.beanAmount.sub(buyBeanAmount), 0);
+            transferAllocatedBeans(al.beanAmount.sub(buyBeanAmount), c.beansToWallet);
             beans = beans.add(al.beanAmount.sub(buyBeanAmount));
         }
         uint256 liquidity; uint256 ethAdded;
@@ -191,13 +193,13 @@ library LibMarket {
 
     // This function is called when user sends more value of BEAN than ETH to LP.
     // Value of BEAN is converted to equivalent value of ETH.
-    function buyEthAndAddLiquidity(uint256 buyWethAmount, AddLiquidity calldata al)
+    function buyEthAndAddLiquidity(uint256 buyWethAmount, AddLiquidity calldata al, LibClaim.Claim calldata c)
         internal
         returns (uint256)
     {
         DiamondStorage storage ds = diamondStorage();
         uint256 sellBeans = _amountIn(buyWethAmount);
-        transferAllocatedBeans(al.beanAmount.add(sellBeans), 0);
+        transferAllocatedBeans(al.beanAmount.add(sellBeans), c.beansToWallet);
         (uint256 beansSold, uint256 wethBought) = _sell(sellBeans, buyWethAmount, address(this));
         if (msg.value > 0) IWETH(ds.weth).deposit{value: msg.value}();
         (uint256 beans, uint256 ethAdded, uint256 liquidity) = _addLiquidityWETH(
@@ -207,11 +209,13 @@ library LibMarket {
             al.minBeanAmount
         );
 
-        if (al.beanAmount.add(sellBeans) > beans.add(beansSold))
-            IBean(ds.bean).transfer(
+        if (al.beanAmount.add(sellBeans) > beans.add(beansSold)) {
+        uint256 toTransfer = al.beanAmount.add(sellBeans).sub(beans.add(beansSold));
+	IBean(ds.bean).transfer(
                 msg.sender,
-                al.beanAmount.add(sellBeans).sub(beans.add(beansSold))
+                toTransfer
             );
+	}
 
         if (ethAdded < wethBought.add(msg.value)) {
             uint256 eth = wethBought.add(msg.value).sub(ethAdded);
