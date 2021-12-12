@@ -10,6 +10,7 @@ import "./LibCheck.sol";
 import "./LibInternal.sol";
 import "./LibMarket.sol";
 import "./LibAppStorage.sol";
+import "../interfaces/IWETH.sol";
 
 /**
  * @author Publius
