@@ -31,10 +31,9 @@ describe('Sun', function () {
     describe(testStr.concat((v)), function () {
       testData = {}
       columns.forEach((key, i) => testData[key] = tests[v][i])
-      console.log(testData);
       before(async function () {
         await this.season.resetState()
-        await this.pair.burnBeans(this.bean.address)
+        await this.pair.burnTokens(this.bean.address)
         this.testData = {}
         columns.forEach((key, i) => this.testData[key] = tests[v][i])
         for (var i = 0; i < this.testData.season-1; i++) {

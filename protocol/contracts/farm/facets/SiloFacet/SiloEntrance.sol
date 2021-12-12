@@ -25,10 +25,11 @@ contract SiloEntrance is SiloExit {
     **/
 
     function updateSilo(address account) public payable {
-        uint256 grownStalk;
         uint32 update = lastUpdate(account);
+        if (update >= season()) return;
+        uint256 grownStalk;
         if (s.a[account].s.seeds > 0) grownStalk = balanceOfGrownStalk(account);
-        if (s.a[account].roots > 0 && update < season()) {
+        if (s.a[account].roots > 0) {
             farmSops(account, update);
             farmBeans(account, update);
         } else if (s.a[account].roots == 0) {
