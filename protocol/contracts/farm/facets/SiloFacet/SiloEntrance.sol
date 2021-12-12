@@ -197,5 +197,4 @@ contract SiloEntrance is SiloExit {
             }
         }
     }
-
 }
