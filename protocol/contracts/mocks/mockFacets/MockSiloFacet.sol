@@ -30,6 +30,12 @@ contract MockSiloFacet is SiloFacet {
     function incrementDepositedBeansE(uint256 amount) public {
         s.bean.deposited = s.bean.deposited.add(amount);
     }
+    function incrementBalanceOfStalkE(address account, uint256 amount) public {
+        incrementBalanceOfStalk(account, amount);
+    }
+    function withdrawSiloAssetsE(address account, uint256 seeds, uint256 stalk) public {
+        withdrawSiloAssets(account, seeds, stalk);
+    }
 
     function withdrawSiloAssetsE(address account, uint256 base, uint256 amount) public {
         updateSilo(account);

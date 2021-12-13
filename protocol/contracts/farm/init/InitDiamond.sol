@@ -12,6 +12,7 @@ import {IDiamondLoupe} from "../../interfaces/IDiamondLoupe.sol";
 import {IERC173} from "../../interfaces/IERC173.sol";
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
 import {LibMarket} from "../../libraries/LibMarket.sol";
+import {LibStalk} from "../../libraries/LibStalk.sol";
 import "../../C.sol";
 import "../../interfaces/IBean.sol";
 import "../../interfaces/IWETH.sol";
@@ -65,6 +66,7 @@ contract InitDiamond {
 
         s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
         LibMarket.initMarket(s.c.bean, s.c.weth, UNISWAP_ROUTER);
+        LibStalk.initStalkToken('Stalk', 'STALK');
 
         IBean(s.c.bean).mint(msg.sender, C.getAdvanceIncentive());
         emit Incentivization(msg.sender, C.getAdvanceIncentive());
