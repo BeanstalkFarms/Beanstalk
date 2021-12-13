@@ -17,6 +17,7 @@ describe('Silo', function () {
     this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair);
     this.pegPair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pegPair);
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
+    this.claim = await ethers.getContractAt('MockClaimFacet', this.diamond.address)
 
     await this.pair.simulateTrade('2000', '2');
     await this.season.siloSunrise(0);
@@ -612,14 +613,26 @@ describe('Silo', function () {
     })
 
     describe('crate balance too low', function () {
+      beforeEach(async function () {
+      this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+      this.walletBeans = await this.bean.balanceOf(userAddress)
+          console.log(this.claimableBeans.toString())
+          console.log(this.walletBeans.toString())
+
+      })
       it('reverts', async function () {
-        await expect(this.silo.connect(user).convertAddAndDepositLP('0',['1500','900','1'], [2], [1500],{value: '1'})).to.be.revertedWith('Silo: Crate balance too low.');
+        await expect(this.silo.connect(user).convertAddAndDepositLP('0',['1500','900','1'], [2], [1500], '100000000', {value: '1'})).to.be.revertedWith('Silo: Crate balance too low.');
       });
     })
 
     describe('immediate convert', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2], [1000],{value: '1'});
+        await this.silo.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2], [1000], '0', {value: '1'});
+	this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+        this.walletBeans = await this.bean.balanceOf(userAddress)
+              console.log(this.claimableBeans.toString())
+              console.log(this.walletBeans.toString())
+
       })
       it('properly updates the total balances', async function () {
         expect(await this.silo.totalDepositedLP()).to.eq('1');
@@ -647,7 +660,12 @@ describe('Silo', function () {
     describe('convert 1 crate after a lot of seasons', function () {
       beforeEach(async function () {
         await this.season.siloSunrises('10');
-        await this.silo.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2], [1000],{value: '1'});
+        await this.silo.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2], [1000], '0', {value: '1'});
+	this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+        this.walletBeans = await this.bean.balanceOf(userAddress)
+              console.log(this.claimableBeans.toString())
+              console.log(this.walletBeans.toString())
+
       })
       it('properly updates the user balance', async function () {
         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('8000');
@@ -671,7 +689,13 @@ describe('Silo', function () {
       beforeEach(async function () {
         await this.season.siloSunrises('10');
         await this.silo.connect(user).depositBeans('500');
-        await this.silo.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2,12], [500,500],{value: '1'});
+	await this.silo.connect(user).setStateVariable('300')
+        await this.silo.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2,12], [500,500], '0', {value: '1'});
+	this.walletBeans = await this.bean.balanceOf(userAddress)
+	this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+              console.log(this.claimableBeans.toString())
+	      console.log(this.walletBeans.toString())
+
       })
       it('properly updates the user balance', async function () {
         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('9000');
