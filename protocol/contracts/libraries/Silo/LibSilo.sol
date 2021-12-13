@@ -19,7 +19,7 @@ library LibSilo {
     using Decimal for Decimal.D256;
 
     event BeanDeposit(address indexed account, uint256 season, uint256 beans);
-
+    
     /**
      * Silo
     **/
@@ -40,14 +40,18 @@ library LibSilo {
         s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
     }
 
+    /// @notice mints the corresponding amount of stalk ERC-20 tokens to the selected account address
+    /// @param account The address of the account address to have minted stalk tokens to
+    /// @param stalk The amount of stalk tokens to have minted
     function incrementBalanceOfStalk(address account, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 roots;
         if (s.s.roots == 0) roots = stalk.mul(C.getRootsBase());
-        else roots = s.s.roots.mul(stalk).div(s.s.stalk);
+        else roots = s.s.roots.mul(stalk).div(s.stalkToken._totalSupply());
 
         s.s.stalk = s.s.stalk.add(stalk);
-        s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
+        // Mint Stalk ERC-20
+        LibStalk._mint(account, stalk);
 
         s.s.roots = s.s.roots.add(roots);
         s.a[account].roots = s.a[account].roots.add(roots);
@@ -61,13 +65,17 @@ library LibSilo {
         s.a[account].s.seeds = s.a[account].s.seeds.sub(seeds);
     }
 
+    /// @notice burns the corresponding amount of stalk ERC-20 tokens of the selected account address
+    /// @param account The address of the account address to have stalk and seed tokens withdrawn and burned
+    /// @param stalk The amount of stalk tokens to have withdrawn and burned
     function decrementBalanceOfStalk(address account, uint256 stalk) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return;
-        uint256 roots = s.a[account].roots.mul(stalk).sub(1).div(s.a[account].s.stalk).add(1);
-
+        uint256 roots = s.a[account].roots.mul(stalk).sub(1).div(s.stalkToken._balances[account]).add(1);
+        
         s.s.stalk = s.s.stalk.sub(stalk);
-        s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
+        // Burn Stalk ERC-20
+        LibStalk._burn(account, stalk);
 
         s.s.roots = s.s.roots.sub(roots);
         s.a[account].roots = s.a[account].roots.sub(roots);
