@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibMarket.sol";
+import "../../../libraries/LibStalk.sol";
 import "../../../C.sol";
 
 /**
@@ -21,6 +22,19 @@ contract SiloEntrance {
     AppStorage internal s;
 
     event BeanDeposit(address indexed account, uint256 season, uint256 beans);
+    
+
+    /// @notice Calls the incrementBalanceOfStalk function from Silo Entrance and mints the corresponding amount
+    ///         of stalk ERC-20 tokens to the selected account address
+    /// @param account The address of the account address to have minted stalk tokens to
+    /// @param stalk The amount of stalk tokens to have minted
+
+
+    /// @notice Calls withdrawSiloAssets function in SiloEntrance and burns the corresponding amount
+    ///         of stalk ERC-20 tokens from the selected account address
+    /// @param account The address of the account address to have stalk and seed tokens withdrawn and burned
+    /// @param seeds The amount of seed tokens to have withdrawn and burned
+    /// @param stalk The amount of stalk tokens to have withdrawn and burned
 
     /**
      * Silo
@@ -39,10 +53,13 @@ contract SiloEntrance {
     function incrementBalanceOfStalk(address account, uint256 stalk) internal {
         uint256 roots;
         if (s.s.roots == 0) roots = stalk.mul(C.getRootsBase());
-        else roots = s.s.roots.mul(stalk).div(s.s.stalk);
+        else roots = s.s.roots.mul(stalk).div(s.stalkToken._totalSupply);
 
-        s.s.stalk = s.s.stalk.add(stalk);
-        s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
+        // Mint Stalk ERC-20
+        LibStalk._mint(account, stalk);
+
+        // s.stalkToken = s.stalkToken.add(stalk);
+        // s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
 
         s.s.roots = s.s.roots.add(roots);
         s.a[account].roots = s.a[account].roots.add(roots);
@@ -64,8 +81,11 @@ contract SiloEntrance {
         if (stalk == 0) return;
         uint256 roots = s.a[account].roots.mul(stalk).sub(1).div(s.a[account].s.stalk).add(1);
 
-        s.s.stalk = s.s.stalk.sub(stalk);
-        s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
+        // Burn Stalk ERC-20
+        LibStalk._burn(account, stalk);
+
+        // s.stalkToken = s.stalkToken.sub(stalk);
+        // s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
 
         s.s.roots = s.s.roots.sub(roots);
         s.a[account].roots = s.a[account].roots.sub(roots);

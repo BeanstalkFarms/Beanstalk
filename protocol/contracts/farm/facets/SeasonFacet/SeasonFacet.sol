@@ -68,7 +68,7 @@ contract SeasonFacet is Sun {
             s.season.current,
             price,
             bean().totalSupply(),
-            s.s.stalk,
+            s.stalkToken._totalSupply,
             s.s.seeds,
             s.f.pods,
             s.f.harvestable

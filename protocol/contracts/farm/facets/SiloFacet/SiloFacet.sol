@@ -20,6 +20,38 @@ contract SiloFacet is BeanSilo {
     using SafeMath for uint32;
 
     /**
+     * Stalk
+    **/
+    
+    /// @notice Transfer any amount of Stalk ERC-20 tokens to another wallet address
+    /// @param recipient The address of the recipient of the Stalk tokens
+    /// @param amount The amount of stalk tokens to transfer to the recipient
+    function transfer(address recipient, uint256 amount) public returns (bool) {
+        updateSilo(LibStalk._msgSender());
+        updateSilo(recipient);
+        LibStalk._transfer(LibStalk._msgSender(), recipient, amount);
+        return true;
+    }
+
+    /// @notice transfer function that allows the caller to send a specified amount of Stalk ERC-20 tokens to
+    ///         another wallet address from another specified address's wallet
+    /// @param sender The address of the selected sender address of the Stalk tokens
+    /// @param recipient The address of the selected recipient address of the sent Stalk tokens
+    /// @param amount The amount of stalk tokens to transfer to the recipient account from the sender account
+    function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
+        updateSilo(sender);
+        updateSilo(recipient);
+        LibStalk._transfer(sender, recipient, amount);
+        if (allowance(sender, LibStalk._msgSender()) != uint256(-1)) {
+            LibStalk._approve(
+                sender,
+                LibStalk._msgSender(),
+                allowance(sender, LibStalk._msgSender()).sub(amount, "Stalk: Transfer amount exceeds allowance."));
+        }
+        return true;
+    }
+
+    /**
      * Bean
     **/
 

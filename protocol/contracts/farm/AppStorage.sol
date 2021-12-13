@@ -166,6 +166,15 @@ contract Storage {
         uint256 total;
         uint256 remaining;
     }
+
+    struct Stalk {
+        uint8 _decimals;
+        uint256 _totalSupply;
+        string _name;
+        string _symbol;
+        mapping (address => uint256) _balances;
+        mapping (address => mapping (address => uint256)) _allowances;
+    }
 }
 
 struct AppStorage {
@@ -195,4 +204,5 @@ struct AppStorage {
     uint32 hotFix3Start;
     mapping (uint32 => Storage.Fundraiser) fundraisers;
     uint32 fundraiserIndex;
+    Storage.Stalk stalkToken;
 }
