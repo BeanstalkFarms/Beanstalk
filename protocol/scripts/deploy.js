@@ -89,7 +89,8 @@ async function main (scriptName, verbose=true, mock=false) {
     siloFacet,
     governanceFacet,
     claimFacet,
-    fundraiserFacet
+    fundraiserFacet,
+    convertFacet
   ] = mock ? await deployFacets(
       verbose,
       ['MockSeasonFacet',
@@ -98,12 +99,14 @@ async function main (scriptName, verbose=true, mock=false) {
       'MockSiloFacet',
       'MockGovernanceFacet',
       'MockClaimFacet',
-      'MockFundraiserFacet'],
+      'MockFundraiserFacet',
+      'ConvertFacet'],
       ["LibClaim"],
       {
         "MockSiloFacet": ["LibClaim"],
         "MockFieldFacet": ["LibClaim"],
-        "MockClaimFacet": ["LibClaim"]
+        "MockClaimFacet": ["LibClaim"],
+        "ConvertFacet": ["LibClaim"]
       },
     ) : await deployFacets(
       verbose,
@@ -113,12 +116,14 @@ async function main (scriptName, verbose=true, mock=false) {
       'SiloFacet',
       'GovernanceFacet',
       'ClaimFacet',
-      'FundraiserFacet']
+      'FundraiserFacet',
+      'ConvertFacet']
       ["LibClaim"],
       {
         "SiloFacet": ["LibClaim"],
         "FieldFacet": ["LibClaim"],
-        "ClaimFacet": ["LibClaim"]
+        "ClaimFacet": ["LibClaim"],
+        "ConvertFacet": ["LibClaim"]
       },
     )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/InitDiamond.sol:InitDiamond'
@@ -141,7 +146,8 @@ async function main (scriptName, verbose=true, mock=false) {
       ['SiloFacet', siloFacet],
       ['GovernanceFacet', governanceFacet],
       ['ClaimFacet', claimFacet],
-      ['FundraiserFacet', fundraiserFacet]
+      ['FundraiserFacet', fundraiserFacet],
+      ['ConvertFacet', convertFacet]
     ],
     owner: account,
     args: args,
@@ -184,7 +190,8 @@ async function main (scriptName, verbose=true, mock=false) {
     siloFacet: siloFacet,
     governanceFacet: governanceFacet,
     claimFacet: claimFacet,
-    fundraiserFacet, fundraiserFacet,
+    fundraiserFacet: fundraiserFacet,
+    convertFacet: convertFacet,
     pair: pair,
     pegPair: pegPair,
     weth: weth,

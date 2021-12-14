@@ -103,7 +103,7 @@ contract SiloFacet is BeanSilo {
 
     function depositLP(uint256 amount) public {
         pair().transferFrom(msg.sender, address(this), amount);
-        _depositLP(amount, season());
+        _depositLP(amount);
     }
 
     function addAndDepositLP(uint256 lp,
@@ -117,81 +117,19 @@ contract SiloFacet is BeanSilo {
         require(buyBeanAmount == 0 || buyEthAmount == 0, "Silo: Silo: Cant buy Ether and Beans.");
         _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, 0, al);
     }
-
-    function _addAndDepositLP(uint256 lp,
+    
+    function _addAndDepositLP(
+        uint256 lp,
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
         uint256 allocatedBeans,
         LibMarket.AddLiquidity calldata al
     )
-        internal {
+        internal 
+    {
         uint256 boughtLP = LibMarket.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, allocatedBeans, al);
         if (lp>0) pair().transferFrom(msg.sender, address(this), lp);
-        _depositLP(lp.add(boughtLP), season());
-
-    }
-
-    function claimConvertAddAndDepositLP(
-        uint256 lp,
-        LibMarket.AddLiquidity calldata al,
-        uint32[] memory crates,
-        uint256[] memory amounts,
-        LibClaim.Claim calldata claim
-    )
-        external
-        payable
-    {
-        _convertAddAndDepositLP(lp, al, crates, amounts, LibClaim.claim(claim, true));
-    }
-
-    function convertAddAndDepositLP(
-        uint256 lp,
-        LibMarket.AddLiquidity calldata al,
-        uint32[] memory crates,
-        uint256[] memory amounts
-    )
-        public
-        payable
-    {
-        _convertAddAndDepositLP(lp, al, crates, amounts, 0);
-    }
-
-    function _convertAddAndDepositLP(
-        uint256 lp,
-        LibMarket.AddLiquidity calldata al,
-        uint32[] memory crates,
-        uint256[] memory amounts,
-        uint256 allocatedBeans
-    )
-        private
-    {
-        updateSilo(msg.sender);
-        WithdrawState memory w;
-        if (IBean(s.c.bean).balanceOf(address(this)) < al.beanAmount) {
-            w.beansTransferred = al.beanAmount.sub(totalDepositedBeans());
-            bean().transferFrom(msg.sender, address(this), w.beansTransferred);
-        }
-        (w.beansAdded, w.newLP) = LibMarket.addLiquidity(al);
-        require(w.newLP > 0, "Silo: No LP added.");
-        (w.beansRemoved, w.stalkRemoved) = _withdrawBeansForConvert(crates, amounts, w.beansAdded);
-        uint256 amountFromWallet = w.beansAdded.sub(w.beansRemoved, "Silo: Removed too many Beans.");
-
-        if (amountFromWallet < w.beansTransferred)
-            bean().transfer(msg.sender, w.beansTransferred.sub(amountFromWallet).add(allocatedBeans));
-        else if (w.beansTransferred < amountFromWallet) {
-            uint256 transferAmount = amountFromWallet.sub(w.beansTransferred);
-            LibMarket.transferAllocatedBeans(allocatedBeans, transferAmount);
-        }
-        w.i = w.stalkRemoved.sub(w.beansRemoved.mul(C.getStalkPerBean()));
-        w.i = w.i.div(lpToLPBeans(lp.add(w.newLP)), "Silo: No LP Beans.");
-
-        uint32 depositSeason = uint32(season().sub(w.i.div(C.getSeedsPerLPBean())));
-
-        if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
-
-        _depositLP(lp.add(w.newLP), depositSeason);
-        LibCheck.beanBalanceCheck();
-        updateBalanceOfRainStalk(msg.sender);
+        _depositLP(lp.add(boughtLP));
     }
 
     /**
@@ -223,5 +161,4 @@ contract SiloFacet is BeanSilo {
     function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {
         LibMarket.transferAllocatedBeans(LibClaim.claim(c, true), transferBeans);
     }
-
 }
