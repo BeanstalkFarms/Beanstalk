@@ -11,6 +11,7 @@ import "../interfaces/IBean.sol";
 import "../interfaces/IWETH.sol";
 import "./LibAppStorage.sol";
 import "./LibClaim.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -349,5 +350,21 @@ library LibMarket {
             IBean(ds.bean).transferFrom(msg.sender, address(this), transferBeans.sub(s.a[msg.sender].claimableBeans));
 	    s.a[msg.sender].claimableBeans = 0;
         }
+    }
+
+    function sendBeansToWallet(uint beansToWallet) internal {
+	    AppStorage storage s = LibAppStorage.diamondStorage();
+	    if (s.a[msg.sender].claimableBeans == beansToWallet) {
+		    IBean(s.c.bean).mint(msg.sender, beansToWallet);
+		    s.a[msg.sender].claimableBeans = 0;
+	    }
+	    else if (s.a[msg.sender].claimableBeans > beansToWallet) {
+		    IBean(s.c.bean).mint(msg.sender, beansToWallet);
+		    s.a[msg.sender].claimableBeans = s.a[msg.sender].claimableBeans.sub(beansToWallet);
+	    }
+	    else {
+		    IBean(s.c.bean).mint(msg.sender, s.a[msg.sender].claimableBeans);
+		    s.a[msg.sender].claimableBeans = 0;
+	    }
     }
 }
