@@ -91,7 +91,7 @@ contract MockUniswapV2Pair {
         return true;
     }
 
-    function burnBeans(address bean) external {
+    function burnTokens(address bean) external {
       IBean(bean).burn(IBean(bean).balanceOf(address(this)));
     }
 
