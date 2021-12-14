@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "./BeanSilo.sol";
 import "../../../libraries/LibClaim.sol";
+import "../../../libraries/LibMarket.sol";
 
 /*
  * @author Publius
@@ -168,38 +169,55 @@ contract SiloFacet is BeanSilo {
     )
         private
     {
-        updateSilo(msg.sender);
+	updateSilo(msg.sender);
         WithdrawState memory w;
         if (IBean(s.c.bean).balanceOf(address(this)) < al.beanAmount) {
-            w.beansTransferred = al.beanAmount.sub(totalDepositedBeans());
-            if (s.a[msg.sender].claimableBeans == 0) bean().transferFrom(msg.sender, address(this), w.beansTransferred);
+            w.beansTransferred = al.beanAmount.sub(totalDepositedBeans()); // amount of beans taken from user when he deposits more beans into LP than there are beans in the Silo
+	    if (s.a[msg.sender].claimableBeans == 0) {
+		    bean().transferFrom(msg.sender, address(this), w.beansTransferred);
+	    }
             else {
-                    if (s.a[msg.sender].claimableBeans > w.beansTransferred) s.a[msg.sender].claimableBeans = s.a[msg.sender].claimableBeans.sub(w.beansTransferred);
-                    else if (s.a[msg.sender].claimableBeans == w.beansTransferred) s.a[msg.sender].claimableBeans = 0;
+                    if (s.a[msg.sender].claimableBeans > w.beansTransferred) {
+			    s.a[msg.sender].claimableBeans = s.a[msg.sender].claimableBeans.sub(w.beansTransferred);
+			    IBean(s.c.bean).mint(address(this), w.beansTransferred);
+		    }
+                    else if (s.a[msg.sender].claimableBeans == w.beansTransferred) {
+			    s.a[msg.sender].claimableBeans = 0;
+			    IBean(s.c.bean).mint(address(this), w.beansTransferred);
+		    }
                     else {
-                            s.a[msg.sender].claimableBeans = 0;
+			    require(s.a[msg.sender].claimableBeans.add(IBean(s.c.bean).balanceOf(msg.sender)) >= w.beansTransferred, "Silo: Not enough beans");
+			    IBean(s.c.bean).mint(address(this), s.a[msg.sender].claimableBeans);
                             bean().transferFrom(msg.sender, address(this), w.beansTransferred.sub(s.a[msg.sender].claimableBeans));
+			    s.a[msg.sender].claimableBeans = 0;
                     }
             }
         }
-        (w.beansAdded, w.newLP) = LibMarket.addLiquidity(al);
+        (w.beansAdded, w.newLP) = LibMarket.addLiquidity(al); // w.beansAdded is beans added to LP
         require(w.newLP > 0, "Silo: No LP added.");
-        (w.beansRemoved, w.stalkRemoved) = _withdrawBeansForConvert(crates, amounts, w.beansAdded);
+        (w.beansRemoved, w.stalkRemoved) = _withdrawBeansForConvert(crates, amounts, w.beansAdded); // w.beansRemoved is beans removed from Silo
         uint256 amountFromWallet = w.beansAdded.sub(w.beansRemoved, "Silo: Removed too many Beans.");
-
-        if (amountFromWallet < w.beansTransferred)
+	
+	bool flag = false;
+        if (amountFromWallet < w.beansTransferred) {
             bean().transfer(msg.sender, w.beansTransferred.sub(amountFromWallet));
+	}
         else if (w.beansTransferred < amountFromWallet) {
+	    flag = true;
             uint256 transferAmount = amountFromWallet.sub(w.beansTransferred);
             LibMarket.transferAllocatedBeans(transferAmount, beansToWallet);
         }
         w.i = w.stalkRemoved.sub(w.beansRemoved.mul(C.getStalkPerBean()));
         w.i = w.i.div(lpToLPBeans(lp.add(w.newLP)), "Silo: No LP Beans.");
 
+	if (!flag) {
+		LibMarket.sendBeansToWallet(beansToWallet);
+	}
+
         uint32 depositSeason = uint32(season().sub(w.i.div(C.getSeedsPerLPBean())));
 
         if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
-
+	
         _depositLP(lp.add(w.newLP), depositSeason);
         LibCheck.beanBalanceCheck();
         updateBalanceOfRainStalk(msg.sender);
@@ -235,9 +253,4 @@ contract SiloFacet is BeanSilo {
         LibClaim.claim(c, 0);
         LibMarket.transferAllocatedBeans(transferBeans, c.beansToWallet);
     }
-
-    function setStateVariable(uint256 num) public {
-	    s.a[msg.sender].claimableBeans = num;
-    }
-
 }
