@@ -145,6 +145,11 @@ contract SiloExit is SiloEntrance {
         return balanceOfPlentyBase(account).mul(s.sop.weth).div(s.sop.base);
     }
 
+    modifier notLocked(address account) {
+        require(!(locked(account)),"locked");
+        _;
+    }
+
     function balanceOfPlentyBase(address account) public view returns (uint256) {
         uint256 plenty = s.a[account].sop.base;
         uint32 endSeason = s.a[account].lastSop;

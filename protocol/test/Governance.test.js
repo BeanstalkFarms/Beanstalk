@@ -39,7 +39,6 @@ describe('Governance', function () {
     this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair);
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
-    console.log(await this.governance.activeBips());
 
     this.empty = {
       diamondCut: [],
