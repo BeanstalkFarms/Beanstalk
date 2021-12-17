@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/SeasonFacet/SeasonFacet.sol";
 import "../../libraries/Decimal.sol";
+import "../MockToken.sol";
 
 /**
  * @author Publius
@@ -137,6 +138,34 @@ contract MockSeasonFacet is SeasonFacet {
         s.w.lastSoilPercent = number;
     }
 
+    function incrementTotalSoilE(uint256 amount) public {
+        incrementTotalSoil(amount);
+    }
+
+    function decrementTotalSoilE(uint256 amount) public {
+        decrementTotalSoil(amount);
+    }
+
+    function increaseSoilE(uint256 amount) public {
+        increaseSoil(amount);
+    }
+
+    function decreaseSoilE(uint256 amount, uint256 harvested) public {
+        decreaseSoil(amount, harvested);
+    }
+
+    function ensureSoilBoundsE() public {
+        ensureSoilBounds();
+    }
+
+    function minSoil(uint256 amount) public view returns (uint256) {
+        return getMinSoil(amount);
+    }
+
+    function maxSoil() public view returns (uint256) {
+        return getMaxSoil();
+    }
+
     function resetAccount(address account) public {
         uint32 _s = season();
         for (uint32 j = 0; j <= _s; j++) {
@@ -166,6 +195,11 @@ contract MockSeasonFacet is SeasonFacet {
             delete s.g.bips[i];
             delete s.g.diamondCuts[i];
         }
+
+        for (uint32 i = 0; i < s.fundraiserIndex; i++) {
+            MockToken(s.fundraisers[i].token).burn(MockToken(s.fundraisers[i].token).balanceOf(address(this)));
+            delete s.fundraisers[i];
+        }
         delete s.f;
         delete s.bean;
         delete s.lp;
@@ -177,6 +211,7 @@ contract MockSeasonFacet is SeasonFacet {
         delete s.v1SI;
         delete s.season;
         delete s.unclaimedRoots;
+        delete s.fundraiserIndex;
         s.season.start = block.timestamp;
         s.season.timestamp = uint32(block.timestamp % 2 ** 32);
         delete s.sop;

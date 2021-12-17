@@ -106,39 +106,56 @@ contract Life {
     **/
 
     function increaseSoil(uint256 amount) internal returns (int256) {
-        uint256 maxTotalSoil = C.getMaxSoilRatioCap().mul(bean().totalSupply()).div(1e18);
-        uint256 minTotalSoil = C.getMinSoilRatioCap().mul(bean().totalSupply()).div(1e18);
-        if (s.f.soil > maxTotalSoil) {
-            amount = s.f.soil.sub(maxTotalSoil);
+        uint256 maxTotalSoil = getMaxSoil();
+        uint256 soil = s.f.soil;
+        if (soil > maxTotalSoil) {
+            amount = soil.sub(maxTotalSoil);
             decrementTotalSoil(amount);
             return -int256(amount);
         }
-        uint256 newTotalSoil = s.f.soil + amount;
-        amount = newTotalSoil <= maxTotalSoil ? amount : maxTotalSoil.sub(s.f.soil);
-        amount = newTotalSoil >= minTotalSoil ? amount : minTotalSoil.sub(s.f.soil);
-
+        uint256 newTotalSoil = soil.add(amount);
+        if (newTotalSoil > maxTotalSoil) amount = maxTotalSoil.sub(soil);
         incrementTotalSoil(amount);
         return int256(amount);
     }
 
-    function decreaseSoil(uint256 amount) internal {
-        decrementTotalSoil(amount);
-    }
-
-    function ensureSoilBounds() internal returns (int256) {
-        uint256 minTotalSoil = C.getMinSoilRatioCap().mul(bean().totalSupply()).div(1e18);
-        if (s.f.soil < minTotalSoil) {
-            uint256 amount = minTotalSoil.sub(s.f.soil);
+    function decreaseSoil(uint256 amount, uint256 harvested) internal returns (int256) {
+        uint256 minTotalSoil = getMinSoil(harvested);
+        uint256 soil = s.f.soil;
+        if (soil < minTotalSoil) {
+            amount = minTotalSoil.sub(soil);
             incrementTotalSoil(amount);
             return int256(amount);
         }
-        uint256 maxTotalSoil = C.getMaxSoilRatioCap().mul(bean().totalSupply()).div(1e18);
+        if (amount > soil) {
+            amount = soil.sub(minTotalSoil);
+        } else {
+            uint256 newTotalSoil = soil.sub(amount);
+            uint256 maxTotalSoil = getMaxSoil();
+            if (newTotalSoil > maxTotalSoil) amount = soil.sub(maxTotalSoil);
+            else if (newTotalSoil < minTotalSoil) amount = soil.sub(minTotalSoil);
+        }
+
+        decrementTotalSoil(amount);
+        return -int256(amount);
+    }
+
+    function ensureSoilBounds() internal returns (int256) {
+        uint256 maxTotalSoil = getMaxSoil();
         if (s.f.soil > maxTotalSoil) {
             uint256 amount = s.f.soil.sub(maxTotalSoil);
             decrementTotalSoil(amount);
             return -int256(amount);
         }
         return 0;
+    }
+
+    function getMaxSoil() internal view returns (uint256 maxSoil) {
+        maxSoil = bean().totalSupply().div(C.getMaxSoilDenominator());
+    }
+    
+   function getMinSoil(uint256 amount) internal view returns (uint256 minSoil) {
+        minSoil = amount.mul(100).div(100 + s.w.yield);
     }
 
     function incrementTotalSoil(uint256 amount) internal {

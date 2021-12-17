@@ -48,7 +48,7 @@ describe('Field', function () {
         await this.season.resetAccount(otherAddress)
         await this.season.resetState()
         await this.field.resetAllowances([userAddress, user2Address, otherAddress, ownerAddress])
-        await this.pair.burnBeans(this.bean.address)
+        await this.pair.burnTokens(this.bean.address)
         await this.bean.connect(user).burn(await this.bean.balanceOf(userAddress))
         await this.bean.connect(user2).burn(await this.bean.balanceOf(user2Address))
         await this.bean.connect(other).burn(await this.bean.balanceOf(otherAddress))
@@ -67,7 +67,7 @@ describe('Field', function () {
         await this.bean.connect(user2).approve(this.field.address, MAX_UINT256)
         await this.bean.mint(otherAddress, this.testData.otherStarterBeans)
         await this.bean.connect(other).approve(this.field.address, MAX_UINT256)
-        this.field.incrementTotalSoilEE(this.testData.startSoil)
+        this.season.incrementTotalSoilE(this.testData.startSoil)
         await this.season.setStartSoilE(this.testData.startSoil)
         await this.season.setLastSowTimeE(this.testData.startLastSowTime)
 

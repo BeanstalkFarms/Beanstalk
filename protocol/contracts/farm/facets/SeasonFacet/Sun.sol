@@ -68,7 +68,7 @@ contract Sun is Weather {
 
     function growSupply(uint256 beans, uint256 price) private returns (uint256) {
         (uint256 newHarvestable, uint256 newSilo) = increaseSupply(beans);
-        int256 newSoil = ensureSoilBounds();
+        int256 newSoil = decreaseSoil(beans, newHarvestable);
         emit SupplyIncrease(season(), price, newHarvestable, newSilo, newSoil);
         return newSilo;
     }
