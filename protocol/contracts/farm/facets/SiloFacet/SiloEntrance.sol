@@ -91,7 +91,7 @@ contract SiloEntrance {
     }
 
     function incrementBipRoots(address account, uint256 roots) internal {
-        if (s.a[account].lockedUntil >= season()) {
+        if (s.a[account].votedUntil >= season()) {
             for (uint256 i = 0; i < s.g.activeBips.length; i++) {
                 uint32 bip = s.g.activeBips[i];
                 if (s.g.voted[bip][account]) s.g.bips[bip].roots = s.g.bips[bip].roots.add(roots);
@@ -100,7 +100,7 @@ contract SiloEntrance {
     }
 
     function decrementBipRoots(address account, uint256 roots) internal {
-        if (s.a[account].lockedUntil >= season()) {
+        if (s.a[account].votedUntil >= season()) {
             for (uint256 i = 0; i < s.g.activeBips.length; i++) {
                 uint32 bip = s.g.activeBips[i];
                 if (s.g.voted[bip][account]) s.g.bips[bip].roots = s.g.bips[bip].roots.sub(roots);

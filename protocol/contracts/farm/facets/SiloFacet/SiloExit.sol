@@ -145,6 +145,11 @@ contract SiloExit is SiloEntrance {
         return balanceOfPlentyBase(account).mul(s.sop.weth).div(s.sop.base);
     }
 
+    modifier notLocked(address account) {
+        require(!(locked(account)),"locked");
+        _;
+    }
+
     function balanceOfPlentyBase(address account) public view returns (uint256) {
         uint256 plenty = s.a[account].sop.base;
         uint32 endSeason = s.a[account].lastSop;
@@ -175,20 +180,15 @@ contract SiloExit is SiloEntrance {
      * Governance
     **/
 
-    modifier notLocked(address account) {
-        require(!(locked(account)),"locked");
-        _;
-    }
-
-    function lockedUntil(address account) public view returns (uint32) {
+    function votedUntil(address account) public view returns (uint32) {
         if (locked(account)) {
-            return s.a[account].lockedUntil;
+            return s.a[account].votedUntil;
         }
         return 0;
     }
 
     function locked(address account) public view returns (bool) {
-        if (s.a[account].lockedUntil >= season()) {
+        if (s.a[account].votedUntil >= season()) {
             for (uint256 i = 0; i < s.g.activeBips.length; i++) {
                     uint32 activeBip = s.g.activeBips[i];
                     if (s.g.voted[activeBip][account]) {
