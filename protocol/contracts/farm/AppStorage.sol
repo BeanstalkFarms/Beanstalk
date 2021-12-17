@@ -47,6 +47,7 @@ contract Account {
         uint32 lastSIs;
         SeasonOfPlenty sop;
         uint256 roots;
+        uint256 claimableBeans;
     }
 }
 
@@ -144,6 +145,7 @@ contract Storage {
     struct Season {
         uint32 current;
         uint32 sis;
+        uint8 withdrawBuffer;
         uint256 start;
         uint256 period;
         uint256 timestamp;

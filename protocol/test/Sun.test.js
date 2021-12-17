@@ -80,6 +80,17 @@ describe('Sun', function () {
              this.testData.deltaSoil)
         }
       })
+      it('decrements the withdraw buffer', async function () {
+             await this.season.resetState()
+             await this.season.weekSunrise()
+             expect(await this.season.withdrawTime()).to.eq(24)
+             await this.season.weekSunrise()
+             expect(await this.season.withdrawTime()).to.eq(23)
+             await this.season.decrementSunrise(14)
+             expect(await this.season.withdrawTime()).to.eq(9)
+             await this.season.decrementSunrise(100)
+             expect(await this.season.withdrawTime()).to.eq(4)
+      })
     })
   })
 })

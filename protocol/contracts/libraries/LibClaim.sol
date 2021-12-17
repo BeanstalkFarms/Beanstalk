@@ -10,6 +10,7 @@ import "./LibCheck.sol";
 import "./LibInternal.sol";
 import "./LibMarket.sol";
 import "./LibAppStorage.sol";
+import "../interfaces/IWETH.sol";
 
 /**
  * @author Publius
@@ -33,9 +34,10 @@ library LibClaim {
         bool convertLP;
         uint256 minBeanAmount;
         uint256 minEthAmount;
+	uint256 beansToWallet;
     }
 
-    function claim(Claim calldata c, bool allocate)
+    function claim(Claim calldata c, uint256 beansToWallet)
         public
         returns (uint256 beansClaimed)
     {
@@ -44,15 +46,39 @@ library LibClaim {
         if (c.plots.length > 0) beansClaimed = beansClaimed.add(harvest(c.plots));
         if (c.lpWithdrawals.length > 0) {
             if (c.convertLP) {
-                if (allocate) beansClaimed = beansClaimed.add(removeAllocationAndClaimLP(c.lpWithdrawals, c.minBeanAmount, c.minEthAmount));
+                if (beansToWallet == 0) beansClaimed = beansClaimed.add(removeAllocationAndClaimLP(c.lpWithdrawals, c.minBeanAmount, c.minEthAmount));
                 else removeAndClaimLP(c.lpWithdrawals, c.minBeanAmount, c.minEthAmount);
             }
             else claimLP(c.lpWithdrawals);
         }
         if (c.claimEth) claimEth();
-        if (!allocate) IBean(s.c.bean).transfer(msg.sender, beansClaimed);
-    }
 
+	/*
+	Now beansClaimed contains the number of beans the user obtained from harvesting pods.
+	If beansToClaim is 0, then entire claimableBeans will be sent to state variable.
+	If beansToClaim is nonzero, then beansToClaim beans will be sent to wallet, and rest will be sent to state variable.
+	Note that beansToClaim can exceed the beansClaimed because users can also claim beans from s.a[msg.sender].claimableBeans, aka the state variable
+	*/
+
+	if (beansToWallet > 0) {
+		if (beansToWallet >= s.a[msg.sender].claimableBeans.add(beansClaimed)) {
+			IBean(s.c.bean).transfer(msg.sender, s.a[msg.sender].claimableBeans.add(beansClaimed));
+			s.a[msg.sender].claimableBeans = 0;
+		}
+		else {
+			IBean(s.c.bean).transfer(msg.sender, beansToWallet);
+			if (beansToWallet < beansClaimed) {
+				s.a[msg.sender].claimableBeans = s.a[msg.sender].claimableBeans.add(beansClaimed.sub(beansToWallet));
+			}
+			else {
+				s.a[msg.sender].claimableBeans = s.a[msg.sender].claimableBeans.sub(beansToWallet.sub(beansClaimed));
+			}
+		}
+	}
+	else {
+		s.a[msg.sender].claimableBeans = s.a[msg.sender].claimableBeans.add(beansClaimed);
+	}
+    }
     // Claim Beans
 
     function claimBeans(uint32[] calldata withdrawals) public returns (uint256 beansClaimed) {

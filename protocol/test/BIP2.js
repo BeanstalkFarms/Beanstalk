@@ -65,13 +65,18 @@ describe('BIP2', function () {
     describe('claim', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.result = await this.claim.connect(user).claim([['27'],[],[],false,true,'0','0'])
+        this.result = await this.claim.connect(user).claim([['27'],[],[],false,true,'0','0', '0'])
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
       });
 
+      // Before partial claiming, was claimedBeans and not claimableBeans
       it('properly claims beans', async function () {
-        expect(this.claimedBeans.toString()).to.equal('1000');
+        expect(this.claimableBeans.toString()).to.equal('1000');
+      });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('1000');
       });
     });
 
@@ -79,9 +84,10 @@ describe('BIP2', function () {
       describe('exact allocate', async function () {
         beforeEach(async function () {
           const beans = await this.bean.balanceOf(userAddress)
-          this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],[],false,true,'0','0'], '1000')
+          this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],[],false,true,'0','0', '0'], '1000')
           const newBeans = await this.bean.balanceOf(userAddress)
           this.claimedBeans = newBeans.sub(beans)
+	  this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
         });
         it('properly claims beans', async function () {
           expect(this.claimedBeans.toString()).to.equal('0');
@@ -89,15 +95,19 @@ describe('BIP2', function () {
         it('properly allocates beans', async function () {
           expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
         });
+	it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
+      });
       });
 
       describe('exact LP allocate', async function () {
         beforeEach(async function () {
           const beans = await this.bean.balanceOf(userAddress)
-          this.result = await this.claim.connect(user).claimWithAllocationE([[],['27'],[],false,true,'0','0'], '1000')
+          this.result = await this.claim.connect(user).claimWithAllocationE([[],['27'],[],false,true,'0','0', '0'], '1000')
           const newBeans = await this.bean.balanceOf(userAddress)
           this.claimedBeans = newBeans.sub(beans)
-        });
+          this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+	});
         it('properly claims beans', async function () {
           expect(this.claimedBeans.toString()).to.equal('0');
         });
@@ -107,50 +117,69 @@ describe('BIP2', function () {
         it('properly allocates beans', async function () {
           expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
         });
+	it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
+        });
       });
 
       describe('under allocate', async function () {
         beforeEach(async function () {
           const beans = await this.bean.balanceOf(userAddress)
-          this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],[],false,true,'0','0'], '500')
+          this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],[],false,true,'0','0', '0'], '500')
           const newBeans = await this.bean.balanceOf(userAddress)
           this.claimedBeans = newBeans.sub(beans)
+          this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
         });
+
+	// Before partial claiming, was claimedBeans and not claimableBeans
         it('properly claims beans', async function () {
-          expect(this.claimedBeans.toString()).to.equal('500');
+          expect(this.claimableBeans.toString()).to.equal('500');
         });
         it('properly allocates beans', async function () {
           expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '500');
+        });
+	it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('500');
         });
       });
 
       describe('over allocate', async function () {
         beforeEach(async function () {
           const beans = await this.bean.balanceOf(userAddress)
-          this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],[],false,true,'0','0'], '1500')
+          this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],[],false,true,'0','0', '0'], '1500')
           const newBeans = await this.bean.balanceOf(userAddress)
           this.claimedBeans = newBeans.sub(beans)
-        });
+	  this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+	});
         it('properly claims beans', async function () {
           expect(this.claimedBeans.toString()).to.equal('-500');
         });
         it('properly allocates beans', async function () {
           expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
         });
+	it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('-500');
+        });
       });
 
       describe('multiple allocate', async function () {
         beforeEach(async function () {
           const beans = await this.bean.balanceOf(userAddress)
-          this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],['0'],false,true,'0','0'], '1500')
+          this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],['0'],false,true,'0','0', '0'], '1500')
           const newBeans = await this.bean.balanceOf(userAddress)
           this.claimedBeans = newBeans.sub(beans)
+          this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
         });
+
+	// Before partial claiming, was claimedBeans and not claimableBeans
         it('properly claims beans', async function () {
-          expect(this.claimedBeans.toString()).to.equal('500');
+          expect(this.claimableBeans.toString()).to.equal('500');
         });
         it('properly allocates beans', async function () {
           expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1500');
+        });
+	it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('500');
         });
       });
     });
@@ -158,9 +187,10 @@ describe('BIP2', function () {
     describe('claim and deposit Beans', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.result = await this.silo.connect(user).claimAndDepositBeans('1000', [['27'],[],[],false,true,'0','0'])
+        this.result = await this.silo.connect(user).claimAndDepositBeans('1000', [['27'],[],[],false,true,'0','0', '0'])
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('0');
@@ -169,14 +199,18 @@ describe('BIP2', function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
         expect(this.result).to.emit(this.silo , 'BeanDeposit').withArgs(userAddress, '27', '1000');
       });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
+      });
     });
 
     describe('claim buy and deposit Beans', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.result = await this.silo.connect(user).claimBuyAndDepositBeans('1000', '990', [['27'],[],[],false,true,'0','0'], {value: '1'})
+        this.result = await this.silo.connect(user).claimBuyAndDepositBeans('1000', '990', [['27'],[],[],false,true,'0','0', '0'], {value: '1'})
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('0');
@@ -185,14 +219,18 @@ describe('BIP2', function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
         expect(this.result).to.emit(this.silo, 'BeanDeposit').withArgs(userAddress, '27', '1990');
       });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
+      });
     });
 
     describe('claim and sow Beans', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.result = await this.field.connect(user).claimAndSowBeans('1000', [['27'],[],[],false,true,'0','0'])
+        this.result = await this.field.connect(user).claimAndSowBeans('1000', [['27'],[],[],false,true,'0','0', '0'])
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('0');
@@ -201,14 +239,18 @@ describe('BIP2', function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
         expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, '1000', '1000', '1000');
       });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
+      });
     });
 
     describe('claim, buy and sow Beans', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.result = await this.field.connect(user).claimBuyAndSowBeans('1000', '990', [['27'],[],[],false,true,'0','0'], {value: '1'})
+        this.result = await this.field.connect(user).claimBuyAndSowBeans('1000', '990', [['27'],[],[],false,true,'0','0', '0'], {value: '1'})
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('0');
@@ -217,26 +259,34 @@ describe('BIP2', function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
         expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, '1000', '1990', '1990');
       });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
+      });
     });
 
     describe('claim and deposit LP', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.silo.connect(user).claimAndDepositLP('1',[['27'],[],[],false,true,'0','0']);
+        this.silo.connect(user).claimAndDepositLP('1',[['27'],[],[],false,true,'0','0', '0']);
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
       });
       it('properly claims beans', async function () {
-        expect(this.claimedBeans.toString()).to.equal('1000');
+        expect(this.claimableBeans.toString()).to.equal('1000');
+      });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('1000');
       });
     });
 
     describe('claim add and deposit LP, exact allocation', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['1000','1000','1'],[['27'],[],[],false,true,'0','0'], {value: '1'});
+        this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['1000','1000','1'],[['27'],[],[],false,true,'0','0', '0'], {value: '1'});
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('0');
@@ -244,29 +294,39 @@ describe('BIP2', function () {
       it('properly allocates beans', async function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
       });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
+      });
     });
 
     describe('claim add and deposit LP, over allocation', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['1000','1000','1'],[['27'],[],['0'],false,true,'0','0'], {value: '1'});
+        this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['1000','1000','1'],[['27'],[],['0'],false,true,'0','0', '0'], {value: '1'});
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
       });
+
+      // Before partial claiming, was claimedBeans and not claimableBeans
       it('properly claims beans', async function () {
-        expect(this.claimedBeans.toString()).to.equal('1000');
+        expect(this.claimableBeans.toString()).to.equal('1000');
       });
       it('properly allocates beans', async function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
+      });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('1000');
       });
     });
 
     describe('claim add and deposit LP, under allocation', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['2000','2000','2'],[['27'],[],[],false,true,'0','0'], {value: '2'});
+        this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['2000','2000','2'],[['27'],[],[],false,true,'0','0', '0'], {value: '2'});
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('-1000');
@@ -274,14 +334,18 @@ describe('BIP2', function () {
       it('properly allocates beans', async function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
       });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('-1000');
+      });
     });
 
     describe('claim add buy Beans and deposit LP, exact allocation', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.result = this.silo.connect(user).claimAddAndDepositLP('0','1000','0', ['2000','2000','2'],[['27'],[],[],false,true,'0','0'], {value: '4'});
+        this.result = this.silo.connect(user).claimAddAndDepositLP('0','1000','0', ['2000','2000','2'],[['27'],[],[],false,true,'0','0', '0'], {value: '4'});
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('0');
@@ -289,20 +353,27 @@ describe('BIP2', function () {
       it('properly allocates beans', async function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
       });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
+      });
     });
 
     describe('claim add buy ETH and deposit LP, exact allocation', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','1',['2000','2000','2'],[['27'],[],['0'],false,true,'0','0'], {value: '1'});
+        this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','1',['2000','2000','2'],[['27'],[],['0'],false,true,'0','0', '0'], {value: '1'});
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
+        this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
       });
       it('properly claims beans', async function () {
         expect(this.claimedBeans.toString()).to.equal('-1011');
       });
       it('properly allocates beans', async function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '2000');
+      });
+      it('no beans created or destroyed', async function () {
+        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('-1011');
       });
     });
   });

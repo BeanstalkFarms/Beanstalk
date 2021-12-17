@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "../../farm/facets/ClaimFacet.sol";
 import "../../libraries/LibMarket.sol";
+import "../../libraries/LibAppStorage.sol";
 
 /**
  * @author Publius
@@ -21,7 +22,7 @@ contract MockClaimFacet is ClaimFacet {
         public
         payable
     {
-        LibMarket.transferAllocatedBeans(LibClaim.claim(c, true), beansAllocated);
+        LibClaim.claim(c, 0);
+        LibMarket.transferAllocatedBeans(beansAllocated, c.beansToWallet);
     }
-
 }
