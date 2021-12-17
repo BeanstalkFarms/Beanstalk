@@ -54,9 +54,6 @@ contract SiloEntrance {
         // Mint Stalk ERC-20
         LibStalk._mint(account, stalk);
 
-        // s.stalkToken = s.stalkToken.add(stalk);
-        // s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
-
         s.s.roots = s.s.roots.add(roots);
         s.a[account].roots = s.a[account].roots.add(roots);
 
@@ -77,7 +74,6 @@ contract SiloEntrance {
     /// @param account The address of the account address to have stalk and seed tokens withdrawn and burned
     /// @param stalk The amount of stalk tokens to have withdrawn and burned
     function decrementBalanceOfStalk(address account, uint256 stalk) internal {
-        
         // Remove all Legacy Stalk and Mint the corresponding fungible token
         if (s.a[account].s.stalk > 0) {
             LibStalk._mint(account, s.a[account].s.stalk);
@@ -89,9 +85,6 @@ contract SiloEntrance {
 
         // Burn Stalk ERC-20
         LibStalk._burn(account, stalk);
-
-        // s.stalkToken = s.stalkToken.sub(stalk);
-        // s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
 
         s.s.roots = s.s.roots.sub(roots);
         s.a[account].roots = s.a[account].roots.sub(roots);
