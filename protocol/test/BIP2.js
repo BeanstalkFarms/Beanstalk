@@ -54,7 +54,7 @@ describe('BIP2', function () {
     beforeEach(async function () {
       await this.silo.connect(user).depositBeans('1000')
       await this.silo.connect(user).depositLP('1')
-      await this.field.incrementTotalSoilEE('5000')
+      await this.season.incrementTotalSoilE('5000')
       await this.field.connect(user).sowBeans('1000')
       await this.field.incrementTotalHarvestableE('1000')
       await this.silo.connect(user).withdrawBeans([2],['1000'])

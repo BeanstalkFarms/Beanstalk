@@ -5,13 +5,13 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./Dibbler.sol";
+import "./BeanDibbler.sol";
 
 /**
  * @author Publius
  * @title Pod Transfer
 **/
-contract PodTransfer is Dibbler {
+contract PodTransfer is BeanDibbler {
 
     using SafeMath for uint256;
     using SafeMath for uint32;

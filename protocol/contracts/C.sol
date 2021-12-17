@@ -56,8 +56,8 @@ library C {
     uint256 private constant ROOTS_BASE = 1e12;
 
     // Field
-    uint256 private constant SOIL_MAX_RATIO_CAP = 25e16; // 25%
-    uint256 private constant SOIL_MIN_RATIO_CAP = 1e15; // 0.1%
+    uint256 private constant MAX_SOIL_DENOMINATOR = 4; // 25%
+    uint256 private constant COMPLEX_WEATHER_DENOMINATOR = 1000; // 0.1%
 
 
     /**
@@ -104,12 +104,12 @@ library C {
         return WITHDRAW_TIME;
     }
 
-    function getMinSoilRatioCap() internal pure returns (uint256) {
-        return SOIL_MIN_RATIO_CAP;
+    function getComplexWeatherDenominator() internal pure returns (uint256) {
+        return COMPLEX_WEATHER_DENOMINATOR;
     }
 
-    function getMaxSoilRatioCap() internal pure returns (uint256) {
-        return SOIL_MAX_RATIO_CAP;
+    function getMaxSoilDenominator() internal pure returns (uint256) {
+        return MAX_SOIL_DENOMINATOR;
     }
 
     function getHarvestPercentage() internal pure returns (uint256) {

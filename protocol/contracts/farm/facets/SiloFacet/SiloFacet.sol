@@ -104,7 +104,7 @@ contract SiloFacet is BeanSilo {
 
     function depositLP(uint256 amount) public {
         pair().transferFrom(msg.sender, address(this), amount);
-        _depositLP(amount, season());
+        _depositLP(amount);
     }
 
     function addAndDepositLP(uint256 lp,
@@ -119,8 +119,9 @@ contract SiloFacet is BeanSilo {
         require(buyBeanAmount == 0 || buyEthAmount == 0, "Silo: Silo: Cant buy Ether and Beans.");
         _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al, c);
     }
-
-    function _addAndDepositLP(uint256 lp,
+    
+    function _addAndDepositLP(
+        uint256 lp,
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
         LibMarket.AddLiquidity calldata al,

@@ -49,7 +49,6 @@ contract BeanSilo is LPSilo {
         incrementDepositedBeans(amount);
         depositSiloAssets(msg.sender, amount.mul(C.getSeedsPerBean()), amount.mul(C.getStalkPerBean()));
         addBeanDeposit(msg.sender, season(), amount);
-        LibCheck.beanBalanceCheck();
     }
 
     function _withdrawBeans(
@@ -66,39 +65,6 @@ contract BeanSilo is LPSilo {
         withdrawSiloAssets(msg.sender, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved);
         updateBalanceOfRainStalk(msg.sender);
         LibCheck.beanBalanceCheck();
-    }
-
-    function _withdrawBeansForConvert(
-        uint32[] memory crates,
-        uint256[] memory amounts,
-        uint256 maxBeans
-    )
-        internal
-        returns (uint256 beansRemoved, uint256 stalkRemoved)
-    {
-        require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
-        uint256 crateBeans;
-        uint256 i = 0;
-        while ((i < crates.length) && (beansRemoved < maxBeans)) {
-            if (beansRemoved.add(amounts[i]) < maxBeans)
-                crateBeans = removeBeanDeposit(msg.sender, crates[i], amounts[i]);
-            else
-                crateBeans = removeBeanDeposit(msg.sender, crates[i], maxBeans.sub(beansRemoved));
-            beansRemoved = beansRemoved.add(crateBeans);
-            stalkRemoved = stalkRemoved.add(crateBeans.mul(C.getStalkPerBean()).add(
-                stalkReward(crateBeans.mul(C.getSeedsPerBean()), season()-crates[i]
-            )));
-            i++;
-        }
-        if (i > 0) amounts[i.sub(1)] = crateBeans;
-        while (i < crates.length) {
-            amounts[i] = 0;
-            i++;
-        }
-        decrementDepositedBeans(beansRemoved);
-        withdrawSiloAssets(msg.sender, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved);
-        emit BeanRemove(msg.sender, crates, amounts, beansRemoved);
-        return (beansRemoved, stalkRemoved);
     }
 
     function removeBeanDeposits(uint32[] calldata crates, uint256[] calldata amounts)

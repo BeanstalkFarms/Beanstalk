@@ -232,7 +232,7 @@ library LibMarket {
     **/
 
     function _sell(uint256 sellBeanAmount, uint256 minBuyEthAmount, address to)
-        private
+        internal
         returns (uint256 inAmount, uint256 outAmount)
     {
         DiamondStorage storage ds = diamondStorage();
@@ -268,7 +268,7 @@ library LibMarket {
     }
 
     function _buyWithWETH(uint256 beanAmount, uint256 ethAmount, address to)
-        private
+        internal
         returns (uint256 inAmount, uint256 outAmount)
     {
         DiamondStorage storage ds = diamondStorage();
@@ -301,7 +301,7 @@ library LibMarket {
     }
 
     function _addLiquidityWETH(uint256 wethAmount, uint256 beanAmount, uint256 minWethAmount, uint256 minBeanAmount)
-        private
+        internal
         returns (uint256, uint256, uint256)
     {
         DiamondStorage storage ds = diamondStorage();

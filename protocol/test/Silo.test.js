@@ -14,6 +14,7 @@ describe('Silo', function () {
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
+    this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
     this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair);
     this.pegPair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pegPair);
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
@@ -625,7 +626,6 @@ describe('Silo', function () {
         await this.silo.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2], [1000], '0', {value: '1'});
 	this.after = await this.claim.connect(user).claimableBeans(userAddress)
 	this.second = await this.bean.balanceOf(userAddress)
-
       })
       it('properly updates the total balances', async function () {
         expect(await this.silo.totalDepositedLP()).to.eq('1');
@@ -655,7 +655,6 @@ describe('Silo', function () {
         await this.season.siloSunrises('10');
         await this.silo.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2], [1000], '200', {value: '1'});
 	this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
-
       })
       it('properly updates the user balance', async function () {
         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('8000');
@@ -683,7 +682,6 @@ describe('Silo', function () {
         await this.silo.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2,12], [500,500], '1400', {value: '1'});
 	this.second = await this.bean.balanceOf(userAddress)
 	this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
-
       })
       it('properly updates the user balance', async function () {
         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('9000');

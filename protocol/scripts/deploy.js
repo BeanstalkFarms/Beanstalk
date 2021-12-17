@@ -88,7 +88,9 @@ async function main (scriptName, verbose=true, mock=false) {
     fieldFacet,
     siloFacet,
     governanceFacet,
-    claimFacet
+    claimFacet,
+    fundraiserFacet,
+    convertFacet
   ] = mock ? await deployFacets(
       verbose,
       ['MockSeasonFacet',
@@ -96,12 +98,15 @@ async function main (scriptName, verbose=true, mock=false) {
       'MockFieldFacet',
       'MockSiloFacet',
       'MockGovernanceFacet',
-      'MockClaimFacet'],
+      'MockClaimFacet',
+      'MockFundraiserFacet',
+      'ConvertFacet'],
       ["LibClaim"],
       {
         "MockSiloFacet": ["LibClaim"],
         "MockFieldFacet": ["LibClaim"],
-        "MockClaimFacet": ["LibClaim"]
+        "MockClaimFacet": ["LibClaim"],
+        "ConvertFacet": ["LibClaim"]
       },
     ) : await deployFacets(
       verbose,
@@ -110,12 +115,15 @@ async function main (scriptName, verbose=true, mock=false) {
       'FieldFacet',
       'SiloFacet',
       'GovernanceFacet',
-      'ClaimFacet']
+      'ClaimFacet',
+      'FundraiserFacet',
+      'ConvertFacet']
       ["LibClaim"],
       {
         "SiloFacet": ["LibClaim"],
         "FieldFacet": ["LibClaim"],
-        "ClaimFacet": ["LibClaim"]
+        "ClaimFacet": ["LibClaim"],
+        "ConvertFacet": ["LibClaim"]
       },
     )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/InitDiamond.sol:InitDiamond'
@@ -137,7 +145,9 @@ async function main (scriptName, verbose=true, mock=false) {
       ['FieldFacet', fieldFacet],
       ['SiloFacet', siloFacet],
       ['GovernanceFacet', governanceFacet],
-      ['ClaimFacet', claimFacet]
+      ['ClaimFacet', claimFacet],
+      ['FundraiserFacet', fundraiserFacet],
+      ['ConvertFacet', convertFacet]
     ],
     owner: account,
     args: args,
@@ -180,6 +190,8 @@ async function main (scriptName, verbose=true, mock=false) {
     siloFacet: siloFacet,
     governanceFacet: governanceFacet,
     claimFacet: claimFacet,
+    fundraiserFacet: fundraiserFacet,
+    convertFacet: convertFacet,
     pair: pair,
     pegPair: pegPair,
     weth: weth,
