@@ -23,19 +23,6 @@ contract SiloEntrance {
 
     event BeanDeposit(address indexed account, uint256 season, uint256 beans);
     
-
-    /// @notice Calls the incrementBalanceOfStalk function from Silo Entrance and mints the corresponding amount
-    ///         of stalk ERC-20 tokens to the selected account address
-    /// @param account The address of the account address to have minted stalk tokens to
-    /// @param stalk The amount of stalk tokens to have minted
-
-
-    /// @notice Calls withdrawSiloAssets function in SiloEntrance and burns the corresponding amount
-    ///         of stalk ERC-20 tokens from the selected account address
-    /// @param account The address of the account address to have stalk and seed tokens withdrawn and burned
-    /// @param seeds The amount of seed tokens to have withdrawn and burned
-    /// @param stalk The amount of stalk tokens to have withdrawn and burned
-
     /**
      * Silo
     **/
@@ -50,7 +37,16 @@ contract SiloEntrance {
         s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
     }
 
+    /// @notice mints the corresponding amount of stalk ERC-20 tokens to the selected account address
+    /// @param account The address of the account address to have minted stalk tokens to
+    /// @param stalk The amount of stalk tokens to have minted
     function incrementBalanceOfStalk(address account, uint256 stalk) internal {
+        // Remove all Legacy Stalk and Mint the corresponding fungible token
+        if (s.a[account].s.stalk > 0) {
+            LibStalk._mint(account, s.a[account].s.stalk);
+            s.a[account].s.stalk = 0;
+        }
+
         uint256 roots;
         if (s.s.roots == 0) roots = stalk.mul(C.getRootsBase());
         else roots = s.s.roots.mul(stalk).div(s.stalkToken._totalSupply);
@@ -77,9 +73,19 @@ contract SiloEntrance {
         s.a[account].s.seeds = s.a[account].s.seeds.sub(seeds);
     }
 
+    /// @notice burns the corresponding amount of stalk ERC-20 tokens of the selected account address
+    /// @param account The address of the account address to have stalk and seed tokens withdrawn and burned
+    /// @param stalk The amount of stalk tokens to have withdrawn and burned
     function decrementBalanceOfStalk(address account, uint256 stalk) internal {
+        
+        // Remove all Legacy Stalk and Mint the corresponding fungible token
+        if (s.a[account].s.stalk > 0) {
+            LibStalk._mint(account, s.a[account].s.stalk);
+            s.a[account].s.stalk = 0;
+        }
+
         if (stalk == 0) return;
-        uint256 roots = s.a[account].roots.mul(stalk).sub(1).div(s.a[account].s.stalk).add(1);
+        uint256 roots = s.a[account].roots.mul(stalk).sub(1).div(s.stalkToken._balances[account]).add(1);
 
         // Burn Stalk ERC-20
         LibStalk._burn(account, stalk);

@@ -89,18 +89,22 @@ describe('Stalk ERC20', function () {
 
     it('Increments Stalk Correctly, Single Increment', async function () {
       const userStalkErc20 = await this.silo.balanceOf(userAddress);
+      const user2StalkErc20 = await this.silo.balanceOf(user2Address);
+      const ownerStalkErc20 = await this.silo.balanceOf(ownerAddress);
+
       console.log(`Stalk Tokens: ${await this.silo.balanceOf(userAddress)}`)
       const totalStalkSupplyErc20 = await this.silo.totalSupply();
       console.log(`Total Stalk Supply: ${await this.silo.totalSupply()}`)
-      expect(userStalkErc20).to.be.equal(totalStalkSupplyErc20);
+      expect(userStalkErc20.add(user2StalkErc20).add(ownerStalkErc20)).be.equal(totalStalkSupplyErc20);
     });
 
     it('Increments Stalk Correctly, Multiple Accounts', async function () {
       await this.silo.incrementBalanceOfStalkE(user2Address, '5000');
       const userStalkErc20 = await this.silo.balanceOf(userAddress);
       const user2StalkErc20 = await this.silo.balanceOf(user2Address);
+      const ownerStalkErc20 = await this.silo.balanceOf(ownerAddress);
       const totalStalkSupplyErc20 = await this.silo.totalSupply();
-      expect(totalStalkSupplyErc20).to.be.equal(userStalkErc20.add(user2StalkErc20));
+      expect(totalStalkSupplyErc20.sub(ownerStalkErc20)).to.be.equal(userStalkErc20.add(user2StalkErc20));
     });
 
     it('Increments Stalk Correctly, Multiple Increments', async function () {
@@ -144,7 +148,6 @@ describe('Stalk ERC20', function () {
   });
 
   describe('Transfering Stalk', function () {
-
     it('Transfers Stalk Correctly, Single transfer', async function () {
       const initialUser2StalkErc20 = await this.silo.balanceOf(user2Address);
       await this.silo.connect(user).transfer(user2Address, '1000')
