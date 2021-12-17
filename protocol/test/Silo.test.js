@@ -14,6 +14,7 @@ describe('Silo', function () {
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
+    this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
     this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair);
     this.pegPair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pegPair);
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
@@ -613,13 +614,13 @@ describe('Silo', function () {
 
     describe('crate balance too low', function () {
       it('reverts', async function () {
-        await expect(this.silo.connect(user).convertAddAndDepositLP('0',['1500','900','1'], [2], [1500],{value: '1'})).to.be.revertedWith('Silo: Crate balance too low.');
+        await expect(this.convert.connect(user).convertAddAndDepositLP('0',['1500','900','1'], [2], [1500],{value: '1'})).to.be.revertedWith('Silo: Crate balance too low.');
       });
     })
 
     describe('immediate convert', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2], [1000],{value: '1'});
+        await this.convert.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2], [1000],{value: '1'});
       })
       it('properly updates the total balances', async function () {
         expect(await this.silo.totalDepositedLP()).to.eq('1');
@@ -647,7 +648,7 @@ describe('Silo', function () {
     describe('convert 1 crate after a lot of seasons', function () {
       beforeEach(async function () {
         await this.season.siloSunrises('10');
-        await this.silo.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2], [1000],{value: '1'});
+        await this.convert.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2], [1000],{value: '1'});
       })
       it('properly updates the user balance', async function () {
         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('8000');
@@ -671,7 +672,7 @@ describe('Silo', function () {
       beforeEach(async function () {
         await this.season.siloSunrises('10');
         await this.silo.connect(user).depositBeans('500');
-        await this.silo.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2,12], [500,500],{value: '1'});
+        await this.convert.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2,12], [500,500],{value: '1'});
       })
       it('properly updates the user balance', async function () {
         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('9000');

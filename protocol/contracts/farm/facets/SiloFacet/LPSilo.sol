@@ -5,22 +5,13 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./SiloEntrance.sol";
+import "./UpdateSilo.sol";
 
 /**
  * @author Publius
  * @title LP Silo
 **/
-contract LPSilo is SiloEntrance {
-
-    struct WithdrawState {
-        uint256 newLP;
-        uint256 beansAdded;
-        uint256 beansTransferred;
-        uint256 beansRemoved;
-        uint256 stalkRemoved;
-        uint256 i;
-    }
+contract LPSilo is UpdateSilo {
 
     using SafeMath for uint256;
     using SafeMath for uint32;
@@ -53,8 +44,9 @@ contract LPSilo is SiloEntrance {
      * Internal
     **/
 
-    function _depositLP(uint256 amount, uint32 _s) internal {
+    function _depositLP(uint256 amount) internal {
         updateSilo(msg.sender);
+        uint32 _s = season();
         uint256 lpb = lpToLPBeans(amount);
         require(lpb > 0, "Silo: No Beans under LP.");
         incrementDepositedLP(amount);
@@ -141,5 +133,4 @@ contract LPSilo is SiloEntrance {
         s.lp.withdrawn = s.lp.withdrawn.add(amount);
         emit LPWithdraw(msg.sender, arrivalSeason, amount);
     }
-    
 }

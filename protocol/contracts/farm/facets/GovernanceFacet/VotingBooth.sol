@@ -30,24 +30,24 @@ contract VotingBooth is Bip {
         s.g.bips[bipId].roots = s.g.bips[bipId].roots.sub(balanceOfRoots(account));
     }
 
-    function placeLock(address account, uint32 bipId) internal {
+    function placeVotedUntil(address account, uint32 bipId) internal {
         uint32 newLock = startFor(bipId) + periodFor(bipId);
-        if (newLock > s.a[account].lockedUntil) {
-                s.a[account].lockedUntil = newLock;
+        if (newLock > s.a[account].votedUntil) {
+                s.a[account].votedUntil = newLock;
         }
     }
 
-    function removeLock(address account, uint32 bipId) internal {
+    function updateVotedUntil(address account) internal {
         uint32[] memory actives = activeBips();
         uint32 lastSeason = 0;
         for (uint256 i = 0; i < actives.length; i++) {
                 uint32 activeBip = actives[i];
-                if (activeBip != bipId && s.g.voted[activeBip][account]) {
-                    uint32 bipEnd = startFor(bipId) + periodFor(bipId);
+                if (s.g.voted[activeBip][account]) {
+                    uint32 bipEnd = startFor(activeBip) + periodFor(activeBip);
                     if (bipEnd > lastSeason) lastSeason = bipEnd;
                 }
         }
-        s.a[account].lockedUntil = lastSeason;
+        s.a[account].votedUntil = lastSeason;
     }
 
 }

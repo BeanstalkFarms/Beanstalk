@@ -40,7 +40,7 @@ contract Account {
         AssetSilo bean;
         AssetSilo lp;
         Silo s;
-        uint32 lockedUntil;
+        uint32 votedUntil;
         uint32 proposedUntil;
         uint32 lastUpdate;
         uint32 lastSop;
@@ -160,6 +160,13 @@ contract Storage {
         bool didSowBelowMin;
         bool didSowFaster;
     }
+
+    struct Fundraiser {
+        address payee;
+        address token;
+        uint256 total;
+        uint256 remaining;
+    }
 }
 
 struct AppStorage {
@@ -187,4 +194,6 @@ struct AppStorage {
     mapping (address => Account.State) a;
     uint32 bip0Start;
     uint32 hotFix3Start;
+    mapping (uint32 => Storage.Fundraiser) fundraisers;
+    uint32 fundraiserIndex;
 }
