@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibMarket.sol";
+import "../../../libraries/Decimal.sol";
 import "../../../C.sol";
 
 /**
@@ -17,6 +18,7 @@ import "../../../C.sol";
 contract SiloEntrance {
 
     using SafeMath for uint256;
+    using Decimal for Decimal.D256;
 
     AppStorage internal s;
 
@@ -99,13 +101,31 @@ contract SiloEntrance {
         }
     }
 
+    /// @notice Decrements the given amount of roots from bips that have been voted on by a given account and
+    /// checks whether the account is a proposer and if he/she are then they need to have the min roots required
+    /// @param account The address of the account to have their bip roots decremented
+    /// @param roots The amount of roots for the given account to be decremented from
     function decrementBipRoots(address account, uint256 roots) internal {
         if (s.a[account].votedUntil >= season()) {
+            require(
+                s.a[account].proposedUntil < season() || canPropose(account),
+                "Proposer must have the min amount left in the BIP"
+            );
             for (uint256 i = 0; i < s.g.activeBips.length; i++) {
                 uint32 bip = s.g.activeBips[i];
                 if (s.g.voted[bip][account]) s.g.bips[bip].roots = s.g.bips[bip].roots.sub(roots);
             }
         }
+    }
+
+    /// @notice Checks whether the account have the min roots required for a BIP
+    /// @param account The address of the account to check roots balance
+    function canPropose(address account) internal view returns (bool) {
+        if (s.s.roots == 0 || s.a[account].roots == 0) {
+            return false;
+        }
+        Decimal.D256 memory stake = Decimal.ratio(s.a[account].roots, s.s.roots);
+        return stake.greaterThan(C.getGovernanceProposalThreshold());
     }
 
     /**

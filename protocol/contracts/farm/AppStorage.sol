@@ -41,6 +41,7 @@ contract Account {
         AssetSilo lp;
         Silo s;
         uint32 votedUntil;
+        uint32 proposedUntil;
         uint32 lastUpdate;
         uint32 lastSop;
         uint32 lastRain;

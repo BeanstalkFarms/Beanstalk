@@ -57,6 +57,7 @@ contract GovernanceFacet is VotingBooth {
             msg.sender
         );
 
+        s.a[msg.sender].proposedUntil = startFor(bipId) + periodFor(bipId);
         emit Proposal(msg.sender, bipId, season(), C.getGovernancePeriod());
 
         vote(bipId);

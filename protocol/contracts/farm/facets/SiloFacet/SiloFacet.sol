@@ -60,7 +60,6 @@ contract SiloFacet is BeanSilo {
         uint32[] calldata crates,
         uint256[] calldata amounts
     )
-        notLocked(msg.sender)
         external
     {
         _withdrawBeans(crates, amounts);
@@ -71,7 +70,6 @@ contract SiloFacet is BeanSilo {
         uint256[] calldata amounts,
         LibClaim.Claim calldata claim
     )
-        notLocked(msg.sender)
         external
     {
         LibClaim.claim(claim, false);
@@ -141,7 +139,6 @@ contract SiloFacet is BeanSilo {
         uint256[] calldata amounts,
         LibClaim.Claim calldata claim
     )
-        notLocked(msg.sender)
         external
     {
         LibClaim.claim(claim, false);
@@ -152,7 +149,6 @@ contract SiloFacet is BeanSilo {
         uint32[] calldata crates, uint256[]
         calldata amounts
     )
-        notLocked(msg.sender)
         external
     {
         _withdrawLP(crates, amounts);
