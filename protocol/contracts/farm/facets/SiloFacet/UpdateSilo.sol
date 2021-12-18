@@ -24,7 +24,7 @@ contract UpdateSilo is SiloExit {
 
     function updateSilo(address account) public payable {
         uint32 update = lastUpdate(account);
-	convertSeeds(account);
+	//convertSeeds(account); To be implemented in conjunction with full silo transition from non-fungible seeds/stalk to fungible seeds/stalk
         if (update >= season()) return;
         uint256 grownStalk;
         if (s.a[account].s.seeds > 0) grownStalk = balanceOfGrownStalk(account);
