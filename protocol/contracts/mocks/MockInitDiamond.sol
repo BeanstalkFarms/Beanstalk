@@ -14,6 +14,7 @@ import "../mocks/MockUniswapV2Pair.sol";
 import "../mocks/MockUniswapV2Router.sol";
 import {AppStorage} from "../farm/AppStorage.sol";
 import {LibMarket} from "../libraries/LibMarket.sol";
+import "../interfaces/ISeed.sol";
 
 /**
  * @author Publius
@@ -45,6 +46,7 @@ contract MockInitDiamond {
 
         s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
         LibMarket.initMarket(s.c.bean, s.c.weth, mockRouter);
+       	s.seedContract = address(new MockToken("SEED", "Beanstalk"));
     }
 
 }
