@@ -24,6 +24,7 @@ contract UpdateSilo is SiloExit {
 
     function updateSilo(address account) public payable {
         uint32 update = lastUpdate(account);
+	convertSeeds(account);
         if (update >= season()) return;
         uint256 grownStalk;
         if (s.a[account].s.seeds > 0) grownStalk = balanceOfGrownStalk(account);
@@ -103,5 +104,19 @@ contract UpdateSilo is SiloExit {
         } else if (s.a[account].lastRain > 0) {
             s.a[account].lastRain = 0;
         }
+    }
+
+    function convertSeeds(address account) public {
+	if (s.a[account].s.seeds > 0) {
+		seed().mint(account, s.a[account].s.seeds);
+		s.s.seeds = s.s.seeds.sub(s.a[account].s.seeds);
+		s.a[account].s.seeds = 0;
+	}
+    }
+
+    function convertSeedsArray(address[] calldata accounts) public {
+	for (uint256 i = 0; i < accounts.length; i++) {
+		convertSeeds(accounts[i]);
+	}
     }
 }
