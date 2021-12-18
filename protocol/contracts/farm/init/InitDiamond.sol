@@ -20,6 +20,8 @@ import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "../../Bean.sol";
 import "../../mocks/MockToken.sol";
+import "../../Seed.sol";
+import "../../interfaces/ISeed.sol";
 
 /**
  * @author Publius
@@ -67,6 +69,8 @@ contract InitDiamond {
 
         IBean(s.c.bean).mint(msg.sender, C.getAdvanceIncentive());
         emit Incentivization(msg.sender, C.getAdvanceIncentive());
+
+	       s.seedContract = address(new Seed());
     }
 
 }
