@@ -9,6 +9,7 @@ import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibMarket.sol";
 import "../../../C.sol";
+import "../../../interfaces/ISeed.sol";
 
 /**
  * @author Publius
@@ -144,5 +145,9 @@ contract SiloEntrance {
 
     function bean() internal view returns (IBean) {
         return IBean(s.c.bean);
+    }
+
+    function seed() internal view returns (ISeed) {
+	return ISeed(s.seedContract);
     }
 }
