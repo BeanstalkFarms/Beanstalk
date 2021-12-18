@@ -167,6 +167,7 @@ async function main (scriptName, verbose=true, mock=false) {
   const pegPair = await season.pegPair();
   const silo = await ethers.getContractAt('SiloFacet', beanstalkDiamond.address);
   const weth = await silo.weth();
+  const seed = await season.seed();
 
   if (verbose) {
     console.log("--");
@@ -196,6 +197,7 @@ async function main (scriptName, verbose=true, mock=false) {
     pegPair: pegPair,
     weth: weth,
     bean: bean,
+    seed: seed,
   }
 }
 
