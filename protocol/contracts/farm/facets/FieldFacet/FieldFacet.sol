@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "./PodTransfer.sol";
 import "../../../libraries/LibClaim.sol";
+import "../MarketplaceFacet/MarketplaceFacet.sol";
 
 /**
  * @author Publius
@@ -76,6 +77,12 @@ contract FieldFacet is PodTransfer {
         if (msg.sender != sender && allowancePods(sender, msg.sender) != uint256(-1)) {
                 decrementAllowancePods(sender, msg.sender, amount);
         }
+
+        //TODO
+        if (s.listedPlots[id].price > 0){
+            // MarketplaceFacet.cancelListing(id);
+        }
+
         emit PlotTransfer(sender, recipient, id.add(start), amount);
     }
 
