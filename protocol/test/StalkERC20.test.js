@@ -170,30 +170,52 @@ describe('Stalk ERC20', function () {
 
   });
 
-  // describe('Transfering with transferFrom Stalk', function () {
-  //   it('transferFrom Stalk Correctly, Single transfer', async function () {
-  //     const initialUser2StalkErc20 = await this.silo.balanceOf(user2Address);
-  //     console.log(`Stalk Tokens: ${await this.silo.balanceOf(userAddress)}`);
-  //     console.log(`Allowance Stalk Tokens: ${await this.silo.allowance(user2Address, user2Address)}`);
-  //     await this.silo.connect(userAddress).transferFrom(user2Address, owner, '1000');
-  //     const postUser2StalkErc20 = await this.silo.balanceOf(user2Address);
-  //     expect(postUser2StalkErc20).to.be.equal(initialUser2StalkErc20.add('2000'));
-  //   });
+  describe('Transfering with transferFrom Stalk', function () {
+    it('transferFrom Stalk Correctly, Single transfer', async function () {
+      const initialUser2StalkErc20 = await this.silo.balanceOf(user2Address);
+      console.log(`Stalk Tokens: ${await this.silo.balanceOf(userAddress)}`);
+      await this.silo.connect(user2).approve(userAddress, '10000000');
+      console.log(`Allowance Stalk Tokens: ${await this.silo.allowance(user2Address, userAddress)}`);
+      await this.silo.connect(user).transferFrom(user2Address, ownerAddress, '1000');
+      const postUser2StalkErc20 = await this.silo.balanceOf(user2Address);
+      expect(postUser2StalkErc20).to.be.equal(initialUser2StalkErc20.sub('1000'));
+    });
 
-  //   it('transferFrom Stalk Correctly, Multiple transfers', async function () {
-  //     const initialUser2StalkErc20 = await this.silo.balanceOf(user2Address);
-  //     const initialUserStalkErc20 = await this.silo.balanceOf(userAddress);
-  //     const initialOwnerStalkErc20 = await this.silo.balanceOf(ownerAddress);
-  //     await this.silo.incrementBalanceOfStalkE(userAddress, '2000');
-  //     await this.silo.connect(owner).transferFrom(userAddress, user2Address, '500')
-  //     await this.silo.connect(owner).transferFrom(userAddress, ownerAddress, '1000')
-  //     const postUser2StalkErc20 = await this.silo.balanceOf(user2Address);
-  //     const postUserStalkErc20 = await this.silo.balanceOf(userAddress);
-  //     const postOwnerStalkErc20 = await this.silo.balanceOf(ownerAddress);
-  //     expect(postUser2StalkErc20).to.be.equal(initialUser2StalkErc20.add('500'));
-  //     expect(postUserStalkErc20).to.be.equal(initialUserStalkErc20.sub('500'));
-  //     expect(postOwnerStalkErc20).to.be.equal(initialOwnerStalkErc20.add('2000'));
-  //   });
+    it('transferFrom Stalk Correctly, Multiple transfers, single spender account', async function () {
+      const initialUser2StalkErc20 = await this.silo.balanceOf(user2Address);
+      const initialUserStalkErc20 = await this.silo.balanceOf(userAddress);
+      const initialOwnerStalkErc20 = await this.silo.balanceOf(ownerAddress);
 
-  // });
+      await this.silo.connect(user).approve(userAddress, '10000000');
+      await this.silo.connect(user2).approve(userAddress, '10000000');
+
+      await this.silo.connect(user).transferFrom(userAddress, user2Address, '5000')
+      await this.silo.connect(user).transferFrom(user2Address, ownerAddress, '1000')
+      const postUser2StalkErc20 = await this.silo.balanceOf(user2Address);
+      const postUserStalkErc20 = await this.silo.balanceOf(userAddress);
+      const postOwnerStalkErc20 = await this.silo.balanceOf(ownerAddress);
+      expect(postUser2StalkErc20).to.be.equal(initialUser2StalkErc20.add('4000'));
+      expect(postUserStalkErc20).to.be.equal(initialUserStalkErc20.sub('5000'));
+      expect(postOwnerStalkErc20).to.be.equal(initialOwnerStalkErc20.add('1000'));
+    });
+
+    it('transferFrom Stalk Correctly, Multiple transfers and multiple spender accounts', async function () {
+      const initialUser2StalkErc20 = await this.silo.balanceOf(user2Address);
+      const initialUserStalkErc20 = await this.silo.balanceOf(userAddress);
+      const initialOwnerStalkErc20 = await this.silo.balanceOf(ownerAddress);
+
+      await this.silo.connect(user).approve(ownerAddress, '10000000');
+      await this.silo.connect(user2).approve(userAddress, '10000000');
+
+      await this.silo.connect(owner).transferFrom(userAddress, user2Address, '500')
+      await this.silo.connect(user).transferFrom(user2Address, ownerAddress, '1000')
+      const postUser2StalkErc20 = await this.silo.balanceOf(user2Address);
+      const postUserStalkErc20 = await this.silo.balanceOf(userAddress);
+      const postOwnerStalkErc20 = await this.silo.balanceOf(ownerAddress);
+      expect(postUser2StalkErc20).to.be.equal(initialUser2StalkErc20.sub('500'));
+      expect(postUserStalkErc20).to.be.equal(initialUserStalkErc20.sub('500'));
+      expect(postOwnerStalkErc20).to.be.equal(initialOwnerStalkErc20.add('1000'));
+    });
+
+  });
 });
