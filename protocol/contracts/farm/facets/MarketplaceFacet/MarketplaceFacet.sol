@@ -56,8 +56,16 @@ contract MarketplaceFacet {
     
         uint256 plotSize = s.a[msg.sender].field.plots[index];
 
-        require(plotSize > 0, "Field: Plot not owned by user.");
-        require(plotSize >= amount, "Field: Plot not large enough.");
+        require(plotSize > 0, "Marketplace: Plot not owned by user.");
+        require(plotSize >= amount, "Marketplace: Plot not large enough.");
+
+        require(pricePerPod > 0, "Marketplace: Plot price must be non-zero.");
+        require(pricePerPod < 1000000, "Marketplace: Plot price must be less than 1.");
+
+        uint232 harvestable = uint232(s.f.harvestable);
+        require(harvestable <= index, "Marketplace: Plot cannot be harvestable.");
+        require(expiry <= index, "Marketplace: Plot must expire before harvestable.");
+        require(s.listedPlots[index].price == 0, "Marketplace: Plot already listed.");
 
         // Optimization: if Listing is full amount of plot, set to 0
         // Later, we consider a Listing with 0 to be full plot
@@ -77,10 +85,12 @@ contract MarketplaceFacet {
        return s.listedPlots[index];
     }
 
-    function buyListing(uint index, address recipient, uint amount) public {
+    function buyListing(uint256 index, address recipient, uint256 amount) public {
 
 
         Storage.Listing storage listing = s.listedPlots[index];
+
+        require(listing.price > 0, "Marketplace: Plot not listed.");
         uint232 harvestable = uint232(s.f.harvestable);
 
         uint256 listingAmount = s.listedPlots[index].amount;
@@ -89,10 +99,10 @@ contract MarketplaceFacet {
             listingAmount = s.a[recipient].field.plots[index];
         }
 
-        require(msg.sender != address(0), "Field: Transfer from 0 address.");
-        require(recipient != address(0), "Field: Transfer to 0 address.");
-        require(harvestable <= listing.expiry, "Field: Listing has expired");
-        require(listingAmount >= amount, "Field: Plot Listing has insufficient pods");
+        require(msg.sender != address(0), "Marketplace: Transfer from 0 address.");
+        require(recipient != address(0), "Marketplace: Transfer to 0 address.");
+        require(harvestable <= listing.expiry, "Marketplace: Listing has expired");
+        require(listingAmount >= amount, "Marketplace: Plot Listing has insufficient pods");
  
         uint costInBeans = (listing.price * amount) / 1000000;
 
@@ -104,6 +114,8 @@ contract MarketplaceFacet {
         if (amount == listingAmount) delete s.listedPlots[index];
         else{
             s.listedPlots[index.add(amount)] = s.listedPlots[index];
+            s.listedPlots[index.add(amount)].amount = listingAmount - amount;
+
             delete s.listedPlots[index];
         }
 
@@ -111,15 +123,15 @@ contract MarketplaceFacet {
         emit PlotTransfer(msg.sender, recipient, index, listing.price, amount);
     }
 
-    // TODO Test: How to include ETH value in test call
-    function buyBeansAndListing(uint index, address recipient, uint amount, uint256 buyBeanAmount) public {
+    //TODO Test: How to include ETH value in test call
+    function buyBeansAndListing(uint256 index, address recipient, uint256 amount, uint256 buyBeanAmount) public {
 
         LibMarket.buy(buyBeanAmount);
         buyListing(index, recipient, amount);
     }
 
-    function cancelListing(uint index) public {
-        require(s.a[msg.sender].field.plots[index] > 0, "Field: Plot not owned by user.");
+    function cancelListing(uint256 index) public {
+        require(s.a[msg.sender].field.plots[index] > 0, "Marketplace: Plot not owned by user.");
         delete s.listedPlots[index];
         emit ListingCancelled(msg.sender, index);
     }
@@ -128,23 +140,34 @@ contract MarketplaceFacet {
     // TODO
     // Question for Publius: Include 3 different amounts here?
     // Question for Publius: allocateBeans? 
+
     // function claimBeansAndBuyListing(uint256 amount, LibClaim.Claim calldata claim, uint index, address payable recipient, uint buyBeanAmount, uint amountToClaim) public  {
     //     FieldFacet.allocateBeans(claim, amountToClaim);
     //     buyBeansAndListing(index,recipient,amount);
     // }
 
-    function listBuyOffer(uint256 maxPlaceInLine, uint24 maxPricePerPod, uint232 amount) public  {
+    // TODO add ETH ?
+    function listBuyOffer(uint256 maxPlaceInLine, uint24 pricePerPod, uint232 amount, uint256 buyBeanAmount) public  {
         
+        require(amount>0, "Marketplace: Must offer to buy non-zero amount");
+        require(pricePerPod>0, "Marketplace: Price must be greater than 0");
+
+
+        uint256 costInBeans = (pricePerPod * amount) / 1000000;
+
+        if (buyBeanAmount>0){
+            LibMarket.buy(buyBeanAmount);
+        }
+
+        require(bean().balanceOf(msg.sender) >= costInBeans, "Marketplace: Not enough beans to submit buy offer.");
+
         s.buyOffers[s.buyOfferIndex].amount = amount;
-        s.buyOffers[s.buyOfferIndex].price = maxPricePerPod;
+        s.buyOffers[s.buyOfferIndex].price = pricePerPod;
         s.buyOffers[s.buyOfferIndex].maxPlaceInLine = maxPlaceInLine;
         s.buyOffers[s.buyOfferIndex].owner = msg.sender;
 
-        uint costInBeans = (maxPricePerPod * amount) / 1000000;
-        require(bean().balanceOf(msg.sender) >= costInBeans, "Field: Not enough beans to submit buy offer.");
-
         bean().transferFrom(msg.sender, address(this), costInBeans);
-        emit BuyOfferCreated(s.buyOfferIndex, msg.sender, amount, maxPricePerPod, maxPlaceInLine);
+        emit BuyOfferCreated(s.buyOfferIndex, msg.sender, amount, pricePerPod, maxPlaceInLine);
 
         s.buyOfferIndex = s.buyOfferIndex + 1;
 
@@ -152,9 +175,21 @@ contract MarketplaceFacet {
 
     function sellToBuyOffer(uint256 plotIndex, uint24 buyOfferIndex, uint232 amount) public  {
         
+
+        require(amount > 0, "Marketplace: Must sell non-zero amount");
+        require(s.a[msg.sender].field.plots[plotIndex] >= 0, "Marketplace: Plot  not owned by user.");
+
         Storage.BuyOffer storage buyOffer = s.buyOffers[buyOfferIndex];
-        require(amount <= buyOffer.amount, "Field: Buy Offer has insufficient pods");
-        require(s.a[msg.sender].field.plots[plotIndex] >= amount, "Field: Plot cannot fill Buy Offer.");
+
+
+        uint232 harvestable = uint232(s.f.harvestable);
+        uint256 placeInLine = plotIndex + amount - harvestable;
+        require(placeInLine <= buyOffer.maxPlaceInLine, "Marketplace: Plot too far in line");
+
+        require(buyOffer.price > 0, "Marketplace: BuyOffer does not exist");
+
+        require(amount <= buyOffer.amount, "Marketplace: Buy Offer has insufficient amount.");
+        require(s.a[msg.sender].field.plots[plotIndex] >= amount, "Marketplace: Plot has insufficient amount.");
 
         uint256 costInBeans = (buyOffer.price * amount) / 1000000;
 
@@ -172,7 +207,7 @@ contract MarketplaceFacet {
                 delete s.listedPlots[plotIndex];
             }
             else{
-                s.listedPlots[plotIndex.add(amount)] = s.listedPlots[plotIndex];
+                s.listedPlots[plotIndex.add(amount)] = listing;
                 delete s.listedPlots[plotIndex];
             }
             emit ListingFilled(buyOffer.owner, msg.sender, plotIndex, listing.price, amount);
@@ -189,10 +224,17 @@ contract MarketplaceFacet {
     }
 
 
-    function cancelOffer(uint24 buyOfferIndex) public  {
+    function cancelBuyOffer(uint24 buyOfferIndex) public  {
         Storage.BuyOffer storage buyOffer = s.buyOffers[buyOfferIndex];
         // TODO does this check equality correctly?
         require(buyOffer.owner == msg.sender, "Field: Buy Offer not owned by user.");
+        
+        uint256 amount = s.buyOffers[s.buyOfferIndex].amount;
+        uint256 price = s.buyOffers[s.buyOfferIndex].price;
+
+        uint256 costInBeans = (price * amount) / 1000000;
+        bean().transferFrom(address(this), msg.sender, costInBeans);
+        
         delete s.buyOffers[buyOfferIndex];
         emit BuyOfferCancelled(msg.sender, buyOfferIndex);
     }

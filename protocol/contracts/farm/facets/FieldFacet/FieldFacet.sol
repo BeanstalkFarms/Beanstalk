@@ -78,7 +78,7 @@ contract FieldFacet is PodTransfer {
                 decrementAllowancePods(sender, msg.sender, amount);
         }
 
-        //TODO
+        //TODO how do I call this function?
         if (s.listedPlots[id].price > 0){
             // MarketplaceFacet.cancelListing(id);
         }
