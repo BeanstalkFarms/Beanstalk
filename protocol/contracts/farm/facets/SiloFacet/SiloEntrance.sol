@@ -33,8 +33,7 @@ contract SiloEntrance {
     }
 
     function incrementBalanceOfSeeds(address account, uint256 seeds) internal {
-        s.s.seeds = s.s.seeds.add(seeds);
-        s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
+        seed().mint(account, seeds);
     }
 
     function incrementBalanceOfStalk(address account, uint256 stalk) internal {
@@ -57,8 +56,7 @@ contract SiloEntrance {
     }
 
     function decrementBalanceOfSeeds(address account, uint256 seeds) internal {
-        s.s.seeds = s.s.seeds.sub(seeds);
-        s.a[account].s.seeds = s.a[account].s.seeds.sub(seeds);
+        seed().burnFrom(account, seeds);
     }
 
     function decrementBalanceOfStalk(address account, uint256 stalk) internal {
