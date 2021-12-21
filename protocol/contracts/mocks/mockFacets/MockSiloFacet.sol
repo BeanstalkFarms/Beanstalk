@@ -135,5 +135,9 @@ contract MockSiloFacet is SiloFacet {
         }
         return (seasons, crates);
     }
+    
+    function setNonFungibleSeeds(uint256 amount) public {
+	       s.a[msg.sender].s.seeds = amount;
+    }
 
 }
