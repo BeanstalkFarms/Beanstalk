@@ -20,6 +20,7 @@ contract FieldFacet is PodTransfer {
 
     event PlotTransfer(address indexed from, address indexed to, uint256 indexed id, uint256 pods);
     event PodApproval(address indexed owner, address indexed spender, uint256 pods);
+    event ListingCancelled(address indexed account, uint256 indexed index);
 
     /**
      * Sow
@@ -78,9 +79,8 @@ contract FieldFacet is PodTransfer {
                 decrementAllowancePods(sender, msg.sender, amount);
         }
 
-        //TODO how do I call this function?
         if (s.listedPlots[id].price > 0){
-            // MarketplaceFacet.cancelListing(id);
+            cancelListing(id);
         }
 
         emit PlotTransfer(sender, recipient, id.add(start), amount);
@@ -90,6 +90,12 @@ contract FieldFacet is PodTransfer {
         require(spender != address(0), "Field: Pod Approve to 0 address.");
         setAllowancePods(msg.sender, spender, amount);
         emit PodApproval(msg.sender, spender, amount);
+    }
+
+    function cancelListing(uint256 index) internal {
+        require(s.a[msg.sender].field.plots[index] > 0, "Marketplace: Plot not owned by user.");
+        delete s.listedPlots[index];
+        emit ListingCancelled(msg.sender, index);
     }
 
     function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {

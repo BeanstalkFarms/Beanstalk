@@ -11,6 +11,7 @@ import "../../../interfaces/IBean.sol";
 import "../../../libraries/LibMarket.sol";
 import "../../../libraries/LibClaim.sol";
 import "../FieldFacet/FieldFacet.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Beanjoyer
@@ -56,7 +57,6 @@ contract MarketplaceFacet {
     
         uint256 plotSize = s.a[msg.sender].field.plots[index];
 
-        require(plotSize > 0, "Marketplace: Plot not owned by user.");
         require(plotSize >= amount, "Marketplace: Plot not large enough.");
 
         require(pricePerPod > 0, "Marketplace: Plot price must be non-zero.");
@@ -125,9 +125,8 @@ contract MarketplaceFacet {
 
     //TODO Test: How to include ETH value in test call
     function buyBeansAndListing(uint256 index, address recipient, uint256 amount, uint256 buyBeanAmount) public {
-
         LibMarket.buy(buyBeanAmount);
-        buyListing(index, recipient, amount);
+        buyListing(index, recipient, buyBeanAmount);
     }
 
     function cancelListing(uint256 index) public {
@@ -138,8 +137,6 @@ contract MarketplaceFacet {
 
 
     // TODO
-    // Question for Publius: Include 3 different amounts here?
-    // Question for Publius: allocateBeans? 
 
     // function claimBeansAndBuyListing(uint256 amount, LibClaim.Claim calldata claim, uint index, address payable recipient, uint buyBeanAmount, uint amountToClaim) public  {
     //     FieldFacet.allocateBeans(claim, amountToClaim);
@@ -167,6 +164,9 @@ contract MarketplaceFacet {
         s.buyOffers[s.buyOfferIndex].owner = msg.sender;
 
         bean().transferFrom(msg.sender, address(this), costInBeans);
+
+
+
         emit BuyOfferCreated(s.buyOfferIndex, msg.sender, amount, pricePerPod, maxPlaceInLine);
 
         s.buyOfferIndex = s.buyOfferIndex + 1;
@@ -175,8 +175,6 @@ contract MarketplaceFacet {
 
     function sellToBuyOffer(uint256 plotIndex, uint24 buyOfferIndex, uint232 amount) public  {
         
-
-        require(amount > 0, "Marketplace: Must sell non-zero amount");
         require(s.a[msg.sender].field.plots[plotIndex] >= 0, "Marketplace: Plot  not owned by user.");
 
         Storage.BuyOffer storage buyOffer = s.buyOffers[buyOfferIndex];
@@ -193,7 +191,7 @@ contract MarketplaceFacet {
 
         uint256 costInBeans = (buyOffer.price * amount) / 1000000;
 
-        bean().transferFrom(address(this), msg.sender, costInBeans);
+        bean().transfer(msg.sender, costInBeans);
 
         // If plot being transferred was previously listed,
         // Update Index / Delete Listing Accordingly 
@@ -233,7 +231,7 @@ contract MarketplaceFacet {
         uint256 price = s.buyOffers[s.buyOfferIndex].price;
 
         uint256 costInBeans = (price * amount) / 1000000;
-        bean().transferFrom(address(this), msg.sender, costInBeans);
+        bean().transfer(msg.sender, costInBeans);
         
         delete s.buyOffers[buyOfferIndex];
         emit BuyOfferCancelled(msg.sender, buyOfferIndex);

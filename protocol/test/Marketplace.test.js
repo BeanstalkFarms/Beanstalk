@@ -31,6 +31,7 @@ describe('Marketplace', function () {
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.marketplace = await ethers.getContractAt('MarketplaceFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
+    this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair);
 
 
     await this.season.resetAccount(userAddress)
@@ -79,7 +80,7 @@ describe('Marketplace', function () {
     });
 
     it('Fails to List Unowned Plot', async function () {
-      await expect(this.marketplace.connect(user).listPlot('1000', '500000', '1000', '1000')).to.be.revertedWith('Marketplace: Plot not owned by user.');
+      await expect(this.marketplace.connect(user).listPlot('1000', '500000', '1000', '1000')).to.be.revertedWith('Marketplace: Plot not large enough.');
     });
 
 
@@ -139,6 +140,11 @@ describe('Marketplace', function () {
       expect(listingNew.amount.toString()).to.equal('500');
 
     });
+
+    //TODO List  Buy Listing w ETH
+
+
+
 
     // it('Buy Partial Listing of Partial Plot', async function () {
 
@@ -206,12 +212,23 @@ describe('Marketplace', function () {
 
   describe("Buy Offer", async function () {
 
-    it('Lists Buy Offer', async function () {
+    it('Lists Buy Offer, Sells Plot to Buy Offer', async function () {
+      await this.pair.simulateTrade('10000', '40000');
+
       let user2BeanBalance = parseInt((await this.bean.balanceOf(user2Address)).toString())
       this.result = await this.marketplace.connect(user2).listBuyOffer('5000', '800000', '500', 0);
       let user2BeanBalanceAfterBuyOffer = parseInt((await this.bean.balanceOf(user2Address)).toString())
       expect(user2BeanBalance-user2BeanBalanceAfterBuyOffer).to.equal(400);
+
+      let userBeanBalance2 = parseInt((await this.bean.balanceOf(userAddress)).toString())
+      this.result = await this.marketplace.connect(user).sellToBuyOffer('4000', '0', '250');
+      let userBeanBalanceAfterBuyOffer2 = parseInt((await this.bean.balanceOf(userAddress)).toString())
+      expect(userBeanBalanceAfterBuyOffer2-userBeanBalance2).to.equal(200);
+
     });
+    //TODO List  Buy offer w ETH
+
+
 
     // it('Sell to Buy Offer Fails, Too Far in Line', async function () {
 
@@ -222,12 +239,14 @@ describe('Marketplace', function () {
     // });
 
     it('Sells Plot to Buy Offer', async function () {
-      let user2BeanBalance = parseInt((await this.bean.balanceOf(user2Address)).toString())
-      this.result = await this.marketplace.connect(user).sellToBuyOffer('4000', '0', '250');
-      let user2BeanBalanceAfterBuyOffer = parseInt((await this.bean.balanceOf(user2Address)).toString())
-      expect(user2BeanBalanceAfterBuyOffer-user2BeanBalance).to.equal(160);
+
     });
+
+  // Cancel Buy Offer
+  // TODO more coverage
+
 
 
   });
+
 });
