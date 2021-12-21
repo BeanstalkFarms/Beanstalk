@@ -138,6 +138,7 @@ contract MockSiloFacet is SiloFacet {
     
     function setNonFungibleSeeds(uint256 amount) public {
 	       s.a[msg.sender].s.seeds = amount;
+	       s.s.seeds = s.s.seeds.add(amount);
     }
 
 }
