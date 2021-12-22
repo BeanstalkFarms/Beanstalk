@@ -168,9 +168,9 @@ contract Storage {
     }
 
     struct BuyOffer {
-        uint232 amount;
+        uint256 amount;
         uint24 price;
-        uint256 maxPlaceInLine; 
+        uint232 maxPlaceInLine; 
         address owner;
     }
 }

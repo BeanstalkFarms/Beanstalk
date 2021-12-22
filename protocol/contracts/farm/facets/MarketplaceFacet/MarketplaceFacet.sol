@@ -35,7 +35,7 @@ contract MarketplaceFacet {
     event ListingCancelled(address indexed account, uint256 indexed index);
     event ListingFilled(address indexed buyer, address indexed seller, uint256 indexed index, uint24 pricePerPod, uint256 amount);
 
-    event BuyOfferCreated(uint indexed index, address indexed account, uint232 amount, uint24 pricePerPod, uint256 maxPlaceInLine);
+    event BuyOfferCreated(uint indexed index, address indexed account, uint256 amount, uint24 pricePerPod, uint232 maxPlaceInLine);
     event BuyOfferCancelled(address indexed account, uint256 indexed index);
     event BuyOfferFilled(uint256 indexed index, uint256 amount);
 
@@ -85,7 +85,7 @@ contract MarketplaceFacet {
        return s.listedPlots[index];
     }
 
-    function buyListing(uint256 index, address recipient, uint256 amount) public {
+    function buyListing(uint256 index, address recipient, uint256 amountBeansUsing) public {
 
 
         Storage.Listing storage listing = s.listedPlots[index];
@@ -99,15 +99,16 @@ contract MarketplaceFacet {
             listingAmount = s.a[recipient].field.plots[index];
         }
 
+        require(bean().balanceOf(msg.sender) >= amountBeansUsing, "Field: Not enough beans to purchase.");
+
+        uint256 amount = (amountBeansUsing / listing.price) * 1000000;
+
         require(msg.sender != address(0), "Marketplace: Transfer from 0 address.");
         require(recipient != address(0), "Marketplace: Transfer to 0 address.");
         require(harvestable <= listing.expiry, "Marketplace: Listing has expired");
         require(listingAmount >= amount, "Marketplace: Plot Listing has insufficient pods");
  
-        uint costInBeans = (listing.price * amount) / 1000000;
-
-        require(bean().balanceOf(msg.sender) >= costInBeans, "Field: Not enough beans to purchase.");
-        bean().transferFrom(msg.sender, recipient, costInBeans);
+        bean().transferFrom(msg.sender, recipient, amountBeansUsing);
         insertPlot(msg.sender,index,amount);
         removePlot(recipient,index,0,amount);
 
@@ -124,9 +125,9 @@ contract MarketplaceFacet {
     }
 
     //TODO Test: How to include ETH value in test call
-    function buyBeansAndListing(uint256 index, address recipient, uint256 amount, uint256 buyBeanAmount) public {
-        LibMarket.buy(buyBeanAmount);
-        buyListing(index, recipient, buyBeanAmount);
+    function buyBeansAndListing(uint256 index, address recipient, uint256 amountBeans, uint256 buyBeanAmount) public {
+        uint256 boughtBeanAmount = LibMarket.buy(buyBeanAmount);
+        buyListing(index, recipient, boughtBeanAmount + amountBeans);
     }
 
     function cancelListing(uint256 index) public {
@@ -144,34 +145,32 @@ contract MarketplaceFacet {
     // }
 
     // TODO add ETH ?
-    function listBuyOffer(uint256 maxPlaceInLine, uint24 pricePerPod, uint232 amount, uint256 buyBeanAmount) public  {
+    function listBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amountBeansUsing) public  {
         
-        require(amount>0, "Marketplace: Must offer to buy non-zero amount");
-        require(pricePerPod>0, "Marketplace: Price must be greater than 0");
+        require(amountBeansUsing > 0, "Marketplace: Must offer to buy non-zero amount");
+        require(bean().balanceOf(msg.sender) >= amountBeansUsing, "Marketplace: Not enough beans to submit buy offer.");
+        require(pricePerPod > 0, "Marketplace: Price must be greater than 0");
 
-
-        uint256 costInBeans = (pricePerPod * amount) / 1000000;
-
-        if (buyBeanAmount>0){
-            LibMarket.buy(buyBeanAmount);
-        }
-
-        require(bean().balanceOf(msg.sender) >= costInBeans, "Marketplace: Not enough beans to submit buy offer.");
+        uint256 amount = (amountBeansUsing / pricePerPod) * 1000000;
 
         s.buyOffers[s.buyOfferIndex].amount = amount;
         s.buyOffers[s.buyOfferIndex].price = pricePerPod;
         s.buyOffers[s.buyOfferIndex].maxPlaceInLine = maxPlaceInLine;
         s.buyOffers[s.buyOfferIndex].owner = msg.sender;
 
-        bean().transferFrom(msg.sender, address(this), costInBeans);
-
-
+        bean().transferFrom(msg.sender, address(this), amountBeansUsing);
 
         emit BuyOfferCreated(s.buyOfferIndex, msg.sender, amount, pricePerPod, maxPlaceInLine);
 
         s.buyOfferIndex = s.buyOfferIndex + 1;
 
     }
+
+    function buyBeansAndListBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amountBeans, uint256 buyBeanAmount) public {
+        uint256 boughtBeanAmount = LibMarket.buy(buyBeanAmount);
+        listBuyOffer(maxPlaceInLine, pricePerPod, boughtBeanAmount + amountBeans);
+    }
+
 
     function sellToBuyOffer(uint256 plotIndex, uint24 buyOfferIndex, uint232 amount) public  {
         

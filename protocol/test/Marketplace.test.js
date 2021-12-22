@@ -24,6 +24,7 @@ describe('Marketplace', function () {
     userAddress = user.address;
     user2Address = user2.address;
     const contracts = await deploy("Test", false, true);
+    const provider = ethers.getDefaultProvider();
 
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond
@@ -213,6 +214,21 @@ describe('Marketplace', function () {
   describe("Buy Offer", async function () {
 
     it('Lists Buy Offer, Sells Plot to Buy Offer', async function () {
+      await this.pair.simulateTrade('10000', '40000');
+
+      let user2BeanBalance = parseInt((await this.bean.balanceOf(user2Address)).toString())
+      this.result = await this.marketplace.connect(user2).listBuyOffer('5000', '800000', '500', 0);
+      let user2BeanBalanceAfterBuyOffer = parseInt((await this.bean.balanceOf(user2Address)).toString())
+      expect(user2BeanBalance-user2BeanBalanceAfterBuyOffer).to.equal(400);
+
+      let userBeanBalance2 = parseInt((await this.bean.balanceOf(userAddress)).toString())
+      this.result = await this.marketplace.connect(user).sellToBuyOffer('4000', '0', '250');
+      let userBeanBalanceAfterBuyOffer2 = parseInt((await this.bean.balanceOf(userAddress)).toString())
+      expect(userBeanBalanceAfterBuyOffer2-userBeanBalance2).to.equal(200);
+
+    });
+
+    it('Lists Buy Offer, usiing ETH', async function () {
       await this.pair.simulateTrade('10000', '40000');
 
       let user2BeanBalance = parseInt((await this.bean.balanceOf(user2Address)).toString())
