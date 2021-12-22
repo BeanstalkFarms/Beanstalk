@@ -83,6 +83,16 @@ describe('Stalk ERC20', function () {
       expect(decimalNumber.toString()).to.be.equal('10');
     });
 
+  });
+
+  describe('Silo Properly Rewards Stalk after Sunrise', function () {
+    it('Mints Stalk Correctly to Total Supply after 1 Reward Bean', async function () {
+      const preStalkSupply = await this.silo.totalSupply();
+      await this.season.siloSunrise(1);
+      const totalStalkSupplyErc20 = await this.silo.totalSupply();
+      // 1 Reward Bean is 10000 Stalk
+      expect(preStalkSupply.add(10000)).be.equal(totalStalkSupplyErc20);
+    });
   })
 
   describe('Incrementing Stalk Multiple Accounts', function () {

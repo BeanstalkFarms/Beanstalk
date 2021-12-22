@@ -48,7 +48,6 @@ contract Silo is Life {
     function rewardBeans(uint256 amount) private {
         if (s.stalkToken._totalSupply == 0 || amount == 0) return;
         LibStalk._mint(msg.sender, amount.mul(C.getStalkPerBean()));
-        // s.stalkToken = s.stalkToken.add(amount.mul(C.getStalkPerBean()));
         
         s.si.beans = s.si.beans.add(amount);
         s.bean.deposited = s.bean.deposited.add(amount);
