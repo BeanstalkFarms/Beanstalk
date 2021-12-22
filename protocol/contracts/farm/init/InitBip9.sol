@@ -6,7 +6,7 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {AppStorage} from "../AppStorage.sol";
-import "../../../libraries/LibStalk.sol";
+import "../../libraries/LibStalk.sol";
 
 /**
  * @author LeoFib
@@ -15,9 +15,10 @@ import "../../../libraries/LibStalk.sol";
 contract InitBip9 {
 
     AppStorage internal s;
+    address private constant stalk_contract = address();
 
     function init() external {
-        LibStalk._mint(account, s.s.stalk);
-        s.s.stalk = 0;
+        // LibStalk._mint(stalk_contract, s.s.stalk);
+        // s.s.stalk = 0;
     }
 }
