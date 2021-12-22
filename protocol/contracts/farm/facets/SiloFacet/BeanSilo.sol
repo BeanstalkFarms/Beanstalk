@@ -60,7 +60,7 @@ contract BeanSilo is LPSilo {
         updateSilo(msg.sender);
         require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         (uint256 beansRemoved, uint256 stalkRemoved) = removeBeanDeposits(crates, amounts);
-        addBeanWithdrawal(msg.sender, season()+C.getSiloWithdrawSeasons(), beansRemoved);
+        addBeanWithdrawal(msg.sender, season()+s.season.withdrawBuffer, beansRemoved);
         decrementDepositedBeans(beansRemoved);
         withdrawSiloAssets(msg.sender, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved);
         updateBalanceOfRainStalk(msg.sender);

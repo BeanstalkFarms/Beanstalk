@@ -110,6 +110,22 @@ contract MockSeasonFacet is SeasonFacet {
         }
     }
 
+    function halfWeekSunrise() public {
+            teleportSunrise(84);
+            decrementWithdrawBuffer();
+    }
+    
+    function weekSunrise() public {
+            teleportSunrise(168);
+            decrementWithdrawBuffer();
+    }
+
+    function decrementSunrise(uint256 week) public {
+            for (uint256 i = 0; i < week; i++) {
+                    weekSunrise();
+            }
+    }
+
     function setYieldE(uint32 number) public {
         s.w.yield = number;
     }
@@ -216,7 +232,8 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.timestamp = uint32(block.timestamp % 2 ** 32);
         delete s.sop;
         s.s.stalk = 0;
-        s.s.seeds = 0 ;
+        s.s.seeds = 0;
+        s.season.withdrawBuffer = 25;
         s.season.current = 1;
         s.paused = false;
         bean().burn(bean().balanceOf(address(this)));

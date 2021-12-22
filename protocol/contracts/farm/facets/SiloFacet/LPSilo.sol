@@ -67,7 +67,7 @@ contract LPSilo is UpdateSilo {
             uint256 stalkRemoved,
             uint256 seedsRemoved
         ) = removeLPDeposits(crates, amounts);
-        uint32 arrivalSeason = season() + C.getSiloWithdrawSeasons();
+        uint32 arrivalSeason = season() + s.season.withdrawBuffer;
         addLPWithdrawal(msg.sender, arrivalSeason, lpRemoved);
         decrementDepositedLP(lpRemoved);
         withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);

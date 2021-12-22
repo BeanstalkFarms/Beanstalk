@@ -49,6 +49,10 @@ contract Life {
     function season() public view returns (uint32) {
         return s.season.current;
     }
+    
+    function withdrawTime() public view returns (uint8) {
+        return s.season.withdrawBuffer;
+    }
 
     function seasonTime() public virtual view returns (uint32) {
         if (block.timestamp < s.season.start) return 0;

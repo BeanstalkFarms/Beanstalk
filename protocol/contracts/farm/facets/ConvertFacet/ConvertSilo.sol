@@ -1,3 +1,4 @@
+
 /**
  * SPDX-License-Identifier: MIT
 **/
@@ -27,6 +28,47 @@ contract ConvertSilo is SiloEntrance {
         uint256 beansRemoved;
         uint256 stalkRemoved;
         uint256 i;
+    }
+
+    function _convertAddAndDepositLP(
+        uint256 lp,
+        LibMarket.AddLiquidity calldata al,
+        uint32[] memory crates,
+        uint256[] memory amounts,
+        uint256 beansToWallet
+    )
+        internal
+    {
+	    LibInternal.updateSilo(msg.sender);
+        WithdrawState memory w;
+        if (bean().balanceOf(address(this)) < al.beanAmount) {
+            w.beansTransferred = al.beanAmount.sub(s.bean.deposited);
+            bean().transferFrom(msg.sender, address(this), w.beansTransferred);
+        }
+        (w.beansAdded, w.newLP) = LibMarket.addLiquidity(al); // w.beansAdded is beans added to LP
+        require(w.newLP > 0, "Silo: No LP added.");
+        (w.beansRemoved, w.stalkRemoved) = _withdrawBeansForConvert(crates, amounts, w.beansAdded); // w.beansRemoved is beans removed from Silo
+        uint256 amountFromWallet = w.beansAdded.sub(w.beansRemoved, "Silo: Removed too many Beans.");
+
+	    bool flag;
+        if (amountFromWallet < w.beansTransferred) {
+            bean().transfer(msg.sender, w.beansTransferred.sub(amountFromWallet));
+	    } else if (w.beansTransferred < amountFromWallet) {
+	        flag = true;
+            uint256 transferAmount = amountFromWallet.sub(w.beansTransferred);
+            LibMarket.transferAllocatedBeans(transferAmount, beansToWallet);
+        }
+        if (!flag) LibMarket.sendBeansToWallet(beansToWallet);
+
+        w.i = w.stalkRemoved.div(lpToLPBeans(lp.add(w.newLP)), "Silo: No LP Beans.");
+        uint32 depositSeason = uint32(season().sub(w.i.div(C.getSeedsPerLPBean())));
+
+        if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
+	
+        lp = lp.add(w.newLP);
+        _depositLP(lp, lpToLPBeans(lp), depositSeason);
+        LibCheck.beanBalanceCheck();
+        updateBalanceOfRainStalk(msg.sender);
     }
 
     /**
