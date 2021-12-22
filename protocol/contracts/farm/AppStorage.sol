@@ -208,4 +208,5 @@ struct AppStorage {
     mapping (uint32 => Storage.Fundraiser) fundraisers;
     uint32 fundraiserIndex;
     Storage.Stalk stalkToken;
+    address seedContract;
 }

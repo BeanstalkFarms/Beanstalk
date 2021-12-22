@@ -51,7 +51,7 @@ contract Silo is Life {
         
         s.si.beans = s.si.beans.add(amount);
         s.bean.deposited = s.bean.deposited.add(amount);
-        s.s.seeds = s.s.seeds.add(amount.mul(C.getSeedsPerBean()));
+        seed().mint(msg.sender, amount.mul(C.getSeedsPerBean()));
     }
 
     // Season of Plenty

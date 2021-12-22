@@ -32,7 +32,7 @@ describe('Stalk ERC20', function () {
     user3Address = user3.address;
     
     // Print out all Functions in Contract 
-    const contracts = await deploy("Test", true, true);
+    const contracts = await deploy("Test", false, true);
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
@@ -40,8 +40,8 @@ describe('Stalk ERC20', function () {
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair);
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
+    this.seed = await ethers.getContractAt("MockToken", contracts.seed);
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
-    console.log(await this.governance.activeBips());
 
     this.empty = {
       diamondCut: [],
@@ -62,6 +62,12 @@ describe('Stalk ERC20', function () {
     await this.bean.mint(userAddress, '1000000');
     await this.bean.mint(user2Address, '1000000');
     await this.bean.mint(user3Address, '1000000');
+    await this.seed.mint(userAddress, '1000000');
+    await this.seed.mint(user2Address, '1000000');
+    await this.seed.mint(user3Address, '1000000');
+    await this.seed.connect(user).approve(this.silo.address, '1000000000');
+    await this.seed.connect(user2).approve(this.silo.address, '1000000000');
+    await this.seed.connect(user3).approve(this.silo.address, '1000000000');
   });
 
   beforeEach(async function () {

@@ -10,6 +10,7 @@ import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "../../AppStorage.sol";
 import "../../../C.sol";
 import "../../../interfaces/IBean.sol";
+import "../../../interfaces/ISeed.sol";
 
 /**
  * @author Publius
@@ -30,6 +31,10 @@ contract Life {
 
     function bean() public view returns (IBean) {
         return IBean(s.c.bean);
+    }
+
+    function seed() public view returns (ISeed) {
+        return ISeed(s.seedContract);
     }
 
     function pair() public view returns (IUniswapV2Pair) {

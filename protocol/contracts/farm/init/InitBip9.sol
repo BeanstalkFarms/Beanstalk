@@ -7,6 +7,8 @@ pragma experimental ABIEncoderV2;
 
 import {AppStorage} from "../AppStorage.sol";
 import "../../libraries/LibStalk.sol";
+import "../../interfaces/ISeed.sol";
+import "../../Seed.sol";
 
 /**
  * @author LeoFib
@@ -18,7 +20,8 @@ contract InitBip9 {
     address private constant stalk_contract = address();
 
     function init() external {
-        // LibStalk._mint(stalk_contract, s.s.stalk);
-        // s.s.stalk = 0;
+      // LibStalk._mint(stalk_contract, s.s.stalk);
+      // s.s.stalk = 0;
+      s.seedContract = address(new Seed());
     }
 }
