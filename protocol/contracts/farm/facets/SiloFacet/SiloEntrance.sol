@@ -10,6 +10,7 @@ import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibMarket.sol";
 import "../../../libraries/LibStalk.sol";
 import "../../../C.sol";
+import "../../../interfaces/ISeed.sol";
 
 /**
  * @author Publius
@@ -33,8 +34,7 @@ contract SiloEntrance {
     }
 
     function incrementBalanceOfSeeds(address account, uint256 seeds) internal {
-        s.s.seeds = s.s.seeds.add(seeds);
-        s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
+        seed().mint(account, seeds);
     }
 
     /// @notice mints the corresponding amount of stalk ERC-20 tokens to the selected account address
@@ -66,8 +66,7 @@ contract SiloEntrance {
     }
 
     function decrementBalanceOfSeeds(address account, uint256 seeds) internal {
-        s.s.seeds = s.s.seeds.sub(seeds);
-        s.a[account].s.seeds = s.a[account].s.seeds.sub(seeds);
+        seed().burnFrom(account, seeds);
     }
 
     /// @notice burns the corresponding amount of stalk ERC-20 tokens of the selected account address
@@ -163,5 +162,9 @@ contract SiloEntrance {
 
     function bean() internal view returns (IBean) {
         return IBean(s.c.bean);
+    }
+
+    function seed() internal view returns (ISeed) {
+	return ISeed(s.seedContract);
     }
 }
