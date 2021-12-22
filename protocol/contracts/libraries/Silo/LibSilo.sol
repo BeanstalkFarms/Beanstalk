@@ -47,7 +47,7 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 roots;
         if (s.s.roots == 0) roots = stalk.mul(C.getRootsBase());
-        else roots = s.s.roots.mul(stalk).div(s.stalkToken._totalSupply());
+        else roots = s.s.roots.mul(stalk).div(s.stalkToken._totalSupply);
 
         s.s.stalk = s.s.stalk.add(stalk);
         // Mint Stalk ERC-20
