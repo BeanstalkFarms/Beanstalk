@@ -49,8 +49,9 @@ contract SiloEntrance {
 
         uint256 roots;
         if (s.s.roots == 0) roots = stalk.mul(C.getRootsBase());
-        else roots = s.s.roots.mul(stalk).div(s.stalkToken._totalSupply);
+        else roots = s.s.roots.mul(stalk).div(s.s.stalk);
 
+        s.s.stalk = s.s.stalk.add(stalk);
         // Mint Stalk ERC-20
         LibStalk._mint(account, stalk);
 
@@ -82,7 +83,8 @@ contract SiloEntrance {
 
         if (stalk == 0) return;
         uint256 roots = s.a[account].roots.mul(stalk).sub(1).div(s.stalkToken._balances[account]).add(1);
-
+        
+        s.s.stalk = s.s.stalk.sub(stalk);
         // Burn Stalk ERC-20
         LibStalk._burn(account, stalk);
 
