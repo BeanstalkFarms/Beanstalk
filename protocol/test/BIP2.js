@@ -23,6 +23,7 @@ describe('BIP2', function () {
     this.pegPair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pegPair)
     this.bean = await ethers.getContractAt('MockToken', contracts.bean)
     this.weth = await ethers.getContractAt('MockToken', contracts.weth)
+    this.seed = await ethers.getContractAt('MockToken', contracts.seed)
 
     await this.season.siloSunrise(0)
     await this.bean.mint(userAddress, '1000000000')
@@ -33,6 +34,8 @@ describe('BIP2', function () {
     await this.pair.connect(user2).approve(this.silo.address, '100000000000')
     await this.bean.connect(user).approve(this.silo.address, '100000000000')
     await this.bean.connect(user2).approve(this.silo.address, '100000000000')
+    await this.seed.connect(user).approve(this.silo.address, '1000000000000')
+    await this.seed.connect(user2).approve(this.silo.address, '100000000000')
     await this.pair.faucet(userAddress, '100');
     await this.pair.set('100000', '100','1');
 
@@ -43,11 +46,11 @@ describe('BIP2', function () {
   });
 
   beforeEach (async function () {
-    await this.season.resetAccount(userAddress)
-    await this.season.resetAccount(user2Address)
-    await this.season.resetAccount(ownerAddress)
-    await this.season.resetState()
-    await this.season.siloSunrise(0)
+    await this.season.resetAccount(userAddress);
+    await this.season.resetAccount(user2Address);
+    await this.season.resetAccount(ownerAddress);
+    await this.season.resetState();
+    await this.season.siloSunrise(0);
   });
 
   describe('claimBeans', function () {

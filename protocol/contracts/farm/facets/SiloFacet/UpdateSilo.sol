@@ -28,6 +28,7 @@ contract UpdateSilo is SiloExit {
 
     function updateSilo(address account) public payable {
         uint32 update = lastUpdate(account);
+	// convertSeeds(account);
         if (update >= season()) return;
         uint256 grownStalk;
         if (s.a[account].s.seeds > 0) grownStalk = balanceOfGrownStalk(account);
@@ -67,7 +68,8 @@ contract UpdateSilo is SiloExit {
             s.si.beans = s.si.beans.sub(beans);
             uint256 seeds = beans.mul(C.getSeedsPerBean());
             Account.State storage a = s.a[account];
-            s.a[account].s.seeds = a.s.seeds.add(seeds);
+	    seed().transfer(account, seeds);
+            //s.a[account].s.seeds = a.s.seeds.add(seeds);
             s.a[account].s.stalk = accountStalk.add(beans.mul(C.getStalkPerBean()));
             LibBeanSilo.addBeanDeposit(account, season(), beans);
         }
@@ -109,114 +111,17 @@ contract UpdateSilo is SiloExit {
         }
     }
 
-    /**
-     * Silo
-    **/
-
-    function depositSiloAssets(address account, uint256 seeds, uint256 stalk) internal {
-        incrementBalanceOfStalk(account, stalk);
-        incrementBalanceOfSeeds(account, seeds);
-    }
-
-    function incrementBalanceOfSeeds(address account, uint256 seeds) internal {
-        s.s.seeds = s.s.seeds.add(seeds);
-        s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
-    }
-
-    function incrementBalanceOfStalk(address account, uint256 stalk) internal {
-        uint256 roots;
-        if (s.s.roots == 0) roots = stalk.mul(C.getRootsBase());
-        else roots = s.s.roots.mul(stalk).div(totalStalk());
-
-        s.s.stalk = s.s.stalk.add(stalk);
-        s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
-
-        s.s.roots = s.s.roots.add(roots);
-        s.a[account].roots = s.a[account].roots.add(roots);
-
-        incrementBipRoots(account, roots);
-    }
-
-    function withdrawSiloAssets(address account, uint256 seeds, uint256 stalk) internal {
-        decrementBalanceOfStalk(account, stalk);
-        decrementBalanceOfSeeds(account, seeds);
-    }
-
-    function decrementBalanceOfSeeds(address account, uint256 seeds) internal {
-        s.s.seeds = s.s.seeds.sub(seeds);
-        s.a[account].s.seeds = s.a[account].s.seeds.sub(seeds);
-    }
-
-    function decrementBalanceOfStalk(address account, uint256 stalk) internal {
-        if (stalk == 0) return;
-        uint256 roots = s.a[account].roots.mul(stalk).sub(1).div(s.a[account].s.stalk).add(1);
-
-        s.s.stalk = s.s.stalk.sub(stalk);
-        s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
-
-        s.s.roots = s.s.roots.sub(roots);
-        s.a[account].roots = s.a[account].roots.sub(roots);
-
-        decrementBipRoots(account, roots);
-    }
-
-    function addBeanDeposit(address account, uint32 _s, uint256 amount) internal {
-        s.a[account].bean.deposits[_s] += amount;
-        emit BeanDeposit(account, _s, amount);
-    }
-
-    function incrementDepositedBeans(uint256 amount) internal {
-        s.bean.deposited = s.bean.deposited.add(amount);
-    }
-
-    /// @notice Examines whether a given account has voted for a BIP
-    /// @param account The address for the modifier to check if they have voted
-    modifier hasVoted(address account) {
-        require(!(locked(account)),"locked");
-        _;
-    }
-
-    function updateBalanceOfRainStalk(address account) internal {
-        if (!s.r.raining) return;
-        if (s.a[account].roots < s.a[account].sop.roots) {
-            s.r.roots = s.r.roots.sub(s.a[account].sop.roots.sub(s.a[account].roots));
-            s.a[account].sop.roots = s.a[account].roots;
+    function convertSeeds(address account) public {
+        if (s.a[account].s.seeds > 0) {
+            seed().mint(account, s.a[account].s.seeds);
+            s.s.seeds = s.s.seeds.sub(s.a[account].s.seeds);
+            s.a[account].s.seeds = 0;
         }
     }
 
-    function incrementBipRoots(address account, uint256 roots) internal {
-        if (s.a[account].lockedUntil >= season()) {
-            for (uint256 i = 0; i < s.g.activeBips.length; i++) {
-                uint32 bip = s.g.activeBips[i];
-                if (s.g.voted[bip][account]) s.g.bips[bip].roots = s.g.bips[bip].roots.add(roots);
-            }
+    function convertSeedsArray(address[] calldata accounts) public {
+        for (uint256 i = 0; i < accounts.length; i++) {
+            convertSeeds(accounts[i]);
         }
     }
-
-    /// @notice Decrements the given amount of roots from bips that have been voted on by a given account and
-    /// checks whether the account is a proposer and if he/she are then they need to have the min roots required
-    /// @param account The address of the account to have their bip roots decremented
-    /// @param roots The amount of roots for the given account to be decremented from
-    function decrementBipRoots(address account, uint256 roots) internal {
-        if (s.a[account].lockedUntil >= season()) {
-            for (uint256 i = 0; i < s.g.activeBips.length; i++) {
-                uint32 bip = s.g.activeBips[i];
-                if (s.g.voted[bip][account]) s.g.bips[bip].roots = s.g.bips[bip].roots.sub(roots);
-            }
-            if (s.a[account].proposedUntil >= season()) {
-                require(canPropose(account),  "Proposer must have the min amount left in the BIP");
-            }
-        }
-    }
-
-    /// @notice Checks whether the account have the min roots required for a BIP
-    /// @param account The address of the account to check roots balance
-    function canPropose(address account) internal view returns (bool) {
-        if (totalRoots() == 0 || balanceOfRoots(account) == 0) {
-            return false;
-        }
-        Decimal.D256 memory stake = Decimal.ratio(balanceOfRoots(account), totalRoots());
-        return stake.greaterThan(C.getGovernanceProposalThreshold());
-    }
-
 }
