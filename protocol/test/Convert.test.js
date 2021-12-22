@@ -18,7 +18,8 @@ describe('Convert', function () {
     this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair);
     this.pegPair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pegPair);
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
-    this.weth = await ethers.getContractAt('MockToken', contracts.weth)
+    this.weth = await ethers.getContractAt('MockToken', contracts.weth);
+    this.seed = await ethers.getContractAt('MockToken', contracts.seed);
 
     await this.pair.set('10000', '40000', '1');
     await this.pegPair.simulateTrade('20000', '20000');
@@ -30,6 +31,8 @@ describe('Convert', function () {
     await this.pair.connect(user2).approve(this.silo.address, '100000000000');
     await this.bean.connect(user).approve(this.silo.address, '100000000000');
     await this.bean.connect(user2).approve(this.silo.address, '100000000000'); 
+    await this.seed.connect(user).approve(this.silo.address, '100000000000');
+    await this.seed.connect(user2).approve(this.silo.address, '100000000000');
   });
 
   beforeEach (async function () {
@@ -103,6 +106,7 @@ describe('Convert', function () {
 
     describe('below max', function () {
       beforeEach(async function () {
+	await this.silo.resetSeeds([userAddress, user2Address]);
         await this.silo.connect(user).depositBeans('1000');
         await this.pair.simulateTrade('10000', '40000');
         this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2'],['1000']);
@@ -110,7 +114,8 @@ describe('Convert', function () {
   
       it('properly updates total values', async function () {
         expect(await this.silo.totalDepositedBeans()).to.eq('47');
-        expect(await this.silo.totalSeeds()).to.eq('3906');
+        expect(await this.seed.totalSupply()).to.eq('3906');
+	expect(await this.silo.totalSeeds()).to.eq('0');
         expect(await this.silo.totalStalk()).to.eq('10000000');
       });
 
@@ -131,6 +136,7 @@ describe('Convert', function () {
 
     describe('above max', function () {
       beforeEach(async function () {
+	await this.silo.resetSeeds([userAddress, user2Address]);
         await this.silo.connect(user).depositBeans('20000');
         await this.pair.simulateTrade('19000', '21000');
         this.result = await this.convert.connect(user).convertDepositedBeans('10000','1',['2'],['20000']);
@@ -138,7 +144,8 @@ describe('Convert', function () {
   
       it('properly updates total values', async function () {
         expect(await this.silo.totalDepositedBeans()).to.eq('18098');
-        expect(await this.silo.totalSeeds()).to.eq('43804');
+        expect(await this.seed.totalSupply()).to.eq('43804');
+	expect(await this.silo.totalSeeds()).to.eq('0');
         expect(await this.silo.totalStalk()).to.eq('200000000');
       });
 
@@ -159,6 +166,7 @@ describe('Convert', function () {
 
     describe('after one season', function () {
       beforeEach(async function () {
+	await this.silo.resetSeeds([userAddress, user2Address]);
         await this.silo.connect(user).depositBeans('1000');
         await this.pair.simulateTrade('10000', '40000');
         await this.season.siloSunrise(0);
@@ -167,7 +175,8 @@ describe('Convert', function () {
   
       it('properly updates total values', async function () {
         expect(await this.silo.totalDepositedBeans()).to.eq('47');
-        expect(await this.silo.totalSeeds()).to.eq('3906');
+        expect(await this.seed.totalSupply()).to.eq('3906');
+	expect(await this.silo.totalSeeds()).to.eq('0');
         expect(await this.silo.totalStalk()).to.eq('10000094');
       });
 
@@ -188,6 +197,7 @@ describe('Convert', function () {
 
     describe('after multiple seasons', function () {
       beforeEach(async function () {
+	await this.silo.resetSeeds([userAddress, user2Address]);
         await this.silo.connect(user).depositBeans('1000');
         await this.pair.simulateTrade('10000', '40000');
         await this.season.siloSunrise(0);
@@ -197,7 +207,8 @@ describe('Convert', function () {
   
       it('properly updates total values', async function () {
         expect(await this.silo.totalDepositedBeans()).to.eq('47');
-        expect(await this.silo.totalSeeds()).to.eq('3906');
+        expect(await this.seed.totalSupply()).to.eq('3906');
+	expect(await this.silo.totalSeeds()).to.eq('0');
         expect(await this.silo.totalStalk()).to.eq('10004000');
       });
 
@@ -218,6 +229,7 @@ describe('Convert', function () {
 
     describe('multiple deposits', function () {
       beforeEach(async function () {
+	await this.silo.resetSeeds([userAddress, user2Address]);
         await this.silo.connect(user).depositBeans('1000');
         await this.pair.simulateTrade('10000', '40000');
         await this.season.siloSunrise(0);
@@ -227,7 +239,8 @@ describe('Convert', function () {
   
       it('properly updates total values', async function () {
         expect(await this.silo.totalDepositedBeans()).to.eq('1047');
-        expect(await this.silo.totalSeeds()).to.eq('5906');
+        expect(await this.seed.totalSupply()).to.eq('5906');
+	expect(await this.silo.totalSeeds()).to.eq('0');
         expect(await this.silo.totalStalk()).to.eq('20001000');
       });
 
@@ -249,6 +262,7 @@ describe('Convert', function () {
 
   describe('convert lp to beans', function () {
     beforeEach(async function () {
+      await this.silo.resetSeeds([userAddress, user2Address]);
       await this.pair.faucet(this.silo.address, '997')
       await this.pair.faucet(userAddress, '3');
       await this.bean.mint(this.pair.address, '400000');
@@ -273,6 +287,7 @@ describe('Convert', function () {
 
     describe('below max', async function () {
       beforeEach(async function () {
+	await this.silo.resetSeeds([userAddress, user2Address]);
         await this.pair.simulateTrade('40000', '10000');
         await this.silo.connect(user).depositLP('1');
         this.result = await this.convert.connect(user).convertDepositedLP('1','100',['2'],['1']);
@@ -281,7 +296,8 @@ describe('Convert', function () {
       it('properly updates total values', async function () {
         expect(await this.silo.totalDepositedLP()).to.eq('0');
         expect(await this.silo.totalDepositedBeans()).to.eq('796');
-        expect(await this.silo.totalSeeds()).to.eq('1592');
+        expect(await this.seed.totalSupply()).to.eq('1592');
+	expect(await this.silo.totalSeeds()).to.eq('0');
         expect(await this.silo.totalStalk()).to.eq('7960000');
       });
 
@@ -302,6 +318,7 @@ describe('Convert', function () {
 
     describe('after season', async function () {
       beforeEach(async function () {
+	await this.silo.resetSeeds([userAddress, user2Address]);
         await this.pair.simulateTrade('200000', '50000');
         await this.silo.connect(user).depositLP('1');
         await this.season.siloSunrise(0);
@@ -311,7 +328,8 @@ describe('Convert', function () {
       it('properly updates total values', async function () {
         expect(await this.silo.totalDepositedLP()).to.eq('0');
         expect(await this.silo.totalDepositedBeans()).to.eq('799');
-        expect(await this.silo.totalSeeds()).to.eq('1598');
+        expect(await this.seed.totalSupply()).to.eq('1598');
+	expect(await this.silo.totalSeeds()).to.eq('0');
         expect(await this.silo.totalStalk()).to.eq('7991598');
       });
 
@@ -332,6 +350,7 @@ describe('Convert', function () {
 
     describe('multiple deposits', async function () {
       beforeEach(async function () {
+	await this.silo.resetSeeds([userAddress, user2Address]);
         await this.pair.simulateTrade('200000', '50000');
         await this.silo.connect(user).depositLP('2');
         await this.season.siloSunrise(0);
@@ -342,7 +361,8 @@ describe('Convert', function () {
       it('properly updates total values', async function () {
         expect(await this.silo.totalDepositedLP()).to.eq('1');
         expect(await this.silo.totalDepositedBeans()).to.eq('1596');
-        expect(await this.silo.totalSeeds()).to.eq('4792');
+	expect(await this.silo.totalSeeds()).to.eq('0');
+        expect(await this.seed.totalSupply()).to.eq('4792');
         expect(await this.silo.totalStalk()).to.eq('19961600');
       });
 
