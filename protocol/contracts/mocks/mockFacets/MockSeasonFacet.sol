@@ -109,6 +109,11 @@ contract MockSeasonFacet is SeasonFacet {
             s.season.timestamp = block.timestamp;
         }
     }
+
+    function halfWeekSunrise() public {
+            teleportSunrise(84);
+            decrementWithdrawBuffer();
+    }
     
     function weekSunrise() public {
             teleportSunrise(168);

@@ -53,31 +53,22 @@ library LibClaim {
         }
         if (c.claimEth) claimEth();
 
-	/*
-	Now beansClaimed contains the number of beans the user obtained from harvesting pods.
-	If beansToClaim is 0, then entire claimableBeans will be sent to state variable.
-	If beansToClaim is nonzero, then beansToClaim beans will be sent to wallet, and rest will be sent to state variable.
-	Note that beansToClaim can exceed the beansClaimed because users can also claim beans from s.a[msg.sender].claimableBeans, aka the state variable
-	*/
-
-	if (beansToWallet > 0) {
-		if (beansToWallet >= s.a[msg.sender].claimableBeans.add(beansClaimed)) {
-			IBean(s.c.bean).transfer(msg.sender, s.a[msg.sender].claimableBeans.add(beansClaimed));
-			s.a[msg.sender].claimableBeans = 0;
-		}
-		else {
-			IBean(s.c.bean).transfer(msg.sender, beansToWallet);
-			if (beansToWallet < beansClaimed) {
-				s.a[msg.sender].claimableBeans = s.a[msg.sender].claimableBeans.add(beansClaimed.sub(beansToWallet));
-			}
-			else {
-				s.a[msg.sender].claimableBeans = s.a[msg.sender].claimableBeans.sub(beansToWallet.sub(beansClaimed));
-			}
-		}
-	}
-	else {
-		s.a[msg.sender].claimableBeans = s.a[msg.sender].claimableBeans.add(beansClaimed);
-	}
+        if (beansToWallet > 0) {
+            uint256 claimableBeans = s.a[msg.sender].claimableBeans;
+            if (beansToWallet >= claimableBeans.add(beansClaimed)) {
+                IBean(s.c.bean).transfer(msg.sender, claimableBeans.add(beansClaimed));
+                s.a[msg.sender].claimableBeans = 0;
+            } else {
+                IBean(s.c.bean).transfer(msg.sender, beansToWallet);
+                if (beansToWallet < beansClaimed) {
+                    s.a[msg.sender].claimableBeans = claimableBeans.add(beansClaimed.sub(beansToWallet));
+                } else {
+                    s.a[msg.sender].claimableBeans = claimableBeans.sub(beansToWallet.sub(beansClaimed));
+                }
+            }
+        } else {
+            s.a[msg.sender].claimableBeans = s.a[msg.sender].claimableBeans.add(beansClaimed);
+        }
     }
     // Claim Beans
 

@@ -64,9 +64,11 @@ contract SeasonFacet is Sun {
     }
     
     function decrementWithdrawBuffer() internal {
-            if (s.season.current % 168 == 0 && s.season.withdrawBuffer > 4) {
+        uint withdrawBuffer = s.season.withdrawBuffer;
+        if ((withdrawBuffer > 13 && s.season.current % 84 == 0) ||
+            (withdrawBuffer > 5 && s.season.current % 168 == 0)) {
                 s.season.withdrawBuffer -= 1;
-            }
+        }
     }
 
     function snapshotSeason(uint256 price) private {
