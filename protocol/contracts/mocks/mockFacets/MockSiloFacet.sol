@@ -149,8 +149,8 @@ contract MockSiloFacet is SiloFacet {
 
     function resetSeeds(address[] calldata accounts) public {
         for (uint i = 0; i < accounts.length; i++) {
-           		seed().burnFrom(accounts[i], seed().balanceOf(accounts[i]));
-        	}
+           seed().burnFrom(accounts[i], seed().balanceOf(accounts[i]));
+        }
     }
 
 }
