@@ -23,6 +23,12 @@ contract MockSiloFacet is SiloFacet {
     function incrementDepositedBeansE(uint256 amount) public {
         s.bean.deposited = s.bean.deposited.add(amount);
     }
+    function incrementBalanceOfStalkE(address account, uint256 amount) public {
+        incrementBalanceOfStalk(account, amount);
+    }
+    function withdrawSiloAssetsE(address account, uint256 seeds, uint256 stalk) public {
+        withdrawSiloAssets(account, seeds, stalk);
+    }
 
     function balanceOfDepositedBeans(address account) public view returns (uint256) {
         uint256 beans = 0;
@@ -135,10 +141,15 @@ contract MockSiloFacet is SiloFacet {
         }
         return (seasons, crates);
     }
-    
+
     function setNonFungibleSeeds(uint256 amount) public {
 	       s.a[msg.sender].s.seeds = amount;
 	       s.s.seeds = s.s.seeds.add(amount);
     }
 
+    function resetSeeds(address[] calldata accounts) public {
+	for (uint i = 0; i < accounts.length; i++) {
+		seed().burnFrom(accounts[i], seed().balanceOf(accounts[i]));
+	}
+    }
 }
