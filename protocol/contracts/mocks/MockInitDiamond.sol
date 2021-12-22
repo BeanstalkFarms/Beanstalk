@@ -47,6 +47,7 @@ contract MockInitDiamond {
         s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
         LibMarket.initMarket(s.c.bean, s.c.weth, mockRouter);
         LibStalk.initStalkToken('Stalk', 'STALK');
+       	s.seedContract = address(new MockToken("SEED", "Beanstalk"));
     }
 
 }
