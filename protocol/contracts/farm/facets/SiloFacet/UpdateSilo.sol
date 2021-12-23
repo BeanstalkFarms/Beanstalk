@@ -68,7 +68,7 @@ contract UpdateSilo is SiloExit {
             s.si.beans = s.si.beans.sub(beans);
             uint256 seeds = beans.mul(C.getSeedsPerBean());
             Account.State storage a = s.a[account];
-	    seed().transfer(account, seeds);
+	        seed().transfer(account, seeds);
             //s.a[account].s.seeds = a.s.seeds.add(seeds);
             s.a[account].s.stalk = accountStalk.add(beans.mul(C.getStalkPerBean()));
             LibBeanSilo.addBeanDeposit(account, season(), beans);
