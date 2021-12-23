@@ -35,12 +35,15 @@ describe('Marketplace', function () {
     this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair);
 
 
+
+  });
+ 
+ const resetState = async function (){
     await this.season.resetAccount(userAddress)
     await this.season.resetAccount(user2Address)
     await this.season.resetAccount(ownerAddress)
     await this.season.resetState()
     await this.season.siloSunrise(0)
-
     await this.bean.mint(userAddress, '10000')
     await this.bean.mint(user2Address, '10000')
 
@@ -48,44 +51,38 @@ describe('Marketplace', function () {
     await this.bean.connect(user2).approve(this.field.address, '100000000000')
 
     await this.field.incrementTotalSoilEE('10000');
-    await this.field.connect(user).sowBeans('1000');
-    await this.field.connect(user2).sowBeans('1000');
-    await this.field.connect(user).sowBeans('1000');
-    await this.field.connect(user2).sowBeans('1000');
-    await this.field.connect(user).sowBeans('1000');
-    await this.field.connect(user2).sowBeans('1000');
-    
-    this.result = await this.marketplace.connect(user2).listPlot('1000', '500000', '0', '500');
-    this.result = await this.marketplace.connect(user).listPlot('2000', '500000', '0', '1000');
-    this.result = await this.marketplace.connect(user2).listPlot('3000', '100000', '2000', '1000');
-    this.result = await this.marketplace.connect(user).listPlot('4000', '100000', '2000', '1000');
+    await this.field.connect(user).sowBeansAndIndex('1000');
+    await this.field.connect(user2).sowBeansAndIndex('1000');
+    await this.field.connect(user).sowBeansAndIndex('1000');
+    await this.field.connect(user2).sowBeansAndIndex('1000');
+    await this.field.connect(user).sowBeansAndIndex('1000');
+    await this.field.connect(user2).sowBeansAndIndex('1000');
+    await this.marketplace.connect(user).listPlot('0', '500000', '0', '1000');
+    await this.marketplace.connect(user2).listPlot('1000', '500000', '0', '500');
+    await this.marketplace.connect(user).listPlot('2000', '500000', '0', '1000');
+    await this.marketplace.connect(user2).listPlot('3000', '100000', '2000', '1000');
+    await this.marketplace.connect(user).listPlot('4000', '100000', '2000', '1000');
 
-  });
+ }
 
-
-  beforeEach (async function () {
-    await this.season.resetAccount(userAddress)
-    await this.season.resetAccount(user2Address)
-    await this.season.resetAccount(ownerAddress)
-    await this.season.resetState()
-    await this.season.siloSunrise(0)
-  });
 
 
   describe("List Plot", async function () {
 
+    beforeEach (async function () {
+      resetState();
     
     it('Emits a List event', async function () {
-      result = await this.marketplace.connect(user).listPlot('0', '500000', '0', '1000');
-      await expect(result).to.emit(this.marketplace, 'ListingCreated').withArgs(userAddress, '0', 500000, 0, 1000);
+      result = await this.marketplace.connect(user2).listPlot('5000', '100000', '0', '1000');
+      await expect(result).to.emit(this.marketplace, 'ListingCreated').withArgs(user2Address, '5000', 100000, 0, 1000);
     });
 
     it('Fails to List Unowned Plot', async function () {
-      await expect(this.marketplace.connect(user).listPlot('1000', '500000', '1000', '1000')).to.be.revertedWith('Marketplace: Plot not large enough.');
+      await expect(this.marketplace.connect(user).listPlot('5000', '500000', '1000', '1000')).to.be.revertedWith('Marketplace: Plot not large enough.');
     });
 
 
-    it('Lists the product', async function () {
+    it('Lists full product', async function () {
       const listing = await this.marketplace.listing(0);
       expect(listing.price).to.equal(500000);
       expect(listing.expiry.toString()).to.equal('0');
@@ -96,46 +93,56 @@ describe('Marketplace', function () {
   });
   describe("Buy Listing", async function () {
 
+    beforeEach (async function () {
+      resetState();
+    });
+
     it('Buy Full Listing, Plots Transfer, Balances Update', async function () {
+      let amountBeansBuyingWith = 500;
+
       const listing = await this.marketplace.listing(0);
       expect((await this.field.plot(user2Address, 0)).toString()).to.equal('0');
       expect((await this.field.plot(userAddress, 0)).toString()).to.equal('1000');
-      expect((await this.bean.balanceOf(userAddress)).toString()).to.eq('7000');
-      expect((await this.bean.balanceOf(user2Address)).toString()).to.eq('7000');
-      await this.marketplace.connect(user2).buyListing(0, userAddress, '1000'); 
+
+      let userBeanBalance = parseInt((await this.bean.balanceOf(userAddress)).toString())
+      let user2BeanBalance = parseInt((await this.bean.balanceOf(user2Address)).toString())
+
+      await this.marketplace.connect(user2).buyListing(0, userAddress, amountBeansBuyingWith); 
    
       expect((await this.field.plot(userAddress, 0)).toString()).to.equal('0');
       expect((await this.field.plot(user2Address, 0)).toString()).to.equal('1000');
 
-      expect((await this.bean.balanceOf(userAddress)).toString()).to.eq('7500');
-      expect((await this.bean.balanceOf(user2Address)).toString()).to.eq('6500');
+      let user2BeanBalanceAfter = parseInt((await this.bean.balanceOf(user2Address)).toString())
+      expect(user2BeanBalance-user2BeanBalanceAfter).to.equal(amountBeansBuyingWith);
+      let userBeanBalanceAfter = parseInt((await this.bean.balanceOf(userAddress)).toString())
+      expect(userBeanBalanceAfter-userBeanBalance).to.equal(amountBeansBuyingWith);
 
       const listingDeleted = await this.marketplace.listing(0);
       expect(listingDeleted.price.toString()).to.equal('0');
       expect(listingDeleted.amount.toString()).to.equal('0');
-
     });
 
 
 
     it('Buy Partial Listing, Plots Transfer, Balances Update', async function () {
+      let amountBeansBuyingWith = 250;
+
+
       const listing = await this.marketplace.listing(0);
       expect((await this.field.plot(user2Address, 2000)).toString()).to.equal('0');
       expect((await this.field.plot(userAddress, 2000)).toString()).to.equal('1000');
-      expect((await this.bean.balanceOf(userAddress)).toString()).to.eq('7500');
-      expect((await this.bean.balanceOf(user2Address)).toString()).to.eq('6500');
 
-      await this.marketplace.connect(user2).buyListing(2000, userAddress, '500'); 
+      await this.marketplace.connect(user2).buyListing(2000, userAddress, amountBeansBuyingWith); 
    
       expect((await this.field.plot(userAddress, 2000)).toString()).to.equal('0');
       expect((await this.field.plot(userAddress, 2500)).toString()).to.equal('500');
       expect((await this.field.plot(user2Address, 2000)).toString()).to.equal('500');
 
-      expect((await this.bean.balanceOf(userAddress)).toString()).to.eq('7750');
-      expect((await this.bean.balanceOf(user2Address)).toString()).to.eq('6250');
+
       const listingDeleted = await this.marketplace.listing(2000);
       expect(listingDeleted.price.toString()).to.equal('0');
       expect(listingDeleted.amount.toString()).to.equal('0');
+
       const listingNew = await this.marketplace.listing(2500);
       expect(listingNew.price.toString()).to.equal('500000');
       expect(listingNew.amount.toString()).to.equal('500');
@@ -195,6 +202,10 @@ describe('Marketplace', function () {
 
   describe("Cancel Listing", async function () {
 
+    beforeEach (async function () {
+      resetState();
+    });
+
     it('Fails to Cancel Listing, not owned by user', async function () {
       await expect(this.marketplace.connect(user).cancelListing('3000')).to.be.revertedWith('Marketplace: Plot not owned by user.');
     });
@@ -213,6 +224,10 @@ describe('Marketplace', function () {
 
   describe("Buy Offer", async function () {
 
+    beforeEach (async function () {
+      resetState();
+    });
+
     it('Lists Buy Offer, Sells Plot to Buy Offer', async function () {
       await this.pair.simulateTrade('10000', '40000');
 
@@ -228,7 +243,10 @@ describe('Marketplace', function () {
 
     });
 
-    it('Lists Buy Offer, usiing ETH', async function () {
+    it('Lists Buy Offer using ETH', async function () {
+      
+      const balance = await prov.getBalance(user2Address); 
+
       await this.pair.simulateTrade('10000', '40000');
 
       let user2BeanBalance = parseInt((await this.bean.balanceOf(user2Address)).toString())

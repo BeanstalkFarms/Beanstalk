@@ -166,6 +166,14 @@ contract MockSeasonFacet is SeasonFacet {
             delete s.g.bips[i];
             delete s.g.diamondCuts[i];
         }
+        for (uint32 i = 0; i < s.mapToPlotIndex; i++) {
+            delete s.a[s.mapToAddress[i]].field.plots[s.mapToPlots[i]];
+            delete s.listedPlots[s.mapToPlots[i]];
+        }
+        for (uint32 i = 0; i < s.buyOfferIndex; i++) {
+            delete s.buyOffers[i];
+        }
+
         delete s.f;
         delete s.bean;
         delete s.lp;

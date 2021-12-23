@@ -29,8 +29,6 @@ contract MarketplaceFacet {
     // whats the point of indexing if were going to need every individual event for the entire marketplace data
     // for partials ETC
 
-
-
     event ListingCreated(address indexed account, uint256 indexed index, uint24 pricePerPod, uint232 expiry, uint256 amount);
     event ListingCancelled(address indexed account, uint256 indexed index);
     event ListingFilled(address indexed buyer, address indexed seller, uint256 indexed index, uint24 pricePerPod, uint256 amount);
@@ -87,7 +85,6 @@ contract MarketplaceFacet {
 
     function buyListing(uint256 index, address recipient, uint256 amountBeansUsing) public {
 
-
         Storage.Listing storage listing = s.listedPlots[index];
 
         require(listing.price > 0, "Marketplace: Plot not listed.");
@@ -99,14 +96,19 @@ contract MarketplaceFacet {
             listingAmount = s.a[recipient].field.plots[index];
         }
 
-        require(bean().balanceOf(msg.sender) >= amountBeansUsing, "Field: Not enough beans to purchase.");
-
         uint256 amount = (amountBeansUsing / listing.price) * 1000000;
+
+        // In case of slippage impacting bean purchase in positive way
+        if (listingAmount < amount){
+            amount = listingAmount;
+            amountBeansUsing = (amount/100000) * listing.price;
+        }
+
+        require(bean().balanceOf(msg.sender) >= amountBeansUsing, "Field: Not enough beans to purchase.");
 
         require(msg.sender != address(0), "Marketplace: Transfer from 0 address.");
         require(recipient != address(0), "Marketplace: Transfer to 0 address.");
         require(harvestable <= listing.expiry, "Marketplace: Listing has expired");
-        require(listingAmount >= amount, "Marketplace: Plot Listing has insufficient pods");
  
         bean().transferFrom(msg.sender, recipient, amountBeansUsing);
         insertPlot(msg.sender,index,amount);
@@ -116,7 +118,6 @@ contract MarketplaceFacet {
         else{
             s.listedPlots[index.add(amount)] = s.listedPlots[index];
             s.listedPlots[index.add(amount)].amount = listingAmount - amount;
-
             delete s.listedPlots[index];
         }
 
@@ -125,7 +126,7 @@ contract MarketplaceFacet {
     }
 
     //TODO Test: How to include ETH value in test call
-    function buyBeansAndListing(uint256 index, address recipient, uint256 amountBeans, uint256 buyBeanAmount) public {
+    function buyBeansAndListing(uint256 index, address recipient, uint256 amountBeans, uint256 buyBeanAmount) public payable {
         uint256 boughtBeanAmount = LibMarket.buy(buyBeanAmount);
         buyListing(index, recipient, boughtBeanAmount + amountBeans);
     }
@@ -138,13 +139,11 @@ contract MarketplaceFacet {
 
 
     // TODO
-
     // function claimBeansAndBuyListing(uint256 amount, LibClaim.Claim calldata claim, uint index, address payable recipient, uint buyBeanAmount, uint amountToClaim) public  {
     //     FieldFacet.allocateBeans(claim, amountToClaim);
     //     buyBeansAndListing(index,recipient,amount);
     // }
 
-    // TODO add ETH ?
     function listBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amountBeansUsing) public  {
         
         require(amountBeansUsing > 0, "Marketplace: Must offer to buy non-zero amount");
@@ -172,7 +171,7 @@ contract MarketplaceFacet {
     }
 
 
-    function sellToBuyOffer(uint256 plotIndex, uint24 buyOfferIndex, uint232 amount) public  {
+    function sellToBuyOffer(uint256 plotIndex, uint24 buyOfferIndex, uint232 amount) public payable  {
         
         require(s.a[msg.sender].field.plots[plotIndex] >= 0, "Marketplace: Plot  not owned by user.");
 
@@ -220,7 +219,6 @@ contract MarketplaceFacet {
 
     }
 
-
     function cancelBuyOffer(uint24 buyOfferIndex) public  {
         Storage.BuyOffer storage buyOffer = s.buyOffers[buyOfferIndex];
         // TODO does this check equality correctly?
@@ -235,8 +233,6 @@ contract MarketplaceFacet {
         delete s.buyOffers[buyOfferIndex];
         emit BuyOfferCancelled(msg.sender, buyOfferIndex);
     }
-
-    
 
     function bean() internal view returns (IBean) {
         return IBean(s.c.bean);
