@@ -17,7 +17,7 @@ import "../../Seed.sol";
 contract InitBip9 {
 
     AppStorage internal s;
-    address private constant stalk_contract = address();
+    // address private constant stalk_contract = address();
 
     function init() external {
       // LibStalk._mint(stalk_contract, s.s.stalk);
