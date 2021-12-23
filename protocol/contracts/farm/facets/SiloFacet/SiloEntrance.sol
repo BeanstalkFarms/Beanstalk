@@ -27,8 +27,8 @@ contract SiloEntrance {
      * Silo
     **/
 
-    function depositSiloAssets(address account, uint256 seeds, uint256 stalk) internal {
-        incrementBalanceOfStalk(account, stalk);
+    function depositSiloAssets(address account, uint256 seeds, uint256 stalk, bool wrapped) internal {
+        incrementBalanceOfStalk(account, stalk, wrapped);
         incrementBalanceOfSeeds(account, seeds);
     }
 
@@ -40,19 +40,20 @@ contract SiloEntrance {
     /// @notice mints the corresponding amount of stalk ERC-20 tokens to the selected account address
     /// @param account The address of the account address to have minted stalk tokens to
     /// @param stalk The amount of stalk tokens to have minted
-    function incrementBalanceOfStalk(address account, uint256 stalk) internal {
+    /// @param wrapped Boolean that will tell us whether the stalk will be wrapped in the protocol or unwrapped (using ERC20 standard) 
+    function incrementBalanceOfStalk(address account, uint256 stalk, bool wrapped) internal {
         // Remove all Legacy Stalk and Mint the corresponding fungible token
-        if (s.a[account].s.stalk > 0) {
-            LibStalk._mint(account, s.a[account].s.stalk);
-            s.a[account].s.stalk = 0;
+        if (!wrapped && s.a[account].s.stalk > 0) {
+            convertLegacyStalk(account);
         }
 
         uint256 roots;
         if (s.s.roots == 0) roots = stalk.mul(C.getRootsBase());
         else roots = s.s.roots.mul(stalk).div(s.stalkToken._totalSupply);
 
+        if (!wrapped) LibStalk._mint(account, stalk);
         // Mint Stalk ERC-20
-        LibStalk._mint(account, stalk);
+        else s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
 
         s.s.roots = s.s.roots.add(roots);
         s.a[account].roots = s.a[account].roots.add(roots);
@@ -60,8 +61,8 @@ contract SiloEntrance {
         incrementBipRoots(account, roots);
     }
 
-    function withdrawSiloAssets(address account, uint256 seeds, uint256 stalk) internal {
-        decrementBalanceOfStalk(account, stalk);
+    function withdrawSiloAssets(address account, uint256 seeds, uint256 stalk, bool wrapped) internal {
+        decrementBalanceOfStalk(account, stalk, wrapped);
         decrementBalanceOfSeeds(account, seeds);
     }
 
@@ -73,18 +74,22 @@ contract SiloEntrance {
     /// @notice burns the corresponding amount of stalk ERC-20 tokens of the selected account address
     /// @param account The address of the account address to have stalk and seed tokens withdrawn and burned
     /// @param stalk The amount of stalk tokens to have withdrawn and burned
-    function decrementBalanceOfStalk(address account, uint256 stalk) internal {
+    function decrementBalanceOfStalk(address account, uint256 stalk, bool wrapped) internal {
         // Remove all Legacy Stalk and Mint the corresponding fungible token
-        if (s.a[account].s.stalk > 0) {
-            LibStalk._mint(account, s.a[account].s.stalk);
-            s.a[account].s.stalk = 0;
+        if (!wrapped && s.a[account].s.stalk > 0) {
+            convertLegacyStalk(account);
         }
 
         if (stalk == 0) return;
-        uint256 roots = s.a[account].roots.mul(stalk).sub(1).div(s.stalkToken._balances[account]).add(1);
-
-        // Burn Stalk ERC-20
-        LibStalk._burn(account, stalk);
+        uint256 roots;
+        if (!wrapped) {
+            roots = s.a[account].roots.mul(stalk).sub(1).div(s.stalkToken._balances[account]).add(1);
+            // Burn Stalk ERC-20
+            LibStalk._burn(account, stalk);
+        } else {
+            roots = s.a[account].roots.mul(stalk).sub(1).div(s.a[account].s.stalk).add(1);
+            s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
+        }
 
         s.s.roots = s.s.roots.sub(roots);
         s.a[account].roots = s.a[account].roots.sub(roots);
@@ -125,6 +130,11 @@ contract SiloEntrance {
                 if (s.g.voted[bip][account]) s.g.bips[bip].roots = s.g.bips[bip].roots.sub(roots);
             }
         }
+    }
+
+    function convertLegacyStalk(address account) internal {
+        LibStalk._mint(account, s.a[account].s.stalk);
+        s.a[account].s.stalk = 0;
     }
 
     /**
