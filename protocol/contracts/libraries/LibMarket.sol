@@ -59,6 +59,15 @@ library LibMarket {
         return beanAmount;
     }
 
+    function buyExactTokens(uint256 buyBeanAmount) internal returns (uint256 amount) {
+        (uint256 ethAmount, uint256 beanAmount) = _buyExactTokens(buyBeanAmount, msg.value, msg.sender);
+        (bool success,) = msg.sender.call{ value: msg.value.sub(ethAmount) }("");
+        require(success, "Market: Refund failed.");
+        return beanAmount;
+    }
+
+
+
     function buyAndDeposit(uint256 buyBeanAmount) internal returns (uint256 amount) {
         (uint256 ethAmount, uint256 beanAmount) = _buy(buyBeanAmount, msg.value, address(this));
         (bool success,) = msg.sender.call{ value: msg.value.sub(ethAmount) }("");
@@ -260,20 +269,20 @@ library LibMarket {
     function _buyExactTokens(uint256 beanAmount, uint256 ethAmount, address to)
     private
     returns (uint256 inAmount, uint256 outAmount)
-{
-    DiamondStorage storage ds = diamondStorage();
-    address[] memory path = new address[](2);
-    path[0] = ds.weth;
-    path[1] = ds.bean;
+    {
+        DiamondStorage storage ds = diamondStorage();
+        address[] memory path = new address[](2);
+        path[0] = ds.weth;
+        path[1] = ds.bean;
 
-    uint[] memory amounts = IUniswapV2Router02(ds.router).swapETHForExactTokens{value: ethAmount}(
-        beanAmount,
-        path,
-        to,
-        block.timestamp.add(1)
-    );
-    return (amounts[0], amounts[1]);
-}
+        uint[] memory amounts = IUniswapV2Router02(ds.router).swapETHForExactTokens{value: ethAmount}(
+            beanAmount,
+            path,
+            to,
+            block.timestamp.add(1)
+        );
+        return (amounts[0], amounts[1]);
+    }
 
     function _buyWithWETH(uint256 beanAmount, uint256 ethAmount, address to)
         private
