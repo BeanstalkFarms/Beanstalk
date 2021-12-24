@@ -18,13 +18,15 @@ async function checkUserPlots(field, address, plots) {
 
 
 describe('Marketplace', function () {
+  let contracts
+  let provider
   before(async function () {
     console.log('Starting test');
+    contracts = await deploy("Test", false, true);
     [owner,user,user2] = await ethers.getSigners();
     userAddress = user.address;
     user2Address = user2.address;
-    const contracts = await deploy("Test", false, true);
-    const provider = ethers.getDefaultProvider();
+    provider = ethers.getDefaultProvider();
 
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond
@@ -35,10 +37,22 @@ describe('Marketplace', function () {
     this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair);
 
 
+    console.log('CONTRACTS DEPLOYED');
+
+
 
   });
  
  const resetState = async function (){
+    this.diamond = contracts.beanstalkDiamond
+
+    this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address);
+    this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
+    this.marketplace = await ethers.getContractAt('MarketplaceFacet', this.diamond.address);
+    this.bean = await ethers.getContractAt('MockToken', contracts.bean);
+    this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair);
+    this.weth = await ethers.getContractAt('MockToken', contracts.weth)
+
     await this.season.resetAccount(userAddress)
     await this.season.resetAccount(user2Address)
     await this.season.resetAccount(ownerAddress)
@@ -46,11 +60,14 @@ describe('Marketplace', function () {
     await this.season.siloSunrise(0)
     await this.bean.mint(userAddress, '10000')
     await this.bean.mint(user2Address, '10000')
+    await this.weth.mint(user2Address, '2000')
+
+    await this.pair.faucet(user2Address, '2000');
 
     await this.bean.connect(user).approve(this.field.address, '100000000000')
     await this.bean.connect(user2).approve(this.field.address, '100000000000')
 
-    await this.field.incrementTotalSoilEE('10000');
+    await this.field.incrementTotalSoilEE('100000');
     await this.field.connect(user).sowBeansAndIndex('1000');
     await this.field.connect(user2).sowBeansAndIndex('1000');
     await this.field.connect(user).sowBeansAndIndex('1000');
@@ -62,7 +79,10 @@ describe('Marketplace', function () {
     await this.marketplace.connect(user).listPlot('2000', '500000', '0', '1000');
     await this.marketplace.connect(user2).listPlot('3000', '100000', '2000', '1000');
     await this.marketplace.connect(user).listPlot('4000', '100000', '2000', '1000');
-
+    await user2.sendTransaction({
+        to: this.weth.address,
+        value: ethers.utils.parseEther("1.0")
+    });
  }
 
 
@@ -70,7 +90,8 @@ describe('Marketplace', function () {
   describe("List Plot", async function () {
 
     beforeEach (async function () {
-      resetState();
+      await resetState();
+    });
     
     it('Emits a List event', async function () {
       result = await this.marketplace.connect(user2).listPlot('5000', '100000', '0', '1000');
@@ -101,6 +122,7 @@ describe('Marketplace', function () {
       let amountBeansBuyingWith = 500;
 
       const listing = await this.marketplace.listing(0);
+      
       expect((await this.field.plot(user2Address, 0)).toString()).to.equal('0');
       expect((await this.field.plot(userAddress, 0)).toString()).to.equal('1000');
 
@@ -110,6 +132,7 @@ describe('Marketplace', function () {
       await this.marketplace.connect(user2).buyListing(0, userAddress, amountBeansBuyingWith); 
    
       expect((await this.field.plot(userAddress, 0)).toString()).to.equal('0');
+
       expect((await this.field.plot(user2Address, 0)).toString()).to.equal('1000');
 
       let user2BeanBalanceAfter = parseInt((await this.bean.balanceOf(user2Address)).toString())
@@ -127,7 +150,6 @@ describe('Marketplace', function () {
     it('Buy Partial Listing, Plots Transfer, Balances Update', async function () {
       let amountBeansBuyingWith = 250;
 
-
       const listing = await this.marketplace.listing(0);
       expect((await this.field.plot(user2Address, 2000)).toString()).to.equal('0');
       expect((await this.field.plot(userAddress, 2000)).toString()).to.equal('1000');
@@ -138,7 +160,6 @@ describe('Marketplace', function () {
       expect((await this.field.plot(userAddress, 2500)).toString()).to.equal('500');
       expect((await this.field.plot(user2Address, 2000)).toString()).to.equal('500');
 
-
       const listingDeleted = await this.marketplace.listing(2000);
       expect(listingDeleted.price.toString()).to.equal('0');
       expect(listingDeleted.amount.toString()).to.equal('0');
@@ -146,12 +167,7 @@ describe('Marketplace', function () {
       const listingNew = await this.marketplace.listing(2500);
       expect(listingNew.price.toString()).to.equal('500000');
       expect(listingNew.amount.toString()).to.equal('500');
-
     });
-
-    //TODO List  Buy Listing w ETH
-
-
 
 
     // it('Buy Partial Listing of Partial Plot', async function () {
@@ -188,13 +204,20 @@ describe('Marketplace', function () {
     //   //
     // });
 
-    // it('Buy Listing with Ethereum and beans', async function () {
+    // TODO   Buy Listing w ETH
+
+    // it('Buy Listing with ETH and beans', async function () {
     //   //
     // });
 
     // it('Buy Listing non-listed Index', async function () {
     //   //
     // });
+    
+    // TODO
+
+
+
 
 
   });
@@ -229,10 +252,9 @@ describe('Marketplace', function () {
     });
 
     it('Lists Buy Offer, Sells Plot to Buy Offer', async function () {
-      await this.pair.simulateTrade('10000', '40000');
 
       let user2BeanBalance = parseInt((await this.bean.balanceOf(user2Address)).toString())
-      this.result = await this.marketplace.connect(user2).listBuyOffer('5000', '800000', '500', 0);
+      this.result = await this.marketplace.connect(user2).listBuyOffer('5000', '800000', '400');
       let user2BeanBalanceAfterBuyOffer = parseInt((await this.bean.balanceOf(user2Address)).toString())
       expect(user2BeanBalance-user2BeanBalanceAfterBuyOffer).to.equal(400);
 
@@ -245,19 +267,17 @@ describe('Marketplace', function () {
 
     it('Lists Buy Offer using ETH', async function () {
       
-      const balance = await prov.getBalance(user2Address); 
-
-      await this.pair.simulateTrade('10000', '40000');
+      const ethBalance = await provider.getBalance(user2Address); 
+      console.log(ethBalance.toString());
+      
+      await this.pair.simulateTrade('4000000', '10000');
 
       let user2BeanBalance = parseInt((await this.bean.balanceOf(user2Address)).toString())
-      this.result = await this.marketplace.connect(user2).listBuyOffer('5000', '800000', '500', 0);
-      let user2BeanBalanceAfterBuyOffer = parseInt((await this.bean.balanceOf(user2Address)).toString())
-      expect(user2BeanBalance-user2BeanBalanceAfterBuyOffer).to.equal(400);
+      const options = {value: ethers.utils.parseEther("1")}
+      this.result = await this.marketplace.connect(user2).buyBeansAndListBuyOffer('5000', '800000', '0', '40000',{value:102});
 
-      let userBeanBalance2 = parseInt((await this.bean.balanceOf(userAddress)).toString())
-      this.result = await this.marketplace.connect(user).sellToBuyOffer('4000', '0', '250');
-      let userBeanBalanceAfterBuyOffer2 = parseInt((await this.bean.balanceOf(userAddress)).toString())
-      expect(userBeanBalanceAfterBuyOffer2-userBeanBalance2).to.equal(200);
+      const ethBalanceAfter = await provider.getBalance(user2Address); 
+      console.log(ethBalanceAfter.toString());
 
     });
     //TODO List  Buy offer w ETH

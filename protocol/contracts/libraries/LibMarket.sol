@@ -257,6 +257,24 @@ library LibMarket {
         return (amounts[0], amounts[1]);
     }
 
+    function _buyExactTokens(uint256 beanAmount, uint256 ethAmount, address to)
+    private
+    returns (uint256 inAmount, uint256 outAmount)
+{
+    DiamondStorage storage ds = diamondStorage();
+    address[] memory path = new address[](2);
+    path[0] = ds.weth;
+    path[1] = ds.bean;
+
+    uint[] memory amounts = IUniswapV2Router02(ds.router).swapETHForExactTokens{value: ethAmount}(
+        beanAmount,
+        path,
+        to,
+        block.timestamp.add(1)
+    );
+    return (amounts[0], amounts[1]);
+}
+
     function _buyWithWETH(uint256 beanAmount, uint256 ethAmount, address to)
         private
         returns (uint256 inAmount, uint256 outAmount)

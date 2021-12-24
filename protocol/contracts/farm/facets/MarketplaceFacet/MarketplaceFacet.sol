@@ -96,12 +96,12 @@ contract MarketplaceFacet {
             listingAmount = s.a[recipient].field.plots[index];
         }
 
-        uint256 amount = (amountBeansUsing / listing.price) * 1000000;
+        uint256 amount = (amountBeansUsing  * 1000000) /listing.price;
 
         // In case of slippage impacting bean purchase in positive way
         if (listingAmount < amount){
             amount = listingAmount;
-            amountBeansUsing = (amount/100000) * listing.price;
+            amountBeansUsing = (amount * listing.price)/1000000;
         }
 
         require(bean().balanceOf(msg.sender) >= amountBeansUsing, "Field: Not enough beans to purchase.");
@@ -145,12 +145,13 @@ contract MarketplaceFacet {
     // }
 
     function listBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amountBeansUsing) public  {
+
         
         require(amountBeansUsing > 0, "Marketplace: Must offer to buy non-zero amount");
         require(bean().balanceOf(msg.sender) >= amountBeansUsing, "Marketplace: Not enough beans to submit buy offer.");
         require(pricePerPod > 0, "Marketplace: Price must be greater than 0");
 
-        uint256 amount = (amountBeansUsing / pricePerPod) * 1000000;
+        uint256 amount = (amountBeansUsing  * 1000000) / pricePerPod;
 
         s.buyOffers[s.buyOfferIndex].amount = amount;
         s.buyOffers[s.buyOfferIndex].price = pricePerPod;
@@ -165,13 +166,16 @@ contract MarketplaceFacet {
 
     }
 
-    function buyBeansAndListBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amountBeans, uint256 buyBeanAmount) public {
-        uint256 boughtBeanAmount = LibMarket.buy(buyBeanAmount);
+    function buyBeansAndListBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amountBeans, uint256 buyBeanAmount) public payable{
+        console.log('bean().balanceOf(msg.sender) before',bean().balanceOf(address(this)));
+        uint256 boughtBeanAmount = LibMarket.buyAndDeposit(buyBeanAmount);
+        console.log('bean().balanceOf(msg.sender) after',bean().balanceOf(address(this)));
+        console.log('boughtBeanAmount',boughtBeanAmount);
         listBuyOffer(maxPlaceInLine, pricePerPod, boughtBeanAmount + amountBeans);
     }
 
 
-    function sellToBuyOffer(uint256 plotIndex, uint24 buyOfferIndex, uint232 amount) public payable  {
+    function sellToBuyOffer(uint256 plotIndex, uint24 buyOfferIndex, uint232 amount) public  {
         
         require(s.a[msg.sender].field.plots[plotIndex] >= 0, "Marketplace: Plot  not owned by user.");
 
