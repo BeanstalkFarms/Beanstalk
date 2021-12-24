@@ -17,7 +17,7 @@ contract MockSiloFacet is SiloFacet {
 
     using SafeMath for uint256;
 
-    function depositSiloAssetsE(address account, uint256 base, uint256 amount, bool wrapped) public {
+    function depositSiloAssetsE(address account, uint256 base, uint256 amount) public {
         updateSilo(account);
         LibSilo.depositSiloAssets(account, base, amount);
     }
@@ -30,11 +30,11 @@ contract MockSiloFacet is SiloFacet {
     function incrementDepositedBeansE(uint256 amount) public {
         s.bean.deposited = s.bean.deposited.add(amount);
     }
-    function incrementBalanceOfStalkE(address account, uint256 amount, bool wrapped) public {
-        incrementBalanceOfStalk(account, amount, wrapped);
+    function incrementBalanceOfStalkE(address account, uint256 amount) public {
+        incrementBalanceOfStalk(account, amount);
     }
-    function withdrawSiloAssetsE(address account, uint256 seeds, uint256 stalk, bool wrapped) public {
-        withdrawSiloAssets(account, seeds, stalk, wrapped);
+    function withdrawSiloAssetsE(address account, uint256 seeds, uint256 stalk) public {
+        withdrawSiloAssets(account, seeds, stalk);
     }
 
     function withdrawSiloAssetsE(address account, uint256 base, uint256 amount) public {

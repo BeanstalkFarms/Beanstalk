@@ -72,6 +72,7 @@ contract UpdateSilo is SiloExit {
             //s.a[account].s.seeds = a.s.seeds.add(seeds);
             s.a[account].s.stalk = accountStalk.add(beans.mul(C.getStalkPerBean()));
             LibBeanSilo.addBeanDeposit(account, season(), beans);
+            LibStalk._transfer(LibStalk._msgSender(), account, beans.mul(C.getStalkPerBean()));            
         }
     }
 
