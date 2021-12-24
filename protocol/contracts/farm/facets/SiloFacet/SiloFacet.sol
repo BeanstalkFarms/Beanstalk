@@ -54,6 +54,14 @@ contract SiloFacet is BeanSilo {
         return true;
     }
 
+    function unwrapStalk(address account, uint256 unwrap_stalk_amount) external {
+        // Remove all Legacy Stalk and Mint the corresponding fungible token
+        if (s.a[account].s.stalk > 0) {
+            transfer(account, unwrap_stalk_amount);
+            s.a[account].s.stalk = s.a[account].s.stalk.sub(unwrap_stalk_amount);        
+        }
+    }
+
     /**
      * Bean
     */
