@@ -44,7 +44,7 @@ contract BeanSilo is LPSilo {
      * Internal
     **/
 
-    function _depositBeans(uint256 amount) internal {
+    function _depositBeans(uint256 amount, Settings calldata set) internal {
         require(amount > 0, "Silo: No beans.");
         updateSilo(msg.sender);
         LibBeanSilo.incrementDepositedBeans(amount);
@@ -54,11 +54,12 @@ contract BeanSilo is LPSilo {
 
     function _withdrawBeans(
         uint32[] calldata crates,
-        uint256[] calldata amounts
+        uint256[] calldata amounts,
+	Settings calldata set
     )
         internal
     {
-        updateSilo(msg.sender);
+        updateSilo(msg.sender, set.unwrap_seeds, set.unwrap_stalk, set.update);
         require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         (uint256 beansRemoved, uint256 stalkRemoved) = removeBeanDeposits(crates, amounts);
         addBeanWithdrawal(msg.sender, season()+s.season.withdrawBuffer, beansRemoved);

@@ -86,6 +86,8 @@ describe('Seed', function () {
       it('properly converts existing non-fungible seeds to the ERC-20 token', async function () {
 	await this.silo.updateSilo(userAddress, '1000000000000000000000000000', '0', false); // using a big number to convert all seeds
 	await this.silo.updateSilo(user2Address, '100000000000000000000000000', '0', false);
+	await this.silo.convertSeeds(userAddress);
+	await this.silo.convertSeeds(user2Address);
 	expect(await this.seed.balanceOf(userAddress)).to.eq('200000');
 	expect(await this.seed.balanceOf(user2Address)).to.eq('200000');
       });
