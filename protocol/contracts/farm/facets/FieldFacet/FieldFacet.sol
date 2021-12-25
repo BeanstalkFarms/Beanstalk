@@ -93,7 +93,6 @@ contract FieldFacet is PodTransfer {
     }
 
     function cancelListing(uint256 index) internal {
-        require(s.a[msg.sender].field.plots[index] > 0, "Marketplace: Plot not owned by user.");
         delete s.listedPlots[index];
         emit ListingCancelled(msg.sender, index);
     }
