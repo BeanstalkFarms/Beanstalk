@@ -90,7 +90,7 @@ describe('Convert', function () {
 
     describe('revert', async function () {      
       it('not enough LP', async function () {
-        await this.silo.connect(user).depositBeans('20000');
+        await this.silo.connect(user).depositBeans('20000', ['0','0', true]);
         await this.pair.simulateTrade('10000', '40000');
         await expect(this.convert.connect(user).convertDepositedBeans('5000','2',['2'],['20000']))
           .to.be.revertedWith('Convert: Not enough LP.');
@@ -98,7 +98,7 @@ describe('Convert', function () {
       });
 
       it('p >= 1', async function () {
-        await this.silo.connect(user).depositBeans('1000');
+        await this.silo.connect(user).depositBeans('1000', ['0', '0', true]);
         await this.pair.simulateTrade('20000', '20000');
         await expect(this.convert.connect(user).convertDepositedBeans('100','1',['1'],['1000']))
           .to.be.revertedWith('Convert: P must be > 1.');
@@ -107,8 +107,8 @@ describe('Convert', function () {
 
     describe('below max', function () {
       beforeEach(async function () {
-	await this.silo.resetSeeds([userAddress, user2Address]);
-        await this.silo.connect(user).depositBeans('1000');
+	await this.silo.resetSeedsAndStalk([userAddress, user2Address]);
+        await this.silo.connect(user).depositBeans('1000', ['0','0', true]);
         await this.pair.simulateTrade('10000', '40000');
         this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2'],['1000']);
       });
@@ -137,8 +137,8 @@ describe('Convert', function () {
 
     describe('above max', function () {
       beforeEach(async function () {
-	await this.silo.resetSeeds([userAddress, user2Address]);
-        await this.silo.connect(user).depositBeans('20000');
+	await this.silo.resetSeedsAndStalk([userAddress, user2Address]);
+        await this.silo.connect(user).depositBeans('20000', ['0','0', true]);
         await this.pair.simulateTrade('19000', '21000');
         this.result = await this.convert.connect(user).convertDepositedBeans('10000','1',['2'],['20000']);
       });
@@ -167,8 +167,8 @@ describe('Convert', function () {
 
     describe('after one season', function () {
       beforeEach(async function () {
-	await this.silo.resetSeeds([userAddress, user2Address]);
-        await this.silo.connect(user).depositBeans('1000');
+	await this.silo.resetSeedsAndStalk([userAddress, user2Address]);
+        await this.silo.connect(user).depositBeans('1000', ['0','0', true]);
         await this.pair.simulateTrade('10000', '40000');
         await this.season.siloSunrise(0);
         this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2'],['1000']);
@@ -198,8 +198,8 @@ describe('Convert', function () {
 
     describe('after multiple seasons', function () {
       beforeEach(async function () {
-	await this.silo.resetSeeds([userAddress, user2Address]);
-        await this.silo.connect(user).depositBeans('1000');
+	await this.silo.resetSeedsAndStalk([userAddress, user2Address]);
+        await this.silo.connect(user).depositBeans('1000', ['0','0', true]);
         await this.pair.simulateTrade('10000', '40000');
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
@@ -230,11 +230,11 @@ describe('Convert', function () {
 
     describe('multiple deposits', function () {
       beforeEach(async function () {
-	await this.silo.resetSeeds([userAddress, user2Address]);
-        await this.silo.connect(user).depositBeans('1000');
+	await this.silo.resetSeedsAndStalk([userAddress, user2Address]);
+        await this.silo.connect(user).depositBeans('1000', ['0','0', true]);
         await this.pair.simulateTrade('10000', '40000');
         await this.season.siloSunrise(0);
-        await this.silo.connect(user).depositBeans('1000');
+        await this.silo.connect(user).depositBeans('1000', ['0','0', true]);
         this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2','3'],['500','500']);
       });
   
@@ -263,7 +263,7 @@ describe('Convert', function () {
 
   describe('convert lp to beans', function () {
     beforeEach(async function () {
-      await this.silo.resetSeeds([userAddress, user2Address]);
+      await this.silo.resetSeedsAndStalk([userAddress, user2Address]);
       await this.pair.faucet(this.silo.address, '997')
       await this.pair.faucet(userAddress, '3');
       await this.bean.mint(this.pair.address, '400000');
@@ -274,13 +274,13 @@ describe('Convert', function () {
     describe('revert', async function () {
       it('p >= 1', async function () {
         await this.pair.simulateTrade('10000', '40000');
-        await this.silo.connect(user).depositLP('1');
+        await this.silo.connect(user).depositLP('1', ['0','0', true]);
         await expect(this.convert.connect(user).convertDepositedLP('1','100',['2'],['1']))
           .to.be.revertedWith('Convert: P must be < 1.');
       });
       it('beans below min', async function () {
         await this.pair.set('40000', '10000', '1');
-        await this.silo.connect(user).depositLP('1');
+        await this.silo.connect(user).depositLP('1', ['0','0', true]);
         await expect(this.convert.connect(user).convertDepositedLP('1','1000',['2'],['1']))
           .to.be.revertedWith('Convert: Not enough Beans.');
       });
@@ -288,9 +288,9 @@ describe('Convert', function () {
 
     describe('below max', async function () {
       beforeEach(async function () {
-	await this.silo.resetSeeds([userAddress, user2Address]);
+	await this.silo.resetSeedsAndStalk([userAddress, user2Address]);
         await this.pair.simulateTrade('40000', '10000');
-        await this.silo.connect(user).depositLP('1');
+        await this.silo.connect(user).depositLP('1', ['0','0', true]);
         this.result = await this.convert.connect(user).convertDepositedLP('1','100',['2'],['1']);
       });
   
@@ -319,9 +319,9 @@ describe('Convert', function () {
 
     describe('after season', async function () {
       beforeEach(async function () {
-	await this.silo.resetSeeds([userAddress, user2Address]);
+	await this.silo.resetSeedsAndStalk([userAddress, user2Address]);
         await this.pair.simulateTrade('200000', '50000');
-        await this.silo.connect(user).depositLP('1');
+        await this.silo.connect(user).depositLP('1', ['0','0', true]);
         await this.season.siloSunrise(0);
         this.result = await this.convert.connect(user).convertDepositedLP('1','100',['2'],['1']);
       });
@@ -351,11 +351,11 @@ describe('Convert', function () {
 
     describe('multiple deposits', async function () {
       beforeEach(async function () {
-	await this.silo.resetSeeds([userAddress, user2Address]);
+	await this.silo.resetSeedsAndStalk([userAddress, user2Address]);
         await this.pair.simulateTrade('200000', '50000');
-        await this.silo.connect(user).depositLP('2');
+        await this.silo.connect(user).depositLP('2', ['0','0', true]);
         await this.season.siloSunrise(0);
-        await this.silo.connect(user).depositLP('1');
+        await this.silo.connect(user).depositLP('1', ['0','0', true]);
         this.result = await this.convert.connect(user).convertDepositedLP('2','100',['3','2'],['1','1']);
       });
   

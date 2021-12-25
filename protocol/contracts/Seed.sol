@@ -28,9 +28,9 @@ contract Seed is Ownable, ERC20Burnable {
     }
 
     function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
-          ISeed(owner()).updateSilo(sender);
-        	ISeed(owner()).updateSilo(recipient);
-        	_transfer(sender, recipient, amount);
+          ISeed(owner()).updateSilo(sender, 0, 0, true);
+       	  ISeed(owner()).updateSilo(recipient, 0, 0, true);
+          _transfer(sender, recipient, amount);
           if (allowance(sender, _msgSender()) != uint256(-1)) {
                _approve(
                   sender,
@@ -41,7 +41,7 @@ contract Seed is Ownable, ERC20Burnable {
     }
 
     function transfer(address recipient, uint256 amount) public override returns (bool) {
-      	ISeed(owner()).updateSilo(recipient);
+      	ISeed(owner()).updateSilo(recipient, 0, 0, true);
       	_transfer(_msgSender(), recipient, amount);	
       	return true;
     }
