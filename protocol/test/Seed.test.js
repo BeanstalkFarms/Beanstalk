@@ -72,35 +72,32 @@ describe('Seed', function () {
    });
    describe('Enumeration', async function() {
       it('properly gives fungible seeds as rewards for newly deposited beans', async function () {
-	this.silo.connect(user).depositBeans('100000');
-	this.silo.connect(user2).depositBeans('100000');
+	this.silo.connect(user).depositBeans('100000', ['0', '0', true]);
+	this.silo.connect(user2).depositBeans('100000', ['0', '0', true]);
 	expect(await this.seed.totalSupply()).to.eq('400000');
       });
       it('properly returns the correct balance of non-fungible seeds', async function () {
-	expect(await this.silo.totalSeeds()).to.eq('0');
+	const balanceOfFungibleSeeds = await this.silo.totalSeeds();
+	expect(await this.silo.totalSeeds()).to.eq(balanceOfFungibleSeeds);
       });
    });
    describe('Transition from Silo to ERC20', async function () {
     describe('Seed Conversion', async function () {
       it('properly converts existing non-fungible seeds to the ERC-20 token', async function () {
-	await this.silo.connect(user).setNonFungibleSeeds('200000');
-	await this.silo.connect(user2).setNonFungibleSeeds('200000');
 	await this.silo.convertSeeds(userAddress);
 	await this.silo.convertSeeds(user2Address);
-	expect(await this.seed.balanceOf(userAddress)).to.eq('400000');
-	expect(await this.seed.balanceOf(user2Address)).to.eq('400000');
-	await this.seed.connect(user).burn('200000');
-	await this.seed.connect(user2).burn('200000');
+	expect(await this.seed.balanceOf(userAddress)).to.eq('200000');
+	expect(await this.seed.balanceOf(user2Address)).to.eq('200000');
       });
       it('decrements fungible seeds when withdrawing from the silo', async function () {
-	await this.silo.connect(user).depositBeans('100000');
-	expect(await this.seed.balanceOf(userAddress)).to.eq('400000');
-	await this.silo.connect(user).withdrawBeans([1], ['100000']);
-	expect(await this.seed.balanceOf(userAddress)).to.eq('200000');
+	await this.silo.connect(user).depositBeans('100000', ['0', '0', true]);
+	expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('200000');
+	await this.silo.connect(user).withdrawBeans([1], ['100000'], ['0', '0', true]);
+	expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('0');
       });
       it('reverts when users do not have enough seeds to burn upon silo withdrawl', async function () {
 	await this.seed.connect(user2).transfer(userAddress, '200000');
-	await expect(this.silo.connect(user2).withdrawBeans([1], ['100000'])).to.be.revertedWith('ERC20: burn amount exceeds balance');
+	await expect(this.silo.connect(user2).withdrawBeans([1], ['100000'], ['0', '0', true])).to.be.revertedWith('ERC20: burn amount exceeds balance');
 	expect(await this.seed.balanceOf(user2Address)).to.eq('0');
       });
     });

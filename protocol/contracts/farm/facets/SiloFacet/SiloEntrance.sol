@@ -12,6 +12,7 @@ import "../../../libraries/Decimal.sol";
 import "../../../libraries/LibStalk.sol";
 import "../../../C.sol";
 import "../../../interfaces/ISeed.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -30,13 +31,23 @@ contract SiloEntrance {
      * Silo
     **/
 
+
+    struct Settings {
+	    uint256 unwrap_seeds;
+	    uint256 unwrap_stalk;
+	    bool update;
+    }
+
+
     function depositSiloAssets(address account, uint256 seeds, uint256 stalk) internal {
         incrementBalanceOfStalk(account, stalk);
         incrementBalanceOfSeeds(account, seeds);
     }
 
     function incrementBalanceOfSeeds(address account, uint256 seeds) internal {
-        seed().mint(account, seeds);
+        seed().mint(address(this), seeds);
+	s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
+	s.s.seeds = s.s.seeds.add(seeds);
     }
 
     /// @notice mints the corresponding amount of stalk ERC-20 tokens to the selected account address
@@ -47,6 +58,7 @@ contract SiloEntrance {
         if (s.s.roots == 0) roots = stalk.mul(C.getRootsBase());
         else roots = s.s.roots.mul(stalk).div(s.stalkToken._totalSupply);
 
+	console.log("Stalk being minted to silo address: %s", stalk);
         LibStalk._mint(address(this), stalk);
         // Mint Stalk ERC-20
         s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
@@ -63,7 +75,13 @@ contract SiloEntrance {
     }
 
     function decrementBalanceOfSeeds(address account, uint256 seeds) internal {
-        seed().burnFrom(account, seeds);
+	if (s.a[account].s.seeds >= seeds) {
+		s.a[account].s.seeds = s.a[account].s.seeds.sub(seeds);
+	}
+	else {	
+	        seed().burnFrom(account, seeds.sub(s.a[account].s.seeds));
+		s.a[account].s.seeds = 0;
+	}
     }
 
     /// @notice burns the corresponding amount of stalk ERC-20 tokens of the selected account address
