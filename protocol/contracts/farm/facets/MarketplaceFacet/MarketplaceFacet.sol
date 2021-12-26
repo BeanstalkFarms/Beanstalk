@@ -73,7 +73,8 @@ contract MarketplaceFacet {
     function buyBeansAndListing(uint256 index, address from, uint256 amountBeans, uint256 buyBeanAmount) public payable {
         require(s.listedPlots[index].price > 0, "Marketplace: Listing does not exist.");
         uint256 boughtBeanAmount = LibMarket.buyExactTokens(buyBeanAmount);
-        if (amountBeans > 0) bean().transferFrom(msg.sender, address(this), amountBeans);
+        bean().transfer(from, boughtBeanAmount);
+        if (amountBeans > 0) bean().transferFrom(msg.sender, from, amountBeans);
         uint256 amount = ((amountBeans + buyBeanAmount) * 1000000) / s.listedPlots[index].price;
         _buyListing(index,from,amount);
     }
@@ -91,35 +92,38 @@ contract MarketplaceFacet {
     // }
 
     function listBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amountBeans) public  {
-        require(pricePerPod > 0, "Marketplace: Price must be greater than 0");
-        if (amountBeans > 0) bean().transferFrom(msg.sender, address(this), amountBeans);
+        require(0 < pricePerPod && pricePerPod < 1000000, "Marketplace: Invalid Pod Price");
+        bean().transferFrom(msg.sender, address(this), amountBeans);
         uint256 amount = (amountBeans * 1000000) / pricePerPod;
         _listBuyOffer(maxPlaceInLine,pricePerPod,amount);
     }
 
     function buyBeansAndListBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amountBeans, uint256 buyBeanAmount) public payable {
-        require(pricePerPod > 0, "Marketplace: Price must be greater than 0");
+        require(0 < pricePerPod && pricePerPod < 1000000, "Marketplace: Invalid Pod Price");
         uint256 boughtBeanAmount = LibMarket.buyExactTokens(buyBeanAmount);
         if (amountBeans > 0) bean().transferFrom(msg.sender, address(this), amountBeans);
         uint256 amount = ((amountBeans + boughtBeanAmount) * 1000000) / pricePerPod;
         _listBuyOffer(maxPlaceInLine,pricePerPod,amount);
     }
 
+    function buyOffer(uint24 index) public view returns (Storage.BuyOffer memory) {
+       return s.buyOffers[index];
+    }
+
     function sellToBuyOffer(uint256 plotIndex, uint24 buyOfferIndex, uint232 amount) public  {
         Storage.BuyOffer storage buyOffer = s.buyOffers[buyOfferIndex];
         require(buyOffer.price > 0, "Marketplace: Buy Offer does not exist.");
-        require(s.a[msg.sender].field.plots[plotIndex] > 0, "Marketplace: Plot  not owned by user.");
+        require(s.a[msg.sender].field.plots[plotIndex] > 0, "Marketplace: Plot not owned by user.");
         uint232 harvestable = uint232(s.f.harvestable);
         require(plotIndex >= harvestable, "Marketplace: Cannot send harvestable plot.");
         uint256 placeInLine = plotIndex + amount - harvestable;
         require(placeInLine <= buyOffer.maxPlaceInLine, "Marketplace: Plot too far in line.");
-        require(amount <= buyOffer.amount, "Marketplace: Buy Offer has insufficient amount.");
         uint256 costInBeans = (buyOffer.price * amount) / 1000000;
         bean().transfer(msg.sender, costInBeans);
         if (s.listedPlots[plotIndex].price > 0){
             _fillListing(msg.sender, buyOffer.owner, plotIndex, amount, true);
         }
-        buyOffer.amount = buyOffer.amount - amount;
+        buyOffer.amount = buyOffer.amount.sub(amount);
         _transferPlot(msg.sender, buyOffer.owner, plotIndex, amount);
         emit BuyOfferFilled(buyOfferIndex, amount);
     }

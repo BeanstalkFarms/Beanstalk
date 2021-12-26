@@ -179,6 +179,7 @@ contract MockSeasonFacet is SeasonFacet {
         for (uint32 i = 0; i < s.buyOfferIndex; i++) {
             delete s.buyOffers[i];
         }
+        s.buyOfferIndex = 0;
 
         delete s.f;
         delete s.bean;
