@@ -77,9 +77,9 @@ describe('Stalk ERC20', function () {
     await this.season.resetAccount(ownerAddress)
     await this.season.resetState();
     await this.season.siloSunrise(0);
-    await this.silo.depositSiloAssetsE(userAddress, '500', '1000000');
-    await this.silo.depositSiloAssetsE(user2Address, '500', '1000000');
-    await this.silo.depositSiloAssetsE(ownerAddress, '500', '1000000');
+    await this.silo.depositSiloAssetsE(userAddress, '500', '1000000', ['0', '0', true]);
+    await this.silo.depositSiloAssetsE(user2Address, '500', '1000000', ['0', '0', true]);
+    await this.silo.depositSiloAssetsE(ownerAddress, '500', '1000000', ['0', '0', true]);
 
   });
 
