@@ -125,6 +125,9 @@ contract MarketplaceFacet {
         }
         buyOffer.amount = buyOffer.amount.sub(amount);
         _transferPlot(msg.sender, buyOffer.owner, plotIndex, amount);
+        if (buyOffer.amount == 0){
+            delete s.buyOffers[buyOfferIndex];
+        }
         emit BuyOfferFilled(buyOfferIndex, amount);
     }
 

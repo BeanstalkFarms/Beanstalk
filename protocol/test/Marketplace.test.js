@@ -174,6 +174,7 @@ describe('Marketplace', function () {
 
 
     // it('Buy Listing Fails after Expiry', async function () {
+    //incrementTotalHarvestableE()
     //   //
     // });
 
@@ -229,13 +230,18 @@ describe('Marketplace', function () {
 
     });
 
-    it('Fails to buy Listing, not enough ETH', async function () {
+    it('Fails to buy Listing, not enough ETH used', async function () {
       await this.pair.simulateTrade('4000', '1000');
       await expect(this.marketplace.connect(user2).buyBeansAndListing(4000, userAddress, 0, 100, { value: 24 })).to.be.revertedWith('UniswapV2Router: EXCESSIVE_INPUT_AMOUNT');
     });
 
     it('Buy Listing non-listed Index Fails', async function () {
       await expect(this.marketplace.connect(user).buyListing(1001, user2Address, 999)).to.be.revertedWith('Marketplace: Listing does not exist.');
+    });
+
+    it('Buy Listing after expired', async function () {
+      await this.field.incrementTotalHarvestableE('2000');
+      await expect(this.marketplace.connect(user2).buyListing(0, userAddress, 500)).to.be.revertedWith('Marketplace: Listing has expired');
     });
 
 
@@ -282,7 +288,7 @@ describe('Marketplace', function () {
       await resetState();
     });
 
-    it('Lists Buy Offer,Emits Event, Balance Updates', async function () {
+    it('Lists Offer, Emits Event, Balance Updates', async function () {
 
       let user2BeanBalance = parseInt((await this.bean.balanceOf(user2Address)).toString())
       result = await this.marketplace.connect(user2).listBuyOffer('5000', '800000', '400');
@@ -297,9 +303,7 @@ describe('Marketplace', function () {
 
     });
 
-    it('Lists Buy Offer using ETH + Beans', async function () {
-
-
+    it('Lists Offer using ETH + Beans', async function () {
       await this.pair.simulateTrade('4000000', '10000');
       let user2BeanBalance = parseInt((await this.bean.balanceOf(user2Address)).toString())
       result = await this.marketplace.connect(user2).buyBeansAndListBuyOffer('10000', '500000', '1000', '4000', { value: 11 });
@@ -321,7 +325,7 @@ describe('Marketplace', function () {
       await expect(result2).to.emit(this.marketplace, 'BuyOfferCreated').withArgs('1', user2Address, '200', 500000, '1000');
     });
 
-    it('Sells Plot to Buy Offer Partial Fill', async function () {
+    it('Sell, Partial Fill', async function () {
       result = await this.marketplace.connect(user2).listBuyOffer('5000', '800000', '400');
       const buyOfferAmountBefore = parseInt((await this.marketplace.buyOffer(0)).amount.toString());
       let userBeanBalance = parseInt((await this.bean.balanceOf(userAddress)).toString());
@@ -335,7 +339,6 @@ describe('Marketplace', function () {
       expect((await this.field.plot(userAddress, 4000)).toString()).to.equal('0');
       expect((await this.field.plot(user2Address, 4000)).toString()).to.equal('250');
       expect((await this.field.plot(userAddress, 4250)).toString()).to.equal('750');
-
       const buyOfferAmountAfter = parseInt((await this.marketplace.buyOffer(0)).amount.toString());
       expect(buyOfferAmountBefore - buyOfferAmountAfter).to.equal(250);
 
@@ -344,24 +347,48 @@ describe('Marketplace', function () {
 
 
 
-    // it('Sell to Buy Offer Fails, Unowned plot', async function () {
+    it('Fails, Unowned plot', async function () {
+      result = await this.marketplace.connect(user2).listBuyOffer('10000', '800000', '400');
+      await this.field.connect(user2).sowBeansAndIndex('1000');
+      await expect(this.marketplace.connect(user).sellToBuyOffer('6000', '0', '250')).to.be.revertedWith('Marketplace: Plot not owned by user.');
+    });
 
+    it('Multiple partial fills, Offer Deletes', async function () {
+      result = await this.marketplace.connect(user2).listBuyOffer('8000', '500000', '1000');
+      await this.field.connect(user).sowBeansAndIndex('1000');
+      await this.field.connect(user).sowBeansAndIndex('400');
+      await this.field.connect(user).sowBeansAndIndex('600');
 
-    // });
+      let userBeanBalance = parseInt((await this.bean.balanceOf(userAddress)).toString())
+      await this.marketplace.connect(user).sellToBuyOffer('6000', '0', '1000');
+      await this.marketplace.connect(user).sellToBuyOffer('7000', '0', '400');
+      await this.marketplace.connect(user).sellToBuyOffer('7400', '0', '600');
 
-    // it('Sell to Buy Offer, Multiple partial fills', async function () {
+      let userBeanBalanceAfterBuyOffer = parseInt((await this.bean.balanceOf(userAddress)).toString());
 
-    //   let user2BeanBalance = parseInt((await this.bean.balanceOf(user2Address)).toString())
-    //   this.result = await this.marketplace.connect(user2).sellToBuyOffer('3000', '800000', '500', 0);
-    //   let user2BeanBalanceAfterBuyOffer = parseInt((await this.bean.balanceOf(userAddress)).toString())
-    //   expect(user2BeanBalance-user2BeanBalanceAfterBuyOffer).to.equal(400);
-    // });
+      expect(userBeanBalanceAfterBuyOffer - userBeanBalance).to.equal(1000);
 
-    // TODO test that LibMarket.buyExact works
-    // TO do this, need, to get balance of user ETH
+      const buyOffer = await this.marketplace.buyOffer(0);
+      expect(buyOffer.amount.toString()).to.equal('0');
+      expect(buyOffer.price.toString()).to.equal('0');
+      expect(buyOffer.maxPlaceInLine.toString()).to.equal('0');
+    });
 
-    // TODO test moving the line forward
+    it('Buy Offer accepts plot only at correct place in line', async function () {
+      await this.marketplace.connect(user2).listBuyOffer('5000', '500000', '2000');
+      await this.field.connect(user).sowBeansAndIndex('1000');
+      await expect(this.marketplace.connect(user).sellToBuyOffer('6000', '0', '1000')).to.be.revertedWith('Marketplace: Plot too far in line');
+      await this.field.incrementTotalHarvestableE('2000');
+      result = await this.marketplace.connect(user).sellToBuyOffer('6000', '0', '1000');
+      expect(result).to.emit(this.marketplace, 'BuyOfferFilled').withArgs(0, '1000');
+    });
 
+    it('Cancel Buy Offer', async function () {
+      await this.marketplace.connect(user2).listBuyOffer('5000', '500000', '2000');
+      result = await this.marketplace.connect(user2).cancelBuyOffer('0');
+      expect(result).to.emit(this.marketplace, 'BuyOfferCancelled').withArgs(user2Address, 0);
+
+    });
 
 
     // it('Sell to Buy Offer Fails, Too Far in Line', async function () {
