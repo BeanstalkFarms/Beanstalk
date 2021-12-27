@@ -46,8 +46,12 @@ library LibClaim {
         if (c.plots.length > 0) beansClaimed = beansClaimed.add(harvest(c.plots));
         if (c.lpWithdrawals.length > 0) {
             if (c.convertLP) {
-                if (beansToWallet == 0) beansClaimed = beansClaimed.add(removeAllocationAndClaimLP(c.lpWithdrawals, c.minBeanAmount, c.minEthAmount));
-                else removeAndClaimLP(c.lpWithdrawals, c.minBeanAmount, c.minEthAmount);
+                if (beansToWallet < c.minBeanAmount) beansClaimed = beansClaimed.add(removeAndClaimLPtoClaimable(c.lpWithdrawals, c.minBeanAmount, c.minEthAmount));
+                else {
+                    uint toWallet = removeAndClaimLP(c.lpWithdrawals, c.minBeanAmount, c.minEthAmount);
+                    if (toWallet > beansToWallet) toWallet = 0;
+                    else beansToWallet = beansToWallet.sub(toWallet);
+                }
             }
             else claimLP(c.lpWithdrawals);
         }
@@ -104,12 +108,13 @@ library LibClaim {
         uint256 minEthAmount
     )
         public
+        returns (uint256 beans)
     {
         uint256 lpClaimd = _claimLP(withdrawals);
-        LibMarket.removeLiquidity(lpClaimd, minBeanAmount, minEthAmount);
+        (beans,) = LibMarket.removeLiquidity(lpClaimd, minBeanAmount, minEthAmount);
     }
 
-    function removeAllocationAndClaimLP(
+    function removeAndClaimLPtoClaimable(
         uint32[] calldata withdrawals,
         uint256 minBeanAmount,
         uint256 minEthAmount

@@ -176,7 +176,7 @@ describe('Claim', function () {
       describe('exact LP allocate', async function () {
         beforeEach(async function () {
           const beans = await this.bean.balanceOf(userAddress)
-          this.result = await this.claim.connect(user).claimWithAllocationE([[],['27'],[],false,true,'0','0', '0'], '1000')
+          this.result = await this.claim.connect(user).claimWithAllocationE([[],['27'],[],false,true,'1','1', '0'], '1000')
           const newBeans = await this.bean.balanceOf(userAddress)
           this.claimedBeans = newBeans.sub(beans)
           this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
