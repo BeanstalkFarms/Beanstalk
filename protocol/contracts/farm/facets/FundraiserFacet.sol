@@ -5,25 +5,28 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./FieldFacet/Dibbler.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../../libraries/LibDibbler.sol";
 
 /**
  * @author Publius
  * @title Funding Facet
 **/
-contract FundraiserFacet is Dibbler {
+contract FundraiserFacet {
+
+    AppStorage internal s;
 
     using SafeMath for uint256;
 
     event CreateFundraiser(uint32 indexed id, address fundraiser, address token, uint256 amount);
     event FundFundraiser(address indexed account, uint32 indexed id, uint256 amount);
     event CompleteFundraiser(uint32 indexed id);
+    event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);
 
     function fund(uint32 id, uint256 amount) public returns (uint256) {
         _fund(id, amount);
         bean().burn(amount);
-        return _sowNoSoil(amount, msg.sender);
+        return LibDibbler.sowNoSoil(amount, msg.sender);
     }
 
     function _fund(uint32 id, uint256 amount) internal {
@@ -74,4 +77,7 @@ contract FundraiserFacet is Dibbler {
         return s.fundraiserIndex;
     }
 
+    function bean() internal view returns (IBean) {
+        return IBean(s.c.bean);
+    }
 }

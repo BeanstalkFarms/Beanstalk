@@ -199,11 +199,11 @@ describe('Governance', function () {
     });
 
     it('voter cant unvote', async function () {
-      expect(await this.silo.locked(userAddress)).to.equal(true);
+      expect(await this.silo.voted(userAddress)).to.equal(true);
     });
 
     it('voter can revote', async function () {
-      expect(await this.silo.locked(user2Address)).to.equal(false);
+      expect(await this.silo.voted(user2Address)).to.equal(false);
     });
 
   });
