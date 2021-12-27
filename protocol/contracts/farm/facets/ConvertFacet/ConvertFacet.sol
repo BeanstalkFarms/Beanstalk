@@ -36,7 +36,7 @@ contract ConvertFacet is ConvertSilo {
 
         _depositLP(lp, beansConverted, _s);
         LibCheck.balanceCheck();
-        updateBalanceOfRainStalk(msg.sender);
+        LibSilo.updateBalanceOfRainStalk(msg.sender);
     }   
 
     function convertDepositedLP(
@@ -55,7 +55,7 @@ contract ConvertFacet is ConvertSilo {
         _s = getDepositSeason(_s);
         _depositBeans(beans, _s);
         LibCheck.balanceCheck();
-        updateBalanceOfRainStalk(msg.sender);
+        LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
     function claimConvertAddAndDepositLP(

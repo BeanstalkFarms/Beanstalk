@@ -9,13 +9,19 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "../../../interfaces/IWETH.sol";
 import "../../../interfaces/IBean.sol";
-import "./SiloEntrance.sol";
+import "../../../libraries/LibCheck.sol";
+import "../../../libraries/LibInternal.sol";
+import "../../../libraries/LibMarket.sol";
+import "../../../libraries/Silo/LibSilo.sol";
+import "../../../C.sol";
 
 /**
  * @author Publius
  * @title Silo Exit
 **/
-contract SiloExit is SiloEntrance {
+contract SiloExit {
+
+    AppStorage internal s;
 
     using SafeMath for uint256;
     using SafeMath for uint32;
@@ -61,7 +67,7 @@ contract SiloExit is SiloEntrance {
     }
 
     function balanceOfGrownStalk(address account) public view returns (uint256) {
-        return stalkReward(s.a[account].s.seeds, season()-lastUpdate(account));
+        return LibSilo.stalkReward(s.a[account].s.seeds, season()-lastUpdate(account));
     }
 
     function balanceOfFarmableBeans(address account) public view returns (uint256 beans) {
@@ -208,7 +214,15 @@ contract SiloExit is SiloEntrance {
     }
 
     function balanceOfMigrationStalk(address account) private view returns (uint256) {
-        return s.a[account].s.stalk.add(stalkReward(s.a[account].s.seeds, s.bip0Start-lastUpdate(account)));
+        return s.a[account].s.stalk.add(LibSilo.stalkReward(s.a[account].s.seeds, s.bip0Start-lastUpdate(account)));
+    }
+
+    /**
+     * Internal
+    **/
+
+    function season() internal view returns (uint32) {
+        return s.season.current;
     }
 
 }

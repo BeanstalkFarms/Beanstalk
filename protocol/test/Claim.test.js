@@ -7,7 +7,7 @@ const { print } = require('./utils/print.js')
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 
-describe('BIP2', function () {
+describe('Claim', function () {
   before(async function () {
     [owner,user,user2] = await ethers.getSigners();
     userAddress = user.address;
@@ -54,7 +54,7 @@ describe('BIP2', function () {
     beforeEach(async function () {
       await this.silo.connect(user).depositBeans('1000')
       await this.silo.connect(user).depositLP('1')
-      await this.season.incrementTotalSoilE('5000')
+      await this.season.setSoilE('5000')
       await this.field.connect(user).sowBeans('1000')
       await this.field.incrementTotalHarvestableE('1000')
       await this.silo.connect(user).withdrawBeans([2],['1000'])
@@ -63,20 +63,92 @@ describe('BIP2', function () {
     });
 
     describe('claim', function () {
-      beforeEach(async function () {
-        const beans = await this.bean.balanceOf(userAddress)
-        this.result = await this.claim.connect(user).claim([['27'],[],[],false,true,'0','0', '0'])
-        const newBeans = await this.bean.balanceOf(userAddress)
-        this.claimedBeans = newBeans.sub(beans)
-        this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+      describe('No Beans to wallet', async function () {  
+        beforeEach(async function () {
+          const beans = await this.bean.balanceOf(userAddress)
+          this.result = await this.claim.connect(user).claim([['27'],[],[],false,true,'0','0', '0'])
+          const newBeans = await this.bean.balanceOf(userAddress)
+          this.claimedBeans = newBeans.sub(beans)
+          this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+        });
+
+        it('properly sends beans to wallet', async function () {
+          expect(this.claimedBeans.toString()).to.equal('0');
+        });
+
+        // Before partial claiming, was claimedBeans and not claimableBeans
+        it('properly claims beans', async function () {
+          expect(this.claimableBeans.toString()).to.equal('1000');
+        });
+        it('no beans created or destroyed', async function () {
+          expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('1000');
+        });
       });
 
-      // Before partial claiming, was claimedBeans and not claimableBeans
-      it('properly claims beans', async function () {
-        expect(this.claimableBeans.toString()).to.equal('1000');
+      describe('Some Beans to wallet', async function () {  
+        beforeEach(async function () {
+          const beans = await this.bean.balanceOf(userAddress)
+          this.result = await this.claim.connect(user).claim([['27'],[],[],false,true,'0','0', '500'])
+          const newBeans = await this.bean.balanceOf(userAddress)
+          this.claimedBeans = newBeans.sub(beans)
+          this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+        });
+
+        it('properly sends beans to wallet', async function () {
+          expect(this.claimedBeans.toString()).to.equal('500');
+        });
+
+        // Before partial claiming, was claimedBeans and not claimableBeans
+        it('properly claims beans', async function () {
+          expect(this.claimableBeans.toString()).to.equal('500');
+        });
+        it('no beans created or destroyed', async function () {
+          expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('1000');
+        });
       });
-      it('no beans created or destroyed', async function () {
-        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('1000');
+
+      describe('All Beans to wallet', async function () {  
+        beforeEach(async function () {
+          const beans = await this.bean.balanceOf(userAddress)
+          this.result = await this.claim.connect(user).claim([['27'],[],[],false,true,'0','0', '1000'])
+          const newBeans = await this.bean.balanceOf(userAddress)
+          this.claimedBeans = newBeans.sub(beans)
+          this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+        });
+
+        it('properly sends beans to wallet', async function () {
+          expect(this.claimedBeans.toString()).to.equal('1000');
+        });
+
+        // Before partial claiming, was claimedBeans and not claimableBeans
+        it('properly claims beans', async function () {
+          expect(this.claimableBeans.toString()).to.equal('0');
+        });
+        it('no beans created or destroyed', async function () {
+          expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('1000');
+        });
+      });
+
+      describe('Too many Beans to wallet', async function () {  
+        beforeEach(async function () {
+          const beans = await this.bean.balanceOf(userAddress)
+          this.result = await this.claim.connect(user).claim([['27'],[],[],false,true,'0','0', '1500'])
+          const newBeans = await this.bean.balanceOf(userAddress)
+          this.claimedBeans = newBeans.sub(beans)
+          this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+        });
+
+        it('properly sends beans to wallet', async function () {
+          expect(this.claimedBeans.toString()).to.equal('1000');
+        });
+
+        // Before partial claiming, was claimedBeans and not claimableBeans
+        it('properly claims beans', async function () {
+          expect(this.claimableBeans.toString()).to.equal('0');
+        });
+        it('no beans created or destroyed', async function () {
+          expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('1000');
+        });
       });
     });
 
@@ -87,17 +159,18 @@ describe('BIP2', function () {
           this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],[],false,true,'0','0', '0'], '1000')
           const newBeans = await this.bean.balanceOf(userAddress)
           this.claimedBeans = newBeans.sub(beans)
-	  this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+	        this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
         });
         it('properly claims beans', async function () {
           expect(this.claimedBeans.toString()).to.equal('0');
+          expect(this.claimableBeans.toString()).to.equal('0');
         });
         it('properly allocates beans', async function () {
           expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
         });
-	it('no beans created or destroyed', async function () {
-        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
-      });
+	      it('no beans created or destroyed', async function () {
+          expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
+        });
       });
 
       describe('exact LP allocate', async function () {
@@ -107,9 +180,10 @@ describe('BIP2', function () {
           const newBeans = await this.bean.balanceOf(userAddress)
           this.claimedBeans = newBeans.sub(beans)
           this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
-	});
+	      });
         it('properly claims beans', async function () {
           expect(this.claimedBeans.toString()).to.equal('0');
+          expect(this.claimableBeans.toString()).to.equal('0');
         });
         it('properly claims eth', async function () {
           await expect(this.result).to.changeEtherBalance(user,'1')
@@ -117,8 +191,8 @@ describe('BIP2', function () {
         it('properly allocates beans', async function () {
           expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
         });
-	it('no beans created or destroyed', async function () {
-        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
+	      it('no beans created or destroyed', async function () {
+          expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('0');
         });
       });
 
@@ -131,15 +205,15 @@ describe('BIP2', function () {
           this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
         });
 
-	// Before partial claiming, was claimedBeans and not claimableBeans
         it('properly claims beans', async function () {
+          expect(this.claimedBeans.toString()).to.equal('0');
           expect(this.claimableBeans.toString()).to.equal('500');
         });
         it('properly allocates beans', async function () {
           expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '500');
         });
-	it('no beans created or destroyed', async function () {
-        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('500');
+	      it('no beans created or destroyed', async function () {
+          expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('500');
         });
       });
 
@@ -149,16 +223,17 @@ describe('BIP2', function () {
           this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],[],false,true,'0','0', '0'], '1500')
           const newBeans = await this.bean.balanceOf(userAddress)
           this.claimedBeans = newBeans.sub(beans)
-	  this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
-	});
+	        this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+	      });
         it('properly claims beans', async function () {
           expect(this.claimedBeans.toString()).to.equal('-500');
+          expect(this.claimableBeans.toString()).to.equal('0');
         });
         it('properly allocates beans', async function () {
           expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
         });
-	it('no beans created or destroyed', async function () {
-        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('-500');
+	      it('no beans created or destroyed', async function () {
+          expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('-500');
         });
       });
 
@@ -170,16 +245,55 @@ describe('BIP2', function () {
           this.claimedBeans = newBeans.sub(beans)
           this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
         });
-
-	// Before partial claiming, was claimedBeans and not claimableBeans
         it('properly claims beans', async function () {
+          expect(this.claimedBeans.toString()).to.equal('0');
           expect(this.claimableBeans.toString()).to.equal('500');
         });
         it('properly allocates beans', async function () {
           expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1500');
         });
-	it('no beans created or destroyed', async function () {
-        expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('500');
+	      it('no beans created or destroyed', async function () {
+          expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('500');
+        });
+      });
+
+      describe('allocate with rest of beans to wallet', async function () {
+        beforeEach(async function () {
+          const beans = await this.bean.balanceOf(userAddress)
+          this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],[],false,true,'0','0', '500'], '500')
+          const newBeans = await this.bean.balanceOf(userAddress)
+          this.claimedBeans = newBeans.sub(beans)
+	        this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+        });
+        it('properly claims beans', async function () {
+          expect(this.claimedBeans.toString()).to.equal('500');
+          expect(this.claimableBeans.toString()).to.equal('0');
+        });
+        it('properly allocates beans', async function () {
+          expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '500');
+        });
+	      it('no beans created or destroyed', async function () {
+          expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('500');
+        });
+      });
+
+      describe('allocate with some of beans to wallet', async function () {
+        beforeEach(async function () {
+          const beans = await this.bean.balanceOf(userAddress)
+          this.result = await this.claim.connect(user).claimWithAllocationE([['27'],[],[],false,true,'0','0', '250'], '500')
+          const newBeans = await this.bean.balanceOf(userAddress)
+          this.claimedBeans = newBeans.sub(beans)
+	        this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+        });
+        it('properly claims beans', async function () {
+          expect(this.claimedBeans.toString()).to.equal('250');
+          expect(this.claimableBeans.toString()).to.equal('250');
+        });
+        it('properly allocates beans', async function () {
+          expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '500');
+        });
+	      it('no beans created or destroyed', async function () {
+          expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('500');
         });
       });
     });

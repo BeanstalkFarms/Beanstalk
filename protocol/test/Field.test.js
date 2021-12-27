@@ -67,7 +67,7 @@ describe('Field', function () {
         await this.bean.connect(user2).approve(this.field.address, MAX_UINT256)
         await this.bean.mint(otherAddress, this.testData.otherStarterBeans)
         await this.bean.connect(other).approve(this.field.address, MAX_UINT256)
-        this.season.incrementTotalSoilE(this.testData.startSoil)
+        this.season.setSoilE(this.testData.startSoil)
         await this.season.setStartSoilE(this.testData.startSoil)
         await this.season.setLastSowTimeE(this.testData.startLastSowTime)
 

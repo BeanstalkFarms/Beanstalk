@@ -5,20 +5,17 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../../libraries/LibCheck.sol";
-import "../../../libraries/LibInternal.sol";
-import "../../../libraries/LibMarket.sol";
-import "../../../C.sol";
+import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
+import "../../C.sol";
+import "../LibAppStorage.sol";
 
 /**
  * @author Publius
- * @title Silo Entrance
+ * @title Lib Silo
 **/
-contract SiloEntrance {
+library LibSilo {
 
     using SafeMath for uint256;
-
-    AppStorage internal s;
 
     event BeanDeposit(address indexed account, uint256 season, uint256 beans);
 
@@ -31,12 +28,19 @@ contract SiloEntrance {
         incrementBalanceOfSeeds(account, seeds);
     }
 
-    function incrementBalanceOfSeeds(address account, uint256 seeds) internal {
+    function withdrawSiloAssets(address account, uint256 seeds, uint256 stalk) internal {
+        decrementBalanceOfStalk(account, stalk);
+        decrementBalanceOfSeeds(account, seeds);
+    }
+
+    function incrementBalanceOfSeeds(address account, uint256 seeds) private {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         s.s.seeds = s.s.seeds.add(seeds);
         s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
     }
 
     function incrementBalanceOfStalk(address account, uint256 stalk) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 roots;
         if (s.s.roots == 0) roots = stalk.mul(C.getRootsBase());
         else roots = s.s.roots.mul(stalk).div(s.s.stalk);
@@ -50,17 +54,14 @@ contract SiloEntrance {
         incrementBipRoots(account, roots);
     }
 
-    function withdrawSiloAssets(address account, uint256 seeds, uint256 stalk) internal {
-        decrementBalanceOfStalk(account, stalk);
-        decrementBalanceOfSeeds(account, seeds);
-    }
-
-    function decrementBalanceOfSeeds(address account, uint256 seeds) internal {
+    function decrementBalanceOfSeeds(address account, uint256 seeds) private {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         s.s.seeds = s.s.seeds.sub(seeds);
         s.a[account].s.seeds = s.a[account].s.seeds.sub(seeds);
     }
 
-    function decrementBalanceOfStalk(address account, uint256 stalk) internal {
+    function decrementBalanceOfStalk(address account, uint256 stalk) private {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return;
         uint256 roots = s.a[account].roots.mul(stalk).sub(1).div(s.a[account].s.stalk).add(1);
 
@@ -73,16 +74,8 @@ contract SiloEntrance {
         decrementBipRoots(account, roots);
     }
 
-    function addBeanDeposit(address account, uint32 _s, uint256 amount) internal {
-        s.a[account].bean.deposits[_s] += amount;
-        emit BeanDeposit(account, _s, amount);
-    }
-
-    function incrementDepositedBeans(uint256 amount) internal {
-        s.bean.deposited = s.bean.deposited.add(amount);
-    }
-
     function updateBalanceOfRainStalk(address account) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         if (!s.r.raining) return;
         if (s.a[account].roots < s.a[account].sop.roots) {
             s.r.roots = s.r.roots.sub(s.a[account].sop.roots.sub(s.a[account].roots));
@@ -90,7 +83,8 @@ contract SiloEntrance {
         }
     }
 
-    function incrementBipRoots(address account, uint256 roots) internal {
+    function incrementBipRoots(address account, uint256 roots) private {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.a[account].votedUntil >= season()) {
             for (uint256 i = 0; i < s.g.activeBips.length; i++) {
                 uint32 bip = s.g.activeBips[i];
@@ -99,7 +93,8 @@ contract SiloEntrance {
         }
     }
 
-    function decrementBipRoots(address account, uint256 roots) internal {
+    function decrementBipRoots(address account, uint256 roots) private {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.a[account].votedUntil >= season()) {
             for (uint256 i = 0; i < s.g.activeBips.length; i++) {
                 uint32 bip = s.g.activeBips[i];
@@ -108,41 +103,12 @@ contract SiloEntrance {
         }
     }
 
-    /**
-     * Shed
-    **/
-
-    function reserves() internal view returns (uint256, uint256) {
-        (uint112 reserve0, uint112 reserve1,) = pair().getReserves();
-        return (index() == 0 ? reserve1 : reserve0,index() == 0 ? reserve0 : reserve1);
-    }
-
-    function lpToLPBeans(uint256 amount) internal view returns (uint256) {
-        (,uint256 beanReserve) = reserves();
-        return amount.mul(beanReserve).mul(2).div(pair().totalSupply());
-    }
-
     function stalkReward(uint256 seeds, uint32 seasons) internal pure returns (uint256) {
         return seeds.mul(seasons);
     }
 
     function season() internal view returns (uint32) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         return s.season.current;
-    }
-
-    /**
-     * Contracts
-    **/
-
-    function index() internal view returns (uint8) {
-        return s.index;
-    }
-
-    function pair() internal view returns (IUniswapV2Pair) {
-        return IUniswapV2Pair(s.c.pair);
-    }
-
-    function bean() internal view returns (IBean) {
-        return IBean(s.c.bean);
     }
 }
