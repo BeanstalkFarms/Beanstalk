@@ -26,7 +26,9 @@ contract MockSiloFacet is SiloFacet {
         LibLPSilo.incrementDepositedLP(amount);
         MockUniswapV2Pair(s.c.pair).faucet(address(this), amount);
     }
-
+    function mintStalkTokensE(address account, uint256 amount) public {
+        LibStalk._mint(account, amount);
+    }
     function incrementDepositedBeansE(uint256 amount) public {
         s.bean.deposited = s.bean.deposited.add(amount);
     }

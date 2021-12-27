@@ -199,6 +199,6 @@ contract SiloEntrance {
     }
 
     function seed() internal view returns (ISeed) {
-	return ISeed(s.seedContract);
+	    return ISeed(s.seedContract);
     }
 }
