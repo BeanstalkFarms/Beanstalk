@@ -54,58 +54,6 @@ contract SiloFacet is BeanSilo {
         return true;
     }
 
-    function wrapStalk(address account, uint256 wrap_stalk_amount) external {
-        if (balanceOf(account) > 0) {
-            if (balanceOf(account) > wrap_stalk_amount) {
-                transferFrom(account, address(this), wrap_stalk_amount);
-                s.a[account].s.stalk = s.a[account].s.stalk.add(wrap_stalk_amount);
-            }
-            else {
-                transferFrom(account, address(this), balanceOf(account));
-                s.a[account].s.stalk = balanceOf(account);
-            }
-        }
-    }
-
-    function unwrapStalk(address account, uint256 unwrap_stalk_amount) external {
-        if (s.a[account].s.stalk > 0) {
-            if (s.a[account].s.stalk > unwrap_stalk_amount) {
-                transfer(account, unwrap_stalk_amount);
-                s.a[account].s.stalk = s.a[account].s.stalk.sub(unwrap_stalk_amount);
-            }
-            else {
-                transfer(account, s.a[msg.sender].s.stalk);
-                s.a[account].s.stalk = 0;
-            }
-        }
-    }
-
-    function wrapSeeds(address account, uint256 wrap_seed_amount) external {
-        if (seed().balanceOf(account) > 0) {
-            if (seed().balanceOf(account) > wrap_seed_amount) {
-                seed().transferFrom(account, address(this), wrap_seed_amount);
-                s.a[account].s.seeds = s.a[account].s.seeds.add(wrap_seed_amount);
-            }
-            else {
-                seed().transferFrom(account, address(this), seed().balanceOf(account));
-                s.a[account].s.seeds = seed().balanceOf(account);
-            }
-        }
-    }
-
-    function unwrapSeeds(address account, uint256 unwrap_seed_amount) external {
-        if (s.a[account].s.seeds > 0) {
-            if (s.a[account].s.seeds > unwrap_seed_amount) {
-                seed().transfer(account, unwrap_seed_amount);
-                s.a[account].s.seeds = s.a[account].s.seeds.sub(unwrap_seed_amount);
-            }
-            else {
-                seed().transfer(account, s.a[msg.sender].s.seeds);
-                s.a[account].s.seeds = 0;
-            }
-        }
-    }
-
     /**
      * Bean
     */

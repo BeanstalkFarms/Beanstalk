@@ -102,6 +102,10 @@ contract UpdateSilo is SiloExit {
 
         //     addBeanDeposit(account, season(), beans);
         }
+	else {
+	   unwrapStalk(account, unwrap_stalk_amount);
+	   unwrapSeeds(account, unwrap_seed_amount);
+	}
     }
 
     function farmLegacyBeans(address account, uint32 update, uint256 unwrap_seed_amount, uint256 unwrap_stalk_amount) private {
@@ -169,17 +173,63 @@ contract UpdateSilo is SiloExit {
         }
     }
 
-    function convertSeeds(address account) public {
-        if (s.a[account].s.seeds > 0) {
-            seed().mint(account, s.a[account].s.seeds);
-            s.s.seeds = s.s.seeds.sub(s.a[account].s.seeds);
-            s.a[account].s.seeds = 0;
+    function wrapStalk(address account, uint256 wrap_stalk_amount) external {
+        if (balanceOf(account) > 0) {
+            if (balanceOf(account) > wrap_stalk_amount) {
+                LibStalk._transfer(account, address(this), wrap_stalk_amount);
+                s.a[account].s.stalk = s.a[account].s.stalk.add(wrap_stalk_amount);
+		s.s.stalk = s.s.stalk.add(wrap_stalk_amount);
+            }
+            else {
+                s.a[account].s.stalk = s.a[account].s.stalk.add(balanceOf(account));
+		s.s.stalk = s.s.stalk.add(balanceOf(account));
+                LibStalk._transfer(account, address(this), balanceOf(account));
+            }
         }
     }
 
-    function convertSeedsArray(address[] calldata accounts) public {
-        for (uint256 i = 0; i < accounts.length; i++) {
-            convertSeeds(accounts[i]);
+    function unwrapStalk(address account, uint256 unwrap_stalk_amount) private {
+        if (s.a[account].s.stalk > 0) {
+            if (s.a[account].s.stalk > unwrap_stalk_amount) {
+                    LibStalk._transfer(address(this), account, unwrap_stalk_amount);
+                    s.a[account].s.stalk = s.a[account].s.stalk.sub(unwrap_stalk_amount);
+		    s.s.stalk = s.s.stalk.sub(unwrap_stalk_amount);
+            }
+            else {
+                    LibStalk._transfer(address(this), account, s.a[account].s.stalk);
+                    s.a[account].s.stalk = 0;
+		    s.s.stalk = s.s.stalk.sub(s.a[account].s.stalk);
+            }
+        }
+    }
+
+     function wrapSeeds(address account, uint256 wrap_seed_amount) external {
+        if (seed().balanceOf(account) > 0) {
+            if (seed().balanceOf(account) > wrap_seed_amount) {
+                seed().transferFrom(account, address(this), wrap_seed_amount);
+                s.a[account].s.seeds = s.a[account].s.seeds.add(wrap_seed_amount);
+		s.s.seeds = s.s.seeds.add(wrap_seed_amount);
+            }
+            else {
+                s.a[account].s.seeds = s.a[account].s.seeds.add(seed().balanceOf(account));
+		s.s.seeds = s.s.seeds.add(seed().balanceOf(account));
+                seed().transferFrom(account, address(this), seed().balanceOf(account));
+            }
+        }
+    }
+
+    function unwrapSeeds(address account, uint256 unwrap_seed_amount) private {
+        if (s.a[account].s.seeds > 0) {
+            if (s.a[account].s.seeds > unwrap_seed_amount) {
+                    seed().transfer(account, unwrap_seed_amount);
+                    s.a[account].s.seeds = s.a[account].s.seeds.sub(unwrap_seed_amount);
+		    s.s.seeds = s.s.seeds.sub(unwrap_seed_amount);
+            }
+            else {
+                    seed().transfer(account, s.a[account].s.seeds);
+                    s.a[account].s.seeds = 0;
+		    s.s.seeds = s.s.seeds.sub(s.a[account].s.seeds);
+            }
         }
     }
 }

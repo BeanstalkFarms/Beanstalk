@@ -84,8 +84,8 @@ describe('Seed', function () {
    describe('Transition from Silo to ERC20', async function () {
     describe('Seed Conversion', async function () {
       it('properly converts existing non-fungible seeds to the ERC-20 token', async function () {
-	await this.silo.convertSeeds(userAddress);
-	await this.silo.convertSeeds(user2Address);
+	await this.silo.updateSilo(userAddress, '1000000000000000000000000000', '0', false); // using a big number to convert all seeds
+	await this.silo.updateSilo(user2Address, '100000000000000000000000000', '0', false);
 	expect(await this.seed.balanceOf(userAddress)).to.eq('200000');
 	expect(await this.seed.balanceOf(user2Address)).to.eq('200000');
       });
@@ -99,6 +99,10 @@ describe('Seed', function () {
 	await this.seed.connect(user2).transfer(userAddress, '200000');
 	await expect(this.silo.connect(user2).withdrawBeans([1], ['100000'], ['0', '0', true])).to.be.revertedWith('ERC20: burn amount exceeds balance');
 	expect(await this.seed.balanceOf(user2Address)).to.eq('0');
+      });
+      it('does not create or destroy seeds', async function () {
+	this.stateVar = await this.silo.totalSeeds();
+	expect(await this.seed.totalSupply()).to.eq(this.stateVar);
       });
     });
   });

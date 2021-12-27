@@ -12,7 +12,6 @@ import "../../../libraries/Decimal.sol";
 import "../../../libraries/LibStalk.sol";
 import "../../../C.sol";
 import "../../../interfaces/ISeed.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -58,10 +57,10 @@ contract SiloEntrance {
         if (s.s.roots == 0) roots = stalk.mul(C.getRootsBase());
         else roots = s.s.roots.mul(stalk).div(s.stalkToken._totalSupply);
 
-	console.log("Stalk being minted to silo address: %s", stalk);
         LibStalk._mint(address(this), stalk);
         // Mint Stalk ERC-20
         s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
+	s.s.stalk = s.s.stalk.add(stalk);
 
         s.s.roots = s.s.roots.add(roots);
         s.a[account].roots = s.a[account].roots.add(roots);
@@ -77,6 +76,8 @@ contract SiloEntrance {
     function decrementBalanceOfSeeds(address account, uint256 seeds) internal {
 	if (s.a[account].s.seeds >= seeds) {
 		s.a[account].s.seeds = s.a[account].s.seeds.sub(seeds);
+		s.s.seeds = s.s.seeds.sub(seeds);
+		seed().burn(seeds);
 	}
 	else {	
 	        seed().burnFrom(account, seeds.sub(s.a[account].s.seeds));
@@ -92,8 +93,17 @@ contract SiloEntrance {
         if (stalk == 0) return;
         uint256 roots = s.a[account].roots.mul(stalk).sub(1).div(s.a[account].s.stalk).add(1);
         // Burn Stalk ERC-20
-        LibStalk._burn(address(this), stalk);
-        s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
+	if (s.a[account].s.stalk >= stalk) {
+		s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
+		s.s.stalk = s.s.stalk.sub(stalk);
+		LibStalk._burn(address(this), stalk);
+	}
+	else {
+		LibStalk._burn(account, stalk.sub(s.a[account].s.stalk));
+		s.s.stalk = s.s.stalk.sub(stalk);
+                LibStalk._burn(address(this), s.a[account].s.stalk);
+		s.a[account].s.stalk = 0;
+	}
 
         s.s.roots = s.s.roots.sub(roots);
         s.a[account].roots = s.a[account].roots.sub(roots);
@@ -199,6 +209,6 @@ contract SiloEntrance {
     }
 
     function seed() internal view returns (ISeed) {
-	    return ISeed(s.seedContract);
+	return ISeed(s.seedContract);
     }
 }
