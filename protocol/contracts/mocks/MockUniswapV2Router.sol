@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "./MockUniswapV2Pair.sol";
 import "./MockWETH.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -131,6 +132,24 @@ contract MockUniswapV2Router {
         return amounts;
     }
 
+    function swapETHForExactTokens(uint amountOut, address[] calldata path, address to, uint deadline)
+        external
+        payable
+        returns (uint[] memory amounts)
+    {
+        require(path[0] == _weth, 'UniswapV2Router: INVALID_PATH');
+        amounts = getAmountsIn(amountOut, path);
+        require(amounts[0] <= msg.value, 'UniswapV2Router: EXCESSIVE_INPUT_AMOUNT');
+        MockWETH(_weth).deposit{value: amounts[0]}();
+        MockWETH(_weth).burn(amounts[0]);
+        MockToken(path[1]).mint(msg.sender, amounts[1]);
+        // refund dust eth, if any
+        if (msg.value > amounts[0]){
+             (bool success, ) = msg.sender.call{value: msg.value - amounts[0]}(new bytes(0));
+             require(success, 'TransferHelper::safeTransferETH: ETH transfer failed');
+        }
+    }
+
     function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline)
         external
         payable
@@ -138,6 +157,10 @@ contract MockUniswapV2Router {
     {
         require(path[0] == _weth, 'UniswapV2Router: INVALID_PATH');
         uint256 amountOut = getAmountOut(msg.value, path);
+        // console.log('msg.value', msg.value);
+        // console.log('amountOut', amountOut);
+        // console.log('amountOutMin', amountOutMin);
+
         amounts = new uint[](2);
         amounts[0] = msg.value;
         amounts[1] = amountOut;

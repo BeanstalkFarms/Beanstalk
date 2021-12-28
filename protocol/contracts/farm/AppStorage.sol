@@ -163,6 +163,18 @@ contract Storage {
         bool didSowFaster;
     }
 
+    // marketplace
+    struct Listing {
+        uint232 expiry;
+        uint24 price;
+        uint256 amount;
+    }
+
+    struct BuyOffer {
+        uint256 amount;
+        uint24 price;
+        uint232 maxPlaceInLine; 
+        address owner;
     struct Fundraiser {
         address payee;
         address token;
@@ -196,6 +208,10 @@ struct AppStorage {
     mapping (address => Account.State) a;
     uint32 bip0Start;
     uint32 hotFix3Start;
+    mapping(uint256 => Storage.Listing) listedPlots;
+    uint32 buyOfferIndex;
+    mapping(uint32 => Storage.BuyOffer) buyOffers;
+    
     mapping (uint32 => Storage.Fundraiser) fundraisers;
     uint32 fundraiserIndex;
 }

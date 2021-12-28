@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "./PodTransfer.sol";
 import "../../../libraries/LibClaim.sol";
+import "../MarketplaceFacet/MarketplaceFacet.sol";
 
 /**
  * @author Publius
@@ -19,6 +20,7 @@ contract FieldFacet is PodTransfer {
 
     event PlotTransfer(address indexed from, address indexed to, uint256 indexed id, uint256 pods);
     event PodApproval(address indexed owner, address indexed spender, uint256 pods);
+    event ListingCancelled(address indexed account, uint256 indexed index);
 
     /**
      * Sow
@@ -76,6 +78,11 @@ contract FieldFacet is PodTransfer {
         if (msg.sender != sender && allowancePods(sender, msg.sender) != uint256(-1)) {
                 decrementAllowancePods(sender, msg.sender, amount);
         }
+
+        if (s.listedPlots[id].price > 0){
+            cancelListing(id);
+        }
+
         emit PlotTransfer(sender, recipient, id.add(start), amount);
     }
 
@@ -83,6 +90,11 @@ contract FieldFacet is PodTransfer {
         require(spender != address(0), "Field: Pod Approve to 0 address.");
         setAllowancePods(msg.sender, spender, amount);
         emit PodApproval(msg.sender, spender, amount);
+    }
+
+    function cancelListing(uint256 index) internal {
+        delete s.listedPlots[index];
+        emit ListingCancelled(msg.sender, index);
     }
 
     function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {

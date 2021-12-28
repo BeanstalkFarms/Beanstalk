@@ -5,6 +5,7 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
+import "hardhat/console.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/SeasonFacet/SeasonFacet.sol";
 import "../../libraries/Decimal.sol";
@@ -191,6 +192,19 @@ contract MockSeasonFacet is SeasonFacet {
             delete s.g.bips[i];
             delete s.g.diamondCuts[i];
         }
+
+        // console.log("mapToPlotIndex", s.mapToPlotIndex);
+
+        // for (uint32 i = 0; i < s.mapToPlotIndex; i++) {
+        //     // console.log("Deleting plot at ", i, ": ", s.mapToPlots[i]);
+
+        //     delete s.a[s.mapToAddress[i]].field.plots[s.mapToPlots[i]];
+        //     delete s.listedPlots[s.mapToPlots[i]];
+        // }
+        // for (uint32 i = 0; i < s.buyOfferIndex; i++) {
+        //     delete s.buyOffers[i];
+        // }
+        // s.buyOfferIndex = 0;
 
         for (uint32 i = 0; i < s.fundraiserIndex; i++) {
             MockToken(s.fundraisers[i].token).burn(MockToken(s.fundraisers[i].token).balanceOf(address(this)));
