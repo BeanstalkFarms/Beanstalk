@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../C.sol";
 import "../LibAppStorage.sol";
+import "../LibStalk.sol";
 
 /**
  * @author Publius
