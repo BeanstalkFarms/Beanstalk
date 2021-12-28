@@ -33,7 +33,7 @@ contract MarketplaceFacet {
     event ListingFilled(address indexed from, address indexed to, uint256 index, uint24 pricePerPod, uint256 amount);
     event BuyOfferCreated(uint indexed index, address indexed account, uint256 amount, uint24 pricePerPod, uint232 maxPlaceInLine);
     event BuyOfferCancelled(address indexed account, uint256 index);
-    event BuyOfferFilled(uint256 index, uint256 amount);
+    event BuyOfferFilled(address indexed from, address indexed to, uint24 buyOfferIndex, uint256 index, uint24 pricePerPod, uint256 amount);
     event PlotTransfer(address indexed from, address indexed to, uint256 indexed id, uint256 pods);
 
     function listPlot(uint256 index, uint24 pricePerPod, uint232 expiry, uint256 amount) public {
@@ -128,7 +128,7 @@ contract MarketplaceFacet {
         if (buyOffer.amount == 0){
             delete s.buyOffers[buyOfferIndex];
         }
-        emit BuyOfferFilled(buyOfferIndex, amount);
+        emit BuyOfferFilled(msg.sender, buyOffer.owner, buyOfferIndex, plotIndex, buyOffer.price, amount);
     }
 
     function cancelBuyOffer(uint24 buyOfferIndex) public  {
