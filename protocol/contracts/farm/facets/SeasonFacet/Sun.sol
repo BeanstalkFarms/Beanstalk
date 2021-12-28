@@ -79,7 +79,6 @@ contract Sun is Weather {
         uint lp = pair().totalSupply();
         if (lp == 0) return (0,0);
         uint lockedLP = s.lp.deposited.add(s.lp.withdrawn);
-        console.log("Locked: %s, lp: %s", lockedLP, lp);
         ethReserve = ethReserve.mul(lockedLP).div(lp);
         beanReserve = beanReserve.mul(lockedLP).div(lp);
         return (ethReserve, beanReserve);

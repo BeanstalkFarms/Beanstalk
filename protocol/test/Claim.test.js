@@ -150,6 +150,53 @@ describe('Claim', function () {
           expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('1000');
         });
       });
+
+      describe('Too many Beans to wallet with claimable', async function () {  
+        beforeEach(async function () {
+          const beans = await this.bean.balanceOf(userAddress)
+          await this.claim.incrementBalanceOfClaimableE(userAddress, '300')
+          this.result = await this.claim.connect(user).claim([['27'],[],[],false,true,'0','0', '1500'])
+          const newBeans = await this.bean.balanceOf(userAddress)
+          this.claimedBeans = newBeans.sub(beans)
+          this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+        });
+
+        it('properly sends beans to wallet', async function () {
+          expect(this.claimedBeans.toString()).to.equal('1300');
+        });
+
+        // Before partial claiming, was claimedBeans and not claimableBeans
+        it('properly claims beans', async function () {
+          expect(this.claimableBeans.toString()).to.equal('0');
+        });
+        it('no beans created or destroyed', async function () {
+          expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('1300');
+        });
+      });
+
+      describe('More than claimed, but less than claimable', async function () {  
+        beforeEach(async function () {
+          const beans = await this.bean.balanceOf(userAddress)
+          await this.claim.incrementBalanceOfClaimableE(userAddress, '300')
+          this.result = await this.claim.connect(user).claim([['27'],[],[],false,true,'0','0', '1100'])
+          const newBeans = await this.bean.balanceOf(userAddress)
+          this.claimedBeans = newBeans.sub(beans)
+          this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+        });
+
+        it('properly sends beans to wallet', async function () {
+          expect(this.claimedBeans.toString()).to.equal('1100');
+        });
+
+        // Before partial claiming, was claimedBeans and not claimableBeans
+        it('properly claims beans', async function () {
+          expect(this.claimableBeans.toString()).to.equal('200');
+        });
+
+        it('no beans created or destroyed', async function () {
+          expect(this.claimedBeans.add(this.claimableBeans).toString()).to.equal('1300');
+        });
+      });
     });
 
     describe('claim and allocate', function () {

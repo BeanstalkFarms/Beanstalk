@@ -24,7 +24,7 @@ contract ClaimFacet {
     event Harvest(address indexed account, uint256[] plots, uint256 beans);
     event BeanAllocation(address indexed account, uint256 beans);
 
-    AppStorage private s;
+    AppStorage internal s;
 
     function claim(LibClaim.Claim calldata c) public payable returns (uint256 beansClaimed) {
         beansClaimed = LibClaim.claim(c, c.beansToWallet);

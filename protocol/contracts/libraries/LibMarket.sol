@@ -11,7 +11,6 @@ import "../interfaces/IBean.sol";
 import "../interfaces/IWETH.sol";
 import "./LibAppStorage.sol";
 import "./LibClaim.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius
