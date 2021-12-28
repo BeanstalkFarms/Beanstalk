@@ -41,11 +41,6 @@ contract ClaimFacet {
         LibCheck.balanceCheck();
     }
 
-    function claimWrappedBeans(LibClaim.Claim calldata c) public payable returns (uint256 beansClaimed) {
-        beansClaimed = LibClaim.claim(c);
-        LibCheck.balanceCheck();
-    }
-
     function claimBeans(uint32[] calldata withdrawals) public {
         uint256 beansClaimed = LibClaim.claimBeans(withdrawals);
         IBean(s.c.bean).transfer(msg.sender, beansClaimed);
@@ -64,7 +59,7 @@ contract ClaimFacet {
     )
         public
     {
-        removeAndClaimLP(withdrawals, minBeanAmount, minEthAmount);
+        LibClaim.removeAndClaimLP(withdrawals, minBeanAmount, minEthAmount);
         LibCheck.balanceCheck();
     }
 

@@ -50,7 +50,7 @@ describe('Claim', function () {
     await this.season.siloSunrise(0)
   });
 
-  describe('claimBeans', function () {
+  describe('claim', function () {
     beforeEach(async function () {
       await this.silo.connect(user).depositBeans('1000')
       await this.silo.connect(user).depositLP('1')
@@ -62,7 +62,52 @@ describe('Claim', function () {
       await this.season.farmSunrises('25')
     });
 
-    describe('claim', function () {
+    describe('claim beans', async function () {
+      it('reverts when deposit is empty', async function () {
+        await expect(this.claim.connect(user).claimBeans(['0'])).to.be.revertedWith('Claim: Bean withdrawal is empty.')
+      });
+
+      it('successfully claims beans', async function () {
+        const beans = await this.bean.balanceOf(userAddress)
+        await this.claim.connect(user).claimBeans(['27'])
+        const newBeans = await this.bean.balanceOf(userAddress)
+        expect(await this.silo.beanDeposit(userAddress, '27')).to.be.equal('0');
+        expect(newBeans.sub(beans)).to.be.equal('1000');
+      })
+    });
+
+    describe('harvest beans', async function () {
+      it('reverts when plot is not harvestable', async function () {
+        await expect(this.claim.connect(user).harvest(['1'])).to.be.revertedWith('Claim: Plot not harvestable.')
+        await expect(this.claim.connect(user).harvest(['1000000'])).to.be.revertedWith('Claim: Plot not harvestable.')
+      });
+
+      it('successfully harvests beans', async function () {
+        const beans = await this.bean.balanceOf(userAddress)
+        await this.claim.connect(user).harvest(['0'])
+        const newBeans = await this.bean.balanceOf(userAddress)
+        expect(await this.field.plot(userAddress, '27')).to.be.equal('0');
+        expect(newBeans.sub(beans)).to.be.equal('1000');
+      })
+    });
+
+    describe('claim LP', async function () {
+      it('reverts when deposit is not claimable', async function () {
+        await expect(this.claim.connect(user).claimLP(['0'])).to.be.revertedWith('Claim: LP withdrawal is empty.')
+      });
+
+      it('successfully claims lp', async function () {
+        const lp = await this.pair.balanceOf(userAddress)
+        await this.claim.connect(user).claimLP(['27'])
+        const newLP = await this.pair.balanceOf(userAddress)
+        const lpDeposit = await this.silo.lpDeposit(userAddress, '27')
+        expect(lpDeposit[0]).to.be.equal('0');
+        expect(lpDeposit[1]).to.be.equal('0');
+        expect(newLP.sub(lp)).to.be.equal('1');
+      })
+    });
+
+    describe('claim all', async function () {
       describe('No Beans to wallet', async function () {  
         beforeEach(async function () {
           const beans = await this.bean.balanceOf(userAddress)
@@ -425,5 +470,68 @@ describe('Claim', function () {
         expect(this.claimedBeans.add(this.wrappedBeans).toString()).to.equal('-1011');
       });
     });
+  });
+
+  describe('wrap/unwrap', function () {
+    beforeEach(async function () {
+      const beans = await this.bean.balanceOf(userAddress)
+      this.result = this.claim.connect(user).wrapBeans('1000');
+      const newBeans = await this.bean.balanceOf(userAddress)
+      this.deltaBeans = newBeans.sub(beans)
+    });
+
+    it('wraps beans', async function () {
+      expect(this.deltaBeans).to.be.equal('-1000');
+      expect(await this.claim.wrappedBeans(userAddress)).to.be.equal('1000')
+      expect(await this.bean.balanceOf(this.claim.address)).to.be.equal('1000')
+    })
+
+    it('unwraps all beans', async function () {
+      const beansBefore = await this.bean.balanceOf(userAddress)
+      await this.claim.connect(user).unwrapBeans('1000')
+      const newBeans = await this.bean.balanceOf(userAddress)
+      expect(await this.claim.wrappedBeans(userAddress)).to.be.equal('0')
+      expect(await this.bean.balanceOf(this.claim.address)).to.be.equal('0')
+      expect(newBeans.sub(beansBefore)).to.be.equal('1000')
+    });
+
+    it('unwraps some beans', async function () {
+      const beansBefore = await this.bean.balanceOf(userAddress)
+      await this.claim.connect(user).unwrapBeans('500')
+      const newBeans = await this.bean.balanceOf(userAddress)
+      expect(await this.claim.wrappedBeans(userAddress)).to.be.equal('500')
+      expect(await this.bean.balanceOf(this.claim.address)).to.be.equal('500')
+      expect(newBeans.sub(beansBefore)).to.be.equal('500')
+    });
+
+    it('unwraps too many beans', async function () {
+      const beansBefore = await this.bean.balanceOf(userAddress)
+      await this.claim.connect(user).unwrapBeans('1500')
+      const newBeans = await this.bean.balanceOf(userAddress)
+      expect(await this.claim.wrappedBeans(userAddress)).to.be.equal('0')
+      expect(await this.bean.balanceOf(this.claim.address)).to.be.equal('0')
+      expect(newBeans.sub(beansBefore)).to.be.equal('1000')
+    });
+
+    it('unwraps too many beans', async function () {
+      const beansBefore = await this.bean.balanceOf(userAddress)
+      await this.claim.connect(user).unwrapBeans('1500')
+      const newBeans = await this.bean.balanceOf(userAddress)
+      expect(await this.claim.wrappedBeans(userAddress)).to.be.equal('0')
+      expect(await this.bean.balanceOf(this.claim.address)).to.be.equal('0')
+      expect(newBeans.sub(beansBefore)).to.be.equal('1000')
+    });
+
+    it ('claims and unwraps beans', async function () {
+      await this.season.setSoilE('5000')
+      await this.field.connect(user).sowBeans('1000')
+      await this.field.incrementTotalHarvestableE('1000')
+      const beansBefore = await this.bean.balanceOf(userAddress)
+      this.result = await this.claim.connect(user).claimAndUnwrapBeans([[],[],['0'],false,true,'0','0', true], '1000')
+      const newBeans = await this.bean.balanceOf(userAddress)
+      expect(await this.bean.balanceOf(this.claim.address)).to.be.equal('0')
+      expect(await this.claim.wrappedBeans(userAddress)).to.be.equal('0')
+      expect(newBeans.sub(beansBefore)).to.be.equal('2000')
+    })
   });
 });
