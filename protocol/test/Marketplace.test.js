@@ -14,7 +14,7 @@ describe('Marketplace', function () {
   let provider
   before(async function () {
     console.log('Starting test');
-    contracts = await deploy("Test", false, true);
+    contracts = await deploy("Test", true, true);
     [owner, user, user2] = await ethers.getSigners();
     userAddress = user.address;
     user2Address = user2.address;

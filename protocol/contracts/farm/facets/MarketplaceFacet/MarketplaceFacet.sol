@@ -28,12 +28,12 @@ contract MarketplaceFacet {
     // whats the point of indexing by address if were going to need every individual event for the entire marketplace data?
     // does listingfilled need anthing other than index and amount?
 
-    event ListingCreated(address indexed account, uint256 indexed index, uint24 pricePerPod, uint232 expiry, uint256 amount);
-    event ListingCancelled(address indexed account, uint256 indexed index);
-    event ListingFilled(address indexed from, address indexed to, uint256 indexed index, uint24 pricePerPod, uint256 amount);
+    event ListingCreated(address indexed account, uint256 index, uint24 pricePerPod, uint232 expiry, uint256 amount);
+    event ListingCancelled(address indexed account, uint256 index);
+    event ListingFilled(address indexed from, address indexed to, uint256 index, uint24 pricePerPod, uint256 amount);
     event BuyOfferCreated(uint indexed index, address indexed account, uint256 amount, uint24 pricePerPod, uint232 maxPlaceInLine);
-    event BuyOfferCancelled(address indexed account, uint256 indexed index);
-    event BuyOfferFilled(uint256 indexed index, uint256 amount);
+    event BuyOfferCancelled(address indexed account, uint256 index);
+    event BuyOfferFilled(uint256 index, uint256 amount);
     event PlotTransfer(address indexed from, address indexed to, uint256 indexed id, uint256 pods);
 
     function listPlot(uint256 index, uint24 pricePerPod, uint232 expiry, uint256 amount) public {

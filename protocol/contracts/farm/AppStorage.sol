@@ -175,6 +175,8 @@ contract Storage {
         uint24 price;
         uint232 maxPlaceInLine; 
         address owner;
+    }
+    
     struct Fundraiser {
         address payee;
         address token;

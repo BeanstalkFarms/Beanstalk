@@ -27,7 +27,6 @@ contract MockFieldFacet is FieldFacet {
 
     function incrementTotalSoilE(uint256 amount) public {
         incrementTotalSoil(amount);
-        ensureSoilBounds();
     }
 
     function incrementTotalSoilEE(uint256 amount) public {
