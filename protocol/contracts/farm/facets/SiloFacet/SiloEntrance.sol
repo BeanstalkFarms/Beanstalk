@@ -32,9 +32,10 @@ contract SiloEntrance {
 
 
     struct Settings {
-	    uint256 unwrap_seeds;
-	    uint256 unwrap_stalk;
-	    bool update;
+        // Boolean for whether user wants to use Internal Balances For Withdrawal
+	    bool fromInternalBalance;
+        // Boolean for whether user wants to use Internal Balances For Deposit
+        bool toInternalBalance;
     }
 
 
@@ -45,8 +46,8 @@ contract SiloEntrance {
 
     function incrementBalanceOfSeeds(address account, uint256 seeds) internal {
         seed().mint(address(this), seeds);
-	s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
-	s.s.seeds = s.s.seeds.add(seeds);
+        s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
+        s.s.seeds = s.s.seeds.add(seeds);
     }
 
     /// @notice mints the corresponding amount of stalk ERC-20 tokens to the selected account address
@@ -60,7 +61,7 @@ contract SiloEntrance {
         LibStalk._mint(address(this), stalk);
         // Mint Stalk ERC-20
         s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
-	s.s.stalk = s.s.stalk.add(stalk);
+	    s.s.stalk = s.s.stalk.add(stalk);
 
         s.s.roots = s.s.roots.add(roots);
         s.a[account].roots = s.a[account].roots.add(roots);
@@ -74,36 +75,35 @@ contract SiloEntrance {
     }
 
     function decrementBalanceOfSeeds(address account, uint256 seeds) internal {
-	if (s.a[account].s.seeds >= seeds) {
-		s.a[account].s.seeds = s.a[account].s.seeds.sub(seeds);
-		s.s.seeds = s.s.seeds.sub(seeds);
-		seed().burn(seeds);
-	}
-	else {	
-	        seed().burnFrom(account, seeds.sub(s.a[account].s.seeds));
-		s.a[account].s.seeds = 0;
-	}
+        if (s.a[account].s.seeds >= seeds) {
+            s.a[account].s.seeds = s.a[account].s.seeds.sub(seeds);
+            s.s.seeds = s.s.seeds.sub(seeds);
+            seed().burn(seeds);
+        }
+        else {	
+            seed().burnFrom(account, seeds.sub(s.a[account].s.seeds));
+            s.a[account].s.seeds = 0;
+        }
     }
 
     /// @notice burns the corresponding amount of stalk ERC-20 tokens of the selected account address
     /// @param account The address of the account address to have stalk and seed tokens withdrawn and burned
     /// @param stalk The amount of stalk tokens to have withdrawn and burned
     function decrementBalanceOfStalk(address account, uint256 stalk) internal {
-        // Remove all Legacy Stalk and Mint the corresponding fungible token
         if (stalk == 0) return;
         uint256 roots = s.a[account].roots.mul(stalk).sub(1).div(s.a[account].s.stalk).add(1);
         // Burn Stalk ERC-20
-	if (s.a[account].s.stalk >= stalk) {
-		s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
-		s.s.stalk = s.s.stalk.sub(stalk);
-		LibStalk._burn(address(this), stalk);
-	}
-	else {
-		LibStalk._burn(account, stalk.sub(s.a[account].s.stalk));
-		s.s.stalk = s.s.stalk.sub(stalk);
-                LibStalk._burn(address(this), s.a[account].s.stalk);
-		s.a[account].s.stalk = 0;
-	}
+        if (s.a[account].s.stalk >= stalk) {
+            s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
+            s.s.stalk = s.s.stalk.sub(stalk);
+            LibStalk._burn(address(this), stalk);
+        }
+        else {
+            LibStalk._burn(account, stalk.sub(s.a[account].s.stalk));
+            s.s.stalk = s.s.stalk.sub(stalk);
+            LibStalk._burn(address(this), s.a[account].s.stalk);
+            s.a[account].s.stalk = 0;
+        }
 
         s.s.roots = s.s.roots.sub(roots);
         s.a[account].roots = s.a[account].roots.sub(roots);
@@ -209,6 +209,6 @@ contract SiloEntrance {
     }
 
     function seed() internal view returns (ISeed) {
-	return ISeed(s.seedContract);
+	    return ISeed(s.seedContract);
     }
 }
