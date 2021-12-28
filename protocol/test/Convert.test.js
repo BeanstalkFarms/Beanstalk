@@ -389,7 +389,7 @@ describe('Convert', function () {
       beforeEach(async function () {
         this.first = await this.bean.balanceOf(userAddress)
         await this.convert.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2], [1000], {value: '1'});
-	      this.after = await this.claim.connect(user).claimableBeans(userAddress)
+	      this.after = await this.claim.connect(user).wrappedBeans(userAddress)
 	      this.second = await this.bean.balanceOf(userAddress)
       });
 
@@ -424,7 +424,7 @@ describe('Convert', function () {
       beforeEach(async function () {
         await this.season.siloSunrises('10');
         await this.convert.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2], [1000], {value: '1'});
-        this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+        this.wrappedBeans = await this.claim.connect(user).wrappedBeans(userAddress)
       });
 
       it('properly updates the user balance', async function () {
@@ -455,7 +455,7 @@ describe('Convert', function () {
 	      this.first = await this.bean.balanceOf(userAddress)
         await this.convert.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2,12], [500,500], {value: '1'});
 	      this.second = await this.bean.balanceOf(userAddress)
-	      this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+	      this.wrappedBeans = await this.claim.connect(user).wrappedBeans(userAddress)
       });
 
       it('properly updates the user balance', async function () {
@@ -488,7 +488,7 @@ describe('Convert', function () {
       beforeEach(async function () {
 	      this.first = await this.bean.balanceOf(userAddress)
         await this.convert.connect(user).convertAddAndDepositLP('0',['10000','9000','10'], [2], [1000], {value: '10'});
-	      this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+	      this.wrappedBeans = await this.claim.connect(user).wrappedBeans(userAddress)
 	      this.second = await this.bean.balanceOf(userAddress)
       });
 
@@ -524,8 +524,8 @@ describe('Convert', function () {
         expect(diff).to.eq('9000');
       });
 
-      it('properly clears claimable beans value', function () {
-        expect(this.claimableBeans).to.eq('0');
+      it('properly clears wrapped beans value', function () {
+        expect(this.wrappedBeans).to.eq('0');
       });
     });
 
@@ -534,7 +534,7 @@ describe('Convert', function () {
         await this.season.siloSunrises('10');
         this.first = await this.bean.balanceOf(userAddress)
         await this.convert.connect(user).convertAddAndDepositLP('0',['10000','9000','10'], [2], [1000], {value: '10'});
-        this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+        this.wrappedBeans = await this.claim.connect(user).wrappedBeans(userAddress)
         this.second = await this.bean.balanceOf(userAddress)
       });
 
@@ -563,8 +563,8 @@ describe('Convert', function () {
         expect(diff).to.eq('9000');
       });
 
-      it('properly clears claimable beans value', function () {
-        expect(this.claimableBeans).to.eq('0');
+      it('properly clears wrapped beans value', function () {
+        expect(this.wrappedBeans).to.eq('0');
       });
     });
 
@@ -574,7 +574,7 @@ describe('Convert', function () {
         await this.silo.connect(user).depositBeans('500');
 	      this.first = await this.bean.balanceOf(userAddress)
         await this.convert.connect(user).convertAddAndDepositLP('0',['10000','9000','10'], [2,12], [500,500], {value: '10'});
-	      this.claimableBeans = await this.claim.connect(user).claimableBeans(userAddress)
+	      this.wrappedBeans = await this.claim.connect(user).wrappedBeans(userAddress)
 	      this.second = await this.bean.balanceOf(userAddress)
       });
 
@@ -608,8 +608,8 @@ describe('Convert', function () {
         expect(diff).to.eq('9000');
       });
       
-      it('properly clears claimable beans value', function () {
-        expect(this.claimableBeans).to.eq('0');
+      it('properly clears wrapped beans value', function () {
+        expect(this.wrappedBeans).to.eq('0');
       });
     });
   });

@@ -23,15 +23,15 @@ contract MockClaimFacet is ClaimFacet {
         public
         payable
     {
-        LibClaim.claim(c, 0);
-        LibMarket.transferAllocatedBeans(beansAllocated, c.beansToWallet);
+        LibClaim.claim(c);
+        LibMarket.allocatedBeans(beansAllocated);
     }
 
-    function incrementBalanceOfClaimableE(address account, uint256 amount)
+    function incrementBalanceOfWrappedE(address account, uint256 amount)
         public
         payable
     {
-        s.a[account].claimableBeans += amount;
+        s.a[account].wrappedBeans += amount;
         MockToken(s.c.bean).mint(address(this), amount);
     }
 }

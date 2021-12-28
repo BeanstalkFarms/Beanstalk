@@ -24,10 +24,25 @@ contract ClaimFacet {
     event Harvest(address indexed account, uint256[] plots, uint256 beans);
     event BeanAllocation(address indexed account, uint256 beans);
 
+    using SafeMath for uint256;
+
     AppStorage internal s;
 
     function claim(LibClaim.Claim calldata c) public payable returns (uint256 beansClaimed) {
-        beansClaimed = LibClaim.claim(c, c.beansToWallet);
+        beansClaimed = LibClaim.claim(c);
+
+        LibCheck.balanceCheck();
+    }
+
+    function claimAndUnwrapBeans(LibClaim.Claim calldata c, uint256 amount) public payable returns (uint256 beansClaimed) {
+        beansClaimed = LibClaim.claim(c);
+        beansClaimed = beansClaimed.add(unwrapBeans(amount));
+
+        LibCheck.balanceCheck();
+    }
+
+    function claimWrappedBeans(LibClaim.Claim calldata c) public payable returns (uint256 beansClaimed) {
+        beansClaimed = LibClaim.claim(c);
         LibCheck.balanceCheck();
     }
 
@@ -63,8 +78,29 @@ contract ClaimFacet {
         LibClaim.claimEth();
     }
 
-    function claimableBeans(address user) public view returns (uint256) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.a[user].claimableBeans;
+    function unwrapBeans(uint amount) public returns (uint256 beansToWallet) {
+        if (amount == 0) return beansToWallet;
+	    AppStorage storage s = LibAppStorage.diamondStorage();
+        uint wrappedBeans = s.a[msg.sender].wrappedBeans;
+
+        if (amount > wrappedBeans) {
+            IBean(s.c.bean).transfer(msg.sender, wrappedBeans);
+            beansToWallet = s.a[msg.sender].wrappedBeans;
+            s.a[msg.sender].wrappedBeans = 0;
+        } else {
+            IBean(s.c.bean).transfer(msg.sender, amount);
+            s.a[msg.sender].wrappedBeans = wrappedBeans.sub(amount);
+            beansToWallet = amount;
+        }
+    }
+
+    function wrapBeans(uint amount) public {
+        IBean(s.c.bean).transferFrom(msg.sender, address(this), amount);
+        s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(amount);
+
+    }
+
+    function wrappedBeans(address user) public view returns (uint256) {
+        return s.a[user].wrappedBeans;
     }
 }

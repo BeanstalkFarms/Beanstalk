@@ -73,7 +73,7 @@ contract SiloFacet is BeanSilo {
     )
         external
     {
-        LibClaim.claim(claim, claim.beansToWallet);
+        LibClaim.claim(claim);
         _withdrawBeans(crates, amounts);
     }
 
@@ -82,7 +82,7 @@ contract SiloFacet is BeanSilo {
     */
 
     function claimAndDepositLP(uint256 amount, LibClaim.Claim calldata claim) external {
-        LibClaim.claim(claim, claim.beansToWallet);
+        LibClaim.claim(claim);
         depositLP(amount);
     }
 
@@ -96,7 +96,7 @@ contract SiloFacet is BeanSilo {
         external
         payable
     {
-        LibClaim.claim(claim, 0);
+        LibClaim.claim(claim);
         _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al, claim);
     }
 
@@ -126,7 +126,7 @@ contract SiloFacet is BeanSilo {
 	    LibClaim.Claim calldata c
     )
         internal {
-        uint256 boughtLP = LibMarket.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, al, c.beansToWallet);
+        uint256 boughtLP = LibMarket.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, al);
         if (lp>0) pair().transferFrom(msg.sender, address(this), lp);
         _depositLP(lp.add(boughtLP));
     }
@@ -142,7 +142,7 @@ contract SiloFacet is BeanSilo {
     )
         external
     {
-        LibClaim.claim(claim, claim.beansToWallet);
+        LibClaim.claim(claim);
         _withdrawLP(crates, amounts);
     }
 
@@ -156,7 +156,7 @@ contract SiloFacet is BeanSilo {
     }
 
     function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {
-        LibClaim.claim(c, 0);
-        LibMarket.transferAllocatedBeans(transferBeans, c.beansToWallet);
+        LibClaim.claim(c);
+        LibMarket.allocatedBeans(transferBeans);
     }
 }
