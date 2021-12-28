@@ -46,11 +46,11 @@ contract Silo is Life {
     }
 
     function rewardBeans(uint256 amount) private {
-        if (s.stalkToken._totalSupply == 0 || amount == 0) return;        
+        if (s.stalkToken.totalSupply == 0 || amount == 0) return;        
         s.si.beans = s.si.beans.add(amount);
         s.bean.deposited = s.bean.deposited.add(amount);
-        LibStalk._mint(msg.sender, amount.mul(C.getStalkPerBean()));
-        seed().mint(msg.sender, amount.mul(C.getSeedsPerBean()));
+        LibStalk.mint(address(this), amount.mul(C.getStalkPerBean()));
+        seed().mint(address(this), amount.mul(C.getSeedsPerBean()));
     }
 
     // Season of Plenty

@@ -17,9 +17,9 @@ contract MockSiloFacet is SiloFacet {
 
     using SafeMath for uint256;
 
-    function depositSiloAssetsE(address account, uint256 base, uint256 amount) public {
-        updateSilo(account);
-        LibSilo.depositSiloAssets(account, base, amount);
+    function depositSiloAssetsE(address account, uint256 base, uint256 amount, Storage.Settings calldata set) public {
+        updateSilo(account, set.toInternalBalance, set.lightUpdateSilo);
+        LibSilo.depositSiloAssets(account, base, amount, set.toInternalBalance);
     }
 
     function incrementDepositedLPE(uint256 amount) public {
@@ -27,7 +27,7 @@ contract MockSiloFacet is SiloFacet {
         MockUniswapV2Pair(s.c.pair).faucet(address(this), amount);
     }
     function initMintStalkTokensE(uint256 amount) public {
-        LibStalk._mint(address(this), amount);
+        LibStalk.mint(address(this), amount);
     }
     function initMintSeedTokensE(uint256 amount) public {
         seed().mint(address(this), amount);
@@ -35,16 +35,13 @@ contract MockSiloFacet is SiloFacet {
     function incrementDepositedBeansE(uint256 amount) public {
         s.bean.deposited = s.bean.deposited.add(amount);
     }
-    function incrementBalanceOfStalkE(address account, uint256 amount) public {
-        incrementBalanceOfStalk(account, amount);
-    }
-    function withdrawSiloAssetsE(address account, uint256 seeds, uint256 stalk) public {
-        withdrawSiloAssets(account, seeds, stalk);
+    function incrementBalanceOfStalkE(address account, uint256 amount, bool toInternalBalance) public {
+        LibSilo.incrementBalanceOfStalk(account, amount, toInternalBalance);
     }
 
-    function withdrawSiloAssetsE(address account, uint256 base, uint256 amount) public {
-        updateSilo(account);
-        LibSilo.withdrawSiloAssets(account, base, amount);
+    function withdrawSiloAssetsE(address account, uint256 base, uint256 amount, Storage.Settings calldata set) public {
+        updateSilo(account, set.toInternalBalance, set.lightUpdateSilo);
+        LibSilo.withdrawSiloAssets(account, base, amount, set.fromInternalBalance);
     }
 
     function balanceOfDepositedBeans(address account) public view returns (uint256) {
@@ -162,8 +159,12 @@ contract MockSiloFacet is SiloFacet {
     function resetSeedsAndStalk(address[] calldata accounts) public {
         for (uint i = 0; i < accounts.length; i++) {
            seed().burnFrom(accounts[i], seed().balanceOf(accounts[i]));
-	   LibStalk._burn(accounts[i], balanceOf(accounts[i]));
+	   LibStalk.burn(accounts[i], balanceOf(accounts[i]));
         }
     }
 
+    function resetContract() public {
+           seed().burn(seed().balanceOf(address(this)));
+           LibStalk.burn(address(this), balanceOf(address(this)));
+    }
 }

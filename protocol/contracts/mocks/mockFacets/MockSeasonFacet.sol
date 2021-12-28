@@ -25,7 +25,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function mockStepSilo(uint256 amount) public {
-        if ((s.s.seeds == 0 && s.s.stalk == 0)) {
+        if ((seed().totalSupply() == 0 && s.stalkToken.totalSupply == 0)) {
             stepSilo(0);
             return;
         }

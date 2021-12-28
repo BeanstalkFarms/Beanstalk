@@ -5,19 +5,21 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./SiloExit.sol";
 import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibMarket.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/Silo/LibBeanSilo.sol";
 import "../../../libraries/Decimal.sol";
+import "../../../interfaces/ISeed.sol";
+import "../../AppStorage.sol";
+import "./SiloExit.sol";
 
 /**
  * @author Publius
  * @title Silo Entrance
 **/
-contract UpdateSilo is SiloExit {
+contract UpdateSilo is SiloExit{
 
     using SafeMath for uint256;
     using Decimal for Decimal.D256;
@@ -26,20 +28,22 @@ contract UpdateSilo is SiloExit {
      * Update
     **/
 
-    function updateSilo(address account) public payable {
+    function updateSilo(address account, bool toInternalBalance, bool lightUpdateSilo) public payable {
         uint32 update = lastUpdate(account);
-        if (update >= season()) return;
+        if (update >= LibSilo.season()) return;
         uint256 grownStalk;
-        if (s.a[account].s.seeds > 0) grownStalk = balanceOfGrownStalk(account);
+        if (s.a[account].s.seeds.add(seed().balanceOf(account)) > 0) grownStalk = balanceOfGrownStalk(account);
         if (s.a[account].roots > 0) {
             farmSops(account, update);
-            farmBeans(account, update);
+            farmLegacyBeans(account, update);
+	    if (!lightUpdateSilo) farmBeans(account, update);
+	    
         } else if (s.a[account].roots == 0) {
             s.a[account].lastSop = s.r.start;
             s.a[account].lastRain = 0;
             s.a[account].lastSIs = s.season.sis;
         }
-        if (grownStalk > 0) LibSilo.incrementBalanceOfStalk(account, grownStalk);
+        if (grownStalk > 0) LibSilo.incrementBalanceOfStalk(account, grownStalk, toInternalBalance);
         s.a[account].lastUpdate = season();
     }
 
@@ -56,60 +60,21 @@ contract UpdateSilo is SiloExit {
         return update;
     }
 
-    function farmBeans(address account, uint32 update, uint256 unwrap_seed_amount, uint256 unwrap_stalk_amount) private {
-        if (s.a[account].lastSIs < s.season.sis) {
-            farmLegacyBeans(account, update, unwrap_seed_amount, unwrap_stalk_amount);
-        }
-
-        uint256 accountStalk = s.a[account].s.stalk;
-        uint256 beans = balanceOfFarmableBeansV3(account, accountStalk);
+    function farmBeans(address account, uint32 update) private {
+        uint256 beans = balanceOfFarmableBeansV3(account, s.a[account].s.stalk.add(balanceOf(account)));
         if (beans > 0) {
             s.si.beans = s.si.beans.sub(beans);
             uint256 seeds = beans.mul(C.getSeedsPerBean());
-	        uint256 stalk = beans.mul(C.getStalkPerBean());
-            Account.State storage a = s.a[account];
-	        seed().transfer(account, seeds);
-            //s.a[account].s.seeds = a.s.seeds.add(seeds);
-            s.a[account].s.stalk = accountStalk.add(beans.mul(C.getStalkPerBean()));
+            uint256 stalk = beans.mul(C.getStalkPerBean());
+	    seed().transfer(account, seeds);
             LibBeanSilo.addBeanDeposit(account, season(), beans);
-            LibStalk._transfer(LibStalk._msgSender(), account, beans.mul(C.getStalkPerBean()));            
-
-	    // if (unwrap_seed_amount > 0) {
-		//     if (unwrap_seed_amount > seeds.add(a.s.seeds)) {
-		// 	    seed().transfer(account, seeds.add(a.s.seeds));
-		// 	    s.a[account].s.seeds = 0;
-		//     }
-		//     else {
-		// 	    seed().transfer(account, unwrap_seed_amount);
-		// 	    if (unwrap_seed_amount > seeds) s.a[account].s.seeds = s.a[account].s.seeds.sub(unwrap_seed_amount.sub(seeds));
-		// 	    else s.a[account].s.seeds = s.a[account].s.seeds.add(seeds.sub(unwrap_seed_amount));
-		//     }
-	    // }
-	    // else s.a[account].s.seeds = a.s.seeds.add(seeds);
-
-	    // if (unwrap_stalk_amount > 0) {
-		//     if (unwrap_stalk_amount > stalk.add(a.s.stalk)) {
-        //                     LibStalk._transfer(address(this), account, stalk.add(a.s.stalk));
-        //                     s.a[account].s.stalk = 0;
-        //             }
-        //             else {
-        //                     LibStalk._transfer(address(this), account, unwrap_stalk_amount);
-        //                     if (unwrap_stalk_amount > stalk) s.a[account].s.stalk = s.a[account].s.stalk.sub(unwrap_stalk_amount.sub(stalk));
-        //                     else s.a[account].s.stalk = s.a[account].s.stalk.add(stalk.sub(unwrap_stalk_amount));
-        //             }
-	    // }
-	    // else s.a[account].s.stalk = accountStalk.add(stalk);
-
-        //     addBeanDeposit(account, season(), beans);
+            LibStalk.transfer(address(this), account, beans.mul(C.getStalkPerBean()));            
         }
-	else {
-	   unwrapStalk(account, unwrap_stalk_amount);
-	   unwrapSeeds(account, unwrap_seed_amount);
-	}
     }
 
-    function farmLegacyBeans(address account, uint32 update, uint256 unwrap_seed_amount, uint256 unwrap_stalk_amount) private {
-        uint256 beans;
+    function farmLegacyBeans(address account, uint32 update) private {
+        if (s.a[account].lastSIs >= s.season.sis) return;
+     	uint256 beans;
         if (update < s.hotFix3Start) {
             beans = balanceOfFarmableBeansV1(account);
             if (beans > 0) s.v1SI.beans = s.v1SI.beans.sub(beans);
@@ -128,33 +93,6 @@ contract UpdateSilo is SiloExit {
         LibBeanSilo.addBeanDeposit(account, season(), beans);
         uint256 stalk = beans.mul(C.getStalkPerBean());
         Account.State storage a = s.a[account];
-
-    //     if (unwrap_seed_amount > 0) {
-    //             if (unwrap_seed_amount > seeds.add(a.s.seeds)) {
-    //                     seed().transfer(account, seeds.add(a.s.seeds));
-    //                     s.a[account].s.seeds = 0;
-    //             }
-    //             else {
-    //                     seed().transfer(account, unwrap_seed_amount);
-    //                     if (unwrap_seed_amount > seeds) s.a[account].s.seeds = s.a[account].s.seeds.sub(unwrap_seed_amount.sub(seeds));
-    //                     else s.a[account].s.seeds = s.a[account].s.seeds.add(seeds.sub(unwrap_seed_amount));
-    //             }
-	// }
-    //     else s.a[account].s.seeds = a.s.seeds.add(seeds);
-
-    //     if (unwrap_stalk_amount > 0) {
-    //             if (unwrap_stalk_amount > stalk.add(a.s.stalk)) {
-    //                     LibStalk._transfer(address(this), account, stalk.add(a.s.stalk));
-    //                     s.a[account].s.stalk = 0;
-    //              }
-    //              else {
-    //                     LibStalk._transfer(address(this), account, unwrap_stalk_amount);
-    //                     if (unwrap_stalk_amount > stalk) s.a[account].s.stalk = s.a[account].s.stalk.sub(unwrap_stalk_amount.sub(stalk));
-    //                     else s.a[account].s.stalk = s.a[account].s.stalk.add(stalk.sub(unwrap_stalk_amount));
-    //              }
-    //     }
-    //     else s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
-    //     addBeanDeposit(account, season(), beans);
     }
 
     function farmSops(address account, uint32 update) internal {
@@ -173,62 +111,54 @@ contract UpdateSilo is SiloExit {
         }
     }
 
-    function wrapStalk(address account, uint256 wrap_stalk_amount) external {
-        if (balanceOf(account) > 0) {
-            if (balanceOf(account) > wrap_stalk_amount) {
-                LibStalk._transfer(account, address(this), wrap_stalk_amount);
-                s.a[account].s.stalk = s.a[account].s.stalk.add(wrap_stalk_amount);
-		s.s.stalk = s.s.stalk.add(wrap_stalk_amount);
+    function wrapStalk(uint256 wrap_stalk_amount) public {
+        if (s.stalkToken.balances[msg.sender] > 0) {
+            if (s.stalkToken.balances[msg.sender] > wrap_stalk_amount) {
+                LibStalk.transfer(msg.sender, address(this), wrap_stalk_amount);
+                s.a[msg.sender].s.stalk = s.a[msg.sender].s.stalk.add(wrap_stalk_amount);
             }
             else {
-                s.a[account].s.stalk = s.a[account].s.stalk.add(balanceOf(account));
-		s.s.stalk = s.s.stalk.add(balanceOf(account));
-                LibStalk._transfer(account, address(this), balanceOf(account));
+                s.a[msg.sender].s.stalk = s.a[msg.sender].s.stalk.add(s.stalkToken.balances[msg.sender]);
+                LibStalk.transfer(msg.sender, address(this), s.stalkToken.balances[msg.sender]);
             }
         }
     }
 
-    function unwrapStalk(address account, uint256 unwrap_stalk_amount) private {
-        if (s.a[account].s.stalk > 0) {
-            if (s.a[account].s.stalk > unwrap_stalk_amount) {
-                    LibStalk._transfer(address(this), account, unwrap_stalk_amount);
-                    s.a[account].s.stalk = s.a[account].s.stalk.sub(unwrap_stalk_amount);
-		    s.s.stalk = s.s.stalk.sub(unwrap_stalk_amount);
+    function unwrapStalk(uint256 unwrap_stalk_amount) public {
+        if (s.a[msg.sender].s.stalk > 0) {
+            if (s.a[msg.sender].s.stalk > unwrap_stalk_amount) {
+                    LibStalk.transfer(address(this), msg.sender, unwrap_stalk_amount);
+                    s.a[msg.sender].s.stalk = s.a[msg.sender].s.stalk.sub(unwrap_stalk_amount);
             }
             else {
-                    LibStalk._transfer(address(this), account, s.a[account].s.stalk);
-                    s.a[account].s.stalk = 0;
-		    s.s.stalk = s.s.stalk.sub(s.a[account].s.stalk);
+                    LibStalk.transfer(address(this), msg.sender, s.a[msg.sender].s.stalk);
+                    s.a[msg.sender].s.stalk = 0;
             }
         }
     }
 
-     function wrapSeeds(address account, uint256 wrap_seed_amount) external {
-        if (seed().balanceOf(account) > 0) {
-            if (seed().balanceOf(account) > wrap_seed_amount) {
-                seed().transferFrom(account, address(this), wrap_seed_amount);
-                s.a[account].s.seeds = s.a[account].s.seeds.add(wrap_seed_amount);
-		s.s.seeds = s.s.seeds.add(wrap_seed_amount);
+     function wrapSeeds(uint256 wrap_seed_amount) public {
+        if (seed().balanceOf(msg.sender) > 0) {
+            if (seed().balanceOf(msg.sender) > wrap_seed_amount) {
+                seed().transferFrom(msg.sender, address(this), wrap_seed_amount);
+                s.a[msg.sender].s.seeds = s.a[msg.sender].s.seeds.add(wrap_seed_amount);
             }
             else {
-                s.a[account].s.seeds = s.a[account].s.seeds.add(seed().balanceOf(account));
-		s.s.seeds = s.s.seeds.add(seed().balanceOf(account));
-                seed().transferFrom(account, address(this), seed().balanceOf(account));
+                s.a[msg.sender].s.seeds = s.a[msg.sender].s.seeds.add(seed().balanceOf(msg.sender));
+                seed().transferFrom(msg.sender, address(this), seed().balanceOf(msg.sender));
             }
         }
     }
 
-    function unwrapSeeds(address account, uint256 unwrap_seed_amount) private {
-        if (s.a[account].s.seeds > 0) {
-            if (s.a[account].s.seeds > unwrap_seed_amount) {
-                    seed().transfer(account, unwrap_seed_amount);
-                    s.a[account].s.seeds = s.a[account].s.seeds.sub(unwrap_seed_amount);
-		    s.s.seeds = s.s.seeds.sub(unwrap_seed_amount);
+    function unwrapSeeds(uint256 unwrap_seed_amount) public {
+        if (s.a[msg.sender].s.seeds > 0) {
+            if (s.a[msg.sender].s.seeds > unwrap_seed_amount) {
+                    seed().transfer(msg.sender, unwrap_seed_amount);
+                    s.a[msg.sender].s.seeds = s.a[msg.sender].s.seeds.sub(unwrap_seed_amount);
             }
             else {
-                    seed().transfer(account, s.a[account].s.seeds);
-                    s.a[account].s.seeds = 0;
-		    s.s.seeds = s.s.seeds.sub(s.a[account].s.seeds);
+                    seed().transfer(msg.sender, s.a[msg.sender].s.seeds);
+                    s.a[msg.sender].s.seeds = 0;
             }
         }
     }

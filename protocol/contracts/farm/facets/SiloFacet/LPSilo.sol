@@ -45,23 +45,23 @@ contract LPSilo is UpdateSilo {
      * Internal
     **/
 
-    function _depositLP(uint256 amount, Settings calldata set) internal {
-        updateSilo(msg.sender, set.unwrap_seeds, set.unwrap_stalk, set.update);
+    function _depositLP(uint256 amount, Storage.Settings calldata set) internal {
+        updateSilo(msg.sender, set.toInternalBalance, set.lightUpdateSilo);
         uint32 _s = season();
         uint256 lpb = LibLPSilo.lpToLPBeans(amount);
         require(lpb > 0, "Silo: No Beans under LP.");
         LibLPSilo.incrementDepositedLP(amount);
         uint256 seeds = lpb.mul(C.getSeedsPerLPBean());
-        if (season() == _s) LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000));
-        else LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)));
+        if (season() == _s) LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000), set.toInternalBalance);
+        else LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)), set.toInternalBalance);
 
         LibLPSilo.addLPDeposit(msg.sender, _s, amount, lpb.mul(C.getSeedsPerLPBean()));
 
         LibCheck.lpBalanceCheck();
     }
 
-    function _withdrawLP(uint32[] calldata crates, uint256[] calldata amounts, Settings calldata set) internal {
-        updateSilo(msg.sender, set.unwrap_seeds, set.unwrap_stalk, set.update);
+    function _withdrawLP(uint32[] calldata crates, uint256[] calldata amounts, Storage.Settings calldata set) internal {
+        updateSilo(msg.sender, set.toInternalBalance, set.lightUpdateSilo);
         require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         (
             uint256 lpRemoved,
@@ -71,7 +71,7 @@ contract LPSilo is UpdateSilo {
         uint32 arrivalSeason = season() + s.season.withdrawBuffer;
         addLPWithdrawal(msg.sender, arrivalSeason, lpRemoved);
         LibLPSilo.decrementDepositedLP(lpRemoved);
-        LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved, set.fromInternalBalance);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
 
         LibCheck.lpBalanceCheck();
@@ -120,13 +120,13 @@ contract LPSilo is UpdateSilo {
         uint256 i = 0;
         while ((i < crates.length) && (lpRemoved < maxLP)) {
             if (lpRemoved.add(amounts[i]) < maxLP)
-                (depositLP, depositSeeds) = removeLPDeposit(msg.sender, crates[i], amounts[i]);
+                (depositLP, depositSeeds) = LibLPSilo.removeLPDeposit(msg.sender, crates[i], amounts[i]);
             else
-                (depositLP, depositSeeds) = removeLPDeposit(msg.sender, crates[i], maxLP.sub(lpRemoved));
+                (depositLP, depositSeeds) = LibLPSilo.removeLPDeposit(msg.sender, crates[i], maxLP.sub(lpRemoved));
             lpRemoved = lpRemoved.add(depositLP);
             seedsRemoved = seedsRemoved.add(depositSeeds);
             stalkRemoved = stalkRemoved.add(depositSeeds.mul(C.getStalkPerLPSeed()).add(
-                stalkReward(depositSeeds, season()-crates[i]
+            LibSilo.stalkReward(depositSeeds, season()-crates[i]
             )));
             i++;
         }
@@ -135,8 +135,8 @@ contract LPSilo is UpdateSilo {
             amounts[i] = 0;
             i++;
         }
-        decrementDepositedLP(lpRemoved);
-        withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
+        LibLPSilo.decrementDepositedLP(lpRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved, true);
         stalkRemoved = stalkRemoved.sub(seedsRemoved.mul(C.getStalkPerLPSeed()));
         emit LPRemove(msg.sender, crates, amounts, lpRemoved);
     }

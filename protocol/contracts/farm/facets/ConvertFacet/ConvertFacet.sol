@@ -9,6 +9,7 @@ import "./ConvertSilo.sol";
 import "../../../libraries/LibConvert.sol";
 import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibClaim.sol";
+import "../../AppStorage.sol";
 
 /**
  * @author Publius
@@ -23,7 +24,8 @@ contract ConvertFacet is ConvertSilo {
         uint256 beans,
         uint256 minLP,
         uint32[] memory crates,
-        uint256[] memory amounts
+        uint256[] memory amounts,
+	Storage.Settings calldata set
     )
         external 
     {
@@ -34,7 +36,7 @@ contract ConvertFacet is ConvertSilo {
         uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(C.getSeedsPerLPBean())));
         _s = getDepositSeason(_s);
 
-        _depositLP(lp, beansConverted, _s);
+        _depositLP(lp, beansConverted, _s, set.toInternalBalance);
         LibCheck.balanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }   
@@ -43,7 +45,8 @@ contract ConvertFacet is ConvertSilo {
         uint256 lp,
         uint256 minBeans,
         uint32[] memory crates,
-        uint256[] memory amounts
+        uint256[] memory amounts,
+	Storage.Settings calldata set
     )
         external
     {
@@ -53,7 +56,7 @@ contract ConvertFacet is ConvertSilo {
         require(lpRemoved == lpConverted, "Silo: Wrong LP removed.");
         uint32 _s = uint32(stalkRemoved.div(beans.mul(C.getSeedsPerBean())));
         _s = getDepositSeason(_s);
-        _depositBeans(beans, _s);
+        _depositBeans(beans, _s, set.toInternalBalance);
         LibCheck.balanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
@@ -63,63 +66,27 @@ contract ConvertFacet is ConvertSilo {
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
         uint256[] memory amounts,
-        LibClaim.Claim calldata claim
+        LibClaim.Claim calldata claim,
+	Storage.Settings calldata set
     )
         external
         payable
     {
         LibClaim.claim(claim, claim.beansToWallet);
-        _convertAddAndDepositLP(lp, al, crates, amounts, claim.beansToWallet);
+        _convertAddAndDepositLP(lp, al, crates, amounts, claim.beansToWallet, set.toInternalBalance);
     }
 
     function convertAddAndDepositLP(
         uint256 lp,
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
-        uint256[] memory amounts
+        uint256[] memory amounts,
+	Storage.Settings calldata set
     )
         public
         payable
     {
-        _convertAddAndDepositLP(lp, al, crates, amounts, 0);
-    }
-
-    function _convertAddAndDepositLP(
-        uint256 lp,
-        LibMarket.AddLiquidity calldata al,
-        uint32[] memory crates,
-        uint256[] memory amounts,
-        uint256 allocatedBeans
-    )
-        private
-    {
-        LibInternal.updateSilo(msg.sender);
-        WithdrawState memory w;
-        if (bean().balanceOf(address(this)) < al.beanAmount) {
-            w.beansTransferred = al.beanAmount.sub(s.bean.deposited);
-            bean().transferFrom(msg.sender, address(this), w.beansTransferred);
-        }
-        (w.beansAdded, w.newLP) = LibMarket.addLiquidity(al);
-        require(w.newLP > 0, "Silo: No LP added.");
-        (w.beansRemoved, w.stalkRemoved) = _withdrawBeansForConvert(crates, amounts, w.beansAdded);
-        uint256 amountFromWallet = w.beansAdded.sub(w.beansRemoved, "Silo: Removed too many Beans.");
-
-        if (amountFromWallet < w.beansTransferred)
-            bean().transfer(msg.sender, w.beansTransferred.sub(amountFromWallet).add(allocatedBeans));
-        else if (w.beansTransferred < amountFromWallet) {
-            uint256 transferAmount = amountFromWallet.sub(w.beansTransferred);
-            LibMarket.transferAllocatedBeans(allocatedBeans, transferAmount);
-        }
-        w.i = w.stalkRemoved.div(lpToLPBeans(lp.add(w.newLP)), "Silo: No LP Beans.");
-
-        uint32 depositSeason = uint32(season().sub(w.i.div(C.getSeedsPerLPBean())));
-
-        if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
-
-        lp = lp.add(w.newLP);
-        _depositLP(lp, lpToLPBeans(lp), depositSeason);
-        LibCheck.beanBalanceCheck();
-        updateBalanceOfRainStalk(msg.sender);
+        _convertAddAndDepositLP(lp, al, crates, amounts, 0, set.toInternalBalance);
     }
 
     function lpToPeg() external view returns (uint256 lp) {

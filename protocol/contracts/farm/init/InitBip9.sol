@@ -19,7 +19,7 @@ contract InitBip9 {
     AppStorage internal s;
   
     function init() external {
-      LibStalk._mint(address(this), s.s.stalk);
+      LibStalk.mint(address(this), s.s.stalk);
       s.s.stalk = 0;
       s.seedContract = address(new Seed());
       ISeed(s.seedContract).mint(address(this), s.s.seeds);
