@@ -69,7 +69,7 @@ contract SiloFacet is BeanSilo {
         uint256 amount,
         uint256 buyAmount,
         LibClaim.Claim calldata claim,
-	Settings calldata set
+	    Settings calldata set
     )
         external
         payable

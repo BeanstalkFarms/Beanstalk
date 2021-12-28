@@ -6,6 +6,7 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/IDiamondCut.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @author Publius
@@ -27,6 +28,7 @@ contract Account {
     struct Silo {
         uint256 stalk;
         uint256 seeds;
+        mapping(IERC20 => uint256) internalTokenBalance;
     }
 
     struct SeasonOfPlenty {
