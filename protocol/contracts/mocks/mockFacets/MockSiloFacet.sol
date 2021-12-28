@@ -36,10 +36,7 @@ contract MockSiloFacet is SiloFacet {
         s.bean.deposited = s.bean.deposited.add(amount);
     }
     function incrementBalanceOfStalkE(address account, uint256 amount) public {
-        incrementBalanceOfStalk(account, amount);
-    }
-    function withdrawSiloAssetsE(address account, uint256 seeds, uint256 stalk) public {
-        withdrawSiloAssets(account, seeds, stalk);
+        LibSilo.incrementBalanceOfStalk(account, amount);
     }
 
     function withdrawSiloAssetsE(address account, uint256 base, uint256 amount) public {
