@@ -203,10 +203,5 @@ struct AppStorage {
     mapping(uint256 => Storage.Listing) listedPlots;
     uint32 buyOfferIndex;
     mapping(uint32 => Storage.BuyOffer) buyOffers;
-
-    // for Testing purposes only
-    uint32 mapToPlotIndex;
-    mapping(uint32 => uint256) mapToPlots;
-    mapping(uint32 => address) mapToAddress;
     
 }
