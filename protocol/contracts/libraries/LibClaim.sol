@@ -10,6 +10,7 @@ import "./LibCheck.sol";
 import "./LibInternal.sol";
 import "./LibMarket.sol";
 import "./LibAppStorage.sol";
+import "../interfaces/IWETH.sol";
 
 /**
  * @author Publius
@@ -33,9 +34,10 @@ library LibClaim {
         bool convertLP;
         uint256 minBeanAmount;
         uint256 minEthAmount;
+	    uint256 beansToWallet;
     }
 
-    function claim(Claim calldata c, bool allocate)
+    function claim(Claim calldata c, uint256 beansToWallet)
         public
         returns (uint256 beansClaimed)
     {
@@ -44,15 +46,34 @@ library LibClaim {
         if (c.plots.length > 0) beansClaimed = beansClaimed.add(harvest(c.plots));
         if (c.lpWithdrawals.length > 0) {
             if (c.convertLP) {
-                if (allocate) beansClaimed = beansClaimed.add(removeAllocationAndClaimLP(c.lpWithdrawals, c.minBeanAmount, c.minEthAmount));
-                else removeAndClaimLP(c.lpWithdrawals, c.minBeanAmount, c.minEthAmount);
+                if (beansToWallet < c.minBeanAmount) beansClaimed = beansClaimed.add(removeAndClaimLPtoClaimable(c.lpWithdrawals, c.minBeanAmount, c.minEthAmount));
+                else {
+                    uint toWallet = removeAndClaimLP(c.lpWithdrawals, c.minBeanAmount, c.minEthAmount);
+                    if (toWallet > beansToWallet) toWallet = 0;
+                    else beansToWallet = beansToWallet.sub(toWallet);
+                }
             }
             else claimLP(c.lpWithdrawals);
         }
         if (c.claimEth) claimEth();
-        if (!allocate) IBean(s.c.bean).transfer(msg.sender, beansClaimed);
-    }
 
+        if (beansToWallet > 0) {
+            uint256 claimableBeans = s.a[msg.sender].claimableBeans;
+            if (beansToWallet >= claimableBeans.add(beansClaimed)) {
+                IBean(s.c.bean).transfer(msg.sender, claimableBeans.add(beansClaimed));
+                s.a[msg.sender].claimableBeans = 0;
+            } else {
+                IBean(s.c.bean).transfer(msg.sender, beansToWallet);
+                if (beansToWallet < beansClaimed) {
+                    s.a[msg.sender].claimableBeans = claimableBeans.add(beansClaimed.sub(beansToWallet));
+                } else {
+                    s.a[msg.sender].claimableBeans = claimableBeans.sub(beansToWallet.sub(beansClaimed));
+                }
+            }
+        } else {
+            s.a[msg.sender].claimableBeans = s.a[msg.sender].claimableBeans.add(beansClaimed);
+        }
+    }
     // Claim Beans
 
     function claimBeans(uint32[] calldata withdrawals) public returns (uint256 beansClaimed) {
@@ -87,12 +108,13 @@ library LibClaim {
         uint256 minEthAmount
     )
         public
+        returns (uint256 beans)
     {
         uint256 lpClaimd = _claimLP(withdrawals);
-        LibMarket.removeLiquidity(lpClaimd, minBeanAmount, minEthAmount);
+        (beans,) = LibMarket.removeLiquidity(lpClaimd, minBeanAmount, minEthAmount);
     }
 
-    function removeAllocationAndClaimLP(
+    function removeAndClaimLPtoClaimable(
         uint32[] calldata withdrawals,
         uint256 minBeanAmount,
         uint256 minEthAmount

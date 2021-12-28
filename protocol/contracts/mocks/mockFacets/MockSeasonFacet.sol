@@ -9,6 +9,7 @@ import "hardhat/console.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/SeasonFacet/SeasonFacet.sol";
 import "../../libraries/Decimal.sol";
+import "../MockToken.sol";
 
 /**
  * @author Publius
@@ -110,6 +111,22 @@ contract MockSeasonFacet is SeasonFacet {
         }
     }
 
+    function halfWeekSunrise() public {
+            teleportSunrise(84);
+            decrementWithdrawBuffer();
+    }
+    
+    function weekSunrise() public {
+            teleportSunrise(168);
+            decrementWithdrawBuffer();
+    }
+
+    function decrementSunrise(uint256 week) public {
+            for (uint256 i = 0; i < week; i++) {
+                    weekSunrise();
+            }
+    }
+
     function setYieldE(uint32 number) public {
         s.w.yield = number;
     }
@@ -136,6 +153,14 @@ contract MockSeasonFacet is SeasonFacet {
 
     function setLastSoilPercentE(uint96 number) public {
         s.w.lastSoilPercent = number;
+    }
+
+    function setSoilE(uint256 amount) public returns (int256) {
+        return setSoil(amount);
+    }
+
+    function minSoil(uint256 amount) public view returns (uint256) {
+        return getMinSoil(amount);
     }
 
     function resetAccount(address account) public {
@@ -181,6 +206,10 @@ contract MockSeasonFacet is SeasonFacet {
         // }
         // s.buyOfferIndex = 0;
 
+        for (uint32 i = 0; i < s.fundraiserIndex; i++) {
+            MockToken(s.fundraisers[i].token).burn(MockToken(s.fundraisers[i].token).balanceOf(address(this)));
+            delete s.fundraisers[i];
+        }
         delete s.f;
         delete s.bean;
         delete s.lp;
@@ -189,14 +218,16 @@ contract MockSeasonFacet is SeasonFacet {
         delete s.w;
         delete s.g;
         delete s.r;
-        delete s.legSI;
+        delete s.v1SI;
         delete s.season;
         delete s.unclaimedRoots;
+        delete s.fundraiserIndex;
         s.season.start = block.timestamp;
         s.season.timestamp = uint32(block.timestamp % 2 ** 32);
         delete s.sop;
         s.s.stalk = 0;
-        s.s.seeds = 0 ;
+        s.s.seeds = 0;
+        s.season.withdrawBuffer = 25;
         s.season.current = 1;
         s.paused = false;
         bean().burn(bean().balanceOf(address(this)));

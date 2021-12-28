@@ -40,13 +40,15 @@ contract Account {
         AssetSilo bean;
         AssetSilo lp;
         Silo s;
-        uint32 lockedUntil;
+        uint32 votedUntil;
+        uint32 proposedUntil;
         uint32 lastUpdate;
         uint32 lastSop;
         uint32 lastRain;
         uint32 lastSIs;
         SeasonOfPlenty sop;
         uint256 roots;
+        uint256 claimableBeans;
     }
 }
 
@@ -106,7 +108,7 @@ contract Storage {
         uint256 stalk;
     }
 
-    struct LegacyIncreaseSilo {
+    struct V1IncreaseSilo {
         uint256 beans;
         uint256 stalk;
         uint256 roots;
@@ -144,6 +146,7 @@ contract Storage {
     struct Season {
         uint32 current;
         uint32 sis;
+        uint8 withdrawBuffer;
         uint256 start;
         uint256 period;
         uint256 timestamp;
@@ -172,6 +175,11 @@ contract Storage {
         uint24 price;
         uint232 maxPlaceInLine; 
         address owner;
+    struct Fundraiser {
+        address payee;
+        address token;
+        uint256 total;
+        uint256 remaining;
     }
 }
 
@@ -193,9 +201,9 @@ struct AppStorage {
     Storage.AssetSilo lp;
     Storage.IncreaseSilo si;
     Storage.SeasonOfPlenty sop;
-    Storage.LegacyIncreaseSilo legSI;
+    Storage.V1IncreaseSilo v1SI;
     uint256 unclaimedRoots;
-    uint256 depreciated2;
+    uint256 v2SIBeans;
     mapping (uint32 => uint256) sops;
     mapping (address => Account.State) a;
     uint32 bip0Start;
@@ -204,4 +212,6 @@ struct AppStorage {
     uint32 buyOfferIndex;
     mapping(uint32 => Storage.BuyOffer) buyOffers;
     
+    mapping (uint32 => Storage.Fundraiser) fundraisers;
+    uint32 fundraiserIndex;
 }

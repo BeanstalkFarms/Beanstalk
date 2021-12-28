@@ -60,9 +60,11 @@ For this tutorial, we are going to create a new facet called `SampleFacet`. In y
 1. make sure you are in the `protocol` repository
 2. in `protocol/farm/facets/`, create a new folder called `SampleFacet`
 3. within the `SampleFacet` folder create a file called `SampleFacet.sol`.
+4. implement your faucet. You can use `SampleFacet.sol` in `protocol/samples` as a template for a basis faucet. Note that facets can only have `AppStorage` as an internal state variable or there will be issues with accessing `AppStorage`.
+5. modify the `deploy` function in `scripts/deploy` to include your new facet, so that the `faucet` will be deployed with the Beanstalk diamond.
 
 ## Versions
-Code Version: `1.3.0` <br>
+Code Version: `1.3.2` <br>
 Whitepaper Version `1.3.0`
 
 ## License

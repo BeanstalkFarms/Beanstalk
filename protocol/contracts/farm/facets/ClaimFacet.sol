@@ -24,10 +24,10 @@ contract ClaimFacet {
     event Harvest(address indexed account, uint256[] plots, uint256 beans);
     event BeanAllocation(address indexed account, uint256 beans);
 
-    AppStorage private s;
+    AppStorage internal s;
 
     function claim(LibClaim.Claim calldata c) public payable returns (uint256 beansClaimed) {
-        beansClaimed = LibClaim.claim(c, false);
+        beansClaimed = LibClaim.claim(c, c.beansToWallet);
         LibCheck.balanceCheck();
     }
 
@@ -61,5 +61,10 @@ contract ClaimFacet {
 
     function claimEth() public {
         LibClaim.claimEth();
+    }
+
+    function claimableBeans(address user) public view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return s.a[user].claimableBeans;
     }
 }

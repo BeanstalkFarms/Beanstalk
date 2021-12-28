@@ -49,6 +49,10 @@ contract Life {
     function season() public view returns (uint32) {
         return s.season.current;
     }
+    
+    function withdrawTime() public view returns (uint8) {
+        return s.season.withdrawBuffer;
+    }
 
     function seasonTime() public virtual view returns (uint32) {
         if (block.timestamp < s.season.start) return 0;
@@ -105,48 +109,13 @@ contract Life {
      * Soil
     **/
 
-    function increaseSoil(uint256 amount) internal returns (int256) {
-        uint256 maxTotalSoil = C.getMaxSoilRatioCap().mul(bean().totalSupply()).div(1e18);
-        uint256 minTotalSoil = C.getMinSoilRatioCap().mul(bean().totalSupply()).div(1e18);
-        if (s.f.soil > maxTotalSoil) {
-            amount = s.f.soil.sub(maxTotalSoil);
-            decrementTotalSoil(amount);
-            return -int256(amount);
-        }
-        uint256 newTotalSoil = s.f.soil + amount;
-        amount = newTotalSoil <= maxTotalSoil ? amount : maxTotalSoil.sub(s.f.soil);
-        amount = newTotalSoil >= minTotalSoil ? amount : minTotalSoil.sub(s.f.soil);
-
-        incrementTotalSoil(amount);
-        return int256(amount);
+    function setSoil(uint256 amount) internal returns (int) {
+        int soil = int(s.f.soil);
+        s.f.soil = amount;
+        return int(amount) - soil;
     }
 
-    function decreaseSoil(uint256 amount) internal {
-        decrementTotalSoil(amount);
+   function getMinSoil(uint256 amount) internal view returns (uint256 minSoil) {
+        minSoil = amount.mul(100).div(100 + s.w.yield);
     }
-
-    function ensureSoilBounds() internal returns (int256) {
-        uint256 minTotalSoil = C.getMinSoilRatioCap().mul(bean().totalSupply()).div(1e18);
-        if (s.f.soil < minTotalSoil) {
-            uint256 amount = minTotalSoil.sub(s.f.soil);
-            incrementTotalSoil(amount);
-            return int256(amount);
-        }
-        uint256 maxTotalSoil = C.getMaxSoilRatioCap().mul(bean().totalSupply()).div(1e18);
-        if (s.f.soil > maxTotalSoil) {
-            uint256 amount = s.f.soil.sub(maxTotalSoil);
-            decrementTotalSoil(amount);
-            return -int256(amount);
-        }
-        return 0;
-    }
-
-    function incrementTotalSoil(uint256 amount) internal {
-        s.f.soil = s.f.soil.add(amount);
-    }
-
-    function decrementTotalSoil(uint256 amount) internal {
-        s.f.soil = s.f.soil.sub(amount, "Season: Not enough Soil.");
-    }
-
 }
