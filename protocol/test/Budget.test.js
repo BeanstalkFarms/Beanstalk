@@ -55,60 +55,71 @@ describe('Budget', function () {
     describe('No Soil', async function () {
       beforeEach(async function () {
         const beanSupply = await this.bean.totalSupply();
+        const beanBalance = await this.bean.balanceOf(userAddress);
         await this.budget.connect(user).budgetSow('1000');
         const postBeanSupply = await this.bean.totalSupply();
-        this.deltaTotalBeans = postBeanSupply.sub(beanSupply)
+        const postBeanBalance = await this.bean.balanceOf(userAddress);
+        this.deltaTotalBeans = postBeanSupply.sub(beanSupply);
+        this.deltaBeanBalance = postBeanBalance.sub(beanBalance);
       });
 
       it('creates a plot', async function () {
-        expect(await this.field.plot(userAddress,0)).to.be.equal('1000')
-      })
+        expect(await this.field.plot(userAddress,0)).to.be.equal('1000');
+      });
 
       it('updates total balances', async function () {
-        expect(this.deltaTotalBeans).to.be.equal('-1000')
-        expect(await this.field.podIndex()).to.be.equal('1000')
-        expect(await this.field.totalSoil()).to.be.equal('0')
-      })
+        expect(this.deltaTotalBeans).to.be.equal('-1000');
+        expect(this.deltaBeanBalance).to.be.equal('-1000');
+        expect(await this.field.podIndex()).to.be.equal('1000');
+        expect(await this.field.totalSoil()).to.be.equal('0');
+      });
     })
 
     describe('Some Soil', async function () {
       beforeEach(async function () {
         const beanSupply = await this.bean.totalSupply();
+        const beanBalance = await this.bean.balanceOf(userAddress);
         await this.season.incrementTotalSoilE('500');
         await this.budget.connect(user).budgetSow('1000');
         const postBeanSupply = await this.bean.totalSupply();
-        this.deltaTotalBeans = postBeanSupply.sub(beanSupply)
+        const postBeanBalance = await this.bean.balanceOf(userAddress);
+        this.deltaTotalBeans = postBeanSupply.sub(beanSupply);
+        this.deltaBeanBalance = postBeanBalance.sub(beanBalance);
       });
 
       it('creates a plot', async function () {
-        expect(await this.field.plot(userAddress,0)).to.be.equal('1000')
-      })
+        expect(await this.field.plot(userAddress,0)).to.be.equal('1000');
+      });
 
       it('updates total balances', async function () {
-        expect(this.deltaTotalBeans).to.be.equal('-1000')
-        expect(await this.field.podIndex()).to.be.equal('1000')
-        expect(await this.field.totalSoil()).to.be.equal('0')
-      })
-    })
+        expect(this.deltaTotalBeans).to.be.equal('-1000');
+        expect(this.deltaBeanBalance).to.be.equal('-1000');
+        expect(await this.field.podIndex()).to.be.equal('1000');
+        expect(await this.field.totalSoil()).to.be.equal('0');
+      });
+    });
 
     describe('A lot of Soil', async function () {
       beforeEach(async function () {
         const beanSupply = await this.bean.totalSupply();
+        const beanBalance = await this.bean.balanceOf(userAddress);
         await this.season.incrementTotalSoilE('1500');
         await this.budget.connect(user).budgetSow('1000');
         const postBeanSupply = await this.bean.totalSupply();
-        this.deltaTotalBeans = postBeanSupply.sub(beanSupply)
+        const postBeanBalance = await this.bean.balanceOf(userAddress);
+        this.deltaTotalBeans = postBeanSupply.sub(beanSupply);
+        this.deltaBeanBalance = postBeanBalance.sub(beanBalance);
       });
 
       it('creates a plot', async function () {
-        expect(await this.field.plot(userAddress,0)).to.be.equal('1000')
-      })
+        expect(await this.field.plot(userAddress,0)).to.be.equal('1000');
+      });
 
       it('updates total balances', async function () {
-        expect(this.deltaTotalBeans).to.be.equal('-1000')
-        expect(await this.field.podIndex()).to.be.equal('1000')
-        expect(await this.field.totalSoil()).to.be.equal('500')
-      })
-    })
+        expect(this.deltaTotalBeans).to.be.equal('-1000');
+        expect(await this.field.podIndex()).to.be.equal('1000');
+        expect(await this.field.totalSoil()).to.be.equal('500');
+      });
+    });
   });
-})
+});
