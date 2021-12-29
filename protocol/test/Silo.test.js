@@ -296,10 +296,10 @@ describe('Silo', function () {
         expect(await this.silo.balanceOfFarmableBeans(userAddress)).to.eq('100');
         expect(await this.silo.balanceOfFarmableStalk(userAddress)).to.eq('1000000');
         expect(await this.silo.balanceOf(userAddress)).to.eq('10000000');
-	expect(await this.silo.balanceOfStalk(userAddress)).to.eq('1000000');
-	expect(await this.silo.balanceOf(this.silo.address)).to.eq('1000000');
-	expect(await this.seed.balanceOf(userAddress)).to.eq('2000');
-	expect(await this.seed.balanceOf(this.silo.address)).to.eq('200');
+       	expect(await this.silo.balanceOfStalk(userAddress)).to.eq('1000000');
+      	expect(await this.silo.balanceOf(this.silo.address)).to.eq('1000000');
+        expect(await this.seed.balanceOf(userAddress)).to.eq('2000');
+      	expect(await this.seed.balanceOf(this.silo.address)).to.eq('200');
       });
     });
   

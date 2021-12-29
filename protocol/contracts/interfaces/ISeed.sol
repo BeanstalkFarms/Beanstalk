@@ -13,7 +13,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 **/
 
 abstract contract ISeed is IERC20 {
-
 	function updateSilo(address user, bool toInternalBalance, bool lightUpdateSilo) public virtual payable;
 	function burn(uint256 amount) public virtual;
 	function mint(address account, uint256 amount) public virtual returns (bool);

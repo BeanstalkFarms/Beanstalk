@@ -43,7 +43,7 @@ contract ConvertSilo {
         uint32[] memory crates,
         uint256[] memory amounts,
         uint256 beansToWallet,
-	bool toInternalBalance
+       	bool toInternalBalance
     )
         internal
     {
@@ -58,15 +58,12 @@ contract ConvertSilo {
         (w.beansRemoved, w.stalkRemoved) = _withdrawBeansForConvert(crates, amounts, w.beansAdded); // w.beansRemoved is beans removed from Silo
         uint256 amountFromWallet = w.beansAdded.sub(w.beansRemoved, "Silo: Removed too many Beans.");
 
-	    bool flag;
         if (amountFromWallet < w.beansTransferred) {
             bean().transfer(msg.sender, w.beansTransferred.sub(amountFromWallet));
 	    } else if (w.beansTransferred < amountFromWallet) {
-	        flag = true;
             uint256 transferAmount = amountFromWallet.sub(w.beansTransferred);
-            LibMarket.transferAllocatedBeans(transferAmount, beansToWallet);
+            LibMarket.allocatedBeans(transferAmount);
         }
-        if (!flag) LibMarket.sendBeansToWallet(beansToWallet);
 
         w.i = w.stalkRemoved.div(LibLPSilo.lpToLPBeans(lp.add(w.newLP)), "Silo: No LP Beans.");
         uint32 depositSeason = uint32(season().sub(w.i.div(C.getSeedsPerLPBean())));

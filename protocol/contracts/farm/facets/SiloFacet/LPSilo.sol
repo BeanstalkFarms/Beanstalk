@@ -59,7 +59,7 @@ contract LPSilo is UpdateSilo {
 
         LibCheck.lpBalanceCheck();
     }
-
+    
     function _withdrawLP(uint32[] calldata crates, uint256[] calldata amounts, Storage.Settings calldata set) internal {
         updateSilo(msg.sender, set.toInternalBalance, set.lightUpdateSilo);
         require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");

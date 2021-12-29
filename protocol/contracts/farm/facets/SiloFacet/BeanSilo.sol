@@ -43,7 +43,6 @@ contract BeanSilo is LPSilo {
     /**
      * Internal
     **/
-
     function _depositBeans(uint256 amount, Storage.Settings calldata set) internal {
         require(amount > 0, "Silo: No beans.");
         updateSilo(msg.sender, set.toInternalBalance, set.lightUpdateSilo);

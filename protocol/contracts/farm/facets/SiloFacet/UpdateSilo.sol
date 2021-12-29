@@ -123,7 +123,6 @@ contract UpdateSilo is SiloExit{
             }
         }
     }
-
     function unwrapStalk(uint256 unwrap_stalk_amount) public {
         if (s.a[msg.sender].s.stalk > 0) {
             if (s.a[msg.sender].s.stalk > unwrap_stalk_amount) {

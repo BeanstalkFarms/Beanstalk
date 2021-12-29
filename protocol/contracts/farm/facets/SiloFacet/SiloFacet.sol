@@ -54,7 +54,7 @@ contract SiloFacet is BeanSilo {
         }
         return true;
     }
-
+    
     /**
      * Bean
     */
@@ -167,7 +167,7 @@ contract SiloFacet is BeanSilo {
 	Storage.Settings calldata set
     )
         internal {
-        uint256 boughtLP = LibMarket.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, al, c.beansToWallet);
+        uint256 boughtLP = LibMarket.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, al);
         if (lp>0) pair().transferFrom(msg.sender, address(this), lp);
         _depositLP(lp.add(boughtLP), set);
     }
@@ -199,7 +199,7 @@ contract SiloFacet is BeanSilo {
     }
 
     function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {
-        LibClaim.claim(c, 0);
-        LibMarket.transferAllocatedBeans(transferBeans, c.beansToWallet);
+        LibClaim.claim(c);
+        LibMarket.allocatedBeans(transferBeans);
     }
 }

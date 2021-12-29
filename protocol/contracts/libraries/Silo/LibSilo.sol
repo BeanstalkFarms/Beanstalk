@@ -151,7 +151,7 @@ library LibSilo {
         if (s.a[account].votedUntil >= season()) {
             require(
                 s.a[account].proposedUntil < season() || canPropose(account),
-                "Proposer must have the min amount left in the BIP"
+                "Silo: Proposer must have min Stalk."
             );
             for (uint256 i = 0; i < s.g.activeBips.length; i++) {
                 uint32 bip = s.g.activeBips[i];
@@ -164,9 +164,6 @@ library LibSilo {
     /// @param account The address of the account to check roots balance
     function canPropose(address account) internal view returns (bool) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if (s.s.roots == 0 || s.a[account].roots == 0) {
-            return false;
-        }
         Decimal.D256 memory stake = Decimal.ratio(s.a[account].roots, s.s.roots);
         return stake.greaterThan(C.getGovernanceProposalThreshold());
     }

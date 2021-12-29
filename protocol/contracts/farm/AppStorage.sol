@@ -50,7 +50,7 @@ contract Account {
         uint32 lastSIs;
         SeasonOfPlenty sop;
         uint256 roots;
-        uint256 claimableBeans;
+        uint256 wrappedBeans;
     }
 }
 
@@ -217,4 +217,5 @@ struct AppStorage {
     uint32 fundraiserIndex;
     Storage.Stalk stalkToken;
     address seedContract;
+    mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
 }

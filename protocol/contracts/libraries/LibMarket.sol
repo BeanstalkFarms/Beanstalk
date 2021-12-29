@@ -126,31 +126,29 @@ library LibMarket {
         require(success, "WETH: ETH transfer failed");
     }
 
-    function addAndDepositLiquidity(AddLiquidity calldata al, uint256 beansToWallet) internal returns (uint256) {
+    function addAndDepositLiquidity(AddLiquidity calldata al) internal returns (uint256) {
         DiamondStorage storage ds = diamondStorage();
-        transferAllocatedBeans(al.beanAmount, 0);
+        allocatedBeans(al.beanAmount);
         (uint256 beans, uint256 liquidity) = addLiquidity(al);
         if (al.beanAmount > beans) IBean(ds.bean).transfer(msg.sender, al.beanAmount.sub(beans));
-        sendBeansToWallet(beansToWallet);
         return liquidity;
     }
 
     function swapAndAddLiquidity(
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
-        LibMarket.AddLiquidity calldata al,
-	    uint256 beansToWallet
+        LibMarket.AddLiquidity calldata al
     )
         internal
         returns (uint256)
     {
         uint256 boughtLP;
         if (buyBeanAmount > 0)
-            boughtLP = LibMarket.buyBeansAndAddLiquidity(buyBeanAmount, al, beansToWallet);
+            boughtLP = LibMarket.buyBeansAndAddLiquidity(buyBeanAmount, al);
         else if (buyEthAmount > 0)
-            boughtLP = LibMarket.buyEthAndAddLiquidity(buyEthAmount, al, beansToWallet);
+            boughtLP = LibMarket.buyEthAndAddLiquidity(buyEthAmount, al);
         else
-            boughtLP = LibMarket.addAndDepositLiquidity(al, beansToWallet);
+            boughtLP = LibMarket.addAndDepositLiquidity(al);
         return boughtLP;
     }
 
@@ -159,7 +157,7 @@ library LibMarket {
     // buyBeanAmount is the amount of beans the person bought to contribute to LP. Note that
     // buyBean amount will AT BEST be equal to al.buyBeanAmount because of slippage.
     // Otherwise, it will almost always be less than al.buyBean amount
-    function buyBeansAndAddLiquidity(uint256 buyBeanAmount, AddLiquidity calldata al, uint256 beansToWallet)
+    function buyBeansAndAddLiquidity(uint256 buyBeanAmount, AddLiquidity calldata al)
         internal
         returns (uint256)
     {
@@ -172,7 +170,7 @@ library LibMarket {
         (uint256 ethSold, uint256 beans) = _buyWithWETH(buyBeanAmount, amounts[0], address(this));
         // If beans bought does not cover the amount of money to move to LP
 	if (al.beanAmount > buyBeanAmount) {
-            transferAllocatedBeans(al.beanAmount.sub(buyBeanAmount), beansToWallet);
+            allocatedBeans(al.beanAmount.sub(buyBeanAmount));
             beans = beans.add(al.beanAmount.sub(buyBeanAmount));
         }
         uint256 liquidity; uint256 ethAdded;
@@ -194,13 +192,13 @@ library LibMarket {
 
     // This function is called when user sends more value of BEAN than ETH to LP.
     // Value of BEAN is converted to equivalent value of ETH.
-    function buyEthAndAddLiquidity(uint256 buyWethAmount, AddLiquidity calldata al, uint256 beansToWallet)
+    function buyEthAndAddLiquidity(uint256 buyWethAmount, AddLiquidity calldata al)
         internal
         returns (uint256)
     {
         DiamondStorage storage ds = diamondStorage();
         uint256 sellBeans = _amountIn(buyWethAmount);
-        transferAllocatedBeans(al.beanAmount.add(sellBeans), beansToWallet);
+        allocatedBeans(al.beanAmount.add(sellBeans));
         (uint256 beansSold, uint256 wethBought) = _sell(sellBeans, buyWethAmount, address(this));
         if (msg.value > 0) IWETH(ds.weth).deposit{value: msg.value}();
         (uint256 beans, uint256 ethAdded, uint256 liquidity) = _addLiquidityWETH(
@@ -212,10 +210,10 @@ library LibMarket {
 
         if (al.beanAmount.add(sellBeans) > beans.add(beansSold)) {
         uint256 toTransfer = al.beanAmount.add(sellBeans).sub(beans.add(beansSold));
-	IBean(ds.bean).transfer(
-                msg.sender,
-                toTransfer
-            );
+	    IBean(ds.bean).transfer(
+            msg.sender,
+            toTransfer
+        );
 	}
 
         if (ethAdded < wethBought.add(msg.value)) {
@@ -325,36 +323,21 @@ library LibMarket {
         return amounts[0];
     }
 
-    function transferAllocatedBeans(uint256 transferBeans, uint256 beansToWallet) internal {
+    function allocatedBeans(uint256 transferBeans) internal {
 	    AppStorage storage s = LibAppStorage.diamondStorage();
 
-        uint claimableBeans = s.a[msg.sender].claimableBeans;
+        uint wrappedBeans = s.a[msg.sender].wrappedBeans;
         uint remainingBeans = transferBeans;
-        if (claimableBeans > 0) {
-            if (remainingBeans > claimableBeans) {
-                remainingBeans = transferBeans.sub(claimableBeans);
-                s.a[msg.sender].claimableBeans = 0;
+        if (wrappedBeans > 0) {
+            if (remainingBeans > wrappedBeans) {
+                remainingBeans = transferBeans.sub(wrappedBeans);
+                s.a[msg.sender].wrappedBeans = 0;
             } else {
                 remainingBeans = 0;
-                s.a[msg.sender].claimableBeans = claimableBeans.sub(transferBeans);
+                s.a[msg.sender].wrappedBeans = wrappedBeans.sub(transferBeans);
             }
             emit BeanAllocation(msg.sender, transferBeans.sub(remainingBeans));
         }
         if (remainingBeans > 0) IBean(s.c.bean).transferFrom(msg.sender, address(this), remainingBeans);
-        sendBeansToWallet(beansToWallet);
-    }
-
-    function sendBeansToWallet(uint beansToWallet) internal {
-        if (beansToWallet == 0) return;
-	    AppStorage storage s = LibAppStorage.diamondStorage();
-        uint claimableBeans = s.a[msg.sender].claimableBeans;
-
-        if (beansToWallet > claimableBeans) {
-            IBean(s.c.bean).transfer(msg.sender, claimableBeans);
-            s.a[msg.sender].claimableBeans = 0;
-        } else {
-            IBean(s.c.bean).transfer(msg.sender, beansToWallet);
-            s.a[msg.sender].claimableBeans = claimableBeans.sub(beansToWallet);
-        }
     }
 }

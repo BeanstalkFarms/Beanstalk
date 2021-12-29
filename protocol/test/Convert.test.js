@@ -546,8 +546,8 @@ describe('Convert', function () {
         expect(diff).to.eq('9000');
       });
 
-      it('properly clears claimable beans value', function () {
-        expect(this.claimableBeans).to.eq('0');
+      it('properly clears wrapped beans value', function () {
+        expect(this.wrappedBeans).to.eq('0');
       });
     });
 
@@ -585,8 +585,8 @@ describe('Convert', function () {
         expect(diff).to.eq('9000');
       });
 
-      it('properly clears claimable beans value', function () {
-        expect(this.claimableBeans).to.eq('0');
+      it('properly clears wrapped beans value', function () {
+        expect(this.wrappedBeans).to.eq('0');
       });
     });
 
@@ -630,8 +630,8 @@ describe('Convert', function () {
         expect(diff).to.eq('9000');
       });
       
-      it('properly clears claimable beans value', function () {
-        expect(this.claimableBeans).to.eq('0');
+      it('properly clears wrapped beans value', function () {
+        expect(this.wrappedBeans).to.eq('0');
       });
     });
   });

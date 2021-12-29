@@ -102,8 +102,8 @@ library LibStalk {
 
         _beforeTokenTransfer(account, address(0), amount);
 
-        s.stalkToken.balances[account] = s.stalkToken.balances[account].sub(amount, "ERC20: burn amount exceeds balance");
-        s.stalkToken.totalSupply = s.stalkToken.totalSupply.sub(amount);
+        s.stalkToken._balances[account] = s.stalkToken._balances[account].sub(amount, "ERC20: burn amount exceeds balance");
+        s.stalkToken._totalSupply = s.stalkToken._totalSupply.sub(amount);
         emit Transfer(account, address(0), amount);
     }
 
@@ -124,7 +124,6 @@ library LibStalk {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
         AppStorage storage s = LibAppStorage.diamondStorage();
-
         s.stalkToken.allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
