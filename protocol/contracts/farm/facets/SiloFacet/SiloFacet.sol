@@ -31,9 +31,9 @@ contract SiloFacet is BeanSilo {
     /// @param recipient The address of the recipient of the Stalk tokens
     /// @param amount The amount of stalk tokens to transfer to the recipient
     function transfer(address recipient, uint256 amount) public returns (bool) {
-        updateSilo(LibStalk._msgSender(), 0, 0, true);
-        updateSilo(recipient, 0, 0, true);
-        LibStalk._transfer(LibStalk._msgSender(), recipient, amount);
+        updateSilo(LibStalk._msgSender(), false, false);
+        updateSilo(recipient, false, false);
+        LibStalk.transfer(LibStalk._msgSender(), recipient, amount);
         return true;
     }
 
@@ -43,51 +43,25 @@ contract SiloFacet is BeanSilo {
     /// @param recipient The address of the selected recipient address of the sent Stalk tokens
     /// @param amount The amount of stalk tokens to transfer to the recipient account from the sender account
     function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
-        updateSilo(sender, 0, 0, true);
-        updateSilo(recipient, 0, 0, true);
-        LibStalk._transfer(sender, recipient, amount);
+        updateSilo(sender, false, false);
+        updateSilo(recipient, false, false);
+        LibStalk.transfer(sender, recipient, amount);
         if (allowance(sender, LibStalk._msgSender()) != uint256(-1)) {
-            LibStalk._approve(
+            LibStalk.approve(
                 sender,
                 LibStalk._msgSender(),
                 allowance(sender, LibStalk._msgSender()).sub(amount, "Stalk: Transfer amount exceeds allowance."));
         }
         return true;
     }
-
-    function unwrapStalk(address account, uint256 unwrap_stalk_amount) external {
-        if (s.a[account].s.stalk > 0) {
-	    if (s.a[account].s.stalk > unwrap_stalk_amount) {
-		    transfer(account, unwrap_stalk_amount);
-		    s.a[account].s.stalk = s.a[account].s.stalk.sub(unwrap_stalk_amount);
-	    }
-	    else {
-		    transfer(account, s.a[msg.sender].s.stalk);
-		    s.a[account].s.stalk = 0;
-	    }
-        }
-    }
-
-    function unwrapSeeds(address account, uint256 unwrap_seed_amount) external {
-        if (s.a[account].s.seeds > 0) {
-            if (s.a[account].s.seeds > unwrap_seed_amount) {
-                    transfer(account, unwrap_seed_amount);
-                    s.a[account].s.seeds = s.a[account].s.seeds.sub(unwrap_seed_amount);
-            }
-            else {
-                    transfer(account, s.a[msg.sender].s.seeds);
-                    s.a[account].s.seeds = 0;
-            }
-        }
-    }
-
+    
     /**
      * Bean
     */
 
    // Deposit
 
-    function claimAndDepositBeans(uint256 amount, LibClaim.Claim calldata claim, Settings calldata set) external {
+    function claimAndDepositBeans(uint256 amount, LibClaim.Claim calldata claim, Storage.Settings calldata set) external {
         allocateBeans(claim, amount);
         _depositBeans(amount, set);
     }
@@ -96,7 +70,7 @@ contract SiloFacet is BeanSilo {
         uint256 amount,
         uint256 buyAmount,
         LibClaim.Claim calldata claim,
-	Settings calldata set
+	Storage.Settings calldata set
     )
         external
         payable
@@ -106,12 +80,12 @@ contract SiloFacet is BeanSilo {
         _depositBeans(boughtAmount.add(amount), set);
     }
 
-    function depositBeans(uint256 amount, Settings calldata set) public {
+    function depositBeans(uint256 amount, Storage.Settings calldata set) public {
         bean().transferFrom(msg.sender, address(this), amount);
         _depositBeans(amount, set);
     }
 
-    function buyAndDepositBeans(uint256 amount, uint256 buyAmount, Settings calldata set) public payable {
+    function buyAndDepositBeans(uint256 amount, uint256 buyAmount, Storage.Settings calldata set) public payable {
         uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
         if (amount > 0) bean().transferFrom(msg.sender, address(this), amount);
         _depositBeans(boughtAmount.add(amount), set);
@@ -122,7 +96,7 @@ contract SiloFacet is BeanSilo {
     function withdrawBeans(
         uint32[] calldata crates,
         uint256[] calldata amounts,
-	Settings calldata set
+	Storage.Settings calldata set
     )
         external
     {
@@ -133,21 +107,21 @@ contract SiloFacet is BeanSilo {
         uint32[] calldata crates,
         uint256[] calldata amounts,
         LibClaim.Claim calldata claim,
-	Settings calldata set
+	Storage.Settings calldata set
     )
         external
     {
-        LibClaim.claim(claim);
-        _withdrawBeans(crates, amounts);
+        LibClaim.claim(claim, claim.beansToWallet);
+        _withdrawBeans(crates, amounts, set);
     }
 
     /*
      * LP
     */
 
-    function claimAndDepositLP(uint256 amount, LibClaim.Claim calldata claim) external {
-        LibClaim.claim(claim);
-        depositLP(amount);
+    function claimAndDepositLP(uint256 amount, LibClaim.Claim calldata claim, Storage.Settings calldata set) external {
+        LibClaim.claim(claim, claim.beansToWallet);
+        depositLP(amount, set);
     }
 
     function claimAddAndDepositLP(
@@ -155,17 +129,17 @@ contract SiloFacet is BeanSilo {
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
         LibMarket.AddLiquidity calldata al,
-        LibClaim.Claim calldata claim,
-	    Settings calldata set
+	LibClaim.Claim calldata claim,
+	Storage.Settings calldata set
     )
         external
         payable
     {
-        LibClaim.claim(claim);
+        LibClaim.claim(claim, 0);
         _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al, claim, set);
     }
 
-    function depositLP(uint256 amount, Settings calldata set) public {
+    function depositLP(uint256 amount, Storage.Settings calldata set) public {
         pair().transferFrom(msg.sender, address(this), amount);
         _depositLP(amount, set);
     }
@@ -174,8 +148,8 @@ contract SiloFacet is BeanSilo {
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
         LibMarket.AddLiquidity calldata al,
-	    LibClaim.Claim calldata c,
-	    Settings calldata set
+	LibClaim.Claim calldata c,
+	Storage.Settings calldata set
     )
         public
         payable
@@ -189,8 +163,8 @@ contract SiloFacet is BeanSilo {
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
         LibMarket.AddLiquidity calldata al,
-	    LibClaim.Claim calldata c,
-    	Settings calldata set
+	LibClaim.Claim calldata c,
+	Storage.Settings calldata set
     )
         internal {
         uint256 boughtLP = LibMarket.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, al);
@@ -206,18 +180,18 @@ contract SiloFacet is BeanSilo {
         uint32[] calldata crates,
         uint256[] calldata amounts,
         LibClaim.Claim calldata claim,
-	    Settings calldata set
+	Storage.Settings calldata set
     )
         external
     {
-        LibClaim.claim(claim);
+        LibClaim.claim(claim, claim.beansToWallet);
         _withdrawLP(crates, amounts, set);
     }
 
     function withdrawLP(
         uint32[] calldata crates, uint256[]
         calldata amounts,
-	    Settings calldata set
+	Storage.Settings calldata set
     )
         external
     {

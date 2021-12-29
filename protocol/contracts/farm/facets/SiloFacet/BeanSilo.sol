@@ -43,28 +43,27 @@ contract BeanSilo is LPSilo {
     /**
      * Internal
     **/
-
-    function _depositBeans(uint256 amount, Settings calldata set) internal {
+    function _depositBeans(uint256 amount, Storage.Settings calldata set) internal {
         require(amount > 0, "Silo: No beans.");
-        updateSilo(msg.sender);
+        updateSilo(msg.sender, set.toInternalBalance, set.lightUpdateSilo);
         LibBeanSilo.incrementDepositedBeans(amount);
-        LibSilo.depositSiloAssets(msg.sender, amount.mul(C.getSeedsPerBean()), amount.mul(C.getStalkPerBean()));
+        LibSilo.depositSiloAssets(msg.sender, amount.mul(C.getSeedsPerBean()), amount.mul(C.getStalkPerBean()), set.toInternalBalance);
         LibBeanSilo.addBeanDeposit(msg.sender, season(), amount);
     }
 
     function _withdrawBeans(
         uint32[] calldata crates,
         uint256[] calldata amounts,
-	Settings calldata set
+	Storage.Settings calldata set
     )
         internal
     {
-        updateSilo(msg.sender, set.unwrap_seeds, set.unwrap_stalk, set.update);
+        updateSilo(msg.sender, set.toInternalBalance, set.lightUpdateSilo);
         require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         (uint256 beansRemoved, uint256 stalkRemoved) = removeBeanDeposits(crates, amounts);
         addBeanWithdrawal(msg.sender, season()+s.season.withdrawBuffer, beansRemoved);
         LibBeanSilo.decrementDepositedBeans(beansRemoved);
-        LibSilo.withdrawSiloAssets(msg.sender, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved, set.fromInternalBalance);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
         LibCheck.beanBalanceCheck();
     }

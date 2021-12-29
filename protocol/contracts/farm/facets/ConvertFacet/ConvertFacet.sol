@@ -9,6 +9,7 @@ import "./ConvertSilo.sol";
 import "../../../libraries/LibConvert.sol";
 import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibClaim.sol";
+import "../../AppStorage.sol";
 
 /**
  * @author Publius
@@ -23,7 +24,8 @@ contract ConvertFacet is ConvertSilo {
         uint256 beans,
         uint256 minLP,
         uint32[] memory crates,
-        uint256[] memory amounts
+        uint256[] memory amounts,
+	Storage.Settings calldata set
     )
         external 
     {
@@ -34,7 +36,7 @@ contract ConvertFacet is ConvertSilo {
         uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(C.getSeedsPerLPBean())));
         _s = getDepositSeason(_s);
 
-        _depositLP(lp, beansConverted, _s);
+        _depositLP(lp, beansConverted, _s, set.toInternalBalance);
         LibCheck.balanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }   
@@ -43,7 +45,8 @@ contract ConvertFacet is ConvertSilo {
         uint256 lp,
         uint256 minBeans,
         uint32[] memory crates,
-        uint256[] memory amounts
+        uint256[] memory amounts,
+	Storage.Settings calldata set
     )
         external
     {
@@ -53,7 +56,7 @@ contract ConvertFacet is ConvertSilo {
         require(lpRemoved == lpConverted, "Silo: Wrong LP removed.");
         uint32 _s = uint32(stalkRemoved.div(beans.mul(C.getSeedsPerBean())));
         _s = getDepositSeason(_s);
-        _depositBeans(beans, _s);
+        _depositBeans(beans, _s, set.toInternalBalance);
         LibCheck.balanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
@@ -63,25 +66,27 @@ contract ConvertFacet is ConvertSilo {
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
         uint256[] memory amounts,
-        LibClaim.Claim calldata claim
+        LibClaim.Claim calldata claim,
+	Storage.Settings calldata set
     )
         external
         payable
     {
-        LibClaim.claim(claim);
-        _convertAddAndDepositLP(lp, al, crates, amounts);
+        LibClaim.claim(claim, claim.beansToWallet);
+        _convertAddAndDepositLP(lp, al, crates, amounts, claim.beansToWallet, set.toInternalBalance);
     }
 
     function convertAddAndDepositLP(
         uint256 lp,
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
-        uint256[] memory amounts
+        uint256[] memory amounts,
+	Storage.Settings calldata set
     )
         public
         payable
     {
-        _convertAddAndDepositLP(lp, al, crates, amounts);
+        _convertAddAndDepositLP(lp, al, crates, amounts, 0, set.toInternalBalance);
     }
 
     function lpToPeg() external view returns (uint256 lp) {

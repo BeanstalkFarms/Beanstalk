@@ -33,9 +33,9 @@ library LibStalk {
     
     function initStalkToken(string memory name_, string memory symbol) internal {
       AppStorage storage s = LibAppStorage.diamondStorage();
-      s.stalkToken._name = name_;
-      s.stalkToken._symbol = symbol;
-      s.stalkToken._decimals = 10;
+      s.stalkToken.name = name_;
+      s.stalkToken.symbol = symbol;
+      s.stalkToken.decimals = 10;
     }
 
 
@@ -53,15 +53,15 @@ library LibStalk {
      * - `recipient` cannot be the zero address.
      * - `sender` must have a balance of at least `amount`.
      */
-    function _transfer(address sender, address recipient, uint256 amount) internal {
+    function transfer(address sender, address recipient, uint256 amount) internal {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         _beforeTokenTransfer(sender, recipient, amount);
 
-        s.stalkToken._balances[sender] = s.stalkToken._balances[sender].sub(amount, "ERC20: transfer amount exceeds balance");
-        s.stalkToken._balances[recipient] = s.stalkToken._balances[recipient].add(amount);
+        s.stalkToken.balances[sender] = s.stalkToken.balances[sender].sub(amount, "ERC20: transfer amount exceeds balance");
+        s.stalkToken.balances[recipient] = s.stalkToken.balances[recipient].add(amount);
         emit Transfer(sender, recipient, amount);
     }
 
@@ -74,14 +74,14 @@ library LibStalk {
      *
      * - `to` cannot be the zero address.
      */
-    function _mint(address account, uint256 amount) internal {
+    function mint(address account, uint256 amount) internal {
         require(account != address(0), "ERC20: mint to the zero address");
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         _beforeTokenTransfer(address(0), account, amount);
 
-        s.stalkToken._totalSupply = s.stalkToken._totalSupply.add(amount);
-        s.stalkToken._balances[account] = s.stalkToken._balances[account].add(amount);
+        s.stalkToken.totalSupply = s.stalkToken.totalSupply.add(amount);
+        s.stalkToken.balances[account] = s.stalkToken.balances[account].add(amount);
         emit Transfer(address(0), account, amount);
     }
 
@@ -96,7 +96,7 @@ library LibStalk {
      * - `account` cannot be the zero address.
      * - `account` must have at least `amount` tokens.
      */
-    function _burn(address account, uint256 amount) internal {
+    function burn(address account, uint256 amount) internal {
         require(account != address(0), "ERC20: burn from the zero address");
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -120,12 +120,11 @@ library LibStalk {
      * - `owner` cannot be the zero address.
      * - `spender` cannot be the zero address.
      */
-    function _approve(address owner, address spender, uint256 amount) internal {
+    function approve(address owner, address spender, uint256 amount) internal {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
         AppStorage storage s = LibAppStorage.diamondStorage();
-
-        s.stalkToken._allowances[owner][spender] = amount;
+        s.stalkToken.allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
 
@@ -138,7 +137,7 @@ library LibStalk {
      */
     function _setupDecimals(uint8 decimals_) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.stalkToken._decimals = decimals_;
+        s.stalkToken.decimals = decimals_;
     }
 
     /**

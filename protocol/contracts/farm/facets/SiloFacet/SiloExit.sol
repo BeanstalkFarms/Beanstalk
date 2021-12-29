@@ -37,37 +37,37 @@ contract SiloExit {
     }
 
     function name() public view returns (string memory) {
-        return s.stalkToken._name;
+        return s.stalkToken.name;
     }
 
     function symbol() public view returns (string memory) {
-        return s.stalkToken._symbol;
+        return s.stalkToken.symbol;
     }
 
     function totalSupply() public view returns (uint256) {
-        return s.stalkToken._totalSupply;
+        return s.stalkToken.totalSupply;
     }
 
     function balanceOf(address account) public view returns (uint256) {
-        return s.stalkToken._balances[account];
+        return s.stalkToken.balances[account];
     }
 
     function allowance(address owner, address spender) public view returns (uint256) {
-        return s.stalkToken._allowances[owner][spender];
+        return s.stalkToken.allowances[owner][spender];
     }
 
     function approve(address spender, uint256 amount) public returns (bool) {
-        LibStalk._approve(LibStalk._msgSender(), spender, amount);
+        LibStalk.approve(LibStalk._msgSender(), spender, amount);
         return true;
     }
 
     function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
-        LibStalk._approve(LibStalk._msgSender(), spender, s.stalkToken._allowances[LibStalk._msgSender()][spender].add(addedValue));
+        LibStalk.approve(LibStalk._msgSender(), spender, s.stalkToken.allowances[LibStalk._msgSender()][spender].add(addedValue));
         return true;
     }
 
     function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
-        LibStalk._approve(LibStalk._msgSender(), spender, s.stalkToken._allowances[LibStalk._msgSender()][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
+        LibStalk.approve(LibStalk._msgSender(), spender, s.stalkToken.allowances[LibStalk._msgSender()][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
         return true;
     }
 
@@ -112,22 +112,24 @@ contract SiloExit {
     }
 
     function balanceOfGrownStalk(address account) public view returns (uint256) {
-        return LibSilo.stalkReward(s.a[account].s.seeds, season()-lastUpdate(account));
+        return LibSilo.stalkReward(s.a[account].s.seeds.add(seed().balanceOf(account)), season()-lastUpdate(account));
     }
 
     function balanceOfFarmableBeans(address account) public view returns (uint256 beans) {
         beans = beans.add(balanceOfFarmableBeansV1(account));
         beans = beans.add(balanceOfFarmableBeansV2(balanceOfUnclaimedRoots(account)));
-        uint256 stalk = s.a[account].s.stalk.add(beans.mul(C.getStalkPerBean()));
+        uint256 stalk = s.a[account].s.stalk.add(balanceOf(account)).add(beans.mul(C.getStalkPerBean()));
         beans = beans.add(balanceOfFarmableBeansV3(account, stalk));
     }
 
     function balanceOfFarmableBeansV3(address account, uint256 accountStalk) public view returns (uint256 beans) {
         if (s.s.roots == 0) return 0;
-        uint256 stalk = s.s.stalk.mul(balanceOfRoots(account)).div(s.s.roots);
+        uint256 stalk = s.stalkToken.totalSupply.mul(balanceOfRoots(account)).div(s.s.roots);
         if (stalk <= accountStalk) return 0;
         beans = stalk.sub(accountStalk).div(C.getStalkPerBean());
-        if (beans > s.si.beans) return s.si.beans;
+        if (beans > s.si.beans) {
+		return s.si.beans;
+	}
         return beans;
     }
 

@@ -62,9 +62,6 @@ describe('Stalk ERC20', function () {
     await this.bean.mint(userAddress, '1000000');
     await this.bean.mint(user2Address, '1000000');
     await this.bean.mint(user3Address, '1000000');
-    await this.seed.mint(userAddress, '1000000');
-    await this.seed.mint(user2Address, '1000000');
-    await this.seed.mint(user3Address, '1000000');
     await this.seed.connect(user).approve(this.silo.address, '1000000000');
     await this.seed.connect(user2).approve(this.silo.address, '1000000000');
     await this.seed.connect(user3).approve(this.silo.address, '1000000000');
@@ -76,9 +73,9 @@ describe('Stalk ERC20', function () {
   beforeEach(async function () {
     await this.season.resetState();
     await this.season.siloSunrise(0);
-    await this.silo.depositSiloAssetsE(userAddress, '500', '1000000', ['0','0', true]);
-    await this.silo.depositSiloAssetsE(user2Address, '500', '1000000', ['0','0', true]);
-    await this.silo.depositSiloAssetsE(ownerAddress, '500', '1000000', ['0','0', true]);
+    await this.silo.depositSiloAssetsE(userAddress, '500', '100000', [false, false, false]);
+    await this.silo.depositSiloAssetsE(user2Address, '500', '100000', [false, false, false]);
+    await this.silo.depositSiloAssetsE(ownerAddress, '500', '100000', [false, false, false]);
 
   });
 
@@ -95,35 +92,34 @@ describe('Stalk ERC20', function () {
       const preStalkSupply = await this.silo.totalSupply();
       await this.season.siloSunrise(1);
       const totalStalkSupplyErc20 = await this.silo.totalSupply();
-      await this.silo.updateSilo(userAddress, '0', '0', true);
-      // 1 Reward Bean is 10000 Stalk
-      expect(preStalkSupply.add(10000)).be.equal(totalStalkSupplyErc20);
+      await this.silo.updateSilo(userAddress, false, false);
+      expect(preStalkSupply.add(10000)).be.equal(totalStalkSupplyErc20); // 1 reward bean is 1000 stalk
     });
   })
 
   describe('Incrementing Stalk Multiple Accounts', function () {
 
     it('Increments Stalk Correctly, Single Increment', async function () {
-      const userStalkErc20 = await this.silo.balanceOfStalk(userAddress);
-      const user2StalkErc20 = await this.silo.balanceOfStalk(user2Address);
-      const ownerStalkErc20 = await this.silo.balanceOfStalk(ownerAddress);
+      const userStalkErc20 = await this.silo.balanceOf(userAddress);
+      const user2StalkErc20 = await this.silo.balanceOf(user2Address);
+      const ownerStalkErc20 = await this.silo.balanceOf(ownerAddress);
       const totalStalkSupplyErc20 = await this.silo.totalSupply();
       expect(userStalkErc20.add(user2StalkErc20).add(ownerStalkErc20)).be.equal(totalStalkSupplyErc20);
     });
 
     it('Increments Stalk Correctly, Multiple Accounts', async function () {
-      await this.silo.incrementBalanceOfStalkE(user2Address, '5000');
-      const userStalkErc20 = await this.silo.balanceOfStalk(userAddress);
-      const user2StalkErc20 = await this.silo.balanceOfStalk(user2Address);
-      const ownerStalkErc20 = await this.silo.balanceOfStalk(ownerAddress);
+      await this.silo.incrementBalanceOfStalkE(user2Address, '5000', false);
+      const userStalkErc20 = await this.silo.balanceOf(userAddress);
+      const user2StalkErc20 = await this.silo.balanceOf(user2Address);
+      const ownerStalkErc20 = await this.silo.balanceOf(ownerAddress);
       const totalStalkSupplyErc20 = await this.silo.totalSupply();
       expect(totalStalkSupplyErc20.sub(ownerStalkErc20)).to.be.equal(userStalkErc20.add(user2StalkErc20));
     });
 
     it('Increments Stalk Correctly, Multiple Increments', async function () {
-      const initialUser2StalkErc20 = await this.silo.balanceOfStalk(user2Address);
-      await this.silo.incrementBalanceOfStalkE(user2Address, '1000')
-      const postUser2StalkErc20 = await this.silo.balanceOfStalk(user2Address);
+      const initialUser2StalkErc20 = await this.silo.balanceOf(user2Address);
+      await this.silo.incrementBalanceOfStalkE(user2Address, '1000', false)
+      const postUser2StalkErc20 = await this.silo.balanceOf(user2Address);
       expect(postUser2StalkErc20).to.be.equal(initialUser2StalkErc20.add('1000'));
     });
 
@@ -131,30 +127,30 @@ describe('Stalk ERC20', function () {
 
   describe('Withdrawing/Decrementing Stalk', function () {
     beforeEach(async function () {
-      await this.silo.incrementBalanceOfStalkE(userAddress, '5000')
+      await this.silo.incrementBalanceOfStalkE(userAddress, '5000', false)
     });
 
     it('Withdrawing/Decrementing Stalk Correctly, Single Decrement', async function () {
-      const initialUserStalkErc20 = await this.silo.balanceOfStalk(userAddress);
-      await this.silo.withdrawSiloAssetsE(userAddress, '1', '2000')
-      const postUserStalkErc20 = await this.silo.balanceOfStalk(userAddress);
+      const initialUserStalkErc20 = await this.silo.balanceOf(userAddress);
+      await this.silo.withdrawSiloAssetsE(userAddress, '1', '2000', [false, false, false])
+      const postUserStalkErc20 = await this.silo.balanceOf(userAddress);
       expect(postUserStalkErc20).to.be.equal(initialUserStalkErc20.sub('2000'))
     });
 
     it('Withdrawing/Decrementing Stalk Correctly, Multiple Decrements', async function () {
-      const initialUserStalkErc20 = await this.silo.balanceOfStalk(userAddress);
-      await this.silo.withdrawSiloAssetsE(userAddress, '1', '2000')
-      await this.silo.withdrawSiloAssetsE(userAddress, '1', '3000')
-      const postUserStalkErc20 = await this.silo.balanceOfStalk(userAddress);
+      const initialUserStalkErc20 = await this.silo.balanceOf(userAddress);
+      await this.silo.withdrawSiloAssetsE(userAddress, '1', '2000', [false, false, false])
+      await this.silo.withdrawSiloAssetsE(userAddress, '1', '3000', [false, false, false])
+      const postUserStalkErc20 = await this.silo.balanceOf(userAddress);
       expect(postUserStalkErc20).to.be.equal(initialUserStalkErc20.sub('5000'))
     });
 
     it('Withdrawing/Decrementing Stalk Correctly, Multiple Accounts', async function () {
-      await this.silo.incrementBalanceOfStalkE(user2Address, '2000');
-      await this.silo.withdrawSiloAssetsE(user2Address, '1', '1000');
-      const userStalkErc20 = await this.silo.balanceOfStalk(userAddress);
-      const user2StalkErc20 = await this.silo.balanceOfStalk(user2Address);
-      const ownerStalkErc20 = await this.silo.balanceOfStalk(ownerAddress);
+      await this.silo.incrementBalanceOfStalkE(user2Address, '2000', false);
+      await this.silo.withdrawSiloAssetsE(user2Address, '1', '1000', [false, false, false]);
+      const userStalkErc20 = await this.silo.balanceOf(userAddress);
+      const user2StalkErc20 = await this.silo.balanceOf(user2Address);
+      const ownerStalkErc20 = await this.silo.balanceOf(ownerAddress);
       const totalStalkSupplyErc20 = await this.silo.totalSupply();
       expect(totalStalkSupplyErc20).to.be.equal(userStalkErc20.add(user2StalkErc20).add(ownerStalkErc20));
     });
@@ -163,7 +159,7 @@ describe('Stalk ERC20', function () {
 
   describe('Transfering Stalk', async function () {
     it('Transfers Stalk Correctly, Single transfer', async function () {
-      await this.silo.updateSilo(userAddress, '0', '100000', false);
+      await this.silo.updateSilo(userAddress, false, true);
       const initialUser2StalkErc20 = await this.silo.balanceOf(user2Address);
       await this.silo.connect(user).transfer(user2Address, '1000')
       const postUser2StalkErc20 = await this.silo.balanceOf(user2Address);
@@ -228,10 +224,5 @@ describe('Stalk ERC20', function () {
       expect(postUserStalkErc20).to.be.equal(initialUserStalkErc20.sub('500'));
       expect(postOwnerStalkErc20).to.be.equal(initialOwnerStalkErc20.add('1000'));
     });
-    it('does not create or destory stalk', async function () {
-      this.stateVar = await this.silo.totalStalk();
-      expect(await this.silo.totalSupply()).to.eq(this.stateVar);
-    });
-
   });
 });

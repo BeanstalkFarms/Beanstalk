@@ -41,7 +41,9 @@ contract ConvertSilo {
         uint256 lp,
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
-        uint256[] memory amounts
+        uint256[] memory amounts,
+        uint256 beansToWallet,
+       	bool toInternalBalance
     )
         internal
     {
@@ -69,7 +71,7 @@ contract ConvertSilo {
         if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
 	
         lp = lp.add(w.newLP);
-        _depositLP(lp, LibLPSilo.lpToLPBeans(lp), depositSeason);
+        _depositLP(lp, LibLPSilo.lpToLPBeans(lp), depositSeason, toInternalBalance);
         LibCheck.beanBalanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
@@ -78,12 +80,12 @@ contract ConvertSilo {
      * Internal LP
     **/
 
-    function _depositLP(uint256 amount, uint256 lpb, uint32 _s) internal {
+    function _depositLP(uint256 amount, uint256 lpb, uint32 _s, bool toInternalBalance) internal {
         require(lpb > 0, "Silo: No Beans under LP.");
         LibLPSilo.incrementDepositedLP(amount);
         uint256 seeds = lpb.mul(C.getSeedsPerLPBean());
-        if (season() == _s) LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000));
-        else LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)));
+        if (season() == _s) LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000), toInternalBalance);
+        else LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)), toInternalBalance);
 
         LibLPSilo.addLPDeposit(msg.sender, _s, amount, lpb.mul(C.getSeedsPerLPBean()));
 
@@ -121,7 +123,7 @@ contract ConvertSilo {
             i++;
         }
         LibLPSilo.decrementDepositedLP(lpRemoved);
-        LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved, true);
         stalkRemoved = stalkRemoved.sub(seedsRemoved.mul(C.getStalkPerLPSeed()));
         emit LPRemove(msg.sender, crates, amounts, lpRemoved);
     }
@@ -130,13 +132,13 @@ contract ConvertSilo {
      * Internal Bean
     **/
 
-    function _depositBeans(uint256 amount, uint32 _s) internal {
+    function _depositBeans(uint256 amount, uint32 _s, bool toInternalBalance) internal {
         require(amount > 0, "Silo: No beans.");
         LibBeanSilo.incrementDepositedBeans(amount);
         uint256 stalk = amount.mul(C.getStalkPerBean());
         uint256 seeds = amount.mul(C.getSeedsPerBean());
         if (_s < season()) stalk = stalk.add(LibSilo.stalkReward(seeds, season()-_s));
-        LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
+        LibSilo.depositSiloAssets(msg.sender, seeds, stalk, toInternalBalance);
         LibBeanSilo.addBeanDeposit(msg.sender, _s, amount);
         LibCheck.beanBalanceCheck();
     }
@@ -169,7 +171,7 @@ contract ConvertSilo {
             i++;
         }
         LibBeanSilo.decrementDepositedBeans(beansRemoved);
-        LibSilo.withdrawSiloAssets(msg.sender, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved, true);
         stalkRemoved = stalkRemoved.sub(beansRemoved.mul(C.getStalkPerBean()));
         emit BeanRemove(msg.sender, crates, amounts, beansRemoved);
         return (beansRemoved, stalkRemoved);

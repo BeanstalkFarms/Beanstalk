@@ -86,8 +86,7 @@ contract Life {
             newHarvestable = newHarvestable > notHarvestable ? notHarvestable : newHarvestable;
             mintToHarvestable(newHarvestable);
         }
-
-        if (s.s.seeds == 0 && s.stalkToken._totalSupply == 0) return (newHarvestable,0);
+        if (s.s.seeds == 0 && s.stalkToken.totalSupply == 0) return (newHarvestable,0);
         siloReward = newSupply.sub(newHarvestable);
         if (siloReward > 0) {
             mintToSilo(siloReward);
