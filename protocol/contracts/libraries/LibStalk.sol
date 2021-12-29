@@ -102,8 +102,8 @@ library LibStalk {
 
         _beforeTokenTransfer(account, address(0), amount);
 
-        s.stalkToken._balances[account] = s.stalkToken._balances[account].sub(amount, "ERC20: burn amount exceeds balance");
-        s.stalkToken._totalSupply = s.stalkToken._totalSupply.sub(amount);
+        s.stalkToken.balances[account] = s.stalkToken.balances[account].sub(amount, "ERC20: burn amount exceeds balance");
+        s.stalkToken.totalSupply = s.stalkToken.totalSupply.sub(amount);
         emit Transfer(account, address(0), amount);
     }
 

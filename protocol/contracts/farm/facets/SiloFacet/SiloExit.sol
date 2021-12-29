@@ -12,6 +12,7 @@ import "../../../interfaces/IBean.sol";
 import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibMarket.sol";
+import "../../../libraries/LibStalk.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../C.sol";
 import "../../../interfaces/ISeed.sol";
@@ -27,6 +28,9 @@ contract SiloExit {
     using SafeMath for uint256;
     using SafeMath for uint32;
 
+    // For Abi Visibility From LibStalk
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
 
     /**
      * Stalk ERC-20 Fungible Token External Functions
@@ -71,6 +75,20 @@ contract SiloExit {
         return true;
     }
 
+    function transfer(address sender, address recipient, uint256 amount) public {
+        LibStalk.transfer(sender, recipient, amount);
+    }
+
+    function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
+        LibStalk.transfer(sender, recipient, amount);
+        if (allowance(sender, LibStalk._msgSender()) != uint256(-1)) {
+            LibStalk.approve(
+                sender,
+                LibStalk._msgSender(),
+                allowance(sender, LibStalk._msgSender()).sub(amount, "Stalk: Transfer amount exceeds allowance."));
+        }
+        return true;
+    }
     /**
      * Contracts
     **/

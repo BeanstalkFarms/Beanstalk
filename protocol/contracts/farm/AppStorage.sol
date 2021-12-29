@@ -28,7 +28,6 @@ contract Account {
     struct Silo {
         uint256 stalk;
         uint256 seeds;
-        mapping(IERC20 => uint256) internalTokenBalance;
     }
 
     struct SeasonOfPlenty {

@@ -5,9 +5,11 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibMarket.sol";
+import "../../../libraries/LibUserBalance.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/Silo/LibBeanSilo.sol";
 import "../../../libraries/Decimal.sol";
@@ -19,7 +21,7 @@ import "./SiloExit.sol";
  * @author Publius
  * @title Silo Entrance
 **/
-contract UpdateSilo is SiloExit{
+contract UpdateSilo is SiloExit {
 
     using SafeMath for uint256;
     using Decimal for Decimal.D256;
@@ -29,6 +31,9 @@ contract UpdateSilo is SiloExit{
     **/
 
     function updateSilo(address account, bool toInternalBalance, bool lightUpdateSilo) public payable {
+        // BIP-9 Migration for Internal Balances
+        migrateBip9(account);
+
         uint32 update = lastUpdate(account);
         if (update >= LibSilo.season()) return;
         uint256 grownStalk;
@@ -58,6 +63,19 @@ contract UpdateSilo is SiloExit{
         delete s.a[account].lastRain;
 
         return update;
+    }
+
+    function migrateBip9(address account) private {
+        if (s.a[account].stalk > 0) {
+            s.internalTokenBalance[account][IERC20(address(this))] = s.a[account].stalk;
+            delete s.a[account].stalk;
+
+            s.internalTokenBalance[account][ISeed(s.seedContract)] = s.a[account].seed;
+            delete s.a[account].seeds;
+
+            s.internalTokenBalance[account][IERC20(s.c.bean)] = s.a[account].wrappedBeans;
+            delete s.a[account].wrappedBeans;
+        }
     }
 
     function farmBeans(address account, uint32 update) private {
