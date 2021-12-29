@@ -82,7 +82,7 @@ library LibDibbler {
                 uint256 fasterTime =
                     s.w.lastSowTime > C.getSteadySowTime() ?
                     s.w.lastSowTime.sub(C.getSteadySowTime()) :
-                    0;
+                    C.getSteadySowTime();
                 if (sowTime < fasterTime) s.w.didSowFaster = true;
                 else s.w.lastSowTime = MAX_UINT32;
             }
