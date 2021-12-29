@@ -174,7 +174,7 @@ contract SiloFacet is BeanSilo {
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
         LibMarket.AddLiquidity calldata al,
-	    LibClaim.Claim calldata c
+	    LibClaim.Claim calldata c,
 	    Settings calldata set
     )
         public
@@ -189,7 +189,7 @@ contract SiloFacet is BeanSilo {
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
         LibMarket.AddLiquidity calldata al,
-	    LibClaim.Claim calldata c
+	    LibClaim.Claim calldata c,
     	Settings calldata set
     )
         internal {

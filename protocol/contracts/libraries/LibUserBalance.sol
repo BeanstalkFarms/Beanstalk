@@ -21,14 +21,13 @@ library LibUserBalance {
   using SafeCast for uint256;
 
   /**
-  * @dev Emitted when a user's Internal Balance changes, either from calls to `manageUserBalance`, or through
-  * interacting with Pools using Internal Balance.
+  * @dev Emitted when a user's Internal Balance changes, through interacting using Internal Balance.
   *
   */
   event InternalBalanceChanged(address indexed user, IERC20 indexed token, int256 delta);
 
   /**
-  * @dev Emitted when a user's Vault ERC20 allowance is used by the Vault to transfer tokens to an external account.
+  * @dev Emitted when a user's ERC20 allowance is used to transfer tokens to an external account.
   */
   event ExternalBalanceTransfer(IERC20 indexed token, address indexed sender, address recipient, uint256 amount);
 
