@@ -28,7 +28,6 @@ contract Account {
     struct Silo {
         uint256 stalk;
         uint256 seeds;
-        mapping(IERC20 => uint256) internalTokenBalance;
     }
 
     struct SeasonOfPlenty {
@@ -211,4 +210,5 @@ struct AppStorage {
     uint32 fundraiserIndex;
     Storage.Stalk stalkToken;
     address seedContract;
+    mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
 }

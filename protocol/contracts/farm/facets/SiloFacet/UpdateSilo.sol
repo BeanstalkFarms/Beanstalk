@@ -28,21 +28,27 @@ contract UpdateSilo is SiloExit{
      * Update
     **/
 
-    function updateSilo(address account) public payable {
-        uint32 update = lastUpdate(account);
-        if (update >= LibSilo.season()) return;
-        uint256 grownStalk;
-        if (s.a[account].s.seeds > 0) grownStalk = balanceOfGrownStalk(account);
-        if (s.a[account].roots > 0) {
-            farmSops(account, update);
-            farmBeans(account, update);
-        } else if (s.a[account].roots == 0) {
-            s.a[account].lastSop = s.r.start;
-            s.a[account].lastRain = 0;
-            s.a[account].lastSIs = s.season.sis;
+    function updateSilo(address account, uint256 unwrap_seed_amount, uint256 unwrap_stalk_amount, bool update_silo) public payable {
+        if (!update_silo) {
+		// Code for light update silo
         }
-        if (grownStalk > 0) LibSilo.incrementBalanceOfStalk(account, grownStalk);
-        s.a[account].lastUpdate = season();
+        else {
+            uint32 update = lastUpdate(account);
+            if (update >= LibSilo.season()) return;
+            uint256 grownStalk;
+            if (s.a[account].s.seeds > 0) grownStalk = balanceOfGrownStalk(account);
+            if (s.a[account].roots > 0) {
+                farmSops(account, update);
+                farmLegacyBeans(account, update);
+                farmBeans(account, update);
+            } else if (s.a[account].roots == 0) {
+                s.a[account].lastSop = s.r.start;
+                s.a[account].lastRain = 0;
+                s.a[account].lastSIs = s.season.sis;
+            }
+            if (grownStalk > 0) LibSilo.incrementBalanceOfStalk(account, grownStalk);
+            s.a[account].lastUpdate = season();
+        }
     }
 
     function migrateBip0(address account) private returns (uint32) {
