@@ -46,6 +46,8 @@ describe('Convert', function () {
     await this.pair.burnAllLP(ownerAddress);
     await this.pair.burnTokens(this.bean.address);
     await this.pair.burnTokens(this.weth.address);
+    await this.silo.resetSeedsAndStalk([userAddress, user2Address]);
+    await this.silo.resetContract();
     await this.season.resetState();
     await this.season.siloSunrise(0);
   });
