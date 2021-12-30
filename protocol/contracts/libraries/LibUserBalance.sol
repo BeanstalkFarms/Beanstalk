@@ -42,7 +42,7 @@ library LibUserBalance {
     }
   }
 
-  function getInternalExternalBalance(address account, IERC20 token)
+  function getCombinedInternalExternalBalance(address account, IERC20 token)
     internal
     view
     returns (uint256 combined_balance)
