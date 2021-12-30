@@ -18,8 +18,8 @@ contract InitBip8 {
     AppStorage internal s;
     
     // To Do: Set Budget Addresses
-    address private constant beanSprout = address(0x0000000000000000000000000000000000000000);
-    address private constant beanstalkFarms = address(0x0000000000000000000000000000000000000000);
+    address private constant beanSprout = address(0xb7ab3f0667eFF5e2299d39C23Aa0C956e8982235);
+    address private constant beanstalkFarms = address(0x21DE18B6A8f78eDe6D16C50A167f6B222DC08DF7);
 
     uint256 private constant beanSproutBudget = 800000 * 1e6; // 800,000 Beans
     uint256 private constant beanstalkFarmsBudget = 1200000 * 1e6; // 1,200,000 Beans

@@ -19,13 +19,19 @@ contract BudgetFacet is Dibbler {
     function budgetSow(uint256 amount) public returns (uint256) {
         require(isBudget(msg.sender), "Budget: sender must be budget.");
         bean().burnFrom(msg.sender, amount);
-        uint256 soil = s.f.soil;
-        if (soil > amount) s.f.soil = soil.sub(amount);
-        else if (soil > 0) s.f.soil = 0;
+
+        decreaseSoil(amount);
+
         return _sowNoSoil(amount, msg.sender);
     }
 
     function isBudget(address account) public view returns (bool) {
         return s.isBudget[account];
+    }
+
+    function decreaseSoil(uint256 amount) private {
+        uint256 soil = s.f.soil;
+        if (soil > amount) s.f.soil = soil.sub(amount);
+        else if (soil > 0) s.f.soil = 0;
     }
 }
