@@ -104,12 +104,20 @@ contract SiloExit {
         return s.si.beans.add(s.v1SI.beans).add(s.v2SIBeans);
     }
 
-    function balanceOfSeeds(address account) public view returns (uint256) {
+    function balanceOfSeeds(address account) public view returns (uint256) { 	// Depreciated Function
         return s.a[account].s.seeds.add(balanceOfFarmableBeans(account).mul(C.getSeedsPerBean()));
     }
 
-    function balanceOfStalk(address account) public view returns (uint256) {
+    function internalSeeds(address account) public view returns (uint256) {
+	return s.internalTokenBalance[account][seed()];
+    }
+
+    function balanceOfStalk(address account) public view returns (uint256) {  // Depreciated Function
         return s.a[account].s.stalk.add(balanceOfFarmableStalk(account));
+    }
+
+    function internalStalk(address account) public view returns (uint256) {
+	return s.internalTokenBalance[account][stalk()];
     }
 
     function balanceOfRoots(address account) public view returns (uint256) {
