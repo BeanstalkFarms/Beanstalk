@@ -76,12 +76,15 @@ describe('Seed', function () {
 	this.silo.connect(user2).depositBeans('100000', [true, false, false]);
 	expect(await this.seed.totalSupply()).to.eq('400000');
 	expect(await this.seed.balanceOf(userAddress)).to.eq('200000');
+	expect(await this.seed.balanceOf(user2Address)).to.eq('0');
 	expect(await this.seed.balanceOf(this.silo.address)).to.eq('200000');
-	expect(await this.silo.balanceOfSeeds(user2Address)).to.eq('200000');
+	expect(await this.silo.balanceOfSeeds(user2Address)).to.eq('0');
+	expect(await this.silo.internalSeeds(user2Address)).to.eq('200000');
       });
-      it('properly returns the correct balance of non-fungible seeds', async function () {
-	const balanceOfFungibleSeeds = await this.silo.totalSeeds();
-	expect(await this.silo.totalSeeds()).to.eq(balanceOfFungibleSeeds);
+      it('never increments legacy values', async function () {
+	expect(await this.silo.totalSeeds()).to.eq('0');
+	expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('0');
+	expect(await this.silo.balanceOfSeeds(user2Address)).to.eq('0');
       });
    });
    describe('Transition from Silo to ERC20', async function () {
@@ -98,7 +101,8 @@ describe('Seed', function () {
 	expect(await this.seed.balanceOf(userAddress)).to.eq('100000');
 	await this.silo.connect(user).withdrawBeans([1], ['100000'], [false, true, false]);
 	expect(await this.seed.balanceOf(userAddress)).to.eq('100000');
-	expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('100000');
+	expect(await this.silo.internalSeeds(userAddress)).to.eq('100000');
+	expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('0');
 	expect(await this.seed.balanceOf(this.silo.address)).to.eq('100000');
       });
       it('reverts when users do not have enough seeds to burn upon silo withdrawl', async function () {
