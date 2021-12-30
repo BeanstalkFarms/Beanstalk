@@ -66,12 +66,12 @@ contract UpdateSilo is SiloExit {
     }
 
     function migrateBip9(address account) private {
-        if (s.a[account].stalk > 0) {
-            s.internalTokenBalance[account][IERC20(address(this))] = s.a[account].stalk;
-            delete s.a[account].stalk;
+        if (s.a[account].s.stalk > 0) {
+            s.internalTokenBalance[account][IERC20(address(this))] = s.a[account].s.stalk;
+            delete s.a[account].s.stalk;
 
-            s.internalTokenBalance[account][ISeed(s.seedContract)] = s.a[account].seed;
-            delete s.a[account].seeds;
+            s.internalTokenBalance[account][ISeed(s.seedContract)] = s.a[account].s.seeds;
+            delete s.a[account].s.seeds;
 
             s.internalTokenBalance[account][IERC20(s.c.bean)] = s.a[account].wrappedBeans;
             delete s.a[account].wrappedBeans;

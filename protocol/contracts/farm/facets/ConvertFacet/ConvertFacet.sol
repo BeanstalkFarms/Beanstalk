@@ -72,8 +72,8 @@ contract ConvertFacet is ConvertSilo {
         external
         payable
     {
-        LibClaim.claim(claim, claim.beansToWallet);
-        _convertAddAndDepositLP(lp, al, crates, amounts, claim.beansToWallet, set.toInternalBalance);
+        LibClaim.claim(claim);
+        _convertAddAndDepositLP(lp, al, crates, amounts, set.toInternalBalance);
     }
 
     function convertAddAndDepositLP(
@@ -86,7 +86,7 @@ contract ConvertFacet is ConvertSilo {
         public
         payable
     {
-        _convertAddAndDepositLP(lp, al, crates, amounts, 0, set.toInternalBalance);
+        _convertAddAndDepositLP(lp, al, crates, amounts, set.toInternalBalance);
     }
 
     function lpToPeg() external view returns (uint256 lp) {

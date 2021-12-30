@@ -75,20 +75,6 @@ contract SiloExit {
         return true;
     }
 
-    function transfer(address sender, address recipient, uint256 amount) public {
-        LibStalk.transfer(sender, recipient, amount);
-    }
-
-    function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
-        LibStalk.transfer(sender, recipient, amount);
-        if (allowance(sender, LibStalk._msgSender()) != uint256(-1)) {
-            LibStalk.approve(
-                sender,
-                LibStalk._msgSender(),
-                allowance(sender, LibStalk._msgSender()).sub(amount, "Stalk: Transfer amount exceeds allowance."));
-        }
-        return true;
-    }
     /**
      * Contracts
     **/

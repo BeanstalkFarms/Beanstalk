@@ -42,16 +42,15 @@ contract ConvertSilo {
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
         uint256[] memory amounts,
-        uint256 beansToWallet,
        	bool toInternalBalance
     )
         internal
     {
-	    LibInternal.updateSilo(msg.sender);
+	LibInternal.updateSilo(msg.sender);
         WithdrawState memory w;
         if (bean().balanceOf(address(this)) < al.beanAmount) {
-            w.beansTransferred = al.beanAmount.sub(s.bean.deposited);
-            bean().transferFrom(msg.sender, address(this), w.beansTransferred);
+            	w.beansTransferred = al.beanAmount.sub(s.bean.deposited);
+            	bean().transferFrom(msg.sender, address(this), w.beansTransferred);
         }
         (w.beansAdded, w.newLP) = LibMarket.addLiquidity(al); // w.beansAdded is beans added to LP
         require(w.newLP > 0, "Silo: No LP added.");

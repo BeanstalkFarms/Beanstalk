@@ -111,7 +111,7 @@ contract SiloFacet is BeanSilo {
     )
         external
     {
-        LibClaim.claim(claim, claim.beansToWallet);
+        LibClaim.claim(claim);
         _withdrawBeans(crates, amounts, set);
     }
 
@@ -120,7 +120,7 @@ contract SiloFacet is BeanSilo {
     */
 
     function claimAndDepositLP(uint256 amount, LibClaim.Claim calldata claim, Storage.Settings calldata set) external {
-        LibClaim.claim(claim, claim.beansToWallet);
+        LibClaim.claim(claim);
         depositLP(amount, set);
     }
 
@@ -135,7 +135,7 @@ contract SiloFacet is BeanSilo {
         external
         payable
     {
-        LibClaim.claim(claim, 0);
+        LibClaim.claim(claim);
         _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al, claim, set);
     }
 
@@ -184,7 +184,7 @@ contract SiloFacet is BeanSilo {
     )
         external
     {
-        LibClaim.claim(claim, claim.beansToWallet);
+        LibClaim.claim(claim);
         _withdrawLP(crates, amounts, set);
     }
 
