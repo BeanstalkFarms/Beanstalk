@@ -198,4 +198,5 @@ struct AppStorage {
     uint32 hotFix3Start;
     mapping (uint32 => Storage.Fundraiser) fundraisers;
     uint32 fundraiserIndex;
+    mapping (address => bool) isBudget;
 }
