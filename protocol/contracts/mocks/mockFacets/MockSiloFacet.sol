@@ -22,7 +22,7 @@ contract MockSiloFacet is SiloFacet {
         LibSilo.depositSiloAssets(account, base, amount, set.toInternalBalance);
     }
 
-    function incrementDepositedLPE(uint256 amount) public {
+    function incrementDepositedLP(uint256 amount) public {
         LibLPSilo.incrementDepositedLP(amount);
         MockUniswapV2Pair(s.c.pair).faucet(address(this), amount);
     }

@@ -70,7 +70,7 @@ contract SiloFacet is BeanSilo {
         uint256 amount,
         uint256 buyAmount,
         LibClaim.Claim calldata claim,
-	Storage.Settings calldata set
+	    Storage.Settings calldata set
     )
         external
         payable
@@ -96,7 +96,7 @@ contract SiloFacet is BeanSilo {
     function withdrawBeans(
         uint32[] calldata crates,
         uint256[] calldata amounts,
-	Storage.Settings calldata set
+	    Storage.Settings calldata set
     )
         external
     {
@@ -107,7 +107,7 @@ contract SiloFacet is BeanSilo {
         uint32[] calldata crates,
         uint256[] calldata amounts,
         LibClaim.Claim calldata claim,
-	Storage.Settings calldata set
+	    Storage.Settings calldata set
     )
         external
     {
@@ -129,8 +129,8 @@ contract SiloFacet is BeanSilo {
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
         LibMarket.AddLiquidity calldata al,
-	LibClaim.Claim calldata claim,
-	Storage.Settings calldata set
+        LibClaim.Claim calldata claim,
+        Storage.Settings calldata set
     )
         external
         payable
@@ -148,8 +148,8 @@ contract SiloFacet is BeanSilo {
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
         LibMarket.AddLiquidity calldata al,
-	LibClaim.Claim calldata c,
-	Storage.Settings calldata set
+        LibClaim.Claim calldata c,
+        Storage.Settings calldata set
     )
         public
         payable
@@ -163,8 +163,8 @@ contract SiloFacet is BeanSilo {
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
         LibMarket.AddLiquidity calldata al,
-	LibClaim.Claim calldata c,
-	Storage.Settings calldata set
+        LibClaim.Claim calldata c,
+        Storage.Settings calldata set
     )
         internal {
         uint256 boughtLP = LibMarket.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, al);
@@ -180,7 +180,7 @@ contract SiloFacet is BeanSilo {
         uint32[] calldata crates,
         uint256[] calldata amounts,
         LibClaim.Claim calldata claim,
-	Storage.Settings calldata set
+	    Storage.Settings calldata set
     )
         external
     {
@@ -191,7 +191,7 @@ contract SiloFacet is BeanSilo {
     function withdrawLP(
         uint32[] calldata crates, uint256[]
         calldata amounts,
-	Storage.Settings calldata set
+	    Storage.Settings calldata set
     )
         external
     {

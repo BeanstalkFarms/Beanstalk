@@ -46,7 +46,7 @@ contract UpdateSilo is SiloExit {
         } else if (s.a[account].roots == 0) {
             s.a[account].lastSop = s.r.start;
             s.a[account].lastRain = 0;
-            s.a[account].lastSIs = s.season.sis;
+            s.a[account].lastSIs = s.season.sis; //runs farmLegacyBeans
         }
         if (grownStalk > 0) LibSilo.incrementBalanceOfStalk(account, grownStalk, toInternalBalance);
         s.a[account].lastUpdate = season();
