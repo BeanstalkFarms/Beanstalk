@@ -16,6 +16,7 @@ import "../../../libraries/LibStalk.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../C.sol";
 import "../../../interfaces/ISeed.sol";
+import "../../../libraries/LibUserBalance.sol";
 
 /**
  * @author Publius
@@ -116,13 +117,13 @@ contract SiloExit {
     }
 
     function balanceOfGrownStalk(address account) public view returns (uint256) {
-        return LibSilo.stalkReward(s.a[account].s.seeds.add(seed().balanceOf(account)), season()-lastUpdate(account));
+        return LibSilo.stalkReward(s.internalTokenBalance[account][seed()].add(seed().balanceOf(account)), season()-lastUpdate(account));
     }
 
     function balanceOfFarmableBeans(address account) public view returns (uint256 beans) {
         beans = beans.add(balanceOfFarmableBeansV1(account));
         beans = beans.add(balanceOfFarmableBeansV2(balanceOfUnclaimedRoots(account)));
-        uint256 stalk = s.a[account].s.stalk.add(balanceOf(account)).add(beans.mul(C.getStalkPerBean()));
+        uint256 stalk = s.internalTokenBalance[account][stalk()].add(balanceOf(account)).add(beans.mul(C.getStalkPerBean()));
         beans = beans.add(balanceOfFarmableBeansV3(account, stalk));
     }
 
@@ -273,6 +274,10 @@ contract SiloExit {
 
     function seed() internal view returns (ISeed) {
 	return ISeed(s.seedContract);
+    }
+
+    function stalk() internal view returns (IERC20) {
+	return IERC20(address(this));
     }
 
 }
