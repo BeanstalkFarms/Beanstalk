@@ -10,6 +10,7 @@ import "../../C.sol";
 import "../LibAppStorage.sol";
 import "../LibStalk.sol";
 import "../../interfaces/ISeed.sol";
+import "../LibUserBalance.sol";
 
 /**
  * @author Publius
@@ -39,7 +40,7 @@ library LibSilo {
     function incrementBalanceOfSeeds(address account, uint256 seeds, bool toInternalBalance) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
 	if (toInternalBalance) {
-		s.a[account].s.seeds =  s.a[account].s.seeds.add(seeds);
+		LibUserBalance._increaseInternalBalance(account, seed(), seeds);
 		seed().mint(address(this), seeds);
 	}
 	else seed().mint(account, seeds);
@@ -55,7 +56,7 @@ library LibSilo {
         else roots = s.s.roots.mul(stalk).div(s.stalkToken.totalSupply);
 	if (toInternalBalance) {
         	LibStalk.mint(address(this), stalk);
-        	s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
+        	LibUserBalance._increaseInternalBalance(account, IERC20(address(this)), stalk);
         }
 	else LibStalk.mint(account, stalk);
  
@@ -68,20 +69,20 @@ library LibSilo {
     function decrementBalanceOfSeeds(address account, uint256 seeds, bool fromInternalBalance) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
 	if (fromInternalBalance) {
-		if (s.a[account].s.seeds >= seeds) {
-			s.a[account].s.seeds = s.a[account].s.seeds.sub(seeds);
+		if (s.internalTokenBalance[account][seed()] >= seeds) {
+			LibUserBalance._decreaseInternalBalance(account, seed(), seeds, false);
 			seed().burn(seeds);
 		}
 		else {
-			seed().burnFrom(account, seeds.sub(s.a[account].s.seeds));
-			seed().burn(s.a[account].s.seeds);
-			s.a[account].s.seeds = 0;
+			seed().burnFrom(account, seeds.sub(s.internalTokenBalance[account][seed()]));
+			seed().burn(s.internalTokenBalance[account][seed()]);
+			s.internalTokenBalance[account][seed()] = 0;
 		}
 	}
 	else {
 		if (seed().balanceOf(account) >= seeds) seed().burnFrom(account, seeds);
 		else {
-			s.a[account].s.seeds = s.a[account].s.seeds.sub(seeds.sub(seed().balanceOf(account)));
+			LibUserBalance._decreaseInternalBalance(account, seed(), seeds.sub(seed().balanceOf(account)), false);
 			seed().burnFrom(account, seed().balanceOf(account));
 			seed().burn(seeds.sub(seed().balanceOf(account)));
 		}
@@ -98,20 +99,20 @@ library LibSilo {
         
         // Burn Stalk ERC-20
 	if (fromInternalBalance) {
-                if (s.a[account].s.stalk >= stalk) {
-			s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
+                if (s.internalTokenBalance[account][IERC20(address(this))] >= stalk) {
+			LibUserBalance._decreaseInternalBalance(account, IERC20(address(this)), stalk, false);
 			LibStalk.burn(address(this), stalk);
 		}
                 else {
-                        LibStalk.burn(account, stalk.sub(s.a[account].s.stalk));
-                        LibStalk.burn(address(this), s.a[account].s.stalk);
-                        s.a[account].s.stalk = 0;
+                        LibStalk.burn(account, stalk.sub(s.internalTokenBalance[account][IERC20(address(this))]));
+                        LibStalk.burn(address(this), s.internalTokenBalance[account][IERC20(address(this))]);
+                        s.internalTokenBalance[account][IERC20(address(this))] = 0;
                 }
         }
         else {
                 if (s.stalkToken.balances[account] >= stalk) LibStalk.burn(account, stalk);
                 else {
-                        s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk.sub(s.stalkToken.balances[account]));
+			LibUserBalance._decreaseInternalBalance(account, IERC20(address(this)), stalk.sub(s.stalkToken.balances[account]), false);
                         LibStalk.burn(account, s.stalkToken.balances[account]);
                         LibStalk.burn(address(this), stalk.sub(s.stalkToken.balances[account]));
                 }
