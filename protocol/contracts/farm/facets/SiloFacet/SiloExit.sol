@@ -28,7 +28,7 @@ contract SiloExit {
     using SafeMath for uint256;
     using SafeMath for uint32;
 
-    // For Abi Visibility From LibStalk
+    // For IERC20 Abi Visibility From LibStalk
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
 
