@@ -95,7 +95,7 @@ library LibSilo {
     function decrementBalanceOfStalk(address account, uint256 stalk, bool fromInternalBalance) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return;
-        uint256 roots = s.a[account].roots.mul(stalk).sub(1).div(s.stalkToken.balances[account].add(s.a[account].s.stalk)).add(1);
+        uint256 roots = s.a[account].roots.mul(stalk).sub(1).div(s.stalkToken.balances[account].add(s.internalTokenBalance[account][IERC20(address(this))])).add(1);
         
         // Burn Stalk ERC-20
 	if (fromInternalBalance) {
