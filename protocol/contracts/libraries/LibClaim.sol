@@ -11,6 +11,7 @@ import "./LibInternal.sol";
 import "./LibMarket.sol";
 import "./LibAppStorage.sol";
 import "../interfaces/IWETH.sol";
+import "./LibUserBalance.sol";
 
 /**
  * @author Publius
@@ -34,7 +35,7 @@ library LibClaim {
         bool convertLP;
         uint256 minBeanAmount;
         uint256 minEthAmount;
-	    bool toWallet;
+	bool toWallet;
     }
 
     function claim(Claim calldata c)
@@ -54,7 +55,7 @@ library LibClaim {
         if (c.claimEth) claimEth();
 
         if (c.toWallet) IBean(s.c.bean).transfer(msg.sender, beansClaimed);
-        else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(beansClaimed);
+        else LibUserBalance._increaseInternalBalance(msg.sender, IBean(s.c.bean), beansClaimed);
     }
     // Claim Beans
 
