@@ -132,7 +132,7 @@ library LibClaim {
     // Season of Plenty
 
     function claimEth() public {
-        LibInternal.updateSilo(msg.sender);
+        LibInternal.updateSilo(msg.sender, false, false);
         uint256 eth = claimPlenty(msg.sender);
         emit EtherClaim(msg.sender, eth);
     }
