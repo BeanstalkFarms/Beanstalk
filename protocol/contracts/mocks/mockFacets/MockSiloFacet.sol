@@ -160,11 +160,22 @@ contract MockSiloFacet is SiloFacet {
         for (uint i = 0; i < accounts.length; i++) {
            seed().burnFrom(accounts[i], seed().balanceOf(accounts[i]));
 	   LibStalk.burn(accounts[i], balanceOf(accounts[i]));
+	   s.internalTokenBalance[accounts[i]][seed()] = 0;
+	   s.internalTokenBalance[accounts[i]][stalk()] = 0;
         }
     }
 
     function resetContract() public {
-           seed().burn(seed().balanceOf(address(this)));
-           LibStalk.burn(address(this), balanceOf(address(this)));
+       seed().burn(seed().balanceOf(address(this)));
+       LibStalk.burn(address(this), balanceOf(address(this)));
     }
+
+    function beanAddress() public view returns (address) {
+	    return s.c.bean;
+    }
+
+    function wethAddress() public view returns (address) {
+	    return s.c.weth;
+    }
+
 }

@@ -9,8 +9,8 @@ import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "../interfaces/IBean.sol";
+import "./LibUniswap.sol";
 import "../interfaces/IWETH.sol";
-import "./LibMarket.sol";
 import "./LibAppStorage.sol";
 
 /**
@@ -21,33 +21,48 @@ library LibConvert {
 
     using SafeMath for uint256;
 
-    function sellToPegAndAddLiquidity(uint256 beans, uint256 minLP)
+    struct WithdrawState {
+	    uint256 ethReserve;
+	    uint256 beanReserve;
+	    uint256 sellBeans;
+    }
+
+    function sellToPegAndAddLiquidity(uint256 beans, uint256 minLP, Storage.Settings calldata set)
         internal
         returns (uint256 lp, uint256 beansConverted)
     {
-        (uint256 ethReserve, uint256 beanReserve) = reserves();
-        uint256 maxSellBeans = beansToPeg(ethReserve, beanReserve);
+	WithdrawState memory w;
+	AppStorage storage s = LibAppStorage.diamondStorage();
+        (w.ethReserve, w.beanReserve) = reserves();
+        uint256 maxSellBeans = beansToPeg(w.ethReserve, w.beanReserve);
         require(maxSellBeans > 0, "Convert: P must be > 1.");
-        uint256 sellBeans = calculateSwapInAmount(beanReserve, beans);
-        if (sellBeans > maxSellBeans) sellBeans = maxSellBeans;
+        w.sellBeans = calculateSwapInAmount(w.beanReserve, beans);
+        if (w.sellBeans > maxSellBeans) w.sellBeans = maxSellBeans;
 
-        (uint256 beansSold, uint256 wethBought) = LibMarket._sell(sellBeans, 1, address(this));
-        (beansConverted,, lp) = LibMarket._addLiquidityWETH(wethBought,beans.sub(beansSold),1,1);
+	address[] memory path = new address[](2);
+	path[0] = s.c.bean;
+	path[1] = s.c.weth;
+	uint256[] memory amounts = LibUniswap.swapExactTokensForTokens(w.sellBeans, 1, path, address(this), block.timestamp.add(1), set, true);
+        (beansConverted,, lp) = LibUniswap.addLiquidity(s.c.bean, s.c.weth, beans.sub(amounts[0]), amounts[1], 1, 1, address(this), block.timestamp.add(1), true);
         require(lp >= minLP, "Convert: Not enough LP.");
-        beansConverted = beansConverted + beansSold;
+        beansConverted = beansConverted + amounts[0];
     }
 
-    function removeLPAndBuyToPeg(uint256 lp, uint256 minBeans) 
+    function removeLPAndBuyToPeg(uint256 lp, uint256 minBeans, Storage.Settings calldata set) 
         internal 
         returns (uint256 beans, uint256 lpConverted) 
     {
+	AppStorage storage s = LibAppStorage.diamondStorage();
         lpConverted = lpToPeg();
         require(lpConverted > 0, "Convert: P must be < 1.");
         if (lpConverted > lp) lpConverted = lp;
         
         (uint256 beansRemoved, uint256 ethRemoved) = removeLiquidityToBeanstalk(lpConverted);
-        (, uint256 boughtBeans) = LibMarket._buyWithWETH(1, ethRemoved, address(this));
-        beans = beansRemoved.add(boughtBeans);
+	address[] memory path = new address[](2);
+	path[0] = s.c.weth;
+	path[1] = s.c.bean;
+	uint256[] memory amounts = LibUniswap.swapExactTokensForTokens(ethRemoved, 1, path, address(this), block.timestamp.add(1), set, true);
+        beans = beansRemoved.add(amounts[1]);
         require(beans >= minBeans, "Convert: Not enough Beans.");
     }
 
@@ -55,15 +70,16 @@ library LibConvert {
         private
         returns (uint256 beanAmount, uint256 ethAmount)
     {
-        LibMarket.DiamondStorage storage ds = LibMarket.diamondStorage();
-        (beanAmount, ethAmount) = IUniswapV2Router02(ds.router).removeLiquidity(
-            ds.bean,
-            ds.weth,
+	AppStorage storage s = LibAppStorage.diamondStorage();
+        (beanAmount, ethAmount) = LibUniswap.removeLiquidity(
+            s.c.bean,
+            s.c.weth,
             liqudity,
             1,
             1,
             address(this),
-            block.timestamp.add(1)
+            block.timestamp.add(1),
+	    true
         );
     }
 

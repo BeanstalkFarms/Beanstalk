@@ -9,6 +9,9 @@ import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/SafeCast.sol";
 import "./LibAppStorage.sol";
+import "./LibUniswap.sol";
+import "../interfaces/IBean.sol";
+import "../interfaces/IWETH.sol";
 
 /**
  * @author LeoFib
@@ -30,6 +33,8 @@ library LibUserBalance {
   * @dev Emitted when a user's ERC20 allowance is used to transfer tokens to an external account.
   */
   event ExternalBalanceTransfer(IERC20 indexed token, address indexed sender, address recipient, uint256 amount);
+
+  event BeanAllocation(address indexed account, uint256 beans);
 
   function getInternalBalances(address account, IERC20[] memory tokens)
     internal
@@ -125,4 +130,44 @@ library LibUserBalance {
     return s.internalTokenBalance[account][token];
   }
 
+  // Takes in IERC20 contract address, and direction (true = fromInternalBalance, false = toInternalBalance)
+  // Returns amount to be allocated by Beanstalk on user's behalf
+  function checkAndAllocateInternalBalance(address account, IERC20 token, uint256 amount, bool decrease) internal returns (uint256) {
+    AppStorage storage s = LibAppStorage.diamondStorage();
+    if (decrease) {
+	    if (s.internalTokenBalance[account][token] < amount) {
+		    _decreaseInternalBalance(account, token, amount, false);
+		    return amount;
+	    }
+	    else {
+		    uint256 fromBeanstalk = s.internalTokenBalance[account][token];
+		    _decreaseInternalBalance(account, token, fromBeanstalk, false);
+	    }
+    }
+    else {
+	    _increaseInternalBalance(account, token, amount);
+	    return 0;
+    }
+  }
+
+  /**
+  * Misc Functions relating to internal balances 
+ **/
+
+    function allocatedBeans(uint256 transferBeans) internal {
+	AppStorage storage s = LibAppStorage.diamondStorage();
+        uint wrappedBeans = s.internalTokenBalance[msg.sender][IBean(s.c.bean)];
+        uint remainingBeans = transferBeans;
+        if (wrappedBeans > 0) {
+            if (remainingBeans > wrappedBeans) {
+                remainingBeans = transferBeans.sub(wrappedBeans);
+		_decreaseInternalBalance(msg.sender, IBean(s.c.bean), wrappedBeans, false);
+            } else {
+                remainingBeans = 0;
+		_decreaseInternalBalance(msg.sender, IBean(s.c.bean), transferBeans, false);
+            }
+            emit BeanAllocation(msg.sender, transferBeans.sub(remainingBeans));
+        }
+        if (remainingBeans > 0) IBean(s.c.bean).transferFrom(msg.sender, address(this), remainingBeans);
+    }
 }

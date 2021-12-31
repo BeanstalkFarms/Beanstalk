@@ -11,7 +11,6 @@ import {IDiamondCut} from "../../interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../../interfaces/IDiamondLoupe.sol";
 import {IERC173} from "../../interfaces/IERC173.sol";
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
-import {LibMarket} from "../../libraries/LibMarket.sol";
 import {LibStalk} from "../../libraries/LibStalk.sol";
 import "../../C.sol";
 import "../../interfaces/IBean.sol";
@@ -23,6 +22,7 @@ import "../../Bean.sol";
 import "../../mocks/MockToken.sol";
 import "../../Seed.sol";
 import "../../interfaces/ISeed.sol";
+import "../../libraries/LibUserBalance.sol";
 
 /**
  * @author Publius
@@ -67,12 +67,13 @@ contract InitDiamond {
             block.timestamp;
 
         s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
-        LibMarket.initMarket(s.c.bean, s.c.weth, UNISWAP_ROUTER);
+        LibUniswap.initMarket(s.c.bean, s.c.weth);
         LibStalk.initStalkToken('Stalk', 'STALK');
 
         IBean(s.c.bean).mint(msg.sender, C.getAdvanceIncentive());
         emit Incentivization(msg.sender, C.getAdvanceIncentive());
         s.seedContract = address(new Seed());
+	s.uniswapFactory = address(0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f);
     }
 
 }

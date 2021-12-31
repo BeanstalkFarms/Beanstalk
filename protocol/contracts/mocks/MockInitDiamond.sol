@@ -13,8 +13,9 @@ import "../mocks/MockToken.sol";
 import "../mocks/MockUniswapV2Pair.sol";
 import "../mocks/MockUniswapV2Router.sol";
 import {AppStorage} from "../farm/AppStorage.sol";
-import {LibMarket} from "../libraries/LibMarket.sol";
 import {LibStalk} from "../libraries/LibStalk.sol";
+import "../libraries/LibUserBalance.sol";
+import "../mocks/MockUniswapV2Factory.sol";
 
 /**
  * @author Publius
@@ -46,9 +47,10 @@ contract MockInitDiamond {
         s.season.timestamp = block.timestamp;
 
         s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
-        LibMarket.initMarket(s.c.bean, s.c.weth, mockRouter);
+        LibUniswap.initMarket(s.c.bean, s.c.weth);
         LibStalk.initStalkToken('Stalk', 'STALK');
        	s.seedContract = address(new MockToken("SEED", "Beanstalk"));
+	s.uniswapFactory = address(new MockUniswapV2Factory(s.c.pair));
     }
 
 }

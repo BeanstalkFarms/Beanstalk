@@ -29,8 +29,8 @@ contract ConvertFacet is ConvertSilo {
     )
         external 
     {
-        LibInternal.updateSilo(msg.sender);
-        (uint256 lp, uint256 beansConverted) = LibConvert.sellToPegAndAddLiquidity(beans, minLP);
+        LibInternal.updateSilo(msg.sender, set.toInternalBalance, set.lightUpdateSilo);
+        (uint256 lp, uint256 beansConverted) = LibConvert.sellToPegAndAddLiquidity(beans, minLP, set);
         (uint256 beansRemoved, uint256 stalkRemoved) = _withdrawBeansForConvert(crates, amounts, beansConverted);
         require(beansRemoved == beansConverted, "Silo: Wrong Beans removed.");
         uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(C.getSeedsPerLPBean())));
@@ -50,8 +50,8 @@ contract ConvertFacet is ConvertSilo {
     )
         external
     {
-        LibInternal.updateSilo(msg.sender);
-        (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
+        LibInternal.updateSilo(msg.sender, set.toInternalBalance, set.lightUpdateSilo);
+        (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans, set);
         (uint256 lpRemoved, uint256 stalkRemoved) = _withdrawLPForConvert(crates, amounts, lpConverted);
         require(lpRemoved == lpConverted, "Silo: Wrong LP removed.");
         uint32 _s = uint32(stalkRemoved.div(beans.mul(C.getSeedsPerBean())));
@@ -63,7 +63,7 @@ contract ConvertFacet is ConvertSilo {
 
     function claimConvertAddAndDepositLP(
         uint256 lp,
-        LibMarket.AddLiquidity calldata al,
+        LibUniswap.AddLiquidity calldata al,
         uint32[] memory crates,
         uint256[] memory amounts,
         LibClaim.Claim calldata claim,
@@ -78,7 +78,7 @@ contract ConvertFacet is ConvertSilo {
 
     function convertAddAndDepositLP(
         uint256 lp,
-        LibMarket.AddLiquidity calldata al,
+        LibUniswap.AddLiquidity calldata al,
         uint32[] memory crates,
         uint256[] memory amounts,
 	Storage.Settings calldata set

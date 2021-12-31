@@ -217,4 +217,5 @@ struct AppStorage {
     Storage.Stalk stalkToken;
     address seedContract;
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
+    address uniswapFactory;
 }

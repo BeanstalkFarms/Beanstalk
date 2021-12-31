@@ -6,8 +6,9 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../../../libraries/Decimal.sol";
-import "../../../libraries/LibMarket.sol";
 import "./Silo.sol";
+import "../../../libraries/LibUniswap.sol";
+import "../../AppStorage.sol";
 
 /**
  * @author Publius
@@ -160,8 +161,16 @@ contract Weather is Silo {
         )
             return;
 
+	Storage.Settings memory set = Storage.Settings(false, false, false);
+	set.toInternalBalance = false;
+	set.fromInternalBalance = false;
+	set.lightUpdateSilo = false;
         mintToSilo(newBeans);
-        uint256 ethBought = LibMarket.sellToWETH(newBeans, 0);
+	address[] memory path = new address[](2);
+	path[0] = s.c.bean;
+	path[1] = s.c.weth;
+	uint256[] memory amounts = LibUniswap.swapExactTokensForTokens(newBeans, 0, path, address(this), block.timestamp.add(1), set, false);
+        uint256 ethBought = amounts[1];
         uint256 newHarvestable = 0;
         if (s.f.harvestable < s.r.pods) {
             newHarvestable = s.r.pods.sub(s.f.harvestable);

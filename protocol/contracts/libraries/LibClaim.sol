@@ -8,15 +8,15 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./LibCheck.sol";
 import "./LibInternal.sol";
-import "./LibMarket.sol";
+import "./LibUniswap.sol";
 import "./LibAppStorage.sol";
-import "../interfaces/IWETH.sol";
 import "./LibUserBalance.sol";
 
 /**
  * @author Publius
  * @title Claim Library handles claiming Bean and LP withdrawals, harvesting plots and claiming Ether.
 **/
+
 library LibClaim {
 
     using SafeMath for uint256;
@@ -93,8 +93,9 @@ library LibClaim {
         public
         returns (uint256 beans)
     {
+	AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 lpClaimd = _claimLP(withdrawals);
-        (beans,) = LibMarket.removeLiquidity(lpClaimd, minBeanAmount, minEthAmount);
+        (beans,) = LibUniswap.removeLiquidityETH(s.c.bean, lpClaimd, minBeanAmount, minEthAmount, address(this), block.timestamp.add(1));
     }
 
     function removeClaimLPAndWrapBeans(
@@ -103,10 +104,15 @@ library LibClaim {
         uint256 minEthAmount
     )
         private
-        returns (uint256 beans)
+        returns (uint256)
     {
-        uint256 lpClaimd = _claimLP(withdrawals);
-        (beans,) = LibMarket.removeLiquidityWithBeanAllocation(lpClaimd, minBeanAmount, minEthAmount);
+	AppStorage storage s = LibAppStorage.diamondStorage();
+	uint256 lpClaimd = _claimLP(withdrawals);
+        (uint256 beans, uint256 ethAmount) = LibUniswap.removeLiquidity(s.c.bean, s.c.weth, lpClaimd, minBeanAmount, minEthAmount, address(this), block.timestamp.add(1), false);
+	IWETH(s.c.weth).withdraw(ethAmount);
+        (bool success, ) = msg.sender.call{value: ethAmount}("");
+        require(success, "WETH: ETH transfer failed");
+	return beans;
     }
 
     function _claimLP(uint32[] calldata withdrawals) private returns (uint256) {
@@ -132,7 +138,7 @@ library LibClaim {
     // Season of Plenty
 
     function claimEth() public {
-        LibInternal.updateSilo(msg.sender);
+        LibInternal.updateSilo(msg.sender, false, false);
         uint256 eth = claimPlenty(msg.sender);
         emit EtherClaim(msg.sender, eth);
     }

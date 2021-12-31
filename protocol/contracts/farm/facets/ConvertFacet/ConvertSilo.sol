@@ -10,8 +10,8 @@ import "../../../libraries/Silo/LibBeanSilo.sol";
 import "../../../libraries/Silo/LibLPSilo.sol";
 import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibInternal.sol";
-import "../../../libraries/LibMarket.sol";
 import "../../../C.sol";
+import "../../../libraries/LibUserBalance.sol";
 
 /**
  * @author Publius
@@ -39,20 +39,23 @@ contract ConvertSilo {
 
     function _convertAddAndDepositLP(
         uint256 lp,
-        LibMarket.AddLiquidity calldata al,
+        LibUniswap.AddLiquidity calldata al,
         uint32[] memory crates,
         uint256[] memory amounts,
        	bool toInternalBalance
     )
         internal
     {
-	LibInternal.updateSilo(msg.sender);
+	LibInternal.updateSilo(msg.sender, toInternalBalance, false);
         WithdrawState memory w;
         if (bean().balanceOf(address(this)) < al.beanAmount) {
             	w.beansTransferred = al.beanAmount.sub(s.bean.deposited);
             	bean().transferFrom(msg.sender, address(this), w.beansTransferred);
         }
-        (w.beansAdded, w.newLP) = LibMarket.addLiquidity(al); // w.beansAdded is beans added to LP
+	uint256 ethDeposited;
+	(w.beansAdded, ethDeposited, w.newLP) = LibUniswap.addLiquidityETH(s.c.bean, al.beanAmount, al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1)); //value: msg.value}
+	(bool success,) = msg.sender.call{ value: msg.value.sub(ethDeposited) }("");
+        require(success, "Market: Refund failed.");
         require(w.newLP > 0, "Silo: No LP added.");
         (w.beansRemoved, w.stalkRemoved) = _withdrawBeansForConvert(crates, amounts, w.beansAdded); // w.beansRemoved is beans removed from Silo
         uint256 amountFromWallet = w.beansAdded.sub(w.beansRemoved, "Silo: Removed too many Beans.");
@@ -61,7 +64,7 @@ contract ConvertSilo {
             bean().transfer(msg.sender, w.beansTransferred.sub(amountFromWallet));
 	    } else if (w.beansTransferred < amountFromWallet) {
             uint256 transferAmount = amountFromWallet.sub(w.beansTransferred);
-            LibMarket.allocatedBeans(transferAmount);
+            LibUserBalance.allocatedBeans(transferAmount);
         }
 
         w.i = w.stalkRemoved.div(LibLPSilo.lpToLPBeans(lp.add(w.newLP)), "Silo: No LP Beans.");
@@ -154,14 +157,16 @@ contract ConvertSilo {
         uint256 crateBeans;
         uint256 i = 0;
         while ((i < crates.length) && (beansRemoved < maxBeans)) {
-            if (beansRemoved.add(amounts[i]) < maxBeans)
+            if (beansRemoved.add(amounts[i]) < maxBeans) {
                 crateBeans = LibBeanSilo.removeBeanDeposit(msg.sender, crates[i], amounts[i]);
-            else
+	    }
+            else {
                 crateBeans = LibBeanSilo.removeBeanDeposit(msg.sender, crates[i], maxBeans.sub(beansRemoved));
+	    }
             beansRemoved = beansRemoved.add(crateBeans);
             stalkRemoved = stalkRemoved.add(crateBeans.mul(C.getStalkPerBean()).add(
                 LibSilo.stalkReward(crateBeans.mul(C.getSeedsPerBean()), season()-crates[i]
-            )));
+	    )));
             i++;
         }
         if (i > 0) amounts[i.sub(1)] = crateBeans;

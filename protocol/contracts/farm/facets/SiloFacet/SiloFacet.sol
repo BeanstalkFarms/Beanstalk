@@ -7,7 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import "./BeanSilo.sol";
 import "../../../libraries/LibClaim.sol";
-import "../../../libraries/LibMarket.sol";
 import "../../../libraries/LibConvert.sol";
 import "../../../interfaces/ISeed.sol";
 
@@ -76,7 +75,13 @@ contract SiloFacet is BeanSilo {
         payable
     {
         allocateBeans(claim, amount);
-        uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
+	address[] memory path = new address[](2);
+	path[0] = s.c.weth;
+	path[1] = s.c.bean;
+	uint256[] memory amounts = LibUniswap.swapExactETHForTokens(buyAmount, path, address(this), block.timestamp.add(1), set); //{value: msg.value}
+	(bool success,) = msg.sender.call{ value: msg.value.sub(amounts[0]) }("");
+	require(success, "Field: Refund failed.");
+        uint256 boughtAmount = amounts[1];
         _depositBeans(boughtAmount.add(amount), set);
     }
 
@@ -86,7 +91,13 @@ contract SiloFacet is BeanSilo {
     }
 
     function buyAndDepositBeans(uint256 amount, uint256 buyAmount, Storage.Settings calldata set) public payable {
-        uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
+	address[] memory path = new address[](2);
+	path[0] = s.c.weth;
+	path[1] = s.c.bean;
+	uint256[] memory amounts = LibUniswap.swapExactETHForTokens(buyAmount, path, address(this), block.timestamp.add(1), set); //{value: msg.value}
+	(bool success,) = msg.sender.call{ value: msg.value.sub(amounts[0]) }("");
+	require(success, "Field: Refund failed.");
+        uint256 boughtAmount = amounts[1];
         if (amount > 0) bean().transferFrom(msg.sender, address(this), amount);
         _depositBeans(boughtAmount.add(amount), set);
     }
@@ -128,7 +139,7 @@ contract SiloFacet is BeanSilo {
         uint256 lp,
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
-        LibMarket.AddLiquidity calldata al,
+        LibUniswap.AddLiquidity calldata al,
 	LibClaim.Claim calldata claim,
 	Storage.Settings calldata set
     )
@@ -147,7 +158,7 @@ contract SiloFacet is BeanSilo {
     function addAndDepositLP(uint256 lp,
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
-        LibMarket.AddLiquidity calldata al,
+        LibUniswap.AddLiquidity calldata al,
 	LibClaim.Claim calldata c,
 	Storage.Settings calldata set
     )
@@ -162,12 +173,13 @@ contract SiloFacet is BeanSilo {
         uint256 lp,
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
-        LibMarket.AddLiquidity calldata al,
+        LibUniswap.AddLiquidity calldata al,
 	LibClaim.Claim calldata c,
 	Storage.Settings calldata set
     )
         internal {
-        uint256 boughtLP = LibMarket.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, al);
+
+        uint256 boughtLP = LibUniswap.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, al, set);
         if (lp>0) pair().transferFrom(msg.sender, address(this), lp);
         _depositLP(lp.add(boughtLP), set);
     }
@@ -200,6 +212,6 @@ contract SiloFacet is BeanSilo {
 
     function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {
         LibClaim.claim(c);
-        LibMarket.allocatedBeans(transferBeans);
+        LibUserBalance.allocatedBeans(transferBeans);
     }
 }

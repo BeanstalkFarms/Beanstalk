@@ -11,7 +11,6 @@ import "../../../interfaces/IWETH.sol";
 import "../../../interfaces/IBean.sol";
 import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibInternal.sol";
-import "../../../libraries/LibMarket.sol";
 import "../../../libraries/LibStalk.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../C.sol";
@@ -269,7 +268,7 @@ contract SiloExit {
     }
 
     function balanceOfMigrationStalk(address account) private view returns (uint256) {
-        return s.a[account].s.stalk.add(LibSilo.stalkReward(s.a[account].s.seeds, s.bip0Start-lastUpdate(account)));
+        return s.stalkToken.balances[account].add(s.internalTokenBalance[account][stalk()]).add(LibSilo.stalkReward(seed().balanceOf(account).add(s.internalTokenBalance[account][seed()]), s.bip0Start-lastUpdate(account)));
     }
 
     /**
