@@ -426,7 +426,6 @@ describe('Claim', function () {
 
       // Before partial claiming, was claimedBeans and not wrappedBeans
       it('properly claims beans', async function () {
-	      console.log(this.claimedBeans);
         expect(this.wrappedBeans.toString()).to.equal('1000');
       });
       it('properly allocates beans', async function () {
