@@ -1,9 +1,11 @@
 const hre = require("hardhat")
+const { BN, expectRevert } = require("@openzeppelin/test-helpers")
 const { deploy } = require('../scripts/deploy.js')
 const { upgradeWithNewFacets } = require('../scripts/diamond.js')
 const { expect } = require('chai')
-const { parseJson } = require('./utils/helpers.js')
-const { ZERO_ADDRESS } = require('./utils/constants.js')
+const { printTestCrates, printCrates, print } = require('./utils/print.js')
+const { parseJson, incrementTime } = require('./utils/helpers.js')
+const { MIN_PLENTY_BASE, ZERO_ADDRESS, MAX_UINT256 } = require('./utils/constants.js')
 
 // Set the test data
 const [columns, tests] = parseJson('./coverage_data/siloGovernance.json')
@@ -69,9 +71,9 @@ describe('Governance', function () {
     await this.season.resetAccount(user2Address)
     await this.season.resetAccount(user3Address)
     await this.season.resetAccount(ownerAddress)
-    await this.silo.resetSeedsAndStalk([userAddress, ownerAddress])
     await this.season.resetState();
     await this.season.siloSunrise(0);
+    await this.silo.resetSeedsAndStalk([userAddress, ownerAddress]);
     await this.silo.depositSiloAssetsE(userAddress, '500', '1000000', [false, false, false]);
     await this.silo.depositSiloAssetsE(ownerAddress, '500', '1000000', [false, false, false]);
   });
@@ -222,15 +224,6 @@ describe('Governance', function () {
 
       await this.silo.withdrawSiloAssetsE(userAddress, '500', '500000', [false, false, false]);
     });
-
-    it('reverts when owner withdraws too much', async function () {
-      await expect(this.silo.withdrawSiloAssetsE(ownerAddress, '500', '999500')).to.be.revertedWith('Silo: Proposer must have min Stalk.');
-    });
-
-    it('allows owner to withdraw enough', async function () {
-      await this.silo.withdrawSiloAssetsE(ownerAddress, '500', '999400');
-      expect(await this.silo.balanceOfStalk(ownerAddress)).to.be.equal('600');
-    })
 
     it('sets vote counter correctly', async function () {
       expect(await this.governance.rootsFor(0)).to.be.equal(await this.silo.balanceOfRoots(ownerAddress));
