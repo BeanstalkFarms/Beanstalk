@@ -324,17 +324,17 @@ library LibMarket {
     }
 
     function allocatedBeans(uint256 transferBeans) internal {
-	    AppStorage storage s = LibAppStorage.diamondStorage();
+	AppStorage storage s = LibAppStorage.diamondStorage();
 
-        uint wrappedBeans = s.a[msg.sender].wrappedBeans;
+        uint wrappedBeans = s.internalTokenBalance[msg.sender][IBean(s.c.bean)];
         uint remainingBeans = transferBeans;
         if (wrappedBeans > 0) {
             if (remainingBeans > wrappedBeans) {
                 remainingBeans = transferBeans.sub(wrappedBeans);
-                s.a[msg.sender].wrappedBeans = 0;
+                s.internalTokenBalance[msg.sender][IBean(s.c.bean)] = 0;
             } else {
                 remainingBeans = 0;
-                s.a[msg.sender].wrappedBeans = wrappedBeans.sub(transferBeans);
+                s.internalTokenBalance[msg.sender][IBean(s.c.bean)] = wrappedBeans.sub(transferBeans);
             }
             emit BeanAllocation(msg.sender, transferBeans.sub(remainingBeans));
         }
