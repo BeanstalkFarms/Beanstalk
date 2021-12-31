@@ -5,6 +5,8 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
+import "hardhat/console.sol";
+
 /**
  * @author Publius
  * @title Internal Library handles gas efficient function calls between facets.
@@ -48,11 +50,11 @@ library LibInternal {
         uint256 minEthAmount;
     }
 
-    function updateSilo(address account) internal {
+    function updateSilo(address account, bool toInternalBalance, bool lightUpdateSilo) internal {
         DiamondStorage storage ds = diamondStorage();
-        bytes4 functionSelector = bytes4(keccak256("updateSilo(address)"));
+        bytes4 functionSelector = bytes4(keccak256("updateSilo(address,bool,bool)"));
         address facet = ds.selectorToFacetAndPosition[functionSelector].facetAddress;
-        bytes memory myFunctionCall = abi.encodeWithSelector(functionSelector, account);
+        bytes memory myFunctionCall = abi.encodeWithSelector(functionSelector, account, toInternalBalance, lightUpdateSilo);
         (bool success,) = address(facet).delegatecall(myFunctionCall);
         require(success, "Silo: updateSilo failed.");
     }
