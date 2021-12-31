@@ -83,8 +83,8 @@ library LibSilo {
 		if (seed().balanceOf(account) >= seeds) seed().burnFrom(account, seeds);
 		else {
 			LibUserBalance._decreaseInternalBalance(account, seed(), seeds.sub(seed().balanceOf(account)), false);
-			seed().burnFrom(account, seed().balanceOf(account));
 			seed().burn(seeds.sub(seed().balanceOf(account)));
+			seed().burnFrom(account, seed().balanceOf(account));
 		}
 	}
     }
@@ -113,8 +113,8 @@ library LibSilo {
                 if (s.stalkToken.balances[account] >= stalk) LibStalk.burn(account, stalk);
                 else {
 			LibUserBalance._decreaseInternalBalance(account, IERC20(address(this)), stalk.sub(s.stalkToken.balances[account]), false);
-                        LibStalk.burn(account, s.stalkToken.balances[account]);
                         LibStalk.burn(address(this), stalk.sub(s.stalkToken.balances[account]));
+                        LibStalk.burn(account, s.stalkToken.balances[account]);
                 }
         }
 
