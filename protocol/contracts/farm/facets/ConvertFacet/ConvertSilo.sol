@@ -46,7 +46,7 @@ contract ConvertSilo {
     )
         internal
     {
-	LibInternal.updateSilo(msg.sender);
+	LibInternal.updateSilo(msg.sender, toInternalBalance, false);
         WithdrawState memory w;
         if (bean().balanceOf(address(this)) < al.beanAmount) {
             	w.beansTransferred = al.beanAmount.sub(s.bean.deposited);
