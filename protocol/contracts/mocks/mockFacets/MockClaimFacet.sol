@@ -31,7 +31,11 @@ contract MockClaimFacet is ClaimFacet {
         public
         payable
     {
-        s.a[account].wrappedBeans += amount;
+        s.internalTokenBalance[account][IBean(s.c.bean)] += amount;
         MockToken(s.c.bean).mint(address(this), amount);
+    }
+
+    function legacyClaim(address account) public view returns (uint256) {
+	return s.a[account].wrappedBeans;
     }
 }
