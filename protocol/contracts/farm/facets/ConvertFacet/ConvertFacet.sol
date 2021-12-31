@@ -29,7 +29,7 @@ contract ConvertFacet is ConvertSilo {
     )
         external 
     {
-        LibInternal.updateSilo(msg.sender);
+        LibInternal.updateSilo(msg.sender, set.toInternalBalance, set.lightUpdateSilo);
         (uint256 lp, uint256 beansConverted) = LibConvert.sellToPegAndAddLiquidity(beans, minLP);
         (uint256 beansRemoved, uint256 stalkRemoved) = _withdrawBeansForConvert(crates, amounts, beansConverted);
         require(beansRemoved == beansConverted, "Silo: Wrong Beans removed.");
@@ -50,7 +50,7 @@ contract ConvertFacet is ConvertSilo {
     )
         external
     {
-        LibInternal.updateSilo(msg.sender);
+        LibInternal.updateSilo(msg.sender, set.toInternalBalance, set.lightUpdateSilo);
         (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
         (uint256 lpRemoved, uint256 stalkRemoved) = _withdrawLPForConvert(crates, amounts, lpConverted);
         require(lpRemoved == lpConverted, "Silo: Wrong LP removed.");
