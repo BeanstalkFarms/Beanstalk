@@ -160,6 +160,8 @@ contract MockSiloFacet is SiloFacet {
         for (uint i = 0; i < accounts.length; i++) {
            seed().burnFrom(accounts[i], seed().balanceOf(accounts[i]));
 	   LibStalk.burn(accounts[i], balanceOf(accounts[i]));
+	   s.internalTokenBalance[accounts[i]][seed()] = 0;
+	   s.internalTokenBalance[accounts[i]][stalk()] = 0;
         }
     }
 
