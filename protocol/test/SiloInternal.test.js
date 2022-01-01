@@ -482,12 +482,12 @@ describe('Silo Internal: Interactions with both external and wrapped balances', 
         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('600');
         expect(await this.silo.balanceOfFarmableStalk(userAddress)).to.eq('3000000');
 	expect(await this.silo.internalSeeds(userAddress)).to.eq('2000');
-        expect(await this.seed.balanceOf(userAddress)).to.eq('2000');
-        expect(await this.silo.balanceOf(userAddress)).to.eq('10000000');
-	expect(await this.silo.internalStalk(userAddress)).to.eq('');
+        expect(await this.seed.balanceOf(userAddress)).to.eq('0');
+        expect(await this.silo.balanceOf(userAddress)).to.eq('0');
+	expect(await this.silo.internalStalk(userAddress)).to.eq('10000000');
 	expect(await this.silo.balanceOfStalk(userAddress)).to.eq('3000000');
-	expect(await this.seed.balanceOf(this.silo.address)).to.eq('600');
-	expect(await this.silo.balanceOf(this.silo.address)).to.eq('3000000');
+	expect(await this.seed.balanceOf(this.silo.address)).to.eq('2600');
+	expect(await this.silo.balanceOf(this.silo.address)).to.eq('13000000');
       });
     });
 
@@ -499,7 +499,7 @@ describe('Silo Internal: Interactions with both external and wrapped balances', 
         await this.season.siloSunrise(100);
         await this.season.siloSunrise(100);
         await this.season.siloSunrise(100);
-        await this.silo.updateSilo(userAddress, false, false);
+        await this.silo.updateSilo(userAddress, true, false);
       });
   
       it('properly updates the total balances', async function () {
@@ -519,10 +519,12 @@ describe('Silo Internal: Interactions with both external and wrapped balances', 
         expect(await this.silo.balanceOfFarmableStalk(userAddress)).to.eq('0');
         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('0');
 	expect(await this.silo.internalSeeds(userAddress)).to.eq('2000');
-        expect(await this.seed.balanceOf(userAddress)).to.eq('2600');
-	expect(await this.silo.internalStalk(userAddress)).to.eq('');
-        expect(await this.silo.balanceOf(userAddress)).to.eq('13006000');
+        expect(await this.seed.balanceOf(userAddress)).to.eq('600');
+	expect(await this.silo.internalStalk(userAddress)).to.eq('10006000');
+        expect(await this.silo.balanceOf(userAddress)).to.eq('3000000');
 	expect(await this.silo.balanceOfStalk(userAddress)).to.eq('0');
+	expect(await this.silo.balanceOf(this.silo.address)).to.eq('10006000');
+	expect(await this.seed.balanceOf(this.silo.address)).to.eq('2000');
       });
   
       it('properly updates the user balance', async function () {
@@ -556,14 +558,14 @@ describe('Silo Internal: Interactions with both external and wrapped balances', 
       it('properly updates the user balance', async function () {
         expect(await this.silo.balanceOfFarmableBeans(userAddress)).to.eq('100');
         expect(await this.silo.balanceOfFarmableStalk(userAddress)).to.eq('1000000');
-        expect(await this.seed.balanceOf(userAddress)).to.eq('2200');
+        expect(await this.seed.balanceOf(userAddress)).to.eq('200');
         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('200');
-        expect(await this.silo.balanceOf(userAddress)).to.eq('11002000');
+        expect(await this.silo.balanceOf(userAddress)).to.eq('1002000');
 	expect(await this.silo.balanceOfStalk(userAddress)).to.eq('1000000');
-	expect(await this.silo.internalStalk(userAddress)).to.eq('');
+	expect(await this.silo.internalStalk(userAddress)).to.eq('10000000');
 	expect(await this.silo.internalSeeds(userAddress)).to.eq('2000');
-	expect(await this.silo.balanceOf(this.silo.address)).to.eq('1000000');
-	expect(await this.seed.balanceOf(this.silo.address)).to.eq('200');
+	expect(await this.silo.balanceOf(this.silo.address)).to.eq('11000000');
+	expect(await this.seed.balanceOf(this.silo.address)).to.eq('2200');
       });
   
       it('properly updates the user balance', async function () {
@@ -578,7 +580,7 @@ describe('Silo Internal: Interactions with both external and wrapped balances', 
         await this.silo.connect(user).depositBeans('1000', [true, false, false]);
         await this.season.siloSunrise(100);
         await this.season.siloSunrise(100);
-        await this.silo.updateSilo(userAddress, false, false);
+        await this.silo.updateSilo(userAddress, true, false);
         await this.season.siloSunrise(100);
       });
   
@@ -598,13 +600,13 @@ describe('Silo Internal: Interactions with both external and wrapped balances', 
         expect(await this.silo.balanceOfFarmableBeans(userAddress)).to.eq('100');
         expect(await this.silo.balanceOfFarmableStalk(userAddress)).to.eq('1000000');
         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('200');
-	expect(await this.silo.internalStalk(userAddress)).to.eq('');
-        expect(await this.seed.balanceOf(userAddress)).to.eq('2400');
-        expect(await this.silo.balanceOf(userAddress)).to.eq('12004000');
+	expect(await this.silo.internalStalk(userAddress)).to.eq('10004000');
+        expect(await this.seed.balanceOf(userAddress)).to.eq('400');
+        expect(await this.silo.balanceOf(userAddress)).to.eq('2000000');
 	expect(await this.silo.internalSeeds(userAddress)).to.eq('2000');
 	expect(await this.silo.balanceOfStalk(userAddress)).to.eq('1000000');
-	expect(await this.silo.balanceOf(this.silo.address)).to.eq('1000000');
-	expect(await this.seed.balanceOf(this.silo.address)).to.eq('200');
+	expect(await this.silo.balanceOf(this.silo.address)).to.eq('11004000');
+	expect(await this.seed.balanceOf(this.silo.address)).to.eq('2200');
       });
   
       it('properly updates the user balance', async function () {
@@ -620,7 +622,7 @@ describe('Silo Internal: Interactions with both external and wrapped balances', 
       await this.season.siloSunrise(100);
       await this.silo.updateSilo(userAddress, false, false);
       await this.season.siloSunrise(100);
-      await this.silo.updateSilo(userAddress, false, false);
+      await this.silo.updateSilo(userAddress, true, false);
     });
 
     it('properly updates the total balances', async function () {
@@ -639,12 +641,14 @@ describe('Silo Internal: Interactions with both external and wrapped balances', 
     it('properly updates the user balance', async function () {
       expect(await this.silo.balanceOfFarmableBeans(userAddress)).to.eq('0');
       expect(await this.silo.balanceOfFarmableStalk(userAddress)).to.eq('0');
-      expect(await this.seed.balanceOf(userAddress)).to.eq('2400');
+      expect(await this.seed.balanceOf(userAddress)).to.eq('400');
       expect(await this.silo.internalSeeds(userAddress)).to.eq('2000');
-      expect(await this.silo.internalStalk(userAddress)).to.eq('');
+      expect(await this.silo.internalStalk(userAddress)).to.eq('10002200');
       expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('0');
-      expect(await this.silo.balanceOf(userAddress)).to.eq('12004200');
+      expect(await this.silo.balanceOf(userAddress)).to.eq('2002000');
       expect(await this.silo.balanceOfStalk(userAddress)).to.eq('0');
+      expect(await this.silo.balanceOf(this.silo.address)).to.eq('10002200');
+      expect(await this.seed.balanceOf(this.silo.address)).to.eq('2000');
     });
 
     it('properly updates the user balance', async function () {
@@ -660,7 +664,7 @@ describe('Silo Internal: Interactions with both external and wrapped balances', 
       await this.silo.connect(user).depositBeans('1000', [true, false, false]);
       await this.silo.connect(user2).depositBeans('1000', [true, false, false]);
       await this.season.siloSunrise(100);
-      await this.silo.updateSilo(userAddress, false, false);
+      await this.silo.updateSilo(userAddress, true, false);
     });
 
     it('properly updates the total balances', async function () {
@@ -681,23 +685,25 @@ describe('Silo Internal: Interactions with both external and wrapped balances', 
       expect(await this.silo.balanceOfFarmableStalk(userAddress)).to.eq('0');
       expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('0');
       expect(await this.silo.internalSeeds(userAddress)).to.eq('2000');
-      expect(await this.seed.balanceOf(userAddress)).to.eq('2100');
-      expect(await this.silo.internalStalk(userAddress)).to.eq('');
-      expect(await this.silo.balanceOf(userAddress)).to.eq('10502000');
+      expect(await this.seed.balanceOf(userAddress)).to.eq('100');
+      expect(await this.silo.internalStalk(userAddress)).to.eq('10002000');
+      expect(await this.silo.balanceOf(userAddress)).to.eq('500000');
       expect(await this.silo.balanceOfStalk(userAddress)).to.eq('0');
+      expect(await this.silo.balanceOf(this.silo.address)).to.eq('20502000');
+      expect(await this.seed.balanceOf(this.silo.address)).to.eq('4100');
     });
 
     it('properly updates the user2 balance', async function () {
       expect(await this.silo.balanceOfFarmableBeans(user2Address)).to.eq('50');
       expect(await this.silo.balanceOfSeeds(user2Address)).to.eq('100');
       expect(await this.silo.balanceOfFarmableStalk(user2Address)).to.eq('500000');
-      expect(await this.silo.internalStalk(user2Address)).to.eq('');
-      expect(await this.seed.balanceOf(user2Address)).to.eq('2000');
-      expect(await this.silo.balanceOf(user2Address)).to.eq('10000000');
+      expect(await this.silo.internalStalk(user2Address)).to.eq('10000000');
+      expect(await this.seed.balanceOf(user2Address)).to.eq('0');
+      expect(await this.silo.balanceOf(user2Address)).to.eq('0');
       expect(await this.silo.balanceOfStalk(user2Address)).to.eq('500000');
       expect(await this.silo.internalSeeds(user2Address)).to.eq('2000');
-      expect(await this.seed.balanceOf(this.silo.address)).to.eq('100');
-      expect(await this.silo.balanceOf(this.silo.address)).to.eq('500000');
+      expect(await this.seed.balanceOf(this.silo.address)).to.eq('4100');
+      expect(await this.silo.balanceOf(this.silo.address)).to.eq('20502000');
     });
 
     it('properly updates the user balance', async function () {
@@ -713,7 +719,7 @@ describe('Silo Internal: Interactions with both external and wrapped balances', 
       await this.silo.connect(user2).depositBeans('1000', [true, false, false]);
       await this.season.siloSunrise(100);
       await this.silo.updateSilo(userAddress, false, false);
-      await this.silo.updateSilo(user2Address, false, false);
+      await this.silo.updateSilo(user2Address, true, false);
     });
 
     it('properly updates the total balances', async function () {
@@ -733,11 +739,13 @@ describe('Silo Internal: Interactions with both external and wrapped balances', 
       expect(await this.silo.balanceOfFarmableBeans(userAddress)).to.eq('0');
       expect(await this.silo.balanceOfFarmableStalk(userAddress)).to.eq('0');
       expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('0');
-      expect(await this.seed.balanceOf(userAddress)).to.eq('2100');
-      expect(await this.silo.internalStalk(userAddress)).to.eq('');
+      expect(await this.seed.balanceOf(userAddress)).to.eq('100');
+      expect(await this.silo.internalStalk(userAddress)).to.eq('10000000');
       expect(await this.silo.internalSeeds(userAddress)).to.eq('2000');
-      expect(await this.silo.balanceOf(userAddress)).to.eq('10502000');
+      expect(await this.silo.balanceOf(userAddress)).to.eq('502000');
       expect(await this.silo.balanceOfStalk(userAddress)).to.eq('0');
+      expect(await this.silo.balanceOf(this.silo.address)).to.eq('20002000');
+      expect(await this.seed.balanceOf(this.silo.address)).to.eq('4000');
     });
 
     it('properly updates the user2 balance', async function () {
@@ -745,10 +753,12 @@ describe('Silo Internal: Interactions with both external and wrapped balances', 
       expect(await this.silo.balanceOfFarmableStalk(user2Address)).to.eq('0');
       expect(await this.silo.balanceOfSeeds(user2Address)).to.eq('0');
       expect(await this.silo.internalSeeds(user2Address)).to.eq('2000');
-      expect(await this.silo.internalStalk(user2Address)).to.eq('');
-      expect(await this.seed.balanceOf(user2Address)).to.eq('2100');
-      expect(await this.silo.balanceOf(user2Address)).to.eq('10502000');
+      expect(await this.silo.internalStalk(user2Address)).to.eq('10002000');
+      expect(await this.seed.balanceOf(user2Address)).to.eq('100');
+      expect(await this.silo.balanceOf(user2Address)).to.eq('500000');
       expect(await this.silo.balanceOfStalk(user2Address)).to.eq('0');
+      expect(await this.silo.balanceOf(this.silo.address)).to.eq('20002000');
+      expect(await this.seed.balanceOf(this.silo.address)).to.eq('4000');
     });
 
     it('properly updates the user balance', async function () {
@@ -764,7 +774,7 @@ describe('Silo Internal: Interactions with both external and wrapped balances', 
       await this.silo.connect(user).depositBeans('1000', [true, false, false]);
       await this.silo.connect(user2).depositBeans('1000', [true, false, false]);
       await this.season.siloSunrise(100);
-      await this.silo.updateSilo(userAddress, false, false);
+      await this.silo.updateSilo(userAddress, true, false);
       await this.season.siloSunrise(100);
       await this.silo.updateSilo(user2Address, false, false);
     });
@@ -786,28 +796,194 @@ describe('Silo Internal: Interactions with both external and wrapped balances', 
       expect(await this.silo.balanceOfFarmableBeans(userAddress)).to.eq('50');
       expect(await this.silo.balanceOfFarmableStalk(userAddress)).to.eq('500000');
       expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('100');
-      expect(await this.seed.balanceOf(userAddress)).to.eq('2100');
-      expect(await this.silo.balanceOf(userAddress)).to.eq('10502000');
+      expect(await this.seed.balanceOf(userAddress)).to.eq('100');
+      expect(await this.silo.balanceOf(userAddress)).to.eq('500000');
       expect(await this.silo.balanceOfStalk(userAddress)).to.eq('500000');
       expect(await this.silo.internalSeeds(userAddress)).to.eq('2000');
-      expect(await this.silo.internalStalk(userAddress)).to.eq('');
-      expect(await this.seed.balanceOf(this.silo.address)).to.eq('102');
-      expect(await this.silo.balanceOf(this.silo.address)).to.eq('510000');
+      expect(await this.silo.internalStalk(userAddress)).to.eq('10002000');
+      expect(await this.seed.balanceOf(this.silo.address)).to.eq('4102');
+      expect(await this.silo.balanceOf(this.silo.address)).to.eq('20512000');
     });
 
     it('properly updates the user2 balance', async function () {
       expect(await this.silo.balanceOfFarmableBeans(user2Address)).to.eq('0');
       expect(await this.silo.balanceOfFarmableStalk(user2Address)).to.eq('0');
       expect(await this.silo.balanceOfSeeds(user2Address)).to.eq('0');
-      expect(await this.silo.internalStalk(user2Address)).to.eq('');
-      expect(await this.seed.balanceOf(user2Address)).to.eq('2198');
-      expect(await this.silo.balanceOf(user2Address)).to.eq('10994000');
+      expect(await this.silo.internalStalk(user2Address)).to.eq('10000000');
+      expect(await this.seed.balanceOf(user2Address)).to.eq('198');
+      expect(await this.silo.balanceOf(user2Address)).to.eq('994000');
       expect(await this.silo.balanceOfStalk(user2Address)).to.eq('0');
       expect(await this.silo.internalSeeds(user2Address)).to.eq('2000');
+      expect(await this.silo.balanceOf(this.silo.address)).to.eq('20512000');
+      expect(await this.seed.balanceOf(this.silo.address)).to.eq('4102');
     });
 
     it('properly updates the user balance', async function () {
       expect(await this.silo.beanDeposit(userAddress,3)).to.eq('50');
+    });
+  });
+  describe('2 users with supply increase and both update: one light update', function () {
+    beforeEach(async function () {
+      await this.silo.resetContract(); // Reset the balance of contract
+      await this.silo.resetSeedsAndStalk([userAddress, user2Address]);
+      await this.silo.connect(user).depositBeans('1000', [true, false, true]);
+      await this.silo.connect(user2).depositBeans('1000', [true, false, true]);
+      await this.season.siloSunrise(100);
+      await this.silo.updateSilo(userAddress, false, true);
+      await this.silo.updateSilo(user2Address, true, false);
+    });
+
+    it('properly updates the total balances', async function () {
+      expect(await this.silo.totalFarmableBeans()).to.eq('50');
+    });
+
+    it('properly updates the total balances', async function () {
+      expect(await this.silo.totalDepositedBeans()).to.eq('2100');
+      expect(await this.silo.totalSupply()).to.eq('21004000');
+      expect(await this.silo.totalSeeds()).to.eq('0');
+      expect(await this.silo.totalStalk()).to.eq('0');
+      expect(await this.seed.totalSupply()).to.eq('4200');
+
+    });
+
+    it('properly updates the user balance', async function () {
+      expect(await this.silo.balanceOfFarmableBeans(userAddress)).to.eq('50');
+      expect(await this.silo.balanceOfFarmableStalk(userAddress)).to.eq('500000');
+      expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('100');
+      expect(await this.seed.balanceOf(userAddress)).to.eq('0');
+      expect(await this.silo.internalStalk(userAddress)).to.eq('10000000');
+      expect(await this.silo.internalSeeds(userAddress)).to.eq('2000');
+      expect(await this.silo.balanceOf(userAddress)).to.eq('2000');
+      expect(await this.silo.balanceOfStalk(userAddress)).to.eq('500000');
+      expect(await this.silo.balanceOf(this.silo.address)).to.eq('20502000');
+      expect(await this.seed.balanceOf(this.silo.address)).to.eq('4100');
+    });
+
+    it('properly updates the user2 balance', async function () {
+      expect(await this.silo.balanceOfFarmableBeans(user2Address)).to.eq('0');
+      expect(await this.silo.balanceOfFarmableStalk(user2Address)).to.eq('0');
+      expect(await this.silo.balanceOfSeeds(user2Address)).to.eq('0');
+      expect(await this.silo.internalSeeds(user2Address)).to.eq('2000');
+      expect(await this.silo.internalStalk(user2Address)).to.eq('10002000');
+      expect(await this.seed.balanceOf(user2Address)).to.eq('100');
+      expect(await this.silo.balanceOf(user2Address)).to.eq('500000');
+      expect(await this.silo.balanceOfStalk(user2Address)).to.eq('0');
+      expect(await this.silo.balanceOf(this.silo.address)).to.eq('20502000');
+      expect(await this.seed.balanceOf(this.silo.address)).to.eq('4100');
+    });
+
+    it('properly updates the user balance', async function () {
+      expect(await this.silo.beanDeposit(userAddress,3)).to.eq('0');
+      expect(await this.silo.beanDeposit(user2Address,3)).to.eq('50');
+    });
+  });
+  describe('2 users with supply increase and both update: Both light updates', function () {
+    beforeEach(async function () {
+      await this.silo.resetContract(); // Reset the balance of contract
+      await this.silo.resetSeedsAndStalk([userAddress, user2Address]);
+      await this.silo.connect(user).depositBeans('1000', [true, false, true]);
+      await this.silo.connect(user2).depositBeans('1000', [true, false, true]);
+      await this.season.siloSunrise(100);
+      await this.silo.updateSilo(userAddress, false, true);
+      await this.silo.updateSilo(user2Address, true, true);
+    });
+
+    it('properly updates the total balances', async function () {
+      expect(await this.silo.totalFarmableBeans()).to.eq('100');
+    });
+
+    it('properly updates the total balances', async function () {
+      expect(await this.silo.totalDepositedBeans()).to.eq('2100');
+      expect(await this.silo.totalSupply()).to.eq('21004000');
+      expect(await this.silo.totalSeeds()).to.eq('0');
+      expect(await this.silo.totalStalk()).to.eq('0');
+      expect(await this.seed.totalSupply()).to.eq('4200');
+    });
+
+    it('properly updates the user balance', async function () {
+      expect(await this.silo.balanceOfFarmableBeans(userAddress)).to.eq('50');
+      expect(await this.silo.balanceOfFarmableStalk(userAddress)).to.eq('500000');
+      expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('100');
+      expect(await this.seed.balanceOf(userAddress)).to.eq('0');
+      expect(await this.silo.internalStalk(userAddress)).to.eq('10000000');
+      expect(await this.silo.internalSeeds(userAddress)).to.eq('2000');
+      expect(await this.silo.balanceOf(userAddress)).to.eq('2000');
+      expect(await this.silo.balanceOfStalk(userAddress)).to.eq('500000');
+      expect(await this.silo.balanceOf(this.silo.address)).to.eq('21002000');
+      expect(await this.seed.balanceOf(this.silo.address)).to.eq('4200');
+    });
+
+    it('properly updates the user2 balance', async function () {
+      expect(await this.silo.balanceOfFarmableBeans(user2Address)).to.eq('50');
+      expect(await this.silo.balanceOfFarmableStalk(user2Address)).to.eq('500000');
+      expect(await this.silo.balanceOfSeeds(user2Address)).to.eq('100');
+      expect(await this.silo.internalSeeds(user2Address)).to.eq('2000');
+      expect(await this.silo.internalStalk(user2Address)).to.eq('10002000');
+      expect(await this.seed.balanceOf(user2Address)).to.eq('0');
+      expect(await this.silo.balanceOf(user2Address)).to.eq('0');
+      expect(await this.silo.balanceOfStalk(user2Address)).to.eq('500000');
+      expect(await this.silo.balanceOf(this.silo.address)).to.eq('21002000');
+      expect(await this.seed.balanceOf(this.silo.address)).to.eq('4200');
+    });
+
+    it('properly updates the user balance', async function () {
+      expect(await this.silo.beanDeposit(userAddress,3)).to.eq('0');
+      expect(await this.silo.beanDeposit(user2Address,3)).to.eq('0');
+    });
+  });
+  describe('2 users with two supply increase and both light update', function () {
+    beforeEach(async function () {
+      await this.silo.resetContract(); // Reset the balance of contract
+      await this.silo.resetSeedsAndStalk([userAddress, user2Address]);
+      await this.silo.connect(user).depositBeans('1000', [true, false, true]);
+      await this.silo.connect(user2).depositBeans('1000', [true, false, true]);
+      await this.season.siloSunrise(100);
+      await this.silo.updateSilo(userAddress, false, true);
+      await this.season.siloSunrise(100);
+      await this.silo.updateSilo(user2Address, true, true);
+    });
+
+    it('properly updates the total balances', async function () {
+      expect(await this.silo.totalFarmableBeans()).to.eq('200');
+    });
+
+    it('properly updates the total balances', async function () {
+      expect(await this.silo.totalDepositedBeans()).to.eq('2200');
+      expect(await this.silo.totalSupply()).to.eq('22006000');
+      expect(await this.silo.totalSeeds()).to.eq('0');
+      expect(await this.silo.totalStalk()).to.eq('0');
+      expect(await this.seed.totalSupply()).to.eq('4400');
+    });
+
+    it('properly updates the user balance', async function () {
+      expect(await this.silo.balanceOfFarmableBeans(userAddress)).to.eq('100');
+      expect(await this.silo.balanceOfFarmableStalk(userAddress)).to.eq('1000000');
+      expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('200');
+      expect(await this.seed.balanceOf(userAddress)).to.eq('0');
+      expect(await this.silo.internalStalk(userAddress)).to.eq('10000000');
+      expect(await this.silo.internalSeeds(userAddress)).to.eq('2000');
+      expect(await this.silo.balanceOf(userAddress)).to.eq('2000');
+      expect(await this.silo.balanceOfStalk(userAddress)).to.eq('1000000');
+      expect(await this.silo.balanceOf(this.silo.address)).to.eq('22004000');
+      expect(await this.seed.balanceOf(this.silo.address)).to.eq('4400');
+    });
+
+    it('properly updates the user2 balance', async function () {
+      expect(await this.silo.balanceOfFarmableBeans(user2Address)).to.eq('99');
+      expect(await this.silo.balanceOfFarmableStalk(user2Address)).to.eq('990000');
+      expect(await this.silo.balanceOfSeeds(user2Address)).to.eq('198');
+      expect(await this.silo.internalSeeds(user2Address)).to.eq('2000');
+      expect(await this.silo.internalStalk(user2Address)).to.eq('10004000');
+      expect(await this.seed.balanceOf(user2Address)).to.eq('0');
+      expect(await this.silo.balanceOf(user2Address)).to.eq('0');
+      expect(await this.silo.balanceOfStalk(user2Address)).to.eq('990000');
+      expect(await this.silo.balanceOf(this.silo.address)).to.eq('22004000');
+      expect(await this.seed.balanceOf(this.silo.address)).to.eq('4400');
+    });
+
+    it('properly updates the user balance', async function () {
+      expect(await this.silo.beanDeposit(userAddress,3)).to.eq('0');
+      expect(await this.silo.beanDeposit(user2Address,3)).to.eq('0');
     });
   });
 });
