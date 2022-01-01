@@ -64,6 +64,8 @@ describe('Governance', function () {
     await this.bean.connect(owner).approve(this.governance.address, '100000000000');
     await this.seed.connect(user).approve(this.governance.address, '100000000000');
     await this.seed.connect(owner).approve(this.governance.address, '100000000000');
+    await this.seed.connect(user2).approve(this.governance.address, '100000000000');
+    await this.seed.connect(user3).approve(this.governance.address, '100000000000');
   });
 
   beforeEach(async function () {
@@ -73,7 +75,8 @@ describe('Governance', function () {
     await this.season.resetAccount(ownerAddress)
     await this.season.resetState();
     await this.season.siloSunrise(0);
-    await this.silo.resetSeedsAndStalk([userAddress, ownerAddress]);
+    await this.silo.resetContract();
+    await this.silo.resetSeedsAndStalk([userAddress, user2Address, user3Address, ownerAddress]);
     await this.silo.depositSiloAssetsE(userAddress, '500', '1000000', [false, false, false]);
     await this.silo.depositSiloAssetsE(ownerAddress, '500', '1000000', [false, false, false]);
   });
