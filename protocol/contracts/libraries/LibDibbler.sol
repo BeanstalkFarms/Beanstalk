@@ -64,25 +64,26 @@ library LibDibbler {
     function saveSowTime() private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 totalBeanSupply = IBean(s.c.bean).totalSupply();
-        if (s.f.soil >= totalBeanSupply.div(C.getComplexWeatherDenominator())) return;
+        uint256 soil = s.f.soil;
+        if (soil >= totalBeanSupply.div(C.getComplexWeatherDenominator())) return;
 
         uint256 sowTime = block.timestamp.sub(s.season.timestamp);
         s.w.nextSowTime = uint32(sowTime);
-        uint96 soilPercent = uint96(s.f.soil.mul(1e18).div(totalBeanSupply));
         if (!s.w.didSowBelowMin) s.w.didSowBelowMin = true;
 
-        if (
-            soilPercent <= C.getUpperBoundPodRate().mul(s.w.lastSoilPercent).asUint256() &&
-            !s.w.didSowFaster &&
-            s.w.lastSowTime != MAX_UINT32 &&
-            s.w.lastDSoil != 0
-        ) {
-            uint256 deltaSoil = s.w.startSoil.sub(s.f.soil);
+        if (s.w.didSowFaster ||
+            s.w.lastSowTime == MAX_UINT32 ||
+            s.w.lastDSoil == 0
+        ) return;
+
+        uint96 soilPercent = uint96(soil.mul(1e18).div(totalBeanSupply));
+        if (soilPercent <= C.getUpperBoundPodRate().mul(s.w.lastSoilPercent).asUint256()) {
+            uint256 deltaSoil = s.w.startSoil.sub(soil);
             if (Decimal.ratio(deltaSoil, s.w.lastDSoil).greaterThan(C.getLowerBoundDPD())) {
                 uint256 fasterTime =
                     s.w.lastSowTime > C.getSteadySowTime() ?
                     s.w.lastSowTime.sub(C.getSteadySowTime()) :
-                    C.getSteadySowTime();
+                    0;
                 if (sowTime < fasterTime) s.w.didSowFaster = true;
                 else s.w.lastSowTime = MAX_UINT32;
             }
