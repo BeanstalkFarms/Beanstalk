@@ -41,11 +41,11 @@ contract Account {
         AssetSilo lp;
         Silo s;
         uint32 votedUntil;
-        uint32 proposedUntil;
         uint32 lastUpdate;
         uint32 lastSop;
         uint32 lastRain;
         uint32 lastSIs;
+        uint32 proposedUntil;
         SeasonOfPlenty sop;
         uint256 roots;
         uint256 wrappedBeans;

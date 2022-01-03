@@ -189,13 +189,17 @@ contract SiloExit {
         return 0;
     }
 
+    function proposedUntil(address account) public view returns (uint32) {
+        return s.a[account].proposedUntil;
+    }
+
     function voted(address account) public view returns (bool) {
         if (s.a[account].votedUntil >= season()) {
             for (uint256 i = 0; i < s.g.activeBips.length; i++) {
-                    uint32 activeBip = s.g.activeBips[i];
-                    if (s.g.voted[activeBip][account]) {
-                        return true;
-                    }
+                uint32 activeBip = s.g.activeBips[i];
+                if (s.g.voted[activeBip][account]) {
+                    return true;
+                }
             }
         }
         return false;
