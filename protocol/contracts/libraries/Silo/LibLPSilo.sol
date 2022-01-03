@@ -24,9 +24,20 @@ library LibLPSilo {
         s.lp.deposited = s.lp.deposited.add(amount);
     }
 
+    function incrementDepositedLP(uint256 amount, address lp_address) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.weights[IERC20(0x87898263B6C5BABe34b4ec53F22d98430b91e371)] = 25; 
+        s.lp_balances[IERC20(lp_address)].deposited = s.lp_balances[IERC20(lp_address)].deposited.add(amount);
+    }
+
     function decrementDepositedLP(uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.lp.deposited = s.lp.deposited.sub(amount);
+    }
+
+    function decrementDepositedLP(uint256 amount, address lp_address) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.lp_balances[IERC20(lp_address)].deposited = s.lp_balances[IERC20(lp_address)].deposited.sub(amount);
     }
 
     function addLPDeposit(address account, uint32 _s, uint256 amount, uint256 seeds) internal {

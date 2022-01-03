@@ -6,6 +6,7 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/IDiamondCut.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @author Publius
@@ -22,6 +23,11 @@ contract Account {
         mapping(uint32 => uint256) withdrawals;
         mapping(uint32 => uint256) deposits;
         mapping(uint32 => uint256) depositSeeds;
+    }
+
+    struct Deposit {
+        uint112 tokens;
+        uint112 seeds;
     }
 
     struct Silo {
@@ -97,7 +103,6 @@ contract Storage {
     }
 
     // Silo
-
     struct AssetSilo {
         uint256 deposited;
         uint256 withdrawn;
@@ -198,4 +203,10 @@ struct AppStorage {
     uint32 hotFix3Start;
     mapping (uint32 => Storage.Fundraiser) fundraisers;
     uint32 fundraiserIndex;
+    // If mapping is zero -> then not whitelisted
+    // uint32 represents pool weight in range (0,100]
+    // If weight is 0 -> Pool is not whitelisted
+    mapping(IERC20 => uint32) weights;
+    // On account level
+    mapping(IERC20 => Storage.AssetSilo) lp_balances;
 }
