@@ -11,7 +11,7 @@ import "./interfaces/ISeed.sol";
 
 /**
  * @author Beasley
- * @title Seed is a derivative ERC-20 Stablecoin for Beanstalk obtained by siloing $BEAN.
+ * @title Seed is a derivative ERC-20 token for Beanstalk obtained by siloing $BEAN.
 **/
 
 contract Seed is Ownable, ERC20Burnable {
