@@ -49,11 +49,9 @@ describe('Silo', function () {
         this.result = await this.silo.connect(user).depositBeans('1000');
       });
   
-      it('properly updates the total balances', async function () {
-        await this.silo.incrementDepositedLPE('1')
-        expect(await this.silo.totalDepositedBeans()).to.eq('1000');
-        expect(await this.silo.totalSeeds()).to.eq('2000');
-        expect(await this.silo.totalStalk()).to.eq('10000000');
+      it('properly updates the total lp balances', async function () {
+        await this.silo.incrementDepositedLPByPoolE('1', '0x87898263b6c5babe34b4ec53f22d98430b91e371')
+        expect(await this.silo.totalDepositedLPByPool('0x87898263b6c5babe34b4ec53f22d98430b91e371')).to.eq('1');
       });
   
       it('properly updates the user balance', async function () {

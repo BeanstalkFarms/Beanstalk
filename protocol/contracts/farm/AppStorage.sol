@@ -55,6 +55,9 @@ contract Account {
         SeasonOfPlenty sop;
         uint256 roots;
         uint256 wrappedBeans;
+        // Deposits, Withdrawals By LP Pool
+        mapping(IERC20 => mapping(uint32 => Deposit)) deposits;
+        mapping(IERC20 => mapping(uint32 => uint256)) withdrawals;
     }
 }
 

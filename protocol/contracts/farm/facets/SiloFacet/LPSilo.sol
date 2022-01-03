@@ -78,6 +78,21 @@ contract LPSilo is UpdateSilo {
         LibCheck.lpBalanceCheck();
     }
 
+    function _depositLP(uint256 amount, address lp_address) internal {
+        updateSilo(msg.sender);
+        uint32 _s = season();
+        uint256 lpb = LibLPSilo.lpToLPBeans(amount);
+        require(lpb > 0, "Silo: No Beans under LP.");
+        LibLPSilo.incrementDepositedLP(amount);
+        uint256 seeds = lpb.mul(C.getSeedsPerLPBean());
+        if (season() == _s) LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000));
+        else LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)));
+
+        LibLPSilo.addLPDeposit(msg.sender, _s, amount, lpb.mul(C.getSeedsPerLPBean()), lp_address);
+
+        LibCheck.lpBalanceCheck();
+    }
+
     function _withdrawLP(uint32[] calldata crates, uint256[] calldata amounts) internal {
         updateSilo(msg.sender);
         require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");

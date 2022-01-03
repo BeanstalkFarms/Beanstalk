@@ -105,6 +105,11 @@ contract SiloFacet is BeanSilo {
         _depositLP(amount);
     }
 
+    function depositLP(uint256 amount, address lp_address) public {
+        pair().transferFrom(msg.sender, address(this), amount);
+        _depositLP(amount, lp_address);
+    }
+
     function addAndDepositLP(uint256 lp,
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
