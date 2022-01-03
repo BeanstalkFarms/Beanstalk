@@ -125,7 +125,6 @@ contract GovernanceFacet is VotingBooth {
 
         uint i = 0;
         bool[] memory vote_types = new bool[](bip_list.length);
-        uint32[] memory actives = activeBips();
         for (i = 0; i < bip_list.length; i++) {
             uint32 bip = bip_list[i];
             require(isNominated(bip), "Governance: Not nominated.");
@@ -147,8 +146,7 @@ contract GovernanceFacet is VotingBooth {
         require(balanceOfRoots(msg.sender) > 0, "Governance: Must have Stalk.");
         
         uint i = 0;
-        bool[] memory vote_types = new bool[](bip_list.length);        
-        uint32[] memory actives = activeBips();
+        bool[] memory vote_types = new bool[](bip_list.length);
         for (i = 0; i < bip_list.length; i++) {
             uint32 bip = bip_list[i];
             require(isNominated(bip), "Governance: Not nominated.");

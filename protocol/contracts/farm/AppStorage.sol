@@ -146,7 +146,7 @@ contract Storage {
     struct Season {
         uint32 current;
         uint32 sis;
-        uint8 withdrawBuffer;
+        uint8 withdrawSeasons;
         uint256 start;
         uint256 period;
         uint256 timestamp;

@@ -50,8 +50,8 @@ contract Life {
         return s.season.current;
     }
     
-    function withdrawTime() public view returns (uint8) {
-        return s.season.withdrawBuffer;
+    function withdrawSeasons() public view returns (uint8) {
+        return s.season.withdrawSeasons;
     }
 
     function seasonTime() public virtual view returns (uint32) {

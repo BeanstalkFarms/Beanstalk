@@ -101,9 +101,10 @@ contract SiloExit {
         return beans;
     }
 
-    function balanceOfUnclaimedRoots(address account) public view returns (uint256 roots) {
+    function balanceOfUnclaimedRoots(address account) public view returns (uint256 uRoots) {
         uint256 sis = s.season.sis.sub(s.a[account].lastSIs);
-        return balanceOfRoots(account).mul(sis);
+        uRoots = balanceOfRoots(account).mul(sis);
+        if (uRoots > s.unclaimedRoots) uRoots = s.unclaimedRoots;
     }
 
     function balanceOfFarmableStalk(address account) public view returns (uint256) {
