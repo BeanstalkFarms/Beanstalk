@@ -35,6 +35,14 @@ library LibCheck {
         );
     }
 
+    // function lpBalanceCheck(address lp_address) internal view {
+    //     AppStorage storage s = LibAppStorage.diamondStorage();
+    //     require(
+    //         IUniswapV2Pair(s.c.pair).balanceOf(address(this)) >= s.lp.deposited.add(s.lp.withdrawn),
+    //         "Check: LP balance fail."
+    //     );
+    // }
+
     function balanceCheck() internal view {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(

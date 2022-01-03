@@ -68,6 +68,9 @@ contract InitDiamond {
 
         IBean(s.c.bean).mint(msg.sender, C.getAdvanceIncentive());
         emit Incentivization(msg.sender, C.getAdvanceIncentive());
+
+        s.siloFunctions[s.c.pair] = bytes4(keccak256("uniswapLPtoBDV(address,uint256)")); 
+        s.seedsPerBDV[s.c.pair] = 4;    
     }
 
 }

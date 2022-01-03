@@ -5,13 +5,13 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./LPSilo.sol";
+import "./TokenSilo.sol";
 
 /**
  * @author Publius
  * @title Bean Silo
 **/
-contract BeanSilo is LPSilo {
+contract BeanSilo is TokenSilo {
 
     using SafeMath for uint256;
     using SafeMath for uint32;

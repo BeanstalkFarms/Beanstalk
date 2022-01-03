@@ -20,6 +20,7 @@ contract ConvertFacet is ConvertSilo {
     using SafeMath for uint32;
 
     function convertDepositedBeans(
+        address lp_address,
         uint256 beans,
         uint256 minLP,
         uint32[] memory crates,
@@ -34,12 +35,13 @@ contract ConvertFacet is ConvertSilo {
         uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(C.getSeedsPerLPBean())));
         _s = getDepositSeason(_s);
 
-        _depositLP(lp, beansConverted, _s);
+        _depositLP(lp_address, lp, beansConverted, _s);
         LibCheck.balanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }   
 
     function convertDepositedLP(
+        address lp_address,
         uint256 lp,
         uint256 minBeans,
         uint32[] memory crates,
@@ -49,7 +51,7 @@ contract ConvertFacet is ConvertSilo {
     {
         LibInternal.updateSilo(msg.sender);
         (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
-        (uint256 lpRemoved, uint256 stalkRemoved) = _withdrawLPForConvert(crates, amounts, lpConverted);
+        (uint256 lpRemoved, uint256 stalkRemoved) = _withdrawLPForConvert(lp_address, crates, amounts, lpConverted);
         require(lpRemoved == lpConverted, "Silo: Wrong LP removed.");
         uint32 _s = uint32(stalkRemoved.div(beans.mul(C.getSeedsPerBean())));
         _s = getDepositSeason(_s);
@@ -59,6 +61,7 @@ contract ConvertFacet is ConvertSilo {
     }
 
     function claimConvertAddAndDepositLP(
+        address lp_address,
         uint256 lp,
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
@@ -69,10 +72,11 @@ contract ConvertFacet is ConvertSilo {
         payable
     {
         LibClaim.claim(claim);
-        _convertAddAndDepositLP(lp, al, crates, amounts);
+        _convertAddAndDepositLP(lp_address, lp, al, crates, amounts);
     }
 
     function convertAddAndDepositLP(
+        address lp_address,
         uint256 lp,
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
@@ -81,7 +85,7 @@ contract ConvertFacet is ConvertSilo {
         public
         payable
     {
-        _convertAddAndDepositLP(lp, al, crates, amounts);
+        _convertAddAndDepositLP(lp_address, lp, al, crates, amounts);
     }
 
     function lpToPeg() external view returns (uint256 lp) {

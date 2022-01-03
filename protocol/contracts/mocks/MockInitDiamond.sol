@@ -46,6 +46,8 @@ contract MockInitDiamond {
 
         s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
         LibMarket.initMarket(s.c.bean, s.c.weth, mockRouter);
+        s.siloFunctions[s.c.pair] = bytes4(keccak256("uniswapLPtoBDV(address,uint256)"));  
+        s.seedsPerBDV[s.c.pair] = 4;       
     }
 
 }
