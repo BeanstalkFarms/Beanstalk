@@ -52,10 +52,13 @@ library LibClaim {
             else claimLP(c.lpWithdrawals);
         }
         if (c.claimEth) claimEth();
-
-        if (c.toWallet) IBean(s.c.bean).transfer(msg.sender, beansClaimed);
-        else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(beansClaimed);
+        
+        if (beansClaimed > 0) {
+            if (c.toWallet) IBean(s.c.bean).transfer(msg.sender, beansClaimed);
+            else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(beansClaimed);
+        }
     }
+    
     // Claim Beans
 
     function claimBeans(uint32[] calldata withdrawals) public returns (uint256 beansClaimed) {
