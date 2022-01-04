@@ -54,7 +54,7 @@ contract BeanSilo is LPSilo {
     function _withdrawBeans(
         uint32[] calldata crates,
         uint256[] calldata amounts,
-	Storage.Settings calldata set
+	    Storage.Settings calldata set
     )
         internal
     {

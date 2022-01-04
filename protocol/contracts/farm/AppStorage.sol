@@ -181,9 +181,9 @@ contract Storage {
     }
 
     struct Settings {
-	bool toInternalBalance;
-	bool fromInternalBalance;
-	bool lightUpdateSilo;
+        bool toInternalBalance;
+        bool fromInternalBalance;
+        bool lightUpdateSilo;
     }
 }
 
