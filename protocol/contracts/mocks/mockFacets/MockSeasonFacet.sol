@@ -113,12 +113,12 @@ contract MockSeasonFacet is SeasonFacet {
 
     function halfWeekSunrise() public {
             teleportSunrise(84);
-            decrementWithdrawBuffer();
+            decrementWithdrawSeasons();
     }
     
     function weekSunrise() public {
             teleportSunrise(168);
-            decrementWithdrawBuffer();
+            decrementWithdrawSeasons();
     }
 
     function decrementSunrise(uint256 week) public {
@@ -204,7 +204,7 @@ contract MockSeasonFacet is SeasonFacet {
         // for (uint32 i = 0; i < s.buyOfferIndex; i++) {
         //     delete s.buyOffers[i];
         // }
-        // s.buyOfferIndex = 0;
+        s.buyOfferIndex = 0;
 
         for (uint32 i = 0; i < s.fundraiserIndex; i++) {
             MockToken(s.fundraisers[i].token).burn(MockToken(s.fundraisers[i].token).balanceOf(address(this)));
@@ -227,7 +227,7 @@ contract MockSeasonFacet is SeasonFacet {
         delete s.sop;
         s.s.stalk = 0;
         s.s.seeds = 0;
-        s.season.withdrawBuffer = 25;
+        s.season.withdrawSeasons = 25;
         s.season.current = 1;
         s.paused = false;
         bean().burn(bean().balanceOf(address(this)));
