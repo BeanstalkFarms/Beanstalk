@@ -390,7 +390,6 @@ describe('Marketplace', function () {
 
     });
 
-
     // it('Sell to Buy Offer Fails, Too Far in Line', async function () {
 
     //   let user2BeanBalance = parseInt((await this.bean.balanceOf(user2Address)).toString())
@@ -398,11 +397,6 @@ describe('Marketplace', function () {
     //   let user2BeanBalanceAfterBuyOffer = parseInt((await this.bean.balanceOf(userAddress)).toString())
     //   expect(user2BeanBalance-user2BeanBalanceAfterBuyOffer).to.equal(400);
     // });
-
-
-    // Cancel Buy Offer
-    // TODO more coverage
-
 
 
   });

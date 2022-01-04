@@ -110,25 +110,26 @@ contract MarketplaceFacet {
        return s.buyOffers[index];
     }
 
-    function sellToBuyOffer(uint256 plotIndex, uint24 buyOfferIndex, uint232 amount) public  {
+    function sellToBuyOffer(uint256 plotIndex, uint256 sellFromIndex, uint24 buyOfferIndex, uint232 amount) public  {
         Storage.BuyOffer storage buyOffer = s.buyOffers[buyOfferIndex];
         require(buyOffer.price > 0, "Marketplace: Buy Offer does not exist.");
-        require(s.a[msg.sender].field.plots[plotIndex] > 0, "Marketplace: Plot not owned by user.");
+        require(s.a[msg.sender].field.plots[plotIndex] >= (sellFromIndex.sub(plotIndex) + amount), "Marketplace: Invaid Plot.");
         uint232 harvestable = uint232(s.f.harvestable);
-        require(plotIndex >= harvestable, "Marketplace: Cannot send harvestable plot.");
-        uint256 placeInLine = plotIndex + amount - harvestable;
+        require(sellFromIndex >= harvestable, "Marketplace: Cannot send harvestable plot.");
+        uint256 placeInLine = sellFromIndex + amount - harvestable;
         require(placeInLine <= buyOffer.maxPlaceInLine, "Marketplace: Plot too far in line.");
         uint256 costInBeans = (buyOffer.price * amount) / 1000000;
         bean().transfer(msg.sender, costInBeans);
         if (s.listedPlots[plotIndex].price > 0){
-            _fillListing(msg.sender, buyOffer.owner, plotIndex, amount, true);
+            cancelListing(plotIndex);
         }
         buyOffer.amount = buyOffer.amount.sub(amount);
-        _transferPlot(msg.sender, buyOffer.owner, plotIndex, amount);
+        _transferPlot(msg.sender, buyOffer.owner, sellFromIndex, amount);
         if (buyOffer.amount == 0){
             delete s.buyOffers[buyOfferIndex];
         }
         emit BuyOfferFilled(msg.sender, buyOffer.owner, buyOfferIndex, plotIndex, buyOffer.price, amount);
+        emit BuyOfferFilled(msg.sender, buyOffer.owner, buyOfferIndex, sellFromIndex, buyOffer.price, amount);
     }
 
     function cancelBuyOffer(uint24 buyOfferIndex) public  {
