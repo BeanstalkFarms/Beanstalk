@@ -169,17 +169,8 @@ describe('Marketplace', function () {
 
       const listingNew = await this.marketplace.listing(2500);
       expect(listingNew.price.toString()).to.equal('500000');
-      expect(listingNew.amount.toString()).to.equal('500');
+      expect(listingNew.amount.toString()).to.equal('0');
     });
-
-
-
-
-    // it('Buy Listing Fails after Expiry', async function () {
-    //incrementTotalHarvestableE()
-    //   //
-    // });
-
 
     it('Buy Listing with ETH and beans', async function () {
 
@@ -267,7 +258,7 @@ describe('Marketplace', function () {
 
     });
     it('Fails to Cancel Listing, not owned by user', async function () {
-      await expect(this.marketplace.connect(user).cancelListing('3000')).to.be.revertedWith('Marketplace: Plot not owned by user.');
+      await expect(this.marketplace.connect(user).cancelListing('3000')).to.be.revertedWith('Marketplace: Listing not owned by user.');
     });
 
     it('Cancels Listing, Emits Listing Cancelled Event', async function () {
@@ -392,11 +383,23 @@ describe('Marketplace', function () {
 
     });
 
-    it('Sell Buy Offer ends at unowned index', async function () {
-      await this.marketplace.connect(user2).listBuyOffer('5000', '500000', '2000');
+    it('Sell To Buy Offer ends at unowned index', async function () {
+      await this.marketplace.connect(user2).listBuyOffer('10000', '500000', '2000');
       await this.field.connect(user).sowBeansAndIndex('1000');
-      await this.field.incrementTotalHarvestableE('2000');
       await expect(this.marketplace.connect(user).sellToBuyOffer('6000', '6100', '0', '1000')).to.be.revertedWith('Marketplace: Invaid Plot.');
+    });
+
+    it('Sell Buy Offer cancels listing', async function () {
+      await this.marketplace.connect(user2).listBuyOffer('10000', '500000', '2000');
+      await this.field.connect(user).sowBeansAndIndex('1000');
+      await this.marketplace.connect(user).listPlot('6000', '50000', '5000', '1000');
+      const listing = await this.marketplace.listing(6000);
+      expect(listing.price.toString()).to.equal('50000');
+
+      await (this.marketplace.connect(user).sellToBuyOffer('6000', '6000', '0', '1000'));
+      const listingDeleted = await this.marketplace.listing(6000);
+      expect(listingDeleted.price.toString()).to.equal('0');
+
     });
 
     it('Sell Buy Offer from end of index', async function () {
@@ -420,14 +423,6 @@ describe('Marketplace', function () {
 
     });
 
-
-    // it('Sell to Buy Offer Fails, Too Far in Line', async function () {
-
-    //   let user2BeanBalance = parseInt((await this.bean.balanceOf(user2Address)).toString())
-    //   this.result = await this.marketplace.connect(user2).sellToBuyOffer('3000', '800000', '500', 0);
-    //   let user2BeanBalanceAfterBuyOffer = parseInt((await this.bean.balanceOf(userAddress)).toString())
-    //   expect(user2BeanBalance-user2BeanBalanceAfterBuyOffer).to.equal(400);
-    // });
 
 
   });

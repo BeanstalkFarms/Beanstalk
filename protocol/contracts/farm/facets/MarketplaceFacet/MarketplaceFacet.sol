@@ -24,10 +24,6 @@ contract MarketplaceFacet {
 
     AppStorage s;
 
-    // TODO
-    // whats the point of indexing by address if were going to need every individual event for the entire marketplace data?
-    // does listingfilled need anthing other than index and amount?
-
     event ListingCreated(address indexed account, uint256 index, uint24 pricePerPod, uint232 expiry, uint256 amount);
     event ListingCancelled(address indexed account, uint256 index);
     event ListingFilled(address indexed from, address indexed to, uint256 index, uint24 pricePerPod, uint256 amount);
@@ -80,7 +76,7 @@ contract MarketplaceFacet {
     }
 
     function cancelListing(uint256 index) public {
-        require(s.a[msg.sender].field.plots[index] > 0, "Marketplace: Plot not owned by user.");
+        require(s.a[msg.sender].field.plots[index] > 0, "Marketplace: Listing not owned by user.");
         delete s.listedPlots[index];
         emit ListingCancelled(msg.sender, index);
     }
@@ -92,7 +88,7 @@ contract MarketplaceFacet {
 
     function claimBuyBeansAndListing(LibClaim.Claim calldata claim, uint index, address from, uint256 amountBeans, uint256 buyBeanAmount, uint256 amountToClaim) public  {
         allocateBeans(claim, amountToClaim);
-        buyBeansAndListing(index,from, amountBeans +amountToClaim, buyBeanAmount);
+        buyBeansAndListing(index,from, amountBeans + amountToClaim, buyBeanAmount);
     }
 
     function listBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amountBeans) public  {
@@ -128,11 +124,10 @@ contract MarketplaceFacet {
             cancelListing(plotIndex);
         }
         buyOffer.amount = buyOffer.amount.sub(amount);
-        _transferPlot(msg.sender, buyOffer.owner, plotIndex, sellFromIndex, amount);
+        _transferPlot(msg.sender, buyOffer.owner, plotIndex, sellFromIndex.sub(plotIndex), amount);
         if (buyOffer.amount == 0){
             delete s.buyOffers[buyOfferIndex];
         }
-        emit BuyOfferFilled(msg.sender, buyOffer.owner, buyOfferIndex, plotIndex, buyOffer.price, amount);
         emit BuyOfferFilled(msg.sender, buyOffer.owner, buyOfferIndex, sellFromIndex, buyOffer.price, amount);
     }
 
@@ -148,40 +143,46 @@ contract MarketplaceFacet {
     }
 
     function _buyListing(uint256 index, address from, uint256 amount) private {
-        _fillListing(from, msg.sender, index, amount, false);
-        _transferPlot(from, msg.sender, index, index, amount);
+        _fillListing(from, msg.sender, index, amount);
+        _transferPlot(from, msg.sender, index, 0, amount);
     }
 
-    function _fillListing(address from, address to, uint256 index, uint256 amount, bool isListingOwner) private {
+    function _fillListing(address from, address to, uint256 index, uint256 amount) private {
         require(s.a[from].field.plots[index] >= amount, "Marketplace: Plot has insufficient amount.");
         Storage.Listing storage listing = s.listedPlots[index];
         uint256 listingAmount = listing.amount;
         if (listingAmount == 0){
             listingAmount = s.a[from].field.plots[index];
         }
-        if (!isListingOwner){
-            uint232 harvestable = uint232(s.f.harvestable);
-            require(harvestable <= listing.expiry, "Marketplace: Listing has expired");
-            require(listingAmount >= amount, "Marketplace: Not enough pods in listing");
-        }
+        uint232 harvestable = uint232(s.f.harvestable);
+        require(harvestable <= listing.expiry, "Marketplace: Listing has expired");
+        require(listingAmount >= amount, "Marketplace: Not enough pods in listing");
+
         if (amount >= listingAmount){
             amount = listingAmount;
         }
         else{
             s.listedPlots[index.add(amount)] = listing;
-            s.listedPlots[index.add(amount)].amount = listingAmount - amount;
+            // Optimization: if Listing is full amount of plot, set amount to 0
+            // Later, we consider a valid Listing (price>0) with amount 0 to be full amount of plot
+            if (listingAmount == s.a[from].field.plots[index]){
+                s.listedPlots[index.add(amount)].amount = 0;
+            }
+            else{
+                s.listedPlots[index.add(amount)].amount = listingAmount - amount;
+            }
         }
         delete s.listedPlots[index];
         emit ListingFilled(from, to, index, listing.price, amount);
 
     }
 
-    function _transferPlot(address from, address to, uint256 index, uint256 transferFromIndex,uint256 amount) private {
+    function _transferPlot(address from, address to, uint256 index, uint256 start, uint256 amount) private {
         require(from != address(0), "Marketplace: Transfer from 0 address.");
         require(to != address(0), "Marketplace: Transfer to 0 address.");
-        insertPlot(to,transferFromIndex,amount);
-        removePlot(from,index,transferFromIndex.sub(index),amount);
-        emit PlotTransfer(from, to, index, amount);
+        insertPlot(to,index.add(start),amount);
+        removePlot(from,index,start,amount);
+        emit PlotTransfer(from, to, index.add(start), amount);
     }
 
     function _listBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amount) private{
