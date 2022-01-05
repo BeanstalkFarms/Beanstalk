@@ -16,15 +16,32 @@ contract MockFieldFacet is FieldFacet {
 
     using SafeMath for uint256;
 
+    // for Testing purposes only
+    uint32 mapToPlotIndex;
+    mapping(uint32 => uint256) mapToPlots;
+    mapping(uint32 => address) mapToAddress;
+
     function sowBeansAndIndex(uint256 amount) external returns (uint256) {
-        // s.mapToPlots[s.mapToPlotIndex] = s.f.pods;
+        mapToPlots[mapToPlotIndex] = s.f.pods;
         bean().transferFrom(msg.sender, address(this), amount);
         uint amountPods = _sowBeans(amount);
-        // s.mapToAddress[s.mapToPlotIndex] = msg.sender;
-        // s.mapToPlotIndex = s.mapToPlotIndex +1;
+        mapToAddress[mapToPlotIndex] = msg.sender;
+        mapToPlotIndex = mapToPlotIndex + 1;
         return amountPods;
     }
 
+    function resetField() public {
+
+        for (uint32 i = 0; i < mapToPlotIndex; i++) {
+
+            delete s.a[mapToAddress[i]].field.plots[mapToPlots[i]];
+            delete s.listedPlots[mapToPlots[i]];
+        }
+        for (uint32 i = 0; i < s.buyOfferIndex; i++) {
+            delete s.buyOffers[i];
+        }
+        s.buyOfferIndex = 0;
+    }
     function incrementTotalSoilE(uint256 amount) public {
         incrementTotalSoil(amount);
     }

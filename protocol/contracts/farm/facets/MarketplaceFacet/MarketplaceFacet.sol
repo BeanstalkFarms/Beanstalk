@@ -124,7 +124,7 @@ contract MarketplaceFacet {
             cancelListing(plotIndex);
         }
         buyOffer.amount = buyOffer.amount.sub(amount);
-        _transferPlot(msg.sender, buyOffer.owner, sellFromIndex, amount);
+        _transferPlot(msg.sender, buyOffer.owner, plotIndex, sellFromIndex, amount);
         if (buyOffer.amount == 0){
             delete s.buyOffers[buyOfferIndex];
         }
@@ -145,7 +145,7 @@ contract MarketplaceFacet {
 
     function _buyListing(uint256 index, address from, uint256 amount) private {
         _fillListing(from, msg.sender, index, amount, false);
-        _transferPlot(from, msg.sender, index, amount);
+        _transferPlot(from, msg.sender, index, index, amount);
     }
 
     function _fillListing(address from, address to, uint256 index, uint256 amount, bool isListingOwner) private {
@@ -172,11 +172,11 @@ contract MarketplaceFacet {
 
     }
 
-    function _transferPlot(address from, address to, uint256 index, uint256 amount) private {
+    function _transferPlot(address from, address to, uint256 index, uint256 transferFromIndex,uint256 amount) private {
         require(from != address(0), "Marketplace: Transfer from 0 address.");
         require(to != address(0), "Marketplace: Transfer to 0 address.");
-        insertPlot(to,index,amount);
-        removePlot(from,index,0,amount);
+        insertPlot(to,transferFromIndex,amount);
+        removePlot(from,index,transferFromIndex.sub(index),amount);
         emit PlotTransfer(from, to, index, amount);
     }
 
