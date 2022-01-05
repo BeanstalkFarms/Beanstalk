@@ -7,7 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import "./PodTransfer.sol";
 import "../../../libraries/LibClaim.sol";
-import "../MarketplaceFacet/MarketplaceFacet.sol";
 
 /**
  * @author Publius

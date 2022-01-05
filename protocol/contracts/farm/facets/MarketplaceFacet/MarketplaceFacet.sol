@@ -63,10 +63,10 @@ contract MarketplaceFacet {
        return s.listedPlots[index];
     }
 
-    function buyListing(uint256 index, address from, uint256 amountBeansUsing) public {
+    function buyListing(uint256 index, address from, uint256 amountBeans) public {
         require(s.listedPlots[index].price > 0, "Marketplace: Listing does not exist.");
-        uint256 amount = (amountBeansUsing * 1000000) / s.listedPlots[index].price;
-        bean().transferFrom(msg.sender, from, amountBeansUsing);
+        uint256 amount = (amountBeans * 1000000) / s.listedPlots[index].price;
+        bean().transferFrom(msg.sender, from, amountBeans);
         _buyListing(index,from,amount);
     }
 
@@ -85,11 +85,15 @@ contract MarketplaceFacet {
         emit ListingCancelled(msg.sender, index);
     }
 
-    // TODO
-    // function claimBeansAndBuyListing(uint256 amount, LibClaim.Claim calldata claim, uint index, address payable recipient, uint buyBeanAmount, uint amountToClaim) public  {
-    //     FieldFacet.allocateBeans(claim, amountToClaim);
-    //     buyBeansAndListing(index,recipient,amount);
-    // }
+    function claimAndBuyListing(LibClaim.Claim calldata claim, uint index, address from, uint256 amountBeans, uint256 amountToClaim) public  {
+        allocateBeans(claim, amountToClaim);
+        buyListing(index,from, amountBeans+amountToClaim);
+    }
+
+    function claimBuyBeansAndListing(LibClaim.Claim calldata claim, uint index, address from, uint256 amountBeans, uint256 buyBeanAmount, uint256 amountToClaim) public  {
+        allocateBeans(claim, amountToClaim);
+        buyBeansAndListing(index,from, amountBeans +amountToClaim, buyBeanAmount);
+    }
 
     function listBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amountBeans) public  {
         require(0 < pricePerPod && pricePerPod < 1000000, "Marketplace: Invalid Pod Price");
@@ -203,5 +207,10 @@ contract MarketplaceFacet {
 
     function bean() internal view returns (IBean) {
         return IBean(s.c.bean);
+    }
+
+    function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {
+        LibClaim.claim(c);
+        LibMarket.allocatedBeans(transferBeans);
     }
 }
