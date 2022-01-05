@@ -61,8 +61,8 @@ library LibMarket {
         return beanAmount;
     }
 
-    function buyExactTokens(uint256 buyBeanAmount) internal returns (uint256 amount) {
-        (uint256 ethAmount, uint256 beanAmount) = _buyExactTokens(buyBeanAmount, msg.value, msg.sender);
+    function buyExactTokens(uint256 buyBeanAmount, address to) internal returns (uint256 amount) {
+        (uint256 ethAmount, uint256 beanAmount) = _buyExactTokens(buyBeanAmount, msg.value, to);
         (bool success,) = msg.sender.call{ value: msg.value.sub(ethAmount) }("");
         require(success, "Market: Refund failed.");
         return beanAmount;
@@ -351,6 +351,10 @@ library LibMarket {
     }
 
     function allocatedBeans(uint256 transferBeans) internal {
+        allocatedBeansTo(transferBeans, msg.sender);
+    }
+
+    function allocatedBeansTo(uint256 transferBeans, address to) internal {
 	    AppStorage storage s = LibAppStorage.diamondStorage();
 
         uint wrappedBeans = s.a[msg.sender].wrappedBeans;
@@ -365,6 +369,6 @@ library LibMarket {
             }
             emit BeanAllocation(msg.sender, transferBeans.sub(remainingBeans));
         }
-        if (remainingBeans > 0) IBean(s.c.bean).transferFrom(msg.sender, address(this), remainingBeans);
+        if (remainingBeans > 0) IBean(s.c.bean).transferFrom(msg.sender, to, remainingBeans);
     }
 }

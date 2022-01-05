@@ -13,7 +13,6 @@ describe('Marketplace', function () {
   let contracts
   let provider
   before(async function () {
-    console.log('Starting test');
     contracts = await deploy("Test", false, true);
     [owner, user, user2] = await ethers.getSigners();
     userAddress = user.address;
@@ -187,7 +186,7 @@ describe('Marketplace', function () {
       let user2BeanBalanceAfter = parseInt((await this.bean.balanceOf(user2Address)).toString())
       expect(user2BeanBalanceAfter - user2BeanBalance).to.equal(50);
       let userBeanBalanceAfter = parseInt((await this.bean.balanceOf(userAddress)).toString())
-      expect(userBeanBalanceAfter - userBeanBalance).to.equal(00);
+      expect(userBeanBalanceAfter - userBeanBalance).to.equal(0);
 
       const listingDeleted = await this.marketplace.listing(1000);
       expect(listingDeleted.price.toString()).to.equal('0');

@@ -142,7 +142,7 @@ contract MockUniswapV2Router {
         require(amounts[0] <= msg.value, 'UniswapV2Router: EXCESSIVE_INPUT_AMOUNT');
         MockWETH(_weth).deposit{value: amounts[0]}();
         MockWETH(_weth).burn(amounts[0]);
-        MockToken(path[1]).mint(msg.sender, amounts[1]);
+        MockToken(path[1]).mint(to, amounts[1]);
         // refund dust eth, if any
         if (msg.value > amounts[0]){
              (bool success, ) = msg.sender.call{value: msg.value - amounts[0]}(new bytes(0));
