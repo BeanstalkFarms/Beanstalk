@@ -110,6 +110,24 @@ contract LPSilo is UpdateSilo {
         LibCheck.lpBalanceCheck();
     }
 
+    function _withdrawLP(uint32[] calldata crates, uint256[] calldata amounts, address lp_address) internal {
+        updateSilo(msg.sender);
+        require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
+        (
+            uint256 lpRemoved,
+            uint256 stalkRemoved,
+            uint256 seedsRemoved
+        ) = removeLPDeposits(crates, amounts);
+        uint32 arrivalSeason = season() + s.season.withdrawBuffer;
+        addLPWithdrawal(msg.sender, arrivalSeason, lpRemoved, lp_address);
+        LibLPSilo.decrementDepositedLP(lpRemoved, lp_address);
+        LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
+        LibSilo.updateBalanceOfRainStalk(msg.sender);
+
+        // Need to generalize this LibCheck function possibly using function selectors
+        LibCheck.lpBalanceCheck();
+    }
+
     function removeLPDeposits(uint32[] calldata crates, uint256[] calldata amounts)
         private
         returns (uint256 lpRemoved, uint256 stalkRemoved, uint256 seedsRemoved)
@@ -129,9 +147,35 @@ contract LPSilo is UpdateSilo {
         emit LPRemove(msg.sender, crates, amounts, lpRemoved);
     }
 
+    function removeLPDeposits(uint32[] calldata crates, uint256[] calldata amounts, address lp_address)
+        private
+        returns (uint256 lpRemoved, uint256 stalkRemoved, uint256 seedsRemoved)
+    {
+        for (uint256 i = 0; i < crates.length; i++) {
+            (uint256 crateBeans, uint256 crateSeeds) = LibLPSilo.removeLPDeposit(
+                msg.sender,
+                crates[i],
+                amounts[i],
+                lp_address
+            );
+            lpRemoved = lpRemoved.add(crateBeans);
+            stalkRemoved = stalkRemoved.add(crateSeeds.mul(C.getStalkPerLPSeed()).add(
+                LibSilo.stalkReward(crateSeeds, season()-crates[i]))
+            );
+            seedsRemoved = seedsRemoved.add(crateSeeds);
+        }
+        emit LPRemove(msg.sender, crates, amounts, lpRemoved);
+    }
+
     function addLPWithdrawal(address account, uint32 arrivalSeason, uint256 amount) private {
         s.a[account].lp.withdrawals[arrivalSeason] = s.a[account].lp.withdrawals[arrivalSeason].add(amount);
         s.lp.withdrawn = s.lp.withdrawn.add(amount);
+        emit LPWithdraw(msg.sender, arrivalSeason, amount);
+    }
+
+    function addLPWithdrawal(address account, uint32 arrivalSeason, uint256 amount, address lp_address) private {
+        s.a[account].withdrawals[IERC20(lp_address)][arrivalSeason] = s.a[account].lp.withdrawals[arrivalSeason].add(amount);
+        s.lp_balances[IERC20(lp_address)].withdrawn = s.lp_balances[IERC20(lp_address)].withdrawn.add(amount);
         emit LPWithdraw(msg.sender, arrivalSeason, amount);
     }
 

@@ -47,10 +47,10 @@ library LibLPSilo {
         emit LPDeposit(msg.sender, _s, amount, seeds);
     }
 
-    function addLPDeposit(address account, uint32 _s, uint256 amount, uint112 seeds, address lp_address) internal {
+    function addLPDeposit(address account, uint32 _s, uint256 amount, uint256 seeds, address lp_address) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.a[account].deposits[IERC20(lp_address)][_s].tokens += uint112(amount);
-        s.a[account].deposits[IERC20(lp_address)][_s].seeds += seeds;
+        s.a[account].deposits[IERC20(lp_address)][_s].seeds += uint112(seeds);
         emit LPDeposit(msg.sender, _s, amount, seeds);
     }
 
@@ -74,7 +74,7 @@ library LibLPSilo {
         }
     }
 
-    function removeLPDeposit(address account, uint32 id, uint112 amount, address lp_address)
+    function removeLPDeposit(address account, uint32 id, uint256 amount, address lp_address)
         internal
         returns (uint256, uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -84,7 +84,7 @@ library LibLPSilo {
         require(crateAmount > 0, "Silo: Crate empty.");
         if (amount < crateAmount) {
             uint112 base = uint112(amount.mul(crateBase).div(crateAmount));
-            s.a[account].deposits[IERC20(lp_address)][id].tokens -= amount;
+            s.a[account].deposits[IERC20(lp_address)][id].tokens -= uint112(amount);
             s.a[account].deposits[IERC20(lp_address)][id].seeds -= base;
             return (amount, base);
         } else {

@@ -209,7 +209,7 @@ struct AppStorage {
     // If mapping is zero -> then not whitelisted
     // uint32 represents pool weight in range (0,100]
     // If weight is 0 -> Pool is not whitelisted
-    mapping(IERC20 => uint32) weights;
+    mapping(IERC20 => uint8) weights;
     // On account level
     mapping(IERC20 => Storage.AssetSilo) lp_balances;
 }
