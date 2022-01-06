@@ -64,12 +64,12 @@ contract MarketplaceFacet is Marketplace {
     }
 
 
-    function buyBeansAndListing(uint256 index, address from, uint256 amountBeans, uint256 buyBeanAmount) public payable {
+    function buyBeansAndBuyListing(uint256 index, address from, uint256 amountBeans, uint256 buyBeanAmount) public payable {
         if (amountBeans > 0) bean().transferFrom(msg.sender, from, amountBeans);
         _buyBeansAndListing(index,from,amountBeans, buyBeanAmount);
     }
 
-    function claimBuyBeansAndListing(uint index, address from, uint256 amountBeans, uint256 buyBeanAmount, LibClaim.Claim calldata claim) public  {
+    function claimBuyBeansAndBuyListing(uint index, address from, uint256 amountBeans, uint256 buyBeanAmount, LibClaim.Claim calldata claim) public  {
         allocateBeans(claim, amountBeans, from);
         _buyBeansAndListing(index,from, amountBeans, buyBeanAmount);
     }
@@ -94,7 +94,7 @@ contract MarketplaceFacet is Marketplace {
         _listBuyOffer(maxPlaceInLine, pricePerPod, amountBeans);
     }
 
-    function claimAndlistBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amountBeans, LibClaim.Claim calldata claim) public  {
+    function claimAndListBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amountBeans, LibClaim.Claim calldata claim) public  {
         allocateBeans(claim, amountBeans, address(this));
         _listBuyOffer(maxPlaceInLine, pricePerPod, amountBeans);
     }
