@@ -43,6 +43,19 @@ describe('Silo', function () {
     await this.season.siloSunrise(0);
   });
 
+  describe('claim', function () {
+    beforeEach(async function () {
+      await this.silo.connect(user).depositBeans('1000')
+      await this.silo.connect(user).depositLP('1', '0x87898263b6c5babe34b4ec53f22d98430b91e371')
+      await this.season.setSoilE('5000')
+      await this.field.connect(user).sowBeans('1000')
+      await this.field.incrementTotalHarvestableE('1000')
+      await this.silo.connect(user).withdrawBeans([2],['1000'])
+      await this.silo.connect(user).withdrawLP([2],['1'], '0x87898263b6c5babe34b4ec53f22d98430b91e371')
+      await this.season.farmSunrises('25')
+    });
+  });
+
   describe('deposit', function () {
     describe('single deposit', function () {
       beforeEach(async function () {

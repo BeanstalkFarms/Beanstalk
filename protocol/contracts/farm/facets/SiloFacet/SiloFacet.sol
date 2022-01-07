@@ -160,6 +160,16 @@ contract SiloFacet is BeanSilo {
         _withdrawLP(crates, amounts);
     }
 
+    function withdrawLP(
+        uint32[] calldata crates, uint256[]
+        calldata amounts,
+        address lp_address
+    )
+        external
+    {
+        _withdrawLP(crates, amounts, lp_address);
+    }
+
     function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {
         LibClaim.claim(c);
         LibMarket.allocatedBeans(transferBeans);
