@@ -43,19 +43,6 @@ describe('Silo', function () {
     await this.season.siloSunrise(0);
   });
 
-  describe('claim', function () {
-    beforeEach(async function () {
-      await this.silo.connect(user).depositBeans('1000')
-      await this.silo.connect(user).depositLP('1', '0x87898263b6c5babe34b4ec53f22d98430b91e371')
-      await this.season.setSoilE('5000')
-      await this.field.connect(user).sowBeans('1000')
-      await this.field.incrementTotalHarvestableE('1000')
-      await this.silo.connect(user).withdrawBeans([2],['1000'])
-      await this.silo.connect(user).withdrawLP([2],['1'], '0x87898263b6c5babe34b4ec53f22d98430b91e371')
-      await this.season.farmSunrises('25')
-    });
-  });
-
   describe('deposit', function () {
     describe('single deposit', function () {
       beforeEach(async function () {
@@ -103,6 +90,35 @@ describe('Silo', function () {
         expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('2000');
       });
     });
+  });
+
+  describe('claim', function () {
+    beforeEach(async function () {
+      await this.pair.faucet(userAddress, '5');
+    });
+
+    it('properly deposits lp by lp pool type', async function () {
+      const lp = await this.pair.balanceOf(userAddress)
+      console.log(`${await this.pair.balanceOf(userAddress)}`)
+      await this.silo.connect(user).depositBeans('1000')
+      await this.silo.connect(user).depositLPByPool('1', '0x87898263b6c5babe34b4ec53f22d98430b91e371')
+      const newLP = await this.pair.balanceOf(userAddress)
+      console.log(`${await this.pair.balanceOf(userAddress)}`)
+      const lpDeposit = await this.silo.lpDepositByPool(userAddress, '27', '0x87898263b6c5babe34b4ec53f22d98430b91e371')
+      expect(lpDeposit[0]).to.be.equal('0');
+      expect(lpDeposit[1]).to.be.equal('0');
+      expect(newLP.sub(lp)).to.be.equal('-1');
+    });
+
+    // it('properly withdraws lp by lp pool type', async function () {
+    //   await this.season.setSoilE('5000')
+    //   await this.field.connect(user).sowBeans('1000')
+    //   await this.field.incrementTotalHarvestableE('1000')
+    //   await this.silo.connect(user).withdrawBeans([2],['1000'])
+    //   await this.silo.connect(user).withdrawLPByPool([2],['1'], '0x87898263b6c5babe34b4ec53f22d98430b91e371')
+    //   await this.season.farmSunrises('25')
+    // })
+    
   });
 
 });

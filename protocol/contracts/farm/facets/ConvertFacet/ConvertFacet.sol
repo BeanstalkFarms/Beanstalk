@@ -23,7 +23,8 @@ contract ConvertFacet is ConvertSilo {
         uint256 beans,
         uint256 minLP,
         uint32[] memory crates,
-        uint256[] memory amounts
+        uint256[] memory amounts,
+        address lp_address
     )
         external 
     {
@@ -34,7 +35,7 @@ contract ConvertFacet is ConvertSilo {
         uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(C.getSeedsPerLPBean())));
         _s = getDepositSeason(_s);
 
-        _depositLP(lp, beansConverted, _s);
+        _depositLP(lp, beansConverted, _s, lp_address);
         LibCheck.balanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }   
@@ -43,13 +44,14 @@ contract ConvertFacet is ConvertSilo {
         uint256 lp,
         uint256 minBeans,
         uint32[] memory crates,
-        uint256[] memory amounts
+        uint256[] memory amounts,
+        address lp_address
     )
         external
     {
         LibInternal.updateSilo(msg.sender);
         (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
-        (uint256 lpRemoved, uint256 stalkRemoved) = _withdrawLPForConvert(crates, amounts, lpConverted);
+        (uint256 lpRemoved, uint256 stalkRemoved) = _withdrawLPForConvert(crates, amounts, lpConverted, lp_address);
         require(lpRemoved == lpConverted, "Silo: Wrong LP removed.");
         uint32 _s = uint32(stalkRemoved.div(beans.mul(C.getSeedsPerBean())));
         _s = getDepositSeason(_s);
@@ -63,25 +65,27 @@ contract ConvertFacet is ConvertSilo {
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
         uint256[] memory amounts,
-        LibClaim.Claim calldata claim
+        LibClaim.Claim calldata claim,
+        address lp_address
     )
         external
         payable
     {
         LibClaim.claim(claim);
-        _convertAddAndDepositLP(lp, al, crates, amounts);
+        _convertAddAndDepositLP(lp, al, crates, amounts, lp_address);
     }
 
     function convertAddAndDepositLP(
         uint256 lp,
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
-        uint256[] memory amounts
+        uint256[] memory amounts,
+        address lp_address
     )
         public
         payable
     {
-        _convertAddAndDepositLP(lp, al, crates, amounts);
+        _convertAddAndDepositLP(lp, al, crates, amounts, lp_address);
     }
 
     function lpToPeg() external view returns (uint256 lp) {
