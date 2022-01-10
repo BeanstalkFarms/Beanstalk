@@ -25,7 +25,6 @@ contract LPSilo is UpdateSilo {
      * Getters
     **/
 
-    // Legacy for Uniswap LPPools Only
     function totalDepositedLP() public view returns (uint256) {
             return s.lp.deposited;
     }
@@ -34,12 +33,12 @@ contract LPSilo is UpdateSilo {
             return s.lp.withdrawn;
     }
 
-    function lpDeposit(address account, uint32 id) public view returns (uint256, uint256) {
-        return (s.a[account].lp.deposits[id], s.a[account].lp.depositSeeds[id]);
+    function lpDeposit(address account, uint32 id, address lp_address) public view returns (uint256, uint256) {
+        return (s.a[account].deposits[IERC20(lp_address)][id].tokens, s.a[account].deposits[IERC20(lp_address)][id].seeds);
     }
 
-    function lpWithdrawal(address account, uint32 i) public view returns (uint256) {
-        return s.a[account].lp.withdrawals[i];
+    function lpWithdrawal(address account, uint32 i, address lp_address) public view returns (uint256) {
+        return s.a[account].withdrawals[IERC20(lp_address)][i];
     }
 
     // V2 For All LP Pool Types and Addresses
@@ -50,14 +49,6 @@ contract LPSilo is UpdateSilo {
     function totalWithdrawnLPByPool(address lp_address) public view returns (uint256) {
             return s.lp_balances[IERC20(lp_address)].withdrawn;
     }
-
-    // function lpDepositByPool(address account, uint32 id) public view returns (uint256, uint256) {
-    //     return (s.a[account].lp.deposits[id], s.a[account].lp.depositSeeds[id]);
-    // }
-
-    // function lpWithdrawalByPool(address account, uint32 i) public view returns (uint256) {
-    //     return s.a[account].lp.withdrawals[i];
-    // }
 
     /**
      * Internal
