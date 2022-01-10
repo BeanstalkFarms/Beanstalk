@@ -40,13 +40,15 @@ contract Account {
         AssetSilo bean;
         AssetSilo lp;
         Silo s;
-        uint32 lockedUntil;
+        uint32 votedUntil;
         uint32 lastUpdate;
         uint32 lastSop;
         uint32 lastRain;
         uint32 lastSIs;
+        uint32 proposedUntil;
         SeasonOfPlenty sop;
         uint256 roots;
+        uint256 wrappedBeans;
     }
 }
 
@@ -144,6 +146,7 @@ contract Storage {
     struct Season {
         uint32 current;
         uint32 sis;
+        uint8 withdrawSeasons;
         uint256 start;
         uint256 period;
         uint256 timestamp;

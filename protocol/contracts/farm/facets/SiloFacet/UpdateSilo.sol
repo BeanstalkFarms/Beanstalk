@@ -9,6 +9,8 @@ import "./SiloExit.sol";
 import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibMarket.sol";
+import "../../../libraries/Silo/LibSilo.sol";
+import "../../../libraries/Silo/LibBeanSilo.sol";
 
 /**
  * @author Publius
@@ -29,13 +31,14 @@ contract UpdateSilo is SiloExit {
         if (s.a[account].s.seeds > 0) grownStalk = balanceOfGrownStalk(account);
         if (s.a[account].roots > 0) {
             farmSops(account, update);
+            farmLegacyBeans(account, update);
             farmBeans(account, update);
         } else if (s.a[account].roots == 0) {
             s.a[account].lastSop = s.r.start;
             s.a[account].lastRain = 0;
             s.a[account].lastSIs = s.season.sis;
         }
-        if (grownStalk > 0) incrementBalanceOfStalk(account, grownStalk);
+        if (grownStalk > 0) LibSilo.incrementBalanceOfStalk(account, grownStalk);
         s.a[account].lastUpdate = season();
     }
 
@@ -65,7 +68,7 @@ contract UpdateSilo is SiloExit {
             Account.State storage a = s.a[account];
             s.a[account].s.seeds = a.s.seeds.add(seeds);
             s.a[account].s.stalk = accountStalk.add(beans.mul(C.getStalkPerBean()));
-            addBeanDeposit(account, season(), beans);
+            LibBeanSilo.addBeanDeposit(account, season(), beans);
         }
     }
 
@@ -86,7 +89,7 @@ contract UpdateSilo is SiloExit {
         uint256 seeds = beans.mul(C.getSeedsPerBean());
         s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
         s.a[account].s.stalk = s.a[account].s.stalk.add(beans.mul(C.getStalkPerBean()));
-        addBeanDeposit(account, season(), beans);
+        LibBeanSilo.addBeanDeposit(account, season(), beans);
     }
 
     function farmSops(address account, uint32 update) internal {

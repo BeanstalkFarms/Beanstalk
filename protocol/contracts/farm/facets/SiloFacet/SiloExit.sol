@@ -9,13 +9,19 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "../../../interfaces/IWETH.sol";
 import "../../../interfaces/IBean.sol";
-import "./SiloEntrance.sol";
+import "../../../libraries/LibCheck.sol";
+import "../../../libraries/LibInternal.sol";
+import "../../../libraries/LibMarket.sol";
+import "../../../libraries/Silo/LibSilo.sol";
+import "../../../C.sol";
 
 /**
  * @author Publius
  * @title Silo Exit
 **/
-contract SiloExit is SiloEntrance {
+contract SiloExit {
+
+    AppStorage internal s;
 
     using SafeMath for uint256;
     using SafeMath for uint32;
@@ -61,7 +67,7 @@ contract SiloExit is SiloEntrance {
     }
 
     function balanceOfGrownStalk(address account) public view returns (uint256) {
-        return stalkReward(s.a[account].s.seeds, season()-lastUpdate(account));
+        return LibSilo.stalkReward(s.a[account].s.seeds, season()-lastUpdate(account));
     }
 
     function balanceOfFarmableBeans(address account) public view returns (uint256 beans) {
@@ -95,9 +101,10 @@ contract SiloExit is SiloEntrance {
         return beans;
     }
 
-    function balanceOfUnclaimedRoots(address account) public view returns (uint256 roots) {
+    function balanceOfUnclaimedRoots(address account) public view returns (uint256 uRoots) {
         uint256 sis = s.season.sis.sub(s.a[account].lastSIs);
-        return balanceOfRoots(account).mul(sis);
+        uRoots = balanceOfRoots(account).mul(sis);
+        if (uRoots > s.unclaimedRoots) uRoots = s.unclaimedRoots;
     }
 
     function balanceOfFarmableStalk(address account) public view returns (uint256) {
@@ -144,7 +151,7 @@ contract SiloExit is SiloEntrance {
         if (s.sop.base == 0) return 0;
         return balanceOfPlentyBase(account).mul(s.sop.weth).div(s.sop.base);
     }
-
+    
     function balanceOfPlentyBase(address account) public view returns (uint256) {
         uint256 plenty = s.a[account].sop.base;
         uint32 endSeason = s.a[account].lastSop;
@@ -175,25 +182,24 @@ contract SiloExit is SiloEntrance {
      * Governance
     **/
 
-    modifier notLocked(address account) {
-        require(!(locked(account)),"locked");
-        _;
-    }
-
-    function lockedUntil(address account) public view returns (uint32) {
-        if (locked(account)) {
-            return s.a[account].lockedUntil;
+    function votedUntil(address account) public view returns (uint32) {
+        if (voted(account)) {
+            return s.a[account].votedUntil;
         }
         return 0;
     }
 
-    function locked(address account) public view returns (bool) {
-        if (s.a[account].lockedUntil >= season()) {
+    function proposedUntil(address account) public view returns (uint32) {
+        return s.a[account].proposedUntil;
+    }
+
+    function voted(address account) public view returns (bool) {
+        if (s.a[account].votedUntil >= season()) {
             for (uint256 i = 0; i < s.g.activeBips.length; i++) {
-                    uint32 activeBip = s.g.activeBips[i];
-                    if (s.g.voted[activeBip][account]) {
-                        return true;
-                    }
+                uint32 activeBip = s.g.activeBips[i];
+                if (s.g.voted[activeBip][account]) {
+                    return true;
+                }
             }
         }
         return false;
@@ -208,7 +214,15 @@ contract SiloExit is SiloEntrance {
     }
 
     function balanceOfMigrationStalk(address account) private view returns (uint256) {
-        return s.a[account].s.stalk.add(stalkReward(s.a[account].s.seeds, s.bip0Start-lastUpdate(account)));
+        return s.a[account].s.stalk.add(LibSilo.stalkReward(s.a[account].s.seeds, s.bip0Start-lastUpdate(account)));
+    }
+
+    /**
+     * Internal
+    **/
+
+    function season() internal view returns (uint32) {
+        return s.season.current;
     }
 
 }

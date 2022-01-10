@@ -34,6 +34,7 @@ describe('Sun', function () {
       before(async function () {
         await this.season.resetState()
         await this.pair.burnTokens(this.bean.address)
+        await this.pair.burnAllLP(this.silo.address)
         this.testData = {}
         columns.forEach((key, i) => this.testData[key] = tests[v][i])
         for (var i = 0; i < this.testData.season-1; i++) {
@@ -43,11 +44,12 @@ describe('Sun', function () {
         await this.bean.mint(this.silo.address, this.testData.beansInSilo)
         await this.bean.mint(this.pair.address, this.testData.beansInPool)
         await this.silo.incrementDepositedBeansE(this.testData.beansInSilo)
-        await this.season.incrementTotalSoilE(this.testData.soil)
+        await this.season.setSoilE(this.testData.soil)
         await this.silo.depositSiloAssetsE(userAddress, '1', '100000')
         await this.field.incrementTotalPodsE((parseInt(this.testData.unripenedPods) + parseInt(this.testData.harvestablePods)).toString())
         await this.field.incrementTotalHarvestableE(this.testData.harvestablePods)
         this.pair.simulateTrade(this.testData.beansInPool, this.testData.ethInPool+'000000000000')
+        await this.silo.incrementDepositedLPE('1')
         this.result = await this.season.sunSunrise(this.testData.twapBeans, this.testData.twapUSDC, this.testData.divisor)
       })
       it('checks values', async function () {
@@ -82,8 +84,22 @@ describe('Sun', function () {
       })
     })
   })
+  it('decrements the withdraw buffer', async function () {
+    await this.season.resetState()
+    await this.season.halfWeekSunrise()
+    expect(await this.season.withdrawSeasons()).to.eq(24)
+    await this.season.halfWeekSunrise()
+    expect(await this.season.withdrawSeasons()).to.eq(23)
+    await this.season.decrementSunrise(14)
+    expect(await this.season.withdrawSeasons()).to.eq(9)
+    await this.season.halfWeekSunrise()
+    expect(await this.season.withdrawSeasons()).to.eq(9)
+    await this.season.weekSunrise()
+    expect(await this.season.withdrawSeasons()).to.eq(8)
+    await this.season.decrementSunrise(100)
+    expect(await this.season.withdrawSeasons()).to.eq(5)
+  })
 })
-
 
 describe('Sun Soil', function () {
 
@@ -105,148 +121,10 @@ describe('Sun Soil', function () {
   });
 
   this.beforeEach(async function () {
-    await this.season.decrementTotalSoilE(await this.field.totalSoil())
+    await this.season.setSoilE(0);
   })
 
   it("Properly sets the soil bounds", async function () {
     expect(await this.season.minSoil('100')).to.be.equal('50')
-    expect(await this.season.maxSoil()).to.be.equal('25000')
-  });
-
-  // Increase Soil
-
-  describe("Increase above max Soil", async function () {
-    beforeEach(async function () {
-      await this.season.increaseSoilE('100000')
-    });
-
-    it("Properly sets the soil", async function () {
-      expect(await this.field.totalSoil()).to.be.equal('25000')
-    });
-  });
-
-  describe("Increase when already above above max Soil", async function () {
-    beforeEach(async function () {
-      await this.season.incrementTotalSoilE('100000')
-      await this.season.increaseSoilE('100000')
-    });
-
-    it("Properly sets the soil", async function () {
-      expect(await this.field.totalSoil()).to.be.equal('25000')
-    });
-  });
-
-  describe("Increase little Soil", async function () {
-    beforeEach(async function () {
-      await this.season.increaseSoilE('1')
-    });
-
-    it("Properly sets the soil", async function () {
-      expect(await this.field.totalSoil()).to.be.equal('1')
-    });
-  });
-
-  describe("Increase to normal Soil", async function () {
-    beforeEach(async function () {
-      await this.season.increaseSoilE('100')
-    });
-
-    it("Properly sets the soil", async function () {
-      expect(await this.field.totalSoil()).to.be.equal('100')
-    });
-  });
-
-  // Decrease Soil
-
-  describe("Decrease above max Soil", async function () {
-    beforeEach(async function () {
-      await this.season.incrementTotalSoilE('100000')
-      await this.season.decreaseSoilE('1', '100')
-    });
-
-    it("Properly sets the max soil", async function () {
-      expect(await this.field.totalSoil()).to.be.equal('25000')
-    });
-  });
-
-  describe("Decrease already below min Soil", async function () {
-    beforeEach(async function () {
-      await this.season.incrementTotalSoilE('2')
-      await this.season.decreaseSoilE('1', '100')
-    });
-
-    it("Properly sets the soil", async function () {
-      expect(await this.field.totalSoil()).to.be.equal('50')
-    });
-  });
-
-  describe("Decrease below min Soil", async function () {
-    beforeEach(async function () {
-      await this.season.incrementTotalSoilE('110')
-      await this.season.decreaseSoilE('100', '100')
-    });
-
-    it("Properly sets the soil", async function () {
-      expect(await this.field.totalSoil()).to.be.equal('50')
-    });
-  });
-
-  describe("Decrease to normal Soil", async function () {
-    beforeEach(async function () {
-      await this.season.incrementTotalSoilE('110')
-      await this.season.decreaseSoilE('10', '100')
-    });
-
-    it("Properly sets the soil", async function () {
-      expect(await this.field.totalSoil()).to.be.equal('100')
-    });
-  });
-
-  describe("Decrease below 0 Soil", async function () {
-    beforeEach(async function () {
-      await this.season.incrementTotalSoilE('100')
-      await this.season.decreaseSoilE('110', '10')
-    });
-
-    it("Properly sets the soil", async function () {
-      expect(await this.field.totalSoil()).to.be.equal('5')
-    });
-  });
-
-  describe("Decrease to 0 Soil", async function () {
-    beforeEach(async function () {
-      await this.season.incrementTotalSoilE('100')
-      await this.season.decreaseSoilE('110', '0')
-    });
-
-    it("Properly sets the soil", async function () {
-      expect(await this.field.totalSoil()).to.be.equal('0')
-    });
-  });
-
-  // Ensure soil bounds
-
-  // Decrease Soil
-
-  describe("When above max soil", async function () {
-    beforeEach(async function () {
-      await this.season.incrementTotalSoilE('100000')
-      await this.season.ensureSoilBoundsE()
-    });
-
-    it("Properly sets the max soil", async function () {
-      expect(await this.field.totalSoil()).to.be.equal('25000')
-    });
-  });
-
-  describe("When normal soil", async function () {
-    beforeEach(async function () {
-      await this.season.incrementTotalSoilE('2')
-      await this.season.ensureSoilBoundsE()
-    });
-
-    it("Properly sets the soil", async function () {
-      expect(await this.field.totalSoil()).to.be.equal('2')
-    });
   });
 });

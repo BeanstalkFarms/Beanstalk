@@ -79,7 +79,7 @@ describe('Budget', function () {
       beforeEach(async function () {
         const beanSupply = await this.bean.totalSupply();
         const beanBalance = await this.bean.balanceOf(userAddress);
-        await this.season.incrementTotalSoilE('500');
+        await this.season.setSoilE('500');
         await this.budget.connect(user).budgetSow('1000');
         const postBeanSupply = await this.bean.totalSupply();
         const postBeanBalance = await this.bean.balanceOf(userAddress);
@@ -103,7 +103,7 @@ describe('Budget', function () {
       beforeEach(async function () {
         const beanSupply = await this.bean.totalSupply();
         const beanBalance = await this.bean.balanceOf(userAddress);
-        await this.season.incrementTotalSoilE('1500');
+        await this.season.setSoilE('1500');
         await this.budget.connect(user).budgetSow('1000');
         const postBeanSupply = await this.bean.totalSupply();
         const postBeanBalance = await this.bean.balanceOf(userAddress);

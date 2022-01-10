@@ -1,3 +1,4 @@
+
 /**
  * SPDX-License-Identifier: MIT
 **/
@@ -5,13 +6,21 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../SiloFacet/SiloEntrance.sol";
+import "../../../libraries/Silo/LibSilo.sol";
+import "../../../libraries/Silo/LibBeanSilo.sol";
+import "../../../libraries/Silo/LibLPSilo.sol";
+import "../../../libraries/LibCheck.sol";
+import "../../../libraries/LibInternal.sol";
+import "../../../libraries/LibMarket.sol";
+import "../../../C.sol";
 
 /**
  * @author Publius
  * @title Bean Silo
 **/
-contract ConvertSilo is SiloEntrance {
+contract ConvertSilo {
+
+    AppStorage internal s;
 
     using SafeMath for uint256;
     using SafeMath for uint32;
@@ -29,30 +38,57 @@ contract ConvertSilo is SiloEntrance {
         uint256 i;
     }
 
+    function _convertAddAndDepositLP(
+        uint256 lp,
+        LibMarket.AddLiquidity calldata al,
+        uint32[] memory crates,
+        uint256[] memory amounts
+    )
+        internal
+    {
+	    LibInternal.updateSilo(msg.sender);
+        WithdrawState memory w;
+        if (bean().balanceOf(address(this)) < al.beanAmount) {
+            w.beansTransferred = al.beanAmount.sub(s.bean.deposited);
+            bean().transferFrom(msg.sender, address(this), w.beansTransferred);
+        }
+        (w.beansAdded, w.newLP) = LibMarket.addLiquidity(al); // w.beansAdded is beans added to LP
+        require(w.newLP > 0, "Silo: No LP added.");
+        (w.beansRemoved, w.stalkRemoved) = _withdrawBeansForConvert(crates, amounts, w.beansAdded); // w.beansRemoved is beans removed from Silo
+        uint256 amountFromWallet = w.beansAdded.sub(w.beansRemoved, "Silo: Removed too many Beans.");
+
+        if (amountFromWallet < w.beansTransferred) {
+            bean().transfer(msg.sender, w.beansTransferred.sub(amountFromWallet));
+	    } else if (w.beansTransferred < amountFromWallet) {
+            uint256 transferAmount = amountFromWallet.sub(w.beansTransferred);
+            LibMarket.allocatedBeans(transferAmount);
+        }
+
+        w.i = w.stalkRemoved.div(LibLPSilo.lpToLPBeans(lp.add(w.newLP)), "Silo: No LP Beans.");
+        uint32 depositSeason = uint32(season().sub(w.i.div(C.getSeedsPerLPBean())));
+
+        if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
+	
+        lp = lp.add(w.newLP);
+        _depositLP(lp, LibLPSilo.lpToLPBeans(lp), depositSeason);
+        LibCheck.beanBalanceCheck();
+        LibSilo.updateBalanceOfRainStalk(msg.sender);
+    }
+
     /**
      * Internal LP
     **/
 
     function _depositLP(uint256 amount, uint256 lpb, uint32 _s) internal {
         require(lpb > 0, "Silo: No Beans under LP.");
-        incrementDepositedLP(amount);
+        LibLPSilo.incrementDepositedLP(amount);
         uint256 seeds = lpb.mul(C.getSeedsPerLPBean());
-        if (season() == _s) depositSiloAssets(msg.sender, seeds, lpb.mul(10000));
-        else depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)));
+        if (season() == _s) LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000));
+        else LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)));
 
-        addLPDeposit(msg.sender, _s, amount, lpb.mul(C.getSeedsPerLPBean()));
+        LibLPSilo.addLPDeposit(msg.sender, _s, amount, lpb.mul(C.getSeedsPerLPBean()));
 
         LibCheck.lpBalanceCheck();
-    }
-
-    function incrementDepositedLP(uint256 amount) private {
-        s.lp.deposited = s.lp.deposited.add(amount);
-    }
-
-    function addLPDeposit(address account, uint32 _s, uint256 amount, uint256 seeds) private {
-        s.a[account].lp.deposits[_s] += amount;
-        s.a[account].lp.depositSeeds[_s] += seeds;
-        emit LPDeposit(msg.sender, _s, amount, seeds);
     }
 
     function _withdrawLPForConvert(
@@ -70,13 +106,13 @@ contract ConvertSilo is SiloEntrance {
         uint256 i = 0;
         while ((i < crates.length) && (lpRemoved < maxLP)) {
             if (lpRemoved.add(amounts[i]) < maxLP)
-                (depositLP, depositSeeds) = removeLPDeposit(msg.sender, crates[i], amounts[i]);
+                (depositLP, depositSeeds) = LibLPSilo.removeLPDeposit(msg.sender, crates[i], amounts[i]);
             else
-                (depositLP, depositSeeds) = removeLPDeposit(msg.sender, crates[i], maxLP.sub(lpRemoved));
+                (depositLP, depositSeeds) = LibLPSilo.removeLPDeposit(msg.sender, crates[i], maxLP.sub(lpRemoved));
             lpRemoved = lpRemoved.add(depositLP);
             seedsRemoved = seedsRemoved.add(depositSeeds);
             stalkRemoved = stalkRemoved.add(depositSeeds.mul(C.getStalkPerLPSeed()).add(
-                stalkReward(depositSeeds, season()-crates[i]
+                LibSilo.stalkReward(depositSeeds, season()-crates[i]
             )));
             i++;
         }
@@ -85,37 +121,10 @@ contract ConvertSilo is SiloEntrance {
             amounts[i] = 0;
             i++;
         }
-        decrementDepositedLP(lpRemoved);
-        withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
+        LibLPSilo.decrementDepositedLP(lpRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
         stalkRemoved = stalkRemoved.sub(seedsRemoved.mul(C.getStalkPerLPSeed()));
         emit LPRemove(msg.sender, crates, amounts, lpRemoved);
-    }
-
-    function removeLPDeposit(address account, uint32 id, uint256 amount)
-        private
-        returns (uint256, uint256) {
-        require(id <= season(), "Silo: Future crate.");
-        (uint256 crateAmount, uint256 crateBase) = lpDeposit(account, id);
-        require(crateAmount >= amount, "Silo: Crate balance too low.");
-        require(crateAmount > 0, "Silo: Crate empty.");
-        if (amount < crateAmount) {
-            uint256 base = amount.mul(crateBase).div(crateAmount);
-            s.a[account].lp.deposits[id] -= amount;
-            s.a[account].lp.depositSeeds[id] -= base;
-            return (amount, base);
-        } else {
-            delete s.a[account].lp.deposits[id];
-            delete s.a[account].lp.depositSeeds[id];
-            return (crateAmount, crateBase);
-        }
-    }
-
-    function decrementDepositedLP(uint256 amount) private {
-        s.lp.deposited = s.lp.deposited.sub(amount);
-    }
-
-    function lpDeposit(address account, uint32 id) internal view returns (uint256, uint256) {
-        return (s.a[account].lp.deposits[id], s.a[account].lp.depositSeeds[id]);
     }
 
     /**
@@ -124,12 +133,12 @@ contract ConvertSilo is SiloEntrance {
 
     function _depositBeans(uint256 amount, uint32 _s) internal {
         require(amount > 0, "Silo: No beans.");
-        incrementDepositedBeans(amount);
+        LibBeanSilo.incrementDepositedBeans(amount);
         uint256 stalk = amount.mul(C.getStalkPerBean());
         uint256 seeds = amount.mul(C.getSeedsPerBean());
-        if (_s < season()) stalk = stalk.add(stalkReward(seeds, season()-_s));
-        depositSiloAssets(msg.sender, seeds, stalk);
-        addBeanDeposit(msg.sender, _s, amount);
+        if (_s < season()) stalk = stalk.add(LibSilo.stalkReward(seeds, season()-_s));
+        LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
+        LibBeanSilo.addBeanDeposit(msg.sender, _s, amount);
         LibCheck.beanBalanceCheck();
     }
 
@@ -146,12 +155,12 @@ contract ConvertSilo is SiloEntrance {
         uint256 i = 0;
         while ((i < crates.length) && (beansRemoved < maxBeans)) {
             if (beansRemoved.add(amounts[i]) < maxBeans)
-                crateBeans = removeBeanDeposit(msg.sender, crates[i], amounts[i]);
+                crateBeans = LibBeanSilo.removeBeanDeposit(msg.sender, crates[i], amounts[i]);
             else
-                crateBeans = removeBeanDeposit(msg.sender, crates[i], maxBeans.sub(beansRemoved));
+                crateBeans = LibBeanSilo.removeBeanDeposit(msg.sender, crates[i], maxBeans.sub(beansRemoved));
             beansRemoved = beansRemoved.add(crateBeans);
             stalkRemoved = stalkRemoved.add(crateBeans.mul(C.getStalkPerBean()).add(
-                stalkReward(crateBeans.mul(C.getSeedsPerBean()), season()-crates[i]
+                LibSilo.stalkReward(crateBeans.mul(C.getSeedsPerBean()), season()-crates[i]
             )));
             i++;
         }
@@ -160,30 +169,27 @@ contract ConvertSilo is SiloEntrance {
             amounts[i] = 0;
             i++;
         }
-        decrementDepositedBeans(beansRemoved);
-        withdrawSiloAssets(msg.sender, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved);
+        LibBeanSilo.decrementDepositedBeans(beansRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved);
         stalkRemoved = stalkRemoved.sub(beansRemoved.mul(C.getStalkPerBean()));
         emit BeanRemove(msg.sender, crates, amounts, beansRemoved);
         return (beansRemoved, stalkRemoved);
     }
 
-    function removeBeanDeposit(address account, uint32 id, uint256 amount)
-        private
-        returns (uint256)
-    {
-        require(id <= season(), "Silo: Future crate.");
-        uint256 crateAmount = beanDeposit(account, id);
-        require(crateAmount >= amount, "Silo: Crate balance too low.");
-        require(crateAmount > 0, "Silo: Crate empty.");
-        s.a[account].bean.deposits[id] -= amount;
-        return amount;
+    function reserves() internal view returns (uint256, uint256) {
+        (uint112 reserve0, uint112 reserve1,) = pair().getReserves();
+        return (s.index == 0 ? reserve1 : reserve0,s.index == 0 ? reserve0 : reserve1);
     }
 
-    function decrementDepositedBeans(uint256 amount) private {
-        s.bean.deposited = s.bean.deposited.sub(amount);
+    function pair() internal view returns (IUniswapV2Pair) {
+        return IUniswapV2Pair(s.c.pair);
     }
 
-    function beanDeposit(address account, uint32 id) private view returns (uint256) {
-        return s.a[account].bean.deposits[id];
+    function bean() internal view returns (IBean) {
+        return IBean(s.c.bean);
+    }
+
+    function season() internal view returns (uint32) {
+        return s.season.current;
     }
 }

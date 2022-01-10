@@ -22,6 +22,7 @@ contract GovernanceFacet is VotingBooth {
 
     event Proposal(address indexed account, uint32 indexed bip, uint256 indexed start, uint256 period);
     event Vote(address indexed account, uint32 indexed bip, uint256 roots);
+    event VoteList(address indexed account, uint32[] indexed bips, bool[] votes, uint256 roots);
     event Unvote(address indexed account, uint32 indexed bip, uint256 roots);
     event Commit(address indexed account, uint32 indexed bip);
     event Incentivization(address indexed account, uint256 beans);
@@ -56,6 +57,7 @@ contract GovernanceFacet is VotingBooth {
             msg.sender
         );
 
+        s.a[msg.sender].proposedUntil = startFor(bipId) + periodFor(bipId);
         emit Proposal(msg.sender, bipId, season(), C.getGovernancePeriod());
 
         vote(bipId);
@@ -72,9 +74,35 @@ contract GovernanceFacet is VotingBooth {
         require(!voted(msg.sender, bip), "Governance: Already voted.");
 
         recordVote(msg.sender, bip);
-        placeLock(msg.sender, bip);
+        placeVotedUntil(msg.sender, bip);
 
         emit Vote(msg.sender, bip, balanceOfRoots(msg.sender));
+    }
+
+    /// @notice Takes in a list of multiple bips and performs a vote on all of them
+    /// @param bip_list Contains the bip proposal ids to vote on
+    function voteAll(uint32[] calldata bip_list) public {
+        require(balanceOfRoots(msg.sender) > 0, "Governance: Must have Stalk.");
+        
+        bool[] memory vote_types = new bool[](bip_list.length);
+        uint i = 0;
+        uint32 lock = s.a[msg.sender].votedUntil;
+
+        for (i = 0; i < bip_list.length; i++) {
+            uint32 bip = bip_list[i];
+            require(isNominated(bip), "Governance: Not nominated.");
+            require(isActive(bip), "Governance: Ended.");
+            require(!voted(msg.sender, bip), "Governance: Already voted.");
+            recordVote(msg.sender, bip);
+            vote_types[i] = true;
+
+            // Place timelocks
+            uint32 newLock = startFor(bip) + periodFor(bip);
+            if (newLock > lock) lock = newLock;
+        }
+
+        s.a[msg.sender].votedUntil = lock;
+        emit VoteList(msg.sender, bip_list, vote_types, balanceOfRoots(msg.sender));
     }
 
     function unvote(uint32 bip) external {
@@ -85,9 +113,57 @@ contract GovernanceFacet is VotingBooth {
         require(proposer(bip) != msg.sender, "Governance: Is proposer.");
 
         unrecordVote(msg.sender, bip);
-        removeLock(msg.sender, bip);
+        updateVotedUntil(msg.sender);
 
         emit Unvote(msg.sender, bip, balanceOfRoots(msg.sender));
+    }
+
+    /// @notice Takes in a list of multiple bips and performs an unvote on all of them
+    /// @param bip_list Contains the bip proposal ids to unvote on
+    function unvoteAll(uint32[] calldata bip_list) external {
+        require(balanceOfRoots(msg.sender) > 0, "Governance: Must have Stalk.");
+
+        uint i = 0;
+        bool[] memory vote_types = new bool[](bip_list.length);
+        for (i = 0; i < bip_list.length; i++) {
+            uint32 bip = bip_list[i];
+            require(isNominated(bip), "Governance: Not nominated.");
+            require(isActive(bip), "Governance: Ended.");
+            require(voted(msg.sender, bip), "Governance: Not voted.");
+            require(proposer(bip) != msg.sender, "Governance: Is proposer.");
+            unrecordVote(msg.sender, bip);
+            vote_types[i] = false;
+        }
+
+        updateVotedUntil(msg.sender);
+        emit VoteList(msg.sender, bip_list, vote_types, balanceOfRoots(msg.sender));
+    }
+
+    /// @notice Takes in a list of multiple bips and performs a vote or unvote on all of them
+    ///         depending on their status: whether they are currently voted on or not voted on
+    /// @param bip_list Contains the bip proposal ids
+    function voteUnvoteAll(uint32[] calldata bip_list) external {
+        require(balanceOfRoots(msg.sender) > 0, "Governance: Must have Stalk.");
+        
+        uint i = 0;
+        bool[] memory vote_types = new bool[](bip_list.length);
+        for (i = 0; i < bip_list.length; i++) {
+            uint32 bip = bip_list[i];
+            require(isNominated(bip), "Governance: Not nominated.");
+            require(isActive(bip), "Governance: Ended.");
+            if (s.g.voted[bip][msg.sender]) {
+                // Handle Unvote
+                require(proposer(bip) != msg.sender, "Governance: Is proposer.");
+                unrecordVote(msg.sender, bip);
+                vote_types[i] = false;
+            } else {
+                // Handle Vote
+                recordVote(msg.sender, bip);
+                vote_types[i] = true;
+            }
+        }
+        updateVotedUntil(msg.sender);
+        emit VoteList(msg.sender, bip_list, vote_types, balanceOfRoots(msg.sender));
     }
 
     /**

@@ -18,6 +18,8 @@
     "bignumber": "^1.1.0",
     "chai": "^4.3.4",
     "csvtojson": "^2.0.10",
+    "ethereum-waffle": "^3.4.0",
+    "ethers": "^5.5.2",
     "hardhat": "^2.4.3",
     "hardhat-contract-sizer": "^2.0.3",
     "hardhat-gas-reporter": "^1.0.4",

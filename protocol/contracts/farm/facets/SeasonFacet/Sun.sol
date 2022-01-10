@@ -37,7 +37,7 @@ contract Sun is Weather {
         returns
         (uint256)
     {
-        (uint256 eth_reserve, uint256 bean_reserve) = reserves();
+        (uint256 eth_reserve, uint256 bean_reserve) = lockedReserves();
 
         uint256 currentBeans = sqrt(
             bean_reserve.mul(eth_reserve).mul(1e6).div(beanPrice.mul(1e18).asUint256())
@@ -54,7 +54,7 @@ contract Sun is Weather {
         } else if (currentBeans > targetBeans) {
             shrinkSupply(currentBeans.sub(targetBeans), price);
         } else {
-            int256 newSoil = ensureSoilBounds();
+            int256 newSoil = setSoil(0);
             emit SupplyNeutral(season(), newSoil);
         }
         s.w.startSoil = s.f.soil;
@@ -62,15 +62,26 @@ contract Sun is Weather {
     }
 
     function shrinkSupply(uint256 beans, uint256 price) private {
-        int256 newSoil = increaseSoil(beans);
+        int256 newSoil = setSoil(beans);
         emit SupplyDecrease(season(), price, newSoil);
     }
 
     function growSupply(uint256 beans, uint256 price) private returns (uint256) {
         (uint256 newHarvestable, uint256 newSilo) = increaseSupply(beans);
-        int256 newSoil = decreaseSoil(beans, newHarvestable);
+        int256 newSoil = setSoil(getMinSoil(newHarvestable));
         emit SupplyIncrease(season(), price, newHarvestable, newSilo, newSoil);
         return newSilo;
+    }
+
+    // (ethereum, beans)
+    function lockedReserves() public view returns (uint256, uint256) {
+        (uint ethReserve, uint beanReserve) = reserves();
+        uint lp = pair().totalSupply();
+        if (lp == 0) return (0,0);
+        uint lockedLP = s.lp.deposited.add(s.lp.withdrawn);
+        ethReserve = ethReserve.mul(lockedLP).div(lp);
+        beanReserve = beanReserve.mul(lockedLP).div(lp);
+        return (ethReserve, beanReserve);
     }
 
 }

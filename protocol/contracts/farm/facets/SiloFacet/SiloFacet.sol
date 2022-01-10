@@ -1,17 +1,18 @@
-/**
+/*
  * SPDX-License-Identifier: MIT
-**/
+*/
 
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./BeanSilo.sol";
 import "../../../libraries/LibClaim.sol";
+import "../../../libraries/LibMarket.sol";
 
-/**
+/*
  * @author Publius
  * @title Silo handles depositing and withdrawing Beans and LP, and updating the Silo.
-**/
+*/
 contract SiloFacet is BeanSilo {
 
     event BeanAllocation(address indexed account, uint256 beans);
@@ -19,9 +20,9 @@ contract SiloFacet is BeanSilo {
     using SafeMath for uint256;
     using SafeMath for uint32;
 
-    /**
+    /*
      * Bean
-    **/
+    */
 
     // Deposit
 
@@ -60,7 +61,6 @@ contract SiloFacet is BeanSilo {
         uint32[] calldata crates,
         uint256[] calldata amounts
     )
-        notLocked(msg.sender)
         external
     {
         _withdrawBeans(crates, amounts);
@@ -71,19 +71,18 @@ contract SiloFacet is BeanSilo {
         uint256[] calldata amounts,
         LibClaim.Claim calldata claim
     )
-        notLocked(msg.sender)
         external
     {
-        LibClaim.claim(claim, false);
+        LibClaim.claim(claim);
         _withdrawBeans(crates, amounts);
     }
 
-    /**
+    /*
      * LP
-    **/
+    */
 
     function claimAndDepositLP(uint256 amount, LibClaim.Claim calldata claim) external {
-        LibClaim.claim(claim, false);
+        LibClaim.claim(claim);
         depositLP(amount);
     }
 
@@ -92,13 +91,13 @@ contract SiloFacet is BeanSilo {
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
         LibMarket.AddLiquidity calldata al,
-        LibClaim.Claim calldata claim
+	    LibClaim.Claim calldata claim
     )
         external
         payable
     {
-        uint256 allocatedBeans = LibClaim.claim(claim, true);
-        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, allocatedBeans, al);
+        LibClaim.claim(claim);
+        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al);
     }
 
     function depositLP(uint256 amount) public {
@@ -115,36 +114,33 @@ contract SiloFacet is BeanSilo {
         payable
     {
         require(buyBeanAmount == 0 || buyEthAmount == 0, "Silo: Silo: Cant buy Ether and Beans.");
-        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, 0, al);
+        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al);
     }
     
     function _addAndDepositLP(
         uint256 lp,
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
-        uint256 allocatedBeans,
         LibMarket.AddLiquidity calldata al
     )
-        internal 
-    {
-        uint256 boughtLP = LibMarket.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, allocatedBeans, al);
+        internal {
+        uint256 boughtLP = LibMarket.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, al);
         if (lp>0) pair().transferFrom(msg.sender, address(this), lp);
         _depositLP(lp.add(boughtLP));
     }
 
-    /**
+    /*
      * Withdraw
-    **/
+    */
 
     function claimAndWithdrawLP(
         uint32[] calldata crates,
         uint256[] calldata amounts,
         LibClaim.Claim calldata claim
     )
-        notLocked(msg.sender)
         external
     {
-        LibClaim.claim(claim, false);
+        LibClaim.claim(claim);
         _withdrawLP(crates, amounts);
     }
 
@@ -152,13 +148,13 @@ contract SiloFacet is BeanSilo {
         uint32[] calldata crates, uint256[]
         calldata amounts
     )
-        notLocked(msg.sender)
         external
     {
         _withdrawLP(crates, amounts);
     }
 
     function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {
-        LibMarket.transferAllocatedBeans(LibClaim.claim(c, true), transferBeans);
+        LibClaim.claim(c);
+        LibMarket.allocatedBeans(transferBeans);
     }
 }

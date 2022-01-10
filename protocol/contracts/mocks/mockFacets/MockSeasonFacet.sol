@@ -110,6 +110,22 @@ contract MockSeasonFacet is SeasonFacet {
         }
     }
 
+    function halfWeekSunrise() public {
+            teleportSunrise(84);
+            decrementWithdrawSeasons();
+    }
+    
+    function weekSunrise() public {
+            teleportSunrise(168);
+            decrementWithdrawSeasons();
+    }
+
+    function decrementSunrise(uint256 week) public {
+            for (uint256 i = 0; i < week; i++) {
+                    weekSunrise();
+            }
+    }
+
     function setYieldE(uint32 number) public {
         s.w.yield = number;
     }
@@ -138,32 +154,12 @@ contract MockSeasonFacet is SeasonFacet {
         s.w.lastSoilPercent = number;
     }
 
-    function incrementTotalSoilE(uint256 amount) public {
-        incrementTotalSoil(amount);
-    }
-
-    function decrementTotalSoilE(uint256 amount) public {
-        decrementTotalSoil(amount);
-    }
-
-    function increaseSoilE(uint256 amount) public {
-        increaseSoil(amount);
-    }
-
-    function decreaseSoilE(uint256 amount, uint256 harvested) public {
-        decreaseSoil(amount, harvested);
-    }
-
-    function ensureSoilBoundsE() public {
-        ensureSoilBounds();
+    function setSoilE(uint256 amount) public returns (int256) {
+        return setSoil(amount);
     }
 
     function minSoil(uint256 amount) public view returns (uint256) {
         return getMinSoil(amount);
-    }
-
-    function maxSoil() public view returns (uint256) {
-        return getMaxSoil();
     }
 
     function resetAccount(address account) public {
@@ -216,7 +212,8 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.timestamp = uint32(block.timestamp % 2 ** 32);
         delete s.sop;
         s.s.stalk = 0;
-        s.s.seeds = 0 ;
+        s.s.seeds = 0;
+        s.season.withdrawSeasons = 25;
         s.season.current = 1;
         s.paused = false;
         bean().burn(bean().balanceOf(address(this)));

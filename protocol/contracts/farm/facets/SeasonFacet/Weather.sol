@@ -147,7 +147,7 @@ contract Weather is Silo {
             s.r.pods = s.f.pods;
             s.r.roots = s.s.roots;
         }
-        else if (season() >= s.r.start.add(C.getRainTime())) {
+        else if (season() >= s.r.start.add(s.season.withdrawSeasons - 1)) {
             if (s.r.roots > 0) sop();
         }
     }

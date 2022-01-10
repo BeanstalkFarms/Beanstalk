@@ -6,6 +6,7 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./UpdateSilo.sol";
+import "../../../libraries/Silo/LibLPSilo.sol";
 
 /**
  * @author Publius
@@ -47,14 +48,14 @@ contract LPSilo is UpdateSilo {
     function _depositLP(uint256 amount) internal {
         updateSilo(msg.sender);
         uint32 _s = season();
-        uint256 lpb = lpToLPBeans(amount);
+        uint256 lpb = LibLPSilo.lpToLPBeans(amount);
         require(lpb > 0, "Silo: No Beans under LP.");
-        incrementDepositedLP(amount);
+        LibLPSilo.incrementDepositedLP(amount);
         uint256 seeds = lpb.mul(C.getSeedsPerLPBean());
-        if (season() == _s) depositSiloAssets(msg.sender, seeds, lpb.mul(10000));
-        else depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)));
+        if (season() == _s) LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000));
+        else LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)));
 
-        addLPDeposit(msg.sender, _s, amount, lpb.mul(C.getSeedsPerLPBean()));
+        LibLPSilo.addLPDeposit(msg.sender, _s, amount, lpb.mul(C.getSeedsPerLPBean()));
 
         LibCheck.lpBalanceCheck();
     }
@@ -67,27 +68,13 @@ contract LPSilo is UpdateSilo {
             uint256 stalkRemoved,
             uint256 seedsRemoved
         ) = removeLPDeposits(crates, amounts);
-        uint32 arrivalSeason = season() + C.getSiloWithdrawSeasons();
+        uint32 arrivalSeason = season() + s.season.withdrawSeasons;
         addLPWithdrawal(msg.sender, arrivalSeason, lpRemoved);
-        decrementDepositedLP(lpRemoved);
-        withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
-        updateBalanceOfRainStalk(msg.sender);
+        LibLPSilo.decrementDepositedLP(lpRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
+        LibSilo.updateBalanceOfRainStalk(msg.sender);
 
         LibCheck.lpBalanceCheck();
-    }
-
-    function incrementDepositedLP(uint256 amount) private {
-        s.lp.deposited = s.lp.deposited.add(amount);
-    }
-
-    function decrementDepositedLP(uint256 amount) private {
-        s.lp.deposited = s.lp.deposited.sub(amount);
-    }
-
-    function addLPDeposit(address account, uint32 _s, uint256 amount, uint256 seeds) private {
-        s.a[account].lp.deposits[_s] += amount;
-        s.a[account].lp.depositSeeds[_s] += seeds;
-        emit LPDeposit(msg.sender, _s, amount, seeds);
     }
 
     function removeLPDeposits(uint32[] calldata crates, uint256[] calldata amounts)
@@ -95,42 +82,27 @@ contract LPSilo is UpdateSilo {
         returns (uint256 lpRemoved, uint256 stalkRemoved, uint256 seedsRemoved)
     {
         for (uint256 i = 0; i < crates.length; i++) {
-            (uint256 crateBeans, uint256 crateSeeds) = removeLPDeposit(
+            (uint256 crateBeans, uint256 crateSeeds) = LibLPSilo.removeLPDeposit(
                 msg.sender,
                 crates[i],
                 amounts[i]
             );
             lpRemoved = lpRemoved.add(crateBeans);
             stalkRemoved = stalkRemoved.add(crateSeeds.mul(C.getStalkPerLPSeed()).add(
-                stalkReward(crateSeeds, season()-crates[i]))
+                LibSilo.stalkReward(crateSeeds, season()-crates[i]))
             );
             seedsRemoved = seedsRemoved.add(crateSeeds);
         }
         emit LPRemove(msg.sender, crates, amounts, lpRemoved);
     }
 
-    function removeLPDeposit(address account, uint32 id, uint256 amount)
-        private
-        returns (uint256, uint256) {
-        require(id <= season(), "Silo: Future crate.");
-        (uint256 crateAmount, uint256 crateBase) = lpDeposit(account, id);
-        require(crateAmount >= amount, "Silo: Crate balance too low.");
-        require(crateAmount > 0, "Silo: Crate empty.");
-        if (amount < crateAmount) {
-            uint256 base = amount.mul(crateBase).div(crateAmount);
-            s.a[account].lp.deposits[id] -= amount;
-            s.a[account].lp.depositSeeds[id] -= base;
-            return (amount, base);
-        } else {
-            delete s.a[account].lp.deposits[id];
-            delete s.a[account].lp.depositSeeds[id];
-            return (crateAmount, crateBase);
-        }
-    }
-
     function addLPWithdrawal(address account, uint32 arrivalSeason, uint256 amount) private {
         s.a[account].lp.withdrawals[arrivalSeason] = s.a[account].lp.withdrawals[arrivalSeason].add(amount);
         s.lp.withdrawn = s.lp.withdrawn.add(amount);
         emit LPWithdraw(msg.sender, arrivalSeason, amount);
+    }
+
+    function pair() internal view returns (IUniswapV2Pair) {
+        return IUniswapV2Pair(s.c.pair);
     }
 }
