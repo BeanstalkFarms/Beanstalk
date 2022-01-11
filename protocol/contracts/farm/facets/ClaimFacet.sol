@@ -37,7 +37,8 @@ contract ClaimFacet {
 
     function claimAndUnwrapBeans(LibClaim.Claim calldata c, uint256 amount) public payable returns (uint256 beansClaimed) {
         beansClaimed = LibClaim.claim(c);
-        beansClaimed = beansClaimed.add(unwrapBeans(amount));
+        unwrapBeans(amount);
+        beansClaimed = beansClaimed.add(amount);
         LibCheck.balanceCheck();
     }
 
@@ -73,28 +74,15 @@ contract ClaimFacet {
         LibClaim.claimEth();
     }
 
-    function unwrapBeans(uint amount) public returns (uint256 beansToWallet) {
-        if (amount == 0) return beansToWallet;
-	AppStorage storage s = LibAppStorage.diamondStorage();
-        uint wrappedBeans = s.internalTokenBalance[msg.sender][IBean(s.c.bean)];
-
-        if (amount > wrappedBeans) {
-            IBean(s.c.bean).transfer(msg.sender, wrappedBeans);
-            beansToWallet = s.internalTokenBalance[msg.sender][IBean(s.c.bean)];
-            s.internalTokenBalance[msg.sender][IBean(s.c.bean)] = 0;
-        } else {
-            IBean(s.c.bean).transfer(msg.sender, amount);
-            s.internalTokenBalance[msg.sender][IBean(s.c.bean)] = wrappedBeans.sub(amount);
-            beansToWallet = amount;
-        }
+    function unwrapBeans(uint amount) public {
+        LibUserBalance._convertToExternalBalance(IERC20(s.c.bean), msg.sender, amount);
     }
 
     function wrapBeans(uint amount) public {
-        IBean(s.c.bean).transferFrom(msg.sender, address(this), amount);
-        LibUserBalance._increaseInternalBalance(msg.sender, IBean(s.c.bean), amount);
+        LibUserBalance._convertToInternalBalance(IERC20(s.c.bean), msg.sender, amount);
     }
 
     function wrappedBeans(address user) public view returns (uint256) {
-        return s.internalTokenBalance[user][IBean(s.c.bean)];
+        return LibUserBalance._getInternalBalance(user, IBean(s.c.bean));
     }
 }
