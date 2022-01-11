@@ -31,27 +31,63 @@ library LibUserBalance {
   */
   event ExternalBalanceTransfer(IERC20 indexed token, address indexed sender, address recipient, uint256 amount);
 
-  function getInternalBalances(address account, IERC20[] memory tokens)
+  /**
+  * @dev Emitted when a user's ERC20 allowance is used to transfer tokens to an internal account.
+  */
+  event InternalBalanceTransfer(IERC20 indexed token, address indexed sender, address recipient, uint256 amount);
+
+  function _getBalance(address account, IERC20 token)
     internal
     view
-    returns (uint256[] memory balances)
+    returns (uint256)
   {
-    balances = new uint256[](tokens.length);
-    for (uint256 i = 0; i < tokens.length; i++) {
-      balances[i] = _getInternalBalance(account, tokens[i]);
+    return token.balanceOf(account).add(_getInternalBalance(account, token));
+  }
+
+  function _allocate(
+    IERC20 token,
+    address account,
+    uint256 amount,
+    bool fromInternalBalance
+  ) internal {
+    if (fromInternalBalance) {
+      uint256 fromInternal =_decreaseInternalBalance(account, token, amount, true);
+      amount = amount.sub(fromInternal);
     }
+    if (amount > 0) token.transferFrom(account, address(this), amount);
   }
 
-  function getCombinedInternalExternalBalance(address account, IERC20 token)
-    internal
-    view
-    returns (uint256 combined_balance)
-  {
-    combined_balance = token.balanceOf(account).add(_getInternalBalance(account, token));
-    return combined_balance;
+  function _transfer(
+    IERC20 token,
+    address sender,
+    address recipient,
+    uint256 amount, 
+    bool fromInternalBalance,
+    bool toInternalBalance
+  ) internal {
+    if (toInternalBalance) _transferToInternalBalance(token, sender, recipient, amount, fromInternalBalance);
+    else _transferToExternalBalance(token, sender, recipient, amount, fromInternalBalance);
   }
 
-  function _transferToExternalBalance(
+  function _convertToInternalBalance(
+    IERC20 token,
+    address account,
+    uint256 amount
+  ) internal {
+    token.transferFrom(account, address(this), amount);
+    _increaseInternalBalance(account, token, amount);
+  }
+
+  function _convertToExternalBalance(
+    IERC20 token,
+    address account,
+    uint256 amount
+  ) internal {
+    _decreaseInternalBalance(account, token, amount, false);
+    token.transfer(account, amount);
+  }
+
+  function _transferToInternalBalance(
     IERC20 token,
     address sender,
     address recipient,
@@ -59,8 +95,32 @@ library LibUserBalance {
     bool fromInternalBalance
   ) internal {
     if (amount > 0) {
-      if (fromInternalBalance) _decreaseInternalBalance(sender, token, amount, true);
-      token.transferFrom(sender, recipient, amount);
+      uint256 tempAmount = amount;
+      if (fromInternalBalance) {
+        tempAmount =_decreaseInternalBalance(sender, token, amount, true);
+        tempAmount = amount.sub(tempAmount);
+      }
+      if (tempAmount > 0) token.transferFrom(sender, address(this), tempAmount);
+      _increaseInternalBalance(recipient, token, amount);
+      emit InternalBalanceTransfer(token, sender, recipient, amount);
+    }
+  }
+
+  function _transferToExternalBalance(
+    IERC20 token,
+    address sender,
+    address recipient,
+    uint256 amount,
+    bool fromInternalBalance
+  ) internal {
+    if (amount > 0) {
+      uint256 tempAmount = amount;
+      if (fromInternalBalance) {
+        tempAmount =_decreaseInternalBalance(sender, token, amount, true);
+        if (recipient != address(this)) token.transfer(recipient, tempAmount);
+        tempAmount = amount.sub(tempAmount);
+      }
+      if (tempAmount > 0) token.transferFrom(sender, recipient, tempAmount);
       emit ExternalBalanceTransfer(token, sender, recipient, amount);
     }
   }

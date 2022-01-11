@@ -90,6 +90,7 @@ async function main (scriptName, verbose=true, mock=false) {
     governanceFacet,
     claimFacet,
     fundraiserFacet,
+    balanceFacet,
     convertFacet
   ] = mock ? await deployFacets(
       verbose,
@@ -100,6 +101,7 @@ async function main (scriptName, verbose=true, mock=false) {
       'MockGovernanceFacet',
       'MockClaimFacet',
       'MockFundraiserFacet',
+      'MockBalanceFacet',
       'ConvertFacet'],
       ["LibClaim"],
       {
@@ -117,6 +119,7 @@ async function main (scriptName, verbose=true, mock=false) {
       'GovernanceFacet',
       'ClaimFacet',
       'FundraiserFacet',
+      'BalanceFacet',
       'ConvertFacet']
       ["LibClaim"],
       {
@@ -147,6 +150,7 @@ async function main (scriptName, verbose=true, mock=false) {
       ['GovernanceFacet', governanceFacet],
       ['ClaimFacet', claimFacet],
       ['FundraiserFacet', fundraiserFacet],
+      ['BalanceFacet', balanceFacet],
       ['ConvertFacet', convertFacet]
     ],
     owner: account,
@@ -192,6 +196,7 @@ async function main (scriptName, verbose=true, mock=false) {
     governanceFacet: governanceFacet,
     claimFacet: claimFacet,
     fundraiserFacet: fundraiserFacet,
+    balanceFacet: balanceFacet,
     convertFacet: convertFacet,
     pair: pair,
     pegPair: pegPair,

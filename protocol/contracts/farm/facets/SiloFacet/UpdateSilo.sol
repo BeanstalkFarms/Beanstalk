@@ -37,12 +37,11 @@ contract UpdateSilo is SiloExit {
         uint32 update = lastUpdate(account);
         if (update >= LibSilo.season()) return;
         uint256 grownStalk;
-        if (LibUserBalance.getCombinedInternalExternalBalance(account, seed()) > 0) grownStalk = balanceOfGrownStalk(account);
+        if (LibUserBalance._getBalance(account, seed()) > 0) grownStalk = balanceOfGrownStalk(account);
         if (s.a[account].roots > 0) {
             farmSops(account, update);
             farmLegacyBeans(account, update);
-	    if (!lightUpdateSilo) farmBeans(account, update);
-	    
+	        if (!lightUpdateSilo) farmBeans(account, update);
         } else if (s.a[account].roots == 0) {
             s.a[account].lastSop = s.r.start;
             s.a[account].lastRain = 0;
@@ -79,12 +78,12 @@ contract UpdateSilo is SiloExit {
     }
 
     function farmBeans(address account, uint32 update) private {
-        uint256 beans = balanceOfFarmableBeansV3(account, LibUserBalance.getCombinedInternalExternalBalance(account, stalk()));
+        uint256 beans = balanceOfFarmableBeansV3(account, LibUserBalance._getBalance(account, stalk()));
         if (beans > 0) {
             s.si.beans = s.si.beans.sub(beans);
             uint256 seeds = beans.mul(C.getSeedsPerBean());
             uint256 stalk = beans.mul(C.getStalkPerBean());
-	    seed().transfer(account, seeds);
+	        seed().transfer(account, seeds);
             LibBeanSilo.addBeanDeposit(account, season(), beans);
             LibStalk.transfer(address(this), account, beans.mul(C.getStalkPerBean()));            
         }
@@ -92,7 +91,7 @@ contract UpdateSilo is SiloExit {
 
     function farmLegacyBeans(address account, uint32 update) private {
         if (s.a[account].lastSIs >= s.season.sis) return;
-     	uint256 beans;
+     	    uint256 beans;
         if (update < s.hotFix3Start) {
             beans = balanceOfFarmableBeansV1(account);
             if (beans > 0) s.v1SI.beans = s.v1SI.beans.sub(beans);
@@ -107,8 +106,8 @@ contract UpdateSilo is SiloExit {
 
         uint256 seeds = beans.mul(C.getSeedsPerBean());
         uint256 stalk = beans.mul(C.getStalkPerBean());
-	LibUserBalance._increaseInternalBalance(account, seed(), seeds);
-	LibUserBalance._increaseInternalBalance(account, IERC20(address(this)), stalk);
+        LibUserBalance._increaseInternalBalance(account, seed(), seeds);
+        LibUserBalance._increaseInternalBalance(account, IERC20(address(this)), stalk);
         LibBeanSilo.addBeanDeposit(account, season(), beans);
         Account.State storage a = s.a[account];
     }
