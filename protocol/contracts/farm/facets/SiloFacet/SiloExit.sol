@@ -104,28 +104,12 @@ contract SiloExit {
         return s.si.beans.add(s.v1SI.beans).add(s.v2SIBeans);
     }
 
-    function balanceOfSeeds(address account) public view returns (uint256) { 	// Depreciated Function
-        return s.a[account].s.seeds.add(balanceOfFarmableBeans(account).mul(C.getSeedsPerBean()));
-    }
-
-    function internalSeeds(address account) public view returns (uint256) {
-	return s.internalTokenBalance[account][seed()];
-    }
-
-    function balanceOfStalk(address account) public view returns (uint256) {  // Depreciated Function
-        return s.a[account].s.stalk.add(balanceOfFarmableStalk(account));
-    }
-
-    function internalStalk(address account) public view returns (uint256) {
-	return s.internalTokenBalance[account][stalk()];
-    }
-
     function balanceOfRoots(address account) public view returns (uint256) {
         return s.a[account].roots;
     }
 
     function balanceOfGrownStalk(address account) public view returns (uint256) {
-        return LibSilo.stalkReward(s.internalTokenBalance[account][seed()].add(seed().balanceOf(account)), season()-lastUpdate(account));
+        return LibSilo.stalkReward(LibUserBalance._getBalance(account, seed()), season()-lastUpdate(account));
     }
 
     function balanceOfFarmableBeans(address account) public view returns (uint256 beans) {
@@ -258,18 +242,6 @@ contract SiloExit {
             }
         }
         return false;
-    }
-
-    /**
-     * Migration
-    **/
-
-    function balanceOfMigrationRoots(address account) internal view returns (uint256) {
-        return balanceOfMigrationStalk(account).mul(C.getRootsBase());
-    }
-
-    function balanceOfMigrationStalk(address account) private view returns (uint256) {
-        return s.stalkToken.balances[account].add(s.internalTokenBalance[account][stalk()]).add(LibSilo.stalkReward(seed().balanceOf(account).add(s.internalTokenBalance[account][seed()]), s.bip0Start-lastUpdate(account)));
     }
 
     /**

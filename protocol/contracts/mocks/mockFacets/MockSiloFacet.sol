@@ -169,4 +169,12 @@ contract MockSiloFacet is SiloFacet {
            seed().burn(seed().balanceOf(address(this)));
            LibStalk.burn(address(this), balanceOf(address(this)));
     }
+
+    function internalSeeds(address account) public view returns (uint256) {
+	    return LibUserBalance._getInternalBalance(account, seed());
+    }
+
+    function internalStalk(address account) public view returns (uint256) {
+	    return s.internalTokenBalance[account][stalk()];
+    }
 }

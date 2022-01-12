@@ -35,7 +35,7 @@ library LibClaim {
         bool convertLP;
         uint256 minBeanAmount;
         uint256 minEthAmount;
-	bool toWallet;
+        bool toWallet;
     }
 
     function claim(Claim calldata c)

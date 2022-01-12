@@ -38,6 +38,10 @@ library LibStalk {
       s.stalkToken.decimals = 10;
     }
 
+    function balanceOf(address account) internal view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return s.stalkToken.balances[account];
+    }
 
     /**
      * @dev Moves tokens `amount` from `sender` to `recipient`.

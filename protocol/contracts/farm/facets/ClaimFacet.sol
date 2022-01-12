@@ -37,7 +37,7 @@ contract ClaimFacet {
 
     function claimAndUnwrapBeans(LibClaim.Claim calldata c, uint256 amount) public payable returns (uint256 beansClaimed) {
         beansClaimed = LibClaim.claim(c);
-        unwrapBeans(amount);
+        LibUserBalance._convertToExternalBalance(IERC20(s.c.bean), msg.sender, amount);
         beansClaimed = beansClaimed.add(amount);
         LibCheck.balanceCheck();
     }
@@ -74,15 +74,15 @@ contract ClaimFacet {
         LibClaim.claimEth();
     }
 
-    function unwrapBeans(uint amount) public {
-        LibUserBalance._convertToExternalBalance(IERC20(s.c.bean), msg.sender, amount);
-    }
+    // function unwrapBeans(uint amount) public {
+    //     LibUserBalance._convertToExternalBalance(IERC20(s.c.bean), msg.sender, amount);
+    // }
 
-    function wrapBeans(uint amount) public {
-        LibUserBalance._convertToInternalBalance(IERC20(s.c.bean), msg.sender, amount);
-    }
+    // function wrapBeans(uint amount) public {
+    //     LibUserBalance._convertToInternalBalance(IERC20(s.c.bean), msg.sender, amount);
+    // }
 
-    function wrappedBeans(address user) public view returns (uint256) {
-        return LibUserBalance._getInternalBalance(user, IBean(s.c.bean));
-    }
+    // function wrappedBeans(address user) public view returns (uint256) {
+    //     return LibUserBalance._getInternalBalance(user, IBean(s.c.bean));
+    // }
 }
