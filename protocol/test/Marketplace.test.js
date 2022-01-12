@@ -177,7 +177,7 @@ describe('Marketplace', function () {
       let user2BeanBalance = parseInt((await this.bean.balanceOf(user2Address)).toString())
 
       await this.pair.simulateTrade('4000', '1000');
-      await this.marketplace.connect(user).buyBeansAndListing(1000, user2Address, 0, 50, { value: 15 });
+      await this.marketplace.connect(user).buyBeansAndBuyListing(1000, user2Address, 0, 50, { value: 15 });
 
       expect((await this.field.plot(userAddress, 1000)).toString()).to.equal('500');
 
@@ -199,7 +199,7 @@ describe('Marketplace', function () {
       let user2BeanBalance = parseInt((await this.bean.balanceOf(user2Address)).toString())
 
       await this.pair.simulateTrade('4000', '1000');
-      await this.marketplace.connect(user).buyBeansAndListing(5000, user2Address, 100, 100, { value: 30 });
+      await this.marketplace.connect(user).buyBeansAndBuyListing(5000, user2Address, 100, 100, { value: 30 });
 
       expect((await this.field.plot(userAddress, 5000)).toString()).to.equal('400');
 
@@ -224,7 +224,7 @@ describe('Marketplace', function () {
 
     it('Fails to buy Listing, not enough ETH used', async function () {
       await this.pair.simulateTrade('4000', '1000');
-      await expect(this.marketplace.connect(user2).buyBeansAndListing(4000, userAddress, 0, 100, { value: 24 })).to.be.revertedWith('UniswapV2Router: EXCESSIVE_INPUT_AMOUNT');
+      await expect(this.marketplace.connect(user2).buyBeansAndBuyListing(4000, userAddress, 0, 100, { value: 24 })).to.be.revertedWith('UniswapV2Router: EXCESSIVE_INPUT_AMOUNT');
     });
 
     it('Buy Listing non-listed Index Fails', async function () {
@@ -367,12 +367,17 @@ describe('Marketplace', function () {
     });
 
     it('Buy Offer accepts plot only at correct place in line', async function () {
-      await this.marketplace.connect(user2).listBuyOffer('5000', '500000', '2000');
+      await this.marketplace.connect(user2).listBuyOffer('5000', '500000', '500');
       await this.field.connect(user).sowBeansAndIndex('1000');
       await expect(this.marketplace.connect(user).sellToBuyOffer('6000', '6000', '0', '1000')).to.be.revertedWith('Marketplace: Plot too far in line');
       await this.field.incrementTotalHarvestableE('2000');
       result = await this.marketplace.connect(user).sellToBuyOffer('6000', '6000', '0', '1000');
       expect(result).to.emit(this.marketplace, 'BuyOfferFilled').withArgs(userAddress, user2Address, 0, '6000', 500000, '1000');
+
+      const buyOffer = await this.marketplace.buyOffer(0);
+      expect(buyOffer.amount.toString()).to.equal('0');
+      expect(buyOffer.price.toString()).to.equal('0');
+
     });
 
     it('Cancel Buy Offer', async function () {
@@ -419,6 +424,27 @@ describe('Marketplace', function () {
 
       const buyOffer = await this.marketplace.buyOffer(0);
       expect(buyOffer.amount.toString()).to.equal('1100');
+
+    });
+
+    it('Sell Buy Offer from middle of index', async function () {
+
+      result = await this.marketplace.connect(user2).listBuyOffer('8000', '500000', '1000');
+      await this.field.connect(user).sowBeansAndIndex('1000');
+
+
+      let userBeanBalance = parseInt((await this.bean.balanceOf(userAddress)).toString())
+      await this.marketplace.connect(user).sellToBuyOffer('6000', '6100', '0', '400');
+
+      let userBeanBalanceAfterBuyOffer = parseInt((await this.bean.balanceOf(userAddress)).toString());
+      expect(userBeanBalanceAfterBuyOffer - userBeanBalance).to.equal(200);
+
+      expect((await this.field.plot(userAddress, 6000)).toString()).to.equal('100');
+      expect((await this.field.plot(userAddress, 6500)).toString()).to.equal('500');
+      expect((await this.field.plot(user2Address, 6100)).toString()).to.equal('400');
+
+      const buyOffer = await this.marketplace.buyOffer(0);
+      expect(buyOffer.amount.toString()).to.equal('1600');
 
     });
 
