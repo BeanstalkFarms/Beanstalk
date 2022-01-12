@@ -58,18 +58,18 @@ contract MarketplaceFacet is Marketplace {
         _buyListing(index, from, amountBeans);
     }
 
-    function claimAndBuyListing(uint index, address from, uint256 amountBeans, LibClaim.Claim calldata claim) public  {
+    function claimBeansAndBuyListing(uint index, address from, uint256 amountBeans, LibClaim.Claim calldata claim) public  {
         allocateBeans(claim, amountBeans, from);
         _buyListing(index, from, amountBeans);
     }
 
 
-    function buyBeansAndListing(uint256 index, address from, uint256 amountBeans, uint256 buyBeanAmount) public payable {
+    function buyBeansAndBuyListing(uint256 index, address from, uint256 amountBeans, uint256 buyBeanAmount) public payable {
         if (amountBeans > 0) bean().transferFrom(msg.sender, from, amountBeans);
         _buyBeansAndListing(index,from,amountBeans, buyBeanAmount);
     }
 
-    function claimBuyBeansAndListing(uint index, address from, uint256 amountBeans, uint256 buyBeanAmount, LibClaim.Claim calldata claim) public  {
+    function claimAndBuyBeansAndBuyListing(uint index, address from, uint256 amountBeans, uint256 buyBeanAmount, LibClaim.Claim calldata claim) public payable  {
         allocateBeans(claim, amountBeans, from);
         _buyBeansAndListing(index,from, amountBeans, buyBeanAmount);
     }
@@ -94,7 +94,7 @@ contract MarketplaceFacet is Marketplace {
         _listBuyOffer(maxPlaceInLine, pricePerPod, amountBeans);
     }
 
-    function claimAndlistBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amountBeans, LibClaim.Claim calldata claim) public  {
+    function claimBeansAndListBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amountBeans, LibClaim.Claim calldata claim) public  {
         allocateBeans(claim, amountBeans, address(this));
         _listBuyOffer(maxPlaceInLine, pricePerPod, amountBeans);
     }
@@ -104,7 +104,7 @@ contract MarketplaceFacet is Marketplace {
         _buyBeansAndListBuyOffer(maxPlaceInLine, pricePerPod, amountBeans, buyBeanAmount);
     }
 
-    function claimBuyBeansAndListBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amountBeans, uint256 buyBeanAmount, LibClaim.Claim calldata claim) public payable {
+    function claimAndBuyBeansAndListBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amountBeans, uint256 buyBeanAmount, LibClaim.Claim calldata claim) public payable {
         allocateBeans(claim, amountBeans, address(this));
         _buyBeansAndListBuyOffer(maxPlaceInLine, pricePerPod, amountBeans, buyBeanAmount);
     }
@@ -126,23 +126,25 @@ contract MarketplaceFacet is Marketplace {
 
     function sellToBuyOffer(uint256 plotIndex, uint256 sellFromIndex, uint24 buyOfferIndex, uint232 amount) public  {
         Storage.BuyOffer storage bOffer = s.buyOffers[buyOfferIndex];
-        require(bOffer.price > 0, "Marketplace: Buy Offer does not exist.");
+        uint24 price = bOffer.price;
+        address owner = bOffer.owner;
+        require(price > 0, "Marketplace: Buy Offer does not exist.");
         require(s.a[msg.sender].field.plots[plotIndex] >= (sellFromIndex.sub(plotIndex) + amount), "Marketplace: Invaid Plot.");
         uint232 harvestable = uint232(s.f.harvestable);
         require(sellFromIndex >= harvestable, "Marketplace: Cannot send harvestable plot.");
         uint256 placeInLine = sellFromIndex + amount - harvestable;
         require(placeInLine <= bOffer.maxPlaceInLine, "Marketplace: Plot too far in line.");
-        uint256 costInBeans = (bOffer.price * amount) / 1000000;
+        uint256 costInBeans = (price * amount) / 1000000;
         bean().transfer(msg.sender, costInBeans);
         if (s.listedPlots[plotIndex].price > 0){
             cancelListing(plotIndex);
         }
         bOffer.amount = bOffer.amount.sub(amount);
-        _transferPlot(msg.sender, bOffer.owner, plotIndex, sellFromIndex.sub(plotIndex), amount);
+        _transferPlot(msg.sender, owner, plotIndex, sellFromIndex.sub(plotIndex), amount);
         if (bOffer.amount == 0){
             delete s.buyOffers[buyOfferIndex];
         }
-        emit BuyOfferFilled(msg.sender, bOffer.owner, buyOfferIndex, sellFromIndex, bOffer.price, amount);
+        emit BuyOfferFilled(msg.sender, owner, buyOfferIndex, sellFromIndex, price, amount);
     }
 
     function cancelBuyOffer(uint24 buyOfferIndex) public  {

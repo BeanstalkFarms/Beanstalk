@@ -40,6 +40,7 @@ contract Marketplace {
     function _fillListing(address from, address to, uint256 index, uint256 amount) internal {
         require(s.a[from].field.plots[index] >= amount, "Marketplace: Plot has insufficient amount.");
         Storage.Listing storage listing = s.listedPlots[index];
+        uint24 price = listing.price;
         uint256 listingAmount = listing.amount;
         if (listingAmount == 0){
             listingAmount = s.a[from].field.plots[index];
@@ -63,15 +64,15 @@ contract Marketplace {
             }
         }
         delete s.listedPlots[index];
-        emit ListingFilled(from, to, index, listing.price, amount);
+        emit ListingFilled(from, to, index, price, amount);
 
     }
-
+    
     function _transferPlot(address from, address to, uint256 index, uint256 start, uint256 amount) internal {
         require(from != address(0), "Marketplace: Transfer from 0 address.");
         require(to != address(0), "Marketplace: Transfer to 0 address.");
         insertPlot(to,index.add(start),amount);
-        removePlot(from,index,start,amount);
+        removePlot(from,index,start,amount.add(start));
         emit PlotTransfer(from, to, index.add(start), amount);
     }
 
