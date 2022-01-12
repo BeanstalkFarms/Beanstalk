@@ -39,11 +39,11 @@ contract ConvertSilo {
     }
 
     function _convertAddAndDepositLP(
+        address lp_address,
         uint256 lp,
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
-        uint256[] memory amounts,
-        address lp_address
+        uint256[] memory amounts
     )
         internal
     {
@@ -65,13 +65,13 @@ contract ConvertSilo {
             LibMarket.allocatedBeans(transferAmount);
         }
 
-        w.i = w.stalkRemoved.div(LibLPSilo.lpToLPBeans(lp.add(w.newLP)), "Silo: No LP Beans.");
+        w.i = w.stalkRemoved.div(LibLPSilo.lpToLPBeans(lp_address, lp.add(w.newLP)), "Silo: No LP Beans.");
         uint32 depositSeason = uint32(season().sub(w.i.div(C.getSeedsPerLPBean())));
 
         if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
 	
         lp = lp.add(w.newLP);
-        _depositLP(lp, LibLPSilo.lpToLPBeans(lp), depositSeason, lp_address);
+        _depositLP(lp_address, lp, LibLPSilo.lpToLPBeans(lp_address, lp), depositSeason);
         LibCheck.beanBalanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
@@ -80,23 +80,23 @@ contract ConvertSilo {
      * Internal LP
     **/
 
-    function _depositLP(uint256 amount, uint256 lpb, uint32 _s, address lp_address) internal {
+    function _depositLP(address lp_address, uint256 amount, uint256 lpb, uint32 _s) internal {
         require(lpb > 0, "Silo: No Beans under LP.");
-        LibLPSilo.incrementDepositedLP(amount, lp_address);
+        LibLPSilo.incrementDepositedLP(lp_address, amount);
         uint256 seeds = lpb.mul(C.getSeedsPerLPBean());
         if (season() == _s) LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000));
         else LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)));
 
-        LibLPSilo.addLPDeposit(msg.sender, _s, amount, lpb.mul(C.getSeedsPerLPBean()), lp_address);
+        LibLPSilo.addLPDeposit(lp_address, msg.sender, _s, amount, lpb.mul(C.getSeedsPerLPBean()));
 
         LibCheck.lpBalanceCheck();
     }
 
     function _withdrawLPForConvert(
+        address lp_address,
         uint32[] memory crates,
         uint256[] memory amounts,
-        uint256 maxLP,
-        address lp_address
+        uint256 maxLP
     )
         internal
         returns (uint256 lpRemoved, uint256 stalkRemoved)
@@ -108,9 +108,9 @@ contract ConvertSilo {
         uint256 i = 0;
         while ((i < crates.length) && (lpRemoved < maxLP)) {
             if (lpRemoved.add(amounts[i]) < maxLP)
-                (depositLP, depositSeeds) = LibLPSilo.removeLPDeposit(msg.sender, crates[i], amounts[i], lp_address);
+                (depositLP, depositSeeds) = LibLPSilo.removeLPDeposit(lp_address, msg.sender, crates[i], amounts[i]);
             else
-                (depositLP, depositSeeds) = LibLPSilo.removeLPDeposit(msg.sender, crates[i], maxLP.sub(lpRemoved), lp_address);
+                (depositLP, depositSeeds) = LibLPSilo.removeLPDeposit(lp_address, msg.sender, crates[i], maxLP.sub(lpRemoved));
             lpRemoved = lpRemoved.add(depositLP);
             seedsRemoved = seedsRemoved.add(depositSeeds);
             stalkRemoved = stalkRemoved.add(depositSeeds.mul(C.getStalkPerLPSeed()).add(
@@ -123,7 +123,7 @@ contract ConvertSilo {
             amounts[i] = 0;
             i++;
         }
-        LibLPSilo.decrementDepositedLP(lpRemoved, lp_address);
+        LibLPSilo.decrementDepositedLP(lp_address, lpRemoved);
         LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
         stalkRemoved = stalkRemoved.sub(seedsRemoved.mul(C.getStalkPerLPSeed()));
         emit LPRemove(msg.sender, crates, amounts, lpRemoved);

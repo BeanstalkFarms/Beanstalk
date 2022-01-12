@@ -23,17 +23,17 @@ contract MockSiloFacet is SiloFacet {
     }
 
     function incrementDepositedLPE(uint256 amount, address lp_address) public {
-        LibLPSilo.incrementDepositedLP(amount, lp_address);
+        LibLPSilo.incrementDepositedLP(lp_address, amount);
         MockUniswapV2Pair(s.c.pair).faucet(address(this), amount);
     }
 
     function incrementDepositedLPByPoolE(uint256 amount, address lp_address) public {
-        LibLPSilo.incrementDepositedLP(amount, lp_address);
+        LibLPSilo.incrementDepositedLP(lp_address, amount);
         MockUniswapV2Pair(s.c.pair).faucet(address(this), amount);
     }
 
     function depositLPByPool(uint256 amount, address lp_address) public {
-        depositLP(amount, lp_address);
+        depositLP(lp_address, amount);
     }
 
     function incrementDepositedBeansE(uint256 amount) public {

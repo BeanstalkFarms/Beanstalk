@@ -20,29 +20,29 @@ library LibLPSilo {
     
     event LPDeposit(address indexed account, uint256 season, uint256 lp, uint256 seeds, address lp_address);
 
-    function incrementDepositedLP(uint256 amount, address lp_address) internal {
+    function incrementDepositedLP(address lp_address, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.lp_balances[IERC20(lp_address)].deposited = s.lp_balances[IERC20(lp_address)].deposited.add(amount);
     }
 
-    function decrementDepositedLP(uint256 amount, address lp_address) internal {
+    function decrementDepositedLP(address lp_address, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.lp_balances[IERC20(lp_address)].deposited = s.lp_balances[IERC20(lp_address)].deposited.sub(amount);
     }
 
-    function addLPDeposit(address account, uint32 _s, uint256 amount, uint256 seeds, address lp_address) internal {
+    function addLPDeposit(address lp_address, address account, uint32 _s, uint256 amount, uint256 seeds) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.a[account].deposits[IERC20(lp_address)][_s].tokens += uint112(amount);
         s.a[account].deposits[IERC20(lp_address)][_s].seeds += uint112(seeds);
         emit LPDeposit(msg.sender, _s, amount, seeds, lp_address);
     }
 
-    function removeLPDeposit(address account, uint32 id, uint256 amount, address lp_address)
+    function removeLPDeposit(address lp_address, address account, uint32 id, uint256 amount)
         internal
         returns (uint256, uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(id <= s.season.current, "Silo: Future crate.");
-        (uint256 crateAmount, uint256 crateBase) = lpDeposit(account, id, lp_address);
+        (uint256 crateAmount, uint256 crateBase) = lpDeposit(lp_address, account, id);
         require(crateAmount >= amount, "Silo: Crate balance too low.");
         require(crateAmount > 0, "Silo: Crate empty.");
         if (amount < crateAmount) {
@@ -57,12 +57,20 @@ library LibLPSilo {
         }
     }
 
-    function lpDeposit(address account, uint32 id, address lp_address) private view returns (uint256, uint256) {
+    function lpDeposit(address lp_address, address account, uint32 id) private view returns (uint256, uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return (s.a[account].deposits[IERC20(lp_address)][id].tokens, s.a[account].deposits[IERC20(lp_address)][id].seeds);
     }
 
-    function lpToLPBeans(uint256 amount) internal view returns (uint256) {
+    function beanDenominatedValue(address token, uint256 amount) public returns (uint256 bdv) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        bytes memory myFunctionCall = abi.encodeWithSelector(s.siloFunctions[token], token, amount);
+        (bool success, bytes memory data) = address(this).delegatecall(myFunctionCall);
+        require(success, "Governance: Bean denominated value failed.");
+        assembly { bdv := mload(add(data, add(0x20, 0))) }
+    }
+
+    function lpToLPBeans(address lp_address, uint256 amount) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(s.c.pair).getReserves();
 

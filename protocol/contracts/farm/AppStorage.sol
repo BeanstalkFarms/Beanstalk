@@ -212,4 +212,6 @@ struct AppStorage {
     mapping(IERC20 => uint8) weights;
     // On account level
     mapping(IERC20 => Storage.AssetSilo) lp_balances;
+    // Silo Functions Per Token
+    mapping(address => bytes4) siloFunctions;
 }
