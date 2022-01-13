@@ -58,7 +58,7 @@ contract MarketplaceFacet is Marketplace {
         _buyListing(index, from, amountBeans);
     }
 
-    function claimAndBuyListing(uint index, address from, uint256 amountBeans, LibClaim.Claim calldata claim) public  {
+    function claimBeansAndBuyListing(uint index, address from, uint256 amountBeans, LibClaim.Claim calldata claim) public  {
         allocateBeans(claim, amountBeans, from);
         _buyListing(index, from, amountBeans);
     }
@@ -94,7 +94,7 @@ contract MarketplaceFacet is Marketplace {
         _listBuyOffer(maxPlaceInLine, pricePerPod, amountBeans);
     }
 
-    function claimAndListBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amountBeans, LibClaim.Claim calldata claim) public  {
+    function claimBeansAndListBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amountBeans, LibClaim.Claim calldata claim) public  {
         allocateBeans(claim, amountBeans, address(this));
         _listBuyOffer(maxPlaceInLine, pricePerPod, amountBeans);
     }
