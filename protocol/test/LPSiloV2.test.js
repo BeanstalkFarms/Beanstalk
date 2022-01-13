@@ -53,7 +53,7 @@ describe('Silo', function () {
         await this.pair.faucet(userAddress, '3');
         const bdv = await this.silo.callStatic.getUniswapBDV(this.pair.address, '3')
         console.log(bdv);
-        expect(bdv).to.be.equal('0');
+        expect(bdv).to.be.equal('4000');
       });
   
     });
@@ -117,7 +117,7 @@ describe('Silo', function () {
       const lp = await this.pair.balanceOf(userAddress)
       console.log(`${await this.pair.balanceOf(userAddress)}`)
       await this.silo.connect(user).depositBeans('1000')
-      await this.silo.connect(user).depositLPByPool('1', '0x87898263b6c5babe34b4ec53f22d98430b91e371')
+      await this.silo.connect(user).depositLP('1')
       const newLP = await this.pair.balanceOf(userAddress)
       console.log(`${await this.pair.balanceOf(userAddress)}`)
       const lpDeposit = await this.silo.lpDepositByPool(userAddress, '27', '0x87898263b6c5babe34b4ec53f22d98430b91e371')

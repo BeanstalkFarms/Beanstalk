@@ -6,13 +6,13 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./UpdateSilo.sol";
-import "../../../libraries/Silo/LibLPSilo.sol";
+import "../../../libraries/Silo/LibTokenSilo.sol";
 
 /**
  * @author Publius
- * @title LP Silo
+ * @title Token Silo
 **/
-contract LPSilo is UpdateSilo {
+contract TokenSilo is UpdateSilo {
 
     using SafeMath for uint256;
     using SafeMath for uint32;
@@ -57,14 +57,14 @@ contract LPSilo is UpdateSilo {
     function _depositLP(address lp_address, uint256 amount) internal {
         updateSilo(msg.sender);
         uint32 _s = season();
-        uint256 lpb = LibLPSilo.beanDenominatedValue(lp_address, amount);
+        uint256 lpb = LibTokenSilo.beanDenominatedValue(lp_address, amount);
         require(lpb > 0, "Silo: No Beans under LP.");
-        LibLPSilo.incrementDepositedLP(lp_address, amount);
-        uint256 seeds = lpb.mul(C.getSeedsPerLPBean());
+        LibTokenSilo.incrementDepositedLP(lp_address, amount);
+        uint256 seeds = lpb.mul(s.seedsPerBDV[lp_address]);
         if (season() == _s) LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000));
         else LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)));
 
-        LibLPSilo.addLPDeposit(lp_address, msg.sender, _s, amount, lpb.mul(C.getSeedsPerLPBean()));
+        LibTokenSilo.addDeposit(lp_address, msg.sender, _s, amount, lpb.mul(s.seedsPerBDV[lp_address]));
         
         // Must rewrite this to take into account different lp pools
         LibCheck.lpBalanceCheck();
@@ -80,7 +80,7 @@ contract LPSilo is UpdateSilo {
         ) = removeLPDeposits(lp_address, crates, amounts);
         uint32 arrivalSeason = season() + s.season.withdrawBuffer;
         addLPWithdrawal(lp_address, msg.sender, arrivalSeason, lpRemoved);
-        LibLPSilo.decrementDepositedLP(lp_address, lpRemoved);
+        LibTokenSilo.decrementDepositedLP(lp_address, lpRemoved);
         LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
 
@@ -93,7 +93,7 @@ contract LPSilo is UpdateSilo {
         returns (uint256 lpRemoved, uint256 stalkRemoved, uint256 seedsRemoved)
     {
         for (uint256 i = 0; i < crates.length; i++) {
-            (uint256 crateBeans, uint256 crateSeeds) = LibLPSilo.removeLPDeposit(
+            (uint256 crateBeans, uint256 crateSeeds) = LibTokenSilo.removeDeposit(
                 lp_address,
                 msg.sender,
                 crates[i],

@@ -26,6 +26,19 @@ contract SiloFacet is BeanSilo {
 
     // Deposit
 
+    function deposit(address token, uint256 amount) public {
+        updateSilo(msg.sender);
+        uint32 _s = season();
+        uint256 lpb = LibTokenSilo.beanDenominatedValue(token, amount);
+        require(lpb > 0, "Silo: No Beans under LP.");
+        LibTokenSilo.incrementDepositedLP(token, amount);
+        uint256 seeds = lpb.mul(s.seedsPerBDV[token]);
+        if (season() == _s) LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000));
+        else LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)));
+
+        LibTokenSilo.addDeposit(token, msg.sender, _s, amount, lpb.mul(s.seedsPerBDV[token]));
+    }
+
     function claimAndDepositBeans(uint256 amount, LibClaim.Claim calldata claim) external {
         allocateBeans(claim, amount);
         _depositBeans(amount);
@@ -56,6 +69,20 @@ contract SiloFacet is BeanSilo {
     }
 
     // Withdraw
+    function withdraw(address token, uint32[] calldata crates, uint256[] calldata amounts) public {
+        updateSilo(msg.sender);
+        require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
+        (
+            uint256 lpRemoved,
+            uint256 stalkRemoved,
+            uint256 seedsRemoved
+        ) = removeLPDeposits(token, crates, amounts);
+        uint32 arrivalSeason = season() + s.season.withdrawBuffer;
+        addLPWithdrawal(token, msg.sender, arrivalSeason, lpRemoved);
+        LibTokenSilo.decrementDepositedLP(token, lpRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
+        LibSilo.updateBalanceOfRainStalk(msg.sender);
+    }
 
     function withdrawBeans(
         uint32[] calldata crates,
@@ -137,7 +164,6 @@ contract SiloFacet is BeanSilo {
     */
 
     function claimAndWithdrawLP(
-        address lp_address,
         uint32[] calldata crates,
         uint256[] calldata amounts,
         LibClaim.Claim calldata claim
@@ -145,17 +171,16 @@ contract SiloFacet is BeanSilo {
         external
     {
         LibClaim.claim(claim);
-        _withdrawLP(lp_address, crates, amounts);
+        _withdrawLP(s.c.pair, crates, amounts);
     }
 
     function withdrawLP(
-        address lp_address,
-        uint32[] calldata crates, uint256[]
-        calldata amounts
+        uint32[] calldata crates, 
+        uint256[] calldata amounts
     )
         external
     {
-        _withdrawLP(lp_address, crates, amounts);
+        _withdrawLP(s.c.pair, crates, amounts);
     }
 
     function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {
@@ -165,10 +190,8 @@ contract SiloFacet is BeanSilo {
 
     function uniswapLPtoBDV(address lp_address, uint256 amount) public view returns (uint256) {
         (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(lp_address).getReserves();
-        console.log("reserves 0 and 1", reserve0, reserve1);
         // We might want to deprecate s.index
         uint256 beanReserve = s.index == 0 ? reserve0 : reserve1;
-        console.log("Lp supply", IUniswapV2Pair(lp_address).totalSupply());
         return amount.mul(beanReserve).mul(2).div(IUniswapV2Pair(lp_address).totalSupply());
     }
 }
