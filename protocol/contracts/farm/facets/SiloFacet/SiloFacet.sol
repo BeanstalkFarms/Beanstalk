@@ -81,13 +81,12 @@ contract SiloFacet is BeanSilo {
      * LP
     */
 
-    function claimAndDepositLP(address lp_address, uint256 amount, LibClaim.Claim calldata claim) external {
+    function claimAndDepositLP(uint256 amount, LibClaim.Claim calldata claim) external {
         LibClaim.claim(claim);
-        depositLP(lp_address, amount);
+        depositLP(amount);
     }
 
     function claimAddAndDepositLP(
-        address lp_address,
         uint256 lp,
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
@@ -98,15 +97,15 @@ contract SiloFacet is BeanSilo {
         payable
     {
         LibClaim.claim(claim);
-        _addAndDepositLP(lp_address, lp, buyBeanAmount, buyEthAmount, al, claim);
+        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al, claim);
     }
 
-    function depositLP(address lp_address, uint256 amount) public {
+    function depositLP(uint256 amount) public {
         pair().transferFrom(msg.sender, address(this), amount);
-        _depositLP(lp_address, amount);
+        _depositLP(s.c.pair, amount);
     }
 
-    function addAndDepositLP(address lp_address,
+    function addAndDepositLP(
         uint256 lp,
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
@@ -117,11 +116,10 @@ contract SiloFacet is BeanSilo {
         payable
     {
         require(buyBeanAmount == 0 || buyEthAmount == 0, "Silo: Silo: Cant buy Ether and Beans.");
-        _addAndDepositLP(lp_address, lp, buyBeanAmount, buyEthAmount, al, c);
+        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al, c);
     }
     
     function _addAndDepositLP(
-        address lp_address,
         uint256 lp,
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
@@ -131,7 +129,7 @@ contract SiloFacet is BeanSilo {
         internal {
         uint256 boughtLP = LibMarket.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, al);
         if (lp>0) pair().transferFrom(msg.sender, address(this), lp);
-        _depositLP(lp_address, lp.add(boughtLP));
+        _depositLP(s.c.pair, lp.add(boughtLP));
     }
 
     /*
@@ -163,5 +161,14 @@ contract SiloFacet is BeanSilo {
     function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {
         LibClaim.claim(c);
         LibMarket.allocatedBeans(transferBeans);
+    }
+
+    function uniswapLPtoBDV(address lp_address, uint256 amount) public view returns (uint256) {
+        (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(lp_address).getReserves();
+        console.log("reserves 0 and 1", reserve0, reserve1);
+        // We might want to deprecate s.index
+        uint256 beanReserve = s.index == 0 ? reserve0 : reserve1;
+        console.log("Lp supply", IUniswapV2Pair(lp_address).totalSupply());
+        return amount.mul(beanReserve).mul(2).div(IUniswapV2Pair(lp_address).totalSupply());
     }
 }

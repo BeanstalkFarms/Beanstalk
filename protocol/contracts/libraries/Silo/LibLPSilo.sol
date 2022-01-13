@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "../LibAppStorage.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -64,9 +65,14 @@ library LibLPSilo {
 
     function beanDenominatedValue(address token, uint256 amount) internal returns (uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        // console.log(s.siloFunctions[token]);
+        console.logBytes4(s.siloFunctions[token]);
+        console.log(token);
+        console.log(s.c.pair);
+        console.log("123");
         bytes memory myFunctionCall = abi.encodeWithSelector(s.siloFunctions[token], token, amount);
         (bool success, bytes memory data) = address(this).delegatecall(myFunctionCall);
-        require(success, "Governance: Bean denominated value failed.");
+        require(success, "Silo: Bean denominated value failed.");
         assembly { bdv := mload(add(data, add(0x20, 0))) }
     }
 

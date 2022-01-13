@@ -50,7 +50,9 @@ describe('Silo', function () {
       });
   
       it('properly retrieves Uniswap BDV', async function () {
-        const bdv = await this.silo.getUniswapBDV('0x87898263b6c5babe34b4ec53f22d98430b91e371', '3')
+        await this.pair.faucet(userAddress, '3');
+        const bdv = await this.silo.callStatic.getUniswapBDV(this.pair.address, '3')
+        console.log(bdv);
         expect(bdv).to.be.equal('0');
       });
   

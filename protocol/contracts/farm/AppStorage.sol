@@ -214,4 +214,5 @@ struct AppStorage {
     mapping(IERC20 => Storage.AssetSilo) lp_balances;
     // Silo Functions Per Token
     mapping(address => bytes4) siloFunctions;
+    mapping(address => uint8) seedsPerBDV;
 }
