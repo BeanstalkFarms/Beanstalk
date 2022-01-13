@@ -62,7 +62,7 @@ library LibLPSilo {
         return (s.a[account].deposits[IERC20(lp_address)][id].tokens, s.a[account].deposits[IERC20(lp_address)][id].seeds);
     }
 
-    function beanDenominatedValue(address token, uint256 amount) public returns (uint256 bdv) {
+    function beanDenominatedValue(address token, uint256 amount) internal returns (uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         bytes memory myFunctionCall = abi.encodeWithSelector(s.siloFunctions[token], token, amount);
         (bool success, bytes memory data) = address(this).delegatecall(myFunctionCall);

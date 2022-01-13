@@ -32,6 +32,11 @@ contract MockSiloFacet is SiloFacet {
         MockUniswapV2Pair(s.c.pair).faucet(address(this), amount);
     }
 
+    function getUniswapBDV(address lp_address, uint256 amount) public returns (uint256 bdv) {
+        bdv = LibLPSilo.beanDenominatedValue(lp_address, amount);
+        return bdv;
+    }
+
     function depositLPByPool(uint256 amount, address lp_address) public {
         depositLP(lp_address, amount);
     }

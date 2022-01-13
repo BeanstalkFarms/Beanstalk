@@ -43,6 +43,20 @@ describe('Silo', function () {
     await this.season.siloSunrise(0);
   });
 
+  describe('BDV', function () {
+    describe('single BDV', function () {
+      beforeEach(async function () {
+        this.result = await this.silo.connect(user).depositBeans('1000');
+      });
+  
+      it('properly retrieves Uniswap BDV', async function () {
+        const bdv = await this.silo.getUniswapBDV('0x87898263b6c5babe34b4ec53f22d98430b91e371', '3')
+        expect(bdv).to.be.equal('0');
+      });
+  
+    });
+  });
+
   describe('deposit', function () {
     describe('single deposit', function () {
       beforeEach(async function () {
