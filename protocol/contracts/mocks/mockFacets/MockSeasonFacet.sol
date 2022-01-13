@@ -193,17 +193,10 @@ contract MockSeasonFacet is SeasonFacet {
             delete s.g.diamondCuts[i];
         }
 
-        // console.log("mapToPlotIndex", s.mapToPlotIndex);
 
-        // for (uint32 i = 0; i < s.mapToPlotIndex; i++) {
-        //     // console.log("Deleting plot at ", i, ": ", s.mapToPlots[i]);
-
-        //     delete s.a[s.mapToAddress[i]].field.plots[s.mapToPlots[i]];
-        //     delete s.listedPlots[s.mapToPlots[i]];
-        // }
-        // for (uint32 i = 0; i < s.buyOfferIndex; i++) {
-        //     delete s.buyOffers[i];
-        // }
+        for (uint32 i = 0; i < s.buyOfferIndex; i++) {
+            delete s.buyOffers[i];
+        }
         s.buyOfferIndex = 0;
 
         for (uint32 i = 0; i < s.fundraiserIndex; i++) {

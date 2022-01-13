@@ -27,8 +27,8 @@ describe('Marketplace', function () {
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
     this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair);
 
-    await this.bean.mint(userAddress, '100000')
-    await this.bean.mint(user2Address, '100000')
+    await this.bean.mint(userAddress, '200000')
+    await this.bean.mint(user2Address, '200000')
     await this.field.incrementTotalSoilEE('100000');
 
     // await this.weth.mint(user2Address, '2000')
@@ -96,6 +96,10 @@ describe('Marketplace', function () {
       await expect(this.marketplace.connect(user2).listPlot('5000', '500000', '6000', '1000')).to.be.revertedWith('Marketplace: Invalid Expiry.');
     });
 
+    it('Fails to List Plot price invalid', async function () {
+      await expect(this.marketplace.connect(user2).listPlot('5000', '5000000', '1000', '1000')).to.be.revertedWith('Marketplace: Invalid Pod Price.');
+    });
+
 
     it('Lists partial Plot', async function () {
       const listing = await this.marketplace.listing(1000);
@@ -120,6 +124,9 @@ describe('Marketplace', function () {
     beforeEach(async function () {
       await resetState();
     });
+
+
+
 
     it('Buy Full Listing, Plots Transfer, Balances Update', async function () {
       let amountBeansBuyingWith = 500;
@@ -236,6 +243,15 @@ describe('Marketplace', function () {
       await expect(this.marketplace.connect(user2).buyListing(0, userAddress, 500)).to.be.revertedWith('Marketplace: Listing has expired');
     });
 
+    it('Buy Listing not enough pods in plot', async function () {
+      await expect(this.marketplace.connect(user2).buyListing(0, userAddress, 750)).to.be.revertedWith('Marketplace: Plot has insufficient amount.');
+    });
+
+    it('Buy Listing not enough pods in listing', async function () {
+      await this.marketplace.connect(user).listPlot('0', '500000', '0', '500');
+      await expect(this.marketplace.connect(user2).buyListing(0, userAddress, 500)).to.be.revertedWith('Marketplace: Not enough pods in listing');
+    });
+
 
   });
 
@@ -337,12 +353,34 @@ describe('Marketplace', function () {
 
     });
 
+    it('Fails to list buy offer invalid price', async function () {
+      await this.pair.simulateTrade('4000000', '10000');
+      await expect(this.marketplace.connect(user2).buyBeansAndListBuyOffer('10000', '5000000', '0', '4000', { value: 11 })).to.be.revertedWith('Marketplace: Invalid Pod Price');
+    });
+
+    it('Fails to sell plot, Harvestable plot', async function () {
+      result = await this.marketplace.connect(user2).listBuyOffer('10000', '800000', '400');
+      await this.field.connect(user).sowBeansAndIndex('1000');
+      await this.field.incrementTotalHarvestableE('6100')
+      await expect(this.marketplace.connect(user).sellToBuyOffer('6000', '6000', '0', '250')).to.be.revertedWith('Marketplace: Cannot send harvestable plot.');
+    });
 
 
-    it('Fails, Unowned plot', async function () {
+    it('Fails to sell plot, unowned plot', async function () {
       result = await this.marketplace.connect(user2).listBuyOffer('10000', '800000', '400');
       await this.field.connect(user2).sowBeansAndIndex('1000');
       await expect(this.marketplace.connect(user).sellToBuyOffer('6000', '6000', '0', '250')).to.be.revertedWith('Marketplace: Invaid Plot.');
+    });
+
+    it('Fails to list buy offer amount 0', async function () {
+      await this.pair.simulateTrade('4000000', '10000');
+      await expect(this.marketplace.connect(user2).listBuyOffer('10000', '800000', '0')).to.be.revertedWith('Marketplace: Must offer to buy non-zero amount');
+    });
+
+    it('Fails to sell plot, nonexistent buyoffer', async function () {
+      result = await this.marketplace.connect(user2).listBuyOffer('10000', '800000', '400');
+      await this.field.connect(user).sowBeansAndIndex('1000');
+      await expect(this.marketplace.connect(user).sellToBuyOffer('6000', '6000', '1', '250')).to.be.revertedWith('Marketplace: Buy Offer does not exist.');
     });
 
     it('Multiple partial fills, Offer Deletes', async function () {
@@ -384,8 +422,14 @@ describe('Marketplace', function () {
       await this.marketplace.connect(user2).listBuyOffer('5000', '500000', '2000');
       result = await this.marketplace.connect(user2).cancelBuyOffer('0');
       expect(result).to.emit(this.marketplace, 'BuyOfferCancelled').withArgs(user2Address, 0);
-
     });
+
+
+    it('Cancel Buy Offer fails unowned', async function () {
+      await this.marketplace.connect(user2).listBuyOffer('5000', '500000', '2000');
+      await expect(this.marketplace.connect(user).cancelBuyOffer('0')).to.be.revertedWith('Field: Buy Offer not owned by user.');
+    });
+
 
     it('Sell To Buy Offer ends at unowned index', async function () {
       await this.marketplace.connect(user2).listBuyOffer('10000', '500000', '2000');
