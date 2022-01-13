@@ -48,11 +48,7 @@ contract Marketplace {
         uint232 harvestable = uint232(s.f.harvestable);
         require(harvestable <= listing.expiry, "Marketplace: Listing has expired");
         require(listingAmount >= amount, "Marketplace: Not enough pods in listing");
-
-        if (amount >= listingAmount){
-            amount = listingAmount;
-        }
-        else{
+        if (listingAmount > amount) {
             s.listedPlots[index.add(amount)] = listing;
             // Optimization: if Listing is full amount of plot, set amount to 0
             // Later, we consider a valid Listing (price>0) with amount 0 to be full amount of plot
@@ -65,12 +61,9 @@ contract Marketplace {
         }
         delete s.listedPlots[index];
         emit ListingFilled(from, to, index, price, amount);
-
     }
     
     function _transferPlot(address from, address to, uint256 index, uint256 start, uint256 amount) internal {
-        require(from != address(0), "Marketplace: Transfer from 0 address.");
-        require(to != address(0), "Marketplace: Transfer to 0 address.");
         insertPlot(to,index.add(start),amount);
         removePlot(from,index,start,amount.add(start));
         emit PlotTransfer(from, to, index.add(start), amount);
