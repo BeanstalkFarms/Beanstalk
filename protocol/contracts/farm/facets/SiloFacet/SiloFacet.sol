@@ -31,7 +31,7 @@ contract SiloFacet is BeanSilo {
         uint32 _s = season();
         uint256 lpb = LibTokenSilo.beanDenominatedValue(token, amount);
         require(lpb > 0, "Silo: No Beans under LP.");
-        LibTokenSilo.incrementDepositedLP(token, amount);
+        LibTokenSilo.incrementDepositedToken(token, amount);
         uint256 seeds = lpb.mul(s.seedsPerBDV[token]);
         if (season() == _s) LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000));
         else LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)));

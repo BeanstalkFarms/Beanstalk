@@ -67,14 +67,7 @@ describe('Silo', function () {
   
       it('properly updates the total lp balances', async function () {
         await this.silo.incrementDepositedLPByPoolE('1', '0x87898263b6c5babe34b4ec53f22d98430b91e371')
-        expect(await this.silo.totalDepositedLPByPool('0x87898263b6c5babe34b4ec53f22d98430b91e371')).to.eq('1');
-      });
-  
-      it('properly updates the user balance', async function () {
-        const lpDeposit = await this.silo.lpDeposit(userAddress, '27')
-        expect(lpDeposit[0]).to.be.equal('0');
-        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('2000');
-        expect(await this.silo.balanceOfStalk(userAddress)).to.eq('10000000');
+        expect(await this.silo.totalDepositedToken('0x87898263b6c5babe34b4ec53f22d98430b91e371')).to.eq('1');
       });
   
       it('properly adds the crate', async function () {
@@ -120,20 +113,11 @@ describe('Silo', function () {
       await this.silo.connect(user).depositLP('1')
       const newLP = await this.pair.balanceOf(userAddress)
       console.log(`${await this.pair.balanceOf(userAddress)}`)
-      const lpDeposit = await this.silo.lpDepositByPool(userAddress, '27', '0x87898263b6c5babe34b4ec53f22d98430b91e371')
+      const lpDeposit = await this.silo.lpDeposit(userAddress, '27', this.pair.address)
       expect(lpDeposit[0]).to.be.equal('0');
       expect(lpDeposit[1]).to.be.equal('0');
       expect(newLP.sub(lp)).to.be.equal('-1');
     });
-
-    // it('properly withdraws lp by lp pool type', async function () {
-    //   await this.season.setSoilE('5000')
-    //   await this.field.connect(user).sowBeans('1000')
-    //   await this.field.incrementTotalHarvestableE('1000')
-    //   await this.silo.connect(user).withdrawBeans([2],['1000'])
-    //   await this.silo.connect(user).withdrawLPByPool([2],['1'], '0x87898263b6c5babe34b4ec53f22d98430b91e371')
-    //   await this.season.farmSunrises('25')
-    // })
     
   });
 

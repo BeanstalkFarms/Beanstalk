@@ -65,13 +65,13 @@ contract ConvertSilo {
             LibMarket.allocatedBeans(transferAmount);
         }
 
-        w.i = w.stalkRemoved.div(LibTokenSilo.lpToLPBeans(lp_address, lp.add(w.newLP)), "Silo: No LP Beans.");
-        uint32 depositSeason = uint32(season().sub(w.i.div(C.getSeedsPerLPBean())));
+        w.i = w.stalkRemoved.div(LibTokenSilo.beanDenominatedValue(lp_address, lp.add(w.newLP)), "Silo: No LP Beans.");
+        uint32 depositSeason = uint32(season().sub(w.i.div(s.seedsPerBDV[lp_address])));
 
         if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
 	
         lp = lp.add(w.newLP);
-        _depositLP(lp_address, lp, LibTokenSilo.lpToLPBeans(lp_address, lp), depositSeason);
+        _depositLP(lp_address, lp, LibTokenSilo.beanDenominatedValue(lp_address, lp), depositSeason);
         LibCheck.beanBalanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
@@ -82,12 +82,12 @@ contract ConvertSilo {
 
     function _depositLP(address lp_address, uint256 amount, uint256 lpb, uint32 _s) internal {
         require(lpb > 0, "Silo: No Beans under LP.");
-        LibTokenSilo.incrementDepositedLP(lp_address, amount);
-        uint256 seeds = lpb.mul(C.getSeedsPerLPBean());
+        LibTokenSilo.incrementDepositedToken(lp_address, amount);
+        uint256 seeds = lpb.mul(s.seedsPerBDV[lp_address]);
         if (season() == _s) LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000));
         else LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)));
 
-        LibTokenSilo.addDeposit(lp_address, msg.sender, _s, amount, lpb.mul(C.getSeedsPerLPBean()));
+        LibTokenSilo.addDeposit(lp_address, msg.sender, _s, amount, lpb.mul(s.seedsPerBDV[lp_address]));
 
         LibCheck.lpBalanceCheck();
     }
@@ -123,7 +123,7 @@ contract ConvertSilo {
             amounts[i] = 0;
             i++;
         }
-        LibTokenSilo.decrementDepositedLP(lp_address, lpRemoved);
+        LibTokenSilo.decrementDepositedToken(lp_address, lpRemoved);
         LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
         stalkRemoved = stalkRemoved.sub(seedsRemoved.mul(C.getStalkPerLPSeed()));
         emit LPRemove(msg.sender, crates, amounts, lpRemoved);
