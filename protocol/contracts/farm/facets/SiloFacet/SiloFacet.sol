@@ -26,19 +26,6 @@ contract SiloFacet is BeanSilo {
 
     // Deposit
 
-    function deposit(address token, uint256 amount) public {
-        updateSilo(msg.sender);
-        uint32 _s = season();
-        uint256 lpb = LibTokenSilo.beanDenominatedValue(token, amount);
-        require(lpb > 0, "Silo: No Beans under LP.");
-        LibTokenSilo.incrementDepositedToken(token, amount);
-        uint256 seeds = lpb.mul(s.seedsPerBDV[token]);
-        if (season() == _s) LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000));
-        else LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)));
-
-        LibTokenSilo.addDeposit(token, msg.sender, _s, amount, lpb.mul(s.seedsPerBDV[token]));
-    }
-
     function claimAndDepositBeans(uint256 amount, LibClaim.Claim calldata claim) external {
         allocateBeans(claim, amount);
         _depositBeans(amount);
@@ -69,9 +56,6 @@ contract SiloFacet is BeanSilo {
     }
 
     // Withdraw
-    function withdraw(address token, uint32[] calldata crates, uint256[] calldata amounts) public {
-        _withdraw(token, crates, amounts);
-    }
 
     function withdrawBeans(
         uint32[] calldata crates,

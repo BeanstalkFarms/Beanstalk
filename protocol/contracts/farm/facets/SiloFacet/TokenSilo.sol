@@ -33,12 +33,12 @@ contract TokenSilo is UpdateSilo {
             return s.lp.withdrawn;
     }
 
-    function lpDeposit(address account, uint32 id, address lp_address) public view returns (uint256, uint256) {
-        return (s.a[account].deposits[IERC20(lp_address)][id].tokens, s.a[account].deposits[IERC20(lp_address)][id].seeds);
+    function tokenDeposit(address token, address account, uint32 id) public view returns (uint256, uint256) {
+        return (s.a[account].deposits[IERC20(token)][id].tokens, s.a[account].deposits[IERC20(token)][id].seeds);
     }
 
-    function lpWithdrawal(address account, uint32 i, address lp_address) public view returns (uint256) {
-        return s.a[account].withdrawals[IERC20(lp_address)][i];
+    function lpWithdrawal(address token, address account, uint32 i) public view returns (uint256) {
+        return s.a[account].withdrawals[IERC20(token)][i];
     }
 
     // V2 For All Token Types
@@ -50,37 +50,41 @@ contract TokenSilo is UpdateSilo {
         return s.siloBalances[IERC20(token)].withdrawn;
     }
 
+    function deposit(address token, uint256 amount) public {
+        IERC20(token).transferFrom(msg.sender, address(this), amount);
+        _deposit(token, amount);
+    }
+
+    function withdraw(address token, uint32[] calldata crates, uint256[] calldata amounts) public {
+        _withdraw(token, crates, amounts);
+    }
+
     /**
      * Internal
     **/
 
-    function _depositLP(address lp_address, uint256 amount) internal {
+    function _deposit(address token, uint256 amount) internal {
         updateSilo(msg.sender);
-        uint32 _s = season();
-        uint256 lpb = LibTokenSilo.beanDenominatedValue(lp_address, amount);
+        uint256 lpb = LibTokenSilo.beanDenominatedValue(token, amount);
         require(lpb > 0, "Silo: No Beans under LP.");
-        LibTokenSilo.incrementDepositedToken(lp_address, amount);
-        uint256 seeds = lpb.mul(s.seedsPerBDV[lp_address]);
-        if (season() == _s) LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000));
-        else LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)));
+        LibTokenSilo.incrementDepositedToken(token, amount);
+        uint256 seeds = lpb.mul(s.seedsPerBDV[token]);
+        LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000));
 
-        LibTokenSilo.addDeposit(lp_address, msg.sender, _s, amount, lpb.mul(s.seedsPerBDV[lp_address]));
-        
-        // Must rewrite this to take into account different lp pools
-        LibCheck.lpBalanceCheck();
+        LibTokenSilo.addDeposit(token, msg.sender, season(), amount, lpb.mul(s.seedsPerBDV[token]));
     }
 
-    function _withdraw(address lp_address, uint32[] calldata crates, uint256[] calldata amounts) internal {
+    function _withdraw(address token, uint32[] calldata crates, uint256[] calldata amounts) internal {
         updateSilo(msg.sender);
         require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         (
             uint256 lpRemoved,
             uint256 stalkRemoved,
             uint256 seedsRemoved
-        ) = removeLPDeposits(lp_address, crates, amounts);
+        ) = removeLPDeposits(token, crates, amounts);
         uint32 arrivalSeason = season() + s.season.withdrawBuffer;
-        addTokenWithdrawal(lp_address, msg.sender, arrivalSeason, lpRemoved);
-        LibTokenSilo.decrementDepositedToken(lp_address, lpRemoved);
+        addTokenWithdrawal(token, msg.sender, arrivalSeason, lpRemoved);
+        LibTokenSilo.decrementDepositedToken(token, lpRemoved);
         LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
