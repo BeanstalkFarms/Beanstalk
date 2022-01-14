@@ -57,9 +57,9 @@ library LibTokenSilo {
         }
     }
 
-    function tokenDeposit(address lp_address, address account, uint32 id) private view returns (uint256, uint256) {
+    function tokenDeposit(address token, address account, uint32 id) private view returns (uint256, uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return (s.a[account].deposits[IERC20(lp_address)][id].tokens, s.a[account].deposits[IERC20(lp_address)][id].seeds);
+        return (s.a[account].deposits[IERC20(token)][id].tokens, s.a[account].deposits[IERC20(token)][id].seeds);
     }
 
     function beanDenominatedValue(address token, uint256 amount) internal returns (uint256 bdv) {

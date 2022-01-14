@@ -102,7 +102,7 @@ contract SiloFacet is BeanSilo {
 
     function depositLP(uint256 amount) public {
         pair().transferFrom(msg.sender, address(this), amount);
-        _depositLP(s.c.pair, amount);
+        _deposit(s.c.pair, amount);
     }
 
     function addAndDepositLP(
@@ -129,7 +129,7 @@ contract SiloFacet is BeanSilo {
         internal {
         uint256 boughtLP = LibMarket.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, al);
         if (lp>0) pair().transferFrom(msg.sender, address(this), lp);
-        _depositLP(s.c.pair, lp.add(boughtLP));
+        _deposit(s.c.pair, lp.add(boughtLP));
     }
 
     /*
@@ -144,7 +144,7 @@ contract SiloFacet is BeanSilo {
         external
     {
         LibClaim.claim(claim);
-        _withdrawLP(s.c.pair, crates, amounts);
+        _withdraw(s.c.pair, crates, amounts);
     }
 
     function withdrawLP(
@@ -153,7 +153,7 @@ contract SiloFacet is BeanSilo {
     )
         external
     {
-        _withdrawLP(s.c.pair, crates, amounts);
+        _withdraw(s.c.pair, crates, amounts);
     }
 
     function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {
