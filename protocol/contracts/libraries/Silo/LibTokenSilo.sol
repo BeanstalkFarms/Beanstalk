@@ -22,12 +22,12 @@ library LibTokenSilo {
 
     function incrementDepositedLP(address lp_address, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.lp_balances[IERC20(lp_address)].deposited = s.lp_balances[IERC20(lp_address)].deposited.add(amount);
+        s.siloBalances[IERC20(lp_address)].deposited = s.siloBalances[IERC20(lp_address)].deposited.add(amount);
     }
 
     function decrementDepositedLP(address lp_address, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.lp_balances[IERC20(lp_address)].deposited = s.lp_balances[IERC20(lp_address)].deposited.sub(amount);
+        s.siloBalances[IERC20(lp_address)].deposited = s.siloBalances[IERC20(lp_address)].deposited.sub(amount);
     }
 
     function addDeposit(address lp_address, address account, uint32 _s, uint256 amount, uint256 seeds) internal {

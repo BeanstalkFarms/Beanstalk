@@ -43,11 +43,11 @@ contract TokenSilo is UpdateSilo {
 
     // V2 For All LP Pool Types and Addresses
     function totalDepositedLPByPool(address lp_address) public view returns (uint256) {
-            return s.lp_balances[IERC20(lp_address)].deposited;
+            return s.siloBalances[IERC20(lp_address)].deposited;
     }
 
     function totalWithdrawnLPByPool(address lp_address) public view returns (uint256) {
-            return s.lp_balances[IERC20(lp_address)].withdrawn;
+            return s.siloBalances[IERC20(lp_address)].withdrawn;
     }
 
     /**
@@ -68,6 +68,21 @@ contract TokenSilo is UpdateSilo {
         
         // Must rewrite this to take into account different lp pools
         LibCheck.lpBalanceCheck();
+    }
+
+    function _withdraw(address lp_address, uint32[] calldata crates, uint256[] calldata amounts) internal {
+        updateSilo(msg.sender);
+        require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
+        (
+            uint256 lpRemoved,
+            uint256 stalkRemoved,
+            uint256 seedsRemoved
+        ) = removeLPDeposits(lp_address, crates, amounts);
+        uint32 arrivalSeason = season() + s.season.withdrawBuffer;
+        addLPWithdrawal(lp_address, msg.sender, arrivalSeason, lpRemoved);
+        LibTokenSilo.decrementDepositedLP(lp_address, lpRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
+        LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
     function _withdrawLP(address lp_address, uint32[] calldata crates, uint256[] calldata amounts) internal {
@@ -110,7 +125,7 @@ contract TokenSilo is UpdateSilo {
 
     function addLPWithdrawal(address lp_address, address account, uint32 arrivalSeason, uint256 amount) private {
         s.a[account].withdrawals[IERC20(lp_address)][arrivalSeason] = s.a[account].withdrawals[IERC20(lp_address)][arrivalSeason].add(amount);
-        s.lp_balances[IERC20(lp_address)].withdrawn = s.lp_balances[IERC20(lp_address)].withdrawn.add(amount);
+        s.siloBalances[IERC20(lp_address)].withdrawn = s.siloBalances[IERC20(lp_address)].withdrawn.add(amount);
         emit LPWithdraw(msg.sender, arrivalSeason, amount);
     }
 

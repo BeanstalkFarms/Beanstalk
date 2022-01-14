@@ -70,18 +70,7 @@ contract SiloFacet is BeanSilo {
 
     // Withdraw
     function withdraw(address token, uint32[] calldata crates, uint256[] calldata amounts) public {
-        updateSilo(msg.sender);
-        require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
-        (
-            uint256 lpRemoved,
-            uint256 stalkRemoved,
-            uint256 seedsRemoved
-        ) = removeLPDeposits(token, crates, amounts);
-        uint32 arrivalSeason = season() + s.season.withdrawBuffer;
-        addLPWithdrawal(token, msg.sender, arrivalSeason, lpRemoved);
-        LibTokenSilo.decrementDepositedLP(token, lpRemoved);
-        LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
-        LibSilo.updateBalanceOfRainStalk(msg.sender);
+        _withdraw(token, crates, amounts);
     }
 
     function withdrawBeans(

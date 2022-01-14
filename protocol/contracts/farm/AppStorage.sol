@@ -211,7 +211,7 @@ struct AppStorage {
     // If weight is 0 -> Pool is not whitelisted
     mapping(IERC20 => uint8) weights;
     // On account level
-    mapping(IERC20 => Storage.AssetSilo) lp_balances;
+    mapping(IERC20 => Storage.AssetSilo) siloBalances;
     // Silo Functions Per Token
     mapping(address => bytes4) siloFunctions;
     mapping(address => uint8) seedsPerBDV;
