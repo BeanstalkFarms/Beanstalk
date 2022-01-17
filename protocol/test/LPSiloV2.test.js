@@ -3,7 +3,7 @@ const { deploy } = require('../scripts/deploy.js')
 
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
-describe('Silo', function () {
+describe('Generalized Silo V2', function () {
   before(async function () {
     [owner,user,user2] = await ethers.getSigners();
     userAddress = user.address;
