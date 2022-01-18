@@ -18,7 +18,7 @@ library LibTokenSilo {
     using SafeMath for uint256;
     using SafeMath for uint112;
     
-    event TokenDeposit(address indexed account, uint256 season, uint256 token_amount, uint256 seeds, address token);
+    event TokenDeposit(address indexed account, uint256 season, uint256 token_amount, uint256 bdv, address token);
 
     function incrementDepositedToken(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -30,11 +30,11 @@ library LibTokenSilo {
         s.siloBalances[IERC20(token)].deposited = s.siloBalances[IERC20(token)].deposited.sub(amount);
     }
 
-    function addDeposit(address token, address account, uint32 _s, uint256 amount, uint256 seeds) internal {
+    function addDeposit(address token, address account, uint32 _s, uint256 amount, uint256 bdv) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.a[account].deposits[IERC20(token)][_s].tokens += uint112(amount);
-        s.a[account].deposits[IERC20(token)][_s].seeds += uint112(seeds);
-        emit TokenDeposit(msg.sender, _s, amount, seeds, token);
+        s.a[account].deposits[IERC20(token)][_s].bdv += uint112(bdv);
+        emit TokenDeposit(msg.sender, _s, amount, bdv, token);
     }
 
     function removeDeposit(address token, address account, uint32 id, uint256 amount)
@@ -48,18 +48,18 @@ library LibTokenSilo {
         if (amount < crateAmount) {
             uint112 base = uint112(amount.mul(crateBase).div(crateAmount));
             s.a[account].deposits[IERC20(token)][id].tokens -= uint112(amount);
-            s.a[account].deposits[IERC20(token)][id].seeds -= base;
+            s.a[account].deposits[IERC20(token)][id].bdv -= base;
             return (amount, base);
         } else {
             delete s.a[account].deposits[IERC20(token)][id].tokens;
-            delete s.a[account].deposits[IERC20(token)][id].seeds;
+            delete s.a[account].deposits[IERC20(token)][id].bdv;
             return (crateAmount, crateBase);
         }
     }
 
     function tokenDeposit(address token, address account, uint32 id) private view returns (uint256, uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return (s.a[account].deposits[IERC20(token)][id].tokens, s.a[account].deposits[IERC20(token)][id].seeds);
+        return (s.a[account].deposits[IERC20(token)][id].tokens, s.a[account].deposits[IERC20(token)][id].bdv);
     }
 
     function beanDenominatedValue(address token, uint256 amount) internal returns (uint256 bdv) {

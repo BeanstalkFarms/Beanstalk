@@ -70,7 +70,8 @@ contract InitDiamond {
         emit Incentivization(msg.sender, C.getAdvanceIncentive());
 
         s.siloFunctions[s.c.pair] = bytes4(keccak256("uniswapLPtoBDV(address,uint256)")); 
-        s.seedsPerBDV[s.c.pair] = 4;    
+        s.seedsPerBDV[s.c.pair] = 4;
+        s.stalkPerBDV[s.c.pair] = 10000;
     }
 
 }
