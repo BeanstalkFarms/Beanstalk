@@ -23,6 +23,7 @@ library LibClaim {
 
     event BeanClaim(address indexed account, uint32[] withdrawals, uint256 beans);
     event LPClaim(address indexed account, uint32[] withdrawals, uint256 lp);
+    event TokenClaim(address indexed account, uint32[] withdrawals, uint256 token_amount, address token);
     event EtherClaim(address indexed account, uint256 ethereum);
     event Harvest(address indexed account, uint256[] plots, uint256 beans);
 
@@ -73,6 +74,36 @@ library LibClaim {
         require(amount > 0, "Claim: Bean withdrawal is empty.");
         delete s.a[account].bean.withdrawals[_s];
         s.bean.withdrawn = s.bean.withdrawn.sub(amount);
+        return amount;
+    }
+
+    // Claim Tokens
+
+    function claimTokens(address[] calldata tokens, uint32[] calldata withdrawals) public {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        for(uint256 i = 0; i < tokens.length; i++) {
+            uint256 tokenClaimed = _claimToken(tokens[i], withdrawals);
+            IERC20(tokens[i]).transfer(msg.sender, tokenClaimed); 
+        }
+    }
+
+    function _claimToken(address token, uint32[] calldata withdrawals) private returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 tokenClaimed = 0;
+        for(uint256 i = 0; i < withdrawals.length; i++) {
+            require(withdrawals[i] <= s.season.current, "Claim: Withdrawal not receivable.");
+            tokenClaimed = tokenClaimed.add(claimTokenWithdrawal(token, msg.sender, withdrawals[i]));
+        }
+        emit TokenClaim(msg.sender, withdrawals, tokenClaimed, token);
+        return tokenClaimed;
+    }
+
+    function claimTokenWithdrawal(address token, address account, uint32 _s) private returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 amount = s.a[account].withdrawals[IERC20(token)][_s];
+        require(amount > 0, "Claim: LP withdrawal is empty.");
+        delete s.a[account].withdrawals[IERC20(token)][_s];
+        s.siloBalances[IERC20(token)].withdrawn = s.siloBalances[IERC20(token)].withdrawn.sub(amount);
         return amount;
     }
 
