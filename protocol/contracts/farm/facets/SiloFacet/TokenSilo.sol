@@ -17,7 +17,11 @@ contract TokenSilo is UpdateSilo {
     using SafeMath for uint256;
     using SafeMath for uint32;
 
+<<<<<<< HEAD
     event TokenDeposit(address indexed account, uint256 season, uint256 token_amount, uint256 seeds);
+=======
+    event TokenDeposit(address indexed account, uint256 season, uint256 token_amount, uint256 bdv);
+>>>>>>> 417f47a664f9682150ff37d2c8ab7c237f7a2317
     event TokenRemove(address indexed account, uint32[] crates, uint256[] crateTokens, uint256 token_amount);
     event TokenWithdraw(address indexed account, uint256 season, uint256 token_amount);
 
@@ -26,7 +30,11 @@ contract TokenSilo is UpdateSilo {
     **/
 
     function tokenDeposit(address token, address account, uint32 id) public view returns (uint256, uint256) {
+<<<<<<< HEAD
         return (s.a[account].deposits[IERC20(token)][id].tokens, s.a[account].deposits[IERC20(token)][id].seeds);
+=======
+        return (s.a[account].deposits[IERC20(token)][id].tokens, s.a[account].deposits[IERC20(token)][id].bdv);
+>>>>>>> 417f47a664f9682150ff37d2c8ab7c237f7a2317
     }
 
     function tokenWithdrawal(address token, address account, uint32 i) public view returns (uint256) {
@@ -61,9 +69,15 @@ contract TokenSilo is UpdateSilo {
         require(bdv > 0, "Silo: No Beans under Token.");
         LibTokenSilo.incrementDepositedToken(token, amount);
         uint256 seeds = bdv.mul(s.seedsPerBDV[token]);
+<<<<<<< HEAD
         LibSilo.depositSiloAssets(msg.sender, seeds, bdv.mul(10000));
 
         LibTokenSilo.addDeposit(token, msg.sender, season(), amount, bdv.mul(s.seedsPerBDV[token]));
+=======
+        LibSilo.depositSiloAssets(msg.sender, seeds, bdv.mul(s.stalkPerBDV[token]));
+
+        LibTokenSilo.addDeposit(token, msg.sender, season(), amount, bdv);
+>>>>>>> 417f47a664f9682150ff37d2c8ab7c237f7a2317
     }
 
     function _withdraw(address token, uint32[] calldata crates, uint256[] calldata amounts) internal {
@@ -86,17 +100,28 @@ contract TokenSilo is UpdateSilo {
         returns (uint256 tokensRemoved, uint256 stalkRemoved, uint256 seedsRemoved)
     {
         for (uint256 i = 0; i < crates.length; i++) {
+<<<<<<< HEAD
             (uint256 crateBeans, uint256 crateSeeds) = LibTokenSilo.removeDeposit(
+=======
+            (uint256 crateBeans, uint256 crateBdv) = LibTokenSilo.removeDeposit(
+>>>>>>> 417f47a664f9682150ff37d2c8ab7c237f7a2317
                 token,
                 msg.sender,
                 crates[i],
                 amounts[i]
             );
             tokensRemoved = tokensRemoved.add(crateBeans);
+<<<<<<< HEAD
             stalkRemoved = stalkRemoved.add(crateSeeds.mul(C.getStalkPerLPSeed()).add(
                 LibSilo.stalkReward(crateSeeds, season()-crates[i]))
             );
             seedsRemoved = seedsRemoved.add(crateSeeds);
+=======
+            stalkRemoved = stalkRemoved.add(crateBdv.mul(s.stalkPerBDV[token]).add(
+                LibSilo.stalkReward(crateBdv, season()-crates[i]))
+            );
+            seedsRemoved = seedsRemoved.add(crateBdv.mul(s.seedsPerBDV[token]));
+>>>>>>> 417f47a664f9682150ff37d2c8ab7c237f7a2317
         }
         emit TokenRemove(msg.sender, crates, amounts, tokensRemoved);
     }

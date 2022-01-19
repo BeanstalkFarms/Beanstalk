@@ -47,6 +47,10 @@ contract ClaimFacet {
         LibCheck.beanBalanceCheck();
     }
 
+    function claimTokens(address[] calldata tokens, uint32[] calldata withdrawals) public {
+        LibClaim.claimTokens(tokens, withdrawals);
+    }
+
     function claimLP(uint32[] calldata withdrawals) public {
         LibClaim.claimLP(withdrawals);
         LibCheck.lpBalanceCheck();

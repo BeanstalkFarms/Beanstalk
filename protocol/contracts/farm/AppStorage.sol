@@ -27,7 +27,11 @@ contract Account {
 
     struct Deposit {
         uint112 tokens;
+<<<<<<< HEAD
         uint112 seeds;
+=======
+        uint112 bdv;
+>>>>>>> 417f47a664f9682150ff37d2c8ab7c237f7a2317
     }
 
     struct Silo {
@@ -215,4 +219,8 @@ struct AppStorage {
     // Silo Functions Per Token
     mapping(address => bytes4) siloFunctions;
     mapping(address => uint8) seedsPerBDV;
+<<<<<<< HEAD
+=======
+    mapping(address => uint32) stalkPerBDV;
+>>>>>>> 417f47a664f9682150ff37d2c8ab7c237f7a2317
 }
