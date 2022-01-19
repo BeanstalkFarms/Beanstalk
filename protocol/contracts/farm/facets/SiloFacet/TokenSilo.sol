@@ -21,6 +21,12 @@ contract TokenSilo is UpdateSilo {
     event TokenRemove(address indexed account, uint32[] crates, uint256[] crateTokens, uint256 token_amount);
     event TokenWithdraw(address indexed account, uint256 season, uint256 token_amount);
 
+    struct AssetsRemoved {
+        uint256 tokensRemoved;
+        uint256 stalkRemoved;
+        uint256 seedsRemoved;
+    }
+
     /**
      * Getters
     **/
@@ -69,21 +75,17 @@ contract TokenSilo is UpdateSilo {
     function _withdraw(address token, uint32[] calldata crates, uint256[] calldata amounts) internal {
         updateSilo(msg.sender);
         require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
-        (
-            uint256 tokensRemoved,
-            uint256 stalkRemoved,
-            uint256 seedsRemoved
-        ) = removeDeposits(token, crates, amounts);
+        AssetsRemoved memory assetsRemoved = removeDeposits(token, crates, amounts);
         uint32 arrivalSeason = season() + s.season.withdrawBuffer;
-        addTokenWithdrawal(token, msg.sender, arrivalSeason, tokensRemoved);
-        LibTokenSilo.decrementDepositedToken(token, tokensRemoved);
-        LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
+        addTokenWithdrawal(token, msg.sender, arrivalSeason, assetsRemoved.tokensRemoved);
+        LibTokenSilo.decrementDepositedToken(token, assetsRemoved.tokensRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, assetsRemoved.seedsRemoved, assetsRemoved.stalkRemoved);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
     function removeDeposits(address token, uint32[] calldata crates, uint256[] calldata amounts)
         private
-        returns (uint256 tokensRemoved, uint256 stalkRemoved, uint256 seedsRemoved)
+        returns (AssetsRemoved memory assetsRemoved)
     {
         for (uint256 i = 0; i < crates.length; i++) {
             (uint256 crateBeans, uint256 crateBdv) = LibTokenSilo.removeDeposit(
@@ -92,13 +94,13 @@ contract TokenSilo is UpdateSilo {
                 crates[i],
                 amounts[i]
             );
-            tokensRemoved = tokensRemoved.add(crateBeans);
-            stalkRemoved = stalkRemoved.add(crateBdv.mul(s.stalkPerBDV[token]).add(
+            assetsRemoved.tokensRemoved = assetsRemoved.tokensRemoved.add(crateBeans);
+            assetsRemoved.stalkRemoved = assetsRemoved.stalkRemoved.add(crateBdv.mul(s.stalkPerBDV[token]).add(
                 LibSilo.stalkReward(crateBdv, season()-crates[i]))
             );
-            seedsRemoved = seedsRemoved.add(crateBdv.mul(s.seedsPerBDV[token]));
+            assetsRemoved.seedsRemoved = assetsRemoved.seedsRemoved.add(crateBdv.mul(s.seedsPerBDV[token]));
         }
-        emit TokenRemove(msg.sender, crates, amounts, tokensRemoved);
+        emit TokenRemove(msg.sender, crates, amounts, assetsRemoved.tokensRemoved);
     }
 
     function addTokenWithdrawal(address token, address account, uint32 arrivalSeason, uint256 amount) private {
