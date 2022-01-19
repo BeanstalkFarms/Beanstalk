@@ -150,8 +150,8 @@ contract MarketplaceFacet is Marketplace {
     function cancelBuyOffer(uint24 buyOfferIndex) public  {
         Storage.BuyOffer storage bOffer = s.buyOffers[buyOfferIndex];
         require(bOffer.owner == msg.sender, "Field: Buy Offer not owned by user.");
-        uint256 amount = s.buyOffers[s.buyOfferIndex].amount;
-        uint256 price = s.buyOffers[s.buyOfferIndex].price;
+        uint256 amount = bOffer.amount;
+        uint256 price = bOffer.price;
         uint256 costInBeans = (price * amount) / 1000000;
         bean().transfer(msg.sender, costInBeans);
         delete s.buyOffers[buyOfferIndex];
