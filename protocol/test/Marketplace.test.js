@@ -418,11 +418,18 @@ describe('Marketplace', function () {
 
     });
 
-    it('Cancel Buy Offer', async function () {
+    it('Cancel Buy Offer, returns beans', async function () {
+
       await this.marketplace.connect(user2).listBuyOffer('5000', '500000', '2000');
+      let userBeanBalance = parseInt((await this.bean.balanceOf(user2Address)).toString())
+
       result = await this.marketplace.connect(user2).cancelBuyOffer('0');
+      let userBeanBalanceAfterBuyOffer = parseInt((await this.bean.balanceOf(user2Address)).toString());
+      expect(userBeanBalanceAfterBuyOffer - userBeanBalance).to.equal(2000);
+
       expect(result).to.emit(this.marketplace, 'BuyOfferCancelled').withArgs(user2Address, 0);
     });
+
 
 
     it('Cancel Buy Offer fails unowned', async function () {
