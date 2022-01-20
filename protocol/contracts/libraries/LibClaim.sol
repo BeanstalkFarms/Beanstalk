@@ -111,7 +111,7 @@ library LibClaim {
 
     function claimLP(uint32[] calldata withdrawals) public {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 lpClaimed = _claimLP(withdrawals);
+        uint256 lpClaimed = _claimToken(s.c.pair, withdrawals);
         IUniswapV2Pair(s.c.pair).transfer(msg.sender, lpClaimed);
     }
 
@@ -123,7 +123,8 @@ library LibClaim {
         public
         returns (uint256 beans)
     {
-        uint256 lpClaimd = _claimLP(withdrawals);
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 lpClaimd = _claimToken(s.c.pair, withdrawals);
         (beans,) = LibMarket.removeLiquidity(lpClaimd, minBeanAmount, minEthAmount);
     }
 
@@ -135,7 +136,8 @@ library LibClaim {
         private
         returns (uint256 beans)
     {
-        uint256 lpClaimd = _claimLP(withdrawals);
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 lpClaimd = _claimToken(s.c.pair, withdrawals);
         (beans,) = LibMarket.removeLiquidityWithBeanAllocation(lpClaimd, minBeanAmount, minEthAmount);
     }
 

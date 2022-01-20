@@ -66,8 +66,7 @@ contract TokenSilo is UpdateSilo {
         uint256 bdv = LibTokenSilo.beanDenominatedValue(token, amount);
         require(bdv > 0, "Silo: No Beans under Token.");
         LibTokenSilo.incrementDepositedToken(token, amount);
-        uint256 seeds = bdv.mul(s.seedsPerBDV[token]);
-        LibSilo.depositSiloAssets(msg.sender, seeds, bdv.mul(s.stalkPerBDV[token]));
+        LibSilo.depositSiloAssets(msg.sender, bdv.mul(s.seedsPerBDV[token]), bdv.mul(s.stalkPerBDV[token]));
 
         LibTokenSilo.addDeposit(token, msg.sender, season(), amount, bdv);
     }

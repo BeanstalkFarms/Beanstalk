@@ -97,7 +97,7 @@ contract SiloFacet is BeanSilo {
         payable
     {
         LibClaim.claim(claim);
-        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al, claim);
+        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al);
     }
 
     function depositLP(uint256 amount) public {
@@ -109,22 +109,20 @@ contract SiloFacet is BeanSilo {
         uint256 lp,
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
-        LibMarket.AddLiquidity calldata al,
-	    LibClaim.Claim calldata c
+        LibMarket.AddLiquidity calldata al
     )
         public
         payable
     {
-        require(buyBeanAmount == 0 || buyEthAmount == 0, "Silo: Silo: Cant buy Ether and Beans.");
-        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al, c);
+        require(buyBeanAmount == 0 || buyEthAmount == 0, "Silo: Cant buy Ether and Beans.");
+        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al);
     }
     
     function _addAndDepositLP(
         uint256 lp,
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
-        LibMarket.AddLiquidity calldata al,
-	    LibClaim.Claim calldata c
+        LibMarket.AddLiquidity calldata al
     )
         internal {
         uint256 boughtLP = LibMarket.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, al);
@@ -161,7 +159,7 @@ contract SiloFacet is BeanSilo {
         LibMarket.allocatedBeans(transferBeans);
     }
 
-    function uniswapLPtoBDV(address lp_address, uint256 amount) public view returns (uint256) {
+    function uniswapLPtoBDV(address lp_address, uint256 amount) external view returns (uint256) {
         (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(lp_address).getReserves();
         // We might want to deprecate s.index
         uint256 beanReserve = s.index == 0 ? reserve0 : reserve1;

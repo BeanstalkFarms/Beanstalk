@@ -167,12 +167,15 @@ contract MockSeasonFacet is SeasonFacet {
         for (uint32 j = 0; j <= _s; j++) {
             if (s.a[account].field.plots[j] > 0) s.a[account].field.plots[j];
             if (s.a[account].bean.deposits[j] > 0) delete s.a[account].bean.deposits[j];
+            if (s.a[account].deposits[IERC20(s.c.pair)][j].tokens > 0) delete s.a[account].deposits[IERC20(s.c.pair)][j];
             if (s.a[account].lp.deposits[j] > 0) delete s.a[account].lp.deposits[j];
             if (s.a[account].lp.depositSeeds[j] > 0) delete s.a[account].lp.depositSeeds[j];
             if (s.a[account].bean.withdrawals[j+C.getSiloWithdrawSeasons()] > 0)
                 delete s.a[account].bean.withdrawals[j+C.getSiloWithdrawSeasons()];
             if (s.a[account].lp.withdrawals[j+C.getSiloWithdrawSeasons()] > 0)
                 delete s.a[account].lp.withdrawals[j+C.getSiloWithdrawSeasons()];
+            if (s.a[account].withdrawals[IERC20(s.c.pair)][j+C.getSiloWithdrawSeasons()] > 0)
+                delete s.a[account].withdrawals[IERC20(s.c.pair)][j+C.getSiloWithdrawSeasons()];
         }
         for (uint32 i = 0; i < s.g.bipIndex; i++) {
                 s.g.voted[i][account] = false;
@@ -201,6 +204,7 @@ contract MockSeasonFacet is SeasonFacet {
         delete s.lp;
         delete s.si;
         delete s.s;
+        delete s.siloBalances[IERC20(s.c.pair)];
         delete s.w;
         delete s.g;
         delete s.r;
