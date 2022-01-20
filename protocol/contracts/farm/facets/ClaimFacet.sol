@@ -79,16 +79,15 @@ contract ClaimFacet {
 
     function unwrapBeans(uint amount) public returns (uint256 beansToWallet) {
         if (amount == 0) return beansToWallet;
-	    AppStorage storage s = LibAppStorage.diamondStorage();
-        uint wrappedBeans = s.a[msg.sender].wrappedBeans;
+        uint256 wBeans = s.a[msg.sender].wrappedBeans;
 
-        if (amount > wrappedBeans) {
-            IBean(s.c.bean).transfer(msg.sender, wrappedBeans);
+        if (amount > wBeans) {
+            IBean(s.c.bean).transfer(msg.sender, wBeans);
             beansToWallet = s.a[msg.sender].wrappedBeans;
             s.a[msg.sender].wrappedBeans = 0;
         } else {
             IBean(s.c.bean).transfer(msg.sender, amount);
-            s.a[msg.sender].wrappedBeans = wrappedBeans.sub(amount);
+            s.a[msg.sender].wrappedBeans = wBeans.sub(amount);
             beansToWallet = amount;
         }
     }

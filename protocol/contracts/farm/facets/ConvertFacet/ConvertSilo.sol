@@ -39,7 +39,6 @@ contract ConvertSilo {
     }
 
     function _convertAddAndDepositLP(
-        address lp_address,
         uint256 lp,
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
@@ -65,13 +64,13 @@ contract ConvertSilo {
             LibMarket.allocatedBeans(transferAmount);
         }
 
-        w.i = w.stalkRemoved.div(LibTokenSilo.beanDenominatedValue(lp_address, lp.add(w.newLP)), "Silo: No LP Beans.");
-        uint32 depositSeason = uint32(season().sub(w.i.div(s.seedsPerBDV[lp_address])));
+        w.i = w.stalkRemoved.div(LibTokenSilo.beanDenominatedValue(s.c.pair, lp.add(w.newLP)), "Silo: No LP Beans.");
+        uint32 depositSeason = uint32(season().sub(w.i.div(s.seedsPerBDV[s.c.pair])));
 
         if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
 	
         lp = lp.add(w.newLP);
-        _depositLP(lp_address, lp, LibTokenSilo.beanDenominatedValue(lp_address, lp), depositSeason);
+        _depositLP(s.c.pair, lp, LibTokenSilo.beanDenominatedValue(s.c.pair, lp), depositSeason);
         LibCheck.beanBalanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }

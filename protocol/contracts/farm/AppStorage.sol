@@ -47,11 +47,11 @@ contract Account {
         AssetSilo lp;
         Silo s;
         uint32 votedUntil;
-        uint32 proposedUntil;
         uint32 lastUpdate;
         uint32 lastSop;
         uint32 lastRain;
         uint32 lastSIs;
+        uint32 proposedUntil;
         SeasonOfPlenty sop;
         uint256 roots;
         uint256 wrappedBeans;
@@ -154,7 +154,7 @@ contract Storage {
     struct Season {
         uint32 current;
         uint32 sis;
-        uint8 withdrawBuffer;
+        uint8 withdrawSeasons;
         uint256 start;
         uint256 period;
         uint256 timestamp;
@@ -206,10 +206,7 @@ struct AppStorage {
     uint32 hotFix3Start;
     mapping (uint32 => Storage.Fundraiser) fundraisers;
     uint32 fundraiserIndex;
-    // If mapping is zero -> then not whitelisted
-    // uint32 represents pool weight in range (0,100]
-    // If weight is 0 -> Pool is not whitelisted
-    mapping(IERC20 => uint8) weights;
+    mapping (address => bool) isBudget;
     // On account level
     mapping(IERC20 => Storage.AssetSilo) siloBalances;
     // Silo Functions Per Token

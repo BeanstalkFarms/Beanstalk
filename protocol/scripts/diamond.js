@@ -339,6 +339,9 @@ async function upgradeWithNewFacets ({
   verbose = false,
   account = null
 }) {
+
+  let totalGasUsed = ethers.BigNumber.from('0')
+
   if (arguments.length !== 1) {
     throw Error(`Requires only 1 map argument. ${arguments.length} arguments used.`)
   }
@@ -359,6 +362,7 @@ async function upgradeWithNewFacets ({
       await libraryFactory.deployed()
       const receipt = await libraryFactory.deployTransaction.wait()
       if (verbose) console.log(`${name} deploy gas used: ` + strDisplay(receipt.gasUsed))
+      totalGasUsed = totalGasUsed.add(receipt.gasUsed)
       if (verbose) console.log(`Deployed at ${libraryFactory.address}`)
       libraries[name] = libraryFactory.address
     }
@@ -404,6 +408,7 @@ async function upgradeWithNewFacets ({
     await deployedFactory.deployed()
     const receipt = await deployedFactory.deployTransaction.wait()
     if (verbose) console.log(`${name} deploy gas used: ` + strDisplay(receipt.gasUsed))
+    totalGasUsed = totalGasUsed.add(receipt.gasUsed)
     if (verbose) console.log(`${name} deployed: ${deployedFactory.address}`)
     if (verbose) console.log('--')
     const add = []
@@ -442,6 +447,7 @@ async function upgradeWithNewFacets ({
         initFacet = deployedFactory
         const receipt = await deployedFactory.deployTransaction.wait()
         if (verbose) console.log(`${name} deploy gas used: ` + strDisplay(receipt.gasUsed))
+        totalGasUsed = totalGasUsed.add(receipt.gasUsed)
         break
       }
     }
@@ -451,6 +457,7 @@ async function upgradeWithNewFacets ({
       await initFacet.deployed()
       const receipt = await initFacet.deployTransaction.wait()
       if (verbose) console.log(`Init Diamond deploy gas used: ` + strDisplay(receipt.gasUsed))
+      totalGasUsed = totalGasUsed.add(receipt.gasUsed)
       if (verbose) console.log('Deployed init facet: ' + initFacet.address)
     } else {
       if (verbose)console.log('Using init facet: ' + initFacet.address)
@@ -476,12 +483,13 @@ async function upgradeWithNewFacets ({
       functionCall
     )
   }
+  const receipt = await result.wait();
+  totalGasUsed = totalGasUsed.add(receipt.gasUsed)
   if (verbose) {
     console.log('------')
     console.log('Upgrade transaction hash: ' + result.hash)
-    const receipt = await result.wait();
     console.log(`Diamond Cut Gas Used: ` + strDisplay(receipt.gasUsed));
-
+    console.log('Total gas used: ' + strDisplay(totalGasUsed))
   }
   return result
 }

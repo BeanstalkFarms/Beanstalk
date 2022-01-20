@@ -101,9 +101,10 @@ contract SiloExit {
         return beans;
     }
 
-    function balanceOfUnclaimedRoots(address account) public view returns (uint256 roots) {
+    function balanceOfUnclaimedRoots(address account) public view returns (uint256 uRoots) {
         uint256 sis = s.season.sis.sub(s.a[account].lastSIs);
-        return balanceOfRoots(account).mul(sis);
+        uRoots = balanceOfRoots(account).mul(sis);
+        if (uRoots > s.unclaimedRoots) uRoots = s.unclaimedRoots;
     }
 
     function balanceOfFarmableStalk(address account) public view returns (uint256) {
@@ -188,13 +189,17 @@ contract SiloExit {
         return 0;
     }
 
+    function proposedUntil(address account) public view returns (uint32) {
+        return s.a[account].proposedUntil;
+    }
+
     function voted(address account) public view returns (bool) {
         if (s.a[account].votedUntil >= season()) {
             for (uint256 i = 0; i < s.g.activeBips.length; i++) {
-                    uint32 activeBip = s.g.activeBips[i];
-                    if (s.g.voted[activeBip][account]) {
-                        return true;
-                    }
+                uint32 activeBip = s.g.activeBips[i];
+                if (s.g.voted[activeBip][account]) {
+                    return true;
+                }
             }
         }
         return false;
