@@ -81,6 +81,7 @@ contract MarketplaceFacet is Marketplace {
 
     function _buyListing(uint256 index, address from, uint256 amountBeans) internal {
         require(s.listedPlots[index].price > 0, "Marketplace: Listing does not exist.");
+        require(msg.sender != from);
         uint256 amount = (amountBeans * 1000000) / s.listedPlots[index].price;
         __buyListing(index,from,amount);
     }
@@ -129,11 +130,12 @@ contract MarketplaceFacet is Marketplace {
         uint24 price = bOffer.price;
         address owner = bOffer.owner;
         require(price > 0, "Marketplace: Buy Offer does not exist.");
+        require(msg.sender !=  owner);
         require(s.a[msg.sender].field.plots[plotIndex] >= (sellFromIndex.sub(plotIndex) + amount), "Marketplace: Invaid Plot.");
         uint232 harvestable = uint232(s.f.harvestable);
         require(sellFromIndex >= harvestable, "Marketplace: Cannot send harvestable plot.");
-        uint256 placeInLine = sellFromIndex + amount - harvestable;
-        require(placeInLine <= bOffer.maxPlaceInLine, "Marketplace: Plot too far in line.");
+        uint256 placeInLineEndPlot = sellFromIndex + amount - harvestable;
+        require(placeInLineEndPlot <= bOffer.maxPlaceInLine, "Marketplace: Plot too far in line.");
         uint256 costInBeans = (price * amount) / 1000000;
         bean().transfer(msg.sender, costInBeans);
         if (s.listedPlots[plotIndex].price > 0){
