@@ -18,7 +18,7 @@ library LibTokenSilo {
     using SafeMath for uint256;
     using SafeMath for uint112;
     
-    event TokenDeposit(address indexed account, uint256 season, uint256 token_amount, uint256 bdv, address token);
+    event TokenDeposit(address indexed token, address indexed account, uint256 season, uint256 amount, uint256 bdv);
 
     function incrementDepositedToken(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -34,31 +34,52 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.a[account].deposits[IERC20(token)][_s].tokens += uint112(amount);
         s.a[account].deposits[IERC20(token)][_s].bdv += uint112(bdv);
-        emit TokenDeposit(msg.sender, _s, amount, bdv, token);
+        emit TokenDeposit(token, msg.sender, _s, amount, bdv);
     }
 
     function removeDeposit(address token, address account, uint32 id, uint256 amount)
         internal
-        returns (uint256, uint256) {
+        returns (uint256, uint256) 
+    {
+        if (token == address(0)) return removeLegacyLPDeposit(account, id, amount);
         AppStorage storage s = LibAppStorage.diamondStorage();
-        require(id <= s.season.current, "Silo: Future crate.");
         (uint256 crateAmount, uint256 crateBase) = tokenDeposit(token, account, id);
         require(crateAmount >= amount, "Silo: Crate balance too low.");
-        require(crateAmount > 0, "Silo: Crate empty.");
         if (amount < crateAmount) {
             uint112 base = uint112(amount.mul(crateBase).div(crateAmount));
             s.a[account].deposits[IERC20(token)][id].tokens -= uint112(amount);
             s.a[account].deposits[IERC20(token)][id].bdv -= base;
             return (amount, base);
         } else {
-            delete s.a[account].deposits[IERC20(token)][id].tokens;
-            delete s.a[account].deposits[IERC20(token)][id].bdv;
+            delete s.a[account].deposits[IERC20(token)][id];
             return (crateAmount, crateBase);
         }
     }
 
-    function tokenDeposit(address token, address account, uint32 id) private view returns (uint256, uint256) {
+    function removeLegacyLPDeposit(address account, uint32 id, uint256 amount)
+        internal
+        returns (uint256, uint256) 
+    {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        require(id <= s.season.current, "Silo: Future crate.");
+        (uint256 crateAmount, uint256 crateBase) = tokenDeposit(s.c.pair, account, id);
+        require(crateAmount >= amount, "Silo: Crate balance too low.");
+        require(crateAmount > 0, "Silo: Crate empty.");
+        if (amount < crateAmount) {
+            uint256 base = amount.mul(crateBase).div(crateAmount);
+            s.a[account].lp.deposits[id] -= amount;
+            s.a[account].lp.depositSeeds[id] -= base;
+            return (amount, base);
+        } else {
+            delete s.a[account].lp.deposits[id];
+            delete s.a[account].lp.depositSeeds[id];
+            return (crateAmount, crateBase);
+        }
+    }
+
+    function tokenDeposit(address token, address account, uint32 id) internal view returns (uint256, uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        if (token == address(0)) return (s.a[account].lp.deposits[id], s.a[account].lp.depositSeeds[id]/4);
         return (s.a[account].deposits[IERC20(token)][id].tokens, s.a[account].deposits[IERC20(token)][id].bdv);
     }
 
@@ -70,11 +91,9 @@ library LibTokenSilo {
         assembly { bdv := mload(add(data, add(0x20, 0))) }
     }
 
-    function lpToLPBeans(address lp_address, uint256 amount) internal view returns (uint256) {
+    function tokenWithdrawal(address token, address account, uint32 id) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(s.c.pair).getReserves();
-
-        uint256 beanReserve = s.index == 0 ? reserve0 : reserve1;
-        return amount.mul(beanReserve).mul(2).div(IUniswapV2Pair(s.c.pair).totalSupply());
+        if (token == address(0)) return s.a[account].lp.withdrawals[id];
+        return s.a[account].withdrawals[IERC20(token)][id];
     }
 }

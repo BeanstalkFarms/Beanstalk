@@ -17,9 +17,9 @@ contract TokenSilo is UpdateSilo {
     using SafeMath for uint256;
     using SafeMath for uint32;
 
-    event TokenDeposit(address indexed account, uint256 season, uint256 token_amount, uint256 bdv);
-    event TokenRemove(address indexed account, uint32[] crates, uint256[] crateTokens, uint256 token_amount);
-    event TokenWithdraw(address indexed account, uint256 season, uint256 token_amount);
+    event TokenDeposit(address indexed token, address indexed account, uint256 season, uint256 amount, uint256 bdv);
+    event TokenRemove(address indexed token, address indexed account, uint32[] crates, uint256[] crateTokens, uint256 amount);
+    event TokenWithdraw(address indexed token, address indexed account, uint256 season, uint256 amount);
 
     struct AssetsRemoved {
         uint256 tokensRemoved;
@@ -32,11 +32,11 @@ contract TokenSilo is UpdateSilo {
     **/
 
     function tokenDeposit(address token, address account, uint32 id) public view returns (uint256, uint256) {
-        return (s.a[account].deposits[IERC20(token)][id].tokens, s.a[account].deposits[IERC20(token)][id].bdv);
+        return LibTokenSilo.tokenDeposit(token, account, id);
     }
 
-    function tokenWithdrawal(address token, address account, uint32 i) public view returns (uint256) {
-        return s.a[account].withdrawals[IERC20(token)][i];
+    function tokenWithdrawal(address token, address account, uint32 id) public view returns (uint256) {
+        return LibTokenSilo.tokenWithdrawal(token, account, id);
     }
 
     // V2 For All Token Types
@@ -75,7 +75,7 @@ contract TokenSilo is UpdateSilo {
         updateSilo(msg.sender);
         require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         AssetsRemoved memory assetsRemoved = removeDeposits(token, crates, amounts);
-        uint32 arrivalSeason = season() + s.season.withdrawBuffer;
+        uint32 arrivalSeason = season() + s.season.withdrawSeasons;
         addTokenWithdrawal(token, msg.sender, arrivalSeason, assetsRemoved.tokensRemoved);
         LibTokenSilo.decrementDepositedToken(token, assetsRemoved.tokensRemoved);
         LibSilo.withdrawSiloAssets(msg.sender, assetsRemoved.seedsRemoved, assetsRemoved.stalkRemoved);
@@ -99,13 +99,13 @@ contract TokenSilo is UpdateSilo {
             );
             assetsRemoved.seedsRemoved = assetsRemoved.seedsRemoved.add(crateBdv.mul(s.seedsPerBDV[token]));
         }
-        emit TokenRemove(msg.sender, crates, amounts, assetsRemoved.tokensRemoved);
+        emit TokenRemove(token, msg.sender, crates, amounts, assetsRemoved.tokensRemoved);
     }
 
     function addTokenWithdrawal(address token, address account, uint32 arrivalSeason, uint256 amount) private {
         s.a[account].withdrawals[IERC20(token)][arrivalSeason] = s.a[account].withdrawals[IERC20(token)][arrivalSeason].add(amount);
         s.siloBalances[IERC20(token)].withdrawn = s.siloBalances[IERC20(token)].withdrawn.add(amount);
-        emit TokenWithdraw(msg.sender, arrivalSeason, amount);
+        emit TokenWithdraw(token, msg.sender, arrivalSeason, amount);
     }
 
     function pair() internal view returns (IUniswapV2Pair) {

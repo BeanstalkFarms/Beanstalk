@@ -159,7 +159,7 @@ contract SiloFacet is BeanSilo {
         LibMarket.allocatedBeans(transferBeans);
     }
 
-    function uniswapLPtoBDV(address lp_address, uint256 amount) external view returns (uint256) {
+    function uniswapLPtoBDV(address lp_address, uint256 amount) external payable returns (uint256) {
         (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(lp_address).getReserves();
         // We might want to deprecate s.index
         uint256 beanReserve = s.index == 0 ? reserve0 : reserve1;

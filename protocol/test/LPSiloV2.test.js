@@ -39,21 +39,18 @@ describe('Generalized Silo V2', function () {
     await this.pair.burnAllLP(userAddress);
     await this.pair.burnAllLP(user2Address);
     await this.pair.burnAllLP(ownerAddress);
+    await this.pair.faucet(userAddress, '1');
+    await this.pair.faucet(user2Address, '1');
     await this.season.resetState();
     await this.season.siloSunrise(0);
   });
 
   describe('BDV', function () {
     describe('single BDV', function () {
-      beforeEach(async function () {
-        this.result = await this.silo.connect(user).depositBeans('1000');
-      });
   
       it('properly retrieves Uniswap BDV', async function () {
-        await this.pair.faucet(userAddress, '3');
-        const bdv = await this.silo.callStatic.getUniswapBDV(this.pair.address, '3')
-        console.log(bdv);
-        expect(bdv).to.be.equal('4000');
+        const bdv = await this.silo.callStatic.getUniswapBDV(this.pair.address, '1')
+        expect(bdv).to.be.equal('2000');
       });
   
     });
@@ -62,63 +59,66 @@ describe('Generalized Silo V2', function () {
   describe('deposit', function () {
     describe('single deposit', function () {
       beforeEach(async function () {
-        this.result = await this.silo.connect(user).depositBeans('1000');
-      });
-  
-      it('properly updates the total lp balances', async function () {
-        await this.silo.incrementDepositedLPByPoolE('1', '0x87898263b6c5babe34b4ec53f22d98430b91e371')
-        expect(await this.silo.totalDepositedToken('0x87898263b6c5babe34b4ec53f22d98430b91e371')).to.eq('1');
+        this.result = await this.silo.connect(user).deposit(this.pair.address, '1');
       });
   
       it('properly adds the crate', async function () {
-        expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('1000');
+        const tokenDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, 2);
+        expect(tokenDeposit[0]).to.be.equal('1');
+        expect(tokenDeposit[1]).to.be.equal('2000');
+      })
+
+      it('properly increments user balances', async function () {
+        expect(await this.silo.balanceOfStalk(userAddress)).to.be.equal('20000000');
+        expect(await this.silo.balanceOfSeeds(userAddress)).to.be.equal('8000');
+      })
+
+      it('properly increments total balances', async function () {
+        expect(await this.silo.totalDepositedToken(this.pair.address)).to.be.equal('1');
+        expect(await this.silo.totalStalk()).to.be.equal('20000000');
+        expect(await this.silo.totalSeeds()).to.be.equal('8000');
       })
   
       it('emits Deposit event', async function () {
-        await expect(this.result).to.emit(this.silo, 'BeanDeposit').withArgs(userAddress, 2, '1000');
+        await expect(this.result).to.emit(this.silo, 'TokenDeposit').withArgs(this.pair.address, userAddress, 2, '1', '2000');
       });
     });
-  
-    describe('2 deposits same season', function () {
+  });
+
+  describe('withdraw', function () {
+    describe('single deposit', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).depositBeans('1000');
-        await this.silo.connect(user).depositBeans('1000');
+        this.result = await this.silo.connect(user).deposit(this.pair.address, '1');
+        this.result = await this.silo.connect(user).withdraw(this.pair.address, ['2'], ['1']);
       });
+
+      it('properly removes the deposit', async function () {
+        const tokenDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, 2);
+        expect(tokenDeposit[0]).to.be.equal('0');
+        expect(tokenDeposit[1]).to.be.equal('0');
+      });
+
+      it('properly removes the deposit', async function () {
+        const tokenDeposit = await this.silo.tokenWithdrawal(this.pair.address, userAddress, 27);
+        expect(tokenDeposit).to.be.equal('1');
+      });
+
+      it('properly increments user balances', async function () {
+        expect(await this.silo.balanceOfStalk(userAddress)).to.be.equal('0');
+        expect(await this.silo.balanceOfSeeds(userAddress)).to.be.equal('0');
+      })
+
+      it('properly increments total balances', async function () {
+        expect(await this.silo.totalDepositedToken(this.pair.address)).to.be.equal('0');
+        expect(await this.silo.totalWithdrawnToken(this.pair.address)).to.be.equal('1');
+        expect(await this.silo.totalStalk()).to.be.equal('0');
+        expect(await this.silo.totalSeeds()).to.be.equal('0');
+      })
   
-      it('properly updates the total balances', async function () {
-        expect(await this.silo.totalDepositedBeans()).to.eq('2000');
-        expect(await this.silo.totalSeeds()).to.eq('4000');
-        expect(await this.silo.totalStalk()).to.eq('20000000');
-      });
-      it('properly updates the user balance', async function () {
-        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('4000');
-        expect(await this.silo.balanceOfStalk(userAddress)).to.eq('20000000');
-      });
-  
-      it('properly adds the crate', async function () {
-        expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('2000');
+      it('emits Deposit event', async function () {
+        await expect(this.result).to.emit(this.silo, 'TokenRemove').withArgs(this.pair.address, userAddress, [2], ['1'], '1');
+        await expect(this.result).to.emit(this.silo, 'TokenWithdraw').withArgs(this.pair.address, userAddress, 27, '1');
       });
     });
   });
-
-  describe('claim', function () {
-    beforeEach(async function () {
-      await this.pair.faucet(userAddress, '5');
-    });
-
-    it('properly deposits lp by lp pool type', async function () {
-      const lp = await this.pair.balanceOf(userAddress)
-      console.log(`${await this.pair.balanceOf(userAddress)}`)
-      await this.silo.connect(user).depositBeans('1000')
-      await this.silo.connect(user).depositLP('1')
-      const newLP = await this.pair.balanceOf(userAddress)
-      console.log(`${await this.pair.balanceOf(userAddress)}`)
-      const lpDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, '27')
-      expect(lpDeposit[0]).to.be.equal('0');
-      expect(lpDeposit[1]).to.be.equal('0');
-      expect(newLP.sub(lp)).to.be.equal('-1');
-    });
-    
-  });
-
 });

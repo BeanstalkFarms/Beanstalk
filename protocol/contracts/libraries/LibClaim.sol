@@ -160,7 +160,7 @@ library LibClaim {
         uint256 amount = s.a[account].lp.withdrawals[_s];
         require(amount > 0, "Claim: LP withdrawal is empty.");
         delete s.a[account].lp.withdrawals[_s];
-        s.lp.withdrawn = s.lp.withdrawn.sub(amount);
+        s.siloBalances[IERC20(s.c.pair)].withdrawn = s.siloBalances[IERC20(s.c.pair)].withdrawn.sub(amount);
         return amount;
     }
 

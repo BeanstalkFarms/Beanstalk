@@ -117,16 +117,16 @@ describe('Convert', function () {
 
       it('properly updates user deposits', async function () {
         expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('47');
-        const lpDeposit = await this.silo.lpDeposit(userAddress, 2);
+        const lpDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, 2);
         expect(lpDeposit[0]).to.eq('1');
-        expect(lpDeposit[1]).to.eq('3812');
+        expect(lpDeposit[1]).to.eq('953');
       });
 
       it('emits events', async function () {
         await expect(this.result).to.emit(this.silo, 'BeanRemove')
           .withArgs(userAddress, [2], ['953'], '953');
-        await expect(this.result).to.emit(this.silo, 'LPDeposit')
-          .withArgs(userAddress, 2, '1', '3812');
+        await expect(this.result).to.emit(this.silo, 'TokenDeposit')
+          .withArgs(this.pair.address, userAddress, 2, '1', '953');
       });
     });
 
@@ -145,16 +145,16 @@ describe('Convert', function () {
 
       it('properly updates user deposits', async function () {
         expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('18098');
-        const lpDeposit = await this.silo.lpDeposit(userAddress, 2);
+        const lpDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, 2);
         expect(lpDeposit[0]).to.eq('1');
-        expect(lpDeposit[1]).to.eq('7608');
+        expect(lpDeposit[1]).to.eq('1902');
       });
 
       it('emits events', async function () {
         await expect(this.result).to.emit(this.silo, 'BeanRemove')
           .withArgs(userAddress, [2], ['1902'], '1902');
-        await expect(this.result).to.emit(this.silo, 'LPDeposit')
-          .withArgs(userAddress, 2, '1', '7608');
+        await expect(this.result).to.emit(this.silo, 'TokenDeposit')
+          .withArgs(this.pair.address, userAddress, 2, '1', '1902');
       });
     });
 
@@ -174,16 +174,16 @@ describe('Convert', function () {
 
       it('properly updates user deposits', async function () {
         expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('47');
-        const lpDeposit = await this.silo.lpDeposit(userAddress, 3);
+        const lpDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, 3);
         expect(lpDeposit[0]).to.eq('1');
-        expect(lpDeposit[1]).to.eq('3812');
+        expect(lpDeposit[1]).to.eq('953');
       });
 
       it('emits events', async function () {
         await expect(this.result).to.emit(this.silo, 'BeanRemove')
           .withArgs(userAddress, [2], ['953'], '953');
-        await expect(this.result).to.emit(this.silo, 'LPDeposit')
-          .withArgs(userAddress, 3, '1', '3812');
+        await expect(this.result).to.emit(this.silo, 'TokenDeposit')
+          .withArgs(this.pair.address, userAddress, 3, '1', '953');
       });
     });
 
@@ -204,16 +204,16 @@ describe('Convert', function () {
 
       it('properly updates user deposits', async function () {
         expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('47');
-        const lpDeposit = await this.silo.lpDeposit(userAddress, 3);
+        const lpDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, 3);
         expect(lpDeposit[0]).to.eq('1');
-        expect(lpDeposit[1]).to.eq('3812');
+        expect(lpDeposit[1]).to.eq('953');
       });
 
       it('emits events', async function () {
         await expect(this.result).to.emit(this.silo, 'BeanRemove')
           .withArgs(userAddress, [2], ['953'], '953');
-        await expect(this.result).to.emit(this.silo, 'LPDeposit')
-          .withArgs(userAddress, 3, '1', '3812');
+        await expect(this.result).to.emit(this.silo, 'TokenDeposit')
+          .withArgs(this.pair.address, userAddress, 3, '1', '953');
       });
     });
 
@@ -234,16 +234,16 @@ describe('Convert', function () {
 
       it('properly updates user deposits', async function () {
         expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('500');
-        const lpDeposit = await this.silo.lpDeposit(userAddress, 3);
+        const lpDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, 3);
         expect(lpDeposit[0]).to.eq('1');
-        expect(lpDeposit[1]).to.eq('3812');
+        expect(lpDeposit[1]).to.eq('953');
       });
 
       it('emits events', async function () {
         await expect(this.result).to.emit(this.silo, 'BeanRemove')
           .withArgs(userAddress, [2,3], ['500','453'], '953');
-        await expect(this.result).to.emit(this.silo, 'LPDeposit')
-          .withArgs(userAddress, 3, '1', '3812');
+        await expect(this.result).to.emit(this.silo, 'TokenDeposit')
+          .withArgs(this.pair.address, userAddress, 3, '1', '953');
       });
     });
   });
@@ -280,7 +280,7 @@ describe('Convert', function () {
       });
   
       it('properly updates total values', async function () {
-        expect(await this.silo.totalDepositedLP()).to.eq('0');
+        expect(await this.silo.totalDepositedToken(this.pair.address)).to.eq('0');
         expect(await this.silo.totalDepositedBeans()).to.eq('796');
         expect(await this.silo.totalSeeds()).to.eq('1592');
         expect(await this.silo.totalStalk()).to.eq('7960000');
@@ -288,14 +288,14 @@ describe('Convert', function () {
 
       it('properly updates user deposits', async function () {
         expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('796');
-        const lpDeposit = await this.silo.lpDeposit(userAddress, 2);
+        const lpDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, 2);
         expect(lpDeposit[0]).to.eq('0');
         expect(lpDeposit[1]).to.eq('0');
       });
 
       it('emits events', async function () {
-        await expect(this.result).to.emit(this.silo, 'LPRemove')
-          .withArgs(userAddress, [2], ['1'], '1');
+        await expect(this.result).to.emit(this.silo, 'TokenRemove')
+          .withArgs(this.pair.address, userAddress, [2], ['1'], '1');
         await expect(this.result).to.emit(this.silo, 'BeanDeposit')
           .withArgs(userAddress, 2, '796');
       });
@@ -310,7 +310,7 @@ describe('Convert', function () {
       });
   
       it('properly updates total values', async function () {
-        expect(await this.silo.totalDepositedLP()).to.eq('0');
+        expect(await this.silo.totalDepositedToken(this.pair.address)).to.eq('0');
         expect(await this.silo.totalDepositedBeans()).to.eq('799');
         expect(await this.silo.totalSeeds()).to.eq('1598');
         expect(await this.silo.totalStalk()).to.eq('7991598');
@@ -318,14 +318,14 @@ describe('Convert', function () {
 
       it('properly updates user deposits', async function () {
         expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('799');
-        const lpDeposit = await this.silo.lpDeposit(userAddress, 2);
+        const lpDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, 2);
         expect(lpDeposit[0]).to.eq('0');
         expect(lpDeposit[1]).to.eq('0');
       });
 
       it('emits events', async function () {
-        await expect(this.result).to.emit(this.silo, 'LPRemove')
-          .withArgs(userAddress, [2], ['1'], '1');
+        await expect(this.result).to.emit(this.silo, 'TokenRemove')
+          .withArgs(this.pair.address, userAddress, [2], ['1'], '1');
         await expect(this.result).to.emit(this.silo, 'BeanDeposit')
           .withArgs(userAddress, 2, '799');
       });
@@ -341,7 +341,7 @@ describe('Convert', function () {
       });
   
       it('properly updates total values', async function () {
-        expect(await this.silo.totalDepositedLP()).to.eq('1');
+        expect(await this.silo.totalDepositedToken(this.pair.address)).to.eq('1');
         expect(await this.silo.totalDepositedBeans()).to.eq('1596');
         expect(await this.silo.totalSeeds()).to.eq('4792');
         expect(await this.silo.totalStalk()).to.eq('19961600');
@@ -349,14 +349,14 @@ describe('Convert', function () {
 
       it('properly updates user deposits', async function () {
         expect(await this.silo.beanDeposit(userAddress, 3)).to.eq('1596');
-        const lpDeposit = await this.silo.lpDeposit(userAddress, 2);
+        const lpDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, 2);
         expect(lpDeposit[0]).to.eq('1');
-        expect(lpDeposit[1]).to.eq('1600');
+        expect(lpDeposit[1]).to.eq('400');
       });
 
       it('emits events', async function () {
-        await expect(this.result).to.emit(this.silo, 'LPRemove')
-          .withArgs(userAddress, [3,2], ['1', '1'], '2');
+        await expect(this.result).to.emit(this.silo, 'TokenRemove')
+          .withArgs(this.pair.address, userAddress, [3,2], ['1', '1'], '2');
         await expect(this.result).to.emit(this.silo, 'BeanDeposit')
           .withArgs(userAddress, 3, '1596');
       });
@@ -394,7 +394,7 @@ describe('Convert', function () {
       });
 
       it('properly updates the total balances', async function () {
-        expect(await this.silo.totalDepositedLP()).to.eq('1');
+        expect(await this.silo.totalDepositedToken(this.pair.address)).to.eq('1');
         expect(await this.silo.totalDepositedBeans()).to.eq('0');
         expect(await this.silo.totalSeeds()).to.eq('8000');
         expect(await this.silo.totalStalk()).to.eq('20000000');
@@ -415,9 +415,9 @@ describe('Convert', function () {
       });
 
       it('properly deposits the lp crate', async function () {
-        const lpCrate = await this.silo.lpDeposit(userAddress, 2);
+        const lpCrate = await this.silo.tokenDeposit(this.pair.address, userAddress, 2);
         expect(lpCrate[0]).to.eq('1');
-        expect(lpCrate[1]).to.eq('8000');
+        expect(lpCrate[1]).to.eq('2000');
       });
     });
     describe('convert 1 crate after a lot of seasons', function () {
@@ -442,9 +442,9 @@ describe('Convert', function () {
       });
 
       it('properly deposits the lp crate', async function () {
-        const lpCrate = await this.silo.lpDeposit(userAddress, 10);
+        const lpCrate = await this.silo.tokenDeposit(this.pair.address, userAddress, 10);
         expect(lpCrate[0]).to.eq('1');
-        expect(lpCrate[1]).to.eq('8000');
+        expect(lpCrate[1]).to.eq('2000');
       });
     });
 
@@ -473,9 +473,9 @@ describe('Convert', function () {
       });
 
       it('properly deposits the lp crate', async function () {
-        const lpCrate = await this.silo.lpDeposit(userAddress, 11);
+        const lpCrate = await this.silo.tokenDeposit(this.pair.address, userAddress, 11);
         expect(lpCrate[0]).to.eq('1');
-        expect(lpCrate[1]).to.eq('8000');
+        expect(lpCrate[1]).to.eq('2000');
       });
 
       it('properly removese the bean crate', async function () {
@@ -493,7 +493,7 @@ describe('Convert', function () {
       });
 
       it('properly updates the total balances', async function () {
-        expect(await this.silo.totalDepositedLP()).to.eq('1');
+        expect(await this.silo.totalDepositedToken(this.pair.address)).to.eq('1');
         expect(await this.silo.totalDepositedBeans()).to.eq('0');
         expect(await this.silo.totalSeeds()).to.eq('8000');
         expect(await this.silo.totalStalk()).to.eq('20000000');
@@ -514,9 +514,9 @@ describe('Convert', function () {
       });
 
       it('properly deposits the lp crate', async function () {
-        const lpCrate = await this.silo.lpDeposit(userAddress, 2);
+        const lpCrate = await this.silo.tokenDeposit(this.pair.address, userAddress, 2);
         expect(lpCrate[0]).to.eq('1');
-        expect(lpCrate[1]).to.eq('8000');
+        expect(lpCrate[1]).to.eq('2000');
       });
 
       it('takes the proper amount of beans from wallet', function () {
@@ -553,9 +553,9 @@ describe('Convert', function () {
       });
 
       it('properly deposits the lp crate', async function () {
-        const lpCrate = await this.silo.lpDeposit(userAddress, 10);
+        const lpCrate = await this.silo.tokenDeposit(this.pair.address, userAddress, 10);
         expect(lpCrate[0]).to.eq('1');
-        expect(lpCrate[1]).to.eq('8000');
+        expect(lpCrate[1]).to.eq('2000');
       });
 
       it('takes the proper amount of beans from wallet', function () {
@@ -593,9 +593,9 @@ describe('Convert', function () {
       });
 
       it('properly deposits the lp crate', async function () {
-        const lpCrate = await this.silo.lpDeposit(userAddress, 11);
+        const lpCrate = await this.silo.tokenDeposit(this.pair.address, userAddress, 11);
         expect(lpCrate[0]).to.eq('1');
-        expect(lpCrate[1]).to.eq('8000');
+        expect(lpCrate[1]).to.eq('2000');
       });
 
       it('properly removese the bean crate', async function () {
