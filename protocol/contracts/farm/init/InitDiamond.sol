@@ -23,6 +23,7 @@ import "../../Bean.sol";
 import "../../mocks/MockToken.sol";
 import "../../Seed.sol";
 import "../../interfaces/ISeed.sol";
+// import '@balancer-labs/v2-pool-weighted/contracts/WeightedPoolNoAMFactory.sol';
 
 /**
  * @author Publius
@@ -37,6 +38,7 @@ contract InitDiamond {
     address private constant UNISWAP_FACTORY = address(0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f);
     address private constant UNISWAP_ROUTER = address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
     address private constant PEG_PAIR = address(0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc);
+    address private constant BALANCER_WEIGHTED_POOL_FACTORY = address(0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9);
 
     function init() external {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
@@ -72,11 +74,30 @@ contract InitDiamond {
 
         IBean(s.c.bean).mint(msg.sender, C.getAdvanceIncentive());
         emit Incentivization(msg.sender, C.getAdvanceIncentive());
-        s.seedContract = address(new Seed());
-
         s.ss[s.c.pair].selector = bytes4(keccak256("uniswapLPtoBDV(address,uint256)")); 
         s.ss[s.c.pair].seeds = 4;
         s.ss[s.c.pair].stalk = 10000;
+
+        // Balancer Stalk, Seed, Bean Pool Creation
+        bytes memory bytecode = type(Seed).creationCode;
+        // Generate Salt using Owner of Seed Contract
+        bytes32 salt = keccak256(abi.encodePacked(address(this)));
+        address seedAddress;
+        assembly {
+            seedAddress := create2(0, add(bytecode, 32), mload(bytecode), salt)
+        }
+        s.seedContract = seedAddress;
+
+        string memory name = "Three-Token Bean, Stalk, Seeds Test Pool";
+        string memory symbol = "33SEED-33STALK-34Bean";
+        IERC20[3] memory tokens = [IERC20(seedAddress), IERC20(address(this)), IERC20(s.c.bean)];
+        // Balancer weights are bounded by 1.00 with 18 Decimals
+        uint256[3] memory weights = [uint256(33e16), uint256(33e16), uint256(34e16)];
+        uint256 swapFeePercentage = uint256(5 * 10^15);
+        address poolOwner = address(this);
+        
+        // s.balancerSeedStalkBeanPool = address(WeightedPoolNoAMFactory(BALANCER_WEIGHTED_POOL_FACTORY).create(name, 
+        //     symbol, tokens, weights, swapFeePercentage, poolOwner));
     }
 
 }

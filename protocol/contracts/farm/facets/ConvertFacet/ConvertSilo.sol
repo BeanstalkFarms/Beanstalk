@@ -47,7 +47,7 @@ contract ConvertSilo is ToolShed {
     )
         internal
     {
-	LibInternal.updateSilo(msg.sender);
+	    LibInternal.updateSilo(msg.sender);
         WithdrawState memory w;
         if (bean().balanceOf(address(this)) < al.beanAmount) {
             	w.beansTransferred = al.beanAmount.sub(s.bean.deposited);
@@ -76,6 +76,44 @@ contract ConvertSilo is ToolShed {
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
+    function _convertAddAndDepositBeansAndCirculatingSeedStalk(
+        uint256 beans,
+        LibMarket.AddLiquidity calldata al,
+        uint32[] memory crates,
+        uint256[] memory amounts,
+       	bool toInternalBalance
+    )
+        internal
+    {
+	    // LibInternal.updateSilo(msg.sender);
+        // WithdrawState memory w;
+        // if (bean().balanceOf(address(this)) < al.beanAmount) {
+        //     	w.beansTransferred = al.beanAmount.sub(s.bean.deposited);
+        //     	bean().transferFrom(msg.sender, address(this), w.beansTransferred);
+        // }
+        // (w.beansAdded, w.newLP) = LibMarket.addLiquidity(al); // w.beansAdded is beans added to LP
+        // require(w.newLP > 0, "Silo: No LP added.");
+        // (w.beansRemoved, w.stalkRemoved) = _withdrawBeansForConvert(crates, amounts, w.beansAdded); // w.beansRemoved is beans removed from Silo
+        // uint256 amountFromWallet = w.beansAdded.sub(w.beansRemoved, "Silo: Removed too many Beans.");
+
+        // if (amountFromWallet < w.beansTransferred) {
+        //     bean().transfer(msg.sender, w.beansTransferred.sub(amountFromWallet));
+	    // } else if (w.beansTransferred < amountFromWallet) {
+        //     uint256 transferAmount = amountFromWallet.sub(w.beansTransferred);
+        //     LibMarket.allocatedBeans(transferAmount);
+        // }
+
+        // w.i = w.stalkRemoved.div(LibLPSilo.lpToLPBeans(lp.add(w.newLP)), "Silo: No LP Beans.");
+        // uint32 depositSeason = uint32(season().sub(w.i.div(C.getSeedsPerLPBean())));
+
+        // if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
+	
+        // lp = lp.add(w.newLP);
+        // _depositLP(lp, LibLPSilo.lpToLPBeans(lp), depositSeason, toInternalBalance);
+        // LibCheck.beanBalanceCheck();
+        // LibSilo.updateBalanceOfRainStalk(msg.sender);
+    }
+
     /**
      * Internal LP
     **/
@@ -88,6 +126,10 @@ contract ConvertSilo is ToolShed {
         LibSilo.depositSiloAssets(msg.sender, seeds, stalk, toInternalBalance);
     }
 
+    // TODO
+    // Create Generalized version of this and add seeds removed as return
+    // Also decrementing and incrementing should be done at the end without needing to use the withdraw subfunctions
+    // this should now be done through a new mixed used increment/decrement function in libsilo
     function _withdrawLPForConvert(
         uint32[] memory crates,
         uint256[] memory amounts,
@@ -127,6 +169,8 @@ contract ConvertSilo is ToolShed {
      * Internal Bean
     **/
 
+    // TODO
+    // Instead we return stalk and seeds and don't increment seed/stalk balances
     function _depositBeans(uint256 amount, uint32 _s, bool toInternalBalance) internal {
         require(amount > 0, "Silo: No beans.");
         LibBeanSilo.incrementDepositedBeans(amount);
@@ -150,10 +194,8 @@ contract ConvertSilo is ToolShed {
         uint256 crateBeans;
         uint256 i = 0;
         while ((i < crates.length) && (beansRemoved < maxBeans)) {
-            if (beansRemoved.add(amounts[i]) < maxBeans)
-                crateBeans = LibBeanSilo.removeBeanDeposit(msg.sender, crates[i], amounts[i]);
-            else
-                crateBeans = LibBeanSilo.removeBeanDeposit(msg.sender, crates[i], maxBeans.sub(beansRemoved));
+            if (beansRemoved.add(amounts[i]) < maxBeans) crateBeans = LibBeanSilo.removeBeanDeposit(msg.sender, crates[i], amounts[i]);
+            else crateBeans = LibBeanSilo.removeBeanDeposit(msg.sender, crates[i], maxBeans.sub(beansRemoved));
             beansRemoved = beansRemoved.add(crateBeans);
             stalkRemoved = stalkRemoved.add(crateBeans.mul(C.getStalkPerBean()).add(
                 LibSilo.stalkReward(crateBeans.mul(C.getSeedsPerBean()), season()-crates[i]

@@ -36,13 +36,17 @@ library LibSilo {
         decrementBalanceOfSeeds(account, seeds, fromInternalBalance);
     }
 
+    function convertSiloAssets(address account, uint256 seeds, uint256 stalk, bool toInternalBalance) internal {
+
+    }
+
     function incrementBalanceOfSeeds(address account, uint256 seeds, bool toInternalBalance) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
-	if (toInternalBalance) {
-		s.a[account].s.seeds =  s.a[account].s.seeds.add(seeds);
-		seed().mint(address(this), seeds);
-	}
-	else seed().mint(account, seeds);
+        if (toInternalBalance) {
+            s.a[account].s.seeds =  s.a[account].s.seeds.add(seeds);
+            seed().mint(address(this), seeds);
+        }
+        else seed().mint(account, seeds);
     }
 
     /// @notice mints the corresponding amount of stalk ERC-20 tokens to the selected account address

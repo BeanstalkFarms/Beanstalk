@@ -114,6 +114,19 @@ contract ConvertFacet is ConvertSilo {
         _convertAddAndDepositLP(lp, al, crates, amounts, set.toInternalBalance);
     }
 
+    function convertAddAndDepositBeansAndCirculatingSeedStalk(
+        uint256 beans,
+        LibMarket.AddLiquidity calldata al,
+        uint32[] memory crates,
+        uint256[] memory amounts,
+	    Storage.Settings calldata set
+    )
+        public
+        payable
+    {
+        _convertAddAndDepositBeansAndCirculatingSeedStalk(beans, al, crates, amounts, set.toInternalBalance);
+    }
+
     function lpToPeg() external view returns (uint256 lp) {
         return LibConvert.lpToPeg();
     }
