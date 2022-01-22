@@ -23,7 +23,7 @@ import "../../Bean.sol";
 import "../../mocks/MockToken.sol";
 import "../../Seed.sol";
 import "../../interfaces/ISeed.sol";
-// import '@balancer-labs/v2-pool-weighted/contracts/WeightedPoolNoAMFactory.sol';
+import "../../interfaces/IWeightedPoolFactory.sol";
 
 /**
  * @author Publius
@@ -96,8 +96,8 @@ contract InitDiamond {
         uint256 swapFeePercentage = uint256(5 * 10^15);
         address poolOwner = address(this);
         
-        // s.balancerSeedStalkBeanPool = address(WeightedPoolNoAMFactory(BALANCER_WEIGHTED_POOL_FACTORY).create(name, 
-        //     symbol, tokens, weights, swapFeePercentage, poolOwner));
+        s.balancerSeedStalkBeanPool = address(IWeightedPoolFactory(BALANCER_WEIGHTED_POOL_FACTORY).create(name, 
+            symbol, tokens, weights, swapFeePercentage, poolOwner));
     }
 
 }
