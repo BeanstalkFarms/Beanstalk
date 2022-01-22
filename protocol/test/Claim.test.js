@@ -103,7 +103,7 @@ describe('Claim', function () {
         const lp = await this.pair.balanceOf(userAddress)
         await this.claim.connect(user).claimLP(['27'])
         const newLP = await this.pair.balanceOf(userAddress)
-        const lpDeposit = await this.silo.lpDeposit(userAddress, '27')
+        const lpDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, '27')
         expect(lpDeposit[0]).to.be.equal('0');
         expect(lpDeposit[1]).to.be.equal('0');
         expect(newLP.sub(lp)).to.be.equal('1');

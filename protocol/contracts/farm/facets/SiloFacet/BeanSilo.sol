@@ -5,13 +5,13 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./LPSilo.sol";
+import "./TokenSilo.sol";
 
 /**
  * @author Publius
  * @title Bean Silo
 **/
-contract BeanSilo is LPSilo {
+contract BeanSilo is TokenSilo {
 
     using SafeMath for uint256;
     using SafeMath for uint32;
@@ -61,7 +61,7 @@ contract BeanSilo is LPSilo {
         updateSilo(msg.sender, set.toInternalBalance, set.lightUpdateSilo);
         require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         (uint256 beansRemoved, uint256 stalkRemoved) = removeBeanDeposits(crates, amounts);
-        addBeanWithdrawal(msg.sender, season()+s.season.withdrawBuffer, beansRemoved);
+        addBeanWithdrawal(msg.sender, season()+s.season.withdrawSeasons, beansRemoved);
         LibBeanSilo.decrementDepositedBeans(beansRemoved);
         LibSilo.withdrawSiloAssets(msg.sender, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved, set.fromInternalBalance);
         LibSilo.updateBalanceOfRainStalk(msg.sender);

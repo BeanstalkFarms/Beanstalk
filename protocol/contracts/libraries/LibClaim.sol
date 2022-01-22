@@ -23,6 +23,7 @@ library LibClaim {
 
     event BeanClaim(address indexed account, uint32[] withdrawals, uint256 beans);
     event LPClaim(address indexed account, uint32[] withdrawals, uint256 lp);
+    event TokenClaim(address indexed account, uint32[] withdrawals, uint256 token_amount, address token);
     event EtherClaim(address indexed account, uint256 ethereum);
     event Harvest(address indexed account, uint256[] plots, uint256 beans);
 
@@ -52,10 +53,13 @@ library LibClaim {
             else claimLP(c.lpWithdrawals);
         }
         if (c.claimEth) claimEth();
-
-        if (c.toWallet) IBean(s.c.bean).transfer(msg.sender, beansClaimed);
-        else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(beansClaimed);
+        
+        if (beansClaimed > 0) {
+            if (c.toWallet) IBean(s.c.bean).transfer(msg.sender, beansClaimed);
+            else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(beansClaimed);
+        }
     }
+    
     // Claim Beans
 
     function claimBeans(uint32[] calldata withdrawals) public returns (uint256 beansClaimed) {
@@ -76,11 +80,41 @@ library LibClaim {
         return amount;
     }
 
+    // Claim Tokens
+
+    function claimTokens(address[] calldata tokens, uint32[] calldata withdrawals) public {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        for(uint256 i = 0; i < tokens.length; i++) {
+            uint256 tokenClaimed = _claimToken(tokens[i], withdrawals);
+            IERC20(tokens[i]).transfer(msg.sender, tokenClaimed); 
+        }
+    }
+
+    function _claimToken(address token, uint32[] calldata withdrawals) private returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 tokenClaimed = 0;
+        for(uint256 i = 0; i < withdrawals.length; i++) {
+            require(withdrawals[i] <= s.season.current, "Claim: Withdrawal not receivable.");
+            tokenClaimed = tokenClaimed.add(claimTokenWithdrawal(token, msg.sender, withdrawals[i]));
+        }
+        emit TokenClaim(msg.sender, withdrawals, tokenClaimed, token);
+        return tokenClaimed;
+    }
+
+    function claimTokenWithdrawal(address token, address account, uint32 _s) private returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 amount = s.a[account].withdrawals[IERC20(token)][_s];
+        require(amount > 0, "Claim: LP withdrawal is empty.");
+        delete s.a[account].withdrawals[IERC20(token)][_s];
+        s.siloBalances[IERC20(token)].withdrawn = s.siloBalances[IERC20(token)].withdrawn.sub(amount);
+        return amount;
+    }
+
     // Claim LP
 
     function claimLP(uint32[] calldata withdrawals) public {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 lpClaimed = _claimLP(withdrawals);
+        uint256 lpClaimed = _claimToken(s.c.pair, withdrawals);
         IUniswapV2Pair(s.c.pair).transfer(msg.sender, lpClaimed);
     }
 
@@ -92,7 +126,8 @@ library LibClaim {
         public
         returns (uint256 beans)
     {
-        uint256 lpClaimd = _claimLP(withdrawals);
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 lpClaimd = _claimToken(s.c.pair, withdrawals);
         (beans,) = LibMarket.removeLiquidity(lpClaimd, minBeanAmount, minEthAmount);
     }
 
@@ -104,7 +139,8 @@ library LibClaim {
         private
         returns (uint256 beans)
     {
-        uint256 lpClaimd = _claimLP(withdrawals);
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 lpClaimd = _claimToken(s.c.pair, withdrawals);
         (beans,) = LibMarket.removeLiquidityWithBeanAllocation(lpClaimd, minBeanAmount, minEthAmount);
     }
 
@@ -124,7 +160,7 @@ library LibClaim {
         uint256 amount = s.a[account].lp.withdrawals[_s];
         require(amount > 0, "Claim: LP withdrawal is empty.");
         delete s.a[account].lp.withdrawals[_s];
-        s.lp.withdrawn = s.lp.withdrawn.sub(amount);
+        s.siloBalances[IERC20(s.c.pair)].withdrawn = s.siloBalances[IERC20(s.c.pair)].withdrawn.sub(amount);
         return amount;
     }
 

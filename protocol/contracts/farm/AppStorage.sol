@@ -25,6 +25,11 @@ contract Account {
         mapping(uint32 => uint256) depositSeeds;
     }
 
+    struct Deposit {
+        uint112 tokens;
+        uint112 bdv;
+    }
+
     struct Silo {
         uint256 stalk;
         uint256 seeds;
@@ -42,14 +47,17 @@ contract Account {
         AssetSilo lp;
         Silo s;
         uint32 votedUntil;
-        uint32 proposedUntil;
         uint32 lastUpdate;
         uint32 lastSop;
         uint32 lastRain;
         uint32 lastSIs;
+        uint32 proposedUntil;
         SeasonOfPlenty sop;
         uint256 roots;
         uint256 wrappedBeans;
+        // Deposits, Withdrawals By LP Pool
+        mapping(IERC20 => mapping(uint32 => Deposit)) deposits;
+        mapping(IERC20 => mapping(uint32 => uint256)) withdrawals;
     }
 }
 
@@ -98,7 +106,6 @@ contract Storage {
     }
 
     // Silo
-
     struct AssetSilo {
         uint256 deposited;
         uint256 withdrawn;
@@ -147,7 +154,7 @@ contract Storage {
     struct Season {
         uint32 current;
         uint32 sis;
-        uint8 withdrawBuffer;
+        uint8 withdrawSeasons;
         uint256 start;
         uint256 period;
         uint256 timestamp;
@@ -214,6 +221,14 @@ struct AppStorage {
     uint32 hotFix3Start;
     mapping (uint32 => Storage.Fundraiser) fundraisers;
     uint32 fundraiserIndex;
+    mapping (address => bool) isBudget;
+    // On account level
+    mapping(IERC20 => Storage.AssetSilo) siloBalances;
+    // Silo Functions Per Token
+    mapping(address => bytes4) siloFunctions;
+    mapping(address => uint8) seedsPerBDV;
+    mapping(address => uint32) stalkPerBDV;
+
     Storage.Stalk stalkToken;
     address seedContract;
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;

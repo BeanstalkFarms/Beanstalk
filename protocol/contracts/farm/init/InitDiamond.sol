@@ -59,7 +59,7 @@ contract InitDiamond {
         s.w.yield = 1;
 
         s.season.current = 1;
-        s.season.withdrawBuffer = 25;
+        s.season.withdrawSeasons = 25;
         s.season.period = C.getSeasonPeriod();
         s.season.timestamp = block.timestamp;
         s.season.start = s.season.period > 0 ?
@@ -73,6 +73,10 @@ contract InitDiamond {
         IBean(s.c.bean).mint(msg.sender, C.getAdvanceIncentive());
         emit Incentivization(msg.sender, C.getAdvanceIncentive());
         s.seedContract = address(new Seed());
+
+        s.siloFunctions[s.c.pair] = bytes4(keccak256("uniswapLPtoBDV(address,uint256)")); 
+        s.seedsPerBDV[s.c.pair] = 4;
+        s.stalkPerBDV[s.c.pair] = 10000;
     }
 
 }

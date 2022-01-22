@@ -51,7 +51,6 @@ library C {
     uint256 private constant BASE_ADVANCE_INCENTIVE = 1e8; // 100 beans
     uint32 private constant WITHDRAW_TIME = 25; // 24 + 1 seasons
     uint256 private constant SEEDS_PER_BEAN = 2;
-    uint256 private constant SEEDS_PER_LP_BEAN = 4;
     uint256 private constant STALK_PER_BEAN = 10000;
     uint256 private constant ROOTS_BASE = 1e12;
 
@@ -156,16 +155,8 @@ library C {
         return SEEDS_PER_BEAN;
     }
 
-    function getSeedsPerLPBean() internal pure returns (uint256) {
-        return SEEDS_PER_LP_BEAN;
-    }
-
     function getStalkPerBean() internal pure returns (uint256) {
       return STALK_PER_BEAN;
-    }
-
-    function getStalkPerLPSeed() internal pure returns (uint256) {
-      return STALK_PER_BEAN/SEEDS_PER_LP_BEAN;
     }
 
     function getRootsBase() internal pure returns (uint256) {

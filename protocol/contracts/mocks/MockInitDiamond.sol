@@ -41,7 +41,7 @@ contract MockInitDiamond {
         s.w.yield = 1;
 
         s.season.current = 1;
-        s.season.withdrawBuffer = 25;
+        s.season.withdrawSeasons = 25;
         s.season.start = block.timestamp;
         s.season.timestamp = block.timestamp;
 
@@ -49,6 +49,9 @@ contract MockInitDiamond {
         LibMarket.initMarket(s.c.bean, s.c.weth, mockRouter);
         LibStalk.initStalkToken('Stalk', 'STALK');
        	s.seedContract = address(new MockToken("SEED", "Beanstalk"));
+        s.siloFunctions[s.c.pair] = bytes4(keccak256("uniswapLPtoBDV(address,uint256)"));
+        s.seedsPerBDV[s.c.pair] = 4;
+        s.stalkPerBDV[s.c.pair] = 10000;
     }
 
 }
