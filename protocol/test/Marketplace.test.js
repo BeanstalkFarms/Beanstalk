@@ -74,6 +74,12 @@ describe('Marketplace', function () {
 
   }
 
+  const getBuyOfferIndex = async function (tx) {
+    let receipt = await tx.wait();
+    let idx = (receipt.events?.filter((x) => { return x.event == "BuyOfferCreated" }))[0].args.buyOfferIndex;
+    return idx;
+  }
+
 
 
   describe("List Plot", async function () {
@@ -84,7 +90,7 @@ describe('Marketplace', function () {
 
     it('Emits a List event', async function () {
       result = await this.marketplace.connect(user2).listPlot('5000', '100000', '0', '1000');
-      await expect(result).to.emit(this.marketplace, 'ListingCreated').withArgs(user2Address, '5000', 100000, 0, 1000);
+      await expect(result).to.emit(this.marketplace, 'ListingCreated').withArgs(user2Address, '5000', 1000, 100000, 0);
 
     });
 
@@ -92,17 +98,8 @@ describe('Marketplace', function () {
       await expect(this.marketplace.connect(user).listPlot('5000', '500000', '1000', '1000')).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
     });
 
-    it('Fails to List Plot expiry too late', async function () {
-      await expect(this.marketplace.connect(user2).listPlot('5000', '500000', '6000', '1000')).to.be.revertedWith('Marketplace: Invalid Expiry.');
-    });
-
-    it('Fails to List Plot price invalid', async function () {
-      await expect(this.marketplace.connect(user2).listPlot('5000', '5000000', '1000', '1000')).to.be.revertedWith('Marketplace: Invalid Pod Price.');
-    });
-
-
     it('Lists partial Plot', async function () {
-      const listing = await this.marketplace.listing(1000);
+      const listing = await this.marketplace.listing(1000, user2Address);
       expect(listing.price).to.equal(100000);
       expect(listing.expiry.toString()).to.equal('0');
       expect(listing.amount.toString()).to.equal('500');
@@ -110,10 +107,10 @@ describe('Marketplace', function () {
 
 
     it('Lists full Plot', async function () {
-      const listing = await this.marketplace.listing(0);
+      const listing = await this.marketplace.listing(0, userAddress);
       expect(listing.price).to.equal(500000);
       expect(listing.expiry.toString()).to.equal('0');
-      expect(listing.amount.toString()).to.equal('0');
+      expect(listing.amount.toString()).to.equal('1000');
     });
 
 
@@ -131,7 +128,7 @@ describe('Marketplace', function () {
     it('Buy Full Listing, Plots Transfer, Balances Update', async function () {
       let amountBeansBuyingWith = 500;
 
-      const listing = await this.marketplace.listing(0);
+      const listing = await this.marketplace.listing(0, userAddress);
 
       expect((await this.field.plot(user2Address, 0)).toString()).to.equal('0');
       expect((await this.field.plot(userAddress, 0)).toString()).to.equal('1000');
@@ -150,7 +147,7 @@ describe('Marketplace', function () {
       let userBeanBalanceAfter = parseInt((await this.bean.balanceOf(userAddress)).toString())
       expect(userBeanBalanceAfter - userBeanBalance).to.equal(amountBeansBuyingWith);
 
-      const listingDeleted = await this.marketplace.listing(0);
+      const listingDeleted = await this.marketplace.listing(0, userAddress);
       expect(listingDeleted.price.toString()).to.equal('0');
       expect(listingDeleted.amount.toString()).to.equal('0');
     });
@@ -169,13 +166,13 @@ describe('Marketplace', function () {
       expect((await this.field.plot(userAddress, 2500)).toString()).to.equal('500');
       expect((await this.field.plot(user2Address, 2000)).toString()).to.equal('500');
 
-      const listingDeleted = await this.marketplace.listing(2000);
+      const listingDeleted = await this.marketplace.listing(2000, userAddress);
       expect(listingDeleted.price.toString()).to.equal('0');
       expect(listingDeleted.amount.toString()).to.equal('0');
 
-      const listingNew = await this.marketplace.listing(2500);
+      const listingNew = await this.marketplace.listing(2500, userAddress);
       expect(listingNew.price.toString()).to.equal('500000');
-      expect(listingNew.amount.toString()).to.equal('0');
+      expect(listingNew.amount.toString()).to.equal('500');
     });
 
     it('Buy Listing with ETH and beans', async function () {
@@ -195,7 +192,7 @@ describe('Marketplace', function () {
       let userBeanBalanceAfter = parseInt((await this.bean.balanceOf(userAddress)).toString())
       expect(userBeanBalanceAfter - userBeanBalance).to.equal(0);
 
-      const listingDeleted = await this.marketplace.listing(1000);
+      const listingDeleted = await this.marketplace.listing(1000, user2Address);
       expect(listingDeleted.price.toString()).to.equal('0');
       expect(listingDeleted.amount.toString()).to.equal('0');
 
@@ -219,11 +216,11 @@ describe('Marketplace', function () {
       expect(userBeanBalance - userBeanBalanceAfter).to.equal(100);
 
 
-      const listingNew = await this.marketplace.listing(5400);
+      const listingNew = await this.marketplace.listing(5400, user2Address);
       expect(listingNew.price.toString()).to.equal('500000');
       expect(listingNew.amount.toString()).to.equal('100');
 
-      const listingDeleted = await this.marketplace.listing(5000);
+      const listingDeleted = await this.marketplace.listing(5000, user2Address);
       expect(listingDeleted.price.toString()).to.equal('0');
       expect(listingDeleted.amount.toString()).to.equal('0');
 
@@ -263,12 +260,12 @@ describe('Marketplace', function () {
     });
 
     it('Re-list plot cancels and re-lists', async function () {
-      const listing = await this.marketplace.listing(3000);
+      const listing = await this.marketplace.listing(3000, user2Address);
       expect(listing.price).to.equal(100000);
       result = await this.marketplace.connect(user2).listPlot('3000', '200000', '2000', '1000');
-      await expect(result).to.emit(this.marketplace, 'ListingCreated').withArgs(user2Address, '3000', 200000, 2000, 1000);
+      await expect(result).to.emit(this.marketplace, 'ListingCreated').withArgs(user2Address, '3000', 1000, 200000, 2000);
       await expect(result).to.emit(this.marketplace, 'ListingCancelled').withArgs(user2Address, '3000');
-      const listingRelisted = await this.marketplace.listing(3000);
+      const listingRelisted = await this.marketplace.listing(3000, user2Address);
       expect(listingRelisted.price).to.equal(200000);
 
     });
@@ -277,11 +274,11 @@ describe('Marketplace', function () {
     });
 
     it('Cancels Listing, Emits Listing Cancelled Event', async function () {
-      const listing = await this.marketplace.listing(3000);
+      const listing = await this.marketplace.listing(3000, user2Address);
       expect(listing.price).to.equal(100000);
       expect(listing.expiry.toString()).to.equal('2000');
       result = (await this.marketplace.connect(user2).cancelListing('3000'));
-      const listingCancelled = await this.marketplace.listing(3000);
+      const listingCancelled = await this.marketplace.listing(3000, user2Address);
       expect(listingCancelled.price).to.equal(0);
       expect(result).to.emit(this.marketplace, 'ListingCancelled').withArgs(user2Address, '3000');
     });
@@ -297,13 +294,13 @@ describe('Marketplace', function () {
     });
 
     it('Lists Offer, Emits Event, Balance Updates', async function () {
-
       let user2BeanBalance = parseInt((await this.bean.balanceOf(user2Address)).toString())
-      result = await this.marketplace.connect(user2).listBuyOffer('5000', '800000', '400');
-      await expect(result).to.emit(this.marketplace, 'BuyOfferCreated').withArgs('0', user2Address, '500', 800000, '5000');
+      let result = (await this.marketplace.connect(user2).listBuyOffer('5000', '800000', '400'));
+      let buyOfferIdx = await getBuyOfferIndex(result);
+      await expect(result).to.emit(this.marketplace, 'BuyOfferCreated').withArgs(user2Address, buyOfferIdx, '500', 800000, '5000');
       let user2BeanBalanceAfterBuyOffer = parseInt((await this.bean.balanceOf(user2Address)).toString())
       expect(user2BeanBalance - user2BeanBalanceAfterBuyOffer).to.equal(400);
-      const buyOffer = await this.marketplace.buyOffer(0);
+      const buyOffer = await this.marketplace.buyOffer(buyOfferIdx);
       expect(buyOffer.amount.toString()).to.equal('500');
       expect(buyOffer.price.toString()).to.equal('800000');
       expect(buyOffer.owner).to.equal(user2Address);
@@ -315,10 +312,11 @@ describe('Marketplace', function () {
       await this.pair.simulateTrade('4000000', '10000');
       let user2BeanBalance = parseInt((await this.bean.balanceOf(user2Address)).toString())
       result = await this.marketplace.connect(user2).buyBeansAndListBuyOffer('10000', '500000', '1000', '4000', { value: 11 });
-      await expect(result).to.emit(this.marketplace, 'BuyOfferCreated').withArgs('0', user2Address, '10000', 500000, '10000');
+      let buyOfferIdx = await getBuyOfferIndex(result);
+      await expect(result).to.emit(this.marketplace, 'BuyOfferCreated').withArgs(user2Address, buyOfferIdx, '10000', 500000, '10000');
       let user2BeanBalanceAfterBuyOffer = parseInt((await this.bean.balanceOf(user2Address)).toString());
       expect(user2BeanBalance - user2BeanBalanceAfterBuyOffer).to.equal(1000);
-      const buyOffer = await this.marketplace.buyOffer(0);
+      const buyOffer = await this.marketplace.buyOffer(buyOfferIdx);
       expect(buyOffer.amount.toString()).to.equal('10000');
       expect(buyOffer.price.toString()).to.equal('500000');
       expect(buyOffer.owner).to.equal(user2Address);
@@ -326,50 +324,51 @@ describe('Marketplace', function () {
 
     });
 
-    it('Increments Buy Offer Index', async function () {
+    it('Buy Offer Index different hash', async function () {
       result = await this.marketplace.connect(user2).listBuyOffer('5000', '800000', '400');
-      await expect(result).to.emit(this.marketplace, 'BuyOfferCreated').withArgs('0', user2Address, '500', 800000, '5000');
-      result2 = await this.marketplace.connect(user2).listBuyOffer('1000', '500000', '100');
-      await expect(result2).to.emit(this.marketplace, 'BuyOfferCreated').withArgs('1', user2Address, '200', 500000, '1000');
+      let buyOfferIdx = await getBuyOfferIndex(result);
+      await expect(result).to.emit(this.marketplace, 'BuyOfferCreated').withArgs(user2Address, buyOfferIdx, '500', 800000, '5000');
+      result2 = await this.marketplace.connect(user2).listBuyOffer('5000', '500000', '100');
+      let buyOfferIdx2 = await getBuyOfferIndex(result2);
+      await expect(result2).to.emit(this.marketplace, 'BuyOfferCreated').withArgs(user2Address, buyOfferIdx2, '200', 500000, '5000');
+      expect(result).to.not.equal(result2);
+
     });
 
     it('Sell, Partial Fill', async function () {
       result = await this.marketplace.connect(user2).listBuyOffer('5000', '800000', '400');
-      const buyOfferAmountBefore = parseInt((await this.marketplace.buyOffer(0)).amount.toString());
+      let buyOfferIdx = await getBuyOfferIndex(result);
+
+      const buyOfferAmountBefore = parseInt((await this.marketplace.buyOffer(buyOfferIdx)).amount.toString());
       let userBeanBalance = parseInt((await this.bean.balanceOf(userAddress)).toString());
       expect((await this.field.plot(userAddress, 4000)).toString()).to.equal('1000');
       expect((await this.field.plot(user2Address, 4000)).toString()).to.equal('0');
-
-      this.result = await this.marketplace.connect(user).sellToBuyOffer('4000', '4000', '0', '250');
+      this.result = await this.marketplace.connect(user).sellToBuyOffer('4000', '4000', buyOfferIdx, '250');
       let userBeanBalanceAfterSellToBuyOffer = parseInt((await this.bean.balanceOf(userAddress)).toString())
       expect(userBeanBalanceAfterSellToBuyOffer - userBeanBalance).to.equal(200);
-
       expect((await this.field.plot(userAddress, 4000)).toString()).to.equal('0');
       expect((await this.field.plot(user2Address, 4000)).toString()).to.equal('250');
       expect((await this.field.plot(userAddress, 4250)).toString()).to.equal('750');
-      const buyOfferAmountAfter = parseInt((await this.marketplace.buyOffer(0)).amount.toString());
+      const buyOfferAmountAfter = parseInt((await this.marketplace.buyOffer(buyOfferIdx)).amount.toString());
       expect(buyOfferAmountBefore - buyOfferAmountAfter).to.equal(250);
 
 
     });
 
-    it('Fails to list buy offer invalid price', async function () {
-      await this.pair.simulateTrade('4000000', '10000');
-      await expect(this.marketplace.connect(user2).buyBeansAndListBuyOffer('10000', '5000000', '0', '4000', { value: 11 })).to.be.revertedWith('Marketplace: Invalid Pod Price');
-    });
-
     it('Fails to sell plot, Harvestable plot', async function () {
       result = await this.marketplace.connect(user2).listBuyOffer('10000', '800000', '400');
+      let buyOfferIdx = await getBuyOfferIndex(result);
       await this.field.connect(user).sowBeansAndIndex('1000');
       await this.field.incrementTotalHarvestableE('6100')
-      await expect(this.marketplace.connect(user).sellToBuyOffer('6000', '6000', '0', '250')).to.be.revertedWith('Marketplace: Cannot send harvestable plot.');
+      await expect(this.marketplace.connect(user).sellToBuyOffer('6000', '6000', buyOfferIdx, '250')).to.be.revertedWith('Marketplace: Cannot send harvestable plot.');
     });
 
 
     it('Fails to sell plot, unowned plot', async function () {
       result = await this.marketplace.connect(user2).listBuyOffer('10000', '800000', '400');
+      let buyOfferIdx = await getBuyOfferIndex(result);
       await this.field.connect(user2).sowBeansAndIndex('1000');
-      await expect(this.marketplace.connect(user).sellToBuyOffer('6000', '6000', '0', '250')).to.be.revertedWith('Marketplace: Invaid Plot.');
+      await expect(this.marketplace.connect(user).sellToBuyOffer('6000', '6000', buyOfferIdx, '250')).to.be.revertedWith('Marketplace: Invaid Plot.');
     });
 
     it('Fails to list buy offer amount 0', async function () {
@@ -380,123 +379,116 @@ describe('Marketplace', function () {
     it('Fails to sell plot, nonexistent buyoffer', async function () {
       result = await this.marketplace.connect(user2).listBuyOffer('10000', '800000', '400');
       await this.field.connect(user).sowBeansAndIndex('1000');
-      await expect(this.marketplace.connect(user).sellToBuyOffer('6000', '6000', '1', '250')).to.be.revertedWith('Marketplace: Buy Offer does not exist.');
+      let buyOfferIdx = await getBuyOfferIndex(result);
+      result = await this.marketplace.connect(user2).cancelBuyOffer(buyOfferIdx);
+      await expect(this.marketplace.connect(user).sellToBuyOffer('6000', '6000', buyOfferIdx, '250')).to.be.revertedWith('Marketplace: Buy Offer does not exist.');
     });
 
     it('Multiple partial fills, Offer Deletes', async function () {
       result = await this.marketplace.connect(user2).listBuyOffer('8000', '500000', '1000');
+      let buyOfferIdx = await getBuyOfferIndex(result);
       await this.field.connect(user).sowBeansAndIndex('1000');
       await this.field.connect(user).sowBeansAndIndex('400');
       await this.field.connect(user).sowBeansAndIndex('600');
 
       let userBeanBalance = parseInt((await this.bean.balanceOf(userAddress)).toString())
-      await this.marketplace.connect(user).sellToBuyOffer('6000', '6000', '0', '1000');
-      await this.marketplace.connect(user).sellToBuyOffer('7000', '7000', '0', '400');
-      await this.marketplace.connect(user).sellToBuyOffer('7400', '7400', '0', '600');
+      await this.marketplace.connect(user).sellToBuyOffer('6000', '6000', buyOfferIdx, '1000');
+      await this.marketplace.connect(user).sellToBuyOffer('7000', '7000', buyOfferIdx, '400');
+      await this.marketplace.connect(user).sellToBuyOffer('7400', '7400', buyOfferIdx, '600');
 
       let userBeanBalanceAfterBuyOffer = parseInt((await this.bean.balanceOf(userAddress)).toString());
 
       expect(userBeanBalanceAfterBuyOffer - userBeanBalance).to.equal(1000);
 
-      const buyOffer = await this.marketplace.buyOffer(0);
+      const buyOffer = await this.marketplace.buyOffer(buyOfferIdx);
       expect(buyOffer.amount.toString()).to.equal('0');
       expect(buyOffer.price.toString()).to.equal('0');
       expect(buyOffer.maxPlaceInLine.toString()).to.equal('0');
     });
 
     it('Buy Offer accepts plot only at correct place in line', async function () {
-      await this.marketplace.connect(user2).listBuyOffer('5000', '500000', '500');
-      await this.field.connect(user).sowBeansAndIndex('1000');
-      await expect(this.marketplace.connect(user).sellToBuyOffer('6000', '6000', '0', '1000')).to.be.revertedWith('Marketplace: Plot too far in line');
-      await this.field.incrementTotalHarvestableE('2000');
-      result = await this.marketplace.connect(user).sellToBuyOffer('6000', '6000', '0', '1000');
-      expect(result).to.emit(this.marketplace, 'BuyOfferFilled').withArgs(userAddress, user2Address, 0, '6000', 500000, '1000');
+      result = await this.marketplace.connect(user2).listBuyOffer('5000', '500000', '500');
+      let buyOfferIdx = await getBuyOfferIndex(result);
 
-      const buyOffer = await this.marketplace.buyOffer(0);
+      await this.field.connect(user).sowBeansAndIndex('1000');
+      await expect(this.marketplace.connect(user).sellToBuyOffer('6000', '6000', buyOfferIdx, '1000')).to.be.revertedWith('Marketplace: Plot too far in line');
+      await this.field.incrementTotalHarvestableE('2000');
+      result = await this.marketplace.connect(user).sellToBuyOffer('6000', '6000', buyOfferIdx, '1000');
+      expect(result).to.emit(this.marketplace, 'BuyOfferFilled').withArgs(userAddress, user2Address, buyOfferIdx, '6000', '1000', 500000);
+
+      const buyOffer = await this.marketplace.buyOffer(buyOfferIdx);
       expect(buyOffer.amount.toString()).to.equal('0');
       expect(buyOffer.price.toString()).to.equal('0');
 
     });
 
     it('Cancel Buy Offer, returns beans', async function () {
-
-      await this.marketplace.connect(user2).listBuyOffer('5000', '500000', '2000');
+      result = await this.marketplace.connect(user2).listBuyOffer('5000', '500000', '2000');
       let userBeanBalance = parseInt((await this.bean.balanceOf(user2Address)).toString())
-
-      result = await this.marketplace.connect(user2).cancelBuyOffer('0');
+      let buyOfferIdx = await getBuyOfferIndex(result);
+      result = await this.marketplace.connect(user2).cancelBuyOffer(buyOfferIdx);
       let userBeanBalanceAfterBuyOffer = parseInt((await this.bean.balanceOf(user2Address)).toString());
       expect(userBeanBalanceAfterBuyOffer - userBeanBalance).to.equal(2000);
-
-      expect(result).to.emit(this.marketplace, 'BuyOfferCancelled').withArgs(user2Address, 0);
+      expect(result).to.emit(this.marketplace, 'BuyOfferCancelled').withArgs(user2Address, buyOfferIdx);
     });
 
 
 
     it('Cancel Buy Offer fails unowned', async function () {
-      await this.marketplace.connect(user2).listBuyOffer('5000', '500000', '2000');
-      await expect(this.marketplace.connect(user).cancelBuyOffer('0')).to.be.revertedWith('Field: Buy Offer not owned by user.');
+      result = await this.marketplace.connect(user2).listBuyOffer('5000', '500000', '2000');
+      let buyOfferIdx = await getBuyOfferIndex(result);
+      await expect(this.marketplace.connect(user).cancelBuyOffer(buyOfferIdx)).to.be.revertedWith('Field: Buy Offer not owned by user.');
     });
 
 
     it('Sell To Buy Offer ends at unowned index', async function () {
-      await this.marketplace.connect(user2).listBuyOffer('10000', '500000', '2000');
+      result = await this.marketplace.connect(user2).listBuyOffer('10000', '500000', '2000');
+      let buyOfferIdx = await getBuyOfferIndex(result);
       await this.field.connect(user).sowBeansAndIndex('1000');
-      await expect(this.marketplace.connect(user).sellToBuyOffer('6000', '6100', '0', '1000')).to.be.revertedWith('Marketplace: Invaid Plot.');
+      await expect(this.marketplace.connect(user).sellToBuyOffer('6000', '6100', buyOfferIdx, '1000')).to.be.revertedWith('Marketplace: Invaid Plot.');
     });
 
     it('Sell Buy Offer cancels listing', async function () {
-      await this.marketplace.connect(user2).listBuyOffer('10000', '500000', '2000');
+      result = await this.marketplace.connect(user2).listBuyOffer('10000', '500000', '2000');
       await this.field.connect(user).sowBeansAndIndex('1000');
       await this.marketplace.connect(user).listPlot('6000', '50000', '5000', '1000');
-      const listing = await this.marketplace.listing(6000);
+      const listing = await this.marketplace.listing(6000, userAddress);
       expect(listing.price.toString()).to.equal('50000');
-
-      await (this.marketplace.connect(user).sellToBuyOffer('6000', '6000', '0', '1000'));
-      const listingDeleted = await this.marketplace.listing(6000);
+      let buyOfferIdx = await getBuyOfferIndex(result);
+      await (this.marketplace.connect(user).sellToBuyOffer('6000', '6000', buyOfferIdx, '1000'));
+      const listingDeleted = await this.marketplace.listing(6000, userAddress);
       expect(listingDeleted.price.toString()).to.equal('0');
 
     });
 
     it('Sell Buy Offer from end of index', async function () {
-
       result = await this.marketplace.connect(user2).listBuyOffer('8000', '500000', '1000');
       await this.field.connect(user).sowBeansAndIndex('1000');
-
-
+      let buyOfferIdx = await getBuyOfferIndex(result);
       let userBeanBalance = parseInt((await this.bean.balanceOf(userAddress)).toString())
-      await this.marketplace.connect(user).sellToBuyOffer('6000', '6100', '0', '900');
-
+      await this.marketplace.connect(user).sellToBuyOffer('6000', '6100', buyOfferIdx, '900');
       let userBeanBalanceAfterBuyOffer = parseInt((await this.bean.balanceOf(userAddress)).toString());
       expect(userBeanBalanceAfterBuyOffer - userBeanBalance).to.equal(450);
-
       expect((await this.field.plot(userAddress, 6000)).toString()).to.equal('100');
-
       expect((await this.field.plot(user2Address, 6100)).toString()).to.equal('900');
-
-      const buyOffer = await this.marketplace.buyOffer(0);
+      const buyOffer = await this.marketplace.buyOffer(buyOfferIdx);
       expect(buyOffer.amount.toString()).to.equal('1100');
 
     });
 
     it('Sell Buy Offer from middle of index', async function () {
-
       result = await this.marketplace.connect(user2).listBuyOffer('8000', '500000', '1000');
       await this.field.connect(user).sowBeansAndIndex('1000');
-
-
+      let buyOfferIdx = await getBuyOfferIndex(result);
       let userBeanBalance = parseInt((await this.bean.balanceOf(userAddress)).toString())
-      await this.marketplace.connect(user).sellToBuyOffer('6000', '6100', '0', '400');
-
+      await this.marketplace.connect(user).sellToBuyOffer('6000', '6100', buyOfferIdx, '400');
       let userBeanBalanceAfterBuyOffer = parseInt((await this.bean.balanceOf(userAddress)).toString());
       expect(userBeanBalanceAfterBuyOffer - userBeanBalance).to.equal(200);
-
       expect((await this.field.plot(userAddress, 6000)).toString()).to.equal('100');
       expect((await this.field.plot(userAddress, 6500)).toString()).to.equal('500');
       expect((await this.field.plot(user2Address, 6100)).toString()).to.equal('400');
-
-      const buyOffer = await this.marketplace.buyOffer(0);
+      const buyOffer = await this.marketplace.buyOffer(buyOfferIdx);
       expect(buyOffer.amount.toString()).to.equal('1600');
-
     });
 
 
@@ -504,3 +496,5 @@ describe('Marketplace', function () {
   });
 
 });
+
+

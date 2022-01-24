@@ -194,11 +194,6 @@ contract MockSeasonFacet is SeasonFacet {
         }
 
 
-        for (uint32 i = 0; i < s.buyOfferIndex; i++) {
-            delete s.buyOffers[i];
-        }
-        s.buyOfferIndex = 0;
-
         for (uint32 i = 0; i < s.fundraiserIndex; i++) {
             MockToken(s.fundraisers[i].token).burn(MockToken(s.fundraisers[i].token).balanceOf(address(this)));
             delete s.fundraisers[i];

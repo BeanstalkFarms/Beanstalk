@@ -25,6 +25,7 @@ library LibClaim {
     event LPClaim(address indexed account, uint32[] withdrawals, uint256 lp);
     event EtherClaim(address indexed account, uint256 ethereum);
     event Harvest(address indexed account, uint256[] plots, uint256 beans);
+    event ListingCancelled(address indexed account, uint256 indexed index);
 
     struct Claim {
         uint32[] beanWithdrawals;
@@ -173,9 +174,17 @@ library LibClaim {
         require(pods > 0, "Claim: Plot is empty.");
         uint256 harvestablePods = s.f.harvestable.sub(plotId);
         delete s.a[account].field.plots[plotId];
+        if (s.listedPlots[plotId].price > 0){
+            cancelListing(plotId);
+        }        
         if (harvestablePods >= pods) return pods;
         s.a[account].field.plots[plotId.add(harvestablePods)] = pods.sub(harvestablePods);
         return harvestablePods;
     }
 
+    function cancelListing(uint256 index) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        delete s.listedPlots[index];
+        emit ListingCancelled(msg.sender, index);
+    }
 }

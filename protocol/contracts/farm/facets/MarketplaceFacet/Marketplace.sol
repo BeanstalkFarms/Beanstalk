@@ -11,7 +11,6 @@ import "../../../interfaces/IBean.sol";
 import "../../../libraries/LibMarket.sol";
 import "../../../libraries/LibClaim.sol";
 import "../FieldFacet/FieldFacet.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Beanjoyer
@@ -24,12 +23,12 @@ contract Marketplace {
 
     AppStorage internal s;
 
-    event ListingCreated(address indexed account, uint256 index, uint24 pricePerPod, uint232 expiry, uint256 amount);
+    event ListingCreated(address indexed account, uint256 index, uint256 amount, uint24 pricePerPod, uint232 expiry);
     event ListingCancelled(address indexed account, uint256 index);
-    event ListingFilled(address indexed from, address indexed to, uint256 index, uint24 pricePerPod, uint256 amount);
-    event BuyOfferCreated(uint indexed index, address indexed account, uint256 amount, uint24 pricePerPod, uint232 maxPlaceInLine);
-    event BuyOfferCancelled(address indexed account, uint256 index);
-    event BuyOfferFilled(address indexed from, address indexed to, uint24 buyOfferIndex, uint256 index, uint24 pricePerPod, uint256 amount);
+    event ListingFilled(address indexed from, address indexed to, uint256 index, uint256 amount, uint24 pricePerPod);
+    event BuyOfferCreated(address indexed account, bytes20 buyOfferIndex, uint256 amount, uint24 pricePerPod, uint232 maxPlaceInLine);
+    event BuyOfferCancelled(address indexed account, bytes20 buyOfferIndex);
+    event BuyOfferFilled(address indexed from, address indexed to, bytes20 buyOfferIndex, uint256 index, uint256 amount, uint24 pricePerPod);
     event PlotTransfer(address indexed from, address indexed to, uint256 indexed id, uint256 pods);
 
     function __buyListing(uint256 index, address from, uint256 amount) internal {
@@ -60,7 +59,7 @@ contract Marketplace {
             }
         }
         delete s.listedPlots[index];
-        emit ListingFilled(from, to, index, price, amount);
+        emit ListingFilled(from, to, index, amount, price);
     }
     
     function _transferPlot(address from, address to, uint256 index, uint256 start, uint256 amount) internal {
@@ -69,14 +68,19 @@ contract Marketplace {
         emit PlotTransfer(from, to, index.add(start), amount);
     }
 
-    function __listBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amount) internal {
+    function __listBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amount) internal  returns (bytes20 blobId) {
         require(amount > 0, "Marketplace: Must offer to buy non-zero amount");
-        s.buyOffers[s.buyOfferIndex].amount = amount;
-        s.buyOffers[s.buyOfferIndex].price = pricePerPod;
-        s.buyOffers[s.buyOfferIndex].maxPlaceInLine = maxPlaceInLine;
-        s.buyOffers[s.buyOfferIndex].owner = msg.sender;
-        emit BuyOfferCreated(s.buyOfferIndex, msg.sender, amount, pricePerPod, maxPlaceInLine);
-        s.buyOfferIndex = s.buyOfferIndex + 1;
+
+        bytes20 buyOfferId = createBuyOfferId();
+
+        s.buyOffers[buyOfferId].amount = amount;
+        s.buyOffers[buyOfferId].price = pricePerPod;
+        s.buyOffers[buyOfferId].maxPlaceInLine = maxPlaceInLine;
+        s.buyOffers[buyOfferId].owner = msg.sender;
+        emit BuyOfferCreated(msg.sender, buyOfferId, amount, pricePerPod, maxPlaceInLine);
+        return buyOfferId;
+
+        // s.buyOfferIndex = s.buyOfferIndex + 1;
     }
 
     function insertPlot(address account, uint256 id, uint256 amount) internal {
@@ -92,5 +96,15 @@ contract Marketplace {
 
     function bean() internal view returns (IBean) {
         return IBean(s.c.bean);
+    }
+
+    function createBuyOfferId() internal returns (bytes20 buyOfferId) {
+        // Generate the Buy Offer Id.
+        buyOfferId = bytes20(keccak256(abi.encodePacked(msg.sender, blockhash(block.number - 1))));
+        // Make sure this buyOfferId has not been used before (could be in the same block).
+        while (s.buyOffers[buyOfferId].price != 0) {
+            buyOfferId = bytes20(keccak256(abi.encodePacked(buyOfferId)));
+        }
+        return buyOfferId;
     }
 }
