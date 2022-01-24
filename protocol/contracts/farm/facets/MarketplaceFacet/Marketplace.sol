@@ -70,17 +70,13 @@ contract Marketplace {
 
     function __listBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amount) internal  returns (bytes20 blobId) {
         require(amount > 0, "Marketplace: Must offer to buy non-zero amount");
-
         bytes20 buyOfferId = createBuyOfferId();
-
         s.buyOffers[buyOfferId].amount = amount;
         s.buyOffers[buyOfferId].price = pricePerPod;
         s.buyOffers[buyOfferId].maxPlaceInLine = maxPlaceInLine;
         s.buyOffers[buyOfferId].owner = msg.sender;
         emit BuyOfferCreated(msg.sender, buyOfferId, amount, pricePerPod, maxPlaceInLine);
         return buyOfferId;
-
-        // s.buyOfferIndex = s.buyOfferIndex + 1;
     }
 
     function insertPlot(address account, uint256 id, uint256 amount) internal {

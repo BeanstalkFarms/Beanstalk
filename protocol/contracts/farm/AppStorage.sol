@@ -214,6 +214,5 @@ struct AppStorage {
     uint32 fundraiserIndex;
     mapping (address => bool) isBudget;
     mapping(uint256 => Storage.Listing) listedPlots;
-    uint32 buyOfferIndex;
     mapping(bytes20 => Storage.BuyOffer) buyOffers;
 }
