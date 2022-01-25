@@ -106,7 +106,7 @@ contract TokenSilo is UpdateSilo {
     }
 
     function pair() internal view returns (IUniswapV2Pair) {
-        return IUniswapV2Pair(s.c.pair);
+        return IUniswapV2Pair(C.getUniswapPairAddress());
     }
 
     /*

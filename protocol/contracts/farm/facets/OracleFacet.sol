@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "../AppStorage.sol";
 import "../../libraries/Decimal.sol";
 import "../../libraries/UniswapV2OracleLibrary.sol";
+import "../../C.sol";
 
 /**
  * @author Publius
@@ -31,13 +32,13 @@ contract OracleFacet {
 
     function initializeOracle() internal {
         uint256 priceCumulative = s.index == 0 ?
-            IUniswapV2Pair(s.c.pair).price0CumulativeLast() :
-            IUniswapV2Pair(s.c.pair).price1CumulativeLast();
+            IUniswapV2Pair(C.getUniswapPairAddress()).price0CumulativeLast() :
+            IUniswapV2Pair(C.getUniswapPairAddress()).price1CumulativeLast();
         (
             uint112 reserve0,
             uint112 reserve1,
             uint32 blockTimestampLast
-        ) = IUniswapV2Pair(s.c.pair).getReserves();
+        ) = IUniswapV2Pair(C.getUniswapPairAddress()).getReserves();
 
         if(reserve0 != 0 && reserve1 != 0 && blockTimestampLast != 0) {
             s.o.cumulative = priceCumulative;
@@ -52,7 +53,7 @@ contract OracleFacet {
 
     function updateOracle() internal returns (Decimal.D256 memory, Decimal.D256 memory) {
         (Decimal.D256 memory bean_price, Decimal.D256 memory usdc_price) = updatePrice();
-        (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(s.c.pair).getReserves();
+        (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(C.getUniswapPairAddress()).getReserves();
         if (reserve0 == 0 || reserve1 == 0) {
             return (Decimal.one(),Decimal.one());
         }
@@ -61,7 +62,7 @@ contract OracleFacet {
 
     function updatePrice() private returns (Decimal.D256 memory, Decimal.D256 memory) {
         (uint256 price0Cumulative, uint256 price1Cumulative, uint32 blockTimestamp) =
-        UniswapV2OracleLibrary.currentCumulativePrices(s.c.pair);
+        UniswapV2OracleLibrary.currentCumulativePrices(C.getUniswapPairAddress());
         (uint256 peg_priceCumulative,, uint32 peg_blockTimestamp) =
         UniswapV2OracleLibrary.currentCumulativePrices(s.c.pegPair);
         uint256 priceCumulative = s.index == 0 ? price0Cumulative : price1Cumulative;
@@ -87,7 +88,7 @@ contract OracleFacet {
     function getTWAPPrices() public view returns (uint256, uint256) {
         if (s.o.timestamp == 0) return (1e18, 1e18);
         (uint256 price0Cumulative, uint256 price1Cumulative, uint32 blockTimestamp) =
-        UniswapV2OracleLibrary.currentCumulativePrices(s.c.pair);
+        UniswapV2OracleLibrary.currentCumulativePrices(C.getUniswapPairAddress());
         (uint256 peg_priceCumulative,, uint32 peg_blockTimestamp) =
         UniswapV2OracleLibrary.currentCumulativePrices(s.c.pegPair);
         uint256 priceCumulative = s.index == 0 ? price0Cumulative : price1Cumulative;
@@ -101,7 +102,7 @@ contract OracleFacet {
             uint256 price1 = (priceCumulative - s.o.cumulative) / timeElapsed / 1e12;
             beanPrice = Decimal.ratio(price1, 2**112).mul(1e18).asUint256();
         } else {
-            (uint256 reserve0, uint256 reserve1,) = IUniswapV2Pair(s.c.pair).getReserves();
+            (uint256 reserve0, uint256 reserve1,) = IUniswapV2Pair(C.getUniswapPairAddress()).getReserves();
             beanPrice = (s.index == 0 ? 1e6 * reserve1 / reserve0 : 1e6 * reserve0 / reserve1);
         }
         if (pegTimeElapsed > 0) {

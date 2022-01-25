@@ -220,7 +220,7 @@ contract ConvertSilo is ToolShed {
     }
 
     function pair() internal view returns (IUniswapV2Pair) {
-        return IUniswapV2Pair(s.c.pair);
+        return IUniswapV2Pair(C.getUniswapPairAddress());
     }
 
     function bean() internal view returns (IBean) {
