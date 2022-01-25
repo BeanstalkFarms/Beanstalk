@@ -11,12 +11,13 @@ import "../../AppStorage.sol";
 import "../../../C.sol";
 import "../../../interfaces/IBean.sol";
 import "../../../interfaces/ISeed.sol";
+import "../Utils/ToolShed.sol";
 
 /**
  * @author Publius
  * @title Life
 **/
-contract Life {
+contract Life is ToolShed {
 
     using SafeMath for uint256;
     using SafeMath for uint32;
