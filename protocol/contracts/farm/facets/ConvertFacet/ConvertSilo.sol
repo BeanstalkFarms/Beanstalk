@@ -12,12 +12,13 @@ import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibMarket.sol";
 import "../../../C.sol";
+import "../Utils/ToolShed.sol";
 
 /**
  * @author Publius
  * @title Bean Silo
 **/
-contract ConvertSilo {
+contract ConvertSilo is ToolShed {
 
     AppStorage internal s;
 

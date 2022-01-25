@@ -16,12 +16,13 @@ import "../../../libraries/LibStalk.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../C.sol";
 import "../../../interfaces/ISeed.sol";
+import "../Utils/ToolShed.sol";
 
 /**
  * @author Publius
  * @title Silo Exit
 **/
-contract SiloExit {
+contract SiloExit is ToolShed {
 
     AppStorage internal s;
 
@@ -73,15 +74,6 @@ contract SiloExit {
     function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
         LibStalk.approve(LibStalk._msgSender(), spender, s.stalkToken.allowances[LibStalk._msgSender()][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
         return true;
-    }
-
-    /**
-     * Update Settings Struct Functions
-    **/
-
-    function defaultSettings() public view returns (Storage.Settings memory set) {
-        Storage.Settings memory DEFAULT_SETTINGS = Storage.Settings({toInternalBalance:false, fromInternalBalance:false, lightUpdateSilo: false});
-        return DEFAULT_SETTINGS;
     }
 
     /**
