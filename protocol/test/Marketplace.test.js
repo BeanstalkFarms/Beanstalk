@@ -355,12 +355,11 @@ describe('Marketplace', function () {
 
     });
 
-    it('Fails to sell plot, Harvestable plot', async function () {
+    it('Fails to sell plot, buy offer not large enough', async function () {
       result = await this.marketplace.connect(user2).listBuyOffer('10000', '800000', '400');
       let buyOfferIdx = await getBuyOfferIndex(result);
       await this.field.connect(user).sowBeansAndIndex('1000');
-      await this.field.incrementTotalHarvestableE('6100')
-      await expect(this.marketplace.connect(user).sellToBuyOffer('6000', '6000', buyOfferIdx, '250')).to.be.revertedWith('Marketplace: Cannot send harvestable plot.');
+      await expect(this.marketplace.connect(user).sellToBuyOffer('6000', '6000', buyOfferIdx, '1000')).to.be.revertedWith('SafeMath: subtraction overflow');
     });
 
 

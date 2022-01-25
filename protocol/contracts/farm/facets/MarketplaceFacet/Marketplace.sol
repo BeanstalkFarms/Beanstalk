@@ -68,7 +68,7 @@ contract Marketplace {
         emit PlotTransfer(from, to, index.add(start), amount);
     }
 
-    function __listBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amount) internal  returns (bytes20 blobId) {
+    function __listBuyOffer(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amount) internal  returns (bytes20 buyOfferId) {
         require(amount > 0, "Marketplace: Must offer to buy non-zero amount");
         bytes20 buyOfferId = createBuyOfferId();
         s.buyOffers[buyOfferId].amount = amount;
@@ -95,7 +95,7 @@ contract Marketplace {
     }
 
     function createBuyOfferId() internal returns (bytes20 buyOfferId) {
-        // Generate the Buy Offer Id.
+        // Generate the Buy Offer Id from sender + block hash
         buyOfferId = bytes20(keccak256(abi.encodePacked(msg.sender, blockhash(block.number - 1))));
         // Make sure this buyOfferId has not been used before (could be in the same block).
         while (s.buyOffers[buyOfferId].price != 0) {
