@@ -51,11 +51,11 @@ contract TokenSilo is UpdateSilo {
 
     function deposit(address token, uint256 amount) public {
         IERC20(token).transferFrom(msg.sender, address(this), amount);
-        _deposit(token, amount, defaultSettings());
+        _deposit(token, amount, LibToolShed.defaultSettings());
     }
 
     function withdraw(address token, uint32[] calldata crates, uint256[] calldata amounts) public {
-        _withdraw(token, crates, amounts, defaultSettings());
+        _withdraw(token, crates, amounts, LibToolShed.defaultSettings());
     }
 
     /**

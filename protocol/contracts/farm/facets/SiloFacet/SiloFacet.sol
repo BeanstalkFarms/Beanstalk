@@ -64,7 +64,7 @@ contract SiloFacet is BeanSilo {
 
     function claimAndDepositBeans(uint256 amount, LibClaim.Claim calldata claim) external {
         allocateBeans(claim, amount);
-        _depositBeans(amount, defaultSettings());
+        _depositBeans(amount, LibToolShed.defaultSettings());
     }
 
     function claimBuyAndDepositBeans(
@@ -77,18 +77,18 @@ contract SiloFacet is BeanSilo {
     {
         allocateBeans(claim, amount);
         uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
-        _depositBeans(boughtAmount.add(amount), defaultSettings());
+        _depositBeans(boughtAmount.add(amount), LibToolShed.defaultSettings());
     }
 
     function depositBeans(uint256 amount) public {
         bean().transferFrom(msg.sender, address(this), amount);
-        _depositBeans(amount, defaultSettings());
+        _depositBeans(amount, LibToolShed.defaultSettings());
     }
 
     function buyAndDepositBeans(uint256 amount, uint256 buyAmount) public payable {
         uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
         if (amount > 0) bean().transferFrom(msg.sender, address(this), amount);
-        _depositBeans(boughtAmount.add(amount), defaultSettings());
+        _depositBeans(boughtAmount.add(amount), LibToolShed.defaultSettings());
     }
 
     // Withdraw
@@ -99,7 +99,7 @@ contract SiloFacet is BeanSilo {
     )
         external
     {
-        _withdrawBeans(crates, amounts, defaultSettings());
+        _withdrawBeans(crates, amounts, LibToolShed.defaultSettings());
     }
 
     function claimAndWithdrawBeans(
@@ -110,7 +110,7 @@ contract SiloFacet is BeanSilo {
         external
     {
         LibClaim.claim(claim);
-        _withdrawBeans(crates, amounts, defaultSettings());
+        _withdrawBeans(crates, amounts, LibToolShed.defaultSettings());
     }
 
     /*
@@ -133,12 +133,12 @@ contract SiloFacet is BeanSilo {
         payable
     {
         LibClaim.claim(claim);
-        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al, claim, defaultSettings());
+        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al, claim, LibToolShed.defaultSettings());
     }
 
     function depositLP(uint256 amount) public {
         pair().transferFrom(msg.sender, address(this), amount);
-        _deposit(s.c.pair, amount, defaultSettings());
+        _deposit(s.c.pair, amount, LibToolShed.defaultSettings());
     }
 
     function addAndDepositLP(
@@ -152,7 +152,7 @@ contract SiloFacet is BeanSilo {
         payable
     {
         require(buyBeanAmount == 0 || buyEthAmount == 0, "Silo: Silo: Cant buy Ether and Beans.");
-        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al, c, defaultSettings());
+        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al, c, LibToolShed.defaultSettings());
     }
 
     function _addAndDepositLP(
