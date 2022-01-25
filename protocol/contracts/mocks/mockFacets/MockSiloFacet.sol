@@ -158,4 +158,22 @@ contract MockSiloFacet is SiloFacet {
         return (seasons, crates);
     }
 
+    function mockLegacySiloDeposit(address account, uint32 _s, uint256 amount, uint256 bdv) public {
+        s.a[account].lp.deposits[_s] = _s;
+        s.a[account].lp.depositSeeds[_s] = _s * 4;
+    }
+
+    function migrateDeposit(address account, uint32 _s) internal {
+        s.a[account].deposits[IERC20(s.c.pair)][_s].tokens = uint112(s.a[account].lp.deposits[_s]);
+        s.a[account].deposits[IERC20(s.c.pair)][_s].bdv = uint112(s.a[account].lp.depositSeeds[_s]/4); 
+        delete s.a[account].lp.deposits[_s];
+        delete s.a[account].lp.depositSeeds[_s];
+    }
+
+    function migrateDeposits(address account, uint32[] calldata ss) external {
+        for (uint32 i; i < ss.length; i++) {
+            migrateDeposit(account, ss[i]);
+        }
+    }
+
 }

@@ -179,6 +179,12 @@ contract Storage {
     }
 }
 
+struct SiloSettings {
+    bytes4 selector;
+    uint32 seeds;
+    uint32 stalk;
+}
+
 struct AppStorage {
     uint8 index;
     int8[32] cases;
@@ -210,7 +216,5 @@ struct AppStorage {
     // On account level
     mapping(IERC20 => Storage.AssetSilo) siloBalances;
     // Silo Functions Per Token
-    mapping(address => bytes4) siloFunctions;
-    mapping(address => uint8) seedsPerBDV;
-    mapping(address => uint32) stalkPerBDV;
+    mapping(address => SiloSettings) ss;
 }

@@ -31,10 +31,10 @@ contract ConvertFacet is ConvertSilo {
         (uint256 lp, uint256 beansConverted) = LibConvert.sellToPegAndAddLiquidity(beans, minLP);
         (uint256 beansRemoved, uint256 stalkRemoved) = _withdrawBeansForConvert(crates, amounts, beansConverted);
         require(beansRemoved == beansConverted, "Silo: Wrong Beans removed.");
-        uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(s.seedsPerBDV[s.c.pair])));
+        uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(s.ss[s.c.pair].seeds)));
         _s = getDepositSeason(_s);
 
-        _depositLP(lp, beansConverted, _s);
+        _depositLP(_s, lp, beansConverted);
         LibCheck.balanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }   
