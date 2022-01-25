@@ -94,7 +94,8 @@ contract ConvertSilo {
     function _withdrawLPForConvert(
         uint32[] memory crates,
         uint256[] memory amounts,
-        uint256 maxLP
+        uint256 maxLP,
+        bool fromInternalBalance
     )
         internal
         returns (uint256 lpRemoved, uint256 stalkRemoved)
@@ -120,7 +121,7 @@ contract ConvertSilo {
             i++;
         }
         LibTokenSilo.decrementDepositedToken(s.c.pair, lpRemoved);
-        LibSilo.withdrawSiloAssets(msg.sender, bdvRemoved.mul(s.seedsPerBDV[s.c.pair]), stalkRemoved.add(bdvRemoved.mul(s.stalkPerBDV[s.c.pair])));
+        LibSilo.withdrawSiloAssets(msg.sender, bdvRemoved.mul(s.seedsPerBDV[s.c.pair]), stalkRemoved.add(bdvRemoved.mul(s.stalkPerBDV[s.c.pair])), fromInternalBalance);
         emit TokenRemove(s.c.pair, msg.sender, crates, amounts, lpRemoved);
     }
 

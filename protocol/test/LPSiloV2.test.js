@@ -47,6 +47,10 @@ describe('Generalized Silo V2', function () {
 
   describe('BDV', function () {
     describe('single BDV', function () {
+
+      it('checks gas for defaultSettings getter', async function () {
+        await this.silo.connect(user).deposit(this.pair.address, '1');
+      })
   
       it('properly retrieves Uniswap BDV', async function () {
         const bdv = await this.silo.callStatic.getUniswapBDV(this.pair.address, '1')

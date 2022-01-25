@@ -76,6 +76,15 @@ contract SiloExit {
     }
 
     /**
+     * Update Settings Struct Functions
+    **/
+
+    function defaultSettings() public view returns (Storage.Settings memory set) {
+        Storage.Settings memory DEFAULT_SETTINGS = Storage.Settings({toInternalBalance:false, fromInternalBalance:false, lightUpdateSilo: false});
+        return DEFAULT_SETTINGS;
+    }
+
+    /**
      * Contracts
     **/
 

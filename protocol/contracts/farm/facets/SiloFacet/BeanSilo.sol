@@ -43,7 +43,7 @@ contract BeanSilo is TokenSilo {
     /**
      * Internal
     **/
-    function _depositBeans(uint256 amount, Storage.Settings calldata set) internal {
+    function _depositBeans(uint256 amount, Storage.Settings memory set) internal {
         require(amount > 0, "Silo: No beans.");
         updateSilo(msg.sender, set.toInternalBalance, set.lightUpdateSilo);
         LibBeanSilo.incrementDepositedBeans(amount);
@@ -54,7 +54,7 @@ contract BeanSilo is TokenSilo {
     function _withdrawBeans(
         uint32[] calldata crates,
         uint256[] calldata amounts,
-	    Storage.Settings calldata set
+	    Storage.Settings memory set
     )
         internal
     {

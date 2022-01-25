@@ -20,15 +20,24 @@ contract ConvertFacet is ConvertSilo {
     using SafeMath for uint256;
     using SafeMath for uint32;
 
+    /**
+     * Update Settings Struct Functions
+    **/
+
+    function defaultSettings() public view returns (Storage.Settings memory set) {
+        Storage.Settings memory DEFAULT_SETTINGS = Storage.Settings({toInternalBalance:false, fromInternalBalance:false, lightUpdateSilo: false});
+        return DEFAULT_SETTINGS;
+    }
+
     function convertDepositedBeans(
         uint256 beans,
         uint256 minLP,
         uint32[] memory crates,
-        uint256[] memory amounts,
-	Storage.Settings calldata set
+        uint256[] memory amounts
     )
         external 
     {
+        Storage.Settings memory set = defaultSettings();
         LibInternal.updateSilo(msg.sender);
         (uint256 lp, uint256 beansConverted) = LibConvert.sellToPegAndAddLiquidity(beans, minLP);
         (uint256 beansRemoved, uint256 stalkRemoved) = _withdrawBeansForConvert(crates, amounts, beansConverted);
@@ -45,14 +54,14 @@ contract ConvertFacet is ConvertSilo {
         uint256 lp,
         uint256 minBeans,
         uint32[] memory crates,
-        uint256[] memory amounts,
-	Storage.Settings calldata set
+        uint256[] memory amounts
     )
         external
     {
+        Storage.Settings memory set = defaultSettings();
         LibInternal.updateSilo(msg.sender);
         (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
-        (uint256 lpRemoved, uint256 stalkRemoved) = _withdrawLPForConvert(crates, amounts, lpConverted);
+        (uint256 lpRemoved, uint256 stalkRemoved) = _withdrawLPForConvert(crates, amounts, lpConverted, set.fromInternalBalance);
         require(lpRemoved == lpConverted, "Silo: Wrong LP removed.");
         uint32 _s = uint32(stalkRemoved.div(beans.mul(C.getSeedsPerBean())));
         _s = getDepositSeason(_s);
@@ -66,12 +75,12 @@ contract ConvertFacet is ConvertSilo {
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
         uint256[] memory amounts,
-        LibClaim.Claim calldata claim,
-	Storage.Settings calldata set
+        LibClaim.Claim calldata claim
     )
         external
         payable
     {
+        Storage.Settings memory set = defaultSettings();
         LibClaim.claim(claim);
         _convertAddAndDepositLP(lp, al, crates, amounts, set.toInternalBalance);
     }
@@ -80,12 +89,12 @@ contract ConvertFacet is ConvertSilo {
         uint256 lp,
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
-        uint256[] memory amounts,
-	Storage.Settings calldata set
+        uint256[] memory amounts
     )
         public
         payable
     {
+        Storage.Settings memory set = defaultSettings();
         _convertAddAndDepositLP(lp, al, crates, amounts, set.toInternalBalance);
     }
 

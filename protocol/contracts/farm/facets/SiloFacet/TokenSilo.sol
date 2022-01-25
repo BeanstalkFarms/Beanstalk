@@ -50,35 +50,35 @@ contract TokenSilo is UpdateSilo {
 
     function deposit(address token, uint256 amount) public {
         IERC20(token).transferFrom(msg.sender, address(this), amount);
-        _deposit(token, amount);
+        _deposit(token, amount, defaultSettings());
     }
 
     function withdraw(address token, uint32[] calldata crates, uint256[] calldata amounts) public {
-        _withdraw(token, crates, amounts);
+        _withdraw(token, crates, amounts, defaultSettings());
     }
 
     /**
      * Internal
     **/
 
-    function _deposit(address token, uint256 amount) internal {
-        updateSilo(msg.sender);
+    function _deposit(address token, uint256 amount, Storage.Settings memory set) internal {
+        updateSilo(msg.sender, set.toInternalBalance, set.lightUpdateSilo);
         uint256 bdv = LibTokenSilo.beanDenominatedValue(token, amount);
         require(bdv > 0, "Silo: No Beans under Token.");
         LibTokenSilo.incrementDepositedToken(token, amount);
-        LibSilo.depositSiloAssets(msg.sender, bdv.mul(s.seedsPerBDV[token]), bdv.mul(s.stalkPerBDV[token]));
+        LibSilo.depositSiloAssets(msg.sender, bdv.mul(s.seedsPerBDV[token]), bdv.mul(s.stalkPerBDV[token]), set.toInternalBalance);
 
         LibTokenSilo.addDeposit(token, msg.sender, season(), amount, bdv);
     }
 
-    function _withdraw(address token, uint32[] calldata crates, uint256[] calldata amounts) internal {
-        updateSilo(msg.sender);
+    function _withdraw(address token, uint32[] calldata crates, uint256[] calldata amounts, Storage.Settings memory set) internal {
+        updateSilo(msg.sender, set.toInternalBalance, set.lightUpdateSilo);
         require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         AssetsRemoved memory assetsRemoved = removeDeposits(token, crates, amounts);
         uint32 arrivalSeason = season() + s.season.withdrawSeasons;
         addTokenWithdrawal(token, msg.sender, arrivalSeason, assetsRemoved.tokensRemoved);
         LibTokenSilo.decrementDepositedToken(token, assetsRemoved.tokensRemoved);
-        LibSilo.withdrawSiloAssets(msg.sender, assetsRemoved.seedsRemoved, assetsRemoved.stalkRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, assetsRemoved.seedsRemoved, assetsRemoved.stalkRemoved, set.fromInternalBalance);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
