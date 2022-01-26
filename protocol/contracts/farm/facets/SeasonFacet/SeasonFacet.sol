@@ -47,6 +47,7 @@ contract SeasonFacet is Sun {
 
         stepGovernance();
         stepSeason();
+        decrementWithdrawSeasons();
         snapshotSeason(price);
         stepWeather(price, s.f.soil);
         uint256 increase = stepSun(beanPrice, usdcPrice);
@@ -60,6 +61,14 @@ contract SeasonFacet is Sun {
 
     function stepSeason() private {
         s.season.current += 1;
+    }
+    
+    function decrementWithdrawSeasons() internal {
+        uint withdrawSeasons = s.season.withdrawSeasons;
+        if ((withdrawSeasons > 13 && s.season.current % 84 == 0) ||
+            (withdrawSeasons > 5 && s.season.current % 168 == 0)) {
+                s.season.withdrawSeasons -= 1;
+        }
     }
 
     function snapshotSeason(uint256 price) private {
@@ -80,5 +89,4 @@ contract SeasonFacet is Sun {
         mintToAccount(account, incentive);
         emit Incentivization(account, incentive);
     }
-
 }

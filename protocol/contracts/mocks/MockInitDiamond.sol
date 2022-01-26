@@ -40,6 +40,7 @@ contract MockInitDiamond {
         s.w.yield = 1;
 
         s.season.current = 1;
+        s.season.withdrawSeasons = 25;
         s.season.start = block.timestamp;
         s.season.timestamp = block.timestamp;
 

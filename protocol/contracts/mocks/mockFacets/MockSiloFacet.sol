@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/SiloFacet/SiloFacet.sol";
+import "../MockUniswapV2Pair.sol";
 
 /**
  * @author Publius
@@ -18,10 +19,21 @@ contract MockSiloFacet is SiloFacet {
 
     function depositSiloAssetsE(address account, uint256 base, uint256 amount) public {
         updateSilo(account);
-        depositSiloAssets(account, base, amount);
+        LibSilo.depositSiloAssets(account, base, amount);
     }
+
+    function incrementDepositedLPE(uint256 amount) public {
+        LibLPSilo.incrementDepositedLP(amount);
+        MockUniswapV2Pair(s.c.pair).faucet(address(this), amount);
+    }
+
     function incrementDepositedBeansE(uint256 amount) public {
         s.bean.deposited = s.bean.deposited.add(amount);
+    }
+
+    function withdrawSiloAssetsE(address account, uint256 base, uint256 amount) public {
+        updateSilo(account);
+        LibSilo.withdrawSiloAssets(account, base, amount);
     }
 
     function balanceOfDepositedBeans(address account) public view returns (uint256) {

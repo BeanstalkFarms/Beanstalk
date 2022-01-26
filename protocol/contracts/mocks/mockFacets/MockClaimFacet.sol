@@ -7,6 +7,8 @@ pragma experimental ABIEncoderV2;
 
 import "../../farm/facets/ClaimFacet.sol";
 import "../../libraries/LibMarket.sol";
+import "../../libraries/LibAppStorage.sol";
+import "../MockToken.sol";
 
 /**
  * @author Publius
@@ -21,7 +23,15 @@ contract MockClaimFacet is ClaimFacet {
         public
         payable
     {
-        LibMarket.transferAllocatedBeans(LibClaim.claim(c, true), beansAllocated);
+        LibClaim.claim(c);
+        LibMarket.allocatedBeans(beansAllocated);
     }
 
+    function incrementBalanceOfWrappedE(address account, uint256 amount)
+        public
+        payable
+    {
+        s.a[account].wrappedBeans += amount;
+        MockToken(s.c.bean).mint(address(this), amount);
+    }
 }

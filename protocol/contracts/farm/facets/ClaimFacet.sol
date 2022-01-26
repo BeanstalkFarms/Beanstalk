@@ -24,10 +24,20 @@ contract ClaimFacet {
     event Harvest(address indexed account, uint256[] plots, uint256 beans);
     event BeanAllocation(address indexed account, uint256 beans);
 
-    AppStorage private s;
+    using SafeMath for uint256;
+
+    AppStorage internal s;
 
     function claim(LibClaim.Claim calldata c) public payable returns (uint256 beansClaimed) {
-        beansClaimed = LibClaim.claim(c, false);
+        beansClaimed = LibClaim.claim(c);
+
+        LibCheck.balanceCheck();
+    }
+
+    function claimAndUnwrapBeans(LibClaim.Claim calldata c, uint256 amount) public payable returns (uint256 beansClaimed) {
+        beansClaimed = LibClaim.claim(c);
+        beansClaimed = beansClaimed.add(unwrapBeans(amount));
+
         LibCheck.balanceCheck();
     }
 
@@ -49,7 +59,7 @@ contract ClaimFacet {
     )
         public
     {
-        removeAndClaimLP(withdrawals, minBeanAmount, minEthAmount);
+        LibClaim.removeAndClaimLP(withdrawals, minBeanAmount, minEthAmount);
         LibCheck.balanceCheck();
     }
 
@@ -61,5 +71,30 @@ contract ClaimFacet {
 
     function claimEth() public {
         LibClaim.claimEth();
+    }
+
+    function unwrapBeans(uint amount) public returns (uint256 beansToWallet) {
+        if (amount == 0) return beansToWallet;
+        uint256 wBeans = s.a[msg.sender].wrappedBeans;
+
+        if (amount > wBeans) {
+            IBean(s.c.bean).transfer(msg.sender, wBeans);
+            beansToWallet = s.a[msg.sender].wrappedBeans;
+            s.a[msg.sender].wrappedBeans = 0;
+        } else {
+            IBean(s.c.bean).transfer(msg.sender, amount);
+            s.a[msg.sender].wrappedBeans = wBeans.sub(amount);
+            beansToWallet = amount;
+        }
+    }
+
+    function wrapBeans(uint amount) public {
+        IBean(s.c.bean).transferFrom(msg.sender, address(this), amount);
+        s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(amount);
+
+    }
+
+    function wrappedBeans(address user) public view returns (uint256) {
+        return s.a[user].wrappedBeans;
     }
 }

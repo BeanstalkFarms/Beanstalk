@@ -10,6 +10,7 @@ import "./LibCheck.sol";
 import "./LibInternal.sol";
 import "./LibMarket.sol";
 import "./LibAppStorage.sol";
+import "../interfaces/IWETH.sol";
 
 /**
  * @author Publius
@@ -33,9 +34,10 @@ library LibClaim {
         bool convertLP;
         uint256 minBeanAmount;
         uint256 minEthAmount;
+	    bool toWallet;
     }
 
-    function claim(Claim calldata c, bool allocate)
+    function claim(Claim calldata c)
         public
         returns (uint256 beansClaimed)
     {
@@ -44,15 +46,19 @@ library LibClaim {
         if (c.plots.length > 0) beansClaimed = beansClaimed.add(harvest(c.plots));
         if (c.lpWithdrawals.length > 0) {
             if (c.convertLP) {
-                if (allocate) beansClaimed = beansClaimed.add(removeAllocationAndClaimLP(c.lpWithdrawals, c.minBeanAmount, c.minEthAmount));
+                if (!c.toWallet) beansClaimed = beansClaimed.add(removeClaimLPAndWrapBeans(c.lpWithdrawals, c.minBeanAmount, c.minEthAmount));
                 else removeAndClaimLP(c.lpWithdrawals, c.minBeanAmount, c.minEthAmount);
             }
             else claimLP(c.lpWithdrawals);
         }
         if (c.claimEth) claimEth();
-        if (!allocate) IBean(s.c.bean).transfer(msg.sender, beansClaimed);
+        
+        if (beansClaimed > 0) {
+            if (c.toWallet) IBean(s.c.bean).transfer(msg.sender, beansClaimed);
+            else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(beansClaimed);
+        }
     }
-
+    
     // Claim Beans
 
     function claimBeans(uint32[] calldata withdrawals) public returns (uint256 beansClaimed) {
@@ -87,12 +93,13 @@ library LibClaim {
         uint256 minEthAmount
     )
         public
+        returns (uint256 beans)
     {
         uint256 lpClaimd = _claimLP(withdrawals);
-        LibMarket.removeLiquidity(lpClaimd, minBeanAmount, minEthAmount);
+        (beans,) = LibMarket.removeLiquidity(lpClaimd, minBeanAmount, minEthAmount);
     }
 
-    function removeAllocationAndClaimLP(
+    function removeClaimLPAndWrapBeans(
         uint32[] calldata withdrawals,
         uint256 minBeanAmount,
         uint256 minEthAmount

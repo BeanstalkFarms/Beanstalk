@@ -7,10 +7,13 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
-import "../../../C.sol";
 import "../../../interfaces/IWETH.sol";
-import "../../AppStorage.sol";
 import "../../../interfaces/IBean.sol";
+import "../../../libraries/LibCheck.sol";
+import "../../../libraries/LibInternal.sol";
+import "../../../libraries/LibMarket.sol";
+import "../../../libraries/Silo/LibSilo.sol";
+import "../../../C.sol";
 
 /**
  * @author Publius
@@ -18,10 +21,10 @@ import "../../../interfaces/IBean.sol";
 **/
 contract SiloExit {
 
+    AppStorage internal s;
+
     using SafeMath for uint256;
     using SafeMath for uint32;
-
-    AppStorage internal s;
 
     /**
      * Contracts
@@ -29,22 +32,6 @@ contract SiloExit {
 
     function weth() public view returns (IWETH) {
         return IWETH(s.c.weth);
-    }
-
-    function index() internal view returns (uint8) {
-        return s.index;
-    }
-
-    function pair() internal view returns (IUniswapV2Pair) {
-        return IUniswapV2Pair(s.c.pair);
-    }
-
-    function bean() internal view returns (IBean) {
-        return IBean(s.c.bean);
-    }
-
-    function season() internal view returns (uint32) {
-        return s.season.current;
     }
 
     /**
@@ -80,7 +67,7 @@ contract SiloExit {
     }
 
     function balanceOfGrownStalk(address account) public view returns (uint256) {
-        return stalkReward(s.a[account].s.seeds, season()-lastUpdate(account));
+        return LibSilo.stalkReward(s.a[account].s.seeds, season()-lastUpdate(account));
     }
 
     function balanceOfFarmableBeans(address account) public view returns (uint256 beans) {
@@ -114,9 +101,10 @@ contract SiloExit {
         return beans;
     }
 
-    function balanceOfUnclaimedRoots(address account) public view returns (uint256 roots) {
+    function balanceOfUnclaimedRoots(address account) public view returns (uint256 uRoots) {
         uint256 sis = s.season.sis.sub(s.a[account].lastSIs);
-        return balanceOfRoots(account).mul(sis);
+        uRoots = balanceOfRoots(account).mul(sis);
+        if (uRoots > s.unclaimedRoots) uRoots = s.unclaimedRoots;
     }
 
     function balanceOfFarmableStalk(address account) public view returns (uint256) {
@@ -163,7 +151,7 @@ contract SiloExit {
         if (s.sop.base == 0) return 0;
         return balanceOfPlentyBase(account).mul(s.sop.weth).div(s.sop.base);
     }
-
+    
     function balanceOfPlentyBase(address account) public view returns (uint256) {
         uint256 plenty = s.a[account].sop.base;
         uint32 endSeason = s.a[account].lastSop;
@@ -194,41 +182,27 @@ contract SiloExit {
      * Governance
     **/
 
-    function lockedUntil(address account) public view returns (uint32) {
-        if (locked(account)) {
-            return s.a[account].lockedUntil;
+    function votedUntil(address account) public view returns (uint32) {
+        if (voted(account)) {
+            return s.a[account].votedUntil;
         }
         return 0;
     }
 
-    function locked(address account) public view returns (bool) {
-        if (s.a[account].lockedUntil >= season()) {
+    function proposedUntil(address account) public view returns (uint32) {
+        return s.a[account].proposedUntil;
+    }
+
+    function voted(address account) public view returns (bool) {
+        if (s.a[account].votedUntil >= season()) {
             for (uint256 i = 0; i < s.g.activeBips.length; i++) {
-                    uint32 activeBip = s.g.activeBips[i];
-                    if (s.g.voted[activeBip][account]) {
-                        return true;
-                    }
+                uint32 activeBip = s.g.activeBips[i];
+                if (s.g.voted[activeBip][account]) {
+                    return true;
+                }
             }
         }
         return false;
-    }
-
-    /**
-     * Shed
-    **/
-
-    function reserves() internal view returns (uint256, uint256) {
-        (uint112 reserve0, uint112 reserve1,) = pair().getReserves();
-        return (index() == 0 ? reserve1 : reserve0,index() == 0 ? reserve0 : reserve1);
-    }
-
-    function lpToLPBeans(uint256 amount) internal view returns (uint256) {
-        (,uint256 beanReserve) = reserves();
-        return amount.mul(beanReserve).mul(2).div(pair().totalSupply());
-    }
-
-    function stalkReward(uint256 seeds, uint32 seasons) internal pure returns (uint256) {
-        return seeds.mul(seasons);
     }
 
     /**
@@ -240,7 +214,15 @@ contract SiloExit {
     }
 
     function balanceOfMigrationStalk(address account) private view returns (uint256) {
-        return s.a[account].s.stalk.add(stalkReward(s.a[account].s.seeds, s.bip0Start-lastUpdate(account)));
+        return s.a[account].s.stalk.add(LibSilo.stalkReward(s.a[account].s.seeds, s.bip0Start-lastUpdate(account)));
+    }
+
+    /**
+     * Internal
+    **/
+
+    function season() internal view returns (uint32) {
+        return s.season.current;
     }
 
 }

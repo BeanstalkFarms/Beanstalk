@@ -90,7 +90,8 @@ async function main (scriptName, verbose=true, mock=false) {
     governanceFacet,
     claimFacet,
     fundraiserFacet,
-    lpfieldFacet
+    convertFacet,
+    budgetFacet
   ] = mock ? await deployFacets(
       verbose,
       ['MockSeasonFacet',
@@ -100,13 +101,14 @@ async function main (scriptName, verbose=true, mock=false) {
       'MockGovernanceFacet',
       'MockClaimFacet',
       'MockFundraiserFacet',
-      'MockLPFieldFacet'],
+      'ConvertFacet',
+      'MockBudgetFacet'],
       ["LibClaim"],
       {
         "MockSiloFacet": ["LibClaim"],
         "MockFieldFacet": ["LibClaim"],
         "MockClaimFacet": ["LibClaim"],
-        "MockLPFieldFacet": ["LibClaim"]
+        "ConvertFacet": ["LibClaim"]
       },
     ) : await deployFacets(
       verbose,
@@ -117,13 +119,14 @@ async function main (scriptName, verbose=true, mock=false) {
       'GovernanceFacet',
       'ClaimFacet',
       'FundraiserFacet',
-      'LPFieldFacet']
+      'ConvertFacet',
+      'BudgetFacet'],
       ["LibClaim"],
       {
         "SiloFacet": ["LibClaim"],
         "FieldFacet": ["LibClaim"],
         "ClaimFacet": ["LibClaim"],
-        "LPFieldFacet": ["LibClaim"]
+        "ConvertFacet": ["LibClaim"]
       },
     )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/InitDiamond.sol:InitDiamond'
@@ -147,7 +150,8 @@ async function main (scriptName, verbose=true, mock=false) {
       ['GovernanceFacet', governanceFacet],
       ['ClaimFacet', claimFacet],
       ['FundraiserFacet', fundraiserFacet],
-      ['LPFieldFacet', lpfieldFacet]
+      ['ConvertFacet', convertFacet],
+      ['BudgetFacet', budgetFacet]
     ],
     owner: account,
     args: args,
@@ -190,8 +194,9 @@ async function main (scriptName, verbose=true, mock=false) {
     siloFacet: siloFacet,
     governanceFacet: governanceFacet,
     claimFacet: claimFacet,
-    fundraiserFacet, fundraiserFacet,
-    lpfieldFacet, lpfieldFacet,
+    fundraiserFacet: fundraiserFacet,
+    convertFacet: convertFacet,
+    budgetFacet: budgetFacet,
     pair: pair,
     pegPair: pegPair,
     weth: weth,
