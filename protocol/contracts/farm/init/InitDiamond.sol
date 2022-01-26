@@ -88,11 +88,18 @@ contract InitDiamond {
         }
         s.seedContract = seedAddress;
 
+        // Balancer Pool Parameters
         string memory name = "Three-Token Bean, Stalk, Seeds Test Pool";
         string memory symbol = "33SEED-33STALK-34Bean";
-        IERC20[] memory tokens = [IERC20(seedAddress), IERC20(address(this)), IERC20(s.c.bean)];
+        IERC20[] memory tokens;
+        tokens[0] = IERC20(seedAddress);
+        tokens[1] = IERC20(address(this));
+        tokens[2] = IERC20(s.c.bean);
         // Balancer weights are bounded by 1.00 with 18 Decimals
-        uint256[] memory weights = [uint256(33e16), uint256(33e16), uint256(34e16)];
+        uint256[] memory weights;
+        weights[0] = uint256(33e16);
+        weights[1] = uint256(33e16);
+        weights[2] = uint256(34e16);
         uint256 swapFeePercentage = uint256(5 * 10^15);
         address poolOwner = address(this);
         
