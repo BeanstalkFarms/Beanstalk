@@ -87,9 +87,9 @@ contract LPFieldFacet is POLDibbler {
         require(intPrice() > 0, "POLField: Price < 1.");
         uint256 amount = lpToLPBeans(lp_amount).add(bean_amount);
         LibDibbler.sow(amount, msg.sender);
+        // emit AddPOL(msg.sender, s.c.pair, lp_amount);
         bean().burn(amount);
         LibCheck.beanBalanceCheck();
-        emit AddPOL(msg.sender, s.c.pair, lp_amount);
     }
 
     /**

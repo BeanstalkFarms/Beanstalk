@@ -31,10 +31,10 @@ contract POLDibbler {
     function _sowPOL(uint256 amount, uint256 value) internal returns (uint256 pods) {
         require(intPrice() > 0, "POLField: Price < 1.");
         pods = LibDibbler.sow(value, msg.sender);
-        bean().burn(value);
+        // bean().burn(value);
         LibCheck.beanBalanceCheck();
-        return pods;
         emit AddPOL(msg.sender, s.c.pair, amount);
+        return pods;
     }
 
     function intPrice() public view returns (uint256) {
@@ -49,7 +49,7 @@ contract POLDibbler {
      * Getters
      */
 
-     function pair() internal view returns (IUniswapV2Pair) {
+    function pair() internal view returns (IUniswapV2Pair) {
         return IUniswapV2Pair(s.c.pair);
     }
 
