@@ -17,7 +17,7 @@ contract LPFieldFacet is POLDibbler {
     using SafeMath for uint256;
     using Decimal for Decimal.D256;
 
-    function claimAndSowLP(uint256 amount, LibClaim.Claim calldata claim) external {
+    function claimAndSowLP(uint256 amount, LibClaim.Claim calldata claim) public {
         LibClaim.claim(claim);
         _sowLP(amount);
     }
@@ -29,8 +29,7 @@ contract LPFieldFacet is POLDibbler {
         LibMarket.AddLiquidity calldata al,
         LibClaim.Claim calldata claim
     )
-        external
-        payable
+        external payable
     {
         LibClaim.claim(claim);
         _addAndSowLP(lp, buyBeanAmount, buyEthAmount, al);
@@ -86,7 +85,10 @@ contract LPFieldFacet is POLDibbler {
         bean().burn(bean_amount);
         LibCheck.beanBalanceCheck();
         require(intPrice() > 0, "POLField: Price < 1.");
-        _sowBeans(lpToLPBeans(lp_amount).add(bean_amount));
+        uint256 amount = lpToLPBeans(lp_amount).add(bean_amount);
+        LibDibbler.sow(amount, msg.sender);
+        bean().burn(amount);
+        LibCheck.beanBalanceCheck();
         emit AddPOL(msg.sender, s.c.pair, lp_amount);
     }
 

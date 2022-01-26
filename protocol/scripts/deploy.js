@@ -86,17 +86,19 @@ async function main (scriptName, verbose=true, mock=false) {
     seasonFacet,
     oracleFacet,
     fieldFacet,
+    lpfieldFacet,
     siloFacet,
     governanceFacet,
     claimFacet,
     fundraiserFacet,
     convertFacet,
-    budgetFacet
+    budgetFacet,
   ] = mock ? await deployFacets(
       verbose,
       ['MockSeasonFacet',
       'MockOracleFacet',
       'MockFieldFacet',
+      'MockLPFieldFacet',
       'MockSiloFacet',
       'MockGovernanceFacet',
       'MockClaimFacet',
@@ -107,14 +109,16 @@ async function main (scriptName, verbose=true, mock=false) {
       {
         "MockSiloFacet": ["LibClaim"],
         "MockFieldFacet": ["LibClaim"],
+        "MockLPFieldFacet": ["LibClaim"],
         "MockClaimFacet": ["LibClaim"],
-        "ConvertFacet": ["LibClaim"]
+        "ConvertFacet": ["LibClaim"],
       },
     ) : await deployFacets(
       verbose,
       ['SeasonFacet',
       'OracleFacet',
       'FieldFacet',
+      'LPFieldFacet',
       'SiloFacet',
       'GovernanceFacet',
       'ClaimFacet',
@@ -125,6 +129,7 @@ async function main (scriptName, verbose=true, mock=false) {
       {
         "SiloFacet": ["LibClaim"],
         "FieldFacet": ["LibClaim"],
+        "LPFieldFacet": ["LibClaim"],
         "ClaimFacet": ["LibClaim"],
         "ConvertFacet": ["LibClaim"]
       },
@@ -151,7 +156,8 @@ async function main (scriptName, verbose=true, mock=false) {
       ['ClaimFacet', claimFacet],
       ['FundraiserFacet', fundraiserFacet],
       ['ConvertFacet', convertFacet],
-      ['BudgetFacet', budgetFacet]
+      ['BudgetFacet', budgetFacet],
+      ['LPFieldFacet', lpfieldFacet]
     ],
     owner: account,
     args: args,
@@ -191,6 +197,7 @@ async function main (scriptName, verbose=true, mock=false) {
     seasonFacet: seasonFacet,
     oracleFacet: oracleFacet,
     fieldFacet: fieldFacet,
+    lpfieldFacet: lpfieldFacet,
     siloFacet: siloFacet,
     governanceFacet: governanceFacet,
     claimFacet: claimFacet,

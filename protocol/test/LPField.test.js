@@ -16,7 +16,7 @@ describe('LPField Test', function () {
     [owner,user,user2] = await ethers.getSigners();
     userAddress = user.address;
     user2Address = user2.address;
-    const contracts = await deploy("Test", false, true);
+    const contracts = await deploy("Test", true, true);
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
@@ -100,7 +100,7 @@ describe('LPField Test', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
         // Convert LP flag enabled
-        this.result = await this.lpfield.connect(user).claimAndSowLP('1', [['27'],['27'],[],false,false,'0','0'])
+        this.result = await this.lpfield.connect(user).claimAndSowLP('1', [['27'],['27'],[],false,false,'0','0', true])
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
         console.log(`${await this.pair.balanceOf(userAddress)}`);
@@ -121,7 +121,7 @@ describe('LPField Test', function () {
         // Convert LP flag enabled
         const lpTokens = await this.pair.balanceOf(userAddress);
         console.log(`${await this.pair.balanceOf(userAddress)}` + "sowing Lps");
-        this.result = await this.lpfield.connect(user).claimAndSowLP('2', [['27'],['27'],[],false,false,'0','0'])
+        this.result = await this.lpfield.connect(user).claimAndSowLP('2', [['27'],[],[],false,false,'0','0', true])
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
         const newLpTokens = await this.pair.balanceOf(userAddress);

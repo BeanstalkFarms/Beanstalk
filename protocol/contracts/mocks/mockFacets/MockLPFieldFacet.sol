@@ -6,7 +6,7 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "../../farm/facets/POLFieldFacet/LPFieldFacet.sol";
+import "../../farm/facets/LPFieldFacet/LPFieldFacet.sol";
 
 /**
  * @author Publius
