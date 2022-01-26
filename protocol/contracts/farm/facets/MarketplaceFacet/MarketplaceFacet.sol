@@ -84,15 +84,16 @@ contract MarketplaceFacet is Marketplace {
     }
 
     function _buyListing(uint256 index, address from, uint256 amountBeans) internal {
-        require(s.listedPlots[index].price > 0, "Marketplace: Listing does not exist.");
-        uint256 amount = (amountBeans * 1000000) / s.listedPlots[index].price;
+        uint24 price = s.listedPlots[index].price;
+        require(price > 0, "Marketplace: Listing does not exist.");
+        uint256 amount = (amountBeans * 1000000) / price;
         uint256 listingAmount = s.listedPlots[index].amount;
         if (listingAmount == 0){
             listingAmount = s.a[from].field.plots[index];
         }
         // If remainder left (always <1 pod) that would otherwise be unpurchaseable
         // due to rounding from calculating amount, give it to last buyer
-        if ((listingAmount - amount) < (1000000 / s.listedPlots[index].price))
+        if ((listingAmount - amount) < (1000000 / price))
             amount = listingAmount;
         __buyListing(index,from,amount);
     }
@@ -143,8 +144,7 @@ contract MarketplaceFacet is Marketplace {
         require(price > 0, "Marketplace: Buy Offer does not exist.");
         bOffer.amount = bOffer.amount.sub(amount);
         require(s.a[msg.sender].field.plots[plotIndex] >= (sellFromIndex.sub(plotIndex) + amount), "Marketplace: Invaid Plot.");
-        uint232 harvestable = uint232(s.f.harvestable);
-        uint256 placeInLineEndPlot = sellFromIndex + amount - harvestable;
+        uint256 placeInLineEndPlot = sellFromIndex + amount - s.f.harvestable;
         require(placeInLineEndPlot <= bOffer.maxPlaceInLine, "Marketplace: Plot too far in line.");
         uint256 costInBeans = (price * amount) / 1000000;
         bean().transfer(msg.sender, costInBeans);

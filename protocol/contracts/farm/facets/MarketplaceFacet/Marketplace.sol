@@ -37,12 +37,13 @@ contract Marketplace {
     }
 
     function _fillListing(address from, address to, uint256 index, uint256 amount) internal {
-        require(s.a[from].field.plots[index] >= amount, "Marketplace: Plot has insufficient amount.");
+        uint256 plotAmount = s.a[from].field.plots[index];
+        require(plotAmount >= amount, "Marketplace: Plot has insufficient amount.");
         Storage.Listing storage listing = s.listedPlots[index];
         uint24 price = listing.price;
         uint256 listingAmount = listing.amount;
         if (listingAmount == 0){
-            listingAmount = s.a[from].field.plots[index];
+            listingAmount = plotAmount;
         }
         uint232 harvestable = uint232(s.f.harvestable);
         require(harvestable <= listing.expiry, "Marketplace: Listing has expired");
@@ -51,7 +52,7 @@ contract Marketplace {
             s.listedPlots[index.add(amount)] = listing;
             // Optimization: if Listing is full amount of plot, set amount to 0
             // Later, we consider a valid Listing (price>0) with amount 0 to be full amount of plot
-            if (listingAmount == s.a[from].field.plots[index]){
+            if (listingAmount == plotAmount){
                 s.listedPlots[index.add(amount)].amount = 0;
             }
             else{
