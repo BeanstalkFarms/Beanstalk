@@ -5,13 +5,13 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../FieldFacet/Dibbler.sol";
+import "../FieldFacet/BeanDibbler.sol";
 
 /**
  * @author Publius
  * @title LPField sows LP.
 **/
-contract POLDibbler is Dibbler {
+contract POLDibbler is BeanDibbler {
 
     using SafeMath for uint256;
     using Decimal for Decimal.D256;
@@ -24,7 +24,7 @@ contract POLDibbler is Dibbler {
 
     function _sowPOL(uint256 amount, uint256 value) internal returns (uint256) {
         require(intPrice() > 0, "POLField: Price < 1.");
-        return _sow(value, msg.sender);
+        return _sowBeans(value);
         emit AddPOL(msg.sender, s.c.pair, amount);
     }
 
