@@ -17,9 +17,9 @@ contract LPFieldFacet is POLDibbler {
     using SafeMath for uint256;
     using Decimal for Decimal.D256;
 
-    function claimAndSowLP(uint256 amount, LibClaim.Claim calldata claim) public {
+    function claimAndSowLP(uint256 amount, LibClaim.Claim calldata claim) public returns(uint256) {
         LibClaim.claim(claim);
-        _sowLP(amount);
+        return _sowLP(amount);
     }
 
     function claimAddAndSowLP(
@@ -35,19 +35,19 @@ contract LPFieldFacet is POLDibbler {
         _addAndSowLP(lp, buyBeanAmount, buyEthAmount, al);
     }
 
-    function sowLP(uint256 amount) public {
+    function sowLP(uint256 amount) public returns (uint256) {
         pair().transferFrom(msg.sender, address(this), amount);
-        _sowLP(amount);
+        return _sowLP(amount);
     }
 
     /// @notice Sows both LP and Beans simultaneously into the Field while also creating POL
     /// @param bean_amount Designated amount of Beans to sow
     /// @param lp_amount Designated amount of LPs to sow 
     /// 
-    function sowLPAndBeans(uint256 lp_amount, uint256 bean_amount) public {
+    function sowLPAndBeans(uint256 lp_amount, uint256 bean_amount) public returns(uint256) {
         bean().transferFrom(msg.sender, address(this), bean_amount);
         pair().transferFrom(msg.sender, address(this), lp_amount);
-        _sowLPAndBeans(lp_amount, bean_amount);
+        return _sowLPAndBeans(lp_amount, bean_amount);
     }
 
     function addAndSowLP(uint256 lp,
@@ -57,9 +57,10 @@ contract LPFieldFacet is POLDibbler {
     )
         public
         payable
+        returns (uint256)
     {
         require(buyBeanAmount == 0 || buyEthAmount == 0, "Silo: Silo: Cant buy Ether and Beans.");
-        _addAndSowLP(lp, buyBeanAmount, buyEthAmount, al);
+        return _addAndSowLP(lp, buyBeanAmount, buyEthAmount, al);
     }
 
     function _addAndSowLP(uint256 lp,
@@ -67,29 +68,30 @@ contract LPFieldFacet is POLDibbler {
         uint256 buyEthAmount,
         LibMarket.AddLiquidity calldata al
     )
-        internal {
+        internal returns(uint256) {
         uint256 boughtLP = LibMarket.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, al);
         if (lp>0) pair().transferFrom(msg.sender, address(this), lp);
-        _sowLP(lp.add(boughtLP));
+        return _sowLP(lp.add(boughtLP));
     }
 
-    function _sowLP(uint256 amount) internal {
-        _sowPOL(amount, lpToLPBeans(amount));
+    function _sowLP(uint256 amount) internal returns(uint256) {
+        return _sowPOL(amount, lpToLPBeans(amount));
     }
 
     /// @notice Sow both LP and Beans simultaneously into the Field
     /// @param bean_amount Designated amount of Beans to sow
     /// @param lp_amount Designated amount of LPs to sow 
     ///  
-    function _sowLPAndBeans(uint256 lp_amount, uint256 bean_amount) internal {
+    function _sowLPAndBeans(uint256 lp_amount, uint256 bean_amount) internal returns (uint256) {
         bean().burn(bean_amount);
         LibCheck.beanBalanceCheck();
         require(intPrice() > 0, "POLField: Price < 1.");
         uint256 amount = lpToLPBeans(lp_amount).add(bean_amount);
-        LibDibbler.sow(amount, msg.sender);
+        uint256 pods = LibDibbler.sow(amount, msg.sender);
         // emit AddPOL(msg.sender, s.c.pair, lp_amount);
-        bean().burn(amount);
-        LibCheck.beanBalanceCheck();
+        // bean().burn(amount);
+        // LibCheck.beanBalanceCheck();
+        return pods;
     }
 
     /**

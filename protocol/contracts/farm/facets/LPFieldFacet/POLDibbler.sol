@@ -32,7 +32,7 @@ contract POLDibbler {
         require(intPrice() > 0, "POLField: Price < 1.");
         pods = LibDibbler.sow(value, msg.sender);
         // bean().burn(value);
-        LibCheck.beanBalanceCheck();
+        // LibCheck.beanBalanceCheck();
         emit AddPOL(msg.sender, s.c.pair, amount);
         return pods;
     }
