@@ -37,16 +37,16 @@ contract Marketplace {
     event PodOrderFilled(address indexed from, address indexed to, bytes20 podOrderIndex, uint256 plotIndex, uint256 amount, uint24 pricePerPod);
     event PlotTransfer(address indexed from, address indexed to, uint256 indexed id, uint256 pods);
 
-    function __buyListing(uint256 index, uint256 distanceFromBack, address from, uint256 amount) internal {
+    function __buyListing(address from, uint256 index, uint256 distanceFromBack, uint256 amount) internal {
         uint256 listingAmount = s.podListings[index].amount;
         if (listingAmount == 0){
             listingAmount = s.a[from].field.plots[index];
         }
-        _fillListing(from, msg.sender, index, amount, listingAmount, distanceFromBack);
+        _fillListing(from, msg.sender, index, distanceFromBack, amount, listingAmount);
         _transferPlot(from, msg.sender, index, s.a[from].field.plots[index].sub(distanceFromBack + listingAmount), amount);
     }
 
-    function _fillListing(address from, address to, uint256 index, uint256 amount, uint256 listingAmount, uint256 distanceFromBack) internal {
+    function _fillListing(address from, address to, uint256 index, uint256 distanceFromBack, uint256 amount, uint256 listingAmount) internal {
         uint256 plotAmount = s.a[from].field.plots[index];
         require(plotAmount >= amount, "Marketplace: Plot has insufficient amount.");
         Storage.Listing storage listing = s.podListings[index];

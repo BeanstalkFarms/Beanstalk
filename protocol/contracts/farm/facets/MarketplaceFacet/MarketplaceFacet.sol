@@ -96,7 +96,7 @@ contract MarketplaceFacet is Marketplace {
         // due to rounding from calculating amount, give it to last buyer
         if ((listingAmount - amount) < (1000000 / price))
             amount = listingAmount;
-        __buyListing(index, distanceFromBack, from, amount);
+        __buyListing(from, index, distanceFromBack, amount);
     }
 
     /*
