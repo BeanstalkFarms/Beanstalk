@@ -168,9 +168,10 @@ contract Storage {
         uint232 expiry;
         uint24 price;
         uint256 amount;
+        uint256 distanceFromBack;
     }
 
-    struct BuyOffer {
+    struct Order {
         uint256 amount;
         uint24 price;
         uint232 maxPlaceInLine; 
@@ -213,6 +214,6 @@ struct AppStorage {
     mapping (uint32 => Storage.Fundraiser) fundraisers;
     uint32 fundraiserIndex;
     mapping (address => bool) isBudget;
-    mapping(uint256 => Storage.Listing) listedPlots;
-    mapping(bytes20 => Storage.BuyOffer) buyOffers;
+    mapping(uint256 => Storage.Listing) podListings;
+    mapping(bytes20 => Storage.Order) podOrders;
 }

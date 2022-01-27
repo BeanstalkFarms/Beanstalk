@@ -35,7 +35,7 @@ contract MockFieldFacet is FieldFacet {
         for (uint32 i = 0; i < mapToPlotIndex; i++) {
 
             delete s.a[mapToAddress[i]].field.plots[mapToPlots[i]];
-            delete s.listedPlots[mapToPlots[i]];
+            delete s.podListings[mapToPlots[i]];
         }
     }
     function incrementTotalSoilE(uint256 amount) public {

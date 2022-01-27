@@ -379,7 +379,7 @@ describe('Claim', function () {
       });
       it('properly allocates beans', async function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
-        expect(this.result).to.emit(this.marketplace, 'ListingFilled').withArgs(user2Address, userAddress, '2000', 500000, '2000');
+        expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(user2Address, userAddress, '2000', 0, 500000, '2000');
       });
       it('no beans created or destroyed', async function () {
         expect(this.claimedBeans.add(this.wrappedBeans).toString()).to.equal('0');
@@ -406,7 +406,7 @@ describe('Claim', function () {
       });
       it('properly allocates beans', async function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
-        expect(this.result).to.emit(this.marketplace, 'ListingFilled').withArgs(user2Address, userAddress, '2000', 500000, '2200');
+        expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(user2Address, userAddress, '2000', 0, 500000, '2200');
       });
       it('no beans created or destroyed', async function () {
         expect(this.claimedBeans.add(this.wrappedBeans).toString()).to.equal('0');
@@ -418,9 +418,8 @@ describe('Claim', function () {
       beforeEach(async function () {
 
         const beans = await this.bean.balanceOf(userAddress)
-        //    event BuyOfferCreated(uint indexed index, address indexed account, uint256 amount, uint24 pricePerPod, uint232 maxPlaceInLine);
 
-        this.result = await this.marketplace.connect(user).claimBeansAndListBuyOffer('2000', '500000', '1000', [['27'], [], [], false, true, '0', '0', false])
+        this.result = await this.marketplace.connect(user).claimBeansAndListPodOrder('2000', '500000', '1000', [['27'], [], [], false, true, '0', '0', false])
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
         this.wrappedBeans = await this.claim.connect(user).wrappedBeans(userAddress)
@@ -431,7 +430,7 @@ describe('Claim', function () {
       });
       it('properly allocates beans', async function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
-        expect(this.result).to.emit(this.marketplace, 'BuyOfferCreated').withArgs(0, userAddress, '2000', 500000, '2000');
+        expect(this.result).to.emit(this.marketplace, 'PodOrderCreated').withArgs(0, userAddress, '2000', 500000, '2000');
       });
       it('no beans created or destroyed', async function () {
         expect(this.claimedBeans.add(this.wrappedBeans).toString()).to.equal('0');
@@ -443,7 +442,7 @@ describe('Claim', function () {
         await this.field.incrementTotalSoilEE('1000');
 
         const beans = await this.bean.balanceOf(userAddress)
-        this.result = await this.marketplace.connect(user).claimAndBuyBeansAndListBuyOffer('2000', '500000', '1000', '500', [['27'], [], [], false, true, '0', '0', false], { value: '1' })
+        this.result = await this.marketplace.connect(user).claimAndBuyBeansAndListPodOrder('2000', '500000', '1000', '500', [['27'], [], [], false, true, '0', '0', false], { value: '1' })
 
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
@@ -454,7 +453,7 @@ describe('Claim', function () {
       });
       it('properly allocates beans', async function () {
         expect(this.result).to.emit(this.claim, 'BeanAllocation').withArgs(userAddress, '1000');
-        expect(this.result).to.emit(this.marketplace, 'BuyOfferCreated').withArgs(0, userAddress, '3000', 500000, '2000');
+        expect(this.result).to.emit(this.marketplace, 'PodOrderCreated').withArgs(0, userAddress, '3000', 500000, '2000');
       });
       it('no beans created or destroyed', async function () {
         expect(this.claimedBeans.add(this.wrappedBeans).toString()).to.equal('0');
