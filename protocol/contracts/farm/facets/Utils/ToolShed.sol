@@ -20,7 +20,8 @@ contract ToolShed {
     address private constant UNISWAP_PAIR_ADDRESS = address(0x87898263B6C5BABe34b4ec53F22d98430b91e371);
     address private constant BEAN_ADDRESS = address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db);
     address private constant PEG_PAIR_ADDRESS = address(0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc);
-    
+    address private constant WETH_ADDRESS = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+
     /**
      * Getters
     **/
@@ -35,6 +36,10 @@ contract ToolShed {
 
     function getPegPairAddress() internal pure returns (address) {
         return PEG_PAIR_ADDRESS;
+    }
+
+    function getWETHAddress() internal pure returns (address) {
+        return WETH_ADDRESS;
     }
 
     function bean() internal virtual returns (IBean) {

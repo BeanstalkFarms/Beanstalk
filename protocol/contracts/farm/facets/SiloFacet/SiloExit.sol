@@ -81,7 +81,7 @@ contract SiloExit is ToolShed {
     **/
 
     function weth() public view returns (IWETH) {
-        return IWETH(s.c.weth);
+        return IWETH(getWETHAddress());
     }
 
     /**
