@@ -175,19 +175,6 @@ contract ConvertSilo is ToolShed {
         return (beansRemoved, stalkRemoved);
     }
 
-    function reserves() internal view returns (uint256, uint256) {
-        (uint112 reserve0, uint112 reserve1,) = pair().getReserves();
-        return (s.index == 0 ? reserve1 : reserve0,s.index == 0 ? reserve0 : reserve1);
-    }
-
-    function pair() internal view returns (IUniswapV2Pair) {
-        return IUniswapV2Pair(s.c.pair);
-    }
-
-    function bean() internal view returns (IBean) {
-        return IBean(s.c.bean);
-    }
-
     function season() internal view returns (uint32) {
         return s.season.current;
     }

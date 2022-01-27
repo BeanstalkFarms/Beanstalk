@@ -107,8 +107,5 @@ contract TokenSilo is UpdateSilo {
         s.siloBalances[IERC20(token)].withdrawn = s.siloBalances[IERC20(token)].withdrawn.add(amount);
         emit TokenWithdraw(token, msg.sender, arrivalSeason, amount);
     }
-
-    function pair() internal view returns (IUniswapV2Pair) {
-        return IUniswapV2Pair(s.c.pair);
-    }
+    
 }

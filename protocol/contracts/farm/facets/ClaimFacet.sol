@@ -11,12 +11,13 @@ import "../../libraries/LibCheck.sol";
 import "../../libraries/LibInternal.sol";
 import "../../libraries/LibMarket.sol";
 import "../../libraries/LibClaim.sol";
+import "./Utils/ToolShed.sol";
 
 /**
  * @author Publius
  * @title Claim handles claiming Bean and LP withdrawals, harvesting plots and claiming Ether.
 **/
-contract ClaimFacet {
+contract ClaimFacet is ToolShed {
 
     event BeanClaim(address indexed account, uint32[] withdrawals, uint256 beans);
     event LPClaim(address indexed account, uint32[] withdrawals, uint256 lp);
@@ -43,7 +44,7 @@ contract ClaimFacet {
 
     function claimBeans(uint32[] calldata withdrawals) public {
         uint256 beansClaimed = LibClaim.claimBeans(withdrawals);
-        IBean(s.c.bean).transfer(msg.sender, beansClaimed);
+        bean().transfer(msg.sender, beansClaimed);
         LibCheck.beanBalanceCheck();
     }
 
@@ -69,7 +70,7 @@ contract ClaimFacet {
 
     function harvest(uint256[] calldata plots) public {
         uint256 beansHarvested = LibClaim.harvest(plots);
-        IBean(s.c.bean).transfer(msg.sender, beansHarvested);
+        bean().transfer(msg.sender, beansHarvested);
         LibCheck.beanBalanceCheck();
     }
 
@@ -82,18 +83,18 @@ contract ClaimFacet {
         uint256 wBeans = s.a[msg.sender].wrappedBeans;
 
         if (amount > wBeans) {
-            IBean(s.c.bean).transfer(msg.sender, wBeans);
+            bean().transfer(msg.sender, wBeans);
             beansToWallet = s.a[msg.sender].wrappedBeans;
             s.a[msg.sender].wrappedBeans = 0;
         } else {
-            IBean(s.c.bean).transfer(msg.sender, amount);
+            bean().transfer(msg.sender, amount);
             s.a[msg.sender].wrappedBeans = wBeans.sub(amount);
             beansToWallet = amount;
         }
     }
 
     function wrapBeans(uint amount) public {
-        IBean(s.c.bean).transferFrom(msg.sender, address(this), amount);
+        bean().transferFrom(msg.sender, address(this), amount);
         s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(amount);
 
     }

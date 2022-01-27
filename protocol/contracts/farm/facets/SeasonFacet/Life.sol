@@ -17,7 +17,7 @@ import "../Utils/ToolShed.sol";
  * @author Publius
  * @title Life
 **/
-contract Life is ToolShed {
+contract Life {
 
     using SafeMath for uint256;
     using SafeMath for uint32;

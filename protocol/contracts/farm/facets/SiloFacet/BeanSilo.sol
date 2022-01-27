@@ -88,8 +88,4 @@ contract BeanSilo is TokenSilo {
         emit BeanWithdraw(msg.sender, arrivalSeason, amount);
     }
 
-    function bean() internal view returns (IBean) {
-        return IBean(s.c.bean);
-    }
-
 }

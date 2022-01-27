@@ -8,12 +8,13 @@ pragma experimental ABIEncoderV2;
 import "../AppStorage.sol";
 import "../../libraries/Decimal.sol";
 import "../../libraries/UniswapV2OracleLibrary.sol";
+import "./Utils/ToolShed.sol";
 
 /**
  * @author Publius
  * @title Oracle tracks the TWAP price of the USDC/ETH and BEAN/ETH Uniswap pairs.
 **/
-contract OracleFacet {
+contract OracleFacet is ToolShed {
 
     using Decimal for Decimal.D256;
 
@@ -31,20 +32,20 @@ contract OracleFacet {
 
     function initializeOracle() internal {
         uint256 priceCumulative = s.index == 0 ?
-            IUniswapV2Pair(s.c.pair).price0CumulativeLast() :
-            IUniswapV2Pair(s.c.pair).price1CumulativeLast();
+            pair().price0CumulativeLast() :
+            pair().price1CumulativeLast();
         (
             uint112 reserve0,
             uint112 reserve1,
             uint32 blockTimestampLast
-        ) = IUniswapV2Pair(s.c.pair).getReserves();
+        ) = pair().getReserves();
 
         if(reserve0 != 0 && reserve1 != 0 && blockTimestampLast != 0) {
             s.o.cumulative = priceCumulative;
             s.o.timestamp = blockTimestampLast;
             s.o.initialized = true;
             (uint256 peg_priceCumulative,, uint32 peg_blockTimestamp) =
-            UniswapV2OracleLibrary.currentCumulativePrices(s.c.pegPair);
+            UniswapV2OracleLibrary.currentCumulativePrices(getPegPairAddress());
             s.o.pegCumulative = peg_priceCumulative;
             s.o.pegTimestamp = peg_blockTimestamp;
         }
@@ -52,7 +53,7 @@ contract OracleFacet {
 
     function updateOracle() internal returns (Decimal.D256 memory, Decimal.D256 memory) {
         (Decimal.D256 memory bean_price, Decimal.D256 memory usdc_price) = updatePrice();
-        (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(s.c.pair).getReserves();
+        (uint112 reserve0, uint112 reserve1,) = pair().getReserves();
         if (reserve0 == 0 || reserve1 == 0) {
             return (Decimal.one(),Decimal.one());
         }
@@ -61,9 +62,9 @@ contract OracleFacet {
 
     function updatePrice() private returns (Decimal.D256 memory, Decimal.D256 memory) {
         (uint256 price0Cumulative, uint256 price1Cumulative, uint32 blockTimestamp) =
-        UniswapV2OracleLibrary.currentCumulativePrices(s.c.pair);
+        UniswapV2OracleLibrary.currentCumulativePrices(getUniswapPairAddress());
         (uint256 peg_priceCumulative,, uint32 peg_blockTimestamp) =
-        UniswapV2OracleLibrary.currentCumulativePrices(s.c.pegPair);
+        UniswapV2OracleLibrary.currentCumulativePrices(getPegPairAddress());
         uint256 priceCumulative = s.index == 0 ? price0Cumulative : price1Cumulative;
 
         uint32 timeElapsed = blockTimestamp - s.o.timestamp; // overflow is desired
@@ -87,9 +88,9 @@ contract OracleFacet {
     function getTWAPPrices() public view returns (uint256, uint256) {
         if (s.o.timestamp == 0) return (1e18, 1e18);
         (uint256 price0Cumulative, uint256 price1Cumulative, uint32 blockTimestamp) =
-        UniswapV2OracleLibrary.currentCumulativePrices(s.c.pair);
+        UniswapV2OracleLibrary.currentCumulativePrices(getUniswapPairAddress());
         (uint256 peg_priceCumulative,, uint32 peg_blockTimestamp) =
-        UniswapV2OracleLibrary.currentCumulativePrices(s.c.pegPair);
+        UniswapV2OracleLibrary.currentCumulativePrices(getPegPairAddress());
         uint256 priceCumulative = s.index == 0 ? price0Cumulative : price1Cumulative;
 
         uint32 timeElapsed = blockTimestamp - s.o.timestamp; // overflow is desired
@@ -101,14 +102,14 @@ contract OracleFacet {
             uint256 price1 = (priceCumulative - s.o.cumulative) / timeElapsed / 1e12;
             beanPrice = Decimal.ratio(price1, 2**112).mul(1e18).asUint256();
         } else {
-            (uint256 reserve0, uint256 reserve1,) = IUniswapV2Pair(s.c.pair).getReserves();
+            (uint256 reserve0, uint256 reserve1,) = pair().getReserves();
             beanPrice = (s.index == 0 ? 1e6 * reserve1 / reserve0 : 1e6 * reserve0 / reserve1);
         }
         if (pegTimeElapsed > 0) {
             uint256 price2 = (peg_priceCumulative - s.o.pegCumulative) / pegTimeElapsed / 1e12;
             usdcPrice = Decimal.ratio(price2, 2**112).mul(1e18).asUint256();
         } else {
-            (uint256 reserve0, uint256 reserve1,) = IUniswapV2Pair(s.c.pegPair).getReserves();
+            (uint256 reserve0, uint256 reserve1,) = pegPair().getReserves();
             usdcPrice = 1e6 * reserve1 / reserve0;
         }
         return (beanPrice, usdcPrice);
