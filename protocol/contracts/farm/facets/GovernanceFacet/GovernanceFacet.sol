@@ -229,7 +229,7 @@ contract GovernanceFacet is VotingBooth {
 
     function incentivize(address account, bool compound, uint32 bipId, uint256 amount) private {
         if (compound) amount = LibIncentive.fracExp(amount, 100, incentiveTime(bipId), 2);
-        IBean(s.c.bean).mint(account, amount);
+        bean().mint(account, amount);
         emit Incentivization(account, amount);
     }
 

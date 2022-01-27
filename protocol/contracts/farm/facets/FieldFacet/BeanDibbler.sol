@@ -7,12 +7,13 @@ pragma experimental ABIEncoderV2;
 
 import "../../../interfaces/IBean.sol";
 import "../../../libraries/LibDibbler.sol";
+import "../Utils/ToolShed.sol";
 
 /**
  * @author Publius
  * @title Dibbler
 **/
-contract BeanDibbler {
+contract BeanDibbler is ToolShed {
 
     using SafeMath for uint256;
     using SafeMath for uint32;
@@ -68,7 +69,4 @@ contract BeanDibbler {
         LibCheck.beanBalanceCheck();
     }
 
-    function bean() internal view returns (IBean) {
-        return IBean(s.c.bean);
-    }
 }

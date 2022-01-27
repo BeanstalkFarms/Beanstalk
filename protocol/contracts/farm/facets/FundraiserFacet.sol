@@ -7,12 +7,13 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../libraries/LibDibbler.sol";
+import "./Utils/ToolShed.sol";
 
 /**
  * @author Publius
  * @title Funding Facet
 **/
-contract FundraiserFacet {
+contract FundraiserFacet is ToolShed {
 
     AppStorage internal s;
 
@@ -76,8 +77,5 @@ contract FundraiserFacet {
     function numberOfFundraisers() public view returns (uint32) {
         return s.fundraiserIndex;
     }
-
-    function bean() internal view returns (IBean) {
-        return IBean(s.c.bean);
-    }
+    
 }

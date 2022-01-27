@@ -7,12 +7,13 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../libraries/LibDibbler.sol";
+import "./Utils/ToolShed.sol";
 
 /**
  * @author Publius
  * @title Budget Facet
 **/
-contract BudgetFacet {
+contract BudgetFacet is ToolShed {
 
     AppStorage internal s;
 
@@ -20,7 +21,7 @@ contract BudgetFacet {
 
     function budgetSow(uint256 amount) public returns (uint256) {
         require(isBudget(msg.sender), "Budget: sender must be budget.");
-        IBean(s.c.bean).burnFrom(msg.sender, amount);
+        IBean(getBeanAddress()).burnFrom(msg.sender, amount);
 
         decreaseSoil(amount);
 

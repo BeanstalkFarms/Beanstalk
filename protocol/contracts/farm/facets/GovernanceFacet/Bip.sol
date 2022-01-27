@@ -10,12 +10,13 @@ import "../../AppStorage.sol";
 import "../../../C.sol";
 import "../../../libraries/Decimal.sol";
 import "../../../libraries/LibDiamond.sol";
+import "../Utils/ToolShed.sol";
 
 /**
  * @author Publius
  * @title BIP
 **/
-contract Bip {
+contract Bip is ToolShed {
 
     using SafeMath for uint256;
     using SafeMath for uint32;

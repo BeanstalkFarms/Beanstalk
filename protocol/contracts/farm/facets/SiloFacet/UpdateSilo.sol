@@ -73,7 +73,7 @@ contract UpdateSilo is SiloExit {
             s.internalTokenBalance[account][ISeed(s.seedContract)] = s.a[account].s.seeds;
             delete s.a[account].s.seeds;
 
-            s.internalTokenBalance[account][IERC20(s.c.bean)] = s.a[account].wrappedBeans;
+            s.internalTokenBalance[account][IERC20(getBeanAddress())] = s.a[account].wrappedBeans;
             delete s.a[account].wrappedBeans;
         }
     }

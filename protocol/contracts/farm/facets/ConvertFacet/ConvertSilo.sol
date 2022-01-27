@@ -65,13 +65,13 @@ contract ConvertSilo is ToolShed {
             LibMarket.allocatedBeans(transferAmount);
         }
 
-        w.i = w.stalkRemoved.div(LibTokenSilo.beanDenominatedValue(s.c.pair, lp.add(w.newLP)), "Silo: No LP Beans.");
-        uint32 depositSeason = uint32(season().sub(w.i.div(s.seedsPerBDV[s.c.pair])));
+        w.i = w.stalkRemoved.div(LibTokenSilo.beanDenominatedValue(getUniswapPairAddress(), lp.add(w.newLP)), "Silo: No LP Beans.");
+        uint32 depositSeason = uint32(season().sub(w.i.div(s.seedsPerBDV[getUniswapPairAddress()])));
 
         if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
 	
         lp = lp.add(w.newLP);
-        _depositLP(lp, LibTokenSilo.beanDenominatedValue(s.c.pair, lp), depositSeason, toInternalBalance);
+        _depositLP(lp, LibTokenSilo.beanDenominatedValue(getUniswapPairAddress(), lp), depositSeason, toInternalBalance);
         LibCheck.beanBalanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
@@ -82,12 +82,12 @@ contract ConvertSilo is ToolShed {
 
     function _depositLP(uint256 amount, uint256 lpb, uint32 _s, bool toInternalBalance) internal {
         require(lpb > 0, "Silo: No Beans under LP.");
-        LibTokenSilo.incrementDepositedToken(s.c.pair, amount);
-        uint256 seeds = lpb.mul(s.seedsPerBDV[s.c.pair]);
+        LibTokenSilo.incrementDepositedToken(getUniswapPairAddress(), amount);
+        uint256 seeds = lpb.mul(s.seedsPerBDV[getUniswapPairAddress()]);
         if (season() == _s) LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000), toInternalBalance);
         else LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)), toInternalBalance);
 
-        LibTokenSilo.addDeposit(s.c.pair, msg.sender, _s, amount, lpb);
+        LibTokenSilo.addDeposit(getUniswapPairAddress(), msg.sender, _s, amount, lpb);
 
         LibCheck.lpBalanceCheck();
     }
@@ -108,12 +108,12 @@ contract ConvertSilo is ToolShed {
         uint256 i = 0;
         while ((i < crates.length) && (lpRemoved < maxLP)) {
             if (lpRemoved.add(amounts[i]) < maxLP)
-                (depositLP, depositedBDV) = LibTokenSilo.removeDeposit(s.c.pair, msg.sender, crates[i], amounts[i]);
+                (depositLP, depositedBDV) = LibTokenSilo.removeDeposit(getUniswapPairAddress(), msg.sender, crates[i], amounts[i]);
             else
-                (depositLP, depositedBDV) = LibTokenSilo.removeDeposit(s.c.pair, msg.sender, crates[i], maxLP.sub(lpRemoved));
+                (depositLP, depositedBDV) = LibTokenSilo.removeDeposit(getUniswapPairAddress(), msg.sender, crates[i], maxLP.sub(lpRemoved));
             lpRemoved = lpRemoved.add(depositLP);
             bdvRemoved = bdvRemoved.add(depositedBDV);
-            stalkRemoved = stalkRemoved.add(LibSilo.stalkReward(depositedBDV.mul(s.seedsPerBDV[s.c.pair]), season()-crates[i]));
+            stalkRemoved = stalkRemoved.add(LibSilo.stalkReward(depositedBDV.mul(s.seedsPerBDV[getUniswapPairAddress()]), season()-crates[i]));
             i++;
         }
         if (i > 0) amounts[i.sub(1)] = depositLP;
@@ -121,9 +121,9 @@ contract ConvertSilo is ToolShed {
             amounts[i] = 0;
             i++;
         }
-        LibTokenSilo.decrementDepositedToken(s.c.pair, lpRemoved);
-        LibSilo.withdrawSiloAssets(msg.sender, bdvRemoved.mul(s.seedsPerBDV[s.c.pair]), stalkRemoved.add(bdvRemoved.mul(s.stalkPerBDV[s.c.pair])), fromInternalBalance);
-        emit TokenRemove(s.c.pair, msg.sender, crates, amounts, lpRemoved);
+        LibTokenSilo.decrementDepositedToken(getUniswapPairAddress(), lpRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, bdvRemoved.mul(s.seedsPerBDV[getUniswapPairAddress()]), stalkRemoved.add(bdvRemoved.mul(s.stalkPerBDV[getUniswapPairAddress()])), fromInternalBalance);
+        emit TokenRemove(getUniswapPairAddress(), msg.sender, crates, amounts, lpRemoved);
     }
 
     /**
