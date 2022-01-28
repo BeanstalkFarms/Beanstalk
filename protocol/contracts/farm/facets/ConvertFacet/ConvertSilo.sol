@@ -93,10 +93,11 @@ contract ConvertSilo {
         uint256 maxLP
     )
         internal
-        returns (uint256 lpRemoved, uint256 stalkRemoved)
+        returns (uint256 stalkRemoved)
     {
         require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         uint256 bdvRemoved;
+        uint256 lpRemoved;
         uint256 depositLP;
         uint256 depositedBDV;
         uint256 i = 0;

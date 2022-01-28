@@ -79,6 +79,27 @@ contract MockUniswapV2Router {
         require(amountB >= amountBMin, 'UniswapV2Router: INSUFFICIENT_B_AMOUNT');
     }
 
+    function removeLiquidityETH(
+        address token,
+        uint liquidity,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline
+    ) public virtual returns (uint amountToken, uint amountETH) {
+        (amountToken, amountETH) = removeLiquidity(
+            token,
+            _weth,
+            liquidity,
+            amountTokenMin,
+            amountETHMin,
+            address(this),
+            deadline
+        );
+        IERC20(token).transfer(to, amountToken);
+        (bool success, ) = to.call{value: amountETH}("");
+    }
+
     function _addLiquidity(
         address tokenA,
         address tokenB,

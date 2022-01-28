@@ -58,7 +58,7 @@ describe('Claim', function () {
       await this.field.connect(user).sowBeans('1000')
       await this.field.incrementTotalHarvestableE('1000')
       await this.silo.connect(user).withdrawBeans([2],['1000'])
-      await this.silo.connect(user).withdrawLP([2],['1'])
+      await this.silo.connect(user).withdraw(this.pair.address, [2],['1'])
       await this.season.farmSunrises('25')
     });
 

@@ -20,6 +20,7 @@ contract TokenSilo is UpdateSilo {
     event TokenDeposit(address indexed account, address indexed token, uint256 season, uint256 amount, uint256 bdv);
     event TokenRemove(address indexed account, address indexed token, uint32[] crates, uint256[] crateTokens, uint256 amount);
     event TokenWithdraw(address indexed account, address indexed token, uint256 season, uint256 amount);
+    event LegacyLPRemove(address indexed account, uint32[] crates, uint256[] crateLP, bool[] legacy, uint256 lp);
 
     struct AssetsRemoved {
         uint256 tokensRemoved;
@@ -40,11 +41,11 @@ contract TokenSilo is UpdateSilo {
     }
 
     // V2 For All Token Types
-    function totalDepositedToken(address token) public view returns (uint256) {
+    function totalDeposited(address token) public view returns (uint256) {
         return s.siloBalances[IERC20(token)].deposited;
     }
 
-    function totalWithdrawnToken(address token) public view returns (uint256) {
+    function totalWithdrawn(address token) public view returns (uint256) {
         return s.siloBalances[IERC20(token)].withdrawn;
     }
 
@@ -112,12 +113,12 @@ contract TokenSilo is UpdateSilo {
      * Legacy
      */
 
-    function legacyLPDeposit(address account, uint32 id) internal view returns (uint256, uint256) {
-        (s.a[account].lp.deposits[id], s.a[account].lp.depositSeeds[id]/4);
+    function legacyLPDeposit(address account, uint32 id) public view returns (uint256, uint256) {
+       return (s.a[account].lp.deposits[id], s.a[account].lp.depositSeeds[id]/4);
     }
 
-    function legacyLPWithdrawal(address account, address token, uint32 id) internal view returns (uint256) {
+    function legacyLPWithdrawal(address account, uint32 id) public view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.a[account].withdrawals[IERC20(token)][id];
+        return s.a[account].lp.withdrawals[id];
     }
 }

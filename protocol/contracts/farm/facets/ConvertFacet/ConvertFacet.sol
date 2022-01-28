@@ -9,6 +9,7 @@ import "./ConvertSilo.sol";
 import "../../../libraries/LibConvert.sol";
 import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibClaim.sol";
+import "../../../libraries/Silo/LibLegacyLPSilo.sol";
 
 /**
  * @author Publius
@@ -49,8 +50,31 @@ contract ConvertFacet is ConvertSilo {
     {
         LibInternal.updateSilo(msg.sender);
         (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
-        (uint256 lpRemoved, uint256 stalkRemoved) = _withdrawLPForConvert(crates, amounts, lpConverted);
-        require(lpRemoved == lpConverted, "Silo: Wrong LP removed.");
+        uint256 stalkRemoved = _withdrawLPForConvert(crates, amounts, lpConverted);
+        uint32 _s = uint32(stalkRemoved.div(beans.mul(C.getSeedsPerBean())));
+        _s = getDepositSeason(_s);
+        _depositBeans(beans, _s);
+        LibCheck.balanceCheck();
+        LibSilo.updateBalanceOfRainStalk(msg.sender);
+    }
+
+    function convertDepositedLegacyLP(
+        uint256 lp,
+        uint256 minBeans,
+        uint32[] memory crates,
+        uint256[] memory amounts,
+        bool[] memory legacy
+    )
+        external
+    {
+        LibInternal.updateSilo(msg.sender);
+        (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
+        uint256 stalkRemoved = LibLegacyLPSilo.removeLPDepositsForConvert(
+            crates, 
+            amounts, 
+            legacy,
+            lpConverted
+        );
         uint32 _s = uint32(stalkRemoved.div(beans.mul(C.getSeedsPerBean())));
         _s = getDepositSeason(_s);
         _depositBeans(beans, _s);

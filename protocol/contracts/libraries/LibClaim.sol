@@ -23,41 +23,117 @@ library LibClaim {
 
     event BeanClaim(address indexed account, uint32[] withdrawals, uint256 beans);
     event LPClaim(address indexed account, uint32[] withdrawals, uint256 lp);
-    event TokenClaim(address indexed account, uint32[] withdrawals, uint256 token_amount, address token);
+    event TokenClaim(address indexed account, address token, uint32[] withdrawals, uint256 amount);
+    event BatchTokenClaim(address indexed account, address[] tokens, uint32[] withdrawals, uint256[] amounts);
     event EtherClaim(address indexed account, uint256 ethereum);
     event Harvest(address indexed account, uint256[] plots, uint256 beans);
 
-    struct Claim {
-        uint32[] beanWithdrawals;
-        uint32[] lpWithdrawals;
-        uint256[] plots;
-        bool claimEth;
-        bool convertLP;
-        uint256 minBeanAmount;
-        uint256 minEthAmount;
-	    bool toWallet;
+    struct AdvancedClaim {
+        address token;
+        uint32[] withdrawals;
+        uint8 claimType;
+        uint256[] settings;
     }
 
-    function claim(Claim calldata c)
-        public
-        returns (uint256 beansClaimed)
-    {
+    struct Claim {
+        address[] tokens;
+        uint32[] withdrawals;
+        AdvancedClaim[] cp;
+        bool claimEth;
+        bool toWallet;
+    }
+
+    function claim(Claim calldata c) public returns (uint256 beansClaimed) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if (c.beanWithdrawals.length > 0) beansClaimed = beansClaimed.add(claimBeans(c.beanWithdrawals));
-        if (c.plots.length > 0) beansClaimed = beansClaimed.add(harvest(c.plots));
-        if (c.lpWithdrawals.length > 0) {
-            if (c.convertLP) {
-                if (!c.toWallet) beansClaimed = beansClaimed.add(removeClaimLPAndWrapBeans(c.lpWithdrawals, c.minBeanAmount, c.minEthAmount));
-                else removeAndClaimLP(c.lpWithdrawals, c.minBeanAmount, c.minEthAmount);
-            }
-            else claimLP(c.lpWithdrawals);
-        }
+        simpleClaim(msg.sender, c.tokens, c.withdrawals);
+        beansClaimed = advancedClaim(msg.sender, c.cp, c.toWallet);
         if (c.claimEth) claimEth();
-        
+
         if (beansClaimed > 0) {
             if (c.toWallet) IBean(s.c.bean).transfer(msg.sender, beansClaimed);
             else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(beansClaimed);
         }
+    }
+
+    function simpleClaim(address account, address[] calldata tokens, uint32[] calldata withdrawals) public {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256[] memory amounts = new uint256[](tokens.length);
+        for (uint256 i = 0; i < tokens.length; i++) {
+            amounts[i] = singleSimpleClaim(account, tokens[i], withdrawals[i]);
+        }
+        emit BatchTokenClaim(account, tokens, withdrawals, amounts);
+    }
+
+    function singleSimpleClaim(address account, address token, uint32 _s) public returns (uint256 amount) {
+        amount = removeTokenWithdrawal(account, token, _s);
+        IERC20(token).transfer(account, amount);
+    }
+
+    function advancedClaim(address account, AdvancedClaim[] calldata acs, bool toWallet) public returns (uint256 beansClaimed) {
+        for (uint256 i = 0; i < acs.length; i++) {
+            uint256 bc = singleAdvancedClaim(account, acs[i], toWallet);
+            if (bc > 0) beansClaimed = beansClaimed.add(bc);
+        }
+    }
+
+    function singleAdvancedClaim(address account, AdvancedClaim calldata ac, bool toWallet) public returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 amount;
+        if (ac.claimType == 0) {
+            amount = singleMultiClaim(account, ac.token, ac.withdrawals);
+            if (!toWallet && ac.token == s.c.bean) return amount;
+        }
+        else if (ac.token == s.c.bean) {
+            // Legacy Claim
+            if (ac.claimType == 1) return claimBeans(ac.withdrawals);
+            // Harvest
+            else if (ac.claimType == 2) return harvest(ac.settings);
+            revert("Claim: Invalid type.");
+        }
+        else if (ac.token == s.c.pair) {
+            // Legacy Claim
+            if (ac.claimType == 1) {
+                amount = claimLP(ac.withdrawals);
+            }
+            // Claim and Remove
+            else if (ac.claimType < 4) {
+                // 2 Normal
+                // 3 Legacy
+                // 4 Normal
+                // 5 Legacy
+                return removeAndClaimLP(
+                    account,
+                    ac.withdrawals, 
+                    toWallet, 
+                    ac.claimType == 3,
+                    ac.settings[0],
+                    ac.settings[1]
+                );
+            } else {
+                revert("Claim: Invalid type.");
+            }
+        }
+        IERC20(ac.token).transfer(account, amount);
+        return 0;
+    }
+
+    function singleMultiClaim(address account, address token, uint32[] calldata withdrawals) private returns (uint256 tokenClaimed) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        for(uint256 i = 0; i < withdrawals.length; i++) {
+            require(withdrawals[i] <= s.season.current, "Claim: Withdrawal not receivable.");
+            tokenClaimed = tokenClaimed.add(removeTokenWithdrawal(msg.sender, token, withdrawals[i]));
+        }
+        emit TokenClaim(msg.sender, token, withdrawals, tokenClaimed);
+        return tokenClaimed;
+    }
+
+    function removeTokenWithdrawal(address account, address token, uint32 _s) private returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 amount = s.a[account].withdrawals[IERC20(token)][_s];
+        require(amount > 0, "Claim: LP withdrawal is empty.");
+        delete s.a[account].withdrawals[IERC20(token)][_s];
+        s.siloBalances[IERC20(token)].withdrawn = s.siloBalances[IERC20(token)].withdrawn.sub(amount);
+        return amount;
     }
     
     // Claim Beans
@@ -74,52 +150,20 @@ library LibClaim {
     function claimBeanWithdrawal(address account, uint32 _s) private returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 amount = s.a[account].bean.withdrawals[_s];
+        
         require(amount > 0, "Claim: Bean withdrawal is empty.");
         delete s.a[account].bean.withdrawals[_s];
-        s.bean.withdrawn = s.bean.withdrawn.sub(amount);
-        return amount;
-    }
-
-    // Claim Tokens
-
-    function claimTokens(address[] calldata tokens, uint32[] calldata withdrawals) public {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        for(uint256 i = 0; i < tokens.length; i++) {
-            uint256 tokenClaimed = _claimToken(tokens[i], withdrawals);
-            IERC20(tokens[i]).transfer(msg.sender, tokenClaimed); 
-        }
-    }
-
-    function _claimToken(address token, uint32[] calldata withdrawals) private returns (uint256) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 tokenClaimed = 0;
-        for(uint256 i = 0; i < withdrawals.length; i++) {
-            require(withdrawals[i] <= s.season.current, "Claim: Withdrawal not receivable.");
-            tokenClaimed = tokenClaimed.add(claimTokenWithdrawal(token, msg.sender, withdrawals[i]));
-        }
-        emit TokenClaim(msg.sender, withdrawals, tokenClaimed, token);
-        return tokenClaimed;
-    }
-
-    function claimTokenWithdrawal(address token, address account, uint32 _s) private returns (uint256) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 amount = s.a[account].withdrawals[IERC20(token)][_s];
-        require(amount > 0, "Claim: LP withdrawal is empty.");
-        delete s.a[account].withdrawals[IERC20(token)][_s];
-        s.siloBalances[IERC20(token)].withdrawn = s.siloBalances[IERC20(token)].withdrawn.sub(amount);
+        s.siloBalances[IERC20(s.c.bean)].withdrawn = s.siloBalances[IERC20(s.c.bean)].withdrawn.sub(amount);
         return amount;
     }
 
     // Claim LP
 
-    function claimLP(uint32[] calldata withdrawals) public {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 lpClaimed = _claimToken(s.c.pair, withdrawals);
-        IUniswapV2Pair(s.c.pair).transfer(msg.sender, lpClaimed);
-    }
-
     function removeAndClaimLP(
+        address account,
         uint32[] calldata withdrawals,
+        bool toWallet,
+        bool legacy,
         uint256 minBeanAmount,
         uint256 minEthAmount
     )
@@ -127,24 +171,14 @@ library LibClaim {
         returns (uint256 beans)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 lpClaimd = _claimToken(s.c.pair, withdrawals);
-        (beans,) = LibMarket.removeLiquidity(lpClaimd, minBeanAmount, minEthAmount);
+        uint256 lp;
+        if (legacy) lp = claimLP(withdrawals);
+        else lp = singleMultiClaim(account, s.c.pair, withdrawals);
+        if (toWallet) LibMarket.removeLiquidity(lp, minBeanAmount, minEthAmount);
+        else (beans,) = LibMarket.removeLiquidityWithBeanAllocation(lp, minBeanAmount, minEthAmount);
     }
 
-    function removeClaimLPAndWrapBeans(
-        uint32[] calldata withdrawals,
-        uint256 minBeanAmount,
-        uint256 minEthAmount
-    )
-        private
-        returns (uint256 beans)
-    {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 lpClaimd = _claimToken(s.c.pair, withdrawals);
-        (beans,) = LibMarket.removeLiquidityWithBeanAllocation(lpClaimd, minBeanAmount, minEthAmount);
-    }
-
-    function _claimLP(uint32[] calldata withdrawals) private returns (uint256) {
+    function claimLP(uint32[] calldata withdrawals) public returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 lpClaimd = 0;
         for(uint256 i = 0; i < withdrawals.length; i++) {

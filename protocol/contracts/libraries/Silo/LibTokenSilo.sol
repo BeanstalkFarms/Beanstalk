@@ -53,7 +53,6 @@ library LibTokenSilo {
         internal
         returns (uint256, uint256) 
     {
-        if (token == address(0)) return removeLegacyLPDeposit(account, id, amount);
         AppStorage storage s = LibAppStorage.diamondStorage();
         (uint256 crateAmount, uint256 crateBase) = tokenDeposit(account, token, id);
         require(crateAmount >= amount, "Silo: Crate balance too low.");
@@ -64,27 +63,6 @@ library LibTokenSilo {
             return (amount, base);
         } else {
             delete s.a[account].deposits[IERC20(token)][id];
-            return (crateAmount, crateBase);
-        }
-    }
-
-    function removeLegacyLPDeposit(address account, uint32 id, uint256 amount)
-        internal
-        returns (uint256, uint256) 
-    {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        require(id <= s.season.current, "Silo: Future crate.");
-        (uint256 crateAmount, uint256 crateBase) = tokenDeposit(s.c.pair, account, id);
-        require(crateAmount >= amount, "Silo: Crate balance too low.");
-        require(crateAmount > 0, "Silo: Crate empty.");
-        if (amount < crateAmount) {
-            uint256 base = amount.mul(crateBase).div(crateAmount);
-            s.a[account].lp.deposits[id] -= amount;
-            s.a[account].lp.depositSeeds[id] -= base;
-            return (amount, base);
-        } else {
-            delete s.a[account].lp.deposits[id];
-            delete s.a[account].lp.depositSeeds[id];
             return (crateAmount, crateBase);
         }
     }

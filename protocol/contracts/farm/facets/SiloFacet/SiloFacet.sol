@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "./BeanSilo.sol";
 import "../../../libraries/LibClaim.sol";
 import "../../../libraries/LibMarket.sol";
+import "../../../libraries/Silo/LibLegacyLPSilo.sol";
 
 /*
  * @author Publius
@@ -131,28 +132,34 @@ contract SiloFacet is BeanSilo {
     }
 
     /*
-     * Withdraw
+     * Withdraw legacy
     */
 
-    function claimAndWithdrawLP(
+    function claimAndWithdrawLegacyLP(
         uint32[] calldata crates,
         uint256[] calldata amounts,
+        bool[] calldata legacy,
         LibClaim.Claim calldata claim
     )
         external
     {
         LibClaim.claim(claim);
-        _withdraw(s.c.pair, crates, amounts);
+        LibLegacyLPSilo.withdrawLegacyLP(crates, amounts, legacy);
     }
 
-    function withdrawLP(
-        uint32[] calldata crates, 
-        uint256[] calldata amounts
+    function withdrawLegacyLP(
+        uint32[] calldata crates,
+        uint256[] calldata amounts,
+        bool[] calldata legacy
     )
         external
     {
-        _withdraw(s.c.pair, crates, amounts);
+        LibLegacyLPSilo.withdrawLegacyLP(crates, amounts, legacy);
     }
+
+    /*
+     * Shed
+     */
 
     function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {
         LibClaim.claim(c);
