@@ -49,7 +49,6 @@ describe('Sun', function () {
         await this.field.incrementTotalPodsE((parseInt(this.testData.unripenedPods) + parseInt(this.testData.harvestablePods)).toString())
         await this.field.incrementTotalHarvestableE(this.testData.harvestablePods)
         this.pair.simulateTrade(this.testData.beansInPool, this.testData.ethInPool+'000000000000')
-        await this.silo.incrementDepositedLPE('1', this.pair.address)
         this.result = await this.season.sunSunrise(this.testData.twapBeans, this.testData.twapUSDC, this.testData.divisor)
       })
       it('checks values', async function () {

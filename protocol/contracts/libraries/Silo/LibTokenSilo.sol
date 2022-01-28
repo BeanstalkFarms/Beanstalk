@@ -41,12 +41,18 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.a[account].deposits[IERC20(token)][_s].tokens += uint112(amount);
         s.a[account].deposits[IERC20(token)][_s].bdv += uint112(bdv);
+        
+        // Increment Deposited Token
+        s.siloBalances[IERC20(token)].deposited = s.siloBalances[IERC20(token)].deposited.add(amount);
         emit TokenDeposit(account, token, _s, amount, bdv);
     }
 
     function decrementDepositedToken(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.siloBalances[IERC20(token)].deposited = s.siloBalances[IERC20(token)].deposited.sub(amount);
+        s.a[account].deposits[IERC20(token)][_s].tokens -= uint112(amount);
+        s.a[account].deposits[IERC20(token)][_s].bdv -= uint112(bdv);
+
+        emit TokenDeposit(token, msg.sender, _s, amount, bdv);
     }
 
     function removeDeposit(address account, address token, uint32 id, uint256 amount)
