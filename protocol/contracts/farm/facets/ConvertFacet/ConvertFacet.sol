@@ -36,7 +36,7 @@ contract ConvertFacet is ConvertSilo {
         uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(s.ss[s.c.pair].seeds)));
         _s = getDepositSeason(_s);
 
-        _depositLP(_s, lp, beansConverted, set.toInternalBalance);
+        _deposit(_s, lp, beansConverted, set.toInternalBalance);
         LibCheck.balanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }   
