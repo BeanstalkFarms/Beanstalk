@@ -351,7 +351,7 @@ library LibMarket {
     }
 
     function allocatedBeans(uint256 transferBeans) internal {
-        allocatedBeansTo(transferBeans, msg.sender);
+        allocatedBeansTo(transferBeans, address(this));
     }
 
     function allocatedBeansTo(uint256 transferBeans, address to) internal {
@@ -367,7 +367,9 @@ library LibMarket {
                 remainingBeans = 0;
                 s.a[msg.sender].wrappedBeans = wrappedBeans.sub(transferBeans);
             }
-            emit BeanAllocation(msg.sender, transferBeans.sub(remainingBeans));
+            uint fromWrappedBeans = transferBeans.sub(remainingBeans);
+            emit BeanAllocation(msg.sender, fromWrappedBeans);
+            if (to != address(this)) IBean(s.c.bean).transfer(to, fromWrappedBeans);
         }
         if (remainingBeans > 0) IBean(s.c.bean).transferFrom(msg.sender, to, remainingBeans);
     }

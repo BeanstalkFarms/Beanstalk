@@ -165,17 +165,18 @@ contract Storage {
 
     // marketplace
     struct Listing {
-        uint232 expiry;
+        uint128 start;
+        uint128 amount;
         uint24 price;
-        uint256 amount;
-        uint256 distanceFromBack;
+        uint224 expiry;
+        bool toWallet;
     }
 
     struct Order {
-        uint256 amount;
-        uint24 price;
-        uint232 maxPlaceInLine; 
         address owner;
+        uint256 amount;
+        uint232 maxPlaceInLine;
+        uint24 price;
     }
     
     struct Fundraiser {

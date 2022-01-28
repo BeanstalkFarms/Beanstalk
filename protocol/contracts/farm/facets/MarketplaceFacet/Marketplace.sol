@@ -29,45 +29,54 @@ contract Marketplace {
     // event PodOrderCancelled(address indexed account, bytes20 podOrderIndex);
     // event PodOrderFilled(address indexed from, address indexed to, bytes20 podOrderIndex, uint256 index, uint256 amount, uint24 pricePerPod);
 
-    event PodListingCreated(address indexed account, uint256 plotIndex, uint256 amount, uint256 distanceFromBack, uint24 pricePerPod, uint232 expiry);
-    event PodListingCancelled(address indexed account, uint256 plotIndex);
-    event PodListingFilled(address indexed from, address indexed to, uint256 plotIndex, uint256 amount, uint256 distanceFromBack, uint24 pricePerPod);
-    event PodOrderCreated(address indexed account, bytes20 podOrderIndex, uint256 amount, uint24 pricePerPod, uint232 maxPlaceInLine);
-    event PodOrderCancelled(address indexed account, bytes20 podOrderIndex);
+    event PodListingCreated(address indexed account, uint256 index, uint256 start, uint256 amount, uint24 pricePerPod, uint232 expiry, bool toWallet);
+    event PodListingCancelled(address indexed account, uint256 index);
+    event PodListingFilled(address indexed from, address indexed to, uint256 index, uint256 start, uint256 amount, uint24 pricePerPod);
+    event PodOrderCreated(address indexed account, bytes20 orderId, uint256 amount, uint24 pricePerPod, uint232 maxPlaceInLine);
+    event PodOrderCancelled(address indexed account, bytes20 orderId);
     event PodOrderFilled(address indexed from, address indexed to, bytes20 podOrderIndex, uint256 plotIndex, uint256 amount, uint24 pricePerPod);
     event PlotTransfer(address indexed from, address indexed to, uint256 indexed id, uint256 pods);
 
-    function __buyListing(address from, uint256 index, uint256 distanceFromBack, uint256 amount) internal {
-        uint256 listingAmount = s.podListings[index].amount;
-        if (listingAmount == 0){
-            listingAmount = s.a[from].field.plots[index];
-        }
-        _fillListing(from, msg.sender, index, distanceFromBack, amount, listingAmount);
-        _transferPlot(from, msg.sender, index, s.a[from].field.plots[index].sub(distanceFromBack + listingAmount), amount);
+    function _buyListing(address from, uint256 index, uint256 start, uint256 amountBeans, uint24 pricePerPod) internal {
+        Storage.Listing storage l = s.podListings[index];
+        require(l.price > 0, "Marketplace: Listing does not exist.");
+        require(start == l.start && l.price == pricePerPod, "Marketplace: start/price must match listing.");
+        require(uint232(s.f.harvestable) <= l.expiry, "Marketplace: Listing has expired");
+
+        uint256 amount = (amountBeans * 1000000) / l.price;
+        amount = roundAmount(from, index, start, amount, l.price);
+
+        _fillListing(from, msg.sender, index, start, amount);
+        _transferPlot(from, msg.sender, index, start, amount);
     }
 
-    function _fillListing(address from, address to, uint256 index, uint256 distanceFromBack, uint256 amount, uint256 listingAmount) internal {
-        uint256 plotAmount = s.a[from].field.plots[index];
-        require(plotAmount >= amount, "Marketplace: Plot has insufficient amount.");
-        Storage.Listing storage listing = s.podListings[index];
-        require(distanceFromBack == listing.distanceFromBack, "Marketplace: Invalid listing distanceFromBack.");
-        uint24 price = listing.price;
-        uint232 harvestable = uint232(s.f.harvestable);
-        require(harvestable <= listing.expiry, "Marketplace: Listing has expired");
-        require(listingAmount >= amount, "Marketplace: Not enough pods in listing");
-        if (listingAmount > amount) {
-            s.podListings[index.add(amount).add(distanceFromBack)] = listing;
-            // Optimization: if Listing is full amount of plot, set amount to 0
-            // Later, we consider a valid Listing (price>0) with amount 0 to be full amount of plot
-            if (listingAmount == plotAmount){
-                s.podListings[index.add(amount).add(distanceFromBack)].amount = 0;
-            }
-            else{
-                s.podListings[index.add(amount).add(distanceFromBack)].amount = listingAmount - amount;
+    // If remainder left (always <1 pod) that would otherwise be unpurchaseable
+    // due to rounding from calculating amount, give it to last buyer
+    function roundAmount(address from, uint256 index, uint256 start, uint256 amount, uint24 price) view public returns (uint256) {
+        uint256 listingAmount = s.podListings[index].amount;
+        if (listingAmount == 0) listingAmount = s.a[from].field.plots[index].sub(start);
+
+        if ((listingAmount - amount) < (1000000 / price))
+            amount = listingAmount;
+        return amount;
+    }
+
+    function _fillListing(address from, address to, uint256 index, uint256 start, uint256 amount) internal {
+        Storage.Listing storage l = s.podListings[index];
+
+        uint256 lAmount = l.amount;
+        if (lAmount == 0) lAmount = s.a[from].field.plots[index].sub(s.podListings[index].start);
+        require(lAmount >= amount, "Marketplace: Not enough pods in listing");
+
+        if (lAmount > amount) {
+            uint256 newIndex = index.add(amount).add(start);
+            s.podListings[newIndex] = l;
+            if (l.amount != 0) {
+                s.podListings[newIndex].amount = uint128(lAmount - amount);
             }
         }
         delete s.podListings[index];
-        emit PodListingFilled(from, to, index, amount, distanceFromBack, price);
+        emit PodListingFilled(from, to, index, start, amount, l.price);
     }
 
     function _transferPlot(address from, address to, uint256 index, uint256 start, uint256 amount) internal {
