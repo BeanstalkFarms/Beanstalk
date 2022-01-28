@@ -54,7 +54,7 @@ contract InitDiamond {
         s.c.pegPair = PEG_PAIR;
 
         IBean(s.c.bean).approve(UNISWAP_ROUTER, uint256(-1));
-        IUniswapV2Pair(C.getUniswapPairAddress()).approve(UNISWAP_ROUTER, uint256(-1));
+        IUniswapV2Pair(s.c.pair).approve(UNISWAP_ROUTER, uint256(-1));
         IWETH(s.c.weth).approve(UNISWAP_ROUTER, uint256(-1));
 
         s.cases = [int8(3),1,0,0,-1,-3,-3,0,3,1,0,0,-1,-3,-3,0,3,3,1,0,0,0,-1,0,3,3,1,0,1,0,-1,0];
@@ -68,7 +68,7 @@ contract InitDiamond {
             (block.timestamp / s.season.period) * s.season.period :
             block.timestamp;
 
-        s.index = (IUniswapV2Pair(C.getUniswapPairAddress()).token0() == s.c.bean) ? 0 : 1;
+        s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
         LibMarket.initMarket(s.c.bean, s.c.weth, UNISWAP_ROUTER);
         LibStalk.initStalkToken('Stalk', 'STALK');
 

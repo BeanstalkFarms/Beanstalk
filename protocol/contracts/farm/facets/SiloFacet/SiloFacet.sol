@@ -138,7 +138,7 @@ contract SiloFacet is BeanSilo {
 
     function depositLP(uint256 amount) public {
         pair().transferFrom(msg.sender, address(this), amount);
-        _deposit(C.getUniswapPairAddress(), amount, LibToolShed.defaultSettings());
+        _deposit(s.c.pair, amount, LibToolShed.defaultSettings());
     }
 
     function addAndDepositLP(
@@ -166,7 +166,7 @@ contract SiloFacet is BeanSilo {
         internal {
         uint256 boughtLP = LibMarket.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, al);
         if (lp>0) pair().transferFrom(msg.sender, address(this), lp);
-        _deposit(C.getUniswapPairAddress(), lp.add(boughtLP), set);
+        _deposit(s.c.pair, lp.add(boughtLP), set);
     }
 
     /*

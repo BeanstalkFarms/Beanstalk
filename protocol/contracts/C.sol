@@ -16,10 +16,6 @@ library C {
     using Decimal for Decimal.D256;
     using SafeMath for uint256;
 
-    // Token addresses
-    address private constant UNISWAP_PAIR_ADDRESS = address(0x87898263B6C5BABe34b4ec53F22d98430b91e371);
-    address private constant BEAN_ADDRESS = address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db);
-
     // Chain
     uint256 private constant CHAIN_ID = 1; // Mainnet
 
@@ -66,13 +62,6 @@ library C {
     /**
      * Getters
     **/
-    function getUniswapPairAddress() internal pure returns (address) {
-        return UNISWAP_PAIR_ADDRESS;
-    }
-
-    function getBeanAddress() internal pure returns (address) {
-        return BEAN_ADDRESS;
-    }
 
     function getSeasonPeriod() internal pure returns (uint256) {
         return CURRENT_SEASON_PERIOD;
