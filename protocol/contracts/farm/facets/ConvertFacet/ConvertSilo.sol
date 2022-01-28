@@ -171,6 +171,24 @@ contract ConvertSilo is ToolShed {
 
     // TODO
     // Instead we return stalk and seeds and don't increment seed/stalk balances
+    function _depositBeansOnly(
+        uint256 amount, 
+        uint32 _s, 
+        bool toInternalBalance
+    ) 
+        internal 
+        returns (uint256 stalk, uint256 seeds) 
+    {
+        require(amount > 0, "Silo: No beans.");
+        LibBeanSilo.incrementDepositedBeans(amount);
+        stalk = amount.mul(C.getStalkPerBean());
+        seeds = amount.mul(C.getSeedsPerBean());
+        if (_s < season()) stalk = stalk.add(LibSilo.stalkReward(seeds, season()-_s));
+        LibBeanSilo.addBeanDeposit(msg.sender, _s, amount);
+        LibCheck.beanBalanceCheck();
+        return (stalk, seeds);
+    }
+
     function _depositBeans(uint256 amount, uint32 _s, bool toInternalBalance) internal {
         require(amount > 0, "Silo: No beans.");
         LibBeanSilo.incrementDepositedBeans(amount);
