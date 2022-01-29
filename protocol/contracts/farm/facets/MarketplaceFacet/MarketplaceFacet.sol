@@ -6,6 +6,7 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./Marketplace.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Beanjoyer
@@ -63,7 +64,7 @@ contract MarketplaceFacet is Marketplace {
     }
 
     function buyPodListing(address from, uint256 index, uint256 start, uint256 amountBeans, uint24 pricePerPod) public {
-        LibMarket.transferBeans(msg.sender, from, amountBeans, s.podListings[index].toWallet);
+        LibMarket.transferBeans(from, amountBeans, s.podListings[index].toWallet);
         _buyListing(from, index, start, amountBeans, pricePerPod);
     }
 
@@ -74,11 +75,11 @@ contract MarketplaceFacet is Marketplace {
 
 
     function buyBeansAndBuyPodListing(address from, uint256 index, uint256 start, uint256 amountBeans, uint256 buyBeanAmount, uint24 pricePerPod) public payable {
-        if (amountBeans > 0) LibMarket.transferBeans(msg.sender, from, amountBeans, s.podListings[index].toWallet);
+        if (amountBeans > 0) LibMarket.transferBeans(from, amountBeans, s.podListings[index].toWallet);
         _buyBeansAndPodListing(from, index, start, amountBeans, buyBeanAmount, pricePerPod);
     }
 
-    function claimAndBuyBeansAndBuyPodListing(address from, uint256 index, uint256 start, uint256 amountBeans, uint256 buyBeanAmount, uint24 pricePerPod, LibClaim.Claim calldata claim) public payable  {
+    function claimBuyBeansAndBuyPodListing(address from, uint256 index, uint256 start, uint256 amountBeans, uint256 buyBeanAmount, uint24 pricePerPod, LibClaim.Claim calldata claim) public payable  {
         allocateBeansToWallet(claim, amountBeans, from, s.podListings[index].toWallet);
         _buyBeansAndPodListing(from, index, start, amountBeans, buyBeanAmount, pricePerPod);
     }
@@ -92,69 +93,70 @@ contract MarketplaceFacet is Marketplace {
      * Pod Orders
     **/
 
-    function listPodOrder(uint256 amountBeans, uint24 pricePerPod, uint232 maxPlaceInLine) public returns (bytes20 podOrderId) {
+    function createPodOrder(uint256 amountBeans, uint24 pricePerPod, uint232 maxPlaceInLine) public returns (bytes20 podOrderId) {
         bean().transferFrom(msg.sender, address(this), amountBeans);
-        return _listOrder(amountBeans, pricePerPod, maxPlaceInLine);
+        return _createOrder(amountBeans, pricePerPod, maxPlaceInLine);
     }
 
-    function claimAndListPodOrder(uint256 amountBeans, uint24 pricePerPod, uint232 maxPlaceInLine, LibClaim.Claim calldata claim) public  returns (bytes20 podOrderId) {
+    function claimAndCreatePodOrder(uint256 amountBeans, uint24 pricePerPod, uint232 maxPlaceInLine, LibClaim.Claim calldata claim) public  returns (bytes20 podOrderId) {
         allocateBeans(claim, amountBeans, address(this));
-        return _listOrder(amountBeans, pricePerPod, maxPlaceInLine);
+        return _createOrder(amountBeans, pricePerPod, maxPlaceInLine);
     }
 
-    function buyBeansAndListPodOrder(uint256 amountBeans, uint24 pricePerPod, uint232 maxPlaceInLine, uint256 buyBeanAmount) public payable returns (bytes20 podOrderId) {
+    function buyBeansAndCreatePodOrder(uint256 amountBeans, uint256 buyBeanAmount, uint24 pricePerPod, uint232 maxPlaceInLine) public payable returns (bytes20 podOrderId) {
         if (amountBeans > 0) bean().transferFrom(msg.sender, address(this), amountBeans);
-        return _buyBeansAndListPodOrder(amountBeans, buyBeanAmount, pricePerPod, maxPlaceInLine);
+        return _buyBeansAndCreatePodOrder(amountBeans, buyBeanAmount, pricePerPod, maxPlaceInLine);
     }
 
-    function claimAndBuyBeansAndListPodOrder(uint256 amountBeans, uint256 buyBeanAmount, uint24 pricePerPod, uint232 maxPlaceInLine, LibClaim.Claim calldata claim) public payable returns (bytes20 podOrderId) {
+    function claimBuyBeansAndCreatePodOrder(uint256 amountBeans, uint256 buyBeanAmount, uint24 pricePerPod, uint232 maxPlaceInLine, LibClaim.Claim calldata claim) public payable returns (bytes20 podOrderId) {
         allocateBeans(claim, amountBeans, address(this));
-        return _buyBeansAndListPodOrder(amountBeans, buyBeanAmount, pricePerPod, maxPlaceInLine);
+        return _buyBeansAndCreatePodOrder(amountBeans, buyBeanAmount, pricePerPod, maxPlaceInLine);
     }
 
-    function _buyBeansAndListPodOrder(uint256 amountBeans, uint256 buyBeanAmount, uint24 pricePerPod, uint232 maxPlaceInLine) internal returns (bytes20 podOrderId) {
+    function _buyBeansAndCreatePodOrder(uint256 amountBeans, uint256 buyBeanAmount, uint24 pricePerPod, uint232 maxPlaceInLine) internal returns (bytes20 podOrderId) {
         uint256 boughtBeanAmount = LibMarket.buyExactTokens(buyBeanAmount, address(this));
-        return _listOrder(amountBeans+boughtBeanAmount, pricePerPod, maxPlaceInLine);
+        return _createOrder(amountBeans+boughtBeanAmount, pricePerPod, maxPlaceInLine);
     }
 
-    function _listOrder(uint256 amountBeans, uint24 pricePerPod, uint232 maxPlaceInLine) internal returns (bytes20 podOrderId) {
+    function _createOrder(uint256 amountBeans, uint24 pricePerPod, uint232 maxPlaceInLine) internal returns (bytes20 podOrderId) {
         require(0 < pricePerPod, "Marketplace: Pod price must be greater than 0.");
         uint256 amount = (amountBeans * 1000000) / pricePerPod;
-        return  __listOrder(amount,pricePerPod, maxPlaceInLine);
+        return  __createOrder(amount,pricePerPod, maxPlaceInLine);
     }
 
     function podOrder(bytes20 podOrderIndex) public view returns (Storage.Order memory) {
        return s.podOrders[podOrderIndex];
     }
 
-    function sellToPodOrder(uint256 plotIndex, uint256 sellFromIndex, bytes20 podOrderIndex, uint232 amount) public  {
-        Storage.Order storage order = s.podOrders[podOrderIndex];
+    function sellToPodOrder(bytes20 orderId, uint256 index, uint256 start, uint232 amount, bool toWallet) public  {
+        Storage.Order storage order = s.podOrders[orderId];
         uint24 price = order.price;
         address owner = order.owner;
-        require(price > 0, "Marketplace: Buy Offer does not exist.");
         order.amount = order.amount.sub(amount);
-        require(s.a[msg.sender].field.plots[plotIndex] >= (sellFromIndex.sub(plotIndex) + amount), "Marketplace: Invaid Plot.");
-        uint256 placeInLineEndPlot = sellFromIndex + amount - s.f.harvestable;
+        require(s.a[msg.sender].field.plots[index] >= (start + amount), "Marketplace: Invaid Plot.");
+        uint256 placeInLineEndPlot = index + start + amount - s.f.harvestable;
         require(placeInLineEndPlot <= order.maxPlaceInLine, "Marketplace: Plot too far in line.");
         uint256 costInBeans = (price * amount) / 1000000;
-        bean().transfer(msg.sender, costInBeans);
-        if (s.podListings[plotIndex].price > 0){
-            cancelPodListing(plotIndex);
+        if (toWallet) bean().transfer(msg.sender, costInBeans);
+        else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(costInBeans);
+        if (s.podListings[index].price > 0){
+            cancelPodListing(index);
         }
-        _transferPlot(msg.sender, owner, plotIndex, sellFromIndex.sub(plotIndex), amount);
+        _transferPlot(msg.sender, owner, index, start, amount);
         if (order.amount == 0){
-            delete s.podOrders[podOrderIndex];
+            delete s.podOrders[orderId];
         }
-        emit PodOrderFilled(msg.sender, owner, podOrderIndex, sellFromIndex, amount, price);
+        emit PodOrderFilled(msg.sender, owner, orderId, index, start, amount);
     }
 
-    function cancelPodOrder(bytes20 podOrderIndex) public  {
+    function cancelPodOrder(bytes20 podOrderIndex, bool toWallet) public  {
         Storage.Order storage order = s.podOrders[podOrderIndex];
-        require(order.owner == msg.sender, "Field: Buy Offer not owned by user.");
+        require(order.owner == msg.sender, "Marketplace: Buy Order not owned by user.");
         uint256 amount = order.amount;
         uint256 price = order.price;
         uint256 costInBeans = (price * amount) / 1000000;
-        bean().transfer(msg.sender, costInBeans);
+        if (toWallet) bean().transfer(msg.sender, costInBeans);
+        else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(costInBeans);
         delete s.podOrders[podOrderIndex];
         emit PodOrderCancelled(msg.sender, podOrderIndex);
     }
@@ -167,6 +169,8 @@ contract MarketplaceFacet is Marketplace {
     }
 
     function allocateBeansToWallet(LibClaim.Claim calldata c, uint256 transferBeans, address to, bool toWallet) private {
+        LibClaim.claim(c);
+        LibMarket.allocateBeansToWallet(transferBeans, to, toWallet);
 
     }
 }

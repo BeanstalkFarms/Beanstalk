@@ -22,19 +22,13 @@ contract Marketplace {
     using SafeMath for uint256;
 
     AppStorage internal s;
-    // event ListingCreated(address indexed account, uint256 index, uint256 distanceFromBack, uint256 amount, uint24 pricePerPod, uint232 expiry);
-    // event ListingCancelled(address indexed account, uint256 index);
-    // event ListingFilled(address indexed from, address indexed to, uint256 index, uint256 amount, uint24 pricePerPod);
-    // event PodOrderCreated(address indexed account, bytes20 podOrderIndex, uint256 amount, uint24 pricePerPod, uint232 maxPlaceInLine);
-    // event PodOrderCancelled(address indexed account, bytes20 podOrderIndex);
-    // event PodOrderFilled(address indexed from, address indexed to, bytes20 podOrderIndex, uint256 index, uint256 amount, uint24 pricePerPod);
 
     event PodListingCreated(address indexed account, uint256 index, uint256 start, uint256 amount, uint24 pricePerPod, uint232 maxHarvestableIndex, bool toWallet);
     event PodListingCancelled(address indexed account, uint256 index);
-    event PodListingFilled(address indexed from, address indexed to, uint256 index, uint256 start, uint256 amount, uint24 pricePerPod);
+    event PodListingFilled(address indexed from, address indexed to, uint256 index, uint256 start, uint256 amount);
     event PodOrderCreated(address indexed account, bytes20 orderId, uint256 amount, uint24 pricePerPod, uint232 maxPlaceInLine);
     event PodOrderCancelled(address indexed account, bytes20 orderId);
-    event PodOrderFilled(address indexed from, address indexed to, bytes20 podOrderIndex, uint256 plotIndex, uint256 amount, uint24 pricePerPod);
+    event PodOrderFilled(address indexed from, address indexed to, bytes20 orderId, uint256 index, uint256 start, uint256 amount);
     event PlotTransfer(address indexed from, address indexed to, uint256 indexed id, uint256 pods);
 
     function _buyListing(address from, uint256 index, uint256 start, uint256 amountBeans, uint24 pricePerPod) internal {
@@ -69,14 +63,14 @@ contract Marketplace {
         require(lAmount >= amount, "Marketplace: Not enough pods in listing.");
 
         if (lAmount > amount) {
-            uint256 newIndex = index.add(amount).add(start);
+            uint256 newIndex = index.add(amount);
             s.podListings[newIndex] = l;
             if (l.amount != 0) {
                 s.podListings[newIndex].amount = uint128(lAmount - amount);
             }
         }
+        emit PodListingFilled(from, to, index, start, amount);
         delete s.podListings[index];
-        emit PodListingFilled(from, to, index, start, amount, l.price);
     }
 
     function _transferPlot(address from, address to, uint256 index, uint256 start, uint256 amount) internal {
@@ -85,8 +79,8 @@ contract Marketplace {
         emit PlotTransfer(from, to, index.add(start), amount);
     }
 
-    function __listOrder(uint256 amount, uint24 pricePerPod, uint232 maxPlaceInLine) internal  returns (bytes20 podOrderId) {
-        require(amount > 0, "Marketplace: Must offer to buy non-zero amount");
+    function __createOrder(uint256 amount, uint24 pricePerPod, uint232 maxPlaceInLine) internal  returns (bytes20 podOrderId) {
+        require(amount > 0, "Marketplace: Order amount must be > 0.");
         bytes20 podOrderId = createPodOrderId();
         s.podOrders[podOrderId].amount = amount;
         s.podOrders[podOrderId].price = pricePerPod;
@@ -112,7 +106,7 @@ contract Marketplace {
     }
 
     function createPodOrderId() internal returns (bytes20 podOrderId) {
-        // Generate the Buy Offer Id from sender + block hash
+        // Generate the Buy Order Id from sender + block hash
         podOrderId = bytes20(keccak256(abi.encodePacked(msg.sender, blockhash(block.number - 1))));
         // Make sure this podOrderId has not been used before (could be in the same block).
         while (s.podOrders[podOrderId].price != 0) {

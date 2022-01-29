@@ -30,6 +30,10 @@ contract MockFieldFacet is FieldFacet {
         return amountPods;
     }
 
+    function deletePlot(address account, uint256 index) external returns (uint256) {
+        delete s.a[account].field.plots[index];
+    }
+
     function resetField() public {
 
         for (uint32 i = 0; i < mapToPlotIndex; i++) {

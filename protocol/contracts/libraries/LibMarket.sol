@@ -66,7 +66,7 @@ library LibMarket {
         if (toWallet) amount = buyExactTokens(buyBeanAmount, to);
         else {
             amount = buyExactTokens(buyBeanAmount, address(this));
-            s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(amount);
+            s.a[to].wrappedBeans = s.a[to].wrappedBeans.add(amount);
         }
     }
 
@@ -364,16 +364,16 @@ library LibMarket {
         if (toWallet) LibMarket.allocateBeansTo(amount, to);
         else {
             LibMarket.allocateBeansTo(amount, address(this));
-            s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(amount);
+            s.a[to].wrappedBeans = s.a[to].wrappedBeans.add(amount);
         }
     }
 
-    function transferBeans(address from, address to, uint256 amount, bool toWallet) internal {
+    function transferBeans(address to, uint256 amount, bool toWallet) internal {
 	    AppStorage storage s = LibAppStorage.diamondStorage();
         if (toWallet) IBean(s.c.bean).transferFrom(msg.sender, to, amount);
         else {
             IBean(s.c.bean).transferFrom(msg.sender, address(this), amount);
-            s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(amount);
+            s.a[to].wrappedBeans = s.a[to].wrappedBeans.add(amount);
         }
     }
 
