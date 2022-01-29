@@ -168,7 +168,7 @@ contract Storage {
         uint128 start;
         uint128 amount;
         uint24 price;
-        uint224 expiry;
+        uint224 maxHarvestableIndex;
         bool toWallet;
     }
 

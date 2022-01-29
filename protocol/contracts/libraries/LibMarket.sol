@@ -61,6 +61,15 @@ library LibMarket {
         return beanAmount;
     }
 
+    function buyExactTokensToWallet(uint256 buyBeanAmount, address to, bool toWallet) internal returns (uint256 amount) {
+	    AppStorage storage s = LibAppStorage.diamondStorage();
+        if (toWallet) amount = buyExactTokens(buyBeanAmount, to);
+        else {
+            amount = buyExactTokens(buyBeanAmount, address(this));
+            s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(amount);
+        }
+    }
+
     function buyExactTokens(uint256 buyBeanAmount, address to) internal returns (uint256 amount) {
         (uint256 ethAmount, uint256 beanAmount) = _buyExactTokens(buyBeanAmount, msg.value, to);
         (bool success,) = msg.sender.call{ value: msg.value.sub(ethAmount) }("");
@@ -137,7 +146,7 @@ library LibMarket {
 
     function addAndDepositLiquidity(AddLiquidity calldata al) internal returns (uint256) {
         DiamondStorage storage ds = diamondStorage();
-        allocatedBeans(al.beanAmount);
+        allocateBeans(al.beanAmount);
         (uint256 beans, uint256 liquidity) = addLiquidity(al);
         if (al.beanAmount > beans) IBean(ds.bean).transfer(msg.sender, al.beanAmount.sub(beans));
         return liquidity;
@@ -179,7 +188,7 @@ library LibMarket {
         (uint256 ethSold, uint256 beans) = _buyWithWETH(buyBeanAmount, amounts[0], address(this));
         // If beans bought does not cover the amount of money to move to LP
 	if (al.beanAmount > buyBeanAmount) {
-            allocatedBeans(al.beanAmount.sub(buyBeanAmount));
+            allocateBeans(al.beanAmount.sub(buyBeanAmount));
             beans = beans.add(al.beanAmount.sub(buyBeanAmount));
         }
         uint256 liquidity; uint256 ethAdded;
@@ -207,7 +216,7 @@ library LibMarket {
     {
         DiamondStorage storage ds = diamondStorage();
         uint256 sellBeans = _amountIn(buyWethAmount);
-        allocatedBeans(al.beanAmount.add(sellBeans));
+        allocateBeans(al.beanAmount.add(sellBeans));
         (uint256 beansSold, uint256 wethBought) = _sell(sellBeans, buyWethAmount, address(this));
         if (msg.value > 0) IWETH(ds.weth).deposit{value: msg.value}();
         (uint256 beans, uint256 ethAdded, uint256 liquidity) = _addLiquidityWETH(
@@ -350,11 +359,31 @@ library LibMarket {
         return amounts[0];
     }
 
-    function allocatedBeans(uint256 transferBeans) internal {
-        allocatedBeansTo(transferBeans, address(this));
+    function allocateBeansToWallet(uint256 amount, address to, bool toWallet) internal {
+	    AppStorage storage s = LibAppStorage.diamondStorage();
+        if (toWallet) LibMarket.allocateBeansTo(amount, to);
+        else {
+            LibMarket.allocateBeansTo(amount, address(this));
+            s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(amount);
+        }
     }
 
-    function allocatedBeansTo(uint256 transferBeans, address to) internal {
+    function transferBeans(address from, address to, uint256 amount, bool toWallet) internal {
+	    AppStorage storage s = LibAppStorage.diamondStorage();
+        if (toWallet) IBean(s.c.bean).transferFrom(msg.sender, to, amount);
+        else {
+            IBean(s.c.bean).transferFrom(msg.sender, address(this), amount);
+            s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(amount);
+        }
+    }
+
+    
+
+    function allocateBeans(uint256 transferBeans) internal {
+        allocateBeansTo(transferBeans, address(this));
+    }
+
+    function allocateBeansTo(uint256 transferBeans, address to) internal {
 	    AppStorage storage s = LibAppStorage.diamondStorage();
 
         uint wrappedBeans = s.a[msg.sender].wrappedBeans;

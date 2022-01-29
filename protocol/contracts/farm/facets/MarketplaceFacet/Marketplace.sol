@@ -29,7 +29,7 @@ contract Marketplace {
     // event PodOrderCancelled(address indexed account, bytes20 podOrderIndex);
     // event PodOrderFilled(address indexed from, address indexed to, bytes20 podOrderIndex, uint256 index, uint256 amount, uint24 pricePerPod);
 
-    event PodListingCreated(address indexed account, uint256 index, uint256 start, uint256 amount, uint24 pricePerPod, uint232 expiry, bool toWallet);
+    event PodListingCreated(address indexed account, uint256 index, uint256 start, uint256 amount, uint24 pricePerPod, uint232 maxHarvestableIndex, bool toWallet);
     event PodListingCancelled(address indexed account, uint256 index);
     event PodListingFilled(address indexed from, address indexed to, uint256 index, uint256 start, uint256 amount, uint24 pricePerPod);
     event PodOrderCreated(address indexed account, bytes20 orderId, uint256 amount, uint24 pricePerPod, uint232 maxPlaceInLine);
@@ -41,7 +41,7 @@ contract Marketplace {
         Storage.Listing storage l = s.podListings[index];
         require(l.price > 0, "Marketplace: Listing does not exist.");
         require(start == l.start && l.price == pricePerPod, "Marketplace: start/price must match listing.");
-        require(uint232(s.f.harvestable) <= l.expiry, "Marketplace: Listing has expired");
+        require(uint232(s.f.harvestable) <= l.maxHarvestableIndex, "Marketplace: Listing has expired");
 
         uint256 amount = (amountBeans * 1000000) / l.price;
         amount = roundAmount(from, index, start, amount, l.price);
@@ -66,7 +66,7 @@ contract Marketplace {
 
         uint256 lAmount = l.amount;
         if (lAmount == 0) lAmount = s.a[from].field.plots[index].sub(s.podListings[index].start);
-        require(lAmount >= amount, "Marketplace: Not enough pods in listing");
+        require(lAmount >= amount, "Marketplace: Not enough pods in listing.");
 
         if (lAmount > amount) {
             uint256 newIndex = index.add(amount).add(start);
@@ -85,7 +85,7 @@ contract Marketplace {
         emit PlotTransfer(from, to, index.add(start), amount);
     }
 
-    function __listOrder(uint232 maxPlaceInLine, uint24 pricePerPod, uint256 amount) internal  returns (bytes20 podOrderId) {
+    function __listOrder(uint256 amount, uint24 pricePerPod, uint232 maxPlaceInLine) internal  returns (bytes20 podOrderId) {
         require(amount > 0, "Marketplace: Must offer to buy non-zero amount");
         bytes20 podOrderId = createPodOrderId();
         s.podOrders[podOrderId].amount = amount;
