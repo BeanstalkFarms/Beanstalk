@@ -31,13 +31,13 @@ contract Marketplace {
     event PodOrderFilled(address indexed from, address indexed to, bytes20 orderId, uint256 index, uint256 start, uint256 amount);
     event PlotTransfer(address indexed from, address indexed to, uint256 indexed id, uint256 pods);
 
-    function _buyListing(address from, uint256 index, uint256 start, uint256 amountBeans, uint24 pricePerPod) internal {
+    function _buyListing(address from, uint256 index, uint256 start, uint256 beanAmount, uint24 pricePerPod) internal {
         Storage.Listing storage l = s.podListings[index];
         require(l.price > 0, "Marketplace: Listing does not exist.");
         require(start == l.start && l.price == pricePerPod, "Marketplace: start/price must match listing.");
         require(uint232(s.f.harvestable) <= l.maxHarvestableIndex, "Marketplace: Listing has expired");
 
-        uint256 amount = (amountBeans * 1000000) / l.price;
+        uint256 amount = (beanAmount * 1000000) / l.price;
         amount = roundAmount(from, index, start, amount, l.price);
 
         _fillListing(from, msg.sender, index, start, amount);
