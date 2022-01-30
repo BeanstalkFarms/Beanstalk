@@ -106,7 +106,7 @@ describe('Marketplace', function () {
 
       it('Lists Plot properly', async function () {
         const podListing = await this.marketplace.podListing(userAddress, 0);
-        expect(podListing.price).to.equal(500000);
+        expect(podListing.pricePerPod).to.equal(500000);
         expect(podListing.maxHarvestableIndex.toString()).to.equal('0');
         expect(podListing.amount.toString()).to.equal('1000');
         expect(podListing.start.toString()).to.equal('0');
@@ -125,7 +125,7 @@ describe('Marketplace', function () {
 
       it('Lists Plot properly', async function () {
         const podListing = await this.marketplace.podListing(userAddress, 0);
-        expect(podListing.price).to.equal(500000);
+        expect(podListing.pricePerPod).to.equal(500000);
         expect(podListing.maxHarvestableIndex.toString()).to.equal('0');
         expect(podListing.amount.toString()).to.equal('500');
         expect(podListing.start.toString()).to.equal('0');
@@ -144,7 +144,7 @@ describe('Marketplace', function () {
 
       it('Lists Plot properly', async function () {
         const podListing = await this.marketplace.podListing(userAddress, 0);
-        expect(podListing.price).to.equal(500000);
+        expect(podListing.pricePerPod).to.equal(500000);
         expect(podListing.maxHarvestableIndex.toString()).to.equal('2000');
         expect(podListing.amount.toString()).to.equal('500');
         expect(podListing.start.toString()).to.equal('500');
@@ -164,7 +164,7 @@ describe('Marketplace', function () {
 
       it('Lists Plot properly', async function () {
         const podListing = await this.marketplace.podListing(userAddress, 0);
-        expect(podListing.price).to.equal(500000);
+        expect(podListing.pricePerPod).to.equal(500000);
         expect(podListing.maxHarvestableIndex.toString()).to.equal('2000');
         expect(podListing.amount.toString()).to.equal('100');
         expect(podListing.start.toString()).to.equal('500');
@@ -239,7 +239,7 @@ describe('Marketplace', function () {
 
       it ('Deletes Pod Listing', async function () {
         const podListingDeleted = await this.marketplace.podListing(userAddress, 0);
-        expect(podListingDeleted.price.toString()).to.equal('0');
+        expect(podListingDeleted.pricePerPod.toString()).to.equal('0');
         expect(podListingDeleted.amount.toString()).to.equal('0');
       });
 
@@ -275,10 +275,10 @@ describe('Marketplace', function () {
 
       it ('Deletes Pod Listing', async function () {
         const podListingDeleted = await this.marketplace.podListing(userAddress, 0);
-        expect(podListingDeleted.price.toString()).to.equal('0');
+        expect(podListingDeleted.pricePerPod.toString()).to.equal('0');
         expect(podListingDeleted.amount.toString()).to.equal('0');
         const newPodListing = await this.marketplace.podListing(userAddress, 500);
-        expect(newPodListing.price.toString()).to.equal('500000');
+        expect(newPodListing.pricePerPod.toString()).to.equal('500000');
         expect(newPodListing.amount.toString()).to.equal('500');
       });
 
@@ -315,11 +315,11 @@ describe('Marketplace', function () {
 
       it ('Deletes Pod Listing', async function () {
         const podListingDeleted = await this.marketplace.podListing(userAddress, 0);
-        expect(podListingDeleted.price.toString()).to.equal('0');
+        expect(podListingDeleted.pricePerPod.toString()).to.equal('0');
         expect(podListingDeleted.amount.toString()).to.equal('0');
         const newPodListing = await this.marketplace.podListing(userAddress, 200);
         expect(newPodListing.start.toString()).to.equal('500');
-        expect(newPodListing.price.toString()).to.equal('500000');
+        expect(newPodListing.pricePerPod.toString()).to.equal('500000');
         expect(newPodListing.amount.toString()).to.equal('300');
       });
 
@@ -356,10 +356,10 @@ describe('Marketplace', function () {
 
       it ('Deletes Pod Listing', async function () {
         const podListingDeleted = await this.marketplace.podListing(userAddress, 0);
-        expect(podListingDeleted.price.toString()).to.equal('0');
+        expect(podListingDeleted.pricePerPod.toString()).to.equal('0');
         expect(podListingDeleted.amount.toString()).to.equal('0');
         const newPodListing = await this.marketplace.podListing(userAddress, 500);
-        expect(newPodListing.price.toString()).to.equal('500000');
+        expect(newPodListing.pricePerPod.toString()).to.equal('500000');
         expect(newPodListing.amount.toString()).to.equal('500');
       });
 
@@ -530,12 +530,12 @@ describe('Marketplace', function () {
     it('Re-list plot cancels and re-lists', async function () {
       await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', true);
       const podListing = await this.marketplace.podListing(userAddress, 0);
-      expect(podListing.price).to.equal(500000);
+      expect(podListing.pricePerPod).to.equal(500000);
       result = await this.marketplace.connect(user).createPodListing('0', '0', '1000', '200000', '2000', false);
       await expect(result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, '0', 0, 1000, 200000, 2000, false);
       await expect(result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, '0');
       const podListingRelisted = await this.marketplace.podListing(userAddress, 0);
-      expect(podListingRelisted.price).to.equal(200000);
+      expect(podListingRelisted.pricePerPod).to.equal(200000);
 
     });
 
@@ -547,11 +547,11 @@ describe('Marketplace', function () {
     it('Cancels Listing, Emits Listing Cancelled Event', async function () {
       await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '2000', true);
       const podListing = await this.marketplace.podListing(userAddress, 0);
-      expect(podListing.price).to.equal(500000);
+      expect(podListing.pricePerPod).to.equal(500000);
       expect(podListing.maxHarvestableIndex.toString()).to.equal('2000');
       result = (await this.marketplace.connect(user).cancelPodListing('0'));
       const podListingCancelled = await this.marketplace.podListing(userAddress, 0);
-      expect(podListingCancelled.price).to.equal(0);
+      expect(podListingCancelled.pricePerPod).to.equal(0);
       expect(result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, '0');
     });
   });
@@ -591,7 +591,7 @@ describe('Marketplace', function () {
           const order = await this.marketplace.podOrder(this.orderId)
           expect(order.owner).to.be.equal(userAddress);
           expect(order.amount).to.be.equal('5000');
-          expect(order.price).to.be.equal(100000);
+          expect(order.pricePerPod).to.be.equal(100000);
           expect(order.maxPlaceInLine).to.be.equal('1000');
         })
 
@@ -620,7 +620,7 @@ describe('Marketplace', function () {
           const order = await this.marketplace.podOrder(this.orderId)
           expect(order.owner).to.be.equal(userAddress);
           expect(order.amount).to.be.equal('2500');
-          expect(order.price).to.be.equal(100000);
+          expect(order.pricePerPod).to.be.equal(100000);
           expect(order.maxPlaceInLine).to.be.equal('1000');
         })
 
@@ -649,7 +649,7 @@ describe('Marketplace', function () {
           const order = await this.marketplace.podOrder(this.orderId)
           expect(order.owner).to.be.equal(userAddress);
           expect(order.amount).to.be.equal('3500');
-          expect(order.price).to.be.equal(100000);
+          expect(order.pricePerPod).to.be.equal(100000);
           expect(order.maxPlaceInLine).to.be.equal('1000');
         })
 
@@ -685,7 +685,7 @@ describe('Marketplace', function () {
             const order = await this.marketplace.podOrder(this.orderId)
             expect(order.owner).to.be.equal(userAddress);
             expect(order.amount).to.be.equal('2500');
-            expect(order.price).to.be.equal(100000);
+            expect(order.pricePerPod).to.be.equal(100000);
             expect(order.maxPlaceInLine).to.be.equal('1000');
           })
         })
@@ -710,7 +710,7 @@ describe('Marketplace', function () {
             const order = await this.marketplace.podOrder(this.orderId)
             expect(order.owner).to.be.equal(userAddress);
             expect(order.amount).to.be.equal('3000');
-            expect(order.price).to.be.equal(100000);
+            expect(order.pricePerPod).to.be.equal(100000);
             expect(order.maxPlaceInLine).to.be.equal('1000');
           })
         })
@@ -735,7 +735,7 @@ describe('Marketplace', function () {
             const order = await this.marketplace.podOrder(this.orderId)
             expect(order.owner).to.be.equal(userAddress);
             expect(order.amount).to.be.equal('1000');
-            expect(order.price).to.be.equal(100000);
+            expect(order.pricePerPod).to.be.equal(100000);
             expect(order.maxPlaceInLine).to.be.equal('1000');
           })
         })
@@ -761,7 +761,7 @@ describe('Marketplace', function () {
             const order = await this.marketplace.podOrder(this.orderId)
             expect(order.owner).to.be.equal(userAddress);
             expect(order.amount).to.be.equal('3500');
-            expect(order.price).to.be.equal(100000);
+            expect(order.pricePerPod).to.be.equal(100000);
             expect(order.maxPlaceInLine).to.be.equal('1000');
           })
         })
@@ -819,7 +819,7 @@ describe('Marketplace', function () {
         const order = await this.marketplace.podOrder(this.orderId);
         expect(order.owner).to.be.equal('0x0000000000000000000000000000000000000000');
         expect(order.amount).to.be.equal('0');
-        expect(order.price).to.be.equal(0);
+        expect(order.pricePerPod).to.be.equal(0);
         expect(order.maxPlaceInLine).to.be.equal('0');
       })
 
@@ -853,7 +853,7 @@ describe('Marketplace', function () {
         const order = await this.marketplace.podOrder(this.orderId);
         expect(order.owner).to.be.equal(userAddress);
         expect(order.amount).to.be.equal(250);
-        expect(order.price).to.be.equal(100000);
+        expect(order.pricePerPod).to.be.equal(100000);
         expect(order.maxPlaceInLine).to.be.equal('2500');
       })
 
@@ -887,7 +887,7 @@ describe('Marketplace', function () {
         const order = await this.marketplace.podOrder(this.orderId);
         expect(order.owner).to.be.equal('0x0000000000000000000000000000000000000000');
         expect(order.amount).to.be.equal('0');
-        expect(order.price).to.be.equal(0);
+        expect(order.pricePerPod).to.be.equal(0);
         expect(order.maxPlaceInLine).to.be.equal('0');
       })
 
@@ -922,13 +922,13 @@ describe('Marketplace', function () {
         const order = await this.marketplace.podOrder(this.orderId);
         expect(order.owner).to.be.equal('0x0000000000000000000000000000000000000000');
         expect(order.amount).to.be.equal('0');
-        expect(order.price).to.be.equal(0);
+        expect(order.pricePerPod).to.be.equal(0);
         expect(order.maxPlaceInLine).to.be.equal('0');
       })
 
       it('deletes the listing', async function () {
         const podListing = await this.marketplace.podListing(user2Address, '1000');
-        expect(podListing.price).to.equal(0);
+        expect(podListing.pricePerPod).to.equal(0);
         expect(podListing.maxHarvestableIndex.toString()).to.equal('0');
         expect(podListing.amount.toString()).to.equal('0');
         expect(podListing.start.toString()).to.equal('0');
@@ -965,7 +965,7 @@ describe('Marketplace', function () {
         const order = await this.marketplace.podOrder(this.orderId)
         expect(order.owner).to.be.equal('0x0000000000000000000000000000000000000000');
         expect(order.amount).to.be.equal('0');
-        expect(order.price).to.be.equal(0);
+        expect(order.pricePerPod).to.be.equal(0);
         expect(order.maxPlaceInLine).to.be.equal('0');
       });
 
@@ -993,7 +993,7 @@ describe('Marketplace', function () {
         const order = await this.marketplace.podOrder(this.orderId)
         expect(order.owner).to.be.equal('0x0000000000000000000000000000000000000000');
         expect(order.amount).to.be.equal('0');
-        expect(order.price).to.be.equal(0);
+        expect(order.pricePerPod).to.be.equal(0);
         expect(order.maxPlaceInLine).to.be.equal('0');
       });
 

@@ -34,13 +34,13 @@ contract MarketplaceFacet is Marketplace {
         require(0 < pricePerPod, "Marketplace: Pod price must be greater than 0.");
         uint232 harvestable = uint232(s.f.harvestable);
         require(harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
-        if (s.podListings[index].price > 0){
+        if (s.podListings[index].pricePerPod > 0){
             cancelPodListing(index);
         }
 
         s.podListings[index].start = start;
         if (plotSize > amount) s.podListings[index].amount = amount;
-        s.podListings[index].price = pricePerPod;
+        s.podListings[index].pricePerPod = pricePerPod;
         s.podListings[index].maxHarvestableIndex = maxHarvestableIndex;
         s.podListings[index].toWallet = toWallet;
 
@@ -49,7 +49,7 @@ contract MarketplaceFacet is Marketplace {
 
     function podListing(address owner, uint256 index) external view returns (Storage.Listing memory) {
         Storage.Listing memory listing = s.podListings[index];
-        if (listing.price > 0 && listing.amount == 0) {
+        if (listing.pricePerPod > 0 && listing.amount == 0) {
             listing.amount = uint128(s.a[owner].field.plots[index].sub(listing.start));
         }
        return listing;
@@ -128,7 +128,7 @@ contract MarketplaceFacet is Marketplace {
 
     function sellToPodOrder(bytes20 orderId, uint256 index, uint256 start, uint232 amount, bool toWallet) public  {
         Storage.Order storage order = s.podOrders[orderId];
-        uint24 price = order.price;
+        uint24 price = order.pricePerPod;
         address owner = order.owner;
         order.amount = order.amount.sub(amount);
         require(s.a[msg.sender].field.plots[index] >= (start + amount), "Marketplace: Invaid Plot.");
@@ -137,7 +137,7 @@ contract MarketplaceFacet is Marketplace {
         uint256 costInBeans = (price * amount) / 1000000;
         if (toWallet) bean().transfer(msg.sender, costInBeans);
         else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(costInBeans);
-        if (s.podListings[index].price > 0){
+        if (s.podListings[index].pricePerPod > 0){
             cancelPodListing(index);
         }
         _transferPlot(msg.sender, owner, index, start, amount);
@@ -151,7 +151,7 @@ contract MarketplaceFacet is Marketplace {
         Storage.Order storage order = s.podOrders[podOrderIndex];
         require(order.owner == msg.sender, "Marketplace: Buy Order not owned by user.");
         uint256 amount = order.amount;
-        uint256 price = order.price;
+        uint256 price = order.pricePerPod;
         uint256 costInBeans = (price * amount) / 1000000;
         if (toWallet) bean().transfer(msg.sender, costInBeans);
         else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(costInBeans);

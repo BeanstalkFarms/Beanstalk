@@ -78,7 +78,7 @@ contract FieldFacet is PodTransfer {
                 decrementAllowancePods(sender, msg.sender, amount);
         }
 
-        if (s.podListings[id].price > 0){
+        if (s.podListings[id].pricePerPod > 0){
             cancelPodOrder(id);
         }
 

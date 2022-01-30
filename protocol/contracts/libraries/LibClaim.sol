@@ -174,7 +174,7 @@ library LibClaim {
         require(pods > 0, "Claim: Plot is empty.");
         uint256 harvestablePods = s.f.harvestable.sub(plotId);
         delete s.a[account].field.plots[plotId];
-        if (s.podListings[plotId].price > 0){
+        if (s.podListings[plotId].pricePerPod > 0){
             cancelPodListing(plotId);
         }        
         if (harvestablePods >= pods) return pods;

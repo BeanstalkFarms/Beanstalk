@@ -33,12 +33,12 @@ contract Marketplace {
 
     function _buyListing(address from, uint256 index, uint256 start, uint256 beanAmount, uint24 pricePerPod) internal {
         Storage.Listing storage l = s.podListings[index];
-        require(l.price > 0, "Marketplace: Listing does not exist.");
-        require(start == l.start && l.price == pricePerPod, "Marketplace: start/price must match listing.");
+        require(l.pricePerPod > 0, "Marketplace: Listing does not exist.");
+        require(start == l.start && l.pricePerPod == pricePerPod, "Marketplace: start/price must match listing.");
         require(uint232(s.f.harvestable) <= l.maxHarvestableIndex, "Marketplace: Listing has expired");
 
-        uint256 amount = (beanAmount * 1000000) / l.price;
-        amount = roundAmount(from, index, start, amount, l.price);
+        uint256 amount = (beanAmount * 1000000) / l.pricePerPod;
+        amount = roundAmount(from, index, start, amount, l.pricePerPod);
 
         _fillListing(from, msg.sender, index, start, amount);
         _transferPlot(from, msg.sender, index, start, amount);
@@ -83,7 +83,7 @@ contract Marketplace {
         require(amount > 0, "Marketplace: Order amount must be > 0.");
         bytes20 podOrderId = createPodOrderId();
         s.podOrders[podOrderId].amount = amount;
-        s.podOrders[podOrderId].price = pricePerPod;
+        s.podOrders[podOrderId].pricePerPod = pricePerPod;
         s.podOrders[podOrderId].maxPlaceInLine = maxPlaceInLine;
         s.podOrders[podOrderId].owner = msg.sender;
         emit PodOrderCreated(msg.sender, podOrderId, amount, pricePerPod, maxPlaceInLine);
@@ -109,7 +109,7 @@ contract Marketplace {
         // Generate the Buy Order Id from sender + block hash
         podOrderId = bytes20(keccak256(abi.encodePacked(msg.sender, blockhash(block.number - 1))));
         // Make sure this podOrderId has not been used before (could be in the same block).
-        while (s.podOrders[podOrderId].price != 0) {
+        while (s.podOrders[podOrderId].pricePerPod != 0) {
             podOrderId = bytes20(keccak256(abi.encodePacked(podOrderId)));
         }
         return podOrderId;

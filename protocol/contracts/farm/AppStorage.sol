@@ -167,7 +167,7 @@ contract Storage {
     struct Listing {
         uint128 start;
         uint128 amount;
-        uint24 price;
+        uint24 pricePerPod;
         uint224 maxHarvestableIndex;
         bool toWallet;
     }
@@ -176,7 +176,7 @@ contract Storage {
         address owner;
         uint256 amount;
         uint232 maxPlaceInLine;
-        uint24 price;
+        uint24 pricePerPod;
     }
     
     struct Fundraiser {
