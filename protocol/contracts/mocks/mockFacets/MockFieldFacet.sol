@@ -69,7 +69,7 @@ contract MockFieldFacet is FieldFacet {
     function resetAllowances(address[] memory accounts) public {
         for (uint i = 0; i < accounts.length; i++) {
             for (uint j = 0; j < accounts.length; j++) {
-                setAllowancePods(accounts[i], accounts[j], 0);
+                s.a[accounts[i]].field.podAllowances[accounts[j]] = 0;
             }
         }
     }

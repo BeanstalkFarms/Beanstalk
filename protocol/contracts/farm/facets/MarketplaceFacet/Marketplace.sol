@@ -5,23 +5,20 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "../../AppStorage.sol";
 import "../../../interfaces/IBean.sol";
 import "../../../libraries/LibMarket.sol";
 import "../../../libraries/LibClaim.sol";
 import "../FieldFacet/FieldFacet.sol";
+import "./PodTransfer.sol";
 
 /**
  * @author Beanjoyer
  * @title Pod Marketplace v1
 **/
 
-contract Marketplace {
+contract Marketplace is PodTransfer {
 
     using SafeMath for uint256;
-
-    AppStorage internal s;
 
     event PodListingCreated(address indexed account, uint256 index, uint256 start, uint256 amount, uint24 pricePerPod, uint232 maxHarvestableIndex, bool toWallet);
     event PodListingCancelled(address indexed account, uint256 index);
@@ -29,7 +26,6 @@ contract Marketplace {
     event PodOrderCreated(address indexed account, bytes20 orderId, uint256 amount, uint24 pricePerPod, uint232 maxPlaceInLine);
     event PodOrderCancelled(address indexed account, bytes20 orderId);
     event PodOrderFilled(address indexed from, address indexed to, bytes20 orderId, uint256 index, uint256 start, uint256 amount);
-    event PlotTransfer(address indexed from, address indexed to, uint256 indexed id, uint256 pods);
 
     function _buyListing(address from, uint256 index, uint256 start, uint256 beanAmount, uint24 pricePerPod) internal {
         Storage.Listing storage l = s.podListings[index];
@@ -88,17 +84,6 @@ contract Marketplace {
         s.podOrders[podOrderId].owner = msg.sender;
         emit PodOrderCreated(msg.sender, podOrderId, amount, pricePerPod, maxPlaceInLine);
         return podOrderId;
-    }
-
-    function insertPlot(address account, uint256 id, uint256 amount) internal {
-        s.a[account].field.plots[id] = amount;
-    }
-
-    function removePlot(address account, uint256 id, uint256 start, uint256 end) internal {
-        uint256 amount = s.a[account].field.plots[id];
-        if (start == 0) delete s.a[account].field.plots[id];
-        else s.a[account].field.plots[id] = start;
-        if (end != amount) s.a[account].field.plots[id.add(end)] = amount.sub(end);
     }
 
     function bean() internal view returns (IBean) {

@@ -5,16 +5,22 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./BeanDibbler.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "../../AppStorage.sol";
 
 /**
  * @author Publius
  * @title Pod Transfer
 **/
-contract PodTransfer is BeanDibbler {
+contract PodTransfer {
+
+    AppStorage internal s;
 
     using SafeMath for uint256;
     using SafeMath for uint32;
+
+    event PlotTransfer(address indexed from, address indexed to, uint256 indexed id, uint256 pods);
+    event PodApproval(address indexed owner, address indexed spender, uint256 pods);
 
     /**
      * Getters
@@ -33,7 +39,7 @@ contract PodTransfer is BeanDibbler {
     }
 
     function removePlot(address account, uint256 id, uint256 start, uint256 end) internal {
-        uint256 amount = plot(account, id);
+        uint256 amount = s.a[account].field.plots[id];
         if (start == 0) delete s.a[account].field.plots[id];
         else s.a[account].field.plots[id] = start;
         if (end != amount) s.a[account].field.plots[id.add(end)] = amount.sub(end);

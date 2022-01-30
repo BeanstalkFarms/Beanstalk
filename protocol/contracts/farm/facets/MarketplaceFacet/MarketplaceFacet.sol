@@ -6,7 +6,6 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./Marketplace.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Beanjoyer
@@ -169,6 +168,38 @@ contract MarketplaceFacet is Marketplace {
     function allocateBeansToWallet(LibClaim.Claim calldata c, uint256 transferBeans, address to, bool toWallet) private {
         LibClaim.claim(c);
         LibMarket.allocateBeansToWallet(transferBeans, to, toWallet);
+    }
 
+    /*
+     * Transfer Plot
+     */
+
+     function transferPlot(address sender, address recipient, uint256 id, uint256 start, uint256 end)
+        external
+    {
+        require(sender != address(0), "Field: Transfer from 0 address.");
+        require(recipient != address(0), "Field: Transfer to 0 address.");
+        require(end > start, "Field: Pod range invalid.");
+        uint256 amount = s.a[msg.sender].field.plots[id];
+        require(amount > 0, "Field: Plot not owned by user.");
+        require(amount >= end, "Field: Pod range too long.");
+        amount = end.sub(start);
+        insertPlot(recipient,id.add(start),amount);
+        removePlot(sender,id,start,end);
+        if (msg.sender != sender && allowancePods(sender, msg.sender) != uint256(-1)) {
+                decrementAllowancePods(sender, msg.sender, amount);
+        }
+
+        if (s.podListings[id].pricePerPod > 0){
+            cancelPodListing(id);
+        }
+
+        emit PlotTransfer(sender, recipient, id.add(start), amount);
+    }
+
+    function approvePods(address spender, uint256 amount) external {
+        require(spender != address(0), "Field: Pod Approve to 0 address.");
+        setAllowancePods(msg.sender, spender, amount);
+        emit PodApproval(msg.sender, spender, amount);
     }
 }
