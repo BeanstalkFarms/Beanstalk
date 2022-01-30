@@ -79,7 +79,7 @@ contract Marketplace {
         emit PlotTransfer(from, to, index.add(start), amount);
     }
 
-    function __createOrder(uint256 amount, uint24 pricePerPod, uint232 maxPlaceInLine) internal  returns (bytes20 podOrderId) {
+    function __createPodOrder(uint256 amount, uint24 pricePerPod, uint232 maxPlaceInLine) internal  returns (bytes20 podOrderId) {
         require(amount > 0, "Marketplace: Order amount must be > 0.");
         bytes20 podOrderId = createPodOrderId();
         s.podOrders[podOrderId].amount = amount;

@@ -95,12 +95,12 @@ contract MarketplaceFacet is Marketplace {
 
     function createPodOrder(uint256 amountBeans, uint24 pricePerPod, uint232 maxPlaceInLine) public returns (bytes20 podOrderId) {
         bean().transferFrom(msg.sender, address(this), amountBeans);
-        return _createOrder(amountBeans, pricePerPod, maxPlaceInLine);
+        return _createPodOrder(amountBeans, pricePerPod, maxPlaceInLine);
     }
 
     function claimAndCreatePodOrder(uint256 amountBeans, uint24 pricePerPod, uint232 maxPlaceInLine, LibClaim.Claim calldata claim) public  returns (bytes20 podOrderId) {
         allocateBeans(claim, amountBeans, address(this));
-        return _createOrder(amountBeans, pricePerPod, maxPlaceInLine);
+        return _createPodOrder(amountBeans, pricePerPod, maxPlaceInLine);
     }
 
     function buyBeansAndCreatePodOrder(uint256 amountBeans, uint256 buyBeanAmount, uint24 pricePerPod, uint232 maxPlaceInLine) public payable returns (bytes20 podOrderId) {
@@ -115,13 +115,13 @@ contract MarketplaceFacet is Marketplace {
 
     function _buyBeansAndCreatePodOrder(uint256 amountBeans, uint256 buyBeanAmount, uint24 pricePerPod, uint232 maxPlaceInLine) internal returns (bytes20 podOrderId) {
         uint256 boughtBeanAmount = LibMarket.buyExactTokens(buyBeanAmount, address(this));
-        return _createOrder(amountBeans+boughtBeanAmount, pricePerPod, maxPlaceInLine);
+        return _createPodOrder(amountBeans+boughtBeanAmount, pricePerPod, maxPlaceInLine);
     }
 
-    function _createOrder(uint256 amountBeans, uint24 pricePerPod, uint232 maxPlaceInLine) internal returns (bytes20 podOrderId) {
+    function _createPodOrder(uint256 amountBeans, uint24 pricePerPod, uint232 maxPlaceInLine) internal returns (bytes20 podOrderId) {
         require(0 < pricePerPod, "Marketplace: Pod price must be greater than 0.");
         uint256 amount = (amountBeans * 1000000) / pricePerPod;
-        return  __createOrder(amount,pricePerPod, maxPlaceInLine);
+        return  __createPodOrder(amount,pricePerPod, maxPlaceInLine);
     }
 
     function podOrder(bytes20 podOrderIndex) public view returns (Storage.Order memory) {
