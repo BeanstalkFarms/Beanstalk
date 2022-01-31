@@ -9,7 +9,7 @@ import "./ConvertSilo.sol";
 import "../../../libraries/LibConvert.sol";
 import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibClaim.sol";
-import "../../AppStorage.sol";
+import "../../../libraries/Silo/LibLegacyLPSilo.sol";
 
 /**
  * @author Publius
@@ -33,10 +33,10 @@ contract ConvertFacet is ConvertSilo {
         (uint256 lp, uint256 beansConverted) = LibConvert.sellToPegAndAddLiquidity(beans, minLP);
         (uint256 beansRemoved, uint256 stalkRemoved) = _withdrawBeansForConvert(crates, amounts, beansConverted);
         require(beansRemoved == beansConverted, "Silo: Wrong Beans removed.");
-        uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(s.seedsPerBDV[s.c.pair])));
+        uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(s.ss[s.c.pair].seeds)));
         _s = getDepositSeason(_s);
 
-        _depositLP(lp, beansConverted, _s, set.toInternalBalance);
+        _depositLP(_s, lp, beansConverted, set.toInternalBalance);
         LibCheck.balanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }   
@@ -52,8 +52,31 @@ contract ConvertFacet is ConvertSilo {
         Storage.Settings memory set = defaultSettings();
         LibInternal.updateSilo(msg.sender);
         (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
-        (uint256 lpRemoved, uint256 stalkRemoved) = _withdrawLPForConvert(crates, amounts, lpConverted, set.fromInternalBalance);
-        require(lpRemoved == lpConverted, "Silo: Wrong LP removed.");
+        uint256 stalkRemoved = _withdrawLPForConvert(crates, amounts, lpConverted, set.fromInternalBalance);
+        uint32 _s = uint32(stalkRemoved.div(beans.mul(C.getSeedsPerBean())));
+        _s = getDepositSeason(_s);
+        _depositBeans(beans, _s, set.toInternalBalance);
+        LibCheck.balanceCheck();
+        LibSilo.updateBalanceOfRainStalk(msg.sender);
+    }
+
+    function convertDepositedLegacyLP(
+        uint256 lp,
+        uint256 minBeans,
+        uint32[] memory crates,
+        uint256[] memory amounts,
+        bool[] memory legacy
+    )
+        external
+    {
+        LibInternal.updateSilo(msg.sender);
+        (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
+        uint256 stalkRemoved = LibLegacyLPSilo.removeLPDepositsForConvert(
+            crates, 
+            amounts, 
+            legacy,
+            lpConverted
+        );
         uint32 _s = uint32(stalkRemoved.div(beans.mul(C.getSeedsPerBean())));
         _s = getDepositSeason(_s);
         _depositBeans(beans, _s, set.toInternalBalance);

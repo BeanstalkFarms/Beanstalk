@@ -124,7 +124,7 @@ describe('Convert', function () {
 
       it('properly updates user deposits', async function () {
         expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('47');
-        const lpDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, 2);
+        const lpDeposit = await this.silo.tokenDeposit(userAddress, this.pair.address, 2);
         expect(lpDeposit[0]).to.eq('1');
         expect(lpDeposit[1]).to.eq('953');
       });
@@ -133,7 +133,7 @@ describe('Convert', function () {
         await expect(this.result).to.emit(this.silo, 'BeanRemove')
           .withArgs(userAddress, [2], ['953'], '953');
         await expect(this.result).to.emit(this.silo, 'TokenDeposit')
-          .withArgs(this.pair.address, userAddress, 2, '1', '953');
+          .withArgs(userAddress, this.pair.address, 2, '1', '953');
       });
     });
 
@@ -154,7 +154,7 @@ describe('Convert', function () {
 
       it('properly updates user deposits', async function () {
         expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('18098');
-        const lpDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, 2);
+        const lpDeposit = await this.silo.tokenDeposit(userAddress, this.pair.address, 2);
         expect(lpDeposit[0]).to.eq('1');
         expect(lpDeposit[1]).to.eq('1902');
       });
@@ -163,7 +163,7 @@ describe('Convert', function () {
         await expect(this.result).to.emit(this.silo, 'BeanRemove')
           .withArgs(userAddress, [2], ['1902'], '1902');
         await expect(this.result).to.emit(this.silo, 'TokenDeposit')
-          .withArgs(this.pair.address, userAddress, 2, '1', '1902');
+          .withArgs(userAddress, this.pair.address, 2, '1', '1902');
       });
     });
 
@@ -185,7 +185,7 @@ describe('Convert', function () {
 
       it('properly updates user deposits', async function () {
         expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('47');
-        const lpDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, 3);
+        const lpDeposit = await this.silo.tokenDeposit(userAddress, this.pair.address, 3);
         expect(lpDeposit[0]).to.eq('1');
         expect(lpDeposit[1]).to.eq('953');
       });
@@ -194,7 +194,7 @@ describe('Convert', function () {
         await expect(this.result).to.emit(this.silo, 'BeanRemove')
           .withArgs(userAddress, [2], ['953'], '953');
         await expect(this.result).to.emit(this.silo, 'TokenDeposit')
-          .withArgs(this.pair.address, userAddress, 3, '1', '953');
+          .withArgs(userAddress, this.pair.address, 3, '1', '953');
       });
     });
 
@@ -217,7 +217,7 @@ describe('Convert', function () {
 
       it('properly updates user deposits', async function () {
         expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('47');
-        const lpDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, 3);
+        const lpDeposit = await this.silo.tokenDeposit(userAddress, this.pair.address, 3);
         expect(lpDeposit[0]).to.eq('1');
         expect(lpDeposit[1]).to.eq('953');
       });
@@ -226,7 +226,7 @@ describe('Convert', function () {
         await expect(this.result).to.emit(this.silo, 'BeanRemove')
           .withArgs(userAddress, [2], ['953'], '953');
         await expect(this.result).to.emit(this.silo, 'TokenDeposit')
-          .withArgs(this.pair.address, userAddress, 3, '1', '953');
+          .withArgs(userAddress, this.pair.address, 3, '1', '953');
       });
     });
 
@@ -249,7 +249,7 @@ describe('Convert', function () {
 
       it('properly updates user deposits', async function () {
         expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('500');
-        const lpDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, 3);
+        const lpDeposit = await this.silo.tokenDeposit(userAddress, this.pair.address, 3);
         expect(lpDeposit[0]).to.eq('1');
         expect(lpDeposit[1]).to.eq('953');
       });
@@ -258,7 +258,7 @@ describe('Convert', function () {
         await expect(this.result).to.emit(this.silo, 'BeanRemove')
           .withArgs(userAddress, [2,3], ['500','453'], '953');
         await expect(this.result).to.emit(this.silo, 'TokenDeposit')
-          .withArgs(this.pair.address, userAddress, 3, '1', '953');
+          .withArgs(userAddress, this.pair.address, 3, '1', '953');
       });
     });
   });
@@ -306,7 +306,7 @@ describe('Convert', function () {
 
       it('properly updates user deposits', async function () {
         expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('796');
-        const lpDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, 2);
+        const lpDeposit = await this.silo.tokenDeposit(userAddress, this.pair.address, 2);
         expect(lpDeposit[0]).to.eq('0');
         expect(lpDeposit[1]).to.eq('0');
       });
@@ -338,7 +338,7 @@ describe('Convert', function () {
 
       it('properly updates user deposits', async function () {
         expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('799');
-        const lpDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, 2);
+        const lpDeposit = await this.silo.tokenDeposit(userAddress, this.pair.address, 2);
         expect(lpDeposit[0]).to.eq('0');
         expect(lpDeposit[1]).to.eq('0');
       });
@@ -371,7 +371,7 @@ describe('Convert', function () {
 
       it('properly updates user deposits', async function () {
         expect(await this.silo.beanDeposit(userAddress, 3)).to.eq('1596');
-        const lpDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, 2);
+        const lpDeposit = await this.silo.tokenDeposit(userAddress, this.pair.address, 2);
         expect(lpDeposit[0]).to.eq('1');
         expect(lpDeposit[1]).to.eq('400');
       });
@@ -437,7 +437,7 @@ describe('Convert', function () {
       });
 
       it('properly deposits the lp crate', async function () {
-        const lpCrate = await this.silo.tokenDeposit(this.pair.address, userAddress, 2);
+        const lpCrate = await this.silo.tokenDeposit(userAddress, this.pair.address, 2);
         expect(lpCrate[0]).to.eq('1');
         expect(lpCrate[1]).to.eq('2000');
       });
@@ -464,7 +464,7 @@ describe('Convert', function () {
       });
 
       it('properly deposits the lp crate', async function () {
-        const lpCrate = await this.silo.tokenDeposit(this.pair.address, userAddress, 10);
+        const lpCrate = await this.silo.tokenDeposit(userAddress, this.pair.address, 10);
         expect(lpCrate[0]).to.eq('1');
         expect(lpCrate[1]).to.eq('2000');
       });
@@ -495,7 +495,7 @@ describe('Convert', function () {
       });
 
       it('properly deposits the lp crate', async function () {
-        const lpCrate = await this.silo.tokenDeposit(this.pair.address, userAddress, 11);
+        const lpCrate = await this.silo.tokenDeposit(userAddress, this.pair.address, 11);
         expect(lpCrate[0]).to.eq('1');
         expect(lpCrate[1]).to.eq('2000');
       });
@@ -536,7 +536,7 @@ describe('Convert', function () {
       });
 
       it('properly deposits the lp crate', async function () {
-        const lpCrate = await this.silo.tokenDeposit(this.pair.address, userAddress, 2);
+        const lpCrate = await this.silo.tokenDeposit(userAddress, this.pair.address, 2);
         expect(lpCrate[0]).to.eq('1');
         expect(lpCrate[1]).to.eq('2000');
       });
@@ -575,7 +575,7 @@ describe('Convert', function () {
       });
 
       it('properly deposits the lp crate', async function () {
-        const lpCrate = await this.silo.tokenDeposit(this.pair.address, userAddress, 10);
+        const lpCrate = await this.silo.tokenDeposit(userAddress, this.pair.address, 10);
         expect(lpCrate[0]).to.eq('1');
         expect(lpCrate[1]).to.eq('2000');
       });
@@ -615,7 +615,7 @@ describe('Convert', function () {
       });
 
       it('properly deposits the lp crate', async function () {
-        const lpCrate = await this.silo.tokenDeposit(this.pair.address, userAddress, 11);
+        const lpCrate = await this.silo.tokenDeposit(userAddress, this.pair.address, 11);
         expect(lpCrate[0]).to.eq('1');
         expect(lpCrate[1]).to.eq('2000');
       });

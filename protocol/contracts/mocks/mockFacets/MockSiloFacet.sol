@@ -15,6 +15,7 @@ import "../MockUniswapV2Pair.sol";
 **/
 contract MockSiloFacet is SiloFacet {
 
+    using SafeMath for uint32;
     using SafeMath for uint256;
 
     function depositSiloAssetsE(address account, uint256 base, uint256 amount, Storage.Settings calldata set) public {
@@ -177,5 +178,30 @@ contract MockSiloFacet is SiloFacet {
     function resetContract() public {
            seed().burn(seed().balanceOf(address(this)));
            LibStalk.burn(address(this), balanceOf(address(this)));
+    }
+}
+    function mockLegacySiloDeposit(uint32 _s, uint256 amount) public {
+        updateSilo(msg.sender);
+        pair().transferFrom(msg.sender, address(this), amount);
+        uint256 bdv = LibTokenSilo.beanDenominatedValue(s.c.pair, amount);
+        require(bdv > 0, "Silo: No Beans under Token.");
+        LibTokenSilo.incrementDepositedToken(s.c.pair, amount);
+        uint256 seeds = bdv.mul(4);
+        LibSilo.depositSiloAssets(msg.sender, seeds, bdv.mul(10000).add(season().sub(_s).mul(seeds)));
+
+        s.a[msg.sender].lp.deposits[_s] = amount;
+        s.a[msg.sender].lp.depositSeeds[_s] = bdv * 4;
+    }
+
+    function mockLegacyBeanWithdraw(uint32 _s, uint256 amount) external {
+        IBean(s.c.bean).transferFrom(msg.sender, address(this), amount);
+        s.a[msg.sender].bean.withdrawals[_s] = s.a[msg.sender].bean.withdrawals[_s].add(amount);
+        s.siloBalances[IERC20(s.c.bean)].withdrawn = s.siloBalances[IERC20(s.c.bean)].withdrawn.add(amount);
+    }
+
+    function mockLegacyLPWithdraw(uint32 _s, uint256 amount) external {
+        IUniswapV2Pair(s.c.pair).transferFrom(msg.sender, address(this), amount);
+        s.a[msg.sender].lp.withdrawals[_s] = amount;
+        s.siloBalances[IERC20(s.c.pair)].withdrawn = s.siloBalances[IERC20(s.c.pair)].withdrawn.add(amount);
     }
 }

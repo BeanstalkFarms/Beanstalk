@@ -194,6 +194,12 @@ contract Storage {
     }
 }
 
+struct SiloSettings {
+    bytes4 selector;
+    uint32 seeds;
+    uint32 stalk;
+}
+
 struct AppStorage {
     uint8 index;
     int8[32] cases;
@@ -232,4 +238,5 @@ struct AppStorage {
     Storage.Stalk stalkToken;
     address seedContract;
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
+    mapping(address => SiloSettings) ss;
 }

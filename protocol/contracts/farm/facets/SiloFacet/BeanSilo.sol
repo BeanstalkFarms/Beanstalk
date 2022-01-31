@@ -36,7 +36,7 @@ contract BeanSilo is TokenSilo {
         return s.a[account].bean.deposits[id];
     }
 
-    function beanWithdrawal(address account, uint32 i) public view returns (uint256) {
+    function legacyBeanWithdrawal(address account, uint32 i) public view returns (uint256) {
             return s.a[account].bean.withdrawals[i];
     }
 
@@ -83,8 +83,8 @@ contract BeanSilo is TokenSilo {
     }
 
     function addBeanWithdrawal(address account, uint32 arrivalSeason, uint256 amount) private {
-        s.a[account].bean.withdrawals[arrivalSeason] = s.a[account].bean.withdrawals[arrivalSeason].add(amount);
-        s.bean.withdrawn = s.bean.withdrawn.add(amount);
+        s.a[account].withdrawals[IERC20(s.c.bean)][arrivalSeason] = s.a[account].withdrawals[IERC20(s.c.bean)][arrivalSeason].add(amount);
+        s.siloBalances[IERC20(s.c.bean)].withdrawn = s.siloBalances[IERC20(s.c.bean)].withdrawn.add(amount);
         emit BeanWithdraw(msg.sender, arrivalSeason, amount);
     }
 

@@ -67,7 +67,7 @@ describe('Generalized Silo V2', function () {
       });
   
       it('properly adds the crate', async function () {
-        const tokenDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, 2);
+        const tokenDeposit = await this.silo.tokenDeposit(userAddress, this.pair.address, 2);
         expect(tokenDeposit[0]).to.be.equal('1');
         expect(tokenDeposit[1]).to.be.equal('2000');
       })
@@ -84,7 +84,7 @@ describe('Generalized Silo V2', function () {
       })
   
       it('emits Deposit event', async function () {
-        await expect(this.result).to.emit(this.silo, 'TokenDeposit').withArgs(this.pair.address, userAddress, 2, '1', '2000');
+        await expect(this.result).to.emit(this.silo, 'TokenDeposit').withArgs(userAddress, this.pair.address, 2, '1', '2000');
       });
     });
   });
@@ -103,7 +103,7 @@ describe('Generalized Silo V2', function () {
       });
 
       it('properly removes the deposit', async function () {
-        const tokenDeposit = await this.silo.tokenWithdrawal(this.pair.address, userAddress, 27);
+        const tokenDeposit = await this.silo.tokenWithdrawal(userAddress, this.pair.address, 27);
         expect(tokenDeposit).to.be.equal('1');
       });
 
@@ -120,8 +120,8 @@ describe('Generalized Silo V2', function () {
       })
   
       it('emits Deposit event', async function () {
-        await expect(this.result).to.emit(this.silo, 'TokenRemove').withArgs(this.pair.address, userAddress, [2], ['1'], '1');
-        await expect(this.result).to.emit(this.silo, 'TokenWithdraw').withArgs(this.pair.address, userAddress, 27, '1');
+        await expect(this.result).to.emit(this.silo, 'TokenRemove').withArgs(userAddress, this.pair.address, [2], ['1'], '1');
+        await expect(this.result).to.emit(this.silo, 'TokenWithdraw').withArgs(userAddress, this.pair.address, 27, '1');
       });
     });
   });
