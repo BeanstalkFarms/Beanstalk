@@ -36,12 +36,12 @@ library LibSilo {
         decrementBalanceOfSeeds(account, seeds, fromInternalBalance);
     }
 
-    function convertSiloAssets(address account, int256 seeds, int256 stalk, bool toInternalBalance) internal {
+    function convertSiloAssets(address account, int256 seeds, int256 stalk, bool toInternalBalance, bool fromInternalBalance) internal {
         if (seeds > 0) incrementBalanceOfSeeds(account, uint256(seeds), toInternalBalance);
-        else decrementBalanceOfSeeds(account, uint256(seeds), toInternalBalance);
+        else decrementBalanceOfSeeds(account, uint256(seeds), fromInternalBalance);
 
         if (stalk > 0) incrementBalanceOfStalk(account, uint256(stalk), toInternalBalance);
-        else decrementBalanceOfStalk(account, uint256(seeds), toInternalBalance);
+        else decrementBalanceOfStalk(account, uint256(seeds), fromInternalBalance);
     }
 
     function incrementBalanceOfSeeds(address account, uint256 seeds, bool toInternalBalance) private {

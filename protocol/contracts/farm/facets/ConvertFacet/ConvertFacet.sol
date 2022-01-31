@@ -124,7 +124,7 @@ contract ConvertFacet is ConvertSilo {
         public
         payable
     {
-        _convertAddAndDepositBeansAndCirculatingSeedStalk(beans, al, crates, amounts, set.toInternalBalance);
+        _convertAddAndDepositBeansAndCirculatingSeedStalk(beans, al, crates, amounts, set.toInternalBalance, set.fromInternalBalance);
     }
 
     function lpToPeg() external view returns (uint256 lp) {
