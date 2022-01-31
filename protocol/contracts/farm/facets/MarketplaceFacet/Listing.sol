@@ -95,7 +95,7 @@ contract Listing is PodTransfer {
         Storage.Listing storage l = s.podListings[index];
         require(l.pricePerPod > 0, "Marketplace: Listing does not exist.");
         require(start == l.start && l.pricePerPod == pricePerPod, "Marketplace: start/price must match listing.");
-        require(uint232(s.f.harvestable) <= l.maxHarvestableIndex, "Marketplace: Listing has expired");
+        require(uint232(s.f.harvestable) <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
 
         uint256 amount = (beanAmount * 1000000) / l.pricePerPod;
         amount = roundAmount(from, index, start, amount, l.pricePerPod);
@@ -115,7 +115,7 @@ contract Listing is PodTransfer {
 
         uint256 lAmount = l.amount;
         if (lAmount == 0) lAmount = s.a[from].field.plots[index].sub(s.podListings[index].start);
-        require(lAmount >= amount, "Marketplace: Not enough pods in listing.");
+        require(lAmount >= amount, "Marketplace: Not enough pods in Listing.");
 
         if (lAmount > amount) {
             uint256 newIndex = index.add(amount);
@@ -133,7 +133,7 @@ contract Listing is PodTransfer {
      */
 
     function _cancelPodListing(uint256 index) internal {
-        require(s.a[msg.sender].field.plots[index] > 0, "Marketplace: Listing not owned by user.");
+        require(s.a[msg.sender].field.plots[index] > 0, "Marketplace: Listing not owned by sender.");
         delete s.podListings[index];
         emit PodListingCancelled(msg.sender, index);
     }

@@ -199,16 +199,16 @@ describe('Marketplace', function () {
 
         it('Fill Listing after expired', async function () {
           await this.field.incrementTotalHarvestableE('2000');
-          await expect(this.marketplace.connect(user2).fillPodListing(userAddress, 0, 0, 500, '500000')).to.be.revertedWith('Marketplace: Listing has expired');
+          await expect(this.marketplace.connect(user2).fillPodListing(userAddress, 0, 0, 500, '500000')).to.be.revertedWith('Marketplace: Listing has expired.');
         })
 
         it('Fill Listing not enough pods in plot', async function () {
-          await expect(this.marketplace.connect(user2).fillPodListing(userAddress, 0, 0, 501, '500000')).to.be.revertedWith('Marketplace: Not enough pods in listing.');
+          await expect(this.marketplace.connect(user2).fillPodListing(userAddress, 0, 0, 501, '500000')).to.be.revertedWith('Marketplace: Not enough pods in Listing');
         })
 
         it('Fill Listing not enough pods in listing', async function () {
           await this.marketplace.connect(user).createPodListing('0', '0', '500', '500000', '0', false);
-          await expect(this.marketplace.connect(user2).fillPodListing(userAddress, 0, 0, 500, '500000')).to.be.revertedWith('Marketplace: Not enough pods in listing');
+          await expect(this.marketplace.connect(user2).fillPodListing(userAddress, 0, 0, 500, '500000')).to.be.revertedWith('Marketplace: Not enough pods in Listing.');
         })
       })
 
@@ -535,7 +535,7 @@ describe('Marketplace', function () {
 
       it('Reverts on Cancel Listing, not owned by user', async function () {
         await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', true);
-        await expect(this.marketplace.connect(user2).cancelPodListing('0')).to.be.revertedWith('Marketplace: Listing not owned by user.');
+        await expect(this.marketplace.connect(user2).cancelPodListing('0')).to.be.revertedWith('Marketplace: Listing not owned by sender.');
       })
 
       it('Cancels Listing, Emits Listing Cancelled Event', async function () {
@@ -767,11 +767,11 @@ describe('Marketplace', function () {
 
       describe("revert", async function () {
         it("owner does not own plot", async function () {
-          await expect(this.marketplace.fillPodOrder(this.id, 0, 0, 500, false)).to.revertedWith("Marketplace: Invaid Plot.");
+          await expect(this.marketplace.fillPodOrder(this.id, 0, 0, 500, false)).to.revertedWith("Marketplace: Invalid Plot.");
         })
 
         it("plot amount too large", async function () {
-          await expect(this.marketplace.connect(user2).fillPodOrder(this.id, 1000, 700, 500, false)).to.revertedWith("Marketplace: Invaid Plot.");
+          await expect(this.marketplace.connect(user2).fillPodOrder(this.id, 1000, 700, 500, false)).to.revertedWith("Marketplace: Invalid Plot.");
         })
 
         it("plot amount too large", async function () {

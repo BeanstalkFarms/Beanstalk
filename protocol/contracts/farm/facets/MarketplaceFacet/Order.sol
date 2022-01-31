@@ -11,7 +11,6 @@ import "./Listing.sol";
  * @author Beanjoyer
  * @title Pod Marketplace v1
 **/
-
 contract Order is Listing {
 
     using SafeMath for uint256;
@@ -87,7 +86,7 @@ contract Order is Listing {
         uint24 price = order.pricePerPod;
         address owner = order.owner;
         order.amount = order.amount.sub(amount);
-        require(s.a[msg.sender].field.plots[index] >= (start + amount), "Marketplace: Invaid Plot.");
+        require(s.a[msg.sender].field.plots[index] >= (start + amount), "Marketplace: Invalid Plot.");
         uint256 placeInLineEndPlot = index + start + amount - s.f.harvestable;
         require(placeInLineEndPlot <= order.maxPlaceInLine, "Marketplace: Plot too far in line.");
         uint256 costInBeans = (price * amount) / 1000000;
