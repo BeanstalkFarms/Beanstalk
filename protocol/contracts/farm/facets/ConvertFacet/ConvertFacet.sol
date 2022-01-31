@@ -28,7 +28,7 @@ contract ConvertFacet is ConvertSilo {
     )
         external 
     {
-        Storage.Settings memory set = LibToolShed.defaultSettings();
+        Storage.Settings memory set = defaultSettings();
         LibInternal.updateSilo(msg.sender);
         (uint256 lp, uint256 beansConverted) = LibConvert.sellToPegAndAddLiquidity(beans, minLP);
         (uint256 beansRemoved, uint256 stalkRemoved) = _withdrawBeansForConvert(crates, amounts, beansConverted);
@@ -49,7 +49,7 @@ contract ConvertFacet is ConvertSilo {
     )
         external
     {
-        Storage.Settings memory set = LibToolShed.defaultSettings();
+        Storage.Settings memory set = defaultSettings();
         LibInternal.updateSilo(msg.sender);
         (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
         uint256 stalkRemoved = _withdrawLPForConvert(crates, amounts, lpConverted, set.fromInternalBalance);
@@ -96,7 +96,7 @@ contract ConvertFacet is ConvertSilo {
         external
         payable
     {
-        Storage.Settings memory set = LibToolShed.defaultSettings();
+        Storage.Settings memory set = defaultSettings();
         LibClaim.claim(claim);
         _convertAddAndDepositLP(lp, al, crates, amounts, set.toInternalBalance);
     }
@@ -110,7 +110,7 @@ contract ConvertFacet is ConvertSilo {
         public
         payable
     {
-        Storage.Settings memory set = LibToolShed.defaultSettings();
+        Storage.Settings memory set = defaultSettings();
         _convertAddAndDepositLP(lp, al, crates, amounts, set.toInternalBalance);
     }
 

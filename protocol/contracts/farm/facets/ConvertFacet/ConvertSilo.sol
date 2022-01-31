@@ -109,7 +109,7 @@ contract ConvertSilo is ToolShed {
         if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
 	
         lp = lp.add(w.newLP);
-        _deposit(lp, LibTokenSilo.beanDenominatedValue(s.c.pair, lp), depositSeason, toInternalBalance);
+        _deposit(depositSeason, lp, LibTokenSilo.beanDenominatedValue(s.c.pair, lp), toInternalBalance);
         LibCheck.beanBalanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
@@ -195,7 +195,6 @@ contract ConvertSilo is ToolShed {
             amounts[i] = 0;
             i++;
         }
-        seedsRemoved = bdvRemoved.mul(s.seedsPerBDV[s.c.pair]);
         LibTokenSilo.decrementDepositedToken(s.c.pair, lpRemoved);
         LibSilo.withdrawSiloAssets(msg.sender, bdvRemoved.mul(s.ss[s.c.pair].seeds), stalkRemoved.add(bdvRemoved.mul(s.ss[s.c.pair].stalk)), fromInternalBalance);
         emit TokenRemove(s.c.pair, msg.sender, crates, amounts, lpRemoved);
