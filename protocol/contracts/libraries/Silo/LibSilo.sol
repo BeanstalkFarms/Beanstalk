@@ -41,7 +41,7 @@ library LibSilo {
         else decrementBalanceOfSeeds(account, uint256(seeds), fromInternalBalance);
 
         if (stalk > 0) incrementBalanceOfStalk(account, uint256(stalk), toInternalBalance);
-        else decrementBalanceOfStalk(account, uint256(seeds), fromInternalBalance);
+        else decrementBalanceOfStalk(account, uint256(stalk), fromInternalBalance);
     }
 
     function incrementBalanceOfSeeds(address account, uint256 seeds, bool toInternalBalance) private {

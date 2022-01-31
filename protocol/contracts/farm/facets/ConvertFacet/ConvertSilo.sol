@@ -36,6 +36,10 @@ contract ConvertSilo is ToolShed {
         uint256 beansRemoved;
         uint256 stalkRemoved;
         uint256 i;
+        uint256 grossAddedStalk;
+        uint256 grossAddedSeeds;
+        int256 netStalk;
+        int256 netSeeds;
     }
 
     function _convertAddAndDepositLP(
@@ -114,12 +118,12 @@ contract ConvertSilo is ToolShed {
         if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
 	
         lp = lp.add(w.newLP);
-        (uint256 stalk_to_deposit, uint256 seeds_to_deposit) = __deposit(depositSeason, lp, LibTokenSilo.beanDenominatedValue(s.c.pair, lp), toInternalBalance);
+        (w.grossAddedStalk, w.grossAddedSeeds) = __deposit(depositSeason, lp, LibTokenSilo.beanDenominatedValue(s.c.pair, lp));
         // Net Total Up Actual Deposited Stalk and Seeds
-        int256 net_stalk = int256(stalk_to_deposit) - int256(stalk_to_remove);
-        int256 net_seeds = int256(seeds_to_deposit) - int256(w.beansRemoved.mul(C.getSeedsPerBean()));
+        w.netStalk = int256(w.grossAddedStalk) - int256(stalk_to_remove);
+        w.netSeeds = int256(w.grossAddedSeeds) - int256(w.beansRemoved.mul(C.getSeedsPerBean()));
         // Increment and Decrement Silo Assets
-        LibSilo.convertSiloAssets(msg.sender, net_seeds, net_stalk, toInternalBalance, fromInternalBalance);
+        LibSilo.convertSiloAssets(msg.sender, w.netSeeds,  w.netStalk, toInternalBalance, fromInternalBalance);
         
         LibCheck.beanBalanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
@@ -138,9 +142,9 @@ contract ConvertSilo is ToolShed {
         returns(uint256 stalk_to_deposit, uint256 seeds_to_deposit) 
     {
         LibTokenSilo.depositWithBDV(msg.sender, s.c.pair, _s, amount, lpb);
-        uint256 seeds = lpb.mul(s.ss[s.c.pair].seeds);
-        uint256 stalk = lpb.mul(s.ss[s.c.pair].stalk);
-        if (_s > 0) stalk = stalk.add((season().sub(_s)).mul(seeds));
+        uint256 seeds_to_deposit = lpb.mul(s.ss[s.c.pair].seeds);
+        uint256 stalk_to_deposit = lpb.mul(s.ss[s.c.pair].stalk);
+        if (_s > 0) stalk_to_deposit = stalk_to_deposit.add((season().sub(_s)).mul(seeds_to_deposit));
     }
 
     function _deposit(uint32 _s, uint256 amount, uint256 lpb, bool toInternalBalance) internal {
@@ -266,7 +270,7 @@ contract ConvertSilo is ToolShed {
             if (beans_to_remove.add(amounts[i]) < maxBeans) crateBeans = LibBeanSilo.removeBeanDeposit(msg.sender, crates[i], amounts[i]);
             else crateBeans = LibBeanSilo.removeBeanDeposit(msg.sender, crates[i], maxBeans.sub(beans_to_remove));
             beans_to_remove = beans_to_remove.add(crateBeans);
-            stalkRemoved = stalkRemoved.add(crateBeans.mul(C.getStalkPerBean()).add(
+            stalk_to_remove = stalk_to_remove.add(crateBeans.mul(C.getStalkPerBean()).add(
                 LibSilo.stalkReward(crateBeans.mul(C.getSeedsPerBean()), season()-crates[i]
             )));
             i++;
