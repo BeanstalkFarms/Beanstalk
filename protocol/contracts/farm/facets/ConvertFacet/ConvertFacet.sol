@@ -69,13 +69,15 @@ contract ConvertFacet is ConvertSilo {
     )
         external
     {
+        Storage.Settings memory set = defaultSettings();
         LibInternal.updateSilo(msg.sender);
         (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
         uint256 stalkRemoved = LibLegacyLPSilo.removeLPDepositsForConvert(
             crates, 
             amounts, 
             legacy,
-            lpConverted
+            lpConverted,
+            set.fromInternalBalance
         );
         uint32 _s = uint32(stalkRemoved.div(beans.mul(C.getSeedsPerBean())));
         _s = getDepositSeason(_s);

@@ -18,7 +18,8 @@ contract MockSiloFacet is SiloFacet {
     using SafeMath for uint32;
     using SafeMath for uint256;
 
-    function depositSiloAssetsE(address account, uint256 base, uint256 amount, Storage.Settings calldata set) public {
+    function depositSiloAssetsE(address account, uint256 base, uint256 amount) public {
+        Storage.Settings memory set = defaultSettings();
         updateSilo(account, set.toInternalBalance, set.lightUpdateSilo);
         LibSilo.depositSiloAssets(account, base, amount, set.toInternalBalance);
     }
@@ -51,7 +52,8 @@ contract MockSiloFacet is SiloFacet {
         LibSilo.incrementBalanceOfStalk(account, amount, toInternalBalance);
     }
 
-    function withdrawSiloAssetsE(address account, uint256 base, uint256 amount, Storage.Settings calldata set) public {
+    function withdrawSiloAssetsE(address account, uint256 base, uint256 amount) public {
+        Storage.Settings memory set = defaultSettings();    
         updateSilo(account, set.toInternalBalance, set.lightUpdateSilo);
         LibSilo.withdrawSiloAssets(account, base, amount, set.fromInternalBalance);
     }
@@ -179,15 +181,16 @@ contract MockSiloFacet is SiloFacet {
            seed().burn(seed().balanceOf(address(this)));
            LibStalk.burn(address(this), balanceOf(address(this)));
     }
-}
+
     function mockLegacySiloDeposit(uint32 _s, uint256 amount) public {
-        updateSilo(msg.sender);
+        Storage.Settings memory set = defaultSettings();
+        updateSilo(msg.sender, set.toInternalBalance, set.lightUpdateSilo);
         pair().transferFrom(msg.sender, address(this), amount);
         uint256 bdv = LibTokenSilo.beanDenominatedValue(s.c.pair, amount);
         require(bdv > 0, "Silo: No Beans under Token.");
         LibTokenSilo.incrementDepositedToken(s.c.pair, amount);
         uint256 seeds = bdv.mul(4);
-        LibSilo.depositSiloAssets(msg.sender, seeds, bdv.mul(10000).add(season().sub(_s).mul(seeds)));
+        LibSilo.depositSiloAssets(msg.sender, seeds, bdv.mul(10000).add(season().sub(_s).mul(seeds)), set.toInternalBalance);
 
         s.a[msg.sender].lp.deposits[_s] = amount;
         s.a[msg.sender].lp.depositSeeds[_s] = bdv * 4;

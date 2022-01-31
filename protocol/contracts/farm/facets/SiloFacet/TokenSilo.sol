@@ -63,7 +63,7 @@ contract TokenSilo is UpdateSilo {
     **/
 
     function _deposit(address token, uint256 amount, Storage.Settings memory set) internal {
-        updateSilo(msg.sender);
+        updateSilo(msg.sender, set.toInternalBalance, set.lightUpdateSilo);
         uint256 bdv = LibTokenSilo.deposit(msg.sender, token, season(), amount);
         LibSilo.depositSiloAssets(msg.sender, bdv.mul(s.ss[token].seeds), bdv.mul(s.ss[token].stalk), set.toInternalBalance);
     }

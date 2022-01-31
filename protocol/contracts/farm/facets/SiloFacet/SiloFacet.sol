@@ -181,8 +181,9 @@ contract SiloFacet is BeanSilo {
     )
         external
     {
+        Storage.Settings memory set = defaultSettings();
         LibClaim.claim(claim);
-        LibLegacyLPSilo.withdrawLegacyLP(crates, amounts, legacy);
+        LibLegacyLPSilo.withdrawLegacyLP(crates, amounts, legacy, set.fromInternalBalance);
     }
 
     function withdrawLegacyLP(
@@ -192,7 +193,8 @@ contract SiloFacet is BeanSilo {
     )
         external
     {
-        LibLegacyLPSilo.withdrawLegacyLP(crates, amounts, legacy);
+        Storage.Settings memory set = defaultSettings();
+        LibLegacyLPSilo.withdrawLegacyLP(crates, amounts, legacy, set.fromInternalBalance);
     }
 
     /*

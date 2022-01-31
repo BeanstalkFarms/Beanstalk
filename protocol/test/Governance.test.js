@@ -72,13 +72,13 @@ describe('Governance', function () {
     await this.silo.resetSeedsAndStalk([userAddress, ownerAddress])
     await this.season.resetState();
     await this.season.siloSunrise(0);
-    await this.silo.depositSiloAssetsE(userAddress, '500', '1000000', [false, false, false]);
-    await this.silo.depositSiloAssetsE(ownerAddress, '500', '1000000', [false, false, false]);
+    await this.silo.depositSiloAssetsE(userAddress, '500', '1000000');
+    await this.silo.depositSiloAssetsE(ownerAddress, '500', '1000000');
   });
 
   describe('vote', function () {
     beforeEach(async function () {
-      await this.silo.depositSiloAssetsE(user3Address, '500', '1000000', [false, false, false]);
+      await this.silo.depositSiloAssetsE(user3Address, '500', '1000000');
       await propose(owner, this.governance, this.bip);
       await propose(owner, this.governance, this.bip);
       await propose(owner, this.governance, this.bip);
@@ -220,7 +220,7 @@ describe('Governance', function () {
 
       await this.governance.connect(user).vote(1);
 
-      await this.silo.withdrawSiloAssetsE(userAddress, '500', '500000', [false, false, false]);
+      await this.silo.withdrawSiloAssetsE(userAddress, '500', '500000');
     });
 
     it('reverts when owner withdraws too much', async function () {
@@ -244,23 +244,23 @@ describe('Governance', function () {
     })
 
     it('roots and stalk are correct after one deposit and withdrawal', async function () {
-      await this.silo.depositSiloAssetsE(userAddress, '500', '1000000', [false, false, false]);
-      await this.silo.withdrawSiloAssetsE(userAddress, '500', '1000000', [false, false, false]);
+      await this.silo.depositSiloAssetsE(userAddress, '500', '1000000');
+      await this.silo.withdrawSiloAssetsE(userAddress, '500', '1000000');
       expect(await this.silo.balanceOf(userAddress)).to.eq('500000');
     })
 
     it('roots and stalk are correct after many deposits and withdrawals', async function () {
-      await this.silo.depositSiloAssetsE(userAddress, '500', '1000000', [false, false, false]);
-      await this.silo.depositSiloAssetsE(userAddress, '1000', '1000000', [false, false, false]);
-      await this.silo.withdrawSiloAssetsE(userAddress, '500', '500000', [false, false, false]);
-      await this.silo.withdrawSiloAssetsE(userAddress, '500', '500000', [false, false, false]);
-      await this.silo.withdrawSiloAssetsE(userAddress, '500', '500000', [false, false, false]);
+      await this.silo.depositSiloAssetsE(userAddress, '500', '1000000');
+      await this.silo.depositSiloAssetsE(userAddress, '1000', '1000000');
+      await this.silo.withdrawSiloAssetsE(userAddress, '500', '500000');
+      await this.silo.withdrawSiloAssetsE(userAddress, '500', '500000');
+      await this.silo.withdrawSiloAssetsE(userAddress, '500', '500000');
       expect(await this.governance.rootsFor(1)).to.be.equal(await this.silo.totalRoots());
       expect(await this.silo.balanceOf(userAddress)).to.eq('1000000');
     })
 
     it('roots and stalk are correct after proposer withdraws under the min required for a bip', async function () {
-      await this.silo.withdrawSiloAssetsE(ownerAddress, '500', '500000', [false, false, false]);
+      await this.silo.withdrawSiloAssetsE(ownerAddress, '500', '500000');
       expect(await this.silo.balanceOf(userAddress)).to.eq('500000');
       expect(await this.governance.rootsFor(0)).to.be.equal(await this.silo.balanceOfRoots(ownerAddress));
     })

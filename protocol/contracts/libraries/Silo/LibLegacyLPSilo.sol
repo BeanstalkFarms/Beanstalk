@@ -30,14 +30,14 @@ library LibLegacyLPSilo {
         uint256 seedsRemoved;
     }
 
-    function withdrawLegacyLP(uint32[] calldata crates, uint256[] calldata amounts, bool[] calldata legacy) internal {
+    function withdrawLegacyLP(uint32[] calldata crates, uint256[] calldata amounts, bool[] calldata legacy, bool fromInternalBalance) internal {
         require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         AppStorage storage s = LibAppStorage.diamondStorage();
         AssetsRemoved memory assetsRemoved = removeLPDeposits(crates, amounts, legacy);
         uint32 arrivalSeason = s.season.current + s.season.withdrawSeasons;
         addLPWithdrawal(msg.sender, arrivalSeason, assetsRemoved.lpRemoved);
         LibTokenSilo.decrementDepositedToken(s.c.pair, assetsRemoved.lpRemoved);
-        LibSilo.withdrawSiloAssets(msg.sender, assetsRemoved.seedsRemoved, assetsRemoved.stalkRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, assetsRemoved.seedsRemoved, assetsRemoved.stalkRemoved, fromInternalBalance);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
@@ -45,7 +45,8 @@ library LibLegacyLPSilo {
         uint32[] memory crates,
         uint256[] memory amounts,
         bool[] memory legacy,
-        uint256 maxLP
+        uint256 maxLP,
+        bool fromInternalBalance
     )
         internal
         returns (uint256)
@@ -72,7 +73,7 @@ library LibLegacyLPSilo {
             i++;
         }
         LibTokenSilo.decrementDepositedToken(s.c.pair, ar.lpRemoved);
-        LibSilo.withdrawSiloAssets(msg.sender, ar.seedsRemoved, ar.stalkRemoved.add(ar.seedsRemoved.mul(STALK_PER_SEED)));
+        LibSilo.withdrawSiloAssets(msg.sender, ar.seedsRemoved, ar.stalkRemoved.add(ar.seedsRemoved.mul(STALK_PER_SEED)), fromInternalBalance);
         emit LegacyLPRemove(msg.sender, crates, amounts, legacy, ar.lpRemoved);
         return ar.stalkRemoved;
     }

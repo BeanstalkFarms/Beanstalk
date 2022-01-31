@@ -55,8 +55,8 @@ describe('Claim', function () {
 
   describe('claim', function () {
     beforeEach(async function () {
-      await this.silo.connect(user).depositBeans('1000', [false, false, false])
-      await this.silo.connect(user).depositLP('1', [false, false, false])
+      await this.silo.connect(user).depositBeans('1000')
+      await this.silo.connect(user).depositLP('1')
       await this.season.setSoilE('5000')
       await this.field.connect(user).sowBeans('1000')
       await this.field.incrementTotalHarvestableE('1000')
@@ -284,7 +284,7 @@ describe('Claim', function () {
     describe('claim and deposit Beans', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.result = await this.silo.connect(user).claimAndDepositBeans('1000', [['27'],[],[],false,true,'0','0', '0'], [false, false, false])
+        this.result = await this.silo.connect(user).claimAndDepositBeans('1000', [['27'],[],[],false,true,'0','0', '0'])
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
         this.wrappedBeans = await this.claim.connect(user).wrappedBeans(userAddress)
@@ -304,7 +304,7 @@ describe('Claim', function () {
     describe('claim buy and deposit Beans', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.result = await this.silo.connect(user).claimBuyAndDepositBeans('1000', '990', [['27'],[],[],false,true,'0','0', '0'], [false, false, false], {value: '1'})
+        this.result = await this.silo.connect(user).claimBuyAndDepositBeans('1000', '990', [['27'],[],[],false,true,'0','0', '0'], {value: '1'})
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
         this.wrappedBeans = await this.claim.connect(user).wrappedBeans(userAddress)
@@ -364,7 +364,7 @@ describe('Claim', function () {
     describe('claim and deposit LP', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.silo.connect(user).claimAndDepositLP('1',[['27'],[],[],false,true,'0','0', '0'], [false, false, false]);
+        this.silo.connect(user).claimAndDepositLP('1',[['27'],[],[],false,true,'0','0', '0']);
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
         this.wrappedBeans = await this.claim.connect(user).wrappedBeans(userAddress)
@@ -380,7 +380,7 @@ describe('Claim', function () {
     describe('claim add and deposit LP, exact allocation', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['1000','1000','1'],[['27'],[],[],false,true,'0','0', '0'], [false, false, false], {value: '1'});
+        this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['1000','1000','1'],[['27'],[],[],false,true,'0','0', '0'], {value: '1'});
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
         this.wrappedBeans = await this.claim.connect(user).wrappedBeans(userAddress)
@@ -399,7 +399,7 @@ describe('Claim', function () {
     describe('claim add and deposit LP, over allocation', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['1000','1000','1'],[['27'],[],['0'],false,true,'0','0', '0'], [false, false, false], {value: '1'});
+        this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['1000','1000','1'],[['27'],[],['0'],false,true,'0','0', '0'], {value: '1'});
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
         this.wrappedBeans = await this.claim.connect(user).wrappedBeans(userAddress)
@@ -420,7 +420,7 @@ describe('Claim', function () {
     describe('claim add and deposit LP, under allocation', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['2000','2000','2'],[['27'],[],[],false,true,'0','0', '0'], [false, false, false], {value: '2'});
+        this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','0', ['2000','2000','2'],[['27'],[],[],false,true,'0','0', '0'], {value: '2'});
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
         this.wrappedBeans = await this.claim.connect(user).wrappedBeans(userAddress)
@@ -439,7 +439,7 @@ describe('Claim', function () {
     describe('claim add buy Beans and deposit LP, exact allocation', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.result = this.silo.connect(user).claimAddAndDepositLP('0','1000','0', ['2000','2000','2'],[['27'],[],[],false,true,'0','0', '0'], [false, false, false], {value: '4'});
+        this.result = this.silo.connect(user).claimAddAndDepositLP('0','1000','0', ['2000','2000','2'],[['27'],[],[],false,true,'0','0', '0'], {value: '4'});
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
         this.wrappedBeans = await this.claim.connect(user).wrappedBeans(userAddress)
@@ -458,7 +458,7 @@ describe('Claim', function () {
     describe('claim add buy ETH and deposit LP, exact allocation', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','1',['2000','2000','2'],[['27'],[],['0'],false,true,'0','0', '0'], [false, false, false], {value: '1'});
+        this.result = this.silo.connect(user).claimAddAndDepositLP('0','0','1',['2000','2000','2'],[['27'],[],['0'],false,true,'0','0', '0'], {value: '1'});
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)
         this.wrappedBeans = await this.claim.connect(user).wrappedBeans(userAddress)

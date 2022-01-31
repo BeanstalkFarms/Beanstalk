@@ -72,8 +72,8 @@ describe('Seed', function () {
    });
    describe('Enumeration', async function() {
       it('properly gives fungible seeds as rewards for newly deposited beans', async function () {
-	this.silo.connect(user).depositBeans('100000', [false, false, false]);
-	this.silo.connect(user2).depositBeans('100000', [true, false, false]);
+	this.silo.connect(user).depositBeans('100000');
+	this.silo.connect(user2).depositBeans('100000');
 	expect(await this.seed.totalSupply()).to.eq('400000');
 	expect(await this.seed.balanceOf(userAddress)).to.eq('200000');
 	expect(await this.seed.balanceOf(this.silo.address)).to.eq('200000');
@@ -92,18 +92,18 @@ describe('Seed', function () {
 	expect(await this.seed.balanceOf(user2Address)).to.eq('200000');
       });
       it('correctly transfers seeds based on toInternalBalance bool', async function () {
-	await this.silo.connect(user).depositBeans('100000', [true, false, false]);
+	await this.silo.connect(user).depositBeans('100000');
 	await this.silo.connect(user).wrapSeeds('100000')
 	expect(await this.seed.balanceOf(this.silo.address)).to.eq('300000');
 	expect(await this.seed.balanceOf(userAddress)).to.eq('100000');
-	await this.silo.connect(user).withdrawBeans([1], ['100000'], [false, true, false]);
+	await this.silo.connect(user).withdrawBeans([1], ['100000']);
 	expect(await this.seed.balanceOf(userAddress)).to.eq('100000');
 	expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('100000');
 	expect(await this.seed.balanceOf(this.silo.address)).to.eq('100000');
       });
       it('reverts when users do not have enough seeds to burn upon silo withdrawl', async function () {
 	await this.seed.connect(user2).transfer(userAddress, '200000');
-	await expect(this.silo.connect(user2).withdrawBeans([1], ['100000'], [false, true, false])).to.be.revertedWith('ERC20: burn amount exceeds balance');
+	await expect(this.silo.connect(user2).withdrawBeans([1], ['100000'])).to.be.revertedWith('ERC20: burn amount exceeds balance');
 	expect(await this.seed.balanceOf(user2Address)).to.eq('0');
       });
     });
