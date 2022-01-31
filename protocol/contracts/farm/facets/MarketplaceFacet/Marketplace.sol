@@ -27,7 +27,7 @@ contract Marketplace is PodTransfer {
     event PodOrderCancelled(address indexed account, bytes20 orderId);
     event PodOrderFilled(address indexed from, address indexed to, bytes20 orderId, uint256 index, uint256 start, uint256 amount);
 
-    function _buyListing(address from, uint256 index, uint256 start, uint256 beanAmount, uint24 pricePerPod) internal {
+    function _fillListing(address from, uint256 index, uint256 start, uint256 beanAmount, uint24 pricePerPod) internal {
         Storage.Listing storage l = s.podListings[index];
         require(l.pricePerPod > 0, "Marketplace: Listing does not exist.");
         require(start == l.start && l.pricePerPod == pricePerPod, "Marketplace: start/price must match listing.");
