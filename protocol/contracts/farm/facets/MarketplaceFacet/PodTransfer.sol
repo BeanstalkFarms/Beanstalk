@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../AppStorage.sol";
+import "../../../interfaces/IBean.sol";
 
 /**
  * @author Publius
@@ -34,6 +35,12 @@ contract PodTransfer {
      * Internal
     **/
 
+    function _transferPlot(address from, address to, uint256 index, uint256 start, uint256 amount) internal {
+        insertPlot(to,index.add(start),amount);
+        removePlot(from,index,start,amount.add(start));
+        emit PlotTransfer(from, to, index.add(start), amount);
+    }
+
     function insertPlot(address account, uint256 id, uint256 amount) internal {
         s.a[account].field.plots[id] = amount;
     }
@@ -56,6 +63,10 @@ contract PodTransfer {
 
     function setAllowancePods(address owner, address spender, uint256 amount) internal {
         s.a[owner].field.podAllowances[spender] = amount;
+    }
+
+    function bean() internal view returns (IBean) {
+        return IBean(s.c.bean);
     }
 
 }
