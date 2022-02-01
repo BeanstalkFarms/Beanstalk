@@ -6,6 +6,9 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
+
+// Need Another Interface because Balancer extends ERC20 in a lot of interfaces 
+// import "@balancer-labs/v2-vault/contracts/interfaces/IVault.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "../LibAppStorage.sol";
 
@@ -77,6 +80,28 @@ library LibTokenSilo {
     function beanDenominatedValue(address token, uint256 amount) internal returns (uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         bytes memory myFunctionCall = abi.encodeWithSelector(s.ss[token].selector, token, amount);
+        (bool success, bytes memory data) = address(this).delegatecall(myFunctionCall);
+        require(success, "Silo: Bean denominated value failed.");
+        assembly { bdv := mload(add(data, add(0x20, 0))) }
+    }
+
+    function _buildBalancerPoolRequest() internal returns (JoinPoolRequest memory request) {
+
+    }
+
+    function addBalancerLiquidity (address poolAddress, 
+        bytes32 poolId,
+        address sender,
+        address recipient,
+        JoinPoolRequest memory request
+    ) 
+        internal
+    {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        bytes memory myFunctionCall = abi.encodeWithSelector(
+            s.poolDepositFunctions[poolAddress],
+            poolId, sender, recipient, request
+        );
         (bool success, bytes memory data) = address(this).delegatecall(myFunctionCall);
         require(success, "Silo: Bean denominated value failed.");
         assembly { bdv := mload(add(data, add(0x20, 0))) }

@@ -200,6 +200,11 @@ struct SiloSettings {
     uint32 stalk;
 }
 
+struct BalancerPoolConfig {
+    address poolAddress;
+    bytes32 poolId;
+}
+
 struct AppStorage {
     uint8 index;
     int8[32] cases;
@@ -239,5 +244,6 @@ struct AppStorage {
     address seedContract;
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
     mapping(address => SiloSettings) ss;
-    address balancerSeedStalkBeanPool;
+    mapping(address => bytes4) poolDepositFunctions;
+    BalancerPoolConfig balancerSeedStalkBeanPoolConfig;
 }
