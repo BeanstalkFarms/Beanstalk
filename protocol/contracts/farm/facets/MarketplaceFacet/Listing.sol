@@ -118,8 +118,9 @@ contract Listing is PodTransfer {
         require(lAmount >= amount, "Marketplace: Not enough pods in Listing.");
 
         if (lAmount > amount) {
-            uint256 newIndex = index.add(amount);
+            uint256 newIndex = index.add(amount).add(start);
             s.podListings[newIndex] = l;
+            s.podListings[newIndex].start = 0;
             if (l.amount != 0) {
                 s.podListings[newIndex].amount = uint128(lAmount - amount);
             }
