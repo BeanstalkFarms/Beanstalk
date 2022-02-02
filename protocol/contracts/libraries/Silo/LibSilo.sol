@@ -53,13 +53,13 @@ library LibSilo {
         uint256 roots;
         if (s.s.roots == 0) roots = stalk.mul(C.getRootsBase());
         else roots = s.s.roots.mul(stalk).div(s.stalkToken.totalSupply);
-	if (toInternalBalance) {
+	    if (toInternalBalance) {
         	LibStalk.mint(address(this), stalk);
         	s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
         }
-	else LibStalk.mint(account, stalk);
+	    else LibStalk.mint(account, stalk);
  
-	s.s.roots = s.s.roots.add(roots);
+	    s.s.roots = s.s.roots.add(roots);
         s.a[account].roots = s.a[account].roots.add(roots);
 
         incrementBipRoots(account, roots);
