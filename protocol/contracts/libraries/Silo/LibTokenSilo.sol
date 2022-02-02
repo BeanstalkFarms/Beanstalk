@@ -6,10 +6,8 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
-
-// Need Another Interface because Balancer extends ERC20 in a lot of interfaces 
-// import "@balancer-labs/v2-vault/contracts/interfaces/IVault.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
+import "../../interfaces/balancer/IVault.sol";
 import "../LibAppStorage.sol";
 
 /**
@@ -23,6 +21,14 @@ library LibTokenSilo {
     using SafeMath for uint112;
     
     event TokenDeposit(address indexed account, address indexed token, uint256 season, uint256 amount, uint256 bdv);
+
+    // Balancer Request Struct
+    struct JoinPoolRequest {
+        IAsset[] assets;
+        uint256[] maxAmountsIn;
+        bytes userData;
+        bool fromInternalBalance;
+    }
 
     function deposit(address account, address token, uint32 _s, uint256 amount) internal returns (uint256 bdv) {
         bdv = LibTokenSilo.beanDenominatedValue(token, amount);
@@ -85,11 +91,24 @@ library LibTokenSilo {
         assembly { bdv := mload(add(data, add(0x20, 0))) }
     }
 
-    function _buildBalancerPoolRequest() internal returns (JoinPoolRequest memory request) {
+       // Balancer Internal functions
 
+    function _buildBalancerPoolRequest(
+        IAsset[] calldata assets, 
+        uint256[] calldata maxAmountsIn, 
+        bytes calldata userData,
+        bool fromInternalBalance
+    ) 
+        internal 
+        returns (JoinPoolRequest memory request) 
+    {
+        request.assets = assets;
+        request.maxAmountsIn = maxAmountsIn;
+        request.userData = userData;
+        request.fromInternalBalance = fromInternalBalance;
     }
 
-    function addBalancerLiquidity (address poolAddress, 
+    function _addBalancerLiquidity (address poolAddress, 
         bytes32 poolId,
         address sender,
         address recipient,
@@ -102,9 +121,9 @@ library LibTokenSilo {
             s.poolDepositFunctions[poolAddress],
             poolId, sender, recipient, request
         );
-        (bool success, bytes memory data) = address(this).delegatecall(myFunctionCall);
+        (bool success, bytes memory data) = address(s.balancerVault).delegatecall(myFunctionCall);
         require(success, "Silo: Bean denominated value failed.");
-        assembly { bdv := mload(add(data, add(0x20, 0))) }
+        // assembly { bdv := mload(add(data, add(0x20, 0))) }
     }
 
     function tokenWithdrawal(address account, address token, uint32 id) internal view returns (uint256) {

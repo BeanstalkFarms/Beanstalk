@@ -15,6 +15,9 @@ import "../mocks/MockUniswapV2Router.sol";
 import {AppStorage} from "../farm/AppStorage.sol";
 import {LibMarket} from "../libraries/LibMarket.sol";
 import {LibStalk} from "../libraries/LibStalk.sol";
+import "../Seed.sol";
+import "../interfaces/ISeed.sol";
+import "../interfaces/IWeightedPoolFactory.sol";
 
 /**
  * @author Publius
@@ -48,10 +51,32 @@ contract MockInitDiamond {
         s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
         LibMarket.initMarket(s.c.bean, s.c.weth, mockRouter);
         LibStalk.initStalkToken('Stalk', 'STALK');
-       	s.seedContract = address(new MockToken("SEED", "Beanstalk"));
+       	
         s.ss[s.c.pair].selector = bytes4(keccak256("uniswapLPtoBDV(address,uint256)")); 
         s.ss[s.c.pair].seeds = 4;
         s.ss[s.c.pair].stalk = 10000;
+        s.seedContract = address(new MockToken("SEED", "Beanstalk"));
+        
+        // Balancer Stalk, Seed, Bean Pool Creation
+        // Balancer Pool Parameters
+        // string memory name = "Three-Token Bean, Stalk, Seeds Test Pool";
+        // string memory symbol = "33SEED-33STALK-34Bean";
+        // IERC20[] memory tokens;
+        // tokens[0] = IERC20(seedAddress);
+        // tokens[1] = IERC20(address(this));
+        // tokens[2] = IERC20(s.c.bean);
+        // // Balancer weights are bounded by 1.00 with 18 Decimals
+        // uint256[] memory weights;
+        // weights[0] = uint256(33e16);
+        // weights[1] = uint256(33e16);
+        // weights[2] = uint256(34e16);
+        // uint256 swapFeePercentage = uint256(5 * 10^15);
+        // address poolOwner = address(this);
+        
+        // s.balancerSeedStalkBeanPool = address(IWeightedPoolFactory(BALANCER_WEIGHTED_POOL_FACTORY).create(name, 
+        //     symbol, tokens, weights, swapFeePercentage, poolOwner));
+
+        // s.poolDepositFunctions[s.balancerSeedStalkBeanPool] = bytes4(keccak256("joinPool(bytes32,address,address,JoinPoolRequest)"));
     }
 
 }

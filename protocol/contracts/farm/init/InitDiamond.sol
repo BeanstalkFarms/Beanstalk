@@ -74,7 +74,7 @@ contract InitDiamond {
 
         IBean(s.c.bean).mint(msg.sender, C.getAdvanceIncentive());
         emit Incentivization(msg.sender, C.getAdvanceIncentive());
-        s.ss[s.c.pair].selector = bytes4(keccak256("uniswapLPtoBDV(address,uint256)")); 
+        s.ss[s.c.pair].selector = bytes4(keccak256("uniswapLPtoBDV(address,uint256)"));
         s.ss[s.c.pair].seeds = 4;
         s.ss[s.c.pair].stalk = 10000;
 
@@ -88,6 +88,7 @@ contract InitDiamond {
         }
         s.seedContract = seedAddress;
 
+        s.balancerVault = address(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
         // Balancer Pool Parameters
         string memory name = "Three-Token Bean, Stalk, Seeds Test Pool";
         string memory symbol = "33SEED-33STALK-34Bean";
@@ -105,6 +106,7 @@ contract InitDiamond {
         
         s.balancerSeedStalkBeanPool = address(IWeightedPoolFactory(BALANCER_WEIGHTED_POOL_FACTORY).create(name, 
             symbol, tokens, weights, swapFeePercentage, poolOwner));
-    }
 
+        s.poolDepositFunctions[s.balancerSeedStalkBeanPool] = bytes4(keccak256("joinPool(bytes32,address,address,JoinPoolRequest)"));
+    }
 }
