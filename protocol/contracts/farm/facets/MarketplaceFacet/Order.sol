@@ -15,22 +15,28 @@ contract Order is Listing {
 
     using SafeMath for uint256;
 
+    struct Order {
+        address account;
+        uint24 pricePerPod;
+        uint256 maxPlaceInLine;
+    }
+
     event PodOrderCreated(
         address indexed account, 
-        bytes20 id, 
+        bytes32 id, 
         uint256 amount, 
         uint24 pricePerPod, 
-        uint232 maxPlaceInLine
+        uint256 maxPlaceInLine
     );
     event PodOrderFilled(
         address indexed from, 
         address indexed to, 
-        bytes20 id, 
+        bytes32 id, 
         uint256 index, 
         uint256 start, 
         uint256 amount
     );
-    event PodOrderCancelled(address indexed account, bytes20 id);
+    event PodOrderCancelled(address indexed account, bytes32 id);
 
     /*
      * Create
@@ -40,8 +46,8 @@ contract Order is Listing {
         uint256 beanAmount,
         uint256 buyBeanAmount,
         uint24 pricePerPod,
-        uint232 maxPlaceInLine
-    ) internal returns (bytes20 id) {
+        uint256 maxPlaceInLine
+    ) internal returns (bytes32 id) {
         uint256 boughtBeanAmount = LibMarket.buyExactTokens(buyBeanAmount, address(this));
         return _createPodOrder(beanAmount+boughtBeanAmount, pricePerPod, maxPlaceInLine);
     }
@@ -49,8 +55,8 @@ contract Order is Listing {
     function _createPodOrder(
         uint256 beanAmount, 
         uint24 pricePerPod, 
-        uint232 maxPlaceInLine
-    ) internal returns (bytes20 id) {
+        uint256 maxPlaceInLine
+    ) internal returns (bytes32 id) {
         require(0 < pricePerPod, "Marketplace: Pod price must be greater than 0.");
         uint256 amount = (beanAmount * 1000000) / pricePerPod;
         return  __createPodOrder(amount,pricePerPod, maxPlaceInLine);
@@ -58,15 +64,13 @@ contract Order is Listing {
 
     function __createPodOrder(
         uint256 amount, 
-        uint24 pricePerPod, 
-        uint232 maxPlaceInLine
-    ) internal  returns (bytes20 id) {
+        uint24 pricePerPod,
+        uint256 maxPlaceInLine
+    ) internal  returns (bytes32 id) {
         require(amount > 0, "Marketplace: Order amount must be > 0.");
-        bytes20 id = createPodOrderId(maxPlaceInLine);
-        s.podOrders[id].amount = amount;
-        s.podOrders[id].pricePerPod = pricePerPod;
-        s.podOrders[id].maxPlaceInLine = maxPlaceInLine;
-        s.podOrders[id].owner = msg.sender;
+        bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine);
+        if (s.podOrders[id] > 0) _cancelPodOrder(pricePerPod, maxPlaceInLine, false);
+        s.podOrders[id] = amount;
         emit PodOrderCreated(msg.sender, id, amount, pricePerPod, maxPlaceInLine);
         return id;
     }
@@ -76,59 +80,48 @@ contract Order is Listing {
      */
     
     function _fillPodOrder(
-        bytes20 id,
+        Order calldata o,
         uint256 index,
         uint256 start,
-        uint232 amount,
+        uint256 amount,
         bool toWallet
     ) internal {
-        Storage.Order storage order = s.podOrders[id];
-        uint24 price = order.pricePerPod;
-        address owner = order.owner;
-        order.amount = order.amount.sub(amount);
+        bytes32 id = createOrderId(o.account, o.pricePerPod, o.maxPlaceInLine);
+        s.podOrders[id] = s.podOrders[id].sub(amount);
         require(s.a[msg.sender].field.plots[index] >= (start + amount), "Marketplace: Invalid Plot.");
         uint256 placeInLineEndPlot = index + start + amount - s.f.harvestable;
-        require(placeInLineEndPlot <= order.maxPlaceInLine, "Marketplace: Plot too far in line.");
-        uint256 costInBeans = (price * amount) / 1000000;
+        require(placeInLineEndPlot <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
+        uint256 costInBeans = (o.pricePerPod * amount) / 1000000;
         if (toWallet) bean().transfer(msg.sender, costInBeans);
         else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(costInBeans);
-        if (s.podListings[index].pricePerPod > 0){
+        if (s.podListings[index] != bytes32(0)){
             _cancelPodListing(index);
         }
-        _transferPlot(msg.sender, owner, index, start, amount);
-        if (order.amount == 0){
+        _transferPlot(msg.sender, o.account, index, start, amount);
+        if (s.podOrders[id] == 0){
             delete s.podOrders[id];
         }
-        emit PodOrderFilled(msg.sender, owner, id, index, start, amount);
+        emit PodOrderFilled(msg.sender, o.account, id, index, start, amount);
     }
 
     /*
      * Cancel
      */
 
-     function _cancelPodOrder(bytes20 podOrderIndex, bool toWallet) internal {
-        Storage.Order storage order = s.podOrders[podOrderIndex];
-        require(order.owner == msg.sender, "Marketplace: Buy Order not owned by user.");
-        uint256 amount = order.amount;
-        uint256 price = order.pricePerPod;
-        uint256 costInBeans = (price * amount) / 1000000;
-        if (toWallet) bean().transfer(msg.sender, costInBeans);
-        else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(costInBeans);
-        delete s.podOrders[podOrderIndex];
-        emit PodOrderCancelled(msg.sender, podOrderIndex);
+     function _cancelPodOrder(uint24 pricePerPod, uint256 maxPlaceInLine, bool toWallet) internal {
+        bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine);
+        uint256 amountBeans = (pricePerPod * s.podOrders[id]) / 1000000;
+        if (toWallet) bean().transfer(msg.sender, amountBeans);
+        else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(amountBeans);
+        delete s.podOrders[id];
+        emit PodOrderCancelled(msg.sender, id);
      }
 
     /*
      * Helpers
      */
 
-    function createPodOrderId(uint256 maxPlaceInLine) private returns (bytes20 id) {
-        // Generate the Buy Order Id from sender + block hash
-        id = bytes20(keccak256(abi.encodePacked(msg.sender, maxPlaceInLine, blockhash(block.number - 1))));
-        // Make sure this podOrderId has not been used before (could be in the same block).
-        while (s.podOrders[id].pricePerPod != 0) {
-            id = bytes20(keccak256(abi.encodePacked(id)));
-        }
-        return id;
+    function createOrderId(address account, uint24 pricePerPod, uint256 maxPlaceInLine) internal pure returns (bytes32 id) {
+        id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine));
     }
 }

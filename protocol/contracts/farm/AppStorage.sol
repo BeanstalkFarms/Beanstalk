@@ -163,22 +163,6 @@ contract Storage {
         bool didSowFaster;
     }
 
-    // marketplace
-    struct Listing {
-        uint128 start;
-        uint128 amount;
-        uint24 pricePerPod;
-        uint224 maxHarvestableIndex;
-        bool toWallet;
-    }
-
-    struct Order {
-        address owner;
-        uint256 amount;
-        uint232 maxPlaceInLine;
-        uint24 pricePerPod;
-    }
-
     struct Fundraiser {
         address payee;
         address token;
@@ -215,6 +199,6 @@ struct AppStorage {
     mapping (uint32 => Storage.Fundraiser) fundraisers;
     uint32 fundraiserIndex;
     mapping (address => bool) isBudget;
-    mapping(uint256 => Storage.Listing) podListings;
-    mapping(bytes20 => Storage.Order) podOrders;
+    mapping(uint256 => bytes32) podListings;
+    mapping(bytes32 => uint256) podOrders;
 }
