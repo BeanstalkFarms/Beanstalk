@@ -41,7 +41,7 @@ contract UpdateSilo is SiloExit {
         if (s.a[account].roots > 0) {
             farmSops(account, update);
             farmLegacyBeans(account, update);
-	    if (!lightUpdateSilo) farmBeans(account, update);
+	        if (!lightUpdateSilo) farmBeans(account, update);
 	    
         } else if (s.a[account].roots == 0) {
             s.a[account].lastSop = s.r.start;
