@@ -67,12 +67,12 @@ describe('Claim', function () {
 
     describe('claim beans', async function () {
       it('reverts when deposit is empty', async function () {
-        await expect(this.claim.connect(user).claimBeans(['0'])).to.be.revertedWith('Claim: Bean withdrawal is empty.')
+        await expect(this.claim.connect(user).claimLegacyBeans(['0'])).to.be.revertedWith('Claim: Bean withdrawal is empty.')
       });
 
       it('successfully claims beans', async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        await this.claim.connect(user).claimBeans(['27'])
+        await this.claim.connect(user).claimLegacyBeans(['27'])
         const newBeans = await this.bean.balanceOf(userAddress)
         expect(await this.silo.beanDeposit(userAddress, '27')).to.be.equal('0');
         expect(newBeans.sub(beans)).to.be.equal('1000');
