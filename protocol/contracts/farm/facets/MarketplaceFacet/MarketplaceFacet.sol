@@ -49,7 +49,6 @@ contract MarketplaceFacet is Order {
         _fillListing(l, beanAmount);
     }
 
-
     function buyBeansAndFillPodListing(
         Listing calldata l,
         uint256 beanAmount,

@@ -68,5 +68,4 @@ contract PodTransfer {
     function bean() internal view returns (IBean) {
         return IBean(s.c.bean);
     }
-
 }

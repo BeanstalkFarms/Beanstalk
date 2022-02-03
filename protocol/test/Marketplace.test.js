@@ -26,7 +26,7 @@ describe('Marketplace', function () {
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address);
     this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address);
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
-    this.marketplace = await ethers.getContractAt('MarketplaceFacet', this.diamond.address);
+    this.marketplace = await ethers.getContractAt('MockMarketplaceFacet', this.diamond.address);
     this.claim = await ethers.getContractAt('ClaimFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
     this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair);
@@ -34,6 +34,7 @@ describe('Marketplace', function () {
     await this.bean.mint(userAddress, '500000')
     await this.bean.mint(user2Address, '500000')
     await this.field.incrementTotalSoilEE('100000');
+    this.orderIds = []
   })
 
   const resetState = async function () {
@@ -74,10 +75,7 @@ describe('Marketplace', function () {
   }
 
   const getHashFromListing = function (l) {
-    return ethers.utils.solidityKeccak256(
-      ['uint256', 'uint256', 'uint24', 'uint256', 'bool'],
-      l
-    );
+    return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool'], l);
   }
 
   const getOrderId = async function (tx) {
@@ -88,6 +86,8 @@ describe('Marketplace', function () {
 
   beforeEach(async function () {
     await resetState();
+    await this.marketplace.deleteOrders(this.orderIds);
+    this.orderIds = []
   })
 
   describe("Pod Listings", async function () {
@@ -564,7 +564,6 @@ describe('Marketplace', function () {
         await expect(result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, '0', 0, 1000, 200000, 2000, false);
         await expect(result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, '0');
         expect(await this.marketplace.podListing(0)).to.be.equal(await getHash(result));
-
       })
 
       it('Reverts on Cancel Listing, not owned by user', async function () {
@@ -599,6 +598,7 @@ describe('Marketplace', function () {
           this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
           this.result = await this.marketplace.connect(user).createPodOrder('500', '100000', '1000')
           this.id = await getOrderId(this.result)
+          this.orderIds.push(this.id)
           this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
           this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
         })
@@ -625,6 +625,7 @@ describe('Marketplace', function () {
           this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
           this.result = await this.marketplace.connect(user).buyBeansAndCreatePodOrder('0', '250', '100000', '1000', { value: 112 })
           this.id = await getOrderId(this.result)
+          this.orderIds.push(this.id)
           this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
           this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
         })
@@ -651,6 +652,7 @@ describe('Marketplace', function () {
           this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
           this.result = await this.marketplace.connect(user).buyBeansAndCreatePodOrder('100', '250', 100000, '1000', { value: 112 })
           this.id = await getOrderId(this.result)
+          this.orderIds.push(this.id)
           this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
           this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
         })
@@ -682,6 +684,7 @@ describe('Marketplace', function () {
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
             this.result = await this.marketplace.connect(user).claimAndCreatePodOrder('250', '100000', '1000', [['27'], [], [], false, false, 0, 0, false])
             this.id = await getOrderId(this.result)
+            this.orderIds.push(this.id)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -689,7 +692,7 @@ describe('Marketplace', function () {
           it('Transfer Beans properly', async function () {
             expect(this.beanstalkBeanBalanceAfter.sub(this.beanstalkBeanBalance)).to.equal('0');
             expect(this.userBeanBalance.sub(this.userBeanBalanceAfter)).to.equal('0');
-            // expect(await this.claim.wrappedBeans(userAddress)).to.equal('0');
+            expect(await this.claim.wrappedBeans(userAddress)).to.equal('0');
           })
 
           it('Creates the offer', async function () {
@@ -703,6 +706,7 @@ describe('Marketplace', function () {
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
             this.result = await this.marketplace.connect(user).claimAndCreatePodOrder('300', '100000', '1000', [['27'], [], [], false, false, 0, 0, false])
             this.id = await getOrderId(this.result)
+            this.orderIds.push(this.id)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -710,7 +714,7 @@ describe('Marketplace', function () {
           it('Transfer Beans properly', async function () {
             expect(this.beanstalkBeanBalanceAfter.sub(this.beanstalkBeanBalance)).to.equal('50');
             expect(this.userBeanBalance.sub(this.userBeanBalanceAfter)).to.equal('50');
-            // expect(await this.claim.wrappedBeans(userAddress)).to.equal('0');
+            expect(await this.claim.wrappedBeans(userAddress)).to.equal('0');
           })
 
           it('Creates the offer', async function () {
@@ -724,6 +728,7 @@ describe('Marketplace', function () {
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
             this.result = await this.marketplace.connect(user).claimAndCreatePodOrder('100', '100000', '1000', [['27'], [], [], false, false, 0, 0, false])
             this.id = await getOrderId(this.result)
+            this.orderIds.push(this.id)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -731,7 +736,7 @@ describe('Marketplace', function () {
           it('Transfer Beans properly', async function () {
             expect(this.beanstalkBeanBalanceAfter.sub(this.beanstalkBeanBalance)).to.equal('0');
             expect(this.userBeanBalance.sub(this.userBeanBalanceAfter)).to.equal('0');
-            // expect(await this.claim.wrappedBeans(userAddress)).to.equal('150');
+            expect(await this.claim.wrappedBeans(userAddress)).to.equal('150');
           })
 
           it('Creates the offer', async function () {
@@ -746,6 +751,7 @@ describe('Marketplace', function () {
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
             this.result = await this.marketplace.connect(user).claimBuyBeansAndCreatePodOrder('100', '250', '100000', '1000', [['27'], [], [], false, false, 0, 0, false], { value: 112 })
             this.id = await getOrderId(this.result)
+            this.orderIds.push(this.id)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -753,7 +759,7 @@ describe('Marketplace', function () {
           it('Transfer Beans properly', async function () {
             expect(this.beanstalkBeanBalanceAfter.sub(this.beanstalkBeanBalance)).to.equal('250');
             expect(this.userBeanBalance.sub(this.userBeanBalanceAfter)).to.equal('0');
-            // expect(await this.claim.wrappedBeans(userAddress)).to.equal('150');
+            expect(await this.claim.wrappedBeans(userAddress)).to.equal('150');
           })
 
           it('Creates the offer', async function () {
@@ -920,6 +926,7 @@ describe('Marketplace', function () {
       beforeEach(async function () {
         this.result = await this.marketplace.connect(user).createPodOrder('500', '100000', '1000')
         this.id = await getOrderId(this.result)
+        this.orderIds.push(this.id)
       })
 
       describe('Cancel owner', async function () {

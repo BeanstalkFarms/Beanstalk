@@ -8,7 +8,7 @@ pragma experimental ABIEncoderV2;
 import "../../../libraries/LibMarket.sol";
 import "../../../libraries/LibClaim.sol";
 import "./PodTransfer.sol";
-import "hardhat/console.sol";
+
 /**
  * @author Beanjoyer
  * @title Pod Marketplace v1
@@ -83,7 +83,7 @@ contract Listing is PodTransfer {
             l.account,
             l.toWallet
         );
-        _fillListing(l, beanAmount+buyBeanAmount);
+        _fillListing(l, beanAmount+boughtBeanAmount);
     }
 
     function _fillListing(
@@ -141,7 +141,7 @@ contract Listing is PodTransfer {
     function roundAmount(
         Listing calldata l,
         uint256 amount
-    ) view private returns (uint256) {
+    )  pure private returns (uint256) {
         if ((l.amount - amount) < (1000000 / l.pricePerPod))
             amount = l.amount;
         return amount;
@@ -157,7 +157,7 @@ contract Listing is PodTransfer {
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
         bool toWallet
-    ) internal returns (bytes32 lHash) {
+    ) pure internal returns (bytes32 lHash) {
         lHash = keccak256(
             abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex, toWallet)
         );
