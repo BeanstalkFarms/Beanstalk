@@ -130,7 +130,8 @@ async function main(scriptName, verbose = true, mock = false) {
       "SiloFacet": ["LibClaim"],
       "FieldFacet": ["LibClaim"],
       "ClaimFacet": ["LibClaim"],
-      "ConvertFacet": ["LibClaim"]
+      "ConvertFacet": ["LibClaim"],
+      "MarketplaceFacet": ["LibClaim"]
     },
   )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/InitDiamond.sol:InitDiamond'
