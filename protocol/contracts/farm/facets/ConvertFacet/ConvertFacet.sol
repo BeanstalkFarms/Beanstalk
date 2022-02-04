@@ -35,7 +35,7 @@ contract ConvertFacet is ConvertSilo {
         uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(s.ss[s.c.pair].seeds)));
         _s = getDepositSeason(_s);
 
-        _depositLP(_s, lp, beansConverted);
+        _deposit(_s, lp, beansConverted);
         LibCheck.balanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }   
@@ -50,7 +50,7 @@ contract ConvertFacet is ConvertSilo {
     {
         LibInternal.updateSilo(msg.sender);
         (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
-        uint256 stalkRemoved = _withdrawLPForConvert(crates, amounts, lpConverted);
+        uint256 stalkRemoved = _withdrawForConvert(crates, amounts, lpConverted);
         uint32 _s = uint32(stalkRemoved.div(beans.mul(C.getSeedsPerBean())));
         _s = getDepositSeason(_s);
         _depositBeans(beans, _s);

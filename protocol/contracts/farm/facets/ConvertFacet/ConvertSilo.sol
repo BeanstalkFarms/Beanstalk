@@ -71,7 +71,7 @@ contract ConvertSilo {
         if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
 	
         lp = lp.add(w.newLP);
-        _depositLP(depositSeason, lp, LibTokenSilo.beanDenominatedValue(token, lp));
+        _deposit(depositSeason, lp, LibTokenSilo.beanDenominatedValue(token, lp));
         LibCheck.beanBalanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
@@ -80,7 +80,7 @@ contract ConvertSilo {
      * Internal LP
     **/
 
-    function _depositLP(uint32 _s, uint256 amount, uint256 lpb) internal {
+    function _deposit(uint32 _s, uint256 amount, uint256 lpb) internal {
         LibTokenSilo.depositWithBDV(msg.sender, s.c.pair, _s, amount, lpb);
         uint256 seeds = lpb.mul(s.ss[s.c.pair].seeds);
         uint256 stalk = lpb.mul(s.ss[s.c.pair].stalk);
@@ -88,7 +88,7 @@ contract ConvertSilo {
         LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
     }
 
-    function _withdrawLPForConvert(
+    function _withdrawForConvert(
         uint32[] memory crates,
         uint256[] memory amounts,
         uint256 maxLP
