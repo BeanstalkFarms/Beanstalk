@@ -39,6 +39,7 @@ contract ConvertSilo is ToolShed {
     }
 
     function _convertAddAndDepositLP(
+        address token,
         uint256 lp,
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
@@ -65,30 +66,78 @@ contract ConvertSilo is ToolShed {
             LibMarket.allocatedBeans(transferAmount);
         }
 
-        w.i = w.stalkRemoved.div(LibTokenSilo.beanDenominatedValue(s.c.pair, lp.add(w.newLP)), "Silo: No LP Beans.");
-        uint32 depositSeason = uint32(season().sub(w.i.div(s.ss[s.c.pair].seeds)));
+        w.i = w.stalkRemoved.div(LibTokenSilo.beanDenominatedValue(token, lp.add(w.newLP)), "Silo: No LP Beans.");
+        uint32 depositSeason = uint32(season().sub(w.i.div(s.ss[token].seeds)));
 
         if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
 	
         lp = lp.add(w.newLP);
-        _depositLP(depositSeason, lp, LibTokenSilo.beanDenominatedValue(s.c.pair, lp), toInternalBalance);
+        _deposit(token, depositSeason, lp, LibTokenSilo.beanDenominatedValue(token, lp), toInternalBalance);
         LibCheck.beanBalanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
+    }
+
+    function _convertDepositedBeansAndCirculatingStalkSeed(
+        address token,
+        uint256 beans,
+        uint32[] memory crates,
+        uint256[] memory amounts,
+       	bool toInternalBalance,
+        bool fromInternalBalance
+    )
+        internal
+    {
+	    // LibInternal.updateSilo(msg.sender);
+        // WithdrawState memory w;
+        // // (w.beansAdded, w.newLP) = LibMarket.addLiquidity(al); // w.beansAdded is beans added to LP
+        
+        // // require(w.newLP > 0, "Silo: No LP added.");
+        // (w.beansRemoved, w.stalkRemoved) = __withdrawBeansForConvert(crates, amounts, beans); // w.beansRemoved is beans removed from Silo
+        // uint256 stalk_to_remove = w.stalkRemoved;
+        // // Because we have not withdrawn the silo assets yet, we must account for the actual stalk removed here
+        // w.stalkRemoved = w.stalkRemoved.sub(w.beansRemoved.mul(C.getStalkPerBean()));
+
+        // w.i = w.stalkRemoved.div(LibTokenSilo.beanDenominatedValue(token, lp.add(w.newLP)), "Silo: No LP Beans.");
+        // uint32 depositSeason = uint32(season().sub(w.i.div(s.ss[token].seeds)));
+	
+        // lp = lp.add(w.newLP);
+        // (w.grossAddedStalk, w.grossAddedSeeds) = __deposit(token, depositSeason, lp, LibTokenSilo.beanDenominatedValue(s.c.pair, lp));
+        // // Net Total Up Actual Deposited/Withdrawn Stalk and Seeds
+        // w.netStalk = int256(w.grossAddedStalk) - int256(stalk_to_remove);
+        // w.netSeeds = int256(w.grossAddedSeeds) - int256(w.beansRemoved.mul(C.getSeedsPerBean()));
+        // // Increment and Decrement Silo Assets
+        // LibSilo.convertSiloAssets(msg.sender, w.netSeeds,  w.netStalk, toInternalBalance, fromInternalBalance);
+        
+        // LibCheck.beanBalanceCheck();
+        // LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
     /**
      * Internal LP
     **/
 
-    function _depositLP(uint32 _s, uint256 amount, uint256 lpb, bool toInternalBalance) internal {
-        LibTokenSilo.depositWithBDV(msg.sender, s.c.pair, _s, amount, lpb);
-        uint256 seeds = lpb.mul(s.ss[s.c.pair].seeds);
-        uint256 stalk = lpb.mul(s.ss[s.c.pair].stalk);
-        if (_s > 0) stalk = stalk.add((season().sub(_s)).mul(seeds));
+    function __deposit(
+        address token,
+        uint32 _s, 
+        uint256 amount, 
+        uint256 lpb
+    ) 
+        internal 
+        returns(uint256 stalk_to_deposit, uint256 seeds_to_deposit) 
+    {
+        LibTokenSilo.depositWithBDV(msg.sender, token, _s, amount, lpb);
+        uint256 seeds_to_deposit = lpb.mul(s.ss[token].seeds);
+        uint256 stalk_to_deposit = lpb.mul(s.ss[token].stalk);
+        if (_s > 0) stalk_to_deposit = stalk_to_deposit.add((season().sub(_s)).mul(seeds_to_deposit));
+    }
+
+    function _deposit(address token, uint32 _s, uint256 amount, uint256 lpb, bool toInternalBalance) internal {
+        (uint256 stalk, uint256 seeds) = __deposit(token, _s, amount, lpb);
         LibSilo.depositSiloAssets(msg.sender, seeds, stalk, toInternalBalance);
     }
 
-    function _withdrawLPForConvert(
+    function _withdrawForConvert(
+        address token,
         uint32[] memory crates,
         uint256[] memory amounts,
         uint256 maxLP,
@@ -105,12 +154,12 @@ contract ConvertSilo is ToolShed {
         uint256 i = 0;
         while ((i < crates.length) && (lpRemoved < maxLP)) {
             if (lpRemoved.add(amounts[i]) < maxLP)
-                (depositLP, depositedBDV) = LibTokenSilo.removeDeposit(msg.sender, s.c.pair, crates[i], amounts[i]);
+                (depositLP, depositedBDV) = LibTokenSilo.removeDeposit(msg.sender, token, crates[i], amounts[i]);
             else
-                (depositLP, depositedBDV) = LibTokenSilo.removeDeposit(msg.sender, s.c.pair, crates[i], maxLP.sub(lpRemoved));
+                (depositLP, depositedBDV) = LibTokenSilo.removeDeposit(msg.sender, token, crates[i], maxLP.sub(lpRemoved));
             lpRemoved = lpRemoved.add(depositLP);
             bdvRemoved = bdvRemoved.add(depositedBDV);
-            stalkRemoved = stalkRemoved.add(LibSilo.stalkReward(depositedBDV.mul(s.ss[s.c.pair].seeds), season()-crates[i]));
+            stalkRemoved = stalkRemoved.add(LibSilo.stalkReward(depositedBDV.mul(s.ss[token].seeds), season()-crates[i]));
             i++;
         }
         if (i > 0) amounts[i.sub(1)] = depositLP;
@@ -118,9 +167,9 @@ contract ConvertSilo is ToolShed {
             amounts[i] = 0;
             i++;
         }
-        LibTokenSilo.decrementDepositedToken(s.c.pair, lpRemoved);
-        LibSilo.withdrawSiloAssets(msg.sender, bdvRemoved.mul(s.ss[s.c.pair].seeds), stalkRemoved.add(bdvRemoved.mul(s.ss[s.c.pair].stalk)), fromInternalBalance);
-        emit TokenRemove(s.c.pair, msg.sender, crates, amounts, lpRemoved);
+        LibTokenSilo.decrementDepositedToken(token, lpRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, bdvRemoved.mul(s.ss[token].seeds), stalkRemoved.add(bdvRemoved.mul(s.ss[token].stalk)), fromInternalBalance);
+        emit TokenRemove(token, msg.sender, crates, amounts, lpRemoved);
     }
 
     /**

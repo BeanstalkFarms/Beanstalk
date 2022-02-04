@@ -298,6 +298,50 @@ library LibMarket {
             block.timestamp.add(1));
     }
 
+       // Balancer Internal functions
+
+    function _buildBalancerPoolRequest(
+        IAsset[] calldata assets, 
+        uint256[] calldata maxAmountsIn, 
+        bytes calldata userData,
+        bool fromInternalBalance
+    ) 
+        internal 
+        returns (IVault.JoinPoolRequest memory request) 
+    {
+        request.assets = assets;
+        request.maxAmountsIn = maxAmountsIn;
+        request.userData = userData;
+        request.fromInternalBalance = fromInternalBalance;
+    }
+
+    function _addBalancerBSSLiquidity (uint256 beanAmount, 
+        bytes32 poolId,
+        address sender,
+        address recipient,
+        IVault.JoinPoolRequest memory request
+    ) 
+        internal
+    {
+        // AppStorage storage s = LibAppStorage.diamondStorage();
+        // bytes memory myFunctionCall = abi.encodeWithSelector(
+        //     s.poolDepositFunctions[poolAddress],
+        //     poolId, sender, recipient, request
+        // );
+        // (bool success, bytes memory data) = address(this).delegatecall(myFunctionCall);
+        // require(success, "Silo: Bean denominated value failed.")
+        DiamondStorage storage ds = diamondStorage();
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        // TODO: Not using Ds Router but Vault Address
+        IVault(s.balancerVault).joinPool(
+            poolId, 
+            sender, 
+            recipient, 
+            request
+        );
+    }
+
+
     function _addLiquidityWETH(uint256 wethAmount, uint256 beanAmount, uint256 minWethAmount, uint256 minBeanAmount)
         internal
         returns (uint256, uint256, uint256)

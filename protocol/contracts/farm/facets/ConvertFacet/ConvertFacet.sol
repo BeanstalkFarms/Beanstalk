@@ -36,7 +36,7 @@ contract ConvertFacet is ConvertSilo {
         uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(s.ss[s.c.pair].seeds)));
         _s = getDepositSeason(_s);
 
-        _depositLP(_s, lp, beansConverted, set.toInternalBalance);
+        _deposit(s.c.pair, _s, lp, beansConverted, set.toInternalBalance);
         LibCheck.balanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }   
@@ -52,7 +52,7 @@ contract ConvertFacet is ConvertSilo {
         Storage.Settings memory set = defaultSettings();
         LibInternal.updateSilo(msg.sender);
         (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
-        uint256 stalkRemoved = _withdrawLPForConvert(crates, amounts, lpConverted, set.fromInternalBalance);
+        uint256 stalkRemoved = _withdrawForConvert(s.c.pair, crates, amounts, lpConverted, set.fromInternalBalance);
         uint32 _s = uint32(stalkRemoved.div(beans.mul(C.getSeedsPerBean())));
         _s = getDepositSeason(_s);
         _depositBeans(beans, _s, set.toInternalBalance);
@@ -98,7 +98,7 @@ contract ConvertFacet is ConvertSilo {
     {
         Storage.Settings memory set = defaultSettings();
         LibClaim.claim(claim);
-        _convertAddAndDepositLP(lp, al, crates, amounts, set.toInternalBalance);
+        _convertAddAndDepositLP(s.c.pair, lp, al, crates, amounts, set.toInternalBalance);
     }
 
     function convertAddAndDepositLP(
@@ -111,7 +111,19 @@ contract ConvertFacet is ConvertSilo {
         payable
     {
         Storage.Settings memory set = defaultSettings();
-        _convertAddAndDepositLP(lp, al, crates, amounts, set.toInternalBalance);
+        _convertAddAndDepositLP(s.c.pair, lp, al, crates, amounts, set.toInternalBalance);
+    }
+
+    function convertDepositedBeansAndCirculatingStalkSeed(
+        uint256 beans,
+        uint32[] memory crates,
+        uint256[] memory amounts
+    )
+        public
+        payable
+    {
+        Storage.Settings memory set = defaultSettings();
+        _convertDepositedBeansAndCirculatingStalkSeed(s.balancerBeanStalkSeedPool, beans, crates, amounts, set.toInternalBalance, set.fromInternalBalance);
     }
 
     function lpToPeg() external view returns (uint256 lp) {

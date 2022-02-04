@@ -77,6 +77,37 @@ contract InitDiamond {
         s.ss[s.c.pair].selector = bytes4(keccak256("uniswapLPtoBDV(address,uint256)")); 
         s.ss[s.c.pair].seeds = 4;
         s.ss[s.c.pair].stalk = 10000;
+
+        // Balancer Stalk, Seed, Bean Pool Creation
+        bytes memory bytecode = type(Seed).creationCode;
+        // Generate Salt using Owner of Seed Contract
+        bytes32 salt = keccak256(abi.encodePacked(address(this)));
+        address seedAddress;
+        assembly {
+            seedAddress := create2(0, add(bytecode, 32), mload(bytecode), salt)
+        }
+        s.seedContract = seedAddress;
+
+        s.balancerVault = BALANCER_VAULT;
+        // Balancer Pool Parameters
+        string memory name = "Three-Token Bean, Stalk, Seeds Test Pool";
+        string memory symbol = "33SEED-33STALK-34Bean";
+        IERC20[] memory tokens;
+        tokens[0] = IERC20(seedAddress);
+        tokens[1] = IERC20(address(this));
+        tokens[2] = IERC20(s.c.bean);
+        // Balancer weights are bounded by 1.00 with 18 Decimals
+        uint256[] memory weights;
+        weights[0] = uint256(33e16);
+        weights[1] = uint256(33e16);
+        weights[2] = uint256(34e16);
+        uint256 swapFeePercentage = uint256(5 * 10^15);
+        address poolOwner = address(this);
+        
+        s.balancerBeanStalkSeedPool = address(IWeightedPoolFactory(BALANCER_WEIGHTED_POOL_FACTORY).create(name, 
+            symbol, tokens, weights, swapFeePercentage, poolOwner));
+
+        s.poolDepositFunctions[s.balancerBeanStalkSeedPool] = bytes4(keccak256("joinPool(bytes32,address,address,JoinPoolRequest)"));
     }
 
 }
