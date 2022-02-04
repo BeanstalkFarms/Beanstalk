@@ -316,7 +316,7 @@ library LibMarket {
         bool fromInternalBalance
     ) 
         internal 
-        returns (JoinPoolRequest memory request) 
+        returns (IVault.JoinPoolRequest memory request) 
     {
         request.assets = assets;
         request.maxAmountsIn = maxAmountsIn;
@@ -324,11 +324,11 @@ library LibMarket {
         request.fromInternalBalance = fromInternalBalance;
     }
 
-    function _addBalancerLiquidity (address poolAddress, 
+    function _addBalancerBSSLiquidity (uint256 beanAmount, 
         bytes32 poolId,
         address sender,
         address recipient,
-        JoinPoolRequest memory request
+        IVault.JoinPoolRequest memory request
     ) 
         internal
     {
@@ -340,8 +340,8 @@ library LibMarket {
         // (bool success, bytes memory data) = address(this).delegatecall(myFunctionCall);
         // require(success, "Silo: Bean denominated value failed.")
         DiamondStorage storage ds = diamondStorage();
-        // Not using Ds Router but Vault Address
-        IVault(ds.router).joinPool(bytes32,address,address,JoinPoolRequest){value: beanAmount}(
+        // TODO: Not using Ds Router but Vault Address
+        IVault(ds.router).joinPool{value: beanAmount}(
             poolId, 
             sender, 
             recipient, 
