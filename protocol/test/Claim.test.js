@@ -96,12 +96,12 @@ describe('Claim', function () {
 
     describe('claim LP', async function () {
       it('reverts when deposit is not claimable', async function () {
-        await expect(this.claim.connect(user).claimLP(['0'])).to.be.revertedWith('Claim: LP withdrawal is empty.')
+        await expect(this.claim.connect(user).claimLegacyLP(['0'])).to.be.revertedWith('Claim: LP withdrawal is empty.')
       });
 
       it('successfully claims lp', async function () {
         const lp = await this.pair.balanceOf(userAddress)
-        await this.claim.connect(user).claimLP(['27'])
+        await this.claim.connect(user).claimLegacyLP(['27'])
         const newLP = await this.pair.balanceOf(userAddress)
         const lpDeposit = await this.silo.tokenDeposit(this.pair.address, userAddress, '27')
         expect(lpDeposit[0]).to.be.equal('0');
