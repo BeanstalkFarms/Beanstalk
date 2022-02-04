@@ -87,7 +87,7 @@ contract ConvertSilo is ToolShed {
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
-    function _convertAddAndDepositBeansAndCirculatingSeedStalk(
+    function _convertDepositedBeansAndCirculatingSeedStalk(
         uint256 lp,
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
@@ -104,6 +104,7 @@ contract ConvertSilo is ToolShed {
             	bean().transferFrom(msg.sender, address(this), w.beansTransferred);
         }
         (w.beansAdded, w.newLP) = LibMarket.addLiquidity(al); // w.beansAdded is beans added to LP
+        
         require(w.newLP > 0, "Silo: No LP added.");
         (w.beansRemoved, w.stalkRemoved) = __withdrawBeansForConvert(crates, amounts, w.beansAdded); // w.beansRemoved is beans removed from Silo
         uint256 stalk_to_remove = w.stalkRemoved;

@@ -39,6 +39,7 @@ contract InitDiamond {
     address private constant UNISWAP_ROUTER = address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
     address private constant PEG_PAIR = address(0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc);
     address private constant BALANCER_WEIGHTED_POOL_FACTORY = address(0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9);
+    address private constant BALANCER_VAULT = address(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
 
     function init() external {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
@@ -88,7 +89,7 @@ contract InitDiamond {
         }
         s.seedContract = seedAddress;
 
-        s.balancerVault = address(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
+        s.balancerVault = BALANCER_VAULT;
         // Balancer Pool Parameters
         string memory name = "Three-Token Bean, Stalk, Seeds Test Pool";
         string memory symbol = "33SEED-33STALK-34Bean";

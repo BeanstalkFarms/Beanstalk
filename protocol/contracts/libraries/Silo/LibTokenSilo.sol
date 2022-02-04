@@ -121,7 +121,7 @@ library LibTokenSilo {
             s.poolDepositFunctions[poolAddress],
             poolId, sender, recipient, request
         );
-        (bool success, bytes memory data) = address(s.balancerVault).delegatecall(myFunctionCall);
+        (bool success, bytes memory data) = address(this).delegatecall(myFunctionCall);
         require(success, "Silo: Bean denominated value failed.");
         // assembly { bdv := mload(add(data, add(0x20, 0))) }
     }

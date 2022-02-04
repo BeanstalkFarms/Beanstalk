@@ -114,17 +114,17 @@ contract ConvertFacet is ConvertSilo {
         _convertAddAndDepositLP(lp, al, crates, amounts, set.toInternalBalance);
     }
 
-    function convertAddAndDepositBeansAndCirculatingSeedStalk(
+    function convertDepositedBeansAndCirculatingSeedStalk(
         uint256 beans,
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
-        uint256[] memory amounts,
-	    Storage.Settings calldata set
+        uint256[] memory amounts
     )
         public
         payable
     {
-        _convertAddAndDepositBeansAndCirculatingSeedStalk(beans, al, crates, amounts, set.toInternalBalance, set.fromInternalBalance);
+        Storage.Settings memory set = defaultSettings();
+        _convertDepositedBeansAndCirculatingSeedStalk(beans, al, crates, amounts, set.toInternalBalance, set.fromInternalBalance);
     }
 
     function lpToPeg() external view returns (uint256 lp) {

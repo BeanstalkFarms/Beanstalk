@@ -14,7 +14,7 @@ import "./LibClaim.sol";
 
 /**
  * @author Publius
- * @title Market Library handles swapping, addinga and removing LP on Uniswap for Beanstalk.
+ * @title Market Library handles swapping, adding and removing LP on Uniswap for Beanstalk.
 **/
 library LibMarket {
 
