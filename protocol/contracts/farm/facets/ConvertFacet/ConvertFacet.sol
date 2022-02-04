@@ -36,7 +36,7 @@ contract ConvertFacet is ConvertSilo {
         uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(s.ss[s.c.pair].seeds)));
         _s = getDepositSeason(_s);
 
-        _deposit(_s, lp, beansConverted, set.toInternalBalance);
+        _deposit(s.c.pair, _s, lp, beansConverted, set.toInternalBalance);
         LibCheck.balanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }   
@@ -114,9 +114,8 @@ contract ConvertFacet is ConvertSilo {
         _convertAddAndDepositLP(lp, al, crates, amounts, set.toInternalBalance);
     }
 
-    function convertDepositedBeansAndCirculatingSeedStalk(
+    function convertDepositedBeansAndCirculatingStalkSeed(
         uint256 beans,
-        LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
         uint256[] memory amounts
     )
@@ -124,7 +123,7 @@ contract ConvertFacet is ConvertSilo {
         payable
     {
         Storage.Settings memory set = defaultSettings();
-        _convertDepositedBeansAndCirculatingSeedStalk(beans, al, crates, amounts, set.toInternalBalance, set.fromInternalBalance);
+        _convertDepositedBeansAndCirculatingStalkSeed(s.balancerBeanStalkSeedPool, beans, crates, amounts, set.toInternalBalance, set.fromInternalBalance);
     }
 
     function lpToPeg() external view returns (uint256 lp) {

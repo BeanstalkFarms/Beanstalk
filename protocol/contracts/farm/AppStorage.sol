@@ -245,7 +245,8 @@ struct AppStorage {
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
     mapping(address => SiloSettings) ss;
 
-    address balancerSeedStalkBeanPool;
+    address balancerVault;
+    address balancerBeanStalkSeedPool;
     mapping(address => bytes4) poolDepositFunctions;
-    BalancerPoolConfig balancerSeedStalkBeanPoolConfig;
+    BalancerPoolConfig balancerBeanStalkSeedPoolConfig;
 }

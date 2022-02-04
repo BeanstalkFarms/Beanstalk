@@ -70,7 +70,7 @@ contract InitDiamond {
             block.timestamp;
 
         s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
-        LibMarket.initMarket(s.c.bean, s.c.weth, UNISWAP_ROUTER, BALANCER_VAULT);
+        LibMarket.initMarket(s.c.bean, s.c.weth, UNISWAP_ROUTER);
         LibStalk.initStalkToken('Stalk', 'STALK');
 
         IBean(s.c.bean).mint(msg.sender, C.getAdvanceIncentive());
@@ -89,6 +89,7 @@ contract InitDiamond {
         }
         s.seedContract = seedAddress;
 
+        s.balancerVault = BALANCER_VAULT;
         // Balancer Pool Parameters
         string memory name = "Three-Token Bean, Stalk, Seeds Test Pool";
         string memory symbol = "33SEED-33STALK-34Bean";
@@ -104,9 +105,9 @@ contract InitDiamond {
         uint256 swapFeePercentage = uint256(5 * 10^15);
         address poolOwner = address(this);
         
-        s.balancerSeedStalkBeanPool = address(IWeightedPoolFactory(BALANCER_WEIGHTED_POOL_FACTORY).create(name, 
+        s.balancerBeanStalkSeedPool = address(IWeightedPoolFactory(BALANCER_WEIGHTED_POOL_FACTORY).create(name, 
             symbol, tokens, weights, swapFeePercentage, poolOwner));
 
-        s.poolDepositFunctions[s.balancerSeedStalkBeanPool] = bytes4(keccak256("joinPool(bytes32,address,address,JoinPoolRequest)"));
+        s.poolDepositFunctions[s.balancerBeanStalkSeedPool] = bytes4(keccak256("joinPool(bytes32,address,address,JoinPoolRequest)"));
     }
 }

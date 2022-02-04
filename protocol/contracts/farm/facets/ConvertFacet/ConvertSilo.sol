@@ -82,14 +82,14 @@ contract ConvertSilo is ToolShed {
         if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
 	
         lp = lp.add(w.newLP);
-        _deposit(depositSeason, lp, LibTokenSilo.beanDenominatedValue(s.c.pair, lp), toInternalBalance);
+        _deposit(s.c.pair, depositSeason, lp, LibTokenSilo.beanDenominatedValue(s.c.pair, lp), toInternalBalance);
         LibCheck.beanBalanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
-    function _convertDepositedBeansAndCirculatingSeedStalk(
-        uint256 lp,
-        LibMarket.AddLiquidity calldata al,
+    function _convertDepositedBeansAndCirculatingStalkSeed(
+        address token,
+        uint256 beans,
         uint32[] memory crates,
         uint256[] memory amounts,
        	bool toInternalBalance,
@@ -97,44 +97,29 @@ contract ConvertSilo is ToolShed {
     )
         internal
     {
-	    LibInternal.updateSilo(msg.sender);
-        WithdrawState memory w;
-        if (bean().balanceOf(address(this)) < al.beanAmount) {
-            	w.beansTransferred = al.beanAmount.sub(s.bean.deposited);
-            	bean().transferFrom(msg.sender, address(this), w.beansTransferred);
-        }
-        (w.beansAdded, w.newLP) = LibMarket.addLiquidity(al); // w.beansAdded is beans added to LP
+	    // LibInternal.updateSilo(msg.sender);
+        // WithdrawState memory w;
+        // // (w.beansAdded, w.newLP) = LibMarket.addLiquidity(al); // w.beansAdded is beans added to LP
         
-        require(w.newLP > 0, "Silo: No LP added.");
-        (w.beansRemoved, w.stalkRemoved) = __withdrawBeansForConvert(crates, amounts, w.beansAdded); // w.beansRemoved is beans removed from Silo
-        uint256 stalk_to_remove = w.stalkRemoved;
-        // Because we have not withdrawn the silo assets yet, we must account for the actual stalk removed here
-        w.stalkRemoved = w.stalkRemoved.sub(w.beansRemoved.mul(C.getStalkPerBean()));
-        
-        uint256 amountFromWallet = w.beansAdded.sub(w.beansRemoved, "Silo: Removed too many Beans.");
+        // // require(w.newLP > 0, "Silo: No LP added.");
+        // (w.beansRemoved, w.stalkRemoved) = __withdrawBeansForConvert(crates, amounts, beans); // w.beansRemoved is beans removed from Silo
+        // uint256 stalk_to_remove = w.stalkRemoved;
+        // // Because we have not withdrawn the silo assets yet, we must account for the actual stalk removed here
+        // w.stalkRemoved = w.stalkRemoved.sub(w.beansRemoved.mul(C.getStalkPerBean()));
 
-        if (amountFromWallet < w.beansTransferred) {
-            bean().transfer(msg.sender, w.beansTransferred.sub(amountFromWallet));
-	    } else if (w.beansTransferred < amountFromWallet) {
-            uint256 transferAmount = amountFromWallet.sub(w.beansTransferred);
-            LibMarket.allocatedBeans(transferAmount);
-        }
-
-        w.i = w.stalkRemoved.div(LibTokenSilo.beanDenominatedValue(s.c.pair, lp.add(w.newLP)), "Silo: No LP Beans.");
-        uint32 depositSeason = uint32(season().sub(w.i.div(s.ss[s.c.pair].seeds)));
-
-        if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
+        // w.i = w.stalkRemoved.div(LibTokenSilo.beanDenominatedValue(token, lp.add(w.newLP)), "Silo: No LP Beans.");
+        // uint32 depositSeason = uint32(season().sub(w.i.div(s.ss[token].seeds)));
 	
-        lp = lp.add(w.newLP);
-        (w.grossAddedStalk, w.grossAddedSeeds) = __deposit(depositSeason, lp, LibTokenSilo.beanDenominatedValue(s.c.pair, lp));
-        // Net Total Up Actual Deposited Stalk and Seeds
-        w.netStalk = int256(w.grossAddedStalk) - int256(stalk_to_remove);
-        w.netSeeds = int256(w.grossAddedSeeds) - int256(w.beansRemoved.mul(C.getSeedsPerBean()));
-        // Increment and Decrement Silo Assets
-        LibSilo.convertSiloAssets(msg.sender, w.netSeeds,  w.netStalk, toInternalBalance, fromInternalBalance);
+        // lp = lp.add(w.newLP);
+        // (w.grossAddedStalk, w.grossAddedSeeds) = __deposit(token, depositSeason, lp, LibTokenSilo.beanDenominatedValue(s.c.pair, lp));
+        // // Net Total Up Actual Deposited/Withdrawn Stalk and Seeds
+        // w.netStalk = int256(w.grossAddedStalk) - int256(stalk_to_remove);
+        // w.netSeeds = int256(w.grossAddedSeeds) - int256(w.beansRemoved.mul(C.getSeedsPerBean()));
+        // // Increment and Decrement Silo Assets
+        // LibSilo.convertSiloAssets(msg.sender, w.netSeeds,  w.netStalk, toInternalBalance, fromInternalBalance);
         
-        LibCheck.beanBalanceCheck();
-        LibSilo.updateBalanceOfRainStalk(msg.sender);
+        // LibCheck.beanBalanceCheck();
+        // LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
     /**
@@ -142,6 +127,7 @@ contract ConvertSilo is ToolShed {
     **/
 
     function __deposit(
+        address token,
         uint32 _s, 
         uint256 amount, 
         uint256 lpb
@@ -149,14 +135,14 @@ contract ConvertSilo is ToolShed {
         internal 
         returns(uint256 stalk_to_deposit, uint256 seeds_to_deposit) 
     {
-        LibTokenSilo.depositWithBDV(msg.sender, s.c.pair, _s, amount, lpb);
-        uint256 seeds_to_deposit = lpb.mul(s.ss[s.c.pair].seeds);
-        uint256 stalk_to_deposit = lpb.mul(s.ss[s.c.pair].stalk);
+        LibTokenSilo.depositWithBDV(msg.sender, token, _s, amount, lpb);
+        uint256 seeds_to_deposit = lpb.mul(s.ss[token].seeds);
+        uint256 stalk_to_deposit = lpb.mul(s.ss[token].stalk);
         if (_s > 0) stalk_to_deposit = stalk_to_deposit.add((season().sub(_s)).mul(seeds_to_deposit));
     }
 
-    function _deposit(uint32 _s, uint256 amount, uint256 lpb, bool toInternalBalance) internal {
-        (uint256 stalk, uint256 seeds) = __deposit(_s, amount, lpb);
+    function _deposit(address token, uint32 _s, uint256 amount, uint256 lpb, bool toInternalBalance) internal {
+        (uint256 stalk, uint256 seeds) = __deposit(token, _s, amount, lpb);
         LibSilo.depositSiloAssets(msg.sender, seeds, stalk, toInternalBalance);
     }
 
