@@ -93,7 +93,7 @@ contract ConvertFacet is ConvertSilo {
         payable
     {
         LibClaim.claim(claim);
-        _convertAddAndDepositLP(lp, al, crates, amounts);
+        _convertAddAndDepositLP(s.c.pair, lp, al, crates, amounts);
     }
 
     function convertAddAndDepositLP(
@@ -105,7 +105,7 @@ contract ConvertFacet is ConvertSilo {
         public
         payable
     {
-        _convertAddAndDepositLP(lp, al, crates, amounts);
+        _convertAddAndDepositLP(s.c.pair, lp, al, crates, amounts);
     }
 
     function lpToPeg() external view returns (uint256 lp) {
