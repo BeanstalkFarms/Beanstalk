@@ -332,14 +332,21 @@ library LibMarket {
     ) 
         internal
     {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        bytes memory myFunctionCall = abi.encodeWithSelector(
-            s.poolDepositFunctions[poolAddress],
-            poolId, sender, recipient, request
+        // AppStorage storage s = LibAppStorage.diamondStorage();
+        // bytes memory myFunctionCall = abi.encodeWithSelector(
+        //     s.poolDepositFunctions[poolAddress],
+        //     poolId, sender, recipient, request
+        // );
+        // (bool success, bytes memory data) = address(this).delegatecall(myFunctionCall);
+        // require(success, "Silo: Bean denominated value failed.")
+        DiamondStorage storage ds = diamondStorage();
+        // Not using Ds Router but Vault Address
+        IVault(ds.router).joinPool(bytes32,address,address,JoinPoolRequest){value: beanAmount}(
+            poolId, 
+            sender, 
+            recipient, 
+            request
         );
-        (bool success, bytes memory data) = address(this).delegatecall(myFunctionCall);
-        require(success, "Silo: Bean denominated value failed.");
-        // assembly { bdv := mload(add(data, add(0x20, 0))) }
     }
 
 
