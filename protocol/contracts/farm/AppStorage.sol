@@ -200,6 +200,11 @@ struct SiloSettings {
     uint32 stalk;
 }
 
+struct BalancerPoolConfig {
+    address poolAddress;
+    bytes32 poolId;
+}
+
 struct AppStorage {
     uint8 index;
     int8[32] cases;
