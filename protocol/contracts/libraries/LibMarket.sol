@@ -25,6 +25,7 @@ library LibMarket {
         address bean;
         address weth;
         address router;
+        address balancerVault;
     }
 
     struct AddLiquidity {
@@ -52,11 +53,12 @@ library LibMarket {
         }
     }
 
-    function initMarket(address bean, address weth, address router) internal {
+    function initMarket(address bean, address weth, address router, address balancerVault) internal {
         DiamondStorage storage ds = diamondStorage();
         ds.bean = bean;
         ds.weth = weth;
         ds.router = router;
+        ds.balancerVault = balancerVault;
     }
 
     /**
@@ -341,7 +343,7 @@ library LibMarket {
         // require(success, "Silo: Bean denominated value failed.")
         DiamondStorage storage ds = diamondStorage();
         // TODO: Not using Ds Router but Vault Address
-        IVault(ds.router).joinPool{value: beanAmount}(
+        IVault(ds.balancerVault).joinPool{value: beanAmount}(
             poolId, 
             sender, 
             recipient, 
