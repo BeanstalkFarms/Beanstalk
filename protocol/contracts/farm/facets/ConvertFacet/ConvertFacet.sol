@@ -23,14 +23,14 @@ contract ConvertFacet is ConvertSilo {
     function convertDepositedBeans(
         uint256 beans,
         uint256 minLP,
-        uint32[] memory crates,
+        uint32[] memory seasons,
         uint256[] memory amounts
     )
         external 
     {
         LibInternal.updateSilo(msg.sender);
         (uint256 lp, uint256 beansConverted) = LibConvert.sellToPegAndAddLiquidity(beans, minLP);
-        (uint256 beansRemoved, uint256 stalkRemoved) = _withdrawBeansForConvert(crates, amounts, beansConverted);
+        (uint256 beansRemoved, uint256 stalkRemoved) = _withdrawBeansForConvert(seasons, amounts, beansConverted);
         require(beansRemoved == beansConverted, "Silo: Wrong Beans removed.");
         uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(s.ss[s.c.pair].seeds)));
         _s = getDepositSeason(_s);
@@ -43,14 +43,14 @@ contract ConvertFacet is ConvertSilo {
     function convertDepositedLP(
         uint256 lp,
         uint256 minBeans,
-        uint32[] memory crates,
+        uint32[] memory seasons,
         uint256[] memory amounts
     )
         external
     {
         LibInternal.updateSilo(msg.sender);
         (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
-        uint256 stalkRemoved = _withdrawLPForConvert(crates, amounts, lpConverted);
+        uint256 stalkRemoved = _withdrawLPForConvert(seasons, amounts, lpConverted);
         uint32 _s = uint32(stalkRemoved.div(beans.mul(C.getSeedsPerBean())));
         _s = getDepositSeason(_s);
         _depositBeans(beans, _s);
@@ -61,7 +61,7 @@ contract ConvertFacet is ConvertSilo {
     function convertDepositedLegacyLP(
         uint256 lp,
         uint256 minBeans,
-        uint32[] memory crates,
+        uint32[] memory seasons,
         uint256[] memory amounts,
         bool[] memory legacy
     )
@@ -70,7 +70,7 @@ contract ConvertFacet is ConvertSilo {
         LibInternal.updateSilo(msg.sender);
         (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
         uint256 stalkRemoved = LibLegacyLPSilo.removeLPDepositsForConvert(
-            crates, 
+            seasons, 
             amounts, 
             legacy,
             lpConverted
@@ -85,7 +85,7 @@ contract ConvertFacet is ConvertSilo {
     function claimConvertAddAndDepositLP(
         uint256 lp,
         LibMarket.AddLiquidity calldata al,
-        uint32[] memory crates,
+        uint32[] memory seasons,
         uint256[] memory amounts,
         LibClaim.Claim calldata claim
     )
@@ -93,19 +93,19 @@ contract ConvertFacet is ConvertSilo {
         payable
     {
         LibClaim.claim(claim);
-        _convertAddAndDepositLP(lp, al, crates, amounts);
+        _convertAddAndDepositLP(lp, al, seasons, amounts);
     }
 
     function convertAddAndDepositLP(
         uint256 lp,
         LibMarket.AddLiquidity calldata al,
-        uint32[] memory crates,
+        uint32[] memory seasons,
         uint256[] memory amounts
     )
         public
         payable
     {
-        _convertAddAndDepositLP(lp, al, crates, amounts);
+        _convertAddAndDepositLP(lp, al, seasons, amounts);
     }
 
     function lpToPeg() external view returns (uint256 lp) {

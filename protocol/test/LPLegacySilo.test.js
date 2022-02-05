@@ -65,8 +65,8 @@ describe('Legacy LP Silo Support', function () {
       expect(deposit[1]).to.be.equal(0);
       expect(await this.silo.tokenWithdrawal(userAddress, this.pair.address, '27')).to.be.equal('1');
 
-      expect(await this.silo.totalDepositedToken(this.pair.address)).to.be.equal('2');
-      expect(await this.silo.totalWithdrawnToken(this.pair.address)).to.be.equal('1');
+      expect(await this.silo.totalDeposited(this.pair.address)).to.be.equal('2');
+      expect(await this.silo.totalWithdrawn(this.pair.address)).to.be.equal('1');
 
       expect(await this.silo.balanceOfStalk(userAddress)).to.be.equal('40008000');
       expect(await this.silo.balanceOfSeeds(userAddress)).to.be.equal('16000');
@@ -85,8 +85,8 @@ describe('Legacy LP Silo Support', function () {
       expect(deposit[1]).to.be.equal(0);
       expect(await this.silo.tokenWithdrawal(userAddress, this.pair.address, '27')).to.be.equal('2');
 
-      expect(await this.silo.totalDepositedToken(this.pair.address)).to.be.equal('1');
-      expect(await this.silo.totalWithdrawnToken(this.pair.address)).to.be.equal('2');
+      expect(await this.silo.totalDeposited(this.pair.address)).to.be.equal('1');
+      expect(await this.silo.totalWithdrawn(this.pair.address)).to.be.equal('2');
 
       expect(await this.silo.balanceOfStalk(userAddress)).to.be.equal('20000000');
       expect(await this.silo.balanceOfSeeds(userAddress)).to.be.equal('8000');
@@ -105,8 +105,8 @@ describe('Legacy LP Silo Support', function () {
       expect(deposit[1]).to.be.equal(0);
       expect(await this.silo.tokenWithdrawal(userAddress, this.pair.address, '27')).to.be.equal('2')
 
-      expect(await this.silo.totalDepositedToken(this.pair.address)).to.be.equal('1');
-      expect(await this.silo.totalWithdrawnToken(this.pair.address)).to.be.equal('2');
+      expect(await this.silo.totalDeposited(this.pair.address)).to.be.equal('1');
+      expect(await this.silo.totalWithdrawn(this.pair.address)).to.be.equal('2');
 
       expect(await this.silo.balanceOfStalk(userAddress)).to.be.equal('20008000');
       expect(await this.silo.balanceOfSeeds(userAddress)).to.be.equal('8000');
@@ -132,7 +132,7 @@ describe('Legacy LP Silo Support', function () {
       // const deposit = await this.silo.legacyLPDeposit(userAddress, 2)
       // expect(deposit[0]).to.be.equal(0);
       // expect(deposit[1]).to.be.equal(0);
-      expect(await this.silo.totalDepositedToken(this.pair.address)).to.be.equal('2');
+      expect(await this.silo.totalDeposited(this.pair.address)).to.be.equal('2');
       expect(await this.silo.totalDepositedBeans()).to.be.equal('60000');
 
       expect(await this.silo.balanceOfStalk(userAddress)).to.be.equal('640008000');
@@ -148,7 +148,7 @@ describe('Legacy LP Silo Support', function () {
       const deposit = await this.silo.legacyLPDeposit(userAddress, 1)
       expect(deposit[0]).to.be.equal(0);
       expect(deposit[1]).to.be.equal(0);
-      expect(await this.silo.totalDepositedToken(this.pair.address)).to.be.equal('2');
+      expect(await this.silo.totalDeposited(this.pair.address)).to.be.equal('2');
       expect(await this.silo.totalDepositedBeans()).to.be.equal('60000');
 
       expect(await this.silo.balanceOfStalk(userAddress)).to.be.equal('640000000');
@@ -164,7 +164,7 @@ describe('Legacy LP Silo Support', function () {
       const deposit = await this.silo.legacyLPDeposit(userAddress, 1)
       expect(deposit[0]).to.be.equal(0);
       expect(deposit[1]).to.be.equal(0);
-      expect(await this.silo.totalDepositedToken(this.pair.address)).to.be.equal('1');
+      expect(await this.silo.totalDeposited(this.pair.address)).to.be.equal('1');
       expect(await this.silo.totalDepositedBeans()).to.be.equal('106666');
 
       expect(await this.silo.balanceOfStalk(userAddress)).to.be.equal('1086660000');

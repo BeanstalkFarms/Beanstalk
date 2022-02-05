@@ -17,10 +17,10 @@ contract TokenSilo is UpdateSilo {
     using SafeMath for uint256;
     using SafeMath for uint32;
 
-    event TokenDeposit(address indexed account, address indexed token, uint256 season, uint256 amount, uint256 bdv);
-    event TokenRemove(address indexed account, address indexed token, uint32[] crates, uint256[] crateTokens, uint256 amount);
-    event TokenWithdraw(address indexed account, address indexed token, uint256 season, uint256 amount);
-    event LegacyLPRemove(address indexed account, uint32[] crates, uint256[] crateLP, bool[] legacy, uint256 lp);
+    event TokenDeposit(address indexed account, address indexed token, uint32 season, uint256 amount, uint256 bdv);
+    event TokenRemove(address indexed account, address indexed token, uint32[] seasons, uint256[] amounts, uint256 amount);
+    event TokenWithdraw(address indexed account, address indexed token, uint32 season, uint256 amount);
+    event LegacyLPRemove(address indexed account, uint32[] seasons, uint256[] crateLP, bool[] legacy, uint256 lp);
 
     struct AssetsRemoved {
         uint256 tokensRemoved;
@@ -49,54 +49,46 @@ contract TokenSilo is UpdateSilo {
         return s.siloBalances[IERC20(token)].withdrawn;
     }
 
-    function deposit(address token, uint256 amount) public {
-        IERC20(token).transferFrom(msg.sender, address(this), amount);
-        _deposit(token, amount);
-    }
-
-    function withdraw(address token, uint32[] calldata crates, uint256[] calldata amounts) public {
-        _withdraw(token, crates, amounts);
-    }
-
     /**
      * Internal
     **/
 
     function _deposit(address token, uint256 amount) internal {
         updateSilo(msg.sender);
-        uint256 bdv = LibTokenSilo.deposit(msg.sender, token, season(), amount);
-        LibSilo.depositSiloAssets(msg.sender, bdv.mul(s.ss[token].seeds), bdv.mul(s.ss[token].stalk));
+        (uint256 seeds, uint256 stalk) = LibTokenSilo.deposit(msg.sender, token, season(), amount);
+        LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
     }
 
-    function _withdraw(address token, uint32[] calldata crates, uint256[] calldata amounts) internal {
+    function _withdraw(address token, uint32[] calldata seasons, uint256[] calldata amounts) internal {
         updateSilo(msg.sender);
-        require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
-        AssetsRemoved memory assetsRemoved = removeDeposits(token, crates, amounts);
+        require(seasons.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
+        AssetsRemoved memory ar = removeDeposits(token, seasons, amounts);
         uint32 arrivalSeason = season() + s.season.withdrawSeasons;
-        addTokenWithdrawal(msg.sender, token, arrivalSeason, assetsRemoved.tokensRemoved);
-        LibTokenSilo.decrementDepositedToken(token, assetsRemoved.tokensRemoved);
-        LibSilo.withdrawSiloAssets(msg.sender, assetsRemoved.seedsRemoved, assetsRemoved.stalkRemoved);
+        addTokenWithdrawal(msg.sender, token, arrivalSeason, ar.tokensRemoved);
+        LibTokenSilo.decrementDepositedToken(token, ar.tokensRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, ar.seedsRemoved, ar.stalkRemoved);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
-    function removeDeposits(address token, uint32[] calldata crates, uint256[] calldata amounts)
+    function removeDeposits(address token, uint32[] calldata seasons, uint256[] calldata amounts)
         private
-        returns (AssetsRemoved memory assetsRemoved)
+        returns (AssetsRemoved memory ar)
     {
-        for (uint256 i = 0; i < crates.length; i++) {
+        if (token == C.beanAddress()) return removeBeanDeposits(seasons, amounts);
+        for (uint256 i = 0; i < seasons.length; i++) {
             (uint256 crateBeans, uint256 crateBdv) = LibTokenSilo.removeDeposit(
                 msg.sender,
                 token,
-                crates[i],
+                seasons[i],
                 amounts[i]
             );
-            assetsRemoved.tokensRemoved = assetsRemoved.tokensRemoved.add(crateBeans);
-            assetsRemoved.stalkRemoved = assetsRemoved.stalkRemoved.add(crateBdv.mul(s.ss[token].stalk).add(
-                LibSilo.stalkReward(crateBdv, season()-crates[i]))
+            ar.tokensRemoved = ar.tokensRemoved.add(crateBeans);
+            ar.stalkRemoved = ar.stalkRemoved.add(crateBdv.mul(s.ss[token].stalk).add(
+                LibSilo.stalkReward(crateBdv, season()-seasons[i]))
             );
-            assetsRemoved.seedsRemoved = assetsRemoved.seedsRemoved.add(crateBdv.mul(s.ss[token].seeds));
+            ar.seedsRemoved = ar.seedsRemoved.add(crateBdv.mul(s.ss[token].seeds));
         }
-        emit TokenRemove(msg.sender, token, crates, amounts, assetsRemoved.tokensRemoved);
+        emit TokenRemove(msg.sender, token, seasons, amounts, ar.tokensRemoved);
     }
 
     function addTokenWithdrawal(address account, address token, uint32 arrivalSeason, uint256 amount) private {
@@ -110,6 +102,26 @@ contract TokenSilo is UpdateSilo {
     }
 
     /*
+     * Bean
+     */
+
+
+    function removeBeanDeposits(uint32[] calldata seasons, uint256[] calldata amounts)
+        private
+        returns (AssetsRemoved memory ar)
+    {
+        for (uint256 i = 0; i < seasons.length; i++) {
+            uint256 crateBeans = LibBeanSilo.removeBeanDeposit(msg.sender, seasons[i], amounts[i]);
+            ar.tokensRemoved = ar.tokensRemoved.add(crateBeans);
+            ar.stalkRemoved = ar.stalkRemoved.add(crateBeans.mul(C.getStalkPerBean()).add(
+                LibSilo.stalkReward(crateBeans.mul(C.getSeedsPerBean()), season()-seasons[i]))
+            );
+        }
+        ar.seedsRemoved = ar.tokensRemoved.mul(C.getSeedsPerBean());
+        emit TokenRemove(msg.sender, C.beanAddress(), seasons, amounts, ar.tokensRemoved);
+    }
+
+    /*
      * Legacy
      */
 
@@ -120,5 +132,13 @@ contract TokenSilo is UpdateSilo {
     function legacyLPWithdrawal(address account, uint32 id) public view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.a[account].lp.withdrawals[id];
+    }
+
+    function beanDeposit(address account, uint32 id) public view returns (uint256) {
+        return s.a[account].bean.deposits[id];
+    }
+
+    function legacyBeanWithdrawal(address account, uint32 i) public view returns (uint256) {
+            return s.a[account].bean.withdrawals[i];
     }
 }

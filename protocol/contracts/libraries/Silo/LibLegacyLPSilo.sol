@@ -19,8 +19,8 @@ library LibLegacyLPSilo {
 
     using SafeMath for uint256;
 
-    event LegacyLPRemove(address indexed account, uint32[] crates, uint256[] crateLP, bool[] legacy, uint256 lp);
-    event TokenWithdraw(address indexed account, address indexed token, uint256 season, uint256 amount);
+    event LegacyLPRemove(address indexed account, uint32[] seasons, uint256[] crateLP, bool[] legacy, uint256 lp);
+    event TokenWithdraw(address indexed account, address indexed token, uint32 season, uint256 amount);
 
     uint256 private constant STALK_PER_SEED = 2500;
 
@@ -30,10 +30,10 @@ library LibLegacyLPSilo {
         uint256 seedsRemoved;
     }
 
-    function withdrawLegacyLP(uint32[] calldata crates, uint256[] calldata amounts, bool[] calldata legacy) internal {
-        require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
+    function withdrawLegacyLP(uint32[] calldata seasons, uint256[] calldata amounts, bool[] calldata legacy) internal {
+        require(seasons.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         AppStorage storage s = LibAppStorage.diamondStorage();
-        AssetsRemoved memory assetsRemoved = removeLPDeposits(crates, amounts, legacy);
+        AssetsRemoved memory assetsRemoved = removeLPDeposits(seasons, amounts, legacy);
         uint32 arrivalSeason = s.season.current + s.season.withdrawSeasons;
         addLPWithdrawal(msg.sender, arrivalSeason, assetsRemoved.lpRemoved);
         LibTokenSilo.decrementDepositedToken(s.c.pair, assetsRemoved.lpRemoved);
@@ -42,7 +42,7 @@ library LibLegacyLPSilo {
     }
 
     function removeLPDepositsForConvert(
-        uint32[] memory crates,
+        uint32[] memory seasons,
         uint256[] memory amounts,
         bool[] memory legacy,
         uint256 maxLP
@@ -50,52 +50,52 @@ library LibLegacyLPSilo {
         internal
         returns (uint256)
     {
-        require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
+        require(seasons.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         AppStorage storage s = LibAppStorage.diamondStorage();
         AssetsRemoved memory ar;
         uint256 depositLP;
         uint256 depositSeeds;
         uint256 i = 0;
-        while ((i < crates.length) && (ar.lpRemoved < maxLP)) {
+        while ((i < seasons.length) && (ar.lpRemoved < maxLP)) {
             if (ar.lpRemoved.add(amounts[i]) < maxLP)
-                (depositLP, depositSeeds) = removeLPDeposit(msg.sender, crates[i], amounts[i], legacy[i]);
+                (depositLP, depositSeeds) = removeLPDeposit(msg.sender, seasons[i], amounts[i], legacy[i]);
             else
-                (depositLP, depositSeeds) = removeLPDeposit(msg.sender, crates[i], maxLP.sub(ar.lpRemoved), legacy[i]);
+                (depositLP, depositSeeds) = removeLPDeposit(msg.sender, seasons[i], maxLP.sub(ar.lpRemoved), legacy[i]);
             ar.lpRemoved = ar.lpRemoved.add(depositLP);
             ar.seedsRemoved = ar.seedsRemoved.add(depositSeeds);
-            ar.stalkRemoved = ar.stalkRemoved.add(LibSilo.stalkReward(depositSeeds, s.season.current-crates[i]));
+            ar.stalkRemoved = ar.stalkRemoved.add(LibSilo.stalkReward(depositSeeds, s.season.current-seasons[i]));
             i++;
         }
         if (i > 0) amounts[i.sub(1)] = depositLP;
-        while (i < crates.length) {
+        while (i < seasons.length) {
             amounts[i] = 0;
             i++;
         }
         LibTokenSilo.decrementDepositedToken(s.c.pair, ar.lpRemoved);
         LibSilo.withdrawSiloAssets(msg.sender, ar.seedsRemoved, ar.stalkRemoved.add(ar.seedsRemoved.mul(STALK_PER_SEED)));
-        emit LegacyLPRemove(msg.sender, crates, amounts, legacy, ar.lpRemoved);
+        emit LegacyLPRemove(msg.sender, seasons, amounts, legacy, ar.lpRemoved);
         return ar.stalkRemoved;
     }
 
-    function removeLPDeposits(uint32[] calldata crates, uint256[] calldata amounts, bool[] calldata legacy)
+    function removeLPDeposits(uint32[] calldata seasons, uint256[] calldata amounts, bool[] calldata legacy)
         internal
         returns (AssetsRemoved memory ar)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        for (uint256 i = 0; i < crates.length; i++) {
+        for (uint256 i = 0; i < seasons.length; i++) {
             (uint256 crateBeans, uint256 crateSeeds) = removeLPDeposit(
                 msg.sender,
-                crates[i],
+                seasons[i],
                 amounts[i], 
                 legacy[i]
             );
             ar.lpRemoved = ar.lpRemoved.add(crateBeans);
             ar.stalkRemoved = ar.stalkRemoved.add(crateSeeds.mul(STALK_PER_SEED).add(
-                LibSilo.stalkReward(crateSeeds, s.season.current-crates[i]))
+                LibSilo.stalkReward(crateSeeds, s.season.current-seasons[i]))
             );
             ar.seedsRemoved = ar.seedsRemoved.add(crateSeeds);
         }
-        emit LegacyLPRemove(msg.sender, crates, amounts, legacy, ar.lpRemoved);
+        emit LegacyLPRemove(msg.sender, seasons, amounts, legacy, ar.lpRemoved);
     }
 
     function removeLPDeposit(address account, uint32 id, uint256 amount, bool legacy)

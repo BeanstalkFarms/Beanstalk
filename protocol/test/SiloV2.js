@@ -29,6 +29,8 @@ describe('Generalized Silo V2', function () {
     await this.pair.connect(user2).approve(this.silo.address, '100000000000');
     await this.bean.connect(user).approve(this.silo.address, '100000000000');
     await this.bean.connect(user2).approve(this.silo.address, '100000000000'); 
+
+    console.log(await this.bean.address);
   });
 
   beforeEach (async function () {
@@ -74,7 +76,7 @@ describe('Generalized Silo V2', function () {
       })
 
       it('properly increments total balances', async function () {
-        expect(await this.silo.totalDepositedToken(this.pair.address)).to.be.equal('1');
+        expect(await this.silo.totalDeposited(this.pair.address)).to.be.equal('1');
         expect(await this.silo.totalStalk()).to.be.equal('20000000');
         expect(await this.silo.totalSeeds()).to.be.equal('8000');
       })
@@ -109,8 +111,8 @@ describe('Generalized Silo V2', function () {
       })
 
       it('properly increments total balances', async function () {
-        expect(await this.silo.totalDepositedToken(this.pair.address)).to.be.equal('0');
-        expect(await this.silo.totalWithdrawnToken(this.pair.address)).to.be.equal('1');
+        expect(await this.silo.totalDeposited(this.pair.address)).to.be.equal('0');
+        expect(await this.silo.totalWithdrawn(this.pair.address)).to.be.equal('1');
         expect(await this.silo.totalStalk()).to.be.equal('0');
         expect(await this.silo.totalSeeds()).to.be.equal('0');
       })

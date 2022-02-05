@@ -205,6 +205,7 @@ contract MockSeasonFacet is SeasonFacet {
         delete s.si;
         delete s.s;
         delete s.siloBalances[IERC20(s.c.pair)];
+        delete s.siloBalances[IERC20(C.beanAddress())];
         delete s.w;
         delete s.g;
         delete s.r;

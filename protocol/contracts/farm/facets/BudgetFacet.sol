@@ -20,7 +20,7 @@ contract BudgetFacet {
 
     function budgetSow(uint256 amount) public returns (uint256) {
         require(isBudget(msg.sender), "Budget: sender must be budget.");
-        IBean(s.c.bean).burnFrom(msg.sender, amount);
+        C.bean().burnFrom(msg.sender, amount);
 
         decreaseSoil(amount);
 

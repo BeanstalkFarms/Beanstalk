@@ -43,12 +43,11 @@ contract InitDiamond {
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
         ds.supportedInterfaces[type(IERC173).interfaceId] = true;
 
-        s.c.bean = address(new Bean());
         s.c.weth = IUniswapV2Router02(UNISWAP_ROUTER).WETH();
-        s.c.pair = address(IUniswapV2Factory(UNISWAP_FACTORY).createPair(s.c.bean, s.c.weth));
+        s.c.pair = address(IUniswapV2Factory(UNISWAP_FACTORY).createPair(C.beanAddress(), s.c.weth));
         s.c.pegPair = PEG_PAIR;
 
-        IBean(s.c.bean).approve(UNISWAP_ROUTER, uint256(-1));
+        C.bean().approve(UNISWAP_ROUTER, uint256(-1));
         IUniswapV2Pair(s.c.pair).approve(UNISWAP_ROUTER, uint256(-1));
         IWETH(s.c.weth).approve(UNISWAP_ROUTER, uint256(-1));
 
@@ -63,10 +62,10 @@ contract InitDiamond {
             (block.timestamp / s.season.period) * s.season.period :
             block.timestamp;
 
-        s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
-        LibMarket.initMarket(s.c.bean, s.c.weth, UNISWAP_ROUTER);
+        s.index = (IUniswapV2Pair(s.c.pair).token0() == C.beanAddress()) ? 0 : 1;
+        LibMarket.initMarket(s.c.weth, UNISWAP_ROUTER);
 
-        IBean(s.c.bean).mint(msg.sender, C.getAdvanceIncentive());
+        C.bean().mint(msg.sender, C.getAdvanceIncentive());
         emit Incentivization(msg.sender, C.getAdvanceIncentive());
 
         s.ss[s.c.pair].selector = bytes4(keccak256("uniswapLPtoBDV(address,uint256)")); 

@@ -36,14 +36,4 @@ library LibBeanSilo {
         s.a[account].bean.deposits[id] -= amount;
         return amount;
     }
-
-    function incrementDepositedBeans(uint256 amount) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        s.bean.deposited = s.bean.deposited.add(amount);
-    }
-
-    function decrementDepositedBeans(uint256 amount) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        s.bean.deposited = s.bean.deposited.sub(amount);
-    }
 }

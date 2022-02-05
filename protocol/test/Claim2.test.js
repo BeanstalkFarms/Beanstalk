@@ -7,7 +7,7 @@ const { print } = require('./utils/print.js')
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 
-describe('Claim', function () {
+describe('Claim2', function () {
   before(async function () {
     [owner,user,user2] = await ethers.getSigners();
     userAddress = user.address;

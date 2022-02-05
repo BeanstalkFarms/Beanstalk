@@ -47,13 +47,13 @@ contract FieldFacet is PodTransfer {
     }
 
     function sowBeans(uint256 amount) external returns (uint256) {
-        bean().transferFrom(msg.sender, address(this), amount);
+        C.bean().transferFrom(msg.sender, address(this), amount);
         return _sowBeans(amount);
     }
 
     function buyAndSowBeans(uint256 amount, uint256 buyAmount) public payable returns (uint256) {
         uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
-        if (amount > 0) bean().transferFrom(msg.sender, address(this), amount);
+        if (amount > 0) C.bean().transferFrom(msg.sender, address(this), amount);
         return _sowBeans(amount.add(boughtAmount));
     }
 

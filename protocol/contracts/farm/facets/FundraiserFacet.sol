@@ -25,7 +25,7 @@ contract FundraiserFacet {
 
     function fund(uint32 id, uint256 amount) public returns (uint256) {
         _fund(id, amount);
-        bean().burn(amount);
+        C.bean().burn(amount);
         return LibDibbler.sowNoSoil(amount, msg.sender);
     }
 
@@ -53,7 +53,7 @@ contract FundraiserFacet {
         s.fundraisers[id].total = amount;
         s.fundraisers[id].payee = payee;
         s.fundraiserIndex = id + 1;
-        bean().mint(address(this), amount);
+        C.bean().mint(address(this), amount);
         emit CreateFundraiser(id, payee, token, amount);
     }
 
@@ -75,9 +75,5 @@ contract FundraiserFacet {
 
     function numberOfFundraisers() public view returns (uint32) {
         return s.fundraiserIndex;
-    }
-
-    function bean() internal view returns (IBean) {
-        return IBean(s.c.bean);
     }
 }

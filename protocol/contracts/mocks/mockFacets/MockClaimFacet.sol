@@ -32,6 +32,6 @@ contract MockClaimFacet is ClaimFacet {
         payable
     {
         s.a[account].wrappedBeans += amount;
-        MockToken(s.c.bean).mint(address(this), amount);
+        MockToken(C.beanAddress()).mint(address(this), amount);
     }
 }

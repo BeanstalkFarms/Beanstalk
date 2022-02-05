@@ -168,7 +168,7 @@ describe('Silo', function () {
         expect(await this.silo.totalDepositedBeans()).to.eq('0');
         expect(await this.silo.totalStalk()).to.eq('0');
         expect(await this.silo.totalSeeds()).to.eq('0');
-        expect(await this.silo.totalWithdrawnBeans()).to.eq('1000');
+        expect(await this.silo.totalWithdrawn(this.bean.address)).to.eq('1000');
       });
       it('properly updates the user balance', async function () {
         expect(await this.silo.balanceOfStalk(userAddress)).to.eq('0');
@@ -193,7 +193,7 @@ describe('Silo', function () {
         expect(await this.silo.totalDepositedBeans()).to.eq('1000');
         expect(await this.silo.totalStalk()).to.eq('10000000');
         expect(await this.silo.totalSeeds()).to.eq('2000');
-        expect(await this.silo.totalWithdrawnBeans()).to.eq('1000');
+        expect(await this.silo.totalWithdrawn(this.bean.address)).to.eq('1000');
       });
       it('properly updates the user balance', async function () {
         expect(await this.silo.balanceOfStalk(userAddress)).to.eq('10000000');
@@ -215,7 +215,7 @@ describe('Silo', function () {
         expect(await this.silo.totalDepositedBeans()).to.eq('0');
         expect(await this.silo.totalStalk()).to.eq('0');
         expect(await this.silo.totalSeeds()).to.eq('0');
-        expect(await this.silo.totalWithdrawnBeans()).to.eq('2000');
+        expect(await this.silo.totalWithdrawn(this.bean.address)).to.eq('2000');
       });
       it('properly updates the user balance', async function () {
         expect(await this.silo.balanceOfStalk(userAddress)).to.eq('0');

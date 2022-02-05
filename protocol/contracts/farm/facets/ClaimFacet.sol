@@ -50,7 +50,7 @@ contract ClaimFacet {
     function singleAdvancedClaim(LibClaim.AdvancedClaim calldata ac, bool toWallet) public {
         uint256 beansClaimed = LibClaim.singleAdvancedClaim(msg.sender, ac, toWallet);
         if (beansClaimed > 0) {
-            if (toWallet) IBean(s.c.bean).transfer(msg.sender, beansClaimed);
+            if (toWallet) C.bean().transfer(msg.sender, beansClaimed);
             else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(beansClaimed);
         }
     }
@@ -58,7 +58,7 @@ contract ClaimFacet {
     function advancedClaim(LibClaim.AdvancedClaim[] calldata acs, bool toWallet) public {
         uint256 beansClaimed = LibClaim.advancedClaim(msg.sender, acs, toWallet);
         if (beansClaimed > 0) {
-            if (toWallet) IBean(s.c.bean).transfer(msg.sender, beansClaimed);
+            if (toWallet) C.bean().transfer(msg.sender, beansClaimed);
             else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(beansClaimed);
         }
     }
@@ -76,7 +76,7 @@ contract ClaimFacet {
 
     function claimLegacyBeans(uint32[] calldata withdrawals) public {
         uint256 beansClaimed = LibClaim.claimBeans(withdrawals);
-        IBean(s.c.bean).transfer(msg.sender, beansClaimed);
+        C.bean().transfer(msg.sender, beansClaimed);
         LibCheck.beanBalanceCheck();
     }
 
@@ -98,7 +98,7 @@ contract ClaimFacet {
 
     function harvest(uint256[] calldata plots) public {
         uint256 beansHarvested = LibClaim.harvest(plots);
-        IBean(s.c.bean).transfer(msg.sender, beansHarvested);
+        C.bean().transfer(msg.sender, beansHarvested);
         LibCheck.beanBalanceCheck();
     }
 
@@ -111,18 +111,18 @@ contract ClaimFacet {
         uint256 wBeans = s.a[msg.sender].wrappedBeans;
 
         if (amount > wBeans) {
-            IBean(s.c.bean).transfer(msg.sender, wBeans);
+            C.bean().transfer(msg.sender, wBeans);
             beansToWallet = s.a[msg.sender].wrappedBeans;
             s.a[msg.sender].wrappedBeans = 0;
         } else {
-            IBean(s.c.bean).transfer(msg.sender, amount);
+            C.bean().transfer(msg.sender, amount);
             s.a[msg.sender].wrappedBeans = wBeans.sub(amount);
             beansToWallet = amount;
         }
     }
 
     function wrapBeans(uint amount) public {
-        IBean(s.c.bean).transferFrom(msg.sender, address(this), amount);
+        C.bean().transferFrom(msg.sender, address(this), amount);
         s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(amount);
 
     }

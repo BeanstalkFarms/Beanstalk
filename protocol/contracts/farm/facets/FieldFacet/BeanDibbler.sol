@@ -64,11 +64,7 @@ contract BeanDibbler {
 
     function _sowBeans(uint256 amount) internal returns (uint256 pods) {
         pods = LibDibbler.sow(amount, msg.sender);
-        bean().burn(amount);
+        C.bean().burn(amount);
         LibCheck.beanBalanceCheck();
-    }
-
-    function bean() internal view returns (IBean) {
-        return IBean(s.c.bean);
     }
 }

@@ -43,9 +43,8 @@ library LibMarket {
         }
     }
 
-    function initMarket(address bean, address weth, address router) internal {
+    function initMarket(address weth, address router) internal {
         DiamondStorage storage ds = diamondStorage();
-        ds.bean = bean;
         ds.weth = weth;
         ds.router = router;
     }
@@ -98,7 +97,7 @@ library LibMarket {
     {
         DiamondStorage storage ds = diamondStorage();
         return IUniswapV2Router02(ds.router).removeLiquidityETH(
-            ds.bean,
+            C.beanAddress(),
             liqudity,
             minBeanAmount,
             minEthAmount,
@@ -113,7 +112,7 @@ library LibMarket {
     {
         DiamondStorage storage ds = diamondStorage();
         (beanAmount, ethAmount) = IUniswapV2Router02(ds.router).removeLiquidity(
-            ds.bean,
+            C.beanAddress(),
             ds.weth,
             liqudity,
             minBeanAmount,
@@ -130,7 +129,7 @@ library LibMarket {
         DiamondStorage storage ds = diamondStorage();
         allocatedBeans(al.beanAmount);
         (uint256 beans, uint256 liquidity) = addLiquidity(al);
-        if (al.beanAmount > beans) IBean(ds.bean).transfer(msg.sender, al.beanAmount.sub(beans));
+        if (al.beanAmount > beans) C.bean().transfer(msg.sender, al.beanAmount.sub(beans));
         return liquidity;
     }
 
@@ -165,7 +164,7 @@ library LibMarket {
         IWETH(ds.weth).deposit{value: msg.value}();
         address[] memory path = new address[](2);
         path[0] = ds.weth;
-        path[1] = ds.bean;
+        path[1] = C.beanAddress();
         uint256[] memory amounts = IUniswapV2Router02(ds.router).getAmountsIn(buyBeanAmount, path);
         (uint256 ethSold, uint256 beans) = _buyWithWETH(buyBeanAmount, amounts[0], address(this));
         // If beans bought does not cover the amount of money to move to LP
@@ -180,7 +179,7 @@ library LibMarket {
             al.minEthAmount,
             al.minBeanAmount
         );
-        if (al.beanAmount > beans) IBean(ds.bean).transfer(msg.sender, al.beanAmount.sub(beans));
+        if (al.beanAmount > beans) C.bean().transfer(msg.sender, al.beanAmount.sub(beans));
         if (msg.value > ethAdded.add(ethSold)) {
             uint256 returnETH = msg.value.sub(ethAdded).sub(ethSold);
             IWETH(ds.weth).withdraw(returnETH);
@@ -210,7 +209,7 @@ library LibMarket {
 
         if (al.beanAmount.add(sellBeans) > beans.add(beansSold)) {
         uint256 toTransfer = al.beanAmount.add(sellBeans).sub(beans.add(beansSold));
-	IBean(ds.bean).transfer(
+	C.bean().transfer(
                 msg.sender,
                 toTransfer
             );
@@ -235,7 +234,7 @@ library LibMarket {
     {
         DiamondStorage storage ds = diamondStorage();
         address[] memory path = new address[](2);
-        path[0] = ds.bean;
+        path[0] = C.beanAddress();
         path[1] = ds.weth;
         uint[] memory amounts = IUniswapV2Router02(ds.router).swapExactTokensForTokens(
             sellBeanAmount,
@@ -254,7 +253,7 @@ library LibMarket {
         DiamondStorage storage ds = diamondStorage();
         address[] memory path = new address[](2);
         path[0] = ds.weth;
-        path[1] = ds.bean;
+        path[1] = C.beanAddress();
 
         uint[] memory amounts = IUniswapV2Router02(ds.router).swapExactETHForTokens{value: ethAmount}(
             beanAmount,
@@ -272,7 +271,7 @@ library LibMarket {
         DiamondStorage storage ds = diamondStorage();
         address[] memory path = new address[](2);
         path[0] = ds.weth;
-        path[1] = ds.bean;
+        path[1] = C.beanAddress();
 
         uint[] memory amounts = IUniswapV2Router02(ds.router).swapExactTokensForTokens(
             ethAmount,
@@ -290,7 +289,7 @@ library LibMarket {
     {
         DiamondStorage storage ds = diamondStorage();
         return IUniswapV2Router02(ds.router).addLiquidityETH{value: ethAmount}(
-            ds.bean,
+            C.beanAddress(),
             beanAmount,
             minBeanAmount,
             minEthAmount,
@@ -304,7 +303,7 @@ library LibMarket {
     {
         DiamondStorage storage ds = diamondStorage();
         return IUniswapV2Router02(ds.router).addLiquidity(
-            ds.bean,
+            C.beanAddress(),
             ds.weth,
             beanAmount,
             wethAmount,
@@ -317,7 +316,7 @@ library LibMarket {
     function _amountIn(uint256 buyWethAmount) internal view returns (uint256) {
         DiamondStorage storage ds = diamondStorage();
         address[] memory path = new address[](2);
-        path[0] = ds.bean;
+        path[0] = C.beanAddress();
         path[1] = ds.weth;
         uint256[] memory amounts = IUniswapV2Router02(ds.router).getAmountsIn(buyWethAmount, path);
         return amounts[0];
@@ -338,6 +337,6 @@ library LibMarket {
             }
             emit BeanAllocation(msg.sender, transferBeans.sub(remainingBeans));
         }
-        if (remainingBeans > 0) IBean(s.c.bean).transferFrom(msg.sender, address(this), remainingBeans);
+        if (remainingBeans > 0) C.bean().transferFrom(msg.sender, address(this), remainingBeans);
     }
 }

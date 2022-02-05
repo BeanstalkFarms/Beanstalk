@@ -5,7 +5,7 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./BeanSilo.sol";
+import "./TokenSilo.sol";
 import "../../../libraries/LibClaim.sol";
 import "../../../libraries/LibMarket.sol";
 import "../../../libraries/Silo/LibLegacyLPSilo.sol";
@@ -14,12 +14,36 @@ import "../../../libraries/Silo/LibLegacyLPSilo.sol";
  * @author Publius
  * @title Silo handles depositing and withdrawing Beans and LP, and updating the Silo.
 */
-contract SiloFacet is BeanSilo {
+contract SiloFacet is TokenSilo {
 
     event BeanAllocation(address indexed account, uint256 beans);
 
     using SafeMath for uint256;
     using SafeMath for uint32;
+
+
+    /*
+     * Generic
+     */
+
+    function deposit(address token, uint256 amount) external {
+        IERC20(token).transferFrom(msg.sender, address(this), amount);
+        _deposit(token, amount);
+    }
+
+    function claimAndDeposit(address token, uint256 amount, LibClaim.Claim calldata claim) external {
+        LibClaim.claim(claim);
+        _deposit(C.beanAddress(), amount);
+    }
+
+    function withdraw(address token, uint32[] calldata seasons, uint256[] calldata amounts) public {
+        _withdraw(token, seasons, amounts);
+    }
+
+    function claimAndWithdraw(address token, uint32[] calldata seasons, uint256[] calldata amounts, LibClaim.Claim calldata claim) public {
+        LibClaim.claim(claim);
+        _withdraw(token, seasons, amounts);
+    }
 
     /*
      * Bean
@@ -29,7 +53,7 @@ contract SiloFacet is BeanSilo {
 
     function claimAndDepositBeans(uint256 amount, LibClaim.Claim calldata claim) external {
         allocateBeans(claim, amount);
-        _depositBeans(amount);
+        _deposit(C.beanAddress(), amount);
     }
 
     function claimBuyAndDepositBeans(
@@ -42,40 +66,13 @@ contract SiloFacet is BeanSilo {
     {
         allocateBeans(claim, amount);
         uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
-        _depositBeans(boughtAmount.add(amount));
-    }
-
-    function depositBeans(uint256 amount) public {
-        bean().transferFrom(msg.sender, address(this), amount);
-        _depositBeans(amount);
+        _deposit(C.beanAddress(), boughtAmount.add(amount));
     }
 
     function buyAndDepositBeans(uint256 amount, uint256 buyAmount) public payable {
         uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
-        if (amount > 0) bean().transferFrom(msg.sender, address(this), amount);
-        _depositBeans(boughtAmount.add(amount));
-    }
-
-    // Withdraw
-
-    function withdrawBeans(
-        uint32[] calldata crates,
-        uint256[] calldata amounts
-    )
-        external
-    {
-        _withdrawBeans(crates, amounts);
-    }
-
-    function claimAndWithdrawBeans(
-        uint32[] calldata crates,
-        uint256[] calldata amounts,
-        LibClaim.Claim calldata claim
-    )
-        external
-    {
-        LibClaim.claim(claim);
-        _withdrawBeans(crates, amounts);
+        if (amount > 0) C.bean().transferFrom(msg.sender, address(this), amount);
+        _deposit(C.beanAddress(), boughtAmount.add(amount));
     }
 
     /*
@@ -84,7 +81,7 @@ contract SiloFacet is BeanSilo {
 
     function claimAndDepositLP(uint256 amount, LibClaim.Claim calldata claim) external {
         LibClaim.claim(claim);
-        depositLP(amount);
+        _deposit(s.c.pair, amount);
     }
 
     function claimAddAndDepositLP(
@@ -99,11 +96,6 @@ contract SiloFacet is BeanSilo {
     {
         LibClaim.claim(claim);
         _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al);
-    }
-
-    function depositLP(uint256 amount) public {
-        pair().transferFrom(msg.sender, address(this), amount);
-        _deposit(s.c.pair, amount);
     }
 
     function addAndDepositLP(
@@ -132,11 +124,11 @@ contract SiloFacet is BeanSilo {
     }
 
     /*
-     * Withdraw legacy
+     * Withdraw legacy LP
     */
 
     function claimAndWithdrawLegacyLP(
-        uint32[] calldata crates,
+        uint32[] calldata seasons,
         uint256[] calldata amounts,
         bool[] calldata legacy,
         LibClaim.Claim calldata claim
@@ -144,17 +136,17 @@ contract SiloFacet is BeanSilo {
         external
     {
         LibClaim.claim(claim);
-        LibLegacyLPSilo.withdrawLegacyLP(crates, amounts, legacy);
+        LibLegacyLPSilo.withdrawLegacyLP(seasons, amounts, legacy);
     }
 
     function withdrawLegacyLP(
-        uint32[] calldata crates,
+        uint32[] calldata seasons,
         uint256[] calldata amounts,
         bool[] calldata legacy
     )
         external
     {
-        LibLegacyLPSilo.withdrawLegacyLP(crates, amounts, legacy);
+        LibLegacyLPSilo.withdrawLegacyLP(seasons, amounts, legacy);
     }
 
     /*

@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "./LibAppStorage.sol";
+import "../C.sol";
 import "../interfaces/IBean.sol";
 
 /**
@@ -21,7 +22,7 @@ library LibCheck {
     function beanBalanceCheck() internal view {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(
-            IBean(s.c.bean).balanceOf(address(this)) >=
+            C.bean().balanceOf(address(this)) >=
                 s.f.harvestable.sub(s.f.harvested).add(s.bean.deposited).add(s.bean.withdrawn),
             "Check: Bean balance fail."
         );
@@ -38,7 +39,7 @@ library LibCheck {
     function balanceCheck() internal view {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(
-            IBean(s.c.bean).balanceOf(address(this)) >=
+            C.bean().balanceOf(address(this)) >=
                 s.f.harvestable.sub(s.f.harvested).add(s.bean.deposited).add(s.bean.withdrawn),
             "Check: Bean balance fail."
         );

@@ -17,7 +17,7 @@ contract MockFieldFacet is FieldFacet {
     using SafeMath for uint256;
 
     function incrementTotalHarvestableE(uint256 amount) public {
-        bean().mint(address(this), amount);
+        C.bean().mint(address(this), amount);
         s.f.harvestable = s.f.harvestable.add(amount);
     }
 

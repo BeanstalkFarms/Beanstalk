@@ -29,7 +29,7 @@ contract Life {
     // Contracts
 
     function bean() public view returns (IBean) {
-        return IBean(s.c.bean);
+        return C.bean();
     }
 
     function pair() public view returns (IUniswapV2Pair) {

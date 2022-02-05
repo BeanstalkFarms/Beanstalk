@@ -173,9 +173,9 @@ contract MockSiloFacet is SiloFacet {
     }
 
     function mockLegacyBeanWithdraw(uint32 _s, uint256 amount) external {
-        IBean(s.c.bean).transferFrom(msg.sender, address(this), amount);
+        C.bean().transferFrom(msg.sender, address(this), amount);
         s.a[msg.sender].bean.withdrawals[_s] = s.a[msg.sender].bean.withdrawals[_s].add(amount);
-        s.siloBalances[IERC20(s.c.bean)].withdrawn = s.siloBalances[IERC20(s.c.bean)].withdrawn.add(amount);
+        s.siloBalances[IERC20(C.beanAddress())].withdrawn = s.siloBalances[IERC20(C.beanAddress())].withdrawn.add(amount);
     }
 
     function mockLegacyLPWithdraw(uint32 _s, uint256 amount) external {

@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "../LibAppStorage.sol";
+import "../../C.sol";
 
 /**
  * @author Publius
@@ -21,15 +22,19 @@ library LibTokenSilo {
     
     event TokenDeposit(address indexed account, address indexed token, uint256 season, uint256 amount, uint256 bdv);
 
-    function deposit(address account, address token, uint32 _s, uint256 amount) internal returns (uint256 bdv) {
-        bdv = LibTokenSilo.beanDenominatedValue(token, amount);
-        depositWithBDV(account, token, _s, amount, bdv);
+    function deposit(address account, address token, uint32 _s, uint256 amount) internal returns (uint256, uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        if (token == C.beanAddress()) depositBeans(account, _s, amount);
+        uint256 bdv = LibTokenSilo.beanDenominatedValue(token, amount);
+        return depositWithBDV(account, token, _s, amount, bdv);
     }
 
-    function depositWithBDV(address account, address token, uint32 _s, uint256 amount, uint256 bdv) internal {
+    function depositWithBDV(address account, address token, uint32 _s, uint256 amount, uint256 bdv) internal returns (uint256, uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         require(bdv > 0, "Silo: No Beans under Token.");
         incrementDepositedToken(token, amount);
         addDeposit(account, token, _s, amount, bdv);
+        return (bdv.mul(s.ss[token].seeds), bdv.mul(s.ss[token].stalk));
     }
 
     function incrementDepositedToken(address token, uint256 amount) internal {
@@ -83,5 +88,14 @@ library LibTokenSilo {
     function tokenWithdrawal(address account, address token, uint32 id) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.a[account].withdrawals[IERC20(token)][id];
+    }
+
+    // Bean
+    function depositBeans(address account, uint32 _s, uint256 amount) internal returns (uint256, uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        incrementDepositedToken(C.beanAddress(), amount);
+        s.a[account].bean.deposits[_s] += amount;
+        emit TokenDeposit(account, C.beanAddress(), _s, amount, amount);
+        return (amount, amount.mul(C.getSeedsPerBean()));
     }
 }

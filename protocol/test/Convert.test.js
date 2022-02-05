@@ -280,7 +280,7 @@ describe('Convert', function () {
       });
   
       it('properly updates total values', async function () {
-        expect(await this.silo.totalDepositedToken(this.pair.address)).to.eq('0');
+        expect(await this.silo.totalDeposited(this.pair.address)).to.eq('0');
         expect(await this.silo.totalDepositedBeans()).to.eq('796');
         expect(await this.silo.totalSeeds()).to.eq('1592');
         expect(await this.silo.totalStalk()).to.eq('7960000');
@@ -310,7 +310,7 @@ describe('Convert', function () {
       });
   
       it('properly updates total values', async function () {
-        expect(await this.silo.totalDepositedToken(this.pair.address)).to.eq('0');
+        expect(await this.silo.totalDeposited(this.pair.address)).to.eq('0');
         expect(await this.silo.totalDepositedBeans()).to.eq('799');
         expect(await this.silo.totalSeeds()).to.eq('1598');
         expect(await this.silo.totalStalk()).to.eq('7991598');
@@ -341,7 +341,7 @@ describe('Convert', function () {
       });
   
       it('properly updates total values', async function () {
-        expect(await this.silo.totalDepositedToken(this.pair.address)).to.eq('1');
+        expect(await this.silo.totalDeposited(this.pair.address)).to.eq('1');
         expect(await this.silo.totalDepositedBeans()).to.eq('1596');
         expect(await this.silo.totalSeeds()).to.eq('4792');
         expect(await this.silo.totalStalk()).to.eq('19961600');
@@ -394,7 +394,7 @@ describe('Convert', function () {
       });
 
       it('properly updates the total balances', async function () {
-        expect(await this.silo.totalDepositedToken(this.pair.address)).to.eq('1');
+        expect(await this.silo.totalDeposited(this.pair.address)).to.eq('1');
         expect(await this.silo.totalDepositedBeans()).to.eq('0');
         expect(await this.silo.totalSeeds()).to.eq('8000');
         expect(await this.silo.totalStalk()).to.eq('20000000');
@@ -493,7 +493,7 @@ describe('Convert', function () {
       });
 
       it('properly updates the total balances', async function () {
-        expect(await this.silo.totalDepositedToken(this.pair.address)).to.eq('1');
+        expect(await this.silo.totalDeposited(this.pair.address)).to.eq('1');
         expect(await this.silo.totalDepositedBeans()).to.eq('0');
         expect(await this.silo.totalSeeds()).to.eq('8000');
         expect(await this.silo.totalStalk()).to.eq('20000000');

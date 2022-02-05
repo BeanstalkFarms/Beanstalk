@@ -11,6 +11,7 @@ import "./LibInternal.sol";
 import "./LibMarket.sol";
 import "./LibAppStorage.sol";
 import "../interfaces/IWETH.sol";
+import "../C.sol";
 
 /**
  * @author Publius
@@ -50,7 +51,7 @@ library LibClaim {
         if (c.claimEth) claimEth();
 
         if (beansClaimed > 0) {
-            if (c.toWallet) IBean(s.c.bean).transfer(msg.sender, beansClaimed);
+            if (c.toWallet) IBean(C.beanAddress()).transfer(msg.sender, beansClaimed);
             else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(beansClaimed);
         }
     }
@@ -81,9 +82,9 @@ library LibClaim {
         uint256 amount;
         if (ac.claimType == 0) {
             amount = singleMultiClaim(account, ac.token, ac.withdrawals);
-            if (!toWallet && ac.token == s.c.bean) return amount;
+            if (!toWallet && ac.token == C.beanAddress()) return amount;
         }
-        else if (ac.token == s.c.bean) {
+        else if (ac.token == C.beanAddress()) {
             // Legacy Claim
             if (ac.claimType == 1) return claimBeans(ac.withdrawals);
             // Harvest
@@ -153,7 +154,7 @@ library LibClaim {
         
         require(amount > 0, "Claim: Bean withdrawal is empty.");
         delete s.a[account].bean.withdrawals[_s];
-        s.siloBalances[IERC20(s.c.bean)].withdrawn = s.siloBalances[IERC20(s.c.bean)].withdrawn.sub(amount);
+        s.siloBalances[C.beanERC20()].withdrawn = s.siloBalances[C.beanERC20()].withdrawn.sub(amount);
         return amount;
     }
 

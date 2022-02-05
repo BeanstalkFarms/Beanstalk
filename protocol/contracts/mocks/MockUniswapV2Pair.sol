@@ -47,6 +47,10 @@ contract MockUniswapV2Pair {
         return liquidity;
     }
 
+    function setToken(address _token) external returns (uint) {
+        token = _token;
+    }
+
     function setToken2(address _token2) external returns (uint) {
         token2 = _token2;
     }

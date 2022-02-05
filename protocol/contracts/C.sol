@@ -6,6 +6,7 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./libraries/Decimal.sol";
+import "./interfaces/IBean.sol";
 
 /**
  * @author Publius
@@ -58,6 +59,9 @@ library C {
     uint256 private constant MAX_SOIL_DENOMINATOR = 4; // 25%
     uint256 private constant COMPLEX_WEATHER_DENOMINATOR = 1000; // 0.1%
 
+
+    // Contracts
+    address private constant BEAN = 0xDC59ac4FeFa32293A95889Dc396682858d52e5Db;
 
     /**
      * Getters
@@ -161,6 +165,18 @@ library C {
 
     function getRootsBase() internal pure returns (uint256) {
         return ROOTS_BASE;
+    }
+
+    function beanAddress() internal pure returns (address) {
+        return BEAN;
+    }
+
+    function bean() internal pure returns (IBean) {
+        return IBean(BEAN);
+    }
+
+    function beanERC20() internal pure returns (IBean) {
+        return IBean(BEAN);
     }
 
 }

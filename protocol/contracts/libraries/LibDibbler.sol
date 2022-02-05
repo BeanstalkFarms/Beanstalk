@@ -63,7 +63,7 @@ library LibDibbler {
 
     function saveSowTime() private {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 totalBeanSupply = IBean(s.c.bean).totalSupply();
+        uint256 totalBeanSupply = C.bean().totalSupply();
         uint256 soil = s.f.soil;
         if (soil >= totalBeanSupply.div(C.getComplexWeatherDenominator())) return;
 
