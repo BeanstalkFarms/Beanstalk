@@ -38,6 +38,13 @@ contract ConvertSilo {
         uint256 i;
     }
 
+    struct TokenConvert {
+        uint256 bdvRemoved;
+        uint256 tokenRemoved;
+        uint256 depositToken;
+        uint256 depositedBDV;
+    }
+
     function _convertAddAndDepositLP(
         address token,
         uint256 lp,
@@ -89,6 +96,7 @@ contract ConvertSilo {
     }
 
     function _withdrawForConvert(
+        address token,
         uint32[] memory crates,
         uint256[] memory amounts,
         uint256 maxLP
@@ -97,29 +105,26 @@ contract ConvertSilo {
         returns (uint256 stalkRemoved)
     {
         require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
-        uint256 bdvRemoved;
-        uint256 lpRemoved;
-        uint256 depositLP;
-        uint256 depositedBDV;
+        TokenConvert memory tokenConvert;
         uint256 i = 0;
-        while ((i < crates.length) && (lpRemoved < maxLP)) {
-            if (lpRemoved.add(amounts[i]) < maxLP)
-                (depositLP, depositedBDV) = LibTokenSilo.removeDeposit(msg.sender, s.c.pair, crates[i], amounts[i]);
+        while ((i < crates.length) && (tokenConvert.tokenRemoved < maxLP)) {
+            if (tokenConvert.tokenRemoved.add(amounts[i]) < maxLP)
+                (tokenConvert.depositToken, tokenConvert.depositedBDV) = LibTokenSilo.removeDeposit(msg.sender, token, crates[i], amounts[i]);
             else
-                (depositLP, depositedBDV) = LibTokenSilo.removeDeposit(msg.sender, s.c.pair, crates[i], maxLP.sub(lpRemoved));
-            lpRemoved = lpRemoved.add(depositLP);
-            bdvRemoved = bdvRemoved.add(depositedBDV);
-            stalkRemoved = stalkRemoved.add(LibSilo.stalkReward(depositedBDV.mul(s.ss[s.c.pair].seeds), season()-crates[i]));
+                (tokenConvert.depositToken, tokenConvert.depositedBDV) = LibTokenSilo.removeDeposit(msg.sender, token, crates[i], maxLP.sub(tokenConvert.tokenRemoved));
+            tokenConvert.tokenRemoved = tokenConvert.tokenRemoved.add(tokenConvert.depositToken);
+            tokenConvert.bdvRemoved = tokenConvert.bdvRemoved.add(tokenConvert.depositedBDV);
+            stalkRemoved = stalkRemoved.add(LibSilo.stalkReward(tokenConvert.depositedBDV.mul(s.ss[token].seeds), season()-crates[i]));
             i++;
         }
-        if (i > 0) amounts[i.sub(1)] = depositLP;
+        if (i > 0) amounts[i.sub(1)] = tokenConvert.depositToken;
         while (i < crates.length) {
             amounts[i] = 0;
             i++;
         }
-        LibTokenSilo.decrementDepositedToken(s.c.pair, lpRemoved);
-        LibSilo.withdrawSiloAssets(msg.sender, bdvRemoved.mul(s.ss[s.c.pair].seeds), stalkRemoved.add(bdvRemoved.mul(s.ss[s.c.pair].stalk)));
-        emit TokenRemove(s.c.pair, msg.sender, crates, amounts, lpRemoved);
+        LibTokenSilo.decrementDepositedToken(token, tokenConvert.tokenRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, tokenConvert.bdvRemoved.mul(s.ss[token].seeds), stalkRemoved.add(tokenConvert.bdvRemoved.mul(s.ss[token].stalk)));
+        emit TokenRemove(token, msg.sender, crates, amounts, tokenConvert.tokenRemoved);
     }
 
     /**
