@@ -333,6 +333,7 @@ async function upgradeWithNewFacets ({
   initFacetName = undefined,
   initArgs = [],
   libraries = {},
+  initFacetAddress = ethers.constants.AddressZero,
   bip = false,
   object = false,
   p=0,
@@ -438,7 +439,6 @@ async function upgradeWithNewFacets ({
     console.log('------')
   }
 
-  let initFacetAddress = ethers.constants.AddressZero
   let functionCall = '0x'
   if (initFacetName !== undefined) {
     let initFacet
@@ -450,6 +450,10 @@ async function upgradeWithNewFacets ({
         totalGasUsed = totalGasUsed.add(receipt.gasUsed)
         break
       }
+    }
+
+    if (initFacetAddress !== ethers.constants.AddressZero) {
+      initFacet = await ethers.getContractAt('InitFundraiser', initFacetAddress);
     }
     if (!initFacet) {
       const InitFacet = await ethers.getContractFactory(initFacetName)
