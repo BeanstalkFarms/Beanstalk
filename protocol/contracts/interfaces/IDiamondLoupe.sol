@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma experimental ABIEncoderV2;
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 // A loupe is a small magnifying glass used to look at diamonds.
 // These functions look at diamonds
 interface IDiamondLoupe {

@@ -3,7 +3,7 @@
 */
 
 pragma experimental ABIEncoderV2;
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 
 library LibMeta {
     bytes32 internal constant EIP712_DOMAIN_TYPEHASH =
