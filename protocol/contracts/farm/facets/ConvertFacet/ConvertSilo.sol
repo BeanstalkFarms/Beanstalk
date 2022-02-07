@@ -61,7 +61,7 @@ contract ConvertSilo {
             bean().transfer(msg.sender, w.beansTransferred.sub(amountFromWallet));
 	    } else if (w.beansTransferred < amountFromWallet) {
             uint256 transferAmount = amountFromWallet.sub(w.beansTransferred);
-            LibMarket.allocatedBeans(transferAmount);
+            LibMarket.allocateBeans(transferAmount);
         }
 
         w.i = w.stalkRemoved.div(LibLPSilo.lpToLPBeans(lp.add(w.newLP)), "Silo: No LP Beans.");

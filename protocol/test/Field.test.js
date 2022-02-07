@@ -30,6 +30,7 @@ describe('Field', function () {
     this.diamond = contracts.beanstalkDiamond
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
+    this.marketplace = await ethers.getContractAt('MarketplaceFacet', this.diamond.address)
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('MockToken', contracts.bean)
     this.claim = await ethers.getContractAt('ClaimFacet', this.diamond.address)

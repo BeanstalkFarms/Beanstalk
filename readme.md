@@ -10,7 +10,11 @@ Beanstalk is a decentralized credit based algorithmic stablecoin protocol that i
 |UniswapV2 BEAN:ETH Pair   |[0x87898263B6C5BABe34b4ec53F22d98430b91e371](https://etherscan.io/address/0x87898263B6C5BABe34b4ec53F22d98430b91e371)|
 |Development Budget 1      |[0x83A758a6a24FE27312C1f8BDa7F3277993b64783](https://etherscan.io/address/0x83A758a6a24FE27312C1f8BDa7F3277993b64783)|
 |Marketing Budget 1        |[0xAA420e97534aB55637957e868b658193b112A551](https://etherscan.io/address/0xAA420e97534aB55637957e868b658193b112A551)|
+|Beanstalk Farms Budget    |[0x21DE18B6A8f78eDe6D16C50A167f6B222DC08DF7](https://etherscan.io/address/0x21de18b6a8f78ede6d16c50a167f6b222dc08df7)|
+|Bean Sprout Budget        |[0xb7ab3f0667eFF5e2299d39C23Aa0C956e8982235](https://etherscan.io/address/0xb7ab3f0667eff5e2299d39c23aa0c956e8982235)|
+|BeaNFT Collection         |[0x459895483556dad32526efa461f75e33e458d9e9](https://etherscan.io/address/0x459895483556dad32526efa461f75e33e458d9e9)|
 |BeaNFT OpenSea            |[0xa755A670Aaf1FeCeF2bea56115E65e03F7722A79](https://etherscan.io/address/0xa755A670Aaf1FeCeF2bea56115E65e03F7722A79)|
+|BEAN:3CRV Factory         |[0x3a70DfA7d2262988064A2D051dd47521E43c9BdD](https://etherscan.io/address/0x3a70dfa7d2262988064a2d051dd47521e43c9bdd)|
 
 ### Beanstalk Contract & EIP-2535
 The Beanstalk smart contract is a multi-facet proxy as it implements EIP-2535. Thus, the Beanstalk contract pulls in functions from a variety of different contracts (called facets in the [EIP-2535 documentation](https://eips.ethereum.org/EIPS/eip-2535)) that are all capable of sharing the same state object.
@@ -35,38 +39,4 @@ The following facets are part of the [diamond functionality](https://github.com/
 
 ## Setup
 1. clone the repository
-2. run `cd protocol` to enter the protocol repository
-3. run `npm install`
-5. run `npx hardhat compile`
-
-## Testing
-1. make sure you are in the `protocol` repository
-1. run `npm test` to run all coverage tests
-2. run `npx hardhat coverage` to run all coverage tests and generate a coverage report
-
-
-## Developing
-
-### Overview
-As Beanstalk implements EIP-2535, Beanstalk is upgraded through a `diamondCut` function call.
-There are two different ways a `diamondCut` can apply code to Beanstalk:
-1. adding/replacing/removing functions
-    * Functions being added/replaced are implemented in smart contracts referred to as `facets`. Facets are no different than a normal smart contract with callable functions. In order to share a state, Facets can only define 1 internal state variable: The `AppStorage` struct defined in `AppStorage.sol`.
-2. calling the `init` function of a smart contract
-    * This is a one time action and will be called when the `diamondCut` is executed. There can be 1 `init` call per `diamondCut`.
-
-### Creating a new facet
-For this tutorial, we are going to create a new facet called `SampleFacet`. In your own implementation replace iterations of the word `Sample` with the name of the Facet you want to create. 
-1. make sure you are in the `protocol` repository
-2. in `protocol/farm/facets/`, create a new folder called `SampleFacet`
-3. within the `SampleFacet` folder create a file called `SampleFacet.sol`.
-4. implement your faucet. You can use `SampleFacet.sol` in `protocol/samples` as a template for a basis faucet. Note that facets can only have `AppStorage` as an internal state variable or there will be issues with accessing `AppStorage`.
-5. modify the `deploy` function in `scripts/deploy` to include your new facet, so that the `faucet` will be deployed with the Beanstalk diamond.
-
-## Versions
-Code Version: `1.3.2` <br>
-Whitepaper Version `1.3.0`
-
-## License
-[MIT](https://github.com/BeanstalkFarms/Beanstalk/blob/master/LICENSE)
-
+2. run... Read more

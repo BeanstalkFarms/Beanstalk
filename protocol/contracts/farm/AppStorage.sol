@@ -199,4 +199,6 @@ struct AppStorage {
     mapping (uint32 => Storage.Fundraiser) fundraisers;
     uint32 fundraiserIndex;
     mapping (address => bool) isBudget;
+    mapping(uint256 => bytes32) podListings;
+    mapping(bytes32 => uint256) podOrders;
 }
