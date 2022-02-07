@@ -105,9 +105,9 @@ contract InitDiamond {
         uint256 swapFeePercentage = uint256(5 * 10^15);
         address poolOwner = address(this);
         
-        s.balancerBeanStalkSeedPool = address(IWeightedPoolFactory(BALANCER_WEIGHTED_POOL_FACTORY).create(name, 
+        s.beanSeedStalk3Pair = address(IWeightedPoolFactory(BALANCER_WEIGHTED_POOL_FACTORY).create(name, 
             symbol, tokens, weights, swapFeePercentage, poolOwner));
 
-        s.poolDepositFunctions[s.balancerBeanStalkSeedPool] = bytes4(keccak256("joinPool(bytes32,address,address,JoinPoolRequest)"));
+        s.poolDepositFunctions[s.beanSeedStalk3Pair] = bytes4(keccak256("joinPool(bytes32,address,address,JoinPoolRequest)"));
     }
 }

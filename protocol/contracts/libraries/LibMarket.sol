@@ -310,9 +310,9 @@ library LibMarket {
        // Balancer Internal functions
 
     function _buildBalancerPoolRequest(
-        IAsset[] calldata assets, 
-        uint256[] calldata maxAmountsIn, 
-        bytes calldata userData,
+        IAsset[] memory assets, 
+        uint256[] memory maxAmountsIn, 
+        bytes memory userData,
         bool fromInternalBalance
     ) 
         internal 
@@ -325,6 +325,8 @@ library LibMarket {
     }
 
     function _addBalancerBSSLiquidity (uint256 beanAmount, 
+        uint256 stalkAmount, 
+        uint256 seedAmount,
         bytes32 poolId,
         address sender,
         address recipient,
@@ -332,15 +334,23 @@ library LibMarket {
     ) 
         internal
     {
-        // AppStorage storage s = LibAppStorage.diamondStorage();
-        // bytes memory myFunctionCall = abi.encodeWithSelector(
-        //     s.poolDepositFunctions[poolAddress],
-        //     poolId, sender, recipient, request
-        // );
-        // (bool success, bytes memory data) = address(this).delegatecall(myFunctionCall);
-        // require(success, "Silo: Bean denominated value failed.")
         DiamondStorage storage ds = diamondStorage();
         AppStorage storage s = LibAppStorage.diamondStorage();
+
+        IAsset[] memory assets;
+        assets[0] = IAsset(s.c.bean);
+        assets[1] = IAsset(address(this));
+        assets[2] = IAsset(s.seedContract);
+
+        uint256[] memory maxAmountsIn;
+        maxAmountsIn[0] = 2**256 - 1;
+        maxAmountsIn[1] = 2**256 - 1;
+        maxAmountsIn[2] = 2**256 - 1;
+
+        request = _buildBalancerPoolRequest(assets, 
+            maxAmountsIn, abi.encodePacked([beanAmount, stalkAmount, seedAmount],[0, 0, 0]), false
+        );
+        
         // TODO: Not using Ds Router but Vault Address
         IVault(s.balancerVault).joinPool(
             poolId, 

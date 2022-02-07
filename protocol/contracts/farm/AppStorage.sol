@@ -246,7 +246,7 @@ struct AppStorage {
     mapping(address => SiloSettings) ss;
 
     address balancerVault;
-    address balancerBeanStalkSeedPool;
+    address beanSeedStalk3Pair;
     mapping(address => bytes4) poolDepositFunctions;
     BalancerPoolConfig balancerBeanStalkSeedPoolConfig;
 }

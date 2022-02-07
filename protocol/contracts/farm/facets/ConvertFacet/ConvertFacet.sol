@@ -123,7 +123,7 @@ contract ConvertFacet is ConvertSilo {
         payable
     {
         Storage.Settings memory set = defaultSettings();
-        _convertDepositedBeansAndCirculatingStalkSeed(s.balancerBeanStalkSeedPool, beans, crates, amounts, set.toInternalBalance, set.fromInternalBalance);
+        _convertDepositedBeansAndCirculatingStalkSeed(s.beanSeedStalk3Pair, beans, crates, amounts, set.toInternalBalance, set.fromInternalBalance);
     }
 
     function lpToPeg() external view returns (uint256 lp) {
