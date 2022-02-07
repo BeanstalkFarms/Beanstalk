@@ -50,7 +50,7 @@ contract ConvertFacet is ConvertSilo {
     {
         LibInternal.updateSilo(msg.sender);
         (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
-        uint256 stalkRemoved = _withdrawForConvert(s.c.pair, crates, amounts, lpConverted);
+        uint256 stalkRemoved = _withdrawForConvert(s.c.pair, seasons, amounts, lpConverted);
         uint32 _s = uint32(stalkRemoved.div(beans.mul(C.getSeedsPerBean())));
         _s = getDepositSeason(_s);
         _depositBeans(beans, _s);
@@ -93,7 +93,7 @@ contract ConvertFacet is ConvertSilo {
         payable
     {
         LibClaim.claim(claim);
-        _convertAddAndDepositLP(s.c.pair, lp, al, crates, amounts);
+        _convertAddAndDepositLP(s.c.pair, lp, al, seasons, amounts);
     }
 
     function convertAddAndDepositLP(
@@ -105,7 +105,7 @@ contract ConvertFacet is ConvertSilo {
         public
         payable
     {
-        _convertAddAndDepositLP(s.c.pair, lp, al, crates, amounts);
+        _convertAddAndDepositLP(s.c.pair, lp, al, seasons, amounts);
     }
 
     function lpToPeg() external view returns (uint256 lp) {
