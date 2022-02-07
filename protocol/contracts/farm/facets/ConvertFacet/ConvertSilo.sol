@@ -76,7 +76,7 @@ contract ConvertSilo {
         if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
 	
         lp = lp.add(w.newLP);
-        _deposit(depositSeason, lp, LibTokenSilo.beanDenominatedValue(token, lp));
+        _deposit(s.c.pair, depositSeason, lp, LibTokenSilo.beanDenominatedValue(token, lp));
         LibCheck.beanBalanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
@@ -85,10 +85,10 @@ contract ConvertSilo {
      * Internal LP
     **/
 
-    function _deposit(uint32 _s, uint256 amount, uint256 lpb) internal {
-        LibTokenSilo.depositWithBDV(msg.sender, s.c.pair, _s, amount, lpb);
-        uint256 seeds = lpb.mul(s.ss[s.c.pair].seeds);
-        uint256 stalk = lpb.mul(s.ss[s.c.pair].stalk);
+    function _deposit(address token, uint32 _s, uint256 amount, uint256 lpb) internal {
+        LibTokenSilo.depositWithBDV(msg.sender, token, _s, amount, lpb);
+        uint256 seeds = lpb.mul(s.ss[token].seeds);
+        uint256 stalk = lpb.mul(s.ss[token].stalk);
         if (_s > 0) stalk = stalk.add((season().sub(_s)).mul(seeds));
         LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
     }
