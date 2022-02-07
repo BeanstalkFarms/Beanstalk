@@ -82,7 +82,7 @@ contract InitDiamond {
         // Balancer Stalk, Seed, Bean Pool Creation
         bytes memory bytecode = type(Seed).creationCode;
         // Generate Salt using Owner of Seed Contract
-        bytes32 salt = keccak256(abi.encodePacked(address(this)));
+        bytes32 salt = keccak256(abi.encodePacked(address(this), "SEED"));
         address seedAddress;
         assembly {
             seedAddress := create2(0, add(bytecode, 32), mload(bytecode), salt)
@@ -90,7 +90,10 @@ contract InitDiamond {
         s.seedContract = seedAddress;
 
         s.balancerVault = BALANCER_VAULT;
+
         // Balancer Pool Parameters
+
+        // Later put this into a Balancer Deploy Library
         string memory name = "Three-Token Bean, Stalk, Seeds Test Pool";
         string memory symbol = "33SEED-33STALK-34Bean";
         IERC20[] memory tokens;
@@ -102,7 +105,7 @@ contract InitDiamond {
         weights[0] = uint256(33e16);
         weights[1] = uint256(33e16);
         weights[2] = uint256(34e16);
-        uint256 swapFeePercentage = uint256(5 * 10^15);
+        uint256 swapFeePercentage = uint256(5e16);
         address poolOwner = address(this);
         
         s.beanSeedStalk3Pair = address(IWeightedPoolFactory(BALANCER_WEIGHTED_POOL_FACTORY).create(name, 

@@ -307,7 +307,7 @@ library LibMarket {
             block.timestamp.add(1));
     }
 
-       // Balancer Internal functions
+       // Balancer Internal functions ... PUT in LIB BALANCER
 
     function _buildBalancerPoolRequest(
         IAsset[] memory assets, 
@@ -328,7 +328,6 @@ library LibMarket {
         uint256 stalkAmount, 
         uint256 seedAmount,
         bytes32 poolId,
-        address sender,
         address recipient,
         IVault.JoinPoolRequest memory request
     ) 
@@ -351,10 +350,9 @@ library LibMarket {
             maxAmountsIn, abi.encodePacked([beanAmount, stalkAmount, seedAmount],[0, 0, 0]), false
         );
         
-        // TODO: Not using Ds Router but Vault Address
         IVault(s.balancerVault).joinPool(
             poolId, 
-            sender, 
+            msg.sender, 
             recipient, 
             request
         );
