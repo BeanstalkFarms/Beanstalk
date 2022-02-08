@@ -17,8 +17,9 @@ import {LibMarket} from "../libraries/LibMarket.sol";
 import {LibStalk} from "../libraries/LibStalk.sol";
 import "../Seed.sol";
 import "../interfaces/ISeed.sol";
-import "../interfaces/IWeightedPoolFactory.sol";
-
+import "../interfaces/balancer/IWeightedPoolFactory.sol";
+import "../interfaces/balancer/IVault.sol";
+import "../interfaces/balancer/IBasePool.sol";
 /**
  * @author Publius
  * @title Mock Init Diamond
@@ -77,21 +78,37 @@ contract MockInitDiamond {
         string memory name = "Three-Token Bean, Stalk, Seeds Test Pool";
         string memory symbol = "33SEED-33STALK-34Bean";
         IERC20[] memory tokens = new IERC20[](3);
-        IERC20 token1 = IERC20(seedAddress);
-        tokens[0] = IERC20(seedAddress);
-        tokens[1] = IERC20(address(this));
-        tokens[2] = IERC20(s.c.bean);
+        tokens[0] = IERC20(address(this));
+        tokens[1] = IERC20(s.c.bean);
+        tokens[2] = IERC20(seedAddress);
         // Balancer weights are bounded by 1.00 with 18 Decimals
         uint256[] memory weights = new uint256[](3);
         weights[0] = uint256(33e16);
-        weights[1] = uint256(33e16);
-        weights[2] = uint256(34e16);
+        weights[1] = uint256(34e16);
+        weights[2] = uint256(33e16);
         uint256 swapFeePercentage = uint256(5e16);
         address poolOwner = address(this);
-        s.beanSeedStalk3Pair = address(IWeightedPoolFactory(BALANCER_WEIGHTED_POOL_FACTORY).create(name, 
+        address balancerPool = address(IWeightedPoolFactory(BALANCER_WEIGHTED_POOL_FACTORY).create(name, 
             symbol, tokens, weights, swapFeePercentage, poolOwner));
 
-        s.poolDepositFunctions[s.beanSeedStalk3Pair] = bytes4(keccak256("joinPool(bytes32,address,address,JoinPoolRequest)"));
+        s.beanSeedStalk3Pair.poolAddress = balancerPool;
+        s.beanSeedStalk3Pair.poolId = IBasePool(balancerPool).getPoolId();
+
+        // Register these tokens permissions in Balancer with Silo as Owner
+        // function registerTokens(
+        // bytes32 poolId,
+        // IERC20[] memory tokens,
+        // address[] memory assetManagers
+        // ) external;
+        address[] memory assetManagers = new address[](3);
+        assetManagers[0] = address(0);
+        assetManagers[1] = address(0);
+        assetManagers[2] = address(0);
+        
+        // 
+        // IVault(BALANCER_VAULT).registerTokens(s.beanSeedStalk3Pair.poolId, tokens, assetManagers);
+
+        s.poolDepositFunctions[balancerPool] = bytes4(keccak256("joinPool(bytes32,address,address,JoinPoolRequest)"));
     }
 
 }

@@ -200,7 +200,7 @@ struct SiloSettings {
     uint32 stalk;
 }
 
-struct BalancerPoolConfig {
+struct BalancerPool {
     address poolAddress;
     bytes32 poolId;
 }
@@ -246,7 +246,6 @@ struct AppStorage {
     mapping(address => SiloSettings) ss;
 
     address balancerVault;
-    address beanSeedStalk3Pair;
+    BalancerPool beanSeedStalk3Pair;
     mapping(address => bytes4) poolDepositFunctions;
-    BalancerPoolConfig balancerBeanStalkSeedPoolConfig;
 }

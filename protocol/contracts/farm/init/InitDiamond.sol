@@ -23,7 +23,8 @@ import "../../Bean.sol";
 import "../../mocks/MockToken.sol";
 import "../../Seed.sol";
 import "../../interfaces/ISeed.sol";
-import "../../interfaces/IWeightedPoolFactory.sol";
+import "../../interfaces/balancer/IWeightedPoolFactory.sol";
+import "../../interfaces/balancer/IBasePool.sol";
 
 /**
  * @author Publius
@@ -108,9 +109,9 @@ contract InitDiamond {
         uint256 swapFeePercentage = uint256(5e16);
         address poolOwner = address(this);
         
-        s.beanSeedStalk3Pair = address(IWeightedPoolFactory(BALANCER_WEIGHTED_POOL_FACTORY).create(name, 
+        s.beanSeedStalk3Pair.poolAddress = address(IWeightedPoolFactory(BALANCER_WEIGHTED_POOL_FACTORY).create(name, 
             symbol, tokens, weights, swapFeePercentage, poolOwner));
 
-        s.poolDepositFunctions[s.beanSeedStalk3Pair] = bytes4(keccak256("joinPool(bytes32,address,address,JoinPoolRequest)"));
+        s.poolDepositFunctions[s.beanSeedStalk3Pair.poolAddress] = bytes4(keccak256("joinPool(bytes32,address,address,JoinPoolRequest)"));
     }
 }
