@@ -70,7 +70,7 @@ There are a couple of steps that must be done before we can fork mainnet and upg
 1. include the following code in the networks section of the hardhat.config.js, where ALCHEMY_URL is your mainnet url. We recommend using Alchemy for this. BlockNumber we recommend to be one that is close to the current block number but not too close.
     ```
     forking: {
-        url: process.env.ALCHEMY_URL,
+        url: ALCHEMY_URL,
         blockNumber: 14161000
       },
     ```
