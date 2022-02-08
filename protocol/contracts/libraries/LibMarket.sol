@@ -33,14 +33,6 @@ library LibMarket {
         uint256 minEthAmount;
     }
 
-    // Balancer Request Struct
-    struct JoinPoolRequest {
-        IAsset[] assets;
-        uint256[] maxAmountsIn;
-        bytes userData;
-        bool fromInternalBalance;
-    }
-
     using SafeMath for uint256;
 
     bytes32 private constant MARKET_STORAGE_POSITION = keccak256("diamond.standard.market.storage");
@@ -306,58 +298,6 @@ library LibMarket {
             address(this),
             block.timestamp.add(1));
     }
-
-       // Balancer Internal functions ... PUT in LIB BALANCER
-
-    function _buildBalancerPoolRequest(
-        IAsset[] memory assets, 
-        uint256[] memory maxAmountsIn, 
-        bytes memory userData,
-        bool fromInternalBalance
-    ) 
-        internal 
-        returns (IVault.JoinPoolRequest memory request) 
-    {
-        request.assets = assets;
-        request.maxAmountsIn = maxAmountsIn;
-        request.userData = userData;
-        request.fromInternalBalance = fromInternalBalance;
-    }
-
-    function _addBalancerBSSLiquidity (uint256 beanAmount, 
-        uint256 stalkAmount, 
-        uint256 seedAmount,
-        bytes32 poolId,
-        address recipient,
-        IVault.JoinPoolRequest memory request
-    ) 
-        internal
-    {
-        DiamondStorage storage ds = diamondStorage();
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
-        IAsset[] memory assets;
-        assets[0] = IAsset(s.c.bean);
-        assets[1] = IAsset(address(this));
-        assets[2] = IAsset(s.seedContract);
-
-        uint256[] memory maxAmountsIn;
-        maxAmountsIn[0] = 2**256 - 1;
-        maxAmountsIn[1] = 2**256 - 1;
-        maxAmountsIn[2] = 2**256 - 1;
-
-        request = _buildBalancerPoolRequest(assets, 
-            maxAmountsIn, abi.encodePacked([beanAmount, stalkAmount, seedAmount],[0, 0, 0]), false
-        );
-        
-        IVault(s.balancerVault).joinPool(
-            poolId, 
-            msg.sender, 
-            recipient, 
-            request
-        );
-    }
-
 
     function _addLiquidityWETH(uint256 wethAmount, uint256 beanAmount, uint256 minWethAmount, uint256 minBeanAmount)
         internal
