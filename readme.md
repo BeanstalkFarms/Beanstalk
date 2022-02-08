@@ -63,6 +63,66 @@ For this tutorial, we are going to create a new facet called `SampleFacet`. In y
 4. implement your faucet. You can use `SampleFacet.sol` in `protocol/samples` as a template for a basis faucet. Note that facets can only have `AppStorage` as an internal state variable or there will be issues with accessing `AppStorage`.
 5. modify the `deploy` function in `scripts/deploy` to include your new facet, so that the `faucet` will be deployed with the Beanstalk diamond.
 
+## Mainnet Forking and Bip Upgrades
+
+### Overview
+There are a couple of steps that must be done before we can fork mainnet and upgrade Bips/test Bip upgrades
+1. include the following code in the networks section of the hardhat.config.js, where ALCHEMY_URL is your mainnet url. We recommend using Alchemy for this.
+    ```
+    localhost: {
+      chainId: 1337,
+      url: "http://127.0.0.1:8545",
+      forking: {
+        url: ALCHEMY_URL,
+        blockNumber: 14161000
+      },
+    },
+    ```
+2. include as in imports section
+   * `const BEANSTALK = "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"`
+   * `const { upgradeWithNewFacets } = require('./scripts/diamond.js')`
+3. Lastly, include the tasks required for upgrading above module.exports: 
+    ```
+    task("upgrade", "Commits a bip", async() => {
+        await hre.network.provider.request({
+            method: "hardhat_impersonateAccount",
+            params: ["0x925753106FCdB6D2f30C3db295328a0A1c5fD1D1"],
+        });
+        const account = await ethers.getSigner("0x925753106FCdB6D2f30C3db295328a0A1c5fD1D1")
+        await upgradeWithNewFacets({
+            diamondAddress: BEANSTALK,
+            facetNames: [],
+            initFacetName: 'InitEmpty',
+            initArgs: [],
+            bip: false,
+            verbose: true,
+            account: account
+        });
+    })
+    ```
+4. (this is an example of what bip11 deployment looked like):
+    ```
+    await upgradeWithNewFacets({
+        diamondAddress: BEANSTALK,
+        initFacetName: 'InitBip11',
+        facetNames: ['MarketplaceFacet'],
+        libraryNames: ["LibClaim"],
+        facetLibraries: {
+        "MarketplaceFacet": ["LibClaim"],
+        },
+        bip: false,
+        verbose: true,
+        account: account
+    }); 
+    ```
+
+## Running the Upgrade Tasks
+1. Spin up your mainnet fork node with `npx hardhat node`
+2. In another console, execute your tasks by running `npx hardhat upgrade --network localhost`, where `upgrade` is where you put the name of your task, in the example above it was named upgrade.
+3. Now you can test your changes using your local blockchain node that should now have the latest version
+of beanstalk that you upgraded
+
+
 ## Versions
 Code Version: `1.3.2` <br>
 Whitepaper Version `1.3.0`
