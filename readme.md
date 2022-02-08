@@ -67,7 +67,7 @@ For this tutorial, we are going to create a new facet called `SampleFacet`. In y
 
 ### Overview
 There are a couple of steps that must be done before we can fork mainnet and upgrade Bips/test Bip upgrades
-1. include the following code in the networks: hardhat: section of the hardhat.config.js, where ALCHEMY_URL is your mainnet url. We recommend using Alchemy for this.
+1. include the following code in the networks: hardhat: section of the hardhat.config.js, where ALCHEMY_URL is your mainnet url. We recommend using Alchemy for this. BlockNumber we recommend to be one that is close to the current block number but not too close.
     ```
     forking: {
         url: process.env.ALCHEMY_URL,
