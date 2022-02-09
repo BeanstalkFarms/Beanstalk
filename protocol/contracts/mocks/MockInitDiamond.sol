@@ -105,9 +105,6 @@ contract MockInitDiamond {
         assetManagers[1] = address(0);
         assetManagers[2] = address(0);
         
-        // 
-        // IVault(BALANCER_VAULT).registerTokens(s.beanSeedStalk3Pair.poolId, tokens, assetManagers);
-
         s.poolDepositFunctions[balancerPool] = bytes4(keccak256("joinPool(bytes32,address,address,JoinPoolRequest)"));
     }
 

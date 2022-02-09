@@ -12,6 +12,7 @@ import "../interfaces/IBean.sol";
 import "../interfaces/IWETH.sol";
 import "./LibAppStorage.sol";
 import "./LibClaim.sol";
+import "./balancer/LibBalancer.sol";
 
 /**
  * @author Publius
@@ -91,6 +92,13 @@ library LibMarket {
         (bool success,) = msg.sender.call{ value: msg.value.sub(ethDeposited) }("");
         require(success, "Market: Refund failed.");
         return (beansDeposited, liquidity);
+    }
+
+    function addBalancerLiquidity(LibBalancer.AddBalancerLiquidity memory al) 
+        internal 
+        returns (uint256 lpAdded) 
+    {
+        lpAdded = LibBalancer._addBalancerBSSLiquidity(al);
     }
 
     function removeLiquidity(uint256 liqudity, uint256 minBeanAmount,uint256 minEthAmount)

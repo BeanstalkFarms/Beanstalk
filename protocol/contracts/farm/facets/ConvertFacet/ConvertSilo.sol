@@ -11,6 +11,7 @@ import "../../../libraries/Silo/LibTokenSilo.sol";
 import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibMarket.sol";
+import "../../../libraries/balancer/LibBalancer.sol";
 import "../../../C.sol";
 import "../Utils/ToolShed.sol";
 
@@ -89,7 +90,7 @@ contract ConvertSilo is ToolShed {
 
     function _convertDepositedBeansAndCirculatingStalkSeed(
         address token,
-        uint256 beans,
+        uint256 beansToConvert,
         uint32[] memory crates,
         uint256[] memory amounts,
        	bool toInternalBalance,
@@ -97,29 +98,32 @@ contract ConvertSilo is ToolShed {
     )
         internal
     {
-	    // LibInternal.updateSilo(msg.sender);
-        // WithdrawState memory w;
-        // // (w.beansAdded, w.newLP) = LibMarket.addLiquidity(al); // w.beansAdded is beans added to LP
-        
-        // // require(w.newLP > 0, "Silo: No LP added.");
-        // (w.beansRemoved, w.stalkRemoved) = __withdrawBeansForConvert(crates, amounts, beans); // w.beansRemoved is beans removed from Silo
-        // uint256 stalk_to_remove = w.stalkRemoved;
-        // // Because we have not withdrawn the silo assets yet, we must account for the actual stalk removed here
-        // w.stalkRemoved = w.stalkRemoved.sub(w.beansRemoved.mul(C.getStalkPerBean()));
+	    LibInternal.updateSilo(msg.sender);
+        WithdrawState memory w;
+        LibBalancer.AddBalancerLiquidity memory al;
+        al.beanAmount = beansToConvert;
+        al.stalkAmount = beansToConvert.mul(C.getStalkPerBean());
+        al.seedAmount = beansToConvert.mul(C.getSeedsPerBean())        
+        // require(w.newLP > 0, "Silo: No LP added.");
+        (w.beansRemoved, w.stalkRemoved) = __withdrawBeansForConvert(crates, amounts, beansToConvert); // w.beansRemoved is beans removed from Silo
+        uint256 stalk_to_remove = w.stalkRemoved;
 
-        // w.i = w.stalkRemoved.div(LibTokenSilo.beanDenominatedValue(token, lp.add(w.newLP)), "Silo: No LP Beans.");
-        // uint32 depositSeason = uint32(season().sub(w.i.div(s.ss[token].seeds)));
+        (w.newLP) = LibMarket.addBalancerLiquidity(al); // w.beansAdded is beans added to LP
+        // Because we have not withdrawn the silo assets yet, we must account for the actual stalk removed here
+        w.stalkRemoved = w.stalkRemoved.sub(w.beansRemoved.mul(C.getStalkPerBean()));
+
+        w.i = w.stalkRemoved.div(LibTokenSilo.beanDenominatedValue(token, w.newLP), "Silo: No LP Beans.");
+        uint32 depositSeason = uint32(season().sub(w.i.div(s.ss[token].seeds)));
 	
-        // lp = lp.add(w.newLP);
-        // (w.grossAddedStalk, w.grossAddedSeeds) = __deposit(token, depositSeason, lp, LibTokenSilo.beanDenominatedValue(s.c.pair, lp));
-        // // Net Total Up Actual Deposited/Withdrawn Stalk and Seeds
-        // w.netStalk = int256(w.grossAddedStalk) - int256(stalk_to_remove);
-        // w.netSeeds = int256(w.grossAddedSeeds) - int256(w.beansRemoved.mul(C.getSeedsPerBean()));
-        // // Increment and Decrement Silo Assets
-        // LibSilo.convertSiloAssets(msg.sender, w.netSeeds,  w.netStalk, toInternalBalance, fromInternalBalance);
+        (w.grossAddedStalk, w.grossAddedSeeds) = __deposit(token, depositSeason, w.newLP, LibTokenSilo.beanDenominatedValue(s.c.pair, w.newLP));
+        // Net Total Up Actual Deposited/Withdrawn Stalk and Seeds
+        w.netStalk = int256(w.grossAddedStalk) - int256(stalk_to_remove);
+        w.netSeeds = int256(w.grossAddedSeeds) - int256(w.beansRemoved.mul(C.getSeedsPerBean()));
+        // Increment and Decrement Silo Assets
+        LibSilo.convertSiloAssets(msg.sender, w.netSeeds,  w.netStalk, toInternalBalance, fromInternalBalance);
         
-        // LibCheck.beanBalanceCheck();
-        // LibSilo.updateBalanceOfRainStalk(msg.sender);
+        LibCheck.beanBalanceCheck();
+        LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
     /**
