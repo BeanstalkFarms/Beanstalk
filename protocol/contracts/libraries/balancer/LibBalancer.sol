@@ -44,8 +44,70 @@ library LibBalancer {
 
     using SafeMath for uint256;
 
+    // Weighted Pool Userdata Encoding Functions
+    function joinInit(uint256[] memory amountIn) internal returns (bytes memory userData) {
+        userData = abi.encode(JoinKind.INIT, amountIn);
+    }
+
+    /**
+    * Encodes the userData parameter for joining a WeightedPool with exact token inputs
+    * @param amountsIn - the amounts each of token to deposit in the pool as liquidity
+    * @param minimumBPT - the minimum acceptable BPT to receive in return for deposited tokens
+    */
+    function joinExactTokensInForBPTOut(uint256[] memory amountIn, uint256 minimumBPT) internal returns (bytes memory userData) {
+        userData = abi.encode(JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT, amountIn, minimumBPT);
+    }
+
+    /**
+    * Encodes the userData parameter for joining a WeightedPool with a single token to receive an exact amount of BPT
+    * @param bptAmountOut - the amount of BPT to be minted
+    * @param enterTokenIndex - the index of the token to be provided as liquidity
+    */
+    function joinTokenInForExactBPTOut(uint256 bptAmountOut, uint256 enterTokenIndex) internal returns (bytes memory userData) {
+        userData = abi.encode(JoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT, bptAmountOut, enterTokenIndex);
+    }
+
+    /**
+    * Encodes the userData parameter for joining a WeightedPool proportionally to receive an exact amount of BPT
+    * @param bptAmountOut - the amount of BPT to be minted
+    */
+    function joinAllTokensInForExactBPTOut(uint256 bptAmountOut) internal returns (bytes memory userData) {
+        userData = abi.encode(JoinKind.ALL_TOKENS_IN_FOR_EXACT_BPT_OUT, bptAmountOut);
+    }
+
+    /**
+    * Encodes the userData parameter for exiting a WeightedPool by removing a single token in return for an exact amount of BPT
+    * @param bptAmountIn - the amount of BPT to be burned
+    * @param enterTokenIndex - the index of the token to removed from the pool
+    */
+    function exitExactBPTInForOneTokenOut (uint256 bptAmountIn, uint256 exitTokenIndex) internal returns (bytes memory userData) {
+        userData = abi.encode(ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT, bptAmountIn, exitTokenIndex);   
+    }
+
+    /**
+    * Encodes the userData parameter for exiting a WeightedPool by removing tokens in return for an exact amount of BPT
+    * @param bptAmountIn - the amount of BPT to be burned
+    */
+    function exitExactBPTInForTokensOut (uint256 bptAmountIn) internal returns (bytes memory userData) {
+        userData = abi.encode(ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT, bptAmountIn);
+    }
+
+
+    /**
+    * Encodes the userData parameter for exiting a WeightedPool by removing exact amounts of tokens
+    * @param amountsOut - the amounts of each token to be withdrawn from the pool
+    * @param maxBPTAmountIn - the minimum acceptable BPT to burn in return for withdrawn tokens
+    */
+    function exitBPTInForExactTokensOut (uint256[] amountsOut, uint256 maxBPTAmountIn) internal returns (bytes memory userData) {
+        userData = abi.encode(ExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT, amountsOut, maxBPTAmountIn);
+    }
+
+    function exitForManagementFees() internal returns (bytes memory userData) {
+        userData = abi.encode(ExitKind.MANAGEMENT_FEE_TOKENS_OUT]);
+    }
+    
     // Balancer Internal functions
-    function _buildBalancerPoolRequest(
+    function _buildPoolRequest(
         IAsset[] memory assets, 
         uint256[] memory maxAmountsIn, 
         bytes memory userData,
@@ -60,7 +122,7 @@ library LibBalancer {
         request.fromInternalBalance = fromInternalBalance;
     }
 
-    function _addBalancerBSSLiquidity (
+    function _addExactTokensBSSLiquidity (
         AddBalancerLiquidity memory al,
         bytes32 poolId,
         address recipient,
@@ -82,7 +144,7 @@ library LibBalancer {
         maxAmountsIn[2] = 2**256 - 1;
 
         request = _buildBalancerPoolRequest(assets, 
-            maxAmountsIn, abi.encodePacked([al.beanAmount, al.stalkAmount, al.seedAmount],[0, 0, 0]), false
+            maxAmountsIn, asdfa, false
         );
 
         lpAdded = IERC20(s.beanSeedStalk3Pair.poolAddress).balanceOf(address(this));
