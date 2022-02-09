@@ -120,7 +120,6 @@ contract ConvertFacet is ConvertSilo {
         uint256[] memory amounts
     )
         public
-        payable
     {
         Storage.Settings memory set = defaultSettings();
         _convertDepositedBeansAndCirculatingStalkSeed(s.beanSeedStalk3Pair.poolAddress, beans, crates, amounts, set.toInternalBalance, set.fromInternalBalance);

@@ -102,14 +102,14 @@ library LibMarket {
         lpAdded = LibBalancer._addLiquidityExactTokensInForBPTOut(al, s.beanSeedStalk3Pair.poolId);
     }
 
-    function removeLiquidity(uint256 liqudity, uint256 minBeanAmount,uint256 minEthAmount)
+    function removeLiquidity(uint256 liquidity, uint256 minBeanAmount,uint256 minEthAmount)
         internal
         returns (uint256 beanAmount, uint256 ethAmount)
     {
         DiamondStorage storage ds = diamondStorage();
         return IUniswapV2Router02(ds.router).removeLiquidityETH(
             ds.bean,
-            liqudity,
+            liquidity,
             minBeanAmount,
             minEthAmount,
             msg.sender,
@@ -117,7 +117,15 @@ library LibMarket {
         );
     }
 
-    function removeLiquidityWithBeanAllocation(uint256 liqudity, uint256 minBeanAmount,uint256 minEthAmount)
+    function removeLiquidityExitExactBPTInForTokensOut(uint256 liquidity) 
+        internal 
+        returns (uint256 beanAmount, uint256 stalkAmount, uint256 seedAmount) 
+    {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        (beanAmount, stalkAmount, seedAmount) = LibBalancer._removeLiquidityExitExactBPTInForTokensOut(liquidity, s.beanSeedStalk3Pair.poolId);
+    }
+
+    function removeLiquidityWithBeanAllocation(uint256 liquidity, uint256 minBeanAmount,uint256 minEthAmount)
         internal
         returns (uint256 beanAmount, uint256 ethAmount)
     {
@@ -125,7 +133,7 @@ library LibMarket {
         (beanAmount, ethAmount) = IUniswapV2Router02(ds.router).removeLiquidity(
             ds.bean,
             ds.weth,
-            liqudity,
+            liquidity,
             minBeanAmount,
             minEthAmount,
             address(this),

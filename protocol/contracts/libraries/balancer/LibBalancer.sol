@@ -27,19 +27,25 @@ library LibBalancer {
         MANAGEMENT_FEE_TOKENS_OUT // for ManagedPool
     }
 
-    struct AddBalancerLiquidity {
-        uint256 minLPReceived;
-        uint256 beanAmount;
-        uint256 stalkAmount;
-        uint256 seedAmount;
-    }
-
-    // Balancer Request Struct
+    // Join Request for Providing Liquidity
     struct JoinPoolRequest {
         IAsset[] assets;
         uint256[] maxAmountsIn;
         bytes userData;
         bool fromInternalBalance;
+    }
+
+    // Exit Request for Removing Liquidity
+    struct ExitPoolRequest {
+        IAsset[] assets;
+        uint256[] minAmountsOut;
+        bytes userData;
+        bool toInternalBalance;
+    }
+
+    struct AddBalancerLiquidity {
+        IAsset[] assets;
+        uint256[] amountsIn;
     }
 
     using SafeMath for uint256;
@@ -96,7 +102,7 @@ library LibBalancer {
     /**
     * Encodes the userData parameter for exiting a WeightedPool by removing exact amounts of tokens
     * @param amountsOut - the amounts of each token to be withdrawn from the pool
-    * @param maxBPTAmountIn - the minimum acceptable BPT to burn in return for withdrawn tokens
+    * @param maxBPTAmountIn - the max acceptable BPT to burn in return for withdrawn tokens
     */
     function exitBPTInForExactTokensOut (uint256[] memory amountsOut, uint256 maxBPTAmountIn) internal returns (bytes memory userData) {
         userData = abi.encode(ExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT, amountsOut, maxBPTAmountIn);
@@ -107,7 +113,7 @@ library LibBalancer {
     }
     
     // Balancer Internal functions
-    function _buildPoolRequest(
+    function _buildJoinRequest(
         IAsset[] memory assets, 
         uint256[] memory maxAmountsIn, 
         bytes memory userData,
@@ -122,6 +128,21 @@ library LibBalancer {
         request.fromInternalBalance = fromInternalBalance;
     }
 
+    function _buildExitRequest(
+        IAsset[] memory assets, 
+        uint256[] memory minAmountsOut, 
+        bytes memory userData,
+        bool toInternalBalance
+    ) 
+        internal 
+        returns (IVault.ExitPoolRequest memory request) 
+    {
+        request.assets = assets;
+        request.minAmountsOut = minAmountsOut;
+        request.userData = userData;
+        request.toInternalBalance = toInternalBalance;
+    }
+
     function _addLiquidityExactTokensInForBPTOut (
         AddBalancerLiquidity memory al,
         bytes32 poolId
@@ -131,24 +152,15 @@ library LibBalancer {
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        IAsset[] memory assets;
-        assets[0] = IAsset(s.seedContract);
-        assets[1] = IAsset(address(this));
-        assets[2] = IAsset(s.c.bean);
-
         uint256[] memory maxAmountsIn;
         maxAmountsIn[0] = 2**256 - 1;
         maxAmountsIn[1] = 2**256 - 1;
         maxAmountsIn[2] = 2**256 - 1;
 
-        uint256[] memory amountIn;
-        amountIn[0] = al.seedAmount;
-        amountIn[0] = al.stalkAmount;
-        amountIn[0] = al.beanAmount;
-
-        IVault.JoinPoolRequest memory request = _buildPoolRequest(
-            assets, maxAmountsIn, 
-            joinExactTokensInForBPTOut(amountIn, al.minLPReceived), 
+        // Min BPT to receive can be set to 0
+        IVault.JoinPoolRequest memory request = _buildJoinRequest(
+            al.assets, maxAmountsIn, 
+            joinExactTokensInForBPTOut(al.amountsIn, 0), 
             false
         );
 
@@ -163,5 +175,44 @@ library LibBalancer {
         );
 
         lpAdded = IERC20(s.beanSeedStalk3Pair.poolAddress).balanceOf(address(this)).sub(lpAdded);
+    }
+
+    function _removeLiquidityExitExactBPTInForTokensOut (
+        uint256 lp,
+        bytes32 poolId
+    ) 
+        internal
+        returns (uint256 beansRemoved, uint256 stalkRemoved, uint256 seedRemoved)
+    {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        IAsset[] memory assets;
+        assets[0] = IAsset(s.seedContract);
+        assets[1] = IAsset(address(this));
+        assets[2] = IAsset(s.c.bean);
+
+        uint256[] memory minAmountsOut;
+        minAmountsOut[0] = 0;
+        minAmountsOut[1] = 0;
+        minAmountsOut[2] = 0;
+
+        // Min BPT to receive can be set to 0
+        IVault.ExitPoolRequest memory request = _buildExitRequest(
+            assets, minAmountsOut, 
+            exitExactBPTInForTokensOut(lp), 
+            false
+        );
+
+        IERC20(s.beanSeedStalk3Pair.poolAddress).balanceOf(address(this));
+
+        // Recipient of Removed Tokens is Always the Silo
+        IVault(s.balancerVault).exitPool(
+            poolId, 
+            msg.sender, 
+            payable(address(this)), 
+            request
+        );
+
+        IERC20(s.beanSeedStalk3Pair.poolAddress).balanceOf(address(this)).sub(0);
     }
 }
