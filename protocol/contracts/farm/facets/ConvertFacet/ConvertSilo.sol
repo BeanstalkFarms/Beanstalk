@@ -103,7 +103,7 @@ contract ConvertSilo is ToolShed {
         LibBalancer.AddBalancerLiquidity memory al;
         al.beanAmount = beansToConvert;
         al.stalkAmount = beansToConvert.mul(C.getStalkPerBean());
-        al.seedAmount = beansToConvert.mul(C.getSeedsPerBean())        
+        al.seedAmount = beansToConvert.mul(C.getSeedsPerBean());        
         // require(w.newLP > 0, "Silo: No LP added.");
         (w.beansRemoved, w.stalkRemoved) = __withdrawBeansForConvert(crates, amounts, beansToConvert); // w.beansRemoved is beans removed from Silo
         uint256 stalk_to_remove = w.stalkRemoved;

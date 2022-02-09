@@ -10,7 +10,6 @@ import "../../interfaces/balancer/IVault.sol";
 import "../../interfaces/IBean.sol";
 import "../LibAppStorage.sol";
 import "../LibClaim.sol";
-import "./WeightedPoolUserData.sol";
 
 /**
  * @author Publius
@@ -29,6 +28,7 @@ library LibBalancer {
     }
 
     struct AddBalancerLiquidity {
+        uint256 minLPReceived;
         uint256 beanAmount;
         uint256 stalkAmount;
         uint256 seedAmount;
@@ -54,8 +54,8 @@ library LibBalancer {
     * @param amountsIn - the amounts each of token to deposit in the pool as liquidity
     * @param minimumBPT - the minimum acceptable BPT to receive in return for deposited tokens
     */
-    function joinExactTokensInForBPTOut(uint256[] memory amountIn, uint256 minimumBPT) internal returns (bytes memory userData) {
-        userData = abi.encode(JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT, amountIn, minimumBPT);
+    function joinExactTokensInForBPTOut(uint256[] memory amountsIn, uint256 minimumBPT) internal returns (bytes memory userData) {
+        userData = abi.encode(JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT, amountsIn, minimumBPT);
     }
 
     /**
@@ -78,7 +78,7 @@ library LibBalancer {
     /**
     * Encodes the userData parameter for exiting a WeightedPool by removing a single token in return for an exact amount of BPT
     * @param bptAmountIn - the amount of BPT to be burned
-    * @param enterTokenIndex - the index of the token to removed from the pool
+    * @param exitTokenIndex - the index of the token to removed from the pool
     */
     function exitExactBPTInForOneTokenOut (uint256 bptAmountIn, uint256 exitTokenIndex) internal returns (bytes memory userData) {
         userData = abi.encode(ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT, bptAmountIn, exitTokenIndex);   
@@ -98,12 +98,12 @@ library LibBalancer {
     * @param amountsOut - the amounts of each token to be withdrawn from the pool
     * @param maxBPTAmountIn - the minimum acceptable BPT to burn in return for withdrawn tokens
     */
-    function exitBPTInForExactTokensOut (uint256[] amountsOut, uint256 maxBPTAmountIn) internal returns (bytes memory userData) {
+    function exitBPTInForExactTokensOut (uint256[] memory amountsOut, uint256 maxBPTAmountIn) internal returns (bytes memory userData) {
         userData = abi.encode(ExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT, amountsOut, maxBPTAmountIn);
     }
 
     function exitForManagementFees() internal returns (bytes memory userData) {
-        userData = abi.encode(ExitKind.MANAGEMENT_FEE_TOKENS_OUT]);
+        userData = abi.encode(ExitKind.MANAGEMENT_FEE_TOKENS_OUT);
     }
     
     // Balancer Internal functions
@@ -122,11 +122,9 @@ library LibBalancer {
         request.fromInternalBalance = fromInternalBalance;
     }
 
-    function _addExactTokensBSSLiquidity (
+    function _addLiquidityExactTokensInForBPTOut (
         AddBalancerLiquidity memory al,
-        bytes32 poolId,
-        address recipient,
-        IVault.JoinPoolRequest memory request
+        bytes32 poolId
     ) 
         internal
         returns (uint256 lpAdded)
@@ -134,21 +132,29 @@ library LibBalancer {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         IAsset[] memory assets;
-        assets[0] = IAsset(s.c.bean);
+        assets[0] = IAsset(s.seedContract);
         assets[1] = IAsset(address(this));
-        assets[2] = IAsset(s.seedContract);
+        assets[2] = IAsset(s.c.bean);
 
         uint256[] memory maxAmountsIn;
         maxAmountsIn[0] = 2**256 - 1;
         maxAmountsIn[1] = 2**256 - 1;
         maxAmountsIn[2] = 2**256 - 1;
 
-        request = _buildBalancerPoolRequest(assets, 
-            maxAmountsIn, asdfa, false
+        uint256[] memory amountIn;
+        amountIn[0] = al.seedAmount;
+        amountIn[0] = al.stalkAmount;
+        amountIn[0] = al.beanAmount;
+
+        IVault.JoinPoolRequest memory request = _buildPoolRequest(
+            assets, maxAmountsIn, 
+            joinExactTokensInForBPTOut(amountIn, al.minLPReceived), 
+            false
         );
 
         lpAdded = IERC20(s.beanSeedStalk3Pair.poolAddress).balanceOf(address(this));
 
+        // Recipient of LP Tokens is Always the Silo
         IVault(s.balancerVault).joinPool(
             poolId, 
             msg.sender, 

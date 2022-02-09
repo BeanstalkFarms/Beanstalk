@@ -98,7 +98,8 @@ library LibMarket {
         internal 
         returns (uint256 lpAdded) 
     {
-        lpAdded = LibBalancer._addBalancerBSSLiquidity(al);
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        lpAdded = LibBalancer._addLiquidityExactTokensInForBPTOut(al, s.beanSeedStalk3Pair.poolId);
     }
 
     function removeLiquidity(uint256 liqudity, uint256 minBeanAmount,uint256 minEthAmount)
