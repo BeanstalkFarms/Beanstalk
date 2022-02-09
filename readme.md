@@ -67,11 +67,11 @@ For this tutorial, we are going to create a new facet called `SampleFacet`. In y
 
 ### Overview
 There are a couple of steps that must be done before we can fork mainnet and upgrade Bips/test Bip upgrades
-1. include the following code in the networks section of the hardhat.config.js, where ALCHEMY_URL is your mainnet url. We recommend using Alchemy for this. BlockNumber we recommend to be one that is close to the current block number but not too close.
+1. include the following code in the networks section of the hardhat.config.js, where ALCHEMY_URL is your mainnet url. We recommend using Alchemy for this. The blockNumber is optional, but we recommend to be one that is close to the current block number but not too close.
     ```
     forking: {
-        url: ALCHEMY_URL,
-        blockNumber: 14161000
+        url: <RPC_URL>,
+        blockNumber: <BLOCK_NUMBER>
       },
     ```
     ```
@@ -79,22 +79,24 @@ There are a couple of steps that must be done before we can fork mainnet and upg
       chainId: 1337,
       url: "http://127.0.0.1:8545",
       forking: {
-        url: ALCHEMY_URL,
-        blockNumber: 14161000
+        url: <RPC_URL>,
+        blockNumber: <BLOCK_NUMBER>
       },
     },
     ```
 2. include as in imports section
    * `const BEANSTALK = "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"`
+   * `const ownerFacet = await ethers.getContractAt('OwnershipFacet', BEANSTALK);`
+   * `const owner = await ownerFacet.owner();`
    * `const { upgradeWithNewFacets } = require('./scripts/diamond.js')`
 3. Lastly, include the tasks required for upgrading above module.exports: 
     ```
     task("upgrade", "Commits a bip", async() => {
         await hre.network.provider.request({
             method: "hardhat_impersonateAccount",
-            params: ["0x925753106FCdB6D2f30C3db295328a0A1c5fD1D1"],
+            params: [owner],
         });
-        const account = await ethers.getSigner("0x925753106FCdB6D2f30C3db295328a0A1c5fD1D1")
+        const account = await ethers.getSigner(owner)
         await upgradeWithNewFacets({
             diamondAddress: BEANSTALK,
             facetNames: [],
