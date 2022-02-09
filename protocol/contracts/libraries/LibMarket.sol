@@ -94,7 +94,7 @@ library LibMarket {
         return (beansDeposited, liquidity);
     }
 
-    function addBalancerLiquidity(LibBalancer.AddBalancerLiquidity memory al) 
+    function addLiquidityExactTokensInForBPTOut(LibBalancer.AddBalancerLiquidity memory al) 
         internal 
         returns (uint256 lpAdded) 
     {
