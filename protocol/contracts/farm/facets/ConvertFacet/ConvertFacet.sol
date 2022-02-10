@@ -115,14 +115,23 @@ contract ConvertFacet is ConvertSilo {
     }
 
     function convertDepositedBeansAndCirculatingStalkSeed(
-        uint256 beans,
         uint32[] memory crates,
-        uint256[] memory amounts
+        uint256[] memory amounts,
+        uint256 minBeans,
+        uint256 minStalk, 
+        uint256 minSeeds
     )
         public
     {
         Storage.Settings memory set = defaultSettings();
-        _convertDepositedBeansAndCirculatingStalkSeed(s.beanSeedStalk3Pair.poolAddress, beans, crates, amounts, set.toInternalBalance, set.fromInternalBalance);
+        LibBalancer.AddBalancerLiquidity memory al;
+        al.assets[0] = IAsset(s.c.bean);
+        al.assets[1] = IAsset(address(this));
+        al.assets[2] = IAsset(s.seedContract);
+        al.amountsIn[0] = minBeans;
+        al.amountsIn[1] = minStalk;
+        al.amountsIn[2] = minSeeds;
+        _convertDepositedBeansAndCirculatingStalkSeed(s.beanSeedStalk3Pair.poolAddress, al, crates, amounts, set.toInternalBalance, set.fromInternalBalance);
     }
 
     function lpToPeg() external view returns (uint256 lp) {

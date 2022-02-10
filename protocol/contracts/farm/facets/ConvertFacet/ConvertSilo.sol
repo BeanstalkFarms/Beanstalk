@@ -90,7 +90,7 @@ contract ConvertSilo is ToolShed {
 
     function _convertDepositedBeansAndCirculatingStalkSeed(
         address token,
-        uint256 beansToConvert,
+        LibBalancer.AddBalancerLiquidity memory al,
         uint32[] memory crates,
         uint256[] memory amounts,
        	bool toInternalBalance,
@@ -99,19 +99,13 @@ contract ConvertSilo is ToolShed {
         internal
     {
 	    LibInternal.updateSilo(msg.sender);
-        WithdrawState memory w;
-        LibBalancer.AddBalancerLiquidity memory al;
-        al.assets[0] = IAsset(s.c.bean);
-        al.assets[1] = IAsset(address(this));
-        al.assets[2] = IAsset(s.seedContract);
-        al.amountsIn[0] = beansToConvert;
-        al.amountsIn[1] = beansToConvert.mul(C.getStalkPerBean());
-        al.amountsIn[2] = beansToConvert.mul(C.getSeedsPerBean());        
+        WithdrawState memory w;      
         // require(w.newLP > 0, "Silo: No LP added.");
-        (w.beansRemoved, w.stalkRemoved) = __withdrawBeansForConvert(crates, amounts, beansToConvert); // w.beansRemoved is beans removed from Silo
+        (w.beansAdded, w.newLP) = LibMarket.addLiquidityExactTokensInForBPTOut(al); // w.beansAdded is beans added to LP
+
+        (w.beansRemoved, w.stalkRemoved) = __withdrawBeansForConvert(crates, amounts, w.beansAdded); // w.beansRemoved is beans removed from Silo
         uint256 stalk_to_remove = w.stalkRemoved;
 
-        (w.newLP) = LibMarket.addLiquidityExactTokensInForBPTOut(al); // w.beansAdded is beans added to LP
         // Because we have not withdrawn the silo assets yet, we must account for the actual stalk removed here
         w.stalkRemoved = w.stalkRemoved.sub(w.beansRemoved.mul(C.getStalkPerBean()));
 

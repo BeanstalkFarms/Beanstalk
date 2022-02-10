@@ -148,7 +148,7 @@ library LibBalancer {
         bytes32 poolId
     ) 
         internal
-        returns (uint256 lpAdded)
+        returns (uint256 beansAdded, uint256 lpAdded)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -163,8 +163,11 @@ library LibBalancer {
             joinExactTokensInForBPTOut(al.amountsIn, 0), 
             false
         );
+        address beanAddress = s.c.bean;
+        address beanSeedStalk3PairAddress = s.beanSeedStalk3Pair.poolAddress;
 
-        lpAdded = IERC20(s.beanSeedStalk3Pair.poolAddress).balanceOf(address(this));
+        beansAdded = IERC20(beanAddress).balanceOf(address(this));
+        lpAdded = IERC20(beanSeedStalk3PairAddress).balanceOf(address(this));
 
         // Recipient of LP Tokens is Always the Silo
         IVault(s.balancerVault).joinPool(
@@ -173,8 +176,8 @@ library LibBalancer {
             address(this), 
             request
         );
-
-        lpAdded = IERC20(s.beanSeedStalk3Pair.poolAddress).balanceOf(address(this)).sub(lpAdded);
+        beansAdded = IERC20(beanAddress).balanceOf(address(this)).sub(beansAdded);
+        lpAdded = IERC20(beanSeedStalk3PairAddress).balanceOf(address(this)).sub(lpAdded);
     }
 
     function _removeLiquidityExitExactBPTInForTokensOut (
