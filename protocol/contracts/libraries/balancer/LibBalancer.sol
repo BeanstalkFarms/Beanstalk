@@ -44,6 +44,7 @@ library LibBalancer {
     }
 
     struct AddBalancerLiquidity {
+        address poolAddress;
         IAsset[] assets;
         uint256[] amountsIn;
     }
@@ -190,9 +191,13 @@ library LibBalancer {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         IAsset[] memory assets;
-        assets[0] = IAsset(s.seedContract);
+        
+        address beanAddress = s.c.bean;
+        address seedAddress = s.seedContract;
+
+        assets[0] = IAsset(seedAddress);
         assets[1] = IAsset(address(this));
-        assets[2] = IAsset(s.c.bean);
+        assets[2] = IAsset(beanAddress);
 
         uint256[] memory minAmountsOut;
         minAmountsOut[0] = 0;
@@ -201,12 +206,14 @@ library LibBalancer {
 
         // Min BPT to receive can be set to 0
         IVault.ExitPoolRequest memory request = _buildExitRequest(
-            assets, minAmountsOut, 
-            exitExactBPTInForTokensOut(lp), 
+            assets, minAmountsOut,
+            exitExactBPTInForTokensOut(lp),
             false
         );
 
-        IERC20(s.beanSeedStalk3Pair.poolAddress).balanceOf(address(this));
+        beansRemoved = IERC20(beanAddress).balanceOf(address(this));
+        stalkRemoved = IERC20(address(this)).balanceOf(address(this));
+        seedRemoved = IERC20(seedAddress).balanceOf(address(this));
 
         // Recipient of Removed Tokens is Always the Silo
         IVault(s.balancerVault).exitPool(
@@ -216,6 +223,8 @@ library LibBalancer {
             request
         );
 
-        IERC20(s.beanSeedStalk3Pair.poolAddress).balanceOf(address(this)).sub(0);
+        beansRemoved = IERC20(beanAddress).balanceOf(address(this)).sub(beansRemoved);
+        stalkRemoved = IERC20(address(this)).balanceOf(address(this)).sub(stalkRemoved);
+        seedRemoved = IERC20(seedAddress).balanceOf(address(this)).sub(seedRemoved);
     }
 }

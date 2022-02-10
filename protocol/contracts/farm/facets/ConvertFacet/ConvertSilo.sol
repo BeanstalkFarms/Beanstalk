@@ -89,7 +89,6 @@ contract ConvertSilo is ToolShed {
     }
 
     function _convertDepositedBeansAndCirculatingStalkSeed(
-        address token,
         LibBalancer.AddBalancerLiquidity memory al,
         uint32[] memory crates,
         uint256[] memory amounts,
@@ -109,10 +108,10 @@ contract ConvertSilo is ToolShed {
         // Because we have not withdrawn the silo assets yet, we must account for the actual stalk removed here
         w.stalkRemoved = w.stalkRemoved.sub(w.beansRemoved.mul(C.getStalkPerBean()));
 
-        w.i = w.stalkRemoved.div(LibTokenSilo.beanDenominatedValue(token, w.newLP), "Silo: No LP Beans.");
-        uint32 depositSeason = uint32(season().sub(w.i.div(s.ss[token].seeds)));
+        w.i = w.stalkRemoved.div(LibTokenSilo.beanDenominatedValue(al.poolAddress, w.newLP), "Silo: No LP Beans.");
+        uint32 depositSeason = uint32(season().sub(w.i.div(s.ss[al.poolAddress].seeds)));
 	
-        (w.grossAddedStalk, w.grossAddedSeeds) = __deposit(token, depositSeason, w.newLP, LibTokenSilo.beanDenominatedValue(s.c.pair, w.newLP));
+        (w.grossAddedStalk, w.grossAddedSeeds) = __deposit(al.poolAddress, depositSeason, w.newLP, LibTokenSilo.beanDenominatedValue(s.c.pair, w.newLP));
         // Net Total Up Actual Deposited/Withdrawn Stalk and Seeds
         w.netStalk = int256(w.grossAddedStalk) - int256(stalk_to_remove);
         w.netSeeds = int256(w.grossAddedSeeds) - int256(w.beansRemoved.mul(C.getSeedsPerBean()));

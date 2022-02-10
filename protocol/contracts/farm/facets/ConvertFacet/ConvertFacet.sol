@@ -125,13 +125,14 @@ contract ConvertFacet is ConvertSilo {
     {
         Storage.Settings memory set = defaultSettings();
         LibBalancer.AddBalancerLiquidity memory al;
+        al.poolAddress = s.beanSeedStalk3Pair.poolAddress;
         al.assets[0] = IAsset(s.c.bean);
         al.assets[1] = IAsset(address(this));
         al.assets[2] = IAsset(s.seedContract);
         al.amountsIn[0] = minBeans;
         al.amountsIn[1] = minStalk;
         al.amountsIn[2] = minSeeds;
-        _convertDepositedBeansAndCirculatingStalkSeed(s.beanSeedStalk3Pair.poolAddress, al, crates, amounts, set.toInternalBalance, set.fromInternalBalance);
+        _convertDepositedBeansAndCirculatingStalkSeed(al, crates, amounts, set.toInternalBalance, set.fromInternalBalance);
     }
 
     function lpToPeg() external view returns (uint256 lp) {
