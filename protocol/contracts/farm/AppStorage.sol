@@ -183,6 +183,12 @@ contract Storage {
         uint32 seeds;
         uint32 stalk;
     }
+
+    struct TransferSettings {
+        bool toInternalBalance;
+        bool fromInternalBalance;
+        bool partialUpdateSilo;
+    }
 }
 
 struct AppStorage {
