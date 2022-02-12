@@ -6,7 +6,6 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/IDiamondCut.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @author Publius
@@ -55,8 +54,8 @@ contract Account {
         SeasonOfPlenty sop;
         uint256 roots;
         uint256 wrappedBeans;
-        mapping(IERC20 => mapping(uint32 => Deposit)) deposits;
-        mapping(IERC20 => mapping(uint32 => uint256)) withdrawals;
+        mapping(address => mapping(uint32 => Deposit)) deposits;
+        mapping(address => mapping(uint32 => uint256)) withdrawals;
     }
 }
 
@@ -215,6 +214,6 @@ struct AppStorage {
     mapping (address => bool) isBudget;
     mapping(uint256 => bytes32) podListings;
     mapping(bytes32 => uint256) podOrders;
-    mapping(IERC20 => Storage.AssetSilo) siloBalances;
+    mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
 }
