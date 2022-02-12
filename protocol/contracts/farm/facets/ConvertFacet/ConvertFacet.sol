@@ -60,7 +60,7 @@ contract ConvertFacet is ConvertSilo {
 
     function claimConvertAddAndDepositLP(
         uint256 lp,
-        LibMarket.AddLiquidity calldata al,
+        LibUniswap.AddLiquidity calldata al,
         uint32[] memory crates,
         uint256[] memory amounts,
         LibClaim.Claim calldata claim
@@ -74,7 +74,7 @@ contract ConvertFacet is ConvertSilo {
 
     function convertAddAndDepositLP(
         uint256 lp,
-        LibMarket.AddLiquidity calldata al,
+        LibUniswap.AddLiquidity calldata al,
         uint32[] memory crates,
         uint256[] memory amounts
     )

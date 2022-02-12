@@ -27,6 +27,8 @@ describe('Convert', function () {
     await this.pair.faucet(userAddress, '1');
     await this.bean.mint(userAddress, '1000000000');
     await this.bean.mint(user2Address, '1000000000');
+    await this.bean.mint(this.pair.address, '1000000000');
+    await this.weth.mint(this.pair.address, '1000000');
     await this.pair.connect(user).approve(this.silo.address, '100000000000');
     await this.pair.connect(user2).approve(this.silo.address, '100000000000');
     await this.bean.connect(user).approve(this.silo.address, '100000000000');

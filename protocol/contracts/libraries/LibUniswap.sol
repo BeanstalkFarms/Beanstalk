@@ -16,6 +16,8 @@ import '../farm/AppStorage.sol';
 import './LibUserBalance.sol';
 import "../interfaces/IWETH.sol";
 
+import 'hardhat/console.sol';
+
 library LibUniswap {
 
     using SafeMath for uint;
@@ -74,6 +76,8 @@ library LibUniswap {
             (amountA, amountB) = (amountADesired, amountBDesired);
         }
 	else {
+	console.log("ReserveA: %s", reserveA);
+	console.log("ReserveB: %s", reserveB);
             uint amountBOptimal = quote(amountADesired, reserveA, reserveB);
             if (amountBOptimal <= amountBDesired) {
                 require(amountBOptimal >= amountBMin, 'LibUniswap: INSUFFICIENT_B_AMOUNT');
@@ -465,7 +469,7 @@ library LibUniswap {
      * LibMarket Auxiliary Functions
     */
 
-    function initMarket(address bean, address weth) internal {
+    function initMarket(address bean, address weth, address router) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 	s.c.bean = bean;
         s.c.weth = weth;
