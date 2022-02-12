@@ -11,6 +11,7 @@ import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibMarket.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/Silo/LibBeanSilo.sol";
+import "../../../libraries/Utils/LibToolShed.sol";
 
 /**
  * @author Publius
@@ -24,7 +25,8 @@ contract UpdateSilo is SiloExit {
      * Update
     **/
 
-    function updateSilo(address account) public payable {
+    function updateSilo(address account, bool partialUpdateSilo) public payable {
+        LibToolShed.defaultSettings();
         uint32 update = lastUpdate(account);
         if (update >= season()) return;
         uint256 grownStalk;
@@ -32,7 +34,7 @@ contract UpdateSilo is SiloExit {
         if (s.a[account].roots > 0) {
             farmSops(account, update);
             farmLegacyBeans(account, update);
-            farmBeans(account, update);
+            if (!partialUpdateSilo) farmBeans(account, update);
         } else if (s.a[account].roots == 0) {
             s.a[account].lastSop = s.r.start;
             s.a[account].lastRain = 0;

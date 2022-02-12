@@ -184,7 +184,7 @@ contract Storage {
         uint32 stalk;
     }
 
-    struct TransferSettings {
+    struct UpdateSettings {
         bool toInternalBalance;
         bool fromInternalBalance;
         bool partialUpdateSilo;
