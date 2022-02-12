@@ -183,6 +183,19 @@ contract Storage {
         uint32 seeds;
         uint32 stalk;
     }
+
+    struct Settings {
+	bool toInternalBalance;
+	bool fromInternalBalance;
+	bool lightUpdateSilo;
+    }
+
+    struct Liquity {  
+        mapping (address => uint256) lusdBalance;
+	mapping (address => bool) active;
+	mapping (address => address) lowerHint;
+	mapping (address => address) upperHint;
+    }
 }
 
 struct AppStorage {
@@ -217,4 +230,7 @@ struct AppStorage {
     mapping(bytes32 => uint256) podOrders;
     mapping(IERC20 => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
+    mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
+    address uniswapFactory;
+    Storage.Liquity sl;
 }
