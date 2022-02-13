@@ -9,7 +9,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../AppStorage.sol";
 import "../../libraries/LibCheck.sol";
 import "../../libraries/LibInternal.sol";
-import "../../libraries/LibMarket.sol";
 import "../../libraries/LibClaim.sol";
 
 /**
@@ -75,26 +74,25 @@ contract ClaimFacet {
 
     function unwrapBeans(uint amount) public returns (uint256 beansToWallet) {
         if (amount == 0) return beansToWallet;
-        uint256 wBeans = s.a[msg.sender].wrappedBeans;
+        uint256 wBeans = s.internalTokenBalance[msg.sender][IBean(s.c.bean)];
 
         if (amount > wBeans) {
             IBean(s.c.bean).transfer(msg.sender, wBeans);
-            beansToWallet = s.a[msg.sender].wrappedBeans;
-            s.a[msg.sender].wrappedBeans = 0;
+            beansToWallet = s.internalTokenBalance[msg.sender][IBean(s.c.bean)];
+            LibUserBalance._decreaseInternalBalance(msg.sender, IBean(s.c.bean), wBeans, false);
         } else {
             IBean(s.c.bean).transfer(msg.sender, amount);
-            s.a[msg.sender].wrappedBeans = wBeans.sub(amount);
+	    LibUserBalance._decreaseInternalBalance(msg.sender, IBean(s.c.bean), amount, false);
             beansToWallet = amount;
         }
     }
 
     function wrapBeans(uint amount) public {
         IBean(s.c.bean).transferFrom(msg.sender, address(this), amount);
-        s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(amount);
-
+	LibUserBalance._increaseInternalBalance(msg.sender, IBean(s.c.bean), amount);
     }
 
     function wrappedBeans(address user) public view returns (uint256) {
-        return s.a[user].wrappedBeans;
+        return s.internalTokenBalance[user][IBean(s.c.bean)];
     }
 }

@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import "./SiloExit.sol";
 import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibInternal.sol";
-import "../../../libraries/LibMarket.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/Silo/LibBeanSilo.sol";
 

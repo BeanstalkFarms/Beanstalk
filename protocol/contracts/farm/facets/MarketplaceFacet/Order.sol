@@ -48,7 +48,7 @@ contract Order is Listing {
         uint24 pricePerPod,
         uint256 maxPlaceInLine
     ) internal returns (bytes32 id) {
-        uint256 boughtBeanAmount = LibMarket.buyExactTokens(buyBeanAmount, address(this));
+        uint256 boughtBeanAmount = LibUniswap.buyExactTokens(buyBeanAmount, address(this));
         return _createPodOrder(beanAmount+boughtBeanAmount, pricePerPod, maxPlaceInLine);
     }
 
@@ -93,7 +93,7 @@ contract Order is Listing {
         require(placeInLineEndPlot <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
         uint256 costInBeans = (o.pricePerPod * amount) / 1000000;
         if (toWallet) bean().transfer(msg.sender, costInBeans);
-        else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(costInBeans);
+        else LibUserBalance._increaseInternalBalance(msg.sender, IBean(s.c.bean), costInBeans);
         if (s.podListings[index] != bytes32(0)){
             _cancelPodListing(index);
         }
@@ -112,7 +112,7 @@ contract Order is Listing {
         bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine);
         uint256 amountBeans = (pricePerPod * s.podOrders[id]) / 1000000;
         if (toWallet) bean().transfer(msg.sender, amountBeans);
-        else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(amountBeans);
+        else LibUserBalance._increaseInternalBalance(msg.sender, IBean(s.c.bean), amountBeans);
         delete s.podOrders[id];
         emit PodOrderCancelled(msg.sender, id);
      }

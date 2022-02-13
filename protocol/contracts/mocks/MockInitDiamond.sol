@@ -16,8 +16,6 @@ import {AppStorage} from "../farm/AppStorage.sol";
 import '../libraries/LibUniswap.sol';
 import '../mocks/MockUniswapV2Factory.sol';
 
-import '../libraries/LibMarket.sol';
-
 /**
  * @author Publius
  * @title Mock Init Diamond
@@ -48,7 +46,7 @@ contract MockInitDiamond {
         s.season.timestamp = block.timestamp;
 
         s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
-        LibMarket.initMarket(s.c.bean, s.c.weth, mockRouter);
+        LibUniswap.initMarket(s.c.bean, s.c.weth, mockRouter);
 	s.uniswapFactory = address(new MockUniswapV2Factory(s.c.pair));
     }
 

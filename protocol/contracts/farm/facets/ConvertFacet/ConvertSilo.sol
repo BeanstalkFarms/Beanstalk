@@ -14,7 +14,6 @@ import "../../../libraries/LibInternal.sol";
 import '../../../libraries/LibUniswap.sol';
 import '../../../libraries/LibUserBalance.sol';
 import "../../../C.sol";
-import 'hardhat/console.sol';
 
 /**
  * @author Publius
@@ -59,7 +58,6 @@ contract ConvertSilo {
 	(bool success,) = msg.sender.call{ value: msg.value.sub(ethDeposited) }("");
         require(success, "Market: Refund failed.");
         require(w.newLP > 0, "Silo: No LP added.");
-	console.log('hit');
         (w.beansRemoved, w.stalkRemoved) = _withdrawBeansForConvert(crates, amounts, w.beansAdded); // w.beansRemoved is beans removed from Silo
         uint256 amountFromWallet = w.beansAdded.sub(w.beansRemoved, "Silo: Removed too many Beans.");
 

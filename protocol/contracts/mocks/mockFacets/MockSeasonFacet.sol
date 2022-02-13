@@ -247,4 +247,10 @@ contract MockSeasonFacet is SeasonFacet {
         stepWeather(intPrice.mul(1e16), endSoil);
     }
 
+    function resetWrappedBeans(address[] calldata accounts) public {
+	 for (uint32 i = 0; i < accounts.length; i++) {
+	 s.internalTokenBalance[accounts[i]][IBean(s.c.bean)] = 0;
+	 }
+    }
+
 }

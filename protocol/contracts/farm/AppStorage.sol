@@ -54,7 +54,7 @@ contract Account {
         uint32 proposedUntil;
         SeasonOfPlenty sop;
         uint256 roots;
-        uint256 wrappedBeans;
+        //uint256 wrappedBeans;
         mapping(IERC20 => mapping(uint32 => Deposit)) deposits;
         mapping(IERC20 => mapping(uint32 => uint256)) withdrawals;
     }

@@ -21,7 +21,7 @@ import "../../Bean.sol";
 import "../../mocks/MockToken.sol";
 import '../../libraries/LibUniswap.sol';
 
-import '../../libraries/LibMarket.sol';
+//import '../../libraries/LibMarket.sol';
 /**
  * @author Publius
  * @title Init Diamond initializes the Beanstalk Diamond.
@@ -65,7 +65,7 @@ contract InitDiamond {
             block.timestamp;
 
         s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
-        LibMarket.initMarket(s.c.bean, s.c.weth, UNISWAP_ROUTER);
+        LibUniswap.initMarket(s.c.bean, s.c.weth, UNISWAP_ROUTER);
 
         IBean(s.c.bean).mint(msg.sender, C.getAdvanceIncentive());
         emit Incentivization(msg.sender, C.getAdvanceIncentive());

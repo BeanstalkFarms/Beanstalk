@@ -141,8 +141,10 @@ contract MockUniswapV2Pair {
     }
 
     function burnWETH(address weth) external {
-      MockToken(weth).burn(MockToken(weth).balanceOf(address(this)));
+	MockToken(weth).burn(MockToken(weth).balanceOf(address(this)));
     }
+
+
 
     function burnAllLP(address account) external {
       _totalSupply = _totalSupply.sub(_balances[account]);
@@ -409,5 +411,4 @@ contract MockUniswapV2Pair {
     function uqdiv(uint224 x, uint112 y) internal pure returns (uint224 z) {
         z = x / uint224(y);
     }
-
 }

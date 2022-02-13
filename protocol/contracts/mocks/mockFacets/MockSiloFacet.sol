@@ -9,6 +9,8 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/SiloFacet/SiloFacet.sol";
 import "../MockUniswapV2Pair.sol";
 
+import 'hardhat/console.sol';
+
 /**
  * @author Publius
  * @title Mock Silo Facet
@@ -147,4 +149,10 @@ contract MockSiloFacet is SiloFacet {
         }
         return (seasons, crates);
     }
+
+    function enumerate() public {
+	console.log(IBean(s.c.bean).balanceOf(address(this)));
+	console.log(IUniswapV2Pair(s.c.pair).balanceOf(address(this)));
+    }
+
 }
