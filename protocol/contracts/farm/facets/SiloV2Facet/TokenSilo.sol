@@ -48,7 +48,6 @@ contract TokenSilo {
         return LibTokenSilo.tokenWithdrawal(account, token, season);
     }
 
-    // V2 For All Token Types
     function getTotalDeposited(address token) public view returns (uint256) {
         return s.siloBalances[token].deposited;
     }

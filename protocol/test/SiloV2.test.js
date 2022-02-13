@@ -530,7 +530,7 @@ describe('Silo', function () {
       await this.beanThreeCurve.set_supply('100000');
       await this.beanThreeCurve.set_A_precise('1000');
       await this.beanThreeCurve.set_balances([
-        ethers.utils.parseUnits('1000001',6),
+        ethers.utils.parseUnits('1000000',6),
         ethers.utils.parseEther('1000000')
       ]);
     });
@@ -543,7 +543,7 @@ describe('Silo', function () {
     it("properly checks bdv", async function () {
       await this.threeCurve.set_virtual_price(ethers.utils.parseEther('1.02'));
       this.curveBDV = await ethers.getContractAt('CurveBDVFacet', this.diamond.address);
-      expect(await this.curveBDV.curveToBDV('1')).to.equal('20018030');
+      expect(await this.curveBDV.curveToBDV('1')).to.equal('20181651');
     })
   })
 });

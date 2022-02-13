@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /*
  * @author Publius
- * @title Silo handles depositing and withdrawing Beans and LP, and updating the Silo.
+ * @title SiloV2Facet handles depositing, withdrawing and claiming whitelisted Silo tokens.
 */
 contract SiloV2Facet is TokenSilo {
 
