@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import "../../farm/facets/ClaimFacet.sol";
 import "../../libraries/LibAppStorage.sol";
 import "../MockToken.sol";
-import 'hardhat/console.sol';
 
 /**
  * @author Publius
