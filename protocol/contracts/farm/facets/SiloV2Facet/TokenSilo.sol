@@ -40,19 +40,19 @@ contract TokenSilo {
      * Getters
     **/
 
-    function getDeposit(address account, address token, uint32 season) public view returns (uint256, uint256) {
+    function getDeposit(address account, address token, uint32 season) external view returns (uint256, uint256) {
         return LibTokenSilo.tokenDeposit(account, token, season);
     }
 
-    function getWithdrawal(address account, address token, uint32 season) public view returns (uint256) {
+    function getWithdrawal(address account, address token, uint32 season) external view returns (uint256) {
         return LibTokenSilo.tokenWithdrawal(account, token, season);
     }
 
-    function getTotalDeposited(address token) public view returns (uint256) {
+    function getTotalDeposited(address token) external view returns (uint256) {
         return s.siloBalances[token].deposited;
     }
 
-    function getTotalWithdrawn(address token) public view returns (uint256) {
+    function getTotalWithdrawn(address token) external view returns (uint256) {
         return s.siloBalances[token].withdrawn;
     }
 
