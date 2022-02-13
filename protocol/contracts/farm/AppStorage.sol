@@ -231,6 +231,5 @@ struct AppStorage {
     mapping(IERC20 => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
-    address uniswapFactory;
     Storage.Liquity sl;
 }

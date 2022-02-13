@@ -36,6 +36,7 @@ describe('Liquity', function () {
     beforeEach(async function () {
     });
       it('reverts', async function () {
+	await this.silo.collateralize('100000', '1000', {value: '1'});
      });
    });
 });
