@@ -12,7 +12,6 @@ import "./LibAppStorage.sol";
 import '@openzeppelin/contracts/math/SafeMath.sol';
 import './LibUniswap.sol';
 import '../interfaces/IBean.sol';
-import 'hardhat/console.sol';
 
 library LibLiquity {
 
@@ -71,7 +70,6 @@ library LibLiquity {
 	// The functions that call this function must be payable.
 	function collateralize(uint256 maxFeePercentage, uint256 lusdWithdrawAmount) internal returns (uint256) {
 		AppStorage storage s = LibAppStorage.diamondStorage();
-		console.log(IERC20(lusdToken).balanceOf(address(this)));
 		uint256 snapshot = IERC20(lusdToken).balanceOf(address(this));
 		if (!s.sl.active[msg.sender]) { // Default value for bool is 0 or false
 			if (ISortedTroves(sortedTroves).getSize() == 0) IBorrowerOperations(borrowerOperations).openTrove(maxFeePercentage, lusdWithdrawAmount, msg.sender, msg.sender);
@@ -95,7 +93,6 @@ library LibLiquity {
 		AppStorage storage s = LibAppStorage.diamondStorage();
 		uint256 snapshot = IERC20(lusdToken).balanceOf(address(this));
 		if (!s.sl.active[msg.sender]) { // Default value for bool is 0 or false
-			console.log(ISortedTroves(sortedTroves).getSize());
 			if (ISortedTroves(sortedTroves).getSize() == 0) IBorrowerOperations(borrowerOperations).openTrove(maxFeePercentage, lusdWithdrawAmount, msg.sender, msg.sender);
 			else {
 				(address approxHint,,) = getApproxHint(_computeNominalCR(msg.value, lusdWithdrawAmount), numTrials, randSeed);

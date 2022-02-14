@@ -5,6 +5,18 @@ const { ethersAbiCoder } = require('ethers');
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 
+const LUSD_TOKEN = "0x5f98805A4E8be255a32880FDeC7F6728C6568bA0";
+const TROVE_MANAGER = "0xA39739EF8b0231DbFA0DcdA07d7e29faAbCf4bb2";
+const BORROWER_OPERATIONS = "0x24179CD81c9e782A4096035f7eC97fB8B783e007";
+const SORTED_TROVES = "0x8FdD3fbFEb32b28fb73555518f8b361bCeA741A6";
+const PRICE_FEED = "0x4c517D4e2C851CA76d7eC94B805269Df0f2201De";
+const ACTIVE_POOL = "0xDf9Eb223bAFBE5c5271415C75aeCD68C21fE3D7F";
+const COLL_SURPLUS_POOL = "0x3D32e8b97Ed5881324241Cf03b2DA5E2EBcE5521";
+const DEFAULT_POOL = "0x896a3F03176f05CFbb4f006BfCd8723F2B0D741C";
+const STABILITY_POOL = "0x66017D22b0f8556afDd19FC67041899Eb65a21bb";
+const GAS_POOL = "0x9555b042F969E561855e5F28cB1230819149A8d9";
+const LQTY_STAKING = "0x4f9Fbb3f1E99B56e0Fe2892e623Ed36A76Fc605d";
+
 describe('Liquity', function () {
   before(async function () {
     [owner,user,user2] = await ethers.getSigners();
@@ -21,6 +33,8 @@ describe('Liquity', function () {
     this.pegPair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pegPair);
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
     this.claim = await ethers.getContractAt('MockClaimFacet', this.diamond.address)
+    this.borrowerOperations = await ethers.getContractAt("MockBorrowerOperations", BORROWER_OPERATIONS);
+    this.lusdToken = await ethers.getContractAt("MockLUSDToken", LUSD_TOKEN);
 
     await this.pair.simulateTrade('2000', '2');
     await this.season.siloSunrise(0);
@@ -30,13 +44,14 @@ describe('Liquity', function () {
     await this.pair.connect(user).approve(this.silo.address, '100000000000');
     await this.pair.connect(user2).approve(this.silo.address, '100000000000');
     await this.bean.connect(user).approve(this.silo.address, '100000000000');
-    await this.bean.connect(user2).approve(this.silo.address, '100000000000'); 
+    await this.bean.connect(user2).approve(this.silo.address, '100000000000');
+    await this.borrowerOperations.setAddresses(TROVE_MANAGER, ACTIVE_POOL, DEFAULT_POOL, STABILITY_POOL, GAS_POOL, COLL_SURPLUS_POOL, PRICE_FEED, SORTED_TROVES, LUSD_TOKEN, LQTY_STAKING);
   });
    describe('Create Trove', async function () {
     beforeEach(async function () {
     });
       it('reverts', async function () {
-	await this.silo.collateralize('100000', '1000', {value: '1'});
+	await this.silo.connect(user).collateralize('100000', '1000', {value: '1'});
      });
    });
 });

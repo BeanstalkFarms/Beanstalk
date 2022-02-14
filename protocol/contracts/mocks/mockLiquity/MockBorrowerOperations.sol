@@ -109,7 +109,7 @@ contract MockBorrowerOperations is MockLiquityBase, Ownable, MockCheckContract, 
     )
         external
         override
-        onlyOwner
+        //onlyOwner
     {
         // This makes impossible to open a trove with zero withdrawn LUSD
         assert(MIN_NET_DEBT > 0);
@@ -148,7 +148,6 @@ contract MockBorrowerOperations is MockLiquityBase, Ownable, MockCheckContract, 
         emit LUSDTokenAddressChanged(_lusdTokenAddress);
         emit LQTYStakingAddressChanged(_lqtyStakingAddress);
 
-        renounceOwnership();
     }
 
     // --- Borrower Trove Operations ---

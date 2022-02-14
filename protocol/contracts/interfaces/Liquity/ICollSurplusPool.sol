@@ -5,15 +5,6 @@ pragma solidity ^0.7.6;
 
 interface ICollSurplusPool {
 
-    // --- Events ---
-    
-    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
-    event TroveManagerAddressChanged(address _newTroveManagerAddress);
-    event ActivePoolAddressChanged(address _newActivePoolAddress);
-
-    event CollBalanceUpdated(address indexed _account, uint _newBalance);
-    event EtherSent(address _to, uint _amount);
-
     // --- Contract setters ---
 
     function setAddresses(
