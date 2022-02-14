@@ -39,10 +39,10 @@ contract Sun is Weather {
     {
         (uint256 eth_reserve, uint256 bean_reserve) = lockedReserves();
 
-        uint256 currentBeans = sqrt(
+        uint256 currentBeans = LibToolShed.sqrt(
             bean_reserve.mul(eth_reserve).mul(1e6).div(beanPrice.mul(1e18).asUint256())
         );
-        uint256 targetBeans = sqrt(
+        uint256 targetBeans = LibToolShed.sqrt(
             bean_reserve.mul(eth_reserve).mul(1e6).div(usdcPrice.mul(1e18).asUint256())
         );
 

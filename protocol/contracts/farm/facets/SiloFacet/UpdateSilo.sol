@@ -26,7 +26,6 @@ contract UpdateSilo is SiloExit {
     **/
 
     function updateSilo(address account, bool partialUpdateSilo) public payable {
-        LibToolShed.defaultSettings();
         uint32 update = lastUpdate(account);
         if (update >= season()) return;
         uint256 grownStalk;
