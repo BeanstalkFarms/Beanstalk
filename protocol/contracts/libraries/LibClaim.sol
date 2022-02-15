@@ -10,6 +10,7 @@ import "./LibCheck.sol";
 import "./LibInternal.sol";
 import "./LibMarket.sol";
 import "./LibAppStorage.sol";
+import "./LibUserBalance.sol";
 import "../interfaces/IWETH.sol";
 
 /**
@@ -57,6 +58,7 @@ library LibClaim {
         if (beansClaimed > 0) {
             if (c.toWallet) IBean(s.c.bean).transfer(msg.sender, beansClaimed);
             else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(beansClaimed);
+            // else LibUserBalance._increaseInternalBalance(msg.sender, IBean(s.c.bean), beansClaimed);
         }
     }
     
@@ -135,7 +137,7 @@ library LibClaim {
     // Season of Plenty
 
     function claimEth(bool partialUpdateSilo) public {
-        LibInternal.updateSilo(partialUpdateSilo, msg.sender);
+        LibInternal.updateSilo(msg.sender, partialUpdateSilo);
         uint256 eth = claimPlenty(msg.sender);
         emit EtherClaim(msg.sender, eth);
     }

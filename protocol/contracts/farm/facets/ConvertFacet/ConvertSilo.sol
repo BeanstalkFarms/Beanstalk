@@ -39,15 +39,15 @@ contract ConvertSilo {
     }
 
     function _convertAddAndDepositLP(
-        bool partialUpdateSilo,
         uint256 lp,
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
-        uint256[] memory amounts
+        uint256[] memory amounts,
+        bool partialUpdateSilo
     )
         internal
     {
-	    LibInternal.updateSilo(partialUpdateSilo, msg.sender);
+	    LibInternal.updateSilo(msg.sender, partialUpdateSilo);
         WithdrawState memory w;
         if (bean().balanceOf(address(this)) < al.beanAmount) {
             w.beansTransferred = al.beanAmount.sub(s.bean.deposited);

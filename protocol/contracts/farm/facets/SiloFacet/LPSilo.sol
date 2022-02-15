@@ -45,8 +45,8 @@ contract LPSilo is UpdateSilo {
      * Internal
     **/
 
-    function _depositLP(bool partialUpdateSilo, uint256 amount) internal {
-        updateSilo(partialUpdateSilo, msg.sender);
+    function _depositLP(uint256 amount, bool partialUpdateSilo) internal {
+        updateSilo(msg.sender, partialUpdateSilo);
         uint32 _s = season();
         uint256 lpb = LibLPSilo.lpToLPBeans(amount);
         require(lpb > 0, "Silo: No Beans under LP.");
@@ -60,8 +60,8 @@ contract LPSilo is UpdateSilo {
         LibCheck.lpBalanceCheck();
     }
 
-    function _withdrawLP(bool partialUpdateSilo, uint32[] calldata crates, uint256[] calldata amounts) internal {
-        updateSilo(partialUpdateSilo, msg.sender);
+    function _withdrawLP(uint32[] calldata crates, uint256[] calldata amounts, bool partialUpdateSilo) internal {
+        updateSilo(msg.sender, partialUpdateSilo);
         require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         (
             uint256 lpRemoved,

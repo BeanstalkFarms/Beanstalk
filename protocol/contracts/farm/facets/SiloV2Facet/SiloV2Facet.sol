@@ -22,25 +22,29 @@ contract SiloV2Facet is TokenSilo {
      * Generic
      */
 
-    function deposit(bool partialUpdateSilo, address token, uint256 amount) external {
-        IERC20(token).transferFrom(msg.sender, address(this), amount);
-        _deposit(partialUpdateSilo, token, amount);
+    function deposit(address token, uint256 amount, UpdateSettings calldata settings) external {
+        if (!settings.fromInternalBalance) IERC20(token).transferFrom(msg.sender, address(this), amount);
+        else LibUserBalance._decreaseInternalBalance(msg.sender, IERC20(token), amount, false);
+        _deposit(token, amount, settings.partialUpdateSilo);
     }
 
-    function withdraw(bool partialUpdateSilo, address token, uint32[] calldata seasons, uint256[] calldata amounts) 
-        public {
-        _withdraw(partialUpdateSilo, token, seasons, amounts);
+    function withdraw(address token, uint32[] calldata seasons, uint256[] calldata amounts, bool partialUpdateSilo) public {
+        _withdraw(token, seasons, amounts, partialUpdateSilo);
     }
 
-    function claimWithdrawals(address[] calldata tokens, uint32[] calldata seasons) public {
+    function claimWithdrawals(address[] calldata tokens,
+        uint32[] calldata seasons,
+        UpdateSettings calldata settings
+    ) public {
         for (uint256 i = 0; i < tokens.length; i++) {
-            claimWithdrawal(tokens[i], seasons[i]);
+            claimWithdrawal(tokens[i], seasons[i], settings);
         }
     }
     
-    function claimWithdrawal(address token, uint32 season) public returns (uint256 amount) {
+    function claimWithdrawal(address token, uint32 season, UpdateSettings calldata settings) public returns (uint256 amount) {
         amount = removeTokenWithdrawal(msg.sender, token, season);
-        IERC20(token).transfer(msg.sender, amount);
+        if (!settings.toInternalBalance) IERC20(token).transfer(msg.sender, amount);
+        else LibUserBalance._increaseInternalBalance(msg.sender, IERC20(token), amount);
         emit ClaimWithdrawal(msg.sender, token, season, amount);
     }
 

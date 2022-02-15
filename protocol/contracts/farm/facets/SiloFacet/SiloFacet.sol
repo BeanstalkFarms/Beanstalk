@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "./BeanSilo.sol";
 import "../../../libraries/LibClaim.sol";
 import "../../../libraries/LibMarket.sol";
+import "../../../libraries/LibUserBalance.sol";
 
 /*
  * @author Publius
@@ -27,18 +28,18 @@ contract SiloFacet is BeanSilo {
     // Deposit
 
     function claimAndDepositBeans(
-        bool partialUpdateSilo,
         uint256 amount,
+        bool partialUpdateSilo,
         LibClaim.Claim calldata claim
     ) external {
         allocateBeans(claim, amount, partialUpdateSilo);
-        _depositBeans(partialUpdateSilo, amount);
+        _depositBeans(amount, partialUpdateSilo);
     }
 
     function claimBuyAndDepositBeans(
-        bool partialUpdateSilo,
         uint256 amount,
         uint256 buyAmount,
+        bool partialUpdateSilo,
         LibClaim.Claim calldata claim
     )
         external
@@ -46,58 +47,59 @@ contract SiloFacet is BeanSilo {
     {
         allocateBeans(claim, amount, partialUpdateSilo);
         uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
-        _depositBeans(partialUpdateSilo, boughtAmount.add(amount));
+        _depositBeans(boughtAmount.add(amount), partialUpdateSilo);
     }
 
-    function depositBeans(bool partialUpdateSilo, uint256 amount) public {
-        bean().transferFrom(msg.sender, address(this), amount);
-        _depositBeans(partialUpdateSilo, amount);
+    function depositBeans(uint256 amount, UpdateSettings calldata settings) public {
+        if (!settings.fromInternalBalance) bean().transferFrom(msg.sender, address(this), amount);
+        else LibUserBalance._decreaseInternalBalance(msg.sender, bean(), amount, false);
+        _depositBeans(amount, settings.partialUpdateSilo);
     }
 
-    function buyAndDepositBeans(bool partialUpdateSilo, uint256 amount, uint256 buyAmount) public payable {
+    function buyAndDepositBeans(uint256 amount, uint256 buyAmount, bool partialUpdateSilo) public payable {
         uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
         if (amount > 0) bean().transferFrom(msg.sender, address(this), amount);
-        _depositBeans(partialUpdateSilo, boughtAmount.add(amount));
+        _depositBeans(boughtAmount.add(amount), partialUpdateSilo);
     }
 
     // Withdraw
 
     function withdrawBeans(
-        bool partialUpdateSilo,
         uint32[] calldata crates,
-        uint256[] calldata amounts
+        uint256[] calldata amounts,
+        bool partialUpdateSilo
     )
         external
     {
-        _withdrawBeans(partialUpdateSilo, crates, amounts);
+        _withdrawBeans(crates, amounts, partialUpdateSilo);
     }
 
     function claimAndWithdrawBeans(
-        bool partialUpdateSilo,
         uint32[] calldata crates,
         uint256[] calldata amounts,
+        bool partialUpdateSilo,
         LibClaim.Claim calldata claim
     )
         external
     {
         LibClaim.claim(partialUpdateSilo, claim);
-        _withdrawBeans(partialUpdateSilo, crates, amounts);
+        _withdrawBeans(crates, amounts, partialUpdateSilo);
     }
 
     /*
      * LP
     */
 
-    function claimAndDepositLP(bool partialUpdateSilo, uint256 amount, LibClaim.Claim calldata claim) external {
+    function claimAndDepositLP(uint256 amount, bool partialUpdateSilo, LibClaim.Claim calldata claim) external {
         LibClaim.claim(partialUpdateSilo, claim);
-        depositLP(partialUpdateSilo, amount);
+        depositLP(amount, partialUpdateSilo);
     }
 
     function claimAddAndDepositLP(
-        bool partialUpdateSilo,
         uint256 lp,
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
+        bool partialUpdateSilo,
         LibMarket.AddLiquidity calldata al,
 	    LibClaim.Claim calldata claim
     )
@@ -105,39 +107,39 @@ contract SiloFacet is BeanSilo {
         payable
     {
         LibClaim.claim(partialUpdateSilo, claim);
-        _addAndDepositLP(partialUpdateSilo, lp, buyBeanAmount, buyEthAmount, al);
+        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, partialUpdateSilo, al);
     }
 
-    function depositLP(bool partialUpdateSilo, uint256 amount) public {
+    function depositLP(uint256 amount, bool partialUpdateSilo) public {
         pair().transferFrom(msg.sender, address(this), amount);
-        _depositLP(partialUpdateSilo, amount);
+        _depositLP(amount, partialUpdateSilo);
     }
 
     function addAndDepositLP(
-        bool partialUpdateSilo,
         uint256 lp,
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
+        bool partialUpdateSilo,
         LibMarket.AddLiquidity calldata al
     )
         public
         payable
     {
         require(buyBeanAmount == 0 || buyEthAmount == 0, "Silo: Silo: Cant buy Ether and Beans.");
-        _addAndDepositLP(partialUpdateSilo, lp, buyBeanAmount, buyEthAmount, al);
+        _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, partialUpdateSilo, al);
     }
     
     function _addAndDepositLP(
-        bool partialUpdateSilo,
         uint256 lp,
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
+        bool partialUpdateSilo,
         LibMarket.AddLiquidity calldata al
     )
         internal {
         uint256 boughtLP = LibMarket.swapAndAddLiquidity(buyBeanAmount, buyEthAmount, al);
         if (lp>0) pair().transferFrom(msg.sender, address(this), lp);
-        _depositLP(partialUpdateSilo, lp.add(boughtLP));
+        _depositLP(lp.add(boughtLP), partialUpdateSilo);
     }
 
     /*
@@ -145,25 +147,25 @@ contract SiloFacet is BeanSilo {
     */
 
     function claimAndWithdrawLP(
-        bool partialUpdateSilo,
         uint32[] calldata crates,
         uint256[] calldata amounts,
+        bool partialUpdateSilo,
         LibClaim.Claim calldata claim
     )
         external
     {
         LibClaim.claim(partialUpdateSilo, claim);
-        _withdrawLP(partialUpdateSilo, crates, amounts);
+        _withdrawLP(crates, amounts, partialUpdateSilo);
     }
 
     function withdrawLP(
-        bool partialUpdateSilo,
         uint32[] calldata crates, 
-        uint256[] calldata amounts
+        uint256[] calldata amounts,
+        bool partialUpdateSilo
     )
         external
     {
-        _withdrawLP(partialUpdateSilo, crates, amounts);
+        _withdrawLP(crates, amounts, partialUpdateSilo);
     }
 
     function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans, bool partialUpdateSilo) private {

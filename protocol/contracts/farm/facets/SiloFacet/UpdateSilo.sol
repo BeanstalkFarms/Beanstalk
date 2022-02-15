@@ -25,7 +25,7 @@ contract UpdateSilo is SiloExit {
      * Update
     **/
 
-    function updateSilo(bool partialUpdateSilo, address account) public payable {
+    function updateSilo(address account, bool partialUpdateSilo) public payable {
         uint32 update = lastUpdate(account);
         if (update >= season()) return;
         uint256 grownStalk;

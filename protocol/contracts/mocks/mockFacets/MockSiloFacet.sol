@@ -18,7 +18,7 @@ contract MockSiloFacet is SiloFacet {
     using SafeMath for uint256;
 
     function depositSiloAssetsE(address account, uint256 base, uint256 amount, bool partialUpdateSilo) public {
-        updateSilo(partialUpdateSilo, account);
+        updateSilo(account, partialUpdateSilo);
         LibSilo.depositSiloAssets(account, base, amount);
     }
 
@@ -32,7 +32,7 @@ contract MockSiloFacet is SiloFacet {
     }
 
     function withdrawSiloAssetsE(address account, uint256 base, uint256 amount, bool partialUpdateSilo) public {
-        updateSilo(partialUpdateSilo, account);
+        updateSilo(account, partialUpdateSilo);
         LibSilo.withdrawSiloAssets(account, base, amount);
     }
 

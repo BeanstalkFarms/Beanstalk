@@ -31,8 +31,8 @@ library LibToolShed {
     * Update Settings Struct Functions
     **/
 
-    function defaultSettings() internal returns (Storage.UpdateSettings memory set) {
-        Storage.UpdateSettings memory DEFAULT_SETTINGS;
+    function defaultSettings() internal returns (UpdateSettings memory set) {
+        UpdateSettings memory DEFAULT_SETTINGS;
         DEFAULT_SETTINGS.toInternalBalance = false;
         DEFAULT_SETTINGS.fromInternalBalance = false;
         DEFAULT_SETTINGS.partialUpdateSilo = false;

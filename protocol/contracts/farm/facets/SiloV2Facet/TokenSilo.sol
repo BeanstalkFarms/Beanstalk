@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "../../../libraries/Silo/LibTokenSilo.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/LibInternal.sol";
+import "../../../libraries/LibUserBalance.sol";
 
 /**
  * @author Publius
@@ -59,14 +60,14 @@ contract TokenSilo {
      * Internal
     **/
 
-    function _deposit(bool partialUpdateSilo, address token, uint256 amount) internal {
-        LibInternal.updateSilo(partialUpdateSilo, msg.sender);
+    function _deposit(address token, uint256 amount, bool partialUpdateSilo) internal {
+        LibInternal.updateSilo(msg.sender, partialUpdateSilo);
         (uint256 seeds, uint256 stalk) = LibTokenSilo.deposit(msg.sender, token, _season(), amount);
         LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
     }
 
-    function _withdraw(bool partialUpdateSilo, address token, uint32[] calldata seasons, uint256[] calldata amounts) internal {
-        LibInternal.updateSilo(partialUpdateSilo, msg.sender);
+    function _withdraw(address token, uint32[] calldata seasons, uint256[] calldata amounts, bool partialUpdateSilo) internal {
+        LibInternal.updateSilo(msg.sender, partialUpdateSilo);
         require(seasons.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         AssetsRemoved memory ar = removeDeposits(token, seasons, amounts);
         uint32 arrivalSeason = _season() + s.season.withdrawSeasons;
