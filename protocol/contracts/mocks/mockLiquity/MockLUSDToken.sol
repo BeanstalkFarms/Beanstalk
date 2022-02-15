@@ -41,11 +41,11 @@ contract MockLUSDToken is MockCheckContract, ILUSDToken {
 
     // Cache the domain separator as an immutable value, but also store the chain id that it corresponds to, in order to
     // invalidate the cached domain separator if the chain id changes.
-    bytes32 private immutable _CACHED_DOMAIN_SEPARATOR;
-    uint256 private immutable _CACHED_CHAIN_ID;
+    bytes32 private _CACHED_DOMAIN_SEPARATOR;
+    uint256 private _CACHED_CHAIN_ID;
 
-    bytes32 private immutable _HASHED_NAME;
-    bytes32 private immutable _HASHED_VERSION;
+    bytes32 private _HASHED_NAME;
+    bytes32 private _HASHED_VERSION;
     
     mapping (address => uint256) private _nonces;
     
@@ -54,16 +54,16 @@ contract MockLUSDToken is MockCheckContract, ILUSDToken {
     mapping (address => mapping (address => uint256)) private _allowances;  
     
     // --- Addresses ---
-    address public immutable troveManagerAddress;
-    address public immutable stabilityPoolAddress;
-    address public immutable borrowerOperationsAddress;
+    address public troveManagerAddress;
+    address public stabilityPoolAddress;
+    address public borrowerOperationsAddress;
     
     // --- Events ---
     event TroveManagerAddressChanged(address _troveManagerAddress);
     event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
 
-    constructor
+    function setAddresses
     ( 
         address _troveManagerAddress,
         address _stabilityPoolAddress,

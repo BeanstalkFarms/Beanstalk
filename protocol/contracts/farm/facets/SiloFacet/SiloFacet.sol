@@ -9,7 +9,6 @@ import "./BeanSilo.sol";
 import "../../../libraries/LibClaim.sol";
 import '../../../libraries/LibUserBalance.sol';
 import '../../../libraries/LibUniswap.sol';
-import '../../../libraries/LibLiquity.sol';
 
 /*
  * @author Publius
@@ -176,11 +175,4 @@ contract SiloFacet is BeanSilo {
         LibUserBalance.allocatedBeans(transferBeans);
     }
 
-    /*
-     * Collateralize
-    */ 
-
-   function collateralize(uint256 maxFeeAmount, uint256 lusdWithdrawAmount) public payable {
-	LibLiquity.collateralize(maxFeeAmount, lusdWithdrawAmount);
-   }
 }

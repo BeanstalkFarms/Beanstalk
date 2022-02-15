@@ -42,7 +42,6 @@ contract MockActivePool is Ownable, MockCheckContract, IActivePool {
         address _defaultPoolAddress
     )
         external
-        onlyOwner
     {
         checkContract(_borrowerOperationsAddress);
         checkContract(_troveManagerAddress);
@@ -59,7 +58,6 @@ contract MockActivePool is Ownable, MockCheckContract, IActivePool {
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
 
-        renounceOwnership();
     }
 
     // --- Getters for public variables. Required by IPool interface ---

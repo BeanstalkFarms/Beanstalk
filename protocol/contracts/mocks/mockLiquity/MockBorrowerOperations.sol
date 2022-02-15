@@ -11,6 +11,9 @@ import "../../interfaces/Liquity/ILQTYStaking.sol";
 import "./MockLiquityBase.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./MockCheckContract.sol";
+import './LiquityMath.sol';
+
+import 'hardhat/console.sol';
 
 contract MockBorrowerOperations is MockLiquityBase, Ownable, MockCheckContract, IBorrowerOperations {
     string constant public NAME = "BorrowerOperations";
@@ -147,7 +150,6 @@ contract MockBorrowerOperations is MockLiquityBase, Ownable, MockCheckContract, 
         emit SortedTrovesAddressChanged(_sortedTrovesAddress);
         emit LUSDTokenAddressChanged(_lusdTokenAddress);
         emit LQTYStakingAddressChanged(_lqtyStakingAddress);
-
     }
 
     // --- Borrower Trove Operations ---
@@ -174,7 +176,7 @@ contract MockBorrowerOperations is MockLiquityBase, Ownable, MockCheckContract, 
         // ICR is based on the composite debt, i.e. the requested LUSD amount + LUSD borrowing fee + LUSD gas comp.
         vars.compositeDebt = _getCompositeDebt(vars.netDebt);
         assert(vars.compositeDebt > 0);
-        
+
         vars.ICR = LiquityMath._computeCR(msg.value, vars.compositeDebt, vars.price);
         vars.NICR = LiquityMath._computeNominalCR(msg.value, vars.compositeDebt);
 
@@ -444,7 +446,7 @@ contract MockBorrowerOperations is MockLiquityBase, Ownable, MockCheckContract, 
     // Send ETH to Active Pool and increase its recorded ETH balance
     function _activePoolAddColl(IActivePool _activePool, uint _amount) internal {
         (bool success, ) = address(_activePool).call{value: _amount}("");
-        require(success, "BorrowerOps: Sending ETH to ActivePool failed");
+        //require(success, "BorrowerOps: Sending ETH to ActivePool failed");
     }
 
     // Issue the specified amount of LUSD to _account and increases the total active debt (_netDebtIncrease potentially includes a LUSDFee)
@@ -531,7 +533,7 @@ contract MockBorrowerOperations is MockLiquityBase, Ownable, MockCheckContract, 
         }
     }
 
-    function _requireICRisAboveMCR(uint _newICR) internal pure {
+    function _requireICRisAboveMCR(uint _newICR) internal view {
         require(_newICR >= MCR, "BorrowerOps: An operation that would result in ICR < MCR is not permitted");
     }
 

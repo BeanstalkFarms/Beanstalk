@@ -15,6 +15,7 @@ const DEFAULT_POOL = "0x896a3F03176f05CFbb4f006BfCd8723F2B0D741C";
 const STABILITY_POOL = "0x66017D22b0f8556afDd19FC67041899Eb65a21bb";
 const GAS_POOL = "0x9555b042F969E561855e5F28cB1230819149A8d9";
 const LQTY_STAKING = "0x4f9Fbb3f1E99B56e0Fe2892e623Ed36A76Fc605d";
+const LQTY_TOKEN = "0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D";
 
 async function curve() {
     let threeCurveJson = fs.readFileSync(`./artifacts/contracts/mocks/curve/Mock3Curve.sol/Mock3Curve.json`);
@@ -103,6 +104,13 @@ async function liquity() {
       PRICE_FEED,
       JSON.parse(priceFeedJson).deployedBytecode,
     ]);
+
+    let lqtyTokenJson = fs.readFileSync('./artifacts/contracts/mocks/mockLiquity/MockLQTYToken.sol/MockLQTYToken.json');
+    await network.provider.send("hardhat_setCode", [
+      LQTY_TOKEN,
+      JSON.parse(lqtyTokenJson).deployedBytecode,
+    ]);
+
 }
 
 exports.impersonateCurve = curve

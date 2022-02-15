@@ -76,7 +76,7 @@ contract MockSortedTroves is Ownable, MockCheckContract, ISortedTroves {
 
     // --- Dependency setters ---
 
-    function setParams(uint256 _size, address _troveManagerAddress, address _borrowerOperationsAddress) external override onlyOwner {
+    function setParams(uint256 _size, address _troveManagerAddress, address _borrowerOperationsAddress) external override {
         require(_size > 0, "SortedTroves: Size cannot be zero");
         checkContract(_troveManagerAddress);
         checkContract(_borrowerOperationsAddress);
@@ -89,7 +89,6 @@ contract MockSortedTroves is Ownable, MockCheckContract, ISortedTroves {
         emit TroveManagerAddressChanged(_troveManagerAddress);
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
 
-        renounceOwnership();
     }
 
     /*

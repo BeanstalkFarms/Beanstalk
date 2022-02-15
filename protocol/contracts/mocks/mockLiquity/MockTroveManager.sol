@@ -247,7 +247,7 @@ contract MockTroveManager is MockLiquityBase, Ownable, MockCheckContract, ITrove
     )
         external
         override
-        onlyOwner
+        //onlyOwner
     {
         checkContract(_borrowerOperationsAddress);
         checkContract(_activePoolAddress);
@@ -285,7 +285,6 @@ contract MockTroveManager is MockLiquityBase, Ownable, MockCheckContract, ITrove
         emit LQTYTokenAddressChanged(_lqtyTokenAddress);
         emit LQTYStakingAddressChanged(_lqtyStakingAddress);
 
-        renounceOwnership();
     }
 
     // --- Getters ---
