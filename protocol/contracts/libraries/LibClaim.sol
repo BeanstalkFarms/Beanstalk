@@ -38,7 +38,7 @@ library LibClaim {
 	    bool toWallet;
     }
 
-    function claim(Claim calldata c)
+    function claim(bool partialUpdateSilo, Claim calldata c)
         public
         returns (uint256 beansClaimed)
     {
@@ -52,7 +52,7 @@ library LibClaim {
             }
             else claimLP(c.lpWithdrawals);
         }
-        if (c.claimEth) claimEth();
+        if (c.claimEth) claimEth(partialUpdateSilo);
         
         if (beansClaimed > 0) {
             if (c.toWallet) IBean(s.c.bean).transfer(msg.sender, beansClaimed);
@@ -134,8 +134,8 @@ library LibClaim {
 
     // Season of Plenty
 
-    function claimEth() public {
-        LibInternal.updateSilo(msg.sender);
+    function claimEth(bool partialUpdateSilo) public {
+        LibInternal.updateSilo(partialUpdateSilo, msg.sender);
         uint256 eth = claimPlenty(msg.sender);
         emit EtherClaim(msg.sender, eth);
     }

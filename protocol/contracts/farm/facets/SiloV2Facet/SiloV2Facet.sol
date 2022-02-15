@@ -22,13 +22,14 @@ contract SiloV2Facet is TokenSilo {
      * Generic
      */
 
-    function deposit(address token, uint256 amount) external {
+    function deposit(bool partialUpdateSilo, address token, uint256 amount) external {
         IERC20(token).transferFrom(msg.sender, address(this), amount);
-        _deposit(token, amount);
+        _deposit(partialUpdateSilo, token, amount);
     }
 
-    function withdraw(address token, uint32[] calldata seasons, uint256[] calldata amounts) public {
-        _withdraw(token, seasons, amounts);
+    function withdraw(bool partialUpdateSilo, address token, uint32[] calldata seasons, uint256[] calldata amounts) 
+        public {
+        _withdraw(partialUpdateSilo, token, seasons, amounts);
     }
 
     function claimWithdrawals(address[] calldata tokens, uint32[] calldata seasons) public {

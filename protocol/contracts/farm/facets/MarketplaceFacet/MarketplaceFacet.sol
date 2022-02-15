@@ -43,9 +43,10 @@ contract MarketplaceFacet is Order {
     function claimAndFillPodListing(
         Listing calldata l,
         uint256 beanAmount,
-        LibClaim.Claim calldata claim
+        LibClaim.Claim calldata claim,
+        bool partialUpdateSilo
     ) external  {
-        allocateBeansToWallet(claim, beanAmount, l.account, l.toWallet);
+        allocateBeansToWallet(claim, beanAmount, l.account, l.toWallet, partialUpdateSilo);
         _fillListing(l, beanAmount);
     }
 
@@ -62,9 +63,10 @@ contract MarketplaceFacet is Order {
         Listing calldata l,
         uint256 beanAmount,
         uint256 buyBeanAmount,
-        LibClaim.Claim calldata claim
+        LibClaim.Claim calldata claim,
+        bool partialUpdateSilo
     ) external payable  {
-        allocateBeansToWallet(claim, beanAmount, l.account, l.toWallet);
+        allocateBeansToWallet(claim, beanAmount, l.account, l.toWallet, partialUpdateSilo);
         _buyBeansAndFillPodListing(l, beanAmount, buyBeanAmount);
     }
 
@@ -96,9 +98,10 @@ contract MarketplaceFacet is Order {
         uint256 beanAmount,
         uint24 pricePerPod,
         uint232 maxPlaceInLine,
-        LibClaim.Claim calldata claim
+        LibClaim.Claim calldata claim,
+        bool partialUpdateSilo
     ) external returns (bytes32 id) {
-        allocateBeans(claim, beanAmount, address(this));
+        allocateBeans(claim, beanAmount, address(this), partialUpdateSilo);
         id = _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine);
     }
 
@@ -117,9 +120,10 @@ contract MarketplaceFacet is Order {
         uint256 buyBeanAmount,
         uint24 pricePerPod,
         uint232 maxPlaceInLine,
-        LibClaim.Claim calldata claim
+        LibClaim.Claim calldata claim,
+        bool partialUpdateSilo
     ) external payable returns (bytes32 id) {
-        allocateBeans(claim, beanAmount, address(this));
+        allocateBeans(claim, beanAmount, address(this), partialUpdateSilo);
         return _buyBeansAndCreatePodOrder(beanAmount, buyBeanAmount, pricePerPod, maxPlaceInLine);
     }
 
@@ -153,8 +157,8 @@ contract MarketplaceFacet is Order {
      * Helpers
      */
 
-    function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans, address to) private {
-        LibClaim.claim(c);
+    function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans, address to, bool partialUpdateSilo) private {
+        LibClaim.claim(partialUpdateSilo, c);
         LibMarket.allocateBeansTo(transferBeans, to);
     }
 
@@ -162,9 +166,10 @@ contract MarketplaceFacet is Order {
         LibClaim.Claim calldata c,
         uint256 transferBeans,
         address to,
-        bool toWallet
+        bool toWallet,
+        bool partialUpdateSilo
     ) private {
-        LibClaim.claim(c);
+        LibClaim.claim(partialUpdateSilo, c);
         LibMarket.allocateBeansToWallet(transferBeans, to, toWallet);
     }
 

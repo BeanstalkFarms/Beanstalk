@@ -28,14 +28,19 @@ contract ClaimFacet {
 
     AppStorage internal s;
 
-    function claim(LibClaim.Claim calldata c) public payable returns (uint256 beansClaimed) {
-        beansClaimed = LibClaim.claim(c);
+    function claim(bool partialUpdateSilo, LibClaim.Claim calldata c) public payable returns (uint256 beansClaimed) {
+        beansClaimed = LibClaim.claim(partialUpdateSilo, c);
 
         LibCheck.balanceCheck();
     }
 
-    function claimAndUnwrapBeans(LibClaim.Claim calldata c, uint256 amount) public payable returns (uint256 beansClaimed) {
-        beansClaimed = LibClaim.claim(c);
+    function claimAndUnwrapBeans(bool partialUpdateSilo,
+        LibClaim.Claim calldata c,
+        uint256 amount
+    ) 
+        public payable 
+        returns (uint256 beansClaimed) {
+        beansClaimed = LibClaim.claim(partialUpdateSilo, c);
         beansClaimed = beansClaimed.add(unwrapBeans(amount));
 
         LibCheck.balanceCheck();
@@ -69,8 +74,8 @@ contract ClaimFacet {
         LibCheck.beanBalanceCheck();
     }
 
-    function claimEth() public {
-        LibClaim.claimEth();
+    function claimEth(bool partialUpdateSilo) public {
+        LibClaim.claimEth(partialUpdateSilo);
     }
 
     function unwrapBeans(uint amount) public returns (uint256 beansToWallet) {

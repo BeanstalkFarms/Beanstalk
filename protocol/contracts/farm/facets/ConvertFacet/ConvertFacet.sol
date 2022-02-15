@@ -20,6 +20,7 @@ contract ConvertFacet is ConvertSilo {
     using SafeMath for uint32;
 
     function convertDepositedBeans(
+        bool partialUpdateSilo,
         uint256 beans,
         uint256 minLP,
         uint32[] memory crates,
@@ -27,7 +28,7 @@ contract ConvertFacet is ConvertSilo {
     )
         external 
     {
-        LibInternal.updateSilo(msg.sender);
+        LibInternal.updateSilo(partialUpdateSilo, msg.sender);
         (uint256 lp, uint256 beansConverted) = LibConvert.sellToPegAndAddLiquidity(beans, minLP);
         (uint256 beansRemoved, uint256 stalkRemoved) = _withdrawBeansForConvert(crates, amounts, beansConverted);
         require(beansRemoved == beansConverted, "Silo: Wrong Beans removed.");
@@ -40,6 +41,7 @@ contract ConvertFacet is ConvertSilo {
     }   
 
     function convertDepositedLP(
+        bool partialUpdateSilo,
         uint256 lp,
         uint256 minBeans,
         uint32[] memory crates,
@@ -47,7 +49,7 @@ contract ConvertFacet is ConvertSilo {
     )
         external
     {
-        LibInternal.updateSilo(msg.sender);
+        LibInternal.updateSilo(partialUpdateSilo, msg.sender);
         (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
         (uint256 lpRemoved, uint256 stalkRemoved) = _withdrawLPForConvert(crates, amounts, lpConverted);
         require(lpRemoved == lpConverted, "Silo: Wrong LP removed.");
@@ -59,6 +61,7 @@ contract ConvertFacet is ConvertSilo {
     }
 
     function claimConvertAddAndDepositLP(
+        bool partialUpdateSilo,
         uint256 lp,
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
@@ -68,11 +71,12 @@ contract ConvertFacet is ConvertSilo {
         external
         payable
     {
-        LibClaim.claim(claim);
-        _convertAddAndDepositLP(lp, al, crates, amounts);
+        LibClaim.claim(partialUpdateSilo, claim);
+        _convertAddAndDepositLP(partialUpdateSilo, lp, al, crates, amounts);
     }
 
     function convertAddAndDepositLP(
+        bool partialUpdateSilo,
         uint256 lp,
         LibMarket.AddLiquidity calldata al,
         uint32[] memory crates,
@@ -81,7 +85,7 @@ contract ConvertFacet is ConvertSilo {
         public
         payable
     {
-        _convertAddAndDepositLP(lp, al, crates, amounts);
+        _convertAddAndDepositLP(partialUpdateSilo, lp, al, crates, amounts);
     }
 
     function lpToPeg() external view returns (uint256 lp) {

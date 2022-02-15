@@ -48,11 +48,11 @@ library LibInternal {
         uint256 minEthAmount;
     }
 
-    function updateSilo(address account) internal {
+    function updateSilo(bool partialUpdateSilo, address account) internal {
         DiamondStorage storage ds = diamondStorage();
-        bytes4 functionSelector = bytes4(keccak256("updateSilo(address)"));
+        bytes4 functionSelector = bytes4(keccak256("updateSilo(bool,address)"));
         address facet = ds.selectorToFacetAndPosition[functionSelector].facetAddress;
-        bytes memory myFunctionCall = abi.encodeWithSelector(functionSelector, account);
+        bytes memory myFunctionCall = abi.encodeWithSelector(functionSelector, partialUpdateSilo, account);
         (bool success,) = address(facet).delegatecall(myFunctionCall);
         require(success, "Silo: updateSilo failed.");
     }

@@ -21,15 +21,16 @@ contract FieldFacet is BeanDibbler {
      * Sow
     **/
 
-    function claimAndSowBeans(uint256 amount, LibClaim.Claim calldata claim)
+    function claimAndSowBeans(bool partialUpdateSilo, uint256 amount, LibClaim.Claim calldata claim)
         external
         returns (uint256)
     {
-        allocateBeans(claim, amount);
+        allocateBeans(claim, amount, partialUpdateSilo);
         return _sowBeans(amount);
     }
 
     function claimBuyAndSowBeans(
+        bool partialUpdateSilo,
         uint256 amount,
         uint256 buyAmount,
         LibClaim.Claim calldata claim
@@ -38,7 +39,7 @@ contract FieldFacet is BeanDibbler {
         payable
         returns (uint256)
     {
-        allocateBeans(claim, amount);
+        allocateBeans(claim, amount, partialUpdateSilo);
         uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
         return _sowBeans(amount.add(boughtAmount));
     }
@@ -54,8 +55,8 @@ contract FieldFacet is BeanDibbler {
         return _sowBeans(amount.add(boughtAmount));
     }
 
-    function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {
-        LibClaim.claim(c);
+    function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans, bool partialUpdateSilo) private {
+        LibClaim.claim(partialUpdateSilo, c);
         LibMarket.allocateBeans(transferBeans);
     }
 
