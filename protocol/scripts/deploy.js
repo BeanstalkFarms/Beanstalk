@@ -1,6 +1,7 @@
 const MAX_INT = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
 
 const diamond = require('./diamond.js')
+const { impersonateCurve } = require('./impersonate.js')
 function addCommas(nStr) {
   nStr += ''
   const x = nStr.split('.')
@@ -87,6 +88,8 @@ async function main(scriptName, verbose = true, mock = false) {
     oracleFacet,
     fieldFacet,
     siloFacet,
+    siloV2Facet,
+    curveBDVFacet,
     governanceFacet,
     claimFacet,
     marketplaceFacet,
@@ -99,6 +102,8 @@ async function main(scriptName, verbose = true, mock = false) {
       'MockOracleFacet',
       'MockFieldFacet',
       'MockSiloFacet',
+      'MockSiloV2Facet',
+      'CurveBDVFacet',
       'MockGovernanceFacet',
       'MockClaimFacet',
       'MockMarketplaceFacet',
@@ -119,6 +124,8 @@ async function main(scriptName, verbose = true, mock = false) {
       'OracleFacet',
       'FieldFacet',
       'SiloFacet',
+      'SiloV2Facet',
+      'CurveBDVFacet',
       'GovernanceFacet',
       'ClaimFacet',
       'MarketplaceFacet',
@@ -139,6 +146,7 @@ async function main(scriptName, verbose = true, mock = false) {
 
   let args = []
   if (mock) {
+    await impersonateCurve()
     const MockUniswapV2Router = await ethers.getContractFactory("MockUniswapV2Router");
     mockRouter = await MockUniswapV2Router.deploy();
     args.push(mockRouter.address)
@@ -152,6 +160,8 @@ async function main(scriptName, verbose = true, mock = false) {
       ['OracleFacet', oracleFacet],
       ['FieldFacet', fieldFacet],
       ['SiloFacet', siloFacet],
+      ['SiloV2Facet', siloV2Facet],
+      ['CurveBDVFacet', curveBDVFacet],
       ['GovernanceFacet', governanceFacet],
       ['ClaimFacet', claimFacet],
       ['MarketplaceFacet', marketplaceFacet],
@@ -198,6 +208,7 @@ async function main(scriptName, verbose = true, mock = false) {
     oracleFacet: oracleFacet,
     fieldFacet: fieldFacet,
     siloFacet: siloFacet,
+    siloFacet: siloV2Facet,
     governanceFacet: governanceFacet,
     claimFacet: claimFacet,
     fundraiserFacet: fundraiserFacet,

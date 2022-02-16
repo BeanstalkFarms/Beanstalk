@@ -147,5 +147,4 @@ contract MockSiloFacet is SiloFacet {
         }
         return (seasons, crates);
     }
-
 }

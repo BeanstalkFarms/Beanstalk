@@ -24,6 +24,11 @@ contract Account {
         mapping(uint32 => uint256) depositSeeds;
     }
 
+    struct Deposit {
+        uint128 amount;
+        uint128 bdv;
+    }
+
     struct Silo {
         uint256 stalk;
         uint256 seeds;
@@ -49,6 +54,8 @@ contract Account {
         SeasonOfPlenty sop;
         uint256 roots;
         uint256 wrappedBeans;
+        mapping(address => mapping(uint32 => Deposit)) deposits;
+        mapping(address => mapping(uint32 => uint256)) withdrawals;
     }
 }
 
@@ -169,6 +176,12 @@ contract Storage {
         uint256 total;
         uint256 remaining;
     }
+
+    struct SiloSettings {
+        bytes4 selector;
+        uint32 seeds;
+        uint32 stalk;
+    }
 }
 
 struct AppStorage {
@@ -201,4 +214,6 @@ struct AppStorage {
     mapping (address => bool) isBudget;
     mapping(uint256 => bytes32) podListings;
     mapping(bytes32 => uint256) podOrders;
+    mapping(address => Storage.AssetSilo) siloBalances;
+    mapping(address => Storage.SiloSettings) ss;
 }
