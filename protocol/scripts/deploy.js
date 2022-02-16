@@ -1,7 +1,8 @@
 const MAX_INT = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
 
 const diamond = require('./diamond.js')
-function addCommas (nStr) {
+const { impersonateCurve } = require('./impersonate.js')
+function addCommas(nStr) {
   nStr += ''
   const x = nStr.split('.')
   let x1 = x[0]
@@ -13,11 +14,11 @@ function addCommas (nStr) {
   return x1 + x2
 }
 
-function strDisplay (str) {
+function strDisplay(str) {
   return addCommas(str.toString())
 }
 
-async function main (scriptName, verbose=true, mock=false) {
+async function main(scriptName, verbose = true, mock = false) {
   if (verbose) {
     console.log('SCRIPT NAME: ', scriptName)
     console.log('MOCKS ENABLED: ', mock)
@@ -33,9 +34,9 @@ async function main (scriptName, verbose=true, mock=false) {
   let totalGasUsed = ethers.BigNumber.from('0')
   let receipt
   const name = 'Beanstalk'
-  
 
-  async function deployFacets (verbose,
+
+  async function deployFacets(verbose,
     facets,
     libraryNames = [],
     facetLibraries = {},
@@ -61,7 +62,7 @@ async function main (scriptName, verbose=true, mock=false) {
       }
       let factory;
       if (facetLibraries[facet] !== undefined) {
-        let facetLibrary = Object.keys(libraries).reduce((acc,val) => {
+        let facetLibrary = Object.keys(libraries).reduce((acc, val) => {
           if (facetLibraries[facet].includes(val)) acc[val] = libraries[val];
           return acc;
         }, {});
@@ -87,53 +88,65 @@ async function main (scriptName, verbose=true, mock=false) {
     oracleFacet,
     fieldFacet,
     siloFacet,
+    siloV2Facet,
+    curveBDVFacet,
     governanceFacet,
     claimFacet,
+    marketplaceFacet,
     fundraiserFacet,
     convertFacet,
     budgetFacet
   ] = mock ? await deployFacets(
-      verbose,
-      ['MockSeasonFacet',
+    verbose,
+    ['MockSeasonFacet',
       'MockOracleFacet',
       'MockFieldFacet',
       'MockSiloFacet',
+      'MockSiloV2Facet',
+      'CurveBDVFacet',
       'MockGovernanceFacet',
       'MockClaimFacet',
+      'MockMarketplaceFacet',
       'MockFundraiserFacet',
       'ConvertFacet',
       'MockBudgetFacet'],
-      ["LibClaim"],
-      {
-        "MockSiloFacet": ["LibClaim"],
-        "MockFieldFacet": ["LibClaim"],
-        "MockClaimFacet": ["LibClaim"],
-        "ConvertFacet": ["LibClaim"]
-      },
-    ) : await deployFacets(
-      verbose,
-      ['SeasonFacet',
+    ["LibClaim"],
+    {
+      "MockMarketplaceFacet": ["LibClaim"],
+      "MockSiloFacet": ["LibClaim"],
+      "MockFieldFacet": ["LibClaim"],
+      "MockClaimFacet": ["LibClaim"],
+      "ConvertFacet": ["LibClaim"]
+    },
+  ) : await deployFacets(
+    verbose,
+    ['SeasonFacet',
       'OracleFacet',
       'FieldFacet',
       'SiloFacet',
+      'SiloV2Facet',
+      'CurveBDVFacet',
       'GovernanceFacet',
       'ClaimFacet',
+      'MarketplaceFacet',
       'FundraiserFacet',
       'ConvertFacet',
       'BudgetFacet'],
-      ["LibClaim"],
-      {
-        "SiloFacet": ["LibClaim"],
-        "FieldFacet": ["LibClaim"],
-        "ClaimFacet": ["LibClaim"],
-        "ConvertFacet": ["LibClaim"]
-      },
-    )
+    ["LibClaim"],
+    {
+      "SiloFacet": ["LibClaim"],
+      "FieldFacet": ["LibClaim"],
+      "ClaimFacet": ["LibClaim"],
+      "ConvertFacet": ["LibClaim"],
+      "MarketplaceFacet": ["LibClaim"]
+    },
+  )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/InitDiamond.sol:InitDiamond'
   // eslint-disable-next-line no-unused-vars
 
   let args = []
   if (mock) {
+    await impersonateCurve()
     const MockUniswapV2Router = await ethers.getContractFactory("MockUniswapV2Router");
     mockRouter = await MockUniswapV2Router.deploy();
     args.push(mockRouter.address)
@@ -147,8 +160,11 @@ async function main (scriptName, verbose=true, mock=false) {
       ['OracleFacet', oracleFacet],
       ['FieldFacet', fieldFacet],
       ['SiloFacet', siloFacet],
+      ['SiloV2Facet', siloV2Facet],
+      ['CurveBDVFacet', curveBDVFacet],
       ['GovernanceFacet', governanceFacet],
       ['ClaimFacet', claimFacet],
+      ['MarketplaceFacet', marketplaceFacet],
       ['FundraiserFacet', fundraiserFacet],
       ['ConvertFacet', convertFacet],
       ['BudgetFacet', budgetFacet]
@@ -192,6 +208,7 @@ async function main (scriptName, verbose=true, mock=false) {
     oracleFacet: oracleFacet,
     fieldFacet: fieldFacet,
     siloFacet: siloFacet,
+    siloFacet: siloV2Facet,
     governanceFacet: governanceFacet,
     claimFacet: claimFacet,
     fundraiserFacet: fundraiserFacet,
