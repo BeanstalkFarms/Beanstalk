@@ -9,6 +9,7 @@ import "./SiloExit.sol";
 import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibMarket.sol";
+import "../../../libraries/LibUserBalance.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/Silo/LibBeanSilo.sol";
 import "../../../libraries/Utils/LibToolShed.sol";
@@ -41,6 +42,11 @@ contract UpdateSilo is SiloExit {
         }
         if (grownStalk > 0) LibSilo.incrementBalanceOfStalk(account, grownStalk);
         s.a[account].lastUpdate = season();
+    }
+
+    function migrateBip13(address account) private {
+        LibUserBalance._increaseInternalBalance(account, IERC20(s.c.bean), s.a[msg.sender].wrappedBeans);
+        delete s.a[msg.sender].wrappedBeans;
     }
 
     function migrateBip0(address account) private returns (uint32) {
