@@ -191,10 +191,7 @@ contract Storage {
     }
 
     struct Liquity {  
-        mapping (address => uint256) lusdBalance;
-	mapping (address => bool) active;
-	mapping (address => address) lowerHint;
-	mapping (address => address) upperHint;
+	mapping (address => address) trove;
     }
 }
 

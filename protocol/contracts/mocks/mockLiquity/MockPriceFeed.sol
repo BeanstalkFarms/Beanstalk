@@ -10,8 +10,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./MockCheckContract.sol";
 import "./MockLiquityBase.sol";
 
-import 'hardhat/console.sol';
-
 /*
 * PriceFeed for mainnet deployment, to be connected to Chainlink's live ETH:USD aggregator reference 
 * contract, and a wrapper contract TellorCaller, which connects to TellorMaster contract.
@@ -129,7 +127,6 @@ contract MockPriceFeed is Ownable, MockCheckContract, MockLiquityBase, IPriceFee
     
 
     function fetchPrice() external override returns (uint) {
-	    console.log('f');
 	    return 1e21;  // Simplified for no oracle: Purely testing
 	    /*
         ChainlinkResponse memory chainlinkResponse = _getCurrentChainlinkResponse();
