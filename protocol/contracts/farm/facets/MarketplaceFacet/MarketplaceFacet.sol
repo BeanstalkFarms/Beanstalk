@@ -98,8 +98,8 @@ contract MarketplaceFacet is Order {
         uint256 beanAmount,
         uint24 pricePerPod,
         uint232 maxPlaceInLine,
-        LibClaim.Claim calldata claim,
-        bool partialUpdateSilo
+        bool partialUpdateSilo,
+        LibClaim.Claim calldata claim
     ) external returns (bytes32 id) {
         allocateBeans(claim, beanAmount, address(this), partialUpdateSilo);
         id = _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine);
@@ -120,8 +120,8 @@ contract MarketplaceFacet is Order {
         uint256 buyBeanAmount,
         uint24 pricePerPod,
         uint232 maxPlaceInLine,
-        LibClaim.Claim calldata claim,
-        bool partialUpdateSilo
+        bool partialUpdateSilo,
+        LibClaim.Claim calldata claim
     ) external payable returns (bytes32 id) {
         allocateBeans(claim, beanAmount, address(this), partialUpdateSilo);
         return _buyBeansAndCreatePodOrder(beanAmount, buyBeanAmount, pricePerPod, maxPlaceInLine);

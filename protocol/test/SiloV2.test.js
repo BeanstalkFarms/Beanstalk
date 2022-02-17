@@ -27,6 +27,7 @@ describe('Silo', function () {
 
     this.siloToken = await ethers.getContractFactory("MockToken");
     this.siloToken = await this.siloToken.deploy("Silo", "SILO")
+    this.updateSettings = [false, false, false];
     await this.siloToken.deployed()
 
     await this.silo2.mockWhitelistToken(
@@ -81,17 +82,17 @@ describe('Silo', function () {
   describe('deposit', function () {
     describe('reverts', function () {
       it('reverts if BDV is 0', async function () {
-        await expect(this.silo2.connect(user).deposit(this.siloToken.address, '0')).to.revertedWith('Silo: No Beans under Token.');
+        await expect(this.silo2.connect(user).deposit(this.siloToken.address, '0', this.updateSettings)).to.revertedWith('Silo: No Beans under Token.');
       });
 
       it('reverts if deposits a non whitelisted token', async function () {
-        await expect(this.silo2.connect(user).deposit(this.bean.address, '0')).to.revertedWith('Silo: Bean denominated value failed.');
+        await expect(this.silo2.connect(user).deposit(this.bean.address, '0', this.updateSettings)).to.revertedWith('Silo: Bean denominated value failed.');
       });
     });
 
     describe('single deposit', function () {
       beforeEach(async function () {
-        this.result = await this.silo2.connect(user).deposit(this.siloToken.address, '1000');
+        this.result = await this.silo2.connect(user).deposit(this.siloToken.address, '1000', this.updateSettings);
       });
   
       it('properly updates the total balances', async function () {
@@ -118,8 +119,8 @@ describe('Silo', function () {
   
     describe('2 deposits same season', function () {
       beforeEach(async function () {
-        this.result = await this.silo2.connect(user).deposit(this.siloToken.address, '1000');
-        this.result = await this.silo2.connect(user).deposit(this.siloToken.address, '1000');
+        this.result = await this.silo2.connect(user).deposit(this.siloToken.address, '1000', this.updateSettings);
+        this.result = await this.silo2.connect(user).deposit(this.siloToken.address, '1000', this.updateSettings);
       });
   
       it('properly updates the total balances', async function () {
@@ -142,8 +143,8 @@ describe('Silo', function () {
   
     describe('2 deposits 2 users', function () {
       beforeEach(async function () {
-        this.result = await this.silo2.connect(user).deposit(this.siloToken.address, '1000');
-        this.result = await this.silo2.connect(user2).deposit(this.siloToken.address, '1000');
+        this.result = await this.silo2.connect(user).deposit(this.siloToken.address, '1000', this.updateSettings);
+        this.result = await this.silo2.connect(user2).deposit(this.siloToken.address, '1000', this.updateSettings);
       });
   
       it('properly updates the total balances', async function () {
@@ -173,21 +174,21 @@ describe('Silo', function () {
   });
   describe('withdraw', function () {
     beforeEach(async function () {
-      await this.silo2.connect(user).deposit(this.siloToken.address, '1000');
+      await this.silo2.connect(user).deposit(this.siloToken.address, '1000', this.updateSettings);
     })
     describe('reverts', function () {
       it('reverts if amount is 0', async function () {
-        await expect(this.silo2.connect(user).withdraw(this.siloToken.address, ['2'], ['1001'])).to.revertedWith('Silo: Crate balance too low.');
+        await expect(this.silo2.connect(user).withdraw(this.siloToken.address, ['2'], ['1001'], false)).to.revertedWith('Silo: Crate balance too low.');
       });
 
       it('reverts if deposits + withdrawals is a different length', async function () {
-        await expect(this.silo2.connect(user).withdraw(this.siloToken.address, ['2', '3'], ['1001'])).to.revertedWith('Silo: Crates, amounts are diff lengths.');
+        await expect(this.silo2.connect(user).withdraw(this.siloToken.address, ['2', '3'], ['1001'], false)).to.revertedWith('Silo: Crates, amounts are diff lengths.');
       });
     });
 
     describe('withdraw 1 bean crate', function () {
       beforeEach(async function () {
-        this.result = await this.silo2.connect(user).withdraw(this.siloToken.address, [2],['1000']);
+        this.result = await this.silo2.connect(user).withdraw(this.siloToken.address, [2],['1000'], false);
       });
   
       it('properly updates the total balances', async function () {
@@ -218,8 +219,8 @@ describe('Silo', function () {
     });
     describe('withdraw part of a bean crate', function () {
       beforeEach(async function () {
-        await this.silo2.connect(user).deposit(this.siloToken.address, '1000');
-        this.result = await this.silo2.connect(user).withdraw(this.siloToken.address, [2],['1000']);
+        await this.silo2.connect(user).deposit(this.siloToken.address, '1000', this.updateSettings);
+        this.result = await this.silo2.connect(user).withdraw(this.siloToken.address, [2],['1000'], false);
       });
   
       it('properly updates the total balances', async function () {
@@ -246,8 +247,8 @@ describe('Silo', function () {
     describe('2 bean crates', function () {
       beforeEach(async function () {
         await this.season.siloSunrise(0);
-        await this.silo2.connect(user).deposit(this.siloToken.address, '1000');
-        this.result = await this.silo2.connect(user).withdraw(this.siloToken.address, [2,3],['1000','1000']);
+        await this.silo2.connect(user).deposit(this.siloToken.address, '1000', this.updateSettings);
+        this.result = await this.silo2.connect(user).withdraw(this.siloToken.address, [2,3],['1000','1000'], false);
       });
   
       it('properly updates the total balances', async function () {
@@ -268,20 +269,20 @@ describe('Silo', function () {
   });
   describe('claim', function () {
     beforeEach(async function () {
-      await this.silo2.connect(user).deposit(this.siloToken.address, '1000');
-      await this.silo2.connect(user).withdraw(this.siloToken.address, ['2'], ['1000']);
+      await this.silo2.connect(user).deposit(this.siloToken.address, '1000', this.updateSettings);
+      await this.silo2.connect(user).withdraw(this.siloToken.address, ['2'], ['1000'], false);
       await this.season.siloSunrises(25);
     })
     describe('reverts', function () {
       it('reverts if amount is 0', async function () {
-        await expect(this.silo2.connect(user).claimWithdrawal(this.siloToken.address, 1)).to.revertedWith('Silo: Withdrawal is empty.');
+        await expect(this.silo2.connect(user).claimWithdrawal(this.siloToken.address, 1, this.updateSettings)).to.revertedWith('Silo: Withdrawal is empty.');
       });
     });
 
     describe('claim 1 withdrawal', function () {
       beforeEach(async function () {
         const userTokensBefore = await this.siloToken.balanceOf(userAddress);
-        this.result = await this.silo2.connect(user).claimWithdrawal(this.siloToken.address, [27]);
+        this.result = await this.silo2.connect(user).claimWithdrawal(this.siloToken.address, [27], this.updateSettings);
         this.deltaBeans = (await this.siloToken.balanceOf(userAddress)).sub(userTokensBefore);
       });
   
@@ -301,12 +302,12 @@ describe('Silo', function () {
 
     describe('claim multiple withdrawals', function () {
       beforeEach(async function () {
-        await this.silo2.connect(user).deposit(this.siloToken.address, '1000');
-        await this.silo2.connect(user).withdraw(this.siloToken.address, ['27'], ['1000']);
+        await this.silo2.connect(user).deposit(this.siloToken.address, '1000', this.updateSettings);
+        await this.silo2.connect(user).withdraw(this.siloToken.address, ['27'], ['1000'], false);
         await this.season.siloSunrises(25);
 
       const userTokensBefore = await this.siloToken.balanceOf(userAddress);
-        this.result = await this.silo2.connect(user).claimWithdrawals([this.siloToken.address, this.siloToken.address], [27,52]);
+        this.result = await this.silo2.connect(user).claimWithdrawals([this.siloToken.address, this.siloToken.address], [27,52], this.updateSettings);
         this.deltaBeans = (await this.siloToken.balanceOf(userAddress)).sub(userTokensBefore);
       });
   

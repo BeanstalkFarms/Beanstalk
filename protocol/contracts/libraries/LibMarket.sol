@@ -226,7 +226,7 @@ library LibMarket {
 
         if (al.beanAmount.add(sellBeans) > beans.add(beansSold)) {
         uint256 toTransfer = al.beanAmount.add(sellBeans).sub(beans.add(beansSold));
-	IBean(ds.bean).transfer(
+	    IBean(ds.bean).transfer(
                 msg.sender,
                 toTransfer
             );
