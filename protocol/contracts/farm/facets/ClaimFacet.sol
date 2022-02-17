@@ -46,9 +46,10 @@ contract ClaimFacet {
         LibCheck.balanceCheck();
     }
 
-    function claimBeans(uint32[] calldata withdrawals) public {
+    function claimBeans(uint32[] calldata withdrawals, bool toInternalBalance) public {
         uint256 beansClaimed = LibClaim.claimBeans(withdrawals);
-        IBean(s.c.bean).transfer(msg.sender, beansClaimed);
+        if (!toInternalBalance) IBean(s.c.bean).transfer(msg.sender, beansClaimed);
+        else LibUserBalance._increaseInternalBalance(msg.sender, IERC20(s.c.bean), beansClaimed);
         LibCheck.beanBalanceCheck();
     }
 
@@ -68,9 +69,10 @@ contract ClaimFacet {
         LibCheck.balanceCheck();
     }
 
-    function harvest(uint256[] calldata plots) public {
+    function harvest(uint256[] calldata plots, bool toInternalBalance) public {
         uint256 beansHarvested = LibClaim.harvest(plots);
-        IBean(s.c.bean).transfer(msg.sender, beansHarvested);
+        if (!toInternalBalance) IBean(s.c.bean).transfer(msg.sender, beansHarvested);
+        else LibUserBalance._increaseInternalBalance(msg.sender, IERC20(s.c.bean), beansHarvested);
         LibCheck.beanBalanceCheck();
     }
 
