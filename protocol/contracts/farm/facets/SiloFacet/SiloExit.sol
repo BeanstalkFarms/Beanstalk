@@ -11,7 +11,6 @@ import "../../../interfaces/IWETH.sol";
 import "../../../interfaces/IBean.sol";
 import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibInternal.sol";
-import "../../../libraries/LibMarket.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../C.sol";
 

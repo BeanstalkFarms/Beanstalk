@@ -9,6 +9,8 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/SiloFacet/SiloFacet.sol";
 import "../MockUniswapV2Pair.sol";
 
+import 'hardhat/console.sol';
+
 /**
  * @author Publius
  * @title Mock Silo Facet

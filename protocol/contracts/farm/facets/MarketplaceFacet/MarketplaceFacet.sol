@@ -36,7 +36,7 @@ contract MarketplaceFacet is Order {
         Listing calldata l,
         uint256 beanAmount
     ) external {
-        LibMarket.transferBeans(l.account, beanAmount, l.toWallet);
+        LibUserBalance.transferBeans(l.account, beanAmount, l.toWallet);
         _fillListing(l, beanAmount);
     }
 
@@ -54,7 +54,7 @@ contract MarketplaceFacet is Order {
         uint256 beanAmount,
         uint256 buyBeanAmount
     ) external payable {
-        if (beanAmount > 0) LibMarket.transferBeans(l.account, beanAmount, l.toWallet);
+        if (beanAmount > 0) LibUserBalance.transferBeans(l.account, beanAmount, l.toWallet);
         _buyBeansAndFillPodListing(l, beanAmount, buyBeanAmount);
     }
 
@@ -155,7 +155,7 @@ contract MarketplaceFacet is Order {
 
     function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans, address to) private {
         LibClaim.claim(c);
-        LibMarket.allocateBeansTo(transferBeans, to);
+        LibUserBalance.allocateBeansTo(transferBeans, to);
     }
 
     function allocateBeansToWallet(
@@ -165,7 +165,7 @@ contract MarketplaceFacet is Order {
         bool toWallet
     ) private {
         LibClaim.claim(c);
-        LibMarket.allocateBeansToWallet(transferBeans, to, toWallet);
+        LibUserBalance.allocateBeansToWallet(transferBeans, to, toWallet);
     }
 
     /*

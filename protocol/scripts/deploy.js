@@ -1,7 +1,7 @@
 const MAX_INT = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
 
 const diamond = require('./diamond.js')
-const { impersonateCurve } = require('./impersonate.js')
+const { impersonateCurve, impersonateLiquity } = require('./impersonate.js')
 function addCommas(nStr) {
   nStr += ''
   const x = nStr.split('.')
@@ -95,7 +95,8 @@ async function main(scriptName, verbose = true, mock = false) {
     marketplaceFacet,
     fundraiserFacet,
     convertFacet,
-    budgetFacet
+    budgetFacet,
+    liquityFacet
   ] = mock ? await deployFacets(
     verbose,
     ['MockSeasonFacet',
@@ -109,7 +110,8 @@ async function main(scriptName, verbose = true, mock = false) {
       'MockMarketplaceFacet',
       'MockFundraiserFacet',
       'ConvertFacet',
-      'MockBudgetFacet'],
+      'MockBudgetFacet',
+      'MockLiquityFacet'],
     ["LibClaim"],
     {
       "MockMarketplaceFacet": ["LibClaim"],
@@ -131,7 +133,8 @@ async function main(scriptName, verbose = true, mock = false) {
       'MarketplaceFacet',
       'FundraiserFacet',
       'ConvertFacet',
-      'BudgetFacet'],
+      'BudgetFacet',
+      'LiquityFacet'],
     ["LibClaim"],
     {
       "SiloFacet": ["LibClaim"],
@@ -147,6 +150,7 @@ async function main(scriptName, verbose = true, mock = false) {
   let args = []
   if (mock) {
     await impersonateCurve()
+    await impersonateLiquity()
     const MockUniswapV2Router = await ethers.getContractFactory("MockUniswapV2Router");
     mockRouter = await MockUniswapV2Router.deploy();
     args.push(mockRouter.address)
@@ -167,7 +171,8 @@ async function main(scriptName, verbose = true, mock = false) {
       ['MarketplaceFacet', marketplaceFacet],
       ['FundraiserFacet', fundraiserFacet],
       ['ConvertFacet', convertFacet],
-      ['BudgetFacet', budgetFacet]
+      ['BudgetFacet', budgetFacet],
+      ['LiquityFacet', liquityFacet]
     ],
     owner: account,
     args: args,
@@ -187,6 +192,8 @@ async function main(scriptName, verbose = true, mock = false) {
   const pegPair = await season.pegPair();
   const silo = await ethers.getContractAt('SiloFacet', beanstalkDiamond.address);
   const weth = await silo.weth();
+  const liquity = await ethers.getContractAt("LiquityFacet", beanstalkDiamond.address);
+  const liquityManager = await liquity.liquityManager();
 
   if (verbose) {
     console.log("--");
@@ -218,6 +225,8 @@ async function main(scriptName, verbose = true, mock = false) {
     pegPair: pegPair,
     weth: weth,
     bean: bean,
+    liquityFacet: liquityFacet,
+    liquityManager: liquityManager,
   }
 }
 

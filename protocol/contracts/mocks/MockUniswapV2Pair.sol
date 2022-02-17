@@ -8,6 +8,8 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/lib/contracts/libraries/FixedPoint.sol";
 import "../interfaces/IBean.sol";
+import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol';
+import './MockWETH.sol';
 
 /**
  * @author Publius
@@ -19,8 +21,18 @@ contract MockUniswapV2Pair {
 
     event Approval(address indexed owner, address indexed spender, uint value);
     event Transfer(address indexed from, address indexed to, uint value);
+    event Swap(
+        address indexed sender,
+        uint amount0In,
+        uint amount1In,
+        uint amount0Out,
+        uint amount1Out,
+        address indexed to
+    );
+    event Sync(uint112 reserve0, uint112 reserve1);
 
     uint public constant MINIMUM_LIQUIDITY = 10**3;
+    uint224 constant Q112 = 2**112;
 
     bytes4 private constant SELECTOR = bytes4(keccak256(bytes('transfer(address,uint256)')));
 
@@ -50,6 +62,8 @@ contract MockUniswapV2Pair {
     function setToken2(address _token2) external returns (uint) {
         token2 = _token2;
     }
+
+    function token0() external view returns (address) { return token; }
 
     function setReserves(uint112 newReserve0, uint112 newReserve1) external {
       reserve0 = newReserve0;
@@ -86,6 +100,37 @@ contract MockUniswapV2Pair {
         _safeTransfer(_token1, to, amount1);
     }
 
+
+    function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external {
+        require(amount0Out > 0 || amount1Out > 0, 'UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT');
+        (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
+        require(amount0Out < _reserve0 && amount1Out < _reserve1, 'UniswapV2: INSUFFICIENT_LIQUIDITY');
+
+        uint balance0;
+        uint balance1;
+        { // scope for _token{0,1}, avoids stack too deep errors
+        address _token0 = token;
+        address _token1 = token2;
+        require(to != _token0 && to != _token1, 'UniswapV2: INVALID_TO');
+        if (amount0Out > 0) _safeTransfer(_token0, to, amount0Out); // optimistically transfer tokens
+	if (amount1Out > 0) _safeTransfer(_token1, to, amount1Out); // optimistically transfer tokens
+        if (data.length > 0) IUniswapV2Callee(to).uniswapV2Call(msg.sender, amount0Out, amount1Out, data);
+        balance0 = IERC20(_token0).balanceOf(address(this));
+        balance1 = IERC20(_token1).balanceOf(address(this));
+        }
+        uint amount0In = balance0 > _reserve0 - amount0Out ? balance0 - (_reserve0 - amount0Out) : 0;
+        uint amount1In = balance1 > _reserve1 - amount1Out ? balance1 - (_reserve1 - amount1Out) : 0;
+        require(amount0In > 0 || amount1In > 0, 'UniswapV2: INSUFFICIENT_INPUT_AMOUNT');
+        { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
+        uint balance0Adjusted = balance0.mul(1000).sub(amount0In.mul(3));
+        uint balance1Adjusted = balance1.mul(1000).sub(amount1In.mul(3));
+        require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'UniswapV2: K');
+        }
+
+        //_update(balance0, balance1, _reserve0, _reserve1); Normally, balance0 and balance1 are initialized; however, for testing locally, updating reserves is unnecessary
+        emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
+    }
+
     function faucet(address account, uint256 amount) external returns (bool) {
         _mint(account, amount);
         return true;
@@ -95,9 +140,30 @@ contract MockUniswapV2Pair {
       IBean(bean).burn(IBean(bean).balanceOf(address(this)));
     }
 
+    function burnWETH(address weth) external {
+	MockToken(weth).burn(MockToken(weth).balanceOf(address(this)));
+    }
+
+
+
     function burnAllLP(address account) external {
       _totalSupply = _totalSupply.sub(_balances[account]);
       _balances[account] = 0;
+    }
+
+    function _update(uint balance0, uint balance1, uint112 _reserve0, uint112 _reserve1) private {
+        require(balance0 <= uint112(-1) && balance1 <= uint112(-1), 'UniswapV2: OVERFLOW');
+        uint32 blockTimestamp = uint32(block.timestamp % 2**32);
+        uint32 timeElapsed = blockTimestamp - blockTimestampLast; // overflow is desired
+        if (timeElapsed > 0 && _reserve0 != 0 && _reserve1 != 0) {
+            // * never overflows, and + overflow is desired
+            price0CumulativeLast += uint(uqdiv(encode(_reserve1), _reserve0)) * timeElapsed;
+            price1CumulativeLast += uint(uqdiv(encode(_reserve0), _reserve1)) * timeElapsed;
+        }
+        reserve0 = uint112(balance0);
+        reserve1 = uint112(balance1);
+        blockTimestampLast = blockTimestamp;
+        emit Sync(reserve0, reserve1);
     }
 
     function simulateTrade(uint112 newReserve0, uint112 newReserve1) external {
@@ -112,7 +178,7 @@ contract MockUniswapV2Pair {
         blockTimestampLast = blockTimestamp;
     }
 
-    function token0() external view returns (address) { return token; }
+    //function token0() external view returns (address) { return token; }
 
     // @openzeppelin/contracts/token/ERC20/ERC20.sol
 
@@ -336,4 +402,13 @@ contract MockUniswapV2Pair {
         }
     }
 
+    // encode a uint112 as a UQ112x112
+    function encode(uint112 y) internal pure returns (uint224 z) {
+        z = uint224(y) * Q112; // never overflows
+    }
+
+    // divide a UQ112x112 by a uint112, returning a UQ112x112
+    function uqdiv(uint224 x, uint112 y) internal pure returns (uint224 z) {
+        z = x / uint224(y);
+    }
 }

@@ -5,7 +5,6 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../../libraries/LibMarket.sol";
 import "../../../libraries/LibClaim.sol";
 import "./PodTransfer.sol";
 
@@ -78,7 +77,7 @@ contract Listing is PodTransfer {
         uint256 beanAmount,
         uint256 buyBeanAmount
     ) internal {
-        uint256 boughtBeanAmount = LibMarket.buyExactTokensToWallet(
+        uint256 boughtBeanAmount = LibUniswap.buyExactTokensToWallet(
             buyBeanAmount, 
             l.account,
             l.toWallet

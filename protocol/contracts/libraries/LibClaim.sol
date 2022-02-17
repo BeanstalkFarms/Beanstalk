@@ -8,9 +8,9 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./LibCheck.sol";
 import "./LibInternal.sol";
-import "./LibMarket.sol";
 import "./LibAppStorage.sol";
 import "../interfaces/IWETH.sol";
+import './LibUniswap.sol';
 
 /**
  * @author Publius
@@ -53,10 +53,11 @@ library LibClaim {
             else claimLP(c.lpWithdrawals);
         }
         if (c.claimEth) claimEth();
+
         
         if (beansClaimed > 0) {
             if (c.toWallet) IBean(s.c.bean).transfer(msg.sender, beansClaimed);
-            else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(beansClaimed);
+            else LibUserBalance._increaseInternalBalance(msg.sender, IBean(s.c.bean), beansClaimed);
         }
     }
     
@@ -96,8 +97,9 @@ library LibClaim {
         public
         returns (uint256 beans)
     {
+	AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 lpClaimd = _claimLP(withdrawals);
-        (beans,) = LibMarket.removeLiquidity(lpClaimd, minBeanAmount, minEthAmount);
+	(beans,) = LibUniswap.removeLiquidityETH(s.c.bean, lpClaimd, minBeanAmount, minEthAmount, address(this), block.timestamp.add(1));
     }
 
     function removeClaimLPAndWrapBeans(
@@ -108,8 +110,13 @@ library LibClaim {
         private
         returns (uint256 beans)
     {
+	AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 lpClaimd = _claimLP(withdrawals);
-        (beans,) = LibMarket.removeLiquidityWithBeanAllocation(lpClaimd, minBeanAmount, minEthAmount);
+	(uint256 beans, uint256 ethAmount) = LibUniswap.removeLiquidity(s.c.bean, s.c.weth, lpClaimd, minBeanAmount, minEthAmount, address(this), block.timestamp.add(1), false);
+	IWETH(s.c.weth).withdraw(ethAmount);
+        (bool success, ) = msg.sender.call{value: ethAmount}("");
+        require(success, "WETH: ETH transfer failed");
+	return beans;
     }
 
     function _claimLP(uint32[] calldata withdrawals) private returns (uint256) {

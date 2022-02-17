@@ -6,7 +6,6 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../../farm/facets/ClaimFacet.sol";
-import "../../libraries/LibMarket.sol";
 import "../../libraries/LibAppStorage.sol";
 import "../MockToken.sol";
 
@@ -24,14 +23,14 @@ contract MockClaimFacet is ClaimFacet {
         payable
     {
         LibClaim.claim(c);
-        LibMarket.allocateBeans(beansAllocated);
+        LibUserBalance.allocatedBeans(beansAllocated);
     }
 
     function incrementBalanceOfWrappedE(address account, uint256 amount)
         public
         payable
     {
-        s.a[account].wrappedBeans += amount;
+	LibUserBalance._increaseInternalBalance(account, IBean(s.c.bean), amount);
         MockToken(s.c.bean).mint(address(this), amount);
     }
 }

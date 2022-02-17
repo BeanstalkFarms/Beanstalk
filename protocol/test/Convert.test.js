@@ -24,8 +24,8 @@ describe('Convert', function () {
     await this.pair.set('10000', '40000', '1');
     await this.pegPair.simulateTrade('20000', '20000');
     await this.season.siloSunrise(0);
-    await this.pair.faucet(userAddress, '1');
     await this.bean.mint(userAddress, '1000000000');
+    await this.pair.faucet(userAddress, '1');
     await this.bean.mint(user2Address, '1000000000');
     await this.pair.connect(user).approve(this.silo.address, '100000000000');
     await this.pair.connect(user2).approve(this.silo.address, '100000000000');
@@ -34,6 +34,8 @@ describe('Convert', function () {
   });
 
   beforeEach (async function () {
+    await this.pair.burnTokens(this.bean.address);
+    await this.pair.burnWETH(this.weth.address);
     await this.season.resetAccount(userAddress)
     await this.season.resetAccount(user2Address)
     await this.season.resetAccount(ownerAddress)
@@ -41,13 +43,15 @@ describe('Convert', function () {
     await this.pair.burnAllLP(userAddress);
     await this.pair.burnAllLP(user2Address);
     await this.pair.burnAllLP(ownerAddress);
-    await this.pair.burnTokens(this.bean.address);
-    await this.pair.burnTokens(this.weth.address);
     await this.season.resetState();
     await this.season.siloSunrise(0);
   });
 
   describe('convert beans to lp', async function () {
+   beforeEach(async function () {
+    await this.weth.mint(this.pair.address, '10000');
+    await this.bean.mint(this.pair.address, '1000000');
+   });
 
     describe('calclates beans to peg', async function () {
       it('p > 1', async function () {
@@ -89,7 +93,7 @@ describe('Convert', function () {
       it('not enough LP', async function () {
         await this.silo.connect(user).depositBeans('20000');
         await this.pair.simulateTrade('10000', '40000');
-        await expect(this.convert.connect(user).convertDepositedBeans('5000','2',['2'],['20000']))
+        await expect(this.convert.connect(user).convertDepositedBeans('5000','2',['2'],['20000'], [false, false, false]))
           .to.be.revertedWith('Convert: Not enough LP.');
         await this.pair.set('10000', '40000', '1');
       });
@@ -97,7 +101,7 @@ describe('Convert', function () {
       it('p >= 1', async function () {
         await this.silo.connect(user).depositBeans('1000');
         await this.pair.simulateTrade('20000', '20000');
-        await expect(this.convert.connect(user).convertDepositedBeans('100','1',['1'],['1000']))
+        await expect(this.convert.connect(user).convertDepositedBeans('100','1',['1'],['1000'], [false, false, false]))
           .to.be.revertedWith('Convert: P must be > 1.');
       });
     });
@@ -106,27 +110,27 @@ describe('Convert', function () {
       beforeEach(async function () {
         await this.silo.connect(user).depositBeans('1000');
         await this.pair.simulateTrade('10000', '40000');
-        this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2'],['1000']);
+        this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2'],['1000'], [false, false, false]);
       });
   
       it('properly updates total values', async function () {
-        expect(await this.silo.totalDepositedBeans()).to.eq('47');
-        expect(await this.silo.totalSeeds()).to.eq('3906');
+        expect(await this.silo.totalDepositedBeans()).to.eq('49');
+        expect(await this.silo.totalSeeds()).to.eq('3902');
         expect(await this.silo.totalStalk()).to.eq('10000000');
       });
 
       it('properly updates user deposits', async function () {
-        expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('47');
+        expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('49');
         const lpDeposit = await this.silo.lpDeposit(userAddress, 2);
         expect(lpDeposit[0]).to.eq('1');
-        expect(lpDeposit[1]).to.eq('3812');
+        expect(lpDeposit[1]).to.eq('3804');
       });
 
       it('emits events', async function () {
         await expect(this.result).to.emit(this.silo, 'BeanRemove')
-          .withArgs(userAddress, [2], ['953'], '953');
+          .withArgs(userAddress, [2], ['951'], '951');
         await expect(this.result).to.emit(this.silo, 'LPDeposit')
-          .withArgs(userAddress, 2, '1', '3812');
+          .withArgs(userAddress, 2, '1', '3804');
       });
     });
 
@@ -134,27 +138,27 @@ describe('Convert', function () {
       beforeEach(async function () {
         await this.silo.connect(user).depositBeans('20000');
         await this.pair.simulateTrade('19000', '21000');
-        this.result = await this.convert.connect(user).convertDepositedBeans('10000','1',['2'],['20000']);
+        this.result = await this.convert.connect(user).convertDepositedBeans('10000','1',['2'],['20000'], [false, false, false]);
       });
   
       it('properly updates total values', async function () {
-        expect(await this.silo.totalDepositedBeans()).to.eq('18098');
-        expect(await this.silo.totalSeeds()).to.eq('43804');
+        expect(await this.silo.totalDepositedBeans()).to.eq('18101');
+        expect(await this.silo.totalSeeds()).to.eq('43798');
         expect(await this.silo.totalStalk()).to.eq('200000000');
       });
 
       it('properly updates user deposits', async function () {
-        expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('18098');
+        expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('18101');
         const lpDeposit = await this.silo.lpDeposit(userAddress, 2);
         expect(lpDeposit[0]).to.eq('1');
-        expect(lpDeposit[1]).to.eq('7608');
+        expect(lpDeposit[1]).to.eq('7596');
       });
 
       it('emits events', async function () {
         await expect(this.result).to.emit(this.silo, 'BeanRemove')
-          .withArgs(userAddress, [2], ['1902'], '1902');
+          .withArgs(userAddress, [2], ['1899'], '1899');
         await expect(this.result).to.emit(this.silo, 'LPDeposit')
-          .withArgs(userAddress, 2, '1', '7608');
+          .withArgs(userAddress, 2, '1', '7596');
       });
     });
 
@@ -163,27 +167,27 @@ describe('Convert', function () {
         await this.silo.connect(user).depositBeans('1000');
         await this.pair.simulateTrade('10000', '40000');
         await this.season.siloSunrise(0);
-        this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2'],['1000']);
+        this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2'],['1000'], [false, false, false]);
       });
   
       it('properly updates total values', async function () {
-        expect(await this.silo.totalDepositedBeans()).to.eq('47');
-        expect(await this.silo.totalSeeds()).to.eq('3906');
-        expect(await this.silo.totalStalk()).to.eq('10000094');
+        expect(await this.silo.totalDepositedBeans()).to.eq('49');
+        expect(await this.silo.totalSeeds()).to.eq('3902');
+        expect(await this.silo.totalStalk()).to.eq('10000098');
       });
 
       it('properly updates user deposits', async function () {
-        expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('47');
+        expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('49');
         const lpDeposit = await this.silo.lpDeposit(userAddress, 3);
         expect(lpDeposit[0]).to.eq('1');
-        expect(lpDeposit[1]).to.eq('3812');
+        expect(lpDeposit[1]).to.eq('3804');
       });
 
       it('emits events', async function () {
         await expect(this.result).to.emit(this.silo, 'BeanRemove')
-          .withArgs(userAddress, [2], ['953'], '953');
+          .withArgs(userAddress, [2], ['951'], '951');
         await expect(this.result).to.emit(this.silo, 'LPDeposit')
-          .withArgs(userAddress, 3, '1', '3812');
+          .withArgs(userAddress, 3, '1', '3804');
       });
     });
 
@@ -193,27 +197,27 @@ describe('Convert', function () {
         await this.pair.simulateTrade('10000', '40000');
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
-        this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2'],['1000']);
+        this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2'],['1000'], [false, false, false]);
       });
   
       it('properly updates total values', async function () {
-        expect(await this.silo.totalDepositedBeans()).to.eq('47');
-        expect(await this.silo.totalSeeds()).to.eq('3906');
+        expect(await this.silo.totalDepositedBeans()).to.eq('49');
+        expect(await this.silo.totalSeeds()).to.eq('3902');
         expect(await this.silo.totalStalk()).to.eq('10004000');
       });
 
       it('properly updates user deposits', async function () {
-        expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('47');
+        expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('49');
         const lpDeposit = await this.silo.lpDeposit(userAddress, 3);
         expect(lpDeposit[0]).to.eq('1');
-        expect(lpDeposit[1]).to.eq('3812');
+        expect(lpDeposit[1]).to.eq('3804');
       });
 
       it('emits events', async function () {
         await expect(this.result).to.emit(this.silo, 'BeanRemove')
-          .withArgs(userAddress, [2], ['953'], '953');
+          .withArgs(userAddress, [2], ['951'], '951');
         await expect(this.result).to.emit(this.silo, 'LPDeposit')
-          .withArgs(userAddress, 3, '1', '3812');
+          .withArgs(userAddress, 3, '1', '3804');
       });
     });
 
@@ -223,12 +227,12 @@ describe('Convert', function () {
         await this.pair.simulateTrade('10000', '40000');
         await this.season.siloSunrise(0);
         await this.silo.connect(user).depositBeans('1000');
-        this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2','3'],['500','500']);
+        this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2','3'],['500','500'], [false, false, false]);
       });
   
       it('properly updates total values', async function () {
-        expect(await this.silo.totalDepositedBeans()).to.eq('1047');
-        expect(await this.silo.totalSeeds()).to.eq('5906');
+        expect(await this.silo.totalDepositedBeans()).to.eq('1049');
+        expect(await this.silo.totalSeeds()).to.eq('5902');
         expect(await this.silo.totalStalk()).to.eq('20001000');
       });
 
@@ -236,14 +240,14 @@ describe('Convert', function () {
         expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('500');
         const lpDeposit = await this.silo.lpDeposit(userAddress, 3);
         expect(lpDeposit[0]).to.eq('1');
-        expect(lpDeposit[1]).to.eq('3812');
+        expect(lpDeposit[1]).to.eq('3804');
       });
 
       it('emits events', async function () {
         await expect(this.result).to.emit(this.silo, 'BeanRemove')
-          .withArgs(userAddress, [2,3], ['500','453'], '953');
+          .withArgs(userAddress, [2,3], ['500','451'], '951');
         await expect(this.result).to.emit(this.silo, 'LPDeposit')
-          .withArgs(userAddress, 3, '1', '3812');
+          .withArgs(userAddress, 3, '1', '3804');
       });
     });
   });
@@ -261,13 +265,13 @@ describe('Convert', function () {
       it('p >= 1', async function () {
         await this.pair.simulateTrade('10000', '40000');
         await this.silo.connect(user).depositLP('1');
-        await expect(this.convert.connect(user).convertDepositedLP('1','100',['2'],['1']))
+        await expect(this.convert.connect(user).convertDepositedLP('1','100',['2'],['1'], [false, false, false]))
           .to.be.revertedWith('Convert: P must be < 1.');
       });
       it('beans below min', async function () {
         await this.pair.set('40000', '10000', '1');
         await this.silo.connect(user).depositLP('1');
-        await expect(this.convert.connect(user).convertDepositedLP('1','1000',['2'],['1']))
+        await expect(this.convert.connect(user).convertDepositedLP('1','1000',['2'],['1'], [false, false, false]))
           .to.be.revertedWith('Convert: Not enough Beans.');
       });
     })
@@ -276,18 +280,18 @@ describe('Convert', function () {
       beforeEach(async function () {
         await this.pair.simulateTrade('40000', '10000');
         await this.silo.connect(user).depositLP('1');
-        this.result = await this.convert.connect(user).convertDepositedLP('1','100',['2'],['1']);
+        this.result = await this.convert.connect(user).convertDepositedLP('1','100',['2'],['1'], [false, false, false]);
       });
   
       it('properly updates total values', async function () {
         expect(await this.silo.totalDepositedLP()).to.eq('0');
-        expect(await this.silo.totalDepositedBeans()).to.eq('796');
-        expect(await this.silo.totalSeeds()).to.eq('1592');
-        expect(await this.silo.totalStalk()).to.eq('7960000');
+        expect(await this.silo.totalDepositedBeans()).to.eq('794');
+        expect(await this.silo.totalSeeds()).to.eq('1588');
+        expect(await this.silo.totalStalk()).to.eq('7940000');
       });
 
       it('properly updates user deposits', async function () {
-        expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('796');
+        expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('794');
         const lpDeposit = await this.silo.lpDeposit(userAddress, 2);
         expect(lpDeposit[0]).to.eq('0');
         expect(lpDeposit[1]).to.eq('0');
@@ -297,7 +301,7 @@ describe('Convert', function () {
         await expect(this.result).to.emit(this.silo, 'LPRemove')
           .withArgs(userAddress, [2], ['1'], '1');
         await expect(this.result).to.emit(this.silo, 'BeanDeposit')
-          .withArgs(userAddress, 2, '796');
+          .withArgs(userAddress, 2, '794');
       });
     });
 
@@ -306,18 +310,18 @@ describe('Convert', function () {
         await this.pair.simulateTrade('200000', '50000');
         await this.silo.connect(user).depositLP('1');
         await this.season.siloSunrise(0);
-        this.result = await this.convert.connect(user).convertDepositedLP('1','100',['2'],['1']);
+        this.result = await this.convert.connect(user).convertDepositedLP('1','100',['2'],['1'], [false, false, false]);
       });
   
       it('properly updates total values', async function () {
         expect(await this.silo.totalDepositedLP()).to.eq('0');
-        expect(await this.silo.totalDepositedBeans()).to.eq('799');
-        expect(await this.silo.totalSeeds()).to.eq('1598');
-        expect(await this.silo.totalStalk()).to.eq('7991598');
+        expect(await this.silo.totalDepositedBeans()).to.eq('798');
+        expect(await this.silo.totalSeeds()).to.eq('1596');
+        expect(await this.silo.totalStalk()).to.eq('7981596');
       });
 
       it('properly updates user deposits', async function () {
-        expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('799');
+        expect(await this.silo.beanDeposit(userAddress, 2)).to.eq('798');
         const lpDeposit = await this.silo.lpDeposit(userAddress, 2);
         expect(lpDeposit[0]).to.eq('0');
         expect(lpDeposit[1]).to.eq('0');
@@ -327,7 +331,7 @@ describe('Convert', function () {
         await expect(this.result).to.emit(this.silo, 'LPRemove')
           .withArgs(userAddress, [2], ['1'], '1');
         await expect(this.result).to.emit(this.silo, 'BeanDeposit')
-          .withArgs(userAddress, 2, '799');
+          .withArgs(userAddress, 2, '798');
       });
     });
 
@@ -337,18 +341,18 @@ describe('Convert', function () {
         await this.silo.connect(user).depositLP('2');
         await this.season.siloSunrise(0);
         await this.silo.connect(user).depositLP('1');
-        this.result = await this.convert.connect(user).convertDepositedLP('2','100',['3','2'],['1','1']);
+        this.result = await this.convert.connect(user).convertDepositedLP('2','100',['3','2'],['1','1'], [false, false, false]);
       });
   
       it('properly updates total values', async function () {
         expect(await this.silo.totalDepositedLP()).to.eq('1');
-        expect(await this.silo.totalDepositedBeans()).to.eq('1596');
-        expect(await this.silo.totalSeeds()).to.eq('4792');
-        expect(await this.silo.totalStalk()).to.eq('19961600');
+        expect(await this.silo.totalDepositedBeans()).to.eq('1594');
+        expect(await this.silo.totalSeeds()).to.eq('4788');
+        expect(await this.silo.totalStalk()).to.eq('19941600');
       });
 
       it('properly updates user deposits', async function () {
-        expect(await this.silo.beanDeposit(userAddress, 3)).to.eq('1596');
+        expect(await this.silo.beanDeposit(userAddress, 3)).to.eq('1594');
         const lpDeposit = await this.silo.lpDeposit(userAddress, 2);
         expect(lpDeposit[0]).to.eq('1');
         expect(lpDeposit[1]).to.eq('1600');
@@ -358,7 +362,7 @@ describe('Convert', function () {
         await expect(this.result).to.emit(this.silo, 'LPRemove')
           .withArgs(userAddress, [3,2], ['1', '1'], '2');
         await expect(this.result).to.emit(this.silo, 'BeanDeposit')
-          .withArgs(userAddress, 3, '1596');
+          .withArgs(userAddress, 3, '1594');
       });
     });
   });
@@ -367,13 +371,15 @@ describe('Convert', function () {
       await this.pair.set('10000', '10', '1')
       await this.pair.faucet(user2Address, '9');
       await this.silo.connect(user).depositBeans('1000');
+      await this.weth.mint(this.pair.address, '10000');
+      await this.bean.mint(this.pair.address, '1000000');
     })
 
     describe('Different size arrays', async function () {      
       it('reverts', async function () {
         await this.silo.connect(user).depositBeans('20000');
         await this.pair.simulateTrade('10000', '40000');
-        await expect(this.convert.connect(user).convertDepositedBeans('5000','2',['2', '4'],['20000']))
+        await expect(this.convert.connect(user).convertDepositedBeans('5000','2',['2', '4'],['20000'], [false, false, false]))
           .to.be.revertedWith('Convert: Not enough LP.');
         await this.pair.set('10000', '40000', '1');
       });

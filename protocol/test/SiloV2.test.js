@@ -168,7 +168,6 @@ describe('Silo', function () {
       });
     });
   });
-
   describe('withdraw', function () {
     beforeEach(async function () {
       await this.silo2.connect(user).deposit(this.siloToken.address, '1000');
