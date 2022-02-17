@@ -20,6 +20,10 @@ library LibTokenSilo {
 
     event Deposit(address indexed account, address indexed token, uint256 season, uint256 amount, uint256 bdv);
 
+    /*
+     * Deposit
+     */
+
     function deposit(address account, address token, uint32 _s, uint256 amount) internal returns (uint256, uint256) {
         uint256 bdv = beanDenominatedValue(token, amount);
         return depositWithBDV(account, token, _s, amount, bdv);
@@ -35,20 +39,24 @@ library LibTokenSilo {
 
     function incrementDepositedToken(address token, uint256 amount) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.siloBalances[IERC20(token)].deposited = s.siloBalances[IERC20(token)].deposited.add(amount);
+        s.siloBalances[token].deposited = s.siloBalances[token].deposited.add(amount);
     }
 
     function addDeposit(address account, address token, uint32 _s, uint256 amount, uint256 bdv) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.a[account].deposits[IERC20(token)][_s].amount += uint128(amount);
-        s.a[account].deposits[IERC20(token)][_s].bdv += uint128(bdv);
+        s.a[account].deposits[token][_s].amount += uint128(amount);
+        s.a[account].deposits[token][_s].bdv += uint128(bdv);
         emit Deposit(account, token, _s, amount, bdv);
     }
 
     function decrementDepositedToken(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.siloBalances[IERC20(token)].deposited = s.siloBalances[IERC20(token)].deposited.sub(amount);
+        s.siloBalances[token].deposited = s.siloBalances[token].deposited.sub(amount);
     }
+
+    /*
+     * Remove
+     */
 
     function removeDeposit(address account, address token, uint32 id, uint256 amount)
         internal
@@ -59,21 +67,25 @@ library LibTokenSilo {
         require(crateAmount >= amount, "Silo: Crate balance too low.");
         if (amount < crateAmount) {
             uint256 base = amount.mul(crateBase).div(crateAmount);
-            uint256 newBase = uint256(s.a[account].deposits[IERC20(token)][id].bdv).sub(base);
-            uint256 newAmount = uint256(s.a[account].deposits[IERC20(token)][id].amount).sub(amount);
+            uint256 newBase = uint256(s.a[account].deposits[token][id].bdv).sub(base);
+            uint256 newAmount = uint256(s.a[account].deposits[token][id].amount).sub(amount);
             require(newBase <= uint128(-1) && newAmount <= uint128(-1), 'Silo: uint128 overflow.');
-            s.a[account].deposits[IERC20(token)][id].amount = uint128(newAmount);
-            s.a[account].deposits[IERC20(token)][id].bdv = uint128(newBase);
+            s.a[account].deposits[token][id].amount = uint128(newAmount);
+            s.a[account].deposits[token][id].bdv = uint128(newBase);
             return (amount, base);
         } else {
-            delete s.a[account].deposits[IERC20(token)][id];
+            delete s.a[account].deposits[token][id];
             return (crateAmount, crateBase);
         }
     }
 
+    /*
+     * Getters
+     */
+
     function tokenDeposit(address account, address token, uint32 id) internal view returns (uint256, uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return (s.a[account].deposits[IERC20(token)][id].amount, s.a[account].deposits[IERC20(token)][id].bdv);
+        return (s.a[account].deposits[token][id].amount, s.a[account].deposits[token][id].bdv);
     }
 
     function beanDenominatedValue(address token, uint256 amount) private returns (uint256 bdv) {
@@ -86,6 +98,6 @@ library LibTokenSilo {
 
     function tokenWithdrawal(address account, address token, uint32 id) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.a[account].withdrawals[IERC20(token)][id];
+        return s.a[account].withdrawals[token][id];
     }
 }

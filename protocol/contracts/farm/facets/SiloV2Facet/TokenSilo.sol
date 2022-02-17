@@ -23,10 +23,12 @@ contract TokenSilo {
     using SafeMath for uint32;
 
     event Deposit(address indexed account, address indexed token, uint256 season, uint256 amount, uint256 bdv);
-    event Remove(address indexed account, address indexed token, uint32[] seasons, uint256[] amounts, uint256 amount);
-    event Withdraw(address indexed account, address indexed token, uint32 season, uint256 amount);
-    event ClaimWithdrawal(address indexed account, address indexed token, uint32 season, uint256 amount);
+    event RemoveSeasons(address indexed account, address indexed token, uint32[] seasons, uint256[] amounts, uint256 amount);
+    event RemoveSeason(address indexed account, address indexed token, uint32 season, uint256 amount);
 
+    event Withdraw(address indexed account, address indexed token, uint32 season, uint256 amount);
+    event ClaimSeasons(address indexed account, address indexed token, uint32[] seasons, uint256 amount);
+    event ClaimSeason(address indexed account, address indexed token, uint32 season, uint256 amount);
 
     struct AssetsRemoved {
         uint256 tokensRemoved;
@@ -38,21 +40,20 @@ contract TokenSilo {
      * Getters
     **/
 
-    function getDeposit(address account, address token, uint32 season) public view returns (uint256, uint256) {
+    function getDeposit(address account, address token, uint32 season) external view returns (uint256, uint256) {
         return LibTokenSilo.tokenDeposit(account, token, season);
     }
 
-    function getWithdrawal(address account, address token, uint32 season) public view returns (uint256) {
+    function getWithdrawal(address account, address token, uint32 season) external view returns (uint256) {
         return LibTokenSilo.tokenWithdrawal(account, token, season);
     }
 
-    // V2 For All Token Types
-    function getTotalDeposited(address token) public view returns (uint256) {
-        return s.siloBalances[IERC20(token)].deposited;
+    function getTotalDeposited(address token) external view returns (uint256) {
+        return s.siloBalances[token].deposited;
     }
 
-    function getTotalWithdrawn(address token) public view returns (uint256) {
-        return s.siloBalances[IERC20(token)].withdrawn;
+    function getTotalWithdrawn(address token) external view returns (uint256) {
+        return s.siloBalances[token].withdrawn;
     }
 
     /**
@@ -65,8 +66,7 @@ contract TokenSilo {
         LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
     }
 
-    function _withdraw(address token, uint32[] calldata seasons, uint256[] calldata amounts) internal {
-        LibInternal.updateSilo(msg.sender);
+    function _withdrawDeposits(address token, uint32[] calldata seasons, uint256[] calldata amounts) internal {
         require(seasons.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         AssetsRemoved memory ar = removeDeposits(token, seasons, amounts);
         uint32 arrivalSeason = _season() + s.season.withdrawSeasons;
@@ -76,40 +76,78 @@ contract TokenSilo {
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
+    function _withdrawDeposit(address token, uint32 season, uint256 amount) internal {
+        (uint256 tokensRemoved, uint256 stalkRemoved, uint256 seedsRemoved) = removeDeposit(token, season, amount);
+        uint32 arrivalSeason = _season() + s.season.withdrawSeasons;
+        addTokenWithdrawal(msg.sender, token, arrivalSeason, tokensRemoved);
+        LibTokenSilo.decrementDepositedToken(token, tokensRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
+    }
+
+    function removeDeposit(address token, uint32 season, uint256 amount) 
+        private 
+        returns (uint256 tokensRemoved, uint256 stalkRemoved, uint256 seedsRemoved) 
+    {
+        uint256 bdv;
+        (tokensRemoved, bdv) = LibTokenSilo.removeDeposit(
+            msg.sender,
+            token,
+            season,
+            amount
+        );
+        seedsRemoved = bdv.mul(s.ss[token].seeds);
+        stalkRemoved = bdv.mul(s.ss[token].stalk).add(
+            LibSilo.stalkReward(seedsRemoved, _season()-season)
+        );
+        emit RemoveSeason(msg.sender, token, season, amount);
+    }
+
     function removeDeposits(address token, uint32[] calldata seasons, uint256[] calldata amounts)
         private
         returns (AssetsRemoved memory ar)
     {
         uint256 bdvRemoved;
         for (uint256 i = 0; i < seasons.length; i++) {
-            (uint256 crateBeans, uint256 crateBdv) = LibTokenSilo.removeDeposit(
+            (uint256 crateTokens, uint256 crateBdv) = LibTokenSilo.removeDeposit(
                 msg.sender,
                 token,
                 seasons[i],
                 amounts[i]
             );
             bdvRemoved = bdvRemoved.add(crateBdv);
-            ar.tokensRemoved = ar.tokensRemoved.add(crateBeans);
+            ar.tokensRemoved = ar.tokensRemoved.add(crateTokens);
             ar.stalkRemoved = ar.stalkRemoved.add(
-                LibSilo.stalkReward(crateBdv, _season()-seasons[i])
+                LibSilo.stalkReward(crateBdv.mul(s.ss[token].seeds), _season()-seasons[i])
             );
         }
         ar.seedsRemoved = bdvRemoved.mul(s.ss[token].seeds);
         ar.stalkRemoved = ar.stalkRemoved.add(bdvRemoved.mul(s.ss[token].stalk));
-        emit Remove(msg.sender, token, seasons, amounts, ar.tokensRemoved);
+        emit RemoveSeasons(msg.sender, token, seasons, amounts, ar.tokensRemoved);
     }
 
     function addTokenWithdrawal(address account, address token, uint32 arrivalSeason, uint256 amount) private {
-        s.a[account].withdrawals[IERC20(token)][arrivalSeason] = s.a[account].withdrawals[IERC20(token)][arrivalSeason].add(amount);
-        s.siloBalances[IERC20(token)].withdrawn = s.siloBalances[IERC20(token)].withdrawn.add(amount);
+        s.a[account].withdrawals[token][arrivalSeason] = s.a[account].withdrawals[token][arrivalSeason].add(amount);
+        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.add(amount);
         emit Withdraw(msg.sender, token, arrivalSeason, amount);
     }
 
-    function removeTokenWithdrawal(address account, address token, uint32 _s) internal returns (uint256) {
-        uint256 amount = s.a[account].withdrawals[IERC20(token)][_s];
-        require(amount > 0, "Silo: Withdrawal is empty.");
-        delete s.a[account].withdrawals[IERC20(token)][_s];
-        s.siloBalances[IERC20(token)].withdrawn = s.siloBalances[IERC20(token)].withdrawn.sub(amount);
+    function removeTokenWithdrawals(address account, address token, uint32[] calldata seasons) internal returns (uint256 amount) {
+        for (uint256 i = 0; i < seasons.length; i++) {
+            amount = amount.add(_removeTokenWithdrawal(account, token, seasons[i]));
+        }
+        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(amount);
+        return amount;
+    }
+
+    function removeTokenWithdrawal(address account, address token, uint32 season) internal returns (uint256) {
+        uint256 amount = _removeTokenWithdrawal(account, token, season);
+        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(amount);
+        return amount;
+    }
+
+    function _removeTokenWithdrawal(address account, address token, uint32 season) private returns (uint256) {
+        uint256 amount = s.a[account].withdrawals[token][season];
+        delete s.a[account].withdrawals[token][season];
         return amount;
     }
 

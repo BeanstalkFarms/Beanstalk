@@ -54,7 +54,6 @@ contract Account {
         uint32 proposedUntil;
         SeasonOfPlenty sop;
         uint256 roots;
-        //uint256 wrappedBeans;
         mapping(IERC20 => mapping(uint32 => Deposit)) deposits;
         mapping(IERC20 => mapping(uint32 => uint256)) withdrawals;
     }
@@ -225,7 +224,7 @@ struct AppStorage {
     mapping (address => bool) isBudget;
     mapping(uint256 => bytes32) podListings;
     mapping(bytes32 => uint256) podOrders;
-    mapping(IERC20 => Storage.AssetSilo) siloBalances;
+    mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
     Storage.Liquity sl;

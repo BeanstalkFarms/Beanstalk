@@ -21,10 +21,10 @@ contract InitBip12 {
     address private constant PUBLIUS_ADDRESS = address(0x925753106FCdB6D2f30C3db295328a0A1c5fD1D1);
     uint256 private constant PAYMENT = 5000000000;
 
-    address BEAN_3CURVE_ADDRESS = address(0x3a70DfA7d2262988064A2D051dd47521E43c9BdD);
-    bytes4 SELECTOR = bytes4(0xf984019b);
-    uint32 STALK = 10000;
-    uint32 SEEDS = 4;
+    address private constant BEAN_3CURVE_ADDRESS = address(0x3a70DfA7d2262988064A2D051dd47521E43c9BdD);
+    bytes4 private constant SELECTOR = bytes4(0xf984019b);
+    uint32 private constant STALK = 10000;
+    uint32 private constant SEEDS = 4;
 
     function init() external {
         IBS(address(this)).whitelistToken(BEAN_3CURVE_ADDRESS, SELECTOR, STALK, SEEDS);
