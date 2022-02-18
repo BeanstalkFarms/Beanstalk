@@ -13,6 +13,17 @@ interface IMeta3Curve {
     function totalSupply() external view returns (uint256);
 }
 
+interface IDepositZapCurve {
+    function add_liquidity(uint256[] calldata amounts, uint256 min_mint_amount) external returns (uint256);
+    function remove_liquidity(uint256 _amount, uint256[] calldata min_amounts) external returns (uint256[] calldata);
+    function remove_liquidity_imbalance(uint256[] calldata amounts, uint256 max_burn_amount) external returns (uint256);
+    function remove_liquidity_one_coin(uint256 _token_amount, int128 i, uint256 min_amount) external returns (uint256);
+    function balances(int128 i) external view returns (uint256);
+    function A() external view returns (uint256);
+    function fee() external view returns (uint256);
+    function owner() external view returns (address);
+}
+
 library LibMetaCurve {
     using SafeMath for uint256;
 
@@ -33,6 +44,28 @@ library LibMetaCurve {
         uint256 beanValue = balances[0].mul(amount).div(totalSupply);
         uint256 curveValue = balances[1].mul(price).mul(amount).div(totalSupply).div(1e18);
         return beanValue.add(curveValue);
+    }
+
+    function currentPrice() internal view returns (uint256) {
+        uint256[2] memory balances = IMeta3Curve(POOL).get_balances();
+        uint256 totalSupply = IMeta3Curve(POOL).totalSupply();
+        uint256[2] memory rates = getRates();
+        uint256 price = getPrice(balances,rates);
+    }
+
+    function removeLiquidityOneCoin(
+        uint256 _token_amount,
+        uint8 i,
+        uint256 min_amount
+    )
+        internal
+        returns (uint256 coin_amount_received) 
+    {
+        IDepositZapCurve(POOL).remove_liquidity_one_coin(_token_amount, i, min_amount);
+    }
+
+    function addLiquidity(uint256[] calldata amounts, uint256 min_mint_amount) internal returns (uint256) {
+        IDepositZapCurve(POOL).add_liquidity(amounts, min_mint_amount);
     }
     
     function getPrice(uint256[2] memory balances, uint256[2] memory rates) private view returns (uint) {
