@@ -13,6 +13,8 @@ import "../interfaces/IWETH.sol";
 import "./Utils/LibToolShed.sol";
 import "./LibMarket.sol";
 import "./LibAppStorage.sol";
+import "./LibConvertUserData.sol";
+import "./LibMetaCurve.sol";
 
 /**
  * @author Publius
@@ -21,6 +23,7 @@ import "./LibAppStorage.sol";
 library LibConvert {
 
     using SafeMath for uint256;
+    using LibConvertUserData for bytes;
 
     function sellToPegAndAddLiquidity(uint256 beans, uint256 minLP)
         internal
@@ -36,6 +39,28 @@ library LibConvert {
         (beansConverted,, lp) = LibMarket._addLiquidityWETH(wethBought,beans.sub(beansSold),1,1);
         require(lp >= minLP, "Convert: Not enough LP.");
         beansConverted = beansConverted + beansSold;
+    }
+
+    function sellToPegAndAddLiquidity(uint256 beans, uint256 minLP, bytes memory userData)
+        internal
+        returns (uint256 lp, uint256 beansConverted)
+    {
+        LibConvertUserData.ExitKind kind = userData.exitKind();
+
+        if (kind == LibConvertUserData.ExitKind.EXACT_CURVE_LP_OUT_IN_BEANS) {
+            return _exitExactCurveLPOutInBeans(userData);
+        } else if (kind == LibConvertUserData.ExitKind.UNISWAP_REMOVE_BEAN_AND_BUY_LP) {
+            return _exitExactCurveLPOutInBeans(userData);
+        } 
+        // else {
+        //     _revert(Errors.UNHANDLED_EXIT_KIND);
+        // }
+    }
+
+    function _exitExactCurveLPOutInBeans(bytes memory userData) private returns (uint256 lp_removed, uint256 beans_received) {
+        (uint256 minLPAmountOut) = userData.exactCurveLPOutInBeans();
+        beans_received = LibMetaCurve.removeLiquidityOneCoin(minLPAmountOut, 0, 0);
+        lp_removed = minLPAmountOut;
     }
 
     function removeLPAndBuyToPeg(uint256 lp, uint256 minBeans) 
