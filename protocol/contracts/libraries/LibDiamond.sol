@@ -15,6 +15,8 @@ import {IERC165} from "../interfaces/IERC165.sol";
 import {IERC173} from "../interfaces/IERC173.sol";
 import {LibMeta} from "./LibMeta.sol";
 
+import 'hardhat/console.sol';
+
 library LibDiamond {
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("diamond.standard.diamond.storage");
 

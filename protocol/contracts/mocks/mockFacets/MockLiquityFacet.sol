@@ -21,7 +21,16 @@ contract MockLiquityFacet is LiquityFacet {
 	}
 
 	function associatedTrove(address account) public view returns (address) {
-		return s.sl.trove[account];
+		return s.trove[account];
 	}
+
+	function collateralizeWithApproxHintE(uint256 minFee, uint256 lusdAmount, uint256 numTrials, uint256 randSeed) public payable {
+		_collateralizeWithApproxHint(minFee, lusdAmount, numTrials, randSeed);
+   	}
+
+   	function repayDebtE(uint256 lusdAmount, uint256 numTrials, uint256 randSeed) public {
+		_repayDebt(lusdAmount, numTrials, randSeed);
+   	}
+
 
 }

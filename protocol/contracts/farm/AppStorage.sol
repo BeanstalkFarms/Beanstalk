@@ -189,9 +189,6 @@ contract Storage {
 	bool lightUpdateSilo;
     }
 
-    struct Liquity {  
-	mapping (address => address) trove;
-    }
 }
 
 struct AppStorage {
@@ -227,5 +224,6 @@ struct AppStorage {
     mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
-    Storage.Liquity sl;
+    mapping(address => address) trove;
+    mapping(bytes4 => bool) whitelistedFunction;
 }

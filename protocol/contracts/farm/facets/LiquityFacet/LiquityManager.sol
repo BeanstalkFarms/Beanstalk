@@ -47,7 +47,9 @@ contract LiquityManager is ILiquityManager {
 	function collateralizeWithApproxHint(uint256 maxFeePercentage, uint256 lusdWithdrawAmount, uint256 numTrials, uint256 randSeed) external payable override {
 		if (!active) { // Default value for bool is 0 or false
 			require(msg.value > 0, "Cannot open trove with no collateral.");
-			if (sortedTroves.getSize() == 0) borrowerOperations.openTrove{value: msg.value}(maxFeePercentage, lusdWithdrawAmount, address(this), address(this));
+			if (sortedTroves.getSize() == 0) {
+				borrowerOperations.openTrove{value: msg.value}(maxFeePercentage, lusdWithdrawAmount, address(this), address(this));
+			}
 			else {
 				(address lowerHint, address upperHint) = LibLiquity.findHints(lusdWithdrawAmount, numTrials, randSeed);
 				borrowerOperations.openTrove{value: msg.value}(maxFeePercentage, lusdWithdrawAmount, lowerHint, upperHint);
@@ -67,7 +69,7 @@ contract LiquityManager is ILiquityManager {
 				borrowerOperations.withdrawLUSD(maxFeePercentage, lusdWithdrawAmount, lowerHint, upperHint);
 			}
 		}
-		SafeERC20.safeTransfer(IERC20(lusdToken), msg.sender, lusdWithdrawAmount);
+		SafeERC20.safeTransfer(IERC20(lusdToken), msg.sender, lusdWithdrawAmount); 
 	}
 
 	// Must transfer LUSD to this contract first

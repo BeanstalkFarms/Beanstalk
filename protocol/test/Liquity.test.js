@@ -34,6 +34,7 @@ describe('Liquity', function () {
     this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair);
     this.pegPair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pegPair);
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
+    this.weth = await ethers.getContractAt('MockToken', contracts.weth);
     this.claim = await ethers.getContractAt('MockClaimFacet', this.diamond.address)
     this.liquity = await ethers.getContractAt('MockLiquityFacet', this.diamond.address);
     this.borrowerOperations = await ethers.getContractAt("MockBorrowerOperations", BORROWER_OPERATIONS);
@@ -56,22 +57,27 @@ describe('Liquity', function () {
     await this.sortedTroves.setParams('1000', TROVE_MANAGER, BORROWER_OPERATIONS);
     await this.lusd.setAddresses(TROVE_MANAGER, STABILITY_POOL, BORROWER_OPERATIONS);
     await this.activePool.setAddresses(BORROWER_OPERATIONS, TROVE_MANAGER, STABILITY_POOL, DEFAULT_POOL);
+    await this.lusd.mockMint(this.pair.address, '100000000000000000000000000');
+    await this.bean.mint(this.pair.address, '10000000000000000000000');
+    await this.weth.mint(this.pair.address, '100000');
   });
   beforeEach(async function () {
   });
    describe('Create Trove', async function () {
     describe('reverts', async function () {
       it('not enough collateral - open trove', async function () {
-	await expect(this.liquity.connect(user).collateralizeWithApproxHint(minFee, '2000000000000000000000', 2, Math.floor(Math.random() * 10), {value: ethers.utils.parseEther('1')}))
+	await expect(this.liquity.connect(user).collateralizeWithApproxHintE(minFee, '2000000000000000000000', 2, Math.floor(Math.random() * 10), {value: ethers.utils.parseEther('1')}))
 		      .to.be.revertedWith("BorrowerOps: An operation that would result in ICR < MCR is not permitted");
 	});
       it('not enough collateral - withdraw LUSD', async function () {
-	await this.liquity.connect(user).collateralizeWithApproxHint(minFee, '2000000000000000000000', 2, Math.floor(Math.random() * 10), {value: ethers.utils.parseEther('4')});
+	const lusdBefore = await this.lusd.totalSupply();
+	await this.liquity.connect(user).collateralizeWithApproxHintE(minFee, '2000000000000000000000', 2, Math.floor(Math.random() * 10), {value: ethers.utils.parseEther('4')});
 	expect((await this.lusd.balanceOf(this.silo.address))/1e18).to.eq(2000);
-	await expect(this.liquity.connect(user).collateralizeWithApproxHint(minFee, '2000000000000000000000', 2, Math.floor(Math.random() * 10), {value: ethers.utils.parseEther('0')}))
+	await expect(this.liquity.connect(user).collateralizeWithApproxHintE(minFee, '2000000000000000000000', 2, Math.floor(Math.random() * 10), {value: ethers.utils.parseEther('0')}))
 		      .to.be.revertedWith('BorrowerOps: An operation that would result in ICR < MCR is not permitted');
+	const lusdAfter = await this.lusd.totalSupply();
 	expect((await this.lusd.balanceOf(this.silo.address))/1e18).to.eq(2000);
-	expect((await this.lusd.totalSupply())/1e18).to.eq(2210);
+	expect((lusdAfter.sub(lusdBefore))/1e18).to.eq(2210);
 	expect((await this.liquity.internalBalance(userAddress, this.lusd.address))/1e18).to.eq(2000);
       });
     });
@@ -79,23 +85,25 @@ describe('Liquity', function () {
      beforeEach(async function () {
     });
       it('opens a trove for a new user', async function () {
-        await this.liquity.connect(user2).collateralizeWithApproxHint(minFee, '2000000000000000000000', 2, Math.floor(Math.random() * 10), {value: ethers.utils.parseEther('7')});
+	const lusdBefore = await this.lusd.totalSupply();
+        await this.liquity.connect(user2).collateralizeWithApproxHintE(minFee, '2000000000000000000000', 2, Math.floor(Math.random() * 10), {value: ethers.utils.parseEther('7')});
+	const lusdAfter = await this.lusd.totalSupply();
 	expect((await this.lusd.balanceOf(this.silo.address))/1e18).to.eq(4000);
-	expect((await this.lusd.totalSupply())/1e18).to.eq(4420);
+	expect((lusdAfter.sub(lusdBefore))/1e18).to.eq(2210);
 	expect((await this.liquity.internalBalance(userAddress, this.lusd.address))/1e18).to.eq(2000);
 	expect((await this.liquity.internalBalance(user2Address, this.lusd.address))/1e18).to.eq(2000);
 	expect(await this.liquity.associatedTrove(userAddress)).to.not.eq(await this.liquity.associatedTrove(user2Address));
       });
       it('withdraws funds from an existing trove', async function () {
-        await this.liquity.connect(user2).collateralizeWithApproxHint(minFee, '2000000000000000000000', 2, Math.floor(Math.random() * 10), {value: ethers.utils.parseEther('0')});
+        await this.liquity.connect(user2).collateralizeWithApproxHintE(minFee, '2000000000000000000000', 2, Math.floor(Math.random() * 10), {value: ethers.utils.parseEther('0')});
 	expect((await this.lusd.balanceOf(this.silo.address))/1e18).to.eq(6000);
 	expect((await this.liquity.internalBalance(user2Address, this.lusd.address))/1e18).to.eq(4000);
 	expect((await this.liquity.internalBalance(userAddress, this.lusd.address))/1e18).to.eq(2000);
 	expect((await this.lusd.balanceOf(await this.liquity.associatedTrove(user2Address))/1e18)).to.eq(0);
       });
       it('can repay debt', async function () {
-	await this.liquity.connect(user).repayDebt('2000', 2, Math.floor(Math.random() * 10));
-	await this.liquity.connect(user2).repayDebt('4000', 2, Math.floor(Math.random() * 10));
+	await this.liquity.connect(user).repayDebtE('2000', 2, Math.floor(Math.random() * 10));
+	await this.liquity.connect(user2).repayDebtE('4000', 2, Math.floor(Math.random() * 10));
 	
       });
     });
@@ -103,24 +111,24 @@ describe('Liquity', function () {
      beforeEach(async function () {
      });
       it('collateralize and sow', async function () {
+	await this.liquity.connect(user).collateralizeAndSowBeans(minFee, '2000000000000000000000', 1000, 980, 2, Math.floor(Math.random() * 10), [false, false, false], {value: ethers.utils.parseEther('10')});
+      });
+      it('collateralize and fundraise', async function () {
+	await this.liquity.connect(user).collateralizeAndFundraise(minFee, '2000000000000000000000', 1000, 980, 0, 2, Math.floor(Math.random() * 10), [false, false, false], {value: ethers.utils.parseEther('10')});
       });
     });
     describe('Collateral -> Silo', async function () {
      beforeEach(async function () {
      });
       it('collateralize and deposit', async function () {
-      });
-    });
-    describe('Collateral -> Marketplace', async function () {
-     beforeEach(async function () {
-     });
-      it('collateralize and buy pods', async function () {
+	await this.liquity.connect(user).collateralizeAndDeposit(minFee, '2000000000000000000000', 1000, 980, 2, Math.floor(Math.random() * 10), [false, false, false], {value: ethers.utils.parseEther('10')});
       });
     });
     describe('Collateral -> Beanstalk Functionality', async function () {
      beforeEach(async function () {
      });
       it('collateralize and wrap beans', async function () {
+	await this.liquity.connect(user).collateralizeAndUnwrap(minFee, '2000000000000000000000', 1000, 980, 2, Math.floor(Math.random() * 10), [false, false, false], {value: ethers.utils.parseEther('3')});
       });
     });
   });
