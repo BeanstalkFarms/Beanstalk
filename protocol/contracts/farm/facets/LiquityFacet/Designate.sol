@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import '../../../libraries/LibLiquity.sol';
 import '../../AppStorage.sol';
-import './LiquityFactory.sol';
+import './TroveFactory.sol';
 import '../../../interfaces/ILiquityManager.sol';
 import '../../../libraries/LibUserBalance.sol';
 
@@ -21,7 +21,7 @@ import 'hardhat/console.sol';
  * @author Beasley
  * @title Users lend on Liquity for BEAN
 **/
-contract Designate is LiquityFactory {
+contract Designate is TroveFactory {
 
 	using SafeMath for uint256;
 

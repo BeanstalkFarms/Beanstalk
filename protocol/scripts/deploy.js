@@ -1,7 +1,7 @@
 const MAX_INT = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
 
 const diamond = require('./diamond.js')
-const { impersonateCurve, impersonateLiquity } = require('./impersonate.js')
+const { impersonateCurve, impersonateLiquity, impersonateUniswap, impersonateBean } = require('./impersonate.js')
 function addCommas(nStr) {
   nStr += ''
   const x = nStr.split('.')
@@ -151,6 +151,8 @@ async function main(scriptName, verbose = true, mock = false) {
   if (mock) {
     await impersonateCurve()
     await impersonateLiquity()
+    await impersonateUniswap()
+    await impersonateBean()
     const MockUniswapV2Router = await ethers.getContractFactory("MockUniswapV2Router");
     mockRouter = await MockUniswapV2Router.deploy();
     args.push(mockRouter.address)

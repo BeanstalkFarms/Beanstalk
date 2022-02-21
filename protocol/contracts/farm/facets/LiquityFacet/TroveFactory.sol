@@ -13,7 +13,7 @@ import './LiquityManager.sol';
  * @title Create contract which manages user's trove
 **/
 
-contract LiquityFactory {
+contract TroveFactory {
 
 	event TroveCreated(address indexed account, address trove);
 
