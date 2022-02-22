@@ -1,5 +1,6 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
+const { GeneralFunctionEncoder } = require('./utils/encoder.js')
 
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
@@ -90,7 +91,7 @@ describe('Convert', function () {
       it('not enough LP', async function () {
         await this.silo.connect(user).depositBeans('20000', this.updateSettings);
         await this.pair.simulateTrade('10000', '40000');
-        await expect(this.convert.connect(user).convertDepositedBeans('5000','2',['2'],['20000'], false))
+        await expect(this.convert.connect(user).convertDepositedBeans(GeneralFunctionEncoder.convertExactUniswapSellBeansAndAddLP('5000','2'),['2'],['20000'], false))
           .to.be.revertedWith('Convert: Not enough LP.');
         await this.pair.set('10000', '40000', '1');
       });
@@ -98,7 +99,7 @@ describe('Convert', function () {
       it('p >= 1', async function () {
         await this.silo.connect(user).depositBeans('1000', this.updateSettings);
         await this.pair.simulateTrade('20000', '20000');
-        await expect(this.convert.connect(user).convertDepositedBeans('100','1',['1'],['1000'], false))
+        await expect(this.convert.connect(user).convertDepositedBeans(GeneralFunctionEncoder.convertExactUniswapSellBeansAndAddLP('100','1'),['1'],['1000'], false))
           .to.be.revertedWith('Convert: P must be > 1.');
       });
     });
@@ -107,7 +108,7 @@ describe('Convert', function () {
       beforeEach(async function () {
         await this.silo.connect(user).depositBeans('1000', this.updateSettings);
         await this.pair.simulateTrade('10000', '40000');
-        this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2'],['1000'], false);
+        this.result = await this.convert.connect(user).convertDepositedBeans(GeneralFunctionEncoder.convertExactUniswapSellBeansAndAddLP('1000','1'),['2'],['1000'], false);
       });
   
       it('properly updates total values', async function () {
@@ -135,7 +136,7 @@ describe('Convert', function () {
       beforeEach(async function () {
         await this.silo.connect(user).depositBeans('20000', this.updateSettings);
         await this.pair.simulateTrade('19000', '21000');
-        this.result = await this.convert.connect(user).convertDepositedBeans('10000','1',['2'],['20000'], false);
+        this.result = await this.convert.connect(user).convertDepositedBeans(GeneralFunctionEncoder.convertExactUniswapSellBeansAndAddLP('10000','1'),['2'],['20000'], false);
       });
   
       it('properly updates total values', async function () {
@@ -164,7 +165,7 @@ describe('Convert', function () {
         await this.silo.connect(user).depositBeans('1000', this.updateSettings);
         await this.pair.simulateTrade('10000', '40000');
         await this.season.siloSunrise(0);
-        this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2'],['1000'], false);
+        this.result = await this.convert.connect(user).convertDepositedBeans(GeneralFunctionEncoder.convertExactUniswapSellBeansAndAddLP('1000','1'),['2'],['1000'], false);
       });
   
       it('properly updates total values', async function () {
@@ -194,7 +195,7 @@ describe('Convert', function () {
         await this.pair.simulateTrade('10000', '40000');
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
-        this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2'],['1000'], false);
+        this.result = await this.convert.connect(user).convertDepositedBeans(GeneralFunctionEncoder.convertExactUniswapSellBeansAndAddLP('1000','1'),['2'],['1000'], false);
       });
   
       it('properly updates total values', async function () {
@@ -224,7 +225,7 @@ describe('Convert', function () {
         await this.pair.simulateTrade('10000', '40000');
         await this.season.siloSunrise(0);
         await this.silo.connect(user).depositBeans('1000', this.updateSettings);
-        this.result = await this.convert.connect(user).convertDepositedBeans('1000','1',['2','3'],['500','500'], false);
+        this.result = await this.convert.connect(user).convertDepositedBeans(GeneralFunctionEncoder.convertExactUniswapSellBeansAndAddLP('1000','1'),['2','3'],['500','500'], false);
       });
   
       it('properly updates total values', async function () {
@@ -262,13 +263,13 @@ describe('Convert', function () {
       it('p >= 1', async function () {
         await this.pair.simulateTrade('10000', '40000');
         await this.silo.connect(user).depositLP('1', false);
-        await expect(this.convert.connect(user).convertDepositedLP('1','100',['2'],['1'], false))
+        await expect(this.convert.connect(user).convertDepositedLP(GeneralFunctionEncoder.convertExactUniswapBeansOutInLP('1','100'),['2'],['1'], false))
           .to.be.revertedWith('Convert: P must be < 1.');
       });
       it('beans below min', async function () {
         await this.pair.set('40000', '10000', '1');
         await this.silo.connect(user).depositLP('1', false);
-        await expect(this.convert.connect(user).convertDepositedLP('1','1000',['2'],['1'], false))
+        await expect(this.convert.connect(user).convertDepositedLP(GeneralFunctionEncoder.convertExactUniswapBeansOutInLP('1','1000'),['2'],['1'], false))
           .to.be.revertedWith('Convert: Not enough Beans.');
       });
     })
@@ -277,7 +278,7 @@ describe('Convert', function () {
       beforeEach(async function () {
         await this.pair.simulateTrade('40000', '10000');
         await this.silo.connect(user).depositLP('1',false);
-        this.result = await this.convert.connect(user).convertDepositedLP('1','100',['2'],['1'], false);
+        this.result = await this.convert.connect(user).convertDepositedLP(GeneralFunctionEncoder.convertExactUniswapBeansOutInLP('1','100'),['2'],['1'], false);
       });
   
       it('properly updates total values', async function () {
@@ -307,7 +308,7 @@ describe('Convert', function () {
         await this.pair.simulateTrade('200000', '50000');
         await this.silo.connect(user).depositLP('1', false);
         await this.season.siloSunrise(0);
-        this.result = await this.convert.connect(user).convertDepositedLP('1','100',['2'],['1'], false);
+        this.result = await this.convert.connect(user).convertDepositedLP(GeneralFunctionEncoder.convertExactUniswapBeansOutInLP('1','100'),['2'],['1'], false);
       });
   
       it('properly updates total values', async function () {
@@ -338,7 +339,7 @@ describe('Convert', function () {
         await this.silo.connect(user).depositLP('2', false);
         await this.season.siloSunrise(0);
         await this.silo.connect(user).depositLP('1', false);
-        this.result = await this.convert.connect(user).convertDepositedLP('2','100',['3','2'],['1','1'], false);
+        this.result = await this.convert.connect(user).convertDepositedLP(GeneralFunctionEncoder.convertExactUniswapBeansOutInLP('2','100'),['3','2'],['1','1'], false);
       });
   
       it('properly updates total values', async function () {
@@ -374,7 +375,7 @@ describe('Convert', function () {
       it('reverts', async function () {
         await this.silo.connect(user).depositBeans('20000', this.updateSettings);
         await this.pair.simulateTrade('10000', '40000');
-        await expect(this.convert.connect(user).convertDepositedBeans('5000','2',['2', '4'],['20000'], false))
+        await expect(this.convert.connect(user).convertDepositedBeans(GeneralFunctionEncoder.convertExactUniswapSellBeansAndAddLP('5000','2'),['2', '4'],['20000'], false))
           .to.be.revertedWith('Convert: Not enough LP.');
         await this.pair.set('10000', '40000', '1');
       });

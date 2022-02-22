@@ -20,8 +20,7 @@ contract ConvertFacet is ConvertSilo {
     using SafeMath for uint32;
 
     function convertDepositedBeans(
-        uint256 beans,
-        uint256 minLP,
+        bytes calldata userData,
         uint32[] memory crates,
         uint256[] memory amounts,
         bool partialUpdateSilo
@@ -29,7 +28,7 @@ contract ConvertFacet is ConvertSilo {
         external 
     {
         LibInternal.updateSilo(msg.sender, partialUpdateSilo);
-        (uint256 lp, uint256 beansConverted) = LibConvert.sellToPegAndAddLiquidity(beans, minLP);
+        (uint256 lp, uint256 beansConverted) = LibConvert.sellToPegAndAddLiquidity(userData);
         (uint256 beansRemoved, uint256 stalkRemoved) = _withdrawBeansForConvert(crates, amounts, beansConverted);
         require(beansRemoved == beansConverted, "Silo: Wrong Beans removed.");
         uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(C.getSeedsPerLPBean())));
@@ -41,8 +40,7 @@ contract ConvertFacet is ConvertSilo {
     }   
 
     function convertDepositedLP(
-        uint256 lp,
-        uint256 minBeans,
+        bytes calldata userData,
         uint32[] memory crates,
         uint256[] memory amounts,
         bool partialUpdateSilo
@@ -50,7 +48,7 @@ contract ConvertFacet is ConvertSilo {
         external
     {
         LibInternal.updateSilo(msg.sender, partialUpdateSilo);
-        (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
+        (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(userData);
         (uint256 lpRemoved, uint256 stalkRemoved) = _withdrawLPForConvert(crates, amounts, lpConverted);
         require(lpRemoved == lpConverted, "Silo: Wrong LP removed.");
         uint32 _s = uint32(stalkRemoved.div(beans.mul(C.getSeedsPerBean())));

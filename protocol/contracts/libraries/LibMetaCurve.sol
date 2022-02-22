@@ -14,7 +14,7 @@ interface IMeta3Curve {
 }
 
 interface IDepositZapCurve {
-    function add_liquidity(uint256[] calldata amounts, uint256 min_mint_amount) external returns (uint256);
+    function add_liquidity(uint256[] memory amounts, uint256 min_mint_amount) external returns (uint256);
     function remove_liquidity_one_coin(uint256 _token_amount, int128 i, uint256 min_amount) external returns (uint256);
     function balances(int128 i) external view returns (uint256);
     function fee() external view returns (uint256);
@@ -65,7 +65,7 @@ library LibMetaCurve {
         coin_amount_received = IDepositZapCurve(POOL).remove_liquidity_one_coin(_token_amount, i, min_amount);
     }
 
-    function addLiquidity(uint256[] calldata amounts, uint256 min_mint_amount) internal returns (uint256 lp_added) {
+    function addLiquidity(uint256[] memory amounts, uint256 min_mint_amount) internal returns (uint256 lp_added) {
         lp_added = IDepositZapCurve(POOL).add_liquidity(amounts, min_mint_amount);
     }
     

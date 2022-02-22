@@ -18,40 +18,61 @@ pragma experimental ABIEncoderV2;
 
 library LibConvertUserData {
     // In order to preserve backwards compatibility, make sure new kinds are added at the end of the enum.
-    enum ExitKind {
-        EXACT_CURVE_LP_OUT_IN_BEANS,
-        UNISWAP_REMOVE_BEAN_AND_BUY_LP // for ManagedPool
+    enum BuyToPegKind {
+        EXACT_UNISWAP_REMOVE_BEAN_AND_ADD_LP,
+        EXACT_CURVE_LP_OUT_IN_BEANS
     }
 
-    enum DepositKind {
-        CURVE_ADD_LP,
-        UNISWAP_ADD_LP
+    enum SellToPegKind {
+        EXACT_UNISWAP_SELL_BEANS_AND_ADD_LP,
+        EXACT_CURVE_ADD_LP_IN_BEANS
     }
 
-    function exitKind(bytes memory self) internal pure returns (ExitKind) {
-        return abi.decode(self, (ExitKind));
+    function buyToPegKind(bytes memory self) internal pure returns (BuyToPegKind) {
+        return abi.decode(self, (BuyToPegKind));
     }
 
-    function depositKind(bytes memory self) internal pure returns (DepositKind) {
-        return abi.decode(self, (DepositKind));
+    function sellToPegKind(bytes memory self) internal pure returns (SellToPegKind) {
+        return abi.decode(self, (SellToPegKind));
     }
 
     // SellToPegAndAddLiquidity Functions
 
-    function initialAmountsIn(bytes memory self) internal pure returns (uint256[] memory amountsIn) {
-        (, amountsIn) = abi.decode(self, (DepositKind, uint256[]));
+    function exactCurveAddLPInBeans(bytes memory self)
+        internal
+        pure
+        returns (uint256 beans, uint256 minLP)
+    {
+        (, beans, minLP) = abi.decode(self, (SellToPegKind, uint256, uint256));
     }
 
+    function exactUniswapSellBeansAndAddLP(bytes memory self)
+        internal
+        pure
+        returns (uint256 beans, uint256 minLP)
+    {
+        (, beans, minLP) = abi.decode(self, (SellToPegKind, uint256, uint256));
+    }
+
+    // BuyToPeg Functions
     function exactCurveLPOutInBeans(bytes memory self)
         internal
         pure
         returns (uint256 minLPAmountOut)
     {
-        (, minLPAmountOut) = abi.decode(self, (ExitKind, uint256));
+        (, minLPAmountOut) = abi.decode(self, (BuyToPegKind, uint256));
+    }
+
+    function exactUniswapBeansOutInLP(bytes memory self)
+        internal
+        pure
+        returns (uint256 lp, uint256 minBeans)
+    {
+        (, lp, minBeans) = abi.decode(self, (BuyToPegKind, uint256, uint256));
     }
 
     function tokenInForExactBptOut(bytes memory self) internal pure returns (uint256 bptAmountOut, uint256 tokenIndex) {
-        (, bptAmountOut, tokenIndex) = abi.decode(self, (DepositKind, uint256, uint256));
+        (, bptAmountOut, tokenIndex) = abi.decode(self, (SellToPegKind, uint256, uint256));
     }
 
 }
