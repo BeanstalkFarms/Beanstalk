@@ -77,6 +77,10 @@ library LibMetaCurve {
         require(false, "Price: Convergence false");
     }
 
+    function getDFromBalances(uint256[2] memory balances) internal view returns (uint) {
+        return getD(getXP(balances), IMeta3Curve(POOL).A_precise());
+    }
+
     function getD(uint256[2] memory xp, uint256 a) private pure returns (uint D) {
         // Solution is taken from pool contract: 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD
         uint256 S;

@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/lib/contracts/libraries/FixedPoint.sol";
 import "../interfaces/IBean.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -110,6 +111,12 @@ contract MockUniswapV2Pair {
         reserve0 = newReserve0;
         reserve1 = newReserve1;
         blockTimestampLast = blockTimestamp;
+    }
+    
+    function reset_cumulative() external {
+        blockTimestampLast = uint32(block.timestamp % 2 ** 32);
+        price0CumulativeLast = uint(FixedPoint.fraction(reserve1, reserve0)._x);
+        price1CumulativeLast = uint(FixedPoint.fraction(reserve0, reserve1)._x);
     }
 
     function token0() external view returns (address) { return token; }

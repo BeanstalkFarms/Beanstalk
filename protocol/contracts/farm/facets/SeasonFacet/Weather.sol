@@ -60,7 +60,7 @@ contract Weather is Silo {
      * Internal
     **/
 
-    function stepWeather(uint256 int_price, uint256 endSoil) internal {
+    function stepWeather(int256 deltaB, uint256 endSoil) internal {
 
         if (bean().totalSupply() == 0) {
             s.w.yield = 1;
@@ -86,7 +86,7 @@ contract Weather is Silo {
         else if (podRate.greaterThanOrEqualTo(C.getLowerBoundPodRate())) caseId = 8;
 
         if (
-            int_price > 1e18 || (int_price == 1e18 &&
+            deltaB > 0 || (deltaB == 0  &&
             podRate.lessThanOrEqualTo(C.getOptimalPodRate()))
         ) {
             caseId += 4;

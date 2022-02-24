@@ -133,8 +133,6 @@ contract Storage {
         uint256 roots;
     }
 
-    // Season
-
     struct Oracle {
         bool initialized;
         uint256 cumulative;
@@ -182,6 +180,12 @@ contract Storage {
         uint32 seeds;
         uint32 stalk;
     }
+
+    struct COracle {
+        bool initialized;
+        uint256[] balances;
+        uint256 timestamp;
+    }
 }
 
 struct AppStorage {
@@ -216,4 +220,5 @@ struct AppStorage {
     mapping(bytes32 => uint256) podOrders;
     mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
+    Storage.COracle co;
 }

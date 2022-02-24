@@ -56,13 +56,10 @@ contract MockSeasonFacet is SeasonFacet {
         mockStepSilo(amount);
     }
 
-    function sunSunrise(uint256 beanPrice, uint256 usdcPrice, uint256 divisor) public {
+    function sunSunrise(int256 deltaB) public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
-        uint256 siloReward = stepSun(
-            Decimal.ratio(beanPrice, divisor),
-            Decimal.ratio(usdcPrice, divisor)
-        );
+        uint256 siloReward = stepSun(deltaB);
         s.bean.deposited = s.bean.deposited.add(siloReward);
     }
 
@@ -214,6 +211,8 @@ contract MockSeasonFacet is SeasonFacet {
         delete s.w;
         delete s.g;
         delete s.r;
+        delete s.o;
+        delete s.co;
         delete s.v1SI;
         delete s.season;
         delete s.unclaimedRoots;
@@ -235,7 +234,7 @@ contract MockSeasonFacet is SeasonFacet {
         uint256 lastDSoil,
         uint256 startSoil,
         uint256 endSoil,
-        uint256 intPrice,
+        int256 deltaB,
         bool raining,
         bool rainRoots
     ) public {
@@ -244,7 +243,7 @@ contract MockSeasonFacet is SeasonFacet {
         s.f.pods = pods;
         s.w.lastDSoil = lastDSoil;
         s.w.startSoil = startSoil;
-        stepWeather(intPrice.mul(1e16), endSoil);
+        stepWeather(deltaB, endSoil);
     }
 
 }

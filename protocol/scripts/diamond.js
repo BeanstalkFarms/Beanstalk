@@ -325,7 +325,7 @@ async function upgrade ({
 
 async function upgradeWithNewFacets ({
   diamondAddress,
-  facetNames,
+  facetNames = [],
   facetLibraries = {},
   libraryNames = [],
   selectorsToRemove = [],
