@@ -4,57 +4,35 @@ pragma experimental ABIEncoderV2;
 
 library LibConvertUserData {
     // In order to preserve backwards compatibility, make sure new kinds are added at the end of the enum.
-    enum BuyToPegKind {
-        EXACT_UNISWAP_REMOVE_BEAN_AND_ADD_LP,
-        EXACT_CURVE_LP_OUT_IN_BEANS
+    enum ConvertKind {
+        UNISWAP_ADD_LP_IN_BEANS,
+        CURVE_ADD_LP_IN_BEANS,
+        UNISWAP_ADD_BEANS_IN_LP,
+        CURVE_ADD_BEANS_IN_LP,
+        UNISWAP_BUY_TO_PEG_AND_CURVE_SELL_TO_PEG,
+        CURVE_BUY_TO_PEG_AND_UNISWAP_SELL_TO_PEG
     }
 
-    enum SellToPegKind {
-        EXACT_UNISWAP_SELL_BEANS_AND_ADD_LP,
-        EXACT_CURVE_ADD_LP_IN_BEANS
-    }
-
-    function buyToPegKind(bytes memory self) internal pure returns (BuyToPegKind) {
-        return abi.decode(self, (BuyToPegKind));
-    }
-
-    function sellToPegKind(bytes memory self) internal pure returns (SellToPegKind) {
-        return abi.decode(self, (SellToPegKind));
+    function convertKind(bytes memory self) internal pure returns (ConvertKind) {
+        return abi.decode(self, (ConvertKind));
     }
 
     // SellToPegAndAddLiquidity Functions
-
-    function exactCurveAddLPInBeans(bytes memory self)
+    function addLPInBeans(bytes memory self)
         internal
         pure
         returns (uint256 beans, uint256 minLP)
     {
-        (, beans, minLP) = abi.decode(self, (SellToPegKind, uint256, uint256));
-    }
-
-    function exactUniswapSellBeansAndAddLP(bytes memory self)
-        internal
-        pure
-        returns (uint256 beans, uint256 minLP)
-    {
-        (, beans, minLP) = abi.decode(self, (SellToPegKind, uint256, uint256));
+        (, beans, minLP) = abi.decode(self, (ConvertKind, uint256, uint256));
     }
 
     // BuyToPeg Functions
-    function exactCurveLPOutInBeans(bytes memory self)
-        internal
-        pure
-        returns (uint256 minLPAmountOut)
-    {
-        (, minLPAmountOut) = abi.decode(self, (BuyToPegKind, uint256));
-    }
-
-    function exactUniswapBeansOutInLP(bytes memory self)
+    function addBeansInLP(bytes memory self)
         internal
         pure
         returns (uint256 lp, uint256 minBeans)
     {
-        (, lp, minBeans) = abi.decode(self, (BuyToPegKind, uint256, uint256));
+        (, lp, minBeans) = abi.decode(self, (ConvertKind, uint256, uint256));
     }
 
 }

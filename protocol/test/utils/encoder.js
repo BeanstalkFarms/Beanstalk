@@ -1,13 +1,12 @@
 const { defaultAbiCoder } = require('@ethersproject/abi');
 
-const BuyToPegKind = {
-  EXACT_UNISWAP_REMOVE_BEAN_AND_ADD_LP: 0,
-  EXACT_CURVE_LP_OUT_IN_BEANS: 1
-}
-
-const SellToPegKind = {
-  EXACT_UNISWAP_SELL_BEANS_AND_ADD_LP: 0,
-  EXACT_CURVE_ADD_LP_IN_BEANS: 1
+const ConvertKind = {
+  UNISWAP_ADD_LP_IN_BEANS: 0,
+  CURVE_ADD_LP_IN_BEANS: 1,
+  UNISWAP_ADD_BEANS_IN_LP: 2,
+  CURVE_ADD_BEANS_IN_LP: 3,
+  UNISWAP_BUY_TO_PEG_AND_CURVE_SELL_TO_PEG: 4,
+  CURVE_BUY_TO_PEG_AND_UNISWAP_SELL_TO_PEG: 5
 }
 
 class GeneralFunctionEncoder {
@@ -25,33 +24,34 @@ class GeneralFunctionEncoder {
    * @param lp - the amount of lp to be removed
    * @param minBeans - the index of the token to be provided as liquidity
    */
-  static convertExactUniswapBeansOutInLP = (lp, minBeans) =>
+  static convertUniswapAddBeansInLP = (lp, minBeans) =>
     defaultAbiCoder.encode(
       ['uint256', 'uint256', 'uint256'],
-      [BuyToPegKind.EXACT_UNISWAP_REMOVE_BEAN_AND_ADD_LP, lp, minBeans]
+      [ConvertKind.UNISWAP_ADD_BEANS_IN_LP, lp, minBeans]
     );
 
   /**
    * Encodes the userData parameter for removing a set amount of LP for beans using Curve Pool
-   * @param minLPAmountOut - the amount of LP to be removed
+   * @param lp - the amount of lp to be removed
+   * @param minBeans - the index of the token to be provided as liquidity
    */
-  static convertExactCurveLPOutInBeans = (minLPAmountOut) =>
+  static convertCurveAddBeansInLP = (lp, minBeans) =>
     defaultAbiCoder.encode(
       ['uint256', 'uint256'],
-      [BuyToPegKind.EXACT_CURVE_LP_OUT_IN_BEANS, minLPAmountOut]
+      [ConvertKind.CURVE_ADD_BEANS_IN_LP, lp, minBeans]
     );
 
   // Sell to Peg functions
 
   /**
-   * Encodes the userData parameter for removing BEAN/ETH lp, then converting that Bean to LP using Uniswap Pool
+   * Encodes the userData parameter for removing BEAN/ETH lp, then converting that Bean to LP using Curve Pool
    * @param beans - the amount of lp to be removed
    * @param minLP - the index of the token to be provided as liquidity
    */
-  static convertExactCurveAddLPInBeans = (beans, minLP) =>
-  defaultAbiCoder.encode(
+  static convertCurveAddLPInBeans = (beans, minLP) =>
+    defaultAbiCoder.encode(
     ['uint256', 'uint256', 'uint256'],
-    [SellToPegKind.EXACT_CURVE_ADD_LP_IN_BEANS, beans, minLP]
+    [ConvertKind.CURVE_ADD_LP_IN_BEANS, beans, minLP]
   );
 
   /**
@@ -59,10 +59,10 @@ class GeneralFunctionEncoder {
    * @param beans - the amount of lp to be removed
    * @param minLP - the index of the token to be provided as liquidity
    */
-   static convertExactUniswapSellBeansAndAddLP = (beans, minLP) =>
-   defaultAbiCoder.encode(
+   static convertUniswapAddLPInBeans = (beans, minLP) =>
+    defaultAbiCoder.encode(
      ['uint256', 'uint256', 'uint256'],
-     [SellToPegKind.EXACT_UNISWAP_SELL_BEANS_AND_ADD_LP, beans, minLP]
+     [ConvertKind.UNISWAP_ADD_LP_IN_BEANS, beans, minLP]
    );
 }
 
