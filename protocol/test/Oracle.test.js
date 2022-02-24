@@ -248,10 +248,11 @@ describe('Oracle', function () {
     });
   });
 
-  describe("Delta B Overall", async function {
+  describe("Delta B Overall", async function () {
     it("Delta B Overall", async function () {
-
-
+      this.result = await this.oracle.captureE();
+      await expect(this.result).to.emit(this.oracle, 'DeltaB').withArgs('0');
+      
     });
   })
 

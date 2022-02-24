@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/lib/contracts/libraries/FixedPoint.sol";
 import "../interfaces/IBean.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius

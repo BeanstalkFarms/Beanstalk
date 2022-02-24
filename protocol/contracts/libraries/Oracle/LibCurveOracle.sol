@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import "../Decimal.sol";
 import "../LibMetaCurve.sol";
 import "../LibAppStorage.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius

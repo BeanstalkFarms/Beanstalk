@@ -1,6 +1,3 @@
-import "hardhat/console.sol";
-
-
 contract MockBean3Curve {
     uint256 a;
     uint256[2] balances;
@@ -39,7 +36,6 @@ contract MockBean3Curve {
 
     function reset_cumulative() external {
         timestamp_last = block.timestamp;
-        console.log("setting timestamp: %s", block.timestamp);
         price_cumulative_last = balances;
     }
 

@@ -7,7 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/OracleFacet.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -38,14 +37,11 @@ contract MockOracleFacet is OracleFacet {
 
     function captureUniswapE() external returns (int256 deltaB) {
         deltaB = captureUniswap();
-        console.log("db: %s", uint256(-deltaB));
-        console.log("db: %s", uint256(deltaB));
         emit DeltaB(deltaB);
     }
 
     function updateTWAPCurveE() external returns (uint256[2] memory balances) {
         balances = LibCurveOracle.updateTWAP();
-        console.log("Balances: %s, %s", balances[0], balances[1]);
         emit UpdateTWAPs(balances);
     }
 

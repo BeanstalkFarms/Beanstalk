@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import "../../libraries/Decimal.sol";
 import "../../libraries/UniswapV2OracleLibrary.sol";
 import "../LibAppStorage.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -55,8 +54,6 @@ contract LibUniswapOracle {
         uint256[2] memory prices = updateTWAP();
 
         (uint256 eth_reserve, uint256 bean_reserve) = lockedReserves();
-        console.log("Eth Reserve: %s", eth_reserve);
-        console.log("Bean Reserve: %s", bean_reserve);
         int256 currentBeans = int256(sqrt(
             bean_reserve.mul(eth_reserve).mul(1e6).div(prices[0])
         ));
@@ -77,11 +74,6 @@ contract LibUniswapOracle {
 
         uint32 timeElapsed = blockTimestamp - s.o.timestamp; // overflow is desired
         uint32 pegTimeElapsed = peg_blockTimestamp - s.o.pegTimestamp; // overflow is desired
-
-        console.log("new: %s, old: %s", priceCumulative, s.o.cumulative);
-        console.log("diff: %s", priceCumulative - s.o.cumulative);
-        console.log("hm: %s", (priceCumulative - s.o.cumulative)/(2**112));
-        console.log("elapsed: %s", timeElapsed);
 
         uint256 price1 = (priceCumulative - s.o.cumulative) / timeElapsed;
         uint256 price2 = (peg_priceCumulative - s.o.pegCumulative) / pegTimeElapsed;
