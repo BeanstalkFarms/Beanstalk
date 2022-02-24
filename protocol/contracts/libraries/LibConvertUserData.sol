@@ -35,4 +35,19 @@ library LibConvertUserData {
         (, lp, minBeans) = abi.decode(self, (ConvertKind, uint256, uint256));
     }
 
+    function uniswapBuyToPegAndCurveSellToPeg(bytes memory self)
+        internal
+        pure
+        returns (uint256 uniswapLP, uint256 minBeans, uint256 beans, uint256 minCurveLP)
+    {
+        (, uniswapLP, minBeans, beans, minCurveLP) = abi.decode(self, (ConvertKind, uint256, uint256, uint256, uint256));
+    }
+
+    function curveBuyToPegAndUniswapSellToPeg(bytes memory self)
+        internal
+        pure
+        returns (uint256 curveLP, uint256 minBeans, uint256 beans, uint256 minUniswapLP)
+    {
+        (, curveLP, minBeans, beans, minUniswapLP) = abi.decode(self, (ConvertKind, uint256, uint256, uint256, uint256));
+    }
 }

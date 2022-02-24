@@ -25,21 +25,29 @@ library LibConvert {
     using SafeMath for uint256;
     using LibConvertUserData for bytes;
 
-    // function sellToPegAndAddLiquidity(uint256 beans, uint256 minLP)
-    //     internal
-    //     returns (uint256 lp, uint256 beansConverted)
-    // {
-    //     (uint256 ethReserve, uint256 beanReserve) = reserves();
-    //     uint256 maxSellBeans = beansToPeg(ethReserve, beanReserve);
-    //     require(maxSellBeans > 0, "Convert: P must be > 1.");
-    //     uint256 sellBeans = calculateSwapInAmount(beanReserve, beans);
-    //     if (sellBeans > maxSellBeans) sellBeans = maxSellBeans;
+    function convert(bytes memory userData)
+        internal
+        returns (uint256 toTokenAmount, uint256 fromTokenAmountConverted)
+    {
+        LibConvertUserData.ConvertKind kind = userData.convertKind();
 
-    //     (uint256 beansSold, uint256 wethBought) = LibMarket._sell(sellBeans, 1, address(this));
-    //     (beansConverted,, lp) = LibMarket._addLiquidityWETH(wethBought,beans.sub(beansSold),1,1);
-    //     require(lp >= minLP, "Convert: Not enough LP.");
-    //     beansConverted = beansConverted + beansSold;
-    // }
+        if (kind == LibConvertUserData.ConvertKind.CURVE_ADD_LP_IN_BEANS) {
+            (toTokenAmount, fromTokenAmountConverted) = _convertCurveAddLPInBeans(userData);
+        } else if (kind == LibConvertUserData.ConvertKind.UNISWAP_ADD_LP_IN_BEANS) {
+            (toTokenAmount, fromTokenAmountConverted) = _convertUniswapAddLPInBeans(userData);
+        } else if (kind == LibConvertUserData.ConvertKind.CURVE_ADD_BEANS_IN_LP) {
+            (toTokenAmount, fromTokenAmountConverted) = _convertCurveAddBeansInLP(userData);
+        } else if (kind == LibConvertUserData.ConvertKind.UNISWAP_ADD_BEANS_IN_LP) {
+            (toTokenAmount, fromTokenAmountConverted) = _convertUniswapAddBeansInLP(userData);
+        } else if (kind == LibConvertUserData.ConvertKind.UNISWAP_BUY_TO_PEG_AND_CURVE_SELL_TO_PEG) {
+            (toTokenAmount, fromTokenAmountConverted) = _convertUniswapAddLPInBeans(userData);
+        } else if (kind == LibConvertUserData.ConvertKind.CURVE_BUY_TO_PEG_AND_UNISWAP_SELL_TO_PEG) {
+            (toTokenAmount, fromTokenAmountConverted) = _convertUniswapAddLPInBeans(userData);
+        } 
+        // else {
+        //     _revert(Errors.UNHANDLED_EXIT_KIND);
+        // }
+    }
 
     function sellToPegAndAddLiquidity(bytes memory userData)
         internal
