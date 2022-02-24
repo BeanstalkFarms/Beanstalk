@@ -19,25 +19,25 @@ contract ConvertFacet is ConvertSilo {
     using SafeMath for uint256;
     using SafeMath for uint32;
 
-    function convertDepositedTokens(
-        bytes calldata userData,
-        uint32[] memory crates,
-        uint256[] memory amounts,
-        bool partialUpdateSilo
-    )
-        external 
-    {
-        LibInternal.updateSilo(msg.sender, partialUpdateSilo);
-        (uint256 toTokenAmount, uint256 fromTokenAmountConverted) = LibConvert.convert(userData);
-        (uint256 beansRemoved, uint256 stalkRemoved) = _withdrawBeansForConvert(crates, amounts, beansConverted);
-        require(beansRemoved == beansConverted, "Silo: Wrong Beans removed.");
-        uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(C.getSeedsPerLPBean())));
-        _s = getDepositSeason(_s);
+    // function convertDepositedTokens(
+    //     bytes calldata userData,
+    //     uint32[] memory crates,
+    //     uint256[] memory amounts,
+    //     bool partialUpdateSilo
+    // )
+    //     external 
+    // {
+    //     LibInternal.updateSilo(msg.sender, partialUpdateSilo);
+    //     (uint256 toTokenAmount, uint256 fromTokenAmountConverted) = LibConvert.convert(userData);
+    //     (uint256 beansRemoved, uint256 stalkRemoved) = _withdrawBeansForConvert(crates, amounts, beansConverted);
+    //     require(beansRemoved == beansConverted, "Silo: Wrong Beans removed.");
+    //     uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(C.getSeedsPerLPBean())));
+    //     _s = getDepositSeason(_s);
 
-        _depositLP(lp, beansConverted, _s);
-        LibCheck.balanceCheck();
-        LibSilo.updateBalanceOfRainStalk(msg.sender);
-    }  
+    //     _depositLP(lp, beansConverted, _s);
+    //     LibCheck.balanceCheck();
+    //     LibSilo.updateBalanceOfRainStalk(msg.sender);
+    // }  
 
     function convertDepositedBeans(
         bytes calldata userData,
