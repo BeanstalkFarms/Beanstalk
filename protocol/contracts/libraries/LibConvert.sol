@@ -167,7 +167,7 @@ library LibConvert {
         (outAmount, inAmount) = _uniswapSellToPegAndAddLiquidity(beans, minLP);
         outToken = s.c.pair;
         inToken = s.c.bean;
-        bdv = LibTokenSilo.beanDenominatedValue(outToken, outAmount);
+        bdv = 0; //LibTokenSilo.beanDenominatedValue(outToken, outAmount);
     }
 
     function _convertCurveAddLPInBeans(bytes memory userData) private returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv) {
