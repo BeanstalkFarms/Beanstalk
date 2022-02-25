@@ -27,23 +27,25 @@ library LibConvert {
 
     function convert(bytes memory userData)
         internal
-        returns (uint256 toTokenAmount, uint256 fromTokenAmountConverted)
+        returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv)
     {
         LibConvertUserData.ConvertKind kind = userData.convertKind();
 
         if (kind == LibConvertUserData.ConvertKind.CURVE_ADD_LP_IN_BEANS) {
-            (toTokenAmount, fromTokenAmountConverted) = _convertCurveAddLPInBeans(userData);
+            (outToken, inToken, outAmount, inAmount, bdv) = _convertCurveAddLPInBeans(userData);
         } else if (kind == LibConvertUserData.ConvertKind.UNISWAP_ADD_LP_IN_BEANS) {
-            (toTokenAmount, fromTokenAmountConverted) = _convertUniswapAddLPInBeans(userData);
+            (outToken, inToken, outAmount, inAmount, bdv) = _convertUniswapAddLPInBeans(userData);
         } else if (kind == LibConvertUserData.ConvertKind.CURVE_ADD_BEANS_IN_LP) {
-            (toTokenAmount, fromTokenAmountConverted) = _convertCurveAddBeansInLP(userData);
+            (outToken, inToken, outAmount, inAmount, bdv) = _convertCurveAddBeansInLP(userData);
         } else if (kind == LibConvertUserData.ConvertKind.UNISWAP_ADD_BEANS_IN_LP) {
-            (toTokenAmount, fromTokenAmountConverted) = _convertUniswapAddBeansInLP(userData);
-        } else if (kind == LibConvertUserData.ConvertKind.UNISWAP_BUY_TO_PEG_AND_CURVE_SELL_TO_PEG) {
-            (toTokenAmount, fromTokenAmountConverted) = _convertUniswapAddLPInBeans(userData);
-        } else if (kind == LibConvertUserData.ConvertKind.CURVE_BUY_TO_PEG_AND_UNISWAP_SELL_TO_PEG) {
-            (toTokenAmount, fromTokenAmountConverted) = _convertUniswapAddLPInBeans(userData);
+            (outToken, inToken, outAmount, inAmount, bdv) = _convertUniswapAddBeansInLP(userData);
         } 
+        else if (kind == LibConvertUserData.ConvertKind.UNISWAP_BUY_TO_PEG_AND_CURVE_SELL_TO_PEG) {
+        //     (outToken, inToken, outAmount, inAmount, bdv) = _convertUniswapBuyToPegAndCurveSellToPeg(userData);
+        } else if (kind == LibConvertUserData.ConvertKind.CURVE_BUY_TO_PEG_AND_UNISWAP_SELL_TO_PEG) {
+        //     (outToken, inToken, outAmount, inAmount, bdv) = _convertCurveBuyToPegAndUniswapSellToPeg(userData);
+        } 
+
         // else {
         //     _revert(Errors.UNHANDLED_EXIT_KIND);
         // }
@@ -55,10 +57,18 @@ library LibConvert {
     {
         LibConvertUserData.ConvertKind kind = userData.convertKind();
 
+        address outToken;
+        address inToken;
+        uint256 outAmount;
+        uint256 inAmount;
+        uint256 bdv;
+
         if (kind == LibConvertUserData.ConvertKind.CURVE_ADD_LP_IN_BEANS) {
-            (lp, beansConverted) = _convertCurveAddLPInBeans(userData);
+            (outToken, inToken, outAmount, inAmount, bdv) = _convertCurveAddLPInBeans(userData);
+            return (outAmount, inAmount);
         } else if (kind == LibConvertUserData.ConvertKind.UNISWAP_ADD_LP_IN_BEANS) {
-            (lp, beansConverted) = _convertUniswapAddLPInBeans(userData);
+            (outToken, inToken, outAmount, inAmount, bdv) = _convertUniswapAddLPInBeans(userData);
+            return (outAmount, inAmount);
         } 
         // else {
         //     _revert(Errors.UNHANDLED_EXIT_KIND);
@@ -71,10 +81,18 @@ library LibConvert {
     {
         LibConvertUserData.ConvertKind kind = userData.convertKind();
 
+        address outToken;
+        address inToken;
+        uint256 outAmount;
+        uint256 inAmount;
+        uint256 bdv;
+
         if (kind == LibConvertUserData.ConvertKind.CURVE_ADD_BEANS_IN_LP) {
-            (beans, lpConverted) = _convertCurveAddBeansInLP(userData);
+            (outToken, inToken, outAmount, inAmount, bdv) = _convertCurveAddBeansInLP(userData);
+            return (outAmount, inAmount);
         } else if (kind == LibConvertUserData.ConvertKind.UNISWAP_ADD_BEANS_IN_LP) {
-            (beans, lpConverted) = _convertUniswapAddBeansInLP(userData);
+            (outToken, inToken, outAmount, inAmount, bdv) = _convertUniswapAddBeansInLP(userData);
+            return (outAmount, inAmount);
         } 
         // else {
         //     _revert(Errors.UNHANDLED_EXIT_KIND);
@@ -122,9 +140,7 @@ library LibConvert {
     **/
 
     // Sell To Peg
-    function _convertUniswapAddLPInBeans(bytes memory userData) private returns (uint256 lp, uint256 beansConverted) {
-        (uint256 beans, uint256 minLP) = userData.addLPInBeans();
-        
+    function _uniswapSellToPegAndAddLiquidity(uint256 beans, uint256 minLP) private returns (uint256 lp, uint256 beansConverted) {
         (uint256 ethReserve, uint256 beanReserve) = reserves();
         uint256 maxSellBeans = beansToPeg(ethReserve, beanReserve);
         require(maxSellBeans > 0, "Convert: P must be > 1.");
@@ -137,17 +153,35 @@ library LibConvert {
         beansConverted = beansConverted + beansSold;
     }
 
-    function _convertCurveAddLPInBeans(bytes memory userData) private returns (uint256 lp, uint256 beansConverted) {
-        (uint256 beans, uint256 minLP) = userData.addLPInBeans();
+    function _curveSellToPegAndAddLiquidity(uint256 beans, uint256 minLP) private returns (uint256 lp, uint256 beansConverted) {
         uint256[] memory amounts;
         amounts[0] = beans;
         lp = LibMetaCurve.addLiquidity(amounts, minLP);
         beansConverted = beans;
     }
 
+    function _convertUniswapAddLPInBeans(bytes memory userData) private returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        (uint256 beans, uint256 minLP) = userData.addLPInBeans();
+        (outAmount, inAmount) = _uniswapSellToPegAndAddLiquidity(beans, minLP);
+        outToken = s.c.pair;
+        inToken = s.c.bean;
+        bdv = inAmount;
+    }
+
+    function _convertCurveAddLPInBeans(bytes memory userData) private returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        
+        (uint256 beans, uint256 minLP) = userData.addLPInBeans();
+        (outAmount, inAmount) = _curveSellToPegAndAddLiquidity(beans, minLP);
+        outToken = s.c.pair;
+        inToken = s.c.bean;
+        bdv = inAmount;
+    }
+
     // Buy To Peg
-    function _convertUniswapAddBeansInLP(bytes memory userData) private returns (uint256 beans, uint256 lpConverted) {
-        (uint256 lp, uint256 minBeans) = userData.addBeansInLP();
+    function _uniswapRemoveLPAndBuyToPeg(uint256 lp, uint256 minBeans) private returns (uint256 beans, uint256 lpConverted) {
         lpConverted = lpToPeg();
         require(lpConverted > 0, "Convert: P must be < 1.");
         if (lpConverted > lp) lpConverted = lp;
@@ -158,10 +192,43 @@ library LibConvert {
         require(beans >= minBeans, "Convert: Not enough Beans.");
     }
 
-    function _convertCurveAddBeansInLP(bytes memory userData) private returns (uint256 beans, uint256 lpConverted) {
-        (uint256 lp, uint256 minBeans) = userData.addBeansInLP();
+    function _curveRemoveLPAndBuyToPeg(uint256 lp, uint256 minBeans) private returns (uint256 beans, uint256 lpConverted) {
         beans = LibMetaCurve.removeLiquidityOneCoin(lp, 0, minBeans);
         lpConverted = lp;
+    }
+
+    function _convertUniswapAddBeansInLP(bytes memory userData) private returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        
+        (uint256 lp, uint256 minBeans) = userData.addBeansInLP();
+        (outAmount, inAmount) = _uniswapRemoveLPAndBuyToPeg(lp, minBeans);
+        outToken = s.c.pair;
+        inToken = s.c.bean;
+        bdv = outAmount;
+        
+    }
+
+    function _convertCurveAddBeansInLP(bytes memory userData) private returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        (uint256 lp, uint256 minBeans) = userData.addBeansInLP();
+        (outAmount, inAmount) = _curveRemoveLPAndBuyToPeg(lp, minBeans);
+        outToken = s.c.pair;
+        inToken = s.c.bean;
+        bdv = outAmount;
+    }
+
+    // Multi-Pool Buy To Peg/Sell To Peg Functions
+    function _convertUniswapBuyToPegAndCurveSellToPeg(bytes memory userData) private returns (uint) {
+        (uint256 uniswapLP, uint256 minBeans, uint256 beans, uint256 minCurveLP) = userData.uniswapBuyToPegAndCurveSellToPeg();
+        _uniswapRemoveLPAndBuyToPeg(uniswapLP, minBeans);
+        _curveSellToPegAndAddLiquidity(beans, minCurveLP);
+    }
+
+    function _convertCurveBuyToPegAndUniswapSellToPeg(bytes memory userData) private returns (uint) {
+        (uint256 curveLP, uint256 minBeans, uint256 beans, uint256 minUniswapLP) = userData.curveBuyToPegAndUniswapSellToPeg();
+        _curveRemoveLPAndBuyToPeg(curveLP, minBeans);
+        _uniswapSellToPegAndAddLiquidity(beans, minUniswapLP);
     }
 
     /**
