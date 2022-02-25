@@ -14,6 +14,7 @@ import "./Utils/LibToolShed.sol";
 import "./LibMarket.sol";
 import "./LibAppStorage.sol";
 import "./LibConvertUserData.sol";
+import "./LibMetaCurve.sol";
 
 /**
  * @author Publius
