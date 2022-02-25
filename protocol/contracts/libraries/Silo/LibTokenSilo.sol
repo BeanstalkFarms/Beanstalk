@@ -33,7 +33,7 @@ library LibTokenSilo {
         return (bdv.mul(s.ss[token].seeds), bdv.mul(s.ss[token].stalk));
     }
 
-    function incrementDepositedToken(address token, uint256 amount) private {
+    function incrementDepositedToken(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.siloBalances[IERC20(token)].deposited = s.siloBalances[IERC20(token)].deposited.add(amount);
     }
