@@ -25,4 +25,18 @@ contract MockBean3Curve {
     function set_supply(uint256 _supply) external {
         supply = _supply;
     }
+
+    function add_liquidity(uint256[] memory amounts, uint256 min_mint_amount) external returns (uint256) {
+        uint256[2] memory old_balances = balances;
+        // D0: uint256 = self.get_D_mem(rates, old_balances, amp)
+        uint256[2] memory new_balances = old_balances;
+        for (uint256 i = 0; i < amounts.length; i++) {
+            uint256 amount = amounts[i];
+            if (supply == 0) {
+                require(amount > 0, "dev: initial deposit requires all coins");
+            }
+            new_balances[i] += amount;
+        }
+        
+    }
 }
