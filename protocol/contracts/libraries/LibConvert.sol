@@ -219,16 +219,30 @@ library LibConvert {
     }
 
     // Multi-Pool Buy To Peg/Sell To Peg Functions
-    function _convertUniswapBuyToPegAndCurveSellToPeg(bytes memory userData) private returns (uint) {
+    function _convertUniswapBuyToPegAndCurveSellToPeg(bytes memory userData)
+        private
+        returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv) 
+    {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
         (uint256 uniswapLP, uint256 minBeans, uint256 beans, uint256 minCurveLP) = userData.uniswapBuyToPegAndCurveSellToPeg();
-        _uniswapRemoveLPAndBuyToPeg(uniswapLP, minBeans);
-        _curveSellToPegAndAddLiquidity(beans, minCurveLP);
+        (, uint256 inAmount) = _uniswapRemoveLPAndBuyToPeg(uniswapLP, minBeans);
+        (uint256 outAmount, uint256 bdv) = _curveSellToPegAndAddLiquidity(beans, minCurveLP);
+        address outToken = address(0x3a70DfA7d2262988064A2D051dd47521E43c9BdD);
+        address inToken = s.c.pair;
     }
 
-    function _convertCurveBuyToPegAndUniswapSellToPeg(bytes memory userData) private returns (uint) {
+    function _convertCurveBuyToPegAndUniswapSellToPeg(bytes memory userData)
+        private
+        returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv)
+    {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
         (uint256 curveLP, uint256 minBeans, uint256 beans, uint256 minUniswapLP) = userData.curveBuyToPegAndUniswapSellToPeg();
-        _curveRemoveLPAndBuyToPeg(curveLP, minBeans);
-        _uniswapSellToPegAndAddLiquidity(beans, minUniswapLP);
+        (, uint256 inAmount) = _curveRemoveLPAndBuyToPeg(curveLP, minBeans);
+        (uint256 outAmount, uint256 bdv) = _uniswapSellToPegAndAddLiquidity(beans, minUniswapLP);
+        address outToken = s.c.pair;
+        address inToken = address(0x3a70DfA7d2262988064A2D051dd47521E43c9BdD);
     }
 
     /**
