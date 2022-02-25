@@ -14,7 +14,6 @@ import "./Utils/LibToolShed.sol";
 import "./LibMarket.sol";
 import "./LibAppStorage.sol";
 import "./LibConvertUserData.sol";
-import "./LibMetaCurve.sol";
 
 /**
  * @author Publius
@@ -167,7 +166,7 @@ library LibConvert {
         (outAmount, inAmount) = _uniswapSellToPegAndAddLiquidity(beans, minLP);
         outToken = s.c.pair;
         inToken = s.c.bean;
-        bdv = 0; //LibTokenSilo.beanDenominatedValue(outToken, outAmount);
+        bdv = inAmount;
     }
 
     function _convertCurveAddLPInBeans(bytes memory userData) private returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv) {
@@ -177,7 +176,7 @@ library LibConvert {
         (outAmount, inAmount) = _curveSellToPegAndAddLiquidity(beans, minLP);
         outToken = s.c.pair;
         inToken = s.c.bean;
-        bdv = LibMetaCurve.bdv(outAmount);
+        bdv = inAmount;
     }
 
     // Buy To Peg
