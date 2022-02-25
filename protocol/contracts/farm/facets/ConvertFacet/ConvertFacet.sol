@@ -19,7 +19,7 @@ contract ConvertFacet is ConvertSilo {
     using SafeMath for uint256;
     using SafeMath for uint32;
 
-    // function convertDepositedTokens(
+    // function convert(
     //     bytes calldata userData,
     //     uint32[] memory crates,
     //     uint256[] memory amounts,
@@ -28,14 +28,21 @@ contract ConvertFacet is ConvertSilo {
     //     external 
     // {
     //     LibInternal.updateSilo(msg.sender, partialUpdateSilo);
-    //     (uint256 toTokenAmount, uint256 fromTokenAmountConverted) = LibConvert.convert(userData);
-    //     (uint256 beansRemoved, uint256 stalkRemoved) = _withdrawBeansForConvert(crates, amounts, beansConverted);
-    //     require(beansRemoved == beansConverted, "Silo: Wrong Beans removed.");
-    //     uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(C.getSeedsPerLPBean())));
-    //     _s = getDepositSeason(_s);
 
-    //     _depositLP(lp, beansConverted, _s);
-    //     LibCheck.balanceCheck();
+    //     (   
+    //         address toToken,
+    //         address fromToken,
+    //         uint256 toTokenAmount,
+    //         uint256 fromTokenAmount,
+    //         uint256 bdv
+    //     ) = LibConvert.convert(userData);
+
+    //     (
+    //         uint256 tokensRemoved,
+    //         uint256 stalkRemoved
+    //     ) = _withdrawTokensForConvert(fromToken, crates, amounts, fromTokenAmount);
+
+    //     _depositTokens(toToken, toTokenAmount, bdv, stalkRemoved);
     //     LibSilo.updateBalanceOfRainStalk(msg.sender);
     // }  
 
