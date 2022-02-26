@@ -39,17 +39,19 @@ contract ConvertDeposit {
      * Internal LP
     **/
 
-    function _depositTokens(address token, uint256 amount, uint256 bdv, uint256 bonusStalk) internal {
-        require(bdv > 0, "Silo: No Beans under LP.");
+    function _depositTokens(address token, uint256 amount, uint256 bdv, uint256 grownStalk) internal {
+        require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
         uint256 seeds = s.ss[token].seeds.mul(bdv);
         uint32 _s;
-        if (bonusStalk > 0) {
-            uint32 _s = uint32(bonusStalk.div(seeds));
-            bonusStalk = _s.mul(seeds);
-        } 
-        _s = getDepositSeason(_s);(_s);
-        uint256 stalk = bdv.mul(s.ss[token].stalk).add(bonusStalk);
-        LibSilo.depositSiloAssets(msg.sender, seeds, bdv.mul(s.ss[token].stalk).add(bonusStalk));
+        if (grownStalk > 0) {
+            _s = uint32(grownStalk.div(seeds));
+            uint32 __s = season();
+            if (_s >= __s) _s = __s - 1;
+            grownStalk = _s.mul(seeds);
+            _s = __s - _s;
+        } else _s = season();
+        uint256 stalk = bdv.mul(s.ss[token].stalk).add(grownStalk);
+        LibSilo.depositSiloAssets(msg.sender, seeds, bdv.mul(s.ss[token].stalk).add(grownStalk));
 
         if (token == s.c.bean) {
             LibBeanSilo.incrementDepositedBeans(amount);
@@ -64,7 +66,7 @@ contract ConvertDeposit {
     }
     
     function _depositBeans(uint256 amount, uint32 _s) internal {
-        require(amount > 0, "Silo: No beans.");
+        require(amount > 0, "Convert: No beans.");
         LibBeanSilo.incrementDepositedBeans(amount);
         uint256 stalk = amount.mul(C.getStalkPerBean());
         uint256 seeds = amount.mul(C.getSeedsPerBean());
@@ -75,7 +77,7 @@ contract ConvertDeposit {
     }
 
     function _depositLP(uint256 amount, uint256 lpb, uint32 _s) internal {
-        require(lpb > 0, "Silo: No Beans under LP.");
+        require(lpb > 0, "Convert: No Beans under LP.");
         LibLPSilo.incrementDepositedLP(amount);
         uint256 seeds = lpb.mul(C.getSeedsPerLPBean());
         if (season() == _s) LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000));
@@ -106,6 +108,6 @@ contract ConvertDeposit {
     function getDepositSeason(uint32 _s) internal view returns (uint32) {
         uint32 __s = season();
         if (_s >= __s) _s = __s - 1;
-        return uint32(__s.sub(_s));
+        return uint32(__s - _s);
     }
 }

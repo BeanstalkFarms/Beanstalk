@@ -26,4 +26,13 @@ contract MockConvertFacet is ConvertFacet {
         (uint256 beansRemoved, uint256 stalkRemoved) = _withdrawForConvert(token, seasons, amounts, maxTokens);
         emit MockConvert(beansRemoved, stalkRemoved);
     }
+
+    function depositForConvertE(
+        address token, 
+        uint256 amount, 
+        uint256 bdv, 
+        uint256 grownStalk
+    ) external {
+        _depositTokens(token, amount, bdv, grownStalk);
+    }
 }

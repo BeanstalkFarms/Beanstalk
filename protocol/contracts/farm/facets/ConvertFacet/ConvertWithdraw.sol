@@ -33,6 +33,7 @@ contract ConvertWithdraw is ConvertDeposit {
         uint256[] memory amounts,
         uint256 maxTokens
     ) internal returns (uint256 beansRemoved, uint256 stalkRemoved) {
+        require(seasons.length == amounts.length, "Convert: seasons, amounts are diff lengths.");
         if (token == s.c.bean) return _withdrawBeansForConvert(seasons, amounts, maxTokens);
         else if (token == s.c.pair) return _withdrawLPForConvert(seasons, amounts, maxTokens);
         return _withdrawTokensForConvert(token, seasons, amounts, maxTokens);
@@ -47,9 +48,8 @@ contract ConvertWithdraw is ConvertDeposit {
         internal
         returns (uint256, uint256)
     {
-        require(seasons.length == amounts.length, "Silo: seasons, amounts are diff lengths.");
         AssetsRemoved memory a = _removeTokensForConvert(token, seasons, amounts, maxTokens);
-        require(a.tokensRemoved == maxTokens, "Silo: Wrong Tokens removed.");
+        require(a.tokensRemoved == maxTokens, "Convert: Not enough tokens removed.");
         a.stalkRemoved = a.stalkRemoved.mul(s.ss[token].seeds);
         LibTokenSilo.decrementDepositedToken(token, a.tokensRemoved);
         LibSilo.withdrawSiloAssets(
@@ -98,7 +98,6 @@ contract ConvertWithdraw is ConvertDeposit {
         internal
         returns (uint256 lpRemoved, uint256 stalkRemoved)
     {
-        require(seasons.length == amounts.length, "Silo: seasons, amounts are diff lengths.");
         uint256 seedsRemoved;
         uint256 depositLP;
         uint256 depositSeeds;
@@ -120,7 +119,7 @@ contract ConvertWithdraw is ConvertDeposit {
             amounts[i] = 0;
             i++;
         }
-        require(lpRemoved == maxLP, "Silo: Wrong Tokens removed.");
+        require(lpRemoved == maxLP, "Convert: Not enough tokens removed.");
         LibLPSilo.decrementDepositedLP(lpRemoved);
         LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
         stalkRemoved = stalkRemoved.sub(seedsRemoved.mul(C.getStalkPerLPSeed()));
@@ -135,7 +134,6 @@ contract ConvertWithdraw is ConvertDeposit {
         internal
         returns (uint256 beansRemoved, uint256 stalkRemoved)
     {
-        require(seasons.length == amounts.length, "Silo: seasons, amounts are diff lengths.");
         uint256 crateBeans;
         uint256 i = 0;
         while ((i < seasons.length) && (beansRemoved < maxBeans)) {
@@ -154,7 +152,7 @@ contract ConvertWithdraw is ConvertDeposit {
             amounts[i] = 0;
             i++;
         }
-        require(beansRemoved == maxBeans, "Silo: Wrong Beans removed.");
+        require(beansRemoved == maxBeans, "Convert: Not enough Beans removed.");
         LibBeanSilo.decrementDepositedBeans(beansRemoved);
         LibSilo.withdrawSiloAssets(msg.sender, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved);
         stalkRemoved = stalkRemoved.sub(beansRemoved.mul(C.getStalkPerBean()));
