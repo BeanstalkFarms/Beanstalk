@@ -225,4 +225,5 @@ struct AppStorage {
     mapping(address => Storage.SiloSettings) ss;
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
     mapping(address => bytes4) convertLPSelectors;
+    address bean3Curve;
 }

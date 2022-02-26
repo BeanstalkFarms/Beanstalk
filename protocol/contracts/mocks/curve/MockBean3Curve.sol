@@ -51,39 +51,38 @@ contract MockBean3Curve {
         supply = _supply;
     }
 
-    // @param _amounts List of amounts of coins to deposit
-    // @param _min_mint_amount Minimum amount of LP tokens to mint from the deposit
+    // // @param _amounts List of amounts of coins to deposit
+    // // @param _min_mint_amount Minimum amount of LP tokens to mint from the deposit
 
-    function add_liquidity(uint256[] memory amounts, uint256 min_mint_amount) external returns (uint256) {
-        uint256[2] memory old_balances = balances;
-        // D0: uint256 = self.get_D_mem(rates, old_balances, amp)
-        uint256[2] memory new_balances = old_balances;
-        uint256 total_supply = supply;
-        uint256 mint_amount = min_mint_amount;
+    // function addLiquidity(uint256[] memory amounts, uint256 min_mint_amount) external returns (uint256) {
+    //     uint256[2] memory old_balances = balances;
+    //     uint256[2] memory new_balances = old_balances;
+    //     uint256 total_supply = supply;
+    //     uint256 mint_amount = min_mint_amount;
 
-        for (uint256 i = 0; i < amounts.length; i++) {
-            uint256 amount = amounts[i];
-            if (total_supply == 0) {
-                require(amount > 0, "dev: initial deposit requires all coins");
-            }
-            new_balances[i].add(amount);
-        }
-        balances = new_balances;
+    //     for (uint256 i = 0; i < amounts.length; i++) {
+    //         uint256 amount = amounts[i];
+    //         if (total_supply == 0) {
+    //             require(amount > 0, "dev: initial deposit requires all coins");
+    //         }
+    //         new_balances[i].add(amount);
+    //     }
+    //     balances = new_balances;
 
-        // Take coins from the sender
-        for (uint256 i = 0; i < amounts.length; i++) {
-            uint256 amount = amounts[i];
-            if (amount > 0)
-                IERC20(coins[i]).transferFrom(msg.sender, address(this), amount);  // dev: failed transfer
-        }
-        //  Mint pool tokens
-        total_supply.add(mint_amount);
-        balanceOf[msg.sender].add(mint_amount);
-        supply = total_supply;
-        return mint_amount;
+    //     // Take coins from the sender
+    //     for (uint256 i = 0; i < amounts.length; i++) {
+    //         uint256 amount = amounts[i];
+    //         if (amount > 0)
+    //             IERC20(coins[i]).transferFrom(msg.sender, address(this), amount);  // dev: failed transfer
+    //     }
+    //     //  Mint pool tokens
+    //     total_supply.add(mint_amount);
+    //     balanceOf[msg.sender].add(mint_amount);
+    //     supply = total_supply;
+    //     return mint_amount;
 
-    }
-
+    // }
+    
     // @openzeppelin/contracts/token/ERC20/ERC20.sol
 
     mapping (address => uint256) private balanceOf;

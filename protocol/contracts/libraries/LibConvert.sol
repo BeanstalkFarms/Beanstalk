@@ -228,7 +228,7 @@ library LibConvert {
         (uint256 uniswapLP, uint256 minBeans, uint256 beans, uint256 minCurveLP) = userData.uniswapBuyToPegAndCurveSellToPeg();
         (, uint256 inAmount) = _uniswapRemoveLPAndBuyToPeg(uniswapLP, minBeans);
         (uint256 outAmount, uint256 bdv) = _curveSellToPegAndAddLiquidity(beans, minCurveLP);
-        address outToken = address(0x3a70DfA7d2262988064A2D051dd47521E43c9BdD);
+        address outToken = s.bean3Curve;
         address inToken = s.c.pair;
     }
 
@@ -242,7 +242,7 @@ library LibConvert {
         (, uint256 inAmount) = _curveRemoveLPAndBuyToPeg(curveLP, minBeans);
         (uint256 outAmount, uint256 bdv) = _uniswapSellToPegAndAddLiquidity(beans, minUniswapLP);
         address outToken = s.c.pair;
-        address inToken = address(0x3a70DfA7d2262988064A2D051dd47521E43c9BdD);
+        address inToken = s.bean3Curve;
     }
 
     /**

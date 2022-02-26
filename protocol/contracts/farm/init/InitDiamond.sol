@@ -72,5 +72,7 @@ contract InitDiamond {
         s.ss[s.c.pair].selector = bytes4(keccak256("uniswapLPtoBDV(address,uint256)")); 
         s.ss[s.c.pair].seeds = 4;
         s.ss[s.c.pair].stalk = 10000;    
+
+        s.bean3Curve = address(0x3a70DfA7d2262988064A2D051dd47521E43c9BdD);
     }
 }
