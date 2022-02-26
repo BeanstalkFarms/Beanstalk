@@ -59,8 +59,7 @@ library LibMetaCurve {
         uint8 i,
         uint256 min_amount
     )
-        internal
-        returns (uint256 coin_amount_received) 
+        internal returns (uint256 coin_amount_received) 
     {
         coin_amount_received = IDepositZapCurve(POOL).remove_liquidity_one_coin(_token_amount, i, min_amount);
     }
