@@ -282,7 +282,6 @@ describe('Claim', function () {
     describe('claim and deposit Beans', function () {
       beforeEach(async function () {
         const beans = await this.bean.balanceOf(userAddress)
-        console.log(this.partialSiloUpdate)
         this.result = await this.silo.connect(user).claimAndDepositBeans('1000', this.partialSiloUpdate, [['27'],[],[],false,true,'0','0', false])
         const newBeans = await this.bean.balanceOf(userAddress)
         this.claimedBeans = newBeans.sub(beans)

@@ -55,8 +55,8 @@ contract Account {
         SeasonOfPlenty sop;
         uint256 roots;
         uint256 wrappedBeans;
-        mapping(IERC20 => mapping(uint32 => Deposit)) deposits;
-        mapping(IERC20 => mapping(uint32 => uint256)) withdrawals;
+        mapping(address => mapping(uint32 => Deposit)) deposits;
+        mapping(address => mapping(uint32 => uint256)) withdrawals;
     }
 }
 
@@ -134,8 +134,6 @@ contract Storage {
         uint256 roots;
     }
 
-    // Season
-
     struct Oracle {
         bool initialized;
         uint256 cumulative;
@@ -183,6 +181,12 @@ contract Storage {
         uint32 seeds;
         uint32 stalk;
     }
+
+    struct COracle {
+        bool initialized;
+        uint256[] balances;
+        uint256 timestamp;
+    }
 }
 
 struct UpdateSettings {
@@ -221,8 +225,9 @@ struct AppStorage {
     mapping (address => bool) isBudget;
     mapping(uint256 => bytes32) podListings;
     mapping(bytes32 => uint256) podOrders;
-    mapping(IERC20 => Storage.AssetSilo) siloBalances;
+    mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
+    Storage.COracle co;
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
     mapping(address => bytes4) convertLPSelectors;
     address bean3Curve;
