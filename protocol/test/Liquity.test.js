@@ -103,8 +103,7 @@ describe('Liquity', function () {
       });
       it('can repay debt', async function () {
 	await this.liquity.connect(user).repayDebtE('2000', 2, Math.floor(Math.random() * 10));
-	await this.liquity.connect(user2).repayDebtE('4000', 2, Math.floor(Math.random() * 10));
-	
+	await this.liquity.connect(user2).repayDebtE('4000', 2, Math.floor(Math.random() * 10));	
       });
     });
     describe('Collateral -> Field', async function () {

@@ -209,9 +209,9 @@ contract MockUniswapV2Router {
         return _pair;
 }
 
-    function setPair(address ppair) public {
+    function setPair(address ppair, address bean, address weth) public {
         _pair = ppair;
-        MockUniswapV2Pair(_pair).setToken2(_weth);
+	MockUniswapV2Pair(_pair).setTokens(bean, weth);
     }
 
     function WETH() public view returns (address){

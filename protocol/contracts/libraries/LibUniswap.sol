@@ -157,7 +157,6 @@ library LibUniswap {
         );
         address pair = pairFor(uniswapFactory, token, s.c.weth);
 	IERC20(token).transfer(pair, amountToken);
-        //TransferHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
         IWETH(s.c.weth).deposit{value: amountETH}();
         assert(IWETH(s.c.weth).transfer(pair, amountETH));
         liquidity = IUniswapV2Pair(pair).mint(to);
@@ -374,8 +373,7 @@ library LibUniswap {
    // returns sorted token addresses, used to handle return values from pairs sorted in this order
     function sortTokens(address tokenA, address tokenB) internal pure returns (address token0, address token1) {
         require(tokenA != tokenB, 'LibUniswap: IDENTICAL_ADDRESSES');
-        //(token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        (token0, token1) = tokenA < tokenB ? (tokenB, tokenA) : (tokenA, tokenB);
+        (token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
         require(token0 != address(0), 'LibUniswap: ZERO_ADDRESS');
     }
 
@@ -383,15 +381,12 @@ library LibUniswap {
     function pairFor(address factory, address tokenA, address tokenB) internal view returns (address pair) {
 	AppStorage storage s = LibAppStorage.diamondStorage();
         (address token0, address token1) = sortTokens(tokenA, tokenB);
-	/*
          pair = address(uint(keccak256(abi.encodePacked(
                 hex'ff',
                 factory,
                 keccak256(abi.encodePacked(token0, token1)),
                 hex'96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f' // init code hash
             ))));
-	   */
-	  pair = s.c.pair;
     }
 
     // fetches and sorts the reserves for a pair
@@ -533,7 +528,7 @@ library LibUniswap {
     function addAndDepositLiquidity(AddLiquidity calldata al) internal returns (uint256) {
 	AppStorage storage s = LibAppStorage.diamondStorage();
 	LibUserBalance.allocatedBeans(al.beanAmount);
-        (uint256 beansDeposited, uint256 ethDeposited, uint256 liquidity) = addLiquidityETH(s.c.bean, al.beanAmount, al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1)); //{value: msg.value}
+        (uint256 beansDeposited, uint256 ethDeposited, uint256 liquidity) = addLiquidityETH(s.c.bean, al.beanAmount, al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1));
         (bool success,) = msg.sender.call{ value: msg.value.sub(ethDeposited) }("");
         require(success, "Market: Refund failed.");
         if (al.beanAmount > beansDeposited) IBean(s.c.bean).transfer(msg.sender, al.beanAmount.sub(beansDeposited));
