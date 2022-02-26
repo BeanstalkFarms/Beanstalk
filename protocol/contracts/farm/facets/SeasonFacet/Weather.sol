@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "../../../libraries/Decimal.sol";
 import "../../../libraries/LibMarket.sol";
+import "../../../libraries/Utils/LibToolShed.sol";
 import "./Silo.sol";
 
 /**
@@ -176,7 +177,7 @@ contract Weather is Silo {
         (uint256 ethBeanPool, uint256 beansBeanPool) = reserves();
         (uint256 ethUSDCPool, uint256 usdcUSDCPool) = pegReserves();
 
-        uint256 newBeans = sqrt(ethBeanPool.mul(beansBeanPool).mul(usdcUSDCPool).div(ethUSDCPool));
+        uint256 newBeans = LibToolShed.sqrt(ethBeanPool.mul(beansBeanPool).mul(usdcUSDCPool).div(ethUSDCPool));
         if (newBeans <= beansBeanPool) return (0,0);
         uint256 beans = newBeans.sub(beansBeanPool);
         beans = beans.mul(10000).div(9985).add(1);
@@ -187,23 +188,6 @@ contract Weather is Silo {
         uint256 eth = numerator / denominator;
 
         return (beans, eth);
-    }
-
-    /**
-     * Shed
-    **/
-
-    function sqrt(uint y) internal pure returns (uint z) {
-        if (y > 3) {
-            z = y;
-            uint x = y / 2 + 1;
-            while (x < z) {
-                z = x;
-                x = (y / x + x) / 2;
-            }
-        } else if (y != 0) {
-            z = 1;
-        }
     }
 
 }

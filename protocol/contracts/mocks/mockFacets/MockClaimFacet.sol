@@ -18,12 +18,13 @@ contract MockClaimFacet is ClaimFacet {
 
     function claimWithAllocationE(
         LibClaim.Claim calldata c,
-        uint256 beansAllocated
+        uint256 beansAllocated,
+        bool partialUpdateSilo
     ) 
         public
         payable
     {
-        LibClaim.claim(c);
+        LibClaim.claim(partialUpdateSilo, c);
         LibMarket.allocateBeans(beansAllocated);
     }
 

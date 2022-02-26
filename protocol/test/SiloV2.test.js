@@ -28,6 +28,7 @@ describe('Silo', function () {
 
     this.siloToken = await ethers.getContractFactory("MockToken");
     this.siloToken = await this.siloToken.deploy("Silo", "SILO")
+    this.updateSettings = [false, false, false];
     await this.siloToken.deployed()
 
     await this.silo2.mockWhitelistToken(

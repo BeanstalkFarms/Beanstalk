@@ -12,6 +12,8 @@ import "../interfaces/IWETH.sol";
 import "../mocks/MockToken.sol";
 import "../mocks/MockUniswapV2Pair.sol";
 import "../mocks/MockUniswapV2Router.sol";
+import "../mocks/curve/MockBean3Curve.sol";
+import "../mocks/curve/Mock3Curve.sol";
 import {AppStorage} from "../farm/AppStorage.sol";
 import {LibMarket} from "../libraries/LibMarket.sol";
 
@@ -31,6 +33,7 @@ contract MockInitDiamond {
         s.c.pegPair = address(new MockUniswapV2Pair(s.c.weth));
         MockUniswapV2Router(mockRouter).setPair(s.c.pair);
         s.c.weth = IUniswapV2Router02(mockRouter).WETH();
+        s.bean3Curve = address(new MockBean3Curve(s.c.bean, address(new Mock3Curve())));
 
         IBean(s.c.bean).approve(mockRouter, uint256(-1));
         IUniswapV2Pair(s.c.pair).approve(mockRouter, uint256(-1));
@@ -46,6 +49,13 @@ contract MockInitDiamond {
 
         s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
         LibMarket.initMarket(s.c.bean, s.c.weth, mockRouter);
+
+        s.ss[s.c.pair].selector = bytes4(keccak256("uniswapLPtoBDV(address,uint256)")); 
+        s.ss[s.c.pair].seeds = 4;
+        s.ss[s.c.pair].stalk = 10000;
+
+        s.ss[s.c.bean].seeds = 1;
+        s.ss[s.c.bean].stalk = 10000;
     }
 
 }

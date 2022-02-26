@@ -17,6 +17,18 @@ interface IMeta3Curve {
     function totalSupply() external view returns (uint256);
 }
 
+interface IDepositZapCurve {
+    function add_liquidity(uint256[] memory amounts, uint256 min_mint_amount) external returns (uint256);
+    function remove_liquidity_one_coin(uint256 _token_amount, int128 i, uint256 min_amount) external returns (uint256);
+    function balances(int128 i) external view returns (uint256);
+    function fee() external view returns (uint256);
+    function coins(uint256 i) external view returns (address);
+    function get_virtual_price() external view returns (uint256);
+    function calc_token_amount(uint256[] calldata amounts, bool deposit) external view returns (uint256);
+    function calc_withdraw_one_coin(uint256 _token_amount, int128 i) external view returns (uint256);
+    function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy) external;
+}
+
 library LibMetaCurve {
     using SafeMath for uint256;
 
@@ -109,5 +121,33 @@ library LibMetaCurve {
     function getXP(uint256[2] memory balances) private view returns (uint256[2] memory xp) {
         xp[0] = balances[0].mul(RATE_MULTIPLIER);
         xp[1] = balances[1].mul(I3Curve(CRV3_POOL).get_virtual_price()).div(PRECISION);
+    }
+
+    function currentPrice() internal view returns (uint256) {
+        uint256[2] memory balances = IMeta3Curve(POOL).get_balances();
+        uint256 totalSupply = IMeta3Curve(POOL).totalSupply();
+        uint256[2] memory xp = getXP(balances);
+        uint256 price = getPrice(xp);
+    }
+
+    function removeLiquidityOneCoin(
+        uint256 _token_amount,
+        uint8 i,
+        uint256 min_amount
+    )
+        internal returns (uint256 coin_amount_received) 
+    {
+        coin_amount_received = IDepositZapCurve(POOL).remove_liquidity_one_coin(_token_amount, i, min_amount);
+    }
+
+    function addLiquidity(uint256[] memory amounts, uint256 min_mint_amount) internal returns (uint256 lp_added) {
+        lp_added = IDepositZapCurve(POOL).add_liquidity(amounts, min_mint_amount);
+    }
+    
+    function getPrice(uint256[2] memory balances, uint256[2] memory rates) private view returns (uint price) {
+        uint256[2] memory balances = IMeta3Curve(POOL).get_balances();
+        uint256 totalSupply = IMeta3Curve(POOL).totalSupply();
+        uint256[2] memory xp = getXP(balances);
+        price = getPrice(xp);
     }
 }

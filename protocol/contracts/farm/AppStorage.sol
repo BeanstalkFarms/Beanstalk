@@ -6,6 +6,7 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/IDiamondCut.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @author Publius
@@ -188,6 +189,12 @@ contract Storage {
     }
 }
 
+struct UpdateSettings {
+    bool toInternalBalance;
+    bool fromInternalBalance;
+    bool partialUpdateSilo;
+}
+
 struct AppStorage {
     uint8 index;
     int8[32] cases;
@@ -221,4 +228,7 @@ struct AppStorage {
     mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
     Storage.COracle co;
+    mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
+    mapping(address => bytes4) convertLPSelectors;
+    address bean3Curve;
 }

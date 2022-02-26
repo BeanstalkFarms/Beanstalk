@@ -55,19 +55,19 @@ contract SiloV2Facet is TokenSilo {
      */
 
     function withdrawTokenBySeason(address token, uint32 season, uint256 amount) external {
-        LibInternal.updateSilo(msg.sender);
+        LibInternal.updateSilo(msg.sender, false);
         _withdrawDeposit(token, season, amount);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
     function withdrawTokenBySeasons(address token, uint32[] calldata seasons, uint256[] calldata amounts) external {
-        LibInternal.updateSilo(msg.sender);
+        LibInternal.updateSilo(msg.sender, false);
         _withdrawDeposits(token, seasons, amounts);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
     function withdrawTokensBySeason(WithdrawSeason[] calldata withdraws) external {
-        LibInternal.updateSilo(msg.sender);
+        LibInternal.updateSilo(msg.sender, false);
         for (uint256 i = 0; i < withdraws.length; i++) {
             _withdrawDeposit(withdraws[i].token, withdraws[i].season, withdraws[i].amount);
         }
@@ -75,7 +75,7 @@ contract SiloV2Facet is TokenSilo {
     }
 
     function withdrawTokensBySeasons(WithdrawSeasons[] calldata withdraws) external {
-        LibInternal.updateSilo(msg.sender);
+        LibInternal.updateSilo(msg.sender, false);
         for (uint256 i = 0; i < withdraws.length; i++) {
             _withdrawDeposits(withdraws[i].token, withdraws[i].seasons, withdraws[i].amounts);
         }

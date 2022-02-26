@@ -44,7 +44,7 @@ describe('Sun', function () {
         await this.bean.mint(this.silo.address, this.testData.beansInSilo)
         await this.silo.incrementDepositedBeansE(this.testData.beansInSilo)
         await this.season.setSoilE(this.testData.soil)
-        await this.silo.depositSiloAssetsE(userAddress, '1', '100000')
+        await this.silo.depositSiloAssetsE(userAddress, '1', '100000', false)
         await this.field.incrementTotalPodsE((parseInt(this.testData.unripenedPods) + parseInt(this.testData.harvestablePods)).toString())
         await this.field.incrementTotalHarvestableE(this.testData.harvestablePods)
         await this.silo.incrementDepositedLPE('1')

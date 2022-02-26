@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "../../../libraries/Silo/LibTokenSilo.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/LibInternal.sol";
+import "../../../libraries/LibUserBalance.sol";
 
 /**
  * @author Publius
@@ -61,7 +62,7 @@ contract TokenSilo {
     **/
 
     function _deposit(address token, uint256 amount) internal {
-        LibInternal.updateSilo(msg.sender);
+        LibInternal.updateSilo(msg.sender, false);
         (uint256 seeds, uint256 stalk) = LibTokenSilo.deposit(msg.sender, token, _season(), amount);
         LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
     }

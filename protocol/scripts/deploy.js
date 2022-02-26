@@ -108,7 +108,7 @@ async function main(scriptName, verbose = true, mock = false) {
       'MockClaimFacet',
       'MockMarketplaceFacet',
       'MockFundraiserFacet',
-      'ConvertFacet',
+      'MockConvertFacet',
       'MockBudgetFacet'],
     ["LibClaim"],
     {
@@ -116,7 +116,7 @@ async function main(scriptName, verbose = true, mock = false) {
       "MockSiloFacet": ["LibClaim"],
       "MockFieldFacet": ["LibClaim"],
       "MockClaimFacet": ["LibClaim"],
-      "ConvertFacet": ["LibClaim"]
+      "MockConvertFacet": ["LibClaim"]
     },
   ) : await deployFacets(
     verbose,

@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "./BeanDibbler.sol";
 import "../../../libraries/LibClaim.sol";
+import "../../../libraries/LibUserBalance.sol";
 
 /**
  * @author Publius
@@ -21,30 +22,32 @@ contract FieldFacet is BeanDibbler {
      * Sow
     **/
 
-    function claimAndSowBeans(uint256 amount, LibClaim.Claim calldata claim)
+    function claimAndSowBeans(uint256 amount, bool partialUpdateSilo, LibClaim.Claim calldata claim)
         external
         returns (uint256)
     {
-        allocateBeans(claim, amount);
+        allocateBeans(claim, amount, partialUpdateSilo);
         return _sowBeans(amount);
     }
 
     function claimBuyAndSowBeans(
         uint256 amount,
         uint256 buyAmount,
+        bool partialUpdateSilo,
         LibClaim.Claim calldata claim
     )
         external
         payable
         returns (uint256)
     {
-        allocateBeans(claim, amount);
+        allocateBeans(claim, amount, partialUpdateSilo);
         uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
         return _sowBeans(amount.add(boughtAmount));
     }
 
-    function sowBeans(uint256 amount) external returns (uint256) {
-        bean().transferFrom(msg.sender, address(this), amount);
+    function sowBeans(uint256 amount, bool fromInternalBalance) external returns (uint256) {
+        if (!fromInternalBalance) bean().transferFrom(msg.sender, address(this), amount);
+        else LibUserBalance._decreaseInternalBalance(msg.sender, bean(), amount, false);
         return _sowBeans(amount);
     }
 
@@ -54,8 +57,8 @@ contract FieldFacet is BeanDibbler {
         return _sowBeans(amount.add(boughtAmount));
     }
 
-    function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {
-        LibClaim.claim(c);
+    function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans, bool partialUpdateSilo) private {
+        LibClaim.claim(partialUpdateSilo, c);
         LibMarket.allocateBeans(transferBeans);
     }
 

@@ -19,6 +19,7 @@ describe('Silo', function () {
     this.pegPair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pegPair);
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
     this.claim = await ethers.getContractAt('MockClaimFacet', this.diamond.address)
+    this.updateSettings = [false, false, false]
 
     await this.pair.simulateTrade('2000', '2');
     await this.season.siloSunrise(0);
@@ -46,7 +47,7 @@ describe('Silo', function () {
   describe('deposit', function () {
     describe('single deposit', function () {
       beforeEach(async function () {
-        this.result = await this.silo.connect(user).depositBeans('1000');
+        this.result = await this.silo.connect(user).depositBeans('1000', this.updateSettings);
       });
   
       it('properly updates the total balances', async function () {
@@ -71,8 +72,8 @@ describe('Silo', function () {
   
     describe('2 deposits same season', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).depositBeans('1000');
-        await this.silo.connect(user).depositBeans('1000');
+        await this.silo.connect(user).depositBeans('1000', this.updateSettings);
+        await this.silo.connect(user).depositBeans('1000', this.updateSettings);
       });
   
       it('properly updates the total balances', async function () {
@@ -92,8 +93,8 @@ describe('Silo', function () {
   
     describe('2 deposits 2 users', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).depositBeans('1000');
-        await this.silo.connect(user2).depositBeans('1000');
+        await this.silo.connect(user).depositBeans('1000', this.updateSettings);
+        await this.silo.connect(user2).depositBeans('1000', this.updateSettings);
       });
   
       it('properly updates the total balances', async function () {
@@ -119,7 +120,7 @@ describe('Silo', function () {
   
     describe('1 deposit with step', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).depositBeans('1000');
+        await this.silo.connect(user).depositBeans('1000', this.updateSettings);
         await this.season.siloSunrise(0);
       });
   
@@ -135,9 +136,9 @@ describe('Silo', function () {
     });
     describe('2 deposits different seasons', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).depositBeans('1000');
+        await this.silo.connect(user).depositBeans('1000', this.updateSettings);
         await this.season.siloSunrise(0);
-        await this.silo.connect(user).depositBeans('1000');
+        await this.silo.connect(user).depositBeans('1000', this.updateSettings);
         await this.season.siloSunrise(0);
       });
   
@@ -160,8 +161,8 @@ describe('Silo', function () {
   describe('withdraw', function () {
     describe('withdraw 1 bean crate', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).depositBeans('1000');
-        this.result = await this.silo.connect(user).withdrawBeans([2],['1000']);
+        await this.silo.connect(user).depositBeans('1000', this.updateSettings);
+        this.result = await this.silo.connect(user).withdrawBeans([2],['1000'], this.updateSettings);
       });
   
       it('properly updates the total balances', async function () {
@@ -185,8 +186,8 @@ describe('Silo', function () {
     });
     describe('withdraw part of a bean crate', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).depositBeans('2000');
-        await this.silo.connect(user).withdrawBeans([2],['1000']);
+        await this.silo.connect(user).depositBeans('2000', this.updateSettings);
+        await this.silo.connect(user).withdrawBeans([2],['1000'], this.updateSettings);
       });
   
       it('properly updates the total balances', async function () {
@@ -205,10 +206,10 @@ describe('Silo', function () {
     });
     describe('2 bean crates', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).depositBeans('1000');
+        await this.silo.connect(user).depositBeans('1000', this.updateSettings);
         await this.season.siloSunrise(0);
-        await this.silo.connect(user).depositBeans('1000');
-        await this.silo.connect(user).withdrawBeans([2,3],['1000','1000']);
+        await this.silo.connect(user).depositBeans('1000', this.updateSettings);
+        await this.silo.connect(user).withdrawBeans([2,3],['1000','1000'], this.updateSettings);
       });
   
       it('properly updates the total balances', async function () {
@@ -231,7 +232,7 @@ describe('Silo', function () {
   describe('supply increase', function () {
     describe('1 supply increase', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).depositBeans('1000');
+        await this.silo.connect(user).depositBeans('1000', this.updateSettings);
         await this.season.siloSunrise(100);
       });
       it('properly updates the total balances', async function () {
@@ -253,9 +254,9 @@ describe('Silo', function () {
   
     describe('supply increase and update silo', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).depositBeans('1000');
+        await this.silo.connect(user).depositBeans('1000', this.updateSettings);
         await this.season.siloSunrise(100);
-        await this.silo.updateSilo(userAddress);
+        await this.silo.updateSilo(userAddress, false);
       });
   
       it('properly updates the total balances', async function () {
@@ -281,7 +282,7 @@ describe('Silo', function () {
   
     describe('2 supply increase', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).depositBeans('1000');
+        await this.silo.connect(user).depositBeans('1000', this.updateSettings);
         await this.season.siloSunrise(100);
         await this.season.siloSunrise(100);
       });
@@ -306,10 +307,10 @@ describe('Silo', function () {
   
     describe('2 supply increases and update silo ', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).depositBeans('1000');
+        await this.silo.connect(user).depositBeans('1000', this.updateSettings);
         await this.season.siloSunrise(100);
         await this.season.siloSunrise(100);
-        await this.silo.updateSilo(userAddress);
+        await this.silo.updateSilo(userAddress, false);
       });
   
       it('properly updates the total balances', async function () {
@@ -337,7 +338,7 @@ describe('Silo', function () {
 
     describe('3 supply increase', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).depositBeans('1000');
+        await this.silo.connect(user).depositBeans('1000', this.updateSettings);
         await this.season.siloSunrise(100);
         await this.season.siloSunrise(100);
         await this.season.siloSunrise(100);
@@ -363,11 +364,11 @@ describe('Silo', function () {
 
     describe('3 supply increase and an update silo', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).depositBeans('1000');
+        await this.silo.connect(user).depositBeans('1000', this.updateSettings);
         await this.season.siloSunrise(100);
         await this.season.siloSunrise(100);
         await this.season.siloSunrise(100);
-        await this.silo.updateSilo(userAddress);
+        await this.silo.updateSilo(userAddress, false);
       });
   
       it('properly updates the total balances', async function () {
@@ -394,9 +395,9 @@ describe('Silo', function () {
 
     describe('2 supply increases and update silo in the middle', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).depositBeans('1000');
+        await this.silo.connect(user).depositBeans('1000', this.updateSettings);
         await this.season.siloSunrise(100);
-        await this.silo.updateSilo(userAddress);
+        await this.silo.updateSilo(userAddress, false);
         await this.season.siloSunrise(100);
       });
   
@@ -425,10 +426,10 @@ describe('Silo', function () {
 
     describe('3 supply increase and an update silo in the middle', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).depositBeans('1000');
+        await this.silo.connect(user).depositBeans('1000', this.updateSettings);
         await this.season.siloSunrise(100);
         await this.season.siloSunrise(100);
-        await this.silo.updateSilo(userAddress);
+        await this.silo.updateSilo(userAddress, false);
         await this.season.siloSunrise(100);
       });
   
@@ -456,11 +457,11 @@ describe('Silo', function () {
 
   describe('2 supply increases with alternating updates', function () {
     beforeEach(async function () {
-      await this.silo.connect(user).depositBeans('1000');
+      await this.silo.connect(user).depositBeans('1000', this.updateSettings);
       await this.season.siloSunrise(100);
-      await this.silo.updateSilo(userAddress);
+      await this.silo.updateSilo(userAddress, false);
       await this.season.siloSunrise(100);
-      await this.silo.updateSilo(userAddress);
+      await this.silo.updateSilo(userAddress, false);
     });
 
     it('properly updates the total balances', async function () {
@@ -489,10 +490,10 @@ describe('Silo', function () {
 
   describe('2 users with supply increase and 1 update', function () {
     beforeEach(async function () {
-      await this.silo.connect(user).depositBeans('1000');
-      await this.silo.connect(user2).depositBeans('1000');
+      await this.silo.connect(user).depositBeans('1000', this.updateSettings);
+      await this.silo.connect(user2).depositBeans('1000', this.updateSettings);
       await this.season.siloSunrise(100);
-      await this.silo.updateSilo(userAddress);
+      await this.silo.updateSilo(userAddress, false);
     });
 
     it('properly updates the total balances', async function () {
@@ -527,11 +528,11 @@ describe('Silo', function () {
 
   describe('2 users with supply increase and both update', function () {
     beforeEach(async function () {
-      await this.silo.connect(user).depositBeans('1000');
-      await this.silo.connect(user2).depositBeans('1000');
+      await this.silo.connect(user).depositBeans('1000', this.updateSettings);
+      await this.silo.connect(user2).depositBeans('1000', this.updateSettings);
       await this.season.siloSunrise(100);
-      await this.silo.updateSilo(userAddress);
-      await this.silo.updateSilo(user2Address);
+      await this.silo.updateSilo(userAddress, false);
+      await this.silo.updateSilo(user2Address, false);
     });
 
     it('properly updates the total balances', async function () {
@@ -566,12 +567,12 @@ describe('Silo', function () {
 
   describe('2 users with supply increase and both update', function () {
     beforeEach(async function () {
-      await this.silo.connect(user).depositBeans('1000');
-      await this.silo.connect(user2).depositBeans('1000');
+      await this.silo.connect(user).depositBeans('1000', this.updateSettings);
+      await this.silo.connect(user2).depositBeans('1000', this.updateSettings);
       await this.season.siloSunrise(100);
-      await this.silo.updateSilo(userAddress);
+      await this.silo.updateSilo(userAddress, false);
       await this.season.siloSunrise(100);
-      await this.silo.updateSilo(user2Address);
+      await this.silo.updateSilo(user2Address, false);
     });
 
     it('properly updates the total balances', async function () {

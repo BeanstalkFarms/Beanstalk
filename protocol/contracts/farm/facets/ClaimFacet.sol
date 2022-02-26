@@ -28,22 +28,28 @@ contract ClaimFacet {
 
     AppStorage internal s;
 
-    function claim(LibClaim.Claim calldata c) public payable returns (uint256 beansClaimed) {
-        beansClaimed = LibClaim.claim(c);
+    function claim(bool partialUpdateSilo, LibClaim.Claim calldata c) public payable returns (uint256 beansClaimed) {
+        beansClaimed = LibClaim.claim(partialUpdateSilo, c);
 
         LibCheck.balanceCheck();
     }
 
-    function claimAndUnwrapBeans(LibClaim.Claim calldata c, uint256 amount) public payable returns (uint256 beansClaimed) {
-        beansClaimed = LibClaim.claim(c);
+    function claimAndUnwrapBeans(bool partialUpdateSilo,
+        LibClaim.Claim calldata c,
+        uint256 amount
+    ) 
+        public payable 
+        returns (uint256 beansClaimed) {
+        beansClaimed = LibClaim.claim(partialUpdateSilo, c);
         beansClaimed = beansClaimed.add(unwrapBeans(amount));
 
         LibCheck.balanceCheck();
     }
 
-    function claimBeans(uint32[] calldata withdrawals) public {
+    function claimBeans(uint32[] calldata withdrawals, bool toInternalBalance) public {
         uint256 beansClaimed = LibClaim.claimBeans(withdrawals);
-        IBean(s.c.bean).transfer(msg.sender, beansClaimed);
+        if (!toInternalBalance) IBean(s.c.bean).transfer(msg.sender, beansClaimed);
+        else LibUserBalance._increaseInternalBalance(msg.sender, IERC20(s.c.bean), beansClaimed);
         LibCheck.beanBalanceCheck();
     }
 
@@ -63,14 +69,15 @@ contract ClaimFacet {
         LibCheck.balanceCheck();
     }
 
-    function harvest(uint256[] calldata plots) public {
+    function harvest(uint256[] calldata plots, bool toInternalBalance) public {
         uint256 beansHarvested = LibClaim.harvest(plots);
-        IBean(s.c.bean).transfer(msg.sender, beansHarvested);
+        if (!toInternalBalance) IBean(s.c.bean).transfer(msg.sender, beansHarvested);
+        else LibUserBalance._increaseInternalBalance(msg.sender, IERC20(s.c.bean), beansHarvested);
         LibCheck.beanBalanceCheck();
     }
 
-    function claimEth() public {
-        LibClaim.claimEth();
+    function claimEth(bool partialUpdateSilo) public {
+        LibClaim.claimEth(partialUpdateSilo);
     }
 
     function unwrapBeans(uint amount) public returns (uint256 beansToWallet) {
