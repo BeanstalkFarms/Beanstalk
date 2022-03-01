@@ -1,7 +1,7 @@
 const MAX_INT = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
 
 const diamond = require('./diamond.js')
-const { impersonateCurve, impersonateLiquity, impersonateUniswap, impersonateBean } = require('./impersonate.js')
+const { impersonateCurve, impersonateUniswap, impersonateBean } = require('./impersonate.js')
 function addCommas(nStr) {
   nStr += ''
   const x = nStr.split('.')
@@ -95,7 +95,8 @@ async function main(scriptName, verbose = true, mock = false) {
     marketplaceFacet,
     fundraiserFacet,
     convertFacet,
-    budgetFacet
+    budgetFacet,
+    farmFacet
   ] = mock ? await deployFacets(
     verbose,
     ['MockSeasonFacet',
@@ -109,7 +110,8 @@ async function main(scriptName, verbose = true, mock = false) {
       'MockMarketplaceFacet',
       'MockFundraiserFacet',
       'ConvertFacet',
-      'MockBudgetFacet'],
+      'MockBudgetFacet',
+      'MockFarmFacet'],
     ["LibClaim"],
     {
       "MockMarketplaceFacet": ["LibClaim"],
@@ -131,7 +133,8 @@ async function main(scriptName, verbose = true, mock = false) {
       'MarketplaceFacet',
       'FundraiserFacet',
       'ConvertFacet',
-      'BudgetFacet'],
+      'BudgetFacet',
+      'FarmFacet'],
     ["LibClaim"],
     {
       "SiloFacet": ["LibClaim"],
@@ -147,7 +150,6 @@ async function main(scriptName, verbose = true, mock = false) {
   let args = []
   if (mock) {
     await impersonateCurve()
-    await impersonateLiquity()
     await impersonateUniswap()
     await impersonateBean()
     const MockUniswapV2Router = await ethers.getContractFactory("MockUniswapV2Router");
@@ -170,7 +172,8 @@ async function main(scriptName, verbose = true, mock = false) {
       ['MarketplaceFacet', marketplaceFacet],
       ['FundraiserFacet', fundraiserFacet],
       ['ConvertFacet', convertFacet],
-      ['BudgetFacet', budgetFacet]
+      ['BudgetFacet', budgetFacet],
+      ['FarmFacet', farmFacet]
     ],
     owner: account,
     args: args,
@@ -221,6 +224,7 @@ async function main(scriptName, verbose = true, mock = false) {
     pegPair: pegPair,
     weth: weth,
     bean: bean,
+    farm: farmFacet,
   }
 }
 

@@ -6,6 +6,7 @@ const BEAN_3_CURVE = "0x3a70DfA7d2262988064A2D051dd47521E43c9BdD";
 const UNISWAP_FACTORY = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
 const UNISWAP_V2_ROUTER = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
 
+/*
 const LUSD_TOKEN = "0x5f98805A4E8be255a32880FDeC7F6728C6568bA0";
 const TROVE_MANAGER = "0xA39739EF8b0231DbFA0DcdA07d7e29faAbCf4bb2";
 const BORROWER_OPERATIONS = "0x24179CD81c9e782A4096035f7eC97fB8B783e007";
@@ -18,7 +19,7 @@ const STABILITY_POOL = "0x66017D22b0f8556afDd19FC67041899Eb65a21bb";
 const GAS_POOL = "0x9555b042F969E561855e5F28cB1230819149A8d9";
 const LQTY_STAKING = "0x4f9Fbb3f1E99B56e0Fe2892e623Ed36A76Fc605d";
 const LQTY_TOKEN = "0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D";
-
+*/
 const WETH = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
 const BEAN = '0xDC59ac4FeFa32293A95889Dc396682858d52e5Db'
 
@@ -35,7 +36,7 @@ async function curve() {
       JSON.parse(bean3CurveJson).deployedBytecode,
     ]);
 }
-
+/*
 async function liquity() {
  
     let lusdTokenJson = fs.readFileSync('./artifacts/contracts/mocks/mockLiquity/MockLUSDToken.sol/MockLUSDToken.json');
@@ -111,7 +112,7 @@ async function liquity() {
     ]);
 
 }
-
+*/
 async function uniswap() {
 
     let uniswapFactoryJson = fs.readFileSync(`./artifacts/contracts/mocks/MockUniswapV2Factory.sol/MockUniswapV2Factory.json`);
@@ -145,4 +146,4 @@ async function bean() {
 exports.impersonateBean = bean
 exports.impersonateUniswap = uniswap
 exports.impersonateCurve = curve
-exports.impersonateLiquity = liquity
+//exports.impersonateLiquity = liquity
