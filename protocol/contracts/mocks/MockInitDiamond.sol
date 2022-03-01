@@ -24,14 +24,17 @@ contract MockInitDiamond {
 
     event Incentivization(address indexed account, uint256 beans);
 
+    address private constant WETH = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+    address private constant BEAN = address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db);
+
     AppStorage internal s;
 
     function init(address mockRouter) external {
-        s.c.bean = address(new MockToken("BEAN", "Beanstalk"));
-        s.c.pair = address(new MockUniswapV2Pair(s.c.bean));
-        s.c.pegPair = address(new MockUniswapV2Pair(s.c.weth));
-        MockUniswapV2Router(mockRouter).setPair(s.c.pair);
-        s.c.weth = IUniswapV2Router02(mockRouter).WETH();
+        s.c.bean = BEAN;
+        s.c.weth = WETH;
+        s.c.pair = address(new MockUniswapV2Pair(s.c.weth, s.c.bean));
+        s.c.pegPair = address(new MockUniswapV2Pair(s.c.bean, s.c.weth));
+        MockUniswapV2Router(mockRouter).setPair(s.c.pair, s.c.weth, s.c.bean);
 
         IBean(s.c.bean).approve(mockRouter, uint256(-1));
         IUniswapV2Pair(s.c.pair).approve(mockRouter, uint256(-1));
@@ -47,6 +50,17 @@ contract MockInitDiamond {
 
         s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
         LibUniswap.initMarket(s.c.bean, s.c.weth, mockRouter);
+
+
+
+	/*
+	 * Whitelisted Functions
+	*/
+
+	s.whitelistedFunction[0x75ce258d] = true; // depositBeans(uint256)
+	s.whitelistedFunction[0x52719789] = true; // sowBeans(uint256)
+	s.whitelistedFunction[0x2db75d40] = true; // fundraise(uint32,uint256)
+	s.whitelistedFunction[0x45867952] = true; // unwrapBeans(uint256)
     }
 
 }

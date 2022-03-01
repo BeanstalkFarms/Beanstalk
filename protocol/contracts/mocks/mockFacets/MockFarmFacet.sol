@@ -9,7 +9,7 @@ import '../../farm/facets/FarmFacet/FarmFacet.sol';
 
 /**
  * @author Beasley
- * @title Users lend on Liquity for BEAN
+ * @title Mock Farm facet for debugging
 **/
 contract MockFarmFacet is FarmFacet {
 

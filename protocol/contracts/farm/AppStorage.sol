@@ -224,6 +224,5 @@ struct AppStorage {
     mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
-    mapping(address => address) trove;
     mapping(bytes4 => bool) whitelistedFunction;
 }

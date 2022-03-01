@@ -39,15 +39,16 @@ contract MockUniswapV2Pair {
     uint112 private reserve0;           // uses single storage slot, accessible via getReserves
     uint112 private reserve1;           // uses single storage slot, accessible via getReserves
     uint256 private liquidity;
-    address private token;
-    address private token2;
+    address public token0;
+    address public token1;
 
     uint32 private blockTimestampLast;
     uint public price0CumulativeLast;
     uint public price1CumulativeLast;
 
-    constructor(address _token) {
-      token = _token;
+    constructor(address _token0, address _token1) {
+      token0 = _token0;
+      token1 = _token1;
     }
 
     function getReserves() public view returns (uint112, uint112, uint32) {
@@ -59,12 +60,6 @@ contract MockUniswapV2Pair {
         return liquidity;
     }
 
-    function setToken2(address _token2) external returns (uint) {
-        token2 = _token2;
-    }
-
-    function token0() external view returns (address) { return token; }
-
     function setReserves(uint112 newReserve0, uint112 newReserve1) external {
       reserve0 = newReserve0;
       reserve1 = newReserve1;
@@ -75,23 +70,22 @@ contract MockUniswapV2Pair {
     }
 
     function set(uint112 newReserve0, uint112 newReserve1, uint256 newLiquidity) external {
-        reserve0 = newReserve0;
-        reserve1 = newReserve1;
+        reserve0 = newReserve1;
+        reserve1 = newReserve0;
         liquidity = newLiquidity;
     }
 
-    function getToken() external view returns (address) {
-        return token;
-    }
+    //function token0() external view returns (address) {
+      //  return token0;
+    //}
 
     function burn(address to) external returns (uint amount0, uint amount1) {
         (uint112 _reserve0, uint112 _reserve1,) = getReserves();
-        address _token0 = token;
-        address _token1 = token2;
+        address _token0 = token0;
+        address _token1 = token1;
         uint balance0 = IERC20(_token0).balanceOf(address(this));
         uint balance1 = IERC20(_token1).balanceOf(address(this));
         uint liquidity = balanceOf(address(this));
-
         amount0 = liquidity.mul(balance0) / _totalSupply;
         amount1 = liquidity.mul(balance1) / _totalSupply;
         require(amount0 > 0 && amount1 > 0, 'UniswapV2: INSUFFICIENT_LIQUIDITY_BURNED');
@@ -109,8 +103,8 @@ contract MockUniswapV2Pair {
         uint balance0;
         uint balance1;
         { // scope for _token{0,1}, avoids stack too deep errors
-        address _token0 = token;
-        address _token1 = token2;
+        address _token0 = token0;
+        address _token1 = token1;
         require(to != _token0 && to != _token1, 'UniswapV2: INVALID_TO');
         if (amount0Out > 0) _safeTransfer(_token0, to, amount0Out); // optimistically transfer tokens
 	if (amount1Out > 0) _safeTransfer(_token1, to, amount1Out); // optimistically transfer tokens
@@ -136,6 +130,11 @@ contract MockUniswapV2Pair {
         return true;
     }
 
+    function setTokens(address _token0, address _token1) external {
+	token0 = _token0;
+	token1 = _token1;
+    }
+
     function burnTokens(address bean) external {
       IBean(bean).burn(IBean(bean).balanceOf(address(this)));
     }
@@ -144,7 +143,10 @@ contract MockUniswapV2Pair {
 	MockToken(weth).burn(MockToken(weth).balanceOf(address(this)));
     }
 
-
+    // Must be called once in a test when forking mainnet. Not to be used otherwise.
+    function burnAllLPSimulation() external {
+	_totalSupply = 0;
+    }
 
     function burnAllLP(address account) external {
       _totalSupply = _totalSupply.sub(_balances[account]);
@@ -173,8 +175,8 @@ contract MockUniswapV2Pair {
             price0CumulativeLast += uint(FixedPoint.fraction(reserve1, reserve0)._x) * timeElapsed;
             price1CumulativeLast += uint(FixedPoint.fraction(reserve0, reserve1)._x) * timeElapsed;
         }
-        reserve0 = newReserve0;
-        reserve1 = newReserve1;
+        reserve0 = newReserve1;
+        reserve1 = newReserve0;
         blockTimestampLast = blockTimestamp;
     }
 
@@ -412,3 +414,4 @@ contract MockUniswapV2Pair {
         z = x / uint224(y);
     }
 }
+

@@ -24,6 +24,13 @@ async function main(scriptName, verbose = true, mock = false) {
     console.log('MOCKS ENABLED: ', mock)
   }
 
+  if (mock) {
+    await network.provider.request({
+      method: "hardhat_reset",
+      params: [],
+    });
+  }
+
   const accounts = await ethers.getSigners()
   const account = await accounts[0].getAddress()
   if (verbose) {
@@ -96,7 +103,8 @@ async function main(scriptName, verbose = true, mock = false) {
     fundraiserFacet,
     convertFacet,
     budgetFacet,
-    farmFacet
+    farmFacet,
+    uniswapFacet
   ] = mock ? await deployFacets(
     verbose,
     ['MockSeasonFacet',
@@ -111,7 +119,8 @@ async function main(scriptName, verbose = true, mock = false) {
       'MockFundraiserFacet',
       'ConvertFacet',
       'MockBudgetFacet',
-      'MockFarmFacet'],
+      'MockFarmFacet',
+      'MockUniswapFacet'],
     ["LibClaim"],
     {
       "MockMarketplaceFacet": ["LibClaim"],
@@ -134,7 +143,8 @@ async function main(scriptName, verbose = true, mock = false) {
       'FundraiserFacet',
       'ConvertFacet',
       'BudgetFacet',
-      'FarmFacet'],
+      'FarmFacet',
+      'UniswapFacet'],
     ["LibClaim"],
     {
       "SiloFacet": ["LibClaim"],
@@ -173,7 +183,8 @@ async function main(scriptName, verbose = true, mock = false) {
       ['FundraiserFacet', fundraiserFacet],
       ['ConvertFacet', convertFacet],
       ['BudgetFacet', budgetFacet],
-      ['FarmFacet', farmFacet]
+      ['FarmFacet', farmFacet],
+      ['UniswapFacet', uniswapFacet]
     ],
     owner: account,
     args: args,
@@ -225,6 +236,7 @@ async function main(scriptName, verbose = true, mock = false) {
     weth: weth,
     bean: bean,
     farm: farmFacet,
+    uniswap: uniswapFacet,
   }
 }
 
