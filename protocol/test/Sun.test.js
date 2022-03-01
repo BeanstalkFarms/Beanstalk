@@ -126,5 +126,6 @@ describe('Sun Soil', function () {
 
   it("Properly sets the soil bounds", async function () {
     expect(await this.season.minSoil('100')).to.be.equal('50')
+
   });
 });

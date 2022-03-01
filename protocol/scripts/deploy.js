@@ -95,8 +95,7 @@ async function main(scriptName, verbose = true, mock = false) {
     marketplaceFacet,
     fundraiserFacet,
     convertFacet,
-    budgetFacet,
-    liquityFacet
+    budgetFacet
   ] = mock ? await deployFacets(
     verbose,
     ['MockSeasonFacet',
@@ -110,8 +109,7 @@ async function main(scriptName, verbose = true, mock = false) {
       'MockMarketplaceFacet',
       'MockFundraiserFacet',
       'ConvertFacet',
-      'MockBudgetFacet',
-      'MockLiquityFacet'],
+      'MockBudgetFacet'],
     ["LibClaim"],
     {
       "MockMarketplaceFacet": ["LibClaim"],
@@ -133,8 +131,7 @@ async function main(scriptName, verbose = true, mock = false) {
       'MarketplaceFacet',
       'FundraiserFacet',
       'ConvertFacet',
-      'BudgetFacet',
-      'LiquityFacet'],
+      'BudgetFacet'],
     ["LibClaim"],
     {
       "SiloFacet": ["LibClaim"],
@@ -173,8 +170,7 @@ async function main(scriptName, verbose = true, mock = false) {
       ['MarketplaceFacet', marketplaceFacet],
       ['FundraiserFacet', fundraiserFacet],
       ['ConvertFacet', convertFacet],
-      ['BudgetFacet', budgetFacet],
-      ['LiquityFacet', liquityFacet]
+      ['BudgetFacet', budgetFacet]
     ],
     owner: account,
     args: args,
@@ -194,8 +190,6 @@ async function main(scriptName, verbose = true, mock = false) {
   const pegPair = await season.pegPair();
   const silo = await ethers.getContractAt('SiloFacet', beanstalkDiamond.address);
   const weth = await silo.weth();
-  const liquity = await ethers.getContractAt("LiquityFacet", beanstalkDiamond.address);
-  const liquityManager = await liquity.liquityManager();
 
   if (verbose) {
     console.log("--");
@@ -227,8 +221,6 @@ async function main(scriptName, verbose = true, mock = false) {
     pegPair: pegPair,
     weth: weth,
     bean: bean,
-    liquityFacet: liquityFacet,
-    liquityManager: liquityManager,
   }
 }
 
