@@ -25,6 +25,9 @@ library LibConvert {
     using SafeMath for uint256;
     using LibConvertUserData for bytes;
 
+    /// @notice Takes in bytes object that has convert input data encoded into it for a particular convert for
+    ///         a specified pool and returns the in and out convert amounts and token addresses and bdv
+    /// @param userData Contains convert input parameters for a specified convert
     function convert(bytes memory userData)
         internal
         returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv)
@@ -41,13 +44,13 @@ library LibConvert {
             (outToken, inToken, outAmount, inAmount, bdv) = _convertUniswapAddBeansInLP(userData);
         } 
         else if (kind == LibConvertUserData.ConvertKind.UNISWAP_BUY_TO_PEG_AND_CURVE_SELL_TO_PEG) {
-        //     (outToken, inToken, outAmount, inAmount, bdv) = _convertUniswapBuyToPegAndCurveSellToPeg(userData);
+            (outToken, inToken, outAmount, inAmount, bdv) = _convertUniswapBuyToPegAndCurveSellToPeg(userData);
         } else if (kind == LibConvertUserData.ConvertKind.CURVE_BUY_TO_PEG_AND_UNISWAP_SELL_TO_PEG) {
-        //     (outToken, inToken, outAmount, inAmount, bdv) = _convertCurveBuyToPegAndUniswapSellToPeg(userData);
+            (outToken, inToken, outAmount, inAmount, bdv) = _convertCurveBuyToPegAndUniswapSellToPeg(userData);
         } 
 
         // else {
-        //     _revert(Errors.UNHANDLED_EXIT_KIND);
+        //     _revert(Errors.UNHANDLED_CONVERT_KIND);
         // }
     }
 
@@ -71,7 +74,7 @@ library LibConvert {
             return (outAmount, inAmount);
         } 
         // else {
-        //     _revert(Errors.UNHANDLED_EXIT_KIND);
+        //     _revert(Errors.UNHANDLED_CONVERT_KIND);
         // }
     }
 
@@ -95,7 +98,7 @@ library LibConvert {
             return (outAmount, inAmount);
         } 
         // else {
-        //     _revert(Errors.UNHANDLED_EXIT_KIND);
+        //     _revert(Errors.UNHANDLED_CONVERT_KIND);
         // }
     }
 
@@ -139,7 +142,14 @@ library LibConvert {
      * Convert Function Selector Functions
     **/
 
-    // Sell To Peg
+    /**
+     * Sell To Peg Convert Functions
+    **/
+
+    /// @notice Takes in parameters to convert beans into LP by selling some beans to the Peg for ETH 
+    ///         to convert them into LP using Uniswap
+    /// @param beans - amount of beans to convert to Uniswap LP
+    /// @param minLP - min amount of Uniswap LP to receive
     function _uniswapSellToPegAndAddLiquidity(uint256 beans, uint256 minLP) private returns (uint256 lp, uint256 beansConverted) {
         (uint256 ethReserve, uint256 beanReserve) = reserves();
         uint256 maxSellBeans = beansToPeg(ethReserve, beanReserve);
@@ -153,6 +163,9 @@ library LibConvert {
         beansConverted = beansConverted + beansSold;
     }
 
+    /// @notice Takes in parameters to convert beans into LP using Curve
+    /// @param beans - amount of beans to convert to Curve LP
+    /// @param minLP - min amount of Curve LP to receive
     function _curveSellToPegAndAddLiquidity(uint256 beans, uint256 minLP) private returns (uint256 lp, uint256 beansConverted) {
         uint256[] memory amounts;
         amounts[0] = beans;
@@ -160,6 +173,9 @@ library LibConvert {
         beansConverted = beans;
     }
 
+    /// @notice Takes in encoded bytes for adding Uniswap LP in beans, extracts the input data, and then calls the
+    ///         _uniswapSellToPegAndAddLiquidity function
+    /// @param userData Contains convert input parameters for a Uniswap AddLPInBeans convert
     function _convertUniswapAddLPInBeans(bytes memory userData) private returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -170,6 +186,9 @@ library LibConvert {
         bdv = inAmount;
     }
 
+    /// @notice Takes in encoded bytes for adding Curve LP in beans, extracts the input data, and then calls the
+    ///         _curveSellToPegAndAddLiquidity function
+    /// @param userData Contains convert input parameters for a Curve AddLPInBeans convert
     function _convertCurveAddLPInBeans(bytes memory userData) private returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         
@@ -180,7 +199,14 @@ library LibConvert {
         bdv = inAmount;
     }
 
-    // Buy To Peg
+    /**
+     * Buy To Peg Convert Functions
+    **/
+
+    /// @notice Takes in parameters to convert LP into beans by selling some LP, using the ETH obtained to
+    ///         convert them into beans using Uniswap
+    /// @param lp - the amount of Uniswap lp to be removed
+    /// @param minBeans - min amount of beans to receive
     function _uniswapRemoveLPAndBuyToPeg(uint256 lp, uint256 minBeans) private returns (uint256 beans, uint256 lpConverted) {
         lpConverted = lpToPeg();
         require(lpConverted > 0, "Convert: P must be < 1.");
@@ -192,11 +218,17 @@ library LibConvert {
         require(beans >= minBeans, "Convert: Not enough Beans.");
     }
 
+    /// @notice Takes in parameters to remove LP into beans by removing LP in curve through removing beans 
+    /// @param lp - the amount of Curve lp to be removed
+    /// @param minBeans - min amount of beans to receive    
     function _curveRemoveLPAndBuyToPeg(uint256 lp, uint256 minBeans) private returns (uint256 beans, uint256 lpConverted) {
         beans = LibMetaCurve.removeLiquidityOneCoin(lp, 0, minBeans);
         lpConverted = lp;
     }
 
+    /// @notice Takes in encoded bytes for adding beans in Uniswap LP, extracts the input data, and then calls the
+    ///         _uniswapRemoveLPAndBuyToPeg function
+    /// @param userData Contains convert input parameters for a Uniswap AddBeansInLP convert
     function _convertUniswapAddBeansInLP(bytes memory userData) private returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         
@@ -208,6 +240,9 @@ library LibConvert {
         
     }
 
+    /// @notice Takes in encoded bytes for adding beans in Curve LP, extracts the input data, and then calls the
+    ///         _uniswapRemoveLPAndBuyToPeg function
+    /// @param userData Contains convert input parameters for a Curve AddBeansInLP convert
     function _convertCurveAddBeansInLP(bytes memory userData) private returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -219,6 +254,10 @@ library LibConvert {
     }
 
     // Multi-Pool Buy To Peg/Sell To Peg Functions
+
+    /// @notice Takes in encoded bytes for adding Curve LP in Uniswap LP, extracts the input data, and then calls the
+    ///         _uniswapRemoveLPAndBuyToPeg and then _curveSellToPegAndAddLiquidity
+    /// @param userData Contains convert input parameters for a Curve AddCurveLPInUniswapLP convert
     function _convertUniswapBuyToPegAndCurveSellToPeg(bytes memory userData)
         private
         returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv) 
@@ -232,6 +271,9 @@ library LibConvert {
         address inToken = s.c.pair;
     }
 
+    /// @notice Takes in encoded bytes for adding Uniswap LP in Curve LP, extracts the input data, and then calls the
+    ///         _curveRemoveLPAndBuyToPeg and then _uniswapSellToPegAndAddLiquidity
+    /// @param userData Contains convert input parameters for a Curve AddUniswapLPInCurveLP convert
     function _convertCurveBuyToPegAndUniswapSellToPeg(bytes memory userData)
         private
         returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv)
