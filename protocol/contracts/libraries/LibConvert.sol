@@ -253,7 +253,7 @@ library LibConvert {
         bdv = outAmount;
     }
 
-    // Multi-Pool Buy To Peg/Sell To Peg Functions
+    // Cross-Pool Buy To Peg/Sell To Peg Functions
 
     /// @notice Takes in encoded bytes for adding Curve LP in Uniswap LP, extracts the input data, and then calls the
     ///         _uniswapRemoveLPAndBuyToPeg and then _curveSellToPegAndAddLiquidity
