@@ -5,6 +5,9 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
+import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
+import "./interfaces/IBean.sol";
+import "./interfaces/ICurveMetapool.sol";
 import "./libraries/Decimal.sol";
 
 /**
@@ -59,6 +62,10 @@ library C {
     uint256 private constant MAX_SOIL_DENOMINATOR = 4; // 25%
     uint256 private constant COMPLEX_WEATHER_DENOMINATOR = 1000; // 0.1%
 
+    // Contracts
+    address private constant BEAN = 0xDC59ac4FeFa32293A95889Dc396682858d52e5Db;
+    address private constant UNISWAP_V2_BEAN_ETH = 0x87898263B6C5BABe34b4ec53F22d98430b91e371;
+    address private constant CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
 
     /**
      * Getters
@@ -172,4 +179,26 @@ library C {
         return ROOTS_BASE;
     }
 
+    function beanAddress() internal pure returns (address) {
+        return BEAN;
+    }
+    function uniswapV2PairAddress() internal pure returns (address) {
+        return UNISWAP_V2_BEAN_ETH;
+    }
+
+    function curveMetapoolAddress() internal pure returns (address) {
+        return CURVE_BEAN_METAPOOL;
+    }
+
+    function bean() internal pure returns (IBean) {
+        return IBean(BEAN);
+    }
+
+    function uniswapV2Pair() internal pure returns (IUniswapV2Pair) {
+        return IUniswapV2Pair(UNISWAP_V2_BEAN_ETH);
+    }
+
+    function curveMetapool() internal pure returns (ICurveMetapool) {
+        return ICurveMetapool(CURVE_BEAN_METAPOOL);
+    }
 }

@@ -7,9 +7,12 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
+import "../MockToken.sol";
 
-contract Mock3Curve {
+contract Mock3Curve is MockToken {
     uint256 virtual_price;
+
+    constructor() MockToken("Wrapped Ether", "WETH") { }
 
     function get_virtual_price() external view returns (uint256) {
         return virtual_price;

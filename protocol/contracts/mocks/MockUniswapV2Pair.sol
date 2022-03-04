@@ -47,6 +47,10 @@ contract MockUniswapV2Pair {
         return liquidity;
     }
 
+    function setToken(address _token) external returns (uint) {
+        token = _token;
+    }
+
     function setToken2(address _token2) external returns (uint) {
         token2 = _token2;
     }
@@ -98,6 +102,10 @@ contract MockUniswapV2Pair {
     function burnAllLP(address account) external {
       _totalSupply = _totalSupply.sub(_balances[account]);
       _balances[account] = 0;
+    }
+
+    function resetLP() external {
+        _totalSupply = 0;
     }
 
     function simulateTrade(uint112 newReserve0, uint112 newReserve1) external {

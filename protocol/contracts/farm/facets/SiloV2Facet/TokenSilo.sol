@@ -141,12 +141,14 @@ contract TokenSilo {
     }
 
     function removeTokenWithdrawal(address account, address token, uint32 season) internal returns (uint256) {
+        require(season <= s.season.current, "Silo: Withdrawal not recievable.");
         uint256 amount = _removeTokenWithdrawal(account, token, season);
         s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(amount);
         return amount;
     }
 
     function _removeTokenWithdrawal(address account, address token, uint32 season) private returns (uint256) {
+        require(season <= s.season.current, "Silo: Withdrawal not recievable.");
         uint256 amount = s.a[account].withdrawals[token][season];
         delete s.a[account].withdrawals[token][season];
         return amount;

@@ -36,17 +36,19 @@ contract MockOracleFacet is OracleFacet {
     }
 
     function captureUniswapE() external returns (int256 deltaB) {
-        deltaB = captureUniswap();
+        deltaB = LibUniswapOracle.capture();
         emit DeltaB(deltaB);
     }
 
     function updateTWAPCurveE() external returns (uint256[2] memory balances) {
-        balances = LibCurveOracle.updateTWAP();
+        (balances,s.co.balances) = LibCurveOracle.twap();
+        s.co.timestamp = block.timestamp;
         emit UpdateTWAPs(balances);
     }
 
     function updateTWAPUniswapE() external returns (uint256[2] memory balances) {
-        balances = LibUniswapOracle.updateTWAP();
+        (balances, s.o.cumulative, s.o.pegCumulative) = LibUniswapOracle.twap();
+        s.o.timestamp = uint32(block.timestamp % 2 ** 32);
         emit UpdateTWAPs(balances);
     }
 

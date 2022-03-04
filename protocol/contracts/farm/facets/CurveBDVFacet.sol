@@ -9,7 +9,7 @@ import "../../libraries/LibMetaCurve.sol";
 
 /*
  * @author Publius
- * @title CurveBDVFacet holds the Curve MetaPool BDV function.
+ * @title CurveBDVFacet holds the Curve Metapool BDV function.
 */
 contract CurveBDVFacet {
     function curveToBDV(uint256 amount) external view returns (uint256) {

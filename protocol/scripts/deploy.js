@@ -1,7 +1,7 @@
 const MAX_INT = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
 
 const diamond = require('./diamond.js')
-const { impersonateCurve } = require('./impersonate.js')
+const { impersonateCurve, impersonateBean, impersonateRouter, impersonatePool } = require('./impersonate.js')
 function addCommas(nStr) {
   nStr += ''
   const x = nStr.split('.')
@@ -19,6 +19,12 @@ function strDisplay(str) {
 }
 
 async function main(scriptName, verbose = true, mock = false) {
+  if (mock) {
+    await network.provider.request({
+      method: "hardhat_reset",
+      params: [],
+    });
+  }
   if (verbose) {
     console.log('SCRIPT NAME: ', scriptName)
     console.log('MOCKS ENABLED: ', mock)
@@ -147,9 +153,9 @@ async function main(scriptName, verbose = true, mock = false) {
   let args = []
   if (mock) {
     await impersonateCurve()
-    const MockUniswapV2Router = await ethers.getContractFactory("MockUniswapV2Router");
-    mockRouter = await MockUniswapV2Router.deploy();
-    args.push(mockRouter.address)
+    args.push(await impersonateBean())
+    args.push(await impersonatePool())
+    args.push(await impersonateRouter())
   }
 
   const [beanstalkDiamond, diamondCut] = await diamond.deploy({
@@ -207,7 +213,7 @@ async function main(scriptName, verbose = true, mock = false) {
     seasonFacet: seasonFacet,
     oracleFacet: oracleFacet,
     fieldFacet: fieldFacet,
-    siloFacet: siloFacet,
+  siloFacet: siloFacet,
     siloFacet: siloV2Facet,
     governanceFacet: governanceFacet,
     claimFacet: claimFacet,

@@ -1,15 +1,15 @@
 const { defaultAbiCoder } = require('@ethersproject/abi');
 
 const ConvertKind = {
-  UNISWAP_ADD_LP_IN_BEANS: 0,
-  CURVE_ADD_LP_IN_BEANS: 1,
-  UNISWAP_ADD_BEANS_IN_LP: 2,
-  CURVE_ADD_BEANS_IN_LP: 3,
+  BEANS_TO_UNISWAP_LP: 0,
+  UNISWAP_LP_TO_BEANS: 1,
+  BEANS_TO_CURVE_LP: 2,
+  CURVE_LP_TO_BEANS: 3,
   UNISWAP_BUY_TO_PEG_AND_CURVE_SELL_TO_PEG: 4,
   CURVE_BUY_TO_PEG_AND_UNISWAP_SELL_TO_PEG: 5
 }
 
-class GeneralFunctionEncoder {
+class ConvertEncoder {
   /**
    * Cannot be constructed.
    */
@@ -24,10 +24,10 @@ class GeneralFunctionEncoder {
    * @param lp - the amount of lp to be removed
    * @param minBeans - the index of the token to be provided as liquidity
    */
-  static convertUniswapAddBeansInLP = (lp, minBeans) =>
+  static convertUniswapLPToBeans = (lp, minBeans) =>
     defaultAbiCoder.encode(
       ['uint256', 'uint256', 'uint256'],
-      [ConvertKind.UNISWAP_ADD_BEANS_IN_LP, lp, minBeans]
+      [ConvertKind.UNISWAP_LP_TO_BEANS, lp, minBeans]
     );
 
   /**
@@ -35,10 +35,10 @@ class GeneralFunctionEncoder {
    * @param lp - the amount of lp to be removed
    * @param minBeans - the index of the token to be provided as liquidity
    */
-  static convertCurveAddBeansInLP = (lp, minBeans) =>
+  static convertCurveLPToBeans = (lp, minBeans) =>
     defaultAbiCoder.encode(
       ['uint256', 'uint256'],
-      [ConvertKind.CURVE_ADD_BEANS_IN_LP, lp, minBeans]
+      [ConvertKind.CURVE_LP_TO_BEANS, lp, minBeans]
     );
 
   // Sell to Peg functions
@@ -48,10 +48,10 @@ class GeneralFunctionEncoder {
    * @param beans - the amount of lp to be removed
    * @param minLP - the index of the token to be provided as liquidity
    */
-  static convertCurveAddLPInBeans = (beans, minLP) =>
+  static convertBeansToCurveLP = (beans, minLP) =>
     defaultAbiCoder.encode(
     ['uint256', 'uint256', 'uint256'],
-    [ConvertKind.CURVE_ADD_LP_IN_BEANS, beans, minLP]
+    [ConvertKind.BEANS_TO_CURVE_LP, beans, minLP]
   );
 
   /**
@@ -59,11 +59,11 @@ class GeneralFunctionEncoder {
    * @param beans - the amount of lp to be removed
    * @param minLP - the index of the token to be provided as liquidity
    */
-   static convertUniswapAddLPInBeans = (beans, minLP) =>
+   static convertBeansToUniswapLP = (beans, minLP) =>
     defaultAbiCoder.encode(
      ['uint256', 'uint256', 'uint256'],
-     [ConvertKind.UNISWAP_ADD_LP_IN_BEANS, beans, minLP]
+     [ConvertKind.BEANS_TO_UNISWAP_LP, beans, minLP]
    );
 }
 
-exports.GeneralFunctionEncoder = GeneralFunctionEncoder
+exports.ConvertEncoder = ConvertEncoder

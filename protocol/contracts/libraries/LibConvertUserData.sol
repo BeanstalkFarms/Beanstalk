@@ -5,10 +5,10 @@ pragma experimental ABIEncoderV2;
 library LibConvertUserData {
     // In order to preserve backwards compatibility, make sure new kinds are added at the end of the enum.
     enum ConvertKind {
-        UNISWAP_ADD_LP_IN_BEANS,
-        CURVE_ADD_LP_IN_BEANS,
-        UNISWAP_ADD_BEANS_IN_LP,
-        CURVE_ADD_BEANS_IN_LP,
+        BEANS_TO_UNISWAP_LP,
+        UNISWAP_LP_TO_BEANS,
+        BEANS_TO_CURVE_LP,
+        CURVE_LP_TO_BEANS,
         UNISWAP_BUY_TO_PEG_AND_CURVE_SELL_TO_PEG,
         CURVE_BUY_TO_PEG_AND_UNISWAP_SELL_TO_PEG
     }

@@ -6,8 +6,9 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./ConvertWithdraw.sol";
-import "../../../libraries/LibConvert.sol";
+import "../../../libraries/Convert/LibConvert.sol";
 import "../../../libraries/LibClaim.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -29,59 +30,23 @@ contract ConvertFacet is ConvertWithdraw {
         LibInternal.updateSilo(msg.sender, partialUpdateSilo);
 
         (
-            address toToken, 
-            address fromToken, 
-            uint256 toTokenAmount, 
-            uint256 fromTokenAmount, 
+            address toToken,
+            address fromToken,
+            uint256 toTokenAmount,
+            uint256 fromTokenAmount,
             uint256 bdv
         ) = LibConvert.convert(userData);
+        // console.log("From: %s, To: %s", fromToken, toToken);
+        // console.log("Bean: %s", s.c.bean);
+        // console.log("From: %s, To: %s", fromTokenAmount, toTokenAmount);
 
         (
             uint256 tokensRemoved, 
             uint256 stalkRemoved
-        ) = _withdrawTokensForConvert(fromToken, crates, amounts, fromTokenAmount);
+        ) = _withdrawForConvert(fromToken, crates, amounts, fromTokenAmount);
 
         _depositTokens(toToken, toTokenAmount, bdv, stalkRemoved);
 
-        LibSilo.updateBalanceOfRainStalk(msg.sender);
-    }  
-
-    function convertDepositedBeans(
-        bytes calldata userData,
-        uint32[] memory crates,
-        uint256[] memory amounts,
-        bool partialUpdateSilo
-    )
-        external 
-    {
-        LibInternal.updateSilo(msg.sender, partialUpdateSilo);
-        (uint256 lp, uint256 beansConverted) = LibConvert.sellToPegAndAddLiquidity(userData);
-        (uint256 beansRemoved, uint256 stalkRemoved) = _withdrawBeansForConvert(crates, amounts, beansConverted);
-        require(beansRemoved == beansConverted, "Silo: Wrong Beans removed.");
-        uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(C.getSeedsPerLPBean())));
-        _s = getDepositSeason(_s);
-
-        _depositLP(lp, beansConverted, _s);
-        LibCheck.balanceCheck();
-        LibSilo.updateBalanceOfRainStalk(msg.sender);
-    }   
-
-    function convertDepositedLP(
-        bytes calldata userData,
-        uint32[] memory crates,
-        uint256[] memory amounts,
-        bool partialUpdateSilo
-    )
-        external
-    {
-        LibInternal.updateSilo(msg.sender, partialUpdateSilo);
-        (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(userData);
-        (uint256 lpRemoved, uint256 stalkRemoved) = _withdrawLPForConvert(crates, amounts, lpConverted);
-        require(lpRemoved == lpConverted, "Silo: Wrong LP removed.");
-        uint32 _s = uint32(stalkRemoved.div(beans.mul(C.getSeedsPerBean())));
-        _s = getDepositSeason(_s);
-        _depositBeans(beans, _s);
-        LibCheck.balanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
@@ -151,12 +116,15 @@ contract ConvertFacet is ConvertWithdraw {
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
-    function lpToPeg() external view returns (uint256 lp) {
-        return LibConvert.lpToPeg();
+    function lpToPeg(address pair) external view returns (uint256 lp) {
+        if (pair == C.uniswapV2PairAddress()) return LibUniswapConvert.lpToPeg();
+        else if (pair == C.curveMetapoolAddress()) return LibCurveConvert.lpToPeg();
+        require(false, "Convert: Pool not supported");
     }
 
-    function beansToPeg() external view returns (uint256 beans) {
-        (uint256 ethReserve, uint256 beanReserve) = reserves();
-        return LibConvert.beansToPeg(ethReserve, beanReserve);
+    function beansToPeg(address pair) external view returns (uint256 beans) {
+        if (pair == C.uniswapV2PairAddress()) return LibUniswapConvert.beansToPeg();
+        else if (pair == C.curveMetapoolAddress()) return LibCurveConvert.beansToPeg();
+        require(false, "Convert: Pool not supported");
     }
 }

@@ -8,17 +8,28 @@ pragma experimental ABIEncoderV2;
 import "../../libraries/Decimal.sol";
 import "../../libraries/UniswapV2OracleLibrary.sol";
 import "../LibAppStorage.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Publius
  * @title Oracle tracks the TWAP price of the USDC/ETH and BEAN/ETH Uniswap pairs.
 **/
-contract LibUniswapOracle {
+library LibUniswapOracle {
 
     using Decimal for Decimal.D256;
     using SafeMath for uint256;
 
-    function captureUniswap() internal returns (int256) {
+    function check() internal view returns (int256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        if (s.co.initialized) {
+            (int256 db,,) = twaDeltaB();
+            return db;
+        } else {
+            return 0;
+        }
+    }
+
+    function capture() internal returns (int256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.o.initialized) {
             return updateOracle();
@@ -51,7 +62,14 @@ contract LibUniswapOracle {
 
     function updateOracle() internal returns (int256 deltaB) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256[2] memory prices = updateTWAP();
+        (deltaB, s.o.cumulative, s.o.pegCumulative) = twaDeltaB();
+        s.o.timestamp = uint32(block.timestamp % 2 ** 32);
+    }
+
+    function twaDeltaB() internal view returns (int256 deltaB, uint256 priceCumulative, uint256 peg_priceCumulative) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256[2] memory prices;
+        (prices, priceCumulative, peg_priceCumulative) = twap();
 
         (uint256 eth_reserve, uint256 bean_reserve) = lockedReserves();
         int256 currentBeans = int256(sqrt(
@@ -61,31 +79,25 @@ contract LibUniswapOracle {
             bean_reserve.mul(eth_reserve).mul(1e6).div(prices[1])
         ));
 
-        return targetBeans-currentBeans;
+        deltaB = targetBeans-currentBeans;
     }
 
-    function updateTWAP() internal returns (uint256[2] memory balances) {
+    function twap() internal view returns (uint256[2] memory balances, uint256 priceCumulative, uint256 peg_priceCumulative) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         (uint256 price0Cumulative, uint256 price1Cumulative, uint32 blockTimestamp) =
         UniswapV2OracleLibrary.currentCumulativePrices(s.c.pair);
-        (uint256 peg_priceCumulative,, uint32 peg_blockTimestamp) =
+        (peg_priceCumulative,,) =
         UniswapV2OracleLibrary.currentCumulativePrices(s.c.pegPair);
-        uint256 priceCumulative = s.index == 0 ? price0Cumulative : price1Cumulative;
+        priceCumulative = s.index == 0 ? price0Cumulative : price1Cumulative;
 
         uint32 timeElapsed = blockTimestamp - s.o.timestamp; // overflow is desired
-        uint32 pegTimeElapsed = peg_blockTimestamp - s.o.pegTimestamp; // overflow is desired
+        uint32 pegTimeElapsed = blockTimestamp - s.o.timestamp; // overflow is desired
 
         uint256 price1 = (priceCumulative - s.o.cumulative) / timeElapsed;
         uint256 price2 = (peg_priceCumulative - s.o.pegCumulative) / pegTimeElapsed;
 
         Decimal.D256 memory bean_price = Decimal.ratio(price1, 2**112);
         Decimal.D256 memory usdc_price = Decimal.ratio(price2, 2**112);
-
-        s.o.timestamp = blockTimestamp;
-        s.o.pegTimestamp = peg_blockTimestamp;
-
-        s.o.cumulative = priceCumulative;
-        s.o.pegCumulative = peg_priceCumulative;
 
         balances[0] = bean_price.mul(1e6).asUint256();
         balances[1] = usdc_price.mul(1e6).asUint256();
@@ -136,6 +148,8 @@ contract LibUniswapOracle {
         uint lockedLP = s.lp.deposited.add(s.lp.withdrawn);
         ethReserve = ethReserve.mul(lockedLP).div(lp);
         beanReserve = beanReserve.mul(lockedLP).div(lp);
+        console.log("Locked: %s, Total: %s", lockedLP, lp);
+        console.log("Eth: %s, Bean: %s", ethReserve, beanReserve);
         return (ethReserve, beanReserve);
     }
 

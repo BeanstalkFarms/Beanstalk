@@ -26,6 +26,16 @@ library LibCurveOracle {
     using Decimal for Decimal.D256;
     using SafeMath for uint256;
 
+    function check() internal view returns (int256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        if (s.co.initialized) {
+            (int256 db,) = twaDeltaB();
+            return db;
+        } else {
+            return 0;
+        }
+    }
+
     function capture() internal returns (int256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.co.initialized) {
@@ -48,15 +58,23 @@ library LibCurveOracle {
         }
     }
 
+
     function updateOracle() internal returns (int256 deltaB) {
-        uint256[2] memory balances = updateTWAP();
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        (deltaB, s.co.balances) = twaDeltaB();
+        s.co.timestamp = block.timestamp;
+    }
+
+    function twaDeltaB() internal view returns (int256 deltaB, uint256[2] memory cum_balances) {
+        uint256[2] memory balances;
+        (balances, cum_balances) = twap();
         uint256 d = LibMetaCurve.getDFromBalances(balances);
         deltaB = getCurveDeltaB(balances[0], d);
     }
 
-    function updateTWAP() internal returns (uint256[2] memory balances) {
-        uint256[2] memory cum_balances = IMeta3CurveOracle(POOL).get_price_cumulative_last();
-        uint256[2] memory balances = IMeta3CurveOracle(POOL).get_balances();
+    function twap() internal view returns (uint256[2] memory balances, uint256[2] memory cum_balances) {
+        cum_balances = IMeta3CurveOracle(POOL).get_price_cumulative_last();
+        balances = IMeta3CurveOracle(POOL).get_balances();
         uint256 lastTimestamp = IMeta3CurveOracle(POOL).block_timestamp_last();
 
         cum_balances[0] = cum_balances[0].add(balances[0].mul(block.timestamp.sub(lastTimestamp)));
@@ -65,15 +83,10 @@ library LibCurveOracle {
         AppStorage storage s = LibAppStorage.diamondStorage();
         Storage.COracle storage o = s.co;
 
-        uint256 block_timestamp = block.timestamp;
-        uint256 deltaTimestamp = block_timestamp.sub(o.timestamp);
+        uint256 deltaTimestamp = block.timestamp.sub(o.timestamp);
         
         balances[0] = cum_balances[0].sub(o.balances[0]).div(deltaTimestamp);
         balances[1] = cum_balances[1].sub(o.balances[1]).div(deltaTimestamp);
-
-        o.balances = cum_balances;
-        o.timestamp = block_timestamp;
-        return balances;
     }
 
     function get_cumulative() private returns (uint256[2] memory cum_balances, uint256 lastTimestamp) {

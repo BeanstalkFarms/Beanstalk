@@ -214,6 +214,10 @@ contract MockUniswapV2Router {
         MockUniswapV2Pair(_pair).setToken2(_weth);
     }
 
+    function setWETH(address payable weth) external {
+        _weth = weth;
+    }
+
     function WETH() public view returns (address){
         return _weth;
     }

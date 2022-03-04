@@ -230,5 +230,4 @@ struct AppStorage {
     Storage.COracle co;
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
     mapping(address => bytes4) convertLPSelectors;
-    address bean3Curve;
 }

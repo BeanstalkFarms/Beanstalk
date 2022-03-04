@@ -14,6 +14,7 @@ import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibMarket.sol";
 import "../../../C.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -41,6 +42,9 @@ contract ConvertDeposit {
 
     function _depositTokens(address token, uint256 amount, uint256 bdv, uint256 grownStalk) internal {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
+        console.log("BDV: %s", bdv);
+        console.log("Seeds: %s", s.ss[token].seeds);
+        
         uint256 seeds = s.ss[token].seeds.mul(bdv);
         uint32 _s;
         if (grownStalk > 0) {

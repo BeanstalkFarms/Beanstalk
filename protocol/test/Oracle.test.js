@@ -5,6 +5,7 @@ let userAddress, ownerAddress, user2Address;
 
 const THREE_CURVE = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
 const BEAN_3_CURVE = "0x3a70DfA7d2262988064A2D051dd47521E43c9BdD";
+const UNISWAP_V2_BEAN_ETH = "0x87898263B6C5BABe34b4ec53F22d98430b91e371";
 
 const BN_ZERO = ethers.utils.parseEther('0');
 
@@ -79,6 +80,7 @@ describe('Oracle', function () {
 
   beforeEach (async function () {
     await this.season.resetState();
+    await this.pair.burnAllLP(this.season.address);
     await this.beanThreeCurve.set_balances([toBean('1000000'), to18('1000000')]);
     await this.pair.simulateTrade(toBean('2000'), to18('2'));
     await this.pegPair.simulateTrade(toBean('2000'), to18('2'));
@@ -164,6 +166,30 @@ describe('Oracle', function () {
         this.result = await this.oracle.captureCurveE();
         await expect(this.result).to.emit(this.oracle, 'DeltaB').withArgs('-252354675068');
       });
+
+      it("tracks a TWAL with a change", async function () {
+        await advanceTime(1800)
+        await this.beanThreeCurve.update([toBean('2000000'), to18('2020000')])
+        await advanceTime(900)
+        this.result = await this.oracle.captureCurveE();
+        await expect(this.result).to.emit(this.oracle, 'DeltaB').withArgs('3332955488');
+      });
+    });
+
+    describe("Get Delta B", async function () {
+      it("tracks a basic Delta B", async function () {
+        await advanceTime(900)
+        await hre.network.provider.send("evm_mine")
+        expect(await this.oracle.poolDeltaB(BEAN_3_CURVE)).to.equal('0');
+      });
+
+      it("tracks a TWAL with a change", async function () {
+        await advanceTime(900)
+        await this.beanThreeCurve.update([toBean('2000000'), to18('1000000')])
+        await advanceTime(900)
+        await hre.network.provider.send("evm_mine")
+        expect(await this.oracle.poolDeltaB(BEAN_3_CURVE)).to.equal('-252354675068');
+      });
     });
   });
 
@@ -230,30 +256,65 @@ describe('Oracle', function () {
       )
     });
 
-    it("Delta B with no liquidity in Silo", async function () {
-      await advanceTime(900)
-      await this.pair.simulateTrade(toBean('2000'), to18('2'));
-      await advanceTime(900)
-      this.result = await this.oracle.captureUniswapE();
-      await expect(this.result).to.emit(this.oracle, 'DeltaB').withArgs('0');
-    });
+    describe("Delta B", async function () {
+      it("Delta B with no liquidity in Silo", async function () {
+        await advanceTime(900)
+        await this.pair.simulateTrade(toBean('2000'), to18('2'));
+        await advanceTime(900)
+        this.result = await this.oracle.captureUniswapE();
+        await expect(this.result).to.emit(this.oracle, 'DeltaB').withArgs('0');
+      });
+  
+      it("Delta B with some liquidity in Silo", async function () {
+        await this.silo.incrementDepositedLPE('1');
+        await advanceTime(900)
+        await this.pair.simulateTrade(toBean('2000'), to18('2.02'));
+        await advanceTime(900)
+        this.result = await this.oracle.captureUniswapE();
+        await expect(this.result).to.emit(this.oracle, 'DeltaB').withArgs('2503087');
+      });
 
-    it("Delta B with some liquidity in Silo", async function () {
-      await this.silo.incrementDepositedLPE('1');
-      await advanceTime(900)
-      await this.pair.simulateTrade(toBean('2000'), to18('2.02'));
-      await advanceTime(900)
-      this.result = await this.oracle.captureUniswapE();
-      await expect(this.result).to.emit(this.oracle, 'DeltaB').withArgs('2503087');
-    });
+      it("Delta B with some liquidity in Silo", async function () {
+        await this.silo.incrementDepositedLPE('1');
+        await advanceTime(900)
+        await this.pair.simulateTrade(toBean('2000'), to18('2.02'));
+        await advanceTime(1800)
+        this.result = await this.oracle.captureUniswapE();
+        await expect(this.result).to.emit(this.oracle, 'DeltaB').withArgs('3333302');
+      });
+    })
+
+    describe("Get Delta B", async function () {
+      it("Delta B with no liquidity in Silo", async function () {
+        await advanceTime(900)
+        await this.pair.simulateTrade(toBean('2000'), to18('2'));
+        await advanceTime(900)
+        await hre.network.provider.send("evm_mine")
+        expect(await this.oracle.poolDeltaB(UNISWAP_V2_BEAN_ETH)).to.equal('0');
+      });
+  
+      it("Delta B with some liquidity in Silo", async function () {
+        await this.silo.incrementDepositedLPE('1');
+        await advanceTime(900)
+        await this.pair.simulateTrade(toBean('2000'), to18('2.02'));
+        await advanceTime(900)
+        await hre.network.provider.send("evm_mine")
+        expect(await this.oracle.poolDeltaB(UNISWAP_V2_BEAN_ETH)).to.equal('2503087');
+      });
+
+    })
   });
 
   describe("Delta B Overall", async function () {
     it("Delta B Overall", async function () {
+      await this.silo.incrementDepositedLPE('1');
+      await advanceTime(900)
+      await this.pair.simulateTrade(toBean('2000'), to18('2.02'));
+      await advanceTime(900)
+      await this.beanThreeCurve.update([toBean('2000000'), to18('2020000')])
+      await advanceTime(900)
       this.result = await this.oracle.captureE();
-      await expect(this.result).to.emit(this.oracle, 'DeltaB').withArgs('0');
-      
+      await expect(this.result).to.emit(this.oracle, 'DeltaB').withArgs('3336288790');
     });
   })
-
 });

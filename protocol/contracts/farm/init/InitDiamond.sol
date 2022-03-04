@@ -19,7 +19,6 @@ import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "../../Bean.sol";
-import "../../mocks/MockToken.sol";
 
 /**
  * @author Publius
@@ -75,7 +74,5 @@ contract InitDiamond {
 
         s.ss[s.c.bean].seeds = 2;
         s.ss[s.c.bean].stalk = 10000;
-
-        s.bean3Curve = address(0x3a70DfA7d2262988064A2D051dd47521E43c9BdD);
     }
 }
