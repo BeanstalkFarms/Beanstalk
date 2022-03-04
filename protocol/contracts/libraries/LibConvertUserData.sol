@@ -13,11 +13,16 @@ library LibConvertUserData {
         CURVE_BUY_TO_PEG_AND_UNISWAP_SELL_TO_PEG
     }
 
+    /// @notice Decoder for the Convert Enum
     function convertKind(bytes memory self) internal pure returns (ConvertKind) {
         return abi.decode(self, (ConvertKind));
     }
 
-    // SellToPegAndAddLiquidity Functions
+    /**
+     * Sell To Peg Convert Functions
+    **/
+
+    /// @notice Decoder for the addLPInBeans Convert
     function addLPInBeans(bytes memory self)
         internal
         pure
@@ -26,7 +31,11 @@ library LibConvertUserData {
         (, beans, minLP) = abi.decode(self, (ConvertKind, uint256, uint256));
     }
 
-    // BuyToPeg Functions
+    /**
+     * BuyToPeg Functions
+    **/
+
+    /// @notice Decoder for the addBeansInLP Convert
     function addBeansInLP(bytes memory self)
         internal
         pure
@@ -35,6 +44,11 @@ library LibConvertUserData {
         (, lp, minBeans) = abi.decode(self, (ConvertKind, uint256, uint256));
     }
 
+    /**
+     * Cross Pool Convert Functions
+    **/
+
+    /// @notice Decoder for the uniswapBuyToPegAndCurveSellToPeg Convert
     function uniswapBuyToPegAndCurveSellToPeg(bytes memory self)
         internal
         pure
@@ -43,6 +57,7 @@ library LibConvertUserData {
         (, uniswapLP, minBeans, beans, minCurveLP) = abi.decode(self, (ConvertKind, uint256, uint256, uint256, uint256));
     }
 
+    /// @notice Decoder for the curveBuyToPegAndUniswapSellToPeg Convert
     function curveBuyToPegAndUniswapSellToPeg(bytes memory self)
         internal
         pure

@@ -38,6 +38,8 @@ library LibCurveConvert {
         uint256 beans = balances[0].sub(balances[1]);
     }
 
+    /// @notice Takes in encoded bytes for adding Curve LP in beans, extracts the input data, and then calls the
+    /// @param userData Contains convert input parameters for a Curve AddLPInBeans convert
     function convertLPToBeans(bytes memory userData) internal returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -48,6 +50,8 @@ library LibCurveConvert {
         bdv = outAmount;
     }
 
+    /// @notice Takes in encoded bytes for adding beans in Curve LP, extracts the input data, and then calls the
+    /// @param userData Contains convert input parameters for a Curve AddBeansInLP convert
     function convertBeansToLP(bytes memory userData) internal returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         
@@ -59,6 +63,9 @@ library LibCurveConvert {
         bdv = inAmount;
     }
 
+    /// @notice Takes in parameters to convert beans into LP using Curve
+    /// @param beans - amount of beans to convert to Curve LP
+    /// @param minLP - min amount of Curve LP to receive
     function _curveSellToPegAndAddLiquidity(uint256 beans, uint256 minLP) private returns (uint256 lp, uint256 beansConverted) {
         uint256[2] memory balances = LibMetaCurve.balances();
         uint256 beans = _beansToPeg(balances);
@@ -70,6 +77,9 @@ library LibCurveConvert {
         beansConverted = beans;
     }
 
+    /// @notice Takes in parameters to remove LP into beans by removing LP in curve through removing beans 
+    /// @param lp - the amount of Curve lp to be removed
+    /// @param minBeans - min amount of beans to receive   
     function _curveRemoveLPAndBuyToPeg(uint256 lp, uint256 minBeans) private returns (uint256 beans, uint256 lpConverted) {
         uint256[2] memory balances = LibMetaCurve.balances();
         balances = LibMetaCurve.getXP(balances);

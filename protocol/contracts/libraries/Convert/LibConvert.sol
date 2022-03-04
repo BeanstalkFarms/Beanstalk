@@ -18,6 +18,9 @@ library LibConvert {
     using SafeMath for uint256;
     using LibConvertUserData for bytes;
 
+    /// @notice Takes in bytes object that has convert input data encoded into it for a particular convert for
+    ///         a specified pool and returns the in and out convert amounts and token addresses and bdv
+    /// @param userData Contains convert input parameters for a specified convert
     function convert(bytes memory userData)
         internal
         returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv)

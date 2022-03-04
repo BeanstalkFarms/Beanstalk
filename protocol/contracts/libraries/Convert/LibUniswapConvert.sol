@@ -48,6 +48,17 @@ library LibUniswapConvert {
         return eth.mul(totalLP()).div(e);
     }
 
+    /**
+        * Convert Function Selector Functions
+        **/
+
+        /**
+        * Sell To Peg Convert Functions
+        **/
+
+        /// @notice Takes in parameters to convert beans into LP by selling some beans to the Peg for ETH to convert them into LP using Uniswap
+        /// @param beans - amount of beans to convert to Uniswap LP
+        /// @param minLP - min amount of Uniswap LP to receive
     function convertBeansToLP(bytes memory userData) internal returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -58,6 +69,9 @@ library LibUniswapConvert {
         bdv = inAmount;
     }
 
+    /// @notice Takes in encoded bytes for adding Uniswap LP in beans, extracts the input data, and then calls the
+    ///         _uniswapSellToPegAndAddLiquidity function
+    /// @param userData Contains convert input parameters for a Uniswap AddLPInBeans convert
     function convertLPToBeans(bytes memory userData) internal returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         
@@ -69,11 +83,12 @@ library LibUniswapConvert {
     }
 
     /**
-     * Convert Function Selector Functions
+     * Buy To Peg Convert Functions
     **/
 
-    // Uniswap
-
+    /// @notice Takes in parameters to convert LP into beans by selling some LP, using the ETH obtained to convert them into beans using Uniswap
+    /// @param lp - the amount of Uniswap lp to be removed
+    /// @param minBeans - min amount of beans to receive
     function _uniswapRemoveLPAndBuyToPeg(uint256 lp, uint256 minBeans) private returns (uint256 beans, uint256 lpConverted) {
         lpConverted = lpToPeg();
         require(lpConverted > 0, "Convert: P must be < 1.");
@@ -85,6 +100,11 @@ library LibUniswapConvert {
         require(beans >= minBeans, "Convert: Not enough Beans.");
     }
 
+    // Cross-Pool Buy To Peg/Sell To Peg Functions
+
+    /// @notice Takes in encoded bytes for adding Curve LP in Uniswap LP, extracts the input data, and then calls the
+    ///         _uniswapRemoveLPAndBuyToPeg and then _curveSellToPegAndAddLiquidity
+    /// @param userData Contains convert input parameters for a Curve AddCurveLPInUniswapLP convert
     function _uniswapSellToPegAndAddLiquidity(uint256 beans, uint256 minLP) private returns (uint256 lp, uint256 beansConverted) {
         (uint256 ethReserve, uint256 beanReserve) = reserves();
         uint256 maxSellBeans = _beansToPeg(ethReserve, beanReserve);
