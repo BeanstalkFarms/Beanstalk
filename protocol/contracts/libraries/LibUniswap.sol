@@ -144,7 +144,8 @@ library LibUniswap {
         uint amountTokenMin,
         uint amountETHMin,
         address to,
-        uint deadline
+        uint deadline,
+	bool convert
     ) internal ensure(deadline) returns (uint amountToken, uint amountETH, uint liquidity) {
 	AppStorage storage s = LibAppStorage.diamondStorage();	
         (amountToken, amountETH) = _addLiquidity(
@@ -156,8 +157,8 @@ library LibUniswap {
             amountETHMin
         );
         address pair = pairFor(uniswapFactory, token, s.c.weth);
-	IERC20(token).transfer(pair, amountToken);
-        //TransferHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
+	if (convert) IERC20(token).transfer(pair, amountToken);
+        else TransferHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
         IWETH(s.c.weth).deposit{value: amountETH}();
         assert(IWETH(s.c.weth).transfer(pair, amountETH));
         liquidity = IUniswapV2Pair(pair).mint(to);
@@ -296,7 +297,7 @@ library LibUniswap {
         _swap(amounts, path, to, set.toInternalBalance);
     }
     
-    function swapExactETHForTokens(uint amountOutMin, address[] memory path, address to, uint deadline, Storage.Settings calldata set)
+    function swapExactETHForTokens(uint amountOutMin, address[] memory path, address to, uint deadline, Storage.Settings memory set)
         internal
         ensure(deadline)
         returns (uint[] memory amounts)
@@ -530,7 +531,7 @@ library LibUniswap {
     function addAndDepositLiquidity(AddLiquidity calldata al) internal returns (uint256) {
 	AppStorage storage s = LibAppStorage.diamondStorage();
 	LibUserBalance.allocatedBeans(al.beanAmount);
-        (uint256 beansDeposited, uint256 ethDeposited, uint256 liquidity) = addLiquidityETH(s.c.bean, al.beanAmount, al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1)); //{value: msg.value}
+        (uint256 beansDeposited, uint256 ethDeposited, uint256 liquidity) = addLiquidityETH(s.c.bean, al.beanAmount, al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1), true); //{value: msg.value}
         (bool success,) = msg.sender.call{ value: msg.value.sub(ethDeposited) }("");
         require(success, "Market: Refund failed.");
         if (al.beanAmount > beansDeposited) IBean(s.c.bean).transfer(msg.sender, al.beanAmount.sub(beansDeposited));

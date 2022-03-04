@@ -52,13 +52,12 @@ contract FarmFacet {
      * Farm Function
     */
 
-    function farm(bytes calldata data) public {
+    function farm(bytes calldata data) public payable {
 	DiamondStorage storage ds = diamondStorage();
 	bytes4 functionSelector;
 	assembly {
 		functionSelector := calldataload(data.offset)
 	}
-	require(s.whitelistedFunction[functionSelector], "FarmFacet: Call to a non-whitelisted function");
 	address facet = ds.selectorToFacetAndPosition[functionSelector].facetAddress;
 	(bool success,) = address(facet).delegatecall(data);
 	require(success, "FarmFacet: Function call failed!");

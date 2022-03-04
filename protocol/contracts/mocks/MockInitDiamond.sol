@@ -50,17 +50,6 @@ contract MockInitDiamond {
 
         s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
         LibUniswap.initMarket(s.c.bean, s.c.weth, mockRouter);
-
-
-
-	/*
-	 * Whitelisted Functions
-	*/
-
-	s.whitelistedFunction[0x75ce258d] = true; // depositBeans(uint256)
-	s.whitelistedFunction[0x52719789] = true; // sowBeans(uint256)
-	s.whitelistedFunction[0x2db75d40] = true; // fundraise(uint32,uint256)
-	s.whitelistedFunction[0x45867952] = true; // unwrapBeans(uint256)
     }
 
 }
