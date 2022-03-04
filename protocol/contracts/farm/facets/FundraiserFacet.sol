@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "../../libraries/LibDibbler.sol";
 
 /**
@@ -33,7 +34,7 @@ contract FundraiserFacet {
         uint256 remaining = s.fundraisers[id].remaining;
         require(remaining > 0, "Fundraiser: already completed.");
         require(remaining >= amount, "Fundraiser: amount exceeds remaining.");
-        IERC20(s.fundraisers[id].token).transferFrom(msg.sender, address(this), amount);
+        SafeERC20.safeTransferFrom(IERC20(s.fundraisers[id].token), msg.sender, address(this), amount);
         s.fundraisers[id].remaining = remaining.sub(amount);
         emit FundFundraiser(msg.sender, id, amount);
         
@@ -41,7 +42,7 @@ contract FundraiserFacet {
     }
 
     function completeFundraiser(uint32 id) internal {
-        IERC20(s.fundraisers[id].token).transfer(s.fundraisers[id].payee, s.fundraisers[id].total);
+        SafeERC20.safeTransfer(IERC20(s.fundraisers[id].token), s.fundraisers[id].payee, s.fundraisers[id].total);
         emit CompleteFundraiser(id);
     }
 

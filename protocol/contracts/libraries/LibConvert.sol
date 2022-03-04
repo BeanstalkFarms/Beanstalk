@@ -34,7 +34,7 @@ library LibConvert {
         (uint256 beansSold, uint256 wethBought) = LibMarket._sell(sellBeans, 1, address(this));
         (beansConverted,, lp) = LibMarket._addLiquidityWETH(wethBought,beans.sub(beansSold),1,1);
         require(lp >= minLP, "Convert: Not enough LP.");
-        beansConverted = beansConverted + beansSold;
+        beansConverted = beansConverted.add(beansSold);
     }
 
     function removeLPAndBuyToPeg(uint256 lp, uint256 minBeans) 

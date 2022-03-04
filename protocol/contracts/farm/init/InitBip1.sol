@@ -21,7 +21,7 @@ contract InitBip1 {
     address private constant marketingBudget = address(0xAA420e97534aB55637957e868b658193b112A551 );
 
     function init() external {
-        IBean(s.c.bean).mint(marketingBudget, 80000000000);
-        IBean(s.c.bean).mint(developmentBudget, 120000000000);
+        IBean(s.c.bean).mint(marketingBudget, 80_000_000_000);
+        IBean(s.c.bean).mint(developmentBudget, 120_000_000_000);
     }
 }

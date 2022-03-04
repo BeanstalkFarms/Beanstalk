@@ -22,7 +22,7 @@ contract InitBip5 {
     address private constant bean = address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db);
     
     function init() external {
-        IBS(address(this)).createFundraiser(payee, token, 140000000000);
-        IBean(address(bean)).mint(payee, 15000000000);
+        IBS(address(this)).createFundraiser(payee, token, 140_000_000_000);
+        IBean(address(bean)).mint(payee, 15_000_000_000);
     }
 }
