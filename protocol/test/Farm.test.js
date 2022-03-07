@@ -21,6 +21,7 @@ describe('Farm', function () {
     this.bean = await ethers.getContractAt('MockToken', contracts.bean)
     this.weth = await ethers.getContractAt('MockToken', contracts.weth)
     this.farm = await ethers.getContractAt('MockFarmFacet', this.diamond.address);
+    this.uniswap = await ethers.getContractAt('MockUniswapFacet', this.diamond.address);
     this.fundraiser = await ethers.getContractAt('MockFundraiserFacet', this.diamond.address)
 
     await this.season.siloSunrise(0)
@@ -31,6 +32,7 @@ describe('Farm', function () {
     await this.bean.connect(user).approve(this.silo.address, '100000000000')
     await this.bean.connect(user2).approve(this.silo.address, '100000000000')
     await this.weth.connect(user).approve(this.silo.address, '100000000000');
+    await this.pair.set('20000', '20000','1');
 
     await user.sendTransaction({
         to: this.weth.address,
@@ -43,9 +45,6 @@ describe('Farm', function () {
     await this.pair.burnAllLP(this.silo.address);
     await this.pair.burnTokens(this.bean.address);
     await this.pair.burnWETH(this.weth.address);
-    await this.pair.set('9000000', '1000000','1');
-    await this.weth.mint(this.pair.address, '1000000');
-    await this.bean.mint(this.pair.address, '9000000');
     await this.season.siloSunrise(0)
     await this.season.resetAccount(userAddress)
     await this.season.resetAccount(user2Address)
@@ -53,6 +52,9 @@ describe('Farm', function () {
     await this.season.resetWrappedBeans([userAddress, user2Address, ownerAddress])
     await this.season.resetState()
     await this.season.siloSunrise(0)
+    await this.weth.mint(this.pair.address, '20000');
+    await this.bean.mint(this.pair.address, '20000');
+    await this.pair.simulateTrade('20000', '20000');
   });
 
   describe('Silo Facet', function () {
@@ -91,47 +93,37 @@ describe('Farm', function () {
    });
   });
   describe('Uniswap Facet', function () {
-   it('swap tokens: weth -> bean', async function () {
-	this.preSupply = await this.bean.balanceOf(userAddress);
+   it('swap tokens: ANY -> BEAN', async function () {
 	this.wethPre = await this.weth.balanceOf(userAddress);
-	   console.log(await this.bean.totalSupply());
-	   console.log(await this.bean.balanceOf(userAddress));
-	   console.log(await this.bean.balanceOf(this.pair.address));
-	   console.log(await this.bean.balanceOf(this.silo.address));
 	this.preSupply = await this.bean.balanceOf(userAddress);
-	await this.farm.connect(user).farm('0xeb5428f9000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc200000000000000000000000000000000000000000000000000000000000003e800000000000000000000000000000000000000000000000000000000000003d4'); // swapOnUniswap(weth, 1, 980)
-	console.log(await this.bean.totalSupply());
-	   console.log(await this.bean.balanceOf(userAddress));
-	   console.log(await this.bean.balanceOf(this.pair.address));
-	   console.log(await this.bean.balanceOf(this.silo.address));
-	this.preSupply = await this.bean.balanceOf(userAddress);
-	expect((await this.bean.balanceOf(userAddress)).sub(this.preSupply)).to.eq('988');
-	expect((await this.weth.balanceOf(userAddress)).sub(this.wethPre)).to.eq(-1);
+	await this.farm.connect(user).farm('0xeb5428f9000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc200000000000000000000000000000000000000000000000000000000000003e800000000000000000000000000000000000000000000000000000000000003ac'); // swapOnUniswap(weth, 1000, 940)
+	expect((await this.bean.balanceOf(userAddress)).sub(this.preSupply)).to.eq('0');
+	expect((await this.weth.balanceOf(userAddress)).sub(this.wethPre)).to.eq('-1000');
+	expect(await this.uniswap.internalBalance(userAddress, this.bean.address)).to.eq('949');
    });
-   it('buy tokens: ETH -> bean', async function () {
-	   console.log(await this.bean.totalSupply());
-	   console.log(await this.bean.balanceOf(userAddress));
-	   console.log("P " + await this.bean.balanceOf(this.pair.address));
-	   console.log("S " + await this.bean.balanceOf(this.silo.address));
+   it('buy tokens: ETH -> BEAN', async function () {
 	this.preSupply = await this.bean.balanceOf(userAddress);
-	await this.farm.connect(user).farm('0x058a24c700000000000000000000000000000000000000000000000000000000000003d4', {value: ethers.utils.parseEther('10')}); // buyBeansOnUniswap(980)
-	   console.log(await this.bean.totalSupply());
-	   console.log("user " + await this.bean.balanceOf(userAddress));
-	   console.log("PAir " + await this.bean.balanceOf(this.pair.address));
-	   console.log(" SIlo " + await this.bean.balanceOf(this.silo.address));
-	expect((await this.bean.balanceOf(userAddress)).sub(this.preSupply)).to.eq('988');
+	await this.farm.connect(user).farm('0x058a24c700000000000000000000000000000000000000000000000000000000000003ac', {value: '1000'}); // buyBeansOnUniswap(940)
+	expect((await this.bean.balanceOf(userAddress)).sub(this.preSupply)).to.eq('0');
+	expect(await this.uniswap.internalBalance(userAddress, this.bean.address)).to.eq('949');
+   });
+   it('sell tokens: BEAN -> ETH', async function () {
+	this.preSupply = await this.bean.balanceOf(userAddress);
+	await this.farm.connect(user).farm('0x18e257ea00000000000000000000000000000000000000000000000000000000000003e80000000000000000000000000000000000000000000000000000000000000001'); // sellBeansOnUniswap(1000, 1)
+	expect((await this.bean.balanceOf(userAddress)).sub(this.preSupply)).to.eq('-1000');
+	expect(await this.uniswap.internalBalance(userAddress, this.weth.address)).to.eq('949');
    });
   });
   describe('Fundraiser Facet', function () {
    it('fund an existing fundraiser', async function () {
-	this.preSupply = await this.bean.balanceOf(userAddress);
 	await this.season.setSoilE('1000');
 	await this.season.setYieldE('2000');
-	await this.fundraiser.createFundraiserE(userAddress, this.bean.address, '1000');
+	await this.fundraiser.createFundraiserE(userAddress, this.bean.address, '1000000');
 	expect(await this.field.totalPods()).to.eq('0');
+	this.preSupply = await this.bean.balanceOf(userAddress);
 	await this.farm.connect(user).farm('0x2db75d40000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003e8'); // fund(0, 1000)
 	expect(await this.field.totalPods()).to.eq('21000');
-	expect((await this.bean.balanceOf(userAddress)).sub(this.preSupply)).to.eq(-1000);
+	expect((await this.bean.balanceOf(userAddress)).sub(this.preSupply)).to.eq('-1000');
    });
   });
   describe('Claim Facet', function () {

@@ -236,10 +236,10 @@ library LibUniswap {
 	    	    IUniswapV2Pair(pairFor(uniswapFactory, input, output)).swap(amount0Out, amount1Out, to, new bytes(0));
 	    }
 	    else {
-		    swap.snapshot = IERC20(swap.path[swap.path.length - 1]).balanceOf(_to);
 		    if (toInternalBalance) {
+		            swap.snapshot = IERC20(swap.path[swap.path.length - 1]).balanceOf(address(this));
 			    IUniswapV2Pair(pairFor(uniswapFactory, input, output)).swap(amount0Out, amount1Out, address(this), new bytes(0));
-			    uint256 increment = IERC20(swap.path[swap.path.length - 1]).balanceOf(swap.recipient).sub(amount0Out) == swap.snapshot ? amount0Out : amount1Out;
+			    uint256 increment = IERC20(swap.path[swap.path.length - 1]).balanceOf(address(this)) == swap.snapshot.add(amount0Out) ? amount0Out : amount1Out;
 			    LibUserBalance._increaseInternalBalance(swap.recipient, IERC20(swap.path[swap.path.length - 1]), increment);
 		    }
 		    else {
