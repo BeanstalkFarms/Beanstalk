@@ -10,6 +10,7 @@ import '../../AppStorage.sol';
 import './TroveFactory.sol';
 import '../../../interfaces/ILiquityManager.sol';
 import '../../../libraries/LibUserBalance.sol';
+import '../../../libraries/LibCurve.sol';
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
@@ -45,15 +46,7 @@ contract Designate is TroveFactory {
 	
 	function _collateralizeAndSwap(uint256 maxFeePercentage, uint256 lusdAmount, uint256 minBeanAmount, uint256 numTrials, uint256 randSeed, Storage.Settings calldata set) internal returns (uint256 newBeans) {
 		_collateralizeWithApproxHint(maxFeePercentage, lusdAmount, numTrials, randSeed);
-		address[] memory path = new address[](3);
-		path[0] = lusdToken;
-		path[1] = s.c.weth;
-		path[2] = s.c.bean;
-		console.log('here');
-		uint256[] memory amounts = LibUniswap.swapExactTokensForTokens(lusdAmount, minBeanAmount, path, address(this), block.timestamp.add(1), set, false);
-		console.log("Amounts 0: %s", amounts[0]);
-		console.log("Amounts 1: %s", amounts[1]);
-		console.log("Amounts 2: %s", amounts[2]);
+		uint256 amountReturned = LibCurve.swapLUSDForBeans(lusdAmount, minBeanAmount);
 	}
 
 	function _fetchBeans(uint256 fetchAmount, bool fromInternalBalance) internal {

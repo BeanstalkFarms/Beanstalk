@@ -24,7 +24,6 @@ describe('Sun', function () {
     this.bean = await ethers.getContractAt('MockToken', contracts.bean)
     this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair)
     this.pegPair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pegPair)
-    await this.bean.offlineReset();
   });
 
   [...Array(numberTests).keys()].map(i => i + startTest).forEach(function(v) {
@@ -33,9 +32,7 @@ describe('Sun', function () {
       testData = {}
       columns.forEach((key, i) => testData[key] = tests[v][i])
       before(async function () {
-	await this.season.resetAccount(this.silo.address);
         await this.season.resetState()
-	await this.field.resetField()
         await this.pair.burnTokens(this.bean.address)
         await this.pair.burnAllLP(this.silo.address)
         this.testData = {}
@@ -129,5 +126,6 @@ describe('Sun Soil', function () {
 
   it("Properly sets the soil bounds", async function () {
     expect(await this.season.minSoil('100')).to.be.equal('50')
+
   });
 });

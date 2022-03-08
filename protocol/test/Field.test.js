@@ -36,7 +36,6 @@ describe('Field', function () {
     this.claim = await ethers.getContractAt('ClaimFacet', this.diamond.address)
     this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair)
     this.pegPair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pegPair)
-
   });
 
   [...Array(numberTests).keys()].map(i => i + startTest).forEach(function(v) {
@@ -61,7 +60,6 @@ describe('Field', function () {
              this.testData[columns[c]] = this.testData[columns[c]].toString()
           }
         }
-	this.preSupply = await this.bean.totalSupply();
         await this.season.setYieldE(this.testData.weather)
 
         await this.bean.mint(userAddress, this.testData.userStarterBeans)
@@ -98,7 +96,7 @@ describe('Field', function () {
 
       it('updates total balance', async function() {
         expect(await this.bean.balanceOf(this.field.address)).to.eq(this.testData.totalHarvestablePods)
-        expect((await this.bean.totalSupply()).sub(this.preSupply)).to.eq(this.testData.totalBeans)
+        expect(await this.bean.totalSupply()).to.eq(this.testData.totalBeans)
         expect(await this.field.totalPods()).to.eq(this.testData.totalPods)
         expect(await this.field.totalHarvestable()).to.eq(this.testData.totalHarvestablePods)
         expect(await this.field.totalSoil()).to.eq(this.testData.soil)

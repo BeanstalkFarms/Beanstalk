@@ -54,7 +54,7 @@ contract ConvertSilo {
             bean().transferFrom(msg.sender, address(this), w.beansTransferred);
         }
 	uint256 ethDeposited;
-	(w.beansAdded, ethDeposited, w.newLP) = LibUniswap.addLiquidityETH(s.c.bean, al.beanAmount, al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1));
+	(w.beansAdded, ethDeposited, w.newLP) = LibUniswap.addLiquidityETH(s.c.bean, al.beanAmount, al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1), true);
 	(bool success,) = msg.sender.call{ value: msg.value.sub(ethDeposited) }("");
         require(success, "Market: Refund failed.");
         require(w.newLP > 0, "Silo: No LP added.");

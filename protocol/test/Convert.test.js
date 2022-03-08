@@ -3,8 +3,6 @@ const { deploy } = require('../scripts/deploy.js')
 
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
-
-
 describe('Convert', function () {
   before(async function () {
     [owner,user,user2] = await ethers.getSigners();
@@ -45,7 +43,6 @@ describe('Convert', function () {
     await this.pair.burnAllLP(userAddress);
     await this.pair.burnAllLP(user2Address);
     await this.pair.burnAllLP(ownerAddress);
-    await this.pair.burnAllLPSimulation();
     await this.season.resetState();
     await this.season.siloSunrise(0);
   });

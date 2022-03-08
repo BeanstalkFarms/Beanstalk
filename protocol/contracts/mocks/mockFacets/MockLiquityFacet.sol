@@ -16,10 +16,6 @@ import 'hardhat/console.sol';
 
 contract MockLiquityFacet is LiquityFacet {
 
-	function internalBalance(address account, address token) public view returns (uint256) {
-		return LibUserBalance._getInternalBalance(account, IERC20(token));
-	}
-
 	function associatedTrove(address account) public view returns (address) {
 		return s.trove[account];
 	}

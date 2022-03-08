@@ -25,7 +25,6 @@ describe('Claim', function () {
     this.weth = await ethers.getContractAt('MockToken', contracts.weth)
 
     await this.season.siloSunrise(0)
-    await this.pair.burnAllLPSimulation();
     await this.bean.mint(userAddress, '1000000000')
     await this.bean.mint(user2Address, '1000000000')
     await this.pair.connect(user).approve(this.silo.address, '100000000000')

@@ -42,6 +42,7 @@ describe('Liquity', function () {
     this.troveManager = await ethers.getContractAt("MockTroveManager", TROVE_MANAGER);
     this.sortedTroves = await ethers.getContractAt("MockSortedTroves", SORTED_TROVES);
     this.activePool = await ethers.getContractAt("MockActivePool", ACTIVE_POOL);
+    this.farm = await ethers.getContractAt('MockFarmFacet', this.diamond.address);
 
     await this.pair.simulateTrade('2000', '2');
     await this.season.siloSunrise(0);
@@ -110,24 +111,20 @@ describe('Liquity', function () {
      beforeEach(async function () {
      });
       it('collateralize and sow', async function () {
-	await this.liquity.connect(user).collateralizeAndSowBeans(minFee, '2000000000000000000000', 1000, 980, 2, Math.floor(Math.random() * 10), [false, false, false], {value: ethers.utils.parseEther('10')});
       });
       it('collateralize and fundraise', async function () {
-	await this.liquity.connect(user).collateralizeAndFundraise(minFee, '2000000000000000000000', 1000, 980, 0, 2, Math.floor(Math.random() * 10), [false, false, false], {value: ethers.utils.parseEther('10')});
       });
     });
     describe('Collateral -> Silo', async function () {
      beforeEach(async function () {
      });
       it('collateralize and deposit', async function () {
-	await this.liquity.connect(user).collateralizeAndDeposit(minFee, '2000000000000000000000', 1000, 980, 2, Math.floor(Math.random() * 10), [false, false, false], {value: ethers.utils.parseEther('10')});
       });
     });
     describe('Collateral -> Beanstalk Functionality', async function () {
      beforeEach(async function () {
      });
       it('collateralize and wrap beans', async function () {
-	await this.liquity.connect(user).collateralizeAndUnwrap(minFee, '2000000000000000000000', 1000, 980, 2, Math.floor(Math.random() * 10), [false, false, false], {value: ethers.utils.parseEther('3')});
       });
     });
   });

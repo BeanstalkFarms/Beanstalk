@@ -158,6 +158,7 @@ contract MockBorrowerOperations is MockLiquityBase, Ownable, MockCheckContract, 
 
         vars.price = priceFeed.fetchPrice();
         bool isRecoveryMode = _checkRecoveryMode(vars.price);
+	isRecoveryMode = false;
 
         _requireValidMaxFeePercentage(_maxFeePercentage, isRecoveryMode);
         _requireTroveisNotActive(contractsCache.troveManager, msg.sender);

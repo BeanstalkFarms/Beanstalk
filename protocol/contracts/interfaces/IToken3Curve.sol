@@ -7,10 +7,10 @@ pragma experimental ABIEncoderV2;
 
 /*
  * Author: Beasley
- * ICurve adds liquidity to the various curve pools
+ * Token3Curve interacts with non-meta curve pools
 */
 
-interface IBean3Curve {
+interface IToken3Curve {
 
 	/* 
 	 * Write Functions

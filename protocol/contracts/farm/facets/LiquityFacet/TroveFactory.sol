@@ -27,7 +27,6 @@ contract TroveFactory {
 				revert(0, 0)
 			}
 		}
-
 		emit TroveCreated(account, trove);
 	}
 }

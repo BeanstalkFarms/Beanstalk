@@ -209,9 +209,9 @@ contract MockUniswapV2Router {
         return _pair;
 }
 
-    function setPair(address ppair, address bean, address weth) public {
+    function setPair(address ppair, address weth, address bean) public {
         _pair = ppair;
-	MockUniswapV2Pair(_pair).setTokens(bean, weth);
+	MockUniswapV2Pair(_pair).setTokens(weth, bean);
     }
 
     function WETH() public view returns (address){
@@ -229,3 +229,4 @@ contract MockUniswapV2Router {
     }
 
 }
+
