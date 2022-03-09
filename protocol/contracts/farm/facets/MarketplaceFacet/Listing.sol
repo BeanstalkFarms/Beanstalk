@@ -92,7 +92,7 @@ contract Listing is PodTransfer {
         //update hash to include formula
         s.podListings[index] = hashListing(start, amount, pricePerPod, maxHarvestableIndex, toWallet, functionType, [f.a,f.b,f.c], [f.aShift, f.bShift, f.cShift]);
 
-        emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, toWallet,l.functionType, [f.a,f.b,f.c], [f.aShift, f.bShift, f.cShift]);
+        emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, toWallet,functionType, [f.a,f.b,f.c], [f.aShift, f.bShift, f.cShift]);
     }
 
     /*
@@ -216,7 +216,7 @@ contract Listing is PodTransfer {
     function getListingAmountLin(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256) {
         uint256 placeInLine = l.index - s.f.harvestable; // units: 1 
         uint256 a = f.a.mul(10**(37-f.aShift)); // 1eU
-        uint256 pricePerPod = a.mul(x) + (l.pricePerPod * unit) / 1000000;
+        uint256 pricePerPod = a.mul(placeInLine) + (l.pricePerPod * unit) / 1000000;
         amount = amount * unit / pricePerPod;
         return roundAmount(l, amount); //units will be 1e36
     }
@@ -224,7 +224,7 @@ contract Listing is PodTransfer {
     function getListingAmountLog(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256) {
         uint256 placeInLine = l.index - s.f.harvestable; // units: 1 
         uint256 a = f.a.mul(10**(37-f.aShift));// 1eU
-        uint256 pricePerPod = log_two((placeInLine + 1).mul(unit)).divdrup(log_two(a)) +( l.pricePerPod * unit) / 1000000;
+        uint256 pricePerPod = LibIncentive.log_two((placeInLine + 1).mul(unit)).divdrup(LibIncentive.log_two(a)) + l.pricePerPod * unit / 1000000;
         amount = amount * unit / pricePerPod;
         return roundAmount(l, amount);
     }
@@ -240,14 +240,14 @@ contract Listing is PodTransfer {
     function getListingAmountPoly(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256) {
         uint256 placeInLine = l.index - s.f.harvestable; //units: 1
         uint256 a = f.a.mul(10**(37-f.aShift));
-        uint256 pricePerPod = a.mul(x) + (l.pricePerPod * unit) / 1000000;
+        uint256 pricePerPod = a.mul(placeInLine) + (l.pricePerPod * unit) / 1000000;
         if (f.b > 0) {
             uint128 b = f.b.mul(10**(37-f.bShift));
-            pricePerPod += b.mul(x**2);
+            pricePerPod += b.mul(placeInLine**2);
         }
         if (f.c > 0) {
-            uint128 c = f.c.mul(10**(37-cShift));
-            pricePerPod += c.mul(x**3);
+            uint128 c = f.c.mul(10**(37-f.cShift));
+            pricePerPod += c.mul(placeInLine**3);
         }
         amount = amount * unit / pricePerPod;
         return roundAmount(l, amount);
