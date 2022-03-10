@@ -16,8 +16,6 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
-import 'hardhat/console.sol';
-
 /**
  * @author Beasley
  * @title Users lend on Liquity for BEAN
@@ -44,11 +42,6 @@ contract Designate is TroveFactory {
 	 * Helper Functions
 	*/
 	
-	function _collateralizeAndSwap(uint256 maxFeePercentage, uint256 lusdAmount, uint256 minBeanAmount, uint256 numTrials, uint256 randSeed, Storage.Settings calldata set) internal returns (uint256 newBeans) {
-		_collateralizeWithApproxHint(maxFeePercentage, lusdAmount, numTrials, randSeed);
-		uint256 amountReturned = LibCurve.swapLUSDForBeans(lusdAmount, minBeanAmount);
-	}
-
 	function _fetchBeans(uint256 fetchAmount, bool fromInternalBalance) internal {
 		if (fromInternalBalance) {
 			uint256 fromInternal = LibUserBalance._decreaseInternalBalance(msg.sender, IERC20(s.c.bean), fetchAmount, true);

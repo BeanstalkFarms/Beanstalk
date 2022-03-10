@@ -13,6 +13,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./MockCheckContract.sol";
 import './LiquityMath.sol';
 
+import 'hardhat/console.sol';
+
 contract MockBorrowerOperations is MockLiquityBase, Ownable, MockCheckContract, IBorrowerOperations {
     string constant public NAME = "BorrowerOperations";
 

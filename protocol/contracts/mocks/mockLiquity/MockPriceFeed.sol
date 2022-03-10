@@ -127,7 +127,7 @@ contract MockPriceFeed is Ownable, MockCheckContract, MockLiquityBase, IPriceFee
     
 
     function fetchPrice() external override returns (uint) {
-	    return 1e18;  // Simplified for no oracle: Purely testing
+	    return 1e21;  // Simplified for no oracle: Purely testing
 	    /*
         ChainlinkResponse memory chainlinkResponse = _getCurrentChainlinkResponse();
         ChainlinkResponse memory prevChainlinkResponse = _getPrevChainlinkResponse(chainlinkResponse.roundId, chainlinkResponse.decimals);

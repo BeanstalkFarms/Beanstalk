@@ -20,15 +20,13 @@ contract LiquityFacet is Designate {
      	* Generalized Functions
     	*/
 
-  	function collateralizeAndSwap(
+  	function collateralizeWithApproxHint(
 		uint256 maxFeePercentage, 
 		uint256 lusdAmount, 
-		uint256 beanAmount, 
-		uint256 minBeanAmount, 
 		uint256 numTrials, 
-		uint256 randSeed, 
-		Storage.Settings calldata set
+		uint256 randSeed
 	) public payable {	
+		_collateralizeWithApproxHint(maxFeePercentage, lusdAmount, numTrials, randSeed);
 	}
 
 	/*

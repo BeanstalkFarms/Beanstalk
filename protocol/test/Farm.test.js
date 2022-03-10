@@ -131,14 +131,14 @@ describe('Farm', function () {
 	await this.claim.connect(user).wrapBeans('1000');
 	this.former = await this.claim.wrappedBeans(userAddress);
 	this.balance = await this.bean.balanceOf(userAddress);
-	await this.farm.connect(user).farm('0x4586795200000000000000000000000000000000000000000000000000000000000003e8'); // unwrapBeans(1000)
+	await this.farm.connect(user).chainFarm(['0x4586795200000000000000000000000000000000000000000000000000000000000003e8']); // unwrapBeans(1000)
 	expect((await this.claim.wrappedBeans(userAddress)).sub(this.former)).to.eq(-1000);
 	expect((await this.bean.balanceOf(userAddress)).sub(this.balance)).to.eq(1000);
    });
    it('wrap beans', async function () {
 	this.former = await this.claim.wrappedBeans(userAddress);
 	this.balance = await this.bean.balanceOf(userAddress);
-	await this.farm.connect(user).farm('0xdde7283c00000000000000000000000000000000000000000000000000000000000003e8'); // wrapBeans(1000)
+	await this.farm.connect(user).chainFarm(['0xdde7283c00000000000000000000000000000000000000000000000000000000000003e8']); // wrapBeans(1000)
 	expect((await this.claim.wrappedBeans(userAddress)).sub(this.former)).to.eq(1000);
 	expect((await this.bean.balanceOf(userAddress)).sub(this.balance)).to.eq(-1000);
    });
