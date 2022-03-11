@@ -18,7 +18,7 @@ import "./FixedPointMath.sol";
 contract Listing is PodTransfer {
     uint256 constant eN = 271828;
     uint256 constant eD = 100000;
-    uint256 constant unit = MathFP.unit(37); //multiplying by unit converts to fixedpoingt
+    uint256 unit = MathFP.unit(37); //multiplying by unit converts to fixedpoingt
     using SafeMath for uint256;
     
     struct Formula {
@@ -232,11 +232,14 @@ contract Listing is PodTransfer {
         return roundAmount(l, amount);
     }
 
+    // error in denominator: a uint cannot be multiplied by -1. is there an abs() type function we can use? 
+    // calculating the x for this function -> x intends to be the starting index for the plot
     function getListingAmountSig(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256 amount) {
         uint256 x = (l.index - s.f.harvestable) * unit; // or is this right?
         uint256 a = f.a * unit / (10**f.aShift);
         uint256 n = l.pricePerPod * 2 / 1000000 * unit; //numerator
-        uint256 d = (1 + (eN / eD)**(MathFP.muld(x,a) * -1)) * unit; //denominator -> convert e to be a fixed number 
+        // uint256 d = (1 + (eN / eD)**(MathFP.muld(x,a) * -1)) * unit; //denominator -> convert e to be a fixed number 
+        uint256 d = (1 + (eN / eD)**(-MathFP.muld(x,a))) * unit;
         uint256 pricePerPod = MathFP.divdr(n,d);
         amount = amount * pricePerPod / 1000000;
         return roundAmount(l, amount);

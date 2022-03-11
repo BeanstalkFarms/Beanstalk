@@ -58,7 +58,7 @@ contract Order is Listing {
         Formula calldata f
     ) internal returns (bytes32 id) {
         uint256 boughtBeanAmount = LibMarket.buyExactTokens(buyBeanAmount, address(this));
-        return _createPodOrder(beanAmount+boughtBeanAmount, pricePerPod, maxPlaceInLine);
+        return _createPodOrder(beanAmount+boughtBeanAmount, pricePerPod, maxPlaceInLine, functionType, f);
     }
 
     function _createPodOrder(
@@ -70,7 +70,7 @@ contract Order is Listing {
     ) internal returns (bytes32 id) {
         require(0 < pricePerPod, "Marketplace: Pod price must be greater than 0.");
         uint256 amount = (beanAmount * 1000000) / pricePerPod;
-        return  __createPodOrder(amount,pricePerPod, maxPlaceInLine);
+        return  __createPodOrder(amount,pricePerPod, maxPlaceInLine, functionType, f);
     }
 
     function __createPodOrder(
@@ -82,7 +82,7 @@ contract Order is Listing {
     ) internal  returns (bytes32 id) {
         require(amount > 0, "Marketplace: Order amount must be > 0.");
         bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, functionType, [f.a,f.b,f.c],[f.aShift,f.bShift,f.cShift]);
-        if (s.podOrders[id] > 0) _cancelPodOrder(pricePerPod, maxPlaceInLine, false);
+        if (s.podOrders[id] > 0) _cancelPodOrder(pricePerPod, maxPlaceInLine, false, functionType, f);
         s.podOrders[id] = amount;
         emit PodOrderCreated(msg.sender, id, amount, pricePerPod, maxPlaceInLine, functionType, [f.a,f.b,f.c],[f.aShift,f.bShift,f.cShift]);
         return id;
@@ -99,14 +99,33 @@ contract Order is Listing {
         uint256 amount,
         bool toWallet
     ) internal {
-        bytes32 id = createOrderId(o.account, o.pricePerPod, o.maxPlaceInLine, o.functionType, o.f);
+        bytes32 id = createOrderId(o.account, o.pricePerPod, o.maxPlaceInLine, o.functionType, [o.f.a, o.f.b, o.f.c], [o.f.aShift, o.f.bShift, o.f.cShift]);
         s.podOrders[id] = s.podOrders[id].sub(amount);
         require(s.a[msg.sender].field.plots[index] >= (start + amount), "Marketplace: Invalid Plot.");
         uint256 placeInLineEndPlot = index + start + amount - s.f.harvestable;
         require(placeInLineEndPlot <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
 
         //cost in beans
-        uint256 costInBeans = (o.pricePerPod * amount) / 1000000;
+        // uint256 costInBeans = (o.pricePerPod * amount) / 1000000;
+        uint256 costInBeans;
+        if (o.functionType == 0) {
+            costInBeans = getOrderAmountConst(o.pricePerPod, amount);
+        }
+        else if (o.functionType == 1) {
+            costInBeans = getOrderAmountLin(o, o.f, amount, placeInLineEndPlot);
+        } 
+        else if (o.functionType == 2) {
+            costInBeans = getOrderAmountLog(o, o.f, amount, placeInLineEndPlot);
+        }
+        else if (o.functionType == 3) {
+            costInBeans = getOrderAmountSig(o, o.f, amount, placeInLineEndPlot);
+        }
+        else if (o.functionType == 4) {
+            costInBeans = getOrderAmountPoly(o, o.f, amount, placeInLineEndPlot);
+        }
+
+        assert(costInBeans > 0);
+
         if (toWallet) bean().transfer(msg.sender, costInBeans);
         else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(costInBeans);
         if (s.podListings[index] != bytes32(0)){
@@ -124,7 +143,7 @@ contract Order is Listing {
      */
 
      function _cancelPodOrder(uint24 pricePerPod, uint256 maxPlaceInLine, bool toWallet, uint8 functionType, Formula calldata f) internal {
-        bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, functionType, f);
+        bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, functionType, [f.a, f.b, f.c], [f.aShift, f.bShift, f.cShift]);
         uint256 amountBeans = (pricePerPod * s.podOrders[id]) / 1000000;
         if (toWallet) bean().transfer(msg.sender, amountBeans);
         else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(amountBeans);
@@ -136,7 +155,7 @@ contract Order is Listing {
      * Helpers
      */
 
-    function createOrderId(address account, uint24 pricePerPod, uint256 maxPlaceInLine, uint8 functionType, uint8 functionType, uint120[3] memory f, uint8[3] memory fS) internal pure returns (bytes32 id) {
+    function createOrderId(address account, uint24 pricePerPod, uint256 maxPlaceInLine, uint8 functionType, uint120[3] memory f, uint8[3] memory fS) internal pure returns (bytes32 id) {
         id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, functionType, f, fS));
     }
 
@@ -144,6 +163,7 @@ contract Order is Listing {
         amount = (price * amount) / 1000000; // units: 1000000 = 1
     }
 
+    // calculating the x for this function -> aims to be the place in line for the end index
     function getOrderAmountLin(Order calldata o, Formula calldata f, uint256 amount, uint256 placeInLineEndPlot) internal returns (uint256 amount) {
         uint256 x = placeInLineEndPlot * unit; //fixed point
         uint256 a = f.a * unit / (10**f.aShift); // converts to fixed point (36 dec) but accounts for f.aShift
