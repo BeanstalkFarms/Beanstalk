@@ -214,7 +214,7 @@ contract Listing is PodTransfer {
         amount = amount * 1000000 / l.pricePerPod; // units: 1000000 = 1
     }
 
-    function getListingAmountLin(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256 amount) {
+    function getListingAmountLin(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256) {
         uint256 x = (l.index - s.f.harvestable) * unit; // FP
         uint256 a = f.a * unit / (10**f.aShift); // FP
         uint256 pricePerPod = MathFP.muld(a,x) + l.pricePerPod / 1000000;
@@ -222,7 +222,7 @@ contract Listing is PodTransfer {
         return roundAmount(l, amount);
     }
 
-    function getListingAmountLog(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256 amount) {
+    function getListingAmountLog(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256) {
         uint256 x = (l.index - s.f.harvestable) * unit; 
         uint256 a = f.a * unit / (10**f.aShift);
         uint256 log1 = LibIncentive.log_two(x+1);
@@ -234,7 +234,7 @@ contract Listing is PodTransfer {
 
     // error in denominator: a uint cannot be multiplied by -1. is there an abs() type function we can use? 
     // calculating the x for this function -> x intends to be the starting index for the plot
-    function getListingAmountSig(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256 amount) {
+    function getListingAmountSig(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256) {
         uint256 x = (l.index - s.f.harvestable) * unit; // or is this right?
         uint256 a = f.a * unit / (10**f.aShift);
         uint256 n = l.pricePerPod * 2 / 1000000 * unit; //numerator
@@ -245,7 +245,7 @@ contract Listing is PodTransfer {
         return roundAmount(l, amount);
     }
 
-    function getListingAmountPoly(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256 amount) {
+    function getListingAmountPoly(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256) {
         uint256 x = (l.index + l.start - s.f.harvestable) * unit; // is this right?
         uint256 a = f.a * unit / (10**f.aShift);
         uint256 pricePerPod = MathFP.muld(x,a) + l.pricePerPod  / 1000000;
