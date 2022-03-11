@@ -15,7 +15,7 @@ import "../../../libraries/LibInternal.sol";
 contract Silo is Life {
 
     using SafeMath for uint256;
-    using SafeMath for uint32;
+    using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
 
     uint256 private constant BASE = 1e12;

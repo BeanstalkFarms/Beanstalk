@@ -35,7 +35,7 @@ contract SeasonFacet is Sun {
      * Sunrise
     **/
 
-    function sunrise() external {
+    function sunrise() external nonReentrant {
         require(!paused(), "Season: Paused.");
         require(seasonTime() > season(), "Season: Still current Season.");
 

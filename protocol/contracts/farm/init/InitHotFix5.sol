@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 /**
  * @author Publius
- * @title InitHotFix4
+ * @title InitHotFix5
 **/
 
 interface IBs {

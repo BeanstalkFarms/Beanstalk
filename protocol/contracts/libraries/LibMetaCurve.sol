@@ -46,7 +46,7 @@ library LibMetaCurve {
         return dy;
     }
 
-    function getY(uint256 x, uint256[2] memory xp) private view returns (uint256) {
+    function getY(uint256 x, uint256[2] memory xp) private view returns (uint256 y) {
         // Solution is taken from pool contract: 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD
         uint256 a = IMeta3Curve(POOL).A_precise();
         uint256 D = getD(xp, a);
@@ -66,7 +66,7 @@ library LibMetaCurve {
 
         c = c * D * A_PRECISION / (Ann * N_COINS);
         uint256 b = S_ + D * A_PRECISION / Ann; // - D
-        uint256 y = D;
+        y = D;
 
         for (uint256 _i = 0; _i < 255; _i++) {
             y_prev = y;

@@ -6,22 +6,22 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "../../../libraries/LibSafeMath32.sol";
 import "../../AppStorage.sol";
 import "../../../C.sol";
 import "../../../libraries/Decimal.sol";
 import "../../../libraries/LibDiamond.sol";
+import "../../ReentrancyGuard.sol";
 
 /**
  * @author Publius
  * @title BIP
 **/
-contract Bip {
+contract Bip is ReentrancyGuard {
 
     using SafeMath for uint256;
-    using SafeMath for uint32;
+    using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
-
-    AppStorage internal s;
 
     /**
      * Getters
@@ -83,6 +83,7 @@ contract Bip {
         internal
         returns (uint32)
     {
+        require(_init != address(0) || _calldata.length == 0, "Governance: calldata not empty.");
         uint32 bipId = s.g.bipIndex;
         s.g.bipIndex += 1;
         s.g.bips[bipId].start = season();
@@ -104,7 +105,8 @@ contract Bip {
         while(s.g.activeBips[i] != bipId) i++;
         s.g.bips[bipId].timestamp = uint128(block.timestamp);
         s.g.bips[bipId].endTotalRoots = totalRoots();
-        if (i < s.g.activeBips.length-1) s.g.activeBips[i] = s.g.activeBips[s.g.activeBips.length-1];
+        uint256 numberOfActiveBips = s.g.activeBips.length-1;
+        if (i < numberOfActiveBips) s.g.activeBips[i] = s.g.activeBips[numberOfActiveBips];
         s.g.activeBips.pop();
     }
 
@@ -135,10 +137,6 @@ contract Bip {
 
     function isNominated(uint32 bipId) internal view returns (bool) {
         return startFor(bipId) > 0 && !s.g.bips[bipId].executed;
-    }
-
-    function isEnded(uint32 bipId) internal view returns (bool) {
-        return season() > startFor(bipId).add(periodFor(bipId)) || s.g.bips[bipId].executed;
     }
 
     function isActive(uint32 bipId) internal view returns (bool) {

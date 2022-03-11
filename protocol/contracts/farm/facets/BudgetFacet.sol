@@ -7,18 +7,17 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../libraries/LibDibbler.sol";
+import "../ReentrancyGuard.sol";
 
 /**
  * @author Publius
  * @title Budget Facet
 **/
-contract BudgetFacet {
-
-    AppStorage internal s;
+contract BudgetFacet is ReentrancyGuard {
 
     using SafeMath for uint256;
 
-    function budgetSow(uint256 amount) public returns (uint256) {
+    function budgetSow(uint256 amount) external nonReentrant returns (uint256) {
         require(isBudget(msg.sender), "Budget: sender must be budget.");
         IBean(s.c.bean).burnFrom(msg.sender, amount);
 

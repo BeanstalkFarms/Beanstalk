@@ -10,6 +10,7 @@ import "./LibCheck.sol";
 import "./LibInternal.sol";
 import "./LibMarket.sol";
 import "./LibAppStorage.sol";
+import "./LibSafeMath32.sol";
 import "../interfaces/IWETH.sol";
 
 /**
@@ -19,7 +20,7 @@ import "../interfaces/IWETH.sol";
 library LibClaim {
 
     using SafeMath for uint256;
-    using SafeMath for uint32;
+    using LibSafeMath32 for uint32;
 
     event BeanClaim(address indexed account, uint32[] withdrawals, uint256 beans);
     event LPClaim(address indexed account, uint32[] withdrawals, uint256 lp);

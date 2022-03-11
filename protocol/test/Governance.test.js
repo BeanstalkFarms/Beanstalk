@@ -72,6 +72,18 @@ describe('Governance', function () {
     await this.silo.depositSiloAssetsE(ownerAddress, '500', '1000000');
   });
 
+  // describe('propose', function () {
+  //   describe('revert', async function () {
+  //     it('revert if not enough stalk', async function () {
+  //       await propose(owner, this.governance, this.bip);
+  //     }
+
+  //   })
+
+  //   })
+
+  // });
+
   describe('vote', function () {
     beforeEach(async function () {
       await this.silo.depositSiloAssetsE(user3Address, '500', '1000000');

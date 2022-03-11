@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 /**
  * @author Publius
- * @title InitBip1 runs the code for BIP-1. It mints Beans to the budget contracts.
+ * @title InitEmpty is used for creating empty BIPs on test networks
 **/
 contract InitEmpty {
 

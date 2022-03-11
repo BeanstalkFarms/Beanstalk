@@ -16,7 +16,7 @@ import "../MockToken.sol";
 **/
 contract MockSeasonFacet is SeasonFacet {
     using SafeMath for uint256;
-    using SafeMath for uint32;
+    using LibSafeMath32 for uint32;
 
     function siloSunrise(uint256 amount) public {
         require(!paused(), "Season: Paused.");

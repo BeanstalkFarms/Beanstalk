@@ -27,7 +27,6 @@ contract InitHotFix4 {
         s.si.stalk = 0;
 
         // Increment unclaimed Roots to total for previous misallocation
-        s.unclaimedRoots = s.unclaimedRoots.add(11941504984220113756780626858);
+        s.unclaimedRoots = s.unclaimedRoots.add(11_941_504_984_220_113_756_780_626_858);
     }
-
 }

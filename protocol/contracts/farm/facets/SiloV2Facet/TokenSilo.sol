@@ -8,19 +8,18 @@ pragma experimental ABIEncoderV2;
 import "../../../libraries/Silo/LibTokenSilo.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/LibInternal.sol";
-
+import "../../../libraries/LibSafeMath32.sol";
+import "../../ReentrancyGuard.sol";
 /**
  * @author Publius
  * @title Token Silo
 **/
-contract TokenSilo {
+contract TokenSilo is ReentrancyGuard {
 
     uint32 private constant ASSET_PADDING = 100;
 
-    AppStorage internal s;
-
     using SafeMath for uint256;
-    using SafeMath for uint32;
+    using LibSafeMath32 for uint32;
 
     event Deposit(address indexed account, address indexed token, uint256 season, uint256 amount, uint256 bdv);
     event RemoveSeasons(address indexed account, address indexed token, uint32[] seasons, uint256[] amounts, uint256 amount);
@@ -146,6 +145,7 @@ contract TokenSilo {
     }
 
     function _removeTokenWithdrawal(address account, address token, uint32 season) private returns (uint256) {
+        require(season <= s.season.current, "Claim: Withdrawal not recievable.");
         uint256 amount = s.a[account].withdrawals[token][season];
         delete s.a[account].withdrawals[token][season];
         return amount;

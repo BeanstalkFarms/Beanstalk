@@ -23,6 +23,7 @@ contract FieldFacet is BeanDibbler {
 
     function claimAndSowBeans(uint256 amount, LibClaim.Claim calldata claim)
         external
+        nonReentrant
         returns (uint256)
     {
         allocateBeans(claim, amount);
@@ -36,6 +37,7 @@ contract FieldFacet is BeanDibbler {
     )
         external
         payable
+        nonReentrant
         returns (uint256)
     {
         allocateBeans(claim, amount);
@@ -43,12 +45,12 @@ contract FieldFacet is BeanDibbler {
         return _sowBeans(amount.add(boughtAmount));
     }
 
-    function sowBeans(uint256 amount) external returns (uint256) {
+    function sowBeans(uint256 amount) external nonReentrant returns (uint256) {
         bean().transferFrom(msg.sender, address(this), amount);
         return _sowBeans(amount);
     }
 
-    function buyAndSowBeans(uint256 amount, uint256 buyAmount) public payable returns (uint256) {
+    function buyAndSowBeans(uint256 amount, uint256 buyAmount) external payable nonReentrant returns (uint256) {
         uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
         if (amount > 0) bean().transferFrom(msg.sender, address(this), amount);
         return _sowBeans(amount.add(boughtAmount));

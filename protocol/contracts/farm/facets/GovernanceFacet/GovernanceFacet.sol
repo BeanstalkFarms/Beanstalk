@@ -17,12 +17,11 @@ import "../../../libraries/LibIncentive.sol";
 contract GovernanceFacet is VotingBooth {
 
     using SafeMath for uint256;
-    using SafeMath for uint32;
+    using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
 
     event Proposal(address indexed account, uint32 indexed bip, uint256 indexed start, uint256 period);
-    event Vote(address indexed account, uint32 indexed bip, uint256 roots);
-    event VoteList(address indexed account, uint32[] indexed bips, bool[] votes, uint256 roots);
+    event VoteList(address indexed account, uint32[] bips, bool[] votes, uint256 roots);
     event Unvote(address indexed account, uint32 indexed bip, uint256 roots);
     event Commit(address indexed account, uint32 indexed bip);
     event Incentivization(address indexed account, uint256 beans);
@@ -40,6 +39,7 @@ contract GovernanceFacet is VotingBooth {
         uint8 _pauseOrUnpause
     )
         external
+        nonReentrant
     {
         require(canPropose(msg.sender), "Governance: Not enough Stalk.");
         require(notTooProposed(msg.sender), "Governance: Too many active BIPs.");
@@ -57,31 +57,28 @@ contract GovernanceFacet is VotingBooth {
             msg.sender
         );
 
-        s.a[msg.sender].proposedUntil = startFor(bipId) + periodFor(bipId);
+        s.a[msg.sender].proposedUntil = startFor(bipId).add(periodFor(bipId));
         emit Proposal(msg.sender, bipId, season(), C.getGovernancePeriod());
 
-        vote(bipId);
+        _vote(msg.sender, bipId);
     }
 
     /**
      * Voting
     **/
 
-    function vote(uint32 bip) public {
-        require(isNominated(bip), "Governance: Not nominated.");
+    function vote(uint32 bip) external nonReentrant {
         require(balanceOfRoots(msg.sender) > 0, "Governance: Must have Stalk.");
+        require(isNominated(bip), "Governance: Not nominated.");
         require(isActive(bip), "Governance: Ended.");
         require(!voted(msg.sender, bip), "Governance: Already voted.");
 
-        recordVote(msg.sender, bip);
-        placeVotedUntil(msg.sender, bip);
-
-        emit Vote(msg.sender, bip, balanceOfRoots(msg.sender));
+        _vote(msg.sender, bip);
     }
 
     /// @notice Takes in a list of multiple bips and performs a vote on all of them
     /// @param bip_list Contains the bip proposal ids to vote on
-    function voteAll(uint32[] calldata bip_list) public {
+    function voteAll(uint32[] calldata bip_list) external nonReentrant {
         require(balanceOfRoots(msg.sender) > 0, "Governance: Must have Stalk.");
         
         bool[] memory vote_types = new bool[](bip_list.length);
@@ -105,7 +102,7 @@ contract GovernanceFacet is VotingBooth {
         emit VoteList(msg.sender, bip_list, vote_types, balanceOfRoots(msg.sender));
     }
 
-    function unvote(uint32 bip) external {
+    function unvote(uint32 bip) external nonReentrant {
         require(isNominated(bip), "Governance: Not nominated.");
         require(balanceOfRoots(msg.sender) > 0, "Governance: Must have Stalk.");
         require(isActive(bip), "Governance: Ended.");
@@ -120,7 +117,7 @@ contract GovernanceFacet is VotingBooth {
 
     /// @notice Takes in a list of multiple bips and performs an unvote on all of them
     /// @param bip_list Contains the bip proposal ids to unvote on
-    function unvoteAll(uint32[] calldata bip_list) external {
+    function unvoteAll(uint32[] calldata bip_list) external nonReentrant {
         require(balanceOfRoots(msg.sender) > 0, "Governance: Must have Stalk.");
 
         uint i = 0;
@@ -142,7 +139,7 @@ contract GovernanceFacet is VotingBooth {
     /// @notice Takes in a list of multiple bips and performs a vote or unvote on all of them
     ///         depending on their status: whether they are currently voted on or not voted on
     /// @param bip_list Contains the bip proposal ids
-    function voteUnvoteAll(uint32[] calldata bip_list) external {
+    function voteUnvoteAll(uint32[] calldata bip_list) external nonReentrant {
         require(balanceOfRoots(msg.sender) > 0, "Governance: Must have Stalk.");
         
         uint i = 0;
@@ -170,7 +167,7 @@ contract GovernanceFacet is VotingBooth {
      * Execution
     **/
 
-    function commit(uint32 bip) external {
+    function commit(uint32 bip) external nonReentrant {
         require(isNominated(bip), "Governance: Not nominated.");
         require(!isActive(bip), "Governance: Not ended.");
         require(!isExpired(bip), "Governance: Expired.");
@@ -178,17 +175,10 @@ contract GovernanceFacet is VotingBooth {
             endedBipVotePercent(bip).greaterThanOrEqualTo(C.getGovernancePassThreshold()),
             "Governance: Must have majority."
         );
-
-        s.g.bips[bip].executed = true;
-
-        cutBip(bip);
-        pauseOrUnpauseBip(bip);
-
-        incentivize(msg.sender, true, bip, C.getCommitIncentive());
-        emit Commit(msg.sender, bip);
+        _execute(msg.sender, bip, true, true); 
     }
 
-    function emergencyCommit(uint32 bip) external {
+    function emergencyCommit(uint32 bip) external nonReentrant {
         require(isNominated(bip), "Governance: Not nominated.");
         require(
             block.timestamp >= timestamp(bip).add(C.getGovernanceEmergencyPeriod()),
@@ -198,18 +188,10 @@ contract GovernanceFacet is VotingBooth {
             bipVotePercent(bip).greaterThanOrEqualTo(C.getGovernanceEmergencyThreshold()),
             "Governance: Must have super majority."
         );
-
-        endBip(bip);
-        s.g.bips[bip].executed = true;
-
-        cutBip(bip);
-        pauseOrUnpauseBip(bip);
-
-        incentivize(msg.sender, false, bip, C.getCommitIncentive());
-        emit Commit(msg.sender, bip);
+        _execute(msg.sender, bip, false, true); 
     }
 
-    function pauseOrUnpause(uint32 bip) external {
+    function pauseOrUnpause(uint32 bip) external nonReentrant {
         require(isNominated(bip), "Governance: Not nominated.");
         require(diamondCutIsEmpty(bip),"Governance: Has diamond cut.");
         require(isActive(bip), "Governance: Ended.");
@@ -217,14 +199,18 @@ contract GovernanceFacet is VotingBooth {
             bipVotePercent(bip).greaterThanOrEqualTo(C.getGovernanceEmergencyThreshold()),
             "Governance: Must have super majority."
         );
+        _execute(msg.sender, bip, false, false); 
+    }
 
-        endBip(bip);
+    function _execute(address account, uint32 bip, bool ended, bool cut) private {
+        if (!ended) endBip(bip);
         s.g.bips[bip].executed = true;
 
+        if (cut) cutBip(bip);
         pauseOrUnpauseBip(bip);
 
-        incentivize(msg.sender, false, bip, C.getCommitIncentive());
-        emit Commit(msg.sender, bip);
+        incentivize(account, ended, bip, C.getCommitIncentive());
+        emit Commit(account, bip);
     }
 
     function incentivize(address account, bool compound, uint32 bipId, uint256 amount) private {
@@ -237,12 +223,12 @@ contract GovernanceFacet is VotingBooth {
      * Pause / Unpause
     **/
 
-    function ownerPause() external {
+    function ownerPause() external nonReentrant {
         LibDiamond.enforceIsContractOwner();
         pause();
     }
 
-    function ownerUnpause() external {
+    function ownerUnpause() external nonReentrant {
         LibDiamond.enforceIsContractOwner();
         unpause();
     }

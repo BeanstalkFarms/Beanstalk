@@ -55,10 +55,11 @@ library LibMarket {
     **/
 
     function buy(uint256 buyBeanAmount) internal returns (uint256 amount) {
-        (uint256 ethAmount, uint256 beanAmount) = _buy(buyBeanAmount, msg.value, msg.sender);
-        (bool success,) = msg.sender.call{ value: msg.value.sub(ethAmount) }("");
-        require(success, "Market: Refund failed.");
-        return beanAmount;
+        amount = _buyAndRefund(buyBeanAmount, msg.sender);
+    }
+
+    function buyAndDeposit(uint256 buyBeanAmount) internal returns (uint256 amount) {
+        amount = _buyAndRefund(buyBeanAmount, address(this));
     }
 
      function buyExactTokensToWallet(uint256 buyBeanAmount, address to, bool toWallet) internal returns (uint256 amount) {
@@ -72,13 +73,6 @@ library LibMarket {
 
     function buyExactTokens(uint256 buyBeanAmount, address to) internal returns (uint256 amount) {
         (uint256 ethAmount, uint256 beanAmount) = _buyExactTokens(buyBeanAmount, msg.value, to);
-        (bool success,) = msg.sender.call{ value: msg.value.sub(ethAmount) }("");
-        require(success, "Market: Refund failed.");
-        return beanAmount;
-    }
-
-    function buyAndDeposit(uint256 buyBeanAmount) internal returns (uint256 amount) {
-        (uint256 ethAmount, uint256 beanAmount) = _buy(buyBeanAmount, msg.value, address(this));
         (bool success,) = msg.sender.call{ value: msg.value.sub(ethAmount) }("");
         require(success, "Market: Refund failed.");
         return beanAmount;
@@ -119,7 +113,7 @@ library LibMarket {
             minBeanAmount,
             minEthAmount,
             msg.sender,
-            block.timestamp.add(1)
+            block.timestamp
         );
     }
 
@@ -135,7 +129,7 @@ library LibMarket {
             minBeanAmount,
             minEthAmount,
             address(this),
-            block.timestamp.add(1)
+            block.timestamp
         );
         IWETH(ds.weth).withdraw(ethAmount);
         (bool success, ) = msg.sender.call{value: ethAmount}("");
@@ -186,8 +180,9 @@ library LibMarket {
         (uint256 ethSold, uint256 beans) = _buyWithWETH(buyBeanAmount, amounts[0], address(this));
         // If beans bought does not cover the amount of money to move to LP
 	if (al.beanAmount > buyBeanAmount) {
-            allocateBeans(al.beanAmount.sub(buyBeanAmount));
-            beans = beans.add(al.beanAmount.sub(buyBeanAmount));
+            uint256 newBeanAmount = al.beanAmount - buyBeanAmount;
+            allocateBeans(newBeanAmount);
+            beans = beans.add(newBeanAmount);
         }
         uint256 liquidity; uint256 ethAdded;
         (beans, ethAdded, liquidity) = _addLiquidityWETH(
@@ -258,9 +253,16 @@ library LibMarket {
             minBuyEthAmount,
             path,
             to,
-            block.timestamp.add(1)
+            block.timestamp
         );
         return (amounts[0], amounts[1]);
+    }
+
+    function _buyAndRefund(uint256 buyBeanAmount, address to) private returns (uint256 beanAmount) {
+        uint256 ethAmount;
+        (ethAmount, beanAmount) = _buy(buyBeanAmount, msg.value, to);
+        (bool success,) = msg.sender.call{ value: msg.value.sub(ethAmount) }("");
+        require(success, "Market: Refund failed.");
     }
 
     function _buy(uint256 beanAmount, uint256 ethAmount, address to)
@@ -276,7 +278,7 @@ library LibMarket {
             beanAmount,
             path,
             to,
-            block.timestamp.add(1)
+            block.timestamp
         );
         return (amounts[0], amounts[1]);
     }
@@ -294,7 +296,7 @@ library LibMarket {
             beanAmount,
             path,
             to,
-            block.timestamp.add(1)
+            block.timestamp
         );
         return (amounts[0], amounts[1]);
     }
@@ -313,7 +315,7 @@ library LibMarket {
             beanAmount,
             path,
             to,
-            block.timestamp.add(1)
+            block.timestamp
         );
         return (amounts[0], amounts[1]);
     }
@@ -329,7 +331,7 @@ library LibMarket {
             minBeanAmount,
             minEthAmount,
             address(this),
-            block.timestamp.add(1));
+            block.timestamp);
     }
 
     function _addLiquidityWETH(uint256 wethAmount, uint256 beanAmount, uint256 minWethAmount, uint256 minBeanAmount)
@@ -345,7 +347,7 @@ library LibMarket {
             minBeanAmount,
             minWethAmount,
             address(this),
-            block.timestamp.add(1));
+            block.timestamp);
     }
 
     function _amountIn(uint256 buyWethAmount) internal view returns (uint256) {
@@ -356,6 +358,7 @@ library LibMarket {
         uint256[] memory amounts = IUniswapV2Router02(ds.router).getAmountsIn(buyWethAmount, path);
         return amounts[0];
     }
+
     function allocateBeansToWallet(uint256 amount, address to, bool toWallet) internal {
 	    AppStorage storage s = LibAppStorage.diamondStorage();
         if (toWallet) LibMarket.allocateBeansTo(amount, to);
@@ -374,24 +377,24 @@ library LibMarket {
         }
     }
 
-    function allocateBeans(uint256 transferBeans) internal {
-        allocateBeansTo(transferBeans, address(this));
+    function allocateBeans(uint256 amount) internal {
+        allocateBeansTo(amount, address(this));
     }
 
-    function allocateBeansTo(uint256 transferBeans, address to) internal {
+    function allocateBeansTo(uint256 amount, address to) internal {
 	    AppStorage storage s = LibAppStorage.diamondStorage();
 
         uint wrappedBeans = s.a[msg.sender].wrappedBeans;
-        uint remainingBeans = transferBeans;
+        uint remainingBeans = amount;
         if (wrappedBeans > 0) {
             if (remainingBeans > wrappedBeans) {
-                remainingBeans = transferBeans.sub(wrappedBeans);
                 s.a[msg.sender].wrappedBeans = 0;
+                remainingBeans = remainingBeans - wrappedBeans;
             } else {
+                s.a[msg.sender].wrappedBeans = wrappedBeans - remainingBeans;
                 remainingBeans = 0;
-                s.a[msg.sender].wrappedBeans = wrappedBeans.sub(transferBeans);
             }
-            uint fromWrappedBeans = transferBeans.sub(remainingBeans);
+            uint fromWrappedBeans = amount - remainingBeans;
             emit BeanAllocation(msg.sender, fromWrappedBeans);
             if (to != address(this)) IBean(s.c.bean).transfer(to, fromWrappedBeans);
         }

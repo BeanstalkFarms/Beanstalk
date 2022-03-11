@@ -9,6 +9,7 @@ pragma experimental ABIEncoderV2;
  * @author Publius
  * @title Internal Library handles gas efficient function calls between facets.
 **/
+
 library LibInternal {
 
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("diamond.standard.diamond.storage");
@@ -38,16 +39,6 @@ library LibInternal {
         }
     }
 
-    struct Claim {
-        uint32[] beanWithdrawals;
-        uint32[] lpWithdrawals;
-        uint256[] plots;
-        bool claimEth;
-        bool convertLP;
-        uint256 minBeanAmount;
-        uint256 minEthAmount;
-    }
-
     function updateSilo(address account) internal {
         DiamondStorage storage ds = diamondStorage();
         bytes4 functionSelector = bytes4(keccak256("updateSilo(address)"));
@@ -55,24 +46,5 @@ library LibInternal {
         bytes memory myFunctionCall = abi.encodeWithSelector(functionSelector, account);
         (bool success,) = address(facet).delegatecall(myFunctionCall);
         require(success, "Silo: updateSilo failed.");
-    }
-
-    function updateBip(uint32 bip) internal {
-        DiamondStorage storage ds = diamondStorage();
-        bytes4 functionSelector = bytes4(keccak256("updateBip(uint32)"));
-        address facet = ds.selectorToFacetAndPosition[functionSelector].facetAddress;
-        bytes memory myFunctionCall = abi.encodeWithSelector(functionSelector, bip);
-        (bool success,) = address(facet).delegatecall(myFunctionCall);
-        require(success, "Silo: updateBip failed.");
-    }
-
-    function stalkFor(uint32 bip) internal returns (uint256 stalk) {
-        DiamondStorage storage ds = diamondStorage();
-        bytes4 functionSelector = bytes4(keccak256("stalkFor(uint32)"));
-        address facet = ds.selectorToFacetAndPosition[functionSelector].facetAddress;
-        bytes memory myFunctionCall = abi.encodeWithSelector(functionSelector, bip);
-        (bool success, bytes memory data) = address(facet).delegatecall(myFunctionCall);
-        require(success, "Governance: stalkFor failed.");
-        assembly { stalk := mload(add(data, add(0x20, 0))) }
     }
 }

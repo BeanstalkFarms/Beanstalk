@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "./LibAppStorage.sol";
+import "./LibSafeMath32.sol";
 import "../interfaces/IBean.sol";
 
 /**

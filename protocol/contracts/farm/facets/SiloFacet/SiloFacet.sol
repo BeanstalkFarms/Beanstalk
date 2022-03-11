@@ -18,7 +18,7 @@ contract SiloFacet is BeanSilo {
     event BeanAllocation(address indexed account, uint256 beans);
 
     using SafeMath for uint256;
-    using SafeMath for uint32;
+    using LibSafeMath32 for uint32;
 
     /*
      * Bean
@@ -26,7 +26,7 @@ contract SiloFacet is BeanSilo {
 
     // Deposit
 
-    function claimAndDepositBeans(uint256 amount, LibClaim.Claim calldata claim) external {
+    function claimAndDepositBeans(uint256 amount, LibClaim.Claim calldata claim) external siloNonReentrant {
         allocateBeans(claim, amount);
         _depositBeans(amount);
     }
@@ -38,18 +38,19 @@ contract SiloFacet is BeanSilo {
     )
         external
         payable
+        siloNonReentrant
     {
         allocateBeans(claim, amount);
         uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
         _depositBeans(boughtAmount.add(amount));
     }
 
-    function depositBeans(uint256 amount) public {
+    function depositBeans(uint256 amount) external siloNonReentrant {
         bean().transferFrom(msg.sender, address(this), amount);
         _depositBeans(amount);
     }
 
-    function buyAndDepositBeans(uint256 amount, uint256 buyAmount) public payable {
+    function buyAndDepositBeans(uint256 amount, uint256 buyAmount) external payable siloNonReentrant {
         uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
         if (amount > 0) bean().transferFrom(msg.sender, address(this), amount);
         _depositBeans(boughtAmount.add(amount));
@@ -62,6 +63,7 @@ contract SiloFacet is BeanSilo {
         uint256[] calldata amounts
     )
         external
+        siloNonReentrant
     {
         _withdrawBeans(crates, amounts);
     }
@@ -72,6 +74,7 @@ contract SiloFacet is BeanSilo {
         LibClaim.Claim calldata claim
     )
         external
+        siloNonReentrant
     {
         LibClaim.claim(claim);
         _withdrawBeans(crates, amounts);
@@ -81,9 +84,10 @@ contract SiloFacet is BeanSilo {
      * LP
     */
 
-    function claimAndDepositLP(uint256 amount, LibClaim.Claim calldata claim) external {
+    function claimAndDepositLP(uint256 amount, LibClaim.Claim calldata claim) external siloNonReentrant {
         LibClaim.claim(claim);
-        depositLP(amount);
+        pair().transferFrom(msg.sender, address(this), amount);
+        _depositLP(amount);
     }
 
     function claimAddAndDepositLP(
@@ -95,12 +99,13 @@ contract SiloFacet is BeanSilo {
     )
         external
         payable
+        siloNonReentrant
     {
         LibClaim.claim(claim);
         _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al);
     }
 
-    function depositLP(uint256 amount) public {
+    function depositLP(uint256 amount) external siloNonReentrant {
         pair().transferFrom(msg.sender, address(this), amount);
         _depositLP(amount);
     }
@@ -110,8 +115,9 @@ contract SiloFacet is BeanSilo {
         uint256 buyEthAmount,
         LibMarket.AddLiquidity calldata al
     )
-        public
+        external
         payable
+        siloNonReentrant
     {
         require(buyBeanAmount == 0 || buyEthAmount == 0, "Silo: Silo: Cant buy Ether and Beans.");
         _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al);
@@ -139,6 +145,7 @@ contract SiloFacet is BeanSilo {
         LibClaim.Claim calldata claim
     )
         external
+        siloNonReentrant
     {
         LibClaim.claim(claim);
         _withdrawLP(crates, amounts);
@@ -149,6 +156,7 @@ contract SiloFacet is BeanSilo {
         calldata amounts
     )
         external
+        siloNonReentrant
     {
         _withdrawLP(crates, amounts);
     }

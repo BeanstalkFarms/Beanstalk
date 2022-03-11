@@ -7,15 +7,14 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "../ReentrancyGuard.sol";
 import "../../libraries/LibDibbler.sol";
 
 /**
  * @author Publius
  * @title Funding Facet
 **/
-contract FundraiserFacet {
-
-    AppStorage internal s;
+contract FundraiserFacet is ReentrancyGuard {
 
     using SafeMath for uint256;
 
@@ -24,21 +23,17 @@ contract FundraiserFacet {
     event CompleteFundraiser(uint32 indexed id);
     event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);
 
-    function fund(uint32 id, uint256 amount) public returns (uint256) {
-        _fund(id, amount);
-        bean().burn(amount);
-        return LibDibbler.sowNoSoil(amount, msg.sender);
-    }
-
-    function _fund(uint32 id, uint256 amount) internal {
+    function fund(uint32 id, uint256 amount) public nonReentrant returns (uint256) {
         uint256 remaining = s.fundraisers[id].remaining;
         require(remaining > 0, "Fundraiser: already completed.");
-        require(remaining >= amount, "Fundraiser: amount exceeds remaining.");
+        if (amount > remaining) amount = remaining;
         SafeERC20.safeTransferFrom(IERC20(s.fundraisers[id].token), msg.sender, address(this), amount);
-        s.fundraisers[id].remaining = remaining.sub(amount);
+        s.fundraisers[id].remaining = remaining - amount; // Note: SafeMath is redundant here.
         emit FundFundraiser(msg.sender, id, amount);
-        
         if (s.fundraisers[id].remaining == 0) completeFundraiser(id);
+        bean().burn(amount);
+
+        return LibDibbler.sowNoSoil(amount, msg.sender);
     }
 
     function completeFundraiser(uint32 id) internal {
@@ -46,7 +41,7 @@ contract FundraiserFacet {
         emit CompleteFundraiser(id);
     }
 
-    function createFundraiser(address payee, address token, uint256 amount) public {
+    function createFundraiser(address payee, address token, uint256 amount) public nonReentrant {
         require(msg.sender == address(this), "Fundraiser: sender must be Beanstalk.");
         uint32 id = s.fundraiserIndex;
         s.fundraisers[id].token = token;

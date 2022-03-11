@@ -133,7 +133,7 @@ library Decimal {
     returns (D256 memory)
     {
         if (b == 0) {
-            return from(1);
+            return one();
         }
 
         D256 memory temp = D256({ value: self.value });

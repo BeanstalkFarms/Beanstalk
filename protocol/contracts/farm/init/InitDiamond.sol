@@ -48,9 +48,9 @@ contract InitDiamond {
         s.c.pair = address(IUniswapV2Factory(UNISWAP_FACTORY).createPair(s.c.bean, s.c.weth));
         s.c.pegPair = PEG_PAIR;
 
-        IBean(s.c.bean).approve(UNISWAP_ROUTER, uint256(-1));
-        IUniswapV2Pair(s.c.pair).approve(UNISWAP_ROUTER, uint256(-1));
-        IWETH(s.c.weth).approve(UNISWAP_ROUTER, uint256(-1));
+        IBean(s.c.bean).approve(UNISWAP_ROUTER, type(uint256).max);
+        IUniswapV2Pair(s.c.pair).approve(UNISWAP_ROUTER, type(uint256).max);
+        IWETH(s.c.weth).approve(UNISWAP_ROUTER, type(uint256).max);
 
         s.cases = [int8(3),1,0,0,-1,-3,-3,0,3,1,0,0,-1,-3,-3,0,3,3,1,0,0,0,-1,0,3,3,1,0,1,0,-1,0];
         s.w.yield = 1;
