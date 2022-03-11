@@ -17,7 +17,7 @@ contract Order is Listing {
 
     struct Order {
         address account; //20
-        uint24 pricePerPod; //starting price per pod -> at maxplaceinline index pod will be valued at this
+        uint24 pricePerPod; // formula constant
         uint8 functionType; //1, 0 = constant, 1 = linear, 2 = log, 3 = sigmoid, 4 = poly 2, 5 = poly 3, 6 = poly 4
         Formula f;
         uint256 maxPlaceInLine; //highest index that the order will buy
@@ -33,6 +33,7 @@ contract Order is Listing {
         uint120[3] f,
         uint8[3] fShift
     );
+
     event PodOrderFilled(
         address indexed from, 
         address indexed to, 
@@ -41,6 +42,7 @@ contract Order is Listing {
         uint256 start, 
         uint256 amount
     );
+
     event PodOrderCancelled(address indexed account, bytes32 id);
 
     /*
@@ -51,7 +53,9 @@ contract Order is Listing {
         uint256 beanAmount,
         uint256 buyBeanAmount,
         uint24 pricePerPod,
-        uint256 maxPlaceInLine
+        uint256 maxPlaceInLine,
+        uint8 functionType,
+        Formula calldata f
     ) internal returns (bytes32 id) {
         uint256 boughtBeanAmount = LibMarket.buyExactTokens(buyBeanAmount, address(this));
         return _createPodOrder(beanAmount+boughtBeanAmount, pricePerPod, maxPlaceInLine);
@@ -77,7 +81,7 @@ contract Order is Listing {
         Formula calldata f
     ) internal  returns (bytes32 id) {
         require(amount > 0, "Marketplace: Order amount must be > 0.");
-        bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, functionType, f);
+        bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, functionType, [f.a,f.b,f.c],[f.aShift,f.bShift,f.cShift]);
         if (s.podOrders[id] > 0) _cancelPodOrder(pricePerPod, maxPlaceInLine, false);
         s.podOrders[id] = amount;
         emit PodOrderCreated(msg.sender, id, amount, pricePerPod, maxPlaceInLine, functionType, [f.a,f.b,f.c],[f.aShift,f.bShift,f.cShift]);
@@ -132,52 +136,51 @@ contract Order is Listing {
      * Helpers
      */
 
-    function createOrderId(address account, uint24 pricePerPod, uint256 maxPlaceInLine, uint8 functionType, Formula f) internal pure returns (bytes32 id) {
-        id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, functionType, f));
+    function createOrderId(address account, uint24 pricePerPod, uint256 maxPlaceInLine, uint8 functionType, uint8 functionType, uint120[3] memory f, uint8[3] memory fS) internal pure returns (bytes32 id) {
+        id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, functionType, f, fS));
     }
 
-    function getOrderCostConst(Order calldata o, uint256 amount, uint256 index) pure internal returns (uint256) {
-
-        return amount * 1000000 / l.pricePerPod; // units: 1000000 = 1
+    function getOrderAmountConst(uint24 price, uint256 amount) pure internal returns (uint256 amount) {
+        amount = (price * amount) / 1000000; // units: 1000000 = 1
     }
 
-    function getOrderAmountLin(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256) {
-        uint256 placeInLine = l.index - s.f.harvestable; // units: 1 
-        uint256 a = f.a.mul(10**(37-f.aShift)); // 1eU
-        uint256 pricePerPod = a.mul(x) + (l.pricePerPod * unit) / 1000000;
-        amount = amount * unit / pricePerPod;
-        return roundAmount(l, amount); //units will be 1e36
+    function getOrderAmountLin(Order calldata o, Formula calldata f, uint256 amount, uint256 placeInLineEndPlot) internal returns (uint256 amount) {
+        uint256 x = placeInLineEndPlot * unit; //fixed point
+        uint256 a = f.a * unit / (10**f.aShift); // converts to fixed point (36 dec) but accounts for f.aShift
+        uint256 pricePerPod = MathFP.muld(x,a) + (o.pricePerPod) / 1000000; 
+        amount = amount * 1000000 * pricePerPod; 
     }
 
-    function getOrderAmountLog(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256) {
-        uint256 placeInLine = l.index - s.f.harvestable; // units: 1 
-        uint256 a = f.a.mul(10**(37-f.aShift));// 1eU
-        uint256 pricePerPod = log_two((placeInLine + 1).mul(unit)).divdrup(log_two(a)) +( l.pricePerPod * unit) / 1000000;
-        amount = amount * unit / pricePerPod;
-        return roundAmount(l, amount);
+    function getOrderAmountLog(Order calldata o, Formula calldata f, uint256 amount, uint256 placeInLineEndPlot) internal returns (uint256 amount) {
+        uint256 x = placeInLineEndPlot * unit;
+        uint256 a = f.a * unit / (10**f.aShift); // converts to fixed point (36 dec) but accounts for f.aShift
+        uint256 log1 = LibIncentive.log_two(x+1);
+        uint256 log2 = LibIncentive.log_two(a);
+        uint256 pricePerPod = MathFP.divdr(log1, log2) + o.pricePerPod / 1000000;
+        amount = amount * 1000000 * pricePerPod; 
     }
 
-    function getOrderAmountSig(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256) {
-        uint256 placeInLine = l.index - s.f.harvestable; // units: 1 
-        uint256 a = f.a.mul(10**(37-f.aShift));
-        uint256 pricePerPod = ((l.pricePerPod * 2 / 1000000) * unit) / (1 + (eN / eD)**(a.mul(placeInLine) * -1));
-        amount = amount * unit / pricePerPod;
-        return roundAmount(l, amount);
+    function getOrderAmountSig(Order calldata o, Formula calldata f, uint256 amount, uint256 placeInLineEndPlot) internal returns (uint256 amount) {
+        uint256 x = placeInLineEndPlot * unit;
+        uint256 a = f.a * unit / (10**f.aShift); // converts to fixed point (36 dec) but accounts for f.aShift
+        uint256 n = o.pricePerPod * 2 / 1000000 * unit; //numerator
+        uint256 d = (1 + (eN / eD)**(MathFP.muld(x,a) * -1)) * unit; //denominator -> convert e to be a fixed number 
+        uint256 pricePerPod = MathFP.divdr(n,d);
+        amount = amount * 1000000 * pricePerPod; 
     }
 
-    function getListingAmountPoly(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256) {
-        uint256 placeInLine = l.index - s.f.harvestable; //units: 1
-        uint256 a = f.a.mul(10**(37-f.aShift));
-        uint256 pricePerPod = a.mul(x) + (l.pricePerPod * unit) / 1000000;
+    function getOrderAmountPoly(Order calldata o, Formula calldata f, uint256 amount, uint256 placeInLineEndPlot) internal returns (uint256 amount) {
+        uint256 x = placeInLineEndPlot * unit;
+        uint256 a = f.a * unit / (10**f.aShift);
+        uint256 pricePerPod = MathFP.muld(x,a) + o.pricePerPod / 1000000;
         if (f.b > 0) {
-            uint128 b = f.b.mul(10**(37-f.bShift));
-            pricePerPod += b.mul(x**2);
+            uint256 b = f.b * unit / (10**f.bShift);
+            pricePerPod += MathFP.muld(b, x**2);
         }
         if (f.c > 0) {
-            uint128 c = f.c.mul(10**(37-cShift));
-            pricePerPod += c.mul(x**3);
+            uint256 c = f.c * unit / (10**f.cShift);
+            pricePerPod += MathFP.muld(c, x**3);
         }
-        amount = amount * unit / pricePerPod;
-        return roundAmount(l, amount);
+        amount = amount * 1000000 * pricePerPod; 
     }
 }

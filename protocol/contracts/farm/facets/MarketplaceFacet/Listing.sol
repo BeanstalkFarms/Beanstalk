@@ -18,7 +18,7 @@ import "./FixedPointMath.sol";
 contract Listing is PodTransfer {
     uint256 constant eN = 271828;
     uint256 constant eD = 100000;
-    uint256 constant unit = MathFPSigned.unit(37);
+    uint256 constant unit = MathFP.unit(37); //multiplying by unit converts to fixedpoingt
     using SafeMath for uint256;
     
     struct Formula {
@@ -80,7 +80,7 @@ contract Listing is PodTransfer {
         uint256 maxHarvestableIndex,
         bool toWallet,
         uint8 functionType,
-        Formula f
+        Formula calldata f
     ) internal {
         uint256 plotSize = s.a[msg.sender].field.plots[index];
         require(plotSize >= (start + amount) && amount > 0, "Marketplace: Invalid Plot/Amount.");
@@ -139,6 +139,7 @@ contract Listing is PodTransfer {
         else if (l.functionType == 4) {
             amount = getListingAmountPoly(l, l.f, beanAmount);
         }
+
         amount = roundAmount(l, amount);
 
         __fillListing(l.account, msg.sender, l, amount);
@@ -158,7 +159,8 @@ contract Listing is PodTransfer {
                                     l.amount.sub(amount), 
                                     l.pricePerPod, 
                                     l.maxHarvestableIndex, 
-                                    l.toWallet
+                                    l.toWallet, 
+                                    l.functionType, [l.f.a,l.f.b,l.f.c], [l.f.aShift, l.f.bShift, l.f.cShift]
                                 );
         emit PodListingFilled(l.account, to, l.index, l.start, amount);
         delete s.podListings[l.index];
@@ -200,56 +202,59 @@ contract Listing is PodTransfer {
         uint256 maxHarvestableIndex,
         bool toWallet, 
         uint8 functionType,
-        uint120[3] f,
-        uint8[3] fShifts
+        uint120[3] memory f,
+        uint8[3] memory fShifts
     ) pure internal returns (bytes32 lHash) {
         lHash = keccak256(
             abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex, toWallet, functionType, f, fShifts)
         );
     }
 
-    function getListingAmountConst(Listing calldata l, uint256 amount) pure internal returns (uint256) {
-
-        return amount * 1000000 / l.pricePerPod; // units: 1000000 = 1
+    function getListingAmountConst(Listing calldata l, uint256 amount) pure internal returns (uint256 amount) {
+        amount = amount * 1000000 / l.pricePerPod; // units: 1000000 = 1
     }
 
-    function getListingAmountLin(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256) {
-        uint256 placeInLine = l.index - s.f.harvestable; // units: 1 
-        uint256 a = f.a.mul(10**(37-f.aShift)); // 1eU
-        uint256 pricePerPod = a.mul(placeInLine) + (l.pricePerPod * unit) / 1000000;
-        amount = amount * unit / pricePerPod;
-        return roundAmount(l, amount); //units will be 1e36
-    }
-
-    function getListingAmountLog(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256) {
-        uint256 placeInLine = l.index - s.f.harvestable; // units: 1 
-        uint256 a = f.a.mul(10**(37-f.aShift));// 1eU
-        uint256 pricePerPod = LibIncentive.log_two((placeInLine + 1).mul(unit)).divdrup(LibIncentive.log_two(a)) + l.pricePerPod * unit / 1000000;
-        amount = amount * unit / pricePerPod;
+    function getListingAmountLin(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256 amount) {
+        uint256 x = (l.index - s.f.harvestable) * unit; // FP
+        uint256 a = f.a * unit / (10**f.aShift); // FP
+        uint256 pricePerPod = MathFP.muld(a,x) + l.pricePerPod / 1000000;
+        amount = amount * pricePerPod / 1000000;
         return roundAmount(l, amount);
     }
 
-    function getListingAmountSig(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256) {
-        uint256 placeInLine = l.index - s.f.harvestable; // units: 1 
-        uint256 a = f.a.mul(10**(37-f.aShift));
-        uint256 pricePerPod = ((l.pricePerPod * 2 / 1000000) * unit) / (1 + (eN / eD)**(a.mul(placeInLine) * -1));
-        amount = amount * unit / pricePerPod;
+    function getListingAmountLog(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256 amount) {
+        uint256 x = (l.index - s.f.harvestable) * unit; 
+        uint256 a = f.a * unit / (10**f.aShift);
+        uint256 log1 = LibIncentive.log_two(x+1);
+        uint256 log2 = LibIncentive.log_two(a);
+        uint256 pricePerPod = MathFP.divdr(log1, log2) + l.pricePerPod / 1000000;
+        amount = amount * pricePerPod / 1000000;
         return roundAmount(l, amount);
     }
 
-    function getListingAmountPoly(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256) {
-        uint256 placeInLine = l.index - s.f.harvestable; //units: 1
-        uint256 a = f.a.mul(10**(37-f.aShift));
-        uint256 pricePerPod = a.mul(placeInLine) + (l.pricePerPod * unit) / 1000000;
+    function getListingAmountSig(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256 amount) {
+        uint256 x = (l.index - s.f.harvestable) * unit; // or is this right?
+        uint256 a = f.a * unit / (10**f.aShift);
+        uint256 n = l.pricePerPod * 2 / 1000000 * unit; //numerator
+        uint256 d = (1 + (eN / eD)**(MathFP.muld(x,a) * -1)) * unit; //denominator -> convert e to be a fixed number 
+        uint256 pricePerPod = MathFP.divdr(n,d);
+        amount = amount * pricePerPod / 1000000;
+        return roundAmount(l, amount);
+    }
+
+    function getListingAmountPoly(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256 amount) {
+        uint256 x = (l.index + l.start - s.f.harvestable) * unit; // is this right?
+        uint256 a = f.a * unit / (10**f.aShift);
+        uint256 pricePerPod = MathFP.muld(x,a) + l.pricePerPod  / 1000000;
         if (f.b > 0) {
-            uint128 b = f.b.mul(10**(37-f.bShift));
-            pricePerPod += b.mul(placeInLine**2);
+            uint256 b = f.b * unit / (10**f.bShift);
+            pricePerPod += MathFP.muld(b, x**2);
         }
         if (f.c > 0) {
-            uint128 c = f.c.mul(10**(37-f.cShift));
-            pricePerPod += c.mul(placeInLine**3);
+            uint256 c = f.c * unit / (10**f.cShift);
+            pricePerPod += MathFP.muld(c, x**3);
         }
-        amount = amount * unit / pricePerPod;
+        amount = amount * pricePerPod / 1000000;
         return roundAmount(l, amount);
     }
 }

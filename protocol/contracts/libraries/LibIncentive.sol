@@ -24,7 +24,7 @@ library LibIncentive {
         return s;
     }
 
-    function log_two(uint x) private pure returns (uint y) {
+    function log_two(uint x) internal pure returns (uint y) {
         assembly {
             let arg := x
             x := sub(x,1)
