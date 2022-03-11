@@ -9,6 +9,8 @@ import "../../../libraries/Silo/LibTokenSilo.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/LibInternal.sol";
 
+import "hardhat/console.sol";
+
 /**
  * @author Publius
  * @title Token Silo
@@ -34,6 +36,7 @@ contract TokenSilo {
         uint256 tokensRemoved;
         uint256 stalkRemoved;
         uint256 seedsRemoved;
+        uint256 bdvRemoved;
     }
 
     /**
@@ -77,27 +80,26 @@ contract TokenSilo {
     }
 
     function _withdrawDeposit(address token, uint32 season, uint256 amount) internal {
-        (uint256 tokensRemoved, uint256 stalkRemoved, uint256 seedsRemoved) = removeDeposit(token, season, amount);
+        AssetsRemoved memory ar = removeDeposit(token, season, amount);
         uint32 arrivalSeason = _season() + s.season.withdrawSeasons;
-        addTokenWithdrawal(msg.sender, token, arrivalSeason, tokensRemoved);
-        LibTokenSilo.decrementDepositedToken(token, tokensRemoved);
-        LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
+        addTokenWithdrawal(msg.sender, token, arrivalSeason, ar.tokensRemoved);
+        LibTokenSilo.decrementDepositedToken(token, ar.tokensRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, ar.seedsRemoved, ar.stalkRemoved);
     }
 
-    function removeDeposit(address token, uint32 season, uint256 amount) 
-        private 
-        returns (uint256 tokensRemoved, uint256 stalkRemoved, uint256 seedsRemoved) 
+    function removeDeposit(address token, uint32 season, uint256 amount)
+        private
+        returns (AssetsRemoved memory ar)
     {
-        uint256 bdv;
-        (tokensRemoved, bdv) = LibTokenSilo.removeDeposit(
+        (ar.tokensRemoved, ar.bdvRemoved) = LibTokenSilo.removeDeposit(
             msg.sender,
             token,
             season,
             amount
         );
-        seedsRemoved = bdv.mul(s.ss[token].seeds);
-        stalkRemoved = bdv.mul(s.ss[token].stalk).add(
-            LibSilo.stalkReward(seedsRemoved, _season()-season)
+        ar.seedsRemoved = ar.bdvRemoved.mul(s.ss[token].seeds);
+        ar.stalkRemoved = ar.bdvRemoved.mul(s.ss[token].stalk).add(
+            LibSilo.stalkReward(ar.seedsRemoved, _season()-season)
         );
         emit RemoveSeason(msg.sender, token, season, amount);
     }
@@ -115,6 +117,7 @@ contract TokenSilo {
                 amounts[i]
             );
             bdvRemoved = bdvRemoved.add(crateBdv);
+            ar.bdvRemoved = bdvRemoved;
             ar.tokensRemoved = ar.tokensRemoved.add(crateTokens);
             ar.stalkRemoved = ar.stalkRemoved.add(
                 LibSilo.stalkReward(crateBdv.mul(s.ss[token].seeds), _season()-seasons[i])
@@ -123,6 +126,24 @@ contract TokenSilo {
         ar.seedsRemoved = bdvRemoved.mul(s.ss[token].seeds);
         ar.stalkRemoved = ar.stalkRemoved.add(bdvRemoved.mul(s.ss[token].stalk));
         emit RemoveSeasons(msg.sender, token, seasons, amounts, ar.tokensRemoved);
+    }
+
+    function _transferDeposits(address token, uint32[] calldata seasons, uint256[] calldata amounts, address transferTo) internal {
+        require(seasons.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
+        AssetsRemoved memory ar;
+        for (uint256 i = 0; i < seasons.length; i++) {
+            ar = removeDeposit(token, seasons[i], amounts[i]);
+            LibSilo.withdrawSiloAssets(msg.sender, ar.seedsRemoved, ar.stalkRemoved);
+            LibTokenSilo.transferWithBDV(transferTo, token, seasons[i], ar.tokensRemoved, ar.bdvRemoved);
+            LibSilo.depositSiloAssets(transferTo, ar.seedsRemoved, ar.stalkRemoved);
+        }
+    }
+
+    function _transferDeposit(address token, uint32 season, uint256 amount, address transferTo) internal {
+        AssetsRemoved memory ar = removeDeposit(token, season, amount);
+        LibSilo.withdrawSiloAssets(msg.sender, ar.seedsRemoved, ar.stalkRemoved);
+        LibTokenSilo.transferWithBDV(transferTo, token, season, ar.tokensRemoved, ar.bdvRemoved);
+        LibSilo.depositSiloAssets(transferTo, ar.seedsRemoved, ar.stalkRemoved);
     }
 
     function addTokenWithdrawal(address account, address token, uint32 arrivalSeason, uint256 amount) private {

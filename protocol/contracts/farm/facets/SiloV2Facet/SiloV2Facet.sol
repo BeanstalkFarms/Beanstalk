@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
-*/
+ */
 
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
@@ -11,9 +11,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 /*
  * @author Publius
  * @title SiloV2Facet handles depositing, withdrawing and claiming whitelisted Silo tokens.
-*/
+ */
 contract SiloV2Facet is TokenSilo {
-
     event BeanAllocation(address indexed account, uint256 beans);
 
     using SafeMath for uint256;
@@ -54,30 +53,50 @@ contract SiloV2Facet is TokenSilo {
      * Withdraw
      */
 
-    function withdrawTokenBySeason(address token, uint32 season, uint256 amount) external {
+    function withdrawTokenBySeason(
+        address token,
+        uint32 season,
+        uint256 amount
+    ) external {
         LibInternal.updateSilo(msg.sender);
         _withdrawDeposit(token, season, amount);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
-    function withdrawTokenBySeasons(address token, uint32[] calldata seasons, uint256[] calldata amounts) external {
+    function withdrawTokenBySeasons(
+        address token,
+        uint32[] calldata seasons,
+        uint256[] calldata amounts
+    ) external {
         LibInternal.updateSilo(msg.sender);
         _withdrawDeposits(token, seasons, amounts);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
-    function withdrawTokensBySeason(WithdrawSeason[] calldata withdraws) external {
+    function withdrawTokensBySeason(WithdrawSeason[] calldata withdraws)
+        external
+    {
         LibInternal.updateSilo(msg.sender);
         for (uint256 i = 0; i < withdraws.length; i++) {
-            _withdrawDeposit(withdraws[i].token, withdraws[i].season, withdraws[i].amount);
+            _withdrawDeposit(
+                withdraws[i].token,
+                withdraws[i].season,
+                withdraws[i].amount
+            );
         }
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
-    function withdrawTokensBySeasons(WithdrawSeasons[] calldata withdraws) external {
+    function withdrawTokensBySeasons(WithdrawSeasons[] calldata withdraws)
+        external
+    {
         LibInternal.updateSilo(msg.sender);
         for (uint256 i = 0; i < withdraws.length; i++) {
-            _withdrawDeposits(withdraws[i].token, withdraws[i].seasons, withdraws[i].amounts);
+            _withdrawDeposits(
+                withdraws[i].token,
+                withdraws[i].seasons,
+                withdraws[i].amounts
+            );
         }
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
@@ -92,7 +111,9 @@ contract SiloV2Facet is TokenSilo {
         emit ClaimSeason(msg.sender, token, season, amount);
     }
 
-    function claimTokenBySeasons(address token, uint32[] calldata seasons) public {
+    function claimTokenBySeasons(address token, uint32[] calldata seasons)
+        public
+    {
         uint256 amount = removeTokenWithdrawals(msg.sender, token, seasons);
         IERC20(token).transfer(msg.sender, amount);
         emit ClaimSeasons(msg.sender, token, seasons, amount);
@@ -111,17 +132,87 @@ contract SiloV2Facet is TokenSilo {
     }
 
     /*
+     * Transfer
+     */
+
+    function transferTokenBySeason(
+        address token,
+        uint32 season,
+        uint256 amount,
+        address transferTo
+    ) external {
+        require(msg.sender != transferTo, "Can't transfer to yourself");
+        LibInternal.updateSilo(msg.sender);
+        _transferDeposit(token, season, amount, transferTo);
+        LibSilo.updateBalanceOfRainStalk(msg.sender);
+    }
+
+    function transferTokenBySeasons(
+        address token,
+        uint32[] calldata seasons,
+        uint256[] calldata amounts,
+        address transferTo
+    ) external {
+        require(msg.sender != transferTo, "Can't transfer to yourself");
+        LibInternal.updateSilo(msg.sender);
+        _transferDeposits(token, seasons, amounts, transferTo);
+        LibSilo.updateBalanceOfRainStalk(msg.sender);
+    }
+
+    function transferTokensBySeason(WithdrawSeason[] calldata withdraws, address transferTo)
+        external
+    {
+        LibInternal.updateSilo(msg.sender);
+        for (uint256 i = 0; i < withdraws.length; i++) {
+            _transferDeposit(
+                withdraws[i].token,
+                withdraws[i].season,
+                withdraws[i].amount,
+                transferTo
+            );
+        }
+        LibSilo.updateBalanceOfRainStalk(msg.sender);
+    }
+
+    function transferTokensBySeasons(WithdrawSeasons[] calldata withdraws, address transferTo)
+        external
+    {
+        LibInternal.updateSilo(msg.sender);
+        for (uint256 i = 0; i < withdraws.length; i++) {
+            _transferDeposits(
+                withdraws[i].token,
+                withdraws[i].seasons,
+                withdraws[i].amounts,
+                transferTo
+            );
+        }
+        LibSilo.updateBalanceOfRainStalk(msg.sender);
+    }
+
+    /*
      * Whitelist
      */
 
-    function whitelistToken(address token, bytes4 selector, uint32 stalk, uint32 seeds) external {
-        require(msg.sender == address(this), "Silo: Only Beanstalk can whitelist tokens.");
+    function whitelistToken(
+        address token,
+        bytes4 selector,
+        uint32 stalk,
+        uint32 seeds
+    ) external {
+        require(
+            msg.sender == address(this),
+            "Silo: Only Beanstalk can whitelist tokens."
+        );
         s.ss[token].selector = selector;
         s.ss[token].stalk = stalk;
         s.ss[token].seeds = seeds;
     }
 
-    function tokenSettings(address token) external view returns (Storage.SiloSettings memory) {
+    function tokenSettings(address token)
+        external
+        view
+        returns (Storage.SiloSettings memory)
+    {
         return s.ss[token];
     }
 }
