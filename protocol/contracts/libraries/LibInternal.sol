@@ -10,6 +10,10 @@ pragma experimental ABIEncoderV2;
  * @title Internal Library handles gas efficient function calls between facets.
 **/
 
+interface ISiloUpdate {
+    function updateSilo(address account) external payable;
+}
+
 library LibInternal {
 
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("diamond.standard.diamond.storage");
@@ -41,9 +45,8 @@ library LibInternal {
 
     function updateSilo(address account) internal {
         DiamondStorage storage ds = diamondStorage();
-        bytes4 functionSelector = bytes4(keccak256("updateSilo(address)"));
-        address facet = ds.selectorToFacetAndPosition[functionSelector].facetAddress;
-        bytes memory myFunctionCall = abi.encodeWithSelector(functionSelector, account);
+        address facet = ds.selectorToFacetAndPosition[ISiloUpdate.updateSilo.selector].facetAddress;
+        bytes memory myFunctionCall = abi.encodeWithSelector(ISiloUpdate.updateSilo.selector, account);
         (bool success,) = address(facet).delegatecall(myFunctionCall);
         require(success, "Silo: updateSilo failed.");
     }
