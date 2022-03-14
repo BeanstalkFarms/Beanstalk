@@ -85,7 +85,7 @@ contract Order is Listing {
         bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, fType, [f.a,f.b,f.c, f.d], [f.aShift,f.bShift,f.cShift, f.dShift], [f.aSign, f.bSign, f.cSign, f.dSign]);
         if (s.podOrders[id] > 0) _cancelPodOrder(pricePerPod, maxPlaceInLine, false, fType, f);
         s.podOrders[id] = amount;
-        emit PodOrderCreated(msg.sender, id, amount, pricePerPod, maxPlaceInLine, fType, [f.a, f.b, f.c, f.d],[f.aShift,f.bShift,f.cShift]);
+        emit PodOrderCreated(msg.sender, id, amount, pricePerPod, maxPlaceInLine, fType, [f.a, f.b, f.c, f.d],[f.aShift,f.bShift,f.cShift, f.dShift], [f.aSign, f.bSign, f.cSign, f.dSign]);
         return id;
     }
     
@@ -100,7 +100,7 @@ contract Order is Listing {
         uint256 amount,
         bool toWallet
     ) internal {
-        bytes32 id = createOrderId(o.account, o.pricePerPod, o.maxPlaceInLine, o.fType, [o.f.a, o.f.b, o.f.c, o.f.d], [o.f.aShift, o.f.bShift, o.f.cShift, o.f.dShift], [o.f.aSign, o.f.bSign, o.f.cSign]);
+        bytes32 id = createOrderId(o.account, o.pricePerPod, o.maxPlaceInLine, o.fType, [o.f.a, o.f.b, o.f.c, o.f.d], [o.f.aShift, o.f.bShift, o.f.cShift, o.f.dShift], [o.f.aSign, o.f.bSign, o.f.cSign, o.f.dSign]);
         s.podOrders[id] = s.podOrders[id].sub(amount);
         require(s.a[msg.sender].field.plots[index] >= (start + amount), "Marketplace: Invalid Plot.");
         uint256 placeInLineEndPlot = index + start + amount - s.f.harvestable;
@@ -147,7 +147,7 @@ contract Order is Listing {
      */
 
      function _cancelPodOrder(uint24 pricePerPod, uint256 maxPlaceInLine, bool toWallet, uint8 fType, Formula calldata f) internal {
-        bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, fType, [f.a, f.b, f.c], [f.aShift, f.bShift, f.cShift]);
+        bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, fType, [f.a, f.b, f.c, f.d], [f.aShift, f.bShift, f.cShift, f.dShift], [f.aSign, f.bSign, f.cSign, f.dSign]);
         uint256 amountBeans = (pricePerPod * s.podOrders[id]) / 1000000;
         if (toWallet) bean().transfer(msg.sender, amountBeans);
         else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(amountBeans);
@@ -163,11 +163,12 @@ contract Order is Listing {
         id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, fType, f, fShifts, fSigns));
     }
 
-    function getOrderAmountConst(uint24 price, uint256 amount) pure internal returns (uint256 amount) {
+    function getOrderAmountConst(uint24 price, uint256 amount) pure internal returns (uint256) {
         amount = price * amount; 
+        return amount;
     }
 
-    function getOrderAmountLin(Order calldata o,uint256 amount, uint256 x) internal returns (uint256 amount) {        
+    function getOrderAmountLin(Order calldata o,uint256 amount, uint256 x) internal returns (uint256) {        
         
         uint256 pricePerPod;
         
@@ -178,9 +179,10 @@ contract Order is Listing {
             pricePerPod = o.pricePerPod - MathFP.muld(x, o.f.a, o.f.aShift);
         }
         amount = amount * pricePerPod; 
+        return amount;
     }
 
-    function getOrderAmountLog(Order calldata o, uint256 amount, uint256 x) internal returns (uint256 amount) {
+    function getOrderAmountLog(Order calldata o, uint256 amount, uint256 x) internal returns (uint256) {
 
         uint256 log1 = LibIncentive.log_two(x+1);
         uint256 log2 = LibIncentive.log_two(o.f.a);
@@ -188,24 +190,25 @@ contract Order is Listing {
         uint256 pricePerPod = MathFP.divdr(log1, log2) + o.pricePerPod;
 
         amount = amount * pricePerPod; 
-
+        return amount;
     }
 
-    function getOrderAmountSig(Order calldata o, uint256 amount, uint256 x) internal returns (uint256 amount) {
+    function getOrderAmountSig(Order calldata o, uint256 amount, uint256 x) internal returns (uint256) {
        
         uint256 n = o.pricePerPod * 2;
         uint256 d;
 
         if (o.f.aSign){
-            d = (1 + (eN / eD)**(-1 * MathFP.muld(x, o.f.a, o.f.aShift)));
+            d = (1 + (eN / eD)**(1 / MathFP.muld(x, o.f.a, o.f.aShift)));
         } else {
             d = (1 + (eN / eD)**(MathFP.muld(x, o.f.a, o.f.aShift)));
         }
         uint256 pricePerPod = n / d;
         amount = amount * pricePerPod; 
+        return amount;
     }
 
-    function getOrderAmountPoly(Order calldata o, uint256 amount, uint256 x) internal returns (uint256 amount) {
+    function getOrderAmountPoly(Order calldata o, uint256 amount, uint256 x) internal returns (uint256) {
         
         uint256 pricePerPod;
 
@@ -240,5 +243,6 @@ contract Order is Listing {
             }
         }
         amount = amount * pricePerPod;
+        return amount;
     }
 }

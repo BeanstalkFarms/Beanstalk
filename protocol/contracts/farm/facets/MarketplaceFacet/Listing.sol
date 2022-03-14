@@ -110,7 +110,7 @@ contract Listing is PodTransfer {
             [f.aSign, f.bSign, f.cSign, f.dSign]
         );
 
-        emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, toWallet,fType, [f.a, f.b, f.c, f.d], [f.aShift, f.bShift, f.cShift, f.dShift], [f.aShift, f.bSign, f.cSign, f.dSign]);
+        emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, toWallet,fType, [f.a, f.b, f.c, f.d], [f.aShift, f.bShift, f.cShift, f.dShift], [f.aSign, f.bSign, f.cSign, f.dSign]);
     }
 
     /*
@@ -152,19 +152,19 @@ contract Listing is PodTransfer {
         // calculate price per pod here
         // uint256 amount = (beanAmount * 1000000) / l.pricePerPod;
         uint256 amount;
-        if (l.functionType == 0) {
+        if (l.fType == 0) {
             amount = getListingAmountConst(l, beanAmount);
         }
-        else if (l.functionType == 1) {
+        else if (l.fType == 1) {
             amount = getListingAmountLin(l, beanAmount);
         } 
-        else if (l.functionType == 2) {
+        else if (l.fType == 2) {
             amount = getListingAmountLog(l, beanAmount);
         }
-        else if (l.functionType == 3) {
+        else if (l.fType == 3) {
             amount = getListingAmountSig(l, beanAmount);
         }
-        else if (l.functionType == 4) {
+        else if (l.fType == 4) {
             amount = getListingAmountPoly(l, beanAmount);
         }
 
@@ -238,12 +238,13 @@ contract Listing is PodTransfer {
         bool[4] memory fSigns
     ) pure internal returns (bytes32 lHash) {
         lHash = keccak256(
-            abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex, toWallet, functionType, f, fShifts, fSigns)
+            abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex, toWallet, fType, f, fShifts, fSigns)
         );
     }
 
-    function getListingAmountConst(Listing calldata l, uint256 amount) pure internal returns (uint256 amount) {
+    function getListingAmountConst(Listing calldata l, uint256 amount) pure internal returns (uint256) {
         amount = amount * l.pricePerPod; // units: 1000000 = 1
+        return amount;
     }
 
     function getListingAmountLin(Listing calldata l, uint256 amount) internal returns (uint256) {
@@ -288,7 +289,7 @@ contract Listing is PodTransfer {
         uint256 d;
 
         if (l.f.aSign){
-            d = (1 + (eN / eD)**(-1 * MathFP.muld(x, l.f.a, l.f.aShift)));
+            d = (1 + (eN / eD)**(1 / MathFP.muld(x, l.f.a, l.f.aShift)));
         } else {
             d = (1 + (eN / eD)**(MathFP.muld(x, l.f.a, l.f.aShift)));
         }

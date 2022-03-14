@@ -152,7 +152,7 @@ contract MarketplaceFacet is Order {
     // Get
 
     function podOrder(address account, uint24 pricePerPod, uint256 maxPlaceInLine, uint8 functionType, Formula calldata f) external view returns (uint256) {
-        return s.podOrders[createOrderId(account, pricePerPod, maxPlaceInLine, functionType, [f.a,f.b,f.c], [f.aShift, f.bShift, f.cShift])];
+        return s.podOrders[createOrderId(account, pricePerPod, maxPlaceInLine, functionType, [f.a,f.b,f.c, f.d], [f.aShift, f.bShift, f.cShift, f.dShift], [f.aSign, f.bSign, f.cSign, f.dSign])];
     }
 
     function podOrderById(bytes32 id) external view returns (uint256) {

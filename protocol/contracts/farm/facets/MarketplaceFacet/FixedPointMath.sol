@@ -1,10 +1,9 @@
 pragma solidity ^0.7.6;
-
+import "@openzeppelin/contracts/math/SafeMath.sol";
 // https://github.com/HQ20/contracts/blob/master/contracts/math/DecimalMath.sol
 
 library MathFP {
     using SafeMath for uint256;
-    using SignedSafeMath for int256;
     uint256 constant maxUintCons = 2**256 - 1;
     
     //returns '1' in FP representation
