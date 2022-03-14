@@ -18,21 +18,28 @@ import "./FixedPointMath.sol";
 contract Listing is PodTransfer {
     uint256 constant eN = 271828;
     uint256 constant eD = 100000;
-    uint256 unit = MathFP.unit(37); //multiplying by unit converts to fixedpoingt
     using SafeMath for uint256;
     
     struct Formula {
         //store coefficients as our own implementation of a fixed point where we store the decimal shift
         // our decimal coefficient + decimal shift will be combined into another uint128
         // so then our product is garaunteed to be uint256
-        uint120 a; //15 max uint120 is 10^36
-        uint8 aShift; //1
-        uint120 b; //15
-        uint8 bShift; //1
-        uint120 c; //15
-        uint8 cShift; //1
-        uint120 d; //15
-        uint8 dShift; //1
+        // all coefficients in the Formula struct will be fixed to 46 digits of precision 
+        // this is so (1e13)^4 which is 1e52 can be reduced down to a 1e6 
+        // the coefficient "a" is assumed to be the coefficient for the lowest order
+        // the other values are only used in polynomial and wont be checked otherwise
+        uint240 a; // 30 bytes
+        uint8 aShift; // 1 bytes
+        bool aSign; // 1 byte
+        uint240 b; 
+        uint8 bShift; 
+        bool bSign;
+        uint240 c;
+        uint8 cShift;
+        bool cSign;
+        uint240 d; 
+        uint8 dShift;
+        bool dSign;
     }
 
     struct Listing {
@@ -43,7 +50,7 @@ contract Listing is PodTransfer {
         uint24 pricePerPod; //3 -> starting price
         uint256 maxHarvestableIndex; // expiry
         bool toWallet;
-        uint8 functionType;  // 0 = constant, 1 = linear, 2 = log, 3 = sigmoid, 4 = poly 2, 5 = poly 3, 6 = poly 4
+        uint8 fType;  // 0 = constant, 1 = linear, 2 = log, 3 = sigmoid, 4 = poly 2, 5 = poly 3, 6 = poly 4
         Formula f;
     }
 
@@ -55,9 +62,10 @@ contract Listing is PodTransfer {
         uint24 pricePerPod, 
         uint256 maxHarvestableIndex, 
         bool toWallet,
-        uint8 functionType,
-        uint120[3] f, //store the formula's coefs in an array
-        uint8[3] fShifts //store corresponding shifts in array
+        uint8 fType,
+        uint240[4] fValues, //store the formula's coefs in an array
+        uint8[4] fShifts, //store corresponding shifts in array
+        bool[4] fSigns
     );
     event PodListingFilled(
         address indexed from, 
@@ -79,7 +87,7 @@ contract Listing is PodTransfer {
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
         bool toWallet,
-        uint8 functionType,
+        uint8 fType,
         Formula calldata f
     ) internal {
         uint256 plotSize = s.a[msg.sender].field.plots[index];
@@ -89,10 +97,20 @@ contract Listing is PodTransfer {
         require(s.f.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
 
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(index);
-        //update hash to include formula
-        s.podListings[index] = hashListing(start, amount, pricePerPod, maxHarvestableIndex, toWallet, functionType, [f.a,f.b,f.c], [f.aShift, f.bShift, f.cShift]);
 
-        emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, toWallet,functionType, [f.a,f.b,f.c], [f.aShift, f.bShift, f.cShift]);
+        s.podListings[index] = hashListing(
+            start, 
+            amount, 
+            pricePerPod, 
+            maxHarvestableIndex, 
+            toWallet, 
+            fType, 
+            [f.a, f.b, f.c, f.d], 
+            [f.aShift, f.bShift, f.cShift, f.dShift],
+            [f.aSign, f.bSign, f.cSign, f.dSign]
+        );
+
+        emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, toWallet,fType, [f.a, f.b, f.c, f.d], [f.aShift, f.bShift, f.cShift, f.dShift], [f.aShift, f.bSign, f.cSign, f.dSign]);
     }
 
     /*
@@ -116,7 +134,17 @@ contract Listing is PodTransfer {
         Listing calldata l,
         uint256 beanAmount
     ) internal {
-        bytes32 lHash = hashListing(l.start, l.amount, l.pricePerPod, l.maxHarvestableIndex, l.toWallet, l.functionType, [l.f.a,l.f.b,l.f.c], [l.f.aShift, l.f.bShift, l.f.cShift]);
+        bytes32 lHash = hashListing(
+            l.start, 
+            l.amount, 
+            l.pricePerPod, 
+            l.maxHarvestableIndex, 
+            l.toWallet, 
+            l.fType, 
+            [l.f.a, l.f.b, l.f.c, l.f.d], 
+            [l.f.aShift, l.f.bShift, l.f.cShift, l.f.dShift],
+            [l.f.aSign, l.f.bSign, l.f.cSign, l.f.dSign]
+        );
         require(s.podListings[l.index] == lHash, "Marketplace: Listing does not exist.");
         uint256 plotSize = s.a[l.account].field.plots[l.index];
         require(plotSize >= (l.start + l.amount) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
@@ -128,16 +156,16 @@ contract Listing is PodTransfer {
             amount = getListingAmountConst(l, beanAmount);
         }
         else if (l.functionType == 1) {
-            amount = getListingAmountLin(l, l.f, beanAmount);
+            amount = getListingAmountLin(l, beanAmount);
         } 
         else if (l.functionType == 2) {
-            amount = getListingAmountLog(l, l.f, beanAmount);
+            amount = getListingAmountLog(l, beanAmount);
         }
         else if (l.functionType == 3) {
-            amount = getListingAmountSig(l, l.f, beanAmount);
+            amount = getListingAmountSig(l, beanAmount);
         }
         else if (l.functionType == 4) {
-            amount = getListingAmountPoly(l, l.f, beanAmount);
+            amount = getListingAmountPoly(l, beanAmount);
         }
 
         amount = roundAmount(l, amount);
@@ -160,7 +188,10 @@ contract Listing is PodTransfer {
                                     l.pricePerPod, 
                                     l.maxHarvestableIndex, 
                                     l.toWallet, 
-                                    l.functionType, [l.f.a,l.f.b,l.f.c], [l.f.aShift, l.f.bShift, l.f.cShift]
+                                    l.fType, 
+                                    [l.f.a, l.f.b, l.f.c, l.f.d], 
+                                    [l.f.aShift, l.f.bShift, l.f.cShift, l.f.dShift],
+                                    [l.f.aSign, l.f.bSign, l.f.cSign, l.f.dSign]
                                 );
         emit PodListingFilled(l.account, to, l.index, l.start, amount);
         delete s.podListings[l.index];
@@ -201,63 +232,109 @@ contract Listing is PodTransfer {
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
         bool toWallet, 
-        uint8 functionType,
-        uint120[3] memory f,
-        uint8[3] memory fShifts
+        uint8 fType,
+        uint240[4] memory f,
+        uint8[4] memory fShifts,
+        bool[4] memory fSigns
     ) pure internal returns (bytes32 lHash) {
         lHash = keccak256(
-            abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex, toWallet, functionType, f, fShifts)
+            abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex, toWallet, functionType, f, fShifts, fSigns)
         );
     }
 
     function getListingAmountConst(Listing calldata l, uint256 amount) pure internal returns (uint256 amount) {
-        amount = amount * 1000000 / l.pricePerPod; // units: 1000000 = 1
+        amount = amount * l.pricePerPod; // units: 1000000 = 1
     }
 
-    function getListingAmountLin(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256) {
-        uint256 x = (l.index - s.f.harvestable) * unit; // FP
-        uint256 a = f.a * unit / (10**f.aShift); // FP
-        uint256 pricePerPod = MathFP.muld(a,x) + l.pricePerPod / 1000000;
-        amount = amount * pricePerPod / 1000000;
+    function getListingAmountLin(Listing calldata l, uint256 amount) internal returns (uint256) {
+        uint256 x = l.index + l.start + (amount / 2) - s.f.harvestable; // x is 1e13, divide it by 1e5 to get a number with upper bounds at 1e8
+        
+        //fixed point assuming decimal shift
+        // place in line needs to be 1e13 -> 1e8
+        // 10,000,000,000,000
+        // set 10 trillion 
+        // use the muld with the third parameter being the shift
+        // product of x and a should be 1e6 (so only first 6 digits matter)
+        uint256 pricePerPod;
+        if (l.f.aSign) {
+            pricePerPod = MathFP.muld(x, l.f.a, l.f.aShift) + l.pricePerPod;
+        } else {
+            pricePerPod = l.pricePerPod - MathFP.muld(x, l.f.a, l.f.aShift);
+        }
+
+        amount = amount * pricePerPod;
         return roundAmount(l, amount);
     }
 
-    function getListingAmountLog(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256) {
-        uint256 x = (l.index - s.f.harvestable) * unit; 
-        uint256 a = f.a * unit / (10**f.aShift);
+    function getListingAmountLog(Listing calldata l,uint256 amount) internal returns (uint256) {
+        uint256 x = l.index + l.start + (amount / 2) - s.f.harvestable;
+
         uint256 log1 = LibIncentive.log_two(x+1);
-        uint256 log2 = LibIncentive.log_two(a);
-        uint256 pricePerPod = MathFP.divdr(log1, log2) + l.pricePerPod / 1000000;
-        amount = amount * pricePerPod / 1000000;
+        uint256 log2 = LibIncentive.log_two(l.f.a);
+
+        uint256 pricePerPod = MathFP.divdr(log1, log2, l.f.aShift) + l.pricePerPod;
+        
+        amount = amount * pricePerPod;
         return roundAmount(l, amount);
+
     }
 
     // error in denominator: a uint cannot be multiplied by -1. is there an abs() type function we can use? 
     // calculating the x for this function -> x intends to be the starting index for the plot
-    function getListingAmountSig(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256) {
-        uint256 x = (l.index - s.f.harvestable) * unit; // or is this right?
-        uint256 a = f.a * unit / (10**f.aShift);
-        uint256 n = l.pricePerPod * 2 / 1000000 * unit; //numerator
-        // uint256 d = (1 + (eN / eD)**(MathFP.muld(x,a) * -1)) * unit; //denominator -> convert e to be a fixed number 
-        uint256 d = (1 + (eN / eD)**(-MathFP.muld(x,a))) * unit;
-        uint256 pricePerPod = MathFP.divdr(n,d);
-        amount = amount * pricePerPod / 1000000;
+    function getListingAmountSig(Listing calldata l, uint256 amount) internal returns (uint256) {
+        uint256 x = l.index + l.start + (amount / 2) - s.f.harvestable;
+
+        uint256 n = l.pricePerPod * 2;
+        uint256 d;
+
+        if (l.f.aSign){
+            d = (1 + (eN / eD)**(-1 * MathFP.muld(x, l.f.a, l.f.aShift)));
+        } else {
+            d = (1 + (eN / eD)**(MathFP.muld(x, l.f.a, l.f.aShift)));
+        }
+       
+        uint256 pricePerPod = n / d; // not sure if this is ok
+        amount = amount * pricePerPod;
+
         return roundAmount(l, amount);
     }
 
-    function getListingAmountPoly(Listing calldata l, Formula calldata f, uint256 amount) internal returns (uint256) {
-        uint256 x = (l.index + l.start - s.f.harvestable) * unit; // is this right?
-        uint256 a = f.a * unit / (10**f.aShift);
-        uint256 pricePerPod = MathFP.muld(x,a) + l.pricePerPod  / 1000000;
-        if (f.b > 0) {
-            uint256 b = f.b * unit / (10**f.bShift);
-            pricePerPod += MathFP.muld(b, x**2);
+    function getListingAmountPoly(Listing calldata l, uint256 amount) internal returns (uint256) {
+        uint256 x = l.index + l.start + (amount / 2) - s.f.harvestable;
+
+        uint256 pricePerPod;
+
+        if (l.f.aSign) {
+            pricePerPod = MathFP.muld(x, l.f.a, l.f.aShift) + l.pricePerPod;
+        } else {
+            pricePerPod = l.pricePerPod - MathFP.muld(x, l.f.a, l.f.aShift);
         }
-        if (f.c > 0) {
-            uint256 c = f.c * unit / (10**f.cShift);
-            pricePerPod += MathFP.muld(c, x**3);
+        
+        if (l.f.b > 0) {
+            if (l.f.bSign) {
+                pricePerPod += MathFP.muld(x**2, l.f.b, l.f.bShift);
+            }
+            else {
+                pricePerPod -= MathFP.muld(x**2, l.f.b, l.f.bShift);
+            }
         }
-        amount = amount * pricePerPod / 1000000;
+        if (l.f.c > 0) {
+            if (l.f.cSign) {
+                pricePerPod += MathFP.muld(x**3, l.f.c, l.f.cShift);
+            }
+            else {
+                pricePerPod -= MathFP.muld(x**3, l.f.c, l.f.cShift);
+            }
+        }
+        if (l.f.d > 0) {
+            if (l.f.dSign) {
+                pricePerPod += MathFP.muld(x**4, l.f.d, l.f.dShift);
+            }
+            else {
+                pricePerPod -= MathFP.muld(x**4, l.f.d, l.f.dShift);
+            }
+        }
+        amount = amount * pricePerPod;
         return roundAmount(l, amount);
     }
 }
