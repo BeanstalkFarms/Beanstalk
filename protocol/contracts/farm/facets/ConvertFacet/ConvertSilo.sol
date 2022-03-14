@@ -68,8 +68,8 @@ contract ConvertSilo is ReentrancyGuard {
 	
         lp = lp.add(w.newLP);
         _depositLP(lp, LibLPSilo.lpToLPBeans(lp), depositSeason);
-        LibCheck.beanBalanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
+        LibCheck.balanceCheck();
     }
 
     /**
@@ -84,8 +84,6 @@ contract ConvertSilo is ReentrancyGuard {
         else LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(C.getStalkPerBean()).add(uint256(season().sub(_s)).mul(seeds)));
 
         LibLPSilo.addLPDeposit(msg.sender, _s, amount, lpb.mul(C.getSeedsPerLPBean()));
-
-        LibCheck.lpBalanceCheck();
     }
 
     function _withdrawLPForConvert(
@@ -136,7 +134,6 @@ contract ConvertSilo is ReentrancyGuard {
         if (_s < season()) stalk = stalk.add(LibSilo.stalkReward(seeds, season()-_s));
         LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
         LibBeanSilo.addBeanDeposit(msg.sender, _s, amount);
-        LibCheck.beanBalanceCheck();
     }
 
     function _withdrawBeansForConvert(

@@ -30,18 +30,13 @@ library LibDibbler {
     function sow(uint256 amount, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.f.soil = s.f.soil.sub(amount, "Field: Not enough outstanding Soil.");
-        uint256 pods = beansToPods(amount, s.w.yield);
-        require(pods > 0, "Field: Must receive > 0 Pods.");
-        sowPlot(account, amount, pods);
-        s.f.pods = s.f.pods.add(pods);
-        saveSowTime();
-        return pods;
+        return sowNoSoil(amount, account);
     }
 
     function sowNoSoil(uint256 amount, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        require(amount > 0, "Field: Must purchase non-zero amount.");
         uint256 pods = beansToPods(amount, s.w.yield);
+        require(pods > 0, "Field: Must receive non-zero Pods.");
         sowPlot(account, amount, pods);
         s.f.pods = s.f.pods.add(pods);
         saveSowTime();

@@ -77,7 +77,8 @@ contract Silo is Life {
     // Governance
 
     function stepGovernance() internal {
-        for (uint256 i; i < s.g.activeBips.length; i++) {
+        uint256 numberOfActiveBips = s.g.activeBips.length;
+        for (uint256 i; i < numberOfActiveBips; i++) {
             uint32 bip = s.g.activeBips[i];
             if (season() >= s.g.bips[bip].start.add(s.g.bips[bip].period)) {
                 endBip(bip, i);

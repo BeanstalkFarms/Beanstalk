@@ -2,7 +2,17 @@
 contract MockBean3Curve {
     uint256 a;
     uint256[2] balances;
+    uint256[2] previousBalances;
+    uint256 virtualPrice;
     uint256 supply;
+
+    function get_previous_balances() external view returns (uint256[2] memory) {
+        return previousBalances;
+    }
+
+    function get_virtual_price() external view returns (uint256) {
+        return virtualPrice;
+    }
 
     function A_precise() external view returns (uint256) {
         return a;
@@ -19,10 +29,15 @@ contract MockBean3Curve {
     }
 
     function set_balances(uint256[2] memory _balances) external {
+        previousBalances = balances;
         balances = _balances;
     }
 
     function set_supply(uint256 _supply) external {
         supply = _supply;
+    }
+
+    function set_virtual_price(uint256 vp) external {
+        virtualPrice = vp;
     }
 }

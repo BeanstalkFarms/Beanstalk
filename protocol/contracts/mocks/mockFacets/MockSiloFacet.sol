@@ -147,4 +147,8 @@ contract MockSiloFacet is SiloFacet {
         }
         return (seasons, crates);
     }
+
+    function uniswapLPToBean(uint256 amount) external view returns (uint256) {
+        return LibLPSilo.lpToLPBeans(amount);
+    }
 }
