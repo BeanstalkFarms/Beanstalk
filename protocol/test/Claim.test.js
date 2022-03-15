@@ -534,4 +534,8 @@ describe('Claim', function () {
       expect(newBeans.sub(beansBefore)).to.be.equal('2000')
     })
   });
+
+  it("Guards against reentrancy", async function () {
+    await expect(this.season.reentrancyGuardTest()).to.be.revertedWith('ReentrancyGuard: reentrant call');
+  })
 });

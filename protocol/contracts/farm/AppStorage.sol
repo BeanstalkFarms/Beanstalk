@@ -196,7 +196,7 @@ struct AppStorage {
     Storage.Oracle o;
     Storage.Rain r;
     Storage.Silo s;
-    uint256 reentrantStatus; //  
+    uint256 reentrantStatus;
     Storage.Weather w;
     Storage.AssetSilo bean;
     Storage.AssetSilo lp;
