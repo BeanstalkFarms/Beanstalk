@@ -64,6 +64,7 @@ describe('Liquity', function () {
     await this.weth.mint(this.pair.address, '100000');
   });
   beforeEach(async function () {
+    await this.season.siloSunrise(0);
   });
    describe('Create Trove', async function () {
     describe('reverts', async function () {
@@ -113,6 +114,7 @@ describe('Liquity', function () {
 	await this.season.setSoilE('1000');
 	await this.season.setYieldE('1000');
      });
+	    /*
       it('collateralize and sow', async function () {
 	await this.farm.chainFarm(['0xb54da83c0000000000000000000000000000000000000000000000000011c37937e0800000000000000000000000000000000000000000000000006c6b935b8bbd40000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003', '0x5271978900000000000000000000000000000000000000000000000000000000000003e8'], {value: ethers.utils.parseEther('4')});
       });
@@ -130,5 +132,24 @@ describe('Liquity', function () {
 	await this.farm.chainFarm(['0xb54da83c0000000000000000000000000000000000000000000000000011c37937e0800000000000000000000000000000000000000000000000006c6b935b8bbd40000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003', '0xdde7283c00000000000000000000000000000000000000000000000000000000000003e8'], {value: ethers.utils.parseEther('4')});
       });
     });
+    */
+      it('collateralize and sow', async function () {
+	await this.farm.connect(user).chainFarm(['0x5271978900000000000000000000000000000000000000000000000000000000000003e8'], {value: ethers.utils.parseEther('4')});
+      });
+      it('collateralize and fundraise', async function () {
+	await this.farm.connect(user).chainFarm(['0x2db75d40000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003e8'], {value: ethers.utils.parseEther('4')});
+      });
+    });
+    describe('Collateral -> Silo', async function () {
+      it('collateralize and deposit', async function () {
+	await this.farm.connect(user).chainFarm(['0x75ce258d00000000000000000000000000000000000000000000000000000000000003e8']);//, {value: ethers.utils.parseEther('4')});
+      });
+    });
+    describe('Collateral -> Beanstalk Functionality', async function () {
+      it('collateralize and wrap beans', async function () {
+	await this.farm.connect(user).chainFarm(['0xdde7283c00000000000000000000000000000000000000000000000000000000000003e8'], {value: ethers.utils.parseEther('4')});
+      });
+    });
+
   });
 });

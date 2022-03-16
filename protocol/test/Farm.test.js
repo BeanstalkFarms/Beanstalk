@@ -59,8 +59,8 @@ describe('Farm', function () {
 
   describe('Silo Facet', function () {
    beforeEach(async function () {	
-	await this.farm.connect(user).farm('0x75ce258d00000000000000000000000000000000000000000000000000000000000003e8') // depositBeans(1000)
-	await this.farm.connect(user2).farm('0x75ce258d00000000000000000000000000000000000000000000000000000000000003e8') // depositBeans(1000)
+	await this.farm.connect(user).chainFarm(['0x75ce258d00000000000000000000000000000000000000000000000000000000000003e8']) // depositBeans(1000)
+	await this.farm.connect(user2).chainFarm(['0x75ce258d00000000000000000000000000000000000000000000000000000000000003e8']) // depositBeans(1000)
    });
 	it('deposit beans', async function () {
 	expect(await this.silo.totalDepositedBeans()).to.eq('2000');

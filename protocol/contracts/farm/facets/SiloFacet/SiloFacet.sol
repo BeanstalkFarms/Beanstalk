@@ -52,7 +52,7 @@ contract SiloFacet is BeanSilo {
         _depositBeans(boughtAmount.add(amount));
     }
 
-    function depositBeans(uint256 amount) public {
+    function depositBeans(uint256 amount) public { 
         bean().transferFrom(msg.sender, address(this), amount);
         _depositBeans(amount);
     }

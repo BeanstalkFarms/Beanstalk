@@ -7,6 +7,8 @@ pragma experimental ABIEncoderV2;
 
 import '../../AppStorage.sol';
 
+import 'hardhat/console.sol';
+
 /**
  * @author Beasley
  * @title Users call any function in Beanstalk
@@ -51,7 +53,9 @@ contract FarmFacet {
      * Farm Function
     */
 
-    function farm(bytes calldata data) public payable {
+
+   // We distinguish payable and non-payable delegatecalls because a delegatecall with msg.value cannot be performed with a non-payable function
+    function farm(bytes calldata data) public {
 	DiamondStorage storage ds = diamondStorage();
 	bytes4 functionSelector;
 	assembly {
