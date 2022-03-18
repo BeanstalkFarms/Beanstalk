@@ -375,6 +375,7 @@ library LibMarket {
         if (remainingBeans > 0) IBean(s.c.bean).transferFrom(msg.sender, to, remainingBeans);
     }
 
+    // Allocate Bean Refund stores the Bean refund amount in the state to be refunded at the end of the transaction.
     function allocateBeanRefund(uint256 inputAmount, uint256 amount) internal {
         if (inputAmount > amount) {
 	        AppStorage storage s = LibAppStorage.diamondStorage();
@@ -385,8 +386,8 @@ library LibMarket {
         }
     }
 
+    // Allocate Eth Refund stores the Eth refund amount in the state to be refunded at the end of the transaction.
     function allocateEthRefund(uint256 inputAmount, uint256 amount, bool weth) internal {
-        
         if (inputAmount > amount) {
 	        AppStorage storage s = LibAppStorage.diamondStorage();
             if (weth) IWETH(s.c.weth).withdraw(inputAmount - amount);
@@ -405,6 +406,9 @@ library LibMarket {
 
     function refund() internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        // If Refund state = 1 -> No refund
+        // If Refund state is even -> Refund Beans
+        // if Refund state > 2 -> Refund Eth
         uint256 rs = s.refundStatus;
         if(rs > 1) {
             if (rs > 2) {

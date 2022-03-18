@@ -196,7 +196,7 @@ struct AppStorage {
     Storage.Oracle o;
     Storage.Rain r;
     Storage.Silo s;
-    uint256 reentrantStatus;
+    uint256 reentrantStatus; // An intra-transaction state variable to protect against reentrance
     Storage.Weather w;
     Storage.AssetSilo bean;
     Storage.AssetSilo lp;
@@ -216,6 +216,8 @@ struct AppStorage {
     mapping(bytes32 => uint256) podOrders;
     mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
+
+    // These refund variables are intra-transaction state varables use to store refund amounts
     uint256 refundStatus;
     uint256 beanRefundAmount;
     uint256 ethRefundAmount;

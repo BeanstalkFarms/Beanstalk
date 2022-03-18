@@ -30,6 +30,7 @@ library LibMetaCurve {
     uint256 private constant j = 1;
 
     function bdv(uint256 amount) internal view returns (uint256) {
+        // By using previous balances and the virtual price, we protect against flash loan
         uint256[2] memory balances = IMeta3Curve(POOL).get_previous_balances();
         uint256 virtualPrice = IMeta3Curve(POOL).get_virtual_price();
         uint256[2] memory xp = getXP(balances);

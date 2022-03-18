@@ -70,6 +70,10 @@ library LibLPSilo {
         (uint112 reserve0, uint112 reserve1, uint32 lastTimestamp) = IUniswapV2Pair(s.c.pair).getReserves();
 
         uint256 beanReserve;
+
+        // Check the last timestamp in the Uniswap Pair to see if anyone has interacted with the pair this block.
+        // If so, use current Season TWAP to calculate Bean Reserves for flash loan protection
+        // If not, we can use the current reserves with the assurance that there is no active flash loan
         if (lastTimestamp == uint32(block.timestamp % 2 ** 32)) 
             beanReserve = twapBeanReserve(reserve0, reserve1, lastTimestamp);
         else 
