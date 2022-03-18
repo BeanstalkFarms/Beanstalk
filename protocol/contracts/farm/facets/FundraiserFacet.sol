@@ -54,7 +54,7 @@ contract FundraiserFacet is ReentrancyGuard {
     }
 
     function remainingFunding(uint32 id) public view returns (uint256) {
-        return s.fundraisers[id].remaining;
+    return s.fundraisers[id].remaining;
     }
 
     function totalFunding(uint32 id) public view returns (uint256) {

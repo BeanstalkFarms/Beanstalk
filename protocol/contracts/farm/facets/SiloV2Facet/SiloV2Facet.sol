@@ -57,7 +57,7 @@ contract SiloV2Facet is TokenSilo {
 
     function withdrawTokenBySeason(address token, uint32 season, uint256 amount) 
         external 
-        updateSiloNonReentrant 
+        updateSilo 
     {
         LibInternal.updateSilo(msg.sender);
         _withdrawDeposit(token, season, amount);
@@ -66,14 +66,14 @@ contract SiloV2Facet is TokenSilo {
 
     function withdrawTokenBySeasons(address token, uint32[] calldata seasons, uint256[] calldata amounts) 
         external 
-        updateSiloNonReentrant 
+        updateSilo 
     {
         LibInternal.updateSilo(msg.sender);
         _withdrawDeposits(token, seasons, amounts);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
-    function withdrawTokensBySeason(WithdrawSeason[] calldata withdraws) external updateSiloNonReentrant {
+    function withdrawTokensBySeason(WithdrawSeason[] calldata withdraws) external updateSilo {
         LibInternal.updateSilo(msg.sender);
         for (uint256 i = 0; i < withdraws.length; i++) {
             _withdrawDeposit(withdraws[i].token, withdraws[i].season, withdraws[i].amount);
@@ -81,7 +81,7 @@ contract SiloV2Facet is TokenSilo {
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
-    function withdrawTokensBySeasons(WithdrawSeasons[] calldata withdraws) external updateSiloNonReentrant {
+    function withdrawTokensBySeasons(WithdrawSeasons[] calldata withdraws) external updateSilo {
         LibInternal.updateSilo(msg.sender);
         for (uint256 i = 0; i < withdraws.length; i++) {
             _withdrawDeposits(withdraws[i].token, withdraws[i].seasons, withdraws[i].amounts);
@@ -93,21 +93,21 @@ contract SiloV2Facet is TokenSilo {
      * Claim
      */
 
-    function claimTokenBySeason(address token, uint32 season) external updateSiloNonReentrant {
+    function claimTokenBySeason(address token, uint32 season) external updateSilo {
         _claimTokenBySeason(token, season);
     }
 
-    function claimTokenBySeasons(address token, uint32[] calldata seasons) external updateSiloNonReentrant {
+    function claimTokenBySeasons(address token, uint32[] calldata seasons) external updateSilo {
         _claimTokenBySeasons(token, seasons);
     }
 
-    function claimTokensBySeason(SeasonClaim[] calldata claims) external updateSiloNonReentrant {
+    function claimTokensBySeason(SeasonClaim[] calldata claims) external updateSilo {
         for (uint256 i = 0; i < claims.length; i++) {
             _claimTokenBySeason(claims[i].token, claims[i].season);
         }
     }
 
-    function claimTokensBySeasons(SeasonsClaim[] calldata claims) external updateSiloNonReentrant {
+    function claimTokensBySeasons(SeasonsClaim[] calldata claims) external updateSilo {
         for (uint256 i = 0; i < claims.length; i++) {
             _claimTokenBySeasons(claims[i].token, claims[i].seasons);
         }

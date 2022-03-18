@@ -27,7 +27,7 @@ contract Bean is Ownable, ERC20Burnable  {
 
     function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
         _transfer(sender, recipient, amount);
-        if (allowance(sender, _msgSender()) != uint256(-1)) {
+        if (allowance(sender, _msgSender()) != type(uint256).max) {
             _approve(
                 sender,
                 _msgSender(),

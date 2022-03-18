@@ -16,7 +16,11 @@ abstract contract ReentrancyGuard {
     uint256 private constant _ENTERED = 2;
 
     AppStorage internal s;
-
+    
+    modifier updateSilo() {
+        LibInternal.updateSilo(msg.sender);
+        _;
+    }
     modifier updateSiloNonReentrant() {
         require(s.reentrantStatus != _ENTERED, "ReentrancyGuard: reentrant call");
         s.reentrantStatus = _ENTERED;

@@ -55,11 +55,11 @@ library LibMarket {
     **/
 
     function buy(uint256 buyBeanAmount) internal returns (uint256 amount) {
-        amount = _buyAndRefund(buyBeanAmount, msg.sender);
+        (, amount) = _buy(buyBeanAmount, msg.value, msg.sender);
     }
 
     function buyAndDeposit(uint256 buyBeanAmount) internal returns (uint256 amount) {
-        amount = _buyAndRefund(buyBeanAmount, address(this));
+        (, amount) = _buy(buyBeanAmount, msg.value, address(this));
     }
 
      function buyExactTokensToWallet(uint256 buyBeanAmount, address to, bool toWallet) internal returns (uint256 amount) {
@@ -73,8 +73,7 @@ library LibMarket {
 
     function buyExactTokens(uint256 buyBeanAmount, address to) internal returns (uint256 amount) {
         (uint256 ethAmount, uint256 beanAmount) = _buyExactTokens(buyBeanAmount, msg.value, to);
-        (bool success,) = msg.sender.call{ value: msg.value.sub(ethAmount) }("");
-        require(success, "Market: Refund failed.");
+        allocateEthRefund(msg.value, ethAmount, false);
         return beanAmount;
     }
 
@@ -89,18 +88,6 @@ library LibMarket {
     /**
      *  Liquidity
     **/
-
-    function addLiquidity(AddLiquidity calldata al) internal returns (uint256, uint256) {
-        (uint256 beansDeposited, uint256 ethDeposited, uint256 liquidity) = _addLiquidity(
-            msg.value,
-            al.beanAmount,
-            al.minEthAmount,
-            al.minBeanAmount
-        );
-        (bool success,) = msg.sender.call{ value: msg.value.sub(ethDeposited) }("");
-        require(success, "Market: Refund failed.");
-        return (beansDeposited, liquidity);
-    }
 
     function removeLiquidity(uint256 liqudity, uint256 minBeanAmount,uint256 minEthAmount)
         internal
@@ -131,17 +118,25 @@ library LibMarket {
             address(this),
             block.timestamp
         );
-        IWETH(ds.weth).withdraw(ethAmount);
-        (bool success, ) = msg.sender.call{value: ethAmount}("");
-        require(success, "WETH: ETH transfer failed");
+        allocateEthRefund(ethAmount, 0, true);
     }
 
     function addAndDepositLiquidity(AddLiquidity calldata al) internal returns (uint256) {
-        DiamondStorage storage ds = diamondStorage();
         allocateBeans(al.beanAmount);
-        (uint256 beans, uint256 liquidity) = addLiquidity(al);
-        if (al.beanAmount > beans) IBean(ds.bean).transfer(msg.sender, al.beanAmount.sub(beans));
+        (, uint256 liquidity) = addLiquidity(al);
         return liquidity;
+    }
+
+    function addLiquidity(AddLiquidity calldata al) internal returns (uint256, uint256) {
+        (uint256 beansDeposited, uint256 ethDeposited, uint256 liquidity) = _addLiquidity(
+            msg.value,
+            al.beanAmount,
+            al.minEthAmount,
+            al.minBeanAmount
+        );
+        allocateEthRefund(msg.value, ethDeposited, false);
+        allocateBeanRefund(al.beanAmount, beansDeposited);
+        return (beansDeposited, liquidity);
     }
 
     function swapAndAddLiquidity(
@@ -169,35 +164,33 @@ library LibMarket {
     // Otherwise, it will almost always be less than al.buyBean amount
     function buyBeansAndAddLiquidity(uint256 buyBeanAmount, AddLiquidity calldata al)
         internal
-        returns (uint256)
+        returns (uint256 liquidity)
     {
         DiamondStorage storage ds = diamondStorage();
         IWETH(ds.weth).deposit{value: msg.value}();
+
         address[] memory path = new address[](2);
         path[0] = ds.weth;
         path[1] = ds.bean;
         uint256[] memory amounts = IUniswapV2Router02(ds.router).getAmountsIn(buyBeanAmount, path);
         (uint256 ethSold, uint256 beans) = _buyWithWETH(buyBeanAmount, amounts[0], address(this));
+
         // If beans bought does not cover the amount of money to move to LP
-	if (al.beanAmount > buyBeanAmount) {
+	    if (al.beanAmount > buyBeanAmount) {
             uint256 newBeanAmount = al.beanAmount - buyBeanAmount;
             allocateBeans(newBeanAmount);
             beans = beans.add(newBeanAmount);
         }
-        uint256 liquidity; uint256 ethAdded;
+        uint256 ethAdded;
         (beans, ethAdded, liquidity) = _addLiquidityWETH(
             msg.value.sub(ethSold),
             beans,
             al.minEthAmount,
             al.minBeanAmount
         );
-        if (al.beanAmount > beans) IBean(ds.bean).transfer(msg.sender, al.beanAmount.sub(beans));
-        if (msg.value > ethAdded.add(ethSold)) {
-            uint256 returnETH = msg.value.sub(ethAdded).sub(ethSold);
-            IWETH(ds.weth).withdraw(returnETH);
-            (bool success,) = msg.sender.call{ value: returnETH }("");
-            require(success, "Market: Refund failed.");
-        }
+        
+        allocateBeanRefund(al.beanAmount, beans); 
+        allocateEthRefund(msg.value, ethAdded.add(ethSold), true);
         return liquidity;
     }
 
@@ -219,20 +212,8 @@ library LibMarket {
             al.minBeanAmount
         );
 
-        if (al.beanAmount.add(sellBeans) > beans.add(beansSold)) {
-        uint256 toTransfer = al.beanAmount.add(sellBeans).sub(beans.add(beansSold));
-        IBean(ds.bean).transfer(
-                    msg.sender,
-                    toTransfer
-                );
-	}
-
-        if (ethAdded < wethBought.add(msg.value)) {
-            uint256 eth = wethBought.add(msg.value).sub(ethAdded);
-            IWETH(ds.weth).withdraw(eth);
-            (bool success, ) = msg.sender.call{value: eth}("");
-            require(success, "Market: Ether transfer failed.");
-        }
+        allocateBeanRefund(al.beanAmount.add(sellBeans), beans.add(beansSold));
+        allocateEthRefund(msg.value.add(wethBought), ethAdded, true);
         return liquidity;
     }
 
@@ -256,13 +237,6 @@ library LibMarket {
             block.timestamp
         );
         return (amounts[0], amounts[1]);
-    }
-
-    function _buyAndRefund(uint256 buyBeanAmount, address to) private returns (uint256 beanAmount) {
-        uint256 ethAmount;
-        (ethAmount, beanAmount) = _buy(buyBeanAmount, msg.value, to);
-        (bool success,) = msg.sender.call{ value: msg.value.sub(ethAmount) }("");
-        require(success, "Market: Refund failed.");
     }
 
     function _buy(uint256 beanAmount, uint256 ethAmount, address to)
@@ -399,5 +373,51 @@ library LibMarket {
             if (to != address(this)) IBean(s.c.bean).transfer(to, fromWrappedBeans);
         }
         if (remainingBeans > 0) IBean(s.c.bean).transferFrom(msg.sender, to, remainingBeans);
+    }
+
+    function allocateBeanRefund(uint256 inputAmount, uint256 amount) internal {
+        if (inputAmount > amount) {
+	        AppStorage storage s = LibAppStorage.diamondStorage();
+            if (s.refundStatus % 2 == 1) {
+                s.refundStatus += 1;
+                s.beanRefundAmount = inputAmount - amount;
+            } else s.beanRefundAmount = s.beanRefundAmount.add(inputAmount - amount);
+        }
+    }
+
+    function allocateEthRefund(uint256 inputAmount, uint256 amount, bool weth) internal {
+        
+        if (inputAmount > amount) {
+	        AppStorage storage s = LibAppStorage.diamondStorage();
+            if (weth) IWETH(s.c.weth).withdraw(inputAmount - amount);
+            if (s.refundStatus < 3) {
+                s.refundStatus += 2;
+                s.ethRefundAmount = inputAmount - amount;
+            } else s.ethRefundAmount = s.ethRefundAmount.add(inputAmount - amount);
+        }
+    }
+
+    function claimRefund(LibClaim.Claim calldata c) internal {
+        // The only case that a Claim triggers an Eth refund is 
+        // if the farmer claims LP, removes the LP and wraps the underlying Beans
+        if (c.convertLP && c.toWallet && c.lpWithdrawals.length > 0) refund();
+    }
+
+    function refund() internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 rs = s.refundStatus;
+        if(rs > 1) {
+            if (rs > 2) {
+                (bool success,) = msg.sender.call{ value: s.ethRefundAmount }("");
+                require(success, "Market: Refund failed.");
+                rs -= 2;
+                s.ethRefundAmount = 1;
+            }
+            if (rs == 2) {
+                IBean(s.c.bean).transfer(msg.sender, s.beanRefundAmount);
+                s.beanRefundAmount = 1;
+            }
+            s.refundStatus = 1;
+        }
     }
 }

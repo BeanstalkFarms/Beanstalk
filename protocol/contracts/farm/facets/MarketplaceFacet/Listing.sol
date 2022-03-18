@@ -84,6 +84,7 @@ contract Listing is PodTransfer {
             l.toWallet
         );
         _fillListing(l, beanAmount+boughtBeanAmount);
+        LibMarket.refund();
     }
 
     function _fillListing(

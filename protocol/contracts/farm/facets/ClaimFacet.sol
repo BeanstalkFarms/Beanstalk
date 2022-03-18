@@ -29,7 +29,7 @@ contract ClaimFacet is ReentrancyGuard {
 
     function claim(LibClaim.Claim calldata c) external payable nonReentrant returns (uint256 beansClaimed) {
         beansClaimed = LibClaim.claim(c);
-
+        LibMarket.claimRefund(c);
         LibCheck.balanceCheck();
     }
 
@@ -40,13 +40,13 @@ contract ClaimFacet is ReentrancyGuard {
         LibCheck.balanceCheck();
     }
 
-    function claimBeans(uint32[] calldata withdrawals) external nonReentrant {
+    function claimBeans(uint32[] calldata withdrawals) external {
         uint256 beansClaimed = LibClaim.claimBeans(withdrawals);
         IBean(s.c.bean).transfer(msg.sender, beansClaimed);
         LibCheck.beanBalanceCheck();
     }
 
-    function claimLP(uint32[] calldata withdrawals) external nonReentrant {
+    function claimLP(uint32[] calldata withdrawals) external {
         LibClaim.claimLP(withdrawals);
         LibCheck.lpBalanceCheck();
     }
@@ -63,17 +63,17 @@ contract ClaimFacet is ReentrancyGuard {
         LibCheck.balanceCheck();
     }
 
-    function harvest(uint256[] calldata plots) external nonReentrant {
+    function harvest(uint256[] calldata plots) external {
         uint256 beansHarvested = LibClaim.harvest(plots);
         IBean(s.c.bean).transfer(msg.sender, beansHarvested);
         LibCheck.beanBalanceCheck();
     }
 
-    function claimEth() external nonReentrant {
+    function claimEth() external {
         LibClaim.claimEth();
     }
 
-    function unwrapBeans(uint amount) external nonReentrant returns (uint256 beansToWallet) {
+    function unwrapBeans(uint amount) external returns (uint256 beansToWallet) {
         return _unwrapBeans(amount);
     }
 
@@ -92,7 +92,7 @@ contract ClaimFacet is ReentrancyGuard {
         }
     }
 
-    function wrapBeans(uint amount) external nonReentrant {
+    function wrapBeans(uint amount) external {
         IBean(s.c.bean).transferFrom(msg.sender, address(this), amount);
         s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(amount);
 

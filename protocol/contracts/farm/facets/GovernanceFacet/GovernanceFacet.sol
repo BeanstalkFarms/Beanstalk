@@ -39,7 +39,6 @@ contract GovernanceFacet is VotingBooth {
         uint8 _pauseOrUnpause
     )
         external
-        nonReentrant
     {
         require(canPropose(msg.sender), "Governance: Not enough Stalk.");
         require(notTooProposed(msg.sender), "Governance: Too many active BIPs.");
@@ -67,7 +66,7 @@ contract GovernanceFacet is VotingBooth {
      * Voting
     **/
 
-    function vote(uint32 bip) external nonReentrant {
+    function vote(uint32 bip) external {
         require(balanceOfRoots(msg.sender) > 0, "Governance: Must have Stalk.");
         require(isNominated(bip), "Governance: Not nominated.");
         require(isActive(bip), "Governance: Ended.");
@@ -78,7 +77,7 @@ contract GovernanceFacet is VotingBooth {
 
     /// @notice Takes in a list of multiple bips and performs a vote on all of them
     /// @param bip_list Contains the bip proposal ids to vote on
-    function voteAll(uint32[] calldata bip_list) external nonReentrant {
+    function voteAll(uint32[] calldata bip_list) external {
         require(balanceOfRoots(msg.sender) > 0, "Governance: Must have Stalk.");
         
         bool[] memory vote_types = new bool[](bip_list.length);
@@ -102,7 +101,7 @@ contract GovernanceFacet is VotingBooth {
         emit VoteList(msg.sender, bip_list, vote_types, balanceOfRoots(msg.sender));
     }
 
-    function unvote(uint32 bip) external nonReentrant {
+    function unvote(uint32 bip) external {
         require(isNominated(bip), "Governance: Not nominated.");
         require(balanceOfRoots(msg.sender) > 0, "Governance: Must have Stalk.");
         require(isActive(bip), "Governance: Ended.");
@@ -117,7 +116,7 @@ contract GovernanceFacet is VotingBooth {
 
     /// @notice Takes in a list of multiple bips and performs an unvote on all of them
     /// @param bip_list Contains the bip proposal ids to unvote on
-    function unvoteAll(uint32[] calldata bip_list) external nonReentrant {
+    function unvoteAll(uint32[] calldata bip_list) external {
         require(balanceOfRoots(msg.sender) > 0, "Governance: Must have Stalk.");
 
         uint i = 0;
@@ -139,7 +138,7 @@ contract GovernanceFacet is VotingBooth {
     /// @notice Takes in a list of multiple bips and performs a vote or unvote on all of them
     ///         depending on their status: whether they are currently voted on or not voted on
     /// @param bip_list Contains the bip proposal ids
-    function voteUnvoteAll(uint32[] calldata bip_list) external nonReentrant {
+    function voteUnvoteAll(uint32[] calldata bip_list) external {
         require(balanceOfRoots(msg.sender) > 0, "Governance: Must have Stalk.");
         
         uint i = 0;
@@ -167,7 +166,7 @@ contract GovernanceFacet is VotingBooth {
      * Execution
     **/
 
-    function commit(uint32 bip) external nonReentrant {
+    function commit(uint32 bip) external {
         require(isNominated(bip), "Governance: Not nominated.");
         require(!isActive(bip), "Governance: Not ended.");
         require(!isExpired(bip), "Governance: Expired.");
@@ -178,7 +177,7 @@ contract GovernanceFacet is VotingBooth {
         _execute(msg.sender, bip, true, true); 
     }
 
-    function emergencyCommit(uint32 bip) external nonReentrant {
+    function emergencyCommit(uint32 bip) external {
         require(isNominated(bip), "Governance: Not nominated.");
         require(
             block.timestamp >= timestamp(bip).add(C.getGovernanceEmergencyPeriod()),
@@ -191,7 +190,7 @@ contract GovernanceFacet is VotingBooth {
         _execute(msg.sender, bip, false, true); 
     }
 
-    function pauseOrUnpause(uint32 bip) external nonReentrant {
+    function pauseOrUnpause(uint32 bip) external {
         require(isNominated(bip), "Governance: Not nominated.");
         require(diamondCutIsEmpty(bip),"Governance: Has diamond cut.");
         require(isActive(bip), "Governance: Ended.");
@@ -223,12 +222,12 @@ contract GovernanceFacet is VotingBooth {
      * Pause / Unpause
     **/
 
-    function ownerPause() external nonReentrant {
+    function ownerPause() external {
         LibDiamond.enforceIsContractOwner();
         pause();
     }
 
-    function ownerUnpause() external nonReentrant {
+    function ownerUnpause() external {
         LibDiamond.enforceIsContractOwner();
         unpause();
     }

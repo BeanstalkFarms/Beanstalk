@@ -250,5 +250,4 @@ contract MockSeasonFacet is SeasonFacet {
         s.w.startSoil = startSoil;
         stepWeather(intPrice.mul(1e16), endSoil);
     }
-
 }

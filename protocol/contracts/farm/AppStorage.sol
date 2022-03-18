@@ -216,4 +216,7 @@ struct AppStorage {
     mapping(bytes32 => uint256) podOrders;
     mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
+    uint256 refundStatus;
+    uint256 beanRefundAmount;
+    uint256 ethRefundAmount;
 }

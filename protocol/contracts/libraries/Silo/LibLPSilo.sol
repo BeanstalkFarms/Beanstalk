@@ -64,20 +64,20 @@ library LibLPSilo {
         return (s.a[account].lp.deposits[id], s.a[account].lp.depositSeeds[id]);
     }
 
-    function lpToLPBeans(uint256 amount) internal view returns (uint256) {
+    function lpToLPBeans(uint256 amount) internal view returns (uint256 beans) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         (uint112 reserve0, uint112 reserve1, uint32 lastTimestamp) = IUniswapV2Pair(s.c.pair).getReserves();
 
         uint256 beanReserve;
         if (lastTimestamp == uint32(block.timestamp % 2 ** 32)) 
-            beanReserve = twapBeanReserve(amount, reserve0, reserve1, lastTimestamp);
+            beanReserve = twapBeanReserve(reserve0, reserve1, lastTimestamp);
         else 
             beanReserve = s.index == 0 ? reserve0 : reserve1;
-        return amount.mul(beanReserve).mul(2).div(IUniswapV2Pair(s.c.pair).totalSupply());
+        beans = amount.mul(beanReserve).mul(2).div(IUniswapV2Pair(s.c.pair).totalSupply());
     }
 
-    function twapBeanReserve(uint256 amount, uint112 reserve0, uint112 reserve1, uint32 lastTimestamp) internal view returns (uint256 beans) {
+    function twapBeanReserve(uint112 reserve0, uint112 reserve1, uint32 lastTimestamp) internal view returns (uint256 beans) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         
         (uint256 price0Cumulative, uint256 price1Cumulative, uint32 blockTimestamp) =

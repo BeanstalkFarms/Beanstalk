@@ -11,13 +11,14 @@ import "../../AppStorage.sol";
 import "../../../C.sol";
 import "../../../libraries/Decimal.sol";
 import "../../../libraries/LibDiamond.sol";
-import "../../ReentrancyGuard.sol";
 
 /**
  * @author Publius
  * @title BIP
 **/
-contract Bip is ReentrancyGuard {
+contract Bip {
+    
+    AppStorage internal s;
 
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;

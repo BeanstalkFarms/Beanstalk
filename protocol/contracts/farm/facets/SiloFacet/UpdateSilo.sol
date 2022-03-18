@@ -122,4 +122,9 @@ contract UpdateSilo is SiloExit {
         _;
         _status = _NOT_ENTERED;
     }
+
+    modifier silo() {
+        updateSilo(msg.sender);
+        _;
+    }
 }

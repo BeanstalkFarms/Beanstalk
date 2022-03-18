@@ -49,7 +49,8 @@ contract Order is Listing {
         uint256 maxPlaceInLine
     ) internal returns (bytes32 id) {
         uint256 boughtBeanAmount = LibMarket.buyExactTokens(buyBeanAmount, address(this));
-        return _createPodOrder(beanAmount+boughtBeanAmount, pricePerPod, maxPlaceInLine);
+        id = _createPodOrder(beanAmount+boughtBeanAmount, pricePerPod, maxPlaceInLine);
+        LibMarket.refund();
     }
 
     function _createPodOrder(

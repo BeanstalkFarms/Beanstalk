@@ -55,7 +55,8 @@ contract InitBip0 {
         s.s.roots = s.s.stalk.sub(siStalk).mul(C.getRootsBase());
 
         // migrate bips to new model
-        for (uint32 i = 0; i < sOld.g.bipIndex; i++) {
+        for (uint256 i256 = 0; i256 < sOld.g.bipIndex; ++i256) {
+            uint32 i = uint32(i256);
             StorageOld.Bip memory oldBip = sOld.g.bips[i];
             delete sOld.g.bips[i];
             s.g.bips[i].proposer = oldBip.proposer;

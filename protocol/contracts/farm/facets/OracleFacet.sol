@@ -8,7 +8,7 @@ pragma experimental ABIEncoderV2;
 import "../AppStorage.sol";
 import "../../libraries/Decimal.sol";
 import "../../libraries/UniswapV2OracleLibrary.sol";
-import "hardhat/console.sol";
+
 /**
  * @author Publius
  * @title Oracle tracks the TWAP price of the USDC/ETH and BEAN/ETH Uniswap pairs.

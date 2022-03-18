@@ -27,7 +27,7 @@ contract MarketplaceFacet is Order {
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
         bool toWallet
-    ) external nonReentrant {
+    ) external {
         _createPodListing(index, start, amount, pricePerPod, maxHarvestableIndex, toWallet);
     }
 
@@ -35,7 +35,7 @@ contract MarketplaceFacet is Order {
     function fillPodListing(
         PodListing calldata l,
         uint256 beanAmount
-    ) external nonReentrant {
+    ) external {
         LibMarket.transferBeans(l.account, beanAmount, l.toWallet);
         _fillListing(l, beanAmount);
     }
@@ -47,6 +47,7 @@ contract MarketplaceFacet is Order {
     ) external nonReentrant {
         allocateBeansToWallet(claim, beanAmount, l.account, l.toWallet);
         _fillListing(l, beanAmount);
+        LibMarket.claimRefund(claim);
     }
 
     function buyBeansAndFillPodListing(
@@ -69,7 +70,7 @@ contract MarketplaceFacet is Order {
     }
 
     // Cancel
-    function cancelPodListing(uint256 index) external nonReentrant {
+    function cancelPodListing(uint256 index) external {
         _cancelPodListing(index);
     }
 
@@ -87,7 +88,7 @@ contract MarketplaceFacet is Order {
         uint256 beanAmount,
         uint24 pricePerPod,
         uint256 maxPlaceInLine
-    ) external nonReentrant returns (bytes32 id) {
+    ) external returns (bytes32 id) {
         bean().transferFrom(msg.sender, address(this), beanAmount);
         return _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine);
     }
@@ -100,6 +101,7 @@ contract MarketplaceFacet is Order {
     ) external nonReentrant returns (bytes32 id) {
         allocateBeans(claim, beanAmount, address(this));
         id = _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine);
+        LibMarket.claimRefund(claim);
     }
 
     function buyBeansAndCreatePodOrder(
@@ -130,12 +132,12 @@ contract MarketplaceFacet is Order {
         uint256 start,
         uint256 amount,
         bool toWallet
-    ) external nonReentrant {
+    ) external {
         _fillPodOrder(o, index, start, amount, toWallet);
     }
 
     // Cancel
-    function cancelPodOrder(uint24 pricePerPod, uint256 maxPlaceInLine, bool toWallet) external nonReentrant {
+    function cancelPodOrder(uint24 pricePerPod, uint256 maxPlaceInLine, bool toWallet) external {
         _cancelPodOrder(pricePerPod, maxPlaceInLine, toWallet);
     }
 
