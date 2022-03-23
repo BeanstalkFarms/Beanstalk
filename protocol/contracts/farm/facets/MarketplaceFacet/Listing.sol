@@ -16,10 +16,25 @@ import "./FixedPointMath.sol";
  * @title Pod Marketplace v1
 **/
 contract Listing is PodTransfer {
-    uint256 constant eN = 271828;
-    uint256 constant eD = 100000;
-    using SafeMath for uint256;
     
+    using SafeMath for uint256;
+
+    struct PiecewiseFormula {
+        uint240[10] c0s;
+        bool[10] bool0;
+        uint240[10] c1s;
+        uint8[10] shifts1;
+        bool[10] bool1;
+        uint240[10] c2s;
+        uint8[10] shifts2;
+        bool[10] bool2;
+        uint240[10] c3s;
+        uint8[10] shifts3;
+        bool[10] bool3;
+    }
+    
+
+
     struct Formula {
         //store coefficients as our own implementation of a fixed point where we store the decimal shift
         // our decimal coefficient + decimal shift will be combined into another uint128
@@ -51,7 +66,7 @@ contract Listing is PodTransfer {
         uint256 maxHarvestableIndex; // expiry
         bool toWallet;
         uint8 fType;  // 0 = constant, 1 = linear, 2 = log, 3 = sigmoid, 4 = poly 2, 5 = poly 3, 6 = poly 4
-        Formula f;
+        PiecewiseFormula f;
     }
 
     event PodListingCreated(
@@ -92,7 +107,7 @@ contract Listing is PodTransfer {
     ) internal {
         uint256 plotSize = s.a[msg.sender].field.plots[index];
         require(plotSize >= (start + amount) && amount > 0, "Marketplace: Invalid Plot/Amount.");
-        //price per pod has to be calculated
+
         require(0 < pricePerPod, "Marketplace: Pod price must be greater than 0.");
         require(s.f.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
 
@@ -226,6 +241,55 @@ contract Listing is PodTransfer {
      * Helpers
      */
 
+    function evaluatePiecewise(uint240[10] memory c0s, 
+        bool[10] memory bool0, 
+        uint240[10] memory c1s, 
+        uint8[10] memory shifts1, 
+        bool[10] memory bool1, 
+        uint240[10] memory c2s,
+        uint8[10] memory shifts2, 
+        bool[10] memory bool2, 
+        uint256 x, 
+        uint256 k, 
+        bool kSign) pure internal returns(uint256) {
+
+    }
+
+    function evaluatePoly3(uint256 x, k, uint240[4] memory cons, uint8[4] memory shifts, bool[4] memory bools) pure internal returns(uint256) {
+        // preprocessing on x? and k
+        //i represents the degree of the term. i is max 3
+        uint8 counter = 5;
+        uint256 y;
+        uint256 termValue;
+        uint256 counterValue;
+        for (uint8 i = 0; i < 4;) {
+            termValue = MathFP.muld(x**i, cons[i], shifts[i]);
+            if(bools[i]){
+                y += termValue;
+                i++;
+                if(counter != 5) {
+                    counterValue = MathFP.muld(x**counter, cons[counter], shifts[counter]);
+                    if(y > counterValue) {
+                        y -= counterValue;
+                        counter = 5;
+                    }
+                }
+                continue;
+            } else {
+                if(y > termValue) {
+                    y -= termValue;
+                }
+                else {
+                    if(counter==5){
+                        counter = i;
+                    }
+                }
+                continue;
+            }
+        }
+    }
+
+
     function hashListing(
         uint256 start,
         uint256 amount,
@@ -248,7 +312,7 @@ contract Listing is PodTransfer {
     }
 
     function getListingAmountLin(Listing calldata l, uint256 amount) internal returns (uint256) {
-        uint256 x = l.index + l.start + (amount / 2) - s.f.harvestable; // x is 1e13, divide it by 1e5 to get a number with upper bounds at 1e8
+        uint256 x = l.index + l.start - s.f.harvestable; // x is 1e13, divide it by 1e5 to get a number with upper bounds at 1e8
         
         //fixed point assuming decimal shift
         // place in line needs to be 1e13 -> 1e8
@@ -264,44 +328,45 @@ contract Listing is PodTransfer {
         }
 
         amount = amount * pricePerPod;
-        return roundAmount(l, amount);
+        return amount;
     }
 
-    function getListingAmountLog(Listing calldata l,uint256 amount) internal returns (uint256) {
-        uint256 x = l.index + l.start + (amount / 2) - s.f.harvestable;
+    // function getListingAmountLog(Listing calldata l,uint256 amount) internal returns (uint256) {
+    //     uint256 x = l.index + l.start - s.f.harvestable;
 
-        uint256 log1 = LibIncentive.log_two(x+1);
-        uint256 log2 = LibIncentive.log_two(l.f.a);
+    //     uint256 log1 = LibIncentive.log_two(x+1);
+    //     uint256 log2 = LibIncentive.log_two(l.f.a);
 
-        uint256 pricePerPod = MathFP.divdr(log1, log2, l.f.aShift) + l.pricePerPod;
+    //     uint256 pricePerPod = MathFP.divdr(log1, log2, l.f.aShift) + l.pricePerPod;
         
-        amount = amount * pricePerPod;
-        return roundAmount(l, amount);
+    //     amount = amount * pricePerPod;
+    //     return amount;
 
-    }
+    // }
 
+    // SCRAAPING SIGMOID
     // error in denominator: a uint cannot be multiplied by -1. is there an abs() type function we can use? 
     // calculating the x for this function -> x intends to be the starting index for the plot
-    function getListingAmountSig(Listing calldata l, uint256 amount) internal returns (uint256) {
-        uint256 x = l.index + l.start + (amount / 2) - s.f.harvestable;
+    // function getListingAmountSig(Listing calldata l, uint256 amount) internal returns (uint256) {
+    //     uint256 x = l.index + l.start - s.f.harvestable;
 
-        uint256 n = l.pricePerPod * 2;
-        uint256 d;
+    //     uint256 n = l.pricePerPod * 2;
+    //     uint256 d;
 
-        if (l.f.aSign){
-            d = (1 + (eN / eD)**(1 / MathFP.muld(x, l.f.a, l.f.aShift)));
-        } else {
-            d = (1 + (eN / eD)**(MathFP.muld(x, l.f.a, l.f.aShift)));
-        }
+    //     if (l.f.aSign){
+    //         d = (1 + (eN / eD)**(1 / MathFP.muld(x, l.f.a, l.f.aShift)));
+    //     } else {
+    //         d = (1 + (eN / eD)**(MathFP.muld(x, l.f.a, l.f.aShift)));
+    //     }
        
-        uint256 pricePerPod = n / d; // not sure if this is ok
-        amount = amount * pricePerPod;
+    //     uint256 pricePerPod = n / d; // not sure if this is ok
+    //     amount = amount * pricePerPod;
 
-        return roundAmount(l, amount);
-    }
+    //     return amount;
+    // }
 
     function getListingAmountPoly(Listing calldata l, uint256 amount) internal returns (uint256) {
-        uint256 x = l.index + l.start + (amount / 2) - s.f.harvestable;
+        uint256 x = l.index + l.start - s.f.harvestable;
 
         uint256 pricePerPod;
 
@@ -336,6 +401,6 @@ contract Listing is PodTransfer {
             }
         }
         amount = amount * pricePerPod;
-        return roundAmount(l, amount);
+        return amount;
     }
 }

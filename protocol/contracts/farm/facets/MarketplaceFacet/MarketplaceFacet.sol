@@ -20,6 +20,8 @@ contract MarketplaceFacet is Order {
      */
 
     // Create
+
+    //FTYPE COULD BE A BOOL: CONSTANT OR POLYNOMIAL
     function createPodListing(
         uint256 index,
         uint256 start,
