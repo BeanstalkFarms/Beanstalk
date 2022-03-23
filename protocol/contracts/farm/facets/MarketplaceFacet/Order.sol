@@ -119,12 +119,6 @@ contract Order is Listing {
             costInBeans = getOrderAmountLin(o,amount, placeInLineMidPlot);
         } 
         else if (o.fType == 2) {
-            costInBeans = getOrderAmountLog(o, amount, placeInLineMidPlot);
-        }
-        else if (o.fType == 3) {
-            costInBeans = getOrderAmountSig(o, amount, placeInLineMidPlot);
-        }
-        else if (o.fType == 4) {
             costInBeans = getOrderAmountPoly(o, amount, placeInLineMidPlot);
         }
 
@@ -182,31 +176,31 @@ contract Order is Listing {
         return amount;
     }
 
-    function getOrderAmountLog(Order calldata o, uint256 amount, uint256 x) internal returns (uint256) {
+    // function getOrderAmountLog(Order calldata o, uint256 amount, uint256 x) internal returns (uint256) {
 
-        uint256 log1 = LibIncentive.log_two(x+1);
-        uint256 log2 = LibIncentive.log_two(o.f.a);
+    //     uint256 log1 = LibIncentive.log_two(x+1);
+    //     uint256 log2 = LibIncentive.log_two(o.f.a);
 
-        uint256 pricePerPod = MathFP.divdr(log1, log2) + o.pricePerPod;
+    //     uint256 pricePerPod = MathFP.divdr(log1, log2) + o.pricePerPod;
 
-        amount = amount * pricePerPod; 
-        return amount;
-    }
+    //     amount = amount * pricePerPod; 
+    //     return amount;
+    // }
 
-    function getOrderAmountSig(Order calldata o, uint256 amount, uint256 x) internal returns (uint256) {
+    // function getOrderAmountSig(Order calldata o, uint256 amount, uint256 x) internal returns (uint256) {
        
-        uint256 n = o.pricePerPod * 2;
-        uint256 d;
+    //     uint256 n = o.pricePerPod * 2;
+    //     uint256 d;
 
-        if (o.f.aSign){
-            d = (1 + (eN / eD)**(1 / MathFP.muld(x, o.f.a, o.f.aShift)));
-        } else {
-            d = (1 + (eN / eD)**(MathFP.muld(x, o.f.a, o.f.aShift)));
-        }
-        uint256 pricePerPod = n / d;
-        amount = amount * pricePerPod; 
-        return amount;
-    }
+    //     if (o.f.aSign){
+    //         d = (1 + (eN / eD)**(1 / MathFP.muld(x, o.f.a, o.f.aShift)));
+    //     } else {
+    //         d = (1 + (eN / eD)**(MathFP.muld(x, o.f.a, o.f.aShift)));
+    //     }
+    //     uint256 pricePerPod = n / d;
+    //     amount = amount * pricePerPod; 
+    //     return amount;
+    // }
 
     function getOrderAmountPoly(Order calldata o, uint256 amount, uint256 x) internal returns (uint256) {
         

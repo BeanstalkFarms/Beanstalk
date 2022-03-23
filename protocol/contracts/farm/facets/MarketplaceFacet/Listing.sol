@@ -66,7 +66,7 @@ contract Listing is PodTransfer {
         uint256 maxHarvestableIndex; // expiry
         bool toWallet;
         uint8 fType;  // 0 = constant, 1 = linear, 2 = log, 3 = sigmoid, 4 = poly 2, 5 = poly 3, 6 = poly 4
-        PiecewiseFormula f;
+        Formula f;
     }
 
     event PodListingCreated(
@@ -174,12 +174,6 @@ contract Listing is PodTransfer {
             amount = getListingAmountLin(l, beanAmount);
         } 
         else if (l.fType == 2) {
-            amount = getListingAmountLog(l, beanAmount);
-        }
-        else if (l.fType == 3) {
-            amount = getListingAmountSig(l, beanAmount);
-        }
-        else if (l.fType == 4) {
             amount = getListingAmountPoly(l, beanAmount);
         }
 
@@ -241,36 +235,34 @@ contract Listing is PodTransfer {
      * Helpers
      */
 
-    function evaluatePiecewise(uint240[10] memory c0s, 
-        bool[10] memory bool0, 
-        uint240[10] memory c1s, 
-        uint8[10] memory shifts1, 
-        bool[10] memory bool1, 
-        uint240[10] memory c2s,
-        uint8[10] memory shifts2, 
-        bool[10] memory bool2, 
-        uint256 x, 
-        uint256 k, 
-        bool kSign) pure internal returns(uint256) {
+    // function evaluatePiecewise(uint240[10] memory c0s, 
+    //     bool[10] memory bool0, 
+    //     uint240[10] memory c1s, 
+    //     uint8[10] memory shifts1, 
+    //     bool[10] memory bool1, 
+    //     uint240[10] memory c2s,
+    //     uint8[10] memory shifts2, 
+    //     bool[10] memory bool2, 
+    //     uint256 x, 
+    //     uint256 k, 
+    //     bool kSign) pure internal returns(uint256) {
 
-    }
+    // }
 
-    function evaluatePoly3(uint256 x, k, uint240[4] memory cons, uint8[4] memory shifts, bool[4] memory bools) pure internal returns(uint256) {
+    function evaluatePolyThree(uint256 x, uint256 k, uint240[4] memory cons, uint8[4] memory shifts, bool[4] memory bools) internal returns (uint256) {
         // preprocessing on x? and k
         //i represents the degree of the term. i is max 3
         uint8 counter = 5;
         uint256 y;
         uint256 termValue;
-        uint256 counterValue;
-        for (uint8 i = 0; i < 4;) {
-            termValue = MathFP.muld(x**i, cons[i], shifts[i]);
+        for (uint8 i = 0; i < 4; i++) {
+            termValue = MathFP.muld((x-k)**i, cons[i], shifts[i]);
             if(bools[i]){
                 y += termValue;
-                i++;
                 if(counter != 5) {
-                    counterValue = MathFP.muld(x**counter, cons[counter], shifts[counter]);
-                    if(y > counterValue) {
-                        y -= counterValue;
+                    termValue = MathFP.muld(x**counter, cons[counter], shifts[counter]);
+                    if(y > termValue) {
+                        y -= termValue;
                         counter = 5;
                     }
                 }
@@ -287,6 +279,7 @@ contract Listing is PodTransfer {
                 continue;
             }
         }
+        return y;
     }
 
 
