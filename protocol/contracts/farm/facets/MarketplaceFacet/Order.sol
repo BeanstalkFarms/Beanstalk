@@ -162,7 +162,7 @@ contract Order is Listing {
         return amount;
     }
 
-    function getOrderAmountLin(Order calldata o,uint256 amount, uint256 x) internal returns (uint256) {        
+    function getOrderAmountLin(Order calldata o, uint256 amount, uint256 x) internal returns (uint256) {        
         
         uint256 pricePerPod;
         

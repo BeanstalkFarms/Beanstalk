@@ -20,8 +20,10 @@ contract Listing is PodTransfer {
     using SafeMath for uint256;
 
     struct PiecewiseFormula {
+        uint256[11] index;
         uint240[10] c0s;
         bool[10] bool0;
+        uint8[10] shifts0;
         uint240[10] c1s;
         uint8[10] shifts1;
         bool[10] bool1;
@@ -235,19 +237,39 @@ contract Listing is PodTransfer {
      * Helpers
      */
 
-    // function evaluatePiecewise(uint240[10] memory c0s, 
-    //     bool[10] memory bool0, 
-    //     uint240[10] memory c1s, 
-    //     uint8[10] memory shifts1, 
-    //     bool[10] memory bool1, 
-    //     uint240[10] memory c2s,
-    //     uint8[10] memory shifts2, 
-    //     bool[10] memory bool2, 
-    //     uint256 x, 
-    //     uint256 k, 
-    //     bool kSign) pure internal returns(uint256) {
+     function _find(uint256 input, uint256 k, uint256[11] memory ranges) internal pure returns (uint56) {
+        
+        
+     }
 
-    // }
+    function evaluatePCubicP(PiecewiseFormula f, uint256 x, uint256 k) internal returns (uint256) {
+        uint256 y;
+        uint256 k;
+        //x index must be in the domain
+        assert(x>=f.index[0]);
+        assert(x<=f.index[10];)
+        assert((x+k)<=f.index[10]);
+        //find index at 'x' and index at 'x+k'
+        uint8 xi
+        uint8 xki;
+        for(uint8 i; i <= 10; i++){
+            //case -> x is in range [i,i+1], then i
+            //case -> x is greater than i+1, then i++;
+            if(x >= f.index[i] && x <= f.index[i+1]) {
+               xi=i;
+            } 
+            if((x+k) >= f.index[i] && (x+k) <= f.index[i+1]){
+                xki=i;
+            }
+            continue;
+        }
+        uint256 xValue, xkValue;
+
+        xValue = evaluatePolyThree(x, 0, [f.c0s[xi], f.c1s[xi], f.c2s[xi], f.c3s[xi]], [f.shifts0[xi], f.shifts1[xi], f.shifts2[xi], f.shifts3[xi]], [f.bool0[xi], f.bool1[xi], f.bool2[xi], f.bool3[xi]]);
+        xkValue = evaluatePolyThree(x, k, [f.c0s[xki], f.c1s[xki], f.c2s[xki], f.c3s[xki]], [f.shifts0[xki], f.shifts1[xki], f.shifts2[xki], f.shifts3[xki]], [f.bool0[xki], f.bool1[xki], f.bool2[xki], f.bool3[xki]]);
+        return (xVakue + xkValue) / 2;
+        
+    }
 
     function evaluatePolyThree(uint256 x, uint256 k, uint240[4] memory cons, uint8[4] memory shifts, bool[4] memory bools) internal returns (uint256) {
         // preprocessing on x? and k
