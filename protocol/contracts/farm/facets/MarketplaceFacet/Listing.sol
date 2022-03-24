@@ -237,11 +237,6 @@ contract Listing is PodTransfer {
      * Helpers
      */
 
-     function _find(uint256 input, uint256 k, uint256[11] memory ranges) internal pure returns (uint56) {
-        
-        
-     }
-
     function evaluatePCubicP(PiecewiseFormula f, uint256 x, uint256 k) internal returns (uint256) {
         uint256 y;
         uint256 k;
