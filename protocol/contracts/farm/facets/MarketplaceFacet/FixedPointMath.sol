@@ -21,16 +21,19 @@ library MathFP {
         uint8[10] shiftsDegreeThree;
         bool[10] boolsDegreeThree; //13 terms
     }
-    function evaluatePCubicP(PiecewiseFormula memory f, uint256 x) internal returns (uint256) {
+    function evaluatePCubicP(PiecewiseFormula memory f, uint256 x, uint256 amount) internal returns (uint256) {
         uint256 y;
         uint256 i;
-        
+        uint256 ik;
+        // find definite integral of the piecewise between x and x+amount
         i = findIndexWithinSubinterval(f.subIntervalIndex, x);
-
+        ik = findIndexWithinSubinterval(f.subIntervalIndex, x+amount);
         y = evaluatePCubic(x, f.subIntervalIndex[i], [f.constantsDegreeZero[i], f.constantsDegreeOne[i], f.constantsDegreeTwo[i], f.constantsDegreeThree[i]], 
             [f.shiftsDegreeZero[i], f.shiftsDegreeOne[i], f.shiftsDegreeTwo[i], f.shiftsDegreeThree[i]], 
             [f.boolsDegreeZero[i], f.boolsDegreeOne[i], f.boolsDegreeTwo[i], f.boolsDegreeThree[i]]);
         
+
+
         return y;
     }
 
@@ -57,6 +60,8 @@ library MathFP {
     }
 
     function evaluatePCubic(uint256 x, uint256 k, uint240[4] memory constants, uint8[4] memory shifts, bool[4] memory bools) internal returns (uint256) {
+        //may need to solve degree 4 problems for integrating
+        
         uint8 counter = 5;
         uint256 y;
         uint256 termValue;
