@@ -81,13 +81,12 @@ library MathFP {
         uint240[4] memory constants,
         uint8[4] memory shifts,
         bool[4] memory bools
-    ) internal returns (uint256) {
+    ) pure internal returns (uint256) {
         // uint8 counter = 5;
 
         uint256 result;
         uint256 termValue1;
         uint256 termValue2;
-        uint256 yReduction;
         uint256 lastTermValue;
         for (uint8 i = 0; i < 4; i++) {
             if (constants[i] == 0) {
@@ -139,7 +138,7 @@ library MathFP {
         uint240[4] memory constants,
         uint8[4] memory shifts,
         bool[4] memory bools
-    ) internal returns (uint256) {
+    ) pure internal returns (uint256) {
         //may need to solve degree 4 problems for integrating
 
         uint8 counter = 5;
