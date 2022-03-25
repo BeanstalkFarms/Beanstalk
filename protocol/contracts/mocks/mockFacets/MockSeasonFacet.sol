@@ -142,12 +142,8 @@ contract MockSeasonFacet is SeasonFacet {
         s.w.lastDSoil = number;
     }
 
-    function setDidSowFasterE(bool faster) public {
-        s.w.didSowFaster = faster;
-    }
-
-    function setDidSowBelowMinE(bool below) public {
-        s.w.didSowBelowMin = below;
+    function setNextSowTimeE(uint32 time) public {
+        s.w.nextSowTime = time;
     }
 
     function setLastSowTimeE(uint32 number) public {
@@ -164,6 +160,10 @@ contract MockSeasonFacet is SeasonFacet {
 
     function minSoil(uint256 amount) public view returns (uint256) {
         return getMinSoil(amount);
+    }
+
+    function setPodsE(uint256 amount) external returns (uint256) {
+        s.f.pods = amount;
     }
 
     function resetAccount(address account) public {
@@ -216,6 +216,8 @@ contract MockSeasonFacet is SeasonFacet {
         delete s.si;
         delete s.s;
         delete s.w;
+        s.w.lastSowTime = type(uint32).max;
+        s.w.nextSowTime = type(uint32).max;
         delete s.g;
         delete s.r;
         delete s.v1SI;
@@ -232,6 +234,10 @@ contract MockSeasonFacet is SeasonFacet {
         s.paused = false;
         bean().burn(bean().balanceOf(address(this)));
         IBean(s.c.weth).burn(IBean(s.c.weth).balanceOf(address(this)));
+    }
+
+    function stepWeatherE(uint256 intPrice, uint256 endSoil) external {
+        stepWeather(intPrice.mul(1e16), endSoil);
     }
 
     function stepWeatherWithParams(

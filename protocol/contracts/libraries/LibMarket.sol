@@ -77,6 +77,15 @@ library LibMarket {
         return beanAmount;
     }
 
+    function buyAndSow(uint256 buyBeanAmount, uint256 buyEthAmount) internal returns (uint256 amount) {
+        if (buyBeanAmount == 0) {
+            allocateEthRefund(msg.value, 0, false);
+            return 0;
+        }
+        (uint256 ethAmount, uint256 beanAmount) = _buyExactTokens(buyBeanAmount, buyEthAmount, address(this));
+        allocateEthRefund(msg.value, ethAmount, false);
+    }
+
     function sellToWETH(uint256 sellBeanAmount, uint256 minBuyEthAmount)
         internal
         returns (uint256 amount)

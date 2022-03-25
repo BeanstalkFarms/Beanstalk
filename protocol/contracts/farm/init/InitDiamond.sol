@@ -52,7 +52,17 @@ contract InitDiamond {
         IUniswapV2Pair(s.c.pair).approve(UNISWAP_ROUTER, type(uint256).max);
         IWETH(s.c.weth).approve(UNISWAP_ROUTER, type(uint256).max);
 
-        s.cases = [int8(3),1,0,0,-1,-3,-3,0,3,1,0,0,-1,-3,-3,0,3,3,1,0,0,0,-1,0,3,3,1,0,1,0,-1,0];
+        s.cases = s.cases = [
+        // Dsc, Sdy, Inc, nul
+       int8(3),   1,   0,   0,  // Exs Low: P < 1
+            -1,  -3,  -3,   0,  //          P > 1
+             3,   1,   0,   0,  // Rea Low: P < 1
+            -1,  -3,  -3,   0,  //          P > 1
+             3,   3,   1,   0,  // Rea Hgh: P < 1
+             0,  -1,  -3,   0,  //          P > 1
+             3,   3,   1,   0,  // Exs Hgh: P < 1
+             0,  -1,  -3,   0   //          P > 1
+        ];
         s.w.yield = 1;
         s.refundStatus = 1;
         s.beanRefundAmount = 1;
