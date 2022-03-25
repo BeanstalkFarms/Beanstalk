@@ -185,35 +185,95 @@ var createInterpolant = function(xs, ys) {
         c3s.push(common_*invDx*invDx);
 	}
 
-    var integrations = [];
+    
     var rangeIntegration;
     var termValueStart;
     var termValueEnd;
-    
+
     var calculateDefiniteIntegral = function (start, end, k, a, b, c, d) {
         end -= end/100000000;
         termValueStart = (a/4*(start-k)**4) + (b/3*(start-k)**3) + (c/2*(start-k)**2) + d*(start - k)
-        termValueEnd = (a/4*(end-k)**4) + (b/3*(end-k)**3) + (c/2*((end-k)**2)) + d*(end - k)
-        console.log(termValueEnd, termValueStart)
-        if(isNaN(termValueEnd)||isNaN(termValueStart)){
-            return 0;
-        }
+        termValueEnd =   (a/4*(end-k)**4) + (b/3*(end-k)**3) + (c/2*((end-k)**2)) + d*(end - k)
+        // console.log(termValueEnd, termValueStart)
+        // if(isNaN(termValueEnd)&&isNaN(termValueStart)){
+        //     return termValueEnd - termValueStart;
+        // }else{
+        //     return 0;
+        // }
         return termValueEnd - termValueStart;
+        
     }
-    
-    
+    var calculateDecimalShifts = function (n) {
+        var val = Math.abs(n);
+        var counter = 0;
+        while (val > 1) {
+            val  = val / 10;
+            counter--;
+        }
+        while (0< val < 1) {
+            val = val * 10;
+            counter++;
+        }
+        return counter;
+    }
+    var originalL = xs.length;
+    var xZero = new Array(10-xs.length).fill(0)
     var zerosZero = new Array(10-ys.length).fill(0);
     var onesZero = new Array(10-c1s.length).fill(0);
     var twosZero = new Array(10-c2s.length).fill(0);
     var threesZero = new Array(10-c3s.length).fill(0);
+    xs = xs.concat(xZero)
     ys = ys.concat(zerosZero)
     c1s = c1s.concat(onesZero)
     c2s = c2s.concat(twosZero)
     c3s = c3s.concat(threesZero)
-    for (i = 0; i < 9; i++) {
-        rangeIntegration = calculateDefiniteIntegral(xs[i], xs[i+1], xs[i], c3s[i], c2s[i], c1s[i], ys[i]);
-        integrations.push(rangeIntegration);
+    var shiftsZero = new Array(10).fill(0);
+    var shiftsOne = new Array(10).fill(0);
+    var shiftsTwo = new Array(10).fill(0);
+    var shiftsThree = new Array(10).fill(0);
+    var boolsZero = new Array(10).fill(true);
+    var boolsOne = new Array(10).fill(true);
+    var boolsTwo = new Array(10).fill(true);
+    var boolsThree = new Array(10).fill(true);
+    var integrations = new Array(9).fill(0);
+    console.log(xs,ys,c1s,c2s,c3s)
+    for (i = 0; i < originalL-1; i++) {
+        // console.log(i, )
+        if(ys[i] != 0){
+            if(i<9){
+                if(xs[i]!=0){
+                    rangeIntegration = calculateDefiniteIntegral(xs[i], xs[i+1], xs[i], c3s[i], c2s[i], c1s[i], ys[i]);
+                    console.log(rangeIntegration)
+                    integrations[i] = rangeIntegration;
+                }
+            }
+            shiftsZero[i] = calculateDecimalShifts(ys[i]);
+            shiftsOne[i] = calculateDecimalShifts(c1s[i]);
+            shiftsTwo[i] = calculateDecimalShifts(c2s[i])
+            shiftsThree[i] = calculateDecimalShifts(c3s[i])
+            // shiftsOne.push(calculateDecimalShifts(c1s[i]))
+            // shiftsTwo.push(calculateDecimalShifts(c2s[i]))
+            // shiftsThree.push(calculateDecimalShifts(c3s[i]))
+
+            if(ys[i] < 0) {
+                boolsZero[i] = false;
+            }
+            if(c1s[i] < 0){
+                boolsOne[i] = false;
+            }
+            if(c2s[i] < 0) {
+                boolsTwo[i] = false;
+            }
+            if(c3s[i] < 0){
+                boolsThree[i] = false;
+            }
+        } else {
+            break;
+        }
+        console.log(i, originalL)
     }
+
+    
 	
 	// Return interpolant function
 	var eval = function(x,k) {
@@ -241,7 +301,7 @@ var createInterpolant = function(xs, ys) {
         var diffSq = diff*diff;
 		return ys[i] + c1s[i]*diff + c2s[i]*diffSq + c3s[i]*diff*diffSq;
 	};
-    return {c3s,c2s, c1s, c0s:ys, integrations};
+    return {c3s,c2s, c1s, c0s:ys, integrations, shiftsZero, shiftsOne, shiftsTwo, shiftsThree, boolsZero, boolsOne, boolsTwo, boolsThree};
 };
 
 
@@ -269,6 +329,8 @@ console.log("C0S: ___________", inter.c0s)
     console.log("C2S:____________", inter.c2s)
     console.log("C3S:____________", inter.c3s)
     console.log("Integrations:____________", inter.integrations)
+    console.log(inter.shiftsZero, inter.shiftsOne, inter.shiftsTwo, inter.shiftsThree);
+    console.log(inter.boolsZero, inter.boolsOne, inter.boolsTwo, inter.boolsThree)
     console.log("\n")
 
 
