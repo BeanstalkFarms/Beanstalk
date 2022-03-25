@@ -1,6 +1,6 @@
 /**
  * SPDX-License-Identifier: MIT
-**/
+ **/
 
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
@@ -10,9 +10,8 @@ import "./Order.sol";
 /**
  * @author Beanjoyer
  * @title Pod Marketplace v1
-**/
+ **/
 contract MarketplaceFacet is Order {
-
     using SafeMath for uint256;
 
     /*
@@ -29,17 +28,23 @@ contract MarketplaceFacet is Order {
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
         bool toWallet,
-        bool constantPricing, 
+        bool constantPricing,
         MathFP.PiecewiseFormula calldata f
     ) external {
-        _createPodListing(index, start, amount, pricePerPod, maxHarvestableIndex, toWallet, constantPricing, f);
+        _createPodListing(
+            index,
+            start,
+            amount,
+            pricePerPod,
+            maxHarvestableIndex,
+            toWallet,
+            constantPricing,
+            f
+        );
     }
 
     // Fill
-    function fillPodListing(
-        Listing calldata l,
-        uint256 beanAmount
-    ) external {
+    function fillPodListing(Listing calldata l, uint256 beanAmount) external {
         LibMarket.transferBeans(l.account, beanAmount, l.toWallet);
         _fillListing(l, beanAmount);
     }
@@ -58,7 +63,8 @@ contract MarketplaceFacet is Order {
         uint256 beanAmount,
         uint256 buyBeanAmount
     ) external payable {
-        if (beanAmount > 0) LibMarket.transferBeans(l.account, beanAmount, l.toWallet);
+        if (beanAmount > 0)
+            LibMarket.transferBeans(l.account, beanAmount, l.toWallet);
         _buyBeansAndFillPodListing(l, beanAmount, buyBeanAmount);
     }
 
@@ -67,7 +73,7 @@ contract MarketplaceFacet is Order {
         uint256 beanAmount,
         uint256 buyBeanAmount,
         LibClaim.Claim calldata claim
-    ) external payable  {
+    ) external payable {
         allocateBeansToWallet(claim, beanAmount, l.account, l.toWallet);
         _buyBeansAndFillPodListing(l, beanAmount, buyBeanAmount);
     }
@@ -95,7 +101,14 @@ contract MarketplaceFacet is Order {
         MathFP.PiecewiseFormula calldata f
     ) external returns (bytes32 id) {
         bean().transferFrom(msg.sender, address(this), beanAmount);
-        return _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine, constantPricing, f);
+        return
+            _createPodOrder(
+                beanAmount,
+                pricePerPod,
+                maxPlaceInLine,
+                constantPricing,
+                f
+            );
     }
 
     function claimAndCreatePodOrder(
@@ -107,7 +120,13 @@ contract MarketplaceFacet is Order {
         LibClaim.Claim calldata claim
     ) external returns (bytes32 id) {
         allocateBeans(claim, beanAmount, address(this));
-        id = _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine, constantPricing, f);
+        id = _createPodOrder(
+            beanAmount,
+            pricePerPod,
+            maxPlaceInLine,
+            constantPricing,
+            f
+        );
     }
 
     function buyBeansAndCreatePodOrder(
@@ -118,8 +137,17 @@ contract MarketplaceFacet is Order {
         bool constantPricing,
         MathFP.PiecewiseFormula calldata f
     ) external payable returns (bytes32 id) {
-        if (beanAmount > 0) bean().transferFrom(msg.sender, address(this), beanAmount);
-        return _buyBeansAndCreatePodOrder(beanAmount, buyBeanAmount, pricePerPod, maxPlaceInLine, constantPricing, f);
+        if (beanAmount > 0)
+            bean().transferFrom(msg.sender, address(this), beanAmount);
+        return
+            _buyBeansAndCreatePodOrder(
+                beanAmount,
+                buyBeanAmount,
+                pricePerPod,
+                maxPlaceInLine,
+                constantPricing,
+                f
+            );
     }
 
     function claimBuyBeansAndCreatePodOrder(
@@ -132,7 +160,15 @@ contract MarketplaceFacet is Order {
         LibClaim.Claim calldata claim
     ) external payable returns (bytes32 id) {
         allocateBeans(claim, beanAmount, address(this));
-        return _buyBeansAndCreatePodOrder(beanAmount, buyBeanAmount, pricePerPod, maxPlaceInLine, constantPricing, f);
+        return
+            _buyBeansAndCreatePodOrder(
+                beanAmount,
+                buyBeanAmount,
+                pricePerPod,
+                maxPlaceInLine,
+                constantPricing,
+                f
+            );
     }
 
     // Fill
@@ -142,20 +178,43 @@ contract MarketplaceFacet is Order {
         uint256 start,
         uint256 amount,
         bool toWallet
-    ) external  {
+    ) external {
         _fillPodOrder(o, index, start, amount, toWallet);
     }
 
     // Cancel
-    function cancelPodOrder(uint24 pricePerPod, uint256 maxPlaceInLine, bool toWallet, bool constantPricing, MathFP.PiecewiseFormula calldata f) external {
-        _cancelPodOrder(pricePerPod, maxPlaceInLine, toWallet, constantPricing, f);
+    function cancelPodOrder(
+        uint24 pricePerPod,
+        uint256 maxPlaceInLine,
+        bool toWallet,
+        bool constantPricing,
+        MathFP.PiecewiseFormula calldata f
+    ) external {
+        _cancelPodOrder(
+            pricePerPod,
+            maxPlaceInLine,
+            toWallet,
+            constantPricing,
+            f
+        );
     }
 
     // Get
 
-    function podOrder(address account, uint24 pricePerPod, uint256 maxPlaceInLine, bool constantPricing, MathFP.PiecewiseFormula calldata f) external view returns (uint256) {
-        return s.podOrders[createOrderId(account, pricePerPod, maxPlaceInLine, constantPricing, 
+    function podOrder(
+        address account,
+        uint24 pricePerPod,
+        uint256 maxPlaceInLine,
+        bool constantPricing,
+        MathFP.PiecewiseFormula calldata f
+    ) external view returns (uint256) {
+        bytes32 orderId = createOrderId(
+            account,
+            pricePerPod,
+            maxPlaceInLine,
+            constantPricing,
             f.subIntervalIndex,
+            f.intervalIntegrations,
             f.constantsDegreeZero,
             f.shiftsDegreeZero,
             f.boolsDegreeZero,
@@ -167,18 +226,24 @@ contract MarketplaceFacet is Order {
             f.boolsDegreeTwo,
             f.constantsDegreeThree,
             f.shiftsDegreeThree,
-            f.boolsDegreeThree)];
+            f.boolsDegreeThree
+        );
+        return s.podOrders[orderId];
     }
 
     function podOrderById(bytes32 id) external view returns (uint256) {
-       return s.podOrders[id];
+        return s.podOrders[id];
     }
 
     /*
      * Helpers
      */
 
-    function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans, address to) private {
+    function allocateBeans(
+        LibClaim.Claim calldata c,
+        uint256 transferBeans,
+        address to
+    ) private {
         LibClaim.claim(c);
         LibMarket.allocateBeansTo(transferBeans, to);
     }
@@ -197,23 +262,29 @@ contract MarketplaceFacet is Order {
      * Transfer Plot
      */
 
-     function transferPlot(
-         address sender, 
-         address recipient, 
-         uint256 id, 
-         uint256 start, 
-         uint256 end
+    function transferPlot(
+        address sender,
+        address recipient,
+        uint256 id,
+        uint256 start,
+        uint256 end
     ) external {
-        require(sender != address(0) && recipient != address(0), "Field: Transfer to/from 0 address.");
+        require(
+            sender != address(0) && recipient != address(0),
+            "Field: Transfer to/from 0 address."
+        );
         uint256 amount = s.a[msg.sender].field.plots[id];
         require(amount > 0, "Field: Plot not owned by user.");
         require(end > start && amount >= end, "Field: Pod range invalid.");
         amount = end.sub(start);
-        if (msg.sender != sender && allowancePods(sender, msg.sender) != uint256(-1)) {
-                decrementAllowancePods(sender, msg.sender, amount);
+        if (
+            msg.sender != sender &&
+            allowancePods(sender, msg.sender) != uint256(-1)
+        ) {
+            decrementAllowancePods(sender, msg.sender, amount);
         }
 
-        if (s.podListings[id] != bytes32(0)){
+        if (s.podListings[id] != bytes32(0)) {
             _cancelPodListing(id);
         }
         _transferPlot(sender, recipient, id, start, amount);

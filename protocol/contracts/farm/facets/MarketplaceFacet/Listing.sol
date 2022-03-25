@@ -19,8 +19,6 @@ contract Listing is PodTransfer {
     
     using SafeMath for uint256;
 
-   
-  
     struct Listing {
         address account; //20
         uint256 index; //32
@@ -43,6 +41,7 @@ contract Listing is PodTransfer {
         bool toWallet,
         bool constantPricing,
         uint256[10] subIntervalIndex,
+        uint256[9] intervalIntegrations,
         uint240[10] constantsDegreeZero,
         uint8[10] shiftsDegreeZero,
         bool[10] boolsDegreeZero,
@@ -56,6 +55,7 @@ contract Listing is PodTransfer {
         uint8[10] shiftsDegreeThree,
         bool[10] boolsDegreeThree
     );
+
     event PodListingFilled(
         address indexed from, 
         address indexed to, 
@@ -63,6 +63,7 @@ contract Listing is PodTransfer {
         uint256 start, 
         uint256 amount
     );
+
     event PodListingCancelled(address indexed account, uint256 index);
 
     /*
@@ -95,6 +96,7 @@ contract Listing is PodTransfer {
             toWallet, 
             constantPricing, 
             f.subIntervalIndex,
+            f.intervalIntegrations,
             f.constantsDegreeZero,
             f.shiftsDegreeZero,
             f.boolsDegreeZero,
@@ -109,7 +111,9 @@ contract Listing is PodTransfer {
             f.boolsDegreeThree
         );
 
-        emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, toWallet, constantPricing, f.subIntervalIndex,
+        emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, toWallet, constantPricing, 
+            f.subIntervalIndex,
+            f.intervalIntegrations,
             f.constantsDegreeZero,
             f.shiftsDegreeZero,
             f.boolsDegreeZero,
@@ -153,6 +157,7 @@ contract Listing is PodTransfer {
             l.toWallet, 
             l.constantPricing, 
             l.f.subIntervalIndex, 
+            l.f.intervalIntegrations,
             l.f.constantsDegreeZero,
             l.f.shiftsDegreeZero,
             l.f.boolsDegreeZero,
@@ -170,27 +175,65 @@ contract Listing is PodTransfer {
         uint256 plotSize = s.a[l.account].field.plots[l.index];
         require(plotSize >= (l.start + l.amount) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
+        
         // calculate price per pod here
         // uint256 amount = (beanAmount * 1000000) / l.pricePerPod;
-        uint256 pricePerPod;
-        uint256 amount;
-        uint256 placeInLine = l.index + l.start + l.amount - s.f.harvestable;
+        uint256 amountBeans;
+
+        //for listings, calculate the place in line of the first pod theyre buying
+        uint256 placeInLine = l.index + l.start - s.f.harvestable;
 
         if (l.constantPricing) {
-            pricePerPod = l.pricePerPod;
+            //if constant pricing for all pods, the amount is calculated by dividing the amount of beans by the price per pod
+            amountBeans = (beanAmount * 1000000) / l.pricePerPod;
         }
         else {
-            pricePerPod = MathFP.evaluatePCubicP(l.f, placeInLine);
+            // if the pricing is piecewise polynomial, the amount is calculated by integrating between placeInLine and the amount of beans
+            uint256 startIndex = MathFP.findIndexWithinSubinterval(l.f.subIntervalIndex, placeInLine);
+            uint256 endIndex = MathFP.findIndexWithinSubinterval(l.f.subIntervalIndex, placeInLine + beanAmount);
+            
+            //compare to start value of next index, in this false case they must be equal 
+            bool endValue = (placeInLine + beanAmount) < l.f.subIntervalIndex[startIndex+1];
+            // compute first index integral only if in same piecewise domain
+            if(startIndex == endIndex) {
+                amountBeans += MathFP.evaluateDefiniteIntegralCubic(placeInLine, placeInLine + beanAmount, l.f.subIntervalIndex[startIndex], endValue,
+                 [l.f.constantsDegreeZero[startIndex], l.f.constantsDegreeOne[startIndex], l.f.constantsDegreeTwo[startIndex], l.f.constantsDegreeThree[startIndex]], 
+                 [l.f.shiftsDegreeZero[startIndex], l.f.shiftsDegreeOne[startIndex], l.f.shiftsDegreeTwo[startIndex], l.f.shiftsDegreeThree[startIndex]], 
+                [l.f.boolsDegreeZero[startIndex], l.f.boolsDegreeOne[startIndex], l.f.boolsDegreeTwo[startIndex], l.f.boolsDegreeThree[startIndex]]);
+            }
+            else if (endIndex > startIndex) {
+                //add the first part
+                amountBeans += MathFP.evaluateDefiniteIntegralCubic(placeInLine, l.f.subIntervalIndex[startIndex+1], l.f.subIntervalIndex[startIndex], false,
+                 [l.f.constantsDegreeZero[startIndex], l.f.constantsDegreeOne[startIndex], l.f.constantsDegreeTwo[startIndex], l.f.constantsDegreeThree[startIndex]], 
+                 [l.f.shiftsDegreeZero[startIndex], l.f.shiftsDegreeOne[startIndex], l.f.shiftsDegreeTwo[startIndex], l.f.shiftsDegreeThree[startIndex]], 
+                [l.f.boolsDegreeZero[startIndex], l.f.boolsDegreeOne[startIndex], l.f.boolsDegreeTwo[startIndex], l.f.boolsDegreeThree[startIndex]]);
+
+                //add the middle parts
+                if(endIndex > (startIndex + 1)) {
+                    for(uint8 i = 1; i <= (endIndex - startIndex - 1); i++) {
+                        amountBeans += l.f.intervalIntegrations[startIndex+i];
+                    }
+                }
+
+                //add the end part
+                amountBeans += MathFP.evaluateDefiniteIntegralCubic(l.f.subIntervalIndex[endIndex], placeInLine + beanAmount, l.f.subIntervalIndex[endIndex], true,
+                    [l.f.constantsDegreeZero[endIndex], l.f.constantsDegreeOne[endIndex], l.f.constantsDegreeTwo[endIndex], l.f.constantsDegreeThree[endIndex]], 
+                    [l.f.shiftsDegreeZero[endIndex], l.f.shiftsDegreeOne[endIndex], l.f.shiftsDegreeTwo[endIndex], l.f.shiftsDegreeThree[endIndex]], 
+                    [l.f.boolsDegreeZero[endIndex], l.f.boolsDegreeOne[endIndex], l.f.boolsDegreeTwo[endIndex], l.f.boolsDegreeThree[endIndex]]);
+
+            }
+            amountBeans = amountBeans / 1000000;
         }
 
-        amount = (beanAmount * 1000000) / pricePerPod;
 
-        amount = roundAmount(l.amount, beanAmount, pricePerPod);
+        //Need to fix rounding function
+        // amountBeans = roundAmount(l.amount, amountBeans);
 
-        __fillListing(l.account, msg.sender, l, amount);
-        _transferPlot(l.account, msg.sender, l.index, l.start, amount);
+        __fillListing(l.account, msg.sender, l, amountBeans);
+        _transferPlot(l.account, msg.sender, l.index, l.start, amountBeans);
     }
 
+    
     function __fillListing(
         address from,
         address to,
@@ -205,10 +248,21 @@ contract Listing is PodTransfer {
                                     l.pricePerPod, 
                                     l.maxHarvestableIndex, 
                                     l.toWallet, 
-                                    l.fType, 
-                                    [l.f.a, l.f.b, l.f.c, l.f.d], 
-                                    [l.f.aShift, l.f.bShift, l.f.cShift, l.f.dShift],
-                                    [l.f.aSign, l.f.bSign, l.f.cSign, l.f.dSign]
+                                    l.constantPricing, 
+                                    l.f.subIntervalIndex, 
+            l.f.intervalIntegrations,
+            l.f.constantsDegreeZero,
+            l.f.shiftsDegreeZero,
+            l.f.boolsDegreeZero,
+            l.f.constantsDegreeOne,
+            l.f.shiftsDegreeOne,
+            l.f.boolsDegreeOne,
+            l.f.constantsDegreeTwo,
+            l.f.shiftsDegreeTwo,
+            l.f.boolsDegreeTwo,
+            l.f.constantsDegreeThree,
+            l.f.shiftsDegreeThree,
+            l.f.boolsDegreeThree
                                 );
         emit PodListingFilled(l.account, to, l.index, l.start, amount);
         delete s.podListings[l.index];
@@ -251,22 +305,23 @@ contract Listing is PodTransfer {
         uint256 maxHarvestableIndex,
         bool toWallet, 
         bool constantPricing,
-        uint256[10] subIntervalIndex,
-        uint240[10] constantsDegreeZero,
-        uint8[10] shiftsDegreeZero,
-        bool[10] boolsDegreeZero,
-        uint240[10] constantsDegreeOne,
-        uint8[10] shiftsDegreeOne,
-        bool[10] boolsDegreeOne,
-        uint240[10] constantsDegreeTwo,
-        uint8[10] shiftsDegreeTwo,
-        bool[10] boolsDegreeTwo,
-        uint240[10] constantsDegreeThree,
-        uint8[10] shiftsDegreeThree,
-        bool[10] boolsDegreeThree
+        uint256[10] memory subIntervalIndex,
+        uint256[9] memory intervalIntegrations,
+        uint240[10] memory constantsDegreeZero,
+        uint8[10] memory shiftsDegreeZero,
+        bool[10] memory boolsDegreeZero,
+        uint240[10] memory constantsDegreeOne,
+        uint8[10] memory shiftsDegreeOne,
+        bool[10] memory boolsDegreeOne,
+        uint240[10] memory constantsDegreeTwo,
+        uint8[10] memory shiftsDegreeTwo,
+        bool[10] memory boolsDegreeTwo,
+        uint240[10] memory constantsDegreeThree,
+        uint8[10] memory shiftsDegreeThree,
+        bool[10] memory boolsDegreeThree
     ) pure internal returns (bytes32 lHash) {
         lHash = keccak256(
-            abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex, toWallet, constantPricing, subIntervalIndex, constantsDegreeZero, shiftsDegreeZero, boolsDegreeZero, constantsDegreeOne, shiftsDegreeOne, boolsDegreeOne, constantsDegreeTwo,
+            abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex, toWallet, constantPricing, subIntervalIndex,intervalIntegrations, constantsDegreeZero, shiftsDegreeZero, boolsDegreeZero, constantsDegreeOne, shiftsDegreeOne, boolsDegreeOne, constantsDegreeTwo,
             shiftsDegreeTwo, boolsDegreeTwo, constantsDegreeThree, shiftsDegreeThree, boolsDegreeThree)
         );
     }
