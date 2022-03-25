@@ -5,6 +5,90 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 library MathFP {
     using SafeMath for uint256;
     uint256 constant maxUintCons = 2**256 - 1;
+
+    struct PiecewiseFormula {
+        uint256[10] subIntervalIndex;
+        uint240[10] constantsDegreeZero;
+        uint8[10] shiftsDegreeZero;
+        bool[10] boolsDegreeZero;
+        uint240[10] constantsDegreeOne;
+        uint8[10] shiftsDegreeOne;
+        bool[10] boolsDegreeOne;
+        uint240[10] constantsDegreeTwo;
+        uint8[10] shiftsDegreeTwo;
+        bool[10] boolsDegreeTwo;
+        uint240[10] constantsDegreeThree;
+        uint8[10] shiftsDegreeThree;
+        bool[10] boolsDegreeThree; //13 terms
+    }
+    function evaluatePCubicP(PiecewiseFormula memory f, uint256 x) internal returns (uint256) {
+        uint256 y;
+        uint256 i;
+        
+        i = findIndexWithinSubinterval(f.subIntervalIndex, x);
+
+        y = evaluatePCubic(x, f.subIntervalIndex[i], [f.constantsDegreeZero[i], f.constantsDegreeOne[i], f.constantsDegreeTwo[i], f.constantsDegreeThree[i]], 
+            [f.shiftsDegreeZero[i], f.shiftsDegreeOne[i], f.shiftsDegreeTwo[i], f.shiftsDegreeThree[i]], 
+            [f.boolsDegreeZero[i], f.boolsDegreeOne[i], f.boolsDegreeTwo[i], f.boolsDegreeThree[i]]);
+        
+        return y;
+    }
+
+    function findIndexWithinSubinterval(uint256[10] memory values, uint256 x) pure internal returns(uint256) {
+        //array of values must be ordered
+        uint256 low = 0;
+        uint256 mid = values.length - 1;
+        uint high = mid;
+        while(low <= mid) {
+            mid = (low+mid) / 2;
+            if (values[mid] < x) {
+                low = mid + 1;
+            }
+            else if(values[mid] > x) {
+                high = mid - 1;
+            }
+        }
+
+        if(high > 0) {
+            return high;
+        } else {
+            return 0;
+        }
+    }
+
+    function evaluatePCubic(uint256 x, uint256 k, uint240[4] memory constants, uint8[4] memory shifts, bool[4] memory bools) internal returns (uint256) {
+        uint8 counter = 5;
+        uint256 y;
+        uint256 termValue;
+        for (uint8 i = 0; i < 4; i++) {
+            if(constants[i]==0){
+                continue;
+            }
+            termValue = MathFP.muld((x-k)**i, constants[i], shifts[i]);
+            if(bools[i]){
+                y += termValue;
+                if(counter != 5) {
+                    termValue = MathFP.muld((x-k)**counter, constants[counter], shifts[counter]);
+                    if(y > termValue) {
+                        y -= termValue;
+                        counter = 5;
+                    }
+                }
+                continue;
+            } else {
+                if(y > termValue) {
+                    y -= termValue;
+                }
+                else {
+                    if(counter==5){
+                        counter = i;
+                    }
+                }
+                continue;
+            }
+        }
+        return y;
+    }
     
     //returns '1' in FP representation
     function unit(uint8 decimals) internal pure returns(uint256) {

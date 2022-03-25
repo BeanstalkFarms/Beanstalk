@@ -19,8 +19,8 @@ contract Order is Listing {
         address account; //20
         uint24 pricePerPod; // formula constant
         uint256 maxPlaceInLine; //highest index that the order will buy
-        uint8 fType; //1, 0 = constant, 1 = linear, 2 = log, 3 = sigmoid, 4 = poly 2, 5 = poly 3, 6 = poly 4
-        Formula f;
+        bool constantPricing; 
+        MathFP.PiecewiseFormula f;
     }
 
     event PodOrderCreated(
@@ -29,10 +29,20 @@ contract Order is Listing {
         uint256 amount, 
         uint24 pricePerPod, 
         uint256 maxPlaceInLine,
-        uint8 fType,
-        uint240[4] f,
-        uint8[4] fShifts,
-        bool[4] fSigns
+        bool constantPricing,
+        uint256[10] subIntervalIndex,
+        uint240[10] constantsDegreeZero,
+        uint8[10] shiftsDegreeZero,
+        bool[10] boolsDegreeZero,
+        uint240[10] constantsDegreeOne,
+        uint8[10] shiftsDegreeOne,
+        bool[10] boolsDegreeOne,
+        uint240[10] constantsDegreeTwo,
+        uint8[10] shiftsDegreeTwo,
+        bool[10] boolsDegreeTwo,
+        uint240[10] constantsDegreeThree,
+        uint8[10] shiftsDegreeThree,
+        bool[10] boolsDegreeThree
     );
 
     event PodOrderFilled(
@@ -55,37 +65,44 @@ contract Order is Listing {
         uint256 buyBeanAmount,
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
-        uint8 fType,
-        Formula calldata f
+        bool constantPricing,
+        MathFP.PiecewiseFormula calldata f
     ) internal returns (bytes32 id) {
         uint256 boughtBeanAmount = LibMarket.buyExactTokens(buyBeanAmount, address(this));
-        return _createPodOrder(beanAmount+boughtBeanAmount, pricePerPod, maxPlaceInLine, fType, f);
+        return _createPodOrder(beanAmount+boughtBeanAmount, pricePerPod, maxPlaceInLine, constantPricing, f);
     }
 
     function _createPodOrder(
         uint256 beanAmount, 
         uint24 pricePerPod, 
         uint256 maxPlaceInLine,
-        uint8 fType,
-        Formula calldata f
+        bool constantPricing,
+        MathFP.PiecewiseFormula calldata f
     ) internal returns (bytes32 id) {
         require(0 < pricePerPod, "Marketplace: Pod price must be greater than 0.");
         uint256 amount = (beanAmount * 1000000) / pricePerPod;
-        return  __createPodOrder(amount,pricePerPod, maxPlaceInLine, fType, f);
+        return  __createPodOrder(amount,pricePerPod, maxPlaceInLine, constantPricing, f);
     }
 
     function __createPodOrder(
         uint256 amount, 
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
-        uint8 fType,
-        Formula calldata f
+        bool constantPricing,
+        MathFP.PiecewiseFormula calldata f
     ) internal  returns (bytes32 id) {
         require(amount > 0, "Marketplace: Order amount must be > 0.");
-        bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, fType, [f.a,f.b,f.c, f.d], [f.aShift,f.bShift,f.cShift, f.dShift], [f.aSign, f.bSign, f.cSign, f.dSign]);
-        if (s.podOrders[id] > 0) _cancelPodOrder(pricePerPod, maxPlaceInLine, false, fType, f);
+        bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, constantPricing, f.subIntervalIndex,
+        f.constantsDegreeZero,f.shiftsDegreeZero, f.boolsDegreeZero, 
+        f.constantsDegreeOne, f.shiftsDegreeOne, f.boolsDegreeOne, 
+        f.constantsDegreeTwo, f.shiftsDegreeTwo, f.boolsDegreeTwo, 
+        f.constantsDegreeThree, f.shiftsDegreeThree, f.boolsDegreeThree);
+        if (s.podOrders[id] > 0) _cancelPodOrder(pricePerPod, maxPlaceInLine, false, constantPricing, f);
         s.podOrders[id] = amount;
-        emit PodOrderCreated(msg.sender, id, amount, pricePerPod, maxPlaceInLine, fType, [f.a, f.b, f.c, f.d],[f.aShift,f.bShift,f.cShift, f.dShift], [f.aSign, f.bSign, f.cSign, f.dSign]);
+        emit PodOrderCreated(msg.sender, id, amount, pricePerPod, maxPlaceInLine, constantPricing, f.constantsDegreeZero,f.shiftsDegreeZero, f.boolsDegreeZero, 
+            f.constantsDegreeOne, f.shiftsDegreeOne, f.boolsDegreeOne, 
+            f.constantsDegreeTwo, f.shiftsDegreeTwo, f.boolsDegreeTwo, 
+            f.constantsDegreeThree, f.shiftsDegreeThree, f.boolsDegreeThree);
         return id;
     }
     
@@ -100,7 +117,10 @@ contract Order is Listing {
         uint256 amount,
         bool toWallet
     ) internal {
-        bytes32 id = createOrderId(o.account, o.pricePerPod, o.maxPlaceInLine, o.fType, [o.f.a, o.f.b, o.f.c, o.f.d], [o.f.aShift, o.f.bShift, o.f.cShift, o.f.dShift], [o.f.aSign, o.f.bSign, o.f.cSign, o.f.dSign]);
+        bytes32 id = createOrderId(o.account, o.pricePerPod, o.maxPlaceInLine, o.constantPricing, o.f.constantsDegreeZero,o.f.shiftsDegreeZero, o.f.boolsDegreeZero, 
+            o.f.constantsDegreeOne, o.f.shiftsDegreeOne, o.f.boolsDegreeOne, 
+            o.f.constantsDegreeTwo, o.f.shiftsDegreeTwo, o.f.boolsDegreeTwo, 
+            o.f.constantsDegreeThree, o.f.shiftsDegreeThree, o.f.boolsDegreeThree);
         s.podOrders[id] = s.podOrders[id].sub(amount);
         require(s.a[msg.sender].field.plots[index] >= (start + amount), "Marketplace: Invalid Plot.");
         uint256 placeInLineEndPlot = index + start + amount - s.f.harvestable;
@@ -112,17 +132,15 @@ contract Order is Listing {
         //cost in beans
         // uint256 costInBeans = (o.pricePerPod * amount) / 1000000;
         uint256 costInBeans;
-        if (o.fType == 0) {
-            costInBeans = getOrderAmountConst(o.pricePerPod, amount);
+        uint256 pricePerPod;
+        if (o.constantPricing) {
+            pricePerPod = o.pricePerPod;
         }
-        else if (o.fType == 1) {
-            costInBeans = getOrderAmountLin(o,amount, placeInLineMidPlot);
-        } 
-        else if (o.fType == 2) {
-            costInBeans = getOrderAmountPoly(o, amount, placeInLineMidPlot);
+        else {
+            pricePerPod = MathFP.evaluatePCubicP(o.f, placeInLineMidPlot);
         }
 
-        assert(costInBeans > 0);
+        costInBeans = pricePerPod * amount / 1000000;
 
         if (toWallet) bean().transfer(msg.sender, costInBeans);
         else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(costInBeans);
@@ -140,8 +158,12 @@ contract Order is Listing {
      * Cancel
      */
 
-     function _cancelPodOrder(uint24 pricePerPod, uint256 maxPlaceInLine, bool toWallet, uint8 fType, Formula calldata f) internal {
-        bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, fType, [f.a, f.b, f.c, f.d], [f.aShift, f.bShift, f.cShift, f.dShift], [f.aSign, f.bSign, f.cSign, f.dSign]);
+     function _cancelPodOrder(uint24 pricePerPod, uint256 maxPlaceInLine, bool toWallet, bool constantPricing, MathFP.PiecewiseFormula calldata f) internal {
+        bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, constantPricing, f.constantsDegreeZero,f.shiftsDegreeZero, f.boolsDegreeZero, 
+            f.constantsDegreeOne, f.shiftsDegreeOne, f.boolsDegreeOne, 
+            f.constantsDegreeTwo, f.shiftsDegreeTwo, f.boolsDegreeTwo, 
+            f.constantsDegreeThree, f.shiftsDegreeThree, f.boolsDegreeThree);
+            //revisit
         uint256 amountBeans = (pricePerPod * s.podOrders[id]) / 1000000;
         if (toWallet) bean().transfer(msg.sender, amountBeans);
         else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(amountBeans);
@@ -157,86 +179,4 @@ contract Order is Listing {
         id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, fType, f, fShifts, fSigns));
     }
 
-    function getOrderAmountConst(uint24 price, uint256 amount) pure internal returns (uint256) {
-        amount = price * amount; 
-        return amount;
-    }
-
-    function getOrderAmountLin(Order calldata o, uint256 amount, uint256 x) internal returns (uint256) {        
-        
-        uint256 pricePerPod;
-        
-        if (o.f.aSign) {
-            pricePerPod = MathFP.muld(x, o.f.a, o.f.aShift) + o.pricePerPod;
-        } 
-        else {
-            pricePerPod = o.pricePerPod - MathFP.muld(x, o.f.a, o.f.aShift);
-        }
-        amount = amount * pricePerPod; 
-        return amount;
-    }
-
-    // function getOrderAmountLog(Order calldata o, uint256 amount, uint256 x) internal returns (uint256) {
-
-    //     uint256 log1 = LibIncentive.log_two(x+1);
-    //     uint256 log2 = LibIncentive.log_two(o.f.a);
-
-    //     uint256 pricePerPod = MathFP.divdr(log1, log2) + o.pricePerPod;
-
-    //     amount = amount * pricePerPod; 
-    //     return amount;
-    // }
-
-    // function getOrderAmountSig(Order calldata o, uint256 amount, uint256 x) internal returns (uint256) {
-       
-    //     uint256 n = o.pricePerPod * 2;
-    //     uint256 d;
-
-    //     if (o.f.aSign){
-    //         d = (1 + (eN / eD)**(1 / MathFP.muld(x, o.f.a, o.f.aShift)));
-    //     } else {
-    //         d = (1 + (eN / eD)**(MathFP.muld(x, o.f.a, o.f.aShift)));
-    //     }
-    //     uint256 pricePerPod = n / d;
-    //     amount = amount * pricePerPod; 
-    //     return amount;
-    // }
-
-    function getOrderAmountPoly(Order calldata o, uint256 amount, uint256 x) internal returns (uint256) {
-        
-        uint256 pricePerPod;
-
-        if (o.f.aSign) {
-            pricePerPod = MathFP.muld(x, o.f.a, o.f.aShift) + o.pricePerPod;
-        } else {
-            pricePerPod = o.pricePerPod - MathFP.muld(x, o.f.a, o.f.aShift);
-        }
-        
-        if (o.f.b > 0) {
-            if (o.f.bSign) {
-                pricePerPod += MathFP.muld(x**2, o.f.b, o.f.bShift);
-            }
-            else {
-                pricePerPod -= MathFP.muld(x**2, o.f.b, o.f.bShift);
-            }
-        }
-        if (o.f.c > 0) {
-            if (o.f.cSign) {
-                pricePerPod += MathFP.muld(x**3, o.f.c, o.f.cShift);
-            }
-            else {
-                pricePerPod -= MathFP.muld(x**3, o.f.c, o.f.cShift);
-            }
-        }
-        if (o.f.d > 0) {
-            if (o.f.dSign) {
-                pricePerPod += MathFP.muld(x**4, o.f.d, o.f.dShift);
-            }
-            else {
-                pricePerPod -= MathFP.muld(x**4, o.f.d, o.f.dShift);
-            }
-        }
-        amount = amount * pricePerPod;
-        return amount;
-    }
 }
