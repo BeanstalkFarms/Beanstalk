@@ -81,7 +81,7 @@ library MathFP {
         uint240[4] memory constants,
         uint8[4] memory shifts,
         bool[4] memory bools
-    ) pure internal returns (uint256) {
+    ) internal pure returns (uint256) {
         // uint8 counter = 5;
 
         uint256 result;
@@ -138,7 +138,7 @@ library MathFP {
         uint240[4] memory constants,
         uint8[4] memory shifts,
         bool[4] memory bools
-    ) pure internal returns (uint256) {
+    ) internal pure returns (uint256) {
         //may need to solve degree 4 problems for integrating
 
         uint8 counter = 5;

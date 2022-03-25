@@ -95,12 +95,11 @@ contract Order is Listing {
         );
         //amount is the definite integral over the whole range
         uint256 amountPods;
-        if(constantPricing) {
+        if (constantPricing) {
             amountPods = (beanAmount * 1000000) / pricePerPod;
-        }
-        else {
-            for(uint8 i = 0; i < 9; i++){
-                if(f.intervalIntegrations[i] != 0){
+        } else {
+            for (uint8 i = 0; i < 9; i++) {
+                if (f.intervalIntegrations[i] != 0) {
                     amountPods += f.intervalIntegrations[i];
                 }
             }
@@ -229,35 +228,100 @@ contract Order is Listing {
         if (o.constantPricing) {
             amountBeans = (o.pricePerPod * amount) / 1000000;
         } else {
-            uint256 startIndex = MathFP.findIndexWithinSubinterval(o.f.subIntervalIndex, placeInLine);
-            uint256 endIndex = MathFP.findIndexWithinSubinterval(o.f.subIntervalIndex, placeInLineEndPlot);
-            bool endValue = placeInLineEndPlot < o.f.subIntervalIndex[startIndex+1];
-            if(startIndex == endIndex) {
-                amountBeans += MathFP.evaluateDefiniteIntegralCubic(placeInLine, placeInLineEndPlot, o.f.subIntervalIndex[startIndex],
-                     endValue, [o.f.constantsDegreeZero[startIndex], o.f.constantsDegreeOne[startIndex], o.f.constantsDegreeTwo[startIndex], o.f.constantsDegreeThree[startIndex]],
-                    [o.f.shiftsDegreeZero[startIndex], o.f.shiftsDegreeOne[startIndex], o.f.shiftsDegreeTwo[startIndex], o.f.shiftsDegreeThree[startIndex]], 
-                    [o.f.boolsDegreeZero[startIndex], o.f.boolsDegreeOne[startIndex], o.f.boolsDegreeTwo[startIndex], o.f.boolsDegreeThree[startIndex]]);
-            }
-            else if (endIndex > startIndex) {
-                amountBeans += MathFP.evaluateDefiniteIntegralCubic(placeInLine, o.f.subIntervalIndex[startIndex+1], o.f.subIntervalIndex[startIndex],
-                    false, [o.f.constantsDegreeZero[startIndex], o.f.constantsDegreeOne[startIndex], o.f.constantsDegreeTwo[startIndex], o.f.constantsDegreeThree[startIndex]],
-                   [o.f.shiftsDegreeZero[startIndex], o.f.shiftsDegreeOne[startIndex], o.f.shiftsDegreeTwo[startIndex], o.f.shiftsDegreeThree[startIndex]], 
-                   [o.f.boolsDegreeZero[startIndex], o.f.boolsDegreeOne[startIndex], o.f.boolsDegreeTwo[startIndex], o.f.boolsDegreeThree[startIndex]]);
+            uint256 startIndex = MathFP.findIndexWithinSubinterval(
+                o.f.subIntervalIndex,
+                placeInLine
+            );
+            uint256 endIndex = MathFP.findIndexWithinSubinterval(
+                o.f.subIntervalIndex,
+                placeInLineEndPlot
+            );
+            bool endValue = placeInLineEndPlot <
+                o.f.subIntervalIndex[startIndex + 1];
+            if (startIndex == endIndex) {
+                amountBeans += MathFP.evaluateDefiniteIntegralCubic(
+                    placeInLine,
+                    placeInLineEndPlot,
+                    o.f.subIntervalIndex[startIndex],
+                    endValue,
+                    [
+                        o.f.constantsDegreeZero[startIndex],
+                        o.f.constantsDegreeOne[startIndex],
+                        o.f.constantsDegreeTwo[startIndex],
+                        o.f.constantsDegreeThree[startIndex]
+                    ],
+                    [
+                        o.f.shiftsDegreeZero[startIndex],
+                        o.f.shiftsDegreeOne[startIndex],
+                        o.f.shiftsDegreeTwo[startIndex],
+                        o.f.shiftsDegreeThree[startIndex]
+                    ],
+                    [
+                        o.f.boolsDegreeZero[startIndex],
+                        o.f.boolsDegreeOne[startIndex],
+                        o.f.boolsDegreeTwo[startIndex],
+                        o.f.boolsDegreeThree[startIndex]
+                    ]
+                );
+            } else if (endIndex > startIndex) {
+                amountBeans += MathFP.evaluateDefiniteIntegralCubic(
+                    placeInLine,
+                    o.f.subIntervalIndex[startIndex + 1],
+                    o.f.subIntervalIndex[startIndex],
+                    false,
+                    [
+                        o.f.constantsDegreeZero[startIndex],
+                        o.f.constantsDegreeOne[startIndex],
+                        o.f.constantsDegreeTwo[startIndex],
+                        o.f.constantsDegreeThree[startIndex]
+                    ],
+                    [
+                        o.f.shiftsDegreeZero[startIndex],
+                        o.f.shiftsDegreeOne[startIndex],
+                        o.f.shiftsDegreeTwo[startIndex],
+                        o.f.shiftsDegreeThree[startIndex]
+                    ],
+                    [
+                        o.f.boolsDegreeZero[startIndex],
+                        o.f.boolsDegreeOne[startIndex],
+                        o.f.boolsDegreeTwo[startIndex],
+                        o.f.boolsDegreeThree[startIndex]
+                    ]
+                );
 
-                if(endIndex > (startIndex + 1)) {
-                    for(uint8 i = 1; i <= (endIndex - startIndex - 1); i++) {
-                        amountBeans += o.f.intervalIntegrations[startIndex+i];
+                if (endIndex > (startIndex + 1)) {
+                    for (uint8 i = 1; i <= (endIndex - startIndex - 1); i++) {
+                        amountBeans += o.f.intervalIntegrations[startIndex + i];
                     }
                 }
 
-                amountBeans += MathFP.evaluateDefiniteIntegralCubic(o.f.subIntervalIndex[endIndex], placeInLineEndPlot, o.f.subIntervalIndex[endIndex],
-                    true, [o.f.constantsDegreeZero[endIndex], o.f.constantsDegreeOne[endIndex], o.f.constantsDegreeTwo[endIndex], o.f.constantsDegreeThree[endIndex]],
-                   [o.f.shiftsDegreeZero[endIndex], o.f.shiftsDegreeOne[endIndex], o.f.shiftsDegreeTwo[endIndex], o.f.shiftsDegreeThree[endIndex]], 
-                   [o.f.boolsDegreeZero[endIndex], o.f.boolsDegreeOne[endIndex], o.f.boolsDegreeTwo[endIndex], o.f.boolsDegreeThree[endIndex]]);
+                amountBeans += MathFP.evaluateDefiniteIntegralCubic(
+                    o.f.subIntervalIndex[endIndex],
+                    placeInLineEndPlot,
+                    o.f.subIntervalIndex[endIndex],
+                    true,
+                    [
+                        o.f.constantsDegreeZero[endIndex],
+                        o.f.constantsDegreeOne[endIndex],
+                        o.f.constantsDegreeTwo[endIndex],
+                        o.f.constantsDegreeThree[endIndex]
+                    ],
+                    [
+                        o.f.shiftsDegreeZero[endIndex],
+                        o.f.shiftsDegreeOne[endIndex],
+                        o.f.shiftsDegreeTwo[endIndex],
+                        o.f.shiftsDegreeThree[endIndex]
+                    ],
+                    [
+                        o.f.boolsDegreeZero[endIndex],
+                        o.f.boolsDegreeOne[endIndex],
+                        o.f.boolsDegreeTwo[endIndex],
+                        o.f.boolsDegreeThree[endIndex]
+                    ]
+                );
             }
             amountBeans = amountBeans / 1000000;
         }
-        
 
         // costInBeans = (pricePerPod * amount) / 1000000;
 
@@ -346,8 +410,22 @@ contract Order is Listing {
             abi.encodePacked(
                 account,
                 pricePerPod,
-                maxPlaceInLine, constantPricing, subIntervalIndex, intervalIntegrations, constantsDegreeZero, shiftsDegreeZero, boolsDegreeZero, constantsDegreeOne, shiftsDegreeOne, boolsDegreeOne, constantsDegreeTwo,
-                shiftsDegreeTwo, boolsDegreeTwo, constantsDegreeThree, shiftsDegreeThree, boolsDegreeThree
+                maxPlaceInLine,
+                constantPricing,
+                subIntervalIndex,
+                intervalIntegrations,
+                constantsDegreeZero,
+                shiftsDegreeZero,
+                boolsDegreeZero,
+                constantsDegreeOne,
+                shiftsDegreeOne,
+                boolsDegreeOne,
+                constantsDegreeTwo,
+                shiftsDegreeTwo,
+                boolsDegreeTwo,
+                constantsDegreeThree,
+                shiftsDegreeThree,
+                boolsDegreeThree
             )
         );
     }
