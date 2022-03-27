@@ -7,45 +7,32 @@ library MathFP {
     using SafeMath for uint256;
     uint256 constant maxUintCons = 2**256 - 1;
 
+
     struct PiecewiseFormula {
         uint256[10] subIntervalIndex;
         uint256[9] intervalIntegrations;
-        uint240[10] constantsDegreeZero;
-        uint8[10] shiftsDegreeZero;
-        bool[10] boolsDegreeZero;
-        uint240[10] constantsDegreeOne;
-        uint8[10] shiftsDegreeOne;
-        bool[10] boolsDegreeOne;
-        uint240[10] constantsDegreeTwo;
-        uint8[10] shiftsDegreeTwo;
-        bool[10] boolsDegreeTwo;
-        uint240[10] constantsDegreeThree;
-        uint8[10] shiftsDegreeThree;
-        bool[10] boolsDegreeThree; //13 terms
+        uint256[40] constants;
+        uint8[40] shifts;
+        bool[40] bools;
+        // only need subIntervalIndex, intervalIntegrations, constants[40], shifts[40], bools[40]
     }
 
-    // function evaluatePCubicP(PiecewiseFormula memory f, uint256 x, uint256 amount) internal returns (uint256) {
-    //     uint256 y;
-    //     uint256 i;
-    //     uint256 ik;
-    //     // find definite integral of the piecewise between x and x+amount
-    //     i = findIndexWithinSubinterval(f.subIntervalIndex, x);
-    //     ik = findIndexWithinSubinterval(f.subIntervalIndex, x+amount);
-    //     uint8 diff = ik-i;
-    //     if(diff == 0){
+    struct CubicPolynomial {
+        uint240 constantd0;
+        uint240 constantd1;
+        uint240 constantd2;
+        uint240 constantd3;
+        uint8 shiftd0;
+        uint8 shiftd1;
+        uint8 shiftd2;
+        uint8 shiftd3;
+        bool signd0;
+        bool signd1;
+        bool signd2;
+        bool signd3;
+    }
 
-    //     } if (diff == 1) {
-
-    //     }
-    //     else if (diff > 1)
-    //     // if i and ik are different, we need to sum the whole
-    //     y = evaluatePCubic(x, f.subIntervalIndex[i], [f.constantsDegreeZero[i], f.constantsDegreeOne[i], f.constantsDegreeTwo[i], f.constantsDegreeThree[i]],
-    //         [f.shiftsDegreeZero[i], f.shiftsDegreeOne[i], f.shiftsDegreeTwo[i], f.shiftsDegreeThree[i]],
-    //         [f.boolsDegreeZero[i], f.boolsDegreeOne[i], f.boolsDegreeTwo[i], f.boolsDegreeThree[i]]);
-
-    //     return y;
-    // }
-
+    //probably shouldnt be done on chain
     function findIndexWithinSubinterval(uint256[10] memory values, uint256 x)
         internal
         pure
@@ -71,18 +58,16 @@ library MathFP {
         }
     }
 
-    // function evaluateDefiniteICubic
-
+//might be better to just store the integral
     function evaluateDefiniteIntegralCubic(
         uint256 startIndex,
         uint256 endIndex,
         uint256 k,
         bool endValue,
-        uint240[4] memory constants,
+        uint256[4] memory constants,
         uint8[4] memory shifts,
         bool[4] memory bools
     ) internal pure returns (uint256) {
-        // uint8 counter = 5;
 
         uint256 result;
         uint256 termValue1;
@@ -98,6 +83,7 @@ library MathFP {
                 shifts[i]
             );
 
+            //if the end value of the function is not in the domain
             if (!endValue) {
                 termValue2 = MathFP.muld(
                     (endIndex - k + (endIndex / 10000000))**(i + 1),
@@ -111,6 +97,7 @@ library MathFP {
                     shifts[i]
                 );
             }
+            //check sign
             if (bools[i]) {
                 result += termValue2 - termValue1;
                 if (lastTermValue != 0) {
@@ -132,49 +119,39 @@ library MathFP {
         return result;
     }
 
-    function evaluatePCubic(
-        uint256 x,
-        uint256 k,
-        uint240[4] memory constants,
-        uint8[4] memory shifts,
-        bool[4] memory bools
-    ) internal pure returns (uint256) {
-        //may need to solve degree 4 problems for integrating
-
-        uint8 counter = 5;
+    function evaluatePCubic(CubicPolynomial f, uint256 x) internal returns (uint256) {
+        
         uint256 y;
-        uint256 termValue;
-        for (uint8 i = 0; i < 4; i++) {
-            if (constants[i] == 0) {
-                continue;
-            }
-            termValue = MathFP.muld((x - k)**i, constants[i], shifts[i]);
-            if (bools[i]) {
-                y += termValue;
-                if (counter != 5) {
-                    termValue = MathFP.muld(
-                        (x - k)**counter,
-                        constants[counter],
-                        shifts[counter]
-                    );
-                    if (y > termValue) {
-                        y -= termValue;
-                        counter = 5;
-                    }
-                }
-                continue;
-            } else {
-                if (y > termValue) {
-                    y -= termValue;
-                } else {
-                    if (counter == 5) {
-                        counter = i;
-                    }
-                }
-                continue;
-            }
+        uint256 yMinus;
+        if(!f.signd0 && !f.signd1 && !f.signd2 && !f.signd3){
+            return 0;
         }
-        return y;
+
+        if(f.signd0){
+           y += MathFP.muld(1, f.constantd0, f.shiftd0);
+        } else {
+            yMinus += MathFP.muld(1, f.constantd0, f.shiftd0);
+        }
+
+        if(f.signd1) {
+            y += MathFP.muld(x, f.constantd1, f.shiftd1);
+        } else{
+           yMinus += MathFP.muld(x, f.constantd1, f.shiftd1);
+        }
+
+        if(f.signd2) {
+            y += MathFP.muld(x**2, f.constantd2, f.shiftd2);
+        } else {
+            yMinus += MathFP.muld(x**2, f.constantd2, f.shiftd2);
+        }
+
+        if(f.signd3) {
+            y += MathFP.muld(x**3, f.constantd3, f.shiftd3);
+        } else {
+            yMinus += MathFP.muld(x**3, f.constantd3, f.shiftd3);
+        }
+
+        return y - yMinus;
     }
 
     //returns '1' in FP representation

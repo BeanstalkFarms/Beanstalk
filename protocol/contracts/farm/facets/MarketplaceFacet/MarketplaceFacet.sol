@@ -20,7 +20,6 @@ contract MarketplaceFacet is Order {
 
     // Create
 
-    //FTYPE COULD BE A BOOL: CONSTANT OR POLYNOMIAL
     function createPodListing(
         uint256 index,
         uint256 start,
@@ -215,18 +214,9 @@ contract MarketplaceFacet is Order {
             constantPricing,
             f.subIntervalIndex,
             f.intervalIntegrations,
-            f.constantsDegreeZero,
-            f.shiftsDegreeZero,
-            f.boolsDegreeZero,
-            f.constantsDegreeOne,
-            f.shiftsDegreeOne,
-            f.boolsDegreeOne,
-            f.constantsDegreeTwo,
-            f.shiftsDegreeTwo,
-            f.boolsDegreeTwo,
-            f.constantsDegreeThree,
-            f.shiftsDegreeThree,
-            f.boolsDegreeThree
+            f.constants,
+            f.shifts,
+            f.bools
         );
         return s.podOrders[orderId];
     }

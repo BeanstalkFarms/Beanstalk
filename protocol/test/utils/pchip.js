@@ -194,12 +194,7 @@ var createInterpolant = function(xs, ys) {
         end -= end/100000000;
         termValueStart = (a/4*(start-k)**4) + (b/3*(start-k)**3) + (c/2*(start-k)**2) + d*(start - k)
         termValueEnd =   (a/4*(end-k)**4) + (b/3*(end-k)**3) + (c/2*((end-k)**2)) + d*(end - k)
-        // console.log(termValueEnd, termValueStart)
-        // if(isNaN(termValueEnd)&&isNaN(termValueStart)){
-        //     return termValueEnd - termValueStart;
-        // }else{
-        //     return 0;
-        // }
+        
         return termValueEnd - termValueStart;
         
     }
@@ -238,7 +233,6 @@ var createInterpolant = function(xs, ys) {
     var integrations = new Array(9).fill(0);
     console.log(xs,ys,c1s,c2s,c3s)
     for (i = 0; i < originalL-1; i++) {
-        // console.log(i, )
         if(ys[i] != 0){
             if(i<9){
                 if(xs[i]!=0){
@@ -251,9 +245,6 @@ var createInterpolant = function(xs, ys) {
             shiftsOne[i] = calculateDecimalShifts(c1s[i]);
             shiftsTwo[i] = calculateDecimalShifts(c2s[i])
             shiftsThree[i] = calculateDecimalShifts(c3s[i])
-            // shiftsOne.push(calculateDecimalShifts(c1s[i]))
-            // shiftsTwo.push(calculateDecimalShifts(c2s[i]))
-            // shiftsThree.push(calculateDecimalShifts(c3s[i]))
 
             if(ys[i] < 0) {
                 boolsZero[i] = false;
@@ -270,69 +261,39 @@ var createInterpolant = function(xs, ys) {
         } else {
             break;
         }
-        console.log(i, originalL)
     }
-
-    
-	
 	// Return interpolant function
-	var eval = function(x,k) {
-		// The rightmost point in the dataset should give an exact result
+	// var eval = function(x,k) {
+	// 	// The rightmost point in the dataset should give an exact result
 
-        //-> store xs and ys
-		var i = xs.length - 1;
-		if (x == xs[i]) { return ys[i]; }
+    //     //-> store xs and ys
+	// 	var i = xs.length - 1;
+	// 	if (x == xs[i]) { return ys[i]; }
 		
-		// Search for the interval x is in, returning the corresponding y if x is one of the original xs
-		// store c3s, c2s, c1s
-        var low = 0;
-        var mid, high = c3s.length - 1;
-		while (low <= high) {
-			mid = Math.floor(0.5*(low + high));
-			var xHere = xs[mid];
-			if (xHere < x) { low = mid + 1; }
-			else if (xHere > x) { high = mid - 1; }
-			else { return ys[mid]; }
-		}
-		i = Math.max(0, high);
+	// 	// Search for the interval x is in, returning the corresponding y if x is one of the original xs
+	// 	// store c3s, c2s, c1s
+    //     var low = 0;
+    //     var mid, high = c3s.length - 1;
+	// 	while (low <= high) {
+	// 		mid = Math.floor(0.5*(low + high));
+	// 		var xHere = xs[mid];
+	// 		if (xHere < x) { low = mid + 1; }
+	// 		else if (xHere > x) { high = mid - 1; }
+	// 		else { return ys[mid]; }
+	// 	}
+	// 	i = Math.max(0, high);
 		
-		// Interpolate
-		var diff = x - k;
-        var diffSq = diff*diff;
-		return ys[i] + c1s[i]*diff + c2s[i]*diffSq + c3s[i]*diff*diffSq;
-	};
-    return {c3s,c2s, c1s, c0s:ys, integrations, shiftsZero, shiftsOne, shiftsTwo, shiftsThree, boolsZero, boolsOne, boolsTwo, boolsThree};
+	// 	// Interpolate
+	// 	var diff = x - k;
+    //     var diffSq = diff*diff;
+	// 	return ys[i] + c1s[i]*diff + c2s[i]*diffSq + c3s[i]*diff*diffSq;
+	// };
+    var constants = ys.concat(c1s).concat(c2s).concat(c3s);
+    var shifts = shiftsZero.concat(shiftsOne).concat(shiftsTwo).concat(shiftsThree);
+    var bools = boolsZero.concat(boolsOne).concat(boolsTwo).concat(boolsThree);
+    return {integrations, constants, shifts, bools};
 };
 
-
-var xSeries = [0,      250,  500,   700,    1000,   1200,   1350]
-var ySeries = [1000000,700000,600000,500000,250000, 230000, 200000]
-
-// var splitSeries = splitIntoSubIntervals(xSeries, ySeries)
-// console.log(splitSeries)
-var inter;
-
-// for (i=0; i<splitSeries.xIntervalList.length; i++){
-//     console.log("\nINDEX__________________________________________________ ", i)
-//     console.log("Domain__________________________", splitSeries.xIntervalList[i])
-//     console.log("Range__________________________", splitSeries.yIntervalList[i])
-//     inter = createInterpolant(splitSeries.xIntervalList[i], splitSeries.yIntervalList[i])
-    // console.log("C0S: ___________", inter.c0s)
-    // console.log("C1S:____________", inter.c1s)
-    // console.log("C2S:____________", inter.c2s)
-    // console.log("C3S:____________", inter.c3s)
-    // console.log("\n")
-// }
-inter = createInterpolant(xSeries, ySeries)
-console.log("C0S: ___________", inter.c0s)
-    console.log("C1S:____________", inter.c1s)
-    console.log("C2S:____________", inter.c2s)
-    console.log("C3S:____________", inter.c3s)
-    console.log("Integrations:____________", inter.integrations)
-    console.log(inter.shiftsZero, inter.shiftsOne, inter.shiftsTwo, inter.shiftsThree);
-    console.log(inter.boolsZero, inter.boolsOne, inter.boolsTwo, inter.boolsThree)
-    console.log("\n")
-
-
-
-// console.log(inter)
+module.exports = {
+    createInterpolant
+};

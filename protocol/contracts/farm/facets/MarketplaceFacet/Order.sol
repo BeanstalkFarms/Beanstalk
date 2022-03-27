@@ -31,18 +31,9 @@ contract Order is Listing {
         bool constantPricing,
         uint256[10] subIntervalIndex,
         uint256[9] intervalIntegrations,
-        uint240[10] constantsDegreeZero,
-        uint8[10] shiftsDegreeZero,
-        bool[10] boolsDegreeZero,
-        uint240[10] constantsDegreeOne,
-        uint8[10] shiftsDegreeOne,
-        bool[10] boolsDegreeOne,
-        uint240[10] constantsDegreeTwo,
-        uint8[10] shiftsDegreeTwo,
-        bool[10] boolsDegreeTwo,
-        uint240[10] constantsDegreeThree,
-        uint8[10] shiftsDegreeThree,
-        bool[10] boolsDegreeThree
+        uint256[40] constants,
+        uint8[40] shifts,
+        bool[40] bools
     );
 
     event PodOrderFilled(
@@ -129,18 +120,9 @@ contract Order is Listing {
             constantPricing,
             f.subIntervalIndex,
             f.intervalIntegrations,
-            f.constantsDegreeZero,
-            f.shiftsDegreeZero,
-            f.boolsDegreeZero,
-            f.constantsDegreeOne,
-            f.shiftsDegreeOne,
-            f.boolsDegreeOne,
-            f.constantsDegreeTwo,
-            f.shiftsDegreeTwo,
-            f.boolsDegreeTwo,
-            f.constantsDegreeThree,
-            f.shiftsDegreeThree,
-            f.boolsDegreeThree
+            f.constants,
+            f.shifts,
+            f.bools
         );
         if (s.podOrders[id] > 0)
             _cancelPodOrder(
@@ -160,18 +142,9 @@ contract Order is Listing {
             constantPricing,
             f.subIntervalIndex,
             f.intervalIntegrations,
-            f.constantsDegreeZero,
-            f.shiftsDegreeZero,
-            f.boolsDegreeZero,
-            f.constantsDegreeOne,
-            f.shiftsDegreeOne,
-            f.boolsDegreeOne,
-            f.constantsDegreeTwo,
-            f.shiftsDegreeTwo,
-            f.boolsDegreeTwo,
-            f.constantsDegreeThree,
-            f.shiftsDegreeThree,
-            f.boolsDegreeThree
+            f.constants,
+            f.shifts,
+            f.bools
         );
         return id;
     }
@@ -194,18 +167,9 @@ contract Order is Listing {
             o.constantPricing,
             o.f.subIntervalIndex,
             o.f.intervalIntegrations,
-            o.f.constantsDegreeZero,
-            o.f.shiftsDegreeZero,
-            o.f.boolsDegreeZero,
-            o.f.constantsDegreeOne,
-            o.f.shiftsDegreeOne,
-            o.f.boolsDegreeOne,
-            o.f.constantsDegreeTwo,
-            o.f.shiftsDegreeTwo,
-            o.f.boolsDegreeTwo,
-            o.f.constantsDegreeThree,
-            o.f.shiftsDegreeThree,
-            o.f.boolsDegreeThree
+            o.f.constants,
+            o.f.shifts,
+            o.f.bools
         );
         s.podOrders[id] = s.podOrders[id].sub(amount);
         require(
@@ -237,7 +201,7 @@ contract Order is Listing {
                 placeInLineEndPlot
             );
             bool endValue = placeInLineEndPlot <
-                o.f.subIntervalIndex[startIndex + 1];
+                o.f.subIntervalIndex[startIndex + 1]; 
             if (startIndex == endIndex) {
                 amountBeans += MathFP.evaluateDefiniteIntegralCubic(
                     placeInLine,
@@ -245,22 +209,22 @@ contract Order is Listing {
                     o.f.subIntervalIndex[startIndex],
                     endValue,
                     [
-                        o.f.constantsDegreeZero[startIndex],
-                        o.f.constantsDegreeOne[startIndex],
-                        o.f.constantsDegreeTwo[startIndex],
-                        o.f.constantsDegreeThree[startIndex]
+                        o.f.constants[startIndex],
+                        o.f.constants[startIndex+10],
+                        o.f.constants[startIndex+20],
+                        o.f.constants[startIndex+30]
                     ],
                     [
-                        o.f.shiftsDegreeZero[startIndex],
-                        o.f.shiftsDegreeOne[startIndex],
-                        o.f.shiftsDegreeTwo[startIndex],
-                        o.f.shiftsDegreeThree[startIndex]
+                        o.f.shifts[startIndex],
+                        o.f.shifts[startIndex+10],
+                        o.f.shifts[startIndex+20],
+                        o.f.shifts[startIndex+30]
                     ],
                     [
-                        o.f.boolsDegreeZero[startIndex],
-                        o.f.boolsDegreeOne[startIndex],
-                        o.f.boolsDegreeTwo[startIndex],
-                        o.f.boolsDegreeThree[startIndex]
+                        o.f.bools[startIndex],
+                        o.f.bools[startIndex+10],
+                        o.f.bools[startIndex+20],
+                        o.f.bools[startIndex+30]
                     ]
                 );
             } else if (endIndex > startIndex) {
@@ -270,22 +234,22 @@ contract Order is Listing {
                     o.f.subIntervalIndex[startIndex],
                     false,
                     [
-                        o.f.constantsDegreeZero[startIndex],
-                        o.f.constantsDegreeOne[startIndex],
-                        o.f.constantsDegreeTwo[startIndex],
-                        o.f.constantsDegreeThree[startIndex]
+                        o.f.constants[startIndex],
+                        o.f.constants[startIndex+10],
+                        o.f.constants[startIndex+20],
+                        o.f.constants[startIndex+30]
                     ],
                     [
-                        o.f.shiftsDegreeZero[startIndex],
-                        o.f.shiftsDegreeOne[startIndex],
-                        o.f.shiftsDegreeTwo[startIndex],
-                        o.f.shiftsDegreeThree[startIndex]
+                        o.f.shifts[startIndex],
+                        o.f.shifts[startIndex+10],
+                        o.f.shifts[startIndex+20],
+                        o.f.shifts[startIndex+30]
                     ],
                     [
-                        o.f.boolsDegreeZero[startIndex],
-                        o.f.boolsDegreeOne[startIndex],
-                        o.f.boolsDegreeTwo[startIndex],
-                        o.f.boolsDegreeThree[startIndex]
+                        o.f.bools[startIndex],
+                        o.f.bools[startIndex+10],
+                        o.f.bools[startIndex+20],
+                        o.f.bools[startIndex+30]
                     ]
                 );
 
@@ -301,22 +265,22 @@ contract Order is Listing {
                     o.f.subIntervalIndex[endIndex],
                     true,
                     [
-                        o.f.constantsDegreeZero[endIndex],
-                        o.f.constantsDegreeOne[endIndex],
-                        o.f.constantsDegreeTwo[endIndex],
-                        o.f.constantsDegreeThree[endIndex]
+                        o.f.constants[endIndex],
+                        o.f.constants[endIndex+10],
+                        o.f.constants[endIndex+20],
+                        o.f.constants[endIndex+30]
                     ],
                     [
-                        o.f.shiftsDegreeZero[endIndex],
-                        o.f.shiftsDegreeOne[endIndex],
-                        o.f.shiftsDegreeTwo[endIndex],
-                        o.f.shiftsDegreeThree[endIndex]
+                        o.f.shifts[endIndex],
+                        o.f.shifts[endIndex+10],
+                        o.f.shifts[endIndex+20],
+                        o.f.shifts[endIndex+30]
                     ],
                     [
-                        o.f.boolsDegreeZero[endIndex],
-                        o.f.boolsDegreeOne[endIndex],
-                        o.f.boolsDegreeTwo[endIndex],
-                        o.f.boolsDegreeThree[endIndex]
+                        o.f.bools[endIndex],
+                        o.f.bools[endIndex+10],
+                        o.f.bools[endIndex+20],
+                        o.f.bools[endIndex+30]
                     ]
                 );
             }
@@ -358,18 +322,9 @@ contract Order is Listing {
             constantPricing,
             f.subIntervalIndex,
             f.intervalIntegrations,
-            f.constantsDegreeZero,
-            f.shiftsDegreeZero,
-            f.boolsDegreeZero,
-            f.constantsDegreeOne,
-            f.shiftsDegreeOne,
-            f.boolsDegreeOne,
-            f.constantsDegreeTwo,
-            f.shiftsDegreeTwo,
-            f.boolsDegreeTwo,
-            f.constantsDegreeThree,
-            f.shiftsDegreeThree,
-            f.boolsDegreeThree
+            f.constants,
+            f.shifts,
+            f.bools
         );
         //revisit
         uint256 amountBeans = (pricePerPod * s.podOrders[id]) / 1000000;
@@ -393,18 +348,9 @@ contract Order is Listing {
         bool constantPricing,
         uint256[10] memory subIntervalIndex,
         uint256[9] memory intervalIntegrations,
-        uint240[10] memory constantsDegreeZero,
-        uint8[10] memory shiftsDegreeZero,
-        bool[10] memory boolsDegreeZero,
-        uint240[10] memory constantsDegreeOne,
-        uint8[10] memory shiftsDegreeOne,
-        bool[10] memory boolsDegreeOne,
-        uint240[10] memory constantsDegreeTwo,
-        uint8[10] memory shiftsDegreeTwo,
-        bool[10] memory boolsDegreeTwo,
-        uint240[10] memory constantsDegreeThree,
-        uint8[10] memory shiftsDegreeThree,
-        bool[10] memory boolsDegreeThree
+        uint256[40] memory constants,
+        uint8[40] memory shifts,
+        bool[40] memory bools
     ) internal pure returns (bytes32 id) {
         id = keccak256(
             abi.encodePacked(
@@ -414,18 +360,9 @@ contract Order is Listing {
                 constantPricing,
                 subIntervalIndex,
                 intervalIntegrations,
-                constantsDegreeZero,
-                shiftsDegreeZero,
-                boolsDegreeZero,
-                constantsDegreeOne,
-                shiftsDegreeOne,
-                boolsDegreeOne,
-                constantsDegreeTwo,
-                shiftsDegreeTwo,
-                boolsDegreeTwo,
-                constantsDegreeThree,
-                shiftsDegreeThree,
-                boolsDegreeThree
+                constants,
+                shifts,
+                bools
             )
         );
     }
