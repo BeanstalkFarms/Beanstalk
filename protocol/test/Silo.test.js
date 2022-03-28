@@ -21,7 +21,6 @@ describe('Silo', function () {
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
     this.claim = await ethers.getContractAt('MockClaimFacet', this.diamond.address)
 
-
     await owner.sendTransaction({
         to: contracts.weth,
         value: ethers.utils.parseEther("100")

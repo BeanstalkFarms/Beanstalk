@@ -5,7 +5,7 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../libraries/LibMetaCurve.sol";
+import "../../libraries/Curve/LibBeanMetaCurve.sol";
 
 /*
  * @author Publius
@@ -13,6 +13,6 @@ import "../../libraries/LibMetaCurve.sol";
 */
 contract CurveBDVFacet {
     function curveToBDV(uint256 amount) external view returns (uint256) {
-        return LibMetaCurve.bdv(amount);
+        return LibBeanMetaCurve.bdv(amount);
     }
 }

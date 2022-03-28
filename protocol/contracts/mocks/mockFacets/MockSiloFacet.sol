@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/SiloFacet/SiloFacet.sol";
 import "../MockUniswapV2Pair.sol";
+import "../../libraries/Curve/LibMetaCurve.sol";
 
 /**
  * @author Publius
@@ -157,5 +158,9 @@ contract MockSiloFacet is SiloFacet {
         IBean(s.c.bean).transferFrom(msg.sender, address(this), bean);
         LibMarket.allocateBeanRefund(bean, 0);
         LibMarket.refund();
+    }
+
+    function curveMetapoolPrice(address pool, uint256 decimals) external view returns (uint256) {
+        return LibMetaCurve.price(pool, decimals);
     }
 }

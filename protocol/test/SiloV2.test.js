@@ -548,7 +548,7 @@ describe('Silo', function () {
     before(async function () {
       this.threeCurve = await ethers.getContractAt('Mock3Curve', THREE_CURVE);
       await this.threeCurve.set_virtual_price(ethers.utils.parseEther('1'));
-      this.beanThreeCurve = await ethers.getContractAt('MockBean3Curve', BEAN_3_CURVE);
+      this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
       await this.beanThreeCurve.set_supply(ethers.utils.parseEther('2000000'));
       await this.beanThreeCurve.set_A_precise('1000');
       await this.beanThreeCurve.set_virtual_price(ethers.utils.parseEther('1'));

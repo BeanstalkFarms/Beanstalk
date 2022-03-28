@@ -7,44 +7,18 @@ pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 
-interface I3Curve {
-    function get_virtual_price() external view returns (uint256);
-}
-
-interface IMeta3Curve {
-    function A_precise() external view returns (uint256);
-    function get_previous_balances() external view returns (uint256[2] memory);
-    function get_virtual_price() external view returns (uint256);
-}
-
-library LibMetaCurve {
+library LibCurve {
     using SafeMath for uint256;
 
     uint256 private constant A_PRECISION = 100;
-    address private constant POOL = address(0x3a70DfA7d2262988064A2D051dd47521E43c9BdD);
-    address private constant CRV3_POOL = address(0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7);
     uint256 private constant N_COINS  = 2;
-    uint256 private constant RATE_MULTIPLIER = 1e12; // Bean has 6 Decimals
     uint256 private constant PRECISION = 1e18;
+    uint256 private constant MAX_DECIMALS = 18;
     uint256 private constant i = 0;
     uint256 private constant j = 1;
 
-    function bdv(uint256 amount) internal view returns (uint256) {
-        // By using previous balances and the virtual price, we protect against flash loan
-        uint256[2] memory balances = IMeta3Curve(POOL).get_previous_balances();
-        uint256 virtualPrice = IMeta3Curve(POOL).get_virtual_price();
-        uint256[2] memory xp = getXP(balances);
-        uint256 a = IMeta3Curve(POOL).A_precise();
-        uint256 D = getD(xp, a);
-        uint256 price = getPrice(xp, a, D);
-        uint256 totalSupply =  D * PRECISION / virtualPrice;
-        uint256 beanValue = balances[0].mul(amount).div(totalSupply);
-        uint256 curveValue = xp[1].mul(amount).div(totalSupply).div(price);
-        return beanValue.add(curveValue);
-    }
-
-    function getPrice(uint256[2] memory xp, uint256 a, uint256 D) private view returns (uint) {
-        uint256 x = xp[i] + RATE_MULTIPLIER;
+    function getPrice(uint256[2] memory xp, uint256 a, uint256 D, uint256 padding) internal pure returns (uint) {
+        uint256 x = xp[i] + padding;
         uint256 y = getY(x, xp, a, D);
         uint256 dy = xp[j] - y - 1;
         return dy;
@@ -79,7 +53,7 @@ library LibMetaCurve {
         require(false, "Price: Convergence false");
     }
 
-    function getD(uint256[2] memory xp, uint256 a) private pure returns (uint D) {
+    function getD(uint256[2] memory xp, uint256 a) internal pure returns (uint D) {
         // Solution is taken from pool contract: 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD
         uint256 S;
         uint256 Dprev;
@@ -104,8 +78,8 @@ library LibMetaCurve {
         return 0;
     }
 
-    function getXP(uint256[2] memory balances) private view returns (uint256[2] memory xp) {
-        xp[0] = balances[0].mul(RATE_MULTIPLIER);
-        xp[1] = balances[1].mul(I3Curve(CRV3_POOL).get_virtual_price()).div(PRECISION);
+    function getXP(uint256[2] memory balances, uint256 padding, uint256 rate) internal view returns (uint256[2] memory xp) {
+        xp[0] = balances[0].mul(padding);
+        xp[1] = balances[1].mul(rate).div(PRECISION);
     }
 }

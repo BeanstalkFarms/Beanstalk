@@ -1,5 +1,5 @@
 
-contract MockBean3Curve {
+contract MockMeta3Curve {
     uint256 a;
     uint256[2] balances;
     uint256[2] previousBalances;
