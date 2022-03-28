@@ -88,24 +88,12 @@ contract Order is Listing {
         if (constantPricing) {
             amountPods = (beanAmount * 1000000) / pricePerPod;
         } else {
-            for (uint8 i = 0; i < f.subIntervalIndex.length; i++) {
-                //integrate accross all domain
-                amountPods += MathFP.integrateCubic(
-                    f.bools[i],
-                    f.bools[i + 10],
-                    f.bools[i + 20],
-                    f.bools[i + 30],
-                    f.shifts[i],
-                    f.shifts[i + 10],
-                    f.shifts[i + 20],
-                    f.shifts[i + 30],
-                    f.constants[i],
-                    f.constants[i + 10],
-                    f.constants[i + 20],
-                    f.constants[i + 30],
-                    f.subIntervalIndex[i + 1] - f.subIntervalIndex[i]
-                );
-            }
+            amountPods = _integrateCubic(
+                f,
+                f.subIntervalIndex[f.subIntervalIndex.length - 1],
+                0,
+                f.subIntervalIndex.length - 1
+            );
         }
         return
             __createPodOrder(
@@ -210,66 +198,66 @@ contract Order is Listing {
                 o.f.subIntervalIndex,
                 placeInLineEndPlot
             );
+            amountBeans = _integrateCubic(o.f, amount, startIndex, endIndex);
+            // if (startIndex == endIndex) {
+            //     //if both are in the same piecewise domain, then we only need to integrate one cubic
+            //     amountBeans += _integrateCubic(
+            //         [o.f.bools[startIndex],
+            //         o.f.bools[startIndex + 10],
+            //         o.f.bools[startIndex + 20],
+            //         o.f.bools[startIndex + 30]],
+            //         [o.f.shifts[startIndex],
+            //         o.f.shifts[startIndex + 10],
+            //         o.f.shifts[startIndex + 20],
+            //         o.f.shifts[startIndex + 30]],
+            //         [o.f.constants[startIndex],
+            //         o.f.constants[startIndex + 10],
+            //         o.f.constants[startIndex + 20],
+            //         o.f.constants[startIndex + 30]],
+            //         amount
+            //     );
+            // } else if (endIndex > startIndex) {
+            //     //if the amount falls into more than one piecewise domain, we need to integrate them seperately
 
-            if (startIndex == endIndex) {
-                //if both are in the same piecewise domain, then we only need to integrate one cubic
-                amountBeans += MathFP.integrateCubic(
-                    o.f.bools[startIndex],
-                    o.f.bools[startIndex + 10],
-                    o.f.bools[startIndex + 20],
-                    o.f.bools[startIndex + 30],
-                    o.f.shifts[startIndex],
-                    o.f.shifts[startIndex + 10],
-                    o.f.shifts[startIndex + 20],
-                    o.f.shifts[startIndex + 30],
-                    o.f.constants[startIndex],
-                    o.f.constants[startIndex + 10],
-                    o.f.constants[startIndex + 20],
-                    o.f.constants[startIndex + 30],
-                    amount
-                );
-            } else if (endIndex > startIndex) {
-                //if the amount falls into more than one piecewise domain, we need to integrate them seperately
+            //     //integrate the last cubic in the piecewise
+            //     amountBeans += _integrateCubic(
+            //         [o.f.bools[endIndex],
+            //         o.f.bools[endIndex + 10],
+            //         o.f.bools[endIndex + 20],
+            //         o.f.bools[endIndex + 30]],
+            //         [o.f.shifts[endIndex],
+            //         o.f.shifts[endIndex + 10],
+            //         o.f.shifts[endIndex + 20],
+            //         o.f.shifts[endIndex + 30]],
+            //         [o.f.constants[endIndex],
+            //         o.f.constants[endIndex + 10],
+            //         o.f.constants[endIndex + 20],
+            //         o.f.constants[endIndex + 30]],
+            //         amount - o.f.subIntervalIndex[endIndex]
+            //     );
 
-                //integrate the last cubic in the piecewise
-                amountBeans += MathFP.integrateCubic(
-                    o.f.bools[endIndex],
-                    o.f.bools[endIndex + 10],
-                    o.f.bools[endIndex + 20],
-                    o.f.bools[endIndex + 30],
-                    o.f.shifts[endIndex],
-                    o.f.shifts[endIndex + 10],
-                    o.f.shifts[endIndex + 20],
-                    o.f.shifts[endIndex + 30],
-                    o.f.constants[endIndex],
-                    o.f.constants[endIndex + 10],
-                    o.f.constants[endIndex + 20],
-                    o.f.constants[endIndex + 30],
-                    amount - o.f.subIntervalIndex[endIndex]
-                );
-
-                //integrate the other (middle) ranges in the piecewise, if applicable
-                if (endIndex > (startIndex + 1)) {
-                    for (uint8 i = 1; i <= (endIndex - startIndex - 1); i++) {
-                        amountBeans += MathFP.integrateCubic(
-                            o.f.bools[startIndex + i],
-                            o.f.bools[startIndex + i + 10],
-                            o.f.bools[startIndex + i + 20],
-                            o.f.bools[startIndex + i + 30],
-                            o.f.shifts[startIndex + i],
-                            o.f.shifts[startIndex + i + 10],
-                            o.f.shifts[startIndex + i + 20],
-                            o.f.shifts[startIndex + i + 30],
-                            o.f.constants[startIndex + i],
-                            o.f.constants[startIndex + i + 10],
-                            o.f.constants[startIndex + i + 20],
-                            o.f.constants[startIndex + i + 30],
-                            o.f.subIntervalIndex[startIndex + i + 1] -
-                                o.f.subIntervalIndex[startIndex + i]
-                        );
-                    }
-                }
-            }
+            //     //integrate the other (middle) ranges in the piecewise, if applicable
+            //     if (endIndex > (startIndex + 1)) {
+            //         for (uint8 i = 1; i <= (endIndex - startIndex - 1); i++) {
+            //             amountBeans += _integrateCubic(
+            //                 [o.f.bools[startIndex + i],
+            //                 o.f.bools[startIndex + i + 10],
+            //                 o.f.bools[startIndex + i + 20],
+            //                 o.f.bools[startIndex + i + 30]],
+            //                 [o.f.shifts[startIndex + i],
+            //                 o.f.shifts[startIndex + i + 10],
+            //                 o.f.shifts[startIndex + i + 20],
+            //                 o.f.shifts[startIndex + i + 30]],
+            //                 [o.f.constants[startIndex + i],
+            //                 o.f.constants[startIndex + i + 10],
+            //                 o.f.constants[startIndex + i + 20],
+            //                 o.f.constants[startIndex + i + 30]],
+            //                 o.f.subIntervalIndex[startIndex + i + 1] -
+            //                     o.f.subIntervalIndex[startIndex + i]
+            //             );
+            //         }
+            //     }
+            // }
             amountBeans = amountBeans / 1000000;
         }
 

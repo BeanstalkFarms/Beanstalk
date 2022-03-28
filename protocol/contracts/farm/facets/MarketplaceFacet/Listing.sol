@@ -23,8 +23,8 @@ contract Listing is PodTransfer {
         uint256 index; //32
         uint256 start; //32
         uint256 amount; //32
-        uint24 pricePerPod; //3 -> starting price
         uint256 maxHarvestableIndex; // expiry
+        uint24 pricePerPod; //3 -> starting price
         bool toWallet;
         bool constantPricing;
         MathFP.PiecewiseFormula f;
@@ -165,41 +165,210 @@ contract Listing is PodTransfer {
         uint256 amountBeans;
 
         //for listings, calculate the place in line of the first pod theyre buying
-        uint256 placeInLine = l.index + l.start - s.f.harvestable;
+        // uint256 placeInLine = l.index + l.start - s.f.harvestable;
 
         if (l.constantPricing) {
             //if constant pricing for all pods, the amount is calculated by dividing the amount of beans by the price per pod
             amountBeans = (beanAmount * 1000000) / l.pricePerPod;
         } else {
             // calculate price per pod
+
             uint256 i = MathFP.findIndexWithinSubinterval(
                 l.f.subIntervalIndex,
-                placeInLine
+                l.index + l.start - s.f.harvestable
             );
 
-            uint256 pricePerPod = MathFP.evaluateCubic(
-                l.f.bools[i],
-                l.f.bools[i + 10],
-                l.f.bools[i + 20],
-                l.f.bools[i + 30],
-                l.f.shifts[i],
-                l.f.shifts[i + 10],
-                l.f.shifts[i + 20],
-                l.f.shifts[i + 30],
-                l.f.constants[i],
-                l.f.constants[i + 10],
-                l.f.constants[i + 20],
-                l.f.constants[i + 30],
-                placeInLine
+            // amountBeans = (beanAmount * 1000000) / MathFP.evaluateCubic(
+            //     l.f.bools[i],
+            //     l.f.bools[i + 10],
+            //     l.f.bools[i + 20],
+            //     l.f.bools[i + 30],
+            //     l.f.shifts[i],
+            //     l.f.shifts[i + 10],
+            //     l.f.shifts[i + 20],
+            //     l.f.shifts[i + 30],
+            //     l.f.constants[i],
+            //     l.f.constants[i + 10],
+            //     l.f.constants[i + 20],
+            //     l.f.constants[i + 30],
+            //     l.index + l.start - s.f.harvestable
+            // );
+            amountBeans = MathFP.evaluateCubic(
+                [
+                    l.f.bools[i],
+                    l.f.bools[i + 10],
+                    l.f.bools[i + 20],
+                    l.f.bools[i + 30]
+                ],
+                [
+                    l.f.shifts[i],
+                    l.f.shifts[i + 10],
+                    l.f.shifts[i + 20],
+                    l.f.shifts[i + 30]
+                ],
+                [
+                    l.f.constants[i],
+                    l.f.constants[i + 10],
+                    l.f.constants[i + 20],
+                    l.f.constants[i + 30]
+                ],
+                l.index + l.start - s.f.harvestable
             );
-
-            amountBeans = (beanAmount * 1000000) / pricePerPod;
         }
 
         //Need to fix rounding function
         // amountBeans = roundAmount(l.amount, amountBeans);
         __fillListing(l.account, msg.sender, l, amountBeans);
         _transferPlot(l.account, msg.sender, l.index, l.start, amountBeans);
+    }
+
+    function _integrateCubic(
+        MathFP.PiecewiseFormula calldata f,
+        uint256 k,
+        uint256 i,
+        uint256 endI
+    ) internal pure returns (uint256) {
+        require(i >= endI);
+        if (i == endI) {
+            return
+                MathFP.integrateCubic(
+                    [
+                        f.bools[i],
+                        f.bools[i + 10],
+                        f.bools[i + 20],
+                        f.bools[i + 30]
+                    ],
+                    [
+                        f.shifts[i],
+                        f.shifts[i + 10],
+                        f.shifts[i + 20],
+                        f.shifts[i + 30]
+                    ],
+                    [
+                        f.constants[i],
+                        f.constants[i + 10],
+                        f.constants[i + 20],
+                        f.constants[i + 30]
+                    ],
+                    k
+                );
+        } else {
+            uint256 midSum;
+            if (endI > (i + 1)) {
+                for (uint8 j = 1; j <= (endI - i - 1); i++) {
+                    midSum += MathFP.integrateCubic(
+                        [
+                            f.bools[i + j],
+                            f.bools[i + j + 10],
+                            f.bools[i + j + 20],
+                            f.bools[i + j + 30]
+                        ],
+                        [
+                            f.shifts[i + j],
+                            f.shifts[i + j + 10],
+                            f.shifts[i + j + 20],
+                            f.shifts[i + j + 30]
+                        ],
+                        [
+                            f.constants[i + j],
+                            f.constants[i + i + 10],
+                            f.constants[i + i + 20],
+                            f.constants[i + i + 30]
+                        ],
+                        f.subIntervalIndex[i + j + 1] -
+                            f.subIntervalIndex[i + i]
+                    );
+                }
+                return
+                    MathFP.integrateCubic(
+                        [
+                            f.bools[i],
+                            f.bools[i + 10],
+                            f.bools[i + 20],
+                            f.bools[i + 30]
+                        ],
+                        [
+                            f.shifts[i],
+                            f.shifts[i + 10],
+                            f.shifts[i + 20],
+                            f.shifts[i + 30]
+                        ],
+                        [
+                            f.constants[i],
+                            f.constants[i + 10],
+                            f.constants[i + 20],
+                            f.constants[i + 30]
+                        ],
+                        k
+                    ) +
+                    midSum +
+                    MathFP.integrateCubic(
+                        [
+                            f.bools[endI],
+                            f.bools[endI + 10],
+                            f.bools[endI + 20],
+                            f.bools[endI + 30]
+                        ],
+                        [
+                            f.shifts[endI],
+                            f.shifts[endI + 10],
+                            f.shifts[endI + 20],
+                            f.shifts[endI + 30]
+                        ],
+                        [
+                            f.constants[endI],
+                            f.constants[endI + 10],
+                            f.constants[endI + 20],
+                            f.constants[endI + 30]
+                        ],
+                        k - f.subIntervalIndex[endI]
+                    );
+            } else {
+                return
+                    MathFP.integrateCubic(
+                        [
+                            f.bools[i],
+                            f.bools[i + 10],
+                            f.bools[i + 20],
+                            f.bools[i + 30]
+                        ],
+                        [
+                            f.shifts[i],
+                            f.shifts[i + 10],
+                            f.shifts[i + 20],
+                            f.shifts[i + 30]
+                        ],
+                        [
+                            f.constants[i],
+                            f.constants[i + 10],
+                            f.constants[i + 20],
+                            f.constants[i + 30]
+                        ],
+                        k
+                    ) +
+                    MathFP.integrateCubic(
+                        [
+                            f.bools[endI],
+                            f.bools[endI + 10],
+                            f.bools[endI + 20],
+                            f.bools[endI + 30]
+                        ],
+                        [
+                            f.shifts[endI],
+                            f.shifts[endI + 10],
+                            f.shifts[endI + 20],
+                            f.shifts[endI + 30]
+                        ],
+                        [
+                            f.constants[endI],
+                            f.constants[endI + 10],
+                            f.constants[endI + 20],
+                            f.constants[endI + 30]
+                        ],
+                        k - f.subIntervalIndex[endI]
+                    );
+            }
+        }
     }
 
     function __fillListing(
@@ -219,7 +388,6 @@ contract Listing is PodTransfer {
                 l.toWallet,
                 l.constantPricing,
                 l.f.subIntervalIndex,
-                l.f.intervalIntegrations,
                 l.f.constants,
                 l.f.shifts,
                 l.f.bools

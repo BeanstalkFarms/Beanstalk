@@ -52,152 +52,81 @@ library MathFP {
         return high;
     }
 
-    // function evaluateDefiniteIntegralCubic(PiecewiseFormula calldata f, uint256 x, uint256 startIndex, uint256 endIndex) internal returns (uint256) {
-    //     require(f.subIntervalIndex[startIndex] <= x, "X cannot be outside the domain of subinterval index startIndex - endIndex");
-    //     require(f.subIntervalIndex)
-    //     uint256 result;
-    //     uint256 termValue1;
-    //     uint256 termValue2;
-    //     uint256 lastTermValue;
-    //     for (uint8 i = 0; i < 4; i++) {
-    //         if (constants[i] == 0) {
-    //             continue;
-    //         }
-    //         termValue1 = MathFP.muld(
-    //             (startIndex - k)**(i + 1),
-    //             constants[i] / (i + 1),
-    //             shifts[i]
-    //         );
-
-    //         //if the end value of the function is not in the domain
-    //         if (!endValue) {
-    //             termValue2 = MathFP.muld(
-    //                 (endIndex - k + (endIndex / 10000000))**(i + 1),
-    //                 constants[i] / (i + 1),
-    //                 shifts[i]
-    //             );
-    //         } else {
-    //             termValue2 = MathFP.muld(
-    //                 (endIndex - k)**(i + 1),
-    //                 constants[i] / (i + 1),
-    //                 shifts[i]
-    //             );
-    //         }
-    //         //check sign
-    //         if (bools[i]) {
-    //             result += termValue2 - termValue1;
-    //             if (lastTermValue != 0) {
-    //                 if (result > lastTermValue) {
-    //                     result -= lastTermValue;
-    //                     lastTermValue = 0;
-    //                 }
-    //             }
-    //             continue;
-    //         } else {
-    //             if (result > (termValue2 - termValue1)) {
-    //                 result -= termValue2 - termValue1;
-    //             } else {
-    //                 lastTermValue = (termValue2 - termValue1);
-    //             }
-    //             continue;
-    //         }
-    //     }
-    //     return result;
-    // }
-
     function integrateCubic(
-        bool signd0,
-        bool signd1,
-        bool signd2,
-        bool signd3,
-        uint8 shiftd0,
-        uint8 shiftd1,
-        uint8 shiftd2,
-        uint8 shiftd3,
-        uint240 constantd0,
-        uint240 constantd1,
-        uint240 constantd2,
-        uint240 constantd3,
+        bool[4] memory sign,
+        uint8[4] memory shift,
+        uint256[4] memory term,
         uint256 k
     ) internal pure returns (uint256) {
         //this function evaluates the area under curve of a cubic polynomial in the bounds of (0,k)
 
         uint256 y;
         uint256 yMinus;
-        if (!signd0 && !signd1 && !signd2 && !signd3) {
+        if (!sign[0] && !sign[1] && !sign[2] && !sign[3]) {
             return 0;
         }
 
-        if (signd0) {
-            y += MathFP.muld(k, constantd0, shiftd0);
+        if (sign[0]) {
+            y += MathFP.muld(k, term[0], shift[0]);
         } else {
-            yMinus += MathFP.muld(k, constantd0, shiftd0);
+            yMinus += MathFP.muld(k, term[0], shift[0]);
         }
 
-        if (signd1) {
-            y += MathFP.muld(k**2, constantd1 / 2, shiftd1);
+        if (sign[1]) {
+            y += MathFP.muld(k**2, term[1] / 2, shift[1]);
         } else {
-            yMinus += MathFP.muld(k**2, constantd1 / 2, shiftd1);
+            yMinus += MathFP.muld(k**2, term[1] / 2, shift[1]);
         }
 
-        if (signd2) {
-            y += MathFP.muld(k**3, constantd2 / 3, shiftd2);
+        if (sign[2]) {
+            y += MathFP.muld(k**3, term[2] / 3, shift[2]);
         } else {
-            yMinus += MathFP.muld(k**3, constantd2 / 3, shiftd2);
+            yMinus += MathFP.muld(k**3, term[2] / 3, shift[2]);
         }
 
-        if (signd3) {
-            y += MathFP.muld(k**4, constantd3 / 4, shiftd3);
+        if (sign[3]) {
+            y += MathFP.muld(k**4, term[3] / 4, shift[3]);
         } else {
-            yMinus += MathFP.muld(k**4, constantd3 / 4, shiftd3);
+            yMinus += MathFP.muld(k**4, term[3] / 4, shift[3]);
         }
 
         return y - yMinus;
     }
 
     function evaluateCubic(
-        bool signd0,
-        bool signd1,
-        bool signd2,
-        bool signd3,
-        uint8 shiftd0,
-        uint8 shiftd1,
-        uint8 shiftd2,
-        uint8 shiftd3,
-        uint240 constantd0,
-        uint240 constantd1,
-        uint240 constantd2,
-        uint240 constantd3,
+        bool[4] memory sign,
+        uint8[4] memory shift,
+        uint256[4] memory term,
         uint256 x
     ) internal pure returns (uint256) {
         uint256 y;
         uint256 yMinus;
-        if (!signd0 && !signd1 && !signd2 && !signd3) {
+        if (!sign[0] && !sign[1] && !sign[2] && !sign[3]) {
             return 0;
         }
 
-        if (signd0) {
-            y += MathFP.muld(1, constantd0, shiftd0);
+        if (sign[0]) {
+            y += MathFP.muld(1, term[0], shift[0]);
         } else {
-            yMinus += MathFP.muld(1, constantd0, shiftd0);
+            yMinus += MathFP.muld(1, term[0], shift[0]);
         }
 
-        if (signd1) {
-            y += MathFP.muld(x, constantd1, shiftd1);
+        if (sign[1]) {
+            y += MathFP.muld(x, term[1], shift[1]);
         } else {
-            yMinus += MathFP.muld(x, constantd1, shiftd1);
+            yMinus += MathFP.muld(x, term[1], shift[1]);
         }
 
-        if (signd2) {
-            y += MathFP.muld(x**2, constantd2, shiftd2);
+        if (sign[2]) {
+            y += MathFP.muld(x**2, term[2], shift[2]);
         } else {
-            yMinus += MathFP.muld(x**2, constantd2, shiftd2);
+            yMinus += MathFP.muld(x**2, term[2], shift[2]);
         }
 
-        if (signd3) {
-            y += MathFP.muld(x**3, constantd3, shiftd3);
+        if (sign[3]) {
+            y += MathFP.muld(x**3, term[3], shift[3]);
         } else {
-            yMinus += MathFP.muld(x**3, constantd3, shiftd3);
+            yMinus += MathFP.muld(x**3, term[3], shift[3]);
         }
 
         return y - yMinus;
