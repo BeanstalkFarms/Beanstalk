@@ -213,7 +213,6 @@ contract MarketplaceFacet is Order {
             maxPlaceInLine,
             constantPricing,
             f.subIntervalIndex,
-            f.intervalIntegrations,
             f.constants,
             f.shifts,
             f.bools

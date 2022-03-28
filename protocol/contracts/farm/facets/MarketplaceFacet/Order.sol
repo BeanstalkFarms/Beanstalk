@@ -30,7 +30,6 @@ contract Order is Listing {
         uint256 maxPlaceInLine,
         bool constantPricing,
         uint256[10] subIntervalIndex,
-        uint256[9] intervalIntegrations,
         uint256[40] constants,
         uint8[40] shifts,
         bool[40] bools
@@ -89,10 +88,23 @@ contract Order is Listing {
         if (constantPricing) {
             amountPods = (beanAmount * 1000000) / pricePerPod;
         } else {
-            for (uint8 i = 0; i < 9; i++) {
-                if (f.intervalIntegrations[i] != 0) {
-                    amountPods += f.intervalIntegrations[i];
-                }
+            for (uint8 i = 0; i < f.subIntervalIndex.length; i++) {
+                //integrate accross all domain
+                amountPods += MathFP.integrateCubic(
+                    f.bools[i],
+                    f.bools[i + 10],
+                    f.bools[i + 20],
+                    f.bools[i + 30],
+                    f.shifts[i],
+                    f.shifts[i + 10],
+                    f.shifts[i + 20],
+                    f.shifts[i + 30],
+                    f.constants[i],
+                    f.constants[i + 10],
+                    f.constants[i + 20],
+                    f.constants[i + 30],
+                    f.subIntervalIndex[i + 1] - f.subIntervalIndex[i]
+                );
             }
         }
         return
@@ -112,14 +124,14 @@ contract Order is Listing {
         bool constantPricing,
         MathFP.PiecewiseFormula calldata f
     ) internal returns (bytes32 id) {
+        //uint is always > 0 -> unneccesary require?
         require(amount > 0, "Marketplace: Order amount must be > 0.");
-        bytes32 id = createOrderId(
+        id = createOrderId(
             msg.sender,
             pricePerPod,
             maxPlaceInLine,
             constantPricing,
             f.subIntervalIndex,
-            f.intervalIntegrations,
             f.constants,
             f.shifts,
             f.bools
@@ -141,7 +153,6 @@ contract Order is Listing {
             maxPlaceInLine,
             constantPricing,
             f.subIntervalIndex,
-            f.intervalIntegrations,
             f.constants,
             f.shifts,
             f.bools
@@ -166,7 +177,6 @@ contract Order is Listing {
             o.maxPlaceInLine,
             o.constantPricing,
             o.f.subIntervalIndex,
-            o.f.intervalIntegrations,
             o.f.constants,
             o.f.shifts,
             o.f.bools
@@ -200,89 +210,65 @@ contract Order is Listing {
                 o.f.subIntervalIndex,
                 placeInLineEndPlot
             );
-            bool endValue = placeInLineEndPlot <
-                o.f.subIntervalIndex[startIndex + 1]; 
+
             if (startIndex == endIndex) {
-                amountBeans += MathFP.evaluateDefiniteIntegralCubic(
-                    placeInLine,
-                    placeInLineEndPlot,
-                    o.f.subIntervalIndex[startIndex],
-                    endValue,
-                    [
-                        o.f.constants[startIndex],
-                        o.f.constants[startIndex+10],
-                        o.f.constants[startIndex+20],
-                        o.f.constants[startIndex+30]
-                    ],
-                    [
-                        o.f.shifts[startIndex],
-                        o.f.shifts[startIndex+10],
-                        o.f.shifts[startIndex+20],
-                        o.f.shifts[startIndex+30]
-                    ],
-                    [
-                        o.f.bools[startIndex],
-                        o.f.bools[startIndex+10],
-                        o.f.bools[startIndex+20],
-                        o.f.bools[startIndex+30]
-                    ]
+                //if both are in the same piecewise domain, then we only need to integrate one cubic
+                amountBeans += MathFP.integrateCubic(
+                    o.f.bools[startIndex],
+                    o.f.bools[startIndex + 10],
+                    o.f.bools[startIndex + 20],
+                    o.f.bools[startIndex + 30],
+                    o.f.shifts[startIndex],
+                    o.f.shifts[startIndex + 10],
+                    o.f.shifts[startIndex + 20],
+                    o.f.shifts[startIndex + 30],
+                    o.f.constants[startIndex],
+                    o.f.constants[startIndex + 10],
+                    o.f.constants[startIndex + 20],
+                    o.f.constants[startIndex + 30],
+                    amount
                 );
             } else if (endIndex > startIndex) {
-                amountBeans += MathFP.evaluateDefiniteIntegralCubic(
-                    placeInLine,
-                    o.f.subIntervalIndex[startIndex + 1],
-                    o.f.subIntervalIndex[startIndex],
-                    false,
-                    [
-                        o.f.constants[startIndex],
-                        o.f.constants[startIndex+10],
-                        o.f.constants[startIndex+20],
-                        o.f.constants[startIndex+30]
-                    ],
-                    [
-                        o.f.shifts[startIndex],
-                        o.f.shifts[startIndex+10],
-                        o.f.shifts[startIndex+20],
-                        o.f.shifts[startIndex+30]
-                    ],
-                    [
-                        o.f.bools[startIndex],
-                        o.f.bools[startIndex+10],
-                        o.f.bools[startIndex+20],
-                        o.f.bools[startIndex+30]
-                    ]
+                //if the amount falls into more than one piecewise domain, we need to integrate them seperately
+
+                //integrate the last cubic in the piecewise
+                amountBeans += MathFP.integrateCubic(
+                    o.f.bools[endIndex],
+                    o.f.bools[endIndex + 10],
+                    o.f.bools[endIndex + 20],
+                    o.f.bools[endIndex + 30],
+                    o.f.shifts[endIndex],
+                    o.f.shifts[endIndex + 10],
+                    o.f.shifts[endIndex + 20],
+                    o.f.shifts[endIndex + 30],
+                    o.f.constants[endIndex],
+                    o.f.constants[endIndex + 10],
+                    o.f.constants[endIndex + 20],
+                    o.f.constants[endIndex + 30],
+                    amount - o.f.subIntervalIndex[endIndex]
                 );
 
+                //integrate the other (middle) ranges in the piecewise, if applicable
                 if (endIndex > (startIndex + 1)) {
                     for (uint8 i = 1; i <= (endIndex - startIndex - 1); i++) {
-                        amountBeans += o.f.intervalIntegrations[startIndex + i];
+                        amountBeans += MathFP.integrateCubic(
+                            o.f.bools[startIndex + i],
+                            o.f.bools[startIndex + i + 10],
+                            o.f.bools[startIndex + i + 20],
+                            o.f.bools[startIndex + i + 30],
+                            o.f.shifts[startIndex + i],
+                            o.f.shifts[startIndex + i + 10],
+                            o.f.shifts[startIndex + i + 20],
+                            o.f.shifts[startIndex + i + 30],
+                            o.f.constants[startIndex + i],
+                            o.f.constants[startIndex + i + 10],
+                            o.f.constants[startIndex + i + 20],
+                            o.f.constants[startIndex + i + 30],
+                            o.f.subIntervalIndex[startIndex + i + 1] -
+                                o.f.subIntervalIndex[startIndex + i]
+                        );
                     }
                 }
-
-                amountBeans += MathFP.evaluateDefiniteIntegralCubic(
-                    o.f.subIntervalIndex[endIndex],
-                    placeInLineEndPlot,
-                    o.f.subIntervalIndex[endIndex],
-                    true,
-                    [
-                        o.f.constants[endIndex],
-                        o.f.constants[endIndex+10],
-                        o.f.constants[endIndex+20],
-                        o.f.constants[endIndex+30]
-                    ],
-                    [
-                        o.f.shifts[endIndex],
-                        o.f.shifts[endIndex+10],
-                        o.f.shifts[endIndex+20],
-                        o.f.shifts[endIndex+30]
-                    ],
-                    [
-                        o.f.bools[endIndex],
-                        o.f.bools[endIndex+10],
-                        o.f.bools[endIndex+20],
-                        o.f.bools[endIndex+30]
-                    ]
-                );
             }
             amountBeans = amountBeans / 1000000;
         }
@@ -321,7 +307,6 @@ contract Order is Listing {
             maxPlaceInLine,
             constantPricing,
             f.subIntervalIndex,
-            f.intervalIntegrations,
             f.constants,
             f.shifts,
             f.bools
@@ -347,7 +332,6 @@ contract Order is Listing {
         uint256 maxPlaceInLine,
         bool constantPricing,
         uint256[10] memory subIntervalIndex,
-        uint256[9] memory intervalIntegrations,
         uint256[40] memory constants,
         uint8[40] memory shifts,
         bool[40] memory bools
@@ -359,7 +343,6 @@ contract Order is Listing {
                 maxPlaceInLine,
                 constantPricing,
                 subIntervalIndex,
-                intervalIntegrations,
                 constants,
                 shifts,
                 bools

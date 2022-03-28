@@ -7,148 +7,197 @@ library MathFP {
     using SafeMath for uint256;
     uint256 constant maxUintCons = 2**256 - 1;
 
-
     struct PiecewiseFormula {
         uint256[10] subIntervalIndex;
-        uint256[9] intervalIntegrations;
         uint256[40] constants;
         uint8[40] shifts;
         bool[40] bools;
-        // only need subIntervalIndex, intervalIntegrations, constants[40], shifts[40], bools[40]
+        // only need subIntervalIndex, constants[40], shifts[40], bools[40]
     }
 
-    struct CubicPolynomial {
-        uint240 constantd0;
-        uint240 constantd1;
-        uint240 constantd2;
-        uint240 constantd3;
-        uint8 shiftd0;
-        uint8 shiftd1;
-        uint8 shiftd2;
-        uint8 shiftd3;
-        bool signd0;
-        bool signd1;
-        bool signd2;
-        bool signd3;
-    }
+    // struct Polynomial {
+    //     uint240 constantd0;
+    //     uint240 constantd1;
+    //     uint240 constantd2;
+    //     uint240 constantd3;
+    //     uint8 shiftd0;
+    //     uint8 shiftd1;
+    //     uint8 shiftd2;
+    //     uint8 shiftd3;
+    //     bool signd0;
+    //     bool signd1;
+    //     bool signd2;
+    //     bool signd3;
+    // }
 
-    //probably shouldnt be done on chain
-    function findIndexWithinSubinterval(uint256[10] memory values, uint256 x)
+    //probably shouldnt be done on chain? we coiuld just check it instead
+    function findIndexWithinSubinterval(uint256[10] memory ranges, uint256 x)
         internal
         pure
         returns (uint256)
     {
         //array of values must be ordered
         uint256 low = 0;
-        uint256 mid = values.length - 1;
+        uint256 mid = ranges.length - 1;
         uint256 high = mid;
         while (low <= mid) {
             mid = (low + mid) / 2;
-            if (values[mid] < x) {
+            if (ranges[mid] < x) {
                 low = mid + 1;
-            } else if (values[mid] > x) {
+            } else if (ranges[mid] > x) {
                 high = mid - 1;
             }
         }
 
-        if (high > 0) {
-            return high;
-        } else {
-            return 0;
-        }
+        return high;
     }
 
-//might be better to just store the integral
-    function evaluateDefiniteIntegralCubic(
-        uint256 startIndex,
-        uint256 endIndex,
-        uint256 k,
-        bool endValue,
-        uint256[4] memory constants,
-        uint8[4] memory shifts,
-        bool[4] memory bools
+    // function evaluateDefiniteIntegralCubic(PiecewiseFormula calldata f, uint256 x, uint256 startIndex, uint256 endIndex) internal returns (uint256) {
+    //     require(f.subIntervalIndex[startIndex] <= x, "X cannot be outside the domain of subinterval index startIndex - endIndex");
+    //     require(f.subIntervalIndex)
+    //     uint256 result;
+    //     uint256 termValue1;
+    //     uint256 termValue2;
+    //     uint256 lastTermValue;
+    //     for (uint8 i = 0; i < 4; i++) {
+    //         if (constants[i] == 0) {
+    //             continue;
+    //         }
+    //         termValue1 = MathFP.muld(
+    //             (startIndex - k)**(i + 1),
+    //             constants[i] / (i + 1),
+    //             shifts[i]
+    //         );
+
+    //         //if the end value of the function is not in the domain
+    //         if (!endValue) {
+    //             termValue2 = MathFP.muld(
+    //                 (endIndex - k + (endIndex / 10000000))**(i + 1),
+    //                 constants[i] / (i + 1),
+    //                 shifts[i]
+    //             );
+    //         } else {
+    //             termValue2 = MathFP.muld(
+    //                 (endIndex - k)**(i + 1),
+    //                 constants[i] / (i + 1),
+    //                 shifts[i]
+    //             );
+    //         }
+    //         //check sign
+    //         if (bools[i]) {
+    //             result += termValue2 - termValue1;
+    //             if (lastTermValue != 0) {
+    //                 if (result > lastTermValue) {
+    //                     result -= lastTermValue;
+    //                     lastTermValue = 0;
+    //                 }
+    //             }
+    //             continue;
+    //         } else {
+    //             if (result > (termValue2 - termValue1)) {
+    //                 result -= termValue2 - termValue1;
+    //             } else {
+    //                 lastTermValue = (termValue2 - termValue1);
+    //             }
+    //             continue;
+    //         }
+    //     }
+    //     return result;
+    // }
+
+    function integrateCubic(
+        bool signd0,
+        bool signd1,
+        bool signd2,
+        bool signd3,
+        uint8 shiftd0,
+        uint8 shiftd1,
+        uint8 shiftd2,
+        uint8 shiftd3,
+        uint240 constantd0,
+        uint240 constantd1,
+        uint240 constantd2,
+        uint240 constantd3,
+        uint256 k
     ) internal pure returns (uint256) {
+        //this function evaluates the area under curve of a cubic polynomial in the bounds of (0,k)
 
-        uint256 result;
-        uint256 termValue1;
-        uint256 termValue2;
-        uint256 lastTermValue;
-        for (uint8 i = 0; i < 4; i++) {
-            if (constants[i] == 0) {
-                continue;
-            }
-            termValue1 = MathFP.muld(
-                (startIndex - k)**(i + 1),
-                constants[i] / (i + 1),
-                shifts[i]
-            );
-
-            //if the end value of the function is not in the domain
-            if (!endValue) {
-                termValue2 = MathFP.muld(
-                    (endIndex - k + (endIndex / 10000000))**(i + 1),
-                    constants[i] / (i + 1),
-                    shifts[i]
-                );
-            } else {
-                termValue2 = MathFP.muld(
-                    (endIndex - k)**(i + 1),
-                    constants[i] / (i + 1),
-                    shifts[i]
-                );
-            }
-            //check sign
-            if (bools[i]) {
-                result += termValue2 - termValue1;
-                if (lastTermValue != 0) {
-                    if (result > lastTermValue) {
-                        result -= lastTermValue;
-                        lastTermValue = 0;
-                    }
-                }
-                continue;
-            } else {
-                if (result > (termValue2 - termValue1)) {
-                    result -= termValue2 - termValue1;
-                } else {
-                    lastTermValue = (termValue2 - termValue1);
-                }
-                continue;
-            }
-        }
-        return result;
-    }
-
-    function evaluatePCubic(CubicPolynomial f, uint256 x) internal returns (uint256) {
-        
         uint256 y;
         uint256 yMinus;
-        if(!f.signd0 && !f.signd1 && !f.signd2 && !f.signd3){
+        if (!signd0 && !signd1 && !signd2 && !signd3) {
             return 0;
         }
 
-        if(f.signd0){
-           y += MathFP.muld(1, f.constantd0, f.shiftd0);
+        if (signd0) {
+            y += MathFP.muld(k, constantd0, shiftd0);
         } else {
-            yMinus += MathFP.muld(1, f.constantd0, f.shiftd0);
+            yMinus += MathFP.muld(k, constantd0, shiftd0);
         }
 
-        if(f.signd1) {
-            y += MathFP.muld(x, f.constantd1, f.shiftd1);
-        } else{
-           yMinus += MathFP.muld(x, f.constantd1, f.shiftd1);
+        if (signd1) {
+            y += MathFP.muld(k**2, constantd1 / 2, shiftd1);
+        } else {
+            yMinus += MathFP.muld(k**2, constantd1 / 2, shiftd1);
         }
 
-        if(f.signd2) {
-            y += MathFP.muld(x**2, f.constantd2, f.shiftd2);
+        if (signd2) {
+            y += MathFP.muld(k**3, constantd2 / 3, shiftd2);
         } else {
-            yMinus += MathFP.muld(x**2, f.constantd2, f.shiftd2);
+            yMinus += MathFP.muld(k**3, constantd2 / 3, shiftd2);
         }
 
-        if(f.signd3) {
-            y += MathFP.muld(x**3, f.constantd3, f.shiftd3);
+        if (signd3) {
+            y += MathFP.muld(k**4, constantd3 / 4, shiftd3);
         } else {
-            yMinus += MathFP.muld(x**3, f.constantd3, f.shiftd3);
+            yMinus += MathFP.muld(k**4, constantd3 / 4, shiftd3);
+        }
+
+        return y - yMinus;
+    }
+
+    function evaluateCubic(
+        bool signd0,
+        bool signd1,
+        bool signd2,
+        bool signd3,
+        uint8 shiftd0,
+        uint8 shiftd1,
+        uint8 shiftd2,
+        uint8 shiftd3,
+        uint240 constantd0,
+        uint240 constantd1,
+        uint240 constantd2,
+        uint240 constantd3,
+        uint256 x
+    ) internal pure returns (uint256) {
+        uint256 y;
+        uint256 yMinus;
+        if (!signd0 && !signd1 && !signd2 && !signd3) {
+            return 0;
+        }
+
+        if (signd0) {
+            y += MathFP.muld(1, constantd0, shiftd0);
+        } else {
+            yMinus += MathFP.muld(1, constantd0, shiftd0);
+        }
+
+        if (signd1) {
+            y += MathFP.muld(x, constantd1, shiftd1);
+        } else {
+            yMinus += MathFP.muld(x, constantd1, shiftd1);
+        }
+
+        if (signd2) {
+            y += MathFP.muld(x**2, constantd2, shiftd2);
+        } else {
+            yMinus += MathFP.muld(x**2, constantd2, shiftd2);
+        }
+
+        if (signd3) {
+            y += MathFP.muld(x**3, constantd3, shiftd3);
+        } else {
+            yMinus += MathFP.muld(x**3, constantd3, shiftd3);
         }
 
         return y - yMinus;

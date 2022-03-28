@@ -40,7 +40,6 @@ contract Listing is PodTransfer {
         bool toWallet,
         bool constantPricing,
         uint256[10] subIntervalIndex,
-        uint256[9] intervalIntegrations,
         uint256[40] constants,
         uint8[40] shifts,
         bool[40] bools
@@ -95,7 +94,6 @@ contract Listing is PodTransfer {
             toWallet,
             constantPricing,
             f.subIntervalIndex,
-            f.intervalIntegrations,
             f.constants,
             f.shifts,
             f.bools
@@ -111,7 +109,6 @@ contract Listing is PodTransfer {
             toWallet,
             constantPricing,
             f.subIntervalIndex,
-            f.intervalIntegrations,
             f.constants,
             f.shifts,
             f.bools
@@ -144,7 +141,6 @@ contract Listing is PodTransfer {
             l.toWallet,
             l.constantPricing,
             l.f.subIntervalIndex,
-            l.f.intervalIntegrations,
             l.f.constants,
             l.f.shifts,
             l.f.bools
@@ -175,112 +171,33 @@ contract Listing is PodTransfer {
             //if constant pricing for all pods, the amount is calculated by dividing the amount of beans by the price per pod
             amountBeans = (beanAmount * 1000000) / l.pricePerPod;
         } else {
-            // if the pricing is piecewise polynomial, the amount is calculated by integrating between placeInLine and the amount of beans
-            uint256 startIndex = MathFP.findIndexWithinSubinterval(
+            // calculate price per pod
+            uint256 i = MathFP.findIndexWithinSubinterval(
                 l.f.subIntervalIndex,
                 placeInLine
             );
-            uint256 endIndex = MathFP.findIndexWithinSubinterval(
-                l.f.subIntervalIndex,
-                placeInLine + beanAmount
+
+            uint256 pricePerPod = MathFP.evaluateCubic(
+                l.f.bools[i],
+                l.f.bools[i + 10],
+                l.f.bools[i + 20],
+                l.f.bools[i + 30],
+                l.f.shifts[i],
+                l.f.shifts[i + 10],
+                l.f.shifts[i + 20],
+                l.f.shifts[i + 30],
+                l.f.constants[i],
+                l.f.constants[i + 10],
+                l.f.constants[i + 20],
+                l.f.constants[i + 30],
+                placeInLine
             );
 
-            //compare to start value of next index, in this false case they must be equal
-            bool endValue = (placeInLine + beanAmount) <
-                l.f.subIntervalIndex[startIndex + 1];
-            // compute first index integral only if in same piecewise domain
-            //need to consider the range of values of index
-            if (startIndex == endIndex) {
-                amountBeans += MathFP.evaluateDefiniteIntegralCubic(
-                    placeInLine,
-                    placeInLine + beanAmount,
-                    l.f.subIntervalIndex[startIndex],
-                    endValue,
-                    [
-                        l.f.constants[startIndex],
-                        l.f.constants[startIndex+10],
-                        l.f.constants[startIndex+20],
-                        l.f.constants[startIndex+30]
-                    ],
-                    [
-                        l.f.shifts[startIndex],
-                        l.f.shifts[startIndex+10],
-                        l.f.shifts[startIndex+20],
-                        l.f.shifts[startIndex+30]
-                    ],
-                    [
-                        l.f.bools[startIndex],
-                        l.f.bools[startIndex+10],
-                        l.f.bools[startIndex+20],
-                        l.f.bools[startIndex+30]
-                    ]
-                );
-            } else if (endIndex > startIndex) {
-                //add the first part
-                amountBeans += MathFP.evaluateDefiniteIntegralCubic(
-                    placeInLine,
-                    l.f.subIntervalIndex[startIndex + 1],
-                    l.f.subIntervalIndex[startIndex],
-                    false,
-                    [
-                        l.f.constants[startIndex],
-                        l.f.constants[startIndex+10],
-                        l.f.constants[startIndex+20],
-                        l.f.constants[startIndex+30]
-                    ],
-                    [
-                        l.f.shifts[startIndex],
-                        l.f.shifts[startIndex+10],
-                        l.f.shifts[startIndex+20],
-                        l.f.shifts[startIndex+30]
-                    ],
-                    [
-                        l.f.bools[startIndex],
-                        l.f.bools[startIndex+10],
-                        l.f.bools[startIndex+20],
-                        l.f.bools[startIndex+30]
-                    ]
-                );
-
-                //add the middle parts
-                if (endIndex > (startIndex + 1)) {
-                    for (uint8 i = 1; i <= (endIndex - startIndex - 1); i++) {
-                        amountBeans += l.f.intervalIntegrations[startIndex + i];
-                    }
-                }
-
-                //add the end part
-                amountBeans += MathFP.evaluateDefiniteIntegralCubic(
-                    l.f.subIntervalIndex[endIndex],
-                    placeInLine + beanAmount,
-                    l.f.subIntervalIndex[endIndex],
-                    true,
-                    [
-                        l.f.constants[endIndex],
-                        l.f.constants[endIndex+10],
-                        l.f.constants[endIndex+20],
-                        l.f.constants[endIndex+30]
-                    ],
-                    [
-                        l.f.shifts[endIndex],
-                        l.f.shifts[endIndex+10],
-                        l.f.shifts[endIndex+20],
-                        l.f.shifts[endIndex+30]
-                    ],
-                    [
-                        l.f.bools[endIndex],
-                        l.f.bools[endIndex+10],
-                        l.f.bools[endIndex+20],
-                        l.f.bools[endIndex+30]
-                    ]
-                );
-            }
-            amountBeans = amountBeans / 1000000;
+            amountBeans = (beanAmount * 1000000) / pricePerPod;
         }
 
         //Need to fix rounding function
         // amountBeans = roundAmount(l.amount, amountBeans);
-
         __fillListing(l.account, msg.sender, l, amountBeans);
         _transferPlot(l.account, msg.sender, l.index, l.start, amountBeans);
     }
@@ -352,7 +269,6 @@ contract Listing is PodTransfer {
         bool toWallet,
         bool constantPricing,
         uint256[10] memory subIntervalIndex,
-        uint256[9] memory intervalIntegrations,
         uint256[40] memory constants,
         uint8[40] memory shifts,
         bool[40] memory bools
@@ -366,7 +282,6 @@ contract Listing is PodTransfer {
                 toWallet,
                 constantPricing,
                 subIntervalIndex,
-                intervalIntegrations,
                 constants,
                 shifts,
                 bools
