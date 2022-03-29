@@ -7,11 +7,6 @@ library MathFP {
     using SafeMath for uint256;
     uint256 constant maxUintCons = 2**256 - 1;
 
-    struct PiecewiseCubic {
-        uint256[10] subIntervalIndex;
-        PackedInt[40] packedValues;
-    }
-
     struct PackedInt {
         uint240 value;
         uint8 shift;
@@ -40,7 +35,7 @@ library MathFP {
     }
 
     //evaluate polynomial up to forth degree
-    function evaluatePolynomial(
+    function evaluateCubic(
         bool[4] calldata sign,
         uint8[4] calldata shift,
         uint256[4] calldata term,
@@ -54,6 +49,7 @@ library MathFP {
         }
         for(uint8 i = 0; i < 4; i++){
             if(integrateInstead){
+                //integrate the inputted polynomial from 0 - x
                 if(sign[i]){
                     y+=MathFP.muld(x**(i+1), term[i]/(i+1), shift[i]);
                     continue;
@@ -64,6 +60,7 @@ library MathFP {
                 }
             }
             else{
+                //evaluate the polynomial at x
                 if(sign[i]){
                     y+=MathFP.muld(x**i, term[i], shift[i]);
                     continue;

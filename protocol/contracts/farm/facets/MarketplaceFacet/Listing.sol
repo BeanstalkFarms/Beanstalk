@@ -28,6 +28,13 @@ contract Listing is PodTransfer {
         bool toWallet;
     }
 
+    struct PiecewiseCubic {
+        uint256[10] subIntervalIndex;
+        uint256[40] constants;
+        uint8[40] shifts;
+        bool[40] signs;
+    }
+
     struct DynamicListing {
         address account;
         uint256 index;
@@ -35,8 +42,10 @@ contract Listing is PodTransfer {
         uint256 amount;
         uint256 maxHarvestableIndex;
         bool toWallet;
-        MathFP.PiecewiseFormula f;
+        PiecewiseCubic f;
     }
+
+    
 
     event PodListingCreated(
         address indexed account,
@@ -125,7 +134,7 @@ contract Listing is PodTransfer {
         uint256 amount,
         uint256 maxHarvestableIndex,
         bool toWallet,
-        MathFP.PiecewiseFormula calldata f
+        PiecewiseCubic calldata f
     ) internal {
         uint256 plotSize = s.a[msg.sender].field.plots[index];
         require(
@@ -184,6 +193,19 @@ contract Listing is PodTransfer {
             l.toWallet
         );
         _fillListing(l, beanAmount + boughtBeanAmount);
+    }
+
+    function _buyBeansAndFillDynamicPodListing(
+        DynamicListing calldata l,
+        uint256 beanAmount,
+        uint256 buyBeanAmount
+    ) internal {
+        uint256 boughtBeanAmount = LibMarket.buyExactTokensToWallet(
+            buyBeanAmount,
+            l.account,
+            l.toWallet
+        );
+        _fillDynamicListing(l, beanAmount + boughtBeanAmount);
     }
 
     function _fillListing(Listing calldata l, uint256 beanAmount) internal {
@@ -282,8 +304,8 @@ contract Listing is PodTransfer {
     ) internal pure returns (uint256) {
         require(i >= endI);
 
-        //
         if (i == endI) {
+            //0 - k
             return
                 MathFP.integrateCubic(
                     [

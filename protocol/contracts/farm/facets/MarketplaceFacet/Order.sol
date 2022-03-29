@@ -19,7 +19,7 @@ contract Order is Listing {
         uint24 pricePerPod; // formula constant
         uint256 maxPlaceInLine; //highest index that the order will buy
         bool constantPricing;
-        MathFP.PiecewiseFormula f;
+        PiecewiseCubic f;
     }
 
     event PodOrderCreated(
