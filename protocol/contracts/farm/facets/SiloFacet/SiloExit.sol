@@ -198,9 +198,7 @@ contract SiloExit {
             uint256 numberOfActiveBips = s.g.activeBips.length;
             for (uint256 i = 0; i < numberOfActiveBips; i++) {
                 uint32 activeBip = s.g.activeBips[i];
-                if (s.g.voted[activeBip][account]) {
-                    return true;
-                }
+                if (s.g.voted[activeBip][account]) return true;
             }
         }
         return false;

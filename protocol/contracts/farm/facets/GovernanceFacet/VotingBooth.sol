@@ -50,11 +50,11 @@ contract VotingBooth is Bip {
         uint32[] memory actives = activeBips();
         uint32 lastSeason = 0;
         for (uint256 i = 0; i < actives.length; i++) {
-                uint32 activeBip = actives[i];
-                if (s.g.voted[activeBip][account]) {
-                    uint32 bipEnd = startFor(activeBip) + periodFor(activeBip);
-                    if (bipEnd > lastSeason) lastSeason = bipEnd;
-                }
+            uint32 activeBip = actives[i];
+            if (s.g.voted[activeBip][account]) {
+                uint32 bipEnd = startFor(activeBip).add(periodFor(activeBip));
+                if (bipEnd > lastSeason) lastSeason = bipEnd;
+            }
         }
         s.a[account].votedUntil = lastSeason;
     }

@@ -25,6 +25,7 @@ contract MockClaimFacet is ClaimFacet {
     {
         LibClaim.claim(c);
         LibMarket.allocateBeans(beansAllocated);
+        LibMarket.claimRefund(c);
     }
 
     function incrementBalanceOfWrappedE(address account, uint256 amount)

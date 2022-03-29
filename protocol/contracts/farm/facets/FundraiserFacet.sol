@@ -17,6 +17,7 @@ import "../../libraries/LibDibbler.sol";
 contract FundraiserFacet is ReentrancyGuard {
 
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
 
     event CreateFundraiser(uint32 indexed id, address fundraiser, address token, uint256 amount);
     event FundFundraiser(address indexed account, uint32 indexed id, uint256 amount);
@@ -27,7 +28,7 @@ contract FundraiserFacet is ReentrancyGuard {
         uint256 remaining = s.fundraisers[id].remaining;
         require(remaining > 0, "Fundraiser: already completed.");
         if (amount > remaining) amount = remaining;
-        SafeERC20.safeTransferFrom(IERC20(s.fundraisers[id].token), msg.sender, address(this), amount);
+        IERC20(s.fundraisers[id].token).safeTransferFrom(msg.sender, address(this), amount);
         s.fundraisers[id].remaining = remaining - amount; // Note: SafeMath is redundant here.
         emit FundFundraiser(msg.sender, id, amount);
         if (s.fundraisers[id].remaining == 0) completeFundraiser(id);
@@ -37,17 +38,19 @@ contract FundraiserFacet is ReentrancyGuard {
     }
 
     function completeFundraiser(uint32 id) internal {
-        SafeERC20.safeTransfer(IERC20(s.fundraisers[id].token), s.fundraisers[id].payee, s.fundraisers[id].total);
+        require(block.timestamp != s.fundraisers[id].start, "Fundraiser: start block");
+        IERC20(s.fundraisers[id].token).safeTransfer(s.fundraisers[id].payee, s.fundraisers[id].total);
         emit CompleteFundraiser(id);
     }
 
-    function createFundraiser(address payee, address token, uint256 amount) public nonReentrant {
+    function createFundraiser(address payee, address token, uint256 amount) public {
         require(msg.sender == address(this), "Fundraiser: sender must be Beanstalk.");
         uint32 id = s.fundraiserIndex;
         s.fundraisers[id].token = token;
         s.fundraisers[id].remaining = amount;
         s.fundraisers[id].total = amount;
         s.fundraisers[id].payee = payee;
+        s.fundraisers[id].start = block.timestamp;
         s.fundraiserIndex = id + 1;
         bean().mint(address(this), amount);
         emit CreateFundraiser(id, payee, token, amount);

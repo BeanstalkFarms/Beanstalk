@@ -93,7 +93,7 @@ contract GovernanceFacet is VotingBooth {
             vote_types[i] = true;
 
             // Place timelocks
-            uint32 newLock = startFor(bip) + periodFor(bip);
+            uint32 newLock = startFor(bip).add(periodFor(bip));
             if (newLock > lock) lock = newLock;
         }
 

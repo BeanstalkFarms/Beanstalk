@@ -124,6 +124,9 @@ contract Weather is Silo {
         int8 change = s.cases[caseId];
         if (change < 0) {
                 if (yield() <= (uint32(-change))) {
+                    // if (change < 0 && yield() <= uint32(-change)),
+                    // then 0 <= yield() <= type(int8).max because change is an int8.
+                    // Thus, downcasting yield() to an int8 will not cause overflow.
                     change = 1 - int8(yield());
                     s.w.yield = 1;
                 }
@@ -163,7 +166,7 @@ contract Weather is Silo {
         uint256 ethBought = LibMarket.sellToWETH(newBeans, 0);
         uint256 newHarvestable = 0;
         if (s.f.harvestable < s.r.pods) {
-            newHarvestable = s.r.pods.sub(s.f.harvestable);
+            newHarvestable = s.r.pods - s.f.harvestable;
             mintToHarvestable(newHarvestable);
         }
         if (ethBought == 0) return;

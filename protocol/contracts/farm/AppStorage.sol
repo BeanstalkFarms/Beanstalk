@@ -175,6 +175,7 @@ contract Storage {
         address token;
         uint256 total;
         uint256 remaining;
+        uint256 start;
     }
 
     struct SiloSettings {

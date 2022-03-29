@@ -401,7 +401,7 @@ library LibMarket {
     function claimRefund(LibClaim.Claim calldata c) internal {
         // The only case that a Claim triggers an Eth refund is 
         // if the farmer claims LP, removes the LP and wraps the underlying Beans
-        if (c.convertLP && c.toWallet && c.lpWithdrawals.length > 0) refund();
+        if (c.convertLP && !c.toWallet && c.lpWithdrawals.length > 0) refund();
     }
 
     function refund() internal {

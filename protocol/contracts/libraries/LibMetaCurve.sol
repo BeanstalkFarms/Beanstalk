@@ -43,7 +43,7 @@ library LibMetaCurve {
         return beanValue.add(curveValue);
     }
 
-    function getPrice(uint256[2] memory xp, uint256 a, uint256 D) private view returns (uint) {
+    function getPrice(uint256[2] memory xp, uint256 a, uint256 D) private pure returns (uint) {
         uint256 x = xp[i] + RATE_MULTIPLIER;
         uint256 y = getY(x, xp, a, D);
         uint256 dy = xp[j] - y - 1;

@@ -24,10 +24,10 @@ contract FieldFacet is BeanDibbler {
     function claimAndSowBeans(uint256 amount, LibClaim.Claim calldata claim)
         external
         nonReentrant
-        returns (uint256)
+        returns (uint256 pods)
     {
         allocateBeans(claim, amount);
-        return _sowBeans(amount);
+        pods = _sowBeans(amount);
         LibMarket.claimRefund(claim);
     }
 
