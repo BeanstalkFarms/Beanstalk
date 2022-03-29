@@ -5,16 +5,8 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 library MathFP {
     using SafeMath for uint256;
-    uint256 constant maxUintCons = 2**256 - 1;
 
-    struct PackedInt {
-        uint240 value;
-        uint8 shift;
-        bool sign;
-    }
-
-    //probably shouldnt be done on chain? we coiuld just check it instead
-    function findIndexWithinSubinterval(uint256[10] memory ranges, uint256 x)
+    function findIndexWithinSubinterval(uint256[10] calldata ranges, uint256 x)
         internal
         pure
         returns (uint256)
@@ -36,9 +28,9 @@ library MathFP {
 
     //evaluate polynomial up to forth degree
     function evaluateCubic(
-        bool[4] calldata sign,
-        uint8[4] calldata shift,
-        uint256[4] calldata term,
+        bool[4] memory sign,
+        uint8[4] memory shift,
+        uint256[4] memory term,
         uint256 x,
         bool integrateInstead
     ) internal pure returns (uint256) {
@@ -47,26 +39,27 @@ library MathFP {
         if (!sign[0] && !sign[1] && !sign[2] && !sign[3]) {
             return 0;
         }
-        for(uint8 i = 0; i < 4; i++){
-            if(integrateInstead){
+        for (uint8 i = 0; i < 4; i++) {
+            if (integrateInstead) {
                 //integrate the inputted polynomial from 0 - x
-                if(sign[i]){
-                    y+=MathFP.muld(x**(i+1), term[i]/(i+1), shift[i]);
+                if (sign[i]) {
+                    y += MathFP.muld(x**(i + 1), term[i] / (i + 1), shift[i]);
+                    continue;
+                } else {
+                    yMinus += MathFP.muld(
+                        x**(i + 1),
+                        term[i] / (i + 1),
+                        shift[i]
+                    );
                     continue;
                 }
-                else{
-                    yMinus+=MathFP.muld(x**(i+1), term[i]/(i+1), shift[i]);
-                    continue;
-                }
-            }
-            else{
+            } else {
                 //evaluate the polynomial at x
-                if(sign[i]){
-                    y+=MathFP.muld(x**i, term[i], shift[i]);
+                if (sign[i]) {
+                    y += MathFP.muld(x**i, term[i], shift[i]);
                     continue;
-                }
-                else{
-                    yMinus+=MathFP.muld(x**i, term[i], shift[i]);
+                } else {
+                    yMinus += MathFP.muld(x**i, term[i], shift[i]);
                     continue;
                 }
             }
