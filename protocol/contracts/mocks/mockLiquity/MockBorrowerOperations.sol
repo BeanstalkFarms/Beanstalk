@@ -13,8 +13,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./MockCheckContract.sol";
 import './LiquityMath.sol';
 
-import 'hardhat/console.sol';
-
 contract MockBorrowerOperations is MockLiquityBase, Ownable, MockCheckContract, IBorrowerOperations {
     string constant public NAME = "BorrowerOperations";
 
@@ -446,8 +444,8 @@ contract MockBorrowerOperations is MockLiquityBase, Ownable, MockCheckContract, 
 
     // Send ETH to Active Pool and increase its recorded ETH balance
     function _activePoolAddColl(IActivePool _activePool, uint _amount) internal {
-        (bool success, ) = address(_activePool).call{value: _amount}("");
-        //require(success, "BorrowerOps: Sending ETH to ActivePool failed");
+        (bool success, ) = address(_activePool).call{value: msg.value}("");
+        require(success, "BorrowerOps: Sending ETH to ActivePool failed");
     }
 
     // Issue the specified amount of LUSD to _account and increases the total active debt (_netDebtIncrease potentially includes a LUSDFee)

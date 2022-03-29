@@ -26,6 +26,7 @@ contract MockInitDiamond {
 
     address private constant WETH = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     address private constant BEAN = address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db);
+    address private constant BEANLUSD = address(0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D);
 
     AppStorage internal s;
 

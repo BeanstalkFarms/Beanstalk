@@ -52,7 +52,7 @@ contract SiloFacet is BeanSilo {
         _depositBeans(boughtAmount.add(amount));
     }
 
-    function depositBeans(uint256 amount) public { 
+    function depositBeans(uint256 amount) public payable { 
         bean().transferFrom(msg.sender, address(this), amount);
         _depositBeans(amount);
     }
@@ -76,6 +76,7 @@ contract SiloFacet is BeanSilo {
         uint256[] calldata amounts
     )
         external
+	payable
     {
         _withdrawBeans(crates, amounts);
     }
@@ -86,6 +87,7 @@ contract SiloFacet is BeanSilo {
         LibClaim.Claim calldata claim
     )
         external
+	payable
     {
         LibClaim.claim(claim);
         _withdrawBeans(crates, amounts);
@@ -95,7 +97,7 @@ contract SiloFacet is BeanSilo {
      * LP
     */
 
-    function claimAndDepositLP(uint256 amount, LibClaim.Claim calldata claim) external {
+    function claimAndDepositLP(uint256 amount, LibClaim.Claim calldata claim) external payable {
         LibClaim.claim(claim);
         depositLP(amount);
     }
@@ -115,7 +117,7 @@ contract SiloFacet is BeanSilo {
         _addAndDepositLP(lp, buyBeanAmount, buyEthAmount, al, set);
     }
 
-    function depositLP(uint256 amount) public {
+    function depositLP(uint256 amount) public payable {
         pair().transferFrom(msg.sender, address(this), amount);
         _depositLP(amount);
     }
@@ -156,6 +158,7 @@ contract SiloFacet is BeanSilo {
         LibClaim.Claim calldata claim
     )
         external
+	payable
     {
         LibClaim.claim(claim);
         _withdrawLP(crates, amounts);
@@ -166,6 +169,7 @@ contract SiloFacet is BeanSilo {
         calldata amounts
     )
         external
+	payable
     {
         _withdrawLP(crates, amounts);
     }

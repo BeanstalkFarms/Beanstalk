@@ -6,8 +6,8 @@ let userAddress, ownerAddress, user2Address;
 
 const minFee = '5000000000000000';
 
-const LUSD_TOKEN = "0x5f98805A4E8be255a32880FDeC7F6728C6568bA0";
 const TROVE_MANAGER = "0xA39739EF8b0231DbFA0DcdA07d7e29faAbCf4bb2";
+const LUSD_TOKEN = "0x5f98805A4E8be255a32880FDeC7F6728C6568bA0";
 const BORROWER_OPERATIONS = "0x24179CD81c9e782A4096035f7eC97fB8B783e007";
 const SORTED_TROVES = "0x8FdD3fbFEb32b28fb73555518f8b361bCeA741A6";
 const PRICE_FEED = "0x4c517D4e2C851CA76d7eC94B805269Df0f2201De";
@@ -44,6 +44,8 @@ describe('Liquity', function () {
     this.activePool = await ethers.getContractAt("MockActivePool", ACTIVE_POOL);
     this.farm = await ethers.getContractAt('MockFarmFacet', this.diamond.address);
     this.uniswap = await ethers.getContractAt('MockUniswapFacet', this.diamond.address);
+    this.fundraiser = await ethers.getContractAt("MockFundraiserFacet", this.diamond.address);
+    this.field = await ethers.getContractAt("MockFieldFacet", this.diamond.address);
 
     await this.pair.simulateTrade('2000', '2');
     await this.season.siloSunrise(0);
@@ -59,7 +61,7 @@ describe('Liquity', function () {
     await this.sortedTroves.setParams('1000', TROVE_MANAGER, BORROWER_OPERATIONS);
     await this.lusd.setAddresses(TROVE_MANAGER, STABILITY_POOL, BORROWER_OPERATIONS);
     await this.activePool.setAddresses(BORROWER_OPERATIONS, TROVE_MANAGER, STABILITY_POOL, DEFAULT_POOL);
-    await this.lusd.mockMint(this.pair.address, '100000000000000000000000000');
+    await this.lusd.mintE(this.pair.address, '100000000000000000000000000');
     await this.bean.mint(this.pair.address, '10000000000000000000000');
     await this.weth.mint(this.pair.address, '100000');
   });
@@ -109,47 +111,43 @@ describe('Liquity', function () {
 	await this.liquity.connect(user2).repayDebtE('4000', 2, Math.floor(Math.random() * 10));	
       });
     });
-    describe('Collateral -> Field', async function () {
+    describe('Collateral -> Curve -> Field', async function () {
      beforeEach(async function () {
 	await this.season.setSoilE('1000');
 	await this.season.setYieldE('1000');
      });
-	    /*
       it('collateralize and sow', async function () {
-	await this.farm.chainFarm(['0xb54da83c0000000000000000000000000000000000000000000000000011c37937e0800000000000000000000000000000000000000000000000006c6b935b8bbd40000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003', '0x5271978900000000000000000000000000000000000000000000000000000000000003e8'], {value: ethers.utils.parseEther('4')});
+	this.preSupply = await this.bean.balanceOf(userAddress);
+	await this.farm.connect(user).chainFarm(['0xb54da83c0000000000000000000000000000000000000000000000000011c37937e0800000000000000000000000000000000000000000000000006c6b935b8bbd4000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000a', '0x5271978900000000000000000000000000000000000000000000000000000000000003e8'], {value: ethers.utils.parseEther('4')});
+	expect(await this.field.totalPods()).to.eq('11000');
+	expect((await this.bean.balanceOf(userAddress)).sub(this.preSupply)).to.eq('-1000');
       });
       it('collateralize and fundraise', async function () {
-	await this.farm.chainFarm(['0xb54da83c0000000000000000000000000000000000000000000000000011c37937e0800000000000000000000000000000000000000000000000006c6b935b8bbd40000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003', '0x2db75d40000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003e8'], {value: ethers.utils.parseEther('4')});
+	this.preSupply = await this.bean.balanceOf(userAddress);
+	await this.fundraiser.createFundraiserE(userAddress, this.bean.address, '1000000');
+	expect(await this.field.totalPods()).to.eq('11000');
+	await this.farm.connect(user).chainFarm(['0xb54da83c0000000000000000000000000000000000000000000000000011c37937e0800000000000000000000000000000000000000000000000006c6b935b8bbd40000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003', '0x2db75d40000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003e8'], {value: ethers.utils.parseEther('4')});
+	expect(await this.field.totalPods()).to.eq('22000');
+	expect((await this.bean.balanceOf(userAddress)).sub(this.preSupply)).to.eq('-1000');
       });
     });
-    describe('Collateral -> Silo', async function () {
+    describe('Collateral -> Curve -> Silo', async function () {
       it('collateralize and deposit', async function () {
-	await this.farm.chainFarm(['0xb54da83c0000000000000000000000000000000000000000000000000011c37937e0800000000000000000000000000000000000000000000000006c6b935b8bbd40000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003', '0x75ce258d00000000000000000000000000000000000000000000000000000000000003e8'], {value: ethers.utils.parseEther('4')});
+	expect(await this.silo.totalDepositedBeans()).to.eq('0');
+	await this.farm.connect(user).chainFarm(['0xb54da83c0000000000000000000000000000000000000000000000000011c37937e0800000000000000000000000000000000000000000000000006c6b935b8bbd40000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003', '0x75ce258d00000000000000000000000000000000000000000000000000000000000003e8'], {value: ethers.utils.parseEther('4')});
+        expect(await this.silo.totalDepositedBeans()).to.eq('1000');
+	expect(await this.silo.balanceOfStalk(userAddress)).to.eq('10000000');
+	expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('2000');
+	expect(await this.silo.totalStalk()).to.eq('10000000');
       });
     });
-    describe('Collateral -> Beanstalk Functionality', async function () {
+    describe('Collateral -> Curve -> Beanstalk Functionality', async function () {
       it('collateralize and wrap beans', async function () {
-	await this.farm.chainFarm(['0xb54da83c0000000000000000000000000000000000000000000000000011c37937e0800000000000000000000000000000000000000000000000006c6b935b8bbd40000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003', '0xdde7283c00000000000000000000000000000000000000000000000000000000000003e8'], {value: ethers.utils.parseEther('4')});
+	this.preSupply = await this.bean.balanceOf(userAddress);
+	await this.farm.connect(user).chainFarm(['0xb54da83c0000000000000000000000000000000000000000000000000011c37937e0800000000000000000000000000000000000000000000000006c6b935b8bbd40000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003', '0xdde7283c00000000000000000000000000000000000000000000000000000000000003e8'], {value: ethers.utils.parseEther('4')});
+	expect((await this.bean.balanceOf(userAddress)).sub(this.preSupply)).to.eq('-1000');
+	expect(await this.claim.wrappedBeans(userAddress)).to.eq('1000');
       });
     });
-    */
-      it('collateralize and sow', async function () {
-	await this.farm.connect(user).chainFarm(['0x5271978900000000000000000000000000000000000000000000000000000000000003e8'], {value: ethers.utils.parseEther('4')});
-      });
-      it('collateralize and fundraise', async function () {
-	await this.farm.connect(user).chainFarm(['0x2db75d40000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003e8'], {value: ethers.utils.parseEther('4')});
-      });
-    });
-    describe('Collateral -> Silo', async function () {
-      it('collateralize and deposit', async function () {
-	await this.farm.connect(user).chainFarm(['0x75ce258d00000000000000000000000000000000000000000000000000000000000003e8']);//, {value: ethers.utils.parseEther('4')});
-      });
-    });
-    describe('Collateral -> Beanstalk Functionality', async function () {
-      it('collateralize and wrap beans', async function () {
-	await this.farm.connect(user).chainFarm(['0xdde7283c00000000000000000000000000000000000000000000000000000000000003e8'], {value: ethers.utils.parseEther('4')});
-      });
-    });
-
   });
 });

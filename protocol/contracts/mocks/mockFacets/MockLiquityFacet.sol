@@ -7,8 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import "../../farm/facets/LiquityFacet/LiquityFacet.sol";
 
-import 'hardhat/console.sol';
-
 /**
  * @author Beasley
  * @title Mock Liquity Facet
@@ -27,6 +25,4 @@ contract MockLiquityFacet is LiquityFacet {
    	function repayDebtE(uint256 lusdAmount, uint256 numTrials, uint256 randSeed) public {
 		_repayDebt(lusdAmount, numTrials, randSeed);
    	}
-
-
 }

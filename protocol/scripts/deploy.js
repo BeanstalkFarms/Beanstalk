@@ -105,7 +105,8 @@ async function main(scriptName, verbose = true, mock = false) {
     budgetFacet,
     farmFacet,
     uniswapFacet,
-    liquityFacet
+    liquityFacet,
+    curveFacet
   ] = mock ? await deployFacets(
     verbose,
     ['MockSeasonFacet',
@@ -122,7 +123,8 @@ async function main(scriptName, verbose = true, mock = false) {
       'MockBudgetFacet',
       'MockFarmFacet',
       'MockUniswapFacet',
-      'MockLiquityFacet'],
+      'MockLiquityFacet',
+      'MockCurveFacet'],
     ["LibClaim"],
     {
       "MockMarketplaceFacet": ["LibClaim"],
@@ -147,7 +149,8 @@ async function main(scriptName, verbose = true, mock = false) {
       'BudgetFacet',
       'FarmFacet',
       'UniswapFacet',
-      'LiquityFacet'],
+      'LiquityFacet',
+      'CurveFacet'],
     ["LibClaim"],
     {
       "SiloFacet": ["LibClaim"],
@@ -189,7 +192,8 @@ async function main(scriptName, verbose = true, mock = false) {
       ['BudgetFacet', budgetFacet],
       ['FarmFacet', farmFacet],
       ['UniswapFacet', uniswapFacet],
-      ['LiquityFacet', liquityFacet]
+      ['LiquityFacet', liquityFacet],
+      ['CurveFacet', curveFacet],
     ],
     owner: account,
     args: args,
@@ -246,6 +250,7 @@ async function main(scriptName, verbose = true, mock = false) {
     uniswap: uniswapFacet,
     liquity: liquityFacet,
     liquityManager: liquityManager,
+    curve: curveFacet,
   }
 }
 

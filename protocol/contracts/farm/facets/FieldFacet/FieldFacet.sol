@@ -24,6 +24,7 @@ contract FieldFacet is BeanDibbler {
 
     function claimAndSowBeans(uint256 amount, LibClaim.Claim calldata claim)
         external
+	payable
         returns (uint256)
     {
         allocateBeans(claim, amount);
@@ -50,7 +51,7 @@ contract FieldFacet is BeanDibbler {
         return _sowBeans(amount.add(amounts[1]));
     }
 
-    function sowBeans(uint256 amount) external returns (uint256) {
+    function sowBeans(uint256 amount) external payable returns (uint256) {
         bean().transferFrom(msg.sender, address(this), amount);
         return _sowBeans(amount);
     }

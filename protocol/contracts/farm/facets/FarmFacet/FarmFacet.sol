@@ -6,6 +6,8 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import '../../AppStorage.sol';
+import '../../../interfaces/IWETH.sol';
+import '../../../libraries/LibUserBalance.sol';
 
 import 'hardhat/console.sol';
 
@@ -55,7 +57,7 @@ contract FarmFacet {
 
 
    // We distinguish payable and non-payable delegatecalls because a delegatecall with msg.value cannot be performed with a non-payable function
-    function farm(bytes calldata data) public {
+    function farm(bytes calldata data) public payable {
 	DiamondStorage storage ds = diamondStorage();
 	bytes4 functionSelector;
 	assembly {

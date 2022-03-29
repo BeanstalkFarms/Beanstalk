@@ -25,7 +25,7 @@ contract LiquityFacet is Designate {
 		uint256 lusdAmount, 
 		uint256 numTrials, 
 		uint256 randSeed
-	) public payable {	
+	) public payable {
 		_collateralizeWithApproxHint(maxFeePercentage, lusdAmount, numTrials, randSeed);
 	}
 

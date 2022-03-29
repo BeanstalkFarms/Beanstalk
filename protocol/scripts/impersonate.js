@@ -2,6 +2,7 @@ var fs = require('fs');
 
 const THREE_CURVE = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
 const BEAN_3_CURVE = "0x3a70DfA7d2262988064A2D051dd47521E43c9BdD";
+const BEAN_LUSD = "0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D";
 
 const UNISWAP_FACTORY = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
 const UNISWAP_V2_ROUTER = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
@@ -33,6 +34,13 @@ async function curve() {
       BEAN_3_CURVE,
       JSON.parse(bean3CurveJson).deployedBytecode,
     ]);
+
+    let beanLusdJson = fs.readFileSync(`./artifacts/contracts/mocks/curve/MockBEAN-LUSD.vy/MockBEAN-LUSD.json`);
+    await network.provider.send("hardhat_setCode", [
+      BEAN_LUSD,
+      JSON.parse(beanLusdJson).deployedBytecode,
+    ]);
+
 }
 
 async function liquity() {

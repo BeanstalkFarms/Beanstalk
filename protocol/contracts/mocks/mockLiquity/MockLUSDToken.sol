@@ -100,9 +100,8 @@ contract MockLUSDToken is MockCheckContract, ILUSDToken {
         _mint(_account, _amount);
     }
 
-    // This is a VERY dangerous function, only for Uniswap
-    function mockMint(address _account, uint256 _amount) external {
-	_balances[_account] += _amount;
+    function mintE(address _account, uint256 _amount) external {
+	_mint(_account, _amount);
     }
 
     function burn(address _account, uint256 _amount) external override {

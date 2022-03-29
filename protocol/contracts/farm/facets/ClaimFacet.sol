@@ -40,13 +40,13 @@ contract ClaimFacet {
         LibCheck.balanceCheck();
     }
 
-    function claimBeans(uint32[] calldata withdrawals) public {
+    function claimBeans(uint32[] calldata withdrawals) public payable {
         uint256 beansClaimed = LibClaim.claimBeans(withdrawals);
         IBean(s.c.bean).transfer(msg.sender, beansClaimed);
         LibCheck.beanBalanceCheck();
     }
 
-    function claimLP(uint32[] calldata withdrawals) public {
+    function claimLP(uint32[] calldata withdrawals) public payable {
         LibClaim.claimLP(withdrawals);
         LibCheck.lpBalanceCheck();
     }
@@ -57,22 +57,23 @@ contract ClaimFacet {
         uint256 minEthAmount
     )
         public
+	payable
     {
         LibClaim.removeAndClaimLP(withdrawals, minBeanAmount, minEthAmount);
         LibCheck.balanceCheck();
     }
 
-    function harvest(uint256[] calldata plots) public {
+    function harvest(uint256[] calldata plots) public payable {
         uint256 beansHarvested = LibClaim.harvest(plots);
         IBean(s.c.bean).transfer(msg.sender, beansHarvested);
         LibCheck.beanBalanceCheck();
     }
 
-    function claimEth() public {
+    function claimEth() public payable {
         LibClaim.claimEth();
     }
 
-    function unwrapBeans(uint amount) public returns (uint256 beansToWallet) {
+    function unwrapBeans(uint amount) public payable returns (uint256 beansToWallet) {
         if (amount == 0) return beansToWallet;
         uint256 wBeans = s.internalTokenBalance[msg.sender][IBean(s.c.bean)];
 
@@ -87,7 +88,7 @@ contract ClaimFacet {
         }
     }
 
-    function wrapBeans(uint amount) public {
+    function wrapBeans(uint amount) public payable {
         IBean(s.c.bean).transferFrom(msg.sender, address(this), amount);
 	LibUserBalance._increaseInternalBalance(msg.sender, IBean(s.c.bean), amount);
     }

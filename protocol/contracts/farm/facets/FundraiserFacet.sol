@@ -8,8 +8,6 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../libraries/LibDibbler.sol";
 
-import 'hardhat/console.sol';
-
 /**
  * @author Publius
  * @title Funding Facet
@@ -25,7 +23,7 @@ contract FundraiserFacet {
     event CompleteFundraiser(uint32 indexed id);
     event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);
 
-    function fund(uint32 id, uint256 amount) public returns (uint256) {
+    function fund(uint32 id, uint256 amount) public payable returns (uint256) {
         _fund(id, amount);
         bean().burn(amount);
         return LibDibbler.sowNoSoil(amount, msg.sender);

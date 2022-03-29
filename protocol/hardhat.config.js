@@ -3,6 +3,7 @@ require("@nomiclabs/hardhat-ethers")
 require('hardhat-contract-sizer')
 require("hardhat-gas-reporter")
 require("solidity-coverage")
+require("@nomiclabs/hardhat-vyper");
 const fs = require('fs')
 
 module.exports = {
@@ -21,6 +22,9 @@ module.exports = {
         runs: 1000
       }
     }
+  },
+  vyper: {
+    version: "0.2.15",
   },
   gasReporter: {
     enabled: false
