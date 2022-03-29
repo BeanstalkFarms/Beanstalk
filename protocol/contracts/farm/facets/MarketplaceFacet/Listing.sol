@@ -26,7 +26,15 @@ contract Listing is PodTransfer {
         uint256 maxHarvestableIndex; // expiry
         uint24 pricePerPod; //3 -> starting price
         bool toWallet;
-        bool constantPricing;
+    }
+
+    struct DynamicListing {
+        address account;
+        uint256 index;
+        uint256 start;
+        uint256 amount;
+        uint256 maxHarvestableIndex;
+        bool toWallet;
         MathFP.PiecewiseFormula f;
     }
 
@@ -37,8 +45,16 @@ contract Listing is PodTransfer {
         uint256 amount,
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
+        bool toWallet
+    );
+
+    event DynamicPodListingCreated(
+        address indexed account,
+        uint256 index,
+        uint256 start,
+        uint256 amount,
+        uint256 maxHarvestableIndex,
         bool toWallet,
-        bool constantPricing,
         uint256[10] subIntervalIndex,
         uint256[40] constants,
         uint8[40] shifts,
@@ -65,9 +81,7 @@ contract Listing is PodTransfer {
         uint256 amount,
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
-        bool toWallet,
-        bool constantPricing,
-        MathFP.PiecewiseFormula calldata f
+        bool toWallet
     ) internal {
         uint256 plotSize = s.a[msg.sender].field.plots[index];
         require(
@@ -91,12 +105,7 @@ contract Listing is PodTransfer {
             amount,
             pricePerPod,
             maxHarvestableIndex,
-            toWallet,
-            constantPricing,
-            f.subIntervalIndex,
-            f.constants,
-            f.shifts,
-            f.bools
+            toWallet
         );
 
         emit PodListingCreated(
@@ -106,8 +115,53 @@ contract Listing is PodTransfer {
             amount,
             pricePerPod,
             maxHarvestableIndex,
+            toWallet
+        );
+    }
+
+    function _createDynamicPodListing(
+        uint256 index,
+        uint256 start,
+        uint256 amount,
+        uint256 maxHarvestableIndex,
+        bool toWallet,
+        MathFP.PiecewiseFormula calldata f
+    ) internal {
+        uint256 plotSize = s.a[msg.sender].field.plots[index];
+        require(
+            plotSize >= (start + amount) && amount > 0,
+            "Marketplace: Invalid Plot/Amount."
+        );
+
+        // require(
+        //     0 < pricePerPod,
+        //     "Marketplace: Pod price must be greater than 0."
+        // );
+        require(
+            s.f.harvestable <= maxHarvestableIndex,
+            "Marketplace: Expired."
+        );
+
+        if (s.podListings[index] != bytes32(0)) _cancelPodListing(index);
+
+        s.podListings[index] = hashDynamicListing(
+            start,
+            amount,
+            maxHarvestableIndex,
             toWallet,
-            constantPricing,
+            f.subIntervalIndex,
+            f.constants,
+            f.shifts,
+            f.bools
+        );
+
+        emit DynamicPodListingCreated(
+            msg.sender,
+            index,
+            start,
+            amount,
+            maxHarvestableIndex,
+            toWallet,
             f.subIntervalIndex,
             f.constants,
             f.shifts,
@@ -138,8 +192,35 @@ contract Listing is PodTransfer {
             l.amount,
             l.pricePerPod,
             l.maxHarvestableIndex,
+            l.toWallet
+        );
+
+        require(
+            s.podListings[l.index] == lHash,
+            "Marketplace: Listing does not exist."
+        );
+        uint256 plotSize = s.a[l.account].field.plots[l.index];
+        require(
+            plotSize >= (l.start + l.amount) && l.amount > 0,
+            "Marketplace: Invalid Plot/Amount."
+        );
+        require(
+            s.f.harvestable <= l.maxHarvestableIndex,
+            "Marketplace: Listing has expired."
+        );
+
+        uint256 amountBeans = (beanAmount * 1000000) / l.pricePerPod;
+
+        __fillListing(l.account, msg.sender, l, amountBeans);
+        _transferPlot(l.account, msg.sender, l.index, l.start, amountBeans);
+    }
+
+    function _fillDynamicListing(DynamicListing calldata l, uint256 beanAmount) internal {
+        bytes32 lHash = hashDynamicListing(
+            l.start,
+            l.amount,
+            l.maxHarvestableIndex,
             l.toWallet,
-            l.constantPricing,
             l.f.subIntervalIndex,
             l.f.constants,
             l.f.shifts,
@@ -160,75 +241,48 @@ contract Listing is PodTransfer {
             "Marketplace: Listing has expired."
         );
 
-        // calculate price per pod here
-        // uint256 amount = (beanAmount * 1000000) / l.pricePerPod;
         uint256 amountBeans;
 
-        //for listings, calculate the place in line of the first pod theyre buying
-        // uint256 placeInLine = l.index + l.start - s.f.harvestable;
-
-        if (l.constantPricing) {
-            //if constant pricing for all pods, the amount is calculated by dividing the amount of beans by the price per pod
-            amountBeans = (beanAmount * 1000000) / l.pricePerPod;
-        } else {
-            // calculate price per pod
-
-            uint256 i = MathFP.findIndexWithinSubinterval(
-                l.f.subIntervalIndex,
-                l.index + l.start - s.f.harvestable
-            );
-
-            // amountBeans = (beanAmount * 1000000) / MathFP.evaluateCubic(
-            //     l.f.bools[i],
-            //     l.f.bools[i + 10],
-            //     l.f.bools[i + 20],
-            //     l.f.bools[i + 30],
-            //     l.f.shifts[i],
-            //     l.f.shifts[i + 10],
-            //     l.f.shifts[i + 20],
-            //     l.f.shifts[i + 30],
-            //     l.f.constants[i],
-            //     l.f.constants[i + 10],
-            //     l.f.constants[i + 20],
-            //     l.f.constants[i + 30],
-            //     l.index + l.start - s.f.harvestable
-            // );
-            amountBeans = MathFP.evaluateCubic(
-                [
-                    l.f.bools[i],
-                    l.f.bools[i + 10],
-                    l.f.bools[i + 20],
-                    l.f.bools[i + 30]
-                ],
-                [
-                    l.f.shifts[i],
-                    l.f.shifts[i + 10],
-                    l.f.shifts[i + 20],
-                    l.f.shifts[i + 30]
-                ],
-                [
-                    l.f.constants[i],
-                    l.f.constants[i + 10],
-                    l.f.constants[i + 20],
-                    l.f.constants[i + 30]
-                ],
-                l.index + l.start - s.f.harvestable
-            );
-        }
-
-        //Need to fix rounding function
-        // amountBeans = roundAmount(l.amount, amountBeans);
-        __fillListing(l.account, msg.sender, l, amountBeans);
+        uint256 i = MathFP.findIndexWithinSubinterval(
+            l.f.subIntervalIndex,
+            l.index + l.start - s.f.harvestable
+        );
+       
+        amountBeans = MathFP.evaluateCubic(
+            [
+                l.f.bools[i],
+                l.f.bools[i + 10],
+                l.f.bools[i + 20],
+                l.f.bools[i + 30]
+            ],
+            [
+                l.f.shifts[i],
+                l.f.shifts[i + 10],
+                l.f.shifts[i + 20],
+                l.f.shifts[i + 30]
+            ],
+            [
+                l.f.constants[i],
+                l.f.constants[i + 10],
+                l.f.constants[i + 20],
+                l.f.constants[i + 30]
+            ],
+            l.index + l.start - s.f.harvestable
+        );
+    
+        __fillDynamicListing(l.account, msg.sender, l, amountBeans);
         _transferPlot(l.account, msg.sender, l.index, l.start, amountBeans);
     }
-
-    function _integrateCubic(
+    
+    function _integratePiecewiseCubic(
         MathFP.PiecewiseFormula calldata f,
         uint256 k,
         uint256 i,
         uint256 endI
     ) internal pure returns (uint256) {
         require(i >= endI);
+
+        //
         if (i == endI) {
             return
                 MathFP.integrateCubic(
@@ -368,6 +422,7 @@ contract Listing is PodTransfer {
                         k - f.subIntervalIndex[endI]
                     );
             }
+            //
         }
     }
 
@@ -385,8 +440,26 @@ contract Listing is PodTransfer {
                 l.amount.sub(amount),
                 l.pricePerPod,
                 l.maxHarvestableIndex,
+                l.toWallet
+            );
+        emit PodListingFilled(l.account, to, l.index, l.start, amount);
+        delete s.podListings[l.index];
+    }
+
+    function __fillDynamicListing(
+        address from,
+        address to,
+        DynamicListing calldata l,
+        uint256 amount
+    ) private {
+        require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
+
+        if (l.amount > amount)
+            s.podListings[l.index.add(amount).add(l.start)] = hashDynamicListing(
+                0,
+                l.amount.sub(amount),
+                l.maxHarvestableIndex,
                 l.toWallet,
-                l.constantPricing,
                 l.f.subIntervalIndex,
                 l.f.constants,
                 l.f.shifts,
@@ -434,8 +507,24 @@ contract Listing is PodTransfer {
         uint256 amount,
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
+        bool toWallet
+    ) internal pure returns (bytes32 lHash) {
+        lHash = keccak256(
+            abi.encodePacked(
+                start,
+                amount,
+                pricePerPod,
+                maxHarvestableIndex,
+                toWallet
+            )
+        );
+    }
+
+    function hashDynamicListing(
+        uint256 start,
+        uint256 amount,
+        uint256 maxHarvestableIndex,
         bool toWallet,
-        bool constantPricing,
         uint256[10] memory subIntervalIndex,
         uint256[40] memory constants,
         uint8[40] memory shifts,
@@ -445,10 +534,8 @@ contract Listing is PodTransfer {
             abi.encodePacked(
                 start,
                 amount,
-                pricePerPod,
                 maxHarvestableIndex,
                 toWallet,
-                constantPricing,
                 subIntervalIndex,
                 constants,
                 shifts,

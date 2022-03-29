@@ -110,8 +110,6 @@ var lowerBound = function (arr,value) {
     return high;
 }
 
-
-
 var createInterpolant = function(xs, ys) {
 	var i, length = xs.length;
 	
@@ -288,12 +286,17 @@ var createInterpolant = function(xs, ys) {
     //     var diffSq = diff*diff;
 	// 	return ys[i] + c1s[i]*diff + c2s[i]*diffSq + c3s[i]*diff*diffSq;
 	// };
+    //cut off at arbitrary number of digits
     var constants = ys.concat(c1s).concat(c2s).concat(c3s);
     var shifts = shiftsZero.concat(shiftsOne).concat(shiftsTwo).concat(shiftsThree);
     var bools = boolsZero.concat(boolsOne).concat(boolsTwo).concat(boolsThree);
+
+    //
     return {integrations, constants, shifts, bools};
 };
 
 module.exports = {
     createInterpolant
 };
+
+//minimum price delta

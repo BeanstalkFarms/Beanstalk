@@ -7,28 +7,16 @@ library MathFP {
     using SafeMath for uint256;
     uint256 constant maxUintCons = 2**256 - 1;
 
-    struct PiecewiseFormula {
+    struct PiecewiseCubic {
         uint256[10] subIntervalIndex;
-        uint256[40] constants;
-        uint8[40] shifts;
-        bool[40] bools;
-        // only need subIntervalIndex, constants[40], shifts[40], bools[40]
+        PackedInt[40] packedValues;
     }
 
-    // struct Polynomial {
-    //     uint240 constantd0;
-    //     uint240 constantd1;
-    //     uint240 constantd2;
-    //     uint240 constantd3;
-    //     uint8 shiftd0;
-    //     uint8 shiftd1;
-    //     uint8 shiftd2;
-    //     uint8 shiftd3;
-    //     bool signd0;
-    //     bool signd1;
-    //     bool signd2;
-    //     bool signd3;
-    // }
+    struct PackedInt {
+        uint240 value;
+        uint8 shift;
+        bool sign;
+    }
 
     //probably shouldnt be done on chain? we coiuld just check it instead
     function findIndexWithinSubinterval(uint256[10] memory ranges, uint256 x)
@@ -48,87 +36,44 @@ library MathFP {
                 high = mid - 1;
             }
         }
-
         return high;
     }
 
-    function integrateCubic(
-        bool[4] memory sign,
-        uint8[4] memory shift,
-        uint256[4] memory term,
-        uint256 k
-    ) internal pure returns (uint256) {
-        //this function evaluates the area under curve of a cubic polynomial in the bounds of (0,k)
-
-        uint256 y;
-        uint256 yMinus;
-        if (!sign[0] && !sign[1] && !sign[2] && !sign[3]) {
-            return 0;
-        }
-
-        if (sign[0]) {
-            y += MathFP.muld(k, term[0], shift[0]);
-        } else {
-            yMinus += MathFP.muld(k, term[0], shift[0]);
-        }
-
-        if (sign[1]) {
-            y += MathFP.muld(k**2, term[1] / 2, shift[1]);
-        } else {
-            yMinus += MathFP.muld(k**2, term[1] / 2, shift[1]);
-        }
-
-        if (sign[2]) {
-            y += MathFP.muld(k**3, term[2] / 3, shift[2]);
-        } else {
-            yMinus += MathFP.muld(k**3, term[2] / 3, shift[2]);
-        }
-
-        if (sign[3]) {
-            y += MathFP.muld(k**4, term[3] / 4, shift[3]);
-        } else {
-            yMinus += MathFP.muld(k**4, term[3] / 4, shift[3]);
-        }
-
-        return y - yMinus;
-    }
-
-    function evaluateCubic(
-        bool[4] memory sign,
-        uint8[4] memory shift,
-        uint256[4] memory term,
-        uint256 x
+    //evaluate polynomial up to forth degree
+    function evaluatePolynomial(
+        bool[4] calldata sign,
+        uint8[4] calldata shift,
+        uint256[4] calldata term,
+        uint256 x,
+        bool integrateInstead
     ) internal pure returns (uint256) {
         uint256 y;
         uint256 yMinus;
         if (!sign[0] && !sign[1] && !sign[2] && !sign[3]) {
             return 0;
         }
-
-        if (sign[0]) {
-            y += MathFP.muld(1, term[0], shift[0]);
-        } else {
-            yMinus += MathFP.muld(1, term[0], shift[0]);
+        for(uint8 i = 0; i < 4; i++){
+            if(integrateInstead){
+                if(sign[i]){
+                    y+=MathFP.muld(x**(i+1), term[i]/(i+1), shift[i]);
+                    continue;
+                }
+                else{
+                    yMinus+=MathFP.muld(x**(i+1), term[i]/(i+1), shift[i]);
+                    continue;
+                }
+            }
+            else{
+                if(sign[i]){
+                    y+=MathFP.muld(x**i, term[i], shift[i]);
+                    continue;
+                }
+                else{
+                    yMinus+=MathFP.muld(x**i, term[i], shift[i]);
+                    continue;
+                }
+            }
         }
-
-        if (sign[1]) {
-            y += MathFP.muld(x, term[1], shift[1]);
-        } else {
-            yMinus += MathFP.muld(x, term[1], shift[1]);
-        }
-
-        if (sign[2]) {
-            y += MathFP.muld(x**2, term[2], shift[2]);
-        } else {
-            yMinus += MathFP.muld(x**2, term[2], shift[2]);
-        }
-
-        if (sign[3]) {
-            y += MathFP.muld(x**3, term[3], shift[3]);
-        } else {
-            yMinus += MathFP.muld(x**3, term[3], shift[3]);
-        }
-
         return y - yMinus;
     }
 
