@@ -65,7 +65,7 @@ contract Listing is PodTransfer {
         uint256[10] subIntervalIndex,
         uint256[40] constants,
         uint8[40] shifts,
-        bool[40] bools
+        bool[40] signs
     );
 
     event PodListingFilled(

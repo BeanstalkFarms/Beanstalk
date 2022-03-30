@@ -173,13 +173,12 @@ contract MarketplaceFacet is Order {
 
     function claimAndCreateDynamicPodOrder(
         uint256 beanAmount,
-        uint24 pricePerPod,
         uint232 maxPlaceInLine,
         PiecewiseCubic calldata f,
         LibClaim.Claim calldata claim
     ) external returns (bytes32 id) {
         allocateBeans(claim, beanAmount, address(this));
-        id = _createDynamicPodOrder(beanAmount, pricePerPod, maxPlaceInLine, f);
+        id = _createDynamicPodOrder(beanAmount, maxPlaceInLine, f);
     }
 
     function buyBeansAndCreatePodOrder(
@@ -310,7 +309,7 @@ contract MarketplaceFacet is Order {
             f.subIntervalIndex,
             f.constants,
             f.shifts,
-            f.bools
+            f.signs
         );
         return s.podOrders[orderId];
     }

@@ -42,7 +42,7 @@ contract Order is Listing {
         uint256[10] subIntervalIndex,
         uint256[40] constants,
         uint8[40] shifts,
-        bool[40] bools
+        bool[40] signs
     );
 
     event PodOrderFilled(
@@ -164,7 +164,7 @@ contract Order is Listing {
             f.subIntervalIndex,
             f.constants,
             f.shifts,
-            f.bools
+            f.signs
         );
         if (s.podOrders[id] > 0)
             _cancelDynamicPodOrder(maxPlaceInLine, false, f);
@@ -177,7 +177,7 @@ contract Order is Listing {
             f.subIntervalIndex,
             f.constants,
             f.shifts,
-            f.bools
+            f.signs
         );
         return id;
     }
@@ -237,12 +237,11 @@ contract Order is Listing {
     ) internal {
         bytes32 id = createDynamicOrderId(
             o.account,
-            o.pricePerPod,
             o.maxPlaceInLine,
             o.f.subIntervalIndex,
             o.f.constants,
             o.f.shifts,
-            o.f.bools
+            o.f.signs
         );
         s.podOrders[id] = s.podOrders[id].sub(amount);
         require(
@@ -307,7 +306,7 @@ contract Order is Listing {
             f.subIntervalIndex,
             f.constants,
             f.shifts,
-            f.bools
+            f.signs
         );
 
         uint256 amountBeans = _getCostInBeans(
@@ -332,7 +331,7 @@ contract Order is Listing {
         PiecewiseCubic calldata f,
         uint256 x,
         uint256 amount
-    ) internal pure returns (uint256) {
+    ) internal returns (uint256) {
         uint256 startIndex = _findIndex(f.subIntervalIndex, x);
         uint256 endIndex = _findIndex(f.subIntervalIndex, x + amount);
 
@@ -340,10 +339,10 @@ contract Order is Listing {
             return
                 MathFP.evaluateCubic(
                     [
-                        f.bools[startIndex],
-                        f.bools[startIndex + 10],
-                        f.bools[startIndex + 20],
-                        f.bools[startIndex + 30]
+                        f.signs[startIndex],
+                        f.signs[startIndex + 10],
+                        f.signs[startIndex + 20],
+                        f.signs[startIndex + 30]
                     ],
                     [
                         f.shifts[startIndex],
@@ -369,10 +368,10 @@ contract Order is Listing {
             ) {
                 midSum += MathFP.evaluateCubic(
                     [
-                        f.bools[startIndex + midIndex],
-                        f.bools[startIndex + midIndex + 10],
-                        f.bools[startIndex + midIndex + 20],
-                        f.bools[startIndex + midIndex + 30]
+                        f.signs[startIndex + midIndex],
+                        f.signs[startIndex + midIndex + 10],
+                        f.signs[startIndex + midIndex + 20],
+                        f.signs[startIndex + midIndex + 30]
                     ],
                     [
                         f.shifts[startIndex + midIndex],
@@ -394,10 +393,10 @@ contract Order is Listing {
             return
                 MathFP.evaluateCubic(
                     [
-                        f.bools[startIndex],
-                        f.bools[startIndex + 10],
-                        f.bools[startIndex + 20],
-                        f.bools[startIndex + 30]
+                        f.signs[startIndex],
+                        f.signs[startIndex + 10],
+                        f.signs[startIndex + 20],
+                        f.signs[startIndex + 30]
                     ],
                     [
                         f.shifts[startIndex],
@@ -417,10 +416,10 @@ contract Order is Listing {
                 midSum +
                 MathFP.evaluateCubic(
                     [
-                        f.bools[endIndex],
-                        f.bools[endIndex + 10],
-                        f.bools[endIndex + 20],
-                        f.bools[endIndex + 30]
+                        f.signs[endIndex],
+                        f.signs[endIndex + 10],
+                        f.signs[endIndex + 20],
+                        f.signs[endIndex + 30]
                     ],
                     [
                         f.shifts[endIndex],
@@ -454,7 +453,7 @@ contract Order is Listing {
         uint256[10] memory subIntervalIndex,
         uint256[40] memory constants,
         uint8[40] memory shifts,
-        bool[40] memory bools
+        bool[40] memory signs
     ) internal pure returns (bytes32 id) {
         id = keccak256(
             abi.encodePacked(
@@ -463,7 +462,7 @@ contract Order is Listing {
                 subIntervalIndex,
                 constants,
                 shifts,
-                bools
+                signs
             )
         );
     }

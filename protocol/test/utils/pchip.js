@@ -232,13 +232,13 @@ var createInterpolant = function(xs, ys) {
     console.log(xs,ys,c1s,c2s,c3s)
     for (i = 0; i < originalL-1; i++) {
         if(ys[i] != 0){
-            if(i<9){
-                if(xs[i]!=0){
-                    rangeIntegration = calculateDefiniteIntegral(xs[i], xs[i+1], xs[i], c3s[i], c2s[i], c1s[i], ys[i]);
-                    console.log(rangeIntegration)
-                    integrations[i] = rangeIntegration;
-                }
-            }
+            // if(i<9){
+            //     if(xs[i]!=0){
+            //         rangeIntegration = calculateDefiniteIntegral(xs[i], xs[i+1], xs[i], c3s[i], c2s[i], c1s[i], ys[i]);
+            //         console.log(rangeIntegration)
+            //         integrations[i] = rangeIntegration;
+            //     }
+            // }
             shiftsZero[i] = calculateDecimalShifts(ys[i]);
             shiftsOne[i] = calculateDecimalShifts(c1s[i]);
             shiftsTwo[i] = calculateDecimalShifts(c2s[i])
