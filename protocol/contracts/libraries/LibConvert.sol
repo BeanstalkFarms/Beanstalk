@@ -86,7 +86,7 @@ library LibConvert {
         * If the Bean price is the Bean:Eth Uniswap V2 Pair is > $1, it will return 0 
         * lpToPeg solves the follow system of equations for lp:
         *   lp = eth * totalLP / e
-        *   f * eth = sqrt((e - eth) * (b - beans) * x/y) - (e - eth)
+        *   f * eth = sqrt((e - eth) * (b - beans) * y/x) - (e - eth)
         * such that
         *   e / b = (e - eth) / (b - beans)
         * given
@@ -101,7 +101,7 @@ library LibConvert {
         *   lp = eth * totalLP / e
         *   eth = e (c - 1) / (c + f - 1)
         * such that
-        *   c = sqrt((x * b) / (y * e))
+        *   c = sqrt((y * b) / (x * e))
         */
 
         (uint e, uint b) = reserves();
