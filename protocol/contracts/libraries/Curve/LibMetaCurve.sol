@@ -6,7 +6,6 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
-import "hardhat/console.sol";
 import "./LibCurve.sol";
 
 interface I3Curve {
@@ -35,7 +34,6 @@ library LibMetaCurve {
         uint256 a = IMeta3Curve(pool).A_precise();
         uint256[2] memory balances = IMeta3Curve(pool).get_previous_balances();
         uint256[2] memory xp = getXP(balances, 10 ** MAX_DECIMALS.sub(decimals));
-        console.log("XP1: %s, XP2: %s", xp[0], xp[1]);
         uint256 D =  LibCurve.getD(xp, a);
         price = LibCurve.getPrice(xp, a, D, 10**decimals);
     }
