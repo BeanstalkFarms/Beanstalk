@@ -18,12 +18,21 @@ contract CurveFacet {
 
 	AppStorage internal s;
 
-	function swapOnCurve(uint256 startingAmount, uint256 minEndAmount, uint8 fromToken, uint8 toToken, address poolAddress) public payable {
-		LibCurve.swapOnCurve(startingAmount, minEndAmount, fromToken, toToken, poolAddress);
+	function swapBeanLusd(uint256 startingAmount, uint256 minEndAmount, uint8 fromToken, uint8 toToken, address swapToken) public payable returns (uint256 amountReturned) {
+		amountReturned = LibCurve.swapBeanLusd(startingAmount, minEndAmount, fromToken, toToken, swapToken);
 	}
 
-	function addLiquidityCurve(uint256[] calldata amounts, uint256 minMintAmount, address poolAddress) public payable {
-		LibCurve.addLiquidity(amounts, minMintAmount, poolAddress);
+	function addLiquidityBeanLusd(uint256[2] calldata amounts, uint256 minMintAmount, address[2] calldata tokens) public payable returns (uint256 LPReturned) {
+		LPReturned = LibCurve.addLiquidityBeanLusd(amounts, minMintAmount, tokens);
 	}
+
+	function swapBean3Curve(uint256 startingAmount, uint256 minEndAmount, uint8 fromToken, uint8 toToken, address swapToken) public payable returns (uint256 amountReturned) {
+		amountReturned = LibCurve.swapBean3Curve(startingAmount, minEndAmount, fromToken, toToken, swapToken);
+	}
+
+	function addLiquidityBean3Curve(uint256[4] calldata amounts, uint256 minMintAmount, address[4] calldata tokens) public payable returns (uint256 LPReturned) {
+		LPReturned = LibCurve.addLiquidityBean3Curve(amounts, minMintAmount, tokens);
+	}
+
 }
 

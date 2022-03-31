@@ -30,10 +30,12 @@ describe('Curve', function () {
     await this.bean.mint(user2Address, '10000000000000')
     await this.bean.connect(user).approve(this.silo.address, '100000000000')
     await this.weth.connect(user).approve(this.silo.address, '100000000000');
-    await this.bean.connect(user).approve(this.beanLusd.address, '100000000000');
-    await this.lusd.connect(user).approve(this.beanLusd.address, '100000000000');
+    await this.lusd.connect(user).approve(this.silo.address, '100000000000');
+    await this.bean.connect(user2).approve(this.silo.address, '10000000000');
+    await this.lusd.connect(user2).approve(this.silo.address, '10000000000');
     await this.lusd.mintE(user2Address, '10000000000000');
-    await this.beanLusd.initialize("Bean-LUSD", "BEAN:LUSD", [BEAN, LUSD, ZERO, ZERO], [1, 1, 0, 0], '10000', '5000000000');
+    await this.lusd.mintE(userAddress, '10000000000000');
+    await this.beanLusd.initialize("Bean-LUSD", "BEAN:LUSD", [BEAN, LUSD, ZERO, ZERO], [1, 1, 0, 0], '100', '5000000000');
 
     await user.sendTransaction({
         to: this.weth.address,
@@ -48,15 +50,15 @@ describe('Curve', function () {
     it("adds liquidity to BEAN3CRV", async function () {
     });
     it("adds liquidity to BEANLUSD", async function () {
-      await this.curve.connect(user).addLiquidityCurve(['100000000', '1000000000'], 1, BEAN_LUSD);
+      await this.curve.connect(user).addLiquidityBeanLusd(['100000000', '1000000000'], 1, [BEAN, LUSD]);
     });
   });
   describe("Swap", async function () {
     it("swaps from BEAN -> LUSD", async function () {
-      await this.curve.connect(user).swapOnCurve('1000', '900', 0, 1, BEAN_LUSD);
+      await this.curve.connect(user).swapBeanLusd('1000', '900', 0, 1, BEAN);
     });
     it("swaps from LUSD -> BEAN", async function () {
-      await this.curve.connect(user).swapOnCurve('1000', '900', 1, 0, BEAN_LUSD); 
+      await this.curve.connect(user).swapBeanLusd('1000', '900', 1, 0, LUSD); 
     });
   });
 });

@@ -10,15 +10,15 @@ pragma experimental ABIEncoderV2;
  * Token3Curve interacts with non-meta curve pools
 */
 
-interface ICurve {
+interface IBeanLusdCurve {
 
 	/* 
 	 * Write Functions
 	*/
 
-	function add_liquidity(uint256[] calldata _amounts, uint256 _min_mint_amount) external returns (uint256);
+	function add_liquidity(uint256[2] calldata _amounts, uint256 _min_mint_amount) external returns (uint256);
 
-	function add_liquidity(uint256[] calldata _amounts, uint256 _min_mint_amount, address _receiver) external returns (uint256);
+	function add_liquidity(uint256[2] calldata _amounts, uint256 _min_mint_amount, address _receiver) external returns (uint256);
 
 	function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy) external returns (uint256);
 
@@ -32,9 +32,9 @@ interface ICurve {
 
 	function remove_liquidity(uint256 _burn_amount, uint256[] calldata _min_amounts, address _receiver) external returns (uint256);
 
-	function remove_liquidity_imbalance(uint256[] calldata _amounts, uint256 _max_burn_amount) external returns (uint256);
+	function remove_liquidity_imbalance(uint256[2] calldata _amounts, uint256 _max_burn_amount) external returns (uint256);
 	
-	function remove_liquidity_imbalance(uint256[] calldata _amounts, uint256 _max_burn_amount, address _receiver) external returns (uint256);
+	function remove_liquidity_imbalance(uint256[2] calldata _amounts, uint256 _max_burn_amount, address _receiver) external returns (uint256);
 
 	function remove_liquidity_one_coin(uint256 _burn_amount, int256 i, uint256 _min_received) external returns (uint256);
 	

@@ -27,6 +27,7 @@ contract MockInitDiamond {
     address private constant WETH = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     address private constant BEAN = address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db);
     address private constant BEANLUSD = address(0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D);
+    address private constant LUSD = address(0x5f98805A4E8be255a32880FDeC7F6728C6568bA0);
 
     AppStorage internal s;
 
@@ -40,6 +41,8 @@ contract MockInitDiamond {
         IBean(s.c.bean).approve(mockRouter, uint256(-1));
         IUniswapV2Pair(s.c.pair).approve(mockRouter, uint256(-1));
         IWETH(s.c.weth).approve(mockRouter, uint256(-1));
+	IBean(s.c.bean).approve(BEANLUSD, uint256(-1));
+	IERC20(LUSD).approve(BEANLUSD, uint256(-1));
 
         s.cases = [int8(3),1,0,0,-1,-3,-3,0,3,1,0,0,-1,-3,-3,0,3,3,1,0,0,0,-1,0,3,3,1,0,1,0,-1,0];
         s.w.yield = 1;
