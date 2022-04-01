@@ -73,34 +73,69 @@ describe('Curve Convert', function () {
     await this.silo.connect(user).depositBeans(toBean('1000'), false)
   });
 
-  describe('convert beans to lp', async function () {
-    describe('p > 1', async function () {
-      beforeEach(async function () {
-        await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
-      });
-      
-      it('properly calculates beans to peg', async function () {
-        expect(await this.convert.beansToPeg('0x3a70DfA7d2262988064A2D051dd47521E43c9BdD')).to.be.equal(ethers.utils.parseUnits('200', 6));
-      });
-      
-      describe("Basic convert", async function () {
-        beforeEach(async function () {
-          this.result = await this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('200'), to18('100')), ['2'], [toBean('200')], true);
-          const balances = await this.beanMetapool.get_balances()
-          console.log(balances);
-        })
+  describe('calclates beans to peg', async function () {
+    it('p > 1', async function () {
+      await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
+      expect(await this.convert.beansToPeg(this.beanMetapool.address)).to.be.equal(ethers.utils.parseUnits('200', 6));
+    });
 
-        it('converts to peg', async function () {
-          this.result = await this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('200'), to18('100')), ['2'], [toBean('200')], true);
-          const balances = await this.beanMetapool.get_balances()
-          expect(balances[0]).to.equal(toBean('1200'), to18('1200'))
-        });
+    it('p = 1', async function () {
+      expect(await this.convert.beansToPeg(this.beanMetapool.address)).to.be.equal('0');
+    });
 
-        it('removes bean deposit', async function () {
-          expect(await this.silo.beanDeposit(userAddress, 2)).to.equal('0');
-        })
-
-      })
+    it('p < 1', async function () {
+      await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
+      expect(await this.convert.beansToPeg(this.beanMetapool.address)).to.be.equal('0');
     });
   });
+
+  describe('calclates lp to peg', async function () {
+    it('p > 1', async function () {
+      // await this.beanMetapool.set_balances([toBean('0'), to18('200')])
+      // expect(await this.convert.beansToPeg(this.beanMetapool.address)).to.be.equal(ethers.utils.parseUnits('200', 6));
+    });
+
+    it('p = 1', async function () {
+      // await this.pair.faucet(this.silo.address, '10000')
+      // await this.pair.simulateTrade('20000', '20000');
+      // expect(await this.convert.lpToPeg(this.pair.address)).to.be.equal('0');
+    });
+
+    it('p < 1', async function () {
+      // await this.pair.simulateTrade('40000', '10000');
+      // await this.pair.faucet(this.silo.address, '10000')
+      // expect(await this.convert.lpToPeg(this.pair.address)).to.be.equal('5003');
+    });
+  })
+
+  // describe('convert beans to lp', async function () {
+
+    // describe('p > 1', async function () {
+    //   beforeEach(async function () {
+    //     await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
+    //   });
+      
+    //   it('properly calculates beans to peg', async function () {
+    //     expect(await this.convert.beansToPeg('0x3a70DfA7d2262988064A2D051dd47521E43c9BdD')).to.be.equal(ethers.utils.parseUnits('200', 6));
+    //   });
+      
+    //   describe("Basic convert", async function () {
+    //     beforeEach(async function () {
+    //       this.result = await this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('200'), to18('100')), ['2'], [toBean('200')], true);
+    //       const balances = await this.beanMetapool.get_balances()
+    //       console.log(balances);
+    //     })
+
+    //     it('converts to peg', async function () {
+    //       this.result = await this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('200'), to18('100')), ['2'], [toBean('200')], true);
+    //       const balances = await this.beanMetapool.get_balances()
+    //       expect(balances[0]).to.equal(toBean('1200'), to18('1200'))
+    //     });
+
+    //     it('removes bean deposit', async function () {
+    //       expect(await this.silo.beanDeposit(userAddress, 2)).to.equal('0');
+    //     })
+    //   })
+    // });
+  // });
 });

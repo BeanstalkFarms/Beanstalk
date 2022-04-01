@@ -57,8 +57,7 @@ library LibUniswapConvert {
         **/
 
         /// @notice Takes in parameters to convert beans into LP by selling some beans to the Peg for ETH to convert them into LP using Uniswap
-        /// @param beans - amount of beans to convert to Uniswap LP
-        /// @param minLP - min amount of Uniswap LP to receive
+        /// @param userData Contains convert input parameters for a Uniswap convert Beans to LP
     function convertBeansToLP(bytes memory userData) internal returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -104,7 +103,8 @@ library LibUniswapConvert {
 
     /// @notice Takes in encoded bytes for adding Curve LP in Uniswap LP, extracts the input data, and then calls the
     ///         _uniswapRemoveLPAndBuyToPeg and then _curveSellToPegAndAddLiquidity
-    /// @param userData Contains convert input parameters for a Curve AddCurveLPInUniswapLP convert
+    /// @param beans the amount of Beans to convert
+    /// @param minLP the minimum amount of LP to receive from converting
     function _uniswapSellToPegAndAddLiquidity(uint256 beans, uint256 minLP) private returns (uint256 lp, uint256 beansConverted) {
         (uint256 ethReserve, uint256 beanReserve) = reserves();
         uint256 maxSellBeans = _beansToPeg(ethReserve, beanReserve);

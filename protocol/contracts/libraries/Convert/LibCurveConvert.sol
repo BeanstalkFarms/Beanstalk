@@ -26,10 +26,10 @@ library LibCurveConvert {
     }
 
     function _beansToPeg(uint256[2] memory balances) private view returns (uint256 beans) {
-        balances = LibMetaCurve.getXP(balances);
-        console.log(balances[0]);
-        console.log(balances[1]);
-        beans = balances[1].sub(balances[0]).div(LibMetaCurve.rateMultiplier());
+        uint256 D = LibMetaCurve.getDFromBalances(balances);
+        uint256 pegBalance = D / 2e12;
+        if (pegBalance < balances[0]) return 0;
+        beans = pegBalance.sub(balances[0]);
     }
 
     function lpToPeg() internal view returns (uint256 lp) {
