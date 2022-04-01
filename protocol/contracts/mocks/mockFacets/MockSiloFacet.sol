@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -146,5 +146,16 @@ contract MockSiloFacet is SiloFacet {
             }
         }
         return (seasons, crates);
+    }
+
+    function uniswapLPToBean(uint256 amount) external view returns (uint256) {
+        return LibLPSilo.lpToLPBeans(amount);
+    }
+
+    function mockRefund(uint256 bean) external payable {
+        LibMarket.allocateEthRefund(msg.value, 0, false);
+        IBean(s.c.bean).transferFrom(msg.sender, address(this), bean);
+        LibMarket.allocateBeanRefund(bean, 0);
+        LibMarket.refund();
     }
 }

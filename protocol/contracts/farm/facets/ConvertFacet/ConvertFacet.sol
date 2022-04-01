@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./ConvertSilo.sol";
@@ -17,7 +17,7 @@ import "../../../libraries/LibClaim.sol";
 contract ConvertFacet is ConvertSilo {
 
     using SafeMath for uint256;
-    using SafeMath for uint32;
+    using LibSafeMath32 for uint32;
 
     function convertDepositedBeans(
         uint256 beans,
@@ -25,7 +25,8 @@ contract ConvertFacet is ConvertSilo {
         uint32[] memory crates,
         uint256[] memory amounts
     )
-        external 
+        external
+        updateSiloNonReentrant
     {
         LibInternal.updateSilo(msg.sender);
         (uint256 lp, uint256 beansConverted) = LibConvert.sellToPegAndAddLiquidity(beans, minLP);
@@ -46,6 +47,7 @@ contract ConvertFacet is ConvertSilo {
         uint256[] memory amounts
     )
         external
+        updateSiloNonReentrant
     {
         LibInternal.updateSilo(msg.sender);
         (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
@@ -67,6 +69,7 @@ contract ConvertFacet is ConvertSilo {
     )
         external
         payable
+        updateSiloNonReentrant
     {
         LibClaim.claim(claim);
         _convertAddAndDepositLP(lp, al, crates, amounts);
@@ -78,8 +81,9 @@ contract ConvertFacet is ConvertSilo {
         uint32[] memory crates,
         uint256[] memory amounts
     )
-        public
+        external
         payable
+        updateSiloNonReentrant
     {
         _convertAddAndDepositLP(lp, al, crates, amounts);
     }

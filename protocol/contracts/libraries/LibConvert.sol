@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
@@ -34,7 +34,7 @@ library LibConvert {
         (uint256 beansSold, uint256 wethBought) = LibMarket._sell(sellBeans, 1, address(this));
         (beansConverted,, lp) = LibMarket._addLiquidityWETH(wethBought,beans.sub(beansSold),1,1);
         require(lp >= minLP, "Convert: Not enough LP.");
-        beansConverted = beansConverted + beansSold;
+        beansConverted = beansConverted.add(beansSold);
     }
 
     function removeLPAndBuyToPeg(uint256 lp, uint256 minBeans) 
@@ -51,7 +51,7 @@ library LibConvert {
         require(beans >= minBeans, "Convert: Not enough Beans.");
     }
 
-    function removeLiquidityToBeanstalk(uint256 liqudity)
+    function removeLiquidityToBeanstalk(uint256 liquidity)
         private
         returns (uint256 beanAmount, uint256 ethAmount)
     {
@@ -59,11 +59,11 @@ library LibConvert {
         (beanAmount, ethAmount) = IUniswapV2Router02(ds.router).removeLiquidity(
             ds.bean,
             ds.weth,
-            liqudity,
+            liquidity,
             1,
             1,
             address(this),
-            block.timestamp.add(1)
+            block.timestamp
         );
     }
 
@@ -76,13 +76,40 @@ library LibConvert {
         beans = beans.mul(10000).div(9985);
     }
 
+    /// @notice lpToPeg solves for the maximum amount ofDeposited  LP that can be converted into Deposited Beans
+    /// @return lp - the quantity of LP that can be removed such that the eth recieved 
+    /// from removing the LP is the exact amount to buy the Bean price back to its peg.
     function lpToPeg() internal view returns (uint256 lp) {
+        /* 
+        * lpToPeg solves for the quantity of LP that can be removed such that the eth recieved from removing the LP
+        * is the exact amount to buy the Bean price back to its peg.
+        * If the Bean price is the Bean:Eth Uniswap V2 Pair is > $1, it will return 0 
+        * lpToPeg solves the follow system of equations for lp:
+        *   lp = eth * totalLP / e
+        *   f * eth = sqrt((e - eth) * (b - beans) * y/x) - (e - eth)
+        * such that
+        *   e / b = (e - eth) / (b - beans)
+        * given
+        *   e, b - the Ether, Bean reserves in the Eth:Bean Uniswap V2 Pair
+        *   y, x - the Ether, USDC reserves in the Eth:USDC Uniswap V2 Pair
+        *   f - is the inverse of the 1 sided fee on Uniswap (1 / .9985)
+        *   totaLP is the total supply of LP tokens
+        * where
+        *   eth, beans are the assets returned from removing lp liquidity token from the Eth:Bean Uniswap V2 Pair
+        *
+        * The solution can be reduced to:
+        *   lp = eth * totalLP / e
+        *   eth = e (c - 1) / (c + f - 1)
+        * such that
+        *   c = sqrt((y * b) / (x * e))
+        */
+
         (uint e, uint b) = reserves();
         (uint y, uint x) = pegReserves();
         uint c = sqrt(y*b*1e18/(x*e)).mul(1e9);
         if (c <= 1e18) return 0;
         uint num = e*(c.sub(1e18));
-        uint denom = c.sub(1502253380070105);
+        uint denom = c.sub(1502253380070105); // 0.1502253380070105 ~= f - 1 = 1 / .9985 - 1
         uint eth = num.div(denom);
         return eth.mul(totalLP()).div(e);
     }
@@ -110,7 +137,7 @@ library LibConvert {
     function reserves() private view returns (uint256, uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(s.c.pair).getReserves();
-        return (s.index == 0 ? reserve1 : reserve0, s.index == 0 ? reserve0 : reserve1);
+        return s.index == 0 ? (reserve1, reserve0) : (reserve0, reserve1);
     }
 
     // (ethereum, usdc)

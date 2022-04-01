@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/IDiamondCut.sol";
@@ -175,6 +175,7 @@ contract Storage {
         address token;
         uint256 total;
         uint256 remaining;
+        uint256 start;
     }
 
     struct SiloSettings {
@@ -196,7 +197,7 @@ struct AppStorage {
     Storage.Oracle o;
     Storage.Rain r;
     Storage.Silo s;
-    uint256 depreciated1;
+    uint256 reentrantStatus; // An intra-transaction state variable to protect against reentrance
     Storage.Weather w;
     Storage.AssetSilo bean;
     Storage.AssetSilo lp;
@@ -216,4 +217,9 @@ struct AppStorage {
     mapping(bytes32 => uint256) podOrders;
     mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
+
+    // These refund variables are intra-transaction state varables use to store refund amounts
+    uint256 refundStatus;
+    uint256 beanRefundAmount;
+    uint256 ethRefundAmount;
 }

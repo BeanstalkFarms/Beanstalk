@@ -13,8 +13,8 @@ interface I3Curve {
 
 interface IMeta3Curve {
     function A_precise() external view returns (uint256);
-    function get_balances() external view returns (uint256[2] memory);
-    function totalSupply() external view returns (uint256);
+    function get_previous_balances() external view returns (uint256[2] memory);
+    function get_virtual_price() external view returns (uint256);
 }
 
 library LibMetaCurve {
@@ -30,26 +30,28 @@ library LibMetaCurve {
     uint256 private constant j = 1;
 
     function bdv(uint256 amount) internal view returns (uint256) {
-        uint256[2] memory balances = IMeta3Curve(POOL).get_balances();
-        uint256 totalSupply = IMeta3Curve(POOL).totalSupply();
+        // By using previous balances and the virtual price, we protect against flash loan
+        uint256[2] memory balances = IMeta3Curve(POOL).get_previous_balances();
+        uint256 virtualPrice = IMeta3Curve(POOL).get_virtual_price();
         uint256[2] memory xp = getXP(balances);
-        uint256 price = getPrice(xp);
+        uint256 a = IMeta3Curve(POOL).A_precise();
+        uint256 D = getD(xp, a);
+        uint256 price = getPrice(xp, a, D);
+        uint256 totalSupply =  D * PRECISION / virtualPrice;
         uint256 beanValue = balances[0].mul(amount).div(totalSupply);
         uint256 curveValue = xp[1].mul(amount).div(totalSupply).div(price);
         return beanValue.add(curveValue);
     }
-    
-    function getPrice(uint256[2] memory xp) private view returns (uint) {
+
+    function getPrice(uint256[2] memory xp, uint256 a, uint256 D) private pure returns (uint) {
         uint256 x = xp[i] + RATE_MULTIPLIER;
-        uint256 y = getY(x, xp);
+        uint256 y = getY(x, xp, a, D);
         uint256 dy = xp[j] - y - 1;
         return dy;
     }
 
-    function getY(uint256 x, uint256[2] memory xp) private view returns (uint256) {
+    function getY(uint256 x, uint256[2] memory xp, uint256 a, uint256 D) private pure returns (uint256 y) {
         // Solution is taken from pool contract: 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD
-        uint256 a = IMeta3Curve(POOL).A_precise();
-        uint256 D = getD(xp, a);
         uint256 S_ = 0;
         uint256 _x = 0;
         uint256 y_prev = 0;
@@ -66,7 +68,7 @@ library LibMetaCurve {
 
         c = c * D * A_PRECISION / (Ann * N_COINS);
         uint256 b = S_ + D * A_PRECISION / Ann; // - D
-        uint256 y = D;
+        y = D;
 
         for (uint256 _i = 0; _i < 255; _i++) {
             y_prev = y;

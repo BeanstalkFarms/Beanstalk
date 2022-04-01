@@ -17,7 +17,7 @@ contract Listing is PodTransfer {
 
     using SafeMath for uint256;
 
-    struct Listing {
+    struct PodListing {
         address account;
         uint256 index;
         uint256 start;
@@ -74,7 +74,7 @@ contract Listing is PodTransfer {
      */
 
     function _buyBeansAndFillPodListing(
-        Listing calldata l,
+        PodListing calldata l,
         uint256 beanAmount,
         uint256 buyBeanAmount
     ) internal {
@@ -84,10 +84,11 @@ contract Listing is PodTransfer {
             l.toWallet
         );
         _fillListing(l, beanAmount+boughtBeanAmount);
+        LibMarket.refund();
     }
 
     function _fillListing(
-        Listing calldata l,
+        PodListing calldata l,
         uint256 beanAmount
     ) internal {
         bytes32 lHash = hashListing(l.start, l.amount, l.pricePerPod, l.maxHarvestableIndex, l.toWallet);
@@ -99,14 +100,13 @@ contract Listing is PodTransfer {
         uint256 amount = (beanAmount * 1000000) / l.pricePerPod;
         amount = roundAmount(l, amount);
 
-        __fillListing(l.account, msg.sender, l, amount);
+        __fillListing(msg.sender, l, amount);
         _transferPlot(l.account, msg.sender, l.index, l.start, amount);
     }
 
     function __fillListing(
-        address from,
         address to,
-        Listing calldata l,
+        PodListing calldata l,
         uint256 amount
     ) private {
         require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
@@ -139,7 +139,7 @@ contract Listing is PodTransfer {
     // If remainder left (always <1 pod) that would otherwise be unpurchaseable
     // due to rounding from calculating amount, give it to last buyer
     function roundAmount(
-        Listing calldata l,
+        PodListing calldata l,
         uint256 amount
     )  pure private returns (uint256) {
         if ((l.amount - amount) < (1000000 / l.pricePerPod))

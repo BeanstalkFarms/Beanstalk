@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./UpdateSilo.sol";
@@ -15,7 +15,7 @@ import "../../../libraries/Silo/LibLPSilo.sol";
 contract LPSilo is UpdateSilo {
 
     using SafeMath for uint256;
-    using SafeMath for uint32;
+    using LibSafeMath32 for uint32;
 
     event LPDeposit(address indexed account, uint256 season, uint256 lp, uint256 seeds);
     event LPRemove(address indexed account, uint32[] crates, uint256[] crateLP, uint256 lp);
@@ -46,22 +46,17 @@ contract LPSilo is UpdateSilo {
     **/
 
     function _depositLP(uint256 amount) internal {
-        updateSilo(msg.sender);
-        uint32 _s = season();
         uint256 lpb = LibLPSilo.lpToLPBeans(amount);
         require(lpb > 0, "Silo: No Beans under LP.");
         LibLPSilo.incrementDepositedLP(amount);
         uint256 seeds = lpb.mul(C.getSeedsPerLPBean());
-        if (season() == _s) LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000));
-        else LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)));
-
-        LibLPSilo.addLPDeposit(msg.sender, _s, amount, lpb.mul(C.getSeedsPerLPBean()));
+        LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(C.getStalkPerBean()));
+        LibLPSilo.addLPDeposit(msg.sender, season(), amount, seeds);
 
         LibCheck.lpBalanceCheck();
     }
 
     function _withdrawLP(uint32[] calldata crates, uint256[] calldata amounts) internal {
-        updateSilo(msg.sender);
         require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         (
             uint256 lpRemoved,

@@ -18,6 +18,14 @@ async function checkUserPlots(field, address, plots) {
   }
 }
 
+async function getEthSpentOnGas(result) {
+  const receipt = await result.wait()
+  return receipt.effectiveGasPrice.mul(receipt.cumulativeGasUsed);
+}
+
+const toBean = (amount) => ethers.utils.parseUnits(amount, 6);
+const to18 = (amount) => ethers.utils.parseEther(amount);
+
 describe('Field', function () {
 
   before(async function () {
@@ -121,6 +129,41 @@ describe('Field', function () {
         } else {
           expect('0').to.eq(this.testData.state)
         }
+      })
+    })
+  })
+
+  describe("Buy and sow", async function () {
+    beforeEach(async function () {
+      await this.season.resetAccount(userAddress)
+      await this.season.resetState()
+      await this.bean.connect(user).burn(await this.bean.balanceOf(userAddress))
+      await this.bean.connect(user).approve(this.field.address, to18('1000000000000'))
+      await this.bean.mint(userAddress, toBean('100000'))
+      await this.season.setYieldE('1')
+    })
+
+    describe("Half buy, half Beans", async function () {
+      beforeEach(async function () {
+        const beforeBeans = await this.bean.balanceOf(userAddress);
+        const beforeEth = await ethers.provider.getBalance(userAddress);
+        await this.pair.simulateTrade(toBean('5000'), to18('1'));
+        this.field.incrementTotalSoilE(toBean('5000'));
+        this.result = await this.field.connect(user).buyAndSowBeans(toBean('2500'), toBean('2500'), {value: to18('1') })
+        const ethSpentOnGas = await getEthSpentOnGas(this.result);
+        this.deltaBeans = beforeBeans.sub(await this.bean.balanceOf(userAddress));
+        this.deltaEth = beforeEth.sub(await ethers.provider.getBalance(userAddress)).sub(ethSpentOnGas);
+      })
+
+      it("updates user balances", async function () {
+        expect(this.deltaBeans).to.equal(toBean('2500'))
+        expect(this.deltaEth).to.equal(to18('1'))
+        expect(await this.field.plot(userAddress, '0')).to.eq(toBean('5050'))
+      })
+
+      it('updates total balance', async function() {
+        expect(await this.field.totalPods()).to.eq(toBean('5050'))
+        expect(await this.field.totalSoil()).to.eq('0')
       })
     })
   })
