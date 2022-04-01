@@ -26,12 +26,12 @@ contract Listing is PodTransfer {
     }
 
     struct Listing {
-        address account; //20
-        uint256 index; //32
-        uint256 start; //32
-        uint256 amount; //32
-        uint256 maxHarvestableIndex; // expiry
-        uint24 pricePerPod; //3 -> starting price
+        address account; 
+        uint256 index; 
+        uint256 start; 
+        uint256 amount; 
+        uint24 pricePerPod;
+        uint256 maxHarvestableIndex; 
         bool toWallet;
     }
 
@@ -274,7 +274,7 @@ contract Listing is PodTransfer {
     }
 
     function _findIndex(uint256[10] calldata subIntervalIndex, uint256 x)
-        internal
+        internal pure 
         returns (uint256)
     {
         return MathFP.findIndexWithinSubinterval(subIntervalIndex, x);
@@ -284,7 +284,7 @@ contract Listing is PodTransfer {
         PiecewiseCubic calldata f,
         uint256 x,
         uint256 i
-    ) internal returns (uint256 amountBeans) {
+    ) internal pure returns (uint256 amountBeans) {
         amountBeans = MathFP.evaluateCubic(
             [f.signs[i], f.signs[i + 10], f.signs[i + 20], f.signs[i + 30]],
             [f.shifts[i], f.shifts[i + 10], f.shifts[i + 20], f.shifts[i + 30]],
