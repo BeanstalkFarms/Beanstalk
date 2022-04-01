@@ -69,6 +69,7 @@ contract ConvertSilo is ReentrancyGuard {
         lp = lp.add(w.newLP);
         _depositLP(lp, LibLPSilo.lpToLPBeans(lp), depositSeason);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
+        LibMarket.refund();
         LibCheck.balanceCheck();
     }
 
