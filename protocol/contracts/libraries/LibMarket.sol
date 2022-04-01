@@ -176,7 +176,7 @@ library LibMarket {
         (uint256 ethSold, uint256 beans) = _buyWithWETH(buyBeanAmount, amounts[0], address(this));
 
         // If beans bought does not cover the amount of money to move to LP
-	    if (al.beanAmount > buyBeanAmount) {
+        if (al.beanAmount > buyBeanAmount) {
             uint256 newBeanAmount = al.beanAmount - buyBeanAmount;
             allocateBeans(newBeanAmount);
             beans = beans.add(newBeanAmount);

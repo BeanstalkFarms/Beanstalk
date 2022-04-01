@@ -36,7 +36,7 @@ contract ClaimFacet is ReentrancyGuard {
     function claimAndUnwrapBeans(LibClaim.Claim calldata c, uint256 amount) external payable nonReentrant returns (uint256 beansClaimed) {
         beansClaimed = LibClaim.claim(c);
         beansClaimed = beansClaimed.add(_unwrapBeans(amount));
-
+        LibMarket.claimRefund(c);
         LibCheck.balanceCheck();
     }
 

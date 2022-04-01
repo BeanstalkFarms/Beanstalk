@@ -59,7 +59,6 @@ contract SiloV2Facet is TokenSilo {
         external 
         updateSilo 
     {
-        LibInternal.updateSilo(msg.sender);
         _withdrawDeposit(token, season, amount);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
@@ -68,13 +67,11 @@ contract SiloV2Facet is TokenSilo {
         external 
         updateSilo 
     {
-        LibInternal.updateSilo(msg.sender);
         _withdrawDeposits(token, seasons, amounts);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
     function withdrawTokensBySeason(WithdrawSeason[] calldata withdraws) external updateSilo {
-        LibInternal.updateSilo(msg.sender);
         for (uint256 i = 0; i < withdraws.length; i++) {
             _withdrawDeposit(withdraws[i].token, withdraws[i].season, withdraws[i].amount);
         }
@@ -82,7 +79,6 @@ contract SiloV2Facet is TokenSilo {
     }
 
     function withdrawTokensBySeasons(WithdrawSeasons[] calldata withdraws) external updateSilo {
-        LibInternal.updateSilo(msg.sender);
         for (uint256 i = 0; i < withdraws.length; i++) {
             _withdrawDeposits(withdraws[i].token, withdraws[i].seasons, withdraws[i].amounts);
         }
@@ -93,21 +89,21 @@ contract SiloV2Facet is TokenSilo {
      * Claim
      */
 
-    function claimTokenBySeason(address token, uint32 season) external updateSilo {
+    function claimTokenBySeason(address token, uint32 season) external {
         _claimTokenBySeason(token, season);
     }
 
-    function claimTokenBySeasons(address token, uint32[] calldata seasons) external updateSilo {
+    function claimTokenBySeasons(address token, uint32[] calldata seasons) external {
         _claimTokenBySeasons(token, seasons);
     }
 
-    function claimTokensBySeason(SeasonClaim[] calldata claims) external updateSilo {
+    function claimTokensBySeason(SeasonClaim[] calldata claims) external {
         for (uint256 i = 0; i < claims.length; i++) {
             _claimTokenBySeason(claims[i].token, claims[i].season);
         }
     }
 
-    function claimTokensBySeasons(SeasonsClaim[] calldata claims) external updateSilo {
+    function claimTokensBySeasons(SeasonsClaim[] calldata claims) external {
         for (uint256 i = 0; i < claims.length; i++) {
             _claimTokenBySeasons(claims[i].token, claims[i].seasons);
         }
@@ -129,7 +125,7 @@ contract SiloV2Facet is TokenSilo {
      * Whitelist
      */
 
-    function whitelistToken(address token, bytes4 selector, uint32 stalk, uint32 seeds) external updateSiloNonReentrant {
+    function whitelistToken(address token, bytes4 selector, uint32 stalk, uint32 seeds) external {
         require(msg.sender == address(this), "Silo: Only Beanstalk can whitelist tokens.");
         s.ss[token].selector = selector;
         s.ss[token].stalk = stalk;
