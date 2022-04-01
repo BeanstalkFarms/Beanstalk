@@ -16,9 +16,17 @@ interface ICurve {
 	 * Write Functions
 	*/
 
-	function add_liquidity(uint256[] calldata _amounts, uint256 _min_mint_amount) external returns (uint256);
+	function add_liquidity(uint256[2] calldata _amounts, uint256 _min_mint_amount) external returns (uint256);
 
-	function add_liquidity(uint256[] calldata _amounts, uint256 _min_mint_amount, address _receiver) external returns (uint256);
+	function add_liquidity(uint256[2] calldata _amounts, uint256 _min_mint_amount, address _receiver) external returns (uint256);
+
+  function add_liquidity(uint256[3] calldata _amounts, uint256 _min_mint_amount) external returns (uint256);
+
+	function add_liquidity(uint256[3] calldata _amounts, uint256 _min_mint_amount, address _receiver) external returns (uint256);
+
+  function add_liquidity(uint256[4] calldata _amounts, uint256 _min_mint_amount) external returns (uint256);
+
+	function add_liquidity(uint256[4] calldata _amounts, uint256 _min_mint_amount, address _receiver) external returns (uint256);
 
 	function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy) external returns (uint256);
 
@@ -28,13 +36,29 @@ interface ICurve {
 
 	function exchange_underlying(int128 i, int128 j, uint256 dx, uint256 min_dy, address _receiver) external returns (uint256);
 
-	function remove_liquidity(uint256 _burn_amount, uint256[] calldata _min_amounts) external returns (uint256);
+	function remove_liquidity(uint256 _burn_amount, uint256[2] calldata _min_amounts) external returns (uint256[2] memory);
 
-	function remove_liquidity(uint256 _burn_amount, uint256[] calldata _min_amounts, address _receiver) external returns (uint256);
+	function remove_liquidity(uint256 _burn_amount, uint256[2] calldata _min_amounts, address _receiver) external returns (uint256[2] memory);
 
-	function remove_liquidity_imbalance(uint256[] calldata _amounts, uint256 _max_burn_amount) external returns (uint256);
+  function remove_liquidity(uint256 _burn_amount, uint256[3] calldata _min_amounts) external returns (uint256[3] memory);
+
+	function remove_liquidity(uint256 _burn_amount, uint256[3] calldata _min_amounts, address _receiver) external returns (uint256[3] memory);
+
+  function remove_liquidity(uint256 _burn_amount, uint256[4] calldata _min_amounts) external returns (uint256[4] memory);
+
+	function remove_liquidity(uint256 _burn_amount, uint256[4] calldata _min_amounts, address _receiver) external returns (uint256[4] memory);
+
+	function remove_liquidity_imbalance(uint256[2] calldata _amounts, uint256 _max_burn_amount) external returns (uint256);
+
+	function remove_liquidity_imbalance(uint256[3] calldata _amounts, uint256 _max_burn_amount) external returns (uint256);
+
+	function remove_liquidity_imbalance(uint256[4] calldata _amounts, uint256 _max_burn_amount) external returns (uint256);
+
+	function remove_liquidity_imbalance(uint256[2] calldata _amounts, uint256 _max_burn_amount, address _receiver) external returns (uint256);
 	
-	function remove_liquidity_imbalance(uint256[] calldata _amounts, uint256 _max_burn_amount, address _receiver) external returns (uint256);
+  function remove_liquidity_imbalance(uint256[3] calldata _amounts, uint256 _max_burn_amount, address _receiver) external returns (uint256);
+	
+  function remove_liquidity_imbalance(uint256[4] calldata _amounts, uint256 _max_burn_amount, address _receiver) external returns (uint256);
 
 	function remove_liquidity_one_coin(uint256 _burn_amount, int256 i, uint256 _min_received) external returns (uint256);
 	
@@ -50,29 +74,23 @@ interface ICurve {
 	 * Read Functions
 	*/
         
-        function calc_token_amount(uint256[] calldata _amounts, bool _is_deposit) external returns (uint256);
-       
-	function calc_token_amount(uint256[] calldata _amounts, bool _is_deposit, bool _previous) external returns (uint256);
-
-	function get_dy(int128 i, int128 j, uint256 dx) external returns (uint256);
+	function get_dy(int128 i, int128 j, uint256 dx) external view returns (uint256);
 	
-	function get_dy(int128 i, int128 j, uint256 dx, uint256[] calldata _balances) external returns (uint256);
-
-	function get_dy_underlying(int128 i, int128 j, uint256 dx) external returns (uint256);
+	function get_dy_underlying(int128 i, int128 j, uint256 dx) external view returns (uint256);
 	
-	function get_dy_underlying(int128 i, int128 j, uint256 dx, uint256[] calldata _balances) external returns (uint256);
+	function get_dy_underlying(int128 i, int128 j, uint256 dx, uint256[] calldata _balances) external view returns (uint256);
 
-	function calc_withdraw_one_coin(uint256 _burn_amount, int128 i) external returns (uint256);
+	function calc_withdraw_one_coin(uint256 _burn_amount, int128 i) external view returns (uint256);
 	
-	function calc_withdraw_one_coin(uint256 _burn_amount, int128 i, bool _previous) external returns (uint256);
+	function calc_withdraw_one_coin(uint256 _burn_amount, int128 i, bool _previous) external view returns (uint256);
 
-	function coins(uint256 arg0) external returns (address);
+	function coins(uint256 arg0) external view returns (address);
 
-	function totalSupply() external returns (uint256);
+	function totalSupply() external view returns (uint256);
 
-	function balanceOf(address account) external returns (uint256);
+	function balanceOf(address account) external view returns (uint256);
 
-	function decimals() external returns (uint256);
+	function decimals() external view returns (uint256);
 
 	function A_precise() external view returns (uint256);
 

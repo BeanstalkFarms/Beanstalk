@@ -87,15 +87,15 @@ library LibUniswap {
         uint amountBMin
     ) internal returns (uint amountA, uint amountB) {
         // create the pair if it doesn't exist yet
-	AppStorage storage s = LibAppStorage.diamondStorage();
-        if (IUniswapV2Factory(uniswapFactory).getPair(tokenA, tokenB) == address(0)) {
-            IUniswapV2Factory(uniswapFactory).createPair(tokenA, tokenB);
+      AppStorage storage s = LibAppStorage.diamondStorage();
+      if (IUniswapV2Factory(uniswapFactory).getPair(tokenA, tokenB) == address(0)) {
+             IUniswapV2Factory(uniswapFactory).createPair(tokenA, tokenB);
         }
         (uint reserveA, uint reserveB) = getReserves(uniswapFactory, tokenA, tokenB);
         if (reserveA == 0 && reserveB == 0) {
             (amountA, amountB) = (amountADesired, amountBDesired);
         }
-	else {
+	    else {
             uint amountBOptimal = quote(amountADesired, reserveA, reserveB);
             if (amountBOptimal <= amountBDesired) {
                 require(amountBOptimal >= amountBMin, 'LibUniswap: INSUFFICIENT_B_AMOUNT');
@@ -119,24 +119,24 @@ library LibUniswap {
         uint amountBMin,
         address to,
         uint deadline,
-	bool convert
+	      bool convert
     ) internal ensure(deadline) returns (uint amountA, uint amountB, uint liquidity) {
-	AppStorage storage s = LibAppStorage.diamondStorage();	
-	SwapInfo memory swap;
-        (amountA, amountB) = _addLiquidity(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin);
-	swap.tokenA = tokenA;
-	swap.tokenB = tokenB;
-	swap.pair = pairFor(uniswapFactory, swap.tokenA, swap.tokenB);
-	if (!convert) {
+	    AppStorage storage s = LibAppStorage.diamondStorage();	
+	    SwapInfo memory swap;
+      (amountA, amountB) = _addLiquidity(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin);
+	    swap.tokenA = tokenA;
+	    swap.tokenB = tokenB;
+	    swap.pair = pairFor(uniswapFactory, swap.tokenA, swap.tokenB);
+	    if (!convert) {
         	TransferHelper.safeTransferFrom(swap.tokenA, msg.sender, swap.pair, amountA);
         	TransferHelper.safeTransferFrom(swap.tokenB, msg.sender, swap.pair, amountB);
-	}
-	else {
-		IERC20(swap.tokenA).transfer(swap.pair, amountA); 
-		IERC20(swap.tokenB).transfer(swap.pair, amountB);
-	}
-        liquidity = IUniswapV2Pair(swap.pair).mint(to);
-    }
+	    }
+	    else {
+		  IERC20(swap.tokenA).transfer(swap.pair, amountA); 
+		  IERC20(swap.tokenB).transfer(swap.pair, amountB);
+	    }
+      liquidity = IUniswapV2Pair(swap.pair).mint(to);
+  }
     
     function addLiquidityETH(
         address token,
@@ -147,7 +147,7 @@ library LibUniswap {
         uint deadline,
 	bool convert
     ) internal ensure(deadline) returns (uint amountToken, uint amountETH, uint liquidity) {
-	AppStorage storage s = LibAppStorage.diamondStorage();	
+	    AppStorage storage s = LibAppStorage.diamondStorage();	
         (amountToken, amountETH) = _addLiquidity(
             token,
             s.c.weth,
@@ -157,7 +157,7 @@ library LibUniswap {
             amountETHMin
         );
         address pair = pairFor(uniswapFactory, token, s.c.weth);
-	if (convert) IERC20(token).transfer(pair, amountToken);
+	    if (convert) IERC20(token).transfer(pair, amountToken);
         else TransferHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
         IWETH(s.c.weth).deposit{value: amountETH}();
         assert(IWETH(s.c.weth).transfer(pair, amountETH));

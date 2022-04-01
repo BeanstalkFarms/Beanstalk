@@ -28,7 +28,9 @@ contract MockInitDiamond {
     address private constant BEAN = address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db);
     address private constant BEANLUSD = address(0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D);
     address private constant LUSD = address(0x5f98805A4E8be255a32880FDeC7F6728C6568bA0);
-
+    address private constant THREE_CURVE = address(0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7);
+    address private constant BEAN_3CRV = address(0x3a70DfA7d2262988064A2D051dd47521E43c9BdD);
+ 
     AppStorage internal s;
 
     function init(address mockRouter) external {
@@ -41,8 +43,10 @@ contract MockInitDiamond {
         IBean(s.c.bean).approve(mockRouter, uint256(-1));
         IUniswapV2Pair(s.c.pair).approve(mockRouter, uint256(-1));
         IWETH(s.c.weth).approve(mockRouter, uint256(-1));
-	IBean(s.c.bean).approve(BEANLUSD, uint256(-1));
-	IERC20(LUSD).approve(BEANLUSD, uint256(-1));
+	      IBean(s.c.bean).approve(BEANLUSD, uint256(-1));
+	      IERC20(LUSD).approve(BEANLUSD, uint256(-1));
+        IERC20(THREE_CURVE).approve(BEAN_3CRV, uint256(-1));
+        IBean(s.c.bean).approve(BEAN_3CRV, uint256(-1));
 
         s.cases = [int8(3),1,0,0,-1,-3,-3,0,3,1,0,0,-1,-3,-3,0,3,3,1,0,0,0,-1,0,3,3,1,0,1,0,-1,0];
         s.w.yield = 1;

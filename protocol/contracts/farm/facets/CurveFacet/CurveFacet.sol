@@ -5,9 +5,8 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import '../../../libraries/LibCurve.sol';
-import '@openzeppelin/contracts/math/SafeMath.sol';
-import '../../AppStorage.sol';
+import { LibCurve } from '../../../libraries/LibCurve.sol';
+import { AppStorage } from '../../AppStorage.sol';
 
 /**
  * @author Beasley
@@ -16,23 +15,26 @@ import '../../AppStorage.sol';
 
 contract CurveFacet {
 
-	AppStorage internal s;
+	function swapOnCurve(uint256 startingAmount, 
+                       uint256 minEndAmount, 
+                       uint8 fromToken, 
+                       uint8 toToken, 
+                       address poolAddress, 
+                       bool fromInternalBalance, 
+                       bool toInternalBalance
+  ) public payable returns (uint256 amountReturned) {
+    LibCurve.swapOnCurve(startingAmount, minEndAmount, fromToken, toToken, poolAddress, fromInternalBalance, toInternalBalance);
+  }
 
-	function swapBeanLusd(uint256 startingAmount, uint256 minEndAmount, uint8 fromToken, uint8 toToken, address swapToken) public payable returns (uint256 amountReturned) {
-		amountReturned = LibCurve.swapBeanLusd(startingAmount, minEndAmount, fromToken, toToken, swapToken);
-	}
+	function addLiquidityCurve(uint256[] calldata amounts, uint256 minMintAmount, address poolAddress, bool fromInternalBalance, bool toInternalBalance) public payable returns (uint256 LPReturned) {
+    LPReturned = LibCurve.addLiquidity(amounts, minMintAmount, poolAddress, fromInternalBalance, toInternalBalance);
+  }
+   
+  function removeLiquidityCurve(uint256 LPAmount, uint256[] calldata minEndAmounts, address poolAddress, bool fromInternalBalance, bool toInternalBalance) public payable {
+    LibCurve.removeLiquidity(LPAmount, minEndAmounts, poolAddress, fromInternalBalance, toInternalBalance);
+  }
 
-	function addLiquidityBeanLusd(uint256[2] calldata amounts, uint256 minMintAmount, address[2] calldata tokens) public payable returns (uint256 LPReturned) {
-		LPReturned = LibCurve.addLiquidityBeanLusd(amounts, minMintAmount, tokens);
-	}
-
-	function swapBean3Curve(uint256 startingAmount, uint256 minEndAmount, uint8 fromToken, uint8 toToken, address swapToken) public payable returns (uint256 amountReturned) {
-		amountReturned = LibCurve.swapBean3Curve(startingAmount, minEndAmount, fromToken, toToken, swapToken);
-	}
-
-	function addLiquidityBean3Curve(uint256[4] calldata amounts, uint256 minMintAmount, address[4] calldata tokens) public payable returns (uint256 LPReturned) {
-		LPReturned = LibCurve.addLiquidityBean3Curve(amounts, minMintAmount, tokens);
-	}
-
+  function removeLiquidityImbalanceCurve(uint256 LPAmount, uint256[] calldata minEndAmounts, address poolAddress, bool fromInternalBalance, bool toInternalBalance) public payable returns (uint256 LPBurned) {
+    LPBurned = LibCurve.removeLiquidityImbalance(LPAmount, minEndAmounts, poolAddress, fromInternalBalance, toInternalBalance);
+  }
 }
-
