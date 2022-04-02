@@ -39,9 +39,15 @@ library MathFP {
         if (!sign[0] && !sign[1] && !sign[2] && !sign[3]) {
             return 0;
         }
+        if (x == 0) {
+            return 0;
+        }
         for (uint8 i = 0; i < 4; i++) {
             if (integrateInstead) {
                 //integrate the inputted polynomial from 0 - x
+                if (term[i] == 0) {
+                    continue;
+                }
                 if (sign[i]) {
                     y += MathFP.muld(x**(i + 1), term[i] / (i + 1), shift[i]);
                     continue;
@@ -55,7 +61,9 @@ library MathFP {
                 }
             } else {
                 //evaluate the polynomial at x
-                if (sign[i]) {
+                if (term[i] == 0) {
+                    continue;
+                } else if (sign[i]) {
                     y += MathFP.muld(x**i, term[i], shift[i]);
                     continue;
                 } else {
@@ -64,7 +72,11 @@ library MathFP {
                 }
             }
         }
-        return y - yMinus;
+        if (y > yMinus) {
+            return y.sub(yMinus);
+        } else {
+            return yMinus.sub(y);
+        }
     }
 
     //returns '1' in FP representation

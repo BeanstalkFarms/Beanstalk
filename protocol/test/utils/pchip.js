@@ -6,8 +6,8 @@ function createInterpolant (xs, ys) {
             val = val/10;
             counter--;
         }
-        if(val<0.1&&val>0){
-            while(val<0.1){
+        if(val<=0.1&&val>0){
+            while(val<=0.1){
                 val = val * 10;
                 counter++;
             }

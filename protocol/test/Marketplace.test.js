@@ -673,12 +673,12 @@ describe('Marketplace', function () {
       })
     })
 
-    describe("Fill", async function () {
-      describe('revert dynamic', async function () {
+    describe("Fill Dynamic", async function () {
+      describe('reverts', async function () {
         beforeEach(async function () {
           let interp = createInterpolant(linearSet.xs, linearSet.ys);
-          this.result = await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '0', true, [linearSet.xs.map(String), interp.constants.map(String, interp.shifts.map(String), interp.signs)]);
-          this.listing = [userAddress, '0', '0', '1000', '0', true, [linearSet.xs.map(String), interp.constants.map(String), interp.shifts, interp.signs]];
+          this.result = await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '0', true, [interp.subIntervalIndex.map(String), interp.constants.map(String), interp.shifts.map(String), interp.signs]);
+          this.listing = [userAddress, '0', '0', '1000', '0', true, [interp.subIntervalIndex.map(String), interp.constants.map(String), interp.shifts.map(String), interp.signs]];
         })
         it('Lists Plot properly', async function () {
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(this.result));
@@ -705,12 +705,13 @@ describe('Marketplace', function () {
         })
 
         it('Fill Listing not enough pods in plot', async function () {
-          await expect(this.marketplace.connect(user2).fillDynamicPodListing(this.listing, 501)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
+          await expect(this.marketplace.connect(user2).fillDynamicPodListing(this.listing, 1001)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
         })
 
         it('Fill Listing not enough pods in listing', async function () {
-          const l = [userAddress, '0', '0', '500', '0', false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String, this.interp.shifts, this.interp.signs)]]
-          await this.marketplace.connect(user).createDynamicPodListing('0', '0', '500', '0', false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String, this.interp.shifts.map(String), this.interp.signs)]);
+          let interp = createInterpolant(linearSet.xs, linearSet.ys);
+          const l = [userAddress, '0', '0', '500', '0', false, [interp.subIntervalIndex.map(String), interp.constants.map(String, interp.shifts.map(String), interp.signs)]]
+          await this.marketplace.connect(user).createDynamicPodListing('0', '0', '500', '0', false, [interp.subIntervalIndex.map(String), interp.constants.map(String, interp.shifts.map(String),interp.signs)]);
           await expect(this.marketplace.connect(user2).fillDynamicPodListing(l, 500)).to.be.revertedWith('Marketplace: Not enough pods in Listing.');
         })
       })
@@ -718,9 +719,10 @@ describe('Marketplace', function () {
       describe("Fill dynamic listing", async function () {
         beforeEach(async function () {
           let xs = [0,100,200,300,400,500,600,700,800,900];
-          let interp = createInterpolant(xs, linearSet.ys);
+          let ys = [1000000,900000,900000,800000,800000,700000,700000,600000,600000,500000]
+          let interp = createInterpolant(xs, ys);
           console.log(interp)
-          this.listing = [userAddress, '0', '0', '1000', '0', true, [xs.map(String), interp.constants.map(String), interp.shifts, interp.signs]]
+          this.listing = [userAddress, '0', '0', '1000', '0', true, [xs.map(String), interp.constants.map(String), interp.shifts.map(String), interp.signs]]
           await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '0', true, [xs.map(String), interp.constants.map(String), interp.shifts, interp.signs]);
           this.amountBeansBuyingWith = 500;
 
@@ -728,14 +730,19 @@ describe('Marketplace', function () {
           this.user2BeanBalance = await this.bean.balanceOf(user2Address)
 
           this.result = await this.marketplace.connect(user2).fillDynamicPodListing(this.listing, this.amountBeansBuyingWith);
+          // console.log(this.result)
 
           this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
           this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+        })
+        it('emits event', async function () {
+          await expect(this.result).to.emit(this.marketplace, 'ListingFill').withArgs(userAddress, user2Address, 500000, 1000);
         })
 
         it('Transfer Beans properly', async function () {
           expect(this.user2BeanBalance.sub(this.user2BeanBalanceAfter)).to.equal(this.amountBeansBuyingWith);
           expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal(this.amountBeansBuyingWith);
+          console.log(this.userBeanBalance, this.user2BeanBalance, this.userBeanBalanceAfter, this.user2BeanBalanceAfter)
           expect(await this.claim.wrappedBeans(userAddress)).to.equal(0);
         })
 

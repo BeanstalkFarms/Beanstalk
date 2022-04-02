@@ -26,12 +26,12 @@ contract Listing is PodTransfer {
     }
 
     struct Listing {
-        address account; 
-        uint256 index; 
-        uint256 start; 
-        uint256 amount; 
+        address account;
+        uint256 index;
+        uint256 start;
+        uint256 amount;
         uint24 pricePerPod;
-        uint256 maxHarvestableIndex; 
+        uint256 maxHarvestableIndex;
         bool toWallet;
     }
 
@@ -77,6 +77,13 @@ contract Listing is PodTransfer {
     );
 
     event PodListingCancelled(address indexed account, uint256 index);
+    //debugging event remove later
+    event ListingFill(
+        address indexed from,
+        address indexed to,
+        uint256 amount,
+        uint256 pricePerPod
+    );
 
     /*
      * Create
@@ -258,23 +265,34 @@ contract Listing is PodTransfer {
             s.f.harvestable <= l.maxHarvestableIndex,
             "Marketplace: Listing has expired."
         );
-
+        require(beanAmount > 0, "bean amount is zero rip 1");
         uint256 i = _findIndex(
             l.f.subIntervalIndex,
-            l.index + l.start - s.f.harvestable
+            l.index + l.start + l.amount - s.f.harvestable
         );
         uint256 pricePerPod = _getPriceAtIndex(
             l.f,
-            l.index + l.start - s.f.harvestable,
+            l.index + l.start + l.amount - s.f.harvestable,
             i
         );
+        emit ListingFill(
+            l.account,
+            msg.sender,
+            pricePerPod,
+            l.index + l.start + l.amount - s.f.harvestable
+        );
+        // require(0 <=i && i < 10, "invalid index");
+        // require(pricePerPod > 0, "invalid price per pod calculated");
+        // require(pricePerPod<=1000000, "price per pod too high");
         beanAmount = (beanAmount * 1000000) / pricePerPod;
+        // require(beanAmount > 0, "bean amount is zero rip 2");
         __fillDynamicListing(l.account, msg.sender, l, beanAmount);
         _transferPlot(l.account, msg.sender, l.index, l.start, beanAmount);
     }
 
     function _findIndex(uint256[10] calldata subIntervalIndex, uint256 x)
-        internal pure 
+        internal
+        pure
         returns (uint256)
     {
         return MathFP.findIndexWithinSubinterval(subIntervalIndex, x);
@@ -284,8 +302,8 @@ contract Listing is PodTransfer {
         PiecewiseCubic calldata f,
         uint256 x,
         uint256 i
-    ) internal pure returns (uint256 amountBeans) {
-        amountBeans = MathFP.evaluateCubic(
+    ) internal pure returns (uint256 pricePerPod) {
+        pricePerPod = MathFP.evaluateCubic(
             [f.signs[i], f.signs[i + 10], f.signs[i + 20], f.signs[i + 30]],
             [f.shifts[i], f.shifts[i + 10], f.shifts[i + 20], f.shifts[i + 30]],
             [
