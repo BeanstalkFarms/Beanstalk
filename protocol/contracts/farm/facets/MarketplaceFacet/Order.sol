@@ -116,16 +116,20 @@ contract Order is Listing {
         uint256 maxPlaceInLine,
         PiecewiseCubic calldata f
     ) internal returns (bytes32 id) {
-        // require(
-        //     0 < pricePerPod,
-        //     "Marketplace: Pod price must be greater than 0."
-        // );
-        //amount is the definite integral over the whole range
+        require(
+            0 < beanAmount,
+            "Marketplace: Pod price must be greater than 0."
+        );
+        // amount is the definite integral over the whole range
 
-        uint256 amountPods = _getCostInBeans(
+        uint256 amountPods = _getSumOverPiecewiseRange(
             f,
             f.subIntervalIndex[0],
-            f.subIntervalIndex[f.subIntervalIndex.length]
+            beanAmount
+        );
+        require(
+            0 < amountPods,
+            "Marketplace: Pod price must be greater than 0."
         );
 
         return __createDynamicPodOrder(amountPods, maxPlaceInLine, f);
@@ -256,8 +260,11 @@ contract Order is Listing {
 
         uint256 placeInLine = index + start - s.f.harvestable;
 
-        uint256 amountBeans = _getCostInBeans(o.f, placeInLine, amount) /
-            1000000;
+        uint256 amountBeans = _getSumOverPiecewiseRange(
+            o.f,
+            placeInLine,
+            amount
+        ) / 1000000;
 
         if (toWallet) bean().transfer(msg.sender, amountBeans);
         else
@@ -309,7 +316,7 @@ contract Order is Listing {
             f.signs
         );
 
-        uint256 amountBeans = _getCostInBeans(
+        uint256 amountBeans = _getSumOverPiecewiseRange(
             f,
             f.subIntervalIndex[0],
             f.subIntervalIndex[f.subIntervalIndex.length]
@@ -327,7 +334,7 @@ contract Order is Listing {
      * Helpers
      */
 
-    function _getCostInBeans(
+    function _getSumOverPiecewiseRange(
         PiecewiseCubic calldata f,
         uint256 x,
         uint256 amount

@@ -152,7 +152,7 @@ contract MarketplaceFacet is Order {
         return _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine);
     }
 
-    function createPodDynamicOrder(
+    function createDynamicPodOrder(
         uint256 beanAmount,
         uint256 maxPlaceInLine,
         PiecewiseCubic calldata f
