@@ -84,6 +84,7 @@ library LibMarket {
         }
         (uint256 ethAmount, uint256 beanAmount) = _buyExactTokens(buyBeanAmount, buyEthAmount, address(this));
         allocateEthRefund(msg.value, ethAmount, false);
+        amount = beanAmount;
     }
 
     function sellToWETH(uint256 sellBeanAmount, uint256 minBuyEthAmount)
@@ -418,6 +419,7 @@ library LibMarket {
         // If Refund state = 1 -> No refund
         // If Refund state is even -> Refund Beans
         // if Refund state > 2 -> Refund Eth
+
         uint256 rs = s.refundStatus;
         if(rs > 1) {
             if (rs > 2) {
