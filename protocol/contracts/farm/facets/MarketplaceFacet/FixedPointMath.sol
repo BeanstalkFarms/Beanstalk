@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 library MathFP {
     using SafeMath for uint256;
 
+    //binary search to find x within 10 subintervals
     function findIndexWithinSubinterval(uint256[10] calldata ranges, uint256 x)
         internal
         pure
