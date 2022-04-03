@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../../farm/facets/ClaimFacet.sol";
@@ -25,6 +25,7 @@ contract MockClaimFacet is ClaimFacet {
     {
         LibClaim.claim(c);
         LibMarket.allocateBeans(beansAllocated);
+        LibMarket.claimRefund(c);
     }
 
     function incrementBalanceOfWrappedE(address account, uint256 amount)

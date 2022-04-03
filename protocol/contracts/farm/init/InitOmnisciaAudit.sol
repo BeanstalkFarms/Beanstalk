@@ -6,16 +6,18 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {AppStorage} from "../AppStorage.sol";
-
 /**
  * @author Publius
- * @title InitBip2 runs the code for BIP-2. It adjusts the Weather Cases
+ * @title Init Omniscia Audit initializes the Beanstalk Diamond.
 **/
-contract InitBip2 {
+contract InitOmnisciaAudit {
 
     AppStorage internal s;
-
+    
     function init() external {
-        s.cases = [int8(3),1,0,0,-1,-3,-3,0,3,1,0,0,-1,-3,-3,0,3,3,1,0,0,-1,-3,0,3,3,1,0,1,-1,-3,0];
+        s.refundStatus = 1;
+        s.beanRefundAmount = 1;
+        s.ethRefundAmount = 1;
     }
+
 }

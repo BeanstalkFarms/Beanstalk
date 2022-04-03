@@ -15,7 +15,7 @@ contract Order is Listing {
 
     using SafeMath for uint256;
 
-    struct Order {
+    struct PodOrder {
         address account;
         uint24 pricePerPod;
         uint256 maxPlaceInLine;
@@ -49,7 +49,8 @@ contract Order is Listing {
         uint256 maxPlaceInLine
     ) internal returns (bytes32 id) {
         uint256 boughtBeanAmount = LibMarket.buyExactTokens(buyBeanAmount, address(this));
-        return _createPodOrder(beanAmount+boughtBeanAmount, pricePerPod, maxPlaceInLine);
+        id = _createPodOrder(beanAmount+boughtBeanAmount, pricePerPod, maxPlaceInLine);
+        LibMarket.refund();
     }
 
     function _createPodOrder(
@@ -68,11 +69,10 @@ contract Order is Listing {
         uint256 maxPlaceInLine
     ) internal  returns (bytes32 id) {
         require(amount > 0, "Marketplace: Order amount must be > 0.");
-        bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine);
+        id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine);
         if (s.podOrders[id] > 0) _cancelPodOrder(pricePerPod, maxPlaceInLine, false);
         s.podOrders[id] = amount;
         emit PodOrderCreated(msg.sender, id, amount, pricePerPod, maxPlaceInLine);
-        return id;
     }
     
     /*
@@ -80,7 +80,7 @@ contract Order is Listing {
      */
     
     function _fillPodOrder(
-        Order calldata o,
+        PodOrder calldata o,
         uint256 index,
         uint256 start,
         uint256 amount,

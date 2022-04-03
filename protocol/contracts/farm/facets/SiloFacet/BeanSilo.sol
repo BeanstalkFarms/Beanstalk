@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./LPSilo.sol";
@@ -14,7 +14,7 @@ import "./LPSilo.sol";
 contract BeanSilo is LPSilo {
 
     using SafeMath for uint256;
-    using SafeMath for uint32;
+    using LibSafeMath32 for uint32;
 
     event BeanDeposit(address indexed account, uint256 season, uint256 beans);
     event BeanRemove(address indexed account, uint32[] crates, uint256[] crateBeans, uint256 beans);
@@ -46,7 +46,6 @@ contract BeanSilo is LPSilo {
 
     function _depositBeans(uint256 amount) internal {
         require(amount > 0, "Silo: No beans.");
-        updateSilo(msg.sender);
         LibBeanSilo.incrementDepositedBeans(amount);
         LibSilo.depositSiloAssets(msg.sender, amount.mul(C.getSeedsPerBean()), amount.mul(C.getStalkPerBean()));
         LibBeanSilo.addBeanDeposit(msg.sender, season(), amount);
@@ -58,7 +57,6 @@ contract BeanSilo is LPSilo {
     )
         internal
     {
-        updateSilo(msg.sender);
         require(crates.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         (uint256 beansRemoved, uint256 stalkRemoved) = removeBeanDeposits(crates, amounts);
         addBeanWithdrawal(msg.sender, season()+s.season.withdrawSeasons, beansRemoved);

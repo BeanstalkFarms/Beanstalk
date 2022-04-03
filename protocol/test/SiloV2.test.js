@@ -8,6 +8,26 @@ const BEAN_3_CURVE = "0x3a70DfA7d2262988064A2D051dd47521E43c9BdD";
 
 const BN_ZERO = ethers.utils.parseEther('0');
 
+let lastTimestamp = 1700000000;
+let timestamp;
+
+async function resetTime() {
+  timestamp = lastTimestamp + 100000000
+  lastTimestamp = timestamp
+  await hre.network.provider.request({
+    method: "evm_setNextBlockTimestamp",
+    params: [timestamp],
+  });
+}
+
+async function advanceTime(time) {
+  timestamp += time
+  await hre.network.provider.request({
+    method: "evm_setNextBlockTimestamp",
+    params: [timestamp],
+  });
+}
+
 describe('Silo', function () {
   before(async function () {
     [owner,user,user2] = await ethers.getSigners();
@@ -19,6 +39,7 @@ describe('Silo', function () {
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
+    this.oracle = await ethers.getContractAt('MockOracleFacet', this.diamond.address);
     this.silo2 = await ethers.getContractAt('MockSiloV2Facet', this.diamond.address);
     this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
     this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair);
@@ -36,7 +57,8 @@ describe('Silo', function () {
       '10000', 
       '1');
 
-    await this.pair.simulateTrade('2000', '2');
+    await this.pair.simulateTrade(ethers.utils.parseUnits('2500', 6), ethers.utils.parseEther('1'));
+    await this.pegPair.simulateTrade(ethers.utils.parseEther('1'), ethers.utils.parseUnits('2500', 6));
     await this.season.siloSunrise(0);
     await this.pair.faucet(userAddress, '1');
     await this.bean.mint(userAddress, '1000000000');
@@ -527,23 +549,59 @@ describe('Silo', function () {
       this.threeCurve = await ethers.getContractAt('Mock3Curve', THREE_CURVE);
       await this.threeCurve.set_virtual_price(ethers.utils.parseEther('1'));
       this.beanThreeCurve = await ethers.getContractAt('MockBean3Curve', BEAN_3_CURVE);
-      await this.beanThreeCurve.set_supply('100000');
+      await this.beanThreeCurve.set_supply(ethers.utils.parseEther('2000000'));
       await this.beanThreeCurve.set_A_precise('1000');
+      await this.beanThreeCurve.set_virtual_price(ethers.utils.parseEther('1'));
       await this.beanThreeCurve.set_balances([
         ethers.utils.parseUnits('1000000',6),
+        ethers.utils.parseEther('1000000')
+      ]);
+      await this.beanThreeCurve.set_balances([
+        ethers.utils.parseUnits('1200000',6),
         ethers.utils.parseEther('1000000')
       ]);
     });
 
     it("properly checks bdv", async function () {
       this.curveBDV = await ethers.getContractAt('CurveBDVFacet', this.diamond.address);
-      expect(await this.curveBDV.curveToBDV('100')).to.equal('2000000000');
+      expect(await this.curveBDV.curveToBDV(ethers.utils.parseEther('200'))).to.equal(ethers.utils.parseUnits('200',6));
     })
 
     it("properly checks bdv", async function () {
       await this.threeCurve.set_virtual_price(ethers.utils.parseEther('1.02'));
       this.curveBDV = await ethers.getContractAt('CurveBDVFacet', this.diamond.address);
-      expect(await this.curveBDV.curveToBDV('1')).to.equal('20181651');
+      expect(await this.curveBDV.curveToBDV(ethers.utils.parseEther('2'))).to.equal('1998191');
+    })
+  })
+
+  describe("UniswapV2 BDV BDV", async function () {
+    beforeEach(async function () {
+      await this.pair.faucet(userAddress, ethers.utils.parseEther('2'));
+      await resetTime();
+      await this.pair.reset_cumulative();
+      await resetTime();
+      await this.oracle.captureE();
+    });
+
+    it("properly checks bdv", async function () {
+      expect(await this.silo.uniswapLPToBean(ethers.utils.parseEther('1'))).to.equal(
+        ethers.utils.parseUnits('2500', 6)
+      );
+    });
+
+    it("properly checks bdv after updating TWAP", async function () {
+      await this.pair.simulateTrade(ethers.utils.parseUnits('2500', 6), ethers.utils.parseEther('1'));
+      expect(await this.silo.uniswapLPToBean(ethers.utils.parseEther('1'))).to.equal(
+        ethers.utils.parseUnits('2500', 6)
+      );
+    });
+
+    it("Fails if trade in Season", async function () {
+      await this.pair.setBlockTimestampLast('2300000002')
+      await this.oracle.captureE();
+      expect(this.silo.uniswapLPToBean(ethers.utils.parseEther('1'))).to.be.revertedWith(
+        "Silo: Oracle same Season"
+      );
     })
   })
 });

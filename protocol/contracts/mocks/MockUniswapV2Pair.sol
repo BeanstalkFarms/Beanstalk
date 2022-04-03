@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -47,6 +47,10 @@ contract MockUniswapV2Pair {
         return liquidity;
     }
 
+    function setToken(address _token) external returns (uint) {
+        token = _token;
+    }
+
     function setToken2(address _token2) external returns (uint) {
         token2 = _token2;
     }
@@ -58,6 +62,15 @@ contract MockUniswapV2Pair {
 
     function setLiqudity(uint256 newLiquidity) external {
       liquidity = newLiquidity;
+    }
+
+    function setBlockTimestampLast(uint32 btl) external {
+        uint32 timeElapsed = btl - blockTimestampLast;
+        if (timeElapsed > 0 && reserve0 != 0 && reserve1 != 0) {
+            price0CumulativeLast += uint(FixedPoint.fraction(reserve1, reserve0)._x) * timeElapsed;
+            price1CumulativeLast += uint(FixedPoint.fraction(reserve0, reserve1)._x) * timeElapsed;
+        }
+        blockTimestampLast = btl;
     }
 
     function set(uint112 newReserve0, uint112 newReserve1, uint256 newLiquidity) external {
@@ -100,6 +113,10 @@ contract MockUniswapV2Pair {
       _balances[account] = 0;
     }
 
+    function resetLP() external {
+        _totalSupply = 0;
+    }
+
     function simulateTrade(uint112 newReserve0, uint112 newReserve1) external {
         uint32 blockTimestamp = uint32(block.timestamp % 2 ** 32);
         uint32 timeElapsed = blockTimestamp - blockTimestampLast;
@@ -110,6 +127,12 @@ contract MockUniswapV2Pair {
         reserve0 = newReserve0;
         reserve1 = newReserve1;
         blockTimestampLast = blockTimestamp;
+    }
+
+    function reset_cumulative() external {
+        blockTimestampLast = uint32(block.timestamp % 2 ** 32);
+        price0CumulativeLast = uint(FixedPoint.fraction(reserve1, reserve0)._x);
+        price1CumulativeLast = uint(FixedPoint.fraction(reserve0, reserve1)._x);
     }
 
     function token0() external view returns (address) { return token; }

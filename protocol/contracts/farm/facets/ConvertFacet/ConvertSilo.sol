@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../../../libraries/Silo/LibSilo.sol";
+import "../../ReentrancyGuard.sol";
 import "../../../libraries/Silo/LibBeanSilo.sol";
 import "../../../libraries/Silo/LibLPSilo.sol";
 import "../../../libraries/LibCheck.sol";
-import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibMarket.sol";
 import "../../../C.sol";
 
@@ -18,12 +18,10 @@ import "../../../C.sol";
  * @author Publius
  * @title Bean Silo
 **/
-contract ConvertSilo {
-
-    AppStorage internal s;
+contract ConvertSilo is ReentrancyGuard {
 
     using SafeMath for uint256;
-    using SafeMath for uint32;
+    using LibSafeMath32 for uint32;
     
     event LPDeposit(address indexed account, uint256 season, uint256 lp, uint256 seeds);
     event LPRemove(address indexed account, uint32[] crates, uint256[] crateLP, uint256 lp);
@@ -46,8 +44,7 @@ contract ConvertSilo {
     )
         internal
     {
-	    LibInternal.updateSilo(msg.sender);
-        WithdrawState memory w;
+	    WithdrawState memory w;
         if (bean().balanceOf(address(this)) < al.beanAmount) {
             w.beansTransferred = al.beanAmount.sub(s.bean.deposited);
             bean().transferFrom(msg.sender, address(this), w.beansTransferred);
@@ -58,21 +55,22 @@ contract ConvertSilo {
         uint256 amountFromWallet = w.beansAdded.sub(w.beansRemoved, "Silo: Removed too many Beans.");
 
         if (amountFromWallet < w.beansTransferred) {
-            bean().transfer(msg.sender, w.beansTransferred.sub(amountFromWallet));
+            bean().transfer(msg.sender, w.beansTransferred - amountFromWallet); // Note: SafeMath is redundant here.
 	    } else if (w.beansTransferred < amountFromWallet) {
-            uint256 transferAmount = amountFromWallet.sub(w.beansTransferred);
+            uint256 transferAmount = amountFromWallet - w.beansTransferred; // Note: SafeMath is redundant here.
             LibMarket.allocateBeans(transferAmount);
         }
 
         w.i = w.stalkRemoved.div(LibLPSilo.lpToLPBeans(lp.add(w.newLP)), "Silo: No LP Beans.");
-        uint32 depositSeason = uint32(season().sub(w.i.div(C.getSeedsPerLPBean())));
+        uint32 depositSeason = season().sub(uint32(w.i.div(C.getSeedsPerLPBean())));
 
         if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
 	
         lp = lp.add(w.newLP);
         _depositLP(lp, LibLPSilo.lpToLPBeans(lp), depositSeason);
-        LibCheck.beanBalanceCheck();
         LibSilo.updateBalanceOfRainStalk(msg.sender);
+        LibMarket.refund();
+        LibCheck.balanceCheck();
     }
 
     /**
@@ -83,12 +81,10 @@ contract ConvertSilo {
         require(lpb > 0, "Silo: No Beans under LP.");
         LibLPSilo.incrementDepositedLP(amount);
         uint256 seeds = lpb.mul(C.getSeedsPerLPBean());
-        if (season() == _s) LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000));
-        else LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(10000).add(season().sub(_s).mul(seeds)));
+        if (season() == _s) LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(C.getStalkPerBean()));
+        else LibSilo.depositSiloAssets(msg.sender, seeds, lpb.mul(C.getStalkPerBean()).add(uint256(season().sub(_s)).mul(seeds)));
 
         LibLPSilo.addLPDeposit(msg.sender, _s, amount, lpb.mul(C.getSeedsPerLPBean()));
-
-        LibCheck.lpBalanceCheck();
     }
 
     function _withdrawLPForConvert(
@@ -139,7 +135,6 @@ contract ConvertSilo {
         if (_s < season()) stalk = stalk.add(LibSilo.stalkReward(seeds, season()-_s));
         LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
         LibBeanSilo.addBeanDeposit(msg.sender, _s, amount);
-        LibCheck.beanBalanceCheck();
     }
 
     function _withdrawBeansForConvert(
@@ -157,7 +152,7 @@ contract ConvertSilo {
             if (beansRemoved.add(amounts[i]) < maxBeans)
                 crateBeans = LibBeanSilo.removeBeanDeposit(msg.sender, crates[i], amounts[i]);
             else
-                crateBeans = LibBeanSilo.removeBeanDeposit(msg.sender, crates[i], maxBeans.sub(beansRemoved));
+                crateBeans = LibBeanSilo.removeBeanDeposit(msg.sender, crates[i], maxBeans - beansRemoved); // Redundant SafeMath
             beansRemoved = beansRemoved.add(crateBeans);
             stalkRemoved = stalkRemoved.add(crateBeans.mul(C.getStalkPerBean()).add(
                 LibSilo.stalkReward(crateBeans.mul(C.getSeedsPerBean()), season()-crates[i]
@@ -178,7 +173,7 @@ contract ConvertSilo {
 
     function reserves() internal view returns (uint256, uint256) {
         (uint112 reserve0, uint112 reserve1,) = pair().getReserves();
-        return (s.index == 0 ? reserve1 : reserve0,s.index == 0 ? reserve0 : reserve1);
+        return s.index == 0 ? (reserve1, reserve0) : (reserve0, reserve1);
     }
 
     function pair() internal view returns (IUniswapV2Pair) {

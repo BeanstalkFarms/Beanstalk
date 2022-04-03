@@ -100,8 +100,16 @@ describe('Fundraiser', function () {
     })
 
     describe('over fund', async function () {
+      beforeEach(async function () {
+        this.result = await this.fundraiser.connect(user).fund(0, '1001')
+      })
+
       it('reverts on over fund', async function () {
-        await expect(this.fundraiser.connect(user).fund(0, '1001')).to.be.revertedWith('Fundraiser: amount exceeds remaining.')
+        await expect(this.fundraiser.connect(user).fund(0, '0')).to.be.revertedWith('Fundraiser: already completed.')
+      })
+
+      it('burns beans from protocol', async function () {
+        await expect(await this.bean.balanceOf(this.fundraiser.address)).to.be.equal('0')
       })
     })
 

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
@@ -79,7 +79,7 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (!s.r.raining) return;
         if (s.a[account].roots < s.a[account].sop.roots) {
-            s.r.roots = s.r.roots.sub(s.a[account].sop.roots.sub(s.a[account].roots));
+            s.r.roots = s.r.roots.sub(s.a[account].sop.roots - s.a[account].roots); // Note: SafeMath is redundant here.
             s.a[account].sop.roots = s.a[account].roots;
         }
     }
@@ -87,7 +87,8 @@ library LibSilo {
     function incrementBipRoots(address account, uint256 roots) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.a[account].votedUntil >= season()) {
-            for (uint256 i = 0; i < s.g.activeBips.length; i++) {
+            uint256 numberOfActiveBips = s.g.activeBips.length; 
+            for (uint256 i = 0; i < numberOfActiveBips; i++) {
                 uint32 bip = s.g.activeBips[i];
                 if (s.g.voted[bip][account]) s.g.bips[bip].roots = s.g.bips[bip].roots.add(roots);
             }
@@ -105,7 +106,8 @@ library LibSilo {
                 s.a[account].proposedUntil < season() || canPropose(account),
                 "Silo: Proposer must have min Stalk."
             );
-            for (uint256 i = 0; i < s.g.activeBips.length; i++) {
+            uint256 numberOfActiveBips = s.g.activeBips.length; 
+            for (uint256 i = 0; i < numberOfActiveBips; i++) {
                 uint32 bip = s.g.activeBips[i];
                 if (s.g.voted[bip][account]) s.g.bips[bip].roots = s.g.bips[bip].roots.sub(roots);
             }

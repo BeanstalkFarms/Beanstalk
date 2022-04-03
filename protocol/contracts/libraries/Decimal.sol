@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
@@ -133,7 +133,7 @@ library Decimal {
     returns (D256 memory)
     {
         if (b == 0) {
-            return from(1);
+            return one();
         }
 
         D256 memory temp = D256({ value: self.value });

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./VotingBooth.sol";
@@ -17,12 +17,11 @@ import "../../../libraries/LibIncentive.sol";
 contract GovernanceFacet is VotingBooth {
 
     using SafeMath for uint256;
-    using SafeMath for uint32;
+    using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
 
     event Proposal(address indexed account, uint32 indexed bip, uint256 indexed start, uint256 period);
-    event Vote(address indexed account, uint32 indexed bip, uint256 roots);
-    event VoteList(address indexed account, uint32[] indexed bips, bool[] votes, uint256 roots);
+    event VoteList(address indexed account, uint32[] bips, bool[] votes, uint256 roots);
     event Unvote(address indexed account, uint32 indexed bip, uint256 roots);
     event Commit(address indexed account, uint32 indexed bip);
     event Incentivization(address indexed account, uint256 beans);
@@ -57,31 +56,28 @@ contract GovernanceFacet is VotingBooth {
             msg.sender
         );
 
-        s.a[msg.sender].proposedUntil = startFor(bipId) + periodFor(bipId);
+        s.a[msg.sender].proposedUntil = startFor(bipId).add(periodFor(bipId));
         emit Proposal(msg.sender, bipId, season(), C.getGovernancePeriod());
 
-        vote(bipId);
+        _vote(msg.sender, bipId);
     }
 
     /**
      * Voting
     **/
 
-    function vote(uint32 bip) public {
-        require(isNominated(bip), "Governance: Not nominated.");
+    function vote(uint32 bip) external {
         require(balanceOfRoots(msg.sender) > 0, "Governance: Must have Stalk.");
+        require(isNominated(bip), "Governance: Not nominated.");
         require(isActive(bip), "Governance: Ended.");
         require(!voted(msg.sender, bip), "Governance: Already voted.");
 
-        recordVote(msg.sender, bip);
-        placeVotedUntil(msg.sender, bip);
-
-        emit Vote(msg.sender, bip, balanceOfRoots(msg.sender));
+        _vote(msg.sender, bip);
     }
 
     /// @notice Takes in a list of multiple bips and performs a vote on all of them
     /// @param bip_list Contains the bip proposal ids to vote on
-    function voteAll(uint32[] calldata bip_list) public {
+    function voteAll(uint32[] calldata bip_list) external {
         require(balanceOfRoots(msg.sender) > 0, "Governance: Must have Stalk.");
         
         bool[] memory vote_types = new bool[](bip_list.length);
@@ -97,7 +93,7 @@ contract GovernanceFacet is VotingBooth {
             vote_types[i] = true;
 
             // Place timelocks
-            uint32 newLock = startFor(bip) + periodFor(bip);
+            uint32 newLock = startFor(bip).add(periodFor(bip));
             if (newLock > lock) lock = newLock;
         }
 
@@ -178,14 +174,7 @@ contract GovernanceFacet is VotingBooth {
             endedBipVotePercent(bip).greaterThanOrEqualTo(C.getGovernancePassThreshold()),
             "Governance: Must have majority."
         );
-
-        s.g.bips[bip].executed = true;
-
-        cutBip(bip);
-        pauseOrUnpauseBip(bip);
-
-        incentivize(msg.sender, true, bip, C.getCommitIncentive());
-        emit Commit(msg.sender, bip);
+        _execute(msg.sender, bip, true, true); 
     }
 
     function emergencyCommit(uint32 bip) external {
@@ -198,15 +187,7 @@ contract GovernanceFacet is VotingBooth {
             bipVotePercent(bip).greaterThanOrEqualTo(C.getGovernanceEmergencyThreshold()),
             "Governance: Must have super majority."
         );
-
-        endBip(bip);
-        s.g.bips[bip].executed = true;
-
-        cutBip(bip);
-        pauseOrUnpauseBip(bip);
-
-        incentivize(msg.sender, false, bip, C.getCommitIncentive());
-        emit Commit(msg.sender, bip);
+        _execute(msg.sender, bip, false, true); 
     }
 
     function pauseOrUnpause(uint32 bip) external {
@@ -217,14 +198,18 @@ contract GovernanceFacet is VotingBooth {
             bipVotePercent(bip).greaterThanOrEqualTo(C.getGovernanceEmergencyThreshold()),
             "Governance: Must have super majority."
         );
+        _execute(msg.sender, bip, false, false); 
+    }
 
-        endBip(bip);
+    function _execute(address account, uint32 bip, bool ended, bool cut) private {
+        if (!ended) endBip(bip);
         s.g.bips[bip].executed = true;
 
+        if (cut) cutBip(bip);
         pauseOrUnpauseBip(bip);
 
-        incentivize(msg.sender, false, bip, C.getCommitIncentive());
-        emit Commit(msg.sender, bip);
+        incentivize(account, ended, bip, C.getCommitIncentive());
+        emit Commit(account, bip);
     }
 
     function incentivize(address account, bool compound, uint32 bipId, uint256 amount) private {

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -11,12 +11,13 @@ import "../../libraries/LibCheck.sol";
 import "../../libraries/LibInternal.sol";
 import "../../libraries/LibMarket.sol";
 import "../../libraries/LibClaim.sol";
+import "../ReentrancyGuard.sol";
 
 /**
  * @author Publius
  * @title Claim handles claiming Bean and LP withdrawals, harvesting plots and claiming Ether.
 **/
-contract ClaimFacet {
+contract ClaimFacet is ReentrancyGuard {
 
     event BeanClaim(address indexed account, uint32[] withdrawals, uint256 beans);
     event LPClaim(address indexed account, uint32[] withdrawals, uint256 lp);
@@ -26,28 +27,26 @@ contract ClaimFacet {
 
     using SafeMath for uint256;
 
-    AppStorage internal s;
-
-    function claim(LibClaim.Claim calldata c) public payable returns (uint256 beansClaimed) {
+    function claim(LibClaim.Claim calldata c) external payable nonReentrant returns (uint256 beansClaimed) {
         beansClaimed = LibClaim.claim(c);
-
+        LibMarket.claimRefund(c);
         LibCheck.balanceCheck();
     }
 
-    function claimAndUnwrapBeans(LibClaim.Claim calldata c, uint256 amount) public payable returns (uint256 beansClaimed) {
+    function claimAndUnwrapBeans(LibClaim.Claim calldata c, uint256 amount) external payable nonReentrant returns (uint256 beansClaimed) {
         beansClaimed = LibClaim.claim(c);
-        beansClaimed = beansClaimed.add(unwrapBeans(amount));
-
+        beansClaimed = beansClaimed.add(_unwrapBeans(amount));
+        LibMarket.claimRefund(c);
         LibCheck.balanceCheck();
     }
 
-    function claimBeans(uint32[] calldata withdrawals) public {
+    function claimBeans(uint32[] calldata withdrawals) external {
         uint256 beansClaimed = LibClaim.claimBeans(withdrawals);
         IBean(s.c.bean).transfer(msg.sender, beansClaimed);
         LibCheck.beanBalanceCheck();
     }
 
-    function claimLP(uint32[] calldata withdrawals) public {
+    function claimLP(uint32[] calldata withdrawals) external {
         LibClaim.claimLP(withdrawals);
         LibCheck.lpBalanceCheck();
     }
@@ -57,23 +56,28 @@ contract ClaimFacet {
         uint256 minBeanAmount,
         uint256 minEthAmount
     )
-        public
+        external
+        nonReentrant
     {
         LibClaim.removeAndClaimLP(withdrawals, minBeanAmount, minEthAmount);
         LibCheck.balanceCheck();
     }
 
-    function harvest(uint256[] calldata plots) public {
+    function harvest(uint256[] calldata plots) external {
         uint256 beansHarvested = LibClaim.harvest(plots);
         IBean(s.c.bean).transfer(msg.sender, beansHarvested);
         LibCheck.beanBalanceCheck();
     }
 
-    function claimEth() public {
+    function claimEth() external {
         LibClaim.claimEth();
     }
 
-    function unwrapBeans(uint amount) public returns (uint256 beansToWallet) {
+    function unwrapBeans(uint amount) external returns (uint256 beansToWallet) {
+        return _unwrapBeans(amount);
+    }
+
+    function _unwrapBeans(uint amount) private returns (uint256 beansToWallet) {
         if (amount == 0) return beansToWallet;
         uint256 wBeans = s.a[msg.sender].wrappedBeans;
 
@@ -88,7 +92,7 @@ contract ClaimFacet {
         }
     }
 
-    function wrapBeans(uint amount) public {
+    function wrapBeans(uint amount) external {
         IBean(s.c.bean).transferFrom(msg.sender, address(this), amount);
         s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(amount);
 

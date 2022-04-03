@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./libraries/Decimal.sol";
@@ -16,6 +16,9 @@ library C {
     using Decimal for Decimal.D256;
     using SafeMath for uint256;
 
+    // Constants
+    uint256 private constant PERCENT_BASE = 1e18; // Mainnet
+
     // Chain
     uint256 private constant CHAIN_ID = 1; // Mainnet
 
@@ -23,17 +26,17 @@ library C {
     uint256 private constant CURRENT_SEASON_PERIOD = 3600; // 1 hour
 
     // Sun
-    uint256 private constant HARVESET_PERCENTAGE = 5e17; // 50%
+    uint256 private constant HARVESET_PERCENTAGE = 0.5e18; // 50%
 
     // Weather
-    uint256 private constant POD_RATE_LOWER_BOUND = 5e16; // 5%
-    uint256 private constant OPTIMAL_POD_RATE = 15e16; // 15%
-    uint256 private constant POD_RATE_UPPER_BOUND = 25e16; // 25%
+    uint256 private constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%
+    uint256 private constant OPTIMAL_POD_RATE = 0.15e18; // 15%
+    uint256 private constant POD_RATE_UPPER_BOUND = 0.25e18; // 25%
 
-    uint256 private constant DELTA_POD_DEMAND_LOWER_BOUND = 95e16; // 95%
-    uint256 private constant DELTA_POD_DEMAND_UPPER_BOUND = 105e16; // 105%
+    uint256 private constant DELTA_POD_DEMAND_LOWER_BOUND = 0.95e18; // 95%
+    uint256 private constant DELTA_POD_DEMAND_UPPER_BOUND = 1.05e18; // 105%
 
-    uint256 private constant STEADY_SOW_TIME = 60; // 1 minute
+    uint32 private constant STEADY_SOW_TIME = 60; // 1 minute
     uint256 private constant RAIN_TIME = 24; // 24 seasons = 1 day
 
     // Governance
@@ -43,12 +46,12 @@ library C {
     uint256 private constant GOVERNANCE_EMERGENCY_THRESHOLD_NUMERATOR = 2; // 2/3
     uint256 private constant GOVERNANCE_EMERGENCY_THRESHOLD_DEMONINATOR = 3; // 2/3
     uint32 private constant GOVERNANCE_EXPIRATION = 24; // 24 seasons = 1 day
-    uint256 private constant GOVERNANCE_PROPOSAL_THRESHOLD = 1e15; // 0.1%
-    uint256 private constant BASE_COMMIT_INCENTIVE = 1e8; // 100 beans
+    uint256 private constant GOVERNANCE_PROPOSAL_THRESHOLD = 0.001e18; // 0.1%
+    uint256 private constant BASE_COMMIT_INCENTIVE = 100e6; // 100 beans
     uint256 private constant MAX_PROPOSITIONS = 5;
 
     // Silo
-    uint256 private constant BASE_ADVANCE_INCENTIVE = 1e8; // 100 beans
+    uint256 private constant BASE_ADVANCE_INCENTIVE = 100e6; // 100 beans
     uint32 private constant WITHDRAW_TIME = 25; // 24 + 1 seasons
     uint256 private constant SEEDS_PER_BEAN = 2;
     uint256 private constant SEEDS_PER_LP_BEAN = 4;
@@ -76,7 +79,7 @@ library C {
         return GOVERNANCE_EMERGENCY_PERIOD;
     }
 
-    function getGovernanceExpiration() internal pure returns (uint256) {
+    function getGovernanceExpiration() internal pure returns (uint32) {
         return GOVERNANCE_EXPIRATION;
     }
 
@@ -121,26 +124,26 @@ library C {
     }
 
     function getOptimalPodRate() internal pure returns (Decimal.D256 memory) {
-        return Decimal.ratio(OPTIMAL_POD_RATE,1e18);
+        return Decimal.ratio(OPTIMAL_POD_RATE, PERCENT_BASE);
     }
 
     function getUpperBoundPodRate() internal pure returns (Decimal.D256 memory) {
-        return Decimal.ratio(POD_RATE_UPPER_BOUND,1e18);
+        return Decimal.ratio(POD_RATE_UPPER_BOUND, PERCENT_BASE);
     }
 
     function getLowerBoundPodRate() internal pure returns (Decimal.D256 memory) {
-        return Decimal.ratio(POD_RATE_LOWER_BOUND,1e18);
+        return Decimal.ratio(POD_RATE_LOWER_BOUND, PERCENT_BASE);
     }
 
     function getUpperBoundDPD() internal pure returns (Decimal.D256 memory) {
-        return Decimal.ratio(DELTA_POD_DEMAND_UPPER_BOUND,1e18);
+        return Decimal.ratio(DELTA_POD_DEMAND_UPPER_BOUND, PERCENT_BASE);
     }
 
     function getLowerBoundDPD() internal pure returns (Decimal.D256 memory) {
-        return Decimal.ratio(DELTA_POD_DEMAND_LOWER_BOUND,1e18);
+        return Decimal.ratio(DELTA_POD_DEMAND_LOWER_BOUND, PERCENT_BASE);
     }
 
-    function getSteadySowTime() internal pure returns (uint256) {
+    function getSteadySowTime() internal pure returns (uint32) {
         return STEADY_SOW_TIME;
     }
 

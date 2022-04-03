@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 /**
@@ -11,9 +11,20 @@ pragma experimental ABIEncoderV2;
 **/
 library LibIncentive {
 
-    function fracExp(uint k, uint q, uint n, uint x) internal pure returns (uint) {
+    /// @notice fracExp estimates an exponential expression in the form: k * (1 + 1/q) ^ N.
+    /// We use a binomial expansion to estimate the exponent to avoid running into integer overflow issues.
+    /// @param k - the principle amount
+    /// @param q - the base of the fraction being exponentiated
+    /// @param n - the exponent
+    /// @param x - the excess # of times to run the iteration.
+    /// @return s - the solution to the exponential equation
+    function fracExp(uint k, uint q, uint n, uint x) internal pure returns (uint s) {
+        // The upper bound in which the binomial expansion is expected to converge
+        // Upon testing with a limit of n <= 300, x = 2, k = 100, q = 100 (parameters Beanstalk currently uses)
+        // we found this p optimizes for gas and error
         uint p = log_two(n) + 1 + x * n / q;
-        uint s = 0;
+        // Solution for binomial expansion in Solidity.
+        // Motivation: https://ethereum.stackexchange.com/questions/10425
         uint N = 1;
         uint B = 1;
         for (uint i = 0; i < p; ++i){
@@ -21,9 +32,11 @@ library LibIncentive {
             N = N * (n-i);
             B = B * (i+1);
         }
-        return s;
     }
 
+    /// @notice log_two calculates the log2 solution in a gas efficient manner
+    /// Motivation: https://ethereum.stackexchange.com/questions/8086
+    /// @param x - the base to calculate log2 of
     function log_two(uint x) private pure returns (uint y) {
         assembly {
             let arg := x

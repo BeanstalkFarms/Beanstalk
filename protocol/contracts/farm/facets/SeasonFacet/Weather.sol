@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../../../libraries/Decimal.sol";
@@ -16,13 +16,11 @@ import "./Silo.sol";
 contract Weather is Silo {
 
     using SafeMath for uint256;
-    using SafeMath for uint32;
+    using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
 
     event WeatherChange(uint256 indexed season, uint256 caseId, int8 change);
     event SeasonOfPlenty(uint256 indexed season, uint256 eth, uint256 harvestable);
-
-    uint32 private constant MAX_UINT32 = 2**32-1;
 
     /**
      * Getters
@@ -47,7 +45,7 @@ contract Weather is Silo {
     // (ethereum, beans)
     function reserves() public view returns (uint256, uint256) {
         (uint112 reserve0, uint112 reserve1,) = pair().getReserves();
-        return (s.index == 0 ? reserve1 : reserve0, s.index == 0 ? reserve0 : reserve1);
+        return s.index == 0 ? (reserve1, reserve0) : (reserve0, reserve1);
     }
 
     // (ethereum, usdc)
@@ -87,7 +85,7 @@ contract Weather is Silo {
 
         if (
             int_price > 1e18 || (int_price == 1e18 &&
-            podRate.lessThanOrEqualTo(C.getOptimalPodRate()))
+            podRate.lessThan(C.getOptimalPodRate()))
         ) {
             caseId += 4;
         }
@@ -95,7 +93,7 @@ contract Weather is Silo {
         if (deltaPodDemand.greaterThanOrEqualTo(C.getUpperBoundDPD())) {
             caseId += 2;
         } else if (deltaPodDemand.greaterThanOrEqualTo(C.getLowerBoundDPD())) {
-            if (s.w.lastSowTime == MAX_UINT32 || !s.w.didSowBelowMin) {
+            if (s.w.lastSowTime == type(uint32).max || !s.w.didSowBelowMin) {
                 caseId += 1;
             }
             else if (s.w.didSowFaster) {
@@ -112,12 +110,13 @@ contract Weather is Silo {
     function handleExtremeWeather(uint256 endSoil) private {
         if (s.w.didSowBelowMin) {
             s.w.didSowBelowMin = false;
-            s.w.lastSoilPercent = uint96(endSoil.mul(1e18).div(bean().totalSupply()));
+            uint256 lsp = endSoil.mul(1e18).div(bean().totalSupply());
+            s.w.lastSoilPercent = lsp < type(uint96).max ? uint96(lsp) : type(uint96).max;
             s.w.lastSowTime = s.w.nextSowTime;
-            s.w.nextSowTime = MAX_UINT32;
+            s.w.nextSowTime = type(uint32).max;
         }
-        else if (s.w.lastSowTime != MAX_UINT32) {
-            s.w.lastSowTime = MAX_UINT32;
+        else if (s.w.lastSowTime != type(uint32).max) {
+            s.w.lastSowTime = type(uint32).max;
         }
     }
 
@@ -125,6 +124,9 @@ contract Weather is Silo {
         int8 change = s.cases[caseId];
         if (change < 0) {
                 if (yield() <= (uint32(-change))) {
+                    // if (change < 0 && yield() <= uint32(-change)),
+                    // then 0 <= yield() <= type(int8).max because change is an int8.
+                    // Thus, downcasting yield() to an int8 will not cause overflow.
                     change = 1 - int8(yield());
                     s.w.yield = 1;
                 }
@@ -164,7 +166,7 @@ contract Weather is Silo {
         uint256 ethBought = LibMarket.sellToWETH(newBeans, 0);
         uint256 newHarvestable = 0;
         if (s.f.harvestable < s.r.pods) {
-            newHarvestable = s.r.pods.sub(s.f.harvestable);
+            newHarvestable = s.r.pods - s.f.harvestable;
             mintToHarvestable(newHarvestable);
         }
         if (ethBought == 0) return;
@@ -178,7 +180,7 @@ contract Weather is Silo {
 
         uint256 newBeans = sqrt(ethBeanPool.mul(beansBeanPool).mul(usdcUSDCPool).div(ethUSDCPool));
         if (newBeans <= beansBeanPool) return (0,0);
-        uint256 beans = newBeans.sub(beansBeanPool);
+        uint256 beans = newBeans - beansBeanPool;
         beans = beans.mul(10000).div(9985).add(1);
 
         uint256 beansWithFee = beans.mul(997);

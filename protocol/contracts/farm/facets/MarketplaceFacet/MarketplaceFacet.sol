@@ -33,7 +33,7 @@ contract MarketplaceFacet is Order {
 
     // Fill
     function fillPodListing(
-        Listing calldata l,
+        PodListing calldata l,
         uint256 beanAmount
     ) external {
         LibMarket.transferBeans(l.account, beanAmount, l.toWallet);
@@ -41,29 +41,30 @@ contract MarketplaceFacet is Order {
     }
 
     function claimAndFillPodListing(
-        Listing calldata l,
+        PodListing calldata l,
         uint256 beanAmount,
         LibClaim.Claim calldata claim
-    ) external  {
+    ) external nonReentrant {
         allocateBeansToWallet(claim, beanAmount, l.account, l.toWallet);
         _fillListing(l, beanAmount);
+        LibMarket.claimRefund(claim);
     }
 
     function buyBeansAndFillPodListing(
-        Listing calldata l,
+        PodListing calldata l,
         uint256 beanAmount,
         uint256 buyBeanAmount
-    ) external payable {
+    ) external payable nonReentrant {
         if (beanAmount > 0) LibMarket.transferBeans(l.account, beanAmount, l.toWallet);
         _buyBeansAndFillPodListing(l, beanAmount, buyBeanAmount);
     }
 
     function claimBuyBeansAndFillPodListing(
-        Listing calldata l,
+        PodListing calldata l,
         uint256 beanAmount,
         uint256 buyBeanAmount,
         LibClaim.Claim calldata claim
-    ) external payable  {
+    ) external payable nonReentrant {
         allocateBeansToWallet(claim, beanAmount, l.account, l.toWallet);
         _buyBeansAndFillPodListing(l, beanAmount, buyBeanAmount);
     }
@@ -97,9 +98,10 @@ contract MarketplaceFacet is Order {
         uint24 pricePerPod,
         uint232 maxPlaceInLine,
         LibClaim.Claim calldata claim
-    ) external returns (bytes32 id) {
+    ) external nonReentrant returns (bytes32 id) {
         allocateBeans(claim, beanAmount, address(this));
         id = _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine);
+        LibMarket.claimRefund(claim);
     }
 
     function buyBeansAndCreatePodOrder(
@@ -107,7 +109,7 @@ contract MarketplaceFacet is Order {
         uint256 buyBeanAmount,
         uint24 pricePerPod,
         uint232 maxPlaceInLine
-    ) external payable returns (bytes32 id) {
+    ) external nonReentrant payable returns (bytes32 id) {
         if (beanAmount > 0) bean().transferFrom(msg.sender, address(this), beanAmount);
         return _buyBeansAndCreatePodOrder(beanAmount, buyBeanAmount, pricePerPod, maxPlaceInLine);
     }
@@ -118,19 +120,19 @@ contract MarketplaceFacet is Order {
         uint24 pricePerPod,
         uint232 maxPlaceInLine,
         LibClaim.Claim calldata claim
-    ) external payable returns (bytes32 id) {
+    ) external nonReentrant payable returns (bytes32 id) {
         allocateBeans(claim, beanAmount, address(this));
         return _buyBeansAndCreatePodOrder(beanAmount, buyBeanAmount, pricePerPod, maxPlaceInLine);
     }
 
     // Fill
     function fillPodOrder(
-        Order calldata o,
+        PodOrder calldata o,
         uint256 index,
         uint256 start,
         uint256 amount,
         bool toWallet
-    ) external  {
+    ) external {
         _fillPodOrder(o, index, start, amount, toWallet);
     }
 
@@ -178,12 +180,12 @@ contract MarketplaceFacet is Order {
          uint256 id, 
          uint256 start, 
          uint256 end
-    ) external {
+    ) external nonReentrant {
         require(sender != address(0) && recipient != address(0), "Field: Transfer to/from 0 address.");
         uint256 amount = s.a[msg.sender].field.plots[id];
         require(amount > 0, "Field: Plot not owned by user.");
         require(end > start && amount >= end, "Field: Pod range invalid.");
-        amount = end.sub(start);
+        amount = end - start; // Note: SafeMath is redundant here.
         if (msg.sender != sender && allowancePods(sender, msg.sender) != uint256(-1)) {
                 decrementAllowancePods(sender, msg.sender, amount);
         }
@@ -194,7 +196,7 @@ contract MarketplaceFacet is Order {
         _transferPlot(sender, recipient, id, start, amount);
     }
 
-    function approvePods(address spender, uint256 amount) external {
+    function approvePods(address spender, uint256 amount) external nonReentrant {
         require(spender != address(0), "Field: Pod Approve to 0 address.");
         setAllowancePods(msg.sender, spender, amount);
         emit PodApproval(msg.sender, spender, amount);

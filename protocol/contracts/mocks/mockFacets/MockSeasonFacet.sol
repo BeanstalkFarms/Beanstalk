@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -16,7 +16,11 @@ import "../MockToken.sol";
 **/
 contract MockSeasonFacet is SeasonFacet {
     using SafeMath for uint256;
-    using SafeMath for uint32;
+    using LibSafeMath32 for uint32;
+
+    function reentrancyGuardTest() public nonReentrant {
+        reentrancyGuardTest();
+    }
 
     function siloSunrise(uint256 amount) public {
         require(!paused(), "Season: Paused.");
@@ -246,5 +250,4 @@ contract MockSeasonFacet is SeasonFacet {
         s.w.startSoil = startSoil;
         stepWeather(intPrice.mul(1e16), endSoil);
     }
-
 }

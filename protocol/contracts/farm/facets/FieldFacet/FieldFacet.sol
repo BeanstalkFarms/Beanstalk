@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./BeanDibbler.sol";
@@ -23,10 +23,12 @@ contract FieldFacet is BeanDibbler {
 
     function claimAndSowBeans(uint256 amount, LibClaim.Claim calldata claim)
         external
-        returns (uint256)
+        nonReentrant
+        returns (uint256 pods)
     {
         allocateBeans(claim, amount);
-        return _sowBeans(amount);
+        pods = _sowBeans(amount);
+        LibMarket.claimRefund(claim);
     }
 
     function claimBuyAndSowBeans(
@@ -36,11 +38,12 @@ contract FieldFacet is BeanDibbler {
     )
         external
         payable
-        returns (uint256)
+        nonReentrant
+        returns (uint256 pods)
     {
         allocateBeans(claim, amount);
         uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
-        return _sowBeans(amount.add(boughtAmount));
+        pods = _sowBeans(amount.add(boughtAmount));
     }
 
     function sowBeans(uint256 amount) external returns (uint256) {
@@ -48,10 +51,10 @@ contract FieldFacet is BeanDibbler {
         return _sowBeans(amount);
     }
 
-    function buyAndSowBeans(uint256 amount, uint256 buyAmount) public payable returns (uint256) {
+    function buyAndSowBeans(uint256 amount, uint256 buyAmount) external payable nonReentrant returns (uint256 pods) {
         uint256 boughtAmount = LibMarket.buyAndDeposit(buyAmount);
         if (amount > 0) bean().transferFrom(msg.sender, address(this), amount);
-        return _sowBeans(amount.add(boughtAmount));
+        pods = _sowBeans(amount.add(boughtAmount));
     }
 
     function allocateBeans(LibClaim.Claim calldata c, uint256 transferBeans) private {

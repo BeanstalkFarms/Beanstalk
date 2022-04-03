@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../AppStorage.sol";
@@ -52,10 +52,6 @@ contract OracleFacet {
 
     function updateOracle() internal returns (Decimal.D256 memory, Decimal.D256 memory) {
         (Decimal.D256 memory bean_price, Decimal.D256 memory usdc_price) = updatePrice();
-        (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(s.c.pair).getReserves();
-        if (reserve0 == 0 || reserve1 == 0) {
-            return (Decimal.one(),Decimal.one());
-        }
         return (bean_price, usdc_price);
     }
 
@@ -102,13 +98,14 @@ contract OracleFacet {
             beanPrice = Decimal.ratio(price1, 2**112).mul(1e18).asUint256();
         } else {
             (uint256 reserve0, uint256 reserve1,) = IUniswapV2Pair(s.c.pair).getReserves();
-            beanPrice = (s.index == 0 ? 1e6 * reserve1 / reserve0 : 1e6 * reserve0 / reserve1);
+            beanPrice = 1e6 * (s.index == 0 ? reserve1 / reserve0 : reserve0 / reserve1);
         }
         if (pegTimeElapsed > 0) {
             uint256 price2 = (peg_priceCumulative - s.o.pegCumulative) / pegTimeElapsed / 1e12;
             usdcPrice = Decimal.ratio(price2, 2**112).mul(1e18).asUint256();
         } else {
             (uint256 reserve0, uint256 reserve1,) = IUniswapV2Pair(s.c.pegPair).getReserves();
+            // We assume that the index of USDC is 0 in this instance.
             usdcPrice = 1e6 * reserve1 / reserve0;
         }
         return (beanPrice, usdcPrice);
