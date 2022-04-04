@@ -145,7 +145,12 @@ contract FieldFacet is BeanDibbler {
 
     function getSowAmount(uint256 amount, uint256 minAmount) private view returns (uint256 maxSowAmount) {
         maxSowAmount = s.f.soil;
-        require(maxSowAmount >= minAmount && amount >= minAmount, "Field: Sowing below min pods.");
+        require(
+            maxSowAmount >= minAmount && 
+            amount >= minAmount && 
+            minAmount > 0, 
+            "Field: Sowing below min or 0 pods."
+        );
         if (amount < maxSowAmount) return amount;
     }
 
@@ -155,7 +160,12 @@ contract FieldFacet is BeanDibbler {
         returns (uint256 maxSowAmount, uint256 sowBuyAmount, uint256 sowEthAmount) 
     {
         maxSowAmount = s.f.soil;
-        require(maxSowAmount >= minAmount && amount.add(buyAmount) >= minAmount, "Field: Sowing below min pods.");
+        require(
+            maxSowAmount >= minAmount && 
+            amount.add(buyAmount) >= minAmount && 
+            minAmount > 0, 
+            "Field: Sowing below min or 0 pods."
+        );
         if (amount.add(buyAmount) <= maxSowAmount) return (amount, buyAmount, ethAmount);
         if (amount < maxSowAmount) {
             sowBuyAmount = maxSowAmount.sub(amount);

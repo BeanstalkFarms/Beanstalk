@@ -81,7 +81,11 @@ contract Weather is Silo {
             if (
                 s.w.lastSowTime == type(uint32).max || // Didn't Sow all last Season
                 s.w.nextSowTime < 300 || // Sow'd all instantly this Season
-                s.w.nextSowTime < s.w.lastSowTime.sub(C.getSteadySowTime()) // Sow'd all faster
+                (
+                    s.w.lastSowTime > C.getSteadySowTime()
+                    &&
+                    s.w.nextSowTime < s.w.lastSowTime.sub(C.getSteadySowTime()) // Sow'd all faster
+                )
             ) 
                 deltaPodDemand = Decimal.from(1e18);
             else if (s.w.nextSowTime <= s.w.lastSowTime.add(C.getSteadySowTime())) // Sow'd all in same time

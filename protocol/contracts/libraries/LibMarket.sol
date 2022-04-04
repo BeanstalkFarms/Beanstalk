@@ -82,7 +82,7 @@ library LibMarket {
             allocateEthRefund(msg.value, 0, false);
             return 0;
         }
-        (uint256 ethAmount, uint256 beanAmount) = _buyExactTokens(buyBeanAmount, buyEthAmount, address(this));
+        (uint256 ethAmount, uint256 beanAmount) = _buyExactTokensWETH(buyBeanAmount, buyEthAmount, address(this));
         allocateEthRefund(msg.value, ethAmount, false);
         amount = beanAmount;
     }
@@ -282,6 +282,26 @@ library LibMarket {
             to,
             block.timestamp
         );
+        return (amounts[0], amounts[1]);
+    }
+
+    function _buyExactTokensWETH(uint256 beanAmount, uint256 ethAmount, address to)
+        private
+        returns (uint256 inAmount, uint256 outAmount)
+    {
+        DiamondStorage storage ds = diamondStorage();
+        address[] memory path = new address[](2);
+        path[0] = ds.weth;
+        path[1] = ds.bean;
+        IWETH(ds.weth).deposit{value: ethAmount}();
+        uint[] memory amounts = IUniswapV2Router02(ds.router).swapTokensForExactTokens(
+            beanAmount,
+            ethAmount,
+            path,
+            to,
+            block.timestamp
+        );
+        IWETH(ds.weth).withdraw(ethAmount-amounts[0]);
         return (amounts[0], amounts[1]);
     }
 
