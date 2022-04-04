@@ -22,16 +22,17 @@ The Beanstalk smart contract is a multi-facet proxy as it implements EIP-2535. T
 The following are the different facets Beanstalk uses:
 |Facet       | Addresss                                                                                                            |
 |:-----------|:--------------------------------------------------------------------------------------------------------------------|
-|Season      |[0xE7F0C51d8FaF239a1CF65DB79E5e0fC64d148424](https://etherscan.io/address/0xE7F0C51d8FaF239a1CF65DB79E5e0fC64d148424)|
-|Governance  |[0x88540cB124CEeCFd0aE95F86d3EB6670b6035308](https://etherscan.io/address/0x88540cB124CEeCFd0aE95F86d3EB6670b6035308)|
-|Silo        |[0x07CBe1273D9A7EB0cfD10463BF1102d2FBBbDe74](https://etherscan.io/address/0x07CBe1273D9A7EB0cfD10463BF1102d2FBBbDe74)|
-|Field       |[0x24A30Cc4B8342B8A62DE921cd4038F4645C281eC](https://etherscan.io/address/0x24A30Cc4B8342B8A62DE921cd4038F4645C281eC)|
-|Claim       |[0x5ad02aED25fb1fd438CC71fBC5129895b395d4C6](https://etherscan.io/address/0x5ad02aED25fb1fd438CC71fBC5129895b395d4C6)|
-|Oracle      |[0xBA95364b0B856231e707a8a053e04FB7ceE71D44](https://etherscan.io/address/0xBA95364b0B856231e707a8a053e04FB7ceE71D44)|
-|Convert     |[0x3F8CE426e3fDC5EFECae218D84B50D46542e5416](https://etherscan.io/address/0x3f8ce426e3fdc5efecae218d84b50d46542e5416)|
-|Budget      |[0xAdb0e28A4AD120E13d110Aad5661DDEAa12Ba15F](https://etherscan.io/address/0xadb0e28a4ad120e13d110aad5661ddeaa12ba15f)|
-|Fundraiser  |[0x79C7531670fEA24b123b28b5e67FB93A44Faf001](https://etherscan.io/address/0x79c7531670fea24b123b28b5e67fb93a44faf001)|
-|Marketplace |[0x79ebc5C482ecF20A9643742785Df064D26c7eF71](https://etherscan.io/address/0x79ebc5c482ecf20a9643742785df064d26c7ef71)|
+|Budget      |[0x6c90e5ce27461e31b8954dfa2bc5101507751df6](https://etherscan.io/address/0x6c90e5ce27461e31b8954dfa2bc5101507751df6)|
+|Claim       |[0x024a129bb564da019aca23b41891329eadd233d8](https://etherscan.io/address/0x024a129bb564da019aca23b41891329eadd233d8)|
+|Convert     |[0x649d4b21278a1771c0b196614e2c21b4c73fe801](https://etherscan.io/address/0x649d4b21278a1771c0b196614e2c21b4c73fe801)|
+|CurveBDV    |[0x8e0dc2f6e8fb8712bc1e3c411609e581077cd1d6](https://etherscan.io/address/0x8e0dc2f6e8fb8712bc1e3c411609e581077cd1d6)|
+|Field       |[0x656b50740cbf6616d6324e3ccc9a96147fa04fb6](https://etherscan.io/address/0x656b50740cbf6616d6324e3ccc9a96147fa04fb6)|
+|Fundraiser  |[0x19c0674071d068be6c0b3900629618738bd137dc](https://etherscan.io/address/0x19c0674071d068be6c0b3900629618738bd137dc)|
+|Governance  |[0xf480ee81a54e21be47aa02d0f9e29985bc7667c4](https://etherscan.io/address/0xf480ee81a54e21be47aa02d0f9e29985bc7667c4)|
+|Marketplace |[0xdefcf58e20520466c2f023ab94a526184f534a6a](https://etherscan.io/address/0xdefcf58e20520466c2f023ab94a526184f534a6a)|
+|Season      |[0x197406ee97ad1d464194ee0e47efcf5b99520d27](https://etherscan.io/address/0x197406ee97ad1d464194ee0e47efcf5b99520d27)|
+|Silo        |[0x448d330affa0ad31264c2e6a7b5d2bf579608065](https://etherscan.io/address/0x448d330affa0ad31264c2e6a7b5d2bf579608065)|
+|SiloV2      |[0x23d231f37c8f5711468c8abbfbf1757d1f38fda2](https://etherscan.io/address/0x23d231f37c8f5711468c8abbfbf1757d1f38fda2)|
 
 The following facets are part of the [diamond functionality](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-2535.md):
 
