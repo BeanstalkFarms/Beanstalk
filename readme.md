@@ -10,8 +10,9 @@ Beanstalk is a decentralized credit based algorithmic stablecoin protocol that i
 |UniswapV2 BEAN:ETH Pool   |[0x87898263B6C5BABe34b4ec53F22d98430b91e371](https://etherscan.io/address/0x87898263B6C5BABe34b4ec53F22d98430b91e371)|
 |Curve BEAN:3CRV Metapool  |[0x3a70DfA7d2262988064A2D051dd47521E43c9BdD](https://etherscan.io/address/0x3a70DfA7d2262988064A2D051dd47521E43c9BdD)|
 |Curve BEAN:LUSD Plain Pool|[0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D](https://etherscan.io/address/0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D)|
-|Beanstalk Farms Treasury  |[0x21DE18B6A8f78eDe6D16C50A167f6B222DC08DF7](https://etherscan.io/address/0x21DE18B6A8f78eDe6D16C50A167f6B222DC08DF7)|
-|Bean Sprout Treasury      |[0xb7ab3f0667eFF5e2299d39C23Aa0C956e8982235](https://etherscan.io/address/0xb7ab3f0667eFF5e2299d39C23Aa0C956e8982235)|
+|Beanstalk Contract Owner  |[0xefd0E9ff0C4E1Bee55Db53FDD1FAD6F6950CeD0b](https://etherscan.io/address/0xefd0E9ff0C4E1Bee55Db53FDD1FAD6F6950CeD0b)
+|Beanstalk Farms Multisig  |[0x21DE18B6A8f78eDe6D16C50A167f6B222DC08DF7](https://etherscan.io/address/0x21DE18B6A8f78eDe6D16C50A167f6B222DC08DF7)|
+|Bean Sprout Multisig      |[0xb7ab3f0667eFF5e2299d39C23Aa0C956e8982235](https://etherscan.io/address/0xb7ab3f0667eFF5e2299d39C23Aa0C956e8982235)|
 |Development Budget 1      |[0x83A758a6a24FE27312C1f8BDa7F3277993b64783](https://etherscan.io/address/0x83A758a6a24FE27312C1f8BDa7F3277993b64783)|
 |Marketing Budget 1        |[0xAA420e97534aB55637957e868b658193b112A551](https://etherscan.io/address/0xAA420e97534aB55637957e868b658193b112A551)|
 |Beanstalk Farms Budget    |[0x21DE18B6A8f78eDe6D16C50A167f6B222DC08DF7](https://etherscan.io/address/0x21de18b6a8f78ede6d16c50a167f6b222dc08df7)|
@@ -97,10 +98,13 @@ There are a couple of steps that must be done before we can fork mainnet and upg
     },
     ```
 2. include as in imports section
-   * `const BEANSTALK = "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"`
-   * `const ownerFacet = await ethers.getContractAt('OwnershipFacet', BEANSTALK);`
-   * `const owner = await ownerFacet.owner();`
-   * `const { upgradeWithNewFacets } = require('./scripts/diamond.js')`
+    ```
+    const BEANSTALK = "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5";
+    const ownerFacet = await ethers.getContractAt('OwnershipFacet', BEANSTALK);
+    const owner = await ownerFacet.owner();
+    const { upgradeWithNewFacets } = require('./scripts/diamond.js')
+    ```
+
 3. Lastly, include the tasks required for upgrading above module.exports: 
     ```
     task("upgrade", "Commits a bip", async() => {
@@ -137,10 +141,19 @@ There are a couple of steps that must be done before we can fork mainnet and upg
     ```
 
 ## Running the Upgrade Tasks
-1. Spin up your mainnet fork node with `npx hardhat node`
-2. In another console, execute your tasks by running `npx hardhat upgrade --network localhost`, where `upgrade` is where you put the name of your task, in the example above it was named upgrade.
+1. Spin up your mainnet fork node with:
+    ```
+    npx hardhat node
+    ```
+
+2. In another console, execute your tasks by running 
+    ```
+    npx hardhat upgrade --network localhost
+    ```
+    where `upgrade` is where you put the name of your task, in the example above it was named upgrade.
+
 3. Now you can test your changes using your local blockchain node that should now have the latest version
-of beanstalk that you upgraded
+of beanstalk that you upgraded.
 
 
 ## Versions
