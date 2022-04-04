@@ -11,8 +11,6 @@ import { LibUserBalance } from './LibUserBalance.sol';
 
 import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
-import 'hardhat/console.sol';
-
 /* 
  * Author: Beasley
  * LibCurve is the "router" for the Curve Pools
@@ -37,21 +35,21 @@ library LibCurve {
       address[2] memory tokens = [ICurve(poolAddress).coins(0), ICurve(poolAddress).coins(1)];
       transferAmountsTwo(swp, tokens, fromInternalBalance, false);
       if (!toInternalBalance) LPReturned = ICurve(poolAddress).add_liquidity(swp, minMintAmount, msg.sender);
-      else LPReturned = ICurve(poolAddress).add_liquidity(swp, minMintAmount, poolAddress);
+      else LPReturned = ICurve(poolAddress).add_liquidity(swp, minMintAmount);
     }
     else if (amounts.length == 3) {
       uint256[3] memory swp = [amounts[0], amounts[1], amounts[2]];
       address[3] memory tokens = [ICurve(poolAddress).coins(0), ICurve(poolAddress).coins(1), ICurve(poolAddress).coins(2)];
       transferAmountsThree(swp, tokens, fromInternalBalance, false);
       if (!toInternalBalance) LPReturned = ICurve(poolAddress).add_liquidity(swp, minMintAmount, msg.sender);
-      else LPReturned = ICurve(poolAddress).add_liquidity(swp, minMintAmount, poolAddress);
+      else LPReturned = ICurve(poolAddress).add_liquidity(swp, minMintAmount);
     }
     else {
       uint256[4] memory swp = [amounts[0], amounts[1], amounts[2], amounts[3]];
       address[4] memory tokens = [ICurve(poolAddress).coins(0), ICurve(poolAddress).coins(1), ICurve(poolAddress).coins(2), ICurve(poolAddress).coins(3)];
       transferAmountsFour(swp, tokens, fromInternalBalance, false);
       if (!toInternalBalance) LPReturned = ICurve(poolAddress).add_liquidity(swp, minMintAmount, msg.sender);
-      else LPReturned = ICurve(poolAddress).add_liquidity(swp, minMintAmount, poolAddress);
+      else LPReturned = ICurve(poolAddress).add_liquidity(swp, minMintAmount);
     }
     if (toInternalBalance) LibUserBalance._increaseInternalBalance(msg.sender, IERC20(poolAddress), LPReturned);
 	}
@@ -152,7 +150,9 @@ library LibCurve {
       if (internalBalance != startingAmount) IERC20(x.fromTokenAddress).transferFrom(msg.sender, address(this), startingAmount.sub(internalBalance));
     }
     else IERC20(x.fromTokenAddress).transferFrom(msg.sender, address(this), startingAmount);
-		if (!toInternalBalance) amountReturned = ICurve(poolAddress).exchange(fromToken, toToken, startingAmount, minEndAmount, msg.sender);
+		if (!toInternalBalance) {
+      amountReturned = ICurve(poolAddress).exchange(fromToken, toToken, startingAmount, minEndAmount, msg.sender);
+    }
     else {
       amountReturned = ICurve(poolAddress).exchange(fromToken, toToken, startingAmount, minEndAmount);
       LibUserBalance._increaseInternalBalance(msg.sender, IERC20(x.toTokenAddress), amountReturned);

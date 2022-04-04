@@ -6,6 +6,7 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import '../../farm/facets/FarmFacet/FarmFacet.sol';
+import 'hardhat/console.sol';
 
 /**
  * @author Beasley
@@ -22,4 +23,8 @@ contract MockFarmFacet is FarmFacet {
 		DiamondStorage storage ds = diamondStorage();
 		f = ds.selectorToFacetAndPosition[selector];
 	}
+
+  function mockPrivateFunction(bool irrelevant) private {
+    console.log("If this is printing, then farm facet is failing");
+  }
 }

@@ -30,9 +30,11 @@ describe('Marketplace', function () {
     this.claim = await ethers.getContractAt('ClaimFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
     this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair);
+    this.uniswap = await ethers.getContractAt('MockUniswapFacet', this.diamond.address);
 
     await this.bean.mint(userAddress, '500000')
     await this.bean.mint(user2Address, '500000')
+    await this.bean.mint(this.pair.address, '100000000000000') // For updated MockPair
     await this.field.incrementTotalSoilEE('100000');
     this.orderIds = []
   })
@@ -46,7 +48,8 @@ describe('Marketplace', function () {
     this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
     this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair);
-    this.weth = await ethers.getContractAt('MockToken', contracts.weth)
+    this.weth = await ethers.getContractAt('MockToken', contracts.weth);
+    this.uniswap = await ethers.getContractAt('MockUniswapFacet', this.diamond.address);
 
     await this.season.resetAccount(userAddress)
     await this.season.resetAccount(user2Address)
@@ -63,6 +66,8 @@ describe('Marketplace', function () {
     await this.field.incrementTotalSoilEE('100000');
     await this.field.connect(user).sowBeansAndIndex('1000');
     await this.field.connect(user2).sowBeansAndIndex('1000');
+    await this.uniswap.resetInternalBalance(userAddress, this.bean.address);
+    await this.uniswap.resetInternalBalance(user2Address, this.bean.address);
   }
 
   const getHash = async function (tx) {
@@ -182,7 +187,7 @@ describe('Marketplace', function () {
 
         it('Fails to fill Listing, not enough ETH used', async function () {
           await this.pair.simulateTrade('4000', '1000');
-          await expect(this.marketplace.connect(user2).buyBeansAndFillPodListing(this.listing, 0, 100, { value: '24' })).to.be.revertedWith('UniswapV2Router: EXCESSIVE_INPUT_AMOUNT');
+          await expect(this.marketplace.connect(user2).buyBeansAndFillPodListing(this.listing, 0, 100, { value: '24' })).to.be.revertedWith('LibUniswap: EXCESSIVE_INPUT_AMOUNT');
         })
 
         it('Fill Listing non-listed Index Fails', async function () {
@@ -370,7 +375,7 @@ describe('Marketplace', function () {
 
           this.userBeanBalance = await this.bean.balanceOf(userAddress)
           this.user2BeanBalance = await this.bean.balanceOf(user2Address)
-
+          
           this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, this.amountBeansBuyingWith);
 
           this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)

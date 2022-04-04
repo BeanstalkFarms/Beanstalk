@@ -28,9 +28,9 @@ library LibUniswap {
     }
 
     struct DiamondStorage {
-        address bean;
-        address weth;
-        address router;
+      address bean;
+      address weth;
+      address router;
     }
 
     struct SwapInfo {
@@ -46,19 +46,19 @@ library LibUniswap {
     }
 
     struct AddLiquidity {
-        uint256 beanAmount;
-        uint256 minBeanAmount;
-        uint256 minEthAmount;
+      uint256 beanAmount;
+      uint256 minBeanAmount;
+      uint256 minEthAmount;
     }
 
     struct Swap {
-	uint256 beans;
-	uint256 sellBeans;
-	uint256 ethAdded;
-	uint256 liquidity;
-	uint256 returnETH;
-	address[] path;
-	uint256[] amounts;
+	    uint256 beans;
+	    uint256 sellBeans;
+	    uint256 ethAdded;
+	    uint256 liquidity;
+	    uint256 returnETH;
+	    address[] path;
+	    uint256[] amounts;
     }
 
     bytes32 private constant MARKET_STORAGE_POSITION = keccak256("diamond.standard.market.storage");
@@ -89,24 +89,24 @@ library LibUniswap {
         // create the pair if it doesn't exist yet
       AppStorage storage s = LibAppStorage.diamondStorage();
       if (IUniswapV2Factory(uniswapFactory).getPair(tokenA, tokenB) == address(0)) {
-             IUniswapV2Factory(uniswapFactory).createPair(tokenA, tokenB);
-        }
-        (uint reserveA, uint reserveB) = getReserves(uniswapFactory, tokenA, tokenB);
-        if (reserveA == 0 && reserveB == 0) {
-            (amountA, amountB) = (amountADesired, amountBDesired);
-        }
+        IUniswapV2Factory(uniswapFactory).createPair(tokenA, tokenB);
+      }
+      (uint reserveA, uint reserveB) = getReserves(uniswapFactory, tokenA, tokenB);
+      if (reserveA == 0 && reserveB == 0) {
+        (amountA, amountB) = (amountADesired, amountBDesired);
+      }
 	    else {
-            uint amountBOptimal = quote(amountADesired, reserveA, reserveB);
-            if (amountBOptimal <= amountBDesired) {
-                require(amountBOptimal >= amountBMin, 'LibUniswap: INSUFFICIENT_B_AMOUNT');
-                (amountA, amountB) = (amountADesired, amountBOptimal);
-            } else {
-                uint amountAOptimal = quote(amountBDesired, reserveB, reserveA);
-                assert(amountAOptimal <= amountADesired);
-                require(amountAOptimal >= amountAMin, 'LibUniswap: INSUFFICIENT_A_AMOUNT');
-                (amountA, amountB) = (amountAOptimal, amountBDesired);
-            }
+        uint amountBOptimal = quote(amountADesired, reserveA, reserveB);
+        if (amountBOptimal <= amountBDesired) {
+        require(amountBOptimal >= amountBMin, 'LibUniswap: INSUFFICIENT_B_AMOUNT');
+        (amountA, amountB) = (amountADesired, amountBOptimal);
+      } else {
+        uint amountAOptimal = quote(amountBDesired, reserveB, reserveA);
+        assert(amountAOptimal <= amountADesired);
+        require(amountAOptimal >= amountAMin, 'LibUniswap: INSUFFICIENT_A_AMOUNT');
+        (amountA, amountB) = (amountAOptimal, amountBDesired);
         }
+      }
     }
 
     // If we want to add liquidity from an internal convert, i.e. from Convert Facet, which converts siloed beans to LP, the bool will be true. Otherwise, liquidity will be provided by the user, not by Beanstalk.
@@ -175,25 +175,26 @@ library LibUniswap {
         uint amountBMin,
         address to,
         uint deadline,
-	bool convert // Once again, convert is only true when it is accessed from ConvertFacet
+	      bool convert // Once again, convert is only true when it is accessed from ConvertFacet
     ) internal ensure(deadline) returns (uint amountA, uint amountB) {
-	SwapInfo memory swap;
-	swap.tokenA = tokenA;
-	swap.tokenB = tokenB;
-	AppStorage storage s = LibAppStorage.diamondStorage();
-        address pair = pairFor(uniswapFactory, swap.tokenA, swap.tokenB);
-	if (!convert) {
-        	IUniswapV2Pair(pair).transferFrom(msg.sender, pair, liquidity);	// send liquidity to pair
-	}
-	else {
-		IUniswapV2Pair(pair).transfer(pair, liquidity); // send liquidity to pair
-	}
-        (uint amount0, uint amount1) = IUniswapV2Pair(pair).burn(to);
-        (address token0,) = sortTokens(swap.tokenA, swap.tokenB);
-        (amountA, amountB) = swap.tokenA == token0 ? (amount0, amount1) : (amount1, amount0);
-        require(amountA >= amountAMin, 'LibUniswap: INSUFFICIENT_A_AMOUNT');
-        require(amountB >= amountBMin, 'LibUniswap: INSUFFICIENT_B_AMOUNT');
+	    SwapInfo memory swap;
+	    swap.tokenA = tokenA;
+	    swap.tokenB = tokenB;
+	    AppStorage storage s = LibAppStorage.diamondStorage();
+      address pair = pairFor(uniswapFactory, swap.tokenA, swap.tokenB);
+	    if (!convert) {
+        IUniswapV2Pair(pair).transferFrom(msg.sender, pair, liquidity);	// send liquidity to pair
+	    }
+	    else {
+		    IUniswapV2Pair(pair).transfer(pair, liquidity); // send liquidity to pair
+	    }
+      (uint amount0, uint amount1) = IUniswapV2Pair(pair).burn(to);
+      (address token0,) = sortTokens(swap.tokenA, swap.tokenB);
+      (amountA, amountB) = swap.tokenA == token0 ? (amount0, amount1) : (amount1, amount0);
+      require(amountA >= amountAMin, 'LibUniswap: INSUFFICIENT_A_AMOUNT');
+      require(amountB >= amountBMin, 'LibUniswap: INSUFFICIENT_B_AMOUNT');
     }
+
     function removeLiquidityETH(
         address token,
         uint liquidity,
@@ -202,8 +203,8 @@ library LibUniswap {
         address to,
         uint deadline
     ) internal ensure(deadline) returns (uint amountToken, uint amountETH) {
-	AppStorage storage s = LibAppStorage.diamondStorage();	
-        (amountToken, amountETH) = removeLiquidity(
+	    AppStorage storage s = LibAppStorage.diamondStorage();	
+      (amountToken, amountETH) = removeLiquidity(
             token,
             s.c.weth,
             liquidity,
@@ -211,7 +212,7 @@ library LibUniswap {
             amountETHMin,
             address(this),
             deadline,
-	    false
+	          false
         );
         TransferHelper.safeTransfer(token, to, amountToken);
         IWETH(s.c.weth).withdraw(amountETH);
@@ -221,88 +222,91 @@ library LibUniswap {
     // **** SWAP ****
     // requires the initial amount to have already been sent to the first pair
     function _swap(uint[] memory amounts, address[] memory path, address _to, bool toInternalBalance) internal {
-	AppStorage storage s = LibAppStorage.diamondStorage();
-	SwapState memory swap;
-	swap.recipient = _to;
-	swap.path = path;
-        for (uint i; i < swap.path.length - 1; i++) {
-            (address input, address output) = (swap.path[i], swap.path[i + 1]);
-            (address token0,) = sortTokens(input, output);
-            uint amountOut = amounts[i + 1];
-            (uint amount0Out, uint amount1Out) = input == token0 ? (uint(0), amountOut) : (amountOut, uint(0));
+	    AppStorage storage s = LibAppStorage.diamondStorage();
+	    SwapState memory swap;
+	    swap.recipient = _to;
+	    swap.path = path;
+      for (uint i; i < swap.path.length - 1; i++) {
+        (address input, address output) = (swap.path[i], swap.path[i + 1]);
+        (address token0,) = sortTokens(input, output);
+        uint amountOut = amounts[i + 1];
+        (uint amount0Out, uint amount1Out) = input == token0 ? (uint(0), amountOut) : (amountOut, uint(0));
 
-	    if (i < swap.path.length - 2) {
-		    address to = pairFor(uniswapFactory, output, swap.path[i + 2]);
-	    	    IUniswapV2Pair(pairFor(uniswapFactory, input, output)).swap(amount0Out, amount1Out, to, new bytes(0));
-	    }
-	    else {
-		    if (toInternalBalance) {
-		            swap.snapshot = IERC20(swap.path[swap.path.length - 1]).balanceOf(address(this));
-			    IUniswapV2Pair(pairFor(uniswapFactory, input, output)).swap(amount0Out, amount1Out, address(this), new bytes(0));
-			    uint256 increment = IERC20(swap.path[swap.path.length - 1]).balanceOf(address(this)) == swap.snapshot.add(amount0Out) ? amount0Out : amount1Out;
-			    LibUserBalance._increaseInternalBalance(swap.recipient, IERC20(swap.path[swap.path.length - 1]), increment);
-		    }
-		    else {
-            	    	    IUniswapV2Pair(pairFor(uniswapFactory, input, output)).swap(amount0Out, amount1Out, swap.recipient, new bytes(0));
-		    }
-	    }
-        }
+	      if (i < swap.path.length - 2) {
+		      address to = pairFor(uniswapFactory, output, swap.path[i + 2]);
+	    	  IUniswapV2Pair(pairFor(uniswapFactory, input, output)).swap(amount0Out, amount1Out, to, new bytes(0));
+	      }
+	      else {
+		      if (toInternalBalance) {
+		        swap.snapshot = IERC20(swap.path[swap.path.length - 1]).balanceOf(address(this));
+			      IUniswapV2Pair(pairFor(uniswapFactory, input, output)).swap(amount0Out, amount1Out, address(this), new bytes(0));
+			      uint256 increment = IERC20(swap.path[swap.path.length - 1]).balanceOf(address(this)) == swap.snapshot.add(amount0Out) ? amount0Out : amount1Out;
+			      LibUserBalance._increaseInternalBalance(swap.recipient, IERC20(swap.path[swap.path.length - 1]), increment);
+		      }
+		      else {
+            IUniswapV2Pair(pairFor(uniswapFactory, input, output)).swap(amount0Out, amount1Out, swap.recipient, new bytes(0));
+		      }
+	      }
+      }
     }
+
     function swapExactTokensForTokens(
         uint amountIn,
         uint amountOutMin,
         address[] memory path,
         address to,
         uint deadline,
-	Storage.Settings memory set,
-	bool convert // This is to differentiate between normal swaps and swaps called from ConvertFacet
+	      Storage.Settings memory set,
+	      bool convert // This is to differentiate between normal swaps and swaps called from ConvertFacet
     ) internal ensure(deadline) returns (uint[] memory amounts) {
-	AppStorage storage s = LibAppStorage.diamondStorage();
-	amounts = getAmountsOut(uniswapFactory, amountIn, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, 'LibUniswap: INSUFFICIENT_OUTPUT_AMOUNT');
-	if (!convert) {
-		if (set.fromInternalBalance) {
-			uint256 fromBeanstalk = LibUserBalance._decreaseInternalBalance(msg.sender, IERC20(path[0]), amounts[0], true);
-			IERC20(path[0]).transfer(pairFor(uniswapFactory, path[0], path[1]), fromBeanstalk);
-			TransferHelper.safeTransferFrom(path[0], msg.sender, pairFor(uniswapFactory, path[0], path[1]), amounts[0].sub(fromBeanstalk));
-		}
-		else {
-        		TransferHelper.safeTransferFrom(path[0], msg.sender, pairFor(uniswapFactory, path[0], path[1]), amounts[0]);
-		}
-	}
-	else {
-		IERC20(path[0]).transfer(pairFor(uniswapFactory, path[0], path[1]), amounts[0]);
-	}
+	    AppStorage storage s = LibAppStorage.diamondStorage();
+	    amounts = getAmountsOut(uniswapFactory, amountIn, path);
+      require(amounts[amounts.length - 1] >= amountOutMin, 'LibUniswap: INSUFFICIENT_OUTPUT_AMOUNT');
+	    if (!convert) {
+		    if (set.fromInternalBalance) {
+			    uint256 fromBeanstalk = LibUserBalance._decreaseInternalBalance(msg.sender, IERC20(path[0]), amounts[0], true);
+			    IERC20(path[0]).transfer(pairFor(uniswapFactory, path[0], path[1]), fromBeanstalk);
+			    TransferHelper.safeTransferFrom(path[0], msg.sender, pairFor(uniswapFactory, path[0], path[1]), amounts[0].sub(fromBeanstalk));
+		    }
+		    else {
+        	TransferHelper.safeTransferFrom(path[0], msg.sender, pairFor(uniswapFactory, path[0], path[1]), amounts[0]);
+		    }
+	    }
+	    else {
+		    IERC20(path[0]).transfer(pairFor(uniswapFactory, path[0], path[1]), amounts[0]);
+	    }
         _swap(amounts, path, to, set.toInternalBalance);
     }
+
     function swapTokensForExactTokens(
         uint amountOut,
         uint amountInMax,
         address[] memory path,
         address to,
         uint deadline,
-	Storage.Settings calldata set
+	      Storage.Settings calldata set
     ) internal ensure(deadline) returns (uint[] memory amounts) {
-	AppStorage storage s = LibAppStorage.diamondStorage();	
-        amounts = getAmountsIn(uniswapFactory, amountOut, path);
-        require(amounts[0] <= amountInMax, 'LibUniswap: EXCESSIVE_INPUT_AMOUNT');
-	if (set.fromInternalBalance) {
-		uint256 fromBeanstalk = LibUserBalance._decreaseInternalBalance(msg.sender, IERC20(path[0]), amounts[0], true);
-                IERC20(path[0]).transfer(pairFor(uniswapFactory, path[0], path[1]), fromBeanstalk);
-                TransferHelper.safeTransferFrom(path[0], msg.sender, pairFor(uniswapFactory, path[0], path[1]), amounts[0].sub(fromBeanstalk));
-	}
-	else {
-        	TransferHelper.safeTransferFrom(path[0], msg.sender, pairFor(uniswapFactory, path[0], path[1]), amounts[0]);
-	}
+	    AppStorage storage s = LibAppStorage.diamondStorage();	
+      amounts = getAmountsIn(uniswapFactory, amountOut, path);
+      require(amounts[0] <= amountInMax, 'LibUniswap: EXCESSIVE_INPUT_AMOUNT');
+	    if (set.fromInternalBalance) {
+		    uint256 fromBeanstalk = LibUserBalance._decreaseInternalBalance(msg.sender, IERC20(path[0]), amounts[0], true);
+        IERC20(path[0]).transfer(pairFor(uniswapFactory, path[0], path[1]), fromBeanstalk);
+        TransferHelper.safeTransferFrom(path[0], msg.sender, pairFor(uniswapFactory, path[0], path[1]), amounts[0].sub(fromBeanstalk));
+	    }
+	    else {
+       	TransferHelper.safeTransferFrom(path[0], msg.sender, pairFor(uniswapFactory, path[0], path[1]), amounts[0]);
+	    }
         _swap(amounts, path, to, set.toInternalBalance);
     }
+
     
     function swapExactETHForTokens(uint amountOutMin, address[] memory path, address to, uint deadline, Storage.Settings memory set)
         internal
         ensure(deadline)
         returns (uint[] memory amounts)
     {
-	AppStorage storage s = LibAppStorage.diamondStorage();	
+	      AppStorage storage s = LibAppStorage.diamondStorage();	
         require(path[0] == s.c.weth, 'LibUniswap: INVALID_PATH');
         amounts = getAmountsOut(uniswapFactory, msg.value, path);
         require(amounts[amounts.length - 1] >= amountOutMin, 'LibUniswap: INSUFFICIENT_OUTPUT_AMOUNT');
@@ -310,54 +314,60 @@ library LibUniswap {
         assert(IWETH(s.c.weth).transfer(pairFor(uniswapFactory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to, set.toInternalBalance);
     }
+
+
     function swapTokensForExactETH(uint amountOut, uint amountInMax, address[] memory path, address to, uint deadline, Storage.Settings calldata set)
         internal
         ensure(deadline)
         returns (uint[] memory amounts)
     {
-	AppStorage storage s = LibAppStorage.diamondStorage();	
+	      AppStorage storage s = LibAppStorage.diamondStorage();	
         require(path[path.length - 1] == s.c.weth, 'LibUniswap: INVALID_PATH');
         amounts = getAmountsIn(uniswapFactory, amountOut, path);
         require(amounts[0] <= amountInMax, 'LibUniswap: EXCESSIVE_INPUT_AMOUNT');
-	if (set.fromInternalBalance) {
-		uint256 fromBeanstalk = LibUserBalance._decreaseInternalBalance(msg.sender, IERC20(path[0]), amounts[0], true);
-                IERC20(path[0]).transfer(pairFor(uniswapFactory, path[0], path[1]), fromBeanstalk);
-                TransferHelper.safeTransferFrom(path[0], msg.sender, pairFor(uniswapFactory, path[0], path[1]), amounts[0].sub(fromBeanstalk));
-	}
-	else {
+	      if (set.fromInternalBalance) {
+		      uint256 fromBeanstalk = LibUserBalance._decreaseInternalBalance(msg.sender, IERC20(path[0]), amounts[0], true);
+          IERC20(path[0]).transfer(pairFor(uniswapFactory, path[0], path[1]), fromBeanstalk);
+          TransferHelper.safeTransferFrom(path[0], msg.sender, pairFor(uniswapFactory, path[0], path[1]), amounts[0].sub(fromBeanstalk));
+	      }
+	      else {
         	TransferHelper.safeTransferFrom(path[0], msg.sender, pairFor(uniswapFactory, path[0], path[1]), amounts[0]);
-	}
+	      }
         _swap(amounts, path, address(this), false);
         IWETH(s.c.weth).withdraw(amounts[amounts.length - 1]);
         TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
     }
+
+
     function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] memory path, address to, uint deadline, Storage.Settings calldata set)
         internal
         ensure(deadline)
         returns (uint[] memory amounts)
     {
-	AppStorage storage s = LibAppStorage.diamondStorage();	
+	      AppStorage storage s = LibAppStorage.diamondStorage();	
         require(path[path.length - 1] == s.c.weth, 'LibUniswap: INVALID_PATH');
         amounts = getAmountsOut(uniswapFactory, amountIn, path);
         require(amounts[amounts.length - 1] >= amountOutMin, 'LibUniswap: INSUFFICIENT_OUTPUT_AMOUNT');
-	if (set.fromInternalBalance) {
-		uint256 fromBeanstalk = LibUserBalance._decreaseInternalBalance(msg.sender, IERC20(path[0]), amounts[0], true);
-                IERC20(path[0]).transfer(pairFor(uniswapFactory, path[0], path[1]), fromBeanstalk);
-                TransferHelper.safeTransferFrom(path[0], msg.sender, pairFor(uniswapFactory, path[0], path[1]), amounts[0].sub(fromBeanstalk));
+	      if (set.fromInternalBalance) {
+		      uint256 fromBeanstalk = LibUserBalance._decreaseInternalBalance(msg.sender, IERC20(path[0]), amounts[0], true);
+          IERC20(path[0]).transfer(pairFor(uniswapFactory, path[0], path[1]), fromBeanstalk);
+          TransferHelper.safeTransferFrom(path[0], msg.sender, pairFor(uniswapFactory, path[0], path[1]), amounts[0].sub(fromBeanstalk));
         }
-	else {
+	      else {
         	TransferHelper.safeTransferFrom(path[0], msg.sender, pairFor(uniswapFactory, path[0], path[1]), amounts[0]);
-	}
+	      }
         _swap(amounts, path, address(this), false);
         IWETH(s.c.weth).withdraw(amounts[amounts.length - 1]);
         TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
     }
+
+
     function swapETHForExactTokens(uint amountOut, address[] memory path, address to, uint deadline)
         internal
         ensure(deadline)
         returns (uint[] memory amounts)
     {
-	AppStorage storage s = LibAppStorage.diamondStorage();	
+	      AppStorage storage s = LibAppStorage.diamondStorage();	
         require(path[0] == s.c.weth, 'LibUniswap: INVALID_PATH');
         amounts = getAmountsIn(uniswapFactory, amountOut, path);
         require(amounts[0] <= msg.value, 'LibUniswap: EXCESSIVE_INPUT_AMOUNT');
@@ -372,6 +382,7 @@ library LibUniswap {
     * Uniswap Library
     **/
    
+
    // returns sorted token addresses, used to handle return values from pairs sorted in this order
     function sortTokens(address tokenA, address tokenB) internal pure returns (address token0, address token1) {
         require(tokenA != tokenB, 'LibUniswap: IDENTICAL_ADDRESSES');
@@ -381,9 +392,9 @@ library LibUniswap {
 
     // calculates the CREATE2 address for a pair without making any external calls
     function pairFor(address factory, address tokenA, address tokenB) internal view returns (address pair) {
-	AppStorage storage s = LibAppStorage.diamondStorage();
-        (address token0, address token1) = sortTokens(tokenA, tokenB);
-	if ((token0 == s.c.bean && token1 == s.c.weth) || (token0 == s.c.weth && token1 == s.c.bean)) return s.c.pair;
+	    AppStorage storage s = LibAppStorage.diamondStorage();
+      (address token0, address token1) = sortTokens(tokenA, tokenB);
+	    if ((token0 == s.c.bean && token1 == s.c.weth) || (token0 == s.c.weth && token1 == s.c.bean)) return s.c.pair;
          pair = address(uint(keccak256(abi.encodePacked(
                 hex'ff',
                 factory,
@@ -391,6 +402,7 @@ library LibUniswap {
                 hex'96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f' // init code hash
             ))));
     }
+
 
     // fetches and sorts the reserves for a pair
     function getReserves(address factory, address tokenA, address tokenB) internal view returns (uint reserveA, uint reserveB) {
@@ -455,7 +467,7 @@ library LibUniswap {
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
         AddLiquidity calldata al,
-	Storage.Settings calldata set
+	      Storage.Settings calldata set
     )
         internal
         returns (uint256)
@@ -471,81 +483,87 @@ library LibUniswap {
         internal
         returns (uint256)
     {
-	Swap memory swap;
-	AppStorage storage s = LibAppStorage.diamondStorage();
-        IWETH(s.c.weth).deposit{value: msg.value}();
-	swap.path = new address[](2);
-        swap.path[0] = s.c.weth;
-        swap.path[1] = s.c.bean;
-        swap.sellBeans = getAmountsIn(uniswapFactory, buyBeanAmount, swap.path)[0];
-	swap.amounts = swapExactTokensForTokens(swap.sellBeans, buyBeanAmount, swap.path, address(this), block.timestamp.add(1), set, true);
-	swap.beans = swap.amounts[1];
-        // If beans bought does not cover the amount of money to move to LP
-	if (al.beanAmount > buyBeanAmount) {
-            LibUserBalance.allocatedBeans(al.beanAmount.sub(buyBeanAmount));
-            swap.beans = swap.beans.add(al.beanAmount.sub(buyBeanAmount));
-        }
-	(swap.beans, swap.ethAdded, swap.liquidity) = addLiquidity(s.c.bean, s.c.weth, swap.beans, msg.value.sub(swap.amounts[0]), al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1), true);
-        if (al.beanAmount > swap.beans) IBean(s.c.bean).transfer(msg.sender, al.beanAmount.sub(swap.beans));
-        if (msg.value > swap.ethAdded.add(swap.amounts[0])) {
-            swap.returnETH = msg.value.sub(swap.ethAdded).sub(swap.amounts[0]);
-            IWETH(s.c.weth).withdraw(swap.returnETH);
-            (bool success,) = msg.sender.call{ value: swap.returnETH }("");
-            require(success, "Market: Refund failed.");
-        }
-        return swap.liquidity;
+	    Swap memory swap;
+	    AppStorage storage s = LibAppStorage.diamondStorage();
+      IWETH(s.c.weth).deposit{value: msg.value}();
+	    swap.path = new address[](2);
+      swap.path[0] = s.c.weth;
+      swap.path[1] = s.c.bean;
+      swap.sellBeans = getAmountsIn(uniswapFactory, buyBeanAmount, swap.path)[0];
+	    swap.amounts = swapExactTokensForTokens(swap.sellBeans, buyBeanAmount, swap.path, address(this), block.timestamp.add(1), set, true);
+	    swap.beans = swap.amounts[1];
+       // If beans bought does not cover the amount of money to move to LP
+	
+      if (al.beanAmount > buyBeanAmount) {
+        LibUserBalance.allocatedBeans(al.beanAmount.sub(buyBeanAmount));
+        swap.beans = swap.beans.add(al.beanAmount.sub(buyBeanAmount));
+      }
+	    (swap.beans, swap.ethAdded, swap.liquidity) = addLiquidity(s.c.bean, s.c.weth, swap.beans, msg.value.sub(swap.amounts[0]), al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1), true);
+      if (al.beanAmount > swap.beans) IBean(s.c.bean).transfer(msg.sender, al.beanAmount.sub(swap.beans));
+      if (msg.value > swap.ethAdded.add(swap.amounts[0])) {
+        swap.returnETH = msg.value.sub(swap.ethAdded).sub(swap.amounts[0]);
+        IWETH(s.c.weth).withdraw(swap.returnETH);
+        (bool success,) = msg.sender.call{ value: swap.returnETH }("");
+        require(success, "Market: Refund failed.");
+      }
+      return swap.liquidity;
     }
+
 
     function buyEthAndAddLiquidity(uint256 buyWethAmount, AddLiquidity calldata al, Storage.Settings calldata set)
         internal
         returns (uint256)
     {
-	Swap memory swap;
-        AppStorage storage s = LibAppStorage.diamondStorage();
-	swap.path = new address[](2);
-	swap.path[0] = s.c.bean;
-	swap.path[1] = s.c.weth;
-        swap.sellBeans = getAmountsIn(uniswapFactory, buyWethAmount, swap.path)[0];
-        LibUserBalance.allocatedBeans(al.beanAmount.add(swap.sellBeans));
-	swap.amounts = swapExactTokensForTokens(swap.sellBeans, buyWethAmount, swap.path, address(this), block.timestamp.add(1), set, true);
-        if (msg.value > 0) IWETH(s.c.weth).deposit{value: msg.value}();
-	(swap.beans, swap.ethAdded, swap.liquidity) = addLiquidity(s.c.bean, s.c.weth, al.beanAmount, msg.value.add(swap.amounts[1]), al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1), true);
+	    Swap memory swap;
+      AppStorage storage s = LibAppStorage.diamondStorage();
+	    swap.path = new address[](2);
+	    swap.path[0] = s.c.bean;
+	    swap.path[1] = s.c.weth;
+      swap.sellBeans = getAmountsIn(uniswapFactory, buyWethAmount, swap.path)[0];
+      LibUserBalance.allocatedBeans(al.beanAmount.add(swap.sellBeans));
+	    swap.amounts = swapExactTokensForTokens(swap.sellBeans, buyWethAmount, swap.path, address(this), block.timestamp.add(1), set, true);
+      if (msg.value > 0) IWETH(s.c.weth).deposit{value: msg.value}();
+	    (swap.beans, swap.ethAdded, swap.liquidity) = addLiquidity(s.c.bean, s.c.weth, al.beanAmount, msg.value.add(swap.amounts[1]), al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1), true);
 
-        if (al.beanAmount.add(swap.sellBeans) > swap.beans.add(swap.amounts[0])) {
+
+      if (al.beanAmount.add(swap.sellBeans) > swap.beans.add(swap.amounts[0])) {
         uint256 toTransfer = al.beanAmount.add(swap.sellBeans).sub(swap.beans.add(swap.amounts[0]));
-	    IBean(s.c.bean).transfer(
-            msg.sender,
-            toTransfer
+	      IBean(s.c.bean).transfer(
+           msg.sender,
+           toTransfer
         );
-	}
+	    }
 
-        if (swap.ethAdded < msg.value.add(swap.amounts[1])) {
-            uint256 eth = swap.amounts[1].add(msg.value).sub(swap.ethAdded);
-            IWETH(s.c.weth).withdraw(eth);
-            (bool success, ) = msg.sender.call{value: eth}("");
-            require(success, "Market: Ether transfer failed.");
-        }
-        return swap.liquidity;
+      if (swap.ethAdded < msg.value.add(swap.amounts[1])) {
+        uint256 eth = swap.amounts[1].add(msg.value).sub(swap.ethAdded);
+        IWETH(s.c.weth).withdraw(eth);
+        (bool success, ) = msg.sender.call{value: eth}("");
+        require(success, "Market: Ether transfer failed.");
+      }
+      return swap.liquidity;
     }
 
+
+
     function addAndDepositLiquidity(AddLiquidity calldata al) internal returns (uint256) {
-	AppStorage storage s = LibAppStorage.diamondStorage();
-	LibUserBalance.allocatedBeans(al.beanAmount);
-        (uint256 beansDeposited, uint256 ethDeposited, uint256 liquidity) = addLiquidityETH(s.c.bean, al.beanAmount, al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1), true); //{value: msg.value}
-        (bool success,) = msg.sender.call{ value: msg.value.sub(ethDeposited) }("");
-        require(success, "Market: Refund failed.");
-        if (al.beanAmount > beansDeposited) IBean(s.c.bean).transfer(msg.sender, al.beanAmount.sub(beansDeposited));
-        return liquidity;
+	    AppStorage storage s = LibAppStorage.diamondStorage();
+	    LibUserBalance.allocatedBeans(al.beanAmount);
+      (uint256 beansDeposited, uint256 ethDeposited, uint256 liquidity) = addLiquidityETH(s.c.bean, al.beanAmount, al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1), true); //{value: msg.value}
+      (bool success,) = msg.sender.call{ value: msg.value.sub(ethDeposited) }("");
+      require(success, "Market: Refund failed.");
+      if (al.beanAmount > beansDeposited) IBean(s.c.bean).transfer(msg.sender, al.beanAmount.sub(beansDeposited));
+      return liquidity;
     }
 
     function buyExactTokensToWallet(uint256 buyBeanAmount, address to, bool toWallet) internal returns (uint256 amount) {
-	AppStorage storage s = LibAppStorage.diamondStorage();
-        if (toWallet) amount = buyExactTokens(buyBeanAmount, to);
-        else {
-            amount = buyExactTokens(buyBeanAmount, address(this));
-	    LibUserBalance._increaseInternalBalance(to, IBean(s.c.bean), amount);
-        }
+	    AppStorage storage s = LibAppStorage.diamondStorage();
+      if (toWallet) amount = buyExactTokens(buyBeanAmount, to);
+      else {
+        amount = buyExactTokens(buyBeanAmount, address(this));
+	      LibUserBalance._increaseInternalBalance(to, IBean(s.c.bean), amount);
+      }
     }
+
 
     function buyExactTokens(uint256 buyBeanAmount, address to) internal returns (uint256 amount) {
         (uint256 ethAmount, uint256 beanAmount) = _buyExactTokens(buyBeanAmount, msg.value, to);
@@ -553,6 +571,7 @@ library LibUniswap {
         require(success, "Market: Refund failed.");
         return beanAmount;
     }
+
 
     function _buyExactTokens(uint256 beanAmount, uint256 ethAmount, address to)
         private

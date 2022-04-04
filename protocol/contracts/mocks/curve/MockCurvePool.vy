@@ -6,7 +6,6 @@
 @notice 2 coin pool implementation with no lending
 @dev ERC20 support for return True/revert, return True/False, return None
 """
-
 from vyper.interfaces import ERC20
 
 interface Factory:
@@ -100,6 +99,23 @@ balanceOf: public(HashMap[address, uint256])
 allowance: public(HashMap[address, HashMap[address, uint256]])
 totalSupply: public(uint256)
 
+### Beanstalk test functions ###
+
+@external
+def set_A_precise(_a: uint256):
+    A: uint256 = _a #* A_PRECISION
+    self.initial_A = A
+    self.future_A = A
+
+@external
+def set_balances(_balances: uint256[2]):
+    self.balances = _balances
+
+@external
+def set_supply(_supply: uint256):
+    self.totalSupply = _supply
+
+### Initializations ###
 
 @external
 def __init__():
@@ -215,7 +231,6 @@ def approve(_spender : address, _value : uint256) -> bool:
 
     log Approval(msg.sender, _spender, _value)
     return True
-
 
 ### StableSwap Functionality ###
 

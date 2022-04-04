@@ -135,58 +135,59 @@ library LibUserBalance {
  **/
 
     function allocatedBeans(uint256 transferBeans) internal {
-	AppStorage storage s = LibAppStorage.diamondStorage();
-        uint wrappedBeans = s.internalTokenBalance[msg.sender][IBean(s.c.bean)];
-        uint remainingBeans = transferBeans;
-        if (wrappedBeans > 0) {
-            if (remainingBeans > wrappedBeans) {
-                remainingBeans = transferBeans.sub(wrappedBeans);
-		_decreaseInternalBalance(msg.sender, IBean(s.c.bean), wrappedBeans, false);
-            } else {
-                remainingBeans = 0;
-		_decreaseInternalBalance(msg.sender, IBean(s.c.bean), transferBeans, false);
-            }
-            emit BeanAllocation(msg.sender, transferBeans.sub(remainingBeans));
+	    AppStorage storage s = LibAppStorage.diamondStorage();
+      uint wrappedBeans = s.internalTokenBalance[msg.sender][IBean(s.c.bean)];
+      uint remainingBeans = transferBeans;
+      if (wrappedBeans > 0) {
+        if (remainingBeans > wrappedBeans) {
+          remainingBeans = transferBeans.sub(wrappedBeans);
+		      _decreaseInternalBalance(msg.sender, IBean(s.c.bean), wrappedBeans, false);
+        } else {
+          remainingBeans = 0;
+		    _decreaseInternalBalance(msg.sender, IBean(s.c.bean), transferBeans, false);
         }
-        if (remainingBeans > 0) IBean(s.c.bean).transferFrom(msg.sender, address(this), remainingBeans);
+        emit BeanAllocation(msg.sender, transferBeans.sub(remainingBeans));
+      }
+      if (remainingBeans > 0) IBean(s.c.bean).transferFrom(msg.sender, address(this), remainingBeans);
     }
 
-    function allocateBeansTo(uint256 transferBeans, address to) internal {
-	    AppStorage storage s = LibAppStorage.diamondStorage();
 
-        uint wrappedBeans = s.internalTokenBalance[msg.sender][IBean(s.c.bean)];
-        uint remainingBeans = transferBeans;
-        if (wrappedBeans > 0) {
-            if (remainingBeans > wrappedBeans) {
-                remainingBeans = transferBeans.sub(wrappedBeans);
-		LibUserBalance._decreaseInternalBalance(msg.sender, IBean(s.c.bean), wrappedBeans, false);
-            } else {
-                remainingBeans = 0;
-		LibUserBalance._decreaseInternalBalance(msg.sender, IBean(s.c.bean), transferBeans, false);
-            }
-            uint fromWrappedBeans = transferBeans.sub(remainingBeans);
-            emit BeanAllocation(msg.sender, fromWrappedBeans);
-            if (to != address(this)) IBean(s.c.bean).transfer(to, fromWrappedBeans);
+    function allocateBeansTo(uint256 transferBeans, address to) internal {
+	     AppStorage storage s = LibAppStorage.diamondStorage();
+       uint wrappedBeans = s.internalTokenBalance[msg.sender][IBean(s.c.bean)];
+       uint remainingBeans = transferBeans;
+       if (wrappedBeans > 0) {
+        if (remainingBeans > wrappedBeans) {
+          remainingBeans = transferBeans.sub(wrappedBeans);
+		      LibUserBalance._decreaseInternalBalance(msg.sender, IBean(s.c.bean), wrappedBeans, false);
+        } else {
+          remainingBeans = 0;
+		      LibUserBalance._decreaseInternalBalance(msg.sender, IBean(s.c.bean), transferBeans, false);
         }
+        uint fromWrappedBeans = transferBeans.sub(remainingBeans);
+        emit BeanAllocation(msg.sender, fromWrappedBeans);
+        if (to != address(this)) IBean(s.c.bean).transfer(to, fromWrappedBeans);
+      }
         if (remainingBeans > 0) IBean(s.c.bean).transferFrom(msg.sender, to, remainingBeans);
     }
 
     function allocateBeansToWallet(uint256 amount, address to, bool toWallet) internal {
 	    AppStorage storage s = LibAppStorage.diamondStorage();
-        if (toWallet) allocateBeansTo(amount, to);
-        else {
-            allocateBeansTo(amount, address(this));
-	    LibUserBalance._increaseInternalBalance(to, IBean(s.c.bean), amount);
-        }
+      if (toWallet) allocateBeansTo(amount, to);
+      else {
+        allocateBeansTo(amount, address(this));
+	      LibUserBalance._increaseInternalBalance(to, IBean(s.c.bean), amount);
+      }
     }
+
 
     function transferBeans(address to, uint256 amount, bool toWallet) internal {
 	    AppStorage storage s = LibAppStorage.diamondStorage();
-        if (toWallet) IBean(s.c.bean).transferFrom(msg.sender, to, amount);
-        else {
-            IBean(s.c.bean).transferFrom(msg.sender, address(this), amount);
-	    LibUserBalance._increaseInternalBalance(to, IBean(s.c.bean), amount);
-        }
+      if (toWallet) IBean(s.c.bean).transferFrom(msg.sender, to, amount);
+      else {
+        IBean(s.c.bean).transferFrom(msg.sender, address(this), amount);
+	      LibUserBalance._increaseInternalBalance(to, IBean(s.c.bean), amount);
+      }
     }
 
     function allocateBeans(uint256 transferBeans) internal {

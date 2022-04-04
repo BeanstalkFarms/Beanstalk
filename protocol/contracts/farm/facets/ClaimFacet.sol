@@ -83,17 +83,37 @@ contract ClaimFacet {
             LibUserBalance._decreaseInternalBalance(msg.sender, IBean(s.c.bean), wBeans, false);
         } else {
             IBean(s.c.bean).transfer(msg.sender, amount);
-	    LibUserBalance._decreaseInternalBalance(msg.sender, IBean(s.c.bean), amount, false);
+	          LibUserBalance._decreaseInternalBalance(msg.sender, IBean(s.c.bean), amount, false);
             beansToWallet = amount;
         }
     }
 
     function wrapBeans(uint amount) public payable {
         IBean(s.c.bean).transferFrom(msg.sender, address(this), amount);
-	LibUserBalance._increaseInternalBalance(msg.sender, IBean(s.c.bean), amount);
+	      LibUserBalance._increaseInternalBalance(msg.sender, IBean(s.c.bean), amount);
     }
 
     function wrappedBeans(address user) public view returns (uint256) {
         return s.internalTokenBalance[user][IBean(s.c.bean)];
+    }
+
+    function wrapTokens(uint256 amount, address token) public payable {
+        IERC20(token).transferFrom(msg.sender, address(this), amount);
+        LibUserBalance._increaseInternalBalance(msg.sender, IERC20(token), amount);
+    }
+
+    function unwrapTokens(uint256 amount, address token) public payable returns (uint256 tokensUnwrapped) {
+        if (amount == 0) return tokensUnwrapped;
+        uint256 wrapped = s.internalTokenBalance[msg.sender][IERC20(token)];
+
+        if (amount > wrapped) {
+            IERC20(token).transfer(msg.sender, wrapped);
+            tokensUnwrapped = s.internalTokenBalance[msg.sender][IERC20(token)];
+            LibUserBalance._decreaseInternalBalance(msg.sender, IERC20(token), wrapped, false);
+        } else {
+            IERC20(token).transfer(msg.sender, amount);
+	          LibUserBalance._decreaseInternalBalance(msg.sender, IERC20(token), amount, false);
+            tokensUnwrapped = amount;
+        }
     }
 }

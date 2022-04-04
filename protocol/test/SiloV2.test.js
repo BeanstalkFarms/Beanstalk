@@ -5,6 +5,7 @@ let userAddress, ownerAddress, user2Address;
 
 const THREE_CURVE = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
 const BEAN_3_CURVE = "0x3a70DfA7d2262988064A2D051dd47521E43c9BdD";
+const ZERO = "0x0000000000000000000000000000000000000000";
 
 const BN_ZERO = ethers.utils.parseEther('0');
 

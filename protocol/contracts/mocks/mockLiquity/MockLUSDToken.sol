@@ -101,7 +101,7 @@ contract MockLUSDToken is MockCheckContract, ILUSDToken {
     }
 
     function mintE(address _account, uint256 _amount) external {
-	_mint(_account, _amount);
+	      _mint(_account, _amount);
     }
 
     function burn(address _account, uint256 _amount) external override {

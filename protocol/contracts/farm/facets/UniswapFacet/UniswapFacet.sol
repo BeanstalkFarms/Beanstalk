@@ -20,7 +20,7 @@ contract UniswapFacet {
 
 	AppStorage internal s;
 	
-	function sellBeansOnUniswap(uint256 amountIn, uint256 amountOutMin) public {
+	function sellBeansOnUniswap(uint256 amountIn, uint256 amountOutMin) public payable {
 		address[] memory path = new address[](2);
 		path[0] = s.c.bean;
 		path[1] = s.c.weth;
@@ -42,7 +42,7 @@ contract UniswapFacet {
 		LibUniswap.swapExactETHForTokens(amountOutMin, path, msg.sender, block.timestamp.add(1), set);
 	}
 
-	function swapOnUniswap(address token, uint256 amountIn, uint256 amountOutMin) public {
+	function swapOnUniswap(address token, uint256 amountIn, uint256 amountOutMin) public payable {
 		address[] memory path;
 		if (token == s.c.weth) {
 			path = new address[](2);
@@ -62,7 +62,7 @@ contract UniswapFacet {
 		LibUniswap.swapExactTokensForTokens(amountIn, amountOutMin, path, msg.sender, block.timestamp.add(1), set, false);
 	}
 
-	function addLiquidityOnUniswap(uint256 amountADesired, uint256 amountBDesired, uint256 amountAMin, uint256 amountBMin) public {
+	function addLiquidityOnUniswap(uint256 amountADesired, uint256 amountBDesired, uint256 amountAMin, uint256 amountBMin) public payable {
 		LibUniswap.addLiquidity(s.c.bean, s.c.weth, amountADesired, amountBDesired, amountAMin, amountBMin, msg.sender, block.timestamp.add(1), false);
 	}
 	
@@ -70,11 +70,11 @@ contract UniswapFacet {
 		LibUniswap.addLiquidityETH(s.c.bean, amountTokenDesired, amountTokenMin, amountETHMin, msg.sender, block.timestamp.add(1), false);
 	}
 
-	function removeLiquidityOnUniswap(uint256 liquidity, uint256 amountAMin, uint256 amountBMin) public {
+	function removeLiquidityOnUniswap(uint256 liquidity, uint256 amountAMin, uint256 amountBMin) public payable {
 		LibUniswap.removeLiquidity(s.c.bean, s.c.weth, liquidity, amountAMin, amountBMin, msg.sender, block.timestamp.add(1), false);
 	}
 	
-	function removeLiquidityETHOnUniswap(uint256 liquidity, uint256 amountTokenMin, uint256 amountETHMin) public {
+	function removeLiquidityETHOnUniswap(uint256 liquidity, uint256 amountTokenMin, uint256 amountETHMin) public payable {
 		LibUniswap.removeLiquidityETH(s.c.bean, liquidity, amountTokenMin, amountETHMin, msg.sender, block.timestamp.add(1));
 	}
 }

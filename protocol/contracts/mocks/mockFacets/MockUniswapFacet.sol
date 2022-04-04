@@ -20,7 +20,12 @@ contract MockUniswapFacet is UniswapFacet {
 		return LibUserBalance._getInternalBalance(account, IERC20(token));
 	}
 
+  function toInternalBalance(uint256 amount, address token) public {
+    IERC20(token).transferFrom(msg.sender, address(this), amount);
+    LibUserBalance._increaseInternalBalance(msg.sender, IERC20(token), amount);
+  }
+
 	function resetInternalBalance(address account, address token) public {
-		LibUserBalance._decreaseInternalBalance(account, IERC20(token), internalBalance(account, token), false);
+		LibUserBalance._decreaseInternalBalance(account, IERC20(token), internalBalance(account, token), false); // This is to be used in conjunction with season facet's resetAccount() function
 	}
 }

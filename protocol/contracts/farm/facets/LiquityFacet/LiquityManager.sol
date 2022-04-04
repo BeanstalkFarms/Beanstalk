@@ -25,7 +25,7 @@ contract LiquityManager is ILiquityManager {
 	 * Events
 	*/ 
 
-        event Fallback(address indexed caller, uint256 value);
+  event Fallback(address indexed caller, uint256 value);
 
 	/*
 	 * Contract Data
@@ -44,7 +44,7 @@ contract LiquityManager is ILiquityManager {
 	 * General Functions
 	*/
 
-	function collateralizeWithApproxHint(uint256 maxFeePercentage, uint256 lusdWithdrawAmount, uint256 numTrials, uint256 randSeed) external payable override {
+	function manageTroveWithApproxHint(uint256 maxFeePercentage, uint256 lusdWithdrawAmount, uint256 numTrials, uint256 randSeed) external payable override returns (uint256 lusdBack) {
 		if (!active) { // Default value for bool is 0 or false
 			require(msg.value > 0, "Cannot open trove with no collateral.");
 			if (sortedTroves.getSize() == 0) {
@@ -69,7 +69,8 @@ contract LiquityManager is ILiquityManager {
 				borrowerOperations.withdrawLUSD(maxFeePercentage, lusdWithdrawAmount, lowerHint, upperHint);
 			}
 		}
-		SafeERC20.safeTransfer(IERC20(lusdToken), msg.sender, lusdWithdrawAmount); 
+    lusdBack = lusdToken.balanceOf(address(this));
+		SafeERC20.safeTransfer(IERC20(lusdToken), msg.sender, lusdBack); 
 	}
 
 	// Must transfer LUSD to this contract first
@@ -84,6 +85,7 @@ contract LiquityManager is ILiquityManager {
 			(address lowerHint, address upperHint) = LibLiquity.findHints(lusdAmount, numTrials, randSeed);
 			borrowerOperations.repayLUSD(lusdAmount, lowerHint, upperHint);
 		}
+    if (excessLUSD > 0) SafeERC20.safeTransfer(IERC20(lusdToken), msg.sender, excessLUSD);
 	}
 
 	/* 

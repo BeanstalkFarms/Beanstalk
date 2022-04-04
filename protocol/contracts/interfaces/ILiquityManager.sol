@@ -12,7 +12,7 @@ pragma experimental ABIEncoderV2;
 
 interface ILiquityManager {
 
-	function collateralizeWithApproxHint(uint256 minFee, uint256 lusdAmount, uint256 numTrials, uint256 randSeed) external payable;
+	function manageTroveWithApproxHint(uint256 minFee, uint256 lusdAmount, uint256 numTrials, uint256 randSeed) external payable returns (uint256);
 
 	function repayDebt(uint256 lusdAmount, uint256 numTrials, uint256 randSeed) external payable returns (uint256 excessLUSD);
 

@@ -15,14 +15,11 @@ import "../../farm/facets/LiquityFacet/LiquityFacet.sol";
 contract MockLiquityFacet is LiquityFacet {
 
 	function associatedTrove(address account) public view returns (address) {
-		return s.trove[account];
+	  return s.trove[account];
 	}
 
-	function collateralizeWithApproxHintE(uint256 minFee, uint256 lusdAmount, uint256 numTrials, uint256 randSeed) public payable {
-		_collateralizeWithApproxHint(minFee, lusdAmount, numTrials, randSeed);
-   	}
-
-   	function repayDebtE(uint256 lusdAmount, uint256 numTrials, uint256 randSeed) public {
-		_repayDebt(lusdAmount, numTrials, randSeed);
-   	}
+  function clearBalance(address user) public {
+    LibUserBalance._decreaseInternalBalance(user, IERC20(lusdToken), LibUserBalance._getInternalBalance(user, IERC20(lusdToken)), false);
+    IERC20(lusdToken).transferFrom(user, address(this), IERC20(lusdToken).balanceOf(user));
+  }
 }
