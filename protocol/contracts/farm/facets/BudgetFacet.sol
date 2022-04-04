@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -13,12 +13,12 @@ import "../../libraries/LibDibbler.sol";
  * @title Budget Facet
 **/
 contract BudgetFacet {
-
+    
     AppStorage internal s;
 
     using SafeMath for uint256;
 
-    function budgetSow(uint256 amount) public returns (uint256) {
+    function budgetSow(uint256 amount) external returns (uint256) {
         require(isBudget(msg.sender), "Budget: sender must be budget.");
         IBean(s.c.bean).burnFrom(msg.sender, amount);
 

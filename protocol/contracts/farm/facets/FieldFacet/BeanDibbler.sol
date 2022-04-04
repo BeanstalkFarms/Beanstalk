@@ -2,26 +2,25 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../../../interfaces/IBean.sol";
 import "../../../libraries/LibDibbler.sol";
+import "../../ReentrancyGuard.sol";
 
 /**
  * @author Publius
  * @title Dibbler
 **/
-contract BeanDibbler {
+contract BeanDibbler is ReentrancyGuard{
 
     using SafeMath for uint256;
-    using SafeMath for uint32;
+    using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
 
     event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);
 
-    AppStorage internal s;
-    uint32 private constant MAX_UINT32 = 2**32-1;
     /**
      * Getters
     **/

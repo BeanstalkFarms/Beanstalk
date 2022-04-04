@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -15,6 +15,40 @@ import "../../farm/facets/FieldFacet/FieldFacet.sol";
 contract MockFieldFacet is FieldFacet {
 
     using SafeMath for uint256;
+
+    // for Testing purposes only
+    uint32 mapToPlotIndex;
+    mapping(uint32 => uint256) mapToPlots;
+    mapping(uint32 => address) mapToAddress;
+
+    function sowBeansAndIndex(uint256 amount) external returns (uint256) {
+        mapToPlots[mapToPlotIndex] = s.f.pods;
+        bean().transferFrom(msg.sender, address(this), amount);
+        uint amountPods = _sowBeans(amount);
+        mapToAddress[mapToPlotIndex] = msg.sender;
+        mapToPlotIndex = mapToPlotIndex + 1;
+        return amountPods;
+    }
+
+    function deletePlot(address account, uint256 index) external returns (uint256) {
+        delete s.a[account].field.plots[index];
+    }
+
+    function resetField() public {
+
+        for (uint32 i = 0; i < mapToPlotIndex; i++) {
+
+            delete s.a[mapToAddress[i]].field.plots[mapToPlots[i]];
+            delete s.podListings[mapToPlots[i]];
+        }
+    }
+    function incrementTotalSoilE(uint256 amount) public {
+        incrementTotalSoil(amount);
+    }
+
+    function incrementTotalSoilEE(uint256 amount) public {
+        incrementTotalSoil(amount);
+    }
 
     function incrementTotalHarvestableE(uint256 amount) public {
         bean().mint(address(this), amount);
@@ -34,7 +68,7 @@ contract MockFieldFacet is FieldFacet {
     function resetAllowances(address[] memory accounts) public {
         for (uint i = 0; i < accounts.length; i++) {
             for (uint j = 0; j < accounts.length; j++) {
-                setAllowancePods(accounts[i], accounts[j], 0);
+                s.a[accounts[i]].field.podAllowances[accounts[j]] = 0;
             }
         }
     }

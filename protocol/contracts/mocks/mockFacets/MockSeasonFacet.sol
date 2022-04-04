@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -16,7 +16,11 @@ import "../MockToken.sol";
 **/
 contract MockSeasonFacet is SeasonFacet {
     using SafeMath for uint256;
-    using SafeMath for uint32;
+    using LibSafeMath32 for uint32;
+
+    function reentrancyGuardTest() public nonReentrant {
+        reentrancyGuardTest();
+    }
 
     function siloSunrise(uint256 amount) public {
         require(!paused(), "Season: Paused.");
@@ -180,6 +184,16 @@ contract MockSeasonFacet is SeasonFacet {
         delete s.a[account];
     }
 
+    function resetAccountToken(address account, address token) public {
+        uint32 _s = season();
+        for (uint32 j = 0; j <= _s; j++) {
+            if (s.a[account].deposits[token][j].amount > 0) delete s.a[account].deposits[token][j];
+            if (s.a[account].withdrawals[token][j+C.getSiloWithdrawSeasons()] > 0)
+                delete s.a[account].withdrawals[token][j+C.getSiloWithdrawSeasons()];
+        }
+        delete s.siloBalances[token];
+    }
+
     function resetState() public {
         uint32 _s = season();
         for (uint32 j = 0; j <= _s; j++) delete s.sops[j];
@@ -236,5 +250,4 @@ contract MockSeasonFacet is SeasonFacet {
         s.w.startSoil = startSoil;
         stepWeather(intPrice.mul(1e16), endSoil);
     }
-
 }

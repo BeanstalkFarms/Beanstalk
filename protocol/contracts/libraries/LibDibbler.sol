@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../C.sol";
@@ -18,10 +18,8 @@ import "./LibAppStorage.sol";
 library LibDibbler {
 
     using SafeMath for uint256;
-    using SafeMath for uint32;
+    using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
-
-    uint32 private constant MAX_UINT32 = 2**32-1;
 
     event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);
 
@@ -31,19 +29,14 @@ library LibDibbler {
 
     function sow(uint256 amount, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        require(amount > 0, "Field: Must purchase non-zero amount.");
         s.f.soil = s.f.soil.sub(amount, "Field: Not enough outstanding Soil.");
-        uint256 pods = beansToPods(amount, s.w.yield);
-        sowPlot(account, amount, pods);
-        s.f.pods = s.f.pods.add(pods);
-        saveSowTime();
-        return pods;
+        return sowNoSoil(amount, account);
     }
 
     function sowNoSoil(uint256 amount, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        require(amount > 0, "Field: Must purchase non-zero amount.");
         uint256 pods = beansToPods(amount, s.w.yield);
+        require(pods > 0, "Field: Must receive non-zero Pods.");
         sowPlot(account, amount, pods);
         s.f.pods = s.f.pods.add(pods);
         saveSowTime();
@@ -72,11 +65,11 @@ library LibDibbler {
         if (!s.w.didSowBelowMin) s.w.didSowBelowMin = true;
 
         if (s.w.didSowFaster ||
-            s.w.lastSowTime == MAX_UINT32 ||
+            s.w.lastSowTime == type(uint32).max ||
             s.w.lastDSoil == 0
         ) return;
 
-        uint96 soilPercent = uint96(soil.mul(1e18).div(totalBeanSupply));
+        uint256 soilPercent = soil.mul(1e18).div(totalBeanSupply);
         if (soilPercent <= C.getUpperBoundPodRate().mul(s.w.lastSoilPercent).asUint256()) {
             uint256 deltaSoil = s.w.startSoil.sub(soil);
             if (Decimal.ratio(deltaSoil, s.w.lastDSoil).greaterThan(C.getLowerBoundDPD())) {
@@ -85,7 +78,7 @@ library LibDibbler {
                     s.w.lastSowTime.sub(C.getSteadySowTime()) :
                     0;
                 if (sowTime < fasterTime) s.w.didSowFaster = true;
-                else s.w.lastSowTime = MAX_UINT32;
+                else s.w.lastSowTime = type(uint32).max;
             }
         }
     }

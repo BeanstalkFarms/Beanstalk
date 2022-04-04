@@ -2,25 +2,25 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "../../AppStorage.sol";
+import "../../ReentrancyGuard.sol";
 import "../../../C.sol";
 import "../../../interfaces/IBean.sol";
+import "../../../libraries/LibSafeMath32.sol";
 
 /**
  * @author Publius
  * @title Life
 **/
-contract Life {
+contract Life is ReentrancyGuard {
 
     using SafeMath for uint256;
-    using SafeMath for uint32;
-
-    AppStorage internal s;
+    using LibSafeMath32 for uint32;
 
     /**
      * Getters
@@ -56,8 +56,8 @@ contract Life {
 
     function seasonTime() public virtual view returns (uint32) {
         if (block.timestamp < s.season.start) return 0;
-        if (s.season.period == 0) return uint32(-1);
-        return uint32((block.timestamp.sub(s.season.start).div(s.season.period)));
+        if (s.season.period == 0) return type(uint32).max;
+        return uint32((block.timestamp - s.season.start) / s.season.period); // Note: SafeMath is redundant here.
     }
 
     function incentiveTime() internal view returns (uint256) {
@@ -76,7 +76,7 @@ contract Life {
         (uint256 newHarvestable, uint256 siloReward) = (0, 0);
 
         if (s.f.harvestable < s.f.pods) {
-            uint256 notHarvestable = s.f.pods.sub(s.f.harvestable);
+            uint256 notHarvestable = s.f.pods - s.f.harvestable; // Note: SafeMath is redundant here.
             newHarvestable = newSupply.mul(C.getHarvestPercentage()).div(1e18);
             newHarvestable = newHarvestable > notHarvestable ? notHarvestable : newHarvestable;
             mintToHarvestable(newHarvestable);

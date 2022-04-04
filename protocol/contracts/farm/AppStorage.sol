@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/IDiamondCut.sol";
@@ -22,6 +22,11 @@ contract Account {
         mapping(uint32 => uint256) withdrawals;
         mapping(uint32 => uint256) deposits;
         mapping(uint32 => uint256) depositSeeds;
+    }
+
+    struct Deposit {
+        uint128 amount;
+        uint128 bdv;
     }
 
     struct Silo {
@@ -49,6 +54,8 @@ contract Account {
         SeasonOfPlenty sop;
         uint256 roots;
         uint256 wrappedBeans;
+        mapping(address => mapping(uint32 => Deposit)) deposits;
+        mapping(address => mapping(uint32 => uint256)) withdrawals;
     }
 }
 
@@ -168,6 +175,13 @@ contract Storage {
         address token;
         uint256 total;
         uint256 remaining;
+        uint256 start;
+    }
+
+    struct SiloSettings {
+        bytes4 selector;
+        uint32 seeds;
+        uint32 stalk;
     }
 }
 
@@ -183,7 +197,7 @@ struct AppStorage {
     Storage.Oracle o;
     Storage.Rain r;
     Storage.Silo s;
-    uint256 depreciated1;
+    uint256 reentrantStatus; // An intra-transaction state variable to protect against reentrance
     Storage.Weather w;
     Storage.AssetSilo bean;
     Storage.AssetSilo lp;
@@ -199,4 +213,13 @@ struct AppStorage {
     mapping (uint32 => Storage.Fundraiser) fundraisers;
     uint32 fundraiserIndex;
     mapping (address => bool) isBudget;
+    mapping(uint256 => bytes32) podListings;
+    mapping(bytes32 => uint256) podOrders;
+    mapping(address => Storage.AssetSilo) siloBalances;
+    mapping(address => Storage.SiloSettings) ss;
+
+    // These refund variables are intra-transaction state varables use to store refund amounts
+    uint256 refundStatus;
+    uint256 beanRefundAmount;
+    uint256 ethRefundAmount;
 }

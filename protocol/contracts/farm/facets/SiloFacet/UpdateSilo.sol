@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./SiloExit.sol";
@@ -20,6 +20,11 @@ contract UpdateSilo is SiloExit {
 
     using SafeMath for uint256;
 
+    uint256 private constant _NOT_ENTERED = 1;
+    uint256 private constant _ENTERED = 2;
+
+    uint256 private _status = 1;
+
     /**
      * Update
     **/
@@ -33,7 +38,7 @@ contract UpdateSilo is SiloExit {
             farmSops(account, update);
             farmLegacyBeans(account, update);
             farmBeans(account, update);
-        } else if (s.a[account].roots == 0) {
+        } else {
             s.a[account].lastSop = s.r.start;
             s.a[account].lastRain = 0;
             s.a[account].lastSIs = s.season.sis;
@@ -83,7 +88,7 @@ contract UpdateSilo is SiloExit {
         uint256 beansV2 = balanceOfFarmableBeansV2(unclaimedRoots);
         beans = beans.add(beansV2);
         if (beansV2 > 0) s.v2SIBeans = s.v2SIBeans.sub(beansV2);
-        s.unclaimedRoots = s.unclaimedRoots.sub(unclaimedRoots);
+        s.unclaimedRoots = unclaimedRoots < s.unclaimedRoots ? s.unclaimedRoots - unclaimedRoots : 0;
         s.a[account].lastSIs = s.season.sis;
 
         uint256 seeds = beans.mul(C.getSeedsPerBean());
@@ -106,5 +111,20 @@ contract UpdateSilo is SiloExit {
         } else if (s.a[account].lastRain > 0) {
             s.a[account].lastRain = 0;
         }
+    }
+
+    // Variation of Oepn Zeppelins reentrant guard.
+    // https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts%2Fsecurity%2FReentrancyGuard.sol
+    modifier siloNonReentrant() {
+        require(_status != _ENTERED, "ReentrancyGuard: reentrant call");
+        _status = _ENTERED;
+        updateSilo(msg.sender);
+        _;
+        _status = _NOT_ENTERED;
+    }
+
+    modifier silo() {
+        updateSilo(msg.sender);
+        _;
     }
 }

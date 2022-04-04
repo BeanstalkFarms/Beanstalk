@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
@@ -38,6 +38,10 @@ contract MockInitDiamond {
 
         s.cases = [int8(3),1,0,0,-1,-3,-3,0,3,1,0,0,-1,-3,-3,0,3,3,1,0,0,0,-1,0,3,3,1,0,1,0,-1,0];
         s.w.yield = 1;
+    
+        s.refundStatus = 1;
+        s.beanRefundAmount = 1;
+        s.ethRefundAmount = 1;
 
         s.season.current = 1;
         s.season.withdrawSeasons = 25;

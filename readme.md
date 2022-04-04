@@ -7,14 +7,17 @@ Beanstalk is a decentralized credit based algorithmic stablecoin protocol that i
 |:-------------------------|:--------------------------------------------|
 |Bean                      |[0xDC59ac4FeFa32293A95889Dc396682858d52e5Db](https://etherscan.io/address/0xDC59ac4FeFa32293A95889Dc396682858d52e5Db)|
 |Beanstalk                 |[0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5](https://etherscan.io/address/0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5)|
-|UniswapV2 BEAN:ETH Pair   |[0x87898263B6C5BABe34b4ec53F22d98430b91e371](https://etherscan.io/address/0x87898263B6C5BABe34b4ec53F22d98430b91e371)|
+|UniswapV2 BEAN:ETH Pool   |[0x87898263B6C5BABe34b4ec53F22d98430b91e371](https://etherscan.io/address/0x87898263B6C5BABe34b4ec53F22d98430b91e371)|
 |Curve BEAN:3CRV Metapool  |[0x3a70DfA7d2262988064A2D051dd47521E43c9BdD](https://etherscan.io/address/0x3a70DfA7d2262988064A2D051dd47521E43c9BdD)|
+|Curve BEAN:LUSD Plain Pool|[0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D](https://etherscan.io/address/0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D)|
 |Beanstalk Farms Treasury  |[0x21DE18B6A8f78eDe6D16C50A167f6B222DC08DF7](https://etherscan.io/address/0x21DE18B6A8f78eDe6D16C50A167f6B222DC08DF7)|
 |Bean Sprout Treasury      |[0xb7ab3f0667eFF5e2299d39C23Aa0C956e8982235](https://etherscan.io/address/0xb7ab3f0667eFF5e2299d39C23Aa0C956e8982235)|
 |Development Budget 1      |[0x83A758a6a24FE27312C1f8BDa7F3277993b64783](https://etherscan.io/address/0x83A758a6a24FE27312C1f8BDa7F3277993b64783)|
 |Marketing Budget 1        |[0xAA420e97534aB55637957e868b658193b112A551](https://etherscan.io/address/0xAA420e97534aB55637957e868b658193b112A551)|
+|Beanstalk Farms Budget    |[0x21DE18B6A8f78eDe6D16C50A167f6B222DC08DF7](https://etherscan.io/address/0x21de18b6a8f78ede6d16c50a167f6b222dc08df7)|
+|Bean Sprout Budget        |[0xb7ab3f0667eFF5e2299d39C23Aa0C956e8982235](https://etherscan.io/address/0xb7ab3f0667eff5e2299d39c23aa0c956e8982235)|
 |BeaNFT Genesis            |[0xa755A670Aaf1FeCeF2bea56115E65e03F7722A79](https://etherscan.io/address/0xa755A670Aaf1FeCeF2bea56115E65e03F7722A79)|
-|BeaNFT Collection         |[0x459895483556daD32526eFa461F75E33E458d9E9](https://etherscan.io/address/0x459895483556dad32526efa461f75e33e458d9e9)|
+|BeaNFT Winter             |[0x459895483556dad32526efa461f75e33e458d9e9](https://etherscan.io/address/0x459895483556dad32526efa461f75e33e458d9e9)|
 
 ### Beanstalk Contract & EIP-2535
 The Beanstalk smart contract is a multi-facet proxy as it implements EIP-2535. Thus, the Beanstalk contract pulls in functions from a variety of different contracts (called facets in the [EIP-2535 documentation](https://eips.ethereum.org/EIPS/eip-2535)) that are all capable of sharing the same state object.
@@ -141,8 +144,8 @@ of beanstalk that you upgraded
 
 
 ## Versions
-Code Version: `1.7.0` <br>
-Whitepaper Version `1.7.0`
+Code Version: `1.9.1` <br>
+Whitepaper Version `1.9.3`
 
 ## License
 [MIT](https://github.com/BeanstalkFarms/Beanstalk/blob/master/LICENSE)

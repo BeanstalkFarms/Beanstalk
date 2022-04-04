@@ -21,12 +21,18 @@ library UniswapV2OracleLibrary {
     internal
     view
     returns (uint price0Cumulative, uint price1Cumulative, uint32 blockTimestamp) {
+        (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast) = IUniswapV2Pair(pair).getReserves();
+        return currentCumulativePricesWithReserves(pair, reserve0, reserve1, blockTimestampLast);
+    }
+
+    function currentCumulativePricesWithReserves(address pair, uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)
+    internal
+    view
+    returns (uint price0Cumulative, uint price1Cumulative, uint32 blockTimestamp) {
         blockTimestamp = currentBlockTimestamp();
         price0Cumulative = IUniswapV2Pair(pair).price0CumulativeLast();
         price1Cumulative = IUniswapV2Pair(pair).price1CumulativeLast();
 
-        // if time has elapsed since the last update on the pair, mock the accumulated price values
-        (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast) = IUniswapV2Pair(pair).getReserves();
         if (blockTimestampLast != blockTimestamp) {
             // subtraction overflow is desired
             uint32 timeElapsed = blockTimestamp - blockTimestampLast;

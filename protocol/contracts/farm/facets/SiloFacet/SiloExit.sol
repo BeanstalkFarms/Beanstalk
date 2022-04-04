@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -24,7 +24,7 @@ contract SiloExit {
     AppStorage internal s;
 
     using SafeMath for uint256;
-    using SafeMath for uint32;
+    using LibSafeMath32 for uint32;
 
     /**
      * Contracts
@@ -81,7 +81,7 @@ contract SiloExit {
         if (s.s.roots == 0) return 0;
         uint256 stalk = s.s.stalk.mul(balanceOfRoots(account)).div(s.s.roots);
         if (stalk <= accountStalk) return 0;
-        beans = stalk.sub(accountStalk).div(C.getStalkPerBean());
+        beans = (stalk - accountStalk).div(C.getStalkPerBean()); // Note: SafeMath is redundant here.
         if (beans > s.si.beans) return s.si.beans;
         return beans;
     }
@@ -96,7 +96,7 @@ contract SiloExit {
         if (s.s.roots == 0 || s.v1SI.beans == 0 || lastUpdate(account) >= s.hotFix3Start) return 0;
         uint256 stalk = s.v1SI.stalk.mul(balanceOfRoots(account)).div(s.v1SI.roots);
         if (stalk <= s.a[account].s.stalk) return 0;
-        beans = stalk.sub(s.a[account].s.stalk).div(C.getStalkPerBean());
+        beans = (stalk - s.a[account].s.stalk).div(C.getStalkPerBean()); // Note: SafeMath is redundant here.
         if (beans > s.v1SI.beans) return s.v1SI.beans;
         return beans;
     }
@@ -195,11 +195,10 @@ contract SiloExit {
 
     function voted(address account) public view returns (bool) {
         if (s.a[account].votedUntil >= season()) {
-            for (uint256 i = 0; i < s.g.activeBips.length; i++) {
+            uint256 numberOfActiveBips = s.g.activeBips.length;
+            for (uint256 i = 0; i < numberOfActiveBips; i++) {
                 uint32 activeBip = s.g.activeBips[i];
-                if (s.g.voted[activeBip][account]) {
-                    return true;
-                }
+                if (s.g.voted[activeBip][account]) return true;
             }
         }
         return false;

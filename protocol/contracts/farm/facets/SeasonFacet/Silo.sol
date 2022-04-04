@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./Life.sol";
@@ -15,7 +15,7 @@ import "../../../libraries/LibInternal.sol";
 contract Silo is Life {
 
     using SafeMath for uint256;
-    using SafeMath for uint32;
+    using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
 
     uint256 private constant BASE = 1e12;
@@ -77,12 +77,11 @@ contract Silo is Life {
     // Governance
 
     function stepGovernance() internal {
-        for (uint256 i; i < s.g.activeBips.length; i++) {
-            uint32 bip = s.g.activeBips[i];
-            if (season() >= s.g.bips[bip].start.add(s.g.bips[bip].period)) {
-                endBip(bip, i);
-                i--;
-            }
+        uint256 numberOfActiveBips = s.g.activeBips.length;
+        for (uint256 i = numberOfActiveBips; i > 0; --i) {
+            uint32 bip = s.g.activeBips[i-1];
+            if (season() >= s.g.bips[bip].start.add(s.g.bips[bip].period))
+                endBip(bip, i-1);
         }
     }
 
