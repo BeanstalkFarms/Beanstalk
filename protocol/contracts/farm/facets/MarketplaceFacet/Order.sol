@@ -120,16 +120,12 @@ contract Order is Listing {
             0 < beanAmount,
             "Marketplace: Pod price must be greater than 0."
         );
-        // amount is the definite integral over the whole range
+
 
         uint256 amountPods = _getSumOverPiecewiseRange(
             f,
             f.subIntervalIndex[0],
             beanAmount
-        );
-        require(
-            0 < amountPods,
-            "Marketplace: Pod price must be greater than 0."
         );
 
         return __createDynamicPodOrder(amountPods, maxPlaceInLine, f);

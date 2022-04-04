@@ -413,7 +413,7 @@ contract Listing is PodTransfer {
         );
     }
 
-    function hashDynamicListing(
+     function hashDynamicListing(
         uint256 start,
         uint256 amount,
         uint256 maxHarvestableIndex,
