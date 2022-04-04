@@ -1,17 +1,20 @@
+/**
+ * SPDX-License-Identifier: MIT
+**/
+
 pragma solidity ^0.7.6;
+
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
-// https://github.com/HQ20/contracts/blob/master/contracts/math/DecimalMath.sol
+/**
+ * Based on the implementation found in: https://github.com/HQ20/contracts/blob/master/contracts/math/DecimalMath.sol
+*/
 
 library MathFP {
     using SafeMath for uint256;
 
     //binary search to find x within 10 subintervals
-    function findIndexWithinSubinterval(uint256[10] calldata ranges, uint256 x)
-        internal
-        pure
-        returns (uint256)
-    {
+    function findIndexWithinSubinterval(uint256[10] calldata ranges, uint256 x) internal pure returns (uint256) {
         //array of values must be ordered
         uint256 low = 0;
         uint256 mid = ranges.length - 1;
@@ -28,15 +31,11 @@ library MathFP {
     }
 
     //evaluate polynomial up to forth degree
-    function evaluateCubic(
-        bool[4] memory sign,
-        uint8[4] memory shift,
-        uint256[4] memory term,
-        uint256 x,
-        bool integrateInstead
-    ) internal pure returns (uint256) {
+    function evaluateCubic(bool[4] memory sign, uint8[4] memory shift, uint256[4] memory term, uint256 x, bool integrateInstead) internal pure returns (uint256) {
+        
         uint256 y;
         uint256 yMinus;
+
         if (!sign[0] && !sign[1] && !sign[2] && !sign[3]) {
             return 0;
         }
@@ -102,11 +101,7 @@ library MathFP {
     }
 
     //@dev Multiplies x and y, assuming a variable decimal fixed point
-    function muld(
-        uint256 x,
-        uint256 y,
-        uint8 decimals
-    ) internal pure returns (uint256) {
+    function muld(uint256 x, uint256 y, uint8 decimals) internal pure returns (uint256) {
         return x.mul(y).div(unit(decimals));
     }
 
@@ -116,11 +111,7 @@ library MathFP {
     }
 
     //@dev Divides x by y, assuming a variable decimal fixed point
-    function divd(
-        uint256 x,
-        uint256 y,
-        uint8 decimals
-    ) internal pure returns (uint256) {
+    function divd(uint256 x, uint256 y, uint8 decimals) internal pure returns (uint256) {
         return x.mul(unit(decimals)).div(y);
     }
 
@@ -132,11 +123,7 @@ library MathFP {
 
     // divides x by y, rounding to the closest representable number
     // variable fixed point
-    function divdr(
-        uint256 x,
-        uint256 y,
-        uint8 decimals
-    ) internal pure returns (uint256) {
+    function divdr(uint256 x, uint256 y, uint8 decimals) internal pure returns (uint256) {
         uint256 z = x.mul(unit(decimals + 1)).div(y);
         if (z % 10 > 5) return z / 10 + 1;
         else return z / 10;
@@ -147,11 +134,7 @@ library MathFP {
         return divdrup(x, y, 36);
     }
 
-    function divdrup(
-        uint256 x,
-        uint256 y,
-        uint8 decimals
-    ) internal pure returns (uint256) {
+    function divdrup(uint256 x, uint256 y, uint8 decimals) internal pure returns (uint256) {
         uint256 z = x.mul(unit(decimals + 1)).div(y);
         if (z % 10 > 0) return z / 10 + 1;
         else return z / 10;
