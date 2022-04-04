@@ -5,6 +5,8 @@ let userAddress, ownerAddress, user2Address;
 
 const THREE_CURVE = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
 const BEAN_3_CURVE = "0x3a70DfA7d2262988064A2D051dd47521E43c9BdD";
+const UNIPOOL = "0x87898263B6C5BABe34b4ec53F22d98430b91e371";
+const BEAN = "0xDC59ac4FeFa32293A95889Dc396682858d52e5Db";
 
 const BN_ZERO = ethers.utils.parseEther("0");
 
@@ -36,12 +38,12 @@ describe("Silo", function () {
       "ConvertFacet",
       this.diamond.address
     );
-    this.pair = await ethers.getContractAt("MockUniswapV2Pair", contracts.pair);
+    this.pair = await ethers.getContractAt("MockUniswapV2Pair", UNIPOOL);
     this.pegPair = await ethers.getContractAt(
       "MockUniswapV2Pair",
       contracts.pegPair
     );
-    this.bean = await ethers.getContractAt("MockToken", contracts.bean);
+    this.bean = await ethers.getContractAt("MockToken", BEAN);
     this.claim = await ethers.getContractAt(
       "MockClaimFacet",
       this.diamond.address
@@ -1371,5 +1373,53 @@ describe("Silo", function () {
       );
       expect(await this.curveBDV.curveToBDV("1")).to.equal("20181651");
     });
+  });
+
+  describe("Bean deposit and withdraw", async function () {
+    before(async function () {
+      this.BeanSilo = await ethers.getContractAt(
+        "BeanSilo",
+        this.diamond.address
+      );
+    });
+
+    beforeEach(async function () {
+      await this.season.siloSunrise(0);
+      await this.silo2.connect(user).deposit(this.bean.address, "1000");
+    });
+
+    it("properly deposits beans", async function () {
+      expect(await this.BeanSilo.totalDepositedBeans()).to.eq("1000");
+    });
+
+    it("properly withdraws beans", async function () {
+      await this.silo2
+        .connect(user)
+        .withdrawTokenBySeason(this.bean.address, 3, "1000");
+      expect(await this.BeanSilo.totalDepositedBeans()).to.eq("0");
+    });
+  });
+
+  describe("LP deposit and withdraw", async function () {
+    before(async function () {
+      this.LPSilo = await ethers.getContractAt("LPSilo", this.diamond.address);
+    });
+
+    beforeEach(async function () {
+      await this.season.siloSunrise(0);
+      await this.pair.faucet(userAddress, "10000");
+      await this.silo2.connect(user).deposit(this.pair.address, "1000");
+    });
+
+    it("properly deposits LP", async function () {
+      expect(await this.LPSilo.totalDepositedLP()).to.eq("1000");
+    });
+
+    // it("properly withdraws LP", async function () {
+    //   await this.silo2
+    //     .connect(user)
+    //     .withdrawTokenBySeason(this.pair.address, 3, "1000");
+    //   expect(await this.LPSilo.totalDepositedLP()).to.eq("0");
+    // });
   });
 });

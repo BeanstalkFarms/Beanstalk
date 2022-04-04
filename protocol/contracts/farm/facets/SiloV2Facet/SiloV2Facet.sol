@@ -162,6 +162,7 @@ contract SiloV2Facet is TokenSilo {
     function transferTokensBySeason(WithdrawSeason[] calldata withdraws, address transferTo)
         external
     {
+        require(msg.sender != transferTo, "Can't transfer to yourself");
         LibInternal.updateSilo(msg.sender);
         for (uint256 i = 0; i < withdraws.length; i++) {
             _transferDeposit(
@@ -177,6 +178,7 @@ contract SiloV2Facet is TokenSilo {
     function transferTokensBySeasons(WithdrawSeasons[] calldata withdraws, address transferTo)
         external
     {
+        require(msg.sender != transferTo, "Can't transfer to yourself");
         LibInternal.updateSilo(msg.sender);
         for (uint256 i = 0; i < withdraws.length; i++) {
             _transferDeposits(
