@@ -10,27 +10,30 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
  * Based on the implementation found in: https://github.com/HQ20/contracts/blob/master/contracts/math/DecimalMath.sol
 */
 
-library MathFP {
+library LibMathFP {
     using SafeMath for uint256;
 
     //binary search to find x within 10 subintervals
     function findIndexWithinSubinterval(uint256[10] calldata ranges, uint256 x) internal pure returns (uint256) {
-        //array of values must be ordered
-        uint256 low = 0;
-        uint256 mid = ranges.length - 1;
-        uint256 high = mid;
-        while (low <= mid) {
-            mid = (low + mid) / 2;
-            if (ranges[mid] < x) {
-                low = mid + 1;
-            } else if (ranges[mid] > x) {
-                high = mid - 1;
+        uint256 low;
+        uint256 mid;
+        uint256 high=9;
+
+        while (low<=high) {
+            mid = (low+high)/2;
+            if(ranges[mid]<x){
+                low = mid+1;
+            }else if(ranges[mid]>x){
+                high = mid-1;
+            }else{
+                return mid;
             }
         }
-        return high;
+        
+        return mid;
     }
 
-    //evaluate polynomial up to forth degree
+    //evaluate polynomial at x, with an option to 'integrateInstead' over the range of 0 - x
     function evaluateCubic(bool[4] memory sign, uint8[4] memory shift, uint256[4] memory term, uint256 x, bool integrateInstead) internal pure returns (uint256) {
         
         uint256 y;
@@ -44,19 +47,21 @@ library MathFP {
         }
         for (uint8 i = 0; i < 4; i++) {
             if (integrateInstead) {
+                //if integrate instead is selected, the polynomial is evaluated using polynomial integration rules 
                 //integrate the inputted polynomial from 0 - x
                 if (term[i] == 0) {
+                    //if the constants is 0, skip the term
                     continue;
                 }
+                //seperate signs into two terms to prevent overflow or underflow during calculation 
                 if (sign[i]) {
-                    y += MathFP.muld(x**(i + 1), term[i] / (i + 1), shift[i]);
+                    //combine all positive signs into  'y'
+                    //terms are raised to the i+1th power and divided by i+1 because we are integrating
+                    y += LibMathFP.muld(x**(i + 1), term[i] / (i + 1), shift[i]);
                     continue;
                 } else {
-                    yMinus += MathFP.muld(
-                        x**(i + 1),
-                        term[i] / (i + 1),
-                        shift[i]
-                    );
+                    //all negative sums are added to 'yMinus' 
+                    yMinus += LibMathFP.muld(x**(i + 1), term[i] / (i + 1), shift[i]);
                     continue;
                 }
             } else {
@@ -64,10 +69,10 @@ library MathFP {
                 if (term[i] == 0) {
                     continue;
                 } else if (sign[i]) {
-                    y += MathFP.muld(x**i, term[i], shift[i]);
+                    y += LibMathFP.muld(x**i, term[i], shift[i]);
                     continue;
                 } else {
-                    yMinus += MathFP.muld(x**i, term[i], shift[i]);
+                    yMinus += LibMathFP.muld(x**i, term[i], shift[i]);
                     continue;
                 }
             }

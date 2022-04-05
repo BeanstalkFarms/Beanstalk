@@ -223,127 +223,88 @@ contract Order is Listing {
     function _getSumOverPiecewiseRange(PiecewiseCubic calldata f, uint256 x, uint256 amount) internal pure returns (uint256) {
         uint256 startIndex = _findIndex(f.subIntervalIndex, x);
         uint256 endIndex = _findIndex(f.subIntervalIndex, x + amount);
-
-        if (x + amount <= f.subIntervalIndex[startIndex + 1]) {
+        //if x+amount is less than the end of the subinterval is in, there is only a need to evaluate one function integration
+        //i think these need to be fixed 
+        if (x + amount < f.subIntervalIndex[startIndex + 1]) {
             return
-                MathFP.evaluateCubic(
-                    [
-                        f.signs[startIndex],
-                        f.signs[startIndex + 10],
-                        f.signs[startIndex + 20],
-                        f.signs[startIndex + 30]
-                    ],
-                    [
-                        f.shifts[startIndex],
-                        f.shifts[startIndex + 10],
-                        f.shifts[startIndex + 20],
-                        f.shifts[startIndex + 30]
-                    ],
-                    [
-                        f.constants[startIndex],
-                        f.constants[startIndex + 10],
-                        f.constants[startIndex + 20],
-                        f.constants[startIndex + 30]
-                    ],
-                    x + amount - f.subIntervalIndex[startIndex],
+            LibMathFP.evaluateCubic(
+                    [f.signs[startIndex],
+                    f.signs[startIndex + 10],
+                    f.signs[startIndex + 20],
+                    f.signs[startIndex + 30]],
+                    [f.shifts[startIndex],
+                    f.shifts[startIndex + 10],
+                    f.shifts[startIndex + 20],
+                    f.shifts[startIndex + 30]],
+                    [f.constants[startIndex],
+                    f.constants[startIndex + 10],
+                    f.constants[startIndex + 20],
+                    f.constants[startIndex + 30]],
+                    amount,
                     true
                 );
         } else {
             uint256 midSum;
-            for (
-                uint8 midIndex = 1;
-                midIndex <= (endIndex - startIndex - 1);
-                midIndex++
-            ) {
-                midSum += MathFP.evaluateCubic(
-                    [
-                        f.signs[startIndex + midIndex],
-                        f.signs[startIndex + midIndex + 10],
-                        f.signs[startIndex + midIndex + 20],
-                        f.signs[startIndex + midIndex + 30]
-                    ],
-                    [
-                        f.shifts[startIndex + midIndex],
-                        f.shifts[startIndex + midIndex + 10],
-                        f.shifts[startIndex + midIndex + 20],
-                        f.shifts[startIndex + midIndex + 30]
-                    ],
-                    [
-                        f.constants[startIndex + midIndex],
-                        f.constants[startIndex + midIndex + 10],
-                        f.constants[startIndex + midIndex + 20],
-                        f.constants[startIndex + midIndex + 30]
-                    ],
+            for (uint8 midIndex = 1; midIndex < (endIndex - startIndex - 1); midIndex++) {
+                midSum += LibMathFP.evaluateCubic(
+                    [f.signs[startIndex + midIndex],
+                    f.signs[startIndex + midIndex + 10],
+                    f.signs[startIndex + midIndex + 20],
+                    f.signs[startIndex + midIndex + 30]],
+                    [f.shifts[startIndex + midIndex],
+                    f.shifts[startIndex + midIndex + 10],
+                    f.shifts[startIndex + midIndex + 20],
+                    f.shifts[startIndex + midIndex + 30]],
+                    [f.constants[startIndex + midIndex],
+                    f.constants[startIndex + midIndex + 10],
+                    f.constants[startIndex + midIndex + 20],
+                    f.constants[startIndex + midIndex + 30]],
                     f.subIntervalIndex[startIndex + midIndex + 1] -
-                        f.subIntervalIndex[startIndex + midIndex],
+                    f.subIntervalIndex[startIndex + midIndex],
                     true
                 );
             }
-            return
-                MathFP.evaluateCubic(
-                    [
-                        f.signs[startIndex],
+            return LibMathFP.evaluateCubic(
+                    [f.signs[startIndex],
                         f.signs[startIndex + 10],
                         f.signs[startIndex + 20],
-                        f.signs[startIndex + 30]
-                    ],
-                    [
-                        f.shifts[startIndex],
+                        f.signs[startIndex + 30]],
+                    [f.shifts[startIndex],
                         f.shifts[startIndex + 10],
                         f.shifts[startIndex + 20],
-                        f.shifts[startIndex + 30]
-                    ],
-                    [
-                        f.constants[startIndex],
+                        f.shifts[startIndex + 30]],
+                    [f.constants[startIndex],
                         f.constants[startIndex + 10],
                         f.constants[startIndex + 20],
-                        f.constants[startIndex + 30]
-                    ],
-                    f.subIntervalIndex[startIndex + 1] - x,
+                        f.constants[startIndex + 30]],
+                    x - f.subIntervalIndex[startIndex],
                     true
                 ) +
                 midSum +
-                MathFP.evaluateCubic(
-                    [
-                        f.signs[endIndex],
+                LibMathFP.evaluateCubic(
+                    [f.signs[endIndex],
                         f.signs[endIndex + 10],
                         f.signs[endIndex + 20],
-                        f.signs[endIndex + 30]
-                    ],
-                    [
-                        f.shifts[endIndex],
+                        f.signs[endIndex + 30]],
+                    [f.shifts[endIndex],
                         f.shifts[endIndex + 10],
                         f.shifts[endIndex + 20],
-                        f.shifts[endIndex + 30]
-                    ],
-                    [
-                        f.constants[endIndex],
+                        f.shifts[endIndex + 30]],
+                    [f.constants[endIndex],
                         f.constants[endIndex + 10],
                         f.constants[endIndex + 20],
-                        f.constants[endIndex + 30]
-                    ],
+                        f.constants[endIndex + 30]],
                     x + amount - f.subIntervalIndex[endIndex],
                     true
                 );
         }
     }
 
-    function createOrderId(
-        address account,
-        uint24 pricePerPod,
-        uint256 maxPlaceInLine
-    ) internal pure returns (bytes32 id) {
+    function createOrderId(address account, uint24 pricePerPod, uint256 maxPlaceInLine) internal pure returns (bytes32 id) {
         id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine));
     }
 
-    function createDynamicOrderId(
-        address account,
-        uint256 maxPlaceInLine,
-        uint256[10] memory subIntervalIndex,
-        uint256[40] memory constants,
-        uint8[40] memory shifts,
-        bool[40] memory signs
-    ) internal pure returns (bytes32 id) {
+    function createDynamicOrderId(address account, uint256 maxPlaceInLine, uint256[10] calldata subIntervalIndex, uint256[40] calldata constants, uint8[40] calldata shifts, bool[40] memory signs) internal pure returns (bytes32 id) {
         id = keccak256(
             abi.encodePacked(
                 account,

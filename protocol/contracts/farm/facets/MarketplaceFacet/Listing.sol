@@ -8,14 +8,15 @@ pragma experimental ABIEncoderV2;
 import "../../../libraries/LibMarket.sol";
 import "../../../libraries/LibClaim.sol";
 import "../../../libraries/LibIncentive.sol";
+import "../../../libraries/LibMathFP.sol";
 import "./PodTransfer.sol";
-import "./FixedPointMath.sol";
 
 /**
  * @author Beanjoyer
  * @title Pod Marketplace v1
  **/
 contract Listing is PodTransfer {
+
     using SafeMath for uint256;
 
     struct PiecewiseCubic {
@@ -77,6 +78,7 @@ contract Listing is PodTransfer {
     );
 
     event PodListingCancelled(address indexed account, uint256 index);
+    
     //debugging event remove later
     event ListingFill(
         address indexed from,
@@ -189,11 +191,11 @@ contract Listing is PodTransfer {
     }
 
     function _findIndex(uint256[10] calldata subIntervalIndex, uint256 x) internal pure returns (uint256) {
-        return MathFP.findIndexWithinSubinterval(subIntervalIndex, x);
+        return LibMathFP.findIndexWithinSubinterval(subIntervalIndex, x);
     }
 
     function _getPriceAtIndex(PiecewiseCubic calldata f, uint256 x, uint256 i) internal pure returns (uint256 pricePerPod) {
-        pricePerPod = MathFP.evaluateCubic(
+        pricePerPod = LibMathFP.evaluateCubic(
             [f.signs[i], f.signs[i + 10], f.signs[i + 20], f.signs[i + 30]], 
             [f.shifts[i], f.shifts[i + 10], f.shifts[i + 20], f.shifts[i + 30]],
             [f.constants[i], f.constants[i + 10], f.constants[i + 20], f.constants[i + 30]],
