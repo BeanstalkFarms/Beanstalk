@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "../../../libraries/Silo/LibTokenSilo.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/LibInternal.sol";
+import "../SiloFacet/BeanSilo.sol";
 
 import "hardhat/console.sol";
 
@@ -15,7 +16,7 @@ import "hardhat/console.sol";
  * @author Publius
  * @title Token Silo
 **/
-contract TokenSilo {
+contract TokenSilo is BeanSilo {
 
     uint32 private constant ASSET_PADDING = 100;
 
@@ -43,20 +44,54 @@ contract TokenSilo {
      * Getters
     **/
 
+    /**
+    if (token == address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db)) {
+
+    } else if (token == address(0x87898263B6C5BABe34b4ec53F22d98430b91e371)) {
+
+    } else {
+
+    }
+     */
+
     function getDeposit(address account, address token, uint32 season) external view returns (uint256, uint256) {
-        return LibTokenSilo.tokenDeposit(account, token, season);
+        if (token == address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db)) {
+            return beanDeposit(account, season);
+        } else if (token == address(0x87898263B6C5BABe34b4ec53F22d98430b91e371)) {
+            return lpDeposit(account, season);
+        } else {
+            return LibTokenSilo.tokenDeposit(account, token, season);
+        }
     }
 
     function getWithdrawal(address account, address token, uint32 season) external view returns (uint256) {
-        return LibTokenSilo.tokenWithdrawal(account, token, season);
+        if (token == address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db)) {
+            beanWithdrawal(account, season);
+        } else if (token == address(0x87898263B6C5BABe34b4ec53F22d98430b91e371)) {
+            lpWithdrawal(account, season);
+        } else {
+            return LibTokenSilo.tokenWithdrawal(account, token, season);
+        }
     }
 
     function getTotalDeposited(address token) external view returns (uint256) {
-        return s.siloBalances[token].deposited;
+        if (token == address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db)) {
+            return totalDepositedBeans();
+        } else if (token == address(0x87898263B6C5BABe34b4ec53F22d98430b91e371)) {
+            return totalDepositedLP();
+        } else {
+            return s.siloBalances[token].deposited;
+        }
     }
 
     function getTotalWithdrawn(address token) external view returns (uint256) {
-        return s.siloBalances[token].withdrawn;
+        if (token == address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db)) {
+            return totalWithdrawnBeans();
+        } else if (token == address(0x87898263B6C5BABe34b4ec53F22d98430b91e371)) {
+            return totalWithdrawnLP();
+        } else {
+            return s.siloBalances[token].withdrawn;
+        }
     }
 
     /**
