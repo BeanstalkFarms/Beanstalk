@@ -75,8 +75,8 @@ library LibMathFP {
         if (y > yMinus) {
             return y.sub(yMinus);
         } else {
-            // return yMinus.sub(y);
-            return 0;
+            return yMinus.sub(y);
+            // return 0;
         }
     }
 

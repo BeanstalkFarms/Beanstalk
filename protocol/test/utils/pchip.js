@@ -154,8 +154,9 @@ function createInterpolant (xs, ys) {
 function findIndex(ranges, x) {
     let left = 0;
     let right = ranges.length;
+    let mid;
     while(left < right) {
-        let mid = left + Math.floor((right-left)/2)
+        mid = left + Math.floor((right-left)/2)
         let compare = ranges[mid] - x;
         if(compare==0) return mid;
         if(compare < 0) right = mid;
