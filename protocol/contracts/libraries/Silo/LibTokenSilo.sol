@@ -88,7 +88,7 @@ library LibTokenSilo {
         return (s.a[account].deposits[token][id].amount, s.a[account].deposits[token][id].bdv);
     }
 
-    function beanDenominatedValue(address token, uint256 amount) private returns (uint256 bdv) {
+    function beanDenominatedValue(address token, uint256 amount) internal returns (uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         bytes memory myFunctionCall = abi.encodeWithSelector(s.ss[token].selector, amount);
         (bool success, bytes memory data) = address(this).delegatecall(myFunctionCall);

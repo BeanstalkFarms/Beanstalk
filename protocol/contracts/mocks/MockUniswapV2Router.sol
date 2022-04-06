@@ -218,6 +218,10 @@ contract MockUniswapV2Router {
         return _weth;
     }
 
+    function setWETH(address payable __weth) public {
+        _weth = __weth;
+    }
+
     function quote(uint amountA, uint reserveA, uint reserveB)
         internal
         pure

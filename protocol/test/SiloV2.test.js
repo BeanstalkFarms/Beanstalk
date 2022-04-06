@@ -563,13 +563,13 @@ describe('Silo', function () {
     });
 
     it("properly checks bdv", async function () {
-      this.curveBDV = await ethers.getContractAt('CurveBDVFacet', this.diamond.address);
+      this.curveBDV = await ethers.getContractAt('BDVFacet', this.diamond.address);
       expect(await this.curveBDV.curveToBDV(ethers.utils.parseEther('200'))).to.equal(ethers.utils.parseUnits('200',6));
     })
 
     it("properly checks bdv", async function () {
       await this.threeCurve.set_virtual_price(ethers.utils.parseEther('1.02'));
-      this.curveBDV = await ethers.getContractAt('CurveBDVFacet', this.diamond.address);
+      this.curveBDV = await ethers.getContractAt('BDVFacet', this.diamond.address);
       expect(await this.curveBDV.curveToBDV(ethers.utils.parseEther('2'))).to.equal('1998191');
     })
   })

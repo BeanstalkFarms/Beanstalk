@@ -7,12 +7,9 @@ pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import "./LibMetaCurve.sol";
-import "hardhat/console.sol";
 
 interface IPlainCurve {
-    function A_precise() external view returns (uint256);
-    function get_balances() external view returns (uint256[2] memory);
-    function totalSupply() external view returns (uint256);
+    function get_virtual_price() external view returns (uint256);
 }
 
 library LibBeanLUSDCurve {
@@ -33,42 +30,14 @@ library LibBeanLUSDCurve {
 
     function bdv(uint256 amount) internal view returns (uint256) {
         uint256 rate = getRate();
-        console.log("Price: %s", rate);
-        uint256[2] memory balances = IPlainCurve(POOL).get_balances();
-        console.log("B1: %s, B2: %s", balances[0], balances[1]);
-        uint256 a = IPlainCurve(POOL).A_precise();
-        console.log("A: %s", a);
-        uint256[2] memory xp = LibCurve.getXP(balances, BEAN_RM, rate);
-
-        console.log("XP1: %s, XP2: %s", xp[0], xp[1]);
-        uint256 d = LibCurve.getD(xp, a);
-        console.log("D: %s", d);
-        uint256 totalSupply = IPlainCurve(POOL).totalSupply();
-
-// 
-        checkD(balances);
-        uint256 beanBalance = d.div(2);
-        uint256 lusdBalance = beanBalance.mul(1e18).div(rate);
-        checkD([beanBalance / 1e12, lusdBalance]);
-// 
-
-        return d.mul(amount).div(totalSupply) / 1e12;
-    }
-
-    function checkD(uint256[2] memory balances) internal view returns (uint256) {
-        uint256 a = IPlainCurve(POOL).A_precise();
-        console.log("B1: %s, B2: %s", balances[0], balances[1]);
-        uint256[2] memory xp = LibCurve.getXP(balances, BEAN_RM, 1e18);
-        console.log("XP1: %s, XP2: %s", xp[0], xp[1]);
-        uint256 d = LibCurve.getD(xp, a);
-        console.log("check d: %s", d);
+        uint256 price = IPlainCurve(POOL).get_virtual_price();
+        if (rate < 1e18) price = price.mul(rate).div(1e18);
+        return amount.mul(price).div(1e30);
     }
 
     function getRate() internal view returns (uint256 rate) {
         uint256 bean3CrvPrice = LibMetaCurve.price(BEAN_METAPOOL, BEAN_DECIMALS);
-        console.log("Bean3Crv: %s",bean3CrvPrice);
         uint256 token3CrvPrice = LibMetaCurve.price(TOKEN_METAPOOL, TOKEN_DECIMALS);
-        console.log("LUSD3Crv: %s", token3CrvPrice);
         rate = token3CrvPrice.mul(I_BEAN_RM).div(
             bean3CrvPrice
         );

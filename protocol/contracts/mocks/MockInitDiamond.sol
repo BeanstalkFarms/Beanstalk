@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
+pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
@@ -14,6 +14,7 @@ import "../mocks/MockUniswapV2Pair.sol";
 import "../mocks/MockUniswapV2Router.sol";
 import {AppStorage} from "../farm/AppStorage.sol";
 import {LibMarket} from "../libraries/LibMarket.sol";
+import "../C.sol";
 
 /**
  * @author Publius
@@ -25,9 +26,9 @@ contract MockInitDiamond {
 
     AppStorage internal s;
 
-    function init(address mockRouter) external {
-        s.c.bean = address(new MockToken("BEAN", "Beanstalk"));
-        s.c.pair = address(new MockUniswapV2Pair(s.c.bean));
+    function init(address bean, address pair, address mockRouter) external {
+        s.c.bean = bean;
+        s.c.pair = pair;
         s.c.pegPair = address(new MockUniswapV2Pair(s.c.weth));
         MockUniswapV2Router(mockRouter).setPair(s.c.pair);
         s.c.weth = IUniswapV2Router02(mockRouter).WETH();
@@ -35,23 +36,20 @@ contract MockInitDiamond {
         IBean(s.c.bean).approve(mockRouter, uint256(-1));
         IUniswapV2Pair(s.c.pair).approve(mockRouter, uint256(-1));
         IWETH(s.c.weth).approve(mockRouter, uint256(-1));
+        IBean(bean).approve(C.curveMetapoolAddress(), uint256(-1));
 
-        s.cases = [
-        // Dsc, Sdy, Inc, nul
-       int8(3),   1,   0,   0,  // Exs Low: P < 1
-            -1,  -3,  -3,   0,  //          P > 1
-             3,   1,   0,   0,  // Rea Low: P < 1
-            -1,  -3,  -3,   0,  //          P > 1
-             3,   3,   1,   0,  // Rea Hgh: P < 1
-             0,  -1,  -3,   0,  //          P > 1
-             3,   3,   1,   0,  // Exs Hgh: P < 1
-             0,  -1,  -3,   0   //          P > 1
+         s.cases = [
+           // Dsc, Sdy, Inc, nul
+          int8(3),   1,   0,   0,  // Exs Low: P < 1
+               -1,  -3,  -3,   0,  //          P > 1
+                3,   1,   0,   0,  // Rea Low: P < 1
+               -1,  -3,  -3,   0,  //          P > 1
+                3,   3,   1,   0,  // Rea Hgh: P < 1
+                0,  -1,  -3,   0,  //          P > 1
+                3,   3,   1,   0,  // Exs Hgh: P < 1
+                0,  -1,  -3,   0   //          P > 1
         ];
         s.w.yield = 1;
-    
-        s.refundStatus = 1;
-        s.beanRefundAmount = 1;
-        s.ethRefundAmount = 1;
 
         s.season.current = 1;
         s.season.withdrawSeasons = 25;
@@ -60,6 +58,13 @@ contract MockInitDiamond {
 
         s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
         LibMarket.initMarket(s.c.bean, s.c.weth, mockRouter);
+
+        s.ss[s.c.pair].selector = bytes4(keccak256("uniswapLPtoBDV(address,uint256)")); 
+        s.ss[s.c.pair].seeds = 4;
+        s.ss[s.c.pair].stalk = 10000;
+
+        s.ss[s.c.bean].seeds = 2;
+        s.ss[s.c.bean].stalk = 10000;
     }
 
 }
