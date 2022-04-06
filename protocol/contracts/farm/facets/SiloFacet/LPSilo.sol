@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "./UpdateSilo.sol";
 import "../../../libraries/Silo/LibLPSilo.sol";
+import "../../../libraries/LibBeanEthUniswap.sol";
 
 /**
  * @author Publius
@@ -46,7 +47,7 @@ contract LPSilo is UpdateSilo {
     **/
 
     function _depositLP(uint256 amount) internal {
-        uint256 lpb = LibLPSilo.lpToLPBeans(amount);
+        uint256 lpb = LibBeanEthUniswap.lpToLPBeans(amount);
         require(lpb > 0, "Silo: No Beans under LP.");
         LibLPSilo.incrementDepositedLP(amount);
         uint256 seeds = lpb.mul(C.getSeedsPerLPBean());

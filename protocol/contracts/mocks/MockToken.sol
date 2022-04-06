@@ -14,6 +14,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
 **/
 contract MockToken is ERC20, ERC20Burnable {
 
+    uint8 private _decimals = 6;
+
     constructor(string memory name, string memory symbol)
     ERC20(name, symbol)
     { }
@@ -31,8 +33,12 @@ contract MockToken is ERC20, ERC20Burnable {
         ERC20Burnable.burn(amount);
     }
 
+    function setDecimals(uint8 dec) public {
+        _decimals = dec;
+    }
+
     function decimals() public view virtual override returns (uint8) {
-        return 6;
+        return _decimals;
     }
 
 }
