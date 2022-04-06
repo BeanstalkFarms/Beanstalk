@@ -151,24 +151,33 @@ function createInterpolant (xs, ys) {
     return {subIntervalIndex:oldXs, constants:constants, shifts:shifts, signs:bools};
 };
 
-function findIndex(ranges, x, low, high) {
-    let mid;
-    while(low<high){
-        mid = (low+high)/2;
-        if(x<=ranges[mid]){
-            low=mid-1;
-        } else if(x > ranges[mid]){
-            high = mid - 1;
-        }
+function findIndex(ranges, x) {
+    let left = 0;
+    let right = ranges.length;
+    while(left < right) {
+        let mid = left + Math.floor((right-left)/2)
+        let compare = ranges[mid] - x;
+        if(compare==0) return mid;
+        if(compare < 0) right = mid;
+        else left = mid + 1;
     }
+    // console.log(ranges,x,low,high)
+    // while(low<high){
+    //     mid = Math.floor((low+high)/2);
+    //     if(x<=ranges[mid]){
+    //         low=mid-1;
+    //     } else if(x > ranges[mid]){
+    //         high = mid - 1;
+    //     }
+    // }
     return mid;
 }
 
 //integrate a PCHIP from x to k, with a piecewise of 10 parts
 function evaluatePCHIP(f, x, amount) {
     let startIndex = findIndex(f.subIntervalIndex, x, 0 , 9)
-    let endIndex = findIndex(f.subIntervalIndex, x, 0, 9)
-
+    let endIndex = findIndex(f.subIntervalIndex, x+amount, 0, 9)
+    console.log(startIndex,endIndex)
     if(x+amount <= f.subIntervalIndex[startIndex+1]){
         return evaluateCubic(f.constants[startIndex]/Math.pow(10,f.shifts[startIndex]), f.constants[startIndex+10]/Math.pow(10,f.shifts[startIndex+10]), f.constants[startIndex+20]/Math.pow(10,f.shifts[startIndex+20]), f.constants[startIndex+30]/Math.pow(10,f.shifts[startIndex+30]), x, amount, true);
     }
@@ -178,7 +187,9 @@ function evaluatePCHIP(f, x, amount) {
     for(i = 1; i<(endIndex-startIndex-1);i++){
         midSum += evaluateCubic(f.constants[startIndex+i]/Math.pow(10,f.shifts[startIndex+i]), f.constants[startIndex+i+10]/Math.pow(10,f.shifts[startIndex+i+10]), f.constants[startIndex+i+20]/Math.pow(10,f.shifts[startIndex+i+20]), f.constants[startIndex+i+30]/Math.pow(10,f.shifts[startIndex+i+30]),0, f.subIntervalIndex[startIndex+i+1]-f.subIntervalIndex[startIndex+i])
     }
-    return evaluateCubic(f.constants[startIndex]/Math.pow(10,f.shifts[startIndex]), f.constants[startIndex+10]/Math.pow(10,f.shifts[startIndex+10]), f.constants[startIndex+20]/Math.pow(10,f.shifts[startIndex+20]), f.constants[startIndex+30]/Math.pow(10,f.shifts[startIndex+30]), x, amount, true) + evaluateCubic(f.constants[endIndex]/Math.pow(10,f.shifts[endIndex]), f.constants[endIndex+10]/Math.pow(10,f.shifts[endIndex+10]), f.constants[endIndex+20]/Math.pow(10,f.shifts[endIndex+20]), f.constants[endIndex+30]/Math.pow(10,f.shifts[endIndex+30]), f.subIntervalIndex[endIndex], amount+x, true)+midSum;
+    return evaluateCubic(f.constants[startIndex]/Math.pow(10,f.shifts[startIndex]), f.constants[startIndex+10]/Math.pow(10,f.shifts[startIndex+10]), f.constants[startIndex+20]/Math.pow(10,f.shifts[startIndex+20]), f.constants[startIndex+30]/Math.pow(10,f.shifts[startIndex+30]), x, amount, true) 
+    + evaluateCubic(f.constants[endIndex]/Math.pow(10,f.shifts[endIndex]), f.constants[endIndex+10]/Math.pow(10,f.shifts[endIndex+10]), f.constants[endIndex+20]/Math.pow(10,f.shifts[endIndex+20]), f.constants[endIndex+30]/Math.pow(10,f.shifts[endIndex+30]), f.subIntervalIndex[endIndex], amount+x, true)
+    +midSum;
 }
 
 function evaluateCubic(a,b,c,d,x,amount,integrate){

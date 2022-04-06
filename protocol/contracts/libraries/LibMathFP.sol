@@ -5,7 +5,7 @@
 pragma solidity ^0.7.6;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-
+import "hardhat/console.sol";
 /**
  * Based on the implementation found in: https://github.com/HQ20/contracts/blob/master/contracts/math/DecimalMath.sol
 */
@@ -20,6 +20,7 @@ library LibMathFP {
      */
     //ranges has to be an ordered set
     function findIndexWithinSubinterval(uint256[10] calldata ranges, uint256 x, uint256 low, uint256 high) internal pure returns (uint256 mid) {
+        // console.log();
         while (low<high) {
             mid = (low+high)/2;
             if(x <= ranges[mid]){
