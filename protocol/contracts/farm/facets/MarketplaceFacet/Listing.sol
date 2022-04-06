@@ -19,11 +19,12 @@ contract Listing is PodTransfer {
 
     using SafeMath for uint256;
 
+
     struct PiecewiseCubic {
-        uint256[10] subIntervalIndex;
-        uint256[40] constants;
-        uint8[40] shifts;
-        bool[40] signs;
+        uint256[10] subIntervalIndex; //Each term 'n' points to the beginning of the domain for the nth piecewise
+        uint256[40] constants; //Stores the constant values for each cubic. Since there are only 10 values ot a degree, they are concatenated together to form a 40 length array
+        uint8[40] shifts; //Decimal shift for each corresponding constant value
+        bool[40] signs; //Sign for each corresponding value
     }
 
     struct Listing {
@@ -173,7 +174,8 @@ contract Listing is PodTransfer {
         require(plotSize >= (l.start + l.amount) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
         require(beanAmount > 0, "bean amount is zero rip 1");
-        uint256 i = _findIndex(l.f.subIntervalIndex, l.index + l.start + l.amount - s.f.harvestable);
+        // uint256 i = _findIndex(l.f.subIntervalIndex, l.index + l.start + l.amount - s.f.harvestable);
+        uint256 i = LibMathFP.findIndexWithinSubinterval(l.f.subIntervalIndex, l.index + l.start + l.amount - s.f.harvestable, 0, 9);
         uint256 pricePerPod = _getPriceAtIndex(l.f, l.index + l.start + l.amount - s.f.harvestable, i);
         emit ListingFill(
             l.account,
@@ -182,17 +184,17 @@ contract Listing is PodTransfer {
             l.index + l.start + l.amount - s.f.harvestable
         );
         // require(0 <=i && i < 10, "invalid index");
-        // require(pricePerPod > 0, "invalid price per pod calculated");
+        require(pricePerPod > 0, "invalid price per pod calculated");
         // require(pricePerPod<=1000000, "price per pod too high");
         beanAmount = (beanAmount * 1000000) / pricePerPod;
-        // require(beanAmount > 0, "bean amount is zero rip 2");
+        require(l.amount >= beanAmount, "Marketplace: Not enough pods in Listing.");
         __fillDynamicListing(l.account, msg.sender, l, beanAmount);
         _transferPlot(l.account, msg.sender, l.index, l.start, beanAmount);
     }
 
-    function _findIndex(uint256[10] calldata subIntervalIndex, uint256 x) internal pure returns (uint256) {
-        return LibMathFP.findIndexWithinSubinterval(subIntervalIndex, x);
-    }
+    // function _findIndex(uint256[10] calldata subIntervalIndex, uint256 x) internal pure returns (uint256) {
+    //     return LibMathFP.findIndexWithinSubinterval(subIntervalIndex, x);
+    
 
     function _getPriceAtIndex(PiecewiseCubic calldata f, uint256 x, uint256 i) internal pure returns (uint256 pricePerPod) {
         pricePerPod = LibMathFP.evaluateCubic(
@@ -200,6 +202,7 @@ contract Listing is PodTransfer {
             [f.shifts[i], f.shifts[i + 10], f.shifts[i + 20], f.shifts[i + 30]],
             [f.constants[i], f.constants[i + 10], f.constants[i + 20], f.constants[i + 30]],
             x,
+            0,
             false
         );
     }
@@ -214,8 +217,6 @@ contract Listing is PodTransfer {
     }
 
     function __fillDynamicListing(address from, address to, DynamicListing calldata l, uint256 amount) private {
-        require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
-
         if (l.amount > amount)
             s.podListings[
                 l.index.add(amount).add(l.start)

@@ -147,10 +147,51 @@ function createInterpolant (xs, ys) {
     var constants = ys.concat(c1s).concat(c2s).concat(c3s);
     var shifts = shiftsZero.concat(shiftsOne).concat(shiftsTwo).concat(shiftsThree);
     var bools = boolsZero.concat(boolsOne).concat(boolsTwo).concat(boolsThree);
-
     
     return {subIntervalIndex:oldXs, constants:constants, shifts:shifts, signs:bools};
 };
+
+function findIndex(ranges, x, low, high) {
+    let mid;
+    while(low<high){
+        mid = (low+high)/2;
+        if(x<=ranges[mid]){
+            low=mid-1;
+        } else if(x > ranges[mid]){
+            high = mid - 1;
+        }
+    }
+    return mid;
+}
+
+//integrate a PCHIP from x to k, with a piecewise of 10 parts
+function evaluatePCHIP(f, x, amount) {
+    let startIndex = findIndex(f.subIntervalIndex, x, 0 , 9)
+    let endIndex = findIndex(f.subIntervalIndex, x, 0, 9)
+
+    if(x+amount <= f.subIntervalIndex[startIndex+1]){
+        return evaluateCubic(f.constants[startIndex]/Math.pow(10,f.shifts[startIndex]), f.constants[startIndex+10]/Math.pow(10,f.shifts[startIndex+10]), f.constants[startIndex+20]/Math.pow(10,f.shifts[startIndex+20]), f.constants[startIndex+30]/Math.pow(10,f.shifts[startIndex+30]), x, amount, true);
+    }
+    
+    let midSum;
+    let i;
+    for(i = 1; i<(endIndex-startIndex-1);i++){
+        midSum += evaluateCubic(f.constants[startIndex+i]/Math.pow(10,f.shifts[startIndex+i]), f.constants[startIndex+i+10]/Math.pow(10,f.shifts[startIndex+i+10]), f.constants[startIndex+i+20]/Math.pow(10,f.shifts[startIndex+i+20]), f.constants[startIndex+i+30]/Math.pow(10,f.shifts[startIndex+i+30]),0, f.subIntervalIndex[startIndex+i+1]-f.subIntervalIndex[startIndex+i])
+    }
+    return evaluateCubic(f.constants[startIndex]/Math.pow(10,f.shifts[startIndex]), f.constants[startIndex+10]/Math.pow(10,f.shifts[startIndex+10]), f.constants[startIndex+20]/Math.pow(10,f.shifts[startIndex+20]), f.constants[startIndex+30]/Math.pow(10,f.shifts[startIndex+30]), x, amount, true) + evaluateCubic(f.constants[endIndex]/Math.pow(10,f.shifts[endIndex]), f.constants[endIndex+10]/Math.pow(10,f.shifts[endIndex+10]), f.constants[endIndex+20]/Math.pow(10,f.shifts[endIndex+20]), f.constants[endIndex+30]/Math.pow(10,f.shifts[endIndex+30]), f.subIntervalIndex[endIndex], amount+x, true)+midSum;
+}
+
+function evaluateCubic(a,b,c,d,x,amount,integrate){
+    if(integrate){
+        return ((a*Math.pow(x+amount,4)/4)+(b*Math.pow(x+amount,3)/3)+(c*Math.pow(x+amount,2)/2)+d*(x+amount)) - (a*Math.pow(x,4)/4)+(b*Math.pow(x,3)/3)+(c*Math.pow(x,2)/2)+d*x
+    }else{
+        return a*Math.pow(x,3) + b*Math.pow(x,2) + c*x + d;
+    }
+}
+
+function muld(x, y, decimals){
+    return (x*y)/Math.pow(10,decimals);
+}
 
 // let interp1 = createInterpolant(
 //     [0,500,1000,1500,2000,2500,3000, 3500, 4000, 4500], 
@@ -159,7 +200,8 @@ function createInterpolant (xs, ys) {
 // console.log(interp1);
 
 module.exports = {
-    createInterpolant
+    createInterpolant,
+    evaluatePCHIP
 };
 
 //minimum price delta

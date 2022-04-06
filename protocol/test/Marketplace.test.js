@@ -5,7 +5,7 @@ use(waffleChai);
 const { deploy } = require('../scripts/deploy.js')
 const { BigNumber } = require('bignumber.js')
 const { print, printWeather } = require('./utils/print.js')
-const { createInterpolant } = require('./utils/pchip.js')
+const { createInterpolant, evaluatePCHIP } = require('./utils/pchip.js')
 
 const ZERO_HASH = '0x0000000000000000000000000000000000000000000000000000000000000000'
 let user, user2, owner;
@@ -104,7 +104,7 @@ describe('Marketplace', function () {
 
   const linearSet = {
     xs:[0,500,1000,1500,2000,2500,3000, 3500, 4000, 4500],
-    ys:[1000000,900000,800000,700000,600000,500000,400000,300000,200000,100000]
+    ys:[ 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1 ]
   }
 
   beforeEach(async function () {
@@ -221,8 +221,10 @@ describe('Marketplace', function () {
 
       describe("List full dynamic plot", async function () {
         beforeEach(async function () {
+
           let interp = createInterpolant(linearSet.xs, linearSet.ys);
           this.result = await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000','0', true, [linearSet.xs.map(String), interp.constants.map(String), interp.shifts.map(String), interp.signs]);
+
         })
 
         it('Lists Dynamic Plot properly', async function () {
@@ -722,12 +724,11 @@ describe('Marketplace', function () {
       describe("Fill dynamic listing", async function () {
         beforeEach(async function () {
           let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-          let ys = [ 1000000, 900000, 900000, 800000, 800000, 700000, 700000, 600000, 600000, 500000 ];
+          let ys = [ 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1 ];
           this.interp = createInterpolant(xs, ys);
-          // console.log(interp)
           this.listing = [userAddress, '0', '0', '1000', '0', true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]]
-          await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '0', true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]);
-          this.amountBeansBuyingWith = 500;
+          await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '0', true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
+          this.amountBeansBuyingWith = 400;
 
           this.userBeanBalance = await this.bean.balanceOf(userAddress)
           this.user2BeanBalance = await this.bean.balanceOf(user2Address)
@@ -741,7 +742,6 @@ describe('Marketplace', function () {
         it('Transfer Beans properly', async function () {
           expect(this.user2BeanBalance.sub(this.user2BeanBalanceAfter)).to.equal(this.amountBeansBuyingWith);
           expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal(this.amountBeansBuyingWith);
-          console.log(this.userBeanBalance, this.user2BeanBalance, this.userBeanBalanceAfter, this.user2BeanBalanceAfter)
           expect(await this.claim.wrappedBeans(userAddress)).to.equal(0);
         })
 
@@ -762,7 +762,7 @@ describe('Marketplace', function () {
       describe("Fill partial dynamic listing", async function () {
         beforeEach(async function () {
           let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-          let ys = [ 1000000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000 ];
+          let ys = [ 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1 ];
           this.interp = createInterpolant(xs,ys);
           this.listing = [userAddress, '0', '0', '1000', '0', true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]];
           await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '0', true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]);
@@ -802,7 +802,7 @@ describe('Marketplace', function () {
       describe("Fill partial dynamic listing of a partial dynamic listing multiple fills", async function () {
         beforeEach(async function () {
           let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-          let ys = [ 1000000, 900000, 900000, 800000, 800000, 700000, 700000, 600000, 600000, 500000 ];
+          let ys = [ 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1 ];
           this.interp = createInterpolant(xs, ys);
           this.listing = [userAddress, '0', '500', '500', '0', true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]];
           // this.listing = [userAddress, '0', '500', '500', '500000', '0', true]
@@ -843,7 +843,7 @@ describe('Marketplace', function () {
       describe("Fill partial dynamic listing of a dynamic listing created by partial fill", async function () {
         beforeEach(async function () {
           let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-          let ys = [ 1000000, 900000, 900000, 800000, 800000, 700000, 700000, 600000, 600000, 500000 ];
+          let ys = [ 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1 ];
           this.interp = createInterpolant(xs,ys);
           this.listing = [userAddress, '0', '500', '500', '0', true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]]
           // this.listing = [userAddress, '0', '500', '500', '500000', '0', true]
@@ -881,7 +881,7 @@ describe('Marketplace', function () {
       describe("Fill partial dynamic listing to wallet", async function () {
         beforeEach(async function () {
           let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-          let ys = [ 1000000, 850000, 700000, 600000, 550000, 500000, 500000, 500000, 500000, 500000 ];
+          let ys = [ 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1 ];
           this.interp = createInterpolant(xs,ys);
           this.listing = [userAddress, '0', '0', '1000', '0', false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]]
           await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '0', false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]);
@@ -894,7 +894,6 @@ describe('Marketplace', function () {
 
           this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
           this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
-          console.log(this.userBeanBalance,this.user2BeanBalance,this.userBeanBalanceAfter,this.user2BeanBalanceAfter)
         })
 
         it('Transfer Beans properly', async function () {
@@ -922,7 +921,7 @@ describe('Marketplace', function () {
       describe("Fill Beans to wallet dynamic", async function () {
         beforeEach(async function () {
           let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-          let ys = [ 1000000, 900000, 900000, 800000, 800000, 700000, 700000, 600000, 600000, 500000 ];
+          let ys = [ 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1 ];
           this.interp = createInterpolant(xs,ys);
           await this.pair.simulateTrade('2500', '1000');
           this.listing = [userAddress, '0', '0', '1000', '0', false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]]
@@ -955,7 +954,7 @@ describe('Marketplace', function () {
       describe("Fill Beans with amount to wallet dynamic", async function () {
         beforeEach(async function () {
           let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-          let ys = [ 1000000, 900000, 900000, 800000, 800000, 700000, 700000, 600000, 600000, 500000 ];
+          let ys = [ 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1 ];
           this.interp = createInterpolant(xs,ys);
           await this.pair.simulateTrade('2500', '1000');
           this.listing = [userAddress, '0', '0', '1000', '0', false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]]
@@ -995,7 +994,7 @@ describe('Marketplace', function () {
         describe("Claim and fill dynamic listing", async function () {
           beforeEach(async function () {
             let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-            let ys = [ 1000000, 900000, 900000, 800000, 800000, 700000, 700000, 600000, 600000, 500000 ];
+            let ys = [ 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1 ];
             this.interp = createInterpolant(xs,ys);
             this.amountBeansBuyingWith = 100;
             this.listing = [userAddress, '0', '0', '1000', '0', true,  [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]]
@@ -1019,7 +1018,7 @@ describe('Marketplace', function () {
         describe("Claim and fill dynamic listing overallocate", async function () {
           beforeEach(async function () {
             let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-            let ys = [ 1000000, 900000, 900000, 800000, 800000, 700000, 700000, 600000, 600000, 500000 ];
+            let ys = [ 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1 ];
             this.interp = createInterpolant(xs,ys);
             this.amountBeansBuyingWith = 300;
             this.listing = [userAddress, '0', '0', '1000', '0', true,  [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]]
@@ -1043,7 +1042,7 @@ describe('Marketplace', function () {
         describe("Claim and buy dynamic listing to wrapped", async function () {
           beforeEach(async function () {
             let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-            let ys = [ 1000000, 900000, 900000, 800000, 800000, 700000, 700000, 600000, 600000, 500000 ];
+            let ys = [ 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1 ];
             this.interp = createInterpolant(xs,ys);
             this.amountBeansBuyingWith = 100;
             this.listing = [userAddress, '0', '0', '1000', '0', false,[this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]]
@@ -1069,10 +1068,10 @@ describe('Marketplace', function () {
           beforeEach(async function () {
 
             let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-            let ys = [ 1000000, 900000, 900000, 800000, 800000, 700000, 700000, 600000, 600000, 500000 ];
+            let ys = [ 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1 ];
             this.interp = createInterpolant(xs,ys);
             await this.pair.simulateTrade('2500', '1000');
-            this.listing = [userAddress, '0', '0', '1000', '0', true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]]
+            this.listing = [userAddress, '0', '0', '1000', '0', true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]]
             await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '0', true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]);
             this.amountTransferringBeans = 100;
             this.amoutBuyingBeans = 250;
@@ -1100,7 +1099,7 @@ describe('Marketplace', function () {
     describe("Cancel", async function () {
       it('Re-list plot cancels and re-lists', async function () {
         let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-        let ys = [ 1000000, 900000, 900000, 800000, 800000, 700000, 700000, 600000, 600000, 500000 ];
+        let ys = [ 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1 ];
         this.interp = createInterpolant(xs,ys);
         result = await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '0', true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]);
         expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
@@ -1112,7 +1111,7 @@ describe('Marketplace', function () {
 
       it('Reverts on Cancel Listing, not owned by user', async function () {
         let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-        let ys = [ 1000000, 900000, 900000, 800000, 800000, 700000, 700000, 600000, 600000, 500000 ];
+        let ys = [ 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1 ];
         this.interp = createInterpolant(xs,ys);
         await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '0', true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]);
         await expect(this.marketplace.connect(user2).cancelPodListing('0')).to.be.revertedWith('Marketplace: Listing not owned by sender.');
@@ -1120,7 +1119,7 @@ describe('Marketplace', function () {
 
       it('Cancels Listing, Emits Listing Cancelled Event', async function () {
         let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-        let ys = [ 1000000, 900000, 900000, 800000, 800000, 700000, 700000, 600000, 600000, 500000 ];
+        let ys = [ 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1 ];
         this.interp = createInterpolant(xs,ys);
         result = await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '2000', true,[this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]);
         expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
@@ -1537,23 +1536,26 @@ describe('Marketplace', function () {
         it('Reverts if price is 0', async function () {
           let xs = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900];
           let ys = [0, 0, 0, 0, 0,0,0,0,0,0];
-          this.interp = createInterpolant(xs,ys); 
-          console.log(this.interp)
-          await expect(this.marketplace.connect(user2).createDynamicPodOrder('100', '100000', [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs])).to.be.revertedWith("Marketplace: Order amount must be > 0.");
+          let interp = createInterpolant(xs,ys); 
+          await expect(this.marketplace.connect(user2).createDynamicPodOrder('100', '100000', [interp.subIntervalIndex.map(String), interp.constants.map(String), interp.shifts.map(String), interp.signs])).to.be.revertedWith("Marketplace: Pod Amount must be > 0.");
         })
         it('Reverts if amount is 0', async function () {
-          await expect(this.marketplace.connect(user2).createDynamicPodOrder('0', '100000', [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs])).to.be.revertedWith("Marketplace: Pod price must be greater than 0.");
+          let xs = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900];
+          let ys = [ 800000, 750000, 690000, 640000, 600000, 500000, 400000, 600000, 530000, 500000 ];
+          let interp = createInterpolant(xs,ys); 
+          await expect(this.marketplace.connect(user2).createDynamicPodOrder('0', '100000', [interp.subIntervalIndex.map(String), interp.constants.map(String), interp.shifts.map(String), interp.signs])).to.be.revertedWith("Marketplace: Order amount must be > 0.");
         })
       })
 
       describe('create order', async function () {
         beforeEach(async function () {
           let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-          let ys = [ 900000, 900000, 800000, 700000, 600000, 500000, 400000, 300000, 200000, 100000 ];
+          let ys = [ 800000, 750000, 690000, 640000, 600000, 500000, 400000, 600000, 530000, 500000 ];
           this.interp = createInterpolant(xs,ys);
           this.userBeanBalance = await this.bean.balanceOf(userAddress);
           this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address);
-          //creating order with 500 beans, willing to buy pods up to 1000
+          //creating order with 500 beans, willing to buy pods from 0.8-0.5 
+          // if we create an 
           this.result = await this.marketplace.connect(user).createDynamicPodOrder('500', '1000', [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs] )
           this.id = await getDynamicOrderId(this.result);
           this.orderIds.push(this.id);
@@ -1561,51 +1563,57 @@ describe('Marketplace', function () {
           this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address);
         })
         it('emits an event', async function () {
-          expect(this.result).to.emit(this.marketplace, 'OrderFill').withArgs("225833334")
+          expect(this.result).to.emit(this.marketplace, 'OrderFill').withArgs("205")
         })
 
         it('Transfer Beans properly', async function () {
           expect(this.beanstalkBeanBalanceAfter.sub(this.beanstalkBeanBalance)).to.equal('500');
-          expect(this.userBeanBalance.sub(this.userBeanBalanceAfter)).to.equal('225833334');
+          expect(this.userBeanBalance.sub(this.userBeanBalanceAfter)).to.equal('500');
         })
 
         it('Creates the order', async function () {
-          expect(await this.marketplace.podOrderById(this.id)).to.equal('225833334');
+          expect(await this.marketplace.podOrderById(this.id)).to.equal('205');
           expect(await this.marketplace.podOrder(userAddress, '100000', '1000')).to.equal('0');
         })
 
         it('emits an event', async function () {
-          expect(this.result).to.emit(this.marketplace, 'DynamicPodOrderCreated').withArgs(userAddress, this.id, '225833334', '1000', this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs)
+          expect(this.result).to.emit(this.marketplace, 'DynamicPodOrderCreated').withArgs(userAddress, this.id, '205', '1000', this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs)
         })
       })
 
       describe('buy beans and create order', async function () {
         beforeEach(async function () {
+
           let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-          let ys = [ 1000000, 900000, 800000, 700000, 600000, 500000, 400000, 300000, 200000, 100000 ];
+          let ys = [ 800000, 750000, 690000, 640000, 600000, 500000, 400000, 600000, 530000, 500000 ];
           this.interp = createInterpolant( xs , ys );
           await this.pair.simulateTrade('2500', '1000');
           this.userBeanBalance = await this.bean.balanceOf(userAddress)
           this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-          this.result = await this.marketplace.connect(user).buyBeansAndCreateDynamicPodOrder('0', '250', '1000', [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs], { value: 112 })
+          this.result = await this.marketplace.connect(user).buyBeansAndCreateDynamicPodOrder('0', '250', '1000', [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs], { value: 112 })
           this.id = await getDynamicOrderId(this.result);
           this.orderIds.push(this.id)
           this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
           this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
+
         })
 
         it('Transfer Beans properly', async function () {
+
           expect(this.beanstalkBeanBalanceAfter.sub(this.beanstalkBeanBalance)).to.equal('250');
           expect(this.userBeanBalance.sub(this.userBeanBalanceAfter)).to.equal('0');
+
         })
 
         it('Creates the offer', async function () {
-          expect(await this.marketplace.podOrderById(this.id)).to.equal('2500');
-          expect(await this.marketplace.podOrder(userAddress, '100000', '1000')).to.equal('2500');
+
+          expect(await this.marketplace.podOrderById(this.id)).to.equal('73');
+          expect(await this.marketplace.dynamicPodOrder(userAddress, '1000',[this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs])).to.equal('73');
+
         })
 
         it('emits an event', async function () {
-          expect(this.result).to.emit(this.marketplace, 'DynamicPodOrderCreated').withArgs(userAddress, this.id, '2500', '1000', this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs)
+          expect(this.result).to.emit(this.marketplace, 'DynamicPodOrderCreated').withArgs(userAddress, this.id, '73', '1000', this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs)
         })
       })
 
@@ -1613,7 +1621,7 @@ describe('Marketplace', function () {
         beforeEach(async function () {
 
           let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-          let ys = [ 1000000, 900000, 800000, 700000, 600000, 500000, 400000, 300000, 200000, 100000 ];
+          let ys = [ 800000, 750000, 690000, 640000, 600000, 500000, 400000, 600000, 530000, 500000 ];
           this.interp = createInterpolant(xs,ys);
           await this.pair.simulateTrade('2500', '1000');
           this.userBeanBalance = await this.bean.balanceOf(userAddress)
@@ -1632,11 +1640,11 @@ describe('Marketplace', function () {
         })
 
         it('Creates the offer', async function () {
-          expect(await this.marketplace.podOrderById(this.id)).to.equal('3500');
+          expect(await this.marketplace.podOrderById(this.id)).to.equal('73');
         })
 
         it('emits an event', async function () {
-          expect(this.result).to.emit(this.marketplace, 'DynamicPodOrderCreated').withArgs(userAddress, this.id, '3500', '1000',this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs)
+          expect(this.result).to.emit(this.marketplace, 'DynamicPodOrderCreated').withArgs(userAddress, this.id, '73', '1000',this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs)
         })
       })
 
@@ -1650,7 +1658,7 @@ describe('Marketplace', function () {
         describe('normal dynamic order', async function () {
           beforeEach(async function () {
             let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-            let ys = [ 1000000, 900000, 800000, 700000, 600000, 500000, 400000, 300000, 200000, 100000 ];
+            let ys = [ 800000, 750000, 690000, 640000, 600000, 500000, 400000, 600000, 530000, 500000 ];
             this.interp = createInterpolant(xs,ys);
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
@@ -1668,14 +1676,16 @@ describe('Marketplace', function () {
           })
 
           it('Creates the offer', async function () {
-            expect(await this.marketplace.podOrderById(this.id)).to.equal('2500');
+            expect(await this.marketplace.podOrderById(this.id)).to.equal('73');
           })
         })
 
         describe('normal dynamic order overallocate', async function () {
+
           beforeEach(async function () {
+
             let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-            let ys = [ 1000000, 900000, 800000, 700000, 600000, 500000, 400000, 300000, 200000, 100000 ];
+            let ys = [ 800000, 750000, 690000, 640000, 600000, 500000, 400000, 600000, 530000, 500000 ];
             this.interp = createInterpolant(xs,ys);
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
@@ -1684,6 +1694,7 @@ describe('Marketplace', function () {
             this.orderIds.push(this.id);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress);
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address);
+
           })
 
           it('Transfer Beans properly', async function () {
@@ -1693,18 +1704,19 @@ describe('Marketplace', function () {
           })
 
           it('Creates the offer', async function () {
-            expect(await this.marketplace.podOrderById(this.id)).to.equal('3000');
+            expect(await this.marketplace.podOrderById(this.id)).to.equal('73');
           })
         })
 
         describe('normal under overallocate', async function () {
+
           beforeEach(async function () {
             let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-            let ys = [ 1000000, 900000, 800000, 700000, 600000, 500000, 400000, 300000, 200000, 100000 ];
+            let ys = [ 800000, 750000, 690000, 640000, 600000, 500000, 400000, 600000, 530000, 500000 ];
             this.interp = createInterpolant(xs,ys);
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).claimAndCreateDynamicPodOrder('100', '1000', [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs], [['27'], [], [], false, false, 0, 0, false])
+            this.result = await this.marketplace.connect(user).claimAndCreateDynamicPodOrder('200', '1000', [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs], [['27'], [], [], false, false, 0, 0, false])
             this.id = await getDynamicOrderId(this.result)
             this.orderIds.push(this.id)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
@@ -1720,6 +1732,7 @@ describe('Marketplace', function () {
           it('Creates the offer', async function () {
             expect(await this.marketplace.podOrderById(this.id)).to.equal('1000');
           })
+
         })
 
         describe('buy and claim', async function () {
@@ -1727,10 +1740,8 @@ describe('Marketplace', function () {
           beforeEach(async function () {
 
             let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-            let ys = [ 1000000, 900000, 800000, 700000, 600000, 500000, 400000, 300000, 200000, 100000 ];
-
+            let ys = [ 800000, 750000, 690000, 640000, 600000, 500000, 400000, 600000, 530000, 500000 ];
             this.interp = createInterpolant(xs,ys);
-
             await this.pair.simulateTrade('2500', '1000');
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
@@ -1749,21 +1760,27 @@ describe('Marketplace', function () {
           })
 
           it('Creates the offer', async function () {
-            expect(await this.marketplace.podOrderById(this.id)).to.equal('3500');
+            expect(await this.marketplace.podOrderById(this.id)).to.equal('73');
           })
+
         })
       })
     })
 
     describe("Dynamic Fill", async function () {
+
       beforeEach(async function () {
+
         //something wrong with interpolant function input
         let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-        let ys = [ 1000000, 900000, 800000, 700000, 600000, 500000, 400000, 300000, 200000, 100000 ];
+        let ys = [ 200000, 180000, 160000, 140000, 120000, 100000, 100000, 80000, 60000, 50000 ];
         this.interp = createInterpolant(xs,ys);
+        this.orderAmount = evaluatePCHIP(this.interp,0,2500 );
+        console.log(orderAmount);
         this.order = [userAddress, '2500', [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]];
         this.result = await this.marketplace.connect(user).createDynamicPodOrder('50', '2500', [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs])
-        this.id = await getDynamicOrderId(this.result)
+        this.id = await getDynamicOrderId(this.result);
+
       })
 
       describe("revert", async function () {
@@ -1921,7 +1938,7 @@ describe('Marketplace', function () {
     describe("Cancel dynamic", async function () {
       beforeEach(async function () {
         let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
-        let ys = [ 1000000, 900000, 800000, 700000, 600000, 500000, 400000, 300000, 200000, 100000 ];
+        let ys = [ 800000, 750000, 690000, 640000, 600000, 500000, 400000, 600000, 530000, 500000 ];
         this.interp = createInterpolant(xs,ys);
         this.result = await this.marketplace.connect(user).createDynamicPodOrder('500', '1000', [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs])
         this.id = await getDynamicOrderId(this.result)
@@ -1968,7 +1985,7 @@ describe('Marketplace', function () {
         it('transfer beans', async function () {
           expect(this.beanstalkBeanBalance.sub(this.beanstalkBeanBalanceAfter)).to.equal('0');
           expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal('0');
-          expect(await this.claim.wrappedBeans(userAddress)).to.equal('500');
+          expect(await this.claim.wrappedBeans(userAddress)).to.equal('430791131');
         })
 
         it('Emits an event', async function () {
@@ -1976,6 +1993,16 @@ describe('Marketplace', function () {
         })
       })
     })
+
+    // describe("Pod Marketplace Function", async function () {
+    //   beforeEach(async function () {
+
+    //   })
+
+    //   it('', async function () {
+    //     expect()
+    //   })
+    // })
   })
 
 

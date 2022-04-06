@@ -81,11 +81,13 @@ contract Order is Listing {
     }
 
     function _createDynamicPodOrder(uint256 beanAmount, uint256 maxPlaceInLine, PiecewiseCubic calldata f) internal returns (bytes32 id) {
-        require(0 < beanAmount, "Marketplace: Pod price must be greater than 0.");
+        
+        require(0 < beanAmount, "Marketplace: Order amount must be > 0.");
 
         uint256 amountPods = _getSumOverPiecewiseRange(f, f.subIntervalIndex[0], beanAmount);
-
         emit OrderFill(amountPods);
+
+        require(0 < amountPods, "Marketplace: Pod Amount must be > 0.");
 
         return __createDynamicPodOrder(amountPods, maxPlaceInLine, f);
     }
@@ -108,7 +110,7 @@ contract Order is Listing {
     }
 
     function __createDynamicPodOrder(uint256 amount, uint256 maxPlaceInLine, PiecewiseCubic calldata f) internal returns (bytes32 id) {
-        require(amount > 0, "Marketplace: Order amount must be > 0.");
+        // require(amount > 0, "Marketplace: Order amount must be > 0.");
         id = createDynamicOrderId(msg.sender, maxPlaceInLine, f.subIntervalIndex, f.constants, f.shifts, f.signs);
         if (s.podOrders[id] > 0)
             _cancelDynamicPodOrder(maxPlaceInLine, false, f);
@@ -141,7 +143,7 @@ contract Order is Listing {
 
         require(placeInLineEndPlot <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
 
-        uint256 placeInLine = index + start - s.f.harvestable;
+        // uint256 placeInLine = index + start - s.f.harvestable;
 
         uint256 amountBeans = (o.pricePerPod * amount) / 1000000;
 
@@ -169,7 +171,7 @@ contract Order is Listing {
 
         uint256 placeInLine = index + start - s.f.harvestable;
 
-        uint256 amountBeans = _getSumOverPiecewiseRange(o.f, placeInLine, amount) / 1000000;
+        uint256 amountBeans = _getSumOverPiecewiseRange(o.f, placeInLine, amount);
 
         if (toWallet) bean().transfer(msg.sender, amountBeans);
         else
@@ -206,7 +208,7 @@ contract Order is Listing {
     function _cancelDynamicPodOrder(uint256 maxPlaceInLine, bool toWallet, PiecewiseCubic calldata f) internal {
         bytes32 id = createDynamicOrderId(msg.sender, maxPlaceInLine, f.subIntervalIndex, f.constants, f.shifts, f.signs);
 
-        uint256 amountBeans = _getSumOverPiecewiseRange(f, f.subIntervalIndex[0], f.subIntervalIndex[f.subIntervalIndex.length]);
+        uint256 amountBeans = _getSumOverPiecewiseRange(f, f.subIntervalIndex[0], maxPlaceInLine);
         if (toWallet) bean().transfer(msg.sender, amountBeans);
         else
             s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(
@@ -221,11 +223,11 @@ contract Order is Listing {
      */
 
     function _getSumOverPiecewiseRange(PiecewiseCubic calldata f, uint256 x, uint256 amount) internal pure returns (uint256) {
-        uint256 startIndex = _findIndex(f.subIntervalIndex, x);
-        uint256 endIndex = _findIndex(f.subIntervalIndex, x + amount);
+        uint256 startIndex = LibMathFP.findIndexWithinSubinterval(f.subIntervalIndex, x, 0, 9);
+        uint256 endIndex = LibMathFP.findIndexWithinSubinterval(f.subIntervalIndex, x+amount, 0, 9);
         //if x+amount is less than the end of the subinterval is in, there is only a need to evaluate one function integration
         //i think these need to be fixed 
-        if (x + amount < f.subIntervalIndex[startIndex + 1]) {
+        if (x + amount <= f.subIntervalIndex[startIndex + 1]) {
             return
             LibMathFP.evaluateCubic(
                     [f.signs[startIndex],
@@ -240,64 +242,68 @@ contract Order is Listing {
                     f.constants[startIndex + 10],
                     f.constants[startIndex + 20],
                     f.constants[startIndex + 30]],
+                    x,
                     amount,
                     true
-                );
-        } else {
-            uint256 midSum;
-            for (uint8 midIndex = 1; midIndex < (endIndex - startIndex - 1); midIndex++) {
-                midSum += LibMathFP.evaluateCubic(
-                    [f.signs[startIndex + midIndex],
-                    f.signs[startIndex + midIndex + 10],
-                    f.signs[startIndex + midIndex + 20],
-                    f.signs[startIndex + midIndex + 30]],
-                    [f.shifts[startIndex + midIndex],
-                    f.shifts[startIndex + midIndex + 10],
-                    f.shifts[startIndex + midIndex + 20],
-                    f.shifts[startIndex + midIndex + 30]],
-                    [f.constants[startIndex + midIndex],
-                    f.constants[startIndex + midIndex + 10],
-                    f.constants[startIndex + midIndex + 20],
-                    f.constants[startIndex + midIndex + 30]],
-                    f.subIntervalIndex[startIndex + midIndex + 1] -
-                    f.subIntervalIndex[startIndex + midIndex],
-                    true
-                );
-            }
-            return LibMathFP.evaluateCubic(
-                    [f.signs[startIndex],
-                        f.signs[startIndex + 10],
-                        f.signs[startIndex + 20],
-                        f.signs[startIndex + 30]],
-                    [f.shifts[startIndex],
-                        f.shifts[startIndex + 10],
-                        f.shifts[startIndex + 20],
-                        f.shifts[startIndex + 30]],
-                    [f.constants[startIndex],
-                        f.constants[startIndex + 10],
-                        f.constants[startIndex + 20],
-                        f.constants[startIndex + 30]],
-                    x - f.subIntervalIndex[startIndex],
-                    true
-                ) +
-                midSum +
-                LibMathFP.evaluateCubic(
-                    [f.signs[endIndex],
-                        f.signs[endIndex + 10],
-                        f.signs[endIndex + 20],
-                        f.signs[endIndex + 30]],
-                    [f.shifts[endIndex],
-                        f.shifts[endIndex + 10],
-                        f.shifts[endIndex + 20],
-                        f.shifts[endIndex + 30]],
-                    [f.constants[endIndex],
-                        f.constants[endIndex + 10],
-                        f.constants[endIndex + 20],
-                        f.constants[endIndex + 30]],
-                    x + amount - f.subIntervalIndex[endIndex],
-                    true
-                );
+                ) / 1000000;
+        } 
+        uint256 midSum;
+        for (uint8 midIndex = 1; midIndex < (endIndex - startIndex - 1); midIndex++) {
+            midSum += LibMathFP.evaluateCubic(
+                [f.signs[startIndex + midIndex],
+                f.signs[startIndex + midIndex + 10],
+                f.signs[startIndex + midIndex + 20],
+                f.signs[startIndex + midIndex + 30]],
+                [f.shifts[startIndex + midIndex],
+                f.shifts[startIndex + midIndex + 10],
+                f.shifts[startIndex + midIndex + 20],
+                f.shifts[startIndex + midIndex + 30]],
+                [f.constants[startIndex + midIndex],
+                f.constants[startIndex + midIndex + 10],
+                f.constants[startIndex + midIndex + 20],
+                f.constants[startIndex + midIndex + 30]],
+                0,
+                f.subIntervalIndex[startIndex + midIndex + 1] -
+                f.subIntervalIndex[startIndex + midIndex],
+                true
+            ) / 1000000;
         }
+        return (LibMathFP.evaluateCubic(
+                [f.signs[startIndex],
+                    f.signs[startIndex + 10],
+                    f.signs[startIndex + 20],
+                    f.signs[startIndex + 30]],
+                [f.shifts[startIndex],
+                    f.shifts[startIndex + 10],
+                    f.shifts[startIndex + 20],
+                    f.shifts[startIndex + 30]],
+                [f.constants[startIndex],
+                    f.constants[startIndex + 10],
+                    f.constants[startIndex + 20],
+                    f.constants[startIndex + 30]],
+                x,
+                f.subIntervalIndex[startIndex],
+                true
+            )/100000) +
+            midSum +
+            (LibMathFP.evaluateCubic(
+                [f.signs[endIndex],
+                    f.signs[endIndex + 10],
+                    f.signs[endIndex + 20],
+                    f.signs[endIndex + 30]],
+                [f.shifts[endIndex],
+                    f.shifts[endIndex + 10],
+                    f.shifts[endIndex + 20],
+                    f.shifts[endIndex + 30]],
+                [f.constants[endIndex],
+                    f.constants[endIndex + 10],
+                    f.constants[endIndex + 20],
+                    f.constants[endIndex + 30]],
+                    f.subIntervalIndex[endIndex],
+                x + amount,
+                true
+            )/1000000);
+        
     }
 
     function createOrderId(address account, uint24 pricePerPod, uint256 maxPlaceInLine) internal pure returns (bytes32 id) {

@@ -13,62 +13,56 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 library LibMathFP {
     using SafeMath for uint256;
 
-    //binary search to find x within 10 subintervals
-    function findIndexWithinSubinterval(uint256[10] calldata ranges, uint256 x) internal pure returns (uint256) {
-        uint256 low;
-        uint256 mid;
-        uint256 high=9;
 
-        while (low<=high) {
+    //binary search to find x within 10 subintervals
+    /**
+    for anyone here, does this function look like it makes sense to use first of all and could it be the cause of the opcode errors? its being used to find the index of the piecewise
+     */
+    //ranges has to be an ordered set
+    function findIndexWithinSubinterval(uint256[10] calldata ranges, uint256 x, uint256 low, uint256 high) internal pure returns (uint256 mid) {
+        while (low<high) {
             mid = (low+high)/2;
-            if(ranges[mid]<x){
-                low = mid+1;
-            }else if(ranges[mid]>x){
-                high = mid-1;
-            }else{
-                return mid;
-            }
+            if(x <= ranges[mid]){
+                low = mid - 1;
+            } else if(x > ranges[mid]){
+                high = mid - 1;
+            } 
         }
-        
-        return mid;
     }
 
+    event DebugCubic(uint256 x, uint256 term);
+
     //evaluate polynomial at x, with an option to 'integrateInstead' over the range of 0 - x
-    function evaluateCubic(bool[4] memory sign, uint8[4] memory shift, uint256[4] memory term, uint256 x, bool integrateInstead) internal pure returns (uint256) {
-        
+    function evaluateCubic(bool[4] memory sign, uint8[4] memory shift, uint256[4] memory term, uint256 x, uint256 amount, bool integrateInstead) internal pure returns (uint256) {
         uint256 y;
         uint256 yMinus;
-
-        if (!sign[0] && !sign[1] && !sign[2] && !sign[3]) {
-            return 0;
-        }
-        if (x == 0) {
-            return 0;
-        }
+        // if (!sign[0] && !sign[1] && !sign[2] && !sign[3]) {
+        //     return 0;
+        // }
+        // if (x == 0) {
+        //     return 0;
+        // }
         for (uint8 i = 0; i < 4; i++) {
             if (integrateInstead) {
                 //if integrate instead is selected, the polynomial is evaluated using polynomial integration rules 
-                //integrate the inputted polynomial from 0 - x
-                if (term[i] == 0) {
-                    //if the constants is 0, skip the term
-                    continue;
-                }
+                //integrate the inputted polynomial from value of x until k
                 //seperate signs into two terms to prevent overflow or underflow during calculation 
                 if (sign[i]) {
                     //combine all positive signs into  'y'
                     //terms are raised to the i+1th power and divided by i+1 because we are integrating
-                    y += LibMathFP.muld(x**(i + 1), term[i] / (i + 1), shift[i]);
+                    y += LibMathFP.muld((amount+x)**(i + 1) ,term[i] , shift[i]) / (i + 1);
+                    y -= LibMathFP.muld(x**(i+1), term[i], shift[i]) / (i+1);
                     continue;
                 } else {
                     //all negative sums are added to 'yMinus' 
-                    yMinus += LibMathFP.muld(x**(i + 1), term[i] / (i + 1), shift[i]);
+                    yMinus += LibMathFP.muld((amount+x)**(i + 1) / (i + 1), term[i], shift[i]) / (i + 1);
+                    yMinus -= LibMathFP.muld(x**(i+1), term[i], shift[i] / (i+1));
                     continue;
                 }
             } else {
                 //evaluate the polynomial at x
-                if (term[i] == 0) {
-                    continue;
-                } else if (sign[i]) {
+                
+                 if (sign[i]) {
                     y += LibMathFP.muld(x**i, term[i], shift[i]);
                     continue;
                 } else {
@@ -80,7 +74,8 @@ library LibMathFP {
         if (y > yMinus) {
             return y.sub(yMinus);
         } else {
-            return yMinus.sub(y);
+            // return yMinus.sub(y);
+            return 0;
         }
     }
 
