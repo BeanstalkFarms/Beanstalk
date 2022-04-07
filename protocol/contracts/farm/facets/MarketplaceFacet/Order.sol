@@ -14,30 +14,34 @@ import "./Listing.sol";
 contract Order is Listing {
     using SafeMath for uint256;
 
+    // struct Order {
+    //     address account;
+    //     uint24 pricePerPod;
+    //     uint256 maxPlaceInLine;
+    // }
+
     struct Order {
         address account;
         uint24 pricePerPod;
         uint256 maxPlaceInLine;
-    }
-
-    struct DynamicOrder {
-        address account;
-        uint256 maxPlaceInLine;
+        bool dynamic;
         PiecewiseCubic f;
     }
+
+    // event PodOrderCreated(
+    //     address indexed account,
+    //     bytes32 id,
+    //     uint256 amount,
+    //     uint24 pricePerPod,
+    //     uint256 maxPlaceInLine
+    // );
 
     event PodOrderCreated(
         address indexed account,
         bytes32 id,
         uint256 amount,
         uint24 pricePerPod,
-        uint256 maxPlaceInLine
-    );
-
-    event DynamicPodOrderCreated(
-        address indexed account,
-        bytes32 id,
-        uint256 amount,
+        bool dynamic,
         uint256 maxPlaceInLine,
         uint256[10] subIntervalIndex,
         uint256[40] constants,
@@ -56,69 +60,56 @@ contract Order is Listing {
 
     event PodOrderCancelled(address indexed account, bytes32 id);
 
-    event OrderFill(uint256 amount);
-
     /*
      * Create
      */
 
-    function _buyBeansAndCreatePodOrder(uint256 beanAmount, uint256 buyBeanAmount, uint24 pricePerPod, uint256 maxPlaceInLine) internal returns (bytes32 id) {
+    // function _buyBeansAndCreatePodOrder(uint256 beanAmount, uint256 buyBeanAmount, uint24 pricePerPod, uint256 maxPlaceInLine, bool dynamic, PiecewiseCubic calldata f) internal returns (bytes32 id) {
+    //     uint256 boughtBeanAmount = LibMarket.buyExactTokens(buyBeanAmount, address(this));
+    //     return _createPodOrder(beanAmount + boughtBeanAmount, pricePerPod, maxPlaceInLine, false, f);
+    // }
+
+    function _buyBeansAndCreatePodOrder(uint256 beanAmount, uint256 buyBeanAmount, uint24 pricePerPod, uint256 maxPlaceInLine, bool dynamic, PiecewiseCubic calldata f) internal returns (bytes32 id) {
         uint256 boughtBeanAmount = LibMarket.buyExactTokens(buyBeanAmount, address(this));
-        return _createPodOrder(beanAmount + boughtBeanAmount, pricePerPod, maxPlaceInLine);
+        return _createPodOrder(beanAmount + boughtBeanAmount, pricePerPod, maxPlaceInLine, dynamic, f);
     }
 
-    function _buyBeansAndCreateDynamicPodOrder(uint256 beanAmount, uint256 buyBeanAmount, uint256 maxPlaceInLine, PiecewiseCubic calldata f) internal returns (bytes32 id) {
-        uint256 boughtBeanAmount = LibMarket.buyExactTokens(buyBeanAmount, address(this));
-        return _createDynamicPodOrder(beanAmount + boughtBeanAmount, maxPlaceInLine, f);
+    function _createPodOrder(uint256 beanAmount, uint24 pricePerPod, uint256 maxPlaceInLine, bool dynamic, PiecewiseCubic calldata f) internal returns (bytes32 id) {
+       
+        uint256 amountPods;
+        if(dynamic){
+            amountPods = _getSumOverPiecewiseRange(f, f.subIntervalIndex[0], beanAmount);
+        }else{
+            amountPods = (beanAmount * 1000000) / pricePerPod;
+        }
+
+        return __createPodOrder(amountPods, pricePerPod, maxPlaceInLine, dynamic, f);
     }
 
-    function _createPodOrder(uint256 beanAmount, uint24 pricePerPod, uint256 maxPlaceInLine) internal returns (bytes32 id) {
-        require(0 < pricePerPod, "Marketplace: Pod price must be greater than 0.");
-
-        uint256 amountPods = (beanAmount * 1000000) / pricePerPod;
-
-        return __createPodOrder(amountPods, pricePerPod, maxPlaceInLine);
-    }
-
-    function _createDynamicPodOrder(uint256 beanAmount, uint256 maxPlaceInLine, PiecewiseCubic calldata f) internal returns (bytes32 id) {
+    // function _createDynamicPodOrder(uint256 beanAmount, uint256 maxPlaceInLine, PiecewiseCubic calldata f) internal returns (bytes32 id) {
         
-        require(0 < beanAmount, "Marketplace: Order amount must be > 0.");
+    //     require(0 < beanAmount, "Marketplace: Order amount must be > 0.");
 
-        uint256 amountPods = _getSumOverPiecewiseRange(f, f.subIntervalIndex[0], beanAmount);
-        emit OrderFill(amountPods);
+    //     uint256 amountPods = _getSumOverPiecewiseRange(f, f.subIntervalIndex[0], beanAmount);
 
-        require(0 < amountPods, "Marketplace: Pod Amount must be > 0.");
+    //     require(0 < amountPods, "Marketplace: Pod Amount must be > 0.");
 
-        return __createDynamicPodOrder(amountPods, maxPlaceInLine, f);
-    }
+    //     return __createDynamicPodOrder(amountPods, maxPlaceInLine, f);
+    // }
 
-    function __createPodOrder(uint256 amount, uint24 pricePerPod, uint256 maxPlaceInLine) internal returns (bytes32 id) {
-        //uint is always > 0 -> unneccesary require?
+    function __createPodOrder(uint256 amount, uint24 pricePerPod, uint256 maxPlaceInLine, bool dynamic, PiecewiseCubic calldata f) internal returns (bytes32 id) {
+        if(!dynamic) require(0 < pricePerPod, "Marketplace: Pod price must be greater than 0.");
         require(amount > 0, "Marketplace: Order amount must be > 0.");
-        id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine);
+        id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, dynamic, f.subIntervalIndex, f.constants, f.shifts, f.signs);
         if (s.podOrders[id] > 0)
-            _cancelPodOrder(pricePerPod, maxPlaceInLine, false);
+            _cancelPodOrder(pricePerPod, maxPlaceInLine, dynamic, false, f);
         s.podOrders[id] = amount;
         emit PodOrderCreated(
             msg.sender,
             id,
             amount,
             pricePerPod,
-            maxPlaceInLine
-        );
-        return id;
-    }
-
-    function __createDynamicPodOrder(uint256 amount, uint256 maxPlaceInLine, PiecewiseCubic calldata f) internal returns (bytes32 id) {
-        // require(amount > 0, "Marketplace: Order amount must be > 0.");
-        id = createDynamicOrderId(msg.sender, maxPlaceInLine, f.subIntervalIndex, f.constants, f.shifts, f.signs);
-        if (s.podOrders[id] > 0)
-            _cancelDynamicPodOrder(maxPlaceInLine, false, f);
-        s.podOrders[id] = amount;
-        emit DynamicPodOrderCreated(
-            msg.sender,
-            id,
-            amount,
+            dynamic,
             maxPlaceInLine,
             f.subIntervalIndex,
             f.constants,
@@ -128,50 +119,45 @@ contract Order is Listing {
         return id;
     }
 
+    // function __createDynamicPodOrder(uint256 amount, uint256 maxPlaceInLine, PiecewiseCubic calldata f) internal returns (bytes32 id) {
+    //     id = createDynamicOrderId(msg.sender, maxPlaceInLine, f.subIntervalIndex, f.constants, f.shifts, f.signs);
+    //     if (s.podOrders[id] > 0)
+    //         _cancelDynamicPodOrder(maxPlaceInLine, false, f);
+    //     s.podOrders[id] = amount;
+    //     emit DynamicPodOrderCreated(
+    //         msg.sender,
+    //         id,
+    //         amount,
+    //         maxPlaceInLine,
+    //         f.subIntervalIndex,
+    //         f.constants,
+    //         f.shifts,
+    //         f.signs
+    //     );
+    //     return id;
+    // }
+
     /*
      * Fill
      */
 
     function _fillPodOrder(Order calldata o, uint256 index, uint256 start, uint256 amount, bool toWallet) internal {
-        bytes32 id = createOrderId(o.account, o.pricePerPod, o.maxPlaceInLine);
+        bytes32 id = createOrderId(o.account, o.pricePerPod, o.maxPlaceInLine, o.dynamic, o.f.subIntervalIndex, o.f.constants, o.f.shifts, o.f.signs);
 
         s.podOrders[id] = s.podOrders[id].sub(amount);
 
         require(s.a[msg.sender].field.plots[index] >= (start + amount), "Marketplace: Invalid Plot.");
-
-        uint256 placeInLineEndPlot = index + start + amount - s.f.harvestable;
-
-        require(placeInLineEndPlot <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
-
-        // uint256 placeInLine = index + start - s.f.harvestable;
-
-        uint256 amountBeans = (o.pricePerPod * amount) / 1000000;
-
-        if (toWallet) bean().transfer(msg.sender, amountBeans);
-        else
-            s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(
-                amountBeans
-            );
-        if (s.podListings[index] != bytes32(0)) {
-            _cancelPodListing(index);
-        }
-        _transferPlot(msg.sender, o.account, index, start, amount);
-        if (s.podOrders[id] == 0) {
-            delete s.podOrders[id];
-        }
-        emit PodOrderFilled(msg.sender, o.account, id, index, start, amount);
-    }
-
-    function _fillDynamicPodOrder(DynamicOrder calldata o, uint256 index, uint256 start, uint256 amount, bool toWallet) internal {
-        bytes32 id = createDynamicOrderId(o.account, o.maxPlaceInLine, o.f.subIntervalIndex, o.f.constants, o.f.shifts, o.f.signs);
-        s.podOrders[id] = s.podOrders[id].sub(amount);
-        require(s.a[msg.sender].field.plots[index] >= (start + amount), "Marketplace: Invalid Plot.");
-        uint256 placeInLineEndPlot = index + start + amount - s.f.harvestable;
-        require(placeInLineEndPlot <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
 
         uint256 placeInLine = index + start - s.f.harvestable;
 
-        uint256 amountBeans = _getSumOverPiecewiseRange(o.f, placeInLine, amount);
+        require(placeInLine + amount <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
+
+        uint256 amountBeans;
+        if(o.dynamic){
+            amountBeans = _getSumOverPiecewiseRange(o.f, placeInLine, amount);
+        }else{
+            amountBeans = (o.pricePerPod * amount) / 1000000;
+        }
 
         if (toWallet) bean().transfer(msg.sender, amountBeans);
         else
@@ -187,15 +173,47 @@ contract Order is Listing {
         }
         emit PodOrderFilled(msg.sender, o.account, id, index, start, amount);
     }
+
+    // function _fillDynamicPodOrder(DynamicOrder calldata o, uint256 index, uint256 start, uint256 amount, bool toWallet) internal {
+    //     bytes32 id = createDynamicOrderId(o.account, o.maxPlaceInLine, o.f.subIntervalIndex, o.f.constants, o.f.shifts, o.f.signs);
+    //     s.podOrders[id] = s.podOrders[id].sub(amount);
+    //     require(s.a[msg.sender].field.plots[index] >= (start + amount), "Marketplace: Invalid Plot.");
+    //     uint256 placeInLineEndPlot = index + start + amount - s.f.harvestable;
+    //     require(placeInLineEndPlot <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
+
+    //     uint256 placeInLine = index + start - s.f.harvestable;
+
+    //     uint256 amountBeans = _getSumOverPiecewiseRange(o.f, placeInLine, amount);
+
+    //     if (toWallet) bean().transfer(msg.sender, amountBeans);
+    //     else
+    //         s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(
+    //             amountBeans
+    //         );
+    //     if (s.podListings[index] != bytes32(0)) {
+    //         _cancelPodListing(index);
+    //     }
+    //     _transferPlot(msg.sender, o.account, index, start, amount);
+    //     if (s.podOrders[id] == 0) {
+    //         delete s.podOrders[id];
+    //     }
+    //     emit PodOrderFilled(msg.sender, o.account, id, index, start, amount);
+    // }
 
     /*
      * Cancel
      */
 
-    function _cancelPodOrder(uint24 pricePerPod, uint256 maxPlaceInLine, bool toWallet) internal {
-        bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine);
+    function _cancelPodOrder(uint24 pricePerPod, uint256 maxPlaceInLine, bool dynamic, bool toWallet, PiecewiseCubic calldata f) internal {
+        bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, dynamic, f.subIntervalIndex, f.constants, f.shifts, f.signs);
 
-        uint256 amountBeans = (pricePerPod * s.podOrders[id]) / 1000000;
+        uint256 amountBeans;
+        if(dynamic){
+            amountBeans = _getSumOverPiecewiseRange(f, f.subIntervalIndex[0], maxPlaceInLine);
+        }else{
+            amountBeans = (pricePerPod * s.podOrders[id]) / 1000000;
+        }
+
         if (toWallet) bean().transfer(msg.sender, amountBeans);
         else
             s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(
@@ -205,26 +223,26 @@ contract Order is Listing {
         emit PodOrderCancelled(msg.sender, id);
     }
 
-    function _cancelDynamicPodOrder(uint256 maxPlaceInLine, bool toWallet, PiecewiseCubic calldata f) internal {
-        bytes32 id = createDynamicOrderId(msg.sender, maxPlaceInLine, f.subIntervalIndex, f.constants, f.shifts, f.signs);
+    // function _cancelDynamicPodOrder(uint256 maxPlaceInLine, bool toWallet, PiecewiseCubic calldata f) internal {
+    //     bytes32 id = createOrderId(msg.sender, 0, maxPlaceInLine, f.subIntervalIndex, f.constants, f.shifts, f.signs);
 
-        uint256 amountBeans = _getSumOverPiecewiseRange(f, f.subIntervalIndex[0], maxPlaceInLine);
-        if (toWallet) bean().transfer(msg.sender, amountBeans);
-        else
-            s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(
-                amountBeans
-            );
-        delete s.podOrders[id];
-        emit PodOrderCancelled(msg.sender, id);
-    }
+    //     uint256 amountBeans = _getSumOverPiecewiseRange(f, f.subIntervalIndex[0], maxPlaceInLine);
+    //     if (toWallet) bean().transfer(msg.sender, amountBeans);
+    //     else
+    //         s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(
+    //             amountBeans
+    //         );
+    //     delete s.podOrders[id];
+    //     emit PodOrderCancelled(msg.sender, id);
+    // }
 
     /*
      * Helpers
      */
 
-    function _getSumOverPiecewiseRange(PiecewiseCubic calldata f, uint256 x, uint256 amount) internal pure returns (uint256) {
+    function _getSumOverPiecewiseRange(PiecewiseCubic calldata f, uint256 x, uint256 amount) internal view returns (uint256) {
         uint256 startIndex = LibMathFP.findIndexWithinSubinterval(f.subIntervalIndex, x, 0, 9);
-        uint256 endIndex = LibMathFP.findIndexWithinSubinterval(f.subIntervalIndex, x+amount, 0, 9);
+        uint256 endIndex = LibMathFP.findIndexWithinSubinterval(f.subIntervalIndex, x + amount, 0, 9);
         //if x+amount is less than the end of the subinterval is in, there is only a need to evaluate one function integration
         //i think these need to be fixed 
         if (x + amount <= f.subIntervalIndex[startIndex + 1]) {
@@ -245,7 +263,7 @@ contract Order is Listing {
                     x,
                     amount,
                     true
-                ) / 1000000;
+                );
         } 
         uint256 midSum;
         for (uint8 midIndex = 1; midIndex < (endIndex - startIndex - 1); midIndex++) {
@@ -266,7 +284,7 @@ contract Order is Listing {
                 f.subIntervalIndex[startIndex + midIndex + 1] -
                 f.subIntervalIndex[startIndex + midIndex],
                 true
-            ) / 1000000;
+            );
         }
         return (LibMathFP.evaluateCubic(
                 [f.signs[startIndex],
@@ -284,7 +302,7 @@ contract Order is Listing {
                 x,
                 f.subIntervalIndex[startIndex],
                 true
-            )/100000) +
+            )) +
             midSum +
             (LibMathFP.evaluateCubic(
                 [f.signs[endIndex],
@@ -302,19 +320,21 @@ contract Order is Listing {
                     f.subIntervalIndex[endIndex],
                 x + amount,
                 true
-            )/1000000);
+            ));
         
     }
 
-    function createOrderId(address account, uint24 pricePerPod, uint256 maxPlaceInLine) internal pure returns (bytes32 id) {
-        id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine));
-    }
+    // function createOrderId(address account, uint24 pricePerPod, uint256 maxPlaceInLine) internal pure returns (bytes32 id) {
+    //     id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine));
+    // }
 
-    function createDynamicOrderId(address account, uint256 maxPlaceInLine, uint256[10] calldata subIntervalIndex, uint256[40] calldata constants, uint8[40] calldata shifts, bool[40] memory signs) internal pure returns (bytes32 id) {
+    function createOrderId(address account, uint24 pricePerPod, uint256 maxPlaceInLine, bool dynamic, uint256[10] calldata subIntervalIndex, uint256[40] calldata constants, uint8[40] calldata shifts, bool[40] calldata signs) internal pure returns (bytes32 id) {
         id = keccak256(
             abi.encodePacked(
                 account,
+                pricePerPod,
                 maxPlaceInLine,
+                dynamic,
                 subIntervalIndex,
                 constants,
                 shifts,

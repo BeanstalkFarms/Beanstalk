@@ -20,13 +20,13 @@ contract MarketplaceFacet is Order {
 
     // Create
 
-    function createPodListing(uint256 index, uint256 start, uint256 amount, uint24 pricePerPod, uint256 maxHarvestableIndex, bool toWallet) external {
-        _createPodListing(index,start,amount,pricePerPod,maxHarvestableIndex,toWallet);
+    function createPodListing(uint256 index, uint256 start, uint256 amount, uint24 pricePerPod, uint256 maxHarvestableIndex, bool dynamic, bool toWallet, PiecewiseCubic calldata f) external {
+        _createPodListing(index, start, amount, pricePerPod, maxHarvestableIndex, dynamic, toWallet, f);
     }
 
-    function createDynamicPodListing(uint256 index, uint256 start, uint256 amount, uint256 maxHarvestableIndex, bool toWallet, PiecewiseCubic calldata f) external {
-        _createDynamicPodListing(index, start, amount, maxHarvestableIndex, toWallet, f);
-    }
+    // function createDynamicPodListing(uint256 index, uint256 start, uint256 amount, uint256 maxHarvestableIndex, bool toWallet, PiecewiseCubic calldata f) external {
+    //     _createDynamicPodListing(index, start, amount, maxHarvestableIndex, toWallet, f);
+    // }
 
     // Fill
     function fillPodListing(Listing calldata l, uint256 beanAmount) external {
@@ -34,19 +34,9 @@ contract MarketplaceFacet is Order {
         _fillListing(l, beanAmount);
     }
 
-    function fillDynamicPodListing(DynamicListing calldata l, uint256 beanAmount) external {
-        LibMarket.transferBeans(l.account, beanAmount, l.toWallet);
-        _fillDynamicListing(l, beanAmount);
-    }
-
     function claimAndFillPodListing(Listing calldata l, uint256 beanAmount, LibClaim.Claim calldata claim) external {
         allocateBeansToWallet(claim, beanAmount, l.account, l.toWallet);
         _fillListing(l, beanAmount);
-    }
-
-    function claimAndFillDynamicPodListing(DynamicListing calldata l, uint256 beanAmount, LibClaim.Claim calldata claim) external {
-        allocateBeansToWallet(claim, beanAmount, l.account, l.toWallet);
-        _fillDynamicListing(l, beanAmount);
     }
 
     function buyBeansAndFillPodListing(Listing calldata l, uint256 beanAmount, uint256 buyBeanAmount) external payable {
@@ -55,20 +45,9 @@ contract MarketplaceFacet is Order {
         _buyBeansAndFillPodListing(l, beanAmount, buyBeanAmount);
     }
 
-    function buyBeansAndFillDynamicPodListing(DynamicListing calldata l, uint256 beanAmount, uint256 buyBeanAmount) external payable {
-        if (beanAmount > 0)
-            LibMarket.transferBeans(l.account, beanAmount, l.toWallet);
-        _buyBeansAndFillDynamicPodListing(l, beanAmount, buyBeanAmount);
-    }
-
     function claimBuyBeansAndFillPodListing(Listing calldata l, uint256 beanAmount, uint256 buyBeanAmount, LibClaim.Claim calldata claim) external payable {
         allocateBeansToWallet(claim, beanAmount, l.account, l.toWallet);
         _buyBeansAndFillPodListing(l, beanAmount, buyBeanAmount);
-    }
-
-    function claimBuyBeansAndFillDynamicPodListing(DynamicListing calldata l, uint256 beanAmount, uint256 buyBeanAmount, LibClaim.Claim calldata claim) external payable {
-        allocateBeansToWallet(claim, beanAmount, l.account, l.toWallet);
-        _buyBeansAndFillDynamicPodListing(l, beanAmount, buyBeanAmount);
     }
 
     // Cancel
@@ -86,75 +65,75 @@ contract MarketplaceFacet is Order {
      */
 
     // Create
-    function createPodOrder(uint256 beanAmount, uint24 pricePerPod, uint256 maxPlaceInLine) external returns (bytes32 id) {
+    function createPodOrder(uint256 beanAmount, uint24 pricePerPod, uint256 maxPlaceInLine, bool dynamic, PiecewiseCubic calldata f) external returns (bytes32 id) {
         bean().transferFrom(msg.sender, address(this), beanAmount);
-        return _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine);
+        return _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine, dynamic, f);
     }
 
-    function createDynamicPodOrder(uint256 beanAmount, uint256 maxPlaceInLine, PiecewiseCubic calldata f) external returns (bytes32 id) {
-        bean().transferFrom(msg.sender, address(this), beanAmount);
-        return _createDynamicPodOrder(beanAmount, maxPlaceInLine, f);
-    }
+    // function createDynamicPodOrder(uint256 beanAmount, uint256 maxPlaceInLine, PiecewiseCubic calldata f) external returns (bytes32 id) {
+    //     bean().transferFrom(msg.sender, address(this), beanAmount);
+    //     return _createDynamicPodOrder(beanAmount, maxPlaceInLine, f);
+    // }
 
-    function claimAndCreatePodOrder(uint256 beanAmount, uint24 pricePerPod, uint232 maxPlaceInLine, LibClaim.Claim calldata claim) external returns (bytes32 id) {
+    function claimAndCreatePodOrder(uint256 beanAmount, uint24 pricePerPod, uint232 maxPlaceInLine,bool dynamic, LibClaim.Claim calldata claim, PiecewiseCubic calldata f) external returns (bytes32 id) {
         allocateBeans(claim, beanAmount, address(this));
-        id = _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine);
+        id = _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine, dynamic,f);
     }
 
-    function claimAndCreateDynamicPodOrder(uint256 beanAmount, uint232 maxPlaceInLine, PiecewiseCubic calldata f, LibClaim.Claim calldata claim) external returns (bytes32 id) {
-        allocateBeans(claim, beanAmount, address(this));
-        id = _createDynamicPodOrder(beanAmount, maxPlaceInLine, f);
-    }
+    // function claimAndCreateDynamicPodOrder(uint256 beanAmount, uint232 maxPlaceInLine, PiecewiseCubic calldata f, LibClaim.Claim calldata claim) external returns (bytes32 id) {
+    //     allocateBeans(claim, beanAmount, address(this));
+    //     id = _createDynamicPodOrder(beanAmount, maxPlaceInLine, f);
+    // }
 
-    function buyBeansAndCreatePodOrder(uint256 beanAmount, uint256 buyBeanAmount, uint24 pricePerPod, uint232 maxPlaceInLine) external payable returns (bytes32 id) {
+    function buyBeansAndCreatePodOrder(uint256 beanAmount, uint256 buyBeanAmount, uint24 pricePerPod, uint232 maxPlaceInLine, bool dynamic, PiecewiseCubic calldata f) external payable returns (bytes32 id) {
         if (beanAmount > 0)
             bean().transferFrom(msg.sender, address(this), beanAmount);
-        return  _buyBeansAndCreatePodOrder(beanAmount, buyBeanAmount, pricePerPod, maxPlaceInLine);
+        return  _buyBeansAndCreatePodOrder(beanAmount, buyBeanAmount, pricePerPod, maxPlaceInLine,dynamic,f);
     }
 
-    function buyBeansAndCreateDynamicPodOrder(uint256 beanAmount, uint256 buyBeanAmount, uint232 maxPlaceInLine, PiecewiseCubic calldata f) external payable returns (bytes32 id) {
-        if (beanAmount > 0)
-            bean().transferFrom(msg.sender, address(this), beanAmount);
-        return _buyBeansAndCreateDynamicPodOrder(beanAmount, buyBeanAmount, maxPlaceInLine, f);
-    }
+    // function buyBeansAndCreateDynamicPodOrder(uint256 beanAmount, uint256 buyBeanAmount, uint232 maxPlaceInLine, PiecewiseCubic calldata f) external payable returns (bytes32 id) {
+    //     if (beanAmount > 0)
+    //         bean().transferFrom(msg.sender, address(this), beanAmount);
+    //     return _buyBeansAndCreateDynamicPodOrder(beanAmount, buyBeanAmount, maxPlaceInLine, f);
+    // }
 
-    function claimBuyBeansAndCreatePodOrder(uint256 beanAmount, uint256 buyBeanAmount, uint24 pricePerPod, uint232 maxPlaceInLine, LibClaim.Claim calldata claim) external payable returns (bytes32 id) {
+    function claimBuyBeansAndCreatePodOrder(uint256 beanAmount, uint256 buyBeanAmount, uint24 pricePerPod, uint232 maxPlaceInLine, bool dynamic, PiecewiseCubic calldata f, LibClaim.Claim calldata claim) external payable returns (bytes32 id) {
         allocateBeans(claim, beanAmount, address(this));
-        return _buyBeansAndCreatePodOrder(beanAmount, buyBeanAmount, pricePerPod, maxPlaceInLine);
+        return _buyBeansAndCreatePodOrder(beanAmount, buyBeanAmount, pricePerPod, maxPlaceInLine, dynamic, f);
     }
 
-    function claimBuyBeansAndCreateDynamicPodOrder(uint256 beanAmount, uint256 buyBeanAmount, uint232 maxPlaceInLine, PiecewiseCubic calldata f, LibClaim.Claim calldata claim) external payable returns (bytes32 id) {
-        allocateBeans(claim, beanAmount, address(this));
-        return _buyBeansAndCreateDynamicPodOrder(beanAmount, buyBeanAmount, maxPlaceInLine, f);
-    }
+    // function claimBuyBeansAndCreateDynamicPodOrder(uint256 beanAmount, uint256 buyBeanAmount, uint232 maxPlaceInLine, PiecewiseCubic calldata f, LibClaim.Claim calldata claim) external payable returns (bytes32 id) {
+    //     allocateBeans(claim, beanAmount, address(this));
+    //     return _buyBeansAndCreateDynamicPodOrder(beanAmount, buyBeanAmount, maxPlaceInLine, f);
+    // }
 
     // Fill
     function fillPodOrder(Order calldata o, uint256 index, uint256 start, uint256 amount, bool toWallet) external {
         _fillPodOrder(o, index, start, amount, toWallet);
     }
 
-    function fillDynamicPodOrder(DynamicOrder calldata o, uint256 index, uint256 start, uint256 amount, bool toWallet) external {
-        _fillDynamicPodOrder(o, index, start, amount, toWallet);
-    }
+    // function fillDynamicPodOrder(DynamicOrder calldata o, uint256 index, uint256 start, uint256 amount, bool toWallet) external {
+    //     _fillDynamicPodOrder(o, index, start, amount, toWallet);
+    // }
 
     // Cancel
-    function cancelPodOrder(uint24 pricePerPod, uint256 maxPlaceInLine, bool toWallet) external {
-        _cancelPodOrder(pricePerPod, maxPlaceInLine, toWallet);
+    function cancelPodOrder(uint24 pricePerPod, uint256 maxPlaceInLine, bool dynamic, bool toWallet, PiecewiseCubic calldata f) external {
+        _cancelPodOrder(pricePerPod, maxPlaceInLine, dynamic, toWallet, f);
     }
 
-    function cancelDynamicPodOrder(uint256 maxPlaceInLine, bool toWallet, PiecewiseCubic calldata f) external {
-        _cancelDynamicPodOrder(maxPlaceInLine, toWallet, f);
-    }
+    // function cancelDynamicPodOrder(uint256 maxPlaceInLine, bool toWallet, PiecewiseCubic calldata f) external {
+    //     _cancelDynamicPodOrder(maxPlaceInLine, toWallet, f);
+    // }
 
     // Get
 
-    function podOrder(address account, uint24 pricePerPod, uint256 maxPlaceInLine) external view returns (uint256) {
-        bytes32 orderId = createOrderId(account, pricePerPod, maxPlaceInLine);
-        return s.podOrders[orderId];
-    }
+    // function podOrder(address account, uint24 pricePerPod, uint256 maxPlaceInLine) external view returns (uint256) {
+    //     bytes32 orderId = createOrderId(account, pricePerPod, maxPlaceInLine);
+    //     return s.podOrders[orderId];
+    // }
 
-    function dynamicPodOrder(address account, uint256 maxPlaceInLine, PiecewiseCubic calldata f) external view returns (uint256) {
-        bytes32 orderId = createDynamicOrderId(account,maxPlaceInLine,f.subIntervalIndex,f.constants,f.shifts,f.signs);
+    function podOrder(address account, uint24 pricePerPod, uint256 maxPlaceInLine, bool dynamic, PiecewiseCubic calldata f) external view returns (uint256) {
+        bytes32 orderId = createOrderId(account, pricePerPod, maxPlaceInLine, dynamic, f.subIntervalIndex,f.constants,f.shifts,f.signs);
         return s.podOrders[orderId];
     }
 

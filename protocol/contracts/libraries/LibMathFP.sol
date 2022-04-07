@@ -19,20 +19,25 @@ library LibMathFP {
     for anyone here, does this function look like it makes sense to use first of all and could it be the cause of the opcode errors? its being used to find the index of the piecewise
      */
     //ranges has to be an ordered set
-    function findIndexWithinSubinterval(uint256[10] calldata ranges, uint256 x, uint256 start, uint256 end) internal pure returns (uint256 mid) {
+    function findIndexWithinSubinterval(uint256[10] calldata ranges, uint256 x, uint256 low, uint256 high) internal view returns (uint256 mid) {
 
-        while (start<=end) {
+       while (low<high) {
 
-            mid = (start+end)/2;
-
-            if(x==ranges[mid]){
+            // console.log('low', low);
+            // console.log('high', high);
+            mid = (low+high)/2;
+            // console.log('mid',mid); 
+            if (ranges[mid] == x) {
                 return mid;
             }
-            else if(x > ranges[mid]){
-                start = mid + 1;
+            // console.log('ranges[mid]',ranges[mid]);
+            if(x >= ranges[mid]){
+                low = mid;
+            } else{
+                high = mid;
             } 
-            else if(x < ranges[mid]){
-                end = mid - 1;
+            if (high-low == 1) {
+                return low;
             }
         }
     }

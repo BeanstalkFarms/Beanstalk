@@ -215,8 +215,8 @@ describe('Marketplace', function () {
         let xs = [ 0, 100, 200, 300, 400, 500, 600, 700, 800, 900 ];
         let ys = [ 200000, 180000, 160000, 140000, 120000, 100000, 100000, 80000, 60000, 50000 ];
         this.interp = createInterpolant(xs,ys);
-        this.orderAmount = evaluatePCHIP(this.interp,0,2500 );
-        console.log(this.orderAmount);
+        // this.orderAmount = evaluatePCHIP(this.interp,0,2500 );
+        // console.log(this.orderAmount);
         this.order = [userAddress, '2500', [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]];
         this.result = await this.marketplace.connect(user).createDynamicPodOrder('50', '2500', [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs])
         this.id = await getDynamicOrderId(this.result);
