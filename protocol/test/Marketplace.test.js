@@ -69,27 +69,27 @@ describe('Marketplace', function () {
     let receipt = await tx.wait();
     const args = (receipt.events?.filter((x) => { return x.event == "PodListingCreated" }))[0].args;
     return ethers.utils.solidityKeccak256(
-      ['uint256', 'uint256', 'uint24', 'uint256', 'bool'],
-      [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args.toWallet]
+      ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[10]', 'uint256[40]', 'uint8[40]', 'bool[40]'],
+      [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args.dynamic, args.toWallet, args.subIntervalIndex, args.constants, args.shifts, args.signs]
     );
   }
 
-  const getDynamicHash = async function (tx) {
-    let receipt = await tx.wait();
-    const args = (receipt.events?.filter((x) => { return x.event == "DynamicPodListingCreated" }))[0].args;
-    return ethers.utils.solidityKeccak256(
-      ['uint256', 'uint256', 'uint256', 'bool', 'uint256[10]', 'uint256[40]', 'uint8[40]', 'bool[40]'],
-      [args.start, args.amount, args.maxHarvestableIndex, args.toWallet, args.subIntervalIndex, args.constants, args.shifts, args.signs]
-    );
-  }
+  // const getDynamicHash = async function (tx) {
+  //   let receipt = await tx.wait();
+  //   const args = (receipt.events?.filter((x) => { return x.event == "DynamicPodListingCreated" }))[0].args;
+  //   return ethers.utils.solidityKeccak256(
+  //     ['uint256', 'uint256', 'uint256', 'bool', 'uint256[10]', 'uint256[40]', 'uint8[40]', 'bool[40]'],
+  //     [args.start, args.amount, args.maxHarvestableIndex, args.toWallet, args.subIntervalIndex, args.constants, args.shifts, args.signs]
+  //   );
+  // }
 
   const getHashFromListing = function (l) {
-    return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool'], l);
+    return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool','uint256[10]', 'uint256[40]', 'uint8[40]', 'bool[40]'], l);
   }
 
-  const getHashFromDynamicListing = function (l) {
-    return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint256', 'bool', 'uint256[10]', 'uint256[40]', 'uint8[40]', 'bool[40]'], l);
-  }
+  // const getHashFromDynamicListing = function (l) {
+  //   return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint256', 'bool', 'uint256[10]', 'uint256[40]', 'uint8[40]', 'bool[40]'], l);
+  // }
 
   const getOrderId = async function (tx) {
     let receipt = await tx.wait();
@@ -97,11 +97,11 @@ describe('Marketplace', function () {
     return idx; 
   }
 
-  const getDynamicOrderId = async function (tx) {
-    let receipt = await tx.wait();
-    let idx = (receipt.events?.filter((x) => { return x.event == "DynamicPodOrderCreated" }))[0].args.id;
-    return idx;
-  }
+  // const getDynamicOrderId = async function (tx) {
+  //   let receipt = await tx.wait();
+  //   let idx = (receipt.events?.filter((x) => { return x.event == "DynamicPodOrderCreated" }))[0].args.id;
+  //   return idx;
+  // }
 
   const linearSet = {
     xs:[0,500,1000,1500,2000,2500,3000, 3500, 4000, 4500],
@@ -120,7 +120,7 @@ describe('Marketplace', function () {
     
       it('Fails to List Unowned Dynamic Plot', async function () {
         let interp = createInterpolant(linearSet.xs, linearSet.ys);
-        await expect(this.marketplace.connect(user).createDynamicPodListing('5000', '0', '1000', '0', false,[interp.subIntervalIndex.map(String), interp.constants.map(String), interp.shifts.map(String), interp.signs])).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+        await expect(this.marketplace.connect(user).createPodListing('5000', '0', '1000', '0', false,[interp.subIntervalIndex.map(String), interp.constants.map(String), interp.shifts.map(String), interp.signs])).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
       })
 
       it('Fails if already expired - dynamic', async function () {
