@@ -24,7 +24,7 @@ contract MockFieldFacet is FieldFacet {
     function sowBeansAndIndex(uint256 amount) external returns (uint256) {
         mapToPlots[mapToPlotIndex] = s.f.pods;
         bean().transferFrom(msg.sender, address(this), amount);
-        uint amountPods = _sowBeans(amount);
+        uint amountPods = _sowBeans(amount, false);
         mapToAddress[mapToPlotIndex] = msg.sender;
         mapToPlotIndex = mapToPlotIndex + 1;
         return amountPods;

@@ -9,7 +9,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "./MockUniswapV2Pair.sol";
 import "./MockWETH.sol";
-
 /**
  * @author Publius
  * @title Mock Uniswap V2 Router
@@ -129,6 +128,22 @@ contract MockUniswapV2Router {
         amounts[0] = amountIn;
         amounts[1] = amountOut;
         return amounts;
+    }
+
+    function swapTokensForExactTokens(
+        uint amountOut,
+        uint amountInMax,
+        address[] calldata path,
+        address to,
+        uint deadline
+    )
+        external
+        returns (uint[] memory amounts)
+    {
+        amounts = getAmountsIn(amountOut, path);
+        require(amounts[0] <= amountInMax, 'UniswapV2Router: EXCESSIVE_INPUT_AMOUNT');
+        MockToken(path[0]).burnFrom(msg.sender, amounts[0]);
+        MockToken(path[1]).mint(msg.sender, amounts[1]);
     }
 
     function swapETHForExactTokens(uint amountOut, address[] calldata path, address to, uint deadline)

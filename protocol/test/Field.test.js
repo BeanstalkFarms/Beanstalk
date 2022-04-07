@@ -2,7 +2,7 @@ require('hardhat')
 const { expectRevert } = require('@openzeppelin/test-helpers')
 const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
-const { parseJson, incrementTime } = require('./utils/helpers.js')
+const { parseJson, getEthSpentOnGas, toBean, toEther } = require('./utils/helpers.js')
 const { MAX_UINT32, MAX_UINT256 } = require('./utils/constants.js')
 
 const users = ['userAddress', 'user2Address', 'ownerAddress', 'otherAddress']
@@ -18,14 +18,6 @@ async function checkUserPlots(field, address, plots) {
   }
 }
 
-async function getEthSpentOnGas(result) {
-  const receipt = await result.wait()
-  return receipt.effectiveGasPrice.mul(receipt.cumulativeGasUsed);
-}
-
-const toBean = (amount) => ethers.utils.parseUnits(amount, 6);
-const to18 = (amount) => ethers.utils.parseEther(amount);
-
 describe('Field', function () {
 
   before(async function () {
@@ -33,7 +25,7 @@ describe('Field', function () {
     userAddress = user.address
     user2Address = user2.address
     otherAddress = other.address
-    const contracts = await deploy("Test", false, true)
+    const contracts = await deploy("Test", true, true)
     ownerAddress = contracts.account
     this.diamond = contracts.beanstalkDiamond
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
@@ -52,6 +44,7 @@ describe('Field', function () {
       testData = {}
       columns.forEach((key, i) => testData[key] = tests[v][i])
       before(async function () {
+        await this.season.resetState()
         await this.season.resetAccount(userAddress)
         await this.season.resetAccount(user2Address)
         await this.season.resetAccount(otherAddress)
@@ -77,9 +70,9 @@ describe('Field', function () {
         await this.bean.mint(otherAddress, this.testData.otherStarterBeans)
         await this.bean.connect(other).approve(this.field.address, MAX_UINT256)
         this.season.setSoilE(this.testData.startSoil)
+        
         await this.season.setStartSoilE(this.testData.startSoil)
         await this.season.setLastSowTimeE(this.testData.startLastSowTime)
-
         await this.season.setLastDSoilE(this.testData.lastDSoil)
         for (var i = 0; i < this.testData.functionsCalled.length; i++) {
           this.testData.functionsCalled[i] = this.testData.functionsCalled[i].replace('Address','')
@@ -112,24 +105,160 @@ describe('Field', function () {
         expect(await this.field.podIndex()).to.eq(this.testData.podIndex)
         expect(await this.field.harvestableIndex()).to.eq(this.testData.podHarvestableIndex)
       })
+    })
+  })
 
-      it('outputs the correct extreme weather', async function () {
-        const weather = await this.season.weather()
-        expect(weather.didSowBelowMin).to.eq(this.testData.didSowBelowMin)
-        expect(weather.lastSowTime).to.eq(parseInt(this.testData.lastSowTime))
-        expect(weather.didSowFaster).to.eq(this.testData.didSowFaster)
+  describe("Buy and Sow", async function () {
+    before(async function () {
+      await this.bean.connect(user).approve(this.field.address, MAX_UINT256)
+      await this.pair.simulateTrade(toBean('1000'), toEther('1'));
+      await this.bean.mint(userAddress, toBean('10000000'))
+    })
+    beforeEach(async function () {
+      await this.season.resetState()
+    })
+
+    describe("revert", async function () {
+      it("no Soil", async function () {
+        await expect(this.field.connect(user).buyAndSowBeansWithMin('1','1','1', {value: toEther('0.001')})).to.be.revertedWith("Field: Sowing below min or 0 pods.")
+      })
+    })
+
+    describe("Only transfer", async function () {
+      beforeEach(async function () {
+        await this.season.setSoilE(toBean('1'));
+        this.beforeBeans = await this.bean.balanceOf(userAddress)
+        this.beforeEth = await ethers.provider.getBalance(userAddress)
+        this.result = await this.field.connect(user).buyAndSowBeansWithMin(toBean('1'), toBean('1'), toBean('1'), {value: toEther('0.001')});
+        this.ethSpentOnGas = await getEthSpentOnGas(this.result)
       })
 
-      it('outputs the correct state', async function () {
-        const weather = await this.season.weather()
-        if (weather.lastSowTime == MAX_UINT32 || !weather.didSowBelowMin) {
-          expect('1').to.eq(this.testData.state)
-        } else if (weather.didSowFaster) {
-          expect('2').to.eq(this.testData.state)
-        } else {
-          expect('0').to.eq(this.testData.state)
-        }
+      it("Properly transfers assets", async function () {
+        expect(this.beforeBeans.sub(await this.bean.balanceOf(userAddress))).to.equal(toBean('1'))
+        expect(this.beforeEth.sub(await ethers.provider.getBalance(userAddress)).sub(this.ethSpentOnGas)).to.equal('0')
+
+        expect(await this.bean.balanceOf(this.field.address)).to.equal('0')
+        expect(await ethers.provider.getBalance(this.field.address)).to.equal('0')
       })
+
+      it("Properly sows", async function () {
+        expect(await this.field.totalSoil()).to.equal('0')
+      })
+    })
+
+    describe("full Buy and Sow", async function () {
+      beforeEach(async function () {
+        await this.season.setSoilE(toBean('3'));
+        
+        this.beforeBeans = await this.bean.balanceOf(userAddress)
+        this.beforeEth = await ethers.provider.getBalance(userAddress)
+        this.result = await this.field.connect(user).buyAndSowBeansWithMin(toBean('1'), toBean('1'), toBean('1'), {value: toEther('0.001002')});
+        this.ethSpentOnGas = await getEthSpentOnGas(this.result)
+      })
+
+      it("Properly transfers assets", async function () {
+        expect(this.beforeBeans.sub(await this.bean.balanceOf(userAddress))).to.equal(toBean('1'))
+        expect(this.beforeEth.sub(await ethers.provider.getBalance(userAddress)).sub(this.ethSpentOnGas)).to.equal('1001001001001002')
+
+        expect(await this.bean.balanceOf(this.field.address)).to.equal('0')
+        expect(await ethers.provider.getBalance(this.field.address)).to.equal('0')
+      })
+
+      it("Properly sows", async function () {
+        expect(await this.field.totalSoil()).to.equal(toBean('1'))
+      })
+    })
+
+    describe("full Buy and Sow all Soil", async function () {
+      beforeEach(async function () {
+        await this.season.setSoilE(toBean('2'));
+        
+        this.beforeBeans = await this.bean.balanceOf(userAddress)
+        this.beforeEth = await ethers.provider.getBalance(userAddress)
+        this.result = await this.field.connect(user).buyAndSowBeansWithMin(toBean('1'), toBean('1'), toBean('1'), {value: toEther('0.001002')});
+        this.ethSpentOnGas = await getEthSpentOnGas(this.result)
+      })
+
+      it("Properly transfers assets", async function () {
+        expect(this.beforeBeans.sub(await this.bean.balanceOf(userAddress))).to.equal(toBean('1'))
+        expect(this.beforeEth.sub(await ethers.provider.getBalance(userAddress)).sub(this.ethSpentOnGas)).to.equal('1001001001001002')
+
+        expect(await this.bean.balanceOf(this.field.address)).to.equal('0')
+        expect(await ethers.provider.getBalance(this.field.address)).to.equal('0')
+      })
+
+      it("Properly sows", async function () {
+        expect(await this.field.totalSoil()).to.equal('0')
+      })
+    })
+
+    describe("full transfer and partial Sow all Soil", async function () {
+      it ('reverts with min', async function () {
+        await this.season.setSoilE(toBean('1.5'));
+        await expect(this.field.connect(user).buyAndSowBeans(toBean('1'), toBean('1'), {value: toEther('0.001002')})).to.be.revertedWith("Field: Sowing below min or 0 pods.");
+      });
+
+      beforeEach(async function () {
+        await this.season.setSoilE(toBean('1.5'));
+        
+        this.beforeBeans = await this.bean.balanceOf(userAddress)
+        this.beforeEth = await ethers.provider.getBalance(userAddress)
+        this.result = await this.field.connect(user).buyAndSowBeansWithMin(toBean('1'), toBean('1'), toBean('1.5'), {value: toEther('0.001002')});
+        this.ethSpentOnGas = await getEthSpentOnGas(this.result)
+      })
+
+      it("Properly transfers assets", async function () {
+        expect(this.beforeBeans.sub(await this.bean.balanceOf(userAddress))).to.equal(toBean('1'))
+        expect(this.beforeEth.sub(await ethers.provider.getBalance(userAddress)).sub(this.ethSpentOnGas)).to.equal('500250125062532')
+
+        expect(await this.bean.balanceOf(this.field.address)).to.equal('0')
+        expect(await ethers.provider.getBalance(this.field.address)).to.equal('0')
+      })
+
+      it("Properly sows", async function () {
+        expect(await this.field.totalSoil()).to.equal('0')
+      })
+    })
+  })
+
+  describe("complex DPD", async function () {
+    before(async function () {
+      await this.bean.connect(user).approve(this.field.address, MAX_UINT256)
+      await this.bean.mint(userAddress, toBean('100000'))
+    })
+    beforeEach(async function () {
+      await this.season.resetAccount(userAddress)
+      await this.season.resetState()
+    })
+
+    it("Does not set nextSowTime if Soil > 1", async function () {
+      this.season.setSoilE(toBean('3'));
+      await this.field.connect(user).sowBeans(toBean('1'))
+      const weather = await this.season.weather()
+      expect(weather.nextSowTime).to.be.equal(parseInt(MAX_UINT32))
+    })
+
+    it("Does set nextSowTime if Soil = 1", async function () {
+      this.season.setSoilE(toBean('1'));
+      await this.field.connect(user).sowBeans(toBean('1'))
+      const weather = await this.season.weather()
+      expect(weather.nextSowTime).to.be.not.equal(parseInt(MAX_UINT32))
+    })
+
+    it("Does set nextSowTime if Soil < 1", async function () {
+      this.season.setSoilE(toBean('1.5'));
+      await this.field.connect(user).sowBeans(toBean('1'))
+      const weather = await this.season.weather()
+      expect(weather.nextSowTime).to.be.not.equal(parseInt(MAX_UINT32))
+    })
+
+    it("Does not set nextSowTime if Soil already < 1", async function () {
+      this.season.setSoilE(toBean('1.5'));
+      await this.field.connect(user).sowBeans(toBean('1'))
+      const weather = await this.season.weather()
+      await this.field.connect(user).sowBeans(toBean('0.5'))
+      const weather2 = await this.season.weather()
+      expect(weather2.nextSowTime).to.be.equal(weather.nextSowTime)
     })
   })
 
@@ -138,7 +267,7 @@ describe('Field', function () {
       await this.season.resetAccount(userAddress)
       await this.season.resetState()
       await this.bean.connect(user).burn(await this.bean.balanceOf(userAddress))
-      await this.bean.connect(user).approve(this.field.address, to18('1000000000000'))
+      await this.bean.connect(user).approve(this.field.address, toEther('1000000000000'))
       await this.bean.mint(userAddress, toBean('100000'))
       await this.season.setYieldE('1')
     })
@@ -147,9 +276,9 @@ describe('Field', function () {
       beforeEach(async function () {
         const beforeBeans = await this.bean.balanceOf(userAddress);
         const beforeEth = await ethers.provider.getBalance(userAddress);
-        await this.pair.simulateTrade(toBean('5000'), to18('1'));
+        await this.pair.simulateTrade(toBean('5000'), toEther('1'));
         this.field.incrementTotalSoilE(toBean('5000'));
-        this.result = await this.field.connect(user).buyAndSowBeans(toBean('2500'), toBean('2500'), {value: to18('1') })
+        this.result = await this.field.connect(user).buyAndSowBeans(toBean('2500'), toBean('2500'), {value: toEther('1.000000000001') })
         const ethSpentOnGas = await getEthSpentOnGas(this.result);
         this.deltaBeans = beforeBeans.sub(await this.bean.balanceOf(userAddress));
         this.deltaEth = beforeEth.sub(await ethers.provider.getBalance(userAddress)).sub(ethSpentOnGas);
@@ -157,7 +286,7 @@ describe('Field', function () {
 
       it("updates user balances", async function () {
         expect(this.deltaBeans).to.equal(toBean('2500'))
-        expect(this.deltaEth).to.equal(to18('1'))
+        expect(this.deltaEth).to.equal(toEther('1.000000000000000001'))
         expect(await this.field.plot(userAddress, '0')).to.eq(toBean('5050'))
       })
 

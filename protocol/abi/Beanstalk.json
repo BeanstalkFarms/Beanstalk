@@ -949,6 +949,35 @@
                 "type": "uint256"
             },
             {
+                "internalType": "uint256",
+                "name": "buyAmount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "minAmount",
+                "type": "uint256"
+            }
+        ],
+        "name": "buyAndSowBeansWithMin",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "pods",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
                 "components": [
                     {
                         "internalType": "uint32[]",
@@ -997,6 +1026,77 @@
             }
         ],
         "name": "claimAndSowBeans",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "pods",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "minAmount",
+                "type": "uint256"
+            },
+            {
+                "components": [
+                    {
+                        "internalType": "uint32[]",
+                        "name": "beanWithdrawals",
+                        "type": "uint32[]"
+                    },
+                    {
+                        "internalType": "uint32[]",
+                        "name": "lpWithdrawals",
+                        "type": "uint32[]"
+                    },
+                    {
+                        "internalType": "uint256[]",
+                        "name": "plots",
+                        "type": "uint256[]"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "claimEth",
+                        "type": "bool"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "convertLP",
+                        "type": "bool"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "minBeanAmount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "minEthAmount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "toWallet",
+                        "type": "bool"
+                    }
+                ],
+                "internalType": "struct LibClaim.Claim",
+                "name": "claim",
+                "type": "tuple"
+            }
+        ],
+        "name": "claimAndSowBeansWithMin",
         "outputs": [
             {
                 "internalType": "uint256",
@@ -1079,6 +1179,82 @@
         "type": "function"
     },
     {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "buyAmount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "minAmount",
+                "type": "uint256"
+            },
+            {
+                "components": [
+                    {
+                        "internalType": "uint32[]",
+                        "name": "beanWithdrawals",
+                        "type": "uint32[]"
+                    },
+                    {
+                        "internalType": "uint32[]",
+                        "name": "lpWithdrawals",
+                        "type": "uint32[]"
+                    },
+                    {
+                        "internalType": "uint256[]",
+                        "name": "plots",
+                        "type": "uint256[]"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "claimEth",
+                        "type": "bool"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "convertLP",
+                        "type": "bool"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "minBeanAmount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "minEthAmount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "toWallet",
+                        "type": "bool"
+                    }
+                ],
+                "internalType": "struct LibClaim.Claim",
+                "name": "claim",
+                "type": "tuple"
+            }
+        ],
+        "name": "claimBuyAndSowBeansWithMin",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "pods",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "harvestableIndex",
         "outputs": [
@@ -1150,6 +1326,30 @@
             }
         ],
         "name": "sowBeans",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "minAmount",
+                "type": "uint256"
+            }
+        ],
+        "name": "sowBeansWithMin",
         "outputs": [
             {
                 "internalType": "uint256",
