@@ -94,8 +94,7 @@ async function main(scriptName, verbose = true, mock = false) {
     claimFacet,
     marketplaceFacet,
     fundraiserFacet,
-    convertFacet,
-    budgetFacet
+    convertFacet
   ] = mock ? await deployFacets(
     verbose,
     ['MockSeasonFacet',
@@ -108,8 +107,7 @@ async function main(scriptName, verbose = true, mock = false) {
       'MockClaimFacet',
       'MockMarketplaceFacet',
       'MockFundraiserFacet',
-      'ConvertFacet',
-      'MockBudgetFacet'],
+      'ConvertFacet'],
     ["LibClaim"],
     {
       "MockMarketplaceFacet": ["LibClaim"],
@@ -130,8 +128,7 @@ async function main(scriptName, verbose = true, mock = false) {
       'ClaimFacet',
       'MarketplaceFacet',
       'FundraiserFacet',
-      'ConvertFacet',
-      'BudgetFacet'],
+      'ConvertFacet'],
     ["LibClaim"],
     {
       "SiloFacet": ["LibClaim"],
@@ -166,8 +163,7 @@ async function main(scriptName, verbose = true, mock = false) {
       ['ClaimFacet', claimFacet],
       ['MarketplaceFacet', marketplaceFacet],
       ['FundraiserFacet', fundraiserFacet],
-      ['ConvertFacet', convertFacet],
-      ['BudgetFacet', budgetFacet]
+      ['ConvertFacet', convertFacet]
     ],
     owner: account,
     args: args,
@@ -213,7 +209,6 @@ async function main(scriptName, verbose = true, mock = false) {
     claimFacet: claimFacet,
     fundraiserFacet: fundraiserFacet,
     convertFacet: convertFacet,
-    budgetFacet: budgetFacet,
     pair: pair,
     pegPair: pegPair,
     weth: weth,
