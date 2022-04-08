@@ -327,7 +327,7 @@ describe('Marketplace', function () {
 
           this.userBeanBalance = await this.bean.balanceOf(userAddress)
           this.user2BeanBalance = await this.bean.balanceOf(user2Address)
-
+   
           this.result = await this.marketplace.connect(user2).fillDynamicPodListing(this.listing, this.amountBeansBuyingWith);
 
           this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)

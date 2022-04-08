@@ -65,18 +65,6 @@ contract Listing is PodTransfer {
         bool[40] signs
     );
 
-    // event DynamicPodListingCreated(
-    //     address indexed account,
-    //     uint256 index,
-    //     uint256 start,
-    //     uint256 amount,
-    //     uint256 maxHarvestableIndex,
-    //     bool toWallet,
-    //     uint256[10] subIntervalIndex,
-    //     uint256[40] constants,
-    //     uint8[40] shifts,
-    //     bool[40] signs
-    // );
 
     event PodListingFilled(
         address indexed from,
