@@ -68,6 +68,12 @@ contract BeanSilo is LPSilo {
         LibCheck.beanBalanceCheck();
     }
 
+    function _transferBeans(uint32[] calldata crates, uint256[] calldata amounts, address transferTo)
+        internal
+    {
+
+    }
+
     function removeBeanDeposits(uint32[] calldata crates, uint256[] calldata amounts)
         private
         returns (uint256 beansRemoved, uint256 stalkRemoved)
