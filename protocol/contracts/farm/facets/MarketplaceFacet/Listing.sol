@@ -75,12 +75,14 @@ contract Listing is PodTransfer {
     function _buyBeansAndFillPodListing(
         Listing calldata l,
         uint256 beanAmount,
-        uint256 buyBeanAmount
+        uint256 buyBeanAmount,
+        uint256 ethAmount
     ) internal {
         uint256 boughtBeanAmount = LibUniswap.buyExactTokensToWallet(
             buyBeanAmount, 
             l.account,
-            l.toWallet
+            l.toWallet,
+            ethAmount
         );
         _fillListing(l, beanAmount+boughtBeanAmount);
     }

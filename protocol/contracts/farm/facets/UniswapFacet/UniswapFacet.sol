@@ -1,6 +1,6 @@
 /**
  * SPDX-License-Identifier: MIT
-**/
+*/
 
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
@@ -31,7 +31,7 @@ contract UniswapFacet {
 		LibUniswap.swapExactTokensForTokens(amountIn, amountOutMin, path, msg.sender, block.timestamp.add(1), set, false);
 	}
 
-	function buyBeansOnUniswap(uint256 amountOutMin) public payable {
+	function buyBeansOnUniswap(uint256 amountOutMin, uint256 ethAmount) public payable {
 		address[] memory path = new address[](2);
 		path[0] = s.c.weth;
 		path[1] = s.c.bean;
@@ -39,7 +39,7 @@ contract UniswapFacet {
 		set.toInternalBalance = true;
  		set.fromInternalBalance = true;
 		set.lightUpdateSilo = false;
-		LibUniswap.swapExactETHForTokens(amountOutMin, path, msg.sender, block.timestamp.add(1), set);
+		LibUniswap.swapExactETHForTokens(amountOutMin, path, msg.sender, block.timestamp.add(1), set, ethAmount);
 	}
 
 	function swapOnUniswap(address token, uint256 amountIn, uint256 amountOutMin) public payable {
@@ -66,8 +66,8 @@ contract UniswapFacet {
 		LibUniswap.addLiquidity(s.c.bean, s.c.weth, amountADesired, amountBDesired, amountAMin, amountBMin, msg.sender, block.timestamp.add(1), false);
 	}
 	
-	function addLiquidityETHOnUniswap(uint256 amountTokenDesired, uint256 amountTokenMin, uint256 amountETHMin) public payable {
-		LibUniswap.addLiquidityETH(s.c.bean, amountTokenDesired, amountTokenMin, amountETHMin, msg.sender, block.timestamp.add(1), false);
+	function addLiquidityETHOnUniswap(uint256 amountTokenDesired, uint256 amountTokenMin, uint256 amountETHMin, uint256 ethAmount) public payable {
+		LibUniswap.addLiquidityETH(s.c.bean, amountTokenDesired, amountTokenMin, amountETHMin, msg.sender, block.timestamp.add(1), false, ethAmount);
 	}
 
 	function removeLiquidityOnUniswap(uint256 liquidity, uint256 amountAMin, uint256 amountBMin) public payable {

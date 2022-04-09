@@ -64,7 +64,7 @@ library LibUserBalance {
     bool fromInternalBalance
   ) internal {
     if (amount > 0) {
-      if (fromInternalBalance) _decreaseInternalBalance(sender, token, amount, true);
+      if (fromInternalBalance) _decreaseInternalBalance(sender, token, amount, false);
       token.transferFrom(sender, recipient, amount);
       emit ExternalBalanceTransfer(token, sender, recipient, amount);
     }

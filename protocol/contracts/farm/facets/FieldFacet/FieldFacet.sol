@@ -35,19 +35,18 @@ contract FieldFacet is BeanDibbler {
         uint256 amount,
         uint256 buyAmount,
         LibClaim.Claim calldata claim,
-	Storage.Settings calldata set
+	      Storage.Settings calldata set,
+        uint256 ethAmount
     )
         external
         payable
         returns (uint256)
     {
         allocateBeans(claim, amount);
-	address[] memory path = new address[](2);
-	path[0] = s.c.weth;
-	path[1] = s.c.bean;
-	uint256[] memory amounts = LibUniswap.swapExactETHForTokens(buyAmount, path, address(this), block.timestamp.add(1), set); //{value: msg.value}
-	(bool success,) = msg.sender.call{ value: msg.value.sub(amounts[0]) }("");
-	require(success, "Field: Refund failed.");
+	      address[] memory path = new address[](2);
+	      path[0] = s.c.weth;
+	      path[1] = s.c.bean;
+	      uint256[] memory amounts = LibUniswap.swapExactETHForTokens(buyAmount, path, address(this), block.timestamp.add(1), set, ethAmount); 
         return _sowBeans(amount.add(amounts[1]));
     }
 
@@ -56,13 +55,11 @@ contract FieldFacet is BeanDibbler {
         return _sowBeans(amount);
     }
 
-    function buyAndSowBeans(uint256 amount, uint256 buyAmount, Storage.Settings calldata set) public payable returns (uint256) {
-	address[] memory path = new address[](2);
+    function buyAndSowBeans(uint256 amount, uint256 buyAmount, Storage.Settings calldata set, uint256 ethAmount) public payable returns (uint256) {
+	      address[] memory path = new address[](2);
         path[0] = s.c.weth;
         path[1] = s.c.bean;
-        uint256[] memory amounts = LibUniswap.swapExactETHForTokens(buyAmount, path, address(this), block.timestamp.add(1), set); //{value: msg.value}
-        (bool success,) = msg.sender.call{ value: msg.value.sub(amounts[0]) }("");
-        require(success, "Field: Refund failed.");
+        uint256[] memory amounts = LibUniswap.swapExactETHForTokens(buyAmount, path, address(this), block.timestamp.add(1), set, ethAmount);
         if (amount > 0) bean().transferFrom(msg.sender, address(this), amount);
         return _sowBeans(amount.add(amounts[1]));
     }

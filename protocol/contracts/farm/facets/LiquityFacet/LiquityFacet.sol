@@ -11,6 +11,7 @@ import './TroveFactory.sol';
 import '../../../interfaces/ILiquityManager.sol';
 import '../../../libraries/LibUserBalance.sol';
 import '../../../libraries/LibCurve.sol';
+import { LibUniswap } from '../../../libraries/LibUniswap.sol';
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
@@ -42,8 +43,9 @@ contract LiquityFacet is TroveFactory {
    * Public Functions
   */
 
-  function manageTroveWithApproxHint(uint256 maxFeePercentage, uint256 lusdAmount, uint256 numTrials, uint256 randSeed) public payable {
-	  _manageTroveWithApproxHint(maxFeePercentage, lusdAmount, numTrials, randSeed);
+  function manageTroveWithApproxHint(uint256 maxFeePercentage, uint256 lusdAmount, uint256 numTrials, uint256 randSeed, uint256 ethAmount) public payable {
+    require(ethAmount <= LibUniswap.availableEth(ethAmount));
+	  _manageTroveWithApproxHint(maxFeePercentage, lusdAmount, numTrials, randSeed, ethAmount);
 	}
 
   function repayDebt(uint256 lusdAmount, uint256 numTrials, uint256 randSeed, bool fromInternalBalance) public payable {
@@ -60,9 +62,9 @@ contract LiquityFacet is TroveFactory {
 	 * Trove Functions
 	*/
 
-	function _manageTroveWithApproxHint(uint256 minFee, uint256 lusdAmount, uint256 numTrials, uint256 randSeed) private {
+	function _manageTroveWithApproxHint(uint256 minFee, uint256 lusdAmount, uint256 numTrials, uint256 randSeed, uint256 ethAmount) private {
 	  if (s.trove[msg.sender] == address(0)) s.trove[msg.sender] = createTroveContract(msg.sender);
-	  uint256 lusdBack = ILiquityManager(s.trove[msg.sender]).manageTroveWithApproxHint{value: msg.value}(minFee, lusdAmount, numTrials, randSeed);
+	  uint256 lusdBack = ILiquityManager(s.trove[msg.sender]).manageTroveWithApproxHint{value: ethAmount}(minFee, lusdAmount, numTrials, randSeed);
 	  LibUserBalance._increaseInternalBalance(msg.sender, IERC20(lusdToken), lusdBack);
    	}
 

@@ -73,7 +73,7 @@ describe('Uniswap', function () {
   describe('Add Liquidity', function () {
    beforeEach(async function () {
 	    await this.uniswap.connect(user).addLiquidityOnUniswap('1000', '1', '980', '1'); // TokenA(BEAN), TokenB(WETH), TokenAMin, TokenBMin
-	    await this.uniswap.connect(user).addLiquidityETHOnUniswap('1000', '980', '1', {value: ethers.utils.parseEther('1')});
+	    await this.uniswap.connect(user).addLiquidityETHOnUniswap('1000', '980', '1', ethers.utils.parseEther('1'), {value: ethers.utils.parseEther('1')});
    });
    it('add liquidity to the pair', async function () {
 	    this.preSupply = await this.bean.balanceOf(userAddress);
@@ -86,7 +86,7 @@ describe('Uniswap', function () {
    it('add eth liquidity to the pair', async function () {
 	    this.preSupply = await this.bean.balanceOf(userAddress);
 	    this.preWeth = await this.weth.balanceOf(userAddress);
-	    await this.uniswap.connect(user).addLiquidityETHOnUniswap('1000', '980', '1', {value: ethers.utils.parseEther('1')});
+	    await this.uniswap.connect(user).addLiquidityETHOnUniswap('1000', '980', '1', ethers.utils.parseEther('1'), {value: ethers.utils.parseEther('1')});
 	    expect(await this.pair.balanceOf(userAddress)).to.eq('3');
 	    expect((await this.bean.balanceOf(userAddress)).sub(this.preSupply)).to.eq(-1000);
 	    expect((await this.weth.balanceOf(userAddress)).sub(this.preWeth)).to.eq('0') // ETH added
@@ -98,7 +98,7 @@ describe('Uniswap', function () {
   describe('Remove Liquidity', function () {
     beforeEach(async function () {
 	    await this.uniswap.connect(user).addLiquidityOnUniswap('1000', '1', '980', '1');
-	    await this.uniswap.connect(user).addLiquidityETHOnUniswap('1000', '980', '1', {value: ethers.utils.parseEther('1')});
+	    await this.uniswap.connect(user).addLiquidityETHOnUniswap('1000', '980', '1', ethers.utils.parseEther('1'), {value: ethers.utils.parseEther('1')});
     });
     it('remove liquidity from the pair', async function () {
 	    this.preSupply = await this.bean.balanceOf(userAddress);
@@ -129,7 +129,7 @@ describe('Uniswap', function () {
     beforeEach(async function () {
 	    await this.pair.simulateTrade('20000', '20000');
 	    await this.uniswap.connect(user).sellBeansOnUniswap('1000', '1'); // Simulating trade to ensure no "beforeEach" function reverts
-	    await this.uniswap.connect(user).buyBeansOnUniswap('940', {value: '1000' });
+	    await this.uniswap.connect(user).buyBeansOnUniswap('940', '1000', {value: '1000' });
     });
     it('properly performs swapExactTokensForTokens', async function () {
 	    this.preSupply = await this.bean.balanceOf(userAddress);
@@ -140,7 +140,7 @@ describe('Uniswap', function () {
     });
     it('properly performs swapExactETHForTokens', async function () {
 	    this.preSupply = await this.bean.balanceOf(userAddress);
-	    await this.uniswap.connect(user).buyBeansOnUniswap('940', {value: '1000'});
+	    await this.uniswap.connect(user).buyBeansOnUniswap('940', '1000', {value: '1000'});
 	    expect((await this.bean.balanceOf(userAddress)).sub(this.preSupply)).to.eq('0');  // From here on, entire swap should be funded by internal balance
 	    expect(await this.claim.wrappedBeans(userAddress)).to.eq('1898');	
 	    expect(await this.uniswap.internalBalance(userAddress, this.weth.address)).to.eq('949');	

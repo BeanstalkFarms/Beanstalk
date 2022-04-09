@@ -46,9 +46,10 @@ contract Order is Listing {
         uint256 beanAmount,
         uint256 buyBeanAmount,
         uint24 pricePerPod,
-        uint256 maxPlaceInLine
+        uint256 maxPlaceInLine,
+        uint256 ethAmount
     ) internal returns (bytes32 id) {
-        uint256 boughtBeanAmount = LibUniswap.buyExactTokens(buyBeanAmount, address(this));
+        uint256 boughtBeanAmount = LibUniswap.buyExactTokens(buyBeanAmount, address(this), ethAmount);
         return _createPodOrder(beanAmount+boughtBeanAmount, pricePerPod, maxPlaceInLine);
     }
 

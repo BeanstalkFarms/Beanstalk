@@ -52,20 +52,22 @@ contract MarketplaceFacet is Order {
     function buyBeansAndFillPodListing(
         Listing calldata l,
         uint256 beanAmount,
-        uint256 buyBeanAmount
+        uint256 buyBeanAmount,
+        uint256 ethAmount
     ) external payable {
         if (beanAmount > 0) LibUserBalance.transferBeans(l.account, beanAmount, l.toWallet);
-        _buyBeansAndFillPodListing(l, beanAmount, buyBeanAmount);
+        _buyBeansAndFillPodListing(l, beanAmount, buyBeanAmount, ethAmount);
     }
 
     function claimBuyBeansAndFillPodListing(
         Listing calldata l,
         uint256 beanAmount,
         uint256 buyBeanAmount,
+        uint256 ethAmount,
         LibClaim.Claim calldata claim
     ) external payable  {
         allocateBeansToWallet(claim, beanAmount, l.account, l.toWallet);
-        _buyBeansAndFillPodListing(l, beanAmount, buyBeanAmount);
+        _buyBeansAndFillPodListing(l, beanAmount, buyBeanAmount, ethAmount);
     }
 
     // Cancel
@@ -106,10 +108,11 @@ contract MarketplaceFacet is Order {
         uint256 beanAmount,
         uint256 buyBeanAmount,
         uint24 pricePerPod,
-        uint232 maxPlaceInLine
+        uint232 maxPlaceInLine,
+        uint256 ethAmount
     ) external payable returns (bytes32 id) {
         if (beanAmount > 0) bean().transferFrom(msg.sender, address(this), beanAmount);
-        return _buyBeansAndCreatePodOrder(beanAmount, buyBeanAmount, pricePerPod, maxPlaceInLine);
+        return _buyBeansAndCreatePodOrder(beanAmount, buyBeanAmount, pricePerPod, maxPlaceInLine, ethAmount);
     }
 
     function claimBuyBeansAndCreatePodOrder(
@@ -117,10 +120,11 @@ contract MarketplaceFacet is Order {
         uint256 buyBeanAmount,
         uint24 pricePerPod,
         uint232 maxPlaceInLine,
+        uint256 ethAmount,
         LibClaim.Claim calldata claim
     ) external payable returns (bytes32 id) {
         allocateBeans(claim, beanAmount, address(this));
-        return _buyBeansAndCreatePodOrder(beanAmount, buyBeanAmount, pricePerPod, maxPlaceInLine);
+        return _buyBeansAndCreatePodOrder(beanAmount, buyBeanAmount, pricePerPod, maxPlaceInLine, ethAmount);
     }
 
     // Fill

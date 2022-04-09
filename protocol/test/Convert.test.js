@@ -387,14 +387,14 @@ describe('Convert', function () {
 
     describe('crate balance too low', function () {
       it('reverts', async function () {
-        await expect(this.convert.connect(user).convertAddAndDepositLP('0',['1500','900','1'], [2], [1500], {value: '1'})).to.be.revertedWith('Silo: Crate balance too low.');
+        await expect(this.convert.connect(user).convertAddAndDepositLP('0',['1500','900','1'], [2], [1500], 1, {value: '1'})).to.be.revertedWith('Silo: Crate balance too low.');
       });
     })
 
 	  describe('immediate convert', function () {
       beforeEach(async function () {
         this.first = await this.bean.balanceOf(userAddress)
-        await this.convert.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2], [1000], {value: '1'});
+        await this.convert.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2], [1000], 1, {value: '1'});
 	      this.after = await this.claim.connect(user).wrappedBeans(userAddress)
 	      this.second = await this.bean.balanceOf(userAddress)
       });
@@ -429,7 +429,7 @@ describe('Convert', function () {
     describe('convert 1 crate after a lot of seasons', function () {
       beforeEach(async function () {
         await this.season.siloSunrises('10');
-        await this.convert.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2], [1000], {value: '1'});
+        await this.convert.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2], [1000], 1, {value: '1'});
         this.wrappedBeans = await this.claim.connect(user).wrappedBeans(userAddress)
       });
 
@@ -459,7 +459,7 @@ describe('Convert', function () {
         await this.season.siloSunrises('10');
         await this.silo.connect(user).depositBeans('500');
 	      this.first = await this.bean.balanceOf(userAddress)
-        await this.convert.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2,12], [500,500], {value: '1'});
+        await this.convert.connect(user).convertAddAndDepositLP('0',['1000','900','1'], [2,12], [500,500], 1, {value: '1'});
 	      this.second = await this.bean.balanceOf(userAddress)
 	      this.wrappedBeans = await this.claim.connect(user).wrappedBeans(userAddress)
       });
@@ -493,7 +493,7 @@ describe('Convert', function () {
     describe('immediate convert, excessive LP allocation', function () {
       beforeEach(async function () {
 	      this.first = await this.bean.balanceOf(userAddress)
-        await this.convert.connect(user).convertAddAndDepositLP('0',['10000','9000','10'], [2], [1000], {value: '10'});
+        await this.convert.connect(user).convertAddAndDepositLP('0',['10000','9000','10'], [2], [1000], 10, {value: '10'});
 	      this.wrappedBeans = await this.claim.connect(user).wrappedBeans(userAddress)
 	      this.second = await this.bean.balanceOf(userAddress)
       });
@@ -539,7 +539,7 @@ describe('Convert', function () {
       beforeEach(async function () {
         await this.season.siloSunrises('10');
         this.first = await this.bean.balanceOf(userAddress)
-        await this.convert.connect(user).convertAddAndDepositLP('0',['10000','9000','10'], [2], [1000], {value: '10'});
+        await this.convert.connect(user).convertAddAndDepositLP('0',['10000','9000','10'], [2], [1000], 10, {value: '10'});
         this.wrappedBeans = await this.claim.connect(user).wrappedBeans(userAddress)
         this.second = await this.bean.balanceOf(userAddress)
       });
@@ -579,7 +579,7 @@ describe('Convert', function () {
         await this.season.siloSunrises('10');
         await this.silo.connect(user).depositBeans('500');
 	      this.first = await this.bean.balanceOf(userAddress)
-        await this.convert.connect(user).convertAddAndDepositLP('0',['10000','9000','10'], [2,12], [500,500], {value: '10'});
+        await this.convert.connect(user).convertAddAndDepositLP('0',['10000','9000','10'], [2,12], [500,500], 10, {value: '10'});
 	      this.wrappedBeans = await this.claim.connect(user).wrappedBeans(userAddress)
 	      this.second = await this.bean.balanceOf(userAddress)
       });

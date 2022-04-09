@@ -145,25 +145,27 @@ library LibUniswap {
         uint amountETHMin,
         address to,
         uint deadline,
-	bool convert
+	      bool convert,
+        uint256 ethAmount
     ) internal ensure(deadline) returns (uint amountToken, uint amountETH, uint liquidity) {
 	    AppStorage storage s = LibAppStorage.diamondStorage();	
+      require(ethAmount <= availableEth(ethAmount), "LibUniswap: Not enough ETH");
         (amountToken, amountETH) = _addLiquidity(
             token,
             s.c.weth,
             amountTokenDesired,
-            msg.value,
+            ethAmount,
             amountTokenMin,
             amountETHMin
         );
         address pair = pairFor(uniswapFactory, token, s.c.weth);
-	    if (convert) IERC20(token).transfer(pair, amountToken);
+	      if (convert) IERC20(token).transfer(pair, amountToken);
         else TransferHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
         IWETH(s.c.weth).deposit{value: amountETH}();
         assert(IWETH(s.c.weth).transfer(pair, amountETH));
         liquidity = IUniswapV2Pair(pair).mint(to);
         // refund dust eth, if any
-        if (msg.value > amountETH) TransferHelper.safeTransferETH(msg.sender, msg.value - amountETH);
+        if (ethAmount > amountETH) TransferHelper.safeTransferETH(msg.sender, ethAmount - amountETH);
     }
 
     // **** REMOVE LIQUIDITY ****
@@ -301,14 +303,15 @@ library LibUniswap {
     }
 
     
-    function swapExactETHForTokens(uint amountOutMin, address[] memory path, address to, uint deadline, Storage.Settings memory set)
+    function swapExactETHForTokens(uint amountOutMin, address[] memory path, address to, uint deadline, Storage.Settings memory set, uint256 ethAmount)
         internal
         ensure(deadline)
         returns (uint[] memory amounts)
     {
 	      AppStorage storage s = LibAppStorage.diamondStorage();	
+        require(ethAmount <= availableEth(ethAmount), "LibUniswap: Not enough ETH");
         require(path[0] == s.c.weth, 'LibUniswap: INVALID_PATH');
-        amounts = getAmountsOut(uniswapFactory, msg.value, path);
+        amounts = getAmountsOut(uniswapFactory, ethAmount, path);
         require(amounts[amounts.length - 1] >= amountOutMin, 'LibUniswap: INSUFFICIENT_OUTPUT_AMOUNT');
         IWETH(s.c.weth).deposit{value: amounts[0]}();
         assert(IWETH(s.c.weth).transfer(pairFor(uniswapFactory, path[0], path[1]), amounts[0]));
@@ -362,20 +365,21 @@ library LibUniswap {
     }
 
 
-    function swapETHForExactTokens(uint amountOut, address[] memory path, address to, uint deadline)
+    function swapETHForExactTokens(uint amountOut, address[] memory path, address to, uint deadline, uint256 ethAmount)
         internal
         ensure(deadline)
         returns (uint[] memory amounts)
     {
+        require(ethAmount <= availableEth(ethAmount), "LibUniswap: Not enough ETH");
 	      AppStorage storage s = LibAppStorage.diamondStorage();	
         require(path[0] == s.c.weth, 'LibUniswap: INVALID_PATH');
         amounts = getAmountsIn(uniswapFactory, amountOut, path);
-        require(amounts[0] <= msg.value, 'LibUniswap: EXCESSIVE_INPUT_AMOUNT');
+        require(amounts[0] <= ethAmount, 'LibUniswap: EXCESSIVE_INPUT_AMOUNT');
         IWETH(s.c.weth).deposit{value: amounts[0]}();
         assert(IWETH(s.c.weth).transfer(pairFor(uniswapFactory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to, false);
         // refund dust eth, if any
-        if (msg.value > amounts[0]) TransferHelper.safeTransferETH(msg.sender, msg.value - amounts[0]);
+        if (ethAmount > amounts[0]) TransferHelper.safeTransferETH(msg.sender, ethAmount - amounts[0]);
     }
 
     /** 
@@ -467,25 +471,27 @@ library LibUniswap {
         uint256 buyBeanAmount,
         uint256 buyEthAmount,
         AddLiquidity calldata al,
-	      Storage.Settings calldata set
+	      Storage.Settings calldata set,
+        uint256 ethAmount
     )
         internal
         returns (uint256)
     {
         uint256 boughtLP;
-        if (buyBeanAmount > 0) boughtLP = buyBeansAndAddLiquidity(buyBeanAmount, al, set);
-        else if (buyEthAmount > 0) boughtLP = buyEthAndAddLiquidity(buyEthAmount, al, set);
-        else boughtLP = addAndDepositLiquidity(al);
+        if (buyBeanAmount > 0) boughtLP = buyBeansAndAddLiquidity(buyBeanAmount, al, set, ethAmount);
+        else if (buyEthAmount > 0) boughtLP = buyEthAndAddLiquidity(buyEthAmount, al, set, ethAmount);
+        else boughtLP = addAndDepositLiquidity(al, ethAmount);
         return boughtLP;
     }
 
-    function buyBeansAndAddLiquidity(uint256 buyBeanAmount, AddLiquidity calldata al, Storage.Settings calldata set)
+    function buyBeansAndAddLiquidity(uint256 buyBeanAmount, AddLiquidity calldata al, Storage.Settings calldata set, uint256 ethAmount)
         internal
         returns (uint256)
     {
 	    Swap memory swap;
 	    AppStorage storage s = LibAppStorage.diamondStorage();
-      IWETH(s.c.weth).deposit{value: msg.value}();
+      require(ethAmount <= availableEth(ethAmount), "LibUniswap: Not enough ETH");
+      IWETH(s.c.weth).deposit{value: ethAmount}();
 	    swap.path = new address[](2);
       swap.path[0] = s.c.weth;
       swap.path[1] = s.c.bean;
@@ -498,10 +504,10 @@ library LibUniswap {
         LibUserBalance.allocatedBeans(al.beanAmount.sub(buyBeanAmount));
         swap.beans = swap.beans.add(al.beanAmount.sub(buyBeanAmount));
       }
-	    (swap.beans, swap.ethAdded, swap.liquidity) = addLiquidity(s.c.bean, s.c.weth, swap.beans, msg.value.sub(swap.amounts[0]), al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1), true);
+	    (swap.beans, swap.ethAdded, swap.liquidity) = addLiquidity(s.c.bean, s.c.weth, swap.beans, ethAmount.sub(swap.amounts[0]), al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1), true);
       if (al.beanAmount > swap.beans) IBean(s.c.bean).transfer(msg.sender, al.beanAmount.sub(swap.beans));
-      if (msg.value > swap.ethAdded.add(swap.amounts[0])) {
-        swap.returnETH = msg.value.sub(swap.ethAdded).sub(swap.amounts[0]);
+      if (ethAmount > swap.ethAdded.add(swap.amounts[0])) {
+        swap.returnETH = ethAmount.sub(swap.ethAdded).sub(swap.amounts[0]);
         IWETH(s.c.weth).withdraw(swap.returnETH);
         (bool success,) = msg.sender.call{ value: swap.returnETH }("");
         require(success, "Market: Refund failed.");
@@ -510,20 +516,21 @@ library LibUniswap {
     }
 
 
-    function buyEthAndAddLiquidity(uint256 buyWethAmount, AddLiquidity calldata al, Storage.Settings calldata set)
+    function buyEthAndAddLiquidity(uint256 buyWethAmount, AddLiquidity calldata al, Storage.Settings calldata set, uint256 ethAmount)
         internal
         returns (uint256)
     {
 	    Swap memory swap;
       AppStorage storage s = LibAppStorage.diamondStorage();
+      require(ethAmount <= availableEth(ethAmount), "LibUniswap: Not enough ETH");
 	    swap.path = new address[](2);
 	    swap.path[0] = s.c.bean;
 	    swap.path[1] = s.c.weth;
       swap.sellBeans = getAmountsIn(uniswapFactory, buyWethAmount, swap.path)[0];
       LibUserBalance.allocatedBeans(al.beanAmount.add(swap.sellBeans));
 	    swap.amounts = swapExactTokensForTokens(swap.sellBeans, buyWethAmount, swap.path, address(this), block.timestamp.add(1), set, true);
-      if (msg.value > 0) IWETH(s.c.weth).deposit{value: msg.value}();
-	    (swap.beans, swap.ethAdded, swap.liquidity) = addLiquidity(s.c.bean, s.c.weth, al.beanAmount, msg.value.add(swap.amounts[1]), al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1), true);
+      if (ethAmount > 0) IWETH(s.c.weth).deposit{value: ethAmount}();
+	    (swap.beans, swap.ethAdded, swap.liquidity) = addLiquidity(s.c.bean, s.c.weth, al.beanAmount, ethAmount.add(swap.amounts[1]), al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1), true);
 
 
       if (al.beanAmount.add(swap.sellBeans) > swap.beans.add(swap.amounts[0])) {
@@ -534,8 +541,8 @@ library LibUniswap {
         );
 	    }
 
-      if (swap.ethAdded < msg.value.add(swap.amounts[1])) {
-        uint256 eth = swap.amounts[1].add(msg.value).sub(swap.ethAdded);
+      if (swap.ethAdded < ethAmount.add(swap.amounts[1])) {
+        uint256 eth = swap.amounts[1].add(ethAmount).sub(swap.ethAdded);
         IWETH(s.c.weth).withdraw(eth);
         (bool success, ) = msg.sender.call{value: eth}("");
         require(success, "Market: Ether transfer failed.");
@@ -545,29 +552,30 @@ library LibUniswap {
 
 
 
-    function addAndDepositLiquidity(AddLiquidity calldata al) internal returns (uint256) {
+    function addAndDepositLiquidity(AddLiquidity calldata al, uint256 ethAmount) internal returns (uint256) {
 	    AppStorage storage s = LibAppStorage.diamondStorage();
+      require(ethAmount <= availableEth(ethAmount), "LibUniswap: Not enough ETH");
 	    LibUserBalance.allocatedBeans(al.beanAmount);
-      (uint256 beansDeposited, uint256 ethDeposited, uint256 liquidity) = addLiquidityETH(s.c.bean, al.beanAmount, al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1), true); //{value: msg.value}
-      (bool success,) = msg.sender.call{ value: msg.value.sub(ethDeposited) }("");
+      (uint256 beansDeposited, uint256 ethDeposited, uint256 liquidity) = addLiquidityETH(s.c.bean, al.beanAmount, al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1), true, ethAmount);
+      (bool success,) = msg.sender.call{ value: ethAmount.sub(ethDeposited) }("");
       require(success, "Market: Refund failed.");
       if (al.beanAmount > beansDeposited) IBean(s.c.bean).transfer(msg.sender, al.beanAmount.sub(beansDeposited));
       return liquidity;
     }
 
-    function buyExactTokensToWallet(uint256 buyBeanAmount, address to, bool toWallet) internal returns (uint256 amount) {
+    function buyExactTokensToWallet(uint256 buyBeanAmount, address to, bool toWallet, uint256 ethAmount) internal returns (uint256 amount) {
 	    AppStorage storage s = LibAppStorage.diamondStorage();
-      if (toWallet) amount = buyExactTokens(buyBeanAmount, to);
+      if (toWallet) amount = buyExactTokens(buyBeanAmount, to, ethAmount);
       else {
-        amount = buyExactTokens(buyBeanAmount, address(this));
+        amount = buyExactTokens(buyBeanAmount, address(this), ethAmount);
 	      LibUserBalance._increaseInternalBalance(to, IBean(s.c.bean), amount);
       }
     }
 
 
-    function buyExactTokens(uint256 buyBeanAmount, address to) internal returns (uint256 amount) {
-        (uint256 ethAmount, uint256 beanAmount) = _buyExactTokens(buyBeanAmount, msg.value, to);
-        (bool success,) = msg.sender.call{ value: msg.value.sub(ethAmount) }("");
+    function buyExactTokens(uint256 buyBeanAmount, address to, uint256 eth) internal returns (uint256 amount) {
+        (uint256 ethAmount, uint256 beanAmount) = _buyExactTokens(buyBeanAmount, eth, to);
+        (bool success,) = msg.sender.call{ value: eth.sub(ethAmount) }("");
         require(success, "Market: Refund failed.");
         return beanAmount;
     }
@@ -578,6 +586,7 @@ library LibUniswap {
         returns (uint256 inAmount, uint256 outAmount)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        require(ethAmount <= availableEth(ethAmount), "LibUniswap: Not enough ETH");
         address[] memory path = new address[](2);
         path[0] = s.c.weth;
         path[1] = s.c.bean;
@@ -586,8 +595,22 @@ library LibUniswap {
             beanAmount,
             path,
             to,
-            block.timestamp.add(1)
+            block.timestamp.add(1),
+            ethAmount
         );
         return (amounts[0], amounts[1]);
+    }
+
+    /*
+     * Eth Getter
+    */
+
+    function availableEth(uint256 amountEth) internal returns (uint256 x) {
+      AppStorage storage s = LibAppStorage.diamondStorage();
+      if (s.remainingEth == 1) x = msg.value;
+      else {
+        x = s.remainingEth - 2;
+        s.remainingEth = s.remainingEth.sub(amountEth);
+      }
     }
 }

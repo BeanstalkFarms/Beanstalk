@@ -9,8 +9,6 @@ import '../../AppStorage.sol';
 import '../../../interfaces/IWETH.sol';
 import '../../../libraries/LibUserBalance.sol';
 
-import 'hardhat/console.sol';
-
 /**
  * @author Beasley
  * @title Users call any function in Beanstalk
@@ -56,21 +54,28 @@ contract FarmFacet {
     */
 
 
-   // We distinguish payable and non-payable delegatecalls because a delegatecall with msg.value cannot be performed with a non-payable function
-    function farm(bytes calldata data) public payable {
-	DiamondStorage storage ds = diamondStorage();
-	bytes4 functionSelector;
-	assembly {
-		functionSelector := calldataload(data.offset)
-	}
-	address facet = ds.selectorToFacetAndPosition[functionSelector].facetAddress;
-	(bool success,) = address(facet).delegatecall(data);
-	require(success, "FarmFacet: Function call failed!");
+    function farm(bytes calldata data) private {
+      DiamondStorage storage ds = diamondStorage();
+	    bytes4 functionSelector;
+	    assembly {
+		    functionSelector := calldataload(data.offset)
+	    }
+	    address facet = ds.selectorToFacetAndPosition[functionSelector].facetAddress;
+	    (bool success,) = address(facet).delegatecall(data);
+	    require(success, "FarmFacet: Function call failed!");
     }
 
+
     function chainFarm(bytes[] calldata data) public payable {
-	for(uint256 i = 0; i < data.length; i++) {
-		farm(data[i]);
-	}
+      if (msg.value > 0) s.remainingEth = 2 + msg.value;
+	    for(uint256 i = 0; i < data.length; i++) {
+		    farm(data[i]);
+	    }
+      if (msg.value > 0) {
+        (bool success,) = msg.sender.call{ value: s.remainingEth - 2 }("");
+        require(success, "FarmFacet: Eth Refund Failed");
+        s.remainingEth = 1;
+      }
     }
+
 }

@@ -43,20 +43,19 @@ contract ConvertSilo {
         uint256 lp,
         LibUniswap.AddLiquidity calldata al,
         uint32[] memory crates,
-        uint256[] memory amounts
+        uint256[] memory amounts,
+        uint256 ethAmount
     )
         internal
     {
-	LibInternal.updateSilo(msg.sender);
+	      LibInternal.updateSilo(msg.sender);
         WithdrawState memory w;
         if (bean().balanceOf(address(this)) < al.beanAmount) {
             w.beansTransferred = al.beanAmount.sub(s.bean.deposited);
             bean().transferFrom(msg.sender, address(this), w.beansTransferred);
         }
-	uint256 ethDeposited;
-	(w.beansAdded, ethDeposited, w.newLP) = LibUniswap.addLiquidityETH(s.c.bean, al.beanAmount, al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1), true);
-	(bool success,) = msg.sender.call{ value: msg.value.sub(ethDeposited) }("");
-        require(success, "Market: Refund failed.");
+	      uint256 ethDeposited;
+	      (w.beansAdded, ethDeposited, w.newLP) = LibUniswap.addLiquidityETH(s.c.bean, al.beanAmount, al.minBeanAmount, al.minEthAmount, address(this), block.timestamp.add(1), true, ethAmount);
         require(w.newLP > 0, "Silo: No LP added.");
         (w.beansRemoved, w.stalkRemoved) = _withdrawBeansForConvert(crates, amounts, w.beansAdded); // w.beansRemoved is beans removed from Silo
         uint256 amountFromWallet = w.beansAdded.sub(w.beansRemoved, "Silo: Removed too many Beans.");

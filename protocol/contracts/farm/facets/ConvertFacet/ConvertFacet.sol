@@ -24,7 +24,7 @@ contract ConvertFacet is ConvertSilo {
         uint256 minLP,
         uint32[] memory crates,
         uint256[] memory amounts,
-	Storage.Settings calldata set
+	      Storage.Settings calldata set
     )
         external 
     {
@@ -45,7 +45,7 @@ contract ConvertFacet is ConvertSilo {
         uint256 minBeans,
         uint32[] memory crates,
         uint256[] memory amounts,
-	Storage.Settings calldata set
+	      Storage.Settings calldata set
     )
         external
     {
@@ -65,25 +65,27 @@ contract ConvertFacet is ConvertSilo {
         LibUniswap.AddLiquidity calldata al,
         uint32[] memory crates,
         uint256[] memory amounts,
-        LibClaim.Claim calldata claim
+        LibClaim.Claim calldata claim,
+        uint256 ethAmount
     )
         external
         payable
     {
         LibClaim.claim(claim);
-        _convertAddAndDepositLP(lp, al, crates, amounts);
+        _convertAddAndDepositLP(lp, al, crates, amounts, ethAmount);
     }
 
     function convertAddAndDepositLP(
         uint256 lp,
         LibUniswap.AddLiquidity calldata al,
         uint32[] memory crates,
-        uint256[] memory amounts
+        uint256[] memory amounts,
+        uint256 ethAmount
     )
         public
         payable
     {
-        _convertAddAndDepositLP(lp, al, crates, amounts);
+        _convertAddAndDepositLP(lp, al, crates, amounts, ethAmount);
     }
 
     function lpToPeg() external view returns (uint256 lp) {

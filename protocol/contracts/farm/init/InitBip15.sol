@@ -26,5 +26,6 @@ contract InitBip15 {
       IBean(s.c.bean).approve(BEAN_3CRV, uint256(-1));
       IERC20(LUSD).approve(BEAN_LUSD, uint256(-1));
       IERC20(THREE_CURVE).approve(BEAN_3CRV, uint256(-1));
+      s.remainingEth = 1;
   }
 }

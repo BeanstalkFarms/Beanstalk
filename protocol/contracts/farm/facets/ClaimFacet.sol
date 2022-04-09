@@ -10,6 +10,7 @@ import "../AppStorage.sol";
 import "../../libraries/LibCheck.sol";
 import "../../libraries/LibInternal.sol";
 import "../../libraries/LibClaim.sol";
+import { LibUserBalance } from '../../libraries/LibUserBalance.sol';
 
 /**
  * @author Publius
@@ -94,7 +95,7 @@ contract ClaimFacet {
     }
 
     function wrappedBeans(address user) public view returns (uint256) {
-        return s.internalTokenBalance[user][IBean(s.c.bean)];
+        return LibUserBalance._getInternalBalance(user, IBean(s.c.bean));
     }
 
     function wrapTokens(uint256 amount, address token) public payable {
@@ -104,11 +105,11 @@ contract ClaimFacet {
 
     function unwrapTokens(uint256 amount, address token) public payable returns (uint256 tokensUnwrapped) {
         if (amount == 0) return tokensUnwrapped;
-        uint256 wrapped = s.internalTokenBalance[msg.sender][IERC20(token)];
+        uint256 wrapped = LibUserBalance._getInternalBalance(msg.sender, IERC20(token));
 
         if (amount > wrapped) {
             IERC20(token).transfer(msg.sender, wrapped);
-            tokensUnwrapped = s.internalTokenBalance[msg.sender][IERC20(token)];
+            tokensUnwrapped = LibUserBalance._getInternalBalance(msg.sender, IERC20(token));
             LibUserBalance._decreaseInternalBalance(msg.sender, IERC20(token), wrapped, false);
         } else {
             IERC20(token).transfer(msg.sender, amount);
