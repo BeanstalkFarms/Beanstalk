@@ -178,7 +178,9 @@ function findIndex(ranges, x) {
 function evaluatePCHIP(f, x, amount) {
     let startIndex = findIndex(f.subIntervalIndex, x, 0 , 9)
     let endIndex = findIndex(f.subIntervalIndex, x+amount, 0, 9)
-    console.log(startIndex,endIndex)
+    console.log('index: ', startIndex,endIndex)
+    console.log('x: ', x, ', amount: ' ,amount)
+    console.log(f.subIntervalIndex)
     if(x+amount <= f.subIntervalIndex[startIndex+1]){
         return evaluateCubic(f.constants[startIndex]/Math.pow(10,f.shifts[startIndex]), f.constants[startIndex+10]/Math.pow(10,f.shifts[startIndex+10]), f.constants[startIndex+20]/Math.pow(10,f.shifts[startIndex+20]), f.constants[startIndex+30]/Math.pow(10,f.shifts[startIndex+30]), x, amount, true);
     }
@@ -205,11 +207,13 @@ function muld(x, y, decimals){
     return (x*y)/Math.pow(10,decimals);
 }
 
-// let interp1 = createInterpolant(
-//     [0,500,1000,1500,2000,2500,3000, 3500, 4000, 4500], 
-//     [1000000,900000,800000,700000,600000,500000,400000,300000,200000,100000]
-//     );
-// console.log(interp1);
+let interp1 = createInterpolant(
+    [0,500,1000,1500,2000,2500,3000, 3500, 4000, 4500], 
+    [900000,900000,800000,700000,600000,500000,400000,300000,200000,100000]
+    );
+let examplePchip = evaluateCubic(interp1, 0,900);
+
+console.log(examplePchip);
 
 module.exports = {
     createInterpolant,
