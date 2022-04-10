@@ -18,6 +18,7 @@ library LibLPSilo {
     using SafeMath for uint256;
     
     event LPDeposit(address indexed account, uint256 season, uint256 lp, uint256 seeds);
+    event LPRemove(address indexed account, uint32[] crates, uint256[] crateLP, uint256 lp);
 
     function incrementDepositedLP(uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -54,6 +55,25 @@ library LibLPSilo {
             delete s.a[account].lp.depositSeeds[id];
             return (crateAmount, crateBase);
         }
+    }
+
+    function removeLPDeposits(uint32[] calldata crates, uint256[] calldata amounts)
+        internal 
+        returns (uint256 lpRemoved, uint256 stalkRemoved, uint256 seedsRemoved)
+    {
+        for (uint256 i = 0; i < crates.length; i++) {
+            (uint256 crateBeans, uint256 crateSeeds) = LibLPSilo.removeLPDeposit(
+                msg.sender,
+                crates[i],
+                amounts[i]
+            );
+            lpRemoved = lpRemoved.add(crateBeans);
+            stalkRemoved = stalkRemoved.add(crateSeeds.mul(C.getStalkPerLPSeed()).add(
+                LibSilo.stalkReward(crateSeeds, season()-crates[i]))
+            );
+            seedsRemoved = seedsRemoved.add(crateSeeds);
+        }
+        emit LPRemove(msg.sender, crates, amounts, lpRemoved);
     }
     
     function lpDeposit(address account, uint32 id) private view returns (uint256, uint256) {

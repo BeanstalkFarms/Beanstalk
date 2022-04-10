@@ -116,7 +116,7 @@ contract TokenSilo {
         require(seasons.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         if (token == address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db)) {
 			LibInternal.updateSilo(msg.sender);
-			(uint256 beansRemoved, uint256 stalkRemoved) = removeBeanDeposits(seasons, amounts);
+			(uint256 beansRemoved, uint256 stalkRemoved) = LibBeanSilo.removeBeanDeposits(seasons, amounts);
 			addBeanWithdrawal(msg.sender, season()+s.season.withdrawSeasons, beansRemoved);
 			LibBeanSilo.decrementDepositedBeans(beansRemoved);
 			LibSilo.withdrawSiloAssets(msg.sender, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved);
@@ -128,7 +128,7 @@ contract TokenSilo {
 				uint256 lpRemoved,
 				uint256 stalkRemoved,
 				uint256 seedsRemoved
-			) = removeLPDeposits(seasons, amounts);
+			) = LibLPSilo.removeLPDeposits(seasons, amounts);
 			uint32 arrivalSeason = season() + s.season.withdrawSeasons;
 			addLPWithdrawal(msg.sender, arrivalSeason, lpRemoved);
 			LibLPSilo.decrementDepositedLP(lpRemoved);

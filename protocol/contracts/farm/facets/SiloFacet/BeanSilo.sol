@@ -25,11 +25,11 @@ contract BeanSilo is LPSilo {
     **/
 
     function totalDepositedBeans() public view returns (uint256) {
-            return s.bean.deposited;
+		return s.bean.deposited;
     }
 
     function totalWithdrawnBeans() public view returns (uint256) {
-            return s.bean.withdrawn;
+		return s.bean.withdrawn;
     }
 
     function beanDeposit(address account, uint32 id) public view returns (uint256) {
@@ -37,7 +37,7 @@ contract BeanSilo is LPSilo {
     }
 
     function beanWithdrawal(address account, uint32 i) public view returns (uint256) {
-            return s.a[account].bean.withdrawals[i];
+		return s.a[account].bean.withdrawals[i];
     }
 
     /**

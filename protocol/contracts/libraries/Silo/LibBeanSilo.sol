@@ -17,6 +17,7 @@ library LibBeanSilo {
     using SafeMath for uint256;
 
     event BeanDeposit(address indexed account, uint256 season, uint256 beans);
+    event BeanRemove(address indexed account, uint32[] crates, uint256[] crateBeans, uint256 beans);
 
     function addBeanDeposit(address account, uint32 _s, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -35,6 +36,20 @@ library LibBeanSilo {
         require(crateAmount > 0, "Silo: Crate empty.");
         s.a[account].bean.deposits[id] -= amount;
         return amount;
+    }
+
+    function removeBeanDeposits(uint32[] calldata crates, uint256[] calldata amounts)
+        internal
+        returns (uint256 beansRemoved, uint256 stalkRemoved)
+    {
+        for (uint256 i = 0; i < crates.length; i++) {
+            uint256 crateBeans = LibBeanSilo.removeBeanDeposit(msg.sender, crates[i], amounts[i]);
+            beansRemoved = beansRemoved.add(crateBeans);
+            stalkRemoved = stalkRemoved.add(crateBeans.mul(C.getStalkPerBean()).add(
+                LibSilo.stalkReward(crateBeans.mul(C.getSeedsPerBean()), season()-crates[i]))
+            );
+        }
+        emit BeanRemove(msg.sender, crates, amounts, beansRemoved);
     }
 
     function incrementDepositedBeans(uint256 amount) internal {

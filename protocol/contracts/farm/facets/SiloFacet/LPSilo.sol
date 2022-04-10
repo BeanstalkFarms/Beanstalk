@@ -26,11 +26,11 @@ contract LPSilo is UpdateSilo {
     **/
 
     function totalDepositedLP() public view returns (uint256) {
-            return s.lp.deposited;
+		return s.lp.deposited;
     }
 
     function totalWithdrawnLP() public view returns (uint256) {
-            return s.lp.withdrawn;
+		return s.lp.withdrawn;
     }
 
     function lpDeposit(address account, uint32 id) public view returns (uint256, uint256) {
