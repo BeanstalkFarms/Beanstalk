@@ -253,7 +253,7 @@ describe('Marketplace', function () {
       describe("Fill listing", async function () {
         beforeEach(async function () {
           this.interp = createInterpolant(linearSet.xs, linearSet.ys);
-          this.listing = [userAddress, '0', '0', '1000', '500000', '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]]
+          this.listing = [userAddress, '0', '0', '1000', '500000', '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]]
           await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
           this.amountBeansBuyingWith = 500;
 
@@ -328,7 +328,7 @@ describe('Marketplace', function () {
 
       describe("Fill partial listing of a partial listing multiple fills", async function () {
         beforeEach(async function () {
-         
+
           this.interp = createInterpolant(linearSet.xs, linearSet.ys);
           this.listing = [userAddress, '0', '500', '500', '500000', '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]];
           await this.marketplace.connect(user).createPodListing('0', '500', '500', '500000', '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]);
@@ -367,7 +367,7 @@ describe('Marketplace', function () {
 
       describe("Fill partial listing of a partial listing multiple fills", async function () {
         beforeEach(async function () {
-          
+
           this.interp = createInterpolant(linearSet.xs, linearSet.ys);
           this.listing = [userAddress, '0', '500', '500', '500000', '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]]
           await this.marketplace.connect(user).createPodListing('0', '500', '500', '500000', '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
@@ -406,7 +406,7 @@ describe('Marketplace', function () {
 
       describe("Fill partial listing of a listing created by partial fill", async function () {
         beforeEach(async function () {
-          
+
           this.interp = createInterpolant(linearSet.xs, linearSet.ys);
           this.listing = [userAddress, '0', '500', '500', '500000', '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]]
           await this.marketplace.connect(user).createPodListing('0', '500', '500', '500000', '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]);
@@ -722,12 +722,12 @@ describe('Marketplace', function () {
       describe("Create", async function () {
 
         describe('revert', async function () {
-          it('Reverts if price is 0', async function () {
-            let xs = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900];
-            let ys = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-            let interp = createInterpolant(xs, ys);
-            await expect(this.marketplace.connect(user2).createPodOrder('100', '0', '100000', true, [interp.subIntervalIndex.map(String), interp.constants.map(String), interp.shifts.map(String), interp.signs])).to.be.revertedWith("Marketplace: Order amount must be > 0.");
-          })
+          // it('Reverts if price is 0', async function () {
+          //   let xs = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900];
+          //   let ys = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+          //   let interp = createInterpolant(xs, ys);
+          //   await expect(this.marketplace.connect(user2).createPodOrder('100', '0', '100000', true, [interp.subIntervalIndex.map(String), interp.constants.map(String), interp.shifts.map(String), interp.signs])).to.be.revertedWith("Marketplace: Order amount must be > 0.");
+          // })
           it('Reverts if amount is 0', async function () {
             let interp = createInterpolant(linearSet.xs, linearSet.ys);
             await expect(this.marketplace.connect(user2).createPodOrder('0', '0', '100000', true, [interp.subIntervalIndex.map(String), interp.constants.map(String), interp.shifts.map(String), interp.signs])).to.be.revertedWith("Marketplace: Order amount must be > 0.");
@@ -940,9 +940,11 @@ describe('Marketplace', function () {
 
       describe("Fill", async function () {
         beforeEach(async function () {
-          this.interp = createInterpolant(linearSet.xs, linearSet.ys);
-          this.order = [userAddress, '100000', '2500', false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]];
-          this.result = await this.marketplace.connect(user).createPodOrder('50', '100000', '2500', true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs])
+          let xs = [0, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500]
+          let ys = [100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000]
+          this.interp = createInterpolant(xs, ys);
+          this.order = [userAddress, 100000, '2500', true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]];
+          this.result = await this.marketplace.connect(user).createPodOrder('500', '100000', '2500', true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs])
           this.id = await getOrderId(this.result)
         })
 
@@ -975,8 +977,8 @@ describe('Marketplace', function () {
           })
 
           it('Transfer Beans properly', async function () {
-            expect(this.user2BeanBalanceAfter.sub(this.user2BeanBalance)).to.equal('50');
-            expect(this.beanstalkBalance.sub(this.beanstalkBalanceAfter)).to.equal('50');
+            expect(this.user2BeanBalanceAfter.sub(this.user2BeanBalance)).to.equal('500');
+            expect(this.beanstalkBalance.sub(this.beanstalkBalanceAfter)).to.equal('500');
             expect(await this.claim.wrappedBeans(user2Address)).to.equal(0);
           })
 
@@ -1005,8 +1007,8 @@ describe('Marketplace', function () {
           })
 
           it('Transfer Beans properly', async function () {
-            expect(this.user2BeanBalanceAfter.sub(this.user2BeanBalance)).to.equal('25');
-            expect(this.beanstalkBalance.sub(this.beanstalkBalanceAfter)).to.equal('25');
+            expect(this.user2BeanBalanceAfter.sub(this.user2BeanBalance)).to.equal('150');
+            expect(this.beanstalkBalance.sub(this.beanstalkBalanceAfter)).to.equal('150');
             expect(await this.claim.wrappedBeans(user2Address)).to.equal(0);
           })
 
@@ -1017,7 +1019,7 @@ describe('Marketplace', function () {
           })
 
           it('Updates the offer', async function () {
-            expect(await this.marketplace.podOrderById(this.id)).to.equal('250');
+            expect(await this.marketplace.podOrderById(this.id)).to.equal('350');
           })
 
           it('Emits an event', async function () {
@@ -1037,7 +1039,7 @@ describe('Marketplace', function () {
           it('Transfer Beans properly', async function () {
             expect(this.user2BeanBalanceAfter.sub(this.user2BeanBalance)).to.equal(0);
             expect(this.beanstalkBalance.sub(this.beanstalkBalanceAfter)).to.equal(0);
-            expect(await this.claim.wrappedBeans(user2Address)).to.equal('50');
+            expect(await this.claim.wrappedBeans(user2Address)).to.equal('500');
           })
 
           it('transfer the plot', async function () {
@@ -1058,7 +1060,7 @@ describe('Marketplace', function () {
         describe("Full order with active listing", async function () {
           beforeEach(async function () {
             this.interp = createInterpolant(linearSet.xs, linearSet.ys);
-            await this.marketplace.connect(user2).createPodListing('1000', '500', '500', '50000', '5000', false, false, this.interp);
+            await this.marketplace.connect(user2).createPodListing('1000', '500', '500', '50000', '5000', false, false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
             this.beanstalkBalance = await this.bean.balanceOf(this.marketplace.address)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
             this.result = await this.marketplace.connect(user2).fillPodOrder(this.order, 1000, 0, 500, false);
@@ -1069,7 +1071,7 @@ describe('Marketplace', function () {
           it('Transfer Beans properly', async function () {
             expect(this.user2BeanBalanceAfter.sub(this.user2BeanBalance)).to.equal(0);
             expect(this.beanstalkBalance.sub(this.beanstalkBalanceAfter)).to.equal(0);
-            expect(await this.claim.wrappedBeans(user2Address)).to.equal('50');
+            expect(await this.claim.wrappedBeans(user2Address)).to.equal('500');
           })
 
           it('transfer the plot', async function () {
@@ -1105,7 +1107,7 @@ describe('Marketplace', function () {
           it('Transfer Beans properly', async function () {
             expect(this.user2BeanBalanceAfter.sub(this.user2BeanBalance)).to.equal(0);
             expect(this.beanstalkBalance.sub(this.beanstalkBalanceAfter)).to.equal(0);
-            expect(await this.claim.wrappedBeans(user2Address)).to.equal('50');
+            expect(await this.claim.wrappedBeans(user2Address)).to.equal('500');
           })
 
           it('transfer the plot', async function () {
@@ -1137,7 +1139,7 @@ describe('Marketplace', function () {
           it('Transfer Beans properly', async function () {
             expect(this.user2BeanBalanceAfter.sub(this.user2BeanBalance)).to.equal(0);
             expect(this.beanstalkBalance.sub(this.beanstalkBalanceAfter)).to.equal(0);
-            expect(await this.claim.wrappedBeans(user2Address)).to.equal('50');
+            expect(await this.claim.wrappedBeans(user2Address)).to.equal('500');
           })
 
           it('transfer the plot', async function () {
@@ -1164,7 +1166,7 @@ describe('Marketplace', function () {
       describe("Cancel", async function () {
         beforeEach(async function () {
           this.interp = createInterpolant(linearSet.xs, linearSet.ys);
-          this.result = await this.marketplace.connect(user).createPodOrder('500', '100000', '1000', false, this.interp)
+          this.result = await this.marketplace.connect(user).createPodOrder('500', '100000', '1000', false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs])
           this.id = await getOrderId(this.result)
           this.orderIds.push(this.id)
         })
@@ -1173,7 +1175,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancelPodOrder('100000', '1000', false, true, this.interp);
+            this.result = await this.marketplace.connect(user).cancelPodOrder('100000', '1000', false, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -1197,7 +1199,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancelPodOrder('100000', '1000', false, false, this.interp);
+            this.result = await this.marketplace.connect(user).cancelPodOrder('100000', '1000', false, false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })

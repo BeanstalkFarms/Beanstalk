@@ -203,7 +203,7 @@ contract Listing is PodTransfer {
         PiecewiseCubic calldata f,
         uint256 x,
         uint256 i
-    ) internal pure returns (uint256 pricePerPod) {
+    ) internal view returns (uint256 pricePerPod) {
         pricePerPod = LibMathFP.evaluateCubic(
             [f.signs[i], f.signs[i + 10], f.signs[i + 20], f.signs[i + 30]],
             [f.shifts[i], f.shifts[i + 10], f.shifts[i + 20], f.shifts[i + 30]],

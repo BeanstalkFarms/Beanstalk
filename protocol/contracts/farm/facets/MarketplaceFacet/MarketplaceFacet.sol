@@ -42,10 +42,6 @@ contract MarketplaceFacet is Order {
         );
     }
 
-    // function createDynamicPodListing(uint256 index, uint256 start, uint256 amount, uint256 maxHarvestableIndex, bool toWallet, PiecewiseCubic calldata f) external {
-    //     _createDynamicPodListing(index, start, amount, maxHarvestableIndex, toWallet, f);
-    // }
-
     // Fill
     function fillPodListing(Listing calldata l, uint256 beanAmount) external {
         LibMarket.transferBeans(l.account, beanAmount, l.toWallet);
@@ -114,11 +110,6 @@ contract MarketplaceFacet is Order {
             );
     }
 
-    // function createDynamicPodOrder(uint256 beanAmount, uint256 maxPlaceInLine, PiecewiseCubic calldata f) external returns (bytes32 id) {
-    //     bean().transferFrom(msg.sender, address(this), beanAmount);
-    //     return _createDynamicPodOrder(beanAmount, maxPlaceInLine, f);
-    // }
-
     function claimAndCreatePodOrder(
         uint256 beanAmount,
         uint24 pricePerPod,
@@ -136,11 +127,6 @@ contract MarketplaceFacet is Order {
             f
         );
     }
-
-    // function claimAndCreateDynamicPodOrder(uint256 beanAmount, uint232 maxPlaceInLine, PiecewiseCubic calldata f, LibClaim.Claim calldata claim) external returns (bytes32 id) {
-    //     allocateBeans(claim, beanAmount, address(this));
-    //     id = _createDynamicPodOrder(beanAmount, maxPlaceInLine, f);
-    // }
 
     function buyBeansAndCreatePodOrder(
         uint256 beanAmount,
