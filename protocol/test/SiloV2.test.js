@@ -1393,9 +1393,10 @@ describe("Silo", function () {
     });
 
     it("properly withdraws beans", async function () {
+	  console.log(await this.BeanSilo.totalDepositedBeans());
       await this.silo2
         .connect(user)
-        .withdrawTokenBySeason(this.bean.address, 3, "1000");
+        .withdrawTokenBySeasons(this.bean.address, [3], [1000]);
       expect(await this.BeanSilo.totalDepositedBeans()).to.eq("0");
     });
   });

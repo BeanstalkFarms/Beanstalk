@@ -7,6 +7,8 @@ pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../LibAppStorage.sol";
+import "../../C.sol";
+import "./LibSilo.sol";
 
 /**
  * @author Publius
@@ -18,6 +20,7 @@ library LibBeanSilo {
 
     event BeanDeposit(address indexed account, uint256 season, uint256 beans);
     event BeanRemove(address indexed account, uint32[] crates, uint256[] crateBeans, uint256 beans);
+    event BeanWithdraw(address indexed account, uint256 season, uint256 beans);
 
     function addBeanDeposit(address account, uint32 _s, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -42,14 +45,22 @@ library LibBeanSilo {
         internal
         returns (uint256 beansRemoved, uint256 stalkRemoved)
     {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         for (uint256 i = 0; i < crates.length; i++) {
             uint256 crateBeans = LibBeanSilo.removeBeanDeposit(msg.sender, crates[i], amounts[i]);
             beansRemoved = beansRemoved.add(crateBeans);
             stalkRemoved = stalkRemoved.add(crateBeans.mul(C.getStalkPerBean()).add(
-                LibSilo.stalkReward(crateBeans.mul(C.getSeedsPerBean()), season()-crates[i]))
+                LibSilo.stalkReward(crateBeans.mul(C.getSeedsPerBean()), s.season.current-crates[i]))
             );
         }
         emit BeanRemove(msg.sender, crates, amounts, beansRemoved);
+    }
+
+    function addBeanWithdrawal(address account, uint32 arrivalSeason, uint256 amount) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.a[account].bean.withdrawals[arrivalSeason] = s.a[account].bean.withdrawals[arrivalSeason].add(amount);
+        s.bean.withdrawn = s.bean.withdrawn.add(amount);
+        emit BeanWithdraw(msg.sender, arrivalSeason, amount);
     }
 
     function incrementDepositedBeans(uint256 amount) internal {

@@ -8,6 +8,8 @@ pragma experimental ABIEncoderV2;
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "../LibAppStorage.sol";
+import "../../C.sol";
+import "./LibSilo.sol";
 
 /**
  * @author Publius
@@ -19,6 +21,7 @@ library LibLPSilo {
     
     event LPDeposit(address indexed account, uint256 season, uint256 lp, uint256 seeds);
     event LPRemove(address indexed account, uint32[] crates, uint256[] crateLP, uint256 lp);
+    event LPWithdraw(address indexed account, uint256 season, uint256 lp);
 
     function incrementDepositedLP(uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -61,19 +64,27 @@ library LibLPSilo {
         internal 
         returns (uint256 lpRemoved, uint256 stalkRemoved, uint256 seedsRemoved)
     {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         for (uint256 i = 0; i < crates.length; i++) {
-            (uint256 crateBeans, uint256 crateSeeds) = LibLPSilo.removeLPDeposit(
+            (uint256 crateBeans, uint256 crateSeeds) = removeLPDeposit(
                 msg.sender,
                 crates[i],
                 amounts[i]
             );
             lpRemoved = lpRemoved.add(crateBeans);
             stalkRemoved = stalkRemoved.add(crateSeeds.mul(C.getStalkPerLPSeed()).add(
-                LibSilo.stalkReward(crateSeeds, season()-crates[i]))
+                LibSilo.stalkReward(crateSeeds, s.season.current-crates[i]))
             );
             seedsRemoved = seedsRemoved.add(crateSeeds);
         }
         emit LPRemove(msg.sender, crates, amounts, lpRemoved);
+    }
+
+    function addLPWithdrawal(address account, uint32 arrivalSeason, uint256 amount) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.a[account].lp.withdrawals[arrivalSeason] = s.a[account].lp.withdrawals[arrivalSeason].add(amount);
+        s.lp.withdrawn = s.lp.withdrawn.add(amount);
+        emit LPWithdraw(msg.sender, arrivalSeason, amount);
     }
     
     function lpDeposit(address account, uint32 id) private view returns (uint256, uint256) {
