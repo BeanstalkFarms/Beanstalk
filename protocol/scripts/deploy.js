@@ -1,7 +1,7 @@
 const MAX_INT = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
 
 const diamond = require('./diamond.js')
-const { impersonateCurve } = require('./impersonate.js')
+const { impersonateCurve, impersonateBean, impersonateRouter, impersonatePool } = require('./impersonate.js')
 function addCommas(nStr) {
   nStr += ''
   const x = nStr.split('.')
@@ -22,6 +22,13 @@ async function main(scriptName, verbose = true, mock = false) {
   if (verbose) {
     console.log('SCRIPT NAME: ', scriptName)
     console.log('MOCKS ENABLED: ', mock)
+  }
+
+  if (mock) {
+    await network.provider.request({
+      method: "hardhat_reset",
+      params: [],
+    });
   }
 
   const accounts = await ethers.getSigners()
@@ -89,7 +96,7 @@ async function main(scriptName, verbose = true, mock = false) {
     fieldFacet,
     siloFacet,
     siloV2Facet,
-    curveBDVFacet,
+    bdvFacet,
     governanceFacet,
     claimFacet,
     marketplaceFacet,
@@ -102,7 +109,7 @@ async function main(scriptName, verbose = true, mock = false) {
       'MockFieldFacet',
       'MockSiloFacet',
       'MockSiloV2Facet',
-      'CurveBDVFacet',
+      'BDVFacet',
       'MockGovernanceFacet',
       'MockClaimFacet',
       'MockMarketplaceFacet',
@@ -123,7 +130,7 @@ async function main(scriptName, verbose = true, mock = false) {
       'FieldFacet',
       'SiloFacet',
       'SiloV2Facet',
-      'CurveBDVFacet',
+      'BDVFacet',
       'GovernanceFacet',
       'ClaimFacet',
       'MarketplaceFacet',
@@ -144,9 +151,9 @@ async function main(scriptName, verbose = true, mock = false) {
   let args = []
   if (mock) {
     await impersonateCurve()
-    const MockUniswapV2Router = await ethers.getContractFactory("MockUniswapV2Router");
-    mockRouter = await MockUniswapV2Router.deploy();
-    args.push(mockRouter.address)
+    args.push(await impersonateBean())
+    args.push(await impersonatePool())
+    args.push(await impersonateRouter())
   }
 
   const [beanstalkDiamond, diamondCut] = await diamond.deploy({
@@ -158,7 +165,7 @@ async function main(scriptName, verbose = true, mock = false) {
       ['FieldFacet', fieldFacet],
       ['SiloFacet', siloFacet],
       ['SiloV2Facet', siloV2Facet],
-      ['CurveBDVFacet', curveBDVFacet],
+      ['BDVFacet', bdvFacet],
       ['GovernanceFacet', governanceFacet],
       ['ClaimFacet', claimFacet],
       ['MarketplaceFacet', marketplaceFacet],

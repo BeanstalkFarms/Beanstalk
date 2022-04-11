@@ -1,5 +1,11 @@
+/*
+ SPDX-License-Identifier: MIT
+*/
 
-contract MockBean3Curve {
+pragma solidity ^0.7.6;
+pragma experimental ABIEncoderV2;
+
+contract MockMeta3Curve {
     uint256 a;
     uint256[2] balances;
     uint256[2] previousBalances;
@@ -17,9 +23,11 @@ contract MockBean3Curve {
     function A_precise() external view returns (uint256) {
         return a;
     }
+    
     function get_balances() external view returns (uint256[2] memory) {
         return balances;
     }
+
     function totalSupply() external view returns (uint256) {
         return supply;
     }

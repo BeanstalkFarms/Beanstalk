@@ -13,6 +13,7 @@ import "../../../libraries/Silo/LibLPSilo.sol";
 import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibMarket.sol";
 import "../../../C.sol";
+import "../../../libraries/LibBeanEthUniswap.sol";
 
 /**
  * @author Publius
@@ -61,13 +62,13 @@ contract ConvertSilo is ReentrancyGuard {
             LibMarket.allocateBeans(transferAmount);
         }
 
-        w.i = w.stalkRemoved.div(LibLPSilo.lpToLPBeans(lp.add(w.newLP)), "Silo: No LP Beans.");
+        w.i = w.stalkRemoved.div(LibBeanEthUniswap.lpToLPBeans(lp.add(w.newLP)), "Silo: No LP Beans.");
         uint32 depositSeason = season().sub(uint32(w.i.div(C.getSeedsPerLPBean())));
 
         if (lp > 0) pair().transferFrom(msg.sender, address(this), lp);
 	
         lp = lp.add(w.newLP);
-        _depositLP(lp, LibLPSilo.lpToLPBeans(lp), depositSeason);
+        _depositLP(lp, LibBeanEthUniswap.lpToLPBeans(lp), depositSeason);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
         LibMarket.refund();
         LibCheck.balanceCheck();
