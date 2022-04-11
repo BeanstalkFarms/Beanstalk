@@ -61,9 +61,10 @@ contract BeanDibbler is ReentrancyGuard{
      * Internal
     **/
 
-    function _sowBeans(uint256 amount) internal returns (uint256 pods) {
+    function _sowBeans(uint256 amount, bool fromWallet) internal returns (uint256 pods) {
         pods = LibDibbler.sow(amount, msg.sender);
-        bean().burn(amount);
+        if (fromWallet) bean().burnFrom(msg.sender, amount);
+        else bean().burn(amount);
         LibCheck.beanBalanceCheck();
     }
 

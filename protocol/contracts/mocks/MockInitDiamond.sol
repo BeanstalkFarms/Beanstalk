@@ -38,16 +38,16 @@ contract MockInitDiamond {
         IWETH(s.c.weth).approve(mockRouter, uint256(-1));
         IBean(bean).approve(C.curveMetapoolAddress(), uint256(-1));
 
-         s.cases = [
-           // Dsc, Sdy, Inc, nul
-          int8(3),   1,   0,   0,  // Exs Low: P < 1
-               -1,  -3,  -3,   0,  //          P > 1
-                3,   1,   0,   0,  // Rea Low: P < 1
-               -1,  -3,  -3,   0,  //          P > 1
-                3,   3,   1,   0,  // Rea Hgh: P < 1
-                0,  -1,  -3,   0,  //          P > 1
-                3,   3,   1,   0,  // Exs Hgh: P < 1
-                0,  -1,  -3,   0   //          P > 1
+        s.cases = s.cases = [
+        // Dsc, Sdy, Inc, nul
+       int8(3),   1,   0,   0,  // Exs Low: P < 1
+            -1,  -3,  -3,   0,  //          P > 1
+             3,   1,   0,   0,  // Rea Low: P < 1
+            -1,  -3,  -3,   0,  //          P > 1
+             3,   3,   1,   0,  // Rea Hgh: P < 1
+             0,  -1,  -3,   0,  //          P > 1
+             3,   3,   1,   0,  // Exs Hgh: P < 1
+             0,  -1,  -3,   0   //          P > 1
         ];
         s.w.yield = 1;
     

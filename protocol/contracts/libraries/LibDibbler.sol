@@ -29,7 +29,8 @@ library LibDibbler {
 
     function sow(uint256 amount, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.f.soil = s.f.soil.sub(amount, "Field: Not enough outstanding Soil.");
+        // We can assume amount <= soil from getSowAmount
+        s.f.soil = s.f.soil - amount; 
         return sowNoSoil(amount, account);
     }
 
@@ -56,31 +57,7 @@ library LibDibbler {
 
     function saveSowTime() private {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 totalBeanSupply = IBean(s.c.bean).totalSupply();
-        uint256 soil = s.f.soil;
-        if (soil >= totalBeanSupply.div(C.getComplexWeatherDenominator())) return;
-
-        uint256 sowTime = block.timestamp.sub(s.season.timestamp);
-        s.w.nextSowTime = uint32(sowTime);
-        if (!s.w.didSowBelowMin) s.w.didSowBelowMin = true;
-
-        if (s.w.didSowFaster ||
-            s.w.lastSowTime == type(uint32).max ||
-            s.w.lastDSoil == 0
-        ) return;
-
-        uint256 soilPercent = soil.mul(1e18).div(totalBeanSupply);
-        if (soilPercent <= C.getUpperBoundPodRate().mul(s.w.lastSoilPercent).asUint256()) {
-            uint256 deltaSoil = s.w.startSoil.sub(soil);
-            if (Decimal.ratio(deltaSoil, s.w.lastDSoil).greaterThan(C.getLowerBoundDPD())) {
-                uint256 fasterTime =
-                    s.w.lastSowTime > C.getSteadySowTime() ?
-                    s.w.lastSowTime.sub(C.getSteadySowTime()) :
-                    0;
-                if (sowTime < fasterTime) s.w.didSowFaster = true;
-                else s.w.lastSowTime = type(uint32).max;
-            }
-        }
+        if (s.f.soil > 1e6 || s.w.nextSowTime < type(uint32).max) return;
+        s.w.nextSowTime = uint32(block.timestamp.sub(s.season.timestamp));
     }
-
 }

@@ -65,59 +65,66 @@ contract Weather is Silo {
             return;
         }
 
+        // Calculate Pod Rate
         Decimal.D256 memory podRate = Decimal.ratio(
             s.f.pods.sub(s.f.harvestable),
             bean().totalSupply()
         );
 
+        // Calculate Delta Soil Demand
         uint256 dsoil = s.w.startSoil.sub(endSoil);
 
         Decimal.D256 memory deltaPodDemand;
-        uint256 lastDSoil = s.w.lastDSoil;
-        if (dsoil == 0) deltaPodDemand = Decimal.zero();
-        else if (lastDSoil == 0) deltaPodDemand = Decimal.from(1e18);
-        else deltaPodDemand = Decimal.ratio(dsoil, lastDSoil);
 
+        // If Sow'd all Soil
+        if (s.w.nextSowTime < type(uint32).max) {
+            if (
+                s.w.lastSowTime == type(uint32).max || // Didn't Sow all last Season
+                s.w.nextSowTime < 300 || // Sow'd all instantly this Season
+                (
+                    s.w.lastSowTime > C.getSteadySowTime()
+                    &&
+                    s.w.nextSowTime < s.w.lastSowTime.sub(C.getSteadySowTime()) // Sow'd all faster
+                )
+            ) 
+                deltaPodDemand = Decimal.from(1e18);
+            else if (s.w.nextSowTime <= s.w.lastSowTime.add(C.getSteadySowTime())) // Sow'd all in same time
+                deltaPodDemand = Decimal.one();
+            else 
+                deltaPodDemand = Decimal.zero();
+            s.w.lastSowTime = s.w.nextSowTime;
+            s.w.nextSowTime = type(uint32).max;
+        // If soil didn't sell out
+        } else {
+            uint256 lastDSoil = s.w.lastDSoil;
+            if (dsoil == 0) deltaPodDemand = Decimal.zero(); // If no one sow'd
+            else if (lastDSoil == 0) deltaPodDemand = Decimal.from(1e18); // If no one sow'd last Season
+            else deltaPodDemand = Decimal.ratio(dsoil, lastDSoil);
+            if (s.w.lastSowTime != type(uint32).max) s.w.lastSowTime = type(uint32).max;
+        }
+
+        // Calculate Weather Case
         uint8 caseId = 0;
+
+        // Evaluate Pod Rate
         if (podRate.greaterThanOrEqualTo(C.getUpperBoundPodRate())) caseId = 24;
         else if (podRate.greaterThanOrEqualTo(C.getOptimalPodRate())) caseId = 16;
         else if (podRate.greaterThanOrEqualTo(C.getLowerBoundPodRate())) caseId = 8;
 
+        // Evaluate Price
         if (
             int_price > 1e18 || (int_price == 1e18 &&
-            podRate.lessThan(C.getOptimalPodRate()))
-        ) {
-            caseId += 4;
-        }
+            podRate.lessThanOrEqualTo(C.getOptimalPodRate()))
+        ) caseId += 4;
 
-        if (deltaPodDemand.greaterThanOrEqualTo(C.getUpperBoundDPD())) {
-            caseId += 2;
-        } else if (deltaPodDemand.greaterThanOrEqualTo(C.getLowerBoundDPD())) {
-            if (s.w.lastSowTime == type(uint32).max || !s.w.didSowBelowMin) {
-                caseId += 1;
-            }
-            else if (s.w.didSowFaster) {
-                caseId += 2;
-                s.w.didSowFaster = false;
-            }
-        }
+        // Evaluate Delta Soil Demand
+        if (deltaPodDemand.greaterThanOrEqualTo(C.getUpperBoundDPD())) caseId += 2;
+        else if (deltaPodDemand.greaterThanOrEqualTo(C.getLowerBoundDPD())) caseId += 1;
+        
         s.w.lastDSoil = dsoil;
-        handleExtremeWeather(endSoil);
+
         changeWeather(caseId);
         handleRain(caseId);
-    }
-
-    function handleExtremeWeather(uint256 endSoil) private {
-        if (s.w.didSowBelowMin) {
-            s.w.didSowBelowMin = false;
-            uint256 lsp = endSoil.mul(1e18).div(bean().totalSupply());
-            s.w.lastSoilPercent = lsp < type(uint96).max ? uint96(lsp) : type(uint96).max;
-            s.w.lastSowTime = s.w.nextSowTime;
-            s.w.nextSowTime = type(uint32).max;
-        }
-        else if (s.w.lastSowTime != type(uint32).max) {
-            s.w.lastSowTime = type(uint32).max;
-        }
     }
 
     function changeWeather(uint256 caseId) private {

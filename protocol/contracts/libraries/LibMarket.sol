@@ -77,6 +77,16 @@ library LibMarket {
         return beanAmount;
     }
 
+    function buyAndSow(uint256 buyBeanAmount, uint256 buyEthAmount) internal returns (uint256 amount) {
+        if (buyBeanAmount == 0) {
+            allocateEthRefund(msg.value, 0, false);
+            return 0;
+        }
+        (uint256 ethAmount, uint256 beanAmount) = _buyExactTokensWETH(buyBeanAmount, buyEthAmount, address(this));
+        allocateEthRefund(msg.value, ethAmount, false);
+        amount = beanAmount;
+    }
+
     function sellToWETH(uint256 sellBeanAmount, uint256 minBuyEthAmount)
         internal
         returns (uint256 amount)
@@ -275,6 +285,26 @@ library LibMarket {
         return (amounts[0], amounts[1]);
     }
 
+    function _buyExactTokensWETH(uint256 beanAmount, uint256 ethAmount, address to)
+        private
+        returns (uint256 inAmount, uint256 outAmount)
+    {
+        DiamondStorage storage ds = diamondStorage();
+        address[] memory path = new address[](2);
+        path[0] = ds.weth;
+        path[1] = ds.bean;
+        IWETH(ds.weth).deposit{value: ethAmount}();
+        uint[] memory amounts = IUniswapV2Router02(ds.router).swapTokensForExactTokens(
+            beanAmount,
+            ethAmount,
+            path,
+            to,
+            block.timestamp
+        );
+        IWETH(ds.weth).withdraw(ethAmount-amounts[0]);
+        return (amounts[0], amounts[1]);
+    }
+
     function _buyWithWETH(uint256 beanAmount, uint256 ethAmount, address to)
         internal
         returns (uint256 inAmount, uint256 outAmount)
@@ -409,6 +439,7 @@ library LibMarket {
         // If Refund state = 1 -> No refund
         // If Refund state is even -> Refund Beans
         // if Refund state > 2 -> Refund Eth
+
         uint256 rs = s.refundStatus;
         if(rs > 1) {
             if (rs > 2) {
