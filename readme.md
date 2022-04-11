@@ -1,6 +1,10 @@
 # Beanstalk
 Beanstalk is a decentralized credit based algorithmic stablecoin protocol that is built on Ethereum.
 
+## Techincal Documentation
+Technical documentation is a WIP. Current Draft is available here:
+https://gist.github.com/leonardo-fibonacci/268bb316c4c5ac08bcbc431927998a51
+
 ## Contracts
 
 |Contract                  | Addresss 
@@ -29,7 +33,7 @@ The following are the different facets Beanstalk uses:
 |Budget      |[0x6c90e5ce27461e31b8954dfa2bc5101507751df6](https://etherscan.io/address/0x6c90e5ce27461e31b8954dfa2bc5101507751df6)|
 |Claim       |[0x024a129bb564da019aca23b41891329eadd233d8](https://etherscan.io/address/0x024a129bb564da019aca23b41891329eadd233d8)|
 |Convert     |[0x649d4b21278a1771c0b196614e2c21b4c73fe801](https://etherscan.io/address/0x649d4b21278a1771c0b196614e2c21b4c73fe801)|
-|CurveBDV    |[0x8e0dc2f6e8fb8712bc1e3c411609e581077cd1d6](https://etherscan.io/address/0x8e0dc2f6e8fb8712bc1e3c411609e581077cd1d6)|
+|BDV         |[0x33b63042865242739bA410aC32AB68723E6CF4b9](https://etherscan.io/address/0x33b63042865242739bA410aC32AB68723E6CF4b9)|
 |Field       |[0x656b50740cbf6616d6324e3ccc9a96147fa04fb6](https://etherscan.io/address/0x656b50740cbf6616d6324e3ccc9a96147fa04fb6)|
 |Fundraiser  |[0x19c0674071d068be6c0b3900629618738bd137dc](https://etherscan.io/address/0x19c0674071d068be6c0b3900629618738bd137dc)|
 |Governance  |[0xf480ee81a54e21be47aa02d0f9e29985bc7667c4](https://etherscan.io/address/0xf480ee81a54e21be47aa02d0f9e29985bc7667c4)|
@@ -157,7 +161,7 @@ of beanstalk that you upgraded.
 
 
 ## Versions
-Code Version: `1.9.1` <br>
+Code Version: `1.16.0` <br>
 Whitepaper Version `1.9.3`
 
 ## License
