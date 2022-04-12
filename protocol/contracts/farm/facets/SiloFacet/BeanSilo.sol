@@ -18,15 +18,15 @@ contract BeanSilo is LPSilo {
 
     event BeanDeposit(address indexed account, uint256 season, uint256 beans);
     event BeanRemove(address indexed account, uint32[] crates, uint256[] crateBeans, uint256 beans);
-    event BeanWithdraw(address indexed account, uint256 season, uint256 beans);
+	event BeanWithdraw(address indexed account, uint256 season, uint256 beans);
 
-    /**
-     * Getters
-    **/
+	/**
+	 * Getters
+	 **/
 
-    function totalDepositedBeans() public view returns (uint256) {
+	function totalDepositedBeans() public view returns (uint256) {
 		return s.bean.deposited;
-    }
+	}
 
     function totalWithdrawnBeans() public view returns (uint256) {
 		return s.bean.withdrawn;
