@@ -25,7 +25,7 @@ contract TokenSilo {
     
 	event Deposit(address indexed account, address indexed token, uint256 season, uint256 amount, uint256 bdv);
     event RemoveSeasons(address indexed account, address indexed token, uint32[] seasons, uint256[] amounts, uint256 amount);
-    event ReoveSeason(address indexed account, address indexed token, uint32 season, uint256 amount);
+    event RemoveSeason(address indexed account, address indexed token, uint32 season, uint256 amount);
     event Withdraw(address indexed account, address indexed token, uint32 season, uint256 amount);
     event ClaimSeasons(address indexed account, address indexed token, uint32[] seasons, uint256 amount);
     event ClaimSeason(address indexed account, address indexed token, uint32 season, uint256 amount);
@@ -114,7 +114,6 @@ contract TokenSilo {
         if (token == address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db)) {
 			LibInternal.updateSilo(msg.sender);
 			(uint256 beansRemoved, uint256 stalkRemoved) = LibBeanSilo.removeBeanDeposits(seasons, amounts);
-			addBeanWithdrawal(msg.sender, season()+s.season.withdrawSeasons, beansRemoved);
 			LibBeanSilo.addBeanWithdrawal(msg.sender, _season()+s.season.withdrawSeasons, beansRemoved);
 			LibBeanSilo.decrementDepositedBeans(beansRemoved);
 			LibSilo.withdrawSiloAssets(msg.sender, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved);
@@ -127,8 +126,6 @@ contract TokenSilo {
 				uint256 stalkRemoved,
 				uint256 seedsRemoved
 			) = LibLPSilo.removeLPDeposits(seasons, amounts);
-			uint32 arrivalSeason = season() + s.season.withdrawSeasons;
-			addLPWithdrawal(msg.sender, arrivalSeason, lpRemoved);
 			uint32 arrivalSeason = _season() + s.season.withdrawSeasons;
 			LibLPSilo.addLPWithdrawal(msg.sender, arrivalSeason, lpRemoved);
 			LibLPSilo.decrementDepositedLP(lpRemoved);
