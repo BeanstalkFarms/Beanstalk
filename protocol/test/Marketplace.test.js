@@ -92,6 +92,11 @@ describe('Marketplace', function () {
     ys: [500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000]
   }
 
+  const polySet = {
+    xs: [0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500],
+    ys: [800000, 500000, 500000, 460000, 400000, 370000, 350000, 300000, 250000, 250000]
+  }
+
   beforeEach(async function () {
     await resetState();
     await this.marketplace.deleteOrders(this.orderIds);
@@ -124,11 +129,11 @@ describe('Marketplace', function () {
         await expect(this.marketplace.connect(user2).createPodListing('1000', '500', '1000', 0, '0', true, false, [interp.subIntervalIndex.map(String), interp.constants.map(String), interp.shifts.map(String), interp.signs.map(String)])).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
       })
 
-      describe("List full plot", async function () {
+      describe("List full polynomial plot", async function () {
         beforeEach(async function () {
 
-          let interp = createInterpolant(linearSet.xs, linearSet.ys);
-          this.result = await this.marketplace.connect(user).createPodListing('0', '0', '1000', 0, '0', true, false, [interp.subIntervalIndex.map(String), interp.constants.map(String), interp.shifts, interp.signs]);
+          this.interp = createInterpolant(polySet.xs, polySet.ys);
+          this.result = await this.marketplace.connect(user).createPodListing('0', '0', '1000', 0, '0', true, false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
 
         })
 
@@ -137,14 +142,44 @@ describe('Marketplace', function () {
         })
 
         it('emits event', async function () {
-          let interp = createInterpolant(linearSet.xs, linearSet.ys);
-          await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 0, '1000', 0, 0, true, false, interp.subIntervalIndex.map(String), interp.constants.map(String), interp.shifts, interp.signs);
+          await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 0, '1000', 0, 0, true, false, this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs);
+        })
+      })
+
+      describe("List full plot", async function () {
+        beforeEach(async function () {
+          this.interp = createInterpolant(linearSet.xs, linearSet.ys);
+          this.result = await this.marketplace.connect(user).createPodListing('0', '0', '1000', 0, '0', true, false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
+
+        })
+
+        it('Lists Plot properly', async function () {
+          expect(await this.marketplace.podListing(0)).to.be.equal(await getHash(this.result));
+        })
+
+        it('emits event', async function () {
+          await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 0, '1000', 0, 0, true, false, this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs);
         })
       })
 
       describe("List partial plot", async function () {
         beforeEach(async function () {
           this.interp = createInterpolant(linearSet.xs, linearSet.ys);
+          this.result = await this.marketplace.connect(user).createPodListing('0', '0', '500', 0, '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
+        })
+
+        it('Lists Plot properly', async function () {
+          expect(await this.marketplace.podListing(0)).to.be.equal(await getHash(this.result));
+        })
+
+        it('Emits event', async function () {
+          await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 0, '500', 0, 0, true, true, this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs);
+        })
+      })
+
+      describe("List partial polynomial plot", async function () {
+        beforeEach(async function () {
+          this.interp = createInterpolant(polySet.xs, polySet.ys);
           this.result = await this.marketplace.connect(user).createPodListing('0', '0', '500', 0, '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
         })
 
@@ -282,6 +317,42 @@ describe('Marketplace', function () {
         })
 
         it('emits event (dynamic)', async function () {
+          await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '1000');
+        })
+      })
+
+      describe("Fill poly listing", async function () {
+        beforeEach(async function () {
+          this.interp = createInterpolant(polySet.xs, polySet.ys);
+          this.listing = [userAddress, '0', '0', '1000', '500000', '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]]
+          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
+          this.amountBeansBuyingWith = 468;
+
+          this.userBeanBalance = await this.bean.balanceOf(userAddress)
+          this.user2BeanBalance = await this.bean.balanceOf(user2Address)
+
+          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, this.amountBeansBuyingWith);
+
+          this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
+          this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+        })
+
+        it('Transfer Beans properly', async function () {
+          expect(this.user2BeanBalance.sub(this.user2BeanBalanceAfter)).to.equal(this.amountBeansBuyingWith);
+          expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal(this.amountBeansBuyingWith);
+          expect(await this.claim.wrappedBeans(userAddress)).to.equal(0);
+        })
+
+        it('Deletes Pod Listing', async function () {
+          expect(await this.marketplace.podListing(0)).to.equal(ZERO_HASH);
+        })
+
+        it('transfer pod listing', async function () {
+          expect((await this.field.plot(user2Address, 0)).toString()).to.equal('1000');
+          expect((await this.field.plot(userAddress, 0)).toString()).to.equal('0');
+        })
+
+        it('emits event', async function () {
           await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '1000');
         })
       })

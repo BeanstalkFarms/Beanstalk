@@ -58,12 +58,7 @@ library LibMathFP {
     ) internal view returns (uint256) {
         uint256 y;
         uint256 yMinus;
-        // if (!sign[0] && !sign[1] && !sign[2] && !sign[3]) {
-        //     return 0;
-        // }
-        // if (x == 0) {
-        //     return 0;
-        // }
+
         for (uint8 i = 0; i < 4; i++) {
             if (integrateInstead) {
                 //if integrate instead is selected, the polynomial is evaluated using polynomial integration rules
@@ -109,14 +104,8 @@ library LibMathFP {
                 }
             }
         }
-        console.log("y", y);
-        console.log("yMinus", yMinus);
-        if (y > yMinus) {
-            return y.sub(yMinus);
-        } else {
-            // return yMinus.sub(y);
-            return 0;
-        }
+
+        return y.sub(yMinus);
     }
 
     //returns '1' in FP representation

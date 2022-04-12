@@ -38,16 +38,6 @@ contract Listing is PodTransfer {
         PiecewiseCubic f;
     }
 
-    // struct DynamicListing {
-    //     address account;
-    //     uint256 index;
-    //     uint256 start;
-    //     uint256 amount;
-    //     uint256 maxHarvestableIndex;
-    //     bool toWallet;
-    //     PiecewiseCubic f;
-    // }
-
     event PodListingCreated(
         address indexed account,
         uint256 index,
@@ -186,7 +176,9 @@ contract Listing is PodTransfer {
                 l.index + l.start + l.amount - s.f.harvestable,
                 i
             );
+            console.log("pricePerPod", pricePerPod);
             amountBeans = (beanAmount * 1000000) / pricePerPod;
+            console.log("amountBeans", amountBeans);
         } else {
             amountBeans = (beanAmount * 1000000) / l.pricePerPod;
         }

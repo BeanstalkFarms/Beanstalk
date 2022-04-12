@@ -81,13 +81,7 @@ contract Order is Listing {
     ) internal returns (bytes32 id) {
         uint256 amountPods;
         if (dynamic) {
-            // amountPods = _getSumOverPiecewiseRange(
-            //     f,
-            //     f.subIntervalIndex[0],
-            //     beanAmount
-            // );
-
-            //since we cant estimate the
+            //if the order is dynamic, amountPods is storing just the beanAmount of the order.
             amountPods = beanAmount;
         } else {
             amountPods = (beanAmount * 1000000) / pricePerPod;
@@ -240,11 +234,6 @@ contract Order is Listing {
 
         uint256 amountBeans;
         if (dynamic) {
-            // amountBeans = _getSumOverPiecewiseRange(
-            //     f,
-            //     f.subIntervalIndex[0],
-            //     maxPlaceInLine
-            // );
             amountBeans = s.podOrders[id];
         } else {
             amountBeans = (pricePerPod * s.podOrders[id]) / 1000000;
