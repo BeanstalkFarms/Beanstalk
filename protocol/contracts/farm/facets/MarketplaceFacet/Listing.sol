@@ -45,7 +45,15 @@ contract Listing is PodTransfer {
         uint256 amount,
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
-        bool dynamic,
+        bool toWallet
+    );
+
+    event DynamicPodListingCreated(
+        address indexed account,
+        uint256 index,
+        uint256 start,
+        uint256 amount,
+        uint256 maxHarvestableIndex,
         bool toWallet,
         uint256[10] subIntervalIndex,
         uint256[40] constants,
@@ -67,72 +75,48 @@ contract Listing is PodTransfer {
      * Create
      */
 
-    function _createPodListing(
-        uint256 index,
-        uint256 start,
-        uint256 amount,
-        uint24 pricePerPod,
-        uint256 maxHarvestableIndex,
-        bool dynamic,
-        bool toWallet,
-        PiecewiseCubic calldata f
-    ) internal {
+    function _createPodListing(uint256 index, uint256 start, uint256 amount, uint24 pricePerPod, uint256 maxHarvestableIndex, bool dynamic, bool toWallet, PiecewiseCubic calldata f) internal {
         uint256 plotSize = s.a[msg.sender].field.plots[index];
-        require(
-            plotSize >= (start + amount) && amount > 0,
-            "Marketplace: Invalid Plot/Amount."
-        );
+        require(plotSize >= (start + amount) && amount > 0, "Marketplace: Invalid Plot/Amount.");
 
-        require(
-            s.f.harvestable <= maxHarvestableIndex,
-            "Marketplace: Expired."
-        );
+        require(s.f.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
 
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(index);
 
-        s.podListings[index] = hashListing(
-            start,
-            amount,
-            pricePerPod,
-            maxHarvestableIndex,
-            dynamic,
-            toWallet,
-            f.subIntervalIndex,
-            f.constants,
-            f.shifts,
-            f.signs
-        );
+        s.podListings[index] = hashListing(start, amount, pricePerPod, maxHarvestableIndex, dynamic, toWallet, f.subIntervalIndex, f.constants, f.shifts, f.signs);
 
-        emit PodListingCreated(
-            msg.sender,
-            index,
-            start,
-            amount,
-            pricePerPod,
-            maxHarvestableIndex,
-            dynamic,
-            toWallet,
-            f.subIntervalIndex,
-            f.constants,
-            f.shifts,
-            f.signs
-        );
+        if (dynamic) {
+            emit DynamicPodListingCreated(
+                msg.sender,
+                index,
+                start,
+                amount,
+                maxHarvestableIndex,
+                toWallet,
+                f.subIntervalIndex,
+                f.constants,
+                f.shifts,
+                f.signs
+            );
+        } else {
+            emit PodListingCreated(
+                msg.sender,
+                index,
+                start,
+                amount,
+                pricePerPod,
+                maxHarvestableIndex,
+                toWallet
+            );
+        }
     }
 
     /*
      * Fill
      */
 
-    function _buyBeansAndFillPodListing(
-        Listing calldata l,
-        uint256 beanAmount,
-        uint256 buyBeanAmount
-    ) internal {
-        uint256 boughtBeanAmount = LibMarket.buyExactTokensToWallet(
-            buyBeanAmount,
-            l.account,
-            l.toWallet
-        );
+    function _buyBeansAndFillPodListing(Listing calldata l, uint256 beanAmount, uint256 buyBeanAmount) internal {
+        uint256 boughtBeanAmount = LibMarket.buyExactTokensToWallet(buyBeanAmount, l.account, l.toWallet);
         _fillListing(l, beanAmount + boughtBeanAmount);
     }
 
@@ -150,32 +134,14 @@ contract Listing is PodTransfer {
             l.f.signs
         );
 
-        require(
-            s.podListings[l.index] == lHash,
-            "Marketplace: Listing does not exist."
-        );
+        require(s.podListings[l.index] == lHash, "Marketplace: Listing does not exist.");
         uint256 plotSize = s.a[l.account].field.plots[l.index];
-        require(
-            plotSize >= (l.start + l.amount) && l.amount > 0,
-            "Marketplace: Invalid Plot/Amount."
-        );
-        require(
-            s.f.harvestable <= l.maxHarvestableIndex,
-            "Marketplace: Listing has expired."
-        );
+        require(plotSize >= (l.start + l.amount) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
+        require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
         uint256 amountBeans;
         if (l.dynamic) {
-            uint256 i = LibMathFP.findIndexWithinSubinterval(
-                l.f.subIntervalIndex,
-                l.index + l.start + l.amount - s.f.harvestable,
-                0,
-                9
-            );
-            uint256 pricePerPod = _getPriceAtIndex(
-                l.f,
-                l.index + l.start + l.amount - s.f.harvestable,
-                i
-            );
+            uint256 i = LibMathFP.findIndexWithinSubinterval(l.f.subIntervalIndex, l.index + l.start + l.amount - s.f.harvestable, 0, 9);
+            uint256 pricePerPod = _getPriceAtIndex(l.f, l.index + l.start + l.amount - s.f.harvestable, i);
             console.log("pricePerPod", pricePerPod);
             amountBeans = (beanAmount * 1000000) / pricePerPod;
             console.log("amountBeans", amountBeans);
@@ -191,11 +157,7 @@ contract Listing is PodTransfer {
         _transferPlot(l.account, msg.sender, l.index, l.start, amountBeans);
     }
 
-    function _getPriceAtIndex(
-        PiecewiseCubic calldata f,
-        uint256 x,
-        uint256 i
-    ) internal view returns (uint256 pricePerPod) {
+    function _getPriceAtIndex(PiecewiseCubic calldata f, uint256 x, uint256 i) internal view returns (uint256 pricePerPod) {
         pricePerPod = LibMathFP.evaluateCubic(
             [f.signs[i], f.signs[i + 10], f.signs[i + 20], f.signs[i + 30]],
             [f.shifts[i], f.shifts[i + 10], f.shifts[i + 20], f.shifts[i + 30]],
@@ -211,12 +173,7 @@ contract Listing is PodTransfer {
         );
     }
 
-    function __fillListing(
-        address from,
-        address to,
-        Listing calldata l,
-        uint256 amount
-    ) private {
+    function __fillListing(address from, address to, Listing calldata l, uint256 amount) private {
         if (l.amount > amount)
             s.podListings[l.index.add(amount).add(l.start)] = hashListing(
                 0,
@@ -239,10 +196,7 @@ contract Listing is PodTransfer {
      */
 
     function _cancelPodListing(uint256 index) internal {
-        require(
-            s.a[msg.sender].field.plots[index] > 0,
-            "Marketplace: Listing not owned by sender."
-        );
+        require(s.a[msg.sender].field.plots[index] > 0, "Marketplace: Listing not owned by sender.");
         delete s.podListings[index];
         emit PodListingCancelled(msg.sender, index);
     }
@@ -253,11 +207,7 @@ contract Listing is PodTransfer {
 
     // If remainder left (always <1 pod) that would otherwise be unpurchaseable
     // due to rounding from calculating amount, give it to last buyer
-    function roundAmount(
-        uint256 listingAmount,
-        uint256 amount,
-        uint24 pricePerPod
-    ) private pure returns (uint256) {
+    function roundAmount(uint256 listingAmount, uint256 amount,uint24 pricePerPod) private pure returns (uint256) {
         if ((listingAmount - amount) < (1000000 / pricePerPod))
             amount = listingAmount;
         return amount;

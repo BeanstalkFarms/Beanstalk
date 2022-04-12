@@ -38,10 +38,8 @@ describe('Marketplace', function () {
     this.orderIds = []
   })
 
-
-
   const resetState = async function () {
-    this.diamond = contracts.beanstalkDiamond
+    this.diamond = contracts.beanstalkDiamond;
 
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address);
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
@@ -320,6 +318,7 @@ describe('Marketplace', function () {
           await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '1000');
         })
       })
+
 
       describe("Fill poly listing", async function () {
         beforeEach(async function () {
