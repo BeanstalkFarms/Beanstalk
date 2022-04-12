@@ -46,6 +46,10 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.a[account].deposits[token][_s].amount += uint128(amount);
         s.a[account].deposits[token][_s].bdv += uint128(bdv);
+        uint256 depositLength = s.a[account].depositSeasons.length;
+        if (depositLength == 0 || s.a[account].depositSeasons[depositLength - 1] != _s) {
+            s.a[account].depositSeasons.push(_s);
+        }
         emit Deposit(account, token, _s, amount, bdv);
     }
 
@@ -75,6 +79,38 @@ library LibTokenSilo {
             return (amount, base);
         } else {
             delete s.a[account].deposits[token][id];
+            uint256 depositLength = s.a[account].depositSeasons.length;
+            if (depositLength > 0 && s.a[account].depositSeasons[depositLength - 1] == id) {
+                s.a[account].depositSeasons.length--;
+            } else if (depositLength > 0) {
+                uint256 l = 0;
+                uint256 r = depositLength - 1;
+                uint256 idx;
+                bool found;
+                while (l <= r) {
+                    uint256 m = (l + r) / 2;
+                    uint256 _id = s.a[account].depositSeasons[m];
+                    if (_id == id) {
+                        idx = m;
+                        found = true;
+                        break;
+                    }
+                    if (_id < id) {
+                        l = m + 1;
+                    } else {
+                        if (m == 0) {
+                            break;
+                        }
+                        r = m - 1;
+                    }
+                }
+                if (found) {
+                    for (uint256 i = idx; i < depositLength - 1; i++) {
+                        s.a[account].depositSeasons[i] = s.a[account].depositSeasons[i + 1];
+                    }
+                    s.a[account].depositSeasons.length--;
+                }
+            }
             return (crateAmount, crateBase);
         }
     }

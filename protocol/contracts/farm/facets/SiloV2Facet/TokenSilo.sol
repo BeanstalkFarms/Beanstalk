@@ -24,10 +24,12 @@ contract TokenSilo is ReentrancyGuard {
     event Deposit(address indexed account, address indexed token, uint256 season, uint256 amount, uint256 bdv);
     event RemoveSeasons(address indexed account, address indexed token, uint32[] seasons, uint256[] amounts, uint256 amount);
     event RemoveSeason(address indexed account, address indexed token, uint32 season, uint256 amount);
+    event Remove(address indexed account, address indexed token, uint256 amount, uint256 removedAmount);
 
     event Withdraw(address indexed account, address indexed token, uint32 season, uint256 amount);
     event ClaimSeasons(address indexed account, address indexed token, uint32[] seasons, uint256 amount);
     event ClaimSeason(address indexed account, address indexed token, uint32 season, uint256 amount);
+    event Claim(address indexed account, address indexed token, uint256 amount);
 
     struct AssetsRemoved {
         uint256 tokensRemoved;
@@ -83,6 +85,14 @@ contract TokenSilo is ReentrancyGuard {
         LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
     }
 
+    function _withdraw(address token, uint256 amount) internal {
+        (uint256 tokensRemoved, uint256 stalkRemoved, uint256 seedsRemoved) = removeDeposit(token, amount);
+        uint32 arrivalSeason = _season() + s.season.withdrawSeasons;
+        addTokenWithdrawal(msg.sender, token, arrivalSeason, tokensRemoved);
+        LibTokenSilo.decrementDepositedToken(token, tokensRemoved);
+        LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
+    }
+
     function removeDeposit(address token, uint32 season, uint256 amount) 
         private 
         returns (uint256 tokensRemoved, uint256 stalkRemoved, uint256 seedsRemoved) 
@@ -124,6 +134,40 @@ contract TokenSilo is ReentrancyGuard {
         emit RemoveSeasons(msg.sender, token, seasons, amounts, ar.tokensRemoved);
     }
 
+    function removeDeposit(address token, uint256 amount)
+        private 
+        returns (uint256 tokensRemoved, uint256 stalkRemoved, uint256 seedsRemoved) 
+    {
+        uint32[] memory seasons = s.a[msg.sender].depositSeasons[token];
+        uint256 bdvRemoved;
+        uint256 i = seasons.length - 1;
+        while (i != uint256(-1) && amount > 0) {
+            uint32 season = seasons[i];
+            (uint256 crateAmount, uint256 crateBase) = LibTokenSilo.tokenDeposit(msg.sender, token, season);
+            uint256 removeAmount = crateAmount >= amount ? amount : crateAmount;
+            amount = amount.sub(removeAmount);
+
+            (uint256 crateTokens, uint256 crateBdv) = LibTokenSilo.removeDeposit(
+                msg.sender,
+                token,
+                season,
+                removeAmount
+            );
+            bdvRemoved = bdvRemoved.add(crateBdv);
+            tokensRemoved = tokensRemoved.add(crateTokens);
+            stalkRemoved = stalkRemoved.add(
+                LibSilo.stalkReward(crateBdv.mul(s.ss[token].seeds), _season()-season)
+            );
+
+            i--;
+        }
+
+        seedsRemoved = bdvRemoved.mul(s.ss[token].seeds);
+        stalkRemoved = stalkRemoved.add(bdvRemoved.mul(s.ss[token].stalk));
+
+        emit Remove(msg.sender, token, amount, tokensRemoved);
+    }
+
     function addTokenWithdrawal(address account, address token, uint32 arrivalSeason, uint256 amount) private {
         s.a[account].withdrawals[token][arrivalSeason] = s.a[account].withdrawals[token][arrivalSeason].add(amount);
         s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.add(amount);
@@ -131,6 +175,15 @@ contract TokenSilo is ReentrancyGuard {
     }
 
     function removeTokenWithdrawals(address account, address token, uint32[] calldata seasons) internal returns (uint256 amount) {
+        for (uint256 i = 0; i < seasons.length; i++) {
+            amount = amount.add(_removeTokenWithdrawal(account, token, seasons[i]));
+        }
+        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(amount);
+        return amount;
+    }
+
+    function removeTokenWithdrawals(address account, address token) internal returns (uint256 amount) {
+        uint32[] memory seasons = s.a[account].depositSeasons[token];
         for (uint256 i = 0; i < seasons.length; i++) {
             amount = amount.add(_removeTokenWithdrawal(account, token, seasons[i]));
         }
