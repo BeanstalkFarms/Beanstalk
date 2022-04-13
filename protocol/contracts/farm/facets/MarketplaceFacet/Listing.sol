@@ -82,6 +82,8 @@ contract Listing is PodTransfer {
 
         require(s.f.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
 
+        if(!dynamic) require(pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
+
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(index);
 
         s.podListings[index] = hashListing(start, amount, pricePerPod, maxHarvestableIndex, dynamic, toWallet, f.subIntervalIndex, f.constants, f.shifts, f.signs);
