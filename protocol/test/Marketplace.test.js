@@ -1183,7 +1183,7 @@ describe('Marketplace', function () {
         beforeEach(async function () {
           this.userBeanBalance = await this.bean.balanceOf(userAddress)
           this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-          this.result = await this.marketplace.connect(user).cancelPodOrder('100000', '1000', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
+          this.result = await this.marketplace.connect(user).cancelPodOrder('0', '1000', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
           this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
           this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
         })
@@ -1207,7 +1207,7 @@ describe('Marketplace', function () {
         beforeEach(async function () {
           this.userBeanBalance = await this.bean.balanceOf(userAddress)
           this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-          this.result = await this.marketplace.connect(user).cancelPodOrder('100000', '1000', true, false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
+          this.result = await this.marketplace.connect(user).cancelPodOrder('0', '1000', true, false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
           this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
           this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
         })
