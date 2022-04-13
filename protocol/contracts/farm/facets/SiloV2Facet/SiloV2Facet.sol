@@ -85,11 +85,6 @@ contract SiloV2Facet is TokenSilo {
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
-    function withdraw(address token, uint256 amount) external updateSilo {
-        _withdraw(token, amount);
-        LibSilo.updateBalanceOfRainStalk(msg.sender);
-    }
-
     /*
      * Claim
      */
@@ -114,10 +109,6 @@ contract SiloV2Facet is TokenSilo {
         }
     }
 
-    function claim(address token) external {
-        _claim(token);
-    }
-
     function _claimTokenBySeasons(address token, uint32[] calldata seasons) private {
         uint256 amount = removeTokenWithdrawals(msg.sender, token, seasons);
         IERC20(token).transfer(msg.sender, amount);
@@ -128,12 +119,6 @@ contract SiloV2Facet is TokenSilo {
         uint256 amount = removeTokenWithdrawal(msg.sender, token, season);
         IERC20(token).transfer(msg.sender, amount);
         emit ClaimSeason(msg.sender, token, season, amount);
-    }
-
-    function _claim(address token) private {
-        uint256 amount = removeTokenWithdrawals(msg.sender, token);
-        IERC20(token).transfer(msg.sender, amount);
-        emit Claim(msg.sender, token, amount);
     }
 
     /*
