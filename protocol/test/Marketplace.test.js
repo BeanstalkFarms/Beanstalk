@@ -66,6 +66,8 @@ describe('Marketplace', function () {
     await this.field.connect(user2).sowBeansAndIndex('1000');
   }
 
+  const emptyFunction = [Array(10).fill("0"), Array(40).fill("0"), Array(40).fill(0), Array(40).fill(true)];
+
   const getHash = async function (tx) {
     let receipt = await tx.wait();
     const args = (receipt.events?.filter((x) => { return x.event == "PodListingCreated" }))[0].args;
@@ -629,8 +631,8 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.interp = createInterpolant(linearSet.xs, linearSet.ys);
             this.amountBeansBuyingWith = 300;
-            this.listing = [userAddress, '0', '0', '1000', '500000', '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]]
-            await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
+            this.listing = [userAddress, '0', '0', '1000', '0', '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]]
+            await this.marketplace.connect(user).createPodListing('0', '0', '1000', '0', '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
 
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
@@ -651,8 +653,8 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.interp = createInterpolant(linearSet.xs, linearSet.ys);
             this.amountBeansBuyingWith = 100;
-            this.listing = [userAddress, '0', '0', '1000', '500000', '0', true, false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]]
-            await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', true, false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
+            this.listing = [userAddress, '0', '0', '1000', '0', '0', true, false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]]
+            await this.marketplace.connect(user).createPodListing('0', '0', '1000', '0', '0', true, false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs]);
 
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
@@ -673,8 +675,8 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.interp = createInterpolant(linearSet.xs, linearSet.ys);
             await this.pair.simulateTrade('2500', '1000');
-            this.listing = [userAddress, '0', '0', '1000', '500000', '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]]
-            await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
+            this.listing = [userAddress, '0', '0', '1000', '0', '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]]
+            await this.marketplace.connect(user).createPodListing('0', '0', '1000', '0', '0', true, true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
             this.amountTransferringBeans = 100;
             this.amoutBuyingBeans = 250;
 
@@ -771,18 +773,15 @@ describe('Marketplace', function () {
 
         describe('buy beans and create order', async function () {
           beforeEach(async function () {
-            //buy beans not transferrring ?
             this.interp = createInterpolant(linearSet.xs, linearSet.ys);
             await this.pair.simulateTrade('2500', '1000');
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            console.log(this.userBeanBalance, this.beanstalkBeanBalance)
             this.result = await this.marketplace.connect(user).buyBeansAndCreatePodOrder('0', '250', '0', '1000', true, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts.map(String), this.interp.signs], { value: 112 })
             this.id = await getDynamicOrderId(this.result);
             this.orderIds.push(this.id)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
-            console.log(this.userBeanBalanceAfter, this.beanstalkBeanBalanceAfter)
           })
 
           it('Transfer Beans properly', async function () {
@@ -1168,12 +1167,15 @@ describe('Marketplace', function () {
             expect(this.result).to.emit(this.marketplace, 'PodOrderFilled').withArgs(user2Address, userAddress, this.id, 1000, 0, 500);
           })
         })
+
+        
       })
 
+      
       describe("Cancel", async function () {
         beforeEach(async function () {
-          // this.interp = createInterpolant(linearSet.xs, linearSet.ys);
-          this.result = await this.marketplace.connect(user).createPodOrder('500', '100000', '1000', false, [Array(10).fill(0), Array(40).fill(0), Array(40).fill(0), Array(40).fill(true)])
+          
+          this.result = await this.marketplace.connect(user).createPodOrder('500', '100000', '1000', false, emptyFunction)
           this.id = await getOrderId(this.result)
           this.orderIds.push(this.id)
         })
@@ -1182,7 +1184,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancelPodOrder('100000', '1000', false, true, [Array(10).fill(0), Array(40).fill(0), Array(40).fill(0), Array(40).fill(true)]);
+            this.result = await this.marketplace.connect(user).cancelPodOrder('100000', '1000', false, true, emptyFunction);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -1206,7 +1208,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancelPodOrder('100000', '1000', false, false, [Array(10).fill(0), Array(40).fill(0), Array(40).fill(0), Array(40).fill(true)]);
+            this.result = await this.marketplace.connect(user).cancelPodOrder('100000', '1000', false, false, emptyFunction);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -1228,4 +1230,622 @@ describe('Marketplace', function () {
       })
     })
   })
+
+  describe("Pod Offers", async function () {
+
+    describe("Create", async function () {
+      describe('revert', async function () {
+        it('Reverts if price is 0', async function () {
+          await expect(this.marketplace.connect(user2).createPodOrder('100', '0', '100000', false, emptyFunction)).to.be.revertedWith("Marketplace: Pod price must be greater than 0.");
+        })
+        it('Reverts if amount is 0', async function () {
+          await expect(this.marketplace.connect(user2).createPodOrder('0', '100000', '100000', false, emptyFunction)).to.be.revertedWith("Marketplace: Order amount must be > 0.");
+        })
+      })
+
+      describe('create order', async function () {
+        beforeEach(async function () {
+          this.userBeanBalance = await this.bean.balanceOf(userAddress)
+          this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
+          this.result = await this.marketplace.connect(user).createPodOrder('500', '100000', '1000', false, emptyFunction)
+          this.id = await getOrderId(this.result)
+          this.orderIds.push(this.id)
+          this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+          this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
+        })
+
+        it('Transfer Beans properly', async function () {
+          expect(this.beanstalkBeanBalanceAfter.sub(this.beanstalkBeanBalance)).to.equal('500');
+          expect(this.userBeanBalance.sub(this.userBeanBalanceAfter)).to.equal('500');
+        })
+
+        it('Creates the order', async function () {
+          expect(await this.marketplace.podOrderById(this.id)).to.equal('5000');
+          expect(await this.marketplace.podOrder(userAddress, '100000', '1000', false, emptyFunction)).to.equal('5000');
+        })
+
+        it('emits an event', async function () {
+          expect(this.result).to.emit(this.marketplace, 'PodOrderCreated').withArgs(userAddress, this.id, '5000', 100000, '1000')
+        })
+      })
+
+      describe('buy beans and create order', async function () {
+        beforeEach(async function () {
+          await this.pair.simulateTrade('2500', '1000');
+          this.userBeanBalance = await this.bean.balanceOf(userAddress)
+          this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
+          this.result = await this.marketplace.connect(user).buyBeansAndCreatePodOrder('0', '250', '100000', '1000', false, emptyFunction, { value: 112 })
+          this.id = await getOrderId(this.result)
+          this.orderIds.push(this.id)
+          this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+          this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
+        })
+
+        it('Transfer Beans properly', async function () {
+          expect(this.beanstalkBeanBalanceAfter.sub(this.beanstalkBeanBalance)).to.equal('250');
+          expect(this.userBeanBalance.sub(this.userBeanBalanceAfter)).to.equal('0');
+        })
+
+        it('Creates the offer', async function () {
+          expect(await this.marketplace.podOrderById(this.id)).to.equal('2500');
+          expect(await this.marketplace.podOrder(userAddress, '100000', '1000', false, emptyFunction)).to.equal('2500');
+        })
+
+        it('emits an event', async function () {
+          expect(this.result).to.emit(this.marketplace, 'PodOrderCreated').withArgs(userAddress, this.id, '2500', 100000, '1000')
+        })
+      })
+
+      describe('buy and transfer beans and create order', async function () {
+        beforeEach(async function () {
+          await this.pair.simulateTrade('2500', '1000');
+          this.userBeanBalance = await this.bean.balanceOf(userAddress)
+          this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
+          this.result = await this.marketplace.connect(user).buyBeansAndCreatePodOrder('100', '250', 100000, '1000', false, emptyFunction, { value: 112 })
+          this.id = await getOrderId(this.result)
+          this.orderIds.push(this.id)
+          this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+          this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
+        })
+
+        it('Transfer Beans properly', async function () {
+          expect(this.beanstalkBeanBalanceAfter.sub(this.beanstalkBeanBalance)).to.equal('350');
+          expect(this.userBeanBalance.sub(this.userBeanBalanceAfter)).to.equal('100');
+        })
+
+        it('Creates the offer', async function () {
+          expect(await this.marketplace.podOrderById(this.id)).to.equal('3500');
+        })
+
+        it('emits an event', async function () {
+          expect(this.result).to.emit(this.marketplace, 'PodOrderCreated').withArgs(userAddress, this.id, '3500', 100000, '1000')
+        })
+      })
+    })
+
+    describe("Claim", async function () {
+      beforeEach(async function () {
+        await this.silo.connect(user).depositBeans('250')
+        await this.silo.connect(user).withdrawBeans([2], ['250'])
+        await this.season.farmSunrises('25')
+      })
+
+      describe('normal order', async function () {
+        beforeEach(async function () {
+          this.userBeanBalance = await this.bean.balanceOf(userAddress)
+          this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
+          this.result = await this.marketplace.connect(user).claimAndCreatePodOrder('250', '100000', '1000', false, emptyFunction, [['27'], [], [], false, false, 0, 0, false])
+          this.id = await getOrderId(this.result)
+          this.orderIds.push(this.id)
+          this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+          this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
+        })
+
+        it('Transfer Beans properly', async function () {
+          expect(this.beanstalkBeanBalanceAfter.sub(this.beanstalkBeanBalance)).to.equal('0');
+          expect(this.userBeanBalance.sub(this.userBeanBalanceAfter)).to.equal('0');
+          expect(await this.claim.wrappedBeans(userAddress)).to.equal('0');
+        })
+
+        it('Creates the offer', async function () {
+          expect(await this.marketplace.podOrderById(this.id)).to.equal('2500');
+        })
+      })
+
+      describe('normal order overallocate', async function () {
+        beforeEach(async function () {
+          this.userBeanBalance = await this.bean.balanceOf(userAddress)
+          this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
+          this.result = await this.marketplace.connect(user).claimAndCreatePodOrder('300', '100000', '1000', false, emptyFunction, [['27'], [], [], false, false, 0, 0, false])
+          this.id = await getOrderId(this.result)
+          this.orderIds.push(this.id)
+          this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+          this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
+        })
+
+        it('Transfer Beans properly', async function () {
+          expect(this.beanstalkBeanBalanceAfter.sub(this.beanstalkBeanBalance)).to.equal('50');
+          expect(this.userBeanBalance.sub(this.userBeanBalanceAfter)).to.equal('50');
+          expect(await this.claim.wrappedBeans(userAddress)).to.equal('0');
+        })
+
+        it('Creates the offer', async function () {
+          expect(await this.marketplace.podOrderById(this.id)).to.equal('3000');
+        })
+      })
+
+      describe('normal under overallocate', async function () {
+        beforeEach(async function () {
+          this.userBeanBalance = await this.bean.balanceOf(userAddress)
+          this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
+          this.result = await this.marketplace.connect(user).claimAndCreatePodOrder('100', '100000', '1000', false, emptyFunction, [['27'], [], [], false, false, 0, 0, false])
+          this.id = await getOrderId(this.result)
+          this.orderIds.push(this.id)
+          this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+          this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
+        })
+
+        it('Transfer Beans properly', async function () {
+          expect(this.beanstalkBeanBalanceAfter.sub(this.beanstalkBeanBalance)).to.equal('0');
+          expect(this.userBeanBalance.sub(this.userBeanBalanceAfter)).to.equal('0');
+          expect(await this.claim.wrappedBeans(userAddress)).to.equal('150');
+        })
+
+        it('Creates the offer', async function () {
+          expect(await this.marketplace.podOrderById(this.id)).to.equal('1000');
+        })
+      })
+
+      describe('buy and claim', async function () {
+        beforeEach(async function () {
+          await this.pair.simulateTrade('2500', '1000');
+          this.userBeanBalance = await this.bean.balanceOf(userAddress)
+          this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
+          this.result = await this.marketplace.connect(user).claimBuyBeansAndCreatePodOrder('100', '250', '100000', '1000', false, emptyFunction, [['27'], [], [], false, false, 0, 0, false], { value: 112 })
+          this.id = await getOrderId(this.result)
+          this.orderIds.push(this.id)
+          this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+          this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
+        })
+
+        it('Transfer Beans properly', async function () {
+          expect(this.beanstalkBeanBalanceAfter.sub(this.beanstalkBeanBalance)).to.equal('250');
+          expect(this.userBeanBalance.sub(this.userBeanBalanceAfter)).to.equal('0');
+          expect(await this.claim.wrappedBeans(userAddress)).to.equal('150');
+        })
+
+        it('Creates the offer', async function () {
+          expect(await this.marketplace.podOrderById(this.id)).to.equal('3500');
+        })
+      })
+    })
+
+    describe("Fill", async function () {
+      describe('revert', async function () {
+        beforeEach(async function () {
+          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', false, true, emptyFunction);
+          this.listing = [userAddress, '0', '0', '1000', '500000', '0', false, true, emptyFunction];
+        })
+
+        it('Fails to fill Listing, not enough ETH used', async function () {
+          await this.pair.simulateTrade('4000', '1000');
+          await expect(this.marketplace.connect(user2).buyBeansAndFillPodListing(this.listing, 0, 100, { value: '24' })).to.be.revertedWith('UniswapV2Router: EXCESSIVE_INPUT_AMOUNT');
+        })
+
+        it('Fill Listing non-listed Index Fails', async function () {
+          let brokenListing = this.listing;
+          brokenListing[1] = '1'
+          await expect(this.marketplace.connect(user).fillPodListing(brokenListing, 500)).to.be.revertedWith('Marketplace: Listing does not exist.');
+        })
+
+        it('Fill Listing wrong start Index Fails', async function () {
+          let brokenListing = this.listing;
+          brokenListing[2] = '1'
+          await expect(this.marketplace.connect(user).fillPodListing(brokenListing, 500)).to.be.revertedWith('Marketplace: Listing does not exist.');
+        })
+
+        it('Fill Listing wrong price Fails', async function () {
+          let brokenListing = this.listing;
+          brokenListing[4] = '100001'
+          await expect(this.marketplace.connect(user).fillPodListing(brokenListing, 500)).to.be.revertedWith('Marketplace: Listing does not exist.');
+        })
+
+        it('Fill Listing after expired', async function () {
+          await this.field.incrementTotalHarvestableE('2000');
+          await expect(this.marketplace.connect(user2).fillPodListing(this.listing, 500)).to.be.revertedWith('Marketplace: Listing has expired.');
+        })
+
+        it('Fill Listing not enough pods in plot', async function () {
+          await expect(this.marketplace.connect(user2).fillPodListing(this.listing, 501)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
+        })
+
+        it('Fill Listing not enough pods in listing', async function () {
+          const l = [userAddress, '0', '0', '500', '500000', '0', false, false, emptyFunction]
+          await this.marketplace.connect(user).createPodListing('0', '0', '500', '500000', '0', false, false, emptyFunction);
+          await expect(this.marketplace.connect(user2).fillPodListing(l, 500)).to.be.revertedWith('Marketplace: Not enough pods in Listing.');
+        })
+      })
+
+      describe("Fill listing", async function () {
+        beforeEach(async function () {
+          this.listing = [userAddress, '0', '0', '1000', '500000', '0', false, true, emptyFunction]
+          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', false, true, emptyFunction);
+          this.amountBeansBuyingWith = 500;
+
+          this.userBeanBalance = await this.bean.balanceOf(userAddress)
+          this.user2BeanBalance = await this.bean.balanceOf(user2Address)
+
+          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, this.amountBeansBuyingWith);
+
+          this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
+          this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+        })
+
+        it('Transfer Beans properly', async function () {
+          expect(this.user2BeanBalance.sub(this.user2BeanBalanceAfter)).to.equal(this.amountBeansBuyingWith);
+          expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal(this.amountBeansBuyingWith);
+          expect(await this.claim.wrappedBeans(userAddress)).to.equal(0);
+        })
+
+        it('Deletes Pod Listing', async function () {
+          expect(await this.marketplace.podListing(0)).to.equal(ZERO_HASH);
+        })
+
+        it('transfer pod listing', async function () {
+          expect((await this.field.plot(user2Address, 0)).toString()).to.equal('1000');
+          expect((await this.field.plot(userAddress, 0)).toString()).to.equal('0');
+        })
+
+        it('emits event', async function () {
+          await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '1000');
+        })
+      })
+
+      describe("Fill partial listing", async function () {
+        beforeEach(async function () {
+          this.listing = [userAddress, '0', '0', '1000', '500000', '0', false, true, emptyFunction]
+          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', false, true, emptyFunction);
+          this.amountBeansBuyingWith = 250;
+
+          this.userBeanBalance = await this.bean.balanceOf(userAddress)
+          this.user2BeanBalance = await this.bean.balanceOf(user2Address)
+
+          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, this.amountBeansBuyingWith);
+
+          this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
+          this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+        })
+
+        it('Transfer Beans properly', async function () {
+          expect(this.user2BeanBalance.sub(this.user2BeanBalanceAfter)).to.equal(this.amountBeansBuyingWith);
+          expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal(this.amountBeansBuyingWith);
+          expect(await this.claim.wrappedBeans(userAddress)).to.equal(0);
+        })
+
+        it('Deletes Pod Listing', async function () {
+          expect(await this.marketplace.podListing(0)).to.equal(ZERO_HASH);
+          expect(await this.marketplace.podListing(500)).to.equal(getHashFromListing(['0', '500', this.listing[4], this.listing[5], this.listing[6], this.listing[7], this.listing[8][0], this.listing[8][1], this.listing[8][2], this.listing[8][3]]));
+        })
+
+        it('transfer pod listing', async function () {
+          expect((await this.field.plot(user2Address, 0)).toString()).to.equal('500');
+          expect((await this.field.plot(userAddress, 0)).toString()).to.equal('0');
+          expect((await this.field.plot(userAddress, 500)).toString()).to.equal('500');
+        })
+
+        it('emits event', async function () {
+          await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '500');
+        })
+      })
+
+      describe("Fill partial listing of a partial listing multiple fills", async function () {
+        beforeEach(async function () {
+          this.listing = [userAddress, '0', '500', '500', '500000', '0', false, true, emptyFunction]
+          await this.marketplace.connect(user).createPodListing('0', '500', '500', '500000', '0', false, true, emptyFunction);
+          this.amountBeansBuyingWith = 100;
+
+          this.userBeanBalance = await this.bean.balanceOf(userAddress)
+          this.user2BeanBalance = await this.bean.balanceOf(user2Address)
+
+          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, this.amountBeansBuyingWith);
+
+          this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
+          this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+        })
+
+        it('Transfer Beans properly', async function () {
+          expect(this.user2BeanBalance.sub(this.user2BeanBalanceAfter)).to.equal(this.amountBeansBuyingWith);
+          expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal(this.amountBeansBuyingWith);
+          expect(await this.claim.wrappedBeans(userAddress)).to.equal(0);
+        })
+
+        it('Deletes Pod Listing', async function () {
+          expect(await this.marketplace.podListing(0)).to.equal(ZERO_HASH);
+          expect(await this.marketplace.podListing(700)).to.equal(getHashFromListing(['0', '300', this.listing[4], this.listing[5], this.listing[6], this.listing[7], this.listing[8][0], this.listing[8][1], this.listing[8][2], this.listing[8][3]]));
+        })
+
+        it('transfer pod listing', async function () {
+          expect((await this.field.plot(user2Address, 500)).toString()).to.equal('200');
+          expect((await this.field.plot(userAddress, 0)).toString()).to.equal('500');
+          expect((await this.field.plot(userAddress, 700)).toString()).to.equal('300');
+        })
+
+        it('emits event', async function () {
+          await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 500, '200');
+        })
+      })
+
+      describe("Fill partial listing of a listing created by partial fill", async function () {
+        beforeEach(async function () {
+          this.listing = [userAddress, '0', '500', '500', '500000', '0', false, true, emptyFunction]
+          await this.marketplace.connect(user).createPodListing('0', '500', '500', '500000', '0', false, true, emptyFunction);
+          this.amountBeansBuyingWith = 100;
+
+          this.userBeanBalance = await this.bean.balanceOf(userAddress)
+          this.user2BeanBalance = await this.bean.balanceOf(user2Address)
+          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, this.amountBeansBuyingWith);
+
+          this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
+          this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+          this.listing = [userAddress, '700', '0', '300', '500000', '0', false, true, emptyFunction]
+
+          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, 100);
+
+        })
+        it('plots correctly transfer', async function () {
+          expect((await this.field.plot(userAddress, 0)).toString()).to.equal('500');
+          expect((await this.field.plot(userAddress, 700)).toString()).to.equal('0');
+          expect((await this.field.plot(userAddress, 900)).toString()).to.equal('100');
+
+          expect((await this.field.plot(user2Address, 0)).toString()).to.equal('0');
+          expect((await this.field.plot(user2Address, 500)).toString()).to.equal('200');
+          expect((await this.field.plot(user2Address, 700)).toString()).to.equal('200');
+          expect((await this.field.plot(user2Address, 900)).toString()).to.equal('0');
+        })
+
+        it('listing updates', async function () {
+          expect(await this.marketplace.podListing(700)).to.equal(ZERO_HASH);
+          expect(await this.marketplace.podListing(900)).to.equal(getHashFromListing(['0', '100', this.listing[4], this.listing[5], this.listing[6], this.listing[7], this.listing[8][0], this.listing[8][1], this.listing[8][2], this.listing[8][3]]));
+        })
+      })
+
+      describe("Fill partial listing to wallet", async function () {
+        beforeEach(async function () {
+          this.listing = [userAddress, '0', '0', '1000', '500000', '0', false, false, emptyFunction]
+          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', false, false, emptyFunction);
+          this.amountBeansBuyingWith = 250;
+
+          this.userBeanBalance = await this.bean.balanceOf(userAddress)
+          this.user2BeanBalance = await this.bean.balanceOf(user2Address)
+
+          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, this.amountBeansBuyingWith);
+
+          this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
+          this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+        })
+
+        it('Transfer Beans properly', async function () {
+          expect(this.user2BeanBalance.sub(this.user2BeanBalanceAfter)).to.equal(this.amountBeansBuyingWith);
+          expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal(0);
+          expect(await this.claim.wrappedBeans(userAddress)).to.equal(this.amountBeansBuyingWith);
+        })
+
+        it('Deletes Pod Listing', async function () {
+          expect(await this.marketplace.podListing(700)).to.equal(ZERO_HASH);
+          expect(await this.marketplace.podListing(500)).to.equal(getHashFromListing(['0', '500', this.listing[4], this.listing[5], this.listing[6], this.listing[7], this.listing[8][0], this.listing[8][1], this.listing[8][2], this.listing[8][3]]));
+        })
+
+        it('transfer pod listing', async function () {
+          expect((await this.field.plot(user2Address, 0)).toString()).to.equal('500');
+          expect((await this.field.plot(userAddress, 0)).toString()).to.equal('0');
+          expect((await this.field.plot(userAddress, 500)).toString()).to.equal('500');
+        })
+
+        it('emits event', async function () {
+          await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '500');
+        })
+      })
+
+      describe("Fill Beans to wallet", async function () {
+        beforeEach(async function () {
+          await this.pair.simulateTrade('2500', '1000');
+          this.listing = [userAddress, '0', '0', '1000', '500000', '0', false, false, emptyFunction]
+          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', false, false, emptyFunction);
+          this.amountTransferringBeans = 0;
+          this.amoutBuyingBeans = 250;
+
+          this.userBeanBalance = await this.bean.balanceOf(userAddress)
+          this.user2BeanBalance = await this.bean.balanceOf(user2Address)
+
+          this.result = await this.marketplace.connect(user2).buyBeansAndFillPodListing(this.listing, this.amountTransferringBeans, this.amoutBuyingBeans, { value: 112 })
+
+          this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
+          this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+        })
+
+        it('Transfer Beans properly', async function () {
+          expect(this.user2BeanBalance.sub(this.user2BeanBalanceAfter)).to.equal(0);
+          expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal(0);
+          expect(await this.claim.wrappedBeans(userAddress)).to.equal(this.amoutBuyingBeans);
+        })
+
+        it('transfer pod listing', async function () {
+          expect((await this.field.plot(user2Address, 0)).toString()).to.equal('500');
+          expect((await this.field.plot(userAddress, 0)).toString()).to.equal('0');
+          expect((await this.field.plot(userAddress, 500)).toString()).to.equal('500');
+        })
+      })
+
+      describe("Fill Beans with amount to wallet", async function () {
+        beforeEach(async function () {
+          await this.pair.simulateTrade('2500', '1000');
+          this.listing = [userAddress, '0', '0', '1000', '500000', '0', false, false, emptyFunction]
+          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', false, false, emptyFunction);
+          this.amountTransferringBeans = 100;
+          this.amoutBuyingBeans = 250;
+
+          this.userBeanBalance = await this.bean.balanceOf(userAddress)
+          this.user2BeanBalance = await this.bean.balanceOf(user2Address)
+          const beforeEth = await ethers.provider.getBalance(user2Address)
+
+          this.result = await this.marketplace.connect(user2).buyBeansAndFillPodListing(this.listing, this.amountTransferringBeans, this.amoutBuyingBeans, { value: 112 })
+
+          this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
+          this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+          const ethSpentOnGas = await getEthSpentOnGas(this.result);
+          this.deltaEth = beforeEth.sub(await ethers.provider.getBalance(user2Address)).sub(ethSpentOnGas)
+        })
+
+        it('Transfers Eth properly', async function () {
+            expect(this.deltaEth).to.equal('112')
+        })
+
+        it('Transfer Beans properly', async function () {
+          expect(this.user2BeanBalance.sub(this.user2BeanBalanceAfter)).to.equal(this.amountTransferringBeans);
+          expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal(0);
+          expect(await this.claim.wrappedBeans(userAddress)).to.equal(this.amoutBuyingBeans + this.amountTransferringBeans);
+        })
+
+        it('transfer pod listing', async function () {
+          expect((await this.field.plot(user2Address, 0)).toString()).to.equal('700');
+          expect((await this.field.plot(userAddress, 0)).toString()).to.equal('0');
+          expect((await this.field.plot(userAddress, 700)).toString()).to.equal('300');
+        })
+      })
+
+      describe("Fill Beans with amount to wallet and Eth Refund", async function () {
+        beforeEach(async function () {
+          await this.pair.simulateTrade('2500', '1000');
+          this.listing = [userAddress, '0', '0', '1000', '500000', '0', false, false, emptyFunction]
+          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', false, false, emptyFunction);
+          this.amountTransferringBeans = 100;
+          this.amoutBuyingBeans = 250;
+
+          this.userBeanBalance = await this.bean.balanceOf(userAddress)
+          this.user2BeanBalance = await this.bean.balanceOf(user2Address)
+          const beforeEth = await ethers.provider.getBalance(user2Address)
+
+          this.result = await this.marketplace.connect(user2).buyBeansAndFillPodListing(this.listing, this.amountTransferringBeans, this.amoutBuyingBeans, { value: 115 })
+
+          this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
+          this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+          const ethSpentOnGas = await getEthSpentOnGas(this.result)
+          this.deltaEth = beforeEth.sub(await ethers.provider.getBalance(user2Address)).sub(ethSpentOnGas)
+        })
+
+        it('Transfers Eth properly', async function () {
+           expect(this.deltaEth).to.equal('112')
+        })
+
+        it('Transfer Beans properly', async function () {
+          expect(this.user2BeanBalance.sub(this.user2BeanBalanceAfter)).to.equal(this.amountTransferringBeans);
+          expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal(0);
+          expect(await this.claim.wrappedBeans(userAddress)).to.equal(this.amoutBuyingBeans + this.amountTransferringBeans);
+        })
+
+        it('transfer pod listing', async function () {
+          expect((await this.field.plot(user2Address, 0)).toString()).to.equal('700');
+          expect((await this.field.plot(userAddress, 0)).toString()).to.equal('0');
+          expect((await this.field.plot(userAddress, 700)).toString()).to.equal('300');
+        })
+      })
+
+      describe("Claim", async function () {
+        beforeEach(async function () {
+          await this.silo.connect(user2).depositBeans('250')
+          await this.silo.connect(user2).withdrawBeans([2], ['250'])
+          await this.season.farmSunrises('25')
+        })
+
+        describe("Claim and fill listing", async function () {
+          beforeEach(async function () {
+            this.amountBeansBuyingWith = 100;
+            this.listing = [userAddress, '0', '0', '1000', '500000', '0', false, true, emptyFunction]
+            await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', false, true, emptyFunction);
+
+            this.userBeanBalance = await this.bean.balanceOf(userAddress)
+            this.user2BeanBalance = await this.bean.balanceOf(user2Address)
+            this.result = await this.marketplace.connect(user2).claimAndFillPodListing(this.listing, this.amountBeansBuyingWith, [['27'], [], [], false, false, 0, 0, false]);
+            this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
+            this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+          })
+
+          it('Transfer Beans properly', async function () {
+            expect(this.user2BeanBalance.sub(this.user2BeanBalanceAfter)).to.equal(0);
+            expect(await this.claim.wrappedBeans(user2Address)).to.equal('150');
+            expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal(100);
+            expect(await this.claim.wrappedBeans(userAddress)).to.equal('0');
+          })
+        })
+
+        describe("Claim and fill listing overallocate", async function () {
+          beforeEach(async function () {
+            this.amountBeansBuyingWith = 300;
+            this.listing = [userAddress, '0', '0', '1000', '500000', '0', false, true, emptyFunction]
+            await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0',false, true, emptyFunction);
+
+            this.userBeanBalance = await this.bean.balanceOf(userAddress)
+            this.user2BeanBalance = await this.bean.balanceOf(user2Address)
+            this.result = await this.marketplace.connect(user2).claimAndFillPodListing(this.listing, this.amountBeansBuyingWith, [['27'], [], [], false, false, 0, 0, false]);
+            this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
+            this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+          })
+
+          it('Transfer Beans properly', async function () {
+            expect(this.user2BeanBalance.sub(this.user2BeanBalanceAfter)).to.equal(50);
+            expect(await this.claim.wrappedBeans(user2Address)).to.equal('0');
+            expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal(300);
+            expect(await this.claim.wrappedBeans(userAddress)).to.equal('0');
+          })
+        })
+
+        describe("Claim and buy listing to wrapped", async function () {
+          beforeEach(async function () {
+            this.amountBeansBuyingWith = 100;
+            this.listing = [userAddress, '0', '0', '1000', '500000', '0', false, false, emptyFunction]
+            await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', false, false, emptyFunction);
+
+            this.userBeanBalance = await this.bean.balanceOf(userAddress)
+            this.user2BeanBalance = await this.bean.balanceOf(user2Address)
+            this.result = await this.marketplace.connect(user2).claimAndFillPodListing(this.listing, this.amountBeansBuyingWith, [['27'], [], [], false, false, 0, 0, false]);
+            this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
+            this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+          })
+
+          it('Transfer Beans properly', async function () {
+            expect(this.user2BeanBalance.sub(this.user2BeanBalanceAfter)).to.equal(0);
+            expect(await this.claim.wrappedBeans(user2Address)).to.equal('150');
+            expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal(0);
+            expect(await this.claim.wrappedBeans(userAddress)).to.equal('100');
+          })
+        })
+
+        describe("Claim, fill Beans with amount to wallet", async function () {
+          beforeEach(async function () {
+            await this.pair.simulateTrade('2500', '1000');
+            this.listing = [userAddress, '0', '0', '1000', '500000', '0', false, true, emptyFunction]
+            await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', false, true, emptyFunction);
+            this.amountTransferringBeans = 100;
+            this.amoutBuyingBeans = 250;
+
+            this.userBeanBalance = await this.bean.balanceOf(userAddress)
+            this.user2BeanBalance = await this.bean.balanceOf(user2Address)
+
+            this.result = await this.marketplace.connect(user2).claimBuyBeansAndFillPodListing(this.listing, this.amountTransferringBeans, this.amoutBuyingBeans, [['27'], [], [], false, false, 0, 0, false], { value: 112 })
+
+            this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
+            this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+          })
+
+          it('Transfer Beans properly', async function () {
+            expect(this.user2BeanBalance.sub(this.user2BeanBalanceAfter)).to.equal(0);
+            expect(await this.claim.wrappedBeans(user2Address)).to.equal('150');
+            expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal(this.amoutBuyingBeans + this.amountTransferringBeans);
+            expect(await this.claim.wrappedBeans(userAddress)).to.equal(0);
+          })
+        })
+      })
+    })
+  })
+
 })

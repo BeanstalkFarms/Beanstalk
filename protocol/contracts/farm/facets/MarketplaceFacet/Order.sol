@@ -66,6 +66,7 @@ contract Order is Listing {
         if (dynamic) {
             amount = beanAmount;
         } else {
+            require(0 < pricePerPod, "Marketplace: Pod price must be greater than 0.");
             amount = (beanAmount * 1000000) / pricePerPod;
         }
 
@@ -76,8 +77,7 @@ contract Order is Listing {
 
     function __createPodOrder(uint256 amount, uint24 pricePerPod, uint256 maxPlaceInLine, bool dynamic, PiecewiseCubic calldata f) internal returns (bytes32 id) {
         //if dynamic we need to make sure the sum of the pods cost is equal to the bean amount inputted
-        if (!dynamic)
-            require(0 < pricePerPod, "Marketplace: Pod price must be greater than 0.");
+            
         require(amount > 0, "Marketplace: Order amount must be > 0.");
 
         id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, dynamic, f.subIntervalIndex, f.constants, f.shifts, f.signs);
@@ -125,8 +125,8 @@ contract Order is Listing {
             o.f.signs
         );
 
-        console.log("podOrder Amount", s.podOrders[id]);
-        console.log("amount", amount);
+        // console.log("podOrder Amount", s.podOrders[id]);
+        // console.log("amount", amount);
 
         require(s.a[msg.sender].field.plots[index] >= (start + amount), "Marketplace: Invalid Plot.");
 
@@ -137,7 +137,7 @@ contract Order is Listing {
         uint256 amountBeans;
         if (o.dynamic) {
             amountBeans = 1 + _getSumOverPiecewiseRange(o.f, placeInLine, amount) / 1000000;
-            console.log("amountBeans", amountBeans);
+            // console.log("amountBeans", amountBeans);
             s.podOrders[id] = s.podOrders[id].sub(amountBeans);
         } else {
             s.podOrders[id] = s.podOrders[id].sub(amount);
@@ -198,10 +198,10 @@ contract Order is Listing {
 
         uint256 endIndex = LibMathFP.findIndexWithinSubinterval(f.subIntervalIndex, x + amount, 0,9 );
 
-        console.log("startIndex", startIndex);
-        console.log("endIndex", endIndex);
-        console.log("x", x);
-        console.log("amount", amount);
+        // console.log("startIndex", startIndex);
+        // console.log("endIndex", endIndex);
+        // console.log("x", x);
+        // console.log("amount", amount);
 
         //if x+amount is less than the end of the subinterval is in, there is only a need to evaluate one function integration
         //i think these need to be fixed
@@ -259,7 +259,7 @@ contract Order is Listing {
                 ) /
                 1000000;
         }
-        
+
         return
             (LibMathFP.evaluateCubic(
                 [
