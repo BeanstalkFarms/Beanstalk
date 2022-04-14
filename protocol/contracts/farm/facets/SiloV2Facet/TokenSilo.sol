@@ -170,16 +170,7 @@ contract TokenSilo {
 			LibCheck.beanBalanceCheck();
         } else if (token == address(0x87898263B6C5BABe34b4ec53F22d98430b91e371)) {
 			LibInternal.updateSilo(msg.sender);
-			(
-				uint256 lpRemoved,
-				uint256 stalkRemoved,
-				uint256 seedsRemoved
-			) = LibLPSilo.removeLPDeposits(seasons, amounts);
-			LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
-			for (uint256 i = 0; i < seasons.length; i++) {
-				LibLPSilo.addLPDeposit(transferTo, seasons[i], amounts[i]);
-			}
-			LibSilo.depositSiloAssets(transferTo, seedsRemoved, stalkRemoved);
+			LibLPSilo.transferLPDeposits(seasons, amounts, transferTo);
 			LibSilo.updateBalanceOfRainStalk(msg.sender);
 			LibCheck.lpBalanceCheck();
         } else {

@@ -81,6 +81,31 @@ library LibLPSilo {
         emit LPRemove(msg.sender, crates, amounts, lpRemoved);
     }
 
+    function transferLPDeposits(uint32[] calldata crates, uint256[] calldata amounts, address transferTo)
+        internal 
+    {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+		uint256 lpRemoved;
+        for (uint256 i = 0; i < crates.length; i++) {
+            (uint256 crateBeans, uint256 crateSeeds) = removeLPDeposit(
+                msg.sender,
+                crates[i],
+                amounts[i]
+            );
+            lpRemoved = lpRemoved.add(crateBeans);
+			LibSilo.withdrawSiloAssets(msg.sender, crateSeeds, crateSeeds.mul(C.getStalkPerLPSeed()).add(
+                LibSilo.stalkReward(crateSeeds, s.season.current-crates[i])));
+			addLPDeposit(transferTo, crates[i], amounts[i], crateSeeds);
+			LibSilo.depositSiloAssets(transferTo, crateSeeds, crateSeeds.mul(C.getStalkPerLPSeed()).add(
+                LibSilo.stalkReward(crateSeeds, s.season.current-crates[i])));
+        }
+
+		
+		
+        emit LPRemove(msg.sender, crates, amounts, lpRemoved);
+    }
+
+
     function addLPWithdrawal(address account, uint32 arrivalSeason, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.a[account].lp.withdrawals[arrivalSeason] = s.a[account].lp.withdrawals[arrivalSeason].add(amount);

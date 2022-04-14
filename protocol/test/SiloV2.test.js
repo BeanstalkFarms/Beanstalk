@@ -1408,12 +1408,6 @@ describe("Silo", function () {
       expect(await this.silo2.getTotalDeposited(this.pair.address)).to.eq("1000");
     });
 
-    // it("properly withdraws LP", async function () {
-    //   await this.silo2
-    //     .connect(user)
-    //     .withdrawTokenBySeason(this.pair.address, 3, "1000");
-    //   expect(await this.LPSilo.totalDepositedLP()).to.eq("0");
-    // });
     it("properly withdraws LP", async function () {
       await this.silo2
         .connect(user)
