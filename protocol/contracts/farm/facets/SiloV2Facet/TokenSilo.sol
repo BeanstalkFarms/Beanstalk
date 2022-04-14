@@ -9,6 +9,7 @@ import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/LibInternal.sol";
 import "../SiloFacet/BeanSilo.sol";
 import "hardhat/console.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @author Publius
@@ -89,6 +90,7 @@ contract TokenSilo {
     function _deposit(address token, uint256 amount) internal {
 		LibInternal.updateSilo(msg.sender);
         if (token == address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db)) {
+			console.log("Bean Balance (TokenSilo _deposit): ", IERC20(token).balanceOf(address(this)));
 			require(amount > 0, "Silo: No beans.");
 			LibBeanSilo.incrementDepositedBeans(amount);
 			LibSilo.depositSiloAssets(msg.sender, amount.mul(C.getSeedsPerBean()), amount.mul(C.getStalkPerBean()));
@@ -112,12 +114,14 @@ contract TokenSilo {
     function _withdrawDeposits(address token, uint32[] calldata seasons, uint256[] calldata amounts) internal {
         require(seasons.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
         if (token == address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db)) {
+			console.log("Bean Balance (TokenSilo _withdrawDeposits 1): ", IERC20(token).balanceOf(address(this)));
 			LibInternal.updateSilo(msg.sender);
 			(uint256 beansRemoved, uint256 stalkRemoved) = LibBeanSilo.removeBeanDeposits(seasons, amounts);
 			LibBeanSilo.addBeanWithdrawal(msg.sender, _season()+s.season.withdrawSeasons, beansRemoved);
 			LibBeanSilo.decrementDepositedBeans(beansRemoved);
 			LibSilo.withdrawSiloAssets(msg.sender, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved);
 			LibSilo.updateBalanceOfRainStalk(msg.sender);
+			console.log("Bean Balance (TokenSilo _withdrawDeposits 2): ", IERC20(token).balanceOf(address(this)));
 			LibCheck.beanBalanceCheck();
         } else if (token == address(0x87898263B6C5BABe34b4ec53F22d98430b91e371)) {
 			LibInternal.updateSilo(msg.sender);

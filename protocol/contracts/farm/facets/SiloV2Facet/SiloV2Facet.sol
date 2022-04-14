@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "./TokenSilo.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "hardhat/console.sol";
 
 /*
  * @author Publius
@@ -46,6 +47,9 @@ contract SiloV2Facet is TokenSilo {
 
     function deposit(address token, uint256 amount) external {
         IERC20(token).transferFrom(msg.sender, address(this), amount);
+		if (token == address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db)) {
+			console.log("Bean Balance (SiloV2Facet): ", IERC20(token).balanceOf(address(this)));
+		}
         _deposit(token, amount);
     }
 

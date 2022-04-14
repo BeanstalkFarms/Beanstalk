@@ -43,10 +43,15 @@ contract InitDiamond {
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
         ds.supportedInterfaces[type(IERC173).interfaceId] = true;
 
-        s.c.bean = address(new Bean());
         s.c.weth = IUniswapV2Router02(UNISWAP_ROUTER).WETH();
-        s.c.pair = address(IUniswapV2Factory(UNISWAP_FACTORY).createPair(s.c.bean, s.c.weth));
         s.c.pegPair = PEG_PAIR;
+		// comment out these if testing
+        // s.c.bean = address(new Bean());
+        // s.c.pair = address(IUniswapV2Factory(UNISWAP_FACTORY).createPair(s.c.bean, s.c.weth));
+		
+		// comment in these if testing
+        s.c.bean = address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db);
+        s.c.pair = address(0x87898263B6C5BABe34b4ec53F22d98430b91e371);
 
         IBean(s.c.bean).approve(UNISWAP_ROUTER, uint256(-1));
         IUniswapV2Pair(s.c.pair).approve(UNISWAP_ROUTER, uint256(-1));

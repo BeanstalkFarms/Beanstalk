@@ -26,11 +26,16 @@ contract MockInitDiamond {
     AppStorage internal s;
 
     function init(address mockRouter) external {
-        s.c.bean = address(new MockToken("BEAN", "Beanstalk"));
-        s.c.pair = address(new MockUniswapV2Pair(s.c.bean));
         s.c.pegPair = address(new MockUniswapV2Pair(s.c.weth));
         MockUniswapV2Router(mockRouter).setPair(s.c.pair);
         s.c.weth = IUniswapV2Router02(mockRouter).WETH();
+		// comment out these if testing
+        // s.c.bean = address(new MockToken("BEAN", "Beanstalk"));
+        // s.c.pair = address(new MockUniswapV2Pair(s.c.bean));
+		
+		// comment in these if testing
+        s.c.bean = address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db);
+        s.c.pair = address(0x87898263B6C5BABe34b4ec53F22d98430b91e371);
 
         IBean(s.c.bean).approve(mockRouter, uint256(-1));
         IUniswapV2Pair(s.c.pair).approve(mockRouter, uint256(-1));

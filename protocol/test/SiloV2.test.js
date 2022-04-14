@@ -1394,7 +1394,6 @@ describe("Silo", function () {
 
     it("properly withdraws beans", async function () {
 	  console.log(await this.BeanSilo.totalDepositedBeans());
-	  console.log(await this.season.season());
       await this.silo2
         .connect(user)
         .withdrawTokenBySeasons(this.bean.address, [3], ["1000"]);
