@@ -56,7 +56,12 @@ contract Account {
         uint256 wrappedBeans;
         mapping(address => mapping(uint32 => Deposit)) deposits;
         mapping(address => mapping(uint32 => uint256)) withdrawals;
-        mapping(address => uint32[]) depositSeasons;
+        mapping(address => uint32) depositSeasonsHead;
+        mapping(address => mapping(uint32 => uint32)) depositSeasons;
+        mapping(address => mapping(uint32 => bool)) depositSeasonExists;
+        mapping(address => uint32) withdrawalSeasonsHead;
+        mapping(address => mapping(uint32 => uint32)) withdrawalSeasons;
+        mapping(address => mapping(uint32 => bool)) withdrawalSeasonExists;
     }
 }
 

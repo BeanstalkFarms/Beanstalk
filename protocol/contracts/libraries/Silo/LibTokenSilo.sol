@@ -46,11 +46,94 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.a[account].deposits[token][_s].amount += uint128(amount);
         s.a[account].deposits[token][_s].bdv += uint128(bdv);
-        uint256 depositLength = s.a[account].depositSeasons.length;
-        if (depositLength == 0 || s.a[account].depositSeasons[depositLength - 1] != _s) {
-            s.a[account].depositSeasons.push(_s);
-        }
+        addDepositSeason(account, token, _s);
         emit Deposit(account, token, _s, amount, bdv);
+    }
+
+    function addDepositSeason(address account, address token, uint32 season) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        if (!s.a[account].depositSeasonExists[token][season]) {
+            s.a[account].depositSeasonExists[token][season] = true;
+
+            uint32 current = s.a[account].depositSeasonsHead[token];
+            uint32 prev;
+            while (current > season) {
+                prev = current;
+                current = s.a[account].depositSeasons[token][current];
+            }
+            if (prev == uint32(0)) {
+                s.a[account].depositSeasonsHead[token] = season;
+            } else {
+                s.a[account].depositSeasons[token][prev] = season;
+            }
+            s.a[account].depositSeasons[token][season] = current;
+        }
+    }
+
+    function removeDepositSeason(address account, address token, uint32 season) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        if (s.a[account].depositSeasonExists[token][season]) {
+                s.a[account].depositSeasonExists[token][season] = false;
+
+                uint32 current = s.a[account].depositSeasonsHead[token];
+                uint32 prev;
+                while (current > season) {
+                    prev = current;
+                    current = s.a[account].depositSeasons[token][current];
+                }
+
+                if (prev == uint32(0)) {
+                    s.a[account].depositSeasonsHead[token] = s.a[account].depositSeasons[token][current];
+                } else {
+                    s.a[account].depositSeasons[token][prev] = s.a[account].depositSeasons[token][current];
+                }
+                delete s.a[account].depositSeasons[token][current];
+            }
+    }
+
+    function addWithdrawalSeason(address account, address token, uint32 season) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        if (!s.a[account].withdrawalSeasonExists[token][season]) {
+            s.a[account].withdrawalSeasonExists[token][season] = true;
+
+            uint32 current = s.a[account].withdrawalSeasonsHead[token];
+            uint32 prev;
+            while (current > season) {
+                prev = current;
+                current = s.a[account].withdrawalSeasons[token][current];
+            }
+            if (prev == uint32(0)) {
+                s.a[account].withdrawalSeasonsHead[token] = season;
+            } else {
+                s.a[account].withdrawalSeasons[token][prev] = season;
+            }
+            s.a[account].withdrawalSeasons[token][season] = current;
+        }
+    }
+
+    function removeWithdrawalSeason(address account, address token, uint32 season) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        if (s.a[account].withdrawalSeasonExists[token][season]) {
+                s.a[account].withdrawalSeasonExists[token][season] = false;
+
+                uint32 current = s.a[account].withdrawalSeasonsHead[token];
+                uint32 prev;
+                while (current > season) {
+                    prev = current;
+                    current = s.a[account].withdrawalSeasons[token][current];
+                }
+
+                if (prev == uint32(0)) {
+                    s.a[account].withdrawalSeasonsHead[token] = s.a[account].withdrawalSeasons[token][current];
+                } else {
+                    s.a[account].withdrawalSeasons[token][prev] = s.a[account].withdrawalSeasons[token][current];
+                }
+                delete s.a[account].withdrawalSeasons[token][current];
+            }
     }
 
     function decrementDepositedToken(address token, uint256 amount) internal {
@@ -79,38 +162,7 @@ library LibTokenSilo {
             return (amount, base);
         } else {
             delete s.a[account].deposits[token][id];
-            uint256 depositLength = s.a[account].depositSeasons.length;
-            if (depositLength > 0 && s.a[account].depositSeasons[depositLength - 1] == id) {
-                s.a[account].depositSeasons.length--;
-            } else if (depositLength > 0) {
-                uint256 l = 0;
-                uint256 r = depositLength - 1;
-                uint256 idx;
-                bool found;
-                while (l <= r) {
-                    uint256 m = (l + r) / 2;
-                    uint256 _id = s.a[account].depositSeasons[m];
-                    if (_id == id) {
-                        idx = m;
-                        found = true;
-                        break;
-                    }
-                    if (_id < id) {
-                        l = m + 1;
-                    } else {
-                        if (m == 0) {
-                            break;
-                        }
-                        r = m - 1;
-                    }
-                }
-                if (found) {
-                    for (uint256 i = idx; i < depositLength - 1; i++) {
-                        s.a[account].depositSeasons[i] = s.a[account].depositSeasons[i + 1];
-                    }
-                    s.a[account].depositSeasons.length--;
-                }
-            }
+            removeDepositSeason(account, token, id);
             return (crateAmount, crateBase);
         }
     }
