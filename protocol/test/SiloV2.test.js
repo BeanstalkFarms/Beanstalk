@@ -1401,20 +1401,21 @@ describe("Silo", function () {
 	  console.log(await this.silo.balanceOfSeeds(user2Address));
 	   
 	  await this.silo2.connect(user).transferTokenBySeasons(this.bean.address, [3], [1000], user2Address);
+
 	  console.log(await this.silo.balanceOfStalk(userAddress));
 	  console.log(await this.silo.balanceOfSeeds(userAddress));
 	  console.log(await this.silo.balanceOfStalk(user2Address));
 	  console.log(await this.silo.balanceOfSeeds(user2Address));
+
       expect(await this.silo2.getTotalDeposited(this.bean.address)).to.eq("1000");
       expect(await this.silo2.getTotalWithdrawn(this.bean.address)).to.eq("0");
+    });
   });
 
   describe("LP deposit and withdraw", async function () {
     beforeEach(async function () {
       await this.season.siloSunrise(0);
-	  console.log(await this.pair.balanceOf(userAddress));
       await this.pair.faucet(userAddress, "10000");
-	  console.log(await this.pair.balanceOf(userAddress));
       await this.silo2.connect(user).deposit(this.pair.address, "1000");
     });
 
@@ -1428,6 +1429,23 @@ describe("Silo", function () {
         .withdrawTokenBySeasons(this.pair.address, [3], ["1000"]);
       expect(await this.silo2.getTotalDeposited(this.pair.address)).to.eq("0");
       expect(await this.silo2.getTotalWithdrawn(this.pair.address)).to.eq("1000");
+    });
+
+	it("properly transfers LP", async function () {
+	  console.log(await this.silo.balanceOfStalk(userAddress));
+	  console.log(await this.silo.balanceOfSeeds(userAddress));
+	  console.log(await this.silo.balanceOfStalk(user2Address));
+	  console.log(await this.silo.balanceOfSeeds(user2Address));
+	   
+	  await this.silo2.connect(user).transferTokenBySeasons(this.pair.address, [3], [1000], user2Address);
+
+	  console.log(await this.silo.balanceOfStalk(userAddress));
+	  console.log(await this.silo.balanceOfSeeds(userAddress));
+	  console.log(await this.silo.balanceOfStalk(user2Address));
+	  console.log(await this.silo.balanceOfSeeds(user2Address));
+
+      expect(await this.silo2.getTotalDeposited(this.pair.address)).to.eq("1000");
+      expect(await this.silo2.getTotalWithdrawn(this.pair.address)).to.eq("0");
     });
   });
 });

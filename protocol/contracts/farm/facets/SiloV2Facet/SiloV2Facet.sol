@@ -152,6 +152,7 @@ contract SiloV2Facet is TokenSilo {
         LibInternal.updateSilo(msg.sender);
         _transferDeposit(token, season, amount, transferTo);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
+        LibSilo.updateBalanceOfRainStalk(transferTo);
     }
 
     function transferTokenBySeasons(
@@ -164,6 +165,7 @@ contract SiloV2Facet is TokenSilo {
         LibInternal.updateSilo(msg.sender);
         _transferDeposits(token, seasons, amounts, transferTo);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
+        LibSilo.updateBalanceOfRainStalk(transferTo);
     }
 
     function transferTokensBySeason(WithdrawSeason[] calldata withdraws, address transferTo)
@@ -180,6 +182,7 @@ contract SiloV2Facet is TokenSilo {
             );
         }
         LibSilo.updateBalanceOfRainStalk(msg.sender);
+        LibSilo.updateBalanceOfRainStalk(transferTo);
     }
 
     function transferTokensBySeasons(WithdrawSeasons[] calldata withdraws, address transferTo)
@@ -196,6 +199,7 @@ contract SiloV2Facet is TokenSilo {
             );
         }
         LibSilo.updateBalanceOfRainStalk(msg.sender);
+        LibSilo.updateBalanceOfRainStalk(transferTo);
     }
 
     /*
