@@ -47,12 +47,6 @@ contract SiloV2Facet is TokenSilo {
 
     function deposit(address token, uint256 amount) external {
         IERC20(token).transferFrom(msg.sender, address(this), amount);
-		if (token == address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db)) {
-			console.log("Bean Balance (SiloV2Facet): ", IERC20(token).balanceOf(address(this)));
-		}
-		if (token == address(0x87898263B6C5BABe34b4ec53F22d98430b91e371)) {
-			console.log("LP Balance (SiloV2Facet): ", IERC20(token).balanceOf(address(this)));
-		}
         _deposit(token, amount);
     }
 
