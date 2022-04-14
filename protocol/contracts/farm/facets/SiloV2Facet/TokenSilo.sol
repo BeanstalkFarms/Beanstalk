@@ -89,7 +89,6 @@ contract TokenSilo {
     function _deposit(address token, uint256 amount) internal {
 		LibInternal.updateSilo(msg.sender);
         if (token == address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db)) {
-			console.log("Bean Balance (TokenSilo _deposit): ", IERC20(token).balanceOf(address(this)));
 			require(amount > 0, "Silo: No beans.");
 			LibBeanSilo.incrementDepositedBeans(amount);
 			LibSilo.depositSiloAssets(msg.sender, amount.mul(C.getSeedsPerBean()), amount.mul(C.getStalkPerBean()));
@@ -114,15 +113,12 @@ contract TokenSilo {
 
     function _withdrawDeposits(address token, uint32[] calldata seasons, uint256[] calldata amounts) internal {
         require(seasons.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
-        if (token == address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db)) {
-			console.log("Bean Balance (TokenSilo _withdrawDeposits 1): ", IERC20(token).balanceOf(address(this)));
 			LibInternal.updateSilo(msg.sender);
+        if (token == address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db)) {
 			(uint256 beansRemoved, uint256 stalkRemoved) = LibBeanSilo.removeBeanDeposits(seasons, amounts);
 			LibBeanSilo.addBeanWithdrawal(msg.sender, _season()+s.season.withdrawSeasons, beansRemoved);
 			LibBeanSilo.decrementDepositedBeans(beansRemoved);
 			LibSilo.withdrawSiloAssets(msg.sender, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved);
-			LibSilo.updateBalanceOfRainStalk(msg.sender);
-			console.log("Bean Balance (TokenSilo _withdrawDeposits 2): ", IERC20(token).balanceOf(address(this)));
 			LibCheck.beanBalanceCheck();
         } else if (token == address(0x87898263B6C5BABe34b4ec53F22d98430b91e371)) {
 			LibInternal.updateSilo(msg.sender);
@@ -135,7 +131,6 @@ contract TokenSilo {
 			LibLPSilo.addLPWithdrawal(msg.sender, arrivalSeason, lpRemoved);
 			LibLPSilo.decrementDepositedLP(lpRemoved);
 			LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
-			LibSilo.updateBalanceOfRainStalk(msg.sender);
 			LibCheck.lpBalanceCheck();
         } else {
 			AssetsRemoved memory ar = removeDeposits(token, seasons, amounts);
@@ -143,8 +138,8 @@ contract TokenSilo {
 			addTokenWithdrawal(msg.sender, token, arrivalSeason, ar.tokensRemoved);
 			LibTokenSilo.decrementDepositedToken(token, ar.tokensRemoved);
 			LibSilo.withdrawSiloAssets(msg.sender, ar.seedsRemoved, ar.stalkRemoved);
-			LibSilo.updateBalanceOfRainStalk(msg.sender);
 		}
+		LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
     function _withdrawDeposit(address token, uint32 season, uint256 amount) internal {
@@ -159,6 +154,56 @@ contract TokenSilo {
 			LibTokenSilo.decrementDepositedToken(token, ar.tokensRemoved);
 			LibSilo.withdrawSiloAssets(msg.sender, ar.seedsRemoved, ar.stalkRemoved);
         }
+    }
+
+    function _transferDeposits(address token, uint32[] calldata seasons, uint256[] calldata amounts, address transferTo) internal {
+        require(seasons.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
+        if (token == address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db)) {
+			LibInternal.updateSilo(msg.sender);
+			(uint256 beansRemoved, uint256 stalkRemoved) = LibBeanSilo.removeBeanDeposits(seasons, amounts);
+			LibSilo.withdrawSiloAssets(msg.sender, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved);
+			for (uint256 i = 0; i < seasons.length; i++) {
+				LibBeanSilo.addBeanDeposit(transferTo, seasons[i], amounts[i]);
+			}
+			LibSilo.depositSiloAssets(msg.sender, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved);
+			LibSilo.updateBalanceOfRainStalk(msg.sender);
+			LibCheck.beanBalanceCheck();
+        } else if (token == address(0x87898263B6C5BABe34b4ec53F22d98430b91e371)) {
+			LibInternal.updateSilo(msg.sender);
+			(
+				uint256 lpRemoved,
+				uint256 stalkRemoved,
+				uint256 seedsRemoved
+			) = LibLPSilo.removeLPDeposits(seasons, amounts);
+			LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
+			for (uint256 i = 0; i < seasons.length; i++) {
+				LibLPSilo.addLPDeposit(transferTo, seasons[i], amounts[i]);
+			}
+			LibSilo.depositSiloAssets(transferTo, seedsRemoved, stalkRemoved);
+			LibSilo.updateBalanceOfRainStalk(msg.sender);
+			LibCheck.lpBalanceCheck();
+        } else {
+			AssetsRemoved memory ar;
+			for (uint256 i = 0; i < seasons.length; i++) {
+				ar = removeDeposit(token, seasons[i], amounts[i]);
+				LibSilo.withdrawSiloAssets(msg.sender, ar.seedsRemoved, ar.stalkRemoved);
+				LibTokenSilo.transferWithBDV(transferTo, token, seasons[i], ar.tokensRemoved, ar.bdvRemoved);
+				LibSilo.depositSiloAssets(transferTo, ar.seedsRemoved, ar.stalkRemoved);
+			}
+		}
+    }
+
+    function _transferDeposit(address token, uint32 season, uint256 amount, address transferTo) internal {
+        if (token == address(0xDC59ac4FeFa32293A95889Dc396682858d52e5Db)) {
+			revert("For Beans, use _transferDeposits, not _transferDeposit");
+        } else if (token == address(0x87898263B6C5BABe34b4ec53F22d98430b91e371)) {
+			revert("For LP, use _transferDeposits, not _transferDeposit");
+        } else {
+			AssetsRemoved memory ar = removeDeposit(token, season, amount);
+			LibSilo.withdrawSiloAssets(msg.sender, ar.seedsRemoved, ar.stalkRemoved);
+			LibTokenSilo.transferWithBDV(transferTo, token, season, ar.tokensRemoved, ar.bdvRemoved);
+			LibSilo.depositSiloAssets(transferTo, ar.seedsRemoved, ar.stalkRemoved);
+		}
     }
 
     function removeDeposit(address token, uint32 season, uint256 amount)
@@ -200,24 +245,6 @@ contract TokenSilo {
         ar.seedsRemoved = bdvRemoved.mul(s.ss[token].seeds);
         ar.stalkRemoved = ar.stalkRemoved.add(bdvRemoved.mul(s.ss[token].stalk));
         emit RemoveSeasons(msg.sender, token, seasons, amounts, ar.tokensRemoved);
-    }
-
-    function _transferDeposits(address token, uint32[] calldata seasons, uint256[] calldata amounts, address transferTo) internal {
-        require(seasons.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
-        AssetsRemoved memory ar;
-        for (uint256 i = 0; i < seasons.length; i++) {
-            ar = removeDeposit(token, seasons[i], amounts[i]);
-            LibSilo.withdrawSiloAssets(msg.sender, ar.seedsRemoved, ar.stalkRemoved);
-            LibTokenSilo.transferWithBDV(transferTo, token, seasons[i], ar.tokensRemoved, ar.bdvRemoved);
-            LibSilo.depositSiloAssets(transferTo, ar.seedsRemoved, ar.stalkRemoved);
-        }
-    }
-
-    function _transferDeposit(address token, uint32 season, uint256 amount, address transferTo) internal {
-        AssetsRemoved memory ar = removeDeposit(token, season, amount);
-        LibSilo.withdrawSiloAssets(msg.sender, ar.seedsRemoved, ar.stalkRemoved);
-        LibTokenSilo.transferWithBDV(transferTo, token, season, ar.tokensRemoved, ar.bdvRemoved);
-        LibSilo.depositSiloAssets(transferTo, ar.seedsRemoved, ar.stalkRemoved);
     }
 
     function addTokenWithdrawal(address account, address token, uint32 arrivalSeason, uint256 amount) private {
