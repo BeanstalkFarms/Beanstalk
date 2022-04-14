@@ -18,4 +18,16 @@ contract MockMarketplaceFacet is MarketplaceFacet {
             delete s.podOrders[ids[i]];
         }
     }
+
+    function getPriceAtIndex(PiecewiseCubic calldata f, uint256 x, uint256 i) external view returns (uint256) {
+        return _getPriceAtIndex(f, x, i);
+    }
+
+    function getSumOverRange(PiecewiseCubic calldata f, uint256 x, uint256 amount) external view returns (uint256) {
+        return _getSumOverPiecewiseRange(f, x, amount);
+    }
+
+    function findIndexWithinSubinterval(uint256[10] calldata ranges, uint256 x, uint256 low, uint256 high) external pure returns (uint256) {
+        return LibMathFP.findIndexWithinSubinterval(ranges, x, low, high);
+    }
 }

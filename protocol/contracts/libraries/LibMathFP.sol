@@ -24,7 +24,7 @@ library LibMathFP {
         uint256 x,
         uint256 low,
         uint256 high
-    ) internal view returns (uint256 mid) {
+    ) internal pure returns (uint256 mid) {
         while (low < high) {
             // console.log('low', low);
             // console.log('high', high);
@@ -33,7 +33,7 @@ library LibMathFP {
             if (ranges[mid] == x) {
                 return mid;
             }
-            // console.log('ranges[mid]',ranges[mid]);
+
             if (x >= ranges[mid]) {
                 low = mid;
             } else {
@@ -55,7 +55,7 @@ library LibMathFP {
         uint256 x,
         uint256 amount,
         bool integrateInstead
-    ) internal view returns (uint256) {
+    ) internal pure returns (uint256) {
         uint256 y;
         uint256 yMinus;
 

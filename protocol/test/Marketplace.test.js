@@ -5,7 +5,7 @@ use(waffleChai);
 const { deploy } = require('../scripts/deploy.js')
 const { BigNumber } = require('bignumber.js')
 const { print, printWeather } = require('./utils/print.js')
-const { createInterpolant, evaluatePCHIP } = require('./utils/pchip.js')
+const { createInterpolant, getInterpPrice, getInterpSum } = require('./utils/pchip.js')
 const { getEthSpentOnGas } = require('./utils/helpers.js')
 
 
@@ -66,6 +66,11 @@ describe('Marketplace', function () {
     await this.field.connect(user2).sowBeansAndIndex('1000');
   }
 
+  const nonLinearSet = {
+    xs: [0, 1000, 6000],
+    ys: [500000, 600000, 700000]
+  };
+
   const emptyFunction = [Array(10).fill("0"), Array(40).fill("0"), Array(40).fill(0), Array(40).fill(true)];
 
   const getHash = async function (tx) {
@@ -112,6 +117,50 @@ describe('Marketplace', function () {
     await this.marketplace.deleteOrders(this.orderIds);
     this.orderIds = []
   })
+
+  describe("Dynamic Pricing Functions", async function () {
+
+    // describe("getPriceAtIndex", function () {
+      it("prices correctly", async function () {
+        this.interp = createInterpolant(nonLinearSet.xs, nonLinearSet.ys);
+        this.listing = await this.marketplace.connect(user).createPodListing('0', '0', '1000', 0, '0', true, false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
+        this.priceAt0 = await this.marketplace.connect(user).getPriceAtIndex([this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs], 0, this.index)
+        console.log(this.priceAt0)
+        expect(await this.marketplace.connect(user).getPriceAtIndex([this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs], 0, 0)).to.equal(nonLinearSet.ys[0])
+      })
+      // describe("Price at 0", async function () {
+          
+          
+      //     console.log('this.marketplace', this.marketplace);
+          
+      //     // this.index = await this.marketplace.connect(user).findIndexWithinSubinterval(this.interp.subIntervalIndex.map(String), '0', '0', '9');
+      //     // this.priceAt0 = await this.marketplace.connect(user).getPriceAtIndex([this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs], 0, this.index)
+      //     // console.log(this.priceAt0);
+      //     // this.priceAt0 = await _getPriceAtIndex(0);
+      //     // evaluatePchip(this.interp, 0);
+          
+      // });
+  
+      // describe("Price in first piece of piecewise", async function () {
+          
+      //     this.interp = createInterpolant(nonLinearSet.xs, nonLinearSet.ys);
+      //     this.listing = await this.marketplace.connect(user).createPodListing('0', '0', '1000', 0, '0', true, false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
+  
+      //     // this.priceAt0 = await _getPriceAtIndex(500);
+      //     // evaluatePchip(this.interp, 500);
+      // });
+  
+      // describe("Error: Price out of domain", async function () {
+          
+      //     this.interp = createInterpolant(nonLinearSet.xs, nonLinearSet.ys);
+      //     this.listing = await this.marketplace.connect(user).createPodListing('0', '0', '1000', 0, '0', true, false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
+  
+      //     // this.priceAt0 = await _getPriceAtIndex(8000);
+      //     //
+      //     // evaluatePchip(this.interp, 8000);
+      // });
+    // });
+  });
 
   describe("Pod Listings (dynamic)", async function () {
 
