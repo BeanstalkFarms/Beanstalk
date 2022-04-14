@@ -9,7 +9,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "./LibAppStorage.sol";
 import "../interfaces/IBean.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "hardhat/console.sol";
 
@@ -23,13 +22,6 @@ library LibCheck {
 
     function beanBalanceCheck() internal view {
         AppStorage storage s = LibAppStorage.diamondStorage();
-		console.log("IERC20(s.c.bean).balanceOf(address(this))", IERC20(s.c.bean).balanceOf(address(this))); 
-		console.log("IBean(s.c.bean).balanceOf(address(this))", IBean(s.c.bean).balanceOf(address(this))); 
-		console.log("Bean Address: ", s.c.bean);
-		console.log("s.f.harvestable", s.f.harvestable); 
-		console.log("s.f.harvested", s.f.harvested); 
-		console.log("s.bean.deposited", s.bean.deposited); 
-		console.log("s.bean.withdrawn", s.bean.withdrawn); 
         require(
             IBean(s.c.bean).balanceOf(address(this)) >=
                 s.f.harvestable.sub(s.f.harvested).add(s.bean.deposited).add(s.bean.withdrawn),
@@ -39,7 +31,6 @@ library LibCheck {
 
     function lpBalanceCheck() internal view {
         AppStorage storage s = LibAppStorage.diamondStorage();
-		console.log("IERC20(s.c.pair).balanceOf(address(this))", IERC20(s.c.pair).balanceOf(address(this))); 
 		console.log("IBean(s.c.pair).balanceOf(address(this))", IBean(s.c.pair).balanceOf(address(this))); 
 		console.log("s.lp.deposited", s.lp.deposited); 
 		console.log("s.lp.withdrawn", s.lp.withdrawn); 

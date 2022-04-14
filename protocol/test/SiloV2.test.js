@@ -60,7 +60,7 @@ describe("Silo", function () {
       "1"
     );
 
-    await this.pair.simulateTrade("2000", "2");
+    await this.pair.simulateTrade("2000", "1000");
     await this.season.siloSunrise(0);
     await this.pair.faucet(userAddress, "1");
     await this.bean.mint(userAddress, "1000000000");
@@ -1376,45 +1376,36 @@ describe("Silo", function () {
   });
 
   describe("Bean deposit and withdraw", async function () {
-    before(async function () {
-      this.BeanSilo = await ethers.getContractAt(
-        "BeanSilo",
-        this.diamond.address
-      );
-    });
-
     beforeEach(async function () {
       await this.season.siloSunrise(0);
       await this.silo2.connect(user).deposit(this.bean.address, "1000");
     });
 
     it("properly deposits beans", async function () {
-      expect(await this.BeanSilo.totalDepositedBeans()).to.eq("1000");
+      expect(await this.silo2.getTotalDeposited(this.bean.address)).to.eq("1000");
+      expect(await this.silo2.getTotalWithdrawn(this.bean.address)).to.eq("0");
     });
 
     it("properly withdraws beans", async function () {
-	  console.log(await this.BeanSilo.totalDepositedBeans());
       await this.silo2
         .connect(user)
         .withdrawTokenBySeasons(this.bean.address, [3], ["1000"]);
-	  console.log(await this.BeanSilo.totalDepositedBeans());
-      expect(await this.BeanSilo.totalDepositedBeans()).to.eq("0");
+      expect(await this.silo2.getTotalDeposited(this.bean.address)).to.eq("0");
+      expect(await this.silo2.getTotalWithdrawn(this.bean.address)).to.eq("1000");
     });
   });
 
   describe("LP deposit and withdraw", async function () {
-    before(async function () {
-      this.LPSilo = await ethers.getContractAt("LPSilo", this.diamond.address);
-    });
-
     beforeEach(async function () {
       await this.season.siloSunrise(0);
+	  console.log(await this.pair.balanceOf(userAddress));
       await this.pair.faucet(userAddress, "10000");
+	  console.log(await this.pair.balanceOf(userAddress));
       await this.silo2.connect(user).deposit(this.pair.address, "1000");
     });
 
     it("properly deposits LP", async function () {
-      expect(await this.LPSilo.totalDepositedLP()).to.eq("1000");
+      expect(await this.silo2.getTotalDeposited(this.pair.address)).to.eq("1000");
     });
 
     // it("properly withdraws LP", async function () {

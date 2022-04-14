@@ -9,7 +9,6 @@ import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/LibInternal.sol";
 import "../SiloFacet/BeanSilo.sol";
 import "hardhat/console.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @author Publius
@@ -98,6 +97,8 @@ contract TokenSilo {
         } else if (token == address(0x87898263B6C5BABe34b4ec53F22d98430b91e371)) {
 			uint32 _s = _season();
 			uint256 lpb = LibLPSilo.lpToLPBeans(amount);
+			console.log("amount", amount);
+			console.log("lpb", lpb);
 			require(lpb > 0, "Silo: No Beans under LP.");
 			LibLPSilo.incrementDepositedLP(amount);
 			uint256 seeds = lpb.mul(C.getSeedsPerLPBean());
