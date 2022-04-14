@@ -163,12 +163,12 @@ contract TokenSilo {
 			for (uint256 i = 0; i < seasons.length; i++) {
 				LibBeanSilo.addBeanDeposit(transferTo, seasons[i], amounts[i]);
 			}
-			LibSilo.depositSiloAssets(msg.sender, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved);
-			LibSilo.updateBalanceOfRainStalk(msg.sender);
+			LibSilo.depositSiloAssets(transferTo, beansRemoved.mul(C.getSeedsPerBean()), stalkRemoved);
+			LibSilo.updateBalanceOfRainStalk(transferTo);
 			LibCheck.beanBalanceCheck();
         } else if (token == address(0x87898263B6C5BABe34b4ec53F22d98430b91e371)) {
 			LibLPSilo.transferLPDeposits(seasons, amounts, transferTo);
-			LibSilo.updateBalanceOfRainStalk(msg.sender);
+			LibSilo.updateBalanceOfRainStalk(transferTo);
 			LibCheck.lpBalanceCheck();
         } else {
 			AssetsRemoved memory ar;

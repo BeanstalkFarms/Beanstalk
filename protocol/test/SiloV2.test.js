@@ -1395,20 +1395,13 @@ describe("Silo", function () {
     });
 
 	it("properly transfers beans", async function () {
-	  console.log(await this.silo.balanceOfStalk(userAddress));
-	  console.log(await this.silo.balanceOfSeeds(userAddress));
-	  console.log(await this.silo.balanceOfStalk(user2Address));
-	  console.log(await this.silo.balanceOfSeeds(user2Address));
-	   
 	  await this.silo2.connect(user).transferTokenBySeasons(this.bean.address, [3], [1000], user2Address);
-
-	  console.log(await this.silo.balanceOfStalk(userAddress));
-	  console.log(await this.silo.balanceOfSeeds(userAddress));
-	  console.log(await this.silo.balanceOfStalk(user2Address));
-	  console.log(await this.silo.balanceOfSeeds(user2Address));
-
       expect(await this.silo2.getTotalDeposited(this.bean.address)).to.eq("1000");
       expect(await this.silo2.getTotalWithdrawn(this.bean.address)).to.eq("0");
+	  expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
+	  expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
+	  expect(await this.silo.balanceOfStalk(user2Address)).to.eq("10000000");
+	  expect(await this.silo.balanceOfSeeds(user2Address)).to.eq("2000");
     });
   });
 
@@ -1432,20 +1425,13 @@ describe("Silo", function () {
     });
 
 	it("properly transfers LP", async function () {
-	  console.log(await this.silo.balanceOfStalk(userAddress));
-	  console.log(await this.silo.balanceOfSeeds(userAddress));
-	  console.log(await this.silo.balanceOfStalk(user2Address));
-	  console.log(await this.silo.balanceOfSeeds(user2Address));
-	   
 	  await this.silo2.connect(user).transferTokenBySeasons(this.pair.address, [3], [1000], user2Address);
-
-	  console.log(await this.silo.balanceOfStalk(userAddress));
-	  console.log(await this.silo.balanceOfSeeds(userAddress));
-	  console.log(await this.silo.balanceOfStalk(user2Address));
-	  console.log(await this.silo.balanceOfSeeds(user2Address));
-
       expect(await this.silo2.getTotalDeposited(this.pair.address)).to.eq("1000");
       expect(await this.silo2.getTotalWithdrawn(this.pair.address)).to.eq("0");
+	  expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
+	  expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
+	  expect(await this.silo.balanceOfStalk(user2Address)).to.eq("2000000");
+	  expect(await this.silo.balanceOfSeeds(user2Address)).to.eq("800");
     });
   });
 });

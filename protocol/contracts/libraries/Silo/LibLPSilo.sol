@@ -10,7 +10,6 @@ import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "../LibAppStorage.sol";
 import "../../C.sol";
 import "./LibSilo.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -100,8 +99,6 @@ library LibLPSilo {
                 LibSilo.stalkReward(crateSeeds, s.season.current-crates[i])));
         }
 
-		
-		
         emit LPRemove(msg.sender, crates, amounts, lpRemoved);
     }
 
@@ -123,12 +120,6 @@ library LibLPSilo {
         (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(s.c.pair).getReserves();
 
         uint256 beanReserve = s.index == 0 ? reserve0 : reserve1;
-
-        console.log("amount", amount); // 1000 
-        console.log("reserve0", reserve0); // 2000
-        console.log("reserve1", reserve1); // 2
-        console.log("beanReserve", beanReserve); // 2
-        console.log("IUniswapV2Pair(s.c.pair).totalSupply()", IUniswapV2Pair(s.c.pair).totalSupply()); // 10000
 
         return amount.mul(beanReserve).mul(2).div(IUniswapV2Pair(s.c.pair).totalSupply()); // 0
     }

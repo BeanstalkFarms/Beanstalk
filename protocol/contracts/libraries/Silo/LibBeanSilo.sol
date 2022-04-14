@@ -41,20 +41,20 @@ library LibBeanSilo {
         return amount;
     }
 
-
-    function transferBeanDeposits(uint32[] calldata crates, uint256[] calldata amounts, address transferTo)
+    function removeBeanDeposits(uint32[] calldata crates, uint256[] calldata amounts)
         internal
+        returns (uint256 beansRemoved, uint256 stalkRemoved)
     {
-        uint256 beansRemoved;
         AppStorage storage s = LibAppStorage.diamondStorage();
         for (uint256 i = 0; i < crates.length; i++) {
             uint256 crateBeans = LibBeanSilo.removeBeanDeposit(msg.sender, crates[i], amounts[i]);
             beansRemoved = beansRemoved.add(crateBeans);
-			LibSilo.withd
+            stalkRemoved = stalkRemoved.add(crateBeans.mul(C.getStalkPerBean()).add(
+                LibSilo.stalkReward(crateBeans.mul(C.getSeedsPerBean()), s.season.current-crates[i]))
+            );
         }
         emit BeanRemove(msg.sender, crates, amounts, beansRemoved);
     }
-
 
     function addBeanWithdrawal(address account, uint32 arrivalSeason, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();

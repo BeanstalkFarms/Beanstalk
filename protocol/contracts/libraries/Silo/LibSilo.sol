@@ -25,7 +25,7 @@ library LibSilo {
     **/
 
     function depositSiloAssets(address account, uint256 seeds, uint256 stalk) internal {
-        incrementBalanceOfStalk(account, stalk);
+		incrementBalanceOfStalk(account, stalk);
         incrementBalanceOfSeeds(account, seeds);
     }
 
