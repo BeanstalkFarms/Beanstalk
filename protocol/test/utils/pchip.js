@@ -163,7 +163,7 @@ function findIndex(ranges, x, start, end) {
             index++;
         } 
     }
-    console.log(index)
+    // console.log(index)
     return index;
 }
 

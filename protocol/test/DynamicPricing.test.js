@@ -103,6 +103,12 @@ describe('Marketplace Pricing Functions', function () {
     return idx;
   }
 
+  function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
   // so what i would do is test the pricing functions indpendently 
     //
     const nonLinearSet = {
@@ -110,17 +116,34 @@ describe('Marketplace Pricing Functions', function () {
       ys: [500000, 600000, 700000]
     };
 
+    function getRandomSetMonotonic(xStart, xEnd, yStart, yEnd) {
+      var length = getRandomInt(3,10);
+      let xs = [];
+      let ys = [];
+
+      var xDiffavg = (xEnd - xStart) / length;
+      var yDiffavg = (yEnd - yStart) / length;
+
+      if(yDiffavg < 0) 
+
+      for(i = 0; i < length; i++){
+        if(i==0){
+          xs.push(xStart);
+          ys.push(yStart)
+        }else{
+          xs.push(getRandomInt(i * xDiffavg, (i+1) * xDiffavg))
+          ys.push(yEnd - getRandomInt((length - i) * yDiffavg, (length - i + 1) * yDiffavg))
+        }
+      }
+      console.log(xs, ys)
+      return {xs, ys};
+
+    }
+
     beforeEach(async function () {
-        console.log('Why is before each not running?')
       await resetState();
       await this.marketplace.deleteOrders(this.orderIds);
       this.orderIds = []
-
-      // const nonLinearSet = {
-      //     xs: [0, 1000, 6000],
-      //     ys: [500000, 600000, 700000]
-      // }
-      
       // this.interp = createInterpolant(nonLinearSet.xs, nonLinearSet.ys);
     })
 
@@ -128,24 +151,37 @@ describe('Marketplace Pricing Functions', function () {
 
       describe("Find Index within Subinterval", async function () {
 
-        it("Finds the correct index start", async function () {
-          this.interp = createInterpolant(nonLinearSet.xs, nonLinearSet.ys)
-          this.index = findIndex(this.interp.subIntervalIndex, 0, 0, 3);
-          // console.log(this.index)
-          expect(await this.marketplace.findIndexWithinSubinterval(this.interp.subIntervalIndex.map(String), '0', '0', '3')).to.equal(this.index)
+        // describe("reverts", async function () {
+        //   beforeEach(async function () {
+
+        //   })
+
+        //   it("Fails to perform in a non monotonic dataset", async function () {
+        //     this.set = getRandomSetMonotonic
+        //   })
+
+        // })
+
+        it("Finds the correct index 0", async function () {
+          this.set = getRandomSetMonotonic(0, 5000, 900000, 200000);
+          console.log(this.set);
+          this.interp = createInterpolant(this.set.xs, this.set.ys)
+          this.index = findIndex(this.interp.subIntervalIndex, 0, 0, this.set.xs.length);
+          expect(await this.marketplace.findIndexWithinSubinterval(this.interp.subIntervalIndex.map(String), '0', '0', this.set.xs.length.toString())).to.equal(this.index)
         })
 
         it("Finds the correct index middle", async function () {
-          this.interp = createInterpolant(nonLinearSet.xs, nonLinearSet.ys)
-          // this.index = await this.marketplace.findIndexWithinSubinterval(this.interp.subIntervalIndex.map(String), '2000', '0', '3');
-          this.index = findIndex(this.interp.subIntervalIndex, 2000, 0, 3);
-          expect(await this.marketplace.findIndexWithinSubinterval(this.interp.subIntervalIndex.map(String), '2000', '0', '3')).to.equal(this.index)
+          this.set = getRandomSetMonotonic(0, 5000, 900000, 200000);
+          this.interp = createInterpolant(this.set.xs, this.set.ys)
+          this.mid = getRandomInt(this.set.xs[Math.ceil(this.set.xs.length/2)], this.set.xs[Math.ceil(this.set.xs.length/2)])
+          this.index = findIndex(this.interp.subIntervalIndex, this.mid, 0, this.set.xs.length);
+          expect(await this.marketplace.findIndexWithinSubinterval(this.interp.subIntervalIndex.map(String), this.mid.toString(), '0', this.set.xs.length.toString())).to.equal(this.index)
         })
         it("Finds the correct index end", async function () {
-          this.interp = createInterpolant(nonLinearSet.xs, nonLinearSet.ys)
-          // this.index = await this.marketplace.findIndexWithinSubinterval(this.interp.subIntervalIndex.map(String), '2000', '0', '3');
-          this.index = findIndex(this.interp.subIntervalIndex, 6000, 0, 3);
-          expect(await this.marketplace.findIndexWithinSubinterval(this.interp.subIntervalIndex.map(String), '6000', '0', '3')).to.equal(this.index)
+          this.set = getRandomSetMonotonic(0, 5000, 900000, 200000);
+          this.interp = createInterpolant(this.set.xs, this.set.ys);
+          this.index = findIndex(this.interp.subIntervalIndex, this.set.xs[this.set.xs.length-1], 0, this.set.xs.length);
+          expect(await this.marketplace.findIndexWithinSubinterval(this.interp.subIntervalIndex.map(String), this.set.xs[this.set.xs.length-1].toString(), '0', this.set.xs.length.toString())).to.equal(this.index)
         })
 
       })
