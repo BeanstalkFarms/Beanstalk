@@ -49,19 +49,4 @@ contract SiloV3Facet is TokenSilo {
         IERC20(token).transfer(msg.sender, amount);
         emit Claim(msg.sender, token, amount);
     }
-
-    /*
-     * Whitelist
-     */
-
-    function whitelistToken(address token, bytes4 selector, uint32 stalk, uint32 seeds) external {
-        require(msg.sender == address(this), "Silo: Only Beanstalk can whitelist tokens.");
-        s.ss[token].selector = selector;
-        s.ss[token].stalk = stalk;
-        s.ss[token].seeds = seeds;
-    }
-
-    function tokenSettings(address token) external view returns (Storage.SiloSettings memory) {
-        return s.ss[token];
-    }
 }
