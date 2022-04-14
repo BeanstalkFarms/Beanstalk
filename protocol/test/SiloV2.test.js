@@ -1414,5 +1414,12 @@ describe("Silo", function () {
     //     .withdrawTokenBySeason(this.pair.address, 3, "1000");
     //   expect(await this.LPSilo.totalDepositedLP()).to.eq("0");
     // });
+    it("properly withdraws LP", async function () {
+      await this.silo2
+        .connect(user)
+        .withdrawTokenBySeasons(this.pair.address, [3], ["1000"]);
+      expect(await this.silo2.getTotalDeposited(this.pair.address)).to.eq("0");
+      expect(await this.silo2.getTotalWithdrawn(this.pair.address)).to.eq("1000");
+    });
   });
 });
