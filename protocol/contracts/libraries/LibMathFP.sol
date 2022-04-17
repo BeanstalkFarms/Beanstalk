@@ -24,28 +24,36 @@ library LibMathFP {
         uint256 x,
         uint256 low,
         uint256 high
-    ) internal pure returns (uint256 mid) {
+    ) internal view returns (uint256) {
         while (low < high) {
             // console.log('low', low);
             // console.log('high', high);
-            mid = (low + high) / 2;
+            // mid = (low + high) / 2;
             // console.log('mid',mid);
-            if (ranges[mid] == x) {
-                return mid;
-            }
-
-            if (x >= ranges[mid]) {
-                low = mid;
+            // if (ranges[low] == x) {
+            //     return low;
+            // }
+            // console.log('ranges[mid]',ranges[mid]);
+            if (x >= ranges[low]) {
+                if(ranges[low+1] != 0 && x < ranges[low+1]){
+                    return low;
+                } else if(ranges[low+1] == 0) {
+                    return low;
+                    // continue;
+                } else {
+                    low++;
+                }
+                // low = mid;
             } else {
-                high = mid;
+                // high = mid;
+                low++;
             }
-            if (high - low == 1) {
-                return low;
-            }
+            // if (high - low == 1) {
+            //     return low;
+            // }
         }
+        return low;
     }
-
-    event DebugCubic(uint256 x, uint256 term);
 
     //evaluate polynomial at x, with an option to 'integrateInstead' over the range of 0 - x
     function evaluateCubic(
@@ -55,7 +63,7 @@ library LibMathFP {
         uint256 x,
         uint256 amount,
         bool integrateInstead
-    ) internal pure returns (uint256) {
+    ) internal view returns (uint256) {
         uint256 y;
         uint256 yMinus;
 
@@ -94,7 +102,7 @@ library LibMathFP {
                 }
             } else {
                 //evaluate the polynomial at x
-
+                console.log(x,term[i], shift[i]);
                 if (sign[i]) {
                     y += LibMathFP.muld(x**i, term[i], shift[i]);
                     continue;
@@ -104,7 +112,8 @@ library LibMathFP {
                 }
             }
         }
-
+        // console.log("y", y);
+        // console.log("yminus", yMinus);
         return y.sub(yMinus);
     }
 

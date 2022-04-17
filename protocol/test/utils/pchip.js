@@ -151,7 +151,7 @@ function createInterpolant(xs, ys) {
     var shifts = shiftsZero.concat(shiftsOne).concat(shiftsTwo).concat(shiftsThree);
     var bools = boolsZero.concat(boolsOne).concat(boolsTwo).concat(boolsThree);
     // console.log(oldXsFormatted, constants, shifts, bools)
-    return { subIntervalIndex: oldXsFormatted, constants: constants, shifts: shifts, signs: bools };
+    return { subintervals: oldXsFormatted, constants: constants, shifts: shifts, signs: bools };
 };
 
 function findIndex(ranges, x, start, end) {
@@ -169,42 +169,49 @@ function findIndex(ranges, x, start, end) {
 
 //integrate a PCHIP from x to k, with a piecewise of 10 parts
 function evaluatePCHIPI(f, x, amount) {
-    let startIndex = findIndex(f.subIntervalIndex, x, 0, f.subIntervalIndex.length)
-    let endIndex = findIndex(f.subIntervalIndex, x + amount, 0, f.subIntervalIndex.length)
-    // console.log('index: ', startIndex, endIndex)
-    // console.log('x: ', x, ', amount: ', amount)
-    // console.log(f.subIntervalIndex[startIndex+1])
-    if (x + amount <= f.subIntervalIndex[startIndex + 1]) {
+    let startIndex = findIndex(f.subintervals, x, 0, f.subintervals.length)
+    let endIndex = findIndex(f.subintervals, x + amount, 0, f.subintervals.length)
+
+    if (x + amount <= f.subintervals[startIndex + 1]) {
         return evaluateCubic(f.constants[startIndex] / Math.pow(10, f.shifts[startIndex]), f.constants[startIndex + 10] / Math.pow(10, f.shifts[startIndex + 10]), f.constants[startIndex + 20] / Math.pow(10, f.shifts[startIndex + 20]), f.constants[startIndex + 30] / Math.pow(10, f.shifts[startIndex + 30]), x, amount, true);
     }
 
     let midSum = 0;
     let i;
     for (i = 1; i < (endIndex - startIndex - 1); i++) {
-        midSum += evaluateCubic(f.constants[startIndex + i] / Math.pow(10, f.shifts[startIndex + i] - 6), f.constants[startIndex + i + 10] / Math.pow(10, f.shifts[startIndex + i + 10] - 6), f.constants[startIndex + i + 20] / Math.pow(10, f.shifts[startIndex + i + 20] - 6), f.constants[startIndex + i + 30] / Math.pow(10, f.shifts[startIndex + i + 30] - 6), 0, f.subIntervalIndex[startIndex + i + 1] - f.subIntervalIndex[startIndex + i])
+        midSum += evaluateCubic(f.constants[startIndex + i] / Math.pow(10, f.shifts[startIndex + i] - 6), f.constants[startIndex + i + 10] / Math.pow(10, f.shifts[startIndex + i + 10] - 6), f.constants[startIndex + i + 20] / Math.pow(10, f.shifts[startIndex + i + 20] - 6), f.constants[startIndex + i + 30] / Math.pow(10, f.shifts[startIndex + i + 30] - 6), 0, f.subintervals[startIndex + i + 1] - f.subintervals[startIndex + i])
     }
-    var cubic1 = evaluateCubic(f.constants[startIndex] / Math.pow(10, f.shifts[startIndex]), f.constants[startIndex + 10] / Math.pow(10, f.shifts[startIndex + 10]), f.constants[startIndex + 20] / Math.pow(10, f.shifts[startIndex + 20]), f.constants[startIndex + 30] / Math.pow(10, f.shifts[startIndex + 30]), x, f.subIntervalIndex[startIndex], true)
-    var cubic2 = evaluateCubic(f.constants[endIndex] / Math.pow(10, f.shifts[endIndex]), f.constants[endIndex + 10] / Math.pow(10, f.shifts[endIndex + 10]), f.constants[endIndex + 20] / Math.pow(10, f.shifts[endIndex + 20]), f.constants[endIndex + 30] / Math.pow(10, f.shifts[endIndex + 30]), f.subIntervalIndex[endIndex], amount+x,true)
+    var cubic1 = evaluateCubic(f.constants[startIndex] / Math.pow(10, f.shifts[startIndex]), f.constants[startIndex + 10] / Math.pow(10, f.shifts[startIndex + 10]), f.constants[startIndex + 20] / Math.pow(10, f.shifts[startIndex + 20]), f.constants[startIndex + 30] / Math.pow(10, f.shifts[startIndex + 30]), x, f.subintervals[startIndex], true)
+    var cubic2 = evaluateCubic(f.constants[endIndex] / Math.pow(10, f.shifts[endIndex]), f.constants[endIndex + 10] / Math.pow(10, f.shifts[endIndex + 10]), f.constants[endIndex + 20] / Math.pow(10, f.shifts[endIndex + 20]), f.constants[endIndex + 30] / Math.pow(10, f.shifts[endIndex + 30]), f.subintervals[endIndex], amount+x,true)
     // console.log(cubic1, cubic2, midSum)
     return cubic1 + cubic2 + midSum;
 }
 
-function evaluatePchip(f, x) {
-    let startIndex = findIndex(f.subIntervalIndex, x, 0, f.subIntervalIndex.length)
-    // console.log(startIndex)
-    return evaluateCubic(f.constants[startIndex] / Math.pow(10, f.shifts[startIndex]), f.constants[startIndex + 10] / Math.pow(10, f.shifts[startIndex + 10]), f.constants[startIndex + 20] / Math.pow(10, f.shifts[startIndex + 20]), f.constants[startIndex + 30] / Math.pow(10, f.shifts[startIndex + 30]), x, 0, false);
+function evaluatePchip(f, x, i) {
+    let val = evaluateCubic([f.constants[i], f.constants[i+10], f.constants[i+20], f.constants[i+30]], [f.shifts[i], f.shifts[i+10], f.shifts[i+20], f.shifts[i+30]],[f.signs[i], f.signs[i+10], f.signs[i+20], f.signs[i+30]], x, false);
+    console.log([f.constants[i], f.constants[i+10], f.constants[i+20], f.constants[i+30]], [f.shifts[i], f.shifts[i+10], f.shifts[i+20], f.shifts[i+30]]);
+    val = Math.round(val)
+    return val;
 }
 
-function evaluateCubic(a, b, c, d, x, amount, integrate) {
-    if (integrate) {
-        return ((d * Math.pow(x + amount, 4) / 4) + (c * Math.pow(x + amount, 3) / 3) + (b * Math.pow(x + amount, 2) / 2) + a * (x + amount)) - (d * Math.pow(x, 4) / 4) + (c * Math.pow(x, 3) / 3) + (b * Math.pow(x, 2) / 2) + a * x
-    } else {
-        // console.log("a: ", a);
-        // console.log("b: ", b);
-        // console.log("c: ", c)
-        // console.log("d: ", d)
-        return (d * Math.pow(x, 3)) + (c * Math.pow(x, 2)) + (b * x) + a;
+function evaluateCubic(valueArray, shiftsArray, signArray, x, integrate) {
+    console.log(valueArray, shiftsArray)
+    console.log(valueArray[0]/Math.pow(10,shiftsArray[0]))
+    console.log(valueArray[1]*x/Math.pow(10,shiftsArray[1]))
+    console.log(valueArray[2]*x**2/Math.pow(10,shiftsArray[2]))
+    console.log(valueArray[3]*x**3/Math.pow(10, shiftsArray[3]))
+    let y = 0;
+    for(let i = 0; i < 4; i++){
+        if(signArray[i]){
+            y += valueArray[i]*(x**i) / Math.pow(10, shiftsArray[i])
+        } else {
+            y -= valueArray[i]*(x**i) / Math.pow(10, shiftsArray[i])
+        }
     }
+    if(y<0){
+        throw Error("Subtraction overflow")
+    }
+    return y
 }
 
 module.exports = {

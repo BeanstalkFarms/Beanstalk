@@ -20,7 +20,7 @@ contract Listing is PodTransfer {
     using SafeMath for uint256;
 
     struct PiecewiseCubic {
-        uint256[10] subIntervalIndex; //Each term 'n' points to the beginning of the domain for the nth piecewise
+        uint256[10] subintervals; //Each term 'n' points to the beginning of the domain for the nth piecewise
         uint256[40] constants; //Stores the constant values for each cubic. Since there are only 10 values ot a degree, they are concatenated together to form a 40 length array
         uint8[40] shifts; //Decimal shift for each corresponding constant value
         bool[40] signs; //Sign for each corresponding value
@@ -55,7 +55,7 @@ contract Listing is PodTransfer {
         uint256 amount,
         uint256 maxHarvestableIndex,
         bool toWallet,
-        uint256[10] subIntervalIndex,
+        uint256[10] subintervals,
         uint256[40] constants,
         uint8[40] shifts,
         bool[40] signs
@@ -86,7 +86,7 @@ contract Listing is PodTransfer {
 
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(index);
 
-        s.podListings[index] = hashListing(start, amount, pricePerPod, maxHarvestableIndex, dynamic, toWallet, f.subIntervalIndex, f.constants, f.shifts, f.signs);
+        s.podListings[index] = hashListing(start, amount, pricePerPod, maxHarvestableIndex, dynamic, toWallet, f.subintervals, f.constants, f.shifts, f.signs);
 
         if (dynamic) {
             emit DynamicPodListingCreated(
@@ -96,7 +96,7 @@ contract Listing is PodTransfer {
                 amount,
                 maxHarvestableIndex,
                 toWallet,
-                f.subIntervalIndex,
+                f.subintervals,
                 f.constants,
                 f.shifts,
                 f.signs
@@ -131,7 +131,7 @@ contract Listing is PodTransfer {
             l.maxHarvestableIndex,
             l.dynamic,
             l.toWallet,
-            l.f.subIntervalIndex,
+            l.f.subintervals,
             l.f.constants,
             l.f.shifts,
             l.f.signs
@@ -143,8 +143,9 @@ contract Listing is PodTransfer {
         require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
         uint256 amountBeans;
         if (l.dynamic) {
-            uint256 i = LibMathFP.findIndexWithinSubinterval(l.f.subIntervalIndex, l.index + l.start + l.amount - s.f.harvestable, 0, 9);
+            uint256 i = LibMathFP.findIndexWithinSubinterval(l.f.subintervals, l.index + l.start + l.amount - s.f.harvestable, 0, 9);
             uint256 pricePerPod = _getPriceAtIndex(l.f, l.index + l.start + l.amount - s.f.harvestable, i);
+            console.log("s.f.harvestable", s.f.harvestable);
             console.log("pricePerPod", pricePerPod);
             amountBeans = (beanAmount * 1000000) / pricePerPod;
             console.log("amountBeans", amountBeans);
@@ -161,6 +162,8 @@ contract Listing is PodTransfer {
     }
 
     function _getPriceAtIndex(PiecewiseCubic calldata f, uint256 x, uint256 i) internal view returns (uint256 pricePerPod) {
+        console.log("x", x);
+        console.log("i", i);
         pricePerPod = LibMathFP.evaluateCubic(
             [f.signs[i], f.signs[i + 10], f.signs[i + 20], f.signs[i + 30]],
             [f.shifts[i], f.shifts[i + 10], f.shifts[i + 20], f.shifts[i + 30]],
@@ -185,7 +188,7 @@ contract Listing is PodTransfer {
                 l.maxHarvestableIndex,
                 l.dynamic,
                 l.toWallet,
-                l.f.subIntervalIndex,
+                l.f.subintervals,
                 l.f.constants,
                 l.f.shifts,
                 l.f.signs
@@ -227,7 +230,7 @@ contract Listing is PodTransfer {
         uint256 maxHarvestableIndex,
         bool dynamic,
         bool toWallet,
-        uint256[10] calldata subIntervalIndex,
+        uint256[10] calldata subintervals,
         uint256[40] calldata constants,
         uint8[40] calldata shifts,
         bool[40] calldata bools
@@ -240,7 +243,7 @@ contract Listing is PodTransfer {
                 maxHarvestableIndex,
                 dynamic,
                 toWallet,
-                subIntervalIndex,
+                subintervals,
                 constants,
                 shifts,
                 bools

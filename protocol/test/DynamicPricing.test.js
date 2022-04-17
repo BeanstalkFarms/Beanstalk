@@ -69,6 +69,10 @@ describe('Marketplace Pricing Functions', function () {
 
   const emptyFunction = [Array(10).fill("0"), Array(40).fill("0"), Array(40).fill(0), Array(40).fill(true)];
 
+  const nonLinearSet = {
+    xs: [0, 1000, 6000],
+    ys: [500000, 600000, 700000]
+  };
   const getHash = async function (tx) {
     let receipt = await tx.wait();
     const args = (receipt.events?.filter((x) => { return x.event == "PodListingCreated" }))[0].args;
@@ -83,7 +87,7 @@ describe('Marketplace Pricing Functions', function () {
     const args = (receipt.events?.filter((x) => { return x.event == "DynamicPodListingCreated" }))[0].args;
     return ethers.utils.solidityKeccak256(
       ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[10]', 'uint256[40]', 'uint8[40]', 'bool[40]'],
-      [args.start, args.amount, 0, args.maxHarvestableIndex, true, args.toWallet, args.subIntervalIndex, args.constants, args.shifts, args.signs]
+      [args.start, args.amount, 0, args.maxHarvestableIndex, true, args.toWallet, args.subintervals, args.constants, args.shifts, args.signs]
     );
   }
 
@@ -111,30 +115,14 @@ describe('Marketplace Pricing Functions', function () {
 
   // so what i would do is test the pricing functions indpendently 
     //
-    const nonLinearSet = {
-      xs: [0, 1000, 6000],
-      ys: [500000, 600000, 700000]
-    };
+    
 
     function getRandomSetMonotonic(xStart, xEnd, yStart, yEnd) {
-      var length = getRandomInt(3,10);
-      let xs = [];
-      let ys = [];
+      // var length = 5;
+      let xs = [0,       1000,    2000,   8000, 9000];
+      let ys = [1000000, 850000,  800000, 400000, 380000];
 
-      var xDiffavg = (xEnd - xStart) / length;
-      var yDiffavg = (yEnd - yStart) / length;
-
-      if(yDiffavg < 0) 
-
-      for(i = 0; i < length; i++){
-        if(i==0){
-          xs.push(xStart);
-          ys.push(yStart)
-        }else{
-          xs.push(getRandomInt(i * xDiffavg, (i+1) * xDiffavg))
-          ys.push(yEnd - getRandomInt((length - i) * yDiffavg, (length - i + 1) * yDiffavg))
-        }
-      }
+   
       console.log(xs, ys)
       return {xs, ys};
 
@@ -144,115 +132,105 @@ describe('Marketplace Pricing Functions', function () {
       await resetState();
       await this.marketplace.deleteOrders(this.orderIds);
       this.orderIds = []
-      // this.interp = createInterpolant(nonLinearSet.xs, nonLinearSet.ys);
+      this.set = getRandomSetMonotonic(0, 5000, 900000, 200000);
     })
 
-    describe("Dynamic Pricing Functions", async function () {
+    describe("Dynamic Pricing - LibMathFP", async function () {
 
       describe("Find Index within Subinterval", async function () {
-
-        // describe("reverts", async function () {
-        //   beforeEach(async function () {
-
-        //   })
-
-        //   it("Fails to perform in a non monotonic dataset", async function () {
-        //     this.set = getRandomSetMonotonic
-        //   })
-
-        // })
-
-        it("Finds the correct index 0", async function () {
-          this.set = getRandomSetMonotonic(0, 5000, 900000, 200000);
-          console.log(this.set);
-          this.interp = createInterpolant(this.set.xs, this.set.ys)
-          this.index = findIndex(this.interp.subIntervalIndex, 0, 0, this.set.xs.length);
-          expect(await this.marketplace.findIndexWithinSubinterval(this.interp.subIntervalIndex.map(String), '0', '0', this.set.xs.length.toString())).to.equal(this.index)
-        })
-
-        it("Finds the correct index middle", async function () {
-          this.set = getRandomSetMonotonic(0, 5000, 900000, 200000);
+        beforeEach(async function() {
+          
           this.interp = createInterpolant(this.set.xs, this.set.ys)
           this.mid = getRandomInt(this.set.xs[Math.ceil(this.set.xs.length/2)], this.set.xs[Math.ceil(this.set.xs.length/2)])
-          this.index = findIndex(this.interp.subIntervalIndex, this.mid, 0, this.set.xs.length);
-          expect(await this.marketplace.findIndexWithinSubinterval(this.interp.subIntervalIndex.map(String), this.mid.toString(), '0', this.set.xs.length.toString())).to.equal(this.index)
+          this.index0 = findIndex(this.interp.subintervals, 0, 0, this.set.xs.length);
+          this.index1 = findIndex(this.interp.subintervals, this.interp.subintervals[1], 0, this.set.xs.length);
+          this.index1n = findIndex(this.interp.subintervals, this.interp.subintervals[this.set.xs.length - 1 - 1], 0, this.set.xs.length)
+          // this.indexMid = findIndex(this.interp.subintervals, this.mid, 0, this.set.xs.length);
+          this.indexEnd = findIndex(this.interp.subintervals, this.set.xs[this.set.xs.length - 1], 0, this.set.xs.length);
+        })
+  
+        it("Finds the correct index 0", async function () {
+          let ind = await this.marketplace.findIndexWithinSubinterval(this.interp.subintervals.map(String), '0', '0', '9');
+          // expect(ind == index0 ? )
+          expect(ind).to.equal(this.index0)
+          expect(this.interp.subintervals[ind]).to.equal(this.interp.subintervals[this.index0])
+        })
+        it("Finds the correct index 1", async function () {
+          let ind = await this.marketplace.findIndexWithinSubinterval(this.interp.subintervals.map(String), this.interp.subintervals[1].toString(), '0', '9');
+          // expect(ind == index0 ? )
+          expect(ind).to.equal(this.index1)
+          expect(this.interp.subintervals[ind]).to.equal(this.interp.subintervals[this.index1])
+        })
+        it("Finds the correct index -1", async function () {
+          let ind = await this.marketplace.findIndexWithinSubinterval(this.interp.subintervals.map(String), this.interp.subintervals[this.set.xs.length - 1 - 1].toString(), '0', '9');
+          // expect(ind == index0 ? )
+          expect(ind).to.equal(this.index1n)
+          expect(this.interp.subintervals[ind]).to.equal(this.interp.subintervals[this.index1n])
         })
         it("Finds the correct index end", async function () {
-          this.set = getRandomSetMonotonic(0, 5000, 900000, 200000);
+          let ind = await this.marketplace.findIndexWithinSubinterval(this.interp.subintervals.map(String), this.interp.subintervals[this.set.xs.length - 1].toString(), '0', '9');
+          // expect(ind == index0 ? )
+          expect(ind).to.equal(this.indexEnd)
+          expect(this.interp.subintervals[ind]).to.equal(this.interp.subintervals[this.indexEnd])
+        })
+
+        // it("Finds the correct index 1", async function () {
+        //   let ind = await this.marketplace.findIndexWithinSubinterval(this.interp.subintervals.map(String), this.interp.subintervals[1].toString(), '0', '9');
+        //   expect(this.interp.subintervals[ind]).to.equal(this.interp.subintervals[this.index1])
+        // })
+        // it("Finds the correct index middle", async function () {
+        //   let ind = await this.marketplace.findIndexWithinSubinterval(this.interp.subintervals.map(String), this.mid.toString(), '0', '9');
+        //   expect(this.interp.subintervals[ind]).to.equal(this.interp.subintervals[this.indexMid])
+        // })
+
+        // it("Finds the correct index end", async function () {
+        //   let ind = await this.marketplace.findIndexWithinSubinterval(this.interp.subintervals.map(String), this.set.xs[this.set.xs.length-1].toString(), '0', '9');
+        //   console.log(ind,this.indexEnd)
+        //   console.log(this.interp.subintervals[ind], this.interp.subintervals[this.indexEnd])
+        //   expect(this.interp.subintervals[ind]).to.equal(this.interp.subintervals[this.indexEnd])
+        // })
+
+      })
+
+      describe("pricing with a non linear set", async function () {
+        
+        beforeEach(async function () {
           this.interp = createInterpolant(this.set.xs, this.set.ys);
-          this.index = findIndex(this.interp.subIntervalIndex, this.set.xs[this.set.xs.length-1], 0, this.set.xs.length);
-          expect(await this.marketplace.findIndexWithinSubinterval(this.interp.subIntervalIndex.map(String), this.set.xs[this.set.xs.length-1].toString(), '0', this.set.xs.length.toString())).to.equal(this.index)
+
+          this.index0 = findIndex(this.interp.subintervals, 0, 0, this.set.xs.length)
+          this.priceAt0 = getInterpPrice(this.interp, 0, this.index0);
+
+          this.index1 = findIndex(this.interp.subintervals, this.interp.subintervals[1], 0, this.set.xs.length)
+          this.priceAt1 = getInterpPrice(this.interp, this.interp.subintervals[1], this.index1);
+
+          this.index2 = findIndex(this.interp.subintervals, this.interp.subintervals[2], 0, this.set.xs.length);
+          this.priceAt2 = getInterpPrice(this.interp, this.interp.subintervals[2], this.index2)
+
+          this.index1reverse = findIndex(this.interp.subintervals, this.interp.subintervals[this.set.xs.length-1], 0, this.set.xs.length);
+          this.priceAt1reverse = getInterpPrice(this.interp, this.interp.subintervals[this.set.xs.length-1], this.set.xs.length-1, this.index1reverse)
+
+          this.index2reverse = findIndex(this.interp.subintervals, this.interp.subintervals[this.set.xs.length-2], 0, this.set.xs.length);
+          this.priceAt2reverse = getInterpPrice(this.interp, this.interp.subintervals[this.set.xs.length-2], this.set.xs.length-2, this.index2reverse)
         })
 
-      })
-
-      describe("Get Price at Index", async function () {
-
-        it("prices correctly at index 0", async function () {
-          this.interp = createInterpolant(nonLinearSet.xs, nonLinearSet.ys);
-          this.listing = await this.marketplace.connect(user).createPodListing('0', '0', '1000', 0, '0', true, false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
-          // this.index = await this.marketplace.findIndexWithinSubinterval(this.interp.subIntervalIndex.map(String), '0', '0', '9');
-          // console.log("index: ", this.index)
-          // this.priceAt0 = await this.marketplace.getPriceAtIndex([this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs], 0, 0);
-          // console.log("pa0: ", this.priceAt0)
-          expect(await this.marketplace.getPriceAtIndex([this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs], 0, 0)).to.equal(nonLinearSet.ys[0])
+        // HAVE TO CALCULATE THE CORRECT X VALUE BY USING THE HARVESTABLE IDNEX
+        it("prices correctly at 0", async function () {
+          expect(await this.marketplace.getPriceAtIndex([this.interp.subintervals.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs], '0', this.index0)).to.equal(this.priceAt0.toString())
         })
 
+        it("prices correctly in 1st index", async function () {
+          expect(await this.marketplace.getPriceAtIndex([this.interp.subintervals.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs], this.interp.subintervals[1], this.index1)).to.equal(this.priceAt1)
+        })
+        it("prices correctly in 2nd index", async function () {
+          expect(await this.marketplace.getPriceAtIndex([this.interp.subintervals.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs], this.interp.subintervals[2], this.index2)).to.equal(this.priceAt2)
+        })
+        it("prices correctly in 1st reverse index", async function () {
+          expect(await this.marketplace.getPriceAtIndex([this.interp.subintervals.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs], this.interp.subintervals[this.set.xs.length-1], this.index1reverse)).to.equal(this.priceAt1reverse)
+        })
+      
       })
-
-      // describe("getPriceAtIndex", function () {
     
-        // describe("Price at 0", async function () {
-            
-            
-        //     console.log('this.marketplace', this.marketplace);
-            
-        //     // this.index = await this.marketplace.connect(user).findIndexWithinSubinterval(this.interp.subIntervalIndex.map(String), '0', '0', '9');
-        //     // this.priceAt0 = await this.marketplace.connect(user).getPriceAtIndex([this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs], 0, this.index)
-        //     // console.log(this.priceAt0);
-        //     // this.priceAt0 = await _getPriceAtIndex(0);
-        //     // evaluatePchip(this.interp, 0);
-            
-        // });
+    })
     
-        // describe("Price in first piece of piecewise", async function () {
-            
-        //     this.interp = createInterpolant(nonLinearSet.xs, nonLinearSet.ys);
-        //     this.listing = await this.marketplace.connect(user).createPodListing('0', '0', '1000', 0, '0', true, false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
-    
-        //     // this.priceAt0 = await _getPriceAtIndex(500);
-        //     // evaluatePchip(this.interp, 500);
-        // });
-    
-        // describe("Error: Price out of domain", async function () {
-            
-        //     this.interp = createInterpolant(nonLinearSet.xs, nonLinearSet.ys);
-        //     this.listing = await this.marketplace.connect(user).createPodListing('0', '0', '1000', 0, '0', true, false, [this.interp.subIntervalIndex.map(String), this.interp.constants.map(String), this.interp.shifts, this.interp.signs]);
-    
-        //     // this.priceAt0 = await _getPriceAtIndex(8000);
-        //     //
-        //     // evaluatePchip(this.interp, 8000);
-        // });
-      // });
-    });
-
-  // describe("_getSumOverPiecewiseRange", async function () {
-
-  //   describe("Sum over entire piecewise range", async function () {
-        
-  //   });
-
-
-  // });
-
-  // describe("findIndexWithinSubinterval", async function () {
-
-  //   describe("Find index out of range", async function () {
-        
-
-  //   });
-
-
-  // });
-
+  
 });

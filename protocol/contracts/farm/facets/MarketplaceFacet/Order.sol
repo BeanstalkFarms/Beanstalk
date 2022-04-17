@@ -35,7 +35,7 @@ contract Order is Listing {
         bytes32 id,
         uint256 amountBeans,
         uint256 maxPlaceInLine,
-        uint256[10] subIntervalIndex,
+        uint256[10] subintervals,
         uint256[40] constants,
         uint8[40] shifts,
         bool[40] signs
@@ -80,7 +80,7 @@ contract Order is Listing {
             
         require(amount > 0, "Marketplace: Order amount must be > 0.");
 
-        id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, dynamic, f.subIntervalIndex, f.constants, f.shifts, f.signs);
+        id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, dynamic, f.subintervals, f.constants, f.shifts, f.signs);
 
         if (s.podOrders[id] > 0)
             _cancelPodOrder(pricePerPod, maxPlaceInLine, dynamic, false, f);
@@ -92,7 +92,7 @@ contract Order is Listing {
                 id,
                 amount,
                 maxPlaceInLine,
-                f.subIntervalIndex,
+                f.subintervals,
                 f.constants,
                 f.shifts,
                 f.signs
@@ -119,7 +119,7 @@ contract Order is Listing {
             o.pricePerPod,
             o.maxPlaceInLine,
             o.dynamic,
-            o.f.subIntervalIndex,
+            o.f.subintervals,
             o.f.constants,
             o.f.shifts,
             o.f.signs
@@ -167,7 +167,7 @@ contract Order is Listing {
             pricePerPod,
             maxPlaceInLine,
             dynamic,
-            f.subIntervalIndex,
+            f.subintervals,
             f.constants,
             f.shifts,
             f.signs
@@ -194,9 +194,9 @@ contract Order is Listing {
      */
 
     function _getSumOverPiecewiseRange(PiecewiseCubic calldata f, uint256 x, uint256 amount) internal view returns (uint256) {
-        uint256 startIndex = LibMathFP.findIndexWithinSubinterval(f.subIntervalIndex, x, 0, 9);
+        uint256 startIndex = LibMathFP.findIndexWithinSubinterval(f.subintervals, x, 0, 9);
 
-        uint256 endIndex = LibMathFP.findIndexWithinSubinterval(f.subIntervalIndex, x + amount, 0,9 );
+        uint256 endIndex = LibMathFP.findIndexWithinSubinterval(f.subintervals, x + amount, 0,9 );
 
         // console.log("startIndex", startIndex);
         // console.log("endIndex", endIndex);
@@ -205,7 +205,7 @@ contract Order is Listing {
 
         //if x+amount is less than the end of the subinterval is in, there is only a need to evaluate one function integration
         //i think these need to be fixed
-        if (x + amount <= f.subIntervalIndex[startIndex + 1]) {
+        if (x + amount <= f.subintervals[startIndex + 1]) {
             return LibMathFP.evaluateCubic(
                     [
                         f.signs[startIndex],
@@ -253,8 +253,8 @@ contract Order is Listing {
                         f.constants[startIndex + midIndex + 30]
                     ],
                     0,
-                    f.subIntervalIndex[startIndex + midIndex + 1] -
-                        f.subIntervalIndex[startIndex + midIndex],
+                    f.subintervals[startIndex + midIndex + 1] -
+                        f.subintervals[startIndex + midIndex],
                     true
                 ) /
                 1000000;
@@ -281,7 +281,7 @@ contract Order is Listing {
                     f.constants[startIndex + 30]
                 ],
                 x,
-                f.subIntervalIndex[startIndex],
+                f.subintervals[startIndex],
                 true
             ) / 1000000) +
             midSum +
@@ -304,7 +304,7 @@ contract Order is Listing {
                     f.constants[endIndex + 20],
                     f.constants[endIndex + 30]
                 ],
-                f.subIntervalIndex[endIndex],
+                f.subintervals[endIndex],
                 x + amount,
                 true
             ) / 1000000);
@@ -314,7 +314,7 @@ contract Order is Listing {
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
         bool dynamic,
-        uint256[10] calldata subIntervalIndex,
+        uint256[10] calldata subintervals,
         uint256[40] calldata constants,
         uint8[40] calldata shifts,
         bool[40] calldata signs
@@ -325,7 +325,7 @@ contract Order is Listing {
                 pricePerPod,
                 maxPlaceInLine,
                 dynamic,
-                subIntervalIndex,
+                subintervals,
                 constants,
                 shifts,
                 signs

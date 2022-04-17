@@ -27,7 +27,7 @@ contract MockMarketplaceFacet is MarketplaceFacet {
         return _getSumOverPiecewiseRange(f, x, amount);
     }
 
-    function findIndexWithinSubinterval(uint256[10] calldata ranges, uint256 x, uint256 low, uint256 high) external pure returns (uint256) {
+    function findIndexWithinSubinterval(uint256[10] calldata ranges, uint256 x, uint256 low, uint256 high) external view returns (uint256) {
         return LibMathFP.findIndexWithinSubinterval(ranges, x, low, high);
     }
 }
