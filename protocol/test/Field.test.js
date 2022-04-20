@@ -25,7 +25,7 @@ describe('Field', function () {
     userAddress = user.address
     user2Address = user2.address
     otherAddress = other.address
-    const contracts = await deploy("Test", true, true)
+    const contracts = await deploy("Test", false, true)
     ownerAddress = contracts.account
     this.diamond = contracts.beanstalkDiamond
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)

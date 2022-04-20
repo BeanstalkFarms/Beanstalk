@@ -23,7 +23,7 @@ contract SeasonFacet is Sun {
     event Incentivization(address indexed account, uint256 beans);
     event SeasonSnapshot(
         uint32 indexed season,
-        uint256 price,
+        int256 deltaB,
         uint256 supply,
         uint256 stalk,
         uint256 seeds,
@@ -39,18 +39,14 @@ contract SeasonFacet is Sun {
         require(!paused(), "Season: Paused.");
         require(seasonTime() > season(), "Season: Still current Season.");
 
-        (
-            Decimal.D256 memory beanPrice,
-            Decimal.D256 memory usdcPrice
-        ) = IOracle(address(this)).capture();
-        uint256 price = beanPrice.mul(1e18).div(usdcPrice).asUint256();
-
+        int256 deltaB = IOracle(address(this)).capture();
+        
         stepGovernance();
         stepSeason();
         decrementWithdrawSeasons();
-        snapshotSeason(price);
-        stepWeather(price, s.f.soil);
-        uint256 increase = stepSun(beanPrice, usdcPrice);
+        snapshotSeason(deltaB);
+        stepWeather(deltaB, s.f.soil);
+        uint256 increase = stepSun(deltaB);
         stepSilo(increase);
         incentivize(msg.sender, C.getAdvanceIncentive());
 
@@ -71,11 +67,11 @@ contract SeasonFacet is Sun {
         }
     }
 
-    function snapshotSeason(uint256 price) private {
+    function snapshotSeason(int256 deltaB) private {
         s.season.timestamp = block.timestamp;
         emit SeasonSnapshot(
             s.season.current,
-            price,
+            deltaB,
             bean().totalSupply(),
             s.s.stalk,
             s.s.seeds,

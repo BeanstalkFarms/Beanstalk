@@ -119,7 +119,7 @@ describe('BDV', function () {
     })
   })
 
-  describe("UniswapV2 Bean Eth BDV", async function () {
+  describe("Uniswap V2 Bean Eth BDV", async function () {
     beforeEach(async function () {
       await this.pair.faucet(userAddress, ethers.utils.parseEther('2'));
       await resetTime();
@@ -143,7 +143,7 @@ describe('BDV', function () {
 
     it("Fails if trade in Season", async function () {
       await this.pair.setBlockTimestampLast('2300000002')
-      await this.oracle.captureE();
+      await this.oracle.captureUniswapE();
       expect(this.silo.uniswapLPToBean(ethers.utils.parseEther('1'))).to.be.revertedWith(
         "Silo: Oracle same Season"
       );

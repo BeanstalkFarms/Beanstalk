@@ -5,6 +5,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 import "../libraries/LibInternal.sol";
 import "./AppStorage.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Beanstalk Farms
@@ -18,10 +19,12 @@ abstract contract ReentrancyGuard {
     AppStorage internal s;
     
     modifier updateSilo() {
+        console.log("Re");
         LibInternal.updateSilo(msg.sender);
         _;
     }
     modifier updateSiloNonReentrant() {
+        console.log("Re");
         require(s.reentrantStatus != _ENTERED, "ReentrancyGuard: reentrant call");
         s.reentrantStatus = _ENTERED;
         LibInternal.updateSilo(msg.sender);
@@ -30,6 +33,7 @@ abstract contract ReentrancyGuard {
     }
     
     modifier nonReentrant() {
+        console.log("Re");
         require(s.reentrantStatus != _ENTERED, "ReentrancyGuard: reentrant call");
         s.reentrantStatus = _ENTERED;
         _;

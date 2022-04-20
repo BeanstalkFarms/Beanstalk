@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "./interfaces/IBean.sol";
-import "./interfaces/ICurveMetapool.sol";
+import "./interfaces/ICurve.sol";
 import "./libraries/Decimal.sol";
 
 /**
@@ -71,6 +71,7 @@ library C {
     address private constant CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
     address private constant CURVE_LUSD_METAPOOL = 0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA;
     address private constant CURVE_BEAN_LUSD_POOL = 0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D;
+    address private constant CURVE_3_POOL = 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7;
 
     /**
      * Getters
@@ -212,7 +213,11 @@ library C {
         return IUniswapV2Pair(UNISWAP_V2_BEAN_ETH);
     }
 
-    function curveMetapool() internal pure returns (ICurveMetapool) {
-        return ICurveMetapool(CURVE_BEAN_METAPOOL);
+    function curveMetapool() internal pure returns (ICurvePool) {
+        return ICurvePool(CURVE_BEAN_METAPOOL);
+    }
+
+    function curve3Pool() internal pure returns (I3Curve) {
+        return I3Curve(CURVE_3_POOL);
     }
 }

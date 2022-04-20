@@ -13,6 +13,6 @@ import "../libraries/Decimal.sol";
 **/
 interface IOracle {
 
-  function capture() external returns (Decimal.D256 memory, Decimal.D256 memory);
+  function capture() external returns (int256);
 
 }

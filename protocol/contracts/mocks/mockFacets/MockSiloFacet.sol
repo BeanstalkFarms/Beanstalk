@@ -149,7 +149,7 @@ contract MockSiloFacet is SiloFacet {
     }
 
     function uniswapLPToBean(uint256 amount) external view returns (uint256) {
-        return LibBeanEthUniswap.lpToLPBeans(amount);
+        return LibBeanEthUniswap.bdv(amount);
     }
 
     function mockRefund(uint256 bean) external payable {

@@ -51,6 +51,8 @@ contract InitDiamond {
         IBean(s.c.bean).approve(UNISWAP_ROUTER, type(uint256).max);
         IUniswapV2Pair(s.c.pair).approve(UNISWAP_ROUTER, type(uint256).max);
         IWETH(s.c.weth).approve(UNISWAP_ROUTER, type(uint256).max);
+        IBean(s.c.bean).approve(C.curveMetapoolAddress(), type(uint256).max);
+        IBean(s.c.bean).approve(C.curveBeanLUSDAddress(), type(uint256).max);
 
         s.cases = s.cases = [
         // Dsc, Sdy, Inc, nul
@@ -75,6 +77,9 @@ contract InitDiamond {
         s.season.start = s.season.period > 0 ?
             (block.timestamp / s.season.period) * s.season.period :
             block.timestamp;
+
+        s.w.nextSowTime = type(uint32).max;
+        s.w.lastSowTime = type(uint32).max;
 
         s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
         LibMarket.initMarket(s.c.bean, s.c.weth, UNISWAP_ROUTER);

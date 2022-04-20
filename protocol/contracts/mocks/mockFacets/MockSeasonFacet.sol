@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
+pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -60,13 +60,10 @@ contract MockSeasonFacet is SeasonFacet {
         mockStepSilo(amount);
     }
 
-    function sunSunrise(uint256 beanPrice, uint256 usdcPrice, uint256 divisor) public {
+    function sunSunrise(int256 deltaB) public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
-        uint256 siloReward = stepSun(
-            Decimal.ratio(beanPrice, divisor),
-            Decimal.ratio(usdcPrice, divisor)
-        );
+        uint256 siloReward = stepSun(deltaB);
         s.bean.deposited = s.bean.deposited.add(siloReward);
     }
 
@@ -129,6 +126,7 @@ contract MockSeasonFacet is SeasonFacet {
                     weekSunrise();
             }
     }
+    
 
     function setYieldE(uint32 number) public {
         s.w.yield = number;
@@ -182,6 +180,8 @@ contract MockSeasonFacet is SeasonFacet {
                 s.g.voted[i][account] = false;
         }
         delete s.a[account];
+        
+        resetAccountToken(account, C.curveMetapoolAddress());
     }
 
     function resetAccountToken(address account, address token) public {
@@ -220,6 +220,8 @@ contract MockSeasonFacet is SeasonFacet {
         s.w.nextSowTime = type(uint32).max;
         delete s.g;
         delete s.r;
+        delete s.o;
+        delete s.co;
         delete s.v1SI;
         delete s.season;
         delete s.unclaimedRoots;
@@ -236,8 +238,8 @@ contract MockSeasonFacet is SeasonFacet {
         IBean(s.c.weth).burn(IBean(s.c.weth).balanceOf(address(this)));
     }
 
-    function stepWeatherE(uint256 intPrice, uint256 endSoil) external {
-        stepWeather(intPrice.mul(1e16), endSoil);
+    function stepWeatherE(int256 deltaB, uint256 endSoil) external {
+        stepWeather(deltaB, endSoil);
     }
 
     function stepWeatherWithParams(
@@ -245,7 +247,7 @@ contract MockSeasonFacet is SeasonFacet {
         uint256 lastDSoil,
         uint256 startSoil,
         uint256 endSoil,
-        uint256 intPrice,
+        int256 deltaB,
         bool raining,
         bool rainRoots
     ) public {
@@ -254,6 +256,11 @@ contract MockSeasonFacet is SeasonFacet {
         s.f.pods = pods;
         s.w.lastDSoil = lastDSoil;
         s.w.startSoil = startSoil;
-        stepWeather(intPrice.mul(1e16), endSoil);
+        stepWeather(deltaB, endSoil);
     }
+
+    function appStorage() external returns (AppStorage storage) {
+        return s;
+    }
+
 }

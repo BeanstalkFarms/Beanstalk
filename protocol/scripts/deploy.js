@@ -114,14 +114,14 @@ async function main(scriptName, verbose = true, mock = false) {
       'MockClaimFacet',
       'MockMarketplaceFacet',
       'MockFundraiserFacet',
-      'ConvertFacet'],
+      'MockConvertFacet'],
     ["LibClaim"],
     {
       "MockMarketplaceFacet": ["LibClaim"],
       "MockSiloFacet": ["LibClaim"],
       "MockFieldFacet": ["LibClaim"],
       "MockClaimFacet": ["LibClaim"],
-      "ConvertFacet": ["LibClaim"]
+      "MockConvertFacet": ["LibClaim"]
     },
   ) : await deployFacets(
     verbose,
@@ -150,8 +150,8 @@ async function main(scriptName, verbose = true, mock = false) {
 
   let args = []
   if (mock) {
-    await impersonateCurve()
     args.push(await impersonateBean())
+    await impersonateCurve()
     args.push(await impersonatePool())
     args.push(await impersonateRouter())
   }

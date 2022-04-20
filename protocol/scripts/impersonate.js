@@ -9,6 +9,7 @@ const UNISWAP_V2_ROUTER = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
 const UNISWAP_V2_PAIR = '0x87898263B6C5BABe34b4ec53F22d98430b91e371';
 const WETH = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 const BEAN = '0xDC59ac4FeFa32293A95889Dc396682858d52e5Db';
+const LUSD = '0x5f98805A4E8be255a32880FDeC7F6728C6568bA0';
 
 async function curve() {
     // Deploy 3 Curve
@@ -19,18 +20,26 @@ async function curve() {
     ]);
 
     // Deploy Bean Metapool
-    let bean3CurveJson = fs.readFileSync(`./artifacts/contracts/mocks/curve/MockMeta3Curve.sol/MockMeta3Curve.json`);
+    let meta3CurveJson = fs.readFileSync(`./artifacts/contracts/mocks/curve/MockMeta3Curve.sol/MockMeta3Curve.json`);
     await network.provider.send("hardhat_setCode", [
       BEAN_3_CURVE,
-      JSON.parse(bean3CurveJson).deployedBytecode,
+      JSON.parse(meta3CurveJson).deployedBytecode,
     ]);
     // const beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
 
     // Deploy LUSD Metapool
-    let lusd3CurveJson = fs.readFileSync(`./artifacts/contracts/mocks/curve/MockMeta3Curve.sol/MockMeta3Curve.json`);
+    let tokenJson = fs.readFileSync(`./artifacts/contracts/mocks/MockToken.sol/MockToken.json`);
+    await network.provider.send("hardhat_setCode", [
+      LUSD,
+      JSON.parse(tokenJson).deployedBytecode,
+    ]);
+
+    const lusd = await ethers.getContractAt("MockToken", LUSD);
+    await lusd.setDecimals(18);
+  
     await network.provider.send("hardhat_setCode", [
       LUSD_3_CURVE,
-      JSON.parse(bean3CurveJson).deployedBytecode,
+      JSON.parse(meta3CurveJson).deployedBytecode,
     ]);
 
     let beanLusdCurveJson = fs.readFileSync(`./artifacts/contracts/mocks/curve/MockPlainCurve.sol/MockPlainCurve.json`);
@@ -38,8 +47,17 @@ async function curve() {
       BEAN_LUSD_CURVE,
       JSON.parse(beanLusdCurveJson).deployedBytecode,
     ]);
-    // const plainPool = await ethers.getContractAt('MockPlainCurve', BEAN_3_CURVE);
 
+    const beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
+    await beanMetapool.init(BEAN, THREE_CURVE, THREE_CURVE);
+    const lusdMetapool = await ethers.getContractAt('MockMeta3Curve', LUSD_3_CURVE);
+    await lusdMetapool.init(LUSD, THREE_CURVE, THREE_CURVE);
+
+    const beanLusdPool = await ethers.getContractAt('MockPlainCurve', BEAN_LUSD_CURVE);
+    console.log(1);
+    await beanLusdPool.init(BEAN, LUSD);
+    console.log(1);
+  
     return [BEAN_3_CURVE, THREE_CURVE];
 }
 
