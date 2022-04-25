@@ -8,107 +8,45 @@ pragma experimental ABIEncoderV2;
 import "../AppStorage.sol";
 import "../../libraries/Decimal.sol";
 import "../../libraries/UniswapV2OracleLibrary.sol";
+import "../../libraries/Oracle/LibUniswapOracle.sol";
+import "../../libraries/Oracle/LibCurveOracle.sol";
 
 /**
  * @author Publius
- * @title Oracle tracks the TWAP price of the USDC/ETH and BEAN/ETH Uniswap pairs.
+ * @title Oracle tracks the Delta B across the Uniswap and Curve Liquidity pools
 **/
 contract OracleFacet {
 
     using Decimal for Decimal.D256;
+    using SafeMath for uint256;
+    
+    struct Pool {
+        address pool;
+        int256 deltaB;
+    }
 
     AppStorage internal s;
 
-    function capture() public virtual returns (Decimal.D256 memory, Decimal.D256 memory) {
+    function capture() public virtual returns (int256 bdv) {
         require(address(this) == msg.sender, "Oracle: Beanstalk only");
-        if (s.o.initialized) {
-            return updateOracle();
-        } else {
-            initializeOracle();
-            return (Decimal.one(), Decimal.one());
-        }
+        bdv = LibCurveOracle.capture() + LibUniswapOracle.capture();
     }
 
-    function initializeOracle() internal {
-        uint256 priceCumulative = s.index == 0 ?
-            IUniswapV2Pair(s.c.pair).price0CumulativeLast() :
-            IUniswapV2Pair(s.c.pair).price1CumulativeLast();
-        (
-            uint112 reserve0,
-            uint112 reserve1,
-            uint32 blockTimestampLast
-        ) = IUniswapV2Pair(s.c.pair).getReserves();
-
-        if(reserve0 != 0 && reserve1 != 0 && blockTimestampLast != 0) {
-            s.o.cumulative = priceCumulative;
-            s.o.timestamp = blockTimestampLast;
-            s.o.initialized = true;
-            (uint256 peg_priceCumulative,, uint32 peg_blockTimestamp) =
-            UniswapV2OracleLibrary.currentCumulativePrices(s.c.pegPair);
-            s.o.pegCumulative = peg_priceCumulative;
-            s.o.pegTimestamp = peg_blockTimestamp;
-        }
+    function totalDeltaB() external view returns (int256 bdv) {
+        bdv = LibCurveOracle.check() + LibUniswapOracle.check();
     }
 
-    function updateOracle() internal returns (Decimal.D256 memory, Decimal.D256 memory) {
-        (Decimal.D256 memory bean_price, Decimal.D256 memory usdc_price) = updatePrice();
-        return (bean_price, usdc_price);
+    function deltaB() external view returns (int256 dB, Pool[2] memory pools) {
+        pools[0].pool = C.uniswapV2PairAddress();
+        pools[0].deltaB = LibUniswapOracle.check();
+        pools[1].pool = C.curveMetapoolAddress();
+        pools[1].deltaB = LibCurveOracle.check();
+        dB = pools[0].deltaB + pools[1].deltaB;
     }
 
-    function updatePrice() private returns (Decimal.D256 memory, Decimal.D256 memory) {
-        (uint256 price0Cumulative, uint256 price1Cumulative, uint32 blockTimestamp) =
-        UniswapV2OracleLibrary.currentCumulativePrices(s.c.pair);
-        (uint256 peg_priceCumulative,, uint32 peg_blockTimestamp) =
-        UniswapV2OracleLibrary.currentCumulativePrices(s.c.pegPair);
-        uint256 priceCumulative = s.index == 0 ? price0Cumulative : price1Cumulative;
-
-        uint32 timeElapsed = blockTimestamp - s.o.timestamp; // overflow is desired
-        uint32 pegTimeElapsed = peg_blockTimestamp - s.o.pegTimestamp; // overflow is desired
-
-        uint256 price1 = (priceCumulative - s.o.cumulative) / timeElapsed / 1e12;
-        uint256 price2 = (peg_priceCumulative - s.o.pegCumulative) / pegTimeElapsed / 1e12;
-
-        Decimal.D256 memory bean_price = Decimal.ratio(price1, 2**112);
-        Decimal.D256 memory usdc_price = Decimal.ratio(price2, 2**112);
-
-        s.o.timestamp = blockTimestamp;
-        s.o.pegTimestamp = peg_blockTimestamp;
-
-        s.o.cumulative = priceCumulative;
-        s.o.pegCumulative = peg_priceCumulative;
-
-        return (bean_price, usdc_price);
+    function poolDeltaB(address pool) external view returns (int256 bdv) {
+        if (pool == C.uniswapV2PairAddress()) return LibUniswapOracle.check();
+        else if (pool == C.curveMetapoolAddress()) return LibCurveOracle.check();
+        require(false, "Oracle: Pool not supported");
     }
-
-    function getTWAPPrices() public view returns (uint256, uint256) {
-        if (s.o.timestamp == 0) return (1e18, 1e18);
-        (uint256 price0Cumulative, uint256 price1Cumulative, uint32 blockTimestamp) =
-        UniswapV2OracleLibrary.currentCumulativePrices(s.c.pair);
-        (uint256 peg_priceCumulative,, uint32 peg_blockTimestamp) =
-        UniswapV2OracleLibrary.currentCumulativePrices(s.c.pegPair);
-        uint256 priceCumulative = s.index == 0 ? price0Cumulative : price1Cumulative;
-
-        uint32 timeElapsed = blockTimestamp - s.o.timestamp; // overflow is desired
-        uint32 pegTimeElapsed = peg_blockTimestamp - s.o.pegTimestamp; // overflow is desired
-
-        uint256 beanPrice;
-        uint256 usdcPrice;
-        if (timeElapsed > 0) {
-            uint256 price1 = (priceCumulative - s.o.cumulative) / timeElapsed / 1e12;
-            beanPrice = Decimal.ratio(price1, 2**112).mul(1e18).asUint256();
-        } else {
-            (uint256 reserve0, uint256 reserve1,) = IUniswapV2Pair(s.c.pair).getReserves();
-            beanPrice = 1e6 * (s.index == 0 ? reserve1 / reserve0 : reserve0 / reserve1);
-        }
-        if (pegTimeElapsed > 0) {
-            uint256 price2 = (peg_priceCumulative - s.o.pegCumulative) / pegTimeElapsed / 1e12;
-            usdcPrice = Decimal.ratio(price2, 2**112).mul(1e18).asUint256();
-        } else {
-            (uint256 reserve0, uint256 reserve1,) = IUniswapV2Pair(s.c.pegPair).getReserves();
-            // We assume that the index of USDC is 0 in this instance.
-            usdcPrice = 1e6 * reserve1 / reserve0;
-        }
-        return (beanPrice, usdcPrice);
-    }
-
 }

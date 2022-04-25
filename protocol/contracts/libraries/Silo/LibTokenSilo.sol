@@ -2,13 +2,14 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "../LibAppStorage.sol";
 import "../../C.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -37,7 +38,7 @@ library LibTokenSilo {
         return (bdv.mul(s.ss[token].seeds), bdv.mul(s.ss[token].stalk));
     }
 
-    function incrementDepositedToken(address token, uint256 amount) private {
+    function incrementDepositedToken(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.siloBalances[token].deposited = s.siloBalances[token].deposited.add(amount);
     }
@@ -91,6 +92,8 @@ library LibTokenSilo {
     function beanDenominatedValue(address token, uint256 amount) private returns (uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         bytes memory myFunctionCall = abi.encodeWithSelector(s.ss[token].selector, amount);
+        console.log("Token: %s", token);
+        console.logBytes4(s.ss[token].selector);
         (bool success, bytes memory data) = address(this).delegatecall(myFunctionCall);
         require(success, "Silo: Bean denominated value failed.");
         assembly { bdv := mload(add(data, add(0x20, 0))) }
@@ -99,5 +102,15 @@ library LibTokenSilo {
     function tokenWithdrawal(address account, address token, uint32 id) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.a[account].withdrawals[token][id];
+    }
+
+    function seeds(address token) internal view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return uint256(s.ss[token].seeds);
+    }
+
+    function stalk(address token) internal view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return uint256(s.ss[token].stalk);
     }
 }

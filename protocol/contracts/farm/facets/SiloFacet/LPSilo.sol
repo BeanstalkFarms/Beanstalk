@@ -47,7 +47,7 @@ contract LPSilo is UpdateSilo {
     **/
 
     function _depositLP(uint256 amount) internal {
-        uint256 lpb = LibBeanEthUniswap.lpToLPBeans(amount);
+        uint256 lpb = LibBeanEthUniswap.bdv(amount);
         require(lpb > 0, "Silo: No Beans under LP.");
         LibLPSilo.incrementDepositedLP(amount);
         uint256 seeds = lpb.mul(C.getSeedsPerLPBean());

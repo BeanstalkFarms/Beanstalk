@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
@@ -15,13 +15,11 @@ interface IPlainCurve {
 library LibBeanLUSDCurve {
     using SafeMath for uint256;
 
-    uint256 private constant N_COINS = 2;
     uint256 private constant i = 0;
     uint256 private constant j = 1;
 
     address private constant BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
     uint256 private constant BEAN_DECIMALS = 6;
-    uint256 private constant BEAN_RM = 1e12;
     uint256 private constant I_BEAN_RM = 1e6;
 
     address private constant POOL = 0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D;

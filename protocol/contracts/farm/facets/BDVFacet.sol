@@ -2,13 +2,14 @@
  * SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../../C.sol";
 import "../../libraries/Curve/LibBeanMetaCurve.sol";
 import "../../libraries/Curve/LibBeanLUSDCurve.sol";
 import "../../libraries/LibBeanEthUniswap.sol";
+import "hardhat/console.sol";
 
 /*
  * @author Publius
@@ -19,16 +20,23 @@ contract BDVFacet {
     using SafeMath for uint256;
 
     function curveToBDV(uint256 amount) external view returns (uint256) {
+        console.log("Amount: %s", amount);
         return LibBeanMetaCurve.bdv(amount);
     }
     
     function lusdToBDV(uint256 amount) external view returns (uint256) {
+        console.log("Amount: %s", amount);
         return LibBeanLUSDCurve.bdv(amount);
+    }
+
+    function uniswapToBDV(uint256 amount) external view returns (uint256) {
+        console.log("Amount: %s", amount);
+        return LibBeanEthUniswap.bdv(amount);
     }
 
     function bdv(address token, uint256 amount) external view returns (uint256) {
         if (token == C.beanAddress()) return amount.mul(1);
-        else if (token == C.uniswapV2PairAddress()) return LibBeanEthUniswap.lpToLPBeans(amount);
+        else if (token == C.uniswapV2PairAddress()) return LibBeanEthUniswap.bdv(amount);
         else if (token == C.curveMetapoolAddress()) return LibBeanMetaCurve.bdv(amount); 
         else if (token == C.curveBeanLUSDAddress()) return LibBeanLUSDCurve.bdv(amount);
         revert("BDV: Token not whitelisted");
