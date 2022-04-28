@@ -101,7 +101,8 @@ async function main(scriptName, verbose = true, mock = false) {
     claimFacet,
     marketplaceFacet,
     fundraiserFacet,
-    convertFacet
+    convertFacet,
+    unripeClaimFacet
   ] = mock ? await deployFacets(
     verbose,
     ['MockSeasonFacet',
@@ -114,7 +115,8 @@ async function main(scriptName, verbose = true, mock = false) {
       'MockClaimFacet',
       'MockMarketplaceFacet',
       'MockFundraiserFacet',
-      'MockConvertFacet'],
+      'MockConvertFacet',
+      'MockUnripeClaimFacet'],
     ["LibClaim"],
     {
       "MockMarketplaceFacet": ["LibClaim"],
@@ -135,14 +137,16 @@ async function main(scriptName, verbose = true, mock = false) {
       'ClaimFacet',
       'MarketplaceFacet',
       'FundraiserFacet',
-      'ConvertFacet'],
+      'ConvertFacet',
+      'UnripeClaimFacet'],
     ["LibClaim"],
     {
       "SiloFacet": ["LibClaim"],
       "FieldFacet": ["LibClaim"],
       "ClaimFacet": ["LibClaim"],
       "ConvertFacet": ["LibClaim"],
-      "MarketplaceFacet": ["LibClaim"]
+      "MarketplaceFacet": ["LibClaim"],
+      "UnripeClaimFacet": ["LibClaim"]
     },
   )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/InitDiamond.sol:InitDiamond'
@@ -170,7 +174,8 @@ async function main(scriptName, verbose = true, mock = false) {
       ['ClaimFacet', claimFacet],
       ['MarketplaceFacet', marketplaceFacet],
       ['FundraiserFacet', fundraiserFacet],
-      ['ConvertFacet', convertFacet]
+      ['ConvertFacet', convertFacet],
+      ['UnripeClaimFacet', unripeClaimFacet]
     ],
     owner: account,
     args: args,
@@ -216,6 +221,7 @@ async function main(scriptName, verbose = true, mock = false) {
     claimFacet: claimFacet,
     fundraiserFacet: fundraiserFacet,
     convertFacet: convertFacet,
+    unripeClaimFacet: unripeClaimFacet,
     pair: pair,
     pegPair: pegPair,
     weth: weth,
