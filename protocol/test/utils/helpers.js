@@ -13,7 +13,6 @@ async function incrementTime(t=86400) {
   await ethers.provider.send("evm_mine")
 }
 
-
 async function getEthSpentOnGas(result) {
   const receipt = await result.wait()
   return receipt.effectiveGasPrice.mul(receipt.cumulativeGasUsed);
@@ -21,6 +20,10 @@ async function getEthSpentOnGas(result) {
 
 function toBean(amount) {
   return ethers.utils.parseUnits(amount,6);
+}
+
+function toStalk(amount) {
+  return ethers.utils.parseUnits(amount,10);
 }
 
 function toEther(amount) {
@@ -32,6 +35,7 @@ function to18(amount) {
 }
 
 exports.toBean = toBean
+exports.toStalk = toStalk
 exports.toEther = toEther
 exports.to18 = to18
 exports.parseJson = parseJson

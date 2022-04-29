@@ -5,58 +5,43 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./ConvertSilo.sol";
-import "../../../libraries/LibConvert.sol";
-import "../../../libraries/LibInternal.sol";
+import "./ConvertWithdraw.sol";
+import "../../../libraries/Convert/LibConvert.sol";
 import "../../../libraries/LibClaim.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Publius
  * @title Silo handles depositing and withdrawing Beans and LP, and updating the Silo.
 **/
-contract ConvertFacet is ConvertSilo {
+contract ConvertFacet is ConvertWithdraw {
 
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
-    function convertDepositedBeans(
-        uint256 beans,
-        uint256 minLP,
+    function convert(
+        bytes calldata userData,
         uint32[] memory crates,
         uint256[] memory amounts
     )
-        external
-        updateSiloNonReentrant
+        external 
     {
         LibInternal.updateSilo(msg.sender);
-        (uint256 lp, uint256 beansConverted) = LibConvert.sellToPegAndAddLiquidity(beans, minLP);
-        (uint256 beansRemoved, uint256 stalkRemoved) = _withdrawBeansForConvert(crates, amounts, beansConverted);
-        require(beansRemoved == beansConverted, "Silo: Wrong Beans removed.");
-        uint32 _s = uint32(stalkRemoved.div(beansConverted.mul(C.getSeedsPerLPBean())));
-        _s = getDepositSeason(_s);
 
-        _depositLP(lp, beansConverted, _s);
-        LibCheck.balanceCheck();
-        LibSilo.updateBalanceOfRainStalk(msg.sender);
-    }   
+        (
+            address toToken,
+            address fromToken,
+            uint256 toTokenAmount,
+            uint256 fromTokenAmount,
+            uint256 bdv
+        ) = LibConvert.convert(userData);
 
-    function convertDepositedLP(
-        uint256 lp,
-        uint256 minBeans,
-        uint32[] memory crates,
-        uint256[] memory amounts
-    )
-        external
-        updateSiloNonReentrant
-    {
-        LibInternal.updateSilo(msg.sender);
-        (uint256 beans, uint256 lpConverted) = LibConvert.removeLPAndBuyToPeg(lp, minBeans);
-        (uint256 lpRemoved, uint256 stalkRemoved) = _withdrawLPForConvert(crates, amounts, lpConverted);
-        require(lpRemoved == lpConverted, "Silo: Wrong LP removed.");
-        uint32 _s = uint32(stalkRemoved.div(beans.mul(C.getSeedsPerBean())));
-        _s = getDepositSeason(_s);
-        _depositBeans(beans, _s);
-        LibCheck.balanceCheck();
+        (uint256 grownStalk) = _withdrawForConvert(fromToken, crates, amounts, fromTokenAmount);
+
+        _depositTokens(toToken, toTokenAmount, bdv, grownStalk);
+
+        console.log("Stalk: %s", s.s.stalk);
+
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
@@ -69,7 +54,6 @@ contract ConvertFacet is ConvertSilo {
     )
         external
         payable
-        updateSiloNonReentrant
     {
         LibClaim.claim(claim);
         _convertAddAndDepositLP(lp, al, crates, amounts);
@@ -81,25 +65,57 @@ contract ConvertFacet is ConvertSilo {
         uint32[] memory crates,
         uint256[] memory amounts
     )
-        external
+        public
         payable
-        updateSiloNonReentrant
     {
         _convertAddAndDepositLP(lp, al, crates, amounts);
     }
 
-    function lpToPeg() external view returns (uint256 lp) {
-        return LibConvert.lpToPeg();
+    function _convertAddAndDepositLP(
+        uint256 lp,
+        LibMarket.AddLiquidity calldata al,
+        uint32[] memory seasons,
+        uint256[] memory amounts
+    )
+        internal
+    {
+	    LibInternal.updateSilo(msg.sender);
+        WithdrawState memory w;
+        if (C.bean().balanceOf(address(this)) < al.beanAmount) {
+            w.beansTransferred = al.beanAmount.sub(s.bean.deposited);
+            C.bean().transferFrom(msg.sender, address(this), w.beansTransferred);
+        }
+        (w.beansAdded, w.newLP) = LibMarket.addLiquidity(al); // w.beansAdded is beans added to LP
+        require(w.newLP > 0, "Silo: No LP added.");
+        (w.beansRemoved, w.stalkRemoved) = __withdrawBeansForConvert(seasons, amounts, w.beansAdded); // w.beansRemoved is beans removed from Silo
+        uint256 amountFromWallet = w.beansAdded.sub(w.beansRemoved, "Silo: Removed too many Beans.");
+
+        if (amountFromWallet < w.beansTransferred) {
+            C.bean().transfer(msg.sender, w.beansTransferred.sub(amountFromWallet));
+	    } else if (w.beansTransferred < amountFromWallet) {
+            uint256 transferAmount = amountFromWallet.sub(w.beansTransferred);
+            LibMarket.allocateBeans(transferAmount);
+        }
+
+        if (lp > 0) C.uniswapV2Pair().transferFrom(msg.sender, address(this), lp);
+	
+        lp = lp.add(w.newLP);
+        _depositTokens(s.c.pair, lp, LibBeanEthUniswap.bdv(lp), w.stalkRemoved);
+        LibCheck.beanBalanceCheck();
+        LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
-    function beansToPeg() external view returns (uint256 beans) {
-        (uint256 ethReserve, uint256 beanReserve) = reserves();
-        return LibConvert.beansToPeg(ethReserve, beanReserve);
+    function lpToPeg(address pair) external view returns (uint256 lp) {
+        if (pair == C.uniswapV2PairAddress()) return LibUniswapConvert.lpToPeg();
+        else if (pair == C.curveMetapoolAddress()) return LibCurveConvert.lpToPeg(C.curveMetapoolAddress());
+        else if (pair == C.curveBeanLUSDAddress()) return LibCurveConvert.lpToPeg(C.curveBeanLUSDAddress());
+        require(false, "Convert: Pool not supported");
     }
 
-    function getDepositSeason(uint32 _s) internal view returns (uint32) {
-        uint32 __s = season();
-        if (_s >= __s) _s = __s - 1;
-        return uint32(__s.sub(_s));
+    function beansToPeg(address pair) external view returns (uint256 beans) {
+        if (pair == C.uniswapV2PairAddress()) return LibUniswapConvert.beansToPeg();
+        else if (pair == C.curveMetapoolAddress()) return LibCurveConvert.beansToPeg(C.curveMetapoolAddress());
+        else if (pair == C.curveBeanLUSDAddress()) return LibCurveConvert.beansToPeg(C.curveBeanLUSDAddress());
+        require(false, "Convert: Pool not supported");
     }
 }

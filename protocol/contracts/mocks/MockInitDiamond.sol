@@ -15,6 +15,7 @@ import "../mocks/MockUniswapV2Router.sol";
 import {AppStorage} from "../farm/AppStorage.sol";
 import {LibMarket} from "../libraries/LibMarket.sol";
 import "../C.sol";
+import "../libraries/LibWhitelist.sol";
 
 /**
  * @author Publius
@@ -36,7 +37,8 @@ contract MockInitDiamond {
         IBean(s.c.bean).approve(mockRouter, uint256(-1));
         IUniswapV2Pair(s.c.pair).approve(mockRouter, uint256(-1));
         IWETH(s.c.weth).approve(mockRouter, uint256(-1));
-        IBean(bean).approve(C.curveMetapoolAddress(), uint256(-1));
+        IBean(bean).approve(C.curveMetapoolAddress(), type(uint256).max);
+        IBean(bean).approve(C.curveBeanLUSDAddress(), type(uint256).max);
 
         s.cases = s.cases = [
         // Dsc, Sdy, Inc, nul
@@ -50,6 +52,9 @@ contract MockInitDiamond {
              0,  -1,  -3,   0   //          P > 1
         ];
         s.w.yield = 1;
+
+        s.w.nextSowTime = type(uint32).max;
+        s.w.lastSowTime = type(uint32).max;
     
         s.refundStatus = 1;
         s.beanRefundAmount = 1;
@@ -63,12 +68,7 @@ contract MockInitDiamond {
         s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
         LibMarket.initMarket(s.c.bean, s.c.weth, mockRouter);
 
-        s.ss[s.c.pair].selector = bytes4(keccak256("uniswapLPtoBDV(address,uint256)")); 
-        s.ss[s.c.pair].seeds = 4;
-        s.ss[s.c.pair].stalk = 10000;
-
-        s.ss[s.c.bean].seeds = 2;
-        s.ss[s.c.bean].stalk = 10000;
+        LibWhitelist.whitelistPools();
     }
 
 }

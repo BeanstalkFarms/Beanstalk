@@ -184,6 +184,13 @@ contract Storage {
         uint32 seeds;
         uint32 stalk;
     }
+
+    struct COracle {
+        bool initialized;
+        uint32 startSeason;
+        uint256[] balances;
+        uint256 timestamp;
+    }
 }
 
 struct AppStorage {
@@ -218,10 +225,18 @@ struct AppStorage {
     mapping(bytes32 => uint256) podOrders;
     mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
+    Storage.COracle co;
+    mapping(address => bytes4) convertLPSelectors;
+
     // These refund variables are intra-transaction state varables use to store refund amounts
     uint256 refundStatus;
     uint256 beanRefundAmount;
     uint256 ethRefundAmount;
-
+    
+    // Internal Balances
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
+
+    // Unripe
+    mapping(address => bytes32) merkleRoots;
+    mapping(address => mapping(address => bool)) unripeClaimed;
 }

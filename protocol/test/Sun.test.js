@@ -42,15 +42,13 @@ describe('Sun', function () {
         }
 
         await this.bean.mint(this.silo.address, this.testData.beansInSilo)
-        await this.bean.mint(this.pair.address, this.testData.beansInPool)
         await this.silo.incrementDepositedBeansE(this.testData.beansInSilo)
         await this.season.setSoilE(this.testData.soil)
         await this.silo.depositSiloAssetsE(userAddress, '1', '100000')
         await this.field.incrementTotalPodsE((parseInt(this.testData.unripenedPods) + parseInt(this.testData.harvestablePods)).toString())
         await this.field.incrementTotalHarvestableE(this.testData.harvestablePods)
-        this.pair.simulateTrade(this.testData.beansInPool, this.testData.ethInPool+'000000000000')
         await this.silo.incrementDepositedLPE('1')
-        this.result = await this.season.sunSunrise(this.testData.twapBeans, this.testData.twapUSDC, this.testData.divisor)
+        this.result = await this.season.sunSunrise(this.testData.deltaB)
       })
       it('checks values', async function () {
         expect(await this.bean.totalSupply()).to.eq(this.testData.newTotalSupply)
@@ -63,22 +61,20 @@ describe('Sun', function () {
       })
 
       it('emits the correct event', async function () {
-        if (new BN(this.testData.currentTWAP).gt(new BN('1000000000000000000'))) {
+        if (new BN(this.testData.deltaB).gt(new BN('0'))) {
           await expect(this.result).to.emit(this.season, 'SupplyIncrease').withArgs(
              (parseInt(this.testData.currentSeason)+1).toString(),
-             this.testData.currentTWAP,
              this.testData.deltaHarvestablePods,
              this.testData.deltaBeansInSilo,
              this.testData.deltaSoil)
        }
-       else if (new BN(this.testData.currentTWAP).eq(new BN('1000000000000000000'))) {
+       else if (new BN(this.testData.deltaB).eq(new BN('0'))) {
           await expect(this.result).to.emit(this.season, 'SupplyNeutral').withArgs(
              (parseInt(this.testData.currentSeason)+1).toString(),
              this.testData.deltaSoil)
         } else {
           await expect(this.result).to.emit(this.season, 'SupplyDecrease').withArgs(
              (parseInt(this.testData.currentSeason)+1).toString(),
-             this.testData.currentTWAP,
              this.testData.deltaSoil)
         }
       })

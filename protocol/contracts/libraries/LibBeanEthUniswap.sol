@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
 **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
@@ -20,7 +20,7 @@ library LibBeanEthUniswap {
 
     uint256 private constant TWO_TO_THE_112 = 2**112;
 
-    function lpToLPBeans(uint256 amount) internal view returns (uint256 beans) {
+    function bdv(uint256 amount) internal view returns (uint256 beans) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         (uint112 reserve0, uint112 reserve1, uint32 lastTimestamp) = IUniswapV2Pair(s.c.pair).getReserves();
