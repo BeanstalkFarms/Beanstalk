@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import "./LibCurve.sol";
 import "../../C.sol";
-import "hardhat/console.sol";
 
 interface IMeta3Curve {
     function A_precise() external view returns (uint256);
@@ -24,12 +23,9 @@ library LibMetaCurve {
     function price(address pool, uint256 decimals) internal view returns (uint256 p) {
         uint256 a = IMeta3Curve(pool).A_precise();
         uint256[2] memory balances = IMeta3Curve(pool).get_previous_balances();
-        console.log("M B: %s %s", balances[0], balances[1]);
         uint256[2] memory xp = getXP(balances, 10 ** MAX_DECIMALS.sub(decimals));
-        console.log("M XP: %s %s", xp[0], xp[1]);
         uint256 D =  LibCurve.getD(xp, a);
         p = LibCurve.getPrice(xp, a, D, 1e6);
-        console.log("P: %s", p);
     }
 
     function getXP(uint256[2] memory balances, uint256 padding) internal view returns (uint256[2] memory xp) {

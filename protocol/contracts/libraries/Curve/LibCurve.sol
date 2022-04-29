@@ -6,7 +6,6 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
-import "hardhat/console.sol";
 
 library LibCurve {
     using SafeMath for uint256;
@@ -19,7 +18,6 @@ library LibCurve {
 
     function getPrice(uint256[2] memory xp, uint256 a, uint256 D, uint256 padding) internal view returns (uint) {
         uint256 x = xp[i] + padding;
-        console.log("X: %s", x);
         uint256 y = getY(x, xp, a, D);
         uint256 dy = xp[j] - y - 1;
         return dy;

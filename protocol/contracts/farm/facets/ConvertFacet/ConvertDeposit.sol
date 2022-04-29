@@ -15,7 +15,6 @@ import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibMarket.sol";
 import "../../../libraries/LibBeanEthUniswap.sol";
 import "../../../C.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -43,8 +42,6 @@ contract ConvertDeposit {
 
     function _depositTokens(address token, uint256 amount, uint256 bdv, uint256 grownStalk) internal {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
-        console.log("BDV: %s", bdv);
-        console.log("Seeds: %s", s.ss[token].seeds);
         
         uint256 seeds = bdv.mul(LibTokenSilo.seeds(token));
         uint32 _s;
@@ -52,11 +49,9 @@ contract ConvertDeposit {
             _s = uint32(grownStalk.div(seeds));
             uint32 __s = season();
             if (_s >= __s) _s = __s - 1;
-            console.log("Seasons ago: %s", _s);
             grownStalk = uint256(_s).mul(seeds);
             _s = __s - _s;
         } else _s = season();
-        console.log("grownStalk: %s", grownStalk);
         uint256 stalk = bdv.mul(LibTokenSilo.stalk(token)).add(grownStalk);
         LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
 

@@ -9,8 +9,6 @@ import "../../C.sol";
 import "../../libraries/Curve/LibBeanMetaCurve.sol";
 import "../../libraries/Curve/LibBeanLUSDCurve.sol";
 import "../../libraries/LibBeanEthUniswap.sol";
-import "hardhat/console.sol";
-
 /*
  * @author Publius
  * @title BDVFacet holds the Curve MetaPool BDV function.
@@ -20,17 +18,14 @@ contract BDVFacet {
     using SafeMath for uint256;
 
     function curveToBDV(uint256 amount) external view returns (uint256) {
-        console.log("Amount: %s", amount);
         return LibBeanMetaCurve.bdv(amount);
     }
     
     function lusdToBDV(uint256 amount) external view returns (uint256) {
-        console.log("Amount: %s", amount);
         return LibBeanLUSDCurve.bdv(amount);
     }
 
     function uniswapToBDV(uint256 amount) external view returns (uint256) {
-        console.log("Amount: %s", amount);
         return LibBeanEthUniswap.bdv(amount);
     }
 

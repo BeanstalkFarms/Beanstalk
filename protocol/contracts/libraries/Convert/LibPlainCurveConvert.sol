@@ -7,7 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../Curve/LibMetaCurve.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -40,7 +39,6 @@ library LibPlainCurveConvert {
         uint256 pricePadding = decimals[j] - decimals[i];
         uint256 targetPrice = (10 ** pricePadding).div(pool1Price);
 
-        console.log("Target Price: %s", targetPrice);
         return getPlainPegBeansAtPeg(xp, D, 36-decimals[i], a, targetPrice, poolPrice);
     }
 
@@ -65,8 +63,6 @@ library LibPlainCurveConvert {
         uint256 x;
         uint256 x2;
 
-        console.log("xp: %s %s", xp[0], xp[1]);
-
         for (uint256 k = 0; k < 256; k++) {
             db.deltaPriceToTarget = int256(targetPrice) - int256(poolPrice);
             db.deltaPriceToPeg = 1e6 - int256(poolPrice);
@@ -83,8 +79,6 @@ library LibPlainCurveConvert {
             }
             else if (poolPrice - prevPrice <= 1) break;
         }
-        console.log("BAPPING: %s", padding);
-        console.log("xp: %s %s", xp[0], xp[1]);
         return xp[0].mul(1e18).div(10 ** padding);
     }
 
