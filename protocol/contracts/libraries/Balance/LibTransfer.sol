@@ -18,6 +18,22 @@ library LibTransfer {
     enum FromBalance{ EXTERNAL, INTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT }
     enum ToBalance{ EXTERNAL, INTERNAL }
 
+    function transferToken(
+        IERC20 token,
+        address recipient,
+        uint256 amount,
+        FromBalance fromMode,
+        ToBalance toMode
+    ) internal {
+        if (fromMode == FromBalance.EXTERNAL &&
+            toMode == ToBalance.EXTERNAL) {
+            token.transferFrom(msg.sender, recipient, amount);
+            return;
+        }
+        receiveToken(token, amount, msg.sender, fromMode);
+        sendToken(token, amount, recipient, toMode);
+    }
+
     function receiveToken(
         IERC20 token,
         uint256 amount,

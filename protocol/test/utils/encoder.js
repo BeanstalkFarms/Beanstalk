@@ -1,12 +1,8 @@
 const { defaultAbiCoder } = require('@ethersproject/abi');
 
 const ConvertKind = {
-  BEANS_TO_UNISWAP_LP: 0,
-  UNISWAP_LP_TO_BEANS: 1,
-  BEANS_TO_CURVE_LP: 2,
-  CURVE_LP_TO_BEANS: 3,
-  UNISWAP_BUY_TO_PEG_AND_CURVE_SELL_TO_PEG: 4,
-  CURVE_BUY_TO_PEG_AND_UNISWAP_SELL_TO_PEG: 5
+  BEANS_TO_CURVE_LP: 0,
+  CURVE_LP_TO_BEANS: 1,
 }
 
 class ConvertEncoder {

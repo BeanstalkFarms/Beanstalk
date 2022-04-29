@@ -5,11 +5,11 @@ const takeSnapshot = async () => {
   return snapshotId;
 };
 
-const revertToSnapShot = async (snapshotId) => {
+const revertToSnapshot = async (snapshotId) => {
   await ethers.provider.send("evm_revert", [snapshotId]);
 };
 
 module.exports = {
   takeSnapshot,
-  revertToSnapShot,
+  revertToSnapshot,
 };

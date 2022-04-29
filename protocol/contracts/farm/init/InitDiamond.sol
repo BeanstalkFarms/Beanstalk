@@ -11,13 +11,9 @@ import {IDiamondCut} from "../../interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../../interfaces/IDiamondLoupe.sol";
 import {IERC173} from "../../interfaces/IERC173.sol";
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
-import {LibMarket} from "../../libraries/LibMarket.sol";
 import "../../C.sol";
 import "../../interfaces/IBean.sol";
 import "../../interfaces/IWETH.sol";
-import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
-import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
-import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "../../Bean.sol";
 import "../../mocks/MockToken.sol";
 
@@ -44,13 +40,7 @@ contract InitDiamond {
         ds.supportedInterfaces[type(IERC173).interfaceId] = true;
 
         s.c.bean = address(new Bean());
-        s.c.weth = IUniswapV2Router02(UNISWAP_ROUTER).WETH();
-        s.c.pair = address(IUniswapV2Factory(UNISWAP_FACTORY).createPair(s.c.bean, s.c.weth));
-        s.c.pegPair = PEG_PAIR;
 
-        IBean(s.c.bean).approve(UNISWAP_ROUTER, type(uint256).max);
-        IUniswapV2Pair(s.c.pair).approve(UNISWAP_ROUTER, type(uint256).max);
-        IWETH(s.c.weth).approve(UNISWAP_ROUTER, type(uint256).max);
         IBean(s.c.bean).approve(C.curveMetapoolAddress(), type(uint256).max);
         IBean(s.c.bean).approve(C.curveBeanLUSDAddress(), type(uint256).max);
 
@@ -80,9 +70,6 @@ contract InitDiamond {
 
         s.w.nextSowTime = type(uint32).max;
         s.w.lastSowTime = type(uint32).max;
-
-        s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
-        LibMarket.initMarket(s.c.bean, s.c.weth, UNISWAP_ROUTER);
 
         IBean(s.c.bean).mint(msg.sender, C.getAdvanceIncentive());
         emit Incentivization(msg.sender, C.getAdvanceIncentive());

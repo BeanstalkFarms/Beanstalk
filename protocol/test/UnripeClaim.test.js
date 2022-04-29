@@ -3,7 +3,7 @@ const { MerkleTree } = require("merkletreejs");
 const keccak256 = require("keccak256");
 
 const { deploy } = require("../scripts/deploy.js");
-const { takeSnapshot, revertToSnapShot } = require("./utils/snapshot");
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
 let owner;
 let users;
@@ -105,7 +105,7 @@ describe("UnripeClaim", function () {
   });
 
   afterEach(async function () {
-    await revertToSnapShot(snapshotId);
+    await revertToSnapshot(snapshotId);
   });
 
   it("claim unripe token", async function () {

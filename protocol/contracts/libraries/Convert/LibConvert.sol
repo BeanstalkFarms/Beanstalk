@@ -7,7 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import "./LibCurveConvert.sol";
-import "./LibUniswapConvert.sol";
 
 /**
  * @author Publius
@@ -29,12 +28,8 @@ library LibConvert {
 
         if (kind == LibConvertUserData.ConvertKind.BEANS_TO_CURVE_LP) {
             (outToken, inToken, outAmount, inAmount, bdv) = LibCurveConvert.convertBeansToLP(userData);
-        } else if (kind == LibConvertUserData.ConvertKind.BEANS_TO_UNISWAP_LP) {
-            (outToken, inToken, outAmount, inAmount, bdv) = LibUniswapConvert.convertBeansToLP(userData);
         } else if (kind == LibConvertUserData.ConvertKind.CURVE_LP_TO_BEANS) {
             (outToken, inToken, outAmount, inAmount, bdv) = LibCurveConvert.convertLPToBeans(userData);
-        } else if (kind == LibConvertUserData.ConvertKind.UNISWAP_LP_TO_BEANS) {
-            (outToken, inToken, outAmount, inAmount, bdv) = LibUniswapConvert.convertLPToBeans(userData);
         } else {
             revert("Convert: Invalid payload");
         }

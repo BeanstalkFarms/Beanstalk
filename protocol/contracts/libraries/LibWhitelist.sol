@@ -16,7 +16,7 @@ interface IBS {
     function whitelistToken(address token, bytes4 selector, uint32 stalk, uint32 seeds) external;
     function lusdToBDV(uint256 amount) external view returns (uint256);
     function curveToBDV(uint256 amount) external view returns (uint256);
-    function uniswapToBDV(uint256 amount) external view returns (uint256);
+    function beanToBDV(uint256 amount) external view returns (uint256);
 }
 
 library LibWhitelist {
@@ -30,15 +30,11 @@ library LibWhitelist {
     uint32 private constant BEAN_STALK = 10000;
     uint32 private constant BEAN_SEEDS = 2;
 
-    uint32 private constant BEAN_ETH_STALK = 10000;
-    uint32 private constant BEAN_ETH_SEEDS = 4;
-
 
     function whitelistPools() internal {
         whitelistBeanLusd();
         whitelistBean3Crv();
         whitelistBean();
-        whitelistBeanEth();
     }
 
     function whitelistBeanLusd() internal {
@@ -50,10 +46,6 @@ library LibWhitelist {
     }
 
     function whitelistBean() internal {
-        IBS(address(this)).whitelistToken(C.beanAddress(), bytes4(0), BEAN_STALK, BEAN_SEEDS);
-    }
-
-    function whitelistBeanEth() internal {
-        IBS(address(this)).whitelistToken(C.uniswapV2PairAddress(), IBS.uniswapToBDV.selector, BEAN_ETH_STALK, BEAN_ETH_SEEDS);
+        IBS(address(this)).whitelistToken(C.beanAddress(), IBS.beanToBDV.selector, BEAN_STALK, BEAN_SEEDS);
     }
 }

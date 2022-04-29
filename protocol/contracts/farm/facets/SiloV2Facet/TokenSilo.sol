@@ -5,16 +5,14 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../../libraries/Silo/LibTokenSilo.sol";
-import "../../../libraries/Silo/LibSilo.sol";
-import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibSafeMath32.sol";
-import "../../ReentrancyGuard.sol";
+import "./UpdateSilo.sol";
+
 /**
  * @author Publius
  * @title Token Silo
 **/
-contract TokenSilo is ReentrancyGuard {
+contract TokenSilo is UpdateSilo {
 
     uint32 private constant ASSET_PADDING = 100;
 
@@ -76,19 +74,18 @@ contract TokenSilo is ReentrancyGuard {
     }
 
     function _withdrawDeposit(address token, uint32 season, uint256 amount) internal {
-        (uint256 tokensRemoved, uint256 stalkRemoved, uint256 seedsRemoved) = removeDeposit(token, season, amount);
+        (uint256 stalkRemoved, uint256 seedsRemoved) = removeDeposit(token, season, amount);
         uint32 arrivalSeason = _season() + s.season.withdrawSeasons;
-        addTokenWithdrawal(msg.sender, token, arrivalSeason, tokensRemoved);
-        LibTokenSilo.decrementDepositedToken(token, tokensRemoved);
+        addTokenWithdrawal(msg.sender, token, arrivalSeason, amount);
+        LibTokenSilo.decrementDepositedToken(token, amount);
         LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
     }
 
     function removeDeposit(address token, uint32 season, uint256 amount) 
         private 
-        returns (uint256 tokensRemoved, uint256 stalkRemoved, uint256 seedsRemoved) 
+        returns (uint256 stalkRemoved, uint256 seedsRemoved) 
     {
-        uint256 bdv;
-        (tokensRemoved, bdv) = LibTokenSilo.removeDeposit(
+        uint256 bdv = LibTokenSilo.removeDeposit(
             msg.sender,
             token,
             season,
@@ -107,14 +104,14 @@ contract TokenSilo is ReentrancyGuard {
     {
         uint256 bdvRemoved;
         for (uint256 i = 0; i < seasons.length; i++) {
-            (uint256 crateTokens, uint256 crateBdv) = LibTokenSilo.removeDeposit(
+            uint256 crateBdv = LibTokenSilo.removeDeposit(
                 msg.sender,
                 token,
                 seasons[i],
                 amounts[i]
             );
             bdvRemoved = bdvRemoved.add(crateBdv);
-            ar.tokensRemoved = ar.tokensRemoved.add(crateTokens);
+            ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
             ar.stalkRemoved = ar.stalkRemoved.add(
                 LibSilo.stalkReward(crateBdv.mul(s.ss[token].seeds), _season()-seasons[i])
             );

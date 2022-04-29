@@ -54,9 +54,7 @@ async function curve() {
     await lusdMetapool.init(LUSD, THREE_CURVE, THREE_CURVE);
 
     const beanLusdPool = await ethers.getContractAt('MockPlainCurve', BEAN_LUSD_CURVE);
-    console.log(1);
     await beanLusdPool.init(BEAN, LUSD);
-    console.log(1);
   
     return [BEAN_3_CURVE, THREE_CURVE];
 }

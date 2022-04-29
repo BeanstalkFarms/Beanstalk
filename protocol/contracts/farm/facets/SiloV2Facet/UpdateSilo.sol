@@ -6,11 +6,9 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./SiloExit.sol";
-import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibInternal.sol";
-import "../../../libraries/LibMarket.sol";
 import "../../../libraries/Silo/LibSilo.sol";
-import "../../../libraries/Silo/LibBeanSilo.sol";
+import "../../../libraries/Silo/LibTokenSilo.sol";
 
 /**
  * @author Publius
@@ -73,7 +71,7 @@ contract UpdateSilo is SiloExit {
             Account.State storage a = s.a[account];
             s.a[account].s.seeds = a.s.seeds.add(seeds);
             s.a[account].s.stalk = accountStalk.add(beans.mul(C.getStalkPerBean()));
-            LibBeanSilo.addBeanDeposit(account, season(), beans);
+            LibTokenSilo.addDeposit(account, C.beanAddress(), season(), beans, beans.mul(C.getStalkPerBean()));
         }
     }
 
@@ -94,7 +92,7 @@ contract UpdateSilo is SiloExit {
         uint256 seeds = beans.mul(C.getSeedsPerBean());
         s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
         s.a[account].s.stalk = s.a[account].s.stalk.add(beans.mul(C.getStalkPerBean()));
-        LibBeanSilo.addBeanDeposit(account, season(), beans);
+        LibTokenSilo.addDeposit(account, C.beanAddress(), season(), beans, beans.mul(C.getStalkPerBean()));
     }
 
     function farmSops(address account, uint32 update) internal {
@@ -111,16 +109,6 @@ contract UpdateSilo is SiloExit {
         } else if (s.a[account].lastRain > 0) {
             s.a[account].lastRain = 0;
         }
-    }
-
-    // Variation of Oepn Zeppelins reentrant guard.
-    // https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts%2Fsecurity%2FReentrancyGuard.sol
-    modifier siloNonReentrant() {
-        require(_status != _ENTERED, "ReentrancyGuard: reentrant call");
-        _status = _ENTERED;
-        updateSilo(msg.sender);
-        _;
-        _status = _NOT_ENTERED;
     }
 
     modifier silo() {

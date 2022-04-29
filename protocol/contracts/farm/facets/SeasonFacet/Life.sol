@@ -6,7 +6,6 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "../../AppStorage.sol";
 import "../../ReentrancyGuard.sol";
 import "../../../C.sol";
@@ -30,14 +29,6 @@ contract Life is ReentrancyGuard {
 
     function bean() public view returns (IBean) {
         return IBean(s.c.bean);
-    }
-
-    function pair() public view returns (IUniswapV2Pair) {
-        return IUniswapV2Pair(s.c.pair);
-    }
-
-    function pegPair() public view returns (IUniswapV2Pair) {
-        return IUniswapV2Pair(s.c.pegPair);
     }
 
     // Time

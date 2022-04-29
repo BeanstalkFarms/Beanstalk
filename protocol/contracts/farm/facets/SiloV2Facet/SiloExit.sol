@@ -6,22 +6,19 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
+import "../../ReentrancyGuard.sol";
 import "../../../interfaces/IWETH.sol";
 import "../../../interfaces/IBean.sol";
-import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibInternal.sol";
-import "../../../libraries/LibMarket.sol";
 import "../../../libraries/Silo/LibSilo.sol";
+import "../../../libraries/LibSafeMath32.sol";
 import "../../../C.sol";
 
 /**
  * @author Publius
  * @title Silo Exit
 **/
-contract SiloExit {
-
-    AppStorage internal s;
+contract SiloExit is ReentrancyGuard {
 
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;

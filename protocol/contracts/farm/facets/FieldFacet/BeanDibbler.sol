@@ -20,6 +20,8 @@ contract BeanDibbler is ReentrancyGuard{
     using Decimal for Decimal.D256;
 
     event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);
+    event Harvest(address indexed account, uint256[] plots, uint256 beans);
+    event PodListingCancelled(address indexed account, uint256 indexed index);
 
     /**
      * Getters
@@ -65,7 +67,6 @@ contract BeanDibbler is ReentrancyGuard{
         pods = LibDibbler.sow(amount, msg.sender);
         if (fromWallet) bean().burnFrom(msg.sender, amount);
         else bean().burn(amount);
-        LibCheck.beanBalanceCheck();
     }
 
     function bean() internal view returns (IBean) {

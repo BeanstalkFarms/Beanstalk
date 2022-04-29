@@ -6,7 +6,6 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../../../libraries/Decimal.sol";
-import "../../../libraries/LibMarket.sol";
 import "./Silo.sol";
 
 /**
@@ -38,20 +37,6 @@ contract Weather is Silo {
 
     function yield() public view returns (uint32) {
         return s.w.yield;
-    }
-
-    // Reserves
-
-    // (ethereum, beans)
-    function reserves() public view returns (uint256, uint256) {
-        (uint112 reserve0, uint112 reserve1,) = pair().getReserves();
-        return s.index == 0 ? (reserve1, reserve0) : (reserve0, reserve1);
-    }
-
-    // (ethereum, usdc)
-    function pegReserves() public view returns (uint256, uint256) {
-        (uint112 reserve0, uint112 reserve1,) = pegPair().getReserves();
-        return (reserve1, reserve0);
     }
 
     /**
@@ -170,7 +155,8 @@ contract Weather is Silo {
             return;
 
         mintToSilo(newBeans);
-        uint256 ethBought = LibMarket.sellToWETH(newBeans, 0);
+        // uint256 ethBought = LibMarket.sellToWETH(newBeans, 0);
+        uint256 ethBought; // TODO: Fix SOP
         uint256 newHarvestable = 0;
         if (s.f.harvestable < s.r.pods) {
             newHarvestable = s.r.pods - s.f.harvestable;
@@ -182,20 +168,21 @@ contract Weather is Silo {
     }
 
     function calculateSopBeansAndEth() private view returns (uint256, uint256) {
-        (uint256 ethBeanPool, uint256 beansBeanPool) = reserves();
-        (uint256 ethUSDCPool, uint256 usdcUSDCPool) = pegReserves();
+        // (uint256 ethBeanPool, uint256 beansBeanPool) = reserves();
+        // (uint256 ethUSDCPool, uint256 usdcUSDCPool) = pegReserves();
 
-        uint256 newBeans = sqrt(ethBeanPool.mul(beansBeanPool).mul(usdcUSDCPool).div(ethUSDCPool));
-        if (newBeans <= beansBeanPool) return (0,0);
-        uint256 beans = newBeans - beansBeanPool;
-        beans = beans.mul(10000).div(9985).add(1);
+        // uint256 newBeans = sqrt(ethBeanPool.mul(beansBeanPool).mul(usdcUSDCPool).div(ethUSDCPool));
+        // if (newBeans <= beansBeanPool) return (0,0);
+        // uint256 beans = newBeans - beansBeanPool;
+        // beans = beans.mul(10000).div(9985).add(1);
 
-        uint256 beansWithFee = beans.mul(997);
-        uint256 numerator = beansWithFee.mul(ethBeanPool);
-        uint256 denominator = beansBeanPool.mul(1000).add(beansWithFee);
-        uint256 eth = numerator / denominator;
+        // uint256 beansWithFee = beans.mul(997);
+        // uint256 numerator = beansWithFee.mul(ethBeanPool);
+        // uint256 denominator = beansBeanPool.mul(1000).add(beansWithFee);
+        // uint256 eth = numerator / denominator;
 
-        return (beans, eth);
+        // return (beans, eth);
+        return (0,0);
     }
 
     /**

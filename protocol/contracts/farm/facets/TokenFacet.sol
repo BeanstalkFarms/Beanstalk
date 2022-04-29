@@ -33,9 +33,8 @@ contract TokenFacet {
         uint256 amount,
         LibTransfer.FromBalance fromMode,
         LibTransfer.ToBalance toMode
-    ) external payable {
-        LibTransfer.receiveToken(token, amount, msg.sender, fromMode);
-        LibTransfer.sendToken(token, amount, recipient, toMode);
+    ) external {
+        LibTransfer.transferToken(token, recipient, amount, fromMode, toMode);
     }
 
     function getInternalBalance(address account, IERC20 token)
