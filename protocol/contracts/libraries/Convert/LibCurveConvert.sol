@@ -11,7 +11,6 @@ import "./LibConvertUserData.sol";
 import "./LibMetaCurveConvert.sol";
 import "./LibBeanLUSDConvert.sol";
 import "../Curve/LibBeanMetaCurve.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -31,8 +30,6 @@ library LibCurveConvert {
     function beansToPeg(address pool) internal view returns (uint256 beans) {
         uint256[2] memory balances = ICurvePool(pool).get_balances();
         uint256 xp1 = getBeansAtPeg(pool, balances);
-        console.log("Beans at peg: %s", xp1);
-        console.log("Current Beans: %s", balances[0]);
         if (xp1 <= balances[0]) return 0;
         beans = xp1.sub(balances[0]);
     }
@@ -49,7 +46,6 @@ library LibCurveConvert {
     function convertLPToBeans(bytes memory userData) internal returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv) {
         (uint256 lp, uint256 minBeans, address pool) = userData.convertWithAddress();
         (outAmount, inAmount) = _curveRemoveLPAndBuyToPeg(lp, minBeans, pool);
-        console.log("Out: %s, In: %s", outAmount, inAmount);
         outToken = C.beanAddress();
         inToken = pool;
         bdv = outAmount;
@@ -81,7 +77,6 @@ library LibCurveConvert {
     function _curveRemoveLPAndBuyToPeg(uint256 lp, uint256 minBeans, address pool) private returns (uint256 beans, uint256 lpConverted) {
         uint256 lpTo = lpToPeg(pool);
         require(lpTo > 0, "Convert: P must be < 1.");
-        console.log("lpTo: %s, lp: %s", lpTo, lp);
         lpConverted = lp > lpTo ? lpTo : lp;
         beans = ICurvePool(pool).remove_liquidity_one_coin(lpConverted, 0, minBeans);
     }

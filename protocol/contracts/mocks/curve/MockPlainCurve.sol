@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../interfaces/IBean.sol";
 import "../MockToken.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius + LeoFib
@@ -147,9 +146,6 @@ contract MockPlainCurve {
         uint256 D0 = get_D_mem(rates, old_balances, amp);
         uint256[N_COINS] memory new_balances = old_balances;
 
-        console.log("OB: %s %s", old_balances[0], old_balances[1]);
-        console.log("D0: %s", D0);
-
         uint256 total_supply = supply;
         for (uint256 i = 0; i < N_COINS; i++) {
             uint256 amount = _amounts[i];
@@ -159,9 +155,6 @@ contract MockPlainCurve {
         }
 
         uint256 D1 = get_D_mem(rates, new_balances, amp);
-
-        console.log("NB: %s %s", new_balances[0], new_balances[1]);
-        console.log("D1: %s", D1);
 
         require(D1 > D0, "New D high");
 

@@ -19,12 +19,10 @@ abstract contract ReentrancyGuard {
     AppStorage internal s;
     
     modifier updateSilo() {
-        console.log("Re");
         LibInternal.updateSilo(msg.sender);
         _;
     }
     modifier updateSiloNonReentrant() {
-        console.log("Re");
         require(s.reentrantStatus != _ENTERED, "ReentrancyGuard: reentrant call");
         s.reentrantStatus = _ENTERED;
         LibInternal.updateSilo(msg.sender);
@@ -33,7 +31,6 @@ abstract contract ReentrancyGuard {
     }
     
     modifier nonReentrant() {
-        console.log("Re");
         require(s.reentrantStatus != _ENTERED, "ReentrancyGuard: reentrant call");
         s.reentrantStatus = _ENTERED;
         _;

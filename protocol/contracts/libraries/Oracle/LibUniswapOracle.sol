@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import "../../libraries/Decimal.sol";
 import "../../libraries/UniswapV2OracleLibrary.sol";
 import "../LibAppStorage.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -69,7 +68,6 @@ library LibUniswapOracle {
     function twaDeltaB() internal view returns (int256 deltaB, uint256 priceCumulative, uint256 peg_priceCumulative) {
         uint256[2] memory prices;
         (prices, priceCumulative, peg_priceCumulative) = twap();
-        console.log("P1: %s, P2: %s", prices[0], prices[1]);
 
         (uint256 eth_reserve, uint256 bean_reserve) = lockedReserves();
         int256 currentBeans = int256(sqrt(
@@ -90,18 +88,11 @@ library LibUniswapOracle {
         UniswapV2OracleLibrary.currentCumulativePrices(s.c.pegPair);
         priceCumulative = s.index == 0 ? price0Cumulative : price1Cumulative;
 
-        console.log("Block: %s, Timestamp: %s PTimestamp: %s", blockTimestamp, s.o.timestamp, s.o.pegTimestamp);
-
         uint32 timeElapsed = blockTimestamp - s.o.timestamp; // overflow is desired
         uint32 pegTimeElapsed = blockTimestamp - s.o.timestamp; // overflow is desired
 
-        console.log("PC: %s, OC: %s", priceCumulative, s.o.cumulative);
-        console.log("PPC: %s, OOC: %s", peg_priceCumulative, s.o.pegCumulative);
         uint256 price1 = (priceCumulative - s.o.cumulative) / timeElapsed;
         uint256 price2 = (peg_priceCumulative - s.o.pegCumulative) / pegTimeElapsed;
-
-        console.log("Price1: %s", price1);
-        console.log("Price2: %s", price2);
 
         Decimal.D256 memory bean_price = Decimal.ratio(price1, 2**112);
         Decimal.D256 memory usdc_price = Decimal.ratio(price2, 2**112);
@@ -124,8 +115,6 @@ library LibUniswapOracle {
         uint lockedLP = s.lp.deposited.add(s.lp.withdrawn);
         ethReserve = ethReserve.mul(lockedLP).div(lp);
         beanReserve = beanReserve.mul(lockedLP).div(lp);
-        console.log("Locked: %s, Total: %s", lockedLP, lp);
-        console.log("Eth: %s, Bean: %s", ethReserve, beanReserve);
         return (ethReserve, beanReserve);
     }
 

@@ -7,7 +7,6 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./ConvertDeposit.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -138,8 +137,6 @@ contract ConvertWithdraw is ConvertDeposit {
     {
         uint256 beansRemoved;
         (beansRemoved, stalkRemoved) = __withdrawBeansForConvert(seasons, amounts, maxBeans);
-        console.log("removed: %s", beansRemoved);
-        console.log("maxBeans: %s", maxBeans);
         require(beansRemoved == maxBeans, "Convert: Not enough Beans removed.");
     }
 

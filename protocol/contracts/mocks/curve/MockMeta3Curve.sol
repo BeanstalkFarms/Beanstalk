@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../interfaces/IBean.sol";
 import "../MockToken.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius + LeoFib
@@ -53,10 +52,7 @@ contract MockMeta3Curve {
         coins[0] = _token;
         coins[1] = _token2;
         BASE_POOL = base_pool;
-        console.log(123);
-        console.log(_token);
         rate_multiplier = 10 ** (36 - MockToken(_token).decimals());
-        console.log(123);
     }
 
     function A_precise() external view returns (uint256) {
@@ -202,11 +198,7 @@ contract MockMeta3Curve {
     ) external returns (uint256) {
         _update();
         uint256 i = uint256(_i_);
-        // console.log("sup: %s", supply);
-        // console.log("BA: %s", _burn_amount);
         (uint256 dy, uint256 dy_fee) = _calc_withdraw_one_coin(_burn_amount, _i_, balances);
-        // console.log("Dy: %s, balance i: %s", dy, balances[i]);
-        // console.log("Min: %s", _min_received);
         require(dy >= _min_received, "Curve: Insufficient Output");
 
         balances[i] -= (dy + dy_fee * ADMIN_FEE / FEE_DENOMINATOR);
@@ -224,18 +216,12 @@ contract MockMeta3Curve {
         uint256 i = uint256(_i_);
         uint256 amp = a;
         uint256[N_COINS] memory rates = [rate_multiplier, I3Curve(BASE_POOL).get_virtual_price()];
-        // console.log("R1: %s, R2: %s", rate_multiplier, I3Curve(BASE_POOL).get_virtual_price());
-        // console.log("b1: %s, b2: %s", balances[0], balances[1]);
         uint256[N_COINS] memory xp = _xp_mem(rates, _balances);
-        // console.log("x1: %s, x2: %s", xp[0], xp[1]);
         uint256 D0 = get_D(xp, amp);
-        // console.log("D: %s", D0);
 
         uint256 total_supply = supply;
         uint256 D1 = D0 - _burn_amount * D0 / total_supply;
-        // console.log("D1: %s", D1);
         uint256 new_y = get_y_D(amp, i, xp, D1);
-        // console.log("new_y: %s", new_y);
 
         uint256 base_fee = fee * N_COINS / (4 * (N_COINS - 1));
         uint256[N_COINS] memory xp_reduced;
@@ -247,7 +233,6 @@ contract MockMeta3Curve {
             else dx_expected = xp_j - xp_j * D1 / D0;
             xp_reduced[j] = xp_j - base_fee * dx_expected / FEE_DENOMINATOR;
         }
-        // console.log("xp_r: %s, %s", xp_reduced[0],xp_reduced[1]);
 
         uint256 dy = xp_reduced[i] - get_y_D(amp, i, xp_reduced, D1);
         uint256 dy_0 = (xp[i] - new_y) * PRECISION / rates[i];  // w/o fees

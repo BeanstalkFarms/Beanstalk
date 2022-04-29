@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import "./ConvertWithdraw.sol";
 import "../../../libraries/Convert/LibConvert.sol";
 import "../../../libraries/LibClaim.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -39,8 +38,6 @@ contract ConvertFacet is ConvertWithdraw {
         (uint256 grownStalk) = _withdrawForConvert(fromToken, crates, amounts, fromTokenAmount);
 
         _depositTokens(toToken, toTokenAmount, bdv, grownStalk);
-
-        console.log("Stalk: %s", s.s.stalk);
 
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
