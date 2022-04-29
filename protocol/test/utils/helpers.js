@@ -27,8 +27,13 @@ function toEther(amount) {
   return ethers.utils.parseEther(amount);
 }
 
+function to18(amount) {
+  return ethers.utils.parseEther(amount);
+}
+
 exports.toBean = toBean
 exports.toEther = toEther
+exports.to18 = to18
 exports.parseJson = parseJson
 exports.getEthSpentOnGas = getEthSpentOnGas
 exports.incrementTime = incrementTime

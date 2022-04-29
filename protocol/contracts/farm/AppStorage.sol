@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/IDiamondCut.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @author Publius
@@ -217,9 +218,10 @@ struct AppStorage {
     mapping(bytes32 => uint256) podOrders;
     mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
-
     // These refund variables are intra-transaction state varables use to store refund amounts
     uint256 refundStatus;
     uint256 beanRefundAmount;
     uint256 ethRefundAmount;
+
+    mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
 }

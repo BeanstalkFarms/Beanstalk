@@ -63,7 +63,7 @@ contract SiloV2Facet is TokenSilo {
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
-    function withdrawTokenBySeasons(address token, uint32[] calldata seasons, uint256[] calldata amounts) 
+    function withdrawTokenBySeasons(address token, uint32[] calldata seasons, uint256[] calldata amounts)
         external 
         updateSilo 
     {
