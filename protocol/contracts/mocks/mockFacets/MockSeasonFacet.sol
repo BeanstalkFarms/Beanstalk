@@ -259,8 +259,4 @@ contract MockSeasonFacet is SeasonFacet {
         stepWeather(deltaB, endSoil);
     }
 
-    function appStorage() external returns (AppStorage storage) {
-        return s;
-    }
-
 }

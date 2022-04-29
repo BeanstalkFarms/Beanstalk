@@ -231,4 +231,7 @@ struct AppStorage {
     uint256 refundStatus;
     uint256 beanRefundAmount;
     uint256 ethRefundAmount;
+
+    mapping(address => bytes32) merkleRoots;
+    mapping(address => mapping(address => bool)) unripeClaimed;
 }
