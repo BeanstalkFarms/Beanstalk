@@ -7,13 +7,9 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../../../libraries/Silo/LibSilo.sol";
-import "../../../libraries/Silo/LibBeanSilo.sol";
-import "../../../libraries/Silo/LibLPSilo.sol";
 import "../../../libraries/Silo/LibTokenSilo.sol";
-import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibInternal.sol";
-import "../../../libraries/LibMarket.sol";
-import "../../../libraries/LibBeanEthUniswap.sol";
+import "../../../libraries/LibSafeMath32.sol";
 import "../../../C.sol";
 
 /**
@@ -55,16 +51,8 @@ contract ConvertDeposit {
         uint256 stalk = bdv.mul(LibTokenSilo.stalk(token)).add(grownStalk);
         LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
 
-        if (token == s.c.bean) {
-            LibBeanSilo.incrementDepositedBeans(amount);
-            LibBeanSilo.addBeanDeposit(msg.sender, _s, amount);
-        } else if (token == s.c.pair) {
-            LibLPSilo.incrementDepositedLP(amount);
-            LibLPSilo.addLPDeposit(msg.sender, _s, amount, seeds);
-        } else {
-            LibTokenSilo.incrementDepositedToken(token, amount);
-            LibTokenSilo.addDeposit(msg.sender, token, _s, amount, bdv);
-        }
+        LibTokenSilo.incrementDepositedToken(token, amount);
+        LibTokenSilo.addDeposit(msg.sender, token, _s, amount, bdv);
     }
 
     function season() internal view returns (uint32) {

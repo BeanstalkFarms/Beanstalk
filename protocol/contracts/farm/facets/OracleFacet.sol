@@ -7,8 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import "../AppStorage.sol";
 import "../../libraries/Decimal.sol";
-import "../../libraries/UniswapV2OracleLibrary.sol";
-import "../../libraries/Oracle/LibUniswapOracle.sol";
 import "../../libraries/Oracle/LibCurveOracle.sol";
 
 /**
@@ -29,24 +27,21 @@ contract OracleFacet {
 
     function capture() public virtual returns (int256 bdv) {
         require(address(this) == msg.sender, "Oracle: Beanstalk only");
-        bdv = LibCurveOracle.capture() + LibUniswapOracle.capture();
+        bdv = LibCurveOracle.capture();
     }
 
     function totalDeltaB() external view returns (int256 bdv) {
-        bdv = LibCurveOracle.check() + LibUniswapOracle.check();
+        bdv = LibCurveOracle.check();
     }
 
-    function deltaB() external view returns (int256 dB, Pool[2] memory pools) {
-        pools[0].pool = C.uniswapV2PairAddress();
-        pools[0].deltaB = LibUniswapOracle.check();
-        pools[1].pool = C.curveMetapoolAddress();
-        pools[1].deltaB = LibCurveOracle.check();
-        dB = pools[0].deltaB + pools[1].deltaB;
+    function deltaB() external view returns (int256 dB, Pool[1] memory pools) {
+        pools[0].pool = C.curveMetapoolAddress();
+        pools[0].deltaB = LibCurveOracle.check();
+        dB = pools[0].deltaB;
     }
 
     function poolDeltaB(address pool) external view returns (int256 bdv) {
-        if (pool == C.uniswapV2PairAddress()) return LibUniswapOracle.check();
-        else if (pool == C.curveMetapoolAddress()) return LibCurveOracle.check();
+        if (pool == C.curveMetapoolAddress()) return LibCurveOracle.check();
         require(false, "Oracle: Pool not supported");
     }
 }

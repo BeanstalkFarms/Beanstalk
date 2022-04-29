@@ -8,8 +8,8 @@ pragma experimental ABIEncoderV2;
 import "../C.sol";
 import "../interfaces/IBean.sol";
 import "./Decimal.sol";
-import "./LibCheck.sol";
 import "./LibAppStorage.sol";
+import "./LibSafeMath32.sol";
 
 /**
  * @author Publius

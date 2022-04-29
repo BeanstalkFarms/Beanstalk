@@ -6,10 +6,9 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
-import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "../LibAppStorage.sol";
 import "../../C.sol";
-import "hardhat/console.sol";
+import "./LibUnripeSilo.sol";
 
 /**
  * @author Publius
@@ -61,22 +60,31 @@ library LibTokenSilo {
 
     function removeDeposit(address account, address token, uint32 id, uint256 amount)
         internal
-        returns (uint256, uint256) 
+        returns (uint256 crateBDV) 
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        (uint256 crateAmount, uint256 crateBase) = tokenDeposit(account, token, id);
+        uint256 crateAmount;
+        (crateAmount, crateBDV) = tokenDeposit(account, token, id);
         require(crateAmount >= amount, "Silo: Crate balance too low.");
         if (amount < crateAmount) {
-            uint256 base = amount.mul(crateBase).div(crateAmount);
+            uint256 base = amount.mul(crateBDV).div(crateAmount);
             uint256 newBase = uint256(s.a[account].deposits[token][id].bdv).sub(base);
             uint256 newAmount = uint256(s.a[account].deposits[token][id].amount).sub(amount);
             require(newBase <= uint128(-1) && newAmount <= uint128(-1), 'Silo: uint128 overflow.');
             s.a[account].deposits[token][id].amount = uint128(newAmount);
             s.a[account].deposits[token][id].bdv = uint128(newBase);
-            return (amount, base);
-        } else {
-            delete s.a[account].deposits[token][id];
-            return (crateAmount, crateBase);
+            return base;
+        }
+
+        delete s.a[account].deposits[token][id];
+
+        if (amount > crateAmount) {
+            uint256 unripeAmount;
+            if (LibUnripeSilo.isUnripeBean(token)) 
+                return crateBDV.add(LibUnripeSilo.removeUnripeBeanDeposit(account, id, amount));
+            else if (LibUnripeSilo.isUnripeLP(token)) 
+                return crateBDV.add(LibUnripeSilo.removeUnripeLPDeposit(account, id, amount));
+            revert("Silo: Crate balance too low.");
         }
     }
 
@@ -86,14 +94,14 @@ library LibTokenSilo {
 
     function tokenDeposit(address account, address token, uint32 id) internal view returns (uint256, uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        if (LibUnripeSilo.isUnripeBean(token)) return LibUnripeSilo.unripeBeanDeposit(account, id);
+        if (LibUnripeSilo.isUnripeLP(token)) return LibUnripeSilo.unripeLPDeposit(account, id);
         return (s.a[account].deposits[token][id].amount, s.a[account].deposits[token][id].bdv);
     }
 
     function beanDenominatedValue(address token, uint256 amount) private returns (uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         bytes memory myFunctionCall = abi.encodeWithSelector(s.ss[token].selector, amount);
-        console.log("Token: %s", token);
-        console.logBytes4(s.ss[token].selector);
         (bool success, bytes memory data) = address(this).delegatecall(myFunctionCall);
         require(success, "Silo: Bean denominated value failed.");
         assembly { bdv := mload(add(data, add(0x20, 0))) }

@@ -5,8 +5,6 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../../libraries/LibMarket.sol";
-import "../../../libraries/LibClaim.sol";
 import "./PodTransfer.sol";
 
 /**
@@ -72,20 +70,6 @@ contract Listing is PodTransfer {
     /*
      * Fill
      */
-
-    function _buyBeansAndFillPodListing(
-        PodListing calldata l,
-        uint256 beanAmount,
-        uint256 buyBeanAmount
-    ) internal {
-        uint256 boughtBeanAmount = LibMarket.buyExactTokensToWallet(
-            buyBeanAmount, 
-            l.account,
-            l.toWallet
-        );
-        _fillListing(l, beanAmount+boughtBeanAmount);
-        LibMarket.refund();
-    }
 
     function _fillListing(
         PodListing calldata l,

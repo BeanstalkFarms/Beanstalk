@@ -94,11 +94,9 @@ async function main(scriptName, verbose = true, mock = false) {
     seasonFacet,
     oracleFacet,
     fieldFacet,
-    siloFacet,
     siloV2Facet,
     bdvFacet,
     tokenFacet,
-    claimFacet,
     marketplaceFacet,
     fundraiserFacet,
     convertFacet,
@@ -108,46 +106,25 @@ async function main(scriptName, verbose = true, mock = false) {
     ['MockSeasonFacet',
       'MockOracleFacet',
       'MockFieldFacet',
-      'MockSiloFacet',
       'MockSiloV2Facet',
       'BDVFacet',
       'TokenFacet',
-      'MockClaimFacet',
       'MockMarketplaceFacet',
       'MockFundraiserFacet',
       'MockConvertFacet',
       'MockUnripeClaimFacet'],
-    ["LibClaim"],
-    {
-      "MockMarketplaceFacet": ["LibClaim"],
-      "MockSiloFacet": ["LibClaim"],
-      "MockFieldFacet": ["LibClaim"],
-      "MockClaimFacet": ["LibClaim"],
-      "MockConvertFacet": ["LibClaim"]
-    },
   ) : await deployFacets(
     verbose,
     ['SeasonFacet',
       'OracleFacet',
       'FieldFacet',
-      'SiloFacet',
       'SiloV2Facet',
       'BDVFacet',
       'TokenFacet',
-      'ClaimFacet',
       'MarketplaceFacet',
       'FundraiserFacet',
       'ConvertFacet',
       'UnripeClaimFacet'],
-    ["LibClaim"],
-    {
-      "SiloFacet": ["LibClaim"],
-      "FieldFacet": ["LibClaim"],
-      "ClaimFacet": ["LibClaim"],
-      "ConvertFacet": ["LibClaim"],
-      "MarketplaceFacet": ["LibClaim"],
-      "UnripeClaimFacet": ["LibClaim"]
-    },
   )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/InitDiamond.sol:InitDiamond'
   // eslint-disable-next-line no-unused-vars
@@ -156,8 +133,6 @@ async function main(scriptName, verbose = true, mock = false) {
   if (mock) {
     args.push(await impersonateBean())
     await impersonateCurve()
-    args.push(await impersonatePool())
-    args.push(await impersonateRouter())
   }
 
   const [beanstalkDiamond, diamondCut] = await diamond.deploy({
@@ -167,11 +142,9 @@ async function main(scriptName, verbose = true, mock = false) {
       ['SeasonFacet', seasonFacet],
       ['OracleFacet', oracleFacet],
       ['FieldFacet', fieldFacet],
-      ['SiloFacet', siloFacet],
       ['SiloV2Facet', siloV2Facet],
       ['BDVFacet', bdvFacet],
       ['TokenFacet', tokenFacet],
-      ['ClaimFacet', claimFacet],
       ['MarketplaceFacet', marketplaceFacet],
       ['FundraiserFacet', fundraiserFacet],
       ['ConvertFacet', convertFacet],
@@ -191,10 +164,6 @@ async function main(scriptName, verbose = true, mock = false) {
 
   const season = await ethers.getContractAt('SeasonFacet', beanstalkDiamond.address);
   const bean = await season.bean();
-  const pair = await season.pair();
-  const pegPair = await season.pegPair();
-  const silo = await ethers.getContractAt('SiloFacet', beanstalkDiamond.address);
-  const weth = await silo.weth();
 
   if (verbose) {
     console.log("--");
@@ -215,16 +184,10 @@ async function main(scriptName, verbose = true, mock = false) {
     seasonFacet: seasonFacet,
     oracleFacet: oracleFacet,
     fieldFacet: fieldFacet,
-    siloFacet: siloFacet,
-    siloFacet: siloV2Facet,
     tokenFacet: tokenFacet,
-    claimFacet: claimFacet,
     fundraiserFacet: fundraiserFacet,
     convertFacet: convertFacet,
     unripeClaimFacet: unripeClaimFacet,
-    pair: pair,
-    pegPair: pegPair,
-    weth: weth,
     bean: bean,
   }
 }

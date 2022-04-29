@@ -5,7 +5,6 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "./interfaces/IBean.sol";
 import "./interfaces/ICurve.sol";
 import "./libraries/Decimal.sol";
@@ -207,10 +206,6 @@ library C {
 
     function bean() internal pure returns (IBean) {
         return IBean(BEAN);
-    }
-
-    function uniswapV2Pair() internal pure returns (IUniswapV2Pair) {
-        return IUniswapV2Pair(UNISWAP_V2_BEAN_ETH);
     }
 
     function curveMetapool() internal pure returns (ICurvePool) {

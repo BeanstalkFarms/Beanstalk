@@ -7,7 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import "./Sun.sol";
 import "../../../interfaces/IOracle.sol";
-import "../../../libraries/LibCheck.sol";
 import "../../../libraries/LibIncentive.sol";
 
 /**
@@ -49,8 +48,6 @@ contract SeasonFacet is Sun {
         uint256 increase = stepSun(deltaB);
         stepSilo(increase);
         incentivize(msg.sender, C.getAdvanceIncentive());
-
-        LibCheck.balanceCheck();
 
         emit Sunrise(season());
     }
