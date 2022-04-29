@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./Listing.sol";
+import "../../../libraries/Balance/LibTransfer.sol";
 
 /**
  * @author Beanjoyer
@@ -81,8 +82,12 @@ contract Order is Listing {
         uint256 placeInLineEndPlot = index + start + amount - s.f.harvestable;
         require(placeInLineEndPlot <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
         uint256 costInBeans = (o.pricePerPod * amount) / 1000000;
-        if (toWallet) bean().transfer(msg.sender, costInBeans);
-        else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(costInBeans);
+        LibTransfer.sendToken(
+            bean(),
+            costInBeans,
+            msg.sender,
+            toWallet ? LibTransfer.ToBalance.EXTERNAL : LibTransfer.ToBalance.INTERNAL
+        );
         if (s.podListings[index] != bytes32(0)){
             _cancelPodListing(index);
         }
@@ -100,8 +105,12 @@ contract Order is Listing {
      function _cancelPodOrder(uint24 pricePerPod, uint256 maxPlaceInLine, bool toWallet) internal {
         bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine);
         uint256 amountBeans = (pricePerPod * s.podOrders[id]) / 1000000;
-        if (toWallet) bean().transfer(msg.sender, amountBeans);
-        else s.a[msg.sender].wrappedBeans = s.a[msg.sender].wrappedBeans.add(amountBeans);
+        LibTransfer.sendToken(
+            bean(),
+            amountBeans,
+            msg.sender,
+            toWallet ? LibTransfer.ToBalance.EXTERNAL : LibTransfer.ToBalance.INTERNAL
+        );
         delete s.podOrders[id];
         emit PodOrderCancelled(msg.sender, id);
      }

@@ -5,16 +5,14 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../../libraries/Silo/LibTokenSilo.sol";
-import "../../../libraries/Silo/LibSilo.sol";
-import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibSafeMath32.sol";
-import "../../ReentrancyGuard.sol";
+import "./UpdateSilo.sol";
+
 /**
  * @author Publius
  * @title Token Silo
 **/
-contract TokenSilo is ReentrancyGuard {
+contract TokenSilo is UpdateSilo {
 
     uint32 private constant ASSET_PADDING = 100;
 
@@ -80,7 +78,7 @@ contract TokenSilo is ReentrancyGuard {
         uint32 arrivalSeason = _season() + s.season.withdrawSeasons;
         addTokenWithdrawal(msg.sender, token, arrivalSeason, amount);
         LibTokenSilo.decrementDepositedToken(token, amount);
-        LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, amount);
+        LibSilo.withdrawSiloAssets(msg.sender, seedsRemoved, stalkRemoved);
     }
 
     function removeDeposit(address token, uint32 season, uint256 amount) 

@@ -23,7 +23,7 @@ library LibCurveConvert {
 
     function getBeansAtPeg(address pool, uint256[2] memory balances) internal view returns (uint256 beans) {
         if (pool == C.curveMetapoolAddress()) return LibMetaCurveConvert.beansAtPeg(balances);
-        if (pool == C.curveBeanLUSDAddress()) return LibBeanLUSDConvert.beansAtPeg(balances);
+        // if (pool == C.curveBeanLUSDAddress()) return LibBeanLUSDConvert.beansAtPeg(balances);
         revert("Convert: Not a whitelisted Curve pool.");
     }
 

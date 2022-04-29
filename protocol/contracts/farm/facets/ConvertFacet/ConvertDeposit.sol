@@ -11,14 +11,13 @@ import "../../../libraries/Silo/LibTokenSilo.sol";
 import "../../../libraries/LibInternal.sol";
 import "../../../libraries/LibSafeMath32.sol";
 import "../../../C.sol";
+import "../../ReentrancyGuard.sol";
 
 /**
  * @author Publius
  * @title Bean Silo
 **/
-contract ConvertDeposit {
-
-    AppStorage internal s;
+contract ConvertDeposit is ReentrancyGuard {
 
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;

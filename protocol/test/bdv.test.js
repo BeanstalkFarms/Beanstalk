@@ -14,6 +14,7 @@ const BN_ZERO = ethers.utils.parseEther('0');
 
 let lastTimestamp = 1700000000;
 let timestamp;
+let snapshotId;
 
 async function resetTime() {
   timestamp = lastTimestamp + 100000000
@@ -106,52 +107,52 @@ describe('BDV', function () {
     })
   })
 
-  describe("Bean LUSD BDV", async function () {
-    beforeEach(async function () {
-      this.threeCurve = await ethers.getContractAt('Mock3Curve', THREE_CURVE);
-      await this.threeCurve.set_virtual_price(ethers.utils.parseEther('1'));
-      this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
-      await this.beanThreeCurve.set_supply(ethers.utils.parseEther('2000000'));
-      await this.beanThreeCurve.set_A_precise('1000');
-      await this.beanThreeCurve.set_virtual_price(ethers.utils.parseEther('1'));
-      await this.beanThreeCurve.set_balances([
-        ethers.utils.parseUnits('1000000',6),
-        ethers.utils.parseEther('1000000')
-      ]);
-      await this.beanThreeCurve.set_balances([
-        ethers.utils.parseUnits('1200000',6),
-        ethers.utils.parseEther('1000000')
-      ]);
+  // describe("Bean LUSD BDV", async function () {
+  //   beforeEach(async function () {
+  //     this.threeCurve = await ethers.getContractAt('Mock3Curve', THREE_CURVE);
+  //     await this.threeCurve.set_virtual_price(ethers.utils.parseEther('1'));
+  //     this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
+  //     await this.beanThreeCurve.set_supply(ethers.utils.parseEther('2000000'));
+  //     await this.beanThreeCurve.set_A_precise('1000');
+  //     await this.beanThreeCurve.set_virtual_price(ethers.utils.parseEther('1'));
+  //     await this.beanThreeCurve.set_balances([
+  //       ethers.utils.parseUnits('1000000',6),
+  //       ethers.utils.parseEther('1000000')
+  //     ]);
+  //     await this.beanThreeCurve.set_balances([
+  //       ethers.utils.parseUnits('1200000',6),
+  //       ethers.utils.parseEther('1000000')
+  //     ]);
 
-      this.lusdThreeCurve = await ethers.getContractAt('MockMeta3Curve', LUSD_3_CURVE);
-      await this.lusdThreeCurve.set_supply(ethers.utils.parseEther('2000000'));
-      await this.lusdThreeCurve.set_A_precise('1000');
-      await this.lusdThreeCurve.set_virtual_price(ethers.utils.parseEther('1'));
-      await this.lusdThreeCurve.set_balances([
-        ethers.utils.parseEther('1000000000'),
-        ethers.utils.parseEther('1000000000')
-      ]);
-      await this.lusdThreeCurve.set_balances([
-        ethers.utils.parseEther('1200000'),
-        ethers.utils.parseEther('1000000')
-      ]);
+  //     this.lusdThreeCurve = await ethers.getContractAt('MockMeta3Curve', LUSD_3_CURVE);
+  //     await this.lusdThreeCurve.set_supply(ethers.utils.parseEther('2000000'));
+  //     await this.lusdThreeCurve.set_A_precise('1000');
+  //     await this.lusdThreeCurve.set_virtual_price(ethers.utils.parseEther('1'));
+  //     await this.lusdThreeCurve.set_balances([
+  //       ethers.utils.parseEther('1000000000'),
+  //       ethers.utils.parseEther('1000000000')
+  //     ]);
+  //     await this.lusdThreeCurve.set_balances([
+  //       ethers.utils.parseEther('1200000'),
+  //       ethers.utils.parseEther('1000000')
+  //     ]);
 
-      this.lusdBeanCurve = await ethers.getContractAt('MockPlainCurve', BEAN_LUSD_CURVE);
-      await this.lusdBeanCurve.set_virtual_price(ethers.utils.parseEther('1'));
-    });
+  //     this.lusdBeanCurve = await ethers.getContractAt('MockPlainCurve', BEAN_LUSD_CURVE);
+  //     await this.lusdBeanCurve.set_virtual_price(ethers.utils.parseEther('1'));
+  //   });
 
-    it("properly checks bdv", async function () {
-      this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
-      expect(await this.bdv.bdv(BEAN_LUSD_CURVE, ethers.utils.parseEther('200'))).to.equal(ethers.utils.parseUnits('200',6));
-    })
+  //   it("properly checks bdv", async function () {
+  //     this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
+  //     expect(await this.bdv.bdv(BEAN_LUSD_CURVE, ethers.utils.parseEther('200'))).to.equal(ethers.utils.parseUnits('200',6));
+  //   })
 
-    it("properly checks bdv", async function () {
-      await this.lusdThreeCurve.set_balances([
-        ethers.utils.parseEther('1200000'),
-        ethers.utils.parseEther('1000000')
-      ]);
-      this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
-      expect(await this.bdv.bdv(BEAN_LUSD_CURVE, ethers.utils.parseEther('200'))).to.equal('196675497');
-    })
-  })
+  //   it("properly checks bdv", async function () {
+  //     await this.lusdThreeCurve.set_balances([
+  //       ethers.utils.parseEther('1200000'),
+  //       ethers.utils.parseEther('1000000')
+  //     ]);
+  //     this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
+  //     expect(await this.bdv.bdv(BEAN_LUSD_CURVE, ethers.utils.parseEther('200'))).to.equal('196675497');
+  //   })
+  // })
 });

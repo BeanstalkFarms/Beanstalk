@@ -235,7 +235,6 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.current = 1;
         s.paused = false;
         bean().burn(bean().balanceOf(address(this)));
-        IBean(s.c.weth).burn(IBean(s.c.weth).balanceOf(address(this)));
     }
 
     function stepWeatherE(int256 deltaB, uint256 endSoil) external {

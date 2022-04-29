@@ -22,7 +22,7 @@ contract ConvertFacet is ConvertWithdraw {
         uint32[] memory crates,
         uint256[] memory amounts
     )
-        external 
+        external nonReentrant
     {
         LibInternal.updateSilo(msg.sender);
 
@@ -39,5 +39,15 @@ contract ConvertFacet is ConvertWithdraw {
         _depositTokens(toToken, toTokenAmount, bdv, grownStalk);
 
         LibSilo.updateBalanceOfRainStalk(msg.sender);
+    }
+    
+    function lpToPeg(address pair) external view returns (uint256 lp) {
+        if (pair == C.curveMetapoolAddress()) return LibCurveConvert.lpToPeg(pair);
+        require(false, "Convert: Pool not supported");
+    }
+
+    function beansToPeg(address pair) external view returns (uint256 beans) {
+        if (pair == C.curveMetapoolAddress()) return LibCurveConvert.beansToPeg(pair);
+        require(false, "Convert: Pool not supported");
     }
 }

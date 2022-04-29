@@ -46,7 +46,8 @@ contract SiloV2Facet is TokenSilo {
      * Deposit
      */
 
-    function deposit(address token, uint256 amount) external updateSiloNonReentrant {
+    function deposit(address token, uint256 amount) external nonReentrant silo {
+        updateSilo(msg.sender);
         IERC20(token).transferFrom(msg.sender, address(this), amount);
         _deposit(token, amount);
     }
@@ -57,7 +58,7 @@ contract SiloV2Facet is TokenSilo {
 
     function withdrawTokenBySeason(address token, uint32 season, uint256 amount) 
         external 
-        updateSilo 
+        silo 
     {
         _withdrawDeposit(token, season, amount);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
@@ -65,20 +66,20 @@ contract SiloV2Facet is TokenSilo {
 
     function withdrawTokenBySeasons(address token, uint32[] calldata seasons, uint256[] calldata amounts)
         external 
-        updateSilo 
+        silo 
     {
         _withdrawDeposits(token, seasons, amounts);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
-    function withdrawTokensBySeason(WithdrawSeason[] calldata withdraws) external updateSilo {
+    function withdrawTokensBySeason(WithdrawSeason[] calldata withdraws) external silo {
         for (uint256 i = 0; i < withdraws.length; i++) {
             _withdrawDeposit(withdraws[i].token, withdraws[i].season, withdraws[i].amount);
         }
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
-    function withdrawTokensBySeasons(WithdrawSeasons[] calldata withdraws) external updateSilo {
+    function withdrawTokensBySeasons(WithdrawSeasons[] calldata withdraws) external silo {
         for (uint256 i = 0; i < withdraws.length; i++) {
             _withdrawDeposits(withdraws[i].token, withdraws[i].seasons, withdraws[i].amounts);
         }

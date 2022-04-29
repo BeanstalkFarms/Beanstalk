@@ -3,6 +3,7 @@ const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { BigNumber } = require('bignumber.js')
 const { print } = require('./utils/print.js')
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address, fundraiserAddress;
@@ -24,6 +25,7 @@ describe('Fundraiser', function () {
     let tokenFacet = await ethers.getContractFactory('MockToken')
     this.token = await tokenFacet.deploy('MockToken', 'TOKEN')
     await this.token.deployed()
+    await this.season.setYieldE('0')
 
     await this.season.siloSunrise(0)
     await this.bean.mint(userAddress, '1000000000')
@@ -34,14 +36,13 @@ describe('Fundraiser', function () {
     await this.token.connect(user2).approve(this.diamond.address, '1000000000')
   })
 
-  beforeEach (async function () {
-    await this.season.resetAccount(userAddress)
-    await this.season.resetAccount(user2Address)
-    await this.season.resetAccount(ownerAddress)
-    await this.season.resetState()
-    await this.season.siloSunrise(0)
-    await this.token.connect(fundraiser).burn(await this.token.balanceOf(fundraiserAddress))
-  })
+  beforeEach(async function () {
+    snapshotId = await takeSnapshot();
+  });
+
+  afterEach(async function () {
+    await revertToSnapshot(snapshotId);
+  });
 
   describe('create fundraiser', function () {
     describe('reverts if not owner', async function () {

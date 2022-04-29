@@ -24,10 +24,14 @@ contract BDVFacet {
         return LibBeanLUSDCurve.bdv(amount);
     }
 
+    function beanToBDV(uint256 amount) external view returns (uint256) {
+        return amount;
+    }
+
     function bdv(address token, uint256 amount) external view returns (uint256) {
-        if (token == C.beanAddress()) return amount.mul(1);
-        else if (token == C.curveMetapoolAddress()) return LibBeanMetaCurve.bdv(amount); 
-        else if (token == C.curveBeanLUSDAddress()) return LibBeanLUSDCurve.bdv(amount);
+        if (token == C.beanAddress()) return amount;
+        else if (token == C.curveMetapoolAddress()) return LibBeanMetaCurve.bdv(amount);
+        // else if (token == C.curveBeanLUSDAddress()) return LibBeanLUSDCurve.bdv(amount);
         revert("BDV: Token not whitelisted");
     }
 }
