@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/IDiamondCut.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @author Publius
@@ -231,7 +232,11 @@ struct AppStorage {
     uint256 refundStatus;
     uint256 beanRefundAmount;
     uint256 ethRefundAmount;
+    
+    // Internal Balances
+    mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
 
+    // Unripe
     mapping(address => bytes32) merkleRoots;
     mapping(address => mapping(address => bool)) unripeClaimed;
 }
