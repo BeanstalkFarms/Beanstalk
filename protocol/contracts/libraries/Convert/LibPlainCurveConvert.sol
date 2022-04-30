@@ -37,7 +37,7 @@ library LibPlainCurveConvert {
         uint256 poolPrice = LibCurve.getPrice(xp, rates, a, D);
 
         uint256 pricePadding = decimals[j] - decimals[i];
-        uint256 targetPrice = (10 ** pricePadding).div(pool1Price);
+        uint256 targetPrice = pool0Price.mul(10 ** pricePadding).div(pool1Price);
 
         return getPlainPegBeansAtPeg(xp, D, 36-decimals[i], a, targetPrice, poolPrice);
     }
@@ -53,7 +53,7 @@ library LibPlainCurveConvert {
         uint256 kBeansAtPeg; 
     }
 
-    function getPlainPegBeansAtPeg(uint256[2] memory xp, uint256 D, uint256 padding, uint256 a, uint256 targetPrice, uint256 poolPrice) private view returns (uint256 b) {
+    function getPlainPegBeansAtPeg(uint256[2] memory xp, uint256 D, uint256 padding, uint256 a, uint256 targetPrice, uint256 poolPrice) private pure returns (uint256 b) {
         DeltaB memory db;
         db.currentBeans = int256(xp[0]);
         db.pegBeans = D / 2;
@@ -82,7 +82,7 @@ library LibPlainCurveConvert {
         return xp[0].mul(1e18).div(10 ** padding);
     }
 
-    function getPlainRates(uint256[2] memory decimals) private view returns (uint256[2] memory rates) {
+    function getPlainRates(uint256[2] memory decimals) private pure returns (uint256[2] memory rates) {
         return [10 ** (36-decimals[0]), 10 ** (36-decimals[1])];
     }
 

@@ -37,7 +37,7 @@ contract FarmFacet {
         require(success, "FarmFacet: Function call failed!");
     }
 
-    function farm(bytes[] calldata data) public payable {
+    function farm(bytes[] calldata data) external payable {
         for (uint256 i = 0; i < data.length; i++) {
             _farm(data[i]);
         }

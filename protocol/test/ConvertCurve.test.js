@@ -1,5 +1,6 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
+const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { ConvertEncoder } = require('./utils/encoder.js')
 const { to18, toBean, toStalk } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
@@ -20,7 +21,7 @@ describe('Curve Convert', function () {
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
-    this.silo = await ethers.getContractAt('SiloV2Facet', this.diamond.address);
+    this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address);
     this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
     this.threeCurve = await ethers.getContractAt('Mock3Curve', THREE_CURVE);
@@ -90,14 +91,14 @@ describe('Curve Convert', function () {
 
     describe('revert', async function () {      
       it('not enough LP', async function () {
-        await this.silo.connect(user).deposit(this.bean.address, toBean('200'));
+        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
         await expect(this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('200'),to18('201'), this.beanMetapool.address),['2'],[toBean('200')]))
           .to.be.revertedWith('Curve: Not enough LP');
       });
 
       it('p >= 1', async function () {
-        await this.silo.connect(user).deposit(this.bean.address, '1000');
+        await this.silo.connect(user).deposit(this.bean.address, '1000', EXTERNAL);
         await expect(this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('200'),to18('190'), this.beanMetapool.address),['1'],['1000']))
           .to.be.revertedWith('Convert: P must be < 1.');
       });
@@ -106,7 +107,7 @@ describe('Curve Convert', function () {
     
     describe('below max', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).deposit(this.bean.address, toBean('200'));
+        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('100'),to18('99'), this.beanMetapool.address),['2'],[toBean('100')])
         const balances = await this.beanMetapool.get_balances();
@@ -141,11 +142,10 @@ describe('Curve Convert', function () {
 
     describe('above max', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).deposit(this.bean.address, toBean('300'));
+        await this.silo.connect(user).deposit(this.bean.address, toBean('300'), EXTERNAL);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('250'),to18('190'), this.beanMetapool.address),['2'],[toBean('250')])
         const balances = await this.beanMetapool.get_balances();
-        console.log(`${balances[0]}, ${balances[1]}`)
       });
   
       it('properly updates total values', async function () {
@@ -177,12 +177,11 @@ describe('Curve Convert', function () {
 
     describe('after one season', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).deposit(this.bean.address, toBean('200'));
+        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
         await this.season.siloSunrise(0);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('250'),to18('190'), this.beanMetapool.address),['2'],[toBean('250')])
         const balances = await this.beanMetapool.get_balances();
-        console.log(`${balances[0]}, ${balances[1]}`)
       });
   
       it('properly updates total values', async function () {
@@ -214,13 +213,12 @@ describe('Curve Convert', function () {
 
     describe('after multiple season', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).deposit(this.bean.address, toBean('200'));
+        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('250'),to18('190'), this.beanMetapool.address),['2'],[toBean('250')])
         const balances = await this.beanMetapool.get_balances();
-        console.log(`${balances[0]}, ${balances[1]}`)
       });
   
       it('properly updates total values', async function () {
@@ -252,12 +250,12 @@ describe('Curve Convert', function () {
 
     describe('multiple crates', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).deposit(this.bean.address, toBean('100'));
+        await this.silo.connect(user).deposit(this.bean.address, toBean('100'), EXTERNAL);
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
-        await this.silo.connect(user).deposit(this.bean.address, toBean('100'));
+        await this.silo.connect(user).deposit(this.bean.address, toBean('100'), EXTERNAL);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('250'),to18('190'), this.beanMetapool.address),['2','6'],[toBean('100'), toBean('100')])
         const balances = await this.beanMetapool.get_balances();
@@ -298,7 +296,7 @@ describe('Curve Convert', function () {
     describe('revert', async function () {      
       it('not enough Beans', async function () {
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
-        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'));
+        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), EXTERNAL);
         console.log(`---------------------------------------------------`);
         console.log(`${await this.beanMetapool.totalSupply()}`);
         const balances = await this.beanMetapool.get_balances();
@@ -311,7 +309,7 @@ describe('Curve Convert', function () {
 
       it('p >= 1', async function () {
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('1')], to18('0.5'));
-        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'));
+        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), EXTERNAL);
         await expect(this.convert.connect(user).convert(ConvertEncoder.convertCurveLPToBeans(to18('200'),toBean('190'), this.beanMetapool.address),['1'],['1000']))
           .to.be.revertedWith('Convert: P must be < 1.');
       });
@@ -320,7 +318,7 @@ describe('Curve Convert', function () {
     describe('below max', function () {
       beforeEach(async function () {
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
-        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'));
+        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), EXTERNAL);
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertCurveLPToBeans(to18('100'),toBean('99'), this.beanMetapool.address),['2'],[to18('100')])
         const balances = await this.beanMetapool.get_balances();
       });
@@ -357,7 +355,7 @@ describe('Curve Convert', function () {
     describe('above max', function () {
       beforeEach(async function () {
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
-        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'));
+        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), EXTERNAL);
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertCurveLPToBeans(to18('300'),toBean('150'), this.beanMetapool.address),['2'],[to18('300')])
       });
   
@@ -393,7 +391,7 @@ describe('Curve Convert', function () {
     describe('after 1 season', function () {
       beforeEach(async function () {
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
-        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'));
+        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), EXTERNAL);
         await this.season.siloSunrise(0);
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertCurveLPToBeans(to18('100'),toBean('99'), this.beanMetapool.address),['2'],[to18('100')])
         const balances = await this.beanMetapool.get_balances();
@@ -429,9 +427,9 @@ describe('Curve Convert', function () {
     describe('multiple crates', function () {
       beforeEach(async function () {
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
-        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('500'));
+        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('500'), EXTERNAL);
         await this.season.siloSunrise(0);
-        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('500'));
+        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('500'), EXTERNAL);
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertCurveLPToBeans(to18('100'),toBean('99'), this.beanMetapool.address),['2', '3'],[to18('50'), to18('50')])
         const balances = await this.beanMetapool.get_balances();
       });

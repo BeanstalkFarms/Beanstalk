@@ -1,8 +1,9 @@
 require('hardhat')
 const { expectRevert } = require('@openzeppelin/test-helpers')
+const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
-const { parseJson, getEthSpentOnGas, toBean, toEther } = require('./utils/helpers.js')
+const { parseJson, toBean } = require('./utils/helpers.js')
 const { MAX_UINT32, MAX_UINT256 } = require('./utils/constants.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
@@ -91,7 +92,7 @@ describe('Field', function () {
         expect(await this.field.totalPods()).to.eq(this.testData.totalPods)
         expect(await this.field.totalHarvestable()).to.eq(this.testData.totalHarvestablePods)
         expect(await this.field.totalSoil()).to.eq(this.testData.soil)
-        expect(await this.field.totalUnripenedPods()).to.eq(this.testData.totalUnripenedPods)
+        expect(await this.field.totalUnharvestable()).to.eq(this.testData.totalUnripenedPods)
         expect(await this.field.podIndex()).to.eq(this.testData.podIndex)
         expect(await this.field.harvestableIndex()).to.eq(this.testData.podHarvestableIndex)
       })
@@ -114,30 +115,30 @@ describe('Field', function () {
 
     it("Does not set nextSowTime if Soil > 1", async function () {
       this.season.setSoilE(toBean('3'));
-      await this.field.connect(user).sowBeans(toBean('1'))
+      await this.field.connect(user).sowBeans(toBean('1'), EXTERNAL)
       const weather = await this.season.weather()
       expect(weather.nextSowTime).to.be.equal(parseInt(MAX_UINT32))
     })
 
     it("Does set nextSowTime if Soil = 1", async function () {
       this.season.setSoilE(toBean('1'));
-      await this.field.connect(user).sowBeans(toBean('1'))
+      await this.field.connect(user).sowBeans(toBean('1'), EXTERNAL)
       const weather = await this.season.weather()
       expect(weather.nextSowTime).to.be.not.equal(parseInt(MAX_UINT32))
     })
 
     it("Does set nextSowTime if Soil < 1", async function () {
       this.season.setSoilE(toBean('1.5'));
-      await this.field.connect(user).sowBeans(toBean('1'))
+      await this.field.connect(user).sowBeans(toBean('1'), EXTERNAL)
       const weather = await this.season.weather()
       expect(weather.nextSowTime).to.be.not.equal(parseInt(MAX_UINT32))
     })
 
     it("Does not set nextSowTime if Soil already < 1", async function () {
       this.season.setSoilE(toBean('1.5'));
-      await this.field.connect(user).sowBeans(toBean('1'))
+      await this.field.connect(user).sowBeans(toBean('1'), EXTERNAL)
       const weather = await this.season.weather()
-      await this.field.connect(user).sowBeans(toBean('0.5'))
+      await this.field.connect(user).sowBeans(toBean('0.5'), EXTERNAL)
       const weather2 = await this.season.weather()
       expect(weather2.nextSowTime).to.be.equal(weather.nextSowTime)
     })

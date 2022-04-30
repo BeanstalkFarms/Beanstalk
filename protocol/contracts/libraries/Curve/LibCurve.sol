@@ -16,7 +16,7 @@ library LibCurve {
     uint256 private constant i = 0;
     uint256 private constant j = 1;
 
-    function getPrice(uint256[2] memory xp, uint256 a, uint256 D, uint256 padding) internal view returns (uint) {
+    function getPrice(uint256[2] memory xp, uint256 a, uint256 D, uint256 padding) internal pure returns (uint) {
         uint256 x = xp[i] + padding;
         uint256 y = getY(x, xp, a, D);
         uint256 dy = xp[j] - y - 1;

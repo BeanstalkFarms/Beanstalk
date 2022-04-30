@@ -160,10 +160,6 @@ contract MockSeasonFacet is SeasonFacet {
         return getMinSoil(amount);
     }
 
-    function setPodsE(uint256 amount) external returns (uint256) {
-        s.f.pods = amount;
-    }
-
     function resetAccount(address account) public {
         uint32 _s = season();
         for (uint32 j = 0; j <= _s; j++) {
@@ -195,12 +191,6 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function resetState() public {
-        uint32 _s = season();
-        for (uint32 j = 0; j <= _s; j++) delete s.sops[j];
-        resetStateNoSeason();
-    }
-
-    function resetStateNoSeason() public {
         for (uint32 i = 0; i < s.g.bipIndex; i++) {
             delete s.g.bips[i];
             delete s.g.diamondCuts[i];

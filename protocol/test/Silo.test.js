@@ -1,5 +1,6 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
+const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
 let user,user2,owner;
@@ -13,23 +14,6 @@ const BN_ZERO = ethers.utils.parseEther('0');
 let lastTimestamp = 1700000000;
 let timestamp;
 
-async function resetTime() {
-  timestamp = lastTimestamp + 100000000
-  lastTimestamp = timestamp
-  await hre.network.provider.request({
-    method: "evm_setNextBlockTimestamp",
-    params: [timestamp],
-  });
-}
-
-async function advanceTime(time) {
-  timestamp += time
-  await hre.network.provider.request({
-    method: "evm_setNextBlockTimestamp",
-    params: [timestamp],
-  });
-}
-
 describe('Silo', function () {
   before(async function () {
     [owner,user,user2] = await ethers.getSigners();
@@ -39,33 +23,24 @@ describe('Silo', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
-    this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
-    this.oracle = await ethers.getContractAt('MockOracleFacet', this.diamond.address);
-    this.silo = await ethers.getContractAt('MockSiloV2Facet', this.diamond.address);
-    this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
-    this.bean = await ethers.getContractAt('MockToken', contracts.bean);
+    this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
 
     const SiloToken = await ethers.getContractFactory("MockToken");
     this.siloToken = await SiloToken.deploy("Silo", "SILO")
     await this.siloToken.deployed()
 
-    this.siloToken2 = await ethers.getContractFactory("MockToken");
     this.siloToken2 = await SiloToken.deploy("Silo", "SILO")
     await this.siloToken2.deployed()
 
     await this.silo.mockWhitelistToken(
       this.siloToken.address, 
       this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
-      '10000', 
+      '10000',
       '1');
 
     await this.season.siloSunrise(0);
-    await this.bean.mint(userAddress, '1000000000');
-    await this.bean.mint(user2Address, '1000000000');
     await this.siloToken.connect(user).approve(this.silo.address, '100000000000');
-    await this.siloToken.connect(user2).approve(this.silo.address, '100000000000');
-    await this.bean.connect(user).approve(this.silo.address, '100000000000');
-    await this.bean.connect(user2).approve(this.silo.address, '100000000000'); 
+    await this.siloToken.connect(user2).approve(this.silo.address, '100000000000'); 
     await this.siloToken.mint(userAddress, '10000');
     await this.siloToken.mint(user2Address, '10000');
     await this.siloToken2.connect(user).approve(this.silo.address, '100000000000');
@@ -93,17 +68,17 @@ describe('Silo', function () {
   describe('deposit', function () {
     describe('reverts', function () {
       it('reverts if BDV is 0', async function () {
-        await expect(this.silo.connect(user).deposit(this.siloToken.address, '0')).to.revertedWith('Silo: No Beans under Token.');
+        await expect(this.silo.connect(user).deposit(this.siloToken.address, '0', EXTERNAL)).to.revertedWith('Silo: No Beans under Token.');
       });
 
       it('reverts if deposits a non whitelisted token', async function () {
-        await expect(this.silo.connect(user).deposit(this.siloToken2.address, '0')).to.revertedWith('Silo: Bean denominated value failed.');
+        await expect(this.silo.connect(user).deposit(this.siloToken2.address, '0', EXTERNAL)).to.revertedWith('Silo: Bean denominated value failed.');
       });
     });
 
     describe('single deposit', function () {
       beforeEach(async function () {
-        this.result = await this.silo.connect(user).deposit(this.siloToken.address, '1000');
+        this.result = await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL)
       });
   
       it('properly updates the total balances', async function () {
@@ -130,8 +105,8 @@ describe('Silo', function () {
   
     describe('2 deposits same season', function () {
       beforeEach(async function () {
-        this.result = await this.silo.connect(user).deposit(this.siloToken.address, '1000');
-        this.result = await this.silo.connect(user).deposit(this.siloToken.address, '1000');
+        this.result = await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL)
+        this.result = await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL)
       });
   
       it('properly updates the total balances', async function () {
@@ -154,8 +129,8 @@ describe('Silo', function () {
   
     describe('2 deposits 2 users', function () {
       beforeEach(async function () {
-        this.result = await this.silo.connect(user).deposit(this.siloToken.address, '1000');
-        this.result = await this.silo.connect(user2).deposit(this.siloToken.address, '1000');
+        this.result = await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL);
+        this.result = await this.silo.connect(user2).deposit(this.siloToken.address, '1000', EXTERNAL);
       });
   
       it('properly updates the total balances', async function () {
@@ -186,22 +161,22 @@ describe('Silo', function () {
 
   describe('withdraw', function () {
     beforeEach(async function () {
-      await this.silo.connect(user).deposit(this.siloToken.address, '1000');
+      await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL);
     })
     describe('reverts', function () {
       it('reverts if amount is 0', async function () {
-        await expect(this.silo.connect(user).withdrawTokenBySeason(this.siloToken.address, '2', '1001')).to.revertedWith('Silo: Crate balance too low.');
+        await expect(this.silo.connect(user).withdrawSeason(this.siloToken.address, '2', '1001')).to.revertedWith('Silo: Crate balance too low.');
       });
 
       it('reverts if deposits + withdrawals is a different length', async function () {
-        await expect(this.silo.connect(user).withdrawTokenBySeasons(this.siloToken.address, ['2', '3'], ['1001'])).to.revertedWith('Silo: Crates, amounts are diff lengths.');
+        await expect(this.silo.connect(user).withdrawSeasons(this.siloToken.address, ['2', '3'], ['1001'])).to.revertedWith('Silo: Crates, amounts are diff lengths.');
       });
     });
 
     describe('withdraw token by season', async function () {
       describe('withdraw 1 Bean crate', async function () {
         beforeEach(async function () {
-          this.result = await this.silo.connect(user).withdrawTokenBySeason(this.siloToken.address, 2, '1000');
+          this.result = await this.silo.connect(user).withdrawSeason(this.siloToken.address, 2, '1000');
         });
     
         it('properly updates the total balances', async function () {
@@ -233,7 +208,7 @@ describe('Silo', function () {
       
       describe('withdraw part of a bean crate', function () {
         beforeEach(async function () {
-          this.result = await this.silo.connect(user).withdrawTokenBySeason(this.siloToken.address, 2, '500');
+          this.result = await this.silo.connect(user).withdrawSeason(this.siloToken.address, 2, '500');
         });
     
         it('properly updates the total balances', async function () {
@@ -268,8 +243,8 @@ describe('Silo', function () {
       describe('1 full and 1 partial token crates', function () {
         beforeEach(async function () {
           await this.season.siloSunrise(0);
-          await this.silo.connect(user).deposit(this.siloToken.address, '1000');
-          this.result = await this.silo.connect(user).withdrawTokenBySeasons(this.siloToken.address, [2,3],['500','1000']);
+          await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL);
+          this.result = await this.silo.connect(user).withdrawSeasons(this.siloToken.address, [2,3],['500','1000']);
         });
     
         it('properly updates the total balances', async function () {
@@ -298,8 +273,8 @@ describe('Silo', function () {
       describe('2 token crates', function () {
         beforeEach(async function () {
           await this.season.siloSunrise(0);
-          await this.silo.connect(user).deposit(this.siloToken.address, '1000');
-          this.result = await this.silo.connect(user).withdrawTokenBySeasons(this.siloToken.address, [2,3],['1000','1000']);
+          await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL);
+          this.result = await this.silo.connect(user).withdrawSeasons(this.siloToken.address, [2,3],['1000','1000']);
         });
     
         it('properly updates the total balances', async function () {
@@ -326,118 +301,19 @@ describe('Silo', function () {
         });
       });
     });
-    describe("withdraw tokens by season", async function (){
-      describe('1 full and 1 partial token crates', function () {
-        beforeEach(async function () {
-          await this.season.siloSunrise(0);
-          await this.silo.connect(user).deposit(this.siloToken.address, '1000');
-          this.result = await this.silo.connect(user).withdrawTokensBySeason([[this.siloToken.address, 2, '500'],[this.siloToken.address, 3, '1000']]);
-        });
-    
-        it('properly updates the total balances', async function () {
-          expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.eq('500');
-          expect(await this.silo.totalStalk()).to.eq('5000500');
-          expect(await this.silo.totalSeeds()).to.eq('500');
-          expect(await this.silo.getTotalWithdrawn(this.siloToken.address)).to.eq('1500');
-        });
-        it('properly updates the user balance', async function () {
-          expect(await this.silo.balanceOfStalk(userAddress)).to.eq('5000500');
-          expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('500');
-        });
-        it('properly removes the crate', async function () {
-          let dep = await this.silo.getDeposit(userAddress, this.siloToken.address, 2);
-          expect(dep[0]).to.equal('500')
-          expect(dep[1]).to.equal('500')
-          dep = await this.silo.getDeposit(userAddress, this.siloToken.address, 3);
-          expect(dep[0]).to.equal('0')
-          expect(dep[1]).to.equal('0')
-        });
-        it('emits Remove and Withdrawal event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveSeason').withArgs(userAddress, this.siloToken.address, 2, '500');
-          await expect(this.result).to.emit(this.silo, 'RemoveSeason').withArgs(userAddress, this.siloToken.address, 3, '1000');
-          await expect(this.result).to.emit(this.silo, 'Withdraw').withArgs(userAddress, this.siloToken.address, 28, '500');
-          await expect(this.result).to.emit(this.silo, 'Withdraw').withArgs(userAddress, this.siloToken.address, 28, '1000');
-        });
-      });
-      describe('2 token crates', function () {
-        beforeEach(async function () {
-          await this.season.siloSunrise(0);
-          await this.silo.connect(user).deposit(this.siloToken.address, '1000');
-          this.result = await this.silo.connect(user).withdrawTokensBySeason([[this.siloToken.address, 2, '1000'],[this.siloToken.address, 3, '1000']]);
-        });
-    
-        it('properly updates the total balances', async function () {
-          expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.eq('0');
-          expect(await this.silo.totalStalk()).to.eq('0');
-          expect(await this.silo.totalSeeds()).to.eq('0');
-          expect(await this.silo.getTotalWithdrawn(this.siloToken.address)).to.eq('2000');
-        });
-        it('properly updates the user balance', async function () {
-          expect(await this.silo.balanceOfStalk(userAddress)).to.eq('0');
-          expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('0');
-        });
-        it('properly removes the crate', async function () {
-          let dep = await this.silo.getDeposit(userAddress, this.siloToken.address, 2);
-          expect(dep[0]).to.equal('0')
-          expect(dep[1]).to.equal('0')
-          dep = await this.silo.getDeposit(userAddress, this.siloToken.address, 3);
-          expect(dep[0]).to.equal('0')
-          expect(dep[1]).to.equal('0')
-        });
-        it('emits Remove and Withdrawal event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveSeason').withArgs(userAddress, this.siloToken.address, 2, '1000');
-          await expect(this.result).to.emit(this.silo, 'RemoveSeason').withArgs(userAddress, this.siloToken.address, 3, '1000');
-          await expect(this.result).to.emit(this.silo, 'Withdraw').withArgs(userAddress, this.siloToken.address, 28, '1000');
-        });
-      });
-    });
-    describe("withdraw tokens by seasons", async function (){
-      describe('2 token crates in 2 withdrawals', function () {
-        beforeEach(async function () {
-          await this.season.siloSunrise(0);
-          await this.silo.connect(user).deposit(this.siloToken.address, '1000');
-          this.result = await this.silo.connect(user).withdrawTokensBySeasons([[this.siloToken.address, [2,3], ['750', '500']],[this.siloToken.address, [2,3], ['250', '250']]]);
-        });
-    
-        it('properly updates the total balances', async function () {
-          expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.eq('250');
-          expect(await this.silo.totalStalk()).to.eq('2500000');
-          expect(await this.silo.totalSeeds()).to.eq('250');
-          expect(await this.silo.getTotalWithdrawn(this.siloToken.address)).to.eq('1750');
-        });
-        it('properly updates the user balance', async function () {
-          expect(await this.silo.balanceOfStalk(userAddress)).to.eq('2500000');
-          expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('250');
-        });
-        it('properly removes the crate', async function () {
-          let dep = await this.silo.getDeposit(userAddress, this.siloToken.address, 2);
-          expect(dep[0]).to.equal('0')
-          expect(dep[1]).to.equal('0')
-          dep = await this.silo.getDeposit(userAddress, this.siloToken.address, 3);
-          expect(dep[0]).to.equal('250')
-          expect(dep[1]).to.equal('250')
-        });
-        it('emits Remove and Withdrawal event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveSeasons').withArgs(userAddress, this.siloToken.address, [2,3], ['750', '500'], '1250');
-          await expect(this.result).to.emit(this.silo, 'RemoveSeasons').withArgs(userAddress, this.siloToken.address, [2,3], ['250', '250'], '500');
-          await expect(this.result).to.emit(this.silo, 'Withdraw').withArgs(userAddress, this.siloToken.address, 28, '1250');
-          await expect(this.result).to.emit(this.silo, 'Withdraw').withArgs(userAddress, this.siloToken.address, 28, '500');
-        });
-      });
-    });
   });
 
   describe('claim', function () {
     beforeEach(async function () {
-      await this.silo.connect(user).deposit(this.siloToken.address, '1000');
-      await this.silo.connect(user).withdrawTokenBySeason(this.siloToken.address, '2', '1000');
+      await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL);
+      await this.silo.connect(user).withdrawSeason(this.siloToken.address, '2', '1000');
       await this.season.siloSunrises(25);
     })
 
     describe('claim token by season', function () {
       beforeEach(async function () {
         const userTokensBefore = await this.siloToken.balanceOf(userAddress);
-        this.result = await this.silo.connect(user).claimTokenBySeason(this.siloToken.address, 27);
+        this.result = await this.silo.connect(user).claimSeason(this.siloToken.address, 27, EXTERNAL);
         this.deltaBeans = (await this.siloToken.balanceOf(userAddress)).sub(userTokensBefore);
       });
 
@@ -457,12 +333,12 @@ describe('Silo', function () {
 
     describe('claim token by seasons', function () {
       beforeEach(async function () {
-        await this.silo.connect(user).deposit(this.siloToken.address, '1000');
-        await this.silo.connect(user).withdrawTokenBySeason(this.siloToken.address, '27', '1000');
+        await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL);
+        await this.silo.connect(user).withdrawSeason(this.siloToken.address, '27', '1000');
         await this.season.siloSunrises(25);
 
       const userTokensBefore = await this.siloToken.balanceOf(userAddress);
-        this.result = await this.silo.connect(user).claimTokenBySeasons(this.siloToken.address, [27, 52]);
+        this.result = await this.silo.connect(user).claimSeasons(this.siloToken.address, [27, 52], EXTERNAL);
         this.deltaBeans = (await this.siloToken.balanceOf(userAddress)).sub(userTokensBefore);
       });
 
@@ -477,62 +353,6 @@ describe('Silo', function () {
 
       it('emits a claim ', async function () {
         await expect(this.result).to.emit(this.silo, 'ClaimSeasons').withArgs(userAddress, this.siloToken.address, [27, 52], '2000');
-      });
-    });
-
-    describe('claim tokens by season', function () {
-      beforeEach(async function () {
-        await this.silo.connect(user).deposit(this.siloToken.address, '1000');
-        await this.silo.connect(user).withdrawTokenBySeason(this.siloToken.address, '27', '1000');
-        await this.season.siloSunrises(25);
-
-      const userTokensBefore = await this.siloToken.balanceOf(userAddress);
-        this.result = await this.silo.connect(user).claimTokensBySeason([[this.siloToken.address, 27], [this.siloToken.address, 52]]);
-        this.deltaBeans = (await this.siloToken.balanceOf(userAddress)).sub(userTokensBefore);
-      });
-  
-      it('properly updates the total balances', async function () {
-        expect(await this.silo.getTotalWithdrawn(this.siloToken.address)).to.eq('0');
-        expect(this.deltaBeans).to.equal('2000');
-      });
-
-      it('properly removes the withdrawal', async function () {
-        expect(await this.silo.getWithdrawal(userAddress, this.siloToken.address, 27)).to.eq('0');
-      });
-
-      it('emits a claim ', async function () {
-        await expect(this.result).to.emit(this.silo, 'ClaimSeason').withArgs(userAddress, this.siloToken.address, 27, '1000');
-        await expect(this.result).to.emit(this.silo, 'ClaimSeason').withArgs(userAddress, this.siloToken.address, 52, '1000');
-      });
-    });
-
-    describe('claim tokens by season', function () {
-      beforeEach(async function () {
-        await this.silo.connect(user).deposit(this.siloToken.address, '1000');
-        await this.silo.connect(user).withdrawTokenBySeason(this.siloToken.address, '27', '500');
-        await this.season.siloSunrise(0);
-        await this.silo.connect(user).withdrawTokenBySeason(this.siloToken.address, '27', '250');
-        await this.season.siloSunrise(0);
-        await this.silo.connect(user).withdrawTokenBySeason(this.siloToken.address, '27', '250');
-        await this.season.siloSunrises(25);
-
-        const userTokensBefore = await this.siloToken.balanceOf(userAddress);
-        this.result = await this.silo.connect(user).claimTokensBySeasons([[this.siloToken.address, [27, 52]], [this.siloToken.address, [53, 54]]]);
-        this.deltaBeans = (await this.siloToken.balanceOf(userAddress)).sub(userTokensBefore);
-      });
-  
-      it('properly updates the total balances', async function () {
-        expect(await this.silo.getTotalWithdrawn(this.siloToken.address)).to.eq('0');
-        expect(this.deltaBeans).to.equal('2000');
-      });
-
-      it('properly removes the withdrawal', async function () {
-        expect(await this.silo.getWithdrawal(userAddress, this.siloToken.address, 27)).to.eq('0');
-      });
-
-      it('emits a claim ', async function () {
-        await expect(this.result).to.emit(this.silo, 'ClaimSeasons').withArgs(userAddress, this.siloToken.address, [27, 52], '1500');
-        await expect(this.result).to.emit(this.silo, 'ClaimSeasons').withArgs(userAddress, this.siloToken.address, [53, 54], '500');
       });
     });
   });

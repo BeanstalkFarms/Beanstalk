@@ -75,7 +75,7 @@ library LibCurveOracle {
     function twaDeltaB() internal view returns (int256 deltaB, uint256[2] memory cum_balances) {
         uint256[2] memory balances;
         (balances, cum_balances) = twap();
-        uint256 d = LibBeanMetaCurve.getDFromBalances(balances);
+        uint256 d = LibBeanMetaCurve.getDFroms(balances);
         deltaB = getCurveDeltaB(balances[0], d);
     }
 

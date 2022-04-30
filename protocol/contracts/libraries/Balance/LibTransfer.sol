@@ -15,18 +15,18 @@ import "./LibBalance.sol";
 library LibTransfer {
     using SafeERC20 for IERC20;
 
-    enum FromBalance{ EXTERNAL, INTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT }
-    enum ToBalance{ EXTERNAL, INTERNAL }
+    enum From{ EXTERNAL, INTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT }
+    enum To{ EXTERNAL, INTERNAL }
 
     function transferToken(
         IERC20 token,
         address recipient,
         uint256 amount,
-        FromBalance fromMode,
-        ToBalance toMode
+        From fromMode,
+        To toMode
     ) internal {
-        if (fromMode == FromBalance.EXTERNAL &&
-            toMode == ToBalance.EXTERNAL) {
+        if (fromMode == From.EXTERNAL &&
+            toMode == To.EXTERNAL) {
             token.transferFrom(msg.sender, recipient, amount);
             return;
         }
@@ -38,12 +38,12 @@ library LibTransfer {
         IERC20 token,
         uint256 amount,
         address sender,
-        FromBalance mode
+        From mode
     ) internal returns (uint256 receivedAmount) {
         if (amount == 0) return 0;
-        if (mode != FromBalance.EXTERNAL) {
-            receivedAmount = LibBalance.decreaseInternalBalance(sender, token, amount, mode != FromBalance.INTERNAL);
-            if (amount == receivedAmount || mode == FromBalance.INTERNAL_TOLERANT) return receivedAmount;
+        if (mode != From.EXTERNAL) {
+            receivedAmount = LibBalance.decreaseInternalBalance(sender, token, amount, mode != From.INTERNAL);
+            if (amount == receivedAmount || mode == From.INTERNAL_TOLERANT) return receivedAmount;
         }
         token.safeTransferFrom(sender, address(this), amount - receivedAmount);
     }
@@ -52,10 +52,12 @@ library LibTransfer {
         IERC20 token,
         uint256 amount,
         address recipient,
-        ToBalance mode
+        To mode
     ) internal {
         if (amount == 0) return;
-        if (mode == ToBalance.INTERNAL) LibBalance.increaseInternalBalance(recipient, token, amount);
+        if (mode == To.INTERNAL) LibBalance.increaseInternalBalance(recipient, token, amount);
         else token.safeTransfer(recipient, amount);
     }
+
+    address constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 }

@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
-const { GeneralFunctionEncoder } = require('./utils/encoder.js')
+const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
 let user,user2,owner;
@@ -15,7 +15,7 @@ describe('Convert', function () {
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
-    this.silo = await ethers.getContractAt('MockSiloV2Facet', this.diamond.address);
+    this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.convert = await ethers.getContractAt('MockConvertFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
 
@@ -37,9 +37,9 @@ describe('Convert', function () {
     await this.siloToken.connect(user).approve(this.silo.address, '100000000000');
     await this.siloToken.mint(userAddress, '10000');
     await this.season.siloSunrise(0);
-    await this.silo.connect(user).deposit(this.siloToken.address, '100');
+    await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL);
     await this.season.siloSunrise(0);
-    await this.silo.connect(user).deposit(this.siloToken.address, '100');
+    await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL);
   });
 
   beforeEach(async function () {

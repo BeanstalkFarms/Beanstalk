@@ -1,7 +1,7 @@
 const MAX_INT = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
 
 const diamond = require('./diamond.js')
-const { impersonateCurve, impersonateBean, impersonateRouter, impersonatePool } = require('./impersonate.js')
+const { impersonateCurve, impersonateBean, impersonateCurveMetapool, impersonateWeth } = require('./impersonate.js')
 function addCommas(nStr) {
   nStr += ''
   const x = nStr.split('.')
@@ -94,7 +94,7 @@ async function main(scriptName, verbose = true, mock = false) {
     seasonFacet,
     oracleFacet,
     fieldFacet,
-    siloV2Facet,
+    siloFacet,
     bdvFacet,
     tokenFacet,
     marketplaceFacet,
@@ -106,7 +106,7 @@ async function main(scriptName, verbose = true, mock = false) {
     ['MockSeasonFacet',
       'MockOracleFacet',
       'MockFieldFacet',
-      'MockSiloV2Facet',
+      'MockSiloFacet',
       'BDVFacet',
       'TokenFacet',
       'MockMarketplaceFacet',
@@ -118,7 +118,7 @@ async function main(scriptName, verbose = true, mock = false) {
     ['SeasonFacet',
       'OracleFacet',
       'FieldFacet',
-      'SiloV2Facet',
+      'SiloFacet',
       'BDVFacet',
       'TokenFacet',
       'MarketplaceFacet',
@@ -132,7 +132,8 @@ async function main(scriptName, verbose = true, mock = false) {
   let args = []
   if (mock) {
     args.push(await impersonateBean())
-    await impersonateCurve()
+    await impersonateCurveMetapool()
+    await impersonateWeth()
   }
 
   const [beanstalkDiamond, diamondCut] = await diamond.deploy({
@@ -142,7 +143,7 @@ async function main(scriptName, verbose = true, mock = false) {
       ['SeasonFacet', seasonFacet],
       ['OracleFacet', oracleFacet],
       ['FieldFacet', fieldFacet],
-      ['SiloV2Facet', siloV2Facet],
+      ['SiloFacet', siloFacet],
       ['BDVFacet', bdvFacet],
       ['TokenFacet', tokenFacet],
       ['MarketplaceFacet', marketplaceFacet],

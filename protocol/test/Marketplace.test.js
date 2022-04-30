@@ -1,4 +1,4 @@
-const { ZERO_ADDRESS } = require("@openzeppelin/test-helpers/src/constants");
+const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { expect, use } = require("chai");
 const { waffleChai } = require("@ethereum-waffle/chai");
 use(waffleChai);
@@ -37,10 +37,10 @@ describe('Marketplace', function () {
     await this.bean.connect(user).approve(this.field.address, '100000000000')
     await this.bean.connect(user2).approve(this.field.address, '100000000000')
 
-    await this.field.incrementTotalSoilEE('100000');
+    await this.field.incrementTotalSoilE('100000');
     await this.season.setYieldE('0');
-    await this.field.connect(user).sowBeansAndIndex('1000');
-    await this.field.connect(user2).sowBeansAndIndex('1000');
+    await this.field.connect(user).sowBeans('1000', EXTERNAL);
+    await this.field.connect(user2).sowBeans('1000', EXTERNAL);
   })
 
   const getHash = async function (tx) {
@@ -454,7 +454,7 @@ describe('Marketplace', function () {
         })
 
         it("plot amount too large", async function () {
-          await this.field.connect(user2).sowBeansAndIndex('1200');
+          await this.field.connect(user2).sowBeans('1200', EXTERNAL);
           await expect(this.marketplace.connect(user2).fillPodOrder(this.order, 2000, 700, 500, false)).to.revertedWith("Marketplace: Plot too far in line.");
         })
 

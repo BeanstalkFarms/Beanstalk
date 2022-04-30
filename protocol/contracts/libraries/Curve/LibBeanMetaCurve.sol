@@ -34,8 +34,8 @@ library LibBeanMetaCurve {
         return beanValue.add(curveValue);
     }
 
-    function getDFromBalances(uint256[2] memory balances) internal view returns (uint) {
-        return LibMetaCurve.getDFromBalances(POOL, balances, RATE_MULTIPLIER);
+    function getDFroms(uint256[2] memory balances) internal view returns (uint) {
+        return LibMetaCurve.getDFroms(POOL, balances, RATE_MULTIPLIER);
     }
 
     function getXP(uint256[2] memory balances) internal view returns (uint256[2] memory xp) {

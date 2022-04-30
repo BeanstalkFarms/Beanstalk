@@ -21,6 +21,7 @@ describe('Complex Weather', function () {
     ownerAddress = contracts.account
     this.diamond = contracts.beanstalkDiamond
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
+    this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('MockToken', contracts.bean)
 
   });
@@ -57,7 +58,7 @@ describe('Complex Weather', function () {
       await this.season.setLastDSoilE('100000');
       await this.season.setStartSoilE('10000');
       await this.bean.mint(userAddress, '1000000000')
-      await this.season.setPodsE('100000000000');
+      await this.field.incrementTotalPodsE('100000000000');
     })
 
     beforeEach(async function () {

@@ -86,7 +86,7 @@ contract Order is Listing {
             bean(),
             costInBeans,
             msg.sender,
-            toWallet ? LibTransfer.ToBalance.EXTERNAL : LibTransfer.ToBalance.INTERNAL
+            toWallet ? LibTransfer.To.EXTERNAL : LibTransfer.To.INTERNAL
         );
         if (s.podListings[index] != bytes32(0)){
             _cancelPodListing(index);
@@ -109,7 +109,7 @@ contract Order is Listing {
             bean(),
             amountBeans,
             msg.sender,
-            toWallet ? LibTransfer.ToBalance.EXTERNAL : LibTransfer.ToBalance.INTERNAL
+            toWallet ? LibTransfer.To.EXTERNAL : LibTransfer.To.INTERNAL
         );
         delete s.podOrders[id];
         emit PodOrderCancelled(msg.sender, id);

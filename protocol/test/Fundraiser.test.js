@@ -1,4 +1,5 @@
 const { ZERO_ADDRESS } = require("@openzeppelin/test-helpers/src/constants");
+const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { BigNumber } = require('bignumber.js')
@@ -102,11 +103,11 @@ describe('Fundraiser', function () {
 
     describe('over fund', async function () {
       beforeEach(async function () {
-        this.result = await this.fundraiser.connect(user).fund(0, '1001')
+        this.result = await this.fundraiser.connect(user).fund(0, '1001', EXTERNAL)
       })
 
       it('reverts on over fund', async function () {
-        await expect(this.fundraiser.connect(user).fund(0, '0')).to.be.revertedWith('Fundraiser: already completed.')
+        await expect(this.fundraiser.connect(user).fund(0, '0', EXTERNAL)).to.be.revertedWith('Fundraiser: already completed.')
       })
 
       it('burns beans from protocol', async function () {
@@ -116,11 +117,11 @@ describe('Fundraiser', function () {
 
     describe('fund completed fundraiser', async function () {
       beforeEach(async function () {
-        this.result = await this.fundraiser.connect(user).fund(0, '1000')
+        this.result = await this.fundraiser.connect(user).fund(0, '1000', EXTERNAL)
       })
 
       it('reverts on over fund', async function () {
-        await expect(this.fundraiser.connect(user).fund(0, '0')).to.be.revertedWith('Fundraiser: already completed.')
+        await expect(this.fundraiser.connect(user).fund(0, '0', EXTERNAL)).to.be.revertedWith('Fundraiser: already completed.')
       })
 
       it('burns beans from protocol', async function () {
@@ -130,7 +131,7 @@ describe('Fundraiser', function () {
 
     describe('partial fund', async function () {
       beforeEach(async function () {
-        this.result = await this.fundraiser.connect(user).fund(0, '500')
+        this.result = await this.fundraiser.connect(user).fund(0, '500', EXTERNAL)
       })
 
       it('subtracts from totals', async function () {
@@ -159,7 +160,7 @@ describe('Fundraiser', function () {
 
     describe('fully fund', async function () {
       beforeEach(async function () {
-        this.result = await this.fundraiser.connect(user).fund(0, '1000')
+        this.result = await this.fundraiser.connect(user).fund(0, '1000', EXTERNAL)
       })
 
       it('subtracts from totals', async function () {

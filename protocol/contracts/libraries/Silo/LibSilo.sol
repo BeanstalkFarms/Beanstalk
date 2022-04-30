@@ -18,8 +18,6 @@ library LibSilo {
     using SafeMath for uint256;
     using Decimal for Decimal.D256;
 
-    event BeanDeposit(address indexed account, uint256 season, uint256 beans);
-
     /**
      * Silo
     **/

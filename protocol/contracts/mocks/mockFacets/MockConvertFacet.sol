@@ -5,7 +5,7 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../farm/facets/ConvertFacet/ConvertFacet.sol";
+import "../../farm/facets/ConvertFacet.sol";
 
 /**
  * @author Publius

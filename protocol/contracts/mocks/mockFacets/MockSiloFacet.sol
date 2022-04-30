@@ -6,7 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "../../farm/facets/SiloV2Facet/SiloV2Facet.sol";
+import "../../farm/facets/SiloFacet/SiloFacet.sol";
 
 /**
  * @author Publius
@@ -17,7 +17,7 @@ interface WhitelistSilo {
     function whitelistToken(address token, bytes4 selector, uint32 stalk, uint32 seeds) external;
 }
 
-contract MockSiloV2Facet is SiloV2Facet {
+contract MockSiloFacet is SiloFacet {
 
     using SafeMath for uint256;
 

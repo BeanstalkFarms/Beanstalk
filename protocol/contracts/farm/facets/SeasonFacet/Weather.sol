@@ -167,7 +167,7 @@ contract Weather is Silo {
         emit SeasonOfPlenty(season(), ethBought, newHarvestable);
     }
 
-    function calculateSopBeansAndEth() private view returns (uint256, uint256) {
+    function calculateSopBeansAndEth() private pure returns (uint256, uint256) {
         // (uint256 ethBeanPool, uint256 beansBeanPool) = reserves();
         // (uint256 ethUSDCPool, uint256 usdcUSDCPool) = pegReserves();
 

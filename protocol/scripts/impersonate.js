@@ -11,7 +11,7 @@ const WETH = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 const BEAN = '0xDC59ac4FeFa32293A95889Dc396682858d52e5Db';
 const LUSD = '0x5f98805A4E8be255a32880FDeC7F6728C6568bA0';
 
-async function curve() {
+async function curveMetapool() {
     // Deploy 3 Curve
     let threeCurveJson = fs.readFileSync(`./artifacts/contracts/mocks/curve/Mock3Curve.sol/Mock3Curve.json`);
     await network.provider.send("hardhat_setCode", [
@@ -27,8 +27,50 @@ async function curve() {
     ]);
     // const beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
 
-    // Deploy LUSD Metapool
-    let tokenJson = fs.readFileSync(`./artifacts/contracts/mocks/MockToken.sol/MockToken.json`);
+    const beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
+    await beanMetapool.init(BEAN, THREE_CURVE, THREE_CURVE);
+  
+    return [BEAN_3_CURVE, THREE_CURVE];
+}
+
+async function weth() {
+  let tokenJson = fs.readFileSync(`./artifacts/contracts/mocks/MockWETH.sol/MockWETH.json`);
+
+  await network.provider.send("hardhat_setCode", [
+      WETH,
+      JSON.parse(tokenJson).deployedBytecode,
+  ]);
+}
+
+async function router() {
+    let routerJson = fs.readFileSync(`./artifacts/contracts/mocks/MockUniswapV2Router.sol/MockUniswapV2Router.json`);
+
+    await network.provider.send("hardhat_setCode", [
+      UNISWAP_V2_ROUTER,
+      JSON.parse(routerJson).deployedBytecode,
+    ]);
+    const mockRouter =  await ethers.getContractAt("MockUniswapV2Router", UNISWAP_V2_ROUTER); 
+
+    await mockRouter.setWETH(WETH);
+
+    return UNISWAP_V2_ROUTER;
+}
+
+async function pool() {
+  let tokenJson = fs.readFileSync(`./artifacts/contracts/mocks/MockUniswapV2Pair.sol/MockUniswapV2Pair.json`);
+  await network.provider.send("hardhat_setCode", [
+    UNISWAP_V2_PAIR,
+    JSON.parse(tokenJson).deployedBytecode,
+  ]);
+
+  const pair = await ethers.getContractAt("MockUniswapV2Pair", UNISWAP_V2_PAIR);
+  await pair.resetLP();
+  await pair.setToken(BEAN);
+  return UNISWAP_V2_PAIR;
+}
+
+async function curveLUSD() {
+  let tokenJson = fs.readFileSync(`./artifacts/contracts/mocks/MockToken.sol/MockToken.json`);
     await network.provider.send("hardhat_setCode", [
       LUSD,
       JSON.parse(tokenJson).deployedBytecode,
@@ -48,48 +90,11 @@ async function curve() {
       JSON.parse(beanLusdCurveJson).deployedBytecode,
     ]);
 
-    const beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
-    await beanMetapool.init(BEAN, THREE_CURVE, THREE_CURVE);
     const lusdMetapool = await ethers.getContractAt('MockMeta3Curve', LUSD_3_CURVE);
     await lusdMetapool.init(LUSD, THREE_CURVE, THREE_CURVE);
 
     const beanLusdPool = await ethers.getContractAt('MockPlainCurve', BEAN_LUSD_CURVE);
     await beanLusdPool.init(BEAN, LUSD);
-  
-    return [BEAN_3_CURVE, THREE_CURVE];
-}
-
-async function router() {
-    let routerJson = fs.readFileSync(`./artifacts/contracts/mocks/MockUniswapV2Router.sol/MockUniswapV2Router.json`);
-
-    await network.provider.send("hardhat_setCode", [
-      UNISWAP_V2_ROUTER,
-      JSON.parse(routerJson).deployedBytecode,
-    ]);
-    const mockRouter =  await ethers.getContractAt("MockUniswapV2Router", UNISWAP_V2_ROUTER); 
-
-    let tokenJson = fs.readFileSync(`./artifacts/contracts/mocks/MockWETH.sol/MockWETH.json`);
-
-    await network.provider.send("hardhat_setCode", [
-        WETH,
-        JSON.parse(tokenJson).deployedBytecode,
-    ]);
-
-    await mockRouter.setWETH(WETH);
-    return UNISWAP_V2_ROUTER;
-}
-
-async function pool() {
-  let tokenJson = fs.readFileSync(`./artifacts/contracts/mocks/MockUniswapV2Pair.sol/MockUniswapV2Pair.json`);
-  await network.provider.send("hardhat_setCode", [
-    UNISWAP_V2_PAIR,
-    JSON.parse(tokenJson).deployedBytecode,
-  ]);
-
-  const pair = await ethers.getContractAt("MockUniswapV2Pair", UNISWAP_V2_PAIR);
-  await pair.resetLP();
-  await pair.setToken(BEAN);
-  return UNISWAP_V2_PAIR;
 }
 
 async function bean() {
@@ -107,5 +112,7 @@ async function bean() {
 
 exports.impersonateRouter = router
 exports.impersonateBean = bean
-exports.impersonateCurve = curve
+exports.impersonateCurveMetapool = curveMetapool
+exports.impersonateCurveLUSD = curveLUSD
 exports.impersonatePool = pool
+exports.impersonateWeth = weth

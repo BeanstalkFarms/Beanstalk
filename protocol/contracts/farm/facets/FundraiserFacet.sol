@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "../ReentrancyGuard.sol";
 import "../../libraries/LibDibbler.sol";
+import "../../libraries/Balance/LibTransfer.sol";
 
 /**
  * @author Publius
@@ -24,11 +25,11 @@ contract FundraiserFacet is ReentrancyGuard {
     event CompleteFundraiser(uint32 indexed id);
     event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);
 
-    function fund(uint32 id, uint256 amount) public nonReentrant returns (uint256) {
+    function fund(uint32 id, uint256 amount, LibTransfer.From mode) public nonReentrant returns (uint256) {
         uint256 remaining = s.fundraisers[id].remaining;
         require(remaining > 0, "Fundraiser: already completed.");
         if (amount > remaining) amount = remaining;
-        IERC20(s.fundraisers[id].token).safeTransferFrom(msg.sender, address(this), amount);
+        LibTransfer.receiveToken(IERC20(s.fundraisers[id].token), amount, msg.sender, mode);
         s.fundraisers[id].remaining = remaining - amount; // Note: SafeMath is redundant here.
         emit FundFundraiser(msg.sender, id, amount);
         if (s.fundraisers[id].remaining == 0) completeFundraiser(id);

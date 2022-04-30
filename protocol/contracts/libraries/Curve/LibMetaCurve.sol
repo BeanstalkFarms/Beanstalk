@@ -32,7 +32,7 @@ library LibMetaCurve {
         xp = LibCurve.getXP(balances, padding, C.curve3Pool().get_virtual_price());
     }
 
-    function getDFromBalances(address pool, uint256[2] memory balances, uint256 padding) internal view returns (uint) {
+    function getDFroms(address pool, uint256[2] memory balances, uint256 padding) internal view returns (uint) {
         return LibCurve.getD(getXP(balances, padding), IMeta3Curve(pool).A_precise());
     }
 }

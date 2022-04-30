@@ -44,7 +44,7 @@ describe('BDV', function () {
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
     this.oracle = await ethers.getContractAt('MockOracleFacet', this.diamond.address);
-    this.silo = await ethers.getContractAt('MockSiloV2Facet', this.diamond.address);
+    this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
 
@@ -118,7 +118,7 @@ describe('BDV', function () {
   //     await this.beanThreeCurve.set_balances([
   //       ethers.utils.parseUnits('1000000',6),
   //       ethers.utils.parseEther('1000000')
-  //     ]);
+  //     ]);'
   //     await this.beanThreeCurve.set_balances([
   //       ethers.utils.parseUnits('1200000',6),
   //       ethers.utils.parseEther('1000000')

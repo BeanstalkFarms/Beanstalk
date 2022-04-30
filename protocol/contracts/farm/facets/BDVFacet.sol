@@ -24,7 +24,7 @@ contract BDVFacet {
         return LibBeanLUSDCurve.bdv(amount);
     }
 
-    function beanToBDV(uint256 amount) external view returns (uint256) {
+    function beanToBDV(uint256 amount) external pure returns (uint256) {
         return amount;
     }
 

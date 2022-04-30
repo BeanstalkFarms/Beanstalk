@@ -13,9 +13,4 @@ import "../../farm/facets/MarketplaceFacet/MarketplaceFacet.sol";
  * @title Mock Marketplace Facet
 **/
 contract MockMarketplaceFacet is MarketplaceFacet {
-    function deleteOrders(bytes32[] calldata ids) external {
-        for (uint i = 0; i < ids.length; i++) {
-            delete s.podOrders[ids[i]];
-        }
-    }
 }

@@ -9,7 +9,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../ReentrancyGuard.sol";
 import "../../../interfaces/IWETH.sol";
 import "../../../interfaces/IBean.sol";
-import "../../../libraries/LibInternal.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/LibSafeMath32.sol";
 import "../../../C.sol";
@@ -68,40 +67,16 @@ contract SiloExit is ReentrancyGuard {
     }
 
     function balanceOfFarmableBeans(address account) public view returns (uint256 beans) {
-        beans = beans.add(balanceOfFarmableBeansV1(account));
-        beans = beans.add(balanceOfFarmableBeansV2(balanceOfUnclaimedRoots(account)));
-        uint256 stalk = s.a[account].s.stalk.add(beans.mul(C.getStalkPerBean()));
-        beans = beans.add(balanceOfFarmableBeansV3(account, stalk));
+        beans = _balanceOfFarmableBeans(account,  s.a[account].s.stalk);
     }
 
-    function balanceOfFarmableBeansV3(address account, uint256 accountStalk) public view returns (uint256 beans) {
+    function _balanceOfFarmableBeans(address account, uint256 accountStalk) internal view returns (uint256 beans) {
         if (s.s.roots == 0) return 0;
         uint256 stalk = s.s.stalk.mul(balanceOfRoots(account)).div(s.s.roots);
         if (stalk <= accountStalk) return 0;
         beans = (stalk - accountStalk).div(C.getStalkPerBean()); // Note: SafeMath is redundant here.
         if (beans > s.si.beans) return s.si.beans;
         return beans;
-    }
-
-    function balanceOfFarmableBeansV2(uint256 roots) public view returns (uint256 beans) {
-        if (s.unclaimedRoots == 0 || s.v2SIBeans == 0) return 0;
-        beans = roots.mul(s.v2SIBeans).div(s.unclaimedRoots);
-        if (beans > s.v2SIBeans) beans = s.v2SIBeans;
-    }
-
-    function balanceOfFarmableBeansV1(address account) public view returns (uint256 beans) {
-        if (s.s.roots == 0 || s.v1SI.beans == 0 || lastUpdate(account) >= s.hotFix3Start) return 0;
-        uint256 stalk = s.v1SI.stalk.mul(balanceOfRoots(account)).div(s.v1SI.roots);
-        if (stalk <= s.a[account].s.stalk) return 0;
-        beans = (stalk - s.a[account].s.stalk).div(C.getStalkPerBean()); // Note: SafeMath is redundant here.
-        if (beans > s.v1SI.beans) return s.v1SI.beans;
-        return beans;
-    }
-
-    function balanceOfUnclaimedRoots(address account) public view returns (uint256 uRoots) {
-        uint256 sis = s.season.sis.sub(s.a[account].lastSIs);
-        uRoots = balanceOfRoots(account).mul(sis);
-        if (uRoots > s.unclaimedRoots) uRoots = s.unclaimedRoots;
     }
 
     function balanceOfFarmableStalk(address account) public view returns (uint256) {
@@ -114,22 +89,6 @@ contract SiloExit is ReentrancyGuard {
 
     function lastUpdate(address account) public view returns (uint32) {
         return s.a[account].lastUpdate;
-    }
-
-    function lastSupplyIncreases(address account) public view returns (uint32) {
-        return s.a[account].lastSIs;
-    }
-
-    function supplyIncreases() external view returns (uint32) {
-        return s.season.sis;
-    }
-
-    function unclaimedRoots() external view returns (uint256) {
-        return s.unclaimedRoots;
-    }
-
-    function legacySupplyIncrease() external view returns (Storage.V1IncreaseSilo memory) {
-        return s.v1SI;
     }
 
     /**
@@ -173,44 +132,6 @@ contract SiloExit is ReentrancyGuard {
 
     function balanceOfRainRoots(address account) public view returns (uint256) {
         return s.a[account].sop.roots;
-    }
-
-    /**
-     * Governance
-    **/
-
-    function votedUntil(address account) public view returns (uint32) {
-        if (voted(account)) {
-            return s.a[account].votedUntil;
-        }
-        return 0;
-    }
-
-    function proposedUntil(address account) public view returns (uint32) {
-        return s.a[account].proposedUntil;
-    }
-
-    function voted(address account) public view returns (bool) {
-        if (s.a[account].votedUntil >= season()) {
-            uint256 numberOfActiveBips = s.g.activeBips.length;
-            for (uint256 i = 0; i < numberOfActiveBips; i++) {
-                uint32 activeBip = s.g.activeBips[i];
-                if (s.g.voted[activeBip][account]) return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Migration
-    **/
-
-    function balanceOfMigrationRoots(address account) internal view returns (uint256) {
-        return balanceOfMigrationStalk(account).mul(C.getRootsBase());
-    }
-
-    function balanceOfMigrationStalk(address account) private view returns (uint256) {
-        return s.a[account].s.stalk.add(LibSilo.stalkReward(s.a[account].s.seeds, s.bip0Start-lastUpdate(account)));
     }
 
     /**

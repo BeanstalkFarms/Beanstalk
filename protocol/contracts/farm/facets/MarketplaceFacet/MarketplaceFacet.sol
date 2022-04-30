@@ -40,8 +40,8 @@ contract MarketplaceFacet is Order {
             IERC20(C.beanAddress()), 
             l.account, 
             beanAmount, 
-            LibTransfer.FromBalance.EXTERNAL, 
-            l.toWallet ? LibTransfer.ToBalance.EXTERNAL : LibTransfer.ToBalance.INTERNAL
+            LibTransfer.From.EXTERNAL, 
+            l.toWallet ? LibTransfer.To.EXTERNAL : LibTransfer.To.INTERNAL
         );
         _fillListing(l, beanAmount);
     }

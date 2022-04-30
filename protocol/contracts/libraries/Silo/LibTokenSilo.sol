@@ -79,7 +79,6 @@ library LibTokenSilo {
         delete s.a[account].deposits[token][id];
 
         if (amount > crateAmount) {
-            uint256 unripeAmount;
             if (LibUnripeSilo.isUnripeBean(token)) 
                 return crateBDV.add(LibUnripeSilo.removeUnripeBeanDeposit(account, id, amount));
             else if (LibUnripeSilo.isUnripeLP(token)) 

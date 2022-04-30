@@ -31,6 +31,7 @@ contract TokenSilo is UpdateSilo {
         uint256 tokensRemoved;
         uint256 stalkRemoved;
         uint256 seedsRemoved;
+        uint256 bdvRemoved;
     }
 
     /**
@@ -58,7 +59,6 @@ contract TokenSilo is UpdateSilo {
     **/
 
     function _deposit(address token, uint256 amount) internal {
-        LibInternal.updateSilo(msg.sender);
         (uint256 seeds, uint256 stalk) = LibTokenSilo.deposit(msg.sender, token, _season(), amount);
         LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
     }
@@ -104,12 +104,7 @@ contract TokenSilo is UpdateSilo {
     {
         uint256 bdvRemoved;
         for (uint256 i = 0; i < seasons.length; i++) {
-            uint256 crateBdv = LibTokenSilo.removeDeposit(
-                msg.sender,
-                token,
-                seasons[i],
-                amounts[i]
-            );
+            uint256 crateBdv = LibTokenSilo.removeDeposit(msg.sender, token, seasons[i], amounts[i]);
             bdvRemoved = bdvRemoved.add(crateBdv);
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
             ar.stalkRemoved = ar.stalkRemoved.add(

@@ -68,7 +68,6 @@ library C {
     address private constant BEAN = 0xDC59ac4FeFa32293A95889Dc396682858d52e5Db;
     address private constant UNISWAP_V2_BEAN_ETH = 0x87898263B6C5BABe34b4ec53F22d98430b91e371;
     address private constant CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
-    address private constant CURVE_LUSD_METAPOOL = 0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA;
     address private constant CURVE_BEAN_LUSD_POOL = 0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D;
     address private constant CURVE_3_POOL = 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7;
 
@@ -194,10 +193,6 @@ library C {
 
     function curveMetapoolAddress() internal pure returns (address) {
         return CURVE_BEAN_METAPOOL;
-    }
-
-    function curveLUSDMetapoolAddress() internal pure returns (address) {
-        return CURVE_LUSD_METAPOOL;
     }
 
     function curveBeanLUSDAddress() internal pure returns (address) {

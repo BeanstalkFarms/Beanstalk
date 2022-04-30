@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "../AppStorage.sol";
 import "../../libraries/Balance/LibTransfer.sol";
+import "../../libraries/LibWeth.sol";
 
 /**
  * @author Publius
@@ -31,9 +32,9 @@ contract TokenFacet {
         IERC20 token,
         address recipient,
         uint256 amount,
-        LibTransfer.FromBalance fromMode,
-        LibTransfer.ToBalance toMode
-    ) external {
+        LibTransfer.From fromMode,
+        LibTransfer.To toMode
+    ) external payable {
         LibTransfer.transferToken(token, recipient, amount, fromMode, toMode);
     }
 
@@ -108,5 +109,13 @@ contract TokenFacet {
         for (uint256 i = 0; i < tokens.length; i++) {
             balances[i] = getAllBalance(account, tokens[i]);
         }
+    }
+
+    function wrapEth(uint256 amount, LibTransfer.To mode) external payable {
+        LibWeth.wrap(amount, mode);
+    }
+
+    function unwrapEth(uint256 amount, LibTransfer.From mode) external payable {
+        LibWeth.unwrap(amount, mode);
     }
 }
