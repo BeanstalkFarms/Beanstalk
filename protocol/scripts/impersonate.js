@@ -10,6 +10,8 @@ const UNISWAP_V2_PAIR = '0x87898263B6C5BABe34b4ec53F22d98430b91e371';
 const WETH = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 const BEAN = '0xDC59ac4FeFa32293A95889Dc396682858d52e5Db';
 const LUSD = '0x5f98805A4E8be255a32880FDeC7F6728C6568bA0';
+const UNRIPE_BEAN = '0xD5BDcdEc5b2FEFf781eA8727969A95BbfD47C40e';
+const UNRIPE_LP = '0x2e4243832DB30787764f152457952C8305f442e4';
 
 async function curveMetapool() {
     // Deploy 3 Curve
@@ -110,9 +112,27 @@ async function bean() {
   return BEAN;
 }
 
+async function unripe() {
+  let tokenJson = fs.readFileSync(`./artifacts/contracts/mocks/MockToken.sol/MockToken.json`);
+
+  await network.provider.send("hardhat_setCode", [
+    UNRIPE_BEAN,
+    JSON.parse(tokenJson).deployedBytecode,
+  ]);
+
+  const unripeBean = await ethers.getContractAt("MockToken", UNRIPE_BEAN);
+  await unripeBean.setDecimals(6);
+
+  await network.provider.send("hardhat_setCode", [
+    UNRIPE_LP,
+    JSON.parse(tokenJson).deployedBytecode,
+  ]);
+}
+
 exports.impersonateRouter = router
 exports.impersonateBean = bean
 exports.impersonateCurveMetapool = curveMetapool
 exports.impersonateCurveLUSD = curveLUSD
 exports.impersonatePool = pool
 exports.impersonateWeth = weth
+exports.impersonateUnripe = unripe

@@ -73,24 +73,4 @@ contract Silo is Life {
         if (base > 0) s.sop.last = s.r.start;
 
     }
-
-    // Governance
-
-    function stepGovernance() internal {
-        uint256 numberOfActiveBips = s.g.activeBips.length;
-        for (uint256 i = numberOfActiveBips; i > 0; --i) {
-            uint32 bip = s.g.activeBips[i-1];
-            if (season() >= s.g.bips[bip].start.add(s.g.bips[bip].period))
-                endBip(bip, i-1);
-        }
-    }
-
-    function endBip(uint32 bipId, uint256 i) private {
-        s.g.bips[bipId].timestamp = uint128(block.timestamp);
-        s.g.bips[bipId].endTotalRoots = s.s.roots;
-        if (i < s.g.activeBips.length-1)
-            s.g.activeBips[i] = s.g.activeBips[s.g.activeBips.length-1];
-        s.g.activeBips.pop();
-    }
-
 }

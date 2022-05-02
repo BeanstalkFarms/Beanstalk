@@ -70,6 +70,8 @@ library C {
     address private constant CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
     address private constant CURVE_BEAN_LUSD_POOL = 0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D;
     address private constant CURVE_3_POOL = 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7;
+    address private constant UNRIPE_BEAN = 0xD5BDcdEc5b2FEFf781eA8727969A95BbfD47C40e;
+    address private constant UNRIPE_LP = 0x2e4243832DB30787764f152457952C8305f442e4;
 
     /**
      * Getters
@@ -197,6 +199,14 @@ library C {
 
     function curveBeanLUSDAddress() internal pure returns (address) {
         return CURVE_BEAN_LUSD_POOL;
+    }
+
+    function unripeBeanAddress() internal pure returns (address) {
+        return UNRIPE_BEAN;
+    }
+
+    function unripeLPAddress() internal pure returns (address) {
+        return UNRIPE_LP;
     }
 
     function bean() internal pure returns (IBean) {

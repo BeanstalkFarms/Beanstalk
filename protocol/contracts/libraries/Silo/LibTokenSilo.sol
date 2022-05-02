@@ -64,8 +64,7 @@ library LibTokenSilo {
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 crateAmount;
-        (crateAmount, crateBDV) = tokenDeposit(account, token, id);
-        require(crateAmount >= amount, "Silo: Crate balance too low.");
+        (crateAmount, crateBDV) = (s.a[account].deposits[token][id].amount, s.a[account].deposits[token][id].bdv);
         if (amount < crateAmount) {
             uint256 base = amount.mul(crateBDV).div(crateAmount);
             uint256 newBase = uint256(s.a[account].deposits[token][id].bdv).sub(base);
@@ -76,9 +75,10 @@ library LibTokenSilo {
             return base;
         }
 
-        delete s.a[account].deposits[token][id];
+        if (crateAmount > 0) delete s.a[account].deposits[token][id];
 
         if (amount > crateAmount) {
+            amount -= crateAmount;
             if (LibUnripeSilo.isUnripeBean(token)) 
                 return crateBDV.add(LibUnripeSilo.removeUnripeBeanDeposit(account, id, amount));
             else if (LibUnripeSilo.isUnripeLP(token)) 

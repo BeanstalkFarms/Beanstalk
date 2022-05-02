@@ -39,8 +39,7 @@ contract SeasonFacet is Sun {
         require(seasonTime() > season(), "Season: Still current Season.");
 
         int256 deltaB = IOracle(address(this)).capture();
-        
-        stepGovernance();
+
         stepSeason();
         decrementWithdrawSeasons();
         snapshotSeason(deltaB);

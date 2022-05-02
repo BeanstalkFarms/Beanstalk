@@ -46,7 +46,6 @@ contract MockSeasonFacet is SeasonFacet {
 
     function rainSiloSunrise(uint256 amount) public {
         require(!paused(), "Season: Paused.");
-        stepGovernance();
         s.season.current += 1;
         handleRain(4);
         mockStepSilo(amount);
@@ -54,7 +53,6 @@ contract MockSeasonFacet is SeasonFacet {
 
     function droughtSiloSunrise(uint256 amount) public {
         require(!paused(), "Season: Paused.");
-        stepGovernance();
         s.season.current += 1;
         handleRain(3);
         mockStepSilo(amount);
@@ -81,19 +79,6 @@ contract MockSeasonFacet is SeasonFacet {
         for (uint256 i = 0; i < number; i++) {
             s.season.current += 1;
             stepSilo(0);
-        }
-    }
-
-    function governanceSunrise(uint256 amount) public {
-        require(!paused(), "Season: Paused.");
-        stepGovernance();
-        siloSunrise(amount);
-    }
-
-    function governanceSunrises(uint256 number) public {
-        require(!paused(), "Season: Paused.");
-        for (uint256 i = 0; i < number; i++) {
-            governanceSunrise(0);
         }
     }
 

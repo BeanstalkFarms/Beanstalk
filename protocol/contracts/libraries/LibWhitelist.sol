@@ -17,6 +17,8 @@ interface IBS {
     function lusdToBDV(uint256 amount) external view returns (uint256);
     function curveToBDV(uint256 amount) external view returns (uint256);
     function beanToBDV(uint256 amount) external view returns (uint256);
+    function unripeBeanToBDV(uint256 amount) external view returns (uint256);
+    function unripeLPToBDV(uint256 amount) external view returns (uint256);
 }
 
 library LibWhitelist {
@@ -35,6 +37,8 @@ library LibWhitelist {
         whitelistBeanLusd();
         whitelistBean3Crv();
         whitelistBean();
+        whitelistUnripeBean();
+        whitelistUnripeLP();
     }
 
     function whitelistBeanLusd() internal {
@@ -47,5 +51,13 @@ library LibWhitelist {
 
     function whitelistBean() internal {
         IBS(address(this)).whitelistToken(C.beanAddress(), IBS.beanToBDV.selector, BEAN_STALK, BEAN_SEEDS);
+    }
+
+    function whitelistUnripeBean() internal {
+        IBS(address(this)).whitelistToken(C.unripeBeanAddress(), IBS.unripeBeanToBDV.selector, BEAN_STALK, BEAN_SEEDS);
+    }
+
+    function whitelistUnripeLP() internal {
+        IBS(address(this)).whitelistToken(C.unripeLPAddress(), IBS.unripeLPToBDV.selector, BEAN_3CRV_STALK, BEAN_3CRV_SEEDS);
     }
 }

@@ -49,8 +49,6 @@ library LibSilo {
 
         s.s.roots = s.s.roots.add(roots);
         s.a[account].roots = s.a[account].roots.add(roots);
-
-        incrementBipRoots(account, roots);
     }
 
     function decrementBalanceOfSeeds(address account, uint256 seeds) private {
@@ -69,8 +67,6 @@ library LibSilo {
 
         s.s.roots = s.s.roots.sub(roots);
         s.a[account].roots = s.a[account].roots.sub(roots);
-
-        decrementBipRoots(account, roots);
     }
 
     function updateBalanceOfRainStalk(address account) internal {
@@ -80,44 +76,6 @@ library LibSilo {
             s.r.roots = s.r.roots.sub(s.a[account].sop.roots - s.a[account].roots); // Note: SafeMath is redundant here.
             s.a[account].sop.roots = s.a[account].roots;
         }
-    }
-
-    function incrementBipRoots(address account, uint256 roots) private {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        if (s.a[account].votedUntil >= season()) {
-            uint256 numberOfActiveBips = s.g.activeBips.length; 
-            for (uint256 i = 0; i < numberOfActiveBips; i++) {
-                uint32 bip = s.g.activeBips[i];
-                if (s.g.voted[bip][account]) s.g.bips[bip].roots = s.g.bips[bip].roots.add(roots);
-            }
-        }
-    }
-
-    /// @notice Decrements the given amount of roots from bips that have been voted on by a given account and
-    /// checks whether the account is a proposer and if he/she are then they need to have the min roots required
-    /// @param account The address of the account to have their bip roots decremented
-    /// @param roots The amount of roots for the given account to be decremented from
-    function decrementBipRoots(address account, uint256 roots) private {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        if (s.a[account].votedUntil >= season()) {
-            require(
-                s.a[account].proposedUntil < season() || canPropose(account),
-                "Silo: Proposer must have min Stalk."
-            );
-            uint256 numberOfActiveBips = s.g.activeBips.length; 
-            for (uint256 i = 0; i < numberOfActiveBips; i++) {
-                uint32 bip = s.g.activeBips[i];
-                if (s.g.voted[bip][account]) s.g.bips[bip].roots = s.g.bips[bip].roots.sub(roots);
-            }
-        }
-    }
-
-    /// @notice Checks whether the account have the min roots required for a BIP
-    /// @param account The address of the account to check roots balance
-    function canPropose(address account) internal view returns (bool) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        Decimal.D256 memory stake = Decimal.ratio(s.a[account].roots, s.s.roots);
-        return stake.greaterThan(C.getGovernanceProposalThreshold());
     }
 
     function stalkReward(uint256 seeds, uint32 seasons) internal pure returns (uint256) {

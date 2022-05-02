@@ -4,7 +4,6 @@ const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
-const ethAddress = ethers.constants.AddressZero
 const WETH = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 
 describe('Token', function () {

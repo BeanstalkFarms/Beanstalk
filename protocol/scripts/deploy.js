@@ -1,7 +1,7 @@
 const MAX_INT = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
 
 const diamond = require('./diamond.js')
-const { impersonateCurve, impersonateBean, impersonateCurveMetapool, impersonateWeth } = require('./impersonate.js')
+const { impersonateCurve, impersonateBean, impersonateCurveMetapool, impersonateWeth, impersonateUnripe } = require('./impersonate.js')
 function addCommas(nStr) {
   nStr += ''
   const x = nStr.split('.')
@@ -134,6 +134,7 @@ async function main(scriptName, verbose = true, mock = false) {
     args.push(await impersonateBean())
     await impersonateCurveMetapool()
     await impersonateWeth()
+    await impersonateUnripe()
   }
 
   const [beanstalkDiamond, diamondCut] = await diamond.deploy({

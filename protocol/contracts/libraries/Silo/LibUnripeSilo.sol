@@ -17,11 +17,12 @@ library LibUnripeSilo {
 
     using SafeMath for uint256;
 
-    address constant UNRIPE_BEAN = address(0);
-    address constant UNRIPE_LP = address(0);
+    // Temporary addresses
+    address constant UNRIPE_BEAN = 0xD5BDcdEc5b2FEFf781eA8727969A95BbfD47C40e;
+    address constant UNRIPE_LP = 0x2e4243832DB30787764f152457952C8305f442e4;
 
-    uint256 constant UNRIPE_BEAN_BDV = 1e18;
-    uint256 constant UNRIPE_LP_BDV = 1e18;
+    uint256 constant UNRIPE_BEAN_BDV = 0.5e18;
+    uint256 constant UNRIPE_LP_BDV = 0.1e18;
 
     address constant BEAN_3CURVE_ADDRESS = address(0x3a70DfA7d2262988064A2D051dd47521E43c9BdD);
     address constant BEAN_LUSD_ADDRESS = address(0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA);
@@ -35,13 +36,7 @@ library LibUnripeSilo {
         private
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 crateBDV = s.a[account].bean.deposits[id];
-        if (crateBDV >= amount) {
-            s.a[account].bean.deposits[id] -= amount;
-            return;
-        }
-        require(amount == crateBDV, "Unripe: Crate empty");
-        delete s.a[account].bean.deposits[id];
+        s.a[account].bean.deposits[id] = s.a[account].bean.deposits[id].sub(amount, "Silo: Crate balance too low.");
     }
 
     function isUnripeBean(address token) internal pure returns (bool b) {
@@ -52,7 +47,7 @@ library LibUnripeSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 legacyAmount = s.a[account].bean.deposits[season];
         amount = uint256(s.a[account].deposits[UNRIPE_BEAN][season].amount).add(legacyAmount);
-        bdv =  uint256(s.a[account].deposits[UNRIPE_BEAN][season].bdv).add(amount.mul(UNRIPE_BEAN_BDV).div(1e18));
+        bdv =  uint256(s.a[account].deposits[UNRIPE_BEAN][season].bdv).add(legacyAmount.mul(UNRIPE_BEAN_BDV).div(1e18));
     }
 
     function removeUnripeLPDeposit(address account, uint32 id, uint256 amount) internal returns (uint256 bdv) {
@@ -86,12 +81,10 @@ library LibUnripeSilo {
         crateBDV = s.a[account].deposits[BEAN_LUSD_ADDRESS][id].bdv;
         if (crateBDV >= amount) {
             // Safe math not necessary
-             s.a[account].deposits[BEAN_LUSD_ADDRESS][id].bdv -= uint128(amount);
+            s.a[account].deposits[BEAN_LUSD_ADDRESS][id].bdv -= uint128(amount);
             return;
         }
-        require(amount == crateBDV, "Unripe: Crate empty");
-        amount -= crateBDV;
-        delete s.a[account].deposits[BEAN_LUSD_ADDRESS][id].bdv;
+        revert("Silo: Crate balance too low.");
     }
     
     function isUnripeLP(address token) internal pure returns (bool b) {
@@ -105,10 +98,6 @@ library LibUnripeSilo {
             uint256(s.a[account].deposits[BEAN_LUSD_ADDRESS][season].bdv)
         ));
         amount = uint256(s.a[account].deposits[UNRIPE_LP][season].amount).add(legacyAmount);
-        bdv =  uint256(s.a[account].deposits[UNRIPE_LP][season].bdv).add(amount.mul(UNRIPE_LP_BDV).div(1e18));
-    }
-
-    function isUnripe(address token) internal pure returns (bool b) {
-        b = token == UNRIPE_LP;
+        bdv =  uint256(s.a[account].deposits[UNRIPE_LP][season].bdv).add(legacyAmount.mul(UNRIPE_LP_BDV).div(1e18));
     }
 }
