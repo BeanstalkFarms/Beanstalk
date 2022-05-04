@@ -16,7 +16,6 @@ import "../../../libraries/LibIncentive.sol";
 contract SeasonFacet is Sun {
 
     using SafeMath for uint256;
-    using Decimal for Decimal.D256;
 
     event Sunrise(uint256 indexed season);
     event Incentivization(address indexed account, uint256 beans);
@@ -44,8 +43,7 @@ contract SeasonFacet is Sun {
         decrementWithdrawSeasons();
         snapshotSeason(deltaB);
         stepWeather(deltaB, s.f.soil);
-        uint256 increase = stepSun(deltaB);
-        stepSilo(increase);
+        stepSun(deltaB);
         incentivize(msg.sender, C.getAdvanceIncentive());
 
         emit Sunrise(season());

@@ -46,16 +46,16 @@ contract SiloExit is ReentrancyGuard {
         return s.s.seeds;
     }
 
-    function totalFarmableBeans() public view returns (uint256) {
-        return s.si.beans.add(s.v1SI.beans).add(s.v2SIBeans);
+    function totalEarnedBeans() public view returns (uint256) {
+        return s.si.beans;
     }
 
     function balanceOfSeeds(address account) public view returns (uint256) {
-        return s.a[account].s.seeds.add(balanceOfFarmableBeans(account).mul(C.getSeedsPerBean()));
+        return s.a[account].s.seeds; // Earned Seeds do not earn Grown stalk, so we do not include them. 
     }
 
     function balanceOfStalk(address account) public view returns (uint256) {
-        return s.a[account].s.stalk.add(balanceOfFarmableStalk(account));
+        return s.a[account].s.stalk.add(balanceOfEarnedStalk(account)); // Earned Stalk earns Bean Mints, but Grown Stalk does not.
     }
 
     function balanceOfRoots(address account) public view returns (uint256) {
@@ -66,25 +66,25 @@ contract SiloExit is ReentrancyGuard {
         return LibSilo.stalkReward(s.a[account].s.seeds, season()-lastUpdate(account));
     }
 
-    function balanceOfFarmableBeans(address account) public view returns (uint256 beans) {
-        beans = _balanceOfFarmableBeans(account,  s.a[account].s.stalk);
+    function balanceOfEarnedBeans(address account) public view returns (uint256 beans) {
+        beans = _balanceOfEarnedBeans(account,  s.a[account].s.stalk);
     }
 
-    function _balanceOfFarmableBeans(address account, uint256 accountStalk) internal view returns (uint256 beans) {
+    function _balanceOfEarnedBeans(address account, uint256 accountStalk) internal view returns (uint256 beans) {
         if (s.s.roots == 0) return 0;
-        uint256 stalk = s.s.stalk.mul(balanceOfRoots(account)).div(s.s.roots);
+        uint256 stalk = s.s.stalk.mul(s.a[account].roots).div(s.s.roots);
         if (stalk <= accountStalk) return 0;
         beans = (stalk - accountStalk).div(C.getStalkPerBean()); // Note: SafeMath is redundant here.
         if (beans > s.si.beans) return s.si.beans;
         return beans;
     }
 
-    function balanceOfFarmableStalk(address account) public view returns (uint256) {
-        return balanceOfFarmableBeans(account).mul(C.getStalkPerBean());
+    function balanceOfEarnedStalk(address account) public view returns (uint256) {
+        return balanceOfEarnedBeans(account).mul(C.getStalkPerBean());
     }
 
-    function balanceOfFarmableSeeds(address account) public view returns (uint256) {
-        return balanceOfFarmableBeans(account).mul(C.getSeedsPerBean());
+    function balanceOfEarnedSeeds(address account) public view returns (uint256) {
+        return balanceOfEarnedBeans(account).mul(C.getSeedsPerBean());
     }
 
     function lastUpdate(address account) public view returns (uint32) {

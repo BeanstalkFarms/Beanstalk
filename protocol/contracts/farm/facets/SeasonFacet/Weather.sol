@@ -6,17 +6,20 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../../../libraries/Decimal.sol";
-import "./Silo.sol";
+import "./Life.sol";
 
 /**
  * @author Publius
  * @title Weather
 **/
-contract Weather is Silo {
+contract Weather is Life {
 
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
+
+    uint256 private constant BURN_BASE = 1e20;
+    uint256 private constant BIG_BASE = 1e24;
 
     event WeatherChange(uint256 indexed season, uint256 caseId, int8 change);
     event SeasonOfPlenty(uint256 indexed season, uint256 eth, uint256 harvestable);
@@ -183,6 +186,25 @@ contract Weather is Silo {
 
         // return (beans, eth);
         return (0,0);
+    }
+
+    function rewardEther(uint256 amount) private {
+        uint256 base;
+        if (s.sop.base == 0) {
+            base = amount.mul(BIG_BASE);
+            s.sop.base = BURN_BASE;
+        }
+        else base = amount.mul(s.sop.base).div(s.sop.weth);
+
+        // Award ether to claimed stalk holders
+        uint256 basePerStalk = base.div(s.r.roots);
+        base = basePerStalk.mul(s.r.roots);
+        s.sops[s.r.start] = s.sops[s.r.start].add(basePerStalk);
+
+        // Update total state
+        s.sop.weth = s.sop.weth.add(amount);
+        s.sop.base = s.sop.base.add(base);
+        if (base > 0) s.sop.last = s.r.start;
     }
 
     /**

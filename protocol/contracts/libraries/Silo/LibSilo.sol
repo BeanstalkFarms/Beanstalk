@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../C.sol";
 import "../LibAppStorage.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -16,7 +17,6 @@ import "../LibAppStorage.sol";
 library LibSilo {
 
     using SafeMath for uint256;
-    using Decimal for Decimal.D256;
 
     /**
      * Silo
@@ -32,7 +32,7 @@ library LibSilo {
         decrementBalanceOfSeeds(account, seeds);
     }
 
-    function incrementBalanceOfSeeds(address account, uint256 seeds) private {
+    function incrementBalanceOfSeeds(address account, uint256 seeds) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.s.seeds = s.s.seeds.add(seeds);
         s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
@@ -60,7 +60,10 @@ library LibSilo {
     function decrementBalanceOfStalk(address account, uint256 stalk) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return;
-        uint256 roots = s.a[account].roots.mul(stalk).sub(1).div(s.a[account].s.stalk).add(1);
+
+        uint256 roots = stalk == s.a[account].s.stalk ?
+            s.a[account].roots :
+            s.s.roots.sub(1).mul(stalk).div(s.s.stalk).add(1);
 
         s.s.stalk = s.s.stalk.sub(stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
@@ -80,10 +83,5 @@ library LibSilo {
 
     function stalkReward(uint256 seeds, uint32 seasons) internal pure returns (uint256) {
         return seeds.mul(seasons);
-    }
-
-    function season() internal view returns (uint32) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.season.current;
     }
 }

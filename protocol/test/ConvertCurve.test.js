@@ -258,8 +258,6 @@ describe('Curve Convert', function () {
         await this.silo.connect(user).deposit(this.bean.address, toBean('100'), EXTERNAL);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('250'),to18('190'), this.beanMetapool.address),['2','6'],[toBean('100'), toBean('100')])
-        const balances = await this.beanMetapool.get_balances();
-        console.log(`${balances[0]}, ${balances[1]}`)
       });
 
       it('properly updates total values', async function () {
@@ -297,11 +295,6 @@ describe('Curve Convert', function () {
       it('not enough Beans', async function () {
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
         await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), EXTERNAL);
-        console.log(`---------------------------------------------------`);
-        console.log(`${await this.beanMetapool.totalSupply()}`);
-        const balances = await this.beanMetapool.get_balances();
-        console.log(`${balances[0]}, ${balances[1]}`);
-        console.log(`---------------------------------------------------`);
 
         await expect(this.convert.connect(user).convert(ConvertEncoder.convertCurveLPToBeans(to18('200'),toBean('250'), this.beanMetapool.address),['2'],[to18('200')]))
           .to.be.revertedWith('Curve: Insufficient Output');
@@ -336,9 +329,9 @@ describe('Curve Convert', function () {
       });
 
       it('properly updates user deposits', async function () {
-        let deposit = await this.silo.getDeposit(userAddress, this.beanMetapool.address, 2);
-        expect(deposit[0]).to.eq(to18('100618167'));
-        expect(deposit[1]).to.eq(toBean('100618167'));
+        let deposit = await this.silo.getDeposit(userAddress, this.bean.address, 2);
+        expect(deposit[0]).to.eq(toBean('100.618167'));
+        expect(deposit[1]).to.eq(toBean('100.618167'));
         deposit = await this.silo.getDeposit(userAddress, this.beanMetapool.address, 2);
         expect(deposit[0]).to.eq(to18('900'));
         expect(deposit[1]).to.eq(toBean('900'));

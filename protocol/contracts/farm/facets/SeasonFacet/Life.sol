@@ -33,6 +33,10 @@ contract Life is ReentrancyGuard {
 
     // Time
 
+    function paused() public view returns (bool) {
+        return s.paused;
+    }
+
      function time() external view returns (Storage.Season memory) {
          return s.season;
      }
@@ -84,6 +88,9 @@ contract Life is ReentrancyGuard {
     function mintToSilo(uint256 amount) internal {
         if (amount > 0) {
             bean().mint(address(this), amount);
+            s.s.stalk = s.s.stalk.add(amount.mul(C.getStalkPerBean()));
+            s.si.beans = s.si.beans.add(amount);
+            s.siloBalances[C.beanAddress()].deposited = s.siloBalances[C.beanAddress()].deposited.add(amount);
         }
     }
 

@@ -27,11 +27,10 @@ contract SiloFacet is TokenSilo {
         external
         payable
         nonReentrant
-        silo
+        updateSilo
     {
-        updateSilo(msg.sender);
         LibTransfer.receiveToken(IERC20(token), amount, msg.sender, mode);
-        _deposit(token, amount);
+        _deposit(msg.sender, token, amount);
     }
 
     /*
@@ -41,18 +40,18 @@ contract SiloFacet is TokenSilo {
     function withdrawSeason(address token, uint32 season, uint256 amount) 
         external
         payable
-        silo 
+        updateSilo 
     {
-        _withdrawDeposit(token, season, amount);
+        _withdrawDeposit(msg.sender, token, season, amount);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
     function withdrawSeasons(address token, uint32[] calldata seasons, uint256[] calldata amounts)
         external
         payable
-        silo 
+        updateSilo 
     {
-        _withdrawDeposits(token, seasons, amounts);
+        _withdrawDeposits(msg.sender, token, seasons, amounts);
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
@@ -63,6 +62,7 @@ contract SiloFacet is TokenSilo {
     function claimSeason(address token, uint32 season, LibTransfer.To mode) 
         external
         payable
+        nonReentrant
     {
         uint256 amount = removeTokenWithdrawal(msg.sender, token, season);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
@@ -72,12 +72,32 @@ contract SiloFacet is TokenSilo {
     function claimSeasons(address token, uint32[] calldata seasons, LibTransfer.To mode) 
         external
         payable
+        nonReentrant
     {
         uint256 amount = removeTokenWithdrawals(msg.sender, token, seasons);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
         emit ClaimSeasons(msg.sender, token, seasons, amount);
     }
 
+    /*
+     * Transfer
+     */
+
+    function transferDeposit(address recipient, address token, uint32 season, uint256 amount) 
+        external
+        payable
+        nonReentrant
+    {
+        _transferDeposit(msg.sender, recipient, token, season, amount);
+    }
+
+    function transferDeposits(address recipient, address token, uint32[] calldata seasons, uint256[] calldata amounts) 
+        external
+        payable
+        nonReentrant
+    {
+        _transferDeposits(msg.sender, recipient, token, seasons, amounts);
+    }
     /*
      * Whitelist
      */

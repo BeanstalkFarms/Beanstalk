@@ -77,12 +77,10 @@ contract FieldFacet is ReentrancyGuard {
         returns (uint256 beansHarvested)
     {
         for (uint256 i = 0; i < plots.length; i++) {
-            require(plots[i] < s.f.harvestable, "Claim: Plot not harvestable.");
-            require(s.a[msg.sender].field.plots[plots[i]] > 0, "Claim: Plot not harvestable.");
+            require(plots[i] < s.f.harvestable, "Field: Plot not Harvestable.");
             uint256 harvested = harvestPlot(msg.sender, plots[i]);
             beansHarvested = beansHarvested.add(harvested);
         }
-        require(s.f.harvestable.sub(s.f.harvested) >= beansHarvested, "Claim: Not enough Harvestable.");
         s.f.harvested = s.f.harvested.add(beansHarvested);
         emit Harvest(msg.sender, plots, beansHarvested);
     }
@@ -92,7 +90,7 @@ contract FieldFacet is ReentrancyGuard {
         returns (uint256) 
     {
         uint256 pods = s.a[account].field.plots[plotId];
-        require(pods > 0, "Claim: Plot is empty.");
+        require(pods > 0, "Field: Plot is empty.");
         uint256 harvestablePods = s.f.harvestable.sub(plotId);
         delete s.a[account].field.plots[plotId];
         if (s.podListings[plotId] > 0) {

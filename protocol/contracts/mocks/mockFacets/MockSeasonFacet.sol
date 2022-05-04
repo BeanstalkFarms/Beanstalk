@@ -7,7 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/SeasonFacet/SeasonFacet.sol";
-import "../../libraries/Decimal.sol";
 import "../MockToken.sol";
 
 /**
@@ -29,12 +28,8 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function mockStepSilo(uint256 amount) public {
-        if ((s.s.seeds == 0 && s.s.stalk == 0)) {
-            stepSilo(0);
-            return;
-        }
+        if ((s.s.seeds == 0 && s.s.stalk == 0)) return;
         mintToSilo(amount);
-        stepSilo(amount);
 
     }
 
@@ -61,8 +56,7 @@ contract MockSeasonFacet is SeasonFacet {
     function sunSunrise(int256 deltaB) public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
-        uint256 siloReward = stepSun(deltaB);
-        s.bean.deposited = s.bean.deposited.add(siloReward);
+        stepSun(deltaB);
     }
 
     function lightSunrise() public {
@@ -70,16 +64,12 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.current += 1;
     }
 
-    function teleportSunrise(uint32 _s) public {
-        s.season.current = _s;
+    function fastForward(uint32 _s) public {
+        s.season.current += _s;
     }
 
-    function siloSunrises(uint256 number) public {
-        require(!paused(), "Season: Paused.");
-        for (uint256 i = 0; i < number; i++) {
-            s.season.current += 1;
-            stepSilo(0);
-        }
+    function teleportSunrise(uint32 _s) public {
+        s.season.current = _s;
     }
 
     function farmSunrise() public {
@@ -152,10 +142,10 @@ contract MockSeasonFacet is SeasonFacet {
             if (s.a[account].bean.deposits[j] > 0) delete s.a[account].bean.deposits[j];
             if (s.a[account].lp.deposits[j] > 0) delete s.a[account].lp.deposits[j];
             if (s.a[account].lp.depositSeeds[j] > 0) delete s.a[account].lp.depositSeeds[j];
-            if (s.a[account].bean.withdrawals[j+C.getSiloWithdrawSeasons()] > 0)
-                delete s.a[account].bean.withdrawals[j+C.getSiloWithdrawSeasons()];
-            if (s.a[account].lp.withdrawals[j+C.getSiloWithdrawSeasons()] > 0)
-                delete s.a[account].lp.withdrawals[j+C.getSiloWithdrawSeasons()];
+            if (s.a[account].bean.withdrawals[j+s.season.withdrawSeasons] > 0)
+                delete s.a[account].bean.withdrawals[j+s.season.withdrawSeasons];
+            if (s.a[account].lp.withdrawals[j+s.season.withdrawSeasons] > 0)
+                delete s.a[account].lp.withdrawals[j+s.season.withdrawSeasons];
         }
         for (uint32 i = 0; i < s.g.bipIndex; i++) {
                 s.g.voted[i][account] = false;
@@ -169,8 +159,8 @@ contract MockSeasonFacet is SeasonFacet {
         uint32 _s = season();
         for (uint32 j = 0; j <= _s; j++) {
             if (s.a[account].deposits[token][j].amount > 0) delete s.a[account].deposits[token][j];
-            if (s.a[account].withdrawals[token][j+C.getSiloWithdrawSeasons()] > 0)
-                delete s.a[account].withdrawals[token][j+C.getSiloWithdrawSeasons()];
+            if (s.a[account].withdrawals[token][j+s.season.withdrawSeasons] > 0)
+                delete s.a[account].withdrawals[token][j+s.season.withdrawSeasons];
         }
         delete s.siloBalances[token];
     }

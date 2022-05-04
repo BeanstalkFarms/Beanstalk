@@ -56,9 +56,6 @@ contract InitDiamond {
              0,  -1,  -3,   0   //          P > 1
         ];
         s.w.yield = 1;
-        s.refundStatus = 1;
-        s.beanRefundAmount = 1;
-        s.ethRefundAmount = 1;
 
         s.season.current = 1;
         s.season.withdrawSeasons = 25;

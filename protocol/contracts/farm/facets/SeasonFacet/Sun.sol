@@ -14,7 +14,6 @@ import "./Weather.sol";
 contract Sun is Weather {
 
     using SafeMath for uint256;
-    using Decimal for Decimal.D256;
 
     event SupplyIncrease(
         uint256 indexed season,
@@ -31,23 +30,14 @@ contract Sun is Weather {
 
     // Sun
 
-    function stepSun(int256 deltaB)
-        internal
-        returns
-        (uint256)
-    {
-        uint256 newSilo;
-
-        if (deltaB > 0) {
-            newSilo = growSupply(uint256(deltaB));
-        } else if (deltaB < 0) {
-            shrinkSupply(uint256(-deltaB));
-        } else {
+    function stepSun(int256 deltaB) internal {
+        if (deltaB > 0) growSupply(uint256(deltaB));
+        else if (deltaB < 0) shrinkSupply(uint256(-deltaB));
+        else {
             int256 newSoil = setSoil(0);
             emit SupplyNeutral(season(), newSoil);
         }
         s.w.startSoil = s.f.soil;
-        return newSilo;
     }
 
     function shrinkSupply(uint256 beans) private {

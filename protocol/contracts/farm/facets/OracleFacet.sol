@@ -6,7 +6,6 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../AppStorage.sol";
-import "../../libraries/Decimal.sol";
 import "../../libraries/Oracle/LibCurveOracle.sol";
 
 /**
@@ -15,7 +14,6 @@ import "../../libraries/Oracle/LibCurveOracle.sol";
 **/
 contract OracleFacet {
 
-    using Decimal for Decimal.D256;
     using SafeMath for uint256;
     
     struct Pool {

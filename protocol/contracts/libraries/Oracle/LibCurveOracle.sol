@@ -5,7 +5,6 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../Decimal.sol";
 import "../Curve/LibBeanMetaCurve.sol";
 import "../LibAppStorage.sol";
 import "../LibSafeMath32.sol";
@@ -25,7 +24,6 @@ library LibCurveOracle {
     address private constant POOL = address(0x3a70DfA7d2262988064A2D051dd47521E43c9BdD);
     int256 private constant mintPrecision = 240;
 
-    using Decimal for Decimal.D256;
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
