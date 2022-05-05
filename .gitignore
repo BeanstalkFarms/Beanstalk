@@ -8,3 +8,8 @@ temp
 .DS_Store
 .env
 archived
+.vscode
+
+# Foundry
+cache/
+out/

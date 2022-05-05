@@ -159,6 +159,29 @@ There are a couple of steps that must be done before we can fork mainnet and upg
 3. Now you can test your changes using your local blockchain node that should now have the latest version
 of beanstalk that you upgraded.
 
+### Installing Foundry
+1. `cd protocol` - Foundry must be installed from within this directory!
+2. Install Foundry `curl -L https://foundry.paradigm.xyz | bash` & reopen terminal
+3. Run `foundryup` to ensure latest version.
+   - Ensure `foundry.toml` exists & is configured correctly (see below). 
+4. Run `yarn`
+5. Run `forge t`
+6. Run `forge build`
+
+**`foundry.toml` troubleshooting**
+If there is no `foundry.toml` file, create one: `forge config > foundry.toml`
+If you're getting error messages, check `foundry.toml` includes:
+-  `libs = [‘node_modules’, ‘lib’]`
+-  `src = 'contracts'`
+-  You *may* (unlikely) need to set the remappings: 
+`remappings = ['@openzeppelin/=node_modules/@openzeppelin/contracts/']`
+If `lib/forge-std` doesn't exist, install using: `forge install foundry-rs/forge-std`
+
+
+Foundry docs:
+- Repository: `https://github.com/foundry-rs/foundry`
+- Foundry Book: `https://book.getfoundry.sh/index.html`
+
 
 ## Versions
 Code Version: `1.16.0` <br>
