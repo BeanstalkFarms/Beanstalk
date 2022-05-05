@@ -41,16 +41,8 @@ contract MockOracleFacet is OracleFacet {
         emit UpdateTWAPs(balances);
     }
 
-    function uniswapOracle() external view returns (Storage.Oracle memory) {
-        return s.o;
-    }
-
-    function curveOracle() external view returns (Storage.COracle memory) {
+    function curveOracle() external view returns (Storage.Oracle memory) {
         return s.co;
-    }
-
-    function timestamp() external view returns (uint32) {
-        return s.o.timestamp;
     }
 
     function resetPools(address[] calldata pools) external {

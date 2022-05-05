@@ -32,6 +32,11 @@ library LibSilo {
         decrementBalanceOfSeeds(account, seeds);
     }
 
+    function transferSiloAssets(address sender, address recipient, uint256 seeds, uint256 stalk) internal {
+        transferStalk(sender, recipient, stalk);
+        transferSeeds(sender, recipient, seeds);
+    }
+
     function incrementBalanceOfSeeds(address account, uint256 seeds) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.s.seeds = s.s.seeds.add(seeds);
@@ -63,13 +68,32 @@ library LibSilo {
 
         uint256 roots = stalk == s.a[account].s.stalk ?
             s.a[account].roots :
-            s.s.roots.sub(1).mul(stalk).div(s.s.stalk).add(1);
+            s.s.roots.mul(stalk).div(s.s.stalk);
 
         s.s.stalk = s.s.stalk.sub(stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
 
         s.s.roots = s.s.roots.sub(roots);
         s.a[account].roots = s.a[account].roots.sub(roots);
+    }
+
+    function transferSeeds(address sender, address recipient, uint256 seeds) private {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.a[sender].s.seeds = s.a[sender].s.seeds.sub(seeds);
+        s.a[recipient].s.seeds = s.a[recipient].s.seeds.add(seeds);
+    }
+
+    function transferStalk(address sender, address recipient, uint256 stalk) private {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 roots = stalk == s.a[sender].s.stalk ?
+            s.a[sender].roots :
+            s.s.roots.sub(1).mul(stalk).div(s.s.stalk).add(1);
+
+        s.a[sender].s.stalk = s.a[sender].s.stalk.sub(stalk);
+        s.a[sender].roots = s.a[sender].roots.sub(roots);
+
+        s.a[recipient].s.stalk = s.a[recipient].s.stalk.add(stalk);
+        s.a[recipient].roots = s.a[recipient].roots.add(roots);
     }
 
     function updateBalanceOfRainStalk(address account) internal {

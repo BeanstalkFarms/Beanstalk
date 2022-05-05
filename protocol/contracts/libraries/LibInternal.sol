@@ -5,7 +5,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {LibDiamond} from "./LibDiamond.sol";
+import {LibDiamond} from "./Diamond/LibDiamond.sol";
 
 /**
  * @author Publius

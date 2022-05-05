@@ -5,11 +5,11 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../C.sol";
+import "../../C.sol";
 
 /**
  * @author Publius
- * @title InitBip16 initializes BIP-16: It whitelists the Bean:LUSD Curve Plain Pool into the Silo and pays the publius address 5,000 Beans.
+ * @title LibWhitelist handles the whitelisting of different tokens.
 **/
 
 interface IBS {

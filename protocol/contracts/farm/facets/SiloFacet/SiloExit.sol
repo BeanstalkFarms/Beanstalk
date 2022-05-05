@@ -47,7 +47,7 @@ contract SiloExit is ReentrancyGuard {
     }
 
     function totalEarnedBeans() public view returns (uint256) {
-        return s.si.beans;
+        return s.earnedBeans;
     }
 
     function balanceOfSeeds(address account) public view returns (uint256) {
@@ -75,7 +75,7 @@ contract SiloExit is ReentrancyGuard {
         uint256 stalk = s.s.stalk.mul(s.a[account].roots).div(s.s.roots);
         if (stalk <= accountStalk) return 0;
         beans = (stalk - accountStalk).div(C.getStalkPerBean()); // Note: SafeMath is redundant here.
-        if (beans > s.si.beans) return s.si.beans;
+        if (beans > s.earnedBeans) return s.earnedBeans;
         return beans;
     }
 
@@ -96,38 +96,37 @@ contract SiloExit is ReentrancyGuard {
     **/
 
     function lastSeasonOfPlenty() public view returns (uint32) {
-        return s.sop.last;
+        return s.season.lastSop;
     }
 
-    function seasonsOfPlenty() public view returns (Storage.SeasonOfPlenty memory) {
-        return s.sop;
-    }
-
-    function balanceOfEth(address account) public view returns (uint256) {
-        if (s.sop.base == 0) return 0;
-        return balanceOfPlentyBase(account).mul(s.sop.weth).div(s.sop.base);
-    }
-    
-    function balanceOfPlentyBase(address account) public view returns (uint256) {
-        uint256 plenty = s.a[account].sop.base;
-        uint32 endSeason = s.a[account].lastSop;
-        uint256 plentyPerRoot;
-        uint256 rainSeasonBase = s.sops[s.a[account].lastRain];
-        if (rainSeasonBase > 0) {
-            if (endSeason == s.a[account].lastRain) {
-                plentyPerRoot = rainSeasonBase.sub(s.a[account].sop.basePerRoot);
-            } else {
-                plentyPerRoot = rainSeasonBase.sub(s.sops[endSeason]);
-                endSeason = s.a[account].lastRain;
+    function balanceOfPlenty(address account) public view returns (uint256 plenty) {
+        Account.State storage a = s.a[account];
+        plenty = a.sop.plenty;
+        uint256 previousPPR;
+        // If lastRain > 0, check if SOP occured during the rain period.
+        if (s.a[account].lastRain > 0) {
+            // if the last processed SOP = the lastRain processed season,
+            // then we use the stored roots to get the delta.
+            if (a.lastSop == a.lastRain) previousPPR = a.sop.plentyPerRoot;
+            else previousPPR = s.sops[a.lastSop];
+            uint256 lastRainPPR = s.sops[s.a[account].lastRain];
+            
+            // If there has been a SOP duing this rain sesssion since last update, process spo.
+            if (lastRainPPR > previousPPR) {
+                uint256 plentyPerRoot = lastRainPPR - previousPPR;
+                previousPPR = lastRainPPR;
+                plenty = plenty.add(plentyPerRoot.mul(s.a[account].sop.roots));
             }
-            if (plentyPerRoot > 0) plenty = plenty.add(plentyPerRoot.mul(s.a[account].sop.roots));
+        } else {
+            // If it was not raining, just use the PPR at previous sop
+            previousPPR = s.sops[s.a[account].lastSop];
         }
 
-        if (s.sop.last > lastUpdate(account)) {
-            plentyPerRoot = s.sops[s.sop.last].sub(s.sops[endSeason]);
+        // Handle and SOPs that started + ended before after last Rain where t
+        if (s.season.lastSop > lastUpdate(account)) {
+            uint256 plentyPerRoot = s.sops[s.season.lastSop].sub(previousPPR);
             plenty = plenty.add(plentyPerRoot.mul(balanceOfRoots(account)));
         }
-        return plenty;
     }
 
     function balanceOfRainRoots(address account) public view returns (uint256) {

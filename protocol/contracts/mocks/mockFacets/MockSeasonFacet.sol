@@ -39,6 +39,12 @@ contract MockSeasonFacet is SeasonFacet {
         handleRain(4);
     }
 
+    function droughtSunrise() public {
+        require(!paused(), "Season: Paused.");
+        s.season.current += 1;
+        handleRain(3);
+    }
+
     function rainSiloSunrise(uint256 amount) public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
@@ -176,24 +182,17 @@ contract MockSeasonFacet is SeasonFacet {
             delete s.fundraisers[i];
         }
         delete s.f;
-        delete s.bean;
-        delete s.lp;
-        delete s.si;
         delete s.s;
         delete s.w;
         s.w.lastSowTime = type(uint32).max;
         s.w.nextSowTime = type(uint32).max;
         delete s.g;
         delete s.r;
-        delete s.o;
         delete s.co;
-        delete s.v1SI;
         delete s.season;
-        delete s.unclaimedRoots;
         delete s.fundraiserIndex;
         s.season.start = block.timestamp;
         s.season.timestamp = uint32(block.timestamp % 2 ** 32);
-        delete s.sop;
         s.s.stalk = 0;
         s.s.seeds = 0;
         s.season.withdrawSeasons = 25;

@@ -20,7 +20,7 @@ contract Account {
     }
 
     struct AssetSilo {
-        mapping(uint32 => uint256) withdrawals;
+        mapping(uint32 => uint256) withdrawals; // Dep
         mapping(uint32 => uint256) deposits;
         mapping(uint32 => uint256) depositSeeds;
     }
@@ -36,9 +36,11 @@ contract Account {
     }
 
     struct SeasonOfPlenty {
-        uint256 base;
+        uint256 base; // Dep
         uint256 roots;
-        uint256 basePerRoot;
+        uint256 basePerRoot; // Dep
+        uint256 plentyPerRoot;
+        uint256 plenty;
     }
 
     struct State {
@@ -46,15 +48,15 @@ contract Account {
         AssetSilo bean;
         AssetSilo lp;
         Silo s;
-        uint32 votedUntil;
+        uint32 votedUntil; // Dep
         uint32 lastUpdate;
         uint32 lastSop;
         uint32 lastRain;
-        uint32 lastSIs;
-        uint32 proposedUntil;
+        uint32 lastSIs; // Dep
+        uint32 proposedUntil; // Dep
         SeasonOfPlenty sop;
         uint256 roots;
-        uint256 wrappedBeans;
+        uint256 wrappedBeans; // Dep
         mapping(address => mapping(uint32 => Deposit)) deposits;
         mapping(address => mapping(uint32 => uint256)) withdrawals;
     }
@@ -111,23 +113,6 @@ contract Storage {
         uint256 withdrawn;
     }
 
-    struct IncreaseSilo {
-        uint256 beans;
-        uint256 stalk;
-    }
-
-    struct V1IncreaseSilo {
-        uint256 beans;
-        uint256 stalk;
-        uint256 roots;
-    }
-
-    struct SeasonOfPlenty {
-        uint256 weth;
-        uint256 base;
-        uint32 last;
-    }
-
     struct Silo {
         uint256 stalk;
         uint256 seeds;
@@ -138,10 +123,9 @@ contract Storage {
 
     struct Oracle {
         bool initialized;
-        uint256 cumulative;
-        uint256 pegCumulative;
-        uint32 timestamp;
-        uint32 pegTimestamp;
+        uint32 startSeason;
+        uint256[2] balances;
+        uint256 timestamp;
     }
 
     struct Rain {
@@ -153,8 +137,9 @@ contract Storage {
 
     struct Season {
         uint32 current;
-        uint32 sis;
+        uint32 lastSop;
         uint8 withdrawSeasons;
+        uint32 lastSopSeason;
         uint256 start;
         uint256 period;
         uint256 timestamp;
@@ -184,37 +169,26 @@ contract Storage {
         uint32 seeds;
         uint32 stalk;
     }
-
-    struct COracle {
-        bool initialized;
-        uint32 startSeason;
-        uint256[] balances;
-        uint256 timestamp;
-    }
 }
 
 struct AppStorage {
-    uint8 index;
+    uint8 index; // Depreciated
     int8[32] cases;
     bool paused;
     uint128 pausedAt;
     Storage.Season season;
-    Storage.Contracts c;
+    Storage.Contracts c; // Depreciated
     Storage.Field f;
     Storage.Governance g;
-    Storage.Oracle o;
+    Storage.Oracle co;
     Storage.Rain r;
     Storage.Silo s;
     uint256 reentrantStatus; // An intra-transaction state variable to protect against reentrance
     Storage.Weather w;
-    Storage.AssetSilo bean;
-    Storage.AssetSilo lp;
-    Storage.IncreaseSilo si;
-    Storage.SeasonOfPlenty sop;
-    Storage.V1IncreaseSilo v1SI;
-    uint256 unclaimedRoots;
-    uint256 v2SIBeans;
-    mapping (uint32 => uint256) sops;
+    //////////////////////////////////
+    uint256 earnedBeans;
+    uint256 earnedPlenty;
+    uint256[11] depreciated; // 10 slots to map to depreciated storage variables
     mapping (address => Account.State) a;
     uint32 bip0Start;
     uint32 hotFix3Start;
@@ -226,12 +200,10 @@ struct AppStorage {
     mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
 
-    // These refund variables are intra-transaction state varables use to store refund amounts
-    uint256 refundStatus;
-    uint256 beanRefundAmount;
-    uint256 ethRefundAmount;
+    uint256[3] depreciated2; // 3 slots for depreciated storage variables
 
-    Storage.COracle co;
+    // New Sops
+    mapping (uint32 => uint256) sops;
     
     // Internal Balances
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;

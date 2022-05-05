@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../../../libraries/Decimal.sol";
+import "../../../libraries/Curve/LibBeanMetaCurve.sol";
 import "./Life.sol";
 
 /**
@@ -18,11 +19,10 @@ contract Weather is Life {
     using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
 
-    uint256 private constant BURN_BASE = 1e20;
-    uint256 private constant BIG_BASE = 1e24;
+    uint256 private constant PRECISION = 1e24;
 
     event WeatherChange(uint256 indexed season, uint256 caseId, int8 change);
-    event SeasonOfPlenty(uint256 indexed season, uint256 eth, uint256 harvestable);
+    event SeasonOfPlenty(uint256 indexed season, uint256 amount, uint256 harvestable);
 
     /**
      * Getters
@@ -139,6 +139,7 @@ contract Weather is Life {
         }
         else if (!s.r.raining) {
             s.r.raining = true;
+            // Set the plenty per root equal to previous rain start.
             s.sops[season()] = s.sops[s.r.start];
             s.r.start = season();
             s.r.pods = s.f.pods;
@@ -150,78 +151,26 @@ contract Weather is Life {
     }
 
     function sop() private {
-        (uint256 newBeans, uint256 newEth) = calculateSopBeansAndEth();
-        if (
-            newEth <= s.s.roots.div(1e20) ||
-            (s.sop.base > 0 && newBeans.mul(s.sop.base).div(s.sop.weth).div(s.r.roots) == 0)
-        )
-            return;
+        int256 newBeans = LibBeanMetaCurve.getDeltaB();
+        if (newBeans < 0) return;
+        uint256 sopBeans = uint256(newBeans);
 
-        mintToSilo(newBeans);
-        // uint256 ethBought = LibMarket.sellToWETH(newBeans, 0);
-        uint256 ethBought; // TODO: Fix SOP
-        uint256 newHarvestable = 0;
+        uint256 newHarvestable;
         if (s.f.harvestable < s.r.pods) {
             newHarvestable = s.r.pods - s.f.harvestable;
             mintToHarvestable(newHarvestable);
         }
-        if (ethBought == 0) return;
-        rewardEther(ethBought);
-        emit SeasonOfPlenty(season(), ethBought, newHarvestable);
+
+        mintToSilo(sopBeans);
+        uint256 amountOut = C.curveMetapool().exchange(0, 1, sopBeans, 0, address(this));
+        rewardSop(amountOut);
+        emit SeasonOfPlenty(season(), amountOut, newHarvestable);
     }
 
-    function calculateSopBeansAndEth() private pure returns (uint256, uint256) {
-        // (uint256 ethBeanPool, uint256 beansBeanPool) = reserves();
-        // (uint256 ethUSDCPool, uint256 usdcUSDCPool) = pegReserves();
-
-        // uint256 newBeans = sqrt(ethBeanPool.mul(beansBeanPool).mul(usdcUSDCPool).div(ethUSDCPool));
-        // if (newBeans <= beansBeanPool) return (0,0);
-        // uint256 beans = newBeans - beansBeanPool;
-        // beans = beans.mul(10000).div(9985).add(1);
-
-        // uint256 beansWithFee = beans.mul(997);
-        // uint256 numerator = beansWithFee.mul(ethBeanPool);
-        // uint256 denominator = beansBeanPool.mul(1000).add(beansWithFee);
-        // uint256 eth = numerator / denominator;
-
-        // return (beans, eth);
-        return (0,0);
+    function rewardSop(uint256 amount) private {
+        s.earnedPlenty = s.earnedPlenty.add(amount);
+        s.sops[s.r.start] = s.earnedPlenty.mul(PRECISION).div(s.r.roots);
+        s.season.lastSop = s.r.start;
+        s.season.lastSopSeason = s.season.current;
     }
-
-    function rewardEther(uint256 amount) private {
-        uint256 base;
-        if (s.sop.base == 0) {
-            base = amount.mul(BIG_BASE);
-            s.sop.base = BURN_BASE;
-        }
-        else base = amount.mul(s.sop.base).div(s.sop.weth);
-
-        // Award ether to claimed stalk holders
-        uint256 basePerStalk = base.div(s.r.roots);
-        base = basePerStalk.mul(s.r.roots);
-        s.sops[s.r.start] = s.sops[s.r.start].add(basePerStalk);
-
-        // Update total state
-        s.sop.weth = s.sop.weth.add(amount);
-        s.sop.base = s.sop.base.add(base);
-        if (base > 0) s.sop.last = s.r.start;
-    }
-
-    /**
-     * Shed
-    **/
-
-    function sqrt(uint y) internal pure returns (uint z) {
-        if (y > 3) {
-            z = y;
-            uint x = y / 2 + 1;
-            while (x < z) {
-                z = x;
-                x = (y / x + x) / 2;
-            }
-        } else if (y != 0) {
-            z = 1;
-        }
-    }
-
 }

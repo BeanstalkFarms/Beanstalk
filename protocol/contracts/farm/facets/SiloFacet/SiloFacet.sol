@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "./TokenSilo.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../../../libraries/Balance/LibTransfer.sol";
+import "../../../libraries/Token/LibTransfer.sol";
 import "../../ReentrancyGuard.sol";
 
 /*
@@ -87,7 +87,9 @@ contract SiloFacet is TokenSilo {
         external
         payable
         nonReentrant
+        updateSilo
     {
+        update(recipient);
         _transferDeposit(msg.sender, recipient, token, season, amount);
     }
 
@@ -95,7 +97,9 @@ contract SiloFacet is TokenSilo {
         external
         payable
         nonReentrant
+        updateSilo
     {
+        update(recipient);
         _transferDeposits(msg.sender, recipient, token, seasons, amounts);
     }
     /*

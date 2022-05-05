@@ -53,8 +53,7 @@ describe('Oracle', function () {
     await this.season.siloSunrise(0);
 
     lastTimestamp = 1700000000;
-
-
+  
     this.threeCurve = await ethers.getContractAt('Mock3Curve', THREE_CURVE);
     await this.threeCurve.set_virtual_price(to18('1'));
     this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);

@@ -89,7 +89,7 @@ contract Life is ReentrancyGuard {
         if (amount > 0) {
             bean().mint(address(this), amount);
             s.s.stalk = s.s.stalk.add(amount.mul(C.getStalkPerBean()));
-            s.si.beans = s.si.beans.add(amount);
+            s.earnedBeans = s.earnedBeans.add(amount);
             s.siloBalances[C.beanAddress()].deposited = s.siloBalances[C.beanAddress()].deposited.add(amount);
         }
     }

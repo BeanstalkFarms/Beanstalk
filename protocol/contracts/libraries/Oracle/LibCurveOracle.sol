@@ -53,7 +53,7 @@ library LibCurveOracle {
 
     function initializeOracle() internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        Storage.COracle storage o = s.co;
+        Storage.Oracle storage o = s.co;
         uint256[2] memory balances = 
             IMeta3CurveOracle(POOL).get_price_cumulative_last();
         uint256 timestamp = IMeta3CurveOracle(POOL).block_timestamp_last();
@@ -74,7 +74,7 @@ library LibCurveOracle {
         uint256[2] memory balances;
         (balances, cum_balances) = twap();
         uint256 d = LibBeanMetaCurve.getDFroms(balances);
-        deltaB = getCurveDeltaB(balances[0], d);
+        deltaB = LibBeanMetaCurve.getDeltaBWithD(balances[0], d);
     }
 
     function twap() internal view returns (uint256[2] memory balances, uint256[2] memory cum_balances) {
@@ -86,7 +86,7 @@ library LibCurveOracle {
         cum_balances[1] = cum_balances[1].add(balances[1].mul(block.timestamp.sub(lastTimestamp)));
 
         AppStorage storage s = LibAppStorage.diamondStorage();
-        Storage.COracle storage o = s.co;
+        Storage.Oracle storage o = s.co;
 
         uint256 deltaTimestamp = block.timestamp.sub(o.timestamp);
         
@@ -104,23 +104,5 @@ library LibCurveOracle {
         cum_balances[0] = cum_balances[0].add(balances[0].mul(block.timestamp.sub(lastTimestamp)));
         cum_balances[1] = cum_balances[1].add(balances[1].mul(block.timestamp.sub(lastTimestamp)));
         lastTimestamp = block.timestamp;
-    }
-
-    function getCurveDeltaB(uint256 balance, uint256 D) private pure returns (int deltaB) {
-        uint256 pegBeans = D / 2 / 1e12;
-        deltaB = int256(pegBeans) - int256(balance);
-    }
-
-    function sqrt(uint y) internal pure returns (uint z) {
-        if (y > 3) {
-            z = y;
-            uint x = y / 2 + 1;
-            while (x < z) {
-                z = x;
-                x = (y / x + x) / 2;
-            }
-        } else if (y != 0) {
-            z = 1;
-        }
     }
 }

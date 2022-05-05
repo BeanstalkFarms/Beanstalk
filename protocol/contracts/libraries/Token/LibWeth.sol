@@ -4,8 +4,14 @@
 
 pragma experimental ABIEncoderV2;
 pragma solidity =0.7.6;
-import "../interfaces/IWETH.sol";
-import "./Balance/LibTransfer.sol";
+import "../../interfaces/IWETH.sol";
+import "./LibTransfer.sol";
+
+/**
+ * @author publius
+ * @title LibWeth handles wrapping and unwrapping Weth
+ * Largely inspired by Balancer's Vault
+**/
 
 library LibWeth {
     address constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;

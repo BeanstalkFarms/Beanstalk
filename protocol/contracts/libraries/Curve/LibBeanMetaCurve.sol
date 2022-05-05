@@ -34,11 +34,23 @@ library LibBeanMetaCurve {
         return beanValue.add(curveValue);
     }
 
+    function getDeltaB() internal view returns (int256 deltaB) {
+        uint256[2] memory balances = ICurvePool(POOL).get_balances();
+        uint256 d = getDFroms(balances);
+        deltaB = getDeltaBWithD(balances[0], d);
+    }
+
+
     function getDFroms(uint256[2] memory balances) internal view returns (uint) {
         return LibMetaCurve.getDFroms(POOL, balances, RATE_MULTIPLIER);
     }
 
     function getXP(uint256[2] memory balances) internal view returns (uint256[2] memory xp) {
         return LibMetaCurve.getXP(balances, RATE_MULTIPLIER);
+    }
+
+    function getDeltaBWithD(uint256 balance, uint256 D) internal pure returns (int deltaB) {
+        uint256 pegBeans = D / 2 / 1e12;
+        deltaB = int256(pegBeans) - int256(balance);
     }
 }

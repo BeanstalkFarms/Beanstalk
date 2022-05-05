@@ -6,7 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./Listing.sol";
-import "../../../libraries/Balance/LibTransfer.sol";
+import "../../../libraries/Token/LibTransfer.sol";
 
 /**
  * @author Beanjoyer

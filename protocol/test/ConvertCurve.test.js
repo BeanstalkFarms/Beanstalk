@@ -24,24 +24,24 @@ describe('Curve Convert', function () {
     this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address);
     this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('MockToken', contracts.bean);
+  
     this.threeCurve = await ethers.getContractAt('Mock3Curve', THREE_CURVE);
-    this.beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
-    this.updateSettings = [false, false, false];
-
     await this.threeCurve.mint(userAddress, to18('100000'));
     await this.threeCurve.set_virtual_price(ethers.utils.parseEther('1'));
+    await this.threeCurve.connect(user).set_virtual_price(to18('1'));
+    await this.threeCurve.connect(user).approve(this.beanMetapool.address, to18('100000000000'));
+
+    this.beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
     await this.beanMetapool.set_A_precise('1000');
     await this.beanMetapool.set_virtual_price(ethers.utils.parseEther('1'));
+    await this.beanMetapool.connect(user).approve(this.threeCurve.address, to18('100000000000'));
+    await this.beanMetapool.connect(user).approve(this.silo.address, to18('100000000000'));
 
     await this.season.siloSunrise(0);
     await this.bean.mint(userAddress, toBean('1000000000'));
     await this.bean.mint(user2Address, toBean('1000000000'));
     await this.bean.connect(user).approve(this.beanMetapool.address, to18('100000000000'));
     await this.bean.connect(user2).approve(this.beanMetapool.address, to18('100000000000'));
-    await this.threeCurve.connect(user).set_virtual_price(to18('1'));
-    await this.threeCurve.connect(user).approve(this.beanMetapool.address, to18('100000000000'));
-    await this.beanMetapool.connect(user).approve(this.threeCurve.address, to18('100000000000'));
-    await this.beanMetapool.connect(user).approve(this.silo.address, to18('100000000000'));
     await this.bean.connect(user).approve(this.silo.address, '100000000000');
     await this.bean.connect(user2).approve(this.silo.address, '100000000000');
     await this.beanMetapool.connect(user).add_liquidity([toBean('1000'), to18('1000')], to18('2000'));

@@ -8,7 +8,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import {LibDiamond} from "../../libraries/LibDiamond.sol";
+import {LibDiamond} from "../../libraries/Diamond/LibDiamond.sol";
 import "../ReentrancyGuard.sol";
 
 /*

@@ -10,7 +10,7 @@ import "../interfaces/IWETH.sol";
 import "../mocks/MockToken.sol";
 import {AppStorage} from "../farm/AppStorage.sol";
 import "../C.sol";
-import "../libraries/LibWhitelist.sol";
+import "../libraries/Silo/LibWhitelist.sol";
 
 /**
  * @author Publius
@@ -44,9 +44,9 @@ contract MockInitDiamond {
         s.w.nextSowTime = type(uint32).max;
         s.w.lastSowTime = type(uint32).max;
     
-        s.refundStatus = 1;
-        s.beanRefundAmount = 1;
-        s.ethRefundAmount = 1;
+        // s.refundStatus = 1;
+        // s.beanRefundAmount = 1;
+        // s.ethRefundAmount = 1;
 
         s.season.current = 1;
         s.season.withdrawSeasons = 25;

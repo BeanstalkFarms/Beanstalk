@@ -6,7 +6,6 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./SiloExit.sol";
-import "../../../libraries/LibInternal.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/Silo/LibTokenSilo.sol";
 import "hardhat/console.sol";
@@ -41,7 +40,7 @@ contract Silo is SiloExit {
         uint256 accountStalk = s.a[account].s.stalk;
         uint256 beans = _balanceOfEarnedBeans(account, accountStalk);
         if (beans == 0) return;
-        s.si.beans = s.si.beans.sub(beans);
+        s.earnedBeans = s.earnedBeans.sub(beans);
         uint256 seeds = beans.mul(C.getSeedsPerBean());
         LibSilo.incrementBalanceOfSeeds(account, seeds);
         s.a[account].s.stalk = accountStalk.add(beans.mul(C.getStalkPerBean()));
@@ -54,22 +53,28 @@ contract Silo is SiloExit {
     }
 
     function earnSops(address account, uint32 _update) internal {
+        // If no roots, reset Sop counters variables
         if (s.a[account].roots == 0) {
             s.a[account].lastSop = s.r.start;
             s.a[account].lastRain = 0;
             return;
         }
-        if (s.sop.last > _update || s.sops[s.a[account].lastRain] > 0) {
-            s.a[account].sop.base = balanceOfPlentyBase(account);
-            s.a[account].lastSop = s.sop.last;
+        // If a Sop has occured since last update, calculate rewards and set last Sop.
+        if (s.season.lastSopSeason > _update) {
+            s.a[account].sop.plenty = balanceOfPlenty(account);
+            s.a[account].lastSop = s.season.lastSop;
         }
         if (s.r.raining) {
+            // If rain started after update, set account variables to track rain.
             if (s.r.start > _update) {
                 s.a[account].lastRain = s.r.start;
                 s.a[account].sop.roots = s.a[account].roots;
             }
-            if (s.sop.last == s.r.start) s.a[account].sop.basePerRoot = s.sops[s.sop.last];
+            // If there has been a Sop since rain started,
+            // save plentyPerRoot in case another SOP happens during rain.
+            if (s.season.lastSop == s.r.start) s.a[account].sop.plentyPerRoot = s.sops[s.season.lastSop];
         } else if (s.a[account].lastRain > 0) {
+            // Reset Last Rain if not raining.
             s.a[account].lastRain = 0;
         }
     }

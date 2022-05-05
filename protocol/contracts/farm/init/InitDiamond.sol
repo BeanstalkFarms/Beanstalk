@@ -10,7 +10,7 @@ import {IERC165} from "../../interfaces/IERC165.sol";
 import {IDiamondCut} from "../../interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../../interfaces/IDiamondLoupe.sol";
 import {IERC173} from "../../interfaces/IERC173.sol";
-import {LibDiamond} from "../../libraries/LibDiamond.sol";
+import {LibDiamond} from "../../libraries/Diamond/LibDiamond.sol";
 import "../../C.sol";
 import "../../interfaces/IBean.sol";
 import "../../interfaces/IWETH.sol";

@@ -6,8 +6,8 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../AppStorage.sol";
-import "../../libraries/Balance/LibTransfer.sol";
-import "../../libraries/LibWeth.sol";
+import "../../libraries/Token/LibTransfer.sol";
+import "../../libraries/Token/LibWeth.sol";
 
 /**
  * @author Publius
