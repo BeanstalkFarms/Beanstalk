@@ -27,9 +27,11 @@ library C {
     // Season
     uint256 private constant CURRENT_SEASON_PERIOD = 3600; // 1 hour
     uint256 private constant BASE_ADVANCE_INCENTIVE = 100e6; // 100 beans
+    uint256 private constant SOP_PRECISION = 1e24;
 
     // Sun
-    uint256 private constant HARVESET_PERCENTAGE = 0.5e18; // 50%
+    uint256 private constant SPROUT_DENOMINATOR = 3;
+    uint256 private constant HARVEST_DENOMINATOR =2;
 
     // Weather
     uint256 private constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%
@@ -51,8 +53,10 @@ library C {
     address private constant CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
     address private constant CURVE_BEAN_LUSD_POOL = 0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D;
     address private constant CURVE_3_POOL = 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7;
+    address private constant THREE_CRV = 0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490;
     address private constant UNRIPE_BEAN = 0xD5BDcdEc5b2FEFf781eA8727969A95BbfD47C40e;
     address private constant UNRIPE_LP = 0x2e4243832DB30787764f152457952C8305f442e4;
+    address private constant SPROUT = 0x2E4243832db30787764F152457952C8305f442E5;
 
     /**
      * Getters
@@ -66,8 +70,12 @@ library C {
         return BASE_ADVANCE_INCENTIVE;
     }
 
-    function getHarvestPercentage() internal pure returns (uint256) {
-        return HARVESET_PERCENTAGE;
+    function getSproutDenominator() internal pure returns (uint256) {
+        return SPROUT_DENOMINATOR;
+    }
+
+    function getHarvestDenominator() internal pure returns (uint256) {
+        return HARVEST_DENOMINATOR;
     }
 
     function getChainId() internal pure returns (uint256) {
@@ -110,6 +118,10 @@ library C {
         return ROOTS_BASE;
     }
 
+    function getSopPrecision() internal pure returns (uint256) {
+        return SOP_PRECISION;
+    }
+
     function beanAddress() internal pure returns (address) {
         return BEAN;
     }
@@ -140,5 +152,13 @@ library C {
 
     function curve3Pool() internal pure returns (I3Curve) {
         return I3Curve(CURVE_3_POOL);
+    }
+
+    function threeCrv() internal pure returns (IERC20) {
+        return IERC20(THREE_CRV);
+    }
+    
+    function sprout() internal pure returns (IERC20) {
+        return IERC20(SPROUT);
     }
 }

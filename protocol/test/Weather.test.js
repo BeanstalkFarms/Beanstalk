@@ -2,9 +2,8 @@ const { BN } = require('@openzeppelin/test-helpers')
 const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { parseJson } = require('./utils/helpers.js')
-const { MAX_UINT256, MAX_UINT32 } = require('./utils/constants.js')
-
-const SLOW_TIME = (new BN(4).mul(new BN(10).pow(new BN(9)))).toString()
+const { MAX_UINT32 } = require('./utils/constants.js')
+const { BEAN } = require('./utils/constants')
 
 // Set the test data
 const [columns, tests] = parseJson('./coverage_data/weather.json')
@@ -22,7 +21,7 @@ describe('Complex Weather', function () {
     this.diamond = contracts.beanstalkDiamond
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
-    this.bean = await ethers.getContractAt('MockToken', contracts.bean)
+    this.bean = await ethers.getContractAt('MockToken', BEAN)
 
   });
 

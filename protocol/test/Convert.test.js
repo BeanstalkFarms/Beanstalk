@@ -1,6 +1,7 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
+const { BEAN } = require('./utils/constants')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
 let user,user2,owner;
@@ -17,7 +18,7 @@ describe('Convert', function () {
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.convert = await ethers.getContractAt('MockConvertFacet', this.diamond.address);
-    this.bean = await ethers.getContractAt('MockToken', contracts.bean);
+    this.bean = await ethers.getContractAt('MockToken', BEAN);
 
     this.siloToken = await ethers.getContractFactory("MockToken");
     this.siloToken = await this.siloToken.deploy("Silo", "SILO")

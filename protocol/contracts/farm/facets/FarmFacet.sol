@@ -14,7 +14,6 @@ import {LibDiamond} from "../../libraries/Diamond/LibDiamond.sol";
  **/
 
 contract FarmFacet {
-
     AppStorage internal s;
 
     /*
@@ -31,7 +30,9 @@ contract FarmFacet {
         assembly {
             functionSelector := calldataload(data.offset)
         }
-        address facet = ds.selectorToFacetAndPosition[functionSelector].facetAddress;
+        address facet = ds
+            .selectorToFacetAndPosition[functionSelector]
+            .facetAddress;
         require(facet != address(0), "Diamond: Function does not exist");
         (bool success, ) = address(facet).delegatecall(data);
         require(success, "FarmFacet: Function call failed!");
@@ -42,8 +43,10 @@ contract FarmFacet {
             _farm(data[i]);
         }
         if (msg.value > 0 && address(this).balance > 0) {
-            (bool success, ) = msg.sender.call{value: address(this).balance}(new bytes(0));
-            require(success, 'Farm: Eth transfer Failed.');
+            (bool success, ) = msg.sender.call{value: address(this).balance}(
+                new bytes(0)
+            );
+            require(success, "Farm: Eth transfer Failed.");
         }
     }
 }

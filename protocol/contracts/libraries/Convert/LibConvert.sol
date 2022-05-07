@@ -5,15 +5,14 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "./LibCurveConvert.sol";
 
 /**
  * @author Publius
  * @title Lib Convert
-**/
+ **/
 library LibConvert {
-
     using SafeMath for uint256;
     using LibConvertUserData for bytes;
 
@@ -22,14 +21,22 @@ library LibConvert {
     /// @param userData Contains convert input parameters for a specified convert
     function convert(bytes memory userData)
         internal
-        returns (address outToken, address inToken, uint256 outAmount, uint256 inAmount, uint256 bdv)
+        returns (
+            address outToken,
+            address inToken,
+            uint256 outAmount,
+            uint256 inAmount,
+            uint256 bdv
+        )
     {
         LibConvertUserData.ConvertKind kind = userData.convertKind();
 
         if (kind == LibConvertUserData.ConvertKind.BEANS_TO_CURVE_LP) {
-            (outToken, inToken, outAmount, inAmount, bdv) = LibCurveConvert.convertBeansToLP(userData);
+            (outToken, inToken, outAmount, inAmount, bdv) = LibCurveConvert
+                .convertBeansToLP(userData);
         } else if (kind == LibConvertUserData.ConvertKind.CURVE_LP_TO_BEANS) {
-            (outToken, inToken, outAmount, inAmount, bdv) = LibCurveConvert.convertLPToBeans(userData);
+            (outToken, inToken, outAmount, inAmount, bdv) = LibCurveConvert
+                .convertLPToBeans(userData);
         } else {
             revert("Convert: Invalid payload");
         }

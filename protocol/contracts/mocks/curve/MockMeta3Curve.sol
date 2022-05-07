@@ -125,6 +125,40 @@ contract MockMeta3Curve {
         reset_cumulative();
     }
 
+    function exchange(
+        int128 _i_,
+        int128 _j_,
+        uint256 dx,
+        uint256 min_dy
+    ) external returns (uint256) {
+        uint256 i = uint256(_i_);
+        uint256 j = uint256(_j_);
+        address _receiver = msg.sender;
+        _update();
+        uint256[N_COINS] memory rates = [rate_multiplier, I3Curve(BASE_POOL).get_virtual_price()];
+        uint256[N_COINS] memory xp = _xp_mem(rates, balances);
+
+        // uint256 x = xp[i] + dx * rates[i] / PRECISION;
+        uint256 y = get_y(i, j, xp[i] + dx * rates[i] / PRECISION, xp);
+
+        uint256 dy = xp[j] - y - 1;
+        uint256 dy_fee = dy * fee / FEE_DENOMINATOR;
+
+        dy = (dy - dy_fee) * PRECISION / rates[j];
+        require(dy >= min_dy, "Curve: error"); 
+
+        uint256 dy_admin_fee = dy_fee * ADMIN_FEE / FEE_DENOMINATOR;
+        dy_admin_fee = dy_admin_fee * PRECISION / rates[j];
+
+        balances[i] = balances[i] + dx;
+        balances[j] = balances[j] - dy - dy_admin_fee;
+
+        ERC20(coins[i]).transferFrom(msg.sender, address(this), dx);
+        ERC20(coins[j]).transfer(_receiver, dy);
+
+        return dy;
+    }
+
     // @param _amounts List of amounts of coins to deposit
     // @param _min_mint_amount Minimum amount of LP tokens to mint from the deposit
 
@@ -331,6 +365,43 @@ contract MockMeta3Curve {
         require(false, "Price: Convergence false");
     }
 
+    function get_y(uint256 i, uint256 j, uint256 x, uint256[N_COINS] memory xp) private view returns (uint256 y) {
+
+        require(i != j);
+        require(j >= 0);
+        require(j < N_COINS);
+
+        require(i >= 0);
+        require(i < N_COINS);
+
+        uint256 amp = a;
+        uint256 D = get_D(xp, amp);
+        uint256 S_ = 0;
+        uint256 _x = 0;
+        uint256 y_prev = 0;
+        uint256 c = D;
+        uint256 Ann = amp * N_COINS;
+
+        for (uint256 _i = 0; _i < N_COINS; _i++) {
+            if (_i == i) _x = x;
+            else if (_i != j) _x = xp[_i];
+            else continue;
+            S_ += _x;
+            c = c * D / (_x * N_COINS);
+        }
+
+        c = c * D * A_PRECISION / (Ann * N_COINS);
+        uint256 b = S_ + D * A_PRECISION / Ann; // - D
+        y = D;
+
+        for (uint256 _i = 0; _i < 255; _i++) {
+            y_prev = y;
+            y = (y*y + c) / (2 * y + b - D);
+            if (y > y_prev && y - y_prev <= 1) return y;
+            else if (y_prev - y <= 1) return y;
+        }
+        require(false, "Curve: Convergence false");
+    }
     function calc_token_amount(uint256[N_COINS] memory _amounts, bool _is_deposit) public view returns (uint256) {   
         uint256[N_COINS] memory _balances = balances;
 

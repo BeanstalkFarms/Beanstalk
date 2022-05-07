@@ -5,7 +5,7 @@
 /**
  * @author publius
  * @title LibTransfer handles the recieving and sending of Tokens to/from internal Balances.
-**/
+ **/
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
@@ -15,8 +15,16 @@ import "./LibBalance.sol";
 library LibTransfer {
     using SafeERC20 for IERC20;
 
-    enum From{ EXTERNAL, INTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT }
-    enum To{ EXTERNAL, INTERNAL }
+    enum From {
+        EXTERNAL,
+        INTERNAL,
+        EXTERNAL_INTERNAL,
+        INTERNAL_TOLERANT
+    }
+    enum To {
+        EXTERNAL,
+        INTERNAL
+    }
 
     function transferToken(
         IERC20 token,
@@ -25,8 +33,7 @@ library LibTransfer {
         From fromMode,
         To toMode
     ) internal {
-        if (fromMode == From.EXTERNAL &&
-            toMode == To.EXTERNAL) {
+        if (fromMode == From.EXTERNAL && toMode == To.EXTERNAL) {
             token.transferFrom(msg.sender, recipient, amount);
             return;
         }
@@ -42,8 +49,14 @@ library LibTransfer {
     ) internal returns (uint256 receivedAmount) {
         if (amount == 0) return 0;
         if (mode != From.EXTERNAL) {
-            receivedAmount = LibBalance.decreaseInternalBalance(sender, token, amount, mode != From.INTERNAL);
-            if (amount == receivedAmount || mode == From.INTERNAL_TOLERANT) return receivedAmount;
+            receivedAmount = LibBalance.decreaseInternalBalance(
+                sender,
+                token,
+                amount,
+                mode != From.INTERNAL
+            );
+            if (amount == receivedAmount || mode == From.INTERNAL_TOLERANT)
+                return receivedAmount;
         }
         token.safeTransferFrom(sender, address(this), amount - receivedAmount);
     }
@@ -55,7 +68,8 @@ library LibTransfer {
         To mode
     ) internal {
         if (amount == 0) return;
-        if (mode == To.INTERNAL) LibBalance.increaseInternalBalance(recipient, token, amount);
+        if (mode == To.INTERNAL)
+            LibBalance.increaseInternalBalance(recipient, token, amount);
         else token.safeTransfer(recipient, amount);
     }
 }

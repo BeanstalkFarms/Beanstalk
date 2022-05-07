@@ -39,10 +39,8 @@ contract InitDiamond {
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
         ds.supportedInterfaces[type(IERC173).interfaceId] = true;
 
-        s.c.bean = address(new Bean());
-
-        IBean(s.c.bean).approve(C.curveMetapoolAddress(), type(uint256).max);
-        IBean(s.c.bean).approve(C.curveBeanLUSDAddress(), type(uint256).max);
+        C.bean().approve(C.curveMetapoolAddress(), type(uint256).max);
+        C.bean().approve(C.curveBeanLUSDAddress(), type(uint256).max);
 
         s.cases = s.cases = [
         // Dsc, Sdy, Inc, nul
@@ -68,7 +66,7 @@ contract InitDiamond {
         s.w.nextSowTime = type(uint32).max;
         s.w.lastSowTime = type(uint32).max;
 
-        IBean(s.c.bean).mint(msg.sender, C.getAdvanceIncentive());
+        C.bean().mint(msg.sender, C.getAdvanceIncentive());
         emit Incentivization(msg.sender, C.getAdvanceIncentive());
     }
 

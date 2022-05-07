@@ -1,11 +1,11 @@
 /**
  * SPDX-License-Identifier: MIT
-**/
+ **/
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../C.sol";
 import "../LibAppStorage.sol";
 import "hardhat/console.sol";
@@ -13,26 +13,38 @@ import "hardhat/console.sol";
 /**
  * @author Publius
  * @title Lib Silo
-**/
+ **/
 library LibSilo {
-
     using SafeMath for uint256;
 
     /**
      * Silo
-    **/
+     **/
 
-    function depositSiloAssets(address account, uint256 seeds, uint256 stalk) internal {
+    function depositSiloAssets(
+        address account,
+        uint256 seeds,
+        uint256 stalk
+    ) internal {
         incrementBalanceOfStalk(account, stalk);
         incrementBalanceOfSeeds(account, seeds);
     }
 
-    function withdrawSiloAssets(address account, uint256 seeds, uint256 stalk) internal {
+    function withdrawSiloAssets(
+        address account,
+        uint256 seeds,
+        uint256 stalk
+    ) internal {
         decrementBalanceOfStalk(account, stalk);
         decrementBalanceOfSeeds(account, seeds);
     }
 
-    function transferSiloAssets(address sender, address recipient, uint256 seeds, uint256 stalk) internal {
+    function transferSiloAssets(
+        address sender,
+        address recipient,
+        uint256 seeds,
+        uint256 stalk
+    ) internal {
         transferStalk(sender, recipient, stalk);
         transferSeeds(sender, recipient, seeds);
     }
@@ -66,9 +78,9 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return;
 
-        uint256 roots = stalk == s.a[account].s.stalk ?
-            s.a[account].roots :
-            s.s.roots.mul(stalk).div(s.s.stalk);
+        uint256 roots = stalk == s.a[account].s.stalk
+            ? s.a[account].roots
+            : s.s.roots.mul(stalk).div(s.s.stalk);
 
         s.s.stalk = s.s.stalk.sub(stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
@@ -77,17 +89,25 @@ library LibSilo {
         s.a[account].roots = s.a[account].roots.sub(roots);
     }
 
-    function transferSeeds(address sender, address recipient, uint256 seeds) private {
+    function transferSeeds(
+        address sender,
+        address recipient,
+        uint256 seeds
+    ) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.a[sender].s.seeds = s.a[sender].s.seeds.sub(seeds);
         s.a[recipient].s.seeds = s.a[recipient].s.seeds.add(seeds);
     }
 
-    function transferStalk(address sender, address recipient, uint256 stalk) private {
+    function transferStalk(
+        address sender,
+        address recipient,
+        uint256 stalk
+    ) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 roots = stalk == s.a[sender].s.stalk ?
-            s.a[sender].roots :
-            s.s.roots.sub(1).mul(stalk).div(s.s.stalk).add(1);
+        uint256 roots = stalk == s.a[sender].s.stalk
+            ? s.a[sender].roots
+            : s.s.roots.sub(1).mul(stalk).div(s.s.stalk).add(1);
 
         s.a[sender].s.stalk = s.a[sender].s.stalk.sub(stalk);
         s.a[sender].roots = s.a[sender].roots.sub(roots);
@@ -98,14 +118,20 @@ library LibSilo {
 
     function updateBalanceOfRainStalk(address account) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if (!s.r.raining) return;
+        if (!s.season.raining) return;
         if (s.a[account].roots < s.a[account].sop.roots) {
-            s.r.roots = s.r.roots.sub(s.a[account].sop.roots - s.a[account].roots); // Note: SafeMath is redundant here.
+            s.r.roots = s.r.roots.sub(
+                s.a[account].sop.roots - s.a[account].roots
+            ); // Note: SafeMath is redundant here.
             s.a[account].sop.roots = s.a[account].roots;
         }
     }
 
-    function stalkReward(uint256 seeds, uint32 seasons) internal pure returns (uint256) {
+    function stalkReward(uint256 seeds, uint32 seasons)
+        internal
+        pure
+        returns (uint256)
+    {
         return seeds.mul(seasons);
     }
 }

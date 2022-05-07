@@ -1,23 +1,14 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
+const { THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN } = require('./utils/constants');
 const { to18, to6, toStalk } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 
-const UNRIPE_BEAN = '0xD5BDcdEc5b2FEFf781eA8727969A95BbfD47C40e';
-const UNRIPE_LP = '0x2e4243832DB30787764f152457952C8305f442e4';
-const THREE_CURVE = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
-const BEAN_3_CURVE = "0x3a70DfA7d2262988064A2D051dd47521E43c9BdD";
-
-const BN_ZERO = ethers.utils.parseEther('0');
-
-let lastTimestamp = 1700000000;
-let timestamp;
-
-describe('Silo', function () {
+describe('Silo Token', function () {
   before(async function () {
     [owner,user,user2] = await ethers.getSigners();
     userAddress = user.address;
@@ -65,16 +56,6 @@ describe('Silo', function () {
 
   afterEach(async function () {
     await revertToSnapshot(snapshotId);
-  });
-
-  describe('reverts', function () {
-    it('reverts not Beanstalk tries to whitelist ', async function () {
-      await expect(this.silo.connect(user).whitelistToken(
-        this.siloToken.address, 
-        this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
-        '10000', 
-        '1')).to.revertedWith('Silo: Only Beanstalk can whitelist tokens.');
-    });
   });
 
   describe('deposit', function () {
@@ -371,8 +352,8 @@ describe('Silo', function () {
 
   describe("Curve BDV", async function () {
     before(async function () {
-      this.threeCurve = await ethers.getContractAt('Mock3Curve', THREE_CURVE);
-      await this.threeCurve.set_virtual_price(ethers.utils.parseEther('1'));
+      this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
+      await this.threePool.set_virtual_price(ethers.utils.parseEther('1'));
       this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
       await this.beanThreeCurve.set_supply(ethers.utils.parseEther('2000000'));
       await this.beanThreeCurve.set_A_precise('1000');
@@ -393,7 +374,7 @@ describe('Silo', function () {
     })
 
     it("properly checks bdv", async function () {
-      await this.threeCurve.set_virtual_price(ethers.utils.parseEther('1.02'));
+      await this.threePool.set_virtual_price(ethers.utils.parseEther('1.02'));
       this.curveBDV = await ethers.getContractAt('BDVFacet', this.diamond.address);
       expect(await this.curveBDV.curveToBDV(ethers.utils.parseEther('2'))).to.equal('1998191');
     })

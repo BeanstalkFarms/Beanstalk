@@ -1,6 +1,7 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
+const { BEAN } = require('./utils/constants')
 const { to18, to6, toStalk } = require('./utils/helpers.js')
 const { MAX_UINT32 } = require('./utils/constants.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
@@ -19,7 +20,7 @@ describe('Field', function () {
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address);
     this.tokenFacet = await ethers.getContractAt('TokenFacet', this.diamond.address);
-    this.bean = await ethers.getContractAt('Bean', contracts.bean);
+    this.bean = await ethers.getContractAt('Bean', BEAN);
 
     await this.bean.connect(user).approve(this.field.address, to18('100000000000'));
     await this.bean.connect(user2).approve(this.field.address, to18('100000000000'));

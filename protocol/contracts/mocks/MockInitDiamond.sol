@@ -22,11 +22,10 @@ contract MockInitDiamond {
 
     AppStorage internal s;
 
-    function init(address bean) external {
-        s.c.bean = bean;
+    function init() external {
 
-        IBean(bean).approve(C.curveMetapoolAddress(), type(uint256).max);
-        IBean(bean).approve(C.curveBeanLUSDAddress(), type(uint256).max);
+        C.bean().approve(C.curveMetapoolAddress(), type(uint256).max);
+        C.bean().approve(C.curveBeanLUSDAddress(), type(uint256).max);
 
         s.cases = s.cases = [
         // Dsc, Sdy, Inc, nul

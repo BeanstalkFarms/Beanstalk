@@ -1,6 +1,6 @@
 /**
  * SPDX-License-Identifier: MIT
-**/
+ **/
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
@@ -12,22 +12,25 @@ import "../ReentrancyGuard.sol";
 /**
  * @author Publius
  * @title Field sows Beans.
-**/
+ **/
 contract FieldFacet is ReentrancyGuard {
-
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
-    event Sow(address indexed account, uint256 index, uint256 beans, uint256 pods);
+    event Sow(
+        address indexed account,
+        uint256 index,
+        uint256 beans,
+        uint256 pods
+    );
     event Harvest(address indexed account, uint256[] plots, uint256 beans);
     event PodListingCancelled(address indexed account, uint256 indexed index);
 
-
     /**
      * Sow
-    **/
+     **/
 
-    function sowBeans(uint256 amount, LibTransfer.From mode) 
+    function sowBeans(uint256 amount, LibTransfer.From mode)
         external
         payable
         returns (uint256)
@@ -35,25 +38,27 @@ contract FieldFacet is ReentrancyGuard {
         return sowBeansWithMin(amount, amount, mode);
     }
 
-    function sowBeansWithMin(uint256 amount, uint256 minAmount, LibTransfer.From mode) 
-        public 
-        payable
-        returns (uint256) 
-    {
+    function sowBeansWithMin(
+        uint256 amount,
+        uint256 minAmount,
+        LibTransfer.From mode
+    ) public payable returns (uint256) {
         uint256 sowAmount = s.f.soil;
         require(
-            sowAmount >= minAmount && 
-            amount >= minAmount && 
-            minAmount > 0, 
+            sowAmount >= minAmount && amount >= minAmount && minAmount > 0,
             "Field: Sowing below min or 0 pods."
         );
         if (amount < sowAmount) sowAmount = amount;
         return _sowBeans(sowAmount, mode);
     }
 
-    function _sowBeans(uint256 amount, LibTransfer.From mode) internal returns (uint256 pods) {
+    function _sowBeans(uint256 amount, LibTransfer.From mode)
+        internal
+        returns (uint256 pods)
+    {
         pods = LibDibbler.sow(amount, msg.sender);
-        if (mode == LibTransfer.From.EXTERNAL) C.bean().burnFrom(msg.sender, amount);
+        if (mode == LibTransfer.From.EXTERNAL)
+            C.bean().burnFrom(msg.sender, amount);
         else {
             LibTransfer.receiveToken(C.bean(), amount, msg.sender, mode);
             C.bean().burn(amount);
@@ -61,10 +66,10 @@ contract FieldFacet is ReentrancyGuard {
     }
 
     /**
-     * Sow
-    **/
+     * Harvest
+     **/
 
-    function harvest(uint256[] calldata plots, LibTransfer.To mode) 
+    function harvest(uint256[] calldata plots, LibTransfer.To mode)
         external
         payable
     {
@@ -72,8 +77,8 @@ contract FieldFacet is ReentrancyGuard {
         LibTransfer.sendToken(C.bean(), beansHarvested, msg.sender, mode);
     }
 
-    function _harvest(uint256[] calldata plots) 
-        internal 
+    function _harvest(uint256[] calldata plots)
+        internal
         returns (uint256 beansHarvested)
     {
         for (uint256 i = 0; i < plots.length; i++) {
@@ -85,9 +90,9 @@ contract FieldFacet is ReentrancyGuard {
         emit Harvest(msg.sender, plots, beansHarvested);
     }
 
-    function harvestPlot(address account, uint256 plotId) 
+    function harvestPlot(address account, uint256 plotId)
         private
-        returns (uint256) 
+        returns (uint256)
     {
         uint256 pods = s.a[account].field.plots[plotId];
         require(pods > 0, "Field: Plot is empty.");
@@ -96,15 +101,17 @@ contract FieldFacet is ReentrancyGuard {
         if (s.podListings[plotId] > 0) {
             delete s.podListings[plotId];
             emit PodListingCancelled(msg.sender, plotId);
-        }       
+        }
         if (harvestablePods >= pods) return pods;
-        s.a[account].field.plots[plotId.add(harvestablePods)] = pods.sub(harvestablePods);
+        s.a[account].field.plots[plotId.add(harvestablePods)] = pods.sub(
+            harvestablePods
+        );
         return harvestablePods;
     }
 
     /**
      * Getters
-    **/
+     **/
 
     function podIndex() public view returns (uint256) {
         return s.f.pods;
@@ -130,7 +137,11 @@ contract FieldFacet is ReentrancyGuard {
         return s.f.pods.sub(s.f.harvestable);
     }
 
-    function plot(address account, uint256 plotId) public view returns (uint256) {
+    function plot(address account, uint256 plotId)
+        public
+        view
+        returns (uint256)
+    {
         return s.a[account].field.plots[plotId];
     }
 

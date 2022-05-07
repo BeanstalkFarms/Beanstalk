@@ -13,9 +13,17 @@ import "../MockToken.sol";
  * @author Publius
  * @title Mock Season Facet
 **/
+
+interface ResetPool {
+    function reset_cumulative() external;
+}
+
 contract MockSeasonFacet is SeasonFacet {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
+
+    event UpdateTWAPs(uint256[2] balances);
+    event DeltaB(int256 deltaB);
 
     function reentrancyGuardTest() public nonReentrant {
         reentrancyGuardTest();
@@ -28,8 +36,8 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function mockStepSilo(uint256 amount) public {
-        if ((s.s.seeds == 0 && s.s.stalk == 0)) return;
-        mintToSilo(amount);
+        C.bean().mint(address(this), amount);
+        rewardToSilo(amount);
 
     }
 
@@ -37,6 +45,14 @@ contract MockSeasonFacet is SeasonFacet {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
         handleRain(4);
+    }
+
+    function rainSunrises(uint256 amount) public {
+        require(!paused(), "Season: Paused.");
+        for (uint256 i = 0; i < amount; ++i) {
+            s.season.current += 1;
+            handleRain(4);
+        }
     }
 
     function droughtSunrise() public {
@@ -92,23 +108,6 @@ contract MockSeasonFacet is SeasonFacet {
         }
     }
 
-    function halfWeekSunrise() public {
-            teleportSunrise(84);
-            decrementWithdrawSeasons();
-    }
-    
-    function weekSunrise() public {
-            teleportSunrise(168);
-            decrementWithdrawSeasons();
-    }
-
-    function decrementSunrise(uint256 week) public {
-            for (uint256 i = 0; i < week; i++) {
-                    weekSunrise();
-            }
-    }
-    
-
     function setYieldE(uint32 number) public {
         s.w.yield = number;
     }
@@ -133,12 +132,8 @@ contract MockSeasonFacet is SeasonFacet {
         s.w.lastSoilPercent = number;
     }
 
-    function setSoilE(uint256 amount) public returns (int256) {
-        return setSoil(amount);
-    }
-
-    function minSoil(uint256 amount) public view returns (uint256) {
-        return getMinSoil(amount);
+    function setSoilE(uint256 amount) public {
+        setSoil(amount);
     }
 
     function resetAccount(address account) public {
@@ -198,11 +193,12 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.withdrawSeasons = 25;
         s.season.current = 1;
         s.paused = false;
-        bean().burn(bean().balanceOf(address(this)));
+        C.bean().burn(C.bean().balanceOf(address(this)));
     }
 
     function stepWeatherE(int256 deltaB, uint256 endSoil) external {
-        stepWeather(deltaB, endSoil);
+        s.f.soil = endSoil;
+        stepWeather(deltaB);
     }
 
     function stepWeatherWithParams(
@@ -214,12 +210,38 @@ contract MockSeasonFacet is SeasonFacet {
         bool raining,
         bool rainRoots
     ) public {
-        s.r.raining = raining;
+        s.season.raining = raining;
         s.r.roots = rainRoots ? 1 : 0;
         s.f.pods = pods;
         s.w.lastDSoil = lastDSoil;
         s.w.startSoil = startSoil;
-        stepWeather(deltaB, endSoil);
+        s.f.soil = endSoil;
+        stepWeather(deltaB);
     }
 
+    function captureE() external returns (int256 deltaB) {
+        stepOracle();
+        emit DeltaB(deltaB);
+    }
+
+    function captureCurveE() external returns (int256 deltaB) {
+        deltaB = LibCurveOracle.capture();
+        emit DeltaB(deltaB);
+    }
+
+    function updateTWAPCurveE() external returns (uint256[2] memory balances) {
+        (balances,s.co.balances) = LibCurveOracle.twap();
+        s.co.timestamp = block.timestamp;
+        emit UpdateTWAPs(balances);
+    }
+
+    function curveOracle() external view returns (Storage.Oracle memory) {
+        return s.co;
+    }
+
+    function resetPools(address[] calldata pools) external {
+        for (uint i = 0; i < pools.length; i++) {
+            ResetPool(pools[i]).reset_cumulative();
+        }
+    }
 }

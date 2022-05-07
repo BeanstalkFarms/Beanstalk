@@ -1,7 +1,7 @@
 var fs = require('fs');
 
-
-const THREE_CURVE = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
+const THREE_CURVE = "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490";
+const THREE_POOL = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
 const BEAN_3_CURVE = "0x3a70DfA7d2262988064A2D051dd47521E43c9BdD";
 const LUSD_3_CURVE = "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA";
 const BEAN_LUSD_CURVE = "0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D";
@@ -15,7 +15,13 @@ const UNRIPE_LP = '0x2e4243832DB30787764f152457952C8305f442e4';
 
 async function curveMetapool() {
     // Deploy 3 Curve
-    let threeCurveJson = fs.readFileSync(`./artifacts/contracts/mocks/curve/Mock3Curve.sol/Mock3Curve.json`);
+    let threePoolJson = fs.readFileSync(`./artifacts/contracts/mocks/curve/Mock3Curve.sol/Mock3Curve.json`);
+    await network.provider.send("hardhat_setCode", [
+      THREE_POOL,
+      JSON.parse(threePoolJson).deployedBytecode,
+    ]);
+
+    let threeCurveJson = fs.readFileSync(`./artifacts/contracts/mocks/MockToken.sol/MockToken.json`);
     await network.provider.send("hardhat_setCode", [
       THREE_CURVE,
       JSON.parse(threeCurveJson).deployedBytecode,
@@ -30,9 +36,7 @@ async function curveMetapool() {
     // const beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
 
     const beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
-    await beanMetapool.init(BEAN, THREE_CURVE, THREE_CURVE);
-  
-    return [BEAN_3_CURVE, THREE_CURVE];
+    await beanMetapool.init(BEAN, THREE_CURVE, THREE_POOL);
 }
 
 async function weth() {

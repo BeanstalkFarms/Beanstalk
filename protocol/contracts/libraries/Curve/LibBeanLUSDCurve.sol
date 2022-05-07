@@ -1,11 +1,11 @@
 /**
  * SPDX-License-Identifier: MIT
-**/
+ **/
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "./LibMetaCurve.sol";
 
 interface IPlainCurve {
@@ -34,10 +34,14 @@ library LibBeanLUSDCurve {
     }
 
     function getRate() internal view returns (uint256 rate) {
-        uint256 bean3CrvPrice = LibMetaCurve.price(BEAN_METAPOOL, BEAN_DECIMALS);
-        uint256 token3CrvPrice = LibMetaCurve.price(TOKEN_METAPOOL, TOKEN_DECIMALS);
-        rate = token3CrvPrice.mul(I_BEAN_RM).div(
-            bean3CrvPrice
+        uint256 bean3CrvPrice = LibMetaCurve.price(
+            BEAN_METAPOOL,
+            BEAN_DECIMALS
         );
+        uint256 token3CrvPrice = LibMetaCurve.price(
+            TOKEN_METAPOOL,
+            TOKEN_DECIMALS
+        );
+        rate = token3CrvPrice.mul(I_BEAN_RM).div(bean3CrvPrice);
     }
 }

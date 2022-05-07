@@ -1,7 +1,7 @@
 const MAX_INT = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
 
 const diamond = require('./diamond.js')
-const { impersonateCurve, impersonateBean, impersonateCurveMetapool, impersonateWeth, impersonateUnripe } = require('./impersonate.js')
+const { impersonateBean, impersonateCurveMetapool, impersonateWeth, impersonateUnripe } = require('./impersonate.js')
 function addCommas(nStr) {
   nStr += ''
   const x = nStr.split('.')
@@ -91,39 +91,39 @@ async function main(scriptName, verbose = true, mock = false) {
     return instances
   }
   let [
-    seasonFacet,
-    oracleFacet,
-    fieldFacet,
-    siloFacet,
     bdvFacet,
-    tokenFacet,
-    marketplaceFacet,
-    fundraiserFacet,
     convertFacet,
+    fieldFacet,
+    fundraiserFacet,
+    marketplaceFacet,
+    seasonFacet,
+    siloFacet,
+    sproutFacet,
+    tokenFacet,
     unripeClaimFacet
   ] = mock ? await deployFacets(
     verbose,
-    ['MockSeasonFacet',
-      'MockOracleFacet',
-      'MockFieldFacet',
-      'MockSiloFacet',
-      'BDVFacet',
-      'TokenFacet',
-      'MockMarketplaceFacet',
-      'MockFundraiserFacet',
+    [ 'BDVFacet',
       'MockConvertFacet',
+      'MockFieldFacet',
+      'MockFundraiserFacet',
+      'MockMarketplaceFacet',
+      'MockSeasonFacet',
+      'MockSiloFacet',
+      'MockSproutFacet',
+      'TokenFacet',
       'MockUnripeClaimFacet'],
   ) : await deployFacets(
     verbose,
-    ['SeasonFacet',
-      'OracleFacet',
-      'FieldFacet',
-      'SiloFacet',
-      'BDVFacet',
-      'TokenFacet',
-      'MarketplaceFacet',
-      'FundraiserFacet',
+    [ 'BDVFacet',
       'ConvertFacet',
+      'FieldFacet',
+      'FundraiserFacet',
+      'MarketplaceFacet',
+      'SeasonFacet',
+      'SiloFacet',
+      'SproutFacet',
+      'TokenFacet',
       'UnripeClaimFacet'],
   )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/InitDiamond.sol:InitDiamond'
@@ -131,7 +131,7 @@ async function main(scriptName, verbose = true, mock = false) {
 
   let args = []
   if (mock) {
-    args.push(await impersonateBean())
+    await impersonateBean()
     await impersonateCurveMetapool()
     await impersonateWeth()
     await impersonateUnripe()
@@ -141,15 +141,15 @@ async function main(scriptName, verbose = true, mock = false) {
     diamondName: 'BeanstalkDiamond',
     initDiamond: initDiamondArg,
     facets: [
-      ['SeasonFacet', seasonFacet],
-      ['OracleFacet', oracleFacet],
-      ['FieldFacet', fieldFacet],
-      ['SiloFacet', siloFacet],
       ['BDVFacet', bdvFacet],
-      ['TokenFacet', tokenFacet],
-      ['MarketplaceFacet', marketplaceFacet],
-      ['FundraiserFacet', fundraiserFacet],
       ['ConvertFacet', convertFacet],
+      ['FieldFacet', fieldFacet],
+      ['FundraiserFacet', fundraiserFacet],
+      ['MarketplaceFacet', marketplaceFacet],
+      ['SeasonFacet', seasonFacet],
+      ['SiloFacet', siloFacet],
+      ['SproutFacet', sproutFacet],
+      ['TokenFacet', tokenFacet],
       ['UnripeClaimFacet', unripeClaimFacet]
     ],
     owner: account,
@@ -163,34 +163,29 @@ async function main(scriptName, verbose = true, mock = false) {
   if (verbose) console.log('BeanStalk diamond cut gas used: ' + strDisplay(diamondCut.gasUsed))
   totalGasUsed = totalGasUsed.add(receipt.gasUsed).add(diamondCut.gasUsed)
 
-
-  const season = await ethers.getContractAt('SeasonFacet', beanstalkDiamond.address);
-  const bean = await season.bean();
-
   if (verbose) {
     console.log("--");
     console.log('Beanstalk diamond address:' + beanstalkDiamond.address)
-    console.log('Bean address:' + bean)
-    console.log('Uniswap Pair address:' + pair)
     console.log("--");
   }
 
   const diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', beanstalkDiamond.address)
-
 
   if (verbose) console.log('Total gas used: ' + strDisplay(totalGasUsed))
   return {
     account: account,
     beanstalkDiamond: beanstalkDiamond,
     diamondLoupeFacet: diamondLoupeFacet,
-    seasonFacet: seasonFacet,
-    oracleFacet: oracleFacet,
-    fieldFacet: fieldFacet,
-    tokenFacet: tokenFacet,
-    fundraiserFacet: fundraiserFacet,
-    convertFacet: convertFacet,
-    unripeClaimFacet: unripeClaimFacet,
-    bean: bean,
+    bdvFacet,
+    convertFacet,
+    fieldFacet,
+    fundraiserFacet,
+    marketplaceFacet,
+    seasonFacet,
+    siloFacet,
+    sproutFacet,
+    tokenFacet,
+    unripeClaimFacet
   }
 }
 

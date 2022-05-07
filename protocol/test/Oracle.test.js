@@ -1,13 +1,8 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
+const { THREE_POOL, BEAN_3_CURVE, BEAN } = require('./utils/constants');
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
-
-const THREE_CURVE = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
-const BEAN_3_CURVE = "0x3a70DfA7d2262988064A2D051dd47521E43c9BdD";
-const UNISWAP_V2_BEAN_ETH = "0x87898263B6C5BABe34b4ec53F22d98430b91e371";
-
-const BN_ZERO = ethers.utils.parseEther('0');
 
 let lastTimestamp;
 let timestamp;
@@ -47,15 +42,14 @@ describe('Oracle', function () {
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
-    this.bean = await ethers.getContractAt('MockToken', contracts.bean);
-    this.oracle = await ethers.getContractAt('MockOracleFacet', this.diamond.address)
+    this.bean = await ethers.getContractAt('MockToken', BEAN);
 
     await this.season.siloSunrise(0);
 
     lastTimestamp = 1700000000;
   
-    this.threeCurve = await ethers.getContractAt('Mock3Curve', THREE_CURVE);
-    await this.threeCurve.set_virtual_price(to18('1'));
+    this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
+    await this.threePool.set_virtual_price(to18('1'));
     this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
     await this.beanThreeCurve.set_supply('100000');
     await this.beanThreeCurve.set_A_precise('1000');
@@ -68,15 +62,15 @@ describe('Oracle', function () {
     await this.season.siloSunrise(0);
     await this.season.teleportSunrise('250');
     await resetTime();
-    await this.oracle.resetPools([this.beanThreeCurve.address]);
+    await this.season.resetPools([this.beanThreeCurve.address]);
     await resetTime();
-    await this.oracle.captureE();
+    await this.season.captureE();
   });
   
   describe("Curve", async function () {
 
     it('initializes the oracle', async function () {
-      const o = await this.oracle.curveOracle();
+      const o = await this.season.curveOracle();
       expect(o.initialized).to.equal(true);
       expect(o.balances[0]).to.equal(toBean('100000001000000'));
       expect(o.balances[1]).to.equal(to18('100000001000000'));
@@ -85,8 +79,8 @@ describe('Oracle', function () {
     })
 
     it("tracks a basic TWAL", async function () {
-      this.result = await this.oracle.updateTWAPCurveE();
-      await expect(this.result).to.emit(this.oracle, 'UpdateTWAPs').withArgs(
+      this.result = await this.season.updateTWAPCurveE();
+      await expect(this.result).to.emit(this.season, 'UpdateTWAPs').withArgs(
         [toBean('1000000'), to18('1000000')]
       )
     });
@@ -95,8 +89,8 @@ describe('Oracle', function () {
       await advanceTime(900)
       await this.beanThreeCurve.update([toBean('2000000'), to18('1000000')])
       await advanceTime(900)
-      this.result = await this.oracle.updateTWAPCurveE();
-      await expect(this.result).to.emit(this.oracle, 'UpdateTWAPs').withArgs(
+      this.result = await this.season.updateTWAPCurveE();
+      await expect(this.result).to.emit(this.season, 'UpdateTWAPs').withArgs(
         [ethers.utils.parseUnits('1500000', 6), ethers.utils.parseEther('1000000')]
       )
     });
@@ -107,61 +101,61 @@ describe('Oracle', function () {
       await advanceTime(900)
       await this.beanThreeCurve.update([toBean('1000000'), to18('1000000')])
       await advanceTime(1800)
-      this.result = await this.oracle.updateTWAPCurveE();
+      this.result = await this.season.updateTWAPCurveE();
       
-      await expect(this.result).to.emit(this.oracle, 'UpdateTWAPs').withArgs(
+      await expect(this.result).to.emit(this.season, 'UpdateTWAPs').withArgs(
         [ethers.utils.parseUnits('1250000', 6), ethers.utils.parseEther('1000000')]
       )
       await advanceTime(900)
       await this.beanThreeCurve.update([toBean('500000'), to18('1000000')])
       await advanceTime(900)
-      this.result = await this.oracle.updateTWAPCurveE();
+      this.result = await this.season.updateTWAPCurveE();
       
-      await expect(this.result).to.emit(this.oracle, 'UpdateTWAPs').withArgs(
+      await expect(this.result).to.emit(this.season, 'UpdateTWAPs').withArgs(
         [toBean('750000'), to18('1000000')]
       )
     });
 
     describe("Delta B", async function () {
       it("tracks a basic Delta B", async function () {
-        this.result = await this.oracle.captureCurveE();
-        await expect(this.result).to.emit(this.oracle, 'DeltaB').withArgs('0');
+        this.result = await this.season.captureCurveE();
+        await expect(this.result).to.emit(this.season, 'DeltaB').withArgs('0');
       });
 
       it("tracks a TWAL with a change", async function () {
         await advanceTime(900)
         await this.beanThreeCurve.update([toBean('2000000'), to18('1000000')])
         await advanceTime(900)
-        this.result = await this.oracle.captureCurveE();
-        await expect(this.result).to.emit(this.oracle, 'DeltaB').withArgs('-252354675068');
+        this.result = await this.season.captureCurveE();
+        await expect(this.result).to.emit(this.season, 'DeltaB').withArgs('-252354675068');
       });
 
       it("tracks a TWAL during ramping up season", async function () {
         await this.season.teleportSunrise('120');
         await resetTime();
-        await this.oracle.captureE();
+        await this.season.captureE();
         await advanceTime(900)
         await this.beanThreeCurve.update([toBean('2000000'), to18('1000000')])
         await advanceTime(900)
-        this.result = await this.oracle.captureCurveE();
-        await expect(this.result).to.emit(this.oracle, 'DeltaB').withArgs('-126177337534')
-        this.result = await this.oracle.updateTWAPCurveE();
+        this.result = await this.season.captureCurveE();
+        await expect(this.result).to.emit(this.season, 'DeltaB').withArgs('-126177337534')
+        this.result = await this.season.updateTWAPCurveE();
       });
 
       it("tracks a TWAL with a change", async function () {
         await advanceTime(900)
         await this.beanThreeCurve.update([toBean('2000000'), to18('1000000')])
         await advanceTime(900)
-        this.result = await this.oracle.captureCurveE();
-        await expect(this.result).to.emit(this.oracle, 'DeltaB').withArgs('-252354675068');
+        this.result = await this.season.captureCurveE();
+        await expect(this.result).to.emit(this.season, 'DeltaB').withArgs('-252354675068');
       });
 
       it("tracks a TWAL with a change", async function () {
         await advanceTime(1800)
         await this.beanThreeCurve.update([toBean('2000000'), to18('2020000')])
         await advanceTime(900)
-        this.result = await this.oracle.captureCurveE();
-        await expect(this.result).to.emit(this.oracle, 'DeltaB').withArgs('3332955488');
+        this.result = await this.season.captureCurveE();
+        await expect(this.result).to.emit(this.season, 'DeltaB').withArgs('3332955488');
       });
     });
 
@@ -169,7 +163,7 @@ describe('Oracle', function () {
       it("tracks a basic Delta B", async function () {
         await advanceTime(900)
         await hre.network.provider.send("evm_mine")
-        expect(await this.oracle.poolDeltaB(BEAN_3_CURVE)).to.equal('0');
+        expect(await this.season.poolDeltaB(BEAN_3_CURVE)).to.equal('0');
       });
 
       it("tracks a TWAL with a change", async function () {
@@ -177,7 +171,7 @@ describe('Oracle', function () {
         await this.beanThreeCurve.update([toBean('2000000'), to18('1000000')])
         await advanceTime(900)
         await hre.network.provider.send("evm_mine")
-        expect(await this.oracle.poolDeltaB(BEAN_3_CURVE)).to.equal('-252354675068');
+        expect(await this.season.poolDeltaB(BEAN_3_CURVE)).to.equal('-252354675068');
       });
     });
   });

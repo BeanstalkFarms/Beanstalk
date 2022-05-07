@@ -3,6 +3,7 @@ const { expect, use } = require("chai");
 const { waffleChai } = require("@ethereum-waffle/chai");
 use(waffleChai);
 const { deploy } = require('../scripts/deploy.js')
+const { BEAN } = require('./utils/constants')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
 
@@ -27,7 +28,7 @@ describe('Marketplace', function () {
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.marketplace = await ethers.getContractAt('MockMarketplaceFacet', this.diamond.address);
     this.token = await ethers.getContractAt('TokenFacet', this.diamond.address);
-    this.bean = await ethers.getContractAt('MockToken', contracts.bean);
+    this.bean = await ethers.getContractAt('MockToken', BEAN);
 
     await this.bean.mint(userAddress, '500000')
     await this.bean.mint(user2Address, '500000')
@@ -48,11 +49,12 @@ describe('Marketplace', function () {
     const args = (receipt.events?.filter((x) => { return x.event == "PodListingCreated" }))[0].args;
     return ethers.utils.solidityKeccak256(
       ['uint256', 'uint256', 'uint24', 'uint256', 'bool'],
-      [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args.toWallet]
+      [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args.mode == EXTERNAL]
     );
   }
 
   const getHashFromListing = function (l) {
+    l[4] = l[4] == EXTERNAL
     return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool'], l);
   }
 
@@ -73,29 +75,29 @@ describe('Marketplace', function () {
   describe("Pod Listings", async function () {
     describe("Create", async function () {
       it('Fails to List Unowned Plot', async function () {
-        await expect(this.marketplace.connect(user).createPodListing('5000', '0', '1000', '100000', '0', false)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+        await expect(this.marketplace.connect(user).createPodListing('5000', '0', '1000', '100000', '0', INTERNAL)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
       })
 
       it('Fails if already expired', async function () {
         await this.field.incrementTotalHarvestableE('2000');
-        await expect(this.marketplace.connect(user).createPodListing('0', '0', '500', '100000', '0', false)).to.be.revertedWith('Marketplace: Expired.');
+        await expect(this.marketplace.connect(user).createPodListing('0', '0', '500', '100000', '0', INTERNAL)).to.be.revertedWith('Marketplace: Expired.');
       })
 
       it('Fails if amount is 0', async function () {
-        await expect(this.marketplace.connect(user2).createPodListing('1000', '0', '0', '100000', '0', false)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+        await expect(this.marketplace.connect(user2).createPodListing('1000', '0', '0', '100000', '0', INTERNAL)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
       })
 
       it('fails if price is 0', async function () {
-        await expect(this.marketplace.connect(user2).createPodListing('1000', '0', '1000', '0', '0', false)).to.be.revertedWith('Marketplace: Pod price must be greater than 0.');
+        await expect(this.marketplace.connect(user2).createPodListing('1000', '0', '1000', '0', '0', INTERNAL)).to.be.revertedWith('Marketplace: Pod price must be greater than 0.');
       })
 
       it('Fails if start + amount too large', async function () {
-        await expect(this.marketplace.connect(user2).createPodListing('1000', '500', '1000', '100000', '0', false)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+        await expect(this.marketplace.connect(user2).createPodListing('1000', '500', '1000', '100000', '0', INTERNAL)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
       })
 
       describe("List full plot", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', true);
+          this.result = await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', EXTERNAL);
         })
 
         it('Lists Plot properly', async function () {
@@ -103,13 +105,13 @@ describe('Marketplace', function () {
         })
 
         it('Emits event', async function () {
-          await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 0, '1000', 500000, 0, true);
+          await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 0, '1000', 500000, 0, 0);
         })
       })
 
       describe("List partial plot", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).createPodListing('0', '0', '500', '500000', '0', true);
+          this.result = await this.marketplace.connect(user).createPodListing('0', '0', '500', '500000', '0', EXTERNAL);
         })
 
         it('Lists Plot properly', async function () {
@@ -117,13 +119,13 @@ describe('Marketplace', function () {
         })
 
         it('Emits event', async function () {
-          await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 0, '500', 500000, 0, true);
+          await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 0, '500', 500000, 0, 0);
         })
       })
 
       describe("List partial plot from middle", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).createPodListing('0', '500', '500', '500000', '2000', false);
+          this.result = await this.marketplace.connect(user).createPodListing('0', '500', '500', '500000', '2000', INTERNAL);
         })
 
         it('Lists Plot properly', async function () {
@@ -131,14 +133,14 @@ describe('Marketplace', function () {
         })
 
         it('Emits event', async function () {
-          await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 500, '500', 500000, 2000, false);
+          await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 500, '500', 500000, 2000, 1);
         })
       })
 
       describe("Relist plot from middle", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).createPodListing('0', '0', '500', '500000', '0', false);
-          this.result = await this.marketplace.connect(user).createPodListing('0', '500', '100', '500000', '2000', false);
+          this.result = await this.marketplace.connect(user).createPodListing('0', '0', '500', '500000', '0', INTERNAL);
+          this.result = await this.marketplace.connect(user).createPodListing('0', '500', '100', '500000', '2000', INTERNAL);
         })
 
         it('Lists Plot properly', async function () {
@@ -147,7 +149,7 @@ describe('Marketplace', function () {
 
         it('Emits event', async function () {
           await expect(this.result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, 0);
-          await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 500, '100', 500000, 2000, false);
+          await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 500, '100', 500000, 2000, 1);
         })
       })
     })
@@ -156,54 +158,54 @@ describe('Marketplace', function () {
 
       describe('revert', async function () {
         beforeEach(async function () {
-          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', true);
-          this.listing = [userAddress, '0', '0', '1000', 500000, '0', true];
+          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', EXTERNAL);
+          this.listing = [userAddress, '0', '0', '1000', 500000, '0', EXTERNAL];
         })
 
         it('Fill Listing non-listed Index Fails', async function () {
           let brokenListing = this.listing;
           brokenListing[1] = '1'
-          await expect(this.marketplace.connect(user).fillPodListing(brokenListing, 500)).to.be.revertedWith('Marketplace: Listing does not exist.');
+          await expect(this.marketplace.connect(user).fillPodListing(brokenListing, 500, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
         })
 
         it('Fill Listing wrong start Index Fails', async function () {
           let brokenListing = this.listing;
           brokenListing[2] = '1'
-          await expect(this.marketplace.connect(user).fillPodListing(brokenListing, 500)).to.be.revertedWith('Marketplace: Listing does not exist.');
+          await expect(this.marketplace.connect(user).fillPodListing(brokenListing, 500, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
         })
 
         it('Fill Listing wrong price Fails', async function () {
           let brokenListing = this.listing;
           brokenListing[4] = '100001'
-          await expect(this.marketplace.connect(user).fillPodListing(brokenListing, 500)).to.be.revertedWith('Marketplace: Listing does not exist.');
+          await expect(this.marketplace.connect(user).fillPodListing(brokenListing, 500, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
         })
 
         it('Fill Listing after expired', async function () {
           await this.field.incrementTotalHarvestableE('2000');
-          await expect(this.marketplace.connect(user2).fillPodListing(this.listing, 500)).to.be.revertedWith('Marketplace: Listing has expired.');
+          await expect(this.marketplace.connect(user2).fillPodListing(this.listing, 500, EXTERNAL)).to.be.revertedWith('Marketplace: Listing has expired.');
         })
 
         it('Fill Listing not enough pods in plot', async function () {
-          await expect(this.marketplace.connect(user2).fillPodListing(this.listing, 501)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
+          await expect(this.marketplace.connect(user2).fillPodListing(this.listing, 501, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
         })
 
         it('Fill Listing not enough pods in listing', async function () {
-          const l = [userAddress, '0', '0', '500', '500000', '0', false]
-          await this.marketplace.connect(user).createPodListing('0', '0', '500', '500000', '0', false);
-          await expect(this.marketplace.connect(user2).fillPodListing(l, 500)).to.be.revertedWith('Marketplace: Not enough pods in Listing.');
+          const l = [userAddress, '0', '0', '500', '500000', '0', INTERNAL]
+          await this.marketplace.connect(user).createPodListing('0', '0', '500', '500000', '0', INTERNAL);
+          await expect(this.marketplace.connect(user2).fillPodListing(l, 500, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing.');
         })
       })
 
       describe("Fill listing", async function () {
         beforeEach(async function () {
-          this.listing = [userAddress, '0', '0', '1000', '500000', '0', true]
-          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', true);
+          this.listing = [userAddress, '0', '0', '1000', '500000', '0', EXTERNAL]
+          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', EXTERNAL);
           this.amountBeansBuyingWith = 500;
 
           this.userBeanBalance = await this.bean.balanceOf(userAddress)
           this.user2BeanBalance = await this.bean.balanceOf(user2Address)
 
-          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, this.amountBeansBuyingWith);
+          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, this.amountBeansBuyingWith, EXTERNAL);
 
           this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
           this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
@@ -231,14 +233,14 @@ describe('Marketplace', function () {
 
       describe("Fill partial listing", async function () {
         beforeEach(async function () {
-          this.listing = [userAddress, '0', '0', '1000', '500000', '0', true]
-          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', true);
+          this.listing = [userAddress, '0', '0', '1000', '500000', '0', EXTERNAL]
+          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', EXTERNAL);
           this.amountBeansBuyingWith = 250;
 
           this.userBeanBalance = await this.bean.balanceOf(userAddress)
           this.user2BeanBalance = await this.bean.balanceOf(user2Address)
 
-          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, this.amountBeansBuyingWith);
+          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, this.amountBeansBuyingWith, EXTERNAL);
 
           this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
           this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
@@ -268,14 +270,14 @@ describe('Marketplace', function () {
 
       describe("Fill partial listing of a partial listing multiple fills", async function () {
         beforeEach(async function () {
-          this.listing = [userAddress, '0', '500', '500', '500000', '0', true]
-          await this.marketplace.connect(user).createPodListing('0', '500', '500', '500000', '0', true);
+          this.listing = [userAddress, '0', '500', '500', '500000', '0', EXTERNAL]
+          await this.marketplace.connect(user).createPodListing('0', '500', '500', '500000', '0', EXTERNAL);
           this.amountBeansBuyingWith = 100;
 
           this.userBeanBalance = await this.bean.balanceOf(userAddress)
           this.user2BeanBalance = await this.bean.balanceOf(user2Address)
 
-          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, this.amountBeansBuyingWith);
+          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, this.amountBeansBuyingWith, EXTERNAL);
 
           this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
           this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
@@ -305,19 +307,19 @@ describe('Marketplace', function () {
 
       describe("Fill partial listing of a listing created by partial fill", async function () {
         beforeEach(async function () {
-          this.listing = [userAddress, '0', '500', '500', '500000', '0', true]
-          await this.marketplace.connect(user).createPodListing('0', '500', '500', '500000', '0', true);
+          this.listing = [userAddress, '0', '500', '500', '500000', '0', EXTERNAL]
+          await this.marketplace.connect(user).createPodListing('0', '500', '500', '500000', '0', EXTERNAL);
           this.amountBeansBuyingWith = 100;
 
           this.userBeanBalance = await this.bean.balanceOf(userAddress)
           this.user2BeanBalance = await this.bean.balanceOf(user2Address)
-          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, this.amountBeansBuyingWith);
+          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, this.amountBeansBuyingWith, EXTERNAL);
 
           this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
           this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
-          this.listing = [userAddress, '700', '0', '300', '500000', '0', true]
+          this.listing = [userAddress, '700', '0', '300', '500000', '0', EXTERNAL]
 
-          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, 100);
+          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, 100, EXTERNAL);
 
         })
         it('plots correctly transfer', async function () {
@@ -339,14 +341,14 @@ describe('Marketplace', function () {
 
       describe("Fill partial listing to wallet", async function () {
         beforeEach(async function () {
-          this.listing = [userAddress, '0', '0', '1000', '500000', '0', false]
-          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', false);
+          this.listing = [userAddress, '0', '0', '1000', '500000', '0', INTERNAL]
+          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', INTERNAL);
           this.amountBeansBuyingWith = 250;
 
           this.userBeanBalance = await this.bean.balanceOf(userAddress)
           this.user2BeanBalance = await this.bean.balanceOf(user2Address)
 
-          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, this.amountBeansBuyingWith);
+          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, this.amountBeansBuyingWith, EXTERNAL);
 
           this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
           this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
@@ -377,21 +379,21 @@ describe('Marketplace', function () {
 
     describe("Cancel", async function () {
       it('Re-list plot cancels and re-lists', async function () {
-        result = await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', true);
+        result = await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', EXTERNAL);
         expect(await this.marketplace.podListing(0)).to.be.equal(await getHash(result));
-        result = await this.marketplace.connect(user).createPodListing('0', '0', '1000', '200000', '2000', false);
-        await expect(result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, '0', 0, 1000, 200000, 2000, false);
+        result = await this.marketplace.connect(user).createPodListing('0', '0', '1000', '200000', '2000', INTERNAL);
+        await expect(result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, '0', 0, 1000, 200000, 2000, 1);
         await expect(result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, '0');
         expect(await this.marketplace.podListing(0)).to.be.equal(await getHash(result));
       })
 
       it('Reverts on Cancel Listing, not owned by user', async function () {
-        await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', true);
+        await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', EXTERNAL);
         await expect(this.marketplace.connect(user2).cancelPodListing('0')).to.be.revertedWith('Marketplace: Listing not owned by sender.');
       })
 
       it('Cancels Listing, Emits Listing Cancelled Event', async function () {
-        result = await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '2000', true);
+        result = await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '2000', EXTERNAL);
         expect(await this.marketplace.podListing(0)).to.be.equal(await getHash(result));
         result = (await this.marketplace.connect(user).cancelPodListing('0'));
         expect(await this.marketplace.podListing(0)).to.be.equal(ZERO_HASH);
@@ -404,10 +406,10 @@ describe('Marketplace', function () {
     describe("Create", async function () {
       describe('revert', async function () {
         it('Reverts if price is 0', async function () {
-          await expect(this.marketplace.connect(user2).createPodOrder('100', '0', '100000')).to.be.revertedWith("Marketplace: Pod price must be greater than 0.");
+          await expect(this.marketplace.connect(user2).createPodOrder('100', '0', '100000', EXTERNAL)).to.be.revertedWith("Marketplace: Pod price must be greater than 0.");
         })
         it('Reverts if amount is 0', async function () {
-          await expect(this.marketplace.connect(user2).createPodOrder('0', '100000', '100000')).to.be.revertedWith("Marketplace: Order amount must be > 0.");
+          await expect(this.marketplace.connect(user2).createPodOrder('0', '100000', '100000', EXTERNAL)).to.be.revertedWith("Marketplace: Order amount must be > 0.");
         })
       })
 
@@ -415,7 +417,7 @@ describe('Marketplace', function () {
         beforeEach(async function () {
           this.userBeanBalance = await this.bean.balanceOf(userAddress)
           this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-          this.result = await this.marketplace.connect(user).createPodOrder('500', '100000', '1000')
+          this.result = await this.marketplace.connect(user).createPodOrder('500', '100000', '1000', EXTERNAL)
           this.id = await getOrderId(this.result)
           this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
           this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
@@ -440,26 +442,26 @@ describe('Marketplace', function () {
     describe("Fill", async function () {
       beforeEach(async function () {
         this.order = [userAddress, '100000', '2500'];
-        this.result = await this.marketplace.connect(user).createPodOrder('50', '100000', '2500')
+        this.result = await this.marketplace.connect(user).createPodOrder('50', '100000', '2500', EXTERNAL)
         this.id = await getOrderId(this.result)
       })
 
       describe("revert", async function () {
         it("owner does not own plot", async function () {
-          await expect(this.marketplace.fillPodOrder(this.order, 0, 0, 500, false)).to.revertedWith("Marketplace: Invalid Plot.");
+          await expect(this.marketplace.fillPodOrder(this.order, 0, 0, 500, INTERNAL)).to.revertedWith("Marketplace: Invalid Plot.");
         })
 
         it("plot amount too large", async function () {
-          await expect(this.marketplace.connect(user2).fillPodOrder(this.order, 1000, 700, 500, false)).to.revertedWith("Marketplace: Invalid Plot.");
+          await expect(this.marketplace.connect(user2).fillPodOrder(this.order, 1000, 700, 500, INTERNAL)).to.revertedWith("Marketplace: Invalid Plot.");
         })
 
         it("plot amount too large", async function () {
           await this.field.connect(user2).sowBeans('1200', EXTERNAL);
-          await expect(this.marketplace.connect(user2).fillPodOrder(this.order, 2000, 700, 500, false)).to.revertedWith("Marketplace: Plot too far in line.");
+          await expect(this.marketplace.connect(user2).fillPodOrder(this.order, 2000, 700, 500, INTERNAL)).to.revertedWith("Marketplace: Plot too far in line.");
         })
 
         it("sell too much", async function () {
-          await expect(this.marketplace.connect(user2).fillPodOrder(this.order, 1000, 0, 1000, false)).to.revertedWith("SafeMath: subtraction overflow");
+          await expect(this.marketplace.connect(user2).fillPodOrder(this.order, 1000, 0, 1000, INTERNAL)).to.revertedWith("SafeMath: subtraction overflow");
         })
       })
 
@@ -467,7 +469,7 @@ describe('Marketplace', function () {
         beforeEach(async function () {
           this.beanstalkBalance = await this.bean.balanceOf(this.marketplace.address)
           this.user2BeanBalance = await this.bean.balanceOf(user2Address)
-          this.result = await this.marketplace.connect(user2).fillPodOrder(this.order, 1000, 0, 500, true);
+          this.result = await this.marketplace.connect(user2).fillPodOrder(this.order, 1000, 0, 500, EXTERNAL);
           this.beanstalkBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
         })
@@ -497,7 +499,7 @@ describe('Marketplace', function () {
         beforeEach(async function () {
           this.beanstalkBalance = await this.bean.balanceOf(this.marketplace.address)
           this.user2BeanBalance = await this.bean.balanceOf(user2Address)
-          this.result = await this.marketplace.connect(user2).fillPodOrder(this.order, 1000, 250, 250, true);
+          this.result = await this.marketplace.connect(user2).fillPodOrder(this.order, 1000, 250, 250, EXTERNAL);
           this.beanstalkBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
         })
@@ -527,7 +529,7 @@ describe('Marketplace', function () {
         beforeEach(async function () {
           this.beanstalkBalance = await this.bean.balanceOf(this.marketplace.address)
           this.user2BeanBalance = await this.bean.balanceOf(user2Address)
-          this.result = await this.marketplace.connect(user2).fillPodOrder(this.order, 1000, 0, 500, false);
+          this.result = await this.marketplace.connect(user2).fillPodOrder(this.order, 1000, 0, 500, INTERNAL);
           this.beanstalkBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
         })
@@ -555,10 +557,10 @@ describe('Marketplace', function () {
 
       describe("Full order with active listing", async function () {
         beforeEach(async function () {
-          await this.marketplace.connect(user2).createPodListing('1000', '500', '500', '50000', '5000', false);
+          await this.marketplace.connect(user2).createPodListing('1000', '500', '500', '50000', '5000', EXTERNAL);
           this.beanstalkBalance = await this.bean.balanceOf(this.marketplace.address)
           this.user2BeanBalance = await this.bean.balanceOf(user2Address)
-          this.result = await this.marketplace.connect(user2).fillPodOrder(this.order, 1000, 0, 500, false);
+          this.result = await this.marketplace.connect(user2).fillPodOrder(this.order, 1000, 0, 500, INTERNAL);
           this.beanstalkBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
         })
@@ -592,7 +594,7 @@ describe('Marketplace', function () {
 
     describe("Cancel", async function () {
       beforeEach(async function () {
-        this.result = await this.marketplace.connect(user).createPodOrder('500', '100000', '1000')
+        this.result = await this.marketplace.connect(user).createPodOrder('500', '100000', '1000', EXTERNAL)
         this.id = await getOrderId(this.result)
       })
 
@@ -600,7 +602,7 @@ describe('Marketplace', function () {
         beforeEach(async function () {
           this.userBeanBalance = await this.bean.balanceOf(userAddress)
           this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-          this.result = await this.marketplace.connect(user).cancelPodOrder('100000', '1000', true);
+          this.result = await this.marketplace.connect(user).cancelPodOrder('100000', '1000', EXTERNAL);
           this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
           this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
         })
@@ -624,7 +626,7 @@ describe('Marketplace', function () {
         beforeEach(async function () {
           this.userBeanBalance = await this.bean.balanceOf(userAddress)
           this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-          this.result = await this.marketplace.connect(user).cancelPodOrder('100000', '1000', false);
+          this.result = await this.marketplace.connect(user).cancelPodOrder('100000', '1000', INTERNAL);
           this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
           this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
         })

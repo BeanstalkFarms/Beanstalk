@@ -1,15 +1,12 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
+const { BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE } = require('./utils/constants')
 const { ConvertEncoder } = require('./utils/encoder.js')
 const { to18, toBean, toStalk } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
-
-const THREE_CURVE = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
-const BEAN_3_CURVE = "0x3a70DfA7d2262988064A2D051dd47521E43c9BdD";
-const BEAN_LUSD_CURVE = ""
 
 describe('Curve Convert', function () {
   before(async function () {
@@ -23,15 +20,15 @@ describe('Curve Convert', function () {
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
     this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address);
     this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
-    this.bean = await ethers.getContractAt('MockToken', contracts.bean);
+    this.bean = await ethers.getContractAt('MockToken', BEAN);
+    this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
+    this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
+    this.beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
   
-    this.threeCurve = await ethers.getContractAt('Mock3Curve', THREE_CURVE);
     await this.threeCurve.mint(userAddress, to18('100000'));
-    await this.threeCurve.set_virtual_price(ethers.utils.parseEther('1'));
-    await this.threeCurve.connect(user).set_virtual_price(to18('1'));
+    await this.threePool.set_virtual_price(to18('1'));
     await this.threeCurve.connect(user).approve(this.beanMetapool.address, to18('100000000000'));
 
-    this.beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
     await this.beanMetapool.set_A_precise('1000');
     await this.beanMetapool.set_virtual_price(ethers.utils.parseEther('1'));
     await this.beanMetapool.connect(user).approve(this.threeCurve.address, to18('100000000000'));

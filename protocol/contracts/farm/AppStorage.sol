@@ -59,6 +59,7 @@ contract Account {
         uint256 wrappedBeans; // Dep
         mapping(address => mapping(uint32 => Deposit)) deposits;
         mapping(address => mapping(uint32 => uint256)) withdrawals;
+        uint256 beansPerSprout;
     }
 }
 
@@ -129,8 +130,7 @@ contract Storage {
     }
 
     struct Rain {
-        uint32 start;
-        bool raining;
+        uint256 depreciated;
         uint256 pods;
         uint256 roots;
     }
@@ -140,6 +140,9 @@ contract Storage {
         uint32 lastSop;
         uint8 withdrawSeasons;
         uint32 lastSopSeason;
+        uint32 rainStart;
+        bool raining;
+        bool sprouting;
         uint256 start;
         uint256 period;
         uint256 timestamp;
@@ -187,8 +190,9 @@ struct AppStorage {
     Storage.Weather w;
     //////////////////////////////////
     uint256 earnedBeans;
-    uint256 earnedPlenty;
-    uint256[11] depreciated; // 10 slots to map to depreciated storage variables
+    uint256 sproutedBeans;
+    uint256 totalSprouts;
+    uint256[12] depreciated; // 10 slots to map to depreciated storage variables
     mapping (address => Account.State) a;
     uint32 bip0Start;
     uint32 hotFix3Start;
@@ -199,15 +203,11 @@ struct AppStorage {
     mapping(bytes32 => uint256) podOrders;
     mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
-
     uint256[3] depreciated2; // 3 slots for depreciated storage variables
-
     // New Sops
     mapping (uint32 => uint256) sops;
-    
     // Internal Balances
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
-
     // Unripe
     mapping(address => bytes32) merkleRoots;
     mapping(address => mapping(address => bool)) unripeClaimed;

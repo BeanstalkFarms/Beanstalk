@@ -18,7 +18,6 @@ contract InitReplant {
 
     function init() external {
         s.earnedBeans = 0;
-        s.earnedPlenty = 0;
         s.season.lastSop = 0;
         s.co.initialized = false;
         s.season.withdrawSeasons = 5;

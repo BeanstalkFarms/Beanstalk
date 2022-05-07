@@ -10,10 +10,12 @@ import {LibDiamond} from "./Diamond/LibDiamond.sol";
 /**
  * @author Publius
  * @title Internal Library handles gas efficient function calls between facets.
-**/
+ **/
 
-interface ISiloUpdate {
+interface IBS {
     function update(address account) external payable;
+
+    function capture() external payable returns (int256 bdv);
 }
 
 library LibInternal {
@@ -23,9 +25,14 @@ library LibInternal {
         assembly {
             ds.slot := position
         }
-        address facet = ds.selectorToFacetAndPosition[ISiloUpdate.update.selector].facetAddress;
-        bytes memory myFunctionCall = abi.encodeWithSelector(ISiloUpdate.update.selector, account);
-        (bool success,) = address(facet).delegatecall(myFunctionCall);
-        require(success, "Silo: updateSilo failed.");
+        address facet = ds
+            .selectorToFacetAndPosition[IBS.update.selector]
+            .facetAddress;
+        bytes memory myFunctionCall = abi.encodeWithSelector(
+            IBS.update.selector,
+            account
+        );
+        (bool success, ) = address(facet).delegatecall(myFunctionCall);
+        require(success, "Silo: update failed.");
     }
 }

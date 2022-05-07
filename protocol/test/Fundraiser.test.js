@@ -1,5 +1,6 @@
 const { ZERO_ADDRESS } = require("@openzeppelin/test-helpers/src/constants");
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
+const { BEAN } = require('./utils/constants')
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { BigNumber } = require('bignumber.js')
@@ -20,7 +21,7 @@ describe('Fundraiser', function () {
     this.diamond = contracts.beanstalkDiamond
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
-    this.bean = await ethers.getContractAt('MockToken', contracts.bean)
+    this.bean = await ethers.getContractAt('MockToken', BEAN)
     this.fundraiser = await ethers.getContractAt('MockFundraiserFacet', this.diamond.address)
 
     let tokenFacet = await ethers.getContractFactory('MockToken')

@@ -1,6 +1,6 @@
 /**
  * SPDX-License-Identifier: MIT
-**/
+ **/
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
@@ -16,13 +16,18 @@ import "../ReentrancyGuard.sol";
 /**
  * @author Publius
  * @title Silo handles depositing and withdrawing Beans and LP, and updating the Silo.
-**/
+ **/
 contract ConvertFacet is ReentrancyGuard {
-
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
-    event RemoveSeasons(address indexed account, address indexed token, uint32[] seasons, uint256[] amounts, uint256 amount);
+    event RemoveSeasons(
+        address indexed account,
+        address indexed token,
+        uint32[] seasons,
+        uint256[] amounts,
+        uint256 amount
+    );
 
     struct AssetsRemoved {
         uint256 tokensRemoved;
@@ -34,9 +39,7 @@ contract ConvertFacet is ReentrancyGuard {
         bytes calldata userData,
         uint32[] memory crates,
         uint256[] memory amounts
-    )
-        external nonReentrant
-    {
+    ) external nonReentrant {
         LibInternal.updateSilo(msg.sender);
         (
             address toToken,
@@ -46,7 +49,12 @@ contract ConvertFacet is ReentrancyGuard {
             uint256 bdv
         ) = LibConvert.convert(userData);
 
-        (uint256 grownStalk) = _withdrawForConvert(fromToken, crates, amounts, fromTokenAmount);
+        uint256 grownStalk = _withdrawForConvert(
+            fromToken,
+            crates,
+            amounts,
+            fromTokenAmount
+        );
 
         _depositTokens(toToken, toTokenAmount, bdv, grownStalk);
 
@@ -59,37 +67,68 @@ contract ConvertFacet is ReentrancyGuard {
         uint256[] memory amounts,
         uint256 maxTokens
     ) internal returns (uint256 grownStalkRemoved) {
-        require(seasons.length == amounts.length, "Convert: seasons, amounts are diff lengths.");
-        AssetsRemoved memory a; uint256 depositBDV; uint256 i = 0;
+        require(
+            seasons.length == amounts.length,
+            "Convert: seasons, amounts are diff lengths."
+        );
+        AssetsRemoved memory a;
+        uint256 depositBDV;
+        uint256 i = 0;
         while ((i < seasons.length) && (a.tokensRemoved < maxTokens)) {
             if (a.tokensRemoved.add(amounts[i]) < maxTokens)
-                depositBDV = LibTokenSilo.removeDeposit(msg.sender, token, seasons[i], amounts[i]);
+                depositBDV = LibTokenSilo.removeDeposit(
+                    msg.sender,
+                    token,
+                    seasons[i],
+                    amounts[i]
+                );
             else {
                 amounts[i] = maxTokens.sub(a.tokensRemoved);
-                depositBDV = LibTokenSilo.removeDeposit(msg.sender, token, seasons[i], amounts[i]);
+                depositBDV = LibTokenSilo.removeDeposit(
+                    msg.sender,
+                    token,
+                    seasons[i],
+                    amounts[i]
+                );
             }
             a.tokensRemoved = a.tokensRemoved.add(amounts[i]);
             a.bdvRemoved = a.bdvRemoved.add(depositBDV);
-            a.stalkRemoved = a.stalkRemoved.add(depositBDV.mul(s.season.current-seasons[i]));
+            a.stalkRemoved = a.stalkRemoved.add(
+                depositBDV.mul(s.season.current - seasons[i])
+            );
             i++;
         }
         for (i; i < seasons.length; i++) amounts[i] = 0;
-        emit RemoveSeasons(msg.sender, token, seasons, amounts, a.tokensRemoved);
+        emit RemoveSeasons(
+            msg.sender,
+            token,
+            seasons,
+            amounts,
+            a.tokensRemoved
+        );
 
-        require(a.tokensRemoved == maxTokens, "Convert: Not enough tokens removed.");
+        require(
+            a.tokensRemoved == maxTokens,
+            "Convert: Not enough tokens removed."
+        );
         a.stalkRemoved = a.stalkRemoved.mul(s.ss[token].seeds);
         LibTokenSilo.decrementDepositedToken(token, a.tokensRemoved);
         LibSilo.withdrawSiloAssets(
-            msg.sender, 
-            a.bdvRemoved.mul(s.ss[token].seeds), 
+            msg.sender,
+            a.bdvRemoved.mul(s.ss[token].seeds),
             a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalk))
         );
         return a.stalkRemoved;
     }
 
-    function _depositTokens(address token, uint256 amount, uint256 bdv, uint256 grownStalk) internal {
+    function _depositTokens(
+        address token,
+        uint256 amount,
+        uint256 bdv,
+        uint256 grownStalk
+    ) internal {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
-        
+
         uint256 seeds = bdv.mul(LibTokenSilo.seeds(token));
         uint32 _s;
         if (grownStalk > 0) {
@@ -105,14 +144,16 @@ contract ConvertFacet is ReentrancyGuard {
         LibTokenSilo.incrementDepositedToken(token, amount);
         LibTokenSilo.addDeposit(msg.sender, token, _s, amount, bdv);
     }
-    
+
     function lpToPeg(address pair) external view returns (uint256 lp) {
-        if (pair == C.curveMetapoolAddress()) return LibCurveConvert.lpToPeg(pair);
+        if (pair == C.curveMetapoolAddress())
+            return LibCurveConvert.lpToPeg(pair);
         require(false, "Convert: Pool not supported");
     }
 
     function beansToPeg(address pair) external view returns (uint256 beans) {
-        if (pair == C.curveMetapoolAddress()) return LibCurveConvert.beansToPeg(pair);
+        if (pair == C.curveMetapoolAddress())
+            return LibCurveConvert.beansToPeg(pair);
         require(false, "Convert: Pool not supported");
     }
 }

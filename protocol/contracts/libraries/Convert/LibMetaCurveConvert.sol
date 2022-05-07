@@ -5,7 +5,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../LibAppStorage.sol";
 import "./LibConvertUserData.sol";
 import "../Curve/LibBeanMetaCurve.sol";
@@ -13,15 +13,16 @@ import "../Curve/LibBeanMetaCurve.sol";
 /**
  * @author Publius
  * @title Lib Curve Convert
-**/
+ **/
 library LibMetaCurveConvert {
-
     using SafeMath for uint256;
     using LibConvertUserData for bytes;
 
-
-    function beansAtPeg(uint256[2] memory balances) internal view returns (uint256 beans) {
+    function beansAtPeg(uint256[2] memory balances)
+        internal
+        view
+        returns (uint256 beans)
+    {
         return balances[1].mul(C.curve3Pool().get_virtual_price()).div(1e30);
     }
-
 }

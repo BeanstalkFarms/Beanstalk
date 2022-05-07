@@ -1,16 +1,9 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-
+const { BEAN, THREE_POOL, BEAN_3_CURVE } = require('./utils/constants');
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
-
-const THREE_CURVE = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
-const BEAN_3_CURVE = "0x3a70DfA7d2262988064A2D051dd47521E43c9BdD";
-const LUSD_3_CURVE = "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA";
-const BEAN_LUSD_CURVE = "0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D";
-
-const BN_ZERO = ethers.utils.parseEther('0');
 
 let lastTimestamp = 1700000000;
 let timestamp;
@@ -43,10 +36,9 @@ describe('BDV', function () {
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
-    this.oracle = await ethers.getContractAt('MockOracleFacet', this.diamond.address);
-    this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
-    this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
-    this.bean = await ethers.getContractAt('MockToken', contracts.bean);
+    this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
+    this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address)
+    this.bean = await ethers.getContractAt('MockToken', BEAN);
 
     this.siloToken = await ethers.getContractFactory("MockToken");
     this.siloToken = await this.siloToken.deploy("Silo", "SILO")
@@ -79,8 +71,8 @@ describe('BDV', function () {
 
   describe("Bean Metapool BDV", async function () {
     before(async function () {
-      this.threeCurve = await ethers.getContractAt('Mock3Curve', THREE_CURVE);
-      await this.threeCurve.set_virtual_price(ethers.utils.parseEther('1'));
+      this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
+      await this.threePool.set_virtual_price(ethers.utils.parseEther('1'));
       this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
       await this.beanThreeCurve.set_supply(ethers.utils.parseEther('2000000'));
       await this.beanThreeCurve.set_A_precise('1000');
@@ -101,7 +93,7 @@ describe('BDV', function () {
     })
 
     it("properly checks bdv", async function () {
-      await this.threeCurve.set_virtual_price(ethers.utils.parseEther('1.02'));
+      await this.threePool.set_virtual_price(ethers.utils.parseEther('1.02'));
       this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
       expect(await this.bdv.bdv(BEAN_3_CURVE, ethers.utils.parseEther('2'))).to.equal('1998191');
     })
@@ -109,8 +101,8 @@ describe('BDV', function () {
 
   // describe("Bean LUSD BDV", async function () {
   //   beforeEach(async function () {
-  //     this.threeCurve = await ethers.getContractAt('Mock3Curve', THREE_CURVE);
-  //     await this.threeCurve.set_virtual_price(ethers.utils.parseEther('1'));
+  //     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_CURVE);
+  //     await this.threePool.set_virtual_price(ethers.utils.parseEther('1'));
   //     this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
   //     await this.beanThreeCurve.set_supply(ethers.utils.parseEther('2000000'));
   //     await this.beanThreeCurve.set_A_precise('1000');
