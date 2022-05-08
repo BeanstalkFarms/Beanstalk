@@ -10,7 +10,8 @@ import "../../../libraries/LibIncentive.sol";
 
 /**
  * @author Publius
- * @title Season holds the sunrise function and handles all logic for Season changes.
+ * @title Season Facet
+ * @notice holds the Sunrise function and handles all logic for Season changes.
  **/
 contract SeasonFacet is Weather {
     using SafeMath for uint256;
@@ -22,6 +23,7 @@ contract SeasonFacet is Weather {
      * Sunrise
      **/
 
+    /// @notice advances Beanstalk to the next Season.
     function sunrise() external {
         require(!paused(), "Season: Paused.");
         require(seasonTime() > season(), "Season: Still current Season.");
