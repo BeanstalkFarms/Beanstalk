@@ -17,7 +17,7 @@ contract Sun is Oracle {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
-    event Reward(uint256 harvestable, uint256 earned, uint256 sprouted);
+    event Reward(uint256 harvestable, uint256 earned, uint256 barnRaised);
     event Soil(uint256 soil);
 
     /**
@@ -31,33 +31,34 @@ contract Sun is Oracle {
 
     function rewardBeans(uint256 newSupply) internal {
         uint256 newHarvestable;
-        uint256 newSprouted;
+        uint256 newBarnRaise;
         C.bean().mint(address(this), newSupply);
-        if (s.season.sprouting) {
-            newSprouted = rewardToSprouts(newSupply);
-            newSupply = newSupply.sub(newSprouted);
+        if (s.season.barnRaising) {
+            newBarnRaise = rewardToBarnRaise(newSupply);
+            newSupply = newSupply.sub(newBarnRaise);
         }
         if (s.f.harvestable < s.f.pods) {
             newHarvestable = rewardToHarvestable(newSupply);
             newSupply = newSupply.sub(newHarvestable);
         }
         rewardToSilo(newSupply);
-        emit Reward(newHarvestable, newSupply, newSprouted);
+        emit Reward(newHarvestable, newSupply, newBarnRaise);
         setSoil(newHarvestable.mul(100).div(100 + s.w.yield));
     }
 
-    function rewardToSprouts(uint256 amount)
+    function rewardToBarnRaise(uint256 amount)
         internal
-        returns (uint256 newSprouted)
+        returns (uint256 brNewBeans)
     {
-        uint256 sproutRemaining = uint256(s.totalSprouts - s.sproutedBeans); // Note: SafeMath is redundant here.
-        newSprouted = amount.div(C.getSproutDenominator());
-        if (sproutRemaining < newSprouted) {
-            newSprouted = sproutRemaining;
-            s.season.sprouting = false;
+        uint256 brRemainingBeans = uint256(s.brOwedBeans - s.brEarnedBeans); // Note: SafeMath is redundant here.
+        brNewBeans = amount.div(C.getBarnRaiseDenominator());
+        if (brRemainingBeans < brNewBeans) {
+            brNewBeans = brRemainingBeans;
+            s.season.barnRaising = false;
         }
-        s.sproutedBeans = s.sproutedBeans + newSprouted; // Note: SafeMath is redundant here.
+        s.brEarnedBeans = s.brEarnedBeans + brNewBeans; // Note: SafeMath is redundant here.
     }
+
 
     function rewardToHarvestable(uint256 amount)
         internal

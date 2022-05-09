@@ -23,11 +23,11 @@ library LibBalance {
     using SafeCast for uint256;
 
     /**
-     * @dev Emitted when a user's Internal Balance changes, through interacting using Internal Balance.
+     * @dev Emitted when a account's Internal Balance changes, through interacting using Internal Balance.
      *
      */
     event InternalBalanceChanged(
-        address indexed user,
+        address indexed account,
         IERC20 indexed token,
         int256 delta
     );

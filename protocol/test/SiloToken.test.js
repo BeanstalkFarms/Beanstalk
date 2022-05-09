@@ -92,7 +92,7 @@ describe('Silo Token', function () {
       })
 
       it('emits Deposit event', async function () {
-        await expect(this.result).to.emit(this.silo, 'Deposit').withArgs(userAddress, this.siloToken.address, 2, '1000', '1000');
+        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, this.siloToken.address, 2, '1000', '1000');
       });
     });
   
@@ -194,8 +194,8 @@ describe('Silo Token', function () {
         });
     
         it('emits Remove and Withdrawal event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveSeason').withArgs(userAddress, this.siloToken.address, 2, '1000');
-          await expect(this.result).to.emit(this.silo, 'Withdraw').withArgs(userAddress, this.siloToken.address, 27, '1000');
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, this.siloToken.address, 2, '1000');
+          await expect(this.result).to.emit(this.silo, 'AddWithdrawal').withArgs(userAddress, this.siloToken.address, 27, '1000');
         });
       });
       
@@ -226,8 +226,8 @@ describe('Silo Token', function () {
         });
 
         it('emits Remove and Withdrawal event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveSeason').withArgs(userAddress, this.siloToken.address, 2, '500');
-          await expect(this.result).to.emit(this.silo, 'Withdraw').withArgs(userAddress, this.siloToken.address, 27, '500');
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, this.siloToken.address, 2, '500');
+          await expect(this.result).to.emit(this.silo, 'AddWithdrawal').withArgs(userAddress, this.siloToken.address, 27, '500');
         });
       });
     });
@@ -259,8 +259,8 @@ describe('Silo Token', function () {
           expect(dep[1]).to.equal('0')
         });
         it('emits Remove and Withdrawal event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveSeasons').withArgs(userAddress, this.siloToken.address, [2,3], ['500', '1000'], '1500');
-          await expect(this.result).to.emit(this.silo, 'Withdraw').withArgs(userAddress, this.siloToken.address, 28, '1500');
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [2,3], ['500', '1000'], '1500');
+          await expect(this.result).to.emit(this.silo, 'AddWithdrawal').withArgs(userAddress, this.siloToken.address, 28, '1500');
         });
       });
       describe('2 token crates', function () {
@@ -289,8 +289,8 @@ describe('Silo Token', function () {
           expect(dep[1]).to.equal('0')
         });
         it('emits Remove and Withdrawal event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveSeasons').withArgs(userAddress, this.siloToken.address, [2,3], ['1000', '1000'], '2000');
-          await expect(this.result).to.emit(this.silo, 'Withdraw').withArgs(userAddress, this.siloToken.address, 28, '2000');
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [2,3], ['1000', '1000'], '2000');
+          await expect(this.result).to.emit(this.silo, 'AddWithdrawal').withArgs(userAddress, this.siloToken.address, 28, '2000');
         });
       });
     });
@@ -320,7 +320,7 @@ describe('Silo Token', function () {
       });
 
       it('emits a claim ', async function () {
-        await expect(this.result).to.emit(this.silo, 'ClaimSeason').withArgs(userAddress, this.siloToken.address, 27, '1000');
+        await expect(this.result).to.emit(this.silo, 'RemoveWithdrawal').withArgs(userAddress, this.siloToken.address, 27, '1000');
       });
     });
 
@@ -345,7 +345,7 @@ describe('Silo Token', function () {
       });
 
       it('emits a claim ', async function () {
-        await expect(this.result).to.emit(this.silo, 'ClaimSeasons').withArgs(userAddress, this.siloToken.address, [27, 52], '2000');
+        await expect(this.result).to.emit(this.silo, 'RemoveWithdrawals').withArgs(userAddress, this.siloToken.address, [27, 52], '2000');
       });
     });
   });
@@ -424,8 +424,8 @@ describe('Silo Token', function () {
           expect(dep[1]).to.equal(to6('4.5'))
         });
         it('emits Remove and Withdrawal event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveSeason').withArgs(userAddress, UNRIPE_BEAN, 2, to6('1'));
-          await expect(this.result).to.emit(this.silo, 'Withdraw').withArgs(userAddress, UNRIPE_BEAN, 27, to6('1'));
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, 2, to6('1'));
+          await expect(this.result).to.emit(this.silo, 'AddWithdrawal').withArgs(userAddress, UNRIPE_BEAN, 27, to6('1'));
         });
       })
     })
@@ -473,8 +473,8 @@ describe('Silo Token', function () {
           expect(dep[1]).to.equal(to6('4.5'))
         });
         it('emits Remove and Withdrawal event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveSeason').withArgs(userAddress, UNRIPE_BEAN, 2, to6('11'));
-          await expect(this.result).to.emit(this.silo, 'Withdraw').withArgs(userAddress, UNRIPE_BEAN, 27, to6('11'));
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, 2, to6('11'));
+          await expect(this.result).to.emit(this.silo, 'AddWithdrawal').withArgs(userAddress, UNRIPE_BEAN, 27, to6('11'));
         });
       })
     })
@@ -527,8 +527,8 @@ describe('Silo Token', function () {
         });
 
         it('emits Remove and Withdrawal event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveSeason').withArgs(userAddress, UNRIPE_LP, 2, to6('1'));
-          await expect(this.result).to.emit(this.silo, 'Withdraw').withArgs(userAddress, UNRIPE_LP, 27, to6('1'));
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_LP, 2, to6('1'));
+          await expect(this.result).to.emit(this.silo, 'AddWithdrawal').withArgs(userAddress, UNRIPE_LP, 27, to6('1'));
         });
       })
     })
@@ -578,8 +578,8 @@ describe('Silo Token', function () {
         });
 
         it('emits Remove and Withdrawal event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveSeason').withArgs(userAddress, UNRIPE_LP, 2, to6('1'));
-          await expect(this.result).to.emit(this.silo, 'Withdraw').withArgs(userAddress, UNRIPE_LP, 27, to6('1'));
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_LP, 2, to6('1'));
+          await expect(this.result).to.emit(this.silo, 'AddWithdrawal').withArgs(userAddress, UNRIPE_LP, 27, to6('1'));
         });
       })
     })
@@ -628,8 +628,8 @@ describe('Silo Token', function () {
         });
 
         it('emits Remove and Withdrawal event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveSeason').withArgs(userAddress, UNRIPE_LP, 2, to6('1'));
-          await expect(this.result).to.emit(this.silo, 'Withdraw').withArgs(userAddress, UNRIPE_LP, 27, to6('1'));
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_LP, 2, to6('1'));
+          await expect(this.result).to.emit(this.silo, 'AddWithdrawal').withArgs(userAddress, UNRIPE_LP, 27, to6('1'));
         });
       })
     })
@@ -681,8 +681,8 @@ describe('Silo Token', function () {
         });
 
         it('emits Remove and Withdrawal event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveSeason').withArgs(userAddress, UNRIPE_LP, 2, to6('9'));
-          await expect(this.result).to.emit(this.silo, 'Withdraw').withArgs(userAddress, UNRIPE_LP, 27, to6('9'));
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_LP, 2, to6('9'));
+          await expect(this.result).to.emit(this.silo, 'AddWithdrawal').withArgs(userAddress, UNRIPE_LP, 27, to6('9'));
         });
       })
     })

@@ -18,40 +18,40 @@ contract TokenSilo is Silo {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
-    event Deposit(
+    event AddDeposit(
         address indexed account,
         address indexed token,
         uint256 season,
         uint256 amount,
         uint256 bdv
     );
-    event RemoveSeasons(
+    event RemoveDeposits(
         address indexed account,
         address indexed token,
         uint32[] seasons,
         uint256[] amounts,
         uint256 amount
     );
-    event RemoveSeason(
+    event RemoveDeposit(
         address indexed account,
         address indexed token,
         uint32 season,
         uint256 amount
     );
 
-    event Withdraw(
+    event AddWithdrawal(
         address indexed account,
         address indexed token,
         uint32 season,
         uint256 amount
     );
-    event ClaimSeasons(
+    event RemoveWithdrawals(
         address indexed account,
         address indexed token,
         uint32[] seasons,
         uint256 amount
     );
-    event ClaimSeason(
+    event RemoveWithdrawal(
         address indexed account,
         address indexed token,
         uint32 season,
@@ -198,7 +198,7 @@ contract TokenSilo is Silo {
         stalkRemoved = bdv.mul(s.ss[token].stalk).add(
             LibSilo.stalkReward(seedsRemoved, _season() - season)
         );
-        emit RemoveSeason(account, token, season, amount);
+        emit RemoveDeposit(account, token, season, amount);
     }
 
     function removeDeposits(
@@ -227,7 +227,7 @@ contract TokenSilo is Silo {
         ar.stalkRemoved = ar.stalkRemoved.add(
             ar.bdvRemoved.mul(s.ss[token].stalk)
         );
-        emit RemoveSeasons(account, token, seasons, amounts, ar.tokensRemoved);
+        emit RemoveDeposits(account, token, seasons, amounts, ar.tokensRemoved);
     }
 
     function addTokenWithdrawal(
@@ -242,7 +242,7 @@ contract TokenSilo is Silo {
         s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.add(
             amount
         );
-        emit Withdraw(account, token, arrivalSeason, amount);
+        emit AddWithdrawal(account, token, arrivalSeason, amount);
     }
 
     function removeTokenWithdrawals(
@@ -319,7 +319,7 @@ contract TokenSilo is Silo {
         ar.stalkRemoved = ar.stalkRemoved.add(
             ar.bdvRemoved.mul(s.ss[token].stalk)
         );
-        emit RemoveSeasons(sender, token, seasons, amounts, ar.tokensRemoved);
+        emit RemoveDeposits(sender, token, seasons, amounts, ar.tokensRemoved);
         LibSilo.transferSiloAssets(
             sender,
             recipient,

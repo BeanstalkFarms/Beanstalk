@@ -71,7 +71,7 @@ describe('Convert', function () {
       })
 
       it('Emits event', async function () {
-        await expect(this.result).to.emit(this.convert, 'RemoveSeasons').withArgs(userAddress, this.siloToken.address, [3], ['100'], '100');
+        await expect(this.result).to.emit(this.convert, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [3], ['100'], '100');
         await expect(this.result).to.emit(this.convert, 'MockConvert').withArgs('0');
       })
 
@@ -102,7 +102,7 @@ describe('Convert', function () {
       })
 
       it('Emits event', async function () {
-        await expect(this.result).to.emit(this.convert, 'RemoveSeasons').withArgs(userAddress, this.siloToken.address, [3, 2], ['100', '0'], '100');
+        await expect(this.result).to.emit(this.convert, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [3, 2], ['100', '0'], '100');
         await expect(this.result).to.emit(this.convert, 'MockConvert').withArgs('0');
       })
 
@@ -133,7 +133,7 @@ describe('Convert', function () {
       })
 
       it('Emits event', async function () { 
-        await expect(this.result).to.emit(this.convert, 'RemoveSeasons').withArgs(userAddress, this.siloToken.address, [2, 3], ['100', '50'], '150');
+        await expect(this.result).to.emit(this.convert, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [2, 3], ['100', '50'], '150');
         await expect(this.result).to.emit(this.convert, 'MockConvert').withArgs('100');
       })
 
@@ -164,7 +164,7 @@ describe('Convert', function () {
       })
 
       it('Emits event', async function () { 
-        await expect(this.result).to.emit(this.convert, 'RemoveSeasons').withArgs(userAddress, this.siloToken.address, [2, 3], ['100','50'], '150');
+        await expect(this.result).to.emit(this.convert, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [2, 3], ['100','50'], '150');
         await expect(this.result).to.emit(this.convert, 'MockConvert').withArgs('100');
       })
 
@@ -207,7 +207,7 @@ describe('Convert', function () {
       });
 
       it('Emits event', async function () {
-        await expect(this.result).to.emit(this.silo, 'Deposit').withArgs(user2Address, this.siloToken.address, 3, '100', '100');
+        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user2Address, this.siloToken.address, 3, '100', '100');
       })
 
       it('Decrements totals', async function () {
@@ -234,7 +234,7 @@ describe('Convert', function () {
       });
 
       it('Emits event', async function () {
-        await expect(this.result).to.emit(this.silo, 'Deposit').withArgs(user2Address, this.siloToken.address, 2, '100', '100');
+        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user2Address, this.siloToken.address, 2, '100', '100');
       })
 
       it('Decrements totals', async function () {
@@ -261,7 +261,7 @@ describe('Convert', function () {
       });
 
       it('Emits event', async function () {
-        await expect(this.result).to.emit(this.silo, 'Deposit').withArgs(user2Address, this.siloToken.address, 1, '100', '100');
+        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user2Address, this.siloToken.address, 1, '100', '100');
       })
 
       it('Decrements totals', async function () {

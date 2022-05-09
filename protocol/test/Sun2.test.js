@@ -14,7 +14,7 @@ describe('Sun', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
-    this.sprout = await ethers.getContractAt('MockSproutFacet', this.diamond.address)
+    this.barnRaise = await ethers.getContractAt('MockBarnRaiseFacet', this.diamond.address)
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
 
@@ -72,15 +72,15 @@ describe('Sun', function () {
     expect(await this.silo.totalEarnedBeans()).to.be.equal('100');
   })
 
-  it("all sprouting", async function () {
+  it("all barnRaising", async function () {
     await this.field.incrementTotalPodsE('50');
-    await this.sprout.setSproutE(true, '50');
+    await this.barnRaise.setBarnRaiseE(true, '50');
     this.result = await this.season.sunSunrise('200');
     await expect(this.result).to.emit(this.season, 'Soil').withArgs('49');
     await expect(this.result).to.emit(this.season, 'Reward').withArgs('50', '100', '50');
 
-    expect(await this.sprout.sprouting()).to.be.equal(false);
-    expect(await this.sprout.totalSprouted()).to.be.equal('50');
+    expect(await this.barnRaise.barnRaising()).to.be.equal(false);
+    expect(await this.barnRaise.totalEarnedBR()).to.be.equal('50');
 
     expect(await this.field.totalHarvestable()).to.be.equal('50');
 
@@ -88,15 +88,15 @@ describe('Sun', function () {
     expect(await this.silo.totalEarnedBeans()).to.be.equal('100');
   })
 
-  it("all sprouting", async function () {
+  it("all barnRaising", async function () {
     await this.field.incrementTotalPodsE('50');
-    await this.sprout.setSproutE(true, '50');
+    await this.barnRaise.setBarnRaiseE(true, '50');
     this.result = await this.season.sunSunrise('200');
     await expect(this.result).to.emit(this.season, 'Soil').withArgs('49');
     await expect(this.result).to.emit(this.season, 'Reward').withArgs('50', '100', '50');
 
-    expect(await this.sprout.sprouting()).to.be.equal(false);
-    expect(await this.sprout.totalSprouted()).to.be.equal('50');
+    expect(await this.barnRaise.barnRaising()).to.be.equal(false);
+    expect(await this.barnRaise.totalEarnedBR()).to.be.equal('50');
 
     expect(await this.field.totalHarvestable()).to.be.equal('50');
 
@@ -104,15 +104,15 @@ describe('Sun', function () {
     expect(await this.silo.totalEarnedBeans()).to.be.equal('100');
   })
 
-  it("some sprouting", async function () {
+  it("some barnRaising", async function () {
     await this.field.incrementTotalPodsE('100');
-    await this.sprout.setSproutE(true, '100');
+    await this.barnRaise.setBarnRaiseE(true, '100');
     this.result = await this.season.sunSunrise('150');
     await expect(this.result).to.emit(this.season, 'Soil').withArgs('49');
     await expect(this.result).to.emit(this.season, 'Reward').withArgs('50', '50', '50');
 
-    expect(await this.sprout.sprouting()).to.be.equal(true);
-    expect(await this.sprout.totalSprouted()).to.be.equal('50');
+    expect(await this.barnRaise.barnRaising()).to.be.equal(true);
+    expect(await this.barnRaise.totalEarnedBR()).to.be.equal('50');
 
     expect(await this.field.totalHarvestable()).to.be.equal('50');
 

@@ -17,6 +17,17 @@ import "hardhat/console.sol";
 library LibSilo {
     using SafeMath for uint256;
 
+    event SeedsBalanceChanged(
+        address indexed account,
+        int256 delta
+    );
+
+    event StalkBalanceChanged(
+        address indexed account,
+        int256 delta,
+        int256 deltaRoots
+    );
+
     /**
      * Silo
      **/
@@ -53,6 +64,7 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.s.seeds = s.s.seeds.add(seeds);
         s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
+        emit SeedsBalanceChanged(account, int256(seeds));
     }
 
     function incrementBalanceOfStalk(address account, uint256 stalk) internal {
@@ -66,12 +78,14 @@ library LibSilo {
 
         s.s.roots = s.s.roots.add(roots);
         s.a[account].roots = s.a[account].roots.add(roots);
+        emit StalkBalanceChanged(account, int256(stalk), int256(roots));
     }
 
     function decrementBalanceOfSeeds(address account, uint256 seeds) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.s.seeds = s.s.seeds.sub(seeds);
         s.a[account].s.seeds = s.a[account].s.seeds.sub(seeds);
+        emit SeedsBalanceChanged(account, -int256(seeds));
     }
 
     function decrementBalanceOfStalk(address account, uint256 stalk) private {
@@ -87,6 +101,7 @@ library LibSilo {
 
         s.s.roots = s.s.roots.sub(roots);
         s.a[account].roots = s.a[account].roots.sub(roots);
+        emit StalkBalanceChanged(account, -int256(stalk), -int256(roots));
     }
 
     function transferSeeds(

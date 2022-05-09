@@ -21,7 +21,7 @@ contract ConvertFacet is ReentrancyGuard {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
-    event RemoveSeasons(
+    event RemoveDeposits(
         address indexed account,
         address indexed token,
         uint32[] seasons,
@@ -99,7 +99,7 @@ contract ConvertFacet is ReentrancyGuard {
             i++;
         }
         for (i; i < seasons.length; i++) amounts[i] = 0;
-        emit RemoveSeasons(
+        emit RemoveDeposits(
             msg.sender,
             token,
             seasons,

@@ -59,7 +59,7 @@ contract Account {
         uint256 wrappedBeans; // Dep
         mapping(address => mapping(uint32 => Deposit)) deposits;
         mapping(address => mapping(uint32 => uint256)) withdrawals;
-        uint256 beansPerSprout;
+        uint256 beansPerBRToken;
     }
 }
 
@@ -142,7 +142,7 @@ contract Storage {
         uint32 lastSopSeason;
         uint32 rainStart;
         bool raining;
-        bool sprouting;
+        bool barnRaising;
         uint256 start;
         uint256 period;
         uint256 timestamp;
@@ -190,9 +190,10 @@ struct AppStorage {
     Storage.Weather w;
     //////////////////////////////////
     uint256 earnedBeans;
-    uint256 sproutedBeans;
-    uint256 totalSprouts;
-    uint256[12] depreciated; // 10 slots to map to depreciated storage variables
+    uint256 brEarnedBeans;
+    uint256 brOwedBeans;
+    uint256 brTokens;
+    uint256[11] depreciated; // 10 slots to map to depreciated storage variables
     mapping (address => Account.State) a;
     uint32 bip0Start;
     uint32 hotFix3Start;

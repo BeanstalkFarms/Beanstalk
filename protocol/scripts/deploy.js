@@ -99,7 +99,7 @@ async function main(scriptName, verbose = true, mock = false) {
     pauseFacet,
     seasonFacet,
     siloFacet,
-    sproutFacet,
+    barnRaiseFacet,
     tokenFacet,
     unripeClaimFacet
   ] = mock ? await deployFacets(
@@ -112,7 +112,7 @@ async function main(scriptName, verbose = true, mock = false) {
       'PauseFacet',
       'MockSeasonFacet',
       'MockSiloFacet',
-      'MockSproutFacet',
+      'MockBarnRaiseFacet',
       'TokenFacet',
       'MockUnripeClaimFacet'],
   ) : await deployFacets(
@@ -125,7 +125,7 @@ async function main(scriptName, verbose = true, mock = false) {
       'PauseFacet',
       'SeasonFacet',
       'SiloFacet',
-      'SproutFacet',
+      'BarnRaiseFacet',
       'TokenFacet',
       'UnripeClaimFacet'],
   )
@@ -152,7 +152,7 @@ async function main(scriptName, verbose = true, mock = false) {
       ['PauseFacet', pauseFacet],
       ['SeasonFacet', seasonFacet],
       ['SiloFacet', siloFacet],
-      ['SproutFacet', sproutFacet],
+      ['BarnRaiseFacet', barnRaiseFacet],
       ['TokenFacet', tokenFacet],
       ['UnripeClaimFacet', unripeClaimFacet]
     ],
@@ -188,7 +188,7 @@ async function main(scriptName, verbose = true, mock = false) {
     pauseFacet,
     seasonFacet,
     siloFacet,
-    sproutFacet,
+    barnRaiseFacet,
     tokenFacet,
     unripeClaimFacet
   }

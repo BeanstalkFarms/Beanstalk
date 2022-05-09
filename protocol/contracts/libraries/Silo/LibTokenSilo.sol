@@ -17,7 +17,7 @@ import "./LibUnripeSilo.sol";
 library LibTokenSilo {
     using SafeMath for uint256;
 
-    event Deposit(
+    event AddDeposit(
         address indexed account,
         address indexed token,
         uint256 season,
@@ -70,7 +70,7 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.a[account].deposits[token][_s].amount += uint128(amount);
         s.a[account].deposits[token][_s].bdv += uint128(bdv);
-        emit Deposit(account, token, _s, amount, bdv);
+        emit AddDeposit(account, token, _s, amount, bdv);
     }
 
     function decrementDepositedToken(address token, uint256 amount) internal {

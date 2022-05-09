@@ -64,7 +64,7 @@ contract SiloFacet is TokenSilo {
     ) external payable nonReentrant {
         uint256 amount = removeTokenWithdrawal(msg.sender, token, season);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
-        emit ClaimSeason(msg.sender, token, season, amount);
+        emit RemoveWithdrawal(msg.sender, token, season, amount);
     }
 
     function claimSeasons(
@@ -74,7 +74,7 @@ contract SiloFacet is TokenSilo {
     ) external payable nonReentrant {
         uint256 amount = removeTokenWithdrawals(msg.sender, token, seasons);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
-        emit ClaimSeasons(msg.sender, token, seasons, amount);
+        emit RemoveWithdrawals(msg.sender, token, seasons, amount);
     }
 
     /*

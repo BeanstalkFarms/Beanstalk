@@ -30,7 +30,7 @@ library C {
     uint256 private constant SOP_PRECISION = 1e24;
 
     // Sun
-    uint256 private constant SPROUT_DENOMINATOR = 3;
+    uint256 private constant BARN_RAISE_DENOMINATOR = 3;
     uint256 private constant HARVEST_DENOMINATOR =2;
 
     // Weather
@@ -70,8 +70,8 @@ library C {
         return BASE_ADVANCE_INCENTIVE;
     }
 
-    function getSproutDenominator() internal pure returns (uint256) {
-        return SPROUT_DENOMINATOR;
+    function getBarnRaiseDenominator() internal pure returns (uint256) {
+        return BARN_RAISE_DENOMINATOR;
     }
 
     function getHarvestDenominator() internal pure returns (uint256) {

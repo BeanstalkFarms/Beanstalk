@@ -130,9 +130,9 @@ describe('Curve Convert', function () {
       });
 
       it('emits events', async function () {
-        await expect(this.result).to.emit(this.silo, 'RemoveSeasons')
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
           .withArgs(userAddress, this.bean.address, [2], [toBean('100')], toBean('100'));
-        await expect(this.result).to.emit(this.silo, 'Deposit')
+        await expect(this.result).to.emit(this.silo, 'AddDeposit')
           .withArgs(userAddress, this.beanMetapool.address, 2, '100634476734756985505', toBean('100'));
       });
     });
@@ -165,9 +165,9 @@ describe('Curve Convert', function () {
       });
 
       it('emits events', async function () {
-        await expect(this.result).to.emit(this.silo, 'RemoveSeasons')
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
           .withArgs(userAddress, this.bean.address, [2], [toBean('200')], toBean('200'));
-        await expect(this.result).to.emit(this.silo, 'Deposit')
+        await expect(this.result).to.emit(this.silo, 'AddDeposit')
           .withArgs(userAddress, this.beanMetapool.address, 2, '200832430692705624354', toBean('200'));
       });
     });
@@ -201,9 +201,9 @@ describe('Curve Convert', function () {
       });
 
       it('emits events', async function () {
-        await expect(this.result).to.emit(this.silo, 'RemoveSeasons')
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
           .withArgs(userAddress, this.bean.address, [2], [toBean('200')], toBean('200'));
-        await expect(this.result).to.emit(this.silo, 'Deposit')
+        await expect(this.result).to.emit(this.silo, 'AddDeposit')
           .withArgs(userAddress, this.beanMetapool.address, 3, '200832430692705624354', toBean('200'));
       });
     });
@@ -238,9 +238,9 @@ describe('Curve Convert', function () {
       });
 
       it('emits events', async function () {
-        await expect(this.result).to.emit(this.silo, 'RemoveSeasons')
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
           .withArgs(userAddress, this.bean.address, [2], [toBean('200')], toBean('200'));
-        await expect(this.result).to.emit(this.silo, 'Deposit')
+        await expect(this.result).to.emit(this.silo, 'AddDeposit')
           .withArgs(userAddress, this.beanMetapool.address, 3, '200832430692705624354', toBean('200'));
       });
     });
@@ -278,9 +278,9 @@ describe('Curve Convert', function () {
       });
 
       it('emits events', async function () {
-        await expect(this.result).to.emit(this.silo, 'RemoveSeasons')
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
           .withArgs(userAddress, this.bean.address, [2, 6], [toBean('100'), toBean('100')], toBean('200'));
-        await expect(this.result).to.emit(this.silo, 'Deposit')
+        await expect(this.result).to.emit(this.silo, 'AddDeposit')
           .withArgs(userAddress, this.beanMetapool.address, 5, '200832430692705624354', toBean('200'));
       });
     });
@@ -335,9 +335,9 @@ describe('Curve Convert', function () {
       });
 
       it('emits events', async function () {
-        await expect(this.result).to.emit(this.silo, 'RemoveSeasons')
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
           .withArgs(userAddress, this.beanMetapool.address, [2], [to18('100')], to18('100'));
-        await expect(this.result).to.emit(this.silo, 'Deposit')
+        await expect(this.result).to.emit(this.silo, 'AddDeposit')
           .withArgs(userAddress, this.bean.address, 2, '100618167', '100618167');
       });
     });
@@ -371,9 +371,9 @@ describe('Curve Convert', function () {
       });
 
       it('emits events', async function () {
-        await expect(this.result).to.emit(this.silo, 'RemoveSeasons')
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
           .withArgs(userAddress, this.beanMetapool.address, [2], ['199167569307294375646'], '199167569307294375646');
-        await expect(this.result).to.emit(this.silo, 'Deposit')
+        await expect(this.result).to.emit(this.silo, 'AddDeposit')
           .withArgs(userAddress, this.bean.address, 2, '199999999', '199999999');
       });
     });
@@ -407,9 +407,9 @@ describe('Curve Convert', function () {
       });
 
       it('emits events', async function () {
-        await expect(this.result).to.emit(this.silo, 'RemoveSeasons')
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
           .withArgs(userAddress, this.beanMetapool.address, [2], [to18('100')], to18('100'));
-        await expect(this.result).to.emit(this.silo, 'Deposit')
+        await expect(this.result).to.emit(this.silo, 'AddDeposit')
           .withArgs(userAddress, this.bean.address, 2, '100618167', '100618167');
       });
     });
@@ -444,9 +444,9 @@ describe('Curve Convert', function () {
       });
 
       it('emits events', async function () {
-        await expect(this.result).to.emit(this.silo, 'RemoveSeasons')
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
           .withArgs(userAddress, this.beanMetapool.address, [2,3], [to18('50'), to18('50')], to18('100'));
-        await expect(this.result).to.emit(this.silo, 'Deposit')
+        await expect(this.result).to.emit(this.silo, 'AddDeposit')
           .withArgs(userAddress, this.bean.address, 3, '100618167', '100618167');
       });
     });
