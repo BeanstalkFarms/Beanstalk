@@ -50,7 +50,7 @@ contract FundraiserFacet is ReentrancyGuard {
         uint256 remaining = s.fundraisers[id].remaining;
         require(remaining > 0, "Fundraiser: already completed.");
         if (amount > remaining) amount = remaining;
-        LibTransfer.receiveToken(
+        amount = LibTransfer.receiveToken(
             IERC20(s.fundraisers[id].token),
             amount,
             msg.sender,

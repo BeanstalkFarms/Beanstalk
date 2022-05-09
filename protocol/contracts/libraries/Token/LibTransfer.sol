@@ -32,13 +32,14 @@ library LibTransfer {
         uint256 amount,
         From fromMode,
         To toMode
-    ) internal {
+    ) internal returns (uint256 transferredAmount) {
         if (fromMode == From.EXTERNAL && toMode == To.EXTERNAL) {
             token.transferFrom(msg.sender, recipient, amount);
-            return;
+            return amount;
         }
-        receiveToken(token, amount, msg.sender, fromMode);
+        amount = receiveToken(token, amount, msg.sender, fromMode);
         sendToken(token, amount, recipient, toMode);
+        return amount;
     }
 
     function receiveToken(
@@ -59,6 +60,7 @@ library LibTransfer {
                 return receivedAmount;
         }
         token.safeTransferFrom(sender, address(this), amount - receivedAmount);
+        return amount;
     }
 
     function sendToken(
