@@ -43,7 +43,7 @@ contract MarketplaceFacet is Order {
         uint256 beanAmount,
         LibTransfer.From mode
     ) external {
-        LibTransfer.transferToken(
+        beanAmount = LibTransfer.transferToken(
             C.bean(),
             l.account,
             beanAmount,
@@ -74,7 +74,7 @@ contract MarketplaceFacet is Order {
         uint256 maxPlaceInLine,
         LibTransfer.From mode
     ) external returns (bytes32 id) {
-        LibTransfer.receiveToken(C.bean(), beanAmount, msg.sender, mode);
+        beanAmount = LibTransfer.receiveToken(C.bean(), beanAmount, msg.sender, mode);
         return _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine);
     }
 

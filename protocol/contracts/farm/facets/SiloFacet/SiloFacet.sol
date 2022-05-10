@@ -27,7 +27,7 @@ contract SiloFacet is TokenSilo {
         uint256 amount,
         LibTransfer.From mode
     ) external payable nonReentrant updateSilo {
-        LibTransfer.receiveToken(IERC20(token), amount, msg.sender, mode);
+        amount = LibTransfer.receiveToken(IERC20(token), amount, msg.sender, mode);
         _deposit(msg.sender, token, amount);
     }
 

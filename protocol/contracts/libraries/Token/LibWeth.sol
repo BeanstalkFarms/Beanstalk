@@ -22,7 +22,7 @@ library LibWeth {
     }
 
     function unwrap(uint256 amount, LibTransfer.From mode) internal {
-        LibTransfer.receiveToken(IERC20(WETH), amount, msg.sender, mode);
+        amount = LibTransfer.receiveToken(IERC20(WETH), amount, msg.sender, mode);
         withdraw(amount);
         (bool success, ) = msg.sender.call{value: amount}(new bytes(0));
         require(success, "Weth: unwrap failed");

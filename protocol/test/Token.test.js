@@ -126,7 +126,7 @@ describe('Token', function () {
 
             it('internal + external', async function () {
                 await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
-                this.result = await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.recipient.address, '200', INTERNAL_TOLERANT, INTERNAL);
+                this.result = await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.recipient.address, '250', INTERNAL_TOLERANT, INTERNAL);
                 checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
                 checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '200', '0', '200')
                 await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')

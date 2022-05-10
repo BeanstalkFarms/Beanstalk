@@ -60,7 +60,7 @@ contract FieldFacet is ReentrancyGuard {
         if (mode == LibTransfer.From.EXTERNAL)
             C.bean().burnFrom(msg.sender, amount);
         else {
-            LibTransfer.receiveToken(C.bean(), amount, msg.sender, mode);
+            amount = LibTransfer.receiveToken(C.bean(), amount, msg.sender, mode);
             C.bean().burn(amount);
         }
     }
