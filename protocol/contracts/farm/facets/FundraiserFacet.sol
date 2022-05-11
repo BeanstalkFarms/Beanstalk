@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "../ReentrancyGuard.sol";
+import "../../libraries/Diamond/LibDiamond.sol";
 import "../../libraries/LibDibbler.sol";
 import "../../libraries/Token/LibTransfer.sol";
 
@@ -31,12 +32,6 @@ contract FundraiserFacet is ReentrancyGuard {
         uint256 amount
     );
     event CompleteFundraiser(uint32 indexed id);
-    event Sow(
-        address indexed account,
-        uint256 index,
-        uint256 beans,
-        uint256 pods
-    );
 
     /**
      * Fundraise
@@ -46,7 +41,7 @@ contract FundraiserFacet is ReentrancyGuard {
         uint32 id,
         uint256 amount,
         LibTransfer.From mode
-    ) public nonReentrant returns (uint256) {
+    ) public payable nonReentrant returns (uint256) {
         uint256 remaining = s.fundraisers[id].remaining;
         require(remaining > 0, "Fundraiser: already completed.");
         if (amount > remaining) amount = remaining;
@@ -80,11 +75,8 @@ contract FundraiserFacet is ReentrancyGuard {
         address payee,
         address token,
         uint256 amount
-    ) public {
-        require(
-            msg.sender == address(this),
-            "Fundraiser: sender must be Beanstalk."
-        );
+    ) external payable {
+        LibDiamond.enforceIsOwnerOrContract();
         uint32 id = s.fundraiserIndex;
         s.fundraisers[id].token = token;
         s.fundraisers[id].remaining = amount;

@@ -14,13 +14,6 @@ import "../LibAppStorage.sol";
  **/
 
 interface IBS {
-    function whitelistToken(
-        address token,
-        bytes4 selector,
-        uint32 stalk,
-        uint32 seeds
-    ) external;
-
     function lusdToBDV(uint256 amount) external view returns (uint256);
 
     function curveToBDV(uint256 amount) external view returns (uint256);
@@ -33,6 +26,16 @@ interface IBS {
 }
 
 library LibWhitelist {
+
+    event WhitelistToken(
+        address indexed token,
+        uint256 seeds,
+        uint256 stalk,
+        bytes4 selector
+    );
+
+    event DewhitelistToken(address indexed token);
+
     uint32 private constant BEAN_LUSD_STALK = 10000;
     uint32 private constant BEAN_LUSD_SEEDS = 3;
 
@@ -95,6 +98,12 @@ library LibWhitelist {
         );
     }
 
+    function dewhitelistToken(address token) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        delete s.ss[token];
+        emit DewhitelistToken(token);
+    }
+
     function whitelistToken(
         address token,
         bytes4 selector,
@@ -105,5 +114,7 @@ library LibWhitelist {
         s.ss[token].selector = selector;
         s.ss[token].stalk = stalk;
         s.ss[token].seeds = seeds;
+
+        emit WhitelistToken(token, stalk, seeds, selector);
     }
 }

@@ -158,18 +158,18 @@ describe('Silo Token', function () {
     })
     describe('reverts', function () {
       it('reverts if amount is 0', async function () {
-        await expect(this.silo.connect(user).withdrawSeason(this.siloToken.address, '2', '1001')).to.revertedWith('Silo: Crate balance too low.');
+        await expect(this.silo.connect(user).withdrawDeposit(this.siloToken.address, '2', '1001')).to.revertedWith('Silo: Crate balance too low.');
       });
 
       it('reverts if deposits + withdrawals is a different length', async function () {
-        await expect(this.silo.connect(user).withdrawSeasons(this.siloToken.address, ['2', '3'], ['1001'])).to.revertedWith('Silo: Crates, amounts are diff lengths.');
+        await expect(this.silo.connect(user).withdrawDeposits(this.siloToken.address, ['2', '3'], ['1001'])).to.revertedWith('Silo: Crates, amounts are diff lengths.');
       });
     });
 
     describe('withdraw token by season', async function () {
       describe('withdraw 1 Bean crate', async function () {
         beforeEach(async function () {
-          this.result = await this.silo.connect(user).withdrawSeason(this.siloToken.address, 2, '1000');
+          this.result = await this.silo.connect(user).withdrawDeposit(this.siloToken.address, 2, '1000');
         });
     
         it('properly updates the total balances', async function () {
@@ -201,7 +201,7 @@ describe('Silo Token', function () {
       
       describe('withdraw part of a bean crate', function () {
         beforeEach(async function () {
-          this.result = await this.silo.connect(user).withdrawSeason(this.siloToken.address, 2, '500');
+          this.result = await this.silo.connect(user).withdrawDeposit(this.siloToken.address, 2, '500');
         });
     
         it('properly updates the total balances', async function () {
@@ -237,7 +237,7 @@ describe('Silo Token', function () {
         beforeEach(async function () {
           await this.season.siloSunrise(0);
           await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL);
-          this.result = await this.silo.connect(user).withdrawSeasons(this.siloToken.address, [2,3],['500','1000']);
+          this.result = await this.silo.connect(user).withdrawDeposits(this.siloToken.address, [2,3],['500','1000']);
         });
     
         it('properly updates the total balances', async function () {
@@ -267,7 +267,7 @@ describe('Silo Token', function () {
         beforeEach(async function () {
           await this.season.siloSunrise(0);
           await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL);
-          this.result = await this.silo.connect(user).withdrawSeasons(this.siloToken.address, [2,3],['1000','1000']);
+          this.result = await this.silo.connect(user).withdrawDeposits(this.siloToken.address, [2,3],['1000','1000']);
         });
     
         it('properly updates the total balances', async function () {
@@ -299,14 +299,14 @@ describe('Silo Token', function () {
   describe('claim', function () {
     beforeEach(async function () {
       await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL);
-      await this.silo.connect(user).withdrawSeason(this.siloToken.address, '2', '1000');
+      await this.silo.connect(user).withdrawDeposit(this.siloToken.address, '2', '1000');
       await this.season.fastForward(25);
     })
 
     describe('claim token by season', function () {
       beforeEach(async function () {
         const userTokensBefore = await this.siloToken.balanceOf(userAddress);
-        this.result = await this.silo.connect(user).claimSeason(this.siloToken.address, 27, EXTERNAL);
+        this.result = await this.silo.connect(user).claimWithdrawal(this.siloToken.address, 27, EXTERNAL);
         this.deltaBeans = (await this.siloToken.balanceOf(userAddress)).sub(userTokensBefore);
       });
 
@@ -327,11 +327,11 @@ describe('Silo Token', function () {
     describe('claim token by seasons', function () {
       beforeEach(async function () {
         await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL);
-        await this.silo.connect(user).withdrawSeason(this.siloToken.address, '27', '1000');
+        await this.silo.connect(user).withdrawDeposit(this.siloToken.address, '27', '1000');
         await this.season.fastForward(25);
 
       const userTokensBefore = await this.siloToken.balanceOf(userAddress);
-        this.result = await this.silo.connect(user).claimSeasons(this.siloToken.address, [27, 52], EXTERNAL);
+        this.result = await this.silo.connect(user).claimWithdrawals(this.siloToken.address, [27, 52], EXTERNAL);
         this.deltaBeans = (await this.siloToken.balanceOf(userAddress)).sub(userTokensBefore);
       });
 
@@ -400,12 +400,12 @@ describe('Silo Token', function () {
       })
       
       it('revert if withdrawn too much', async function () {
-        await expect(this.silo.connect(user).withdrawSeason(UNRIPE_BEAN, '2', to6('11'))).to.be.revertedWith('Silo: Crate balance too low.')
+        await expect(this.silo.connect(user).withdrawDeposit(UNRIPE_BEAN, '2', to6('11'))).to.be.revertedWith('Silo: Crate balance too low.')
       });
       
       describe("Withdraw", async function () {
         beforeEach(async function () {
-          this.result = await this.silo.connect(user).withdrawSeason(UNRIPE_BEAN, '2', to6('1'))
+          this.result = await this.silo.connect(user).withdrawDeposit(UNRIPE_BEAN, '2', to6('1'))
         })
 
         it('properly updates the total balances', async function () {
@@ -449,12 +449,12 @@ describe('Silo Token', function () {
       })
       
       it('revert if withdrawn too much', async function () {
-        await expect(this.silo.connect(user).withdrawSeason(UNRIPE_BEAN, '2', to6('21'))).to.be.revertedWith('Silo: Crate balance too low.')
+        await expect(this.silo.connect(user).withdrawDeposit(UNRIPE_BEAN, '2', to6('21'))).to.be.revertedWith('Silo: Crate balance too low.')
       });
       
       describe("Withdraw", async function () {
         beforeEach(async function () {
-          this.result = await this.silo.connect(user).withdrawSeason(UNRIPE_BEAN, '2', to6('11'))
+          this.result = await this.silo.connect(user).withdrawDeposit(UNRIPE_BEAN, '2', to6('11'))
         })
 
         it('properly updates the total balances', async function () {
@@ -500,12 +500,12 @@ describe('Silo Token', function () {
       })
       
       it('revert if withdrawn too much', async function () {
-        await expect(this.silo.connect(user).withdrawSeason(UNRIPE_LP, '2', to6('11'))).to.be.revertedWith('Silo: Crate balance too low.')
+        await expect(this.silo.connect(user).withdrawDeposit(UNRIPE_LP, '2', to6('11'))).to.be.revertedWith('Silo: Crate balance too low.')
       });
       
       describe("Withdraw", async function () {
         beforeEach(async function () {
-          this.result = await this.silo.connect(user).withdrawSeason(UNRIPE_LP, '2', to6('1'))
+          this.result = await this.silo.connect(user).withdrawDeposit(UNRIPE_LP, '2', to6('1'))
         })
 
         it('properly updates the total balances', async function () {
@@ -551,12 +551,12 @@ describe('Silo Token', function () {
       })
       
       it('revert if withdrawn too much', async function () {
-        await expect(this.silo.connect(user).withdrawSeason(UNRIPE_LP, '2', to6('11'))).to.be.revertedWith('Silo: Crate balance too low.')
+        await expect(this.silo.connect(user).withdrawDeposit(UNRIPE_LP, '2', to6('11'))).to.be.revertedWith('Silo: Crate balance too low.')
       });
       
       describe("Withdraw", async function () {
         beforeEach(async function () {
-          this.result = await this.silo.connect(user).withdrawSeason(UNRIPE_LP, '2', to6('1'))
+          this.result = await this.silo.connect(user).withdrawDeposit(UNRIPE_LP, '2', to6('1'))
         })
 
         it('properly updates the total balances', async function () {
@@ -601,12 +601,12 @@ describe('Silo Token', function () {
       })
       
       it('revert if withdrawn too much', async function () {
-        await expect(this.silo.connect(user).withdrawSeason(UNRIPE_LP, '2', to6('11'))).to.be.revertedWith('Silo: Crate balance too low.')
+        await expect(this.silo.connect(user).withdrawDeposit(UNRIPE_LP, '2', to6('11'))).to.be.revertedWith('Silo: Crate balance too low.')
       });
       
       describe("Withdraw", async function () {
         beforeEach(async function () {
-          this.result = await this.silo.connect(user).withdrawSeason(UNRIPE_LP, '2', to6('1'))
+          this.result = await this.silo.connect(user).withdrawDeposit(UNRIPE_LP, '2', to6('1'))
         })
 
         it('properly updates the total balances', async function () {
@@ -654,12 +654,12 @@ describe('Silo Token', function () {
       })
       
       it('revert if withdrawn too much', async function () {
-        await expect(this.silo.connect(user).withdrawSeason(UNRIPE_LP, '2', to6('11'))).to.be.revertedWith('Silo: Crate balance too low.')
+        await expect(this.silo.connect(user).withdrawDeposit(UNRIPE_LP, '2', to6('11'))).to.be.revertedWith('Silo: Crate balance too low.')
       });
       
       describe("Withdraw", async function () {
         beforeEach(async function () {
-          this.result = await this.silo.connect(user).withdrawSeason(UNRIPE_LP, '2', to6('9'))
+          this.result = await this.silo.connect(user).withdrawDeposit(UNRIPE_LP, '2', to6('9'))
         })
 
         it('properly updates the total balances', async function () {

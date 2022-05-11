@@ -63,6 +63,12 @@ library LibDiamond {
         contractOwner_ = diamondStorage().contractOwner;
     }
 
+    function enforceIsOwnerOrContract() internal view {
+        require(msg.sender == diamondStorage().contractOwner ||
+                msg.sender == address(this), "LibDiamond: Must be contract or owner"
+        );
+    }
+
     function enforceIsContractOwner() internal view {
         require(msg.sender == diamondStorage().contractOwner, "LibDiamond: Must be contract owner");
     }

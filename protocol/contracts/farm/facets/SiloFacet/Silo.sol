@@ -18,6 +18,27 @@ contract Silo is SiloExit {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
+    event Earn(
+        address indexed account,
+        uint256 beans
+    );
+
+    event ClaimPlenty(
+        address indexed account,
+        uint256 plenty
+    );
+
+    event SeedsBalanceChanged(
+        address indexed account,
+        int256 delta
+    );
+
+    event StalkBalanceChanged(
+        address indexed account,
+        int256 delta,
+        int256 deltaRoots
+    );
+
     uint256 private constant _NOT_ENTERED = 1;
     uint256 private constant _ENTERED = 2;
 
@@ -41,9 +62,6 @@ contract Silo is SiloExit {
         uint256 beans = _balanceOfEarnedBeans(account, accountStalk);
         if (beans == 0) return;
         s.earnedBeans = s.earnedBeans.sub(beans);
-        uint256 seeds = beans.mul(C.getSeedsPerBean());
-        LibSilo.incrementBalanceOfSeeds(account, seeds);
-        s.a[account].s.stalk = accountStalk.add(beans.mul(C.getStalkPerBean()));
         LibTokenSilo.addDeposit(
             account,
             C.beanAddress(),
@@ -51,12 +69,21 @@ contract Silo is SiloExit {
             beans,
             beans.mul(C.getStalkPerBean())
         );
+        uint256 seeds = beans.mul(C.getSeedsPerBean());
+        LibSilo.incrementBalanceOfSeeds(account, seeds);
+        uint256 stalk = beans.mul(C.getStalkPerBean());
+        s.a[account].s.stalk = accountStalk.add(stalk);
+
+        emit StalkBalanceChanged(account, int256(stalk), 0);
+        emit Earn(account, beans);
     }
 
     function claimPlenty(address account) external payable {
         uint256 plenty = s.a[account].sop.plenty;
         C.threeCrv().safeTransfer(account, plenty);
         delete s.a[account].sop.plenty;
+
+        emit ClaimPlenty(account, plenty);
     }
 
     /**

@@ -49,13 +49,13 @@ describe('Fundraiser', function () {
   describe('create fundraiser', function () {
     describe('reverts if not owner', async function () {
       it('reverts ', async function () {
-        await expect(this.fundraiser.createFundraiser(fundraiserAddress, this.token.address, '1000')).to.be.revertedWith('Fundraiser: sender must be Beanstalk.')
+        await expect(this.fundraiser.connect(user2).createFundraiser(fundraiserAddress, this.token.address, '1000')).to.be.revertedWith('LibDiamond: Must be contract or owner')
       })
     })
 
     describe('create a fundraiser', async function () {
       beforeEach(async function () {
-        this.result = await this.fundraiser.createFundraiserE(fundraiserAddress, this.token.address, '1000')
+        this.result = await this.fundraiser.createFundraiser(fundraiserAddress, this.token.address, '1000')
       })
 
       it('gets listed as a fundraiser', async function () {
@@ -151,7 +151,7 @@ describe('Fundraiser', function () {
       })
 
       it('emits a Sow event', async function () {
-        await expect(this.result).to.emit(this.fundraiser, 'Sow').withArgs(userAddress, 0, '500', '500')
+        await expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, 0, '500', '500')
       })
 
       it('burns beans from protocol', async function () {
@@ -179,7 +179,7 @@ describe('Fundraiser', function () {
       })
 
       it('emits a Sow event', async function () {
-        await expect(this.result).to.emit(this.fundraiser, 'Sow').withArgs(userAddress, 0, '1000', '1000')
+        await expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, 0, '1000', '1000')
       })
 
       it('pays fundraiser address', async function () {
