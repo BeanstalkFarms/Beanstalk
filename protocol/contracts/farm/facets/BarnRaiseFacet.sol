@@ -21,7 +21,7 @@ contract BarnRaiseFacet {
 
     uint256 private constant PRECISION = 1e18;
 
-    function earnBR(address account, LibTransfer.To mode) external {
+    function earnBR(address account, LibTransfer.To mode) external payable {
         (uint256 beans, uint256 totalBeansPerBRToken) = _earnedBR(account);
         s.a[account].beansPerBRToken = totalBeansPerBRToken;
         LibTransfer.sendToken(C.bean(), beans, account, mode);

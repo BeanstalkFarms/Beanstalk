@@ -17,7 +17,7 @@ contract Sun is Oracle {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
-    event Reward(uint256 harvestable, uint256 earned, uint256 barnRaised);
+    event Reward(uint256 toField, uint256 toSilo, uint256 toBarnRaise);
     event Soil(uint256 soil);
 
     /**

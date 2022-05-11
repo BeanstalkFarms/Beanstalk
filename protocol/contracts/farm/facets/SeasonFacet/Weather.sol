@@ -22,7 +22,7 @@ contract Weather is Sun {
     event SeasonOfPlenty(
         uint256 indexed season,
         uint256 amount,
-        uint256 harvestable
+        uint256 toField
     );
 
     /**

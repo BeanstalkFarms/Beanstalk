@@ -21,6 +21,14 @@ contract ConvertFacet is ReentrancyGuard {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
+    event Convert(
+        address indexed account,
+        address fromToken,
+        address toToken,
+        uint256 fromAmount,
+        uint256 toAmount
+    );
+
     event RemoveDeposits(
         address indexed account,
         address indexed token,
@@ -39,13 +47,13 @@ contract ConvertFacet is ReentrancyGuard {
         bytes calldata userData,
         uint32[] memory crates,
         uint256[] memory amounts
-    ) external nonReentrant {
+    ) external payable nonReentrant {
         LibInternal.updateSilo(msg.sender);
         (
             address toToken,
             address fromToken,
-            uint256 toTokenAmount,
-            uint256 fromTokenAmount,
+            uint256 toAmount,
+            uint256 fromAmount,
             uint256 bdv
         ) = LibConvert.convert(userData);
 
@@ -53,10 +61,18 @@ contract ConvertFacet is ReentrancyGuard {
             fromToken,
             crates,
             amounts,
-            fromTokenAmount
+            fromAmount
         );
 
-        _depositTokens(toToken, toTokenAmount, bdv, grownStalk);
+        _depositTokens(toToken, toAmount, bdv, grownStalk);
+
+        emit Convert(
+            msg.sender,
+            fromToken,
+            toToken,
+            fromAmount,
+            toAmount
+        );
 
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }

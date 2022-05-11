@@ -30,15 +30,15 @@ contract FieldFacet is ReentrancyGuard {
      * Sow
      **/
 
-    function sowBeans(uint256 amount, LibTransfer.From mode)
+    function sow(uint256 amount, LibTransfer.From mode)
         external
         payable
         returns (uint256)
     {
-        return sowBeansWithMin(amount, amount, mode);
+        return sowWithMin(amount, amount, mode);
     }
 
-    function sowBeansWithMin(
+    function sowWithMin(
         uint256 amount,
         uint256 minAmount,
         LibTransfer.From mode
@@ -49,10 +49,10 @@ contract FieldFacet is ReentrancyGuard {
             "Field: Sowing below min or 0 pods."
         );
         if (amount < sowAmount) sowAmount = amount;
-        return _sowBeans(sowAmount, mode);
+        return _sow(sowAmount, mode);
     }
 
-    function _sowBeans(uint256 amount, LibTransfer.From mode)
+    function _sow(uint256 amount, LibTransfer.From mode)
         internal
         returns (uint256 pods)
     {
@@ -92,11 +92,11 @@ contract FieldFacet is ReentrancyGuard {
 
     function harvestPlot(address account, uint256 plotId)
         private
-        returns (uint256)
+        returns (uint256 harvestablePods)
     {
         uint256 pods = s.a[account].field.plots[plotId];
         require(pods > 0, "Field: Plot is empty.");
-        uint256 harvestablePods = s.f.harvestable.sub(plotId);
+        harvestablePods = s.f.harvestable.sub(plotId);
         delete s.a[account].field.plots[plotId];
         if (s.podListings[plotId] > 0) {
             delete s.podListings[plotId];
@@ -106,7 +106,6 @@ contract FieldFacet is ReentrancyGuard {
         s.a[account].field.plots[plotId.add(harvestablePods)] = pods.sub(
             harvestablePods
         );
-        return harvestablePods;
     }
 
     /**

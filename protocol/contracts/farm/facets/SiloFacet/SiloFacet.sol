@@ -35,7 +35,7 @@ contract SiloFacet is TokenSilo {
      * Withdraw
      */
 
-    function withdrawSeason(
+    function withdrawDeposit(
         address token,
         uint32 season,
         uint256 amount
@@ -44,7 +44,7 @@ contract SiloFacet is TokenSilo {
         LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
-    function withdrawSeasons(
+    function withdrawDeposits(
         address token,
         uint32[] calldata seasons,
         uint256[] calldata amounts
@@ -57,7 +57,7 @@ contract SiloFacet is TokenSilo {
      * Claim
      */
 
-    function claimSeason(
+    function claimWithdrawal(
         address token,
         uint32 season,
         LibTransfer.To mode
@@ -67,7 +67,7 @@ contract SiloFacet is TokenSilo {
         emit RemoveWithdrawal(msg.sender, token, season, amount);
     }
 
-    function claimSeasons(
+    function claimWithdrawals(
         address token,
         uint32[] calldata seasons,
         LibTransfer.To mode

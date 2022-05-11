@@ -54,7 +54,7 @@ describe('Silo', function () {
 
   describe('Silo Balances After Withdrawal', function () {
     beforeEach(async function () {
-      await this.silo.connect(user).withdrawSeason(this.bean.address, '2', to6('500'))
+      await this.silo.connect(user).withdrawDeposit(this.bean.address, '2', to6('500'))
     })
 
     it('properly updates the total balances', async function () {
@@ -102,7 +102,7 @@ describe('Silo', function () {
     beforeEach(async function () {
       await this.season.siloSunrise(to6('100'))
       await this.silo.update(user2Address)
-      await this.silo.earn(userAddress)
+      this.result = await this.silo.earn(userAddress)
     })
 
     it('properly updates the earned balances', async function () {
@@ -124,6 +124,10 @@ describe('Silo', function () {
       expect(await this.silo.totalStalk()).to.eq(to6('21004000'));
       expect(await this.silo.totalRoots()).to.eq('20003809523809523809523808');
     });
+
+    it('properly emits events', async function () {
+      expect(this.result).to.emit(this.silo, 'Earn')
+    })
 
     it('user2 earns rest', async function () {
       await this.silo.earn(user2Address)

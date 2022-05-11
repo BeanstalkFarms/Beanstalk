@@ -25,8 +25,8 @@ contract PauseFacet {
      * Pause / Unpause
      **/
 
-    function pause() external {
-        LibDiamond.enforceIsContractOwner();
+    function pause() external payable {
+        LibDiamond.enforceIsOwnerOrContract();
         if (s.paused) return;
         s.paused = true;
         s.co.initialized = false;
@@ -34,8 +34,8 @@ contract PauseFacet {
         emit Pause(msg.sender, block.timestamp);
     }
 
-    function unpause() external {
-        LibDiamond.enforceIsContractOwner();
+    function unpause() external payable {
+        LibDiamond.enforceIsOwnerOrContract();
         if (!s.paused) return;
         s.paused = false;
         uint256 timePassed = block.timestamp.sub(uint256(s.pausedAt));

@@ -24,7 +24,7 @@ contract SeasonFacet is Weather {
      **/
 
     /// @notice advances Beanstalk to the next Season.
-    function sunrise() external {
+    function sunrise() external payable {
         require(!paused(), "Season: Paused.");
         require(seasonTime() > season(), "Season: Still current Season.");
         stepSeason();

@@ -26,7 +26,7 @@ contract MarketplaceFacet is Order {
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
         LibTransfer.To mode
-    ) external {
+    ) external payable {
         _createPodListing(
             index,
             start,
@@ -42,7 +42,7 @@ contract MarketplaceFacet is Order {
         PodListing calldata l,
         uint256 beanAmount,
         LibTransfer.From mode
-    ) external {
+    ) external payable {
         beanAmount = LibTransfer.transferToken(
             C.bean(),
             l.account,
@@ -54,7 +54,7 @@ contract MarketplaceFacet is Order {
     }
 
     // Cancel
-    function cancelPodListing(uint256 index) external {
+    function cancelPodListing(uint256 index) external payable {
         _cancelPodListing(index);
     }
 
@@ -73,7 +73,7 @@ contract MarketplaceFacet is Order {
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
         LibTransfer.From mode
-    ) external returns (bytes32 id) {
+    ) external payable returns (bytes32 id) {
         beanAmount = LibTransfer.receiveToken(C.bean(), beanAmount, msg.sender, mode);
         return _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine);
     }
@@ -85,7 +85,7 @@ contract MarketplaceFacet is Order {
         uint256 start,
         uint256 amount,
         LibTransfer.To mode
-    ) external {
+    ) external payable {
         _fillPodOrder(o, index, start, amount, mode);
     }
 
@@ -94,7 +94,7 @@ contract MarketplaceFacet is Order {
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
         LibTransfer.To mode
-    ) external {
+    ) external payable {
         _cancelPodOrder(pricePerPod, maxPlaceInLine, mode);
     }
 
@@ -122,7 +122,7 @@ contract MarketplaceFacet is Order {
         uint256 id,
         uint256 start,
         uint256 end
-    ) external nonReentrant {
+    ) external payable nonReentrant {
         require(
             sender != address(0) && recipient != address(0),
             "Field: Transfer to/from 0 address."
@@ -146,6 +146,7 @@ contract MarketplaceFacet is Order {
 
     function approvePods(address spender, uint256 amount)
         external
+        payable
         nonReentrant
     {
         require(spender != address(0), "Field: Pod Approve to 0 address.");
