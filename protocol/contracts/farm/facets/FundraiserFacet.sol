@@ -8,7 +8,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "../ReentrancyGuard.sol";
-import "../../libraries/Diamond/LibDiamond.sol";
+import "../../libraries/LibDiamond.sol";
 import "../../libraries/LibDibbler.sol";
 import "../../libraries/Token/LibTransfer.sol";
 
@@ -41,7 +41,7 @@ contract FundraiserFacet is ReentrancyGuard {
         uint32 id,
         uint256 amount,
         LibTransfer.From mode
-    ) public payable nonReentrant returns (uint256) {
+    ) external payable nonReentrant returns (uint256) {
         uint256 remaining = s.fundraisers[id].remaining;
         require(remaining > 0, "Fundraiser: already completed.");
         if (amount > remaining) amount = remaining;

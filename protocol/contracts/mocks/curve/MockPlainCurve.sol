@@ -10,7 +10,7 @@ import "../../interfaces/IBean.sol";
 import "../MockToken.sol";
 
 /**
- * @author Publius + LeoFib
+ * @author Publius, LeoFib
  * @title Mock Bean3Curve Pair/Pool
 **/
 

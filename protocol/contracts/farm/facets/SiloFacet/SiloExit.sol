@@ -12,7 +12,6 @@ import "../../../interfaces/IBean.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/LibSafeMath32.sol";
 import "../../../C.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -87,9 +86,17 @@ contract SiloExit is ReentrancyGuard {
         view
         returns (uint256 beans)
     {
+        // There will be no Roots when the first deposit is made.
         if (s.s.roots == 0) return 0;
+
+        // Determine expected user Stalk based on Roots balance
+        // userStalk / totalStalk = userRoots / totalRoots
         uint256 stalk = s.s.stalk.mul(s.a[account].roots).div(s.s.roots);
+
+        // Handle edge case caused by rounding
         if (stalk <= accountStalk) return 0;
+
+        // Calculate Earned Stalk and convert to Earned Beans.
         beans = (stalk - accountStalk).div(C.getStalkPerBean()); // Note: SafeMath is redundant here.
         if (beans > s.earnedBeans) return s.earnedBeans;
         return beans;

@@ -127,7 +127,7 @@ contract MarketplaceFacet is Order {
             sender != address(0) && recipient != address(0),
             "Field: Transfer to/from 0 address."
         );
-        uint256 amount = s.a[msg.sender].field.plots[id];
+        uint256 amount = s.a[sender].field.plots[id];
         require(amount > 0, "Field: Plot not owned by user.");
         require(end > start && amount >= end, "Field: Pod range invalid.");
         amount = end - start; // Note: SafeMath is redundant here.

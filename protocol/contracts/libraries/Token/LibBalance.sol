@@ -12,7 +12,7 @@ import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import "../LibAppStorage.sol";
 
 /**
- * @author LeoFib
+ * @author LeoFib, Publius
  * @title LibInternalBalance Library handles internal read/write functions for Internal User Balances.
  * Largely inspired by Balancer's Vault
  **/

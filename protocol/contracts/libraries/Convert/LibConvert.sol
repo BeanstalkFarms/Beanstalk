@@ -5,8 +5,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import "./LibCurveConvert.sol";
+import "./LibUnripeConvert.sol";
 
 /**
  * @author Publius
@@ -36,6 +35,12 @@ library LibConvert {
                 .convertBeansToLP(userData);
         } else if (kind == LibConvertUserData.ConvertKind.CURVE_LP_TO_BEANS) {
             (outToken, inToken, outAmount, inAmount, bdv) = LibCurveConvert
+                .convertLPToBeans(userData);
+        } else if (kind == LibConvertUserData.ConvertKind.UNRIPE_BEANS_TO_UNRIPE_LP) {
+            (outToken, inToken, outAmount, inAmount, bdv) = LibUnripeConvert
+                .convertBeansToLP(userData);
+        } else if (kind == LibConvertUserData.ConvertKind.UNRIPE_LP_TO_UNRIPE_BEANS) {
+            (outToken, inToken, outAmount, inAmount, bdv) = LibUnripeConvert
                 .convertLPToBeans(userData);
         } else {
             revert("Convert: Invalid payload");

@@ -5,7 +5,7 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {LibDiamond} from "../../libraries/Diamond/LibDiamond.sol";
+import {LibDiamond} from "../../libraries/LibDiamond.sol";
 import {LibWhitelist} from "../../libraries/Silo/LibWhitelist.sol";
 import {AppStorage} from "../AppStorage.sol";
 
@@ -16,16 +16,16 @@ import {AppStorage} from "../AppStorage.sol";
 contract WhitelistFacet {
     event WhitelistToken(
         address indexed token,
+        bytes4 selector,
         uint256 seeds,
-        uint256 stalk,
-        bytes4 selector
+        uint256 stalk
     );
 
     event DewhitelistToken(address indexed token);
 
     function dewhitelistToken(address token) external payable {
         LibDiamond.enforceIsOwnerOrContract();
-        LibWhitelist.DewhitelistToken(token);
+        LibWhitelist.dewhitelistToken(token);
     }
 
     function whitelistToken(

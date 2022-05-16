@@ -99,9 +99,9 @@ library LibCurveConvert {
         uint256 beans,
         uint256 minLP,
         address pool
-    ) private returns (uint256 lp, uint256 beansConverted) {
+    ) internal returns (uint256 lp, uint256 beansConverted) {
         uint256 beansTo = beansToPeg(pool);
-        require(beansTo > 0, "Convert: P must be < 1.");
+        require(beansTo > 0, "Convert: P must be >= 1.");
         beansConverted = beans > beansTo ? beansTo : beans;
         lp = ICurvePool(pool).add_liquidity([beansConverted, 0], minLP);
     }
@@ -113,7 +113,7 @@ library LibCurveConvert {
         uint256 lp,
         uint256 minBeans,
         address pool
-    ) private returns (uint256 beans, uint256 lpConverted) {
+    ) internal returns (uint256 beans, uint256 lpConverted) {
         uint256 lpTo = lpToPeg(pool);
         require(lpTo > 0, "Convert: P must be < 1.");
         lpConverted = lp > lpTo ? lpTo : lp;

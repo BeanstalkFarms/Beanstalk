@@ -23,7 +23,7 @@ describe('Curve Convert', function () {
     this.bean = await ethers.getContractAt('MockToken', BEAN);
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
-    this.beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
+    this.beanMetapool = await ethers.getContractAt('IMockCurvePool', BEAN_3_CURVE);
   
     await this.threeCurve.mint(userAddress, to18('100000'));
     await this.threePool.set_virtual_price(to18('1'));
@@ -97,7 +97,7 @@ describe('Curve Convert', function () {
       it('p >= 1', async function () {
         await this.silo.connect(user).deposit(this.bean.address, '1000', EXTERNAL);
         await expect(this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('200'),to18('190'), this.beanMetapool.address),['1'],['1000']))
-          .to.be.revertedWith('Convert: P must be < 1.');
+          .to.be.revertedWith('Convert: P must be >= 1.');
       });
 
     });
@@ -297,7 +297,7 @@ describe('Curve Convert', function () {
           .to.be.revertedWith('Curve: Insufficient Output');
       });
 
-      it('p >= 1', async function () {
+      it('p < 1', async function () {
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('1')], to18('0.5'));
         await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), EXTERNAL);
         await expect(this.convert.connect(user).convert(ConvertEncoder.convertCurveLPToBeans(to18('200'),toBean('190'), this.beanMetapool.address),['1'],['1000']))

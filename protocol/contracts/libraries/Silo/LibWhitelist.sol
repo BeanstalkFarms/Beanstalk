@@ -29,9 +29,9 @@ library LibWhitelist {
 
     event WhitelistToken(
         address indexed token,
+        bytes4 selector,
         uint256 seeds,
-        uint256 stalk,
-        bytes4 selector
+        uint256 stalk
     );
 
     event DewhitelistToken(address indexed token);
@@ -115,6 +115,6 @@ library LibWhitelist {
         s.ss[token].stalk = stalk;
         s.ss[token].seeds = seeds;
 
-        emit WhitelistToken(token, stalk, seeds, selector);
+        emit WhitelistToken(token, selector, stalk, seeds);
     }
 }

@@ -244,4 +244,9 @@ contract MockSeasonFacet is SeasonFacet {
             ResetPool(pools[i]).reset_cumulative();
         }
     }
+
+    function rewardToBarnRaiseE(uint256 amount) external {
+        rewardToBarnRaise(amount*3);
+        C.bean().mint(address(this), amount);
+    }
 }

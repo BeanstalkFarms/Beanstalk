@@ -56,7 +56,10 @@ library C {
     address private constant THREE_CRV = 0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490;
     address private constant UNRIPE_BEAN = 0xD5BDcdEc5b2FEFf781eA8727969A95BbfD47C40e;
     address private constant UNRIPE_LP = 0x2e4243832DB30787764f152457952C8305f442e4;
-    address private constant SPROUT = 0x2E4243832db30787764F152457952C8305f442E5;
+    address private constant BARN_RAISE = 0x2E4243832db30787764F152457952C8305f442E5;
+
+    address private constant TRI_CRYPTO = 0xc4AD29ba4B3c580e6D59105FFf484999997675Ff;
+    address private constant TRI_CRYPTO_POOL = 0xD51a44d3FaE010294C616388b506AcdA1bfAAE46;
 
     /**
      * Getters
@@ -154,11 +157,23 @@ library C {
         return I3Curve(CURVE_3_POOL);
     }
 
+    function curve3PoolAddress() internal pure returns (address) {
+        return CURVE_3_POOL;
+    }
+
     function threeCrv() internal pure returns (IERC20) {
         return IERC20(THREE_CRV);
     }
     
-    function sprout() internal pure returns (IERC20) {
-        return IERC20(SPROUT);
+    function barnRaise() internal pure returns (IERC20) {
+        return IERC20(BARN_RAISE);
+    }
+
+    function triCryptoPoolAddress() internal pure returns (address) {
+        return TRI_CRYPTO_POOL;
+    }
+
+    function triCrypto() internal pure returns (IERC20) {
+        return IERC20(TRI_CRYPTO);
     }
 }

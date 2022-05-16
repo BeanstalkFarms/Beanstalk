@@ -9,11 +9,10 @@ pragma solidity =0.7.6;
 * EIP-2535 Diamonds: https://eips.ethereum.org/EIPS/eip-2535
 /******************************************************************************/
 
-import {IDiamondCut} from "../../interfaces/IDiamondCut.sol";
-import {IDiamondLoupe} from "../../interfaces/IDiamondLoupe.sol";
-import {IERC165} from "../../interfaces/IERC165.sol";
-import {IERC173} from "../../interfaces/IERC173.sol";
-import {LibMeta} from "./LibMeta.sol";
+import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
+import {IDiamondLoupe} from "../interfaces/IDiamondLoupe.sol";
+import {IERC165} from "../interfaces/IERC165.sol";
+import {IERC173} from "../interfaces/IERC173.sol";
 
 library LibDiamond {
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("diamond.standard.diamond.storage");

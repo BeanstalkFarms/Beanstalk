@@ -70,7 +70,7 @@ describe("UnripeClaim", function () {
     const contracts = await deploy("Test", false, true);
     this.diamond = contracts.beanstalkDiamond;
     this.unripeClaim = await ethers.getContractAt(
-      "MockUnripeClaimFacet",
+      "MockUnripeFacet",
       this.diamond.address
     );
 
@@ -94,10 +94,10 @@ describe("UnripeClaim", function () {
     await initializeMerkleTree();
 
     const rootHash1 = merkleTree1.getRoot();
-    await this.unripeClaim.setMerkleRoot(this.unripeToken1.address, rootHash1);
+    await this.unripeClaim.setMerkleRootE(this.unripeToken1.address, rootHash1);
 
     const rootHash2 = merkleTree2.getRoot();
-    await this.unripeClaim.setMerkleRoot(this.unripeToken2.address, rootHash2);
+    await this.unripeClaim.setMerkleRootE(this.unripeToken2.address, rootHash2);
   });
 
   beforeEach(async function () {
@@ -119,7 +119,7 @@ describe("UnripeClaim", function () {
     const beforeBalance = await this.unripeToken1.balanceOf(user.user.address);
     const tx = await this.unripeClaim
       .connect(user.user)
-      .claimUnripeTokens(this.unripeToken1.address, user.amount, proof);
+      .claimUnripe(this.unripeToken1.address, user.amount, proof);
     const afterBalance = await this.unripeToken1.balanceOf(user.user.address);
 
     expect(afterBalance).to.be.eq(beforeBalance.add(user.amount));
@@ -139,12 +139,12 @@ describe("UnripeClaim", function () {
 
     await this.unripeClaim
       .connect(user.user)
-      .claimUnripeTokens(this.unripeToken1.address, user.amount, proof);
+      .claimUnripe(this.unripeToken1.address, user.amount, proof);
 
     await expect(
       this.unripeClaim
         .connect(user.user)
-        .claimUnripeTokens(this.unripeToken1.address, user.amount, proof)
+        .claimUnripe(this.unripeToken1.address, user.amount, proof)
     ).to.be.revertedWith("UnripeClaim: already claimed");
   });
 
@@ -159,7 +159,7 @@ describe("UnripeClaim", function () {
     await expect(
       this.unripeClaim
         .connect(user.user)
-        .claimUnripeTokens(this.unripeToken2.address, user.amount, proof)
+        .claimUnripe(this.unripeToken2.address, user.amount, proof)
     ).to.be.revertedWith("UnripeClaim: invalid proof");
   });
 
@@ -174,7 +174,7 @@ describe("UnripeClaim", function () {
     await expect(
       this.unripeClaim
         .connect(user2)
-        .claimUnripeTokens(this.unripeToken1.address, user.amount, proof)
+        .claimUnripe(this.unripeToken1.address, user.amount, proof)
     ).to.be.revertedWith("UnripeClaim: invalid proof");
   });
 });

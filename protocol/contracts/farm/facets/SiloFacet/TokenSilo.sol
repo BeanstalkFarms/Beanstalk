@@ -245,7 +245,22 @@ contract TokenSilo is Silo {
         emit AddWithdrawal(account, token, arrivalSeason, amount);
     }
 
-    function removeTokenWithdrawals(
+        // Claim
+
+    function _claimWithdrawal(
+        address account,
+        address token,
+        uint32 season
+    ) internal returns (uint256) {
+        uint256 amount = _removeTokenWithdrawal(account, token, season);
+        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(
+            amount
+        );
+        emit RemoveWithdrawal(msg.sender, token, season, amount);
+        return amount;
+    }
+
+    function _claimWithdrawals(
         address account,
         address token,
         uint32[] calldata seasons
@@ -258,6 +273,21 @@ contract TokenSilo is Silo {
         s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(
             amount
         );
+        emit RemoveWithdrawals(msg.sender, token, seasons, amount);
+        return amount;
+    }
+
+    function _removeTokenWithdrawal(
+        address account,
+        address token,
+        uint32 season
+    ) private returns (uint256) {
+        require(
+            season <= s.season.current,
+            "Claim: Withdrawal not recievable."
+        );
+        uint256 amount = s.a[account].withdrawals[token][season];
+        delete s.a[account].withdrawals[token][season];
         return amount;
     }
 
@@ -326,34 +356,6 @@ contract TokenSilo is Silo {
             ar.seedsRemoved,
             ar.stalkRemoved
         );
-    }
-
-    // Claim
-
-    function removeTokenWithdrawal(
-        address account,
-        address token,
-        uint32 season
-    ) internal returns (uint256) {
-        uint256 amount = _removeTokenWithdrawal(account, token, season);
-        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(
-            amount
-        );
-        return amount;
-    }
-
-    function _removeTokenWithdrawal(
-        address account,
-        address token,
-        uint32 season
-    ) private returns (uint256) {
-        require(
-            season <= s.season.current,
-            "Claim: Withdrawal not recievable."
-        );
-        uint256 amount = s.a[account].withdrawals[token][season];
-        delete s.a[account].withdrawals[token][season];
-        return amount;
     }
 
     function _season() private view returns (uint32) {

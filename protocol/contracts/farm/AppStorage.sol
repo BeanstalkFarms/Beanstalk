@@ -172,6 +172,12 @@ contract Storage {
         uint32 seeds;
         uint32 stalk;
     }
+
+    struct UnripeSettings {
+        address underlyingToken;
+        uint256 balanceOfUnderlying;
+        bytes32 merkleRoot;
+    }
 }
 
 struct AppStorage {
@@ -190,7 +196,7 @@ struct AppStorage {
     Storage.Weather w;
     //////////////////////////////////
     uint256 earnedBeans;
-    uint256 brEarnedBeans;
+    uint256 brPaidBeans;
     uint256 brOwedBeans;
     uint256 brTokens;
     uint256[11] depreciated; // 10 slots to map to depreciated storage variables
@@ -210,6 +216,6 @@ struct AppStorage {
     // Internal Balances
     mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
     // Unripe
-    mapping(address => bytes32) merkleRoots;
     mapping(address => mapping(address => bool)) unripeClaimed;
+    mapping(address => Storage.UnripeSettings) u;
 }

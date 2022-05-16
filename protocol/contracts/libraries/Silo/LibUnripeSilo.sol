@@ -21,7 +21,7 @@ library LibUnripeSilo {
     address constant UNRIPE_LP = 0x2e4243832DB30787764f152457952C8305f442e4;
 
     uint256 constant UNRIPE_BEAN_BDV = 0.5e18;
-    uint256 constant UNRIPE_LP_BDV = 0.1e18;
+    uint256 constant UNRIPE_LP_BDV = 0.1e6;
 
     address constant BEAN_3CURVE_ADDRESS = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
     address constant BEAN_LUSD_ADDRESS = 0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA;

@@ -4,9 +4,12 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {IERC173} from "../../interfaces/IERC173.sol";
-import {LibDiamond} from "../../libraries/Diamond/LibDiamond.sol";
+import {LibDiamond} from "../../libraries/LibDiamond.sol";
 
 contract OwnershipFacet is IERC173 {
+
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
     function transferOwnership(address _newOwner) external override {
         LibDiamond.enforceIsContractOwner();
         LibDiamond.setContractOwner(_newOwner);

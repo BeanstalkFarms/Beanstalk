@@ -45,23 +45,28 @@ contract Silo is SiloExit {
     uint256 private _status = 1;
 
     /**
-     * Silo
+     * Internal
      **/
 
-    function update(address account) public payable {
-        uint32 _update = lastUpdate(account);
-        if (_update >= season()) return;
-        earnSops(account, _update);
+    function _update(address account) internal {
+        uint32 _lastUpdate = lastUpdate(account);
+        if (_lastUpdate >= season()) return;
+        // Increment Plenty if a SOP has occured or save Rain Roots if its Raining.
+        handleRainAndSops(account, _lastUpdate);
+        // Earn Grown Stalk -> The Stalk gained from Seeds.
         earnGrownStalk(account);
         s.a[account].lastUpdate = season();
     }
 
-    function earn(address account) external payable {
-        update(account);
+    function _earn(address account) internal returns (uint256 beans) {
+        // Need to update account before we make a Deposit
+        _update(account);
         uint256 accountStalk = s.a[account].s.stalk;
-        uint256 beans = _balanceOfEarnedBeans(account, accountStalk);
-        if (beans == 0) return;
+        // Calculate balance of Earned Beans.
+        beans = _balanceOfEarnedBeans(account, accountStalk);
+        if (beans == 0) return 0;
         s.earnedBeans = s.earnedBeans.sub(beans);
+        // Deposit Earned Beans
         LibTokenSilo.addDeposit(
             account,
             C.beanAddress(),
@@ -70,7 +75,12 @@ contract Silo is SiloExit {
             beans.mul(C.getStalkPerBean())
         );
         uint256 seeds = beans.mul(C.getSeedsPerBean());
+
+        // Earned Seeds don't auto-compound, so we need to mint new Seeds
         LibSilo.incrementBalanceOfSeeds(account, seeds);
+
+        // Earned Stalk auto-compounds and thus is minted alongside Earned Beans
+        // Farmers don't receive additional Roots from Earned Stalk.
         uint256 stalk = beans.mul(C.getStalkPerBean());
         s.a[account].s.stalk = accountStalk.add(stalk);
 
@@ -78,7 +88,8 @@ contract Silo is SiloExit {
         emit Earn(account, beans);
     }
 
-    function claimPlenty(address account) external payable {
+    function _claimPlenty(address account) internal {
+        // Each Plenty is earned in the form of 3Crv.
         uint256 plenty = s.a[account].sop.plenty;
         C.threeCrv().safeTransfer(account, plenty);
         delete s.a[account].sop.plenty;
@@ -86,16 +97,13 @@ contract Silo is SiloExit {
         emit ClaimPlenty(account, plenty);
     }
 
-    /**
-     * Internal
-     **/
-
     function earnGrownStalk(address account) private {
+        // If they have no seeds, we can save gas.
         if (s.a[account].s.seeds == 0) return;
         LibSilo.incrementBalanceOfStalk(account, balanceOfGrownStalk(account));
     }
 
-    function earnSops(address account, uint32 _update) private {
+    function handleRainAndSops(address account, uint32 _lastUpdate) private {
         // If no roots, reset Sop counters variables
         if (s.a[account].roots == 0) {
             s.a[account].lastSop = s.season.rainStart;
@@ -103,13 +111,13 @@ contract Silo is SiloExit {
             return;
         }
         // If a Sop has occured since last update, calculate rewards and set last Sop.
-        if (s.season.lastSopSeason > _update) {
+        if (s.season.lastSopSeason > _lastUpdate) {
             s.a[account].sop.plenty = balanceOfPlenty(account);
             s.a[account].lastSop = s.season.lastSop;
         }
         if (s.season.raining) {
             // If rain started after update, set account variables to track rain.
-            if (s.season.rainStart > _update) {
+            if (s.season.rainStart > _lastUpdate) {
                 s.a[account].lastRain = s.season.rainStart;
                 s.a[account].sop.roots = s.a[account].roots;
             }
@@ -124,7 +132,7 @@ contract Silo is SiloExit {
     }
 
     modifier updateSilo() {
-        update(msg.sender);
+        _update(msg.sender);
         _;
     }
 }

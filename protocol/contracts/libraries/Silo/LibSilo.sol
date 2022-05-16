@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../C.sol";
 import "../LibAppStorage.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -101,6 +100,12 @@ library LibSilo {
 
         s.s.roots = s.s.roots.sub(roots);
         s.a[account].roots = s.a[account].roots.sub(roots);
+        
+        if (s.season.raining) {
+            s.r.roots = s.r.roots.sub(roots);
+            s.a[account].sop.roots = s.a[account].roots;
+        }
+
         emit StalkBalanceChanged(account, -int256(stalk), -int256(roots));
     }
 
@@ -129,17 +134,6 @@ library LibSilo {
 
         s.a[recipient].s.stalk = s.a[recipient].s.stalk.add(stalk);
         s.a[recipient].roots = s.a[recipient].roots.add(roots);
-    }
-
-    function updateBalanceOfRainStalk(address account) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        if (!s.season.raining) return;
-        if (s.a[account].roots < s.a[account].sop.roots) {
-            s.r.roots = s.r.roots.sub(
-                s.a[account].sop.roots - s.a[account].roots
-            ); // Note: SafeMath is redundant here.
-            s.a[account].sop.roots = s.a[account].roots;
-        }
     }
 
     function stalkReward(uint256 seeds, uint32 seasons)

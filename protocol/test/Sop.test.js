@@ -22,7 +22,7 @@ describe('Silo', function () {
     this.bean = await ethers.getContractAt('Bean', BEAN)
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE)
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL)
-    this.beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE)
+    this.beanMetapool = await ethers.getContractAt('IMockCurvePool', BEAN_3_CURVE)
 
     await this.season.siloSunrise(0)
     await this.bean.connect(user).approve(this.silo.address, '100000000000')

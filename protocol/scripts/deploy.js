@@ -1,7 +1,14 @@
 const MAX_INT = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
 
 const diamond = require('./diamond.js')
-const { impersonateBean, impersonateCurveMetapool, impersonateWeth, impersonateUnripe } = require('./impersonate.js')
+const { 
+  impersonateBean, 
+  impersonateCurve,
+  impersonateCurveMetapool, 
+  impersonateWeth, 
+  impersonateUnripe, 
+  impersonateBarnRaise 
+} = require('./impersonate.js')
 function addCommas(nStr) {
   nStr += ''
   const x = nStr.split('.')
@@ -92,6 +99,7 @@ async function main(scriptName, verbose = true, mock = false) {
   }
   let [
     bdvFacet,
+    curveFacet,
     convertFacet,
     fieldFacet,
     fundraiserFacet,
@@ -101,10 +109,12 @@ async function main(scriptName, verbose = true, mock = false) {
     siloFacet,
     barnRaiseFacet,
     tokenFacet,
-    unripeClaimFacet
+    unripeFacet,
+    whitelistFacet
   ] = mock ? await deployFacets(
     verbose,
     [ 'BDVFacet',
+      'CurveFacet',
       'MockConvertFacet',
       'MockFieldFacet',
       'MockFundraiserFacet',
@@ -114,10 +124,12 @@ async function main(scriptName, verbose = true, mock = false) {
       'MockSiloFacet',
       'MockBarnRaiseFacet',
       'TokenFacet',
-      'MockUnripeClaimFacet'],
+      'MockUnripeFacet',
+      'WhitelistFacet'],
   ) : await deployFacets(
     verbose,
     [ 'BDVFacet',
+      'CurveFacet',
       'ConvertFacet',
       'FieldFacet',
       'FundraiserFacet',
@@ -127,17 +139,20 @@ async function main(scriptName, verbose = true, mock = false) {
       'SiloFacet',
       'BarnRaiseFacet',
       'TokenFacet',
-      'UnripeClaimFacet'],
+      'UnripeFacet',
+      'WhitelistFacet'],
   )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/InitDiamond.sol:InitDiamond'
   // eslint-disable-next-line no-unused-vars
 
   let args = []
   if (mock) {
+    await impersonateCurve()
     await impersonateBean()
     await impersonateCurveMetapool()
     await impersonateWeth()
     await impersonateUnripe()
+    await impersonateBarnRaise()
   }
 
   const [beanstalkDiamond, diamondCut] = await diamond.deploy({
@@ -145,6 +160,7 @@ async function main(scriptName, verbose = true, mock = false) {
     initDiamond: initDiamondArg,
     facets: [
       ['BDVFacet', bdvFacet],
+      ['CurveFacet', curveFacet],
       ['ConvertFacet', convertFacet],
       ['FieldFacet', fieldFacet],
       ['FundraiserFacet', fundraiserFacet],
@@ -154,7 +170,8 @@ async function main(scriptName, verbose = true, mock = false) {
       ['SiloFacet', siloFacet],
       ['BarnRaiseFacet', barnRaiseFacet],
       ['TokenFacet', tokenFacet],
-      ['UnripeClaimFacet', unripeClaimFacet]
+      ['UnripeFacet', unripeFacet],
+      ['WhitelistFacet', whitelistFacet]
     ],
     owner: account,
     args: args,
@@ -190,7 +207,7 @@ async function main(scriptName, verbose = true, mock = false) {
     siloFacet,
     barnRaiseFacet,
     tokenFacet,
-    unripeClaimFacet
+    unripeFacet
   }
 }
 

@@ -27,7 +27,7 @@ contract MockSiloFacet is SiloFacet {
     }
 
     function mockUnripeLPDeposit(uint256 t, uint32 _s, uint256 amount, uint256 bdv) external {
-        update(msg.sender);
+        _update(msg.sender);
         if (t == 0) {
             s.a[msg.sender].lp.deposits[_s] += amount;
             s.a[msg.sender].lp.depositSeeds[_s] += bdv.mul(4);
@@ -42,7 +42,7 @@ contract MockSiloFacet is SiloFacet {
     }
 
     function mockUnripeBeanDeposit(uint32 _s, uint256 amount) external {
-        update(msg.sender);
+        _update(msg.sender);
         s.a[msg.sender].bean.deposits[_s] += amount;
         LibTokenSilo.incrementDepositedToken(LibUnripeSilo.UNRIPE_BEAN, amount);
         amount = amount.mul(LibUnripeSilo.UNRIPE_BEAN_BDV).div(1e18);

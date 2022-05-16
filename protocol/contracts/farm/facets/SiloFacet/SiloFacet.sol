@@ -41,7 +41,6 @@ contract SiloFacet is TokenSilo {
         uint256 amount
     ) external payable updateSilo {
         _withdrawDeposit(msg.sender, token, season, amount);
-        LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
     function withdrawDeposits(
@@ -50,7 +49,6 @@ contract SiloFacet is TokenSilo {
         uint256[] calldata amounts
     ) external payable updateSilo {
         _withdrawDeposits(msg.sender, token, seasons, amounts);
-        LibSilo.updateBalanceOfRainStalk(msg.sender);
     }
 
     /*
@@ -62,9 +60,8 @@ contract SiloFacet is TokenSilo {
         uint32 season,
         LibTransfer.To mode
     ) external payable nonReentrant {
-        uint256 amount = removeTokenWithdrawal(msg.sender, token, season);
+        uint256 amount = _claimWithdrawal(msg.sender, token, season);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
-        emit RemoveWithdrawal(msg.sender, token, season, amount);
     }
 
     function claimWithdrawals(
@@ -72,9 +69,8 @@ contract SiloFacet is TokenSilo {
         uint32[] calldata seasons,
         LibTransfer.To mode
     ) external payable nonReentrant {
-        uint256 amount = removeTokenWithdrawals(msg.sender, token, seasons);
+        uint256 amount = _claimWithdrawals(msg.sender, token, seasons);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
-        emit RemoveWithdrawals(msg.sender, token, seasons, amount);
     }
 
     /*
@@ -87,7 +83,8 @@ contract SiloFacet is TokenSilo {
         uint32 season,
         uint256 amount
     ) external payable nonReentrant updateSilo {
-        update(recipient);
+        // Need to update the recipient's Silo as well.
+        _update(recipient);
         _transferDeposit(msg.sender, recipient, token, season, amount);
     }
 
@@ -97,7 +94,24 @@ contract SiloFacet is TokenSilo {
         uint32[] calldata seasons,
         uint256[] calldata amounts
     ) external payable nonReentrant updateSilo {
-        update(recipient);
+        // Need to update the recipient's Silo as well.
+        _update(recipient);
         _transferDeposits(msg.sender, recipient, token, seasons, amounts);
+    }
+
+    /*
+     * Silo
+     */
+
+    function update(address account) external payable {
+        _update(account);
+    }
+
+    function earn(address account) external payable returns (uint256 beans) {
+        return _earn(account);
+    }
+
+    function claimPlenty(address account) external payable {
+        _claimPlenty(account);
     }
 }

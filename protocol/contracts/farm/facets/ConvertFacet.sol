@@ -57,7 +57,7 @@ contract ConvertFacet is ReentrancyGuard {
             uint256 bdv
         ) = LibConvert.convert(userData);
 
-        uint256 grownStalk = _withdrawForConvert(
+        uint256 grownStalk = _withdrawTokens(
             fromToken,
             crates,
             amounts,
@@ -66,18 +66,10 @@ contract ConvertFacet is ReentrancyGuard {
 
         _depositTokens(toToken, toAmount, bdv, grownStalk);
 
-        emit Convert(
-            msg.sender,
-            fromToken,
-            toToken,
-            fromAmount,
-            toAmount
-        );
-
-        LibSilo.updateBalanceOfRainStalk(msg.sender);
+        emit Convert(msg.sender, fromToken, toToken, fromAmount, toAmount);
     }
 
-    function _withdrawForConvert(
+    function _withdrawTokens(
         address token,
         uint32[] memory seasons,
         uint256[] memory amounts,
@@ -164,12 +156,34 @@ contract ConvertFacet is ReentrancyGuard {
     function lpToPeg(address pair) external view returns (uint256 lp) {
         if (pair == C.curveMetapoolAddress())
             return LibCurveConvert.lpToPeg(pair);
+        if (pair == C.unripeLPAddress()) {
+            return LibUnripeConvert.lpToPeg();
+        }
         require(false, "Convert: Pool not supported");
     }
 
     function beansToPeg(address pair) external view returns (uint256 beans) {
         if (pair == C.curveMetapoolAddress())
             return LibCurveConvert.beansToPeg(pair);
+        if (pair == C.unripeLPAddress()) {
+            return LibUnripeConvert.beansToPeg();
+        }
         require(false, "Convert: Pool not supported");
+    }
+
+    function getMaxAmountIn(address inToken, address outToken)
+        external
+        view
+        returns (uint256 amountIn)
+    {
+        if (inToken == C.curveMetapoolAddress() && outToken == C.beanAddress())
+            return LibCurveConvert.lpToPeg(inToken);
+        if (inToken == C.beanAddress() && outToken == C.curveMetapoolAddress())
+            return LibCurveConvert.beansToPeg(inToken);
+        if (inToken == C.unripeLPAddress() && outToken == C.unripeBeanAddress())
+            return LibUnripeConvert.lpToPeg();
+        if (inToken == C.beanAddress() && outToken == C.unripeLPAddress())
+            return LibUnripeConvert.beansToPeg();
+        require(false, "Convert: Tokens not supported");
     }
 }

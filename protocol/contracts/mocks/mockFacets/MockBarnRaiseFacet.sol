@@ -17,4 +17,12 @@ contract MockBarnRaiseFacet is BarnRaiseFacet {
         s.season.barnRaising = barnRaising;
         s.brOwedBeans = brOwedBeans;
     }
+
+    function setBarnRaisePaidE(uint256 brPaidBeans) external {
+        s.brPaidBeans = brPaidBeans;
+    }
+
+    function setBRTokens(uint256 _brTokens) external {
+        s.brTokens = _brTokens;
+    }
 }

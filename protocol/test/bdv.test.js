@@ -1,9 +1,11 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { BEAN, THREE_POOL, BEAN_3_CURVE } = require('./utils/constants');
+const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP } = require('./utils/constants');
+const { to18 } = require('./utils/helpers.js')
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
+const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 
 let lastTimestamp = 1700000000;
 let timestamp;
@@ -59,6 +61,20 @@ describe('BDV', function () {
     await this.bean.connect(user2).approve(this.silo.address, '100000000000'); 
     await this.siloToken.mint(userAddress, '10000');
     await this.siloToken.mint(user2Address, '10000');
+    await this.siloToken.mint(ownerAddress, to18('1000'));
+    await this.siloToken.approve(this.silo.address, to18('1000'));
+
+    this.unripe = await ethers.getContractAt('UnripeFacet', this.silo.address)
+
+    this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP);
+    await this.unripeLP.connect(user).mint(userAddress, to18('10000'))
+    await this.unripeLP.connect(user).approve(this.silo.address, to18('10000'))
+    await this.unripe.addUnripeToken(UNRIPE_LP, this.siloToken.address, ZERO_BYTES)
+    await this.unripe.connect(owner).addUnderlying(
+      UNRIPE_LP,
+      to18('1000')
+    )
+
   });
 
   beforeEach(async function () {
@@ -75,8 +91,6 @@ describe('BDV', function () {
       await this.threePool.set_virtual_price(ethers.utils.parseEther('1'));
       this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
       await this.beanThreeCurve.set_supply(ethers.utils.parseEther('2000000'));
-      await this.beanThreeCurve.set_A_precise('1000');
-      await this.beanThreeCurve.set_virtual_price(ethers.utils.parseEther('1'));
       await this.beanThreeCurve.set_balances([
         ethers.utils.parseUnits('1000000',6),
         ethers.utils.parseEther('1000000')
@@ -96,6 +110,36 @@ describe('BDV', function () {
       await this.threePool.set_virtual_price(ethers.utils.parseEther('1.02'));
       this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
       expect(await this.bdv.bdv(BEAN_3_CURVE, ethers.utils.parseEther('2'))).to.equal('1998191');
+    })
+  })
+
+  describe("Unripe LP BDV", async function () {
+    before(async function () {
+      this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
+      await this.threePool.set_virtual_price(ethers.utils.parseEther('1'));
+      this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
+      await this.beanThreeCurve.set_supply(ethers.utils.parseEther('2000000'));
+      await this.beanThreeCurve.set_A_precise('1000');
+      await this.beanThreeCurve.set_virtual_price(ethers.utils.parseEther('1'));
+      await this.beanThreeCurve.set_balances([
+        ethers.utils.parseUnits('1000000',6),
+        ethers.utils.parseEther('1000000')
+      ]);
+      await this.beanThreeCurve.set_balances([
+        ethers.utils.parseUnits('1200000',6),
+        ethers.utils.parseEther('1000000')
+      ]);
+    });
+
+    it("properly checks bdv", async function () {
+      this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
+      expect(await this.bdv.bdv(UNRIPE_LP, ethers.utils.parseEther('2000'))).to.equal(ethers.utils.parseUnits('200',6));
+    })
+
+    it("properly checks bdv", async function () {
+      await this.threePool.set_virtual_price(ethers.utils.parseEther('1.02'));
+      this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
+      expect(await this.bdv.bdv(UNRIPE_LP, ethers.utils.parseEther('20'))).to.equal('1998191');
     })
   })
 

@@ -3,7 +3,7 @@ const { expect, use } = require("chai");
 const { waffleChai } = require("@ethereum-waffle/chai");
 use(waffleChai);
 const { deploy } = require('../scripts/deploy.js')
-const { BEAN } = require('./utils/constants')
+const { BEAN, ZERO_ADDRESS } = require('./utils/constants')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
 
@@ -111,6 +111,7 @@ describe('Marketplace', function () {
 
       describe("List partial plot", async function () {
         beforeEach(async function () {
+          this.result = await this.marketplace.connect(user).createPodListing('0', '0', '100', '100000', '0', EXTERNAL);
           this.result = await this.marketplace.connect(user).createPodListing('0', '0', '500', '500000', '0', EXTERNAL);
         })
 
@@ -402,7 +403,7 @@ describe('Marketplace', function () {
     })
   })
 
-  describe("Pod Offers", async function () {
+  describe("Plot Transfer", async function () {
     describe("Create", async function () {
       describe('revert', async function () {
         it('Reverts if price is 0', async function () {
@@ -646,5 +647,94 @@ describe('Marketplace', function () {
         })
       })
     })
+  })
+
+  describe("Plot Transfer", async function () {
+    describe("reverts", async function () {
+      it('doesn\'t sent to 0 address', async function () {
+        await expect(this.marketplace.connect(user).transferPlot(userAddress, ZERO_ADDRESS, '0', '0', '100')).to.be.revertedWith('Field: Transfer to/from 0 address.')
+      })
+
+      it('Plot not owned by user.', async function () {
+        await expect(this.marketplace.connect(user2).transferPlot(user2Address, userAddress, '0', '0', '100')).to.be.revertedWith('Field: Plot not owned by user.')
+      })
+
+      it('Allowance is 0 not owned by user.', async function () {
+        await expect(this.marketplace.connect(user2).transferPlot(userAddress, user2Address, '0', '0', '100')).to.be.revertedWith('Field: Insufficient approval.')
+      })
+
+      it('Pod Range invalid', async function () {
+        await expect(this.marketplace.connect(user).transferPlot(userAddress, userAddress, '0', '150', '100')).to.be.revertedWith('Field: Pod range invalid.')
+      })
+
+      it('transfers to self', async function () {
+        await expect(this.marketplace.connect(user).transferPlot(userAddress, userAddress, '0', '0', '100')).to.be.revertedWith('Field: Cannot transfer Pods to oneself.')
+      })
+    })
+
+    describe('transfers beginning of plot', async function () {
+      beforeEach(async function () {
+        this.result = await this.marketplace.connect(user).transferPlot(userAddress, user2Address, '0', '0', '100')
+      })
+
+      it('transfers the plot', async function () {
+        expect(await this.field.plot(user2Address, '0')).to.be.equal('100')
+        expect(await this.field.plot(userAddress, '0')).to.be.equal('0')
+        expect(await this.field.plot(userAddress, '100')).to.be.equal('900')
+      })
+
+      it('emits plot transfer the plot', async function () {
+        expect(this.result).to.emit(this.marketplace, 'PlotTransfer').withArgs(userAddress, user2Address, '0', '100');
+      })
+    })
+
+    describe('transfers with allowance', async function () {
+      beforeEach(async function () {
+        await expect(this.marketplace.connect(user).approvePods(user2Address, '100'))
+        this.result = await this.marketplace.connect(user2).transferPlot(userAddress, user2Address, '0', '0', '100')
+      })
+
+      it('transfers the plot', async function () {
+        expect(await this.field.plot(user2Address, '0')).to.be.equal('100')
+        expect(await this.field.plot(userAddress, '0')).to.be.equal('0')
+        expect(await this.field.plot(userAddress, '100')).to.be.equal('900')
+        expect(await this.marketplace.allowancePods(userAddress, user2Address)).to.be.equal('0')
+      })
+
+      it('emits plot transfer the plot', async function () {
+        expect(this.result).to.emit(this.marketplace, 'PlotTransfer').withArgs(userAddress, user2Address, '0', '100');
+      })
+    })
+
+    describe('transfers with existing pod listing', async function () {
+      beforeEach(async function () {
+        await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', EXTERNAL);
+        this.result = await this.marketplace.connect(user).transferPlot(userAddress, user2Address, '0', '0', '100')
+      })
+
+      it('transfers the plot', async function () {
+        expect(await this.field.plot(user2Address, '0')).to.be.equal('100')
+        expect(await this.field.plot(userAddress, '0')).to.be.equal('0')
+        expect(await this.field.plot(userAddress, '100')).to.be.equal('900')
+        expect(await this.marketplace.podListing('0')).to.be.equal('0x0000000000000000000000000000000000000000000000000000000000000000')
+      })
+
+      it('emits plot transfer the plot', async function () {
+        expect(this.result).to.emit(this.marketplace, 'PlotTransfer').withArgs(userAddress, user2Address, '0', '100');
+      })
+    })
+  })
+
+  describe('approve pods', async function () {
+    it('reverts if 0 address', async function () {
+      await expect(this.marketplace.connect(user).approvePods(ZERO_ADDRESS, '1')).to.be.revertedWith('Field: Pod Approve to 0 address.')
+    })
+
+    it('approves', async function () {
+      this.result = await expect(this.marketplace.connect(user).approvePods(user2Address, '100'))
+      expect(await this.marketplace.allowancePods(userAddress, user2Address)).to.be.equal('100')
+      expect(this.result).to.emit(this.marketplace, 'PodApproval').withArgs(userAddress, user2Address, '100')
+    })
+
   })
 })

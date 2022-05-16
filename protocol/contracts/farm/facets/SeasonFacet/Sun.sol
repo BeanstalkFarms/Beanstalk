@@ -50,13 +50,13 @@ contract Sun is Oracle {
         internal
         returns (uint256 brNewBeans)
     {
-        uint256 brRemainingBeans = uint256(s.brOwedBeans - s.brEarnedBeans); // Note: SafeMath is redundant here.
+        uint256 brRemainingBeans = uint256(s.brOwedBeans - s.brPaidBeans); // Note: SafeMath is redundant here.
         brNewBeans = amount.div(C.getBarnRaiseDenominator());
         if (brRemainingBeans < brNewBeans) {
             brNewBeans = brRemainingBeans;
             s.season.barnRaising = false;
         }
-        s.brEarnedBeans = s.brEarnedBeans + brNewBeans; // Note: SafeMath is redundant here.
+        s.brPaidBeans = s.brPaidBeans + brNewBeans; // Note: SafeMath is redundant here.
     }
 
 

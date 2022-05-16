@@ -80,7 +80,7 @@ describe('Sun', function () {
     await expect(this.result).to.emit(this.season, 'Reward').withArgs('50', '100', '50');
 
     expect(await this.barnRaise.barnRaising()).to.be.equal(false);
-    expect(await this.barnRaise.totalEarnedBR()).to.be.equal('50');
+    expect(await this.barnRaise.totalPaidBR()).to.be.equal('50');
 
     expect(await this.field.totalHarvestable()).to.be.equal('50');
 
@@ -96,7 +96,7 @@ describe('Sun', function () {
     await expect(this.result).to.emit(this.season, 'Reward').withArgs('50', '100', '50');
 
     expect(await this.barnRaise.barnRaising()).to.be.equal(false);
-    expect(await this.barnRaise.totalEarnedBR()).to.be.equal('50');
+    expect(await this.barnRaise.totalPaidBR()).to.be.equal('50');
 
     expect(await this.field.totalHarvestable()).to.be.equal('50');
 
@@ -112,7 +112,7 @@ describe('Sun', function () {
     await expect(this.result).to.emit(this.season, 'Reward').withArgs('50', '50', '50');
 
     expect(await this.barnRaise.barnRaising()).to.be.equal(true);
-    expect(await this.barnRaise.totalEarnedBR()).to.be.equal('50');
+    expect(await this.barnRaise.totalPaidBR()).to.be.equal('50');
 
     expect(await this.field.totalHarvestable()).to.be.equal('50');
 
