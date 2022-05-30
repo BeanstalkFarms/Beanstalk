@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "./interfaces/IBean.sol";
 import "./interfaces/ICurve.sol";
+import "./interfaces/IFertilizer.sol";
 import "./libraries/Decimal.sol";
 
 /**
@@ -19,7 +20,8 @@ library C {
     using SafeMath for uint256;
 
     // Constants
-    uint256 private constant PERCENT_BASE = 1e18; // Mainnet
+    uint256 private constant PERCENT_BASE = 1e18;
+    uint256 private constant PRECISION = 1e18;
 
     // Chain
     uint256 private constant CHAIN_ID = 1; // Mainnet
@@ -30,8 +32,8 @@ library C {
     uint256 private constant SOP_PRECISION = 1e24;
 
     // Sun
-    uint256 private constant BARN_RAISE_DENOMINATOR = 3;
-    uint256 private constant HARVEST_DENOMINATOR =2;
+    uint256 private constant FERTILIZER_DENOMINATOR = 3;
+    uint256 private constant HARVEST_DENOMINATOR = 2;
 
     // Weather
     uint256 private constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%
@@ -48,18 +50,25 @@ library C {
     uint256 private constant STALK_PER_BEAN = 10000;
     uint256 private constant ROOTS_BASE = 1e12;
 
+
+    // Exploit
+    uint256 private constant UNRIPE_LP_PER_DOLLAR = 2e6; // SET
+    uint256 private constant ADD_LP_RATIO = 824296; // SET
+
     // Contracts
     address private constant BEAN = 0xDC59ac4FeFa32293A95889Dc396682858d52e5Db;
     address private constant CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
     address private constant CURVE_BEAN_LUSD_POOL = 0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D;
     address private constant CURVE_3_POOL = 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7;
     address private constant THREE_CRV = 0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490;
-    address private constant UNRIPE_BEAN = 0xD5BDcdEc5b2FEFf781eA8727969A95BbfD47C40e;
-    address private constant UNRIPE_LP = 0x2e4243832DB30787764f152457952C8305f442e4;
-    address private constant BARN_RAISE = 0x2E4243832db30787764F152457952C8305f442E5;
+    address private constant UNRIPE_BEAN = 0xD5BDcdEc5b2FEFf781eA8727969A95BbfD47C40e; // SET
+    address private constant UNRIPE_LP = 0x2e4243832DB30787764f152457952C8305f442e4; // SET 
+    address private constant FERTILIZER = 0x2E4243832db30787764F152457952C8305f442E5; // SET
+    address private constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
 
     address private constant TRI_CRYPTO = 0xc4AD29ba4B3c580e6D59105FFf484999997675Ff;
     address private constant TRI_CRYPTO_POOL = 0xD51a44d3FaE010294C616388b506AcdA1bfAAE46;
+    address private constant CURVE_ZAP = 0xA79828DF1850E8a3A3064576f380D90aECDD3359;
 
     /**
      * Getters
@@ -73,8 +82,8 @@ library C {
         return BASE_ADVANCE_INCENTIVE;
     }
 
-    function getBarnRaiseDenominator() internal pure returns (uint256) {
-        return BARN_RAISE_DENOMINATOR;
+    function getFertilizerDenominator() internal pure returns (uint256) {
+        return FERTILIZER_DENOMINATOR;
     }
 
     function getHarvestDenominator() internal pure returns (uint256) {
@@ -145,8 +154,20 @@ library C {
         return UNRIPE_LP;
     }
 
+    function unripeBean() internal pure returns (IERC20) {
+        return IERC20(UNRIPE_BEAN);
+    }
+
+    function unripeLP() internal pure returns (IERC20) {
+        return IERC20(UNRIPE_LP);
+    }
+
     function bean() internal pure returns (IBean) {
         return IBean(BEAN);
+    }
+
+    function usdc() internal pure returns (IERC20) {
+        return IERC20(USDC);
     }
 
     function curveMetapool() internal pure returns (ICurvePool) {
@@ -156,6 +177,14 @@ library C {
     function curve3Pool() internal pure returns (I3Curve) {
         return I3Curve(CURVE_3_POOL);
     }
+    
+    function curveZap() internal pure returns (ICurveZap) {
+        return ICurveZap(CURVE_ZAP);
+    }
+
+    function curveZapAddress() internal pure returns (address) {
+        return CURVE_ZAP;
+    }
 
     function curve3PoolAddress() internal pure returns (address) {
         return CURVE_3_POOL;
@@ -164,9 +193,13 @@ library C {
     function threeCrv() internal pure returns (IERC20) {
         return IERC20(THREE_CRV);
     }
-    
-    function barnRaise() internal pure returns (IERC20) {
-        return IERC20(BARN_RAISE);
+
+    function fertilizer() internal pure returns (IFertilizer) {
+        return IFertilizer(FERTILIZER);
+    }
+
+    function fertilizerAddress() internal pure returns (address) {
+        return FERTILIZER;
     }
 
     function triCryptoPoolAddress() internal pure returns (address) {
@@ -175,5 +208,21 @@ library C {
 
     function triCrypto() internal pure returns (IERC20) {
         return IERC20(TRI_CRYPTO);
+    }
+
+    function unripeLPPerDollar() internal pure returns (uint256) {
+        return UNRIPE_LP_PER_DOLLAR;
+    }
+
+    function dollarPerUnripeLP() internal pure returns (uint256) {
+        return 1e12/UNRIPE_LP_PER_DOLLAR;
+    }
+
+    function exploitAddLPRatio() internal pure returns (uint256) {
+        return ADD_LP_RATIO;
+    }
+
+    function precision() internal pure returns (uint256) {
+        return PRECISION;
     }
 }

@@ -14,8 +14,6 @@ import {LibDiamond} from "./LibDiamond.sol";
 
 interface IBS {
     function update(address account) external payable;
-
-    function capture() external payable returns (int256 bdv);
 }
 
 library LibInternal {

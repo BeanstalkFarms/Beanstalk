@@ -1,4 +1,3 @@
-const { BN } = require('@openzeppelin/test-helpers')
 const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { parseJson } = require('./utils/helpers.js')

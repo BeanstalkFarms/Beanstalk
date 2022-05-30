@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "../../../libraries/LibSafeMath32.sol";
 import "./Oracle.sol";
 import "../../../C.sol";
+import "../../../libraries/LibFertilizer.sol";
 
 /**
  * @author Publius
@@ -17,7 +18,7 @@ contract Sun is Oracle {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
-    event Reward(uint256 toField, uint256 toSilo, uint256 toBarnRaise);
+    event Reward(uint256 toField, uint256 toSilo, uint256 toFertilizer);
     event Soil(uint256 soil);
 
     /**
@@ -31,37 +32,54 @@ contract Sun is Oracle {
 
     function rewardBeans(uint256 newSupply) internal {
         uint256 newHarvestable;
-        uint256 newBarnRaise;
+        uint256 newFertilizable;
         C.bean().mint(address(this), newSupply);
-        if (s.season.barnRaising) {
-            newBarnRaise = rewardToBarnRaise(newSupply);
-            newSupply = newSupply.sub(newBarnRaise);
+        if (s.season.fertilizing) {
+            newFertilizable = rewardToFertilizer(newSupply);
+            newSupply = newSupply.sub(newFertilizable);
         }
         if (s.f.harvestable < s.f.pods) {
             newHarvestable = rewardToHarvestable(newSupply);
             newSupply = newSupply.sub(newHarvestable);
         }
         rewardToSilo(newSupply);
-        emit Reward(newHarvestable, newSupply, newBarnRaise);
+        emit Reward(newHarvestable, newSupply, newFertilizable);
         setSoil(newHarvestable.mul(100).div(100 + s.w.yield));
     }
 
-    function rewardToBarnRaise(uint256 amount)
+    function rewardToFertilizer(uint256 amount)
         internal
-        returns (uint256 brNewBeans)
+        returns (uint256 newFertilizable)
     {
-        uint256 brRemainingBeans = uint256(s.brOwedBeans - s.brPaidBeans); // Note: SafeMath is redundant here.
-        brNewBeans = amount.div(C.getBarnRaiseDenominator());
-        if (brRemainingBeans < brNewBeans) {
-            brNewBeans = brRemainingBeans;
-            s.season.barnRaising = false;
+        uint256 maxNewFertilizable = amount.div(C.getFertilizerDenominator());
+
+        uint256 newBpf = maxNewFertilizable.div(s.activeFertilizer);
+        uint256 oldTotalBpf = s.bpf;
+        uint256 newTotalBpf = oldTotalBpf.add(newBpf);
+        uint256 firstEndBpf = s.fFirst;
+
+        while(newTotalBpf >= firstEndBpf) {
+            newBpf = firstEndBpf.sub(oldTotalBpf);
+            newFertilizable = newFertilizable.add(newBpf.mul(s.activeFertilizer));
+            if (!LibFertilizer.pop()) {
+                s.bpf = uint32(firstEndBpf);
+                s.fertilizedIndex = s.fertilizedIndex.add(newFertilizable);
+                require(s.fertilizedIndex == s.unfertilizedIndex, "Paid != owed");
+                return newFertilizable;
+            }
+            newBpf = maxNewFertilizable.sub(newFertilizable).div(s.activeFertilizer);
+            oldTotalBpf = firstEndBpf;
+            newTotalBpf = oldTotalBpf.add(newBpf);
+            firstEndBpf = s.fFirst;
         }
-        s.brPaidBeans = s.brPaidBeans + brNewBeans; // Note: SafeMath is redundant here.
+
+        s.bpf = uint32(newTotalBpf);
+        newFertilizable = newFertilizable.add(newBpf.mul(s.activeFertilizer));
+        s.fertilizedIndex = s.fertilizedIndex.add(newFertilizable);
     }
 
-
     function rewardToHarvestable(uint256 amount)
-        internal
+        internal    
         returns (uint256 newHarvestable)
     {
         uint256 notHarvestable = s.f.pods - s.f.harvestable; // Note: SafeMath is redundant here.

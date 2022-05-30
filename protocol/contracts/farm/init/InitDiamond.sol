@@ -41,6 +41,8 @@ contract InitDiamond {
 
         C.bean().approve(C.curveMetapoolAddress(), type(uint256).max);
         C.bean().approve(C.curveBeanLUSDAddress(), type(uint256).max);
+        C.bean().approve(C.curveZapAddress(), type(uint256).max);
+        C.usdc().approve(C.curveZapAddress(), type(uint256).max);
 
         s.cases = s.cases = [
         // Dsc, Sdy, Inc, nul

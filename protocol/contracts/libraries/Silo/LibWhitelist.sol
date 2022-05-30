@@ -46,20 +46,10 @@ library LibWhitelist {
     uint32 private constant BEAN_SEEDS = 2;
 
     function whitelistPools() internal {
-        whitelistBeanLusd();
         whitelistBean3Crv();
         whitelistBean();
         whitelistUnripeBean();
         whitelistUnripeLP();
-    }
-
-    function whitelistBeanLusd() internal {
-        whitelistToken(
-            C.curveBeanLUSDAddress(),
-            IBS.lusdToBDV.selector,
-            BEAN_LUSD_STALK,
-            BEAN_LUSD_SEEDS
-        );
     }
 
     function whitelistBean3Crv() internal {

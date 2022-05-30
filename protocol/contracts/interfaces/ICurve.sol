@@ -19,6 +19,10 @@ interface ICurvePool {
     function transfer(address recipient, uint256 amount) external returns (bool);
 }
 
+interface ICurveZap {
+    function add_liquidity(address _pool, uint256[4] memory _deposit_amounts, uint256 _min_mint_amount) external returns (uint256);
+}
+
 interface ICurvePoolR {
     function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy, address receiver) external returns (uint256);
     function exchange_underlying(int128 i, int128 j, uint256 dx, uint256 min_dy, address receiver) external returns (uint256);

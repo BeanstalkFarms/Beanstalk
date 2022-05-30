@@ -142,7 +142,7 @@ contract Storage {
         uint32 lastSopSeason;
         uint32 rainStart;
         bool raining;
-        bool barnRaising;
+        bool fertilizing;
         uint256 start;
         uint256 period;
         uint256 timestamp;
@@ -196,10 +196,7 @@ struct AppStorage {
     Storage.Weather w;
     //////////////////////////////////
     uint256 earnedBeans;
-    uint256 brPaidBeans;
-    uint256 brOwedBeans;
-    uint256 brTokens;
-    uint256[11] depreciated; // 10 slots to map to depreciated storage variables
+    uint256[14] depreciated; // 10 slots to map to depreciated storage variables
     mapping (address => Account.State) a;
     uint32 bip0Start;
     uint32 hotFix3Start;
@@ -218,4 +215,14 @@ struct AppStorage {
     // Unripe
     mapping(address => mapping(address => bool)) unripeClaimed;
     mapping(address => Storage.UnripeSettings) u;
+    // Fertilizer
+    mapping(uint32 => uint256) fertilizer;
+    mapping(uint32 => uint32[8]) nextFid;
+    uint256 activeFertilizer;
+    uint256 fertilizedIndex;
+    uint256 unfertilizedIndex;
+    uint32 bpf;
+    uint32 fFirst;
+    uint32 fLast;
+    uint256 recapitalized;
 }

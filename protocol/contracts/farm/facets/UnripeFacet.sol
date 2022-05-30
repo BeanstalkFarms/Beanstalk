@@ -11,8 +11,9 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IBean} from "../../interfaces/IBean.sol";
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
+import {LibFertilizer} from "../../libraries/LibFertilizer.sol";
 import {LibTransfer} from "../../libraries/Token/LibTransfer.sol";
-import "../../interfaces/IBarnraise.sol";
+import "../../C.sol";
 import "../ReentrancyGuard.sol";
 
 /// @author ZrowGz, Publius
@@ -24,7 +25,7 @@ contract UnripeFacet is ReentrancyGuard {
     using LibTransfer for IERC20;
     using SafeMath for uint256;
 
-    uint256 constant PRECISION = 1e18;
+    uint256 constant DECIMALS = 1e6;
 
     event AddUnripeToken(
         address indexed unripeToken,
@@ -109,16 +110,17 @@ contract UnripeFacet is ReentrancyGuard {
         );
     }
 
+    function getPenalty(address unripeToken) external view returns (uint256 penalty) {
+        return getPenalizedUnderlying(unripeToken, DECIMALS);
+    }
+
     function getPenalizedUnderlying(address unripeToken, uint256 amount)
         public
         view
         returns (uint256 redeem)
     {
         require(isUnripe(unripeToken), "not vesting");
-        uint256 sharesBeingRedeemed = s.brPaidBeans.mul(amount).div(
-            s.brOwedBeans,
-            "set line"
-        );
+        uint256 sharesBeingRedeemed = getRecapPaidPercentAmount(amount);
         redeem = getUnderlying(unripeToken, sharesBeingRedeemed);
     }
 
@@ -147,8 +149,25 @@ contract UnripeFacet is ReentrancyGuard {
             );
     }
 
-    function getRipenPenalty() external view returns (uint256 penalty) {
-        penalty = s.brPaidBeans.mul(PRECISION).div(s.brOwedBeans, "set penalt");
+    function getRecapFundedPercent(address unripeToken) public view returns (uint256 percent) {
+        if (unripeToken == C.unripeBeanAddress()) {
+            return s.u[C.unripeBeanAddress()].balanceOfUnderlying.mul(DECIMALS).div(C.unripeBean().totalSupply());
+        } else if (unripeToken == C.unripeLPAddress()) {
+            return C.unripeLPPerDollar().mul(s.recapitalized).div(C.unripeLP().totalSupply());
+        }
+        revert("not vesting");
+    }
+
+    function getPercentPenalty(address unripeToken) external view returns (uint256 penalty) {
+        return getRecapPaidPercentAmount(getRecapFundedPercent(unripeToken));
+    }
+
+    function getRecapPaidPercent() external view returns (uint256 penalty) {
+        penalty = getRecapPaidPercentAmount(DECIMALS);
+    }
+
+    function getRecapPaidPercentAmount(uint256 amount) private view returns (uint256 penalty) {
+        return s.fertilizedIndex.mul(amount).div(s.unfertilizedIndex);
     }
 
     function getUnderlyingPerUnripeToken(address unripeToken)
@@ -159,7 +178,7 @@ contract UnripeFacet is ReentrancyGuard {
         underlyingPerToken = s
             .u[unripeToken]
             .balanceOfUnderlying
-            .mul(PRECISION)
+            .mul(DECIMALS)
             .div(IERC20(unripeToken).totalSupply());
     }
 

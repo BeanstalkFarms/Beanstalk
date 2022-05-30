@@ -245,8 +245,8 @@ contract MockSeasonFacet is SeasonFacet {
         }
     }
 
-    function rewardToBarnRaiseE(uint256 amount) external {
-        rewardToBarnRaise(amount*3);
+    function rewardToFertilizerE(uint256 amount) external {
+        rewardToFertilizer(amount*3);
         C.bean().mint(address(this), amount);
     }
 }

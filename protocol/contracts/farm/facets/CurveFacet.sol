@@ -199,7 +199,7 @@ contract CurveFacet is ReentrancyGuard {
         }
     }
 
-    function removeLiquidityInbalance(
+    function removeLiquidityImbalance(
         address pool,
         uint256[] calldata amountsOut,
         uint256 maxAmountIn,

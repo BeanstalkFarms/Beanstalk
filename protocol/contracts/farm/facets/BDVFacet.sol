@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "../../C.sol";
 import "../../libraries/Curve/LibBeanMetaCurve.sol";
+import "../../libraries/Curve/LibBeanLUSDCurve.sol";
 import "../../libraries/Convert/LibUnripeConvert.sol";
 
 /*

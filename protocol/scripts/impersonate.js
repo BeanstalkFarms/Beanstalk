@@ -15,12 +15,14 @@ const UNRIPE_BEAN = '0xD5BDcdEc5b2FEFf781eA8727969A95BbfD47C40e';
 const UNRIPE_LP = '0x2e4243832DB30787764f152457952C8305f442e4';
 const BARN_RAISE = '0x2E4243832db30787764F152457952C8305f442E5';
 const TETHER = '';
-const USDC = '';
+const USDC = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
 const CURVE_STABLE_FACTORY = '0xB9fC157394Af804a3578134A6585C0dc9cc990d4';
 const CURVE_CRYPTO_FACTORY = '0x0959158b6040D32d04c301A72CBFD6b39E21c9AE';
+const CURVE_ZAP = '0xA79828DF1850E8a3A3064576f380D90aECDD3359';
 
 async function curve() {
-  // Deploy 3 Curve
+  // Deploy 3 Curveadd
+  await usdc()
   let threePoolJson = fs.readFileSync(`./artifacts/contracts/mocks/curve/Mock3Curve.sol/Mock3Curve.json`);
   await network.provider.send("hardhat_setCode", [
     THREE_POOL,
@@ -46,9 +48,16 @@ async function curve() {
     CURVE_CRYPTO_FACTORY,
     JSON.parse(threeCurveJson).deployedBytecode,
   ]);
-
   const curveStableFactory = await ethers.getContractAt("MockCurveFactory", CURVE_STABLE_FACTORY);
   await curveStableFactory.set_coins(BEAN_3_CURVE, [BEAN, THREE_CURVE, ZERO_ADDRESS, ZERO_ADDRESS]);
+
+  let curveZapJson = fs.readFileSync(`./artifacts/contracts/mocks/Curve/MockCurveZap.sol/MockCurveZap.json`);
+  await network.provider.send("hardhat_setCode", [
+    CURVE_ZAP,
+    JSON.parse(curveZapJson).deployedBytecode,
+  ]);
+  const curveZap = await ethers.getContractAt("MockCurveZap", CURVE_ZAP);
+  await curveZap.approve()
 
 }
 
@@ -146,13 +155,24 @@ async function bean() {
   return BEAN;
 }
 
-async function barnRaise() {
+async function usdc() {
   let tokenJson = fs.readFileSync(`./artifacts/contracts/mocks/MockToken.sol/MockToken.json`);
-
   await network.provider.send("hardhat_setCode", [
-    BARN_RAISE,
+    USDC,
     JSON.parse(tokenJson).deployedBytecode,
   ]);
+
+  const usdc = await ethers.getContractAt("MockToken", USDC);
+  await usdc.setDecimals(6);
+}
+
+async function fertilizer() {
+  // let tokenJson = fs.readFileSync(`./artifacts/contracts/mocks/MockToken.sol/MockToken.json`);
+
+  // await network.provider.send("hardhat_setCode", [
+  //   BARN_RAISE,
+  //   JSON.parse(tokenJson).deployedBytecode,
+  // ]);
 }
 
 async function unripe() {
@@ -180,4 +200,4 @@ exports.impersonateCurveLUSD = curveLUSD
 exports.impersonatePool = pool
 exports.impersonateWeth = weth
 exports.impersonateUnripe = unripe
-exports.impersonateBarnRaise = barnRaise
+exports.impersonateFertilizer = fertilizer
