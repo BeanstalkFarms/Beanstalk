@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./LibAppStorage.sol";
 import "./LibSafeMath32.sol";
 import "../C.sol";
+import "./LibUnripe.sol";
 
 /**
  * @author Publius
@@ -20,11 +21,6 @@ library LibFertilizer {
     using LibSafeMath32 for uint32;
 
     event SetFertilizer(uint32 id, uint32 bpf);
-
-    event AddUnderlying(
-        address indexed token,
-        uint256 underlying
-    );
 
     // 6 - 3
     uint32 private constant PADDING = 1e3;
@@ -77,19 +73,10 @@ library LibFertilizer {
         // Add Liquidity
         uint256 newLP = C.curveZap().add_liquidity(C.curveMetapoolAddress(), [newDepositedLPBeans, 0, amount, 0], minAmountOut);
         // Increment underlying balances of Unripe Tokens
-        incrementUnderlying(C.unripeBeanAddress(), newDepositedBeans);
-        incrementUnderlying(C.unripeLPAddress(), newLP);
+        LibUnripe.incrementUnderlying(C.unripeBeanAddress(), newDepositedBeans);
+        LibUnripe.incrementUnderlying(C.unripeLPAddress(), newLP);
 
         s.recapitalized = s.recapitalized.add(amount);
-    }
-
-    function incrementUnderlying(address token, uint256 amount) private {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        s.u[token].balanceOfUnderlying = s
-            .u[token]
-            .balanceOfUnderlying
-            .add(amount);
-        emit AddUnderlying(token, amount);
     }
 
     function push(uint32 id) internal {
@@ -134,7 +121,7 @@ library LibFertilizer {
         s.activeFertilizer = s.activeFertilizer.sub(getAmount(first));
         uint32 next = getNext(first);
         if (next == 0) {
-            // If all Unfertilized Beans have been fertilized.
+            // If all Unfertilized Beans have been fertilized, delete line.
             require(s.activeFertilizer == 0, "Still active fertliizer");
             s.fFirst = 0;
             s.fLast = 0;

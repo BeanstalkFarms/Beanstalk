@@ -7,8 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "../../C.sol";
 import "../../libraries/Curve/LibBeanMetaCurve.sol";
-import "../../libraries/Curve/LibBeanLUSDCurve.sol";
-import "../../libraries/Convert/LibUnripeConvert.sol";
+import "../../libraries/LibUnripe.sol";
 
 /*
  * @author Publius
@@ -26,13 +25,13 @@ contract BDVFacet {
     }
 
     function unripeLPToBDV(uint256 amount) public view returns (uint256) {
-        amount = LibUnripeConvert.unripeToUnderlying(C.unripeLPAddress(), amount);
+        amount = LibUnripe.unripeToUnderlying(C.unripeLPAddress(), amount);
         amount = LibBeanMetaCurve.bdv(amount);
         return amount;
     }
 
     function unripeBeanToBDV(uint256 amount) public view returns (uint256) {
-        return LibUnripeConvert.unripeToUnderlying(C.unripeBeanAddress(), amount);
+        return LibUnripe.unripeToUnderlying(C.unripeBeanAddress(), amount);
     }
 
     function bdv(address token, uint256 amount)

@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../LibAppStorage.sol";
-import "./LibConvertUserData.sol";
+import "./LibConvertData.sol";
 import "./LibMetaCurveConvert.sol";
 import "./LibBeanLUSDConvert.sol";
 import "../Curve/LibBeanMetaCurve.sol";
@@ -18,7 +18,7 @@ import "../Curve/LibBeanMetaCurve.sol";
  **/
 library LibCurveConvert {
     using SafeMath for uint256;
-    using LibConvertUserData for bytes;
+    using LibConvertData for bytes;
 
     function getBeansAtPeg(address pool, uint256[2] memory balances)
         internal
@@ -42,54 +42,58 @@ library LibCurveConvert {
         uint256[2] memory balances = ICurvePool(pool).get_balances();
         uint256 xp1 = getBeansAtPeg(pool, balances);
         if (balances[0] <= xp1) return 0;
-        lp = C.curveMetapool().calc_token_amount(
+        lp = ICurvePool(pool).calc_token_amount(
             [balances[0].sub(xp1), 0],
             false
         );
     }
 
+    function getLPAmountOut(address pool, uint256 amountIn) internal view returns(uint256 lp) {
+        lp = ICurvePool(pool).calc_withdraw_one_coin(amountIn, 0);
+    }
+
+    function getBeanAmountOut(address pool, uint256 amountIn) internal view returns(uint256 lp) {
+        lp = ICurvePool(pool).calc_token_amount([amountIn, 0], true);
+    }
+
     /// @notice Takes in encoded bytes for adding Curve LP in beans, extracts the input data, and then calls the
-    /// @param userData Contains convert input parameters for a Curve AddLPInBeans convert
-    function convertLPToBeans(bytes memory userData)
+    /// @param convertData Contains convert input parameters for a Curve AddLPInBeans convert
+    function convertLPToBeans(bytes memory convertData)
         internal
         returns (
-            address outToken,
-            address inToken,
+            address tokenOut,
+            address tokenIn,
             uint256 outAmount,
-            uint256 inAmount,
-            uint256 bdv
+            uint256 inAmount
         )
     {
-        (uint256 lp, uint256 minBeans, address pool) = userData
+        (uint256 lp, uint256 minBeans, address pool) = convertData
             .convertWithAddress();
         (outAmount, inAmount) = _curveRemoveLPAndBuyToPeg(lp, minBeans, pool);
-        outToken = C.beanAddress();
-        inToken = pool;
-        bdv = outAmount;
+        tokenOut = C.beanAddress();
+        tokenIn = pool;
     }
 
     /// @notice Takes in encoded bytes for adding beans in Curve LP, extracts the input data, and then calls the
-    /// @param userData Contains convert input parameters for a Curve AddBeansInLP convert
-    function convertBeansToLP(bytes memory userData)
+    /// @param convertData Contains convert input parameters for a Curve AddBeansInLP convert
+    function convertBeansToLP(bytes memory convertData)
         internal
         returns (
-            address outToken,
-            address inToken,
+            address tokenOut,
+            address tokenIn,
             uint256 outAmount,
-            uint256 inAmount,
-            uint256 bdv
+            uint256 inAmount
         )
     {
-        (uint256 beans, uint256 minLP, address pool) = userData
+        (uint256 beans, uint256 minLP, address pool) = convertData
             .convertWithAddress();
         (outAmount, inAmount) = _curveSellToPegAndAddLiquidity(
             beans,
             minLP,
             pool
         );
-        outToken = pool;
-        inToken = C.beanAddress();
-        bdv = inAmount;
+        tokenOut = pool;
+        tokenIn = C.beanAddress();
     }
 
     /// @notice Takes in parameters to convert beans into LP using Curve

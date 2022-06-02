@@ -44,7 +44,7 @@ contract ConvertFacet is ReentrancyGuard {
     }
 
     function convert(
-        bytes calldata userData,
+        bytes calldata convertData,
         uint32[] memory crates,
         uint256[] memory amounts
     ) external payable nonReentrant {
@@ -53,16 +53,18 @@ contract ConvertFacet is ReentrancyGuard {
             address toToken,
             address fromToken,
             uint256 toAmount,
-            uint256 fromAmount,
-            uint256 bdv
-        ) = LibConvert.convert(userData);
+            uint256 fromAmount
+        ) = LibConvert.convert(convertData);
 
-        uint256 grownStalk = _withdrawTokens(
+        (uint256 grownStalk, uint256 oldBdv) = _withdrawTokens(
             fromToken,
             crates,
             amounts,
             fromAmount
         );
+
+        uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
+        uint256 bdv = newBdv > oldBdv ? newBdv : oldBdv;
 
         _depositTokens(toToken, toAmount, bdv, grownStalk);
 
@@ -74,7 +76,7 @@ contract ConvertFacet is ReentrancyGuard {
         uint32[] memory seasons,
         uint256[] memory amounts,
         uint256 maxTokens
-    ) internal returns (uint256 grownStalkRemoved) {
+    ) internal returns (uint256, uint256) {
         require(
             seasons.length == amounts.length,
             "Convert: seasons, amounts are diff lengths."
@@ -126,7 +128,7 @@ contract ConvertFacet is ReentrancyGuard {
             a.bdvRemoved.mul(s.ss[token].seeds),
             a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalk))
         );
-        return a.stalkRemoved;
+        return (a.stalkRemoved, a.bdvRemoved);
     }
 
     function _depositTokens(
@@ -153,37 +155,19 @@ contract ConvertFacet is ReentrancyGuard {
         LibTokenSilo.addDeposit(msg.sender, token, _s, amount, bdv);
     }
 
-    function lpToPeg(address pair) external view returns (uint256 lp) {
-        if (pair == C.curveMetapoolAddress())
-            return LibCurveConvert.lpToPeg(pair);
-        if (pair == C.unripeLPAddress()) {
-            return LibUnripeConvert.lpToPeg();
-        }
-        require(false, "Convert: Pool not supported");
-    }
-
-    function beansToPeg(address pair) external view returns (uint256 beans) {
-        if (pair == C.curveMetapoolAddress())
-            return LibCurveConvert.beansToPeg(pair);
-        if (pair == C.unripeLPAddress()) {
-            return LibUnripeConvert.beansToPeg();
-        }
-        require(false, "Convert: Pool not supported");
-    }
-
-    function getMaxAmountIn(address inToken, address outToken)
+    function getMaxAmountIn(address tokenIn, address tokenOut)
         external
         view
         returns (uint256 amountIn)
     {
-        if (inToken == C.curveMetapoolAddress() && outToken == C.beanAddress())
-            return LibCurveConvert.lpToPeg(inToken);
-        if (inToken == C.beanAddress() && outToken == C.curveMetapoolAddress())
-            return LibCurveConvert.beansToPeg(inToken);
-        if (inToken == C.unripeLPAddress() && outToken == C.unripeBeanAddress())
-            return LibUnripeConvert.lpToPeg();
-        if (inToken == C.beanAddress() && outToken == C.unripeLPAddress())
-            return LibUnripeConvert.beansToPeg();
-        require(false, "Convert: Tokens not supported");
+        return LibConvert.getMaxAmountIn(tokenIn, tokenOut);
+    }
+
+    function getAmountOut(
+        address tokenIn,
+        address tokenOut,
+        uint256 amountIn
+    ) external view returns (uint256 amountOut) {
+        return LibConvert.getAmountOut(tokenIn, tokenOut, amountIn);
     }
 }

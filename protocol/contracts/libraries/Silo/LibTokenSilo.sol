@@ -155,7 +155,7 @@ library LibTokenSilo {
     }
 
     function beanDenominatedValue(address token, uint256 amount)
-        private
+        internal
         returns (uint256 bdv)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();

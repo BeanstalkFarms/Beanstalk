@@ -73,7 +73,7 @@ contract CurveFacet is ReentrancyGuard {
         LibTransfer.To toMode
     ) external payable nonReentrant {
         (int128 i, int128 j) = getUnderlyingIandJ(fromToken, toToken, pool);
-        IERC20(fromToken).receiveToken(amountIn, msg.sender, fromMode);
+        amountIn = IERC20(fromToken).receiveToken(amountIn, msg.sender, fromMode);
         IERC20(fromToken).approveToken(pool, amountIn);
 
         if (toMode == LibTransfer.To.EXTERNAL) {

@@ -201,3 +201,4 @@ exports.impersonatePool = pool
 exports.impersonateWeth = weth
 exports.impersonateUnripe = unripe
 exports.impersonateFertilizer = fertilizer
+exports.impersonateUsdc = usdc

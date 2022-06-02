@@ -34,6 +34,8 @@ library C {
     // Sun
     uint256 private constant FERTILIZER_DENOMINATOR = 3;
     uint256 private constant HARVEST_DENOMINATOR = 2;
+    uint256 private constant SOIL_COEFFICIENT_HIGH = 0.5e18;
+    uint256 private constant SOIL_COEFFICIENT_LOW = 1.5e18;
 
     // Weather
     uint256 private constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%
@@ -54,11 +56,11 @@ library C {
     // Exploit
     uint256 private constant UNRIPE_LP_PER_DOLLAR = 2e6; // SET
     uint256 private constant ADD_LP_RATIO = 824296; // SET
+    uint256 private constant INITIAL_HAIRCUT = 0.5e18; // SET
 
     // Contracts
-    address private constant BEAN = 0xDC59ac4FeFa32293A95889Dc396682858d52e5Db;
-    address private constant CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
-    address private constant CURVE_BEAN_LUSD_POOL = 0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D;
+    address private constant BEAN = 0xDC59ac4FeFa32293A95889Dc396682858d52e5Db; // SET
+    address private constant CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD; // SET
     address private constant CURVE_3_POOL = 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7;
     address private constant THREE_CRV = 0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490;
     address private constant UNRIPE_BEAN = 0xD5BDcdEc5b2FEFf781eA8727969A95BbfD47C40e; // SET
@@ -69,6 +71,9 @@ library C {
     address private constant TRI_CRYPTO = 0xc4AD29ba4B3c580e6D59105FFf484999997675Ff;
     address private constant TRI_CRYPTO_POOL = 0xD51a44d3FaE010294C616388b506AcdA1bfAAE46;
     address private constant CURVE_ZAP = 0xA79828DF1850E8a3A3064576f380D90aECDD3359;
+
+    address private constant UNRIPE_CURVE_BEAN_LUSD_POOL = 0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D;
+    address private constant UNRIPE_CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
 
     /**
      * Getters
@@ -142,8 +147,12 @@ library C {
         return CURVE_BEAN_METAPOOL;
     }
 
-    function curveBeanLUSDAddress() internal pure returns (address) {
-        return CURVE_BEAN_LUSD_POOL;
+    function unripeLPPool1() internal pure returns (address) {
+        return UNRIPE_CURVE_BEAN_METAPOOL;
+    }
+
+    function unripeLPPool2() internal pure returns (address) {
+        return UNRIPE_CURVE_BEAN_LUSD_POOL;
     }
 
     function unripeBeanAddress() internal pure returns (address) {
@@ -224,5 +233,17 @@ library C {
 
     function precision() internal pure returns (uint256) {
         return PRECISION;
+    }
+
+    function initialRecap() internal pure returns (uint256) {
+        return INITIAL_HAIRCUT;
+    }
+
+    function soilCoefficientHigh() internal pure returns (uint256) {
+        return SOIL_COEFFICIENT_HIGH;
+    }
+
+    function soilCoefficientLow() internal pure returns (uint256) {
+        return SOIL_COEFFICIENT_LOW;
     }
 }

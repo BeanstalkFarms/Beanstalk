@@ -1,6 +1,8 @@
 const { expect } = require("chai");
 const { deployFertilizer } = require('../scripts/deployFertilizer.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+require('dotenv').config();
+const ALCHEMY_URL = `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`
 
 let user, user2;
 
@@ -14,8 +16,21 @@ function to6(a) {
   return ethers.utils.parseUnits(a, 6)
 }
 
+async function reset() {
+  await network.provider.request({
+    method: "hardhat_reset",
+    params: [{
+        forking: {
+          jsonRpcUrl: ALCHEMY_URL,
+          blockNumber: 14602789,
+        },
+      },],
+  });
+}
+
 describe("PreFertilizer", function () {
   before(async function () {
+    await reset();
     [user, user2] = await ethers.getSigners();
     this.fertilizer = await deployFertilizer(user, true, true);
     this.usdc = await ethers.getContractAt("IUSDC", await this.fertilizer.USDC())

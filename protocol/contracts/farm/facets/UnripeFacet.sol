@@ -11,7 +11,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IBean} from "../../interfaces/IBean.sol";
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
-import {LibFertilizer} from "../../libraries/LibFertilizer.sol";
+import {LibUnripe} from "../../libraries/LibUnripe.sol";
 import {LibTransfer} from "../../libraries/Token/LibTransfer.sol";
 import "../../C.sol";
 import "../ReentrancyGuard.sol";
@@ -33,9 +33,9 @@ contract UnripeFacet is ReentrancyGuard {
         bytes32 merkleRoot
     );
 
-    event AddUnderlying(
+    event ChangeUnderlying(
         address indexed token,
-        uint256 underlying
+        int256 underlying
     );
 
     event Ripen(
@@ -58,10 +58,7 @@ contract UnripeFacet is ReentrancyGuard {
     ) external payable nonReentrant returns (uint256 underlyingAmount) {
         underlyingAmount = getPenalizedUnderlying(unripeToken, amount);
 
-        s.u[unripeToken].balanceOfUnderlying = s
-            .u[unripeToken]
-            .balanceOfUnderlying
-            .sub(underlyingAmount);
+        LibUnripe.decrementUnderlying(unripeToken, underlyingAmount);
 
         IBean(unripeToken).burnFrom(msg.sender, amount);
 
@@ -151,9 +148,9 @@ contract UnripeFacet is ReentrancyGuard {
 
     function getRecapFundedPercent(address unripeToken) public view returns (uint256 percent) {
         if (unripeToken == C.unripeBeanAddress()) {
-            return s.u[C.unripeBeanAddress()].balanceOfUnderlying.mul(DECIMALS).div(C.unripeBean().totalSupply());
+            return LibUnripe.percentBeansRecapped();
         } else if (unripeToken == C.unripeLPAddress()) {
-            return C.unripeLPPerDollar().mul(s.recapitalized).div(C.unripeLP().totalSupply());
+            return LibUnripe.percentLPRecapped();
         }
         revert("not vesting");
     }
@@ -199,24 +196,5 @@ contract UnripeFacet is ReentrancyGuard {
         s.u[unripeToken].underlyingToken = underlyingToken;
         s.u[unripeToken].merkleRoot = root;
         emit AddUnripeToken(unripeToken, underlyingToken, root);
-    }
-
-    function addUnderlying(address unripeToken, uint256 amount)
-        external
-        payable
-        nonReentrant
-    {
-        LibDiamond.enforceIsOwnerOrContract();
-        address underlyingToken = s.u[unripeToken].underlyingToken;
-        IERC20(underlyingToken).safeTransferFrom(
-            msg.sender,
-            address(this),
-            amount
-        );
-        s.u[unripeToken].balanceOfUnderlying = s
-            .u[unripeToken]
-            .balanceOfUnderlying
-            .add(amount);
-        emit AddUnderlying(unripeToken, amount);
     }
 }

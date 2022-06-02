@@ -64,7 +64,7 @@ describe('BDV', function () {
     await this.siloToken.mint(ownerAddress, to18('1000'));
     await this.siloToken.approve(this.silo.address, to18('1000'));
 
-    this.unripe = await ethers.getContractAt('UnripeFacet', this.silo.address)
+    this.unripe = await ethers.getContractAt('MockUnripeFacet', this.silo.address)
 
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP);
     await this.unripeLP.connect(user).mint(userAddress, to18('10000'))

@@ -75,10 +75,10 @@ contract MockSeasonFacet is SeasonFacet {
         mockStepSilo(amount);
     }
 
-    function sunSunrise(int256 deltaB) public {
+    function sunSunrise(int256 deltaB, uint256 caseId) public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
-        stepSun(deltaB);
+        stepSun(deltaB, caseId); // Check
     }
 
     function lightSunrise() public {

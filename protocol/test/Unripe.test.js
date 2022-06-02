@@ -26,6 +26,7 @@ describe('Unripe', function () {
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
     await this.unripeLP.mint(userAddress, to6('1000'))
+    await this.unripeLP.connect(user).approve(this.diamond.address, to6('100000000'))
     await this.unripeBean.mint(userAddress, to6('1000'))
     await this.unripeBean.connect(user).approve(this.diamond.address, to6('100000000'))
     await this.fertilizer.setFertilizerE(true, to6('10000'))
@@ -123,7 +124,6 @@ describe('Unripe', function () {
         UNRIPE_BEAN,
         to6('100')
       )
-
       await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('100'))
       await this.unripe.connect(user).ripen(UNRIPE_BEAN, to6('1'), EXTERNAL)
     })
