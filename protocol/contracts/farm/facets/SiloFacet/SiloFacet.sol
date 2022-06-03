@@ -27,7 +27,12 @@ contract SiloFacet is TokenSilo {
         uint256 amount,
         LibTransfer.From mode
     ) external payable nonReentrant updateSilo {
-        amount = LibTransfer.receiveToken(IERC20(token), amount, msg.sender, mode);
+        amount = LibTransfer.receiveToken(
+            IERC20(token),
+            amount,
+            msg.sender,
+            mode
+        );
         _deposit(msg.sender, token, amount);
     }
 
@@ -115,12 +120,15 @@ contract SiloFacet is TokenSilo {
         _claimPlenty(account);
     }
 
-
     /*
      * Update Unripe Deposits
      */
 
-    function updateUnripeDeposits(address token, uint32[] calldata seasons, uint256[] calldata amounts) external nonReentrant updateSilo {
+    function updateUnripeDeposits(
+        address token,
+        uint32[] calldata seasons,
+        uint256[] calldata amounts
+    ) external nonReentrant updateSilo {
         // First, remove Deposits because every deposit is in a different season, we need to get the total Stalk/Seeds, not just BDV
         AssetsRemoved memory ar = removeDeposits(msg.sender, token, seasons, amounts);
 
@@ -131,25 +139,49 @@ contract SiloFacet is TokenSilo {
         // Iterate through all seasons, redeposit the tokens with new BDV and summate new Stalk.
         for (uint256 i = 0; i < seasons.length; ++i) {
             uint256 bdv = amounts[i].mul(newBDV).div(ar.tokensRemoved); // Cheaper than calling the BDV function multiple times.
-            LibTokenSilo.addDeposit(msg.sender, token, seasons[i], amounts[i], bdv);
+            LibTokenSilo.addDeposit(
+                msg.sender,
+                token,
+                seasons[i],
+                amounts[i],
+                bdv
+            );
             newStalk = newStalk.add(
-                bdv.mul(s.ss[token].stalk).add(LibSilo.stalkReward(bdv.mul(s.ss[token].seeds), season() - seasons[i]))
+                bdv.mul(s.ss[token].stalk).add(
+                    LibSilo.stalkReward(
+                        bdv.mul(s.ss[token].seeds),
+                        season() - seasons[i]
+                    )
+                )
             );
         }
 
         uint256 newSeeds = newBDV.mul(s.ss[token].seeds);
 
         // Add new Stalk
-        LibSilo.depositSiloAssets(msg.sender, newSeeds.sub(ar.seedsRemoved), newStalk.sub(ar.stalkRemoved));
+        LibSilo.depositSiloAssets(
+            msg.sender,
+            newSeeds.sub(ar.seedsRemoved),
+            newStalk.sub(ar.stalkRemoved)
+        );
     }
 
-    function updateUnripeDeposit(address token, uint32 _season, uint256 amount) external nonReentrant updateSilo {
+    function updateUnripeDeposit(
+        address token,
+        uint32 _season,
+        uint256 amount
+    ) external nonReentrant updateSilo {
         // First, remove Deposit and Redeposit with new BDV
-        uint256 ogBDV = LibTokenSilo.removeDeposit(msg.sender, token, _season, amount);
+        uint256 ogBDV = LibTokenSilo.removeDeposit(
+            msg.sender,
+            token,
+            _season,
+            amount
+        );
         emit RemoveDeposit(msg.sender, token, _season, amount); // Remove Deposit does not emit an event, while Add Deposit does.
         uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
         LibTokenSilo.addDeposit(msg.sender, token, _season, amount, newBDV);
-        
+
         // Calculate the different in BDV. Will fail if BDV is lower.
         uint256 deltaBDV = newBDV.sub(ogBDV);
 
