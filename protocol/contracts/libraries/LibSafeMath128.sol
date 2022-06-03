@@ -4,16 +4,16 @@ pragma solidity >=0.6.0 <0.8.0;
 
 /**
  * @author Publius
- * @title LibSafeMath224 is a uint224 variation of Open Zeppelin's Safe Math library.
+ * @title LibSafeMath128 is a uint128 variation of Open Zeppelin's Safe Math library.
 **/
-library LibSafeMath224 {
+library LibSafeMath128 {
     /**
      * @dev Returns the addition of two unsigned integers, with an overflow flag.
      *
      * _Available since v3.4._
      */
-    function tryAdd(uint224 a, uint224 b) internal pure returns (bool, uint224) {
-        uint224 c = a + b;
+    function tryAdd(uint128 a, uint128 b) internal pure returns (bool, uint128) {
+        uint128 c = a + b;
         if (c < a) return (false, 0);
         return (true, c);
     }
@@ -23,7 +23,7 @@ library LibSafeMath224 {
      *
      * _Available since v3.4._
      */
-    function trySub(uint224 a, uint224 b) internal pure returns (bool, uint224) {
+    function trySub(uint128 a, uint128 b) internal pure returns (bool, uint128) {
         if (b > a) return (false, 0);
         return (true, a - b);
     }
@@ -33,12 +33,12 @@ library LibSafeMath224 {
      *
      * _Available since v3.4._
      */
-    function tryMul(uint224 a, uint224 b) internal pure returns (bool, uint224) {
+    function tryMul(uint128 a, uint128 b) internal pure returns (bool, uint128) {
         // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
         // benefit is lost if 'b' is also tested.
         // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
         if (a == 0) return (true, 0);
-        uint224 c = a * b;
+        uint128 c = a * b;
         if (c / a != b) return (false, 0);
         return (true, c);
     }
@@ -48,7 +48,7 @@ library LibSafeMath224 {
      *
      * _Available since v3.4._
      */
-    function tryDiv(uint224 a, uint224 b) internal pure returns (bool, uint224) {
+    function tryDiv(uint128 a, uint128 b) internal pure returns (bool, uint128) {
         if (b == 0) return (false, 0);
         return (true, a / b);
     }
@@ -58,7 +58,7 @@ library LibSafeMath224 {
      *
      * _Available since v3.4._
      */
-    function tryMod(uint224 a, uint224 b) internal pure returns (bool, uint224) {
+    function tryMod(uint128 a, uint128 b) internal pure returns (bool, uint128) {
         if (b == 0) return (false, 0);
         return (true, a % b);
     }
@@ -73,8 +73,8 @@ library LibSafeMath224 {
      *
      * - Addition cannot overflow.
      */
-    function add(uint224 a, uint224 b) internal pure returns (uint224) {
-        uint224 c = a + b;
+    function add(uint128 a, uint128 b) internal pure returns (uint128) {
+        uint128 c = a + b;
         require(c >= a, "SafeMath: addition overflow");
         return c;
     }
@@ -89,7 +89,7 @@ library LibSafeMath224 {
      *
      * - Subtraction cannot overflow.
      */
-    function sub(uint224 a, uint224 b) internal pure returns (uint224) {
+    function sub(uint128 a, uint128 b) internal pure returns (uint128) {
         require(b <= a, "SafeMath: subtraction overflow");
         return a - b;
     }
@@ -104,9 +104,9 @@ library LibSafeMath224 {
      *
      * - Multiplication cannot overflow.
      */
-    function mul(uint224 a, uint224 b) internal pure returns (uint224) {
+    function mul(uint128 a, uint128 b) internal pure returns (uint128) {
         if (a == 0) return 0;
-        uint224 c = a * b;
+        uint128 c = a * b;
         require(c / a == b, "SafeMath: multiplication overflow");
         return c;
     }
@@ -123,7 +123,7 @@ library LibSafeMath224 {
      *
      * - The divisor cannot be zero.
      */
-    function div(uint224 a, uint224 b) internal pure returns (uint224) {
+    function div(uint128 a, uint128 b) internal pure returns (uint128) {
         require(b > 0, "SafeMath: division by zero");
         return a / b;
     }
@@ -140,7 +140,7 @@ library LibSafeMath224 {
      *
      * - The divisor cannot be zero.
      */
-    function mod(uint224 a, uint224 b) internal pure returns (uint224) {
+    function mod(uint128 a, uint128 b) internal pure returns (uint128) {
         require(b > 0, "SafeMath: modulo by zero");
         return a % b;
     }
@@ -158,7 +158,7 @@ library LibSafeMath224 {
      *
      * - Subtraction cannot overflow.
      */
-    function sub(uint224 a, uint224 b, string memory errorMessage) internal pure returns (uint224) {
+    function sub(uint128 a, uint128 b, string memory errorMessage) internal pure returns (uint128) {
         require(b <= a, errorMessage);
         return a - b;
     }
@@ -178,7 +178,7 @@ library LibSafeMath224 {
      *
      * - The divisor cannot be zero.
      */
-    function div(uint224 a, uint224 b, string memory errorMessage) internal pure returns (uint224) {
+    function div(uint128 a, uint128 b, string memory errorMessage) internal pure returns (uint128) {
         require(b > 0, errorMessage);
         return a / b;
     }
@@ -198,7 +198,7 @@ library LibSafeMath224 {
      *
      * - The divisor cannot be zero.
      */
-    function mod(uint224 a, uint224 b, string memory errorMessage) internal pure returns (uint224) {
+    function mod(uint128 a, uint128 b, string memory errorMessage) internal pure returns (uint128) {
         require(b > 0, errorMessage);
         return a % b;
     }

@@ -396,7 +396,7 @@ describe('Fertilize', function () {
     describe("no Beans", async function () {
       beforeEach(async function() {
         const beansBefore = await this.bean.balanceOf(this.fertilizer.address)
-        await this.fertilizer.connect(user).fertilize([to6('2.5')], EXTERNAL)
+        await this.fertilizer.connect(user).claimFertilized([to6('2.5')], EXTERNAL)
         this.deltaBeanstalkBeans = (await this.bean.balanceOf(this.fertilizer.address)).sub(beansBefore)
       })
 
@@ -420,7 +420,7 @@ describe('Fertilize', function () {
       beforeEach(async function() {
         await this.season.rewardToFertilizerE(to6('50'))
         const beansBefore = await this.bean.balanceOf(this.fertilizer.address)
-        await this.fertilizer.connect(user).fertilize([to6('2.5')], EXTERNAL)
+        await this.fertilizer.connect(user).claimFertilized([to6('2.5')], EXTERNAL)
         this.deltaBeanstalkBeans = (await this.bean.balanceOf(this.fertilizer.address)).sub(beansBefore)
       })
 
@@ -444,7 +444,7 @@ describe('Fertilize', function () {
       beforeEach(async function() {
         await this.season.rewardToFertilizerE(to6('250'))
         const beansBefore = await this.bean.balanceOf(this.fertilizer.address)
-        await this.fertilizer.connect(user).fertilize([to6('2.5')], EXTERNAL)
+        await this.fertilizer.connect(user).claimFertilized([to6('2.5')], EXTERNAL)
         this.deltaBeanstalkBeans = (await this.bean.balanceOf(this.fertilizer.address)).sub(beansBefore)
       })
 
@@ -470,11 +470,11 @@ describe('Fertilize', function () {
         await this.season.rewardToFertilizerE(to6('200'))
         await this.season.teleportSunrise('6475')
         this.result = await this.fertilizer.connect(user).mintFertilizer('100', '0', EXTERNAL)
-        await this.fertilizer.connect(user).fertilize([to6('2.5')], EXTERNAL)
+        await this.fertilizer.connect(user).claimFertilized([to6('2.5')], EXTERNAL)
         await this.season.rewardToFertilizerE(to6('150'))
 
         const beansBefore = await this.bean.balanceOf(this.fertilizer.address)
-        await this.fertilizer.connect(user).fertilize([to6('2.5')], EXTERNAL)
+        await this.fertilizer.connect(user).claimFertilized([to6('2.5')], EXTERNAL)
         this.deltaBeanstalkBeans = (await this.bean.balanceOf(this.fertilizer.address)).sub(beansBefore)
       })
 
@@ -499,11 +499,11 @@ describe('Fertilize', function () {
         await this.season.rewardToFertilizerE(to6('200'))
         await this.season.teleportSunrise('6475')
         this.result = await this.fertilizer.connect(user).mintFertilizer('100', '0', EXTERNAL)
-        await this.fertilizer.connect(user).fertilize([to6('2.5')], EXTERNAL)
+        await this.fertilizer.connect(user).claimFertilized([to6('2.5')], EXTERNAL)
         await this.season.rewardToFertilizerE(to6('150'))
 
         const beansBefore = await this.bean.balanceOf(this.fertilizer.address)
-        await this.fertilizer.connect(user).fertilize([to6('2.5'), to6('3.5')], EXTERNAL)
+        await this.fertilizer.connect(user).claimFertilized([to6('2.5'), to6('3.5')], EXTERNAL)
         this.deltaBeanstalkBeans = (await this.bean.balanceOf(this.fertilizer.address)).sub(beansBefore)
       })
 
@@ -528,11 +528,11 @@ describe('Fertilize', function () {
         await this.season.rewardToFertilizerE(to6('200'))
         await this.season.teleportSunrise('6475')
         this.result = await this.fertilizer.connect(user).mintFertilizer('100', '0', EXTERNAL)
-        await this.fertilizer.connect(user).fertilize([to6('2.5')], EXTERNAL)
+        await this.fertilizer.connect(user).claimFertilized([to6('2.5')], EXTERNAL)
         await this.season.rewardToFertilizerE(to6('200'))
 
         const beansBefore = await this.bean.balanceOf(this.fertilizer.address)
-        await this.fertilizer.connect(user).fertilize([to6('2.5'), to6('3.5')], EXTERNAL)
+        await this.fertilizer.connect(user).claimFertilized([to6('2.5'), to6('3.5')], EXTERNAL)
         this.deltaBeanstalkBeans = (await this.bean.balanceOf(this.fertilizer.address)).sub(beansBefore)
       })
 

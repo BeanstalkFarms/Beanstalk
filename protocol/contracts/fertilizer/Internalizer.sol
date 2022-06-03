@@ -10,7 +10,7 @@ import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Fertilizer1155.sol";
 import "../libraries/LibSafeMath32.sol";
-import "../libraries/LibSafeMath224.sol";
+import "../libraries/LibSafeMath128.sol";
 
 /**
  * @author publius
@@ -20,17 +20,16 @@ import "../libraries/LibSafeMath224.sol";
 contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertilizer1155 {
 
     using SafeERC20Upgradeable for IERC20;
-    using LibSafeMath224 for uint224;
-    using LibSafeMath32 for uint32;
+    using LibSafeMath128 for uint128;
 
     struct Balance {
-        uint224 amount;
-        uint32 lastBpf;
+        uint128 amount;
+        uint128 lastBpf;
     }
 
-    function __Internallize_init() internal {
+    function __Internallize_init(string memory uri_) internal {
         __Ownable_init();
-        __ERC1155_init("");
+        __ERC1155_init(uri_);
         __ReentrancyGuard_init();
     }
 
@@ -73,7 +72,7 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
     ) internal virtual override {
         uint128 _amount = uint128(amount);
         if (from != address(0)) {
-            uint224 fromBalance = _balances[id][from].amount;
+            uint128 fromBalance = _balances[id][from].amount;
             require(uint256(fromBalance) >= amount, "ERC1155: insufficient balance for transfer");
             // Because we know fromBalance >= amount, we know amount < type(uint128).max
             _balances[id][from].amount = fromBalance - _amount;

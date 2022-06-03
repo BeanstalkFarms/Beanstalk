@@ -18,6 +18,7 @@ describe('Token', function () {
         this.user = u1; this.user2 = u2; this.recipient = r;
         const contracts = await deploy("Test", false, true)
         this.tokenFacet = await ethers.getContractAt('TokenFacet', contracts.beanstalkDiamond.address)
+        this.farm = await ethers.getContractAt('FarmFacet', contracts.beanstalkDiamond.address)
 
         const MockToken = await ethers.getContractFactory('MockToken')
         this.token = await MockToken.connect(this.user).deploy('Mock', 'MOCK')
@@ -160,7 +161,24 @@ describe('Token', function () {
             expect(await this.tokenFacet.getInternalBalance(this.user.address, WETH)).to.eq(to18('0'))
         })
 
-        it('withdraw WETH from exteranl', async function () {
+        it('deposit WETH to external, not all', async function () {
+            const ethBefore = await ethers.provider.getBalance(this.user.address)
+            await this.tokenFacet.connect(this.user).wrapEth(to18('1'), EXTERNAL, { value: to18('2') })
+            expect(ethBefore.sub(await ethers.provider.getBalance(this.user.address))).to.be.within(to18('1'), to18('1.001'))
+            expect(await this.weth.balanceOf(this.user.address)).to.eq(to18('1'))
+            expect(await this.tokenFacet.getInternalBalance(this.user.address, WETH)).to.eq(to18('0'))
+        })
+
+        it('deposit WETH to external, not all, farm', async function () {
+            const ethBefore = await ethers.provider.getBalance(this.user.address)
+            const wrapEth = await this.tokenFacet.interface.encodeFunctionData("wrapEth", [to18('1'), EXTERNAL]);
+            await this.farm.connect(this.user).farm([wrapEth], { value: to18('2') })
+            expect(ethBefore.sub(await ethers.provider.getBalance(this.user.address))).to.be.within(to18('1'), to18('1.001'))
+            expect(await this.weth.balanceOf(this.user.address)).to.eq(to18('1'))
+            expect(await this.tokenFacet.getInternalBalance(this.user.address, WETH)).to.eq(to18('0'))
+        })
+
+        it('withdraw WETH from external', async function () {
             await this.tokenFacet.connect(this.user).wrapEth(to18('1'), EXTERNAL, { value: to18('1') })
             const ethBefore = await ethers.provider.getBalance(this.user.address)
             await this.tokenFacet.connect(this.user).unwrapEth(to18('1'), EXTERNAL)

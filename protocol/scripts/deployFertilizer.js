@@ -7,8 +7,9 @@ const FERTILIZER = '0x2E4243832db30787764F152457952C8305f442E5'
 
 async function deploy(account, pre=true, mock=false) {
   const contractName = pre ? 'FertilizerPreMint' : 'Fertilizer';
+  const args = pre ? [''] : [];
   const Fertilizer = await ethers.getContractFactory(contractName);
-  const fertilizer = await upgrades.deployProxy(Fertilizer);
+  const fertilizer = await upgrades.deployProxy(Fertilizer, args);
   console.log("Fertilizer 1155 deployed to:", fertilizer.address);
 
   if (mock) {

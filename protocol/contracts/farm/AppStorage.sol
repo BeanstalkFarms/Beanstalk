@@ -59,7 +59,6 @@ contract Account {
         uint256 wrappedBeans; // Dep
         mapping(address => mapping(uint32 => Deposit)) deposits;
         mapping(address => mapping(uint32 => uint256)) withdrawals;
-        uint256 beansPerBRToken;
     }
 }
 
@@ -216,13 +215,14 @@ struct AppStorage {
     mapping(address => mapping(address => bool)) unripeClaimed;
     mapping(address => Storage.UnripeSettings) u;
     // Fertilizer
-    mapping(uint32 => uint256) fertilizer;
-    mapping(uint32 => uint32[8]) nextFid;
+    mapping(uint128 => uint256) fertilizer;
+    mapping(uint128 => uint128) nextFid;
     uint256 activeFertilizer;
     uint256 fertilizedIndex;
     uint256 unfertilizedIndex;
-    uint32 bpf;
-    uint32 fFirst;
-    uint32 fLast;
+    uint128 fFirst;
+    uint128 fLast;
+    uint128 bpf;
     uint256 recapitalized;
+    uint256 isFarm;
 }

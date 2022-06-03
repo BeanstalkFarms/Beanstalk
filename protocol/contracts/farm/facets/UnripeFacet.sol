@@ -33,10 +33,7 @@ contract UnripeFacet is ReentrancyGuard {
         bytes32 merkleRoot
     );
 
-    event ChangeUnderlying(
-        address indexed token,
-        int256 underlying
-    );
+    event ChangeUnderlying(address indexed token, int256 underlying);
 
     event Ripen(
         address indexed account,
@@ -64,15 +61,11 @@ contract UnripeFacet is ReentrancyGuard {
 
         address underlyingToken = s.u[unripeToken].underlyingToken;
 
-        IERC20(underlyingToken).sendToken(
-            underlyingAmount,
-            msg.sender,
-            mode
-        );
+        IERC20(underlyingToken).sendToken(underlyingAmount, msg.sender, mode);
 
         emit Ripen(msg.sender, unripeToken, amount, underlyingAmount);
     }
-    
+
     function claimUnripe(
         address token,
         uint256 amount,
@@ -107,7 +100,11 @@ contract UnripeFacet is ReentrancyGuard {
         );
     }
 
-    function getPenalty(address unripeToken) external view returns (uint256 penalty) {
+    function getPenalty(address unripeToken)
+        external
+        view
+        returns (uint256 penalty)
+    {
         return getPenalizedUnderlying(unripeToken, DECIMALS);
     }
 
@@ -146,7 +143,11 @@ contract UnripeFacet is ReentrancyGuard {
             );
     }
 
-    function getRecapFundedPercent(address unripeToken) public view returns (uint256 percent) {
+    function getRecapFundedPercent(address unripeToken)
+        public
+        view
+        returns (uint256 percent)
+    {
         if (unripeToken == C.unripeBeanAddress()) {
             return LibUnripe.percentBeansRecapped();
         } else if (unripeToken == C.unripeLPAddress()) {
@@ -155,7 +156,11 @@ contract UnripeFacet is ReentrancyGuard {
         revert("not vesting");
     }
 
-    function getPercentPenalty(address unripeToken) external view returns (uint256 penalty) {
+    function getPercentPenalty(address unripeToken)
+        external
+        view
+        returns (uint256 penalty)
+    {
         return getRecapPaidPercentAmount(getRecapFundedPercent(unripeToken));
     }
 
@@ -163,7 +168,11 @@ contract UnripeFacet is ReentrancyGuard {
         penalty = getRecapPaidPercentAmount(DECIMALS);
     }
 
-    function getRecapPaidPercentAmount(uint256 amount) private view returns (uint256 penalty) {
+    function getRecapPaidPercentAmount(uint256 amount)
+        private
+        view
+        returns (uint256 penalty)
+    {
         return s.fertilizedIndex.mul(amount).div(s.unfertilizedIndex);
     }
 

@@ -17,39 +17,40 @@ import "../C.sol";
 library LibUnripe {
     using SafeMath for uint256;
 
-    event ChangeUnderlying(
-        address indexed token,
-        int256 underlying
-    );
+    event ChangeUnderlying(address indexed token, int256 underlying);
 
     uint256 constant DECIMALS = 1e6;
 
     function percentBeansRecapped() internal view returns (uint256 percent) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.u[C.unripeBeanAddress()].balanceOfUnderlying.mul(DECIMALS).div(C.unripeBean().totalSupply());
+        return
+            s.u[C.unripeBeanAddress()].balanceOfUnderlying.mul(DECIMALS).div(
+                C.unripeBean().totalSupply()
+            );
     }
 
     function percentLPRecapped() internal view returns (uint256 percent) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return C.unripeLPPerDollar().mul(s.recapitalized).div(C.unripeLP().totalSupply());
+        return
+            C.unripeLPPerDollar().mul(s.recapitalized).div(
+                C.unripeLP().totalSupply()
+            );
     }
 
     function incrementUnderlying(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.u[token].balanceOfUnderlying = s
-            .u[token]
-            .balanceOfUnderlying
-            .add(amount);
-        emit ChangeUnderlying(token, int(amount));
+        s.u[token].balanceOfUnderlying = s.u[token].balanceOfUnderlying.add(
+            amount
+        );
+        emit ChangeUnderlying(token, int256(amount));
     }
 
     function decrementUnderlying(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.u[token].balanceOfUnderlying = s
-            .u[token]
-            .balanceOfUnderlying
-            .sub(amount);
-        emit ChangeUnderlying(token, -int(amount));
+        s.u[token].balanceOfUnderlying = s.u[token].balanceOfUnderlying.sub(
+            amount
+        );
+        emit ChangeUnderlying(token, -int256(amount));
     }
 
     function unripeToUnderlying(address unripeToken, uint256 unripe)
@@ -77,7 +78,9 @@ library LibUnripe {
     function addUnderlying(address token, uint256 underlying) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (token == C.unripeLPAddress()) {
-            uint256 recapped = underlying.mul(s.recapitalized).div(s.u[C.unripeLPAddress()].balanceOfUnderlying);
+            uint256 recapped = underlying.mul(s.recapitalized).div(
+                s.u[C.unripeLPAddress()].balanceOfUnderlying
+            );
             s.recapitalized = s.recapitalized.add(recapped);
         }
         incrementUnderlying(token, underlying);
@@ -86,7 +89,9 @@ library LibUnripe {
     function removeUnderlying(address token, uint256 underlying) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (token == C.unripeLPAddress()) {
-            uint256 recapped = underlying.mul(s.recapitalized).div(s.u[C.unripeLPAddress()].balanceOfUnderlying);
+            uint256 recapped = underlying.mul(s.recapitalized).div(
+                s.u[C.unripeLPAddress()].balanceOfUnderlying
+            );
             s.recapitalized = s.recapitalized.sub(recapped);
         }
         decrementUnderlying(token, underlying);

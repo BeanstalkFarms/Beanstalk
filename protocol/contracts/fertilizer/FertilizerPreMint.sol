@@ -43,9 +43,9 @@ contract FertilizerPreMint is Internalizer {
     uint128 constant MAX_RAISE  = 77_000_000_000_000; // 77 million in USDC
 
 
-    function initialize() public initializer {
+    function initialize(string memory _uri) public initializer {
         IERC20(WETH).approve(SWAP_ROUTER, type(uint256).max);
-        __Internallize_init();
+        __Internallize_init(_uri);
     }
 
     function mint(uint256 amount) external payable nonReentrant {

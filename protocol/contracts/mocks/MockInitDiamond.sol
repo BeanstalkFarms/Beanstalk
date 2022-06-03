@@ -52,6 +52,7 @@ contract MockInitDiamond {
         s.season.withdrawSeasons = 25;
         s.season.start = block.timestamp;
         s.season.timestamp = block.timestamp;
+        s.isFarm = 1;
 
         LibWhitelist.whitelistPools();
     }

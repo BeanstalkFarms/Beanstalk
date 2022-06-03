@@ -10,9 +10,9 @@ interface IFertilizer {
     function beanstalkUpdate(
         address account,
         uint256[] memory ids,
-        uint32 bpf
+        uint128 bpf
     ) external returns (uint256);
-    function beanstalkMint(address account, uint256 id, uint128 amount, uint32 bpf) external;
+    function beanstalkMint(address account, uint256 id, uint128 amount, uint128 bpf) external;
     function balanceOfFertilized(address account, uint256[] memory ids) external view returns (uint256);
     function balanceOfUnfertilized(address account, uint256[] memory ids) external view returns (uint256);
     function lastBalanceOf(address account, uint256 id) external view returns (Balance memory);

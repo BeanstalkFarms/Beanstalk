@@ -12,32 +12,32 @@ import "./Internalizer.sol";
 
 interface IBS {
     function payFertilizer(address account, uint256 amount) external;
-    function beansPerFertilizer() external view returns (uint32);
-    function getEndBpf() external view returns (uint32);
+    function beansPerFertilizer() external view returns (uint128);
+    function getEndBpf() external view returns (uint128);
     function remainingRecapitalization() external view returns (uint256);
 }
 
 contract Fertilizer is Internalizer {
 
-    event Fertilize(uint256[] ids, uint256 beans);
+    event ClaimFertilizer(uint256[] ids, uint256 beans);
 
     using SafeERC20Upgradeable for IERC20;
     using SafeMathUpgradeable for uint256;
-    using LibSafeMath32 for uint32;
+    using LibSafeMath128 for uint128;
 
     function initialize() public initializer {
-        __Internallize_init();
+        __Internallize_init("");
     }
 
     function beanstalkUpdate(
         address account,
         uint256[] memory ids,
-        uint32 bpf
+        uint128 bpf
     ) external onlyOwner returns (uint256) {
         return __update(account, ids, uint256(bpf));
     }
 
-    function beanstalkMint(address account, uint256 id, uint128 amount, uint32 bpf) external onlyOwner {
+    function beanstalkMint(address account, uint256 id, uint128 amount, uint128 bpf) external onlyOwner {
         _balances[id][account].lastBpf = bpf;
         _safeMint(
             account,
@@ -79,10 +79,10 @@ contract Fertilizer is Internalizer {
             uint256 deltaBpf = stopBpf - _balances[ids[i]][account].lastBpf;
             if (deltaBpf > 0) {
                 beans = beans.add(deltaBpf.mul(_balances[ids[i]][account].amount));
-                _balances[ids[i]][account].lastBpf = uint32(stopBpf); // downcasting
+                _balances[ids[i]][account].lastBpf = uint128(stopBpf);
             }
         }
-        emit Fertilize(ids, beans);
+        emit ClaimFertilizer(ids, beans);
     }
 
     function balanceOfFertilized(address account, uint256[] memory ids) external view returns (uint256 beans) {

@@ -73,7 +73,7 @@ contract Sun is Oracle {
 
             // If there is no more fertilizer, end
             if (!LibFertilizer.pop()) {
-                s.bpf = uint32(firstEndBpf);
+                s.bpf = uint128(firstEndBpf);
                 s.fertilizedIndex = s.fertilizedIndex.add(newFertilized);
                 require(s.fertilizedIndex == s.unfertilizedIndex, "Paid != owed");
                 return newFertilized;
@@ -86,7 +86,7 @@ contract Sun is Oracle {
         }
 
         // Distribute the rest of the Fertilized Beans
-        s.bpf = uint32(newTotalBpf);
+        s.bpf = uint128(newTotalBpf);
         newFertilized = newFertilized.add(newBpf.mul(s.activeFertilizer));
         s.fertilizedIndex = s.fertilizedIndex.add(newFertilized);
     }
