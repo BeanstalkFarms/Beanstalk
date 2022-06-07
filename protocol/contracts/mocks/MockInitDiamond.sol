@@ -25,7 +25,8 @@ contract MockInitDiamond {
     function init() external {
 
         C.bean().approve(C.curveMetapoolAddress(), type(uint256).max);
-        C.bean().approve(C.curveBeanLUSDAddress(), type(uint256).max);
+        C.bean().approve(C.curveZapAddress(), type(uint256).max);
+        C.usdc().approve(C.curveZapAddress(), type(uint256).max);
 
         s.cases = s.cases = [
         // Dsc, Sdy, Inc, nul
@@ -51,6 +52,7 @@ contract MockInitDiamond {
         s.season.withdrawSeasons = 25;
         s.season.start = block.timestamp;
         s.season.timestamp = block.timestamp;
+        s.isFarm = 1;
 
         LibWhitelist.whitelistPools();
     }

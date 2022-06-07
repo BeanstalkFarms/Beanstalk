@@ -11,9 +11,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @author Publius
  * @title WETH Interface
 **/
-interface IWETH is IERC20 {
 
-    function deposit() external payable;
-    function withdraw(uint) external;
-
+interface IUSDC is IERC20 {
+    function masterMinter() external view returns (address);
+    function mint(address _to, uint256 _amount) external;
 }

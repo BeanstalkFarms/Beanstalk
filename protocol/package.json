@@ -14,7 +14,7 @@
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-etherscan": "^2.1.4",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
-    "@openzeppelin/test-helpers": "^0.5.10",
+    "@openzeppelin/hardhat-upgrades": "^1.17.0",
     "bignumber": "^1.1.0",
     "chai": "^4.3.4",
     "csvtojson": "^2.0.10",
@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^3.4.0",
+    "@openzeppelin/contracts-upgradeable": "^3.4.0",
     "dotenv": "^10.0.0",
     "keccak256": "^1.0.6",
     "merkletreejs": "^0.2.31"

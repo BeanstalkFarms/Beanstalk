@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../LibAppStorage.sol";
-import "./LibConvertUserData.sol";
+import "./LibConvertData.sol";
 import "../Curve/LibBeanMetaCurve.sol";
 
 /**
@@ -16,7 +16,7 @@ import "../Curve/LibBeanMetaCurve.sol";
  **/
 library LibMetaCurveConvert {
     using SafeMath for uint256;
-    using LibConvertUserData for bytes;
+    using LibConvertData for bytes;
 
     function beansAtPeg(uint256[2] memory balances)
         internal

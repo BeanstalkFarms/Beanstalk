@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "../AppStorage.sol";
 import "../../libraries/Token/LibTransfer.sol";
 import "../../libraries/Token/LibWeth.sol";
+import "../../libraries/Token/LibEth.sol";
 
 /**
  * @author Publius
@@ -51,6 +52,7 @@ contract TokenFacet {
 
     function wrapEth(uint256 amount, LibTransfer.To mode) external payable {
         LibWeth.wrap(amount, mode);
+        LibEth.refundEth();
     }
 
     function unwrapEth(uint256 amount, LibTransfer.From mode) external payable {

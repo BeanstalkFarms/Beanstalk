@@ -21,5 +21,10 @@ contract InitReplant {
         s.season.lastSop = 0;
         s.co.initialized = false;
         s.season.withdrawSeasons = 5;
+        // Need to start initial supply of Fertilizer
+        uint32 _season = s.season.current;
+
+        // Maybe use add Fertilizer call instead...
+        // LibFertilizer.addFertilizer(...)
     }
 }

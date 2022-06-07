@@ -7,10 +7,10 @@ pragma experimental ABIEncoderV2;
 
 /**
  * @author LeoFib
- * @title LibConvertUserData
+ * @title LibConvertData
  **/
 
-library LibConvertUserData {
+library LibConvertData {
     // In order to preserve backwards compatibility, make sure new kinds are added at the end of the enum.
     enum ConvertKind {
         BEANS_TO_CURVE_LP,

@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import {AppStorage} from "../AppStorage.sol";
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
+import {LibEth} from "../../libraries/Token/LibEth.sol";
 
 /**
  * @author Beasley
@@ -39,14 +40,13 @@ contract FarmFacet {
     }
 
     function farm(bytes[] calldata data) external payable {
+        if (msg.value > 0) s.isFarm = 2;
         for (uint256 i = 0; i < data.length; i++) {
             _farm(data[i]);
         }
-        if (msg.value > 0 && address(this).balance > 0) {
-            (bool success, ) = msg.sender.call{value: address(this).balance}(
-                new bytes(0)
-            );
-            require(success, "Farm: Eth transfer Failed.");
+        if (msg.value > 0) {
+            s.isFarm = 1;
+            LibEth.refundEth();
         }
     }
 }

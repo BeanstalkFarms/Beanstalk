@@ -40,7 +40,8 @@ contract InitDiamond {
         ds.supportedInterfaces[type(IERC173).interfaceId] = true;
 
         C.bean().approve(C.curveMetapoolAddress(), type(uint256).max);
-        C.bean().approve(C.curveBeanLUSDAddress(), type(uint256).max);
+        C.bean().approve(C.curveZapAddress(), type(uint256).max);
+        C.usdc().approve(C.curveZapAddress(), type(uint256).max);
 
         s.cases = s.cases = [
         // Dsc, Sdy, Inc, nul
@@ -65,6 +66,7 @@ contract InitDiamond {
 
         s.w.nextSowTime = type(uint32).max;
         s.w.lastSowTime = type(uint32).max;
+        s.isFarm = 1;
 
         C.bean().mint(msg.sender, C.getAdvanceIncentive());
         emit Incentivization(msg.sender, C.getAdvanceIncentive());

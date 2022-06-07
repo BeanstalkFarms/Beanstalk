@@ -7,7 +7,7 @@ const {
   impersonateCurveMetapool, 
   impersonateWeth, 
   impersonateUnripe, 
-  impersonateBarnRaise 
+  impersonateFertilizer 
 } = require('./impersonate.js')
 function addCommas(nStr) {
   nStr += ''
@@ -101,13 +101,14 @@ async function main(scriptName, verbose = true, mock = false) {
     bdvFacet,
     curveFacet,
     convertFacet,
+    farmFacet,
     fieldFacet,
     fundraiserFacet,
     marketplaceFacet,
     pauseFacet,
     seasonFacet,
     siloFacet,
-    barnRaiseFacet,
+    fertilizerFacet,
     tokenFacet,
     unripeFacet,
     whitelistFacet
@@ -116,13 +117,14 @@ async function main(scriptName, verbose = true, mock = false) {
     [ 'BDVFacet',
       'CurveFacet',
       'MockConvertFacet',
+      'FarmFacet',
       'MockFieldFacet',
       'MockFundraiserFacet',
       'MockMarketplaceFacet',
       'PauseFacet',
       'MockSeasonFacet',
       'MockSiloFacet',
-      'MockBarnRaiseFacet',
+      'MockFertilizerFacet',
       'TokenFacet',
       'MockUnripeFacet',
       'WhitelistFacet'],
@@ -131,13 +133,14 @@ async function main(scriptName, verbose = true, mock = false) {
     [ 'BDVFacet',
       'CurveFacet',
       'ConvertFacet',
+      'FarmFacet',
       'FieldFacet',
       'FundraiserFacet',
       'MarketplaceFacet',
       'PauseFacet',
       'SeasonFacet',
       'SiloFacet',
-      'BarnRaiseFacet',
+      'FertilizerFacet',
       'TokenFacet',
       'UnripeFacet',
       'WhitelistFacet'],
@@ -147,12 +150,12 @@ async function main(scriptName, verbose = true, mock = false) {
 
   let args = []
   if (mock) {
-    await impersonateCurve()
     await impersonateBean()
+    await impersonateCurve()
     await impersonateCurveMetapool()
     await impersonateWeth()
     await impersonateUnripe()
-    await impersonateBarnRaise()
+    await impersonateFertilizer()
   }
 
   const [beanstalkDiamond, diamondCut] = await diamond.deploy({
@@ -162,13 +165,14 @@ async function main(scriptName, verbose = true, mock = false) {
       ['BDVFacet', bdvFacet],
       ['CurveFacet', curveFacet],
       ['ConvertFacet', convertFacet],
+      ['FarmFacet', farmFacet],
       ['FieldFacet', fieldFacet],
       ['FundraiserFacet', fundraiserFacet],
       ['MarketplaceFacet', marketplaceFacet],
       ['PauseFacet', pauseFacet],
       ['SeasonFacet', seasonFacet],
       ['SiloFacet', siloFacet],
-      ['BarnRaiseFacet', barnRaiseFacet],
+      ['FertilizerFacet', fertilizerFacet],
       ['TokenFacet', tokenFacet],
       ['UnripeFacet', unripeFacet],
       ['WhitelistFacet', whitelistFacet]
@@ -199,13 +203,14 @@ async function main(scriptName, verbose = true, mock = false) {
     diamondLoupeFacet: diamondLoupeFacet,
     bdvFacet,
     convertFacet,
+    farmFacet,
     fieldFacet,
     fundraiserFacet,
     marketplaceFacet,
     pauseFacet,
     seasonFacet,
     siloFacet,
-    barnRaiseFacet,
+    fertilizerFacet,
     tokenFacet,
     unripeFacet
   }

@@ -26,15 +26,15 @@ library LibBeanLUSDConvert {
     
 
 
-    function beansAtPeg(
-        uint256[2] memory balances
-    ) internal view returns (uint256 beans) {
-        return LibPlainCurveConvert.beansAtPeg(
-            C.curveBeanLUSDAddress(), 
-            balances,
-            [C.curveMetapoolAddress(), lusdMetaPool], 
-            [beanDecimals, lusdDecimals]
-        );
-    }
+    // function beansAtPeg(
+    //     uint256[2] memory balances
+    // ) internal view returns (uint256 beans) {
+    //     return LibPlainCurveConvert.beansAtPeg(
+    //         C.curveBeanLUSDAddress(), 
+    //         balances,
+    //         [C.curveMetapoolAddress(), lusdMetaPool], 
+    //         [beanDecimals, lusdDecimals]
+    //     );
+    // }
 
 }

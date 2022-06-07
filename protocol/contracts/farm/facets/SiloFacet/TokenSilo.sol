@@ -206,7 +206,7 @@ contract TokenSilo is Silo {
         address token,
         uint32[] calldata seasons,
         uint256[] calldata amounts
-    ) private returns (AssetsRemoved memory ar) {
+    ) internal returns (AssetsRemoved memory ar) {
         for (uint256 i = 0; i < seasons.length; i++) {
             uint256 crateBdv = LibTokenSilo.removeDeposit(
                 account,

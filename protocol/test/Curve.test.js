@@ -24,6 +24,8 @@ describe('Curve', function () {
     this.beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE)
     this.curve = await ethers.getContractAt('CurveFacet', this.diamond.address)
     this.token = await ethers.getContractAt('TokenFacet', this.diamond.address)
+    this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address)
+    this.farm = await ethers.getContractAt('FarmFacet', this.diamond.address)
 
     await this.season.siloSunrise(0)
     await this.bean.connect(user).approve(this.diamond.address, '100000000000')
@@ -266,7 +268,7 @@ describe('Curve', function () {
   describe("Remove Liqudity Inbalance", async function () {
     describe("To external", async function () {
       beforeEach(async function () {
-        await this.curve.connect(user).removeLiquidityInbalance(
+        await this.curve.connect(user).removeLiquidityImbalance(
           this.beanMetapool.address,
           [to6('400'), to18('100')],
           to18('510'),
@@ -301,7 +303,7 @@ describe('Curve', function () {
 
     describe("To internal", async function () {
       beforeEach(async function () {
-        await this.curve.connect(user).removeLiquidityInbalance(
+        await this.curve.connect(user).removeLiquidityImbalance(
           this.beanMetapool.address,
           [to6('400'), to18('100')],
           to18('510'),
@@ -406,6 +408,38 @@ describe('Curve', function () {
         expect(await this.token.getExternalBalance(userAddress, this.threeCurve.address)).to.be.equal('0')
         expect(await this.token.getExternalBalance(userAddress, this.bean.address)).to.be.equal(to6('9000'))
       })
+    })
+  })
+
+  describe("farm", async function () {
+    beforeEach('add LP and depsit', async function () {
+      const addLiquidity = await this.curve.interface.encodeFunctionData("addLiquidity", [
+        BEAN_3_CURVE,
+        [to6('500'), to18('500')],
+        to18('1000'),
+        true,
+        EXTERNAL,
+        INTERNAL
+      ])
+      const deposit = await this.silo.interface.encodeFunctionData('deposit', [
+        this.beanMetapool.address, 
+        to18('1000'), 
+        INTERNAL
+      ])
+
+      await this.threeCurve.mint(user2Address, to18('500'))
+      await this.bean.mint(user2Address, to6('500'))
+      await this.threeCurve.connect(user2).approve(this.silo.address, to18('5000000'))
+      await this.bean.connect(user2).approve(this.silo.address, to6('50000000'))
+
+      await this.farm.connect(user2).farm([addLiquidity, deposit])
+    })
+
+    it('add lp and deposit', async function () {
+      const season = await this.season.season()
+      const dep = await this.silo.getDeposit(user2Address, this.beanMetapool.address, season)
+      expect(dep[0]).to.be.equal(to18('1000'))
+      expect(dep[1]).to.be.equal(to6('1000'))
     })
   })
 })

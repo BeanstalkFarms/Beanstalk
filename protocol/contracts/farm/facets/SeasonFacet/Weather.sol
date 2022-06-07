@@ -49,17 +49,18 @@ contract Weather is Sun {
      * Weather Internal
      **/
 
-    function stepWeather(int256 deltaB) internal {
+    function stepWeather(int256 deltaB) internal returns (uint256 caseId) {
         uint256 endSoil = s.f.soil;
-        if (C.bean().totalSupply() == 0) {
+        uint256 beanSupply = C.bean().totalSupply();
+        if (beanSupply == 0) {
             s.w.yield = 1;
-            return;
+            return 8; // Reasonably low
         }
 
         // Calculate Pod Rate
         Decimal.D256 memory podRate = Decimal.ratio(
             s.f.pods.sub(s.f.harvestable),
-            C.bean().totalSupply()
+            beanSupply
         );
 
         // Calculate Delta Soil Demand
@@ -96,7 +97,7 @@ contract Weather is Sun {
         }
 
         // Calculate Weather Case
-        uint8 caseId = 0;
+        caseId = 0;
 
         // Evaluate Pod Rate
         if (podRate.greaterThanOrEqualTo(C.getUpperBoundPodRate())) caseId = 24;

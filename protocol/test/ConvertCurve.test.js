@@ -55,32 +55,32 @@ describe('Curve Convert', function () {
   describe('calclates beans to peg', async function () {
     it('p > 1', async function () {
       await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
-      expect(await this.convert.beansToPeg(this.beanMetapool.address)).to.be.equal(ethers.utils.parseUnits('200', 6));
+      expect(await this.convert.getMaxAmountIn(this.bean.address, this.beanMetapool.address)).to.be.equal(ethers.utils.parseUnits('200', 6));
     });
 
     it('p = 1', async function () {
-      expect(await this.convert.beansToPeg(this.beanMetapool.address)).to.be.equal('0');
+      expect(await this.convert.getMaxAmountIn(this.bean.address, this.beanMetapool.address)).to.be.equal('0');
     });
 
     it('p < 1', async function () {
       await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
-      expect(await this.convert.beansToPeg(this.beanMetapool.address)).to.be.equal('0');
+      expect(await this.convert.getMaxAmountIn(this.bean.address, this.beanMetapool.address)).to.be.equal('0');
     });
   });
 
   describe('calclates lp to peg', async function () {
     it('p > 1', async function () {
       await this.beanMetapool.connect(user2).add_liquidity([toBean('200'), to18('0')], to18('150'));
-      expect(await this.convert.lpToPeg(this.beanMetapool.address)).to.be.equal('199167569307294375646');
+      expect(await this.convert.getMaxAmountIn(this.beanMetapool.address, this.bean.address)).to.be.equal('199167569307294375646');
     });
 
     it('p = 1', async function () {
-      expect(await this.convert.lpToPeg(this.beanMetapool.address)).to.be.equal('0');
+      expect(await this.convert.getMaxAmountIn(this.beanMetapool.address, this.bean.address)).to.be.equal('0');
     });
 
     it('p < 1', async function () {
       await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
-      expect(await this.convert.lpToPeg(this.beanMetapool.address)).to.be.equal('0');
+      expect(await this.convert.getMaxAmountIn(this.beanMetapool.address, this.bean.address)).to.be.equal('0');
     });
   })
 

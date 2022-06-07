@@ -29,8 +29,8 @@ contract SeasonFacet is Weather {
         require(seasonTime() > season(), "Season: Still current Season.");
         stepSeason();
         int256 deltaB = stepOracle();
-        stepWeather(deltaB);
-        stepSun(deltaB);
+        uint256 caseId = stepWeather(deltaB);
+        stepSun(deltaB, caseId);
         incentivize(msg.sender, C.getAdvanceIncentive());
 
         emit Sunrise(season());

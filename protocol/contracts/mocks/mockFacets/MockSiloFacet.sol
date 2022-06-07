@@ -32,22 +32,22 @@ contract MockSiloFacet is SiloFacet {
             s.a[msg.sender].lp.deposits[_s] += amount;
             s.a[msg.sender].lp.depositSeeds[_s] += bdv.mul(4);
         }
-        else if (t == 1) LibTokenSilo.addDeposit(msg.sender, LibUnripeSilo.BEAN_3CURVE_ADDRESS, _s, amount, bdv);
-        else if (t == 2) LibTokenSilo.addDeposit(msg.sender, LibUnripeSilo.BEAN_LUSD_ADDRESS, _s, amount, bdv);
-        LibTokenSilo.incrementDepositedToken(LibUnripeSilo.UNRIPE_LP, bdv);
-        bdv = bdv.mul(LibUnripeSilo.UNRIPE_LP_BDV).div(1e18);
-        uint256 seeds = bdv.mul(s.ss[LibUnripeSilo.UNRIPE_LP].seeds);
-        uint256 stalk = bdv.mul(s.ss[LibUnripeSilo.UNRIPE_LP].stalk).add(LibSilo.stalkReward(seeds, season() - _s));
+        else if (t == 1) LibTokenSilo.addDeposit(msg.sender, C.unripeLPPool1(), _s, amount, bdv);
+        else if (t == 2) LibTokenSilo.addDeposit(msg.sender, C.unripeLPPool2(), _s, amount, bdv);
+        LibTokenSilo.incrementDepositedToken(C.unripeLPAddress(), bdv);
+        bdv = bdv.mul(C.initialRecap()).div(1e18);
+        uint256 seeds = bdv.mul(s.ss[C.unripeLPAddress()].seeds);
+        uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalk).add(LibSilo.stalkReward(seeds, season() - _s));
         LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
     }
 
     function mockUnripeBeanDeposit(uint32 _s, uint256 amount) external {
         _update(msg.sender);
         s.a[msg.sender].bean.deposits[_s] += amount;
-        LibTokenSilo.incrementDepositedToken(LibUnripeSilo.UNRIPE_BEAN, amount);
-        amount = amount.mul(LibUnripeSilo.UNRIPE_BEAN_BDV).div(1e18);
-        uint256 seeds = amount.mul(s.ss[LibUnripeSilo.UNRIPE_BEAN].seeds);
-        uint256 stalk = amount.mul(s.ss[LibUnripeSilo.UNRIPE_BEAN].stalk).add(LibSilo.stalkReward(seeds, season() - _s));
+        LibTokenSilo.incrementDepositedToken(C.unripeBeanAddress(), amount);
+        amount = amount.mul(C.initialRecap()).div(1e18);
+        uint256 seeds = amount.mul(s.ss[C.unripeBeanAddress()].seeds);
+        uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalk).add(LibSilo.stalkReward(seeds, season() - _s));
         LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
     }
 }
