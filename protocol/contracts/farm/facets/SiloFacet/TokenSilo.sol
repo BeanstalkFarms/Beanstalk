@@ -20,7 +20,7 @@ contract TokenSilo is Silo {
     event AddDeposit(
         address indexed account,
         address indexed token,
-        uint256 season,
+        uint32 season,
         uint256 amount,
         uint256 bdv
     );

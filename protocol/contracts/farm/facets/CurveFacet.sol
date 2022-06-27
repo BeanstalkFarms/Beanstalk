@@ -341,7 +341,7 @@ contract CurveFacet is ReentrancyGuard {
     function getCoins(address pool, bool stable)
         private
         view
-        returns (address[4] memory coins)
+        returns (address[4] memory)
     {
         if (stable) {
             return ICurveFactory(STABLE_FACTORY).get_coins(pool);
