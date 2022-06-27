@@ -34,7 +34,7 @@ library LibTransfer {
         To toMode
     ) internal returns (uint256 transferredAmount) {
         if (fromMode == From.EXTERNAL && toMode == To.EXTERNAL) {
-            token.transferFrom(msg.sender, recipient, amount);
+            token.safeTransferFrom(msg.sender, recipient, amount);
             return amount;
         }
         amount = receiveToken(token, amount, msg.sender, fromMode);

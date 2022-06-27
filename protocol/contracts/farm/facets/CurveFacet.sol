@@ -19,7 +19,7 @@ contract CurveFacet is ReentrancyGuard {
     address private constant STABLE_FACTORY =
         0xB9fC157394Af804a3578134A6585C0dc9cc990d4;
     address private constant CRYPTO_FACTORY =
-        0x0959158b6040D32d04c301A72CBFD6b39E21c9AE;
+        0x8F942C20D02bEfc377D41445793068908E2250D0;
 
     using SafeMath for uint256;
     using LibTransfer for IERC20;
@@ -45,20 +45,24 @@ contract CurveFacet is ReentrancyGuard {
         IERC20(fromToken).approveToken(pool, amountIn);
 
         if (toMode == LibTransfer.To.EXTERNAL) {
-            ICurvePoolR(pool).exchange(
-                i,
-                j,
-                amountIn,
-                minAmountOut,
-                msg.sender
-            );
+            if (stable) {
+                ICurvePoolR(pool).exchange(i, j, amountIn, minAmountOut, msg.sender);
+            } else {
+                if (pool == C.triCryptoPoolAddress()) {
+                    ICurvePoolNCR(pool).exchange(i, j, amountIn, minAmountOut, false, msg.sender);
+                } else {
+                    ICurvePoolCR(pool).exchange(i, j, amountIn, minAmountOut, false, msg.sender);
+                }
+            }
         } else {
-            uint256 amountOut = ICurvePool(pool).exchange(
-                i,
-                j,
-                amountIn,
-                minAmountOut
-            );
+            uint256 amountOut;
+            if (pool == C.triCryptoPoolAddress()) {
+                uint256 beforeBalance = IERC20(toToken).balanceOf(address(this));
+                ICurvePoolNoReturn(pool).exchange(i, j, amountIn, minAmountOut);
+                amountOut = IERC20(toToken).balanceOf(address(this)).sub(beforeBalance);
+            } else {
+                amountOut = ICurvePool(pool).exchange(i, j, amountIn, minAmountOut);
+            }
             msg.sender.increaseInternalBalance(IERC20(toToken), amountOut);
         }
     }
@@ -103,8 +107,7 @@ contract CurveFacet is ReentrancyGuard {
         LibTransfer.From fromMode,
         LibTransfer.To toMode
     ) external payable nonReentrant {
-        address factory = stable ? STABLE_FACTORY : CRYPTO_FACTORY;
-        address[4] memory coins = ICurveFactory(factory).get_coins(pool);
+        address[4] memory coins = getCoins(pool, stable);
         uint256 nCoins = amounts.length;
         for (uint256 i = 0; i < nCoins; ++i) {
             if (amounts[i] > 0) {
@@ -186,8 +189,7 @@ contract CurveFacet is ReentrancyGuard {
             for (uint256 i = 0; i < nCoins; i++) amounts[i] = amountsOut[i];
         }
         if (toMode == LibTransfer.To.INTERNAL) {
-            address factory = stable ? STABLE_FACTORY : CRYPTO_FACTORY;
-            address[4] memory coins = ICurveFactory(factory).get_coins(pool);
+            address[4] memory coins = getCoins(pool, stable);
             for (uint256 i = 0; i < nCoins; ++i) {
                 if (amounts[i] > 0) {
                     msg.sender.increaseInternalBalance(
@@ -241,8 +243,7 @@ contract CurveFacet is ReentrancyGuard {
             token.sendToken(maxAmountIn - amountIn, msg.sender, refundMode);
         }
         if (toMode == LibTransfer.To.INTERNAL) {
-            address factory = stable ? STABLE_FACTORY : CRYPTO_FACTORY;
-            address[4] memory coins = ICurveFactory(factory).get_coins(pool);
+            address[4] memory coins = getCoins(pool, stable);
             for (uint256 i = 0; i < nCoins; ++i) {
                 if (amountsOut[i] > 0) {
                     msg.sender.increaseInternalBalance(
@@ -289,8 +290,7 @@ contract CurveFacet is ReentrancyGuard {
         address pool,
         bool stable
     ) private view returns (int128 i, int128 j) {
-        address factory = stable ? STABLE_FACTORY : CRYPTO_FACTORY;
-        address[4] memory coins = ICurveFactory(factory).get_coins(pool);
+        address[4] memory coins = getCoins(pool, stable);
         i = 4;
         j = 4;
         for (uint256 _i = 0; _i < 4; ++_i) {
@@ -323,8 +323,7 @@ contract CurveFacet is ReentrancyGuard {
         address pool,
         bool stable
     ) private view returns (int128 i) {
-        address factory = stable ? STABLE_FACTORY : CRYPTO_FACTORY;
-        address[4] memory coins = ICurveFactory(factory).get_coins(pool);
+        address[4] memory coins = getCoins(pool, stable);
         i = 4;
         for (uint256 _i = 0; _i < 4; ++_i) {
             if (coins[_i] == token) i = int128(_i);
@@ -337,5 +336,19 @@ contract CurveFacet is ReentrancyGuard {
         if (pool == C.curve3PoolAddress()) return C.threeCrv();
         if (pool == C.triCryptoPoolAddress()) return C.triCrypto();
         return IERC20(pool);
+    }
+
+    function getCoins(address pool, bool stable)
+        private
+        view
+        returns (address[4] memory coins)
+    {
+        if (stable) {
+            return ICurveFactory(STABLE_FACTORY).get_coins(pool);
+        } else {
+            address[8] memory coins = ICurveCryptoFactory(CRYPTO_FACTORY)
+                .get_coins(pool);
+            return [coins[0], coins[1], coins[2], coins[3]];
+        }
     }
 }

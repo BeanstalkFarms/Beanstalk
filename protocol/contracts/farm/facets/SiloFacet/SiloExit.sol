@@ -7,8 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../ReentrancyGuard.sol";
-import "../../../interfaces/IWETH.sol";
-import "../../../interfaces/IBean.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/LibSafeMath32.sol";
 import "../../../C.sol";

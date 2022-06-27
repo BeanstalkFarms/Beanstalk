@@ -48,9 +48,9 @@ contract Account {
 
     // Season Of Plenty stores Season of Plenty (SOP) related balances
     struct SeasonOfPlenty {
-        uint256 base; // DEPRECATED – Post Replant SOPs are denominated in plenty Tokens instead of base.
+        // uint256 base; // DEPRECATED – Post Replant SOPs are denominated in plenty Tokens instead of base.
         uint256 roots; // The number of Roots a Farmer had when it started Raining.
-        uint256 basePerRoot; // DEPRECATED – Post Replant SOPs are denominated in plenty Tokens instead of base.
+        // uint256 basePerRoot; // DEPRECATED – Post Replant SOPs are denominated in plenty Tokens instead of base.
         uint256 plentyPerRoot; // The global Plenty Per Root index at the last time a Farmer updated their Silo. 
         uint256 plenty; // The balance of a Farmer's plenty. Plenty can be claimed directly for 3Crv.
     }
@@ -68,11 +68,12 @@ contract Account {
         uint32 lastRain; // The last Season that it started Raining at the time the Farmer last updated their Silo.
         uint32 lastSIs; // DEPRECATED – In Silo V1.2, the Silo reward mechanism was updated to no longer need to store the number of the Supply Increases at the time the Farmer last updated their Silo.
         uint32 proposedUntil; // DEPRECATED – Replant removed on-chain governance including the ability to propose BIPs.
-        SeasonOfPlenty sop; // A Farmer's Season Of Plenty storage.
+        SeasonOfPlenty deprecated; // DEPRECATED – Replant reset the Season of Plenty mechanism
         uint256 roots; // A Farmer's Root balance.
         uint256 wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
         mapping(address => mapping(uint32 => Deposit)) deposits; // A Farmer's Silo Deposits stored as a map from Token address to Season of Deposit to Deposit.
         mapping(address => mapping(uint32 => uint256)) withdrawals; // A Farmer's Withdrawals from the Silo stored as a map from Token address to Season the Withdrawal becomes Claimable to Withdrawn amount of Tokens.
+        SeasonOfPlenty sop; // A Farmer's Season Of Plenty storage.
     }
 }
 

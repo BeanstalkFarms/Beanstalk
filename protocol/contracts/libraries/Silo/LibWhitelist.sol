@@ -18,7 +18,7 @@ interface IBS {
 
     function curveToBDV(uint256 amount) external view returns (uint256);
 
-    function beanToBDV(uint256 amount) external view returns (uint256);
+    function beanToBDV(uint256 amount) external pure returns (uint256);
 
     function unripeBeanToBDV(uint256 amount) external view returns (uint256);
 

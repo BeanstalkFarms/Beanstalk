@@ -37,15 +37,14 @@ contract FertilizerFacet {
         uint256 minLP,
         LibTransfer.From mode
     ) external payable {
-        uint256 remaining = LibFertilizer.remainingRecapitalization();
-        uint256 _amount = uint256(amount);
-        if (_amount > remaining) _amount = remaining;
-        LibTransfer.receiveToken(
+        uint128 remaining = uint128(LibFertilizer.remainingRecapitalization()); // remaining <= 77_000_000 so downcasting is safe.
+        if (amount > remaining) amount = remaining;
+        amount = uint128(LibTransfer.receiveToken(
             C.usdc(),
             uint256(amount).mul(1e6),
             msg.sender,
             mode
-        );
+        ).div(1e6)); // return value <= amount, so downcasting is safe.
         uint128 id = LibFertilizer.addFertilizer(
             uint128(s.season.current),
             amount,

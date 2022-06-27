@@ -14,7 +14,6 @@ import {LibDiamond} from "../../libraries/LibDiamond.sol";
 import "../../C.sol";
 import "../../interfaces/IBean.sol";
 import "../../interfaces/IWETH.sol";
-import "../../Bean.sol";
 import "../../mocks/MockToken.sol";
 
 /**

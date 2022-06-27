@@ -325,7 +325,7 @@ async function upgrade ({
 
 async function upgradeWithNewFacets ({
   diamondAddress,
-  facetNames,
+  facetNames = [],
   facetLibraries = {},
   libraryNames = [],
   selectorsToRemove = [],
@@ -347,7 +347,6 @@ async function upgradeWithNewFacets ({
     throw Error(`Requires only 1 map argument. ${arguments.length} arguments used.`)
   }
   const diamondCutFacet = await ethers.getContractAt('DiamondCutFacet', diamondAddress)
-  const governance = await ethers.getContractAt('GovernanceFacet', diamondAddress)
   const diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', diamondAddress)
 
   const diamondCut = []
@@ -479,6 +478,7 @@ async function upgradeWithNewFacets ({
     }
   }
   if (bip) {
+    const governance = await ethers.getContractAt('GovernanceFacet', diamondAddress)
     result = await governance.connect(account).propose(diamondCut, initFacetAddress, functionCall, p);
   } else {
     result = await diamondCutFacet.connect(account).diamondCut(

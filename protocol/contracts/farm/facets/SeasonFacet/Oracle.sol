@@ -17,8 +17,8 @@ contract Oracle is ReentrancyGuard {
      * Oracle Getters
      **/
 
-    function totalDeltaB() external view returns (int256 bdv) {
-        bdv = LibCurveOracle.check();
+    function totalDeltaB() external view returns (int256 deltaB) {
+        deltaB = LibCurveOracle.check();
     }
 
     function poolDeltaB(address pool) external view returns (int256 bdv) {
@@ -30,7 +30,7 @@ contract Oracle is ReentrancyGuard {
      * Oracle Internal
      **/
 
-    function stepOracle() internal returns (int256 bdv) {
-        bdv = LibCurveOracle.capture();
+    function stepOracle() internal returns (int256 deltaB) {
+        deltaB = LibCurveOracle.capture();
     }
 }

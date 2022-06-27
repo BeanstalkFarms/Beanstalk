@@ -73,7 +73,7 @@ contract SeasonFacet is Weather {
         );
         if (timestamp > 300) timestamp = 300;
         uint256 incentive = LibIncentive.fracExp(amount, 100, timestamp, 1);
-        C.bean().mint(account, amount);
+        C.bean().mint(account, incentive);
         emit Incentivization(account, incentive);
     }
 }

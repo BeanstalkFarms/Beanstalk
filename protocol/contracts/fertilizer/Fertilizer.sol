@@ -38,6 +38,11 @@ contract Fertilizer is Internalizer {
     }
 
     function beanstalkMint(address account, uint256 id, uint128 amount, uint128 bpf) external onlyOwner {
+        if (_balances[id][account].amount > 0) {
+            uint256[] memory ids = new uint256[](1);
+            ids[0] = id;
+            _update(account, ids, bpf);
+        }
         _balances[id][account].lastBpf = bpf;
         _safeMint(
             account,

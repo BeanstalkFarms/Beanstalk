@@ -20,7 +20,7 @@ library LibTokenSilo {
     event AddDeposit(
         address indexed account,
         address indexed token,
-        uint256 season,
+        uint32 season,
         uint256 amount,
         uint256 bdv
     );
@@ -163,7 +163,7 @@ library LibTokenSilo {
             s.ss[token].selector,
             amount
         );
-        (bool success, bytes memory data) = address(this).delegatecall(
+        (bool success, bytes memory data) = address(this).call(
             myFunctionCall
         );
         require(success, "Silo: Bean denominated value failed.");

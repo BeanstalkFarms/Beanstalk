@@ -17,22 +17,13 @@ contract FertilizerPreMint is Internalizer {
 
     using SafeERC20Upgradeable for IERC20;
 
-    ////////////////////// Ropsten ///////////////////////
-    // address constant public USDC = 0x07865c6E87B9F70255377e024ace6630C1Eaa37F;
-    // address constant public WETH = 0xc778417E063141139Fce010982780140Aa0cD5Ab;
-    // uint256 constant START_TIMESTAMP = 1653840000;
-
-    /////////////////////// RINKEBY //////////////////////
-    // address constant public USDC = 0x4DBCdF9B62e891a7cec5A2568C3F4FAF9E8Abe2b;
-    // address constant public WETH = 0xc778417E063141139Fce010982780140Aa0cD5Ab;
-
-    /////////////////////// MAINNET //////////////////////
+    // Mainnet Settings
     address constant public WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address constant public USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     uint256 constant START_TIMESTAMP = 1654531200;
 
-    // Settings
-    address constant CUSTODIAN   = 0x21DE18B6A8f78eDe6D16C50A167f6B222DC08DF7;
+    // Global Settings
+    address constant CUSTODIAN   = 0xa9bA2C40b263843C04d344727b954A545c81D043;
     uint256 constant DECIMALS        = 1e6;
     IERC20 constant IUSDC            = IERC20(USDC);
 
@@ -82,7 +73,9 @@ contract FertilizerPreMint is Internalizer {
     // These functions will be overwritten once Beanstalk has restarted.
 
     function remaining() public view returns (uint256) {
-        return MAX_RAISE - IUSDC.balanceOf(CUSTODIAN);
+        uint128 raised = uint128(IUSDC.balanceOf(CUSTODIAN));
+        if (raised >= MAX_RAISE) return 0;
+        return MAX_RAISE - raised;
     }
 
     function getMintId() public pure returns (uint256) {

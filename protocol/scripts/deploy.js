@@ -25,13 +25,13 @@ function strDisplay(str) {
   return addCommas(str.toString())
 }
 
-async function main(scriptName, verbose = true, mock = false) {
+async function main(scriptName, verbose = true, mock = false, reset = true) {
   if (verbose) {
     console.log('SCRIPT NAME: ', scriptName)
     console.log('MOCKS ENABLED: ', mock)
   }
 
-  if (mock) {
+  if (mock && reset) {
     await network.provider.request({
       method: "hardhat_reset",
       params: [],
@@ -145,7 +145,7 @@ async function main(scriptName, verbose = true, mock = false) {
       'UnripeFacet',
       'WhitelistFacet'],
   )
-  const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/InitDiamond.sol:InitDiamond'
+  const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/init/InitDiamond.sol:InitDiamond'
   // eslint-disable-next-line no-unused-vars
 
   let args = []
@@ -184,8 +184,8 @@ async function main(scriptName, verbose = true, mock = false) {
 
   tx = beanstalkDiamond.deployTransaction
   receipt = await tx.wait()
-  if (verbose) console.log('BeanStalk diamond deploy gas used: ' + strDisplay(receipt.gasUsed))
-  if (verbose) console.log('BeanStalk diamond cut gas used: ' + strDisplay(diamondCut.gasUsed))
+  if (verbose) console.log('Beanstalk diamond deploy gas used: ' + strDisplay(receipt.gasUsed))
+  if (verbose) console.log('Beanstalk diamond cut gas used: ' + strDisplay(diamondCut.gasUsed))
   totalGasUsed = totalGasUsed.add(receipt.gasUsed).add(diamondCut.gasUsed)
 
   if (verbose) {

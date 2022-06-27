@@ -6,9 +6,8 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./TokenSilo.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../../../libraries/Token/LibTransfer.sol";
 import "../../ReentrancyGuard.sol";
+import "../../../libraries/Token/LibTransfer.sol";
 
 /*
  * @author Publius
