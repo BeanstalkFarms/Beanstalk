@@ -6,7 +6,7 @@ const ALCHEMY_URL = `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_
 
 let user, user2;
 
-const BF = '0x21DE18B6A8f78eDe6D16C50A167f6B222DC08DF7'
+const BCM = '0xa9bA2C40b263843C04d344727b954A545c81D043'
 
 function to18(a) {
   return ethers.utils.parseEther(a)
@@ -61,7 +61,7 @@ describe("PreFertilizer", function () {
 
       it('changes user balance', async function () {
         expect(await this.fertilizer.balanceOf(user.address, to6('6'))).to.equal('10000')
-        expect(await this.usdc.balanceOf(BF)).to.equal(to6('10000'))
+        expect(await this.usdc.balanceOf(BCM)).to.equal(to6('10000'))
         expect(await this.usdc.balanceOf(user.address)).to.equal(to6('0'))
         const lb = await this.fertilizer.lastBalanceOf(user.address, to6('6'))
         expect(lb[0]).to.be.equal('10000')
@@ -83,7 +83,7 @@ describe("PreFertilizer", function () {
 
       it('changes user balance', async function () {
         expect(await this.fertilizer.balanceOf(user.address, to6('6'))).to.equal(this.usdcOut.div(1e6))
-        expect(await this.usdc.balanceOf(BF)).to.equal(this.usdcOut)
+        expect(await this.usdc.balanceOf(BCM)).to.equal(this.usdcOut)
       })
     })
   })
@@ -92,7 +92,7 @@ describe("PreFertilizer", function () {
     beforeEach(async function () {
       usdc_minter = '0x5B6122C109B78C6755486966148C1D70a50A47D7'
       const minter = await ethers.getSigner(usdc_minter)
-      await this.usdc.connect(minter).mint(BF, ethers.utils.parseUnits('76999999',6));
+      await this.usdc.connect(minter).mint(BCM, ethers.utils.parseUnits('76999999',6));
     })
 
     describe("Contribute from usdc", async function () {
@@ -102,7 +102,7 @@ describe("PreFertilizer", function () {
   
       it('changes user balance', async function () {
         expect(await this.fertilizer.balanceOf(user.address, to6('6'))).to.equal('1')
-        expect(await this.usdc.balanceOf(BF)).to.equal(to6('77000000'))
+        expect(await this.usdc.balanceOf(BCM)).to.equal(to6('77000000'))
         expect(await this.usdc.balanceOf(user.address)).to.equal(to6('9999'))
       })
   

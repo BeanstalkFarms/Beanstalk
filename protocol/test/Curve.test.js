@@ -2,7 +2,7 @@ const { expect } = require('chai')
 const { ethers } = require('hardhat')
 const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
-const { BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE } = require('./utils/constants')
+const { BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, STABLE_FACTORY } = require('./utils/constants')
 const { to18, to6, toStalk } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 
@@ -46,9 +46,9 @@ describe('Curve', function () {
 
     this.result = await this.curve.connect(user).addLiquidity(
       BEAN_3_CURVE,
+      STABLE_FACTORY,
       [to6('1000'), to18('1000')],
       to18('2000'),
-      true,
       EXTERNAL,
       EXTERNAL
     )
@@ -91,9 +91,9 @@ describe('Curve', function () {
         await this.threeCurve.mint(userAddress, to18('500'))
         this.result = await this.curve.connect(user).addLiquidity(
             BEAN_3_CURVE,
+            STABLE_FACTORY,
             [to6('500'), to18('500')],
             to18('1000'),
-            true,
             EXTERNAL,
             INTERNAL
         );
@@ -126,11 +126,11 @@ describe('Curve', function () {
       beforeEach(async function () {
         await this.curve.connect(user2).exchange(
           this.beanMetapool.address,
+          STABLE_FACTORY,
           this.bean.address,
           this.threeCurve.address,
           to6('10'),
           to18('9'),
-          true,
           EXTERNAL,
           EXTERNAL
         )
@@ -161,11 +161,11 @@ describe('Curve', function () {
       beforeEach(async function () {
         await this.curve.connect(user2).exchange(
           this.beanMetapool.address,
+          STABLE_FACTORY,
           this.bean.address,
           this.threeCurve.address,
           to6('10'),
           to18('9'),
-          true,
           EXTERNAL,
           INTERNAL
         )
@@ -198,9 +198,9 @@ describe('Curve', function () {
       beforeEach(async function () {
         await this.curve.connect(user).removeLiquidity(
           this.beanMetapool.address,
+          STABLE_FACTORY,
           to18('500'),
           [to6('250'), to18('250')],
-          true,
           EXTERNAL,
           EXTERNAL
         )
@@ -233,9 +233,9 @@ describe('Curve', function () {
       beforeEach(async function () {
         await this.curve.connect(user).removeLiquidity(
           this.beanMetapool.address,
+          STABLE_FACTORY,
           to18('500'),
           [to6('250'), to18('250')],
-          true,
           EXTERNAL,
           INTERNAL
         )
@@ -270,9 +270,9 @@ describe('Curve', function () {
       beforeEach(async function () {
         await this.curve.connect(user).removeLiquidityImbalance(
           this.beanMetapool.address,
+          STABLE_FACTORY,
           [to6('400'), to18('100')],
           to18('510'),
-          true,
           EXTERNAL,
           EXTERNAL
         )
@@ -305,9 +305,9 @@ describe('Curve', function () {
       beforeEach(async function () {
         await this.curve.connect(user).removeLiquidityImbalance(
           this.beanMetapool.address,
+          STABLE_FACTORY,
           [to6('400'), to18('100')],
           to18('510'),
-          true,
           EXTERNAL,
           EXTERNAL
         )
@@ -342,10 +342,10 @@ describe('Curve', function () {
       beforeEach(async function () {
         await this.curve.connect(user).removeLiquidityOneToken(
           this.beanMetapool.address,
+          STABLE_FACTORY,
           this.bean.address,
           to18('500'),
           to6('480'),
-          true,
           EXTERNAL,
           EXTERNAL
         )
@@ -378,10 +378,10 @@ describe('Curve', function () {
       beforeEach(async function () {
         await this.curve.connect(user).removeLiquidityOneToken(
           this.beanMetapool.address,
+          STABLE_FACTORY,
           this.bean.address,
           to18('500'),
           to6('480'),
-          true,
           EXTERNAL,
           INTERNAL
         )
@@ -411,13 +411,13 @@ describe('Curve', function () {
     })
   })
 
-  describe("farm", async function () {
-    beforeEach('add LP and depsit', async function () {
+  describe("farm LP and Deposit", async function () {
+    beforeEach('add LP and Deposits', async function () {
       const addLiquidity = await this.curve.interface.encodeFunctionData("addLiquidity", [
         BEAN_3_CURVE,
+        STABLE_FACTORY,
         [to6('500'), to18('500')],
         to18('1000'),
-        true,
         EXTERNAL,
         INTERNAL
       ])

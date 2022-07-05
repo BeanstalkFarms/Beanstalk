@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../LibAppStorage.sol";
+import "../LibSafeMath128.sol";
 import "../../C.sol";
 
 /**
@@ -15,6 +16,11 @@ import "../../C.sol";
  **/
 library LibUnripeSilo {
     using SafeMath for uint256;
+    using LibSafeMath128 for uint128;
+
+    uint256 private constant AMOUNT_TO_BDV_BEAN_ETH = 119894802186829;
+    uint256 private constant AMOUNT_TO_BDV_BEAN_3CRV = 992035;
+    uint256 private constant AMOUNT_TO_BDV_BEAN_LUSD = 983108;
 
     function removeUnripeBeanDeposit(
         address account,
@@ -48,12 +54,11 @@ library LibUnripeSilo {
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 legacyAmount = s.a[account].bean.deposits[season];
-        amount = uint256(s.a[account].deposits[C.unripeBeanAddress()][season].amount).add(
-                legacyAmount
-            );
-        bdv = uint256(s.a[account].deposits[C.unripeBeanAddress()][season].bdv).add(
-            legacyAmount.mul(C.initialRecap()).div(1e18)
-        );
+        amount = uint256(
+            s.a[account].deposits[C.unripeBeanAddress()][season].amount
+        ).add(legacyAmount);
+        bdv = uint256(s.a[account].deposits[C.unripeBeanAddress()][season].bdv)
+            .add(legacyAmount.mul(C.initialRecap()).div(1e18));
     }
 
     function removeUnripeLPDeposit(
@@ -61,42 +66,70 @@ library LibUnripeSilo {
         uint32 id,
         uint256 amount
     ) internal returns (uint256 bdv) {
-        _removeUnripeLPDeposit(account, id, amount);
-        bdv = amount.mul(C.initialRecap()).div(1e18);
+        bdv = _removeUnripeLPDeposit(account, id, amount);
+        bdv = bdv.mul(C.initialRecap()).div(1e18);
     }
 
     function _removeUnripeLPDeposit(
         address account,
         uint32 id,
         uint256 amount
-    ) private {
-        uint256 crateBDV;
+    ) private returns (uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        crateBDV = s.a[account].lp.depositSeeds[id].div(4);
-        if (crateBDV >= amount) {
-            // Safe math not necessary
-            s.a[account].lp.depositSeeds[id] -= amount.mul(4);
-            return;
-        }
-        amount -= crateBDV;
-        delete s.a[account].lp.depositSeeds[id];
-
-        crateBDV = s.a[account].deposits[C.unripeLPPool1()][id].bdv;
-        if (crateBDV >= amount) {
-            // Safe math not necessary
-            s.a[account].deposits[C.unripeLPPool1()][id].bdv -= uint128(
-                amount
+        (uint256 amount1, uint256 bdv1) = getBeanEthUnripeLP(account, id);
+        if (amount1 >= amount) {
+            uint256 removed = amount.mul(s.a[account].lp.deposits[id]).div(
+                amount1
             );
-            return;
+            s.a[account].lp.deposits[id] = s.a[account].lp.deposits[id].sub(
+                removed
+            );
+            removed = amount.mul(bdv1).div(amount1);
+            s.a[account].lp.depositSeeds[id] = s
+                .a[account]
+                .lp
+                .depositSeeds[id]
+                .sub(removed.mul(4));
+            return removed;
         }
-        amount -= crateBDV;
-        delete s.a[account].deposits[C.unripeLPPool1()][id].bdv;
+        amount -= amount1;
+        bdv = bdv1;
+        delete s.a[account].lp.depositSeeds[id];
+        delete s.a[account].lp.deposits[id];
 
-        crateBDV = s.a[account].deposits[C.unripeLPPool2()][id].bdv;
-        if (crateBDV >= amount) {
-            // Safe math not necessary
-            s.a[account].deposits[C.unripeLPPool2()][id].bdv -= uint128(amount);
-            return;
+        (amount1, bdv1) = getBean3CrvUnripeLP(account, id);
+        if (amount1 >= amount) {
+            Account.Deposit storage d = s.a[account].deposits[
+                C.unripeLPPool1()
+            ][id];
+            uint128 removed = uint128(amount.mul(d.amount).div(amount1));
+            s.a[account].deposits[C.unripeLPPool1()][id].amount = d.amount.sub(
+                removed
+            );
+            removed = uint128(amount.mul(d.bdv).div(amount1));
+            s.a[account].deposits[C.unripeLPPool1()][id].bdv = d.bdv.sub(
+                removed
+            );
+            return bdv.add(removed);
+        }
+        amount -= amount1;
+        bdv = bdv.add(bdv1);
+        delete s.a[account].deposits[C.unripeLPPool1()][id];
+
+        (amount1, bdv1) = getBeanLusdUnripeLP(account, id);
+        if (amount1 >= amount) {
+            Account.Deposit storage d = s.a[account].deposits[
+                C.unripeLPPool2()
+            ][id];
+            uint128 removed = uint128(amount.mul(d.amount).div(amount1));
+            s.a[account].deposits[C.unripeLPPool2()][id].amount = d.amount.sub(
+                removed
+            );
+            removed = uint128(amount.mul(d.bdv).div(amount1));
+            s.a[account].deposits[C.unripeLPPool2()][id].bdv = d.bdv.sub(
+                removed
+            );
+            return bdv.add(removed);
         }
         revert("Silo: Crate balance too low.");
     }
@@ -111,16 +144,57 @@ library LibUnripeSilo {
         returns (uint256 amount, uint256 bdv)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 legacyAmount = s.a[account].lp.depositSeeds[season].div(4).add(
-            uint256(s.a[account].deposits[C.unripeLPPool1()][season].bdv).add(
-                uint256(s.a[account].deposits[C.unripeLPPool2()][season].bdv)
-            )
+        (amount, bdv) = getBeanEthUnripeLP(account, season);
+        (uint256 amount1, uint256 bdv1) = getBean3CrvUnripeLP(account, season);
+        (uint256 amount2, uint256 bdv2) = getBeanLusdUnripeLP(account, season);
+
+        amount = uint256(
+            s.a[account].deposits[C.unripeLPAddress()][season].amount
+        ).add(amount.add(amount1).add(amount2));
+
+        uint256 legBdv = bdv.add(bdv1).add(bdv2).mul(C.initialRecap()).div(
+            C.precision()
         );
-        amount = uint256(s.a[account].deposits[C.unripeLPAddress()][season].amount).add(
-            legacyAmount
-        );
-        bdv = uint256(s.a[account].deposits[C.unripeLPAddress()][season].bdv).add(
-            legacyAmount.mul(C.initialRecap()).div(1e18)
-        );
+        bdv = uint256(s.a[account].deposits[C.unripeLPAddress()][season].bdv)
+            .add(legBdv);
+    }
+
+    function getBeanEthUnripeLP(address account, uint32 season)
+        private
+        view
+        returns (uint256 amount, uint256 bdv)
+    {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        bdv = s.a[account].lp.depositSeeds[season].div(4);
+        amount = s
+            .a[account]
+            .lp
+            .deposits[season]
+            .mul(AMOUNT_TO_BDV_BEAN_ETH)
+            .div(1e18);
+    }
+
+    function getBeanLusdUnripeLP(address account, uint32 season)
+        private
+        view
+        returns (uint256 amount, uint256 bdv)
+    {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        bdv = uint256(s.a[account].deposits[C.unripeLPPool2()][season].bdv);
+        amount = uint256(
+            s.a[account].deposits[C.unripeLPPool2()][season].amount
+        ).mul(AMOUNT_TO_BDV_BEAN_LUSD).div(C.precision());
+    }
+
+    function getBean3CrvUnripeLP(address account, uint32 season)
+        private
+        view
+        returns (uint256 amount, uint256 bdv)
+    {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        bdv = uint256(s.a[account].deposits[C.unripeLPPool1()][season].bdv);
+        amount = uint256(
+            s.a[account].deposits[C.unripeLPPool1()][season].amount
+        ).mul(AMOUNT_TO_BDV_BEAN_3CRV).div(C.precision());
     }
 }

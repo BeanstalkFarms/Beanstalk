@@ -35,8 +35,13 @@ contract FarmFacet {
             .selectorToFacetAndPosition[functionSelector]
             .facetAddress;
         require(facet != address(0), "Diamond: Function does not exist");
-        (bool success, ) = address(facet).delegatecall(data);
-        require(success, "FarmFacet: Function call failed!");
+        (bool success, bytes memory returndata) = address(facet).delegatecall(data);
+        if (!success) {
+            if (returndata.length == 0) revert();
+            assembly {
+                revert(add(32, returndata), mload(returndata))
+            }
+        }
     }
 
     function farm(bytes[] calldata data) external payable {

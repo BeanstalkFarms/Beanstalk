@@ -60,17 +60,14 @@ interface ICurveCryptoFactory {
     function get_coins(address _pool) external view returns (address[8] calldata);
 }
 
-interface ICurvePoolCR {
-    function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy, bool use_eth, address receiver) external returns (uint256);
-    function remove_liquidity_one_coin(uint256 _token_amount, int128 i, uint256 min_amount, bool use_eth, address receiver) external returns (uint256);
+interface ICurvePoolC {
+    function exchange(uint256 i, uint256 j, uint256 dx, uint256 min_dy) external returns (uint256);
 }
 
 interface ICurvePoolNoReturn {
-    function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy) external;
+    function exchange(uint256 i, uint256 j, uint256 dx, uint256 min_dy) external;
+    function add_liquidity(uint256[3] memory amounts, uint256 min_mint_amount) external;
+    function remove_liquidity(uint256 _burn_amount, uint256[3] memory _min_amounts) external;
+    function remove_liquidity_imbalance(uint256[3] memory _amounts, uint256 _max_burn_amount) external;
     function remove_liquidity_one_coin(uint256 _token_amount, int128 i, uint256 min_amount) external;
-}
-
-interface ICurvePoolNCR {
-    function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy, bool use_eth, address receiver) external;
-    function remove_liquidity_one_coin(uint256 _token_amount, int128 i, uint256 min_amount, bool use_eth, address receiver) external;
 }

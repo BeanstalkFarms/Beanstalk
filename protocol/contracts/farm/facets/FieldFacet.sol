@@ -24,7 +24,7 @@ contract FieldFacet is ReentrancyGuard {
         uint256 pods
     );
     event Harvest(address indexed account, uint256[] plots, uint256 beans);
-    event PodListingCancelled(address indexed account, uint256 indexed index);
+    event PodListingCancelled(address indexed account, uint256 index);
 
     /**
      * Sow

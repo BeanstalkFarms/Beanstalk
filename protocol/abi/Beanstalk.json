@@ -257,6 +257,11 @@
                 "type": "address"
             },
             {
+                "internalType": "address",
+                "name": "registry",
+                "type": "address"
+            },
+            {
                 "internalType": "uint256[]",
                 "name": "amounts",
                 "type": "uint256[]"
@@ -265,11 +270,6 @@
                 "internalType": "uint256",
                 "name": "minAmountOut",
                 "type": "uint256"
-            },
-            {
-                "internalType": "bool",
-                "name": "stable",
-                "type": "bool"
             },
             {
                 "internalType": "enum LibTransfer.From",
@@ -296,6 +296,11 @@
             },
             {
                 "internalType": "address",
+                "name": "registry",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
                 "name": "fromToken",
                 "type": "address"
             },
@@ -313,11 +318,6 @@
                 "internalType": "uint256",
                 "name": "minAmountOut",
                 "type": "uint256"
-            },
-            {
-                "internalType": "bool",
-                "name": "stable",
-                "type": "bool"
             },
             {
                 "internalType": "enum LibTransfer.From",
@@ -386,6 +386,11 @@
                 "type": "address"
             },
             {
+                "internalType": "address",
+                "name": "registry",
+                "type": "address"
+            },
+            {
                 "internalType": "uint256",
                 "name": "amountIn",
                 "type": "uint256"
@@ -394,11 +399,6 @@
                 "internalType": "uint256[]",
                 "name": "minAmountsOut",
                 "type": "uint256[]"
-            },
-            {
-                "internalType": "bool",
-                "name": "stable",
-                "type": "bool"
             },
             {
                 "internalType": "enum LibTransfer.From",
@@ -424,6 +424,11 @@
                 "type": "address"
             },
             {
+                "internalType": "address",
+                "name": "registry",
+                "type": "address"
+            },
+            {
                 "internalType": "uint256[]",
                 "name": "amountsOut",
                 "type": "uint256[]"
@@ -432,11 +437,6 @@
                 "internalType": "uint256",
                 "name": "maxAmountIn",
                 "type": "uint256"
-            },
-            {
-                "internalType": "bool",
-                "name": "stable",
-                "type": "bool"
             },
             {
                 "internalType": "enum LibTransfer.From",
@@ -463,6 +463,11 @@
             },
             {
                 "internalType": "address",
+                "name": "registry",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
                 "name": "toToken",
                 "type": "address"
             },
@@ -475,11 +480,6 @@
                 "internalType": "uint256",
                 "name": "minAmountOut",
                 "type": "uint256"
-            },
-            {
-                "internalType": "bool",
-                "name": "stable",
-                "type": "bool"
             },
             {
                 "internalType": "enum LibTransfer.From",
@@ -1130,7 +1130,7 @@
                 "type": "address"
             },
             {
-                "indexed": true,
+                "indexed": false,
                 "internalType": "uint256",
                 "name": "index",
                 "type": "uint256"
@@ -2609,7 +2609,7 @@
         "outputs": [
             {
                 "internalType": "int256",
-                "name": "bdv",
+                "name": "deltaB",
                 "type": "int256"
             }
         ],
@@ -2701,9 +2701,9 @@
             },
             {
                 "indexed": false,
-                "internalType": "uint256",
+                "internalType": "uint32",
                 "name": "season",
-                "type": "uint256"
+                "type": "uint32"
             },
             {
                 "indexed": false,
