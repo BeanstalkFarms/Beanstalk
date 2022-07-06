@@ -37,8 +37,7 @@ library LibTransfer {
         if (fromMode == From.EXTERNAL && toMode == To.EXTERNAL) {
             uint256 beforeBalance = token.balanceOf(recipient);
             token.safeTransferFrom(msg.sender, recipient, amount);
-            amount = token.balanceOf(recipient).sub(beforeBalance);
-            return amount;
+            return token.balanceOf(recipient).sub(beforeBalance);
         }
         amount = receiveToken(token, amount, msg.sender, fromMode);
         sendToken(token, amount, recipient, toMode);
