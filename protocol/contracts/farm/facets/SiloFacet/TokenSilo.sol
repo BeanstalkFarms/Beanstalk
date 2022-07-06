@@ -206,7 +206,7 @@ contract TokenSilo is Silo {
         uint32[] calldata seasons,
         uint256[] calldata amounts
     ) internal returns (AssetsRemoved memory ar) {
-        for (uint256 i = 0; i < seasons.length; i++) {
+        for (uint256 i; i < seasons.length; ++i) {
             uint256 crateBdv = LibTokenSilo.removeDeposit(
                 account,
                 token,
@@ -264,7 +264,7 @@ contract TokenSilo is Silo {
         address token,
         uint32[] calldata seasons
     ) internal returns (uint256 amount) {
-        for (uint256 i = 0; i < seasons.length; i++) {
+        for (uint256 i; i < seasons.length; ++i) {
             amount = amount.add(
                 _removeTokenWithdrawal(account, token, seasons[i])
             );
@@ -283,7 +283,7 @@ contract TokenSilo is Silo {
     ) private returns (uint256) {
         require(
             season <= s.season.current,
-            "Claim: Withdrawal not recievable."
+            "Claim: Withdrawal not receivable"
         );
         uint256 amount = s.a[account].withdrawals[token][season];
         delete s.a[account].withdrawals[token][season];
@@ -321,7 +321,7 @@ contract TokenSilo is Silo {
             "Silo: Crates, amounts are diff lengths."
         );
         AssetsRemoved memory ar;
-        for (uint256 i = 0; i < seasons.length; i++) {
+        for (uint256 i; i < seasons.length; ++i) {
             uint256 crateBdv = LibTokenSilo.removeDeposit(
                 sender,
                 token,

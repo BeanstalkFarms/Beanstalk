@@ -81,7 +81,7 @@ contract FieldFacet is ReentrancyGuard {
         internal
         returns (uint256 beansHarvested)
     {
-        for (uint256 i = 0; i < plots.length; i++) {
+        for (uint256 i; i < plots.length; ++i) {
             require(plots[i] < s.f.harvestable, "Field: Plot not Harvestable.");
             uint256 harvested = harvestPlot(msg.sender, plots[i]);
             beansHarvested = beansHarvested.add(harvested);

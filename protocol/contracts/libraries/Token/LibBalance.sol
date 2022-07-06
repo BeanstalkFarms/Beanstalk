@@ -70,7 +70,7 @@ library LibBalance {
         uint256 currentBalance = getInternalBalance(account, token);
         require(
             allowPartial || (currentBalance >= amount),
-            "Balance: Insufficnent internal balance"
+            "Balance: Insufficient internal balance"
         );
 
         deducted = Math.min(currentBalance, amount);

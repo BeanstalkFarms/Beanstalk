@@ -46,7 +46,7 @@ contract FarmFacet {
 
     function farm(bytes[] calldata data) external payable {
         if (msg.value > 0) s.isFarm = 2;
-        for (uint256 i = 0; i < data.length; i++) {
+        for (uint256 i; i < data.length; ++i) {
             _farm(data[i]);
         }
         if (msg.value > 0) {

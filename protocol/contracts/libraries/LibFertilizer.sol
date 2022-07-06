@@ -150,7 +150,7 @@ library LibFertilizer {
         uint128 next = getNext(first);
         if (next == 0) {
             // If all Unfertilized Beans have been fertilized, delete line.
-            require(s.activeFertilizer == 0, "Still active fertliizer");
+            require(s.activeFertilizer == 0, "Still active fertilizer");
             s.fFirst = 0;
             s.fLast = 0;
             s.season.fertilizing = false;

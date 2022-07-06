@@ -31,7 +31,7 @@ library LibIncentive {
         // Motivation: https://ethereum.stackexchange.com/questions/10425
         uint256 N = 1;
         uint256 B = 1;
-        for (uint256 i = 0; i < p; ++i) {
+        for (uint256 i; i < p; ++i) {
             s += (k * N) / B / (q**i);
             N = N * (n - i);
             B = B * (i + 1);

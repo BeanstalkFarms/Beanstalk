@@ -21,7 +21,7 @@ contract Oracle is ReentrancyGuard {
         deltaB = LibCurveOracle.check();
     }
 
-    function poolDeltaB(address pool) external view returns (int256 bdv) {
+    function poolDeltaB(address pool) external view returns (int256 deltaB) {
         if (pool == C.curveMetapoolAddress()) return LibCurveOracle.check();
         require(false, "Oracle: Pool not supported");
     }

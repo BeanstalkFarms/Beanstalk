@@ -49,7 +49,7 @@ contract MockSeasonFacet is SeasonFacet {
 
     function rainSunrises(uint256 amount) public {
         require(!paused(), "Season: Paused.");
-        for (uint256 i = 0; i < amount; ++i) {
+        for (uint256 i; i < amount; ++i) {
             s.season.current += 1;
             handleRain(4);
         }
@@ -102,7 +102,7 @@ contract MockSeasonFacet is SeasonFacet {
 
     function farmSunrises(uint256 number) public {
         require(!paused(), "Season: Paused.");
-        for (uint256 i = 0; i < number; i++) {
+        for (uint256 i; i < number; ++i) {
             s.season.current += 1;
             s.season.timestamp = block.timestamp;
         }
@@ -138,7 +138,7 @@ contract MockSeasonFacet is SeasonFacet {
 
     function resetAccount(address account) public {
         uint32 _s = season();
-        for (uint32 j = 0; j <= _s; j++) {
+        for (uint32 j; j <= _s; ++j) {
             if (s.a[account].field.plots[j] > 0) s.a[account].field.plots[j];
             if (s.a[account].bean.deposits[j] > 0) delete s.a[account].bean.deposits[j];
             if (s.a[account].lp.deposits[j] > 0) delete s.a[account].lp.deposits[j];
@@ -148,7 +148,7 @@ contract MockSeasonFacet is SeasonFacet {
             if (s.a[account].lp.withdrawals[j+s.season.withdrawSeasons] > 0)
                 delete s.a[account].lp.withdrawals[j+s.season.withdrawSeasons];
         }
-        for (uint32 i = 0; i < s.g.bipIndex; i++) {
+        for (uint32 i; i < s.g.bipIndex; ++i) {
                 s.g.voted[i][account] = false;
         }
         delete s.a[account];
@@ -158,7 +158,7 @@ contract MockSeasonFacet is SeasonFacet {
 
     function resetAccountToken(address account, address token) public {
         uint32 _s = season();
-        for (uint32 j = 0; j <= _s; j++) {
+        for (uint32 j; j <= _s; ++j) {
             if (s.a[account].deposits[token][j].amount > 0) delete s.a[account].deposits[token][j];
             if (s.a[account].withdrawals[token][j+s.season.withdrawSeasons] > 0)
                 delete s.a[account].withdrawals[token][j+s.season.withdrawSeasons];
@@ -167,12 +167,12 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function resetState() public {
-        for (uint32 i = 0; i < s.g.bipIndex; i++) {
+        for (uint32 i; i < s.g.bipIndex; ++i) {
             delete s.g.bips[i];
             delete s.g.diamondCuts[i];
         }
 
-        for (uint32 i = 0; i < s.fundraiserIndex; i++) {
+        for (uint32 i; i < s.fundraiserIndex; ++i) {
             MockToken(s.fundraisers[i].token).burn(MockToken(s.fundraisers[i].token).balanceOf(address(this)));
             delete s.fundraisers[i];
         }
@@ -240,7 +240,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function resetPools(address[] calldata pools) external {
-        for (uint i = 0; i < pools.length; i++) {
+        for (uint i; i < pools.length; ++i) {
             ResetPool(pools[i]).reset_cumulative();
         }
     }

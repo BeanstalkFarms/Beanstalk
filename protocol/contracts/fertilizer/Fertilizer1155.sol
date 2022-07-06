@@ -64,7 +64,7 @@ contract Fertilizer1155 is ERC1155Upgradeable {
 
         _beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
-        for (uint256 i = 0; i < ids.length; ++i) {
+        for (uint256 i; i < ids.length; ++i) {
             _transfer(from, to, ids[i], amounts[i]);
         }
 

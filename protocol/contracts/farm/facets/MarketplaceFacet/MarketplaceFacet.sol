@@ -19,6 +19,7 @@ contract MarketplaceFacet is Order {
      */
 
     // Create
+    // Note: pricePerPod is bounded by 16_777_215 Beans.
     function createPodListing(
         uint256 index,
         uint256 start,
@@ -68,6 +69,7 @@ contract MarketplaceFacet is Order {
      */
 
     // Create
+    // Note: pricePerPod is bounded by 16_777_215 Beans.
     function createPodOrder(
         uint256 beanAmount,
         uint24 pricePerPod,

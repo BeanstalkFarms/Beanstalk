@@ -14,6 +14,7 @@ import "./LibBalance.sol";
 
 library LibTransfer {
     using SafeERC20 for IERC20;
+    using SafeMath for uint256;
 
     enum From {
         EXTERNAL,
@@ -34,7 +35,9 @@ library LibTransfer {
         To toMode
     ) internal returns (uint256 transferredAmount) {
         if (fromMode == From.EXTERNAL && toMode == To.EXTERNAL) {
+            uint256 beforeBalance = token.balanceOf(recipient);
             token.safeTransferFrom(msg.sender, recipient, amount);
+            amount = token.balanceOf(recipient).sub(beforeBalance);
             return amount;
         }
         amount = receiveToken(token, amount, msg.sender, fromMode);
@@ -59,8 +62,9 @@ library LibTransfer {
             if (amount == receivedAmount || mode == From.INTERNAL_TOLERANT)
                 return receivedAmount;
         }
+        uint256 beforeBalance = token.balanceOf(address(this));
         token.safeTransferFrom(sender, address(this), amount - receivedAmount);
-        return amount;
+        return receivedAmount.add(token.balanceOf(address(this)).sub(beforeBalance));
     }
 
     function sendToken(

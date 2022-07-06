@@ -46,8 +46,10 @@ contract FertilizerPreMint is Internalizer {
         IUSDC.transferFrom(msg.sender, CUSTODIAN, amount);
     }
 
-    function buyAndMint(uint256 buyAmount) external payable nonReentrant {
-        uint256 amount = buy(buyAmount);
+    // Note: Slippage should be properly be accounted for in the minBuyAmount
+    // variable when calling the buyAndMint function directly.
+    function buyAndMint(uint256 minBuyAmount) external payable nonReentrant {
+        uint256 amount = buy(minBuyAmount);
         require(IUSDC.balanceOf(CUSTODIAN) <= MAX_RAISE, "Fertilizer: Not enough remaining");
         __mint(amount);
     }

@@ -79,7 +79,7 @@ contract TokenFacet {
         returns (uint256[] memory balances)
     {
         balances = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; ++i) {
             balances[i] = getInternalBalance(account, tokens[i]);
         }
     }
@@ -100,7 +100,7 @@ contract TokenFacet {
         returns (uint256[] memory balances)
     {
         balances = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; ++i) {
             balances[i] = getExternalBalance(account, tokens[i]);
         }
     }
@@ -121,7 +121,7 @@ contract TokenFacet {
         returns (uint256[] memory balances)
     {
         balances = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; ++i) {
             balances[i] = getBalance(account, tokens[i]);
         }
     }
@@ -144,7 +144,7 @@ contract TokenFacet {
         returns (Balance[] memory balances)
     {
         balances = new Balance[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; ++i) {
             balances[i] = getAllBalance(account, tokens[i]);
         }
     }

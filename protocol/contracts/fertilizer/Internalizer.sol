@@ -59,7 +59,7 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
 
     function lastBalanceOfBatch(address[] memory accounts, uint256[] memory ids) external view returns (Balance[] memory balances) {
         balances = new Balance[](accounts.length);
-        for (uint256 i = 0; i < accounts.length; i++) {
+        for (uint256 i; i < accounts.length; ++i) {
             balances[i] = lastBalanceOf(accounts[i], ids[i]);
         }
     }

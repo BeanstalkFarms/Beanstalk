@@ -204,7 +204,7 @@ contract MockMeta3Curve {
         uint256[N_COINS] memory new_balances = old_balances;
 
         uint256 total_supply = supply;
-        for (uint256 i = 0; i < N_COINS; i++) {
+        for (uint256 i; i < N_COINS; ++i) {
             uint256 amount = _amounts[i];
             if (total_supply == 0)
                 require(amount > 0, "dev: initial deposit requires all coins");
@@ -218,7 +218,7 @@ contract MockMeta3Curve {
         uint256 mint_amount = 0;
         if (total_supply > 0) {
             uint256 base_fee = fee * N_COINS / (4 * (N_COINS - 1));
-            for (uint256 i = 0; i < N_COINS; i++) {
+            for (uint256 i; i < N_COINS; ++i) {
                 uint256 ideal_balance = D1 * old_balances[i] / D0;
                 uint256 difference = 0;
                 uint256 new_balance = new_balances[i];
@@ -237,7 +237,7 @@ contract MockMeta3Curve {
 
         require(mint_amount >= _min_mint_amount, "Curve: Not enough LP");
 
-        for (uint256 i = 0; i < N_COINS; i++) {
+        for (uint256 i; i < N_COINS; ++i) {
             uint256 amount = _amounts[i];
             if (amount > 0)
                 IBean(coins[i]).transferFrom(msg.sender, address(this), amount);
@@ -264,7 +264,7 @@ contract MockMeta3Curve {
     ) public returns (uint256[N_COINS] memory amounts) {
         _update();
 
-        for (uint256 i = 0; i < N_COINS; i++) {
+        for (uint256 i; i < N_COINS; ++i) {
             uint256 old_balance = balances[i];
             uint256 value = old_balance * _burn_amount / supply;
             require(value >= _min_amounts[i]);
@@ -299,14 +299,14 @@ contract MockMeta3Curve {
         uint256 D0 = get_D_mem(rates, old_balances, amp);
 
         uint256[N_COINS] memory new_balances = old_balances;
-        for (uint256 i = 0; i < N_COINS; ++i) {
+        for (uint256 i; i < N_COINS; ++i) {
             new_balances[i] -= _amounts[i];
         }
         uint256 D1 = get_D_mem(rates, new_balances, amp);
 
         uint256[N_COINS] memory fees;
         uint256 base_fee = fee * N_COINS / (4 * (N_COINS - 1));
-        for (uint256 i = 0; i < N_COINS; ++i) {
+        for (uint256 i; i < N_COINS; ++i) {
             uint256 ideal_balance = D1 * old_balances[i] / D0;
             uint256 difference = 0;
             uint256 new_balance = new_balances[i];
@@ -328,7 +328,7 @@ contract MockMeta3Curve {
         supply -= burn_amount;
         _balanceOf[msg.sender] -= burn_amount;
 
-        for (uint256 i = 0; i < N_COINS; ++i) {
+        for (uint256 i; i < N_COINS; ++i) {
             uint256 amount = _amounts[i];
             if (amount != 0) {
                 ERC20(coins[i]).transfer(_receiver, amount);
@@ -387,7 +387,7 @@ contract MockMeta3Curve {
         uint256 base_fee = fee * N_COINS / (4 * (N_COINS - 1));
         uint256[N_COINS] memory xp_reduced;
 
-        for (uint j = 0; j < N_COINS; j++) {
+        for (uint j; j < N_COINS; ++j) {
             uint256 dx_expected = 0;
             uint256 xp_j = xp[j];
             if (j == i) dx_expected = xp_j * D1 / D0 - new_y;
@@ -418,7 +418,7 @@ contract MockMeta3Curve {
 //     return _calc_withdraw_one_coin(_burn_amount, i, balances)[0]
 
     function _xp_mem(uint256[N_COINS] memory _rates, uint256[N_COINS] memory _balances) pure private returns (uint256[N_COINS] memory result) {
-        for (uint256 i = 0; i < N_COINS; i++) {
+        for (uint256 i; i < N_COINS; ++i) {
             result[i] = _rates[i] * _balances[i] / PRECISION;
         }
     }
@@ -427,16 +427,16 @@ contract MockMeta3Curve {
         // Solution is taken from pool contract: 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD
         uint256 S;
         uint256 Dprev;
-        for (uint _i = 0; _i < xp.length; _i++) {
+        for (uint _i; _i < xp.length; ++_i) {
             S += xp[_i];
         }
         if (S == 0) return 0;
 
         D = S;
         uint256 Ann = _a * N_COINS;
-        for (uint _i = 0; _i < 256; _i++) {
+        for (uint _i; _i < 256; ++_i) {
             uint256 D_P = D;
-            for (uint _j = 0; _j < xp.length; _j++) {
+            for (uint _j; _j < xp.length; ++_j) {
                 D_P = D_P * D / (xp[_j] * N_COINS);
             }
             Dprev = D;
@@ -467,7 +467,7 @@ contract MockMeta3Curve {
         uint256 c = D;
         uint256 Ann = A * N_COINS;
 
-        for (uint256 _i = 0; _i < N_COINS; _i++) {
+        for (uint256 _i; _i < N_COINS; ++_i) {
             if (_i != i) _x = xp[_i];
             else continue;
             S_ += _x;
@@ -478,7 +478,7 @@ contract MockMeta3Curve {
         uint256 b = S_ + D * A_PRECISION / Ann;
         y = D;
 
-        for (uint256 _i = 0; _i < 255; _i++) {
+        for (uint256 _i; _i < 255; ++_i) {
             y_prev = y;
             y = (y*y + c) / (2 * y + b - D);
             // Equality with the precision of 1
@@ -509,7 +509,7 @@ contract MockMeta3Curve {
         uint256 c = D;
         uint256 Ann = amp * N_COINS;
 
-        for (uint256 _i = 0; _i < N_COINS; _i++) {
+        for (uint256 _i; _i < N_COINS; ++_i) {
             if (_i == i) _x = x;
             else if (_i != j) _x = xp[_i];
             else continue;
@@ -521,7 +521,7 @@ contract MockMeta3Curve {
         uint256 b = S_ + D * A_PRECISION / Ann; // - D
         y = D;
 
-        for (uint256 _i = 0; _i < 255; _i++) {
+        for (uint256 _i; _i < 255; ++_i) {
             y_prev = y;
             y = (y*y + c) / (2 * y + b - D);
             if (y > y_prev && y - y_prev <= 1) return y;
@@ -533,7 +533,7 @@ contract MockMeta3Curve {
         uint256[N_COINS] memory _balances = balances;
 
         uint256 D0 = get_D_mem([rate_multiplier, 1e18], _balances, a);
-        for (uint256 i = 0; i < N_COINS; i++) {
+        for (uint256 i; i < N_COINS; ++i) {
             if (_is_deposit) _balances[i] += _amounts[i];
             else _balances[i] -= _amounts[i];
         }

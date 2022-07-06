@@ -108,7 +108,7 @@ contract ConvertFacet is ReentrancyGuard {
             );
             i++;
         }
-        for (i; i < seasons.length; i++) amounts[i] = 0;
+        for (i; i < seasons.length; ++i) amounts[i] = 0;
         emit RemoveDeposits(
             msg.sender,
             token,

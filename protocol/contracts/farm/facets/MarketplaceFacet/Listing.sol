@@ -57,7 +57,7 @@ contract Listing is PodTransfer {
     ) internal {
         uint256 plotSize = s.a[msg.sender].field.plots[index];
         require(
-            plotSize >= (start + amount) && amount > 0,
+            plotSize >= start.add(amount) && amount > 0,
             "Marketplace: Invalid Plot/Amount."
         );
         require(
@@ -116,7 +116,7 @@ contract Listing is PodTransfer {
             "Marketplace: Listing has expired."
         );
 
-        uint256 amount = (beanAmount * 1000000) / l.pricePerPod;
+        uint256 amount = beanAmount.mul(1000000).div(l.pricePerPod);
         amount = roundAmount(l, amount);
 
         __fillListing(msg.sender, l, amount);
@@ -128,7 +128,7 @@ contract Listing is PodTransfer {
         PodListing calldata l,
         uint256 amount
     ) private {
-        require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
+        // Note: If l.amount < amount, the function roundAmount will revert
 
         if (l.amount > amount)
             s.podListings[l.index.add(amount).add(l.start)] = hashListing(
@@ -166,7 +166,8 @@ contract Listing is PodTransfer {
         pure
         returns (uint256)
     {
-        if ((l.amount - amount) < (1000000 / l.pricePerPod)) amount = l.amount;
+        uint256 remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing");
+        if (remainingAmount < (1000000 / l.pricePerPod)) amount = l.amount;
         return amount;
     }
 

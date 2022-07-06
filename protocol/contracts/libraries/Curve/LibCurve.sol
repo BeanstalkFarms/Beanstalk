@@ -53,7 +53,7 @@ library LibCurve {
         uint256 c = D;
         uint256 Ann = a * N_COINS;
 
-        for (uint256 _i = 0; _i < N_COINS; _i++) {
+        for (uint256 _i; _i < N_COINS; ++_i) {
             if (_i == i) _x = x;
             else if (_i != j) _x = xp[_i];
             else continue;
@@ -65,7 +65,7 @@ library LibCurve {
         uint256 b = S_ + (D * A_PRECISION) / Ann; // - D
         y = D;
 
-        for (uint256 _i = 0; _i < 255; _i++) {
+        for (uint256 _i; _i < 255; ++_i) {
             y_prev = y;
             y = (y * y + c) / (2 * y + b - D);
             if (y > y_prev && y - y_prev <= 1) return y;
@@ -82,16 +82,16 @@ library LibCurve {
         // Solution is taken from pool contract: 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD
         uint256 S;
         uint256 Dprev;
-        for (uint256 _i = 0; _i < xp.length; _i++) {
+        for (uint256 _i; _i < xp.length; ++_i) {
             S += xp[_i];
         }
         if (S == 0) return 0;
 
         D = S;
         uint256 Ann = a * N_COINS;
-        for (uint256 _i = 0; _i < 256; _i++) {
+        for (uint256 _i; _i < 256; ++_i) {
             uint256 D_P = D;
-            for (uint256 _j = 0; _j < xp.length; _j++) {
+            for (uint256 _j; _j < xp.length; ++_j) {
                 D_P = (D_P * D) / (xp[_j] * N_COINS);
             }
             Dprev = D;

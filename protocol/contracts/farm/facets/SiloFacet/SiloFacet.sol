@@ -136,7 +136,7 @@ contract SiloFacet is TokenSilo {
         uint256 newStalk;
 
         // Iterate through all seasons, redeposit the tokens with new BDV and summate new Stalk.
-        for (uint256 i = 0; i < seasons.length; ++i) {
+        for (uint256 i; i < seasons.length; ++i) {
             uint256 bdv = amounts[i].mul(newBDV).div(ar.tokensRemoved); // Cheaper than calling the BDV function multiple times.
             LibTokenSilo.addDeposit(
                 msg.sender,

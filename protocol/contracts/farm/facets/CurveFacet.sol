@@ -106,7 +106,7 @@ contract CurveFacet is ReentrancyGuard {
     ) external payable nonReentrant {
         address[8] memory coins = getCoins(pool, registry);
         uint256 nCoins = amounts.length;
-        for (uint256 i = 0; i < nCoins; ++i) {
+        for (uint256 i; i < nCoins; ++i) {
             if (amounts[i] > 0) {
                 amounts[i] = IERC20(coins[i]).receiveToken(
                     amounts[i],
@@ -175,12 +175,12 @@ contract CurveFacet is ReentrancyGuard {
             uint256 amountOut;
             address[8] memory coins = getCoins(pool, registry);
             uint256[] memory beforeAmounts = new uint256[](nCoins);
-            for (uint256 i = 0; i < nCoins; ++i) beforeAmounts[i] = IERC20(coins[i]).balanceOf(address(this));
+            for (uint256 i; i < nCoins; ++i) beforeAmounts[i] = IERC20(coins[i]).balanceOf(address(this));
             ICurvePoolNoReturn(pool).remove_liquidity(
                 amountIn,
                 [minAmountsOut[0], minAmountsOut[1], minAmountsOut[2]]
             );
-            for (uint256 i = 0; i < nCoins; ++i) {
+            for (uint256 i; i < nCoins; ++i) {
                 amountOut = IERC20(coins[i]).balanceOf(address(this)).sub(beforeAmounts[i]);
                 if (amountOut > 0) LibTransfer.sendToken(IERC20(coins[i]), amountOut, msg.sender, toMode);
             }
@@ -198,14 +198,14 @@ contract CurveFacet is ReentrancyGuard {
                 [minAmountsOut[0], minAmountsOut[1]],
                 to
             );
-            for (uint256 i = 0; i < nCoins; i++) amounts[i] = amountsOut[i];
+            for (uint256 i; i < nCoins; ++i) amounts[i] = amountsOut[i];
         } else if (nCoins == 3) {
             uint256[3] memory amountsOut = ICurvePool3R(pool).remove_liquidity(
                 amountIn,
                 [minAmountsOut[0], minAmountsOut[1], minAmountsOut[2]],
                 to
             );
-            for (uint256 i = 0; i < nCoins; i++) amounts[i] = amountsOut[i];
+            for (uint256 i; i < nCoins; ++i) amounts[i] = amountsOut[i];
         } else {
             uint256[4] memory amountsOut = ICurvePool4R(pool).remove_liquidity(
                 amountIn,
@@ -217,11 +217,11 @@ contract CurveFacet is ReentrancyGuard {
                 ],
                 to
             );
-            for (uint256 i = 0; i < nCoins; i++) amounts[i] = amountsOut[i];
+            for (uint256 i; i < nCoins; ++i) amounts[i] = amountsOut[i];
         }
         if (toMode == LibTransfer.To.INTERNAL) {
             address[8] memory coins = getCoins(pool, registry);
-            for (uint256 i = 0; i < nCoins; ++i) {
+            for (uint256 i; i < nCoins; ++i) {
                 if (amounts[i] > 0) {
                     msg.sender.increaseInternalBalance(
                         IERC20(coins[i]),
@@ -256,7 +256,7 @@ function removeLiquidityImbalance(
                 maxAmountIn,
                 [amountsOut[0], amountsOut[1], amountsOut[2]]
             );
-            for (uint256 i = 0; i < nCoins; ++i) {
+            for (uint256 i; i < nCoins; ++i) {
                 if (amountsOut[i] > 0) {
                     LibTransfer.sendToken(IERC20(coins[i]), amountsOut[i], msg.sender, toMode);
                 }
@@ -290,7 +290,7 @@ function removeLiquidityImbalance(
         refundUnusedLPTokens(token, maxAmountIn, amountIn, fromMode);
         if (toMode == LibTransfer.To.INTERNAL) {
             address[8] memory coins = getCoins(pool, registry);
-            for (uint256 i = 0; i < nCoins; ++i) {
+            for (uint256 i; i < nCoins; ++i) {
                 if (amountsOut[i] > 0) {
                     msg.sender.increaseInternalBalance(
                         IERC20(coins[i]),
