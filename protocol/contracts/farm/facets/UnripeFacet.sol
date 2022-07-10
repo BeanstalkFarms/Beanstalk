@@ -57,6 +57,8 @@ contract UnripeFacet is ReentrancyGuard {
 
         LibUnripe.decrementUnderlying(unripeToken, underlyingAmount);
 
+        // Unripe Bean and Unripe Bean3Crv implementations use OpenZeppelin's ERC20Burnable
+        // which reverts if burnFrom function call cannot burn full amount.
         IBean(unripeToken).burnFrom(msg.sender, amount);
 
         address underlyingToken = s.u[unripeToken].underlyingToken;
