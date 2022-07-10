@@ -353,7 +353,7 @@ async function upgradeWithNewFacets ({
   const existingFacets = await diamondLoupeFacet.facets()
   const undeployed = []
   const deployed = []
-  if (verbose) console.log('Deploying Libraries')
+  if (verbose && libraryNames.length > 0) console.log('Deploying Libraries')
   for (const name of libraryNames) {
     if (!Object.keys(libraries).includes(name)) {
       if (verbose) console.log(`Deploying: ${name}`)
@@ -367,7 +367,7 @@ async function upgradeWithNewFacets ({
       libraries[name] = libraryFactory.address
     }
   }
-  if (verbose) console.log('\nDeploying Facets')
+  if (verbose && facetNames.length > 0) console.log('\nDeploying Facets')
   for (const name of facetNames) {
     let facetFactory
     if (facetLibraries[name] !== undefined) {
@@ -466,7 +466,7 @@ async function upgradeWithNewFacets ({
       if (verbose)console.log('Using init facet: ' + initFacet.address)
     }
     functionCall = initFacet.interface.encodeFunctionData('init', initArgs)
-    if (verbose) console.log(`Function call: ${functionCall}`)
+    if (verbose) console.log(`Function call: ${functionCall.toString().substring(0,100)}`)
     initFacetAddress = initFacet.address
   }
   let result;

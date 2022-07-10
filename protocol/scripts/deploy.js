@@ -105,6 +105,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     fieldFacet,
     fundraiserFacet,
     marketplaceFacet,
+    ownershipFacet,
     pauseFacet,
     seasonFacet,
     siloFacet,
@@ -125,6 +126,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'MockSeasonFacet',
       'MockSiloFacet',
       'MockFertilizerFacet',
+      'OwnershipFacet',
       'TokenFacet',
       'MockUnripeFacet',
       'WhitelistFacet'],
@@ -137,6 +139,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'FieldFacet',
       'FundraiserFacet',
       'MarketplaceFacet',
+      'OwnershipFacet',
       'PauseFacet',
       'SeasonFacet',
       'SiloFacet',
@@ -151,9 +154,11 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
   let args = []
   if (mock) {
     await impersonateBean()
-    await impersonateCurve()
+    if (reset) {
+      await impersonateCurve()
+      await impersonateWeth()
+    }
     await impersonateCurveMetapool()
-    await impersonateWeth()
     await impersonateUnripe()
     await impersonateFertilizer()
   }

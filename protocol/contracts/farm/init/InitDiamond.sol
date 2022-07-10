@@ -9,7 +9,6 @@ import {AppStorage} from "../AppStorage.sol";
 import {IERC165} from "../../interfaces/IERC165.sol";
 import {IDiamondCut} from "../../interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../../interfaces/IDiamondLoupe.sol";
-import {IERC173} from "../../interfaces/IERC173.sol";
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
 import "../../C.sol";
 import "../../interfaces/IBean.sol";
@@ -36,7 +35,6 @@ contract InitDiamond {
         ds.supportedInterfaces[type(IERC165).interfaceId] = true;
         ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
-        ds.supportedInterfaces[type(IERC173).interfaceId] = true;
 
         C.bean().approve(C.curveMetapoolAddress(), type(uint256).max);
         C.bean().approve(C.curveZapAddress(), type(uint256).max);

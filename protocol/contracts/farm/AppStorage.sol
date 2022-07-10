@@ -281,4 +281,5 @@ struct AppStorage {
     uint128 bpf; // The cumulative Beans Per Fertilizer (bfp) minted over all Season.
     uint256 recapitalized; // The nubmer of USDC that has been recapitalized in the Barn Raise.
     uint256 isFarm; // Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
+    address ownerCandidate; // Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
 }
