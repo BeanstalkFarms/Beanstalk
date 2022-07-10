@@ -56,13 +56,13 @@ contract FieldFacet is ReentrancyGuard {
         internal
         returns (uint256 pods)
     {
-        pods = LibDibbler.sow(amount, msg.sender);
         if (mode == LibTransfer.From.EXTERNAL)
             C.bean().burnFrom(msg.sender, amount);
         else {
             amount = LibTransfer.receiveToken(C.bean(), amount, msg.sender, mode);
             C.bean().burn(amount);
         }
+        pods = LibDibbler.sow(amount, msg.sender);
     }
 
     /**

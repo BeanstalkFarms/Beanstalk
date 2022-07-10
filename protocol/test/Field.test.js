@@ -131,6 +131,33 @@ describe('Field', function () {
       })
     })
 
+    describe('some soil from internal tolerant', async function () {
+      beforeEach(async function () {
+        await this.field.incrementTotalSoilE(to6('200'))
+        await this.tokenFacet.connect(user).transferToken(this.bean.address, userAddress, to6('50'), EXTERNAL, INTERNAL);
+        this.result = await this.field.connect(user).sow(to6('100'), INTERNAL_TOLERANT)
+      })
+
+      it('updates user\'s balance', async function () {
+        expect(await this.bean.balanceOf(userAddress)).to.eq(to6('9950'))
+        expect(await this.field.plot(userAddress, 0)).to.eq(to6('50.5'))
+      })
+
+      it('updates total balance', async function () {
+        expect(await this.bean.balanceOf(this.field.address)).to.eq('0')
+        expect(await this.bean.totalSupply()).to.eq(to6('19950'))
+        expect(await this.field.totalPods()).to.eq(to6('50.5'))
+        expect(await this.field.totalSoil()).to.eq(to6('150'))
+        expect(await this.field.totalUnharvestable()).to.eq(to6('50.5'))
+        expect(await this.field.podIndex()).to.eq(to6('50.5'))
+        expect(await this.field.harvestableIndex()).to.eq('0')
+      })
+
+      it('emits Sow event', async function () {
+        await expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, '0', to6('50'), to6('50.5'))
+      })
+    })
+
     describe('with min', async function () {
       beforeEach(async function () {
         await this.field.incrementTotalSoilE(to6('100'))
