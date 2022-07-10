@@ -61,7 +61,7 @@ contract Listing is PodTransfer {
             "Marketplace: Invalid Plot/Amount."
         );
         require(
-            0 < pricePerPod,
+            pricePerPod > 0,
             "Marketplace: Pod price must be greater than 0."
         );
         require(
@@ -69,7 +69,7 @@ contract Listing is PodTransfer {
             "Marketplace: Expired."
         );
 
-        if (s.podListings[index] != bytes32(0)) _cancelPodListing(index);
+        if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
 
         s.podListings[index] = hashListing(
             start,
@@ -146,13 +146,13 @@ contract Listing is PodTransfer {
      * Cancel
      */
 
-    function _cancelPodListing(uint256 index) internal {
+    function _cancelPodListing(address account, uint256 index) internal {
         require(
-            s.a[msg.sender].field.plots[index] > 0,
+            s.a[account].field.plots[index] > 0,
             "Marketplace: Listing not owned by sender."
         );
         delete s.podListings[index];
-        emit PodListingCancelled(msg.sender, index);
+        emit PodListingCancelled(account, index);
     }
 
     /*

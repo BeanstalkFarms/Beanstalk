@@ -102,7 +102,7 @@ contract Order is Listing {
         uint256 costInBeans = (o.pricePerPod * amount) / 1000000;
         LibTransfer.sendToken(C.bean(), costInBeans, msg.sender, mode);
         if (s.podListings[index] != bytes32(0)) {
-            _cancelPodListing(index);
+            _cancelPodListing(msg.sender, index);
         }
         _transferPlot(msg.sender, o.account, index, start, amount);
         if (s.podOrders[id] == 0) {

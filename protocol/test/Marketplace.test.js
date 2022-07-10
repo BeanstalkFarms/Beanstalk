@@ -193,7 +193,7 @@ describe('Marketplace', function () {
         it('Fill Listing not enough pods in listing', async function () {
           const l = [userAddress, '0', '0', '500', '500000', '0', INTERNAL]
           await this.marketplace.connect(user).createPodListing('0', '0', '500', '500000', '0', INTERNAL);
-          await expect(this.marketplace.connect(user2).fillPodListing(l, 500, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing.');
+          await expect(this.marketplace.connect(user2).fillPodListing(l, 500, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
         })
       })
 
@@ -684,7 +684,7 @@ describe('Marketplace', function () {
       })
 
       it('emits plot transfer the plot', async function () {
-        expect(this.result).to.emit(this.marketplace, 'PlotTransfer').withArgs(userAddress, user2Address, '0', '100');
+        await expect(this.result).to.emit(this.marketplace, 'PlotTransfer').withArgs(userAddress, user2Address, '0', '100');
       })
     })
 
@@ -702,7 +702,7 @@ describe('Marketplace', function () {
       })
 
       it('emits plot transfer the plot', async function () {
-        expect(this.result).to.emit(this.marketplace, 'PlotTransfer').withArgs(userAddress, user2Address, '0', '100');
+        await expect(this.result).to.emit(this.marketplace, 'PlotTransfer').withArgs(userAddress, user2Address, '0', '100');
       })
     })
 
@@ -720,7 +720,32 @@ describe('Marketplace', function () {
       })
 
       it('emits plot transfer the plot', async function () {
-        expect(this.result).to.emit(this.marketplace, 'PlotTransfer').withArgs(userAddress, user2Address, '0', '100');
+        await expect(this.result).to.emit(this.marketplace, 'PlotTransfer').withArgs(userAddress, user2Address, '0', '100');
+        await expect(this.result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, '0');
+      })
+    })
+
+    describe('transfers with existing pod listing from other', async function () {
+      beforeEach(async function () {
+        await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', EXTERNAL);
+        this.result = await expect(this.marketplace.connect(user).approvePods(user2Address, '100'))
+        this.result = await this.marketplace.connect(user2).transferPlot(userAddress, user2Address, '0', '0', '100')
+      })
+
+      it('transfers the plot', async function () {
+        expect(await this.field.plot(user2Address, '0')).to.be.equal('100')
+        expect(await this.field.plot(userAddress, '0')).to.be.equal('0')
+        expect(await this.field.plot(userAddress, '100')).to.be.equal('900')
+        expect(await this.marketplace.podListing('0')).to.be.equal('0x0000000000000000000000000000000000000000000000000000000000000000')
+      })
+
+      it('removes the listing', async function () {
+        expect(await this.marketplace.podListing('0')).to.be.equal(ZERO_HASH)
+      })
+
+      it('emits events', async function () {
+        await expect(this.result).to.emit(this.marketplace, 'PlotTransfer').withArgs(userAddress, user2Address, '0', '100');
+        await expect(this.result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, '0');
       })
     })
   })
@@ -735,6 +760,5 @@ describe('Marketplace', function () {
       expect(await this.marketplace.allowancePods(userAddress, user2Address)).to.be.equal('100')
       expect(this.result).to.emit(this.marketplace, 'PodApproval').withArgs(userAddress, user2Address, '100')
     })
-
   })
 })

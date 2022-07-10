@@ -56,7 +56,7 @@ contract MarketplaceFacet is Order {
 
     // Cancel
     function cancelPodListing(uint256 index) external payable {
-        _cancelPodListing(index);
+        _cancelPodListing(msg.sender, index);
     }
 
     // Get
@@ -141,7 +141,7 @@ contract MarketplaceFacet is Order {
         }
 
         if (s.podListings[id] != bytes32(0)) {
-            _cancelPodListing(id);
+            _cancelPodListing(sender, id);
         }
         _transferPlot(sender, recipient, id, start, amount);
     }
