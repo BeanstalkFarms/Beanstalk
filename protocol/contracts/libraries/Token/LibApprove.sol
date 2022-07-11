@@ -20,9 +20,8 @@ library LibApprove {
         address spender,
         uint256 amount
     ) internal {
-        if (token.allowance(address(this), spender) >= amount)
+        if (token.allowance(address(this), spender) == type(uint256).max)
             return;
-        token.safeApprove(spender, 0);
-        token.safeApprove(spender, type(uint256).max);
+        token.safeIncreaseAllowance(spender, amount);
     }
 }
