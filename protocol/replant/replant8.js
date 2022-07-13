@@ -4,6 +4,8 @@ const { BEANSTALK } = require('../test/utils/constants.js');
 async function replant8 (
         account
     ) {
+    console.log('-----------------------------------')
+    console.log('Replant8:\n')
     await upgradeWithNewFacets({
       diamondAddress: BEANSTALK,
       facetNames: [],
@@ -12,5 +14,6 @@ async function replant8 (
       verbose: true,
       account: account
     });
+    console.log('-----------------------------------')
 }
 exports.replant8 = replant8
