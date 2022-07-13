@@ -117,8 +117,12 @@ contract FertilizerFacet {
         return s.bpf;
     }
 
-    function getHumidity(uint128 id) public pure returns (uint128 humidity) {
-        humidity = LibFertilizer.getHumidity(id);
+    function getHumidity(uint128 _s) external pure returns (uint128 humidity) {
+        humidity = LibFertilizer.getHumidity(_s);
+    }
+
+    function getCurrentHumidity() external view returns (uint128 humidity) {
+        humidity = LibFertilizer.getHumidity(s.season.current);
     }
 
     function getEndBpf() external view returns (uint128 endBpf) {

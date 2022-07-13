@@ -30,6 +30,7 @@
     "@openzeppelin/contracts": "^3.4.0",
     "@openzeppelin/contracts-upgradeable": "^3.4.0",
     "dotenv": "^10.0.0",
+    "eth-permit": "^0.2.1",
     "keccak256": "^1.0.6",
     "merkletreejs": "^0.2.31"
   }

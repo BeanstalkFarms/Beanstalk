@@ -21,6 +21,7 @@ interface ICurvePool {
 
 interface ICurveZap {
     function add_liquidity(address _pool, uint256[4] memory _deposit_amounts, uint256 _min_mint_amount) external returns (uint256);
+    function calc_token_amount(address _pool, uint256[4] memory _amounts, bool _is_deposit) external returns (uint256);
 }
 
 interface ICurvePoolR {

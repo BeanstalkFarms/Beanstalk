@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "./interfaces/IBean.sol";
 import "./interfaces/ICurve.sol";
 import "./interfaces/IFertilizer.sol";
+import "./interfaces/IProxyAdmin.sol";
 import "./libraries/Decimal.sol";
 
 /**
@@ -48,24 +49,24 @@ library C {
 
     // Silo
     uint256 private constant SEEDS_PER_BEAN = 2;
-    uint256 private constant SEEDS_PER_LP_BEAN = 4;
     uint256 private constant STALK_PER_BEAN = 10000;
     uint256 private constant ROOTS_BASE = 1e12;
 
 
     // Exploit
-    uint256 private constant UNRIPE_LP_PER_DOLLAR = 2e6; // SET
-    uint256 private constant ADD_LP_RATIO = 824296; // SET
+    uint256 private constant UNRIPE_LP_PER_DOLLAR = 1884592; // 145_113_507_403_282 / 77_000_000
+    uint256 private constant ADD_LP_RATIO = 866616;
     uint256 private constant INITIAL_HAIRCUT = 0.5e18; // SET
 
     // Contracts
-    address private constant BEAN = 0xDC59ac4FeFa32293A95889Dc396682858d52e5Db; // SET
-    address private constant CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD; // SET
+    address private constant BEAN = 0xBEA0003eA948Db32082Fc6F4EC0729D258a0444c; // SET
+    address private constant CURVE_BEAN_METAPOOL = 0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49; // SET
     address private constant CURVE_3_POOL = 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7;
     address private constant THREE_CRV = 0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490;
     address private constant UNRIPE_BEAN = 0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449;
     address private constant UNRIPE_LP = 0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716D;
-    address private constant FERTILIZER = 0x2E4243832db30787764F152457952C8305f442E5; // SET
+    address private constant FERTILIZER = 0x402c84De2Ce49aF88f5e2eF3710ff89bFED36cB6;
+    address private constant FERTILIZER_ADMIN = 0xfECB01359263C12Aa9eD838F878A596F0064aa6e;
     address private constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
 
     address private constant TRI_CRYPTO = 0xc4AD29ba4B3c580e6D59105FFf484999997675Ff;
@@ -209,6 +210,10 @@ library C {
 
     function fertilizerAddress() internal pure returns (address) {
         return FERTILIZER;
+    }
+
+    function fertilizerAdmin() internal pure returns (IProxyAdmin) {
+        return IProxyAdmin(FERTILIZER_ADMIN);
     }
 
     function triCryptoPoolAddress() internal pure returns (address) {

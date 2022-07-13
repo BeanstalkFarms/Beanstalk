@@ -895,6 +895,19 @@
     },
     {
         "inputs": [],
+        "name": "getCurrentHumidity",
+        "outputs": [
+            {
+                "internalType": "uint128",
+                "name": "humidity",
+                "type": "uint128"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "getEndBpf",
         "outputs": [
             {
@@ -942,7 +955,7 @@
         "inputs": [
             {
                 "internalType": "uint128",
-                "name": "id",
+                "name": "_s",
                 "type": "uint128"
             }
         ],
@@ -2234,11 +2247,31 @@
     },
     {
         "inputs": [],
+        "name": "claimOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "owner",
         "outputs": [
             {
                 "internalType": "address",
                 "name": "owner_",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "ownerCandidate",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "ownerCandidate_",
                 "type": "address"
             }
         ],
@@ -2468,7 +2501,7 @@
         "outputs": [
             {
                 "internalType": "int256",
-                "name": "bdv",
+                "name": "deltaB",
                 "type": "int256"
             }
         ],
@@ -4063,7 +4096,7 @@
                 "type": "uint256"
             }
         ],
-        "name": "ClaimUnripe",
+        "name": "Pick",
         "type": "event"
     },
     {
@@ -4166,29 +4199,6 @@
             }
         ],
         "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "token",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            },
-            {
-                "internalType": "bytes32[]",
-                "name": "proof",
-                "type": "bytes32[]"
-            }
-        ],
-        "name": "claimUnripe",
-        "outputs": [],
-        "stateMutability": "payable",
         "type": "function"
     },
     {
@@ -4360,6 +4370,58 @@
             {
                 "internalType": "bool",
                 "name": "unripe",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bytes32[]",
+                "name": "proof",
+                "type": "bytes32[]"
+            },
+            {
+                "internalType": "enum LibTransfer.To",
+                "name": "mode",
+                "type": "uint8"
+            }
+        ],
+        "name": "pick",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "token",
+                "type": "address"
+            }
+        ],
+        "name": "picked",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
                 "type": "bool"
             }
         ],

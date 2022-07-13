@@ -13,10 +13,10 @@ pragma experimental ABIEncoderV2;
 contract MockCurveZap {
 
     address private constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-    address private constant BEAN = 0xDC59ac4FeFa32293A95889Dc396682858d52e5Db;
+    address private constant BEAN = 0xBEA0003eA948Db32082Fc6F4EC0729D258a0444c;
     address private constant THREE_CURVE = 0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490;
     address private constant THREE_POOL = 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7;
-    address private constant BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
+    address private constant BEAN_METAPOOL = 0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49;
 
     function approve() external {
         IERC20(BEAN).approve(BEAN_METAPOOL, type(uint256).max);

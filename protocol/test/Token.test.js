@@ -105,7 +105,7 @@ describe('Token', function () {
         describe('internal to internal', async function () {
             it('reverts if > than internal, not tolerant', async function () {
                 await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
-                await expect(this.tokenFacet.connect(this.user).transferToken(this.token.address, this.recipient.address, '300', INTERNAL, INTERNAL)).to.be.revertedWith("Balance: Insufficnent internal balance")
+                await expect(this.tokenFacet.connect(this.user).transferToken(this.token.address, this.recipient.address, '300', INTERNAL, INTERNAL)).to.be.revertedWith("Balance: Insufficient internal balance")
             })
             it('internal', async function () {
                 await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);

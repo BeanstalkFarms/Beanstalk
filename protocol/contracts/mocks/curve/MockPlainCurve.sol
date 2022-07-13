@@ -270,7 +270,7 @@ contract MockPlainCurve {
     }
 
     function get_D(uint256[N_COINS] memory xp, uint256 _a) private pure returns (uint D) {
-        // Solution is taken from pool contract: 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD
+        // Solution is taken from pool contract: 0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49
         uint256 S;
         uint256 Dprev;
         for (uint _i; _i < xp.length; ++_i) {

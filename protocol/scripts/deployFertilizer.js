@@ -1,9 +1,11 @@
 const { ethers, upgrades } = require("hardhat");
 var fs = require('fs');
 
-usdc_minter = '0x5B6122C109B78C6755486966148C1D70a50A47D7'
-const BCM = '0xa9bA2C40b263843C04d344727b954A545c81D043'
-const FERTILIZER = '0x2E4243832db30787764F152457952C8305f442E5'
+const {
+  BCM,
+  FERTILIZER,
+  USDC_MINTER
+} = require('../test/utils/constants')
 
 async function deploy(account, pre=true, mock=false) {
   const contractName = pre ? 'FertilizerPreMint' : 'Fertilizer';
@@ -16,11 +18,12 @@ async function deploy(account, pre=true, mock=false) {
     const usdc = await ethers.getContractAt('IUSDC', await fertilizer.USDC())
 
     await account.sendTransaction({
-      to: usdc_minter,
+      to: USDC_MINTER,
       value: ethers.utils.parseEther('1')
     })
-    await hre.network.provider.request({ method: "hardhat_impersonateAccount", params: [usdc_minter] });
-    const minter = await ethers.getSigner(usdc_minter)
+
+    await hre.network.provider.request({ method: "hardhat_impersonateAccount", params: [USDC_MINTER] });
+    const minter = await ethers.getSigner(USDC_MINTER)
 
     await usdc.connect(minter).mint(account.address, ethers.utils.parseUnits('10000',6));
 
@@ -30,7 +33,7 @@ async function deploy(account, pre=true, mock=false) {
     })
     await hre.network.provider.request({ method: "hardhat_impersonateAccount", params: [BCM] });
     const bcm = await ethers.getSigner(BCM)
-    await usdc.connect(bcm).transfer(usdc_minter, await usdc.balanceOf(BCM));
+    await usdc.connect(bcm).transfer(USDC_MINTER, await usdc.balanceOf(BCM));
 
   }
 
@@ -38,13 +41,13 @@ async function deploy(account, pre=true, mock=false) {
 }
 
 async function impersonate() {
-  let tokenJson = fs.readFileSync(`./artifacts/contracts/fertilizer/Fertilizer.sol/Fertilizer.json`);
+  let tokenJson = fs.readFileSync(`./artifacts/contracts/mocks/MockFertilizer.sol/MockFertilizer.json`);
   await network.provider.send("hardhat_setCode", [
     FERTILIZER,
     JSON.parse(tokenJson).deployedBytecode,
   ]);
 
-  const fertilizer = await ethers.getContractAt('Fertilizer', FERTILIZER)
+  const fertilizer = await ethers.getContractAt('MockFertilizer', FERTILIZER)
   await fertilizer.initialize()
   return fertilizer
 }

@@ -30,8 +30,6 @@ contract TokenFacet {
         int256 delta
     );
 
-    AppStorage internal s;
-
     /**
      * Transfer
      **/

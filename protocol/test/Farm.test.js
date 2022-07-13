@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { to18, to6, toStalk } = require('./utils/helpers.js')
-const { BEAN, USDT, WETH, CURVE_REGISTRY, CRYPTO_REGISTRY, THREE_POOL, TRI_CRYPTO, THREE_CURVE } = require('./utils/constants')
+const { BEAN, USDT, WETH, CURVE_REGISTRY, CRYPTO_REGISTRY, THREE_POOL, TRI_CRYPTO, TRI_CRYPTO_POOL, THREE_CURVE, BEAN_3_CURVE, STABLE_FACTORY } = require('./utils/constants')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
 let user, user2, owner;
@@ -33,8 +33,16 @@ describe('Farm', function () {
     this.tokenFacet = await ethers.getContractAt('TokenFacet', this.diamond.address)
     this.farm = await ethers.getContractAt('FarmFacet', this.diamond.address)
     this.curve = await ethers.getContractAt('CurveFacet', this.diamond.address)
+    this.beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE)
+    this.threeCurve = await ethers.getContractAt('IERC20', THREE_CURVE)
+
+    await this.beanMetapool.set_A_precise('1000')
+    await this.beanMetapool.set_virtual_price(to18('1'))
+    await this.beanMetapool.set_balances(['1', ethers.utils.parseUnits('1', 12)])
+    await this.beanMetapool.set_supply('0')
 
     await this.season.lightSunrise();
+    await this.bean.connect(user).mint(user.address, '100000000000');
     await this.bean.connect(user).approve(this.silo.address, '100000000000');
     await this.bean.connect(user2).approve(this.silo.address, '100000000000');
     await this.bean.mint(userAddress, to6('10000'));
@@ -78,7 +86,7 @@ describe('Farm', function () {
 
   it('wraps Eth and exchanges to usdt external', async function () {
     exchange = await this.curve.interface.encodeFunctionData('exchange', [
-      '0xD51a44d3FaE010294C616388b506AcdA1bfAAE46', // tricrypto2
+      TRI_CRYPTO_POOL, // tricrypto2
       CRYPTO_REGISTRY,
       WETH, // WETH
       USDT, // USDT
@@ -97,7 +105,7 @@ describe('Farm', function () {
   describe("Wrap Eth and Exchange", async function () {
     it('wraps Eth and exchanges to usdt internal', async function () {
       exchange = await this.curve.interface.encodeFunctionData('exchange', [
-        '0xD51a44d3FaE010294C616388b506AcdA1bfAAE46', // tricrypto2
+        TRI_CRYPTO_POOL, // tricrypto2
         CRYPTO_REGISTRY,
         WETH, // WETH
         USDT, // USDT
@@ -160,7 +168,7 @@ describe('Farm', function () {
   describe("Eth -> LP", async function () {
     before(async function () {
       exchange = await this.curve.interface.encodeFunctionData('exchange', [
-        '0xD51a44d3FaE010294C616388b506AcdA1bfAAE46', // tricrypto2
+        TRI_CRYPTO_POOL, // tricrypto2
         CRYPTO_REGISTRY,
         WETH, // WETH
         USDT, // USDT
@@ -208,5 +216,69 @@ describe('Farm', function () {
       expect(await this.tokenFacet.getInternalBalance(user.address, this.threeCurve.address)).to.be.equal('0')
       expect(await this.threeCurve.balanceOf(user.address)).to.be.equal('2981268357742150365108')
     })
+
+    // Temporarily Disabled until new pool is deployed
+
+    // it('wraps Eth and adds lp to 3pool external', async function () {
+    //   addLP3Pool = await this.curve.interface.encodeFunctionData('addLiquidity', [
+    //     THREE_POOL, // 3pool
+    //     CURVE_REGISTRY,
+    //     ["0", "0", "3043205584"],
+    //     to18('1'),  // minAmountOut
+    //     INTERNAL_TOLERANT,
+    //     INTERNAL
+    //   ])
+
+    //   addLPBeanMetapool = await this.curve.interface.encodeFunctionData('addLiquidity', [
+    //     BEAN_3_CURVE, // 3pool
+    //     STABLE_FACTORY,
+    //     [ to6('1'), to18('1') ],
+    //     to18('2'),  // minAmountOut
+    //     INTERNAL_EXTERNAL,
+    //     INTERNAL
+    //   ])
+
+    //   deposit = await this.silo.interface.encodeFunctionData(
+    //     "deposit", [BEAN_3_CURVE, to18('2'), INTERNAL]
+    //   );
+
+    //   withdraw = await this.silo.interface.encodeFunctionData(
+    //     "withdrawDeposit", [BEAN_3_CURVE, 2, to18('2')]
+    //   );
+
+    //   await this.farm.connect(user).farm([
+    //     wrapEth, 
+    //     exchange, 
+    //     addLP3Pool, 
+    //     addLPBeanMetapool, 
+    //     deposit, 
+    //     withdraw
+    //   ], { value: to18('1') })
+
+    //   this.season.farmSunrises('30')
+
+    //   const claimWithdrawal = await this.silo.interface.encodeFunctionData(
+    //     "claimWithdrawal", [
+    //       BEAN_3_CURVE,
+    //       '27',
+    //       INTERNAL
+    //     ]
+    //   );
+
+    //   const removeLiquidity = await this.curve.interface.encodeFunctionData(
+    //     "removeLiquidity", [
+    //       BEAN_3_CURVE,
+    //       STABLE_FACTORY,
+    //       to18('2'),
+    //       [0,0],
+    //       INTERNAL,
+    //       EXTERNAL,
+    //     ]
+    //   )
+
+    //   await this.farm.connect(user).farm([claimWithdrawal, removeLiquidity])
+
+    //   expect(await this.threeCurve.balanceOf(user.address)).to.be.equal('989769589977063077')
+    // })
   })
 })

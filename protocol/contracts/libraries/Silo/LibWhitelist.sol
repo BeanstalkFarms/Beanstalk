@@ -36,9 +36,6 @@ library LibWhitelist {
 
     event DewhitelistToken(address indexed token);
 
-    uint32 private constant BEAN_LUSD_STALK = 10000;
-    uint32 private constant BEAN_LUSD_SEEDS = 3;
-
     uint32 private constant BEAN_3CRV_STALK = 10000;
     uint32 private constant BEAN_3CRV_SEEDS = 4;
 

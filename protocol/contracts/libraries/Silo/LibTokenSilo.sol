@@ -166,7 +166,12 @@ library LibTokenSilo {
         (bool success, bytes memory data) = address(this).call(
             myFunctionCall
         );
-        require(success, "Silo: Bean denominated value failed.");
+        if (!success) {
+            if (data.length == 0) revert();
+            assembly {
+                revert(add(32, data), mload(data))
+            }
+        }
         assembly {
             bdv := mload(add(data, add(0x20, 0)))
         }

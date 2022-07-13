@@ -39,11 +39,6 @@ contract Silo is SiloExit {
         int256 deltaRoots
     );
 
-    uint256 private constant _NOT_ENTERED = 1;
-    uint256 private constant _ENTERED = 2;
-
-    uint256 private _status = 1;
-
     /**
      * Internal
      **/

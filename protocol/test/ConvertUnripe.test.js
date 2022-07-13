@@ -48,7 +48,7 @@ describe('Unripe Convert', function () {
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
     this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)
     await this.unripeBean.mint(userAddress, to6('10000'))
-    await this.unripeLP.mint(userAddress, to6('10000'))
+    await this.unripeLP.mint(userAddress, to6('9422.960000'))
     await this.unripeBean.connect(user).approve(this.diamond.address, to18('100000000'))
     await this.unripeLP.connect(user).approve(this.diamond.address, to18('100000000'))
     await this.fertilizer.setFertilizerE(true, to6('10000'))
@@ -64,7 +64,7 @@ describe('Unripe Convert', function () {
     )
     await this.unripe.connect(owner).addUnderlying(
       UNRIPE_LP,
-      to18('1000')
+      to18('942.2960000')
     )
   });
 
@@ -242,7 +242,7 @@ describe('Unripe Convert', function () {
       beforeEach(async function () {
         await this.unripe.connect(user).addUnderlyingWithRecap(
           UNRIPE_LP,
-          to18('1000')
+          to18('942.2960000')
         )
         await this.silo.connect(user).deposit(this.unripeBean.address, to6('2000'), EXTERNAL);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
@@ -252,27 +252,27 @@ describe('Unripe Convert', function () {
       it('properly updates total values', async function () {
         expect(await this.silo.getTotalDeposited(this.unripeBean.address)).to.eq(to6('1500'));
         expect(await this.silo.getTotalDeposited(this.unripeLP.address)).to.eq('503761210');
-        expect(await this.silo.totalSeeds()).to.eq('689925752');
-        expect(await this.silo.totalStalk()).to.eq('2474814380000');
+        expect(await this.silo.totalSeeds()).to.eq('689368856');
+        expect(await this.silo.totalStalk()).to.eq('2473422140000');
       });
 
       it('properly updates user values', async function () {
-        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('689925752');
-        expect(await this.silo.balanceOfStalk(userAddress)).to.eq('2474814380000');
+        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('689368856');
+        expect(await this.silo.balanceOfStalk(userAddress)).to.eq('2473422140000');
       });
 
       it('properly updates user deposits', async function () {
         expect((await this.silo.getDeposit(userAddress, this.unripeBean.address, 2))[0]).to.eq(to6('1500'));
         const deposit = await this.silo.getDeposit(userAddress, this.unripeLP.address, 2);
         expect(deposit[0]).to.eq('503761210');
-        expect(deposit[1]).to.eq('97481438');
+        expect(deposit[1]).to.eq('97342214');
       });
 
       it('emits events', async function () {
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
           .withArgs(userAddress, this.unripeBean.address, [2], [to6('500')], to6('500'));
         await expect(this.result).to.emit(this.silo, 'AddDeposit')
-          .withArgs(userAddress, this.unripeLP.address, 2, '503761210', '97481438');
+          .withArgs(userAddress, this.unripeLP.address, 2, '503761210', '97342214');
       });
     })
   });
@@ -379,7 +379,7 @@ describe('Unripe Convert', function () {
       beforeEach(async function () {
         await this.unripe.connect(user).addUnderlyingWithRecap(
           UNRIPE_LP,
-          to18('1000')
+          to18('942.2960000')
         )
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
         await this.silo.connect(user).deposit(this.unripeLP.address, to6('1000'), EXTERNAL);

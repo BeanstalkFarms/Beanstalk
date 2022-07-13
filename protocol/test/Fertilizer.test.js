@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { deployFertilizer, impersonateFertilizer } = require('../scripts/deployFertilizer.js')
-const { EXTERNAL } = require('./utils/balances.js')
+const { EXTERNAL, INTERNAL } = require('./utils/balances.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { BEAN, FERTILIZER, USDC, BEAN_3_CURVE, THREE_CURVE, UNRIPE_BEAN, UNRIPE_LP } = require('./utils/constants');
 const { to6, to18 } = require('./utils/helpers.js');
@@ -18,7 +18,7 @@ function beansForUsdc(amount) {
 
 function lpBeansForUsdc(amount) {
   return ethers.BigNumber.from(amount)
-    .mul(ethers.BigNumber.from('824296'))
+    .mul(ethers.BigNumber.from('866616'))
 }
 
 describe('Fertilize', function () {
@@ -47,7 +47,7 @@ describe('Fertilize', function () {
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
     await this.unripeBean.mint(user2.address, to6('1000'))
-    await this.unripeLP.mint(user2.address, to6('1000'))
+    await this.unripeLP.mint(user2.address, to6('942.297473'))
 
     this.threeCurve = await ethers.getContractAt('IBean', THREE_CURVE)
     this.threeCurve = await ethers.getContractAt('IBean', THREE_CURVE)
@@ -115,7 +115,7 @@ describe('Fertilize', function () {
 
       it('updates token balances', async function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal(to6('2'))
-        expect(await this.beanMetapool.balanceOf(this.fertilizer.address)).to.be.equal('1823520531850802708')
+        expect(await this.beanMetapool.balanceOf(this.fertilizer.address)).to.be.equal('1866180825834066049')
 
         expect(await this.threeCurve.balanceOf(this.beanMetapool.address)).to.be.equal(to18('1'))
         expect(await this.bean.balanceOf(this.beanMetapool.address)).to.be.equal(lpBeansForUsdc('1'))
@@ -123,7 +123,7 @@ describe('Fertilize', function () {
 
       it('updates underlying balances', async function () {
         expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('2'))
-        expect(await this.unripe.getTotalUnderlying(UNRIPE_LP)).to.be.equal('1823520531850802708')
+        expect(await this.unripe.getTotalUnderlying(UNRIPE_LP)).to.be.equal('1866180825834066049')
       })
 
       it('updates fertizer amount', async function () {
@@ -152,7 +152,7 @@ describe('Fertilize', function () {
 
       it('updates token balances', async function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal(to6('3.999999'))
-        expect(await this.beanMetapool.balanceOf(this.fertilizer.address)).to.be.equal('3647041063701605416')
+        expect(await this.beanMetapool.balanceOf(this.fertilizer.address)).to.be.equal('3732361651668132099')
 
         expect(await this.threeCurve.balanceOf(this.beanMetapool.address)).to.be.equal(to18('2'))
         expect(await this.bean.balanceOf(this.beanMetapool.address)).to.be.equal(lpBeansForUsdc('2'))
@@ -160,7 +160,7 @@ describe('Fertilize', function () {
 
       it('updates underlying balances', async function () {
         expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('3.999999'))
-        expect(await this.unripe.getTotalUnderlying(UNRIPE_LP)).to.be.equal('3647041063701605416')
+        expect(await this.unripe.getTotalUnderlying(UNRIPE_LP)).to.be.equal('3732361651668132099')
       })
 
       it('updates fertizer amount', async function () {
@@ -186,7 +186,7 @@ describe('Fertilize', function () {
 
       it('updates token balances', async function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal(to6('11.999999'))
-        expect(await this.beanMetapool.balanceOf(this.fertilizer.address)).to.be.equal('10941123191104816250')
+        expect(await this.beanMetapool.balanceOf(this.fertilizer.address)).to.be.equal('11197084955004396299')
 
         expect(await this.threeCurve.balanceOf(this.beanMetapool.address)).to.be.equal(to18('6'))
         expect(await this.bean.balanceOf(this.beanMetapool.address)).to.be.equal(this.lpBeans)
@@ -194,7 +194,7 @@ describe('Fertilize', function () {
 
       it('updates underlying balances', async function () {
         expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('11.999999'))
-        expect(await this.unripe.getTotalUnderlying(UNRIPE_LP)).to.be.equal('10941123191104816250')
+        expect(await this.unripe.getTotalUnderlying(UNRIPE_LP)).to.be.equal('11197084955004396299')
       })
 
       it('updates fertizer amount', async function () {
@@ -247,7 +247,7 @@ describe('Fertilize', function () {
 
       it('updates token balances', async function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal(to6('200'))
-        expect(await this.beanMetapool.balanceOf(this.fertilizer.address)).to.be.equal('182352053185080270837')
+        expect(await this.beanMetapool.balanceOf(this.fertilizer.address)).to.be.equal('186618082583406604989')
 
         expect(await this.threeCurve.balanceOf(this.beanMetapool.address)).to.be.equal(to18('100'))
         expect(await this.bean.balanceOf(this.beanMetapool.address)).to.be.equal(this.lpBeans)
@@ -255,7 +255,7 @@ describe('Fertilize', function () {
 
       it('updates underlying balances', async function () {
         expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('200'))
-        expect(await this.unripe.getTotalUnderlying(UNRIPE_LP)).to.be.equal('182352053185080270837')
+        expect(await this.unripe.getTotalUnderlying(UNRIPE_LP)).to.be.equal('186618082583406604989')
       })
 
       it('updates fertizer amount', async function () {
@@ -294,7 +294,7 @@ describe('Fertilize', function () {
 
       it('updates token balances', async function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal('199999999') // Rounds down
-        expect(await this.beanMetapool.balanceOf(this.fertilizer.address)).to.be.equal('182352053185080270837')
+        expect(await this.beanMetapool.balanceOf(this.fertilizer.address)).to.be.equal('186618082583406604989')
 
         expect(await this.threeCurve.balanceOf(this.beanMetapool.address)).to.be.equal(to18('100'))
         expect(await this.bean.balanceOf(this.beanMetapool.address)).to.be.equal(this.lpBeans)
@@ -302,7 +302,7 @@ describe('Fertilize', function () {
 
       it('updates underlying balances', async function () {
         expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal('199999999') // Rounds down
-        expect(await this.unripe.getTotalUnderlying(UNRIPE_LP)).to.be.equal('182352053185080270837')
+        expect(await this.unripe.getTotalUnderlying(UNRIPE_LP)).to.be.equal('186618082583406604989')
       })
 
       it('updates fertizer amount', async function () {
@@ -344,7 +344,7 @@ describe('Fertilize', function () {
 
       it('updates token balances', async function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal(to6('450'))
-        expect(await this.beanMetapool.balanceOf(this.fertilizer.address)).to.be.equal('364704106370160541675')
+        expect(await this.beanMetapool.balanceOf(this.fertilizer.address)).to.be.equal('373236165166813209979')
 
         expect(await this.threeCurve.balanceOf(this.beanMetapool.address)).to.be.equal(to18('200'))
         expect(await this.bean.balanceOf(this.beanMetapool.address)).to.be.equal(this.lpBeans)
@@ -352,7 +352,7 @@ describe('Fertilize', function () {
 
       it('updates underlying balances', async function () {
         expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('400'))
-        expect(await this.unripe.getTotalUnderlying(UNRIPE_LP)).to.be.equal('364704106370160541675')
+        expect(await this.unripe.getTotalUnderlying(UNRIPE_LP)).to.be.equal('373236165166813209979')
       })
 
       it('updates fertizer amount', async function () {
@@ -374,6 +374,75 @@ describe('Fertilize', function () {
       it('updates fertilizer getters', async function () {
         expect(await this.fert.remaining()).to.be.equal(to6('300'))
         expect(await this.fert.getMintId()).to.be.equal(to6('3'))
+      })
+    })
+
+    describe("2 mint with same id", async function () {
+      beforeEach(async function () {
+        await this.season.teleportSunrise('6075')
+        await this.fertilizer.connect(user).mintFertilizer('100', '0', EXTERNAL)
+        await this.season.rewardToFertilizerE(to6('50'))
+        await this.season.teleportSunrise('6175')
+        this.result = await this.fertilizer.connect(user).mintFertilizer('100', '0', EXTERNAL)
+        this.lpBeans = lpBeansForUsdc('100').add(lpBeansForUsdc('100'))
+      })
+
+      it("updates totals", async function () {
+        expect(await this.fertilizer.totalFertilizerBeans()).to.be.equal(to6('650'))
+        expect(await this.fertilizer.totalFertilizedBeans()).to.be.equal(to6('50'))
+        expect(await this.fertilizer.getFirst()).to.be.equal(to6('3.5'))
+        expect(await this.fertilizer.getNext(to6('3'))).to.be.equal(to6('0'))
+        expect(await this.fertilizer.getActiveFertilizer()).to.be.equal('200')
+        expect(await this.fertilizer.isFertilizing()).to.be.equal(true)
+        expect(await this.fertilizer.remainingRecapitalization()).to.be.equal(to6('300'))
+      })
+
+      it('updates token balances', async function () {
+        expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal(to6('450'))
+        expect(await this.beanMetapool.balanceOf(this.fertilizer.address)).to.be.equal('373236165166813209979')
+
+        expect(await this.threeCurve.balanceOf(this.beanMetapool.address)).to.be.equal(to18('200'))
+        expect(await this.bean.balanceOf(this.beanMetapool.address)).to.be.equal(this.lpBeans)
+      })
+
+      it('updates underlying balances', async function () {
+        expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('400'))
+        expect(await this.unripe.getTotalUnderlying(UNRIPE_LP)).to.be.equal('373236165166813209979')
+      })
+
+      it('updates fertizer amount', async function () {
+        expect(await this.fertilizer.getFertilizer(to6('3.5'))).to.be.equal('200')
+      })
+
+      it('mints fetilizer', async function () {
+        expect(await this.fert.balanceOf(user.address, to6('3.5'))).to.be.equal('200')
+        let balance = await this.fert.lastBalanceOf(user.address, to6('3.5'))
+        expect(balance[0]).to.be.equal('200')
+        expect(balance[1]).to.be.equal(to6('0.5'))
+      })
+
+      it('updates fertilizer getters', async function () {
+        expect(await this.fert.remaining()).to.be.equal(to6('300'))
+        expect(await this.fert.getMintId()).to.be.equal(to6('3.5'))
+      })
+
+      it('updates claims fertilized Beans', async function () {
+        expect(await this.token.getInternalBalance(user.address, this.bean.address)).to.be.equal(to6('50'))
+      })
+    })
+
+    describe("2 mint with same id and claim", async function () {
+      beforeEach(async function () {
+        await this.season.teleportSunrise('6075')
+        await this.fertilizer.connect(user).mintFertilizer('100', '0', EXTERNAL)
+        await this.season.rewardToFertilizerE(to6('50'))
+        await this.season.teleportSunrise('6175')
+        await this.fertilizer.connect(user).claimFertilized([to6('3.5')], INTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer('100', '0', EXTERNAL)
+      })
+
+      it('updates claims fertilized Beans', async function () {
+        expect(await this.token.getInternalBalance(user.address, this.bean.address)).to.be.equal(to6('50'))
       })
     })
   })
@@ -705,5 +774,4 @@ describe('Fertilize', function () {
       })
     })
   })
-
 })

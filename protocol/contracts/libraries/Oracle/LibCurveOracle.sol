@@ -26,7 +26,6 @@ interface IMeta3CurveOracle {
 }
 
 library LibCurveOracle {
-    address private constant POOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
     int256 private constant mintPrecision = 240;
 
     using SafeMath for uint256;
@@ -67,9 +66,9 @@ library LibCurveOracle {
     function initializeOracle() internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         Storage.Oracle storage o = s.co;
-        uint256[2] memory balances = IMeta3CurveOracle(POOL)
+        uint256[2] memory balances = IMeta3CurveOracle(C.curveMetapoolAddress())
             .get_price_cumulative_last();
-        uint256 timestamp = IMeta3CurveOracle(POOL).block_timestamp_last();
+        uint256 timestamp = IMeta3CurveOracle(C.curveMetapoolAddress()).block_timestamp_last();
         if (balances[0] != 0 && balances[1] != 0 && timestamp != 0) {
             (o.balances, o.timestamp) = get_cumulative();
             o.initialized = true;
@@ -98,9 +97,9 @@ library LibCurveOracle {
         view
         returns (uint256[2] memory balances, uint256[2] memory cum_balances)
     {
-        cum_balances = IMeta3CurveOracle(POOL).get_price_cumulative_last();
-        balances = IMeta3CurveOracle(POOL).get_balances();
-        uint256 lastTimestamp = IMeta3CurveOracle(POOL).block_timestamp_last();
+        cum_balances = IMeta3CurveOracle(C.curveMetapoolAddress()).get_price_cumulative_last();
+        balances = IMeta3CurveOracle(C.curveMetapoolAddress()).get_balances();
+        uint256 lastTimestamp = IMeta3CurveOracle(C.curveMetapoolAddress()).block_timestamp_last();
 
         cum_balances[0] = cum_balances[0].add(
             balances[0].mul(block.timestamp.sub(lastTimestamp))
@@ -123,9 +122,9 @@ library LibCurveOracle {
         view
         returns (uint256[2] memory cum_balances, uint256 lastTimestamp)
     {
-        cum_balances = IMeta3CurveOracle(POOL).get_price_cumulative_last();
-        uint256[2] memory balances = IMeta3CurveOracle(POOL).get_balances();
-        lastTimestamp = IMeta3CurveOracle(POOL).block_timestamp_last();
+        cum_balances = IMeta3CurveOracle(C.curveMetapoolAddress()).get_price_cumulative_last();
+        uint256[2] memory balances = IMeta3CurveOracle(C.curveMetapoolAddress()).get_balances();
+        lastTimestamp = IMeta3CurveOracle(C.curveMetapoolAddress()).block_timestamp_last();
 
         cum_balances[0] = cum_balances[0].add(
             balances[0].mul(block.timestamp.sub(lastTimestamp))

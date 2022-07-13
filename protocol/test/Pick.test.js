@@ -4,6 +4,7 @@ const keccak256 = require("keccak256");
 
 const { deploy } = require("../scripts/deploy.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+const { EXTERNAL } = require("./utils/balances.js");
 
 let owner;
 let users;
@@ -119,7 +120,7 @@ describe("UnripeClaim", function () {
     const beforeBalance = await this.unripeToken1.balanceOf(user.user.address);
     const tx = await this.unripeClaim
       .connect(user.user)
-      .claimUnripe(this.unripeToken1.address, user.amount, proof);
+      .pick(this.unripeToken1.address, user.amount, proof, EXTERNAL);
     const afterBalance = await this.unripeToken1.balanceOf(user.user.address);
 
     expect(afterBalance).to.be.eq(beforeBalance.add(user.amount));
@@ -139,13 +140,13 @@ describe("UnripeClaim", function () {
 
     await this.unripeClaim
       .connect(user.user)
-      .claimUnripe(this.unripeToken1.address, user.amount, proof);
+      .pick(this.unripeToken1.address, user.amount, proof, EXTERNAL);
 
     await expect(
       this.unripeClaim
         .connect(user.user)
-        .claimUnripe(this.unripeToken1.address, user.amount, proof)
-    ).to.be.revertedWith("UnripeClaim: already claimed");
+        .pick(this.unripeToken1.address, user.amount, proof, EXTERNAL)
+    ).to.be.revertedWith("UnripeClaim: already picked");
   });
 
   it("claim correct unripe token", async function () {
@@ -159,7 +160,7 @@ describe("UnripeClaim", function () {
     await expect(
       this.unripeClaim
         .connect(user.user)
-        .claimUnripe(this.unripeToken2.address, user.amount, proof)
+        .pick(this.unripeToken2.address, user.amount, proof, EXTERNAL)
     ).to.be.revertedWith("UnripeClaim: invalid proof");
   });
 
@@ -174,7 +175,7 @@ describe("UnripeClaim", function () {
     await expect(
       this.unripeClaim
         .connect(user2)
-        .claimUnripe(this.unripeToken1.address, user.amount, proof)
+        .pick(this.unripeToken1.address, user.amount, proof, EXTERNAL)
     ).to.be.revertedWith("UnripeClaim: invalid proof");
   });
 });

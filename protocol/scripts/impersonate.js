@@ -1,24 +1,24 @@
 var fs = require('fs');
 
-const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
-const THREE_CURVE = "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490";
-const THREE_POOL = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
-const BEAN_3_CURVE = "0x3a70DfA7d2262988064A2D051dd47521E43c9BdD";
-const LUSD_3_CURVE = "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA";
-const BEAN_LUSD_CURVE = "0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D";
-const UNISWAP_V2_ROUTER = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
-const UNISWAP_V2_PAIR = '0x87898263B6C5BABe34b4ec53F22d98430b91e371';
-const WETH = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-const BEAN = '0xDC59ac4FeFa32293A95889Dc396682858d52e5Db';
-const LUSD = '0x5f98805A4E8be255a32880FDeC7F6728C6568bA0';
-const UNRIPE_BEAN = '0xD5BDcdEc5b2FEFf781eA8727969A95BbfD47C40e';
-const UNRIPE_LP = '0x2e4243832DB30787764f152457952C8305f442e4';
-const BARN_RAISE = '0x2E4243832db30787764F152457952C8305f442E5';
-const TETHER = '';
-const USDC = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
-const CURVE_STABLE_FACTORY = '0xB9fC157394Af804a3578134A6585C0dc9cc990d4';
-const CURVE_CRYPTO_FACTORY = '0x0959158b6040D32d04c301A72CBFD6b39E21c9AE';
-const CURVE_ZAP = '0xA79828DF1850E8a3A3064576f380D90aECDD3359';
+const {
+  ZERO_ADDRESS,
+  BEAN,
+  THREE_CURVE,
+  THREE_POOL,
+  BEAN_3_CURVE,
+  LUSD_3_CURVE,
+  BEAN_LUSD_CURVE,
+  UNISWAP_V2_ROUTER,
+  UNISWAP_V2_PAIR,
+  WETH,
+  LUSD,
+  UNRIPE_BEAN,
+  UNRIPE_LP,
+  USDC,
+  CURVE_REGISTRY,
+  CURVE_ZAP,
+  STABLE_FACTORY
+} = require('../test/utils/constants')
 
 async function curve() {
   // Deploy 3 Curveadd
@@ -40,15 +40,15 @@ async function curve() {
 
   let curveFactoryJson = fs.readFileSync(`./artifacts/contracts/mocks/Curve/MockCurveFactory.sol/MockCurveFactory.json`);
   await network.provider.send("hardhat_setCode", [
-    CURVE_STABLE_FACTORY,
+    STABLE_FACTORY,
     JSON.parse(curveFactoryJson).deployedBytecode,
   ]);
 
   await network.provider.send("hardhat_setCode", [
-    CURVE_CRYPTO_FACTORY,
+    CURVE_REGISTRY,
     JSON.parse(threeCurveJson).deployedBytecode,
   ]);
-  const curveStableFactory = await ethers.getContractAt("MockCurveFactory", CURVE_STABLE_FACTORY);
+  const curveStableFactory = await ethers.getContractAt("MockCurveFactory", STABLE_FACTORY);
   await curveStableFactory.set_coins(BEAN_3_CURVE, [BEAN, THREE_CURVE, ZERO_ADDRESS, ZERO_ADDRESS]);
 
   let curveZapJson = fs.readFileSync(`./artifacts/contracts/mocks/Curve/MockCurveZap.sol/MockCurveZap.json`);

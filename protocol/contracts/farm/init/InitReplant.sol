@@ -6,6 +6,8 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {AppStorage} from "../AppStorage.sol";
+import "../../C.sol";
+import {LibWhitelist} from "../../libraries/Silo/LibWhitelist.sol";
 
 /**
  * @author Publius
@@ -16,15 +18,17 @@ contract InitReplant {
 
     AppStorage internal s;
 
-    function init() external {
-        s.earnedBeans = 0;
-        s.season.lastSop = 0;
-        s.co.initialized = false;
-        s.season.withdrawSeasons = 5;
-        // Need to start initial supply of Fertilizer
-        uint32 _season = s.season.current;
+    function init(address fertilizerImplementation) external {
+        // s.season.lastSop = 0;
+        // s.isFarm = 1;
+        // s.co.initialized = false;
+        // s.co.startSeason = s.season.current;
+        // s.season.withdrawSeasons = 1;
+        // s.earnedBeans = 0;
 
-        // Maybe use add Fertilizer call instead...
-        // LibFertilizer.addFertilizer(...)
+        C.fertilizerAdmin().upgrade(
+            C.fertilizerAddress(), 
+            fertilizerImplementation
+        );
     }
 }

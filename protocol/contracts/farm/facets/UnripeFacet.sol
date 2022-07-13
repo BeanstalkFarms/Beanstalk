@@ -42,7 +42,7 @@ contract UnripeFacet is ReentrancyGuard {
         uint256 underlying
     );
 
-    event ClaimUnripe(
+    event Pick(
         address indexed account,
         address indexed token,
         uint256 amount
@@ -68,16 +68,17 @@ contract UnripeFacet is ReentrancyGuard {
         emit Ripen(msg.sender, unripeToken, amount, underlyingAmount);
     }
 
-    function claimUnripe(
+    function pick(
         address token,
         uint256 amount,
-        bytes32[] memory proof
+        bytes32[] memory proof,
+        LibTransfer.To mode
     ) external payable nonReentrant {
         bytes32 root = s.u[token].merkleRoot;
         require(root != bytes32(0), "UnripeClaim: invalid token");
         require(
-            !s.unripeClaimed[token][msg.sender],
-            "UnripeClaim: already claimed"
+            !picked(msg.sender, token),
+            "UnripeClaim: already picked"
         );
 
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender, amount));
@@ -87,9 +88,17 @@ contract UnripeFacet is ReentrancyGuard {
         );
         s.unripeClaimed[token][msg.sender] = true;
 
-        IERC20(token).safeTransfer(msg.sender, amount);
+        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
 
-        emit ClaimUnripe(msg.sender, token, amount);
+        emit Pick(msg.sender, token, amount);
+    }
+
+    function picked(address account, address token)
+        public
+        view
+        returns (bool)
+    {
+        return s.unripeClaimed[token][account];
     }
 
     function getUnderlying(address unripeToken, uint256 amount)

@@ -46,7 +46,7 @@ library LibCurve {
         uint256 a,
         uint256 D
     ) internal pure returns (uint256 y) {
-        // Solution is taken from pool contract: 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD
+        // Solution is taken from pool contract: 0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49
         uint256 S_ = 0;
         uint256 _x = 0;
         uint256 y_prev = 0;
@@ -79,7 +79,7 @@ library LibCurve {
         pure
         returns (uint256 D)
     {
-        // Solution is taken from pool contract: 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD
+        // Solution is taken from pool contract: 0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49
         uint256 S;
         uint256 Dprev;
         for (uint256 _i; _i < xp.length; ++_i) {
