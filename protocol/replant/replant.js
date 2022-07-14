@@ -17,24 +17,6 @@ function printBeanstalk() {
   console.log("------------------------------------------------------------------")
 }
 
-function printBeanLogo() {      
-  console.log('               @@@@      ')
-  console.log('           @@@@@@@       ')
-  console.log('       ,@@@@@@@@@        ')
-  console.log('     @@@@@@@@@@   @     ')
-  console.log('    @@@@@@@@@@   @@@@   ')
-  console.log('  @@@@@@@@@@@   @@@@@@@ ')
-  console.log(' /@@@@@@@@@@   @@@@@@@@@')
-  console.log(' @@@@@@@@@@   @@@@@@@@@@')
-  console.log(' @@@@@@@@@(  @@@@@@@@@@@')
-  console.log(' @@@@@@@@@  @@@@@@@@@@@ ')
-  console.log(' @@@@@@@@  @@@@@@@@@@@  ')
-  console.log(' @@@@@@@  @@@@@@@@@     ')
-  console.log('  @@@@@  @@@@@@@        ')
-  console.log('   @@@  @@@@            ')
-  console.log('    @                   ')
-}
-
 const replants = [
   '0',
   '0',

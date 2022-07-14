@@ -19,12 +19,12 @@ contract InitReplant {
     AppStorage internal s;
 
     function init(address fertilizerImplementation) external {
-        // s.season.lastSop = 0;
-        // s.isFarm = 1;
-        // s.co.initialized = false;
-        // s.co.startSeason = s.season.current;
-        // s.season.withdrawSeasons = 1;
-        // s.earnedBeans = 0;
+        s.season.lastSop = 0;
+        s.isFarm = 1;
+        s.co.initialized = false;
+        s.co.startSeason = s.season.current;
+        s.season.withdrawSeasons = 1;
+        s.earnedBeans = 0;
 
         C.fertilizerAdmin().upgrade(
             C.fertilizerAddress(), 

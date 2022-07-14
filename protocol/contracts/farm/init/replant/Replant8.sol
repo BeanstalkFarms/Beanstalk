@@ -107,7 +107,7 @@ contract Replant8 {
         LibWhitelist.dewhitelistToken(C.unripeLPPool1());
         LibWhitelist.dewhitelistToken(C.unripeLPPool2());
 
-        BeanstalkPrice bp = new BeanstalkPrice{salt: bytes32(0)}();
+        new BeanstalkPrice{salt: bytes32(0)}();
     }
 
     function addUnripeToken(
