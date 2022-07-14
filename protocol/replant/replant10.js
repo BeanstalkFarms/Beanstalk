@@ -33,7 +33,7 @@ async function replant10(account) {
     initFacetName: 'InitReplant',
     initArgs: [fertilizer.address],
     object: true,
-    verbose: true,
+    verbose: false,
     account: account
   });
 
@@ -71,6 +71,9 @@ async function replant10(account) {
     method: "hardhat_impersonateAccount",
     params: [BCM],
   });
+
+  await hre.network.provider.send("hardhat_setCode", [BCM, "0x"]);
+  await hre.network.provider.send("hardhat_setBalance", [BCM, "0xDE0B6B3A7640000"]);
 
   const bcm = await ethers.getSigner(BCM)
   // const bcm = account

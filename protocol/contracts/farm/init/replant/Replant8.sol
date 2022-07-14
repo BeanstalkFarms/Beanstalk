@@ -9,9 +9,8 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../AppStorage.sol";
 import "../../../C.sol";
 import "../../../tokens/ERC20/BeanstalkERC20.sol";
+import "../../../price/BeanstalkPrice.sol";
 import "../../../libraries/Silo/LibWhitelist.sol";
-import "hardhat/console.sol";
-
 /**
  * @author Publius
  * @title Replant8 Deploys the Bean, Unripe Bean and Unripe Bean:3Crv Tokens. It also
@@ -77,17 +76,14 @@ contract Replant8 {
     function init() external {
         BeanstalkERC20 bean = new BeanstalkERC20{salt: BEAN_SALT}(address(this), NAME, SYMBOL);
         bean.mint(address(this), INITIAL_LP);
-        console.log("Minted");
         address metapool = OLD_FACTORY.deploy_metapool(BASEPOOL, NAME, SYMBOL, address(bean), A, FEE);
         require(NEW_FACTORY.add_existing_metapools([metapool, address(0), address(0), address(0), address(0), address(0), address(0), address(0), address(0), address(0)]));
 
-        console.log("Deployed Bean: %s, Metapool: %s", address(bean), metapool);
+        // console.log("Deployed Bean: %s, Metapool: %s", address(bean), metapool);
 
         bean.approve(C.curveZapAddress(), type(uint256).max);
         C.usdc().approve(C.curveZapAddress(), type(uint256).max);
         C.usdc().transferFrom(msg.sender, address(this), INITIAL_LP);
-
-        console.log("USDC acquired");
 
         uint256 newLP = C.curveZap().add_liquidity(
             metapool,
@@ -97,23 +93,21 @@ contract Replant8 {
 
         IERC20(metapool).transfer(msg.sender, newLP);
 
-        console.log("LP added");
-
         BeanstalkERC20 ub = new BeanstalkERC20{salt: UNRIPE_BEAN_SALT}(address(this), "Unripe Bean", "urBEAN");
         ub.mint(address(this), NON_DEPOSITED_UNRIPE_BEANS + DEPOSITED_UNRIPE_BEANS + EARNED_UNRIPE_BEANS);
         s.siloBalances[address(ub)].deposited = DEPOSITED_UNRIPE_BEANS + EARNED_UNRIPE_BEANS;
         addUnripeToken(address(ub), address(bean), UNRIPE_BEAN_MERKLE_ROOT);
-        console.log("Unripe Bean Address: %s", address(ub));
 
         BeanstalkERC20 ub3 = new BeanstalkERC20{salt: UNRIPE_BEAN3CRV_SALT}(address(this), "Unripe BEAN3CRV", "urBEAN3CRV");
         ub3.mint(address(this), NON_DEPOSITED_UNRIPE_BEAN3CRV + DEPOSITED_UNRIPE_BEAN3CRV);
         s.siloBalances[address(ub3)].deposited = DEPOSITED_UNRIPE_BEAN3CRV;
         addUnripeToken(address(ub3), metapool, UNRIPE_LP_MERKLE_ROOT);
-        console.log("Unripe Bean3Crv Address: %s", address(ub3));
 
         LibWhitelist.whitelistPools();
         LibWhitelist.dewhitelistToken(C.unripeLPPool1());
         LibWhitelist.dewhitelistToken(C.unripeLPPool2());
+
+        BeanstalkPrice bp = new BeanstalkPrice{salt: bytes32(0)}();
     }
 
     function addUnripeToken(

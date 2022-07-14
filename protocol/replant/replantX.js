@@ -9,6 +9,7 @@ const SILO_ACCOUNTS = "./replant/data/r7-siloAccounts.json"
 const EARNED_BEANS = "./replant/data/r7-earnedBeans.json"
 
 const PRUNE = '1'
+// const PRUNE = '1'
 const REPLANT_SEASON = '6074'
 
 function addCommas(nStr) {
@@ -38,7 +39,7 @@ async function replant7(
   console.log('-----------------------------------')
   console.log('Replant7:\n')
 
-  const siloAccounts = await countStalkSeeds(JSON.parse(await fs.readFileSync(EARNED_BEANS)));
+  const siloAccounts = await countStalkSeeds();
   // const siloAccounts = JSON.parse(await fs.readFileSync(SILO_ACCOUNTS))
   const stalk = siloAccounts.reduce((acc, s) => acc.add(toBN(s[2])), toBN('0'))
   const seeds = siloAccounts.reduce((acc, s) => acc.add(toBN(s[3])), toBN('0'))
@@ -111,10 +112,12 @@ async function replantX(
     const receipt = await diamondCutRetry(functionCall)
     const gasUsed = (await receipt.wait()).gasUsed
     totalGasUsed = totalGasUsed.add(gasUsed)
-    console.log(`${i+1}/${deposits.length}: Wallets Processed ${deposits[i].length} gas used: ${strDisplay(gasUsed)}`)
+    process.stdout.write("\r\x1b[K")
+    process.stdout.write(`${chunkSize*(i+1)}/${_deposits.length}: ${getProcessString(i, deposits.length)} gas used: ${strDisplay(totalGasUsed)}`)
   }
 
-  console.log(`Total Wallets Processed ${_deposits.length} gas used: ${strDisplay(totalGasUsed)}`)
+  process.stdout.write("\r\x1b[K")
+  process.stdout.write(`${_deposits.length}/${_deposits.length}: ${getProcessString(1,1)} gas used: ${strDisplay(totalGasUsed)}`)
 }
 
 // let account_;
@@ -137,7 +140,7 @@ async function countStalkSeeds() {
     acc[account][2] = acc[account][2].add(st)
     acc[account][3] = acc[account][3].add(se)
     return acc
-  }, {})).map((d) => [d[0], d[1], d[2].toString(), d[3].toString()])
+  }, {})).map((d) => [d[0], d[1], d[2].toString(), d[3].toString()]).sort((a,b) => a[0] > b[0])
 
   await fs.writeFileSync(`./replant/data/replant7.json`, JSON.stringify(replant7, null, 4));
   return replant7
@@ -169,6 +172,13 @@ function getStalkSeedsRow(token, seasons, bdvs) {
     ]
   }, [toBN('0'), toBN('0')])
 }
+
+function getProcessString(processed, total) {
+  const max = 20
+  const eq = max * processed / total
+  const sp = max-eq
+  return `[${'='.repeat(eq)}${' '.repeat(sp)}]`
+} 
 
 function getStalkSeeds(token, season, bdv) {
   const seedsPerBdv = toBN(token === SPOILED_BEAN ? '2': '4')
