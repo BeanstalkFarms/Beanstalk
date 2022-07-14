@@ -54,7 +54,8 @@ contract CurveFacet is ReentrancyGuard {
             uint256 amountOut;
             if (hasNoReturnValue(pool)) {
                 uint256 beforeBalance = IERC20(toToken).balanceOf(address(this));
-                ICurvePoolNoReturn(pool).exchange(uint256(i), uint256(j), amountIn, minAmountOut);
+                if (is3Pool(pool)) ICurvePoolNoReturn128(pool).exchange(i, j, amountIn, minAmountOut);
+                else ICurvePoolNoReturn(pool).exchange(uint256(i), uint256(j), amountIn, minAmountOut);
                 amountOut = IERC20(toToken).balanceOf(address(this)).sub(beforeBalance);
             } else {
                 if (isStable(registry)) amountOut = ICurvePool(pool).exchange(i, j, amountIn, minAmountOut);
@@ -316,11 +317,19 @@ function removeLiquidityImbalance(
 
         if (hasNoReturnValue(pool)) {
             uint256 beforeBalance = IERC20(toToken).balanceOf(address(this));
-            ICurvePool(pool).remove_liquidity_one_coin(
-                amountIn,
-                i,
-                minAmountOut
-            );
+            if (is3Pool(pool)) {
+                ICurvePoolNoReturn128(pool).remove_liquidity_one_coin(
+                    amountIn,
+                    i,
+                    minAmountOut
+                );
+            } else {
+                ICurvePoolNoReturn(pool).remove_liquidity_one_coin(
+                    amountIn,
+                    uint256(i),
+                    minAmountOut
+                );
+            }
             uint256 amountOut = IERC20(toToken).balanceOf(address(this)).sub(beforeBalance);
             LibTransfer.sendToken(IERC20(toToken), amountOut, msg.sender, toMode);
             return;
@@ -420,6 +429,10 @@ function removeLiquidityImbalance(
 
     function hasNoReturnValue(address pool) private pure returns (bool) {
         return pool == C.triCryptoPoolAddress() || pool == C.curve3PoolAddress();
+    }
+
+        function is3Pool(address pool) private pure returns (bool) {
+        return pool == C.curve3PoolAddress();
     }
 
     function refundUnusedLPTokens(IERC20 token, uint256 maxAmountIn, uint256 amountIn, LibTransfer.From fromMode) private {

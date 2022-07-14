@@ -70,5 +70,10 @@ interface ICurvePoolNoReturn {
     function add_liquidity(uint256[3] memory amounts, uint256 min_mint_amount) external;
     function remove_liquidity(uint256 _burn_amount, uint256[3] memory _min_amounts) external;
     function remove_liquidity_imbalance(uint256[3] memory _amounts, uint256 _max_burn_amount) external;
+    function remove_liquidity_one_coin(uint256 _token_amount, uint256 i, uint256 min_amount) external;
+}
+
+interface ICurvePoolNoReturn128 {
+    function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy) external;
     function remove_liquidity_one_coin(uint256 _token_amount, int128 i, uint256 min_amount) external;
 }
