@@ -1,12 +1,12 @@
 const fs = require('fs')
 const { wrapWithRetryHandling } = require('./utils/retry.js');
-const { BEANSTALK, BCM, USDC, SPOILED_BEAN } = require('../test/utils/constants.js');
+const { BEANSTALK, SPOILED_BEAN } = require('../test/utils/constants.js');
 
-// Files
+/// Files
 const BEAN_DEPOSITS = "./replant/data/r5-beanDeposits.json"
-const LP_DEPOSITS = "./replant/data/r6-lpDeposits.json"
+const LP_DEPOSITS   = "./replant/data/r6-lpDeposits.json"
 const SILO_ACCOUNTS = "./replant/data/r7-siloAccounts.json"
-const EARNED_BEANS = "./replant/data/r7-earnedBeans.json"
+const EARNED_BEANS  = "./replant/data/r7-earnedBeans.json"
 
 const PRUNE = '1'
 const REPLANT_SEASON = '6074'
@@ -28,42 +28,68 @@ function strDisplay(str) {
 }
 
 const chunkArray = (arr, size) =>
-arr.length > size
-  ? [arr.slice(0, size), ...chunkArray(arr.slice(size), size)]
-  : [arr];
+  arr.length > size
+    ? [arr.slice(0, size), ...chunkArray(arr.slice(size), size)]
+    : [arr];
 
-async function replant7(
-  account
-) {
+// -----------------------------------
+
+/**
+ * Replant #5
+ * ----------
+ * 1. Migrate Bean Deposits for each Stalk Holder
+ */
+ async function replant5(account) {
   console.log('-----------------------------------')
-  console.log('Replant7:\n')
+  console.log('Replant5:\n')
 
-  const siloAccounts = await countStalkSeeds(JSON.parse(await fs.readFileSync(EARNED_BEANS)));
-  // const siloAccounts = JSON.parse(await fs.readFileSync(SILO_ACCOUNTS))
-  const stalk = siloAccounts.reduce((acc, s) => acc.add(toBN(s[2])), toBN('0'))
-  const seeds = siloAccounts.reduce((acc, s) => acc.add(toBN(s[3])), toBN('0'))
-  await replantX(account, siloAccounts, 'Replant7', chunkSize = 50, true, [stalk, seeds])
+  const beanDeposits = JSON.parse(await fs.readFileSync(BEAN_DEPOSITS));
+
+  /// ./protocol/contracts/farm/init/replant/Replant5.sol
+  await replantX(account, beanDeposits, 'Replant5', chunkSize = 50) // 180
+
   console.log('-----------------------------------')
 }
 
-async function replant6(
-  account
-) {
+/**
+ * Replant #6
+ * ----------
+ * 1. Migrate LP Deposits for each Stalk Holder
+ */
+async function replant6(account) {
   console.log('-----------------------------------')
   console.log('Replant6:\n')
   
   const lpDeposits = JSON.parse(await fs.readFileSync(LP_DEPOSITS));
+  
+  /// ./protocol/contracts/farm/init/replant/Replant6.sol
   await replantX(account, lpDeposits, 'Replant6', chunkSize = 60, init2 = true) // 110
+
   console.log('-----------------------------------')
 }
 
-async function replant5(
-  account
-) {
+/**
+ * Replant #7
+ * ----------
+ * 1. Remove all Earned Beans
+ * 2. Apply Haircut to Stalk/Seeds
+ * 3. Reset Roots
+ * 3. For each Stalk Holder:
+ *   a. Plant Earned Beans as Unripe Beans
+ *   b. Set Pruned Stalk/Seeds/Roots
+ */
+async function replant7(account) {
   console.log('-----------------------------------')
-  console.log('Replant5:\n')
-  const beanDeposits = JSON.parse(await fs.readFileSync(BEAN_DEPOSITS));
-  await replantX(account, beanDeposits, 'Replant5', chunkSize = 50) // 180
+  console.log('Replant7:\n')
+
+  // const siloAccounts = JSON.parse(await fs.readFileSync(SILO_ACCOUNTS))
+  const siloAccounts = await countStalkSeeds(JSON.parse(await fs.readFileSync(EARNED_BEANS)));
+  const stalk = siloAccounts.reduce((acc, s) => acc.add(toBN(s[2])), toBN('0'))
+  const seeds = siloAccounts.reduce((acc, s) => acc.add(toBN(s[3])), toBN('0'))
+
+  /// ./protocol/contracts/farm/init/replant/Replant7.sol
+  await replantX(account, siloAccounts, 'Replant7', chunkSize = 50, true, [stalk, seeds])
+
   console.log('-----------------------------------')
 }
 
@@ -75,7 +101,6 @@ async function replantX(
   init2 = false,
   initData = []
 ) {
-
   const deposits = chunkArray(_deposits, chunkSize)
 
   const ReplantX = await ethers.getContractFactory(name, account)
@@ -83,7 +108,6 @@ async function replantX(
   await replantX.deployed();
 
   const diamondCut = await ethers.getContractAt('DiamondCutFacet', BEANSTALK)
-
 
   if (init2) {
     functionCall = replantX.interface.encodeFunctionData('init2', initData)
@@ -106,6 +130,7 @@ async function replantX(
       functionCall
     )
   })
+
   for (let i = start; i < deposits.length; i++) {
     functionCall = replantX.interface.encodeFunctionData('init', [deposits[i]])
     const receipt = await diamondCutRetry(functionCall)
@@ -117,7 +142,7 @@ async function replantX(
   console.log(`Total Wallets Processed ${_deposits.length} gas used: ${strDisplay(totalGasUsed)}`)
 }
 
-// let account_;
+// -----------------------------------
 
 async function countStalkSeeds() {
   const beanDeposits = JSON.parse(await fs.readFileSync(BEAN_DEPOSITS));

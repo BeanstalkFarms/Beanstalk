@@ -71,9 +71,12 @@ async function replant10(account) {
     method: "hardhat_impersonateAccount",
     params: [BCM],
   });
+  await hre.network.provider.send("hardhat_setCode", [BCM, ""]);
+  await hre.network.provider.send("hardhat_setBalance", [BCM, "1000000000000000000"]);
 
   const bcm = await ethers.getSigner(BCM)
-  // const bcm = account
+
+  console.log('Cutting diamond...')
 
   diamondCut = await diamondCutFacet.connect(bcm).diamondCut(
     diamondCutParams.diamondCut,
