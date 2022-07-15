@@ -1,6 +1,8 @@
 const { replant3 } = require('./replant3.js')
 const { replant4 } = require('./replant4.js')
-const { replant5, replant6, replant7 } = require('./replantX.js')
+const { replant5 } = require('./replant5.js')
+const { replant6 } = require('./replant6.js')
+const { replant7 } = require('./replant7.js')
 const { replant8 } = require('./replant8.js')
 const { replant9 } = require('./replant9.js')
 const { replant10 } = require('./replant10.js')
@@ -31,14 +33,6 @@ const replants = [
   replant10
 ]
 
-function printStage(i, j) {
-  console.clear()
-  printBeanstalk()
-  console.log("Commencing replant sequence:")
-  console.log(`Stage ${i}/${replants.length}: ${getProcessString(i, replants.length)}`)
-
-}
-
 async function replant(account) {
   console.clear()
   printBeanstalk()
@@ -55,6 +49,13 @@ function getProcessString(processed, total) {
   const eq = max * processed / total
   const sp = max-eq
   return `[${'='.repeat(eq)}${' '.repeat(sp)}]`
-} 
+}
+
+function printStage(i, j) {
+  console.clear()
+  printBeanstalk()
+  console.log("Commencing replant sequence:")
+  console.log(`Stage ${i}/${replants.length}: ${getProcessString(i, replants.length)}`)
+}
 
 exports.replant = replant
