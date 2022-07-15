@@ -14,7 +14,6 @@ async function replant7(
   console.log('-----------------------------------')
   console.log('Replant7:\n')
 
-  console.log("Computing Stalk and Seed balances...\n")
   const siloAccounts = await countStalkSeeds();
   const stalk = siloAccounts.reduce((acc, s) => acc.add(toBN(s[2])), toBN('0'))
   const seeds = siloAccounts.reduce((acc, s) => acc.add(toBN(s[3])), toBN('0'))
@@ -30,7 +29,11 @@ async function countStalkSeeds() {
   const earnedBeans = JSON.parse(await fs.readFileSync(EARNED_BEANS))
   const lpDeposits = JSON.parse(await fs.readFileSync(LP_DEPOSITS));
 
+  console.log("Computing Stalk and Seed balances...")
+
   prune_ = await readPrune()
+
+  console.log(`Pruning to 0.${prune_}%\n`)
 
   lDeposits = Object.entries(lpDeposits.reduce((lds, [account, token, seasons, amounts, bdvs, totalAmount]) => {
     lds[account] = seasons.reduce((ss,s,i) => {

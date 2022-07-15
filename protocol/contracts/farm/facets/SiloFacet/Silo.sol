@@ -67,7 +67,7 @@ contract Silo is SiloExit {
             C.beanAddress(),
             season(),
             beans,
-            beans.mul(C.getStalkPerBean())
+            beans
         );
         uint256 seeds = beans.mul(C.getSeedsPerBean());
 
