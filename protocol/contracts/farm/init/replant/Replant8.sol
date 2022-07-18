@@ -46,7 +46,7 @@ contract Replant8 {
     );
 
     // Bean Token
-    bytes32 constant BEAN_SALT = 0x3330303037313932343700000000000000000000000000000000000000000000;
+    bytes32 constant BEAN_SALT = 0x3230353630323135343731000000000000000000000000000000000000000000;
     uint256 constant INITIAL_LP = 100e6; // 100 Beans
     string constant NAME = "Bean";
     string constant SYMBOL = "BEAN";
@@ -78,8 +78,6 @@ contract Replant8 {
         bean.mint(address(this), INITIAL_LP);
         address metapool = OLD_FACTORY.deploy_metapool(BASEPOOL, NAME, SYMBOL, address(bean), A, FEE);
         require(NEW_FACTORY.add_existing_metapools([metapool, address(0), address(0), address(0), address(0), address(0), address(0), address(0), address(0), address(0)]));
-
-        // console.log("Deployed Bean: %s, Metapool: %s", address(bean), metapool);
 
         bean.approve(C.curveZapAddress(), type(uint256).max);
         C.usdc().approve(C.curveZapAddress(), type(uint256).max);

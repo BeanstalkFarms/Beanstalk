@@ -26,7 +26,7 @@ contract CurvePrice {
     uint256 private constant PRECISION = 1e18;
     uint256 private constant i = 0;
     uint256 private constant j = 1;
-    address[2] private tokens = [0xBEA0003eA948Db32082Fc6F4EC0729D258a0444c, 0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490];
+    address[2] private tokens = [0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab, 0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490];
 
     function getCurve() public view returns (P.Pool memory pool) {
         pool.pool = POOL;
