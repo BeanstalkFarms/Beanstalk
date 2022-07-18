@@ -28,7 +28,6 @@ contract PauseFacet {
     function pause() external payable {
         LibDiamond.enforceIsOwnerOrContract();
         require(!s.paused, "Pause: already paused.");
-        if (s.paused) return;
         s.paused = true;
         s.co.initialized = false;
         s.pausedAt = uint128(block.timestamp);
@@ -38,7 +37,6 @@ contract PauseFacet {
     function unpause() external payable {
         LibDiamond.enforceIsOwnerOrContract();
         require(s.paused, "Pause: not paused.");
-        if (!s.paused) return;
         s.paused = false;
         uint256 timePassed = block.timestamp.sub(uint256(s.pausedAt));
         timePassed = (timePassed.div(3600).add(1)).mul(3600);

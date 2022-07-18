@@ -160,10 +160,20 @@ describe('Oracle', function () {
     });
 
     describe("Get Delta B", async function () {
+      it('reverts if not a minting pool', async function () {
+        await expect(this.season.poolDeltaB(BEAN)).to.be.revertedWith('Oracle: Pool not supported')
+      })
+
+      it("tracks a instant Delta B", async function () {
+        expect(await this.season.poolDeltaB(BEAN_3_CURVE)).to.equal('0');
+        expect(await this.season.totalDeltaB()).to.equal('0');
+      })
+
       it("tracks a basic Delta B", async function () {
         await advanceTime(900)
         await hre.network.provider.send("evm_mine")
         expect(await this.season.poolDeltaB(BEAN_3_CURVE)).to.equal('0');
+        expect(await this.season.totalDeltaB()).to.equal('0');
       });
 
       it("tracks a TWAL with a change", async function () {
@@ -172,6 +182,7 @@ describe('Oracle', function () {
         await advanceTime(900)
         await hre.network.provider.send("evm_mine")
         expect(await this.season.poolDeltaB(BEAN_3_CURVE)).to.equal('-252354675068');
+        expect(await this.season.totalDeltaB()).to.equal('-252354675068');
       });
     });
   });

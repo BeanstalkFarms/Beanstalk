@@ -250,19 +250,20 @@ function removeLiquidityImbalance(
         // Thus, we need to call the balanceOf function to determine
         // how many tokens were received.
         if (hasNoReturnValue(pool)) {
+            require(is3Pool(pool), "Curve: tri-crypto not supported");
             address[8] memory coins = getCoins(pool, registry);
             IERC20 lpToken = IERC20(tokenForPool(pool));
             uint256 beforeBalance = lpToken.balanceOf(address(this));
-            ICurvePoolNoReturn(pool).remove_liquidity(
-                maxAmountIn,
-                [amountsOut[0], amountsOut[1], amountsOut[2]]
+            ICurvePoolNoReturn(pool).remove_liquidity_imbalance(
+                [amountsOut[0], amountsOut[1], amountsOut[2]],
+                maxAmountIn
             );
             for (uint256 i; i < nCoins; ++i) {
                 if (amountsOut[i] > 0) {
                     LibTransfer.sendToken(IERC20(coins[i]), amountsOut[i], msg.sender, toMode);
                 }
             }
-            amountIn = lpToken.balanceOf(address(this)).sub(beforeBalance);
+            amountIn = beforeBalance.sub(lpToken.balanceOf(address(this)));
             refundUnusedLPTokens(token, maxAmountIn, amountIn, fromMode);
             return;
         }

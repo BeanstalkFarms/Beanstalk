@@ -72,85 +72,85 @@ describe('Ownership', function () {
     })
   })
 
-  // describe('whitelist', async function () {
-  //   it('reverts if not owner', async function () {
-  //     await expect(this.whitelist.connect(user2).whitelistToken(
-  //       this.siloToken.address, 
-  //       this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
-  //       '10000',
-  //       '1')).to.be.revertedWith('LibDiamond: Must be contract or owner')
-  //   })
+  describe('whitelist', async function () {
+    it('reverts if not owner', async function () {
+      await expect(this.whitelist.connect(user2).whitelistToken(
+        this.siloToken.address, 
+        this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
+        '10000',
+        '1')).to.be.revertedWith('LibDiamond: Must be contract or owner')
+    })
 
 
-  //   it('whitelists token', async function () {
-  //     this.result = this.whitelist.connect(owner).whitelistToken(
-  //       this.siloToken.address, 
-  //       this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
-  //       '10000',
-  //       '1')
-  //     const settings = await this.silo.tokenSettings(this.siloToken.address)
-  //     expect(settings[0]).to.equal(this.silo.interface.getSighash("mockBDV(uint256 amount)"))
-  //     expect(settings[1]).to.equal(1)
-  //     expect(settings[2]).to.equal(10000)
-  //     await expect(this.result).to.emit(this.whitelist, 'WhitelistToken').withArgs(this.siloToken.address, 
-  //       this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
-  //       10000,
-  //       1)
-  //   })
-  // })
+    it('whitelists token', async function () {
+      this.result = this.whitelist.connect(owner).whitelistToken(
+        this.siloToken.address, 
+        this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
+        '10000',
+        '1')
+      const settings = await this.silo.tokenSettings(this.siloToken.address)
+      expect(settings[0]).to.equal(this.silo.interface.getSighash("mockBDV(uint256 amount)"))
+      expect(settings[1]).to.equal(1)
+      expect(settings[2]).to.equal(10000)
+      await expect(this.result).to.emit(this.whitelist, 'WhitelistToken').withArgs(this.siloToken.address, 
+        this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
+        10000,
+        1)
+    })
+  })
 
-  // describe('dewhitelist', async function () {
-  //   it('reverts if not owner', async function () {
-  //     await expect(this.whitelist.connect(user2).dewhitelistToken(this.siloToken.address)).to.be.revertedWith('LibDiamond: Must be contract or owner')
-  //   })
+  describe('dewhitelist', async function () {
+    it('reverts if not owner', async function () {
+      await expect(this.whitelist.connect(user2).dewhitelistToken(this.siloToken.address)).to.be.revertedWith('LibDiamond: Must be contract or owner')
+    })
 
-  //   it('dewhitelists token', async function () {
-  //     await this.whitelist.connect(owner).whitelistToken(
-  //       this.siloToken.address, 
-  //       this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
-  //       '10000',
-  //       '1')
-  //     this.result = await this.whitelist.connect(owner).dewhitelistToken(this.siloToken.address)
-  //     const settings = await this.silo.tokenSettings(this.siloToken.address)
-  //     expect(settings[0]).to.equal('0x00000000')
-  //     expect(settings[1]).to.equal(0)
-  //     expect(settings[2]).to.equal(0)
-  //     await expect(this.result).to.emit(this.whitelist, 'DewhitelistToken').withArgs(this.siloToken.address)
-  //   })
-  // })
+    it('dewhitelists token', async function () {
+      await this.whitelist.connect(owner).whitelistToken(
+        this.siloToken.address, 
+        this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
+        '10000',
+        '1')
+      this.result = await this.whitelist.connect(owner).dewhitelistToken(this.siloToken.address)
+      const settings = await this.silo.tokenSettings(this.siloToken.address)
+      expect(settings[0]).to.equal('0x00000000')
+      expect(settings[1]).to.equal(0)
+      expect(settings[2]).to.equal(0)
+      await expect(this.result).to.emit(this.whitelist, 'DewhitelistToken').withArgs(this.siloToken.address)
+    })
+  })
 
-  // describe('pause', async function () {
-  //   it('reverts if not owner', async function () {
-  //     await expect(this.pause.connect(user2).pause()).to.be.revertedWith('LibDiamond: Must be contract or owner')
-  //   })
+  describe('pause', async function () {
+    it('reverts if not owner', async function () {
+      await expect(this.pause.connect(user2).pause()).to.be.revertedWith('LibDiamond: Must be contract or owner')
+    })
 
-  //   it('reverts if paused', async function () {
-  //     this.result = await this.pause.connect(owner).pause()
-  //     await expect(this.pause.connect(owner).pause()).to.be.revertedWith('Pause: already paused.')
-  //   })
+    it('reverts if paused', async function () {
+      this.result = await this.pause.connect(owner).pause()
+      await expect(this.pause.connect(owner).pause()).to.be.revertedWith('Pause: already paused.')
+    })
 
 
-  //   it('pauses', async function () {
-  //     this.result = await this.pause.connect(owner).pause()
-  //     expect(await this.season.paused()).to.equal(true)
-  //     await expect(this.result).to.emit(this.pause, 'Pause')
-  //   })
-  // })
+    it('pauses', async function () {
+      this.result = await this.pause.connect(owner).pause()
+      expect(await this.season.paused()).to.equal(true)
+      await expect(this.result).to.emit(this.pause, 'Pause')
+    })
+  })
 
-  // describe('unpause', async function () {
-  //   it('reverts if not owner', async function () {
-  //     await expect(this.pause.connect(user2).unpause()).to.be.revertedWith('LibDiamond: Must be contract or owner')
-  //   })
+  describe('unpause', async function () {
+    it('reverts if not owner', async function () {
+      await expect(this.pause.connect(user2).unpause()).to.be.revertedWith('LibDiamond: Must be contract or owner')
+    })
 
-  //   it('reverts if not paused', async function () {
-  //     await expect(this.pause.connect(owner).unpause()).to.be.revertedWith('Pause: not paused.');
-  //   })
+    it('reverts if not paused', async function () {
+      await expect(this.pause.connect(owner).unpause()).to.be.revertedWith('Pause: not paused.');
+    })
 
-  //   it('unpauses', async function () {
-  //     await this.pause.connect(owner).pause()
-  //     this.result = await this.pause.connect(owner).unpause()
-  //     expect(await this.season.paused()).to.equal(false)
-  //     await expect(this.result).to.emit(this.pause, 'Unpause')
-  //   })
-  // })
+    it('unpauses', async function () {
+      await this.pause.connect(owner).pause()
+      this.result = await this.pause.connect(owner).unpause()
+      expect(await this.season.paused()).to.equal(false)
+      await expect(this.result).to.emit(this.pause, 'Unpause')
+    })
+  })
 })

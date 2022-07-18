@@ -2,12 +2,24 @@ const { expect } = require('chai')
 const { ethers } = require('hardhat')
 const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
-const { BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, STABLE_FACTORY } = require('./utils/constants')
+const { BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, STABLE_FACTORY, USDC } = require('./utils/constants')
 const { to18, to6, toStalk } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
+
+async function reset() {
+  await network.provider.request({
+    method: "hardhat_reset",
+    params: [{
+        forking: {
+          jsonRpcUrl: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
+          blockNumber: 15148000,
+        },
+      },],
+  });
+}
 
 describe('Curve', function () {
   before(async function () {
@@ -26,6 +38,7 @@ describe('Curve', function () {
     this.token = await ethers.getContractAt('TokenFacet', this.diamond.address)
     this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address)
     this.farm = await ethers.getContractAt('FarmFacet', this.diamond.address)
+    this.usdc = await ethers.getContractAt('IERC20', USDC)
 
     await this.season.siloSunrise(0)
     await this.bean.connect(user).approve(this.diamond.address, '100000000000')
@@ -309,7 +322,7 @@ describe('Curve', function () {
           [to6('400'), to18('100')],
           to18('510'),
           EXTERNAL,
-          EXTERNAL
+          INTERNAL
         )
       })
 
@@ -320,19 +333,19 @@ describe('Curve', function () {
       })
 
       it('updates beanstalk balances', async function () {
-        expect(await this.bean.balanceOf(this.token.address)).to.be.eq('0')
-        expect(await this.threeCurve.balanceOf(this.token.address)).to.be.eq('0')
+        expect(await this.bean.balanceOf(this.token.address)).to.be.eq(to6('400'))
+        expect(await this.threeCurve.balanceOf(this.token.address)).to.be.eq(to18('100'))
         expect(await this.beanMetapool.balanceOf(this.token.address)).to.be.eq('0')
       })
 
       it('adds lp tokens to internal balance', async function () {
-        expect(await this.token.getInternalBalance(userAddress, this.threeCurve.address)).to.be.equal(to18('0'))
-        expect(await this.token.getInternalBalance(userAddress, this.bean.address)).to.be.equal(to6('0'))
+        expect(await this.token.getInternalBalance(userAddress, this.threeCurve.address)).to.be.equal(to18('100'))
+        expect(await this.token.getInternalBalance(userAddress, this.bean.address)).to.be.equal(to6('400'))
       })
 
       it('adds lp tokens to external balance', async function () {
-        expect(await this.token.getExternalBalance(userAddress, this.threeCurve.address)).to.be.equal(to18('100'))
-        expect(await this.token.getExternalBalance(userAddress, this.bean.address)).to.be.equal(to6('9400'))
+        expect(await this.token.getExternalBalance(userAddress, this.threeCurve.address)).to.be.equal(to18('0'))
+        expect(await this.token.getExternalBalance(userAddress, this.bean.address)).to.be.equal(to6('9000'))
       })
     })
   })
