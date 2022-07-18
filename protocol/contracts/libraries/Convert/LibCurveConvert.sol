@@ -49,7 +49,7 @@ library LibCurveConvert {
     }
 
     /// @param amountIn The amount of the LP token of `pool` to remove as BEAN.
-    /// @return lp The amount of BEAN received for removing `amountIn` LP tokens.
+    /// @return beans The amount of BEAN received for removing `amountIn` LP tokens.
     /// @notice Assumes that i=0 corresponds to BEAN.
     function getBeanAmountOut(address pool, uint256 amountIn) internal view returns(uint256 beans) {
         beans = ICurvePool(pool).calc_withdraw_one_coin(amountIn, 0); // i=0 -> BEAN

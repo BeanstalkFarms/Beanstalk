@@ -51,14 +51,22 @@ library LibConvert {
         view
         returns (uint256 amountIn)
     {
+        /// BEAN:3CRV LP -> BEAN
         if (tokenIn == C.curveMetapoolAddress() && tokenOut == C.beanAddress())
             return LibCurveConvert.lpToPeg(C.curveMetapoolAddress());
+        
+        /// BEAN -> BEAN:3CRV LP
         if (tokenIn == C.beanAddress() && tokenOut == C.curveMetapoolAddress())
             return LibCurveConvert.beansToPeg(C.curveMetapoolAddress());
+        
+        /// urBEAN:3CRV LP -> urBEAN
         if (tokenIn == C.unripeLPAddress() && tokenOut == C.unripeBeanAddress())
             return LibUnripeConvert.lpToPeg();
+
+        /// urBEAN -> urBEAN:3CRV LP
         if (tokenIn == C.unripeBeanAddress() && tokenOut == C.unripeLPAddress())
             return LibUnripeConvert.beansToPeg();
+        
         require(false, "Convert: Tokens not supported");
     }
 
@@ -67,14 +75,22 @@ library LibConvert {
         view
         returns (uint256 amountOut)
     {
+        /// BEAN:3CRV LP -> BEAN
         if (tokenIn == C.curveMetapoolAddress() && tokenOut == C.beanAddress())
             return LibCurveConvert.getBeanAmountOut(C.curveMetapoolAddress(), amountIn);
+        
+        /// BEAN -> BEAN:3CRV LP
         if (tokenIn == C.beanAddress() && tokenOut == C.curveMetapoolAddress())
             return LibCurveConvert.getLPAmountOut(C.curveMetapoolAddress(), amountIn);
+
+        /// urBEAN:3CRV LP -> BEAN
         if (tokenIn == C.unripeLPAddress() && tokenOut == C.unripeBeanAddress())
             return LibUnripeConvert.getBeanAmountOut(amountIn);
-        if (tokenIn == C.beanAddress() && tokenOut == C.unripeLPAddress())
+        
+        /// urBEAN -> urBEAN:3CRV LP
+        if (tokenIn == C.unripeBeanAddress() && tokenOut == C.unripeLPAddress())
             return LibUnripeConvert.getLPAmountOut(amountIn);
+        
         require(false, "Convert: Tokens not supported");
     }
 }
