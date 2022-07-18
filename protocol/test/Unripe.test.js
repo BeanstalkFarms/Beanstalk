@@ -118,14 +118,14 @@ describe('Unripe', function () {
     })
   })
 
-  describe('ripen', async function () {
+  describe('chop', async function () {
     beforeEach(async function () {
       await this.unripe.connect(owner).addUnderlying(
         UNRIPE_BEAN,
         to6('100')
       )
       await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('100'))
-      await this.unripe.connect(user).ripen(UNRIPE_BEAN, to6('1'), EXTERNAL)
+      this.result = await this.unripe.connect(user).chop(UNRIPE_BEAN, to6('1'), EXTERNAL, EXTERNAL)
     })
 
     it('getters', async function () {
@@ -145,6 +145,15 @@ describe('Unripe', function () {
       expect(await this.bean.balanceOf(userAddress)).to.be.equal(to6('0.001'))
       expect(await this.unripeBean.totalSupply()).to.be.equal(to6('999'))
       expect(await this.bean.balanceOf(this.unripe.address)).to.be.equal(to6('99.999'))
+    })
+
+    it('emits an event', async function () {
+      await expect(this.result).to.emit(this.unripe, 'Chop').withArgs(
+        user.address,
+        UNRIPE_BEAN,
+        to6('1'),
+        to6('0.001')
+      )
     })
   })
 })

@@ -164,11 +164,6 @@ describe('Oracle', function () {
         await expect(this.season.poolDeltaB(BEAN)).to.be.revertedWith('Oracle: Pool not supported')
       })
 
-      it("tracks a instant Delta B", async function () {
-        expect(await this.season.poolDeltaB(BEAN_3_CURVE)).to.equal('0');
-        expect(await this.season.totalDeltaB()).to.equal('0');
-      })
-
       it("tracks a basic Delta B", async function () {
         await advanceTime(900)
         await hre.network.provider.send("evm_mine")

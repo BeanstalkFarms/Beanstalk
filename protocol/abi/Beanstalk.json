@@ -4094,9 +4094,15 @@
                 "internalType": "uint256",
                 "name": "amount",
                 "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "underlying",
+                "type": "uint256"
             }
         ],
-        "name": "Pick",
+        "name": "Chop",
         "type": "event"
     },
     {
@@ -4119,15 +4125,9 @@
                 "internalType": "uint256",
                 "name": "amount",
                 "type": "uint256"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "underlying",
-                "type": "uint256"
             }
         ],
-        "name": "Ripen",
+        "name": "Pick",
         "type": "event"
     },
     {
@@ -4199,6 +4199,40 @@
             }
         ],
         "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "unripeToken",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "enum LibTransfer.From",
+                "name": "fromMode",
+                "type": "uint8"
+            },
+            {
+                "internalType": "enum LibTransfer.To",
+                "name": "toMode",
+                "type": "uint8"
+            }
+        ],
+        "name": "chop",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "underlyingAmount",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "payable",
         "type": "function"
     },
     {
@@ -4426,35 +4460,6 @@
             }
         ],
         "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "unripeToken",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            },
-            {
-                "internalType": "enum LibTransfer.To",
-                "name": "mode",
-                "type": "uint8"
-            }
-        ],
-        "name": "ripen",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "underlyingAmount",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "payable",
         "type": "function"
     },
     {

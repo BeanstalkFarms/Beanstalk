@@ -35,7 +35,7 @@ contract UnripeFacet is ReentrancyGuard {
 
     event ChangeUnderlying(address indexed token, int256 underlying);
 
-    event Ripen(
+    event Chop(
         address indexed account,
         address indexed token,
         uint256 amount,
@@ -48,24 +48,23 @@ contract UnripeFacet is ReentrancyGuard {
         uint256 amount
     );
 
-    function ripen(
+    function chop(
         address unripeToken,
         uint256 amount,
-        LibTransfer.To mode
+        LibTransfer.From fromMode,
+        LibTransfer.To toMode
     ) external payable nonReentrant returns (uint256 underlyingAmount) {
         underlyingAmount = getPenalizedUnderlying(unripeToken, amount);
 
         LibUnripe.decrementUnderlying(unripeToken, underlyingAmount);
 
-        // Unripe Bean and Unripe Bean3Crv implementations use OpenZeppelin's ERC20Burnable
-        // which reverts if burnFrom function call cannot burn full amount.
-        IBean(unripeToken).burnFrom(msg.sender, amount);
+        LibTransfer.burnToken(IBean(unripeToken), amount, msg.sender, fromMode);
 
         address underlyingToken = s.u[unripeToken].underlyingToken;
 
-        IERC20(underlyingToken).sendToken(underlyingAmount, msg.sender, mode);
+        IERC20(underlyingToken).sendToken(underlyingAmount, msg.sender, toMode);
 
-        emit Ripen(msg.sender, unripeToken, amount, underlyingAmount);
+        emit Chop(msg.sender, unripeToken, amount, underlyingAmount);
     }
 
     function pick(
