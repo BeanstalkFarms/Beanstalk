@@ -99,7 +99,7 @@ describe('Sun', function () {
 
   it("all harvestable and all fertilizable", async function () {
     await this.field.incrementTotalPodsE(to6('50'));
-    await this.fertilizer.connect(owner).addFertilizerOwner('6275', '20', '0')
+    await this.fertilizer.connect(owner).addFertilizerOwner('6274', '20', '0')
     this.result = await this.season.sunSunrise(to6('200'), 8);
     await expect(this.result).to.emit(this.season, 'Soil').withArgs('49504950');
     await expect(this.result).to.emit(this.season, 'Reward').withArgs(to6('50'), to6('100'), to6('50'));
@@ -119,7 +119,7 @@ describe('Sun', function () {
 
   it("all harvestable, some fertilizable", async function () {
     await this.field.incrementTotalPodsE('50');
-    await this.fertilizer.connect(owner).addFertilizerOwner('6074', '1', '0')
+    await this.fertilizer.connect(owner).addFertilizerOwner('0', '1', '0')
     this.result = await this.season.sunSunrise('200', 8);
     await expect(this.result).to.emit(this.season, 'Soil').withArgs('49');
     await expect(this.result).to.emit(this.season, 'Reward').withArgs('50', '84', '66');
@@ -139,7 +139,7 @@ describe('Sun', function () {
 
   it("some harvestable, some fertilizable", async function () {
     await this.field.incrementTotalPodsE('100');
-    await this.fertilizer.connect(owner).addFertilizerOwner('6074', '1', '0')
+    await this.fertilizer.connect(owner).addFertilizerOwner('0', '1', '0')
     this.result = await this.season.sunSunrise('150', 8);
     await expect(this.result).to.emit(this.season, 'Soil').withArgs('49');
     await expect(this.result).to.emit(this.season, 'Reward').withArgs('50', '50', '50');
@@ -159,9 +159,9 @@ describe('Sun', function () {
 
   it("1 all and 1 some fertilizable", async function () {
     await this.field.incrementTotalPodsE(to6('250'));
-    await this.fertilizer.connect(owner).addFertilizerOwner('6074', '40', '0')
+    await this.fertilizer.connect(owner).addFertilizerOwner('0', '40', '0')
     this.result = await this.season.sunSunrise(to6('120'), 8);
-    await this.fertilizer.connect(owner).addFertilizerOwner('6375', '40', '0')
+    await this.fertilizer.connect(owner).addFertilizerOwner('6374', '40', '0')
     this.result = await this.season.sunSunrise(to6('480'), 8);
 
     expect(await this.fertilizer.isFertilizing()).to.be.equal(true);

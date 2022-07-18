@@ -60,9 +60,9 @@ library LibFertilizer {
     }
 
     function getHumidity(uint128 id) internal pure returns (uint128 humidity) {
-        if (id == REPLANT_SEASON) return 5000;
+        if (id == 0) return 5000;
         if (id >= END_DECREASE_SEASON) return 200;
-        uint128 humidityDecrease = id.sub(REPLANT_SEASON + 1).mul(5);
+        uint128 humidityDecrease = id.sub(REPLANT_SEASON).mul(5);
         humidity = RESTART_HUMIDITY.sub(humidityDecrease);
     }
 
