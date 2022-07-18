@@ -25,6 +25,8 @@ contract InitReplant {
         s.co.startSeason = s.season.current;
         s.season.withdrawSeasons = 1;
         s.earnedBeans = 0;
+        // 4 Sunrises were missed before Beanstalk was paused.
+        s.season.start = s.season.start + 14400;
 
         C.fertilizerAdmin().upgrade(
             C.fertilizerAddress(), 
