@@ -48,11 +48,11 @@ library LibCurveConvert {
         );
     }
 
-    function getLPAmountOut(address pool, uint256 amountIn) internal view returns(uint256 lp) {
+    function getBeanAmountOut(address pool, uint256 amountIn) internal view returns(uint256 lp) {
         lp = ICurvePool(pool).calc_withdraw_one_coin(amountIn, 0);
     }
 
-    function getBeanAmountOut(address pool, uint256 amountIn) internal view returns(uint256 lp) {
+    function getLPAmountOut(address pool, uint256 amountIn) internal view returns(uint256 lp) {
         lp = ICurvePool(pool).calc_token_amount([amountIn, 0], true);
     }
 
