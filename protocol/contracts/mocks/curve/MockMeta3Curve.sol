@@ -402,20 +402,9 @@ contract MockMeta3Curve {
         return (dy, dy_0 - dy);
     }
 
-
-// @view
-// @external
-// def calc_withdraw_one_coin(_burn_amount: uint256, i: int128, _previous: bool = False) -> uint256:
-//     @notice Calculate the amount received when withdrawing a single coin
-//     @param _burn_amount Amount of LP tokens to burn in the withdrawal
-//     @param i Index value of the coin to withdraw
-//     @param _previous indicate to use previous_balances or current balances
-//     @return Amount of coin received
-//     """
-//     balances: uint256[N_COINS] = balances
-//     if _previous:
-//         balances = previous_balances
-//     return _calc_withdraw_one_coin(_burn_amount, i, balances)[0]
+    function calc_withdraw_one_coin(uint256 _burn_amount, int128 i) external view returns (uint256 amount) {
+       (amount,) = _calc_withdraw_one_coin(_burn_amount, i, balances);
+    }
 
     function _xp_mem(uint256[N_COINS] memory _rates, uint256[N_COINS] memory _balances) pure private returns (uint256[N_COINS] memory result) {
         for (uint256 i; i < N_COINS; ++i) {
