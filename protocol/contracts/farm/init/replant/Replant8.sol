@@ -79,6 +79,7 @@ contract Replant8 {
         address metapool = OLD_FACTORY.deploy_metapool(BASEPOOL, NAME, SYMBOL, address(bean), A, FEE);
         require(NEW_FACTORY.add_existing_metapools([metapool, address(0), address(0), address(0), address(0), address(0), address(0), address(0), address(0), address(0)]));
 
+        bean.approve(C.curveMetapoolAddress(), type(uint256).max);
         bean.approve(C.curveZapAddress(), type(uint256).max);
         C.usdc().approve(C.curveZapAddress(), type(uint256).max);
         C.usdc().transferFrom(msg.sender, address(this), INITIAL_LP);
