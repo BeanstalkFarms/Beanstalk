@@ -27,7 +27,7 @@ task('sellBeans').addParam("amount", "The amount of Beans to sell").setAction(as
 
 task('ripen').addParam("amount", "The amount to increment harvestable by").setAction(async(args) => {
   const beanstalkAdmin = await getBeanstalkAdminControls()
-  await beanstalkAdmin.ripenHarvestable(amount)
+  await beanstalkAdmin.ripenHarvestable(args.amount)
 })
 
 task('sunrise', async function () {
