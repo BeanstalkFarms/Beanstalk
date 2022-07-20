@@ -22,7 +22,7 @@ function printBeanstalk() {
 
 
 let replants
-async function replant(account, mock=true) {
+async function replant(account, deployAccount=undefined, mock=true) {
   replants = [
     '0',
     '0',
@@ -32,7 +32,7 @@ async function replant(account, mock=true) {
     replant5,
     replant6,
     replant7,
-    replant8,
+    (account) => replant8(account, deployAccount),
     replant9,
     (account) => replant10(account, mock)
   ]

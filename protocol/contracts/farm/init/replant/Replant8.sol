@@ -9,7 +9,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../AppStorage.sol";
 import "../../../C.sol";
 import "../../../tokens/ERC20/BeanstalkERC20.sol";
-import "../../../price/BeanstalkPrice.sol";
 import "../../../libraries/Silo/LibWhitelist.sol";
 /**
  * @author Publius
@@ -105,8 +104,6 @@ contract Replant8 {
         LibWhitelist.whitelistPools();
         LibWhitelist.dewhitelistToken(C.unripeLPPool1());
         LibWhitelist.dewhitelistToken(C.unripeLPPool2());
-
-        new BeanstalkPrice{salt: bytes32(0)}();
     }
 
     function addUnripeToken(
