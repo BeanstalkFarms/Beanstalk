@@ -195,7 +195,7 @@ async function unripe() {
 exports.impersonateRouter = router
 exports.impersonateBean = bean
 exports.impersonateCurve = curve
-exports.impersonateCurveMetapool = curveMetapool
+exports.impersonateCurveMetapool = curveMetapool 
 exports.impersonateCurveLUSD = curveLUSD
 exports.impersonatePool = pool
 exports.impersonateWeth = weth

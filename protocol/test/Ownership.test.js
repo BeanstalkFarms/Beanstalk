@@ -29,11 +29,6 @@ describe('Ownership', function () {
     this.siloToken = await SiloToken.deploy("Silo", "SILO")
     await this.siloToken.deployed()
 
-    // await this.silo.mockWhitelistToken(
-    //   this.siloToken.address, 
-    //   this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
-    //   '10000',
-    //   '1');
   })
 
   beforeEach(async function () {

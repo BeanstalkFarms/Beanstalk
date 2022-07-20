@@ -6,6 +6,9 @@ module.exports = {
       './libraries/LibSafeMath32.sol',
       './libraries/LibSafeMath128.sol',
       './libraries/Decimal.sol',
-      './libraries/LibDiamond.sol'
+      './libraries/LibDiamond.sol',
+      './facets/DiamondLoupeFacet.sol',
+      './libraries/Convert/LibPlainCurveConvert.sol',
+      './libraries/Curve/LibBeanLUSDCurve.sol'
     ]
   };

@@ -20,6 +20,7 @@ describe('Field', function () {
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address);
     this.tokenFacet = await ethers.getContractAt('TokenFacet', this.diamond.address);
+    this.marketplace = await ethers.getContractAt('MarketplaceFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('Bean', BEAN);
 
     await this.bean.connect(user).approve(this.field.address, to18('100000000000'));
@@ -342,6 +343,39 @@ describe('Field', function () {
 
       it('emits Sow event', async function () {
         await expect(this.result).to.emit(this.field, 'Harvest').withArgs(userAddress, ['0'], to6('50'))
+      })
+    })
+
+    describe("Full With Listing", async function () {
+      beforeEach(async function () {
+        await this.field.incrementTotalHarvestableE(to6('101'))
+        this.result = await this.marketplace.connect(user).createPodListing('0', '0', '500', '500000', to6('200'), EXTERNAL);
+        this.result = await this.field.connect(user).harvest(['0'], EXTERNAL);
+      })
+
+      it('updates user\'s balance', async function () {
+        expect(await this.bean.balanceOf(userAddress)).to.eq(to6('10001'))
+        expect(await this.field.plot(userAddress, to6('0'))).to.eq(to6('0'))
+      })
+
+      it('updates total balance', async function () {
+        expect(await this.bean.balanceOf(this.field.address)).to.eq('0')
+        expect(await this.bean.totalSupply()).to.eq(to6('19901'))
+        expect(await this.field.totalPods()).to.eq(to6('101'))
+        expect(await this.field.totalSoil()).to.eq(to6('0'))
+        expect(await this.field.totalUnharvestable()).to.eq(to6('101'))
+        expect(await this.field.totalHarvestable()).to.eq(to6('0'))
+        expect(await this.field.harvestableIndex()).to.eq(to6('101'))
+        expect(await this.field.totalHarvested()).to.eq(to6('101'))
+        expect(await this.field.podIndex()).to.eq(to6('202'))
+      })
+
+      it('deletes', async function () {
+        expect(await this.marketplace.podListing(0)).to.be.equal(ethers.constants.HashZero)
+      })
+
+      it('emits Sow event', async function () {
+        await expect(this.result).to.emit(this.field, 'Harvest').withArgs(userAddress, ['0'], to6('101'))
       })
     })
   })
