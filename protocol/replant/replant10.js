@@ -1,13 +1,9 @@
-const EthersAdapter = require('@gnosis.pm/safe-ethers-lib')
-const Safe = require('@gnosis.pm/safe-core-sdk')
 const { upgradeWithNewFacets, deploy } = require('../scripts/diamond.js');
 const { BEAN, BEANSTALK, BCM, USDC, BEAN_3_CURVE, ZERO_ADDRESS, CURVE_ZAP, TEST_GNOSIS } = require('../test/utils/constants.js');
 const { to6 } = require('../test/utils/helpers.js');
 const fs = require("fs");
 
-const MOCK = false;
-
-async function replant10(account) {
+async function replant10(account, mock) {
   console.log('-----------------------------------')
   console.log('Replant10:\n')
 
@@ -86,7 +82,7 @@ async function replant10(account) {
   const addFertilizerParams = ['0', `${amount}`, `${minLPOut}`]
   const addFertilizer = fertilizerFacet.interface.encodeFunctionData('addFertilizerOwner', addFertilizerParams)
 
-  if (MOCK) {
+  if (mock) {
     await account.sendTransaction({
       to: BCM,
       value: ethers.utils.parseEther("1")
@@ -114,7 +110,7 @@ async function replant10(account) {
     console.log("Unpausing Beanstalk...")
     unpause = await pauseFacet.connect(bcm).unpause()
 
-    console.log("Beanstalk successfully upgraded")
+    console.log("Beanstalk successfully upgraded...")
   } else {
     await fs.writeFileSync(`./replant/gnosis/diamondCut.json`, JSON.stringify({ to: BEANSTALK, parameters: Object.values(diamondCutParams), data: diamondCut }, null, 4));
     await fs.writeFileSync(`./replant/gnosis/approval.json`, JSON.stringify({ to: USDC, parameters: approvalParams, data: approval }, null, 4));

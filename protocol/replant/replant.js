@@ -6,6 +6,7 @@ const { replant7 } = require('./replant7.js')
 const { replant8 } = require('./replant8.js')
 const { replant9 } = require('./replant9.js')
 const { replant10 } = require('./replant10.js')
+const { replantMock } = require('./replantMock.js')
 
 function printBeanstalk() {
 
@@ -19,21 +20,24 @@ function printBeanstalk() {
   console.log("------------------------------------------------------------------")
 }
 
-const replants = [
-  '0',
-  '0',
-  '0',
-  replant3,
-  replant4,
-  replant5,
-  replant6,
-  replant7,
-  replant8,
-  replant9,
-  replant10
-]
 
-async function replant(account) {
+let replants
+async function replant(account, mock=true) {
+  replants = [
+    '0',
+    '0',
+    '0',
+    replant3,
+    replant4,
+    replant5,
+    replant6,
+    replant7,
+    replant8,
+    replant9,
+    (account) => replant10(account, mock)
+  ]
+  if (mock) replants.push(replantMock)
+
   console.clear()
   printBeanstalk()
   for (let i = 3; i < replants.length; i++) {
