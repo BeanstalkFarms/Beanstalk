@@ -12,22 +12,32 @@ const { to6 } = require('./test/utils/helpers.js')
 const { replant } = require("./replant/replant.js")
 
 task('buyBeans').addParam("amount", "The amount of USDC to buy with").setAction(async(args) => {
-  await mintUsdc(PUBLIUS, to6('100000'))
+  await mintUsdc(PUBLIUS, args.amount)
   const signer = await impersonateSigner(PUBLIUS)
   await (await getUsdc()).connect(signer).approve(BEAN_3_CURVE, ethers.constants.MaxUint256)
   await (await getBeanMetapool()).connect(signer).exchange_underlying('2', '0', args.amount, '0')
 })
 
 task('sellBeans').addParam("amount", "The amount of Beans to sell").setAction(async(args) => {
-  await mintBeans(PUBLIUS, to6('100000'))
+  await mintBeans(PUBLIUS, args.amount)
   const signer = await impersonateSigner(PUBLIUS)
   await (await getBean()).connect(signer).approve(BEAN_3_CURVE, ethers.constants.MaxUint256)
   await (await getBeanMetapool()).connect(signer).connect(await impersonateSigner(PUBLIUS)).exchange_underlying('0', '2', args.amount, '0')
 })
 
-task('ripen').addParam("amount", "The amount to increment harvestable by").setAction(async(args) => {
+task('ripen').addParam("amount", "The amount of Pods to ripen").setAction(async(args) => {
   const beanstalkAdmin = await getBeanstalkAdminControls()
-  await beanstalkAdmin.ripenHarvestable(args.amount)
+  await beanstalkAdmin.ripen(args.amount)
+})
+
+task('fertilize').addParam("amount", "The amount of Beans to fertilize").setAction(async(args) => {
+  const beanstalkAdmin = await getBeanstalkAdminControls()
+  await beanstalkAdmin.fertilize(args.amount)
+})
+
+task('rewardSilo').addParam("amount", "The amount of Beans to distribute to Silo").setAction(async(args) => {
+  const beanstalkAdmin = await getBeanstalkAdminControls()
+  await beanstalkAdmin.rewardSilo(args.amount)
 })
 
 task('sunrise', async function () {
