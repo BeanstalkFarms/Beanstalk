@@ -76,7 +76,7 @@ task('diamondABI', 'Generates ABI file for diamond, includes all ABIs of facets'
 })
 
 module.exports = {
-  defaultNetwork: "hardhat",
+  defaultNetwork: "localhost",
   networks: {
     hardhat: {
       chainId: 1337,
