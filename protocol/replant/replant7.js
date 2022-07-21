@@ -1,5 +1,6 @@
 const fs = require('fs')
 const { replantX } = require('./replantX.js')
+const { readPrune } = require('../utils')
 
 // Files
 const EARNED_BEANS = "./replant/data/r7-earnedBeans.json"
@@ -82,13 +83,6 @@ function getStalkSeedsRow(token, seasons, bdvs) {
       seeds.add(se)
     ]
   }, [toBN('0'), toBN('0')])
-}
-
-async function readPrune() {
-  const contents = await fs.readFileSync('contracts/C.sol', 'utf-8');
-  let num = contents.split('INITIAL_HAIRCUT = ')[1].split(';')[0]
-  num = parseFloat(num).toString()
-  return num
 }
 
 function getStalkSeeds(seedsPerBdv, season, bdv) {

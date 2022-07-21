@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "compile": "hardhat compile",
-    "test": "hardhat compile && hardhat test",
+    "test": "hardhat compile && hardhat test --network hardhat",
     "clean": "hardhat clean"
   },
   "author": "",

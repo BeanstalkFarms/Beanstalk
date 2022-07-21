@@ -1,4 +1,4 @@
-const { ethers, upgrades } = require("hardhat");
+const { upgrades } = require("hardhat");
 var fs = require('fs');
 
 const {

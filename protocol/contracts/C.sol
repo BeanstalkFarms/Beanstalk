@@ -56,7 +56,7 @@ library C {
     // Exploit
     uint256 private constant UNRIPE_LP_PER_DOLLAR = 1884592; // 145_113_507_403_282 / 77_000_000
     uint256 private constant ADD_LP_RATIO = 866616;
-    uint256 private constant INITIAL_HAIRCUT = 0.5e18; // SET
+    uint256 private constant INITIAL_HAIRCUT = 0.1e18; // SET
 
     // Contracts
     address private constant BEAN = 0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab;
