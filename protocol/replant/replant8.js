@@ -7,7 +7,7 @@ async function replant8 (
         deployAccount
     ) {
     console.log('-----------------------------------')
-    console.log('Replant8:\n')
+    console.log('Replant8: Deploy New Tokens\n')
     await upgradeWithNewFacets({
       diamondAddress: BEANSTALK,
       facetNames: [],

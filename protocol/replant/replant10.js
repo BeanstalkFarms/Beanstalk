@@ -5,7 +5,7 @@ const fs = require("fs");
 
 async function replant10(account, mock) {
   console.log('-----------------------------------')
-  console.log('Replant10:\n')
+  console.log('Replant10: Replant Beanstalk\n')
 
   const Fertilizer = await ethers.getContractFactory("Fertilizer", account);
   const fertilizer = await Fertilizer.deploy();

@@ -10,7 +10,7 @@ async function replant4 (
         account
     ) {
     console.log('-----------------------------------')
-    console.log('Replant4:\n')
+    console.log('Replant4: Delete LP Withdrawals\n')
     const v1LPWithdrawals = JSON.parse(await fs.readFileSync(V1_LP_WITHDRAWALS));
     const v2LPWithdrawals = JSON.parse(await fs.readFileSync(V2_LP_WITHDRAWALS));
     

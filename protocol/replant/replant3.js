@@ -16,7 +16,7 @@ async function replant3 (
         account
     ) {
     console.log('-----------------------------------')
-    console.log('Replant3:\n')
+    console.log('Replant3: Remove Non-Deposited Beans\n')
     const harvestablePlots = JSON.parse(await fs.readFileSync(HARVESTABLE_PLOTS));
     const podListings = JSON.parse(await fs.readFileSync(POD_LISTINGS));
     const podOrders = JSON.parse(await fs.readFileSync(POD_ORDERS));

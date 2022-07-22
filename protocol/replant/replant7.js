@@ -13,7 +13,7 @@ async function replant7(
   account
 ) {
   console.log('-----------------------------------')
-  console.log('Replant7:\n')
+  console.log('Replant7: Prune Stalk and Seeds\n')
 
   const siloAccounts = await countStalkSeeds();
   const stalk = siloAccounts.reduce((acc, s) => acc.add(toBN(s[2])), toBN('0'))
@@ -34,7 +34,7 @@ async function countStalkSeeds() {
 
   prune_ = await readPrune()
 
-  console.log(`Pruning to 0.${prune_}%\n`)
+  console.log(`Pruning to ${prune_.substring(0,2)}.${prune_.substring(2)}%\n`)
 
   lDeposits = Object.entries(lpDeposits.reduce((lds, [account, token, seasons, amounts, bdvs, totalAmount]) => {
     lds[account] = seasons.reduce((ss,s,i) => {

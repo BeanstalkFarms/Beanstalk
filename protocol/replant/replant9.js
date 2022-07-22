@@ -3,7 +3,7 @@ const { FERTILIZER_ADMIN, BEANSTALK, BCM, FERTILIZER } = require('../test/utils/
 
 async function replant9 (account) {
   console.log('-----------------------------------')
-  console.log('Replant9:\n')
+  console.log('Replant9: Transfer Ownership\n')
   const ownershipFacet = await ethers.getContractAt("OwnershipFacet", BEANSTALK)
   await ownershipFacet.connect(account).transferOwnership(BCM)
   console.log(`Transfered Beanstalk owner to ${await ownershipFacet.owner()}`)
