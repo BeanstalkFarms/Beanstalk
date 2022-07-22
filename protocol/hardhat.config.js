@@ -3,6 +3,7 @@ require("@nomiclabs/hardhat-ethers")
 require('hardhat-contract-sizer')
 require("hardhat-gas-reporter")
 require("solidity-coverage")
+require("@openzeppelin/hardhat-upgrades")
 require('dotenv').config();
 const fs = require('fs')
 const { impersonateSigner, mintUsdc, mintBeans, getBeanMetapool, getUsdc, getBean, getBeanstalkAdminControls } = require('./utils');
@@ -70,7 +71,7 @@ task('diamondABI', 'Generates ABI file for diamond, includes all ABIs of facets'
       abi.push(...json.abi)
     }
   }
-  abi = JSON.stringify(abi)
+  abi = JSON.stringify(abi.filter((item, pos) => abi.map((a)=>a.name).indexOf(item.name) == pos), null, 4)
   fs.writeFileSync('./abi/Beanstalk.json', abi)
   console.log('ABI written to abi/Beanstalk.json')
 })
