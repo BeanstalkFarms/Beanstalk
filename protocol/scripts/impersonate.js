@@ -1,4 +1,5 @@
 var fs = require('fs');
+const { ethers } = require('hardhat');
 
 const {
   ZERO_ADDRESS,
@@ -17,8 +18,12 @@ const {
   USDC,
   CURVE_REGISTRY,
   CURVE_ZAP,
-  STABLE_FACTORY
-} = require('../test/utils/constants')
+  STABLE_FACTORY,
+  PRICE_DEPLOYER
+} = require('../test/utils/constants');
+const { impersonateSigner, mintEth } = require('../utils');
+
+const { getSigner } = '../utils'
 
 async function curve() {
   // Deploy 3 Curveadd
@@ -192,6 +197,14 @@ async function unripe() {
   ]);
 }
 
+async function price() {
+  const priceDeployer = await impersonateSigner(PRICE_DEPLOYER)
+  await mintEth(PRICE_DEPLOYER)
+  const Price = await ethers.getContractFactory('BeanstalkPrice')
+  const price = await Price.connect(priceDeployer).deploy()
+  await price.deployed()
+}
+
 exports.impersonateRouter = router
 exports.impersonateBean = bean
 exports.impersonateCurve = curve
@@ -202,3 +215,4 @@ exports.impersonateWeth = weth
 exports.impersonateUnripe = unripe
 exports.impersonateFertilizer = fertilizer
 exports.impersonateUsdc = usdc
+exports.impersonatePrice = price

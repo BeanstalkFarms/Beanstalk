@@ -2341,6 +2341,37 @@
         "anonymous": false,
         "inputs": [
             {
+                "indexed": true,
+                "internalType": "uint32",
+                "name": "season",
+                "type": "uint32"
+            },
+            {
+                "indexed": false,
+                "internalType": "int256",
+                "name": "deltaB",
+                "type": "int256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256[2]",
+                "name": "balances",
+                "type": "uint256[2]"
+            }
+        ],
+        "name": "MetapoolOracle",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint32",
+                "name": "season",
+                "type": "uint32"
+            },
+            {
                 "indexed": false,
                 "internalType": "uint256",
                 "name": "toField",
@@ -2390,6 +2421,12 @@
     {
         "anonymous": false,
         "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint32",
+                "name": "season",
+                "type": "uint32"
+            },
             {
                 "indexed": false,
                 "internalType": "uint256",
@@ -3263,6 +3300,52 @@
         "inputs": [
             {
                 "internalType": "address",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "uint32",
+                "name": "_season",
+                "type": "uint32"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "enrootDeposit",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "uint32[]",
+                "name": "seasons",
+                "type": "uint32[]"
+            },
+            {
+                "internalType": "uint256[]",
+                "name": "amounts",
+                "type": "uint256[]"
+            }
+        ],
+        "name": "enrootDeposits",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
                 "name": "account",
                 "type": "address"
             },
@@ -3547,52 +3630,6 @@
         "name": "update",
         "outputs": [],
         "stateMutability": "payable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "token",
-                "type": "address"
-            },
-            {
-                "internalType": "uint32",
-                "name": "_season",
-                "type": "uint32"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            }
-        ],
-        "name": "updateUnripeDeposit",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "token",
-                "type": "address"
-            },
-            {
-                "internalType": "uint32[]",
-                "name": "seasons",
-                "type": "uint32[]"
-            },
-            {
-                "internalType": "uint256[]",
-                "name": "amounts",
-                "type": "uint256[]"
-            }
-        ],
-        "name": "updateUnripeDeposits",
-        "outputs": [],
-        "stateMutability": "nonpayable",
         "type": "function"
     },
     {

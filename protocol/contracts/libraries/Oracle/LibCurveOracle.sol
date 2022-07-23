@@ -28,6 +28,8 @@ interface IMeta3CurveOracle {
 library LibCurveOracle {
     int256 private constant mintPrecision = 240;
 
+    event MetapoolOracle(uint32 indexed season, int256 deltaB, uint256[2] balances);
+
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
@@ -78,6 +80,7 @@ library LibCurveOracle {
     function updateOracle() internal returns (int256 deltaB) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         (deltaB, s.co.balances) = twaDeltaB();
+        emit MetapoolOracle(s.season.current, deltaB, s.co.balances);
         s.co.timestamp = block.timestamp;
     }
 

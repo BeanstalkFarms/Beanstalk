@@ -20,8 +20,8 @@ contract Sun is Oracle {
     using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
 
-    event Reward(uint256 toField, uint256 toSilo, uint256 toFertilizer);
-    event Soil(uint256 soil);
+    event Reward(uint32 indexed season, uint256 toField, uint256 toSilo, uint256 toFertilizer);
+    event Soil(uint32 indexed season, uint256 soil);
 
     /**
      * Sun Internal
@@ -47,7 +47,7 @@ contract Sun is Oracle {
             newSupply = newSupply.sub(newHarvestable);
         }
         rewardToSilo(newSupply);
-        emit Reward(newHarvestable, newSupply, newFertilized);
+        emit Reward(s.season.current, newHarvestable, newSupply, newFertilized);
     }
 
     function rewardToFertilizer(uint256 amount)
@@ -122,6 +122,6 @@ contract Sun is Oracle {
     function setSoil(uint256 amount) internal {
         s.f.soil = amount;
         s.w.startSoil = amount;
-        emit Soil(amount);
+        emit Soil(s.season.current, amount);
     }
 }

@@ -32,8 +32,6 @@ contract SeasonFacet is Weather {
         uint256 caseId = stepWeather(deltaB);
         stepSun(deltaB, caseId);
         incentivize(msg.sender, C.getAdvanceIncentive());
-
-        emit Sunrise(season());
     }
 
     /**
@@ -65,6 +63,7 @@ contract SeasonFacet is Weather {
     function stepSeason() private {
         s.season.timestamp = block.timestamp;
         s.season.current += 1;
+        emit Sunrise(season());
     }
 
     function incentivize(address account, uint256 amount) private {

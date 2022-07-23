@@ -123,7 +123,7 @@ contract SiloFacet is TokenSilo {
      * Update Unripe Deposits
      */
 
-    function updateUnripeDeposits(
+    function enrootDeposits(
         address token,
         uint32[] calldata seasons,
         uint256[] calldata amounts
@@ -165,7 +165,7 @@ contract SiloFacet is TokenSilo {
         );
     }
 
-    function updateUnripeDeposit(
+    function enrootDeposit(
         address token,
         uint32 _season,
         uint256 amount

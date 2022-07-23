@@ -17,6 +17,8 @@ contract Oracle is ReentrancyGuard {
      * Oracle Getters
      **/
 
+    event MetapoolOracle(uint32 indexed season, int256 deltaB, uint256[2] balances);
+
     function totalDeltaB() external view returns (int256 deltaB) {
         deltaB = LibCurveOracle.check();
     }
