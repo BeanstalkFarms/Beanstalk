@@ -9,21 +9,7 @@ const { replant10 } = require('./replant10.js')
 const { replantMock } = require('./replantMock.js')
 const fs = require('fs')
 
-function printBeanstalk() {
-
-  console.log('\n')
-  console.log("------------------------------------------------------------------")
-  console.log("      ┌▓████▀▓╗          ┌▓████▀▓╗          ┌▓████▀▓╗   ")
-  console.log("    █████'  ▓███▓      █████'  ▓███▓      █████'  ▓███▓ ")
-  console.log("   ████▌   /  ████    ████▌   /  ████    ████▌   /  ████")
-  console.log("   ████   /   ║███    ████   /   ║███    ████   /   ║███")
-  console.log("   ████  ┌   ┌████    ████  ┌   ┌████    ████  ┌   ┌████")
-  console.log("    ███▄ ▌┌#████▀      ███▄ ▌┌#████▀      ███▄ ▌┌#████▀ ")
-  console.log("       ▀▓████▀`           ▀▓████▀`           ▀▓████▀`   ")
-  console.log("------------------------------------------------------------------")
-}
-
-async function printBeanstalk2() {
+async function printBeanstalk() {
   console.log('\n')
   console.log("------------------------------------------------------------")
   const text = fs.readFileSync('./replant/data/replant.txt');
@@ -49,7 +35,7 @@ async function replant(account, deployAccount=undefined, mock=true) {
   if (mock) replants.push(replantMock)
 
   console.clear()
-  printBeanstalk()
+  await printBeanstalk()
   for (let i = 3; i < replants.length; i++) {
     printStage(i, replants.length)
     await replants[i](account)
@@ -73,4 +59,3 @@ async function printStage(i, j) {
 }
 
 exports.replant = replant
-exports.test = printBeanstalk2
