@@ -61,4 +61,20 @@ library LibBeanMetaCurve {
         uint256 pegBeans = D / 2 / 1e12;
         deltaB = int256(pegBeans) - int256(balance);
     }
+
+    function getXP0(uint256 balance)
+        internal
+        pure
+        returns (uint256 xp0)
+    {
+        return balance.mul(RATE_MULTIPLIER);
+    }
+
+    function getX0(uint256 xp0)
+        internal
+        pure
+        returns (uint256 balance0)
+    {
+        return xp0.div(RATE_MULTIPLIER);
+    }
 }

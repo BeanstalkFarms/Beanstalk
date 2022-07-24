@@ -105,6 +105,39 @@ library LibCurve {
         return 0;
     }
 
+    function getYD(
+        uint256 a,
+        uint256 i_,
+        uint256[2] memory xp,
+        uint256 D
+    ) internal pure returns (uint256 y) {
+        // Solution is taken from pool contract: 0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49
+        uint256 S_ = 0;
+        uint256 _x = 0;
+        uint256 y_prev = 0;
+        uint256 c = D;
+        uint256 Ann = a * N_COINS;
+
+        for (uint256 _i; _i < N_COINS; ++_i) {
+            if (_i != i_) _x = xp[_i];
+            else continue;
+            S_ += _x;
+            c = (c * D) / (_x * N_COINS);
+        }
+
+        c = (c * D * A_PRECISION) / (Ann * N_COINS);
+        uint256 b = S_ + (D * A_PRECISION) / Ann; // - D
+        y = D;
+
+        for (uint256 _i; _i < 255; ++_i) {
+            y_prev = y;
+            y = (y * y + c) / (2 * y + b - D);
+            if (y > y_prev && y - y_prev <= 1) return y;
+            else if (y_prev - y <= 1) return y;
+        }
+        require(false, "Price: Convergence false");
+    }
+
     function getXP(
         uint256[2] memory balances,
         uint256 padding,

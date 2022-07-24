@@ -71,7 +71,7 @@ describe('Curve Convert', function () {
   describe('calclates lp to peg', async function () {
     it('p > 1', async function () {
       await this.beanMetapool.connect(user2).add_liquidity([toBean('200'), to18('0')], to18('150'));
-      expect(await this.convert.getMaxAmountIn(this.beanMetapool.address, this.bean.address)).to.be.equal('199167569307294375646');
+      expect(await this.convert.getMaxAmountIn(this.beanMetapool.address, this.bean.address)).to.be.equal('199185758314813528598');
     });
 
     it('p = 1', async function () {
@@ -403,8 +403,8 @@ describe('Curve Convert', function () {
         expect(await this.convert.getAmountOut(
           BEAN_3_CURVE,
           BEAN,
-          '199167569307294375646',
-        )).to.be.equal('199999999')
+          '199185758314813528598',
+        )).to.be.equal('200018189')
       })
 
       describe('it converts', async function () {
@@ -413,31 +413,31 @@ describe('Curve Convert', function () {
         });
 
         it('properly updates total values', async function () {
-          expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq('199999999');
-          expect(await this.silo.getTotalDeposited(this.beanMetapool.address)).to.eq('800832430692705624354');
-          expect(await this.silo.totalSeeds()).to.eq('3603329722');
-          expect(await this.silo.totalStalk()).to.eq('10008324300000');
+          expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq('200018189');
+          expect(await this.silo.getTotalDeposited(this.beanMetapool.address)).to.eq('800814241685186471402');
+          expect(await this.silo.totalSeeds()).to.eq('3603293346');
+          expect(await this.silo.totalStalk()).to.eq('10008324310000');
         });
 
         it('properly updates user values', async function () {
-          expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('3603329722');
-          expect(await this.silo.balanceOfStalk(userAddress)).to.eq('10008324300000');
+          expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('3603293346');
+          expect(await this.silo.balanceOfStalk(userAddress)).to.eq('10008324310000');
         });
 
         it('properly updates user deposits', async function () {
           let deposit = await this.silo.getDeposit(userAddress, this.bean.address, 2);
-          expect(deposit[0]).to.eq('199999999');
-          expect(deposit[1]).to.eq('199999999');
+          expect(deposit[0]).to.eq('200018189');
+          expect(deposit[1]).to.eq('200018189');
           deposit = await this.silo.getDeposit(userAddress, this.beanMetapool.address, 2);
-          expect(deposit[0]).to.eq('800832430692705624354');
-          expect(deposit[1]).to.eq('800832431');
+          expect(deposit[0]).to.eq('800814241685186471402');
+          expect(deposit[1]).to.eq('800814242');
         });
 
         it('emits events', async function () {
           await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
-            .withArgs(userAddress, this.beanMetapool.address, [2], ['199167569307294375646'], '199167569307294375646');
+            .withArgs(userAddress, this.beanMetapool.address, [2], ['199185758314813528598'], '199185758314813528598');
           await expect(this.result).to.emit(this.silo, 'AddDeposit')
-            .withArgs(userAddress, this.bean.address, 2, '199999999', '199999999');
+            .withArgs(userAddress, this.bean.address, 2, '200018189', '200018189');
         });
       });
     });

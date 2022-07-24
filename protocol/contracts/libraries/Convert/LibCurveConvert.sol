@@ -27,7 +27,6 @@ library LibCurveConvert {
     {
         if (pool == C.curveMetapoolAddress())
             return LibMetaCurveConvert.beansAtPeg(balances);
-        // if (pool == C.curveBeanLUSDAddress()) return LibBeanLUSDConvert.beansAtPeg(balances);
         revert("Convert: Not a whitelisted Curve pool.");
     }
 
@@ -42,10 +41,7 @@ library LibCurveConvert {
         uint256[2] memory balances = ICurvePool(pool).get_balances();
         uint256 xp1 = getBeansAtPeg(pool, balances);
         if (balances[0] <= xp1) return 0;
-        lp = ICurvePool(pool).calc_token_amount(
-            [balances[0].sub(xp1), 0],
-            false
-        );
+        return LibMetaCurveConvert.lpToPeg(balances, xp1);
     }
 
     /// @param amountIn The amount of the LP token of `pool` to remove as BEAN.
