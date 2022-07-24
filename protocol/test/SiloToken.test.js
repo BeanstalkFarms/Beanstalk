@@ -858,7 +858,7 @@ describe('Silo Token', function () {
           to6('1000')
         )
 
-        this.result = await this.silo.connect(user).updateUnripeDeposit(UNRIPE_BEAN, '2', to6('5'));
+        this.result = await this.silo.connect(user).enrootDeposit(UNRIPE_BEAN, '2', to6('5'));
       })
 
       it('properly updates the total balances', async function () {
@@ -896,7 +896,7 @@ describe('Silo Token', function () {
           to6('5000').sub(to6('10000').mul(toBN(pru)).div(to18('1')))
         )
 
-        this.result = await this.silo.connect(user).updateUnripeDeposit(UNRIPE_BEAN, '2', to6('10'));
+        this.result = await this.silo.connect(user).enrootDeposit(UNRIPE_BEAN, '2', to6('10'));
       })
 
       it('properly updates the total balances', async function () {
@@ -935,7 +935,7 @@ describe('Silo Token', function () {
           to6('5000').sub(to6('10000').mul(toBN(pru)).div(to18('1')))
         )
 
-        this.result = await this.silo.connect(user).updateUnripeDeposits(UNRIPE_BEAN, ['2', '3'], [to6('5'), to6('5')]);
+        this.result = await this.silo.connect(user).enrootDeposits(UNRIPE_BEAN, ['2', '3'], [to6('5'), to6('5')]);
       })
 
       it('properly updates the total balances', async function () {

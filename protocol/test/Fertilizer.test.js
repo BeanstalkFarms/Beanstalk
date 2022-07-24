@@ -102,6 +102,11 @@ describe('Fertilize', function () {
     })
   })
 
+  it('gets fertilizers', async function () {
+    const fertilizers = await this.fertilizer.getFertilizers()
+    expect(`${fertilizers}`).to.be.equal('')
+  })
+
   describe('Add Fertilizer', async function () {
     describe('1 fertilizer', async function () {
       beforeEach(async function () {
@@ -136,6 +141,11 @@ describe('Fertilize', function () {
 
       it('emits event', async function () {
         expect(this.result).to.emit('SetFertilizer').withArgs('10000', to6('1.2'), to6('1.2'))
+      })
+
+      it('gets fertilizers', async function () {
+        const fertilizers = await this.fertilizer.getFertilizers()
+        expect(`${fertilizers}`).to.be.equal('1200000,1')
       })
     })
 
@@ -229,6 +239,11 @@ describe('Fertilize', function () {
       expect(await this.fertilizer.getNext(to6('2.5'))).to.be.equal(to6('3'))
       expect(await this.fertilizer.getNext(to6('3'))).to.be.equal(to6('6.5'))
       expect(await this.fertilizer.getNext(to6('6.5'))).to.be.equal(0)
+    })
+
+    it('gets fertilizers', async function () {
+      const fertilizers = await this.fertilizer.getFertilizers()
+      expect(`${fertilizers}`).to.be.equal('1200000,2,1700000,1,2000000,1,2500000,1,3000000,1,6500000,1')
     })
   })
 

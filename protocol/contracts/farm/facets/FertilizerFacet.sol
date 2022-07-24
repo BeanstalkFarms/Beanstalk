@@ -24,6 +24,11 @@ contract FertilizerFacet {
 
     AppStorage internal s;
 
+    struct Supply {
+        uint128 endBpf;
+        uint256 supply;
+    }
+
     function claimFertilized(uint256[] calldata ids, LibTransfer.To mode)
         external
         payable
@@ -162,5 +167,27 @@ contract FertilizerFacet {
         uint256[] memory ids
     ) external view returns (IFertilizer.Balance[] memory) {
         return C.fertilizer().lastBalanceOfBatch(accounts, ids);
+    }
+
+    function getFertilizers()
+        external
+        view
+        returns (Supply[] memory fertilizers)
+    {
+        uint256 numFerts = 0;
+        uint128 idx = s.fFirst;
+        while (idx > 0) {
+            numFerts = numFerts.add(1);
+            idx = LibFertilizer.getNext(idx);
+        }
+        fertilizers = new Supply[](numFerts);
+        numFerts = 0;
+        idx = s.fFirst;
+        while (idx > 0) {
+            fertilizers[numFerts].endBpf = idx;
+            fertilizers[numFerts].supply = LibFertilizer.getAmount(idx);
+            numFerts = numFerts.add(1);
+            idx = LibFertilizer.getNext(idx);
+        }
     }
 }

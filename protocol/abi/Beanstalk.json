@@ -940,6 +940,31 @@
     },
     {
         "inputs": [],
+        "name": "getFertilizers",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint128",
+                        "name": "endBpf",
+                        "type": "uint128"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "supply",
+                        "type": "uint256"
+                    }
+                ],
+                "internalType": "struct FertilizerFacet.Supply[]",
+                "name": "fertilizers",
+                "type": "tuple[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "getFirst",
         "outputs": [
             {
