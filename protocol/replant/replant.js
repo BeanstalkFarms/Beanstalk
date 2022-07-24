@@ -11,10 +11,10 @@ const fs = require('fs')
 
 async function printBeanstalk() {
   console.log('\n')
-  console.log("------------------------------------------------------------")
+  console.log('')
   const text = fs.readFileSync('./replant/data/replant.txt');
   console.log(text.toString())
-  console.log("------------------------------------------------------------")
+  console.log('')
 }
 
 let replants
@@ -54,7 +54,7 @@ function getProcessString(processed, total) {
 async function printStage(i, j) {
   console.clear()
   printBeanstalk()
-  console.log("Commencing replant sequence:")
+  console.log("Replanting Beanstalk:")
   console.log(`Stage ${i}/${replants.length}: ${getProcessString(i, replants.length)}`)
 }
 
