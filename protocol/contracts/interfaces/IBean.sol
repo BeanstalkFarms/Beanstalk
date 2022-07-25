@@ -14,6 +14,6 @@ abstract contract IBean is IERC20 {
 
     function burn(uint256 amount) public virtual;
     function burnFrom(address account, uint256 amount) public virtual;
-    function mint(address account, uint256 amount) public virtual returns (bool);
+    function mint(address account, uint256 amount) public virtual;
 
 }

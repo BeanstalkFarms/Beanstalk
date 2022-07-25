@@ -1,48 +1,41 @@
 /**
  * SPDX-License-Identifier: MIT
-**/
+ **/
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
-import "../../../interfaces/IWETH.sol";
-import "../../../interfaces/IBean.sol";
-import "../../../libraries/LibCheck.sol";
-import "../../../libraries/LibInternal.sol";
-import "../../../libraries/LibMarket.sol";
+import "../../ReentrancyGuard.sol";
 import "../../../libraries/Silo/LibSilo.sol";
+import "../../../libraries/LibSafeMath32.sol";
 import "../../../C.sol";
 
 /**
  * @author Publius
  * @title Silo Exit
-**/
-contract SiloExit {
-
-    AppStorage internal s;
-
+ **/
+contract SiloExit is ReentrancyGuard {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
-    /**
-     * Contracts
-    **/
-
-    function weth() public view returns (IWETH) {
-        return IWETH(s.c.weth);
+    struct AccountSeasonOfPlenty {
+        uint32 lastRain;
+        uint32 lastSop;
+        uint256 roots;
+        uint256 plentyPerRoot;
+        uint256 plenty;
     }
 
     /**
      * Silo
-    **/
+     **/
 
     function totalStalk() public view returns (uint256) {
         return s.s.stalk;
     }
 
-    function totalRoots() public view returns(uint256) {
+    function totalRoots() public view returns (uint256) {
         return s.s.roots;
     }
 
@@ -50,178 +43,154 @@ contract SiloExit {
         return s.s.seeds;
     }
 
-    function totalFarmableBeans() public view returns (uint256) {
-        return s.si.beans.add(s.v1SI.beans).add(s.v2SIBeans);
+    function totalEarnedBeans() public view returns (uint256) {
+        return s.earnedBeans;
     }
 
     function balanceOfSeeds(address account) public view returns (uint256) {
-        return s.a[account].s.seeds.add(balanceOfFarmableBeans(account).mul(C.getSeedsPerBean()));
+        return s.a[account].s.seeds; // Earned Seeds do not earn Grown stalk, so we do not include them.
     }
 
     function balanceOfStalk(address account) public view returns (uint256) {
-        return s.a[account].s.stalk.add(balanceOfFarmableStalk(account));
+        return s.a[account].s.stalk.add(balanceOfEarnedStalk(account)); // Earned Stalk earns Bean Mints, but Grown Stalk does not.
     }
 
     function balanceOfRoots(address account) public view returns (uint256) {
         return s.a[account].roots;
     }
 
-    function balanceOfGrownStalk(address account) public view returns (uint256) {
-        return LibSilo.stalkReward(s.a[account].s.seeds, season()-lastUpdate(account));
+    function balanceOfGrownStalk(address account)
+        public
+        view
+        returns (uint256)
+    {
+        return
+            LibSilo.stalkReward(
+                s.a[account].s.seeds,
+                season() - lastUpdate(account)
+            );
     }
 
-    function balanceOfFarmableBeans(address account) public view returns (uint256 beans) {
-        beans = beans.add(balanceOfFarmableBeansV1(account));
-        beans = beans.add(balanceOfFarmableBeansV2(balanceOfUnclaimedRoots(account)));
-        uint256 stalk = s.a[account].s.stalk.add(beans.mul(C.getStalkPerBean()));
-        beans = beans.add(balanceOfFarmableBeansV3(account, stalk));
+    function balanceOfEarnedBeans(address account)
+        public
+        view
+        returns (uint256 beans)
+    {
+        beans = _balanceOfEarnedBeans(account, s.a[account].s.stalk);
     }
 
-    function balanceOfFarmableBeansV3(address account, uint256 accountStalk) public view returns (uint256 beans) {
+    function _balanceOfEarnedBeans(address account, uint256 accountStalk)
+        internal
+        view
+        returns (uint256 beans)
+    {
+        // There will be no Roots when the first deposit is made.
         if (s.s.roots == 0) return 0;
-        uint256 stalk = s.s.stalk.mul(balanceOfRoots(account)).div(s.s.roots);
+
+        // Determine expected user Stalk based on Roots balance
+        // userStalk / totalStalk = userRoots / totalRoots
+        uint256 stalk = s.s.stalk.mul(s.a[account].roots).div(s.s.roots);
+
+        // Handle edge case caused by rounding
         if (stalk <= accountStalk) return 0;
+
+        // Calculate Earned Stalk and convert to Earned Beans.
         beans = (stalk - accountStalk).div(C.getStalkPerBean()); // Note: SafeMath is redundant here.
-        if (beans > s.si.beans) return s.si.beans;
+        if (beans > s.earnedBeans) return s.earnedBeans;
         return beans;
     }
 
-    function balanceOfFarmableBeansV2(uint256 roots) public view returns (uint256 beans) {
-        if (s.unclaimedRoots == 0 || s.v2SIBeans == 0) return 0;
-        beans = roots.mul(s.v2SIBeans).div(s.unclaimedRoots);
-        if (beans > s.v2SIBeans) beans = s.v2SIBeans;
+    function balanceOfEarnedStalk(address account)
+        public
+        view
+        returns (uint256)
+    {
+        return balanceOfEarnedBeans(account).mul(C.getStalkPerBean());
     }
 
-    function balanceOfFarmableBeansV1(address account) public view returns (uint256 beans) {
-        if (s.s.roots == 0 || s.v1SI.beans == 0 || lastUpdate(account) >= s.hotFix3Start) return 0;
-        uint256 stalk = s.v1SI.stalk.mul(balanceOfRoots(account)).div(s.v1SI.roots);
-        if (stalk <= s.a[account].s.stalk) return 0;
-        beans = (stalk - s.a[account].s.stalk).div(C.getStalkPerBean()); // Note: SafeMath is redundant here.
-        if (beans > s.v1SI.beans) return s.v1SI.beans;
-        return beans;
-    }
-
-    function balanceOfUnclaimedRoots(address account) public view returns (uint256 uRoots) {
-        uint256 sis = s.season.sis.sub(s.a[account].lastSIs);
-        uRoots = balanceOfRoots(account).mul(sis);
-        if (uRoots > s.unclaimedRoots) uRoots = s.unclaimedRoots;
-    }
-
-    function balanceOfFarmableStalk(address account) public view returns (uint256) {
-        return balanceOfFarmableBeans(account).mul(C.getStalkPerBean());
-    }
-
-    function balanceOfFarmableSeeds(address account) public view returns (uint256) {
-        return balanceOfFarmableBeans(account).mul(C.getSeedsPerBean());
+    function balanceOfEarnedSeeds(address account)
+        public
+        view
+        returns (uint256)
+    {
+        return balanceOfEarnedBeans(account).mul(C.getSeedsPerBean());
     }
 
     function lastUpdate(address account) public view returns (uint32) {
         return s.a[account].lastUpdate;
     }
 
-    function lastSupplyIncreases(address account) public view returns (uint32) {
-        return s.a[account].lastSIs;
-    }
-
-    function supplyIncreases() external view returns (uint32) {
-        return s.season.sis;
-    }
-
-    function unclaimedRoots() external view returns (uint256) {
-        return s.unclaimedRoots;
-    }
-
-    function legacySupplyIncrease() external view returns (Storage.V1IncreaseSilo memory) {
-        return s.v1SI;
-    }
-
     /**
      * Season Of Plenty
-    **/
+     **/
 
     function lastSeasonOfPlenty() public view returns (uint32) {
-        return s.sop.last;
+        return s.season.lastSop;
     }
 
-    function seasonsOfPlenty() public view returns (Storage.SeasonOfPlenty memory) {
-        return s.sop;
-    }
+    function balanceOfPlenty(address account)
+        public
+        view
+        returns (uint256 plenty)
+    {
+        Account.State storage a = s.a[account];
+        plenty = a.sop.plenty;
+        uint256 previousPPR;
+        // If lastRain > 0, check if SOP occured during the rain period.
+        if (s.a[account].lastRain > 0) {
+            // if the last processed SOP = the lastRain processed season,
+            // then we use the stored roots to get the delta.
+            if (a.lastSop == a.lastRain) previousPPR = a.sop.plentyPerRoot;
+            else previousPPR = s.sops[a.lastSop];
+            uint256 lastRainPPR = s.sops[s.a[account].lastRain];
 
-    function balanceOfEth(address account) public view returns (uint256) {
-        if (s.sop.base == 0) return 0;
-        return balanceOfPlentyBase(account).mul(s.sop.weth).div(s.sop.base);
-    }
-    
-    function balanceOfPlentyBase(address account) public view returns (uint256) {
-        uint256 plenty = s.a[account].sop.base;
-        uint32 endSeason = s.a[account].lastSop;
-        uint256 plentyPerRoot;
-        uint256 rainSeasonBase = s.sops[s.a[account].lastRain];
-        if (rainSeasonBase > 0) {
-            if (endSeason == s.a[account].lastRain) {
-                plentyPerRoot = rainSeasonBase.sub(s.a[account].sop.basePerRoot);
-            } else {
-                plentyPerRoot = rainSeasonBase.sub(s.sops[endSeason]);
-                endSeason = s.a[account].lastRain;
+            // If there has been a SOP duing this rain sesssion since last update, process spo.
+            if (lastRainPPR > previousPPR) {
+                uint256 plentyPerRoot = lastRainPPR - previousPPR;
+                previousPPR = lastRainPPR;
+                plenty = plenty.add(
+                    plentyPerRoot.mul(s.a[account].sop.roots).div(
+                        C.getSopPrecision()
+                    )
+                );
             }
-            if (plentyPerRoot > 0) plenty = plenty.add(plentyPerRoot.mul(s.a[account].sop.roots));
+        } else {
+            // If it was not raining, just use the PPR at previous sop
+            previousPPR = s.sops[s.a[account].lastSop];
         }
 
-        if (s.sop.last > lastUpdate(account)) {
-            plentyPerRoot = s.sops[s.sop.last].sub(s.sops[endSeason]);
-            plenty = plenty.add(plentyPerRoot.mul(balanceOfRoots(account)));
+        // Handle and SOPs that started + ended before after last Rain where t
+        if (s.season.lastSop > lastUpdate(account)) {
+            uint256 plentyPerRoot = s.sops[s.season.lastSop].sub(previousPPR);
+            plenty = plenty.add(
+                plentyPerRoot.mul(balanceOfRoots(account)).div(
+                    C.getSopPrecision()
+                )
+            );
         }
-        return plenty;
     }
 
     function balanceOfRainRoots(address account) public view returns (uint256) {
         return s.a[account].sop.roots;
     }
 
-    /**
-     * Governance
-    **/
-
-    function votedUntil(address account) public view returns (uint32) {
-        if (voted(account)) {
-            return s.a[account].votedUntil;
-        }
-        return 0;
-    }
-
-    function proposedUntil(address account) public view returns (uint32) {
-        return s.a[account].proposedUntil;
-    }
-
-    function voted(address account) public view returns (bool) {
-        if (s.a[account].votedUntil >= season()) {
-            uint256 numberOfActiveBips = s.g.activeBips.length;
-            for (uint256 i = 0; i < numberOfActiveBips; i++) {
-                uint32 activeBip = s.g.activeBips[i];
-                if (s.g.voted[activeBip][account]) return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Migration
-    **/
-
-    function balanceOfMigrationRoots(address account) internal view returns (uint256) {
-        return balanceOfMigrationStalk(account).mul(C.getRootsBase());
-    }
-
-    function balanceOfMigrationStalk(address account) private view returns (uint256) {
-        return s.a[account].s.stalk.add(LibSilo.stalkReward(s.a[account].s.seeds, s.bip0Start-lastUpdate(account)));
+    function balanceOfSop(address account)
+        external
+        view
+        returns (AccountSeasonOfPlenty memory sop)
+    {
+        sop.lastRain = s.a[account].lastRain;
+        sop.lastSop = s.a[account].lastSop;
+        sop.roots = s.a[account].sop.roots;
+        sop.plenty = balanceOfPlenty(account);
+        sop.plentyPerRoot = s.a[account].sop.plentyPerRoot;
     }
 
     /**
      * Internal
-    **/
+     **/
 
     function season() internal view returns (uint32) {
         return s.season.current;
     }
-
 }

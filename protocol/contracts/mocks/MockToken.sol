@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
 **/
 contract MockToken is ERC20, ERC20Burnable {
 
-    uint8 private _decimals = 6;
+    uint8 private _decimals = 18;
 
     constructor(string memory name, string memory symbol)
     ERC20(name, symbol)

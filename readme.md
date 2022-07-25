@@ -56,11 +56,34 @@ The following facets are part of the [diamond functionality](https://github.com/
 3. run `npm install`
 5. run `npx hardhat compile`
 
+## Forking Mainnet Locally
+We elect to use `anvil` instead of `hardhat` for local node forking as `anvil` is considerably faster than `hardhat` and properly caches the blockchain locally
+
+1. ensure you are in the `/protocol` repository
+2. Install Foundry `curl -L https://foundry.paradigm.xyz | bash` & reopen terminal
+3. Run `foundryup` to ensure latest version
+4. Start a locally forked node with the following command:
+
+```bash
+anvil --fork-url <FORK_RPC> --fork-block-number <BLOCK_NUMBER> --chain-id 1337
+```
+
+For `<FORK_RPC>`, use an Alchemy or Infura RPC URL.
+For `<BLOCK_NUMBER>`, we currently use `15128715`, but you are welcome to use any block after Replant2
+
+**It should be very clear if the node starts up properly.** 
+
+**Note: anvil will cache the blockchain provided that `BLOCK_NUMBER` does NOT change. Given this, we recommend picking a block and sticking to it.**
+
+## Replanting
+
+1. ensure that you have a localhost 
+2. run `npx hardhat replant --network localhost`
+
 ## Testing
 1. make sure you are in the `protocol` repository
 1. run `npm test` to run all coverage tests
 2. run `npx hardhat coverage` to run all coverage tests and generate a coverage report
-
 
 ## Developing
 
@@ -159,10 +182,9 @@ There are a couple of steps that must be done before we can fork mainnet and upg
 3. Now you can test your changes using your local blockchain node that should now have the latest version
 of beanstalk that you upgraded.
 
-
 ## Versions
-Code Version: `1.16.0` <br>
-Whitepaper Version `1.9.3`
+Code Version: `2.0.0` <br>
+Whitepaper Version `2.0.0`
 
 ## License
 [MIT](https://github.com/BeanstalkFarms/Beanstalk/blob/master/LICENSE)

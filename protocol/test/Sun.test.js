@@ -1,130 +1,179 @@
-const { BN } = require('@openzeppelin/test-helpers')
 const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
-const { parseJson } = require('./utils/helpers.js')
-const { MAX_UINT256 } = require('./utils/constants.js')
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
+const { to6, toStalk } = require('./utils/helpers.js');
+const { USDC, UNRIPE_LP } = require('./utils/constants.js');
 
-// Set the test data
-const [columns, tests] = parseJson('./coverage_data/sun.json')
-var numberTests = tests.length
-var startTest = 0
+let user, user2, owner;
+let userAddress, ownerAddress, user2Address;
 
 describe('Sun', function () {
-
   before(async function () {
-    [owner,user,user2] = await ethers.getSigners()
-    userAddress = user.address
-    user2Address = user2.address
+    [owner, user, user2] = await ethers.getSigners()
+    userAddress = user.address;
+    user2Address = user2.address;
     const contracts = await deploy("Test", false, true)
-    ownerAddress = contracts.account
-    this.diamond = contracts.beanstalkDiamond
+    ownerAddress = contracts.account;
+    this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
-    this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
+    this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
-    this.bean = await ethers.getContractAt('MockToken', contracts.bean)
-    this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair)
-    this.pegPair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pegPair)
-  });
+    this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
+    this.usdc = await ethers.getContractAt('MockToken', USDC);
+    await this.usdc.mint(owner.address, to6('10000'))
+    await this.usdc.connect(owner).approve(this.diamond.address, to6('10000'))
+    this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
+    await this.unripeLP.mint(owner.address, to6('10000'))
 
-  [...Array(numberTests).keys()].map(i => i + startTest).forEach(function(v) {
-    const testStr = 'Test #'
-    describe(testStr.concat((v)), function () {
-      testData = {}
-      columns.forEach((key, i) => testData[key] = tests[v][i])
-      before(async function () {
-        await this.season.resetState()
-        await this.pair.burnTokens(this.bean.address)
-        await this.pair.burnAllLP(this.silo.address)
-        this.testData = {}
-        columns.forEach((key, i) => this.testData[key] = tests[v][i])
-        for (var i = 0; i < this.testData.season-1; i++) {
-          await this.season.lightSunrise()
-        }
-
-        await this.bean.mint(this.silo.address, this.testData.beansInSilo)
-        await this.bean.mint(this.pair.address, this.testData.beansInPool)
-        await this.silo.incrementDepositedBeansE(this.testData.beansInSilo)
-        await this.season.setSoilE(this.testData.soil)
-        await this.silo.depositSiloAssetsE(userAddress, '1', '100000')
-        await this.field.incrementTotalPodsE((parseInt(this.testData.unripenedPods) + parseInt(this.testData.harvestablePods)).toString())
-        await this.field.incrementTotalHarvestableE(this.testData.harvestablePods)
-        this.pair.simulateTrade(this.testData.beansInPool, this.testData.ethInPool+'000000000000')
-        await this.silo.incrementDepositedLPE('1')
-        this.result = await this.season.sunSunrise(this.testData.twapBeans, this.testData.twapUSDC, this.testData.divisor)
-      })
-      it('checks values', async function () {
-        expect(await this.bean.totalSupply()).to.eq(this.testData.newTotalSupply)
-        expect(await this.bean.balanceOf(this.silo.address)).to.eq((parseInt(this.testData.newBeansInSilo)+parseInt(this.testData.newHarvestablePods)).toString())
-        expect(await this.silo.totalDepositedBeans()).to.eq(this.testData.newBeansInSilo)
-        expect(await this.field.totalSoil()).to.eq(this.testData.newSupplyofSoil)
-        expect(await this.field.totalHarvestable()).to.eq(this.testData.newHarvestablePods)
-        expect(await this.field.totalUnripenedPods()).to.eq(this.testData.newUnripenedPods)
-        expect(await this.field.totalPods()).to.eq(this.testData.newTotalPods)
-      })
-
-      it('emits the correct event', async function () {
-        if (new BN(this.testData.currentTWAP).gt(new BN('1000000000000000000'))) {
-          await expect(this.result).to.emit(this.season, 'SupplyIncrease').withArgs(
-             (parseInt(this.testData.currentSeason)+1).toString(),
-             this.testData.currentTWAP,
-             this.testData.deltaHarvestablePods,
-             this.testData.deltaBeansInSilo,
-             this.testData.deltaSoil)
-       }
-       else if (new BN(this.testData.currentTWAP).eq(new BN('1000000000000000000'))) {
-          await expect(this.result).to.emit(this.season, 'SupplyNeutral').withArgs(
-             (parseInt(this.testData.currentSeason)+1).toString(),
-             this.testData.deltaSoil)
-        } else {
-          await expect(this.result).to.emit(this.season, 'SupplyDecrease').withArgs(
-             (parseInt(this.testData.currentSeason)+1).toString(),
-             this.testData.currentTWAP,
-             this.testData.deltaSoil)
-        }
-      })
-    })
+    await this.season.siloSunrise(0)
   })
-  it('decrements the withdraw buffer', async function () {
-    await this.season.resetState()
-    await this.season.halfWeekSunrise()
-    expect(await this.season.withdrawSeasons()).to.eq(24)
-    await this.season.halfWeekSunrise()
-    expect(await this.season.withdrawSeasons()).to.eq(23)
-    await this.season.decrementSunrise(14)
-    expect(await this.season.withdrawSeasons()).to.eq(9)
-    await this.season.halfWeekSunrise()
-    expect(await this.season.withdrawSeasons()).to.eq(9)
-    await this.season.weekSunrise()
-    expect(await this.season.withdrawSeasons()).to.eq(8)
-    await this.season.decrementSunrise(100)
-    expect(await this.season.withdrawSeasons()).to.eq(5)
+
+  beforeEach(async function () {
+    snapshotId = await takeSnapshot()
+  })
+
+  afterEach(async function () {
+    await revertToSnapshot(snapshotId)
+  })
+
+  it("delta B < 1", async function () {
+    this.result = await this.season.sunSunrise('-100', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '100');
+  })
+
+  it("delta B == 1", async function () {
+    this.result = await this.season.sunSunrise('0', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '0');
+  })
+
+  it("delta B > 1, low pod rate", async function () {
+    await this.field.incrementTotalPodsE('100');
+    this.result = await this.season.sunSunrise('300', 0);
+    expect(await this.field.totalSoil()).to.be.equal('148')
+  })
+
+  it("delta B > 1, medium pod rate", async function () {
+    await this.field.incrementTotalPodsE('100');
+    this.result = await this.season.sunSunrise('300', 8);
+    expect(await this.field.totalSoil()).to.be.equal('99')
+  })
+
+  it("delta B > 1, high pod rate", async function () {
+    await this.field.incrementTotalPodsE('100');
+    this.result = await this.season.sunSunrise('300', 25);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '49');
+  })
+
+  it("only silo", async function () {
+    this.result = await this.season.sunSunrise('100', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '0');
+    await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '0', '100', '0');
+
+    expect(await this.silo.totalStalk()).to.be.equal('1000000');
+    expect(await this.silo.totalEarnedBeans()).to.be.equal('100');
+  })
+
+  it("some harvestable", async function () {
+    await this.field.incrementTotalPodsE('150');
+    this.result = await this.season.sunSunrise('200', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '99');
+    await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '100', '100', '0');
+
+    expect(await this.field.totalHarvestable()).to.be.equal('100');
+
+    expect(await this.silo.totalStalk()).to.be.equal('1000000');
+    expect(await this.silo.totalEarnedBeans()).to.be.equal('100');
+  })
+
+  it("all harvestable", async function () {
+    await this.field.incrementTotalPodsE('50');
+    this.result = await this.season.sunSunrise('150', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '49');
+    await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '50', '100', '0');
+
+    expect(await this.field.totalHarvestable()).to.be.equal('50');
+
+    expect(await this.silo.totalStalk()).to.be.equal('1000000');
+    expect(await this.silo.totalEarnedBeans()).to.be.equal('100');
+  })
+
+  it("all harvestable and all fertilizable", async function () {
+    await this.field.incrementTotalPodsE(to6('50'));
+    await this.fertilizer.connect(owner).addFertilizerOwner('6274', '20', '0')
+    this.result = await this.season.sunSunrise(to6('200'), 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '49504950');
+    await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, to6('50'), to6('100'), to6('50'));
+
+    expect(await this.fertilizer.isFertilizing()).to.be.equal(false);
+    expect(await this.fertilizer.totalFertilizedBeans()).to.be.equal(to6('50'));
+    expect(await this.fertilizer.getActiveFertilizer()).to.be.equal(to6('0'));
+    expect(await this.fertilizer.getFirst()).to.be.equal(0)
+    expect(await this.fertilizer.getLast()).to.be.equal(0)
+    expect(await this.fertilizer.beansPerFertilizer()).to.be.equal(to6('2.5'))
+
+    expect(await this.field.totalHarvestable()).to.be.equal(to6('50'));
+
+    expect(await this.silo.totalStalk()).to.be.equal(toStalk('100'));
+    expect(await this.silo.totalEarnedBeans()).to.be.equal(to6('100'));
+  })
+
+  it("all harvestable, some fertilizable", async function () {
+    await this.field.incrementTotalPodsE('50');
+    await this.fertilizer.connect(owner).addFertilizerOwner('0', '1', '0')
+    this.result = await this.season.sunSunrise('200', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '49');
+    await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '50', '84', '66');
+
+    expect(await this.fertilizer.isFertilizing()).to.be.equal(true);
+    expect(await this.fertilizer.totalFertilizedBeans()).to.be.equal('66');
+    expect(await this.fertilizer.getActiveFertilizer()).to.be.equal('1');
+    expect(await this.fertilizer.getFirst()).to.be.equal(to6('6'))
+    expect(await this.fertilizer.getLast()).to.be.equal(to6('6'))
+    expect(await this.fertilizer.beansPerFertilizer()).to.be.equal(66)
+
+    expect(await this.field.totalHarvestable()).to.be.equal('50');
+
+    expect(await this.silo.totalStalk()).to.be.equal('840000');
+    expect(await this.silo.totalEarnedBeans()).to.be.equal('84');
+  })
+
+  it("some harvestable, some fertilizable", async function () {
+    await this.field.incrementTotalPodsE('100');
+    await this.fertilizer.connect(owner).addFertilizerOwner('0', '1', '0')
+    this.result = await this.season.sunSunrise('150', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '49');
+    await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '50', '50', '50');
+
+    expect(await this.fertilizer.isFertilizing()).to.be.equal(true);
+    expect(await this.fertilizer.totalFertilizedBeans()).to.be.equal('50');
+    expect(await this.fertilizer.getActiveFertilizer()).to.be.equal('1');
+    expect(await this.fertilizer.getFirst()).to.be.equal(to6('6'))
+    expect(await this.fertilizer.getLast()).to.be.equal(to6('6'))
+    expect(await this.fertilizer.beansPerFertilizer()).to.be.equal(50)
+
+    expect(await this.field.totalHarvestable()).to.be.equal('50');
+
+    expect(await this.silo.totalStalk()).to.be.equal('500000');
+    expect(await this.silo.totalEarnedBeans()).to.be.equal('50');
+  })
+
+  it("1 all and 1 some fertilizable", async function () {
+    await this.field.incrementTotalPodsE(to6('250'));
+    await this.fertilizer.connect(owner).addFertilizerOwner('0', '40', '0')
+    this.result = await this.season.sunSunrise(to6('120'), 8);
+    await this.fertilizer.connect(owner).addFertilizerOwner('6374', '40', '0')
+    this.result = await this.season.sunSunrise(to6('480'), 8);
+
+    expect(await this.fertilizer.isFertilizing()).to.be.equal(true);
+    expect(await this.fertilizer.totalFertilizedBeans()).to.be.equal(to6('200'));
+    expect(await this.fertilizer.getActiveFertilizer()).to.be.equal('40');
+    expect(await this.fertilizer.getFirst()).to.be.equal(to6('6'))
+    expect(await this.fertilizer.getLast()).to.be.equal(to6('6'))
+    expect(await this.fertilizer.beansPerFertilizer()).to.be.equal(to6('3'))
+
+    expect(await this.field.totalHarvestable()).to.be.equal(to6('200'));
+
+    expect(await this.silo.totalStalk()).to.be.equal(toStalk('200'));
+    expect(await this.silo.totalEarnedBeans()).to.be.equal(to6('200'));
   })
 })
-
-describe('Sun Soil', function () {
-
-  before(async function () {
-    [owner,user,user2] = await ethers.getSigners()
-    userAddress = user.address
-    user2Address = user2.address
-    const contracts = await deploy("Test", false, true)
-    ownerAddress = contracts.account
-    this.diamond = contracts.beanstalkDiamond
-    this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
-    this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
-    this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
-    this.bean = await ethers.getContractAt('MockToken', contracts.bean)
-    this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair)
-    this.pegPair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pegPair)
-    await this.bean.mint(this.silo.address, '100000')
-    await this.season.setYieldE('100')
-  });
-
-  this.beforeEach(async function () {
-    await this.season.setSoilE(0);
-  })
-
-  it("Properly sets the soil bounds", async function () {
-    expect(await this.season.minSoil('100')).to.be.equal('50')
-  });
-});

@@ -15,9 +15,9 @@ contract InitOmnisciaAudit {
     AppStorage internal s;
     
     function init() external {
-        s.refundStatus = 1;
-        s.beanRefundAmount = 1;
-        s.ethRefundAmount = 1;
+        // s.refundStatus = 1;
+        // s.beanRefundAmount = 1;
+        // s.ethRefundAmount = 1;
     }
 
 }

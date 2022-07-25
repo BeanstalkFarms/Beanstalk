@@ -2,21 +2,28 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
+pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/SeasonFacet/SeasonFacet.sol";
-import "../../libraries/Decimal.sol";
 import "../MockToken.sol";
 
 /**
  * @author Publius
  * @title Mock Season Facet
 **/
+
+interface ResetPool {
+    function reset_cumulative() external;
+}
+
 contract MockSeasonFacet is SeasonFacet {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
+
+    event UpdateTWAPs(uint256[2] balances);
+    event DeltaB(int256 deltaB);
 
     function reentrancyGuardTest() public nonReentrant {
         reentrancyGuardTest();
@@ -29,12 +36,8 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function mockStepSilo(uint256 amount) public {
-        if ((s.s.seeds == 0 && s.s.stalk == 0)) {
-            stepSilo(0);
-            return;
-        }
-        mintToSilo(amount);
-        stepSilo(amount);
+        C.bean().mint(address(this), amount);
+        rewardToSilo(amount);
 
     }
 
@@ -44,9 +47,22 @@ contract MockSeasonFacet is SeasonFacet {
         handleRain(4);
     }
 
+    function rainSunrises(uint256 amount) public {
+        require(!paused(), "Season: Paused.");
+        for (uint256 i; i < amount; ++i) {
+            s.season.current += 1;
+            handleRain(4);
+        }
+    }
+
+    function droughtSunrise() public {
+        require(!paused(), "Season: Paused.");
+        s.season.current += 1;
+        handleRain(3);
+    }
+
     function rainSiloSunrise(uint256 amount) public {
         require(!paused(), "Season: Paused.");
-        stepGovernance();
         s.season.current += 1;
         handleRain(4);
         mockStepSilo(amount);
@@ -54,20 +70,15 @@ contract MockSeasonFacet is SeasonFacet {
 
     function droughtSiloSunrise(uint256 amount) public {
         require(!paused(), "Season: Paused.");
-        stepGovernance();
         s.season.current += 1;
         handleRain(3);
         mockStepSilo(amount);
     }
 
-    function sunSunrise(uint256 beanPrice, uint256 usdcPrice, uint256 divisor) public {
+    function sunSunrise(int256 deltaB, uint256 caseId) public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
-        uint256 siloReward = stepSun(
-            Decimal.ratio(beanPrice, divisor),
-            Decimal.ratio(usdcPrice, divisor)
-        );
-        s.bean.deposited = s.bean.deposited.add(siloReward);
+        stepSun(deltaB, caseId); // Check
     }
 
     function lightSunrise() public {
@@ -75,29 +86,12 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.current += 1;
     }
 
+    function fastForward(uint32 _s) public {
+        s.season.current += _s;
+    }
+
     function teleportSunrise(uint32 _s) public {
         s.season.current = _s;
-    }
-
-    function siloSunrises(uint256 number) public {
-        require(!paused(), "Season: Paused.");
-        for (uint256 i = 0; i < number; i++) {
-            s.season.current += 1;
-            stepSilo(0);
-        }
-    }
-
-    function governanceSunrise(uint256 amount) public {
-        require(!paused(), "Season: Paused.");
-        stepGovernance();
-        siloSunrise(amount);
-    }
-
-    function governanceSunrises(uint256 number) public {
-        require(!paused(), "Season: Paused.");
-        for (uint256 i = 0; i < number; i++) {
-            governanceSunrise(0);
-        }
     }
 
     function farmSunrise() public {
@@ -108,26 +102,10 @@ contract MockSeasonFacet is SeasonFacet {
 
     function farmSunrises(uint256 number) public {
         require(!paused(), "Season: Paused.");
-        for (uint256 i = 0; i < number; i++) {
+        for (uint256 i; i < number; ++i) {
             s.season.current += 1;
             s.season.timestamp = block.timestamp;
         }
-    }
-
-    function halfWeekSunrise() public {
-            teleportSunrise(84);
-            decrementWithdrawSeasons();
-    }
-    
-    function weekSunrise() public {
-            teleportSunrise(168);
-            decrementWithdrawSeasons();
-    }
-
-    function decrementSunrise(uint256 week) public {
-            for (uint256 i = 0; i < week; i++) {
-                    weekSunrise();
-            }
     }
 
     function setYieldE(uint32 number) public {
@@ -154,90 +132,73 @@ contract MockSeasonFacet is SeasonFacet {
         s.w.lastSoilPercent = number;
     }
 
-    function setSoilE(uint256 amount) public returns (int256) {
-        return setSoil(amount);
-    }
-
-    function minSoil(uint256 amount) public view returns (uint256) {
-        return getMinSoil(amount);
-    }
-
-    function setPodsE(uint256 amount) external returns (uint256) {
-        s.f.pods = amount;
+    function setSoilE(uint256 amount) public {
+        setSoil(amount);
     }
 
     function resetAccount(address account) public {
         uint32 _s = season();
-        for (uint32 j = 0; j <= _s; j++) {
+        for (uint32 j; j <= _s; ++j) {
             if (s.a[account].field.plots[j] > 0) s.a[account].field.plots[j];
             if (s.a[account].bean.deposits[j] > 0) delete s.a[account].bean.deposits[j];
             if (s.a[account].lp.deposits[j] > 0) delete s.a[account].lp.deposits[j];
             if (s.a[account].lp.depositSeeds[j] > 0) delete s.a[account].lp.depositSeeds[j];
-            if (s.a[account].bean.withdrawals[j+C.getSiloWithdrawSeasons()] > 0)
-                delete s.a[account].bean.withdrawals[j+C.getSiloWithdrawSeasons()];
-            if (s.a[account].lp.withdrawals[j+C.getSiloWithdrawSeasons()] > 0)
-                delete s.a[account].lp.withdrawals[j+C.getSiloWithdrawSeasons()];
+            if (s.a[account].bean.withdrawals[j+s.season.withdrawSeasons] > 0)
+                delete s.a[account].bean.withdrawals[j+s.season.withdrawSeasons];
+            if (s.a[account].lp.withdrawals[j+s.season.withdrawSeasons] > 0)
+                delete s.a[account].lp.withdrawals[j+s.season.withdrawSeasons];
         }
-        for (uint32 i = 0; i < s.g.bipIndex; i++) {
+        for (uint32 i; i < s.g.bipIndex; ++i) {
                 s.g.voted[i][account] = false;
         }
         delete s.a[account];
+        
+        resetAccountToken(account, C.curveMetapoolAddress());
     }
 
     function resetAccountToken(address account, address token) public {
         uint32 _s = season();
-        for (uint32 j = 0; j <= _s; j++) {
+        for (uint32 j; j <= _s; ++j) {
             if (s.a[account].deposits[token][j].amount > 0) delete s.a[account].deposits[token][j];
-            if (s.a[account].withdrawals[token][j+C.getSiloWithdrawSeasons()] > 0)
-                delete s.a[account].withdrawals[token][j+C.getSiloWithdrawSeasons()];
+            if (s.a[account].withdrawals[token][j+s.season.withdrawSeasons] > 0)
+                delete s.a[account].withdrawals[token][j+s.season.withdrawSeasons];
         }
         delete s.siloBalances[token];
     }
 
     function resetState() public {
-        uint32 _s = season();
-        for (uint32 j = 0; j <= _s; j++) delete s.sops[j];
-        resetStateNoSeason();
-    }
-
-    function resetStateNoSeason() public {
-        for (uint32 i = 0; i < s.g.bipIndex; i++) {
+        for (uint32 i; i < s.g.bipIndex; ++i) {
             delete s.g.bips[i];
             delete s.g.diamondCuts[i];
         }
 
-        for (uint32 i = 0; i < s.fundraiserIndex; i++) {
+        for (uint32 i; i < s.fundraiserIndex; ++i) {
             MockToken(s.fundraisers[i].token).burn(MockToken(s.fundraisers[i].token).balanceOf(address(this)));
             delete s.fundraisers[i];
         }
         delete s.f;
-        delete s.bean;
-        delete s.lp;
-        delete s.si;
         delete s.s;
         delete s.w;
         s.w.lastSowTime = type(uint32).max;
         s.w.nextSowTime = type(uint32).max;
         delete s.g;
         delete s.r;
-        delete s.v1SI;
+        delete s.co;
         delete s.season;
-        delete s.unclaimedRoots;
         delete s.fundraiserIndex;
         s.season.start = block.timestamp;
         s.season.timestamp = uint32(block.timestamp % 2 ** 32);
-        delete s.sop;
         s.s.stalk = 0;
         s.s.seeds = 0;
         s.season.withdrawSeasons = 25;
         s.season.current = 1;
         s.paused = false;
-        bean().burn(bean().balanceOf(address(this)));
-        IBean(s.c.weth).burn(IBean(s.c.weth).balanceOf(address(this)));
+        C.bean().burn(C.bean().balanceOf(address(this)));
     }
 
-    function stepWeatherE(uint256 intPrice, uint256 endSoil) external {
-        stepWeather(intPrice.mul(1e16), endSoil);
+    function stepWeatherE(int256 deltaB, uint256 endSoil) external {
+        s.f.soil = endSoil;
+        stepWeather(deltaB);
     }
 
     function stepWeatherWithParams(
@@ -245,15 +206,47 @@ contract MockSeasonFacet is SeasonFacet {
         uint256 lastDSoil,
         uint256 startSoil,
         uint256 endSoil,
-        uint256 intPrice,
+        int256 deltaB,
         bool raining,
         bool rainRoots
     ) public {
-        s.r.raining = raining;
+        s.season.raining = raining;
         s.r.roots = rainRoots ? 1 : 0;
         s.f.pods = pods;
         s.w.lastDSoil = lastDSoil;
         s.w.startSoil = startSoil;
-        stepWeather(intPrice.mul(1e16), endSoil);
+        s.f.soil = endSoil;
+        stepWeather(deltaB);
+    }
+
+    function captureE() external returns (int256 deltaB) {
+        stepOracle();
+        emit DeltaB(deltaB);
+    }
+
+    function captureCurveE() external returns (int256 deltaB) {
+        deltaB = LibCurveOracle.capture();
+        emit DeltaB(deltaB);
+    }
+
+    function updateTWAPCurveE() external returns (uint256[2] memory balances) {
+        (balances,s.co.balances) = LibCurveOracle.twap();
+        s.co.timestamp = block.timestamp;
+        emit UpdateTWAPs(balances);
+    }
+
+    function curveOracle() external view returns (Storage.Oracle memory) {
+        return s.co;
+    }
+
+    function resetPools(address[] calldata pools) external {
+        for (uint i; i < pools.length; ++i) {
+            ResetPool(pools[i]).reset_cumulative();
+        }
+    }
+
+    function rewardToFertilizerE(uint256 amount) external {
+        rewardToFertilizer(amount*3);
+        C.bean().mint(address(this), amount);
     }
 }

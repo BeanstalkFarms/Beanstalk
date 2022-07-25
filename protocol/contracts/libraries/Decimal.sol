@@ -137,7 +137,7 @@ library Decimal {
         }
 
         D256 memory temp = D256({ value: self.value });
-        for (uint256 i = 1; i < b; i++) {
+        for (uint256 i = 1; i < b; ++i) {
             temp = mul(temp, self);
         }
 

@@ -1,299 +1,382 @@
-require('hardhat')
-const { expectRevert } = require('@openzeppelin/test-helpers')
-const { expect } = require('chai')
+const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
-const { parseJson, getEthSpentOnGas, toBean, toEther } = require('./utils/helpers.js')
-const { MAX_UINT32, MAX_UINT256 } = require('./utils/constants.js')
+const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
+const { BEAN } = require('./utils/constants')
+const { to18, to6, toStalk } = require('./utils/helpers.js')
+const { MAX_UINT32 } = require('./utils/constants.js')
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
-const users = ['userAddress', 'user2Address', 'ownerAddress', 'otherAddress']
-
-// Set the test data
-const [columns, tests] = parseJson('./coverage_data/field.json')
-var numberTests = tests.length
-var startTest = 0
-
-async function checkUserPlots(field, address, plots) {
-  for (var i = 0; i < plots.length; i++) {
-    expect(await field.plot(address, plots[i][0])).to.eq(plots[i][1])
-  }
-}
+let user, user2, owner;
+let userAddress, ownerAddress, user2Address;
 
 describe('Field', function () {
-
   before(async function () {
-    [owner,user,user2,other] = await ethers.getSigners()
-    userAddress = user.address
-    user2Address = user2.address
-    otherAddress = other.address
-    const contracts = await deploy("Test", true, true)
-    ownerAddress = contracts.account
-    this.diamond = contracts.beanstalkDiamond
-    this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
-    this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
-    this.marketplace = await ethers.getContractAt('MarketplaceFacet', this.diamond.address)
-    this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
-    this.bean = await ethers.getContractAt('MockToken', contracts.bean)
-    this.claim = await ethers.getContractAt('ClaimFacet', this.diamond.address)
-    this.pair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pair)
-    this.pegPair = await ethers.getContractAt('MockUniswapV2Pair', contracts.pegPair)
+    [owner, user, user2] = await ethers.getSigners();
+    userAddress = user.address;
+    user2Address = user2.address;
+    const contracts = await deploy("Test", false, true);
+    ownerAddress = contracts.account;
+    this.diamond = contracts.beanstalkDiamond;
+    this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
+    this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address);
+    this.tokenFacet = await ethers.getContractAt('TokenFacet', this.diamond.address);
+    this.marketplace = await ethers.getContractAt('MarketplaceFacet', this.diamond.address);
+    this.bean = await ethers.getContractAt('Bean', BEAN);
+
+    await this.bean.connect(user).approve(this.field.address, to18('100000000000'));
+    await this.bean.connect(user2).approve(this.field.address, to18('100000000000'));
+    await this.bean.mint(userAddress, to6('10000'));
+    await this.bean.mint(user2Address, to6('10000'));
   });
 
-  [...Array(numberTests).keys()].map(i => i + startTest).forEach(function(v) {
-    const testStr = 'Test #'
-    describe(testStr.concat((v)), function () {
-      testData = {}
-      columns.forEach((key, i) => testData[key] = tests[v][i])
-      before(async function () {
-        await this.season.resetState()
-        await this.season.resetAccount(userAddress)
-        await this.season.resetAccount(user2Address)
-        await this.season.resetAccount(otherAddress)
-        await this.season.resetState()
-        await this.field.resetAllowances([userAddress, user2Address, otherAddress, ownerAddress])
-        await this.pair.burnTokens(this.bean.address)
-        await this.bean.connect(user).burn(await this.bean.balanceOf(userAddress))
-        await this.bean.connect(user2).burn(await this.bean.balanceOf(user2Address))
-        await this.bean.connect(other).burn(await this.bean.balanceOf(otherAddress))
-        this.testData = {}
-        columns.forEach((key, i) => this.testData[key] = tests[v][i])
-        for (c in columns) {
-          if (typeof this.testData[columns[c]] == 'number') {
-             this.testData[columns[c]] = this.testData[columns[c]].toString()
-          }
-        }
-        await this.season.setYieldE(this.testData.weather)
+  beforeEach(async function () {
+    snapshotId = await takeSnapshot();
+  });
 
-        await this.bean.mint(userAddress, this.testData.userStarterBeans)
-        await this.bean.connect(user).approve(this.field.address, MAX_UINT256)
-        await this.bean.mint(user2Address, this.testData.user2StarterBeans)
-        await this.bean.connect(user2).approve(this.field.address, MAX_UINT256)
-        await this.bean.mint(otherAddress, this.testData.otherStarterBeans)
-        await this.bean.connect(other).approve(this.field.address, MAX_UINT256)
-        this.season.setSoilE(this.testData.startSoil)
-        
-        await this.season.setStartSoilE(this.testData.startSoil)
-        await this.season.setLastSowTimeE(this.testData.startLastSowTime)
-        await this.season.setLastDSoilE(this.testData.lastDSoil)
-        for (var i = 0; i < this.testData.functionsCalled.length; i++) {
-          this.testData.functionsCalled[i] = this.testData.functionsCalled[i].replace('Address','')
-          this.result = await eval(this.testData.functionsCalled[i])
-        }
-      })
+  afterEach(async function () {
+    await revertToSnapshot(snapshotId);
+  });
 
-      it('updates user\'s balance', async function() {
-        expect(await this.bean.balanceOf(userAddress)).to.eq(this.testData.userCirculatingBeans)
-        await checkUserPlots(this.field,userAddress,this.testData.userPlots)
-      })
+  describe('Reverts', function () {
+    it('No Soil', async function () {
+      await expect(this.field.connect(user).sow('1', EXTERNAL)).to.be.revertedWith('Field: Sowing below min or 0 pods.')
+    });
 
-      it('updates user2\'s balance', async function() {
-        expect(await this.bean.balanceOf(user2Address)).to.eq(this.testData.user2CirculatingBeans)
-        await checkUserPlots(this.field,user2Address,this.testData.user2Plots)
-      })
+    it('No Soil', async function () {
+      await this.field.incrementTotalSoilE('100')
+      await expect(this.field.connect(user).sowWithMin('1', '3', EXTERNAL)).to.be.revertedWith('Field: Sowing below min or 0 pods.')
+    });
 
-      it('updates other\'s balance', async function() {
-        expect(await this.bean.balanceOf(otherAddress)).to.eq(this.testData.otherCirculatingBeans)
-        await checkUserPlots(this.field,otherAddress,this.testData.otherPlots)
-      })
+    it('No Pods', async function () {
+      await expect(this.field.connect(user).sowWithMin('1', '0', EXTERNAL)).to.be.revertedWith('Field: Sowing below min or 0 pods.')
+    });
+  });
 
-      it('updates total balance', async function() {
-        expect(await this.bean.balanceOf(this.field.address)).to.eq(this.testData.totalHarvestablePods)
-        expect(await this.bean.totalSupply()).to.eq(this.testData.totalBeans)
-        expect(await this.field.totalPods()).to.eq(this.testData.totalPods)
-        expect(await this.field.totalHarvestable()).to.eq(this.testData.totalHarvestablePods)
-        expect(await this.field.totalSoil()).to.eq(this.testData.soil)
-        expect(await this.field.totalUnripenedPods()).to.eq(this.testData.totalUnripenedPods)
-        expect(await this.field.podIndex()).to.eq(this.testData.podIndex)
-        expect(await this.field.harvestableIndex()).to.eq(this.testData.podHarvestableIndex)
-      })
-    })
-  })
-
-  describe("Buy and Sow", async function () {
-    before(async function () {
-      await this.bean.connect(user).approve(this.field.address, MAX_UINT256)
-      await this.pair.simulateTrade(toBean('1000'), toEther('1'));
-      await this.bean.mint(userAddress, toBean('10000000'))
-    })
-    beforeEach(async function () {
-      await this.season.resetState()
-    })
-
-    describe("revert", async function () {
-      it("no Soil", async function () {
-        await expect(this.field.connect(user).buyAndSowBeansWithMin('1','1','1', {value: toEther('0.001')})).to.be.revertedWith("Field: Sowing below min or 0 pods.")
-      })
-    })
-
-    describe("Only transfer", async function () {
+  describe('Sow', async function () {
+    describe('all soil', async function () {
       beforeEach(async function () {
-        await this.season.setSoilE(toBean('1'));
-        this.beforeBeans = await this.bean.balanceOf(userAddress)
-        this.beforeEth = await ethers.provider.getBalance(userAddress)
-        this.result = await this.field.connect(user).buyAndSowBeansWithMin(toBean('1'), toBean('1'), toBean('1'), {value: toEther('0.001')});
-        this.ethSpentOnGas = await getEthSpentOnGas(this.result)
+        await this.field.incrementTotalSoilE(to6('100'))
+        this.result = await this.field.connect(user).sow(to6('100'), EXTERNAL)
       })
 
-      it("Properly transfers assets", async function () {
-        expect(this.beforeBeans.sub(await this.bean.balanceOf(userAddress))).to.equal(toBean('1'))
-        expect(this.beforeEth.sub(await ethers.provider.getBalance(userAddress)).sub(this.ethSpentOnGas)).to.equal('0')
-
-        expect(await this.bean.balanceOf(this.field.address)).to.equal('0')
-        expect(await ethers.provider.getBalance(this.field.address)).to.equal('0')
+      it('updates user\'s balance', async function () {
+        expect(await this.bean.balanceOf(userAddress)).to.eq(to6('9900'))
+        expect(await this.field.plot(userAddress, 0)).to.eq(to6('101'))
       })
 
-      it("Properly sows", async function () {
-        expect(await this.field.totalSoil()).to.equal('0')
-      })
-    })
-
-    describe("full Buy and Sow", async function () {
-      beforeEach(async function () {
-        await this.season.setSoilE(toBean('3'));
-        
-        this.beforeBeans = await this.bean.balanceOf(userAddress)
-        this.beforeEth = await ethers.provider.getBalance(userAddress)
-        this.result = await this.field.connect(user).buyAndSowBeansWithMin(toBean('1'), toBean('1'), toBean('1'), {value: toEther('0.001002')});
-        this.ethSpentOnGas = await getEthSpentOnGas(this.result)
+      it('updates total balance', async function () {
+        expect(await this.bean.balanceOf(this.field.address)).to.eq('0')
+        expect(await this.bean.totalSupply()).to.eq(to6('19900'))
+        expect(await this.field.totalPods()).to.eq(to6('101'))
+        expect(await this.field.totalSoil()).to.eq('0')
+        expect(await this.field.totalUnharvestable()).to.eq(to6('101'))
+        expect(await this.field.podIndex()).to.eq(to6('101'))
+        expect(await this.field.harvestableIndex()).to.eq('0')
       })
 
-      it("Properly transfers assets", async function () {
-        expect(this.beforeBeans.sub(await this.bean.balanceOf(userAddress))).to.equal(toBean('1'))
-        expect(this.beforeEth.sub(await ethers.provider.getBalance(userAddress)).sub(this.ethSpentOnGas)).to.equal('1001001001001002')
-
-        expect(await this.bean.balanceOf(this.field.address)).to.equal('0')
-        expect(await ethers.provider.getBalance(this.field.address)).to.equal('0')
-      })
-
-      it("Properly sows", async function () {
-        expect(await this.field.totalSoil()).to.equal(toBean('1'))
+      it('emits Sow event', async function () {
+        await expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, '0', to6('100'), to6('101'))
       })
     })
 
-    describe("full Buy and Sow all Soil", async function () {
+    describe('some soil', async function () {
       beforeEach(async function () {
-        await this.season.setSoilE(toBean('2'));
-        
-        this.beforeBeans = await this.bean.balanceOf(userAddress)
-        this.beforeEth = await ethers.provider.getBalance(userAddress)
-        this.result = await this.field.connect(user).buyAndSowBeansWithMin(toBean('1'), toBean('1'), toBean('1'), {value: toEther('0.001002')});
-        this.ethSpentOnGas = await getEthSpentOnGas(this.result)
+        await this.field.incrementTotalSoilE(to6('200'))
+        this.result = await this.field.connect(user).sow(to6('100'), EXTERNAL)
       })
 
-      it("Properly transfers assets", async function () {
-        expect(this.beforeBeans.sub(await this.bean.balanceOf(userAddress))).to.equal(toBean('1'))
-        expect(this.beforeEth.sub(await ethers.provider.getBalance(userAddress)).sub(this.ethSpentOnGas)).to.equal('1001001001001002')
-
-        expect(await this.bean.balanceOf(this.field.address)).to.equal('0')
-        expect(await ethers.provider.getBalance(this.field.address)).to.equal('0')
+      it('updates user\'s balance', async function () {
+        expect(await this.bean.balanceOf(userAddress)).to.eq(to6('9900'))
+        expect(await this.field.plot(userAddress, 0)).to.eq(to6('101'))
       })
 
-      it("Properly sows", async function () {
-        expect(await this.field.totalSoil()).to.equal('0')
+      it('updates total balance', async function () {
+        expect(await this.bean.balanceOf(this.field.address)).to.eq('0')
+        expect(await this.bean.totalSupply()).to.eq(to6('19900'))
+        expect(await this.field.totalPods()).to.eq(to6('101'))
+        expect(await this.field.totalSoil()).to.eq(to6('100'))
+        expect(await this.field.totalUnharvestable()).to.eq(to6('101'))
+        expect(await this.field.podIndex()).to.eq(to6('101'))
+        expect(await this.field.harvestableIndex()).to.eq('0')
+      })
+
+      it('emits Sow event', async function () {
+        await expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, '0', to6('100'), to6('101'))
       })
     })
 
-    describe("full transfer and partial Sow all Soil", async function () {
-      it ('reverts with min', async function () {
-        await this.season.setSoilE(toBean('1.5'));
-        await expect(this.field.connect(user).buyAndSowBeans(toBean('1'), toBean('1'), {value: toEther('0.001002')})).to.be.revertedWith("Field: Sowing below min or 0 pods.");
-      });
-
+    describe('some soil from internal', async function () {
       beforeEach(async function () {
-        await this.season.setSoilE(toBean('1.5'));
-        
-        this.beforeBeans = await this.bean.balanceOf(userAddress)
-        this.beforeEth = await ethers.provider.getBalance(userAddress)
-        this.result = await this.field.connect(user).buyAndSowBeansWithMin(toBean('1'), toBean('1'), toBean('1.5'), {value: toEther('0.001002')});
-        this.ethSpentOnGas = await getEthSpentOnGas(this.result)
+        await this.field.incrementTotalSoilE(to6('200'))
+        await this.tokenFacet.connect(user).transferToken(this.bean.address, userAddress, to6('100'), EXTERNAL, INTERNAL);
+        this.result = await this.field.connect(user).sow(to6('100'), INTERNAL)
       })
 
-      it("Properly transfers assets", async function () {
-        expect(this.beforeBeans.sub(await this.bean.balanceOf(userAddress))).to.equal(toBean('1'))
-        expect(this.beforeEth.sub(await ethers.provider.getBalance(userAddress)).sub(this.ethSpentOnGas)).to.equal('500250125062532')
-
-        expect(await this.bean.balanceOf(this.field.address)).to.equal('0')
-        expect(await ethers.provider.getBalance(this.field.address)).to.equal('0')
+      it('updates user\'s balance', async function () {
+        expect(await this.bean.balanceOf(userAddress)).to.eq(to6('9900'))
+        expect(await this.field.plot(userAddress, 0)).to.eq(to6('101'))
       })
 
-      it("Properly sows", async function () {
-        expect(await this.field.totalSoil()).to.equal('0')
+      it('updates total balance', async function () {
+        expect(await this.bean.balanceOf(this.field.address)).to.eq('0')
+        expect(await this.bean.totalSupply()).to.eq(to6('19900'))
+        expect(await this.field.totalPods()).to.eq(to6('101'))
+        expect(await this.field.totalSoil()).to.eq(to6('100'))
+        expect(await this.field.totalUnharvestable()).to.eq(to6('101'))
+        expect(await this.field.podIndex()).to.eq(to6('101'))
+        expect(await this.field.harvestableIndex()).to.eq('0')
+      })
+
+      it('emits Sow event', async function () {
+        await expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, '0', to6('100'), to6('101'))
+      })
+    })
+
+    describe('some soil from internal tolerant', async function () {
+      beforeEach(async function () {
+        await this.field.incrementTotalSoilE(to6('200'))
+        await this.tokenFacet.connect(user).transferToken(this.bean.address, userAddress, to6('50'), EXTERNAL, INTERNAL);
+        this.result = await this.field.connect(user).sow(to6('100'), INTERNAL_TOLERANT)
+      })
+
+      it('updates user\'s balance', async function () {
+        expect(await this.bean.balanceOf(userAddress)).to.eq(to6('9950'))
+        expect(await this.field.plot(userAddress, 0)).to.eq(to6('50.5'))
+      })
+
+      it('updates total balance', async function () {
+        expect(await this.bean.balanceOf(this.field.address)).to.eq('0')
+        expect(await this.bean.totalSupply()).to.eq(to6('19950'))
+        expect(await this.field.totalPods()).to.eq(to6('50.5'))
+        expect(await this.field.totalSoil()).to.eq(to6('150'))
+        expect(await this.field.totalUnharvestable()).to.eq(to6('50.5'))
+        expect(await this.field.podIndex()).to.eq(to6('50.5'))
+        expect(await this.field.harvestableIndex()).to.eq('0')
+      })
+
+      it('emits Sow event', async function () {
+        await expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, '0', to6('50'), to6('50.5'))
+      })
+    })
+
+    describe('with min', async function () {
+      beforeEach(async function () {
+        await this.field.incrementTotalSoilE(to6('100'))
+        this.result = await this.field.connect(user).sowWithMin(to6('200'), to6('100'), EXTERNAL)
+      })
+
+      it('updates user\'s balance', async function () {
+        expect(await this.bean.balanceOf(userAddress)).to.eq(to6('9900'))
+        expect(await this.field.plot(userAddress, 0)).to.eq(to6('101'))
+      })
+
+      it('updates total balance', async function () {
+        expect(await this.bean.balanceOf(this.field.address)).to.eq('0')
+        expect(await this.bean.totalSupply()).to.eq(to6('19900'))
+        expect(await this.field.totalPods()).to.eq(to6('101'))
+        expect(await this.field.totalSoil()).to.eq(to6('0'))
+        expect(await this.field.totalUnharvestable()).to.eq(to6('101'))
+        expect(await this.field.podIndex()).to.eq(to6('101'))
+        expect(await this.field.harvestableIndex()).to.eq('0')
+      })
+
+      it('emits Sow event', async function () {
+        await expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, '0', to6('100'), to6('101'))
+      })
+    })
+
+    describe('with min, but enough soil', async function () {
+      beforeEach(async function () {
+        await this.field.incrementTotalSoilE(to6('200'))
+        this.result = await this.field.connect(user).sowWithMin(to6('100'), to6('50'), EXTERNAL)
+      })
+
+      it('updates user\'s balance', async function () {
+        expect(await this.bean.balanceOf(userAddress)).to.eq(to6('9900'))
+        expect(await this.field.plot(userAddress, 0)).to.eq(to6('101'))
+      })
+
+      it('updates total balance', async function () {
+        expect(await this.bean.balanceOf(this.field.address)).to.eq('0')
+        expect(await this.bean.totalSupply()).to.eq(to6('19900'))
+        expect(await this.field.totalPods()).to.eq(to6('101'))
+        expect(await this.field.totalSoil()).to.eq(to6('100'))
+        expect(await this.field.totalUnharvestable()).to.eq(to6('101'))
+        expect(await this.field.podIndex()).to.eq(to6('101'))
+        expect(await this.field.harvestableIndex()).to.eq('0')
+      })
+
+      it('emits Sow event', async function () {
+        await expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, '0', to6('100'), to6('101'))
+      })
+    })
+
+    describe('second plot', async function () {
+      beforeEach(async function () {
+        await this.field.incrementTotalSoilE(to6('200'))
+        this.result = await this.field.connect(user2).sow(to6('100'), EXTERNAL)
+        this.result = await this.field.connect(user).sow(to6('100'), EXTERNAL)
+      })
+
+      it('updates user\'s balance', async function () {
+        expect(await this.bean.balanceOf(userAddress)).to.eq(to6('9900'))
+        expect(await this.field.plot(userAddress, to6('101'))).to.eq(to6('101'))
+      })
+
+      it('updates total balance', async function () {
+        expect(await this.bean.balanceOf(this.field.address)).to.eq('0')
+        expect(await this.bean.totalSupply()).to.eq(to6('19800'))
+        expect(await this.field.totalPods()).to.eq(to6('202'))
+        expect(await this.field.totalSoil()).to.eq(to6('0'))
+        expect(await this.field.totalUnharvestable()).to.eq(to6('202'))
+        expect(await this.field.podIndex()).to.eq(to6('202'))
+        expect(await this.field.harvestableIndex()).to.eq('0')
+      })
+
+      it('emits Sow event', async function () {
+        await expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, to6('101'), to6('100'), to6('101'))
       })
     })
   })
 
   describe("complex DPD", async function () {
-    before(async function () {
-      await this.bean.connect(user).approve(this.field.address, MAX_UINT256)
-      await this.bean.mint(userAddress, toBean('100000'))
-    })
-    beforeEach(async function () {
-      await this.season.resetAccount(userAddress)
-      await this.season.resetState()
-    })
-
     it("Does not set nextSowTime if Soil > 1", async function () {
-      this.season.setSoilE(toBean('3'));
-      await this.field.connect(user).sowBeans(toBean('1'))
+      this.season.setSoilE(to6('3'));
+      await this.field.connect(user).sow(to6('1'), EXTERNAL)
       const weather = await this.season.weather()
       expect(weather.nextSowTime).to.be.equal(parseInt(MAX_UINT32))
     })
 
     it("Does set nextSowTime if Soil = 1", async function () {
-      this.season.setSoilE(toBean('1'));
-      await this.field.connect(user).sowBeans(toBean('1'))
+      this.season.setSoilE(to6('1'));
+      await this.field.connect(user).sow(to6('1'), EXTERNAL)
       const weather = await this.season.weather()
       expect(weather.nextSowTime).to.be.not.equal(parseInt(MAX_UINT32))
     })
 
     it("Does set nextSowTime if Soil < 1", async function () {
-      this.season.setSoilE(toBean('1.5'));
-      await this.field.connect(user).sowBeans(toBean('1'))
+      this.season.setSoilE(to6('1.5'));
+      await this.field.connect(user).sow(to6('1'), EXTERNAL)
       const weather = await this.season.weather()
       expect(weather.nextSowTime).to.be.not.equal(parseInt(MAX_UINT32))
     })
 
     it("Does not set nextSowTime if Soil already < 1", async function () {
-      this.season.setSoilE(toBean('1.5'));
-      await this.field.connect(user).sowBeans(toBean('1'))
+      this.season.setSoilE(to6('1.5'));
+      await this.field.connect(user).sow(to6('1'), EXTERNAL)
       const weather = await this.season.weather()
-      await this.field.connect(user).sowBeans(toBean('0.5'))
+      await this.field.connect(user).sow(to6('0.5'), EXTERNAL)
       const weather2 = await this.season.weather()
       expect(weather2.nextSowTime).to.be.equal(weather.nextSowTime)
     })
   })
 
-  describe("Buy and sow", async function () {
+  describe("Harvest", async function () {
     beforeEach(async function () {
-      await this.season.resetAccount(userAddress)
-      await this.season.resetState()
-      await this.bean.connect(user).burn(await this.bean.balanceOf(userAddress))
-      await this.bean.connect(user).approve(this.field.address, toEther('1000000000000'))
-      await this.bean.mint(userAddress, toBean('100000'))
-      await this.season.setYieldE('1')
+      await this.field.incrementTotalSoilE(to6('200'))
+      await this.field.connect(user).sow(to6('100'), EXTERNAL)
+      await this.field.connect(user2).sow(to6('100'), EXTERNAL)
     })
 
-    describe("Half buy, half Beans", async function () {
+    describe('Revert', async function () {
+      it('reverts if plot not owned', async function () {
+        await this.field.incrementTotalHarvestableE(to6('101'))
+        await expect(this.field.connect(user2).harvest(['0'], EXTERNAL)).to.be.revertedWith('Field: Plot is empty.')
+      })
+
+      it('reverts if plot harvestable', async function () {
+        await expect(this.field.connect(user).harvest(['0'], EXTERNAL)).to.be.revertedWith('Field: Plot not Harvestable.')
+      })
+    })
+
+    describe("Full", async function () {
       beforeEach(async function () {
-        const beforeBeans = await this.bean.balanceOf(userAddress);
-        const beforeEth = await ethers.provider.getBalance(userAddress);
-        await this.pair.simulateTrade(toBean('5000'), toEther('1'));
-        this.field.incrementTotalSoilE(toBean('5000'));
-        this.result = await this.field.connect(user).buyAndSowBeans(toBean('2500'), toBean('2500'), {value: toEther('1.000000000001') })
-        const ethSpentOnGas = await getEthSpentOnGas(this.result);
-        this.deltaBeans = beforeBeans.sub(await this.bean.balanceOf(userAddress));
-        this.deltaEth = beforeEth.sub(await ethers.provider.getBalance(userAddress)).sub(ethSpentOnGas);
+        await this.field.incrementTotalHarvestableE(to6('101'))
+        this.result = await this.field.connect(user).harvest(['0'], EXTERNAL);
       })
 
-      it("updates user balances", async function () {
-        expect(this.deltaBeans).to.equal(toBean('2500'))
-        expect(this.deltaEth).to.equal(toEther('1.000000000000000001'))
-        expect(await this.field.plot(userAddress, '0')).to.eq(toBean('5050'))
+      it('updates user\'s balance', async function () {
+        expect(await this.bean.balanceOf(userAddress)).to.eq(to6('10001'))
+        expect(await this.field.plot(userAddress, to6('0'))).to.eq(to6('0'))
       })
 
-      it('updates total balance', async function() {
-        expect(await this.field.totalPods()).to.eq(toBean('5050'))
-        expect(await this.field.totalSoil()).to.eq('0')
+      it('updates total balance', async function () {
+        expect(await this.bean.balanceOf(this.field.address)).to.eq('0')
+        expect(await this.bean.totalSupply()).to.eq(to6('19901'))
+        expect(await this.field.totalPods()).to.eq(to6('101'))
+        expect(await this.field.totalSoil()).to.eq(to6('0'))
+        expect(await this.field.totalUnharvestable()).to.eq(to6('101'))
+        expect(await this.field.totalHarvestable()).to.eq(to6('0'))
+        expect(await this.field.harvestableIndex()).to.eq(to6('101'))
+        expect(await this.field.totalHarvested()).to.eq(to6('101'))
+        expect(await this.field.podIndex()).to.eq(to6('202'))
+      })
+
+      it('emits Sow event', async function () {
+        await expect(this.result).to.emit(this.field, 'Harvest').withArgs(userAddress, ['0'], to6('101'))
+      })
+    })
+
+    describe("Partial", async function () {
+      beforeEach(async function () {
+        await this.field.incrementTotalHarvestableE(to6('50'))
+        this.result = await this.field.connect(user).harvest(['0'], EXTERNAL);
+      })
+
+      it('updates user\'s balance', async function () {
+        expect(await this.bean.balanceOf(userAddress)).to.eq(to6('9950'))
+        expect(await this.field.plot(userAddress, to6('0'))).to.eq(to6('0'))
+        expect(await this.field.plot(userAddress, to6('50'))).to.eq(to6('51'))
+      })
+
+      it('updates total balance', async function () {
+        expect(await this.bean.balanceOf(this.field.address)).to.eq('0')
+        expect(await this.bean.totalSupply()).to.eq(to6('19850'))
+        expect(await this.field.totalPods()).to.eq(to6('152'))
+        expect(await this.field.totalSoil()).to.eq(to6('0'))
+        expect(await this.field.totalHarvestable()).to.eq(to6('0'))
+        expect(await this.field.totalUnharvestable()).to.eq(to6('152'))
+        expect(await this.field.harvestableIndex()).to.eq(to6('50'))
+        expect(await this.field.totalHarvested()).to.eq(to6('50'))
+        expect(await this.field.podIndex()).to.eq(to6('202'))
+      })
+
+      it('emits Sow event', async function () {
+        await expect(this.result).to.emit(this.field, 'Harvest').withArgs(userAddress, ['0'], to6('50'))
+      })
+    })
+
+    describe("Full With Listing", async function () {
+      beforeEach(async function () {
+        await this.field.incrementTotalHarvestableE(to6('101'))
+        this.result = await this.marketplace.connect(user).createPodListing('0', '0', '500', '500000', to6('200'), EXTERNAL);
+        this.result = await this.field.connect(user).harvest(['0'], EXTERNAL);
+      })
+
+      it('updates user\'s balance', async function () {
+        expect(await this.bean.balanceOf(userAddress)).to.eq(to6('10001'))
+        expect(await this.field.plot(userAddress, to6('0'))).to.eq(to6('0'))
+      })
+
+      it('updates total balance', async function () {
+        expect(await this.bean.balanceOf(this.field.address)).to.eq('0')
+        expect(await this.bean.totalSupply()).to.eq(to6('19901'))
+        expect(await this.field.totalPods()).to.eq(to6('101'))
+        expect(await this.field.totalSoil()).to.eq(to6('0'))
+        expect(await this.field.totalUnharvestable()).to.eq(to6('101'))
+        expect(await this.field.totalHarvestable()).to.eq(to6('0'))
+        expect(await this.field.harvestableIndex()).to.eq(to6('101'))
+        expect(await this.field.totalHarvested()).to.eq(to6('101'))
+        expect(await this.field.podIndex()).to.eq(to6('202'))
+      })
+
+      it('deletes', async function () {
+        expect(await this.marketplace.podListing(0)).to.be.equal(ethers.constants.HashZero)
+      })
+
+      it('emits Sow event', async function () {
+        await expect(this.result).to.emit(this.field, 'Harvest').withArgs(userAddress, ['0'], to6('101'))
       })
     })
   })
-})
+});
