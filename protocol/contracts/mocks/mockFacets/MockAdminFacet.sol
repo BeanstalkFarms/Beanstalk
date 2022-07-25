@@ -31,11 +31,28 @@ contract MockAdminFacet is Sun {
     }
 
     function forceSunrise() external {
+        updateStart();
+        SeasonFacet sf = SeasonFacet(address(this));
+        sf.sunrise();
+    }
+
+    function rewardSunrise(uint256 amount) public {
+        updateStart();
+        s.season.current += 1;
+        C.bean().mint(address(this), amount);
+        rewardBeans(amount);
+    }
+
+    function fertilizerSunrise(uint256 amount) public {
+        updateStart();
+        s.season.current += 1;
+        C.bean().mint(address(this), amount);
+        rewardToFertilizer(amount*3);
+    }
+
+    function updateStart() private {
         SeasonFacet sf = SeasonFacet(address(this));
         int256 sa = sf.season() - sf.seasonTime();
-        if (sa >= 0) {
-            s.season.start -= 3600 * (uint256(sa)+1);
-        }
-        sf.sunrise();
+        if (sa >= 0) s.season.start -= 3600 * (uint256(sa)+1);
     }
 }

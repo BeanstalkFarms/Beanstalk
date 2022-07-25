@@ -42,7 +42,7 @@ contract FertilizerFacet {
         uint256 minLP,
         LibTransfer.From mode
     ) external payable {
-        uint128 remaining = uint128(LibFertilizer.remainingRecapitalization()); // remaining <= 77_000_000 so downcasting is safe.
+        uint128 remaining = uint128(LibFertilizer.remainingRecapitalization().div(1e6)); // remaining <= 77_000_000 so downcasting is safe.
         if (amount > remaining) amount = remaining;
         amount = uint128(LibTransfer.receiveToken(
             C.usdc(),
