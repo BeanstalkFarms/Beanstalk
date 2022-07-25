@@ -138,7 +138,7 @@ describe('Oracle', function () {
         await this.beanThreeCurve.update([toBean('2000000'), to18('1000000')])
         await advanceTime(900)
         this.result = await this.season.captureCurveE();
-        await expect(this.result).to.emit(this.season, 'DeltaB').withArgs('-126177337534')
+        await expect(this.result).to.emit(this.season, 'DeltaB').withArgs('-252354675068')
         this.result = await this.season.updateTWAPCurveE();
       });
 

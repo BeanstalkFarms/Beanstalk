@@ -26,7 +26,7 @@ interface IMeta3CurveOracle {
 }
 
 library LibCurveOracle {
-    int256 private constant mintPrecision = 240;
+    int256 private constant mintPrecision = 100;
 
     event MetapoolOracle(uint32 indexed season, int256 deltaB, uint256[2] balances);
 
