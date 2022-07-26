@@ -19,14 +19,17 @@ contract MockAdminFacet is Sun {
     }
 
     function ripen(uint256 amount) external {
+        C.bean().mint(address(this), amount);
         rewardToHarvestable(amount);
     }
 
     function fertilize(uint256 amount) external {
+        C.bean().mint(address(this), amount);
         rewardToFertilizer(amount);
     }
 
     function rewardSilo(uint256 amount) external {
+        C.bean().mint(address(this), amount);
         rewardToSilo(amount);
     }
 
