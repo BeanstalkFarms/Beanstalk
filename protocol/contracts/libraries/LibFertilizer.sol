@@ -72,12 +72,16 @@ library LibFertilizer {
         uint256 percentToFill = amount.mul(C.precision()).div(
             remainingRecapitalization()
         );
-        uint256 newDepositedBeans = (C.unripeBean().totalSupply()).sub(
-            s.u[C.unripeBeanAddress()].balanceOfUnderlying
-        );
-        newDepositedBeans = newDepositedBeans.mul(percentToFill).div(
-            C.precision()
-        );
+        uint256 newDepositedBeans;
+        if (C.unripeBean().totalSupply() > s.u[C.unripeBeanAddress()].balanceOfUnderlying) {
+            newDepositedBeans = (C.unripeBean().totalSupply()).sub(
+                s.u[C.unripeBeanAddress()].balanceOfUnderlying
+            );
+            newDepositedBeans = newDepositedBeans.mul(percentToFill).div(
+                C.precision()
+            );
+        }
+
         // Calculate how many Beans to add as LP
         uint256 newDepositedLPBeans = amount.mul(C.exploitAddLPRatio()).div(
             DECIMALS
@@ -139,6 +143,7 @@ library LibFertilizer {
             .dollarPerUnripeLP()
             .mul(C.unripeLP().totalSupply())
             .div(DECIMALS);
+        totalDollars = totalDollars / 1e6 * 1e6; // round down to nearest USDC
         if (s.recapitalized >= totalDollars) return 0;
         return totalDollars.sub(s.recapitalized);
     }
