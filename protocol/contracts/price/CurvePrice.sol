@@ -10,6 +10,10 @@ interface IERC20D {
     function decimals() external view returns (uint8);
 }
 
+interface IBDV {
+    function bdv(address token, uint256 amount) external view returns (uint256);
+}
+
 contract CurvePrice {
 
     using SafeMath for uint256;
@@ -18,6 +22,7 @@ contract CurvePrice {
     // Mainnet
     address private constant POOL = 0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49;
     address private constant CRV3_POOL = 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7;
+    address private constant BEANSTALK = 0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5;
     //-------------------------------------------------------------------------------------------------------------------
 
     uint256 private constant A_PRECISION = 100; 
@@ -42,6 +47,8 @@ contract CurvePrice {
         rates[0] = rates[0].mul(pool.price).div(1e6);
         pool.liquidity = getCurveUSDValue(balances, rates);
         pool.deltaB = getCurveDeltaB(balances[0], D);
+        pool.lpUsd = pool.liquidity * 1e18 / ICurvePool(POOL).totalSupply();
+        pool.lpBdv = IBDV(BEANSTALK).bdv(POOL, 1e18);
     }
 
     function getCurveDeltaB(uint256 balance, uint256 D) private pure returns (int deltaB) {
