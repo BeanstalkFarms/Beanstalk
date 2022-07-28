@@ -102,7 +102,7 @@ describe('Silo', function () {
     beforeEach(async function () {
       await this.season.siloSunrise(to6('100'))
       await this.silo.update(user2Address)
-      this.result = await this.silo.earn(userAddress)
+      this.result = await this.silo.earn()
     })
 
     it('properly updates the earned balances', async function () {
