@@ -102,7 +102,7 @@ describe('Silo', function () {
     beforeEach(async function () {
       await this.season.siloSunrise(to6('100'))
       await this.silo.update(user2Address)
-      this.result = await this.silo.earn()
+      this.result = await this.silo.connect(user).plant()
     })
 
     it('properly updates the earned balances', async function () {
@@ -130,7 +130,7 @@ describe('Silo', function () {
     })
 
     it('user2 earns rest', async function () {
-      await this.silo.earn(user2Address)
+      await this.silo.connect(user2).plant()
       expect(await this.silo.totalEarnedBeans()).to.eq('0');
     });
   })

@@ -2863,7 +2863,7 @@
                 "type": "uint256"
             }
         ],
-        "name": "Earn",
+        "name": "Plant",
         "type": "event"
     },
     {
@@ -3303,19 +3303,6 @@
         "type": "function"
     },
     {
-        "inputs": [],
-        "name": "earn",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "beans",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "payable",
-        "type": "function"
-    },
-    {
         "inputs": [
             {
                 "internalType": "address",
@@ -3492,6 +3479,19 @@
             }
         ],
         "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "plant",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "beans",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "payable",
         "type": "function"
     },
     {

@@ -18,7 +18,7 @@ contract Silo is SiloExit {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    event Earn(
+    event Plant(
         address indexed account,
         uint256 beans
     );
@@ -53,7 +53,7 @@ contract Silo is SiloExit {
         s.a[account].lastUpdate = season();
     }
 
-    function _earn(address account) internal returns (uint256 beans) {
+    function _plant(address account) internal returns (uint256 beans) {
         // Need to update account before we make a Deposit
         _update(account);
         uint256 accountStalk = s.a[account].s.stalk;
@@ -80,7 +80,7 @@ contract Silo is SiloExit {
         s.a[account].s.stalk = accountStalk.add(stalk);
 
         emit StalkBalanceChanged(account, int256(stalk), 0);
-        emit Earn(account, beans);
+        emit Plant(account, beans);
     }
 
     function _claimPlenty(address account) internal {
