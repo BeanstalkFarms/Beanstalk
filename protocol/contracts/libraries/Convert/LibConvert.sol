@@ -18,7 +18,7 @@ library LibConvert {
     /// @notice Takes in bytes object that has convert input data encoded into it for a particular convert for
     ///         a specified pool and returns the in and out convert amounts and token addresses and bdv
     /// @param convertData Contains convert input parameters for a specified convert
-    function convert(bytes memory convertData)
+    function convert(bytes calldata convertData)
         internal
         returns (
             address tokenOut,

@@ -111,8 +111,8 @@ contract SiloFacet is TokenSilo {
         _update(account);
     }
 
-    function earn(address account) external payable returns (uint256 beans) {
-        return _earn(account);
+    function earn() external payable returns (uint256 beans) {
+        return _earn(msg.sender);
     }
 
     function claimPlenty(address account) external payable {
