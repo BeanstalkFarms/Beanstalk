@@ -4399,6 +4399,25 @@
                 "type": "address"
             }
         ],
+        "name": "getUnderlyingToken",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "underlyingToken",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "unripeToken",
+                "type": "address"
+            }
+        ],
         "name": "isUnripe",
         "outputs": [
             {

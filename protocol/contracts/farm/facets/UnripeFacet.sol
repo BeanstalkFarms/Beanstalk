@@ -216,4 +216,12 @@ contract UnripeFacet is ReentrancyGuard {
         s.u[unripeToken].merkleRoot = root;
         emit AddUnripeToken(unripeToken, underlyingToken, root);
     }
+
+    function getUnderlyingToken(address unripeToken)
+        external
+        view
+        returns (address underlyingToken)
+    {
+        return s.u[unripeToken].underlyingToken;
+    }
 }
