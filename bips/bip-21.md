@@ -25,6 +25,8 @@ Two-thirds supermajority: 142,219,545.64 Stalk
 2. Commit a series of upgrades to Beanstalk.
 3. Unpause Beanstalk.
 
+_Note: Any bugs found during testing will continue to be fixed throughout the BIP-21 Voting Period such that the Replant may not be delayed._
+
 # Problem
 
 BIP-21 addresses the following issues:
@@ -250,7 +252,7 @@ All relevant changes with the exception of `CurveFacet` and `LibUnripeSilo` can 
 |`LibWhitelist.sol`|Removed BEAN_LUSD variables.|Clean Up|
 |`LibTransfer.sol`|Added generalized `burnToken()` function with Internal Balance support.|Refactor|
 |`LibUnripeSilo.sol`|Most functionality—some were audited, but all have been heavily tested.|Updated to account for Barn Raise changes|
-|`LibCurveConvert.sol` / `LibBeanMetaCurve.sol` / `LibCurve.sol` / `LibBeanMetaCurve.sol`|Change the `lpToPeg()` function to account for Curve exchange fee.|Bug Fix|
+|`LibCurveConvert.sol` / `LibMetaCurveConvert.sol` / `LibBeanMetaCurve.sol` / `LibCurve.sol`|Change the `lpToPeg()` function to account for Curve exchange fee.|Bug Fix|
 |`FertilizerFacet.sol`|Added `getFertilizers()` function.|Usability|
 |`LibCurveOracle.sol`|Added `MetapoolOracle` event.|Usability|
 |`SeasonFacet.sol`|Moved `Sunrise` event call to the start of the `sunrise()` function instead of the end.|Refactor|
