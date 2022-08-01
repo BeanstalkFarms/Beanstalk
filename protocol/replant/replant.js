@@ -19,6 +19,12 @@ async function printBeanstalk() {
 
 let replants
 async function replant(account, deployAccount=undefined, mock=true) {
+  if (mock) {
+    await hre.network.provider.request({
+      method: "evm_setNextBlockTimestamp",
+      params: [ ~~(Date.now() / 1000)],
+    });
+  }
   replants = [
     '0',
     '0',
