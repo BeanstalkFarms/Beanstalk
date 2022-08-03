@@ -19,10 +19,11 @@ async function replant8 (
 
     if (!deployAccount) deployAccount = await impersonateSigner(PRICE_DEPLOYER)
 
-    await account.sendTransaction({
+    const receipt = await account.sendTransaction({
       to: deployAccount.address,
-      value: ethers.utils.parseEther("1")
+      value: ethers.utils.parseEther("0.1")
     });
+    await receipt.wait()
 
     const PriceContract = await ethers.getContractFactory("BeanstalkPrice", deployAccount);
     const priceContract = await PriceContract.deploy();

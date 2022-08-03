@@ -43,16 +43,19 @@ async function replantX(
 
   const ReplantX = await ethers.getContractFactory(name, account)
   const replantX = await ReplantX.deploy()
-  await replantX.deployed();
+  await replantX.deployed()
+  const receipt = await replantX.deployTransaction.wait()
+  console.log(`${name} deploy gas used: ` + strDisplay(receipt.gasUsed))
+  const initFacetAddress = receipt.contractAddress
+  console.log(`${name} address: ` + initFacetAddress)
 
   const diamondCut = await ethers.getContractAt('DiamondCutFacet', BEANSTALK)
-
 
   if (init2) {
     functionCall = replantX.interface.encodeFunctionData('init2', initData)
     const receipt = await diamondCut.connect(account).diamondCut(
       [],
-      replantX.address,
+      initFacetAddress,
       functionCall
     )
     const gasUsed = (await receipt.wait()).gasUsed
@@ -62,16 +65,16 @@ async function replantX(
   let totalGasUsed = ethers.BigNumber.from('0')
   let start = 0
 
-  const diamondCutRetry = wrapWithRetryHandling((functionCall) => {
+  const diamondCutRetry = wrapWithRetryHandling((functionCall, initAddress) => {
     return diamondCut.connect(account).diamondCut(
       [],
-      replantX.address,
+      initAddress,
       functionCall
     )
   })
   for (let i = start; i < deposits.length; i++) {
     functionCall = replantX.interface.encodeFunctionData('init', [deposits[i]])
-    const receipt = await diamondCutRetry(functionCall)
+    const receipt = await diamondCutRetry(functionCall, initFacetAddress)
     const gasUsed = (await receipt.wait()).gasUsed
     totalGasUsed = totalGasUsed.add(gasUsed)
     process.stdout.write("\r\x1b[K")
@@ -80,6 +83,7 @@ async function replantX(
 
   process.stdout.write("\r\x1b[K")
   process.stdout.write(`${_deposits.length}/${_deposits.length}: ${getProcessString(1,1)} gas used: ${strDisplay(totalGasUsed)}`)
+  console.log('\n')
 }
 
 function getProcessString(processed, total) {

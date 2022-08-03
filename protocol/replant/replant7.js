@@ -18,7 +18,7 @@ async function replant7(
   const siloAccounts = await countStalkSeeds();
   const stalk = siloAccounts.reduce((acc, s) => acc.add(toBN(s[2])), toBN('0'))
   const seeds = siloAccounts.reduce((acc, s) => acc.add(toBN(s[3])), toBN('0'))
-  await replantX(account, siloAccounts, 'Replant7', chunkSize = 50, true, [stalk, seeds])
+  await replantX(account, siloAccounts, 'Replant7', chunkSize = 80, true, [stalk, seeds])
   console.log('-----------------------------------')
 }
 

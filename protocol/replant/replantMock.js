@@ -6,13 +6,14 @@ async function replantMock (
         account
     ) {
     console.log('-----------------------------------')
-    console.log('Replant11:\n')
+    console.log('Mock Replant:\n')
+    console.log('Mocking Replant')
     const signer = await impersonateBeanstalkOwner()
     await upgradeWithNewFacets({
       diamondAddress: BEANSTALK,
       facetNames: ['MockAdminFacet'],
       bip: false,
-      verbose: true,
+      verbose: false,
       account: signer
     });
     console.log('-----------------------------------')

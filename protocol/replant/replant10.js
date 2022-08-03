@@ -3,7 +3,7 @@ const { BEAN, BEANSTALK, BCM, USDC, BEAN_3_CURVE, ZERO_ADDRESS, CURVE_ZAP, TEST_
 const { to6 } = require('../test/utils/helpers.js');
 const fs = require("fs");
 
-async function replant10(account, mock) {
+async function replant10(account, mock, verbose) {
   console.log('-----------------------------------')
   console.log('Replant10: Replant Beanstalk\n')
 
@@ -35,7 +35,7 @@ async function replant10(account, mock) {
     initFacetName: 'InitReplant',
     initArgs: [fertilizer.address],
     object: true,
-    verbose: false,
+    verbose: verbose,
     account: account
   });
 
@@ -83,10 +83,11 @@ async function replant10(account, mock) {
   const addFertilizer = fertilizerFacet.interface.encodeFunctionData('addFertilizerOwner', addFertilizerParams)
 
   if (mock) {
-    await account.sendTransaction({
+    const receipt = await account.sendTransaction({
       to: BCM,
       value: ethers.utils.parseEther("1")
     });
+    await receipt.wait()
 
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",

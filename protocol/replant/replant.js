@@ -18,8 +18,8 @@ async function printBeanstalk() {
 }
 
 let replants
-async function replant(account, deployAccount=undefined, mock=true) {
-  if (mock) {
+async function replant(account, deployAccount=undefined, mock=true, log=false, start=3, end=0) {
+  if (mock && start == 3) {
     await hre.network.provider.request({
       method: "evm_setNextBlockTimestamp",
       params: [ ~~(Date.now() / 1000)],
@@ -36,17 +36,17 @@ async function replant(account, deployAccount=undefined, mock=true) {
     replant7,
     (account) => replant8(account, deployAccount),
     replant9,
-    (account) => replant10(account, mock)
+    (account) => replant10(account, mock, log)
   ]
   if (mock) replants.push(replantMock)
 
   console.clear()
   await printBeanstalk()
-  for (let i = 3; i < replants.length; i++) {
-    printStage(i, replants.length)
+  end = end || replants.length
+  for (let i = start; i < end; i++) {
+    printStage(i, end, mock, log)
     await replants[i](account)
   }
-  await printStage(replants.length, replants.length)
   console.log("Replant successful.")
 }
 
@@ -57,11 +57,16 @@ function getProcessString(processed, total) {
   return `[${'='.repeat(eq)}${' '.repeat(sp)}]`
 }
 
-async function printStage(i, j) {
-  console.clear()
-  printBeanstalk()
+async function printStage(i, end, mock, log) {
+  if (!log) {
+    console.clear()
+    printBeanstalk()
+  } else {
+    console.log('==============================================')
+  }
   console.log("Replanting Beanstalk:")
-  console.log(`Stage ${i}/${replants.length}: ${getProcessString(i, replants.length)}`)
+  console.log(`Mocks Enabled: ${mock}`)
+  console.log(`Stage ${i}/${end-1}: ${getProcessString(i, end-1)}`)
 }
 
 exports.replant = replant

@@ -10,7 +10,7 @@ async function replant5(
   console.log('-----------------------------------')
   console.log('Replant5: Migrate Bean Deposits\n')
   const beanDeposits = JSON.parse(await fs.readFileSync(BEAN_DEPOSITS));
-  await replantX(account, beanDeposits, 'Replant5', chunkSize = 50) // 180
+  await replantX(account, beanDeposits, 'Replant5', chunkSize = 180) // 180
   console.log('-----------------------------------')
 }
 exports.replant5 = replant5
