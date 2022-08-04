@@ -32,5 +32,6 @@ contract InitReplant {
             C.fertilizerAddress(), 
             fertilizerImplementation
         );
+        C.fertilizer().setURI('https://fert.bean.money/');
     }
 }

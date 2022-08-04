@@ -4,6 +4,7 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
@@ -35,8 +36,14 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
 
     mapping(uint256 => mapping(address => Balance)) internal _balances;
 
+    string private _uri;
+
+    function uri(uint256 _id) external view virtual override returns (string memory) {
+        return string(abi.encodePacked(_uri, StringsUpgradeable.toString(_id)));
+    }
+
     function setURI(string calldata newuri) public onlyOwner {
-        _setURI(newuri);
+        _uri = newuri;
     }
 
     function name() public pure returns (string memory) {
