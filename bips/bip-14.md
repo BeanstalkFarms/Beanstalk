@@ -1,7 +1,6 @@
 # BIP-14: Beanstalk Q2 2022 Budget
 
-- [BIP-14: Beanstalk Q2 2022 Budget](#bip-14-beanstalk-q2-2022-budget)
-  - [Proposer:](#proposer)
+  - [Proposer](#proposer)
   - [Summary](#summary)
   - [Goals](#goals)
   - [Q1 Budget Recap](#q1-budget-recap)
