@@ -5,7 +5,7 @@
 - [Goals](#goals)
 - [Q1 Budget Recap](#q1-budget-recap)
 - [Anticipated Q2 Beanstalk Farms Output](#anticipated-q2-beanstalk-farms-output)
-- [Q2 2022 Current Staffing & New Hires](#q2-2022-current-staffing--new-hires)
+- [Q2 2022 Current Staffing & New Hires](#q2-2022-current-staffing-&-new-hires)
 - [Amounts](#amounts)
 - [Custody](#custody)
 - [Snapshot Processes](#snapshot-processes)
