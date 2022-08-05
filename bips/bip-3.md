@@ -2,14 +2,14 @@
 
 _**Note: BIP-3 did not pass.**_
 
- - [Summary](#summary)
- - [Proposer](#proposer)
- - [Problem](#problem)
- - [Proposed Solution](#proposed-solution)
- - [DAO Responsibilities](#dao-responsibilities)
- - [Resume](#resume)
- - [Payment](#payment)
- - [Effective](#effective)
+- [Summary](#summary)
+- [Proposer](#proposer)
+- [Problem](#problem)
+- [Proposed Solution](#proposed-solution)
+- [DAO Responsibilities](#dao-responsibilities)
+- [Resume](#resume)
+- [Payment](#payment)
+- [Effective](#effective)
 
 ## Summary
 

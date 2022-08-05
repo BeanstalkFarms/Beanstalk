@@ -2,18 +2,18 @@
 
 _**Note: BIP-17 did not pass. The [Beanstalk governance exploit](https://bean.money/blog/beanstalk-governance-exploit) occured during the Voting Period.**_
 
-  - [Proposer:](#proposer)
-  - [Summary](#summary)
-  - [Goals](#goals)
-  - [Q1 Budget Recap:](#q1-budget-recap)
-  - [Anticipated Q2 Bean Sprout Output:](#anticipated-q2-bean-sprout-output)
-  - [Q2 2022 Current Staffing & New Hires:](#q2-2022-current-staffing--new-hires)
-  - [Amounts:](#amounts)
-  - [Custody:](#custody)
-  - [Snapshot Processes:](#snapshot-processes)
-  - [Incentive Alignment:](#incentive-alignment)
-  - [Competitive Pay:](#competitive-pay)
-  - [Effective:](#effective)
+- [Proposer](#proposer)
+- [Summary](#summary)
+- [Goals](#goals)
+- [Q1 Budget Recap:](#q1-budget-recap)
+- [Anticipated Q2 Bean Sprout Output:](#anticipated-q2-bean-sprout-output)
+- [Q2 2022 Current Staffing & New Hires:](#q2-2022-current-staffing--new-hires)
+- [Amounts:](#amounts)
+- [Custody:](#custody)
+- [Snapshot Processes:](#snapshot-processes)
+- [Incentive Alignment:](#incentive-alignment)
+- [Competitive Pay:](#competitive-pay)
+- [Effective:](#effective)
 
 ## Proposer:
 

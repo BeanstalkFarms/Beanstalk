@@ -1,12 +1,12 @@
 # BIP-20: Migration of Balances
 
-  - [Proposer](#proposer)
-  - [Summary](#summary)
-  - [Problem](#problem)
-  - [Proposed Solution](#proposed-solution)
-  - [Rationale](#rationale)
-  - [Effective](#effective)
-  - [Quorum](#quorum)
+- [Proposer](#proposer)
+- [Summary](#summary)
+- [Problem](#problem)
+- [Proposed Solution](#proposed-solution)
+- [Rationale](#rationale)
+- [Effective](#effective)
+- [Quorum](#quorum)
 
 ## Proposer
 

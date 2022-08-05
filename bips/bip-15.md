@@ -1,13 +1,13 @@
 # BIP-15: Demand for Soil Improvement
 
-  - [Proposer:](#proposer)
-  - [Summary:](#summary)
-  - [Problem:](#problem)
-  - [Proposed Solution:](#proposed-solution)
-  - [Technical Rationale:](#technical-rationale)
-  - [Economic Rationale:](#economic-rationale)
-  - [Effective:](#effective)
-  - [Glossary Terms:](#glossary-terms)
+- [Proposer:](#proposer)
+- [Summary:](#summary)
+- [Problem:](#problem)
+- [Proposed Solution:](#proposed-solution)
+- [Technical Rationale:](#technical-rationale)
+- [Economic Rationale:](#economic-rationale)
+- [Effective:](#effective)
+- [Glossary Terms:](#glossary-terms)
 
 ## Proposer:
 

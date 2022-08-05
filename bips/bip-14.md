@@ -1,18 +1,18 @@
 # BIP-14: Beanstalk Q2 2022 Budget
 
-  - [Proposer](#proposer)
-  - [Summary](#summary)
-  - [Goals](#goals)
-  - [Q1 Budget Recap](#q1-budget-recap)
-  - [Anticipated Q2 Beanstalk Farms Output](#anticipated-q2-beanstalk-farms-output)
-  - [Q2 2022 Current Staffing & New Hires](#q2-2022-current-staffing--new-hires)
-  - [Amounts](#amounts)
-  - [Custody](#custody)
-  - [Snapshot Processes](#snapshot-processes)
-  - [Initial Allocations](#initial-allocations)
-  - [Incentive Alignment](#incentive-alignment)
-  - [Competitive Pay](#competitive-pay)
-  - [Effective](#effective)
+- [Proposer](#proposer)
+- [Summary](#summary)
+- [Goals](#goals)
+- [Q1 Budget Recap](#q1-budget-recap)
+- [Anticipated Q2 Beanstalk Farms Output](#anticipated-q2-beanstalk-farms-output)
+- [Q2 2022 Current Staffing & New Hires](#q2-2022-current-staffing--new-hires)
+- [Amounts](#amounts)
+- [Custody](#custody)
+- [Snapshot Processes](#snapshot-processes)
+- [Initial Allocations](#initial-allocations)
+- [Incentive Alignment](#incentive-alignment)
+- [Competitive Pay](#competitive-pay)
+- [Effective](#effective)
 
 ## Proposer:
 
