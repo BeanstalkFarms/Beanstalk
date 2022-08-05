@@ -58,6 +58,7 @@ async function deployFacets (facets, verbose = false) {
       if (verbose) console.log(`Deploying ${facet}`)
       const deployedFactory = await facetFactory.deploy()
       await deployedFactory.deployed()
+      await deployedFactory.deployTransaction.wait()
       if (verbose) console.log(`${facet} deployed: ${deployedFactory.address}`)
       if (verbose) console.log('--')
       deployed.push([facet, deployedFactory])
@@ -278,6 +279,7 @@ async function upgrade ({
       if (!(deployedFacet instanceof ethers.Contract)) {
         deployedFacet = await facetFactory.deploy()
         await deployedFacet.deployed()
+        await deployedFacet.deployTransaction.wait()
       }
       facetFactories.set(facet[0], deployedFacet)
       console.log(`${facet[0]} deployed: ${deployedFacet.address}`)
@@ -297,6 +299,7 @@ async function upgrade ({
       const InitFacet = await ethers.getContractFactory(initFacetName)
       initFacet = await InitFacet.deploy()
       await initFacet.deployed()
+      await initFacet.deployTransaction.wait()
       console.log('Deployed init facet: ' + initFacet.address)
     } else {
       console.log('Using init facet: ' + initFacet.address)
@@ -399,11 +402,7 @@ async function upgradeWithNewFacets ({
   }
 
   for (const [name, facetFactory] of undeployed) {
-    if (verbose) console.log(`Deploying ${name}`)
-    deployed.push([name, await facetFactory.deploy()])
-  }
-
-  for (const [name, deployedFactory] of deployed) {
+    const deployedFactory = await facetFactory.deploy();
     if (verbose) console.log(`${name} hash: ${deployedFactory.deployTransaction.hash}`);
     await deployedFactory.deployed()
     const receipt = await deployedFactory.deployTransaction.wait()
