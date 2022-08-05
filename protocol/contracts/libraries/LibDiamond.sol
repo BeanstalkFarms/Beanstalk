@@ -12,8 +12,6 @@ pragma solidity =0.7.6;
 import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../interfaces/IDiamondLoupe.sol";
 import {IERC165} from "../interfaces/IERC165.sol";
-import {IERC173} from "../interfaces/IERC173.sol";
-import {LibMeta} from "./LibMeta.sol";
 
 library LibDiamond {
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("diamond.standard.diamond.storage");
@@ -63,6 +61,12 @@ library LibDiamond {
         contractOwner_ = diamondStorage().contractOwner;
     }
 
+    function enforceIsOwnerOrContract() internal view {
+        require(msg.sender == diamondStorage().contractOwner ||
+                msg.sender == address(this), "LibDiamond: Must be contract or owner"
+        );
+    }
+
     function enforceIsContractOwner() internal view {
         require(msg.sender == diamondStorage().contractOwner, "LibDiamond: Must be contract owner");
     }
@@ -71,10 +75,9 @@ library LibDiamond {
 
     function addDiamondFunctions(
         address _diamondCutFacet,
-        address _diamondLoupeFacet,
-        address _ownershipFacet
+        address _diamondLoupeFacet
     ) internal {
-        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](3);
+        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](2);
         bytes4[] memory functionSelectors = new bytes4[](1);
         functionSelectors[0] = IDiamondCut.diamondCut.selector;
         cut[0] = IDiamondCut.FacetCut({facetAddress: _diamondCutFacet, action: IDiamondCut.FacetCutAction.Add, functionSelectors: functionSelectors});
@@ -89,10 +92,6 @@ library LibDiamond {
             action: IDiamondCut.FacetCutAction.Add,
             functionSelectors: functionSelectors
         });
-        functionSelectors = new bytes4[](2);
-        functionSelectors[0] = IERC173.transferOwnership.selector;
-        functionSelectors[1] = IERC173.owner.selector;
-        cut[2] = IDiamondCut.FacetCut({facetAddress: _ownershipFacet, action: IDiamondCut.FacetCutAction.Add, functionSelectors: functionSelectors});
         diamondCut(cut, address(0), "");
     }
 

@@ -1,7 +1,15 @@
 const MAX_INT = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
 
 const diamond = require('./diamond.js')
-const { impersonateCurve, impersonateBean, impersonateRouter, impersonatePool } = require('./impersonate.js')
+const { 
+  impersonateBean, 
+  impersonateCurve,
+  impersonateCurveMetapool, 
+  impersonateWeth, 
+  impersonateUnripe, 
+  impersonateFertilizer,
+  impersonatePrice
+} = require('./impersonate.js')
 function addCommas(nStr) {
   nStr += ''
   const x = nStr.split('.')
@@ -18,13 +26,13 @@ function strDisplay(str) {
   return addCommas(str.toString())
 }
 
-async function main(scriptName, verbose = true, mock = false) {
+async function main(scriptName, verbose = true, mock = false, reset = true) {
   if (verbose) {
     console.log('SCRIPT NAME: ', scriptName)
     console.log('MOCKS ENABLED: ', mock)
   }
 
-  if (mock) {
+  if (mock && reset) {
     await network.provider.request({
       method: "hardhat_reset",
       params: [],
@@ -91,86 +99,91 @@ async function main(scriptName, verbose = true, mock = false) {
     return instances
   }
   let [
-    seasonFacet,
-    oracleFacet,
-    fieldFacet,
-    siloFacet,
-    siloV2Facet,
     bdvFacet,
-    governanceFacet,
-    claimFacet,
-    marketplaceFacet,
+    curveFacet,
+    convertFacet,
+    farmFacet,
+    fieldFacet,
     fundraiserFacet,
-    convertFacet
+    marketplaceFacet,
+    ownershipFacet,
+    pauseFacet,
+    seasonFacet,
+    siloFacet,
+    fertilizerFacet,
+    tokenFacet,
+    unripeFacet,
+    whitelistFacet
   ] = mock ? await deployFacets(
     verbose,
-    ['MockSeasonFacet',
-      'MockOracleFacet',
+    [ 'BDVFacet',
+      'CurveFacet',
+      'MockConvertFacet',
+      'FarmFacet',
       'MockFieldFacet',
-      'MockSiloFacet',
-      'MockSiloV2Facet',
-      'BDVFacet',
-      'MockGovernanceFacet',
-      'MockClaimFacet',
-      'MockMarketplaceFacet',
       'MockFundraiserFacet',
-      'ConvertFacet'],
-    ["LibClaim"],
-    {
-      "MockMarketplaceFacet": ["LibClaim"],
-      "MockSiloFacet": ["LibClaim"],
-      "MockFieldFacet": ["LibClaim"],
-      "MockClaimFacet": ["LibClaim"],
-      "ConvertFacet": ["LibClaim"]
-    },
+      'MockMarketplaceFacet',
+      'PauseFacet',
+      'MockSeasonFacet',
+      'MockSiloFacet',
+      'MockFertilizerFacet',
+      'OwnershipFacet',
+      'TokenFacet',
+      'MockUnripeFacet',
+      'WhitelistFacet'],
   ) : await deployFacets(
     verbose,
-    ['SeasonFacet',
-      'OracleFacet',
+    [ 'BDVFacet',
+      'CurveFacet',
+      'ConvertFacet',
+      'FarmFacet',
       'FieldFacet',
-      'SiloFacet',
-      'SiloV2Facet',
-      'BDVFacet',
-      'GovernanceFacet',
-      'ClaimFacet',
-      'MarketplaceFacet',
       'FundraiserFacet',
-      'ConvertFacet'],
-    ["LibClaim"],
-    {
-      "SiloFacet": ["LibClaim"],
-      "FieldFacet": ["LibClaim"],
-      "ClaimFacet": ["LibClaim"],
-      "ConvertFacet": ["LibClaim"],
-      "MarketplaceFacet": ["LibClaim"]
-    },
+      'MarketplaceFacet',
+      'OwnershipFacet',
+      'PauseFacet',
+      'SeasonFacet',
+      'SiloFacet',
+      'FertilizerFacet',
+      'TokenFacet',
+      'UnripeFacet',
+      'WhitelistFacet'],
   )
-  const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/InitDiamond.sol:InitDiamond'
+  const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/init/InitDiamond.sol:InitDiamond'
   // eslint-disable-next-line no-unused-vars
 
   let args = []
   if (mock) {
-    await impersonateCurve()
-    args.push(await impersonateBean())
-    args.push(await impersonatePool())
-    args.push(await impersonateRouter())
+    await impersonateBean()
+    await impersonatePrice()
+    if (reset) {
+      await impersonateCurve()
+      await impersonateWeth()
+    }
+    await impersonateCurveMetapool()
+    await impersonateUnripe()
+    await impersonateFertilizer()
   }
 
   const [beanstalkDiamond, diamondCut] = await diamond.deploy({
     diamondName: 'BeanstalkDiamond',
     initDiamond: initDiamondArg,
     facets: [
-      ['SeasonFacet', seasonFacet],
-      ['OracleFacet', oracleFacet],
-      ['FieldFacet', fieldFacet],
-      ['SiloFacet', siloFacet],
-      ['SiloV2Facet', siloV2Facet],
       ['BDVFacet', bdvFacet],
-      ['GovernanceFacet', governanceFacet],
-      ['ClaimFacet', claimFacet],
-      ['MarketplaceFacet', marketplaceFacet],
+      ['CurveFacet', curveFacet],
+      ['ConvertFacet', convertFacet],
+      ['FarmFacet', farmFacet],
+      ['FieldFacet', fieldFacet],
       ['FundraiserFacet', fundraiserFacet],
-      ['ConvertFacet', convertFacet]
+      ['MarketplaceFacet', marketplaceFacet],
+      ['OwnershipFacet', ownershipFacet],
+      ['PauseFacet', pauseFacet],
+      ['SeasonFacet', seasonFacet],
+      ['SiloFacet', siloFacet],
+      ['FertilizerFacet', fertilizerFacet],
+      ['TokenFacet', tokenFacet],
+      ['UnripeFacet', unripeFacet],
+      ['WhitelistFacet', whitelistFacet]
     ],
     owner: account,
     args: args,
@@ -179,47 +192,36 @@ async function main(scriptName, verbose = true, mock = false) {
 
   tx = beanstalkDiamond.deployTransaction
   receipt = await tx.wait()
-  if (verbose) console.log('BeanStalk diamond deploy gas used: ' + strDisplay(receipt.gasUsed))
-  if (verbose) console.log('BeanStalk diamond cut gas used: ' + strDisplay(diamondCut.gasUsed))
+  if (verbose) console.log('Beanstalk diamond deploy gas used: ' + strDisplay(receipt.gasUsed))
+  if (verbose) console.log('Beanstalk diamond cut gas used: ' + strDisplay(diamondCut.gasUsed))
   totalGasUsed = totalGasUsed.add(receipt.gasUsed).add(diamondCut.gasUsed)
-
-
-  const season = await ethers.getContractAt('SeasonFacet', beanstalkDiamond.address);
-  const bean = await season.bean();
-  const pair = await season.pair();
-  const pegPair = await season.pegPair();
-  const silo = await ethers.getContractAt('SiloFacet', beanstalkDiamond.address);
-  const weth = await silo.weth();
 
   if (verbose) {
     console.log("--");
     console.log('Beanstalk diamond address:' + beanstalkDiamond.address)
-    console.log('Bean address:' + bean)
-    console.log('Uniswap Pair address:' + pair)
     console.log("--");
   }
 
   const diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', beanstalkDiamond.address)
-
 
   if (verbose) console.log('Total gas used: ' + strDisplay(totalGasUsed))
   return {
     account: account,
     beanstalkDiamond: beanstalkDiamond,
     diamondLoupeFacet: diamondLoupeFacet,
-    seasonFacet: seasonFacet,
-    oracleFacet: oracleFacet,
-    fieldFacet: fieldFacet,
-    siloFacet: siloFacet,
-    siloFacet: siloV2Facet,
-    governanceFacet: governanceFacet,
-    claimFacet: claimFacet,
-    fundraiserFacet: fundraiserFacet,
-    convertFacet: convertFacet,
-    pair: pair,
-    pegPair: pegPair,
-    weth: weth,
-    bean: bean,
+    bdvFacet,
+    convertFacet,
+    farmFacet,
+    fieldFacet,
+    fundraiserFacet,
+    marketplaceFacet,
+    ownershipFacet,
+    pauseFacet,
+    seasonFacet,
+    siloFacet,
+    fertilizerFacet,
+    tokenFacet,
+    unripeFacet
   }
 }
 

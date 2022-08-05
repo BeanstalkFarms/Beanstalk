@@ -16,7 +16,6 @@ import {AppStorage} from "./AppStorage.sol";
 import {IERC165} from "../interfaces/IERC165.sol";
 import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../interfaces/IDiamondLoupe.sol";
-import {IERC173} from "../interfaces/IERC173.sol";
 
 contract Diamond {
     AppStorage internal s;
@@ -27,8 +26,7 @@ contract Diamond {
         LibDiamond.setContractOwner(_contractOwner);
         LibDiamond.addDiamondFunctions(
             address(new DiamondCutFacet()),
-            address(new DiamondLoupeFacet()),
-            address(new OwnershipFacet())
+            address(new DiamondLoupeFacet())
         );
     }
 

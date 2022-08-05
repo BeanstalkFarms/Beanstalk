@@ -5,16 +5,12 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
-import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "../interfaces/IBean.sol";
 import "../interfaces/IWETH.sol";
 import "../mocks/MockToken.sol";
-import "../mocks/MockUniswapV2Pair.sol";
-import "../mocks/MockUniswapV2Router.sol";
 import {AppStorage} from "../farm/AppStorage.sol";
-import {LibMarket} from "../libraries/LibMarket.sol";
 import "../C.sol";
+import "../libraries/Silo/LibWhitelist.sol";
 
 /**
  * @author Publius
@@ -26,17 +22,11 @@ contract MockInitDiamond {
 
     AppStorage internal s;
 
-    function init(address bean, address pair, address mockRouter) external {
-        s.c.bean = bean;
-        s.c.pair = pair;
-        s.c.pegPair = address(new MockUniswapV2Pair(s.c.weth));
-        MockUniswapV2Router(mockRouter).setPair(s.c.pair);
-        s.c.weth = IUniswapV2Router02(mockRouter).WETH();
+    function init() external {
 
-        IBean(s.c.bean).approve(mockRouter, uint256(-1));
-        IUniswapV2Pair(s.c.pair).approve(mockRouter, uint256(-1));
-        IWETH(s.c.weth).approve(mockRouter, uint256(-1));
-        IBean(bean).approve(C.curveMetapoolAddress(), uint256(-1));
+        C.bean().approve(C.curveMetapoolAddress(), type(uint256).max);
+        C.bean().approve(C.curveZapAddress(), type(uint256).max);
+        C.usdc().approve(C.curveZapAddress(), type(uint256).max);
 
         s.cases = s.cases = [
         // Dsc, Sdy, Inc, nul
@@ -50,25 +40,21 @@ contract MockInitDiamond {
              0,  -1,  -3,   0   //          P > 1
         ];
         s.w.yield = 1;
+
+        s.w.nextSowTime = type(uint32).max;
+        s.w.lastSowTime = type(uint32).max;
     
-        s.refundStatus = 1;
-        s.beanRefundAmount = 1;
-        s.ethRefundAmount = 1;
+        // s.refundStatus = 1;
+        // s.beanRefundAmount = 1;
+        // s.ethRefundAmount = 1;
 
         s.season.current = 1;
         s.season.withdrawSeasons = 25;
         s.season.start = block.timestamp;
         s.season.timestamp = block.timestamp;
+        s.isFarm = 1;
 
-        s.index = (IUniswapV2Pair(s.c.pair).token0() == s.c.bean) ? 0 : 1;
-        LibMarket.initMarket(s.c.bean, s.c.weth, mockRouter);
-
-        s.ss[s.c.pair].selector = bytes4(keccak256("uniswapLPtoBDV(address,uint256)")); 
-        s.ss[s.c.pair].seeds = 4;
-        s.ss[s.c.pair].stalk = 10000;
-
-        s.ss[s.c.bean].seeds = 2;
-        s.ss[s.c.bean].stalk = 10000;
+        LibWhitelist.whitelistPools();
     }
 
 }
