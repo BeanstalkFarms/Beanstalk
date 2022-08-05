@@ -152,7 +152,7 @@ In the future, whenever Deposits become transferrable, Beanstalk Farms will try 
 
 ## Competitive Pay
 
-Beanstalk Farms recognizes that its ability to pay contributors competitive wages is essential to Beanstalk’s long-term success. As a result of the community’s recent decision to disallow compensation in the form of Pods, as outlined above and in Beanstalk Governance Memorandum 1, several pay increases will be proposed via Snapshot.
+Beanstalk Farms recognizes that its ability to pay contributors competitive wages is essential to Beanstalk’s long-term success. As a result of the community’s recent decision to disallow compensation in the form of Pods, as outlined above and in [Beanstalk Governance Memorandum 1](https://arweave.net/j0ZUEiNJmqku2JYQZBkuzktG-5k-5pQ-PlhuWunu-r8), several pay increases will be proposed via Snapshot.
 
 ## Effective
 
