@@ -1,92 +1,78 @@
 /**
  * SPDX-License-Identifier: MIT
-**/
+ **/
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./Sun.sol";
-import "../../../interfaces/IOracle.sol";
-import "../../../libraries/LibCheck.sol";
+import "./Weather.sol";
 import "../../../libraries/LibIncentive.sol";
 
 /**
  * @author Publius
- * @title Season holds the sunrise function and handles all logic for Season changes.
-**/
-contract SeasonFacet is Sun {
-
+ * @title Season Facet
+ * @notice holds the Sunrise function and handles all logic for Season changes.
+ **/
+contract SeasonFacet is Weather {
     using SafeMath for uint256;
-    using Decimal for Decimal.D256;
 
     event Sunrise(uint256 indexed season);
     event Incentivization(address indexed account, uint256 beans);
-    event SeasonSnapshot(
-        uint32 indexed season,
-        uint256 price,
-        uint256 supply,
-        uint256 stalk,
-        uint256 seeds,
-        uint256 podIndex,
-        uint256 harvestableIndex
-    );
 
     /**
      * Sunrise
-    **/
+     **/
 
-    function sunrise() external {
+    /// @notice advances Beanstalk to the next Season.
+    function sunrise() external payable {
         require(!paused(), "Season: Paused.");
         require(seasonTime() > season(), "Season: Still current Season.");
-
-        (
-            Decimal.D256 memory beanPrice,
-            Decimal.D256 memory usdcPrice
-        ) = IOracle(address(this)).capture();
-        uint256 price = beanPrice.mul(1e18).div(usdcPrice).asUint256();
-
-        stepGovernance();
         stepSeason();
-        decrementWithdrawSeasons();
-        snapshotSeason(price);
-        stepWeather(price, s.f.soil);
-        uint256 increase = stepSun(beanPrice, usdcPrice);
-        stepSilo(increase);
+        int256 deltaB = stepOracle();
+        uint256 caseId = stepWeather(deltaB);
+        stepSun(deltaB, caseId);
         incentivize(msg.sender, C.getAdvanceIncentive());
+    }
 
-        LibCheck.balanceCheck();
+    /**
+     * Season Getters
+     **/
 
+    function season() public view returns (uint32) {
+        return s.season.current;
+    }
+
+    function paused() public view returns (bool) {
+        return s.paused;
+    }
+
+    function time() external view returns (Storage.Season memory) {
+        return s.season;
+    }
+
+    function seasonTime() public view virtual returns (uint32) {
+        if (block.timestamp < s.season.start) return 0;
+        if (s.season.period == 0) return type(uint32).max;
+        return uint32((block.timestamp - s.season.start) / s.season.period); // Note: SafeMath is redundant here.
+    }
+
+    /**
+     * Season Internal
+     **/
+
+    function stepSeason() private {
+        s.season.timestamp = block.timestamp;
+        s.season.current += 1;
         emit Sunrise(season());
     }
 
-    function stepSeason() private {
-        s.season.current += 1;
-    }
-    
-    function decrementWithdrawSeasons() internal {
-        uint withdrawSeasons = s.season.withdrawSeasons;
-        if ((withdrawSeasons > 13 && s.season.current % 84 == 0) ||
-            (withdrawSeasons > 5 && s.season.current % 168 == 0)) {
-                s.season.withdrawSeasons -= 1;
-        }
-    }
-
-    function snapshotSeason(uint256 price) private {
-        s.season.timestamp = block.timestamp;
-        emit SeasonSnapshot(
-            s.season.current,
-            price,
-            bean().totalSupply(),
-            s.s.stalk,
-            s.s.seeds,
-            s.f.pods,
-            s.f.harvestable
-        );
-    }
-
     function incentivize(address account, uint256 amount) private {
-        uint256 incentive = LibIncentive.fracExp(amount, 100, incentiveTime(), 1);
-        mintToAccount(account, incentive);
+        uint256 timestamp = block.timestamp.sub(
+            s.season.start.add(s.season.period.mul(season()))
+        );
+        if (timestamp > 300) timestamp = 300;
+        uint256 incentive = LibIncentive.fracExp(amount, 100, timestamp, 1);
+        C.bean().mint(account, incentive);
         emit Incentivization(account, incentive);
     }
 }

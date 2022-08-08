@@ -2,9 +2,13 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
+import "./interfaces/IBean.sol";
+import "./interfaces/ICurve.sol";
+import "./interfaces/IFertilizer.sol";
+import "./interfaces/IProxyAdmin.sol";
 import "./libraries/Decimal.sol";
 
 /**
@@ -16,49 +20,61 @@ library C {
     using Decimal for Decimal.D256;
     using SafeMath for uint256;
 
+    // Constants
+    uint256 private constant PERCENT_BASE = 1e18;
+    uint256 private constant PRECISION = 1e18;
+
     // Chain
     uint256 private constant CHAIN_ID = 1; // Mainnet
 
     // Season
     uint256 private constant CURRENT_SEASON_PERIOD = 3600; // 1 hour
+    uint256 private constant BASE_ADVANCE_INCENTIVE = 100e6; // 100 beans
+    uint256 private constant SOP_PRECISION = 1e24;
 
     // Sun
-    uint256 private constant HARVESET_PERCENTAGE = 5e17; // 50%
+    uint256 private constant FERTILIZER_DENOMINATOR = 3;
+    uint256 private constant HARVEST_DENOMINATOR = 2;
+    uint256 private constant SOIL_COEFFICIENT_HIGH = 0.5e18;
+    uint256 private constant SOIL_COEFFICIENT_LOW = 1.5e18;
 
     // Weather
-    uint256 private constant POD_RATE_LOWER_BOUND = 5e16; // 5%
-    uint256 private constant OPTIMAL_POD_RATE = 15e16; // 15%
-    uint256 private constant POD_RATE_UPPER_BOUND = 25e16; // 25%
+    uint256 private constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%
+    uint256 private constant OPTIMAL_POD_RATE = 0.15e18; // 15%
+    uint256 private constant POD_RATE_UPPER_BOUND = 0.25e18; // 25%
+    uint32 private constant STEADY_SOW_TIME = 60; // 1 minute
 
-    uint256 private constant DELTA_POD_DEMAND_LOWER_BOUND = 95e16; // 95%
-    uint256 private constant DELTA_POD_DEMAND_UPPER_BOUND = 105e16; // 105%
-
-    uint256 private constant STEADY_SOW_TIME = 60; // 1 minute
-    uint256 private constant RAIN_TIME = 24; // 24 seasons = 1 day
-
-    // Governance
-    uint32 private constant GOVERNANCE_PERIOD = 168; // 168 seasons = 7 days
-    uint32 private constant GOVERNANCE_EMERGENCY_PERIOD = 86400; // 1 day
-    uint256 private constant GOVERNANCE_PASS_THRESHOLD = 5e17; // 1/2
-    uint256 private constant GOVERNANCE_EMERGENCY_THRESHOLD_NUMERATOR = 2; // 2/3
-    uint256 private constant GOVERNANCE_EMERGENCY_THRESHOLD_DEMONINATOR = 3; // 2/3
-    uint32 private constant GOVERNANCE_EXPIRATION = 24; // 24 seasons = 1 day
-    uint256 private constant GOVERNANCE_PROPOSAL_THRESHOLD = 1e15; // 0.1%
-    uint256 private constant BASE_COMMIT_INCENTIVE = 1e8; // 100 beans
-    uint256 private constant MAX_PROPOSITIONS = 5;
+    uint256 private constant DELTA_POD_DEMAND_LOWER_BOUND = 0.95e18; // 95%
+    uint256 private constant DELTA_POD_DEMAND_UPPER_BOUND = 1.05e18; // 105%
 
     // Silo
-    uint256 private constant BASE_ADVANCE_INCENTIVE = 1e8; // 100 beans
-    uint32 private constant WITHDRAW_TIME = 25; // 24 + 1 seasons
     uint256 private constant SEEDS_PER_BEAN = 2;
-    uint256 private constant SEEDS_PER_LP_BEAN = 4;
     uint256 private constant STALK_PER_BEAN = 10000;
     uint256 private constant ROOTS_BASE = 1e12;
 
-    // Field
-    uint256 private constant MAX_SOIL_DENOMINATOR = 4; // 25%
-    uint256 private constant COMPLEX_WEATHER_DENOMINATOR = 1000; // 0.1%
 
+    // Exploit
+    uint256 private constant UNRIPE_LP_PER_DOLLAR = 1884592; // 145_113_507_403_282 / 77_000_000
+    uint256 private constant ADD_LP_RATIO = 866616;
+    uint256 private constant INITIAL_HAIRCUT = 185564685220298701; // SET
+
+    // Contracts
+    address private constant BEAN = 0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab;
+    address private constant CURVE_BEAN_METAPOOL = 0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49;
+    address private constant CURVE_3_POOL = 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7;
+    address private constant THREE_CRV = 0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490;
+    address private constant UNRIPE_BEAN = 0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449;
+    address private constant UNRIPE_LP = 0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716D;
+    address private constant FERTILIZER = 0x402c84De2Ce49aF88f5e2eF3710ff89bFED36cB6;
+    address private constant FERTILIZER_ADMIN = 0xfECB01359263C12Aa9eD838F878A596F0064aa6e;
+    address private constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+
+    address private constant TRI_CRYPTO = 0xc4AD29ba4B3c580e6D59105FFf484999997675Ff;
+    address private constant TRI_CRYPTO_POOL = 0xD51a44d3FaE010294C616388b506AcdA1bfAAE46;
+    address private constant CURVE_ZAP = 0xA79828DF1850E8a3A3064576f380D90aECDD3359;
+
+    address private constant UNRIPE_CURVE_BEAN_LUSD_POOL = 0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D;
+    address private constant UNRIPE_CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
 
     /**
      * Getters
@@ -68,52 +84,16 @@ library C {
         return CURRENT_SEASON_PERIOD;
     }
 
-    function getGovernancePeriod() internal pure returns (uint32) {
-        return GOVERNANCE_PERIOD;
-    }
-
-    function getGovernanceEmergencyPeriod() internal pure returns (uint32) {
-        return GOVERNANCE_EMERGENCY_PERIOD;
-    }
-
-    function getGovernanceExpiration() internal pure returns (uint256) {
-        return GOVERNANCE_EXPIRATION;
-    }
-
-    function getGovernancePassThreshold() internal pure returns (Decimal.D256 memory) {
-        return Decimal.D256({value: GOVERNANCE_PASS_THRESHOLD});
-    }
-
-    function getGovernanceEmergencyThreshold() internal pure returns (Decimal.D256 memory) {
-        return Decimal.ratio(GOVERNANCE_EMERGENCY_THRESHOLD_NUMERATOR,GOVERNANCE_EMERGENCY_THRESHOLD_DEMONINATOR);
-    }
-
-    function getGovernanceProposalThreshold() internal pure returns (Decimal.D256 memory) {
-        return Decimal.D256({value: GOVERNANCE_PROPOSAL_THRESHOLD});
-    }
-
     function getAdvanceIncentive() internal pure returns (uint256) {
         return BASE_ADVANCE_INCENTIVE;
     }
 
-    function getCommitIncentive() internal pure returns (uint256) {
-        return BASE_COMMIT_INCENTIVE;
+    function getFertilizerDenominator() internal pure returns (uint256) {
+        return FERTILIZER_DENOMINATOR;
     }
 
-    function getSiloWithdrawSeasons() internal pure returns (uint32) {
-        return WITHDRAW_TIME;
-    }
-
-    function getComplexWeatherDenominator() internal pure returns (uint256) {
-        return COMPLEX_WEATHER_DENOMINATOR;
-    }
-
-    function getMaxSoilDenominator() internal pure returns (uint256) {
-        return MAX_SOIL_DENOMINATOR;
-    }
-
-    function getHarvestPercentage() internal pure returns (uint256) {
-        return HARVESET_PERCENTAGE;
+    function getHarvestDenominator() internal pure returns (uint256) {
+        return HARVEST_DENOMINATOR;
     }
 
     function getChainId() internal pure returns (uint256) {
@@ -121,55 +101,154 @@ library C {
     }
 
     function getOptimalPodRate() internal pure returns (Decimal.D256 memory) {
-        return Decimal.ratio(OPTIMAL_POD_RATE,1e18);
+        return Decimal.ratio(OPTIMAL_POD_RATE, PERCENT_BASE);
     }
 
     function getUpperBoundPodRate() internal pure returns (Decimal.D256 memory) {
-        return Decimal.ratio(POD_RATE_UPPER_BOUND,1e18);
+        return Decimal.ratio(POD_RATE_UPPER_BOUND, PERCENT_BASE);
     }
 
     function getLowerBoundPodRate() internal pure returns (Decimal.D256 memory) {
-        return Decimal.ratio(POD_RATE_LOWER_BOUND,1e18);
+        return Decimal.ratio(POD_RATE_LOWER_BOUND, PERCENT_BASE);
     }
 
     function getUpperBoundDPD() internal pure returns (Decimal.D256 memory) {
-        return Decimal.ratio(DELTA_POD_DEMAND_UPPER_BOUND,1e18);
+        return Decimal.ratio(DELTA_POD_DEMAND_UPPER_BOUND, PERCENT_BASE);
     }
 
     function getLowerBoundDPD() internal pure returns (Decimal.D256 memory) {
-        return Decimal.ratio(DELTA_POD_DEMAND_LOWER_BOUND,1e18);
+        return Decimal.ratio(DELTA_POD_DEMAND_LOWER_BOUND, PERCENT_BASE);
     }
 
-    function getSteadySowTime() internal pure returns (uint256) {
+    function getSteadySowTime() internal pure returns (uint32) {
         return STEADY_SOW_TIME;
-    }
-
-    function getRainTime() internal pure returns (uint256) {
-        return RAIN_TIME;
-    }
-
-    function getMaxPropositions() internal pure returns (uint256) {
-      return MAX_PROPOSITIONS;
     }
 
     function getSeedsPerBean() internal pure returns (uint256) {
         return SEEDS_PER_BEAN;
     }
 
-    function getSeedsPerLPBean() internal pure returns (uint256) {
-        return SEEDS_PER_LP_BEAN;
-    }
-
     function getStalkPerBean() internal pure returns (uint256) {
       return STALK_PER_BEAN;
-    }
-
-    function getStalkPerLPSeed() internal pure returns (uint256) {
-      return STALK_PER_BEAN/SEEDS_PER_LP_BEAN;
     }
 
     function getRootsBase() internal pure returns (uint256) {
         return ROOTS_BASE;
     }
 
+    function getSopPrecision() internal pure returns (uint256) {
+        return SOP_PRECISION;
+    }
+
+    function beanAddress() internal pure returns (address) {
+        return BEAN;
+    }
+
+    function curveMetapoolAddress() internal pure returns (address) {
+        return CURVE_BEAN_METAPOOL;
+    }
+
+    function unripeLPPool1() internal pure returns (address) {
+        return UNRIPE_CURVE_BEAN_METAPOOL;
+    }
+
+    function unripeLPPool2() internal pure returns (address) {
+        return UNRIPE_CURVE_BEAN_LUSD_POOL;
+    }
+
+    function unripeBeanAddress() internal pure returns (address) {
+        return UNRIPE_BEAN;
+    }
+
+    function unripeLPAddress() internal pure returns (address) {
+        return UNRIPE_LP;
+    }
+
+    function unripeBean() internal pure returns (IERC20) {
+        return IERC20(UNRIPE_BEAN);
+    }
+
+    function unripeLP() internal pure returns (IERC20) {
+        return IERC20(UNRIPE_LP);
+    }
+
+    function bean() internal pure returns (IBean) {
+        return IBean(BEAN);
+    }
+
+    function usdc() internal pure returns (IERC20) {
+        return IERC20(USDC);
+    }
+
+    function curveMetapool() internal pure returns (ICurvePool) {
+        return ICurvePool(CURVE_BEAN_METAPOOL);
+    }
+
+    function curve3Pool() internal pure returns (I3Curve) {
+        return I3Curve(CURVE_3_POOL);
+    }
+    
+    function curveZap() internal pure returns (ICurveZap) {
+        return ICurveZap(CURVE_ZAP);
+    }
+
+    function curveZapAddress() internal pure returns (address) {
+        return CURVE_ZAP;
+    }
+
+    function curve3PoolAddress() internal pure returns (address) {
+        return CURVE_3_POOL;
+    }
+
+    function threeCrv() internal pure returns (IERC20) {
+        return IERC20(THREE_CRV);
+    }
+
+    function fertilizer() internal pure returns (IFertilizer) {
+        return IFertilizer(FERTILIZER);
+    }
+
+    function fertilizerAddress() internal pure returns (address) {
+        return FERTILIZER;
+    }
+
+    function fertilizerAdmin() internal pure returns (IProxyAdmin) {
+        return IProxyAdmin(FERTILIZER_ADMIN);
+    }
+
+    function triCryptoPoolAddress() internal pure returns (address) {
+        return TRI_CRYPTO_POOL;
+    }
+
+    function triCrypto() internal pure returns (IERC20) {
+        return IERC20(TRI_CRYPTO);
+    }
+
+    function unripeLPPerDollar() internal pure returns (uint256) {
+        return UNRIPE_LP_PER_DOLLAR;
+    }
+
+    function dollarPerUnripeLP() internal pure returns (uint256) {
+        return 1e12/UNRIPE_LP_PER_DOLLAR;
+    }
+
+    function exploitAddLPRatio() internal pure returns (uint256) {
+        return ADD_LP_RATIO;
+    }
+
+    function precision() internal pure returns (uint256) {
+        return PRECISION;
+    }
+
+    function initialRecap() internal pure returns (uint256) {
+        return INITIAL_HAIRCUT;
+    }
+
+    function soilCoefficientHigh() internal pure returns (uint256) {
+        return SOIL_COEFFICIENT_HIGH;
+    }
+
+    function soilCoefficientLow() internal pure returns (uint256) {
+        return SOIL_COEFFICIENT_LOW;
+    }
 }

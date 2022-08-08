@@ -2,7 +2,7 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {AppStorage} from "../AppStorage.sol";
@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 /**
  * @author Publius
- * @title InitHotFix4
+ * @title InitHotFix5
 **/
 
 interface IBs {

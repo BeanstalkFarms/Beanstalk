@@ -2,149 +2,63 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.7.6;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/SiloFacet/SiloFacet.sol";
-import "../MockUniswapV2Pair.sol";
+import "../../libraries/Silo/LibWhitelist.sol";
 
 /**
  * @author Publius
  * @title Mock Silo Facet
 **/
+
 contract MockSiloFacet is SiloFacet {
+
+    uint256 constant private AMOUNT_TO_BDV_BEAN_ETH = 119894802186829;
+    uint256 constant private AMOUNT_TO_BDV_BEAN_3CRV = 992035;
+    uint256 constant private AMOUNT_TO_BDV_BEAN_LUSD = 983108;
 
     using SafeMath for uint256;
 
-    function depositSiloAssetsE(address account, uint256 base, uint256 amount) public {
-        updateSilo(account);
-        LibSilo.depositSiloAssets(account, base, amount);
+    function mockWhitelistToken(address token, bytes4 selector, uint32 stalk, uint32 seeds) external {
+       LibWhitelist.whitelistToken(token, selector, stalk, seeds);
     }
 
-    function incrementDepositedLPE(uint256 amount) public {
-        LibLPSilo.incrementDepositedLP(amount);
-        MockUniswapV2Pair(s.c.pair).faucet(address(this), amount);
+    function mockBDV(uint256 amount) external pure returns (uint256) {
+        return amount;
     }
 
-    function incrementDepositedBeansE(uint256 amount) public {
-        s.bean.deposited = s.bean.deposited.add(amount);
-    }
-
-    function withdrawSiloAssetsE(address account, uint256 base, uint256 amount) public {
-        updateSilo(account);
-        LibSilo.withdrawSiloAssets(account, base, amount);
-    }
-
-    function balanceOfDepositedBeans(address account) public view returns (uint256) {
-        uint256 beans = 0;
-        for (uint32 i = 0; i <= season(); i++) {
-            beans = beans.add(s.a[account].bean.deposits[i]);
+    function mockUnripeLPDeposit(uint256 t, uint32 _s, uint256 amount, uint256 bdv) external {
+        _update(msg.sender);
+        if (t == 0) {
+            s.a[msg.sender].lp.deposits[_s] += amount;
+            s.a[msg.sender].lp.depositSeeds[_s] += bdv.mul(4);
         }
-        return beans;
+        else if (t == 1) LibTokenSilo.addDeposit(msg.sender, C.unripeLPPool1(), _s, amount, bdv);
+        else if (t == 2) LibTokenSilo.addDeposit(msg.sender, C.unripeLPPool2(), _s, amount, bdv);
+        uint256 unripeLP = getUnripeForAmount(t, amount);
+        LibTokenSilo.incrementDepositedToken(C.unripeLPAddress(), unripeLP);
+        bdv = bdv.mul(C.initialRecap()).div(1e18);
+        uint256 seeds = bdv.mul(s.ss[C.unripeLPAddress()].seeds);
+        uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalk).add(LibSilo.stalkReward(seeds, season() - _s));
+        LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
     }
 
-    function balanceOfDepositedLP(address account) public view returns (uint256) {
-        uint256 beans = 0;
-        for (uint32 i = 0; i <= season(); i++) {
-            beans = beans.add(s.a[account].lp.deposits[i]);
-        }
-        return beans;
+    function mockUnripeBeanDeposit(uint32 _s, uint256 amount) external {
+        _update(msg.sender);
+        s.a[msg.sender].bean.deposits[_s] += amount;
+        LibTokenSilo.incrementDepositedToken(C.unripeBeanAddress(), amount);
+        amount = amount.mul(C.initialRecap()).div(1e18);
+        uint256 seeds = amount.mul(s.ss[C.unripeBeanAddress()].seeds);
+        uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalk).add(LibSilo.stalkReward(seeds, season() - _s));
+        LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
     }
 
-    function balanceOfRootStalk(address account) public view returns (uint256) {
-        if (s.s.roots == 0) return 0;
-        return s.a[account].roots.mul(s.s.stalk).div(s.s.roots);
-    }
-
-    function balanceOfRawStalk(address account) public view returns (uint256) {
-        return s.a[account].s.stalk;
-    }
-
-    function beanDeposits(address account) public view returns (
-        uint32[] memory seasons,
-        uint256[] memory crates
-    ) {
-        uint256 numberCrates = 0;
-        for (uint32 i = 0; i <= season(); i++) {
-            if (beanDeposit(account, i) > 0) numberCrates += 1;
-        }
-        seasons = new uint32[](numberCrates);
-        crates = new uint256[](numberCrates);
-        numberCrates = 0;
-        for (uint32 i = 0; i <= season(); i++) {
-            if (beanDeposit(account, i) > 0) {
-                seasons[numberCrates] = i;
-                crates[numberCrates] = beanDeposit(account, i);
-                numberCrates += 1;
-            }
-        }
-        return (seasons, crates);
-    }
-
-    function lpDeposits(address account) public view returns (
-        uint32[] memory seasons,
-        uint256[] memory crates,
-        uint256[] memory seedCrates
-    ) {
-        uint256 numberCrates;
-        for (uint32 i = 0; i <= season(); i++) {
-            if (s.a[account].lp.deposits[i] > 0) numberCrates += 1;
-        }
-        seasons = new uint32[](numberCrates);
-        crates = new uint256[](numberCrates);
-        seedCrates = new uint256[](numberCrates);
-        numberCrates = 0;
-        for (uint32 i = 0; i <= season(); i++) {
-            if (s.a[account].lp.deposits[i] > 0) {
-                seasons[numberCrates] = i;
-                crates[numberCrates] = s.a[account].lp.deposits[i];
-                seedCrates[numberCrates] = s.a[account].lp.depositSeeds[i];
-                numberCrates += 1;
-            }
-        }
-        return (seasons, crates, seedCrates);
-    }
-
-    function beanWithdrawals(address account) public view returns (
-        uint32[] memory seasons,
-        uint256[] memory crates
-    ) {
-        uint256 numberCrates;
-        for (uint32 i = 0; i <= season()+25; i++) {
-            if (s.a[account].bean.withdrawals[i] > 0) numberCrates += 1;
-        }
-        seasons = new uint32[](numberCrates);
-        crates = new uint256[](numberCrates);
-        numberCrates = 0;
-        for (uint32 i = 0; i <= season()+25; i++) {
-            if (s.a[account].bean.withdrawals[i] > 0) {
-                seasons[numberCrates] = i;
-                crates[numberCrates] = s.a[account].bean.withdrawals[i];
-                numberCrates += 1;
-            }
-        }
-        return (seasons, crates);
-    }
-
-    function lpWithdrawals(address account) public view returns (
-        uint32[] memory seasons,
-        uint256[] memory crates
-    ) {
-        uint256 numberCrates;
-        for (uint32 i = 0; i <= season()+25; i++) {
-            if (s.a[account].lp.withdrawals[i] > 0) numberCrates += 1;
-        }
-        seasons = new uint32[](numberCrates);
-        crates = new uint256[](numberCrates);
-        numberCrates = 0;
-        for (uint32 i = 0; i <= season()+25; i++) {
-            if (s.a[account].lp.withdrawals[i] > 0) {
-                seasons[numberCrates] = i;
-                crates[numberCrates] = s.a[account].lp.withdrawals[i];
-                numberCrates += 1;
-            }
-        }
-        return (seasons, crates);
+    function getUnripeForAmount(uint256 t, uint256 amount) private pure returns (uint256) {
+        if (t == 0) return amount.mul(AMOUNT_TO_BDV_BEAN_ETH).div(1e18);
+        else if (t == 1) return amount.mul(AMOUNT_TO_BDV_BEAN_3CRV).div(1e18);
+        else return amount.mul(AMOUNT_TO_BDV_BEAN_LUSD).div(1e18);
     }
 }

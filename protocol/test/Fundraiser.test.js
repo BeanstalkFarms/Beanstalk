@@ -1,8 +1,8 @@
-const { ZERO_ADDRESS } = require("@openzeppelin/test-helpers/src/constants");
+const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
+const { BEAN } = require('./utils/constants')
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
-const { BigNumber } = require('bignumber.js')
-const { print } = require('./utils/print.js')
+const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address, fundraiserAddress;
@@ -18,12 +18,13 @@ describe('Fundraiser', function () {
     this.diamond = contracts.beanstalkDiamond
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
-    this.bean = await ethers.getContractAt('MockToken', contracts.bean)
+    this.bean = await ethers.getContractAt('MockToken', BEAN)
     this.fundraiser = await ethers.getContractAt('MockFundraiserFacet', this.diamond.address)
 
     let tokenFacet = await ethers.getContractFactory('MockToken')
     this.token = await tokenFacet.deploy('MockToken', 'TOKEN')
     await this.token.deployed()
+    await this.season.setYieldE('0')
 
     await this.season.siloSunrise(0)
     await this.bean.mint(userAddress, '1000000000')
@@ -34,25 +35,24 @@ describe('Fundraiser', function () {
     await this.token.connect(user2).approve(this.diamond.address, '1000000000')
   })
 
-  beforeEach (async function () {
-    await this.season.resetAccount(userAddress)
-    await this.season.resetAccount(user2Address)
-    await this.season.resetAccount(ownerAddress)
-    await this.season.resetState()
-    await this.season.siloSunrise(0)
-    await this.token.connect(fundraiser).burn(await this.token.balanceOf(fundraiserAddress))
-  })
+  beforeEach(async function () {
+    snapshotId = await takeSnapshot();
+  });
+
+  afterEach(async function () {
+    await revertToSnapshot(snapshotId);
+  });
 
   describe('create fundraiser', function () {
     describe('reverts if not owner', async function () {
       it('reverts ', async function () {
-        await expect(this.fundraiser.createFundraiser(fundraiserAddress, this.token.address, '1000')).to.be.revertedWith('Fundraiser: sender must be Beanstalk.')
+        await expect(this.fundraiser.connect(user2).createFundraiser(fundraiserAddress, this.token.address, '1000')).to.be.revertedWith('LibDiamond: Must be contract or owner')
       })
     })
 
     describe('create a fundraiser', async function () {
       beforeEach(async function () {
-        this.result = await this.fundraiser.createFundraiserE(fundraiserAddress, this.token.address, '1000')
+        this.result = await this.fundraiser.createFundraiser(fundraiserAddress, this.token.address, '1000')
       })
 
       it('gets listed as a fundraiser', async function () {
@@ -100,18 +100,26 @@ describe('Fundraiser', function () {
     })
 
     describe('over fund', async function () {
+      beforeEach(async function () {
+        this.result = await this.fundraiser.connect(user).fund(0, '1001', EXTERNAL)
+      })
+
       it('reverts on over fund', async function () {
-        await expect(this.fundraiser.connect(user).fund(0, '1001')).to.be.revertedWith('Fundraiser: amount exceeds remaining.')
+        await expect(this.fundraiser.connect(user).fund(0, '0', EXTERNAL)).to.be.revertedWith('Fundraiser: already completed.')
+      })
+
+      it('burns beans from protocol', async function () {
+        await expect(await this.bean.balanceOf(this.fundraiser.address)).to.be.equal('0')
       })
     })
 
     describe('fund completed fundraiser', async function () {
       beforeEach(async function () {
-        this.result = await this.fundraiser.connect(user).fund(0, '1000')
+        this.result = await this.fundraiser.connect(user).fund(0, '1000', EXTERNAL)
       })
 
       it('reverts on over fund', async function () {
-        await expect(this.fundraiser.connect(user).fund(0, '0')).to.be.revertedWith('Fundraiser: already completed.')
+        await expect(this.fundraiser.connect(user).fund(0, '0', EXTERNAL)).to.be.revertedWith('Fundraiser: already completed.')
       })
 
       it('burns beans from protocol', async function () {
@@ -121,7 +129,7 @@ describe('Fundraiser', function () {
 
     describe('partial fund', async function () {
       beforeEach(async function () {
-        this.result = await this.fundraiser.connect(user).fund(0, '500')
+        this.result = await this.fundraiser.connect(user).fund(0, '500', EXTERNAL)
       })
 
       it('subtracts from totals', async function () {
@@ -140,7 +148,7 @@ describe('Fundraiser', function () {
       })
 
       it('emits a Sow event', async function () {
-        await expect(this.result).to.emit(this.fundraiser, 'Sow').withArgs(userAddress, 0, '500', '500')
+        await expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, 0, '500', '500')
       })
 
       it('burns beans from protocol', async function () {
@@ -150,7 +158,7 @@ describe('Fundraiser', function () {
 
     describe('fully fund', async function () {
       beforeEach(async function () {
-        this.result = await this.fundraiser.connect(user).fund(0, '1000')
+        this.result = await this.fundraiser.connect(user).fund(0, '1000', EXTERNAL)
       })
 
       it('subtracts from totals', async function () {
@@ -168,7 +176,7 @@ describe('Fundraiser', function () {
       })
 
       it('emits a Sow event', async function () {
-        await expect(this.result).to.emit(this.fundraiser, 'Sow').withArgs(userAddress, 0, '1000', '1000')
+        await expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, 0, '1000', '1000')
       })
 
       it('pays fundraiser address', async function () {
