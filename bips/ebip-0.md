@@ -14,7 +14,7 @@ Note: Bugs or security vulnerabilities qualify as emergencies. Emergency action 
 
 * GitHub PR: https://github.com/BeanstalkFarms/Beanstalk/pull/80
 * GitHub Commit Hash: fa8612e3698d932004f45cd3260c5ad71893b006
-* Gnosis Transaction: [insert Gnosis transaction details link here]
+* Gnosis Transaction: https://etherscan.io/tx/0x7949bdea1864aa66712bac3d57b79f3030c4cafbb91cdca3d56a0921e1496402
 
 ## Issue
 
@@ -26,7 +26,7 @@ If a Farmer performs an action that removes all of their assets from the Silo, t
 
 ## Magnitude
 
-It is estimated that approximately 1600 Beans across 34 accounts have been forfeited so far. Forfeited Earned Beans were redistributed across remaining Stalkholders. 
+It is estimated that approximately 1717 Beans across 32 accounts have been forfeited so far. Forfeited Earned Beans were redistributed across remaining Stalkholders. 
 
 ## Effective
 
