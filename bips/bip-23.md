@@ -10,9 +10,9 @@ Bean Sprout
 
 ## Links
 
-* GitHub PR: [insert GitHub PR link here]
-* GitHub Commit Hash: [insert GitHub commit hash here]
-* Gnosis Transaction: [insert Gnosis transaction details link here]
+* [Gnosis Transaction](https://gnosis-safe.io/app/eth:0xa9bA2C40b263843C04d344727b954A545c81D043/transactions/multisig_0xa9bA2C40b263843C04d344727b954A545c81D043_0xdf2bd4aaa81f658a1d37f44c98a0a4e3de2ee573cf9b92df7f81fa0abf5560f0)
+* [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/79)
+* GitHub Commit Hash: [42ebfdc80201361d7eb72c1c54dc3432fd9d3e4c](https://github.com/BeanstalkFarms/Beanstalk/commit/42ebfdc80201361d7eb72c1c54dc3432fd9d3e4c)
 
 ## Goals
 
