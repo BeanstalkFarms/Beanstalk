@@ -46,7 +46,8 @@ contract MarketplaceV2Facet is Order {
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
         LibTransfer.To mode,
-        PiecewiseFunction calldata f
+        // PiecewiseFunction calldata f
+        PackedPiecewiseFunction calldata f
     ) external payable {
         _createDPodListing(
             index,
@@ -107,7 +108,8 @@ contract MarketplaceV2Facet is Order {
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
         LibTransfer.From mode,
-        PiecewiseFunction calldata f
+        // PiecewiseFunction calldata f
+        PackedPiecewiseFunction calldata f
     ) external payable returns (bytes32 id) {
         beanAmount = LibTransfer.receiveToken(C.bean(), beanAmount, msg.sender, mode);
         return _createDPodOrder(beanAmount, pricePerPod, maxPlaceInLine, f);
@@ -137,7 +139,8 @@ contract MarketplaceV2Facet is Order {
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
         LibTransfer.To mode,
-        PiecewiseFunction calldata f
+        // PiecewiseFunction calldata f
+        PackedPiecewiseFunction calldata f
     ) external payable {
         _cancelDynamicPodOrder(pricePerPod, maxPlaceInLine, mode, f);
     }
@@ -148,7 +151,8 @@ contract MarketplaceV2Facet is Order {
         address account,
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
-        PiecewiseFunction calldata f
+        // PiecewiseFunction calldata f
+        PackedPiecewiseFunction calldata f
     ) external view returns (uint256) {
         return s.podOrders[ createOrderId(account, pricePerPod, maxPlaceInLine, f.mode, f.values, f.bases, f.signs)];
     }

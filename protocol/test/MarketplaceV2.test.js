@@ -45,10 +45,15 @@ describe('MarketplaceV2', function () {
     await this.field.connect(user2).sow('1000', EXTERNAL);
   })
 
+  // const emptyFunction = {
+  //   values: new Array(160).fill('0'),
+  //   bases: new Array(128).fill(0),
+  //   signs: new Array(128).fill(false)
+  // }
   const emptyFunction = {
     values: new Array(160).fill('0'),
-    bases: new Array(128).fill(0),
-    signs: new Array(128).fill(false)
+    bases: new Array(4).fill(0),
+    signs: 0
   }
 
   const getHash = async function (tx) {
@@ -63,11 +68,38 @@ describe('MarketplaceV2', function () {
 
     // console.log([args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args[6] == EXTERNAL, priceMode == CONSTANT, args.values || emptyFunction.values, args.bases || emptyFunction.bases, args.signs || emptyFunction.signs]);
     return ethers.utils.solidityKeccak256(
-      ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint8[]', 'bool[]'],
+      ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint256[]', 'uint256'],
       [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args[6] == EXTERNAL, priceMode == CONSTANT, priceMode == CONSTANT ? emptyFunction.values : args[7], priceMode == CONSTANT ? emptyFunction.bases : args[8], priceMode == CONSTANT ? emptyFunction.signs : args[9]]
     );
   }
 
+  // const getHash = async function (tx) {
+  //   let receipt = await tx.wait();
+  //   var args = (receipt.events?.filter((x) => { return x.event == ("DynamicPodListingCreated") }))[0]?.args;
+  //   var priceMode = DYNAMIC;
+  //   // console.log(args);
+  //   if (!args) {
+  //     args = (receipt.events?.filter((x) => { return x.event == ("PodListingCreated")}))[0]?.args;
+  //     priceMode = CONSTANT;
+  //   }
+
+  //   // console.log([args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args[6] == EXTERNAL, priceMode == CONSTANT, args.values || emptyFunction.values, args.bases || emptyFunction.bases, args.signs || emptyFunction.signs]);
+  //   return ethers.utils.solidityKeccak256(
+  //     ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint8[]', 'bool[]'],
+  //     [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args[6] == EXTERNAL, priceMode == CONSTANT, priceMode == CONSTANT ? emptyFunction.values : args[7], priceMode == CONSTANT ? emptyFunction.bases : args[8], priceMode == CONSTANT ? emptyFunction.signs : args[9]]
+  //   );
+  // }
+
+  // const getHashFromListing = function (l) {
+  //   l[4] = l[4] == EXTERNAL;
+  //   l.push(l[5][1])
+  //   l.push(l[5][2])
+  //   l.push(l[5][3])
+  //   l[5] = l[5][0] == CONSTANT;
+    
+  //   return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint8[]', 'bool[]'], l);
+  // }
+  
   const getHashFromListing = function (l) {
     l[4] = l[4] == EXTERNAL;
     l.push(l[5][1])
@@ -75,7 +107,7 @@ describe('MarketplaceV2', function () {
     l.push(l[5][3])
     l[5] = l[5][0] == CONSTANT;
     
-    return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint8[]', 'bool[]'], l);
+    return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint256[]', 'uint256'], l);
   }
 
   const getOrderId = async function (tx) {
@@ -98,6 +130,7 @@ describe('MarketplaceV2', function () {
     xs: [100, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800],
     ys: [900000, 900000, 900000, 900000, 900000, 800000, 800000, 800000, 800000, 775000, 750000, 725000, 700000, 675000, 650000, 625000, 600000, 575000, 550000, 525000]
   }
+
   const set2 = {
     xs: [200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4200, 5000, 5500, 6350, 6780, 7230, 7400, 8130, 8500, 8800, 8950, 9900, 9999],
     ys: [900000, 900000, 900000, 900000, 800000, 800000, 800000, 800000, 775000, 750000, 725000, 700000, 675000, 650000, 625000, 600000, 575000, 550000, 525000, 520000, 515000, 510000, 501000, 478000, 465000, 443000, 425000, 409000, 398000, 389000, 371000, 369000]
@@ -108,10 +141,6 @@ describe('MarketplaceV2', function () {
     ys: [990000, 990000, 980000, 950000, 890000, 790000, 680000, 670000, 660000, 570000, 470000, 450000, 450000]
   }
   
-  const zeroXYset = {
-    xs: new Array(32).fill(0),
-    ys: new Array(32).fill(0)
-  }
   const z_interpolant = interpolate(set0.xs, set0.ys);
   const n_interpolant = interpolate(set1.xs, set1.ys); 
   const m_interpolant = interpolate(set2.xs, set2.ys);

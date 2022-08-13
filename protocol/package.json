@@ -32,6 +32,7 @@
     "dotenv": "^10.0.0",
     "eth-permit": "^0.2.1",
     "keccak256": "^1.0.6",
+    "mathjs": "^11.0.1",
     "merkletreejs": "^0.2.31"
   }
 }

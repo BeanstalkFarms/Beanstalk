@@ -1,4 +1,7 @@
 const {create, all} = require("mathjs");
+const { ethers } = require("ethers");
+const { Field } = require("./bitfield");
+
 
 const config = {
     matrix: 'Array',
@@ -191,6 +194,8 @@ function interpolate(xArr, yArr) {
             }
         }
     }
+
+    //32 bases packed into a single uint
     return {values: values, bases: bases, signs: signs}
 }
 
@@ -318,18 +323,76 @@ function parseIntervals(priceFunction){
     return subintervals;
 }
 
-// const set = {
-//     xs: [0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15],
-//     ys: [10, 10, 10, 10, 10, 10, 10.5, 15, 50, 60, 85]
+const set = {
+    xs: [0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15],
+    ys: [10, 10, 10, 10, 10, 10, 10.5, 15, 50, 60, 85]
+}
+
+// const boolArrToNumber = (arr) => {
+//     var bitArr = [];
+//     arr.forEach((el) => bitArr.push(+el));
+//     var result = bitArr.reduce((accumulator, value) => {
+//         // console.log(accumulator, value);
+//         return accumulator << 1 | value;
+//     });
+//     console.log(result);
+//     return math.format(math.bignumber(result), {notation: "fixed"});
 // }
+const boolArrToNumber = (arr) => {
+    const field = new Field(256);
+    for(let i = 0; i < arr.length; i++) {
+        field.set(i, arr[i]);
+    }
+    console.log(field.buffer)
+    //each number in js can only be a 32 bit number
+    return ethers.BigNumber.from(field.buffer.reverse());
+}
 
-// let priceFunction = interpolate(set.xs, set.ys);
+const getBoolsFromNum = (packedBools, length) => {
+    // var packedBool = math.bignumber(packedBools);
+    console.log(packedBools);
+    var bools = [];
+    for(let i = 0; i < length; i++) {
+        // var flag = math.bitAnd(math.rightArithShift(packedBool, math.bignumber(i)), math.bignumber(1));
+        // var flag = math.mod(math.rightArithShift(packedBool, i), math.bignumber(2));
+        var flag = (packedBools >> (i)) & ethers.BigNumber.from(1);
+        // console.log(flag);
+        bools.push(flag!=0);
+        // console.log(i, flag === 1, f.signs.reverse()[i]);
+    }
+    return bools;
+}
 
-// console.log(priceFunction.values.length, priceFunction.bases.length, priceFunction.signs.length);
-// console.log(cleanSubintervals(priceFunction))
-// let order = ppval_listing(priceFunction, 5); 
+let f = interpolate(set.xs, set.ys);
+// var a = [false, false, false, false, true, false, true, false, false, true];
 
-// console.log("order", order)
+// var testnum = boolArrToNumber(f.signs.reverse());
+// getBoolsFromNum(testnum, f.signs.length);
+
+const packBases = (bases) => {
+    //move all the bases into an arraybuffer
+    let buffer = new ArrayBuffer(bases.length);
+    let view = new Uint8ClampedArray(buffer);
+    for(let i = 0; i < bases.length; i++) {
+        view[i] = bases[i];
+    }
+    console.log(view)
+    //convert the array buffer to a hex string
+    //32 bytes max per hex string
+    var hexStrings = new Array(Math.ceil(bases.length / 32));
+
+    for(let i = 0; i < hexStrings.length; i++) {
+        hexStrings[i] = ethers.BigNumber.from(view.slice(i*32, (i+1)*32));
+        // console.log(view.buffer.slice(i*32, (i+1)*32))
+    }
+    return hexStrings;
+}
+
+let booltonum = boolArrToNumber(f.signs);
+console.log(booltonum);
+let boolsfromnum = getBoolsFromNum(booltonum, f.signs.length)
+console.log(JSON.stringify(f.signs), f.signs.length)
+console.log(JSON.stringify(boolsfromnum), boolsfromnum.length);
 
 module.exports = {
     ppval_order,

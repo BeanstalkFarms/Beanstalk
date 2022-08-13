@@ -18,7 +18,7 @@ contract MockMarketplaceFacet is MarketplaceV2Facet {
         return getListingPrice(l);
     }
 
-    function priceOrderFill(PiecewiseFunction calldata f, uint256 index, uint256 start, uint256 amount) external view returns (uint256) {
+    function priceOrderFill(PackedPiecewiseFunction calldata f, uint256 index, uint256 start, uint256 amount) external view returns (uint256) {
         return getOrderAmount(f, index + start, amount);
     }
 
@@ -32,6 +32,9 @@ contract MockMarketplaceFacet is MarketplaceV2Facet {
 
     function evalPiecewiseFunctionTest(PiecewiseFunction calldata f, uint256 x, uint256 i, uint256 deg) external view returns (uint256) {
         return evaluatePiecewiseFunction(f, x, i, deg);
+    }
+    function evalPackedPiecewiseFunctionTest(PackedPiecewiseFunction calldata f, uint256 x, uint256 i, uint256 deg) external view returns (uint256) {
+        return evaluatePackedPF(f, x, i, deg);
     }
 
 }
