@@ -46,44 +46,62 @@
         uint256 signs;
     }
 
-    // function createZeros() internal pure returns (uint256[numValues] memory valueArray, uint256[indexMultiplier] memory baseArray, uint256 signArray) {
-    //     for (uint256 i = 0; i < numValues; i++) {
-    //         valueArray[i] = 0;
-    //         if(i < indexMultiplier){
-    //             baseArray[i] = 0;
-    //         }
-    //     }
-        
-    //     return (valueArray, baseArray, 0);
-    // }
-
-    function createZeros() internal pure returns (uint256[numValues] memory valueArray, uint8[numMeta] memory baseArray, bool[numMeta] memory signArray) {
+    function createZeros() internal pure returns (uint256[numValues] memory valueArray, uint256[indexMultiplier] memory baseArray, uint256 signArray) {
         for (uint256 i = 0; i < numValues; i++) {
             valueArray[i] = 0;
-            if(i < numMeta){
+            if(i < indexMultiplier){
                 baseArray[i] = 0;
-                signArray[i] = false;
             }
         }
-        return (valueArray, baseArray, signArray);
+        
+        return (valueArray, baseArray, 0);
     }
+
+    // function createZeros() internal pure returns (uint256[numValues] memory valueArray, uint8[numMeta] memory baseArray, bool[numMeta] memory signArray) {
+    //     for (uint256 i = 0; i < numValues; i++) {
+    //         valueArray[i] = 0;
+    //         if(i < numMeta){
+    //             baseArray[i] = 0;
+    //             signArray[i] = false;
+    //         }
+    //     }
+    //     return (valueArray, baseArray, signArray);
+    // }
 
     //Packed Evaluation of a PiecewiseFunction
 
-    function evaluatePackedPF(PackedPiecewiseFunction calldata f, uint256 x, uint256 i, uint256 deg) internal pure returns (uint256) {
+    function evaluatePackedPF(
+        PackedPiecewiseFunction calldata f, uint256 x, uint256 i, uint256 deg) internal view returns (uint256) {
         uint256 degIdx;
         uint256 yP;
         uint256 yN;
         uint256 temp;
 
+        //only do x - rangeStart if x is greater than rangeStart, otherwise it will cause underflow
+        if(x >= f.values[i*valueIndexMultiplier + indexMultiplier]) {
+            x -= f.values[i*valueIndexMultiplier + indexMultiplier];
+        }
+
         while(degIdx <= deg) {
             // evaluate in the form v3(x-k)^3 + v2(x-k)^2 + v1(x-k) + v0
-            uint256 baseIndex = (i*indexMultiplier + degIdx) / 32;
-           
-            temp = pow(x - f.values[i*valueIndexMultiplier + indexMultiplier], degIdx)
-                .mul(f.values[i*valueIndexMultiplier + degIdx])
-                .div(pow(10, getPackedBase(f.bases[baseIndex], i)));
+            
+            uint256 base = getPackedBase(
+                f.bases[i/ 8], //get the base for the current index which is in range 0-4
+                (i - ((i/8)*8))*4 + degIdx
+            );
 
+            console.log(base, i, (i - ((i/8)*8))*4 + degIdx);
+            
+            console.log(f.values[i*valueIndexMultiplier + degIdx]);
+            console.log(x, f.values[i*valueIndexMultiplier + indexMultiplier]);
+
+            temp = pow(x, degIdx)
+                .mul(f.values[i*valueIndexMultiplier + degIdx])
+                .div(pow(10, base));
+            
+            console.log(temp);
+            // console.log(getPackedSign(f.signs, i*indexMultiplier + degIdx));
+            
             if(getPackedSign(f.signs, i*indexMultiplier + degIdx))
                 yP = yP.add(temp);
             else 
@@ -94,6 +112,59 @@
 
         return yP.sub(yN);
     }
+ 
+     //Piecewise Integration
+     /**
+     * @dev Calculates the integral of a piecewise function.
+     *
+     * 
+     */
+
+     function evalPackedPFIntegrate(
+        PackedPiecewiseFunction calldata f, 
+        uint256 x1, 
+        uint256 x2, 
+        uint256 i, 
+        uint256 deg
+    ) internal view returns (uint256) {
+        uint256 degIdx;
+        uint256 yP;
+        uint256 yN;
+
+        uint256 temp;
+
+        if(x1 >= f.values[i*valueIndexMultiplier + indexMultiplier] && x2 >= f.values[i*valueIndexMultiplier + indexMultiplier]) {
+            x1 -= f.values[i*valueIndexMultiplier + indexMultiplier];
+            x2 -= f.values[i*valueIndexMultiplier + indexMultiplier];
+        }
+
+        while(degIdx <= deg) {
+            // to integrate from x1 to x2 we need to evaluate the expression
+            // ( v3(x2-k)^4/4 + v2(x2-k)^3/3 + v1(x2-k)^2/2 + v0*x2 ) - ( v3(x1-k)^4/4 + v2(x1-k)^3/3 + v1(x1-k)^2/2 + v0*x1 )
+            // uint256 baseIndex = (i*indexMultiplier + degIdx) / 32;
+            uint256 base = getPackedBase(f.bases[i / 8], (i - ((i/8)*8))*4 + degIdx);
+
+            {   
+                temp = pow(x2, degIdx+1)
+                    .mul(f.values[i*valueIndexMultiplier + degIdx])
+                    .div(pow(10, base).mul(degIdx + 1));
+            }
+            {
+                temp -= pow(x1, degIdx+1)
+                .mul(f.values[i*valueIndexMultiplier + degIdx])
+                .div(pow(10, base).mul(degIdx + 1));
+            }
+
+            if (getPackedSign(f.signs, i*indexMultiplier + degIdx)) 
+                yP = yP.add(temp);
+            else 
+                yN = yN.add(temp);
+
+            degIdx++;
+        }
+        return yP - yN;
+     }
+
 
      //Piecewise Evaluation
      function evaluatePiecewiseFunction(PiecewiseFunction calldata f, uint256 x, uint256 i, uint256 deg) internal pure returns (uint256) {
@@ -116,13 +187,7 @@
 
         return yP.sub(yN);
      }
- 
-     //Piecewise Integration
-     /**
-     * @dev Calculates the integral of a piecewise function.
-     *
-     * 
-     */
+
      function evalPiecewiseFunctionIntegrate(
         PiecewiseFunction calldata f, 
         uint256 x1, 
@@ -162,58 +227,12 @@
         }
         return yP - yN;
      }
-
-     function evalPackedPFIntegrate(
-        PackedPiecewiseFunction calldata f, 
-        uint256 x1, 
-        uint256 x2, 
-        uint256 i, 
-        uint256 deg
-    ) internal pure returns (uint256) {
-        uint256 degIdx;
-        uint256 yP;
-        uint256 yN;
-
-        uint256 temp;
-
-        while(degIdx <= deg) {
-            // to integrate from x1 to x2 we need to evaluate the expression
-            // ( v3(x2-k)^4/4 + v2(x2-k)^3/3 + v1(x2-k)^2/2 + v0*x2 ) - ( v3(x1-k)^4/4 + v2(x1-k)^3/3 + v1(x1-k)^2/2 + v0*x1 )
-            // uint256 baseIndex = (i*indexMultiplier + degIdx) / 32;
-            uint256 base = getPackedBase(f.bases[(i*indexMultiplier + degIdx) / 32], i);
-
-            {   
-                temp = pow(
-                    x2 - f.values[i*valueIndexMultiplier + indexMultiplier], degIdx+1
-                    ).mul(
-                        f.values[i*valueIndexMultiplier + degIdx]
-                    ).div(
-                        pow(10, base).mul(degIdx + 1));
-            }
-            {
-                temp -= pow(
-                    x1 - f.values[i*valueIndexMultiplier + indexMultiplier], degIdx+1
-                ).mul(
-                    f.values[i*valueIndexMultiplier + degIdx]
-                ).div(
-                    pow(10, base).mul(degIdx + 1)
-                );
-            }
-
-            if (getPackedSign(f.signs, i*indexMultiplier + degIdx)) 
-                yP = yP.add(temp);
-            else 
-                yN = yN.add(temp);
-
-            degIdx++;
-        }
-        return yP - yN;
-     }
- 
     function getPackedBase(uint256 packedBases, uint256 index) internal pure returns (uint8) {
-        return uint8(packedBases >> (index*8));
+        //assume 32 bases are always packed
+        return uint8(packedBases >> ((32 - index - 1)*8));
     }
-    function getPackedSign(uint256 packedBools, uint256 index) internal pure returns (bool) {
+    function getPackedSign(uint256 packedBools, uint256 index) internal view returns (bool) {
+        console.log(packedBools, index);
         return ((packedBools >> index) & uint256(1) == 1);
     }
  

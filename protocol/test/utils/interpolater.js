@@ -1,5 +1,5 @@
 const {create, all} = require("mathjs");
-const { ethers } = require("ethers");
+const {BitDescriptor, BitPacker} = require("./bitpacker.js");
 
 
 const config = {
@@ -148,13 +148,14 @@ function interpolate(xArr, yArr) {
     var signs = new Array(maxpieces*4);
     for(let i = 0; i < maxpieces; i++){
         if(i<length) {
-            signs[i*4] = (math.sign(ys[i]) == (1||0));
-            signs[i*4 + 1] = (math.sign(c1s[i]) == (1||0));
-            
+            // signs[i*4] = (math.sign(ys[i]) == (1||0));
+            // signs[i*4 + 1] = (math.sign(c1s[i]) == (1||0));
+            signs[i*4] = BitDescriptor.fromBool(math.sign(ys[i]) == (1||0));
+            signs[i*4 + 1] = BitDescriptor.fromBool(math.sign(c1s[i]) == (1||0));
 
             var c = 25;
-            bases[i*4] = math.number(ys[i]).calculateShifts(c);
-            bases[i*4 + 1] = math.number(c1s[i]).calculateShifts(c);
+            bases[i*4] = BitDescriptor.fromUint8(math.number(ys[i]).calculateShifts(c));
+            bases[i*4 + 1] = BitDescriptor.fromUint8(math.number(c1s[i]).calculateShifts(c));
             
             var base1 = math.pow(math.bignumber(10), math.bignumber(math.number(ys[i]).calculateShifts(c)))
             var base2 = math.pow(math.bignumber(10), math.bignumber(math.number(c1s[i]).calculateShifts(c)))
@@ -166,54 +167,93 @@ function interpolate(xArr, yArr) {
             values[i*5 + 4] = math.format(xs[i], {notation: "fixed"});
 
             if(i<(length - 1)) {
-                signs[i*4 + 2] = (math.sign(c2s[i]) == 1);
-                signs[i*4 + 3] = (math.sign(c3s[i]) == 1);
+                signs[i*4 + 2] = BitDescriptor.fromBool(math.sign(c2s[i]) == 1);
+                signs[i*4 + 3] = BitDescriptor.fromBool(math.sign(c3s[i]) == 1);
 
-                bases[i*4 + 2] = math.number(c2s[i]).calculateShifts(c);
-                bases[i*4 + 3] = math.number(c3s[i]).calculateShifts(c);
+                bases[i*4 + 2] = BitDescriptor.fromUint8(math.number(c2s[i]).calculateShifts(c));
+                bases[i*4 + 3] = BitDescriptor.fromUint8(math.number(c3s[i]).calculateShifts(c));
 
                 var base3 = math.pow(math.bignumber(10), math.bignumber(math.number(c2s[i]).calculateShifts(c)))
                 var base4 = math.pow(math.bignumber(10), math.bignumber(math.number(c3s[i]).calculateShifts(c)))
                 values[i*5 + 2] = math.format(math.floor(math.abs(math.multiply(c2s[i], base3))), {notation: "fixed"});
                 values[i*5 + 3] = math.format(math.floor(math.abs(math.multiply(c3s[i], base4))), {notation: "fixed"});
             } else {
-                signs[i*4 + 2] = false;
-                signs[i*4 + 3] = false;
-                bases[i*4 + 2] = 0;
-                bases[i*4 + 3] = 0;
+                signs[i*4 + 2] = BitDescriptor.fromBool(false);
+                signs[i*4 + 3] = BitDescriptor.fromBool(false);
+                bases[i*4 + 2] = BitDescriptor.fromUint8(0);
+                bases[i*4 + 3] = BitDescriptor.fromUint8(0);
                 values[i*5 + 2] = '0';
                 values[i*5 + 3] = '0';
             }
             // console.log(xs[i], "xs[", i, "]")
         } else {
             for(let j = 0; j < 5; j++){
-                if(j<4) signs[i*4 + j] = false;
-                if(j<4) bases[i*4 + j] = 0;
+                if(j<4) signs[i*4 + j] = BitDescriptor.fromBool(false);
+                if(j<4) bases[i*4 + j] = BitDescriptor.fromUint8(0);
                 values[i*5 + j] = '0';
             }
         }
     }
 
+    const packedBools = BitPacker.pack(signs);
+    const packedBases = BitPacker.pack(bases);
+
+    const booliterator = BitPacker.createUnpackIterator(packedBools, pattern => {
+        switch(pattern) {
+            case '1': return '1';
+            case '0': return '0';
+            default: return null;
+        }
+    })
+    const baseiterator = BitPacker.createUnpackIterator(packedBases, pattern => {
+        switch(pattern) {
+            case '1': return '1';
+            case '0': return '0';
+            default: return null;
+        }
+    })
+    const boolString = [...booliterator].reverse().join('');
+    const baseArr = [...baseiterator];
+    console.log(baseArr.slice(0,32*8).join(''));
+    // var baseStrings = [];
+    var baseInts = [];
+    for(let i = 0; i < 4; i++){
+        // baseStrings.push(baseArr.slice(i*maxpieces, (i+1)*maxpieces).join(''));
+        baseInts.push(BigInt("0b" + baseArr.slice((i)*maxpieces*8, (i+1)*maxpieces*8).join('')).toString());
+        console.log("bigint at index ", i, " :", BigInt("0b" + baseArr.slice((i)*maxpieces*8, (i+1)*maxpieces*8).join('')).toString());
+        console.log(bases.slice((i)*maxpieces, (1+i)*maxpieces).map(x => x.value));
+    }
+
+    const boolInt = BigInt("0b" + boolString).toString();
+
     //32 bases packed into a single uint
-    return {values: values, bases: bases, signs: signs}
+    return {values: values, bases: bases, signs: signs, basesPacked: baseInts, signsPacked: boolInt}
 }
 
 function ppval(f, x, index, pieces, degree) {
     if(f.values.length != pieces*5) return;
     if(f.bases.length != pieces*4 && f.signs.length != pieces*4) return;
     var _x = math.bignumber(x);
+
+    //only do x - k if x is greater than or equal to k
+    if(math.compare(_x, math.bignumber(f.values[index*5 + 4])) !== -1) {
+        _x = math.subtract(_x, math.bignumber(f.values[index*5 + 4]));
+    }
+
     var y = math.bignumber(0);
     var degIdx = 0;
 
     while(degIdx <= degree) {
-        var istart = math.bignumber(f.values[index*5 + 4]);
         var v = math.bignumber(f.values[index*5 + degIdx])
-        var b = math.pow(math.bignumber(10), math.bignumber(f.bases[index*4 + degIdx]));
-        // console.log("delta: ", math.subtract(_x, istart), "value: ", math.divide(v,b), "term w/o dividing: " ,math.chain(math.subtract(_x, istart)).pow(degIdx).multiply(v).done());
-        // y += ((x - +f.values[index*5 + 4])**(degIdx)).muld(+f.values[index*5 + degIdx], f.bases[index*4 + degIdx]) * (f.signs[index*4 + degIdx] ? 1 : -1);
-        var term = math.floor(math.chain(math.subtract(_x, istart)).pow(degIdx).multiply(v).divide(b).done());
-        if(!f.signs[index*4 + degIdx]) y = math.subtract(y, term)
-        else y = math.add(y, term)
+        var b = math.pow(math.bignumber(10), math.bignumber(f.bases[index*4 + degIdx].value));
+
+        // console.log("index: ", index, degIdx, f.bases[index*4 + degIdx].value, f.signs[index*4 + degIdx].value === 1);
+        // console.log("x: ", _x, "istart: ", istart, "v: ", v, "b: ", b);
+        
+        var term = math.floor(math.chain(_x).pow(degIdx).multiply(v).divide(b).done());
+        // console.log("term: ", term);
+        if(f.signs[index*4 + degIdx].value === 1) y = math.add(y, term)
+        else y = math.subtract(y, term)
         // console.log("term res: ", term)
         degIdx++;
     }
@@ -226,22 +266,27 @@ function ppval_integrate(f, x1, x2, index, pieces, degree) {
     if(f.bases.length !== pieces*4 && f.signs.length !== pieces*4) return;
     var _x1 = math.bignumber(x1);
     var _x2 = math.bignumber(x2);
+
+    if(math.compare(_x1, math.bignumber(f.values[index*5 + 4])) !== -1 && math.compare(_x2, math.bignumber(f.values[index*5 + 4])) !== -1) {
+        _x1 = math.subtract(_x1, math.bignumber(f.values[index*5 + 4]));
+        _x2 = math.subtract(_x2, math.bignumber(f.values[index*5 + 4]));
+    }
+
     var y = math.bignumber(0);
     var degIdx = 0;
 
     while(degIdx <= degree) {
-        var istart = math.bignumber(f.values[index*5 + 4]);
         var v = math.bignumber(f.values[index*5 + degIdx])
-        var b = math.pow(math.bignumber(10), math.bignumber(f.bases[index*4 + degIdx]))
+        var b = math.pow(math.bignumber(10), math.bignumber(f.bases[index*4 + degIdx].value))
         if(degree == 0) {
-            var term = math.chain(math.subtract(_x2, istart)).multiply(v).divide(b).multiply(f.signs[index*4 + degIdx] ? 1 : -1).done();
+            var term = math.chain(_x2).multiply(v).divide(b).multiply(f.signs[index*4 + degIdx].value ? 1 : -1).done();
             y = math.add(y,  term);
-            term = math.chain(math.subtract(_x1, istart)).multiply(v).divide(b).multiply(f.signs[index*4 + degIdx] ? 1 : -1).done();
+            term = math.chain(_x1).multiply(v).divide(b).multiply(f.signs[index*4 + degIdx].value ? 1 : -1).done();
             y = math.subtract(y, term );
         } else {
-            var term = math.chain(math.subtract(_x2, istart)).pow(degIdx + 1).multiply(v).divide(b).divide(degIdx + 1).multiply(f.signs[index*4 + degIdx] ? 1 : -1).done();
+            var term = math.chain(_x2).pow(degIdx + 1).multiply(v).divide(b).divide(degIdx + 1).multiply(f.signs[index*4 + degIdx].value ? 1 : -1).done();
             y = math.add(y, term);
-            term = math.chain(math.subtract(_x1, istart)).pow(degIdx + 1).multiply(v).divide(b).divide(degIdx + 1).multiply(f.signs[index*4 + degIdx] ? 1 : -1).done();
+            term = math.chain(_x1).pow(degIdx + 1).multiply(v).divide(b).divide(degIdx + 1).multiply(f.signs[index*4 + degIdx].value ? 1 : -1).done();
             y = math.subtract(y, term);
         }
         degIdx++;
@@ -302,21 +347,31 @@ function ppval_order(f, placeInLine, amount) {
 
 }
 
+function getPackedBase(_packedBase, index) {
+    var bitArr = [];
+    for(var i = 0; i < 8; i++) {
+        bitArr.push(_packedBase >>> ((index*8) + i) & 1);
+    }
+    var bitString = bitArr.reverse().join('');
+    return parseInt(bitString, 2);
+}
+
 function getFunctionDegree(f, index) {
     var degree = 3;
-    while(f.values[index*5 + degree] == 0){ 
+    while(f.values[index*5 + degree] === 0){ 
         degree--;
     }
     // console.log(degree)
     return degree;
 }
 
-function parseIntervals(priceFunction){
+function parseIntervals(f){
     var pieces = 32;
     var subintervals = [];
+
     for(let i = 0; i <= pieces; i++) {
-        if(priceFunction.values[i*5 + 4] == 0 && i !== 0) break;
-        else if (priceFunction.values[i*5 + 4] || i==0) subintervals.push(Number(priceFunction.values[i*5 + 4]));
+        if(f.values[i*5 + 4] == 0 && i !== 0) break;
+        else if (f.values[i*5 + 4] || i==0) subintervals.push(Number(f.values[i*5 + 4]));
     }
     // console.log(subintervals);
     return subintervals;

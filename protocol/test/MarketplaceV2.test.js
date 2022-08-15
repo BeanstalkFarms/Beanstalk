@@ -45,33 +45,16 @@ describe('MarketplaceV2', function () {
     await this.field.connect(user2).sow('1000', EXTERNAL);
   })
 
-  const emptyFunction = {
-    values: new Array(160).fill('0'),
-    bases: new Array(128).fill(0),
-    signs: new Array(128).fill(false)
-  }
   // const emptyFunction = {
   //   values: new Array(160).fill('0'),
-  //   bases: new Array(4).fill(0),
-  //   signs: 0
+  //   bases: new Array(128).fill(0),
+  //   signs: new Array(128).fill(false)
   // }
-
-  // const getHash = async function (tx) {
-  //   let receipt = await tx.wait();
-  //   var args = (receipt.events?.filter((x) => { return x.event == ("DynamicPodListingCreated") }))[0]?.args;
-  //   var priceMode = DYNAMIC;
-  //   // console.log(args);
-  //   if (!args) {
-  //     args = (receipt.events?.filter((x) => { return x.event == ("PodListingCreated")}))[0]?.args;
-  //     priceMode = CONSTANT;
-  //   }
-
-  //   // console.log([args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args[6] == EXTERNAL, priceMode == CONSTANT, args.values || emptyFunction.values, args.bases || emptyFunction.bases, args.signs || emptyFunction.signs]);
-  //   return ethers.utils.solidityKeccak256(
-  //     ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint256[]', 'uint256'],
-  //     [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args[6] == EXTERNAL, priceMode == CONSTANT, priceMode == CONSTANT ? emptyFunction.values : args[7], priceMode == CONSTANT ? emptyFunction.bases : args[8], priceMode == CONSTANT ? emptyFunction.signs : args[9]]
-  //   );
-  // }
+  const emptyFunction = {
+    values: new Array(160).fill('0'),
+    bases: new Array(4).fill(0),
+    signs: 0
+  }
 
   const getHash = async function (tx) {
     let receipt = await tx.wait();
@@ -85,21 +68,28 @@ describe('MarketplaceV2', function () {
 
     // console.log([args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args[6] == EXTERNAL, priceMode == CONSTANT, args.values || emptyFunction.values, args.bases || emptyFunction.bases, args.signs || emptyFunction.signs]);
     return ethers.utils.solidityKeccak256(
-      ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint8[]', 'bool[]'],
+      ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint256[]', 'uint256'],
       [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args[6] == EXTERNAL, priceMode == CONSTANT, priceMode == CONSTANT ? emptyFunction.values : args[7], priceMode == CONSTANT ? emptyFunction.bases : args[8], priceMode == CONSTANT ? emptyFunction.signs : args[9]]
     );
   }
 
-  const getHashFromListing = function (l) {
-    l[4] = l[4] == EXTERNAL;
-    l.push(l[5][1])
-    l.push(l[5][2])
-    l.push(l[5][3])
-    l[5] = l[5][0] == CONSTANT;
-    
-    return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint8[]', 'bool[]'], l);
-  }
-  
+  // const getHash = async function (tx) {
+  //   let receipt = await tx.wait();
+  //   var args = (receipt.events?.filter((x) => { return x.event == ("DynamicPodListingCreated") }))[0]?.args;
+  //   var priceMode = DYNAMIC;
+  //   // console.log(args);
+  //   if (!args) {
+  //     args = (receipt.events?.filter((x) => { return x.event == ("PodListingCreated")}))[0]?.args;
+  //     priceMode = CONSTANT;
+  //   }
+
+  //   // console.log([args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args[6] == EXTERNAL, priceMode == CONSTANT, args.values || emptyFunction.values, args.bases || emptyFunction.bases, args.signs || emptyFunction.signs]);
+  //   return ethers.utils.solidityKeccak256(
+  //     ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint8[]', 'bool[]'],
+  //     [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args[6] == EXTERNAL, priceMode == CONSTANT, priceMode == CONSTANT ? emptyFunction.values : args[7], priceMode == CONSTANT ? emptyFunction.bases : args[8], priceMode == CONSTANT ? emptyFunction.signs : args[9]]
+  //   );
+  // }
+
   // const getHashFromListing = function (l) {
   //   l[4] = l[4] == EXTERNAL;
   //   l.push(l[5][1])
@@ -107,8 +97,18 @@ describe('MarketplaceV2', function () {
   //   l.push(l[5][3])
   //   l[5] = l[5][0] == CONSTANT;
     
-  //   return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint256[]', 'uint256'], l);
+  //   return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint8[]', 'bool[]'], l);
   // }
+  
+  const getHashFromListing = function (l) {
+    l[4] = l[4] == EXTERNAL;
+    l.push(l[5][1])
+    l.push(l[5][2])
+    l.push(l[5][3])
+    l[5] = l[5][0] == CONSTANT;
+    
+    return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint256[]', 'uint256'], l);
+  }
 
   const getOrderId = async function (tx) {
     let receipt = await tx.wait();
@@ -241,6 +241,7 @@ describe('MarketplaceV2', function () {
         })
       })
     })
+
     describe("Function evaluation", async function () {
       describe("cubic", async function () {
         describe("at breakpoints", async function () {
@@ -253,8 +254,9 @@ describe('MarketplaceV2', function () {
             if(index > 0) index = index - 1;
             var degree = getFunctionDegree(this.interp, index);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user).evalPiecewiseFunctionTest([DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs], x, index, degree)).to.be.equal(v);
+            expect(await this.marketplace.connect(user).evalPackedPiecewiseFunctionTest([DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index, degree)).to.be.equal(v);
           })
+
           it("correctly evaluates at first breakpoint", async function () {
             var x = cubicSet.xs[0];
             var index = findSortedIndex(cubicSet.xs, x);
@@ -262,33 +264,36 @@ describe('MarketplaceV2', function () {
             var v = ppval_listing(this.interp, x);
             var degree = getFunctionDegree(this.interp, index);
 
-            expect(await this.marketplace.connect(user).evalPiecewiseFunctionTest([DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs], x, index, degree)).to.be.equal(v);
+            expect(await this.marketplace.connect(user).evalPackedPiecewiseFunctionTest([DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index, degree)).to.be.equal(v);
           })
+
           it("correctly evaluates at second breakpoint", async function () {  
             var x = cubicSet.xs[1];
             var index = findSortedIndex(cubicSet.xs, x);
             if(index > 0) index = index - 1;
             var v = ppval_listing(this.interp, x);
             var degree = getFunctionDegree(this.interp, index);
-            expect(await this.marketplace.connect(user).evalPiecewiseFunctionTest([DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs], x, index, degree)).to.be.equal(v);
+            console.log("expected: " + v);
+            expect(await this.marketplace.connect(user).evalPackedPiecewiseFunctionTest([DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index, degree)).to.be.equal(v);
           })
+
           it("correctly evaluates at second last breakpoint", async function () {  
             var x = cubicSet.xs[cubicSet.xs.length - 2];
             var index = findSortedIndex(cubicSet.xs, x);
             if(index > 0) index = index - 1;
             var degree = getFunctionDegree(this.interp, index);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user).evalPiecewiseFunctionTest([DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs], x, index, degree)).to.be.equal(v);
+            expect(await this.marketplace.connect(user).evalPackedPiecewiseFunctionTest([DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index, degree)).to.be.equal(v);
           })
+
           it("correctly evaluates at last breakpoint", async function () {  
             var x = cubicSet.xs[cubicSet.xs.length - 1];
             var index = findSortedIndex(cubicSet.xs, x);
             var v = ppval_listing(this.interp, x);
             if(index > 0) index = index - 1;
             var degree = getFunctionDegree(this.interp, index);
-            expect(await this.marketplace.connect(user).evalPiecewiseFunctionTest([DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs], x, index, degree)).to.be.equal(v);
+            expect(await this.marketplace.connect(user).evalPackedPiecewiseFunctionTest([DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index, degree)).to.be.equal(v);
           })
-
         })
         describe("within intervals", async function () {
           beforeEach(async function () {
@@ -301,7 +306,7 @@ describe('MarketplaceV2', function () {
             var degree = getFunctionDegree(this.interp, index);
 
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user).evalPiecewiseFunctionTest([DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs], x, index, degree)).to.be.equal(v);
+            expect(await this.marketplace.connect(user).evalPackedPiecewiseFunctionTest([DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index, degree)).to.be.equal(v);
           })
           it("correctly evaluates within second interval", async function () {
             var x = 5750;
@@ -310,7 +315,7 @@ describe('MarketplaceV2', function () {
             var degree = getFunctionDegree(this.interp, index);
 
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user).evalPiecewiseFunctionTest([DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs], x, index, degree)).to.be.equal(v);
+            expect(await this.marketplace.connect(user).evalPackedPiecewiseFunctionTest([DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index, degree)).to.be.equal(v);
           })
           it("correctly evaluates within second last interval", async function () {
             var x = 14999;
@@ -319,7 +324,7 @@ describe('MarketplaceV2', function () {
             var degree = getFunctionDegree(this.interp, index);
 
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user).evalPiecewiseFunctionTest([DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs], x, index, degree)).to.be.equal(v);
+            expect(await this.marketplace.connect(user).evalPackedPiecewiseFunctionTest([DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index, degree)).to.be.equal(v);
           })
           it("correctly evaluates within last interval", async function () {
             var x = 19410;
@@ -328,7 +333,7 @@ describe('MarketplaceV2', function () {
             if(index > 0) index = index - 1;
             var degree = getFunctionDegree(this.interp, index);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user).evalPiecewiseFunctionTest([DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs], x, index, degree)).to.be.equal(v);
+            expect(await this.marketplace.connect(user).evalPackedPiecewiseFunctionTest([DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index, degree)).to.be.equal(v);
           })
         })
         
@@ -340,7 +345,7 @@ describe('MarketplaceV2', function () {
       describe("within an interval", async function () {
         beforeEach(async function ( ){
           this.interp = interpolate(cubicSet.xs, cubicSet.ys);
-          this.f = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+          this.f = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
         })
 
         it("first interval", async function () {
@@ -373,7 +378,7 @@ describe('MarketplaceV2', function () {
       describe("across 2 intervals", async function () {
         beforeEach(async function ( ){
           this.interp = interpolate(cubicSet.xs, cubicSet.ys);
-          this.f = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+          this.f = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
         })
 
         it("first to second", async function () {
@@ -399,7 +404,7 @@ describe('MarketplaceV2', function () {
       describe("across >2 intervals", async function () {
         beforeEach(async function ( ){
           this.interp = interpolate(cubicSet.xs, cubicSet.ys);
-          this.f = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+          this.f = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
         })
 
         it("three intervals", async function () {
@@ -434,6 +439,7 @@ describe('MarketplaceV2', function () {
         })
       })
     })
+
   })
 
   describe("Pod Listings", async function () {
@@ -522,7 +528,7 @@ describe('MarketplaceV2', function () {
     describe("Create Dynamic", async function () {
       beforeEach(async function () {
         this.interp = interpolate(cubicSet.xs, cubicSet.ys);
-        this.function = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+        this.function = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
       })
       it('Fails to List Unowned Plot', async function () {
         await expect(this.marketplace.connect(user).createDPodListing('5000', '0', '1000', '100000', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
@@ -558,7 +564,7 @@ describe('MarketplaceV2', function () {
       describe("List partial plot", async function () {
         beforeEach(async function () {
           this.interp = interpolate(cubicSet.xs, cubicSet.ys);
-          this.function = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+          this.function = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
           this.result = await this.marketplace.connect(user).createDPodListing('0', '0', '100', '100000', '0', EXTERNAL, this.function);
           this.result = await this.marketplace.connect(user).createDPodListing('0', '0', '500', '500000', '0', EXTERNAL, this.function);
         })
@@ -575,7 +581,7 @@ describe('MarketplaceV2', function () {
       describe("List partial plot from middle", async function () {
         beforeEach(async function () {
           this.interp = interpolate(cubicSet.xs, cubicSet.ys);
-          this.function = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+          this.function = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
           this.result = await this.marketplace.connect(user).createDPodListing('0', '500', '500', '500000', '2000', INTERNAL, this.function);
         })
 
@@ -591,7 +597,7 @@ describe('MarketplaceV2', function () {
       describe("Relist plot from middle", async function () {
         beforeEach(async function () {
           this.interp = interpolate(cubicSet.xs, cubicSet.ys);
-          this.function = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+          this.function = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
           this.result = await this.marketplace.connect(user).createDPodListing('0', '0', '500', '500000', '0', INTERNAL, this.function);
           this.result = await this.marketplace.connect(user).createDPodListing('0', '500', '100', '500000', '2000', INTERNAL, this.function);
         })
@@ -843,7 +849,7 @@ describe('MarketplaceV2', function () {
         beforeEach(async function () {
           this.set = {xs: [0,10000,20000], ys: [500000, 500000, 500000]};
           this.interp = interpolate(this.set.xs, this.set.ys);
-          this.function = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+          this.function = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
           await this.marketplace.connect(user).createDPodListing('0', '0', '1000', '500000', '0', EXTERNAL, this.function);
           this.listing = [userAddress, '0', '0', '1000', 500000, '0', EXTERNAL, this.function];
         })
@@ -886,7 +892,7 @@ describe('MarketplaceV2', function () {
         beforeEach(async function () {
           this.set = {xs: [0,10000,20000], ys: [500000, 500000, 500000]};
           this.interp = interpolate(this.set.xs, this.set.ys);
-          this.function = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+          this.function = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
           this.listing = [userAddress, '0', '0', '1000', '500000', '0', EXTERNAL, this.function]
           await this.marketplace.connect(user).createDPodListing('0', '0', '1000', '500000', '0', EXTERNAL, this.function);
           this.amountBeansBuyingWith = 500;
@@ -924,7 +930,7 @@ describe('MarketplaceV2', function () {
         beforeEach(async function () {
           this.set = {xs: [0,10000,20000], ys: [500000, 500000, 500000]};
           this.interp = interpolate(this.set.xs, this.set.ys);
-          this.function = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+          this.function = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
           this.listing = [userAddress, '0', '0', '1000', '500000', '0', EXTERNAL, this.function]
           await this.marketplace.connect(user).createDPodListing('0', '0', '1000', '500000', '0', EXTERNAL, this.function);
           this.amountBeansBuyingWith = 250;
@@ -964,7 +970,7 @@ describe('MarketplaceV2', function () {
         beforeEach(async function () {
           this.set = {xs: [0,10000,20000], ys: [500000, 500000, 500000]};
           this.interp = interpolate(this.set.xs, this.set.ys);
-          this.function = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+          this.function = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
           this.listing = [userAddress, '0', '500', '500', '500000', '0', EXTERNAL, this.function]
           await this.marketplace.connect(user).createDPodListing('0', '500', '500', '500000', '0', EXTERNAL, this.function);
           this.amountBeansBuyingWith = 100;
@@ -1004,7 +1010,7 @@ describe('MarketplaceV2', function () {
         beforeEach(async function () {
           this.set = {xs: [0,10000,20000], ys: [500000, 500000, 500000]};
           this.interp = interpolate(this.set.xs, this.set.ys);
-          this.function = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+          this.function = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
           this.listing = [userAddress, '0', '500', '500', '500000', '0', EXTERNAL, this.function]
           await this.marketplace.connect(user).createDPodListing('0', '500', '500', '500000', '0', EXTERNAL, this.function);
           this.amountBeansBuyingWith = 100;
@@ -1041,7 +1047,7 @@ describe('MarketplaceV2', function () {
         beforeEach(async function () {
           this.set = {xs: [0,10000,20000], ys: [500000, 500000, 500000]};
           this.interp = interpolate(this.set.xs, this.set.ys);
-          this.function = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+          this.function = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
           this.listing = [userAddress, '0', '0', '1000', '500000', '0', INTERNAL, this.function]
           await this.marketplace.connect(user).createDPodListing('0', '0', '1000', '500000', '0', INTERNAL, this.function);
           this.amountBeansBuyingWith = 250;
@@ -1105,7 +1111,7 @@ describe('MarketplaceV2', function () {
     describe("Cancel Dynamic", async function () {
       beforeEach(async function () {
         this.interp = interpolate(cubicSet.xs, cubicSet.ys);
-        this.function = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+        this.function = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
       })
       it('Re-list plot cancels and re-lists', async function () {
         result = await this.marketplace.connect(user).createDPodListing('0', '0', '1000', '500000', '0', EXTERNAL, this.function);
@@ -1174,7 +1180,7 @@ describe('MarketplaceV2', function () {
         beforeEach(async function () {
           this.set = {xs: [0,10000,20000], ys: [100000, 100000, 100000]};
           this.interp = interpolate(this.set.xs, this.set.ys);
-          this.function = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+          this.function = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
         })
         it('Reverts if amount is 0', async function () {
           await expect(this.marketplace.connect(user2).createDPodOrder('0', '100000', '100000', EXTERNAL, this.function)).to.be.revertedWith("Marketplace: Order amount must be > 0.");
@@ -1184,7 +1190,7 @@ describe('MarketplaceV2', function () {
         beforeEach(async function () {
           this.set = {xs: [0,10000,20000], ys: [100000, 100000, 100000]};
           this.interp = interpolate(this.set.xs, this.set.ys);
-          this.function = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+          this.function = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
           this.userBeanBalance = await this.bean.balanceOf(userAddress)
           this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
           this.result = await this.marketplace.connect(user).createDPodOrder('500', '100000', '1000', EXTERNAL, this.function);
@@ -1369,7 +1375,7 @@ describe('MarketplaceV2', function () {
       beforeEach(async function () {
         this.set = {xs: [0,10000,20000], ys: [100000, 100000, 100000]};
         this.interp = interpolate(this.set.xs, this.set.ys);
-        this.function = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+        this.function = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
         this.result = await this.marketplace.connect(user).createDPodOrder('50', '100000', '2500', EXTERNAL, this.function)
         this.id = await getDOrderId(this.result)
         this.order = [userAddress, this.id, '100000', '2500', this.function];
@@ -1582,7 +1588,7 @@ describe('MarketplaceV2', function () {
       beforeEach(async function () {
         this.set = {xs: [0,10000,20000], ys: [100000, 100000, 100000]};
         this.interp = interpolate(this.set.xs, this.set.ys);
-        this.function = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+        this.function = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
         this.result = await this.marketplace.connect(user).createDPodOrder('500', '100000', '1000', EXTERNAL, this.function)
         this.id = await getDOrderId(this.result)
       })
@@ -1697,7 +1703,7 @@ describe('MarketplaceV2', function () {
         beforeEach(async function () {
           this.set = {xs: [0,10000,20000], ys: [100000, 100000, 100000]};
           this.interp = interpolate(this.set.xs, this.set.ys);
-          this.function = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+          this.function = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
           await this.marketplace.connect(user).createDPodListing('0', '0', '1000', '500000', '0', EXTERNAL, this.function);
           this.result = await this.marketplace.connect(user).transferPlot(userAddress, user2Address, '0', '0', '100')
         })
@@ -1719,7 +1725,7 @@ describe('MarketplaceV2', function () {
         beforeEach(async function () {
           this.set = {xs: [0,10000,20000], ys: [100000, 100000, 100000]};
           this.interp = interpolate(this.set.xs, this.set.ys);
-          this.function = [DYNAMIC, this.interp.values, this.interp.bases, this.interp.signs];
+          this.function = [DYNAMIC, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
           await this.marketplace.connect(user).createDPodListing('0', '0', '1000', '500000', '0', EXTERNAL, this.function);
           this.result = await expect(this.marketplace.connect(user).approvePods(user2Address, '100'))
           this.result = await this.marketplace.connect(user2).transferPlot(userAddress, user2Address, '0', '0', '100')
