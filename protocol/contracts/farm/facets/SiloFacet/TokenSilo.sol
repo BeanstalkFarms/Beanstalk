@@ -57,6 +57,13 @@ contract TokenSilo is Silo {
         uint256 amount
     );
 
+    event DepositApproval(
+        address indexed owner,
+        address indexed spender,
+        address token,
+        uint256 amount
+    );
+
     struct AssetsRemoved {
         uint256 tokensRemoved;
         uint256 stalkRemoved;
@@ -355,6 +362,32 @@ contract TokenSilo is Silo {
             ar.seedsRemoved,
             ar.stalkRemoved
         );
+    }
+
+    function _spendDepositAllowance(
+        address owner,
+        address spender,
+        address token,
+        uint256 amount
+    ) internal virtual {
+        uint256 currentAllowance = depositAllowance(owner, spender, token);
+        if (currentAllowance != type(uint256).max) {
+            require(currentAllowance >= amount, "Silo: insufficient allowance");
+            _approveDeposit(owner, spender, token, currentAllowance - amount);
+        }
+    }
+        
+    function _approveDeposit(address account, address spender, address token, uint256 amount) internal {
+        s.a[account].depositAllowances[spender][token] = amount;
+        emit DepositApproval(account, spender, token, amount);
+    }
+
+    function depositAllowance(
+        address account,
+        address spender,
+        address token
+    ) public view virtual returns (uint256) {
+        return s.a[account].depositAllowances[spender][token];
     }
 
     function _season() private view returns (uint32) {

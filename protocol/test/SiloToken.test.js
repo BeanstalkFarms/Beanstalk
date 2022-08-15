@@ -740,7 +740,7 @@ describe('Silo Token', function () {
     describe("Single", async function () {
       beforeEach(async function () {
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
-        await this.silo.connect(user).transferDeposit(user2Address, this.siloToken.address, '2', '50')
+        await this.silo.connect(user).transferDeposit(userAddress, user2Address, this.siloToken.address, '2', '50')
       })
 
       it('removes the deposit from the sender', async function () {
@@ -774,7 +774,7 @@ describe('Silo Token', function () {
     describe("Single all", async function () {
       beforeEach(async function () {
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
-        await this.silo.connect(user).transferDeposit(user2Address, this.siloToken.address, '2', '100')
+        await this.silo.connect(user).transferDeposit(userAddress, user2Address, this.siloToken.address, '2', '100')
       })
 
       it('removes the deposit from the sender', async function () {
@@ -810,7 +810,7 @@ describe('Silo Token', function () {
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
         await this.season.siloSunrise('0')
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
-        await this.silo.connect(user).transferDeposits(user2Address, this.siloToken.address, ['2', '3'], ['50','25'])
+        await this.silo.connect(user).transferDeposits(userAddress, user2Address, this.siloToken.address, ['2', '3'], ['50','25'])
       })
 
       it('removes the deposit from the sender', async function () {
@@ -844,6 +844,153 @@ describe('Silo Token', function () {
       it('updates total stalk and seeds', async function () {
         expect(await this.silo.totalStalk()).to.be.equal('2000100')
         expect(await this.silo.totalSeeds()).to.be.equal('200')
+      })
+    })
+
+    describe("Single with allowance", async function () {
+      beforeEach(async function () {
+        await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
+        await this.silo.connect(user).approveDeposit(ownerAddress, this.siloToken.address, '100');
+        await this.silo.connect(owner).transferDeposit(userAddress, user2Address, this.siloToken.address, '2', '50')
+      })
+
+      it('removes the deposit from the sender', async function () {
+        const deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, '2')
+        expect(deposit[0]).to.equal('50');
+        expect(deposit[0]).to.equal('50');
+      })
+
+      it('updates users stalk and seeds', async function () {
+        expect(await this.silo.balanceOfStalk(userAddress)).to.be.equal('500000')
+        expect(await this.silo.balanceOfSeeds(userAddress)).to.be.equal('50')
+      })
+
+      it('add the deposit to the recipient', async function () {
+        const deposit = await this.silo.getDeposit(user2Address, this.siloToken.address, '2')
+        expect(deposit[0]).to.equal('50');
+        expect(deposit[0]).to.equal('50');
+      })
+
+      it('updates users stalk and seeds', async function () {
+        expect(await this.silo.balanceOfStalk(user2Address)).to.be.equal('500000')
+        expect(await this.silo.balanceOfSeeds(user2Address)).to.be.equal('50')
+      })
+
+      it('updates total stalk and seeds', async function () {
+        expect(await this.silo.totalStalk()).to.be.equal('1000000')
+        expect(await this.silo.totalSeeds()).to.be.equal('100')
+      })
+
+      it('properly updates users token allowance', async function () {
+        expect(await this.silo.depositAllowance(userAddress, ownerAddress, this.siloToken.address)).to.be.equal('50')
+      })
+    })
+
+    describe("Single with no allowance", async function () {
+      beforeEach(async function () {
+        await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
+      })
+
+      it('reverts with no allowance', async function () {
+        await expect(this.silo.connect(owner).transferDeposit(userAddress, user2Address, this.siloToken.address, '2', '50')).to.revertedWith('Silo: insufficient allowance');
+      })
+    })
+
+    describe("Single all with allowance", async function () {
+      beforeEach(async function () {
+        await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
+        await this.silo.connect(user).approveDeposit(ownerAddress, this.siloToken.address, '100');
+        await this.silo.connect(owner).transferDeposit(userAddress, user2Address, this.siloToken.address, '2', '100');
+      })
+
+      it('removes the deposit from the sender', async function () {
+        const deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, '2')
+        expect(deposit[0]).to.equal('0');
+        expect(deposit[0]).to.equal('0');
+      })
+
+      it('updates users stalk and seeds', async function () {
+        expect(await this.silo.balanceOfStalk(userAddress)).to.be.equal('0')
+        expect(await this.silo.balanceOfSeeds(userAddress)).to.be.equal('0')
+      })
+
+      it('add the deposit to the recipient', async function () {
+        const deposit = await this.silo.getDeposit(user2Address, this.siloToken.address, '2')
+        expect(deposit[0]).to.equal('100');
+        expect(deposit[0]).to.equal('100');
+      })
+
+      it('updates users stalk and seeds', async function () {
+        expect(await this.silo.balanceOfStalk(user2Address)).to.be.equal('1000000')
+        expect(await this.silo.balanceOfSeeds(user2Address)).to.be.equal('100')
+      })
+
+      it('updates total stalk and seeds', async function () {
+        expect(await this.silo.totalStalk()).to.be.equal('1000000')
+        expect(await this.silo.totalSeeds()).to.be.equal('100')
+      })
+
+      it('properly updates users token allowance', async function () {
+        expect(await this.silo.depositAllowance(userAddress, ownerAddress, this.siloToken.address)).to.be.equal('0')
+      })
+    })
+
+    describe("Multiple with allowance", async function () {
+      beforeEach(async function () {
+        await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
+        await this.season.siloSunrise('0')
+        await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
+        await this.silo.connect(user).approveDeposit(ownerAddress, this.siloToken.address, '200');
+        await this.silo.connect(owner).transferDeposits(userAddress, user2Address, this.siloToken.address, ['2', '3'], ['50','25'])
+      })
+
+      it('removes the deposit from the sender', async function () {
+        let deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, '2')
+        expect(deposit[0]).to.equal('50');
+        expect(deposit[0]).to.equal('50');
+        deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, '3')
+        expect(deposit[0]).to.equal('75');
+        expect(deposit[0]).to.equal('75');
+      })
+
+      it('updates users stalk and seeds', async function () {
+        expect(await this.silo.balanceOfStalk(userAddress)).to.be.equal('1250050')
+        expect(await this.silo.balanceOfSeeds(userAddress)).to.be.equal('125')
+      })
+
+      it('add the deposit to the recipient', async function () {
+        let deposit = await this.silo.getDeposit(user2Address, this.siloToken.address, '2')
+        expect(deposit[0]).to.equal('50');
+        expect(deposit[0]).to.equal('50');
+        deposit = await this.silo.getDeposit(user2Address, this.siloToken.address, '3')
+        expect(deposit[0]).to.equal('25');
+        expect(deposit[0]).to.equal('25');
+      })
+
+      it('updates users stalk and seeds', async function () {
+        expect(await this.silo.balanceOfStalk(user2Address)).to.be.equal('750050')
+        expect(await this.silo.balanceOfSeeds(user2Address)).to.be.equal('75')
+      })
+
+      it('updates total stalk and seeds', async function () {
+        expect(await this.silo.totalStalk()).to.be.equal('2000100')
+        expect(await this.silo.totalSeeds()).to.be.equal('200')
+      })
+
+      it('properly updates users token allowance', async function () {
+        expect(await this.silo.depositAllowance(userAddress, ownerAddress, this.siloToken.address)).to.be.equal('125')
+      })
+    })
+
+    describe("Multiple with no allowance", async function () {
+      beforeEach(async function () {
+        await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
+        await this.season.siloSunrise('0')
+        await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
+      })
+
+      it('reverts with no allowance', async function () {
+        await expect(this.silo.connect(owner).transferDeposits(userAddress, user2Address, this.siloToken.address, ['2', '3'], ['50','25'])).to.revertedWith('Silo: insufficient allowance');
       })
     })
   })
@@ -961,5 +1108,51 @@ describe('Silo Token', function () {
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, 3, to6('5'), to6('2.5'));
       });
     });
+  });
+
+  describe("Deposit Approval", async function () {
+    describe("approve allowance", async function () {
+      beforeEach(async function () {
+        this.result = await this.silo.connect(user).approveDeposit(user2Address, this.siloToken.address, '100');
+      })
+
+      it('properly updates users token allowance', async function () {
+        expect(await this.silo.depositAllowance(userAddress, user2Address, this.siloToken.address)).to.be.equal('100')
+      })
+
+      it('emits DepositApproval event', async function () {
+        await expect(this.result).to.emit(this.silo, 'DepositApproval').withArgs(userAddress ,user2Address, this.siloToken.address, '100');
+      });
+    })
+
+    describe("increase and decrease allowance", async function () {
+      beforeEach(async function () {
+        await this.silo.connect(user).approveDeposit(user2Address, this.siloToken.address, '100');
+      })
+
+      it('properly increase users token allowance', async function () {
+        await this.silo.connect(user).increaseDepositAllowance(user2Address, this.siloToken.address, '100');
+        expect(await this.silo.depositAllowance(userAddress, user2Address, this.siloToken.address)).to.be.equal('200')
+      })
+
+      it('properly decrease users token allowance', async function () {
+        await this.silo.connect(user).decreaseDepositAllowance(user2Address, this.siloToken.address, '25')
+        expect(await this.silo.depositAllowance(userAddress, user2Address, this.siloToken.address)).to.be.equal('75')
+      })
+
+      it('decrease users token allowance below zero', async function () {
+        await expect(this.silo.connect(user).decreaseDepositAllowance(user2Address, this.siloToken.address, '101')).to.revertedWith('Silo: decreased allowance below zero');
+      })
+
+      it('emits DepositApproval event on increase', async function () {
+        const result = await this.silo.connect(user).increaseDepositAllowance(user2Address, this.siloToken.address, '25');
+        await expect(result).to.emit(this.silo, 'DepositApproval').withArgs(userAddress ,user2Address, this.siloToken.address, '125');
+      });
+
+      it('emits DepositApproval event on decrease', async function () {
+        const result = await this.silo.connect(user).decreaseDepositAllowance(user2Address, this.siloToken.address, '25');
+        await expect(result).to.emit(this.silo, 'DepositApproval').withArgs(userAddress ,user2Address, this.siloToken.address, '75');
+      });
+    })
   });
 });

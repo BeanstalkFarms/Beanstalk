@@ -82,25 +82,62 @@ contract SiloFacet is TokenSilo {
      */
 
     function transferDeposit(
+        address from,
         address recipient,
         address token,
         uint32 season,
         uint256 amount
     ) external payable nonReentrant updateSilo {
+        if (from != msg.sender) {
+            _spendDepositAllowance(from, msg.sender, token, amount);
+        }
         // Need to update the recipient's Silo as well.
         _update(recipient);
-        _transferDeposit(msg.sender, recipient, token, season, amount);
+        _transferDeposit(from, recipient, token, season, amount);
     }
 
     function transferDeposits(
+        address from,
         address recipient,
         address token,
         uint32[] calldata seasons,
         uint256[] calldata amounts
     ) external payable nonReentrant updateSilo {
+        if (from != msg.sender) {
+            for (uint256 i = 0; i < amounts.length; i++) {
+                _spendDepositAllowance(from, msg.sender, token, amounts[i]);
+            }
+        }
+
         // Need to update the recipient's Silo as well.
         _update(recipient);
-        _transferDeposits(msg.sender, recipient, token, seasons, amounts);
+        _transferDeposits(from, recipient, token, seasons, amounts);
+    }
+
+    /*
+     * Approval
+     */
+
+    function approveDeposit(
+        address spender,
+        address token,
+        uint256 amount
+    ) external payable nonReentrant {
+        require(spender != address(0), "approve from the zero address");
+        require(token != address(0), "approve to the zero address");
+        _approveDeposit(msg.sender, spender, token, amount);
+    }
+
+    function increaseDepositAllowance(address spender, address token, uint256 addedValue) public virtual nonReentrant returns (bool) {
+        _approveDeposit(msg.sender, spender, token, depositAllowance(msg.sender, spender, token) + addedValue);
+        return true;
+    }
+
+    function decreaseDepositAllowance(address spender, address token, uint256 subtractedValue) public virtual returns (bool) {
+        uint256 currentAllowance = depositAllowance(msg.sender, spender, token);
+        require(currentAllowance >= subtractedValue, "Silo: decreased allowance below zero");
+        _approveDeposit(msg.sender, spender, token, currentAllowance - subtractedValue);
+        return true;
     }
 
     /*
