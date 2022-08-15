@@ -45,33 +45,16 @@ describe('MarketplaceV2', function () {
     await this.field.connect(user2).sow('1000', EXTERNAL);
   })
 
-  // const emptyFunction = {
-  //   values: new Array(160).fill('0'),
-  //   bases: new Array(128).fill(0),
-  //   signs: new Array(128).fill(false)
-  // }
   const emptyFunction = {
     values: new Array(160).fill('0'),
-    bases: new Array(4).fill(0),
-    signs: 0
+    bases: new Array(128).fill(0),
+    signs: new Array(128).fill(false)
   }
-
-  const getHash = async function (tx) {
-    let receipt = await tx.wait();
-    var args = (receipt.events?.filter((x) => { return x.event == ("DynamicPodListingCreated") }))[0]?.args;
-    var priceMode = DYNAMIC;
-    // console.log(args);
-    if (!args) {
-      args = (receipt.events?.filter((x) => { return x.event == ("PodListingCreated")}))[0]?.args;
-      priceMode = CONSTANT;
-    }
-
-    // console.log([args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args[6] == EXTERNAL, priceMode == CONSTANT, args.values || emptyFunction.values, args.bases || emptyFunction.bases, args.signs || emptyFunction.signs]);
-    return ethers.utils.solidityKeccak256(
-      ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint256[]', 'uint256'],
-      [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args[6] == EXTERNAL, priceMode == CONSTANT, priceMode == CONSTANT ? emptyFunction.values : args[7], priceMode == CONSTANT ? emptyFunction.bases : args[8], priceMode == CONSTANT ? emptyFunction.signs : args[9]]
-    );
-  }
+  // const emptyFunction = {
+  //   values: new Array(160).fill('0'),
+  //   bases: new Array(4).fill(0),
+  //   signs: 0
+  // }
 
   // const getHash = async function (tx) {
   //   let receipt = await tx.wait();
@@ -85,21 +68,28 @@ describe('MarketplaceV2', function () {
 
   //   // console.log([args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args[6] == EXTERNAL, priceMode == CONSTANT, args.values || emptyFunction.values, args.bases || emptyFunction.bases, args.signs || emptyFunction.signs]);
   //   return ethers.utils.solidityKeccak256(
-  //     ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint8[]', 'bool[]'],
+  //     ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint256[]', 'uint256'],
   //     [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args[6] == EXTERNAL, priceMode == CONSTANT, priceMode == CONSTANT ? emptyFunction.values : args[7], priceMode == CONSTANT ? emptyFunction.bases : args[8], priceMode == CONSTANT ? emptyFunction.signs : args[9]]
   //   );
   // }
 
-  // const getHashFromListing = function (l) {
-  //   l[4] = l[4] == EXTERNAL;
-  //   l.push(l[5][1])
-  //   l.push(l[5][2])
-  //   l.push(l[5][3])
-  //   l[5] = l[5][0] == CONSTANT;
-    
-  //   return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint8[]', 'bool[]'], l);
-  // }
-  
+  const getHash = async function (tx) {
+    let receipt = await tx.wait();
+    var args = (receipt.events?.filter((x) => { return x.event == ("DynamicPodListingCreated") }))[0]?.args;
+    var priceMode = DYNAMIC;
+    // console.log(args);
+    if (!args) {
+      args = (receipt.events?.filter((x) => { return x.event == ("PodListingCreated")}))[0]?.args;
+      priceMode = CONSTANT;
+    }
+
+    // console.log([args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args[6] == EXTERNAL, priceMode == CONSTANT, args.values || emptyFunction.values, args.bases || emptyFunction.bases, args.signs || emptyFunction.signs]);
+    return ethers.utils.solidityKeccak256(
+      ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint8[]', 'bool[]'],
+      [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args[6] == EXTERNAL, priceMode == CONSTANT, priceMode == CONSTANT ? emptyFunction.values : args[7], priceMode == CONSTANT ? emptyFunction.bases : args[8], priceMode == CONSTANT ? emptyFunction.signs : args[9]]
+    );
+  }
+
   const getHashFromListing = function (l) {
     l[4] = l[4] == EXTERNAL;
     l.push(l[5][1])
@@ -107,8 +97,18 @@ describe('MarketplaceV2', function () {
     l.push(l[5][3])
     l[5] = l[5][0] == CONSTANT;
     
-    return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint256[]', 'uint256'], l);
+    return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint8[]', 'bool[]'], l);
   }
+  
+  // const getHashFromListing = function (l) {
+  //   l[4] = l[4] == EXTERNAL;
+  //   l.push(l[5][1])
+  //   l.push(l[5][2])
+  //   l.push(l[5][3])
+  //   l[5] = l[5][0] == CONSTANT;
+    
+  //   return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'bool', 'uint256[]', 'uint256[]', 'uint256'], l);
+  // }
 
   const getOrderId = async function (tx) {
     let receipt = await tx.wait();

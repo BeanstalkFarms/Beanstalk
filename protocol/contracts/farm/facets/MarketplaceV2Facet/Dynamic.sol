@@ -46,28 +46,27 @@
         uint256 signs;
     }
 
-    function createZeros() internal pure returns (uint256[numValues] memory valueArray, uint256[indexMultiplier] memory baseArray, uint256 signArray) {
-        for (uint256 i = 0; i < numValues; i++) {
-            valueArray[i] = 0;
-            if(i < indexMultiplier){
-                baseArray[i] = 0;
-            }
-        }
-        
-        return (valueArray, baseArray, 0);
-    }
-
-    // function createZeros() internal pure returns (uint256[numValues] memory valueArray, uint8[numMeta] memory baseArray, bool[numMeta] memory signArray) {
+    // function createZeros() internal pure returns (uint256[numValues] memory valueArray, uint256[indexMultiplier] memory baseArray, uint256 signArray) {
     //     for (uint256 i = 0; i < numValues; i++) {
     //         valueArray[i] = 0;
-    //         if(i < numMeta){
+    //         if(i < indexMultiplier){
     //             baseArray[i] = 0;
-    //             signArray[i] = false;
     //         }
     //     }
         
-    //     return (valueArray, baseArray, signArray);
+    //     return (valueArray, baseArray, 0);
     // }
+
+    function createZeros() internal pure returns (uint256[numValues] memory valueArray, uint8[numMeta] memory baseArray, bool[numMeta] memory signArray) {
+        for (uint256 i = 0; i < numValues; i++) {
+            valueArray[i] = 0;
+            if(i < numMeta){
+                baseArray[i] = 0;
+                signArray[i] = false;
+            }
+        }
+        return (valueArray, baseArray, signArray);
+    }
 
     //Packed Evaluation of a PiecewiseFunction
 
@@ -182,6 +181,7 @@
             // ( v3(x2-k)^4/4 + v2(x2-k)^3/3 + v1(x2-k)^2/2 + v0*x2 ) - ( v3(x1-k)^4/4 + v2(x1-k)^3/3 + v1(x1-k)^2/2 + v0*x1 )
             // uint256 baseIndex = (i*indexMultiplier + degIdx) / 32;
             uint256 base = getPackedBase(f.bases[(i*indexMultiplier + degIdx) / 32], i);
+
             {   
                 temp = pow(
                     x2 - f.values[i*valueIndexMultiplier + indexMultiplier], degIdx+1
@@ -199,7 +199,8 @@
                     pow(10, base).mul(degIdx + 1)
                 );
             }
-            if(getPackedSign(f.signs, i*indexMultiplier + degIdx)) 
+
+            if (getPackedSign(f.signs, i*indexMultiplier + degIdx)) 
                 yP = yP.add(temp);
             else 
                 yN = yN.add(temp);
@@ -210,7 +211,7 @@
      }
  
     function getPackedBase(uint256 packedBases, uint256 index) internal pure returns (uint8) {
-        return uint8(packedBases << (index*8));
+        return uint8(packedBases >> (index*8));
     }
     function getPackedSign(uint256 packedBools, uint256 index) internal pure returns (bool) {
         return ((packedBools >> index) & uint256(1) == 1);
