@@ -82,36 +82,37 @@ contract SiloFacet is TokenSilo {
      */
 
     function transferDeposit(
-        address from,
+        address sender,
         address recipient,
         address token,
         uint32 season,
         uint256 amount
-    ) external payable nonReentrant updateSilo {
-        if (from != msg.sender) {
-            _spendDepositAllowance(from, msg.sender, token, amount);
+    ) external payable nonReentrant {
+        if (sender != msg.sender) {
+            _spendDepositAllowance(sender, msg.sender, token, amount);
         }
+        _update(sender);
         // Need to update the recipient's Silo as well.
         _update(recipient);
-        _transferDeposit(from, recipient, token, season, amount);
+        _transferDeposit(sender, recipient, token, season, amount);
     }
 
     function transferDeposits(
-        address from,
+        address sender,
         address recipient,
         address token,
         uint32[] calldata seasons,
         uint256[] calldata amounts
-    ) external payable nonReentrant updateSilo {
-        if (from != msg.sender) {
+    ) external payable nonReentrant {
+        if (sender != msg.sender) {
             for (uint256 i = 0; i < amounts.length; i++) {
-                _spendDepositAllowance(from, msg.sender, token, amounts[i]);
+                _spendDepositAllowance(sender, msg.sender, token, amounts[i]);
             }
         }
-
+        _update(sender);
         // Need to update the recipient's Silo as well.
         _update(recipient);
-        _transferDeposits(from, recipient, token, seasons, amounts);
+        _transferDeposits(sender, recipient, token, seasons, amounts);
     }
 
     /*
