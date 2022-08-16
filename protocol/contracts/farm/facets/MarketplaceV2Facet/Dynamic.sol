@@ -41,7 +41,7 @@
         uint256 x, 
         uint256 pieceIndex, 
         uint256 evaluationDegree
-    ) internal pure returns (uint256) {
+    ) internal view returns (uint256) {
         uint256 currDegreeIndex;
         uint256 sumPositive;
         uint256 sumNegative;
@@ -52,9 +52,10 @@
 
         while(currDegreeIndex <= evaluationDegree) {
             // evaluate in the form v3(x-k)^3 + v2(x-k)^2 + v1(x-k) + v0
+            // console.log(pieceIndex);
             uint256 index = pieceIndex * 4 + currDegreeIndex;
             uint256 base = getPackedBase(f.bases[pieceIndex/8], (pieceIndex - ((pieceIndex/8)*8))*4 + currDegreeIndex);
-
+            // console.log(f.values[index], getPackedSign(f.signs, index), base, x);
             if(getPackedSign(f.signs, index)) {
                 sumPositive += pow(x, currDegreeIndex)
                     .mul(f.values[index])
@@ -64,7 +65,7 @@
                     .mul(f.values[index])
                     .div(pow(10, base));
             }
-
+            // console.log(sumPositive, sumNegative);
             currDegreeIndex++;
         }
 
@@ -83,7 +84,7 @@
         uint256 x2, 
         uint256 pieceIndex, 
         uint256 evaluationDegree
-    ) internal pure returns (uint256) {
+    ) internal view returns (uint256) {
         uint256 currDegreeIndex;
         uint256 sumPositive;
         uint256 sumNegative;
@@ -98,6 +99,7 @@
             // ( v3(x2-k)^4/4 + v2(x2-k)^3/3 + v1(x2-k)^2/2 + v0*x2 ) - ( v3(x1-k)^4/4 + v2(x1-k)^3/3 + v1(x1-k)^2/2 + v0*x1 )
             uint256 index = pieceIndex * 4 + currDegreeIndex;
             uint256 base = getPackedBase(f.bases[pieceIndex / 8], (pieceIndex - ((pieceIndex/8)*8))*4 + currDegreeIndex);
+            // console.log(pieceIndex);
 
             if (getPackedSign(f.signs, index)) {
                 sumPositive += pow(x2, 1 + currDegreeIndex)
@@ -116,6 +118,7 @@
                     .mul(f.values[index])
                     .div(pow(10, base).mul(1 + currDegreeIndex));
             }
+            // console.log(sumPositive, sumNegative);
             currDegreeIndex++;
         }
         return sumPositive.sub(sumNegative);
@@ -137,6 +140,9 @@
             }
             maxIndex++;
         }
+
+        // console.log("max index: ");
+        // console.log(maxIndex--);
         return maxIndex--;
     }
 

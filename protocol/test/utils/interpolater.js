@@ -14,8 +14,8 @@ const math = create(all, config);
 function getMaxIndex(array) {
     var maxIndex = 0;
     while(maxIndex < 32) {
-        if(array[maxIndex] == 0 && maxIndex != 0) break;
-        if(array[maxIndex] == undefined) break;
+        // console.log("maxIndex: ", array[maxIndex]);
+        if((array[maxIndex] == 0 || array[maxIndex] == undefined) && maxIndex != 0) break;
         maxIndex++;
     }
     maxIndex--;
@@ -30,9 +30,11 @@ function findSortedIndex(array, value, max) {
     if(value == 0) return 0;
     while (low <= high) {
         var mid = math.floor(math.divide(math.add(low, high), 2));
+        // console.log("high: ", high, "mid:", mid, "low: ", low, array[mid], "value: ", value, "array value: ", array[mid])
         if( math.compare(math.bignumber(array[mid]), math.bignumber(value)) == -1) low = mid + 1;
         else high = mid - 1;
     }
+    // console.log("low: ", low);
     return low;
 }
 
@@ -113,7 +115,7 @@ function interpolate(xArr, yArr) {
         //     ys.push(+yArr[indexes[i]] || 0);
         // }
     }
-
+    // console.log(xs, ys, "length: ", length);
     var dys = [], dxs = [], ms = [];
     for(let i = 0; i < (length-1); i++) {
 
@@ -123,8 +125,9 @@ function interpolate(xArr, yArr) {
         dxs.push(deltax);
         dys.push(deltay);
         ms.push(math.divide(deltay, deltax));
+        // console.log(deltax, deltay)
     }
-
+    // console.log(dxs, dys, ms, "length: ", dxs.length)
     var c1s = [ms[0]];
     for(let i = 0; i < (length-1-1); i++) {
         if(ms[i] * ms[i+1] <= 0) {
@@ -142,8 +145,8 @@ function interpolate(xArr, yArr) {
     }
     //
     c1s.push(ms[ms.length - 1]);
+    // console.log("c1s: ", c1s, c1s.length);
 
-    
     var c2s = [], c3s = [];
     for(let i = 0; i < (c1s.length - 1 ); i ++ ) {
         var invDx = math.divide(math.bignumber(1), dxs[i]);
@@ -153,7 +156,8 @@ function interpolate(xArr, yArr) {
         var c3sv = math.chain(common_).multiply(invDx).multiply(invDx).done();
         c3s.push(c3sv);
     }
-    
+    // console.log("lens: ", xs.length, c1s.length, c2s.length,c3s.length);
+    // console.log(c1s, c2s, c3s);
     var ranges = new Array(maxpieces);
     var values = new Array(maxpieces*4);
     var bases = new Array(maxpieces*4);
@@ -227,14 +231,14 @@ function interpolate(xArr, yArr) {
     var baseInts = [];
     for(let i = 0; i < 4; i++){
         baseInts.push(BigInt("0b" + baseArr.slice((i)*maxpieces*8, (i+1)*maxpieces*8).join('')).toString());
-        
-        
+        // console.log("bigint at index ", i, " :", BigInt("0b" + baseArr.slice((i)*maxpieces*8, (i+1)*maxpieces*8).join('')).toString());
+        // console.log(bases.slice((i)*maxpieces, (1+i)*maxpieces).map(x => x.value));
     }
 
     const boolInt = BigInt("0b" + boolString).toString();
 
     //32 bases packed into a single uint
-
+    // console.log(ranges.length, ranges, values.length, values)
     return {ranges: ranges, values: values, bases: bases, signs: signs, basesPacked: baseInts, signsPacked: boolInt}
 }
 
@@ -242,7 +246,7 @@ function ppval(f, x, index, degree) {
     var _x = math.bignumber(x);
 
     //only do x - k if x is greater than or equal to k
-    console.log(_x, f.ranges[index],math.compare(_x, math.bignumber(f.ranges[index])));
+    // console.log(_x, f.ranges[index],math.compare(_x, math.bignumber(f.ranges[index])));
     if(math.compare(_x, math.bignumber(f.ranges[index])) != -1) {
         _x = math.subtract(_x, math.bignumber(f.ranges[index]));
     }
@@ -254,12 +258,14 @@ function ppval(f, x, index, degree) {
         var v = math.bignumber(f.values[index*4 + degIdx])
         var b = math.pow(math.bignumber(10), math.bignumber(f.bases[index*4 + degIdx].value));
 
+        // console.log("index: ", index, degIdx, f.bases[index*4 + degIdx].value, f.signs[index*4 + degIdx].value == 1);
+        // console.log("x: ", _x, "v: ", v, "b: ", b);
         
         var term = math.floor(math.chain(_x).pow(degIdx).multiply(v).divide(b).done());
-
+        // console.log("term: ", term);
         if(f.signs[index*4 + degIdx].value == 1) y = math.add(y, term)
         else y = math.subtract(y, term)
-
+        // console.log("term res: ", y)
         degIdx++;
     }
     return y;
@@ -296,7 +302,7 @@ function ppval_integrate(f, x1, x2, index, degree) {
 function ppval_listing(f, placeInLine) {
     var ppIndex = findSortedIndex(f.ranges, placeInLine);
     var degree = getFunctionDegree(f, ppIndex > 0 ? ppIndex - 1 : 0);
-
+    // console.log(ppIndex,degree);
     var y = ppval(f, placeInLine, ppIndex > 0 ? ppIndex - 1 : 0, degree);
     return math.format(math.floor(y), {notation:"fixed"});
 
@@ -315,14 +321,15 @@ function ppval_order(f, placeInLine, amount) {
 
         var degree = getFunctionDegree(f, i);
 
-        if(i < getMaxIndex(f.ranges) && math.compare(end, f.ranges[i+1]) == 1) {
+        if(i < getMaxIndex(f.ranges)-1 && math.compare(end, f.ranges[i+1]) == 1) {
+            // console.log(i);
             var nextIndexStart = math.bignumber(f.ranges[i+1]);
             var term = ppval_integrate(f, placeInLine, nextIndexStart, i, degree); 
             beanAmount = math.add(beanAmount, term);
             
             placeInLine = nextIndexStart; // set x to end of index to continue integrating from there
             
-            if(i < getMaxIndex(f.ranges)) i++;
+            if(i < getMaxIndex(f.ranges)-1) i++;
             
         } else {
 
@@ -331,6 +338,7 @@ function ppval_order(f, placeInLine, amount) {
 
             beanAmount = math.add(beanAmount, term);
             placeInLine = end;
+            // console.log(i, placeInLine, end, beanAmount);
         }
         
     }
@@ -351,8 +359,69 @@ const set = {
     ys: [10, 10, 10, 10, 10, 10, 10.5, 15, 50, 60, 85]
 }
 
+// const boolArrToNumber = (arr) => {
+//     var bitArr = [];
+//     arr.forEach((el) => bitArr.push(+el));
+//     var result = bitArr.reduce((accumulator, value) => {
+//         // console.log(accumulator, value);
+//         return accumulator << 1 | value;
+//     });
+//     console.log(result);
+//     return math.format(math.bignumber(result), {notation: "fixed"});
+// }
+// const boolArrToNumber = (arr) => {
+//     var rarr = arr;
+//     const field = new Field(256);
+//     for(let i = 0; i < rarr.length; i++) {
+//         field.set(i, rarr[i+1]);
+//     }
+//     // console.log(field.buffer.reverse())
+//     //each number in js can only only 
+//     return ethers.BigNumber.from(field.buffer);
+// }
+
+// const getBoolsFromNum = (packedBools, length) => {
+//     // var packedBool = math.bignumber(packedBools);
+//     console.log(packedBools);
+//     var bools = [];
+//     for(let i = 0; i < length; i++) {
+//         // var flag = math.bitAnd(math.rightArithShift(packedBool, math.bignumber(i)), math.bignumber(1));
+//         // var flag = math.mod(math.rightArithShift(packedBool, i), math.bignumber(2));
+//         var flag = (packedBools >> (i)) & ethers.BigNumber.from(1);
+//         // console.log(flag);
+//         bools.push(flag!=0);
+//         // console.log(i, flag === 1, f.signs.reverse()[i]);
+//     }
+//     return bools;
+// }
 
 let f = interpolate(set.xs, set.ys);
+// var a = [false, false, false, false, true, false, true, false, false, true];
+
+// var testnum = boolArrToNumber(f.signs.reverse());
+// getBoolsFromNum(testnum, f.signs.length);
+
+// const packBases = (bases) => {
+//     //move all the bases into an arraybuffer
+//     let buffer = new ArrayBuffer(bases.length);
+//     let view = new Uint8ClampedArray(buffer);
+//     for(let i = 0; i < bases.length; i++) {
+//         view[i] = bases[i];
+//     }
+//     console.log(view)
+//     //convert the array buffer to a hex string
+//     //32 bytes max per hex string
+//     var hexStrings = new Array(Math.ceil(bases.length / 32));
+
+//     for(let i = 0; i < hexStrings.length; i++) {
+//         hexStrings[i] = ethers.BigNumber.from(view.slice(i*32, (i+1)*32));
+//         // console.log(view.buffer.slice(i*32, (i+1)*32))
+//     }
+//     return hexStrings;
+// }
+
+// console.log("real: ", JSON.stringify(f.signs), f.signs.length)
+// console.log("packed: ", JSON.stringify(boolsfromnum), boolsfromnum.length);
 
 module.exports = {
     ppval_order,

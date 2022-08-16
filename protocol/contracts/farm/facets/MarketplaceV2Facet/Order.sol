@@ -216,7 +216,7 @@ contract Order is Listing {
         uint256 pieceIndex;
         uint256 maxIndex = getMaxPieceIndex(f.ranges);
 
-        require(placeInLine < f.ranges[maxIndex]);
+        // require(placeInLine < f.ranges[maxIndex]);
 
         if(placeInLine > f.ranges[0]) {
             pieceIndex = findIndex(f.ranges, placeInLine, maxIndex);
@@ -228,14 +228,18 @@ contract Order is Listing {
         while(placeInLine < end) { 
 
             uint256 degree = getDegree(f, pieceIndex);
-            uint256 termValue;
-            if(pieceIndex < maxIndex && end > f.ranges[pieceIndex+1]) {
+
+            if(pieceIndex < maxIndex-1 && end > f.ranges[pieceIndex+1]) {
+                console.log(maxIndex, pieceIndex, 0);
+                console.log(placeInLine,f.ranges[pieceIndex+1]);
                 //current end index reaches into next piecewise domain
                 beanAmount += evaluatePPolyI(f, placeInLine, f.ranges[pieceIndex+1], pieceIndex, degree);
                 placeInLine = f.ranges[pieceIndex+1]; // set place in line to the end index
-                if(pieceIndex < maxIndex) pieceIndex++;
+                if(pieceIndex < maxIndex-1) pieceIndex++;
             
             } else {
+                console.log(pieceIndex, 1);
+                console.log(placeInLine,end);
                 beanAmount += evaluatePPolyI(f, placeInLine, end, pieceIndex, degree);
                 placeInLine = end;
             }
