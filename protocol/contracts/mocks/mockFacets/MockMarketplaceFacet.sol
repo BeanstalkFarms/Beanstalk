@@ -14,27 +14,26 @@ import "../../farm/facets/MarketplaceV2Facet/MarketplaceV2Facet.sol";
 **/
 contract MockMarketplaceFacet is MarketplaceV2Facet {
 
-    function priceListing(PodListing calldata l) external view returns (uint256) {
-        return getListingPrice(l);
+    function _evaluatePPoly(
+        PPoly32 calldata f,
+        uint256 x,
+        uint256 pieceIndex,
+        uint256 evaluationDegree
+    ) public view returns (uint256) {
+        return evaluatePPoly(f, x, pieceIndex, evaluationDegree);
+    }
+    function _getDynamicListingPrice(PodListing calldata l) external view returns (uint256) {
+        return getDynamicListingPrice(l);
     }
 
-    function priceOrderFill(PackedPiecewiseFunction calldata f, uint256 index, uint256 start, uint256 amount) external view returns (uint256) {
-        return getOrderAmount(f, index + start, amount);
+    function _getDynamicOrderAmount(PPoly32 calldata f, uint256 index, uint256 start, uint256 amount) external view returns (uint256) {
+        return getDynamicOrderAmount(f, index + start, amount);
     }
 
-    function findIndexInIntervals(uint256[] calldata array, uint256 value) external view returns(uint256) {
-        return findIndex(array, value);
+    function findIndex(uint256[32] calldata array, uint256 value) external view returns(uint256) {
+        uint256 maxIndex = getMaxPieceIndex(array);
+        return findIndex(array, value, maxIndex);
     }
 
-    function parseIntervalTest(uint256[160] calldata array) external view returns (uint256[] memory) {
-        return parseIntervals(array);
-    }
-
-    function evalPiecewiseFunctionTest(PiecewiseFunction calldata f, uint256 x, uint256 i, uint256 deg) external view returns (uint256) {
-        return evaluatePiecewiseFunction(f, x, i, deg);
-    }
-    function evalPackedPiecewiseFunctionTest(PackedPiecewiseFunction calldata f, uint256 x, uint256 i, uint256 deg) external view returns (uint256) {
-        return evaluatePackedPF(f, x, i, deg);
-    }
 
 }

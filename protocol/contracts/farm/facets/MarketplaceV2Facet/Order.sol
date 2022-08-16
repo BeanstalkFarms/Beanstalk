@@ -18,20 +18,12 @@ contract Order is Listing {
 
     using SafeMath for uint256;
 
-    // struct PodOrder {
-    //     address account;
-    //     bytes32 id;
-    //     uint24 pricePerPod;
-    //     uint256 maxPlaceInLine;
-    //     PiecewiseFunction f;
-    // }
-
     struct PodOrder {
         address account;
         bytes32 id;
         uint24 pricePerPod;
         uint256 maxPlaceInLine;
-        PackedPiecewiseFunction f;
+        PPoly32 f;
     }
 
     event PodOrderCreated(
@@ -48,21 +40,11 @@ contract Order is Listing {
         uint256 amount,
         uint24 pricePerPod, 
         uint256 maxPlaceInLine,
+        uint256[] ranges,
         uint256[] values,
         uint256[] bases,
         uint256 signs
     );
-
-    // event DynamicPodOrderCreated(
-    //     address indexed account,
-    //     bytes32 id,
-    //     uint256 amount,
-    //     uint24 pricePerPod, 
-    //     uint256 maxPlaceInLine,
-    //     uint256[] values,
-    //     uint8[] bases,
-    //     bool[] signs
-    // );
 
     event PodOrderFilled(
         address indexed from,
@@ -88,10 +70,9 @@ contract Order is Listing {
         require(beanAmount > 0, "Marketplace: Order amount must be > 0.");
         require(pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
 
-        // (uint256[numValues] memory values, uint8[numMeta] memory bases, bool[numMeta] memory signs) = createZeros();
-        (uint256[numValues] memory values, uint256[indexMultiplier] memory bases, uint256 signs) = createZeros();
+        (uint256[32] memory ranges, uint256[128] memory values, uint256[4] memory bases) = createZeros();
 
-        id = createOrderIdMem(msg.sender, pricePerPod, maxPlaceInLine, PricingMode.CONSTANT, values, bases, signs);
+        id = createOrderIdMem(msg.sender, pricePerPod, maxPlaceInLine, PricingMode.CONSTANT, ranges, values, bases, 0);
 
         if (s.podOrders[id] > 0) _cancelPodOrder(pricePerPod, maxPlaceInLine, LibTransfer.To.INTERNAL);
         s.podOrders[id] = beanAmount;
@@ -102,18 +83,17 @@ contract Order is Listing {
     }
 
     //Note: Gas is quite high, ~460k
-    function _createDPodOrder(
+    function _createDynamicPodOrder(
         uint256 beanAmount,
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
-        // PiecewiseFunction calldata f
-        PackedPiecewiseFunction calldata f
+        PPoly32 calldata f
     ) internal returns (bytes32 id) {
         console.log("_createDPodOrder");
         require(beanAmount > 0, "Marketplace: Order amount must be > 0.");
         console.log(gasleft());
 
-        id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, f.mode, f.values, f.bases, f.signs);
+        id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, f.mode, f.ranges, f.values, f.bases, f.signs);
         console.log(gasleft());
         
         if (s.podOrders[id] > 0) _cancelDynamicPodOrder(pricePerPod, maxPlaceInLine, LibTransfer.To.INTERNAL, f);
@@ -121,26 +101,22 @@ contract Order is Listing {
 
         console.log(gasleft());
         // Note: Orders changed to accept an arbitary amount of beans, higher than the value of the order
-        // emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, f.t);
         
-        //Note: make this into a new function
-        uint256[] memory values = new uint256[](numValues);
-        uint256[] memory bases = new uint256[](indexMultiplier);
-        // uint8[] memory bases = new uint8[](numMeta);
-        // bool[] memory signs = new bool[](numMeta);
-        for(uint8 i = 0; i < numValues; i++){
+        uint256[] memory ranges = new uint256[](32);
+        uint256[] memory values = new uint256[](128);
+        uint256[] memory bases = new uint256[](4);
+
+        for(uint256 i = 0; i < 128; i++){
             values[i] = f.values[i];
-            if(i< indexMultiplier)
-                bases[i] = f.bases[i];
-            // if(i < numMeta) bases[i] = f.bases[i];
-            // if(i < numMeta) signs[i] = f.signs[i];
-        } 
+            if(i < 4) bases[i] = f.bases[i];
+            if(i < 32) ranges[i] = f.ranges[i];
+        }
+
         console.log(gasleft());
 
-        emit DynamicPodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, values, bases, f.signs);
-        // emit DynamicPodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, values, bases, signs);
-        console.log(gasleft());
-        
+        emit DynamicPodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, ranges, values, bases, f.signs);
+
+        console.log(gasleft());        
     }
 
     /*
@@ -158,7 +134,7 @@ contract Order is Listing {
         console.log("_fillPodOrder");
         console.log(gasleft());
 
-        bytes32 id = createOrderId(o.account, o.pricePerPod, o.maxPlaceInLine, o.f.mode, o.f.values, o.f.bases, o.f.signs);
+        bytes32 id = createOrderId(o.account, o.pricePerPod, o.maxPlaceInLine, o.f.mode, o.f.ranges, o.f.values, o.f.bases, o.f.signs);
         console.log(gasleft());
         
         uint256 placeInLine = index + start - s.f.harvestable;
@@ -172,7 +148,7 @@ contract Order is Listing {
         if(o.f.mode == PricingMode.CONSTANT){
             costInBeans = amount.mul(o.pricePerPod).div(1000000);
         } else {
-            costInBeans = getOrderAmount(o.f, placeInLine, amount);
+            costInBeans = getDynamicOrderAmount(o.f, placeInLine, amount);
         }
 
         console.log(gasleft());
@@ -204,9 +180,8 @@ contract Order is Listing {
         uint256 maxPlaceInLine,
         LibTransfer.To mode
     ) internal {
-        // (uint256[numValues] memory values, uint8[numMeta] memory bases, bool[numMeta] memory signs) = createZeros();
-        (uint256[numValues] memory values, uint256[indexMultiplier] memory bases, uint256 signs) = createZeros();
-        bytes32 id = createOrderIdMem(msg.sender, pricePerPod, maxPlaceInLine, PricingMode.CONSTANT, values, bases, signs);
+        (uint256[32] memory ranges, uint256[128] memory values, uint256[4] memory bases) = createZeros();
+        bytes32 id = createOrderIdMem(msg.sender, pricePerPod, maxPlaceInLine, PricingMode.CONSTANT, ranges, values, bases, 0);
         uint256 amountBeans = s.podOrders[id];
         LibTransfer.sendToken(C.bean(), amountBeans, msg.sender, mode);
         delete s.podOrders[id];
@@ -219,10 +194,9 @@ contract Order is Listing {
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
         LibTransfer.To mode,
-        // PiecewiseFunction calldata f
-        PackedPiecewiseFunction calldata f
+        PPoly32 calldata f
     ) internal {
-        bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, f.mode, f.values, f.bases, f.signs);
+        bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine, f.mode, f.ranges, f.values, f.bases, f.signs);
         uint256 amountBeans = s.podOrders[id];
         LibTransfer.sendToken(C.bean(), amountBeans, msg.sender, mode);
         delete s.podOrders[id];
@@ -233,46 +207,36 @@ contract Order is Listing {
     /*
     * PRICING
     */
-    function getOrderAmount(
-        // PiecewiseFunction calldata f, 
-        PackedPiecewiseFunction calldata f,
+    function getDynamicOrderAmount(
+        PPoly32 calldata f,
         uint256 placeInLine, 
         uint256 amount
     ) internal view returns (uint256 beanAmount) { 
-        uint256[] memory subintervals = parseIntervals(f.values);
 
-        require(placeInLine < subintervals[subintervals.length-1]);
+        uint256 pieceIndex;
+        uint256 maxIndex = getMaxPieceIndex(f.ranges);
 
-        uint256 i;
+        require(placeInLine < f.ranges[maxIndex]);
 
-        if(placeInLine > subintervals[0]) {
-            i = findIndex(subintervals, placeInLine);
-            i = i > 0 ? i - 1 : 0;
+        if(placeInLine > f.ranges[0]) {
+            pieceIndex = findIndex(f.ranges, placeInLine, maxIndex);
+            pieceIndex = pieceIndex > 0 ? pieceIndex - 1 : 0;
         }
+
         uint256 end = placeInLine + amount;
 
         while(placeInLine < end) { 
 
-            //error if end is not within interval range
-            uint256 degree = getPackedFunctionDegree(f, i);
-            // uint256 degree = getFunctionDegree(f, i);
-            // console.log(i, subintervals.length, degree);
-            
-            if(i < subintervals.length - 1 && end > subintervals[i+1]) {
+            uint256 degree = getDegree(f, pieceIndex);
+            uint256 termValue;
+            if(pieceIndex < maxIndex && end > f.ranges[pieceIndex+1]) {
                 //current end index reaches into next piecewise domain
-                // uint256 term = evalPiecewiseFunctionIntegrate(f, placeInLine, subintervals[i+1], i, degree);
-                uint256 term = evalPackedPFIntegrate(f, placeInLine, subintervals[i+1], i, degree);
-                // console.log(term);
-                beanAmount = beanAmount.add(term);
-
-                placeInLine = subintervals[i+1]; // set place in line to the end index
-                if(i< subintervals.length - 1) i++;
+                beanAmount += evaluatePPolyI(f, placeInLine, f.ranges[pieceIndex+1], pieceIndex, degree);
+                placeInLine = f.ranges[pieceIndex+1]; // set place in line to the end index
+                if(pieceIndex < maxIndex) pieceIndex++;
             
             } else {
-                // console.log(2, placeInLine);
-                uint256 term = evalPackedPFIntegrate(f, placeInLine, end, i, degree);
-                // uint256 term = evalPiecewiseFunctionIntegrate(f, placeInLine, end, i, degree);
-                beanAmount = beanAmount.add(term);
+                beanAmount += evaluatePPolyI(f, placeInLine, end, pieceIndex, degree);
                 placeInLine = end;
             }
         }
@@ -287,11 +251,12 @@ contract Order is Listing {
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
         PricingMode priceMode,
-        uint256[numValues] memory values,
-        uint256[indexMultiplier] memory bases,
+        uint256[32] memory ranges,
+        uint256[128] memory values,
+        uint256[4] memory bases,
         uint256 signs
     ) internal pure returns (bytes32 id) {
-        id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, priceMode == PricingMode.CONSTANT, values, bases, signs));
+        id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, priceMode == PricingMode.CONSTANT, ranges, values, bases, signs));
     }
 
     function createOrderId(
@@ -299,33 +264,11 @@ contract Order is Listing {
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
         PricingMode priceMode,
-        uint256[numValues] calldata values,
-        uint256[indexMultiplier] calldata bases,
+        uint256[32] calldata ranges,
+        uint256[128] calldata values,
+        uint256[4] calldata bases,
         uint256 signs
     ) internal pure returns (bytes32 id) {
-        id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, priceMode == PricingMode.CONSTANT, values, bases, signs));
+        id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, priceMode == PricingMode.CONSTANT, ranges, values, bases, signs));
     }
-    //  function createOrderIdMem(
-    //     address account,
-    //     uint24 pricePerPod,
-    //     uint256 maxPlaceInLine,
-    //     PricingMode priceMode,
-    //     uint256[numValues] memory values,
-    //     uint8[numMeta] memory bases,
-    //     bool[numMeta] memory signs
-    // ) internal pure returns (bytes32 id) {
-    //     id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, priceMode == PricingMode.CONSTANT, values, bases, signs));
-    // }
-
-    // function createOrderId(
-    //     address account,
-    //     uint24 pricePerPod,
-    //     uint256 maxPlaceInLine,
-    //     PricingMode priceMode,
-    //     uint256[numValues] calldata values,
-    //     uint8[numMeta] calldata bases,
-    //     bool[numMeta] calldata signs
-    // ) internal pure returns (bytes32 id) {
-    //     id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, priceMode == PricingMode.CONSTANT, values, bases, signs));
-    // }
 }

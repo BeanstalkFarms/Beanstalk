@@ -24,93 +24,51 @@
         DYNAMIC
     }
 
-    uint256 constant numPieces = 32; //the maximum number of pieces in a PiecewiseFunction
-    uint256 constant maxFunctionDegree = 3; //the maximum degree of evaluation for a polynomial
-    uint256 constant indexMultiplier = 4;
-    uint256 constant valueIndexMultiplier = 5;
-    uint256 constant numMeta = 128; //the size of the bases and signs array
-    uint256 constant numValues = 160;
-
-    // The values array contains the concatenation of 32 pieces following the form for each piece: [v0, v1, v2, v3, startInterval]
-    struct PiecewiseFunction {
+    //polynomials are evaluated at a maximum order of 3 (cubic evaluation)
+    //A piecewise polynomial containing up to 32 polynomials and their corresponding ranges
+    struct PPoly32 {
+        uint256[32] ranges;
+        uint256[128] values;
+        uint256[4] bases; //32 8-bit bases fit into each 256 bit word, so 1 + maxPolynomialDegree words are needed for 32 
+        uint256 signs; 
         PricingMode mode;
-        uint256[numValues] values; // This general values array is a concatenation of all the values of the polynomial and the start interval associated with each polynomial.
-        uint8[numMeta] bases; // Every non-interval value in 'values' is associated with a fixed point base. The amount of fixed points and the base is calculated during the interpolation phase
-        bool[numMeta] signs; // It would be possible to pack all the signs in one uint256, but this is not implemented yet.
     }
 
-    struct PackedPiecewiseFunction {
-        PricingMode mode;
-        uint256[numValues] values;
-        uint256[4] bases; //bases[0] represents index 0-32, bases[1] represents index 33-64, bases[2] represents index 65-96, bases[3] represents index 97-128
-        uint256 signs;
-    }
+    // Evaluation of a PiecewiseFunction
 
-    function createZeros() internal pure returns (uint256[numValues] memory valueArray, uint256[indexMultiplier] memory baseArray, uint256 signArray) {
-        for (uint256 i = 0; i < numValues; i++) {
-            valueArray[i] = 0;
-            if(i < indexMultiplier){
-                baseArray[i] = 0;
-            }
-        }
-        
-        return (valueArray, baseArray, 0);
-    }
-
-    // function createZeros() internal pure returns (uint256[numValues] memory valueArray, uint8[numMeta] memory baseArray, bool[numMeta] memory signArray) {
-    //     for (uint256 i = 0; i < numValues; i++) {
-    //         valueArray[i] = 0;
-    //         if(i < numMeta){
-    //             baseArray[i] = 0;
-    //             signArray[i] = false;
-    //         }
-    //     }
-    //     return (valueArray, baseArray, signArray);
-    // }
-
-    //Packed Evaluation of a PiecewiseFunction
-
-    function evaluatePackedPF(
-        PackedPiecewiseFunction calldata f, uint256 x, uint256 i, uint256 deg) internal view returns (uint256) {
-        uint256 degIdx;
-        uint256 yP;
-        uint256 yN;
-        uint256 temp;
-
+    function evaluatePPoly(
+        PPoly32 calldata f, 
+        uint256 x, 
+        uint256 pieceIndex, 
+        uint256 evaluationDegree
+    ) internal pure returns (uint256) {
+        uint256 currDegreeIndex;
+        uint256 sumPositive;
+        uint256 sumNegative;
         //only do x - rangeStart if x is greater than rangeStart, otherwise it will cause underflow
-        if(x >= f.values[i*valueIndexMultiplier + indexMultiplier]) {
-            x -= f.values[i*valueIndexMultiplier + indexMultiplier];
+        if(x >= f.ranges[pieceIndex]) {
+            x -= f.ranges[pieceIndex];
         }
 
-        while(degIdx <= deg) {
+        while(currDegreeIndex <= evaluationDegree) {
             // evaluate in the form v3(x-k)^3 + v2(x-k)^2 + v1(x-k) + v0
-            
-            uint256 base = getPackedBase(
-                f.bases[i/ 8], //get the base for the current index which is in range 0-4
-                (i - ((i/8)*8))*4 + degIdx
-            );
+            uint256 index = pieceIndex * 4 + currDegreeIndex;
+            uint256 base = getPackedBase(f.bases[pieceIndex/8], (pieceIndex - ((pieceIndex/8)*8))*4 + currDegreeIndex);
 
-            console.log(base, i, (i - ((i/8)*8))*4 + degIdx);
-            
-            console.log(f.values[i*valueIndexMultiplier + degIdx]);
-            console.log(x, f.values[i*valueIndexMultiplier + indexMultiplier]);
+            if(getPackedSign(f.signs, index)) {
+                sumPositive += pow(x, currDegreeIndex)
+                    .mul(f.values[index])
+                    .div(pow(10, base));
+            } else {
+                sumNegative += pow(x, currDegreeIndex)
+                    .mul(f.values[index])
+                    .div(pow(10, base));
+            }
 
-            temp = pow(x, degIdx)
-                .mul(f.values[i*valueIndexMultiplier + degIdx])
-                .div(pow(10, base));
-            
-            console.log(temp);
-            // console.log(getPackedSign(f.signs, i*indexMultiplier + degIdx));
-            
-            if(getPackedSign(f.signs, i*indexMultiplier + degIdx))
-                yP = yP.add(temp);
-            else 
-                yN = yN.add(temp);
-        
-            degIdx++;
+            currDegreeIndex++;
         }
 
-        return yP.sub(yN);
+        return sumPositive.sub(sumNegative);
     }
  
      //Piecewise Integration
@@ -119,164 +77,91 @@
      *
      * 
      */
-
-     function evalPackedPFIntegrate(
-        PackedPiecewiseFunction calldata f, 
+     function evaluatePPolyI(
+        PPoly32 calldata f, 
         uint256 x1, 
         uint256 x2, 
-        uint256 i, 
-        uint256 deg
-    ) internal view returns (uint256) {
-        uint256 degIdx;
-        uint256 yP;
-        uint256 yN;
-
-        uint256 temp;
-
-        if(x1 >= f.values[i*valueIndexMultiplier + indexMultiplier] && x2 >= f.values[i*valueIndexMultiplier + indexMultiplier]) {
-            x1 -= f.values[i*valueIndexMultiplier + indexMultiplier];
-            x2 -= f.values[i*valueIndexMultiplier + indexMultiplier];
-        }
-
-        while(degIdx <= deg) {
-            // to integrate from x1 to x2 we need to evaluate the expression
-            // ( v3(x2-k)^4/4 + v2(x2-k)^3/3 + v1(x2-k)^2/2 + v0*x2 ) - ( v3(x1-k)^4/4 + v2(x1-k)^3/3 + v1(x1-k)^2/2 + v0*x1 )
-            // uint256 baseIndex = (i*indexMultiplier + degIdx) / 32;
-            uint256 base = getPackedBase(f.bases[i / 8], (i - ((i/8)*8))*4 + degIdx);
-
-            {   
-                temp = pow(x2, degIdx+1)
-                    .mul(f.values[i*valueIndexMultiplier + degIdx])
-                    .div(pow(10, base).mul(degIdx + 1));
-            }
-            {
-                temp -= pow(x1, degIdx+1)
-                .mul(f.values[i*valueIndexMultiplier + degIdx])
-                .div(pow(10, base).mul(degIdx + 1));
-            }
-
-            if (getPackedSign(f.signs, i*indexMultiplier + degIdx)) 
-                yP = yP.add(temp);
-            else 
-                yN = yN.add(temp);
-
-            degIdx++;
-        }
-        return yP - yN;
-     }
-
-
-     //Piecewise Evaluation
-     function evaluatePiecewiseFunction(PiecewiseFunction calldata f, uint256 x, uint256 i, uint256 deg) internal pure returns (uint256) {
-        uint256 degIdx;
-        uint256 yP;
-        uint256 yN;
-        uint256 temp;
-
-        while(degIdx <= deg) {
-            // evaluate in the form v3(x-k)^3 + v2(x-k)^2 + v1(x-k) + v0
-            temp = pow(x - f.values[i*valueIndexMultiplier + indexMultiplier], degIdx).mul(f.values[i*valueIndexMultiplier + degIdx]).div(pow(10, f.bases[i*indexMultiplier + degIdx]) );
-           
-            if(f.signs[i*indexMultiplier + degIdx]) 
-                yP = yP.add(temp);
-            else 
-                yN = yN.add(temp);
-        
-            degIdx++;
-        }
-
-        return yP.sub(yN);
-     }
-
-     function evalPiecewiseFunctionIntegrate(
-        PiecewiseFunction calldata f, 
-        uint256 x1, 
-        uint256 x2, 
-        uint256 i, 
-        uint256 deg
+        uint256 pieceIndex, 
+        uint256 evaluationDegree
     ) internal pure returns (uint256) {
-        uint256 degIdx;
-        uint256 yP;
-        uint256 yN;
+        uint256 currDegreeIndex;
+        uint256 sumPositive;
+        uint256 sumNegative;
 
-        uint256 temp;
+        if(x1 >= f.ranges[pieceIndex] && x2 >= f.ranges[pieceIndex]) {
+            x1 -= f.ranges[pieceIndex];
+            x2 -= f.ranges[pieceIndex];
+        }
 
-        while(degIdx <= deg) {
+        while(currDegreeIndex <= evaluationDegree) {
             // to integrate from x1 to x2 we need to evaluate the expression
             // ( v3(x2-k)^4/4 + v2(x2-k)^3/3 + v1(x2-k)^2/2 + v0*x2 ) - ( v3(x1-k)^4/4 + v2(x1-k)^3/3 + v1(x1-k)^2/2 + v0*x1 )
-            temp = pow(
-                x2 - f.values[i*valueIndexMultiplier + indexMultiplier], degIdx+1
-                ).mul(
-                    f.values[i*valueIndexMultiplier + degIdx]
-                ).div(
-                    pow(10, f.bases[i*indexMultiplier +degIdx]).mul(degIdx + 1))
-                - pow(
-                    x1 - f.values[i*valueIndexMultiplier + indexMultiplier], degIdx+1
-                ).mul(
-                    f.values[i*valueIndexMultiplier + degIdx]
-                ).div(
-                    pow(10, f.bases[i*indexMultiplier +degIdx]).mul(degIdx + 1)
-                );
+            uint256 index = pieceIndex * 4 + currDegreeIndex;
+            uint256 base = getPackedBase(f.bases[pieceIndex / 8], (pieceIndex - ((pieceIndex/8)*8))*4 + currDegreeIndex);
 
-            if(f.signs[i*indexMultiplier + degIdx]) 
-                yP = yP.add(temp);
-            else 
-                yN = yN.add(temp);
-
-            degIdx++;
-        }
-        return yP - yN;
-     }
-    function getPackedBase(uint256 packedBases, uint256 index) internal pure returns (uint8) {
-        //assume 32 bases are always packed
-        return uint8(packedBases >> ((32 - index - 1)*8));
-    }
-    function getPackedSign(uint256 packedBools, uint256 index) internal view returns (bool) {
-        console.log(packedBools, index);
-        return ((packedBools >> index) & uint256(1) == 1);
-    }
- 
-     //This is to prevent the evaluation loop from running redundant calculations.
-     function getFunctionDegree(PiecewiseFunction calldata f, uint256 index) internal pure returns (uint256 deg) {
-         deg = maxFunctionDegree;
-         while(f.values[index*valueIndexMultiplier + deg] == 0) {
-             deg--;
-         }
-     }
-
-     function getPackedFunctionDegree(PackedPiecewiseFunction calldata f, uint256 index) internal pure returns (uint256 deg) {
-        deg = maxFunctionDegree;
-        while(f.values[index*valueIndexMultiplier + deg] == 0) {
-            deg--;
-        }
-    }
- 
-     //extract the subinterval array from the general values array 
-     function parseIntervals(uint256[numValues] calldata values) internal pure returns(uint256[] memory) {
-        uint256 i;
-
-        for(uint256 j = 0; j < numPieces; j++) {
-
-            if(values[j*valueIndexMultiplier + indexMultiplier] == 0 && j != 0) {
-                break;
+            if (getPackedSign(f.signs, index)) {
+                sumPositive += pow(x2, 1 + currDegreeIndex)
+                    .mul(f.values[index])
+                    .div(pow(10, base).mul(1 + currDegreeIndex));
+                
+                sumPositive -= pow(x1, 1 + currDegreeIndex)
+                    .mul(f.values[index])
+                    .div(pow(10, base).mul(1 + currDegreeIndex));
             } else {
-                i++;
+                sumNegative += pow(x2, 1 + currDegreeIndex)
+                .mul(f.values[index])
+                .div(pow(10, base).mul(1 + currDegreeIndex));
+            
+                sumNegative -= pow(x1, 1 + currDegreeIndex)
+                    .mul(f.values[index])
+                    .div(pow(10, base).mul(1 + currDegreeIndex));
             }
+            currDegreeIndex++;
         }
-
-        uint256[] memory parsedIntervals = new uint256[](i);
-        for(uint256 c = 0; c < i; c++) {
-            parsedIntervals[c] = values[c*valueIndexMultiplier + indexMultiplier]; // removed check for monotonicity
-        }
-
-        return parsedIntervals;
+        return sumPositive.sub(sumNegative);
      }
+
+    function createZeros() internal pure returns (uint256[32] memory ranges, uint256[128] memory values, uint256[4] memory bases) {
+        for (uint256 i = 0; i < 128; i++) {
+            values[i] = 0;
+            if(i < 32) ranges[i] = 0;
+            if(i < 4) bases[i] = 0;
+        }
+        return (ranges, values, bases);
+    }
+
+    function getMaxPieceIndex(uint256[32] calldata ranges) internal pure returns (uint256 maxIndex) {
+        while(maxIndex < 32) {
+            if(ranges[maxIndex] == 0 && maxIndex != 0) {
+                break;
+            }
+            maxIndex++;
+        }
+        return maxIndex--;
+    }
+
+    function getPackedBase(uint256 packedBases, uint256 baseIndex) internal pure returns (uint8) {
+        //baseIndex is in the range 0 to 31
+        return uint8(packedBases >> ((32 - baseIndex - 1)*8));
+    }
+    function getPackedSign(uint256 packedBools, uint256 boolIndex) internal pure returns (bool) {
+        //boolIndex is in the range 0 to 255
+        return ((packedBools >> boolIndex) & uint256(1) == 1);
+    }
+ 
+    //Function degree of a polynomial at a given pieceIndex
+     function getDegree(PPoly32 calldata f, uint256 pieceIndex) internal pure returns (uint256 degree) {
+        degree = 3;
+         while(f.values[pieceIndex*4 + degree] == 0) {
+            degree--;
+         }
+    }
  
      //find the index of the interval containing x with the start of the interval being inclusive and the end of the interval being exclusive.
      // [inclusiveStart, exclusiveEnd)
-    function findIndex(uint256[] memory array, uint256 value) internal pure returns (uint256) {
+    function findIndex(uint256[32] calldata array, uint256 value, uint256 maxIndex) internal pure returns (uint256) {
         int256 low;
-        int256 high = int(array.length - 1);
+        int256 high = int(maxIndex);
         int256 mid;
 
         if(value == 0) 

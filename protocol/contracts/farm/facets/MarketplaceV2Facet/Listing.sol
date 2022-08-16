@@ -17,17 +17,6 @@ contract Listing is Dynamic {
 
     using SafeMath for uint256;
 
-    // struct PodListing {
-    //     address account;
-    //     uint256 index;
-    //     uint256 start;
-    //     uint256 amount;
-    //     uint24 pricePerPod;
-    //     uint256 maxHarvestableIndex;
-    //     LibTransfer.To mode;
-    //     PiecewiseFunction f;
-    // }
-
     struct PodListing {
         address account;
         uint256 index;
@@ -36,7 +25,7 @@ contract Listing is Dynamic {
         uint24 pricePerPod;
         uint256 maxHarvestableIndex;
         LibTransfer.To mode;
-        PackedPiecewiseFunction f;
+        PPoly32 f;
     }
 
     event PodListingCreated(
@@ -49,19 +38,6 @@ contract Listing is Dynamic {
         LibTransfer.To mode
     );
 
-    // event DynamicPodListingCreated(
-    //     address indexed account,
-    //     uint256 index, 
-    //     uint256 start,
-    //     uint256 amount,
-    //     uint24 pricePerPod,
-    //     uint256 maxHarvestableIndex,
-    //     LibTransfer.To mode,
-    //     uint256[] values,
-    //     uint8[] bases,
-    //     bool[] signs
-    // );
-    
     event DynamicPodListingCreated(
         address indexed account,
         uint256 index, 
@@ -70,6 +46,7 @@ contract Listing is Dynamic {
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
         LibTransfer.To mode,
+        uint256[] ranges,
         uint256[] values,
         uint256[] bases,
         uint256 signs
@@ -106,25 +83,23 @@ contract Listing is Dynamic {
         
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
         
-        // (uint256[numValues] memory values, uint8[numMeta] memory bases, bool[numMeta] memory signs) = createZeros();
-        (uint256[numValues] memory values, uint256[indexMultiplier] memory bases, uint256 signs) = createZeros();
+        (uint256[32] memory ranges, uint256[128] memory values, uint256[4] memory bases) = createZeros();
 
         //for a regular pod listing, PiecewiseFunction should just be filled with 0s
-        s.podListings[index] = hashListingMem(start, amount, pricePerPod, maxHarvestableIndex, mode, PricingMode.CONSTANT, values, bases, signs);
+        s.podListings[index] = hashListingMem(start, amount, pricePerPod, maxHarvestableIndex, mode, PricingMode.CONSTANT, ranges, values, bases, 0);
         
         emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, mode);
 
     }
 
-    function _createDPodListing(
+    function _createDynamicPodListing(
         uint256 index,
         uint256 start,
         uint256 amount,
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
         LibTransfer.To mode,
-        // PiecewiseFunction calldata f
-        PackedPiecewiseFunction calldata f
+        PPoly32 calldata f
     ) internal {
         console.log("_createDPodListing");
         console.log(gasleft());
@@ -135,21 +110,21 @@ contract Listing is Dynamic {
         
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
         console.log(gasleft());
-        s.podListings[index] = hashListing(start, amount, pricePerPod, maxHarvestableIndex, mode, f.mode, f.values, f.bases, f.signs);
+        s.podListings[index] = hashListing(start, amount, pricePerPod, maxHarvestableIndex, mode, f.mode, f.ranges, f.values, f.bases, f.signs);
         console.log(gasleft());
-        uint256[] memory values = new uint256[](numValues);
-        uint256[] memory bases = new uint256[](indexMultiplier);
-        // uint8[] memory bases = new uint8[](numMeta);
-        // bool[] memory signs = new bool[](numMeta);
 
-        for(uint256 i = 0; i < numValues; i++){
+        uint256[] memory ranges = new uint256[](32);
+        uint256[] memory values = new uint256[](128);
+        uint256[] memory bases = new uint256[](4);
+
+        for(uint256 i = 0; i < 128; i++){
             values[i] = f.values[i];
-            if(i < indexMultiplier) bases[i] = f.bases[i];
-            // if(i < numMeta) bases[i] = f.bases[i];
-            // if(i < numMeta) signs[i] = f.signs[i];
+            if(i < 4) bases[i] = f.bases[i];
+            if(i < 32) ranges[i] = f.ranges[i];
         }
+
         console.log(gasleft());
-        emit DynamicPodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, mode, values, bases, f.signs);
+        emit DynamicPodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, mode, ranges, values, bases, f.signs);
         // emit DynamicPodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, mode, values, bases, signs);
         console.log(gasleft());
     }
@@ -168,6 +143,7 @@ contract Listing is Dynamic {
             l.maxHarvestableIndex,
             l.mode,
             l.f.mode,
+            l.f.ranges,
             l.f.values,
             l.f.bases,
             l.f.signs
@@ -178,7 +154,7 @@ contract Listing is Dynamic {
         require(plotSize >= (l.start + l.amount) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
         console.log(gasleft());
-        uint256 pricePerPod = l.f.mode == PricingMode.CONSTANT ? l.pricePerPod : getListingPrice(l);
+        uint256 pricePerPod = l.f.mode == PricingMode.CONSTANT ? l.pricePerPod : getDynamicListingPrice(l);
         console.log(gasleft());
         require(pricePerPod <= 1000000, "Marketplace: Invalid price calculated");
         uint256 amount = (beanAmount * 1000000) / pricePerPod;
@@ -205,6 +181,7 @@ contract Listing is Dynamic {
                 l.maxHarvestableIndex,
                 l.mode,
                 l.f.mode,
+                l.f.ranges,
                 l.f.values,
                 l.f.bases,
                 l.f.signs
@@ -231,21 +208,11 @@ contract Listing is Dynamic {
     * Pricing
     */
 
-    // function getListingPrice(PodListing calldata l) internal view returns (uint256) {
-    //     uint256[] memory subintervals = parseIntervals(l.f.values);
-    //     uint256 index = findIndex(subintervals, l.index + l.start - s.f.harvestable);
-    //     index = index > 0 ? index - 1 : 0;
-    //     uint256 intervalDeg = getFunctionDegree(l.f, index);
-    //     uint256 pricePerPod = evaluatePiecewiseFunction(l.f, l.index + l.start - s.f.harvestable, index, intervalDeg);
-    //     return pricePerPod;
-    // }
-    
-    function getListingPrice(PodListing calldata l) internal view returns (uint256) {
-        uint256[] memory subintervals = parseIntervals(l.f.values);
-        uint256 index = findIndex(subintervals, l.index + l.start - s.f.harvestable);
+    function getDynamicListingPrice(PodListing calldata l) internal view returns (uint256) {
+        uint256 index = findIndex(l.f.ranges, l.index + l.start - s.f.harvestable, getMaxPieceIndex(l.f.ranges));
         index = index > 0 ? index - 1 : 0;
-        uint256 intervalDeg = getPackedFunctionDegree(l.f, index);
-        uint256 pricePerPod = evaluatePackedPF(l.f, l.index + l.start - s.f.harvestable, index, intervalDeg);
+        uint256 intervalDeg = getDegree(l.f, index);
+        uint256 pricePerPod = evaluatePPoly(l.f, l.index + l.start - s.f.harvestable, index, intervalDeg);
         return pricePerPod;
     }
 
@@ -275,31 +242,34 @@ contract Listing is Dynamic {
      * Helpers
      */
 
-    function hashListingMem(uint256 start, uint256 amount, uint24 pricePerPod, uint256 maxHarvestableIndex, LibTransfer.To mode, PricingMode priceMode, uint256[numValues] memory values, uint256[indexMultiplier] memory bases, uint256 signs) 
-        internal 
-        pure 
-        returns (bytes32 lHash) {
-        lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex,  mode == LibTransfer.To.EXTERNAL, priceMode == PricingMode.CONSTANT, values, bases, signs));
+    function hashListingMem(
+        uint256 start, 
+        uint256 amount, 
+        uint24 pricePerPod, 
+        uint256 maxHarvestableIndex, 
+        LibTransfer.To mode, 
+        PricingMode priceMode, 
+        uint256[32] memory ranges,
+        uint256[128] memory values, 
+        uint256[4] memory bases, 
+        uint256 signs
+    ) internal pure returns (bytes32 lHash) {
+        lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex,  mode == LibTransfer.To.EXTERNAL, priceMode == PricingMode.CONSTANT, ranges, values, bases, signs));
     }
 
-    function hashListing(uint256 start, uint256 amount, uint24 pricePerPod, uint256 maxHarvestableIndex, LibTransfer.To mode, PricingMode priceMode, uint256[numValues] calldata values, uint256[indexMultiplier] calldata bases, uint256 signs) 
-        internal 
-        pure 
-        returns (bytes32 lHash) {
-        lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex,  mode == LibTransfer.To.EXTERNAL, priceMode == PricingMode.CONSTANT, values, bases, signs));
+    function hashListing(
+        uint256 start, 
+        uint256 amount, 
+        uint24 pricePerPod, 
+        uint256 maxHarvestableIndex, 
+        LibTransfer.To mode, 
+        PricingMode priceMode, 
+        uint256[32] calldata ranges,
+        uint256[128] calldata values, 
+        uint256[4] calldata bases, 
+        uint256 signs
+    ) internal pure returns (bytes32 lHash) {
+        lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex,  mode == LibTransfer.To.EXTERNAL, priceMode == PricingMode.CONSTANT, ranges, values, bases, signs));
     }
 
-    //  function hashListingMem(uint256 start, uint256 amount, uint24 pricePerPod, uint256 maxHarvestableIndex, LibTransfer.To mode, PricingMode priceMode, uint256[numValues] memory values, uint8[numMeta] memory bases, bool[numMeta] memory signs) 
-    //     internal 
-    //     pure 
-    //     returns (bytes32 lHash) {
-    //     lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex,  mode == LibTransfer.To.EXTERNAL, priceMode == PricingMode.CONSTANT, values, bases, signs));
-    // }
-
-    // function hashListing(uint256 start, uint256 amount, uint24 pricePerPod, uint256 maxHarvestableIndex, LibTransfer.To mode, PricingMode priceMode, uint256[numValues] calldata values, uint8[numMeta] calldata bases, bool[numMeta] calldata signs) 
-    //     internal 
-    //     pure 
-    //     returns (bytes32 lHash) {
-    //     lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex,  mode == LibTransfer.To.EXTERNAL, priceMode == PricingMode.CONSTANT, values, bases, signs));
-    // }
 }

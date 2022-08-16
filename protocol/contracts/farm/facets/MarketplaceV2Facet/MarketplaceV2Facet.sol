@@ -39,17 +39,16 @@ contract MarketplaceV2Facet is Order {
         );
     }
 
-    function createDPodListing(
+    function createDynamicPodListing(
         uint256 index,
         uint256 start,
         uint256 amount,
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
         LibTransfer.To mode,
-        // PiecewiseFunction calldata f
-        PackedPiecewiseFunction calldata f
+        PPoly32 calldata f
     ) external payable {
-        _createDPodListing(
+        _createDynamicPodListing(
             index,
             start,
             amount,
@@ -103,16 +102,15 @@ contract MarketplaceV2Facet is Order {
         return _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine);
     }
 
-    function createDPodOrder(
+    function createDynamicPodOrder(
         uint256 beanAmount,
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
         LibTransfer.From mode,
-        // PiecewiseFunction calldata f
-        PackedPiecewiseFunction calldata f
+        PPoly32 calldata f
     ) external payable returns (bytes32 id) {
         beanAmount = LibTransfer.receiveToken(C.bean(), beanAmount, msg.sender, mode);
-        return _createDPodOrder(beanAmount, pricePerPod, maxPlaceInLine, f);
+        return _createDynamicPodOrder(beanAmount, pricePerPod, maxPlaceInLine, f);
     }
 
     // Fill
@@ -135,12 +133,11 @@ contract MarketplaceV2Facet is Order {
         _cancelPodOrder(pricePerPod, maxPlaceInLine, mode);
     }
 
-    function cancelDPodOrder(
+    function cancelDynamicPodOrder(
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
         LibTransfer.To mode,
-        // PiecewiseFunction calldata f
-        PackedPiecewiseFunction calldata f
+        PPoly32 calldata f
     ) external payable {
         _cancelDynamicPodOrder(pricePerPod, maxPlaceInLine, mode, f);
     }
@@ -151,10 +148,9 @@ contract MarketplaceV2Facet is Order {
         address account,
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
-        // PiecewiseFunction calldata f
-        PackedPiecewiseFunction calldata f
+        PPoly32 calldata f
     ) external view returns (uint256) {
-        return s.podOrders[ createOrderId(account, pricePerPod, maxPlaceInLine, f.mode, f.values, f.bases, f.signs)];
+        return s.podOrders[createOrderId(account, pricePerPod, maxPlaceInLine, f.mode, f.ranges, f.values, f.bases, f.signs)];
     }
 
     function podOrderById(bytes32 id) external view returns (uint256) {
