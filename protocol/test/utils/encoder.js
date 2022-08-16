@@ -5,6 +5,7 @@ const ConvertKind = {
   CURVE_LP_TO_BEANS: 1,
   UNRIPE_BEANS_TO_LP: 2,
   UNRIPE_LP_TO_BEANS: 3,
+  LAMBDA_LAMBDA: 4
 }
 
 class ConvertEncoder {
@@ -51,6 +52,11 @@ class ConvertEncoder {
      [ConvertKind.UNRIPE_BEANS_TO_LP, beans, minLP]
    );
 
+   static convertLambdaToLambda = (amount, token) =>
+    defaultAbiCoder.encode(
+      ['uint256', 'uint256', 'address'],
+      [ConvertKind.LAMBDA_LAMBDA, amount, token]
+    );
 }
 
 exports.ConvertEncoder = ConvertEncoder

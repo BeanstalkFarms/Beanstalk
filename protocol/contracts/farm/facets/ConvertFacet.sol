@@ -47,14 +47,18 @@ contract ConvertFacet is ReentrancyGuard {
         bytes calldata convertData,
         uint32[] memory crates,
         uint256[] memory amounts
-    ) external payable nonReentrant {
+    )
+        external
+        payable
+        nonReentrant
+        returns (uint32 toSeason, uint256 toAmount)
+    {
         LibInternal.updateSilo(msg.sender);
-        (
-            address toToken,
-            address fromToken,
-            uint256 toAmount,
-            uint256 fromAmount
-        ) = LibConvert.convert(convertData);
+
+        address toToken; address fromToken; uint256 fromAmount;
+        (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(
+            convertData
+        );
 
         (uint256 grownStalk, uint256 oldBdv) = _withdrawTokens(
             fromToken,
@@ -66,7 +70,7 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
         uint256 bdv = newBdv > oldBdv ? newBdv : oldBdv;
 
-        _depositTokens(toToken, toAmount, bdv, grownStalk);
+        toSeason = _depositTokens(toToken, toAmount, bdv, grownStalk);
 
         emit Convert(msg.sender, fromToken, toToken, fromAmount, toAmount);
     }
@@ -136,11 +140,10 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 amount,
         uint256 bdv,
         uint256 grownStalk
-    ) internal {
+    ) internal returns (uint32 _s) {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
 
         uint256 seeds = bdv.mul(LibTokenSilo.seeds(token));
-        uint32 _s;
         if (grownStalk > 0) {
             _s = uint32(grownStalk.div(seeds));
             uint32 __s = s.season.current;

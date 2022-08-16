@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./LibUnripeConvert.sol";
+import "./LibLambdaConvert.sol";
 
 /**
  * @author Publius
@@ -41,6 +42,9 @@ library LibConvert {
         } else if (kind == LibConvertData.ConvertKind.UNRIPE_LP_TO_UNRIPE_BEANS) {
             (tokenOut, tokenIn, outAmount, inAmount) = LibUnripeConvert
                 .convertLPToBeans(convertData);
+        } else if (kind == LibConvertData.ConvertKind.LAMBDA_LAMBDA) {
+            (tokenOut, tokenIn, outAmount, inAmount) = LibLambdaConvert
+                .convert(convertData);
         } else {
             revert("Convert: Invalid payload");
         }
