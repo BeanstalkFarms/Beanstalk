@@ -70,7 +70,10 @@ library LibConvert {
         /// urBEAN -> urBEAN:3CRV LP
         if (tokenIn == C.unripeBeanAddress() && tokenOut == C.unripeLPAddress())
             return LibUnripeConvert.beansToPeg();
-        
+
+        // Lambda -> Lambda
+        if (tokenIn == tokenOut) return type(uint256).max;
+
         require(false, "Convert: Tokens not supported");
     }
 
@@ -95,6 +98,9 @@ library LibConvert {
         if (tokenIn == C.unripeBeanAddress() && tokenOut == C.unripeLPAddress())
             return LibUnripeConvert.getLPAmountOut(amountIn);
         
+        // Lambda -> Lambda
+        if (tokenIn == tokenOut) return amountIn;
+
         require(false, "Convert: Tokens not supported");
     }
 }
