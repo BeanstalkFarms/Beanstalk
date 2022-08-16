@@ -1,18 +1,20 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+**/
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./PodTransfer.sol";
-import "../../../libraries/Token/LibTransfer.sol";
+import "./Dynamic.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Beanjoyer
  * @title Pod Marketplace v1
  **/
-contract Listing is PodTransfer {
+
+contract Listing is Dynamic {
+
     using SafeMath for uint256;
 
     struct PodListing {
@@ -23,17 +25,33 @@ contract Listing is PodTransfer {
         uint24 pricePerPod;
         uint256 maxHarvestableIndex;
         LibTransfer.To mode;
+        PPoly32 f;
     }
 
     event PodListingCreated(
+        address indexed account, 
+        uint256 index, 
+        uint256 start, 
+        uint256 amount, 
+        uint24 pricePerPod, 
+        uint256 maxHarvestableIndex, 
+        LibTransfer.To mode
+    );
+
+    event DynamicPodListingCreated(
         address indexed account,
-        uint256 index,
+        uint256 index, 
         uint256 start,
         uint256 amount,
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
-        LibTransfer.To mode
+        LibTransfer.To mode,
+        uint256[32] ranges,
+        uint256[128] values,
+        uint256[4] bases,
+        uint256 signs
     );
+
     event PodListingFilled(
         address indexed from,
         address indexed to,
@@ -41,8 +59,10 @@ contract Listing is PodTransfer {
         uint256 start,
         uint256 amount
     );
+
     event PodListingCancelled(address indexed account, uint256 index);
 
+    
     /*
      * Create
      */
@@ -56,71 +76,76 @@ contract Listing is PodTransfer {
         LibTransfer.To mode
     ) internal {
         uint256 plotSize = s.a[msg.sender].field.plots[index];
-        require(
-            plotSize >= start.add(amount) && amount > 0,
-            "Marketplace: Invalid Plot/Amount."
-        );
-        require(
-            pricePerPod > 0,
-            "Marketplace: Pod price must be greater than 0."
-        );
-        require(
-            s.f.harvestable <= maxHarvestableIndex,
-            "Marketplace: Expired."
-        );
-
+        
+        require(plotSize >= (start + amount) && amount > 0, "Marketplace: Invalid Plot/Amount.");
+        require(pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
+        require(s.f.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
+        
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
 
-        s.podListings[index] = hashListing(
-            start,
-            amount,
-            pricePerPod,
-            maxHarvestableIndex,
-            mode
-        );
+        //for a regular pod listing, PiecewiseFunction should just be filled with 0s
+        s.podListings[index] = hashListingFillZeros(start, amount, pricePerPod, maxHarvestableIndex, mode, PricingMode.CONSTANT);
+        
+        emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, mode);
 
-        emit PodListingCreated(
-            msg.sender,
-            index,
-            start,
-            amount,
-            pricePerPod,
-            maxHarvestableIndex,
-            mode
-        );
     }
 
+    function _createDynamicPodListing(
+        uint256 index,
+        uint256 start,
+        uint256 amount,
+        uint24 pricePerPod,
+        uint256 maxHarvestableIndex,
+        LibTransfer.To mode,
+        PPoly32 calldata f
+    ) internal {
+        // console.log("_createDPodListing");
+        // console.log(gasleft());
+        uint256 plotSize = s.a[msg.sender].field.plots[index];
+        require(plotSize >= (start + amount) && amount > 0, "Marketplace: Invalid Plot/Amount.");
+        if(f.mode == PricingMode.CONSTANT) require(pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
+        require(s.f.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
+        
+        if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
+        // console.log(gasleft());
+        s.podListings[index] = hashListing(start, amount, pricePerPod, maxHarvestableIndex, mode, f.mode, f.ranges, f.values, f.bases, f.signs);
+        PPoly32 memory _f = toMemory(f);
+
+        emit DynamicPodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, mode, _f.ranges, _f.values, _f.bases, _f.signs);
+    }
     /*
      * Fill
      */
 
     function _fillListing(PodListing calldata l, uint256 beanAmount) internal {
+        
         bytes32 lHash = hashListing(
             l.start,
             l.amount,
             l.pricePerPod,
             l.maxHarvestableIndex,
-            l.mode
-        );
-        require(
-            s.podListings[l.index] == lHash,
-            "Marketplace: Listing does not exist."
-        );
-        uint256 plotSize = s.a[l.account].field.plots[l.index];
-        require(
-            plotSize >= (l.start + l.amount) && l.amount > 0,
-            "Marketplace: Invalid Plot/Amount."
-        );
-        require(
-            s.f.harvestable <= l.maxHarvestableIndex,
-            "Marketplace: Listing has expired."
+            l.mode,
+            l.f.mode,
+            l.f.ranges,
+            l.f.values,
+            l.f.bases,
+            l.f.signs
         );
 
-        uint256 amount = beanAmount.mul(1000000).div(l.pricePerPod);
-        amount = roundAmount(l, amount);
+        require(s.podListings[l.index] == lHash, "Marketplace: Listing does not exist.");
+        uint256 plotSize = s.a[l.account].field.plots[l.index];
+        require(plotSize >= (l.start + l.amount) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
+        require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
+
+        uint256 pricePerPod = l.f.mode == PricingMode.CONSTANT ? l.pricePerPod : getDynamicListingPrice(l);
+
+        uint256 amount = (beanAmount * 1000000) / pricePerPod;
+        amount = roundAmount(l, amount, pricePerPod);
 
         __fillListing(msg.sender, l, amount);
+
         _transferPlot(l.account, msg.sender, l.index, l.start, amount);
+
     }
 
     function __fillListing(
@@ -128,18 +153,24 @@ contract Listing is PodTransfer {
         PodListing calldata l,
         uint256 amount
     ) private {
-        // Note: If l.amount < amount, the function roundAmount will revert
-
+        // console.log(l.amount, amount);
+        require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
         if (l.amount > amount)
             s.podListings[l.index.add(amount).add(l.start)] = hashListing(
                 0,
                 l.amount.sub(amount),
                 l.pricePerPod,
                 l.maxHarvestableIndex,
-                l.mode
+                l.mode,
+                l.f.mode,
+                l.f.ranges,
+                l.f.values,
+                l.f.bases,
+                l.f.signs
             );
         emit PodListingFilled(l.account, to, l.index, l.start, amount);
         delete s.podListings[l.index];
+    
     }
 
     /*
@@ -156,40 +187,69 @@ contract Listing is PodTransfer {
     }
 
     /*
-     * Helpers
-     */
+    * Pricing
+    */
 
-    // If remainder left (always <1 pod) that would otherwise be unpurchaseable
-    // due to rounding from calculating amount, give it to last buyer
-    function roundAmount(PodListing calldata l, uint256 amount)
-        private
-        pure
-        returns (uint256)
-    {
-        uint256 remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing");
-        if (remainingAmount < (1000000 / l.pricePerPod)) amount = l.amount;
-        return amount;
+    function getDynamicListingPrice(PodListing calldata l) internal view returns (uint256) {
+        uint256 index = findIndex(l.f.ranges, l.index + l.start - s.f.harvestable, getMaxPieceIndex(l.f.ranges));
+        index = index > 0 ? index - 1 : 0;
+        uint256 intervalDeg = getDegree(l.f, index);
+        uint256 pricePerPod = evaluatePPoly(l.f, l.index + l.start - s.f.harvestable, index, intervalDeg);
+        return pricePerPod;
     }
 
     /*
      * Helpers
      */
 
-    function hashListing(
-        uint256 start,
-        uint256 amount,
-        uint24 pricePerPod,
-        uint256 maxHarvestableIndex,
-        LibTransfer.To mode
-    ) internal pure returns (bytes32 lHash) {
-        lHash = keccak256(
-            abi.encodePacked(
-                start,
-                amount,
-                pricePerPod,
-                maxHarvestableIndex,
-                mode == LibTransfer.To.EXTERNAL
-            )
-        );
+    // If remainder left (always <1 pod) that would otherwise be unpurchaseable
+    // due to rounding from calculating amount, give it to last buyer
+    function roundAmount(PodListing calldata l, uint256 amount, uint256 pricePerPod)
+        private
+        pure
+        returns (uint256)
+    {
+        if(l.f.mode != PricingMode.CONSTANT) {
+            uint256 remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing");
+            if (remainingAmount < (1000000 / pricePerPod)) amount = l.amount;
+            return amount;
+        } else {
+            uint256 remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing");
+            if (remainingAmount < (1000000 / l.pricePerPod)) amount = l.amount;
+            return amount;
+        }
     }
+
+    /*
+     * Helpers
+     */
+
+    function hashListingFillZeros(
+        uint256 start, 
+        uint256 amount, 
+        uint24 pricePerPod, 
+        uint256 maxHarvestableIndex, 
+        LibTransfer.To mode,
+        PricingMode priceMode
+    ) internal pure returns (bytes32 lHash) {
+        (uint256[32] memory ranges, uint256[128] memory values, uint256[4] memory bases) = createZeros();
+        uint256 signs = 0;
+        lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex,  mode == LibTransfer.To.EXTERNAL, priceMode == PricingMode.CONSTANT, ranges, values, bases, signs));
+    }
+
+    function hashListing(
+        uint256 start, 
+        uint256 amount, 
+        uint24 pricePerPod, 
+        uint256 maxHarvestableIndex, 
+        LibTransfer.To mode, 
+        PricingMode priceMode, 
+        uint256[32] calldata ranges,
+        uint256[128] calldata values, 
+        uint256[4] calldata bases, 
+        uint256 signs
+    ) internal pure returns (bytes32 lHash) {
+        lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex,  mode == LibTransfer.To.EXTERNAL, priceMode == PricingMode.CONSTANT, ranges, values, bases, signs));
+    }
+
 }

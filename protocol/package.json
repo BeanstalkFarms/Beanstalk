@@ -24,7 +24,8 @@
     "hardhat-contract-sizer": "^2.0.3",
     "hardhat-gas-reporter": "^1.0.4",
     "json-bigint": "^1.0.0",
-    "solidity-coverage": "^0.7.16"
+    "solidity-coverage": "^0.7.21",
+    "ganache-cli": "^6.12.2"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^3.4.0",

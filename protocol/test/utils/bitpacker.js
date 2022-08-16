@@ -111,55 +111,50 @@ class BitPacker {
     }
 }
 
-const packedBools = BitPacker.pack([
-    BitDescriptor.fromBool(true),
-    BitDescriptor.fromBool(true),
-    BitDescriptor.fromBool(false),
-    BitDescriptor.fromBool(true),
-    BitDescriptor.fromBool(true),
-    BitDescriptor.fromBool(true),
-    BitDescriptor.fromBool(false),
-    BitDescriptor.fromBool(true),
-    BitDescriptor.fromBool(false),
-]);
+// const packedBools = BitPacker.pack([
+//     BitDescriptor.fromBool(true),
+//     BitDescriptor.fromBool(true),
+//     BitDescriptor.fromBool(false),
+//     BitDescriptor.fromBool(true),
+//     BitDescriptor.fromBool(true),
+//     BitDescriptor.fromBool(true),
+//     BitDescriptor.fromBool(false),
+//     BitDescriptor.fromBool(true),
+//     BitDescriptor.fromBool(false),
+// ]);
 
-const packedUint8s = BitPacker.pack([
-    BitDescriptor.fromUint8(0),
-    BitDescriptor.fromUint8(56),
-    BitDescriptor.fromUint8(34),
-    BitDescriptor.fromUint8(23),
-    BitDescriptor.fromUint8(0),
-    BitDescriptor.fromUint8(77),
-    BitDescriptor.fromUint8(21),
-    BitDescriptor.fromUint8(0),
-]);
+// const packedUint8s = BitPacker.pack([
+//     BitDescriptor.fromUint8(0),
+//     BitDescriptor.fromUint8(56),
+//     BitDescriptor.fromUint8(34),
+//     BitDescriptor.fromUint8(23),
+//     BitDescriptor.fromUint8(0),
+//     BitDescriptor.fromUint8(77),
+//     BitDescriptor.fromUint8(21),
+//     BitDescriptor.fromUint8(0),
+// ]);
 
-const booliterator = BitPacker.createUnpackIterator(packedBools, pattern => {
-    switch(pattern) {
-        case '1': return '1';
-        case '0': return '0';
-        default: return null;
-    }
-})
+// const booliterator = BitPacker.createUnpackIterator(packedBools, pattern => {
+//     switch(pattern) {
+//         case '1': return '1';
+//         case '0': return '0';
+//         default: return null;
+//     }
+// })
 
-const uint8iterator = BitPacker.createUnpackIterator(packedUint8s, pattern => {
-    // if(pattern.length === 8) {
-    //     return parseInt(pattern, 2);
-    // } else {
-    //     return null;
-    // }
-    switch(pattern) {
-        case '1': return '1';
-        case '0': return '0';
-        default: return null;
-    }
-})
+// const uint8iterator = BitPacker.createUnpackIterator(packedUint8s, pattern => {
+//     switch(pattern) {
+//         case '1': return '1';
+//         case '0': return '0';
+//         default: return null;
+//     }
+// })
 
-const binaryString = [...booliterator].reverse().join('');
-const uint8String = [...uint8iterator].join('');
+// const binaryString = [...booliterator].reverse().join('');
+// const uint8String = [...uint8iterator].join('');
 
-const uint8num = parseInt(uint8String, 2);
-const binaryNum = parseInt(binaryString, 2);
+// const uint8num = parseInt(uint8String, 2);
+// const binaryNum = parseInt(binaryString, 2);
 
 // 1010000100011111111110111XXXXXXX
 // 10100001000111110001111100000010
