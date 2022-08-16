@@ -485,14 +485,14 @@ describe('Silo Token', function () {
 
       it("Check mock works", async function () {
         expect(await this.silo.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6('20'));
-        expect(await this.silo.totalStalk()).to.eq(pruneToStalk(to6('20')));
-        expect(await this.silo.totalSeeds()).to.eq(pruneToSeeds(to6('20')));
+        expect(await this.silo.totalStalk()).to.eq(pruneToStalk(to6('10')).add(pruneToStalk(to6('10'))));
+        expect(await this.silo.totalSeeds()).to.eq(pruneToSeeds(to6('10')).add(pruneToSeeds(to6('10'))));
       })
 
       it('get Deposit', async function () {
         const deposit = await this.silo.getDeposit(user.address, UNRIPE_BEAN, '2')
         expect(deposit[0]).to.equal(to6('20'))
-        expect(deposit[1]).to.equal(prune(to6('20')))
+        expect(deposit[1]).to.equal(prune(to6('10')).add(prune(to6('10'))))
       })
       
       it('revert if withdrawn too much', async function () {
@@ -691,14 +691,14 @@ describe('Silo Token', function () {
 
       it("Check mock works", async function () {
         expect(await this.silo.getTotalDeposited(UNRIPE_LP)).to.eq(to6('10'));
-        expect(await this.silo.totalStalk()).to.eq(pruneToStalk(to6('10')));
-        expect(await this.silo.totalSeeds()).to.eq(pruneToSeeds(to6('10'), 4));
+        expect(await this.silo.totalStalk()).to.eq(pruneToStalk(to6('2.5')).mul(toBN('4')).sub(toBN('10000')));
+        expect(await this.silo.totalSeeds()).to.eq(pruneToSeeds(to6('2.5'), 4).mul(toBN('4')).sub(toBN('4')));
       })
 
       it('get Deposit', async function () {
         const deposit = await this.silo.getDeposit(user.address, UNRIPE_LP, '2')
         expect(deposit[0]).to.equal(to6('10'))
-        expect(deposit[1]).to.equal(prune(to6('10')))
+        expect(deposit[1]).to.equal(prune(to6('7.5')).add(prune(to6('2.5'))).sub(toBN('1')))
       })
       
       it('revert if withdrawn too much', async function () {
@@ -712,14 +712,14 @@ describe('Silo Token', function () {
 
         it('properly updates the total balances', async function () {
           expect(await this.silo.getTotalDeposited(UNRIPE_LP)).to.eq(to6('1'));
-          expect(await this.silo.totalStalk()).to.eq(pruneToStalk(to6('1')));
-          expect(await this.silo.totalSeeds()).to.eq(pruneToSeeds(to6('1'), 4));
+          expect(await this.silo.totalStalk()).to.eq(pruneToStalk(to6('1')).sub(toBN('10000')));
+          expect(await this.silo.totalSeeds()).to.eq(pruneToSeeds(to6('1'), 4).sub(toBN('4')));
           expect(await this.silo.getTotalWithdrawn(UNRIPE_LP)).to.eq(to6('9'));
         });
 
         it('properly updates the user balance', async function () {
-          expect(await this.silo.balanceOfStalk(userAddress)).to.eq(pruneToStalk(to6('1')));
-          expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(pruneToSeeds(to6('1'), 4));
+          expect(await this.silo.balanceOfStalk(userAddress)).to.eq(pruneToStalk(to6('1')).sub(toBN('10000')));
+          expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(pruneToSeeds(to6('1'), 4).sub(toBN('4')));
         });
 
         it('properly removes the crate', async function () {
@@ -880,7 +880,7 @@ describe('Silo Token', function () {
 
       it('emits Remove and Withdrawal event', async function () {
         await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, 2, to6('5'));
-        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, 2, to6('5'), to6('1'));
+        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, 2, to6('5'), prune(to6('5')).add(to6('0.5')));
       });
     });
 

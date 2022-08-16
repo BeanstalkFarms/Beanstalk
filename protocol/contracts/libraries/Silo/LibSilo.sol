@@ -91,9 +91,8 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return;
 
-        uint256 roots = stalk == s.a[account].s.stalk
-            ? s.a[account].roots
-            : s.s.roots.mul(stalk).div(s.s.stalk);
+        uint256 roots = s.s.roots.mul(stalk).div(s.s.stalk);
+        if (roots > s.a[account].roots) roots = s.a[account].roots;
 
         s.s.stalk = s.s.stalk.sub(stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
