@@ -282,7 +282,7 @@
                 "type": "uint8"
             }
         ],
-        "name": "addLiquidity",
+        "name": "addLiquidityCurve",
         "outputs": [],
         "stateMutability": "payable",
         "type": "function"
@@ -411,7 +411,7 @@
                 "type": "uint8"
             }
         ],
-        "name": "removeLiquidity",
+        "name": "removeLiquidityCurve",
         "outputs": [],
         "stateMutability": "payable",
         "type": "function"
@@ -449,7 +449,7 @@
                 "type": "uint8"
             }
         ],
-        "name": "removeLiquidityImbalance",
+        "name": "removeLiquidityImbalanceCurve",
         "outputs": [],
         "stateMutability": "payable",
         "type": "function"
@@ -492,7 +492,7 @@
                 "type": "uint8"
             }
         ],
-        "name": "removeLiquidityOneToken",
+        "name": "removeLiquidityOneTokenCurve",
         "outputs": [],
         "stateMutability": "payable",
         "type": "function"
@@ -4482,6 +4482,1256 @@
         "type": "function"
     },
     {
+        "inputs": [
+            {
+                "internalType": "contract IERC20[]",
+                "name": "tokens",
+                "type": "address[]"
+            },
+            {
+                "internalType": "enum LibWellStorage.WellType",
+                "name": "wellType",
+                "type": "uint8"
+            },
+            {
+                "internalType": "bytes",
+                "name": "typeData",
+                "type": "bytes"
+            },
+            {
+                "internalType": "string[]",
+                "name": "symbols",
+                "type": "string[]"
+            }
+        ],
+        "name": "buildWell",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "enum LibWellStorage.WellType",
+                "name": "wellType",
+                "type": "uint8"
+            }
+        ],
+        "name": "getWellTypeSignature",
+        "outputs": [
+            {
+                "internalType": "string[]",
+                "name": "signature",
+                "type": "string[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "enum LibWellStorage.WellType",
+                "name": "wellType",
+                "type": "uint8"
+            }
+        ],
+        "name": "isWellTypeRegistered",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "registered",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "enum LibWellStorage.WellType",
+                        "name": "wellType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "typeData",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "p",
+                "type": "tuple"
+            },
+            {
+                "internalType": "enum LibWellStorage.WellType",
+                "name": "newWellType",
+                "type": "uint8"
+            },
+            {
+                "internalType": "bytes",
+                "name": "newTypeData",
+                "type": "bytes"
+            }
+        ],
+        "name": "modifyWell",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "enum LibWellStorage.WellType",
+                "name": "newWellType",
+                "type": "uint8"
+            },
+            {
+                "internalType": "string[]",
+                "name": "typeParameters",
+                "type": "string[]"
+            }
+        ],
+        "name": "registerWellType",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "enum LibWellStorage.WellType",
+                        "name": "wellType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "typeData",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "p",
+                "type": "tuple"
+            },
+            {
+                "internalType": "uint128[]",
+                "name": "tokenAmounts",
+                "type": "uint128[]"
+            },
+            {
+                "internalType": "uint256",
+                "name": "minLPAmountOut",
+                "type": "uint256"
+            },
+            {
+                "internalType": "enum LibTransfer.From",
+                "name": "fromMode",
+                "type": "uint8"
+            },
+            {
+                "internalType": "enum LibTransfer.To",
+                "name": "toMode",
+                "type": "uint8"
+            }
+        ],
+        "name": "addLiquidity",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "lpAmountOut",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "enum LibWellStorage.WellType",
+                        "name": "wellType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "typeData",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "p",
+                "type": "tuple"
+            }
+        ],
+        "name": "computeWellHash",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "wellHash",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "pure",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "enum LibWellStorage.WellType",
+                        "name": "wellType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "typeData",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "p",
+                "type": "tuple"
+            },
+            {
+                "internalType": "uint128[]",
+                "name": "tokenAmounts",
+                "type": "uint128[]"
+            }
+        ],
+        "name": "getAddLiquidityOut",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "lpAmountOut",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            }
+        ],
+        "name": "getK",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "k",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            }
+        ],
+        "name": "getLastCumulativeBalances",
+        "outputs": [
+            {
+                "internalType": "uint256[]",
+                "name": "cumulativeBalances",
+                "type": "uint256[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            }
+        ],
+        "name": "getLastTimestamp",
+        "outputs": [
+            {
+                "internalType": "uint32",
+                "name": "lastTimestamp",
+                "type": "uint32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "enum LibWellStorage.WellType",
+                        "name": "wellType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "typeData",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "p",
+                "type": "tuple"
+            },
+            {
+                "internalType": "uint128[]",
+                "name": "amountsOut",
+                "type": "uint128[]"
+            }
+        ],
+        "name": "getRemoveLiquidityImbalancedIn",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "lpAmountIn",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "enum LibWellStorage.WellType",
+                        "name": "wellType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "typeData",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "p",
+                "type": "tuple"
+            },
+            {
+                "internalType": "contract IERC20",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "lpAmountIn",
+                "type": "uint256"
+            }
+        ],
+        "name": "getRemoveLiquidityOneTokenOut",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "tokenAmountOut",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "enum LibWellStorage.WellType",
+                        "name": "wellType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "typeData",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "p",
+                "type": "tuple"
+            },
+            {
+                "internalType": "uint256",
+                "name": "lpAmountIn",
+                "type": "uint256"
+            }
+        ],
+        "name": "getRemoveLiquidityOut",
+        "outputs": [
+            {
+                "internalType": "uint128[]",
+                "name": "tokenAmountsOut",
+                "type": "uint128[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "enum LibWellStorage.WellType",
+                        "name": "wellType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "typeData",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "p",
+                "type": "tuple"
+            },
+            {
+                "internalType": "contract IERC20",
+                "name": "fromToken",
+                "type": "address"
+            },
+            {
+                "internalType": "contract IERC20",
+                "name": "toToken",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amountOut",
+                "type": "uint256"
+            }
+        ],
+        "name": "getSwapIn",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "amountIn",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "enum LibWellStorage.WellType",
+                        "name": "wellType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "typeData",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "p",
+                "type": "tuple"
+            },
+            {
+                "internalType": "contract IERC20",
+                "name": "fromToken",
+                "type": "address"
+            },
+            {
+                "internalType": "contract IERC20",
+                "name": "toToken",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amountIn",
+                "type": "uint256"
+            }
+        ],
+        "name": "getSwapOut",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "amountOut",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            }
+        ],
+        "name": "getTokens",
+        "outputs": [
+            {
+                "internalType": "contract IERC20[]",
+                "name": "tokens",
+                "type": "address[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            }
+        ],
+        "name": "getWell",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "enum LibWellStorage.WellType",
+                        "name": "wellType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "typeData",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "info",
+                "type": "tuple"
+            },
+            {
+                "components": [
+                    {
+                        "internalType": "uint128[]",
+                        "name": "balances",
+                        "type": "uint128[]"
+                    },
+                    {
+                        "internalType": "uint256[]",
+                        "name": "cumulativeBalances",
+                        "type": "uint256[]"
+                    },
+                    {
+                        "internalType": "uint32",
+                        "name": "lastTimestamp",
+                        "type": "uint32"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellState",
+                "name": "state",
+                "type": "tuple"
+            },
+            {
+                "internalType": "uint256",
+                "name": "lpSupply",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "index",
+                "type": "uint256"
+            }
+        ],
+        "name": "getWellAtIndex",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "enum LibWellStorage.WellType",
+                        "name": "wellType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "typeData",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "info",
+                "type": "tuple"
+            },
+            {
+                "components": [
+                    {
+                        "internalType": "uint128[]",
+                        "name": "balances",
+                        "type": "uint128[]"
+                    },
+                    {
+                        "internalType": "uint256[]",
+                        "name": "cumulativeBalances",
+                        "type": "uint256[]"
+                    },
+                    {
+                        "internalType": "uint32",
+                        "name": "lastTimestamp",
+                        "type": "uint32"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellState",
+                "name": "state",
+                "type": "tuple"
+            },
+            {
+                "internalType": "uint256",
+                "name": "lpSupply",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            }
+        ],
+        "name": "getWellBalances",
+        "outputs": [
+            {
+                "internalType": "uint128[]",
+                "name": "balances",
+                "type": "uint128[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            }
+        ],
+        "name": "getWellHash",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "wellHash",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "index",
+                "type": "uint256"
+            }
+        ],
+        "name": "getWellIdAtIndex",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            }
+        ],
+        "name": "getWellInfo",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "enum LibWellStorage.WellType",
+                        "name": "wellType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "typeData",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "info",
+                "type": "tuple"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            }
+        ],
+        "name": "getWellState",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint128[]",
+                        "name": "balances",
+                        "type": "uint128[]"
+                    },
+                    {
+                        "internalType": "uint256[]",
+                        "name": "cumulativeBalances",
+                        "type": "uint256[]"
+                    },
+                    {
+                        "internalType": "uint32",
+                        "name": "lastTimestamp",
+                        "type": "uint32"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellState",
+                "name": "state",
+                "type": "tuple"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "wellHash",
+                "type": "bytes32"
+            }
+        ],
+        "name": "getWellStateFromHash",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint128[]",
+                        "name": "balances",
+                        "type": "uint128[]"
+                    },
+                    {
+                        "internalType": "uint256[]",
+                        "name": "cumulativeBalances",
+                        "type": "uint256[]"
+                    },
+                    {
+                        "internalType": "uint32",
+                        "name": "lastTimestamp",
+                        "type": "uint32"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellState",
+                "name": "state",
+                "type": "tuple"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "enum LibWellStorage.WellType",
+                        "name": "wellType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "typeData",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "p",
+                "type": "tuple"
+            },
+            {
+                "internalType": "uint256",
+                "name": "lpAmountIn",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint128[]",
+                "name": "minTokenAmountsOut",
+                "type": "uint128[]"
+            },
+            {
+                "internalType": "enum LibTransfer.From",
+                "name": "fromMode",
+                "type": "uint8"
+            },
+            {
+                "internalType": "enum LibTransfer.To",
+                "name": "toMode",
+                "type": "uint8"
+            }
+        ],
+        "name": "removeLiquidity",
+        "outputs": [
+            {
+                "internalType": "uint128[]",
+                "name": "tokenAmountsOut",
+                "type": "uint128[]"
+            }
+        ],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "enum LibWellStorage.WellType",
+                        "name": "wellType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "typeData",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "p",
+                "type": "tuple"
+            },
+            {
+                "internalType": "uint256",
+                "name": "maxLPAmountIn",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint128[]",
+                "name": "tokenAmountsOut",
+                "type": "uint128[]"
+            },
+            {
+                "internalType": "enum LibTransfer.From",
+                "name": "fromMode",
+                "type": "uint8"
+            },
+            {
+                "internalType": "enum LibTransfer.To",
+                "name": "toMode",
+                "type": "uint8"
+            }
+        ],
+        "name": "removeLiquidityImbalanced",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "lpAmountIn",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "enum LibWellStorage.WellType",
+                        "name": "wellType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "typeData",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "p",
+                "type": "tuple"
+            },
+            {
+                "internalType": "contract IERC20",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "lpAmountIn",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "minTokenAmountOut",
+                "type": "uint256"
+            },
+            {
+                "internalType": "enum LibTransfer.From",
+                "name": "fromMode",
+                "type": "uint8"
+            },
+            {
+                "internalType": "enum LibTransfer.To",
+                "name": "toMode",
+                "type": "uint8"
+            }
+        ],
+        "name": "removeLiquidityOneToken",
+        "outputs": [
+            {
+                "internalType": "uint128",
+                "name": "tokenAmountOut",
+                "type": "uint128"
+            }
+        ],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "enum LibWellStorage.WellType",
+                        "name": "wellType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "typeData",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "p",
+                "type": "tuple"
+            },
+            {
+                "internalType": "contract IERC20",
+                "name": "fromToken",
+                "type": "address"
+            },
+            {
+                "internalType": "contract IERC20",
+                "name": "toToken",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amountIn",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "minAmountOut",
+                "type": "uint256"
+            },
+            {
+                "internalType": "enum LibTransfer.From",
+                "name": "fromMode",
+                "type": "uint8"
+            },
+            {
+                "internalType": "enum LibTransfer.To",
+                "name": "toMode",
+                "type": "uint8"
+            }
+        ],
+        "name": "swapFrom",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "amountOut",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "enum LibWellStorage.WellType",
+                        "name": "wellType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "typeData",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "p",
+                "type": "tuple"
+            },
+            {
+                "internalType": "contract IERC20",
+                "name": "fromToken",
+                "type": "address"
+            },
+            {
+                "internalType": "contract IERC20",
+                "name": "toToken",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "maxAmountIn",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amountOut",
+                "type": "uint256"
+            },
+            {
+                "internalType": "enum LibTransfer.From",
+                "name": "fromMode",
+                "type": "uint8"
+            },
+            {
+                "internalType": "enum LibTransfer.To",
+                "name": "toMode",
+                "type": "uint8"
+            }
+        ],
+        "name": "swapTo",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "amountIn",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
         "anonymous": false,
         "inputs": [
             {
@@ -4565,5 +5815,272 @@
         "outputs": [],
         "stateMutability": "payable",
         "type": "function"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint128[]",
+                "name": "amounts",
+                "type": "uint128[]"
+            }
+        ],
+        "name": "AddLiquidity",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "contract IERC20[]",
+                "name": "tokens",
+                "type": "address[]"
+            },
+            {
+                "indexed": false,
+                "internalType": "enum LibWellStorage.WellType",
+                "name": "wellType",
+                "type": "uint8"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes",
+                "name": "typeData",
+                "type": "bytes"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "wellHash",
+                "type": "bytes32"
+            }
+        ],
+        "name": "CreateWell",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "enum LibWellStorage.WellType",
+                "name": "wellType",
+                "type": "uint8"
+            },
+            {
+                "indexed": false,
+                "internalType": "string[]",
+                "name": "parameterTypes",
+                "type": "string[]"
+            }
+        ],
+        "name": "RegisterWellType",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint128[]",
+                "name": "amounts",
+                "type": "uint128[]"
+            }
+        ],
+        "name": "RemoveLiquidity",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "contract IERC20",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint128",
+                "name": "amount",
+                "type": "uint128"
+            }
+        ],
+        "name": "RemoveLiquidityOneToken",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "contract IERC20",
+                "name": "fromToken",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "contract IERC20",
+                "name": "toToken",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "fromAmount",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "toAmount",
+                "type": "uint256"
+            }
+        ],
+        "name": "Swap",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "enum LibWellStorage.WellType",
+                "name": "newWellType",
+                "type": "uint8"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes",
+                "name": "newTypeData",
+                "type": "bytes"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "oldWellHash",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "newWellHash",
+                "type": "bytes32"
+            }
+        ],
+        "name": "UpdateWell",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "contract IERC20[]",
+                "name": "tokens",
+                "type": "address[]"
+            },
+            {
+                "indexed": false,
+                "internalType": "enum LibWellStorage.WellType",
+                "name": "wellType",
+                "type": "uint8"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes",
+                "name": "typeData",
+                "type": "bytes"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "wellHash",
+                "type": "bytes32"
+            }
+        ],
+        "name": "BuildWell",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "enum LibWellStorage.WellType",
+                "name": "newWellType",
+                "type": "uint8"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes",
+                "name": "newTypeData",
+                "type": "bytes"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "oldWellHash",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "newWellHash",
+                "type": "bytes32"
+            }
+        ],
+        "name": "ModifyWell",
+        "type": "event"
     }
 ]

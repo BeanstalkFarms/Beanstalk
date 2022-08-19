@@ -50,7 +50,22 @@ class ConvertEncoder {
      ['uint256', 'uint256', 'uint256'],
      [ConvertKind.UNRIPE_BEANS_TO_LP, beans, minLP]
    );
+}
+
+class TypeEncoder {
+  static constantProductType = () =>
+    defaultAbiCoder.encode(
+      [],
+      []
+    );
+
+  static testType = (num) =>
+    defaultAbiCoder.encode(
+      ['uint256'],
+      [num]
+    );
 
 }
 
 exports.ConvertEncoder = ConvertEncoder
+exports.TypeEncoder = TypeEncoder

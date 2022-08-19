@@ -96,4 +96,18 @@ library LibTransfer {
             token.burn(burnt);
         }
     }
+
+    function mintToken(
+        IBean token,
+        uint256 amount,
+        address recipient,
+        To mode
+    ) internal {
+        if (mode == To.EXTERNAL) {
+            token.mint(recipient, amount);
+        } else {
+            token.mint(address(this), amount);
+            LibTransfer.sendToken(token, amount, recipient, mode);
+        }
+    }
 }

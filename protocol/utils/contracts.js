@@ -6,6 +6,10 @@ async function getBeanstalk() {
     return await ethers.getContractAt(beanstalkABI, BEANSTALK);
 }
 
+async function getAltBeanstalk(address) {
+    return await ethers.getContractAt(beanstalkABI, address);
+}
+
 async function getBeanstalkAdminControls() {
     return await ethers.getContractAt('MockAdminFacet', BEANSTALK);
 }
@@ -43,3 +47,4 @@ exports.getBeanMetapool = getBeanMetapool;
 exports.getBeanstalkAdminControls = getBeanstalkAdminControls;
 exports.getFertilizerPreMint = getFertilizerPreMint
 exports.getFertilizer = getFertilizer
+exports.getAltBeanstalk = getAltBeanstalk

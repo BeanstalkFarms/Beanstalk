@@ -113,6 +113,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     fertilizerFacet,
     tokenFacet,
     unripeFacet,
+    wellBuildingFacet,
+    wellFacet,
     whitelistFacet
   ] = mock ? await deployFacets(
     verbose,
@@ -130,6 +132,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'OwnershipFacet',
       'TokenFacet',
       'MockUnripeFacet',
+      'WellBuildingFacet',
+      'WellFacet',
       'WhitelistFacet'],
   ) : await deployFacets(
     verbose,
@@ -147,6 +151,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'FertilizerFacet',
       'TokenFacet',
       'UnripeFacet',
+      'WellBuildingFacet',
+      'WellFacet',
       'WhitelistFacet'],
   )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/init/InitDiamond.sol:InitDiamond'
@@ -183,6 +189,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['FertilizerFacet', fertilizerFacet],
       ['TokenFacet', tokenFacet],
       ['UnripeFacet', unripeFacet],
+      ['WellBuildingFacet', wellBuildingFacet],
+      ['WellFacet', wellFacet],
       ['WhitelistFacet', whitelistFacet]
     ],
     owner: account,
@@ -221,7 +229,9 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     siloFacet,
     fertilizerFacet,
     tokenFacet,
-    unripeFacet
+    unripeFacet,
+    wellBuildingFacet,
+    wellFacet,
   }
 }
 
