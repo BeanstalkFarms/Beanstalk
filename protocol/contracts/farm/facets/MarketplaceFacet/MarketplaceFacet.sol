@@ -18,9 +18,6 @@ contract MarketplaceFacet is Order {
      */
 
     // Create
-    // Note: pricePerPod is bounded by 16_777_215 Beans.
-
-    //Note: pricePerPod can be 0 IFF listing is dynamic
     function createPodListing(
         uint256 index,
         uint256 start,

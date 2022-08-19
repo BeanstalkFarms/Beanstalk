@@ -83,7 +83,6 @@ contract Listing is Dynamic {
         
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
 
-        //for a regular pod listing, PiecewiseFunction should just be filled with 0s
         s.podListings[index] = hashListingFillZeros(start, amount, pricePerPod, maxHarvestableIndex, mode, PricingMode.CONSTANT);
         
         emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, mode);
@@ -99,16 +98,16 @@ contract Listing is Dynamic {
         LibTransfer.To mode,
         PPoly32 calldata f
     ) internal {
-        // console.log("_createDPodListing");
-        // console.log(gasleft());
+        
         uint256 plotSize = s.a[msg.sender].field.plots[index];
         require(plotSize >= (start + amount) && amount > 0, "Marketplace: Invalid Plot/Amount.");
         if(f.mode == PricingMode.CONSTANT) require(pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
         require(s.f.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
         
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
-        // console.log(gasleft());
+
         s.podListings[index] = hashListing(start, amount, pricePerPod, maxHarvestableIndex, mode, f.mode, f.ranges, f.values, f.bases, f.signs);
+        
         PPoly32 memory _f = toMemory(f);
 
         emit DynamicPodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, mode, _f.ranges, _f.values, _f.bases, _f.signs);
@@ -191,11 +190,8 @@ contract Listing is Dynamic {
     */
 
     function getDynamicListingPrice(PodListing calldata l) internal view returns (uint256) {
-        uint256 index = findIndex(l.f.ranges, l.index + l.start - s.f.harvestable, getMaxPieceIndex(l.f.ranges));
-        index = index > 0 ? index - 1 : 0;
-        uint256 intervalDeg = getDegree(l.f, index);
-        uint256 pricePerPod = evaluatePPoly(l.f, l.index + l.start - s.f.harvestable, index, intervalDeg);
-        return pricePerPod;
+        uint256 pieceIndex = findIndex(l.f.ranges, l.index + l.start - s.f.harvestable, getNumIntervals(l.f.ranges) - 1);
+        return evaluatePPoly(l.f, l.index + l.start - s.f.harvestable, pieceIndex, 3);
     }
 
     /*

@@ -123,38 +123,6 @@ describe('Marketplace', function () {
   });
 
   describe("Functions Miscellaneous", async function () {
-    // describe("Subinterval Parsing", async function () {
-      
-    //   it('Correctly parses a value array with 0 subintervals', async function () {
-    //     let parsedReturn = await this.marketplace.connect(user).parseIntervalTest(new Array(160).fill('0'));
-    //     parsedReturn = parsedReturn.map(Number);
-    //     expect(await parsedReturn).to.have.ordered.members([0]);
-    //   })
-
-    //   it("Correctly parses a value array with 1 subintervals", async function () {
-    //     let parsedIntervals = parseIntervals(z_interpolant);
-    //     let parsedReturn = await this.marketplace.connect(user).parseIntervalTest(z_interpolant.values);
-    //     parsedReturn = parsedReturn.map((value) => Number(value));
-
-    //     expect(await parsedReturn).to.have.ordered.members(parsedIntervals);
-    //   })
-
-    //   it("Correctly parses a value array with <32 subintervals", async function () {
-    //     let parsedIntervals = parseIntervals(n_interpolant);
-    //     let parsedReturn = await this.marketplace.connect(user).parseIntervalTest(n_interpolant.values);
-    //     parsedReturn = parsedReturn.map((value) => Number(value));
-
-    //     expect(await parsedReturn).to.have.ordered.members(parsedIntervals);
-    //   })
-
-    //   it("Correctly parses a value array with 32 subintervals", async function () {
-    //     let parsedIntervals = parseIntervals(m_interpolant);
-    //     let parsedReturn = await this.marketplace.connect(user).parseIntervalTest(m_interpolant.values);
-    //     parsedReturn = parsedReturn.map((value) => Number(value));
-
-    //     expect(await parsedReturn).to.have.ordered.members(parsedIntervals);
-    //   })
-    // })
 
     // describe("Subinterval Index Search", async function () {
 
@@ -213,19 +181,24 @@ describe('Marketplace', function () {
 
     describe("Function evaluation", async function () {
       describe("cubic", async function () {
-        describe("at breakpoints", async function () {
+        describe('revert', async function () {
           beforeEach(async function () {
             this.interp = interpolate(cubicSet.xs, cubicSet.ys);
           })
-          it("correctly evaluates at 0", async function () {   
+          it("Fails when value lies before function domain", async function () {   
             var x = 0;       
             var index = findSortedIndex(cubicSet.xs, x);
             if(index > 0) index = index - 1;
             var degree = getFunctionDegree(this.interp, index);
-            var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, degree)).to.be.equal(v);
+            await expect(this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, degree)).to.be.revertedWith("Marketplace: Not in function domain.");
           })
-
+  
+        })
+        describe("at breakpoints", async function () {
+          beforeEach(async function () {
+            this.interp = interpolate(cubicSet.xs, cubicSet.ys);
+          })
+          
           it("correctly evaluates at first breakpoint", async function () {
             var x = cubicSet.xs[0];
             var index = findSortedIndex(cubicSet.xs, x);

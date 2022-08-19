@@ -11,27 +11,27 @@ const config = {
 
 const math = create(all, config);
 
-function getMaxIndex(array) {
-    var maxIndex = 0;
-    while(maxIndex < 32) {
-        if((array[maxIndex] == 0 || array[maxIndex] == undefined) && maxIndex != 0) break;
-        maxIndex++;
+function getNumIntervals(array) { //REDESIGN THIS
+    var numIntervals = 0;
+    while(numIntervals < 32) {
+        if((array[numIntervals] == 0 || array[numIntervals] == undefined) && numIntervals != 0) break;
+        numIntervals++;
     }
-    maxIndex--;
-    return maxIndex;
+
+    return numIntervals;
 }
 
-function findSortedIndex(array, value, max) {
+function findSortedIndex(array, value, max) { //REDESIGN THIS
     
     var low = 0;
-    var high = max ? max : getMaxIndex(array);
+    var high = max ? max : getNumIntervals(array) - 1 ;
     if(value == 0) return 0;
     while (low <= high) {
         var mid = math.floor(math.divide(math.add(low, high), 2));
         if( math.compare(math.bignumber(array[mid]), math.bignumber(value)) == -1) low = mid + 1;
         else high = mid - 1;
     }
-    return low;
+    return low ;
 }
 
 String.prototype.calculateShifts = function (c) {
@@ -85,30 +85,29 @@ function interpolate(xArr, yArr) {
     if(length === 0) { return function(x) { return 0; }}
     if(length === 1) { return function(x) { return +yArr[0]; }}
 
-    // var indexes = [];
-    // for(let i = 0; i < length; i++) {
-    //     indexes.push(i);
-    // }
-    // indexes.sort(function(a,b) {
-    //     return xArr[a] < xArr[b] ? -1 : 1;
-    // })
+    var indexes = [];
+    for(let i = 0; i < length; i++) {
+        indexes.push(i);
+    }
+    indexes.sort(function(a,b) {
+        return xArr[a] < xArr[b] ? -1 : 1;
+    })
 
     var xs = [], ys = [];
 
     for(let i = 0; i < length; i++) {
-        xs.push(+xArr[i]);
-        ys.push(+yArr[i])
-        // if(+xArr[indexes[i]] < +xArr[indexes[i-1]]) {
-        //     xs.push(+xArr[indexes[i-1]] || 0);
-        // } else {
-        //     xs.push(+xArr[indexes[i]] || 0)
-        // }
+        
+        if(+xArr[indexes[i]] < +xArr[indexes[i-1]]) {
+            xs.push(+xArr[indexes[i-1]] || 0);
+        } else {
+            xs.push(+xArr[indexes[i]] || 0)
+        }
 
-        // if(+yArr[indexes[i]] < +yArr[indexes[i-1]]) {
-        //     ys.push(yArr[indexes[i-1]] || 0);
-        // } else {
-        //     ys.push(+yArr[indexes[i]] || 0);
-        // }
+        if(+yArr[indexes[i]] < +yArr[indexes[i-1]]) {
+            ys.push(yArr[indexes[i-1]] || 0);
+        } else {
+            ys.push(+yArr[indexes[i]] || 0);
+        }
     }
 
     var dys = [], dxs = [], ms = [];
@@ -262,7 +261,7 @@ function ppval(f, x, index, degree) {
 }
 
 function ppval_integrate(f, start, end, pieceIndex, degree) {
-    
+
     var _x1 = math.bignumber(start);
     var _x2 = math.bignumber(end);
 
@@ -307,8 +306,7 @@ function ppval_integrate(f, start, end, pieceIndex, degree) {
 
 function ppval_listing(f, placeInLine) {
     var pieceIndex = findSortedIndex(f.ranges, placeInLine);
-    var degree = getFunctionDegree(f, pieceIndex > 0 ? pieceIndex - 1 : 0);
-    var y = ppval(f, placeInLine, pieceIndex > 0 ? pieceIndex - 1 : 0, degree);
+    var y = ppval(f, placeInLine, pieceIndex > 0 ? pieceIndex - 1 : 0, 3);
     return math.format(math.floor(y), {notation:"fixed"});
 
 }
@@ -316,32 +314,38 @@ function ppval_listing(f, placeInLine) {
 function ppval_order(f, placeInLine, amount) {
 
     var beanAmount = math.bignumber(0);
-    placeInLine = math.bignumber(placeInLine);
     var end = math.add(placeInLine, math.bignumber(amount));
 
-    var pieceIndex = findSortedIndex(f.ranges, placeInLine);
+    var maxIndex = getNumIntervals(f.ranges);
+    var pieceIndex = findSortedIndex(f.ranges, placeInLine, maxIndex);
+
     var i =  pieceIndex > 0 ? pieceIndex - 1 : 0;
 
-    while(math.compare(end, placeInLine) == 1) {
+    var start = math.bignumber(placeInLine);
+    var end = math.add(start, math.bignumber(amount));
 
-        var degree = getFunctionDegree(f, i);
+    if(math.compare(start, f.ranges[0]) == -1) start = math.bignumber(f.ranges[0]);
+    if(math.compare(end, f.ranges[maxIndex - 1]) == 1) end = math.bignumber(f.ranges[maxIndex - 1]);
+    
+    console.log("i: ", i);
+    
+    while(math.compare(start, end) == -1) {
 
-        if(i < getMaxIndex(f.ranges)-1 && math.compare(end, f.ranges[i+1]) == 1) {
+        if(math.compare(end, f.ranges[i+1]) == 1) {
 
-            var nextIndexStart = math.bignumber(f.ranges[i+1]);
-            var term = ppval_integrate(f, placeInLine, nextIndexStart, i, degree); 
+            var term = ppval_integrate(f, start, f.ranges[i+1], i, 3); 
+            console.log("term: " + term);
+            start = math.bignumber(f.ranges[i+1]);
             beanAmount = math.add(beanAmount, term);
-            
-            placeInLine = nextIndexStart; // set x to end of index to continue integrating from there
-            
-            if(i < getMaxIndex(f.ranges)-1) i++;
+
+            if(i < (maxIndex - 1) - 1) i++;
             
         } else {
-
             //integrate from x until end 
-            var term = ppval_integrate(f, placeInLine, end, i, degree);
+            var term = ppval_integrate(f, start, end, i, 3);
+            console.log("term: " + term);
             beanAmount = math.add(beanAmount, term);
-            placeInLine = end;
+            start = end;
         }
         
     }
@@ -356,13 +360,6 @@ function getFunctionDegree(f, index) {
     }
     return degree;
 }
-
-// const set = {
-//     xs: [0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15],
-//     ys: [10, 10, 10, 10, 10, 10, 10.5, 15, 50, 60, 85]
-// }
-
-// let f = interpolate(set.xs, set.ys);
 
 module.exports = {
     ppval_order,

@@ -23,7 +23,6 @@
         CONSTANT,
         DYNAMIC
     }
-
     //polynomials are evaluated at a maximum order of 3 (cubic evaluation)
     //A piecewise polynomial containing up to 32 polynomials and their corresponding ranges
 
@@ -95,16 +94,14 @@
         uint256 sumPositive;
         uint256 sumNegative;
         //only do x - rangeStart if x is greater than rangeStart, otherwise it will cause underflow
-        if(x >= f.ranges[pieceIndex]) {
-            x -= f.ranges[pieceIndex];
-        }
+
+        x = x.sub(f.ranges[pieceIndex], "Marketplace: Not in function domain.");
 
         while(currDegreeIndex <= evaluationDegree) {
-            // evaluate in the form v3(x-k)^3 + v2(x-k)^2 + v1(x-k) + v0
-            // console.log(pieceIndex);
+
             uint256 index = pieceIndex * 4 + currDegreeIndex;
             uint256 base = getPackedBase(f.bases[pieceIndex/8], (pieceIndex - ((pieceIndex/8)*8))*4 + currDegreeIndex);
-            // console.log(f.values[index], getPackedSign(f.signs, index), base, x);
+
             if(getPackedSign(f.signs, index)) {
                 sumPositive += pow(x, currDegreeIndex)
                     .mul(f.values[index])
@@ -114,7 +111,7 @@
                     .mul(f.values[index])
                     .div(pow(10, base));
             }
-            // console.log(sumPositive, sumNegative);
+
             currDegreeIndex++;
         }
 
@@ -138,10 +135,8 @@
         uint256 sumPositive;
         uint256 sumNegative;
 
-        if(x1 >= f.ranges[pieceIndex] && x2 >= f.ranges[pieceIndex]) {
-            x1 -= f.ranges[pieceIndex];
-            x2 -= f.ranges[pieceIndex];
-        }
+        x1 = x1.sub(f.ranges[pieceIndex], "Marketplace: Not in function domain.");
+        x2 = x2.sub(f.ranges[pieceIndex], "Marketplace: Not in function domain.");
 
         while(currDegreeIndex <= evaluationDegree) {
             // to integrate from x1 to x2 we need to evaluate the expression
@@ -193,17 +188,13 @@
         return (ranges, values, bases);
     }
 
-    function getMaxPieceIndex(uint256[32] calldata ranges) internal pure returns (uint256 maxIndex) {
-        while(maxIndex < 32) {
-            if(ranges[maxIndex] == 0 && maxIndex != 0) {
+    function getNumIntervals(uint256[32] calldata ranges) internal pure returns (uint256 numIntervals) {
+        while(numIntervals < 32) {
+            if(ranges[numIntervals] == 0 && numIntervals != 0) {
                 break;
             }
-            maxIndex++;
+            numIntervals++;
         }
-
-        // console.log("max index: ");
-        // console.log(maxIndex--);
-        return maxIndex--;
     }
 
     function getPackedBase(uint256 packedBases, uint256 baseIndex) internal pure returns (uint8) {
@@ -215,35 +206,21 @@
         return ((packedBools >> boolIndex) & uint256(1) == 1);
     }
  
-    //Function degree of a polynomial at a given pieceIndex
-     function getDegree(PPoly32 calldata f, uint256 pieceIndex) internal pure returns (uint256 degree) {
-        degree = 3;
-         while(f.values[pieceIndex*4 + degree] == 0) {
-            degree--;
-         }
-    }
- 
      //find the index of the interval containing x with the start of the interval being inclusive and the end of the interval being exclusive.
      // [inclusiveStart, exclusiveEnd)
     function findIndex(uint256[32] calldata array, uint256 value, uint256 maxIndex) internal pure returns (uint256) {
         int256 low;
         int256 high = int(maxIndex);
-        int256 mid;
-
-        if(value == 0) 
-            return 0;
         
         while(low <= high){
-
-            mid = (high+low) / 2;
-
-            if(array[uint(mid)] < value) 
-                low = mid + 1;
+            
+            if(array[uint((high+low) >> 1)] < value) 
+                low = ((high+low) >> 1) + 1;
             else 
-                high = mid - 1;
+                high = ((high+low) >> 1) - 1;
         }
 
-        return uint256(low);
+        return uint256(low > 0 ? low - 1 : 0);
     }
 
     //a safe function to take base to the power of exp.

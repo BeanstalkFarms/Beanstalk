@@ -174,28 +174,36 @@ contract Order is Listing {
         PPoly32 calldata f,
         uint256 placeInLine, 
         uint256 amount
-    ) internal pure returns (uint256 beanAmount) { 
+    ) internal view returns (uint256 beanAmount) { 
 
-        uint256 pieceIndex;
-        uint256 maxIndex = getMaxPieceIndex(f.ranges);
+        // uint256 pieceIndex;
+        uint256 numIntervals = getNumIntervals(f.ranges);
 
-        if(placeInLine > f.ranges[0]) {
-            pieceIndex = findIndex(f.ranges, placeInLine, maxIndex);
-            pieceIndex = pieceIndex > 0 ? pieceIndex - 1 : 0;
-        }
+        uint256 pieceIndex = findIndex(f.ranges, placeInLine, numIntervals - 1);
+
+        uint256 start = placeInLine;
 
         uint256 end = placeInLine + amount;
 
-        while(placeInLine < end) { 
-            uint256 degree = getDegree(f, pieceIndex);
-            if(pieceIndex < maxIndex-1 && end > f.ranges[pieceIndex+1]) {
+        if(start < f.ranges[0]) start = f.ranges[0];
+        if(end > f.ranges[numIntervals - 1]) end = f.ranges[numIntervals - 1]; 
+        console.log(pieceIndex);
+        while(start < end) { 
+            
+            //if the integration reaches into the next piece, then break the integration at the end of the current piece
+            if(end > f.ranges[pieceIndex + 1]) {
                 //current end index reaches into next piecewise domain
-                beanAmount += evaluatePPolyI(f, placeInLine, f.ranges[pieceIndex+1], pieceIndex, degree);
-                placeInLine = f.ranges[pieceIndex+1]; // set place in line to the end index
-                if(pieceIndex < maxIndex-1) pieceIndex++;
+                uint256 term = evaluatePPolyI(f, start, f.ranges[pieceIndex+1], pieceIndex, 3);
+
+                beanAmount += term;
+                console.log(term);
+                start = f.ranges[pieceIndex+1]; // set place in line to the end index
+                if(pieceIndex < (numIntervals - 1) - 1) pieceIndex++; //increment piece index if not at the last piece
             } else {
-                beanAmount += evaluatePPolyI(f, placeInLine, end, pieceIndex, degree);
-                placeInLine = end;
+                uint256 term = evaluatePPolyI(f, start, end, pieceIndex, 3); 
+                beanAmount += term;
+                console.log(term);
+                start = end;
             }
         }
         return beanAmount / 1000000;

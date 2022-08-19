@@ -30,9 +30,9 @@ contract MockMarketplaceFacet is MarketplaceFacet {
         return getDynamicOrderAmount(f, index + start, amount);
     }
 
-    function findIndex(uint256[32] calldata array, uint256 value) external view returns(uint256) {
-        uint256 maxIndex = getMaxPieceIndex(array);
-        return findIndex(array, value, maxIndex);
+    function _findIndex(uint256[32] calldata array, uint256 value) external view returns(uint256) {
+        uint256 numIntervals = getNumIntervals(array);
+        return findIndex(array, value, numIntervals - 1);
     }
 
 
