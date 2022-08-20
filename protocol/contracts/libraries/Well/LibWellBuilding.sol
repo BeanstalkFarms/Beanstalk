@@ -54,46 +54,46 @@ library LibWellBuilding {
         }
         wellId = address(new WellERC20(name, symbol));
 
-        LibWellStorage.WellInfo memory p;
-        p.tokens = tokens;
-        p.wellType = wellType;
-        p.typeData = typeData;
-        p.wellId = wellId;
+        LibWellStorage.WellInfo memory w;
+        w.tokens = tokens;
+        w.wellType = wellType;
+        w.typeData = typeData;
+        w.wellId = wellId;
 
-        bytes32 ph = LibWellStorage.computeWellHash(p);
+        bytes32 wh = LibWellStorage.computeWellHash(w);
 
         s.indices[s.numberOfWells] = wellId;
         s.numberOfWells = s.numberOfWells.add(1);
 
         for (uint256 i; i < tokens.length; i++) {
-            s.ps[ph].balances.push(0);
-            s.ps[ph].cumulativeBalances.push(0);
+            s.ws[wh].balances.push(0);
+            s.ws[wh].cumulativeBalances.push(0);
         }
 
-        s.pi[wellId] = p;
-        s.ph[wellId] = ph;
+        s.wi[wellId] = w;
+        s.wh[wellId] = wh;
 
-        emit BuildWell(p.wellId, p.tokens, p.wellType, p.typeData, ph);
+        emit BuildWell(w.wellId, w.tokens, w.wellType, w.typeData, wh);
     }
 
     function modifyWell(
-        LibWellStorage.WellInfo memory p,
+        LibWellStorage.WellInfo memory w,
         LibWellStorage.WellType newWellType,
         bytes calldata newTypeData
     ) internal {
         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
-        bytes32 prevPH = LibWellStorage.computeWellHash(p);
-        p.wellType = newWellType;
-        p.typeData = newTypeData;
+        bytes32 prevWH = LibWellStorage.computeWellHash(w);
+        w.wellType = newWellType;
+        w.typeData = newTypeData;
 
-        bytes32 newPH = LibWellStorage.computeWellHash(p);
+        bytes32 newWH = LibWellStorage.computeWellHash(w);
 
-        s.pi[p.wellId] = p;
-        s.ph[p.wellId] = newPH;
-        s.ps[newPH] = s.ps[prevPH];
-        delete s.ps[prevPH];
+        s.wi[w.wellId] = w;
+        s.wh[w.wellId] = newWH;
+        s.ws[newWH] = s.ws[prevWH];
+        delete s.ws[prevWH];
 
-        emit ModifyWell(p.wellId, p.wellType, p.typeData, prevPH, newPH);
+        emit ModifyWell(w.wellId, w.wellType, w.typeData, prevWH, newWH);
     }
 
     function registerWellType(

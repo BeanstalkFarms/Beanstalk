@@ -24,6 +24,16 @@ library LibWellStorage {
         bytes typeData; // Params specific to the well type
     }
 
+    // Well2State is the state struct for Wells with exactly 2 tokens.
+    struct Well2State {
+        uint128 balance0; // token balance of token0 in the Well
+        uint128 balance1; // token balance of token1 in the Well
+        uint32 lastTimestamp; // Last Timestamp the pool was interacted with
+        uint256 cumulativeBalance0; // Cumulative balance of token0 in the Well
+        uint256 cumulativeBalance1; // Cumulative balance of token1 in the Well
+    }
+
+    // WellState is the state struct for Wells with more than 2 tokens.
     struct WellState {
         uint128[] balances; // well balances of each token
         uint256[] cumulativeBalances; // well balances times time
@@ -37,11 +47,12 @@ library LibWellStorage {
 
     struct WellStorage {
         uint256 numberOfWells; // Total number of wells in Beanstalk
+        mapping(WellType => TypeInfo) wt; // Well type info
         mapping(uint256 => address) indices; // Stores a mapping from index to id. Only used in view functions.
-        mapping(address => WellInfo) pi; // Stores a mapping from id to well info. Only used in view functions.
-        mapping(address => bytes32) ph; // Stores a mapping from id to hash. Only used in view functions.
-        mapping(bytes32 => WellState) ps; // Stores a mapping from hash to state.
-        mapping(WellType => TypeInfo) wt;
+        mapping(address => WellInfo) wi; // Stores a mapping from id to well info. Only used in view functions.
+        mapping(address => bytes32) wh; // Stores a mapping from id to hash. Only used in view functions.
+        mapping(bytes32 => Well2State) w2s; // Stores a mapping from hash to state.
+        mapping(bytes32 => WellState) ws; // Stores a mapping from hash to state.
     }
 
     function wellStorage() internal pure returns (WellStorage storage s) {
@@ -51,21 +62,21 @@ library LibWellStorage {
         }
     }
 
-    function wellState(WellInfo calldata p)
+    function wellState(WellInfo calldata w)
         internal
         view
-        returns (WellState storage ps)
+        returns (WellState storage ws)
     {
-        ps = wellStorage().ps[computeWellHash(p)];
+        ws = wellStorage().ws[computeWellHash(w)];
     }
 
-    function computeWellHash(LibWellStorage.WellInfo memory p)
+    function computeWellHash(LibWellStorage.WellInfo memory w)
         internal
         pure
         returns (bytes32 wellHash)
     {
         wellHash = keccak256(
-            abi.encodePacked(p.wellId, p.tokens, p.wellType, p.typeData)
+            abi.encodePacked(w.wellId, w.tokens, w.wellType, w.typeData)
         );
     }
 }
