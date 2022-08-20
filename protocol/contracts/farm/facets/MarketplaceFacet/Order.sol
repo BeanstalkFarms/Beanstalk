@@ -60,8 +60,6 @@ contract Order is Listing {
     /*
      * Create
      */
-
-    //Note: Gas here increased from ~97k to 175k
     function _createPodOrder(
         uint256 beanAmount,
         uint24 pricePerPod,
@@ -80,7 +78,6 @@ contract Order is Listing {
         emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine);
     }
 
-    //Note: Gas is quite high, ~460k
     function _createDynamicPodOrder(
         uint256 beanAmount,
         uint24 pricePerPod,
@@ -104,7 +101,6 @@ contract Order is Listing {
     /*
      * Fill
      */
-
     function _fillPodOrder(
         PodOrder calldata o,
         uint256 index,
@@ -139,7 +135,6 @@ contract Order is Listing {
     /*
      * Cancel
      */
-
     function _cancelPodOrder(
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
@@ -152,7 +147,6 @@ contract Order is Listing {
         emit PodOrderCancelled(msg.sender, id);
     }
 
-    //Note: Gas ~150k
     function _cancelDynamicPodOrder(
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
@@ -176,7 +170,6 @@ contract Order is Listing {
         uint256 amount
     ) internal view returns (uint256 beanAmount) { 
 
-        // uint256 pieceIndex;
         uint256 numIntervals = getNumIntervals(f.ranges);
 
         uint256 pieceIndex = findIndex(f.ranges, placeInLine, numIntervals - 1);
@@ -187,25 +180,20 @@ contract Order is Listing {
 
         if(start < f.ranges[0]) start = f.ranges[0];
         if(end > f.ranges[numIntervals - 1]) end = f.ranges[numIntervals - 1]; 
-        console.log(pieceIndex);
-        while(start < end) { 
-            
+
+        while(start < end) {             
             //if the integration reaches into the next piece, then break the integration at the end of the current piece
             if(end > f.ranges[pieceIndex + 1]) {
                 //current end index reaches into next piecewise domain
-                uint256 term = evaluatePPolyI(f, start, f.ranges[pieceIndex+1], pieceIndex, 3);
-
-                beanAmount += term;
-                console.log(term);
+                beanAmount +=  evaluatePPolyI(f, start, f.ranges[pieceIndex + 1], pieceIndex, 3);
                 start = f.ranges[pieceIndex+1]; // set place in line to the end index
                 if(pieceIndex < (numIntervals - 1) - 1) pieceIndex++; //increment piece index if not at the last piece
             } else {
-                uint256 term = evaluatePPolyI(f, start, end, pieceIndex, 3); 
-                beanAmount += term;
-                console.log(term);
+                beanAmount += evaluatePPolyI(f, start, end, pieceIndex, 3);
                 start = end;
             }
         }
+
         return beanAmount / 1000000;
     }
 

@@ -1,6 +1,6 @@
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const {CONSTANT, DYNAMIC } = require("./utils/pricetypes.js")
-const { ppval_listing, ppval_order, interpolate, getFunctionDegree, findSortedIndex } = require('./utils/interpolater.js')
+const { ppval_listing, ppval_order, interpolate, getNumIntervals, findSortedIndex } = require('./utils/interpolater.js')
 const { expect, use } = require("chai");
 const { waffleChai } = require("@ethereum-waffle/chai");
 use(waffleChai);
@@ -89,12 +89,6 @@ describe('Marketplace', function () {
     let idx = (receipt.events?.filter((x) => { return x.event == "DynamicPodOrderCreated" }))[0].args.id;
     return idx;
   }
-
-  const set0 = {
-    xs: [100, 200],
-    ys: [900000, 900000]
-  }
-
   const set1 = {
     xs: [100, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800],
     ys: [900000, 900000, 900000, 900000, 900000, 800000, 800000, 800000, 800000, 775000, 750000, 725000, 700000, 675000, 650000, 625000, 600000, 575000, 550000, 525000]
@@ -110,9 +104,11 @@ describe('Marketplace', function () {
     ys: [990000, 990000, 980000, 950000, 890000, 790000, 680000, 670000, 660000, 570000, 470000, 450000, 450000]
   }
   
-  const z_interpolant = interpolate(set0.xs, set0.ys);
-  const n_interpolant = interpolate(set1.xs, set1.ys); 
-  const m_interpolant = interpolate(set2.xs, set2.ys);
+  const hugeSet = {
+    //starting from 10 trillion
+    xs: [10000000000000, 50000000000000, 60000000000000, 70000000000000, 80000000000000, 90000000000000, 100000000000000, 110000000000000, 120000000000000, 130000000000000, 140000000000000, 180000000000000, 200000000000000],
+    ys: [990000, 990000, 980000, 950000, 890000, 790000, 680000, 670000, 660000, 570000, 470000, 450000, 450000]
+  }
 
   beforeEach(async function () {
     snapshotId = await takeSnapshot();
@@ -122,159 +118,318 @@ describe('Marketplace', function () {
     await revertToSnapshot(snapshotId);
   });
 
-  describe("Functions Miscellaneous", async function () {
+  describe("Functions", async function () {
 
-    // describe("Subinterval Index Search", async function () {
+    describe("breakpoint index search", async function () {
 
-    //   describe("<32 break points", async function () {
-    //     beforeEach(async function () {
-    //       this.parsedIntervals = parseIntervals(n_interpolant);
-    //     })
-    //     it("correctly finds interval at 0 value", async function () {
-    //       expect(await this.marketplace.connect(user).findIndexInIntervals(this.parsedIntervals, '0')).to.be.equal(0);
-    //     })
+      describe("<32 break points", async function () {
+        beforeEach(async function () {
+          this.breakpoints = interpolate(set1.xs, set1.ys).ranges;
+        })
+        it("correctly finds interval at 0", async function () {
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '0')).to.be.equal(0);
+        })
 
-    //     it("correctly finds interval at median value", async function ( ){
-    //       expect(await this.marketplace.connect(user).findIndexInIntervals(this.parsedIntervals, '250')).to.be.equal(2);
-    //       expect(await this.marketplace.connect(user).findIndexInIntervals(this.parsedIntervals, '420')).to.be.equal(3);
-    //       expect(await this.marketplace.connect(user).findIndexInIntervals(this.parsedIntervals, '3599')).to.be.equal(18);
-    //     })
-    //     it("correctly finds interval at breakpoint (exclusive of start value)", async function ( ){
-    //       expect(await this.marketplace.connect(user).findIndexInIntervals(this.parsedIntervals, '200')).to.be.equal(1);
-    //       expect(await this.marketplace.connect(user).findIndexInIntervals(this.parsedIntervals, '400')).to.be.equal(2);
-    //       expect(await this.marketplace.connect(user).findIndexInIntervals(this.parsedIntervals, '3600')).to.be.equal(18);
-    //     })
-    //     it("correctly finds interval if value is at end", async function () {
-    //       expect(await this.marketplace.connect(user).findIndexInIntervals(this.parsedIntervals, '3800')).to.be.equal(19);
-    //     })
-    //     it("returns interval array length if value is outside subinterval range", async function () {
-    //       expect(await this.marketplace.connect(user).findIndexInIntervals(this.parsedIntervals, '3801')).to.be.equal(20);
-    //     })
-    //   })
+        it("correctly finds interval at values within breakpoints", async function ( ){
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '250')).to.be.equal(1);
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '420')).to.be.equal(2);
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '3599')).to.be.equal(17);
+        })
+        it("correctly finds interval at breakpoint (inclusive of start value, exclusive of end value)", async function ( ){
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '200')).to.be.equal(1);
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '400')).to.be.equal(2);
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '3600')).to.be.equal(18);
+        })
+        it("correctly finds interval if value is at end", async function () {
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '3800')).to.be.equal(18);
+        })
+        it("returns last interval if value is outside subinterval range", async function () {
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '3801')).to.be.equal(18);
+        })
+      })
+
+      describe("<32 break points, huge set", async function () {
+        beforeEach(async function () {
+          this.breakpoints = interpolate(hugeSet.xs, hugeSet.ys).ranges;
+        })
+        it("correctly finds interval at 0", async function () {
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '0')).to.be.equal(0);
+        })
+
+        it("correctly finds interval at values within breakpoints", async function ( ){
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '55000000000000')).to.be.equal(1);
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '69000000000000')).to.be.equal(2);
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '105000000000000')).to.be.equal(6);
+        })
+        it("correctly finds interval at breakpoint (inclusive of start value, exclusive of end value)", async function ( ){
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '50000000000000')).to.be.equal(1);
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '60000000000000')).to.be.equal(2);
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '185000000000000')).to.be.equal(11);
+        })
+        it("correctly finds interval if value is at end", async function () {
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '200000000000000')).to.be.equal(11);
+        })
+        it("returns last interval if value is outside subinterval range", async function () {
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '400000000000000')).to.be.equal(11);
+        })
+      })
       
-    //   describe("32 break points", async function () {
-    //     beforeEach(async function () {
-    //       this.parsedIntervals = parseIntervals(m_interpolant);
-    //     })
-    //     it("correctly finds interval 0 value", async function () {
-    //       expect(await this.marketplace.connect(user).findIndexInIntervals(this.parsedIntervals, '0')).to.be.equal(0);
-    //     })
+      describe("32 break points", async function () {
+        beforeEach(async function () {
+          this.breakpoints = interpolate(set2.xs, set2.ys).ranges;
+        })
+        it("correctly finds interval 0", async function () {
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '0')).to.be.equal(0);
+        })
 
-    //     it("correctly finds interval at median values", async function ( ){
-    //       expect(await this.marketplace.connect(user).findIndexInIntervals(this.parsedIntervals, '250')).to.be.equal(1);
-    //       expect(await this.marketplace.connect(user).findIndexInIntervals(this.parsedIntervals, '420')).to.be.equal(2);
-    //       expect(await this.marketplace.connect(user).findIndexInIntervals(this.parsedIntervals, '1199')).to.be.equal(5);
-    //     })
-    //     it("correctly finds interval at breakpoints (exclusive of start value)", async function ( ){
-    //       expect(await this.marketplace.connect(user).findIndexInIntervals(this.parsedIntervals, '400')).to.be.equal(1);
-    //       expect(await this.marketplace.connect(user).findIndexInIntervals(this.parsedIntervals, '2000')).to.be.equal(9);
-    //       expect(await this.marketplace.connect(user).findIndexInIntervals(this.parsedIntervals, '6780')).to.be.equal(23);
-    //     })
-    //     it("correctly finds interval if value is at end", async function () {
-    //       expect(await this.marketplace.connect(user).findIndexInIntervals(this.parsedIntervals, '9999')).to.be.equal(31);
-    //     })
-    //     it("returns interval array length if value is outside subinterval range", async function () {
-    //       expect(await this.marketplace.connect(user).findIndexInIntervals(this.parsedIntervals, '10000')).to.be.equal(32);
-    //     })
-    //   })
-    // })
+        it("correctly finds interval at values within breakpoints", async function ( ){
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '250')).to.be.equal(0);
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '420')).to.be.equal(1);
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '1199')).to.be.equal(4);
+        })
+        it("correctly finds interval at breakpoints (exclusive of start value)", async function ( ){
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '400')).to.be.equal(1);
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '2000')).to.be.equal(9);
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '6780')).to.be.equal(23);
+        })
+        it("correctly finds interval if value is at end", async function () {
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '9999')).to.be.equal(30);
+        })
+        it("returns last interval if value is outside subinterval range", async function () {
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '10000')).to.be.equal(30);
+        })
+        it("returns last interval if value is outside subinterval range 2", async function () {
+          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '10000000000000')).to.be.equal(30);
+        })
+      })
 
-    describe("Function evaluation", async function () {
-      describe("cubic", async function () {
-        describe('revert', async function () {
+    })
+
+    describe("function evaluation", async function () {
+      describe("normal set, medium amount intervals", async function () {
+        describe('reverts', async function () {
           beforeEach(async function () {
             this.interp = interpolate(cubicSet.xs, cubicSet.ys);
           })
-          it("Fails when value lies before function domain", async function () {   
+          it("when value lies before function domain", async function () {   
             var x = 0;       
-            var index = findSortedIndex(cubicSet.xs, x);
-            if(index > 0) index = index - 1;
-            var degree = getFunctionDegree(this.interp, index);
-            await expect(this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, degree)).to.be.revertedWith("Marketplace: Not in function domain.");
+            var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
+            await expect(this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.revertedWith("Marketplace: Not in function domain.");
           })
   
         })
-        describe("at breakpoints", async function () {
+        describe("evaluation at piecewise breakpoints", async function () {
           beforeEach(async function () {
             this.interp = interpolate(cubicSet.xs, cubicSet.ys);
           })
           
           it("correctly evaluates at first breakpoint", async function () {
             var x = cubicSet.xs[0];
-            var index = findSortedIndex(cubicSet.xs, x);
-            if(index > 0) index = index - 1;
+            var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            var degree = getFunctionDegree(this.interp, index);
-
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, degree)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
           })
 
           it("correctly evaluates at second breakpoint", async function () {  
             var x = cubicSet.xs[1];
-            var index = findSortedIndex(cubicSet.xs, x);
-            if(index > 0) index = index - 1;
+            var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            var degree = getFunctionDegree(this.interp, index);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, degree)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
           })
 
           it("correctly evaluates at second last breakpoint", async function () {  
             var x = cubicSet.xs[cubicSet.xs.length - 2];
-            var index = findSortedIndex(cubicSet.xs, x);
-            if(index > 0) index = index - 1;
-            var degree = getFunctionDegree(this.interp, index);
+            var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, degree)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
           })
 
           it("correctly evaluates at last breakpoint", async function () {  
             var x = cubicSet.xs[cubicSet.xs.length - 1];
-            var index = findSortedIndex(cubicSet.xs, x);
+            var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            if(index > 0) index = index - 1;
-            var degree = getFunctionDegree(this.interp, index);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, degree)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
           })
         })
-        describe("within intervals", async function () {
+        describe("evaluation in between piecewise breakpoints", async function () {
           beforeEach(async function () {
             this.interp = interpolate(cubicSet.xs, cubicSet.ys);
           })
           it("correctly evaluates within first interval", async function () {
             var x = 2500;
-            var index = findSortedIndex(cubicSet.xs, x);
-            if(index > 0) index = index - 1;
-            var degree = getFunctionDegree(this.interp, index);
-
+            var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, degree)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
           })
           it("correctly evaluates within second interval", async function () {
             var x = 5750;
-            var index = findSortedIndex(cubicSet.xs, x);
-            if(index > 0) index = index - 1;
-            var degree = getFunctionDegree(this.interp, index);
-
+            var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, degree)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
           })
           it("correctly evaluates within second last interval", async function () {
             var x = 14999;
-            var index = findSortedIndex(cubicSet.xs, x);
-            if(index > 0) index = index - 1;
-            var degree = getFunctionDegree(this.interp, index);
-
+            var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, degree)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
           })
           it("correctly evaluates within last interval", async function () {
             var x = 19410;
-            var index = findSortedIndex(cubicSet.xs, x);
-
-            if(index > 0) index = index - 1;
-            var degree = getFunctionDegree(this.interp, index);
+            var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, degree)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+          })
+        })
+      })
+
+      describe("max intervals set", async function () {
+        describe('reverts', async function () {
+          beforeEach(async function () {
+            this.interp = interpolate(set2.xs, set2.ys);
+          })
+          it("when value lies before function domain", async function () {   
+            var x = 0;       
+            var index = findSortedIndex(set2.xs, x, getNumIntervals(set2.xs) - 1);
+            await expect(this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.revertedWith("Marketplace: Not in function domain.");
+          })
+  
+        })
+        describe("evaluation at piecewise breakpoints", async function () {
+          beforeEach(async function () {
+            this.interp = interpolate(set2.xs, set2.ys);
+          })
+          
+          it("correctly evaluates at first breakpoint", async function () {
+            var x = set2.xs[0];
+            var index = findSortedIndex(set2.xs, x, getNumIntervals(set2.xs) - 1);
+            var v = ppval_listing(this.interp, x);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+          })
+
+          it("correctly evaluates at second breakpoint", async function () {  
+            var x = set2.xs[1];
+            var index = findSortedIndex(set2.xs, x, getNumIntervals(set2.xs) - 1);
+            var v = ppval_listing(this.interp, x);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+          })
+
+          it("correctly evaluates at second last breakpoint", async function () {  
+            var x = set2.xs[set2.xs.length - 2];
+            var index = findSortedIndex(set2.xs, x, getNumIntervals(set2.xs) - 1);
+            var v = ppval_listing(this.interp, x);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+          })
+
+          it("correctly evaluates at last breakpoint", async function () {  
+            var x = set2.xs[set2.xs.length - 1];
+            var index = findSortedIndex(set2.xs, x, getNumIntervals(set2.xs) - 1);
+            var v = ppval_listing(this.interp, x);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+          })
+        })
+        describe("evaluation in between piecewise breakpoints", async function () {
+          beforeEach(async function () {
+            this.interp = interpolate(set2.xs, set2.ys);
+          })
+          it("correctly evaluates within first interval", async function () {
+            var x = 2500;
+            var index = findSortedIndex(set2.xs, x, getNumIntervals(set2.xs) - 1);
+            var v = ppval_listing(this.interp, x);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+          })
+          it("correctly evaluates within second interval", async function () {
+            var x = 5750;
+            var index = findSortedIndex(set2.xs, x, getNumIntervals(set2.xs) - 1);
+            var v = ppval_listing(this.interp, x);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+          })
+          it("correctly evaluates within second last interval", async function () {
+            var x = 14999;
+            var index = findSortedIndex(set2.xs, x, getNumIntervals(set2.xs) - 1);
+            var v = ppval_listing(this.interp, x);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+          })
+          it("correctly evaluates within last interval", async function () {
+            var x = 19410;
+            var index = findSortedIndex(set2.xs, x, getNumIntervals(set2.xs) - 1);
+            var v = ppval_listing(this.interp, x);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+          })
+        })
+      })
+
+      describe("huge set, medium amount intervals", async function () {
+        describe('reverts', async function () {
+          beforeEach(async function () {
+            this.interp = interpolate(hugeSet.xs, hugeSet.ys);
+          })
+          it("when value lies before function domain", async function () {   
+            var x = 0;       
+            var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
+            await expect(this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.revertedWith("Marketplace: Not in function domain.");
+          })
+  
+        })
+        describe("evaluation at piecewise breakpoints", async function () {
+          beforeEach(async function () {
+            this.interp = interpolate(hugeSet.xs, hugeSet.ys);
+          })
+          
+          it("correctly evaluates at first breakpoint", async function () {
+            var x = hugeSet.xs[0];
+            var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
+            var v = ppval_listing(this.interp, x);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+          })
+
+          it("correctly evaluates at second breakpoint", async function () {  
+            var x = hugeSet.xs[1];
+            var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
+            var v = ppval_listing(this.interp, x);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+          })
+
+          it("correctly evaluates at second last breakpoint", async function () {  
+            var x = hugeSet.xs[hugeSet.xs.length - 2];
+            var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
+            var v = ppval_listing(this.interp, x);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+          })
+
+          it("correctly evaluates at last breakpoint", async function () {  
+            var x = hugeSet.xs[hugeSet.xs.length - 1];
+            var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
+            var v = ppval_listing(this.interp, x);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+          })
+        })
+        describe("evaluation in between piecewise breakpoints", async function () {
+          beforeEach(async function () {
+            this.interp = interpolate(hugeSet.xs, hugeSet.ys);
+          })
+          it("correctly evaluates within first interval", async function () {
+            var x = 14567200000500;
+            var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
+            var v = ppval_listing(this.interp, x);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+          })
+          it("correctly evaluates within second interval", async function () {
+            var x = 59555200441200;
+            var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
+            var v = ppval_listing(this.interp, x);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+          })
+          it("correctly evaluates within second last interval", async function () {
+            var x = 140567200000500;
+            var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
+            var v = ppval_listing(this.interp, x);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+          })
+          it("correctly evaluates within last interval", async function () {
+            var x = 18569299999500;
+            var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
+            var v = ppval_listing(this.interp, x);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
           })
         })
         
@@ -282,103 +437,206 @@ describe('Marketplace', function () {
     })
 
     describe("order evaluation", async function () {
+
+      describe("normal set", async function () {
+        describe("within an interval", async function () {
+          beforeEach(async function ( ){
+            this.interp = interpolate(cubicSet.xs, cubicSet.ys);
+            this.f = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC];
+          })
+  
+          it("evaluates within first piecewise interval", async function () {
+            var placeInLine = 1000;
+            var amount = 3000;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+  
+          it("evaluates within second piecewise interval", async function () {
+            var placeInLine = 5200;
+            var amount = 799;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+          
+          it("evaluates within third piecewise interval", async function () {
+            var placeInLine = 7500;
+            var amount = 10;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+          it("evaluates within last piecewise interval", async function () {
+            var placeInLine = 18000;
+            var amount = 1000;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+        })
+  
+        describe("across 2 intervals", async function () {
+          beforeEach(async function ( ){
+            this.interp = interpolate(cubicSet.xs, cubicSet.ys);
+            this.f = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC];
+          })
+  
+          it("first to second", async function () {
+            var placeInLine = 1000;
+            var amount = 4500;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+          it("third to fourth", async function () {
+            var placeInLine = 6500;
+            var amount = 1499;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+          it("second last to last", async function () {
+            var placeInLine = 15750;
+            var amount = 4000;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+        })
+  
+        describe("across >2 intervals", async function () {
+          beforeEach(async function ( ){
+            this.interp = interpolate(cubicSet.xs, cubicSet.ys);
+            this.f = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC];
+          })
+  
+          it("three intervals", async function () {
+            var placeInLine = 1000;
+            var amount = 5500;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+          it("four intervals", async function () {
+            var placeInLine = 5000;
+            var amount = 3750;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+          it("one less than all", async function () {
+            var placeInLine = 5500;
+            var amount = 13990;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+          it("all", async function () {
+            var placeInLine = 1000;
+            var amount = 19000;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+          it("extends past end", async function () {
+            var placeInLine = 1000;
+            var amount = 19500;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+        })
+      })
+      describe("huge set", async function () {
+        describe("within an interval", async function () {
+          beforeEach(async function ( ){
+            this.interp = interpolate(hugeSet.xs, hugeSet.ys);
+            this.f = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC];
+          })
+  
+          it("evaluates within first piecewise interval", async function () {
+            var placeInLine = 10000000000000;
+            var amount = 10000000000000;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+  
+          it("evaluates within second piecewise interval", async function () {
+            var placeInLine = 55000000000000;
+            var amount = 3000000000000;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+          
+          it("evaluates within third piecewise interval", async function () {
+            var placeInLine = 69000000000000;
+            var amount = 10;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+          it("evaluates within last piecewise interval", async function () {
+            var placeInLine = 180000000000000;
+            var amount = 19999999999999;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+        })
+  
+        describe("across 2 intervals", async function () {
+          beforeEach(async function ( ){
+            this.interp = interpolate(hugeSet.xs, hugeSet.ys);
+            this.f = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC];
+          })
+  
+          it("first to second", async function () {
+            var placeInLine = 10000000000000;
+            var amount = 45532999124442;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+          it("third to fourth", async function () {
+            var placeInLine = 69123456789012;
+            var amount = 10000000000000;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+          it("second last to last", async function () {
+            var placeInLine = 145000000000000;
+            var amount = 54999999999999;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+        })
+  
+        describe("across >2 intervals", async function () {
+          beforeEach(async function ( ){
+            this.interp = interpolate(hugeSet.xs, hugeSet.ys);
+            this.f = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC];
+          })
+  
+          it("three intervals", async function () {
+            var placeInLine = 10000000000000;
+            var amount = 55000000000000;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+          it("four intervals", async function () {
+            var placeInLine = 10000000000000;
+            var amount = 65000000000000;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+          it("one less than all", async function () {
+            var placeInLine = 10000000000000;
+            var amount = 165000000000000;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+          it("all", async function () {
+            var placeInLine = 10000000000000;
+            var amount = 18500000000000;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+          it("extends past end", async function () {
+            var placeInLine = 12500000000000;
+            var amount = 200000000000000;
+            var amountBeans = ppval_order(this.interp, placeInLine, amount);
+            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          })
+        })
+      })
       
-      describe("within an interval", async function () {
-        beforeEach(async function ( ){
-          this.interp = interpolate(cubicSet.xs, cubicSet.ys);
-          this.f = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC];
-        })
-
-        it("first interval", async function () {
-          var placeInLine = 1000;
-          var amount = 3000;
-          var amountBeans = ppval_order(this.interp, placeInLine, amount);
-          expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-        })
-
-        it("second interval", async function () {
-          var placeInLine = 5200;
-          var amount = 799;
-          var amountBeans = ppval_order(this.interp, placeInLine, amount);
-          expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-        })
-        it("third interval", async function () {
-          var placeInLine = 7500;
-          var amount = 10;
-          var amountBeans = ppval_order(this.interp, placeInLine, amount);
-          expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-        })
-        it("last interval", async function () {
-          var placeInLine = 18000;
-          var amount = 1000;
-          var amountBeans = ppval_order(this.interp, placeInLine, amount);
-          expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-        })
-      })
-
-      describe("across 2 intervals", async function () {
-        beforeEach(async function ( ){
-          this.interp = interpolate(cubicSet.xs, cubicSet.ys);
-          this.f = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC];
-        })
-
-        it("first to second", async function () {
-          var placeInLine = 1000;
-          var amount = 4500;
-          var amountBeans = ppval_order(this.interp, placeInLine, amount);
-          expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-        })
-        it("third to fourth", async function () {
-          var placeInLine = 6500;
-          var amount = 1499;
-          var amountBeans = ppval_order(this.interp, placeInLine, amount);
-          expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-        })
-        it("second last to last", async function () {
-          var placeInLine = 15750;
-          var amount = 4000;
-          var amountBeans = ppval_order(this.interp, placeInLine, amount);
-          expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-        })
-      })
-
-      describe("across >2 intervals", async function () {
-        beforeEach(async function ( ){
-          this.interp = interpolate(cubicSet.xs, cubicSet.ys);
-          this.f = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC];
-        })
-
-        it("three intervals", async function () {
-          var placeInLine = 1000;
-          var amount = 5500;
-          var amountBeans = ppval_order(this.interp, placeInLine, amount);
-          expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-        })
-        it("four intervals", async function () {
-          var placeInLine = 5000;
-          var amount = 3750;
-          var amountBeans = ppval_order(this.interp, placeInLine, amount);
-          expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-        })
-        it("one less than all", async function () {
-          var placeInLine = 5500;
-          var amount = 13990;
-          var amountBeans = ppval_order(this.interp, placeInLine, amount);
-          expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-        })
-        it("all", async function () {
-          var placeInLine = 1000;
-          var amount = 19000;
-          var amountBeans = ppval_order(this.interp, placeInLine, amount);
-          expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-        })
-        it("extends past end", async function () {
-          var placeInLine = 1000;
-          var amount = 19500;
-          var amountBeans = ppval_order(this.interp, placeInLine, amount);
-          expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-        })
-      })
     })
 
   })

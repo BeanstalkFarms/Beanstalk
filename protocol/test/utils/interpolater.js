@@ -5,8 +5,9 @@ const {BitDescriptor, BitPacker} = require("./bitpacker.js");
 const config = {
     matrix: 'Array',
     number: 'BigNumber',
-    precision: 64,
+    precision: 128,
     predictable: true,
+    epsilon: 1e-24
 }
 
 const math = create(all, config);
@@ -14,25 +15,38 @@ const math = create(all, config);
 function getNumIntervals(array) { //REDESIGN THIS
     var numIntervals = 0;
     while(numIntervals < 32) {
-        if((array[numIntervals] == 0 || array[numIntervals] == undefined) && numIntervals != 0) break;
+        if(array[numIntervals] == 0 && numIntervals != 0) break;
+        else if(array[numIntervals] == undefined) break;
         numIntervals++;
     }
 
     return numIntervals;
 }
 
-function findSortedIndex(array, value, max) { //REDESIGN THIS
-    
+function findSortedIndex(array, value, high) {
+    if(math.compare(math.bignumber(value), math.bignumber(array[0])) == -1) return 0;
+
     var low = 0;
-    var high = max ? max : getNumIntervals(array) - 1 ;
-    if(value == 0) return 0;
-    while (low <= high) {
-        var mid = math.floor(math.divide(math.add(low, high), 2));
-        if( math.compare(math.bignumber(array[mid]), math.bignumber(value)) == -1) low = mid + 1;
-        else high = mid - 1;
+    while(low < high) {
+        if(math.compare(math.bignumber(array[low]), math.bignumber(value)) == 0) return low;
+        else if(math.compare(math.bignumber(array[low]), math.bignumber(value)) == 1) break;
+        else low++;
     }
-    return low ;
+    return low>0?low-1:0;
 }
+
+// function findSortedIndex(array, value, max) { //REDESIGN THIS
+    
+//     var low = 0;
+//     var high = max ? max : getNumIntervals(array) - 1 ;
+//     if(value == 0) return 0;
+//     while (low <= high) {
+//         var mid = math.floor(math.divide(math.add(low, high), 2));
+//         if( math.compare(math.bignumber(array[mid]), math.bignumber(value)) == -1) low = mid + 1;
+//         else high = mid - 1;
+//     }
+//     return low ;
+// }
 
 String.prototype.calculateShifts = function (c) {
     let val = +this;
@@ -77,6 +91,7 @@ Number.prototype.muld = function (_v, base) {
     return math.chain(value).multiply(multiplier).divide(b).done();
 }
 
+//javascript implementation from https://www.wikiwand.com/en/Monotone_cubic_interpolation
 function interpolate(xArr, yArr) {
     //set and base cases
     if(xArr.length != yArr.length) return;
@@ -234,33 +249,32 @@ function interpolate(xArr, yArr) {
     return {ranges: ranges, values: values, bases: bases, signs: signs, basesPacked: baseInts, signsPacked: boolInt}
 }
 
-function ppval(f, x, index, degree) {
+function ppval(f, x, index) {
     var _x = math.bignumber(x);
-
+    var degreeIndex = math.bignumber(0);
     //only do x - k if x is greater than or equal to k
     if(math.compare(_x, math.bignumber(f.ranges[index])) != -1) {
         _x = math.subtract(_x, math.bignumber(f.ranges[index]));
     }
 
     var y = math.bignumber(0);
-    var degreeIndex = 0;
-
-    while(degreeIndex <= degree) {
-        var termMultiplier = math.bignumber(f.values[index*4 + degreeIndex])
-        var termBase = math.pow(math.bignumber(10), math.bignumber(f.bases[index*4 + degreeIndex].value));
+    
+    while(degreeIndex < 4) {
+        var termMultiplier = math.bignumber(f.values[math.add(index*4, degreeIndex)])
+        var termBase = math.pow(math.bignumber(10), math.bignumber(f.bases[math.add(index*4, degreeIndex)].value));
 
         var term = math.floor(math.chain(_x).pow(degreeIndex).multiply(termMultiplier).divide(termBase).done());
 
-        if(f.signs[index*4 + degreeIndex].value == 1) y = math.add(y, term)
+        if(f.signs[math.add(index*4, degreeIndex)].value == 1) y = math.add(y, term)
         else y = math.subtract(y, term)
 
-        degreeIndex++;
+        degreeIndex = math.add(degreeIndex, 1);
     }
 
     return y;
 }
 
-function ppval_integrate(f, start, end, pieceIndex, degree) {
+function ppval_integrate(f, start, end, pieceIndex) {
 
     var _x1 = math.bignumber(start);
     var _x2 = math.bignumber(end);
@@ -271,42 +285,41 @@ function ppval_integrate(f, start, end, pieceIndex, degree) {
     }
 
     var sum = math.bignumber(0);
-    var degreeIndex = 0;
+    var degreeIndex = math.bignumber(0);
 
-    while(degreeIndex <= degree) {
+    while(degreeIndex < 4) {
 
-        var termMultiplier = math.bignumber(f.values[pieceIndex*4 + degreeIndex]);
-        var termBase = math.pow(math.bignumber(10), math.bignumber(f.bases[pieceIndex*4 + degreeIndex].value));
+        var termMultiplier = math.bignumber(f.values[math.add(pieceIndex*4, degreeIndex)]);
+        var termBase = math.pow(math.bignumber(10), math.bignumber(f.bases[math.add(pieceIndex*4, degreeIndex)].value));
 
-        var term = math.floor(
-            math.chain(_x2)
-            .pow(degreeIndex + 1)
+        var term = math.chain(_x2)
+            .pow(math.add(degreeIndex,1))
             .multiply(termMultiplier)
             .divide(termBase)
-            .divide(degreeIndex + 1)
-            .multiply(f.signs[pieceIndex*4 + degreeIndex].value == 1 ? 1 : -1)
-            .done());
+            .divide(math.add(degreeIndex,1))
+            .multiply(math.bignumber(f.signs[math.add(pieceIndex*4, degreeIndex)].value == 1 ? 1 : -1))
+            .done();
+
         sum = math.add(sum, term);
 
-        term = math.floor(
-            math.chain(_x1)
-            .pow(degreeIndex + 1)
+        term = math.chain(_x1)
+            .pow(math.add(degreeIndex,1))
             .multiply(termMultiplier)
             .divide(termBase)
-            .divide(degreeIndex + 1)
-            .multiply(f.signs[pieceIndex*4 + degreeIndex].value == 1 ? 1 : -1)
-            .done());
+            .divide(math.add(degreeIndex,1))
+            .multiply(math.bignumber(f.signs[math.add(pieceIndex*4, degreeIndex)].value == 1 ? 1 : -1))
+            .done();
         sum = math.subtract(sum, term);
         
         degreeIndex++;
     }
     
-    return sum;
+    return math.floor(sum);
 }
 
 function ppval_listing(f, placeInLine) {
-    var pieceIndex = findSortedIndex(f.ranges, placeInLine);
-    var y = ppval(f, placeInLine, pieceIndex > 0 ? pieceIndex - 1 : 0, 3);
+    var pieceIndex = findSortedIndex(f.ranges, placeInLine, getNumIntervals(f.ranges) - 1);
+    var y = ppval(f, placeInLine, pieceIndex, 3);
     return math.format(math.floor(y), {notation:"fixed"});
 
 }
@@ -314,36 +327,29 @@ function ppval_listing(f, placeInLine) {
 function ppval_order(f, placeInLine, amount) {
 
     var beanAmount = math.bignumber(0);
-    var end = math.add(placeInLine, math.bignumber(amount));
-
+    var end = math.add(math.bignumber(placeInLine), math.bignumber(amount));
     var maxIndex = getNumIntervals(f.ranges);
-    var pieceIndex = findSortedIndex(f.ranges, placeInLine, maxIndex);
-
-    var i =  pieceIndex > 0 ? pieceIndex - 1 : 0;
+    var pieceIndex = findSortedIndex(f.ranges, math.bignumber(placeInLine), maxIndex - 1);
 
     var start = math.bignumber(placeInLine);
     var end = math.add(start, math.bignumber(amount));
 
     if(math.compare(start, f.ranges[0]) == -1) start = math.bignumber(f.ranges[0]);
     if(math.compare(end, f.ranges[maxIndex - 1]) == 1) end = math.bignumber(f.ranges[maxIndex - 1]);
-    
-    console.log("i: ", i);
-    
+   
     while(math.compare(start, end) == -1) {
 
-        if(math.compare(end, f.ranges[i+1]) == 1) {
+        if(math.compare(end, math.bignumber(f.ranges[pieceIndex + 1])) == 1) {
 
-            var term = ppval_integrate(f, start, f.ranges[i+1], i, 3); 
-            console.log("term: " + term);
-            start = math.bignumber(f.ranges[i+1]);
+            var term = ppval_integrate(f, start, f.ranges[pieceIndex + 1], pieceIndex, 3); 
+            start = math.bignumber(f.ranges[pieceIndex+1]);
             beanAmount = math.add(beanAmount, term);
 
-            if(i < (maxIndex - 1) - 1) i++;
+            if(pieceIndex < (maxIndex - 1) - 1) pieceIndex++;
             
         } else {
             //integrate from x until end 
-            var term = ppval_integrate(f, start, end, i, 3);
-            console.log("term: " + term);
+            var term = ppval_integrate(f, start, end, pieceIndex, 3);
             beanAmount = math.add(beanAmount, term);
             start = end;
         }
@@ -353,14 +359,6 @@ function ppval_order(f, placeInLine, amount) {
 
 }
 
-function getFunctionDegree(f, index) {
-    var degree = 3;
-    while(f.values[index*4 + degree] == 0){ 
-        degree--;
-    }
-    return degree;
-}
-
 module.exports = {
     ppval_order,
     ppval_listing,
@@ -368,6 +366,6 @@ module.exports = {
     ppval,
     ppval_integrate,
     interpolate,
-    getFunctionDegree
+    getNumIntervals
 }
 
