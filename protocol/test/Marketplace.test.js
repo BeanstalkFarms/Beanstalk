@@ -216,7 +216,7 @@ describe('Marketplace', function () {
           it("when value lies before function domain", async function () {   
             var x = 0;       
             var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
-            await expect(this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.revertedWith("Marketplace: Not in function domain.");
+            await expect(this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.revertedWith("Marketplace: Not in function domain.");
           })
   
         })
@@ -229,28 +229,28 @@ describe('Marketplace', function () {
             var x = cubicSet.xs[0];
             var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
 
           it("correctly evaluates at second breakpoint", async function () {  
             var x = cubicSet.xs[1];
             var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
 
           it("correctly evaluates at second last breakpoint", async function () {  
             var x = cubicSet.xs[cubicSet.xs.length - 2];
             var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
 
           it("correctly evaluates at last breakpoint", async function () {  
             var x = cubicSet.xs[cubicSet.xs.length - 1];
             var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
         })
         describe("evaluation in between piecewise breakpoints", async function () {
@@ -261,25 +261,25 @@ describe('Marketplace', function () {
             var x = 2500;
             var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
           it("correctly evaluates within second interval", async function () {
             var x = 5750;
             var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
           it("correctly evaluates within second last interval", async function () {
             var x = 14999;
             var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
           it("correctly evaluates within last interval", async function () {
             var x = 19410;
             var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
         })
       })
@@ -292,7 +292,7 @@ describe('Marketplace', function () {
           it("when value lies before function domain", async function () {   
             var x = 0;       
             var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
-            await expect(this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.revertedWith("Marketplace: Not in function domain.");
+            await expect(this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.revertedWith("Marketplace: Not in function domain.");
           })
   
         })
@@ -305,28 +305,28 @@ describe('Marketplace', function () {
             var x = maxSet.xs[0];
             var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
 
           it("correctly evaluates at second breakpoint", async function () {  
             var x = maxSet.xs[1];
             var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
 
           it("correctly evaluates at second last breakpoint", async function () {  
             var x = maxSet.xs[maxSet.xs.length - 2];
             var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
 
           it("correctly evaluates at last breakpoint", async function () {  
             var x = maxSet.xs[maxSet.xs.length - 1];
             var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
         })
         describe("evaluation in between piecewise breakpoints", async function () {
@@ -337,25 +337,25 @@ describe('Marketplace', function () {
             var x = 250;
             var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
           it("correctly evaluates within second interval", async function () {
             var x = 473;
             var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
           it("correctly evaluates within second last interval", async function () {
             var x = 9890;
             var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
           it("correctly evaluates within last interval", async function () {
             var x = 9998;
             var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
         })
       })
@@ -368,7 +368,7 @@ describe('Marketplace', function () {
           it("when value lies before function domain", async function () {   
             var x = 0;       
             var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
-            await expect(this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.revertedWith("Marketplace: Not in function domain.");
+            await expect(this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.revertedWith("Marketplace: Not in function domain.");
           })
   
         })
@@ -381,28 +381,28 @@ describe('Marketplace', function () {
             var x = hugeSet.xs[0];
             var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
 
           it("correctly evaluates at second breakpoint", async function () {  
             var x = hugeSet.xs[1];
             var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
 
           it("correctly evaluates at second last breakpoint", async function () {  
             var x = hugeSet.xs[hugeSet.xs.length - 2];
             var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
 
           it("correctly evaluates at last breakpoint", async function () {  
             var x = hugeSet.xs[hugeSet.xs.length - 1];
             var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
         })
         describe("evaluation in between piecewise breakpoints", async function () {
@@ -413,25 +413,25 @@ describe('Marketplace', function () {
             var x = 14567200000500;
             var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
           it("correctly evaluates within second interval", async function () {
             var x = 59555200441200;
             var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
           it("correctly evaluates within second last interval", async function () {
             var x = 140567200000500;
             var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
           it("correctly evaluates within last interval", async function () {
             var x = 18569299999500;
             var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
+            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
           })
         })
         

@@ -17,10 +17,9 @@ contract MockMarketplaceFacet is MarketplaceFacet {
     function _evaluatePPoly(
         PPoly32 calldata f,
         uint256 x,
-        uint256 pieceIndex,
-        uint256 evaluationDegree
+        uint256 pieceIndex
     ) public view returns (uint256) {
-        return evaluatePPoly(f, x, pieceIndex, evaluationDegree);
+        return evaluatePPoly(f, x, pieceIndex);
     }
 
     function _getDynamicOrderAmount(PPoly32 calldata f, uint256 index, uint256 start, uint256 amount) external view returns (uint256) {
