@@ -12,10 +12,10 @@ const config = {
 
 const math = create(all, config);
 
-function getNumIntervals(array) { //REDESIGN THIS
+function getNumIntervals(array) {
     var numIntervals = 0;
     while(numIntervals < 32) {
-        if(array[numIntervals] == 0 && numIntervals != 0) break;
+        if(array[numIntervals] == 0) break;
         else if(array[numIntervals] == undefined) break;
         numIntervals++;
     }
@@ -97,8 +97,56 @@ function interpolate(xArr, yArr) {
     if(xArr.length != yArr.length) return;
     var maxpieces = 32;
     var length = xArr.length;
-    if(length === 0) { return function(x) { return 0; }}
-    if(length === 1) { return function(x) { return +yArr[0]; }}
+    if(length === 0) { return function(x) { 
+        return {ranges: new Array(32).fill('0'), values: new Array(128).fill('0'), bases: new Array(128).fill(BitDescriptor.fromUint8(0)), signs: new Array(128).fill(BitDescriptor.fromBool(false)), basesPacked: 0, signsPacked: 0}; 
+    }}
+    if(length === 1) { 
+        var ranges = new Array(32).fill('0');
+        ranges[0] = xArr[0].toString();
+
+        var bases = new Array(128).fill(BitDescriptor.fromUint8(0));
+        bases[0] = BitDescriptor.fromUint8(math.number(yArr[0]).calculateShifts(25)); 
+
+        var base = math.pow(math.bignumber(10), math.bignumber(math.number(yArr[0]).calculateShifts(25)))
+        var value = new Array(128).fill('0');
+        value[0] = math.format(math.floor(math.abs(math.multiply(yArr[0], base))), {notation: "fixed"});
+
+        var signs = new Array(128).fill(BitDescriptor.fromBool(false));
+        signs[0] = BitDescriptor.fromBool(math.sign(yArr[0]) == 1);
+
+        const packedBools = BitPacker.pack(signs);
+        const packedBases = BitPacker.pack(bases);
+
+        const booliterator = BitPacker.createUnpackIterator(packedBools, pattern => {
+            switch(pattern) {
+                case '1': return '1';
+                case '0': return '0';
+                default: return null;
+            }
+        })
+
+        const baseiterator = BitPacker.createUnpackIterator(packedBases, pattern => {
+            switch(pattern) {
+                case '1': return '1';
+                case '0': return '0';
+                default: return null;
+            }
+        })
+
+        const boolString = [...booliterator].reverse().join('');
+        const baseArr = [...baseiterator];
+
+        var baseInts = [];
+        for(let i = 0; i < 4; i++){
+            //pack 32 bases per baseInt
+            baseInts.push(BigInt("0b" + baseArr.slice((i)*maxpieces*8, (i+1)*maxpieces*8).join('')).toString());
+        }
+
+        //pack all bools (up to 256) into a single int. in this case there are only 128 bools
+        const boolInt = BigInt("0b" + boolString).toString();
+
+        return { ranges: ranges, values: values, bases: bases, signs: signs, basesPacked: baseInts, signsPacked: boolInt}; 
+    }
 
     var indexes = [];
     for(let i = 0; i < length; i++) {

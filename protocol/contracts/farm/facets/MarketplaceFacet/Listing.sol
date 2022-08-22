@@ -83,7 +83,7 @@ contract Listing is Dynamic {
         
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
 
-        s.podListings[index] = hashListingFillZeros(start, amount, pricePerPod, maxHarvestableIndex, mode, PricingMode.CONSTANT);
+        s.podListings[index] = hashListingConstant(start, amount, pricePerPod, maxHarvestableIndex, mode, PricingMode.CONSTANT);
         
         emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, mode);
 
@@ -136,10 +136,10 @@ contract Listing is Dynamic {
         require(plotSize >= (l.start + l.amount) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
 
-        uint256 pricePerPod = l.f.mode == PricingMode.CONSTANT ? l.pricePerPod : getDynamicListingPrice(l);
+        // uint256 pricePerPod = getPrice(l);
 
-        uint256 amount = (beanAmount * 1000000) / pricePerPod;
-        amount = roundAmount(l, amount, pricePerPod);
+        uint256 amount = getRoundedAmount(l, beanAmount);
+        // amount = roundAmount(l, amount, pricePerPod);
 
         __fillListing(msg.sender, l, amount);
 
@@ -152,7 +152,7 @@ contract Listing is Dynamic {
         PodListing calldata l,
         uint256 amount
     ) private {
-        // console.log(l.amount, amount);
+
         require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
         if (l.amount > amount)
             s.podListings[l.index.add(amount).add(l.start)] = hashListing(
@@ -189,9 +189,31 @@ contract Listing is Dynamic {
     * Pricing
     */
 
-    function getDynamicListingPrice(PodListing calldata l) internal view returns (uint256) {
-        uint256 pieceIndex = findIndex(l.f.ranges, l.index + l.start - s.f.harvestable, getNumIntervals(l.f.ranges) - 1);
-        return evaluatePPoly(l.f, l.index + l.start - s.f.harvestable, pieceIndex, 3);
+    function getRoundedAmount(PodListing calldata l, uint256 beanAmount) internal view returns (uint256) {
+        uint256 pricePerPod;
+        uint256 amount;
+        uint256 remainingAmount;
+        if (l.f.mode == PricingMode.CONSTANT) {
+
+            pricePerPod = l.pricePerPod;
+            amount = (beanAmount * 1000000) / pricePerPod;
+            remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
+            if(remainingAmount < (1000000 / l.pricePerPod)) amount = l.amount;
+            return amount;
+
+        } else {
+
+            pricePerPod = evaluatePPoly(
+                l.f, 
+                l.index + l.start - s.f.harvestable, 
+                findIndex(l.f.ranges, l.index + l.start - s.f.harvestable, getNumIntervals(l.f.ranges) - 1)
+            );
+            amount = (beanAmount * 1000000) / pricePerPod;
+            remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
+            if(remainingAmount < (1000000 / pricePerPod)) amount = l.amount;
+            return amount;
+
+        }
     }
 
     /*
@@ -220,7 +242,7 @@ contract Listing is Dynamic {
      * Helpers
      */
 
-    function hashListingFillZeros(
+    function hashListingConstant(
         uint256 start, 
         uint256 amount, 
         uint24 pricePerPod, 

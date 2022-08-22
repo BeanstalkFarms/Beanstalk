@@ -58,8 +58,9 @@ contract Order is Listing {
     event PodOrderCancelled(address indexed account, bytes32 id);
 
     /*
-     * Create
-     */
+    * Create
+    */
+    // Note: Orders changed and now can accept an arbitary amount of beans, possibly higher than the value of the order
     function _createPodOrder(
         uint256 beanAmount,
         uint24 pricePerPod,
@@ -68,12 +69,11 @@ contract Order is Listing {
         require(beanAmount > 0, "Marketplace: Order amount must be > 0.");
         require(pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
 
-        id = createOrderIdFillZeros(msg.sender, pricePerPod, maxPlaceInLine, PricingMode.CONSTANT);
+        id = createOrderIdConstant(msg.sender, pricePerPod, maxPlaceInLine);
 
         if (s.podOrders[id] > 0) _cancelPodOrder(pricePerPod, maxPlaceInLine, LibTransfer.To.INTERNAL);
         s.podOrders[id] = beanAmount;
 
-        // Note: Orders changed to accept an arbitary amount of beans, higher than the value of the order
         
         emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine);
     }
@@ -120,7 +120,7 @@ contract Order is Listing {
         else
             costInBeans = getDynamicOrderAmount(o.f, index + start - s.f.harvestable, amount);
         
-        s.podOrders[id] = s.podOrders[id].sub(costInBeans);
+        s.podOrders[id] = s.podOrders[id].sub(costInBeans, "Marketplace: Not enough beans in order.");
         LibTransfer.sendToken(C.bean(), costInBeans, msg.sender, mode);
         
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
@@ -140,7 +140,7 @@ contract Order is Listing {
         uint256 maxPlaceInLine,
         LibTransfer.To mode
     ) internal {
-        bytes32 id = createOrderIdFillZeros(msg.sender, pricePerPod, maxPlaceInLine, PricingMode.CONSTANT);
+        bytes32 id = createOrderIdConstant(msg.sender, pricePerPod, maxPlaceInLine);
         uint256 amountBeans = s.podOrders[id];
         LibTransfer.sendToken(C.bean(), amountBeans, msg.sender, mode);
         delete s.podOrders[id];
@@ -164,11 +164,13 @@ contract Order is Listing {
     /*
     * PRICING
     */
+
+
     function getDynamicOrderAmount(
         PPoly32 calldata f,
         uint256 placeInLine, 
         uint256 amount
-    ) internal view returns (uint256 beanAmount) { 
+    ) internal pure returns (uint256 beanAmount) { 
 
         uint256 numIntervals = getNumIntervals(f.ranges);
 
@@ -185,11 +187,11 @@ contract Order is Listing {
             //if the integration reaches into the next piece, then break the integration at the end of the current piece
             if(end > f.ranges[pieceIndex + 1]) {
                 //current end index reaches into next piecewise domain
-                beanAmount +=  evaluatePPolyI(f, start, f.ranges[pieceIndex + 1], pieceIndex, 3);
+                beanAmount +=  evaluatePPolyI(f, start, f.ranges[pieceIndex + 1], pieceIndex);
                 start = f.ranges[pieceIndex+1]; // set place in line to the end index
                 if(pieceIndex < (numIntervals - 1) - 1) pieceIndex++; //increment piece index if not at the last piece
             } else {
-                beanAmount += evaluatePPolyI(f, start, end, pieceIndex, 3);
+                beanAmount += evaluatePPolyI(f, start, end, pieceIndex);
                 start = end;
             }
         }
@@ -200,15 +202,14 @@ contract Order is Listing {
     /*
      * Helpers
      */
-     function createOrderIdFillZeros(
+     function createOrderIdConstant(
         address account,
         uint24 pricePerPod,
-        uint256 maxPlaceInLine,
-        PricingMode priceMode
+        uint256 maxPlaceInLine
     ) internal pure returns (bytes32 id) {
         (uint256[32] memory ranges, uint256[128] memory values, uint256[4] memory bases) = createZeros();
         uint256 signs = 0;
-        id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, priceMode == PricingMode.CONSTANT, ranges, values, bases, signs));
+        id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, true, ranges, values, bases, signs));
     }
 
     function createOrderId(

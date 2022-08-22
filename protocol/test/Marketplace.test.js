@@ -84,17 +84,18 @@ describe('Marketplace', function () {
     let idx = (receipt.events?.filter((x) => { return x.event == ("PodOrderCreated") }))[0].args.id;
     return idx;
   }
-  const getDOrderId = async function (tx) {
+  const getDynamicOrderId = async function (tx) {
     let receipt = await tx.wait();
     let idx = (receipt.events?.filter((x) => { return x.event == "DynamicPodOrderCreated" }))[0].args.id;
     return idx;
   }
+
   const set1 = {
     xs: [100, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800],
     ys: [900000, 900000, 900000, 900000, 900000, 800000, 800000, 800000, 800000, 775000, 750000, 725000, 700000, 675000, 650000, 625000, 600000, 575000, 550000, 525000]
   }
 
-  const set2 = {
+  const maxSet = {
     xs: [200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4200, 5000, 5500, 6350, 6780, 7230, 7400, 8130, 8500, 8800, 8950, 9900, 9999],
     ys: [900000, 900000, 900000, 900000, 800000, 800000, 800000, 800000, 775000, 750000, 725000, 700000, 675000, 650000, 625000, 600000, 575000, 550000, 525000, 520000, 515000, 510000, 501000, 478000, 465000, 443000, 425000, 409000, 398000, 389000, 371000, 369000]
   }
@@ -176,7 +177,7 @@ describe('Marketplace', function () {
       
       describe("32 break points", async function () {
         beforeEach(async function () {
-          this.breakpoints = interpolate(set2.xs, set2.ys).ranges;
+          this.breakpoints = interpolate(maxSet.xs, maxSet.ys).ranges;
         })
         it("correctly finds interval 0", async function () {
           expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '0')).to.be.equal(0);
@@ -206,6 +207,7 @@ describe('Marketplace', function () {
     })
 
     describe("function evaluation", async function () {
+    
       describe("normal set, medium amount intervals", async function () {
         describe('reverts', async function () {
           beforeEach(async function () {
@@ -285,73 +287,73 @@ describe('Marketplace', function () {
       describe("max intervals set", async function () {
         describe('reverts', async function () {
           beforeEach(async function () {
-            this.interp = interpolate(set2.xs, set2.ys);
+            this.interp = interpolate(maxSet.xs, maxSet.ys);
           })
           it("when value lies before function domain", async function () {   
             var x = 0;       
-            var index = findSortedIndex(set2.xs, x, getNumIntervals(set2.xs) - 1);
+            var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
             await expect(this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.revertedWith("Marketplace: Not in function domain.");
           })
   
         })
         describe("evaluation at piecewise breakpoints", async function () {
           beforeEach(async function () {
-            this.interp = interpolate(set2.xs, set2.ys);
+            this.interp = interpolate(maxSet.xs, maxSet.ys);
           })
           
           it("correctly evaluates at first breakpoint", async function () {
-            var x = set2.xs[0];
-            var index = findSortedIndex(set2.xs, x, getNumIntervals(set2.xs) - 1);
+            var x = maxSet.xs[0];
+            var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
             expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
           })
 
           it("correctly evaluates at second breakpoint", async function () {  
-            var x = set2.xs[1];
-            var index = findSortedIndex(set2.xs, x, getNumIntervals(set2.xs) - 1);
+            var x = maxSet.xs[1];
+            var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
             expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
           })
 
           it("correctly evaluates at second last breakpoint", async function () {  
-            var x = set2.xs[set2.xs.length - 2];
-            var index = findSortedIndex(set2.xs, x, getNumIntervals(set2.xs) - 1);
+            var x = maxSet.xs[maxSet.xs.length - 2];
+            var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
             expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
           })
 
           it("correctly evaluates at last breakpoint", async function () {  
-            var x = set2.xs[set2.xs.length - 1];
-            var index = findSortedIndex(set2.xs, x, getNumIntervals(set2.xs) - 1);
+            var x = maxSet.xs[maxSet.xs.length - 1];
+            var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
             expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
           })
         })
         describe("evaluation in between piecewise breakpoints", async function () {
           beforeEach(async function () {
-            this.interp = interpolate(set2.xs, set2.ys);
+            this.interp = interpolate(maxSet.xs, maxSet.ys);
           })
           it("correctly evaluates within first interval", async function () {
-            var x = 2500;
-            var index = findSortedIndex(set2.xs, x, getNumIntervals(set2.xs) - 1);
+            var x = 250;
+            var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
             expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
           })
           it("correctly evaluates within second interval", async function () {
-            var x = 5750;
-            var index = findSortedIndex(set2.xs, x, getNumIntervals(set2.xs) - 1);
+            var x = 473;
+            var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
             expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
           })
           it("correctly evaluates within second last interval", async function () {
-            var x = 14999;
-            var index = findSortedIndex(set2.xs, x, getNumIntervals(set2.xs) - 1);
+            var x = 9890;
+            var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
             expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
           })
           it("correctly evaluates within last interval", async function () {
-            var x = 19410;
-            var index = findSortedIndex(set2.xs, x, getNumIntervals(set2.xs) - 1);
+            var x = 9998;
+            var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
             var v = ppval_listing(this.interp, x);
             expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index, 3)).to.be.equal(v);
           })
@@ -437,7 +439,7 @@ describe('Marketplace', function () {
     })
 
     describe("order evaluation", async function () {
-
+     
       describe("normal set", async function () {
         describe("within an interval", async function () {
           beforeEach(async function ( ){
@@ -1385,6 +1387,7 @@ describe('Marketplace', function () {
           await expect(this.marketplace.connect(user2).createDynamicPodOrder('0', '100000', '100000', EXTERNAL, this.function)).to.be.revertedWith("Marketplace: Order amount must be > 0.");
         })
       })
+
       describe('create order', async function () {
         beforeEach(async function () {
           this.set = {xs: [0,10000,20000], ys: [100000, 100000, 100000]};
@@ -1393,7 +1396,7 @@ describe('Marketplace', function () {
           this.userBeanBalance = await this.bean.balanceOf(userAddress)
           this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
           this.result = await this.marketplace.connect(user).createDynamicPodOrder('500', '100000', '1000', EXTERNAL, this.function);
-          this.id = await getDOrderId(this.result)
+          this.id = await getDynamicOrderId(this.result)
           this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
           this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
         })
@@ -1409,8 +1412,7 @@ describe('Marketplace', function () {
         })
 
         it('emits an event', async function () {
-          //for some reason this event isnt getting validated
-          expect(this.result).to.emit(this.marketplace, 'DynamicPodOrderCreated').withArgs(userAddress, this.id, '500', 100000, '1000', this.function[0], this.function[1], this.function[2], this.function[3])
+          await expect(this.result).to.emit(this.marketplace, 'DynamicPodOrderCreated').withArgs(userAddress, this.id, '500', 100000, '1000', this.function[0], this.function[1], this.function[2], this.function[3])
         })
       })
       
@@ -1439,7 +1441,7 @@ describe('Marketplace', function () {
         })
 
         it("sell too much", async function () {
-          await expect(this.marketplace.connect(user2).fillPodOrder(this.order, 1000, 0, 1000, INTERNAL)).to.revertedWith("SafeMath: subtraction overflow");
+          await expect(this.marketplace.connect(user2).fillPodOrder(this.order, 1000, 0, 1000, INTERNAL)).to.revertedWith("Marketplace: Not enough beans in order.");
         })
       })
 
@@ -1576,7 +1578,7 @@ describe('Marketplace', function () {
         this.interp = interpolate(this.set.xs, this.set.ys);
         this.function = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC];
         this.result = await this.marketplace.connect(user).createDynamicPodOrder('50', '100000', '2500', EXTERNAL, this.function)
-        this.id = await getDOrderId(this.result)
+        this.id = await getDynamicOrderId(this.result)
         this.order = [userAddress, this.id, '100000', '2500', this.function];
       })
 
@@ -1595,7 +1597,7 @@ describe('Marketplace', function () {
         })
 
         it("sell too much", async function () {
-          await expect(this.marketplace.connect(user2).fillPodOrder(this.order, 1000, 0, 1000, INTERNAL)).to.revertedWith("SafeMath: subtraction overflow");
+          await expect(this.marketplace.connect(user2).fillPodOrder(this.order, 1000, 0, 1000, INTERNAL)).to.revertedWith("Marketplace: Not enough beans in order.");
         })
       })
     
@@ -1652,7 +1654,7 @@ describe('Marketplace', function () {
         })
 
         it('Updates the offer', async function () {
-          expect(await this.marketplace.podOrderById(this.id)).to.equal('25'); //bean amt
+          expect(await this.marketplace.podOrderById(this.id)).to.equal('25');
         })
 
         it('Emits an event', async function () {
@@ -1789,7 +1791,7 @@ describe('Marketplace', function () {
         this.interp = interpolate(this.set.xs, this.set.ys);
         this.function = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC];
         this.result = await this.marketplace.connect(user).createDynamicPodOrder('500', '100000', '1000', EXTERNAL, this.function)
-        this.id = await getDOrderId(this.result)
+        this.id = await getDynamicOrderId(this.result)
       })
 
       describe('Cancel owner', async function () {
@@ -1947,7 +1949,5 @@ describe('Marketplace', function () {
         })
       })
     })
-
   })
-  
 })

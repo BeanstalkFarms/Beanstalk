@@ -22,15 +22,12 @@ contract MockMarketplaceFacet is MarketplaceFacet {
     ) public view returns (uint256) {
         return evaluatePPoly(f, x, pieceIndex, evaluationDegree);
     }
-    function _getDynamicListingPrice(PodListing calldata l) external view returns (uint256) {
-        return getDynamicListingPrice(l);
-    }
 
     function _getDynamicOrderAmount(PPoly32 calldata f, uint256 index, uint256 start, uint256 amount) external view returns (uint256) {
         return getDynamicOrderAmount(f, index + start, amount);
     }
 
-    function _findIndex(uint256[32] calldata array, uint256 value) external view returns(uint256) {
+    function _findIndex(uint256[32] calldata array, uint256 value) external pure returns(uint256) {
         uint256 numIntervals = getNumIntervals(array);
         return findIndex(array, value, numIntervals - 1);
     }
