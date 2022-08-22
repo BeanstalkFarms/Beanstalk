@@ -166,6 +166,15 @@ contract Order is Listing {
     */
 
 
+    /**
+        Consider a piecewise with the following breakpoints: [b0, b1, b2, b3, b4]
+        Let us say the start  of our integration falls in the range [b0, b1], and the end of our integration falls in the range [b3, b4].
+        Then our integration splits into: I(start, b1) + I(b1, b2) + I(b2, b3) + I(b3, end).
+    */
+    /**
+    * @notice Calculates the amount of beans needed to fill an order.
+    * @dev integration over multiple pieces of the polynomial pricing function.
+    */
     function getDynamicOrderAmount(
         PPoly32 calldata f,
         uint256 placeInLine, 

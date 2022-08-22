@@ -189,6 +189,8 @@ contract Listing is Dynamic {
     * Pricing
     */
 
+    // If remainder left (always <1 pod) that would otherwise be unpurchaseable
+    // due to rounding from calculating amount, give it to last buyer
     function getRoundedAmount(PodListing calldata l, uint256 beanAmount) internal view returns (uint256) {
         uint256 pricePerPod;
         uint256 amount;
@@ -220,8 +222,6 @@ contract Listing is Dynamic {
      * Helpers
      */
 
-    // If remainder left (always <1 pod) that would otherwise be unpurchaseable
-    // due to rounding from calculating amount, give it to last buyer
     function roundAmount(PodListing calldata l, uint256 amount, uint256 pricePerPod)
         private
         pure

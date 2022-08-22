@@ -23,9 +23,7 @@
         CONSTANT,
         DYNAMIC
     }
-    //polynomials are evaluated at a maximum order of 3 (cubic evaluation)
-    //A piecewise polynomial containing up to 32 polynomials and their corresponding ranges
-
+    
     /**
         Example Piecewise to PPoly32 conversion: 
 
