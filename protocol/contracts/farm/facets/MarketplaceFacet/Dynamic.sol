@@ -26,6 +26,21 @@
     //polynomials are evaluated at a maximum order of 3 (cubic evaluation)
     //A piecewise polynomial containing up to 32 polynomials and their corresponding ranges
 
+    /**
+        Example Piecewise to PPoly32 conversion: 
+
+            Range(0, 1) -> Polynomial(0.25*x^3 + 25*x^2 + x + 1)
+            Range(1, 2) -> Polynomial(0.0125*x^3 + 50*x^2 + x - 2)
+            Range(2, Infinity) -> Polynomial(-1)
+            
+        Resulting PPoly32:
+
+            ranges: [0, 1, 2, 0, 0, ... , 0]
+            values: [1, 1, 25, 25, 2, 1, 50, 125, 1, 0, 0, ... , 0]
+            bases: [0, 0, 0, 2, 0, 0, 0, 4, 0, 0, 0, ... , 0]
+            signs: [true, true, true, true, false, true, true, true, false, false, false, ... , false]
+        
+    */
     struct PPoly32 {
         uint256[32] ranges; //The breakpoints for the piecewise. The last breakpoint in the array is the final interval for the polynomial, extending to infinity.
         uint256[128] values; // [c0_0,c1_0,c2_0,c3_0, ... , c0_31,c1_31,c2_31,c3_31] Contains the coefficients of the polynomial, concatenated according to their piecewise index. The first coefficient is the constant term, the second is the first term, etc.  
