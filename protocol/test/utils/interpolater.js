@@ -12,42 +12,6 @@ const config = {
 
 const math = create(all, config);
 
-function getNumIntervals(array) {
-    var numIntervals = 0;
-    while(numIntervals < 32) {
-        if(array[numIntervals] == 0) break;
-        else if(array[numIntervals] == undefined) break;
-        numIntervals++;
-    }
-
-    return numIntervals;
-}
-
-function findSortedIndex(array, value, high) {
-    if(math.compare(math.bignumber(value), math.bignumber(array[0])) == -1) return 0;
-
-    var low = 0;
-    while(low < high) {
-        if(math.compare(math.bignumber(array[low]), math.bignumber(value)) == 0) return low;
-        else if(math.compare(math.bignumber(array[low]), math.bignumber(value)) == 1) break;
-        else low++;
-    }
-    return low>0?low-1:0;
-}
-
-// function findSortedIndex(array, value, max) { //REDESIGN THIS
-    
-//     var low = 0;
-//     var high = max ? max : getNumIntervals(array) - 1 ;
-//     if(value == 0) return 0;
-//     while (low <= high) {
-//         var mid = math.floor(math.divide(math.add(low, high), 2));
-//         if( math.compare(math.bignumber(array[mid]), math.bignumber(value)) == -1) low = mid + 1;
-//         else high = mid - 1;
-//     }
-//     return low ;
-// }
-
 String.prototype.calculateShifts = function (c) {
     let val = +this;
     if(Math.abs(val) == 0) {
@@ -84,69 +48,89 @@ Number.prototype.calculateShifts = function (counter) {
     return counter;
 }
 
-Number.prototype.muld = function (_v, base) {
-    const value = math.bignumber(this);
-    const multiplier = math.bignumber(_v);
-    const b = math.pow(math.bignumber(10), math.bignumber(base));
-    return math.chain(value).multiply(multiplier).divide(b).done();
+function getNumIntervals(array) {
+    var numIntervals = 0;
+    while(numIntervals < 32) {
+        if(array[numIntervals] == 0) break;
+        else if(array[numIntervals] == undefined) break;
+        numIntervals++;
+    }
+
+    return numIntervals;
 }
+
+function findSortedIndex(array, value, high) {
+    if(math.compare(math.bignumber(value), math.bignumber(array[0])) == -1) return 0;
+    var low = 0;
+    while(low < high) {
+        if(math.compare(math.bignumber(array[low]), math.bignumber(value)) == 0) return low;
+        else if(math.compare(math.bignumber(array[low]), math.bignumber(value)) == 1) break;
+        else low++;
+    }
+    return low>0?low-1:0;
+}
+
+
 
 //javascript implementation from https://www.wikiwand.com/en/Monotone_cubic_interpolation
 function interpolate(xArr, yArr) {
     //set and base cases
-    if(xArr.length != yArr.length) return;
     var maxpieces = 32;
+
+    if(xArr.length != yArr.length) return;
     var length = xArr.length;
-    if(length === 0) { return function(x) { 
-        return {ranges: new Array(32).fill('0'), values: new Array(128).fill('0'), bases: new Array(128).fill(BitDescriptor.fromUint8(0)), signs: new Array(128).fill(BitDescriptor.fromBool(false)), basesPacked: 0, signsPacked: 0}; 
-    }}
-    if(length === 1) { 
-        var ranges = new Array(32).fill('0');
-        ranges[0] = xArr[0].toString();
+    if(length > maxpieces || length < 2) return;
 
-        var bases = new Array(128).fill(BitDescriptor.fromUint8(0));
-        bases[0] = BitDescriptor.fromUint8(math.number(yArr[0]).calculateShifts(25)); 
+    // if(length === 0) {
+    //     return {ranges: new Array(32).fill('0'), values: new Array(128).fill('0'), bases: new Array(128).fill(BitDescriptor.fromUint8(0)), signs: new Array(128).fill(BitDescriptor.fromBool(false)), basesPacked: 0, signsPacked: 0}; 
+    // }
+    // if(length === 1) { 
+    //     var ranges = new Array(32).fill('0');
+    //     ranges[0] = xArr[0].toString();
 
-        var base = math.pow(math.bignumber(10), math.bignumber(math.number(yArr[0]).calculateShifts(25)))
-        var value = new Array(128).fill('0');
-        value[0] = math.format(math.floor(math.abs(math.multiply(yArr[0], base))), {notation: "fixed"});
+    //     var bases = new Array(128).fill(BitDescriptor.fromUint8(0));
+    //     bases[0] = BitDescriptor.fromUint8(math.number(yArr[0]).calculateShifts(25)); 
 
-        var signs = new Array(128).fill(BitDescriptor.fromBool(false));
-        signs[0] = BitDescriptor.fromBool(math.sign(yArr[0]) == 1);
+    //     var base = math.pow(math.bignumber(10), math.bignumber(math.number(yArr[0]).calculateShifts(25)))
+    //     var value = new Array(128).fill('0');
+    //     value[0] = math.format(math.floor(math.abs(math.multiply(yArr[0], base))), {notation: "fixed"});
 
-        const packedBools = BitPacker.pack(signs);
-        const packedBases = BitPacker.pack(bases);
+    //     var signs = new Array(128).fill(BitDescriptor.fromBool(false));
+    //     signs[0] = BitDescriptor.fromBool(math.sign(yArr[0]) == 1);
 
-        const booliterator = BitPacker.createUnpackIterator(packedBools, pattern => {
-            switch(pattern) {
-                case '1': return '1';
-                case '0': return '0';
-                default: return null;
-            }
-        })
+    //     const packedBools = BitPacker.pack(signs);
+    //     const packedBases = BitPacker.pack(bases);
 
-        const baseiterator = BitPacker.createUnpackIterator(packedBases, pattern => {
-            switch(pattern) {
-                case '1': return '1';
-                case '0': return '0';
-                default: return null;
-            }
-        })
+    //     const booliterator = BitPacker.createUnpackIterator(packedBools, pattern => {
+    //         switch(pattern) {
+    //             case '1': return '1';
+    //             case '0': return '0';
+    //             default: return null;
+    //         }
+    //     })
 
-        const boolString = [...booliterator].reverse().join('');
-        const baseArr = [...baseiterator];
+    //     const baseiterator = BitPacker.createUnpackIterator(packedBases, pattern => {
+    //         switch(pattern) {
+    //             case '1': return '1';
+    //             case '0': return '0';
+    //             default: return null;
+    //         }
+    //     })
 
-        var baseInts = [];
-        for(let i = 0; i < 4; i++){
-            //pack 32 bases per baseInt
-            baseInts.push(BigInt("0b" + baseArr.slice((i)*maxpieces*8, (i+1)*maxpieces*8).join('')).toString());
-        }
+    //     const boolString = [...booliterator].reverse().join('');
+    //     const baseArr = [...baseiterator];
 
-        //pack all bools (up to 256) into a single int. in this case there are only 128 bools
-        const boolInt = BigInt("0b" + boolString).toString();
+    //     var baseInts = [];
+    //     for(let i = 0; i < 4; i++){
+    //         //pack 32 bases per baseInt
+    //         baseInts.push(BigInt("0b" + baseArr.slice((i)*maxpieces*8, (i+1)*maxpieces*8).join('')).toString());
+    //     }
 
-        return { ranges: ranges, values: values, bases: bases, signs: signs, basesPacked: baseInts, signsPacked: boolInt}; 
-    }
+    //     //pack all bools (up to 256) into a single int. in this case there are only 128 bools
+    //     const boolInt = BigInt("0b" + boolString).toString();
+
+    //     return { ranges: ranges, values: values, bases: bases, signs: signs, basesPacked: baseInts, signsPacked: boolInt}; 
+    // }
 
     var indexes = [];
     for(let i = 0; i < length; i++) {
@@ -161,15 +145,15 @@ function interpolate(xArr, yArr) {
     for(let i = 0; i < length; i++) {
         
         if(+xArr[indexes[i]] < +xArr[indexes[i-1]]) {
-            xs.push(+xArr[indexes[i-1]] || 0);
+            xs.push(+xArr[indexes[i-1]]);
         } else {
-            xs.push(+xArr[indexes[i]] || 0)
+            xs.push(+xArr[indexes[i]])
         }
 
         if(+yArr[indexes[i]] < +yArr[indexes[i-1]]) {
-            ys.push(yArr[indexes[i-1]] || 0);
+            ys.push(yArr[indexes[i-1]]);
         } else {
-            ys.push(+yArr[indexes[i]] || 0);
+            ys.push(+yArr[indexes[i]]);
         }
     }
 
@@ -367,7 +351,7 @@ function ppval_integrate(f, start, end, pieceIndex) {
 
 function ppval_listing(f, placeInLine) {
     var pieceIndex = findSortedIndex(f.ranges, placeInLine, getNumIntervals(f.ranges) - 1);
-    var y = ppval(f, placeInLine, pieceIndex, 3);
+    var y = ppval(f, placeInLine, pieceIndex);
     return math.format(math.floor(y), {notation:"fixed"});
 
 }
@@ -376,31 +360,36 @@ function ppval_order(f, placeInLine, amount) {
 
     var beanAmount = math.bignumber(0);
     var end = math.add(math.bignumber(placeInLine), math.bignumber(amount));
-    var maxIndex = getNumIntervals(f.ranges);
-    var pieceIndex = findSortedIndex(f.ranges, math.bignumber(placeInLine), maxIndex - 1);
+    var numIntervals = getNumIntervals(f.ranges);
+    var pieceIndex = findSortedIndex(f.ranges, math.bignumber(placeInLine), numIntervals - 1);
 
     var start = math.bignumber(placeInLine);
     var end = math.add(start, math.bignumber(amount));
 
     if(math.compare(start, f.ranges[0]) == -1) start = math.bignumber(f.ranges[0]);
-    if(math.compare(end, f.ranges[maxIndex - 1]) == 1) end = math.bignumber(f.ranges[maxIndex - 1]);
    
     while(math.compare(start, end) == -1) {
+        if(!(math.compare(pieceIndex, numIntervals-1) == 0)) {
+            if(math.compare(end, math.bignumber(f.ranges[pieceIndex + 1])) == 1) {
 
-        if(math.compare(end, math.bignumber(f.ranges[pieceIndex + 1])) == 1) {
-
-            var term = ppval_integrate(f, start, f.ranges[pieceIndex + 1], pieceIndex, 3); 
-            start = math.bignumber(f.ranges[pieceIndex+1]);
-            beanAmount = math.add(beanAmount, term);
-
-            if(pieceIndex < (maxIndex - 1) - 1) pieceIndex++;
-            
-        } else {
-            //integrate from x until end 
-            var term = ppval_integrate(f, start, end, pieceIndex, 3);
+                var term = ppval_integrate(f, start, f.ranges[pieceIndex + 1], pieceIndex); 
+                start = math.bignumber(f.ranges[pieceIndex+1]);
+                beanAmount = math.add(beanAmount, term);
+    
+                if(pieceIndex < (numIntervals - 1)) pieceIndex++;
+                
+            } else {
+                //integrate from x until end 
+                var term = ppval_integrate(f, start, end, pieceIndex);
+                beanAmount = math.add(beanAmount, term);
+                start = end;
+            }
+        }else{
+            var term = ppval_integrate(f, start, end, pieceIndex);
             beanAmount = math.add(beanAmount, term);
             start = end;
         }
+        
         
     }
     return math.format(math.floor(math.divide(beanAmount, 1000000)), {notation: "fixed"});

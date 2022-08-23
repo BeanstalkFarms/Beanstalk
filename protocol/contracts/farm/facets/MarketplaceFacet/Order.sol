@@ -173,7 +173,7 @@ contract Order is Listing {
     */
     /**
     * @notice Calculates the amount of beans needed to fill an order.
-    * @dev integration over multiple pieces of the polynomial pricing function.
+    * @dev Integration over a range that falls within piecewise domain.
     */
     function getDynamicOrderAmount(
         PPoly32 calldata f,
@@ -189,20 +189,27 @@ contract Order is Listing {
 
         uint256 end = placeInLine + amount;
 
-        if(start < f.ranges[0]) start = f.ranges[0];
-        if(end > f.ranges[numIntervals - 1]) end = f.ranges[numIntervals - 1]; 
+        if(start < f.ranges[0]) start = f.ranges[0]; //limit the start of the integration to the start of the function domain
 
-        while(start < end) {             
-            //if the integration reaches into the next piece, then break the integration at the end of the current piece
-            if(end > f.ranges[pieceIndex + 1]) {
-                //current end index reaches into next piecewise domain
-                beanAmount +=  evaluatePPolyI(f, start, f.ranges[pieceIndex + 1], pieceIndex);
-                start = f.ranges[pieceIndex+1]; // set place in line to the end index
-                if(pieceIndex < (numIntervals - 1) - 1) pieceIndex++; //increment piece index if not at the last piece
+        while(start < end) {
+            //if on the last piece, complete the remainder of the integration in the current piece
+            if(pieceIndex != numIntervals - 1) {
+                //if the integration reaches into the next piece, then break the integration at the end of the current piece
+                if(end > f.ranges[pieceIndex + 1]) {
+                    //current end index reaches into next piecewise domain
+                    beanAmount +=  evaluatePPolyI(f, start, f.ranges[pieceIndex + 1], pieceIndex);
+                    start = f.ranges[pieceIndex + 1]; // set place in line to the end index
+                    if(pieceIndex < (numIntervals - 1)) pieceIndex++; //increment piece index if not at the last piece
+                } else {
+                    
+                    beanAmount += evaluatePPolyI(f, start, end, pieceIndex);
+                    start = end;
+                }
             } else {
                 beanAmount += evaluatePPolyI(f, start, end, pieceIndex);
                 start = end;
             }
+            
         }
 
         return beanAmount / 1000000;

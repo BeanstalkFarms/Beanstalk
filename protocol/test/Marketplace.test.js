@@ -84,6 +84,7 @@ describe('Marketplace', function () {
     let idx = (receipt.events?.filter((x) => { return x.event == ("PodOrderCreated") }))[0].args.id;
     return idx;
   }
+  
   const getDynamicOrderId = async function (tx) {
     let receipt = await tx.wait();
     let idx = (receipt.events?.filter((x) => { return x.event == "DynamicPodOrderCreated" }))[0].args.id;
