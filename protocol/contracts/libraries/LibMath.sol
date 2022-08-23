@@ -11,8 +11,6 @@ pragma experimental ABIEncoderV2;
 **/
 library LibMath {
 
-    uint224 constant Q112 = 2**112;
-
     function sqrt(uint x) internal pure returns (uint y) {
         uint z = (x + 1) / 2;
         y = x;
@@ -22,13 +20,24 @@ library LibMath {
         }
     }
 
-    // encode a uint112 as a UQ112x112
-    function encode(uint112 y) internal pure returns (uint224 z) {
-        z = uint224(y) * Q112; // never overflows
-    }
+    function nthRoot(uint _a, uint _n) internal pure returns(uint) {
+        assert (_n > 1);
+        // The scale factor is a crude way to turn everything into integer calcs.
+        // Actually do (a * (10 ^ n)) ^ (1/n)
+        uint a0 = 10 ** _n * _a;
 
-    // divide a UQ112x112 by a uint112, returning a UQ112x112
-    function uqdiv(uint224 x, uint112 y) internal pure returns (uint224 z) {
-        z = x / uint224(y);
+        uint xNew = 10;
+        uint x;
+        while (xNew != x) {
+            x = xNew;
+            uint t0 = x ** (_n - 1);
+            if (x * t0 > a0) {
+                xNew = x - (x - a0 / t0) / _n;
+            } else {
+                xNew = x + (a0 / t0 - x) / _n;
+            }
+        }
+
+        return (xNew + 5) / 10;
     }
 }

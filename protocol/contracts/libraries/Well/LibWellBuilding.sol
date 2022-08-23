@@ -7,7 +7,8 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "./LibWellStorage.sol";
-import "./LibConstantProductWell.sol";
+import "./WellN/LibConstantProductWellN.sol";
+import "./Well2/LibConstantProductWell2.sol";
 import "../../tokens/ERC20/WellERC20.sol";
 
 /**
@@ -43,7 +44,7 @@ library LibWellBuilding {
         bytes calldata typeData,
         string[] calldata symbols
     ) internal returns (address wellId) {
-        checkWellValidity(tokens, wellType, typeData);
+        require(isWellValid(tokens, wellType, typeData), "LibWell: Well not valid.");
         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
 
         string memory name = symbols[0];
@@ -65,9 +66,14 @@ library LibWellBuilding {
         s.indices[s.numberOfWells] = wellId;
         s.numberOfWells = s.numberOfWells.add(1);
 
-        for (uint256 i; i < tokens.length; i++) {
-            s.ws[wh].balances.push(0);
-            s.ws[wh].cumulativeBalances.push(0);
+        if (tokens.length == 2) {
+            s.w2s[wh].lastTimestamp = uint32(block.timestamp); // TODO: check if mod needed
+        } else {
+            for (uint256 i; i < tokens.length; i++) {
+                s.ws[wh].balances.push(0);
+                s.ws[wh].cumulativeBalances.push(0);
+            }
+            s.ws[wh].lastTimestamp = uint32(block.timestamp);
         }
 
         s.wi[wellId] = w;
@@ -112,22 +118,19 @@ library LibWellBuilding {
      * Internal
      **/
 
-    function checkWellValidity(
+    function isWellValid(
         IERC20[] calldata tokens,
         LibWellStorage.WellType wellType,
         bytes calldata typeData
-    ) internal pure {
+    ) internal pure returns (bool) {
         for (uint256 i; i < tokens.length - 1; i++) {
             require(
                 tokens[i] < tokens[i + 1],
                 "LibWell: Tokens not alphabetical"
             );
         }
-        if (wellType == LibWellStorage.WellType.CONSTANT_PRODUCT)
-            require(
-                LibConstantProductWell.isWellInfoValid(tokens, typeData),
-                "LibWell: invalid well"
-            );
+        if (wellType == LibWellStorage.WellType.CONSTANT_PRODUCT) 
+            return typeData.length == 0;
         else revert("LibWell: Well type not supported");
     }
 }

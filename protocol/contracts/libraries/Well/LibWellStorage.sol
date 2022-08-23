@@ -24,10 +24,12 @@ library LibWellStorage {
         bytes typeData; // Params specific to the well type
     }
 
+    // For gas efficiency reasons, Wells with 2 tokens use a different storage struct.
+
     // Well2State is the state struct for Wells with exactly 2 tokens.
     struct Well2State {
-        uint128 balance0; // token balance of token0 in the Well
-        uint128 balance1; // token balance of token1 in the Well
+        uint112 balance0; // token balance of token0 in the Well
+        uint112 balance1; // token balance of token1 in the Well
         uint32 lastTimestamp; // Last Timestamp the pool was interacted with
         uint256 cumulativeBalance0; // Cumulative balance of token0 in the Well
         uint256 cumulativeBalance1; // Cumulative balance of token1 in the Well
@@ -41,8 +43,8 @@ library LibWellStorage {
     }
 
     struct TypeInfo {
-        bool registered;
-        string[] signature;
+        bool registered; // Whether the type has been registered or not
+        string[] signature; // The typeData signature
     }
 
     struct WellStorage {
@@ -70,6 +72,15 @@ library LibWellStorage {
         ws = wellStorage().ws[computeWellHash(w)];
     }
 
+    function well2State(WellInfo calldata w)
+        internal
+        view
+        returns (Well2State storage ws)
+    {
+        ws = wellStorage().w2s[computeWellHash(w)];
+    }
+
+    // Well storage is indexed by the hash of the WellInfo struct.
     function computeWellHash(LibWellStorage.WellInfo memory w)
         internal
         pure

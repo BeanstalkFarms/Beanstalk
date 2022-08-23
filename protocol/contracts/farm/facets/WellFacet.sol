@@ -72,19 +72,19 @@ contract WellFacet is ReentrancyGuard {
 
     function addLiquidity(
         LibWellStorage.WellInfo calldata w,
-        uint128[] memory tokenAmounts,
+        uint256[] memory tokenAmounts,
         uint256 minLPAmountOut,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
     ) external payable nonReentrant returns (uint256 lpAmountOut) {
         for (uint i; i < tokenAmounts.length; ++i)
-            tokenAmounts[i] = uint128(w.tokens[i].receiveToken(uint256(tokenAmounts[i]), msg.sender, fromMode)); // Downcasting to uint128 is okay because result is < tokensAmounts[i]
+            tokenAmounts[i] = w.tokens[i].receiveToken(tokenAmounts[i], msg.sender, fromMode);
         lpAmountOut = LibWell.addLiquidity(w, tokenAmounts, minLPAmountOut, msg.sender, toMode);
     }
 
     function getAddLiquidityOut(
          LibWellStorage.WellInfo calldata w,
-        uint128[] calldata tokenAmounts
+        uint256[] calldata tokenAmounts
     ) external view returns (uint256 lpAmountOut) {
         lpAmountOut = LibWell.getAddLiquidityOut(w, tokenAmounts);
     }
@@ -96,10 +96,10 @@ contract WellFacet is ReentrancyGuard {
     function removeLiquidity(
          LibWellStorage.WellInfo calldata w,
         uint256 lpAmountIn,
-        uint128[] calldata minTokenAmountsOut,
+        uint256[] calldata minTokenAmountsOut,
         LibTransfer.From fromMode, 
         LibTransfer.To toMode
-    ) external payable nonReentrant returns (uint128[] memory tokenAmountsOut) {
+    ) external payable nonReentrant returns (uint256[] memory tokenAmountsOut) {
         tokenAmountsOut = LibWell.removeLiquidity(w, lpAmountIn, minTokenAmountsOut, msg.sender, fromMode);
         for (uint i; i < tokenAmountsOut.length; ++i)
             w.tokens[i].sendToken(tokenAmountsOut[i], msg.sender, toMode);
@@ -108,7 +108,7 @@ contract WellFacet is ReentrancyGuard {
     function getRemoveLiquidityOut( LibWellStorage.WellInfo calldata w, uint256 lpAmountIn)
         external
         view
-        returns (uint128[] memory tokenAmountsOut) {
+        returns (uint256[] memory tokenAmountsOut) {
             tokenAmountsOut = LibWell.getRemoveLiquidityOut(w, lpAmountIn);
         }
 
@@ -119,7 +119,7 @@ contract WellFacet is ReentrancyGuard {
         uint256 minTokenAmountOut,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable nonReentrant returns (uint128 tokenAmountOut) {
+    ) external payable nonReentrant returns (uint256 tokenAmountOut) {
         tokenAmountOut = LibWell.removeLiquidityOneToken(w, token, lpAmountIn, minTokenAmountOut, msg.sender, fromMode);
         token.sendToken(uint256(tokenAmountOut), msg.sender, toMode);
     }
@@ -135,7 +135,7 @@ contract WellFacet is ReentrancyGuard {
     function removeLiquidityImbalanced(
         LibWellStorage.WellInfo calldata w,
         uint256 maxLPAmountIn,
-        uint128[] calldata tokenAmountsOut,
+        uint256[] calldata tokenAmountsOut,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
     ) external payable nonReentrant returns (uint256 lpAmountIn) {
@@ -146,7 +146,7 @@ contract WellFacet is ReentrancyGuard {
 
     function getRemoveLiquidityImbalancedIn(
         LibWellStorage.WellInfo calldata w,
-        uint128[] calldata amountsOut
+        uint256[] calldata amountsOut
     ) external view returns (uint256 lpAmountIn) {
         lpAmountIn = LibWell.getRemoveLiquidityImbalanced(w, amountsOut);
     }
@@ -163,6 +163,7 @@ contract WellFacet is ReentrancyGuard {
             getWellBalances(wellId)
         );
     }
+
     function getTokens(address wellId) external view returns (IERC20[] memory tokens) {
         tokens = getWellInfo(wellId).tokens;
     }
@@ -198,7 +199,7 @@ contract WellFacet is ReentrancyGuard {
         return getWell(getWellIdAtIndex(index));
     }
 
-    function getWell(address wellId) public view returns ( LibWellStorage.WellInfo memory info,  LibWellStorage.WellState memory state, uint256 lpSupply) {
+    function getWell(address wellId) public view returns (LibWellStorage.WellInfo memory info,  LibWellStorage.WellState memory state, uint256 lpSupply) {
         info = getWellInfo(wellId);
         state = getWellState(wellId);
         lpSupply = LibWell.getK(
@@ -208,11 +209,33 @@ contract WellFacet is ReentrancyGuard {
         );
     }
 
-    function getWellStateFromHash(bytes32 wellHash) public view returns ( LibWellStorage.WellState memory state) {
-         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
-        state = s.ws[wellHash];
+    function getWellStateFromHash(bytes32 wellHash) public view returns (LibWellStorage.WellState memory state) {
+        LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
+        if (s.w2s[wellHash].lastTimestamp > 0) state = getWellStateFromWell2Hash(wellHash);
+        else state = s.ws[wellHash];
     }
+
+    function getWellStateFromWell2Hash(bytes32 wellHash) public view returns (LibWellStorage.WellState memory s) {
+        LibWellStorage.Well2State memory s2 = LibWellStorage.wellStorage().w2s[wellHash];
+        s.balances = new uint128[](2);
+        s.balances[0] = s2.balance0;
+        s.balances[1] = s2.balance1;
+        s.cumulativeBalances = new uint256[](2);
+        s.cumulativeBalances[0] = s2.cumulativeBalance0;
+        s.cumulativeBalances[1] = s2.cumulativeBalance1;
+        s.lastTimestamp = s2.lastTimestamp;
+    }
+
     function computeWellHash( LibWellStorage.WellInfo calldata p) external pure returns (bytes32 wellHash) {
         wellHash = LibWellStorage.computeWellHash(p);
+    }
+
+    /**
+     * Well2
+    **/
+
+    function getWell2StateFromHash(bytes32 wellHash) public view returns (LibWellStorage.Well2State memory state) {
+        LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
+        state = s.w2s[wellHash];
     }
 }
