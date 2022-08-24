@@ -7,9 +7,10 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "./LibWellStorage.sol";
-import "./WellN/LibConstantProductWellN.sol";
+import "./WellN/LibWellN.sol";
 import "./Well2/LibConstantProductWell2.sol";
 import "../../tokens/ERC20/WellERC20.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -69,11 +70,13 @@ library LibWellBuilding {
         if (tokens.length == 2) {
             s.w2s[wh].lastTimestamp = uint32(block.timestamp); // TODO: check if mod needed
         } else {
-            for (uint256 i; i < tokens.length; i++) {
-                s.ws[wh].balances.push(0);
-                s.ws[wh].cumulativeBalances.push(0);
+            uint256 iMax = tokens.length - 1;
+            for (uint256 i; i < iMax; i++) {
+                s.wNs[wh].balances.push(0);
+                s.wNs[wh].cumulativeBalances.push(0);
             }
-            s.ws[wh].lastTimestamp = uint32(block.timestamp);
+            s.wNs[wh].balances.push(0);
+            s.wNs[wh].lastTimestamp = uint32(block.timestamp);
         }
 
         s.wi[wellId] = w;
@@ -96,8 +99,8 @@ library LibWellBuilding {
 
         s.wi[w.wellId] = w;
         s.wh[w.wellId] = newWH;
-        s.ws[newWH] = s.ws[prevWH];
-        delete s.ws[prevWH];
+        // s.ws[newWH] = s.ws[prevWH]; //ToDo: fix
+        // delete s.ws[prevWH];
 
         emit ModifyWell(w.wellId, w.wellType, w.typeData, prevWH, newWH);
     }

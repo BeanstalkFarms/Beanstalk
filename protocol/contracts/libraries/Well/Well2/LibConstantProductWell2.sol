@@ -19,15 +19,15 @@ library LibConstantProductWell2 {
     using LibMath for uint256;
 
     function getK(
-        uint112 x0,
-        uint112 x1
+        uint128 x0,
+        uint128 x1
     ) internal pure returns (uint256 k) {
         k = uint256(x0).mul(uint256(x1));
         k = k.sqrt().mul(2);
     }
 
     function getY(
-        uint112 x,
+        uint128 x,
         uint256 k
     ) internal pure returns (uint256) {
         return ((k / 2) ** 2).div(x); //unchecked math is safe here.

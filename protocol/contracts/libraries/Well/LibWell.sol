@@ -61,6 +61,7 @@ library LibWell {
         return LibWellN.getSwap(w, iToken, jToken, dx);
     }
 
+    // By using a negative dx and 
     function swap(
         LibWellStorage.WellInfo calldata w,
         IERC20 iToken,

@@ -12,6 +12,7 @@ import "../LibWellStorage.sol";
 import "../../LibSafeMath128.sol";
 import "../../../tokens/ERC20/WellERC20.sol";
 import "../../Token/LibTransfer.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -57,7 +58,7 @@ library LibWellN {
         IERC20 jToken,
         int256 dx
     ) internal view returns (int256 dy) {
-        LibWellStorage.WellState storage ws = LibWellStorage.wellState(w);
+        LibWellStorage.WellNState storage ws = LibWellStorage.wellNState(w);
         (uint256 i, uint256 j) = getIJ(w.tokens, iToken, jToken);
         (, dy) = _getSwap(w.wellType, w.typeData, ws.balances, i, j, dx);
     }
@@ -69,7 +70,7 @@ library LibWellN {
         int256 dx,
         int256 minDy
     ) internal returns (int256 dy) {
-        LibWellStorage.WellState storage ws = LibWellStorage.wellState(w);
+        LibWellStorage.WellNState storage ws = LibWellStorage.wellNState(w);
         update(ws);
         (uint256 i, uint256 j) = getIJ(w.tokens, iToken, jToken);
         (ws.balances, dy) = _getSwap(
@@ -116,7 +117,7 @@ library LibWellN {
         address recipient,
         LibTransfer.To toMode
     ) internal returns (uint256 amountOut) {
-        LibWellStorage.WellState storage ws = LibWellStorage.wellState(w);
+        LibWellStorage.WellNState storage ws = LibWellStorage.wellNState(w);
         update(ws);
         uint256 k1 = getK(w.wellType, w.typeData, ws.balances);
         for (uint256 i; i < w.tokens.length; ++i)
@@ -133,7 +134,7 @@ library LibWellN {
         view
         returns (uint256 amountOut)
     {
-        LibWellStorage.WellState storage ws = LibWellStorage.wellState(w);
+        LibWellStorage.WellNState storage ws = LibWellStorage.wellNState(w);
         uint256 k1 = getK(w.wellType, w.typeData, ws.balances);
         uint128[] memory balances = new uint128[](w.tokens.length);
         for (uint256 i; i < w.tokens.length; ++i)
@@ -153,7 +154,7 @@ library LibWellN {
         address recipient,
         LibTransfer.From fromMode
     ) internal returns (uint256[] memory tokenAmountsOut) {
-        LibWellStorage.WellState storage ws = LibWellStorage.wellState(w);
+        LibWellStorage.WellNState storage ws = LibWellStorage.wellNState(w);
         update(ws);
         uint256 k = getK(w.wellType, w.typeData, ws.balances);
         tokenAmountsOut = new uint256[](w.tokens.length);
@@ -174,7 +175,7 @@ library LibWellN {
         view
         returns (uint256[] memory tokenAmountsOut)
     {
-        LibWellStorage.WellState storage ws = LibWellStorage.wellState(w);
+        LibWellStorage.WellNState storage ws = LibWellStorage.wellNState(w);
         uint256 k = getK(w.wellType, w.typeData, ws.balances);
         tokenAmountsOut = new uint256[](w.tokens.length);
         for (uint256 i; i < w.tokens.length; ++i) {
@@ -195,7 +196,7 @@ library LibWellN {
         LibTransfer.From fromMode
     ) internal returns (uint256 tokenAmountOut) {
         uint128 y;
-        LibWellStorage.WellState storage ws = LibWellStorage.wellState(w);
+        LibWellStorage.WellNState storage ws = LibWellStorage.wellNState(w);
         update(ws);
         uint256 i = getI(w.tokens, token);
         (tokenAmountOut, y) = _getRemoveLiquidityOneTokenOut(w, ws, i, lpAmountIn);
@@ -210,14 +211,14 @@ library LibWellN {
         IERC20 token,
         uint256 lpAmountIn
     ) internal view returns (uint256 tokenAmountOut) {
-        LibWellStorage.WellState storage ws = LibWellStorage.wellState(w);
+        LibWellStorage.WellNState storage ws = LibWellStorage.wellNState(w);
         uint256 i = getI(w.tokens, token);
         (tokenAmountOut, ) = _getRemoveLiquidityOneTokenOut(w, ws, i, lpAmountIn);
     }
 
     function _getRemoveLiquidityOneTokenOut(
         LibWellStorage.WellInfo calldata w,
-        LibWellStorage.WellState storage ws,
+        LibWellStorage.WellNState storage ws,
         uint256 i,
         uint256 lpAmountIn
     ) private view returns (uint256 tokenAmountOut, uint128 y) {
@@ -238,7 +239,7 @@ library LibWellN {
         address recipient,
         LibTransfer.From fromMode
     ) internal returns (uint256 lpAmountIn) {
-        LibWellStorage.WellState storage ws = LibWellStorage.wellState(w);
+        LibWellStorage.WellNState storage ws = LibWellStorage.wellNState(w);
         update(ws);
         (lpAmountIn, ws.balances) = _getRemoveLiquidityImbalanced(w, ws.balances, tokenAmountsOut);
         require(lpAmountIn <= maxLPAmountIn, "LibWell: in too high.");
@@ -250,7 +251,7 @@ library LibWellN {
         LibWellStorage.WellInfo calldata w,
         uint256[] calldata tokenAmountsOut
     ) internal view returns (uint256 lpAmountIn) {
-        LibWellStorage.WellState storage ws = LibWellStorage.wellState(w);
+        LibWellStorage.WellNState storage ws = LibWellStorage.wellNState(w);
         (lpAmountIn, ) = _getRemoveLiquidityImbalanced(w, ws.balances, tokenAmountsOut);
     }
 
@@ -258,7 +259,7 @@ library LibWellN {
         LibWellStorage.WellInfo calldata w,
         uint128[] memory balances,
         uint256[] calldata tokenAmountsOut
-    ) private view returns (uint256, uint128[] memory) {
+    ) private pure returns (uint256, uint128[] memory) {
         uint256 k1 = getK(w.wellType, w.typeData, balances);
         for (uint i; i < w.tokens.length; ++i) {
             balances[i] = balances[i].sub(uint128(tokenAmountsOut[i]));
@@ -285,7 +286,7 @@ library LibWellN {
     function getI(
         IERC20[] memory tokens,
         IERC20 token
-    ) private pure returns (uint256) {
+    ) private pure returns (uint256 from) {
         for (uint i; i < tokens.length; ++i)
             if (token == tokens[i]) return i;
     }
@@ -316,16 +317,36 @@ library LibWellN {
     }
 
     function update(
-        LibWellStorage.WellState storage ws
+        LibWellStorage.WellNState storage ws
     ) private {
         uint32 timestamp = uint32(block.timestamp);
         uint32 passedTime = timestamp - ws.lastTimestamp; // ws.lastTimestamp <= block.timestamp
         if (passedTime > 0) {
             // Overflow on addition is okay
             // overflow on multication is not possible b/c ws.balanceX <= (uint112).max and passedTime <= (uint32).max
-            for (uint256 i; i < ws.cumulativeBalances.length; ++i)
-                ws.cumulativeBalances[i] = ws.cumulativeBalances[i] + uint256(ws.balances[i]) * passedTime;
+            uint256 i;
+            for (i; i < ws.cumulativeBalances.length; ++i) {
+                ws.cumulativeBalances[i] = ws.cumulativeBalances[i] + uint224(ws.balances[i]) * passedTime;
+            }
+            ws.lastCumulativeBalance = ws.lastCumulativeBalance + uint224(ws.balances[i]) * passedTime;
             ws.lastTimestamp = uint32(block.timestamp);
         }
+    }
+
+    function getCumulativeBalances(LibWellStorage.WellNState storage s) internal view returns (uint224[] memory cumulativeBalances) {
+        cumulativeBalances = new uint224[](s.cumulativeBalances.length+1);
+        uint i;
+        for (i; i < s.cumulativeBalances.length; ++i) {
+            cumulativeBalances[i] = s.cumulativeBalances[i];
+        }
+        cumulativeBalances[i] = s.lastCumulativeBalance;
+    }
+
+
+    function getWellState(bytes32 wellHash) internal view returns (LibWellStorage.WellState memory s) {
+        LibWellStorage.WellNState storage sN = LibWellStorage.wellStorage().wNs[wellHash];
+        s.balances = sN.balances;
+        s.cumulativeBalances = getCumulativeBalances(sN);
+        s.lastTimestamp = sN.lastTimestamp;
     }
 }

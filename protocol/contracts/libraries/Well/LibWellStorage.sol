@@ -25,20 +25,27 @@ library LibWellStorage {
     }
 
     // For gas efficiency reasons, Wells with 2 tokens use a different storage struct.
-
-    // Well2State is the state struct for Wells with exactly 2 tokens.
-    struct Well2State {
-        uint112 balance0; // token balance of token0 in the Well
-        uint112 balance1; // token balance of token1 in the Well
-        uint32 lastTimestamp; // Last Timestamp the pool was interacted with
-        uint256 cumulativeBalance0; // Cumulative balance of token0 in the Well
-        uint256 cumulativeBalance1; // Cumulative balance of token1 in the Well
-    }
-
     // WellState is the state struct for Wells with more than 2 tokens.
     struct WellState {
         uint128[] balances; // well balances of each token
-        uint256[] cumulativeBalances; // well balances times time
+        uint224[] cumulativeBalances; // well balances times time
+        uint32 lastTimestamp; // Last timestamp someone interacted with well
+    }
+
+    // Well2State is the state struct for Wells with exactly 2 tokens.
+    struct Well2State {
+        uint128 balance0; // token balance of token0 in the Well
+        uint128 balance1; // token balance of token1 in the Well
+        uint224 cumulativeBalance0; // Cumulative balance of token0 in the Well
+        uint224 cumulativeBalance1; // Cumulative balance of token1 in the Well
+        uint32 lastTimestamp; // Last Timestamp the pool was interacted with
+    }
+
+        // WellState is the state struct for Wells with more than 2 tokens.
+    struct WellNState {
+        uint128[] balances; // well balances of each token
+        uint224[] cumulativeBalances; // well balances times time
+        uint224 lastCumulativeBalance;
         uint32 lastTimestamp; // Last timestamp someone interacted with well
     }
 
@@ -54,7 +61,7 @@ library LibWellStorage {
         mapping(address => WellInfo) wi; // Stores a mapping from id to well info. Only used in view functions.
         mapping(address => bytes32) wh; // Stores a mapping from id to hash. Only used in view functions.
         mapping(bytes32 => Well2State) w2s; // Stores a mapping from hash to state.
-        mapping(bytes32 => WellState) ws; // Stores a mapping from hash to state.
+        mapping(bytes32 => WellNState) wNs; // Stores a mapping from hash to state.
     }
 
     function wellStorage() internal pure returns (WellStorage storage s) {
@@ -64,12 +71,12 @@ library LibWellStorage {
         }
     }
 
-    function wellState(WellInfo calldata w)
+    function wellNState(WellInfo calldata w)
         internal
         view
-        returns (WellState storage ws)
+        returns (WellNState storage ws)
     {
-        ws = wellStorage().ws[computeWellHash(w)];
+        ws = wellStorage().wNs[computeWellHash(w)];
     }
 
     function well2State(WellInfo calldata w)

@@ -171,7 +171,7 @@ contract WellFacet is ReentrancyGuard {
     function getWellBalances(address wellId) public view returns (uint128[] memory balances) {
         balances = getWellState(wellId).balances;
     }
-    function getLastCumulativeBalances(address wellId) external view returns (uint256[] memory cumulativeBalances) {
+    function getLastCumulativeBalances(address wellId) external view returns (uint224[] memory cumulativeBalances) {
         cumulativeBalances = getWellState(wellId).cumulativeBalances;
     }
     function getLastTimestamp(address wellId) external view returns (uint32 lastTimestamp) {
@@ -211,19 +211,8 @@ contract WellFacet is ReentrancyGuard {
 
     function getWellStateFromHash(bytes32 wellHash) public view returns (LibWellStorage.WellState memory state) {
         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
-        if (s.w2s[wellHash].lastTimestamp > 0) state = getWellStateFromWell2Hash(wellHash);
-        else state = s.ws[wellHash];
-    }
-
-    function getWellStateFromWell2Hash(bytes32 wellHash) public view returns (LibWellStorage.WellState memory s) {
-        LibWellStorage.Well2State memory s2 = LibWellStorage.wellStorage().w2s[wellHash];
-        s.balances = new uint128[](2);
-        s.balances[0] = s2.balance0;
-        s.balances[1] = s2.balance1;
-        s.cumulativeBalances = new uint256[](2);
-        s.cumulativeBalances[0] = s2.cumulativeBalance0;
-        s.cumulativeBalances[1] = s2.cumulativeBalance1;
-        s.lastTimestamp = s2.lastTimestamp;
+        if (s.w2s[wellHash].lastTimestamp > 0) state = LibWell2.getWellState(wellHash);
+        else state = LibWellN.getWellState(wellHash);
     }
 
     function computeWellHash( LibWellStorage.WellInfo calldata p) external pure returns (bytes32 wellHash) {
