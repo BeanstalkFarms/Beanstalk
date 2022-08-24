@@ -61,6 +61,9 @@ contract Order is Listing {
     * Create
     */
     // Note: Orders changed and now can accept an arbitary amount of beans, possibly higher than the value of the order
+    /* Note: Fixed pod orders store at s.podOrders[id] the amount of pods that they order 
+    * whereas dynamic orders store the amount of beans used to make the order 
+    */
     function _createPodOrder(
         uint256 beanAmount,
         uint24 pricePerPod,
@@ -72,10 +75,9 @@ contract Order is Listing {
         id = createFixedOrderId(msg.sender, pricePerPod, maxPlaceInLine);
 
         if (s.podOrders[id] > 0) _cancelPodOrder(pricePerPod, maxPlaceInLine, LibTransfer.To.INTERNAL);
-        s.podOrders[id] = beanAmount;
-
-        
-        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine);
+        uint256 amount = (beanAmount * 1000000) / pricePerPod;
+        s.podOrders[id] = amount;
+        emit PodOrderCreated(msg.sender, id, amount, pricePerPod, maxPlaceInLine);
     }
 
     function _createDynamicPodOrder(
@@ -113,13 +115,14 @@ contract Order is Listing {
 
         if(o.f.mode == EvaluationMode.Fixed) {
             id = createFixedOrderId(o.account, o.pricePerPod, o.maxPlaceInLine);
+            s.podOrders[id] = s.podOrders[id].sub(amount, "Marketplace: Not enough pods in order.");
             costInBeans = amount.mul(o.pricePerPod).div(1000000);
         } else {
             id = createDynamicOrderId(o.account, o.pricePerPod, o.maxPlaceInLine, o.f.breakpoints, o.f.constants, o.f.packedBases, o.f.packedSigns);
             costInBeans = getDynamicOrderAmount(o.f, index + start - s.f.harvestable, amount);
+            s.podOrders[id] = s.podOrders[id].sub(costInBeans, "Marketplace: Not enough beans in order.");
         }
 
-        s.podOrders[id] = s.podOrders[id].sub(costInBeans, "Marketplace: Not enough beans in order.");
         LibTransfer.sendToken(C.bean(), costInBeans, msg.sender, mode);
         
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
@@ -140,10 +143,9 @@ contract Order is Listing {
         LibTransfer.To mode
     ) internal {
         bytes32 id = createFixedOrderId(msg.sender, pricePerPod, maxPlaceInLine);
-        uint256 amountBeans = s.podOrders[id];
+        uint256 amountBeans = (pricePerPod * s.podOrders[id]) / 1000000;
         LibTransfer.sendToken(C.bean(), amountBeans, msg.sender, mode);
         delete s.podOrders[id];
-
         emit PodOrderCancelled(msg.sender, id);
     }
 
@@ -225,6 +227,7 @@ contract Order is Listing {
     ) internal pure returns (bytes32 id) {
         id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine));
     }
+
     function createDynamicOrderId(
         address account,
         uint24 pricePerPod,

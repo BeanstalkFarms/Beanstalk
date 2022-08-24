@@ -142,17 +142,25 @@ contract MarketplaceFacet is Order {
     function podOrder(
         address account,
         uint24 pricePerPod,
-        uint256 maxPlaceInLine,
-        bool isFixed,
-        PiecewisePolynomial calldata f
+        uint256 maxPlaceInLine
     ) external view returns (uint256) {
         return s.podOrders[
-            isFixed ? 
             createFixedOrderId(
                 account, 
                 pricePerPod, 
                 maxPlaceInLine
-            ) : createDynamicOrderId(
+            )
+        ];
+    }
+
+    function dynamicPodOrder(
+        address account,
+        uint24 pricePerPod,
+        uint256 maxPlaceInLine,
+        PiecewisePolynomial calldata f
+    ) external view returns (uint256) {
+        return s.podOrders[
+            createDynamicOrderId(
                 account, 
                 pricePerPod, 
                 maxPlaceInLine, 

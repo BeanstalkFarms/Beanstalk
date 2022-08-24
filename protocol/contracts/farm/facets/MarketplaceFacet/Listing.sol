@@ -236,7 +236,7 @@ contract Listing is Dynamic {
         if (l.f.mode == EvaluationMode.Fixed) {
             amount = (beanAmount * 1000000) / l.pricePerPod;
             remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
-            if(remainingAmount < (1000000 / l.pricePerPod)) amount = l.amount;
+            if(remainingAmount <= (1000000 / l.pricePerPod)) amount = l.amount;
             return amount;
         } else {
             uint24 pricePerPod = uint24(evaluatePolynomial(
@@ -246,7 +246,7 @@ contract Listing is Dynamic {
             ));
             amount = (beanAmount * 1000000) / pricePerPod;
             remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
-            if(remainingAmount < (1000000 / pricePerPod)) amount = l.amount;
+            if(remainingAmount <= (1000000 / pricePerPod)) amount = l.amount;
             return amount;
 
         }

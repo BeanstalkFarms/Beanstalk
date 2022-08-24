@@ -33,10 +33,10 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
   }
 
   if (mock && reset) {
-    await network.provider.request({
-      method: "hardhat_reset",
-      params: [],
-    });
+    // await network.provider.request({
+    //   method: "hardhat_reset",
+    //   params: [],
+    // });
   }
 
   const accounts = await ethers.getSigners()
