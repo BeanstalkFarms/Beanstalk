@@ -18,18 +18,18 @@ library LibConstantProductWell2 {
     using SafeMath for uint256;
     using LibMath for uint256;
 
-    function getK(
+    function getD(
         uint128 x0,
         uint128 x1
-    ) internal pure returns (uint256 k) {
-        k = uint256(x0).mul(uint256(x1));
-        k = k.sqrt().mul(2);
+    ) internal pure returns (uint256 d) {
+        d = uint256(x0).mul(uint256(x1));
+        d = d.sqrt().mul(2);
     }
 
     function getY(
         uint128 x,
-        uint256 k
+        uint256 d
     ) internal pure returns (uint256) {
-        return ((k / 2) ** 2).div(x); //unchecked math is safe here.
+        return ((d / 2) ** 2).div(x); //unchecked math is safe here.
     }
 }

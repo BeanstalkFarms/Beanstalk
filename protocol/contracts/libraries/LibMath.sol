@@ -40,4 +40,10 @@ library LibMath {
 
         return (xNew + 5) / 10;
     }
+
+    function getLastHourstamp() internal view returns (uint32 lastHourstamp, bool even) {
+        lastHourstamp = uint32(block.timestamp)/3600-1;
+        even = lastHourstamp%2 == 0;
+        lastHourstamp = lastHourstamp*3600;
+    }
 }

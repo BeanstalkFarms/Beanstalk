@@ -152,20 +152,43 @@ contract WellFacet is ReentrancyGuard {
     }
 
     /**
-     * Getters
+     * Info
     **/
 
-    function getK(address wellId) public view returns (uint256 k) {
+    function getTokens(address wellId) external view returns (IERC20[] memory tokens) {
+        tokens = getWellInfo(wellId).tokens;
+    }
+
+    function getWellInfo(address wellId) public view returns (LibWellStorage.WellInfo memory info) {
+         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
+        info = s.wi[wellId];
+    }
+
+    function getWellIdAtIndex(uint256 index) public view returns (address wellId) {
+         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
+        wellId = s.indices[index];
+    }
+
+    function getWellHash(address wellId) public view returns (bytes32 wellHash) {
+         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
+        wellHash = s.wh[wellId];
+    }
+
+    function computeWellHash( LibWellStorage.WellInfo calldata p) external pure returns (bytes32 wellHash) {
+        wellHash = LibWellStorage.computeWellHash(p);
+    }
+
+    /**
+     * State
+     **/
+
+    function getD(address wellId) public view returns (uint256 d) {
         LibWellStorage.WellInfo memory info = getWellInfo(wellId);
-        k = LibWell.getK(
+        d = LibWell.getD(
             info.wellType,
             info.typeData,
             getWellBalances(wellId)
         );
-    }
-
-    function getTokens(address wellId) external view returns (IERC20[] memory tokens) {
-        tokens = getWellInfo(wellId).tokens;
     }
 
     function getWellBalances(address wellId) public view returns (uint128[] memory balances) {
@@ -178,53 +201,42 @@ contract WellFacet is ReentrancyGuard {
         lastTimestamp = getWellState(wellId).lastTimestamp;
     }
 
-    function getWellIdAtIndex(uint256 index) public view returns (address wellId) {
-         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
-        wellId = s.indices[index];
-    }
-    function getWellInfo(address wellId) public view returns (LibWellStorage.WellInfo memory info) {
-         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
-        info = s.wi[wellId];
-    }
     function getWellState(address wellId) public view returns (LibWellStorage.WellState memory state) {
         state = getWellStateFromHash(getWellHash(wellId));
-
-    }
-    function getWellHash(address wellId) public view returns (bytes32 wellHash) {
-         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
-        wellHash = s.wh[wellId];
-    }
-
-    function getWellAtIndex(uint256 index) external view returns ( LibWellStorage.WellInfo memory info,  LibWellStorage.WellState memory state, uint256 lpSupply) {
-        return getWell(getWellIdAtIndex(index));
-    }
-
-    function getWell(address wellId) public view returns (LibWellStorage.WellInfo memory info,  LibWellStorage.WellState memory state, uint256 lpSupply) {
-        info = getWellInfo(wellId);
-        state = getWellState(wellId);
-        lpSupply = LibWell.getK(
-            info.wellType,
-            info.typeData,
-            state.balances
-        );
     }
 
     function getWellStateFromHash(bytes32 wellHash) public view returns (LibWellStorage.WellState memory state) {
         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
-        if (s.w2s[wellHash].lastTimestamp > 0) state = LibWell2.getWellState(wellHash);
+        if (s.w2s[wellHash].last.timestamp > 0) state = LibWell2.getWellState(wellHash);
         else state = LibWellN.getWellState(wellHash);
     }
 
-    function computeWellHash( LibWellStorage.WellInfo calldata p) external pure returns (bytes32 wellHash) {
-        wellHash = LibWellStorage.computeWellHash(p);
-    }
-
-    /**
-     * Well2
-    **/
 
     function getWell2StateFromHash(bytes32 wellHash) public view returns (LibWellStorage.Well2State memory state) {
         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
         state = s.w2s[wellHash];
+    }
+
+    function getWellNStateFromHash(bytes32 wellHash) public view returns (LibWellStorage.WellNState memory state) {
+        LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
+        state = s.wNs[wellHash];
+    }
+
+    /**
+     * Info + State
+    **/
+
+    function getWellAtIndex(uint256 index) external view returns ( LibWellStorage.WellInfo memory info,  LibWellStorage.WellState memory state, uint256 d) {
+        return getWell(getWellIdAtIndex(index));
+    }
+
+    function getWell(address wellId) public view returns (LibWellStorage.WellInfo memory info,  LibWellStorage.WellState memory state, uint256 d) {
+        info = getWellInfo(wellId);
+        state = getWellState(wellId);
+        d = LibWell.getD(
+            info.wellType,
+            info.typeData,
+            state.balances
+        );
     }
 }

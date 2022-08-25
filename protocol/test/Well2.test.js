@@ -152,7 +152,7 @@ describe('Well', function () {
 
       expect(await this.beanstalk.getLastTimestamp(wellId)).to.be.equal(await getTimestamp())
 
-      expect(await this.beanstalk.getK(wellId)).to.be.equal(to6('200'))
+      expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('200'))
     })
 
     it('returns the whole well', async function () {
@@ -174,7 +174,7 @@ describe('Well', function () {
         expect(wholeWell.state.cumulativeBalances[1]).to.be.equal('0')
         expect(wholeWell.state.lastTimestamp).to.be.equal(await getTimestamp())
 
-        expect(wholeWell.lpSupply).to.be.equal(to6('200'))
+        expect(wholeWell.d).to.be.equal(to6('200'))
       }
     })
 
@@ -219,7 +219,7 @@ describe('Well', function () {
         expect(state.cumulativeBalances[0]).to.be.equal(await getCumulative(to6('100')))
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
         expect(state.lastTimestamp).to.be.equal(await getTimestamp())
-        expect(await this.beanstalk.getK(wellId)).to.be.equal(to6('200'))
+        expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('200'))
       })
 
       it('updates lp balances', async function () {
@@ -260,7 +260,7 @@ describe('Well', function () {
         expect(state.cumulativeBalances[0]).to.be.equal(await getCumulative(to6('100')))
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
         expect(state.lastTimestamp).to.be.equal(await getTimestamp())
-        expect(await this.beanstalk.getK(wellId)).to.be.equal(to6('200'))
+        expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('200'))
       })
 
       it('updates lp balances', async function () {
@@ -302,7 +302,7 @@ describe('Well', function () {
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
         expect(state.lastTimestamp).to.be.equal(await getTimestamp())
 
-        expect(await this.beanstalk.getK(wellId)).to.be.equal(to6('399.499686'))
+        expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('399.499686'))
       })
 
       it('updates lp balances', async function () {
@@ -345,7 +345,7 @@ describe('Well', function () {
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
         expect(state.lastTimestamp).to.be.equal(await getTimestamp())
 
-        expect(await this.beanstalk.getK(wellId)).to.be.equal(to6('190'))
+        expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('190'))
       })
 
       it('updates lp balances', async function () {
@@ -386,7 +386,7 @@ describe('Well', function () {
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
         expect(state.lastTimestamp).to.be.equal(await getTimestamp())
 
-        expect(await this.beanstalk.getK(wellId)).to.be.equal(to6('190'))
+        expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('190'))
       })
 
       it('updates lp balances', async function () {
@@ -419,7 +419,7 @@ describe('Well', function () {
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
         expect(state.lastTimestamp).to.be.equal(await getTimestamp())
 
-        expect(await this.beanstalk.getK(wellId)).to.be.equal(to6('190'))
+        expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('190'))
       })
 
       it('updates lp balances', async function () {
@@ -461,7 +461,7 @@ describe('Well', function () {
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
         expect(state.lastTimestamp).to.be.equal(await getTimestamp())
 
-        expect(await this.beanstalk.getK(wellId)).to.be.equal(to6('190.997382'))
+        expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('190.997382'))
       })
 
       it('updates lp balances', async function () {

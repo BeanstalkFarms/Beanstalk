@@ -13,6 +13,17 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  **/
 library LibWellStorage {
 
+    event Swap(
+        address wellId,
+        IERC20 fromToken,
+        IERC20 toToken,
+        uint256 fromAmount,
+        uint256 toAmount
+    );
+    event AddLiquidity(address wellId, uint256[] amounts);
+    event RemoveLiquidity(address wellId, uint256[] amounts);
+    event RemoveLiquidityOneToken(address wellId, IERC20 token, uint256 amount);
+
     enum WellType {
         CONSTANT_PRODUCT
     }
@@ -32,21 +43,33 @@ library LibWellStorage {
         uint32 lastTimestamp; // Last timestamp someone interacted with well
     }
 
+    struct CumulativeBalance2 {
+        uint224 cumulativeBalance0; // Cumulative balance of token0 in the Well
+        uint224 cumulativeBalance1; // Cumulative balance of token1 in the Well
+        uint32 timestamp; // Last Timestamp the pool was interacted with
+    }
+
     // Well2State is the state struct for Wells with exactly 2 tokens.
     struct Well2State {
         uint128 balance0; // token balance of token0 in the Well
         uint128 balance1; // token balance of token1 in the Well
-        uint224 cumulativeBalance0; // Cumulative balance of token0 in the Well
-        uint224 cumulativeBalance1; // Cumulative balance of token1 in the Well
-        uint32 lastTimestamp; // Last Timestamp the pool was interacted with
+        CumulativeBalance2 last; // The cumulative balances at the last update
+        CumulativeBalance2 even; // The cumulative balances at the first update after the start of the last even hour.
+        CumulativeBalance2 odd; // The cumulative balances at the first update after the start of the last odd hour.
+    }
+
+    struct CumulativeBalanceN {
+        uint224[] cumulativeBalances; // well balances times time
+        uint224 lastCumulativeBalance;
+        uint32 timestamp; // Last timestamp someone interacted with well
     }
 
         // WellState is the state struct for Wells with more than 2 tokens.
     struct WellNState {
         uint128[] balances; // well balances of each token
-        uint224[] cumulativeBalances; // well balances times time
-        uint224 lastCumulativeBalance;
-        uint32 lastTimestamp; // Last timestamp someone interacted with well
+        CumulativeBalanceN last; // The cumulative balances at the last update
+        CumulativeBalanceN even; // The cumulative balances at the first update after the start of the last even hour.
+        CumulativeBalanceN odd; // The cumulative balances at the first update after the start of the last odd hour.
     }
 
     struct TypeInfo {
@@ -96,5 +119,9 @@ library LibWellStorage {
         wellHash = keccak256(
             abi.encodePacked(w.wellId, w.tokens, w.wellType, w.typeData)
         );
+    }
+
+    function isWell2(IERC20[] calldata tokens) internal pure returns (bool) {
+        return tokens.length == 2;
     }
 }

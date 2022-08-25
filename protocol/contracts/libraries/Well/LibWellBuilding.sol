@@ -67,16 +67,22 @@ library LibWellBuilding {
         s.indices[s.numberOfWells] = wellId;
         s.numberOfWells = s.numberOfWells.add(1);
 
-        if (tokens.length == 2) {
-            s.w2s[wh].lastTimestamp = uint32(block.timestamp); // TODO: check if mod needed
+        if (LibWellStorage.isWell2(tokens)) {
+            s.w2s[wh].last.timestamp = uint32(block.timestamp);
+            s.w2s[wh].even.timestamp = uint32(block.timestamp);
+            s.w2s[wh].odd.timestamp = uint32(block.timestamp);
         } else {
             uint256 iMax = tokens.length - 1;
             for (uint256 i; i < iMax; i++) {
                 s.wNs[wh].balances.push(0);
-                s.wNs[wh].cumulativeBalances.push(0);
+                s.wNs[wh].last.cumulativeBalances.push(0);
+                s.wNs[wh].even.cumulativeBalances.push(0);
+                s.wNs[wh].odd.cumulativeBalances.push(0);
             }
             s.wNs[wh].balances.push(0);
-            s.wNs[wh].lastTimestamp = uint32(block.timestamp);
+            s.wNs[wh].last.timestamp = uint32(block.timestamp);
+            s.wNs[wh].even.timestamp = uint32(block.timestamp);
+            s.wNs[wh].odd.timestamp = uint32(block.timestamp);
         }
 
         s.wi[wellId] = w;

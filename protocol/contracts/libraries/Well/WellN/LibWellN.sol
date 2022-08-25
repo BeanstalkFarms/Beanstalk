@@ -22,32 +22,6 @@ library LibWellN {
     using SafeMath for uint256;
     using LibSafeMath128 for uint128;
 
-    event RegisterWellType(LibWellStorage.WellType wellType, string[] parameterTypes);
-    event CreateWell(
-        address wellId,
-        IERC20[] tokens,
-        LibWellStorage.WellType wellType,
-        bytes typeData,
-        bytes32 wellHash
-    );
-    event UpdateWell(
-        address wellId,
-        LibWellStorage.WellType newWellType,
-        bytes newTypeData,
-        bytes32 oldWellHash,
-        bytes32 newWellHash
-    );
-    event Swap(
-        address wellId,
-        IERC20 fromToken,
-        IERC20 toToken,
-        uint256 fromAmount,
-        uint256 toAmount
-    );
-    event AddLiquidity(address wellId, uint256[] amounts);
-    event RemoveLiquidity(address wellId, uint256[] amounts);
-    event RemoveLiquidityOneToken(address wellId, IERC20 token, uint256 amount);
-
     /**
      * Swap
      **/
@@ -83,9 +57,9 @@ library LibWellN {
         );
         require(dy >= minDy, "LibWell: too much slippage.");
         if (dx < 0)
-            emit Swap(w.wellId, jToken, iToken, uint256(-dy), uint256(-dx));
+            emit LibWellStorage.Swap(w.wellId, jToken, iToken, uint256(-dy), uint256(-dx));
         else
-            emit Swap(w.wellId, iToken, jToken, uint256(dx), uint256(dy));
+            emit LibWellStorage.Swap(w.wellId, iToken, jToken, uint256(dx), uint256(dy));
     }
 
     function _getSwap(
@@ -96,12 +70,12 @@ library LibWellN {
         uint256 j,
         int256 dx
     ) private pure returns (uint128[] memory, int256) {
-        uint256 k = getK(wellType, typeData, balances);
+        uint256 d = getD(wellType, typeData, balances);
         balances[i] = dx > 0
             ? balances[i].add(uint128(dx))
             : balances[i].sub(uint128(-dx));
         uint256 yBefore = balances[j];
-        balances[j] = getY(wellType, typeData, j, balances, k);
+        balances[j] = getY(wellType, typeData, j, balances, d);
         int256 dy = int256(yBefore) - int256(balances[j]);
         return (balances, dy);
     }
@@ -119,14 +93,14 @@ library LibWellN {
     ) internal returns (uint256 amountOut) {
         LibWellStorage.WellNState storage ws = LibWellStorage.wellNState(w);
         update(ws);
-        uint256 k1 = getK(w.wellType, w.typeData, ws.balances);
+        uint256 d1 = getD(w.wellType, w.typeData, ws.balances);
         for (uint256 i; i < w.tokens.length; ++i)
             ws.balances[i] = ws.balances[i].add(uint128(amounts[i])); // Check 
-        uint256 k2 = getK(w.wellType, w.typeData, ws.balances);
-        amountOut = k2.sub(k1);
+        uint256 d2 = getD(w.wellType, w.typeData, ws.balances);
+        amountOut = d2.sub(d1);
         require(amountOut >= minAmountOut, "LibWell: Not enough LP.");
         LibTransfer.mintToken(IBean(w.wellId), amountOut, recipient, toMode);
-        emit AddLiquidity(w.wellId, amounts);
+        emit LibWellStorage.AddLiquidity(w.wellId, amounts);
     }
 
     function getAddLiquidityOut(LibWellStorage.WellInfo calldata w, uint256[] memory amounts)
@@ -135,12 +109,12 @@ library LibWellN {
         returns (uint256 amountOut)
     {
         LibWellStorage.WellNState storage ws = LibWellStorage.wellNState(w);
-        uint256 k1 = getK(w.wellType, w.typeData, ws.balances);
+        uint256 d1 = getD(w.wellType, w.typeData, ws.balances);
         uint128[] memory balances = new uint128[](w.tokens.length);
         for (uint256 i; i < w.tokens.length; ++i)
             balances[i] = ws.balances[i].add(uint128(amounts[i]));
-        uint256 k2 = getK(w.wellType, w.typeData, balances);
-        amountOut = k2.sub(k1);
+        uint256 d2 = getD(w.wellType, w.typeData, balances);
+        amountOut = d2.sub(d1);
     }
 
     /**
@@ -156,10 +130,10 @@ library LibWellN {
     ) internal returns (uint256[] memory tokenAmountsOut) {
         LibWellStorage.WellNState storage ws = LibWellStorage.wellNState(w);
         update(ws);
-        uint256 k = getK(w.wellType, w.typeData, ws.balances);
+        uint256 d = getD(w.wellType, w.typeData, ws.balances);
         tokenAmountsOut = new uint256[](w.tokens.length);
         for (uint256 i; i < w.tokens.length; ++i) {
-            tokenAmountsOut[i] = lpAmountIn.mul(ws.balances[i]).div(k); // Downcasting ok because lpAmountIn <= k
+            tokenAmountsOut[i] = lpAmountIn.mul(ws.balances[i]).div(d); // Downcasting ok because lpAmountIn <= d
             ws.balances[i] = ws.balances[i].sub(uint128(tokenAmountsOut[i]));
             require(
                 tokenAmountsOut[i] >= minTokenAmountsOut[i],
@@ -167,7 +141,7 @@ library LibWellN {
             );
         }
         LibTransfer.burnToken(IBean(w.wellId), lpAmountIn, recipient, fromMode);
-        emit RemoveLiquidity(w.wellId, tokenAmountsOut);
+        emit LibWellStorage.RemoveLiquidity(w.wellId, tokenAmountsOut);
     }
 
     function getRemoveLiquidityOut(LibWellStorage.WellInfo calldata w, uint256 lpAmountIn)
@@ -176,10 +150,10 @@ library LibWellN {
         returns (uint256[] memory tokenAmountsOut)
     {
         LibWellStorage.WellNState storage ws = LibWellStorage.wellNState(w);
-        uint256 k = getK(w.wellType, w.typeData, ws.balances);
+        uint256 d = getD(w.wellType, w.typeData, ws.balances);
         tokenAmountsOut = new uint256[](w.tokens.length);
         for (uint256 i; i < w.tokens.length; ++i) {
-            tokenAmountsOut[i] = lpAmountIn.mul(ws.balances[i]).div(k);
+            tokenAmountsOut[i] = lpAmountIn.mul(ws.balances[i]).div(d);
         }
     }
 
@@ -203,7 +177,7 @@ library LibWellN {
         require(tokenAmountOut >= minTokenAmountOut, "LibWell: out too low.");
         ws.balances[i] = y;
         LibTransfer.burnToken(IBean(w.wellId), lpAmountIn, recipient, fromMode);
-        emit RemoveLiquidityOneToken(w.wellId, token, tokenAmountOut);
+        emit LibWellStorage.RemoveLiquidityOneToken(w.wellId, token, tokenAmountOut);
     }
 
     function getRemoveLiquidityOneTokenOut(
@@ -222,9 +196,9 @@ library LibWellN {
         uint256 i,
         uint256 lpAmountIn
     ) private view returns (uint256 tokenAmountOut, uint128 y) {
-        uint256 k = getK(w.wellType, w.typeData, ws.balances);
-        k = k.sub(lpAmountIn, "LibWell: too much LP");
-        y = getY(w.wellType, w.typeData, i, ws.balances, k);
+        uint256 d = getD(w.wellType, w.typeData, ws.balances);
+        d = d.sub(lpAmountIn, "LibWell: too much LP");
+        y = getY(w.wellType, w.typeData, i, ws.balances, d);
         tokenAmountOut = ws.balances[i].sub(y);
     }
 
@@ -244,7 +218,7 @@ library LibWellN {
         (lpAmountIn, ws.balances) = _getRemoveLiquidityImbalanced(w, ws.balances, tokenAmountsOut);
         require(lpAmountIn <= maxLPAmountIn, "LibWell: in too high.");
         LibTransfer.burnToken(IBean(w.wellId), lpAmountIn, recipient, fromMode);
-        emit RemoveLiquidity(w.wellId, tokenAmountsOut);
+        emit LibWellStorage.RemoveLiquidity(w.wellId, tokenAmountsOut);
     }
 
     function getRemoveLiquidityImbalanced(
@@ -260,16 +234,34 @@ library LibWellN {
         uint128[] memory balances,
         uint256[] calldata tokenAmountsOut
     ) private pure returns (uint256, uint128[] memory) {
-        uint256 k1 = getK(w.wellType, w.typeData, balances);
+        uint256 d1 = getD(w.wellType, w.typeData, balances);
         for (uint i; i < w.tokens.length; ++i) {
             balances[i] = balances[i].sub(uint128(tokenAmountsOut[i]));
         }
-        uint256 k2 = getK(w.wellType, w.typeData, balances);
-        return (k1.sub(k2), balances);
+        uint256 d2 = getD(w.wellType, w.typeData, balances);
+        return (d1.sub(d2), balances);
     }
 
     /**
-     * Internal
+     * State
+    **/
+
+    function getCumulativeBalances(LibWellStorage.CumulativeBalanceN storage cb) internal view returns (uint224[] memory cumulativeBalances) {
+        cumulativeBalances = new uint224[](cb.cumulativeBalances.length+1);
+        for (uint i; i < cb.cumulativeBalances.length; ++i)
+            cumulativeBalances[i] = cb.cumulativeBalances[i];
+        cumulativeBalances[cb.cumulativeBalances.length] = cb.lastCumulativeBalance;
+    }
+
+    function getWellState(bytes32 wellHash) internal view returns (LibWellStorage.WellState memory s) {
+        LibWellStorage.WellNState storage sN = LibWellStorage.wellStorage().wNs[wellHash];
+        s.balances = sN.balances;
+        s.cumulativeBalances = getCumulativeBalances(sN.last);
+        s.lastTimestamp = sN.last.timestamp;
+    }
+
+    /**
+     * Token Indices
      **/
 
     function getIJ(
@@ -291,13 +283,17 @@ library LibWellN {
             if (token == tokens[i]) return i;
     }
 
-    function getK(
+    /**
+     * Internal
+     **/
+
+    function getD(
         LibWellStorage.WellType wellType,
         bytes memory typeData,
         uint128[] memory balances
     ) internal pure returns (uint256) {
         if (wellType == LibWellStorage.WellType.CONSTANT_PRODUCT)
-            return LibConstantProductWellN.getK(balances);
+            return LibConstantProductWellN.getD(balances);
         revert("LibWell: Well type not supported");
     }
 
@@ -306,47 +302,44 @@ library LibWellN {
         bytes calldata typeData,
         uint256 i,
         uint128[] memory xs,
-        uint256 k
+        uint256 d
     ) private pure returns (uint128) {
         uint256 y;
         if (wellType == LibWellStorage.WellType.CONSTANT_PRODUCT)
-            y = LibConstantProductWellN.getY(i, xs, k);
+            y = LibConstantProductWellN.getY(i, xs, d);
         else revert("LibWell: Well type not supported");
         require(y < type(uint128).max, "LibWell: y too high");
         return uint128(y);
     }
 
+    /**
+     * Oracle
+    **/
+
     function update(
         LibWellStorage.WellNState storage ws
     ) private {
-        uint32 timestamp = uint32(block.timestamp);
-        uint32 passedTime = timestamp - ws.lastTimestamp; // ws.lastTimestamp <= block.timestamp
+        // uint32 blockTimestamp = uint32(block.timestamp);
+        // uint32 hourstamp = blockTimestamp/3600;
+        // uint32 lastHourstamp = hourstamp-1;
+        // if (lastHourstamp > ws.last.timestamp/3600)
+        //     record(lastHourstamp%2==0 ? ws.even : ws.odd, ws.balances, lastHourstamp*3600);
+        // if (hourstamp > ws.last.timestamp/3600)
+        //     record(hourstamp%2==0 ? ws.even : ws.odd, ws.balances, hourstamp*3600);
+        // record(ws.last, ws.balances, blockTimestamp);
+    }
+
+    function record(LibWellStorage.CumulativeBalanceN storage cb, uint128[] storage balances, uint32 timestamp) private {
+        uint32 passedTime = timestamp - cb.timestamp; // ws.lastTimestamp <= block.timestamp
         if (passedTime > 0) {
             // Overflow on addition is okay
             // overflow on multication is not possible b/c ws.balanceX <= (uint112).max and passedTime <= (uint32).max
             uint256 i;
-            for (i; i < ws.cumulativeBalances.length; ++i) {
-                ws.cumulativeBalances[i] = ws.cumulativeBalances[i] + uint224(ws.balances[i]) * passedTime;
+            for (i; i < cb.cumulativeBalances.length; ++i) {
+                cb.cumulativeBalances[i] = cb.cumulativeBalances[i] + uint224(balances[i]) * passedTime;
             }
-            ws.lastCumulativeBalance = ws.lastCumulativeBalance + uint224(ws.balances[i]) * passedTime;
-            ws.lastTimestamp = uint32(block.timestamp);
+            cb.lastCumulativeBalance = cb.lastCumulativeBalance + uint224(balances[i]) * passedTime;
+            cb.timestamp = uint32(block.timestamp);
         }
-    }
-
-    function getCumulativeBalances(LibWellStorage.WellNState storage s) internal view returns (uint224[] memory cumulativeBalances) {
-        cumulativeBalances = new uint224[](s.cumulativeBalances.length+1);
-        uint i;
-        for (i; i < s.cumulativeBalances.length; ++i) {
-            cumulativeBalances[i] = s.cumulativeBalances[i];
-        }
-        cumulativeBalances[i] = s.lastCumulativeBalance;
-    }
-
-
-    function getWellState(bytes32 wellHash) internal view returns (LibWellStorage.WellState memory s) {
-        LibWellStorage.WellNState storage sN = LibWellStorage.wellStorage().wNs[wellHash];
-        s.balances = sN.balances;
-        s.cumulativeBalances = getCumulativeBalances(sN);
-        s.lastTimestamp = sN.lastTimestamp;
-    }
+    }    
 }

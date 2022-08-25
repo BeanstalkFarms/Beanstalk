@@ -57,7 +57,7 @@ library LibWell {
         IERC20 jToken,
         int256 dx
     ) internal view returns (int256 dy) {
-        if (w.tokens.length == 2) return LibWell2.getSwap(w, iToken, jToken, dx);
+        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.getSwap(w, iToken, jToken, dx);
         return LibWellN.getSwap(w, iToken, jToken, dx);
     }
 
@@ -69,7 +69,7 @@ library LibWell {
         int256 dx,
         int256 minDy
     ) internal returns (int256 dy) {
-        if (w.tokens.length == 2) return LibWell2.swap(w, iToken, jToken, dx, minDy);
+        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.swap(w, iToken, jToken, dx, minDy);
         return LibWellN.swap(w, iToken, jToken, dx, minDy);
     }
 
@@ -84,7 +84,7 @@ library LibWell {
         address recipient,
         LibTransfer.To toMode
     ) internal returns (uint256 amountOut) {
-        if (w.tokens.length == 2) return LibWell2.addLiquidity(w, amounts, minAmountOut, recipient, toMode);
+        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.addLiquidity(w, amounts, minAmountOut, recipient, toMode);
         return LibWellN.addLiquidity(w, amounts, minAmountOut, recipient, toMode);
     }
 
@@ -93,7 +93,7 @@ library LibWell {
         view
         returns (uint256 amountOut)
     {
-        if (w.tokens.length == 2) return LibWell2.getAddLiquidityOut(w, amounts);
+        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.getAddLiquidityOut(w, amounts);
         return LibWellN.getAddLiquidityOut(w, amounts);
     }
 
@@ -108,7 +108,7 @@ library LibWell {
         address recipient,
         LibTransfer.From fromMode
     ) internal returns (uint256[] memory tokenAmountsOut) {
-        if (w.tokens.length == 2) return LibWell2.removeLiquidity(w, lpAmountIn, minTokenAmountsOut, recipient, fromMode);
+        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.removeLiquidity(w, lpAmountIn, minTokenAmountsOut, recipient, fromMode);
         return LibWellN.removeLiquidity(w, lpAmountIn, minTokenAmountsOut, recipient, fromMode);
     }
 
@@ -117,7 +117,7 @@ library LibWell {
         view
         returns (uint256[] memory tokenAmountsOut)
     {
-        if (w.tokens.length == 2) return LibWell2.getRemoveLiquidityOut(w, lpAmountIn);
+        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.getRemoveLiquidityOut(w, lpAmountIn);
         return LibWellN.getRemoveLiquidityOut(w, lpAmountIn);
     }
 
@@ -133,7 +133,7 @@ library LibWell {
         address recipient,
         LibTransfer.From fromMode
     ) internal returns (uint256 tokenAmountOut) {
-        if (w.tokens.length == 2) return LibWell2.removeLiquidityOneToken(w, token, lpAmountIn, minTokenAmountOut, recipient, fromMode);
+        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.removeLiquidityOneToken(w, token, lpAmountIn, minTokenAmountOut, recipient, fromMode);
         return LibWellN.removeLiquidityOneToken(w, token, lpAmountIn, minTokenAmountOut, recipient, fromMode);
     }
 
@@ -142,7 +142,7 @@ library LibWell {
         IERC20 token,
         uint256 lpAmountIn
     ) internal view returns (uint256 tokenAmountOut) {
-        if (w.tokens.length == 2) return LibWell2.getRemoveLiquidityOneTokenOut(w, token, lpAmountIn);
+        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.getRemoveLiquidityOneTokenOut(w, token, lpAmountIn);
         return LibWellN.getRemoveLiquidityOneTokenOut(w, token, lpAmountIn);
     }
 
@@ -157,7 +157,7 @@ library LibWell {
         address recipient,
         LibTransfer.From fromMode
     ) internal returns (uint256 lpAmountIn) {
-        if (w.tokens.length == 2) return LibWell2.removeLiquidityImbalanced(w, maxLPAmountIn, tokenAmountsOut, recipient, fromMode);
+        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.removeLiquidityImbalanced(w, maxLPAmountIn, tokenAmountsOut, recipient, fromMode);
         return LibWellN.removeLiquidityImbalanced(w, maxLPAmountIn, tokenAmountsOut, recipient, fromMode);
     }
 
@@ -165,17 +165,17 @@ library LibWell {
         LibWellStorage.WellInfo calldata w,
         uint256[] calldata tokenAmountsOut
     ) internal view returns (uint256 lpAmountIn) {
-        if (w.tokens.length == 2) return LibWell2.getRemoveLiquidityImbalanced(w, tokenAmountsOut);
+        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.getRemoveLiquidityImbalanced(w, tokenAmountsOut);
         return LibWellN.getRemoveLiquidityImbalanced(w, tokenAmountsOut);
     }
 
-    function getK(
+    function getD(
         LibWellStorage.WellType wellType,
         bytes memory typeData,
         uint128[] memory balances
     ) internal pure returns (uint256) {
         if (balances.length == 2) 
-            return LibWell2.getK(wellType, typeData, uint112(balances[0]), uint112(balances[1]));
-        return LibWellN.getK(wellType, typeData, balances);
+            return LibWell2.getD(wellType, typeData, uint112(balances[0]), uint112(balances[1]));
+        return LibWellN.getD(wellType, typeData, balances);
     }
 }

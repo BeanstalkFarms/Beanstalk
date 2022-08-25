@@ -18,23 +18,23 @@ library LibConstantProductWellN {
     using SafeMath for uint256;
     using LibMath for uint256;
 
-    function getK(
+    function getD(
         uint128[] memory xs
-    ) internal pure returns (uint256 k) {
-        k = uint256(xs[0]);
+    ) internal pure returns (uint256 d) {
+        d = uint256(xs[0]);
         uint256 n = xs.length;
         for (uint i = 1; i < xs.length; i++)
-            k = k.mul(uint256(xs[i]));
-        k = k.nthRoot(n).mul(n);
+            d = d.mul(uint256(xs[i]));
+        d = d.nthRoot(n).mul(n);
     }
 
     function getY(
         uint256 i,
         uint128[] memory xs,
-        uint256 k
+        uint256 d
     ) internal pure returns (uint256 x) {
         uint256 n = xs.length;
-        x = ((k / n) ** n); // unchecked math is safe here.
+        x = ((d / n) ** n); // unchecked math is safe here.
         for (uint256 _i = 0; _i < xs.length; _i++)
             if (_i != i) x = x.div(xs[_i]);
     }
