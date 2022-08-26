@@ -31,5 +31,4 @@ contract MockMarketplaceFacet is MarketplaceFacet {
         return findPieceIndex(array, value, numIntervals - 1);
     }
 
-
 }

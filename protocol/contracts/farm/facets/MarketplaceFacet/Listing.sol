@@ -25,7 +25,6 @@ contract Listing is Dynamic {
         uint24 pricePerPod;
         uint256 maxHarvestableIndex;
         LibTransfer.To mode;
-        PiecewisePolynomial f;
     }
 
     event PodListingCreated(
@@ -82,7 +81,7 @@ contract Listing is Dynamic {
         
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
 
-        s.podListings[index] = hashFixedListing(start, amount, pricePerPod, maxHarvestableIndex, mode);
+        s.podListings[index] = hashListing(start, amount, pricePerPod, maxHarvestableIndex, mode);
         
         emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, mode);
 
@@ -111,12 +110,12 @@ contract Listing is Dynamic {
             maxHarvestableIndex, 
             mode, 
             f.breakpoints, 
-            f.constants, 
-            f.packedBases, 
+            f.significands, 
+            f.packedExponents, 
             f.packedSigns
         );
 
-        (uint256[16] memory polynomialBreakpoints, uint256[64] memory polynomialConstants) = loadArraysToMemory(f.breakpoints, f.constants);
+        (uint256[16] memory polynomialBreakpoints, uint256[64] memory polynomialSignificands) = loadArraysToMemory(f.breakpoints, f.significands);
         
         emit DynamicPodListingCreated(
             msg.sender, 
@@ -127,8 +126,8 @@ contract Listing is Dynamic {
             maxHarvestableIndex, 
             mode, 
             polynomialBreakpoints, 
-            polynomialConstants, 
-            [f.packedBases[0], f.packedBases[1]],
+            polynomialSignificands, 
+            [f.packedExponents[0], f.packedExponents[1]],
             f.packedSigns
         );
     }
@@ -138,29 +137,13 @@ contract Listing is Dynamic {
 
     function _fillListing(PodListing calldata l, uint256 beanAmount) internal {
 
-        bytes32 lHash;
-        
-        if(l.f.mode == EvaluationMode.Fixed) {
-            lHash = hashFixedListing(
+        bytes32 lHash = hashListing(
                 l.start,
                 l.amount,
                 l.pricePerPod,
                 l.maxHarvestableIndex,
                 l.mode
             );
-        } else {
-            lHash = hashDynamicListing(
-                l.start,
-                l.amount,
-                l.pricePerPod,
-                l.maxHarvestableIndex,
-                l.mode,
-                l.f.breakpoints,
-                l.f.constants,
-                l.f.packedBases,
-                l.f.packedSigns
-            );
-        }
         
         require(s.podListings[l.index] == lHash, "Marketplace: Listing does not exist.");
         uint256 plotSize = s.a[l.account].field.plots[l.index];
@@ -169,7 +152,35 @@ contract Listing is Dynamic {
 
         uint256 amount = getRoundedAmount(l, beanAmount);
 
-        __fillListing(msg.sender, l, amount, l.f.mode == EvaluationMode.Fixed);
+        __fillListing(msg.sender, l, amount);
+
+        _transferPlot(l.account, msg.sender, l.index, l.start, amount);
+
+    }
+
+    function _fillDynamicListing(PodListing calldata l, PiecewisePolynomial calldata f, uint256 beanAmount) internal {
+
+        bytes32 lHash = hashDynamicListing(
+            l.start,
+            l.amount,
+            l.pricePerPod,
+            l.maxHarvestableIndex,
+            l.mode,
+            f.breakpoints,
+            f.significands,
+            f.packedExponents,
+            f.packedSigns
+        );
+
+        
+        require(s.podListings[l.index] == lHash, "Marketplace: Listing does not exist.");
+        uint256 plotSize = s.a[l.account].field.plots[l.index];
+        require(plotSize >= (l.start + l.amount) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
+        require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
+
+        uint256 amount = getDynamicRoundedAmount(l, f, beanAmount);
+
+        __fillDynamicListing(msg.sender, l, f, amount);
 
         _transferPlot(l.account, msg.sender, l.index, l.start, amount);
 
@@ -178,33 +189,43 @@ contract Listing is Dynamic {
     function __fillListing(
         address to,
         PodListing calldata l,
-        uint256 amount,
-        bool isFixed
+        uint256 amount
     ) private {
 
         require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
         if (l.amount > amount) {
-            if(isFixed){
-                s.podListings[l.index.add(amount).add(l.start)] = hashFixedListing(
-                    0,
-                    l.amount.sub(amount),
-                    l.pricePerPod,
-                    l.maxHarvestableIndex,
-                    l.mode
-                );
-            } else {
-                s.podListings[l.index.add(amount).add(l.start)] = hashDynamicListing(
-                    0,
-                    l.amount.sub(amount),
-                    l.pricePerPod,
-                    l.maxHarvestableIndex,
-                    l.mode,
-                    l.f.breakpoints,
-                    l.f.constants,
-                    l.f.packedBases,
-                    l.f.packedSigns
-                );
-            }
+            s.podListings[l.index.add(amount).add(l.start)] = hashListing(
+                0,
+                l.amount.sub(amount),
+                l.pricePerPod,
+                l.maxHarvestableIndex,
+                l.mode
+            );
+        }
+        emit PodListingFilled(l.account, to, l.index, l.start, amount);
+        delete s.podListings[l.index];
+    
+    }
+
+    function __fillDynamicListing(
+        address to,
+        PodListing calldata l,
+        PiecewisePolynomial calldata f,
+        uint256 amount
+    ) private {
+        require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
+        if (l.amount > amount) {
+            s.podListings[l.index.add(amount).add(l.start)] = hashDynamicListing(
+                0,
+                l.amount.sub(amount),
+                l.pricePerPod,
+                l.maxHarvestableIndex,
+                l.mode,
+                f.breakpoints,
+                f.significands,
+                f.packedExponents,
+                f.packedSigns
+            );
         }
         emit PodListingFilled(l.account, to, l.index, l.start, amount);
         delete s.podListings[l.index];
@@ -230,29 +251,24 @@ contract Listing is Dynamic {
 
     // If remainder left (always <1 pod) that would otherwise be unpurchaseable
     // due to rounding from calculating amount, give it to last buyer
-    function getRoundedAmount(PodListing calldata l, uint256 beanAmount) internal view returns (uint256) {
-        uint256 amount;
-        uint256 remainingAmount;
-        if (l.f.mode == EvaluationMode.Fixed) {
-            amount = (beanAmount * 1000000) / l.pricePerPod;
-            remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
-            if(remainingAmount <= (1000000 / l.pricePerPod)) amount = l.amount;
-            return amount;
-        } else {
-            uint24 pricePerPod = uint24(evaluatePolynomial(
-                l.f, 
-                l.index + l.start - s.f.harvestable, 
-                findPieceIndex(l.f.breakpoints, l.index + l.start - s.f.harvestable, getNumPieces(l.f.breakpoints) - 1)
-            ));
-            amount = (beanAmount * 1000000) / pricePerPod;
-            remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
-            if(remainingAmount <= (1000000 / pricePerPod)) amount = l.amount;
-            return amount;
-
-        }
+    function getRoundedAmount(PodListing calldata l, uint256 beanAmount) internal pure returns (uint256 amount) {
+        amount = (beanAmount * 1000000) / l.pricePerPod;
+        uint256 remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
+        if(remainingAmount <= (1000000 / l.pricePerPod)) amount = l.amount;
     }
 
-    function hashFixedListing(
+    function getDynamicRoundedAmount(PodListing calldata l, PiecewisePolynomial calldata f, uint256 beanAmount) internal view returns (uint256 amount) {
+        uint24 pricePerPod = uint24(evaluatePolynomial(
+            f, 
+            l.index + l.start - s.f.harvestable, 
+            findPieceIndex(f.breakpoints, l.index + l.start - s.f.harvestable, getNumPieces(f.breakpoints) - 1)
+        ));
+        amount = (beanAmount * 1000000) / pricePerPod;
+        uint256 remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
+        if(remainingAmount <= (1000000 / pricePerPod)) amount = l.amount;
+    }
+
+    function hashListing(
         uint256 start, 
         uint256 amount, 
         uint24 pricePerPod, 

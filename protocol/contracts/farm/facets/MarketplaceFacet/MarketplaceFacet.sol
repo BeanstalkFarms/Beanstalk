@@ -72,6 +72,22 @@ contract MarketplaceFacet is Order {
         _fillListing(l, beanAmount);
     }
 
+    function fillDynamicPodListing(
+        PodListing calldata l,
+        PiecewisePolynomial calldata f,
+        uint256 beanAmount,
+        LibTransfer.From mode
+    ) external payable {
+        beanAmount = LibTransfer.transferToken(
+            C.bean(),
+            l.account,
+            beanAmount,
+            mode,
+            l.mode
+        );
+        _fillDynamicListing(l, f, beanAmount);
+    }
+
     // Cancel
     function cancelPodListing(uint256 index) external payable {
         _cancelPodListing(msg.sender, index);
@@ -119,6 +135,17 @@ contract MarketplaceFacet is Order {
         _fillPodOrder(o, index, start, amount, mode);
     }
 
+    function fillDynamicPodOrder(
+        PodOrder calldata o,
+        PiecewisePolynomial calldata f,
+        uint256 index,
+        uint256 start,
+        uint256 amount,
+        LibTransfer.To mode
+    ) external payable {
+        _fillDynamicPodOrder(o, f, index, start, amount, mode);
+    }
+
     // Cancel
     function cancelPodOrder(
         uint24 pricePerPod,
@@ -145,7 +172,7 @@ contract MarketplaceFacet is Order {
         uint256 maxPlaceInLine
     ) external view returns (uint256) {
         return s.podOrders[
-            createFixedOrderId(
+            createOrderId(
                 account, 
                 pricePerPod, 
                 maxPlaceInLine
@@ -165,8 +192,8 @@ contract MarketplaceFacet is Order {
                 pricePerPod, 
                 maxPlaceInLine, 
                 f.breakpoints, 
-                f.constants, 
-                f.packedBases, 
+                f.significands, 
+                f.packedExponents, 
                 f.packedSigns
             )
         ];
