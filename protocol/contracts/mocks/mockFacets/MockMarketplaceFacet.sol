@@ -14,21 +14,31 @@ import "../../farm/facets/MarketplaceFacet/MarketplaceFacet.sol";
 **/
 contract MockMarketplaceFacet is MarketplaceFacet {
 
-    function _evaluatePPoly(
-        PiecewisePolynomial calldata f,
-        uint256 x,
-        uint256 pieceIndex
-    ) public view returns (uint256) {
-        return evaluatePolynomial(f, x, pieceIndex);
+    function evaluatePolynomial(uint256[4] memory significands, uint256 packedExponents, uint256 packedSigns, uint256 piece, uint256 x) public pure returns (uint256) {
+        uint8[4] memory exponents = getPackedExponents(packedExponents, piece);
+        bool[4] memory signs = getPackedSigns(packedSigns, piece);
+        return _evaluatePolynomial(significands, exponents, signs, x);
     }
 
-    function _getDynamicOrderAmount(PiecewisePolynomial calldata f, uint256 index, uint256 start, uint256 amount) external view returns (uint256) {
-        return getDynamicOrderAmount(f, index + start, amount);
+    function evaluatePolynomialIntegration(uint256[4] memory significands, uint256 packedExponents, uint256 packedSigns, uint256 piece, uint256 start, uint256 end) public pure returns (uint256) {
+        uint8[4] memory exponents = getPackedExponents(packedExponents, piece);
+        bool[4] memory signs = getPackedSigns(packedSigns, piece);
+        return _evaluatePolynomialIntegration(significands, exponents, signs, start, end);
     }
 
-    function _findIndex(uint256[16] calldata array, uint256 value) external pure returns (uint256) {
-        uint256 numIntervals = getNumPieces(array);
-        return findPieceIndex(array, value, numIntervals - 1);
+    function _getPackedExponents(uint256 packedExponents, uint256 piece) public pure returns (uint8[4] memory) {
+        return getPackedExponents(packedExponents, piece);
     }
 
+    function _getPackedSigns(uint256 packedSigns, uint256 piece) public pure returns (bool[4] memory) {
+        return getPackedSigns(packedSigns, piece);
+    }
+
+    function _findPieceIndexFrom4(uint256[4] calldata breakpoints, uint256 value, uint256 high) public pure returns (uint256) {
+        return findPieceIndexFrom4(breakpoints, value, high);
+    }
+
+    function _findPieceIndexFrom16(uint256[16] calldata breakpoints, uint256 value, uint256 high) public pure returns (uint256) {
+        return findPieceIndexFrom16(breakpoints, value, high);
+    }
 }

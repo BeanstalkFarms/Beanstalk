@@ -35,137 +35,137 @@
             (expanded) signs: [true, true, true, true, false, true, true, true, false, false, false, ... , false]
         
     */
-    
-    //
-    struct PiecewisePolynomial {
+
+    struct PiecewisePolynomial_4 {
+        uint256[4] breakpoints; //The breakpoints for the piecewise. The last breakpoint in the array is the final interval for the polynomial, extending to infinity.
+        uint256[16] significands; // [c0_0,c1_0,c2_0,c3_0, ... , c0_31,c1_31,c2_31,c3_31] Contains the significands of the coefficients of the polynomial, concatenated according to their piecewise index. The first coefficient is the constant term, the second is the first term, etc.  
+        uint256 packedExponents; // [b0,b1,b2,b3] b0 contains the 8-bit bases for polynomials 0-7, b1 for polynomials 8-15
+        uint256 packedSigns; // The first bit is the sign of c0_0, the second bit is the sign of c1_0, etc.
+    }
+
+    struct PiecewisePolynomial_16 {
         uint256[16] breakpoints; //The breakpoints for the piecewise. The last breakpoint in the array is the final interval for the polynomial, extending to infinity.
         uint256[64] significands; // [c0_0,c1_0,c2_0,c3_0, ... , c0_31,c1_31,c2_31,c3_31] Contains the significands of the coefficients of the polynomial, concatenated according to their piecewise index. The first coefficient is the constant term, the second is the first term, etc.  
         uint256[2] packedExponents; // [b0,b1,b2,b3] b0 contains the 8-bit bases for polynomials 0-7, b1 for polynomials 8-15
         uint256 packedSigns; // The first bit is the sign of c0_0, the second bit is the sign of c1_0, etc.
     }
 
+    struct PiecewisePolynomial_64 {
+        uint256[64] breakpoints; //The breakpoints for the piecewise. The last breakpoint in the array is the final interval for the polynomial, extending to infinity.
+        uint256[256] significands; // [c0_0,c1_0,c2_0,c3_0, ... , c0_31,c1_31,c2_31,c3_31] Contains the significands of the coefficients of the polynomial, concatenated according to their piecewise index. The first coefficient is the constant term, the second is the first term, etc.  
+        uint256[8] packedExponents; // [b0,b1,b2,b3] b0 contains the 8-bit bases for polynomials 0-7, b1 for polynomials 8-15
+        uint256 packedSigns; // The first bit is the sign of c0_0, the second bit is the sign of c1_0, etc.
+    }
+    
+
     uint256 constant MAX_DEGREE = 3;
 
+   
     /**
     * @notice Computes a piecewise cubic polynomial at specified index.
-    * @param f The piecewise function to evaluate.
+    * @param significands The piecewise function to evaluate.
     * @param x The value at which to evaluate the polynomial.
-    * @param piece The index of the function piece to evaluate.
     */
-    function evaluatePolynomial(
-        PiecewisePolynomial calldata f, 
-        uint256 x, 
-        uint256 piece
+    function _evaluatePolynomial(
+        uint256[4] memory significands,
+        uint8[4] memory exponents,
+        bool[4] memory signs,
+        uint256 x
     ) internal pure returns (uint256) {
-        uint256 degree;
         uint256 positiveSum;
         uint256 negativeSum;
 
-        //only do x - rangeStart if x is greater than rangeStart, otherwise it will cause underflow
-        x = x.sub(f.breakpoints[piece], "Marketplace: Not in function domain.");
-
-        while(degree <= MAX_DEGREE) {
-
-            uint256 index = piece * 4 + degree;
-
-            if(getPackedSign(f.packedSigns, piece, degree)) {
+        for(uint256 degree = 0; degree <= MAX_DEGREE; degree++) {
+            if(signs[degree]) {
                 positiveSum += pow(x, degree)
-                    .mul(f.significands[index])
-                    .div(
-                        pow(10, getPackedExponent(f.packedExponents, piece, degree))
-                    );
+                    .mul(significands[degree])
+                    .div(pow(10, exponents[degree]));
             } else {
                 negativeSum += pow(x, degree)
-                    .mul(f.significands[index])
-                    .div(
-                        pow(10, getPackedExponent(f.packedExponents, piece, degree))
-                    );
+                    .mul(significands[degree])
+                    .div(pow(10, exponents[degree]));
             }
-            degree++;
         }
-
         return positiveSum.sub(negativeSum);
     }
  
     /**
     * @notice Computes the integral of a piecewise cubic polynomial at a single piecewise index.
-    * @param f The piecewise function to integrate.
+    * @param significands The piecewise function to integrate.
     * @param start The lower bound of the integral.
     * @param end The upper bound of the integral.
-    * @param piece The index of the function piece to integrate.
     */
-    function evaluatePolynomialIntegration(
-        PiecewisePolynomial calldata f, 
-        uint256 start,
-        uint256 end,
-        uint256 piece
+    function _evaluatePolynomialIntegration(
+        uint256[4] memory significands,
+        uint8[4] memory exponents,
+        bool[4] memory signs,
+        uint256 start, //start of breakpoint is assumed to be subtracted
+        uint256 end //start of breakpoint is assumed to be subtracted
     ) internal pure returns (uint256) {
-        uint256 degree;
         uint256 positiveSum;
         uint256 negativeSum;
 
-        start = start.sub(f.breakpoints[piece], "Marketplace: Not in function domain.");
-        end = end.sub(f.breakpoints[piece], "Marketplace: Not in function domain.");
-
-        while(degree <= MAX_DEGREE) {
-            // to integrate from x1 to x2 we need to evaluate the expression
-            // ( v3(x2-k)^4/4 + v2(x2-k)^3/3 + v1(x2-k)^2/2 + v0*x2 ) - ( v3(x1-k)^4/4 + v2(x1-k)^3/3 + v1(x1-k)^2/2 + v0*x1 )
-
-            uint256 index = piece * 4 + degree;
-
-            if (getPackedSign(f.packedSigns, piece, degree)) {
+        for(uint256 degree = 0; degree <= MAX_DEGREE; degree++) {
+            if(signs[degree]) {
                 positiveSum += pow(end, 1 + degree)
-                    .mul(f.significands[index])
+                    .mul(significands[degree])
                     .div(
-                        pow(10, getPackedExponent(f.packedExponents, piece, degree)).mul(1 + degree)
-                    ); 
-                
+                        pow(10, exponents[degree]).mul(1 + degree)
+                    );
                 positiveSum -= pow(start, 1 + degree)
-                    .mul(f.significands[index])
+                    .mul(significands[degree])
                     .div(
-                        pow(10, getPackedExponent(f.packedExponents, piece, degree)).mul(1 + degree)
-                    ); 
+                        pow(10, exponents[degree]).mul(1 + degree)
+                    );
             } else {
                 negativeSum += pow(end, 1 + degree)
-                    .mul(f.significands[index])
+                    .mul(significands[degree])
                     .div(
-                        pow(10, getPackedExponent(f.packedExponents, piece, degree)).mul(1 + degree)
-                    ); 
-            
-                negativeSum -= pow(start, 1 + degree)
-                    .mul(f.significands[index])
+                        pow(10, exponents[degree]).mul(1 + degree)
+                    );
+                negativeSum -= pow(end, 1 + degree)
+                    .mul(significands[degree])
                     .div(
-                        pow(10, getPackedExponent(f.packedExponents, piece, degree)).mul(1 + degree)
-                    ); 
+                        pow(10, exponents[degree]).mul(1 + degree)
+                    );
             }
-            degree++;
         }
-
+        
         return positiveSum.sub(negativeSum);
     }
-
+ 
     /**
     * @notice Loads a calldata PiecewisePolynomial into memory.
     * @dev To be used when emitting function parameters
     */
 
-    function loadArraysToMemory(uint256[16] calldata _breakpoints, uint256[64] memory _significands) internal pure returns (uint256[16] memory, uint256[64] memory) {
-        uint256[16] memory breakpoints = _breakpoints;
-        uint256[64] memory significands = _significands;
-
-        return (breakpoints, significands);
-    }
-
     /**
-    * @notice Gets the number of relevant breakpoints in a PPoly32's ranges array.
+    * @notice Gets the number of relevant breakpoints in a PiecewisePolynomial's breakpoints array.
     */
-   
-    function getNumPieces(uint256[16] calldata ranges) internal pure returns (uint256 numPieces) {
-        while(numPieces < 16) {
-            if(ranges[numPieces] == 0 && numPieces != 0) {
+
+    function getNumPiecesFrom64(uint256[64] calldata breakpoints) internal pure returns (uint256 numPieces) {
+        for(numPieces; numPieces < 64; numPieces++) {
+            if(breakpoints[numPieces] == 0 && numPieces != 0) {
                 break;
             }
-            numPieces++;
+        }
+        return numPieces--;
+    }
+
+    function getNumPiecesFrom16(uint256[16] calldata breakpoints) internal pure returns (uint256 numPieces) {
+        for(numPieces; numPieces < 16; numPieces++) {
+            if(breakpoints[numPieces] == 0 && numPieces != 0) {
+                break;
+            }
+        }
+        return numPieces--;
+    }
+
+    function getNumPiecesFrom4(uint256[4] calldata breakpoints) internal pure returns (uint256 numPieces) {
+        for(numPieces; numPieces < 4; numPieces++) {
+            if(breakpoints[numPieces] == 0 && numPieces != 0) {
+                break;
+            }
         }
         return numPieces--;
     }
@@ -175,12 +175,25 @@
     * @dev 32 base indices are available per uint256. 
     * @param packedExponents A uint256 created from the concatenation of up to 32 uint8 values.
     * @param piece The index of the piece to retrieve the base for.
-    * @param degree The degree of the constant term to retrieve the base for. 
     */
-    function getPackedExponent(uint256[2] calldata packedExponents, uint256 piece, uint256 degree) internal pure returns (uint8) {
-        uint256 packedExponent = packedExponents[piece/ 8]; //get the relevant index from packedExponents
-        uint256 relativeBaseIndex = (piece - ((piece/8)*8))*4 + degree; //get the index of the base in the relevant uint256
-        return uint8(packedExponent >> ((32 - relativeBaseIndex - 1)*8)); 
+    // function getPackedExponent(uint256[2] calldata packedExponents, uint256 piece, uint256 degree) internal pure returns (uint8) {
+    //     uint256 packedExponent = packedExponents[piece/ 8]; //get the relevant index from packedExponents
+    //     return _getPackedExponent(packedExponent, piece, degree);
+    // }
+
+    // function getPackedExponent(uint256 packedExponents, uint256 piece, uint256 degree) internal pure returns (uint8) {
+    //     uint256 relativeBaseIndex = (piece - ((piece/8)*8))*4 + degree; //get the index of the base in the relevant uint256
+    //     return uint8(packedExponents >> ((32 - relativeBaseIndex - 1)*8)); 
+    // }
+
+    function getPackedExponents(uint256 packedExponents, uint256 piece) internal pure returns (uint8[4] memory) {
+        uint8[4] memory exponents;
+        uint256 relativeBaseIndex = (piece - ((piece/8)*8))*4; //get the index of the base in the relevant uint256
+        exponents[0] = uint8(packedExponents >> ((32 - relativeBaseIndex - 1)*8));
+        exponents[1] = uint8(packedExponents >> ((32 - relativeBaseIndex)*8));
+        exponents[2] = uint8(packedExponents >> ((32 - relativeBaseIndex + 1)*8));
+        exponents[1] = uint8(packedExponents >> ((32 - relativeBaseIndex + 2)*8));
+        return exponents; 
     }
 
     /**
@@ -188,10 +201,18 @@
     * @dev 256 sign indices are available per uint256. 1 bit is allocated per sign. 
     * @param packedBools A uint256 created from the concatenation of up to 256 boolean values.
     * @param piece The index of the piece to retrieve the sign for.
-    * @param degree The degree of the constant term to retrieve the sign for. 
     */
-    function getPackedSign(uint256 packedBools, uint256 piece, uint256 degree) internal pure returns (bool) {
-        return ((packedBools >> (piece*4 + degree)) & uint256(1) == 1);
+    // function getPackedSign(uint256 packedBools, uint256 piece, uint256 degree) internal pure returns (bool) {
+    //     return ((packedBools >> (piece*4 + degree)) & uint256(1) == 1);
+    // }
+
+    function getPackedSigns(uint256 packedBools, uint256 piece) internal pure returns (bool[4] memory) {
+        bool[4] memory signs;
+        signs[0] = ((packedBools >> (piece*4 )) & uint256(1) == 1);
+        signs[1] = ((packedBools >> (piece*4 + 1)) & uint256(1) == 1);
+        signs[2] = ((packedBools >> (piece*4 + 2)) & uint256(1) == 1);
+        signs[3] = ((packedBools >> (piece*4 + 3)) & uint256(1) == 1);
+        return signs;
     }
  
      /**
@@ -201,7 +222,36 @@
     * @param value The value to search for.
     * @param high The highest index of the array to search. Could be retrieved from getNumPieces(arr) - 1.
     */
-    function findPieceIndex(uint256[16] calldata breakpoints, uint256 value, uint256 high) internal pure returns (uint256 index) {
+
+    function findPieceIndexFrom64(uint256[64] calldata breakpoints, uint256 value, uint256 high) internal pure returns (uint256 index) {
+        if(value < breakpoints[0]) return 0;
+        
+        uint256 low = 0;
+        
+        while(low < high) {
+            if(breakpoints[low] == value) return low;
+            else if(breakpoints[low] > value) return low - 1;
+            else low++;
+        }
+
+        return low - 1;
+    }
+
+    function findPieceIndexFrom16(uint256[16] calldata breakpoints, uint256 value, uint256 high) internal pure returns (uint256 index) {
+        if(value < breakpoints[0]) return 0;
+        
+        uint256 low = 0;
+        
+        while(low < high) {
+            if(breakpoints[low] == value) return low;
+            else if(breakpoints[low] > value) return low - 1;
+            else low++;
+        }
+
+        return low - 1;
+    }
+
+    function findPieceIndexFrom4(uint256[4] calldata breakpoints, uint256 value, uint256 high) internal pure returns (uint256 index) {
         if(value < breakpoints[0]) return 0;
         
         uint256 low = 0;

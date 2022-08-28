@@ -14,8 +14,6 @@ const config = {
 
 const math = create(all, config);
 
-const maxpieces = 16;
-
 String.prototype.calculateShifts = function (c) {
     let val = +this;
     if(Math.abs(val) == 0) {
@@ -52,18 +50,18 @@ Number.prototype.calculateShifts = function (counter) {
     return counter;
 }
 
-function getNumIntervals(array) {
-    var numIntervals = 0;
-    while(numIntervals < maxpieces) {
-        if(array[numIntervals] == 0 && numIntervals != 0) break;
-        else if(array[numIntervals] == undefined) break;
-        numIntervals++;
+function getNumPieces(array, maxPieces) {
+    var numPieces = 0;
+    while(numPieces < maxPieces) {
+        if(array[numPieces] == 0 && numPieces != 0) break;
+        else if(array[numPieces] == undefined) break;
+        numPieces++;
     }
 
-    return numIntervals;
+    return numPieces;
 }
 
-function findSortedIndex(array, value, high) {
+function findIndex(array, value, high) {
     if(math.compare(math.bignumber(value), math.bignumber(array[0])) == -1) return 0;
     var low = 0;
     while(low < high) {
@@ -76,40 +74,23 @@ function findSortedIndex(array, value, high) {
 
 
 
-//javascript implementation from https://www.wikiwand.com/en/Monotone_cubic_interpolation
-function interpolate(xArr, yArr) {
-    //set and base cases
+//implementation from https://www.wikiwand.com/en/Monotone_cubic_interpolation
+function interpolatePoints(xs, ys) {
+    var length = xs.length;
+    if(length < 2) return;
+    if(length > 64) return;
 
-    // if(xArr.length != yArr.length) return;
-    var length = xArr.length;
-    // if(length > maxpieces || length < 2) return;
-
+    var maxPieces;
+    if(length <= 4) {
+        maxPieces = 4;        
+    } else if (length <= 16) {
+        maxPieces = 16;
+    } else if (length <= 32) {
+        maxPieces = 32;
+    } else if (length <= 64) {
+        maxPieces = 64;
+    }
     
-    var indexes = [];
-    for(let i = 0; i < length; i++) {
-        indexes.push(i);
-    }
-    indexes.sort(function(a,b) {
-        return xArr[a] < xArr[b] ? -1 : 1;
-    })
-
-    var xs = [], ys = [];
-
-    for(let i = 0; i < length; i++) {
-        
-        if(+xArr[indexes[i]] < +xArr[indexes[i-1]]) {
-            xs.push(+xArr[indexes[i-1]]);
-        } else {
-            xs.push(+xArr[indexes[i]])
-        }
-
-        if(+yArr[indexes[i]] < +yArr[indexes[i-1]]) {
-            ys.push(yArr[indexes[i-1]]);
-        } else {
-            ys.push(+yArr[indexes[i]]);
-        }
-    }
-
     var dys = [], dxs = [], ms = [];
     for(let i = 0; i < (length-1); i++) {
 
@@ -126,14 +107,7 @@ function interpolate(xArr, yArr) {
         if(ms[i] * ms[i+1] <= 0) {
             c1s.push(math.bignumber(0));
         } else {
-            // var common = math.add(dxs[i], dxs[i+1]);
-            c1s.push(math.divide(
-                math.multiply(math.bignumber(3), math.add(dxs[i], dxs[i+1])), 
-                math.add(
-                    math.divide(math.add(math.add(dxs[i], dxs[i+1]), dxs[i+1]), ms[i]),
-                    math.divide(math.add(math.add(dxs[i], dxs[i+1]), dxs[i]), ms[i+1])
-                )
-            ));
+            c1s.push(math.divide(math.multiply(math.bignumber(3), math.add(dxs[i], dxs[i+1])), math.add(math.divide(math.add(math.add(dxs[i], dxs[i+1]), dxs[i+1]), ms[i]), math.divide(math.add(math.add(dxs[i], dxs[i+1]), dxs[i]), ms[i+1]))));
         }
     }
     
@@ -148,191 +122,176 @@ function interpolate(xArr, yArr) {
         c3s.push(math.chain(common_).multiply(invDx).multiply(invDx).done());
     }
     
-    var ranges = new Array(maxpieces);
-    var values = new Array(maxpieces*4);
-    var bases = new Array(maxpieces*4);
-    var signs = new Array(maxpieces*4);
-    for(let i = 0; i < maxpieces; i++){
+    var breakpoints = new Array(maxPieces);
+    var coefficients = new Array(maxPieces*4);
+    var exponents = new Array(maxPieces*4);
+    var signs = new Array(maxPieces*4);
+    for(let i = 0; i < maxPieces; i++){
         if(i<length) {
             signs[i*4] = BitDescriptor.fromBool(math.sign(ys[i]) == 1 || math.sign(ys[i]) == 0);
             signs[i*4 + 1] = BitDescriptor.fromBool(math.sign(c1s[i]) == 1 || math.sign(c1s[i]) == 0);
 
             var c = 25; //Note: arbitrary number: 10^25 is the starting base
 
-            bases[i*4] = BitDescriptor.fromUint8(math.number(ys[i]).calculateShifts(c));
-            bases[i*4 + 1] = BitDescriptor.fromUint8(math.number(c1s[i]).calculateShifts(c));
+            exponents[i*4] = BitDescriptor.fromUint8(math.number(ys[i]).calculateShifts(c));
+            exponents[i*4 + 1] = BitDescriptor.fromUint8(math.number(c1s[i]).calculateShifts(c));
             
-            var base1 = math.pow(math.bignumber(10), math.bignumber(math.number(ys[i]).calculateShifts(c)))
-            var base2 = math.pow(math.bignumber(10), math.bignumber(math.number(c1s[i]).calculateShifts(c)))
+            var exponentDeg0 = math.pow(math.bignumber(10), math.bignumber(math.number(ys[i]).calculateShifts(c)))
+            var exponentDeg1 = math.pow(math.bignumber(10), math.bignumber(math.number(c1s[i]).calculateShifts(c)))
             
-            values[i*4] = math.format(math.floor(math.abs(math.multiply(ys[i], base1))), {notation: "fixed"});
-            values[i*4 + 1] = math.format(math.floor(math.abs(math.multiply(c1s[i], base2))), {notation: "fixed"});
+            coefficients[i*4] = math.format(math.floor(math.abs(math.multiply(ys[i], exponentDeg0))), {notation: "fixed"});
+            coefficients[i*4 + 1] = math.format(math.floor(math.abs(math.multiply(c1s[i], exponentDeg1))), {notation: "fixed"});
             
-            ranges[i] = math.format(xs[i], {notation: "fixed"});
+            breakpoints[i] = math.format(xs[i], {notation: "fixed"});
 
             if(i<(dxs.length)) {
                 signs[i*4 + 2] = BitDescriptor.fromBool(math.sign(c2s[i]) == 1 || math.sign(c2s[i]) == 0);
                 signs[i*4 + 3] = BitDescriptor.fromBool(math.sign(c3s[i]) == 1 || math.sign(c3s[i]) == 0);
 
-                bases[i*4 + 2] = BitDescriptor.fromUint8(math.number(c2s[i]).calculateShifts(c));
-                bases[i*4 + 3] = BitDescriptor.fromUint8(math.number(c3s[i]).calculateShifts(c));
+                exponents[i*4 + 2] = BitDescriptor.fromUint8(math.number(c2s[i]).calculateShifts(c));
+                exponents[i*4 + 3] = BitDescriptor.fromUint8(math.number(c3s[i]).calculateShifts(c));
 
-                var base3 = math.pow(math.bignumber(10), math.bignumber(math.number(c2s[i]).calculateShifts(c)))
-                var base4 = math.pow(math.bignumber(10), math.bignumber(math.number(c3s[i]).calculateShifts(c)))
-                values[i*4 + 2] = math.format(math.floor(math.abs(math.multiply(c2s[i], base3))), {notation: "fixed"});
-                values[i*4 + 3] = math.format(math.floor(math.abs(math.multiply(c3s[i], base4))), {notation: "fixed"});
+                var exponentDeg2 = math.pow(math.bignumber(10), math.bignumber(math.number(c2s[i]).calculateShifts(c)))
+                var exponentDeg3 = math.pow(math.bignumber(10), math.bignumber(math.number(c3s[i]).calculateShifts(c)))
+                coefficients[i*4 + 2] = math.format(math.floor(math.abs(math.multiply(c2s[i], exponentDeg2))), {notation: "fixed"});
+                coefficients[i*4 + 3] = math.format(math.floor(math.abs(math.multiply(c3s[i], exponentDeg3))), {notation: "fixed"});
             } else {
                 signs[i*4 + 2] = BitDescriptor.fromBool(false);
                 signs[i*4 + 3] = BitDescriptor.fromBool(false);
-                bases[i*4 + 2] = BitDescriptor.fromUint8(0);
-                bases[i*4 + 3] = BitDescriptor.fromUint8(0);
-                values[i*4 + 2] = '0';
-                values[i*4 + 3] = '0';
+                exponents[i*4 + 2] = BitDescriptor.fromUint8(0);
+                exponents[i*4 + 3] = BitDescriptor.fromUint8(0);
+                coefficients[i*4 + 2] = '0';
+                coefficients[i*4 + 3] = '0';
             }
         } else {
-            ranges[i] = '0';
+            breakpoints[i] = '0';
             for(let j = 0; j < 4; j++){
                 signs[i*4 + j] = BitDescriptor.fromBool(false);
-                bases[i*4 + j] = BitDescriptor.fromUint8(0);
-                values[i*4 + j] = '0';
+                exponents[i*4 + j] = BitDescriptor.fromUint8(0);
+                coefficients[i*4 + j] = '0';
             }
         }
     }
 
-    const packedBools = BitPacker.pack(signs);
-    const packedBases = BitPacker.pack(bases);
+    const packedSignsArr = BitPacker.pack(signs);
+    const packedExponentsArr = BitPacker.pack(exponents);
     
-    const booliterator = BitPacker.createUnpackIterator(packedBools, pattern => {
-        switch(pattern) {
-            case '1': return '1';
-            case '0': return '0';
-            default: return null;
-        }
-    })
+    const packedSignsIter = BitPacker.createUnpackIterator(packedSignsArr)
+    const packedExponentsIter = BitPacker.createUnpackIterator(packedExponentsArr)
 
-    const baseiterator = BitPacker.createUnpackIterator(packedBases, pattern => {
-        switch(pattern) {
-            case '1': return '1';
-            case '0': return '0';
-            default: return null;
-        }
-    })
+    const packedSigns = BigInt("0b" + [...packedSignsIter].reverse().join('')).toString();
 
-    const boolString = [...booliterator].reverse().join('');
-    const baseArr = [...baseiterator];
-    // console.log(baseArr.length, baseArr);
-    var baseInts = [];
-    for(let i = 0; i < (Math.floor(maxpieces / 8)); i++){
-        //pack 32 bases per baseInt
-        // console.log(baseArr.slice(i*256, (i+1)*256 - 1));
-        baseInts.push(BigInt("0b" + baseArr.slice(i*256, (i+1)*256).join('')).toString());
+    if(maxPieces > 8) {
+        const packedExponentsBitArr = [...packedExponentsIter];
+
+        var packedExponents = [];
+        for(let i = 0; i < (Math.floor(maxPieces / 8)); i++){
+            packedExponents.push(BigInt("0b" + packedExponentsBitArr.slice(i*256, (i+1)*256).join('')).toString());
+        }
+    } else {
+        var packedExponents = BigInt("0b" + [...packedExponentsIter].join('')).toString();
     }
-
-    //pack all bools (up to 256) into a single int. in this case there are only 128 bools
-    const boolInt = BigInt("0b" + boolString).toString();
-
-    return {ranges: ranges, values: values, bases: bases, signs: signs, basesPacked: baseInts, signsPacked: boolInt}
+    
+    return {breakpoints: breakpoints, coefficients: coefficients, exponents: exponents, signs: signs, packedExponents: packedExponents, packedSigns: packedSigns}
 }
 
-function ppval(f, x, index) {
+function evaluatePolynomial(f, x, pieceIndex) {
     var _x = math.bignumber(x);
-    var degreeIndex = math.bignumber(0);
-    //only do x - k if x is greater than or equal to k
-    if(math.compare(_x, math.bignumber(f.ranges[index])) != -1) {
-        _x = math.subtract(_x, math.bignumber(f.ranges[index]));
+
+    if(math.compare(_x, math.bignumber(f.breakpoints[pieceIndex])) != -1) {
+        _x = math.subtract(_x, math.bignumber(f.breakpoints[pieceIndex]));
     }
 
-    var y = math.bignumber(0);
+    var result = math.bignumber(0);
     
-    while(degreeIndex < 4) {
-        var termMultiplier = math.bignumber(f.values[math.add(index*4, degreeIndex)])
-        var termBase = math.pow(math.bignumber(10), math.bignumber(f.bases[math.add(index*4, degreeIndex)].value));
+    var degreeIndex = 0;
+    while(degreeIndex <= 3) {
+        
+        const coefValue = math.bignumber(f.coefficients[math.add(pieceIndex*4, degreeIndex)])
+        const coefExponent = math.pow(math.bignumber(10), math.bignumber(f.exponents[math.add(pieceIndex*4, degreeIndex)].value));
+        const term = math.floor(math.chain(_x).pow(degreeIndex).multiply(coefValue).divide(coefExponent).done());
 
-        var term = math.floor(math.chain(_x).pow(degreeIndex).multiply(termMultiplier).divide(termBase).done());
-
-        if(f.signs[math.add(index*4, degreeIndex)].value == 1) y = math.add(y, term)
-        else y = math.subtract(y, term)
+        if(f.signs[math.add(index*4, degreeIndex)].value == 1) result = math.add(result, term)
+        else result = math.subtract(result, term)
 
         degreeIndex = math.add(degreeIndex, 1);
     }
 
-    return y;
+    return result;
 }
 
-function ppval_integrate(f, start, end, pieceIndex) {
+function evaluatePolynomialIntegration(f, start, end, pieceIndex) {
 
     var _x1 = math.bignumber(start);
     var _x2 = math.bignumber(end);
 
-    if(math.compare(_x1, math.bignumber(f.ranges[pieceIndex])) != -1 && math.compare(_x2, math.bignumber(f.ranges[pieceIndex])) != -1) {
-        _x1 = math.subtract(_x1, math.bignumber(f.ranges[pieceIndex]));
-        _x2 = math.subtract(_x2, math.bignumber(f.ranges[pieceIndex]));
+    if(math.compare(_x1, math.bignumber(f.breakpoints[pieceIndex])) !== -1 && math.compare(_x2, math.bignumber(f.ranges[pieceIndex])) !== -1) {
+        _x1 = math.subtract(_x1, math.bignumber(f.breakpoints[pieceIndex]));
+        _x2 = math.subtract(_x2, math.bignumber(f.breakpoints[pieceIndex]));
     }
 
-    var sum = math.bignumber(0);
-    var degreeIndex = math.bignumber(0);
+    var result = math.bignumber(0);
+    var degreeIndex = 0;
 
-    while(degreeIndex < 4) {
+    while(degreeIndex <= 3) {
 
-        var termMultiplier = math.bignumber(f.values[math.add(pieceIndex*4, degreeIndex)]);
-        var termBase = math.pow(math.bignumber(10), math.bignumber(f.bases[math.add(pieceIndex*4, degreeIndex)].value));
+        var coefValue = math.bignumber(f.coefficients[math.add(pieceIndex*4, degreeIndex)]);
+        var coefExponent = math.pow(math.bignumber(10), math.bignumber(f.bases[math.add(pieceIndex*4, degreeIndex)].value));
 
         var term = math.chain(_x2)
-            .pow(math.add(degreeIndex,1))
-            .multiply(termMultiplier)
-            .divide(termBase)
-            .divide(math.add(degreeIndex,1))
-            .multiply(math.bignumber(f.signs[math.add(pieceIndex*4, degreeIndex)].value == 1 ? 1 : -1))
+            .pow(degreeIndex + 1)
+            .multiply(coefValue)
+            .divide(coefExponent)
+            .divide(degreeIndex + 1)
+            .multiply(f.signs[math.add(pieceIndex*4, degreeIndex)].value == 1 ? 1 : -1)
             .done();
 
-        sum = math.add(sum, term);
+        result = math.add(result, term);
 
         term = math.chain(_x1)
-            .pow(math.add(degreeIndex,1))
-            .multiply(termMultiplier)
-            .divide(termBase)
-            .divide(math.add(degreeIndex,1))
-            .multiply(math.bignumber(f.signs[math.add(pieceIndex*4, degreeIndex)].value == 1 ? 1 : -1))
+            .pow(degreeIndex + 1)
+            .multiply(coefValue)
+            .divide(coefExponent)
+            .divide(degreeIndex + 1)
+            .multiply(f.signs[math.add(pieceIndex*4, degreeIndex)].value == 1 ? 1 : -1)
             .done();
-        sum = math.subtract(sum, term);
-        
+
+        result = math.subtract(result, term);
         degreeIndex++;
     }
     
-    return math.floor(sum);
+    return math.floor(result);
 }
 
-function ppval_listing(f, placeInLine) {
-    var pieceIndex = findSortedIndex(f.ranges, placeInLine, getNumIntervals(f.ranges) - 1);
-    var y = ppval(f, placeInLine, pieceIndex);
+function getAmountListing(f, placeInLine) {
+    var pieceIndex = findIndex(f.breakpoints, placeInLine, getNumPieces(f.breakpoints) - 1);
+    var y = evaluatePolynomial(f, placeInLine, pieceIndex);
     return math.format(math.floor(y), {notation:"fixed"});
 
 }
 
-function ppval_order(f, placeInLine, amount) {
+function getAmountOrder(f, placeInLine, amountPodsFromOrder) {
 
     var beanAmount = math.bignumber(0);
-    var end = math.add(math.bignumber(placeInLine), math.bignumber(amount));
-    var numIntervals = getNumIntervals(f.ranges);
-    var pieceIndex = findSortedIndex(f.ranges, math.bignumber(placeInLine), numIntervals - 1);
+    const numPieces = getNumPieces(f.breakpoints);
+    var pieceIndex = findIndex(f.breakpoints, math.bignumber(placeInLine), numPieces - 1);
 
     var start = math.bignumber(placeInLine);
-    var end = math.add(start, math.bignumber(amount));
+    const end = math.add(start, math.bignumber(amountPodsFromOrder));
 
-    if(math.compare(start, f.ranges[0]) == -1) start = math.bignumber(f.ranges[0]);
+    if(math.compare(start, f.breakpoints[0]) === -1) start = math.bignumber(f.breakpoints[0]);
    
-    while(math.compare(start, end) == -1) {
-        if(!(math.compare(pieceIndex, numIntervals-1) == 0)) {
-            if(math.compare(end, math.bignumber(f.ranges[pieceIndex + 1])) == 1) {
+    while(math.compare(start, end) === -1) {
+        if(!(math.compare(pieceIndex, numPieces - 1) === 0)) {
+            if(math.compare(end, math.bignumber(f.breakpoints[pieceIndex + 1])) === 1) {
 
-                var term = ppval_integrate(f, start, f.ranges[pieceIndex + 1], pieceIndex); 
-                start = math.bignumber(f.ranges[pieceIndex+1]);
+                var term = evaluatePolynomialIntegration(f, start, f.breakpoints[pieceIndex + 1], pieceIndex); 
+                start = math.bignumber(f.breakpoints[pieceIndex + 1]);
                 beanAmount = math.add(beanAmount, term);
     
-                if(pieceIndex < (numIntervals - 1)) pieceIndex++;
+                if(pieceIndex < (numPieces - 1)) pieceIndex++;
                 
             } else {
-                //integrate from x until end 
                 var term = ppval_integrate(f, start, end, pieceIndex);
                 beanAmount = math.add(beanAmount, term);
                 start = end;
@@ -342,20 +301,18 @@ function ppval_order(f, placeInLine, amount) {
             beanAmount = math.add(beanAmount, term);
             start = end;
         }
-        
-        
     }
     return math.format(math.floor(math.divide(beanAmount, 1000000)), {notation: "fixed"});
 
 }
 
 module.exports = {
-    ppval_order,
-    ppval_listing,
-    findSortedIndex,
-    ppval,
-    ppval_integrate,
-    interpolate,
-    getNumIntervals
+    getAmountOrder,
+    getAmountListing,
+    findIndex,
+    evaluatePolynomial,
+    evaluatePolynomialIntegration,
+    interpolatePoints,
+    getNumPieces
 }
 

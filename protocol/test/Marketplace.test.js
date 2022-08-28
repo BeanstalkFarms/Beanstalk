@@ -1,5 +1,5 @@
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
-const { ppval_listing, ppval_order, interpolate, getNumIntervals, findSortedIndex } = require('./utils/interpolater.js')
+const { getAmountListing, getAmountOrder, interpolatePoints, getNumPieces, findIndex } = require('./utils/interpolater.js')
 const { expect, use } = require("chai");
 const { waffleChai } = require("@ethereum-waffle/chai");
 use(waffleChai);
@@ -45,13 +45,6 @@ describe('Marketplace', function () {
     await this.field.connect(user2).sow('1000', EXTERNAL);
   })
 
-  const emptyFunction = {
-    ranges: new Array(16).fill('0'),
-    values: new Array(64).fill('0'),
-    bases: new Array(2).fill('0'),
-    signs: '0'
-  }
-
   const getHash = async function (tx) {
     let receipt = await tx.wait();
     var args = (receipt.events?.filter((x) => { return x.event == ("PodListingCreated")}))[0]?.args;
@@ -64,29 +57,51 @@ describe('Marketplace', function () {
 
   const getDynamicHash = async function (tx) {
     let receipt = await tx.wait();
-    var args = (receipt.events.filter((x) => { return x.event == ("DynamicPodListingCreated") }))[0].args;
+    let numPieces = 4;
+    var args = (receipt.events.filter((x) => { return x.event == ("Dynamic4PiecesPodListingCreated") }))[0].args;
+    if(!args) {
+      args = (receipt.events.filter((x) => { return x.event == ("Dynamic16PiecesPodListingCreated") }))[0].args;
+      numPieces = 16;
+    }
 
-    return ethers.utils.solidityKeccak256(
-      ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'uint256[]', 'uint256[]', 'uint256[]', 'uint256'],
-      [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args.mode == EXTERNAL, args.polynomialBreakpoints, args.polynomialConstants, args.packedPolynomialBases, args.packedPolynomialSigns]
-    )
+    if(!args) {
+      args = (receipt.events.filter((x) => { return x.event == ("Dynamic64PiecesPodListingCreated") }))[0].args;
+      numPieces = 64;
+    }
+
+    if(numPieces === 4) {
+      return ethers.utils.solidityKeccak256(
+        ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'uint256[]', 'uint256[]', 'uint256', 'uint256'],
+        [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args.mode == EXTERNAL, args.pieceBreakpoints, args.polynomialCoefficients, args.packedPolynomialExponents, args.packedPolynomialSigns]
+      )
+    } else {
+      return ethers.utils.solidityKeccak256(
+        ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'uint256[]', 'uint256[]', 'uint256[]', 'uint256'],
+        [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args.mode == EXTERNAL, args.pieceBreakpoints, args.polynomialCoefficients, args.packedPolynomialExponents, args.packedPolynomialSigns]
+      )
+    }
   }
 
   const getHashFromDynamicListing = function (l) {
+    let numPieces = l[5][0].length;
+
     l[4] = l[4] == EXTERNAL;
     l.push(l[5][1]);
     l.push(l[5][2]);
     l.push(l[5][3]);
     l[5] = l[5][0];
     
-    return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'uint256[]', 'uint256[]', 'uint256[]', 'uint256'], l);
+    if(numPieces === 4) {
+      return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'uint256[]', 'uint256[]', 'uint256', 'uint256'], l);
+    } else if (numPieces === 16) {
+      return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'uint256[]', 'uint256[]', 'uint256[]', 'uint256'], l);
+    }
   }
 
   const getHashFromListing = function (l) {
     
     return ethers.utils.solidityKeccak256(
-      ['uint256', 'uint256', 'uint24', 'uint256', 'bool'], 
-      [l[0],l[1], l[2], l[3], l[4] == EXTERNAL]
+      ['uint256', 'uint256', 'uint24', 'uint256', 'bool'], [l[0], l[1], l[2], l[3], l[4] == EXTERNAL]
     );
   }
 
@@ -98,26 +113,30 @@ describe('Marketplace', function () {
 
   const getDynamicOrderId = async function (tx) {
     let receipt = await tx.wait();
-    let idx = (receipt.events?.filter((x) => { return x.event == "DynamicPodOrderCreated" }))[0].args.id;
+    let idx = (receipt.events?.filter((x) => { return (x.event == "Dynamic4PiecesPodOrderCreated" || x.event == "Dynamic16PiecesPodOrderCreated" || x.event == "Dynamic64PiecesPodOrderCreated") }))[0].args.id;
     return idx;
   }
+  const set_12Pieces = {
+    xs: [100, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200],
+    ys: [900000, 900000, 900000, 900000, 900000, 800000, 800000, 800000, 800000, 775000, 750000, 725000]
+  }
 
-  const set1 = {
+  const set_16Pieces = {
     xs: [100, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000],
     ys: [900000, 900000, 900000, 900000, 900000, 800000, 800000, 800000, 800000, 775000, 750000, 725000, 700000, 675000, 650000, 625000]
   }
 
-  const maxSet = {
+  const set_32Pieces = {
     xs: [200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4200, 5000, 5500, 6350, 6780, 7230, 7400, 8130, 8500, 8800, 8950, 9900, 9999],
     ys: [900000, 900000, 900000, 900000, 800000, 800000, 800000, 800000, 775000, 750000, 725000, 700000, 675000, 650000, 625000, 600000, 575000, 550000, 525000, 520000, 515000, 510000, 501000, 478000, 465000, 443000, 425000, 409000, 398000, 389000, 371000, 369000]
   }
 
-  const cubicSet = {
+  const set_13Pieces = {
     xs: [1000  , 5000  , 6000  , 7000  , 8000  , 9000  , 10000 , 11000 , 12000 , 13000 , 14000 , 18000 , 20000 ],
     ys: [990000, 990000, 980000, 950000, 890000, 790000, 680000, 670000, 660000, 570000, 470000, 450000, 450000]
   }
   
-  const hugeSet = {
+  const hugeValueSet_13Pieces = {
     //starting from 10 trillion
     xs: [10000000000000, 50000000000000, 60000000000000, 70000000000000, 80000000000000, 90000000000000, 100000000000000, 110000000000000, 120000000000000, 130000000000000, 140000000000000, 180000000000000, 200000000000000],
     ys: [990000, 990000, 980000, 950000, 890000, 790000, 680000, 670000, 660000, 570000, 470000, 450000, 450000]
@@ -131,526 +150,365 @@ describe('Marketplace', function () {
     await revertToSnapshot(snapshotId);
   });
 
-  describe("Functions", async function () {
+  describe("Functions Misc", async function () {
 
-    describe("breakpoint index search", async function () {
+    describe("Piece Index Search", async function () {
 
-      describe("<32 break points", async function () {
+      describe("Less than 4 Pieces", async function () {
         beforeEach(async function () {
-          this.breakpoints = interpolate(set1.xs, set1.ys).ranges;
+          this.breakpoints = interpolatePoints([100, 200, 300], [0, 0, 0]).ranges;
         })
         it("correctly finds interval at 0", async function () {
-          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '0')).to.be.equal(0);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '0')).to.be.equal(0);
         })
 
-        it("correctly finds interval at values within breakpoints", async function ( ){
-          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '250')).to.be.equal(1);
-          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '420')).to.be.equal(2);
-          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '2900')).to.be.equal(14);
+        it("finds interval between breakpoints", async function () {
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '150')).to.be.equal(0);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '250')).to.be.equal(1);
         })
-        it("correctly finds interval at breakpoint (inclusive of start value, exclusive of end value)", async function ( ){
-          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '200')).to.be.equal(1);
-          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '400')).to.be.equal(2);
-          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '2800')).to.be.equal(14);
+        it("finds interval at breakpoints", async function () {
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '100')).to.be.equal(0);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '200')).to.be.equal(1);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '300')).to.be.equal(1);
         })
-        it("correctly finds interval if value is at end", async function () {
-          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '3000')).to.be.equal(14);
-        })
-        it("returns last interval if value is outside subinterval range", async function () {
-          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '3001')).to.be.equal(14);
+        it("finds interval past end", async function (){
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '301')).to.be.equal(1);
         })
       })
 
-      describe("<32 break points, huge set", async function () {
+      describe("4 Pieces", async function () {
         beforeEach(async function () {
-          this.breakpoints = interpolate(hugeSet.xs, hugeSet.ys).ranges;
+          this.breakpoints = interpolatePoints([100, 200, 300, 400], [0, 0, 0, 0]).ranges;
         })
         it("correctly finds interval at 0", async function () {
-          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '0')).to.be.equal(0);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '0')).to.be.equal(0);
         })
 
-        it("correctly finds interval at values within breakpoints", async function ( ){
-          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '55000000000000')).to.be.equal(1);
-          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '69000000000000')).to.be.equal(2);
-          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '105000000000000')).to.be.equal(6);
+        it("finds interval between breakpoints", async function () {
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '150')).to.be.equal(0);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '250')).to.be.equal(1);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '350')).to.be.equal(2);
         })
-        it("correctly finds interval at breakpoint (inclusive of start value, exclusive of end value)", async function ( ){
-          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '50000000000000')).to.be.equal(1);
-          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '60000000000000')).to.be.equal(2);
-          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '185000000000000')).to.be.equal(11);
+        it("finds interval at breakpoints", async function () {
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '100')).to.be.equal(0);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '200')).to.be.equal(1);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom(this.breakpoints, '300')).to.be.equal(2);
         })
-        it("correctly finds interval if value is at end", async function () {
-          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '200000000000000')).to.be.equal(11);
+        it("finds interval at end", async function () {
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '400')).to.be.equal(2);
         })
-        it("returns last interval if value is outside subinterval range", async function () {
-          expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '400000000000000')).to.be.equal(11);
+        it("finds interval past end", async function (){
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '401')).to.be.equal(2);
         })
       })
-      
-      // describe("32 break points", async function () {
-      //   beforeEach(async function () {
-      //     this.breakpoints = interpolate(maxSet.xs, maxSet.ys).ranges;
-      //   })
-      //   it("correctly finds interval 0", async function () {
-      //     expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '0')).to.be.equal(0);
-      //   })
 
-      //   it("correctly finds interval at values within breakpoints", async function ( ){
-      //     expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '250')).to.be.equal(0);
-      //     expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '420')).to.be.equal(1);
-      //     expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '1199')).to.be.equal(4);
-      //   })
-      //   it("correctly finds interval at breakpoints (exclusive of start value)", async function ( ){
-      //     expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '400')).to.be.equal(1);
-      //     expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '2000')).to.be.equal(9);
-      //     expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '6780')).to.be.equal(23);
-      //   })
-      //   it("correctly finds interval if value is at end", async function () {
-      //     expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '9999')).to.be.equal(30);
-      //   })
-      //   it("returns last interval if value is outside subinterval range", async function () {
-      //     expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '10000')).to.be.equal(30);
-      //   })
-      //   it("returns last interval if value is outside subinterval range 2", async function () {
-      //     expect(await this.marketplace.connect(user)._findIndex(this.breakpoints, '10000000000000')).to.be.equal(30);
-      //   })
-      // })
+      describe("Less than 16 Pieces", async function () {
+        beforeEach(async function () {
+          this.breakpoints = interpolatePoints(set_12Pieces.xs, set_12Pieces.ys).ranges;
+        })
+        it("correctly finds interval at 0", async function () {
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '0')).to.be.equal(0);
+        })
+
+        it("finds interval between breakpoints", async function () {
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '250')).to.be.equal(1);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '420')).to.be.equal(2);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '2100')).to.be.equal(10);
+        })
+        it("finds interval at breakpoints", async function () {
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '200')).to.be.equal(1);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '400')).to.be.equal(2);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '1800')).to.be.equal(9);
+        })
+        it("finds interval at end", async function () {
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '2200')).to.be.equal(10);
+        })
+        it("finds interval past end", async function (){
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '2201')).to.be.equal(10);
+        })
+      })
+
+      describe("16 Pieces", async function () {
+        beforeEach(async function () {
+          this.breakpoints = interpolatePoints(set_16Pieces.xs, set_16Pieces.ys).ranges;
+        })
+        it("correctly finds interval at 0", async function () {
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '0')).to.be.equal(0);
+        })
+
+        it("finds interval between breakpoints", async function () {
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '250')).to.be.equal(1);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '420')).to.be.equal(2);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '2900')).to.be.equal(14);
+        })
+        it("finds interval at breakpoints", async function () {
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '200')).to.be.equal(1);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '400')).to.be.equal(2);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '2600')).to.be.equal(13);
+        })
+        it("finds interval at end", async function () {
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '3000')).to.be.equal(14);
+        })
+        it("finds interval past end", async function (){
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '3001')).to.be.equal(14);
+        })
+      })
 
     })
 
-    describe("function evaluation", async function () {
+    describe("Polynomial Evaluation", async function () {
     
-      describe("normal set, medium amount intervals", async function () {
+      describe("Small Values", async function () {
         describe('reverts', async function () {
           beforeEach(async function () {
-            this.interp = interpolate(cubicSet.xs, cubicSet.ys);
+            this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
           })
           it("when value lies before function domain", async function () {   
-            var x = 0;       
-            var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
-            await expect(this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index)).to.be.revertedWith("Marketplace: Not in function domain.");
+            const x = 0;       
+            const pieceIndex = findIndex(set_13Pieces.xs, x, getNumPieces(set_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            await expect(this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents, this.f.packedSigns, pieceIndex, x)).to.be.revertedWith("Marketplace: Not in function domain.");
           })
   
         })
         describe("evaluation at piecewise breakpoints", async function () {
           beforeEach(async function () {
-            this.interp = interpolate(cubicSet.xs, cubicSet.ys);
+            this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
           })
           
-          it("correctly evaluates at first breakpoint", async function () {
-            var x = cubicSet.xs[0];
-            var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
-            var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index)).to.be.equal(v);
+          it("first breakpoint", async function () {
+            const x = set_13Pieces.xs[0];
+            const pieceIndex = findIndex(set_13Pieces.xs, x, getNumPieces(set_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            const v = getAmountListing(this.f, x);
+            
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs,this.f.packedExponents, this.f.packedSigns, pieceIndex, x)).to.be.equal(v);
           })
 
-          it("correctly evaluates at second breakpoint", async function () {  
-            var x = cubicSet.xs[1];
-            var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
-            var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index)).to.be.equal(v);
+          it("second breakpoint", async function () {  
+            const x = set_13Pieces.xs[1];
+            const pieceIndex = findIndex(set_13Pieces.xs, x, getNumPieces(set_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            const v = getAmountListing(this.f, x);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs,this.f.packedExponents, this.f.packedSigns, pieceIndex, x)).to.be.equal(v);
           })
 
-          it("correctly evaluates at second last breakpoint", async function () {  
-            var x = cubicSet.xs[cubicSet.xs.length - 2];
-            var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
-            var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index)).to.be.equal(v);
+          it("second last breakpoint", async function () {  
+            var x = set_13Pieces.xs[set_13Pieces.xs.length - 2];
+            var pieceIndex = findIndex(set_13Pieces.xs, x, getNumPieces(set_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            var v = getAmountListing(this.f, x);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs,this.f.packedExponents, this.f.packedSigns, pieceIndex, x)).to.be.equal(v);
           })
 
-          it("correctly evaluates at last breakpoint", async function () {  
-            var x = cubicSet.xs[cubicSet.xs.length - 1];
-            var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
-            var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index)).to.be.equal(v);
+          it("last breakpoint", async function () {  
+            const x = set_13Pieces.xs[set_13Pieces.xs.length - 1];
+            const pieceIndex = findIndex(set_13Pieces.xs, x, getNumPieces(set_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            const v = getAmountListing(this.f, x);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs,this.f.packedExponents, this.f.packedSigns, pieceIndex, x)).to.be.equal(v);
           })
         })
-        describe("evaluation in between piecewise breakpoints", async function () {
+        describe("evaluation between piecewise breakpoints", async function () {
           beforeEach(async function () {
-            this.interp = interpolate(cubicSet.xs, cubicSet.ys);
+            this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
           })
-          it("correctly evaluates within first interval", async function () {
-            var x = 2500;
-            var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
-            var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index)).to.be.equal(v);
+          it("within first interval", async function () {
+            const x = 2500;
+            const pieceIndex = findIndex(set_13Pieces.xs, x, getNumPieces(set_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            const v = getAmountListing(this.f, x);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs,this.f.packedExponents, this.f.packedSigns, pieceIndex, x)).to.be.equal(v);
           })
-          it("correctly evaluates within second interval", async function () {
-            var x = 5750;
-            var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
-            var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index)).to.be.equal(v);
+          it("within second interval", async function () {
+            const x = 5750;
+            const pieceIndex = findIndex(set_13Pieces.xs, x, getNumPieces(set_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            const v = getAmountListing(this.f, x);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs,this.f.packedExponents, this.f.packedSigns, pieceIndex, x)).to.be.equal(v);
           })
-          it("correctly evaluates within second last interval", async function () {
-            var x = 14999;
-            var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
-            var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index)).to.be.equal(v);
+          it("within second last interval", async function () {
+            const x = 14999;
+            const pieceIndex = findIndex(set_13Pieces.xs, x, getNumPieces(set_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            const v = getAmountListing(this.f, x);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs,this.f.packedExponents, this.f.packedSigns, pieceIndex, x)).to.be.equal(v);
           })
-          it("correctly evaluates within last interval", async function () {
-            var x = 19410;
-            var index = findSortedIndex(cubicSet.xs, x, getNumIntervals(cubicSet.xs) - 1);
-            var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index)).to.be.equal(v);
+          it("within last interval", async function () {
+            const x = 19410;
+            const pieceIndex = findIndex(set_13Pieces.xs, x, getNumPieces(set_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            const v = getAmountListing(this.f, x);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs,this.f.packedExponents, this.f.packedSigns, pieceIndex, x)).to.be.equal(v);
           })
         })
       })
 
-      // describe("max intervals set", async function () {
-      //   describe('reverts', async function () {
-      //     beforeEach(async function () {
-      //       this.interp = interpolate(maxSet.xs, maxSet.ys);
-      //     })
-      //     it("when value lies before function domain", async function () {   
-      //       var x = 0;       
-      //       var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
-      //       await expect(this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.revertedWith("Marketplace: Not in function domain.");
-      //     })
-  
-      //   })
-      //   describe("evaluation at piecewise breakpoints", async function () {
-      //     beforeEach(async function () {
-      //       this.interp = interpolate(maxSet.xs, maxSet.ys);
-      //     })
-          
-      //     it("correctly evaluates at first breakpoint", async function () {
-      //       var x = maxSet.xs[0];
-      //       var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
-      //       var v = ppval_listing(this.interp, x);
-      //       expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
-      //     })
-
-      //     it("correctly evaluates at second breakpoint", async function () {  
-      //       var x = maxSet.xs[1];
-      //       var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
-      //       var v = ppval_listing(this.interp, x);
-      //       expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
-      //     })
-
-      //     it("correctly evaluates at second last breakpoint", async function () {  
-      //       var x = maxSet.xs[maxSet.xs.length - 2];
-      //       var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
-      //       var v = ppval_listing(this.interp, x);
-      //       expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
-      //     })
-
-      //     it("correctly evaluates at last breakpoint", async function () {  
-      //       var x = maxSet.xs[maxSet.xs.length - 1];
-      //       var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
-      //       var v = ppval_listing(this.interp, x);
-      //       expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
-      //     })
-      //   })
-      //   describe("evaluation in between piecewise breakpoints", async function () {
-      //     beforeEach(async function () {
-      //       this.interp = interpolate(maxSet.xs, maxSet.ys);
-      //     })
-      //     it("correctly evaluates within first interval", async function () {
-      //       var x = 250;
-      //       var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
-      //       var v = ppval_listing(this.interp, x);
-      //       expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
-      //     })
-      //     it("correctly evaluates within second interval", async function () {
-      //       var x = 473;
-      //       var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
-      //       var v = ppval_listing(this.interp, x);
-      //       expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
-      //     })
-      //     it("correctly evaluates within second last interval", async function () {
-      //       var x = 9890;
-      //       var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
-      //       var v = ppval_listing(this.interp, x);
-      //       expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
-      //     })
-      //     it("correctly evaluates within last interval", async function () {
-      //       var x = 9998;
-      //       var index = findSortedIndex(maxSet.xs, x, getNumIntervals(maxSet.xs) - 1);
-      //       var v = ppval_listing(this.interp, x);
-      //       expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked, DYNAMIC], x, index)).to.be.equal(v);
-      //     })
-      //   })
-      // })
-
-      describe("huge set, medium amount intervals", async function () {
+      describe("Huge Values", async function () {
         describe('reverts', async function () {
           beforeEach(async function () {
-            this.interp = interpolate(hugeSet.xs, hugeSet.ys);
+            this.f = interpolatePoints(hugeValueSet_13Pieces.xs, hugeValueSet_13Pieces.ys);
           })
           it("when value lies before function domain", async function () {   
-            var x = 0;       
-            var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
-            await expect(this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index)).to.be.revertedWith("Marketplace: Not in function domain.");
+            const x = 0;       
+            const pieceIndex = findIndex(hugeValueSet_13Pieces.xs, x, getNumPieces(hugeValueSet_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            await expect(this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents, this.f.packedSigns, pieceIndex, x)).to.be.revertedWith("Marketplace: Not in function domain.");
           })
   
         })
         describe("evaluation at piecewise breakpoints", async function () {
           beforeEach(async function () {
-            this.interp = interpolate(hugeSet.xs, hugeSet.ys);
+            this.f = interpolatePoints(hugeValueSet_13Pieces.xs, hugeValueSet_13Pieces.ys);
           })
           
           it("correctly evaluates at first breakpoint", async function () {
-            var x = hugeSet.xs[0];
-            var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
-            var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index)).to.be.equal(v);
+            const x = hugeValueSet_13Pieces.xs[0];
+            const pieceIndex = findIndex(hugeValueSet_13Pieces.xs, x, getNumPieces(hugeValueSet_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            const v = getAmountListing(this.f, x);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents, this.f.packedSigns, pieceIndex, x)).to.be.equal(v);
           })
 
           it("correctly evaluates at second breakpoint", async function () {  
-            var x = hugeSet.xs[1];
-            var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
-            var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index)).to.be.equal(v);
+            const x = hugeValueSet_13Pieces.xs[1];
+            const pieceIndex = findIndex(hugeValueSet_13Pieces.xs, x, getNumPieces(hugeValueSet_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            const v = getAmountListing(this.f, x);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents, this.f.packedSigns, pieceIndex, x)).to.be.equal(v);
           })
 
           it("correctly evaluates at second last breakpoint", async function () {  
-            var x = hugeSet.xs[hugeSet.xs.length - 2];
-            var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
-            var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index)).to.be.equal(v);
+            const x = hugeValueSet_13Pieces.xs[hugeValueSet_13Pieces.xs.length - 2];
+            const pieceIndex = findIndex(hugeValueSet_13Pieces.xs, x, getNumPieces(hugeValueSet_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            const v = getAmountListing(this.f, x);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents, this.f.packedSigns, pieceIndex, x)).to.be.equal(v);
           })
 
           it("correctly evaluates at last breakpoint", async function () {  
-            var x = hugeSet.xs[hugeSet.xs.length - 1];
-            var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
-            var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index)).to.be.equal(v);
+            const x = hugeValueSet_13Pieces.xs[hugeValueSet_13Pieces.xs.length - 1];
+            const pieceIndex = findIndex(hugeValueSet_13Pieces.xs, x, getNumPieces(hugeValueSet_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            const v = getAmountListing(this.f, x);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents, this.f.packedSigns, pieceIndex, x)).to.be.equal(v);
           })
         })
         describe("evaluation in between piecewise breakpoints", async function () {
           beforeEach(async function () {
-            this.interp = interpolate(hugeSet.xs, hugeSet.ys);
+            this.f = interpolatePoints(hugeValueSet_13Pieces.xs, hugeValueSet_13Pieces.ys);
           })
           it("correctly evaluates within first interval", async function () {
-            var x = 14567200000500;
-            var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
-            var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index)).to.be.equal(v);
+            const x = 14567200000500;
+            const pieceIndex = findIndex(hugeValueSet_13Pieces.xs, x, getNumPieces(hugeValueSet_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            const v = getAmountListing(this.f, x);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents, this.f.packedSigns, pieceIndex, x)).to.be.equal(v);
           })
           it("correctly evaluates within second interval", async function () {
-            var x = 59555200441200;
-            var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
-            var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index)).to.be.equal(v);
+            const x = 59555200441200;
+            const pieceIndex = findIndex(hugeValueSet_13Pieces.xs, x, getNumPieces(hugeValueSet_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            const v = getAmountListing(this.f, x);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents, this.f.packedSigns, pieceIndex, x)).to.be.equal(v);
           })
           it("correctly evaluates within second last interval", async function () {
-            var x = 140567200000500;
-            var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
-            var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index)).to.be.equal(v);
+            const x = 140567200000500;
+            const pieceIndex = findIndex(hugeValueSet_13Pieces.xs, x, getNumPieces(hugeValueSet_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            const v = getAmountListing(this.f, x);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents, this.f.packedSigns, pieceIndex, x)).to.be.equal(v);
           })
           it("correctly evaluates within last interval", async function () {
-            var x = 18569299999500;
-            var index = findSortedIndex(hugeSet.xs, x, getNumIntervals(hugeSet.xs) - 1);
-            var v = ppval_listing(this.interp, x);
-            expect(await this.marketplace.connect(user)._evaluatePPoly([this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked], x, index)).to.be.equal(v);
+            const x = 18569299999500;
+            const pieceIndex = findIndex(hugeValueSet_13Pieces.xs, x, getNumPieces(hugeValueSet_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            const v = getAmountListing(this.f, x);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents, this.f.packedSigns, pieceIndex, x)).to.be.equal(v);
           })
         })
-        
       })
     })
 
-    describe("order evaluation", async function () {
-     
-      describe("normal set", async function () {
-        describe("within an interval", async function () {
-          beforeEach(async function ( ){
-            this.interp = interpolate(cubicSet.xs, cubicSet.ys);
-            this.f = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
+    describe("Polynomial Integral Evaluation", async function () {
+
+      describe("Small Values", async function () {
+        describe("correctly evaluates within a piecewise interval", async function () {
+          beforeEach(async function () {
+            this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
           })
   
-          it("evaluates within first piecewise interval", async function () {
-            var placeInLine = 1000;
-            var amount = 3000;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          it("first interval", async function () {
+            const start = 1000;
+            const delta = 3000;
+            const pieceIndex = findIndex(set_13Pieces.xs, start, getNumPieces(set_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefs, this.f.packedExponents, this.f.packedSigns, pieceIndex, start, start + delta)).to.be.equal(getAmountOrder(this.f, start, delta));
           })
   
-          it("evaluates within second piecewise interval", async function () {
-            var placeInLine = 5200;
-            var amount = 799;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          it("second interval", async function () {
+            const start = 5200;
+            const delta = 799;
+            const pieceIndex = findIndex(set_13Pieces.xs, start, getNumPieces(set_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefs, this.f.packedExponents, this.f.packedSigns, pieceIndex, start, start + delta)).to.be.equal(getAmountOrder(this.f, start, delta));
           })
           
-          it("evaluates within third piecewise interval", async function () {
-            var placeInLine = 7500;
-            var amount = 10;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          it("third interval", async function () {
+            const start = 7500;
+            const delta = 103;
+            const pieceIndex = findIndex(set_13Pieces.xs, start, getNumPieces(set_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefs, this.f.packedExponents, this.f.packedSigns, pieceIndex, start, start + delta)).to.be.equal(getAmountOrder(this.f, start, delta));
           })
-          it("evaluates within last piecewise interval", async function () {
-            var placeInLine = 18000;
-            var amount = 1000;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-          })
-        })
-  
-        describe("across 2 intervals", async function () {
-          beforeEach(async function ( ){
-            this.interp = interpolate(cubicSet.xs, cubicSet.ys);
-            this.f = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
-          })
-  
-          it("first to second", async function () {
-            var placeInLine = 1000;
-            var amount = 4500;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-          })
-          it("third to fourth", async function () {
-            var placeInLine = 6500;
-            var amount = 1499;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-          })
-          it("second last to last", async function () {
-            var placeInLine = 15750;
-            var amount = 4000;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-          })
-        })
-  
-        describe("across >2 intervals", async function () {
-          beforeEach(async function ( ){
-            this.interp = interpolate(cubicSet.xs, cubicSet.ys);
-            this.f = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
-          })
-  
-          it("three intervals", async function () {
-            var placeInLine = 1000;
-            var amount = 5500;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-          })
-          it("four intervals", async function () {
-            var placeInLine = 5000;
-            var amount = 3750;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-          })
-          it("one less than all", async function () {
-            var placeInLine = 5500;
-            var amount = 13990;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-          })
-          it("all", async function () {
-            var placeInLine = 1000;
-            var amount = 19000;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-          })
-          it("extends past end", async function () {
-            var placeInLine = 1000;
-            var amount = 19500;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+          it("last interval", async function () {
+            const start = 18000;
+            const delta = 1000;
+            const pieceIndex = findIndex(set_13Pieces.xs, start, getNumPieces(set_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefs, this.f.packedExponents, this.f.packedSigns, pieceIndex, start, start + delta)).to.be.equal(getAmountOrder(this.f, start, delta));
           })
         })
       })
-      describe("huge set", async function () {
-        describe("within an interval", async function () {
-          beforeEach(async function ( ){
-            this.interp = interpolate(hugeSet.xs, hugeSet.ys);
-            this.f = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
+
+      describe("Huge Values", async function () {
+        describe("correctly evaluates within a piecewise interval", async function () {
+          beforeEach(async function () {
+            this.f = interpolatePoints(hugeValueSet_13Pieces.xs, hugeValueSet_13Pieces.ys);
           })
   
           it("evaluates within first piecewise interval", async function () {
-            var placeInLine = 10000000000000;
-            var amount = 10000000000000;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+            const start = 10000000000000; 
+            const delta = 10000000000000; 
+            const pieceIndex = findIndex(hugeValueSet_13Pieces.xs, start, getNumPieces(hugeValueSet_13Pieces.xs) - 1); 
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]]; 
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefs, this.f.packedExponents, this.f.packedSigns, pieceIndex, start, start + delta)).to.be.equal(getAmountOrder(this.f, start, delta));
           })
   
           it("evaluates within second piecewise interval", async function () {
-            var placeInLine = 55000000000000;
-            var amount = 3000000000000;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+            const start = 55000000000000;
+            const delta = 3000000000000;
+            const pieceIndex = findIndex(hugeValueSet_13Pieces.xs, start, getNumPieces(hugeValueSet_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefs, this.f.packedExponents, this.f.packedSigns, pieceIndex, start, start + delta)).to.be.equal(getAmountOrder(this.f, start, delta));
           })
           
           it("evaluates within third piecewise interval", async function () {
-            var placeInLine = 69000000000000;
-            var amount = 10;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+            const start = 69000000000000;
+            const delta = 15;
+            const pieceIndex = findIndex(hugeValueSet_13Pieces.xs, start, getNumPieces(hugeValueSet_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefs, this.f.packedExponents, this.f.packedSigns, pieceIndex, start, start + delta)).to.be.equal(getAmountOrder(this.f, start, delta));
           })
           it("evaluates within last piecewise interval", async function () {
-            var placeInLine = 180000000000000;
-            var amount = 19999999999999;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-          })
-        })
-  
-        describe("across 2 intervals", async function () {
-          beforeEach(async function ( ){
-            this.interp = interpolate(hugeSet.xs, hugeSet.ys);
-            this.f = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
-          })
-  
-          it("first to second", async function () {
-            var placeInLine = 10000000000000;
-            var amount = 45532999124442;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-          })
-          it("third to fourth", async function () {
-            var placeInLine = 69123456789012;
-            var amount = 10000000000000;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-          })
-          it("second last to last", async function () {
-            var placeInLine = 145000000000000;
-            var amount = 54999999999999;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-          })
-        })
-  
-        describe("across >2 intervals", async function () {
-          beforeEach(async function ( ){
-            this.interp = interpolate(hugeSet.xs, hugeSet.ys);
-            this.f = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
-          })
-  
-          it("three intervals", async function () {
-            var placeInLine = 10000000000000;
-            var amount = 55000000000000;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-          })
-          it("four intervals", async function () {
-            var placeInLine = 10000000000000;
-            var amount = 65000000000000;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-          })
-          it("one less than all", async function () {
-            var placeInLine = 10000000000000;
-            var amount = 165000000000000;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-          })
-          it("all", async function () {
-            var placeInLine = 10000000000000;
-            var amount = 18500000000000;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
-          })
-          it("extends past end", async function () {
-            var placeInLine = 12500000000000;
-            var amount = 200000000000000;
-            var amountBeans = ppval_order(this.interp, placeInLine, amount);
-            expect(await this.marketplace.connect(user)._getDynamicOrderAmount(this.f, placeInLine, 0, amount)).to.be.equal(amountBeans);
+            const start = 180000000000000;
+            const delta = 19999999999999;
+            const pieceIndex = findIndex(hugeValueSet_13Pieces.xs, start, getNumPieces(hugeValueSet_13Pieces.xs) - 1);
+            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefs, this.f.packedExponents, this.f.packedSigns, pieceIndex, start, start + delta)).to.be.equal(getAmountOrder(this.f, start, delta));
           })
         })
       })
-      
     })
 
   })
@@ -739,89 +597,95 @@ describe('Marketplace', function () {
     })
 
     describe("Create Dynamic", async function () {
-      beforeEach(async function () {
-        this.interp = interpolate(cubicSet.xs, cubicSet.ys);
-        this.function = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
-      })
-      it('Fails to List Unowned Plot', async function () {
-        await expect(this.marketplace.connect(user).createDynamicPodListing('5000', '0', '1000', '100000', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+      describe("<4 Pieces", async function () {
+
       })
 
-      it('Fails if already expired', async function () {
-        await this.field.incrementTotalHarvestableE('2000');
-        await expect(this.marketplace.connect(user).createDynamicPodListing('0', '0', '500', '100000', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Expired.');
-      })
-
-      it('Fails if amount is 0', async function () {
-        await expect(this.marketplace.connect(user2).createDynamicPodListing('1000', '0', '0', '100000', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
-      })
-
-      it('Fails if start + amount too large', async function () {
-        await expect(this.marketplace.connect(user2).createDynamicPodListing('1000', '500', '1000', '100000', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
-      })
-
-      describe("List full plot", async function () {
+      describe("<16 Pieces", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '500000', '0', EXTERNAL, this.function);
+          this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
+          this.function = [this.f.ranges, this.f.values, this.f.basesPacked, this.f.signsPacked];
         })
-
-        it('Lists Plot properly', async function () {
-          expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(this.result));
+        it('Fails to List Unowned Plot', async function () {
+          await expect(this.marketplace.connect(user).create16PiecesDynamicPodListing('5000', '0', '1000', '100000', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
-
-        it('Emits event', async function () {
-          await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated').withArgs(userAddress, 0, 0, '1000', 500000, 0, 0, this.function[0], this.function[1], this.function[2], this.function[3]);
+  
+        it('Fails if already expired', async function () {
+          await this.field.incrementTotalHarvestableE('2000');
+          await expect(this.marketplace.connect(user).createDynamicPodListing('0', '0', '500', '100000', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Expired.');
         })
-      })
-
-      describe("List partial plot", async function () {
-        beforeEach(async function () {
-          this.interp = interpolate(cubicSet.xs, cubicSet.ys);
-          this.function = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
-          this.result = await this.marketplace.connect(user).createDynamicPodListing('0', '0', '100', '100000', '0', EXTERNAL, this.function);
-          this.result = await this.marketplace.connect(user).createDynamicPodListing('0', '0', '500', '500000', '0', EXTERNAL, this.function);
+  
+        it('Fails if amount is 0', async function () {
+          await expect(this.marketplace.connect(user2).createDynamicPodListing('1000', '0', '0', '100000', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
-
-        it('Lists Plot properly', async function () {
-          expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(this.result));
+  
+        it('Fails if start + amount too large', async function () {
+          await expect(this.marketplace.connect(user2).createDynamicPodListing('1000', '500', '1000', '100000', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
-
-        it('Emits event', async function () {
-          await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated').withArgs(userAddress, 0, 0, '500', 500000, 0, 0, this.function[0], this.function[1], this.function[2], this.function[3]);
+  
+        describe("List full plot", async function () {
+          beforeEach(async function () {
+            this.result = await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '500000', '0', EXTERNAL, this.function);
+          })
+  
+          it('Lists Plot properly', async function () {
+            expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(this.result));
+          })
+  
+          it('Emits event', async function () {
+            await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated').withArgs(userAddress, 0, 0, '1000', 500000, 0, 0, this.function[0], this.function[1], this.function[2], this.function[3]);
+          })
         })
-      })
-
-      describe("List partial plot from middle", async function () {
-        beforeEach(async function () {
-          this.interp = interpolate(cubicSet.xs, cubicSet.ys);
-          this.function = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
-          this.result = await this.marketplace.connect(user).createDynamicPodListing('0', '500', '500', '500000', '2000', INTERNAL, this.function);
+  
+        describe("List partial plot", async function () {
+          beforeEach(async function () {
+            this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
+            this.function = [this.f.ranges, this.f.values, this.f.basesPacked, this.f.signsPacked];
+            this.result = await this.marketplace.connect(user).createDynamicPodListing('0', '0', '100', '100000', '0', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createDynamicPodListing('0', '0', '500', '500000', '0', EXTERNAL, this.function);
+          })
+  
+          it('Lists Plot properly', async function () {
+            expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(this.result));
+          })
+  
+          it('Emits event', async function () {
+            await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated').withArgs(userAddress, 0, 0, '500', 500000, 0, 0, this.function[0], this.function[1], this.function[2], this.function[3]);
+          })
         })
-
-        it('Lists Plot properly', async function () {
-          expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(this.result));
+  
+        describe("List partial plot from middle", async function () {
+          beforeEach(async function () {
+            this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
+            this.function = [this.f.ranges, this.f.values, this.f.basesPacked, this.f.signsPacked];
+            this.result = await this.marketplace.connect(user).createDynamicPodListing('0', '500', '500', '500000', '2000', INTERNAL, this.function);
+          })
+  
+          it('Lists Plot properly', async function () {
+            expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(this.result));
+          })
+  
+          it('Emits event', async function () {
+            await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated').withArgs(userAddress, 0, 500, '500', 500000, 2000, 1, this.function[0], this.function[1], this.function[2], this.function[3]);
+          })
         })
-
-        it('Emits event', async function () {
-          await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated').withArgs(userAddress, 0, 500, '500', 500000, 2000, 1, this.function[0], this.function[1], this.function[2], this.function[3]);
-        })
-      })
-
-      describe("Relist plot from middle", async function () {
-        beforeEach(async function () {
-          this.interp = interpolate(cubicSet.xs, cubicSet.ys);
-          this.function = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
-          this.result = await this.marketplace.connect(user).createDynamicPodListing('0', '0', '500', '500000', '0', INTERNAL, this.function);
-          this.result = await this.marketplace.connect(user).createDynamicPodListing('0', '500', '100', '500000', '2000', INTERNAL, this.function);
-        })
-
-        it('Lists Plot properly', async function () {
-          expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(this.result));
-        })
-
-        it('Emits event', async function () {
-          await expect(this.result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, 0);
-          await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated').withArgs(userAddress, 0, 500, '100', 500000, 2000, 1, this.function[0], this.function[1], this.function[2], this.function[3]);
+  
+        describe("Relist plot from middle", async function () {
+          beforeEach(async function () {
+            this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
+            this.function = [this.f.ranges, this.f.values, this.f.basesPacked, this.f.signsPacked];
+            this.result = await this.marketplace.connect(user).createDynamicPodListing('0', '0', '500', '500000', '0', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createDynamicPodListing('0', '500', '100', '500000', '2000', INTERNAL, this.function);
+          })
+  
+          it('Lists Plot properly', async function () {
+            expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(this.result));
+          })
+  
+          it('Emits event', async function () {
+            await expect(this.result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, 0);
+            await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated').withArgs(userAddress, 0, 500, '100', 500000, 2000, 1, this.function[0], this.function[1], this.function[2], this.function[3]);
+          })
         })
       })
     })
@@ -1057,8 +921,8 @@ describe('Marketplace', function () {
       describe('revert', async function () {
         beforeEach(async function () {
           this.set = {xs: [0,10000,20000], ys: [500000, 500000, 500000]}; 
-          this.interp = interpolate(this.set.xs, this.set.ys);
-          this.function = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
+          this.f = interpolatePoints(this.set.xs, this.set.ys);
+          this.function = [this.f.ranges, this.f.values, this.f.basesPacked, this.f.signsPacked];
           await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '500000', '0', EXTERNAL, this.function);
           this.listing = [userAddress, '0', '0', '1000', 500000, '0', EXTERNAL];
         })
@@ -1100,8 +964,8 @@ describe('Marketplace', function () {
       describe("Fill listing", async function () {
         beforeEach(async function () {
           this.set = {xs: [0,10000,20000], ys: [500000, 500000, 500000]};
-          this.interp = interpolate(this.set.xs, this.set.ys);
-          this.function = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
+          this.f = interpolatePoints(this.set.xs, this.set.ys);
+          this.function = [this.f.ranges, this.f.values, this.f.basesPacked, this.f.signsPacked];
           this.listing = [userAddress, '0', '0', '1000', '500000', '0', EXTERNAL]
           await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '500000', '0', EXTERNAL, this.function);
           this.amountBeansBuyingWith = 500;
@@ -1138,8 +1002,8 @@ describe('Marketplace', function () {
       describe("Fill partial listing", async function () {
         beforeEach(async function () {
           this.set = {xs: [0,10000,20000], ys: [500000, 500000, 500000]};
-          this.interp = interpolate(this.set.xs, this.set.ys);
-          this.function = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
+          this.f = interpolatePoints(this.set.xs, this.set.ys);
+          this.function = [this.f.ranges, this.f.values, this.f.basesPacked, this.f.signsPacked];
           this.listing = [userAddress, '0', '0', '1000', '500000', '0', EXTERNAL]
           await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '500000', '0', EXTERNAL, this.function);
           this.amountBeansBuyingWith = 250;
@@ -1178,8 +1042,8 @@ describe('Marketplace', function () {
       describe("Fill partial listing of a partial listing multiple fills", async function () {
         beforeEach(async function () {
           this.set = {xs: [0,10000,20000], ys: [500000, 500000, 500000]};
-          this.interp = interpolate(this.set.xs, this.set.ys);
-          this.function = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
+          this.f = interpolatePoints(this.set.xs, this.set.ys);
+          this.function = [this.f.ranges, this.f.values, this.f.basesPacked, this.f.signsPacked];
           this.listing = [userAddress, '0', '500', '500', '500000', '0', EXTERNAL]
           await this.marketplace.connect(user).createDynamicPodListing('0', '500', '500', '500000', '0', EXTERNAL, this.function);
           this.amountBeansBuyingWith = 100;
@@ -1218,8 +1082,8 @@ describe('Marketplace', function () {
       describe("Fill partial listing of a listing created by partial fill", async function () {
         beforeEach(async function () {
           this.set = {xs: [0,10000,20000], ys: [500000, 500000, 500000]};
-          this.interp = interpolate(this.set.xs, this.set.ys);
-          this.function = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
+          this.f = interpolatePoints(this.set.xs, this.set.ys);
+          this.function = [this.f.ranges, this.f.values, this.f.basesPacked, this.f.signsPacked];
           this.listing = [userAddress, '0', '500', '500', '500000', '0', EXTERNAL]
           await this.marketplace.connect(user).createDynamicPodListing('0', '500', '500', '500000', '0', EXTERNAL, this.function);
           this.amountBeansBuyingWith = 100;
@@ -1255,8 +1119,8 @@ describe('Marketplace', function () {
       describe("Fill partial listing to wallet", async function () {
         beforeEach(async function () {
           this.set = {xs: [0,10000,20000], ys: [500000, 500000, 500000]};
-          this.interp = interpolate(this.set.xs, this.set.ys);
-          this.function = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
+          this.f = interpolatePoints(this.set.xs, this.set.ys);
+          this.function = [this.f.ranges, this.f.values, this.f.basesPacked, this.f.signsPacked];
           this.listing = [userAddress, '0', '0', '1000', '500000', '0', INTERNAL]
           await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '500000', '0', INTERNAL, this.function);
           this.amountBeansBuyingWith = 250;
@@ -1319,8 +1183,8 @@ describe('Marketplace', function () {
 
     describe("Cancel Dynamic", async function () {
       beforeEach(async function () {
-        this.interp = interpolate(cubicSet.xs, cubicSet.ys);
-        this.function = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
+        this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
+        this.function = [this.f.ranges, this.f.values, this.f.basesPacked, this.f.signsPacked];
       })
       it('Re-list plot cancels and re-lists', async function () {
         result = await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '500000', '0', EXTERNAL, this.function);
@@ -1412,12 +1276,12 @@ describe('Marketplace', function () {
       describe("revert", async function () {
         beforeEach(async function () {
           this.set = { xs: [0, 10000, 20000], ys: [100000, 100000, 100000] };
-          this.interp = interpolate(this.set.xs, this.set.ys);
+          this.f = interpolatePoints(this.set.xs, this.set.ys);
           this.function = [
-            this.interp.ranges,
-            this.interp.values,
-            this.interp.basesPacked,
-            this.interp.signsPacked
+            this.f.ranges,
+            this.f.values,
+            this.f.basesPacked,
+            this.f.signsPacked
           ];
         });
         it("Reverts if amount is 0", async function () {
@@ -1438,12 +1302,12 @@ describe('Marketplace', function () {
       describe("create order", async function () {
         beforeEach(async function () {
           this.set = { xs: [0, 10000, 20000], ys: [100000, 100000, 100000] };
-          this.interp = interpolate(this.set.xs, this.set.ys);
+          this.f = interpolatePoints(this.set.xs, this.set.ys);
           this.function = [
-            this.interp.ranges,
-            this.interp.values,
-            this.interp.basesPacked,
-            this.interp.signsPacked
+            this.f.ranges,
+            this.f.values,
+            this.f.basesPacked,
+            this.f.signsPacked
           ];
           this.userBeanBalance = await this.bean.balanceOf(userAddress);
           this.beanstalkBeanBalance = await this.bean.balanceOf(
@@ -1748,12 +1612,12 @@ describe('Marketplace', function () {
     describe("Fill Dynamic", async function () {
       beforeEach(async function () {
         this.set = { xs: [0, 10000, 20000], ys: [100000, 100000, 100000] };
-        this.interp = interpolate(this.set.xs, this.set.ys);
+        this.f = interpolatePoints(this.set.xs, this.set.ys);
         this.function = [
-          this.interp.ranges,
-          this.interp.values,
-          this.interp.basesPacked,
-          this.interp.signsPacked
+          this.f.ranges,
+          this.f.values,
+          this.f.basesPacked,
+          this.f.signsPacked
         ];
         this.result = await this.marketplace
           .connect(user)
@@ -2066,8 +1930,8 @@ describe('Marketplace', function () {
     describe("Cancel Dynamic", async function () {
       beforeEach(async function () {
         this.set = {xs: [0,10000,20000], ys: [100000, 100000, 100000]};
-        this.interp = interpolate(this.set.xs, this.set.ys);
-        this.function = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
+        this.f = interpolatePoints(this.set.xs, this.set.ys);
+        this.function = [this.f.ranges, this.f.values, this.f.basesPacked, this.f.signsPacked];
         this.result = await this.marketplace.connect(user).createDynamicPodOrder('500', '100000', '1000', EXTERNAL, this.function)
         this.id = await getDynamicOrderId(this.result)
       })
@@ -2181,8 +2045,8 @@ describe('Marketplace', function () {
       describe('transfers with existing pod listing', async function () {
         beforeEach(async function () {
           this.set = {xs: [0,10000,20000], ys: [100000, 100000, 100000]};
-          this.interp = interpolate(this.set.xs, this.set.ys);
-          this.function = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
+          this.f = interpolatePoints(this.set.xs, this.set.ys);
+          this.function = [this.f.ranges, this.f.values, this.f.basesPacked, this.f.signsPacked];
           await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '500000', '0', EXTERNAL, this.function);
           this.result = await this.marketplace.connect(user).transferPlot(userAddress, user2Address, '0', '0', '100')
         })
@@ -2203,8 +2067,8 @@ describe('Marketplace', function () {
       describe('transfers with existing pod listing from other', async function () {
         beforeEach(async function () {
           this.set = {xs: [0,10000,20000], ys: [100000, 100000, 100000]};
-          this.interp = interpolate(this.set.xs, this.set.ys);
-          this.function = [this.interp.ranges, this.interp.values, this.interp.basesPacked, this.interp.signsPacked];
+          this.f = interpolatePoints(this.set.xs, this.set.ys);
+          this.function = [this.f.ranges, this.f.values, this.f.basesPacked, this.f.signsPacked];
           await this.marketplace.connect(user).createDynamicPodListing('0', '0', '1000', '500000', '0', EXTERNAL, this.function);
           this.result = await expect(this.marketplace.connect(user).approvePods(user2Address, '100'))
           this.result = await this.marketplace.connect(user2).transferPlot(userAddress, user2Address, '0', '0', '100')

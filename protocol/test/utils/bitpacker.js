@@ -87,7 +87,13 @@ class BitPacker {
         }
     }
 
-    static createUnpackIterator = function* (buffer, unpackFn) {
+    static createUnpackIterator = function* (buffer, unpackFn = (pattern) => {
+        switch(pattern) {
+            case '1': return 1;
+            case '0': return 0;
+            default: throw new Error("Invalid pattern");
+        }
+    }) {
         let index = 0;
         let bitIndex = 7;
 
