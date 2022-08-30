@@ -7,9 +7,9 @@ const {BitDescriptor, BitPacker} = require("./bitpacker.js");
 const config = {
     matrix: 'Array',
     number: 'BigNumber',
-    precision: 128,
-    predictable: true,
-    epsilon: 1e-24
+    precision: 256,
+    predictable: false,
+    epsilon: 1e-48
 }
 
 const math = create(all, config);
@@ -69,9 +69,13 @@ function findIndex(array, value, high) {
         else if(math.compare(math.bignumber(array[low]), math.bignumber(value)) == 1) break;
         else low++;
     }
+    console.log(low>0?low-1:0)
     return low>0?low-1:0;
 }
 
+function subtract(x, y) {
+    return math.subtract(x, y);
+}
 
 
 //implementation from https://www.wikiwand.com/en/Monotone_cubic_interpolation
@@ -79,14 +83,13 @@ function interpolatePoints(xs, ys) {
     var length = xs.length;
     if(length < 2) return;
     if(length > 64) return;
+    if(ys.length != length) return;
 
     var maxPieces;
     if(length <= 4) {
         maxPieces = 4;        
     } else if (length <= 16) {
         maxPieces = 16;
-    } else if (length <= 32) {
-        maxPieces = 32;
     } else if (length <= 64) {
         maxPieces = 64;
     }
@@ -131,7 +134,7 @@ function interpolatePoints(xs, ys) {
             signs[i*4] = BitDescriptor.fromBool(math.sign(ys[i]) == 1 || math.sign(ys[i]) == 0);
             signs[i*4 + 1] = BitDescriptor.fromBool(math.sign(c1s[i]) == 1 || math.sign(c1s[i]) == 0);
 
-            var c = 25; //Note: arbitrary number: 10^25 is the starting base
+            var c = 24; 
 
             exponents[i*4] = BitDescriptor.fromUint8(math.number(ys[i]).calculateShifts(c));
             exponents[i*4 + 1] = BitDescriptor.fromUint8(math.number(c1s[i]).calculateShifts(c));
@@ -180,16 +183,18 @@ function interpolatePoints(xs, ys) {
     const packedExponentsIter = BitPacker.createUnpackIterator(packedExponentsArr)
 
     const packedSigns = BigInt("0b" + [...packedSignsIter].reverse().join('')).toString();
-
+    var packedExponents;
     if(maxPieces > 8) {
         const packedExponentsBitArr = [...packedExponentsIter];
 
-        var packedExponents = [];
+        packedExponents = [];
         for(let i = 0; i < (Math.floor(maxPieces / 8)); i++){
             packedExponents.push(BigInt("0b" + packedExponentsBitArr.slice(i*256, (i+1)*256).join('')).toString());
         }
     } else {
-        var packedExponents = BigInt("0b" + [...packedExponentsIter].join('')).toString();
+        const packedExponentsBitArrString = [...packedExponentsIter].join('');
+        const paddingArray = (new Array(256 - packedExponentsBitArrString.length).fill('0')).join('');
+        packedExponents = BigInt("0b" + packedExponentsBitArrString + paddingArray).toString();
     }
     
     return {breakpoints: breakpoints, coefficients: coefficients, exponents: exponents, signs: signs, packedExponents: packedExponents, packedSigns: packedSigns}
@@ -197,11 +202,7 @@ function interpolatePoints(xs, ys) {
 
 function evaluatePolynomial(f, x, pieceIndex) {
     var _x = math.bignumber(x);
-
-    if(math.compare(_x, math.bignumber(f.breakpoints[pieceIndex])) != -1) {
-        _x = math.subtract(_x, math.bignumber(f.breakpoints[pieceIndex]));
-    }
-
+    // console.log("evaluatePolynomial: " + _x);
     var result = math.bignumber(0);
     
     var degreeIndex = 0;
@@ -210,94 +211,109 @@ function evaluatePolynomial(f, x, pieceIndex) {
         const coefValue = math.bignumber(f.coefficients[math.add(pieceIndex*4, degreeIndex)])
         const coefExponent = math.pow(math.bignumber(10), math.bignumber(f.exponents[math.add(pieceIndex*4, degreeIndex)].value));
         const term = math.floor(math.chain(_x).pow(degreeIndex).multiply(coefValue).divide(coefExponent).done());
-
-        if(f.signs[math.add(index*4, degreeIndex)].value == 1) result = math.add(result, term)
+        // console.log("coefValue: " + math.divide(coefValue, coefExponent) + " coefExponent: " + f.exponents[pieceIndex*4 + degreeIndex].value + " coefSign: " + f.signs[pieceIndex*4 + degreeIndex].value + " term: " + term);
+        if(f.signs[math.add(pieceIndex*4, degreeIndex)].value == 1) result = math.add(result, term)
         else result = math.subtract(result, term)
 
         degreeIndex = math.add(degreeIndex, 1);
     }
-
-    return result;
+    // console.log(math.format(result, {notation: "fixed"}));
+    return math.format(result, {notation: "fixed"});
 }
 
 function evaluatePolynomialIntegration(f, start, end, pieceIndex) {
 
     var _x1 = math.bignumber(start);
     var _x2 = math.bignumber(end);
-
-    if(math.compare(_x1, math.bignumber(f.breakpoints[pieceIndex])) !== -1 && math.compare(_x2, math.bignumber(f.ranges[pieceIndex])) !== -1) {
-        _x1 = math.subtract(_x1, math.bignumber(f.breakpoints[pieceIndex]));
-        _x2 = math.subtract(_x2, math.bignumber(f.breakpoints[pieceIndex]));
-    }
-
-    var result = math.bignumber(0);
+    // console.log("evaluatePolynomialIntegration: " + _x1 + " to " + _x2);
+    
+    var positiveSum = math.bignumber(0);
+    var negativeSum = math.bignumber(0);
     var degreeIndex = 0;
 
     while(degreeIndex <= 3) {
-
         var coefValue = math.bignumber(f.coefficients[math.add(pieceIndex*4, degreeIndex)]);
-        var coefExponent = math.pow(math.bignumber(10), math.bignumber(f.bases[math.add(pieceIndex*4, degreeIndex)].value));
+        var coefExponent = math.pow(math.bignumber(10), math.bignumber(f.exponents[math.add(pieceIndex*4, degreeIndex)].value));
 
-        var term = math.chain(_x2)
-            .pow(degreeIndex + 1)
-            .multiply(coefValue)
-            .divide(coefExponent)
-            .divide(degreeIndex + 1)
-            .multiply(f.signs[math.add(pieceIndex*4, degreeIndex)].value == 1 ? 1 : -1)
-            .done();
+        if(f.signs[pieceIndex*4 + degreeIndex].value == 1) {
+            positiveSum = math.add(positiveSum, math.floor(math.chain(_x2)
+                .pow(math.add(degreeIndex, 1))
+                .multiply(coefValue)
+                .divide(coefExponent)
+                .divide(math.add(degreeIndex, 1))
+                .done()
+            ));
 
-        result = math.add(result, term);
+            positiveSum = math.subtract(positiveSum, math.floor(math.chain(_x1)
+                .pow(math.add(degreeIndex, 1))
+                .multiply(coefValue)
+                .divide(coefExponent)
+                .divide(math.add(degreeIndex, 1))
+                .done()
+            ));
+        } else {
+            negativeSum = math.add(negativeSum, math.floor(math.chain(_x2)
+                .pow(math.add(degreeIndex, 1))
+                .multiply(coefValue)
+                .divide(coefExponent)
+                .divide(math.add(degreeIndex, 1))
+                .done()
+            ));
 
-        term = math.chain(_x1)
-            .pow(degreeIndex + 1)
-            .multiply(coefValue)
-            .divide(coefExponent)
-            .divide(degreeIndex + 1)
-            .multiply(f.signs[math.add(pieceIndex*4, degreeIndex)].value == 1 ? 1 : -1)
-            .done();
-
-        result = math.subtract(result, term);
+            negativeSum = math.subtract(negativeSum, math.floor(math.chain(_x2)
+                .pow(math.add(degreeIndex, 1))
+                .multiply(coefValue)
+                .divide(coefExponent)
+                .divide(math.add(degreeIndex, 1))
+                .done()
+            ));
+        }
+        // console.log(positiveSum, negativeSum);
         degreeIndex++;
     }
-    
-    return math.floor(result);
+    // console.log(math.format(result, {notation: "fixed"}));
+    return math.format(math.subtract(positiveSum, negativeSum), {notation: "fixed"});
 }
 
-function getAmountListing(f, placeInLine) {
-    var pieceIndex = findIndex(f.breakpoints, placeInLine, getNumPieces(f.breakpoints) - 1);
-    var y = evaluatePolynomial(f, placeInLine, pieceIndex);
-    return math.format(math.floor(y), {notation:"fixed"});
+function getAmountListing(f, placeInLine, amountBeans, maxPieces) {
+    const pieceIndex = findIndex(f.breakpoints, placeInLine, getNumPieces(f.breakpoints, maxPieces) - 1);
+    const pricePerPod = evaluatePolynomial(f, placeInLine, pieceIndex);
+    const amountPods = math.floor(math.divide(math.multiply(amountBeans, 1000000), pricePerPod));
+    return math.format(amountPods, {notation:"fixed"});
 
 }
 
-function getAmountOrder(f, placeInLine, amountPodsFromOrder) {
+function getAmountOrder(f, placeInLine, amountPodsFromOrder, maxPieces) {
 
     var beanAmount = math.bignumber(0);
-    const numPieces = getNumPieces(f.breakpoints);
+    const numPieces = getNumPieces(f.breakpoints, maxPieces);
     var pieceIndex = findIndex(f.breakpoints, math.bignumber(placeInLine), numPieces - 1);
 
     var start = math.bignumber(placeInLine);
     const end = math.add(start, math.bignumber(amountPodsFromOrder));
 
-    if(math.compare(start, f.breakpoints[0]) === -1) start = math.bignumber(f.breakpoints[0]);
-   
-    while(math.compare(start, end) === -1) {
-        if(!(math.compare(pieceIndex, numPieces - 1) === 0)) {
-            if(math.compare(end, math.bignumber(f.breakpoints[pieceIndex + 1])) === 1) {
+    if(math.compare(start, f.breakpoints[0]) == -1) start = math.bignumber(f.breakpoints[0]);
+
+    while(math.compare(start, end) == -1) {
+        if(!(math.compare(pieceIndex, numPieces - 1) == 0)) {
+            
+            if(math.compare(end, f.breakpoints[pieceIndex + 1]) == 1) {
 
                 var term = evaluatePolynomialIntegration(f, start, f.breakpoints[pieceIndex + 1], pieceIndex); 
                 start = math.bignumber(f.breakpoints[pieceIndex + 1]);
                 beanAmount = math.add(beanAmount, term);
-    
+
                 if(pieceIndex < (numPieces - 1)) pieceIndex++;
                 
             } else {
-                var term = ppval_integrate(f, start, end, pieceIndex);
+
+                var term = evaluatePolynomialIntegration(f, start, end, pieceIndex);
                 beanAmount = math.add(beanAmount, term);
                 start = end;
             }
         }else{
-            var term = ppval_integrate(f, start, end, pieceIndex);
+
+            var term = evaluatePolynomialIntegration(f, start, end, pieceIndex);
             beanAmount = math.add(beanAmount, term);
             start = end;
         }
@@ -313,6 +329,7 @@ module.exports = {
     evaluatePolynomial,
     evaluatePolynomialIntegration,
     interpolatePoints,
-    getNumPieces
+    getNumPieces,
+    subtract
 }
 

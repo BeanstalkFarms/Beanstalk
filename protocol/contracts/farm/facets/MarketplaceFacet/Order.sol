@@ -97,7 +97,6 @@ contract Order is Listing {
         id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine);
 
         if (s.podOrders[id] > 0) _cancelPodOrder(pricePerPod, maxPlaceInLine, LibTransfer.To.INTERNAL);
-        // uint256 amount = (beanAmount * 1000000) / pricePerPod;
         s.podOrders[id] = beanAmount;
         emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine);
     }
@@ -159,8 +158,8 @@ contract Order is Listing {
         require((index + start - s.f.harvestable + amount) <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
         
         bytes32 id = createOrderId(o.account, o.pricePerPod, o.maxPlaceInLine);
-        s.podOrders[id] = s.podOrders[id].sub(amount, "Marketplace: Not enough pods in order.");
         uint256 costInBeans = amount.mul(o.pricePerPod).div(1000000);
+        s.podOrders[id] = s.podOrders[id].sub(costInBeans, "Marketplace: Not enough beans in order.");
 
         LibTransfer.sendToken(C.bean(), costInBeans, msg.sender, mode);
         
@@ -214,6 +213,7 @@ contract Order is Listing {
         
         bytes32 id = create16PiecesDynamicOrderId(o.account, o.pricePerPod, o.maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
         uint256 costInBeans = getAmountBeansToFill16PiecesDynamicOrder(f, index + start - s.f.harvestable, amount);
+        console.log(s.podOrders[id], costInBeans);
         s.podOrders[id] = s.podOrders[id].sub(costInBeans, "Marketplace: Not enough beans in order.");
         
         LibTransfer.sendToken(C.bean(), costInBeans, msg.sender, mode);
@@ -263,7 +263,6 @@ contract Order is Listing {
         LibTransfer.To mode
     ) internal {
         bytes32 id = createOrderId(msg.sender, pricePerPod, maxPlaceInLine);
-        // uint256 amountBeans = (pricePerPod * s.podOrders[id]) / 1000000;
         uint256 amountBeans = s.podOrders[id];
         LibTransfer.sendToken(C.bean(), amountBeans, msg.sender, mode);
         delete s.podOrders[id];
@@ -330,10 +329,10 @@ contract Order is Listing {
         PiecewisePolynomial_4 calldata f,
         uint256 placeInLine, 
         uint256 amountPodsFromOrder
-    ) internal pure returns (uint256 beanAmount) { 
+    ) internal view returns (uint256 beanAmount) { 
 
-        uint256 numIntervals = getNumPiecesFrom4(f.breakpoints);
-        uint256 pieceIndex = findPieceIndexFrom4(f.breakpoints, placeInLine, numIntervals - 1);
+        uint256 numPieces = getNumPiecesFrom4(f.breakpoints);
+        uint256 pieceIndex = findPieceIndexFrom4(f.breakpoints, placeInLine, numPieces - 1);
         uint256 start = placeInLine;
         uint256 end = placeInLine + amountPodsFromOrder;
 
@@ -341,37 +340,37 @@ contract Order is Listing {
 
         while(start < end) {
             //if on the last piece, complete the remainder of the integration in the current piece
-            if(pieceIndex != numIntervals - 1) {
+            if(pieceIndex != numPieces - 1) {
                 //if the integration reaches into the next piece, then break the integration at the end of the current piece
                 if(end > f.breakpoints[pieceIndex + 1]) {
                     //current end index reaches into next piecewise domain
                     beanAmount += _evaluatePolynomialIntegration(
-                        [f.significands[pieceIndex], f.significands[pieceIndex + 1], f.significands[pieceIndex + 2], f.significands[pieceIndex + 3]], 
+                        [f.significands[pieceIndex*4], f.significands[pieceIndex*4 + 1], f.significands[pieceIndex*4 + 2], f.significands[pieceIndex*4 + 3]], 
                         getPackedExponents(f.packedExponents, pieceIndex), 
                         getPackedSigns(f.packedSigns, pieceIndex), 
-                        start, 
-                        f.breakpoints[pieceIndex + 1]
+                        start - f.breakpoints[pieceIndex], 
+                        f.breakpoints[pieceIndex + 1] - f.breakpoints[pieceIndex]
                     );
                     start = f.breakpoints[pieceIndex + 1]; // set place in line to the end index
-                    if(pieceIndex < (numIntervals - 1)) pieceIndex++; //increment piece index if not at the last piece
+                    if(pieceIndex < (numPieces - 1)) pieceIndex++; //increment piece index if not at the last piece
                 } else {
                     
                     beanAmount += _evaluatePolynomialIntegration(
-                        [f.significands[pieceIndex], f.significands[pieceIndex + 1], f.significands[pieceIndex + 2], f.significands[pieceIndex + 3]], 
+                        [f.significands[pieceIndex], f.significands[pieceIndex*4 + 1], f.significands[pieceIndex*4 + 2], f.significands[pieceIndex*4 + 3]], 
                         getPackedExponents(f.packedExponents, pieceIndex), 
                         getPackedSigns(f.packedSigns, pieceIndex), 
-                        start, 
-                        end
+                        start - f.breakpoints[pieceIndex], 
+                        end - f.breakpoints[pieceIndex]
                     );
                     start = end;
                 }
             } else {
                 beanAmount += _evaluatePolynomialIntegration(
-                    [f.significands[pieceIndex], f.significands[pieceIndex + 1], f.significands[pieceIndex + 2], f.significands[pieceIndex + 3]], 
+                    [f.significands[pieceIndex], f.significands[pieceIndex*4 + 1], f.significands[pieceIndex*4 + 2], f.significands[pieceIndex*4 + 3]], 
                     getPackedExponents(f.packedExponents, pieceIndex), 
                     getPackedSigns(f.packedSigns, pieceIndex), 
-                    start, 
-                    end
+                    start - f.breakpoints[pieceIndex], 
+                    end - f.breakpoints[pieceIndex]
                 );
                 start = end;
             }
@@ -385,10 +384,10 @@ contract Order is Listing {
         PiecewisePolynomial_16 calldata f,
         uint256 placeInLine, 
         uint256 amountPodsFromOrder
-    ) internal pure returns (uint256 beanAmount) { 
+    ) internal view returns (uint256 beanAmount) { 
 
-        uint256 numIntervals = getNumPiecesFrom16(f.breakpoints);
-        uint256 pieceIndex = findPieceIndexFrom16(f.breakpoints, placeInLine, numIntervals - 1);
+        uint256 numPieces = getNumPiecesFrom16(f.breakpoints);
+        uint256 pieceIndex = findPieceIndexFrom16(f.breakpoints, placeInLine, numPieces - 1);
         uint256 start = placeInLine;
         uint256 end = placeInLine + amountPodsFromOrder;
 
@@ -396,37 +395,37 @@ contract Order is Listing {
 
         while(start < end) {
             //if on the last piece, complete the remainder of the integration in the current piece
-            if(pieceIndex != numIntervals - 1) {
+            if(pieceIndex != numPieces - 1) {
                 //if the integration reaches into the next piece, then break the integration at the end of the current piece
                 if(end > f.breakpoints[pieceIndex + 1]) {
                     //current end index reaches into next piecewise domain
                     beanAmount +=  _evaluatePolynomialIntegration(
-                        [f.significands[pieceIndex], f.significands[pieceIndex + 1], f.significands[pieceIndex + 2], f.significands[pieceIndex + 3]], 
+                        [f.significands[pieceIndex*4], f.significands[pieceIndex*4 + 1], f.significands[pieceIndex*4 + 2], f.significands[pieceIndex*4 + 3]], 
                         getPackedExponents(f.packedExponents[pieceIndex / 8], pieceIndex), 
                         getPackedSigns(f.packedSigns, pieceIndex), 
-                        start, 
-                        f.breakpoints[pieceIndex + 1]
+                        start - f.breakpoints[pieceIndex], 
+                        f.breakpoints[pieceIndex + 1] - f.breakpoints[pieceIndex]
                     );
                     start = f.breakpoints[pieceIndex + 1]; // set place in line to the end index
-                    if(pieceIndex < (numIntervals - 1)) pieceIndex++; //increment piece index if not at the last piece
+                    if(pieceIndex < (numPieces - 1)) pieceIndex++; //increment piece index if not at the last piece
                 } else {
                     
                     beanAmount += _evaluatePolynomialIntegration(
-                        [f.significands[pieceIndex], f.significands[pieceIndex + 1], f.significands[pieceIndex + 2], f.significands[pieceIndex + 3]], 
+                        [f.significands[pieceIndex*4], f.significands[pieceIndex*4 + 1], f.significands[pieceIndex*4 + 2], f.significands[pieceIndex*4 + 3]], 
                         getPackedExponents(f.packedExponents[pieceIndex / 8], pieceIndex), 
                         getPackedSigns(f.packedSigns, pieceIndex), 
-                        start, 
-                        end
+                        start - f.breakpoints[pieceIndex], 
+                        end - f.breakpoints[pieceIndex]
                     );
                     start = end;
                 }
             } else {
                 beanAmount += _evaluatePolynomialIntegration(
-                    [f.significands[pieceIndex], f.significands[pieceIndex + 1], f.significands[pieceIndex + 2], f.significands[pieceIndex + 3]], 
+                    [f.significands[pieceIndex*4], f.significands[pieceIndex*4 + 1], f.significands[pieceIndex*4 + 2], f.significands[pieceIndex*4 + 3]], 
                     getPackedExponents(f.packedExponents[pieceIndex / 8], pieceIndex), 
                     getPackedSigns(f.packedSigns, pieceIndex), 
-                    start, 
-                    end
+                    start - f.breakpoints[pieceIndex], 
+                    end - f.breakpoints[pieceIndex]
                 );
                 start = end;
             }
@@ -440,7 +439,7 @@ contract Order is Listing {
         PiecewisePolynomial_64 calldata f,
         uint256 placeInLine, 
         uint256 amountPodsFromOrder
-    ) internal pure returns (uint256 beanAmount) { 
+    ) internal view returns (uint256 beanAmount) { 
 
         uint256 numIntervals = getNumPiecesFrom64(f.breakpoints);
         uint256 pieceIndex = findPieceIndexFrom64(f.breakpoints, placeInLine, numIntervals - 1);
@@ -456,32 +455,32 @@ contract Order is Listing {
                 if(end > f.breakpoints[pieceIndex + 1]) {
                     //current end index reaches into next piecewise domain
                     beanAmount +=  _evaluatePolynomialIntegration(
-                        [f.significands[pieceIndex], f.significands[pieceIndex + 1], f.significands[pieceIndex + 2], f.significands[pieceIndex + 3]], 
+                        [f.significands[pieceIndex*4], f.significands[pieceIndex*4 + 1], f.significands[pieceIndex*4 + 2], f.significands[pieceIndex*4 + 3]], 
                         getPackedExponents(f.packedExponents[pieceIndex / 8], pieceIndex), 
                         getPackedSigns(f.packedSigns, pieceIndex), 
-                        start, 
-                        f.breakpoints[pieceIndex + 1]
+                        start - f.breakpoints[pieceIndex], 
+                        f.breakpoints[pieceIndex + 1] - f.breakpoints[pieceIndex]
                     );
                     start = f.breakpoints[pieceIndex + 1]; // set place in line to the end index
                     if(pieceIndex < (numIntervals - 1)) pieceIndex++; //increment piece index if not at the last piece
                 } else {
                     
                     beanAmount += _evaluatePolynomialIntegration(
-                        [f.significands[pieceIndex], f.significands[pieceIndex + 1], f.significands[pieceIndex + 2], f.significands[pieceIndex + 3]], 
+                        [f.significands[pieceIndex*4], f.significands[pieceIndex*4 + 1], f.significands[pieceIndex*4 + 2], f.significands[pieceIndex*4 + 3]], 
                         getPackedExponents(f.packedExponents[pieceIndex / 8], pieceIndex), 
                         getPackedSigns(f.packedSigns, pieceIndex), 
-                        start, 
-                        end
+                        start - f.breakpoints[pieceIndex], 
+                        end - f.breakpoints[pieceIndex]
                     );
                     start = end;
                 }
             } else {
                 beanAmount += _evaluatePolynomialIntegration(
-                    [f.significands[pieceIndex], f.significands[pieceIndex + 1], f.significands[pieceIndex + 2], f.significands[pieceIndex + 3]], 
+                    [f.significands[pieceIndex*4], f.significands[pieceIndex*4 + 1], f.significands[pieceIndex*4 + 2], f.significands[pieceIndex*4 + 3]], 
                     getPackedExponents(f.packedExponents[pieceIndex / 8], pieceIndex), 
                     getPackedSigns(f.packedSigns, pieceIndex), 
-                    start, 
-                    end
+                    start - f.breakpoints[pieceIndex], 
+                    end - f.breakpoints[pieceIndex]
                 );
                 start = end;
             }

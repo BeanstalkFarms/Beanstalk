@@ -14,23 +14,25 @@ import "../../farm/facets/MarketplaceFacet/MarketplaceFacet.sol";
 **/
 contract MockMarketplaceFacet is MarketplaceFacet {
 
-    function evaluatePolynomial(uint256[4] memory significands, uint256 packedExponents, uint256 packedSigns, uint256 piece, uint256 x) public pure returns (uint256) {
+    function evaluatePolynomial(uint256[4] memory significands, uint256 packedExponents, uint256 packedSigns, uint256 piece, uint256 x) public view returns (uint256) {
         uint8[4] memory exponents = getPackedExponents(packedExponents, piece);
+        console.log(exponents[0], exponents[1], exponents[2], exponents[3]);
         bool[4] memory signs = getPackedSigns(packedSigns, piece);
         return _evaluatePolynomial(significands, exponents, signs, x);
     }
 
-    function evaluatePolynomialIntegration(uint256[4] memory significands, uint256 packedExponents, uint256 packedSigns, uint256 piece, uint256 start, uint256 end) public pure returns (uint256) {
+    function evaluatePolynomialIntegration(uint256[4] memory significands, uint256 packedExponents, uint256 packedSigns, uint256 piece, uint256 start, uint256 end) public view returns (uint256) {
         uint8[4] memory exponents = getPackedExponents(packedExponents, piece);
+        console.log(exponents[0], exponents[1], exponents[2], exponents[3]);
         bool[4] memory signs = getPackedSigns(packedSigns, piece);
         return _evaluatePolynomialIntegration(significands, exponents, signs, start, end);
     }
 
-    function _getPackedExponents(uint256 packedExponents, uint256 piece) public pure returns (uint8[4] memory) {
+    function _getPackedExponents(uint256 packedExponents, uint256 piece) public view returns (uint8[4] memory) {
         return getPackedExponents(packedExponents, piece);
     }
 
-    function _getPackedSigns(uint256 packedSigns, uint256 piece) public pure returns (bool[4] memory) {
+    function _getPackedSigns(uint256 packedSigns, uint256 piece) public view returns (bool[4] memory) {
         return getPackedSigns(packedSigns, piece);
     }
 

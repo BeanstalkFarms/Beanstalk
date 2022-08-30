@@ -291,9 +291,9 @@ contract Listing is Dynamic {
         uint256 plotSize = s.a[l.account].field.plots[l.index];
         require(plotSize >= (l.start + l.amount) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
-
+        console.log(s.f.harvestable);
         uint256 amount = get4PiecesDynamicRoundedAmount(l, f, beanAmount);
-
+        console.log(amount);
         __fill4PiecesDynamicListing(msg.sender, l, f, amount);
 
         _transferPlot(l.account, msg.sender, l.index, l.start, amount);
@@ -473,29 +473,30 @@ contract Listing is Dynamic {
 
     function get4PiecesDynamicRoundedAmount(PodListing calldata l, PiecewisePolynomial_4 calldata f, uint256 beanAmount) internal view returns (uint256 amount) {
         uint256 numPieces = getNumPiecesFrom4(f.breakpoints);
-        uint256 pieceIndex = findPieceIndexFrom4(f.breakpoints, beanAmount, numPieces - 1);
-        uint24 pricePerPod = uint24(
-            _evaluatePolynomial(
-                [f.significands[pieceIndex], f.significands[pieceIndex + 1], f.significands[pieceIndex + 2], f.significands[pieceIndex + 3]], 
+        uint256 pieceIndex = findPieceIndexFrom4(f.breakpoints, l.index + l.start - s.f.harvestable, numPieces - 1);
+        uint256 pricePerPod = _evaluatePolynomial(
+                [f.significands[pieceIndex*4], f.significands[pieceIndex*4 + 1], f.significands[pieceIndex*4 + 2], f.significands[pieceIndex*4 + 3]], 
                 getPackedExponents(f.packedExponents, pieceIndex),
                 getPackedSigns(f.packedSigns, pieceIndex),
-                l.index + l.start - s.f.harvestable
-            )
-        );
+                l.index + l.start - s.f.harvestable - f.breakpoints[pieceIndex]
+            );
+        console.log(pieceIndex, numPieces, pricePerPod);
+        console.log(getPackedExponents(f.packedExponents, pieceIndex)[pieceIndex], getPackedSigns(f.packedSigns, pieceIndex)[pieceIndex]);
         amount = (beanAmount * 1000000) / pricePerPod;
+        console.log(beanAmount, amount);
         uint256 remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
         if(remainingAmount <= (1000000 / pricePerPod)) amount = l.amount;
     }
 
     function get16PiecesDynamicRoundedAmount(PodListing calldata l, PiecewisePolynomial_16 calldata f, uint256 beanAmount) internal view returns (uint256 amount) {
         uint256 numPieces = getNumPiecesFrom16(f.breakpoints);
-        uint256 pieceIndex = findPieceIndexFrom16(f.breakpoints, beanAmount, numPieces - 1);
+        uint256 pieceIndex = findPieceIndexFrom16(f.breakpoints, l.index + l.start - s.f.harvestable, numPieces - 1);
         uint24 pricePerPod = uint24(
             _evaluatePolynomial(
                 [f.significands[pieceIndex], f.significands[pieceIndex + 1], f.significands[pieceIndex + 2], f.significands[pieceIndex + 3]], 
                 getPackedExponents(f.packedExponents[pieceIndex / 8], pieceIndex),
                 getPackedSigns(f.packedSigns, pieceIndex),
-                l.index + l.start - s.f.harvestable
+                l.index + l.start - s.f.harvestable - f.breakpoints[pieceIndex]
             )
         );
         amount = (beanAmount * 1000000) / pricePerPod;
@@ -505,13 +506,13 @@ contract Listing is Dynamic {
 
     function get64PiecesDynamicRoundedAmount(PodListing calldata l, PiecewisePolynomial_64 calldata f, uint256 beanAmount) internal view returns (uint256 amount) {
         uint256 numPieces = getNumPiecesFrom64(f.breakpoints);
-        uint256 pieceIndex = findPieceIndexFrom64(f.breakpoints, beanAmount, numPieces - 1);
+        uint256 pieceIndex = findPieceIndexFrom64(f.breakpoints, l.index + l.start - s.f.harvestable, numPieces - 1);
         uint24 pricePerPod = uint24(
             _evaluatePolynomial(
                 [f.significands[pieceIndex], f.significands[pieceIndex + 1], f.significands[pieceIndex + 2], f.significands[pieceIndex + 3]], 
                 getPackedExponents(f.packedExponents[pieceIndex / 8], pieceIndex),
                 getPackedSigns(f.packedSigns, pieceIndex),
-                l.index + l.start - s.f.harvestable
+                l.index + l.start - s.f.harvestable - f.breakpoints[pieceIndex]
             )
         );
         amount = (beanAmount * 1000000) / pricePerPod;
@@ -527,19 +528,6 @@ contract Listing is Dynamic {
         LibTransfer.To mode
     ) internal pure returns (bytes32 lHash) {
         lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex,  mode == LibTransfer.To.EXTERNAL));
-    }
-
-    function hash1PieceDynamicListing(
-        uint256 start, 
-        uint256 amount, 
-        uint24 pricePerPod, 
-        uint256 maxHarvestableIndex, 
-        LibTransfer.To mode, 
-        uint256[4] calldata significands, 
-        uint256 packedExponents, 
-        uint256 packedSigns
-    ) internal pure returns (bytes32 lHash) {
-        lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex,  mode == LibTransfer.To.EXTERNAL, significands, packedExponents, packedSigns));
     }
 
     function hash4PiecesDynamicListing(
