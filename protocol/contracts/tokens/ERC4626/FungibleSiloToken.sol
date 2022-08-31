@@ -17,7 +17,7 @@ contract FungibleSiloToken is
 {
     using MathUpgradeable for uint256;
 
-    address public BEANSTALK_ADDRESS;
+    address public constant BEANSTALK_ADDRESS = 0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5;
     address public siloTokenAddress;
     uint8 public siloTokenDecimals;
 
@@ -25,7 +25,6 @@ contract FungibleSiloToken is
     uint216 public depositedSiloAmount;
 
     function initialize(
-        address _beanstalkAddress,
         address _siloTokenAddress,
         uint8 _siloTokenDecimals,
         uint32 _season,
@@ -35,7 +34,6 @@ contract FungibleSiloToken is
         __ERC20_init(name, symbol);
         __ERC20Permit_init(name);
         __Ownable_init();
-        BEANSTALK_ADDRESS = _beanstalkAddress;
         siloTokenAddress = _siloTokenAddress;
         depositedSiloSeason = _season;
         depositedSiloAmount = 0;

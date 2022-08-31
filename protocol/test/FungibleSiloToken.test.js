@@ -78,7 +78,6 @@ describe("Fungible Silo Token", function () {
     this.fungibleSiloToken = await upgrades.deployProxy(
       FungibleSiloToken,
       [
-        this.diamond.address,
         this.siloToken.address,
         await this.siloToken.decimals(),
         50,
