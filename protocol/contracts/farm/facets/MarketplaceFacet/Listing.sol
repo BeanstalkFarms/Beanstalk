@@ -291,9 +291,7 @@ contract Listing is Dynamic {
         uint256 plotSize = s.a[l.account].field.plots[l.index];
         require(plotSize >= (l.start + l.amount) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
-        console.log(s.f.harvestable);
         uint256 amount = get4PiecesDynamicRoundedAmount(l, f, beanAmount);
-        console.log(amount);
         __fill4PiecesDynamicListing(msg.sender, l, f, amount);
 
         _transferPlot(l.account, msg.sender, l.index, l.start, amount);
@@ -480,10 +478,7 @@ contract Listing is Dynamic {
                 getPackedSigns(f.packedSigns, pieceIndex),
                 l.index + l.start - s.f.harvestable - f.breakpoints[pieceIndex]
             );
-        console.log(pieceIndex, numPieces, pricePerPod);
-        console.log(getPackedExponents(f.packedExponents, pieceIndex)[pieceIndex], getPackedSigns(f.packedSigns, pieceIndex)[pieceIndex]);
         amount = (beanAmount * 1000000) / pricePerPod;
-        console.log(beanAmount, amount);
         uint256 remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
         if(remainingAmount <= (1000000 / pricePerPod)) amount = l.amount;
     }

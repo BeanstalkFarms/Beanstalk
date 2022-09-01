@@ -1,5 +1,5 @@
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
-const { getAmountListing, getAmountOrder, interpolatePoints, getNumPieces, findIndex, evaluatePolynomial, evaluatePolynomialIntegration } = require('./utils/interpolater.js')
+const { interpolatePoints, getNumPieces, evaluatePolynomial, evaluatePolynomialIntegration, getAmountOrder } = require('./utils/interpolater.js')
 const { expect, use } = require("chai");
 const { waffleChai } = require("@ethereum-waffle/chai");
 use(waffleChai);
@@ -163,7 +163,6 @@ describe('Marketplace', function () {
   }
   
   const hugeValueSet_13Pieces = {
-    //starting from 10 trillion
     xs: [10000000000000, 50000000000000, 60000000000000, 70000000000000, 80000000000000, 90000000000000, 100000000000000, 110000000000000, 120000000000000, 130000000000000, 140000000000000, 180000000000000, 200000000000000],
     ys: [1000000, 990000, 980000, 950000, 890000, 790000, 680000, 670000, 660000, 570000, 470000, 450000, 430000]
   }
@@ -176,7 +175,7 @@ describe('Marketplace', function () {
     await revertToSnapshot(snapshotId);
   });
 
-  describe("Functions Misc", async function () {
+  describe("Functions", async function () {
 
     describe("Piece Index Search", async function () {
 
@@ -277,6 +276,32 @@ describe('Marketplace', function () {
         })
         it("finds interval past end", async function (){
           expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '3001', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(14);
+        })
+      })
+
+      describe("64 Pieces", async function () {
+        beforeEach(async function () {
+          this.breakpoints = interpolatePoints(staticset_64Pieces_500000.xs, staticset_64Pieces_500000.ys).breakpoints;
+        })
+        it("correctly finds interval at 0", async function () {
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom64(this.breakpoints, '0', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(0);
+        })
+
+        it("finds interval between breakpoints", async function () {
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom64(this.breakpoints, '1250', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom64(this.breakpoints, '2420', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom64(this.breakpoints, '45500', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(45);
+        })
+        it("finds interval at breakpoints", async function () {
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom64(this.breakpoints, '1000', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom64(this.breakpoints, '2000', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom64(this.breakpoints, '13000', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(13);
+        })
+        it("finds interval at end", async function () {
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom64(this.breakpoints, '63000', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(62);
+        })
+        it("finds interval past end", async function (){
+          expect(await this.marketplace.connect(user)._findPieceIndexFrom64(this.breakpoints, '63001', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(62);
         })
       })
 
@@ -504,6 +529,188 @@ describe('Marketplace', function () {
             const pieceIndex = 11;
             const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
             expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefs, this.f.packedExponents[1], this.f.packedSigns, pieceIndex, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
+          })
+        })
+      })
+    })
+
+    describe("Piecewise Polynomial Integral Evaluation", async function () {
+
+      describe("Small Values", async function () {
+        describe("correctly evaluates a polynomial integration over two pieces", async function () {
+          beforeEach(async function () {
+            this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
+            this.function = [this.f.breakpoints, this.f.coefficients, this.f.packedExponents, this.f.packedSigns];
+          })
+  
+          it("first to second interval", async function () {
+            const startPlaceInLine = 1000;
+            const amountPodsFromOrder = 4500;
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
+            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+          })
+  
+          it("second to third interval", async function () {
+            const startPlaceInLine = 5000;
+            const amountPodsFromOrder = 1500;
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
+            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+          })
+          
+          it("fourth to fifth interval", async function () {
+            const startPlaceInLine = 7000;
+            const amountPodsFromOrder = 1500;
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
+            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+          })
+
+          it("eleventh to twelfth interval", async function () {
+            const startPlaceInLine = 14000;
+            const amountPodsFromOrder = 4500;
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
+            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+          })
+
+          it("twelfth to past last interval", async function () {
+            const startPlaceInLine = 18000;
+            const amountPodsFromOrder = 4500;
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
+            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+          })
+        })
+
+        describe("correctly evaluates a polynomial integration over multiple pieces", async function () {
+          beforeEach(async function () {
+            this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
+            this.function = [this.f.breakpoints, this.f.coefficients, this.f.packedExponents, this.f.packedSigns];
+          })
+  
+          it("first to third interval", async function () {
+            const startPlaceInLine = 1000;
+            const amountPodsFromOrder = 5500;
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
+            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+          })
+  
+          it("second to fourth interval", async function () {
+            const startPlaceInLine = 5000;
+            const amountPodsFromOrder = 2500;
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
+            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+          })
+          
+          it("fourth to sixth interval", async function () {
+            const startPlaceInLine = 7000;
+            const amountPodsFromOrder = 2500;
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
+            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+          })
+
+          it("tenth to twelfth interval", async function () {
+            const startPlaceInLine = 13000;
+            const amountPodsFromOrder = 5500;
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
+            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+          })
+
+          it("eleventh to past last interval", async function () {
+            const startPlaceInLine = 14000;
+            const amountPodsFromOrder = 8500;
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
+            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+          })
+        })
+
+        describe("correctly evaluates a polynomial integration over all pieces", async function () {
+          beforeEach(async function () {
+            this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
+            this.function = [this.f.breakpoints, this.f.coefficients, this.f.packedExponents, this.f.packedSigns];
+          })
+  
+          it("first to last interval", async function () {
+            const startPlaceInLine = 1000;
+            const amountPodsFromOrder = 18500;
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
+            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+          })
+  
+          it("first to past last interval", async function () {
+            const startPlaceInLine = 1000;
+            const amountPodsFromOrder = 19500;
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
+            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+          })
+        })
+      })
+
+      describe("Huge Values", async function () {
+        describe("correctly evaluates a polynomial integration over two pieces", async function () {
+          beforeEach(async function () {
+            this.f = interpolatePoints(hugeValueSet_13Pieces.xs, hugeValueSet_13Pieces.ys);
+            this.function = [this.f.breakpoints, this.f.coefficients, this.f.packedExponents, this.f.packedSigns];
+          })
+  
+          it("first to second interval", async function () {
+            const startPlaceInLine = 10000000000000;
+            const amountPodsFromOrder = 45000000000000;
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
+            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+          })
+  
+          it("second to third interval", async function () {
+            const startPlaceInLine = 50000000000000;
+            const amountPodsFromOrder = 15000000000000;
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
+            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+          })
+          
+          it("eleventh to twelfth interval", async function () {
+            const startPlaceInLine = 130000000000000;
+            const amountPodsFromOrder = 15000000000000;
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
+            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+          })
+        })
+
+        describe("correctly evaluates a polynomial integration over multiple pieces", async function () {
+          beforeEach(async function () {
+            this.f = interpolatePoints(hugeValueSet_13Pieces.xs, hugeValueSet_13Pieces.ys);
+            this.function = [this.f.breakpoints, this.f.coefficients, this.f.packedExponents, this.f.packedSigns];
+          })
+  
+          it("first to third interval", async function () {
+            const startPlaceInLine = 10000000000000;
+            const amountPodsFromOrder = 55000000000000;
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
+            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+          })
+  
+          it("third to fifth interval", async function () {
+            const startPlaceInLine = 60000000000000;
+            const amountPodsFromOrder = 25000000000000;
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
+            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+          })
+          
+          it("eleventh to last interval", async function () {
+            const startPlaceInLine = 130000000000000;
+            const amountPodsFromOrder = 55000000000000;
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
+            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+          })
+        })
+
+        describe("correctly evaluates a polynomial integration over all pieces", async function () {
+          beforeEach(async function () {
+            this.f = interpolatePoints(hugeValueSet_13Pieces.xs, hugeValueSet_13Pieces.ys);
+            this.function = [this.f.breakpoints, this.f.coefficients, this.f.packedExponents, this.f.packedSigns];
+          })
+  
+          it("first to last interval", async function () {
+            const startPlaceInLine = 10000000000000;
+            const amountPodsFromOrder = 185000000000000;
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
+            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
         })
       })
@@ -1970,9 +2177,7 @@ describe('Marketplace', function () {
   
         describe("Partial fill order", async function () {
           beforeEach(async function () {
-            this.beanstalkBalance = await this.bean.balanceOf(
-              this.marketplace.address
-            );
+            this.beanstalkBalance = await this.bean.balanceOf(this.marketplace.address);
             this.user2BeanBalance = await this.bean.balanceOf(user2Address);
             this.result = await this.marketplace
               .connect(user2)

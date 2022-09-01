@@ -69,7 +69,7 @@ function findIndex(array, value, high) {
         else if(math.compare(math.bignumber(array[low]), math.bignumber(value)) == 1) break;
         else low++;
     }
-    console.log(low>0?low-1:0)
+
     return low>0?low-1:0;
 }
 
@@ -299,7 +299,7 @@ function getAmountOrder(f, placeInLine, amountPodsFromOrder, maxPieces) {
             
             if(math.compare(end, f.breakpoints[pieceIndex + 1]) == 1) {
 
-                var term = evaluatePolynomialIntegration(f, start, f.breakpoints[pieceIndex + 1], pieceIndex); 
+                var term = evaluatePolynomialIntegration(f, math.subtract(start, f.breakpoints[pieceIndex]), math.subtract(f.breakpoints[pieceIndex + 1], f.breakpoints[pieceIndex]), pieceIndex); 
                 start = math.bignumber(f.breakpoints[pieceIndex + 1]);
                 beanAmount = math.add(beanAmount, term);
 
@@ -307,13 +307,13 @@ function getAmountOrder(f, placeInLine, amountPodsFromOrder, maxPieces) {
                 
             } else {
 
-                var term = evaluatePolynomialIntegration(f, start, end, pieceIndex);
+                var term = evaluatePolynomialIntegration(f, math.subtract(start, f.breakpoints[pieceIndex]), math.subtract(end, f.breakpoints[pieceIndex]), pieceIndex);
                 beanAmount = math.add(beanAmount, term);
                 start = end;
             }
         }else{
 
-            var term = evaluatePolynomialIntegration(f, start, end, pieceIndex);
+            var term = evaluatePolynomialIntegration(f, math.subtract(start, f.breakpoints[pieceIndex]), math.subtract(end, f.breakpoints[pieceIndex]), pieceIndex);
             beanAmount = math.add(beanAmount, term);
             start = end;
         }

@@ -213,7 +213,6 @@ contract Order is Listing {
         
         bytes32 id = create16PiecesDynamicOrderId(o.account, o.pricePerPod, o.maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
         uint256 costInBeans = getAmountBeansToFill16PiecesDynamicOrder(f, index + start - s.f.harvestable, amount);
-        console.log(s.podOrders[id], costInBeans);
         s.podOrders[id] = s.podOrders[id].sub(costInBeans, "Marketplace: Not enough beans in order.");
         
         LibTransfer.sendToken(C.bean(), costInBeans, msg.sender, mode);
