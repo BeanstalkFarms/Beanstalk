@@ -1,4 +1,5 @@
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
+const { Fixed, Piecewise4, Piecewise16, Piecewise64 } = require('./utils/priceTypes.js')
 const { interpolatePoints } = require('./utils/interpolater.js')
 const { getNumPieces, evaluatePolynomial, evaluatePolynomialIntegration, getAmountOrder } = require('./utils/libDynamicHelpers.js')
 
@@ -60,26 +61,27 @@ describe('Marketplace', function () {
   const getDynamicHash = async function (tx) {
     let receipt = await tx.wait();
     let numPieces = 4;
-    var args = (receipt.events.filter((x) => { return x.event == ("DynamicPodListingCreated_4Pieces") }))[0]?.args;
-    if(!args) {
-      args = (receipt.events.filter((x) => { return x.event == ("DynamicPodListingCreated_16Pieces") }))[0]?.args;
+    var args = (receipt.events.filter((x) => { return x.event == ("PodListingCreated") }))[0].args;
+    var polynomialArgs = (receipt.events.filter((x) => { return x.event == ("NewCubicPolynomialPiecewise4") }))[0]?.args;
+    if(!polynomialArgs) {
+      polynomialArgs = (receipt.events.filter((x) => { return x.event == ("NewCubicPolynomialPiecewise16") }))[0]?.args;
       numPieces = 16;
     }
 
-    if(!args) {
-      args = (receipt.events.filter((x) => { return x.event == ("DynamicPodListingCreated_64Pieces") }))[0].args;
+    if(!polynomialArgs) {
+      polynomialArgs = (receipt.events.filter((x) => { return x.event == ("NewCubicPolynomialPiecewise64") }))[0]?.args;
       numPieces = 64;
     }
 
     if(numPieces === 4) {
       return ethers.utils.solidityKeccak256(
         ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'uint256[]', 'uint256[]', 'uint256', 'uint256'],
-        [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args.mode == EXTERNAL, args.pieceBreakpoints, args.polynomialCoefficients, args.packedPolynomialExponents, args.packedPolynomialSigns]
+        [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args.mode == EXTERNAL, polynomialArgs.piecewiseBreakpoints, polynomialArgs.coefficientSignificands, polynomialArgs.packedCoefficientExponents, polynomialArgs.packedCoefficientSigns]
       )
     } else {
       return ethers.utils.solidityKeccak256(
         ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'uint256[]', 'uint256[]', 'uint256[]', 'uint256'],
-        [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args.mode == EXTERNAL, args.pieceBreakpoints, args.polynomialCoefficients, args.packedPolynomialExponents, args.packedPolynomialSigns]
+        [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args.mode == EXTERNAL, polynomialArgs.piecewiseBreakpoints, polynomialArgs.coefficientSignificands, polynomialArgs.packedCoefficientExponents, polynomialArgs.packedCoefficientSigns]
       )
     }
   }
@@ -110,12 +112,6 @@ describe('Marketplace', function () {
   const getOrderId = async function (tx) {
     let receipt = await tx.wait();
     let idx = (receipt.events?.filter((x) => { return x.event == ("PodOrderCreated") }))[0].args.id;
-    return idx;
-  }
-
-  const getDynamicOrderId = async function (tx) {
-    let receipt = await tx.wait();
-    let idx = (receipt.events?.filter((x) => { return (x.event == "DynamicPodOrderCreated_4Pieces" || x.event == "DynamicPodOrderCreated_16Pieces" || x.event == "DynamicPodOrderCreated_64Pieces") }))[0].args.id;
     return idx;
   }
 
@@ -754,7 +750,7 @@ describe('Marketplace', function () {
           })
   
           it('Emits event', async function () {
-            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 0, '1000', 500000, 0, 0);
+            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 0, '1000', 500000, 0, 0, Fixed);
           })
         })
   
@@ -769,7 +765,7 @@ describe('Marketplace', function () {
           })
   
           it('Emits event', async function () {
-            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 0, '500', 500000, 0, 0);
+            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 0, '500', 500000, 0, 0, Fixed);
           })
         })
   
@@ -783,7 +779,7 @@ describe('Marketplace', function () {
           })
   
           it('Emits event', async function () {
-            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 500, '500', 500000, 2000, 1);
+            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 500, '500', 500000, 2000, 1, Fixed);
           })
         })
   
@@ -799,7 +795,7 @@ describe('Marketplace', function () {
   
           it('Emits event', async function () {
             await expect(this.result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, 0);
-            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 500, '100', 500000, 2000, 1);
+            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 500, '100', 500000, 2000, 1, Fixed);
           })
         })
       })
@@ -1035,7 +1031,7 @@ describe('Marketplace', function () {
           result = await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', EXTERNAL);
           expect(await this.marketplace.podListing(0)).to.be.equal(await getHash(result));
           result = await this.marketplace.connect(user).createPodListing('0', '0', '1000', '200000', '2000', INTERNAL);
-          await expect(result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, '0', 0, 1000, 200000, 2000, 1);
+          await expect(result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, '0', 0, 1000, 200000, 2000, 1, Fixed);
           await expect(result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, '0');
           expect(await this.marketplace.podListing(0)).to.be.equal(await getHash(result));
         })
@@ -1087,7 +1083,8 @@ describe('Marketplace', function () {
           })
   
           it('Emits event', async function () {
-            await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated_4Pieces').withArgs(userAddress, 0, 0, '1000', 0, 0, 0, this.function[0], this.function[1], this.function[2], this.function[3]);
+            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 0, '1000', 0, 0, 0, Piecewise4);
+            await expect(this.result).to.emit(this.marketplace, 'NewCubicPolynomialPiecewise4').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           })
         })
   
@@ -1102,7 +1099,8 @@ describe('Marketplace', function () {
           })
   
           it('Emits event', async function () {
-            await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated_4Pieces').withArgs(userAddress, 0, 0, '500', 0, 0, 0, this.function[0], this.function[1], this.function[2], this.function[3]);
+            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 0, '500', 0, 0, 0, Piecewise4);
+            await expect(this.result).to.emit(this.marketplace, 'NewCubicPolynomialPiecewise4').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           })
         })
   
@@ -1116,7 +1114,8 @@ describe('Marketplace', function () {
           })
   
           it('Emits event', async function () {
-            await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated_4Pieces').withArgs(userAddress, 0, 500, '500', 0, 2000, 1, this.function[0], this.function[1], this.function[2], this.function[3]);
+            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 500, '500', 0, 2000, 1, Piecewise4);
+            await expect(this.result).to.emit(this.marketplace, 'NewCubicPolynomialPiecewise4').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           })
         })
   
@@ -1132,7 +1131,8 @@ describe('Marketplace', function () {
   
           it('Emits event', async function () {
             await expect(this.result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, 0);
-            await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated_4Pieces').withArgs(userAddress, 0, 500, '100', 0, 2000, 1, this.function[0], this.function[1], this.function[2], this.function[3]);
+            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 500, '100', 0, 2000, 1, Piecewise4);
+            await expect(this.result).to.emit(this.marketplace, 'NewCubicPolynomialPiecewise4').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           })
         })
       })
@@ -1360,7 +1360,8 @@ describe('Marketplace', function () {
           result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '0', EXTERNAL, this.function);
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
           result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '2000', INTERNAL, this.function);
-          await expect(result).to.emit(this.marketplace, 'DynamicPodListingCreated_4Pieces').withArgs(userAddress, '0', 0, 1000, 0, 2000, 1, this.function[0], this.function[1], this.function[2], this.function[3]);
+          await expect(result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, '0', 0, 1000, 0, 2000, 1, Piecewise4);
+          await expect(result).to.emit(this.marketplace, 'NewCubicPolynomialPiecewise4').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           await expect(result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, '0');
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
         })
@@ -1413,7 +1414,8 @@ describe('Marketplace', function () {
           })
   
           it('Emits event', async function () {
-            await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated_16Pieces').withArgs(userAddress, 0, 0, '1000', 0, 0, 0, this.function[0], this.function[1], this.function[2], this.function[3]);
+            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 0, '1000', 0, 0, 0, Piecewise16);
+            await expect(this.result).to.emit(this.marketplace, 'NewCubicPolynomialPiecewise16').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           })
         })
   
@@ -1428,7 +1430,8 @@ describe('Marketplace', function () {
           })
   
           it('Emits event', async function () {
-            await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated_16Pieces').withArgs(userAddress, 0, 0, '500', 0, 0, 0, this.function[0], this.function[1], this.function[2], this.function[3]);
+            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 0, '500', 0, 0, 0, Piecewise16);
+            await expect(this.result).to.emit(this.marketplace, 'NewCubicPolynomialPiecewise16').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           })
         })
   
@@ -1442,7 +1445,8 @@ describe('Marketplace', function () {
           })
   
           it('Emits event', async function () {
-            await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated_16Pieces').withArgs(userAddress, 0, 500, '500', 0, 2000, 1, this.function[0], this.function[1], this.function[2], this.function[3]);
+            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 500, '500', 0, 2000, 1, Piecewise16);
+            await expect(this.result).to.emit(this.marketplace, 'NewCubicPolynomialPiecewise16').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           })
         })
   
@@ -1458,7 +1462,8 @@ describe('Marketplace', function () {
   
           it('Emits event', async function () {
             await expect(this.result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, 0);
-            await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated_16Pieces').withArgs(userAddress, 0, 500, '100', 0, 2000, 1, this.function[0], this.function[1], this.function[2], this.function[3]);
+            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 500, '100', 0, 2000, 1, Piecewise16);
+            await expect(this.result).to.emit(this.marketplace, 'NewCubicPolynomialPiecewise16').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           })
         })
       })
@@ -1686,7 +1691,8 @@ describe('Marketplace', function () {
           result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '0', EXTERNAL, this.function);
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
           result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '2000', INTERNAL, this.function);
-          await expect(result).to.emit(this.marketplace, 'DynamicPodListingCreated_16Pieces').withArgs(userAddress, '0', 0, 1000, 0, 2000, 1, this.function[0], this.function[1], this.function[2], this.function[3]);
+          await expect(result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, '0', 0, 1000, 0, 2000, 1, Piecewise16);
+          await expect(result).to.emit(this.marketplace, 'NewCubicPolynomialPiecewise16').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           await expect(result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, '0');
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
         })
@@ -1739,7 +1745,8 @@ describe('Marketplace', function () {
           })
   
           it('Emits event', async function () {
-            await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated_64Pieces').withArgs(userAddress, 0, 0, '1000', 0, 0, 0, this.function[0], this.function[1], this.function[2], this.function[3]);
+            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 0, '1000', 0, 0, 0, Piecewise64);
+            await expect(this.result).to.emit(this.marketplace, 'NewCubicPolynomialPiecewise64').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           })
         })
   
@@ -1754,7 +1761,8 @@ describe('Marketplace', function () {
           })
   
           it('Emits event', async function () {
-            await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated_64Pieces').withArgs(userAddress, 0, 0, '500', 0, 0, 0, this.function[0], this.function[1], this.function[2], this.function[3]);
+            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 0, '500', 0, 0, 0, Piecewise64);
+            await expect(this.result).to.emit(this.marketplace, 'NewCubicPolynomialPiecewise64').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           })
         })
   
@@ -1768,7 +1776,8 @@ describe('Marketplace', function () {
           })
   
           it('Emits event', async function () {
-            await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated_64Pieces').withArgs(userAddress, 0, 500, '500', 0, 2000, 1, this.function[0], this.function[1], this.function[2], this.function[3]);
+            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 500, '500', 0, 2000, 1, Piecewise64);
+            await expect(this.result).to.emit(this.marketplace, 'NewCubicPolynomialPiecewise64').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           })
         })
   
@@ -1784,7 +1793,8 @@ describe('Marketplace', function () {
   
           it('Emits event', async function () {
             await expect(this.result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, 0);
-            await expect(this.result).to.emit(this.marketplace, 'DynamicPodListingCreated_64Pieces').withArgs(userAddress, 0, 500, '100', 0, 2000, 1, this.function[0], this.function[1], this.function[2], this.function[3]);
+            await expect(this.result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, 0, 500, '100', 0, 2000, 1, Piecewise64);
+            await expect(this.result).to.emit(this.marketplace, 'NewCubicPolynomialPiecewise64').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           })
         })
       })
@@ -2012,7 +2022,8 @@ describe('Marketplace', function () {
           result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '0', EXTERNAL, this.function);
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
           result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '2000', INTERNAL, this.function);
-          await expect(result).to.emit(this.marketplace, 'DynamicPodListingCreated_64Pieces').withArgs(userAddress, '0', 0, 1000, 0, 2000, 1, this.function[0], this.function[1], this.function[2], this.function[3]);
+          await expect(result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, '0', 0, 1000, 0, 2000, 1, Piecewise64);
+          await expect(result).to.emit(this.marketplace, 'NewCubicPolynomialPiecewise64').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           await expect(result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, '0');
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
         })
@@ -2085,7 +2096,7 @@ describe('Marketplace', function () {
           it("emits an event", async function () {
             expect(this.result)
               .to.emit(this.marketplace, "PodOrderCreated")
-              .withArgs(userAddress, this.id, "500", 100000, "1000");
+              .withArgs(userAddress, this.id, "500", 100000, "1000", Fixed);
           });
         });
       });
@@ -2420,7 +2431,7 @@ describe('Marketplace', function () {
                 EXTERNAL,
                 this.function
               );
-            this.id = await getDynamicOrderId(this.result);
+            this.id = await getOrderId(this.result);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress);
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(
               this.marketplace.address
@@ -2450,18 +2461,16 @@ describe('Marketplace', function () {
 
           it("emits an event", async function () {
             await expect(this.result)
-              .to.emit(this.marketplace, "DynamicPodOrderCreated_4Pieces")
+              .to.emit(this.marketplace, "PodOrderCreated")
               .withArgs(
                 userAddress,
                 this.id,
                 "500",
                 0,
                 "1000",
-                this.function[0],
-                this.function[1],
-                this.function[2],
-                this.function[3]
+                Piecewise4
               );
+              await expect(this.result).to.emit(this.marketplace, 'NewCubicPolynomialPiecewise4').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           });
         });
       });
@@ -2469,7 +2478,7 @@ describe('Marketplace', function () {
       describe("Fill", async function () {
         beforeEach(async function () {
           this.result = await this.marketplace.connect(user).createPodOrderPiecewise4("50", "0", "2500", EXTERNAL, this.function);
-          this.id = await getDynamicOrderId(this.result);
+          this.id = await getOrderId(this.result);
           this.order = [userAddress, "0", "2500"];
         });
 
@@ -2674,7 +2683,7 @@ describe('Marketplace', function () {
       describe("Cancel", async function () {
         beforeEach(async function () {
           this.result = await this.marketplace.connect(user).createPodOrderPiecewise4('500', '0', '1000', EXTERNAL, this.function)
-          this.id = await getDynamicOrderId(this.result)
+          this.id = await getOrderId(this.result)
         })
 
         describe('Cancel owner', async function () {
@@ -2756,7 +2765,7 @@ describe('Marketplace', function () {
                 EXTERNAL,
                 this.function
               );
-            this.id = await getDynamicOrderId(this.result);
+            this.id = await getOrderId(this.result);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress);
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(
               this.marketplace.address
@@ -2786,18 +2795,16 @@ describe('Marketplace', function () {
 
           it("emits an event", async function () {
             await expect(this.result)
-              .to.emit(this.marketplace, "DynamicPodOrderCreated_16Pieces")
+              .to.emit(this.marketplace, "PodOrderCreated")
               .withArgs(
                 userAddress,
                 this.id,
                 "50",
                 0,
                 "1000",
-                this.function[0],
-                this.function[1],
-                this.function[2],
-                this.function[3]
+                Piecewise16
               );
+              await expect(this.result).to.emit(this.marketplace, 'NewCubicPolynomialPiecewise16').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           });
         });
       });
@@ -2805,7 +2812,7 @@ describe('Marketplace', function () {
       describe("Fill", async function () {
         beforeEach(async function () {
           this.result = await this.marketplace.connect(user).createPodOrderPiecewise16("50", "0", "2500", EXTERNAL, this.function);
-          this.id = await getDynamicOrderId(this.result);
+          this.id = await getOrderId(this.result);
           this.order = [userAddress, "0", "2500"];
         });
 
@@ -3010,7 +3017,7 @@ describe('Marketplace', function () {
       describe("Cancel", async function () {
         beforeEach(async function () {
           this.result = await this.marketplace.connect(user).createPodOrderPiecewise16('500', '0', '1000', EXTERNAL, this.function)
-          this.id = await getDynamicOrderId(this.result)
+          this.id = await getOrderId(this.result)
         })
 
         describe('Cancel owner', async function () {
@@ -3092,7 +3099,7 @@ describe('Marketplace', function () {
                 EXTERNAL,
                 this.function
               );
-            this.id = await getDynamicOrderId(this.result);
+            this.id = await getOrderId(this.result);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress);
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(
               this.marketplace.address
@@ -3122,18 +3129,16 @@ describe('Marketplace', function () {
 
           it("emits an event", async function () {
             await expect(this.result)
-              .to.emit(this.marketplace, "DynamicPodOrderCreated_64Pieces")
+              .to.emit(this.marketplace, "PodOrderCreated")
               .withArgs(
                 userAddress,
                 this.id,
                 "50",
                 0,
                 "1000",
-                this.function[0],
-                this.function[1],
-                this.function[2],
-                this.function[3]
+                Piecewise64
               );
+              await expect(this.result).to.emit(this.marketplace, 'NewCubicPolynomialPiecewise64').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           });
         });
       });
@@ -3141,7 +3146,7 @@ describe('Marketplace', function () {
       describe("Fill", async function () {
         beforeEach(async function () {
           this.result = await this.marketplace.connect(user).createPodOrderPiecewise64("50", "0", "2500", EXTERNAL, this.function);
-          this.id = await getDynamicOrderId(this.result);
+          this.id = await getOrderId(this.result);
           this.order = [userAddress, "0", "2500"];
         });
 
@@ -3346,7 +3351,7 @@ describe('Marketplace', function () {
       describe("Cancel", async function () {
         beforeEach(async function () {
           this.result = await this.marketplace.connect(user).createPodOrderPiecewise64('500', '0', '1000', EXTERNAL, this.function)
-          this.id = await getDynamicOrderId(this.result)
+          this.id = await getOrderId(this.result)
         })
 
         describe('Cancel owner', async function () {

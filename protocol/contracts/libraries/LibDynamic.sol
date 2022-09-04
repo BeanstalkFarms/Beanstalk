@@ -34,7 +34,7 @@ library LibDynamic {
         
     */
 
-    enum PricingMode {
+    enum PriceType {
         Fixed,
         Piecewise4,
         Piecewise16,

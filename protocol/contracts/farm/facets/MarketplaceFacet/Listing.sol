@@ -19,6 +19,27 @@ contract Listing is PodTransfer {
 
     using SafeMath for uint256;
 
+    event NewCubicPolynomialPiecewise4(
+        uint256[4] piecewiseBreakpoints,
+        uint256[16] coefficientSignificands,
+        uint256 packedCoefficientExponents,
+        uint256 packedCoefficientSigns
+    );
+
+    event NewCubicPolynomialPiecewise16(
+        uint256[16] piecewiseBreakpoints,
+        uint256[64] coefficientSignificands,
+        uint256[2] packedCoefficientExponents,
+        uint256 packedCoefficientSigns
+    );
+
+    event NewCubicPolynomialPiecewise64(
+        uint256[64] piecewiseBreakpoints,
+        uint256[256] coefficientSignificands,
+        uint256[8] packedCoefficientExponents,
+        uint256 packedCoefficientSigns
+    );
+
     struct PodListing {
         address account;
         uint256 index;
@@ -36,49 +57,8 @@ contract Listing is PodTransfer {
         uint256 amount, 
         uint24 pricePerPod, 
         uint256 maxHarvestableIndex, 
-        LibTransfer.To mode
-    );
-
-    event DynamicPodListingCreated_4Pieces(
-        address indexed account,
-        uint256 index, 
-        uint256 start,
-        uint256 amount,
-        uint24 pricePerPod,
-        uint256 maxHarvestableIndex,
         LibTransfer.To mode,
-        uint256[4] pieceBreakpoints,
-        uint256[16] polynomialCoefficients,
-        uint256 packedPolynomialExponents,
-        uint256 packedPolynomialSigns
-    );
-
-    event DynamicPodListingCreated_16Pieces(
-        address indexed account,
-        uint256 index, 
-        uint256 start,
-        uint256 amount,
-        uint24 pricePerPod,
-        uint256 maxHarvestableIndex,
-        LibTransfer.To mode,
-        uint256[16] pieceBreakpoints,
-        uint256[64] polynomialCoefficients,
-        uint256[2] packedPolynomialExponents,
-        uint256 packedPolynomialSigns
-    );
-
-    event DynamicPodListingCreated_64Pieces(
-        address indexed account,
-        uint256 index, 
-        uint256 start,
-        uint256 amount,
-        uint24 pricePerPod,
-        uint256 maxHarvestableIndex,
-        LibTransfer.To mode,
-        uint256[64] pieceBreakpoints,
-        uint256[256] polynomialCoefficients,
-        uint256[8] packedPolynomialExponents,
-        uint256 packedPolynomialSigns
+        LibDynamic.PriceType priceType
     );
 
     event PodListingFilled(
@@ -113,7 +93,7 @@ contract Listing is PodTransfer {
 
         s.podListings[index] = hashListing(start, amount, pricePerPod, maxHarvestableIndex, mode);
         
-        emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, mode);
+        emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, mode, LibDynamic.PriceType.Fixed);
 
     }
 
@@ -145,7 +125,7 @@ contract Listing is PodTransfer {
             f.packedSigns
         );
         
-        emit DynamicPodListingCreated_4Pieces(
+        emit PodListingCreated(
             msg.sender, 
             index, 
             start, 
@@ -153,6 +133,10 @@ contract Listing is PodTransfer {
             pricePerPod, 
             maxHarvestableIndex, 
             mode, 
+            LibDynamic.PriceType.Piecewise4
+        );
+
+        emit NewCubicPolynomialPiecewise4(
             f.breakpoints, 
             f.significands, 
             f.packedExponents,
@@ -188,7 +172,7 @@ contract Listing is PodTransfer {
             f.packedSigns
         );
         
-        emit DynamicPodListingCreated_16Pieces(
+        emit PodListingCreated(
             msg.sender, 
             index, 
             start, 
@@ -196,6 +180,10 @@ contract Listing is PodTransfer {
             pricePerPod, 
             maxHarvestableIndex, 
             mode, 
+            LibDynamic.PriceType.Piecewise16
+        );
+
+        emit NewCubicPolynomialPiecewise16(
             f.breakpoints, 
             f.significands, 
             f.packedExponents,
@@ -231,7 +219,7 @@ contract Listing is PodTransfer {
             f.packedSigns
         );
 
-        emit DynamicPodListingCreated_64Pieces(
+        emit PodListingCreated(
             msg.sender, 
             index, 
             start, 
@@ -239,6 +227,10 @@ contract Listing is PodTransfer {
             pricePerPod, 
             maxHarvestableIndex, 
             mode, 
+            LibDynamic.PriceType.Piecewise64
+        );
+
+        emit NewCubicPolynomialPiecewise64(
             f.breakpoints, 
             f.significands, 
             f.packedExponents,

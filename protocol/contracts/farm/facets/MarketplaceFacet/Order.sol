@@ -29,43 +29,8 @@ contract Order is Listing {
         bytes32 id,
         uint256 amount,
         uint24 pricePerPod,
-        uint256 maxPlaceInLine
-    );
-
-    event DynamicPodOrderCreated_4Pieces(
-        address indexed account,
-        bytes32 id,
-        uint256 amount,
-        uint24 pricePerPod, 
         uint256 maxPlaceInLine,
-        uint256[4] pieceBreakpoints,
-        uint256[16] coefficientSignificands,
-        uint256 packedCoefficientExponents,
-        uint256 packedCoefficientSigns
-    );
-
-    event DynamicPodOrderCreated_16Pieces(
-        address indexed account,
-        bytes32 id,
-        uint256 amount,
-        uint24 pricePerPod, 
-        uint256 maxPlaceInLine,
-        uint256[16] pieceBreakpoints,
-        uint256[64] coefficientSignificands,
-        uint256[2] packedCoefficientExponents,
-        uint256 packedCoefficientSigns
-    );
-
-    event DynamicPodOrderCreated_64Pieces(
-        address indexed account,
-        bytes32 id,
-        uint256 amount,
-        uint24 pricePerPod, 
-        uint256 maxPlaceInLine,
-        uint256[64] pieceBreakpoints,
-        uint256[256] coefficientSignificands,
-        uint256[8] packedCoefficientExponents,
-        uint256 packedCoefficientSigns
+        LibDynamic.PriceType priceType
     );
 
     event PodOrderFilled(
@@ -98,7 +63,7 @@ contract Order is Listing {
 
         if (s.podOrders[id] > 0) _cancelPodOrder(pricePerPod, maxPlaceInLine, LibTransfer.To.INTERNAL);
         s.podOrders[id] = beanAmount;
-        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine);
+        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, LibDynamic.PriceType.Fixed);
     }
 
     function _createPodOrderPiecewise4(
@@ -112,7 +77,8 @@ contract Order is Listing {
         if (s.podOrders[id] > 0) _cancelPodOrderPiecewise4(pricePerPod, maxPlaceInLine, LibTransfer.To.INTERNAL, f);
         s.podOrders[id] = beanAmount;
 
-        emit DynamicPodOrderCreated_4Pieces(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
+        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, LibDynamic.PriceType.Piecewise4);
+        emit NewCubicPolynomialPiecewise4(f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
     }
 
     function _createPodOrderPiecewise16(
@@ -126,7 +92,8 @@ contract Order is Listing {
         if (s.podOrders[id] > 0) _cancelPodOrderPiecewise16(pricePerPod, maxPlaceInLine, LibTransfer.To.INTERNAL, f);
         s.podOrders[id] = beanAmount;
 
-        emit DynamicPodOrderCreated_16Pieces(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
+        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, LibDynamic.PriceType.Piecewise16);
+        emit NewCubicPolynomialPiecewise16(f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
     }
 
     function _createPodOrderPiecewise64(
@@ -140,7 +107,8 @@ contract Order is Listing {
         if (s.podOrders[id] > 0) _cancelPodOrderPiecewise64(pricePerPod, maxPlaceInLine, LibTransfer.To.INTERNAL, f);
         s.podOrders[id] = beanAmount;
 
-        emit DynamicPodOrderCreated_64Pieces(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
+        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, LibDynamic.PriceType.Piecewise64);
+        emit NewCubicPolynomialPiecewise64(f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
     }
 
     /*
