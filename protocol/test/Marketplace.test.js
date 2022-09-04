@@ -1,5 +1,7 @@
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
-const { interpolatePoints, getNumPieces, evaluatePolynomial, evaluatePolynomialIntegration, getAmountOrder } = require('./utils/interpolater.js')
+const { interpolatePoints } = require('./utils/interpolater.js')
+const { getNumPieces, evaluatePolynomial, evaluatePolynomialIntegration, getAmountOrder } = require('./utils/libDynamicHelpers.js')
+
 const { expect, use } = require("chai");
 const { waffleChai } = require("@ethereum-waffle/chai");
 use(waffleChai);
