@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/MarketplaceFacet/MarketplaceFacet.sol";
+// import "../../libraries/LibDynamic.sol";
 
 /**
  * @author Publius
@@ -14,16 +15,27 @@ import "../../farm/facets/MarketplaceFacet/MarketplaceFacet.sol";
 **/
 contract MockMarketplaceFacet is MarketplaceFacet {
 
-    // function evaluatePolynomial(uint256[4] memory significands, uint256 packedExponents, uint256 packedSigns, uint256 piece, uint256 x) public view returns (uint256) {
-    //     uint8[4] memory exponents = getPackedExponents(packedExponents, piece);
-    //     bool[4] memory signs = getPackedSigns(packedSigns, piece);
-    //     return _evaluatePolynomial(significands, exponents, signs, x);
-    // }
+    function evaluatePolynomial(uint256[4] memory significands, uint256 packedExponents, uint256 packedSigns, uint256 piece, uint256 x) public pure returns (uint256) {
+        uint8[4] memory exponents = LibDynamic.getPackedExponents(packedExponents, piece);
+        bool[4] memory signs = LibDynamic.getPackedSigns(packedSigns, piece);
+        return LibDynamic.evaluatePolynomial(significands, exponents, signs, x);
+    }
 
-    // function evaluatePolynomialIntegration(uint256[4] memory significands, uint256 packedExponents, uint256 packedSigns, uint256 piece, uint256 start, uint256 end) public view returns (uint256) {
-    //     uint8[4] memory exponents = getPackedExponents(packedExponents, piece);
-    //     bool[4] memory signs = getPackedSigns(packedSigns, piece);
-    //     return _evaluatePolynomialIntegration(significands, exponents, signs, start, end);
-    // }
+    function evaluatePolynomialIntegration(uint256[4] memory significands, uint256 packedExponents, uint256 packedSigns, uint256 piece, uint256 start, uint256 end) public pure returns (uint256) {
+        uint8[4] memory exponents = LibDynamic.getPackedExponents(packedExponents, piece);
+        bool[4] memory signs = LibDynamic.getPackedSigns(packedSigns, piece);
+        return LibDynamic.evaluatePolynomialIntegration(significands, exponents, signs, start, end);
+    }
 
+    function findIndexPiecewise4 (uint256[4] calldata breakpoints, uint256 value, uint256 high) public pure returns (uint256) {
+        return LibDynamic.findIndexPiecewise4(breakpoints, value, high);
+    }
+
+    function findIndexPiecewise16 (uint256[16] calldata breakpoints, uint256 value, uint256 high) public pure returns (uint256) {
+        return LibDynamic.findIndexPiecewise16(breakpoints, value, high);
+    }
+
+    function findIndexPiecewise64 (uint256[64] calldata breakpoints, uint256 value, uint256 high) public pure returns (uint256) {
+        return LibDynamic.findIndexPiecewise64(breakpoints, value, high);
+    }
 }

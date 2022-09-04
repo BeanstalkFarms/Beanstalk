@@ -184,20 +184,20 @@ describe('Marketplace', function () {
           this.breakpoints = interpolatePoints([100, 200, 300], [0, 0, 0]).breakpoints;
         })
         it("correctly finds interval at 0", async function () {
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '0', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(0);
+          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '0', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(0);
         })
 
         it("finds interval between breakpoints", async function () {
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '150', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(0);
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '250', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '150', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(0);
+          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '250', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(1);
         })
         it("finds interval at breakpoints", async function () {
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '100', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(0);
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '200', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(1);
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '300', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '100', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(0);
+          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '200', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '300', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(1);
         })
         it("finds interval past end", async function (){
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '301', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '301', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(1);
         })
       })
 
@@ -206,24 +206,24 @@ describe('Marketplace', function () {
           this.breakpoints = interpolatePoints([100, 200, 300, 400], [0, 0, 0, 0]).breakpoints;
         })
         it("correctly finds interval at 0", async function () {
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '0', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(0);
+          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '0', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(0);
         })
 
         it("finds interval between breakpoints", async function () {
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '150', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(0);
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '250', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(1);
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '350', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '150', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(0);
+          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '250', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '350', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(2);
         })
         it("finds interval at breakpoints", async function () {
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '100', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(0);
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '200', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(1);
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '300', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '100', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(0);
+          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '200', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '300', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(2);
         })
         it("finds interval at end", async function () {
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '400', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '400', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(2);
         })
         it("finds interval past end", async function (){
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom4(this.breakpoints, '401', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '401', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(2);
         })
       })
 
@@ -232,24 +232,24 @@ describe('Marketplace', function () {
           this.breakpoints = interpolatePoints(set_12Pieces.xs, set_12Pieces.ys).breakpoints;
         })
         it("correctly finds interval at 0", async function () {
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '0', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(0);
+          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '0', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(0);
         })
 
         it("finds interval between breakpoints", async function () {
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '250', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(1);
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '420', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(2);
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '2100', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(10);
+          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '250', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '420', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '2100', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(10);
         })
         it("finds interval at breakpoints", async function () {
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '200', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(1);
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '400', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(2);
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '1800', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(9);
+          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '200', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '400', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '1800', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(9);
         })
         it("finds interval at end", async function () {
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '2200', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(10);
+          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '2200', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(10);
         })
         it("finds interval past end", async function (){
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '2201', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(10);
+          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '2201', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(10);
         })
       })
 
@@ -258,24 +258,24 @@ describe('Marketplace', function () {
           this.breakpoints = interpolatePoints(set_16Pieces.xs, set_16Pieces.ys).breakpoints;
         })
         it("correctly finds interval at 0", async function () {
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '0', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(0);
+          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '0', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(0);
         })
 
         it("finds interval between breakpoints", async function () {
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '250', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(1);
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '420', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(2);
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '2900', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(14);
+          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '250', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '420', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '2900', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(14);
         })
         it("finds interval at breakpoints", async function () {
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '200', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(1);
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '400', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(2);
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '2600', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(13);
+          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '200', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '400', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '2600', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(13);
         })
         it("finds interval at end", async function () {
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '3000', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(14);
+          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '3000', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(14);
         })
         it("finds interval past end", async function (){
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom16(this.breakpoints, '3001', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(14);
+          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '3001', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(14);
         })
       })
 
@@ -284,24 +284,24 @@ describe('Marketplace', function () {
           this.breakpoints = interpolatePoints(staticset_64Pieces_500000.xs, staticset_64Pieces_500000.ys).breakpoints;
         })
         it("correctly finds interval at 0", async function () {
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom64(this.breakpoints, '0', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(0);
+          expect(await this.marketplace.connect(user).findIndexPiecewise64(this.breakpoints, '0', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(0);
         })
 
         it("finds interval between breakpoints", async function () {
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom64(this.breakpoints, '1250', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(1);
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom64(this.breakpoints, '2420', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(2);
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom64(this.breakpoints, '45500', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(45);
+          expect(await this.marketplace.connect(user).findIndexPiecewise64(this.breakpoints, '1250', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findIndexPiecewise64(this.breakpoints, '2420', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user).findIndexPiecewise64(this.breakpoints, '45500', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(45);
         })
         it("finds interval at breakpoints", async function () {
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom64(this.breakpoints, '1000', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(1);
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom64(this.breakpoints, '2000', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(2);
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom64(this.breakpoints, '13000', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(13);
+          expect(await this.marketplace.connect(user).findIndexPiecewise64(this.breakpoints, '1000', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findIndexPiecewise64(this.breakpoints, '2000', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user).findIndexPiecewise64(this.breakpoints, '13000', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(13);
         })
         it("finds interval at end", async function () {
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom64(this.breakpoints, '63000', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(62);
+          expect(await this.marketplace.connect(user).findIndexPiecewise64(this.breakpoints, '63000', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(62);
         })
         it("finds interval past end", async function (){
-          expect(await this.marketplace.connect(user)._findPieceIndexFrom64(this.breakpoints, '63001', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(62);
+          expect(await this.marketplace.connect(user).findIndexPiecewise64(this.breakpoints, '63001', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(62);
         })
       })
 
@@ -547,35 +547,35 @@ describe('Marketplace', function () {
             const startPlaceInLine = 1000;
             const amountPodsFromOrder = 4500;
             const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
   
           it("second to third interval", async function () {
             const startPlaceInLine = 5000;
             const amountPodsFromOrder = 1500;
             const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
           
           it("fourth to fifth interval", async function () {
             const startPlaceInLine = 7000;
             const amountPodsFromOrder = 1500;
             const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
 
           it("eleventh to twelfth interval", async function () {
             const startPlaceInLine = 14000;
             const amountPodsFromOrder = 4500;
             const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
 
           it("twelfth to past last interval", async function () {
             const startPlaceInLine = 18000;
             const amountPodsFromOrder = 4500;
             const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
         })
 
@@ -589,35 +589,35 @@ describe('Marketplace', function () {
             const startPlaceInLine = 1000;
             const amountPodsFromOrder = 5500;
             const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
   
           it("second to fourth interval", async function () {
             const startPlaceInLine = 5000;
             const amountPodsFromOrder = 2500;
             const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
           
           it("fourth to sixth interval", async function () {
             const startPlaceInLine = 7000;
             const amountPodsFromOrder = 2500;
             const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
 
           it("tenth to twelfth interval", async function () {
             const startPlaceInLine = 13000;
             const amountPodsFromOrder = 5500;
             const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
 
           it("eleventh to past last interval", async function () {
             const startPlaceInLine = 14000;
             const amountPodsFromOrder = 8500;
             const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
         })
 
@@ -631,14 +631,14 @@ describe('Marketplace', function () {
             const startPlaceInLine = 1000;
             const amountPodsFromOrder = 18500;
             const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
   
           it("first to past last interval", async function () {
             const startPlaceInLine = 1000;
             const amountPodsFromOrder = 19500;
             const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
         })
       })
@@ -654,21 +654,21 @@ describe('Marketplace', function () {
             const startPlaceInLine = 10000000000000;
             const amountPodsFromOrder = 45000000000000;
             const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
   
           it("second to third interval", async function () {
             const startPlaceInLine = 50000000000000;
             const amountPodsFromOrder = 15000000000000;
             const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
           
           it("eleventh to twelfth interval", async function () {
             const startPlaceInLine = 130000000000000;
             const amountPodsFromOrder = 15000000000000;
             const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
         })
 
@@ -682,21 +682,21 @@ describe('Marketplace', function () {
             const startPlaceInLine = 10000000000000;
             const amountPodsFromOrder = 55000000000000;
             const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
   
           it("third to fifth interval", async function () {
             const startPlaceInLine = 60000000000000;
             const amountPodsFromOrder = 25000000000000;
             const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
           
           it("eleventh to last interval", async function () {
             const startPlaceInLine = 130000000000000;
             const amountPodsFromOrder = 55000000000000;
             const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
         })
 
@@ -710,7 +710,7 @@ describe('Marketplace', function () {
             const startPlaceInLine = 10000000000000;
             const amountPodsFromOrder = 185000000000000;
             const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user)._getAmountBeansToFill16PiecesDynamicOrder(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
           })
         })
       })
@@ -1059,25 +1059,25 @@ describe('Marketplace', function () {
       })
       describe("Create", async function () {
         it('Fails to List Unowned Plot', async function () {
-          await expect(this.marketplace.connect(user).create4PiecesDynamicPodListing('5000', '0', '1000', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+          await expect(this.marketplace.connect(user).createPodListingPiecewise4('5000', '0', '1000', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
   
         it('Fails if already expired', async function () {
           await this.field.incrementTotalHarvestableE('2000');
-          await expect(this.marketplace.connect(user).create4PiecesDynamicPodListing('0', '0', '500', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Expired.');
+          await expect(this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '500', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Expired.');
         })
   
         it('Fails if amount is 0', async function () {
-          await expect(this.marketplace.connect(user2).create4PiecesDynamicPodListing('1000', '0', '0', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+          await expect(this.marketplace.connect(user2).createPodListingPiecewise4('1000', '0', '0', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
   
         it('Fails if start + amount too large', async function () {
-          await expect(this.marketplace.connect(user2).create4PiecesDynamicPodListing('1000', '500', '1000', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+          await expect(this.marketplace.connect(user2).createPodListingPiecewise4('1000', '500', '1000', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
   
         describe("List full plot", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).create4PiecesDynamicPodListing('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '0', EXTERNAL, this.function);
           })
   
           it('Lists Plot properly', async function () {
@@ -1091,8 +1091,8 @@ describe('Marketplace', function () {
   
         describe("List partial plot", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).create4PiecesDynamicPodListing('0', '0', '100', '0', '0', EXTERNAL, this.function);
-            this.result = await this.marketplace.connect(user).create4PiecesDynamicPodListing('0', '0', '500', '0', '0', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '100', '0', '0', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '500', '0', '0', EXTERNAL, this.function);
           })
   
           it('Lists Plot properly', async function () {
@@ -1106,7 +1106,7 @@ describe('Marketplace', function () {
   
         describe("List partial plot from middle", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).create4PiecesDynamicPodListing('0', '500', '500', '0', '2000', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '500', '500', '0', '2000', INTERNAL, this.function);
           })
   
           it('Lists Plot properly', async function () {
@@ -1120,8 +1120,8 @@ describe('Marketplace', function () {
   
         describe("Relist plot from middle", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).create4PiecesDynamicPodListing('0', '0', '500', '0', '0', INTERNAL, this.function);
-            this.result = await this.marketplace.connect(user).create4PiecesDynamicPodListing('0', '500', '100', '0', '2000', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '500', '0', '0', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '500', '100', '0', '2000', INTERNAL, this.function);
           })
   
           it('Lists Plot properly', async function () {
@@ -1138,53 +1138,53 @@ describe('Marketplace', function () {
       describe("Fill", async function () {
         describe('revert', async function () {
           beforeEach(async function () {
-            await this.marketplace.connect(user).create4PiecesDynamicPodListing('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '0', EXTERNAL, this.function);
             this.listing = [userAddress, '0', '0', '1000', 0, '0', EXTERNAL];
           })
 
           it('Fill Listing non-listed Index Fails', async function () {
             let brokenListing = this.listing;
             brokenListing[1] = '1'
-            await expect(this.marketplace.connect(user).fill4PiecesDynamicPodListing(brokenListing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
+            await expect(this.marketplace.connect(user).fillPodListingPiecewise4(brokenListing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
           })
 
           it('Fill Listing wrong start Index Fails', async function () {
             let brokenListing = this.listing;
             brokenListing[2] = '1'
-            await expect(this.marketplace.connect(user).fill4PiecesDynamicPodListing(brokenListing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
+            await expect(this.marketplace.connect(user).fillPodListingPiecewise4(brokenListing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
           })
 
           it('Fill Listing wrong price Fails', async function () {
             let brokenListing = this.listing;
             brokenListing[4] = '100001'
-            await expect(this.marketplace.connect(user).fill4PiecesDynamicPodListing(brokenListing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
+            await expect(this.marketplace.connect(user).fillPodListingPiecewise4(brokenListing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
           })
 
           it('Fill Listing after expired', async function () {
             await this.field.incrementTotalHarvestableE('2000');
-            await expect(this.marketplace.connect(user2).fill4PiecesDynamicPodListing(this.listing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing has expired.');
+            await expect(this.marketplace.connect(user2).fillPodListingPiecewise4(this.listing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing has expired.');
           })
 
           it('Fill Listing not enough pods in plot', async function () {
-            await expect(this.marketplace.connect(user2).fill4PiecesDynamicPodListing(this.listing, this.function, 1500, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
+            await expect(this.marketplace.connect(user2).fillPodListingPiecewise4(this.listing, this.function, 1500, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
           })
 
           it('Fill Listing not enough pods in listing', async function () {
             const l = [userAddress, '0', '0', '500', '0', '0', INTERNAL]
-            await this.marketplace.connect(user).create4PiecesDynamicPodListing('0', '0', '500', '0', '0', INTERNAL, this.function);
-            await expect(this.marketplace.connect(user2).fill4PiecesDynamicPodListing(l, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
+            await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '500', '0', '0', INTERNAL, this.function);
+            await expect(this.marketplace.connect(user2).fillPodListingPiecewise4(l, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
           })
         })
 
         describe("Fill listing", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '0', '1000', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).create4PiecesDynamicPodListing('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '0', EXTERNAL, this.function);
             this.amountBeansBuyingWith = 500;
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
 
-            this.result = await this.marketplace.connect(user2).fill4PiecesDynamicPodListing(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodListingPiecewise4(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
@@ -1213,12 +1213,12 @@ describe('Marketplace', function () {
         describe("Fill partial listing", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '0', '1000', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).create4PiecesDynamicPodListing('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '0', EXTERNAL, this.function);
             this.amountBeansBuyingWith = 250;
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
 
-            this.result = await this.marketplace.connect(user2).fill4PiecesDynamicPodListing(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodListingPiecewise4(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
@@ -1249,13 +1249,13 @@ describe('Marketplace', function () {
         describe("Fill partial listing of a partial listing multiple fills", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '500', '500', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).create4PiecesDynamicPodListing('0', '500', '500', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise4('0', '500', '500', '0', '0', EXTERNAL, this.function);
             this.amountBeansBuyingWith = 100;
 
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
 
-            this.result = await this.marketplace.connect(user2).fill4PiecesDynamicPodListing(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodListingPiecewise4(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
@@ -1286,18 +1286,18 @@ describe('Marketplace', function () {
         describe("Fill partial listing of a listing created by partial fill", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '500', '500', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).create4PiecesDynamicPodListing('0', '500', '500', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise4('0', '500', '500', '0', '0', EXTERNAL, this.function);
             this.amountBeansBuyingWith = 100;
 
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
-            this.result = await this.marketplace.connect(user2).fill4PiecesDynamicPodListing(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodListingPiecewise4(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.listing = [userAddress, '700', '0', '300', '0', '0', EXTERNAL]
 
-            this.result = await this.marketplace.connect(user2).fill4PiecesDynamicPodListing(this.listing, this.function, 100, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodListingPiecewise4(this.listing, this.function, 100, EXTERNAL);
 
           })
           it('plots correctly transfer', async function () {
@@ -1320,12 +1320,12 @@ describe('Marketplace', function () {
         describe("Fill partial listing to wallet", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '0', '1000', '0', '0', INTERNAL]
-            await this.marketplace.connect(user).create4PiecesDynamicPodListing('0', '0', '1000', '0', '0', INTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '0', INTERNAL, this.function);
             this.amountBeansBuyingWith = 250;
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
 
-            this.result = await this.marketplace.connect(user2).fill4PiecesDynamicPodListing(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodListingPiecewise4(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
@@ -1355,21 +1355,21 @@ describe('Marketplace', function () {
       })
       describe("Cancel", async function () {
         it('Re-list plot cancels and re-lists', async function () {
-          result = await this.marketplace.connect(user).create4PiecesDynamicPodListing('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+          result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '0', EXTERNAL, this.function);
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
-          result = await this.marketplace.connect(user).create4PiecesDynamicPodListing('0', '0', '1000', '0', '2000', INTERNAL, this.function);
+          result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '2000', INTERNAL, this.function);
           await expect(result).to.emit(this.marketplace, 'DynamicPodListingCreated_4Pieces').withArgs(userAddress, '0', 0, 1000, 0, 2000, 1, this.function[0], this.function[1], this.function[2], this.function[3]);
           await expect(result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, '0');
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
         })
 
         it('Reverts on Cancel Listing, not owned by user', async function () {
-          await this.marketplace.connect(user).create4PiecesDynamicPodListing('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+          await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '0', EXTERNAL, this.function);
           await expect(this.marketplace.connect(user2).cancelPodListing('0')).to.be.revertedWith('Marketplace: Listing not owned by sender.');
         })
 
         it('Cancels Listing, Emits Listing Cancelled Event', async function () {
-          result = await this.marketplace.connect(user).create4PiecesDynamicPodListing('0', '0', '1000', '0', '2000', EXTERNAL, this.function);
+          result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '2000', EXTERNAL, this.function);
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
           result = (await this.marketplace.connect(user).cancelPodListing('0'));
           expect(await this.marketplace.podListing(0)).to.be.equal(ZERO_HASH);
@@ -1385,25 +1385,25 @@ describe('Marketplace', function () {
       })
       describe("Create", async function () {
         it('Fails to List Unowned Plot', async function () {
-          await expect(this.marketplace.connect(user).create16PiecesDynamicPodListing('5000', '0', '1000', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+          await expect(this.marketplace.connect(user).createPodListingPiecewise16('5000', '0', '1000', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
   
         it('Fails if already expired', async function () {
           await this.field.incrementTotalHarvestableE('2000');
-          await expect(this.marketplace.connect(user).create16PiecesDynamicPodListing('0', '0', '500', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Expired.');
+          await expect(this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '500', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Expired.');
         })
   
         it('Fails if amount is 0', async function () {
-          await expect(this.marketplace.connect(user2).create16PiecesDynamicPodListing('1000', '0', '0', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+          await expect(this.marketplace.connect(user2).createPodListingPiecewise16('1000', '0', '0', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
   
         it('Fails if start + amount too large', async function () {
-          await expect(this.marketplace.connect(user2).create16PiecesDynamicPodListing('1000', '500', '1000', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+          await expect(this.marketplace.connect(user2).createPodListingPiecewise16('1000', '500', '1000', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
   
         describe("List full plot", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).create16PiecesDynamicPodListing('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '0', EXTERNAL, this.function);
           })
   
           it('Lists Plot properly', async function () {
@@ -1417,8 +1417,8 @@ describe('Marketplace', function () {
   
         describe("List partial plot", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).create16PiecesDynamicPodListing('0', '0', '100', '0', '0', EXTERNAL, this.function);
-            this.result = await this.marketplace.connect(user).create16PiecesDynamicPodListing('0', '0', '500', '0', '0', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '100', '0', '0', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '500', '0', '0', EXTERNAL, this.function);
           })
   
           it('Lists Plot properly', async function () {
@@ -1432,7 +1432,7 @@ describe('Marketplace', function () {
   
         describe("List partial plot from middle", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).create16PiecesDynamicPodListing('0', '500', '500', '0', '2000', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '500', '500', '0', '2000', INTERNAL, this.function);
           })
   
           it('Lists Plot properly', async function () {
@@ -1446,8 +1446,8 @@ describe('Marketplace', function () {
   
         describe("Relist plot from middle", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).create16PiecesDynamicPodListing('0', '0', '500', '0', '0', INTERNAL, this.function);
-            this.result = await this.marketplace.connect(user).create16PiecesDynamicPodListing('0', '500', '100', '0', '2000', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '500', '0', '0', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '500', '100', '0', '2000', INTERNAL, this.function);
           })
   
           it('Lists Plot properly', async function () {
@@ -1464,53 +1464,53 @@ describe('Marketplace', function () {
       describe("Fill", async function () {
         describe('revert', async function () {
           beforeEach(async function () {
-            await this.marketplace.connect(user).create16PiecesDynamicPodListing('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '0', EXTERNAL, this.function);
             this.listing = [userAddress, '0', '0', '1000', 0, '0', EXTERNAL];
           })
 
           it('Fill Listing non-listed Index Fails', async function () {
             let brokenListing = this.listing;
             brokenListing[1] = '1'
-            await expect(this.marketplace.connect(user).fill16PiecesDynamicPodListing(brokenListing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
+            await expect(this.marketplace.connect(user).fillPodListingPiecewise16(brokenListing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
           })
 
           it('Fill Listing wrong start Index Fails', async function () {
             let brokenListing = this.listing;
             brokenListing[2] = '1'
-            await expect(this.marketplace.connect(user).fill16PiecesDynamicPodListing(brokenListing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
+            await expect(this.marketplace.connect(user).fillPodListingPiecewise16(brokenListing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
           })
 
           it('Fill Listing wrong price Fails', async function () {
             let brokenListing = this.listing;
             brokenListing[4] = '100001'
-            await expect(this.marketplace.connect(user).fill16PiecesDynamicPodListing(brokenListing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
+            await expect(this.marketplace.connect(user).fillPodListingPiecewise16(brokenListing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
           })
 
           it('Fill Listing after expired', async function () {
             await this.field.incrementTotalHarvestableE('2000');
-            await expect(this.marketplace.connect(user2).fill16PiecesDynamicPodListing(this.listing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing has expired.');
+            await expect(this.marketplace.connect(user2).fillPodListingPiecewise16(this.listing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing has expired.');
           })
 
           it('Fill Listing not enough pods in plot', async function () {
-            await expect(this.marketplace.connect(user2).fill16PiecesDynamicPodListing(this.listing, this.function, 1500, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
+            await expect(this.marketplace.connect(user2).fillPodListingPiecewise16(this.listing, this.function, 1500, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
           })
 
           it('Fill Listing not enough pods in listing', async function () {
             const l = [userAddress, '0', '0', '500', '0', '0', INTERNAL]
-            await this.marketplace.connect(user).create16PiecesDynamicPodListing('0', '0', '500', '0', '0', INTERNAL, this.function);
-            await expect(this.marketplace.connect(user2).fill16PiecesDynamicPodListing(l, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
+            await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '500', '0', '0', INTERNAL, this.function);
+            await expect(this.marketplace.connect(user2).fillPodListingPiecewise16(l, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
           })
         })
 
         describe("Fill listing", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '0', '1000', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).create16PiecesDynamicPodListing('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '0', EXTERNAL, this.function);
             this.amountBeansBuyingWith = 500;
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
 
-            this.result = await this.marketplace.connect(user2).fill16PiecesDynamicPodListing(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodListingPiecewise16(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
@@ -1539,12 +1539,12 @@ describe('Marketplace', function () {
         describe("Fill partial listing", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '0', '1000', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).create16PiecesDynamicPodListing('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '0', EXTERNAL, this.function);
             this.amountBeansBuyingWith = 250;
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
 
-            this.result = await this.marketplace.connect(user2).fill16PiecesDynamicPodListing(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodListingPiecewise16(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
@@ -1575,13 +1575,13 @@ describe('Marketplace', function () {
         describe("Fill partial listing of a partial listing multiple fills", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '500', '500', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).create16PiecesDynamicPodListing('0', '500', '500', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise16('0', '500', '500', '0', '0', EXTERNAL, this.function);
             this.amountBeansBuyingWith = 100;
 
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
 
-            this.result = await this.marketplace.connect(user2).fill16PiecesDynamicPodListing(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodListingPiecewise16(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
@@ -1612,18 +1612,18 @@ describe('Marketplace', function () {
         describe("Fill partial listing of a listing created by partial fill", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '500', '500', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).create16PiecesDynamicPodListing('0', '500', '500', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise16('0', '500', '500', '0', '0', EXTERNAL, this.function);
             this.amountBeansBuyingWith = 100;
 
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
-            this.result = await this.marketplace.connect(user2).fill16PiecesDynamicPodListing(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodListingPiecewise16(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.listing = [userAddress, '700', '0', '300', '0', '0', EXTERNAL]
 
-            this.result = await this.marketplace.connect(user2).fill16PiecesDynamicPodListing(this.listing, this.function, 100, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodListingPiecewise16(this.listing, this.function, 100, EXTERNAL);
 
           })
           it('plots correctly transfer', async function () {
@@ -1646,12 +1646,12 @@ describe('Marketplace', function () {
         describe("Fill partial listing to wallet", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '0', '1000', '0', '0', INTERNAL]
-            await this.marketplace.connect(user).create16PiecesDynamicPodListing('0', '0', '1000', '0', '0', INTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '0', INTERNAL, this.function);
             this.amountBeansBuyingWith = 250;
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
 
-            this.result = await this.marketplace.connect(user2).fill16PiecesDynamicPodListing(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodListingPiecewise16(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
@@ -1681,21 +1681,21 @@ describe('Marketplace', function () {
       })
       describe("Cancel", async function () {
         it('Re-list plot cancels and re-lists', async function () {
-          result = await this.marketplace.connect(user).create16PiecesDynamicPodListing('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+          result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '0', EXTERNAL, this.function);
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
-          result = await this.marketplace.connect(user).create16PiecesDynamicPodListing('0', '0', '1000', '0', '2000', INTERNAL, this.function);
+          result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '2000', INTERNAL, this.function);
           await expect(result).to.emit(this.marketplace, 'DynamicPodListingCreated_16Pieces').withArgs(userAddress, '0', 0, 1000, 0, 2000, 1, this.function[0], this.function[1], this.function[2], this.function[3]);
           await expect(result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, '0');
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
         })
 
         it('Reverts on Cancel Listing, not owned by user', async function () {
-          await this.marketplace.connect(user).create16PiecesDynamicPodListing('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+          await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '0', EXTERNAL, this.function);
           await expect(this.marketplace.connect(user2).cancelPodListing('0')).to.be.revertedWith('Marketplace: Listing not owned by sender.');
         })
 
         it('Cancels Listing, Emits Listing Cancelled Event', async function () {
-          result = await this.marketplace.connect(user).create16PiecesDynamicPodListing('0', '0', '1000', '0', '2000', EXTERNAL, this.function);
+          result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '2000', EXTERNAL, this.function);
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
           result = (await this.marketplace.connect(user).cancelPodListing('0'));
           expect(await this.marketplace.podListing(0)).to.be.equal(ZERO_HASH);
@@ -1711,25 +1711,25 @@ describe('Marketplace', function () {
       })
       describe("Create", async function () {
         it('Fails to List Unowned Plot', async function () {
-          await expect(this.marketplace.connect(user).create64PiecesDynamicPodListing('5000', '0', '1000', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+          await expect(this.marketplace.connect(user).createPodListingPiecewise64('5000', '0', '1000', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
   
         it('Fails if already expired', async function () {
           await this.field.incrementTotalHarvestableE('2000');
-          await expect(this.marketplace.connect(user).create64PiecesDynamicPodListing('0', '0', '500', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Expired.');
+          await expect(this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '500', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Expired.');
         })
   
         it('Fails if amount is 0', async function () {
-          await expect(this.marketplace.connect(user2).create64PiecesDynamicPodListing('1000', '0', '0', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+          await expect(this.marketplace.connect(user2).createPodListingPiecewise64('1000', '0', '0', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
   
         it('Fails if start + amount too large', async function () {
-          await expect(this.marketplace.connect(user2).create64PiecesDynamicPodListing('1000', '500', '1000', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+          await expect(this.marketplace.connect(user2).createPodListingPiecewise64('1000', '500', '1000', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
   
         describe("List full plot", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).create64PiecesDynamicPodListing('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '0', EXTERNAL, this.function);
           })
   
           it('Lists Plot properly', async function () {
@@ -1743,8 +1743,8 @@ describe('Marketplace', function () {
   
         describe("List partial plot", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).create64PiecesDynamicPodListing('0', '0', '100', '0', '0', EXTERNAL, this.function);
-            this.result = await this.marketplace.connect(user).create64PiecesDynamicPodListing('0', '0', '500', '0', '0', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '100', '0', '0', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '500', '0', '0', EXTERNAL, this.function);
           })
   
           it('Lists Plot properly', async function () {
@@ -1758,7 +1758,7 @@ describe('Marketplace', function () {
   
         describe("List partial plot from middle", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).create64PiecesDynamicPodListing('0', '500', '500', '0', '2000', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '500', '500', '0', '2000', INTERNAL, this.function);
           })
   
           it('Lists Plot properly', async function () {
@@ -1772,8 +1772,8 @@ describe('Marketplace', function () {
   
         describe("Relist plot from middle", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).create64PiecesDynamicPodListing('0', '0', '500', '0', '0', INTERNAL, this.function);
-            this.result = await this.marketplace.connect(user).create64PiecesDynamicPodListing('0', '500', '100', '0', '2000', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '500', '0', '0', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '500', '100', '0', '2000', INTERNAL, this.function);
           })
   
           it('Lists Plot properly', async function () {
@@ -1790,53 +1790,53 @@ describe('Marketplace', function () {
       describe("Fill", async function () {
         describe('revert', async function () {
           beforeEach(async function () {
-            await this.marketplace.connect(user).create64PiecesDynamicPodListing('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '0', EXTERNAL, this.function);
             this.listing = [userAddress, '0', '0', '1000', 0, '0', EXTERNAL];
           })
 
           it('Fill Listing non-listed Index Fails', async function () {
             let brokenListing = this.listing;
             brokenListing[1] = '1'
-            await expect(this.marketplace.connect(user).fill64PiecesDynamicPodListing(brokenListing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
+            await expect(this.marketplace.connect(user).fillPodListingPiecewise64(brokenListing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
           })
 
           it('Fill Listing wrong start Index Fails', async function () {
             let brokenListing = this.listing;
             brokenListing[2] = '1'
-            await expect(this.marketplace.connect(user).fill64PiecesDynamicPodListing(brokenListing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
+            await expect(this.marketplace.connect(user).fillPodListingPiecewise64(brokenListing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
           })
 
           it('Fill Listing wrong price Fails', async function () {
             let brokenListing = this.listing;
             brokenListing[4] = '100001'
-            await expect(this.marketplace.connect(user).fill64PiecesDynamicPodListing(brokenListing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
+            await expect(this.marketplace.connect(user).fillPodListingPiecewise64(brokenListing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
           })
 
           it('Fill Listing after expired', async function () {
             await this.field.incrementTotalHarvestableE('2000');
-            await expect(this.marketplace.connect(user2).fill64PiecesDynamicPodListing(this.listing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing has expired.');
+            await expect(this.marketplace.connect(user2).fillPodListingPiecewise64(this.listing, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Listing has expired.');
           })
 
           it('Fill Listing not enough pods in plot', async function () {
-            await expect(this.marketplace.connect(user2).fill64PiecesDynamicPodListing(this.listing, this.function, 1500, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
+            await expect(this.marketplace.connect(user2).fillPodListingPiecewise64(this.listing, this.function, 1500, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
           })
 
           it('Fill Listing not enough pods in listing', async function () {
             const l = [userAddress, '0', '0', '500', '0', '0', INTERNAL]
-            await this.marketplace.connect(user).create64PiecesDynamicPodListing('0', '0', '500', '0', '0', INTERNAL, this.function);
-            await expect(this.marketplace.connect(user2).fill64PiecesDynamicPodListing(l, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
+            await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '500', '0', '0', INTERNAL, this.function);
+            await expect(this.marketplace.connect(user2).fillPodListingPiecewise64(l, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
           })
         })
 
         describe("Fill listing", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '0', '1000', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).create64PiecesDynamicPodListing('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '0', EXTERNAL, this.function);
             this.amountBeansBuyingWith = 500;
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
 
-            this.result = await this.marketplace.connect(user2).fill64PiecesDynamicPodListing(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodListingPiecewise64(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
@@ -1865,12 +1865,12 @@ describe('Marketplace', function () {
         describe("Fill partial listing", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '0', '1000', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).create64PiecesDynamicPodListing('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '0', EXTERNAL, this.function);
             this.amountBeansBuyingWith = 250;
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
 
-            this.result = await this.marketplace.connect(user2).fill64PiecesDynamicPodListing(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodListingPiecewise64(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
@@ -1901,13 +1901,13 @@ describe('Marketplace', function () {
         describe("Fill partial listing of a partial listing multiple fills", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '500', '500', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).create64PiecesDynamicPodListing('0', '500', '500', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise64('0', '500', '500', '0', '0', EXTERNAL, this.function);
             this.amountBeansBuyingWith = 100;
 
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
 
-            this.result = await this.marketplace.connect(user2).fill64PiecesDynamicPodListing(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodListingPiecewise64(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
@@ -1938,18 +1938,18 @@ describe('Marketplace', function () {
         describe("Fill partial listing of a listing created by partial fill", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '500', '500', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).create64PiecesDynamicPodListing('0', '500', '500', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise64('0', '500', '500', '0', '0', EXTERNAL, this.function);
             this.amountBeansBuyingWith = 100;
 
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
-            this.result = await this.marketplace.connect(user2).fill64PiecesDynamicPodListing(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodListingPiecewise64(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.listing = [userAddress, '700', '0', '300', '0', '0', EXTERNAL]
 
-            this.result = await this.marketplace.connect(user2).fill64PiecesDynamicPodListing(this.listing, this.function, 100, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodListingPiecewise64(this.listing, this.function, 100, EXTERNAL);
 
           })
           it('plots correctly transfer', async function () {
@@ -1972,12 +1972,12 @@ describe('Marketplace', function () {
         describe("Fill partial listing to wallet", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '0', '1000', '0', '0', INTERNAL]
-            await this.marketplace.connect(user).create64PiecesDynamicPodListing('0', '0', '1000', '0', '0', INTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '0', INTERNAL, this.function);
             this.amountBeansBuyingWith = 250;
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
 
-            this.result = await this.marketplace.connect(user2).fill64PiecesDynamicPodListing(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodListingPiecewise64(this.listing, this.function, this.amountBeansBuyingWith, EXTERNAL);
 
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
@@ -2007,21 +2007,21 @@ describe('Marketplace', function () {
       })
       describe("Cancel", async function () {
         it('Re-list plot cancels and re-lists', async function () {
-          result = await this.marketplace.connect(user).create64PiecesDynamicPodListing('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+          result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '0', EXTERNAL, this.function);
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
-          result = await this.marketplace.connect(user).create64PiecesDynamicPodListing('0', '0', '1000', '0', '2000', INTERNAL, this.function);
+          result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '2000', INTERNAL, this.function);
           await expect(result).to.emit(this.marketplace, 'DynamicPodListingCreated_64Pieces').withArgs(userAddress, '0', 0, 1000, 0, 2000, 1, this.function[0], this.function[1], this.function[2], this.function[3]);
           await expect(result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, '0');
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
         })
 
         it('Reverts on Cancel Listing, not owned by user', async function () {
-          await this.marketplace.connect(user).create64PiecesDynamicPodListing('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+          await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '0', EXTERNAL, this.function);
           await expect(this.marketplace.connect(user2).cancelPodListing('0')).to.be.revertedWith('Marketplace: Listing not owned by sender.');
         })
 
         it('Cancels Listing, Emits Listing Cancelled Event', async function () {
-          result = await this.marketplace.connect(user).create64PiecesDynamicPodListing('0', '0', '1000', '0', '2000', EXTERNAL, this.function);
+          result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '2000', EXTERNAL, this.function);
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
           result = (await this.marketplace.connect(user).cancelPodListing('0'));
           expect(await this.marketplace.podListing(0)).to.be.equal(ZERO_HASH);
@@ -2392,7 +2392,7 @@ describe('Marketplace', function () {
             await expect(
               this.marketplace
                 .connect(user2)
-                .create4PiecesDynamicPodOrder(
+                .createPodOrderPiecewise4(
                   "0",
                   "0",
                   "1000",
@@ -2411,7 +2411,7 @@ describe('Marketplace', function () {
             );
             this.result = await this.marketplace
               .connect(user)
-              .create4PiecesDynamicPodOrder(
+              .createPodOrderPiecewise4(
                 "500",
                 "0",
                 "1000",
@@ -2437,7 +2437,7 @@ describe('Marketplace', function () {
           it("Creates the order", async function () {
             expect(await this.marketplace.podOrderById(this.id)).to.equal("500");
             expect(
-              await this.marketplace.dynamicPodOrder4(
+              await this.marketplace.podOrderPiecewise4(
                 userAddress,
                 "0",
                 "1000",
@@ -2466,7 +2466,7 @@ describe('Marketplace', function () {
 
       describe("Fill", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).create4PiecesDynamicPodOrder("50", "0", "2500", EXTERNAL, this.function);
+          this.result = await this.marketplace.connect(user).createPodOrderPiecewise4("50", "0", "2500", EXTERNAL, this.function);
           this.id = await getDynamicOrderId(this.result);
           this.order = [userAddress, "0", "2500"];
         });
@@ -2474,26 +2474,26 @@ describe('Marketplace', function () {
         describe("revert", async function () {
           it("owner does not own plot", async function () {
             await expect(
-              this.marketplace.fill4PiecesDynamicPodOrder(this.order, this.function, 0, 0, 500, INTERNAL)
+              this.marketplace.fillPodOrderPiecewise4(this.order, this.function, 0, 0, 500, INTERNAL)
             ).to.revertedWith("Marketplace: Invalid Plot.");
           });
 
           it("plot amount too large", async function () {
             await expect(
-              this.marketplace.connect(user2).fill4PiecesDynamicPodOrder(this.order, this.function, 1000, 700, 500, INTERNAL)
+              this.marketplace.connect(user2).fillPodOrderPiecewise4(this.order, this.function, 1000, 700, 500, INTERNAL)
             ).to.revertedWith("Marketplace: Invalid Plot.");
           });
 
           it("plot amount too large", async function () {
             await this.field.connect(user2).sow("1200", EXTERNAL);
             await expect(
-              this.marketplace.connect(user2).fill4PiecesDynamicPodOrder(this.order, this.function, 2000, 700, 500, INTERNAL)
+              this.marketplace.connect(user2).fillPodOrderPiecewise4(this.order, this.function, 2000, 700, 500, INTERNAL)
             ).to.revertedWith("Marketplace: Plot too far in line.");
           });
 
           it("sell too much", async function () {
             await expect(
-              this.marketplace.connect(user2).fill4PiecesDynamicPodOrder(this.order, this.function, 1000, 0, 1000, INTERNAL)
+              this.marketplace.connect(user2).fillPodOrderPiecewise4(this.order, this.function, 1000, 0, 1000, INTERNAL)
             ).to.revertedWith("Marketplace: Not enough beans in order.");
           });
         });
@@ -2502,7 +2502,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.beanstalkBalance = await this.bean.balanceOf(this.marketplace.address);
             this.user2BeanBalance = await this.bean.balanceOf(user2Address);
-            this.result = await this.marketplace.connect(user2).fill4PiecesDynamicPodOrder(this.order, this.function, 1000, 0, 500, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodOrderPiecewise4(this.order, this.function, 1000, 0, 500, EXTERNAL);
             this.beanstalkBalanceAfter = await this.bean.balanceOf(this.marketplace.address);
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address);
           });
@@ -2532,7 +2532,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.beanstalkBalance = await this.bean.balanceOf(this.marketplace.address);
             this.user2BeanBalance = await this.bean.balanceOf(user2Address);
-            this.result = await this.marketplace.connect(user2).fill4PiecesDynamicPodOrder(this.order, this.function, 1000, 250, 250, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodOrderPiecewise4(this.order, this.function, 1000, 250, 250, EXTERNAL);
             this.beanstalkBalanceAfter = await this.bean.balanceOf(this.marketplace.address);
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address);
           });
@@ -2564,7 +2564,7 @@ describe('Marketplace', function () {
               this.marketplace.address
             );
             this.user2BeanBalance = await this.bean.balanceOf(user2Address);
-            this.result = await this.marketplace.connect(user2).fill4PiecesDynamicPodOrder(this.order, this.function, 1000, 0, 500, INTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodOrderPiecewise4(this.order, this.function, 1000, 0, 500, INTERNAL);
             this.beanstalkBalanceAfter = await this.bean.balanceOf(
               this.marketplace.address
             );
@@ -2607,7 +2607,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             await this.marketplace
               .connect(user2)
-              .create4PiecesDynamicPodListing(
+              .createPodListingPiecewise4(
                 "1000",
                 "0",
                 "500",
@@ -2622,7 +2622,7 @@ describe('Marketplace', function () {
             this.user2BeanBalance = await this.bean.balanceOf(user2Address);
             this.result = await this.marketplace
               .connect(user2)
-              .fill4PiecesDynamicPodOrder(this.order, this.function, 1000, 0, 500, INTERNAL);
+              .fillPodOrderPiecewise4(this.order, this.function, 1000, 0, 500, INTERNAL);
             this.beanstalkBalanceAfter = await this.bean.balanceOf(
               this.marketplace.address
             );
@@ -2671,7 +2671,7 @@ describe('Marketplace', function () {
     
       describe("Cancel", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).create4PiecesDynamicPodOrder('500', '0', '1000', EXTERNAL, this.function)
+          this.result = await this.marketplace.connect(user).createPodOrderPiecewise4('500', '0', '1000', EXTERNAL, this.function)
           this.id = await getDynamicOrderId(this.result)
         })
 
@@ -2679,7 +2679,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancel4PiecesDynamicPodOrder('0', '1000', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).cancelPodOrderPiecewise4('0', '1000', EXTERNAL, this.function);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -2703,7 +2703,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancel4PiecesDynamicPodOrder('0', '1000', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).cancelPodOrderPiecewise4('0', '1000', INTERNAL, this.function);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -2734,7 +2734,7 @@ describe('Marketplace', function () {
         describe("revert", async function () {
           it("Reverts if amount is 0", async function () {
             await expect(
-              this.marketplace.connect(user2).create16PiecesDynamicPodOrder("0", "0", "1000", EXTERNAL, this.function)
+              this.marketplace.connect(user2).createPodOrderPiecewise16("0", "0", "1000", EXTERNAL, this.function)
             ).to.be.revertedWith("Marketplace: Order amount must be > 0.");
           });
         });
@@ -2747,7 +2747,7 @@ describe('Marketplace', function () {
             );
             this.result = await this.marketplace
               .connect(user)
-              .create16PiecesDynamicPodOrder(
+              .createPodOrderPiecewise16(
                 "50",
                 "0",
                 "1000",
@@ -2773,7 +2773,7 @@ describe('Marketplace', function () {
           it("Creates the order", async function () {
             expect(await this.marketplace.podOrderById(this.id)).to.equal("50");
             expect(
-              await this.marketplace.dynamicPodOrder16(
+              await this.marketplace.podOrderPiecewise16(
                 userAddress,
                 "0",
                 "1000",
@@ -2802,7 +2802,7 @@ describe('Marketplace', function () {
 
       describe("Fill", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).create16PiecesDynamicPodOrder("50", "0", "2500", EXTERNAL, this.function);
+          this.result = await this.marketplace.connect(user).createPodOrderPiecewise16("50", "0", "2500", EXTERNAL, this.function);
           this.id = await getDynamicOrderId(this.result);
           this.order = [userAddress, "0", "2500"];
         });
@@ -2810,26 +2810,26 @@ describe('Marketplace', function () {
         describe("revert", async function () {
           it("owner does not own plot", async function () {
             await expect(
-              this.marketplace.fill16PiecesDynamicPodOrder(this.order, this.function, 0, 0, 500, INTERNAL)
+              this.marketplace.fillPodOrderPiecewise16(this.order, this.function, 0, 0, 500, INTERNAL)
             ).to.revertedWith("Marketplace: Invalid Plot.");
           });
 
           it("plot amount too large", async function () {
             await expect(
-              this.marketplace.connect(user2).fill16PiecesDynamicPodOrder(this.order, this.function, 1000, 700, 500, INTERNAL)
+              this.marketplace.connect(user2).fillPodOrderPiecewise16(this.order, this.function, 1000, 700, 500, INTERNAL)
             ).to.revertedWith("Marketplace: Invalid Plot.");
           });
 
           it("plot amount too large", async function () {
             await this.field.connect(user2).sow("1200", EXTERNAL);
             await expect(
-              this.marketplace.connect(user2).fill16PiecesDynamicPodOrder(this.order, this.function, 2000, 700, 500, INTERNAL)
+              this.marketplace.connect(user2).fillPodOrderPiecewise16(this.order, this.function, 2000, 700, 500, INTERNAL)
             ).to.revertedWith("Marketplace: Plot too far in line.");
           });
 
           it("sell too much", async function () {
             await expect(
-              this.marketplace.connect(user2).fill16PiecesDynamicPodOrder(this.order, this.function, 1000, 0, 1000, INTERNAL)
+              this.marketplace.connect(user2).fillPodOrderPiecewise16(this.order, this.function, 1000, 0, 1000, INTERNAL)
             ).to.revertedWith("Marketplace: Not enough beans in order.");
           });
         });
@@ -2838,7 +2838,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.beanstalkBalance = await this.bean.balanceOf(this.marketplace.address);
             this.user2BeanBalance = await this.bean.balanceOf(user2Address);
-            this.result = await this.marketplace.connect(user2).fill16PiecesDynamicPodOrder(this.order, this.function, 1000, 0, 500, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodOrderPiecewise16(this.order, this.function, 1000, 0, 500, EXTERNAL);
             this.beanstalkBalanceAfter = await this.bean.balanceOf(this.marketplace.address);
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address);
           });
@@ -2868,7 +2868,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.beanstalkBalance = await this.bean.balanceOf(this.marketplace.address);
             this.user2BeanBalance = await this.bean.balanceOf(user2Address);
-            this.result = await this.marketplace.connect(user2).fill16PiecesDynamicPodOrder(this.order, this.function, 1000, 250, 250, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodOrderPiecewise16(this.order, this.function, 1000, 250, 250, EXTERNAL);
             this.beanstalkBalanceAfter = await this.bean.balanceOf(this.marketplace.address);
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address);
           });
@@ -2900,7 +2900,7 @@ describe('Marketplace', function () {
               this.marketplace.address
             );
             this.user2BeanBalance = await this.bean.balanceOf(user2Address);
-            this.result = await this.marketplace.connect(user2).fill16PiecesDynamicPodOrder(this.order, this.function, 1000, 0, 500, INTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodOrderPiecewise16(this.order, this.function, 1000, 0, 500, INTERNAL);
             this.beanstalkBalanceAfter = await this.bean.balanceOf(
               this.marketplace.address
             );
@@ -2943,7 +2943,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             await this.marketplace
               .connect(user2)
-              .create16PiecesDynamicPodListing(
+              .createPodListingPiecewise16(
                 "1000",
                 "0",
                 "500",
@@ -2958,7 +2958,7 @@ describe('Marketplace', function () {
             this.user2BeanBalance = await this.bean.balanceOf(user2Address);
             this.result = await this.marketplace
               .connect(user2)
-              .fill16PiecesDynamicPodOrder(this.order, this.function, 1000, 0, 500, INTERNAL);
+              .fillPodOrderPiecewise16(this.order, this.function, 1000, 0, 500, INTERNAL);
             this.beanstalkBalanceAfter = await this.bean.balanceOf(
               this.marketplace.address
             );
@@ -3007,7 +3007,7 @@ describe('Marketplace', function () {
     
       describe("Cancel", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).create16PiecesDynamicPodOrder('500', '0', '1000', EXTERNAL, this.function)
+          this.result = await this.marketplace.connect(user).createPodOrderPiecewise16('500', '0', '1000', EXTERNAL, this.function)
           this.id = await getDynamicOrderId(this.result)
         })
 
@@ -3015,7 +3015,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancel16PiecesDynamicPodOrder('0', '1000', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).cancelPodOrderPiecewise16('0', '1000', EXTERNAL, this.function);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -3039,7 +3039,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancel16PiecesDynamicPodOrder('0', '1000', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).cancelPodOrderPiecewise16('0', '1000', INTERNAL, this.function);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -3070,7 +3070,7 @@ describe('Marketplace', function () {
         describe("revert", async function () {
           it("Reverts if amount is 0", async function () {
             await expect(
-              this.marketplace.connect(user2).create64PiecesDynamicPodOrder("0", "0", "1000", EXTERNAL, this.function)
+              this.marketplace.connect(user2).createPodOrderPiecewise64("0", "0", "1000", EXTERNAL, this.function)
             ).to.be.revertedWith("Marketplace: Order amount must be > 0.");
           });
         });
@@ -3083,7 +3083,7 @@ describe('Marketplace', function () {
             );
             this.result = await this.marketplace
               .connect(user)
-              .create64PiecesDynamicPodOrder(
+              .createPodOrderPiecewise64(
                 "50",
                 "0",
                 "1000",
@@ -3109,7 +3109,7 @@ describe('Marketplace', function () {
           it("Creates the order", async function () {
             expect(await this.marketplace.podOrderById(this.id)).to.equal("50");
             expect(
-              await this.marketplace.dynamicPodOrder64(
+              await this.marketplace.podOrderPiecewise64(
                 userAddress,
                 "0",
                 "1000",
@@ -3138,7 +3138,7 @@ describe('Marketplace', function () {
 
       describe("Fill", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).create64PiecesDynamicPodOrder("50", "0", "2500", EXTERNAL, this.function);
+          this.result = await this.marketplace.connect(user).createPodOrderPiecewise64("50", "0", "2500", EXTERNAL, this.function);
           this.id = await getDynamicOrderId(this.result);
           this.order = [userAddress, "0", "2500"];
         });
@@ -3146,26 +3146,26 @@ describe('Marketplace', function () {
         describe("revert", async function () {
           it("owner does not own plot", async function () {
             await expect(
-              this.marketplace.fill64PiecesDynamicPodOrder(this.order, this.function, 0, 0, 500, INTERNAL)
+              this.marketplace.fillPodOrderPiecewise64(this.order, this.function, 0, 0, 500, INTERNAL)
             ).to.revertedWith("Marketplace: Invalid Plot.");
           });
 
           it("plot amount too large", async function () {
             await expect(
-              this.marketplace.connect(user2).fill64PiecesDynamicPodOrder(this.order, this.function, 1000, 700, 500, INTERNAL)
+              this.marketplace.connect(user2).fillPodOrderPiecewise64(this.order, this.function, 1000, 700, 500, INTERNAL)
             ).to.revertedWith("Marketplace: Invalid Plot.");
           });
 
           it("plot amount too large", async function () {
             await this.field.connect(user2).sow("1200", EXTERNAL);
             await expect(
-              this.marketplace.connect(user2).fill64PiecesDynamicPodOrder(this.order, this.function, 2000, 700, 500, INTERNAL)
+              this.marketplace.connect(user2).fillPodOrderPiecewise64(this.order, this.function, 2000, 700, 500, INTERNAL)
             ).to.revertedWith("Marketplace: Plot too far in line.");
           });
 
           it("sell too much", async function () {
             await expect(
-              this.marketplace.connect(user2).fill64PiecesDynamicPodOrder(this.order, this.function, 1000, 0, 1000, INTERNAL)
+              this.marketplace.connect(user2).fillPodOrderPiecewise64(this.order, this.function, 1000, 0, 1000, INTERNAL)
             ).to.revertedWith("Marketplace: Not enough beans in order.");
           });
         });
@@ -3174,7 +3174,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.beanstalkBalance = await this.bean.balanceOf(this.marketplace.address);
             this.user2BeanBalance = await this.bean.balanceOf(user2Address);
-            this.result = await this.marketplace.connect(user2).fill64PiecesDynamicPodOrder(this.order, this.function, 1000, 0, 500, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodOrderPiecewise64(this.order, this.function, 1000, 0, 500, EXTERNAL);
             this.beanstalkBalanceAfter = await this.bean.balanceOf(this.marketplace.address);
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address);
           });
@@ -3204,7 +3204,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.beanstalkBalance = await this.bean.balanceOf(this.marketplace.address);
             this.user2BeanBalance = await this.bean.balanceOf(user2Address);
-            this.result = await this.marketplace.connect(user2).fill64PiecesDynamicPodOrder(this.order, this.function, 1000, 250, 250, EXTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodOrderPiecewise64(this.order, this.function, 1000, 250, 250, EXTERNAL);
             this.beanstalkBalanceAfter = await this.bean.balanceOf(this.marketplace.address);
             this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address);
           });
@@ -3236,7 +3236,7 @@ describe('Marketplace', function () {
               this.marketplace.address
             );
             this.user2BeanBalance = await this.bean.balanceOf(user2Address);
-            this.result = await this.marketplace.connect(user2).fill64PiecesDynamicPodOrder(this.order, this.function, 1000, 0, 500, INTERNAL);
+            this.result = await this.marketplace.connect(user2).fillPodOrderPiecewise64(this.order, this.function, 1000, 0, 500, INTERNAL);
             this.beanstalkBalanceAfter = await this.bean.balanceOf(
               this.marketplace.address
             );
@@ -3279,7 +3279,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             await this.marketplace
               .connect(user2)
-              .create64PiecesDynamicPodListing(
+              .createPodListingPiecewise64(
                 "1000",
                 "0",
                 "500",
@@ -3294,7 +3294,7 @@ describe('Marketplace', function () {
             this.user2BeanBalance = await this.bean.balanceOf(user2Address);
             this.result = await this.marketplace
               .connect(user2)
-              .fill64PiecesDynamicPodOrder(this.order, this.function, 1000, 0, 500, INTERNAL);
+              .fillPodOrderPiecewise64(this.order, this.function, 1000, 0, 500, INTERNAL);
             this.beanstalkBalanceAfter = await this.bean.balanceOf(
               this.marketplace.address
             );
@@ -3343,7 +3343,7 @@ describe('Marketplace', function () {
     
       describe("Cancel", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).create64PiecesDynamicPodOrder('500', '0', '1000', EXTERNAL, this.function)
+          this.result = await this.marketplace.connect(user).createPodOrderPiecewise64('500', '0', '1000', EXTERNAL, this.function)
           this.id = await getDynamicOrderId(this.result)
         })
 
@@ -3351,7 +3351,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancel64PiecesDynamicPodOrder('0', '1000', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).cancelPodOrderPiecewise64('0', '1000', EXTERNAL, this.function);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -3375,7 +3375,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancel64PiecesDynamicPodOrder('0', '1000', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).cancelPodOrderPiecewise64('0', '1000', INTERNAL, this.function);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })

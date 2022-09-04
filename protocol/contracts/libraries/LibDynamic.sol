@@ -76,7 +76,7 @@ library LibDynamic {
         uint8[4] memory exponents,
         bool[4] memory signs,
         uint256 x
-    ) public pure returns (uint256) {
+    ) internal pure returns (uint256) {
         uint256 positiveSum;
         uint256 negativeSum;
 
@@ -109,7 +109,7 @@ library LibDynamic {
         bool[4] memory signs,
         uint256 start, //start of breakpoint is assumed to be subtracted
         uint256 end //start of breakpoint is assumed to be subtracted
-    ) public pure returns (uint256) {
+    ) internal pure returns (uint256) {
         uint256 positiveSum;
         uint256 negativeSum;
         

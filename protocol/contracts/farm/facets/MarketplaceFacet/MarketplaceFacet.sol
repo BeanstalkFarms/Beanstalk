@@ -210,7 +210,7 @@ contract MarketplaceFacet is Order {
         return _createPodOrderPiecewise16(beanAmount, pricePerPod, maxPlaceInLine, f);
     }
 
-    function create64PiecesDynamicPodOrder(
+    function createPodOrderPiecewise64(
         uint256 beanAmount,
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
@@ -254,7 +254,7 @@ contract MarketplaceFacet is Order {
         _fillPodOrderPiecewise16(o, f, index, start, amount, mode);
     }
 
-    function fill64PiecesDynamicPodOrder(
+    function fillPodOrderPiecewise64(
         PodOrder calldata o,
         LibDynamic.CubicPolynomialPiecewise64 calldata f,
         uint256 index,
@@ -292,7 +292,7 @@ contract MarketplaceFacet is Order {
         _cancelPodOrderPiecewise16(pricePerPod, maxPlaceInLine, mode, f);
     }
 
-    function cancel64PiecesDynamicPodOrder(
+    function cancelPodOrderPiecewise64(
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
         LibTransfer.To mode,
