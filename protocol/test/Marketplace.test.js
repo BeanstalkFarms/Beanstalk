@@ -2184,7 +2184,7 @@ describe('Marketplace', function () {
           it("Emits an event", async function () {
             expect(this.result)
               .to.emit(this.marketplace, "PodOrderFilled")
-              .withArgs(user2Address, userAddress, this.id, 1000, 0, 500);
+              .withArgs(user2Address, userAddress, this.id, 1000, 0, 500, 50);
           });
         });
   
@@ -2229,7 +2229,7 @@ describe('Marketplace', function () {
           it("Emits an event", async function () {
             expect(this.result)
               .to.emit(this.marketplace, "PodOrderFilled")
-              .withArgs(user2Address, userAddress, this.id, 1000, 250, 250);
+              .withArgs(user2Address, userAddress, this.id, 1000, 250, 250, 25);
           });
         });
   
@@ -2276,7 +2276,7 @@ describe('Marketplace', function () {
           it("Emits an event", async function () {
             expect(this.result)
               .to.emit(this.marketplace, "PodOrderFilled")
-              .withArgs(user2Address, userAddress, this.id, 1000, 0, 500);
+              .withArgs(user2Address, userAddress, this.id, 1000, 0, 500, 50);
           });
         });
   
@@ -2333,7 +2333,7 @@ describe('Marketplace', function () {
               .withArgs(user2Address, "1000");
             expect(this.result)
               .to.emit(this.marketplace, "PodOrderFilled")
-              .withArgs(user2Address, userAddress, this.id, 1000, 0, 500);
+              .withArgs(user2Address, userAddress, this.id, 1000, 0, 500, 50);
           });
         });
       });
@@ -2535,7 +2535,7 @@ describe('Marketplace', function () {
           });
 
           it("Emits an event", async function () {
-            expect(this.result).to.emit(this.marketplace, "PodOrderFilled").withArgs(user2Address, userAddress, this.id, 1000, 0, 500);
+            expect(this.result).to.emit(this.marketplace, "PodOrderFilled").withArgs(user2Address, userAddress, this.id, 1000, 0, 500, 50);
           });
         });
 
@@ -2565,7 +2565,7 @@ describe('Marketplace', function () {
           });
 
           it("Emits an event", async function () {
-            expect(this.result).to.emit(this.marketplace, "PodOrderFilled").withArgs(user2Address, userAddress, this.id, 1000, 250, 250);
+            expect(this.result).to.emit(this.marketplace, "PodOrderFilled").withArgs(user2Address, userAddress, this.id, 1000, 250, 250, 25);
           });
         });
 
@@ -2610,7 +2610,7 @@ describe('Marketplace', function () {
           it("Emits an event", async function () {
             expect(this.result)
               .to.emit(this.marketplace, "PodOrderFilled")
-              .withArgs(user2Address, userAddress, this.id, 1000, 0, 500);
+              .withArgs(user2Address, userAddress, this.id, 1000, 0, 500, 50);
           });
         });
 
@@ -2675,7 +2675,7 @@ describe('Marketplace', function () {
               .withArgs(user2Address, "1000");
             expect(this.result)
               .to.emit(this.marketplace, "PodOrderFilled")
-              .withArgs(user2Address, userAddress, this.id, 1000, 0, 500);
+              .withArgs(user2Address, userAddress, this.id, 1000, 0, 500, 50);
           });
         });
       });
@@ -2869,7 +2869,7 @@ describe('Marketplace', function () {
           });
 
           it("Emits an event", async function () {
-            expect(this.result).to.emit(this.marketplace, "PodOrderFilled").withArgs(user2Address, userAddress, this.id, 1000, 0, 500);
+            expect(this.result).to.emit(this.marketplace, "PodOrderFilled").withArgs(user2Address, userAddress, this.id, 1000, 0, 500, 50);
           });
         });
 
@@ -2899,7 +2899,7 @@ describe('Marketplace', function () {
           });
 
           it("Emits an event", async function () {
-            expect(this.result).to.emit(this.marketplace, "PodOrderFilled").withArgs(user2Address, userAddress, this.id, 1000, 250, 250);
+            expect(this.result).to.emit(this.marketplace, "PodOrderFilled").withArgs(user2Address, userAddress, this.id, 1000, 250, 250, 25);
           });
         });
 
@@ -2944,7 +2944,7 @@ describe('Marketplace', function () {
           it("Emits an event", async function () {
             expect(this.result)
               .to.emit(this.marketplace, "PodOrderFilled")
-              .withArgs(user2Address, userAddress, this.id, 1000, 0, 500);
+              .withArgs(user2Address, userAddress, this.id, 1000, 0, 500, 50);
           });
         });
 
@@ -3009,7 +3009,7 @@ describe('Marketplace', function () {
               .withArgs(user2Address, "1000");
             expect(this.result)
               .to.emit(this.marketplace, "PodOrderFilled")
-              .withArgs(user2Address, userAddress, this.id, 1000, 0, 500);
+              .withArgs(user2Address, userAddress, this.id, 1000, 0, 500, 50);
           });
         });
       });
@@ -3203,7 +3203,7 @@ describe('Marketplace', function () {
           });
 
           it("Emits an event", async function () {
-            expect(this.result).to.emit(this.marketplace, "PodOrderFilled").withArgs(user2Address, userAddress, this.id, 1000, 0, 500);
+            expect(this.result).to.emit(this.marketplace, "PodOrderFilled").withArgs(user2Address, userAddress, this.id, 1000, 0, 500, 50);
           });
         });
 
@@ -3233,7 +3233,7 @@ describe('Marketplace', function () {
           });
 
           it("Emits an event", async function () {
-            expect(this.result).to.emit(this.marketplace, "PodOrderFilled").withArgs(user2Address, userAddress, this.id, 1000, 250, 250);
+            expect(this.result).to.emit(this.marketplace, "PodOrderFilled").withArgs(user2Address, userAddress, this.id, 1000, 250, 250, 25);
           });
         });
 
@@ -3278,7 +3278,7 @@ describe('Marketplace', function () {
           it("Emits an event", async function () {
             expect(this.result)
               .to.emit(this.marketplace, "PodOrderFilled")
-              .withArgs(user2Address, userAddress, this.id, 1000, 0, 500);
+              .withArgs(user2Address, userAddress, this.id, 1000, 0, 500, 50);
           });
         });
 
@@ -3343,7 +3343,7 @@ describe('Marketplace', function () {
               .withArgs(user2Address, "1000");
             expect(this.result)
               .to.emit(this.marketplace, "PodOrderFilled")
-              .withArgs(user2Address, userAddress, this.id, 1000, 0, 500);
+              .withArgs(user2Address, userAddress, this.id, 1000, 0, 500, 50);
           });
         });
       });

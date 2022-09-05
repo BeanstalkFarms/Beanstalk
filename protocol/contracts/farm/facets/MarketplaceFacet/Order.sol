@@ -39,7 +39,8 @@ contract Order is Listing {
         bytes32 id,
         uint256 index,
         uint256 start,
-        uint256 amount
+        uint256 amount,
+        uint256 costInBeans
     );
 
     event PodOrderCancelled(address indexed account, bytes32 id);
@@ -137,7 +138,7 @@ contract Order is Listing {
 
         if (s.podOrders[id] == 0) delete s.podOrders[id];
         
-        emit PodOrderFilled(msg.sender, o.account, id, index, start, amount);
+        emit PodOrderFilled(msg.sender, o.account, id, index, start, amount, costInBeans);
     }
 
     function _fillPodOrderPiecewise4(
@@ -164,7 +165,7 @@ contract Order is Listing {
 
         if (s.podOrders[id] == 0) delete s.podOrders[id];
         
-        emit PodOrderFilled(msg.sender, o.account, id, index, start, amount);
+        emit PodOrderFilled(msg.sender, o.account, id, index, start, amount, costInBeans);
     }
 
     function _fillPodOrderPiecewise16(
@@ -191,7 +192,7 @@ contract Order is Listing {
 
         if (s.podOrders[id] == 0) delete s.podOrders[id];
         
-        emit PodOrderFilled(msg.sender, o.account, id, index, start, amount);
+        emit PodOrderFilled(msg.sender, o.account, id, index, start, amount, costInBeans);
     }
 
     function _fillPodOrderPiecewise64(
@@ -218,7 +219,7 @@ contract Order is Listing {
 
         if (s.podOrders[id] == 0) delete s.podOrders[id];
         
-        emit PodOrderFilled(msg.sender, o.account, id, index, start, amount);
+        emit PodOrderFilled(msg.sender, o.account, id, index, start, amount, costInBeans);
     }
 
     /*
