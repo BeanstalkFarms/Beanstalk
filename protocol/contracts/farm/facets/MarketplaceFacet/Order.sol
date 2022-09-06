@@ -30,7 +30,7 @@ contract Order is Listing {
         uint256 amount,
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
-        LibDynamic.PriceType priceType
+        LibPolynomial.PriceType priceType
     );
 
     event PodOrderFilled(
@@ -64,52 +64,52 @@ contract Order is Listing {
 
         if (s.podOrders[id] > 0) _cancelPodOrder(pricePerPod, maxPlaceInLine, LibTransfer.To.INTERNAL);
         s.podOrders[id] = beanAmount;
-        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, LibDynamic.PriceType.Fixed);
+        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, LibPolynomial.PriceType.Fixed);
     }
 
     function _createPodOrderPiecewise4(
         uint256 beanAmount,
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
-        LibDynamic.CubicPolynomialPiecewise4 calldata f
+        LibPolynomial.CubicPiecewise4 calldata f
     ) internal returns (bytes32 id) {
         require(beanAmount > 0, "Marketplace: Order amount must be > 0.");
         id = createOrderIdPiecewise4(msg.sender, pricePerPod, maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
         if (s.podOrders[id] > 0) _cancelPodOrderPiecewise4(pricePerPod, maxPlaceInLine, LibTransfer.To.INTERNAL, f);
         s.podOrders[id] = beanAmount;
 
-        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, LibDynamic.PriceType.Piecewise4);
-        emit NewCubicPolynomialPiecewise4(f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
+        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, LibPolynomial.PriceType.Piecewise4);
+        emit NewCubicPiecewise4(f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
     }
 
     function _createPodOrderPiecewise16(
         uint256 beanAmount,
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
-        LibDynamic.CubicPolynomialPiecewise16 calldata f
+        LibPolynomial.CubicPiecewise16 calldata f
     ) internal returns (bytes32 id) {
         require(beanAmount > 0, "Marketplace: Order amount must be > 0.");
         id = createOrderIdPiecewise16(msg.sender, pricePerPod, maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
         if (s.podOrders[id] > 0) _cancelPodOrderPiecewise16(pricePerPod, maxPlaceInLine, LibTransfer.To.INTERNAL, f);
         s.podOrders[id] = beanAmount;
 
-        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, LibDynamic.PriceType.Piecewise16);
-        emit NewCubicPolynomialPiecewise16(f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
+        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, LibPolynomial.PriceType.Piecewise16);
+        emit NewCubicPiecewise16(f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
     }
 
     function _createPodOrderPiecewise64(
         uint256 beanAmount,
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
-        LibDynamic.CubicPolynomialPiecewise64 calldata f
+        LibPolynomial.CubicPiecewise64 calldata f
     ) internal returns (bytes32 id) {
         require(beanAmount > 0, "Marketplace: Order amount must be > 0.");
         id = createOrderIdPiecewise64(msg.sender, pricePerPod, maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
         if (s.podOrders[id] > 0) _cancelPodOrderPiecewise64(pricePerPod, maxPlaceInLine, LibTransfer.To.INTERNAL, f);
         s.podOrders[id] = beanAmount;
 
-        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, LibDynamic.PriceType.Piecewise64);
-        emit NewCubicPolynomialPiecewise64(f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
+        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, LibPolynomial.PriceType.Piecewise64);
+        emit NewCubicPiecewise64(f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
     }
 
     /*
@@ -143,7 +143,7 @@ contract Order is Listing {
 
     function _fillPodOrderPiecewise4(
         PodOrder calldata o,
-        LibDynamic.CubicPolynomialPiecewise4 calldata f,
+        LibPolynomial.CubicPiecewise4 calldata f,
         uint256 index,
         uint256 start,
         uint256 amount,
@@ -170,7 +170,7 @@ contract Order is Listing {
 
     function _fillPodOrderPiecewise16(
         PodOrder calldata o,
-        LibDynamic.CubicPolynomialPiecewise16 calldata f,
+        LibPolynomial.CubicPiecewise16 calldata f,
         uint256 index,
         uint256 start,
         uint256 amount,
@@ -197,7 +197,7 @@ contract Order is Listing {
 
     function _fillPodOrderPiecewise64(
         PodOrder calldata o,
-        LibDynamic.CubicPolynomialPiecewise64 calldata f,
+        LibPolynomial.CubicPiecewise64 calldata f,
         uint256 index,
         uint256 start,
         uint256 amount,
@@ -241,7 +241,7 @@ contract Order is Listing {
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
         LibTransfer.To mode,
-        LibDynamic.CubicPolynomialPiecewise4 calldata f
+        LibPolynomial.CubicPiecewise4 calldata f
     ) internal {
         bytes32 id = createOrderIdPiecewise4(msg.sender, pricePerPod, maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
         uint256 amountBeans = s.podOrders[id];
@@ -255,7 +255,7 @@ contract Order is Listing {
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
         LibTransfer.To mode,
-        LibDynamic.CubicPolynomialPiecewise16 calldata f
+        LibPolynomial.CubicPiecewise16 calldata f
     ) internal {
         bytes32 id = createOrderIdPiecewise16(msg.sender, pricePerPod, maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
         uint256 amountBeans = s.podOrders[id];
@@ -269,7 +269,7 @@ contract Order is Listing {
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
         LibTransfer.To mode,
-        LibDynamic.CubicPolynomialPiecewise64 calldata f
+        LibPolynomial.CubicPiecewise64 calldata f
     ) internal {
         bytes32 id = createOrderIdPiecewise64(msg.sender, pricePerPod, maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
         uint256 amountBeans = s.podOrders[id];
@@ -294,231 +294,30 @@ contract Order is Listing {
     * @dev Integration over a range that falls within piecewise domain.
     */
     function getAmountBeansToFillOrderPiecewise4(
-        LibDynamic.CubicPolynomialPiecewise4 calldata f,
+        LibPolynomial.CubicPiecewise4 calldata f,
         uint256 placeInLine, 
         uint256 amountPodsFromOrder
     ) public pure returns (uint256 beanAmount) { 
-
-        uint256 piecewiseLength = LibDynamic.getLengthOfPiecewise4(f.breakpoints);
-        uint256 pieceIndex = LibDynamic.findIndexPiecewise4(
-            f.breakpoints, 
-            placeInLine, 
-            piecewiseLength - 1
-        );
-
-        uint256 start = placeInLine;
-        uint256 end = placeInLine + amountPodsFromOrder;
-
-        if(start < f.breakpoints[0]) start = f.breakpoints[0]; //limit the start of the integration to the start of the function domain
-
-        while(start < (placeInLine + amountPodsFromOrder)) {
-            //if on the last piece, complete the remainder of the integration in the current piece
-            if(pieceIndex != piecewiseLength - 1) {
-                //if the integration reaches into the next piece, then break the integration at the end of the current piece
-                if(end > f.breakpoints[pieceIndex + 1]) {
-                    //current end index reaches into next piecewise domain
-                    beanAmount += LibDynamic.evaluatePolynomialIntegration(
-                        [
-                            f.significands[pieceIndex*4], 
-                            f.significands[pieceIndex*4 + 1], 
-                            f.significands[pieceIndex*4 + 2], 
-                            f.significands[pieceIndex*4 + 3]
-                        ], 
-                        LibDynamic.getPackedExponents(f.packedExponents, pieceIndex), 
-                        LibDynamic.getPackedSigns(f.packedSigns, pieceIndex), 
-                        start - f.breakpoints[pieceIndex], 
-                        f.breakpoints[pieceIndex + 1] - f.breakpoints[pieceIndex]
-                    );
-                    start = f.breakpoints[pieceIndex + 1]; // set place in line to the end index
-                    if(pieceIndex < (piecewiseLength - 1)) pieceIndex++; //increment piece index if not at the last piece
-                } else {
-                    
-                    beanAmount += LibDynamic.evaluatePolynomialIntegration(
-                        [
-                            f.significands[pieceIndex], 
-                            f.significands[pieceIndex*4 + 1], 
-                            f.significands[pieceIndex*4 + 2],
-                            f.significands[pieceIndex*4 + 3]
-                        ], 
-                        LibDynamic.getPackedExponents(f.packedExponents, pieceIndex), 
-                        LibDynamic.getPackedSigns(f.packedSigns, pieceIndex), 
-                        start - f.breakpoints[pieceIndex], 
-                        end - f.breakpoints[pieceIndex]
-                    );
-                    start = end;
-                }
-            } else {
-                beanAmount += LibDynamic.evaluatePolynomialIntegration(
-                    [
-                        f.significands[pieceIndex], 
-                        f.significands[pieceIndex*4 + 1], 
-                        f.significands[pieceIndex*4 + 2],
-                        f.significands[pieceIndex*4 + 3]
-                    ], 
-                    LibDynamic.getPackedExponents(f.packedExponents, pieceIndex), 
-                    LibDynamic.getPackedSigns(f.packedSigns, pieceIndex), 
-                    start - f.breakpoints[pieceIndex], 
-                    end - f.breakpoints[pieceIndex]
-                );
-                start = end;
-            }
-            
-        }
-
-        return beanAmount / 1000000;
+        beanAmount = LibPolynomial.evaluatePolynomialIntegrationPiecewise4(f, placeInLine, placeInLine + amountPodsFromOrder);
+        beanAmount /= 1000000;
     }
 
     function getAmountBeansToFillOrderPiecewise16(
-        LibDynamic.CubicPolynomialPiecewise16 calldata f,
+        LibPolynomial.CubicPiecewise16 calldata f,
         uint256 placeInLine, 
         uint256 amountPodsFromOrder
     ) public pure returns (uint256 beanAmount) { 
-
-        uint256 piecewiseLength = LibDynamic.getLengthOfPiecewise16(f.breakpoints);
-        uint256 pieceIndex = LibDynamic.findIndexPiecewise16(
-            f.breakpoints, 
-            placeInLine, 
-            piecewiseLength - 1
-        );
-
-        uint256 start = placeInLine;
-        uint256 end = placeInLine + amountPodsFromOrder;
-
-        if(start < f.breakpoints[0]) start = f.breakpoints[0]; //limit the start of the integration to the start of the function domain
-
-        while(start < end) {
-            //if on the last piece, complete the remainder of the integration in the current piece
-            if(pieceIndex != piecewiseLength - 1) {
-                //if the integration reaches into the next piece, then break the integration at the end of the current piece
-                if(end > f.breakpoints[pieceIndex + 1]) {
-                    //current end index reaches into next piecewise domain
-                    beanAmount +=  LibDynamic.evaluatePolynomialIntegration(
-                        [
-                            f.significands[pieceIndex*4], 
-                            f.significands[pieceIndex*4 + 1], 
-                            f.significands[pieceIndex*4 + 2], 
-                            f.significands[pieceIndex*4 + 3]
-                        ], 
-                        LibDynamic.getPackedExponents(f.packedExponents[pieceIndex / 8], pieceIndex), 
-                        LibDynamic.getPackedSigns(f.packedSigns, pieceIndex), 
-                        start - f.breakpoints[pieceIndex], 
-                        f.breakpoints[pieceIndex + 1] - f.breakpoints[pieceIndex]
-                    );
-
-                    start = f.breakpoints[pieceIndex + 1]; // set place in line to the end index
-                    if(pieceIndex < (piecewiseLength - 1)) pieceIndex++; //increment piece index if not at the last piece
-                } else {
-                    
-                    beanAmount += LibDynamic.evaluatePolynomialIntegration(
-                        [
-                            f.significands[pieceIndex*4], 
-                            f.significands[pieceIndex*4 + 1], 
-                            f.significands[pieceIndex*4 + 2], 
-                            f.significands[pieceIndex*4 + 3]
-                        ], 
-                        LibDynamic.getPackedExponents(f.packedExponents[pieceIndex / 8], pieceIndex), 
-                        LibDynamic.getPackedSigns(f.packedSigns, pieceIndex), 
-                        start - f.breakpoints[pieceIndex], 
-                        end - f.breakpoints[pieceIndex]
-                    );
-
-                    start = end;
-                }
-            } else {
-                beanAmount += LibDynamic.evaluatePolynomialIntegration(
-                    [
-                        f.significands[pieceIndex*4], 
-                        f.significands[pieceIndex*4 + 1], 
-                        f.significands[pieceIndex*4 + 2], 
-                        f.significands[pieceIndex*4 + 3]
-                    ], 
-                    LibDynamic.getPackedExponents(f.packedExponents[pieceIndex / 8], pieceIndex), 
-                    LibDynamic.getPackedSigns(f.packedSigns, pieceIndex), 
-                    start - f.breakpoints[pieceIndex], 
-                    end - f.breakpoints[pieceIndex]
-                );
-
-                start = end;
-            }
-            
-        }
-
-        return beanAmount / 1000000;
+        beanAmount = LibPolynomial.evaluatePolynomialIntegrationPiecewise16(f, placeInLine, placeInLine + amountPodsFromOrder);
+        beanAmount /= 1000000;
     }
 
     function getAmountBeansToFillOrderPiecewise64(
-        LibDynamic.CubicPolynomialPiecewise64 calldata f,
+        LibPolynomial.CubicPiecewise64 calldata f,
         uint256 placeInLine, 
         uint256 amountPodsFromOrder
     ) public pure returns (uint256 beanAmount) { 
-
-        uint256 piecewiseLength = LibDynamic.getLengthOfPiecewise64(f.breakpoints);
-        uint256 pieceIndex = LibDynamic.findIndexPiecewise64(
-            f.breakpoints, 
-            placeInLine, 
-            piecewiseLength - 1
-        );
-
-        uint256 start = placeInLine;
-        uint256 end = placeInLine + amountPodsFromOrder;
-
-        if(start < f.breakpoints[0]) start = f.breakpoints[0]; //limit the start of the integration to the start of the function domain
-
-        while(start < end) {
-            //if on the last piece, complete the remainder of the integration in the current piece
-            if(pieceIndex != piecewiseLength - 1) {
-                //if the integration reaches into the next piece, then break the integration at the end of the current piece
-                if(end > f.breakpoints[pieceIndex + 1]) {
-                    //current end index reaches into next piecewise domain
-                    beanAmount +=  LibDynamic.evaluatePolynomialIntegration(
-                        [
-                            f.significands[pieceIndex*4], 
-                            f.significands[pieceIndex*4 + 1], 
-                            f.significands[pieceIndex*4 + 2], 
-                            f.significands[pieceIndex*4 + 3]
-                        ], 
-                        LibDynamic.getPackedExponents(f.packedExponents[pieceIndex / 8], pieceIndex), 
-                        LibDynamic.getPackedSigns(f.packedSigns, pieceIndex), 
-                        start - f.breakpoints[pieceIndex], 
-                        f.breakpoints[pieceIndex + 1] - f.breakpoints[pieceIndex]
-                    );
-                    start = f.breakpoints[pieceIndex + 1]; // set place in line to the end index
-                    if(pieceIndex < (piecewiseLength - 1)) pieceIndex++; //increment piece index if not at the last piece
-                } else {
-                    
-                    beanAmount += LibDynamic.evaluatePolynomialIntegration(
-                        [
-                            f.significands[pieceIndex*4], 
-                            f.significands[pieceIndex*4 + 1], 
-                            f.significands[pieceIndex*4 + 2], 
-                            f.significands[pieceIndex*4 + 3]
-                        ], 
-                        LibDynamic.getPackedExponents(f.packedExponents[pieceIndex / 8], pieceIndex), 
-                        LibDynamic.getPackedSigns(f.packedSigns, pieceIndex), 
-                        start - f.breakpoints[pieceIndex], 
-                        end - f.breakpoints[pieceIndex]
-                    );
-                    start = end;
-                }
-            } else {
-                beanAmount += LibDynamic.evaluatePolynomialIntegration(
-                    [
-                        f.significands[pieceIndex*4], 
-                        f.significands[pieceIndex*4 + 1], 
-                        f.significands[pieceIndex*4 + 2], 
-                        f.significands[pieceIndex*4 + 3]
-                    ], 
-                    LibDynamic.getPackedExponents(f.packedExponents[pieceIndex / 8], pieceIndex), 
-                    LibDynamic.getPackedSigns(f.packedSigns, pieceIndex), 
-                    start - f.breakpoints[pieceIndex], 
-                    end - f.breakpoints[pieceIndex]
-                );
-                start = end;
-            }
-            
-        }
-
-        return beanAmount / 1000000;
+        beanAmount = LibPolynomial.evaluatePolynomialIntegrationPiecewise64(f, placeInLine, placeInLine + amountPodsFromOrder);
+        beanAmount /= 1000000;
     }
 
     /*

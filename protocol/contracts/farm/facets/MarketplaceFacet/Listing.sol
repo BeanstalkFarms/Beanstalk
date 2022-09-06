@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "./PodTransfer.sol";
 import "../../../libraries/Token/LibTransfer.sol";
-import "../../../libraries/LibDynamic.sol";
+import "../../../libraries/LibPolynomial.sol";
 import "hardhat/console.sol";
 
 /**
@@ -19,21 +19,21 @@ contract Listing is PodTransfer {
 
     using SafeMath for uint256;
 
-    event NewCubicPolynomialPiecewise4(
+    event NewCubicPiecewise4(
         uint256[4] piecewiseBreakpoints,
         uint256[16] coefficientSignificands,
         uint256 packedCoefficientExponents,
         uint256 packedCoefficientSigns
     );
 
-    event NewCubicPolynomialPiecewise16(
+    event NewCubicPiecewise16(
         uint256[16] piecewiseBreakpoints,
         uint256[64] coefficientSignificands,
         uint256[2] packedCoefficientExponents,
         uint256 packedCoefficientSigns
     );
 
-    event NewCubicPolynomialPiecewise64(
+    event NewCubicPiecewise64(
         uint256[64] piecewiseBreakpoints,
         uint256[256] coefficientSignificands,
         uint256[8] packedCoefficientExponents,
@@ -58,7 +58,7 @@ contract Listing is PodTransfer {
         uint24 pricePerPod, 
         uint256 maxHarvestableIndex, 
         LibTransfer.To mode,
-        LibDynamic.PriceType priceType
+        LibPolynomial.PriceType priceType
     );
 
     event PodListingFilled(
@@ -93,7 +93,7 @@ contract Listing is PodTransfer {
 
         s.podListings[index] = hashListing(start, amount, pricePerPod, maxHarvestableIndex, mode);
         
-        emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, mode, LibDynamic.PriceType.Fixed);
+        emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, mode, LibPolynomial.PriceType.Fixed);
 
     }
 
@@ -104,7 +104,7 @@ contract Listing is PodTransfer {
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
         LibTransfer.To mode,
-        LibDynamic.CubicPolynomialPiecewise4 calldata f
+        LibPolynomial.CubicPiecewise4 calldata f
     ) internal {
         uint256 plotSize = s.a[msg.sender].field.plots[index];
 
@@ -133,10 +133,10 @@ contract Listing is PodTransfer {
             pricePerPod, 
             maxHarvestableIndex, 
             mode, 
-            LibDynamic.PriceType.Piecewise4
+            LibPolynomial.PriceType.Piecewise4
         );
 
-        emit NewCubicPolynomialPiecewise4(
+        emit NewCubicPiecewise4(
             f.breakpoints, 
             f.significands, 
             f.packedExponents,
@@ -151,7 +151,7 @@ contract Listing is PodTransfer {
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
         LibTransfer.To mode,
-        LibDynamic.CubicPolynomialPiecewise16 calldata f
+        LibPolynomial.CubicPiecewise16 calldata f
     ) internal {
         uint256 plotSize = s.a[msg.sender].field.plots[index];
 
@@ -180,10 +180,10 @@ contract Listing is PodTransfer {
             pricePerPod, 
             maxHarvestableIndex, 
             mode, 
-            LibDynamic.PriceType.Piecewise16
+            LibPolynomial.PriceType.Piecewise16
         );
 
-        emit NewCubicPolynomialPiecewise16(
+        emit NewCubicPiecewise16(
             f.breakpoints, 
             f.significands, 
             f.packedExponents,
@@ -198,7 +198,7 @@ contract Listing is PodTransfer {
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
         LibTransfer.To mode,
-        LibDynamic.CubicPolynomialPiecewise64 calldata f
+        LibPolynomial.CubicPiecewise64 calldata f
     ) internal {
         uint256 plotSize = s.a[msg.sender].field.plots[index];
 
@@ -227,10 +227,10 @@ contract Listing is PodTransfer {
             pricePerPod, 
             maxHarvestableIndex, 
             mode, 
-            LibDynamic.PriceType.Piecewise64
+            LibPolynomial.PriceType.Piecewise64
         );
 
-        emit NewCubicPolynomialPiecewise64(
+        emit NewCubicPiecewise64(
             f.breakpoints, 
             f.significands, 
             f.packedExponents,
@@ -266,7 +266,7 @@ contract Listing is PodTransfer {
 
     function _fillListingPiecewise4(
         PodListing calldata l, 
-        LibDynamic.CubicPolynomialPiecewise4 calldata f, 
+        LibPolynomial.CubicPiecewise4 calldata f, 
         uint256 beanAmount
     ) internal {
         bytes32 lHash = hashListingPiecewise4(
@@ -297,7 +297,7 @@ contract Listing is PodTransfer {
 
     function _fillListingPiecewise16(
         PodListing calldata l, 
-        LibDynamic.CubicPolynomialPiecewise16 calldata f, 
+        LibPolynomial.CubicPiecewise16 calldata f, 
         uint256 beanAmount
     ) internal {
         bytes32 lHash = hashListingPiecewise16(
@@ -328,7 +328,7 @@ contract Listing is PodTransfer {
 
     function _fillListingPiecewise64(
         PodListing calldata l, 
-        LibDynamic.CubicPolynomialPiecewise64 calldata f, 
+        LibPolynomial.CubicPiecewise64 calldata f, 
         uint256 beanAmount
     ) internal {
         bytes32 lHash = hashListingPiecewise64(
@@ -382,7 +382,7 @@ contract Listing is PodTransfer {
     function __fillListingPiecewise4(
         address to,
         PodListing calldata l,
-        LibDynamic.CubicPolynomialPiecewise4 calldata f,
+        LibPolynomial.CubicPiecewise4 calldata f,
         uint256 amount
     ) private {
         require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
@@ -409,7 +409,7 @@ contract Listing is PodTransfer {
     function __fillListingPiecewise16(
         address to,
         PodListing calldata l,
-        LibDynamic.CubicPolynomialPiecewise16 calldata f,
+        LibPolynomial.CubicPiecewise16 calldata f,
         uint256 amount
     ) private {
         require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
@@ -436,7 +436,7 @@ contract Listing is PodTransfer {
     function __fillListingPiecewise64(
         address to,
         PodListing calldata l,
-        LibDynamic.CubicPolynomialPiecewise64 calldata f,
+        LibPolynomial.CubicPiecewise64 calldata f,
         uint256 amount
     ) private {
         require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
@@ -483,95 +483,44 @@ contract Listing is PodTransfer {
     // due to rounding from calculating amount, give it to last buyer
     function getRoundedAmount(PodListing calldata l, uint256 beanAmount) internal pure returns (uint256 amount) {
         amount = (beanAmount * 1000000) / l.pricePerPod;
+        
         uint256 remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
-
         if(remainingAmount <= (1000000 / l.pricePerPod)) amount = l.amount;
     }
 
     function getRoundedAmountPiecewise4(
         PodListing calldata l, 
-        LibDynamic.CubicPolynomialPiecewise4 calldata f, 
+        LibPolynomial.CubicPiecewise4 calldata f, 
         uint256 beanAmount
     ) public view returns (uint256 amount) {
-        uint256 pieceIndex = LibDynamic.findIndexPiecewise4(
-            f.breakpoints, 
-            l.index + l.start - s.f.harvestable, 
-            LibDynamic.getLengthOfPiecewise4(f.breakpoints) - 1
-        );
-
-        uint256 pricePerPod = LibDynamic.evaluatePolynomial(
-                [
-                    f.significands[pieceIndex*4], 
-                    f.significands[pieceIndex*4 + 1], 
-                    f.significands[pieceIndex*4 + 2], 
-                    f.significands[pieceIndex*4 + 3]
-                ], 
-                LibDynamic.getPackedExponents(f.packedExponents, pieceIndex),
-                LibDynamic.getPackedSigns(f.packedSigns, pieceIndex),
-                l.index + l.start - s.f.harvestable - f.breakpoints[pieceIndex]
-            );
-
+        uint256 pricePerPod = LibPolynomial.evaluatePolynomialPiecewise4(f, l.index + l.start - s.f.harvestable);
         amount = (beanAmount * 1000000) / pricePerPod;
-        uint256 remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
         
+        uint256 remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
         if(remainingAmount <= (1000000 / pricePerPod)) amount = l.amount;
     }
 
     function getRoundedAmountPiecewise16(
         PodListing calldata l, 
-        LibDynamic.CubicPolynomialPiecewise16 calldata f, 
+        LibPolynomial.CubicPiecewise16 calldata f, 
         uint256 beanAmount
     ) public view returns (uint256 amount) {
-        uint256 pieceIndex = LibDynamic.findIndexPiecewise16(
-            f.breakpoints, 
-            l.index + l.start - s.f.harvestable, 
-            LibDynamic.getLengthOfPiecewise16(f.breakpoints) - 1
-        );
-
-        uint256 pricePerPod = LibDynamic.evaluatePolynomial(
-                [
-                    f.significands[pieceIndex], 
-                    f.significands[pieceIndex + 1], 
-                    f.significands[pieceIndex + 2], 
-                    f.significands[pieceIndex + 3]
-                ], 
-                LibDynamic.getPackedExponents(f.packedExponents[pieceIndex / 8], pieceIndex),
-                LibDynamic.getPackedSigns(f.packedSigns, pieceIndex),
-                l.index + l.start - s.f.harvestable - f.breakpoints[pieceIndex]
-            );
-
+        uint256 pricePerPod = LibPolynomial.evaluatePolynomialPiecewise16(f, l.index + l.start - s.f.harvestable);
         amount = (beanAmount * 1000000) / pricePerPod;
+        
         uint256 remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
-
         if(remainingAmount <= (1000000 / pricePerPod)) amount = l.amount;
     }
 
     function getRoundedAmountPiecewise64(
         PodListing calldata l, 
-        LibDynamic.CubicPolynomialPiecewise64 calldata f, 
+        LibPolynomial.CubicPiecewise64 calldata f, 
         uint256 beanAmount
     ) public view returns (uint256 amount) {
-        uint256 pieceIndex = LibDynamic.findIndexPiecewise64(
-            f.breakpoints, 
-            l.index + l.start - s.f.harvestable, 
-            LibDynamic.getLengthOfPiecewise64(f.breakpoints) - 1
-        );
-
-        uint256 pricePerPod = LibDynamic.evaluatePolynomial(
-                [
-                    f.significands[pieceIndex], 
-                    f.significands[pieceIndex + 1], 
-                    f.significands[pieceIndex + 2], 
-                    f.significands[pieceIndex + 3]
-                ], 
-                LibDynamic.getPackedExponents(f.packedExponents[pieceIndex / 8], pieceIndex),
-                LibDynamic.getPackedSigns(f.packedSigns, pieceIndex),
-                l.index + l.start - s.f.harvestable - f.breakpoints[pieceIndex]
-            );
-
+        uint256 pricePerPod = LibPolynomial.evaluatePolynomialPiecewise64(f, l.index + l.start - s.f.harvestable);
         amount = (beanAmount * 1000000) / pricePerPod;
+        
         uint256 remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
-
         if(remainingAmount <= (1000000 / pricePerPod)) amount = l.amount;
     }
 
