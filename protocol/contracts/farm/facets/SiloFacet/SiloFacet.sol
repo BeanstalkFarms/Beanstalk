@@ -133,14 +133,14 @@ contract SiloFacet is TokenSilo {
     }
 
     function increaseDepositAllowance(address spender, address token, uint256 addedValue) public virtual nonReentrant returns (bool) {
-        _approveDeposit(msg.sender, spender, token, depositAllowance(msg.sender, spender, token) + addedValue);
+        _approveDeposit(msg.sender, spender, token, depositAllowance(msg.sender, spender, token).add(addedValue));
         return true;
     }
 
-    function decreaseDepositAllowance(address spender, address token, uint256 subtractedValue) public virtual returns (bool) {
+    function decreaseDepositAllowance(address spender, address token, uint256 subtractedValue) public virtual nonReentrant returns (bool) {
         uint256 currentAllowance = depositAllowance(msg.sender, spender, token);
         require(currentAllowance >= subtractedValue, "Silo: decreased allowance below zero");
-        _approveDeposit(msg.sender, spender, token, currentAllowance - subtractedValue);
+        _approveDeposit(msg.sender, spender, token, currentAllowance.sub(subtractedValue));
         return true;
     }
 
