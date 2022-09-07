@@ -104,11 +104,14 @@ contract SiloFacet is TokenSilo {
         uint32[] calldata seasons,
         uint256[] calldata amounts
     ) external payable nonReentrant {
-        if (sender != msg.sender) {
-            for (uint256 i = 0; i < amounts.length; i++) {
+        require(amounts.length > 0, "Silo: amounts array is empty");
+        for (uint256 i = 0; i < amounts.length; i++) {
+            require(amounts[i] > 0, "Silo: amount in array is 0");
+            if (sender != msg.sender) {
                 _spendDepositAllowance(sender, msg.sender, token, amounts[i]);
             }
         }
+       
         _update(sender);
         // Need to update the recipient's Silo as well.
         _update(recipient);

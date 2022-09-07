@@ -737,6 +737,21 @@ describe('Silo Token', function () {
   })
 
   describe("Transfer", async function () {
+    describe("reverts", async function() {
+      beforeEach(async function () {
+        await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
+        await this.season.siloSunrise('0')
+        await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
+      })
+
+      it('reverts if the amounts array is empty', async function () {
+        await expect(this.silo.connect(user).transferDeposits(userAddress, user2Address, this.siloToken.address, [], [])).to.revertedWith('Silo: amounts array is empty');
+      })
+
+      it('reverts if the amount in array is 0', async function () {
+        await expect(this.silo.connect(user).transferDeposits(userAddress, user2Address, this.siloToken.address, ['2', '3'], ['100', '0'])).to.revertedWith('Silo: amount in array is 0');
+      })
+    })
     describe("Single", async function () {
       beforeEach(async function () {
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
