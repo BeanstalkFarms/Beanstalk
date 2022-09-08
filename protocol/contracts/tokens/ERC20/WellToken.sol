@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import "./BeanstalkERC20.sol";
 
-contract WellERC20 is BeanstalkERC20 {
+contract WellToken is BeanstalkERC20 {
     string constant nameSuffix = " Well";
     string constant symbolSuffix = "wl";
 

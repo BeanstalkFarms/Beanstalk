@@ -30,7 +30,7 @@ contract CurveFacet is ReentrancyGuard {
     using LibBalance for address payable;
     using LibApprove for IERC20;
 
-    function exchange(
+    function curve_exchange(
         address pool,
         address registry,
         address fromToken,
@@ -65,7 +65,7 @@ contract CurveFacet is ReentrancyGuard {
         }
     }
 
-    function exchangeUnderlying(
+    function curve_exchangeUnderlying(
         address pool,
         address fromToken,
         address toToken,
@@ -97,7 +97,7 @@ contract CurveFacet is ReentrancyGuard {
         }
     }
 
-    function addLiquidity(
+    function curve_addLiquidity(
         address pool,
         address registry,
         uint256[] memory amounts,
@@ -156,7 +156,7 @@ contract CurveFacet is ReentrancyGuard {
             msg.sender.increaseInternalBalance(IERC20(pool), amountOut);
     }
 
-    function removeLiquidity(
+    function curve_removeLiquidity(
         address pool,
         address registry,
         uint256 amountIn,
@@ -233,7 +233,7 @@ contract CurveFacet is ReentrancyGuard {
         }
     }
 
-function removeLiquidityImbalance(
+function curve_removeLiquidityImbalance(
     address pool,
     address registry,
     uint256[] calldata amountsOut,
@@ -303,7 +303,7 @@ function removeLiquidityImbalance(
         }
     }
 
-    function removeLiquidityOneToken(
+    function curve_removeLiquidityOneToken(
         address pool,
         address registry,
         address toToken,

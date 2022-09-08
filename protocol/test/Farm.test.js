@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { to18, to6, toStalk } = require('./utils/helpers.js')
-const { BEAN, USDT, WETH, CURVE_REGISTRY, CRYPTO_REGISTRY, THREE_POOL, TRI_CRYPTO, TRI_CRYPTO_POOL, THREE_CURVE, BEAN_3_CURVE, USDC, WBTC, DAI, LUSD_3_CURVE, LUSD, CRYPTO_FACTORY } = require('./utils/constants')
+const { BEAN, USDT, WETH, CURVE_REGISTRY, CRYPTO_REGISTRY, THREE_POOL, TRI_CRYPTO, TRI_CRYPTO_POOL, THREE_CURVE, BEAN_3_CURVE, USDC, WBTC, DAI, LUSD_3_CURVE, LUSD, CRYPTO_FACTORY, STABLE_FACTORY } = require('./utils/constants')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
 let user, user2, owner;
@@ -97,7 +97,7 @@ describe('Farm', function () {
     describe('Farm Exchange', async function () {
       describe('tri-crypto', async function () {
         it('Wrap Eth, Exchange WETH -> USDT external', async function () {
-          exchange = await this.curve.interface.encodeFunctionData('exchange', [
+          exchange = await this.curve.interface.encodeFunctionData('curve_exchange', [
             TRI_CRYPTO_POOL, // tricrypto2
             CRYPTO_REGISTRY,
             WETH, // WETH
@@ -115,7 +115,7 @@ describe('Farm', function () {
         })
 
         it('wraps Eth and exchanges to usdt internal', async function () {
-          exchange = await this.curve.interface.encodeFunctionData('exchange', [
+          exchange = await this.curve.interface.encodeFunctionData('curve_exchange', [
             TRI_CRYPTO_POOL, // tricrypto2
             CRYPTO_REGISTRY,
             WETH, // WETH
@@ -134,7 +134,7 @@ describe('Farm', function () {
         })
 
         it('Wrap Eth, Exchange WETH -> CRV external', async function () {
-          exchange = await this.curve.interface.encodeFunctionData('exchange', [
+          exchange = await this.curve.interface.encodeFunctionData('curve_exchange', [
             '0x8301AE4fc9c624d1D396cbDAa1ed877821D7C511', // CRV:ETH
             CRYPTO_REGISTRY,
             WETH, // WETH
@@ -157,7 +157,7 @@ describe('Farm', function () {
 
       describe('weth:crv', async function () {
         it('Wrap Eth, Exchange WETH -> CRV internal', async function () {
-          exchange = await this.curve.interface.encodeFunctionData('exchange', [
+          exchange = await this.curve.interface.encodeFunctionData('curve_exchange', [
             '0x8301AE4fc9c624d1D396cbDAa1ed877821D7C511', // CRV:ETH
             CRYPTO_REGISTRY,
             WETH, // WETH
@@ -178,7 +178,7 @@ describe('Farm', function () {
         })
 
         it('Wrap Eth, Exchange WETH -> USDT, Exchange USDT -> USDC', async function () {
-          exchange = await this.curve.interface.encodeFunctionData('exchange', [
+          exchange = await this.curve.interface.encodeFunctionData('curve_exchange', [
             TRI_CRYPTO_POOL, // tricrypto2
             CRYPTO_REGISTRY,
             WETH, // WETH
@@ -189,7 +189,7 @@ describe('Farm', function () {
             INTERNAL
           ])
 
-          exchange2 = await this.curve.interface.encodeFunctionData('exchange', [
+          exchange2 = await this.curve.interface.encodeFunctionData('curve_exchange', [
             THREE_POOL, // tricrypto2
             CURVE_REGISTRY,
             USDT, // WETH
@@ -210,7 +210,7 @@ describe('Farm', function () {
 
     describe("Farm Exchange Underlying", async function () {
       before(async function () {
-        exchange = await this.curve.interface.encodeFunctionData('exchange', [
+        exchange = await this.curve.interface.encodeFunctionData('curve_exchange', [
           TRI_CRYPTO_POOL, // tricrypto2
           CRYPTO_REGISTRY,
           WETH, // WETH
@@ -223,7 +223,7 @@ describe('Farm', function () {
       })
 
       it("Wrap Eth, Exchange WETH -> USDT, Exchange USDT -> LUSD external", async function () {
-        eu = await this.curve.interface.encodeFunctionData('exchangeUnderlying', [
+        eu = await this.curve.interface.encodeFunctionData('curve_exchangeUnderlying', [
           LUSD_3_CURVE,
           USDT,
           LUSD,
@@ -241,7 +241,7 @@ describe('Farm', function () {
       })
 
       it("Wrap Eth, Exchange WETH -> USDT, Exchange USDT -> LUSD internal", async function () {
-        eu = await this.curve.interface.encodeFunctionData('exchangeUnderlying', [
+        eu = await this.curve.interface.encodeFunctionData('curve_exchangeUnderlying', [
           LUSD_3_CURVE,
           USDT,
           LUSD,
@@ -262,7 +262,7 @@ describe('Farm', function () {
 
     describe("Farm Liquidity ", async function () {
       before(async function () {
-        exchange = await this.curve.interface.encodeFunctionData('exchange', [
+        exchange = await this.curve.interface.encodeFunctionData('curve_exchange', [
           TRI_CRYPTO_POOL, // tricrypto2
           CRYPTO_REGISTRY,
           WETH, // WETH
@@ -276,7 +276,7 @@ describe('Farm', function () {
 
       describe("tri-crypto", async function () {
         before(async function () {
-          addLP = await this.curve.interface.encodeFunctionData('addLiquidity', [
+          addLP = await this.curve.interface.encodeFunctionData('curve_addLiquidity', [
             TRI_CRYPTO_POOL, // tricrypto2
             CRYPTO_REGISTRY,
             [0, 0, to18("1")],
@@ -298,7 +298,7 @@ describe('Farm', function () {
         })
 
         it('Wraps Eth, Adds WETH as tri-crypto internal, removes tri-crypto liquidity 1 token to WETH', async function () {
-          removeLP = await this.curve.interface.encodeFunctionData('removeLiquidityOneToken', [
+          removeLP = await this.curve.interface.encodeFunctionData('curve_removeLiquidityOneToken', [
             TRI_CRYPTO_POOL, // tricrypto2
             CRYPTO_REGISTRY,
             WETH,
@@ -318,7 +318,7 @@ describe('Farm', function () {
         })
 
         it('Wraps Eth, Adds WETH as tri-crypto internal, removes tri-crypto liquidity equally', async function () {
-          removeLP = await this.curve.interface.encodeFunctionData('removeLiquidity', [
+          removeLP = await this.curve.interface.encodeFunctionData('curve_removeLiquidity', [
             TRI_CRYPTO_POOL, // tricrypto2
             CRYPTO_REGISTRY,
             '2019589947833455380', // amountInt
@@ -345,7 +345,7 @@ describe('Farm', function () {
         })
 
         it('Wraps Eth, Adds WETH as tri-crypto internal, removes tri-crypto liquidity equally', async function () {
-          removeLP = await this.curve.interface.encodeFunctionData('removeLiquidity', [
+          removeLP = await this.curve.interface.encodeFunctionData('curve_removeLiquidity', [
             TRI_CRYPTO_POOL, // tricrypto2
             CRYPTO_REGISTRY,
             '2019589947833455380', // amountInt
@@ -372,7 +372,7 @@ describe('Farm', function () {
         })
 
         it('Wraps Eth, Adds WETH as tri-crypto internal, removes tri-crypto liquidity imbalance', async function () {
-          removeLPImb = await this.curve.interface.encodeFunctionData('removeLiquidityImbalance', [
+          removeLPImb = await this.curve.interface.encodeFunctionData('curve_removeLiquidityImbalance', [
             TRI_CRYPTO_POOL, // tricrypto2
             CRYPTO_REGISTRY,
             // [to6('1000'), '2500000', to18('0.3')],  // minAmountOut
@@ -391,7 +391,7 @@ describe('Farm', function () {
         before(async function () {
           this.threeCurve = await ethers.getContractAt('IERC20', THREE_CURVE)
 
-          addLP = await this.curve.interface.encodeFunctionData('addLiquidity', [
+          addLP = await this.curve.interface.encodeFunctionData('curve_addLiquidity', [
             THREE_POOL, // 3pool
             CURVE_REGISTRY,
             ["0", "0", "3043205584"],
@@ -411,7 +411,7 @@ describe('Farm', function () {
         })
 
         it('Wraps Eth, Exchange WETH -> USDT, add USDT as 3CRV external', async function () {
-          addLP2 = await this.curve.interface.encodeFunctionData('addLiquidity', [
+          addLP2 = await this.curve.interface.encodeFunctionData('curve_addLiquidity', [
             THREE_POOL, // 3pool
             CURVE_REGISTRY,
             ["0", "0", "3043205584"],
@@ -428,7 +428,7 @@ describe('Farm', function () {
         })
 
         it('Wraps Eth, Exchange WETH -> USDT, add USDT as 3CRV, removes 3CRV equally', async function () {
-          removeLP = await this.curve.interface.encodeFunctionData('removeLiquidity', [
+          removeLP = await this.curve.interface.encodeFunctionData('curve_removeLiquidity', [
             THREE_POOL, // tricrypto2
             CURVE_REGISTRY,
             '2981268357742150365108', // amountIn
@@ -453,7 +453,7 @@ describe('Farm', function () {
         })
 
         it('Wraps Eth, Exchange WETH -> USDT, add USDT as 3CRV, removes 3CRV to USDC', async function () {
-          removeLP = await this.curve.interface.encodeFunctionData('removeLiquidityOneToken', [
+          removeLP = await this.curve.interface.encodeFunctionData('curve_removeLiquidityOneToken', [
             THREE_POOL, // 3pool
             CURVE_REGISTRY,
             DAI,
@@ -471,7 +471,7 @@ describe('Farm', function () {
         })
 
         it('Wraps Eth, Exchange WETH -> USDT, add USDT as 3CRV, removes 3CRV imbalance', async function () {
-          removeLPImb = await this.curve.interface.encodeFunctionData('removeLiquidityImbalance', [
+          removeLPImb = await this.curve.interface.encodeFunctionData('curve_removeLiquidityImbalance', [
             THREE_POOL, // 3pool
             CURVE_REGISTRY,
             [to6('100'), to6('100'), to6('100')],  // minAmountOut

@@ -6,10 +6,11 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./Type/LibWellType.sol";
 
 /**
  * @author Publius
- * @title Lib Well Storage
+ * @title Lib Well Storage defines the Well Storage and corresponding structs.
  **/
 library LibWellStorage {
 
@@ -20,71 +21,81 @@ library LibWellStorage {
         uint256 fromAmount,
         uint256 toAmount
     );
+
     event AddLiquidity(address wellId, uint256[] amounts);
     event RemoveLiquidity(address wellId, uint256[] amounts);
     event RemoveLiquidityOneToken(address wellId, IERC20 token, uint256 amount);
 
-    enum WellType {
-        CONSTANT_PRODUCT
-    }
-
     struct WellInfo {
         address wellId; // Note: wellId is same as token address
         IERC20[] tokens; // list of tokens
-        WellType wellType; // well type
+        LibWellType.WellType wellType; // well type
         bytes typeData; // Params specific to the well type
     }
 
-    // For gas efficiency reasons, Wells with 2 tokens use a different storage struct.
-    // WellState is the state struct for Wells with more than 2 tokens.
-    struct WellState {
-        uint128[] balances; // well balances of each token
-        uint224[] cumulativeBalances; // well balances times time
-        uint32 lastTimestamp; // Last timestamp someone interacted with well
+    /**
+     * Balance is a generic struct for modifying and accessing cumulative balances
+    **/
+    struct Balances {
+        // Current balances
+        uint128[] balances;
+
+        // Exponential Moving Average balances usable for instantaneous oracles
+        uint128[] emaBalances;
+    
+        // cumulative balances usable for time period oracles
+        uint224[] cumulativeBalances;
+
+        // Timestamp the Balance was last updated
+        uint32 timestamp;
     }
 
-    struct CumulativeBalance2 {
-        uint224 cumulativeBalance0; // Cumulative balance of token0 in the Well
-        uint224 cumulativeBalance1; // Cumulative balance of token1 in the Well
-        uint32 timestamp; // Last Timestamp the pool was interacted with
+    /**
+     * B2 is a struct intended for 2 balances in a storage-efficient fashion.
+    **/
+    struct B2 {
+        // Current balances 
+        uint128 balance0;
+        uint128 balance1;
+
+        // Exponential Moving Average balances usable for instantaneous oracles
+        uint128 emaBalance0;
+        uint128 emaBalance1;
+    
+        // cumulative balances usable for time period oracles
+        uint224 cumulativeBalance0;
+        uint224 cumulativeBalance1;
+
+        // Timestamp the Balance was last updated
+        uint32 timestamp;
     }
 
-    // Well2State is the state struct for Wells with exactly 2 tokens.
-    struct Well2State {
-        uint128 balance0; // token balance of token0 in the Well
-        uint128 balance1; // token balance of token1 in the Well
-        CumulativeBalance2 last; // The cumulative balances at the last update
-        CumulativeBalance2 even; // The cumulative balances at the first update after the start of the last even hour.
-        CumulativeBalance2 odd; // The cumulative balances at the first update after the start of the last odd hour.
-    }
+    /**
+     * BN is a struct intended for N balances in a storage-efficient fashion.
+    **/
+    struct BN {
+        // Current balances 
+        uint128[] balances; // array of stored balances
+        
+        // Exponential Moving Average balances usable for instantaneous oracles
+        uint128[] emaBalances;
+    
+        // cumulative balances usable for time period oracles
+        uint224[] cumulativeBalances; // array of cumulative balances
+        uint224 lastCumulativeBalance; // cumulative value of the last balance. Stored separately from the array for gas efficiency
 
-    struct CumulativeBalanceN {
-        uint224[] cumulativeBalances; // well balances times time
-        uint224 lastCumulativeBalance;
-        uint32 timestamp; // Last timestamp someone interacted with well
-    }
-
-        // WellState is the state struct for Wells with more than 2 tokens.
-    struct WellNState {
-        uint128[] balances; // well balances of each token
-        CumulativeBalanceN last; // The cumulative balances at the last update
-        CumulativeBalanceN even; // The cumulative balances at the first update after the start of the last even hour.
-        CumulativeBalanceN odd; // The cumulative balances at the first update after the start of the last odd hour.
-    }
-
-    struct TypeInfo {
-        bool registered; // Whether the type has been registered or not
-        string[] signature; // The typeData signature
+        // Timestamp the Balance was last updated
+        uint32 timestamp; // Last Timestamp the balances were modified
     }
 
     struct WellStorage {
         uint256 numberOfWells; // Total number of wells in Beanstalk
-        mapping(WellType => TypeInfo) wt; // Well type info
+        mapping(LibWellType.WellType => bool) registered; // Well type info
         mapping(uint256 => address) indices; // Stores a mapping from index to id. Only used in view functions.
         mapping(address => WellInfo) wi; // Stores a mapping from id to well info. Only used in view functions.
         mapping(address => bytes32) wh; // Stores a mapping from id to hash. Only used in view functions.
-        mapping(bytes32 => Well2State) w2s; // Stores a mapping from hash to state.
-        mapping(bytes32 => WellNState) wNs; // Stores a mapping from hash to state.
+        mapping(bytes32 => B2) w2s; // Stores a mapping from hash to 2 token well state.
+        mapping(bytes32 => BN) wNs; // Stores a mapping from hash to state.
     }
 
     function wellStorage() internal pure returns (WellStorage storage s) {
@@ -94,10 +105,14 @@ library LibWellStorage {
         }
     }
 
+    function wellInfo(address wellId) internal view returns (WellInfo storage wi) {
+        wi = wellStorage().wi[wellId];
+    }
+
     function wellNState(WellInfo calldata w)
         internal
         view
-        returns (WellNState storage ws)
+        returns (BN storage ws)
     {
         ws = wellStorage().wNs[computeWellHash(w)];
     }
@@ -105,9 +120,17 @@ library LibWellStorage {
     function well2State(WellInfo calldata w)
         internal
         view
-        returns (Well2State storage ws)
+        returns (B2 storage ws)
     {
         ws = wellStorage().w2s[computeWellHash(w)];
+    }
+
+    function wellHash(address wellId)
+        internal
+        view
+        returns (bytes32 wellHash)
+    {
+        wellHash = LibWellStorage.wellStorage().wh[wellId];
     }
 
     // Well storage is indexed by the hash of the WellInfo struct.
@@ -119,9 +142,5 @@ library LibWellStorage {
         wellHash = keccak256(
             abi.encodePacked(w.wellId, w.tokens, w.wellType, w.typeData)
         );
-    }
-
-    function isWell2(IERC20[] calldata tokens) internal pure returns (bool) {
-        return tokens.length == 2;
     }
 }

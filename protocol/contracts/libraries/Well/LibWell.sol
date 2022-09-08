@@ -7,11 +7,12 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../C.sol";
+import "./Type/LibWellType.sol";
+import "./Balance/LibWellBalance.sol";
 import "./LibWellStorage.sol";
 import "../LibSafeMath128.sol";
-import "../../tokens/ERC20/WellERC20.sol";
-import "./Well2/LibWell2.sol";
-import "./WellN/LibWellN.sol";
+import "../../tokens/ERC20/WellToken.sol";
+import "../Token/LibTransfer.sol";
 
 /**
  * @author Publius
@@ -20,32 +21,6 @@ import "./WellN/LibWellN.sol";
 library LibWell {
     using SafeMath for uint256;
     using LibSafeMath128 for uint128;
-
-    event RegisterWellType(LibWellStorage.WellType wellType, string[] parameterTypes);
-    event CreateWell(
-        address wellId,
-        IERC20[] tokens,
-        LibWellStorage.WellType wellType,
-        bytes typeData,
-        bytes32 wellHash
-    );
-    event UpdateWell(
-        address wellId,
-        LibWellStorage.WellType newWellType,
-        bytes newTypeData,
-        bytes32 oldWellHash,
-        bytes32 newWellHash
-    );
-    event Swap(
-        address wellId,
-        IERC20 fromToken,
-        IERC20 toToken,
-        uint256 fromAmount,
-        uint256 toAmount
-    );
-    event AddLiquidity(address wellId, uint256[] amounts);
-    event RemoveLiquidity(address wellId, uint256[] amounts);
-    event RemoveLiquidityOneToken(address wellId, IERC20 token, uint256 amount);
 
     /**
      * Swap
@@ -57,11 +32,11 @@ library LibWell {
         IERC20 jToken,
         int256 dx
     ) internal view returns (int256 dy) {
-        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.getSwap(w, iToken, jToken, dx);
-        return LibWellN.getSwap(w, iToken, jToken, dx);
+        uint128[] memory balances = LibWellBalance.getBalances(w);
+        (uint256 i, uint256 j) = getIJ(w.tokens, iToken, jToken);
+        (, dy) = _getSwap(w.wellType, w.typeData, balances, i, j, dx);
     }
 
-    // By using a negative dx and 
     function swap(
         LibWellStorage.WellInfo calldata w,
         IERC20 iToken,
@@ -69,8 +44,41 @@ library LibWell {
         int256 dx,
         int256 minDy
     ) internal returns (int256 dy) {
-        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.swap(w, iToken, jToken, dx, minDy);
-        return LibWellN.swap(w, iToken, jToken, dx, minDy);
+        bytes32 wh = LibWellStorage.computeWellHash(w);
+        uint128[] memory balances = LibWellBalance.getBalancesWithHash(w, wh);
+        (uint256 i, uint256 j) = getIJ(w.tokens, iToken, jToken);
+        (balances, dy) = _getSwap(
+            w.wellType,
+            w.typeData,
+            balances,
+            i,
+            j,
+            dx
+        );
+        LibWellBalance.setBalances(wh, balances);
+        require(dy >= minDy, "LibWell: too much slippage.");
+        if (dx < 0)
+            emit LibWellStorage.Swap(w.wellId, jToken, iToken, uint256(-dy), uint256(-dx));
+        else
+            emit LibWellStorage.Swap(w.wellId, iToken, jToken, uint256(dx), uint256(dy));
+    }
+
+    function _getSwap(
+        LibWellType.WellType wellType,
+        bytes calldata typeData,
+        uint128[] memory balances,
+        uint256 i,
+        uint256 j,
+        int256 dx
+    ) private pure returns (uint128[] memory, int256) {
+        uint256 d = LibWellType.getD(wellType, typeData, balances);
+        balances[i] = dx > 0
+            ? balances[i].add(uint128(dx))
+            : balances[i].sub(uint128(-dx));
+        uint256 yBefore = balances[j];
+        balances[j] = LibWellType.getX(wellType, typeData, j, balances, d);
+        int256 dy = int256(yBefore) - int256(balances[j]);
+        return (balances, dy);
     }
 
     /**
@@ -84,8 +92,17 @@ library LibWell {
         address recipient,
         LibTransfer.To toMode
     ) internal returns (uint256 amountOut) {
-        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.addLiquidity(w, amounts, minAmountOut, recipient, toMode);
-        return LibWellN.addLiquidity(w, amounts, minAmountOut, recipient, toMode);
+        bytes32 wh = LibWellStorage.computeWellHash(w);
+        uint128[] memory balances = LibWellBalance.getBalancesWithHash(w, wh);
+        uint256 d1 = LibWellType.getD(w.wellType, w.typeData, balances);
+        for (uint256 i; i < w.tokens.length; ++i)
+            balances[i] = balances[i].add(uint128(amounts[i])); // Check 
+        LibWellBalance.setBalances(wh, balances);
+        uint256 d2 = LibWellType.getD(w.wellType, w.typeData, balances);
+        amountOut = d2.sub(d1);
+        require(amountOut >= minAmountOut, "LibWell: Not enough LP.");
+        LibTransfer.mintToken(IBean(w.wellId), amountOut, recipient, toMode);
+        emit LibWellStorage.AddLiquidity(w.wellId, amounts);
     }
 
     function getAddLiquidityOut(LibWellStorage.WellInfo calldata w, uint256[] memory amounts)
@@ -93,8 +110,12 @@ library LibWell {
         view
         returns (uint256 amountOut)
     {
-        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.getAddLiquidityOut(w, amounts);
-        return LibWellN.getAddLiquidityOut(w, amounts);
+        uint128[] memory balances = LibWellBalance.getBalances(w);
+        uint256 d1 = LibWellType.getD(w.wellType, w.typeData, balances);
+        for (uint256 i; i < w.tokens.length; ++i)
+            balances[i] = balances[i].add(uint128(amounts[i]));
+        uint256 d2 = LibWellType.getD(w.wellType, w.typeData, balances);
+        amountOut = d2.sub(d1);
     }
 
     /**
@@ -108,8 +129,21 @@ library LibWell {
         address recipient,
         LibTransfer.From fromMode
     ) internal returns (uint256[] memory tokenAmountsOut) {
-        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.removeLiquidity(w, lpAmountIn, minTokenAmountsOut, recipient, fromMode);
-        return LibWellN.removeLiquidity(w, lpAmountIn, minTokenAmountsOut, recipient, fromMode);
+        bytes32 wh = LibWellStorage.computeWellHash(w);
+        uint128[] memory balances = LibWellBalance.getBalancesWithHash(w, wh);
+        uint256 d = LibWellType.getD(w.wellType, w.typeData, balances);
+        tokenAmountsOut = new uint256[](w.tokens.length);
+        lpAmountIn = LibTransfer.burnToken(IBean(w.wellId), lpAmountIn, recipient, fromMode);
+        for (uint256 i; i < w.tokens.length; ++i) {
+            tokenAmountsOut[i] = lpAmountIn.mul(balances[i]).div(d); // Downcasting ok because lpAmountIn <= d
+            balances[i] = balances[i].sub(uint128(tokenAmountsOut[i]));
+            require(
+                tokenAmountsOut[i] >= minTokenAmountsOut[i],
+                "LibWell: Not enough out."
+            );
+        }
+        LibWellBalance.setBalances(wh, balances);
+        emit LibWellStorage.RemoveLiquidity(w.wellId, tokenAmountsOut);
     }
 
     function getRemoveLiquidityOut(LibWellStorage.WellInfo calldata w, uint256 lpAmountIn)
@@ -117,13 +151,17 @@ library LibWell {
         view
         returns (uint256[] memory tokenAmountsOut)
     {
-        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.getRemoveLiquidityOut(w, lpAmountIn);
-        return LibWellN.getRemoveLiquidityOut(w, lpAmountIn);
+        uint128[] memory balances = LibWellBalance.getBalances(w);
+        uint256 d = LibWellType.getD(w.wellType, w.typeData, balances);
+        tokenAmountsOut = new uint256[](w.tokens.length);
+        for (uint256 i; i < w.tokens.length; ++i) {
+            tokenAmountsOut[i] = lpAmountIn.mul(balances[i]).div(d);
+        }
     }
 
-    // /**
-    //  * Remove Liquidity One Token
-    //  **/
+    /**
+     * Remove Liquidity One Token
+     **/
 
     function removeLiquidityOneToken(
         LibWellStorage.WellInfo calldata w,
@@ -133,8 +171,16 @@ library LibWell {
         address recipient,
         LibTransfer.From fromMode
     ) internal returns (uint256 tokenAmountOut) {
-        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.removeLiquidityOneToken(w, token, lpAmountIn, minTokenAmountOut, recipient, fromMode);
-        return LibWellN.removeLiquidityOneToken(w, token, lpAmountIn, minTokenAmountOut, recipient, fromMode);
+        bytes32 wh = LibWellStorage.computeWellHash(w);
+        uint128[] memory balances = LibWellBalance.getBalancesWithHash(w, wh);
+        uint128 y;
+        uint256 i = getI(w.tokens, token);
+        lpAmountIn = LibTransfer.burnToken(IBean(w.wellId), lpAmountIn, recipient, fromMode);
+        (tokenAmountOut, y) = _getRemoveLiquidityOneTokenOut(w, balances, i, lpAmountIn);
+        require(tokenAmountOut >= minTokenAmountOut, "LibWell: out too low.");
+        balances[i] = y;
+        LibWellBalance.setBalances(wh, balances); // should we just set 1?
+        emit LibWellStorage.RemoveLiquidityOneToken(w.wellId, token, tokenAmountOut);
     }
 
     function getRemoveLiquidityOneTokenOut(
@@ -142,8 +188,21 @@ library LibWell {
         IERC20 token,
         uint256 lpAmountIn
     ) internal view returns (uint256 tokenAmountOut) {
-        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.getRemoveLiquidityOneTokenOut(w, token, lpAmountIn);
-        return LibWellN.getRemoveLiquidityOneTokenOut(w, token, lpAmountIn);
+        uint128[] memory balances = LibWellBalance.getBalances(w);
+        uint256 i = getI(w.tokens, token);
+        (tokenAmountOut, ) = _getRemoveLiquidityOneTokenOut(w, balances, i, lpAmountIn);
+    }
+
+    function _getRemoveLiquidityOneTokenOut(
+        LibWellStorage.WellInfo calldata w,
+        uint128[] memory balances,
+        uint256 i,
+        uint256 lpAmountIn
+    ) private pure returns (uint256 tokenAmountOut, uint128 y) {
+        uint256 d = LibWellType.getD(w.wellType, w.typeData, balances);
+        d = d.sub(lpAmountIn, "LibWell: too much LP");
+        y = LibWellType.getX(w.wellType, w.typeData, i, balances, d);
+        tokenAmountOut = balances[i].sub(y);
     }
 
     /**
@@ -157,25 +216,57 @@ library LibWell {
         address recipient,
         LibTransfer.From fromMode
     ) internal returns (uint256 lpAmountIn) {
-        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.removeLiquidityImbalanced(w, maxLPAmountIn, tokenAmountsOut, recipient, fromMode);
-        return LibWellN.removeLiquidityImbalanced(w, maxLPAmountIn, tokenAmountsOut, recipient, fromMode);
+        require(fromMode <= LibTransfer.From.INTERNAL_TOLERANT, "Internal tolerant mode not supported");
+        bytes32 wh = LibWellStorage.computeWellHash(w);
+        uint128[] memory balances = LibWellBalance.getBalancesWithHash(w, wh);
+        (lpAmountIn, balances) = _getRemoveLiquidityImbalanced(w, balances, tokenAmountsOut);
+        LibWellBalance.setBalances(wh, balances);
+        require(lpAmountIn <= maxLPAmountIn, "LibWell: in too high.");
+        LibTransfer.burnToken(IBean(w.wellId), lpAmountIn, recipient, fromMode);
+        emit LibWellStorage.RemoveLiquidity(w.wellId, tokenAmountsOut);
     }
 
     function getRemoveLiquidityImbalanced(
         LibWellStorage.WellInfo calldata w,
         uint256[] calldata tokenAmountsOut
     ) internal view returns (uint256 lpAmountIn) {
-        if (LibWellStorage.isWell2(w.tokens)) return LibWell2.getRemoveLiquidityImbalanced(w, tokenAmountsOut);
-        return LibWellN.getRemoveLiquidityImbalanced(w, tokenAmountsOut);
+        uint128[] memory balances = LibWellBalance.getBalances(w);
+        (lpAmountIn, ) = _getRemoveLiquidityImbalanced(w, balances, tokenAmountsOut);
     }
 
-    function getD(
-        LibWellStorage.WellType wellType,
-        bytes memory typeData,
-        uint128[] memory balances
-    ) internal pure returns (uint256) {
-        if (balances.length == 2) 
-            return LibWell2.getD(wellType, typeData, uint112(balances[0]), uint112(balances[1]));
-        return LibWellN.getD(wellType, typeData, balances);
+    function _getRemoveLiquidityImbalanced(
+        LibWellStorage.WellInfo calldata w,
+        uint128[] memory balances,
+        uint256[] calldata tokenAmountsOut
+    ) private pure returns (uint256, uint128[] memory) {
+        uint256 d1 = LibWellType.getD(w.wellType, w.typeData, balances);
+        for (uint i; i < w.tokens.length; ++i) {
+            balances[i] = balances[i].sub(uint128(tokenAmountsOut[i]));
+        }
+        uint256 d2 = LibWellType.getD(w.wellType, w.typeData, balances);
+        return (d1.sub(d2), balances);
+    }
+
+    /**
+     * Token Indices
+     **/
+
+    function getIJ(
+        IERC20[] memory tokens,
+        IERC20 fromToken,
+        IERC20 toToken
+    ) private pure returns (uint256 from, uint256 to) {
+        for (uint i; i < tokens.length; ++i) {
+            if (fromToken == tokens[i]) from = i;
+            else if (toToken == tokens[i]) to = i;
+        }
+    }
+
+    function getI(
+        IERC20[] memory tokens,
+        IERC20 token
+    ) private pure returns (uint256 from) {
+        for (uint i; i < tokens.length; ++i)
+            if (token == tokens[i]) return i;
     }
 }

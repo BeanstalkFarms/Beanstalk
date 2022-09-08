@@ -18,7 +18,7 @@ contract WellBuildingFacet is ReentrancyGuard {
 
     function buildWell(
         IERC20[] calldata tokens,
-         LibWellStorage.WellType wellType,
+        LibWellType.WellType wellType,
         bytes calldata typeData,
         string[] calldata symbols
     ) external returns (address wellId) {
@@ -27,32 +27,23 @@ contract WellBuildingFacet is ReentrancyGuard {
 
     function modifyWell(
          LibWellStorage.WellInfo calldata p,
-         LibWellStorage.WellType newWellType,
+         LibWellType.WellType newWellType,
         bytes calldata newTypeData
     ) external {
         LibDiamond.enforceIsContractOwner();
         LibWellBuilding.modifyWell(p, newWellType, newTypeData);
     }
 
-    function registerWellType(
-         LibWellStorage.WellType newWellType,
-        string[] calldata typeParameters
-    ) external {
-        LibDiamond.enforceIsContractOwner();
-        LibWellBuilding.registerWellType(newWellType, typeParameters);
-    }
-
     function getWellTypeSignature(
-         LibWellStorage.WellType wellType
-    ) external view returns (string[] memory signature) {
-         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage(); 
-        signature = s.wt[wellType].signature;
+        LibWellType.WellType wellType
+    ) external pure returns (string[] memory signature) {
+        signature = LibWellType.getSignature(wellType);
     }
 
     function isWellTypeRegistered(
-         LibWellStorage.WellType wellType
+        LibWellType.WellType wellType
     ) external view returns (bool registered) {
-         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage(); 
-        registered = s.wt[wellType].registered;
+        LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage(); 
+        registered = s.registered[wellType];
     }
 }

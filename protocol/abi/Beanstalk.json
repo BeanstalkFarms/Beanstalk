@@ -282,7 +282,7 @@
                 "type": "uint8"
             }
         ],
-        "name": "addLiquidityCurve",
+        "name": "curve_addLiquidity",
         "outputs": [],
         "stateMutability": "payable",
         "type": "function"
@@ -330,7 +330,7 @@
                 "type": "uint8"
             }
         ],
-        "name": "exchange",
+        "name": "curve_exchange",
         "outputs": [],
         "stateMutability": "payable",
         "type": "function"
@@ -373,7 +373,7 @@
                 "type": "uint8"
             }
         ],
-        "name": "exchangeUnderlying",
+        "name": "curve_exchangeUnderlying",
         "outputs": [],
         "stateMutability": "payable",
         "type": "function"
@@ -411,7 +411,7 @@
                 "type": "uint8"
             }
         ],
-        "name": "removeLiquidityCurve",
+        "name": "curve_removeLiquidity",
         "outputs": [],
         "stateMutability": "payable",
         "type": "function"
@@ -449,7 +449,7 @@
                 "type": "uint8"
             }
         ],
-        "name": "removeLiquidityImbalanceCurve",
+        "name": "curve_removeLiquidityImbalance",
         "outputs": [],
         "stateMutability": "payable",
         "type": "function"
@@ -492,7 +492,7 @@
                 "type": "uint8"
             }
         ],
-        "name": "removeLiquidityOneTokenCurve",
+        "name": "curve_removeLiquidityOneToken",
         "outputs": [],
         "stateMutability": "payable",
         "type": "function"
@@ -4489,7 +4489,7 @@
                 "type": "address[]"
             },
             {
-                "internalType": "enum LibWellStorage.WellType",
+                "internalType": "enum LibWellType.WellType",
                 "name": "wellType",
                 "type": "uint8"
             },
@@ -4518,7 +4518,7 @@
     {
         "inputs": [
             {
-                "internalType": "enum LibWellStorage.WellType",
+                "internalType": "enum LibWellType.WellType",
                 "name": "wellType",
                 "type": "uint8"
             }
@@ -4531,13 +4531,13 @@
                 "type": "string[]"
             }
         ],
-        "stateMutability": "view",
+        "stateMutability": "pure",
         "type": "function"
     },
     {
         "inputs": [
             {
-                "internalType": "enum LibWellStorage.WellType",
+                "internalType": "enum LibWellType.WellType",
                 "name": "wellType",
                 "type": "uint8"
             }
@@ -4568,7 +4568,7 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellStorage.WellType",
+                        "internalType": "enum LibWellType.WellType",
                         "name": "wellType",
                         "type": "uint8"
                     },
@@ -4583,7 +4583,7 @@
                 "type": "tuple"
             },
             {
-                "internalType": "enum LibWellStorage.WellType",
+                "internalType": "enum LibWellType.WellType",
                 "name": "newWellType",
                 "type": "uint8"
             },
@@ -4594,24 +4594,6 @@
             }
         ],
         "name": "modifyWell",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "enum LibWellStorage.WellType",
-                "name": "newWellType",
-                "type": "uint8"
-            },
-            {
-                "internalType": "string[]",
-                "name": "typeParameters",
-                "type": "string[]"
-            }
-        ],
-        "name": "registerWellType",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -4631,7 +4613,7 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellStorage.WellType",
+                        "internalType": "enum LibWellType.WellType",
                         "name": "wellType",
                         "type": "uint8"
                     },
@@ -4642,13 +4624,13 @@
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
-                "name": "p",
+                "name": "w",
                 "type": "tuple"
             },
             {
-                "internalType": "uint128[]",
+                "internalType": "uint256[]",
                 "name": "tokenAmounts",
-                "type": "uint128[]"
+                "type": "uint256[]"
             },
             {
                 "internalType": "uint256",
@@ -4692,7 +4674,7 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellStorage.WellType",
+                        "internalType": "enum LibWellType.WellType",
                         "name": "wellType",
                         "type": "uint8"
                     },
@@ -4733,7 +4715,7 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellStorage.WellType",
+                        "internalType": "enum LibWellType.WellType",
                         "name": "wellType",
                         "type": "uint8"
                     },
@@ -4744,13 +4726,13 @@
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
-                "name": "p",
+                "name": "w",
                 "type": "tuple"
             },
             {
-                "internalType": "uint128[]",
+                "internalType": "uint256[]",
                 "name": "tokenAmounts",
-                "type": "uint128[]"
+                "type": "uint256[]"
             }
         ],
         "name": "getAddLiquidityOut",
@@ -4772,50 +4754,36 @@
                 "type": "address"
             }
         ],
-        "name": "getK",
+        "name": "getCumulativeBalances",
         "outputs": [
             {
-                "internalType": "uint256",
-                "name": "k",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "wellId",
-                "type": "address"
-            }
-        ],
-        "name": "getLastCumulativeBalances",
-        "outputs": [
-            {
-                "internalType": "uint256[]",
+                "internalType": "uint224[]",
                 "name": "cumulativeBalances",
-                "type": "uint256[]"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "wellId",
-                "type": "address"
-            }
-        ],
-        "name": "getLastTimestamp",
-        "outputs": [
+                "type": "uint224[]"
+            },
             {
                 "internalType": "uint32",
                 "name": "lastTimestamp",
                 "type": "uint32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            }
+        ],
+        "name": "getD",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "d",
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",
@@ -4836,7 +4804,7 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellStorage.WellType",
+                        "internalType": "enum LibWellType.WellType",
                         "name": "wellType",
                         "type": "uint8"
                     },
@@ -4847,13 +4815,13 @@
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
-                "name": "p",
+                "name": "w",
                 "type": "tuple"
             },
             {
-                "internalType": "uint128[]",
+                "internalType": "uint256[]",
                 "name": "amountsOut",
-                "type": "uint128[]"
+                "type": "uint256[]"
             }
         ],
         "name": "getRemoveLiquidityImbalancedIn",
@@ -4882,7 +4850,7 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellStorage.WellType",
+                        "internalType": "enum LibWellType.WellType",
                         "name": "wellType",
                         "type": "uint8"
                     },
@@ -4893,7 +4861,7 @@
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
-                "name": "p",
+                "name": "w",
                 "type": "tuple"
             },
             {
@@ -4933,7 +4901,7 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellStorage.WellType",
+                        "internalType": "enum LibWellType.WellType",
                         "name": "wellType",
                         "type": "uint8"
                     },
@@ -4944,7 +4912,7 @@
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
-                "name": "p",
+                "name": "w",
                 "type": "tuple"
             },
             {
@@ -4956,9 +4924,9 @@
         "name": "getRemoveLiquidityOut",
         "outputs": [
             {
-                "internalType": "uint128[]",
+                "internalType": "uint256[]",
                 "name": "tokenAmountsOut",
-                "type": "uint128[]"
+                "type": "uint256[]"
             }
         ],
         "stateMutability": "view",
@@ -4979,7 +4947,7 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellStorage.WellType",
+                        "internalType": "enum LibWellType.WellType",
                         "name": "wellType",
                         "type": "uint8"
                     },
@@ -4990,7 +4958,7 @@
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
-                "name": "p",
+                "name": "w",
                 "type": "tuple"
             },
             {
@@ -5035,7 +5003,7 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellStorage.WellType",
+                        "internalType": "enum LibWellType.WellType",
                         "name": "wellType",
                         "type": "uint8"
                     },
@@ -5046,7 +5014,7 @@
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
-                "name": "p",
+                "name": "w",
                 "type": "tuple"
             },
             {
@@ -5118,7 +5086,7 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellStorage.WellType",
+                        "internalType": "enum LibWellType.WellType",
                         "name": "wellType",
                         "type": "uint8"
                     },
@@ -5140,24 +5108,85 @@
                         "type": "uint128[]"
                     },
                     {
-                        "internalType": "uint256[]",
+                        "internalType": "uint128[]",
+                        "name": "emaBalances",
+                        "type": "uint128[]"
+                    },
+                    {
+                        "internalType": "uint224[]",
                         "name": "cumulativeBalances",
-                        "type": "uint256[]"
+                        "type": "uint224[]"
                     },
                     {
                         "internalType": "uint32",
-                        "name": "lastTimestamp",
+                        "name": "timestamp",
                         "type": "uint32"
                     }
                 ],
-                "internalType": "struct LibWellStorage.WellState",
+                "internalType": "struct LibWellStorage.Balances",
                 "name": "state",
                 "type": "tuple"
             },
             {
                 "internalType": "uint256",
-                "name": "lpSupply",
+                "name": "d",
                 "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "wellHash",
+                "type": "bytes32"
+            }
+        ],
+        "name": "getWell2StateFromHash",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint128",
+                        "name": "balance0",
+                        "type": "uint128"
+                    },
+                    {
+                        "internalType": "uint128",
+                        "name": "balance1",
+                        "type": "uint128"
+                    },
+                    {
+                        "internalType": "uint128",
+                        "name": "emaBalance0",
+                        "type": "uint128"
+                    },
+                    {
+                        "internalType": "uint128",
+                        "name": "emaBalance1",
+                        "type": "uint128"
+                    },
+                    {
+                        "internalType": "uint224",
+                        "name": "cumulativeBalance0",
+                        "type": "uint224"
+                    },
+                    {
+                        "internalType": "uint224",
+                        "name": "cumulativeBalance1",
+                        "type": "uint224"
+                    },
+                    {
+                        "internalType": "uint32",
+                        "name": "timestamp",
+                        "type": "uint32"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.B2",
+                "name": "state",
+                "type": "tuple"
             }
         ],
         "stateMutability": "view",
@@ -5186,7 +5215,7 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellStorage.WellType",
+                        "internalType": "enum LibWellType.WellType",
                         "name": "wellType",
                         "type": "uint8"
                     },
@@ -5208,23 +5237,28 @@
                         "type": "uint128[]"
                     },
                     {
-                        "internalType": "uint256[]",
+                        "internalType": "uint128[]",
+                        "name": "emaBalances",
+                        "type": "uint128[]"
+                    },
+                    {
+                        "internalType": "uint224[]",
                         "name": "cumulativeBalances",
-                        "type": "uint256[]"
+                        "type": "uint224[]"
                     },
                     {
                         "internalType": "uint32",
-                        "name": "lastTimestamp",
+                        "name": "timestamp",
                         "type": "uint32"
                     }
                 ],
-                "internalType": "struct LibWellStorage.WellState",
+                "internalType": "struct LibWellStorage.Balances",
                 "name": "state",
                 "type": "tuple"
             },
             {
                 "internalType": "uint256",
-                "name": "lpSupply",
+                "name": "d",
                 "type": "uint256"
             }
         ],
@@ -5240,6 +5274,25 @@
             }
         ],
         "name": "getWellBalances",
+        "outputs": [
+            {
+                "internalType": "uint128[]",
+                "name": "balances",
+                "type": "uint128[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            }
+        ],
+        "name": "getWellEmaBalances",
         "outputs": [
             {
                 "internalType": "uint128[]",
@@ -5311,7 +5364,7 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellStorage.WellType",
+                        "internalType": "enum LibWellType.WellType",
                         "name": "wellType",
                         "type": "uint8"
                     },
@@ -5323,6 +5376,52 @@
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
                 "name": "info",
+                "type": "tuple"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "wellHash",
+                "type": "bytes32"
+            }
+        ],
+        "name": "getWellNStateFromHash",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint128[]",
+                        "name": "balances",
+                        "type": "uint128[]"
+                    },
+                    {
+                        "internalType": "uint128[]",
+                        "name": "emaBalances",
+                        "type": "uint128[]"
+                    },
+                    {
+                        "internalType": "uint224[]",
+                        "name": "cumulativeBalances",
+                        "type": "uint224[]"
+                    },
+                    {
+                        "internalType": "uint224",
+                        "name": "lastCumulativeBalance",
+                        "type": "uint224"
+                    },
+                    {
+                        "internalType": "uint32",
+                        "name": "timestamp",
+                        "type": "uint32"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.BN",
+                "name": "state",
                 "type": "tuple"
             }
         ],
@@ -5347,17 +5446,22 @@
                         "type": "uint128[]"
                     },
                     {
-                        "internalType": "uint256[]",
+                        "internalType": "uint128[]",
+                        "name": "emaBalances",
+                        "type": "uint128[]"
+                    },
+                    {
+                        "internalType": "uint224[]",
                         "name": "cumulativeBalances",
-                        "type": "uint256[]"
+                        "type": "uint224[]"
                     },
                     {
                         "internalType": "uint32",
-                        "name": "lastTimestamp",
+                        "name": "timestamp",
                         "type": "uint32"
                     }
                 ],
-                "internalType": "struct LibWellStorage.WellState",
+                "internalType": "struct LibWellStorage.Balances",
                 "name": "state",
                 "type": "tuple"
             }
@@ -5383,22 +5487,51 @@
                         "type": "uint128[]"
                     },
                     {
-                        "internalType": "uint256[]",
+                        "internalType": "uint128[]",
+                        "name": "emaBalances",
+                        "type": "uint128[]"
+                    },
+                    {
+                        "internalType": "uint224[]",
                         "name": "cumulativeBalances",
-                        "type": "uint256[]"
+                        "type": "uint224[]"
                     },
                     {
                         "internalType": "uint32",
-                        "name": "lastTimestamp",
+                        "name": "timestamp",
                         "type": "uint32"
                     }
                 ],
-                "internalType": "struct LibWellStorage.WellState",
+                "internalType": "struct LibWellStorage.Balances",
                 "name": "state",
                 "type": "tuple"
             }
         ],
         "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "x",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "y",
+                "type": "uint256"
+            }
+        ],
+        "name": "powu",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "pure",
         "type": "function"
     },
     {
@@ -5416,7 +5549,7 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellStorage.WellType",
+                        "internalType": "enum LibWellType.WellType",
                         "name": "wellType",
                         "type": "uint8"
                     },
@@ -5427,7 +5560,7 @@
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
-                "name": "p",
+                "name": "w",
                 "type": "tuple"
             },
             {
@@ -5436,9 +5569,9 @@
                 "type": "uint256"
             },
             {
-                "internalType": "uint128[]",
+                "internalType": "uint256[]",
                 "name": "minTokenAmountsOut",
-                "type": "uint128[]"
+                "type": "uint256[]"
             },
             {
                 "internalType": "enum LibTransfer.From",
@@ -5454,9 +5587,9 @@
         "name": "removeLiquidity",
         "outputs": [
             {
-                "internalType": "uint128[]",
+                "internalType": "uint256[]",
                 "name": "tokenAmountsOut",
-                "type": "uint128[]"
+                "type": "uint256[]"
             }
         ],
         "stateMutability": "payable",
@@ -5477,7 +5610,7 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellStorage.WellType",
+                        "internalType": "enum LibWellType.WellType",
                         "name": "wellType",
                         "type": "uint8"
                     },
@@ -5488,7 +5621,7 @@
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
-                "name": "p",
+                "name": "w",
                 "type": "tuple"
             },
             {
@@ -5497,9 +5630,9 @@
                 "type": "uint256"
             },
             {
-                "internalType": "uint128[]",
+                "internalType": "uint256[]",
                 "name": "tokenAmountsOut",
-                "type": "uint128[]"
+                "type": "uint256[]"
             },
             {
                 "internalType": "enum LibTransfer.From",
@@ -5538,7 +5671,7 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellStorage.WellType",
+                        "internalType": "enum LibWellType.WellType",
                         "name": "wellType",
                         "type": "uint8"
                     },
@@ -5549,7 +5682,7 @@
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
-                "name": "p",
+                "name": "w",
                 "type": "tuple"
             },
             {
@@ -5581,9 +5714,9 @@
         "name": "removeLiquidityOneToken",
         "outputs": [
             {
-                "internalType": "uint128",
+                "internalType": "uint256",
                 "name": "tokenAmountOut",
-                "type": "uint128"
+                "type": "uint256"
             }
         ],
         "stateMutability": "payable",
@@ -5604,7 +5737,7 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellStorage.WellType",
+                        "internalType": "enum LibWellType.WellType",
                         "name": "wellType",
                         "type": "uint8"
                     },
@@ -5615,7 +5748,7 @@
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
-                "name": "p",
+                "name": "w",
                 "type": "tuple"
             },
             {
@@ -5675,7 +5808,7 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellStorage.WellType",
+                        "internalType": "enum LibWellType.WellType",
                         "name": "wellType",
                         "type": "uint8"
                     },
@@ -5686,7 +5819,7 @@
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
-                "name": "p",
+                "name": "w",
                 "type": "tuple"
             },
             {
@@ -5827,32 +5960,13 @@
             },
             {
                 "indexed": false,
-                "internalType": "uint128[]",
-                "name": "amounts",
-                "type": "uint128[]"
-            }
-        ],
-        "name": "AddLiquidity",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "address",
-                "name": "wellId",
-                "type": "address"
-            },
-            {
-                "indexed": false,
                 "internalType": "contract IERC20[]",
                 "name": "tokens",
                 "type": "address[]"
             },
             {
                 "indexed": false,
-                "internalType": "enum LibWellStorage.WellType",
+                "internalType": "enum LibWellType.WellType",
                 "name": "wellType",
                 "type": "uint8"
             },
@@ -5869,26 +5983,7 @@
                 "type": "bytes32"
             }
         ],
-        "name": "CreateWell",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "enum LibWellStorage.WellType",
-                "name": "wellType",
-                "type": "uint8"
-            },
-            {
-                "indexed": false,
-                "internalType": "string[]",
-                "name": "parameterTypes",
-                "type": "string[]"
-            }
-        ],
-        "name": "RegisterWellType",
+        "name": "BuildWell",
         "type": "event"
     },
     {
@@ -5902,9 +5997,65 @@
             },
             {
                 "indexed": false,
-                "internalType": "uint128[]",
+                "internalType": "enum LibWellType.WellType",
+                "name": "newWellType",
+                "type": "uint8"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes",
+                "name": "newTypeData",
+                "type": "bytes"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "oldWellHash",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "newWellHash",
+                "type": "bytes32"
+            }
+        ],
+        "name": "ModifyWell",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256[]",
                 "name": "amounts",
-                "type": "uint128[]"
+                "type": "uint256[]"
+            }
+        ],
+        "name": "AddLiquidity",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256[]",
+                "name": "amounts",
+                "type": "uint256[]"
             }
         ],
         "name": "RemoveLiquidity",
@@ -5927,9 +6078,9 @@
             },
             {
                 "indexed": false,
-                "internalType": "uint128",
+                "internalType": "uint256",
                 "name": "amount",
-                "type": "uint128"
+                "type": "uint256"
             }
         ],
         "name": "RemoveLiquidityOneToken",
@@ -5970,117 +6121,6 @@
             }
         ],
         "name": "Swap",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "address",
-                "name": "wellId",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "enum LibWellStorage.WellType",
-                "name": "newWellType",
-                "type": "uint8"
-            },
-            {
-                "indexed": false,
-                "internalType": "bytes",
-                "name": "newTypeData",
-                "type": "bytes"
-            },
-            {
-                "indexed": false,
-                "internalType": "bytes32",
-                "name": "oldWellHash",
-                "type": "bytes32"
-            },
-            {
-                "indexed": false,
-                "internalType": "bytes32",
-                "name": "newWellHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "UpdateWell",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "address",
-                "name": "wellId",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "contract IERC20[]",
-                "name": "tokens",
-                "type": "address[]"
-            },
-            {
-                "indexed": false,
-                "internalType": "enum LibWellStorage.WellType",
-                "name": "wellType",
-                "type": "uint8"
-            },
-            {
-                "indexed": false,
-                "internalType": "bytes",
-                "name": "typeData",
-                "type": "bytes"
-            },
-            {
-                "indexed": false,
-                "internalType": "bytes32",
-                "name": "wellHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "BuildWell",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "address",
-                "name": "wellId",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "enum LibWellStorage.WellType",
-                "name": "newWellType",
-                "type": "uint8"
-            },
-            {
-                "indexed": false,
-                "internalType": "bytes",
-                "name": "newTypeData",
-                "type": "bytes"
-            },
-            {
-                "indexed": false,
-                "internalType": "bytes32",
-                "name": "oldWellHash",
-                "type": "bytes32"
-            },
-            {
-                "indexed": false,
-                "internalType": "bytes32",
-                "name": "newWellHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "ModifyWell",
         "type": "event"
     }
 ]

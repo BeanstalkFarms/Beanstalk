@@ -6,11 +6,10 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import "./LibWellStorage.sol";
-import "./WellN/LibWellN.sol";
-import "./Well2/LibConstantProductWell2.sol";
-import "../../tokens/ERC20/WellERC20.sol";
-import "hardhat/console.sol";
+import "../../tokens/ERC20/WellToken.sol";
+import "./Balance/LibWell2.sol";
+import "./Balance/LibWellN.sol";
+import "./Type/LibWellType.sol";
 
 /**
  * @author Publius
@@ -19,17 +18,17 @@ import "hardhat/console.sol";
 library LibWellBuilding {
     using SafeMath for uint256;
 
-    event RegisterWellType(LibWellStorage.WellType wellType, string[] parameterTypes);
     event BuildWell(
         address wellId,
         IERC20[] tokens,
-        LibWellStorage.WellType wellType,
+        LibWellType.WellType wellType,
         bytes typeData,
         bytes32 wellHash
     );
+
     event ModifyWell(
         address wellId,
-        LibWellStorage.WellType newWellType,
+        LibWellType.WellType newWellType,
         bytes newTypeData,
         bytes32 oldWellHash,
         bytes32 newWellHash
@@ -41,7 +40,7 @@ library LibWellBuilding {
 
     function buildWell(
         IERC20[] calldata tokens,
-        LibWellStorage.WellType wellType,
+        LibWellType.WellType wellType,
         bytes calldata typeData,
         string[] calldata symbols
     ) internal returns (address wellId) {
@@ -54,7 +53,7 @@ library LibWellBuilding {
             name = string(abi.encodePacked(name, ":", symbols[i]));
             symbol = string(abi.encodePacked(symbol, symbols[i]));
         }
-        wellId = address(new WellERC20(name, symbol));
+        wellId = address(new WellToken(name, symbol));
 
         LibWellStorage.WellInfo memory w;
         w.tokens = tokens;
@@ -62,28 +61,14 @@ library LibWellBuilding {
         w.typeData = typeData;
         w.wellId = wellId;
 
+        LibWellType.registerIfNeeded(wellType);
         bytes32 wh = LibWellStorage.computeWellHash(w);
 
         s.indices[s.numberOfWells] = wellId;
         s.numberOfWells = s.numberOfWells.add(1);
 
-        if (LibWellStorage.isWell2(tokens)) {
-            s.w2s[wh].last.timestamp = uint32(block.timestamp);
-            s.w2s[wh].even.timestamp = uint32(block.timestamp);
-            s.w2s[wh].odd.timestamp = uint32(block.timestamp);
-        } else {
-            uint256 iMax = tokens.length - 1;
-            for (uint256 i; i < iMax; i++) {
-                s.wNs[wh].balances.push(0);
-                s.wNs[wh].last.cumulativeBalances.push(0);
-                s.wNs[wh].even.cumulativeBalances.push(0);
-                s.wNs[wh].odd.cumulativeBalances.push(0);
-            }
-            s.wNs[wh].balances.push(0);
-            s.wNs[wh].last.timestamp = uint32(block.timestamp);
-            s.wNs[wh].even.timestamp = uint32(block.timestamp);
-            s.wNs[wh].odd.timestamp = uint32(block.timestamp);
-        }
+        if (w.tokens.length == 2) LibWell2.initBalances(wh);
+        else LibWellN.initBalances(wh, w.tokens.length);
 
         s.wi[wellId] = w;
         s.wh[wellId] = wh;
@@ -93,7 +78,7 @@ library LibWellBuilding {
 
     function modifyWell(
         LibWellStorage.WellInfo memory w,
-        LibWellStorage.WellType newWellType,
+        LibWellType.WellType newWellType,
         bytes calldata newTypeData
     ) internal {
         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
@@ -111,25 +96,13 @@ library LibWellBuilding {
         emit ModifyWell(w.wellId, w.wellType, w.typeData, prevWH, newWH);
     }
 
-    function registerWellType(
-        LibWellStorage.WellType newWellType,
-        string[] calldata typeParameters
-    ) internal {
-        LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
-        require(!s.wt[newWellType].registered, "LibWell: Already registered");
-        s.wt[newWellType].registered = true;
-        for (uint256 i; i < typeParameters.length; i++)
-            s.wt[newWellType].signature.push(typeParameters[i]);
-        emit RegisterWellType(newWellType, typeParameters);
-    }
-
     /**
      * Internal
      **/
 
     function isWellValid(
         IERC20[] calldata tokens,
-        LibWellStorage.WellType wellType,
+        LibWellType.WellType wellType,
         bytes calldata typeData
     ) internal pure returns (bool) {
         for (uint256 i; i < tokens.length - 1; i++) {
@@ -138,7 +111,7 @@ library LibWellBuilding {
                 "LibWell: Tokens not alphabetical"
             );
         }
-        if (wellType == LibWellStorage.WellType.CONSTANT_PRODUCT) 
+        if (wellType == LibWellType.WellType.CONSTANT_PRODUCT) 
             return typeData.length == 0;
         else revert("LibWell: Well type not supported");
     }

@@ -57,7 +57,7 @@ describe('Curve', function () {
     await this.beanMetapool.connect(user).approve(this.diamond.address, to18('100000000000'))
     await this.threeCurve.connect(user).approve(this.diamond.address, to18('100000000000'))
 
-    this.result = await this.curve.connect(user).addLiquidity(
+    this.result = await this.curve.connect(user).curve_addLiquidity(
       BEAN_3_CURVE,
       STABLE_FACTORY,
       [to6('1000'), to18('1000')],
@@ -102,7 +102,7 @@ describe('Curve', function () {
     describe("To internal", async function () {
       beforeEach(async function () {
         await this.threeCurve.mint(userAddress, to18('500'))
-        this.result = await this.curve.connect(user).addLiquidity(
+        this.result = await this.curve.connect(user).curve_addLiquidity(
             BEAN_3_CURVE,
             STABLE_FACTORY,
             [to6('500'), to18('500')],
@@ -137,7 +137,7 @@ describe('Curve', function () {
   describe("Exchange", async function () {
     describe("To external", async function () {
       beforeEach(async function () {
-        await this.curve.connect(user2).exchange(
+        await this.curve.connect(user2).curve_exchange(
           this.beanMetapool.address,
           STABLE_FACTORY,
           this.bean.address,
@@ -172,7 +172,7 @@ describe('Curve', function () {
 
     describe("To internal", async function () {
       beforeEach(async function () {
-        await this.curve.connect(user2).exchange(
+        await this.curve.connect(user2).curve_exchange(
           this.beanMetapool.address,
           STABLE_FACTORY,
           this.bean.address,
@@ -209,7 +209,7 @@ describe('Curve', function () {
   describe("Remove Liqudity", async function () {
     describe("To external", async function () {
       beforeEach(async function () {
-        await this.curve.connect(user).removeLiquidity(
+        await this.curve.connect(user).curve_removeLiquidity(
           this.beanMetapool.address,
           STABLE_FACTORY,
           to18('500'),
@@ -244,7 +244,7 @@ describe('Curve', function () {
 
     describe("To internal", async function () {
       beforeEach(async function () {
-        await this.curve.connect(user).removeLiquidity(
+        await this.curve.connect(user).curve_removeLiquidity(
           this.beanMetapool.address,
           STABLE_FACTORY,
           to18('500'),
@@ -281,7 +281,7 @@ describe('Curve', function () {
   describe("Remove Liqudity Inbalance", async function () {
     describe("To external", async function () {
       beforeEach(async function () {
-        await this.curve.connect(user).removeLiquidityImbalance(
+        await this.curve.connect(user).curve_removeLiquidityImbalance(
           this.beanMetapool.address,
           STABLE_FACTORY,
           [to6('400'), to18('100')],
@@ -316,7 +316,7 @@ describe('Curve', function () {
 
     describe("To internal", async function () {
       beforeEach(async function () {
-        await this.curve.connect(user).removeLiquidityImbalance(
+        await this.curve.connect(user).curve_removeLiquidityImbalance(
           this.beanMetapool.address,
           STABLE_FACTORY,
           [to6('400'), to18('100')],
@@ -353,7 +353,7 @@ describe('Curve', function () {
   describe("Remove Liqudity one token", async function () {
     describe("To external", async function () {
       beforeEach(async function () {
-        await this.curve.connect(user).removeLiquidityOneToken(
+        await this.curve.connect(user).curve_removeLiquidityOneToken(
           this.beanMetapool.address,
           STABLE_FACTORY,
           this.bean.address,
@@ -389,7 +389,7 @@ describe('Curve', function () {
 
     describe("To internal", async function () {
       beforeEach(async function () {
-        await this.curve.connect(user).removeLiquidityOneToken(
+        await this.curve.connect(user).curve_removeLiquidityOneToken(
           this.beanMetapool.address,
           STABLE_FACTORY,
           this.bean.address,
@@ -426,7 +426,7 @@ describe('Curve', function () {
 
   describe("farm LP and Deposit", async function () {
     beforeEach('add LP and Deposits', async function () {
-      const addLiquidity = await this.curve.interface.encodeFunctionData("addLiquidity", [
+      const addLiquidity = await this.curve.interface.encodeFunctionData("curve_addLiquidity", [
         BEAN_3_CURVE,
         STABLE_FACTORY,
         [to6('500'), to18('500')],
@@ -450,7 +450,7 @@ describe('Curve', function () {
 
     it('add lp and deposit', async function () {
       const season = await this.season.season()
-      const dep = await this.silo.getDeposit(user2Address, this.beanMetapool.address, season)
+    const dep = await this.silo.getDeposit(user2Address, this.beanMetapool.address, season)
       expect(dep[0]).to.be.equal(to18('1000'))
       expect(dep[1]).to.be.equal(to6('1000'))
     })

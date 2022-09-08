@@ -76,6 +76,8 @@ library C {
     address private constant UNRIPE_CURVE_BEAN_LUSD_POOL = 0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D;
     address private constant UNRIPE_CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
 
+    uint256 private constant EMA_ALPHA = 999444598700000000e18;
+
     /**
      * Getters
     **/
@@ -250,5 +252,9 @@ library C {
 
     function soilCoefficientLow() internal pure returns (uint256) {
         return SOIL_COEFFICIENT_LOW;
+    }
+
+    function emaAlpha() internal pure returns (uint256) {
+        return EMA_ALPHA;
     }
 }

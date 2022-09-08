@@ -1,9 +1,12 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js');
 const { getAltBeanstalk, getBean, getUsdc } = require('../utils/contracts.js');
+const { toBN } = require('../utils/index.js');
 const { mintBeans, mintUsdc } = require('../utils/mint.js');
+const { readEmaAlpha } = require('../utils/read.js');
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { BEAN, USDC, WETH } = require('./utils/constants');
+const { getEma } = require('./utils/ema.js');
 const { TypeEncoder } = require('./utils/encoder.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
@@ -14,6 +17,11 @@ let timestamp;
 
 async function getTimestamp() {
   return (await ethers.provider.getBlock('latest')).timestamp
+}
+
+async function fastForward(seconds = 1000) {
+  // await network.provider.send("evm_increaseTime", [seconds])
+  await network.provider.send("evm_setNextBlockTimestamp", [(await getTimestamp()) + seconds])
 }
 
 async function getCumulative(amount) {
@@ -36,18 +44,17 @@ describe('Well', function () {
     this.bean = await getBean()
     this.usdc = await getUsdc()
 
+    A = toBN(await readEmaAlpha())
 
     await this.bean.mint(user.address, to6('1000'))
-    await this.bean.mint(user2.address, to6('1000'))
+    await this.bean.mint(user2.address, to6('100000'))
     await this.usdc.mint(user.address, to6('1000'))
-    await this.usdc.mint(user2.address, to6('1000'))
+    await this.usdc.mint(user2.address, to6('100000'))
 
     await this.bean.connect(user2).approve(this.beanstalk.address, to18('1'))
     await this.bean.connect(user).approve(this.beanstalk.address, to18('1'))
     await this.usdc.connect(user2).approve(this.beanstalk.address, to18('1'))
     await this.usdc.connect(user).approve(this.beanstalk.address, to18('1'))
-
-    this.register = await this.beanstalk.connect(owner).registerWellType(0, [])
 
     wellId = await this.beanstalk.callStatic.buildWell([USDC, BEAN], '0', typeParams, ['USDC', 'BEAN'])
     well = {
@@ -59,7 +66,7 @@ describe('Well', function () {
     wellHash = await this.beanstalk.computeWellHash(well)
   
     buildWellResult = await this.beanstalk.buildWell([USDC, BEAN], '0', typeParams, ['USDC', 'BEAN'])
-    this.lp = await ethers.getContractAt('WellERC20', wellId)
+    this.lp = await ethers.getContractAt('WellToken', wellId)
     await this.lp.connect(user).approve(this.beanstalk.address, to18('100000000'))
     await this.lp.connect(user2).approve(this.beanstalk.address, to18('100000000'))
 
@@ -84,16 +91,8 @@ describe('Well', function () {
       })
 
       it("emits event", async function () {
-        await expect(this.register).to.emit(this.beanstalk, 'RegisterWellType').withArgs(well.wellType, []);
+        await expect(buildWellResult).to.emit(this.beanstalk, 'RegisterWellType').withArgs(well.wellType, []);
       })
-    })
-
-    it('reverts if not owner', async function () {
-      await expect(this.beanstalk.connect(user2).registerWellType(0, [])).to.be.revertedWith("LibDiamond: Must be contract owner")
-    })
-
-    it('reverts if already registered', async function () {
-      await expect(this.beanstalk.connect(owner).registerWellType(0, ['yo'])).to.be.revertedWith("LibWell: Already registered")
     })
   })
 
@@ -133,24 +132,23 @@ describe('Well', function () {
       expect(state.balances[1]).to.be.equal(to6('100'))
       expect(state.cumulativeBalances[0]).to.be.equal('0')
       expect(state.cumulativeBalances[1]).to.be.equal('0')
-      expect(state.lastTimestamp).to.be.equal(await getTimestamp())
+      expect(state.timestamp).to.be.equal(await getTimestamp())
 
       const hashState = await this.beanstalk.getWellStateFromHash(wellHash)
       expect(hashState.balances[0]).to.be.equal(to6('100'))
       expect(hashState.balances[1]).to.be.equal(to6('100'))
       expect(hashState.cumulativeBalances[0]).to.be.equal('0')
       expect(hashState.cumulativeBalances[1]).to.be.equal('0')
-      expect(hashState.lastTimestamp).to.be.equal(await getTimestamp())
+      expect(hashState.timestamp).to.be.equal(await getTimestamp())
 
       const balances = await this.beanstalk.getWellBalances(wellId)
       expect(balances[0]).to.be.equal(to6('100'))
       expect(balances[1]).to.be.equal(to6('100'))
 
-      const cumulativeBalances = await this.beanstalk.getLastCumulativeBalances(wellId)
-      expect(cumulativeBalances[0]).to.be.equal(to6('0'))
-      expect(cumulativeBalances[1]).to.be.equal(to6('0'))
-
-      expect(await this.beanstalk.getLastTimestamp(wellId)).to.be.equal(await getTimestamp())
+      const cb = await this.beanstalk.getCumulativeBalances(wellId)
+      expect(cb.cumulativeBalances[0]).to.be.equal(to6('0'))
+      expect(cb.cumulativeBalances[1]).to.be.equal(to6('0'))
+      expect(cb.lastTimestamp).to.be.equal(await getTimestamp())
 
       expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('200'))
     })
@@ -172,7 +170,7 @@ describe('Well', function () {
         expect(wholeWell.state.balances[1]).to.be.equal(to6('100'))
         expect(wholeWell.state.cumulativeBalances[0]).to.be.equal('0')
         expect(wholeWell.state.cumulativeBalances[1]).to.be.equal('0')
-        expect(wholeWell.state.lastTimestamp).to.be.equal(await getTimestamp())
+        expect(wholeWell.state.timestamp).to.be.equal(await getTimestamp())
 
         expect(wholeWell.d).to.be.equal(to6('200'))
       }
@@ -218,7 +216,7 @@ describe('Well', function () {
         expect(state.balances[1]).to.be.equal(to6('50'))
         expect(state.cumulativeBalances[0]).to.be.equal(await getCumulative(to6('100')))
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
-        expect(state.lastTimestamp).to.be.equal(await getTimestamp())
+        expect(state.timestamp).to.be.equal(await getTimestamp())
         expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('200'))
       })
 
@@ -259,7 +257,7 @@ describe('Well', function () {
         expect(state.balances[1]).to.be.equal(to6('50'))
         expect(state.cumulativeBalances[0]).to.be.equal(await getCumulative(to6('100')))
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
-        expect(state.lastTimestamp).to.be.equal(await getTimestamp())
+        expect(state.timestamp).to.be.equal(await getTimestamp())
         expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('200'))
       })
 
@@ -300,7 +298,7 @@ describe('Well', function () {
         expect(state.balances[1]).to.be.equal(to6('210'))
         expect(state.cumulativeBalances[0]).to.be.equal(await getCumulative(to6('100')))
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
-        expect(state.lastTimestamp).to.be.equal(await getTimestamp())
+        expect(state.timestamp).to.be.equal(await getTimestamp())
 
         expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('399.499686'))
       })
@@ -333,8 +331,8 @@ describe('Well', function () {
       })
 
       it("transfers assets", async function () {
-        expect(await this.bean.balanceOf(user2.address)).to.be.equal(to6('905'))
-        expect(await this.usdc.balanceOf(user2.address)).to.be.equal(to6('905'))
+        expect(await this.bean.balanceOf(user2.address)).to.be.equal(to6('99905'))
+        expect(await this.usdc.balanceOf(user2.address)).to.be.equal(to6('99905'))
       })
 
       it("updates state", async function () {
@@ -343,7 +341,7 @@ describe('Well', function () {
         expect(state.balances[1]).to.be.equal(to6('95'))
         expect(state.cumulativeBalances[0]).to.be.equal(await getCumulative(to6('100')))
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
-        expect(state.lastTimestamp).to.be.equal(await getTimestamp())
+        expect(state.timestamp).to.be.equal(await getTimestamp())
 
         expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('190'))
       })
@@ -374,8 +372,8 @@ describe('Well', function () {
       })
 
       it("transfers assets", async function () {
-        expect(await this.bean.balanceOf(user2.address)).to.be.equal(to6('909.75'))
-        expect(await this.usdc.balanceOf(user2.address)).to.be.equal(to6('900'))
+        expect(await this.bean.balanceOf(user2.address)).to.be.equal(to6('99909.75'))
+        expect(await this.usdc.balanceOf(user2.address)).to.be.equal(to6('99900'))
       })
 
       it("updates state", async function () {
@@ -384,7 +382,7 @@ describe('Well', function () {
         expect(state.balances[1]).to.be.equal(to6('90.25'))
         expect(state.cumulativeBalances[0]).to.be.equal(await getCumulative(to6('100')))
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
-        expect(state.lastTimestamp).to.be.equal(await getTimestamp())
+        expect(state.timestamp).to.be.equal(await getTimestamp())
 
         expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('190'))
       })
@@ -407,8 +405,8 @@ describe('Well', function () {
       })
 
       it("transfers assets", async function () {
-        expect(await this.bean.balanceOf(user2.address)).to.be.equal(to6('900'))
-        expect(await this.usdc.balanceOf(user2.address)).to.be.equal(to6('909.75'))
+        expect(await this.bean.balanceOf(user2.address)).to.be.equal(to6('99900'))
+        expect(await this.usdc.balanceOf(user2.address)).to.be.equal(to6('99909.75'))
       })
 
       it("updates state", async function () {
@@ -417,7 +415,7 @@ describe('Well', function () {
         expect(state.balances[1]).to.be.equal(to6('100'))
         expect(state.cumulativeBalances[0]).to.be.equal(await getCumulative(to6('100')))
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
-        expect(state.lastTimestamp).to.be.equal(await getTimestamp())
+        expect(state.timestamp).to.be.equal(await getTimestamp())
 
         expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('190'))
       })
@@ -449,8 +447,8 @@ describe('Well', function () {
       })
 
       it("transfers assets", async function () {
-        expect(await this.bean.balanceOf(user2.address)).to.be.equal(to6('905'))
-        expect(await this.usdc.balanceOf(user2.address)).to.be.equal(to6('904'))
+        expect(await this.bean.balanceOf(user2.address)).to.be.equal(to6('99905'))
+        expect(await this.usdc.balanceOf(user2.address)).to.be.equal(to6('99904'))
       })
 
       it("updates state", async function () {
@@ -459,7 +457,7 @@ describe('Well', function () {
         expect(state.balances[1]).to.be.equal(to6('95'))
         expect(state.cumulativeBalances[0]).to.be.equal(await getCumulative(to6('100')))
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
-        expect(state.lastTimestamp).to.be.equal(await getTimestamp())
+        expect(state.timestamp).to.be.equal(await getTimestamp())
 
         expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('190.997382'))
       })
@@ -471,6 +469,85 @@ describe('Well', function () {
 
       it('emits event', async function () {
         await expect(this.result).to.emit(this.beanstalk, 'RemoveLiquidity').withArgs(wellId, [to6('4'), to6('5')]);
+      })
+    })
+  })
+
+  describe("Exp", async function () {
+    it('calculates exp correctly', async function () {
+      expect(await this.beanstalk.powu(A, 1000)).to.be.within('573753399578216471231120745157655437', '573753399578216471231120745157656437')
+      expect(await this.beanstalk.powu(A, 5000)).to.be.within('62176512557204924377648285671939962', '62176512557204924377648285671940962')
+      expect(await this.beanstalk.powu(A, 10000)).to.be.within('3865918713776261644529210082422339', '3865918713776261644529210082423339')
+    })
+  })
+
+  describe("Oracle", async function () {
+
+    describe("add a liquidity", async function () {
+      beforeEach(async function () {
+        time = 10
+        ema = getEma(toBN('0'), to6('100'), time, A)
+        await fastForward(time)
+        await this.beanstalk.connect(user2).addLiquidity(well, [to6('100'), to6('100')], to6('200'), EXTERNAL, EXTERNAL)
+      })
+      it("updates ema balance", async function () {
+        const emaBalances = await this.beanstalk.getWellEmaBalances(wellId)
+        expect(emaBalances[0]).to.be.within(ema, ema.add(toBN('10')))
+        expect(emaBalances[1]).to.be.within(ema, ema.add(toBN('10')))
+      })
+    })
+    
+    describe("add a couple liquiditys", async function () {
+      beforeEach(async function () {
+        ema = getEma(toBN('0'), to6('100'), 10, A)
+        await fastForward(10)
+        await this.beanstalk.connect(user2).addLiquidity(well, [to6('100'), to6('100')], to6('200'), EXTERNAL, EXTERNAL)
+        ema = getEma(ema, to6('200'), 10, A)
+        await fastForward(10)
+        await this.beanstalk.connect(user2).addLiquidity(well, [to6('100'), to6('100')], to6('200'), EXTERNAL, EXTERNAL)
+      })
+      it("updates ema balance", async function () {
+        const emaBalances = await this.beanstalk.getWellEmaBalances(wellId)
+        expect(emaBalances[0]).to.be.within(ema, ema.add(toBN('1000')))
+        expect(emaBalances[1]).to.be.within(ema, ema.add(toBN('1000')))
+      })
+    })
+
+    describe("add a at different amounts", async function () {
+      beforeEach(async function () {
+        time = 50
+        ema = getEma(toBN('0'), to6('100'), time, A)
+        await fastForward(time)
+        await this.beanstalk.connect(user2).addLiquidity(well, [to6('50'), to6('100')], to6('120'), EXTERNAL, EXTERNAL)
+
+        time = 100000
+        ema0 = getEma(ema, to6('150'), time, A)
+        ema1 = getEma(ema, to6('200'), time, A)
+        await fastForward(time)
+        await this.beanstalk.connect(user2).addLiquidity(well, [to6('50'), to6('100')], to6('120'), EXTERNAL, EXTERNAL)
+
+        time = 105323
+        ema0 = getEma(ema0, to6('200'), time, A)
+        ema1 = getEma(ema1, to6('300'), time, A)
+        await fastForward(time)
+        await this.beanstalk.connect(user2).addLiquidity(well, [to6('1000'), to6('1000')], to6('200'), EXTERNAL, EXTERNAL)
+
+        time = 13141
+        ema0 = getEma(ema0, to6('1200'), time, A)
+        ema1 = getEma(ema1, to6('1300'), time, A)
+        await fastForward(time)
+        await this.beanstalk.connect(user2).addLiquidity(well, [to6('1000'), to6('1500')], to6('200'), EXTERNAL, EXTERNAL)
+
+        time = 3114
+        ema0 = getEma(ema0, to6('2200'), time, A)
+        ema1 = getEma(ema1, to6('2800'), time, A)
+        await fastForward(time)
+        await this.beanstalk.connect(user2).addLiquidity(well, [to6('0'), to6('10000')], to6('200'), EXTERNAL, EXTERNAL)
+      })
+      it("updates ema balance", async function () {
+        const emaBalances = await this.beanstalk.getWellEmaBalances(wellId)
+        expect(emaBalances[0]).to.be.within(ema0, ema0.add(toBN('1000')))
+        expect(emaBalances[1]).to.be.within(ema1, ema1.add(toBN('1000')))
       })
     })
   })
