@@ -156,8 +156,8 @@ contract SiloFacet is TokenSilo {
         return _plant(msg.sender);
     }
 
-    function claimPlenty(address account) external payable {
-        _claimPlenty(account);
+    function claimPlenty() external payable {
+        _claimPlenty(msg.sender);
     }
 
     /*
