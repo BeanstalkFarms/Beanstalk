@@ -1,6 +1,7 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { THREE_POOL, BEAN_3_CURVE, BEAN } = require('./utils/constants');
+const { to6 } = require('./utils/helpers.js');
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 
@@ -54,6 +55,7 @@ describe('Oracle', function () {
     await this.beanThreeCurve.set_supply('100000');
     await this.beanThreeCurve.set_A_precise('1000');
     await this.beanThreeCurve.set_balances([toBean('1000000'), to18('1000000')]);
+    await this.bean.mint(user2Address, to6('1000000000'))
   });
 
   beforeEach (async function () {
@@ -116,7 +118,7 @@ describe('Oracle', function () {
       )
     });
 
-    describe("Delta B", async function () {
+    describe("above Max Delta B", async function () {
       it("tracks a basic Delta B", async function () {
         this.result = await this.season.captureCurveE();
         await expect(this.result).to.emit(this.season, 'DeltaB').withArgs('0');
@@ -178,6 +180,73 @@ describe('Oracle', function () {
         await hre.network.provider.send("evm_mine")
         expect(await this.season.poolDeltaB(BEAN_3_CURVE)).to.equal('-252354675068');
         expect(await this.season.totalDeltaB()).to.equal('-252354675068');
+      });
+    });
+
+    describe("Below max Delta B", async function() {
+      beforeEach(async function () {
+        await this.bean.connect(user2).burn(await this.bean.balanceOf(user2Address))
+        await this.bean.mint(user2Address, to6('100'))
+      })
+
+      it("tracks a basic Delta B", async function () {
+        this.result = await this.season.captureCurveE();
+        await expect(this.result).to.emit(this.season, 'DeltaB').withArgs('0');
+      });
+
+      it("tracks a TWAL with a change", async function () {
+        await advanceTime(900)
+        await this.beanThreeCurve.update([toBean('2000000'), to18('1000000')])
+        await advanceTime(900)
+        this.result = await this.season.captureCurveE();
+        await expect(this.result).to.emit(this.season, 'DeltaB').withArgs(to6('-1'));
+      });
+
+      it("tracks a TWAL during ramping up season", async function () {
+        await this.bean.mint(user2Address, to6('100'))
+        await this.season.teleportSunrise('120');
+        await resetTime();
+        await this.season.captureE();
+        await advanceTime(900)
+        await this.beanThreeCurve.update([toBean('2000000'), to18('1000000')])
+        await advanceTime(900)
+        this.result = await this.season.captureCurveE();
+        await expect(this.result).to.emit(this.season, 'DeltaB').withArgs(to6('-2'))
+        this.result = await this.season.updateTWAPCurveE();
+      });
+
+      it("tracks a TWAL with a change", async function () {
+        await this.bean.mint(user2Address, to6('1000'))
+        await advanceTime(900)
+        await this.beanThreeCurve.update([toBean('2000000'), to18('1000000')])
+        await advanceTime(900)
+        this.result = await this.season.captureCurveE();
+        await expect(this.result).to.emit(this.season, 'DeltaB').withArgs(to6('-11'));
+      });
+
+      it("tracks a TWAL with a change", async function () {
+        await this.bean.mint(user2Address, to6('1000'))
+        await advanceTime(1800)
+        await this.beanThreeCurve.update([toBean('2000000'), to18('2020000')])
+        await advanceTime(900)
+        this.result = await this.season.captureCurveE();
+        await expect(this.result).to.emit(this.season, 'DeltaB').withArgs(to6('11'));
+      });
+
+      it("tracks a basic Delta B", async function () {
+        await advanceTime(900)
+        await hre.network.provider.send("evm_mine")
+        expect(await this.season.poolDeltaB(BEAN_3_CURVE)).to.equal('0');
+        expect(await this.season.totalDeltaB()).to.equal('0');
+      });
+
+      it("tracks a TWAL with a change", async function () {
+        await advanceTime(900)
+        await this.beanThreeCurve.update([toBean('2000000'), to18('1000000')])
+        await advanceTime(900)
+        await hre.network.provider.send("evm_mine")
+        expect(await this.season.poolDeltaB(BEAN_3_CURVE)).to.equal(to6('-1'));
+        expect(await this.season.totalDeltaB()).to.equal(to6('-1'));
       });
     });
   });
