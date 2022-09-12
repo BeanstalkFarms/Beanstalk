@@ -19,27 +19,6 @@ contract Listing is PodTransfer {
 
     using SafeMath for uint256;
 
-    event NewCubicPiecewise4(
-        uint256[4] piecewiseBreakpoints,
-        uint256[16] coefficientSignificands,
-        uint256 packedCoefficientExponents,
-        uint256 packedCoefficientSigns
-    );
-
-    event NewCubicPiecewise16(
-        uint256[16] piecewiseBreakpoints,
-        uint256[64] coefficientSignificands,
-        uint256[2] packedCoefficientExponents,
-        uint256 packedCoefficientSigns
-    );
-
-    event NewCubicPiecewise64(
-        uint256[64] piecewiseBreakpoints,
-        uint256[256] coefficientSignificands,
-        uint256[8] packedCoefficientExponents,
-        uint256 packedCoefficientSigns
-    );
-
     struct PodListing {
         address account;
         uint256 index;
@@ -57,8 +36,10 @@ contract Listing is PodTransfer {
         uint256 amount, 
         uint24 pricePerPod, 
         uint256 maxHarvestableIndex, 
+        bytes pricingFunction,
+        uint256 numPieces, 
         LibTransfer.To mode,
-        LibPolynomial.PriceType priceType
+        LibPolynomial.PriceType pricingType
     );
 
     event PodListingFilled(
@@ -92,19 +73,21 @@ contract Listing is PodTransfer {
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
 
         s.podListings[index] = hashListing(start, amount, pricePerPod, maxHarvestableIndex, mode);
+
+        bytes memory f;
         
-        emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, mode, LibPolynomial.PriceType.Fixed);
+        emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, f, 0, mode, LibPolynomial.PriceType.Fixed);
 
     }
 
-    function _createPodListingPiecewise4(
+    function _createPodListingV2(
         uint256 index,
         uint256 start,
         uint256 amount,
-        uint24 pricePerPod,
         uint256 maxHarvestableIndex,
-        LibTransfer.To mode,
-        LibPolynomial.CubicPiecewise4 calldata f
+        bytes calldata pricingFunction,
+        uint256 numPieces,
+        LibTransfer.To mode
     ) internal {
         uint256 plotSize = s.a[msg.sender].field.plots[index];
 
@@ -113,16 +96,13 @@ contract Listing is PodTransfer {
         
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
 
-        s.podListings[index] = hashListingPiecewise4(
+        s.podListings[index] = hashListingV2(
             start, 
             amount, 
-            pricePerPod, 
+            0, 
             maxHarvestableIndex, 
-            mode, 
-            f.breakpoints, 
-            f.significands, 
-            f.packedExponents, 
-            f.packedSigns
+            pricingFunction,
+            mode
         );
         
         emit PodListingCreated(
@@ -130,114 +110,14 @@ contract Listing is PodTransfer {
             index, 
             start, 
             amount, 
-            pricePerPod, 
+            0, 
             maxHarvestableIndex, 
-            mode, 
-            LibPolynomial.PriceType.Piecewise4
-        );
-
-        emit NewCubicPiecewise4(
-            f.breakpoints, 
-            f.significands, 
-            f.packedExponents,
-            f.packedSigns
+            pricingFunction,
+            numPieces,
+            mode,
+            LibPolynomial.PriceType.Dynamic
         );
     }
-
-    function _createPodListingPiecewise16(
-        uint256 index,
-        uint256 start,
-        uint256 amount,
-        uint24 pricePerPod,
-        uint256 maxHarvestableIndex,
-        LibTransfer.To mode,
-        LibPolynomial.CubicPiecewise16 calldata f
-    ) internal {
-        uint256 plotSize = s.a[msg.sender].field.plots[index];
-
-        require(plotSize >= (start + amount) && amount > 0, "Marketplace: Invalid Plot/Amount.");
-        require(s.f.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
-        
-        if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
-
-        s.podListings[index] = hashListingPiecewise16(
-            start, 
-            amount, 
-            pricePerPod, 
-            maxHarvestableIndex, 
-            mode, 
-            f.breakpoints, 
-            f.significands, 
-            f.packedExponents, 
-            f.packedSigns
-        );
-        
-        emit PodListingCreated(
-            msg.sender, 
-            index, 
-            start, 
-            amount, 
-            pricePerPod, 
-            maxHarvestableIndex, 
-            mode, 
-            LibPolynomial.PriceType.Piecewise16
-        );
-
-        emit NewCubicPiecewise16(
-            f.breakpoints, 
-            f.significands, 
-            f.packedExponents,
-            f.packedSigns
-        );
-    }
-
-    function _createPodListingPiecewise64(
-        uint256 index,
-        uint256 start,
-        uint256 amount,
-        uint24 pricePerPod,
-        uint256 maxHarvestableIndex,
-        LibTransfer.To mode,
-        LibPolynomial.CubicPiecewise64 calldata f
-    ) internal {
-        uint256 plotSize = s.a[msg.sender].field.plots[index];
-
-        require(plotSize >= (start + amount) && amount > 0, "Marketplace: Invalid Plot/Amount.");
-        require(s.f.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
-        
-        if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
-
-        s.podListings[index] = hashListingPiecewise64(
-            start, 
-            amount, 
-            pricePerPod, 
-            maxHarvestableIndex, 
-            mode, 
-            f.breakpoints, 
-            f.significands, 
-            f.packedExponents, 
-            f.packedSigns
-        );
-
-        emit PodListingCreated(
-            msg.sender, 
-            index, 
-            start, 
-            amount, 
-            pricePerPod, 
-            maxHarvestableIndex, 
-            mode, 
-            LibPolynomial.PriceType.Piecewise64
-        );
-
-        emit NewCubicPiecewise64(
-            f.breakpoints, 
-            f.significands, 
-            f.packedExponents,
-            f.packedSigns
-        );
-    }
-
 
     /*
      * Fill
@@ -264,21 +144,19 @@ contract Listing is PodTransfer {
 
     }
 
-    function _fillListingPiecewise4(
+    function _fillListingV2(
         PodListing calldata l, 
-        LibPolynomial.CubicPiecewise4 calldata f, 
-        uint256 beanAmount
+        uint256 beanAmount,
+        bytes calldata pricingFunction,
+        uint256 numPieces
     ) internal {
-        bytes32 lHash = hashListingPiecewise4(
+        bytes32 lHash = hashListingV2(
             l.start,
             l.amount,
             l.pricePerPod,
             l.maxHarvestableIndex,
-            l.mode,
-            f.breakpoints,
-            f.significands,
-            f.packedExponents,
-            f.packedSigns
+            pricingFunction,
+            l.mode
         );
         
         require(s.podListings[l.index] == lHash, "Marketplace: Listing does not exist.");
@@ -288,73 +166,11 @@ contract Listing is PodTransfer {
         require(plotSize >= (l.start + l.amount) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
 
-        uint256 amount = getRoundedAmountPiecewise4(l, f, beanAmount);
+        uint256 amount = getRoundedAmountV2(l, beanAmount, pricingFunction, numPieces);
 
-        __fillListingPiecewise4(msg.sender, l, f, amount);
+        __fillListingV2(msg.sender, l, pricingFunction, amount);
         _transferPlot(l.account, msg.sender, l.index, l.start, amount);
 
-    }
-
-    function _fillListingPiecewise16(
-        PodListing calldata l, 
-        LibPolynomial.CubicPiecewise16 calldata f, 
-        uint256 beanAmount
-    ) internal {
-        bytes32 lHash = hashListingPiecewise16(
-            l.start,
-            l.amount,
-            l.pricePerPod,
-            l.maxHarvestableIndex,
-            l.mode,
-            f.breakpoints,
-            f.significands,
-            f.packedExponents,
-            f.packedSigns
-        );
-        
-        require(s.podListings[l.index] == lHash, "Marketplace: Listing does not exist.");
-
-        uint256 plotSize = s.a[l.account].field.plots[l.index];
-
-        require(plotSize >= (l.start + l.amount) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
-        require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
-
-        uint256 amount = getRoundedAmountPiecewise16(l, f, beanAmount);
-
-        __fillListingPiecewise16(msg.sender, l, f, amount);
-        _transferPlot(l.account, msg.sender, l.index, l.start, amount);
-
-    }
-
-    function _fillListingPiecewise64(
-        PodListing calldata l, 
-        LibPolynomial.CubicPiecewise64 calldata f, 
-        uint256 beanAmount
-    ) internal {
-        bytes32 lHash = hashListingPiecewise64(
-            l.start,
-            l.amount,
-            l.pricePerPod,
-            l.maxHarvestableIndex,
-            l.mode,
-            f.breakpoints,
-            f.significands,
-            f.packedExponents,
-            f.packedSigns
-        );
-        
-        require(s.podListings[l.index] == lHash, "Marketplace: Listing does not exist.");
-
-        uint256 plotSize = s.a[l.account].field.plots[l.index];
-
-        require(plotSize >= (l.start + l.amount) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
-        require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
-
-        uint256 amount = getRoundedAmountPiecewise64(l, f, beanAmount);
-
-        __fillListingPiecewise64(msg.sender, l, f, amount);
-
-        _transferPlot(l.account, msg.sender, l.index, l.start, amount);
     }
 
     function __fillListing(
@@ -379,79 +195,22 @@ contract Listing is PodTransfer {
         delete s.podListings[l.index];
     }
 
-    function __fillListingPiecewise4(
+    function __fillListingV2(
         address to,
         PodListing calldata l,
-        LibPolynomial.CubicPiecewise4 calldata f,
+        bytes calldata pricingFunction,
         uint256 amount
     ) private {
         require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
 
         if (l.amount > amount) {
-            s.podListings[l.index.add(amount).add(l.start)] = hashListingPiecewise4(
+            s.podListings[l.index.add(amount).add(l.start)] = hashListingV2(
                 0,
                 l.amount.sub(amount),
                 l.pricePerPod,
                 l.maxHarvestableIndex,
-                l.mode,
-                f.breakpoints,
-                f.significands,
-                f.packedExponents,
-                f.packedSigns
-            );
-        }
-
-        emit PodListingFilled(l.account, to, l.index, l.start, amount);
-
-        delete s.podListings[l.index];
-    }
-
-    function __fillListingPiecewise16(
-        address to,
-        PodListing calldata l,
-        LibPolynomial.CubicPiecewise16 calldata f,
-        uint256 amount
-    ) private {
-        require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
-
-        if (l.amount > amount) {
-            s.podListings[l.index.add(amount).add(l.start)] = hashListingPiecewise16(
-                0,
-                l.amount.sub(amount),
-                l.pricePerPod,
-                l.maxHarvestableIndex,
-                l.mode,
-                f.breakpoints,
-                f.significands,
-                f.packedExponents,
-                f.packedSigns
-            );
-        }
-
-        emit PodListingFilled(l.account, to, l.index, l.start, amount);
-
-        delete s.podListings[l.index];
-    }
-
-    function __fillListingPiecewise64(
-        address to,
-        PodListing calldata l,
-        LibPolynomial.CubicPiecewise64 calldata f,
-        uint256 amount
-    ) private {
-        require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
-
-        if (l.amount > amount) {
-            s.podListings[l.index.add(amount).add(l.start)] = hashListingPiecewise64(
-                0,
-                l.amount.sub(amount),
-                l.pricePerPod,
-                l.maxHarvestableIndex,
-                l.mode,
-                f.breakpoints,
-                f.significands,
-                f.packedExponents,
-                f.packedSigns
+                pricingFunction,
+                l.mode
             );
         }
 
@@ -488,37 +247,14 @@ contract Listing is PodTransfer {
         if(remainingAmount <= (1000000 / l.pricePerPod)) amount = l.amount;
     }
 
-    function getRoundedAmountPiecewise4(
+    function getRoundedAmountV2(
         PodListing calldata l, 
-        LibPolynomial.CubicPiecewise4 calldata f, 
-        uint256 beanAmount
+        uint256 beanAmount,
+        bytes calldata pricingFunction, 
+        uint256 numPieces
     ) public view returns (uint256 amount) {
-        uint256 pricePerPod = LibPolynomial.evaluatePolynomialPiecewise4(f, l.index + l.start - s.f.harvestable);
-        amount = (beanAmount * 1000000) / pricePerPod;
-        
-        uint256 remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
-        if(remainingAmount <= (1000000 / pricePerPod)) amount = l.amount;
-    }
-
-    function getRoundedAmountPiecewise16(
-        PodListing calldata l, 
-        LibPolynomial.CubicPiecewise16 calldata f, 
-        uint256 beanAmount
-    ) public view returns (uint256 amount) {
-        uint256 pricePerPod = LibPolynomial.evaluatePolynomialPiecewise16(f, l.index + l.start - s.f.harvestable);
-        amount = (beanAmount * 1000000) / pricePerPod;
-        
-        uint256 remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
-        if(remainingAmount <= (1000000 / pricePerPod)) amount = l.amount;
-    }
-
-    function getRoundedAmountPiecewise64(
-        PodListing calldata l, 
-        LibPolynomial.CubicPiecewise64 calldata f, 
-        uint256 beanAmount
-    ) public view returns (uint256 amount) {
-        uint256 pricePerPod = LibPolynomial.evaluatePolynomialPiecewise64(f, l.index + l.start - s.f.harvestable);
-        amount = (beanAmount * 1000000) / pricePerPod;
+        uint256 pricePerPod = LibPolynomial.evaluatePolynomialPiecewise(pricingFunction, l.index + l.start - s.f.harvestable, numPieces);
+        amount = (beanAmount.mul(1000000)) / pricePerPod;
         
         uint256 remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
         if(remainingAmount <= (1000000 / pricePerPod)) amount = l.amount;
@@ -534,46 +270,15 @@ contract Listing is PodTransfer {
         lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex,  mode == LibTransfer.To.EXTERNAL));
     }
 
-    function hashListingPiecewise4(
+    function hashListingV2(
         uint256 start, 
         uint256 amount, 
         uint24 pricePerPod, 
         uint256 maxHarvestableIndex, 
-        LibTransfer.To mode, 
-        uint256[4] calldata breakpoints,
-        uint256[16] calldata significands, 
-        uint256 packedExponents, 
-        uint256 packedSigns
+        bytes calldata pricingFunction,
+        LibTransfer.To mode
     ) internal pure returns (bytes32 lHash) {
-        lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex,  mode == LibTransfer.To.EXTERNAL, breakpoints, significands, packedExponents, packedSigns));
-    }
-
-    function hashListingPiecewise16(
-        uint256 start, 
-        uint256 amount, 
-        uint24 pricePerPod, 
-        uint256 maxHarvestableIndex, 
-        LibTransfer.To mode, 
-        uint256[16] calldata breakpoints,
-        uint256[64] calldata significands, 
-        uint256[2] calldata packedExponents, 
-        uint256 packedSigns
-    ) internal pure returns (bytes32 lHash) {
-        lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex,  mode == LibTransfer.To.EXTERNAL, breakpoints, significands, packedExponents, packedSigns));
-    }
-
-    function hashListingPiecewise64(
-        uint256 start, 
-        uint256 amount, 
-        uint24 pricePerPod, 
-        uint256 maxHarvestableIndex, 
-        LibTransfer.To mode, 
-        uint256[64] calldata breakpoints,
-        uint256[256] calldata significands, 
-        uint256[8] calldata packedExponents, 
-        uint256 packedSigns
-    ) internal pure returns (bytes32 lHash) {
-        lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex,  mode == LibTransfer.To.EXTERNAL, breakpoints, significands, packedExponents, packedSigns));
+        lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex, mode == LibTransfer.To.EXTERNAL, pricingFunction));
     }
 
 }

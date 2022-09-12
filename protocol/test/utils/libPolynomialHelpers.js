@@ -19,9 +19,9 @@ function evaluatePolynomial(f, x, pieceIndex) {
     while(degreeIndex <= 3) {
         
         const coefValue = math.bignumber(f.coefficients[math.add(pieceIndex*4, degreeIndex)])
-        const coefExponent = math.pow(math.bignumber(10), math.bignumber(f.exponents[math.add(pieceIndex*4, degreeIndex)].value));
+        const coefExponent = math.pow(math.bignumber(10), math.bignumber(f.exponents[math.add(pieceIndex*4, degreeIndex)]));
         const term = math.floor(math.chain(_x).pow(degreeIndex).multiply(coefValue).divide(coefExponent).done());
-        if(f.signs[math.add(pieceIndex*4, degreeIndex)].value == 1) result = math.add(result, term)
+        if(f.signs[math.add(pieceIndex*4, degreeIndex)]== 1) result = math.add(result, term)
         else result = math.subtract(result, term)
 
         degreeIndex = math.add(degreeIndex, 1);
@@ -41,9 +41,9 @@ function evaluatePolynomialIntegration(f, start, end, pieceIndex) {
 
     while(degreeIndex <= 3) {
         var coefValue = math.bignumber(f.coefficients[math.add(pieceIndex*4, degreeIndex)]);
-        var coefExponent = math.pow(math.bignumber(10), math.bignumber(f.exponents[math.add(pieceIndex*4, degreeIndex)].value));
+        var coefExponent = math.pow(math.bignumber(10), math.bignumber(f.exponents[math.add(pieceIndex*4, degreeIndex)]));
 
-        if(f.signs[pieceIndex*4 + degreeIndex].value == 1) {
+        if(f.signs[pieceIndex*4 + degreeIndex] == 1) {
             positiveSum = math.add(positiveSum, math.floor(math.chain(_x2)
                 .pow(math.add(degreeIndex, 1))
                 .multiply(coefValue)
@@ -101,10 +101,14 @@ function getAmountOrder(f, placeInLine, amountPodsFromOrder, maxPieces) {
     if(math.compare(start, f.breakpoints[0]) == -1) start = math.bignumber(f.breakpoints[0]);
 
     while(math.compare(start, end) == -1) {
+        console.log("beanAmount: ", beanAmount);
+        console.log("coefficients: ", getValueArray(f.coefficients, pieceIndex))
+        console.log("exponents: ", getValueArray(f.exponents, pieceIndex))
+        console.log("signs: ", getValueArray(f.signs, pieceIndex))
         if(!(math.compare(pieceIndex, numPieces - 1) == 0)) {
             
             if(math.compare(end, f.breakpoints[pieceIndex + 1]) == 1) {
-
+                
                 var term = evaluatePolynomialIntegration(f, math.subtract(start, f.breakpoints[pieceIndex]), math.subtract(f.breakpoints[pieceIndex + 1], f.breakpoints[pieceIndex]), pieceIndex); 
                 start = math.bignumber(f.breakpoints[pieceIndex + 1]);
                 beanAmount = math.add(beanAmount, term);
@@ -151,9 +155,14 @@ function findIndex(array, value, high) {
     return low>0?low-1:0;
 }
 
+function getValueArray(values, pieceIndex) {
+    return [values[pieceIndex*4], values[pieceIndex*4 + 1], values[pieceIndex*4 + 2], values[pieceIndex*4 + 3]];
+}
+
 exports.evaluatePolynomial = evaluatePolynomial;
 exports.evaluatePolynomialIntegration = evaluatePolynomialIntegration;
 exports.getAmountListing = getAmountListing;
 exports.getAmountOrder = getAmountOrder;
 exports.getNumPieces = getNumPieces;
 exports.findIndex = findIndex;
+exports.getValueArray = getValueArray;

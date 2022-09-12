@@ -30,6 +30,8 @@ contract Order is Listing {
         uint256 amount,
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
+        bytes pricingFunction,
+        uint256 numPieces,
         LibPolynomial.PriceType priceType
     );
 
@@ -64,53 +66,25 @@ contract Order is Listing {
 
         if (s.podOrders[id] > 0) _cancelPodOrder(pricePerPod, maxPlaceInLine, LibTransfer.To.INTERNAL);
         s.podOrders[id] = beanAmount;
-        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, LibPolynomial.PriceType.Fixed);
+
+        bytes memory pricingFunction;
+        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, pricingFunction, 0, LibPolynomial.PriceType.Fixed);
     }
 
-    function _createPodOrderPiecewise4(
+    function _createPodOrderV2(
         uint256 beanAmount,
-        uint24 pricePerPod,
         uint256 maxPlaceInLine,
-        LibPolynomial.CubicPiecewise4 calldata f
+        bytes calldata pricingFunction,
+        uint256 numPieces
     ) internal returns (bytes32 id) {
         require(beanAmount > 0, "Marketplace: Order amount must be > 0.");
-        id = createOrderIdPiecewise4(msg.sender, pricePerPod, maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
-        if (s.podOrders[id] > 0) _cancelPodOrderPiecewise4(pricePerPod, maxPlaceInLine, LibTransfer.To.INTERNAL, f);
+        id = createOrderIdV2(msg.sender, 0, maxPlaceInLine, pricingFunction, numPieces);
+        if (s.podOrders[id] > 0) _cancelPodOrderV2(maxPlaceInLine, pricingFunction, numPieces, LibTransfer.To.INTERNAL);
         s.podOrders[id] = beanAmount;
 
-        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, LibPolynomial.PriceType.Piecewise4);
-        emit NewCubicPiecewise4(f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
+        emit PodOrderCreated(msg.sender, id, beanAmount, 0, maxPlaceInLine, pricingFunction, numPieces, LibPolynomial.PriceType.Dynamic);
     }
 
-    function _createPodOrderPiecewise16(
-        uint256 beanAmount,
-        uint24 pricePerPod,
-        uint256 maxPlaceInLine,
-        LibPolynomial.CubicPiecewise16 calldata f
-    ) internal returns (bytes32 id) {
-        require(beanAmount > 0, "Marketplace: Order amount must be > 0.");
-        id = createOrderIdPiecewise16(msg.sender, pricePerPod, maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
-        if (s.podOrders[id] > 0) _cancelPodOrderPiecewise16(pricePerPod, maxPlaceInLine, LibTransfer.To.INTERNAL, f);
-        s.podOrders[id] = beanAmount;
-
-        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, LibPolynomial.PriceType.Piecewise16);
-        emit NewCubicPiecewise16(f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
-    }
-
-    function _createPodOrderPiecewise64(
-        uint256 beanAmount,
-        uint24 pricePerPod,
-        uint256 maxPlaceInLine,
-        LibPolynomial.CubicPiecewise64 calldata f
-    ) internal returns (bytes32 id) {
-        require(beanAmount > 0, "Marketplace: Order amount must be > 0.");
-        id = createOrderIdPiecewise64(msg.sender, pricePerPod, maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
-        if (s.podOrders[id] > 0) _cancelPodOrderPiecewise64(pricePerPod, maxPlaceInLine, LibTransfer.To.INTERNAL, f);
-        s.podOrders[id] = beanAmount;
-
-        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, LibPolynomial.PriceType.Piecewise64);
-        emit NewCubicPiecewise64(f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
-    }
 
     /*
      * Fill
@@ -141,74 +115,21 @@ contract Order is Listing {
         emit PodOrderFilled(msg.sender, o.account, id, index, start, amount, costInBeans);
     }
 
-    function _fillPodOrderPiecewise4(
+    function _fillPodOrderV2(
         PodOrder calldata o,
-        LibPolynomial.CubicPiecewise4 calldata f,
         uint256 index,
         uint256 start,
         uint256 amount,
+        bytes calldata pricingFunction,
+        uint256 numPieces,
         LibTransfer.To mode
     ) internal {
 
         require(s.a[msg.sender].field.plots[index] >= (start + amount), "Marketplace: Invalid Plot.");
         require((index + start - s.f.harvestable + amount) <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
         
-        bytes32 id = createOrderIdPiecewise4(o.account, o.pricePerPod, o.maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
-        uint256 costInBeans = getAmountBeansToFillOrderPiecewise4(f, index + start - s.f.harvestable, amount);
-        s.podOrders[id] = s.podOrders[id].sub(costInBeans, "Marketplace: Not enough beans in order.");
-        
-        LibTransfer.sendToken(C.bean(), costInBeans, msg.sender, mode);
-        
-        if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
-        
-        _transferPlot(msg.sender, o.account, index, start, amount);
-
-        if (s.podOrders[id] == 0) delete s.podOrders[id];
-        
-        emit PodOrderFilled(msg.sender, o.account, id, index, start, amount, costInBeans);
-    }
-
-    function _fillPodOrderPiecewise16(
-        PodOrder calldata o,
-        LibPolynomial.CubicPiecewise16 calldata f,
-        uint256 index,
-        uint256 start,
-        uint256 amount,
-        LibTransfer.To mode
-    ) internal {
-
-        require(s.a[msg.sender].field.plots[index] >= (start + amount), "Marketplace: Invalid Plot.");
-        require((index + start - s.f.harvestable + amount) <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
-        
-        bytes32 id = createOrderIdPiecewise16(o.account, o.pricePerPod, o.maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
-        uint256 costInBeans = getAmountBeansToFillOrderPiecewise16(f, index + start - s.f.harvestable, amount);
-        s.podOrders[id] = s.podOrders[id].sub(costInBeans, "Marketplace: Not enough beans in order.");
-        
-        LibTransfer.sendToken(C.bean(), costInBeans, msg.sender, mode);
-        
-        if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
-        
-        _transferPlot(msg.sender, o.account, index, start, amount);
-
-        if (s.podOrders[id] == 0) delete s.podOrders[id];
-        
-        emit PodOrderFilled(msg.sender, o.account, id, index, start, amount, costInBeans);
-    }
-
-    function _fillPodOrderPiecewise64(
-        PodOrder calldata o,
-        LibPolynomial.CubicPiecewise64 calldata f,
-        uint256 index,
-        uint256 start,
-        uint256 amount,
-        LibTransfer.To mode
-    ) internal {
-
-        require(s.a[msg.sender].field.plots[index] >= (start + amount), "Marketplace: Invalid Plot.");
-        require((index + start - s.f.harvestable + amount) <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
-        
-        bytes32 id = createOrderIdPiecewise64(o.account, o.pricePerPod, o.maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
-        uint256 costInBeans = getAmountBeansToFillOrderPiecewise64(f, index + start - s.f.harvestable, amount);
+        bytes32 id = createOrderIdV2(o.account, 0, o.maxPlaceInLine, pricingFunction, numPieces);
+        uint256 costInBeans = getAmountBeansToFillOrderV2(index + start - s.f.harvestable, amount, pricingFunction, numPieces);
         s.podOrders[id] = s.podOrders[id].sub(costInBeans, "Marketplace: Not enough beans in order.");
         
         LibTransfer.sendToken(C.bean(), costInBeans, msg.sender, mode);
@@ -237,41 +158,13 @@ contract Order is Listing {
         emit PodOrderCancelled(msg.sender, id);
     }
 
-    function _cancelPodOrderPiecewise4(
-        uint24 pricePerPod,
+    function _cancelPodOrderV2(
         uint256 maxPlaceInLine,
-        LibTransfer.To mode,
-        LibPolynomial.CubicPiecewise4 calldata f
+        bytes calldata pricingFunction,
+        uint256 numPieces,
+        LibTransfer.To mode
     ) internal {
-        bytes32 id = createOrderIdPiecewise4(msg.sender, pricePerPod, maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
-        uint256 amountBeans = s.podOrders[id];
-        LibTransfer.sendToken(C.bean(), amountBeans, msg.sender, mode);
-        delete s.podOrders[id];
-        
-        emit PodOrderCancelled(msg.sender, id);
-    }
-
-    function _cancelPodOrderPiecewise16(
-        uint24 pricePerPod,
-        uint256 maxPlaceInLine,
-        LibTransfer.To mode,
-        LibPolynomial.CubicPiecewise16 calldata f
-    ) internal {
-        bytes32 id = createOrderIdPiecewise16(msg.sender, pricePerPod, maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
-        uint256 amountBeans = s.podOrders[id];
-        LibTransfer.sendToken(C.bean(), amountBeans, msg.sender, mode);
-        delete s.podOrders[id];
-        
-        emit PodOrderCancelled(msg.sender, id);
-    }
-
-    function _cancelPodOrderPiecewise64(
-        uint24 pricePerPod,
-        uint256 maxPlaceInLine,
-        LibTransfer.To mode,
-        LibPolynomial.CubicPiecewise64 calldata f
-    ) internal {
-        bytes32 id = createOrderIdPiecewise64(msg.sender, pricePerPod, maxPlaceInLine, f.breakpoints, f.significands, f.packedExponents, f.packedSigns);
+        bytes32 id = createOrderIdV2(msg.sender, 0, maxPlaceInLine, pricingFunction, numPieces);
         uint256 amountBeans = s.podOrders[id];
         LibTransfer.sendToken(C.bean(), amountBeans, msg.sender, mode);
         delete s.podOrders[id];
@@ -293,31 +186,14 @@ contract Order is Listing {
     * @notice Calculates the amount of beans needed to fill an order.
     * @dev Integration over a range that falls within piecewise domain.
     */
-    function getAmountBeansToFillOrderPiecewise4(
-        LibPolynomial.CubicPiecewise4 calldata f,
+    function getAmountBeansToFillOrderV2(
         uint256 placeInLine, 
-        uint256 amountPodsFromOrder
-    ) public pure returns (uint256 beanAmount) { 
-        beanAmount = LibPolynomial.evaluatePolynomialIntegrationPiecewise4(f, placeInLine, placeInLine + amountPodsFromOrder);
-        beanAmount /= 1000000;
-    }
-
-    function getAmountBeansToFillOrderPiecewise16(
-        LibPolynomial.CubicPiecewise16 calldata f,
-        uint256 placeInLine, 
-        uint256 amountPodsFromOrder
-    ) public pure returns (uint256 beanAmount) { 
-        beanAmount = LibPolynomial.evaluatePolynomialIntegrationPiecewise16(f, placeInLine, placeInLine + amountPodsFromOrder);
-        beanAmount /= 1000000;
-    }
-
-    function getAmountBeansToFillOrderPiecewise64(
-        LibPolynomial.CubicPiecewise64 calldata f,
-        uint256 placeInLine, 
-        uint256 amountPodsFromOrder
-    ) public pure returns (uint256 beanAmount) { 
-        beanAmount = LibPolynomial.evaluatePolynomialIntegrationPiecewise64(f, placeInLine, placeInLine + amountPodsFromOrder);
-        beanAmount /= 1000000;
+        uint256 amountPodsFromOrder,
+        bytes calldata f,
+        uint256 numPieces
+    ) public view returns (uint256 beanAmount) { 
+        beanAmount = LibPolynomial.evaluatePolynomialIntegrationPiecewise(placeInLine, placeInLine + amountPodsFromOrder, f, numPieces);
+        beanAmount = beanAmount.div(1000000);
     }
 
     /*
@@ -331,39 +207,14 @@ contract Order is Listing {
         id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine));
     }
 
-    function createOrderIdPiecewise4(
+    function createOrderIdV2(
         address account,
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
-        uint256[4] calldata breakpoints,
-        uint256[16] calldata significands,
-        uint256 packedExponents,
-        uint256 packedSigns
+        bytes calldata pricingFunction,
+        uint256 numPieces
     ) internal pure returns (bytes32 id) {
-        id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, breakpoints, significands, packedExponents, packedSigns));
-    }
-
-    function createOrderIdPiecewise16(
-        address account,
-        uint24 pricePerPod,
-        uint256 maxPlaceInLine,
-        uint256[16] calldata breakpoints,
-        uint256[64] calldata significands,
-        uint256[2] calldata packedExponents,
-        uint256 packedSigns
-    ) internal pure returns (bytes32 id) {
-        id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, breakpoints, significands, packedExponents, packedSigns));
-    }
-
-    function createOrderIdPiecewise64(
-        address account,
-        uint24 pricePerPod,
-        uint256 maxPlaceInLine,
-        uint256[64] calldata breakpoints,
-        uint256[256] calldata significands,
-        uint256[8] calldata packedExponents,
-        uint256 packedSigns
-    ) internal pure returns (bytes32 id) {
-        id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, breakpoints, significands, packedExponents, packedSigns));
+        require(pricingFunction.length == numPieces*416, "Marketplace: Invalid pricing function.");
+        id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, pricingFunction));
     }
 }

@@ -33,6 +33,13 @@ class BitDescriptor {
         }
         return new BitDescriptor(value, 8);
     }
+
+    static fromUint256String(value) {
+        if(!(value >= 0)) {
+            throw new Error("Value must be an unsigned 256-bit integer");
+        }
+        return new BitDescriptor(BigInt(value), 256);
+    }
 }
 
 // type UnpackFn<T> = (pattern: string) => T;

@@ -1,7 +1,7 @@
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
-const { Fixed, Piecewise4, Piecewise16, Piecewise64 } = require('./utils/priceTypes.js')
+const { Fixed, Dynamic } = require('./utils/priceTypes.js')
 const { interpolatePoints } = require('./utils/interpolater.js')
-const { getNumPieces, evaluatePolynomial, evaluatePolynomialIntegration, getAmountOrder } = require('./utils/libPolynomialHelpers.js')
+const { getNumPieces, evaluatePolynomial, evaluatePolynomialIntegration, getAmountOrder, getValueArray } = require('./utils/libPolynomialHelpers.js')
 
 const { expect, use } = require("chai");
 const { waffleChai } = require("@ethereum-waffle/chai");
@@ -51,62 +51,29 @@ describe('Marketplace', function () {
   const getHash = async function (tx) {
     let receipt = await tx.wait();
     var args = (receipt.events?.filter((x) => { return x.event == ("PodListingCreated")}))[0]?.args;
-
-    return ethers.utils.solidityKeccak256(
-      ['uint256', 'uint256', 'uint24', 'uint256', 'bool'],
-      [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args.mode == EXTERNAL]
-    );
-  }
-
-  const getDynamicHash = async function (tx) {
-    let receipt = await tx.wait();
-    let numPieces = 4;
-    var args = (receipt.events.filter((x) => { return x.event == ("PodListingCreated") }))[0].args;
-    var polynomialArgs = (receipt.events.filter((x) => { return x.event == ("NewCubicPiecewise4") }))[0]?.args;
-    if(!polynomialArgs) {
-      polynomialArgs = (receipt.events.filter((x) => { return x.event == ("NewCubicPiecewise16") }))[0]?.args;
-      numPieces = 16;
-    }
-
-    if(!polynomialArgs) {
-      polynomialArgs = (receipt.events.filter((x) => { return x.event == ("NewCubicPiecewise64") }))[0]?.args;
-      numPieces = 64;
-    }
-
-    if(numPieces === 4) {
+    if(args.pricingType == Dynamic) {
       return ethers.utils.solidityKeccak256(
-        ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'uint256[]', 'uint256[]', 'uint256', 'uint256'],
-        [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args.mode == EXTERNAL, polynomialArgs.piecewiseBreakpoints, polynomialArgs.coefficientSignificands, polynomialArgs.packedCoefficientExponents, polynomialArgs.packedCoefficientSigns]
-      )
+        ['uint256', 'uint256', 'uint24', 'uint256', 'bytes', 'bool'],
+        [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args.pricingFunction, args.mode == EXTERNAL]
+      );
     } else {
       return ethers.utils.solidityKeccak256(
-        ['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'uint256[]', 'uint256[]', 'uint256[]', 'uint256'],
-        [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args.mode == EXTERNAL, polynomialArgs.piecewiseBreakpoints, polynomialArgs.coefficientSignificands, polynomialArgs.packedCoefficientExponents, polynomialArgs.packedCoefficientSigns]
-      )
-    }
+        ['uint256', 'uint256', 'uint24', 'uint256', 'bool'],
+        [args.start, args.amount, args.pricePerPod, args.maxHarvestableIndex, args.mode == EXTERNAL]
+      );
+    } 
   }
 
-  const getHashFromDynamicListing = function (l) {
-    let numPieces = l[5][0].length;
-
-    l[4] = l[4] == EXTERNAL;
-    l.push(l[5][1]);
-    l.push(l[5][2]);
-    l.push(l[5][3]);
-    l[5] = l[5][0];
-    
-    if(numPieces === 4) {
-      return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'uint256[]', 'uint256[]', 'uint256', 'uint256'], l);
-    } else {
-      return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool', 'uint256[]', 'uint256[]', 'uint256[]', 'uint256'], l);
-    }
+  const getHashFromDynamicListing = function (l, f) {
+    let functionHash = ethers.utils.solidityPack(['uint256[]', 'uint256[]', 'uint8[]', 'bool[]'], [f.breakpoints, f.coefficients, f.exponents, f.signs])
+    l[4] = (l[4] == EXTERNAL);
+    l.push(functionHash);
+    return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bytes', 'bool'], l);
   }
 
   const getHashFromListing = function (l) {
-    
-    return ethers.utils.solidityKeccak256(
-      ['uint256', 'uint256', 'uint24', 'uint256', 'bool'], [l[0], l[1], l[2], l[3], l[4] == EXTERNAL]
-    );
+    l[4] = (l[4] == EXTERNAL);
+    return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool'], l);
   }
 
   const getOrderId = async function (tx) {
@@ -177,129 +144,81 @@ describe('Marketplace', function () {
 
     describe("Piece Index Search", async function () {
 
-      describe("Less than 4 Pieces", async function () {
+      describe("4 Piece Index Search", async function () {
         beforeEach(async function () {
-          this.breakpoints = interpolatePoints([100, 200, 300], [0, 0, 0]).breakpoints;
+          this.f = interpolatePoints([100, 200, 300, 400], [0, 0, 0, 0]);
         })
         it("correctly finds interval at 0", async function () {
-          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '0', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(0);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '0', getNumPieces(this.f.breakpoints, 4) - 1)).to.be.equal(0);
         })
 
         it("finds interval between breakpoints", async function () {
-          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '150', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(0);
-          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '250', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '150', getNumPieces(this.f.breakpoints, 4) - 1)).to.be.equal(0);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '250', getNumPieces(this.f.breakpoints, 4) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '350', getNumPieces(this.f.breakpoints, 4) - 1)).to.be.equal(2);
         })
         it("finds interval at breakpoints", async function () {
-          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '100', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(0);
-          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '200', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(1);
-          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '300', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '100', getNumPieces(this.f.breakpoints, 4) - 1)).to.be.equal(0);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '200', getNumPieces(this.f.breakpoints, 4) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '300', getNumPieces(this.f.breakpoints, 4) - 1)).to.be.equal(2);
+        })
+        it("finds interval at end", async function () {
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '400', getNumPieces(this.f.breakpoints, 4) - 1)).to.be.equal(2);
         })
         it("finds interval past end", async function (){
-          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '301', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '401', getNumPieces(this.f.breakpoints, 4) - 1)).to.be.equal(2);
         })
       })
 
-      describe("4 Pieces", async function () {
+      describe("16 Piece Index Search", async function () {
         beforeEach(async function () {
-          this.breakpoints = interpolatePoints([100, 200, 300, 400], [0, 0, 0, 0]).breakpoints;
+          this.f = interpolatePoints(set_16Pieces.xs, set_16Pieces.ys);
         })
         it("correctly finds interval at 0", async function () {
-          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '0', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(0);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '0', getNumPieces(this.f.breakpoints, 16) - 1)).to.be.equal(0);
         })
 
         it("finds interval between breakpoints", async function () {
-          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '150', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(0);
-          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '250', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(1);
-          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '350', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '250', getNumPieces(this.f.breakpoints, 16) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '420', getNumPieces(this.f.breakpoints, 16) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '2900', getNumPieces(this.f.breakpoints, 16) - 1)).to.be.equal(14);
         })
         it("finds interval at breakpoints", async function () {
-          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '100', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(0);
-          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '200', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(1);
-          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '300', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '200', getNumPieces(this.f.breakpoints, 16) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '400', getNumPieces(this.f.breakpoints, 16) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '2600', getNumPieces(this.f.breakpoints, 16) - 1)).to.be.equal(13);
         })
         it("finds interval at end", async function () {
-          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '400', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '3000', getNumPieces(this.f.breakpoints, 16) - 1)).to.be.equal(14);
         })
         it("finds interval past end", async function (){
-          expect(await this.marketplace.connect(user).findIndexPiecewise4(this.breakpoints, '401', getNumPieces(this.breakpoints, 4) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '3001', getNumPieces(this.f.breakpoints, 16) - 1)).to.be.equal(14);
         })
       })
 
-      describe("Less than 16 Pieces", async function () {
+      describe("64 Piece Index Search", async function () {
         beforeEach(async function () {
-          this.breakpoints = interpolatePoints(set_12Pieces.xs, set_12Pieces.ys).breakpoints;
+          this.f = interpolatePoints(staticset_64Pieces_500000.xs, staticset_64Pieces_500000.ys);
         })
         it("correctly finds interval at 0", async function () {
-          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '0', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(0);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '0', getNumPieces(this.f.breakpoints, 64) - 1)).to.be.equal(0);
         })
 
         it("finds interval between breakpoints", async function () {
-          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '250', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(1);
-          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '420', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(2);
-          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '2100', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(10);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '1250', getNumPieces(this.f.breakpoints, 64) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '2420', getNumPieces(this.f.breakpoints, 64) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '45500', getNumPieces(this.f.breakpoints, 64) - 1)).to.be.equal(45);
         })
         it("finds interval at breakpoints", async function () {
-          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '200', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(1);
-          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '400', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(2);
-          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '1800', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(9);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '1000', getNumPieces(this.f.breakpoints, 64) - 1)).to.be.equal(1);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '2000', getNumPieces(this.f.breakpoints, 64) - 1)).to.be.equal(2);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '13000', getNumPieces(this.f.breakpoints, 64) - 1)).to.be.equal(13);
         })
         it("finds interval at end", async function () {
-          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '2200', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(10);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '63000', getNumPieces(this.f.breakpoints, 64) - 1)).to.be.equal(62);
         })
         it("finds interval past end", async function (){
-          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '2201', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(10);
-        })
-      })
-
-      describe("16 Pieces", async function () {
-        beforeEach(async function () {
-          this.breakpoints = interpolatePoints(set_16Pieces.xs, set_16Pieces.ys).breakpoints;
-        })
-        it("correctly finds interval at 0", async function () {
-          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '0', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(0);
-        })
-
-        it("finds interval between breakpoints", async function () {
-          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '250', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(1);
-          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '420', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(2);
-          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '2900', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(14);
-        })
-        it("finds interval at breakpoints", async function () {
-          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '200', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(1);
-          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '400', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(2);
-          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '2600', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(13);
-        })
-        it("finds interval at end", async function () {
-          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '3000', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(14);
-        })
-        it("finds interval past end", async function (){
-          expect(await this.marketplace.connect(user).findIndexPiecewise16(this.breakpoints, '3001', getNumPieces(this.breakpoints, 16) - 1)).to.be.equal(14);
-        })
-      })
-
-      describe("64 Pieces", async function () {
-        beforeEach(async function () {
-          this.breakpoints = interpolatePoints(staticset_64Pieces_500000.xs, staticset_64Pieces_500000.ys).breakpoints;
-        })
-        it("correctly finds interval at 0", async function () {
-          expect(await this.marketplace.connect(user).findIndexPiecewise64(this.breakpoints, '0', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(0);
-        })
-
-        it("finds interval between breakpoints", async function () {
-          expect(await this.marketplace.connect(user).findIndexPiecewise64(this.breakpoints, '1250', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(1);
-          expect(await this.marketplace.connect(user).findIndexPiecewise64(this.breakpoints, '2420', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(2);
-          expect(await this.marketplace.connect(user).findIndexPiecewise64(this.breakpoints, '45500', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(45);
-        })
-        it("finds interval at breakpoints", async function () {
-          expect(await this.marketplace.connect(user).findIndexPiecewise64(this.breakpoints, '1000', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(1);
-          expect(await this.marketplace.connect(user).findIndexPiecewise64(this.breakpoints, '2000', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(2);
-          expect(await this.marketplace.connect(user).findIndexPiecewise64(this.breakpoints, '13000', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(13);
-        })
-        it("finds interval at end", async function () {
-          expect(await this.marketplace.connect(user).findIndexPiecewise64(this.breakpoints, '63000', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(62);
-        })
-        it("finds interval past end", async function (){
-          expect(await this.marketplace.connect(user).findIndexPiecewise64(this.breakpoints, '63001', getNumPieces(this.breakpoints, 64) - 1)).to.be.equal(62);
+          expect(await this.marketplace.connect(user).findPiecewiseIndex(this.f.packedFunction, '63001', getNumPieces(this.f.breakpoints, 64) - 1)).to.be.equal(62);
         })
       })
 
@@ -307,7 +226,7 @@ describe('Marketplace', function () {
 
     describe("Polynomial Evaluation", async function () {
     
-      describe("Small Values", async function () {
+      describe("Evaluate Normal Values", async function () {
         describe("evaluation at piecewise breakpoints", async function () {
           beforeEach(async function () {
             this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
@@ -316,29 +235,37 @@ describe('Marketplace', function () {
           it("first breakpoint", async function () {
             const x = 0;
             const pieceIndex = 0;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents[0], this.f.packedSigns, pieceIndex, x)).to.be.equal(set_13Pieces.ys[0]);
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(set_13Pieces.ys[0]);
           })
 
           it("second breakpoint", async function () {  
             const x = 0;
             const pieceIndex = 1;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs,this.f.packedExponents[0], this.f.packedSigns, pieceIndex, x)).to.be.equal(set_13Pieces.ys[1]);
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(set_13Pieces.ys[1]);
           })
 
           it("second last breakpoint", async function () {  
             var x = 0;
             var pieceIndex = 11;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs,this.f.packedExponents[1], this.f.packedSigns, pieceIndex, x)).to.be.equal(set_13Pieces.ys[11]);
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(set_13Pieces.ys[11]);
           })
 
           it("last breakpoint", async function () {  
             const x = 0;
             const pieceIndex = 12;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs,this.f.packedExponents[1], this.f.packedSigns, pieceIndex, x)).to.be.equal(set_13Pieces.ys[12]);
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(set_13Pieces.ys[12]);
           })
         })
         describe("evaluation between piecewise breakpoints", async function () {
@@ -348,43 +275,39 @@ describe('Marketplace', function () {
           it("within first interval", async function () {
             const x = 2500 - set_13Pieces.xs[0];
             const pieceIndex = 0;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs,this.f.packedExponents[0], this.f.packedSigns, pieceIndex, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
           })
           it("within second interval", async function () {
             const x = 5750 - set_13Pieces.xs[1];
             const pieceIndex = 1;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs,this.f.packedExponents[0], this.f.packedSigns, pieceIndex, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
           })
           it("within second last interval", async function () {
             const x = 14999 - set_13Pieces.xs[10];
             const pieceIndex = 10;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs,this.f.packedExponents[1], this.f.packedSigns, pieceIndex, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
           })
           it("within last interval", async function () {
             const x = 19410 - set_13Pieces.xs[11];
             const pieceIndex = 11;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs,this.f.packedExponents[1], this.f.packedSigns, pieceIndex, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
           })
         })
       })
 
-      describe("Huge Values", async function () {
-        // describe('reverts', async function () {
-        //   beforeEach(async function () {
-        //     this.f = interpolatePoints(hugeValueSet_13Pieces.xs, hugeValueSet_13Pieces.ys);
-        //   })
-        //   it("when value lies before function domain", async function () {   
-        //     const x = 0;       
-        //     const pieceIndex = findIndex(hugeValueSet_13Pieces.xs, x, getNumPieces(hugeValueSet_13Pieces.xs) - 1);
-        //     const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-        //     await expect(this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents, this.f.packedSigns, pieceIndex, x)).to.be.revertedWith("Marketplace: Not in function domain.");
-        //   })
-  
-        // })
+      describe("Evaluate Huge Values", async function () {
         describe("evaluation at piecewise breakpoints", async function () {
           beforeEach(async function () {
             this.f = interpolatePoints(hugeValueSet_13Pieces.xs, hugeValueSet_13Pieces.ys);
@@ -393,29 +316,37 @@ describe('Marketplace', function () {
           it("correctly evaluates at first breakpoint", async function () {
             const x = 0;
             const pieceIndex = 0;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents[0], this.f.packedSigns, pieceIndex, x)).to.be.equal(hugeValueSet_13Pieces.ys[0]);
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(hugeValueSet_13Pieces.ys[0]);
           })
 
           it("correctly evaluates at second breakpoint", async function () {  
             const x = 0;
             const pieceIndex = 1;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents[0], this.f.packedSigns, pieceIndex, x)).to.be.equal(hugeValueSet_13Pieces.ys[1]);
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(hugeValueSet_13Pieces.ys[1]);
           })
 
           it("correctly evaluates at second last breakpoint", async function () {  
             const x = 0;
             const pieceIndex = 11;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents[1], this.f.packedSigns, pieceIndex, x)).to.be.equal(hugeValueSet_13Pieces.ys[11]);
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(hugeValueSet_13Pieces.ys[11]);
           })
 
           it("correctly evaluates at last breakpoint", async function () {  
             const x = 0;
             const pieceIndex = 12;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents[1], this.f.packedSigns, pieceIndex, x)).to.be.equal(hugeValueSet_13Pieces.ys[12]);
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(hugeValueSet_13Pieces.ys[12]);
           })
         })
         describe("evaluation in between piecewise breakpoints", async function () {
@@ -425,27 +356,34 @@ describe('Marketplace', function () {
           it("correctly evaluates within first interval", async function () {
             const x = 14567200000500 - hugeValueSet_13Pieces.xs[0];
             const pieceIndex = 0  ;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents[0], this.f.packedSigns, pieceIndex, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
           })
           it("correctly evaluates within second interval", async function () {
             const x = 59555200441200 - hugeValueSet_13Pieces.xs[1];
             const pieceIndex = 1;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents[0], this.f.packedSigns, pieceIndex, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
           })
           it("correctly evaluates within second last interval", async function () {
             const x = 140567200000500 - hugeValueSet_13Pieces.xs[10];
             const pieceIndex = 10;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents[1], this.f.packedSigns, pieceIndex, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
           })
           it("correctly evaluates within last interval", async function () {
             const x = 185069299999500 - hugeValueSet_13Pieces.xs[11];
             const pieceIndex = 11;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefs, this.f.packedExponents[1], this.f.packedSigns, pieceIndex, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
           })
         })
       })
@@ -453,7 +391,7 @@ describe('Marketplace', function () {
 
     describe("Polynomial Integral Evaluation", async function () {
 
-      describe("Small Values", async function () {
+      describe("Integrate Normal Values", async function () {
         describe("correctly evaluates a single polynomial integration", async function () {
           beforeEach(async function () {
             this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
@@ -463,36 +401,44 @@ describe('Marketplace', function () {
             const start = 1000 - set_13Pieces.xs[0];
             const end = 4000 - set_13Pieces.xs[0];
             const pieceIndex = 0;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefs, this.f.packedExponents[0], this.f.packedSigns, pieceIndex, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefficients, exponents, signs, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
           })
   
           it("second interval", async function () {
             const start = 5200 - set_13Pieces.xs[1];
             const end = 5999 - set_13Pieces.xs[1];
             const pieceIndex = 1;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefs, this.f.packedExponents[0], this.f.packedSigns, pieceIndex, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefficients, exponents, signs, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
           })
           
           it("second last interval", async function () {
             const start = 14500 - set_13Pieces.xs[10];
             const end = 16603 - set_13Pieces.xs[10];
             const pieceIndex = 10;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefs, this.f.packedExponents[1], this.f.packedSigns, pieceIndex, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefficients, exponents, signs, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
           })
           it("last interval", async function () {
             const start = 18100 - set_13Pieces.xs[11];
             const end = 19004 - set_13Pieces.xs[11];
             const pieceIndex = 11;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefs, this.f.packedExponents[1], this.f.packedSigns, pieceIndex, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefficients, exponents, signs, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
           })
         })
       })
 
-      describe("Huge Values", async function () {
+      describe("Integrate Huge Values", async function () {
         describe("correctly evaluates a single polynomial integration", async function () {
           beforeEach(async function () {
             this.f = interpolatePoints(hugeValueSet_13Pieces.xs, hugeValueSet_13Pieces.ys);
@@ -502,31 +448,39 @@ describe('Marketplace', function () {
             const start = 10000000000000 - hugeValueSet_13Pieces.xs[0]; 
             const end = 12000000000000 - hugeValueSet_13Pieces.xs[0]; 
             const pieceIndex = 0; 
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]]; 
-            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefs, this.f.packedExponents[0], this.f.packedSigns, pieceIndex, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefficients, exponents, signs, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
           })
   
           it("second interval", async function () {
             const start = 55000000000000 - hugeValueSet_13Pieces.xs[1];
             const end = 58000000000000 - hugeValueSet_13Pieces.xs[1];
             const pieceIndex = 1;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefs, this.f.packedExponents[0], this.f.packedSigns, pieceIndex, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefficients, exponents, signs, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
           })
           
           it("second last interval", async function () {
             const start = 145000000000000 - hugeValueSet_13Pieces.xs[10];
             const end = 178000000000016 - hugeValueSet_13Pieces.xs[10];
             const pieceIndex = 10;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefs, this.f.packedExponents[1], this.f.packedSigns, pieceIndex, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefficients, exponents, signs, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
           })
           it("last interval", async function () {
             const start = 180000000000000 - hugeValueSet_13Pieces.xs[11];
             const end = 195999999999990 - hugeValueSet_13Pieces.xs[11]; //this overflows easily 
             const pieceIndex = 11;
-            const coefs = [this.f.coefficients[pieceIndex*4], this.f.coefficients[pieceIndex*4 + 1], this.f.coefficients[pieceIndex*4 + 2], this.f.coefficients[pieceIndex*4 + 3]];
-            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefs, this.f.packedExponents[1], this.f.packedSigns, pieceIndex, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
+            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
+            const exponents = getValueArray(this.f.exponents, pieceIndex);
+            const signs = getValueArray(this.f.signs, pieceIndex);
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefficients, exponents, signs, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
           })
         })
       })
@@ -534,109 +488,109 @@ describe('Marketplace', function () {
 
     describe("Piecewise Polynomial Integral Evaluation", async function () {
 
-      describe("Small Values", async function () {
+      describe("Integrate Normal Values", async function () {
         describe("correctly evaluates a polynomial integration over two pieces", async function () {
           beforeEach(async function () {
             this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
-            this.function = [this.f.breakpoints, this.f.coefficients, this.f.packedExponents, this.f.packedSigns];
+            this.function = ethers.utils.solidityPack(['uint256[]', 'uint256[]', 'uint8[]', 'bool[]'], [this.f.breakpoints, this.f.coefficients, this.f.exponents, this.f.signs]);
           })
   
           it("first to second interval", async function () {
             const startPlaceInLine = 1000;
             const amountPodsFromOrder = 4500;
-            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 13);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderV2(startPlaceInLine, amountPodsFromOrder, this.function, 13)).to.be.equal(orderBeanAmount);
           })
   
           it("second to third interval", async function () {
             const startPlaceInLine = 5000;
             const amountPodsFromOrder = 1500;
-            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 13);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderV2(startPlaceInLine, amountPodsFromOrder, this.function, 13)).to.be.equal(orderBeanAmount);
           })
           
           it("fourth to fifth interval", async function () {
             const startPlaceInLine = 7000;
             const amountPodsFromOrder = 1500;
-            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 13);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderV2(startPlaceInLine, amountPodsFromOrder, this.function, 13)).to.be.equal(orderBeanAmount);
           })
 
           it("eleventh to twelfth interval", async function () {
             const startPlaceInLine = 14000;
             const amountPodsFromOrder = 4500;
-            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 13);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderV2(startPlaceInLine, amountPodsFromOrder, this.function, 13)).to.be.equal(orderBeanAmount);
           })
 
           it("twelfth to past last interval", async function () {
             const startPlaceInLine = 18000;
             const amountPodsFromOrder = 4500;
-            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 13);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderV2(startPlaceInLine, amountPodsFromOrder, this.function, 13)).to.be.equal(orderBeanAmount);
           })
         })
 
         describe("correctly evaluates a polynomial integration over multiple pieces", async function () {
           beforeEach(async function () {
             this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
-            this.function = [this.f.breakpoints, this.f.coefficients, this.f.packedExponents, this.f.packedSigns];
+            this.function = ethers.utils.solidityPack(['uint256[]', 'uint256[]', 'uint8[]', 'bool[]'], [this.f.breakpoints, this.f.coefficients, this.f.exponents, this.f.signs]);
           })
   
           it("first to third interval", async function () {
             const startPlaceInLine = 1000;
             const amountPodsFromOrder = 5500;
-            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 13);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderV2(startPlaceInLine, amountPodsFromOrder, this.function, 13)).to.be.equal(orderBeanAmount);
           })
   
           it("second to fourth interval", async function () {
             const startPlaceInLine = 5000;
             const amountPodsFromOrder = 2500;
-            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 13);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderV2(startPlaceInLine, amountPodsFromOrder, this.function, 13)).to.be.equal(orderBeanAmount);
           })
           
           it("fourth to sixth interval", async function () {
             const startPlaceInLine = 7000;
             const amountPodsFromOrder = 2500;
-            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 13);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderV2(startPlaceInLine, amountPodsFromOrder, this.function, 13)).to.be.equal(orderBeanAmount);
           })
 
           it("tenth to twelfth interval", async function () {
             const startPlaceInLine = 13000;
             const amountPodsFromOrder = 5500;
-            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 13);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderV2(startPlaceInLine, amountPodsFromOrder, this.function, 13)).to.be.equal(orderBeanAmount);
           })
 
           it("eleventh to past last interval", async function () {
             const startPlaceInLine = 14000;
             const amountPodsFromOrder = 8500;
-            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 13);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderV2(startPlaceInLine, amountPodsFromOrder, this.function, 13)).to.be.equal(orderBeanAmount);
           })
         })
 
         describe("correctly evaluates a polynomial integration over all pieces", async function () {
           beforeEach(async function () {
             this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
-            this.function = [this.f.breakpoints, this.f.coefficients, this.f.packedExponents, this.f.packedSigns];
+            this.function = ethers.utils.solidityPack(['uint256[]', 'uint256[]', 'uint8[]', 'bool[]'], [this.f.breakpoints, this.f.coefficients, this.f.exponents, this.f.signs]);
           })
   
           it("first to last interval", async function () {
             const startPlaceInLine = 1000;
             const amountPodsFromOrder = 18500;
-            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 13);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderV2(startPlaceInLine, amountPodsFromOrder, this.function, 13)).to.be.equal(orderBeanAmount);
           })
   
           it("first to past last interval", async function () {
             const startPlaceInLine = 1000;
             const amountPodsFromOrder = 19500;
-            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 13);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderV2(startPlaceInLine, amountPodsFromOrder, this.function, 13)).to.be.equal(orderBeanAmount);
           })
         })
       })
@@ -645,70 +599,70 @@ describe('Marketplace', function () {
         describe("correctly evaluates a polynomial integration over two pieces", async function () {
           beforeEach(async function () {
             this.f = interpolatePoints(hugeValueSet_13Pieces.xs, hugeValueSet_13Pieces.ys);
-            this.function = [this.f.breakpoints, this.f.coefficients, this.f.packedExponents, this.f.packedSigns];
+            this.function = ethers.utils.solidityPack(['uint256[]', 'uint256[]', 'uint8[]', 'bool[]'], [this.f.breakpoints, this.f.coefficients, this.f.exponents, this.f.signs]);
           })
   
           it("first to second interval", async function () {
             const startPlaceInLine = 10000000000000;
             const amountPodsFromOrder = 45000000000000;
-            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 13);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderV2(startPlaceInLine, amountPodsFromOrder, this.function, 13)).to.be.equal(orderBeanAmount);
           })
   
           it("second to third interval", async function () {
             const startPlaceInLine = 50000000000000;
             const amountPodsFromOrder = 15000000000000;
-            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 13);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderV2(startPlaceInLine, amountPodsFromOrder, this.function, 13)).to.be.equal(orderBeanAmount);
           })
           
           it("eleventh to twelfth interval", async function () {
             const startPlaceInLine = 130000000000000;
             const amountPodsFromOrder = 15000000000000;
-            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 13);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderV2(startPlaceInLine, amountPodsFromOrder, this.function, 13)).to.be.equal(orderBeanAmount);
           })
         })
 
         describe("correctly evaluates a polynomial integration over multiple pieces", async function () {
           beforeEach(async function () {
             this.f = interpolatePoints(hugeValueSet_13Pieces.xs, hugeValueSet_13Pieces.ys);
-            this.function = [this.f.breakpoints, this.f.coefficients, this.f.packedExponents, this.f.packedSigns];
+            this.function = ethers.utils.solidityPack(['uint256[]', 'uint256[]', 'uint8[]', 'bool[]'], [this.f.breakpoints, this.f.coefficients, this.f.exponents, this.f.signs]);
           })
   
           it("first to third interval", async function () {
             const startPlaceInLine = 10000000000000;
             const amountPodsFromOrder = 55000000000000;
-            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 13);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderV2(startPlaceInLine, amountPodsFromOrder, this.function, 13)).to.be.equal(orderBeanAmount);
           })
   
           it("third to fifth interval", async function () {
             const startPlaceInLine = 60000000000000;
             const amountPodsFromOrder = 25000000000000;
-            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 13);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderV2(startPlaceInLine, amountPodsFromOrder, this.function, 13)).to.be.equal(orderBeanAmount);
           })
           
           it("eleventh to last interval", async function () {
             const startPlaceInLine = 130000000000000;
             const amountPodsFromOrder = 55000000000000;
-            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 13);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderV2(startPlaceInLine, amountPodsFromOrder, this.function, 13)).to.be.equal(orderBeanAmount);
           })
         })
 
         describe("correctly evaluates a polynomial integration over all pieces", async function () {
           beforeEach(async function () {
             this.f = interpolatePoints(hugeValueSet_13Pieces.xs, hugeValueSet_13Pieces.ys);
-            this.function = [this.f.breakpoints, this.f.coefficients, this.f.packedExponents, this.f.packedSigns];
+            this.function = ethers.utils.solidityPack(['uint256[]', 'uint256[]', 'uint8[]', 'bool[]'], [this.f.breakpoints, this.f.coefficients, this.f.exponents, this.f.signs]);
           })
   
           it("first to last interval", async function () {
             const startPlaceInLine = 10000000000000;
             const amountPodsFromOrder = 185000000000000;
-            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 16);
-            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderPiecewise16(this.function, startPlaceInLine, amountPodsFromOrder)).to.be.equal(orderBeanAmount);
+            const orderBeanAmount = getAmountOrder(this.f, startPlaceInLine, amountPodsFromOrder, 13);
+            expect(await this.marketplace.connect(user).getAmountBeansToFillOrderV2(startPlaceInLine, amountPodsFromOrder, this.function, 13)).to.be.equal(orderBeanAmount);
           })
         })
       })
@@ -1057,25 +1011,25 @@ describe('Marketplace', function () {
       })
       describe("Create", async function () {
         it('Fails to List Unowned Plot', async function () {
-          await expect(this.marketplace.connect(user).createPodListingPiecewise4('5000', '0', '1000', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+          await expect(this.marketplace.connect(user).createPodListingPiecewise4(this.function, '5000', '0', '1000', '0', INTERNAL)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
   
         it('Fails if already expired', async function () {
           await this.field.incrementTotalHarvestableE('2000');
-          await expect(this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '500', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Expired.');
+          await expect(this.marketplace.connect(user).createPodListingPiecewise4(this.function, '0', '0', '500', '0', INTERNAL)).to.be.revertedWith('Marketplace: Expired.');
         })
   
         it('Fails if amount is 0', async function () {
-          await expect(this.marketplace.connect(user2).createPodListingPiecewise4('1000', '0', '0', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+          await expect(this.marketplace.connect(user2).createPodListingPiecewise4(this.function, '1000', '0', '0', '0', INTERNAL)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
   
         it('Fails if start + amount too large', async function () {
-          await expect(this.marketplace.connect(user2).createPodListingPiecewise4('1000', '500', '1000', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+          await expect(this.marketplace.connect(user2).createPodListingPiecewise4(this.function, '1000', '500', '1000', '0', INTERNAL)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
   
         describe("List full plot", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise4(this.function, '0', '0', '1000', '0', EXTERNAL);
           })
   
           it('Lists Plot properly', async function () {
@@ -1090,8 +1044,8 @@ describe('Marketplace', function () {
   
         describe("List partial plot", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '100', '0', '0', EXTERNAL, this.function);
-            this.result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '500', '0', '0', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise4(this.function, '0', '0', '100', '0', EXTERNAL);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise4(this.function, '0', '0', '500', '0', EXTERNAL);
           })
   
           it('Lists Plot properly', async function () {
@@ -1106,7 +1060,7 @@ describe('Marketplace', function () {
   
         describe("List partial plot from middle", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '500', '500', '0', '2000', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise4(this.function, '0', '500', '500', '2000', INTERNAL);
           })
   
           it('Lists Plot properly', async function () {
@@ -1121,8 +1075,8 @@ describe('Marketplace', function () {
   
         describe("Relist plot from middle", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '500', '0', '0', INTERNAL, this.function);
-            this.result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '500', '100', '0', '2000', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise4(this.function, '0', '0', '500', '0', INTERNAL);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise4(this.function, '0', '500', '100', '2000', INTERNAL);
           })
   
           it('Lists Plot properly', async function () {
@@ -1140,7 +1094,7 @@ describe('Marketplace', function () {
       describe("Fill", async function () {
         describe('revert', async function () {
           beforeEach(async function () {
-            await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise4(this.function, '0', '0', '1000', '0', EXTERNAL);
             this.listing = [userAddress, '0', '0', '1000', 0, '0', EXTERNAL];
           })
 
@@ -1173,7 +1127,7 @@ describe('Marketplace', function () {
 
           it('Fill Listing not enough pods in listing', async function () {
             const l = [userAddress, '0', '0', '500', '0', '0', INTERNAL]
-            await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '500', '0', '0', INTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise4(this.function, '0', '0', '500', '0', INTERNAL);
             await expect(this.marketplace.connect(user2).fillPodListingPiecewise4(l, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
           })
         })
@@ -1181,7 +1135,7 @@ describe('Marketplace', function () {
         describe("Fill listing", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '0', '1000', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise4(this.function, '0', '0', '1000', '0', EXTERNAL);
             this.amountBeansBuyingWith = 500;
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
@@ -1215,7 +1169,7 @@ describe('Marketplace', function () {
         describe("Fill partial listing", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '0', '1000', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise4(this.function, '0', '0', '1000', '0', EXTERNAL);
             this.amountBeansBuyingWith = 250;
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
@@ -1251,7 +1205,7 @@ describe('Marketplace', function () {
         describe("Fill partial listing of a partial listing multiple fills", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '500', '500', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).createPodListingPiecewise4('0', '500', '500', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise4(this.function, '0', '500', '500', '0', EXTERNAL);
             this.amountBeansBuyingWith = 100;
 
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
@@ -1288,7 +1242,7 @@ describe('Marketplace', function () {
         describe("Fill partial listing of a listing created by partial fill", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '500', '500', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).createPodListingPiecewise4('0', '500', '500', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise4(this.function, '0', '500', '500', '0', EXTERNAL);
             this.amountBeansBuyingWith = 100;
 
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
@@ -1322,7 +1276,7 @@ describe('Marketplace', function () {
         describe("Fill partial listing to wallet", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '0', '1000', '0', '0', INTERNAL]
-            await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '0', INTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise4(this.function, '0', '0', '1000', '0', INTERNAL);
             this.amountBeansBuyingWith = 250;
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
@@ -1357,9 +1311,9 @@ describe('Marketplace', function () {
       })
       describe("Cancel", async function () {
         it('Re-list plot cancels and re-lists', async function () {
-          result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+          result = await this.marketplace.connect(user).createPodListingPiecewise4(this.function, '0', '0', '1000', '0', EXTERNAL);
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
-          result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '2000', INTERNAL, this.function);
+          result = await this.marketplace.connect(user).createPodListingPiecewise4(this.function, '0', '0', '1000', '2000', INTERNAL);
           await expect(result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, '0', 0, 1000, 0, 2000, 1, Piecewise4);
           await expect(result).to.emit(this.marketplace, 'NewCubicPiecewise4').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           await expect(result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, '0');
@@ -1367,12 +1321,12 @@ describe('Marketplace', function () {
         })
 
         it('Reverts on Cancel Listing, not owned by user', async function () {
-          await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+          await this.marketplace.connect(user).createPodListingPiecewise4(this.function, '0', '0', '1000', '0', EXTERNAL);
           await expect(this.marketplace.connect(user2).cancelPodListing('0')).to.be.revertedWith('Marketplace: Listing not owned by sender.');
         })
 
         it('Cancels Listing, Emits Listing Cancelled Event', async function () {
-          result = await this.marketplace.connect(user).createPodListingPiecewise4('0', '0', '1000', '0', '2000', EXTERNAL, this.function);
+          result = await this.marketplace.connect(user).createPodListingPiecewise4(this.function, '0', '0', '1000', '2000', EXTERNAL);
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
           result = (await this.marketplace.connect(user).cancelPodListing('0'));
           expect(await this.marketplace.podListing(0)).to.be.equal(ZERO_HASH);
@@ -1388,25 +1342,25 @@ describe('Marketplace', function () {
       })
       describe("Create", async function () {
         it('Fails to List Unowned Plot', async function () {
-          await expect(this.marketplace.connect(user).createPodListingPiecewise16('5000', '0', '1000', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+          await expect(this.marketplace.connect(user).createPodListingPiecewise16(this.function, '5000', '0', '1000','0', INTERNAL)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
   
         it('Fails if already expired', async function () {
           await this.field.incrementTotalHarvestableE('2000');
-          await expect(this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '500', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Expired.');
+          await expect(this.marketplace.connect(user).createPodListingPiecewise16(this.function, '0', '0', '500','0', INTERNAL)).to.be.revertedWith('Marketplace: Expired.');
         })
   
         it('Fails if amount is 0', async function () {
-          await expect(this.marketplace.connect(user2).createPodListingPiecewise16('1000', '0', '0', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+          await expect(this.marketplace.connect(user2).createPodListingPiecewise16(this.function, '1000', '0', '0','0', INTERNAL)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
   
         it('Fails if start + amount too large', async function () {
-          await expect(this.marketplace.connect(user2).createPodListingPiecewise16('1000', '500', '1000', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+          await expect(this.marketplace.connect(user2).createPodListingPiecewise16(this.function, '1000', '500', '1000','0', INTERNAL)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
   
         describe("List full plot", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise16(this.function, '0', '0', '1000', '0', EXTERNAL);
           })
   
           it('Lists Plot properly', async function () {
@@ -1421,8 +1375,8 @@ describe('Marketplace', function () {
   
         describe("List partial plot", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '100', '0', '0', EXTERNAL, this.function);
-            this.result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '500', '0', '0', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise16(this.function, '0', '0', '100','0', EXTERNAL);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise16(this.function, '0', '0', '500','0', EXTERNAL);
           })
   
           it('Lists Plot properly', async function () {
@@ -1437,7 +1391,7 @@ describe('Marketplace', function () {
   
         describe("List partial plot from middle", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '500', '500', '0', '2000', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise16(this.function, '0', '500', '500', '2000', INTERNAL);
           })
   
           it('Lists Plot properly', async function () {
@@ -1452,8 +1406,8 @@ describe('Marketplace', function () {
   
         describe("Relist plot from middle", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '500', '0', '0', INTERNAL, this.function);
-            this.result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '500', '100', '0', '2000', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise16(this.function, '0', '0', '500', '0', INTERNAL);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise16(this.function, '0', '500', '100','2000', INTERNAL);
           })
   
           it('Lists Plot properly', async function () {
@@ -1471,7 +1425,7 @@ describe('Marketplace', function () {
       describe("Fill", async function () {
         describe('revert', async function () {
           beforeEach(async function () {
-            await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise16(this.function, '0', '0', '1000', '0', EXTERNAL);
             this.listing = [userAddress, '0', '0', '1000', 0, '0', EXTERNAL];
           })
 
@@ -1504,7 +1458,7 @@ describe('Marketplace', function () {
 
           it('Fill Listing not enough pods in listing', async function () {
             const l = [userAddress, '0', '0', '500', '0', '0', INTERNAL]
-            await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '500', '0', '0', INTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise16(this.function, '0', '0', '500','0', INTERNAL);
             await expect(this.marketplace.connect(user2).fillPodListingPiecewise16(l, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
           })
         })
@@ -1512,7 +1466,7 @@ describe('Marketplace', function () {
         describe("Fill listing", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '0', '1000', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise16(this.function, '0', '0', '1000', '0', EXTERNAL);
             this.amountBeansBuyingWith = 500;
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
@@ -1546,7 +1500,7 @@ describe('Marketplace', function () {
         describe("Fill partial listing", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '0', '1000', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise16(this.function, '0', '0', '1000', '0', EXTERNAL);
             this.amountBeansBuyingWith = 250;
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
@@ -1582,7 +1536,7 @@ describe('Marketplace', function () {
         describe("Fill partial listing of a partial listing multiple fills", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '500', '500', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).createPodListingPiecewise16('0', '500', '500', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise16(this.function, '0', '500', '500', '0', EXTERNAL);
             this.amountBeansBuyingWith = 100;
 
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
@@ -1619,7 +1573,7 @@ describe('Marketplace', function () {
         describe("Fill partial listing of a listing created by partial fill", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '500', '500', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).createPodListingPiecewise16('0', '500', '500', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise16(this.function, '0', '500', '500', '0', EXTERNAL);
             this.amountBeansBuyingWith = 100;
 
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
@@ -1653,7 +1607,7 @@ describe('Marketplace', function () {
         describe("Fill partial listing to wallet", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '0', '1000', '0', '0', INTERNAL]
-            await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '0', INTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise16(this.function, '0', '0', '1000', '0', INTERNAL);
             this.amountBeansBuyingWith = 250;
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
@@ -1688,9 +1642,9 @@ describe('Marketplace', function () {
       })
       describe("Cancel", async function () {
         it('Re-list plot cancels and re-lists', async function () {
-          result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+          result = await this.marketplace.connect(user).createPodListingPiecewise16(this.function, '0', '0', '1000', '0', EXTERNAL);
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
-          result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '2000', INTERNAL, this.function);
+          result = await this.marketplace.connect(user).createPodListingPiecewise16(this.function, '0', '0', '1000', '2000', INTERNAL);
           await expect(result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, '0', 0, 1000, 0, 2000, 1, Piecewise16);
           await expect(result).to.emit(this.marketplace, 'NewCubicPiecewise16').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           await expect(result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, '0');
@@ -1698,12 +1652,12 @@ describe('Marketplace', function () {
         })
 
         it('Reverts on Cancel Listing, not owned by user', async function () {
-          await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+          await this.marketplace.connect(user).createPodListingPiecewise16(this.function, '0', '0', '1000', '0', EXTERNAL);
           await expect(this.marketplace.connect(user2).cancelPodListing('0')).to.be.revertedWith('Marketplace: Listing not owned by sender.');
         })
 
         it('Cancels Listing, Emits Listing Cancelled Event', async function () {
-          result = await this.marketplace.connect(user).createPodListingPiecewise16('0', '0', '1000', '0', '2000', EXTERNAL, this.function);
+          result = await this.marketplace.connect(user).createPodListingPiecewise16(this.function, '0', '0', '1000', '2000', EXTERNAL);
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
           result = (await this.marketplace.connect(user).cancelPodListing('0'));
           expect(await this.marketplace.podListing(0)).to.be.equal(ZERO_HASH);
@@ -1719,25 +1673,25 @@ describe('Marketplace', function () {
       })
       describe("Create", async function () {
         it('Fails to List Unowned Plot', async function () {
-          await expect(this.marketplace.connect(user).createPodListingPiecewise64('5000', '0', '1000', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+          await expect(this.marketplace.connect(user).createPodListingPiecewise64(this.function, '5000', '0', '1000', '0', INTERNAL)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
   
         it('Fails if already expired', async function () {
           await this.field.incrementTotalHarvestableE('2000');
-          await expect(this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '500', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Expired.');
+          await expect(this.marketplace.connect(user).createPodListingPiecewise64(this.function, '0', '0', '500', '0', INTERNAL)).to.be.revertedWith('Marketplace: Expired.');
         })
   
         it('Fails if amount is 0', async function () {
-          await expect(this.marketplace.connect(user2).createPodListingPiecewise64('1000', '0', '0', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+          await expect(this.marketplace.connect(user2).createPodListingPiecewise64(this.function, '1000', '0', '0', '0', INTERNAL)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
   
         it('Fails if start + amount too large', async function () {
-          await expect(this.marketplace.connect(user2).createPodListingPiecewise64('1000', '500', '1000', '0', '0', INTERNAL, this.function)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+          await expect(this.marketplace.connect(user2).createPodListingPiecewise64(this.function, '1000', '500', '1000', '0', INTERNAL)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
         })
   
         describe("List full plot", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise64(this.function, '0', '0', '1000', '0', EXTERNAL);
           })
   
           it('Lists Plot properly', async function () {
@@ -1752,8 +1706,8 @@ describe('Marketplace', function () {
   
         describe("List partial plot", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '100', '0', '0', EXTERNAL, this.function);
-            this.result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '500', '0', '0', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise64( this.function, '0', '0', '100', '0', EXTERNAL);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise64( this.function, '0', '0', '500', '0', EXTERNAL);
           })
   
           it('Lists Plot properly', async function () {
@@ -1768,7 +1722,7 @@ describe('Marketplace', function () {
   
         describe("List partial plot from middle", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '500', '500', '0', '2000', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise64( this.function, '0', '500', '500', '2000', INTERNAL);
           })
   
           it('Lists Plot properly', async function () {
@@ -1783,8 +1737,8 @@ describe('Marketplace', function () {
   
         describe("Relist plot from middle", async function () {
           beforeEach(async function () {
-            this.result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '500', '0', '0', INTERNAL, this.function);
-            this.result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '500', '100', '0', '2000', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise64( this.function, '0', '0', '500', '0', INTERNAL);
+            this.result = await this.marketplace.connect(user).createPodListingPiecewise64( this.function, '0', '500', '100', '2000', INTERNAL);
           })
   
           it('Lists Plot properly', async function () {
@@ -1802,7 +1756,7 @@ describe('Marketplace', function () {
       describe("Fill", async function () {
         describe('revert', async function () {
           beforeEach(async function () {
-            await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise64(this.function, '0', '0', '1000', '0', EXTERNAL);
             this.listing = [userAddress, '0', '0', '1000', 0, '0', EXTERNAL];
           })
 
@@ -1835,7 +1789,7 @@ describe('Marketplace', function () {
 
           it('Fill Listing not enough pods in listing', async function () {
             const l = [userAddress, '0', '0', '500', '0', '0', INTERNAL]
-            await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '500', '0', '0', INTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise64(this.function, '0', '0', '500','0', INTERNAL);
             await expect(this.marketplace.connect(user2).fillPodListingPiecewise64(l, this.function, 1000, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
           })
         })
@@ -1843,7 +1797,7 @@ describe('Marketplace', function () {
         describe("Fill listing", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '0', '1000', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise64(this.function, '0', '0', '1000', '0', EXTERNAL);
             this.amountBeansBuyingWith = 500;
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
@@ -1877,7 +1831,7 @@ describe('Marketplace', function () {
         describe("Fill partial listing", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '0', '1000', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise64(this.function, '0', '0', '1000', '0', EXTERNAL);
             this.amountBeansBuyingWith = 250;
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
@@ -1913,7 +1867,7 @@ describe('Marketplace', function () {
         describe("Fill partial listing of a partial listing multiple fills", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '500', '500', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).createPodListingPiecewise64('0', '500', '500', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise64(this.function, '0', '500', '500', '0', EXTERNAL);
             this.amountBeansBuyingWith = 100;
 
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
@@ -1950,7 +1904,7 @@ describe('Marketplace', function () {
         describe("Fill partial listing of a listing created by partial fill", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '500', '500', '0', '0', EXTERNAL]
-            await this.marketplace.connect(user).createPodListingPiecewise64('0', '500', '500', '0', '0', EXTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise64(this.function, '0', '500', '500', '0', EXTERNAL);
             this.amountBeansBuyingWith = 100;
 
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
@@ -1984,7 +1938,7 @@ describe('Marketplace', function () {
         describe("Fill partial listing to wallet", async function () {
           beforeEach(async function () {
             this.listing = [userAddress, '0', '0', '1000', '0', '0', INTERNAL]
-            await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '0', INTERNAL, this.function);
+            await this.marketplace.connect(user).createPodListingPiecewise64(this.function, '0', '0', '1000', '0', INTERNAL);
             this.amountBeansBuyingWith = 250;
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.user2BeanBalance = await this.bean.balanceOf(user2Address)
@@ -2019,9 +1973,9 @@ describe('Marketplace', function () {
       })
       describe("Cancel", async function () {
         it('Re-list plot cancels and re-lists', async function () {
-          result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+          result = await this.marketplace.connect(user).createPodListingPiecewise64(this.function, '0', '0', '1000', '0', EXTERNAL);
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
-          result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '2000', INTERNAL, this.function);
+          result = await this.marketplace.connect(user).createPodListingPiecewise64(this.function, '0', '0', '1000', '2000', INTERNAL);
           await expect(result).to.emit(this.marketplace, 'PodListingCreated').withArgs(userAddress, '0', 0, 1000, 0, 2000, 1, Piecewise64);
           await expect(result).to.emit(this.marketplace, 'NewCubicPiecewise64').withArgs(this.function[0], this.function[1], this.function[2], this.function[3]);
           await expect(result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, '0');
@@ -2029,12 +1983,12 @@ describe('Marketplace', function () {
         })
 
         it('Reverts on Cancel Listing, not owned by user', async function () {
-          await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '0', EXTERNAL, this.function);
+          await this.marketplace.connect(user).createPodListingPiecewise64(this.function, '0', '0', '1000', '0', EXTERNAL);
           await expect(this.marketplace.connect(user2).cancelPodListing('0')).to.be.revertedWith('Marketplace: Listing not owned by sender.');
         })
 
         it('Cancels Listing, Emits Listing Cancelled Event', async function () {
-          result = await this.marketplace.connect(user).createPodListingPiecewise64('0', '0', '1000', '0', '2000', EXTERNAL, this.function);
+          result = await this.marketplace.connect(user).createPodListingPiecewise64(this.function, '0', '0', '1000', '2000', EXTERNAL);
           expect(await this.marketplace.podListing(0)).to.be.equal(await getDynamicHash(result));
           result = (await this.marketplace.connect(user).cancelPodListing('0'));
           expect(await this.marketplace.podListing(0)).to.be.equal(ZERO_HASH);
@@ -2406,11 +2360,10 @@ describe('Marketplace', function () {
               this.marketplace
                 .connect(user2)
                 .createPodOrderPiecewise4(
-                  "0",
+                  this.function,
                   "0",
                   "1000",
-                  EXTERNAL,
-                  this.function
+                  EXTERNAL
                 )
             ).to.be.revertedWith("Marketplace: Order amount must be > 0.");
           });
@@ -2425,11 +2378,10 @@ describe('Marketplace', function () {
             this.result = await this.marketplace
               .connect(user)
               .createPodOrderPiecewise4(
+                this.function,
                 "500",
-                "0",
                 "1000",
-                EXTERNAL,
-                this.function
+                EXTERNAL
               );
             this.id = await getOrderId(this.result);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress);
@@ -2451,10 +2403,9 @@ describe('Marketplace', function () {
             expect(await this.marketplace.podOrderById(this.id)).to.equal("500");
             expect(
               await this.marketplace.podOrderPiecewise4(
+                this.function,
                 userAddress,
-                "0",
-                "1000",
-                this.function
+                "1000"
               )
             ).to.equal("500");
           });
@@ -2477,7 +2428,7 @@ describe('Marketplace', function () {
 
       describe("Fill", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).createPodOrderPiecewise4("50", "0", "2500", EXTERNAL, this.function);
+          this.result = await this.marketplace.connect(user).createPodOrderPiecewise4(this.function, "50", "2500", EXTERNAL);
           this.id = await getOrderId(this.result);
           this.order = [userAddress, "0", "2500"];
         });
@@ -2619,13 +2570,12 @@ describe('Marketplace', function () {
             await this.marketplace
               .connect(user2)
               .createPodListingPiecewise4(
+                this.function,
                 "1000",
                 "0",
                 "500",
-                "10000",
                 "5000",
-                EXTERNAL,
-                this.function
+                EXTERNAL
               );
             this.beanstalkBalance = await this.bean.balanceOf(
               this.marketplace.address
@@ -2682,7 +2632,7 @@ describe('Marketplace', function () {
     
       describe("Cancel", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).createPodOrderPiecewise4('500', '0', '1000', EXTERNAL, this.function)
+          this.result = await this.marketplace.connect(user).createPodOrderPiecewise4(this.function, '500','1000', EXTERNAL)
           this.id = await getOrderId(this.result)
         })
 
@@ -2690,7 +2640,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancelPodOrderPiecewise4('0', '1000', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).cancelPodOrderPiecewise4(this.function, '1000', EXTERNAL);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -2714,7 +2664,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancelPodOrderPiecewise4('0', '1000', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).cancelPodOrderPiecewise4(this.function, '1000', INTERNAL);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -2745,7 +2695,7 @@ describe('Marketplace', function () {
         describe("revert", async function () {
           it("Reverts if amount is 0", async function () {
             await expect(
-              this.marketplace.connect(user2).createPodOrderPiecewise16("0", "0", "1000", EXTERNAL, this.function)
+              this.marketplace.connect(user2).createPodOrderPiecewise16(this.function, "0", "1000", EXTERNAL)
             ).to.be.revertedWith("Marketplace: Order amount must be > 0.");
           });
         });
@@ -2759,11 +2709,10 @@ describe('Marketplace', function () {
             this.result = await this.marketplace
               .connect(user)
               .createPodOrderPiecewise16(
+                this.function,
                 "50",
-                "0",
                 "1000",
-                EXTERNAL,
-                this.function
+                EXTERNAL
               );
             this.id = await getOrderId(this.result);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress);
@@ -2785,10 +2734,9 @@ describe('Marketplace', function () {
             expect(await this.marketplace.podOrderById(this.id)).to.equal("50");
             expect(
               await this.marketplace.podOrderPiecewise16(
+                this.function,
                 userAddress,
-                "0",
-                "1000",
-                this.function
+                "1000"
               )
             ).to.equal("50");
           });
@@ -2811,7 +2759,7 @@ describe('Marketplace', function () {
 
       describe("Fill", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).createPodOrderPiecewise16("50", "0", "2500", EXTERNAL, this.function);
+          this.result = await this.marketplace.connect(user).createPodOrderPiecewise16(this.function, "50", "2500", EXTERNAL);
           this.id = await getOrderId(this.result);
           this.order = [userAddress, "0", "2500"];
         });
@@ -2953,13 +2901,12 @@ describe('Marketplace', function () {
             await this.marketplace
               .connect(user2)
               .createPodListingPiecewise16(
+                this.function,
                 "1000",
                 "0",
                 "500",
-                "10000",
                 "5000",
-                EXTERNAL,
-                this.function
+                EXTERNAL
               );
             this.beanstalkBalance = await this.bean.balanceOf(
               this.marketplace.address
@@ -3016,7 +2963,7 @@ describe('Marketplace', function () {
     
       describe("Cancel", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).createPodOrderPiecewise16('500', '0', '1000', EXTERNAL, this.function)
+          this.result = await this.marketplace.connect(user).createPodOrderPiecewise16(this.function, '500', '1000', EXTERNAL)
           this.id = await getOrderId(this.result)
         })
 
@@ -3024,7 +2971,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancelPodOrderPiecewise16('0', '1000', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).cancelPodOrderPiecewise16(this.function, '1000', EXTERNAL);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -3048,7 +2995,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancelPodOrderPiecewise16('0', '1000', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).cancelPodOrderPiecewise16(this.function, '1000', INTERNAL);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -3079,7 +3026,7 @@ describe('Marketplace', function () {
         describe("revert", async function () {
           it("Reverts if amount is 0", async function () {
             await expect(
-              this.marketplace.connect(user2).createPodOrderPiecewise64("0", "0", "1000", EXTERNAL, this.function)
+              this.marketplace.connect(user2).createPodOrderPiecewise64(this.function, "0", "1000", EXTERNAL)
             ).to.be.revertedWith("Marketplace: Order amount must be > 0.");
           });
         });
@@ -3093,11 +3040,10 @@ describe('Marketplace', function () {
             this.result = await this.marketplace
               .connect(user)
               .createPodOrderPiecewise64(
+                this.function,
                 "50",
-                "0",
                 "1000",
-                EXTERNAL,
-                this.function
+                EXTERNAL
               );
             this.id = await getOrderId(this.result);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress);
@@ -3119,10 +3065,9 @@ describe('Marketplace', function () {
             expect(await this.marketplace.podOrderById(this.id)).to.equal("50");
             expect(
               await this.marketplace.podOrderPiecewise64(
+                this.function,
                 userAddress,
-                "0",
-                "1000",
-                this.function
+                "1000"
               )
             ).to.equal("50");
           });
@@ -3145,7 +3090,7 @@ describe('Marketplace', function () {
 
       describe("Fill", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).createPodOrderPiecewise64("50", "0", "2500", EXTERNAL, this.function);
+          this.result = await this.marketplace.connect(user).createPodOrderPiecewise64(this.function, "50", "2500", EXTERNAL);
           this.id = await getOrderId(this.result);
           this.order = [userAddress, "0", "2500"];
         });
@@ -3287,13 +3232,12 @@ describe('Marketplace', function () {
             await this.marketplace
               .connect(user2)
               .createPodListingPiecewise64(
+                this.function,
                 "1000",
                 "0",
                 "500",
-                "10000",
                 "5000",
-                EXTERNAL,
-                this.function
+                EXTERNAL
               );
             this.beanstalkBalance = await this.bean.balanceOf(
               this.marketplace.address
@@ -3350,7 +3294,7 @@ describe('Marketplace', function () {
     
       describe("Cancel", async function () {
         beforeEach(async function () {
-          this.result = await this.marketplace.connect(user).createPodOrderPiecewise64('500', '0', '1000', EXTERNAL, this.function)
+          this.result = await this.marketplace.connect(user).createPodOrderPiecewise64(this.function, '500', '1000', EXTERNAL)
           this.id = await getOrderId(this.result)
         })
 
@@ -3358,7 +3302,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancelPodOrderPiecewise64('0', '1000', EXTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).cancelPodOrderPiecewise64(this.function, '1000', EXTERNAL);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })
@@ -3382,7 +3326,7 @@ describe('Marketplace', function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalance = await this.bean.balanceOf(this.marketplace.address)
-            this.result = await this.marketplace.connect(user).cancelPodOrderPiecewise64('0', '1000', INTERNAL, this.function);
+            this.result = await this.marketplace.connect(user).cancelPodOrderPiecewise64(this.function, '1000', INTERNAL);
             this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
             this.beanstalkBeanBalanceAfter = await this.bean.balanceOf(this.marketplace.address)
           })

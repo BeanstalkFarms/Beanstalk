@@ -39,63 +39,23 @@ contract MarketplaceFacet is Order {
         );
     }
 
-    function createPodListingPiecewise4(
+    function createPodListingV2(
         uint256 index,
         uint256 start,
         uint256 amount,
-        uint24 pricePerPod,
         uint256 maxHarvestableIndex,
-        LibTransfer.To mode,
-        LibPolynomial.CubicPiecewise4 calldata f
+        bytes calldata pricingFunction,
+        uint256 numPieces,
+        LibTransfer.To mode
     ) external payable {
-        _createPodListingPiecewise4(
+        _createPodListingV2(
             index,
             start,
             amount,
-            pricePerPod,
             maxHarvestableIndex,
-            mode,
-            f
-        );
-    }
-
-    function createPodListingPiecewise16(
-        uint256 index,
-        uint256 start,
-        uint256 amount,
-        uint24 pricePerPod,
-        uint256 maxHarvestableIndex,
-        LibTransfer.To mode,
-        LibPolynomial.CubicPiecewise16 calldata f
-    ) external payable {
-        _createPodListingPiecewise16(
-            index,
-            start,
-            amount,
-            pricePerPod,
-            maxHarvestableIndex,
-            mode,
-            f
-        );
-    }
-
-    function createPodListingPiecewise64(
-        uint256 index,
-        uint256 start,
-        uint256 amount,
-        uint24 pricePerPod,
-        uint256 maxHarvestableIndex,
-        LibTransfer.To mode,
-        LibPolynomial.CubicPiecewise64 calldata f
-    ) external payable {
-        _createPodListingPiecewise64(
-            index,
-            start,
-            amount,
-            pricePerPod,
-            maxHarvestableIndex,
-            mode,
-            f
+            pricingFunction, 
+            numPieces,
+            mode
         );
     }
 
@@ -115,10 +75,11 @@ contract MarketplaceFacet is Order {
         _fillListing(l, beanAmount);
     }
 
-    function fillPodListingPiecewise4(
+    function fillPodListingV2(
         PodListing calldata l,
-        LibPolynomial.CubicPiecewise4 calldata f,
         uint256 beanAmount,
+        bytes calldata pricingFunction,
+        uint256 numPieces,
         LibTransfer.From mode
     ) external payable {
         beanAmount = LibTransfer.transferToken(
@@ -128,39 +89,7 @@ contract MarketplaceFacet is Order {
             mode,
             l.mode
         );
-        _fillListingPiecewise4(l, f, beanAmount);
-    }
-
-    function fillPodListingPiecewise16(
-        PodListing calldata l,
-        LibPolynomial.CubicPiecewise16 calldata f,
-        uint256 beanAmount,
-        LibTransfer.From mode
-    ) external payable {
-        beanAmount = LibTransfer.transferToken(
-            C.bean(),
-            l.account,
-            beanAmount,
-            mode,
-            l.mode
-        );
-        _fillListingPiecewise16(l, f, beanAmount);
-    }
-
-    function fillPodListingPiecewise64(
-        PodListing calldata l,
-        LibPolynomial.CubicPiecewise64 calldata f,
-        uint256 beanAmount,
-        LibTransfer.From mode
-    ) external payable {
-        beanAmount = LibTransfer.transferToken(
-            C.bean(),
-            l.account,
-            beanAmount,
-            mode,
-            l.mode
-        );
-        _fillListingPiecewise64(l, f, beanAmount);
+        _fillListingV2(l, beanAmount, pricingFunction, numPieces);
     }
 
     // Cancel
@@ -188,37 +117,15 @@ contract MarketplaceFacet is Order {
         return _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine);
     }
 
-    function createPodOrderPiecewise4(
+    function createPodOrderV2(
         uint256 beanAmount,
-        uint24 pricePerPod,
         uint256 maxPlaceInLine,
-        LibTransfer.From mode,
-        LibPolynomial.CubicPiecewise4 calldata f
+        bytes calldata pricingFunction,
+        uint256 numPieces,
+        LibTransfer.From mode
     ) external payable returns (bytes32 id) {
         beanAmount = LibTransfer.receiveToken(C.bean(), beanAmount, msg.sender, mode);
-        return _createPodOrderPiecewise4(beanAmount, pricePerPod, maxPlaceInLine, f);
-    }
-
-    function createPodOrderPiecewise16(
-        uint256 beanAmount,
-        uint24 pricePerPod,
-        uint256 maxPlaceInLine,
-        LibTransfer.From mode,
-        LibPolynomial.CubicPiecewise16 calldata f
-    ) external payable returns (bytes32 id) {
-        beanAmount = LibTransfer.receiveToken(C.bean(), beanAmount, msg.sender, mode);
-        return _createPodOrderPiecewise16(beanAmount, pricePerPod, maxPlaceInLine, f);
-    }
-
-    function createPodOrderPiecewise64(
-        uint256 beanAmount,
-        uint24 pricePerPod,
-        uint256 maxPlaceInLine,
-        LibTransfer.From mode,
-        LibPolynomial.CubicPiecewise64 calldata f
-    ) external payable returns (bytes32 id) {
-        beanAmount = LibTransfer.receiveToken(C.bean(), beanAmount, msg.sender, mode);
-        return _createPodOrderPiecewise64(beanAmount, pricePerPod, maxPlaceInLine, f);
+        return _createPodOrderV2(beanAmount, maxPlaceInLine, pricingFunction, numPieces);
     }
 
     // Fill
@@ -232,37 +139,16 @@ contract MarketplaceFacet is Order {
         _fillPodOrder(o, index, start, amount, mode);
     }
 
-    function fillPodOrderPiecewise4(
+    function fillPodOrderV2(
         PodOrder calldata o,
-        LibPolynomial.CubicPiecewise4 calldata f,
         uint256 index,
         uint256 start,
         uint256 amount,
+        bytes calldata pricingFunction,
+        uint256 numPieces,
         LibTransfer.To mode
     ) external payable {
-        _fillPodOrderPiecewise4(o, f, index, start, amount, mode);
-    }
-
-    function fillPodOrderPiecewise16(
-        PodOrder calldata o,
-        LibPolynomial.CubicPiecewise16 calldata f,
-        uint256 index,
-        uint256 start,
-        uint256 amount,
-        LibTransfer.To mode
-    ) external payable {
-        _fillPodOrderPiecewise16(o, f, index, start, amount, mode);
-    }
-
-    function fillPodOrderPiecewise64(
-        PodOrder calldata o,
-        LibPolynomial.CubicPiecewise64 calldata f,
-        uint256 index,
-        uint256 start,
-        uint256 amount,
-        LibTransfer.To mode
-    ) external payable {
-        _fillPodOrderPiecewise64(o, f, index, start, amount, mode);
+        _fillPodOrderV2(o, index, start, amount, pricingFunction, numPieces, mode);
     }
 
     // Cancel
@@ -274,33 +160,14 @@ contract MarketplaceFacet is Order {
         _cancelPodOrder(pricePerPod, maxPlaceInLine, mode);
     }
 
-    function cancelPodOrderPiecewise4(
-        uint24 pricePerPod,
+    function cancelPodOrderV2(
         uint256 maxPlaceInLine,
-        LibTransfer.To mode,
-        LibPolynomial.CubicPiecewise4 calldata f
+        bytes calldata pricingFunction,
+        uint256 numPieces,
+        LibTransfer.To mode
     ) external payable {
-        _cancelPodOrderPiecewise4(pricePerPod, maxPlaceInLine, mode, f);
+        _cancelPodOrderV2(maxPlaceInLine, pricingFunction, numPieces, mode);
     }
-
-    function cancelPodOrderPiecewise16(
-        uint24 pricePerPod,
-        uint256 maxPlaceInLine,
-        LibTransfer.To mode,
-        LibPolynomial.CubicPiecewise16 calldata f
-    ) external payable {
-        _cancelPodOrderPiecewise16(pricePerPod, maxPlaceInLine, mode, f);
-    }
-
-    function cancelPodOrderPiecewise64(
-        uint24 pricePerPod,
-        uint256 maxPlaceInLine,
-        LibTransfer.To mode,
-        LibPolynomial.CubicPiecewise64 calldata f
-    ) external payable {
-        _cancelPodOrderPiecewise64(pricePerPod, maxPlaceInLine, mode, f);
-    }
-
 
     // Get
 
@@ -318,59 +185,19 @@ contract MarketplaceFacet is Order {
         ];
     }
 
-    function podOrderPiecewise4(
+    function podOrderV2(
         address account,
-        uint24 pricePerPod,
         uint256 maxPlaceInLine,
-        LibPolynomial.CubicPiecewise4 calldata f
+        bytes calldata pricingFunction,
+        uint256 numPieces
     ) external view returns (uint256) {
         return s.podOrders[
-            createOrderIdPiecewise4(
+            createOrderIdV2(
                 account, 
-                pricePerPod, 
+                0,
                 maxPlaceInLine, 
-                f.breakpoints, 
-                f.significands, 
-                f.packedExponents, 
-                f.packedSigns
-            )
-        ];
-    }
-
-    function podOrderPiecewise16(
-        address account,
-        uint24 pricePerPod,
-        uint256 maxPlaceInLine,
-        LibPolynomial.CubicPiecewise16 calldata f
-    ) external view returns (uint256) {
-        return s.podOrders[
-            createOrderIdPiecewise16(
-                account, 
-                pricePerPod, 
-                maxPlaceInLine, 
-                f.breakpoints, 
-                f.significands, 
-                f.packedExponents, 
-                f.packedSigns
-            )
-        ];
-    }
-
-    function podOrderPiecewise64(
-        address account,
-        uint24 pricePerPod,
-        uint256 maxPlaceInLine,
-        LibPolynomial.CubicPiecewise64 calldata f
-    ) external view returns (uint256) {
-        return s.podOrders[
-            createOrderIdPiecewise64(
-                account, 
-                pricePerPod, 
-                maxPlaceInLine, 
-                f.breakpoints, 
-                f.significands, 
-                f.packedExponents, 
-                f.packedSigns
+                pricingFunction,
+                numPieces
             )
         ];
     }

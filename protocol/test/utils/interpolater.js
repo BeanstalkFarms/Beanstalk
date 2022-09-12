@@ -2,6 +2,7 @@
 
 const {create, all} = require("mathjs");
 const {BitDescriptor, BitPacker} = require("./bitpacker.js");
+const ethers = require("ethers");
 
 const config = {
     matrix: 'Array',
@@ -12,6 +13,8 @@ const config = {
 }
 
 const math = create(all, config);
+
+const startingExponent = 24;
 
 String.prototype.calculateShifts = function (c) {
     let val = +this;
@@ -47,6 +50,45 @@ Number.prototype.calculateShifts = function (counter) {
         }
     }
     return counter;
+}
+
+function dec2hex(str){ // .toString(16) only works up to 2^53
+    var dec = str.toString().split(''), sum = [], hex = [], i, s
+    while(dec.length){
+        s = 1 * dec.shift()
+        for(i = 0; s || i < sum.length; i++){
+            s += (sum[i] || 0) * 10
+            sum[i] = s % 16
+            s = (s - sum[i]) / 16
+        }
+    }
+    while(sum.length){
+        hex.push(sum.pop().toString(16))
+    }
+    return hex.join('')
+}
+
+function loadBools(coefArray) {
+    var bitDescriptors = [];
+    for(var i = 0; i < coefArray.length; i++) {
+        bitDescriptors.push(BitDescriptor.fromBool(math.sign(coefArray[i]) == 1 || math.sign(coefArray[i]) == 0));
+    }
+    return bitDescriptors;
+}
+
+function loadUint8s(coefArray) {
+    var bitDescriptors = [];
+    for(var i = 0; i < coefArray.length; i++) {
+        bitDescriptors.push(BitDescriptor.fromUint8(math.number(coefArray[i].calculateShifts(startingExponent))));
+    }
+    return bitDescriptors;
+}
+
+function loadUint256s(uint256Array) {
+    var bitDescriptors = [];
+    for(var i = 0; i < coefArray.length; i++) {
+        bitDescriptors.push(BitDescriptor.fromUint256String(coefArray[i]));
+    }
 }
 
 //implementation from https://www.wikiwand.com/en/Monotone_cubic_interpolation
@@ -102,16 +144,14 @@ function interpolatePoints(xs, ys) {
     var signs = new Array(maxPieces*4);
     for(let i = 0; i < maxPieces; i++){
         if(i<length) {
-            signs[i*4] = BitDescriptor.fromBool(math.sign(ys[i]) == 1 || math.sign(ys[i]) == 0);
-            signs[i*4 + 1] = BitDescriptor.fromBool(math.sign(c1s[i]) == 1 || math.sign(c1s[i]) == 0);
+            signs[i*4] = math.sign(ys[i]) == 1 || math.sign(ys[i]) == 0;
+            signs[i*4 + 1] = math.sign(c1s[i]) == 1 || math.sign(c1s[i]) == 0;
 
-            var c = 24; 
-
-            exponents[i*4] = BitDescriptor.fromUint8(math.number(ys[i]).calculateShifts(c));
-            exponents[i*4 + 1] = BitDescriptor.fromUint8(math.number(c1s[i]).calculateShifts(c));
+            exponents[i*4] = math.number(ys[i]).calculateShifts(startingExponent);
+            exponents[i*4 + 1] = math.number(c1s[i]).calculateShifts(startingExponent);
             
-            var exponentDeg0 = math.pow(math.bignumber(10), math.bignumber(math.number(ys[i]).calculateShifts(c)))
-            var exponentDeg1 = math.pow(math.bignumber(10), math.bignumber(math.number(c1s[i]).calculateShifts(c)))
+            let exponentDeg0 = math.pow(math.bignumber(10), math.bignumber(math.number(ys[i]).calculateShifts(startingExponent)))
+            let exponentDeg1 = math.pow(math.bignumber(10), math.bignumber(math.number(c1s[i]).calculateShifts(startingExponent)))
             
             coefficients[i*4] = math.format(math.floor(math.abs(math.multiply(ys[i], exponentDeg0))), {notation: "fixed"});
             coefficients[i*4 + 1] = math.format(math.floor(math.abs(math.multiply(c1s[i], exponentDeg1))), {notation: "fixed"});
@@ -119,56 +159,41 @@ function interpolatePoints(xs, ys) {
             breakpoints[i] = math.format(xs[i], {notation: "fixed"});
 
             if(i<(dxs.length)) {
-                signs[i*4 + 2] = BitDescriptor.fromBool(math.sign(c2s[i]) == 1 || math.sign(c2s[i]) == 0);
-                signs[i*4 + 3] = BitDescriptor.fromBool(math.sign(c3s[i]) == 1 || math.sign(c3s[i]) == 0);
+                signs[i*4 + 2] = math.sign(c2s[i]) == 1 || math.sign(c2s[i]) == 0;
+                signs[i*4 + 3] = math.sign(c3s[i]) == 1 || math.sign(c3s[i]) == 0;
 
-                exponents[i*4 + 2] = BitDescriptor.fromUint8(math.number(c2s[i]).calculateShifts(c));
-                exponents[i*4 + 3] = BitDescriptor.fromUint8(math.number(c3s[i]).calculateShifts(c));
+                exponents[i*4 + 2] = math.number(c2s[i]).calculateShifts(startingExponent);
+                exponents[i*4 + 3] = math.number(c3s[i]).calculateShifts(startingExponent);
 
-                var exponentDeg2 = math.pow(math.bignumber(10), math.bignumber(math.number(c2s[i]).calculateShifts(c)))
-                var exponentDeg3 = math.pow(math.bignumber(10), math.bignumber(math.number(c3s[i]).calculateShifts(c)))
+                let exponentDeg2 = math.pow(math.bignumber(10), math.bignumber(math.number(c2s[i]).calculateShifts(startingExponent)))
+                let exponentDeg3 = math.pow(math.bignumber(10), math.bignumber(math.number(c3s[i]).calculateShifts(startingExponent)))
                 coefficients[i*4 + 2] = math.format(math.floor(math.abs(math.multiply(c2s[i], exponentDeg2))), {notation: "fixed"});
                 coefficients[i*4 + 3] = math.format(math.floor(math.abs(math.multiply(c3s[i], exponentDeg3))), {notation: "fixed"});
+
             } else {
-                signs[i*4 + 2] = BitDescriptor.fromBool(false);
-                signs[i*4 + 3] = BitDescriptor.fromBool(false);
-                exponents[i*4 + 2] = BitDescriptor.fromUint8(0);
-                exponents[i*4 + 3] = BitDescriptor.fromUint8(0);
+                signs[i*4 + 2] = false;
+                signs[i*4 + 3] = false;
+                exponents[i*4 + 2] = 0;
+                exponents[i*4 + 3] = 0;
                 coefficients[i*4 + 2] = '0';
                 coefficients[i*4 + 3] = '0';
             }
         } else {
             breakpoints[i] = '0';
             for(let j = 0; j < 4; j++){
-                signs[i*4 + j] = BitDescriptor.fromBool(false);
-                exponents[i*4 + j] = BitDescriptor.fromUint8(0);
+                signs[i*4 + j] = false;
+                exponents[i*4 + j] = 0;
                 coefficients[i*4 + j] = '0';
             }
         }
     }
 
-    const packedSignsArr = BitPacker.pack(signs);
-    const packedExponentsArr = BitPacker.pack(exponents);
-    
-    const packedSignsIter = BitPacker.createUnpackIterator(packedSignsArr)
-    const packedExponentsIter = BitPacker.createUnpackIterator(packedExponentsArr)
+    const packedFunction = packInterpolant(breakpoints, coefficients, exponents, signs);
+    return {breakpoints: breakpoints, coefficients: coefficients, exponents: exponents, signs: signs, packedFunction: packedFunction};
+}
 
-    const packedSigns = BigInt("0b" + [...packedSignsIter].reverse().join('')).toString();
-    var packedExponents;
-    if(maxPieces > 8) {
-        const packedExponentsBitArr = [...packedExponentsIter];
-
-        packedExponents = [];
-        for(let i = 0; i < (Math.floor(maxPieces / 8)); i++){
-            packedExponents.push(BigInt("0b" + packedExponentsBitArr.slice(i*256, (i+1)*256).join('')).toString());
-        }
-    } else {
-        const packedExponentsBitArrString = [...packedExponentsIter].join('');
-        const paddingArray = (new Array(256 - packedExponentsBitArrString.length).fill('0')).join('');
-        packedExponents = BigInt("0b" + packedExponentsBitArrString + paddingArray).toString();
-    }
-    
-    return {breakpoints: breakpoints, coefficients: coefficients, exponents: exponents, signs: signs, packedExponents: packedExponents, packedSigns: packedSigns}
+function packInterpolant(breakpoints, coefficients, exponents, signs) {
+    return ethers.utils.solidityPack(['uint256[]', 'uint256[]', 'uint8[]', 'bool[]'], [breakpoints, coefficients, exponents, signs]);
 }
 
 exports.interpolatePoints = interpolatePoints;
