@@ -266,7 +266,7 @@ contract WellFacet is ReentrancyGuard {
         view
         returns (uint128[] memory balances)
     {
-        balances = LibWellBalance.getBalancesFromHash(getWellHash(wellId));
+        balances = LibWellBalance.getBalancesFromHash(getWellHash(wellId), LibWellStorage.getN(wellId));
     }
 
     function getCumulativeBalances(address wellId)
@@ -274,7 +274,7 @@ contract WellFacet is ReentrancyGuard {
         view
         returns (uint224[] memory cumulativeBalances, uint32 lastTimestamp)
     {
-        return LibWellBalance.getCumulativeBalancesFromHash(getWellHash(wellId));
+        return LibWellBalance.getCumulativeBalancesFromHash(getWellHash(wellId), LibWellStorage.getN(wellId));
     }
 
     function getWellEmaBalances(address wellId)
@@ -282,7 +282,7 @@ contract WellFacet is ReentrancyGuard {
         view
         returns (uint128[] memory balances)
     {
-        balances = LibWellBalance.getEmaBalancesFromHash(getWellHash(wellId));
+        balances = LibWellBalance.getEmaBalancesFromHash(getWellHash(wellId), LibWellStorage.getN(wellId));
     }
 
     function getWellState(address wellId)
@@ -290,15 +290,7 @@ contract WellFacet is ReentrancyGuard {
         view
         returns (LibWellStorage.Balances memory state)
     {
-        state = LibWellBalance.getWellStateFromHash(getWellHash(wellId));
-    }
-
-    function getWellStateFromHash(bytes32 wellHash)
-        public
-        view
-        returns (LibWellStorage.Balances memory state)
-    {
-        state = LibWellBalance.getWellStateFromHash(wellHash);
+        state = LibWellBalance.getWellStateFromHash(getWellHash(wellId), LibWellStorage.getN(wellId));
     }
 
     function getWell2StateFromHash(bytes32 wellHash)

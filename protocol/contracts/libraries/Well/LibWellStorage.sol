@@ -75,13 +75,13 @@ library LibWellStorage {
     **/
     struct BN {
         // Current balances 
-        uint128[] balances; // array of stored balances
+        uint128[8] balances; // array of stored balances
         
         // Exponential Moving Average balances usable for instantaneous oracles
-        uint128[] emaBalances;
+        uint128[8] emaBalances;
     
         // cumulative balances usable for time period oracles
-        uint224[] cumulativeBalances; // array of cumulative balances
+        uint224[8] cumulativeBalances; // array of cumulative balances
         uint224 lastCumulativeBalance; // cumulative value of the last balance. Stored separately from the array for gas efficiency
 
         // Timestamp the Balance was last updated
@@ -142,5 +142,13 @@ library LibWellStorage {
         wellHash = keccak256(
             abi.encodePacked(w.wellId, w.tokens, w.wellType, w.typeData)
         );
+    }
+
+    function getN(address wellId)
+        internal 
+        view 
+        returns (uint256 n)
+    {
+        n = wellInfo(wellId).tokens.length;
     }
 }

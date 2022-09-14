@@ -159,10 +159,17 @@ library LibTokenSilo {
         returns (uint256 bdv)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        bytes memory myFunctionCall = abi.encodeWithSelector(
-            s.ss[token].selector,
-            amount
-        );
+        bytes memory myFunctionCall = s.ss[token].useData ?
+            abi.encodeWithSelector(
+                s.ss[token].selector,
+                amount,
+                s.ss[token].data
+            ) : 
+            abi.encodeWithSelector(
+                s.ss[token].selector,
+                amount
+            );
+
         (bool success, bytes memory data) = address(this).call(
             myFunctionCall
         );

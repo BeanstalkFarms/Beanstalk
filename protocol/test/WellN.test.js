@@ -87,20 +87,6 @@ describe('Well', function () {
     await revertToSnapshot(snapshotId);
   });
 
-  describe("Register Types", async function () {
-    describe("Successfully registers type", async function () {
-      it("type token", async function () {
-        const wellSignature = await this.beanstalk.getWellTypeSignature('0')
-        expect(wellSignature.length).to.be.equal(0)
-        expect(await this.beanstalk.isWellTypeRegistered('0')).to.be.equal(true)
-      })
-
-      it("emits event", async function () {
-        await expect(buildWellResult).to.emit(this.beanstalk, 'RegisterWellType').withArgs(well.wellType, []);
-      })
-    })
-  })
-
   describe('Build Well', async function () {
     it('reverts if not alphabetical', async function () {
       await expect(this.beanstalk.buildWell([BEAN, WETH, USDC], '0', typeParams, ["BEAN", "USDC"])).to.be.revertedWith("LibWell: Tokens not alphabetical")
@@ -142,15 +128,6 @@ describe('Well', function () {
       expect(state.cumulativeBalances[1]).to.be.equal('0')
       expect(state.cumulativeBalances[2]).to.be.equal('0')
       expect(state.timestamp).to.be.equal(await getTimestamp())
-
-      const hashState = await this.beanstalk.getWellStateFromHash(wellHash)
-      expect(hashState.balances[0]).to.be.equal(to6('100'))
-      expect(hashState.balances[1]).to.be.equal(to6('100'))
-      expect(hashState.balances[2]).to.be.equal(to6('100'))
-      expect(hashState.cumulativeBalances[0]).to.be.equal('0')
-      expect(hashState.cumulativeBalances[1]).to.be.equal('0')
-      expect(hashState.cumulativeBalances[2]).to.be.equal('0')
-      expect(hashState.timestamp).to.be.equal(await getTimestamp())
 
       const balances = await this.beanstalk.getWellBalances(wellId)
       expect(balances[0]).to.be.equal(to6('100'))

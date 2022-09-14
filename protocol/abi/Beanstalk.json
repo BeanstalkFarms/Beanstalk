@@ -5395,19 +5395,19 @@
             {
                 "components": [
                     {
-                        "internalType": "uint128[]",
+                        "internalType": "uint128[8]",
                         "name": "balances",
-                        "type": "uint128[]"
+                        "type": "uint128[8]"
                     },
                     {
-                        "internalType": "uint128[]",
+                        "internalType": "uint128[8]",
                         "name": "emaBalances",
-                        "type": "uint128[]"
+                        "type": "uint128[8]"
                     },
                     {
-                        "internalType": "uint224[]",
+                        "internalType": "uint224[8]",
                         "name": "cumulativeBalances",
-                        "type": "uint224[]"
+                        "type": "uint224[8]"
                     },
                     {
                         "internalType": "uint224",
@@ -5437,47 +5437,6 @@
             }
         ],
         "name": "getWellState",
-        "outputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "uint128[]",
-                        "name": "balances",
-                        "type": "uint128[]"
-                    },
-                    {
-                        "internalType": "uint128[]",
-                        "name": "emaBalances",
-                        "type": "uint128[]"
-                    },
-                    {
-                        "internalType": "uint224[]",
-                        "name": "cumulativeBalances",
-                        "type": "uint224[]"
-                    },
-                    {
-                        "internalType": "uint32",
-                        "name": "timestamp",
-                        "type": "uint32"
-                    }
-                ],
-                "internalType": "struct LibWellStorage.Balances",
-                "name": "state",
-                "type": "tuple"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "bytes32",
-                "name": "wellHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "getWellStateFromHash",
         "outputs": [
             {
                 "components": [
@@ -6121,6 +6080,25 @@
             }
         ],
         "name": "Swap",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "enum LibWellType.WellType",
+                "name": "wellType",
+                "type": "uint8"
+            },
+            {
+                "indexed": false,
+                "internalType": "string[]",
+                "name": "parameterTypes",
+                "type": "string[]"
+            }
+        ],
+        "name": "RegisterWellType",
         "type": "event"
     }
 ]

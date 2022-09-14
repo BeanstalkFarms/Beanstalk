@@ -51,11 +51,21 @@ library LibConstantProductWell {
     // dy = x_i/x_j
     // uses 18 decimal precision
     function getdXidXj(
+        uint256 precision,
         uint256 i,
         uint256 j,
         uint128[] memory xs
     ) internal pure returns (uint256 dXi) {
-        dXi = uint256(xs[i]).mul(C.precision()).div(xs[j]);
+        dXi = uint256(xs[i]).mul(precision).div(xs[j]);
+    }
+
+    function getdXdD(
+        uint256 precision,
+        uint256 d,
+        uint256 i,
+        uint256[] memory xs
+    ) internal pure returns (uint256 dX) {
+        dX = precision.mul(xs[i]).div(d).mul(xs.length);
     }
 
     function getSignature() internal pure returns (string[] memory signature) {

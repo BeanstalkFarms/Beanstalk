@@ -211,6 +211,8 @@ contract Storage {
         bytes4 selector; // The encoded BDV function selector for the Token.
         uint32 seeds; // The Seeds Per BDV that the Silo mints in exchange for Depositing this Token.
         uint32 stalk; // The Stalk Per BDV that the Silo mints in exchange for Depositing this Token.
+        bytes16 data;
+        bool useData;
     }
 
     // UnripeSettings stores the settings for an Unripe Token in Beanstalk.

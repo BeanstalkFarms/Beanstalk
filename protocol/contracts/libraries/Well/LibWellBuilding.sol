@@ -7,8 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../tokens/ERC20/WellToken.sol";
-import "./Balance/LibWell2.sol";
-import "./Balance/LibWellN.sol";
 import "./Type/LibWellType.sol";
 
 /**
@@ -47,6 +45,8 @@ library LibWellBuilding {
         require(isWellValid(tokens, wellType, typeData), "LibWell: Well not valid.");
         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
 
+        require(tokens.length < 9, "LibWell: 8 Tokens max");
+
         string memory name = symbols[0];
         string memory symbol = symbols[0];
         for (uint i = 1; i < tokens.length; ++i) {
@@ -66,9 +66,6 @@ library LibWellBuilding {
 
         s.indices[s.numberOfWells] = wellId;
         s.numberOfWells = s.numberOfWells.add(1);
-
-        if (w.tokens.length == 2) LibWell2.initBalances(wh);
-        else LibWellN.initBalances(wh, w.tokens.length);
 
         s.wi[wellId] = w;
         s.wh[wellId] = wh;

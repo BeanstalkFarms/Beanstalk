@@ -55,12 +55,26 @@ library LibWellType {
     function getdXidXj(
         WellType wellType,
         bytes calldata typeData,
+        uint256 precision,
         uint256 i,
         uint256 j,
         uint128[] memory xs
     ) internal pure returns (uint256 dXi) {
         if (wellType == WellType.CONSTANT_PRODUCT)
-            dXi = LibConstantProductWell.getdXidXj(i, j, xs);
+            dXi = LibConstantProductWell.getdXidXj(precision, i, j, xs);
+        else revert("LibWell: Well type not supported");
+    }
+
+    function getdXdD(
+        WellType wellType,
+        bytes calldata typeData,
+        uint256 precision,
+        uint256 d,
+        uint256 i,
+        uint256[] memory xs
+    ) internal pure returns (uint256 dX) {
+        if (wellType == WellType.CONSTANT_PRODUCT)
+            dX = LibConstantProductWell.getdXdD(precision, d, i, xs);
         else revert("LibWell: Well type not supported");
     }
 

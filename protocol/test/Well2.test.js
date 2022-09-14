@@ -134,13 +134,6 @@ describe('Well', function () {
       expect(state.cumulativeBalances[1]).to.be.equal('0')
       expect(state.timestamp).to.be.equal(await getTimestamp())
 
-      const hashState = await this.beanstalk.getWellStateFromHash(wellHash)
-      expect(hashState.balances[0]).to.be.equal(to6('100'))
-      expect(hashState.balances[1]).to.be.equal(to6('100'))
-      expect(hashState.cumulativeBalances[0]).to.be.equal('0')
-      expect(hashState.cumulativeBalances[1]).to.be.equal('0')
-      expect(hashState.timestamp).to.be.equal(await getTimestamp())
-
       const balances = await this.beanstalk.getWellBalances(wellId)
       expect(balances[0]).to.be.equal(to6('100'))
       expect(balances[1]).to.be.equal(to6('100'))

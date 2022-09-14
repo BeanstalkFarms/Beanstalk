@@ -20,10 +20,6 @@ library LibWell2 {
      * Accessors with Hash
     **/
 
-    function initBalances(bytes32 wh) internal {
-        initB2(LibWellStorage.wellStorage().w2s[wh]);
-    }
-
     function setBalances(bytes32 wh, uint128[] memory balances) internal {
         setB2(LibWellStorage.wellStorage().w2s[wh], balances);
     }
@@ -60,9 +56,6 @@ library LibWell2 {
      * Private 
     **/
 
-    function initB2(LibWellStorage.B2 storage b) private {
-    }
-    
     function setB2(LibWellStorage.B2 storage b, uint128[] memory balances) private {
         uint32 blockTimestamp = uint32(block.timestamp);
         uint32 passedTime = blockTimestamp - b.timestamp; // ws.lastTimestamp <= block.timestamp
