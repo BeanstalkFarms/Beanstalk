@@ -6,20 +6,21 @@ require("solidity-coverage")
 require("@openzeppelin/hardhat-upgrades")
 require('dotenv').config();
 const fs = require('fs')
-const { impersonateSigner, mintUsdc, mintBeans, getBeanMetapool, getUsdc, getBean, getBeanstalkAdminControls } = require('./utils');
+const { impersonateSigner, mintUsdc, mintBeans, getBeanMetapool, getUsdc, getBean, getBeanstalkAdminControls, buyBuysInBeanEth, sellBeansInBeanEth, printPools, toBN } = require('./utils');
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./test/utils/balances.js')
 const { PUBLIUS, BEAN_3_CURVE } = require('./test/utils/constants.js')  
 const { to6 } = require('./test/utils/helpers.js')
 const { replant } = require("./replant/replant.js")
+const { deployWells } = require("./scripts/wells.js")
 
-task('buyBeans').addParam("amount", "The amount of USDC to buy with").setAction(async(args) => {
+task('buyBeansCurve').addParam("amount", "The amount of USDC to buy with").setAction(async(args) => {
   await mintUsdc(PUBLIUS, args.amount)
   const signer = await impersonateSigner(PUBLIUS)
   await (await getUsdc()).connect(signer).approve(BEAN_3_CURVE, ethers.constants.MaxUint256)
   await (await getBeanMetapool()).connect(signer).exchange_underlying('2', '0', args.amount, '0')
 })
 
-task('sellBeans').addParam("amount", "The amount of Beans to sell").setAction(async(args) => {
+task('sellBeansCurve').addParam("amount", "The amount of Beans to sell").setAction(async(args) => {
   await mintBeans(PUBLIUS, args.amount)
   const signer = await impersonateSigner(PUBLIUS)
   await (await getBean()).connect(signer).approve(BEAN_3_CURVE, ethers.constants.MaxUint256)
@@ -49,6 +50,33 @@ task('sunrise', async function () {
 task('replant', async () => {
   const account = await impersonateSigner(PUBLIUS)
   await replant(account)
+})
+
+
+// Wells
+
+task('wells', async function () {
+  await deployWells()
+})
+
+task('pools', async function () {
+  await printPools()
+})
+
+// buys amount Beans. Pads amount with 6 zeros. change to6 to toBN to not pad with zeros.
+task('buyBeansWell')
+  .addParam("amount", "The amount of Beans to buy")
+  .addParam("account", "The account to buy beans with")
+  .setAction(async(args) => {
+    await sellBeansInBeanEth(args.account, to6(args.amount))
+})
+
+// Sells X Beans. Pads amount with 6 zeros. change to6 to toBN to not pad with zeros.
+task("sellBeansWell")
+  .addParam("amount", "The amount of Beans to sell")
+  .addParam("account", "The account to sell beans with")
+  .setAction(async(args) => {
+    await sellBeansInBeanEth(args.account, to6(args.amount))
 })
 
 task('diamondABI', 'Generates ABI file for diamond, includes all ABIs of facets', async () => {

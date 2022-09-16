@@ -2,7 +2,7 @@ const BEANSTALK = "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
 const fs = require('fs');
 const { PRICE_DEPLOYER } = require('../test/utils/constants');
 const { to18, to6, toX } = require('../test/utils/helpers');
-const { getBeanstalk, impersonateBeanstalkOwner, mintBeans, getEthUsdPrice, impersonateSigner, getBean, mintEth, toBN } = require('../utils');
+const { getBeanstalk, impersonateBeanstalkOwner, mintBeans, getEthUsdPrice, impersonateSigner, getBean, mintEth } = require('../utils');
 const { upgradeWithNewFacets } = require('./diamond');
 require('dotenv').config();
 
@@ -46,7 +46,7 @@ async function deployWells() {
     await beanstalk.connect(bcm).addLiquidity(
       well.info,
       [beanAmount, ethAmount],
-      amountOut.mul(toBN('999')).div(toBN('1000')),
+      amountOut.mul(toX('999', 0)).div(toX('1000', 0)),
       '2',
       '1'
     )

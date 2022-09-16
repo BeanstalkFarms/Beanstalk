@@ -1,8 +1,8 @@
-const { toBN } = require(".")
 const { BEANSTALK, BEAN, WETH } = require("../test/utils/constants")
 const { getBean, getBeanstalk } = require("./contracts")
 const { mintBeans, mintEth } = require("./mint")
 const { impersonateSigner } = require("./signer")
+const { toX } = require("../test/utils/helpers")
 
 async function buyBuysInBeanEth(account, amount) {
     const signer = await impersonateSigner(account)
@@ -12,7 +12,7 @@ async function buyBuysInBeanEth(account, amount) {
     const well = await beanstalk.getWellAtIndex(0)
 
     let ethIn = await beanstalk.getSwapIn(well.info, WETH, BEAN, amount)
-    ethIn = ethIn.mul(toBN('1000')).div(toBN('999'))
+    ethIn = ethIn.mul(toX('1000', 0)).div(toX('999', 0))
     await beanstalk.connect(signer).wrapEth(ethIn, '1', { value: ethIn })
 
     await beanstalk.connect(signer).swapTo(
