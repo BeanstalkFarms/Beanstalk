@@ -470,11 +470,23 @@ async function upgradeWithNewFacets ({
   }
   let result;
   if (object) {
-    return  {
+    result = await diamondCutFacet.interface.encodeFunctionData('diamondCut', [
+      diamondCut,
+      initFacetAddress,
+      functionCall
+    ])
+    console.log('--------------')
+    console.log('Encoded Function Call:')
+    console.log(result)
+    dc = {
       diamondCut: diamondCut,
       initFacetAddress: initFacetAddress,
       functionCall: functionCall
     }
+    console.log('--------------')
+    console.log('Function Call Params:')
+    console.log(JSON.stringify(dc, null, 4))
+    return dc
   }
   if (bip) {
     const governance = await ethers.getContractAt('GovernanceFacet', diamondAddress)
