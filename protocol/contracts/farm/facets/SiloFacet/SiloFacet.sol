@@ -87,14 +87,14 @@ contract SiloFacet is TokenSilo {
         address token,
         uint32 season,
         uint256 amount
-    ) external payable nonReentrant {
+    ) external payable nonReentrant returns (uint256 bdv) {
         if (sender != msg.sender) {
             _spendDepositAllowance(sender, msg.sender, token, amount);
         }
         _update(sender);
         // Need to update the recipient's Silo as well.
         _update(recipient);
-        _transferDeposit(sender, recipient, token, season, amount);
+        bdv = _transferDeposit(sender, recipient, token, season, amount);
     }
 
     function transferDeposits(
@@ -103,7 +103,7 @@ contract SiloFacet is TokenSilo {
         address token,
         uint32[] calldata seasons,
         uint256[] calldata amounts
-    ) external payable nonReentrant {
+    ) external payable nonReentrant returns (uint256[] memory bdvs) {
         require(amounts.length > 0, "Silo: amounts array is empty");
         for (uint256 i = 0; i < amounts.length; i++) {
             require(amounts[i] > 0, "Silo: amount in array is 0");
@@ -115,7 +115,7 @@ contract SiloFacet is TokenSilo {
         _update(sender);
         // Need to update the recipient's Silo as well.
         _update(recipient);
-        _transferDeposits(sender, recipient, token, seasons, amounts);
+        bdvs = _transferDeposits(sender, recipient, token, seasons, amounts);
     }
 
     /*
