@@ -755,7 +755,7 @@ describe('Silo Token', function () {
     describe("Single", async function () {
       beforeEach(async function () {
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
-        await this.silo.connect(user).transferDeposit(userAddress, user2Address, this.siloToken.address, '2', '50')
+        this.result = await this.silo.connect(user).callStatic.transferDeposit(userAddress, user2Address, this.siloToken.address, '2', '50')
       })
 
       it('removes the deposit from the sender', async function () {
@@ -783,6 +783,10 @@ describe('Silo Token', function () {
       it('updates total stalk and seeds', async function () {
         expect(await this.silo.totalStalk()).to.be.equal('1000000')
         expect(await this.silo.totalSeeds()).to.be.equal('100')
+      })
+
+      it('returns correct value', async function () {
+        expect(this.result).to.be.equal('50')
       })
     })
 
@@ -825,7 +829,7 @@ describe('Silo Token', function () {
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
         await this.season.siloSunrise('0')
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
-        await this.silo.connect(user).transferDeposits(userAddress, user2Address, this.siloToken.address, ['2', '3'], ['50','25'])
+        this.result = await this.silo.connect(user).callStatic.transferDeposits(userAddress, user2Address, this.siloToken.address, ['2', '3'], ['50','25'])
       })
 
       it('removes the deposit from the sender', async function () {
@@ -859,6 +863,11 @@ describe('Silo Token', function () {
       it('updates total stalk and seeds', async function () {
         expect(await this.silo.totalStalk()).to.be.equal('2000100')
         expect(await this.silo.totalSeeds()).to.be.equal('200')
+      })
+
+      it('returns correct value', async function () {
+        expect(this.result[0]).to.be.equal(ethers.BigNumber.from('50'))
+        expect(this.result[1]).to.be.equal(ethers.BigNumber.from('25'))
       })
     })
 
