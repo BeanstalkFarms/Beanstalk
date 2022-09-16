@@ -155,21 +155,21 @@ library LibPolynomial {
             }
 
             if(integrateToEnd) {
-                integral += evaluatePolynomialIntegration(
+                integral = integral.add(evaluatePolynomialIntegration(
                     getSignificands(f, currentPieceIndex, numPieces), 
                     getExponents(f, currentPieceIndex, numPieces), 
                     getSigns(f, currentPieceIndex, numPieces), 
                     integrateFrom - currentPieceStart, 
                     integrateTo - currentPieceStart
-                );
+                ));
             } else {
-                integral += evaluatePolynomialIntegration(
+                integral = integral.add(evaluatePolynomialIntegration(
                     getSignificands(f, currentPieceIndex, numPieces), 
                     getExponents(f, currentPieceIndex, numPieces), 
                     getSigns(f, currentPieceIndex, numPieces), 
                     integrateFrom - currentPieceStart, 
                     nextPieceStart - currentPieceStart
-                );
+                ));
 
                 integrateFrom = nextPieceStart;
                 
@@ -236,7 +236,7 @@ library LibPolynomial {
     // * @param numPieces The number of pieces in the piecewise polynomial.
     // */
     function getSignificands(bytes calldata f, uint256 pieceIndex, uint256 numPieces) internal pure returns (uint256[4] memory significands) {
-        bytes memory significandSlice = sliceToMemory(f, (32 + (32*numPieces) + 128*pieceIndex), 128);
+        bytes memory significandSlice = sliceToMemory(f, (32 + (numPieces.mul(32)) + pieceIndex.mul(128)), 128);
         significands[0] = significandSlice.toUint256(0);
         significands[1] = significandSlice.toUint256(32);
         significands[2] = significandSlice.toUint256(64);
@@ -251,7 +251,7 @@ library LibPolynomial {
     // * @param numPieces The number of pieces in the piecewise polynomial.
     // */
     function getExponents(bytes calldata f, uint256 pieceIndex, uint256 numPieces) internal pure returns(uint8[4] memory exponents) {
-        bytes memory exponentSlice = sliceToMemory(f, (32 + (32*numPieces) + (128*numPieces)+ 4*pieceIndex), 4);
+        bytes memory exponentSlice = sliceToMemory(f, (32 + (numPieces.mul(32)) + (numPieces.mul(128))+ pieceIndex.mul(4)), 4);
         exponents[0] = exponentSlice.toUint8(0);
         exponents[1] = exponentSlice.toUint8(1);
         exponents[2] = exponentSlice.toUint8(2);
@@ -266,7 +266,7 @@ library LibPolynomial {
     // * @param numPieces The number of pieces in the piecewise polynomial.
     // */
     function getSigns(bytes calldata f, uint256 pieceIndex, uint256 numPieces) internal pure returns(bool[4] memory signs) {
-        bytes memory signSlice = sliceToMemory(f, (32 + (32*numPieces) + (128*numPieces)+ (4*numPieces) + 4*pieceIndex), 4);
+        bytes memory signSlice = sliceToMemory(f, (32 + (numPieces.mul(32)) + (numPieces.mul(128))+ (numPieces.mul(4)) + pieceIndex.mul(4)), 4);
         signs[0] = signSlice.toUint8(0) == 1;
         signs[1] = signSlice.toUint8(1) == 1;
         signs[2] = signSlice.toUint8(2) == 1; 
@@ -281,7 +281,7 @@ library LibPolynomial {
     // */
     function sliceToMemory(bytes calldata b, uint256 start, uint256 length) internal pure returns (bytes memory) {
         bytes memory memBytes = new bytes(length);
-        for(uint256 i = 0; i < length; i++) {
+        for(uint256 i = 0; i < length; ++i) {
             memBytes[i] = b[start + i];
         }
         return memBytes;
@@ -302,7 +302,7 @@ library LibPolynomial {
 
         else {
             uint256 z = base;
-            for(uint256 i = 1; i < exponent; i++) 
+            for(uint256 i = 1; i < exponent; ++i) 
                 z = z.mul(base);
             return z;
         }
