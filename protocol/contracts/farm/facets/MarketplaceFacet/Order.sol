@@ -31,7 +31,6 @@ contract Order is Listing {
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
         bytes pricingFunction,
-        uint256 numPieces,
         LibPolynomial.PriceType priceType
     );
 
@@ -67,22 +66,21 @@ contract Order is Listing {
         if (s.podOrders[id] > 0) _cancelPodOrder(pricePerPod, maxPlaceInLine, LibTransfer.To.INTERNAL);
         s.podOrders[id] = beanAmount;
 
-        bytes memory pricingFunction;
-        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, pricingFunction, 0, LibPolynomial.PriceType.Fixed);
+        bytes memory emptyPricingFunction;
+        emit PodOrderCreated(msg.sender, id, beanAmount, pricePerPod, maxPlaceInLine, emptyPricingFunction, LibPolynomial.PriceType.Fixed);
     }
 
     function _createPodOrderV2(
         uint256 beanAmount,
         uint256 maxPlaceInLine,
-        bytes calldata pricingFunction,
-        uint256 numPieces
+        bytes calldata pricingFunction
     ) internal returns (bytes32 id) {
         require(beanAmount > 0, "Marketplace: Order amount must be > 0.");
-        id = createOrderIdV2(msg.sender, 0, maxPlaceInLine, pricingFunction, numPieces);
-        if (s.podOrders[id] > 0) _cancelPodOrderV2(maxPlaceInLine, pricingFunction, numPieces, LibTransfer.To.INTERNAL);
+        id = createOrderIdV2(msg.sender, 0, maxPlaceInLine, pricingFunction);
+        if (s.podOrders[id] > 0) _cancelPodOrderV2(maxPlaceInLine, pricingFunction, LibTransfer.To.INTERNAL);
         s.podOrders[id] = beanAmount;
 
-        emit PodOrderCreated(msg.sender, id, beanAmount, 0, maxPlaceInLine, pricingFunction, numPieces, LibPolynomial.PriceType.Dynamic);
+        emit PodOrderCreated(msg.sender, id, beanAmount, 0, maxPlaceInLine, pricingFunction, LibPolynomial.PriceType.Dynamic);
     }
 
 
@@ -121,15 +119,14 @@ contract Order is Listing {
         uint256 start,
         uint256 amount,
         bytes calldata pricingFunction,
-        uint256 numPieces,
         LibTransfer.To mode
     ) internal {
 
         require(s.a[msg.sender].field.plots[index] >= (start + amount), "Marketplace: Invalid Plot.");
         require((index + start - s.f.harvestable + amount) <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
         
-        bytes32 id = createOrderIdV2(o.account, 0, o.maxPlaceInLine, pricingFunction, numPieces);
-        uint256 costInBeans = getAmountBeansToFillOrderV2(index + start - s.f.harvestable, amount, pricingFunction, numPieces);
+        bytes32 id = createOrderIdV2(o.account, 0, o.maxPlaceInLine, pricingFunction);
+        uint256 costInBeans = getAmountBeansToFillOrderV2(index + start - s.f.harvestable, amount, pricingFunction);
         s.podOrders[id] = s.podOrders[id].sub(costInBeans, "Marketplace: Not enough beans in order.");
         
         LibTransfer.sendToken(C.bean(), costInBeans, msg.sender, mode);
@@ -161,10 +158,9 @@ contract Order is Listing {
     function _cancelPodOrderV2(
         uint256 maxPlaceInLine,
         bytes calldata pricingFunction,
-        uint256 numPieces,
         LibTransfer.To mode
     ) internal {
-        bytes32 id = createOrderIdV2(msg.sender, 0, maxPlaceInLine, pricingFunction, numPieces);
+        bytes32 id = createOrderIdV2(msg.sender, 0, maxPlaceInLine, pricingFunction);
         uint256 amountBeans = s.podOrders[id];
         LibTransfer.sendToken(C.bean(), amountBeans, msg.sender, mode);
         delete s.podOrders[id];
@@ -189,10 +185,9 @@ contract Order is Listing {
     function getAmountBeansToFillOrderV2(
         uint256 placeInLine, 
         uint256 amountPodsFromOrder,
-        bytes calldata f,
-        uint256 numPieces
+        bytes calldata pricingFunction
     ) public view returns (uint256 beanAmount) { 
-        beanAmount = LibPolynomial.evaluatePolynomialIntegrationPiecewise(placeInLine, placeInLine + amountPodsFromOrder, f, numPieces);
+        beanAmount = LibPolynomial.evaluatePolynomialIntegrationPiecewise(placeInLine, placeInLine + amountPodsFromOrder, pricingFunction);
         beanAmount = beanAmount.div(1000000);
     }
 
@@ -211,10 +206,9 @@ contract Order is Listing {
         address account,
         uint24 pricePerPod,
         uint256 maxPlaceInLine,
-        bytes calldata pricingFunction,
-        uint256 numPieces
+        bytes calldata pricingFunction
     ) internal pure returns (bytes32 id) {
-        require(pricingFunction.length == numPieces*416, "Marketplace: Invalid pricing function.");
+        // require(pricingFunction.length == numPieces*416, "Marketplace: Invalid pricing function.");
         id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, pricingFunction));
     }
 }

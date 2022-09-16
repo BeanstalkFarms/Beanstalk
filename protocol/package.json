@@ -20,12 +20,12 @@
     "csvtojson": "^2.0.10",
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.5.2",
+    "ganache-cli": "^6.12.2",
     "hardhat": "^2.4.3",
     "hardhat-contract-sizer": "^2.0.3",
     "hardhat-gas-reporter": "^1.0.4",
     "json-bigint": "^1.0.0",
-    "solidity-coverage": "^0.7.21",
-    "ganache-cli": "^6.12.2"
+    "solidity-coverage": "^0.7.21"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^3.4.0",

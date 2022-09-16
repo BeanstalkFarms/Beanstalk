@@ -37,7 +37,6 @@ contract Listing is PodTransfer {
         uint24 pricePerPod, 
         uint256 maxHarvestableIndex, 
         bytes pricingFunction,
-        uint256 numPieces, 
         LibTransfer.To mode,
         LibPolynomial.PriceType pricingType
     );
@@ -76,7 +75,7 @@ contract Listing is PodTransfer {
 
         bytes memory f;
         
-        emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, f, 0, mode, LibPolynomial.PriceType.Fixed);
+        emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, f, mode, LibPolynomial.PriceType.Fixed);
 
     }
 
@@ -86,7 +85,6 @@ contract Listing is PodTransfer {
         uint256 amount,
         uint256 maxHarvestableIndex,
         bytes calldata pricingFunction,
-        uint256 numPieces,
         LibTransfer.To mode
     ) internal {
         uint256 plotSize = s.a[msg.sender].field.plots[index];
@@ -113,7 +111,6 @@ contract Listing is PodTransfer {
             0, 
             maxHarvestableIndex, 
             pricingFunction,
-            numPieces,
             mode,
             LibPolynomial.PriceType.Dynamic
         );
@@ -147,8 +144,7 @@ contract Listing is PodTransfer {
     function _fillListingV2(
         PodListing calldata l, 
         uint256 beanAmount,
-        bytes calldata pricingFunction,
-        uint256 numPieces
+        bytes calldata pricingFunction
     ) internal {
         bytes32 lHash = hashListingV2(
             l.start,
@@ -166,7 +162,7 @@ contract Listing is PodTransfer {
         require(plotSize >= (l.start + l.amount) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
 
-        uint256 amount = getRoundedAmountV2(l, beanAmount, pricingFunction, numPieces);
+        uint256 amount = getRoundedAmountV2(l, beanAmount, pricingFunction);
 
         __fillListingV2(msg.sender, l, pricingFunction, amount);
         _transferPlot(l.account, msg.sender, l.index, l.start, amount);
@@ -250,10 +246,9 @@ contract Listing is PodTransfer {
     function getRoundedAmountV2(
         PodListing calldata l, 
         uint256 beanAmount,
-        bytes calldata pricingFunction, 
-        uint256 numPieces
+        bytes calldata pricingFunction
     ) public view returns (uint256 amount) {
-        uint256 pricePerPod = LibPolynomial.evaluatePolynomialPiecewise(pricingFunction, l.index + l.start - s.f.harvestable, numPieces);
+        uint256 pricePerPod = LibPolynomial.evaluatePolynomialPiecewise(pricingFunction, l.index + l.start - s.f.harvestable);
         amount = (beanAmount.mul(1000000)) / pricePerPod;
         
         uint256 remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");

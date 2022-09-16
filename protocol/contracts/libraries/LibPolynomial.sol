@@ -5,6 +5,7 @@
 pragma solidity =0.7.6;
  
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
+import "./LibBytes.sol";
 import "hardhat/console.sol";
  
  
@@ -17,9 +18,11 @@ library LibPolynomial {
 
     using SafeMath for uint256;
 
+    using LibBytes for bytes;
+
     /**
         The polynomial's constant terms are split into: 1) constant * 10^exponent , 2) the exponent the constant is raised to in base 10 and, 3) the sign of the coefficients.
-        Example conversion to Piecewise struct: 
+        Example conversion to Piecewise: 
 
             Range(0, 1) -> Polynomial(0.25*x^3 + 25*x^2 + x + 1)
             Range(1, 2) -> Polynomial(0.0125*x^3 + 50*x^2 + x - 2)
@@ -31,6 +34,15 @@ library LibPolynomial {
             significands: [1, 1, 25, 25, 2, 1, 50, 125, 1, 0, 0, ... , 0]
             (expanded) coefficient exponents: [0, 0, 0, 2, 0, 0, 0, 4, 0, 0, 0, ... , 0]
             (expanded) signs: [true, true, true, true, false, true, true, true, false, false, false, ... , false]
+
+        The resulting piecewise is then encoded into a single bytes array by concatenating as follows, where n is the number of polynomial pieces: 
+            [
+                n, (32 bytes)
+                breakpoints, (32n bytes)
+                significands, (128n bytes)
+                exponents, (4n bytes)
+                signs, (4n bytes)
+            ]
         
     */
 
@@ -56,7 +68,7 @@ library LibPolynomial {
     ) internal pure returns (uint256) {
         uint256 positiveSum;
         uint256 negativeSum;
-
+        
         for(uint256 degree; degree <= MAX_DEGREE; ++degree) {
             if(signs[degree]) {
                 positiveSum = positiveSum.add(pow(x, degree).mul(significands[degree]).div(pow(10, exponents[degree])));
@@ -69,15 +81,16 @@ library LibPolynomial {
 
     function evaluatePolynomialPiecewise(
         bytes calldata f,
-        uint256 x,
-        uint256 numPieces
-    ) internal view returns (uint256 y) {
+        uint256 x
+    ) internal pure returns (uint256 y) {
+        uint256 numPieces = getNumPieces(f);
         uint256 pieceIndex = findPiecewiseIndex(f, x, numPieces.sub(1));
+        //Note: overflows if x is not in range of piece index
         y = evaluatePolynomial(
             getSignificands(f, pieceIndex, numPieces), 
             getExponents(f, pieceIndex, numPieces),
             getSigns(f, pieceIndex, numPieces),
-            x - getPiecewiseBreakpoint(f, pieceIndex)
+            x.sub(getPiecewiseBreakpoint(f, pieceIndex), "evaluation must be within piecewise bounds")
         );
     }
 
@@ -102,9 +115,8 @@ library LibPolynomial {
         for(uint256 degree; degree <= MAX_DEGREE; ++degree) {
 
             if(signs[degree]) {
-                //uint256 max value is 1e77 and the maximum value we're expecting to evaluate is 1e14. 
-                //1e14^4 is 1e56, leaving (1e77 - 1e56) around 1e20 in room for the significand's precision, past that it overflows.
-                //Accordingly, the variable floating point has been set to 10e20 in the interpolation code.
+                //uint256 max value is 1e77 and this has been tested to work to not overflow for values less than 1e14. 
+                //Note: susceptible to overflows past 1e14
                 positiveSum = positiveSum.add(pow(end, 1 + degree).mul(significands[degree]).div(pow(10, exponents[degree]).mul(1 + degree)));
 
                 positiveSum = positiveSum.sub(pow(start, 1 + degree).mul(significands[degree]).div(pow(10, exponents[degree]).mul(1 + degree)));
@@ -121,12 +133,10 @@ library LibPolynomial {
     function evaluatePolynomialIntegrationPiecewise(
         uint256 integrateFrom, 
         uint256 integrateTo,
-        bytes calldata f,
-        uint256 numPieces
-    ) internal view returns (uint256 integral) {
-
+        bytes calldata f
+    ) internal pure returns (uint256 integral) {
+        uint256 numPieces = getNumPieces(f);
         uint256 currentPieceIndex = findPiecewiseIndex(f, integrateFrom, numPieces.sub(1));
-        console.log("currentPieceIndex:", currentPieceIndex);
         uint256 currentPieceStart = getPiecewiseBreakpoint(f, currentPieceIndex);
         uint256 nextPieceStart = getPiecewiseBreakpoint(f, currentPieceIndex + 1);
         bool integrateToEnd;
@@ -137,14 +147,12 @@ library LibPolynomial {
         }
 
         while (!integrateToEnd) {
-            console.log("integral: ", integral);
 
             if(currentPieceIndex != numPieces.sub(1) && integrateTo > nextPieceStart) {
                 integrateToEnd = false;
             } else {
                 integrateToEnd = true;
             }
-            console.log("breakpoint: ", currentPieceStart);
 
             if(integrateToEnd) {
                 integral += evaluatePolynomialIntegration(
@@ -162,6 +170,7 @@ library LibPolynomial {
                     integrateFrom - currentPieceStart, 
                     nextPieceStart - currentPieceStart
                 );
+
                 integrateFrom = nextPieceStart;
                 
                 if(currentPieceIndex < (numPieces - 1)) {
@@ -173,46 +182,10 @@ library LibPolynomial {
 
         }
     }
-
-
-    // /**
-    // * @notice Retrieves the uint8 coefficient exponent at the specified index within the packed value.
-    // * @dev 32 base indices are available per uint256 with each exponent taking up 8 bits of space. 
-    // * @param packedExponents A uint256 created from the concatenation of up to 32 uint8 values.
-    // * @param pieceIndex The index of the piece to retrieve the base for.
-    // */
-    // function getPackedExponents(uint256 packedExponents, uint256 pieceIndex) internal pure returns (uint8[4] memory) {
-    //     uint8[4] memory exponents;
-    //     uint256 relativeIndex = (pieceIndex % 8)*4; //index of the base in the relevant uint256
-
-    //     exponents[0] = uint8(packedExponents >> ((32 - relativeIndex - 1)*8));
-    //     exponents[1] = uint8(packedExponents >> ((32 - (relativeIndex + 1) - 1)*8));
-    //     exponents[2] = uint8(packedExponents >> ((32 - (relativeIndex + 2) - 1)*8));
-    //     exponents[3] = uint8(packedExponents >> ((32 - (relativeIndex + 3) - 1)*8));
-        
-    //     return exponents; 
-    // }
-
-    // /**
-    // * @notice Retrieves the sign (bool value) at specified index.
-    // * @dev 256 sign indices are available per uint256. 1 bit is allocated per sign. 
-    // * @param packedBools A uint256 from the concatenation of up to 256 boolean bit values.
-    // * @param pieceIndex The index of the piecewise polynomial to get signs for.
-    // */
-    // function getPackedSigns(uint256 packedBools, uint256 pieceIndex) internal pure returns (bool[4] memory) {
-    //     bool[4] memory signs;
-
-    //     signs[0] = ((packedBools >> (pieceIndex*4)) & uint256(1) == 1);
-    //     signs[1] = ((packedBools >> (pieceIndex*4 + 1)) & uint256(1) == 1);
-    //     signs[2] = ((packedBools >> (pieceIndex*4 + 2)) & uint256(1) == 1);
-    //     signs[3] = ((packedBools >> (pieceIndex*4 + 3)) & uint256(1) == 1);
-
-    //     return signs;
-    // }
-
+    
     /**
     * @notice Searches for index of interval containing x
-    * @dev [inclusiveStart, exclusiveEnd). -> If a value is at a breakpoint, it is considered to be in the next interval. 
+    * @dev [inclusiveStart, exclusiveEnd)
     * @param value The value to search for.
     * @param high The highest index of the array to search. Could be retrieved from getNumPieces(arr) - 1.
     */
@@ -232,45 +205,86 @@ library LibPolynomial {
         return low - 1;
     }
 
+    /**
+      Function calldata parsing.
+      Note: Abi.decode is not being used because of the minimum 32 bytes per parameter requirement.
+    */
+
+    // /**
+    // * @notice Retrieves the length of pieces in a piecewise polynomial. 
+    // * @dev Stored as the first 32 bytes of the piecewise function data.
+    // * @param f The function data of the piecewise polynomial.
+    // */
+    function getNumPieces(bytes calldata f) internal pure returns (uint256) {
+        return sliceToMemory(f, 0, 32).toUint256(0);
+    }
+
+    // /**
+    // * @notice Retrieves the breakpoint at the specified piecewise index.
+    // * @dev Stored in function data after the first 32 bytes. Occupies 32n bytes, where n is the number of polynomial pieces.
+    // * @param f The function data of the piecewise polynomial.
+    // */
     function getPiecewiseBreakpoint(bytes calldata f, uint256 pieceIndex) internal pure returns (uint256) {
-        //the index of pieces starts at 0 within the byte array and ends at 32*n where n is the number of total pieces
-        //we need to load calldata from position 32xpieceIndex
-        return abi.decode(f[32*pieceIndex:32*(pieceIndex+1)], (uint256));
+        return sliceToMemory(f, 32 + 32*pieceIndex, 32).toUint256(0);
     }
 
-    function getSignificands(bytes calldata f, uint256 pieceIndex, uint256 numPieces) internal view returns (uint256[4] memory significands) {
-        //the index of pieces starts at 0 within the byte array and ends at 32*n where n is the number of total pieces
-        //we need to load calldata from position 32*(pieceIndex+1) because pieceIndex starts at 0
-        uint256 skipBytes = 32*(numPieces) + 96;
-        
-        significands[0] = abi.decode(f[skipBytes + 128*pieceIndex:skipBytes + 128*pieceIndex + 32], (uint256));
-
-        significands[1] = abi.decode(f[skipBytes + 128*pieceIndex + 32:skipBytes + 128*pieceIndex + 64], (uint256));
-
-        significands[2] = abi.decode(f[skipBytes + 128*pieceIndex + 64:skipBytes + 128*pieceIndex + 96], (uint256));
-
-        significands[3] = abi.decode(f[skipBytes + 128*pieceIndex + 96:skipBytes + 128*pieceIndex + 128], (uint256));
-        console.log(significands[0], significands[1], significands[2], significands[3]);
-
-
+    // /**
+    // * @notice Retrieves the coefficient significands of a cubic polynomial at specified piecewise index. (significands / 10^exponent = coefficientValue)
+    // * @dev Stored in function data after the first 32 + 32n bytes. Occupies 128n bytes, where n is the number of polynomial pieces.
+    // * @param f The function data of the piecewise polynomial.
+    // * @param pieceIndex The index of the piecewise polynomial to get signs for.
+    // * @param numPieces The number of pieces in the piecewise polynomial.
+    // */
+    function getSignificands(bytes calldata f, uint256 pieceIndex, uint256 numPieces) internal pure returns (uint256[4] memory significands) {
+        bytes memory significandSlice = sliceToMemory(f, (32 + (32*numPieces) + 128*pieceIndex), 128);
+        significands[0] = significandSlice.toUint256(0);
+        significands[1] = significandSlice.toUint256(32);
+        significands[2] = significandSlice.toUint256(64);
+        significands[3] = significandSlice.toUint256(96);
     }
 
-    function getExponents(bytes calldata f, uint256 pieceIndex, uint256 numPieces) internal view returns(uint8[4] memory exponents) {
-        uint256 skipBytes = 160*numPieces + 384 + 96;
-        exponents[0] = abi.decode(f[skipBytes + 128*pieceIndex:skipBytes + 128*pieceIndex + 32], (uint8));
-        exponents[1] = abi.decode(f[skipBytes + 128*pieceIndex + 32:skipBytes + 128*pieceIndex + 64], (uint8));
-        exponents[2] = abi.decode(f[skipBytes + 128*pieceIndex + 64:skipBytes + 128*pieceIndex + 96], (uint8));
-        exponents[3] = abi.decode(f[skipBytes + 128*pieceIndex + 96:skipBytes + 128*pieceIndex + 128], (uint8));
-        console.log(exponents[0], exponents[1], exponents[2], exponents[3]);
+    // /**
+    // * @notice Retrieves the exponents for the coefficients of a cubic polynomial at specified piecewise index. (significand / 10^exponent = coefficientValue)
+    // * @dev Stored in function data after the first 32 + 32n + 128n bytes. Occupies 4n bytes, where n is the number of polynomial pieces.
+    // * @param f The function data of the piecewise polynomial.
+    // * @param pieceIndex The index of the piecewise polynomial to get signs for.
+    // * @param numPieces The number of pieces in the piecewise polynomial.
+    // */
+    function getExponents(bytes calldata f, uint256 pieceIndex, uint256 numPieces) internal pure returns(uint8[4] memory exponents) {
+        bytes memory exponentSlice = sliceToMemory(f, (32 + (32*numPieces) + (128*numPieces)+ 4*pieceIndex), 4);
+        exponents[0] = exponentSlice.toUint8(0);
+        exponents[1] = exponentSlice.toUint8(1);
+        exponents[2] = exponentSlice.toUint8(2);
+        exponents[3] = exponentSlice.toUint8(3);
     }
 
-    function getSigns(bytes calldata f, uint256 pieceIndex, uint256 numPieces) internal view returns(bool[4] memory signs) {
-        uint256 skipBytes = 288*numPieces + 384 + 384 + 96;
-        signs[0] = abi.decode(f[skipBytes + 128*pieceIndex:skipBytes + 128*pieceIndex + 32], (bool));
-        signs[1] = abi.decode(f[skipBytes + 128*pieceIndex + 32:skipBytes + 128*pieceIndex + 64], (bool));
-        signs[2] = abi.decode(f[skipBytes + 128*pieceIndex + 64:skipBytes + 128*pieceIndex + 96], (bool));
-        signs[3] = abi.decode(f[skipBytes + 128*pieceIndex + 96:skipBytes + 128*pieceIndex + 128], (bool));
-        console.log(signs[0], signs[1], signs[2], signs[3]);
+    // /**
+    // * @notice Retrieves the signs (bool values) for the coefficients of a cubic polynomial at specified piecewise index.
+    // * @dev Stored in function data after the first 32 + 32n + 128n + 4n bytes. Occupies 4n bytes, where n is the number of polynomial pieces.
+    // * @param f The function data of the piecewise polynomial.
+    // * @param pieceIndex The index of the piecewise polynomial to get signs for.
+    // * @param numPieces The number of pieces in the piecewise polynomial.
+    // */
+    function getSigns(bytes calldata f, uint256 pieceIndex, uint256 numPieces) internal pure returns(bool[4] memory signs) {
+        bytes memory signSlice = sliceToMemory(f, (32 + (32*numPieces) + (128*numPieces)+ (4*numPieces) + 4*pieceIndex), 4);
+        signs[0] = signSlice.toUint8(0) == 1;
+        signs[1] = signSlice.toUint8(1) == 1;
+        signs[2] = signSlice.toUint8(2) == 1; 
+        signs[3] = signSlice.toUint8(3) == 1;
+    }
+
+    // /**
+    // * @notice Loads a slice of a calldata bytes array into memory
+    // * @param b The calldata bytes array to load from
+    // * @param start The start of the slice
+    // * @param length The length of the slice
+    // */
+    function sliceToMemory(bytes calldata b, uint256 start, uint256 length) internal pure returns (bytes memory) {
+        bytes memory memBytes = new bytes(length);
+        for(uint256 i = 0; i < length; i++) {
+            memBytes[i] = b[start + i];
+        }
+        return memBytes;
     }
 
     /**

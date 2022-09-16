@@ -81,19 +81,18 @@ function evaluatePolynomialIntegration(f, start, end, pieceIndex) {
     return math.format(math.subtract(positiveSum, negativeSum), {notation: "fixed"});
 }
 
-function getAmountListing(f, placeInLine, amountBeans, maxPieces) {
-    const pieceIndex = findIndex(f.breakpoints, placeInLine, getNumPieces(f.breakpoints, maxPieces) - 1);
+function getAmountListing(f, placeInLine, amountBeans,) {
+    const pieceIndex = findIndex(f.breakpoints, placeInLine, f.numPieces - 1);
     const pricePerPod = evaluatePolynomial(f, placeInLine, pieceIndex);
     const amountPods = math.floor(math.divide(math.multiply(amountBeans, 1000000), pricePerPod));
     return math.format(amountPods, {notation:"fixed"});
 
 }
 
-function getAmountOrder(f, placeInLine, amountPodsFromOrder, maxPieces) {
+function getAmountOrder(f, placeInLine, amountPodsFromOrder) {
 
     var beanAmount = math.bignumber(0);
-    const numPieces = getNumPieces(f.breakpoints, maxPieces);
-    var pieceIndex = findIndex(f.breakpoints, math.bignumber(placeInLine), numPieces - 1);
+    var pieceIndex = findIndex(f.breakpoints, math.bignumber(placeInLine), f.numPieces - 1);
 
     var start = math.bignumber(placeInLine);
     const end = math.add(start, math.bignumber(amountPodsFromOrder));
@@ -105,7 +104,7 @@ function getAmountOrder(f, placeInLine, amountPodsFromOrder, maxPieces) {
         console.log("coefficients: ", getValueArray(f.coefficients, pieceIndex))
         console.log("exponents: ", getValueArray(f.exponents, pieceIndex))
         console.log("signs: ", getValueArray(f.signs, pieceIndex))
-        if(!(math.compare(pieceIndex, numPieces - 1) == 0)) {
+        if(!(math.compare(pieceIndex, f.numPieces - 1) == 0)) {
             
             if(math.compare(end, f.breakpoints[pieceIndex + 1]) == 1) {
                 
@@ -113,7 +112,7 @@ function getAmountOrder(f, placeInLine, amountPodsFromOrder, maxPieces) {
                 start = math.bignumber(f.breakpoints[pieceIndex + 1]);
                 beanAmount = math.add(beanAmount, term);
 
-                if(pieceIndex < (numPieces - 1)) pieceIndex++;
+                if(pieceIndex < (f.numPieces - 1)) pieceIndex++;
                 
             } else {
 
