@@ -53,7 +53,7 @@ async function deployWells() {
     console.log("Deploying Price Contract...")
     const priceAccount = await impersonateSigner(PRICE_DEPLOYER)
     const PriceContract = await ethers.getContractFactory("BeanstalkPrice", priceAccount);
-    const priceContract = await PriceContract.deploy();
+    const priceContract = await PriceContract.connect(priceAccount).deploy();
     await priceContract.deployed()
     console.log(`Price Contract deployed at: ${priceContract.address}`);
 }
