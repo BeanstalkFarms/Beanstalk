@@ -3,6 +3,8 @@ const { impersonateSigner, impersonateBeanstalkOwner } = require("./signer.js");
 const { getEthUsdPrice } = require("./oracle.js")
 const { mintUsdc, mintBeans, mintEth } = require("./mint.js")
 const { readPrune } = require("./read.js")
+const { printPools, printPool } = require('./price.js')
+const { sellBeansInBeanEth, buyBuysInBeanEth } = require('./wells.js')
 
 
 function toBN(a) {
@@ -24,3 +26,7 @@ exports.mintEth = mintEth
 exports.getPrice = getPrice
 exports.readPrune = readPrune
 exports.getEthUsdPrice = getEthUsdPrice
+exports.printPools = printPools
+exports.printPool = printPool
+exports.sellBeansInBeanEth = sellBeansInBeanEth
+exports.buyBuysInBeanEth = buyBuysInBeanEth
