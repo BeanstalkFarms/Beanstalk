@@ -21,7 +21,7 @@ contract WellBuildingFacet is ReentrancyGuard {
         LibWellType.WellType wellType,
         bytes calldata typeData,
         string[] calldata symbols
-    ) external returns (address wellId) {
+    ) external payable returns (address wellId) {
         wellId = LibWellBuilding.buildWell(tokens, wellType, typeData, symbols);
     }
 
@@ -29,7 +29,7 @@ contract WellBuildingFacet is ReentrancyGuard {
          LibWellStorage.WellInfo calldata p,
          LibWellType.WellType newWellType,
         bytes calldata newTypeData
-    ) external {
+    ) external payable {
         LibDiamond.enforceIsContractOwner();
         LibWellBuilding.modifyWell(p, newWellType, newTypeData);
     }
@@ -45,5 +45,13 @@ contract WellBuildingFacet is ReentrancyGuard {
     ) external view returns (bool registered) {
         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage(); 
         registered = s.registered[wellType];
+    }
+
+    function encodeWellData(
+        LibWellType.WellType wellType,
+        uint8 numTokens,
+        bytes calldata typeData
+    ) external pure returns (bytes memory data) {
+        return LibWellBuilding.encodeData(wellType, numTokens, typeData);
     }
 }

@@ -31,6 +31,28 @@ library LibWellBalance {
         balances = getBalancesFromHash(wh, w.tokens.length);
     }
 
+    // From Hash
+
+    function getBalancesFromHash(bytes32 wh, uint256 n) internal view returns (uint128[] memory) {
+        if (n == 2) return LibWell2.getBalances(wh);
+        return LibWellN.getBalances(wh, n);
+    }
+
+    function getCumulativeBalancesFromHash(bytes32 wh, uint256 n) internal view returns (uint224[] memory, uint32) {
+        if (n == 2) return LibWell2.getCumulativeBalances(wh);
+        return LibWellN.getCumulativeBalances(wh, n);
+    }
+
+    function getEmaBalancesFromHash(bytes32 wh, uint256 n) internal view returns (uint128[] memory) {
+        if (n == 2) return LibWell2.getEmaBalances(wh);
+        return LibWellN.getEmaBalances(wh, n);
+    }
+
+    function getWellStateFromHash(bytes32 wh, uint256 n) internal view returns (LibWellStorage.Balances memory) {
+        if (n == 2) return LibWell2.getWellState(wh);
+        return LibWellN.getWellState(wh, n);
+    }
+
     // From Info
 
     function getBalances(LibWellStorage.WellInfo memory w) internal view returns (uint128[] memory balances) {
@@ -53,45 +75,29 @@ library LibWellBalance {
         s = getWellStateFromHash(wh, w.tokens.length);
     }
 
-    // From Hash
-
-    function getBalancesFromHash(bytes32 wh, uint256 n) internal view returns (uint128[] memory) {
-        if (n == 2) return LibWell2.getBalances(wh);
-        return LibWellN.getBalances(wh, n);
-    }
-
-    function getCumulativeBalancesFromHash(bytes32 wh, uint256 n) internal view returns (uint224[] memory, uint32) {
-        if (n == 2) return LibWell2.getCumulativeBalances(wh);
-        return LibWellN.getCumulativeBalances(wh, n);
-    }
-
-    function getWellStateFromHash(bytes32 wh, uint256 n) internal view returns (LibWellStorage.Balances memory) {
-        if (n == 2) return LibWell2.getWellState(wh);
-        return LibWellN.getWellState(wh, n);
-    }
-
-    function getEmaBalancesFromHash(bytes32 wh, uint256 n) internal view returns (uint128[] memory) {
-        if (n == 2) return LibWell2.getEmaBalances(wh);
-        return LibWellN.getEmaBalances(wh, n);
-    }
-
     // From Id
 
-    // function getBalance(
-    //     address lpToken,
-    //     uint256 iToken
-    // ) internal view returns (uint128 balance) {
-    //     bytes32 wh = LibWellStorage.wellHash(lpToken);
-    //     balance = LibWell2.getBalance(wh, iToken);
-    //     if (balance == 0) balance = LibWellN.getBalance(wh, iToken);
-    // }
+    function getBalancesFromId(address wellId) internal view returns (uint128[] memory balances) {
+        uint256 n = LibWellStorage.getN(wellId);
+        bytes32 wh = LibWellStorage.getWellHash(wellId);
+        balances = LibWellBalance.getBalancesFromHash(wh, n);
+    }
 
-    // function getEmaBalance(
-    //     address lpToken,
-    //     uint256 iToken
-    // ) internal view returns (uint128 balance) {
-    //     bytes32 wh = LibWellStorage.wellHash(lpToken);
-    //     balance = LibWell2.getEmaBalance(wh, iToken);
-    //     if (balance == 0) balance = LibWellN.getEmaBalance(wh, iToken);
-    // }
+    function getCumulativeBalancesFromId(address wellId) internal view returns (uint224[] memory, uint32) {
+        uint256 n = LibWellStorage.getN(wellId);
+        bytes32 wh = LibWellStorage.getWellHash(wellId);
+        return LibWellBalance.getCumulativeBalancesFromHash(wh, n);
+    }
+
+    function getEmaBalancesFromId(address wellId) internal view returns (uint128[] memory balances) {
+        uint256 n = LibWellStorage.getN(wellId);
+        bytes32 wh = LibWellStorage.getWellHash(wellId);
+        balances = LibWellBalance.getEmaBalancesFromHash(wh, n);
+    }
+
+    function getWellStateFromId(address wellId) internal view returns (LibWellStorage.Balances memory) {
+        uint256 n = LibWellStorage.getN(wellId);
+        bytes32 wh = LibWellStorage.getWellHash(wellId);
+        return LibWellBalance.getWellStateFromHash(wh, n);
+    }
 }

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const beanstalkABI = require("../abi/Beanstalk.json");
-const { BEANSTALK, BEAN, BEAN_3_CURVE, USDC, FERTILIZER, PRICE, WETH } = require('../test/utils/constants');
+const { BEANSTALK, BEAN, BEAN_3_CURVE, USDC, FERTILIZER, PRICE, WETH, ETH_USD_CHAINLINK_ORACLE } = require('../test/utils/constants');
 
 async function getBeanstalk() {
     return await ethers.getContractAt(beanstalkABI, BEANSTALK);
@@ -43,6 +43,10 @@ async function getFertilizer() {
     return await ethers.getContractAt('Fertilizer', FERTILIZER)
 }
 
+async function getEthUsdChainlinkOracle() {
+    return await ethers.getContractAt('IChainlinkOracle', ETH_USD_CHAINLINK_ORACLE)
+}
+
 exports.getBeanstalk = getBeanstalk;
 exports.getBean = getBean;
 exports.getUsdc = getUsdc;
@@ -53,3 +57,4 @@ exports.getBeanstalkAdminControls = getBeanstalkAdminControls;
 exports.getFertilizerPreMint = getFertilizerPreMint
 exports.getFertilizer = getFertilizer
 exports.getAltBeanstalk = getAltBeanstalk
+exports.getEthUsdChainlinkOracle = getEthUsdChainlinkOracle

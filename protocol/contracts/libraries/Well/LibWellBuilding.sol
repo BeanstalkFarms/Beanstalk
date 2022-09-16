@@ -21,6 +21,7 @@ library LibWellBuilding {
         IERC20[] tokens,
         LibWellType.WellType wellType,
         bytes typeData,
+        bytes encodedData,
         bytes32 wellHash
     );
 
@@ -53,24 +54,27 @@ library LibWellBuilding {
             name = string(abi.encodePacked(name, ":", symbols[i]));
             symbol = string(abi.encodePacked(symbol, symbols[i]));
         }
-        wellId = address(new WellToken(name, symbol));
 
         LibWellStorage.WellInfo memory w;
         w.tokens = tokens;
-        w.wellType = wellType;
-        w.typeData = typeData;
-        w.wellId = wellId;
+        w.data = encodeData(wellType, uint8(w.tokens.length), typeData);
 
         LibWellType.registerIfNeeded(wellType);
+
+        // Compute Salt for LP Token Deployment
         bytes32 wh = LibWellStorage.computeWellHash(w);
+        wellId = address(new WellToken{salt: wh}(name, symbol));
 
         s.indices[s.numberOfWells] = wellId;
         s.numberOfWells = s.numberOfWells.add(1);
+        w.wellId = wellId;
+
+        wh = LibWellStorage.computeWellHash(w);
 
         s.wi[wellId] = w;
         s.wh[wellId] = wh;
 
-        emit BuildWell(w.wellId, w.tokens, w.wellType, w.typeData, wh);
+        emit BuildWell(w.wellId, tokens, wellType, typeData, w.data, wh);
     }
 
     function modifyWell(
@@ -80,9 +84,7 @@ library LibWellBuilding {
     ) internal {
         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
         bytes32 prevWH = LibWellStorage.computeWellHash(w);
-        w.wellType = newWellType;
-        w.typeData = newTypeData;
-
+        w.data = encodeData(newWellType, uint8(w.tokens.length), newTypeData);
         bytes32 newWH = LibWellStorage.computeWellHash(w);
 
         s.wi[w.wellId] = w;
@@ -90,7 +92,7 @@ library LibWellBuilding {
         // s.ws[newWH] = s.ws[prevWH]; //ToDo: fix
         // delete s.ws[prevWH];
 
-        emit ModifyWell(w.wellId, w.wellType, w.typeData, prevWH, newWH);
+        emit ModifyWell(w.wellId, newWellType, newTypeData, prevWH, newWH);
     }
 
     /**
@@ -111,5 +113,13 @@ library LibWellBuilding {
         if (wellType == LibWellType.WellType.CONSTANT_PRODUCT) 
             return typeData.length == 0;
         else revert("LibWell: Well type not supported");
+    }
+
+    function encodeData(
+        LibWellType.WellType wellType,
+        uint8 numTokens,
+        bytes calldata typeData
+    ) internal pure returns (bytes memory data) {
+        data = abi.encodePacked(uint8(wellType), numTokens, typeData);
     }
 }

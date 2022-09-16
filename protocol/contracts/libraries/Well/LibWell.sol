@@ -34,7 +34,7 @@ library LibWell {
     ) internal view returns (int256 dy) {
         uint128[] memory balances = LibWellBalance.getBalances(w);
         (uint256 i, uint256 j) = getIJ(w.tokens, iToken, jToken);
-        (, dy) = _getSwap(w.wellType, w.typeData, balances, i, j, dx);
+        (, dy) = _getSwap(w.data, balances, i, j, dx);
     }
 
     function swap(
@@ -48,8 +48,7 @@ library LibWell {
         uint128[] memory balances = LibWellBalance.getBalancesWithHash(w, wh);
         (uint256 i, uint256 j) = getIJ(w.tokens, iToken, jToken);
         (balances, dy) = _getSwap(
-            w.wellType,
-            w.typeData,
+            w.data,
             balances,
             i,
             j,
@@ -64,19 +63,18 @@ library LibWell {
     }
 
     function _getSwap(
-        LibWellType.WellType wellType,
-        bytes calldata typeData,
+        bytes calldata data,
         uint128[] memory balances,
         uint256 i,
         uint256 j,
         int256 dx
     ) private pure returns (uint128[] memory, int256) {
-        uint256 d = LibWellType.getD(wellType, typeData, balances);
+        uint256 d = LibWellType.getD(data, balances);
         balances[i] = dx > 0
             ? balances[i].add(uint128(dx))
             : balances[i].sub(uint128(-dx));
         uint256 yBefore = balances[j];
-        balances[j] = LibWellType.getX(wellType, typeData, j, balances, d);
+        balances[j] = LibWellType.getX(data, j, balances, d);
         int256 dy = int256(yBefore) - int256(balances[j]);
         return (balances, dy);
     }
@@ -94,11 +92,11 @@ library LibWell {
     ) internal returns (uint256 amountOut) {
         bytes32 wh = LibWellStorage.computeWellHash(w);
         uint128[] memory balances = LibWellBalance.getBalancesWithHash(w, wh);
-        uint256 d1 = LibWellType.getD(w.wellType, w.typeData, balances);
+        uint256 d1 = LibWellType.getD(w.data, balances);
         for (uint256 i; i < w.tokens.length; ++i)
-            balances[i] = balances[i].add(uint128(amounts[i])); // Check 
+            balances[i] = balances[i].add(uint128(amounts[i])); // Check
         LibWellBalance.setBalances(wh, balances);
-        uint256 d2 = LibWellType.getD(w.wellType, w.typeData, balances);
+        uint256 d2 = LibWellType.getD(w.data, balances);
         amountOut = d2.sub(d1);
         require(amountOut >= minAmountOut, "LibWell: Not enough LP.");
         LibTransfer.mintToken(IBean(w.wellId), amountOut, recipient, toMode);
@@ -111,10 +109,10 @@ library LibWell {
         returns (uint256 amountOut)
     {
         uint128[] memory balances = LibWellBalance.getBalances(w);
-        uint256 d1 = LibWellType.getD(w.wellType, w.typeData, balances);
+        uint256 d1 = LibWellType.getD(w.data, balances);
         for (uint256 i; i < w.tokens.length; ++i)
             balances[i] = balances[i].add(uint128(amounts[i]));
-        uint256 d2 = LibWellType.getD(w.wellType, w.typeData, balances);
+        uint256 d2 = LibWellType.getD(w.data, balances);
         amountOut = d2.sub(d1);
     }
 
@@ -131,7 +129,7 @@ library LibWell {
     ) internal returns (uint256[] memory tokenAmountsOut) {
         bytes32 wh = LibWellStorage.computeWellHash(w);
         uint128[] memory balances = LibWellBalance.getBalancesWithHash(w, wh);
-        uint256 d = LibWellType.getD(w.wellType, w.typeData, balances);
+        uint256 d = LibWellType.getD(w.data, balances);
         tokenAmountsOut = new uint256[](w.tokens.length);
         lpAmountIn = LibTransfer.burnToken(IBean(w.wellId), lpAmountIn, recipient, fromMode);
         for (uint256 i; i < w.tokens.length; ++i) {
@@ -152,7 +150,7 @@ library LibWell {
         returns (uint256[] memory tokenAmountsOut)
     {
         uint128[] memory balances = LibWellBalance.getBalances(w);
-        uint256 d = LibWellType.getD(w.wellType, w.typeData, balances);
+        uint256 d = LibWellType.getD(w.data, balances);
         tokenAmountsOut = new uint256[](w.tokens.length);
         for (uint256 i; i < w.tokens.length; ++i) {
             tokenAmountsOut[i] = lpAmountIn.mul(balances[i]).div(d);
@@ -199,9 +197,9 @@ library LibWell {
         uint256 i,
         uint256 lpAmountIn
     ) private pure returns (uint256 tokenAmountOut, uint128 y) {
-        uint256 d = LibWellType.getD(w.wellType, w.typeData, balances);
+        uint256 d = LibWellType.getD(w.data, balances);
         d = d.sub(lpAmountIn, "LibWell: too much LP");
-        y = LibWellType.getX(w.wellType, w.typeData, i, balances, d);
+        y = LibWellType.getX(w.data, i, balances, d);
         tokenAmountOut = balances[i].sub(y);
     }
 
@@ -239,11 +237,11 @@ library LibWell {
         uint128[] memory balances,
         uint256[] calldata tokenAmountsOut
     ) private pure returns (uint256, uint128[] memory) {
-        uint256 d1 = LibWellType.getD(w.wellType, w.typeData, balances);
+        uint256 d1 = LibWellType.getD(w.data, balances);
         for (uint i; i < w.tokens.length; ++i) {
             balances[i] = balances[i].sub(uint128(tokenAmountsOut[i]));
         }
-        uint256 d2 = LibWellType.getD(w.wellType, w.typeData, balances);
+        uint256 d2 = LibWellType.getD(w.data, balances);
         return (d1.sub(d2), balances);
     }
 

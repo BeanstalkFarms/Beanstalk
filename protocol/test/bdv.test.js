@@ -161,6 +161,6 @@ describe('BDV', function () {
 
   it("reverts if not correct", async function () {
     this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
-    await expect(this.bdv.bdv(ZERO_ADDRESS, to18('2000'))).to.be.revertedWith('BDV: Token not whitelisted')
+    await expect(this.bdv.bdv(ZERO_ADDRESS, to18('2000'))).to.be.reverted
   })
 });

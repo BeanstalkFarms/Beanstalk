@@ -73,7 +73,9 @@ describe('Ownership', function () {
         this.siloToken.address, 
         this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
         '10000',
-        '1')).to.be.revertedWith('LibDiamond: Must be contract or owner')
+        '1',
+        false,
+        '0x00000000000000000000000000000000')).to.be.revertedWith('LibDiamond: Must be contract or owner')
     })
 
 
@@ -82,7 +84,9 @@ describe('Ownership', function () {
         this.siloToken.address, 
         this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
         '10000',
-        '1')
+        '1',
+        false,
+        '0x00000000000000000000000000000000')
       const settings = await this.silo.tokenSettings(this.siloToken.address)
       expect(settings[0]).to.equal(this.silo.interface.getSighash("mockBDV(uint256 amount)"))
       expect(settings[1]).to.equal(1)
@@ -104,7 +108,9 @@ describe('Ownership', function () {
         this.siloToken.address, 
         this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
         '10000',
-        '1')
+        '1',
+        false,
+        '0x00000000000000000000000000000000')
       this.result = await this.whitelist.connect(owner).dewhitelistToken(this.siloToken.address)
       const settings = await this.silo.tokenSettings(this.siloToken.address)
       expect(settings[0]).to.equal('0x00000000')

@@ -2,6 +2,11 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
+
+interface IBDV {
+    function bdv(address token, uint256 amount) external view returns (uint256);
+}
+
 contract P {
     struct Pool {
         address pool;

@@ -60,8 +60,7 @@ describe('Well', function () {
     well = {
       wellId: wellId, 
       tokens: [USDC, BEAN], 
-      wellType: 0,
-      typeData: '0x'
+      data: await this.beanstalk.encodeWellData(0, 2, '0x')
     }
     wellHash = await this.beanstalk.computeWellHash(well)
   
@@ -91,7 +90,7 @@ describe('Well', function () {
       })
 
       it("emits event", async function () {
-        await expect(buildWellResult).to.emit(this.beanstalk, 'RegisterWellType').withArgs(well.wellType, []);
+        await expect(buildWellResult).to.emit(this.beanstalk, 'RegisterWellType').withArgs(0, []);
       })
     })
   })
@@ -110,8 +109,7 @@ describe('Well', function () {
       expect(wellInfo.wellId).to.be.equal(wellId)
       expect(wellInfo.tokens[0]).to.be.equal(well.tokens[0])
       expect(wellInfo.tokens[1]).to.be.equal(well.tokens[1])
-      expect(wellInfo.wellType).to.be.equal(well.wellType)
-      expect(wellInfo.typeData).to.be.equal(well.typeData)
+      expect(wellInfo.data).to.be.equal(well.data)
 
       const tokens = await this.beanstalk.getTokens(wellId)
       expect(tokens[0]).to.be.equal(well.tokens[0])
@@ -143,7 +141,7 @@ describe('Well', function () {
       expect(cb.cumulativeBalances[1]).to.be.equal(to6('0'))
       expect(cb.lastTimestamp).to.be.equal(await getTimestamp())
 
-      expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('200'))
+      expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('200'))
     })
 
     it('returns the whole well', async function () {
@@ -156,8 +154,7 @@ describe('Well', function () {
         expect(wholeWell.info.wellId).to.be.equal(wellId)
         expect(wholeWell.info.tokens[0]).to.be.equal(well.tokens[0])
         expect(wholeWell.info.tokens[1]).to.be.equal(well.tokens[1])
-        expect(wholeWell.info.wellType).to.be.equal(well.wellType)
-        expect(wholeWell.info.typeData).to.be.equal(well.typeData)
+        expect(wholeWell.info.data).to.be.equal(well.data)
 
         expect(wholeWell.state.balances[0]).to.be.equal(to6('100'))
         expect(wholeWell.state.balances[1]).to.be.equal(to6('100'))
@@ -165,12 +162,12 @@ describe('Well', function () {
         expect(wholeWell.state.cumulativeBalances[1]).to.be.equal('0')
         expect(wholeWell.state.timestamp).to.be.equal(await getTimestamp())
 
-        expect(wholeWell.d).to.be.equal(to6('200'))
+        expect(wholeWell.wellTokenSupply).to.be.equal(to6('200'))
       }
     })
 
     it('emits event', async function () {
-      await expect(buildWellResult).to.emit(this.beanstalk, 'BuildWell').withArgs(well.wellId, well.tokens, well.wellType, well.typeData, wellHash);
+      await expect(buildWellResult).to.emit(this.beanstalk, 'BuildWell').withArgs(well.wellId, well.tokens, 0, '0x', well.data, wellHash);
     })
 
     it('sets the name/symbol of well token', async function () {
@@ -210,7 +207,7 @@ describe('Well', function () {
         expect(state.cumulativeBalances[0]).to.be.equal(await getCumulative(to6('100')))
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
         expect(state.timestamp).to.be.equal(await getTimestamp())
-        expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('200'))
+        expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('200'))
       })
 
       it('updates lp balances', async function () {
@@ -251,7 +248,7 @@ describe('Well', function () {
         expect(state.cumulativeBalances[0]).to.be.equal(await getCumulative(to6('100')))
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
         expect(state.timestamp).to.be.equal(await getTimestamp())
-        expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('200'))
+        expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('200'))
       })
 
       it('updates lp balances', async function () {
@@ -293,7 +290,7 @@ describe('Well', function () {
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
         expect(state.timestamp).to.be.equal(await getTimestamp())
 
-        expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('399.499686'))
+        expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('399.499686'))
       })
 
       it('updates lp balances', async function () {
@@ -336,7 +333,7 @@ describe('Well', function () {
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
         expect(state.timestamp).to.be.equal(await getTimestamp())
 
-        expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('190'))
+        expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('190'))
       })
 
       it('updates lp balances', async function () {
@@ -377,7 +374,7 @@ describe('Well', function () {
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
         expect(state.timestamp).to.be.equal(await getTimestamp())
 
-        expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('190'))
+        expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('190'))
       })
 
       it('updates lp balances', async function () {
@@ -410,7 +407,7 @@ describe('Well', function () {
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
         expect(state.timestamp).to.be.equal(await getTimestamp())
 
-        expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('190'))
+        expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('190'))
       })
 
       it('updates lp balances', async function () {
@@ -452,7 +449,7 @@ describe('Well', function () {
         expect(state.cumulativeBalances[1]).to.be.equal(await getCumulative(to6('100')))
         expect(state.timestamp).to.be.equal(await getTimestamp())
 
-        expect(await this.beanstalk.getD(wellId)).to.be.equal(to6('190.997382'))
+        expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('190.997382'))
       })
 
       it('updates lp balances', async function () {

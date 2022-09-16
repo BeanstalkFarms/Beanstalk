@@ -91,6 +91,22 @@ library LibWhitelist {
         emit DewhitelistToken(token);
     }
 
+    function whitelistTokenWithData(
+        address token,
+        bytes4 selector,
+        uint32 stalk,
+        uint32 seeds,
+        bool useData,
+        bytes16 data
+    ) internal {
+        if (useData) {
+            AppStorage storage s = LibAppStorage.diamondStorage();
+            s.ss[token].useData = useData;
+            s.ss[token].data = data;
+        }
+        whitelistToken(token, selector, stalk, seeds);
+    }
+
     function whitelistToken(
         address token,
         bytes4 selector,

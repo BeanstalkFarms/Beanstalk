@@ -8,12 +8,16 @@ pragma experimental ABIEncoderV2;
 import "../../C.sol";
 import "../../libraries/Curve/LibBeanMetaCurve.sol";
 import "../../libraries/LibUnripe.sol";
+import "../../libraries/Silo/LibTokenSilo.sol";
 
 /*
  * @author Publius
  * @title BDVFacet holds the Curve MetaPool BDV function.
  */
 contract BDVFacet {
+
+    AppStorage internal s;
+
     using SafeMath for uint256;
 
     function curveToBDV(uint256 amount) public view returns (uint256) {
@@ -37,12 +41,8 @@ contract BDVFacet {
     function bdv(address token, uint256 amount)
         external
         view
-        returns (uint256)
+        returns (uint256 value)
     {
-        if (token == C.beanAddress()) return beanToBDV(amount);
-        else if (token == C.curveMetapoolAddress()) return curveToBDV(amount);
-        else if (token == C.unripeBeanAddress()) return unripeBeanToBDV(amount);
-        else if (token == C.unripeLPAddress()) return unripeLPToBDV(amount);
-        revert("BDV: Token not whitelisted");
+        value = LibTokenSilo.beanDenominatedValue(token, amount);
     }
 }

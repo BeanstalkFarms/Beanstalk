@@ -29,8 +29,7 @@ library LibWellStorage {
     struct WellInfo {
         address wellId; // Note: wellId is same as token address
         IERC20[] tokens; // list of tokens
-        LibWellType.WellType wellType; // well type
-        bytes typeData; // Params specific to the well type
+        bytes data; // Params specific to the well type
     }
 
     /**
@@ -99,7 +98,7 @@ library LibWellStorage {
     }
 
     function wellStorage() internal pure returns (WellStorage storage s) {
-        bytes32 storagePosition = keccak256("diamond.storage.LibWell");
+        bytes32 storagePosition = keccak256("diamond.storage.Well");
         assembly {
             s.slot := storagePosition
         }
@@ -125,7 +124,7 @@ library LibWellStorage {
         ws = wellStorage().w2s[computeWellHash(w)];
     }
 
-    function wellHash(address wellId)
+    function getWellHash(address wellId)
         internal
         view
         returns (bytes32 wellHash)
@@ -140,7 +139,7 @@ library LibWellStorage {
         returns (bytes32 wellHash)
     {
         wellHash = keccak256(
-            abi.encodePacked(w.wellId, w.tokens, w.wellType, w.typeData)
+            abi.encodePacked(w.wellId, w.tokens, w.data)
         );
     }
 
@@ -149,6 +148,6 @@ library LibWellStorage {
         view 
         returns (uint256 n)
     {
-        n = wellInfo(wellId).tokens.length;
+        n = uint256(uint8(wellInfo(wellId).data[1]));
     }
 }

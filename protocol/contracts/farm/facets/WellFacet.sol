@@ -3,7 +3,6 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../../libraries/Well/LibWell.sol";
-import "../../libraries/Well/LibWellBuilding.sol";
 import "../../libraries/LibDiamond.sol";
 import "../ReentrancyGuard.sol";
 
@@ -241,7 +240,7 @@ contract WellFacet is ReentrancyGuard {
         view
         returns (bytes32 wellHash)
     {
-        wellHash = LibWellStorage.wellHash(wellId);
+        wellHash = LibWellStorage.getWellHash(wellId);
     }
 
     function computeWellHash(LibWellStorage.WellInfo calldata p)
@@ -256,9 +255,8 @@ contract WellFacet is ReentrancyGuard {
      * State
      **/
 
-    function getD(address wellId) public view returns (uint256 d) {
-        LibWellStorage.WellInfo memory info = getWellInfo(wellId);
-        d = LibWellType.getD(info.wellType, info.typeData, getWellBalances(wellId));
+    function getWellTokenSupply(address wellId) public view returns (uint256 wellTokenSupply) {
+        wellTokenSupply = IERC20(wellId).totalSupply();
     }
 
     function getWellBalances(address wellId)
@@ -266,7 +264,7 @@ contract WellFacet is ReentrancyGuard {
         view
         returns (uint128[] memory balances)
     {
-        balances = LibWellBalance.getBalancesFromHash(getWellHash(wellId), LibWellStorage.getN(wellId));
+        balances = LibWellBalance.getBalancesFromId(wellId);
     }
 
     function getCumulativeBalances(address wellId)
@@ -274,7 +272,7 @@ contract WellFacet is ReentrancyGuard {
         view
         returns (uint224[] memory cumulativeBalances, uint32 lastTimestamp)
     {
-        return LibWellBalance.getCumulativeBalancesFromHash(getWellHash(wellId), LibWellStorage.getN(wellId));
+        return LibWellBalance.getCumulativeBalancesFromId(wellId);
     }
 
     function getWellEmaBalances(address wellId)
@@ -282,7 +280,7 @@ contract WellFacet is ReentrancyGuard {
         view
         returns (uint128[] memory balances)
     {
-        balances = LibWellBalance.getEmaBalancesFromHash(getWellHash(wellId), LibWellStorage.getN(wellId));
+        balances = LibWellBalance.getEmaBalancesFromId(wellId);
     }
 
     function getWellState(address wellId)
@@ -290,7 +288,7 @@ contract WellFacet is ReentrancyGuard {
         view
         returns (LibWellStorage.Balances memory state)
     {
-        state = LibWellBalance.getWellStateFromHash(getWellHash(wellId), LibWellStorage.getN(wellId));
+        state = LibWellBalance.getWellStateFromId(wellId);
     }
 
     function getWell2StateFromHash(bytes32 wellHash)
@@ -321,7 +319,7 @@ contract WellFacet is ReentrancyGuard {
         returns (
             LibWellStorage.WellInfo memory info,
             LibWellStorage.Balances memory state,
-            uint256 d
+            uint256 wellTokenSupply
         )
     {
         return getWell(getWellIdAtIndex(index));
@@ -333,36 +331,11 @@ contract WellFacet is ReentrancyGuard {
         returns (
             LibWellStorage.WellInfo memory info,
             LibWellStorage.Balances memory state,
-            uint256 d
+            uint256 wellTokenSupply
         )
     {
         info = getWellInfo(wellId);
         state = getWellState(wellId);
-        d = LibWellType.getD(info.wellType, info.typeData, state.balances);
+        wellTokenSupply = IERC20(wellId).totalSupply();
     }
-
-    /**
-     * Oracle
-     **/
-
-    function powu(uint256 x, uint256 y) external pure returns (uint256) {
-        return LibPRBMath.powu(x, y);
-    }
-
-    // // Gets the value of an LP Token denominated an underlying Token.
-    // function getLPTokenUnderlyingTokenValue(
-    //     address lpToken,
-    //     IERC20 underlyingToken,
-    //     uint256 amount
-    // ) external view returns (uint256 value) {
-    //     value = LibWell.getLPTokenUnderlyingTokenValue(lpToken, underlyingToken, amount);
-    // }
-
-    // function getLPTokenUnderlyingValue(
-    //     address lpToken,
-    //     uint256 iToken,
-    //     uint256 amount
-    // ) external view returns (uint256 value) {
-    //     value = LibWell.getLPTokenUnderlyingValue(lpToken, iToken, amount);
-    // }
 }

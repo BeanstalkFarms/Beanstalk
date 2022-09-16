@@ -16,7 +16,7 @@
         "outputs": [
             {
                 "internalType": "uint256",
-                "name": "",
+                "name": "value",
                 "type": "uint256"
             }
         ],
@@ -2233,6 +2233,70 @@
         "type": "function"
     },
     {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "tokenI",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "tokenJ",
+                "type": "address"
+            }
+        ],
+        "name": "getPrice",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "price",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "tokenI",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "tokenJ",
+                "type": "address"
+            },
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "oracle",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "bytes4",
+                        "name": "selector",
+                        "type": "bytes4"
+                    },
+                    {
+                        "internalType": "uint8",
+                        "name": "precision",
+                        "type": "uint8"
+                    }
+                ],
+                "internalType": "struct LibOracle.Oracle",
+                "name": "o",
+                "type": "tuple"
+            }
+        ],
+        "name": "registerOracle",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
         "anonymous": false,
         "inputs": [
             {
@@ -3520,6 +3584,16 @@
                         "internalType": "uint32",
                         "name": "stalk",
                         "type": "uint32"
+                    },
+                    {
+                        "internalType": "bytes16",
+                        "name": "data",
+                        "type": "bytes16"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "useData",
+                        "type": "bool"
                     }
                 ],
                 "internalType": "struct Storage.SiloSettings",
@@ -4512,7 +4586,36 @@
                 "type": "address"
             }
         ],
-        "stateMutability": "nonpayable",
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "enum LibWellType.WellType",
+                "name": "wellType",
+                "type": "uint8"
+            },
+            {
+                "internalType": "uint8",
+                "name": "numTokens",
+                "type": "uint8"
+            },
+            {
+                "internalType": "bytes",
+                "name": "typeData",
+                "type": "bytes"
+            }
+        ],
+        "name": "encodeWellData",
+        "outputs": [
+            {
+                "internalType": "bytes",
+                "name": "data",
+                "type": "bytes"
+            }
+        ],
+        "stateMutability": "pure",
         "type": "function"
     },
     {
@@ -4568,13 +4671,8 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellType.WellType",
-                        "name": "wellType",
-                        "type": "uint8"
-                    },
-                    {
                         "internalType": "bytes",
-                        "name": "typeData",
+                        "name": "data",
                         "type": "bytes"
                     }
                 ],
@@ -4595,7 +4693,7 @@
         ],
         "name": "modifyWell",
         "outputs": [],
-        "stateMutability": "nonpayable",
+        "stateMutability": "payable",
         "type": "function"
     },
     {
@@ -4613,13 +4711,8 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellType.WellType",
-                        "name": "wellType",
-                        "type": "uint8"
-                    },
-                    {
                         "internalType": "bytes",
-                        "name": "typeData",
+                        "name": "data",
                         "type": "bytes"
                     }
                 ],
@@ -4674,13 +4767,8 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellType.WellType",
-                        "name": "wellType",
-                        "type": "uint8"
-                    },
-                    {
                         "internalType": "bytes",
-                        "name": "typeData",
+                        "name": "data",
                         "type": "bytes"
                     }
                 ],
@@ -4715,13 +4803,8 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellType.WellType",
-                        "name": "wellType",
-                        "type": "uint8"
-                    },
-                    {
                         "internalType": "bytes",
-                        "name": "typeData",
+                        "name": "data",
                         "type": "bytes"
                     }
                 ],
@@ -4773,25 +4856,6 @@
     {
         "inputs": [
             {
-                "internalType": "address",
-                "name": "wellId",
-                "type": "address"
-            }
-        ],
-        "name": "getD",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "d",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
                 "components": [
                     {
                         "internalType": "address",
@@ -4804,13 +4868,8 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellType.WellType",
-                        "name": "wellType",
-                        "type": "uint8"
-                    },
-                    {
                         "internalType": "bytes",
-                        "name": "typeData",
+                        "name": "data",
                         "type": "bytes"
                     }
                 ],
@@ -4850,13 +4909,8 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellType.WellType",
-                        "name": "wellType",
-                        "type": "uint8"
-                    },
-                    {
                         "internalType": "bytes",
-                        "name": "typeData",
+                        "name": "data",
                         "type": "bytes"
                     }
                 ],
@@ -4901,13 +4955,8 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellType.WellType",
-                        "name": "wellType",
-                        "type": "uint8"
-                    },
-                    {
                         "internalType": "bytes",
-                        "name": "typeData",
+                        "name": "data",
                         "type": "bytes"
                     }
                 ],
@@ -4947,13 +4996,8 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellType.WellType",
-                        "name": "wellType",
-                        "type": "uint8"
-                    },
-                    {
                         "internalType": "bytes",
-                        "name": "typeData",
+                        "name": "data",
                         "type": "bytes"
                     }
                 ],
@@ -5003,13 +5047,8 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellType.WellType",
-                        "name": "wellType",
-                        "type": "uint8"
-                    },
-                    {
                         "internalType": "bytes",
-                        "name": "typeData",
+                        "name": "data",
                         "type": "bytes"
                     }
                 ],
@@ -5086,13 +5125,8 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellType.WellType",
-                        "name": "wellType",
-                        "type": "uint8"
-                    },
-                    {
                         "internalType": "bytes",
-                        "name": "typeData",
+                        "name": "data",
                         "type": "bytes"
                     }
                 ],
@@ -5129,7 +5163,7 @@
             },
             {
                 "internalType": "uint256",
-                "name": "d",
+                "name": "wellTokenSupply",
                 "type": "uint256"
             }
         ],
@@ -5215,13 +5249,8 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellType.WellType",
-                        "name": "wellType",
-                        "type": "uint8"
-                    },
-                    {
                         "internalType": "bytes",
-                        "name": "typeData",
+                        "name": "data",
                         "type": "bytes"
                     }
                 ],
@@ -5258,7 +5287,7 @@
             },
             {
                 "internalType": "uint256",
-                "name": "d",
+                "name": "wellTokenSupply",
                 "type": "uint256"
             }
         ],
@@ -5364,13 +5393,8 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellType.WellType",
-                        "name": "wellType",
-                        "type": "uint8"
-                    },
-                    {
                         "internalType": "bytes",
-                        "name": "typeData",
+                        "name": "data",
                         "type": "bytes"
                     }
                 ],
@@ -5472,25 +5496,20 @@
     {
         "inputs": [
             {
-                "internalType": "uint256",
-                "name": "x",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "y",
-                "type": "uint256"
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
             }
         ],
-        "name": "powu",
+        "name": "getWellTokenSupply",
         "outputs": [
             {
                 "internalType": "uint256",
-                "name": "",
+                "name": "wellTokenSupply",
                 "type": "uint256"
             }
         ],
-        "stateMutability": "pure",
+        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -5508,13 +5527,8 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellType.WellType",
-                        "name": "wellType",
-                        "type": "uint8"
-                    },
-                    {
                         "internalType": "bytes",
-                        "name": "typeData",
+                        "name": "data",
                         "type": "bytes"
                     }
                 ],
@@ -5569,13 +5583,8 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellType.WellType",
-                        "name": "wellType",
-                        "type": "uint8"
-                    },
-                    {
                         "internalType": "bytes",
-                        "name": "typeData",
+                        "name": "data",
                         "type": "bytes"
                     }
                 ],
@@ -5630,13 +5639,8 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellType.WellType",
-                        "name": "wellType",
-                        "type": "uint8"
-                    },
-                    {
                         "internalType": "bytes",
-                        "name": "typeData",
+                        "name": "data",
                         "type": "bytes"
                     }
                 ],
@@ -5696,13 +5700,8 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellType.WellType",
-                        "name": "wellType",
-                        "type": "uint8"
-                    },
-                    {
                         "internalType": "bytes",
-                        "name": "typeData",
+                        "name": "data",
                         "type": "bytes"
                     }
                 ],
@@ -5767,13 +5766,8 @@
                         "type": "address[]"
                     },
                     {
-                        "internalType": "enum LibWellType.WellType",
-                        "name": "wellType",
-                        "type": "uint8"
-                    },
-                    {
                         "internalType": "bytes",
-                        "name": "typeData",
+                        "name": "data",
                         "type": "bytes"
                     }
                 ],
@@ -5821,6 +5815,88 @@
             }
         ],
         "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "tokenI",
+                "type": "uint256"
+            }
+        ],
+        "name": "getInstantLPValue",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "value",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "tokenI",
+                "type": "uint256"
+            }
+        ],
+        "name": "getLPValue",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "value",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "x",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "y",
+                "type": "uint256"
+            }
+        ],
+        "name": "powu",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "pure",
         "type": "function"
     },
     {
@@ -5886,6 +5962,52 @@
                 "internalType": "address",
                 "name": "token",
                 "type": "address"
+            }
+        ],
+        "name": "getWhitelistSettings",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "bytes4",
+                        "name": "selector",
+                        "type": "bytes4"
+                    },
+                    {
+                        "internalType": "uint32",
+                        "name": "seeds",
+                        "type": "uint32"
+                    },
+                    {
+                        "internalType": "uint32",
+                        "name": "stalk",
+                        "type": "uint32"
+                    },
+                    {
+                        "internalType": "bytes16",
+                        "name": "data",
+                        "type": "bytes16"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "useData",
+                        "type": "bool"
+                    }
+                ],
+                "internalType": "struct Storage.SiloSettings",
+                "name": "ss",
+                "type": "tuple"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "token",
+                "type": "address"
             },
             {
                 "internalType": "bytes4",
@@ -5901,6 +6023,16 @@
                 "internalType": "uint32",
                 "name": "seeds",
                 "type": "uint32"
+            },
+            {
+                "internalType": "bool",
+                "name": "useData",
+                "type": "bool"
+            },
+            {
+                "internalType": "bytes16",
+                "name": "data",
+                "type": "bytes16"
             }
         ],
         "name": "whitelistToken",
@@ -5933,6 +6065,12 @@
                 "indexed": false,
                 "internalType": "bytes",
                 "name": "typeData",
+                "type": "bytes"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes",
+                "name": "encodedData",
                 "type": "bytes"
             },
             {

@@ -5,28 +5,38 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import "../../C.sol";
 import "./Type/LibWellType.sol";
 import "./Balance/LibWellBalance.sol";
-import "../Token/LibTransfer.sol";
 
 /**
  * @author Publius
- * @title Lib Well
+ * @title Lib Well Oracle
  **/
-library LibWell {
-    using SafeMath for uint256;
-    using LibSafeMath128 for uint128;
+library LibWellOracle {
 
-    // function getInstananeousLPValue(address wellId, uint256 tokenI, uint256 n) internal view returns (uint256 value) {
-    //     LibWellType.getdXdD(
-    //         WellType wellType,
-    //         bytes calldata typeData,
-    //         uint256 precision,
-    //         uint256 d,
-    //         uint256 i,
-    //         uint256[] memory xs
-    //     )
-    // }
+    function getInstantLPValue(
+        address wellId,
+        uint256 amount,
+        uint256 tokenI
+    ) internal view returns (uint256 value) {
+        value = LibWellType.getdXdD(
+            LibWellStorage.wellInfo(wellId).data,
+            amount,
+            tokenI,
+            LibWellBalance.getBalancesFromId(wellId)
+        );
+    }
+
+    function getLPValue(
+        address wellId,
+        uint256 amount,
+        uint256 tokenI
+    ) internal view returns (uint256 value) {
+        value = LibWellType.getdXdD(
+            LibWellStorage.wellInfo(wellId).data,
+            amount,
+            tokenI,
+            LibWellBalance.getBalancesFromId(wellId) // TODO: Switch to EMA
+        );
+    }
 }

@@ -156,21 +156,23 @@ library LibTokenSilo {
 
     function beanDenominatedValue(address token, uint256 amount)
         internal
+        view
         returns (uint256 bdv)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         bytes memory myFunctionCall = s.ss[token].useData ?
             abi.encodeWithSelector(
                 s.ss[token].selector,
+                token,
                 amount,
-                s.ss[token].data
+                bytes32(s.ss[token].data) >> 128
             ) : 
             abi.encodeWithSelector(
                 s.ss[token].selector,
                 amount
             );
 
-        (bool success, bytes memory data) = address(this).call(
+        (bool success, bytes memory data) = address(this).staticcall(
             myFunctionCall
         );
         if (!success) {

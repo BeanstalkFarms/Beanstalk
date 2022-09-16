@@ -28,22 +28,22 @@ library LibWellType {
      **/
 
     function getD(
-        WellType wellType,
-        bytes memory typeData,
+        bytes calldata data,
         uint128[] memory balances
     ) internal pure returns (uint256) {
+        WellType wellType = getType(data);
         if (wellType == WellType.CONSTANT_PRODUCT)
             return LibConstantProductWell.getD(balances);
         revert("LibWell: Well type not supported");
     }
 
     function getX(
-        WellType wellType,
-        bytes calldata typeData,
+        bytes calldata data,
         uint256 i,
         uint128[] memory xs,
         uint256 d
     ) internal pure returns (uint128) {
+        WellType wellType = getType(data);
         uint256 x;
         if (wellType == WellType.CONSTANT_PRODUCT)
             x = LibConstantProductWell.getX(i, xs, d);
@@ -53,28 +53,27 @@ library LibWellType {
     }
     
     function getdXidXj(
-        WellType wellType,
-        bytes calldata typeData,
+        bytes calldata data,
         uint256 precision,
         uint256 i,
         uint256 j,
         uint128[] memory xs
     ) internal pure returns (uint256 dXi) {
+        WellType wellType = getType(data);
         if (wellType == WellType.CONSTANT_PRODUCT)
             dXi = LibConstantProductWell.getdXidXj(precision, i, j, xs);
         else revert("LibWell: Well type not supported");
     }
 
     function getdXdD(
-        WellType wellType,
-        bytes calldata typeData,
+        bytes storage data,
         uint256 precision,
-        uint256 d,
         uint256 i,
-        uint256[] memory xs
-    ) internal pure returns (uint256 dX) {
+        uint128[] memory xs
+    ) internal view returns (uint256 dX) {
+        WellType wellType = getTypeFromStorage(data);
         if (wellType == WellType.CONSTANT_PRODUCT)
-            dX = LibConstantProductWell.getdXdD(precision, d, i, xs);
+            dX = LibConstantProductWell.getdXdD(precision, i, xs);
         else revert("LibWell: Well type not supported");
     }
 
@@ -88,19 +87,22 @@ library LibWellType {
 
     // Internal
 
-    function getTypeAndData(
-        address wellId
-    ) internal view returns (WellType wellType, bytes memory data) {
-        LibWellStorage.WellInfo storage wi = LibWellStorage.wellInfo(wellId);
-        wellType = wi.wellType;
-        if (getSignature((wellType)).length > 0) data = wi.typeData;
+    function getType(
+        bytes calldata data
+    ) internal pure returns (WellType wt) {
+        wt = WellType(uint8(data[0]));
     }
 
+    function getTypeFromStorage(
+        bytes storage data
+    ) internal view returns (WellType wt) {
+        wt = WellType(uint8(data[0]));
+    }
 
     function registerIfNeeded(
         LibWellType.WellType wellType
     ) internal {
-        if (!registered(wellType)) register(wellType);
+        if (!isRegistered(wellType)) register(wellType);
     }
 
     function register(
@@ -111,7 +113,7 @@ library LibWellType {
         emit RegisterWellType(wellType, LibWellType.getSignature(wellType));
     }
 
-    function registered(
+    function isRegistered(
         LibWellType.WellType wellType
     ) internal view returns (bool registered) {
         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();

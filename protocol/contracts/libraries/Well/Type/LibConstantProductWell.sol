@@ -61,12 +61,50 @@ library LibConstantProductWell {
 
     function getdXdD(
         uint256 precision,
-        uint256 d,
         uint256 i,
-        uint256[] memory xs
+        uint128[] memory xs
     ) internal pure returns (uint256 dX) {
+        uint256 d = getD(xs);
         dX = precision.mul(xs[i]).div(d).mul(xs.length);
     }
+
+    function deltaX(
+        uint256 dXidXj,
+        uint128[] memory xs,
+        uint256 i,
+        uint256 j
+    ) internal pure returns (int256 dX) {
+        uint256 d;
+        if (xs.length == 2) {
+            d = getD(xs);
+        } else {
+            uint128[] memory _xs = new uint128[](2);
+            _xs[0] = xs[i]; _xs[1] = xs[j];
+            d = getD(_xs);
+        }
+        uint256 targetX = d.mul(1e18).div(dXidXj).nthRoot(xs.length);
+        dX = int256(targetX - xs[i]);
+    }
+
+    // function deltaD(
+    //     uint256 dXidXj,
+    //     uint128[] memory xs,
+    //     uint256 i,
+    //     uint256 j
+    // ) internal pure returns (int256 dD) {
+    //     uint256 d = getD(xs);
+    //     xs[i] = xs[j].mul(dXidXj).div(1e18);
+    //     uint256 d2 = getD(xs);
+    //     dD = int256(d2 - d);
+    // }
+
+    // function deltaDX(
+    //     uint256 dXidXj,
+    //     uint128[] memory xs,
+    //     uint256 i,
+    //     uint256 j
+    // ) internal pure returns (int256 dDX) {
+    // }
 
     function getSignature() internal pure returns (string[] memory signature) {
         return signature;
