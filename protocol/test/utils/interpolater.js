@@ -101,15 +101,6 @@ function interpolatePoints(xs, ys) {
     if(length > 64) return;
     if(ys.length != length) return;
 
-    // var maxPieces;
-    // if(length <= 4) {
-    //     maxPieces = 4;        
-    // } else if (length <= 16) {
-    //     maxPieces = 16;
-    // } else if (length <= 64) {
-    //     maxPieces = 64;
-    // }
-    
     var dys = [], dxs = [], ms = [];
     for(let i = 0; i < (length-1); i++) {
 
