@@ -202,8 +202,6 @@ function interpolatePoints(xs, ys) {
 
     const hexFunc = "0x" + hexLen + hexBrkpts.join('') + hexCoefs.join('') + hexExps.join('') + hexSigns.join('');
 
-    // console.log(breakpoints.slice(0,1), coefficients.slice(0,1), exponents.slice(0,1), signs.slice(0,1), ), 
-
     return {breakpoints: breakpoints, coefficients: coefficients, exponents: exponents, signs: signs, packedFunction: hexFunc, numPieces: length};
 }
 
