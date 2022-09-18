@@ -186,8 +186,8 @@ contract Order is Listing {
         uint256 placeInLine, 
         uint256 amountPodsFromOrder,
         bytes calldata pricingFunction
-    ) public view returns (uint256 beanAmount) { 
-        beanAmount = LibPolynomial.evaluatePolynomialIntegrationPiecewise(placeInLine, placeInLine + amountPodsFromOrder, pricingFunction);
+    ) public pure returns (uint256 beanAmount) { 
+        beanAmount = LibPolynomial.evaluatePolynomialIntegrationPiecewise(pricingFunction, placeInLine, placeInLine + amountPodsFromOrder);
         beanAmount = beanAmount.div(1000000);
     }
 
@@ -208,7 +208,7 @@ contract Order is Listing {
         uint256 maxPlaceInLine,
         bytes calldata pricingFunction
     ) internal pure returns (bytes32 id) {
-        // require(pricingFunction.length == numPieces*416, "Marketplace: Invalid pricing function.");
+        require(pricingFunction.length == LibPolynomial.getNumPieces(pricingFunction).mul(168).add(32), "Marketplace: Invalid pricing function.");
         id = keccak256(abi.encodePacked(account, pricePerPod, maxPlaceInLine, pricingFunction));
     }
 }

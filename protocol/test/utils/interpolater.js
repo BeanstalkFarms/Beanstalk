@@ -94,14 +94,6 @@ function bitnot(bn) {
     return BigInt('0b' + prefix + bin) + BigInt(1);
 }
 
-const toHexArray = (binArray, numBytes) => {
-    const hexArray = [];
-    for(let i = 0; i < binArray.length / (8*numBytes); i++) {
-        hexArray.push(parseBigInt(binArray.slice(i*8*numBytes, (i+1)*8*numBytes).join(''), 2).toString(16).padStart(numBytes*2, 0));
-    }
-    return hexArray;
-}
-
 //implementation from https://www.wikiwand.com/en/Monotone_cubic_interpolation
 function interpolatePoints(xs, ys) {
     var length = xs.length;
@@ -209,6 +201,8 @@ function interpolatePoints(xs, ys) {
     })
 
     const hexFunc = "0x" + hexLen + hexBrkpts.join('') + hexCoefs.join('') + hexExps.join('') + hexSigns.join('');
+
+    // console.log(breakpoints.slice(0,1), coefficients.slice(0,1), exponents.slice(0,1), signs.slice(0,1), ), 
 
     return {breakpoints: breakpoints, coefficients: coefficients, exponents: exponents, signs: signs, packedFunction: hexFunc, numPieces: length};
 }

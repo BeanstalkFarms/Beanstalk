@@ -11,7 +11,7 @@ const config = {
 const math = create(all, config);
 
 function evaluatePolynomial(f, x, pieceIndex) {
-    var _x = math.bignumber(x);
+    var _x = math.subtract(math.bignumber(x), math.bignumber(f.breakpoints[pieceIndex]));
 
     var result = math.bignumber(0);
     
@@ -32,8 +32,8 @@ function evaluatePolynomial(f, x, pieceIndex) {
 
 function evaluatePolynomialIntegration(f, start, end, pieceIndex) {
 
-    var _x1 = math.bignumber(start);
-    var _x2 = math.bignumber(end);
+    var _x1 = math.subtract(math.bignumber(start), math.bignumber(f.breakpoints[pieceIndex]));
+    var _x2 =  math.subtract(math.bignumber(end), math.bignumber(f.breakpoints[pieceIndex]));
     
     var positiveSum = math.bignumber(0);
     var negativeSum = math.bignumber(0);
@@ -44,37 +44,13 @@ function evaluatePolynomialIntegration(f, start, end, pieceIndex) {
         var coefExponent = math.pow(math.bignumber(10), math.bignumber(f.exponents[math.add(pieceIndex*4, degreeIndex)]));
 
         if(f.signs[pieceIndex*4 + degreeIndex] == 1) {
-            positiveSum = math.add(positiveSum, math.floor(math.chain(_x2)
-                .pow(math.add(degreeIndex, 1))
-                .multiply(coefValue)
-                .divide(coefExponent)
-                .divide(math.add(degreeIndex, 1))
-                .done()
-            ));
+            positiveSum = math.add(positiveSum, math.floor(math.chain(_x2).pow(math.add(degreeIndex, 1)).multiply(coefValue).divide(coefExponent).divide(math.add(degreeIndex, 1)).done()));
 
-            positiveSum = math.subtract(positiveSum, math.floor(math.chain(_x1)
-                .pow(math.add(degreeIndex, 1))
-                .multiply(coefValue)
-                .divide(coefExponent)
-                .divide(math.add(degreeIndex, 1))
-                .done()
-            ));
+            positiveSum = math.subtract(positiveSum, math.floor(math.chain(_x1).pow(math.add(degreeIndex, 1)).multiply(coefValue).divide(coefExponent).divide(math.add(degreeIndex, 1)).done()));
         } else {
-            negativeSum = math.add(negativeSum, math.floor(math.chain(_x2)
-                .pow(math.add(degreeIndex, 1))
-                .multiply(coefValue)
-                .divide(coefExponent)
-                .divide(math.add(degreeIndex, 1))
-                .done()
-            ));
+            negativeSum = math.add(negativeSum, math.floor(math.chain(_x2).pow(math.add(degreeIndex, 1)).multiply(coefValue).divide(coefExponent).divide(math.add(degreeIndex, 1)).done()));
 
-            negativeSum = math.subtract(negativeSum, math.floor(math.chain(_x2)
-                .pow(math.add(degreeIndex, 1))
-                .multiply(coefValue)
-                .divide(coefExponent)
-                .divide(math.add(degreeIndex, 1))
-                .done()
-            ));
+            negativeSum = math.subtract(negativeSum, math.floor(math.chain(_x2).pow(math.add(degreeIndex, 1)).multiply(coefValue).divide(coefExponent).divide(math.add(degreeIndex, 1)).done()));
         }
         degreeIndex++;
     }
@@ -82,7 +58,7 @@ function evaluatePolynomialIntegration(f, start, end, pieceIndex) {
 }
 
 function getAmountListing(f, placeInLine, amountBeans,) {
-    const pieceIndex = findIndex(f.breakpoints, placeInLine, f.numPieces - 1);
+    const pieceIndex = findIndex(f.breakpoints, placeInLine, f.numPieces);
     const pricePerPod = evaluatePolynomial(f, placeInLine, pieceIndex);
     const amountPods = math.floor(math.divide(math.multiply(amountBeans, 1000000), pricePerPod));
     return math.format(amountPods, {notation:"fixed"});
@@ -90,42 +66,34 @@ function getAmountListing(f, placeInLine, amountBeans,) {
 }
 
 function getAmountOrder(f, placeInLine, amountPodsFromOrder) {
-
+    
     var beanAmount = math.bignumber(0);
-    var pieceIndex = findIndex(f.breakpoints, math.bignumber(placeInLine), f.numPieces - 1);
-
     var start = math.bignumber(placeInLine);
     const end = math.add(start, math.bignumber(amountPodsFromOrder));
+    var currentPieceIndex = findIndex(f.breakpoints, placeInLine, f.numPieces);
+    var nextPieceStart = math.bignumber(f.breakpoints[currentPieceIndex + 1]);
+    var integrateToEnd = false;
 
-    if(math.compare(start, f.breakpoints[0]) == -1) start = math.bignumber(f.breakpoints[0]);
-
-    while(math.compare(start, end) == -1) {
-        console.log("beanAmount: ", beanAmount);
-        console.log("coefficients: ", getValueArray(f.coefficients, pieceIndex))
-        console.log("exponents: ", getValueArray(f.exponents, pieceIndex))
-        console.log("signs: ", getValueArray(f.signs, pieceIndex))
-        if(!(math.compare(pieceIndex, f.numPieces - 1) == 0)) {
-            
-            if(math.compare(end, f.breakpoints[pieceIndex + 1]) == 1) {
-                
-                var term = evaluatePolynomialIntegration(f, math.subtract(start, f.breakpoints[pieceIndex]), math.subtract(f.breakpoints[pieceIndex + 1], f.breakpoints[pieceIndex]), pieceIndex); 
-                start = math.bignumber(f.breakpoints[pieceIndex + 1]);
-                beanAmount = math.add(beanAmount, term);
-
-                if(pieceIndex < (f.numPieces - 1)) pieceIndex++;
-                
-            } else {
-
-                var term = evaluatePolynomialIntegration(f, math.subtract(start, f.breakpoints[pieceIndex]), math.subtract(end, f.breakpoints[pieceIndex]), pieceIndex);
-                beanAmount = math.add(beanAmount, term);
-                start = end;
-            }
-        }else{
-
-            var term = evaluatePolynomialIntegration(f, math.subtract(start, f.breakpoints[pieceIndex]), math.subtract(end, f.breakpoints[pieceIndex]), pieceIndex);
-            beanAmount = math.add(beanAmount, term);
-            start = end;
+    while(!integrateToEnd) {
+        if(math.compare(end, nextPieceStart) == 1) {
+            integrateToEnd = false;
+        } else {
+            integrateToEnd = true;
         }
+
+        const endIntegration = integrateToEnd ? end : nextPieceStart;
+        
+        beanAmount = math.add(beanAmount, math.bignumber(evaluatePolynomialIntegration(f, start, endIntegration, currentPieceIndex)));
+        
+        if(!integrateToEnd) {
+            start = nextPieceStart;
+            if(currentPieceIndex == (f.numPieces - 1)) {
+                integrateToEnd = true;
+            } else {
+                currentPieceIndex++;
+                if(currentPieceIndex != (f.numPieces - 1)) nextPieceStart = math.bignumber(f.breakpoints[currentPieceIndex + 1]);
+            }
+        } 
     }
     return math.format(math.floor(math.divide(beanAmount, 1000000)), {notation: "fixed"});
 
@@ -147,7 +115,7 @@ function findIndex(array, value, high) {
     var low = 0;
     while(low < high) {
         if(math.compare(math.bignumber(array[low]), math.bignumber(value)) == 0) return low;
-        else if(math.compare(math.bignumber(array[low]), math.bignumber(value)) == 1) break;
+        else if(math.compare(math.bignumber(array[low]), math.bignumber(value)) == 1) return low - 1;
         else low++;
     }
 

@@ -124,10 +124,7 @@ describe('Marketplace', function () {
     xs: [1000  , 5000  , 6000  , 7000  , 8000  , 9000  , 10000 , 11000 , 12000 , 13000 , 14000 , 18000 , 20000 ],
     ys: [1000000, 990000, 980000, 950000, 890000, 790000, 680000, 670000, 660000, 570000, 470000, 450000, 430000]
   }
-  // const set_13Pieces = {
-  //     xs: [1000  , 5000  , 6000  , 7000  , 8000  , 9000  ],
-  //     ys: [1000000, 990000, 980000, 950000, 890000, 790000]
-  //   }
+
   const hugeValueSet_13Pieces = {
     xs: [10000000000000, 50000000000000, 60000000000000, 70000000000000, 80000000000000, 90000000000000, 100000000000000, 110000000000000, 120000000000000, 130000000000000, 140000000000000, 180000000000000, 200000000000000],
     ys: [1000000, 990000, 980000, 950000, 890000, 790000, 680000, 670000, 660000, 570000, 470000, 450000, 430000]
@@ -234,39 +231,23 @@ describe('Marketplace', function () {
           })
           
           it("first breakpoint", async function () {
-            const x = 0;
-            const pieceIndex = 0;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(set_13Pieces.ys[0]);
+            const x = 1000;
+            expect(await this.marketplace.connect(user).evaluatePolynomialPiecewise(this.f.packedFunction, x)).to.be.equal(set_13Pieces.ys[0]);
           })
 
           it("second breakpoint", async function () {  
-            const x = 0;
-            const pieceIndex = 1;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(set_13Pieces.ys[1]);
+            const x = 5000;
+            expect(await this.marketplace.connect(user).evaluatePolynomialPiecewise(this.f.packedFunction, x)).to.be.equal(set_13Pieces.ys[1]);
           })
 
           it("second last breakpoint", async function () {  
-            var x = 0;
-            var pieceIndex = 11;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(set_13Pieces.ys[11]);
+            var x = 18000;
+            expect(await this.marketplace.connect(user).evaluatePolynomialPiecewise(this.f.packedFunction, x)).to.be.equal(set_13Pieces.ys[11]);
           })
 
           it("last breakpoint", async function () {  
-            const x = 0;
-            const pieceIndex = 12;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(set_13Pieces.ys[12]);
+            const x = 20000;
+            expect(await this.marketplace.connect(user).evaluatePolynomialPiecewise(this.f.packedFunction, x)).to.be.equal(set_13Pieces.ys[12]);
           })
         })
         describe("evaluation between piecewise breakpoints", async function () {
@@ -274,36 +255,24 @@ describe('Marketplace', function () {
             this.f = interpolatePoints(set_13Pieces.xs, set_13Pieces.ys);
           })
           it("within first interval", async function () {
-            const x = 2500 - set_13Pieces.xs[0];
+            const x = 2500;
             const pieceIndex = 0;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
+            expect(await this.marketplace.connect(user).evaluatePolynomialPiecewise(this.f.packedFunction, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
           })
           it("within second interval", async function () {
-            const x = 5750 - set_13Pieces.xs[1];
+            const x = 5750;
             const pieceIndex = 1;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
+            expect(await this.marketplace.connect(user).evaluatePolynomialPiecewise(this.f.packedFunction, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
           })
           it("within second last interval", async function () {
-            const x = 14999 - set_13Pieces.xs[10];
+            const x = 14999;
             const pieceIndex = 10;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
+            expect(await this.marketplace.connect(user).evaluatePolynomialPiecewise(this.f.packedFunction, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
           })
           it("within last interval", async function () {
-            const x = 19410 - set_13Pieces.xs[11];
+            const x = 19410;
             const pieceIndex = 11;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
+            expect(await this.marketplace.connect(user).evaluatePolynomialPiecewise(this.f.packedFunction, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
           })
         })
       })
@@ -315,39 +284,23 @@ describe('Marketplace', function () {
           })
           
           it("correctly evaluates at first breakpoint", async function () {
-            const x = 0;
-            const pieceIndex = 0;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(hugeValueSet_13Pieces.ys[0]);
+            const x = 10000000000000;
+            expect(await this.marketplace.connect(user).evaluatePolynomialPiecewise(this.f.packedFunction, x)).to.be.equal(hugeValueSet_13Pieces.ys[0]);
           })
 
           it("correctly evaluates at second breakpoint", async function () {  
-            const x = 0;
-            const pieceIndex = 1;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(hugeValueSet_13Pieces.ys[1]);
+            const x = 50000000000000;
+            expect(await this.marketplace.connect(user).evaluatePolynomialPiecewise(this.f.packedFunction, x)).to.be.equal(hugeValueSet_13Pieces.ys[1]);
           })
 
           it("correctly evaluates at second last breakpoint", async function () {  
-            const x = 0;
-            const pieceIndex = 11;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(hugeValueSet_13Pieces.ys[11]);
+            const x = 180000000000000;
+            expect(await this.marketplace.connect(user).evaluatePolynomialPiecewise(this.f.packedFunction, x)).to.be.equal(hugeValueSet_13Pieces.ys[11]);
           })
 
           it("correctly evaluates at last breakpoint", async function () {  
-            const x = 0;
-            const pieceIndex = 12;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(hugeValueSet_13Pieces.ys[12]);
+            const x = 200000000000000;
+            expect(await this.marketplace.connect(user).evaluatePolynomialPiecewise(this.f.packedFunction, x)).to.be.equal(hugeValueSet_13Pieces.ys[12]);
           })
         })
         describe("evaluation in between piecewise breakpoints", async function () {
@@ -355,36 +308,24 @@ describe('Marketplace', function () {
             this.f = interpolatePoints(hugeValueSet_13Pieces.xs, hugeValueSet_13Pieces.ys);
           })
           it("correctly evaluates within first interval", async function () {
-            const x = 14567200000500 - hugeValueSet_13Pieces.xs[0];
-            const pieceIndex = 0  ;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
+            const x = 14567200000500;
+            const pieceIndex = 0;
+            expect(await this.marketplace.connect(user).evaluatePolynomialPiecewise(this.f.packedFunction, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
           })
           it("correctly evaluates within second interval", async function () {
-            const x = 59555200441200 - hugeValueSet_13Pieces.xs[1];
+            const x = 59555200441200;
             const pieceIndex = 1;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
+            expect(await this.marketplace.connect(user).evaluatePolynomialPiecewise(this.f.packedFunction, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
           })
           it("correctly evaluates within second last interval", async function () {
-            const x = 140567200000500 - hugeValueSet_13Pieces.xs[10];
+            const x = 140567200000500;
             const pieceIndex = 10;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
+            expect(await this.marketplace.connect(user).evaluatePolynomialPiecewise(this.f.packedFunction, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
           })
           it("correctly evaluates within last interval", async function () {
-            const x = 185069299999500 - hugeValueSet_13Pieces.xs[11];
+            const x = 185069299999500;
             const pieceIndex = 11;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomial(coefficients, exponents, signs, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
+            expect(await this.marketplace.connect(user).evaluatePolynomialPiecewise(this.f.packedFunction, x)).to.be.equal(evaluatePolynomial(this.f, x, pieceIndex));
           })
         })
       })
@@ -399,42 +340,30 @@ describe('Marketplace', function () {
           })
   
           it("first interval", async function () {
-            const start = 1000 - set_13Pieces.xs[0];
-            const end = 4000 - set_13Pieces.xs[0];
+            const start = 1000;
+            const end = 4000;
             const pieceIndex = 0;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefficients, exponents, signs, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegrationPiecewise(this.f.packedFunction, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
           })
   
           it("second interval", async function () {
-            const start = 5200 - set_13Pieces.xs[1];
-            const end = 5999 - set_13Pieces.xs[1];
+            const start = 5200;
+            const end = 5999;
             const pieceIndex = 1;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefficients, exponents, signs, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegrationPiecewise(this.f.packedFunction, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
           })
           
           it("second last interval", async function () {
-            const start = 14500 - set_13Pieces.xs[10];
-            const end = 16603 - set_13Pieces.xs[10];
+            const start = 14500;
+            const end = 16603;
             const pieceIndex = 10;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefficients, exponents, signs, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegrationPiecewise(this.f.packedFunction, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
           })
           it("last interval", async function () {
-            const start = 18100 - set_13Pieces.xs[11];
-            const end = 19004 - set_13Pieces.xs[11];
+            const start = 18100;
+            const end = 19004;
             const pieceIndex = 11;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefficients, exponents, signs, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegrationPiecewise(this.f.packedFunction, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
           })
         })
       })
@@ -446,42 +375,30 @@ describe('Marketplace', function () {
           })
   
           it("first interval", async function () {
-            const start = 10000000000000 - hugeValueSet_13Pieces.xs[0]; 
-            const end = 12000000000000 - hugeValueSet_13Pieces.xs[0]; 
+            const start = 10000000000000; 
+            const end = 12000000000000; 
             const pieceIndex = 0; 
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefficients, exponents, signs, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegrationPiecewise(this.f.packedFunction, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
           })
   
           it("second interval", async function () {
-            const start = 55000000000000 - hugeValueSet_13Pieces.xs[1];
-            const end = 58000000000000 - hugeValueSet_13Pieces.xs[1];
+            const start = 55000000000000;
+            const end = 58000000000000;
             const pieceIndex = 1;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefficients, exponents, signs, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegrationPiecewise(this.f.packedFunction, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
           })
           
           it("second last interval", async function () {
-            const start = 145000000000000 - hugeValueSet_13Pieces.xs[10];
-            const end = 178000000000016 - hugeValueSet_13Pieces.xs[10];
+            const start = 145000000000000;
+            const end = 178000000000016;
             const pieceIndex = 10;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefficients, exponents, signs, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegrationPiecewise(this.f.packedFunction, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
           })
           it("last interval", async function () {
-            const start = 180000000000000 - hugeValueSet_13Pieces.xs[11];
-            const end = 195999999999990 - hugeValueSet_13Pieces.xs[11]; //this overflows easily 
+            const start = 180000000000000;
+            const end = 195999999999990; //this overflows easily 
             const pieceIndex = 11;
-            const coefficients = getValueArray(this.f.coefficients, pieceIndex);
-            const exponents = getValueArray(this.f.exponents, pieceIndex);
-            const signs = getValueArray(this.f.signs, pieceIndex);
-            expect(await this.marketplace.connect(user).evaluatePolynomialIntegration(coefficients, exponents, signs, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
+            expect(await this.marketplace.connect(user).evaluatePolynomialIntegrationPiecewise(this.f.packedFunction, start, end)).to.be.equal(evaluatePolynomialIntegration(this.f, start, end, pieceIndex));
           })
         })
       })
@@ -1018,6 +935,11 @@ describe('Marketplace', function () {
   
         it('Fails if start + amount too large', async function () {
           await expect(this.marketplace.connect(user2).createPodListingV2('1000', '500', '1000', '0', this.f.packedFunction, INTERNAL)).to.be.revertedWith('Marketplace: Invalid Plot/Amount.');
+        })
+
+        it('Fails if function is invalid length', async function () {
+          let brokenFunction = this.f.packedFunction.slice(0, -2);
+          await expect(this.marketplace.connect(user).createPodListingV2('0', '0', '1000', '0', brokenFunction, INTERNAL)).to.be.revertedWith('Marketplace: Invalid pricing function.');
         })
   
         describe("List full plot", async function () {
@@ -1682,9 +1604,14 @@ describe('Marketplace', function () {
       describe("Create", async function () {
         describe("revert", async function () {
           it("Reverts if amount is 0", async function () {
-            await expect(
-              this.marketplace.connect(user2).createPodOrderV2("0","1000",this.f.packedFunction,EXTERNAL)).to.be.revertedWith("Marketplace: Order amount must be > 0.");
+            await expect(this.marketplace.connect(user2).createPodOrderV2("0","1000",this.f.packedFunction,EXTERNAL)).to.be.revertedWith("Marketplace: Order amount must be > 0.");
           });
+
+          it("Reverts with invalid function", async function () {
+            let brokenFunction = this.f.packedFunction.slice(0,-2);
+            await expect(this.marketplace.connect(user2).createPodOrderV2("500","1000",brokenFunction,EXTERNAL)).to.be.revertedWith("Marketplace: Invalid pricing function.");
+          });
+          
         });
 
         describe("create order", async function () {

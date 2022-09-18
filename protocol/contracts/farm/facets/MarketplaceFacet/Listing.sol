@@ -273,6 +273,7 @@ contract Listing is PodTransfer {
         bytes calldata pricingFunction,
         LibTransfer.To mode
     ) internal pure returns (bytes32 lHash) {
+        require(pricingFunction.length == LibPolynomial.getNumPieces(pricingFunction).mul(168).add(32), "Marketplace: Invalid pricing function.");
         lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex, mode == LibTransfer.To.EXTERNAL, pricingFunction));
     }
 
