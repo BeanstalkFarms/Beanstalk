@@ -79,6 +79,7 @@ contract Account {
         mapping(address => mapping(IERC20 => uint256)) tokenAllowances; // Token allowances
         uint256 depositPermitNonces; // A Farmer's current deposit permit nonce
         uint256 tokenPermitNonces; // A Farmer's current token permit nonce
+        mapping(bytes4 => mapping(address => bytes32)) functionApprovals; // function selector => delegatee => approval
     }
 }
 
