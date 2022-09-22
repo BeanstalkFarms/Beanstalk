@@ -82,24 +82,21 @@ contract SunTest is Sun, Test {
 
   ///////////////////////// Pod Rate sets Soil /////////////////////////
 
-  function test_deltaB_positive_podRate() public {
-    uint256 snapId = vm.snapshot();
-
-    // low pod rate
+  function test_deltaB_positive_podRate_low() public {
     field.incrementTotalPodsE(100);
     season.sunSunrise(300e6, 0); // deltaB = +300; case 0 = low pod rate
     assertEq(field.totalSoil(), 148); // FIXME: how calculated?
-    snapId = _reset(snapId);
-
-    // medium pod rate
+  }
+  
+  function test_deltaB_positive_podRate_medium() public {
     field.incrementTotalPodsE(100);
-    season.sunSunrise(300e6, 8); // deltaB = +300; case 0 = low pod rate
+    season.sunSunrise(300e6, 8); // deltaB = +300; case 0 = medium pod rate
     assertEq(field.totalSoil(), 99); // FIXME: how calculated?
-    snapId = _reset(snapId);
+  }
 
-    // high pod rate
+  function test_deltaB_positive_podRate_high() public {
     field.incrementTotalPodsE(100);
-    season.sunSunrise(300e6, 8); // deltaB = +300; case 0 = low pod rate
+    season.sunSunrise(300e6, 8); // deltaB = +300; case 0 = high pod rate
     assertEq(field.totalSoil(), 99); // FIXME: how calculated?
   }
 
@@ -143,21 +140,25 @@ contract SunTest is Sun, Test {
 
   ///////////////////////// Alternatives /////////////////////////
 
-  // function test_deltaB_positive_podRate_low() public {
+  // function test_deltaB_positive_podRate() public {
+  //   uint256 snapId = vm.snapshot();
+
+  //   // low pod rate
   //   field.incrementTotalPodsE(100);
   //   season.sunSunrise(300e6, 0); // deltaB = +300; case 0 = low pod rate
   //   assertEq(field.totalSoil(), 148); // FIXME: how calculated?
-  // }
-  
-  // function test_deltaB_positive_podRate_medium() public {
+  //   snapId = _reset(snapId);
+
+  //   // medium pod rate
+  //   field.incrementTotalPodsE(100);
+  //   season.sunSunrise(300e6, 8); // deltaB = +300; case 0 = low pod rate
+  //   assertEq(field.totalSoil(), 99); // FIXME: how calculated?
+  //   snapId = _reset(snapId);
+
+  //   // high pod rate
   //   field.incrementTotalPodsE(100);
   //   season.sunSunrise(300e6, 8); // deltaB = +300; case 0 = low pod rate
   //   assertEq(field.totalSoil(), 99); // FIXME: how calculated?
   // }
 
-  // function test_deltaB_positive_podRate_high() public {
-  //   field.incrementTotalPodsE(100);
-  //   season.sunSunrise(300e6, 8); // deltaB = +300; case 0 = low pod rate
-  //   assertEq(field.totalSoil(), 99); // FIXME: how calculated?
-  // }
 }
