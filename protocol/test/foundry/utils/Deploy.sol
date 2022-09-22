@@ -30,9 +30,9 @@ import {OwnershipFacet} from "@beanstalk/farm/facets/OwnershipFacet.sol";
 import {TokenFacet} from "@beanstalk/farm/facets/TokenFacet.sol";
 import {MockToken} from "@beanstalk/mocks/MockToken.sol";
 import {MockUnripeFacet} from "@beanstalk/mocks/mockFacets/MockUnripeFacet.sol";
-import {WellBuildingFacet} from "@beanstalk/farm/facets/WellBuildingFacet.sol";
-import {WellFacet} from "@beanstalk/farm/facets/WellFacet.sol";
-import {WellOracleFacet} from "@beanstalk/farm/facets/WellOracleFacet.sol";
+// import {WellBuildingFacet} from "@beanstalk/farm/facets/WellBuildingFacet.sol";
+// import {WellFacet} from "@beanstalk/farm/facets/WellFacet.sol";
+// import {WellOracleFacet} from "@beanstalk/farm/facets/WellOracleFacet.sol";
 import {WhitelistFacet} from "@beanstalk/farm/facets/WhitelistFacet.sol";
 
 import {BeanstalkPrice} from "@beanstalk/price/BeanstalkPrice.sol";
@@ -60,7 +60,7 @@ contract DiamondDeployer is Test {
     console.log("Deployer: %s", deployer);
 
     // create facet cuts
-    IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](17);
+    IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](14);
 
     cut[0] = _cut("BDVFacet", address(new BDVFacet()));
     cut[1] = _cut("CurveFacet", address(new CurveFacet()));
@@ -75,10 +75,10 @@ contract DiamondDeployer is Test {
     cut[10] = _cut("OwnershipFacet", address(new OwnershipFacet()));
     cut[11] = _cut("TokenFacet", address(new TokenFacet()));
     cut[12] = _cut("MockUnripeFacet", address(new MockUnripeFacet()));
-    cut[13] = _cut("WellBuildingFacet", address(new WellBuildingFacet()));
-    cut[14] = _cut("WellFacet", address(new WellFacet()));
-    cut[15] = _cut("WellOracleFacet", address(new WellOracleFacet()));
-    cut[16] = _cut("WhitelistFacet", address(new WhitelistFacet()));
+    cut[13] = _cut("WhitelistFacet", address(new WhitelistFacet()));
+    // cut[13] = _cut("WellBuildingFacet", address(new WellBuildingFacet()));
+    // cut[14] = _cut("WellFacet", address(new WellFacet()));
+    // cut[15] = _cut("WellOracleFacet", address(new WellOracleFacet()));
 
     console.log("Deployed mock facets.");
 
