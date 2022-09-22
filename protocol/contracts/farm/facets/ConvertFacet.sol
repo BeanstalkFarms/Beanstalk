@@ -51,16 +51,16 @@ contract ConvertFacet is ReentrancyGuard {
         external
         payable
         nonReentrant
-        returns (uint32 toSeason, uint256 toAmount)
+        returns (uint32 toSeason, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
         LibInternal.updateSilo(msg.sender);
 
-        address toToken; address fromToken; uint256 fromAmount;
+        address toToken; address fromToken; uint256 grownStalk;
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(
             convertData
         );
 
-        (uint256 grownStalk, uint256 oldBdv) = _withdrawTokens(
+        (grownStalk, fromBdv) = _withdrawTokens(
             fromToken,
             crates,
             amounts,
@@ -68,9 +68,9 @@ contract ConvertFacet is ReentrancyGuard {
         );
 
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
-        uint256 bdv = newBdv > oldBdv ? newBdv : oldBdv;
+        toBdv = newBdv > fromBdv ? newBdv : fromBdv;
 
-        toSeason = _depositTokens(toToken, toAmount, bdv, grownStalk);
+        toSeason = _depositTokens(toToken, toAmount, toBdv, grownStalk);
 
         emit Convert(msg.sender, fromToken, toToken, fromAmount, toAmount);
     }

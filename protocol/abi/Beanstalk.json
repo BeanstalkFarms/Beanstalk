@@ -200,7 +200,22 @@
             },
             {
                 "internalType": "uint256",
+                "name": "fromAmount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
                 "name": "toAmount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "fromBdv",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "toBdv",
                 "type": "uint256"
             }
         ],
@@ -3286,13 +3301,7 @@
         "type": "function"
     },
     {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "account",
-                "type": "address"
-            }
-        ],
+        "inputs": [],
         "name": "claimPlenty",
         "outputs": [],
         "stateMutability": "payable",
@@ -3763,7 +3772,13 @@
             }
         ],
         "name": "transferDeposit",
-        "outputs": [],
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "bdv",
+                "type": "uint256"
+            }
+        ],
         "stateMutability": "payable",
         "type": "function"
     },
@@ -3796,7 +3811,13 @@
             }
         ],
         "name": "transferDeposits",
-        "outputs": [],
+        "outputs": [
+            {
+                "internalType": "uint256[]",
+                "name": "bdvs",
+                "type": "uint256[]"
+            }
+        ],
         "stateMutability": "payable",
         "type": "function"
     },
@@ -4291,6 +4312,35 @@
         ],
         "name": "Pick",
         "type": "event"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "unripeToken",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "supply",
+                "type": "uint256"
+            }
+        ],
+        "name": "_getPenalizedUnderlying",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "redeem",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
     },
     {
         "inputs": [
