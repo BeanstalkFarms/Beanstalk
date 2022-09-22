@@ -4,7 +4,7 @@ pragma solidity =0.7.6;
 import "forge-std/Test.sol";
 import {console} from "forge-std/console.sol";
 
-import { Bean } from "../contracts/tokens/Bean.sol";
+import { Bean } from "@beanstalk/tokens/Bean.sol";
 import { Utils } from "./utils/Utils.sol";
 
 contract BeanTest is Bean, Test {
@@ -20,7 +20,7 @@ contract BeanTest is Bean, Test {
     vm.label(alice, "Alice");
   }
 
-  function testMint() public {
+  function test_mint() public {
     uint256 amount = 100e6;
     _mint(alice, amount);
     assertEq(balanceOf(alice), amount);

@@ -52,9 +52,6 @@ contract DiamondDeployer is Test {
   address internal THREE_CRV = address(C.threeCrv());
 
   function deployMock() public returns (Diamond d) {
-    // reset instance
-    // vm.revertTo(0); 
-
     // create accounts
     utils = new Utils();
     users = utils.createUsers(1);
@@ -114,8 +111,6 @@ contract DiamondDeployer is Test {
     );
 
     console.log("Diamond cut successful.");
-
-    // return d;
   }
 
   function _etch(string memory _file, address _address) internal returns (address) {
