@@ -12,24 +12,21 @@ enum ConvertKind {
 
 interface IBeanstalk {
     function season() external view returns (uint32);
-    function transferDeposit(
-        address sender,
-        address recipient,
+    function getDeposit(
+        address account,
         address token,
-        uint32 _season,
-        uint256 amount
-    ) external payable;
+        uint32 _season
+    ) external view returns (uint256, uint256);
+
+    function balanceOfSeeds(address account) external view returns (uint256);
+    function balanceOfStalk(address account) external view returns (uint256);
+    
     function transferDeposits(
         address sender,
         address recipient,
         address token,
         uint32[] calldata seasons,
         uint256[] calldata amounts
-    ) external payable;
-    function convert(
-        bytes calldata convertData,
-        uint32[] memory crates,
-        uint256[] memory amounts
-    ) external payable returns (uint32 toSeason, uint256 toAmount);
+    ) external payable returns (uint256[] memory bdvs);
     function plant() external payable returns (uint256);
 }
