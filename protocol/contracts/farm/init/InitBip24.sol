@@ -13,7 +13,7 @@ import "../../C.sol";
  **/
 contract InitBip24 {
     address private constant rootAddress =
-        0x735cab9b02fd153174763958ffb4e0a971dd7f29;
+        0x735CAB9B02Fd153174763958FFb4E0a971DD7f29;
     uint256 private constant payment = 10_000 * 1e6; // 10,000 Beans
 
     function init() external {
