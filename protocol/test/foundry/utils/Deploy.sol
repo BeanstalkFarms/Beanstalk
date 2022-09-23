@@ -98,10 +98,6 @@ contract DiamondDeployer is Test {
 
     console.log("Initialized diamond at %s", address(d));
 
-    // logging
-    _printAddresses();
-    console.log("Bean supply: %s", C.bean().totalSupply());
-
     // run diamond cut
     vm.prank(deployer);
     IDiamondCut(address(d)).diamondCut(
