@@ -92,7 +92,7 @@ task('marketplace', async function () {
 })
 
 module.exports = {
-  defaultNetwork: "localhost",
+  defaultNetwork: "hardhat",
   networks: {
     hardhat: {
       chainId: 1337,

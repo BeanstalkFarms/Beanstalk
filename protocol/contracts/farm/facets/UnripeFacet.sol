@@ -54,11 +54,13 @@ contract UnripeFacet is ReentrancyGuard {
         LibTransfer.From fromMode,
         LibTransfer.To toMode
     ) external payable nonReentrant returns (uint256 underlyingAmount) {
-        underlyingAmount = getPenalizedUnderlying(unripeToken, amount);
+        uint256 unripeSupply = IERC20(unripeToken).totalSupply();
+
+        amount = LibTransfer.burnToken(IBean(unripeToken), amount, msg.sender, fromMode);
+
+        underlyingAmount = _getPenalizedUnderlying(unripeToken, amount, unripeSupply);
 
         LibUnripe.decrementUnderlying(unripeToken, underlyingAmount);
-
-        LibTransfer.burnToken(IBean(unripeToken), amount, msg.sender, fromMode);
 
         address underlyingToken = s.u[unripeToken].underlyingToken;
 
@@ -105,8 +107,16 @@ contract UnripeFacet is ReentrancyGuard {
         view
         returns (uint256 redeem)
     {
+        return _getUnderlying(unripeToken, amount, IERC20(unripeToken).totalSupply());
+    }
+
+    function _getUnderlying(address unripeToken, uint256 amount, uint256 supply)
+        private
+        view
+        returns (uint256 redeem)
+    {
         redeem = s.u[unripeToken].balanceOfUnderlying.mul(amount).div(
-            IERC20(unripeToken).totalSupply()
+            supply
         );
     }
 
@@ -123,9 +133,17 @@ contract UnripeFacet is ReentrancyGuard {
         view
         returns (uint256 redeem)
     {
+        return _getPenalizedUnderlying(unripeToken, amount, IERC20(unripeToken).totalSupply());
+    }
+
+    function _getPenalizedUnderlying(address unripeToken, uint256 amount, uint256 supply)
+        public
+        view
+        returns (uint256 redeem)
+    {
         require(isUnripe(unripeToken), "not vesting");
         uint256 sharesBeingRedeemed = getRecapPaidPercentAmount(amount);
-        redeem = getUnderlying(unripeToken, sharesBeingRedeemed);
+        redeem = _getUnderlying(unripeToken, sharesBeingRedeemed, supply);
     }
 
     function isUnripe(address unripeToken) public view returns (bool unripe) {
