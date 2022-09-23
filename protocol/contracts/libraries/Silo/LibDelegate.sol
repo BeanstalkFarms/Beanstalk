@@ -43,14 +43,14 @@ library LibDelegate {
         address account,
         bytes4 selector,
         address spender,
-        uint256 beans
+        uint256 amount
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 allowance = uint256(
             s.a[account].functionApprovals[selector][spender]
         );
         s.a[account].functionApprovals[selector][spender] = bytes32(
-            allowance.sub(beans)
+            allowance.sub(amount)
         );
     }
 }
