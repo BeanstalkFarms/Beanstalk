@@ -11,15 +11,16 @@ import "./Order.sol";
  * @author Beanjoyer
  * @title Pod Marketplace v1
  **/
+ 
 contract MarketplaceFacet is Order {
-    using SafeMath for uint256;
-
+    
     /*
-     * Pod Listing
-     */
-
-    // Create
-    // Note: pricePerPod is bounded by 16_777_215 Beans.
+    * Pod Listing
+    */
+    
+    /*
+    * @notice **LEGACY**
+    */
     function createPodListing(
         uint256 index,
         uint256 start,
@@ -34,6 +35,24 @@ contract MarketplaceFacet is Order {
             amount,
             pricePerPod,
             maxHarvestableIndex,
+            mode
+        );
+    }
+
+    function createPodListingV2(
+        uint256 index,
+        uint256 start,
+        uint256 amount,
+        uint256 maxHarvestableIndex,
+        bytes calldata pricingFunction,
+        LibTransfer.To mode
+    ) external payable {
+        _createPodListingV2(
+            index,
+            start,
+            amount,
+            maxHarvestableIndex,
+            pricingFunction, 
             mode
         );
     }
@@ -54,6 +73,22 @@ contract MarketplaceFacet is Order {
         _fillListing(l, beanAmount);
     }
 
+    function fillPodListingV2(
+        PodListing calldata l,
+        uint256 beanAmount,
+        bytes calldata pricingFunction,
+        LibTransfer.From mode
+    ) external payable {
+        beanAmount = LibTransfer.transferToken(
+            C.bean(),
+            l.account,
+            beanAmount,
+            mode,
+            l.mode
+        );
+        _fillListingV2(l, beanAmount, pricingFunction);
+    }
+
     // Cancel
     function cancelPodListing(uint256 index) external payable {
         _cancelPodListing(msg.sender, index);
@@ -69,7 +104,6 @@ contract MarketplaceFacet is Order {
      */
 
     // Create
-    // Note: pricePerPod is bounded by 16_777_215 Beans.
     function createPodOrder(
         uint256 beanAmount,
         uint24 pricePerPod,
@@ -78,6 +112,16 @@ contract MarketplaceFacet is Order {
     ) external payable returns (bytes32 id) {
         beanAmount = LibTransfer.receiveToken(C.bean(), beanAmount, msg.sender, mode);
         return _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine);
+    }
+
+    function createPodOrderV2(
+        uint256 beanAmount,
+        uint256 maxPlaceInLine,
+        bytes calldata pricingFunction,
+        LibTransfer.From mode
+    ) external payable returns (bytes32 id) {
+        beanAmount = LibTransfer.receiveToken(C.bean(), beanAmount, msg.sender, mode);
+        return _createPodOrderV2(beanAmount, maxPlaceInLine, pricingFunction);
     }
 
     // Fill
@@ -91,6 +135,17 @@ contract MarketplaceFacet is Order {
         _fillPodOrder(o, index, start, amount, mode);
     }
 
+    function fillPodOrderV2(
+        PodOrder calldata o,
+        uint256 index,
+        uint256 start,
+        uint256 amount,
+        bytes calldata pricingFunction,
+        LibTransfer.To mode
+    ) external payable {
+        _fillPodOrderV2(o, index, start, amount, pricingFunction, mode);
+    }
+
     // Cancel
     function cancelPodOrder(
         uint24 pricePerPod,
@@ -100,6 +155,14 @@ contract MarketplaceFacet is Order {
         _cancelPodOrder(pricePerPod, maxPlaceInLine, mode);
     }
 
+    function cancelPodOrderV2(
+        uint256 maxPlaceInLine,
+        bytes calldata pricingFunction,
+        LibTransfer.To mode
+    ) external payable {
+        _cancelPodOrderV2(maxPlaceInLine, pricingFunction, mode);
+    }
+
     // Get
 
     function podOrder(
@@ -107,7 +170,28 @@ contract MarketplaceFacet is Order {
         uint24 pricePerPod,
         uint256 maxPlaceInLine
     ) external view returns (uint256) {
-        return s.podOrders[createOrderId(account, pricePerPod, maxPlaceInLine)];
+        return s.podOrders[
+            createOrderId(
+                account, 
+                pricePerPod, 
+                maxPlaceInLine
+            )
+        ];
+    }
+
+    function podOrderV2(
+        address account,
+        uint256 maxPlaceInLine,
+        bytes calldata pricingFunction
+    ) external view returns (uint256) {
+        return s.podOrders[
+            createOrderIdV2(
+                account, 
+                0,
+                maxPlaceInLine, 
+                pricingFunction
+            )
+        ];
     }
 
     function podOrderById(bytes32 id) external view returns (uint256) {
@@ -133,14 +217,11 @@ contract MarketplaceFacet is Order {
         require(amount > 0, "Field: Plot not owned by user.");
         require(end > start && amount >= end, "Field: Pod range invalid.");
         amount = end - start; // Note: SafeMath is redundant here.
-        if (
-            msg.sender != sender &&
-            allowancePods(sender, msg.sender) != uint256(-1)
-        ) {
-            decrementAllowancePods(sender, msg.sender, amount);
+        if (msg.sender != sender && allowancePods(sender, msg.sender) != uint256(-1)) {
+                decrementAllowancePods(sender, msg.sender, amount);
         }
 
-        if (s.podListings[id] != bytes32(0)) {
+        if (s.podListings[id] != bytes32(0)){
             _cancelPodListing(sender, id);
         }
         _transferPlot(sender, recipient, id, start, amount);
@@ -155,4 +236,5 @@ contract MarketplaceFacet is Order {
         setAllowancePods(msg.sender, spender, amount);
         emit PodApproval(msg.sender, spender, amount);
     }
+
 }
