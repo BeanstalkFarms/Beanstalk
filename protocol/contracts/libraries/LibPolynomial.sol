@@ -30,10 +30,10 @@ library LibPolynomial {
         
     Resulting Piecewise:
 
-        breakpoints: [0, 1, 2, 0, 0, ... , 0]
-        significands: [1, 1, 25, 25, 2, 1, 50, 125, 1, 0, 0, ... , 0]
-        (expanded) coefficient exponents: [0, 0, 0, 2, 0, 0, 0, 4, 0, 0, 0, ... , 0]
-        (expanded) signs: [true, true, true, true, false, true, true, true, false, false, false, ... , false]
+        breakpoints: [0, 1, 2]
+        significands: [1, 1, 25, 25, 2, 1, 50, 125, 1, 0, 0, 0]
+        (expanded) coefficient exponents: [0, 0, 0, 2, 0, 0, 0, 4, 0, 0, 0, 0]
+        (expanded) signs: [true, true, true, true, false, true, true, true, false, false, false, false]
 
     The resulting piecewise is then encoded into a single bytes array by concatenating as follows, where n is the number of polynomial pieces: 
         [
