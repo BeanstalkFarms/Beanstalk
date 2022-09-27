@@ -7,40 +7,40 @@ import "forge-std/console2.sol";
 import {Utils} from "./Utils.sol";
 
 // Diamond setup
-import {Diamond} from "@beanstalk/farm/Diamond.sol";
-import {IDiamondCut} from "@beanstalk/interfaces/IDiamondCut.sol";
-import {DiamondCutFacet} from "@beanstalk/farm/facets/DiamondCutFacet.sol";
-import {DiamondLoupeFacet} from "@beanstalk/farm/facets/DiamondLoupeFacet.sol";
-import {MockInitDiamond} from "@beanstalk/mocks/MockInitDiamond.sol";
+import {Diamond} from "farm/Diamond.sol";
+import {IDiamondCut} from "interfaces/IDiamondCut.sol";
+import {DiamondCutFacet} from "facets/DiamondCutFacet.sol";
+import {DiamondLoupeFacet} from "facets/DiamondLoupeFacet.sol";
+import {MockInitDiamond} from "mocks/MockInitDiamond.sol";
 
 // Facets
-import {BDVFacet} from "@beanstalk/farm/facets/BDVFacet.sol";
-import {CurveFacet} from "@beanstalk/farm/facets/CurveFacet.sol";
-import {ConvertFacet} from "@beanstalk/farm/facets/ConvertFacet.sol";
-import {MockConvertFacet} from "@beanstalk/mocks/mockFacets/MockConvertFacet.sol";
-import {FarmFacet} from "@beanstalk/farm/facets/FarmFacet.sol";
-import {MockFieldFacet} from "@beanstalk/mocks/mockFacets/MockFieldFacet.sol";
-import {MockFundraiserFacet} from "@beanstalk/mocks/mockFacets/MockFundraiserFacet.sol";
-import {MockMarketplaceFacet} from "@beanstalk/mocks/mockFacets/MockMarketplaceFacet.sol";
-import {PauseFacet} from "@beanstalk/farm/facets/PauseFacet.sol";
-import {MockSeasonFacet} from "@beanstalk/mocks/mockFacets/MockSeasonFacet.sol";
-import {MockSiloFacet} from "@beanstalk/mocks/mockFacets/MockSiloFacet.sol";
-import {MockFertilizerFacet} from "@beanstalk/mocks/mockFacets/MockFertilizerFacet.sol";
-import {OwnershipFacet} from "@beanstalk/farm/facets/OwnershipFacet.sol";
-import {TokenFacet} from "@beanstalk/farm/facets/TokenFacet.sol";
-import {MockToken} from "@beanstalk/mocks/MockToken.sol";
-import {MockUnripeFacet} from "@beanstalk/mocks/mockFacets/MockUnripeFacet.sol";
+import {BDVFacet} from "facets/BDVFacet.sol";
+import {CurveFacet} from "facets/CurveFacet.sol";
+import {ConvertFacet} from "facets/ConvertFacet.sol";
+import {MockConvertFacet} from "mockFacets/MockConvertFacet.sol";
+import {FarmFacet} from "facets/FarmFacet.sol";
+import {MockFieldFacet} from "mockFacets/MockFieldFacet.sol";
+import {MockFundraiserFacet} from "mockFacets/MockFundraiserFacet.sol";
+import {MockMarketplaceFacet} from "mockFacets/MockMarketplaceFacet.sol";
+import {PauseFacet} from "facets/PauseFacet.sol";
+import {MockSeasonFacet} from "mockFacets/MockSeasonFacet.sol";
+import {MockSiloFacet} from "mockFacets/MockSiloFacet.sol";
+import {MockFertilizerFacet} from "mockFacets/MockFertilizerFacet.sol";
+import {OwnershipFacet} from "facets/OwnershipFacet.sol";
+import {TokenFacet} from "facets/TokenFacet.sol";
+import {MockToken} from "mocks/MockToken.sol";
+import {MockUnripeFacet} from "mockFacets/MockUnripeFacet.sol";
 // import {WellBuildingFacet} from "@beanstalk/farm/facets/WellBuildingFacet.sol";
 // import {WellFacet} from "@beanstalk/farm/facets/WellFacet.sol";
 // import {WellOracleFacet} from "@beanstalk/farm/facets/WellOracleFacet.sol";
-import {WhitelistFacet} from "@beanstalk/farm/facets/WhitelistFacet.sol";
+import {WhitelistFacet} from "facets/WhitelistFacet.sol";
 
 import {BeanstalkPrice} from "@beanstalk/price/BeanstalkPrice.sol";
-import {Mock3Curve} from "@beanstalk/mocks/curve/Mock3Curve.sol";
-import {MockCurveFactory} from "@beanstalk/mocks/curve/MockCurveFactory.sol";
-import {MockCurveZap} from "@beanstalk/mocks/curve/MockCurveZap.sol";
-import {MockMeta3Curve} from "@beanstalk/mocks/curve/MockMeta3Curve.sol";
-import {MockWETH} from "@beanstalk/mocks/MockWETH.sol";
+import {Mock3Curve} from "mocks/curve/Mock3Curve.sol";
+import {MockCurveFactory} from "mocks/curve/MockCurveFactory.sol";
+import {MockCurveZap} from "mocks/curve/MockCurveZap.sol";
+import {MockMeta3Curve} from "mocks/curve/MockMeta3Curve.sol";
+import {MockWETH} from "mocks/MockWETH.sol";
 
 import "@beanstalk/C.sol";
 
@@ -82,23 +82,20 @@ contract DiamondDeployer is Test {
 
     console.log("Deployed mock facets.");
 
-    // impersonate tokens and utilities
+    //impersonate tokens and utilities
     _mockToken("Bean", address(C.bean()));
     _mockToken("USDC", address(C.usdc()));
     _mockPrice();
     _mockCurve(); // only if "reset"
     _mockWeth(); // only if "reset"
-    // _mockCurveMetapool();
+    //_mockCurveMetapool();
     _mockUnripe();
-    // _mockFertilizer();
+    //_mockFertilizer();
 
     // create diamond    
     d = new Diamond(deployer);
     MockInitDiamond i = new MockInitDiamond();
 
-    console.log("Initialized diamond at %s", address(d));
-
-    // run diamond cut
     vm.prank(deployer);
     IDiamondCut(address(d)).diamondCut(
       cut,
@@ -106,13 +103,16 @@ contract DiamondDeployer is Test {
       abi.encodeWithSignature("init()")
     );
 
+    console.log("Initialized diamond at %s", address(d));
+
+    // run diamond cut
+
     console.log("Diamond cut successful.");
   }
 
   function _etch(string memory _file, address _address) internal returns (address) {
-    deployCode(_file, abi.encode(""));
-    bytes memory code = vm.getDeployedCode(_file);
-    vm.etch(_address, code);
+    address codeaddress = deployCode(_file, abi.encode(""));
+    vm.etch(_address, at(codeaddress));
     return _address;
   }
 
@@ -200,5 +200,22 @@ contract DiamondDeployer is Test {
     bytes memory res = vm.ffi(cmd);
     selectors = abi.decode(res, (bytes4[]));
   }
+
+  //gets bytecode at specific address (cant use address.code as we're in 0.7.6)
+  function at(address _addr) public view returns (bytes memory o_code) {
+        assembly {
+            // retrieve the size of the code
+            let size := extcodesize(_addr)
+            // allocate output byte array
+            // by using o_code = new bytes(size)
+            o_code := mload(0x40)
+            // new "memory end" including padding
+            mstore(0x40, add(o_code, and(add(add(size, 0x20), 0x1f), not(0x1f))))
+            // store length in memory
+            mstore(o_code, size)
+            // actually retrieve the code, this needs assembly
+            extcodecopy(_addr, add(o_code, 0x20), 0, size)
+        }
+    }
 
 }
