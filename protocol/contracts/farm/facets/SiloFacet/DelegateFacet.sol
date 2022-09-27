@@ -6,7 +6,6 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
-import "./Silo.sol";
 import "../../ReentrancyGuard.sol";
 import "../../../libraries/Silo/LibDelegate.sol";
 
@@ -14,12 +13,7 @@ import "../../../libraries/Silo/LibDelegate.sol";
  * @author Publius
  * @title DelegateFacet handles delegating authority for Beanstalk functions.
  */
-contract DelegateFacet is Silo {
-    mapping(address => uint256) private _nonces;
-
-    bytes4 public constant PLANT_DELEGATED_SELECTOR =
-        bytes4(keccak256(bytes("plantDelegated(address)")));
-
+contract DelegateFacet is ReentrancyGuard {
     /**
      * @notice approveDelegate sets approval value for delegation
      * @param selector function selector
@@ -34,7 +28,7 @@ contract DelegateFacet is Silo {
         _approveDelegate(msg.sender, selector, delegatee, approval);
     }
 
-    function permit(
+    function permitDelegate(
         address account,
         bytes4 selector,
         address delegatee,
@@ -84,34 +78,6 @@ contract DelegateFacet is Silo {
         _approveDelegate(account, selector, delegatee, approval);
     }
 
-    /**
-     * @notice plant on behalf of account
-     * @param account user address
-     */
-    function plantDelegated(address account)
-        external
-        payable
-        returns (uint256 beans, uint256 allowance)
-    {
-        allowance = LibDelegate.getAllowance(
-            account,
-            PLANT_DELEGATED_SELECTOR,
-            msg.sender
-        );
-        if (allowance == 0) revert("DelegateFacet: unauthorized");
-
-        beans = _plant(account);
-        if (allowance < beans) revert("DelegateFacet: not enough allowance");
-        allowance -= beans;
-
-        LibDelegate.spendAllowance(
-            account,
-            PLANT_DELEGATED_SELECTOR,
-            msg.sender,
-            beans
-        );
-    }
-
     //////////////////////////////////////
     /////////// VIEW FUNCTIONS ///////////
     //////////////////////////////////////
@@ -135,7 +101,7 @@ contract DelegateFacet is Silo {
      * @dev returns current nonce for user
      */
     function nonces(address account) public view returns (uint256) {
-        return _nonces[account];
+        return s.a[account].nonce;
     }
 
     //////////////////////////////////////
@@ -161,6 +127,6 @@ contract DelegateFacet is Silo {
      * @dev "Consume a nonce": return the current value and increment.
      */
     function _useNonce(address account) internal returns (uint256 current) {
-        current = _nonces[account]++;
+        current = s.a[account].nonce++;
     }
 }
