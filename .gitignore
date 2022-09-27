@@ -13,3 +13,4 @@ archived
 # Foundry
 cache/
 out/
+coverage_data/
