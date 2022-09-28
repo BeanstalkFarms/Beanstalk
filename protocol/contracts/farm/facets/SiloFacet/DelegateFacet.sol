@@ -6,14 +6,14 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
-import "../../Nonce.sol";
+import "../../Permit.sol";
 import "../../../libraries/Silo/LibDelegate.sol";
 
 /*
  * @author Publius
  * @title DelegateFacet handles delegating authority for Beanstalk functions.
  */
-contract DelegateFacet is Nonce {
+contract DelegateFacet is Permit {
     /**
      * @notice approveDelegate sets approval value for delegation
      * @param selector function selector
@@ -45,21 +45,7 @@ contract DelegateFacet is Nonce {
     ) external {
         require(block.timestamp <= deadline, "DelegateFacet: expired deadline");
 
-        uint256 chainId;
-        assembly {
-            chainId := chainid()
-        }
-        bytes32 eip712DomainHash = keccak256(
-            abi.encode(
-                keccak256(
-                    "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-                ),
-                keccak256(bytes("Beanstalk")),
-                keccak256(bytes("1")),
-                chainId,
-                address(this)
-            )
-        );
+        bytes32 eip712DomainHash = _getEIP712DomainHash();
 
         bytes32 hashStruct = keccak256(
             abi.encode(
