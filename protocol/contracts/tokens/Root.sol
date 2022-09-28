@@ -15,7 +15,7 @@ struct DepositTransfer {
     uint256[] amounts;
 }
 
-contract FDBDV is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
+contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     using MathUpgradeable for uint256;
 
     event Deposits(
@@ -69,12 +69,12 @@ contract FDBDV is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     function setDelegate(
         address _delegateContract,
         address _delegate,
-        bytes32 snapshotId
+        bytes32 _snapshotId
     ) external onlyOwner {
         if (_delegate == address(0)) {
-            IDelegation(_delegateContract).clearDelegate(snapshotId);
+            IDelegation(_delegateContract).clearDelegate(_snapshotId);
         } else {
-            IDelegation(_delegateContract).setDelegate(snapshotId, _delegate);
+            IDelegation(_delegateContract).setDelegate(_snapshotId, _delegate);
         }
     }
 
@@ -101,7 +101,61 @@ contract FDBDV is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         return MathUpgradeable.max(num1, num3);
     }
 
-    function deposits(DepositTransfer[] calldata _deposits)
+    function depositsWithTokenPermit(
+        DepositTransfer[] calldata depositTransfers,
+        address token,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public virtual returns (uint256) {
+        IBeanstalk(BEANSTALK_ADDRESS).permitDeposit(
+            msg.sender,
+            address(this),
+            token,
+            value,
+            deadline,
+            v,
+            r,
+            s
+        );
+
+        return _deposits(depositTransfers);
+    }
+
+    function depositsWithTokensPermit(
+        DepositTransfer[] calldata depositTransfers,
+        address[] memory tokens,
+        uint256[] memory values,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public virtual returns (uint256) {
+        IBeanstalk(BEANSTALK_ADDRESS).permitDeposits(
+            msg.sender,
+            address(this),
+            tokens,
+            values,
+            deadline,
+            v,
+            r,
+            s
+        );
+
+        return _deposits(depositTransfers);
+    }
+
+    function deposits(DepositTransfer[] calldata depositTransfers)
+        public
+        virtual
+        returns (uint256)
+    {
+        return _deposits(depositTransfers);
+    }
+
+    function withdraws(DepositTransfer[] calldata depositTransfers)
         public
         virtual
         returns (uint256)
@@ -111,15 +165,14 @@ contract FDBDV is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             uint256 bdv,
             uint256 stalk,
             uint256 seed
-        ) = _transferDeposits(_deposits, true);
-        _mint(msg.sender, shares);
-        emit Deposits(msg.sender, _deposits, bdv, stalk, seed, shares);
+        ) = _transferDeposits(depositTransfers, false);
+        _burn(msg.sender, shares);
+        emit Withdraws(msg.sender, depositTransfers, bdv, stalk, seed, shares);
         return shares;
     }
 
-    function withdraws(DepositTransfer[] calldata _deposits)
-        public
-        virtual
+    function _deposits(DepositTransfer[] memory depositTransfers)
+        internal
         returns (uint256)
     {
         (
@@ -127,14 +180,14 @@ contract FDBDV is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             uint256 bdv,
             uint256 stalk,
             uint256 seed
-        ) = _transferDeposits(_deposits, false);
-        _burn(msg.sender, shares);
-        emit Withdraws(msg.sender, _deposits, bdv, stalk, seed, shares);
+        ) = _transferDeposits(depositTransfers, true);
+        _mint(msg.sender, shares);
+        emit Deposits(msg.sender, depositTransfers, bdv, stalk, seed, shares);
         return shares;
     }
 
     function _transferDeposits(
-        DepositTransfer[] memory _deposits,
+        DepositTransfer[] memory depositTransfers,
         bool isDeposit
     )
         internal
@@ -145,14 +198,15 @@ contract FDBDV is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             uint256 seed
         )
     {
+        IBeanstalk(BEANSTALK_ADDRESS).update(address(this));
         uint256 balanceOfSeedBefore = IBeanstalk(BEANSTALK_ADDRESS)
             .balanceOfSeeds(address(this));
         uint256 balanceOfStalkBefore = IBeanstalk(BEANSTALK_ADDRESS)
             .balanceOfStalk(address(this));
 
-        for (uint256 i; i < _deposits.length; ++i) {
+        for (uint256 i; i < depositTransfers.length; ++i) {
             require(
-                whitelisted[_deposits[i].token],
+                whitelisted[depositTransfers[i].token],
                 "Token is not whitelisted"
             );
 
@@ -160,9 +214,9 @@ contract FDBDV is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
                 .transferDeposits(
                     isDeposit ? msg.sender : address(this),
                     isDeposit ? address(this) : msg.sender,
-                    _deposits[i].token,
-                    _deposits[i].seasons,
-                    _deposits[i].amounts
+                    depositTransfers[i].token,
+                    depositTransfers[i].seasons,
+                    depositTransfers[i].amounts
                 );
             for (uint256 j; j < bdvs.length; ++j) {
                 bdv += bdvs[j];
@@ -188,49 +242,53 @@ contract FDBDV is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         if (supply == 0) {
             shares = stalk;
         } else if (isDeposit) {
-            shares = supply.mulDiv(
-                min(
-                    underlyingBdvAfter.mulDiv(
-                        PRECISION,
-                        underlyingBdv,
-                        MathUpgradeable.Rounding.Down
+            shares =
+                supply.mulDiv(
+                    min(
+                        underlyingBdvAfter.mulDiv(
+                            PRECISION,
+                            underlyingBdv,
+                            MathUpgradeable.Rounding.Down
+                        ),
+                        balanceOfStalkAfter.mulDiv(
+                            PRECISION,
+                            balanceOfStalkBefore,
+                            MathUpgradeable.Rounding.Down
+                        ),
+                        balanceOfSeedAfter.mulDiv(
+                            PRECISION,
+                            balanceOfSeedBefore,
+                            MathUpgradeable.Rounding.Down
+                        )
                     ),
-                    balanceOfStalkAfter.mulDiv(
-                        PRECISION,
-                        balanceOfStalkBefore,
-                        MathUpgradeable.Rounding.Down
-                    ),
-                    balanceOfSeedAfter.mulDiv(
-                        PRECISION,
-                        balanceOfSeedBefore,
-                        MathUpgradeable.Rounding.Down
-                    )
-                ),
-                PRECISION,
-                MathUpgradeable.Rounding.Down
-            );
+                    PRECISION,
+                    MathUpgradeable.Rounding.Down
+                ) -
+                supply;
         } else {
-            shares = supply.mulDiv(
-                max(
-                    underlyingBdvAfter.mulDiv(
-                        PRECISION,
-                        underlyingBdv,
-                        MathUpgradeable.Rounding.Up
+            shares =
+                supply -
+                supply.mulDiv(
+                    max(
+                        underlyingBdvAfter.mulDiv(
+                            PRECISION,
+                            underlyingBdv,
+                            MathUpgradeable.Rounding.Up
+                        ),
+                        balanceOfStalkAfter.mulDiv(
+                            PRECISION,
+                            balanceOfStalkBefore,
+                            MathUpgradeable.Rounding.Up
+                        ),
+                        balanceOfSeedAfter.mulDiv(
+                            PRECISION,
+                            balanceOfSeedBefore,
+                            MathUpgradeable.Rounding.Up
+                        )
                     ),
-                    balanceOfStalkAfter.mulDiv(
-                        PRECISION,
-                        balanceOfStalkBefore,
-                        MathUpgradeable.Rounding.Up
-                    ),
-                    balanceOfSeedAfter.mulDiv(
-                        PRECISION,
-                        balanceOfSeedBefore,
-                        MathUpgradeable.Rounding.Up
-                    )
-                ),
-                PRECISION,
-                MathUpgradeable.Rounding.Up
-            );
+                    PRECISION,
+                    MathUpgradeable.Rounding.Up
+                );
         }
 
         underlyingBdv = underlyingBdvAfter;

@@ -8,6 +8,8 @@ pragma experimental ABIEncoderV2;
 import "./TokenSilo.sol";
 import "../../ReentrancyGuard.sol";
 import "../../../libraries/Token/LibTransfer.sol";
+import "../../../libraries/Silo/LibSiloPermit.sol";
+import "../../../C.sol";
 
 /*
  * @author Publius
@@ -142,6 +144,48 @@ contract SiloFacet is TokenSilo {
         require(currentAllowance >= subtractedValue, "Silo: decreased allowance below zero");
         _approveDeposit(msg.sender, spender, token, currentAllowance.sub(subtractedValue));
         return true;
+    }
+
+    function permitDeposits(
+        address owner,
+        address spender,
+        address[] calldata tokens,
+        uint256[] calldata values,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external payable nonReentrant {
+        LibSiloPermit.checkDepositsPermit(owner, spender, tokens, values, deadline, v, r, s);
+        for (uint256 i; i < tokens.length; ++i) {
+            _approveDeposit(owner, spender, tokens[i], values[i]);
+        }
+    }
+
+    function permitDeposit(
+        address owner,
+        address spender,
+        address token,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external payable nonReentrant {
+        LibSiloPermit.checkDepositPermit(owner, spender, token, value, deadline, v, r, s);
+        _approveDeposit(owner, spender, token, value);
+    }
+
+    function depositPermitNonces(address owner) public view virtual returns (uint256) {
+        return LibSiloPermit.nonces(owner);
+    }
+
+     /**
+     * @dev See {IERC20Permit-DOMAIN_SEPARATOR}.
+     */
+    // solhint-disable-next-line func-name-mixedcase
+    function depositPermitDomainSeparator() external view returns (bytes32) {
+        return LibSiloPermit._domainSeparatorV4();
     }
 
     /*

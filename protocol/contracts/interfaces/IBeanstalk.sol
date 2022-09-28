@@ -28,5 +28,26 @@ interface IBeanstalk {
         uint32[] calldata seasons,
         uint256[] calldata amounts
     ) external payable returns (uint256[] memory bdvs);
+    function permitDeposit(
+        address owner,
+        address spender,
+        address token,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external payable;
+    function permitDeposits(
+        address owner,
+        address spender,
+        address[] calldata tokens,
+        uint256[] calldata values,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external payable;
     function plant() external payable returns (uint256);
+    function update(address account) external payable;
 }
