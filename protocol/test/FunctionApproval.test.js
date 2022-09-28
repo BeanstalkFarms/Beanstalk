@@ -18,6 +18,7 @@ describe('FunctionApproval', function () {
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
+    this.delegate = await ethers.getContractAt('DelegateFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('Bean', BEAN);
 
     await this.season.lightSunrise();
