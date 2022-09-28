@@ -16,6 +16,12 @@ import "../LibAppStorage.sol";
  **/
 library LibSiloPermit {
 
+    bytes32 private constant DEPOSIT_PERMIT_HASHED_NAME = keccak256(bytes("SiloDeposit"));
+    bytes32 private constant DEPOSIT_PERMIT_HASHED_VERSION = keccak256(bytes("1"));
+    bytes32 private constant DEPOSIT_PERMIT_EIP712_TYPE_HASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+    bytes32 private constant DEPOSIT_PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,address token,uint256 value,uint256 nonce,uint256 deadline)");
+    bytes32 private constant DEPOSITS_PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,address[] tokens,uint256[] values,uint256 nonce,uint256 deadline)");
+
     function checkDepositPermit(
         address owner,
         address spender,
@@ -27,7 +33,7 @@ library LibSiloPermit {
         bytes32 s
     ) internal {
         require(block.timestamp <= deadline, "Silo: permit expired deadline");
-        bytes32 structHash = keccak256(abi.encode(C.getDepositPermitTypeHash(), owner, spender, token, value, _useNonce(owner), deadline));
+        bytes32 structHash = keccak256(abi.encode(DEPOSIT_PERMIT_TYPEHASH, owner, spender, token, value, _useNonce(owner), deadline));
         bytes32 hash = _hashTypedDataV4(structHash);
         address signer = ECDSA.recover(hash, v, r, s);
         require(signer == owner, "Silo: permit invalid signature");
@@ -44,7 +50,7 @@ library LibSiloPermit {
         bytes32 s
     ) internal {
         require(block.timestamp <= deadline, "Silo: permit expired deadline");
-        bytes32 structHash = keccak256(abi.encode(C.getDepositsPermitTypeHash(), owner, spender, keccak256(abi.encodePacked(tokens)), keccak256(abi.encodePacked(values)), _useNonce(owner), deadline));
+        bytes32 structHash = keccak256(abi.encode(DEPOSITS_PERMIT_TYPEHASH, owner, spender, keccak256(abi.encodePacked(tokens)), keccak256(abi.encodePacked(values)), _useNonce(owner), deadline));
         bytes32 hash = _hashTypedDataV4(structHash);
         address signer = ECDSA.recover(hash, v, r, s);
         require(signer == owner, "Silo: permit invalid signature");
@@ -65,7 +71,7 @@ library LibSiloPermit {
      * @dev Returns the domain separator for the current chain.
      */
     function _domainSeparatorV4() internal view returns (bytes32) {
-        return _buildDomainSeparator(C.getDepositPermitEIP712TypeHash(), C.getDepositPermitHashedName(), C.getDepositPermitHashedVersion());
+        return _buildDomainSeparator(DEPOSIT_PERMIT_EIP712_TYPE_HASH, DEPOSIT_PERMIT_HASHED_NAME, DEPOSIT_PERMIT_HASHED_VERSION);
     }
 
     function _buildDomainSeparator(bytes32 typeHash, bytes32 name, bytes32 version) internal view returns (bytes32) {

@@ -76,13 +76,6 @@ library C {
     address private constant UNRIPE_CURVE_BEAN_LUSD_POOL = 0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D;
     address private constant UNRIPE_CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
 
-    // Silo Deposit Permit
-    bytes32 private constant DEPOSIT_PERMIT_HASHED_NAME = keccak256(bytes("SiloDeposit"));
-    bytes32 private constant DEPOSIT_PERMIT_HASHED_VERSION = keccak256(bytes("1"));
-    bytes32 private constant DEPOSIT_PERMIT_EIP712_TYPE_HASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
-    bytes32 private constant DEPOSIT_PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,address token,uint256 value,uint256 nonce,uint256 deadline)");
-    bytes32 private constant DEPOSITS_PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,address[] tokens,uint256[] values,uint256 nonce,uint256 deadline)");
-
     /**
      * Getters
     **/
@@ -257,29 +250,5 @@ library C {
 
     function soilCoefficientLow() internal pure returns (uint256) {
         return SOIL_COEFFICIENT_LOW;
-    }
-
-    // function getDepositPermitCachedDomainSeparator() internal pure returns (bytes32) {
-    //     return DEPOSIT_PERMIT_CACHED_DOMAIN_SEPARATOR;
-    // }
-
-    function getDepositPermitEIP712TypeHash() internal pure returns (bytes32) {
-        return DEPOSIT_PERMIT_EIP712_TYPE_HASH;
-    }
-
-    function getDepositPermitHashedName() internal pure returns (bytes32) {
-        return DEPOSIT_PERMIT_HASHED_NAME;
-    }
-
-    function getDepositPermitHashedVersion() internal pure returns (bytes32) {
-        return DEPOSIT_PERMIT_HASHED_VERSION;
-    }
-
-    function getDepositPermitTypeHash() internal pure returns (bytes32) {
-        return DEPOSIT_PERMIT_TYPEHASH;
-    }
-
-    function getDepositsPermitTypeHash() internal pure returns (bytes32) {
-        return DEPOSITS_PERMIT_TYPEHASH;
     }
 }
