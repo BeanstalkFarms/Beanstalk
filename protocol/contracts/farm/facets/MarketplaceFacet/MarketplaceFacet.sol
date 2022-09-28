@@ -5,15 +5,17 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "./Order.sol";
+import "../../Nonce.sol";
 
 /**
  * @author Beanjoyer
  * @title Pod Marketplace v2
  **/
- 
-contract MarketplaceFacet is Order {
-    
+contract MarketplaceFacet is Order, Nonce {
+    using SafeMath for uint256;
+
     /*
     * Pod Listing
     */
@@ -239,4 +241,59 @@ contract MarketplaceFacet is Order {
         emit PodApproval(msg.sender, spender, amount);
     }
 
+    /// @notice permitPods sets pods allowance using permit
+    /// @param account account address
+    /// @param spender spender address
+    /// @param amount allowance amount
+    /// @param deadline permit deadline
+    /// @param signature user's permit signature
+    function permitPods(
+        address account,
+        address spender,
+        uint256 amount,
+        uint256 deadline,
+        bytes memory signature
+    ) external {
+        require(spender != address(0), "Field: Pod Approve to 0 address.");
+        require(block.timestamp <= deadline, "Field: expired deadline");
+
+        uint256 chainId;
+        assembly {
+            chainId := chainid()
+        }
+        bytes32 eip712DomainHash = keccak256(
+            abi.encode(
+                keccak256(
+                    "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+                ),
+                keccak256(bytes("Beanstalk")),
+                keccak256(bytes("1")),
+                chainId,
+                address(this)
+            )
+        );
+
+        bytes32 hashStruct = keccak256(
+            abi.encode(
+                keccak256(
+                    "PermitPods(address account,address spender,uint256 amount,uint256 nonce,uint256 deadline)"
+                ),
+                account,
+                spender,
+                amount,
+                _useNonce(account),
+                deadline
+            )
+        );
+
+        bytes32 hash = keccak256(
+            abi.encodePacked("\x19\x01", eip712DomainHash, hashStruct)
+        );
+
+        address signer = ECDSA.recover(hash, signature);
+        require(signer == account, "Field: invalid signature");
+
+        setAllowancePods(account, spender, amount);
+        emit PodApproval(account, spender, amount);
+    }
 }

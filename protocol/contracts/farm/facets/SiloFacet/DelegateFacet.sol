@@ -6,14 +6,14 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
-import "../../ReentrancyGuard.sol";
+import "../../Nonce.sol";
 import "../../../libraries/Silo/LibDelegate.sol";
 
 /*
  * @author Publius
  * @title DelegateFacet handles delegating authority for Beanstalk functions.
  */
-contract DelegateFacet is ReentrancyGuard {
+contract DelegateFacet is Nonce {
     /**
      * @notice approveDelegate sets approval value for delegation
      * @param selector function selector
@@ -28,6 +28,13 @@ contract DelegateFacet is ReentrancyGuard {
         _approveDelegate(msg.sender, selector, delegatee, approval);
     }
 
+    /// @notice permitDelegate sets function approval using permit
+    /// @param account account address
+    /// @param selector function selector
+    /// @param delegatee contract/EOA address to delegate to
+    /// @param approval approval value bytes32 of uint256 or bool
+    /// @param deadline permit deadline
+    /// @param signature user's permit signature
     function permitDelegate(
         address account,
         bytes4 selector,
@@ -47,7 +54,7 @@ contract DelegateFacet is ReentrancyGuard {
                 keccak256(
                     "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
                 ),
-                keccak256(bytes("DelegateFacet")),
+                keccak256(bytes("Beanstalk")),
                 keccak256(bytes("1")),
                 chainId,
                 address(this)
@@ -57,7 +64,7 @@ contract DelegateFacet is ReentrancyGuard {
         bytes32 hashStruct = keccak256(
             abi.encode(
                 keccak256(
-                    "Permit(address account,bytes4 selector,address delegatee,bytes32 approval,uint256 nonce,uint256 deadline)"
+                    "PermitDelegate(address account,bytes4 selector,address delegatee,bytes32 approval,uint256 nonce,uint256 deadline)"
                 ),
                 account,
                 selector,
@@ -97,13 +104,6 @@ contract DelegateFacet is ReentrancyGuard {
         allowance = LibDelegate.getAllowance(account, selector, delegatee);
     }
 
-    /**
-     * @dev returns current nonce for user
-     */
-    function nonces(address account) public view returns (uint256) {
-        return s.a[account].nonce;
-    }
-
     //////////////////////////////////////
     ///////// INTERNAL FUNCTIONS /////////
     //////////////////////////////////////
@@ -121,12 +121,5 @@ contract DelegateFacet is ReentrancyGuard {
         bytes32 approval
     ) internal {
         LibDelegate.setAllowance(account, selector, delegatee, approval);
-    }
-
-    /**
-     * @dev "Consume a nonce": return the current value and increment.
-     */
-    function _useNonce(address account) internal returns (uint256 current) {
-        current = s.a[account].nonce++;
     }
 }
