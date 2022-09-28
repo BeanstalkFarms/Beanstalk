@@ -33,10 +33,10 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
   }
 
   if (mock && reset) {
-    // await network.provider.request({
-    //   method: "hardhat_reset",
-    //   params: [],
-    // });
+    await network.provider.request({
+      method: "hardhat_reset",
+      params: [],
+    });
   }
 
   const accounts = await ethers.getSigners()
@@ -187,14 +187,17 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     ],
     owner: account,
     args: args,
-    verbose: verbose
+    verbose: verbose,
+    impersonate: mock && reset
   });
 
   tx = beanstalkDiamond.deployTransaction
-  receipt = await tx.wait()
-  if (verbose) console.log('Beanstalk diamond deploy gas used: ' + strDisplay(receipt.gasUsed))
-  if (verbose) console.log('Beanstalk diamond cut gas used: ' + strDisplay(diamondCut.gasUsed))
-  totalGasUsed = totalGasUsed.add(receipt.gasUsed).add(diamondCut.gasUsed)
+  if (!!tx) {
+    receipt = await tx.wait()
+    if (verbose) console.log('Beanstalk diamond deploy gas used: ' + strDisplay(receipt.gasUsed))
+    if (verbose) console.log('Beanstalk diamond cut gas used: ' + strDisplay(diamondCut.gasUsed))
+    totalGasUsed = totalGasUsed.add(receipt.gasUsed).add(diamondCut.gasUsed)
+  }
 
   if (verbose) {
     console.log("--");
