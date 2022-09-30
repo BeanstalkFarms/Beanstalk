@@ -155,7 +155,7 @@ contract SiloFacet is TokenSilo {
         bytes32 r,
         bytes32 s
     ) external payable nonReentrant {
-        LibSiloPermit.checkDepositsPermit(owner, spender, tokens, values, deadline, v, r, s);
+        LibSiloPermit.permits(owner, spender, tokens, values, deadline, v, r, s);
         for (uint256 i; i < tokens.length; ++i) {
             _approveDeposit(owner, spender, tokens[i], values[i]);
         }
@@ -171,7 +171,7 @@ contract SiloFacet is TokenSilo {
         bytes32 r,
         bytes32 s
     ) external payable nonReentrant {
-        LibSiloPermit.checkDepositPermit(owner, spender, token, value, deadline, v, r, s);
+        LibSiloPermit.permit(owner, spender, token, value, deadline, v, r, s);
         _approveDeposit(owner, spender, token, value);
     }
 
