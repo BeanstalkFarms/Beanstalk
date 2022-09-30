@@ -1,7 +1,12 @@
+/**
+ * SPDX-License-Identifier: MIT
+ **/
+
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts-upgradeable-8/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable-8/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable-8/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable-8/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable-8/utils/math/MathUpgradeable.sol";
@@ -103,6 +108,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
 
     function depositsWithTokenPermit(
         DepositTransfer[] calldata depositTransfers,
+        To mode,
         address token,
         uint256 value,
         uint256 deadline,
@@ -121,11 +127,12 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             s
         );
 
-        return _deposits(depositTransfers);
+        return _deposits(depositTransfers, mode);
     }
 
     function depositsWithTokensPermit(
         DepositTransfer[] calldata depositTransfers,
+        To mode,
         address[] memory tokens,
         uint256[] memory values,
         uint256 deadline,
@@ -144,20 +151,50 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             s
         );
 
-        return _deposits(depositTransfers);
+        return _deposits(depositTransfers, mode);
     }
 
-    function deposits(DepositTransfer[] calldata depositTransfers)
+    function deposits(DepositTransfer[] calldata depositTransfers, To mode)
         public
         virtual
         returns (uint256)
     {
-        return _deposits(depositTransfers);
+        return _deposits(depositTransfers, mode);
     }
 
-    function withdraws(DepositTransfer[] calldata depositTransfers)
+    function withdrawsWithFarmBalancePermit(
+        DepositTransfer[] calldata depositTransfers,
+        From mode,
+        address token,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public virtual returns (uint256) {
+        IBeanstalk(BEANSTALK_ADDRESS).permitToken(
+            msg.sender,
+            address(this),
+            token,
+            value,
+            deadline,
+            v,
+            r,
+            s
+        );
+        return _withdraws(depositTransfers, mode);
+    }
+
+    function withdraws(DepositTransfer[] calldata depositTransfers, From mode)
         public
         virtual
+        returns (uint256)
+    {
+        return _withdraws(depositTransfers, mode);
+    }
+
+    function _withdraws(DepositTransfer[] memory depositTransfers, From mode)
+        internal
         returns (uint256)
     {
         (
@@ -166,12 +203,27 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             uint256 stalk,
             uint256 seed
         ) = _transferDeposits(depositTransfers, false);
-        _burn(msg.sender, shares);
+
+        // Default mode is EXTERNAL
+        address burnAddress = msg.sender;
+        // Transfer token from beanstalk internal to this contract and burn
+        if (mode != From.EXTERNAL) {
+            burnAddress = address(this);
+            IBeanstalk(BEANSTALK_ADDRESS).transferTokenFrom(
+                this,
+                msg.sender,
+                burnAddress,
+                shares,
+                mode,
+                To.EXTERNAL
+            );
+        }
+        _burn(burnAddress, shares);
         emit Withdraws(msg.sender, depositTransfers, bdv, stalk, seed, shares);
         return shares;
     }
 
-    function _deposits(DepositTransfer[] memory depositTransfers)
+    function _deposits(DepositTransfer[] memory depositTransfers, To mode)
         internal
         returns (uint256)
     {
@@ -181,7 +233,22 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             uint256 stalk,
             uint256 seed
         ) = _transferDeposits(depositTransfers, true);
-        _mint(msg.sender, shares);
+
+        // Transfer mint tokens to beanstalk internal balance
+        if (mode == To.INTERNAL) {
+            _mint(address(this), shares);
+            _approve(address(this), BEANSTALK_ADDRESS, shares);
+            IBeanstalk(BEANSTALK_ADDRESS).transferToken(
+                this,
+                msg.sender,
+                shares,
+                From.EXTERNAL,
+                To.INTERNAL
+            );
+        } else if (mode == To.EXTERNAL) {
+            _mint(msg.sender, shares);
+        }
+
         emit Deposits(msg.sender, depositTransfers, bdv, stalk, seed, shares);
         return shares;
     }
