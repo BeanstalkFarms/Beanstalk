@@ -10,6 +10,15 @@ async function getDomain() {
   };
 }
 
+async function getTokenDomain() {
+  return {
+    name: "Token",
+    version: "1",
+    chainId: 1,
+    verifyingContract: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5",
+  };
+}
+
 const EIP712Domain = [
   { name: "name", type: "string" },
   { name: "version", type: "string" },
@@ -80,6 +89,27 @@ const createTypedDepositTokenPermitData = (message, domain) => {
   return typedData;
 };
 
+const createTypedTokenPermitData = (message, domain) => {
+  const typedData = {
+    types: {
+      EIP712Domain,
+      Permit: [
+        { name: "owner", type: "address" },
+        { name: "spender", type: "address" },
+        { name: "token", type: "address" },
+        { name: "value", type: "uint256" },
+        { name: "nonce", type: "uint256" },
+        { name: "deadline", type: "uint256" },
+      ],
+    },
+    primaryType: "Permit",
+    domain,
+    message,
+  };
+
+  return typedData;
+};
+
 async function signSiloDepositTokensPermit(
   provider,
   owner,
@@ -130,5 +160,31 @@ async function signSiloDepositTokenPermit(
   return { ...sig, ...message };
 }
 
+async function signTokenPermit(
+  provider,
+  owner,
+  spender,
+  token,
+  value,
+  nonce,
+  deadline,
+) {
+  const message = {
+    owner,
+    spender,
+    token,
+    value,
+    nonce,
+    deadline: deadline || MAX_INT,
+  };
+
+  const domain = await getTokenDomain();
+  const typedData = createTypedTokenPermitData(message, domain);
+  const sig = await signWithEthers(provider, owner, typedData);
+
+  return { ...sig, ...message };
+}
+
 exports.signSiloDepositTokenPermit = signSiloDepositTokenPermit;
+exports.signTokenPermit = signTokenPermit;
 exports.signSiloDepositTokensPermit = signSiloDepositTokensPermit;
