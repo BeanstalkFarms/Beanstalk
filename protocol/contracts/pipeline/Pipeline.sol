@@ -6,17 +6,16 @@ import "../interfaces/IPipeline.sol";
 import "../libraries/LibFunction.sol";
 
 contract Pipeline is IPipeline {
-
     function pipe(Pipe calldata p)
         external
         payable
         override
         returns (bytes memory result)
     {
-        result = _pipe(p);
+        result = _pipe(p[i].target, p[i].data, 0);
     }
 
-    function pipeMulti(Pipe[] calldata pipes)
+    function multiPipe(Pipe[] calldata pipes)
         external
         payable
         override
@@ -28,59 +27,65 @@ contract Pipeline is IPipeline {
         }
     }
 
-    function pipeEther(EtherPipe calldata etherPipe)
+    function dynamicPipe(Pipe[] calldata ps, uint256 packedType)
+        external
+        payable
+        override
+        returns (bytes[] memory results)
+    {
+        results = new bytes[](pipes.length);
+        results[0] = _pipe(pipes[0]); // Assume first Pipe is a static Pipe
+        for (uint256 i = 1; i < pipes.length; i++) {
+            results[i] = LibFunction.isDynamic(packedTypes, i)
+                ? _dynamicPipe(ps[i].target, ps[i].data, 0, results[i - 1])
+                : _pipe(pipes[i], 0);
+        }
+    }
+
+    function payablePipe(PayablePipe calldata p)
         external
         payable
         override
         returns (bytes memory result)
     {
-        result = _pipeEther(etherPipe);
+        result = _pipe(p[i].target, p[i].data, p[i].value);
     }
 
-    function pipeReturn(Pipe calldata p, ReturnPipe calldata returnPipe)
+    function payableDynamicPipe(PayablePipe[] calldata ps, uint256 packedType)
         external
         payable
         override
         returns (bytes[] memory results)
     {
-        results = new bytes[](2);
-        results[0] = _pipe(p);
-        results[1] = _pipeReturn(returnPipe, results[0]);
+        results = new bytes[](pipes.length);
+        results[0] = _pipe(pipes[0]); // Assume first Pipe is a static Pipe
+        for (uint256 i = 1; i < pipes.length; i++) {
+            results[i] = LibFunction.isDynamic(packedTypes, i)
+                ? _dynamicPipe(ps[i].target, ps[i].data, ps[i].value, results[i - 1])
+                : _pipe(ps[i].target, ps[i].data, ps[i].value);
+        }
     }
 
-    function pipeEtherReturn(EtherPipe calldata etherPipe, EtherReturnPipe calldata etherReturnPipe)
-        external
-        payable
-        override
-        returns (bytes[] memory results)
-    {
-        results = new bytes[](2);
-        results[0] = _pipeEther(etherPipe);
-        results[1] = _pipeEtherReturn(etherReturnPipe, results[0]);
-    }
-
-
-    function _pipe(Pipe calldata p) internal returns (bytes memory result) {
+    function _pipe(
+        address target,
+        bytes calldata data,
+        uint256 value
+    ) internal returns (bytes memory result) {
         bool success;
-        (success, result) = p.target.call(p.data);
+        (success, result) = target.call{value: value}(data);
         LibFunction.checkReturn(success, result);
     }
 
-    function _pipeEther(EtherPipe calldata p) internal returns (bytes memory result) {
+    function _dynamicPipe(
+        address target,
+        bytes calldata data,
+        uint256 value,
+        bytes memory injectData
+    ) internal returns (bytes memory result) {
         bool success;
-        (success, result) = p.target.call{value: p.value}(p.data);
-        LibFunction.checkReturn(success, result);
-    }
-
-    function _pipeReturn(ReturnPipe calldata p, bytes memory returnData) internal returns (bytes memory result) {
-        bool success;
-        (success, result) = p.target.call(abi.encode(p.preData, returnData, p.postData));
-        LibFunction.checkReturn(success, result);
-    }
-
-    function _pipeEtherReturn(EtherReturnPipe calldata p, bytes memory returnData) internal returns (bytes memory result) {
-        bool success;
-        (success, result) = p.target.call{value: p.value}(abi.encode(p.preData, returnData, p.postData));
+        (success, result) = target.call{value: value}(
+            LibFunction.injectCallData(data, injectData)
+        );
         LibFunction.checkReturn(success, result);
     }
 }

@@ -23,11 +23,25 @@ library LibFunction {
         }
     }
 
-    function facetForSelector(bytes4 selector) internal view returns (address facet) {
+    function facetForSelector(bytes4 selector)
+        internal
+        view
+        returns (address facet)
+    {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
-        facet = ds
-            .selectorToFacetAndPosition[selector]
-            .facetAddress;
+        facet = ds.selectorToFacetAndPosition[selector].facetAddress;
         require(facet != address(0), "Diamond: Function does not exist");
+    }
+
+    function injectCallData(
+        bytes calldata data,
+        bytes memory injectData
+    ) internal pure returns (bytes memory injectedData) {
+        (bytes memory preData, bytes memory postData) = abi.decode(data, (bytes, bytes));
+        injectedData = abi.encode(preData, injectData, postData);
+    }
+
+    function readIfDynamic(uint256 packedTypes, uint256 i) private returns (bool dynamic) {
+        dynamic = packedTypes & (1 << i) > 0;
     }
 }

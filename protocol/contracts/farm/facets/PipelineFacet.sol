@@ -6,46 +6,62 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../../interfaces/IPipeline.sol";
+import {LibFunction} from "../../libraries/LibFunction.sol";
 
-contract PipelineFacet {
+contract PipelineFacet is IPipeline {
     address private constant PIPELINE = address(0);
 
-    function pipe(IPipeline.Pipe calldata p)
+    function pipe(Pipe calldata p)
         external
         payable
+        override
         returns (bytes memory result) {
-            result = IPipeline(PIPELINE).pipe(p);
+            IPipeline(PIPELINE).pipe(p);
         }
 
-    function pipeMulti(IPipeline.Pipe[] calldata pipes)
+    function multiPipe(Pipe[] calldata pipes)
         external
         payable
-        returns (bytes[] memory results) 
-    {
-        results = IPipeline(PIPELINE).pipeMulti(pipes);
-    }
+        override
+        returns (bytes[] memory results) {
+            IPipeline(PIPELINE).multiPipe(pipes);
+        }
 
-    function pipeEther(IPipeline.EtherPipe calldata etherPipe)
+    function dynamicPipe(Pipe calldata p, DynamicPipe calldata dynamicPipe)
         external
         payable
-        returns (bytes memory result)
-    {
-        result = IPipeline(PIPELINE).pipeEther{value: etherPipe.value}(etherPipe);
-    }
+        override
+        returns (bytes[] memory results) {
+            IPipeline(PIPELINE).dynamicPipe(p, dynamicPipe);
+        }
 
-    function pipeReturn(IPipeline.Pipe calldata p, IPipeline.ReturnPipe calldata returnPipe)
+    function dynamicMultiPipe(Pipe calldata p, DynamicPipe[] calldata dynamicPipes)
         external
         payable
-        returns (bytes[] memory results)
-    {
-        results = IPipeline(PIPELINE).pipeReturn(p, returnPipe);
-    }
+        override
+        returns (bytes[] memory results) {
+            IPipeline(PIPELINE).dynamicMultiPipe(p, dynamicPipes);
+        }
 
-    function pipeEtherReturn(IPipeline.EtherPipe calldata etherPipe, IPipeline.EtherReturnPipe calldata etherReturnPipe)
+    function payablePipe(PayablePipe calldata payablePipe)
         external
         payable
-        returns (bytes[] memory results)
-    {
-        results = IPipeline(PIPELINE).pipeEtherReturn{value: etherPipe.value}(etherPipe, etherReturnPipe);
+        override
+        returns (bytes memory result) {
+            IPipeline(PIPELINE).payablePipe(payablePipe);
+        }
+
+    function dynamicPayablePipe(PayablePipe calldata payablePipe, DynamicPayablePipe calldata dynamicPayablePipe)
+        external
+        payable
+        override
+        returns (bytes[] memory results) {
+            IPipeline(PIPELINE).dynamicPayablePipe(payablePipe, dynamicPayablePipe);
+        }
+
+    function readPipe(Pipe calldata p) external view returns (bytes memory result) {
+        bool success;
+        (success, result) = p.target.staticcall(p.data);
+        LibFunction.checkReturn(success, result);
     }
 }
