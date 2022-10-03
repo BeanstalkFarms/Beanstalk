@@ -6,60 +6,52 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../../interfaces/IPipeline.sol";
-import {LibFunction} from "../../libraries/LibFunction.sol";
+import "../../libraries/LibFunction.sol";
+import "../../libraries/Token/LibEth.sol";
 
-contract PipelineFacet is IPipeline {
-    address private constant PIPELINE = address(0);
+contract PipelineFacet {
+    address private constant PIPELINE =
+        0xc5a5C42992dECbae36851359345FE25997F5C42d;
 
     function pipe(Pipe calldata p)
         external
         payable
-        override
-        returns (bytes memory result) {
-            IPipeline(PIPELINE).pipe(p);
-        }
+        returns (bytes memory result)
+    {
+        result = IPipeline(PIPELINE).pipe(p);
+    }
 
     function multiPipe(Pipe[] calldata pipes)
         external
         payable
-        override
-        returns (bytes[] memory results) {
-            IPipeline(PIPELINE).multiPipe(pipes);
-        }
+        returns (bytes[] memory results)
+    {
+        results = IPipeline(PIPELINE).multiPipe(pipes);
+    }
 
-    function dynamicPipe(Pipe calldata p, DynamicPipe calldata dynamicPipe)
+    function advancedPipe(AdvancedPipe[] calldata pipes, uint256 value)
         external
         payable
-        override
-        returns (bytes[] memory results) {
-            IPipeline(PIPELINE).dynamicPipe(p, dynamicPipe);
-        }
+        returns (bytes[] memory results)
+    {
+        results = IPipeline(PIPELINE).advancedPipe{value: value}(pipes);
+        LibEth.refundEth();
+    }
 
-    function dynamicMultiPipe(Pipe calldata p, DynamicPipe[] calldata dynamicPipes)
+    function etherPipe(Pipe calldata p, uint256 value)
         external
         payable
-        override
-        returns (bytes[] memory results) {
-            IPipeline(PIPELINE).dynamicMultiPipe(p, dynamicPipes);
-        }
+        returns (bytes memory result)
+    {
+        result = IPipeline(PIPELINE).pipe{value: value}(p);
+        LibEth.refundEth();
+    }
 
-    function payablePipe(PayablePipe calldata payablePipe)
+    function readPipe(Pipe calldata p)
         external
-        payable
-        override
-        returns (bytes memory result) {
-            IPipeline(PIPELINE).payablePipe(payablePipe);
-        }
-
-    function dynamicPayablePipe(PayablePipe calldata payablePipe, DynamicPayablePipe calldata dynamicPayablePipe)
-        external
-        payable
-        override
-        returns (bytes[] memory results) {
-            IPipeline(PIPELINE).dynamicPayablePipe(payablePipe, dynamicPayablePipe);
-        }
-
-    function readPipe(Pipe calldata p) external view returns (bytes memory result) {
+        view
+        returns (bytes memory result)
+    {
         bool success;
         (success, result) = p.target.staticcall(p.data);
         LibFunction.checkReturn(success, result);

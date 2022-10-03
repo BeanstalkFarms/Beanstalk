@@ -17,27 +17,12 @@ struct Pipe {
     bytes data; // The callData including the function selector
 }
 
-// DynamicPipe: A Pipe capable of injecting calldata dynamically into the function call
+// AdvancedPipe: A Pipe capable of perform advanced function calls including using a non-zero value, and injecting returning value data
 // calldata should be split into preData and postData at the location that calldata injection is desired
-struct DynamicPipe {
+struct AdvancedPipe {
     address target; // The contract address to call
-    bytes preData; // The calldata to prepend the injected calldata
-    bytes postData; // the calldata to append to the end of the injected calldata
-}
-
-// PayablePipe: A basic Pipe that supports sending Ether.
-struct PayablePipe {
-    address target; // The contract address to call
-    bytes data; // The callData including the function selector
-    uint256 value; // The Ether value to include in the tranasaction
-}
-
-// DynamicPayablePipe: A payable version of DynamicPipe
-struct DynamicPayablePipe {
-    address target; // The contract address to call
-    bytes preData; // The calldata to prepend the injected calldata
-    bytes postData; // the calldata to append to the end of the injected calldata
-    uint256 value; // The Ether value to include in the tranasaction
+    bytes callData; // The callData including the function selector
+    bytes pipeData;
 }
 
 interface IPipeline {
@@ -52,23 +37,9 @@ interface IPipeline {
         payable
         returns (bytes[] memory results);
 
-    function dynamicPipe(Pipe calldata p, DynamicPipe calldata dynamicPipe)
+    function advancedPipe(AdvancedPipe[] calldata pipes)
         external
         payable
         returns (bytes[] memory results);
 
-    function dynamicMultiPipe(Pipe calldata p, DynamicPipe[] calldata dynamicPipes)
-        external
-        payable
-        returns (bytes[] memory results);
-
-    function payablePipe(PayablePipe calldata payablePipe)
-        external
-        payable
-        returns (bytes memory result);
-
-    function dynamicPayablePipe(PayablePipe calldata payablePipe, DynamicPayablePipe calldata dynamicPayablePipe)
-        external
-        payable
-        returns (bytes[] memory results);
 }

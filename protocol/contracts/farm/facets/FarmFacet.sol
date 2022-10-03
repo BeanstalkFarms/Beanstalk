@@ -14,9 +14,9 @@ import {LibFunction} from "../../libraries/LibFunction.sol";
  * @title Farmfacet - Users call any function in Beanstalk
  **/
 
- struct DynamicData {
-    bytes pre;
-    bytes post;
+ struct AdvancedData {
+    bytes callData;
+    bytes farmData;
  }
 
 contract FarmFacet {
@@ -42,48 +42,47 @@ contract FarmFacet {
         }
     }
 
-    // Calls 1 farm function and inputs the return value into the second one.
-    function dynamicFarm(
-        bytes calldata data,
-        uint256 packedTypes
+    function advancedFarm(
+        AdvancedData[] calldata data
     ) external payable returns (bytes[] memory results) {
-        results = new bytes[](data);
-        results[0] = _farm(data);
-        results[1] = _dynamicFarm(abi.encode(preData1, results[0], dynamicData));
+        results = new bytes[](data.length);
+        for (uint256 i = 0; i < data.length; ++i) {
+            results[i] = _advancedFarm(data[i], results);
+        }
     }
 
-    function dynamicFarm(bytes calldata data, DynamicData[] calldata dynamicData)
-        external
-        payable
-        returns (bytes[] memory results)
-    {
-        results = new bytes[](dynamicData.length + 1);
-        results[0] = _farm(data);
-        for (uint256 i = 1; i < dynamicData.length; ++i) {
-            results[i] = _dynamicFarm(
-                abi.encode(data[i].pre, results[i - 1], dynamicData[i].post)
-            );
+    function _advancedFarm(
+        AdvancedData calldata d,
+        bytes[] memory returnData
+    ) internal returns (bytes memory result) {
+        byte pipeType = d.farmData[0];
+        if (pipeType == 0x00) {
+            result = _farm(d.callData);
+        } else if (pipeType == 0x01) {
+            (, bytes32 copyParams) = abi.decode(d.farmData, (uint256, bytes32));
+            result = _farmMem(LibFunction.pasteBytes(returnData, d.callData, copyParams));
+        } else if (pipeType == 0x02) {
+            (, bytes32[] memory copyParams) = abi.decode(d.farmData, (uint256, bytes32[]));
+            bytes memory callData = d.callData;
+            for (uint i; i < copyParams.length; i++)
+                callData = LibFunction.pasteBytes(returnData, callData, copyParams[i]);
+            result = _farmMem(callData);
+        }
+        else {
+            revert("Farm: Type not supported");
         }
     }
 
     // Farm function using calldata
     function _farm(bytes calldata data) private returns (bytes memory result) {
-        bytes4 selector;
-        bool success;
-        assembly {
-            selector := calldataload(data.offset)
-        }
+        bytes4 selector; bool success;
+        assembly { selector := calldataload(data.offset) }
         address facet = LibFunction.facetForSelector(selector);
         (success, result) = facet.delegatecall(data);
         LibFunction.checkReturn(success, result);
     }
 
-    // Farm function using memory
-    function _dynamicFarm(
-        DynamicData calldata d,
-        bytes memory dynamic
-    ) private returns (bytes memory result) {
-        bytes memory data = LibFunction.injectCallData(d.pre, dynamic, d.post);
+    function _farmMem(bytes memory data) private returns (bytes memory result) {
         bool success;
         bytes4 selector = abi.decode(data, (bytes4));
         address facet = LibFunction.facetForSelector(selector);
