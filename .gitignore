@@ -14,3 +14,4 @@ archived
 cache/
 out/
 coverage_data/
+protocol/remappings.txt
