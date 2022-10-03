@@ -10,6 +10,7 @@ import "../../ReentrancyGuard.sol";
 import "../../../libraries/Token/LibTransfer.sol";
 import "../../../libraries/Silo/LibSiloPermit.sol";
 import "../../../libraries/Silo/LibDelegate.sol";
+import "hardhat/console.sol";
 
 /*
  * @author Publius
@@ -197,7 +198,6 @@ contract SiloFacet is TokenSilo {
      */
     function plantDelegated(address account)
         external
-        payable
         returns (uint256 beans, uint256 allowance)
     {
         allowance = LibDelegate.getAllowance(
@@ -205,10 +205,10 @@ contract SiloFacet is TokenSilo {
             PLANT_DELEGATED_SELECTOR,
             msg.sender
         );
-        if (allowance == 0) revert("DelegateFacet: unauthorized");
+        if (allowance == 0) revert("Silo: unauthorized");
 
         beans = _plant(account);
-        if (allowance < beans) revert("DelegateFacet: not enough allowance");
+        if (allowance < beans) revert("Silo: not enough allowance");
         allowance -= beans;
 
         LibDelegate.spendAllowance(
