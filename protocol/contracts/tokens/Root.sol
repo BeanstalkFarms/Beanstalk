@@ -23,7 +23,7 @@ struct DepositTransfer {
 contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     using MathUpgradeable for uint256;
 
-    event Deposits(
+    event Mint(
         address indexed account,
         DepositTransfer[] deposits,
         uint256 bdv,
@@ -32,7 +32,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         uint256 shares
     );
 
-    event Withdraws(
+    event Redeem(
         address indexed account,
         DepositTransfer[] deposits,
         uint256 bdv,
@@ -83,6 +83,34 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         }
     }
 
+    function convertLambdaToLambda(address token, uint32 season) public {
+        _convertLambdaToLambda(token, season);
+    }
+
+    function convertLambdasToLambdas(address[] calldata tokens, uint32[] calldata seasons) public {
+        for (uint256 i; i < tokens.length; ++i) {
+            _convertLambdaToLambda(tokens[i], seasons[i]);
+        }
+    }
+
+    function _convertLambdaToLambda(address token, uint32 season) internal {
+        (uint256 amount,) = IBeanstalk(BEANSTALK_ADDRESS).getDeposit(address(this), token, season);
+        uint32[] memory seasons = new uint32[](1);
+        seasons[0] = season;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+        (,,,uint256 fromBdv, uint256 toBdv) = IBeanstalk(BEANSTALK_ADDRESS).convert(
+            abi.encode(ConvertKind.LAMBDA_LAMBDA, amount, token),
+            seasons,
+            amounts
+        );
+        underlyingBdv += toBdv - fromBdv;
+    }
+
+    function bdvPerRoot() public view returns (uint256) {
+        return (underlyingBdv * PRECISION) / totalSupply();
+    }
+
     function earn() public {
         uint256 beans = IBeanstalk(BEANSTALK_ADDRESS).plant();
         underlyingBdv += beans;
@@ -106,7 +134,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         return MathUpgradeable.max(num1, num3);
     }
 
-    function depositsWithTokenPermit(
+    function mintWithTokenPermit(
         DepositTransfer[] calldata depositTransfers,
         To mode,
         address token,
@@ -127,10 +155,10 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             s
         );
 
-        return _deposits(depositTransfers, mode);
+        return _transferAndMint(depositTransfers, mode);
     }
 
-    function depositsWithTokensPermit(
+    function mintWithTokensPermit(
         DepositTransfer[] calldata depositTransfers,
         To mode,
         address[] memory tokens,
@@ -151,18 +179,18 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             s
         );
 
-        return _deposits(depositTransfers, mode);
+        return _transferAndMint(depositTransfers, mode);
     }
 
-    function deposits(DepositTransfer[] calldata depositTransfers, To mode)
+    function mint(DepositTransfer[] calldata depositTransfers, To mode)
         public
         virtual
         returns (uint256)
     {
-        return _deposits(depositTransfers, mode);
+        return _transferAndMint(depositTransfers, mode);
     }
 
-    function withdrawsWithFarmBalancePermit(
+    function redeemWithFarmBalancePermit(
         DepositTransfer[] calldata depositTransfers,
         From mode,
         address token,
@@ -182,21 +210,21 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             r,
             s
         );
-        return _withdraws(depositTransfers, mode);
+        return _transferAndRedeem(depositTransfers, mode);
     }
 
-    function withdraws(DepositTransfer[] calldata depositTransfers, From mode)
+    function redeem(DepositTransfer[] calldata depositTransfers, From mode)
         public
         virtual
         returns (uint256)
     {
-        return _withdraws(depositTransfers, mode);
+        return _transferAndRedeem(depositTransfers, mode);
     }
 
-    function _withdraws(DepositTransfer[] memory depositTransfers, From mode)
-        internal
-        returns (uint256)
-    {
+    function _transferAndRedeem(
+        DepositTransfer[] memory depositTransfers,
+        From mode
+    ) internal returns (uint256) {
         (
             uint256 shares,
             uint256 bdv,
@@ -219,14 +247,14 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             );
         }
         _burn(burnAddress, shares);
-        emit Withdraws(msg.sender, depositTransfers, bdv, stalk, seed, shares);
+        emit Redeem(msg.sender, depositTransfers, bdv, stalk, seed, shares);
         return shares;
     }
 
-    function _deposits(DepositTransfer[] memory depositTransfers, To mode)
-        internal
-        returns (uint256)
-    {
+    function _transferAndMint(
+        DepositTransfer[] memory depositTransfers,
+        To mode
+    ) internal returns (uint256) {
         (
             uint256 shares,
             uint256 bdv,
@@ -249,7 +277,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             _mint(msg.sender, shares);
         }
 
-        emit Deposits(msg.sender, depositTransfers, bdv, stalk, seed, shares);
+        emit Mint(msg.sender, depositTransfers, bdv, stalk, seed, shares);
         return shares;
     }
 
