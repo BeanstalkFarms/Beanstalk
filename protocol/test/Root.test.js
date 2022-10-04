@@ -20,6 +20,7 @@ const {
   UNRIPE_LP,
   UNRIPE_BEAN,
   THREE_CURVE,
+  STABLE_FACTORY,
 } = require("./utils/constants");
 const { to18, to6, toStalk, toBean } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
@@ -221,7 +222,7 @@ describe("Root", function () {
         .connect(user)
         .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-      this.result = await this.rootToken.connect(user).deposits(
+      this.result = await this.rootToken.connect(user).mint(
         [
           {
             token: this.siloToken.address,
@@ -253,8 +254,100 @@ describe("Root", function () {
     });
   });
 
-  describe("withdraw", async function () {
-    describe("withdraws", async function () {
+  describe("convert lambda to lambda", async function () {
+    beforeEach(async function () {
+      await this.silo
+        .connect(user)
+        .approveDeposit(
+          this.rootToken.address,
+          this.siloToken.address,
+          "1000000"
+        );
+
+      await this.rootToken
+        .connect(owner)
+        .addWhitelistToken(this.siloToken.address);
+
+      await this.silo
+        .connect(user)
+        .deposit(this.siloToken.address, "1000", EXTERNAL);
+
+      this.result = await this.rootToken.connect(user).mint(
+        [
+          {
+            token: this.siloToken.address,
+            seasons: ["2"],
+            amounts: ["1000"],
+          },
+        ],
+        EXTERNAL
+      );
+
+      await this.season.fastForward(48);
+      await this.season.siloSunrise(100);
+    });
+
+    describe("reverts", async function () {
+      it("reverts if convert non-deposited season", async function () {
+        await expect(
+          this.rootToken.convertLambdaToLambda(this.siloToken.address, 22)
+        ).to.revertedWith("Convert: BDV or amount is 0.");
+      });
+    });
+
+    describe("single convert p = 1", async function () {
+      it("properly updates underlyingBdv", async function () {
+        await this.rootToken.convertLambdaToLambda(this.siloToken.address, 2);
+        expect(await this.rootToken.underlyingBdv()).to.eq("1000");
+      });
+    });
+
+    describe("single convert", async function () {
+      it("properly updates underlyingBdv", async function () {
+        await this.silo.mockWhitelistToken(
+          this.siloToken.address,
+          this.silo.interface.getSighash("mockBDVIncrease(uint256 amount)"),
+          "10000",
+          "1"
+        );
+        await this.rootToken.convertLambdaToLambda(this.siloToken.address, 2);
+        expect(await this.rootToken.underlyingBdv()).to.eq("1500");
+      });
+    });
+
+    describe("multiple convert", async function () {
+      it("properly updates underlyingBdv", async function () {
+        await this.silo.mockWhitelistToken(
+          this.siloToken.address,
+          this.silo.interface.getSighash("mockBDVIncrease(uint256 amount)"),
+          "10000",
+          "1"
+        );
+        await this.silo
+          .connect(user)
+          .deposit(this.siloToken.address, "1000", EXTERNAL);
+
+        this.result = await this.rootToken.connect(user).mint(
+          [
+            {
+              token: this.siloToken.address,
+              seasons: ["51"],
+              amounts: ["1000"],
+            },
+          ],
+          EXTERNAL
+        );
+        await this.rootToken.convertLambdasToLambdas(
+          [this.siloToken.address],
+          [2, 51]
+        );
+        expect(await this.rootToken.underlyingBdv()).to.eq("3000");
+      });
+    });
+  });
+
+  describe("redeem", async function () {
+    describe("redeem", async function () {
       describe("reverts", async function () {
         beforeEach(async function () {
           await this.silo
@@ -263,7 +356,7 @@ describe("Root", function () {
         });
         it("reverts if token is not whitelisted", async function () {
           await expect(
-            this.rootToken.connect(user).withdraws(
+            this.rootToken.connect(user).redeem(
               [
                 {
                   token: this.siloToken.address,
@@ -276,7 +369,7 @@ describe("Root", function () {
           ).to.revertedWith("Token is not whitelisted");
         });
 
-        it("reverts if contract does not have enough deposit to withdraw", async function () {
+        it("reverts if contract does not have enough deposit to redeem", async function () {
           await this.rootToken
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
@@ -293,7 +386,7 @@ describe("Root", function () {
             nonce
           );
 
-          await this.rootToken.connect(user).depositsWithTokenPermit(
+          await this.rootToken.connect(user).mintWithTokenPermit(
             [
               {
                 token: this.siloToken.address,
@@ -311,7 +404,7 @@ describe("Root", function () {
           );
 
           await expect(
-            this.rootToken.connect(user2).withdraws(
+            this.rootToken.connect(user2).redeem(
               [
                 {
                   token: this.siloToken.address,
@@ -341,7 +434,7 @@ describe("Root", function () {
             nonce
           );
 
-          await this.rootToken.connect(user).depositsWithTokenPermit(
+          await this.rootToken.connect(user).mintWithTokenPermit(
             [
               {
                 token: this.siloToken.address,
@@ -359,7 +452,7 @@ describe("Root", function () {
           );
 
           await expect(
-            this.rootToken.connect(user2).withdraws(
+            this.rootToken.connect(user2).redeem(
               [
                 {
                   token: this.siloToken.address,
@@ -389,7 +482,7 @@ describe("Root", function () {
             nonce
           );
 
-          await this.rootToken.connect(user).depositsWithTokenPermit(
+          await this.rootToken.connect(user).mintWithTokenPermit(
             [
               {
                 token: this.siloToken.address,
@@ -407,7 +500,7 @@ describe("Root", function () {
           );
 
           await expect(
-            this.rootToken.connect(user2).withdraws(
+            this.rootToken.connect(user2).redeem(
               [
                 {
                   token: this.siloToken.address,
@@ -437,7 +530,7 @@ describe("Root", function () {
             nonce
           );
 
-          await this.rootToken.connect(user).depositsWithTokenPermit(
+          await this.rootToken.connect(user).mintWithTokenPermit(
             [
               {
                 token: this.siloToken.address,
@@ -455,7 +548,7 @@ describe("Root", function () {
           );
 
           await expect(
-            this.rootToken.connect(user2).withdraws(
+            this.rootToken.connect(user2).redeem(
               [
                 {
                   token: this.siloToken.address,
@@ -485,7 +578,7 @@ describe("Root", function () {
             nonce
           );
 
-          await this.rootToken.connect(user).depositsWithTokenPermit(
+          await this.rootToken.connect(user).mintWithTokenPermit(
             [
               {
                 token: this.siloToken.address,
@@ -503,7 +596,7 @@ describe("Root", function () {
           );
 
           await expect(
-            this.rootToken.connect(user2).withdraws(
+            this.rootToken.connect(user2).redeem(
               [
                 {
                   token: this.siloToken.address,
@@ -522,7 +615,7 @@ describe("Root", function () {
             .addWhitelistToken(this.siloToken.address);
 
           await expect(
-            this.rootToken.connect(user).withdraws(
+            this.rootToken.connect(user).redeem(
               [
                 {
                   token: this.siloToken.address,
@@ -536,7 +629,7 @@ describe("Root", function () {
         });
       });
 
-      describe("start withdraw", async function () {
+      describe("start redeem", async function () {
         beforeEach(async function () {
           await this.rootToken
             .connect(owner)
@@ -578,11 +671,11 @@ describe("Root", function () {
           );
         });
 
-        describe("empty withdraw no existings deposit", async function () {
+        describe("empty redeem no existings deposit", async function () {
           beforeEach(async function () {
             this.result = await this.rootToken
               .connect(user)
-              .withdraws([], EXTERNAL);
+              .redeem([], EXTERNAL);
           });
 
           it("properly updates the root total balances", async function () {
@@ -608,20 +701,20 @@ describe("Root", function () {
             expect(await this.rootToken.balanceOf(userAddress)).to.eq("0");
           });
 
-          it("emits Withdraws event", async function () {
+          it("emits Redeem event", async function () {
             await expect(this.result)
-              .to.emit(this.rootToken, "Withdraws")
+              .to.emit(this.rootToken, "Redeem")
               .withArgs(user.address, [], "0", "0", "0", "0");
           });
         });
 
-        describe("withdraw original deposit in same season and burn token from internal balance", async function () {
+        describe("redeem original deposit in same season and burn token from internal balance", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.rootToken.connect(user).depositsWithTokenPermit(
+            await this.rootToken.connect(user).mintWithTokenPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -646,7 +739,7 @@ describe("Root", function () {
                 "10000000"
               );
 
-            await this.rootToken.connect(user).withdraws(
+            await this.rootToken.connect(user).redeem(
               [
                 {
                   token: this.siloToken.address,
@@ -689,13 +782,13 @@ describe("Root", function () {
           });
         });
 
-        describe("withdraw original deposit in same season and burn token from internal balance with permit", async function () {
+        describe("redeem original deposit in same season and burn token from internal balance with permit", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.rootToken.connect(user).depositsWithTokenPermit(
+            await this.rootToken.connect(user).mintWithTokenPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -725,7 +818,7 @@ describe("Root", function () {
               nonce
             );
 
-            await this.rootToken.connect(user).withdrawsWithFarmBalancePermit(
+            await this.rootToken.connect(user).redeemWithFarmBalancePermit(
               [
                 {
                   token: this.siloToken.address,
@@ -774,13 +867,13 @@ describe("Root", function () {
           });
         });
 
-        describe("withdraw original deposit in same season", async function () {
+        describe("redeem original deposit in same season", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.rootToken.connect(user).depositsWithTokenPermit(
+            await this.rootToken.connect(user).mintWithTokenPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -797,7 +890,7 @@ describe("Root", function () {
               this.signature.split.s
             );
 
-            await this.rootToken.connect(user).withdraws(
+            await this.rootToken.connect(user).redeem(
               [
                 {
                   token: this.siloToken.address,
@@ -835,13 +928,13 @@ describe("Root", function () {
           });
         });
 
-        describe("withdraw original deposit at later season", async function () {
+        describe("redeem original deposit at later season", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.rootToken.connect(user).depositsWithTokenPermit(
+            await this.rootToken.connect(user).mintWithTokenPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -860,7 +953,7 @@ describe("Root", function () {
 
             await this.season.fastForward(10);
 
-            await this.rootToken.connect(user).withdraws(
+            await this.rootToken.connect(user).redeem(
               [
                 {
                   token: this.siloToken.address,
@@ -898,13 +991,13 @@ describe("Root", function () {
           });
         });
 
-        describe("2 deposits earliest first withdraw earliest all", async function () {
+        describe("2 mints earliest first redeem earliest all", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.rootToken.connect(user).depositsWithTokenPermit(
+            await this.rootToken.connect(user).mintWithTokenPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -927,7 +1020,7 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.rootToken.connect(user).deposits(
+            await this.rootToken.connect(user).mint(
               [
                 {
                   token: this.siloToken.address,
@@ -938,7 +1031,7 @@ describe("Root", function () {
               EXTERNAL
             );
 
-            await this.rootToken.connect(user).withdraws(
+            await this.rootToken.connect(user).redeem(
               [
                 {
                   token: this.siloToken.address,
@@ -978,13 +1071,13 @@ describe("Root", function () {
           });
         });
 
-        describe("2 deposits earliest first withdraw all", async function () {
+        describe("2 mints earliest first redeem all", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.rootToken.connect(user).depositsWithTokenPermit(
+            await this.rootToken.connect(user).mintWithTokenPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -1007,7 +1100,7 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.rootToken.connect(user).deposits(
+            await this.rootToken.connect(user).mint(
               [
                 {
                   token: this.siloToken.address,
@@ -1018,7 +1111,7 @@ describe("Root", function () {
               EXTERNAL
             );
 
-            await this.rootToken.connect(user).withdraws(
+            await this.rootToken.connect(user).redeem(
               [
                 {
                   token: this.siloToken.address,
@@ -1056,7 +1149,7 @@ describe("Root", function () {
           });
         });
 
-        describe("2 deposits earliest last withdraw earliest all", async function () {
+        describe("2 mints earliest last redeem earliest all", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -1067,7 +1160,7 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.rootToken.connect(user).depositsWithTokenPermit(
+            await this.rootToken.connect(user).mintWithTokenPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -1084,7 +1177,7 @@ describe("Root", function () {
               this.signature.split.s
             );
 
-            await this.rootToken.connect(user).deposits(
+            await this.rootToken.connect(user).mint(
               [
                 {
                   token: this.siloToken.address,
@@ -1095,7 +1188,7 @@ describe("Root", function () {
               EXTERNAL
             );
 
-            await this.rootToken.connect(user).withdraws(
+            await this.rootToken.connect(user).redeem(
               [
                 {
                   token: this.siloToken.address,
@@ -1135,7 +1228,7 @@ describe("Root", function () {
           });
         });
 
-        describe("2 deposits earliest last withdraw all", async function () {
+        describe("2 mints earliest last redeem all", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -1146,7 +1239,7 @@ describe("Root", function () {
             await this.silo
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
-            await this.rootToken.connect(user).depositsWithTokenPermit(
+            await this.rootToken.connect(user).mintWithTokenPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -1163,7 +1256,7 @@ describe("Root", function () {
               this.signature.split.s
             );
 
-            await this.rootToken.connect(user).deposits(
+            await this.rootToken.connect(user).mint(
               [
                 {
                   token: this.siloToken.address,
@@ -1174,7 +1267,7 @@ describe("Root", function () {
               EXTERNAL
             );
 
-            await this.rootToken.connect(user).withdraws(
+            await this.rootToken.connect(user).redeem(
               [
                 {
                   token: this.siloToken.address,
@@ -1215,8 +1308,8 @@ describe("Root", function () {
     });
   });
 
-  describe("deposit", async function () {
-    describe("deposits", async function () {
+  describe("mint", async function () {
+    describe("mints", async function () {
       describe("reverts", async function () {
         beforeEach(async function () {
           await this.silo
@@ -1225,7 +1318,7 @@ describe("Root", function () {
         });
         it("reverts if token is not whitelisted", async function () {
           await expect(
-            this.rootToken.connect(user).deposits(
+            this.rootToken.connect(user).mint(
               [
                 {
                   token: this.siloToken.address,
@@ -1252,7 +1345,7 @@ describe("Root", function () {
             );
 
           await expect(
-            this.rootToken.connect(user).deposits(
+            this.rootToken.connect(user).mint(
               [
                 {
                   token: this.siloToken.address,
@@ -1271,7 +1364,7 @@ describe("Root", function () {
             .addWhitelistToken(this.siloToken.address);
 
           await expect(
-            this.rootToken.connect(user).deposits(
+            this.rootToken.connect(user).mint(
               [
                 {
                   token: this.siloToken.address,
@@ -1290,7 +1383,7 @@ describe("Root", function () {
             .addWhitelistToken(this.siloToken.address);
 
           await expect(
-            this.rootToken.connect(user).deposits(
+            this.rootToken.connect(user).mint(
               [
                 {
                   token: this.siloToken.address,
@@ -1335,15 +1428,13 @@ describe("Root", function () {
             );
         });
 
-        describe("empty deposit", async function () {
+        describe("empty redeem", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            this.result = await this.rootToken
-              .connect(user)
-              .deposits([], EXTERNAL);
+            this.result = await this.rootToken.connect(user).mint([], EXTERNAL);
           });
 
           it("properly updates the root total balances", async function () {
@@ -1371,14 +1462,14 @@ describe("Root", function () {
             expect(await this.rootToken.balanceOf(userAddress)).to.eq("0");
           });
 
-          it("emits Deposits event", async function () {
+          it("emits Mint event", async function () {
             await expect(this.result)
-              .to.emit(this.rootToken, "Deposits")
+              .to.emit(this.rootToken, "Mint")
               .withArgs(user.address, [], "0", "0", "0", "0");
           });
         });
 
-        describe("single deposit with a single season with INTERNAL from mode", async function () {
+        describe("mint with a single season with INTERNAL from mode", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -1391,7 +1482,7 @@ describe("Root", function () {
                 amounts: ["1000"],
               },
             ];
-            this.result = await this.rootToken.connect(user).deposits(
+            this.result = await this.rootToken.connect(user).mint(
               [
                 {
                   token: this.siloToken.address,
@@ -1432,7 +1523,7 @@ describe("Root", function () {
           });
         });
 
-        describe("single deposit with a single season", async function () {
+        describe("mint with a single season", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -1445,7 +1536,7 @@ describe("Root", function () {
                 amounts: ["1000"],
               },
             ];
-            this.result = await this.rootToken.connect(user).deposits(
+            this.result = await this.rootToken.connect(user).mint(
               [
                 {
                   token: this.siloToken.address,
@@ -1483,7 +1574,7 @@ describe("Root", function () {
           });
         });
 
-        describe("single deposit with multiple same season", async function () {
+        describe("mint with multiple same season", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -1498,7 +1589,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .deposits(this.deposits, EXTERNAL);
+              .mint(this.deposits, EXTERNAL);
           });
 
           it("properly updates the total balances", async function () {
@@ -1529,7 +1620,7 @@ describe("Root", function () {
           });
         });
 
-        describe("single deposit with multiple different season", async function () {
+        describe("mint with multiple different season", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -1550,7 +1641,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .deposits(this.deposits, EXTERNAL);
+              .mint(this.deposits, EXTERNAL);
           });
 
           it("properly updates the total balances", async function () {
@@ -1581,7 +1672,7 @@ describe("Root", function () {
           });
         });
 
-        describe("2 users single deposit with same season", async function () {
+        describe("2 users mint with same season", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -1600,7 +1691,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .deposits(this.deposits1, EXTERNAL);
+              .mint(this.deposits1, EXTERNAL);
 
             this.deposits2 = [
               {
@@ -1611,7 +1702,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .deposits(this.deposits2, EXTERNAL);
+              .mint(this.deposits2, EXTERNAL);
           });
 
           it("properly updates the total balances on root", async function () {
@@ -1646,7 +1737,7 @@ describe("Root", function () {
           });
         });
 
-        describe("2 users single deposit with different season earliest first", async function () {
+        describe("2 users mint with different season earliest first", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -1667,7 +1758,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .deposits(this.deposits1, EXTERNAL);
+              .mint(this.deposits1, EXTERNAL);
 
             this.deposits2 = [
               {
@@ -1678,7 +1769,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .deposits(this.deposits2, EXTERNAL);
+              .mint(this.deposits2, EXTERNAL);
           });
 
           it("properly updates the total balances on root", async function () {
@@ -1713,7 +1804,7 @@ describe("Root", function () {
           });
         });
 
-        describe("2 users single deposit with different season earliest last", async function () {
+        describe("2 users mint with different season earliest last", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -1734,7 +1825,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .deposits(this.deposits2, EXTERNAL);
+              .mint(this.deposits2, EXTERNAL);
 
             this.deposits1 = [
               {
@@ -1745,7 +1836,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .deposits(this.deposits1, EXTERNAL);
+              .mint(this.deposits1, EXTERNAL);
           });
 
           it("properly updates the total balances on root", async function () {
@@ -1780,7 +1871,7 @@ describe("Root", function () {
           });
         });
 
-        describe("3 users single deposit with different season earliest last", async function () {
+        describe("3 users mint with different season earliest last", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -1807,7 +1898,7 @@ describe("Root", function () {
             ];
             this.result3 = await this.rootToken
               .connect(user3)
-              .deposits(this.deposits3, EXTERNAL);
+              .mint(this.deposits3, EXTERNAL);
 
             this.deposits2 = [
               {
@@ -1818,7 +1909,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .deposits(this.deposits2, EXTERNAL);
+              .mint(this.deposits2, EXTERNAL);
 
             this.deposits1 = [
               {
@@ -1829,7 +1920,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .deposits(this.deposits1, EXTERNAL);
+              .mint(this.deposits1, EXTERNAL);
           });
 
           it("properly updates the total balances on root", async function () {
@@ -1870,7 +1961,7 @@ describe("Root", function () {
           });
         });
 
-        describe("3 users single deposit with different season earliest first", async function () {
+        describe("3 users mint with different season earliest first", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -1897,7 +1988,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .deposits(this.deposits1, EXTERNAL);
+              .mint(this.deposits1, EXTERNAL);
 
             this.deposits2 = [
               {
@@ -1908,7 +1999,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .deposits(this.deposits2, EXTERNAL);
+              .mint(this.deposits2, EXTERNAL);
 
             this.deposits3 = [
               {
@@ -1919,7 +2010,7 @@ describe("Root", function () {
             ];
             this.result3 = await this.rootToken
               .connect(user3)
-              .deposits(this.deposits3, EXTERNAL);
+              .mint(this.deposits3, EXTERNAL);
           });
 
           it("properly updates the total balances on root", async function () {
@@ -1983,7 +2074,7 @@ describe("Root", function () {
           );
 
           await expect(
-            this.rootToken.connect(user).depositsWithTokenPermit(
+            this.rootToken.connect(user).mintWithTokenPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -2020,7 +2111,7 @@ describe("Root", function () {
           );
 
           await expect(
-            this.rootToken.connect(user).depositsWithTokenPermit(
+            this.rootToken.connect(user).mintWithTokenPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -2057,7 +2148,7 @@ describe("Root", function () {
           );
 
           await expect(
-            this.rootToken.connect(user).depositsWithTokenPermit(
+            this.rootToken.connect(user).mintWithTokenPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -2094,7 +2185,7 @@ describe("Root", function () {
           );
 
           await expect(
-            this.rootToken.connect(user).depositsWithTokenPermit(
+            this.rootToken.connect(user).mintWithTokenPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -2131,7 +2222,7 @@ describe("Root", function () {
           );
 
           await expect(
-            this.rootToken.connect(user).depositsWithTokenPermit(
+            this.rootToken.connect(user).mintWithTokenPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -2170,7 +2261,7 @@ describe("Root", function () {
           );
 
           await expect(
-            this.rootToken.connect(user).depositsWithTokenPermit(
+            this.rootToken.connect(user).mintWithTokenPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -2239,7 +2330,7 @@ describe("Root", function () {
 
             this.result = await this.rootToken
               .connect(user)
-              .depositsWithTokenPermit(
+              .mintWithTokenPermit(
                 [],
                 EXTERNAL,
                 this.signature.token,
@@ -2276,14 +2367,14 @@ describe("Root", function () {
             expect(await this.rootToken.balanceOf(userAddress)).to.eq("0");
           });
 
-          it("emits Deposits event", async function () {
+          it("emits Mint event", async function () {
             await expect(this.result)
-              .to.emit(this.rootToken, "Deposits")
+              .to.emit(this.rootToken, "Mint")
               .withArgs(user.address, [], "0", "0", "0", "0");
           });
         });
 
-        describe("single deposit with a single season", async function () {
+        describe("mint with a single season", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -2298,7 +2389,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .depositsWithTokenPermit(
+              .mintWithTokenPermit(
                 [
                   {
                     token: this.siloToken.address,
@@ -2342,7 +2433,7 @@ describe("Root", function () {
           });
         });
 
-        describe("single deposit with multiple same season", async function () {
+        describe("mint with multiple same season", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -2357,7 +2448,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .depositsWithTokenPermit(
+              .mintWithTokenPermit(
                 this.deposits,
                 EXTERNAL,
                 this.signature.token,
@@ -2397,7 +2488,7 @@ describe("Root", function () {
           });
         });
 
-        describe("single deposit with multiple different season", async function () {
+        describe("mint with multiple different season", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -2418,7 +2509,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .depositsWithTokenPermit(
+              .mintWithTokenPermit(
                 this.deposits,
                 EXTERNAL,
                 this.signature.token,
@@ -2458,7 +2549,7 @@ describe("Root", function () {
           });
         });
 
-        describe("2 users single deposit with same season", async function () {
+        describe("2 users mint with same season", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -2477,7 +2568,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .depositsWithTokenPermit(
+              .mintWithTokenPermit(
                 this.deposits1,
                 EXTERNAL,
                 this.signature.token,
@@ -2497,7 +2588,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .depositsWithTokenPermit(
+              .mintWithTokenPermit(
                 this.deposits2,
                 EXTERNAL,
                 this.signature2.token,
@@ -2541,7 +2632,7 @@ describe("Root", function () {
           });
         });
 
-        describe("2 users single deposit with different season earliest first", async function () {
+        describe("2 users mint with different season earliest first", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -2562,7 +2653,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .depositsWithTokenPermit(
+              .mintWithTokenPermit(
                 this.deposits1,
                 EXTERNAL,
                 this.signature.token,
@@ -2582,7 +2673,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .depositsWithTokenPermit(
+              .mintWithTokenPermit(
                 this.deposits2,
                 EXTERNAL,
                 this.signature2.token,
@@ -2626,7 +2717,7 @@ describe("Root", function () {
           });
         });
 
-        describe("2 users single deposit with different season earliest last", async function () {
+        describe("2 users mint with different season earliest last", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -2647,7 +2738,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .depositsWithTokenPermit(
+              .mintWithTokenPermit(
                 this.deposits2,
                 EXTERNAL,
                 this.signature2.token,
@@ -2666,7 +2757,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .depositsWithTokenPermit(
+              .mintWithTokenPermit(
                 this.deposits1,
                 EXTERNAL,
                 this.signature.token,
@@ -2710,7 +2801,7 @@ describe("Root", function () {
           });
         });
 
-        describe("3 users single deposit with different season earliest last", async function () {
+        describe("3 users mint with different season earliest last", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -2737,7 +2828,7 @@ describe("Root", function () {
             ];
             this.result3 = await this.rootToken
               .connect(user3)
-              .depositsWithTokenPermit(
+              .mintWithTokenPermit(
                 this.deposits3,
                 EXTERNAL,
                 this.signature3.token,
@@ -2757,7 +2848,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .depositsWithTokenPermit(
+              .mintWithTokenPermit(
                 this.deposits2,
                 EXTERNAL,
                 this.signature2.token,
@@ -2777,7 +2868,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .depositsWithTokenPermit(
+              .mintWithTokenPermit(
                 this.deposits1,
                 EXTERNAL,
                 this.signature.token,
@@ -2827,7 +2918,7 @@ describe("Root", function () {
           });
         });
 
-        describe("3 users single deposit with different season earliest first", async function () {
+        describe("3 users mint with different season earliest first", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -2854,7 +2945,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .depositsWithTokenPermit(
+              .mintWithTokenPermit(
                 this.deposits1,
                 EXTERNAL,
                 this.signature.token,
@@ -2874,7 +2965,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .depositsWithTokenPermit(
+              .mintWithTokenPermit(
                 this.deposits2,
                 EXTERNAL,
                 this.signature2.token,
@@ -2894,7 +2985,7 @@ describe("Root", function () {
             ];
             this.result3 = await this.rootToken
               .connect(user3)
-              .depositsWithTokenPermit(
+              .mintWithTokenPermit(
                 this.deposits3,
                 EXTERNAL,
                 this.signature3.token,
@@ -2946,7 +3037,7 @@ describe("Root", function () {
       });
     });
 
-    describe("deposits with tokens permit", async function () {
+    describe("mint with tokens permit", async function () {
       describe("reverts", async function () {
         it("reverts if token is not whitelisted", async function () {
           await this.silo
@@ -2967,7 +3058,7 @@ describe("Root", function () {
           );
 
           await expect(
-            this.rootToken.connect(user).depositsWithTokensPermit(
+            this.rootToken.connect(user).mintWithTokensPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -3007,7 +3098,7 @@ describe("Root", function () {
           );
 
           await expect(
-            this.rootToken.connect(user).depositsWithTokensPermit(
+            this.rootToken.connect(user).mintWithTokensPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -3047,7 +3138,7 @@ describe("Root", function () {
           );
 
           await expect(
-            this.rootToken.connect(user).depositsWithTokensPermit(
+            this.rootToken.connect(user).mintWithTokensPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -3084,7 +3175,7 @@ describe("Root", function () {
           );
 
           await expect(
-            this.rootToken.connect(user).depositsWithTokensPermit(
+            this.rootToken.connect(user).mintWithTokensPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -3121,7 +3212,7 @@ describe("Root", function () {
           );
 
           await expect(
-            this.rootToken.connect(user).depositsWithTokensPermit(
+            this.rootToken.connect(user).mintWithTokensPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -3160,7 +3251,7 @@ describe("Root", function () {
           );
 
           await expect(
-            this.rootToken.connect(user).depositsWithTokensPermit(
+            this.rootToken.connect(user).mintWithTokensPermit(
               [
                 {
                   token: this.siloToken.address,
@@ -3221,7 +3312,7 @@ describe("Root", function () {
           );
         });
 
-        describe("empty deposit", async function () {
+        describe("empty mint", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -3229,7 +3320,7 @@ describe("Root", function () {
 
             this.result = await this.rootToken
               .connect(user)
-              .depositsWithTokensPermit(
+              .mintWithTokensPermit(
                 [],
                 EXTERNAL,
                 this.signature.tokens,
@@ -3266,14 +3357,14 @@ describe("Root", function () {
             expect(await this.rootToken.balanceOf(userAddress)).to.eq("0");
           });
 
-          it("emits Deposits event", async function () {
+          it("emits Mint event", async function () {
             await expect(this.result)
-              .to.emit(this.rootToken, "Deposits")
+              .to.emit(this.rootToken, "Mint")
               .withArgs(user.address, [], "0", "0", "0", "0");
           });
         });
 
-        describe("single deposit with a single season", async function () {
+        describe("mint with a single season", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -3288,7 +3379,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .depositsWithTokensPermit(
+              .mintWithTokensPermit(
                 [
                   {
                     token: this.siloToken.address,
@@ -3315,6 +3406,10 @@ describe("Root", function () {
             ).to.eq("10000000");
           });
 
+          it("properly updates the rootPerBdv", async function () {
+            expect(await this.rootToken.bdvPerRoot()).to.eq(to18("0.0001"));
+          });
+
           it("correctly update total supply", async function () {
             expect(await this.rootToken.totalSupply()).to.be.eq("10000000");
           });
@@ -3332,7 +3427,7 @@ describe("Root", function () {
           });
         });
 
-        describe("single deposit with multiple same season", async function () {
+        describe("mint with multiple same season", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -3347,7 +3442,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .depositsWithTokensPermit(
+              .mintWithTokensPermit(
                 this.deposits,
                 EXTERNAL,
                 this.signature.tokens,
@@ -3366,6 +3461,10 @@ describe("Root", function () {
             expect(
               await this.silo.balanceOfStalk(this.rootToken.address)
             ).to.eq("9000000");
+          });
+
+          it("properly updates the rootPerBdv", async function () {
+            expect(await this.rootToken.bdvPerRoot()).to.eq(to18("0.0001"));
           });
 
           it("correctly update total supply", async function () {
@@ -3387,7 +3486,7 @@ describe("Root", function () {
           });
         });
 
-        describe("single deposit with multiple different season", async function () {
+        describe("mint with multiple different season", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -3408,7 +3507,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .depositsWithTokensPermit(
+              .mintWithTokensPermit(
                 this.deposits,
                 EXTERNAL,
                 this.signature.tokens,
@@ -3448,7 +3547,7 @@ describe("Root", function () {
           });
         });
 
-        describe("2 users single deposit with same season", async function () {
+        describe("2 users mint with same season", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -3467,7 +3566,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .depositsWithTokensPermit(
+              .mintWithTokensPermit(
                 this.deposits1,
                 EXTERNAL,
                 this.signature.tokens,
@@ -3487,7 +3586,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .depositsWithTokensPermit(
+              .mintWithTokensPermit(
                 this.deposits2,
                 EXTERNAL,
                 this.signature2.tokens,
@@ -3506,6 +3605,10 @@ describe("Root", function () {
             expect(
               await this.silo.balanceOfStalk(this.rootToken.address)
             ).to.eq("20000000");
+          });
+
+          it("properly updates the rootPerBdv", async function () {
+            expect(await this.rootToken.bdvPerRoot()).to.eq(to18("0.0001"));
           });
 
           it("correctly update total supply", async function () {
@@ -3531,7 +3634,7 @@ describe("Root", function () {
           });
         });
 
-        describe("2 users single deposit with different season earliest first", async function () {
+        describe("2 users mint with different season earliest first", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -3552,7 +3655,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .depositsWithTokensPermit(
+              .mintWithTokensPermit(
                 this.deposits1,
                 EXTERNAL,
                 this.signature.tokens,
@@ -3572,7 +3675,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .depositsWithTokensPermit(
+              .mintWithTokensPermit(
                 this.deposits2,
                 EXTERNAL,
                 this.signature2.tokens,
@@ -3616,7 +3719,7 @@ describe("Root", function () {
           });
         });
 
-        describe("2 users single deposit with different season earliest last", async function () {
+        describe("2 users mint with different season earliest last", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -3637,7 +3740,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .depositsWithTokensPermit(
+              .mintWithTokensPermit(
                 this.deposits2,
                 EXTERNAL,
                 this.signature2.tokens,
@@ -3656,7 +3759,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .depositsWithTokensPermit(
+              .mintWithTokensPermit(
                 this.deposits1,
                 EXTERNAL,
                 this.signature.tokens,
@@ -3700,7 +3803,7 @@ describe("Root", function () {
           });
         });
 
-        describe("3 users single deposit with different season earliest last", async function () {
+        describe("3 users mint with different season earliest last", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -3727,7 +3830,7 @@ describe("Root", function () {
             ];
             this.result3 = await this.rootToken
               .connect(user3)
-              .depositsWithTokensPermit(
+              .mintWithTokensPermit(
                 this.deposits3,
                 EXTERNAL,
                 this.signature3.tokens,
@@ -3747,7 +3850,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .depositsWithTokensPermit(
+              .mintWithTokensPermit(
                 this.deposits2,
                 EXTERNAL,
                 this.signature2.tokens,
@@ -3767,7 +3870,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .depositsWithTokensPermit(
+              .mintWithTokensPermit(
                 this.deposits1,
                 EXTERNAL,
                 this.signature.tokens,
@@ -3817,7 +3920,7 @@ describe("Root", function () {
           });
         });
 
-        describe("3 users single deposit with different season earliest first", async function () {
+        describe("3 users mint with different season earliest first", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -3844,7 +3947,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .depositsWithTokensPermit(
+              .mintWithTokensPermit(
                 this.deposits1,
                 EXTERNAL,
                 this.signature.tokens,
@@ -3864,7 +3967,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .depositsWithTokensPermit(
+              .mintWithTokensPermit(
                 this.deposits2,
                 EXTERNAL,
                 this.signature2.tokens,
@@ -3884,7 +3987,7 @@ describe("Root", function () {
             ];
             this.result3 = await this.rootToken
               .connect(user3)
-              .depositsWithTokensPermit(
+              .mintWithTokensPermit(
                 this.deposits3,
                 EXTERNAL,
                 this.signature3.tokens,
