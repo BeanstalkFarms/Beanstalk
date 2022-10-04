@@ -5,6 +5,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/drafts/IERC20Permit.sol";
 import "../AppStorage.sol";
 import "../../libraries/Token/LibTransfer.sol";
 import "../../libraries/Token/LibWeth.sol";
@@ -55,6 +56,25 @@ contract TokenFacet {
 
     function unwrapEth(uint256 amount, LibTransfer.From mode) external payable {
         LibWeth.unwrap(amount, mode);
+    }
+
+    /**
+     * Permit
+     */
+
+    /// @notice permitERC20 is wrapper function for permit of ERC20Permit token
+    /// @dev See {IERC20Permit-permit}.
+    function permitERC20(
+        IERC20Permit token,
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public {
+        token.permit(owner, spender, value, deadline, v, r, s);
     }
 
     /**
