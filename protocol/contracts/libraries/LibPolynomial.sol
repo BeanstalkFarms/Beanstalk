@@ -6,14 +6,12 @@ pragma solidity =0.7.6;
  
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import "./LibBytes.sol";
-import "hardhat/console.sol";
  
- 
- /* 
- * @author: Malteasy
- * @title: LibPolynomial
- */
- 
+/* 
+* @author: Malteasy
+* @title: LibPolynomial
+*/
+
 library LibPolynomial { 
 
     using SafeMath for uint256;

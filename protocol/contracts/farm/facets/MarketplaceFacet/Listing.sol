@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import "./PodTransfer.sol";
 import "../../../libraries/Token/LibTransfer.sol";
 import "../../../libraries/LibPolynomial.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Beanjoyer
