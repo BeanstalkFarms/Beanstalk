@@ -30,25 +30,32 @@ contract FieldFacet is ReentrancyGuard {
      * Sow
      **/
 
-    function sow(uint256 amount, LibTransfer.From mode)
+    //note minWeather has precision of 1e6
+    function sow(uint256 amount, uint256 minWeather, LibTransfer.From mode)
         external
         payable
         returns (uint256)
     {
-        return sowWithMin(amount, amount, mode);
+        // maybe instead put this as minWeather = 1? 
+        return sowWithMin(amount, minWeather, amount, mode);
     }
 
     function sowWithMin(
         uint256 amount,
-        uint256 minAmount,
+        uint256 minWeather,
+        uint256 minSoil,
         LibTransfer.From mode
     ) public payable returns (uint256) {
-        uint256 sowAmount = s.f.soil;
+        uint256 sowAmount = totalSoil();
         require(
-            sowAmount >= minAmount && amount >= minAmount && minAmount > 0,
+            sowAmount >= minSoil && amount >= minSoil && minSoil > 0,
             "Field: Sowing below min or 0 pods."
         );
-        if (amount < sowAmount) sowAmount = amount;
+        require(
+            getMorningYield() >= minWeather,
+            "Field: Sowing below min weather."
+        );
+        if (amount < sowAmount) sowAmount = amount; 
         return _sow(sowAmount, mode);
     }
 
@@ -140,6 +147,28 @@ contract FieldFacet is ReentrancyGuard {
     }
 
     function totalSoil() public view returns (uint256) {
-        return s.f.soil;
+        if(s.season.AbovePeg){
+            return s.f.soil.mul(uint256(s.w.yield).add(100).mul(LibDibbler.DECIMALS)).div(getMorningYield().add(100*LibDibbler.DECIMALS));
+        }
+        else{
+            return s.f.soil;
+        }
+    }
+
+
+    //yield now has precision level 1e6 i.e 1% = 1 * 1e6
+    function getMorningYield() public view returns (uint256) {
+        return LibDibbler.morningAuction();
+    }
+    // Peas are the potential pods that can be issued within a season.
+    // totalPeas gives the remaining pods that can be sown within a season, 
+    // totalMaxPeas gives the maximum that can be sown wthin a season
+    function totalMaxPeas() public view returns (uint256){
+        return s.w.startSoil.mul(s.w.yield.add(100).div(100));
+        // peas = soil * weather
+        // peas = 100 * 2 = 200 * 1e6
+    }
+    function totalPeas() public view returns (uint256){
+        return s.f.soil.add(s.f.soil.mul(s.w.yield).div(100));
     }
 }

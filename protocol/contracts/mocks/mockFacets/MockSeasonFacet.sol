@@ -8,6 +8,8 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/SeasonFacet/SeasonFacet.sol";
 import "../MockToken.sol";
+import { console } from "forge-std/console.sol";
+
 
 /**
  * @author Publius
@@ -35,6 +37,7 @@ contract MockSeasonFacet is SeasonFacet {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
         mockStepSilo(amount);
+        console.log("Sunrise called. Current season is:",s.season.current);
     }
 
     function mockStepSilo(uint256 amount) public {
@@ -86,6 +89,7 @@ contract MockSeasonFacet is SeasonFacet {
     function lightSunrise() public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
+        console.log("LightSunrise called. Current season is:",s.season.current);
     }
 
     function fastForward(uint32 _s) public {
@@ -100,6 +104,8 @@ contract MockSeasonFacet is SeasonFacet {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
         s.season.timestamp = block.timestamp;
+        s.season.sunriseBlock = uint32(block.number);
+        console.log("farmSunrise called. Current season is:",s.season.current);
     }
 
     function farmSunrises(uint256 number) public {
@@ -112,6 +118,10 @@ contract MockSeasonFacet is SeasonFacet {
 
     function setYieldE(uint32 number) public {
         s.w.yield = number;
+    }
+
+    function setAbovePegE(bool num) public {
+        s.season.AbovePeg = num;
     }
 
     function setStartSoilE(uint256 number) public {

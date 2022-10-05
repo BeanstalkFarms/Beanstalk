@@ -176,6 +176,8 @@ contract Storage {
         uint256 start; // The timestamp of the Beanstalk deployment rounded down to the nearest hour.
         uint256 period; // The length of each season in Beanstalk.
         uint256 timestamp; // The timestamp of the start of the current Season.
+        uint32 sunriseBlock; // The block of the start of the curren Season.
+        bool AbovePeg; // Boolean indicating whether the previous season was above or below peg.
     }
 
     // Weather stores global level Weather balances.

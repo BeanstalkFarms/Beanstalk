@@ -5,6 +5,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
+import "../../../libraries/Token/LibTransfer.sol";
 import "./Weather.sol";
 import "../../../libraries/LibIncentive.sol";
 
@@ -24,14 +25,15 @@ contract SeasonFacet is Weather {
      **/
 
     /// @notice advances Beanstalk to the next Season.
-    function sunrise() external payable {
+    function sunrise(LibTransfer.To mode) external payable returns (uint256) {
         require(!paused(), "Season: Paused.");
         require(seasonTime() > season(), "Season: Still current Season.");
         stepSeason();
         int256 deltaB = stepOracle();
+        s.season.AbovePeg = deltaB > 0? true : false;
         uint256 caseId = stepWeather(deltaB);
         stepSun(deltaB, caseId);
-        incentivize(msg.sender, C.getAdvanceIncentive());
+        return incentivize(msg.sender, C.getAdvanceIncentive(),mode);
     }
 
     /**
@@ -63,16 +65,21 @@ contract SeasonFacet is Weather {
     function stepSeason() private {
         s.season.timestamp = block.timestamp;
         s.season.current += 1;
+        s.season.sunriseBlock = uint32(block.number);
         emit Sunrise(season());
     }
 
-    function incentivize(address account, uint256 amount) private {
+    function incentivize(address account, uint256 amount, LibTransfer.To _mode) private returns (uint256) {
         uint256 timestamp = block.timestamp.sub(
             s.season.start.add(s.season.period.mul(season()))
         );
         if (timestamp > 300) timestamp = 300;
         uint256 incentive = LibIncentive.fracExp(amount, 100, timestamp, 1);
         C.bean().mint(account, incentive);
+        if(_mode == LibTransfer.To.INTERNAL){
+            LibTransfer.sendToken(C.bean(), incentive, account, _mode);
+        }
         emit Incentivization(account, incentive);
+        return incentive;
     }
 }

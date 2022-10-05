@@ -37,7 +37,7 @@ contract Weather is Sun {
         return s.r;
     }
 
-    function yield() public view returns (uint32) {
+    function maxYield() public view returns (uint32) {
         return s.w.yield;
     }
 
@@ -72,7 +72,7 @@ contract Weather is Sun {
         if (s.w.nextSowTime < type(uint32).max) {
             if (
                 s.w.lastSowTime == type(uint32).max || // Didn't Sow all last Season
-                s.w.nextSowTime < 300 || // Sow'd all instantly this Season
+                s.w.nextSowTime < 600 || // Sow'd all instantly this Season
                 (s.w.lastSowTime > C.getSteadySowTime() &&
                     s.w.nextSowTime < s.w.lastSowTime.sub(C.getSteadySowTime())) // Sow'd all faster
             ) deltaPodDemand = Decimal.from(1e18);
@@ -127,14 +127,14 @@ contract Weather is Sun {
     function changeWeather(uint256 caseId) private {
         int8 change = s.cases[caseId];
         if (change < 0) {
-            if (yield() <= (uint32(-change))) {
-                // if (change < 0 && yield() <= uint32(-change)),
-                // then 0 <= yield() <= type(int8).max because change is an int8.
-                // Thus, downcasting yield() to an int8 will not cause overflow.
-                change = 1 - int8(yield());
+            if (maxYield() <= (uint32(-change))) {
+                // if (change < 0 && maxYield() <= uint32(-change)),
+                // then 0 <= maxYield() <= type(int8).max because change is an int8.
+                // Thus, downcasting maxYield() to an int8 will not cause overflow.
+                change = 1 - int8(maxYield());
                 s.w.yield = 1;
-            } else s.w.yield = yield() - (uint32(-change));
-        } else s.w.yield = yield() + (uint32(change));
+            } else s.w.yield = maxYield() - (uint32(-change));
+        } else s.w.yield = maxYield() + (uint32(change));
 
         emit WeatherChange(s.season.current, caseId, change);
     }
