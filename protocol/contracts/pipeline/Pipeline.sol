@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import "../interfaces/IPipeline.sol";
 import "../libraries/LibFunction.sol";
+import "hardhat/console.sol";
 
 contract Pipeline is IPipeline {
     function pipe(Pipe calldata p)
@@ -62,28 +63,20 @@ contract Pipeline is IPipeline {
         AdvancedPipe calldata p,
         bytes[] memory returnData
     ) internal returns (bytes memory result) {
-        byte pipeType = p.pipeData[0];
         uint256 value = getEthValue(p.pipeData);
-        if (pipeType == 0x00) {
+        // Check if normal Pipe call, if not use advanced call
+        if (p.pipeData[0] == 0x00) {
             result = _pipe(p.target, p.callData, value);
-        } else if (pipeType == 0x01) {
-            (, bytes32 copyParams) = abi.decode(p.pipeData, (uint256, bytes32));
-            bytes memory callData = LibFunction.pasteBytes(returnData, p.callData, copyParams);
-            result = _pipeMem(p.target, callData, value);
-        } else if (pipeType == 0x02) {
-            (, bytes32[] memory copyParams) = abi.decode(p.pipeData, (uint256, bytes32[]));
-            bytes memory callData = p.callData;
-            for (uint i; i < copyParams.length; i++)
-                callData = LibFunction.pasteBytes(returnData, callData, copyParams[i]);
-            result = _pipeMem(p.target, callData, value);
-        }
-        else {
-            revert("Pipeline: Type not supported");
+        } else {
+            result = LibFunction.buildAdvancedCalldata(p.callData, p.pipeData, returnData);
+            result = _pipeMem(p.target, result, value);
         }
     }
 
-    function getEthValue(bytes calldata pipeData) internal pure returns (uint256 value) {
+    function getEthValue(bytes calldata pipeData) internal view returns (uint256 value) {
         if (pipeData[1] == bytes8(0)) return 0;
+        console.log("EthValue");
+        console.logBytes(pipeData);
         assembly { value := calldataload(sub(add(pipeData.offset, pipeData.length), 32))}
     }
 }

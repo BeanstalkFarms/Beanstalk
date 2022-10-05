@@ -6,7 +6,6 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./Listing.sol";
-import "hardhat/console.sol";
 
 
 /**

@@ -7,9 +7,9 @@ pragma experimental ABIEncoderV2;
 
 /**
  * @author Publius
- * @title Mock Test
+ * @title Mock Contract with a getter and setter function
 **/
-contract MockTest {
+contract MockContract {
 
     address account;
 
