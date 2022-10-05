@@ -165,8 +165,6 @@ contract FieldFacet is ReentrancyGuard {
     // totalMaxPeas gives the maximum that can be sown wthin a season
     function totalMaxPeas() public view returns (uint256){
         return s.w.startSoil.mul(s.w.yield.add(100).div(100));
-        // peas = soil * weather
-        // peas = 100 * 2 = 200 * 1e6
     }
     function totalPeas() public view returns (uint256){
         return s.f.soil.add(s.f.soil.mul(s.w.yield).div(100));

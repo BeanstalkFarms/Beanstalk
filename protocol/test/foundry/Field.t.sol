@@ -284,6 +284,133 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     //deletes
     assertEq(marketplace.podListing(0), 0);
   }
+  //MORNING AUCTION STUFF
+  function testMorningAuctionValues(uint256 blockNo,uint32 __weather) public {
+    //verify morning auction value align with manually calculated values
+    uint256 _weather = bound(__weather,1,69420); // arbitary large number
+    season.setYieldE(uint32(_weather));
+    blockNo = bound(blockNo,1,301); // 12s block time = 300 blocks in an season
+    uint256[26] memory ScaleValues;
+    ScaleValues = [
+      uint256(1 * 1e6),
+      27.9415 * 1e6 / 100,
+      40.9336 * 1e6 / 100,
+      49.4912 * 1e6 / 100,
+      55.8830 * 1e6 / 100,
+      60.9868 * 1e6 / 100,
+      65.2355 * 1e6 / 100,
+      68.8751 * 1e6 / 100,
+      72.0584 * 1e6 / 100,
+      74.8873 * 1e6 / 100,
+      77.4327 * 1e6 / 100,
+      79.7465 * 1e6 / 100,
+      81.8672 * 1e6 / 100,
+      83.8245 * 1e6 / 100,
+      85.6420 * 1e6 / 100,
+      87.3382 * 1e6 / 100,
+      88.9283 * 1e6 / 100,
+      90.4248 * 1e6 / 100,
+      91.8382 * 1e6 / 100,
+      93.1771 * 1e6 / 100,
+      94.4490 * 1e6 / 100,
+      95.6603 * 1e6 / 100,
+      96.8166 * 1e6 / 100,
+      97.9226 * 1e6 / 100,
+      98.9825 * 1e6 / 100,
+      100 * 1e6 / 100
+      ];
+  
+      vm.roll(blockNo);
+      blockNo = blockNo > 26? 26 : blockNo;
+      uint256 calcWeather = blockNo == 1 ? ScaleValues[blockNo - 1] : ScaleValues[blockNo - 1] * season.maxYield(); // weather is always 1% if sown at same block as sunrise, irregardless of weather
+      assertApproxEqRel(field.getMorningYield(),calcWeather,0.00001*1e18);
+    }
+  
+  // Various sowing at differnt dutch auctions
+  function testPeas() public {
+    _beforeEachMorningAuction();
+    // sow 25% at delta 5
+    uint256 i = 1;
+    uint256 TotalSoilSown = 0; 
+    console.log("Starting Soil:",field.totalSoil());
+    while(field.totalSoil() > 1 * 1e6){
+      vm.roll(i);
+      console.log("rolling to block",i,",the delta is", i-1);
+      uint256 LastTotalSoil = field.totalSoil();
+      uint256 LastTrueSoil = field.totalTrueSoil();
+      vm.prank(brean);
+      uint256 AmtPodsGained = field.sowWithMin(5 * 1e6, 1 * 1e6, 5 * 1e6, LibTransfer.From.EXTERNAL);
+      TotalSoilSown = TotalSoilSown + 5 * 1e6;
+      assertApproxEqAbs(LastTotalSoil - field.totalSoil(), 5 * 1e6, 1);
+      console.log("TotalSoil Consumed:",LastTotalSoil - field.totalSoil());
+      console.log("TrueSoil Consumed:", LastTrueSoil - field.totalTrueSoil()); 
+      console.log("pods gained:",AmtPodsGained);
+      assertApproxEqAbs(AmtPodsGained, 5 * field.getMorningYield().add(100 * 1e6).div(100),10);
+      console.log("total pods:",field.totalPods());
+      console.log("Soil Left:",field.totalSoil());
+      if(i > 26){
+        assertEq(field.totalSoil(),field.totalTrueSoil());
+      }else{
+        assertGt(field.totalSoil(),field.totalTrueSoil());
+      }
+      i++;
+    }
+
+    // last sowing from 
+    vm.roll(36);
+    console.log("rolling to block",36,",the delta is", 35);
+
+    uint256 LastTotalSoil = field.totalSoil();
+    uint256 LastTrueSoil = field.totalTrueSoil();
+    //dude im going crazy, why does field.totalSoil() not work but putting it as an input works??
+    if(LastTotalSoil != 0){
+      vm.prank(brean);
+      uint256 AmtPodsGained = field.sowWithMin(LastTotalSoil, 1 * 1e6, LastTotalSoil, LibTransfer.From.EXTERNAL);
+      TotalSoilSown = TotalSoilSown + LastTotalSoil;
+      console.log("TotalSoil Consumed:",LastTotalSoil - field.totalSoil());
+      console.log("TrueSoil Consumed:", LastTrueSoil - field.totalTrueSoil());
+      console.log("pods gained:",AmtPodsGained);
+      console.log("total pods:",field.totalPods());
+      console.log("Soil Left:",field.totalSoil());
+    }
+
+    assertApproxEqRel(field.totalMaxPeas(),field.totalUnharvestable(),0.0000001*1e18); //.00001% accuracy
+    assertGt(TotalSoilSown,100 * 1e6); // check the amt of soil sown at the end of the season is greater than the start soil
+
+  }
+  
+  // check that the Soil decreases over 25 blocks, then stays stagent
+  function testSoilDecrementsOverDutch() public {
+    _beforeEachMorningAuction();
+    for(uint i = 1; i < 30; ++i){
+      vm.roll(i);
+      uint256 LastSoil = field.totalSoil();
+      uint256 TrueSoil = field.totalTrueSoil();
+    
+      if(i > 25) { //note the block saved on s.f.sunrise block is 1, so the delta is 25 at blockNo 26
+        assertEq(LastSoil,TrueSoil);
+      }
+      else{
+        assertGt(LastSoil,TrueSoil);
+      }
+    }
+  }
+
+  function testSowAllMorningAuction() public {
+    _beforeEachMorningAuction();
+    uint256 TotalSoil = field.totalSoil();
+    vm.prank(brean);
+    field.sowWithMin(TotalSoil, 1 * 1e6, TotalSoil, LibTransfer.From.EXTERNAL);
+    assertEq(field.totalSoil(),0);
+    assertApproxEqRel(field.totalUnharvestable(), 200 * 1e6,0.0000001*1e18); //.00001% accuracy
+  }
+
+  function _beforeEachMorningAuction() public {
+    season.setYieldE(100);
+    season.setStartSoilE(100*1e6);
+    field.incrementTotalSoilE(100 * 1e6);
+    season.setAbovePegE(true);
+  }
 
   // BeforeEach Helpers
   function _beforeEachFullHarvest() public {
@@ -397,127 +524,5 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     vm.stopPrank();
   } 
 
-  //MORNING AUCTION STUFF
-  function testMorningAuctionValues(uint256 blockNo,uint32 __weather) public {
-    //verify morning auction value align with manually calculated values
-    uint256 _weather = bound(__weather,1,69420); // arbitary large number
-    season.setYieldE(uint32(_weather));
-    blockNo = bound(blockNo,1,301); // 12s block time = 300 blocks in an season
-    uint256[26] memory ScaleValues;
-    ScaleValues = [
-      uint256(1 * 1e6),
-      27.9415 * 1e6 / 100,
-      40.9336 * 1e6 / 100,
-      49.4912 * 1e6 / 100,
-      55.8830 * 1e6 / 100,
-      60.9868 * 1e6 / 100,
-      65.2355 * 1e6 / 100,
-      68.8751 * 1e6 / 100,
-      72.0584 * 1e6 / 100,
-      74.8873 * 1e6 / 100,
-      77.4327 * 1e6 / 100,
-      79.7465 * 1e6 / 100,
-      81.8672 * 1e6 / 100,
-      83.8245 * 1e6 / 100,
-      85.6420 * 1e6 / 100,
-      87.3382 * 1e6 / 100,
-      88.9283 * 1e6 / 100,
-      90.4248 * 1e6 / 100,
-      91.8382 * 1e6 / 100,
-      93.1771 * 1e6 / 100,
-      94.4490 * 1e6 / 100,
-      95.6603 * 1e6 / 100,
-      96.8166 * 1e6 / 100,
-      97.9226 * 1e6 / 100,
-      98.9825 * 1e6 / 100,
-      100 * 1e6 / 100
-      ];
   
-      vm.roll(blockNo);
-      blockNo = blockNo > 26? 26 : blockNo;
-      uint256 calcWeather = blockNo == 1 ? ScaleValues[blockNo - 1] : ScaleValues[blockNo - 1] * season.maxYield(); // weather is always 1% if sown at same block as sunrise, irregardless of weather
-      assertApproxEqRel(field.getMorningYield(),calcWeather,0.00001*1e18);
-    }
-  
-  // above peg testing
-  function testPeas() public {
-    _beforeEachMorningAuction();
-    // sow 25% at delta 5
-    uint256 i = 1;
-    uint256 TotalSoilSown = 0; 
-    console.log("Starting Soil:",field.totalSoil());
-    while(field.totalSoil() > 1 * 1e6){
-      vm.roll(i);
-      console.log("rolling to block",i,",the delta is", i-1);
-      uint256 LastTotalSoil = field.totalSoil();
-      uint256 LastTrueSoil = field.totalTrueSoil();
-      vm.prank(brean);
-      uint256 AmtPodsGained = field.sowWithMin(5 * 1e6, 1 * 1e6, 5 * 1e6, LibTransfer.From.EXTERNAL);
-      TotalSoilSown = TotalSoilSown + 5 * 1e6;
-      console.log("TotalSoil Consumed:",LastTotalSoil - field.totalSoil());
-      console.log("TrueSoil Consumed:", LastTrueSoil - field.totalTrueSoil()); 
-      console.log("pods gained:",AmtPodsGained);
-      console.log("total pods:",field.totalPods());
-      console.log("Soil Left:",field.totalSoil());
-      if(i > 26){
-        assertEq(field.totalSoil(),field.totalTrueSoil());
-      }else{
-        assertGt(field.totalSoil(),field.totalTrueSoil());
-      }
-      i++;
-    }
-    vm.roll(i + 2);
-    console.log("rolling to block",i+2,",the delta is", i+1);
-
-    uint256 LastTotalSoil = field.totalSoil();
-    uint256 LastTrueSoil = field.totalTrueSoil();
-    //dude im going crazy, why does field.totalSoil() not work but putting it as an input works??
-    if(LastTotalSoil != 0){
-      vm.prank(brean);
-      uint256 AmtPodsGained = field.sowWithMin(LastTotalSoil, 1 * 1e6, LastTotalSoil, LibTransfer.From.EXTERNAL);
-      TotalSoilSown = TotalSoilSown + LastTotalSoil;
-      console.log("TotalSoil Consumed:",LastTotalSoil - field.totalSoil());
-      console.log("TrueSoil Consumed:", LastTrueSoil - field.totalTrueSoil());
-      console.log("pods gained:",AmtPodsGained);
-      console.log("total pods:",field.totalPods());
-      console.log("Soil Left:",field.totalSoil());
-    }
-
-    assertApproxEqRel(field.totalMaxPeas(),field.totalUnharvestable(),0.0000001*1e18); //.00001% accuracy
-    assertGt(TotalSoilSown,100 * 1e6); // check the amt of soil sown at the end of the season is greater than the start soil
-
-  }
-  
-  // check that the Soil decreases over 25 blocks, then stays stagent
-  function testSoilDecrementsOverDutch() public {
-    _beforeEachMorningAuction();
-    for(uint i = 1; i < 30; ++i){
-      vm.roll(i);
-      uint256 LastSoil = field.totalSoil();
-      uint256 TrueSoil = field.totalTrueSoil();
-    
-      if(i > 25) { //note the block saved on s.f.sunrise block is 1, so the delta is 25 at blockNo 26
-        assertEq(LastSoil,TrueSoil);
-      }
-      else{
-        assertGt(LastSoil,TrueSoil);
-      }
-    }
-  }
-
-  function testSowAllMorningAuction() public {
-    _beforeEachMorningAuction();
-    uint256 TotalSoil = field.totalSoil();
-    vm.prank(brean);
-    field.sowWithMin(TotalSoil, 1 * 1e6, TotalSoil, LibTransfer.From.EXTERNAL);
-    assertEq(field.totalSoil(),0);
-    assertApproxEqRel(field.totalUnharvestable(), 200 * 1e6,0.0000001*1e18); //.00001% accuracy
-  }
-
-  function _beforeEachMorningAuction() public {
-    season.setYieldE(100);
-    season.setStartSoilE(100*1e6);
-    field.incrementTotalSoilE(100 * 1e6);
-    season.setAbovePegE(true);
-  }
 }

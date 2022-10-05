@@ -23,7 +23,6 @@ interface ResetPool {
 contract MockSeasonFacet is SeasonFacet {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
-    using Decimal for Decimal.D256;
 
 
     event UpdateTWAPs(uint256[2] balances);
