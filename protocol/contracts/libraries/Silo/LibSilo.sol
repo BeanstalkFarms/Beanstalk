@@ -115,7 +115,10 @@ library LibSilo {
     ) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.a[sender].s.seeds = s.a[sender].s.seeds.sub(seeds);
+        emit SeedsBalanceChanged(sender, -int256(seeds));
+
         s.a[recipient].s.seeds = s.a[recipient].s.seeds.add(seeds);
+        emit SeedsBalanceChanged(recipient, int256(seeds));
     }
 
     function transferStalk(
@@ -130,9 +133,11 @@ library LibSilo {
 
         s.a[sender].s.stalk = s.a[sender].s.stalk.sub(stalk);
         s.a[sender].roots = s.a[sender].roots.sub(roots);
+        emit StalkBalanceChanged(sender, -int256(stalk), -int256(roots));
 
         s.a[recipient].s.stalk = s.a[recipient].s.stalk.add(stalk);
         s.a[recipient].roots = s.a[recipient].roots.add(roots);
+        emit StalkBalanceChanged(recipient, int256(stalk), int256(roots));
     }
 
     function stalkReward(uint256 seeds, uint32 seasons)
