@@ -1,3 +1,4 @@
+const fs = require('fs')
 const { BEANSTALK } = require("../test/utils/constants")
 const { impersonateBeanstalk } = require("./impersonate")
 
@@ -482,10 +483,12 @@ async function upgradeWithNewFacets ({
       initFacetAddress: initFacetAddress,
       functionCall: functionCall
     }
-    console.log(JSON.stringify(dc, null, 4))
     const encodedDiamondCut = await diamondCutFacet.interface.encodeFunctionData('diamondCut', Object.values(dc))
+    console.log(JSON.stringify(dc, null, 4))
     console.log("Encoded: -------------------------------------------------------------")
     console.log(encodedDiamondCut)
+    const dcName = `diamondCut-${initFacetName}-${Math.floor(Date.now() / 1000)}-${facetNames.length}-facets.json`
+    await fs.writeFileSync(`./diamondCuts/${dcName}`, JSON.stringify({diamondCut: dc, encoded: encodedDiamondCut }, null, 4));
     return dc
   }
   if (bip) {
