@@ -32,7 +32,7 @@ import {MockToken} from "mocks/MockToken.sol";
 import {MockUnripeFacet} from "mockFacets/MockUnripeFacet.sol";
 // import {WellBuildingFacet} from "@beanstalk/farm/facets/WellBuildingFacet.sol";
 // import {WellFacet} from "@beanstalk/farm/facets/WellFacet.sol";
-// import {WellOracleFacet} from "@beanstalk/farm/facets/WellOracleFacet.sol";
+// import {WellOracleFacet} fom "@beanstalk/farm/facets/WellOracleFacet.sol";
 import {WhitelistFacet} from "facets/WhitelistFacet.sol";
 
 import {BeanstalkPrice} from "@beanstalk/price/BeanstalkPrice.sol";
@@ -41,26 +41,74 @@ import {MockCurveFactory} from "mocks/curve/MockCurveFactory.sol";
 import {MockCurveZap} from "mocks/curve/MockCurveZap.sol";
 import {MockMeta3Curve} from "mocks/curve/MockMeta3Curve.sol";
 import {MockWETH} from "mocks/MockWETH.sol";
+import "farm/AppStorage.sol";
+import "@beanstalk/libraries/Decimal.sol";
+import "@beanstalk/libraries/LibSafeMath32.sol";
+import "@beanstalk/libraries/Token/LibTransfer.sol";
 
 import "@beanstalk/C.sol";
 
-contract DiamondDeployer is Test {
+import "@beanstalk/C.sol";
+
+abstract contract InitDiamondDeployer is Test {
+  
   Utils internal utils;
   address payable[] internal users;
+
+  // the cool dudes
+  address internal deployer;
+  address internal publius;
+  address internal brean;
+  address internal siloChad;
   address internal alice;
+  address internal bob;
+  address internal diamond;
+
+
+  // season mocks
+  MockSeasonFacet internal season;
+  MockSiloFacet internal silo;
+  MockFieldFacet internal field;
+  MockConvertFacet internal convert;
+  MockFundraiserFacet internal fundraiser;
+  MockMarketplaceFacet internal marketplace;
+  MockFertilizerFacet internal fertilizer;
+  TokenFacet internal token;
+
+
+  function setUp() public virtual{
+    diamond = address(deployMock());
+
+    season = MockSeasonFacet(diamond);
+    silo = MockSiloFacet(diamond);
+    field = MockFieldFacet(diamond);
+    convert = MockConvertFacet(diamond);
+    fundraiser = MockFundraiserFacet(diamond);
+    marketplace = MockMarketplaceFacet(diamond);
+    fertilizer = MockFertilizerFacet(diamond);
+    token = TokenFacet(diamond);
+    
+    console.log("Sun: Initialized at season %s", season.season());
+  }
 
   address internal THREE_CRV = address(C.threeCrv());
 
   function deployMock() public returns (Diamond d) {
     // create accounts
     utils = new Utils();
-    users = utils.createUsers(1);
-    address deployer = users[0];
+    users = utils.createUsers(6);
+    deployer = users[0];
+    publius = users[1];
+    brean = users[2];
+    siloChad = users[3];
+    alice = users[4];
+    bob = users[5];
+
     vm.label(deployer, "Deployer");
     console.log("Deployer: %s", deployer);
 
     // create facet cuts
-    IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](14);
+    IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](15);
 
     cut[0] = _cut("BDVFacet", address(new BDVFacet()));
     cut[1] = _cut("CurveFacet", address(new CurveFacet()));
@@ -76,14 +124,17 @@ contract DiamondDeployer is Test {
     cut[11] = _cut("TokenFacet", address(new TokenFacet()));
     cut[12] = _cut("MockUnripeFacet", address(new MockUnripeFacet()));
     cut[13] = _cut("WhitelistFacet", address(new WhitelistFacet()));
-    // cut[13] = _cut("WellBuildingFacet", address(new WellBuildingFacet()));
-    // cut[14] = _cut("WellFacet", address(new WellFacet()));
-    // cut[15] = _cut("WellOracleFacet", address(new WellOracleFacet()));
+    cut[14] = _cut("MockMarketplaceFacet", address(new MockMarketplaceFacet()));
+
+    // cut[14] = _cut("WellBuildingFacet", address(new WellBuildingFacet()));
+    // cut[15] = _cut("WellFacet", address(new WellFacet()));
+    // cut[16] = _cut("WellOracleFacet", address(new WellOracleFacet()));
 
     console.log("Deployed mock facets.");
 
     //impersonate tokens and utilities
     _mockToken("Bean", address(C.bean()));
+    MockToken(address(C.bean())).setDecimals(6);
     _mockToken("USDC", address(C.usdc()));
     _mockPrice();
     _mockCurve(); // only if "reset"
@@ -110,6 +161,20 @@ contract DiamondDeployer is Test {
     console.log("Diamond cut successful.");
   }
 
+  ///////////////////////// Utilities /////////////////////////
+
+  function _abs(int256 v) pure internal returns (uint256) {
+    return uint256(v < 0 ? 0 : v);
+  }
+
+  function _reset(uint256 _snapId) internal returns (uint256) {
+    vm.revertTo(_snapId);
+    return vm.snapshot();
+  }
+
+  //////////////////////// Deploy  /////////////////////////
+
+
   function _etch(string memory _file, address _address) internal returns (address) {
     address codeaddress = deployCode(_file, abi.encode(""));
     vm.etch(_address, at(codeaddress));
@@ -117,7 +182,7 @@ contract DiamondDeployer is Test {
   }
 
   function _mockToken(string memory _tokenName, address _tokenAddress) internal returns (MockToken) {
-    console.log("Mock token: %s @ %s", _tokenName, _tokenAddress);
+   // console.log("Mock token: %s @ %s", _tokenName, _tokenAddress);
     return MockToken(_etch("MockToken.sol", _tokenAddress));
   }
 
@@ -181,7 +246,7 @@ contract DiamondDeployer is Test {
     returns (IDiamondCut.FacetCut memory cut) 
   {
     bytes4[] memory functionSelectors = _generateSelectors(_facetName);
-    console.log("FacetCut: %s @ %s (%s selectors)", _facetName, _facetAddress, functionSelectors.length);
+    //console.log("FacetCut: %s @ %s (%s selectors)", _facetName, _facetAddress, functionSelectors.length);
     cut = IDiamondCut.FacetCut({
       facetAddress: _facetAddress,
       action: IDiamondCut.FacetCutAction.Add,

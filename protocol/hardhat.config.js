@@ -3,6 +3,7 @@ require("@nomiclabs/hardhat-ethers")
 require('hardhat-contract-sizer')
 require("hardhat-gas-reporter")
 require("solidity-coverage")
+require("hardhat-tracer");
 require("@openzeppelin/hardhat-upgrades")
 require('dotenv').config();
 const fs = require('fs')
