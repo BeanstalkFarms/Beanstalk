@@ -2,9 +2,9 @@ const { getBeanstalk, getBean, getBeanMetapool, getUsdc, getBeanstalkAdminContro
 const { impersonateSigner, impersonateBeanstalkOwner } = require("./signer.js");
 const { mintUsdc, mintBeans, mintEth } = require("./mint.js")
 const { readPrune } = require("./read.js")
-const { signSiloDepositTokenPermit, signSiloDepositTokensPermit } = require("./permit.js");
 const { packAdvanced, encodeAdvancedData, decodeAdvancedData } = require('./function.js')
 const { toBN } = require('./helpers.js')
+const { signSiloDepositTokenPermit, signSiloDepositTokensPermit, signTokenPermit } = require("./permit.js");
 
 exports.toBN = toBN
 exports.getBeanstalk = getBeanstalk
@@ -24,3 +24,4 @@ exports.signSiloDepositTokensPermit = signSiloDepositTokensPermit
 exports.packAdvanced = packAdvanced
 exports.encodeAdvancedData = encodeAdvancedData
 exports.decodeAdvancedData = decodeAdvancedData
+exports.signTokenPermit = signTokenPermit

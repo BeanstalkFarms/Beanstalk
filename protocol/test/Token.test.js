@@ -5,6 +5,7 @@ const { signERC2612Permit } = require("eth-permit");
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+const { signTokenPermit } = require('../utils');
 
 describe('Token', function () {
 
@@ -153,6 +154,114 @@ describe('Token', function () {
         })
     })
 
+    describe('transfer from', async function () {
+        describe('External to external', async function () {
+            it('basic', async function () {
+                await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', EXTERNAL, EXTERNAL);
+                checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
+                checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '0', '200', '200')
+            })
+        })
+
+        describe('External to internal', async function () {
+            it('basic', async function () {
+                this.result = await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address,this.user.address,this.recipient.address, '200', EXTERNAL, INTERNAL);
+                checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
+                checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '200', '0', '200')
+                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.recipient.address, this.token.address, '200')
+            })
+        })
+
+        describe('internal to internal', async function () {
+            it('reverts if > than internal, not tolerant', async function () {
+                await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.user.address, '200', EXTERNAL, INTERNAL);
+                await expect(this.tokenFacet.connect(this.user).transferToken(this.token.address, this.recipient.address, '300', INTERNAL, INTERNAL)).to.be.revertedWith("Balance: Insufficient internal balance")
+            })
+            it('internal', async function () {
+                await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.user.address, '200', EXTERNAL, INTERNAL);
+                this.result = await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL, INTERNAL);
+                checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
+                checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '200', '0', '200')
+                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
+                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.recipient.address, this.token.address, '200')
+            })
+
+            it('internal tolerant', async function () {
+                await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.user.address, '200', EXTERNAL, INTERNAL);
+                this.result = await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address,this.recipient.address, '300', INTERNAL_EXTERNAL, INTERNAL);
+                checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '700', '700')
+                checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '300', '0', '300')
+                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
+                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.recipient.address, this.token.address, '300')
+            })
+
+            it('internal + external', async function () {
+                await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.user.address, '200', EXTERNAL, INTERNAL);
+                this.result = await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '250', INTERNAL_TOLERANT, INTERNAL);
+                checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
+                checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '200', '0', '200')
+                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
+                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.recipient.address, this.token.address, '200')
+            })
+
+            it('0 internal tolerant', async function () {
+                this.result = await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address,this.recipient.address, '0', INTERNAL_TOLERANT, INTERNAL);
+                checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '1000', '1000')
+                checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '0', '0', '0')
+            })
+        })
+
+        describe('internal to external', async function () {
+            it('basic', async function () {
+                await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.user.address, '200', EXTERNAL, INTERNAL);
+                this.result = await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL, EXTERNAL);
+                checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
+                checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '0', '200', '200')
+                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
+            })
+        })
+
+        describe('internal to external allowance', async function () {
+            it('reverts if spender has insuffient allowance', async function () {
+                await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
+                await expect(this.tokenFacet.connect(this.user2).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL, EXTERNAL)).to.be.revertedWith("Token: insufficient allowance")
+            })
+            it('reverts if > than internal, not tolerant', async function () {
+                await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
+                await this.tokenFacet.connect(this.user).approveToken(this.user2.address,this.token.address, '500');
+                await expect(this.tokenFacet.connect(this.user2).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '300', INTERNAL, EXTERNAL)).to.be.revertedWith("Balance: Insufficient internal balance")
+            })
+            it('basic', async function () {
+                await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
+                await this.tokenFacet.connect(this.user).approveToken(this.user2.address, this.token.address, '200');
+                this.result = await this.tokenFacet.connect(this.user2).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL, EXTERNAL);
+                checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
+                checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '0', '200', '200')
+                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
+            })
+        })
+
+        describe('internal to external tolerant allowance', async function () {
+            it('reverts if spender has insuffient allowance', async function () {
+                await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
+                await expect(this.tokenFacet.connect(this.user2).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL_EXTERNAL, EXTERNAL)).to.be.revertedWith("Token: insufficient allowance")
+            })
+            it('reverts if > than internal and external', async function () {
+                await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
+                await this.tokenFacet.connect(this.user).approveToken(this.user2.address, this.token.address, '500');
+                await expect(this.tokenFacet.connect(this.user2).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '1200', INTERNAL_EXTERNAL, EXTERNAL)).to.be.revertedWith("ERC20: transfer amount exceeds balance")
+            })
+            it('basic', async function () {
+                await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
+                await this.tokenFacet.connect(this.user).approveToken(this.user2.address, this.token.address, '200');
+                this.result = await this.tokenFacet.connect(this.user2).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '300', INTERNAL_EXTERNAL, EXTERNAL);
+                checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '700', '700')
+                checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '0', '300', '300')
+                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
+            })
+        })
+    })
+
     describe("weth", async function () {
         it('deposit WETH to external', async function () {
             const ethBefore = await ethers.provider.getBalance(this.user.address)
@@ -287,4 +396,121 @@ describe('Token', function () {
             )).to.be.revertedWith("ERC20Permit: expired deadline")
         });
     });
+    describe("Token Approval", async function () {
+        describe("approve allowance", async function () {
+          beforeEach(async function () {
+            this.result = await this.tokenFacet.connect(this.user).approveToken(this.user2.address, this.token.address, '100');
+          })
+    
+          it('properly updates users token allowance', async function () {
+            expect(await this.tokenFacet.tokenAllowance(this.user.address, this.user2.address, this.token.address)).to.be.equal('100')
+          })
+    
+          it('emits TokenApproval event', async function () {
+            await expect(this.tokenFacet.connect(this.user).approveToken(this.user2.address, this.token.address, '100')).to.emit(this.tokenFacet, 'TokenApproval').withArgs(this.user.address ,this.user2.address, this.token.address, '100');
+          });
+        })
+    
+        describe("increase and decrease allowance", async function () {
+          beforeEach(async function () {
+            await this.tokenFacet.connect(this.user).approveToken(this.user2.address, this.token.address, '100');
+          })
+    
+          it('properly increase users token allowance', async function () {
+            await this.tokenFacet.connect(this.user).increaseTokenAllowance(this.user2.address, this.token.address, '100');
+            expect(await this.tokenFacet.tokenAllowance(this.user.address, this.user2.address, this.token.address)).to.be.equal('200')
+          })
+    
+          it('properly decrease users token allowance', async function () {
+            await this.tokenFacet.connect(this.user).decreaseTokenAllowance(this.user2.address, this.token.address, '25')
+            expect(await this.tokenFacet.tokenAllowance(this.user.address, this.user2.address, this.token.address)).to.be.equal('75')
+          })
+    
+          it('decrease users token allowance below zero', async function () {
+            await expect(this.tokenFacet.connect(this.user).decreaseTokenAllowance(this.user2.address, this.token.address, '101')).to.revertedWith('Silo: decreased allowance below zero');
+          })
+    
+          it('emits TokenApproval event on increase', async function () {
+            const result = await this.tokenFacet.connect(this.user).increaseTokenAllowance(this.user2.address, this.token.address, '25');
+            await expect(result).to.emit(this.tokenFacet, 'TokenApproval').withArgs(this.user.address ,this.user2.address, this.token.address, '125');
+          });
+    
+          it('emits TokenApproval event on decrease', async function () {
+            const result = await this.tokenFacet.connect(this.user).decreaseTokenAllowance(this.user2.address, this.token.address, '25');
+            await expect(result).to.emit(this.tokenFacet, 'TokenApproval').withArgs(this.user.address ,this.user2.address, this.token.address, '75');
+          });
+        })
+    
+        describe("Approve Token Permit", async function () {
+          describe('reverts', function () {
+            it('reverts if tokenPermitDomainSeparator is invalid', async function () {
+              expect(await this.tokenFacet.connect(this.user).tokenPermitDomainSeparator()).to.be.equal("0xd74031d32a83121ee5d7c0c14f2aac23c5603bf832f855c2e075ba6d0b20612e");
+            });
+          });
+      
+          describe("single token permit", async function() {
+            describe('reverts', function () {
+              it('reverts if permit expired', async function () {
+                const nonce = await this.tokenFacet.connect(this.user).tokenPermitNonces(this.user.address);
+                const signature = await signTokenPermit(this.user, this.user.address, this.user2.address, this.token.address, '1000', nonce, 1000);
+                await expect(this.tokenFacet.connect(this.user).permitToken(
+                  signature.owner, 
+                  signature.spender, 
+                  signature.token, 
+                  signature.value, 
+                  signature.deadline, 
+                  signature.split.v, 
+                  signature.split.r, 
+                  signature.split.s
+                )).to.be.revertedWith("Token: permit expired deadline")
+              });
+      
+              it('reverts if permit invalid signature', async function () {
+                const nonce = await this.tokenFacet.connect(this.user).tokenPermitNonces(this.user.address);
+                const signature = await signTokenPermit(this.user, this.user.address, this.user2.address, this.token.address, '1000', nonce);
+                await expect(this.tokenFacet.connect(this.user).permitToken(
+                  this.user2.address, 
+                  signature.spender, 
+                  signature.token, 
+                  signature.value, 
+                  signature.deadline, 
+                  signature.split.v, 
+                  signature.split.r, 
+                  signature.split.s
+                )).to.be.revertedWith("Token: permit invalid signature")
+              });
+            });
+      
+            describe("approve permit", async function() {
+              beforeEach(async function () {
+                // Create permit
+                const nonce = await this.tokenFacet.connect(this.user).tokenPermitNonces(this.user.address);
+                const signature = await signTokenPermit(this.user, this.user.address, this.user2.address, this.token.address, '1000', nonce);
+                this.result = await this.tokenFacet.connect(this.user).permitToken(
+                  signature.owner, 
+                  signature.spender, 
+                  signature.token, 
+                  signature.value, 
+                  signature.deadline, 
+                  signature.split.v, 
+                  signature.split.r, 
+                  signature.split.s
+                );
+              });
+      
+              it("properly updates user permit nonce", async function() {
+                expect(await this.tokenFacet.tokenPermitNonces(this.user.address)).to.be.equal('1')
+              });
+      
+              it('properly updates user token allowance', async function () {
+                expect(await this.tokenFacet.tokenAllowance(this.user.address, this.user2.address, this.token.address)).to.be.equal('1000')
+              });
+      
+              it('emits TokenApproval event', async function () {
+                await expect(this.result).to.emit(this.tokenFacet, 'TokenApproval').withArgs(this.user.address ,this.user2.address, this.token.address, '1000');
+              });
+            });
+          });
+        });
+      });
 });
