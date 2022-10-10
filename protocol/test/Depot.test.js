@@ -1,9 +1,9 @@
 const { expect } = require('chai');
 const { defaultAbiCoder } = require('ethers/lib/utils.js');
 const { deploy } = require('../scripts/deploy.js');
-const { deployPipeline, encodeAdvancedData } = require('../scripts/pipeline.js');
+const { deployPipeline } = require('../scripts/pipeline.js');
 const { getAltBeanstalk, getBean, getUsdc } = require('../utils/contracts.js');
-const { toBN } = require('../utils/index.js');
+const { toBN, encodeAdvancedData } = require('../utils/index.js');
 const { impersonateSigner } = require('../utils/signer.js');
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js');
 const { BEAN_3_CURVE, THREE_POOL, THREE_CURVE, STABLE_FACTORY, WETH, BEAN } = require('./utils/constants.js');
@@ -11,22 +11,10 @@ const { to6, to18 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
 let user, user2, owner;
-let userAddress, ownerAddress, user2Address;
-let timestamp;
-
-async function getTimestamp() {
-  return (await ethers.provider.getBlock('latest')).timestamp
-}
-
-async function getTimepassed() {
-  return ethers.BigNumber.from(`${(await getTimestamp()) - timestamp}`)
-}
 
 describe('Pipeline', function () {
   before(async function () {
     [owner, user, user2] = await ethers.getSigners();
-    userAddress = user.address;
-    user2Address = user2.address;
     const contracts = await deploy("Test", false, true);
     this.beanstalk = await getAltBeanstalk(contracts.beanstalkDiamond.address)
     this.bean = await getBean()
@@ -51,9 +39,9 @@ describe('Pipeline', function () {
 
     await this.bean.connect(user).approve(this.beanstalk.address, '100000000000')
     await this.bean.connect(user).approve(this.beanMetapool.address, '100000000000')
-    await this.bean.mint(userAddress, to6('10000'))
+    await this.bean.mint(user.address, to6('10000'))
 
-    await this.threeCurve.mint(userAddress, to18('1000'))
+    await this.threeCurve.mint(user.address, to18('1000'))
     await this.threePool.set_virtual_price(to18('1'))
     await this.threeCurve.connect(user).approve(this.beanMetapool.address, to18('100000000000'))
 
@@ -174,7 +162,7 @@ describe('Pipeline', function () {
         selector = this.bean.interface.encodeFunctionData('balanceOf', [pipeline.address])
         data = encodeAdvancedData(0)
         selector2 = this.bean.interface.encodeFunctionData('transfer', [user2.address, '0'])
-        data2 = encodeAdvancedData(1, value=to6('0'), copyData=[0, 0, 32])
+        data2 = encodeAdvancedData(1, value=to6('0'), copyData=[0, 32, 68])
         await this.beanstalk.connect(user).advancedPipe(
         [
           [this.bean.address, selector, data],
@@ -196,7 +184,7 @@ describe('Pipeline', function () {
         selector2 = this.mockContract.interface.encodeFunctionData('getAccount', [])
         data12 = encodeAdvancedData(0)
         selector3 = this.bean.interface.encodeFunctionData('transfer', [user.address, to6('1')])
-        data3 = encodeAdvancedData(2, value=to6('0'), copyData=[[0, 0, 32], [1,0,0]])
+        data3 = encodeAdvancedData(2, value=to6('0'), copyData=[[0, 32, 68], [1, 32, 36]])
         await this.beanstalk.connect(user).advancedPipe(
         [
           [this.bean.address, selector, data12],

@@ -1,8 +1,8 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js');
-const { deployPipeline, encodeAdvancedData } = require('../scripts/pipeline.js');
+const { deployPipeline, } = require('../scripts/pipeline.js');
 const { getAltBeanstalk, getBean, getUsdc } = require('../utils/contracts.js');
-const { toBN } = require('../utils/index.js');
+const { toBN, encodeAdvancedData } = require('../utils/index.js');
 const { impersonateSigner } = require('../utils/signer.js');
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js');
 const { BEAN_3_CURVE, THREE_POOL, THREE_CURVE, STABLE_FACTORY, WETH, ZERO_ADDRESS } = require('./utils/constants.js');
@@ -78,15 +78,15 @@ describe('Farm Advanced', function () {
       [[selector, data]]
     )).to.be.revertedWith('Function: Advanced Type not supported')
   })
-
+                      
   describe("1 Return data", async function () {
     beforeEach(async function () {
       await this.beanstalk.connect(user).transferToken(this.bean.address, user.address, to6('100'), 0, 1)
       selector = this.beanstalk.interface.encodeFunctionData('getInternalBalance', [user.address, this.bean.address])
       data = encodeAdvancedData(0)
       selector2 = this.beanstalk.interface.encodeFunctionData('transferToken', [this.bean.address, user2.address, to6('0'), 1, 1])
-                                // [read from 0th return value, copy from 0th byte result, paste to 64th byte]
-      data2 = encodeAdvancedData(1, value = to6('0'), [0, 0, 64])
+      // [read from 0th return value, copy from 32nd byte result, paste starting from 100th byte]
+      data2 = encodeAdvancedData(1, value = to6('0'), [0, 32, 100])
       await this.beanstalk.connect(user).advancedFarm([
         [selector, data],
         [selector2, data2]
@@ -107,7 +107,7 @@ describe('Farm Advanced', function () {
       selector2 = this.beanstalk.interface.encodeFunctionData('readPipe', [[this.mockContract.address, pipe]])
       data12 = encodeAdvancedData(0)
       selector3 = this.beanstalk.interface.encodeFunctionData('transferToken', [this.bean.address, ZERO_ADDRESS, to6('0'), 1, 1])
-      data3 = encodeAdvancedData(2, toBN('0'), [[0, 0, 64], [1, 64, 32]])
+      data3 = encodeAdvancedData(2, toBN('0'), [[0, 32, 100], [1, 96, 68]])
       await this.beanstalk.connect(user).advancedFarm([
         [selector, data12],
         [selector2, data12],

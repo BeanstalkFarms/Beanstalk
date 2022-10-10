@@ -6,14 +6,17 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {LibDiamond} from "./LibDiamond.sol";
-import "hardhat/console.sol";
 
 /**
  * @title Lib Function
  **/
 
 library LibFunction {
-    // Checks the return of a any function call for success, if not returns the error returned in `results`
+    /**
+     * @notice Checks The return of a any function call for success, if not returns the error returned in `results`
+     * @param success Whether the corresponding function call succeeded
+     * @param result The return data of the corresponding function call
+    **/
     function checkReturn(bool success, bytes memory result) internal pure {
         if (!success) {
             // Next 5 lines from https://ethereum.stackexchange.com/a/83577
@@ -26,7 +29,12 @@ library LibFunction {
         }
     }
 
-    // Gets the facet address for a given selector. Fails if no set Facet address.
+    /**
+     * @notice Gets the facet address for a given selector
+     * @param selector The function selector to fetch the facet address for
+     * @dev Fails if no set Facet address
+     * @return facet The facet address
+    **/
     function facetForSelector(bytes4 selector)
         internal
         view
@@ -37,19 +45,41 @@ library LibFunction {
         require(facet != address(0), "Diamond: Function does not exist");
     }
 
+    /**
+     * @notice Handles copying data from return data of previous function calls 
+     * into the callData of a subsequent function calls
+     * @param callData The callData bytes of the next function call
+     * @param advancedData The encoded advanced bytes for the advanced function call
+     * Advanced function data takes this form:
+     * [ Type   | padding         | Type data      | Ether Value (only if flag == 1)]
+     * [ 1 byte | 1 byte          | n bytes        | 0 or 32 bytes                  ]
+     * Type: 0x00, 0x01 or 0x002
+        - 0x00: For a basic pipe (Logic in Pipeline.sol and FarmFacet.sol)
+        - 0x01: for a single return value copy
+        - 0x02: for n return value copies
+     * padding: Reserved for Ether value in Pipeline function calls
+     * Type Data: bytes
+     * Currently, two types are supported. Both types depend on the copyParams data struct
+     * Type 1 (0x01): Copy 1 bytes32 from a previous function return value
+     * [ copyParams ]
+     * [ 30 bytes   ]
+     * Note: Should be encoded with ['bytes2', 'uint80', 'uint80', 'uint80']  where the first two bytes are Type and Send Ether Flag if using Pipeline
+     * Type 2 (0x02): Copy n bytes32 from a previous function return value
+     * [ padding  | copyParams[]       ]
+     * [ 30 bytes | (n + 1) * 32 bytes ] 
+     * Copy n bytes32 from previous funtion return values
+     * @param returnData A list of bytes corresponding to return data from previous function calls in the transaction
+     @return data The function call return datas
+    **/
     function buildAdvancedCalldata(
         bytes calldata callData,
         bytes calldata advancedData,
         bytes[] memory returnData
-    ) internal returns (bytes memory data) {
+    ) internal pure returns (bytes memory data) {
         bytes1 typeId = advancedData[0];
         if (typeId == 0x01) {
             bytes32 copyParams = abi.decode(advancedData, (bytes32));
-            data = LibFunction.pasteBytes(
-                returnData,
-                callData,
-                copyParams
-            );
+            data = LibFunction.pasteAdvancedBytes(callData, returnData, copyParams);
         } else if (typeId == 0x02) {
             (, bytes32[] memory copyParams) = abi.decode(
                 advancedData,
@@ -57,47 +87,54 @@ library LibFunction {
             );
             data = callData;
             for (uint256 i; i < copyParams.length; i++)
-                data = LibFunction.pasteBytes(
-                    returnData,
-                    data,
-                    copyParams[i]
-                );
+                data = LibFunction.pasteAdvancedBytes(data, returnData, copyParams[i]);
         } else {
             revert("Function: Advanced Type not supported");
         }
     }
 
-    // pasteBytes copies 32 bytes from a `returnData` to `callData`.
-    // The copy and paste location are encoded via `encodePacked` into a bytes32 slot.
-    // copyParams has the following layout:
-    //   2 bytes |  10 bytes        | 10 bytes  | 10 bytes
-    //  [ other  | returnData index | copyIndex | pasteIndex ]
-    function pasteBytes(
-        bytes[] memory returnData,
+    /**
+     * @notice Copies 32 bytes from returnData into callData determined by copyParams
+     * @param callData The callData bytes of the next function call
+     * @param returnData A list of bytes corresponding to return data from previous function calls in the transaction
+     * @param copyParams Denotes which data should be copied and where it should be pasted
+     * Should be in the following format
+     * [2 bytes | 10 bytes         | 10 bytes  | 10 bytes]
+     * [ N/A    | returnDataIndex  | copyIndex | pasteIndex ]
+     * @return pastedData the calldata for the next function call with bytes pasted from returnData
+     **/
+    function pasteAdvancedBytes(
         bytes memory callData,
+        bytes[] memory returnData,
         bytes32 copyParams
-    ) internal view returns (bytes memory) {
-        // Shift `copyParams` right 22 bytes to insolated index in return data.
-        console.logBytes32(copyParams);
+    ) internal pure returns (bytes memory pastedData) {
+        // Shift `copyParams` right 22 bytes to insolated reduceDataIndex
         bytes memory copyData = returnData[uint256((copyParams << 16) >> 176)];
-        console.log("--------");
-        console.logBytes(copyData);
-        console.logBytes(callData);
+        pastedData = paste32Bytes(
+            copyData,
+            callData,
+            uint256((copyParams << 96) >> 176), // Isolate copyIndex
+            uint256((copyParams << 176) >> 176) // Isolate pasteIndex
+        );
+    }
+
+    /**
+     * @notice Copy 32 Bytes from copyData at copyIndex and paste into pasteData at pasteIndex
+     * @param copyData The data bytes to copy from
+     * @param pasteData The data bytes to paste into
+     * @param copyIndex The index in copyData to copying from
+     * @param pasteIndex The index in pasteData to paste into
+     * @return pastedData The data with the copied with 32 bytes
+    **/
+    function paste32Bytes(
+        bytes memory copyData,
+        bytes memory pasteData,
+        uint256 copyIndex,
+        uint256 pasteIndex
+    ) internal pure returns (bytes memory pastedData) {
         assembly {
-            mstore(
-                // Paste bytes at callData index + 32 + pasteIndex
-                // add 32 because first 32 bytes of `bytes` datatype is length and
-                // next 4 bytes is the function selector. Neither of which we want to overwrite.
-                // pasteIndex is isolated by shifting copyParams 22 bytes left and then 22 bytes right
-                add(add(callData, 36), shr(176, shl(176, copyParams))),
-                // copy bytes from copyBytes + 32 + copyIndex
-                // add 32 because first 32 bytes of `bytes` datatype is length, which we don't want to overwrite
-                // copyIndex is isolated by shifting copyParams 12 bytes left and then 22 bytes right
-                mload(add(add(copyData, 32), shr(176, shl(96, copyParams))))
-            )
+            mstore(add(pasteData, pasteIndex), mload(add(copyData, copyIndex)))
         }
-        console.logBytes(callData);
-        console.log("--------");
-        return callData;
+        pastedData = pasteData;
     }
 }
