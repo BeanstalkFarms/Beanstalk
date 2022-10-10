@@ -12,6 +12,12 @@ const { PUBLIUS, BEAN_3_CURVE } = require('./test/utils/constants.js')
 const { to6 } = require('./test/utils/helpers.js')
 const { replant } = require("./replant/replant.js")
 
+const { emitEvents } = require("./scripts/bip24-event-emission/emit.js") // add at the top of hardhat.config.js 
+
+task('emit', async function () {
+  await emitEvents(mock=false)
+})
+
 task('buyBeans').addParam("amount", "The amount of USDC to buy with").setAction(async(args) => {
   await mintUsdc(PUBLIUS, args.amount)
   const signer = await impersonateSigner(PUBLIUS)
