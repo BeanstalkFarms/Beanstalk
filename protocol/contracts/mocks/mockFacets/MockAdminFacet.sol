@@ -3,6 +3,7 @@
 */
 import "../../C.sol";
 import "../../farm/facets/SeasonFacet/SeasonFacet.sol";
+import "../../libraries/Token/LibTransfer.sol";
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
@@ -36,7 +37,7 @@ contract MockAdminFacet is Sun {
     function forceSunrise() external {
         updateStart();
         SeasonFacet sf = SeasonFacet(address(this));
-        sf.sunrise();
+        sf.sunrise(LibTransfer.To.EXTERNAL);
     }
 
     function rewardSunrise(uint256 amount) public {

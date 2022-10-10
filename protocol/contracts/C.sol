@@ -9,6 +9,8 @@ import "./interfaces/IBean.sol";
 import "./interfaces/ICurve.sol";
 import "./interfaces/IFertilizer.sol";
 import "./interfaces/IProxyAdmin.sol";
+import "./interfaces/IChainlink.sol";
+import "./interfaces/IBlockBasefee.sol";
 import "./libraries/Decimal.sol";
 
 /**
@@ -75,6 +77,11 @@ library C {
 
     address private constant UNRIPE_CURVE_BEAN_LUSD_POOL = 0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D;
     address private constant UNRIPE_CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
+
+    address private constant CHAINLINK_CONTRACT = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
+    // Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
+    // TODO: address TBD, contract not deployed yet.
+    address private constant BASE_FEE_CONTRACT = 0xBA5EFeeba5EfeebA5EfEeBa5efEebA5EFeEBA5eF;
 
     /**
      * Getters
@@ -202,6 +209,14 @@ library C {
 
     function threeCrv() internal pure returns (IERC20) {
         return IERC20(THREE_CRV);
+    }
+
+    function chainlinkContract() internal pure returns (IChainlink) {
+        return IChainlink(CHAINLINK_CONTRACT);
+    }
+
+    function basefeeContract() internal pure returns (IBlockBasefee) {
+        return IBlockBasefee(BASE_FEE_CONTRACT);
     }
 
     function fertilizer() internal pure returns (IFertilizer) {

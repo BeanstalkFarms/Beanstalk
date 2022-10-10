@@ -19,7 +19,9 @@ const {
   CURVE_REGISTRY,
   CURVE_ZAP,
   STABLE_FACTORY,
-  PRICE_DEPLOYER
+  PRICE_DEPLOYER,
+  CHAINLINK_CONTRACT,
+  BASE_FEE_CONTRACT
 } = require('../test/utils/constants');
 const { impersonateSigner, mintEth } = require('../utils');
 
@@ -205,6 +207,24 @@ async function price() {
   await price.deployed()
 }
 
+async function chainlink() {
+  let chainlinkJson = fs.readFileSync(`./artifacts/contracts/mocks/MockChainlink.sol/MockChainlink.json`);
+
+  await network.provider.send("hardhat_setCode", [
+    CHAINLINK_CONTRACT,
+    JSON.parse(chainlinkJson).deployedBytecode,
+  ]);
+}
+
+async function blockBasefee() {
+  let basefeeJson = fs.readFileSync(`./artifacts/contracts/mocks/MockBlockBasefee.sol/MockBlockBasefee.json`);
+
+  await network.provider.send("hardhat_setCode", [
+    BASE_FEE_CONTRACT,
+    JSON.parse(basefeeJson).deployedBytecode,
+  ]);
+}
+
 exports.impersonateRouter = router
 exports.impersonateBean = bean
 exports.impersonateCurve = curve
@@ -216,3 +236,5 @@ exports.impersonateUnripe = unripe
 exports.impersonateFertilizer = fertilizer
 exports.impersonateUsdc = usdc
 exports.impersonatePrice = price
+exports.impersonateChainlink = chainlink;
+exports.impersonateBlockBasefee = blockBasefee;

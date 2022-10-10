@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "./Weather.sol";
 import "../../../libraries/LibIncentive.sol";
+import "../../../libraries/Token/LibTransfer.sol";
 
 /**
  * @author Publius
@@ -19,19 +20,23 @@ contract SeasonFacet is Weather {
     event Sunrise(uint256 indexed season);
     event Incentivization(address indexed account, uint256 beans);
 
+    // Im using this for generic logging of integer values. will remove when finished testing
+    event GenericUint256(uint256 value, string label);
+
     /**
      * Sunrise
      **/
 
     /// @notice advances Beanstalk to the next Season.
-    function sunrise() external payable {
+    function sunrise(LibTransfer.To mode) external payable returns (uint256) {
+        uint256 initialGasLeft = gasleft();
         require(!paused(), "Season: Paused.");
         require(seasonTime() > season(), "Season: Still current Season.");
         stepSeason();
         int256 deltaB = stepOracle();
         uint256 caseId = stepWeather(deltaB);
         stepSun(deltaB, caseId);
-        incentivize(msg.sender, C.getAdvanceIncentive());
+        return incentivize(msg.sender, C.getAdvanceIncentive(), initialGasLeft, mode);
     }
 
     /**
@@ -66,13 +71,35 @@ contract SeasonFacet is Weather {
         emit Sunrise(season());
     }
 
-    function incentivize(address account, uint256 amount) private {
+    function incentivize(
+        address account,
+        uint256 amount,
+        uint256 initialGasLeft,
+        LibTransfer.To mode
+    ) private returns (uint256) {
         uint256 timestamp = block.timestamp.sub(
             s.season.start.add(s.season.period.mul(season()))
         );
+
+        uint256 ethPrice = C.chainlinkContract().latestAnswer();
+        uint256 basefee = C.basefeeContract().block_basefee();
+        emit GenericUint256(ethPrice, "latestAnswer");
+        emit GenericUint256(basefee, "basefee");
+
+        // emit GenericUint256(s.season.start, "s.season.start");
+        // emit GenericUint256(s.season.period, "s.season.period");
+        // emit GenericUint256(timestamp, "incentivize.timestamp");
+        // emit GenericUint256(gasleft(), "gas left");
+
+        uint256 usedGas = initialGasLeft.sub(gasleft());
+        emit GenericUint256(usedGas, "usedGas");
+
         if (timestamp > 300) timestamp = 300;
         uint256 incentive = LibIncentive.fracExp(amount, 100, timestamp, 1);
+
+        // TODO: mint based on mode
         C.bean().mint(account, incentive);
         emit Incentivization(account, incentive);
+        return incentive;
     }
 }

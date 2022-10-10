@@ -3,6 +3,7 @@ const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 const { to6, toStalk } = require('./utils/helpers.js');
 const { USDC, UNRIPE_LP } = require('./utils/constants.js');
+const { EXTERNAL, INTERNAL } = require('./utils/balances.js')
 
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -176,4 +177,34 @@ describe('Sun', function () {
     expect(await this.silo.totalStalk()).to.be.equal(toStalk('200'));
     expect(await this.silo.totalEarnedBeans()).to.be.equal(to6('200'));
   })
+
+  it("sunrise reward", async function() {
+    
+    this.result = await this.season.sunrise(EXTERNAL);
+    console.log('this is my log', this.result);
+    const block = await ethers.provider.getBlock(this.result.blockNumber);
+
+    console.log(block.timestamp, new Date(block.timestamp * 1000));
+    const logs = await ethers.provider.getLogs(this.result.hash);
+    const uint256Topic = '0x925a839279bd49ac1cea4c9d376477744867c1a536526f8c2fd13858e78341fb';
+    for (const log of logs) {
+      if (log.topics.includes(uint256Topic)) {
+        console.log('Value: ', parseInt(log.data.substring(2, 66), 16));
+        console.log('Label: ', hexToAscii(log.data.substring(66)));
+        console.log();
+      }
+    }
+
+    const expectedReward = 100 * Math.pow(10, 6);
+    await expect(this.result).to.emit(this.season, 'Incentivization').withArgs('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', expectedReward);
+  });
 })
+
+function hexToAscii(str1) {
+	var hex  = str1.toString();
+	var str = '';
+	for (var n = 0; n < hex.length; n += 2) {
+		str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
+	}
+	return str;
+}
