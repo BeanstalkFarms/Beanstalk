@@ -3,10 +3,22 @@ const { defaultAbiCoder } = require('@ethersproject/abi');
 const { toBN } = require('./helpers');
 const { to6 } = require('../test/utils/helpers');
 
+// data is a list of the 3 indices: [returnDataIndex, copyIndex, pasteIndex]
+// preBytes is optional and should be used if the function call performs exactly 1 data copy operation
+// in which case it should be set to `0x0${type}0${useEtherFlag}`
+// where type is 0, 1 or 2 and useEtherFlag is 0 or 1.
 function packAdvanced(data, preBytes = '0x0000') {
   return ethers.utils.solidityPack(['bytes2', 'uint80', 'uint80', 'uint80'], [preBytes, data[0], data[1], data[2]])
 }
 
+
+// encode bytes advancedData based on type, value and copyData parameters:
+// type = 0,1, or 2
+// value = Ether to send in transaction as BigNumber
+// copyData = 
+//		 if type = 0, []
+//     if type = 1, [returnDataIndex, copyIndex, pasteIndex]
+//     if type = 2, [[returnDataIndex, copyIndex, pasteIndex]] (List of copyParams)
 function encodeAdvancedData(type, value = to6('0'), copyData = []) {
   let types = []
   let encodeData = []
@@ -29,7 +41,6 @@ function encodeAdvancedData(type, value = to6('0'), copyData = []) {
   return d
 }
 
-
 function decodeAdvancedData(data) {
   let types = []
   const type = parseInt(data[3])
@@ -39,8 +50,6 @@ function decodeAdvancedData(data) {
   else types = types.concat(['bytes2'])
   if (hasValue > 0) types.push('uint256')
   return defaultAbiCoder.decode(types, data)
-
-  return defaultAbiCoder.decode(callData, ['bytes[]'])
 }
 
 exports.packAdvanced = packAdvanced

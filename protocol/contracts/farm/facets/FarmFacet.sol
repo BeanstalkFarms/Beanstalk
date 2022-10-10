@@ -19,7 +19,7 @@ import {LibFunction} from "../../libraries/LibFunction.sol";
 // See LibFunction.buildAdvancedCalldata for details
 struct AdvancedData {
     bytes callData;
-    bytes farmData;
+    bytes advancedData;
 }
 
 contract FarmFacet {
@@ -64,13 +64,13 @@ contract FarmFacet {
         internal
         returns (bytes memory result)
     {
-        bytes1 pipeType = d.farmData[0];
+        bytes1 pipeType = d.advancedData[0];
         // 0x00 -> Normal pipe: Standard function call
         // else > Advanced pipe: Copy return data into function call through buildAdvancedCalldata
         if (pipeType == 0x00) {
             result = _farm(d.callData);
         } else {
-            result = LibFunction.buildAdvancedCalldata(d.callData, d.farmData, returnData);
+            result = LibFunction.buildAdvancedCalldata(d.callData, d.advancedData, returnData);
             _farmMem(result);
         }
     }
