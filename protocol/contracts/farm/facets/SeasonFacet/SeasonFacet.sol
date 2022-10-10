@@ -97,8 +97,7 @@ contract SeasonFacet is Weather {
         if (timestamp > 300) timestamp = 300;
         uint256 incentive = LibIncentive.fracExp(amount, 100, timestamp, 1);
 
-        // TODO: mint based on mode
-        C.bean().mint(account, incentive);
+        LibTransfer.mintToken(C.bean(), incentive, account, mode);
         emit Incentivization(account, incentive);
         return incentive;
     }
