@@ -1,8 +1,8 @@
 const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
-const { to6, toStalk } = require('./utils/helpers.js');
-const { USDC, UNRIPE_LP, BEAN, CHAINLINK_CONTRACT, BASE_FEE_CONTRACT } = require('./utils/constants.js');
+const { to6, toStalk, toBean, to18 } = require('./utils/helpers.js');
+const { USDC, UNRIPE_LP, BEAN, CHAINLINK_CONTRACT, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE } = require('./utils/constants.js');
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
 const { ethers } = require('hardhat');
 
@@ -22,9 +22,22 @@ describe('Sun', function () {
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.usdc = await ethers.getContractAt('MockToken', USDC);
-    this.bean = await ethers.getContractAt('MockToken', BEAN);
+  
+    // These are needed for sunrise incentive test
     this.chainlink = await ethers.getContractAt('MockChainlink', CHAINLINK_CONTRACT);
     this.basefee = await ethers.getContractAt('MockBlockBasefee', BASE_FEE_CONTRACT);
+    this.bean = await ethers.getContractAt('MockToken', BEAN);
+    this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
+    this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
+    await this.threePool.set_virtual_price(to18('1'));
+    this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
+    await this.beanThreeCurve.set_supply(toBean('100000'));
+    await this.beanThreeCurve.set_A_precise('1000');
+    await this.beanThreeCurve.set_virtual_price(to18('1'));
+    // Set twice so the prev balance is nonzero
+    await this.beanThreeCurve.set_balances([toBean('1000000'), to18('1000000')]);
+    await this.beanThreeCurve.set_balances([toBean('1000000'), to18('1000000')]);
+    await this.beanThreeCurve.reset_cumulative();
 
     await this.usdc.mint(owner.address, to6('10000'))
     await this.usdc.connect(owner).approve(this.diamond.address, to6('10000'))
@@ -221,7 +234,7 @@ describe('Sun', function () {
       const failAdjustedGasCostEth = (blockBaseFee + PRIORITY) * (gasUsed + FAIL_GAS_BUFFER) / Math.pow(10, 9);
 
       // Get mocked eth/bean prices
-      const ethPrice = await this.chainlink.latestAnswer() / Math.pow(10, 8);
+      const ethPrice = (await this.chainlink.latestAnswer()).toNumber() / Math.pow(10, 8);
       const beanPrice = 1.2; // TODO
       // How many beans are required to purcahse 1 eth
       const beanEthPrice = ethPrice / beanPrice;
@@ -244,7 +257,7 @@ describe('Sun', function () {
       expect(rewardAmount).to.greaterThan(failAdjustedGasCostBean);
 
       await expect(this.result).to.emit(this.season, 'Incentivization')
-          .withArgs('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', rewardAmount * Math.pow(10, 6));
+          .withArgs(owner.address, Math.trunc(rewardAmount * Math.pow(10, 6)));
     }
   })
 })

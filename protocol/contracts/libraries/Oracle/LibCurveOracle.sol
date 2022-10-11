@@ -131,6 +131,23 @@ library LibCurveOracle {
         balances[1] = cum_balances[1].sub(o.balances[1]).div(deltaTimestamp);
     }
 
+    function get_cumulative_balances()
+        internal
+        view
+        returns (uint256[2] memory cum_balances)
+    {
+        cum_balances = IMeta3CurveOracle(C.curveMetapoolAddress()).get_price_cumulative_last();
+        uint256[2] memory balances = IMeta3CurveOracle(C.curveMetapoolAddress()).get_balances();
+        uint256 lastTimestamp = IMeta3CurveOracle(C.curveMetapoolAddress()).block_timestamp_last();
+
+        cum_balances[0] = cum_balances[0].add(
+            balances[0].mul(block.timestamp.sub(lastTimestamp))
+        );
+        cum_balances[1] = cum_balances[1].add(
+            balances[1].mul(block.timestamp.sub(lastTimestamp))
+        );
+    }
+
     function get_cumulative()
         private
         view
