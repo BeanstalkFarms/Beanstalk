@@ -13,7 +13,13 @@ import "../interfaces/IChainlink.sol";
 **/
 contract MockChainlink is IChainlink  {
 
-    function latestAnswer() external pure override returns (uint256) {
-        return 1320e8;
+    uint256 private answer = 1320e8;
+
+    function latestAnswer() external view override returns (uint256) {
+        return answer;
+    }
+
+    function setAnswer(uint256 ans) public {
+        answer = ans;
     }
 }

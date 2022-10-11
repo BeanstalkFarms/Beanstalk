@@ -30,16 +30,16 @@ library LibIncentive {
                 .div(1.2e6); // TODO sub in correct bean value here // number of beans required to purchase one eth
 
         uint256 gasUsed = Math.min(initialGasLeft.sub(gasleft()) + C.getSunriseGasOverhead(), C.getMaxSunriseGas());
-        uint256 gasPriceWei = C.basefeeContract().block_basefee()   // (BASE_FEE
+        uint256 gasCostWei = C.basefeeContract().block_basefee()   // (BASE_FEE
                 .add(C.getSunrisePriorityFeeBuffer())               // + PRIORITY_FEE_BUFFER)
                 .mul(gasUsed);                                      // * GAS_USED
         uint256 sunriseReward = Math.min(
-                gasPriceWei.mul(beanEthPrice).div(1e18) + C.getBaseReward(), // divide by 1e18 to convert wei to eth
+                gasCostWei.mul(beanEthPrice).div(1e18) + C.getBaseReward(), // divide by 1e18 to convert wei to eth
                 C.getMaxReward()
         );
 
-        // return (LibIncentive.fracExp(sunriseReward, 100, blocksLate.mul(C.getBlockLengthSeconds()), 1), beanEthPrice, gasUsed, gasPriceWei);
-        return (sunriseReward, beanEthPrice, gasUsed, gasPriceWei);
+        // return (LibIncentive.fracExp(sunriseReward, 100, blocksLate.mul(C.getBlockLengthSeconds()), 1), beanEthPrice, gasUsed, gasCostWei);
+        return (sunriseReward, beanEthPrice, gasUsed, gasCostWei);
     }
 
     /// @notice fracExp estimates an exponential expression in the form: k * (1 + 1/q) ^ N.

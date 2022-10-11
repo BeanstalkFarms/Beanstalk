@@ -89,11 +89,11 @@ contract SeasonFacet is Weather {
 
         emit GenericUint256(blocksLate, "blocks late");
 
-        (uint256 incentiveAmount, uint256 beanEthPrice, uint256 gasUsed, uint256 gasPriceWei) = LibIncentive.determineReward(initialGasLeft, blocksLate);
+        (uint256 incentiveAmount, uint256 beanEthPrice, uint256 gasUsed, uint256 gasCostWei) = LibIncentive.determineReward(initialGasLeft, blocksLate);
         emit GenericUint256(incentiveAmount, "incentive");
         emit GenericUint256(beanEthPrice, "beanethprice");
         emit GenericUint256(gasUsed, "gasused");
-        emit GenericUint256(gasPriceWei, "gasPriceWei");
+        emit GenericUint256(gasCostWei, "gasPriceWei");
 
         // uint256 incentiveAmount = LibIncentive.determineReward(initialGasLeft, blocksLate);
         LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);

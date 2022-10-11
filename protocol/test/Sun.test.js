@@ -2,8 +2,9 @@ const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 const { to6, toStalk } = require('./utils/helpers.js');
-const { USDC, UNRIPE_LP } = require('./utils/constants.js');
-const { EXTERNAL, INTERNAL } = require('./utils/balances.js')
+const { USDC, UNRIPE_LP, BEAN, CHAINLINK_CONTRACT, BASE_FEE_CONTRACT } = require('./utils/constants.js');
+const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
+const { ethers } = require('hardhat');
 
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -21,6 +22,13 @@ describe('Sun', function () {
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.usdc = await ethers.getContractAt('MockToken', USDC);
+    this.bean = await ethers.getContractAt('MockToken', BEAN);
+    this.chainlink = await ethers.getContractAt('MockChainlink', CHAINLINK_CONTRACT);
+    this.basefee = await ethers.getContractAt('MockBlockBasefee', BASE_FEE_CONTRACT);
+
+    await this.chainlink.setAnswer(1300 * Math.pow(10, 8));
+    await this.basefee.setAnswer(5 * Math.pow(10, 9));
+
     await this.usdc.mint(owner.address, to6('10000'))
     await this.usdc.connect(owner).approve(this.diamond.address, to6('10000'))
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
@@ -179,26 +187,81 @@ describe('Sun', function () {
   })
 
   it("sunrise reward", async function() {
-    
-    this.result = await this.season.sunrise(EXTERNAL);
-    console.log('this is my log', this.result);
-    const block = await ethers.provider.getBlock(this.result.blockNumber);
 
-    console.log(block.timestamp, new Date(block.timestamp * 1000));
-    const logs = await ethers.provider.getLogs(this.result.hash);
-    const uint256Topic = '0x925a839279bd49ac1cea4c9d376477744867c1a536526f8c2fd13858e78341fb';
-    for (const log of logs) {
-      if (log.topics.includes(uint256Topic)) {
-        console.log('Value: ', parseInt(log.data.substring(2, 66), 16));
-        console.log('Label: ', hexToAscii(log.data.substring(66)));
-        console.log();
+    const VERBOSE = true;
+    const mockedEthAndBasefee = [
+      [1500 * Math.pow(10, 8), 15 * Math.pow(10, 9)],
+      [3000 * Math.pow(10, 8), 30 * Math.pow(10, 9)],
+      [1500 * Math.pow(10, 8), 330 * Math.pow(10, 9)],
+      [3000 * Math.pow(10, 8), 150 * Math.pow(10, 9)]
+    ];
+
+    let prevBalance = 0;
+    for (const mockAns of mockedEthAndBasefee) {
+
+      await this.chainlink.setAnswer(mockAns[0]);
+      await this.basefee.setAnswer(mockAns[1]);
+
+      this.result = await this.season.sunrise(EXTERNAL);
+      // Use this to test reward exponentiation
+      // const block = await ethers.provider.getBlock(this.result.blockNumber);
+      // console.log(block.timestamp, new Date(block.timestamp * 1000));
+      
+      // Verify that sunrise was profitable assuming a 50% average success rate
+      // Get bean balance after reward. Assumption is that the balance of the sender was zero previously
+      const beanBalance = (await this.bean.balanceOf(this.result.from)).toNumber() / Math.pow(10, 6);
+      const rewardAmount = parseFloat((beanBalance - prevBalance).toFixed(6));
+      prevBalance = beanBalance;
+
+      // Determine how much gas was used
+      const txReceipt = await ethers.provider.getTransactionReceipt(this.result.hash);
+      const gasUsed = txReceipt.gasUsed.toNumber();
+      const FAIL_GAS_BUFFER = 36000;
+
+      // Calculate gas amount using the mocked baseFee + priority
+      const PRIORITY = 5;
+      const blockBaseFee = await this.basefee.block_basefee() / Math.pow(10, 9);
+      const failAdjustedGasCostEth = (blockBaseFee + PRIORITY) * (gasUsed + FAIL_GAS_BUFFER) / Math.pow(10, 9);
+
+      // Get mocked eth/bean prices
+      const ethPrice = await this.chainlink.latestAnswer() / Math.pow(10, 8);
+      const beanPrice = 1.2; // TODO
+      // How many beans are required to purcahse 1 eth
+      const beanEthPrice = ethPrice / beanPrice;
+
+      // Bean equivalent of the cost to execute sunrise
+      const failAdjustedGasCostBean = failAdjustedGasCostEth * beanEthPrice;
+
+      if (VERBOSE) {
+        console.log('sunrise call tx', this.result);
+        const logs = await ethers.provider.getLogs(this.result.hash);
+        viewGenericUint256Logs(logs);
+        console.log('reward beans: ', rewardAmount);
+        console.log('eth price', ethPrice);
+        console.log('gas used', gasUsed);
+        console.log('base fee', blockBaseFee);
+        console.log('failure adjusted gas cost (eth)', failAdjustedGasCostEth);
+        console.log('failure adjusted cost (bean)', failAdjustedGasCostBean);
       }
-    }
 
-    const expectedReward = 100 * Math.pow(10, 6);
-    await expect(this.result).to.emit(this.season, 'Incentivization').withArgs('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', expectedReward);
-  });
+      expect(rewardAmount).to.greaterThan(failAdjustedGasCostBean);
+
+      await expect(this.result).to.emit(this.season, 'Incentivization')
+          .withArgs('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', rewardAmount * Math.pow(10, 6));
+    }
+  })
 })
+
+function viewGenericUint256Logs(logs) {
+  const uint256Topic = '0x925a839279bd49ac1cea4c9d376477744867c1a536526f8c2fd13858e78341fb';
+  for (const log of logs) {
+    if (log.topics.includes(uint256Topic)) {
+      console.log('Value: ', parseInt(log.data.substring(2, 66), 16));
+      console.log('Label: ', hexToAscii(log.data.substring(66)));
+      console.log();
+    }
+  }
+}
 
 function hexToAscii(str1) {
 	var hex  = str1.toString();

@@ -13,7 +13,13 @@ import "../interfaces/IBlockBasefee.sol";
 **/
 contract MockBlockBasefee is IBlockBasefee  {
 
-    function block_basefee() external pure override returns (uint256) {
-        return 5e9;
+    uint256 private answer = 215e9;
+
+    function block_basefee() external view override returns (uint256) {
+        return answer;
+    }
+
+    function setAnswer(uint256 ans) public {
+        answer = ans;
     }
 }
