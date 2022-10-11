@@ -8,6 +8,8 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../interfaces/IBean.sol";
 import "../MockToken.sol";
+import "../../libraries/Curve/LibCurve.sol";
+
 /**
  * @author Publius + LeoFib
  * @title Mock Bean3Curve Pair/Pool
@@ -136,6 +138,19 @@ contract MockMeta3Curve {
     
     function block_timestamp_last() external view returns (uint256) {
         return timestamp_last;
+    }
+
+    function get_bean_price() external view returns (uint256 price) {
+        uint256[2] memory rates = get_rates();
+        uint256[2] memory xp = LibCurve.getXP(price_cumulative_last, rates);
+        uint256 D = LibCurve.getD(xp, a);
+        price = LibCurve.getPrice(xp, rates, a, D);
+    }
+    
+    function get_rates() private view returns (uint256[2] memory rates) {
+        // Decimals will always be 6 because we can only mint beans
+        // 10**(36-decimals)
+        return [1e30, virtual_price];
     }
 
     function reset() external {

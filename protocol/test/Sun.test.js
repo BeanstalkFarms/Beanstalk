@@ -235,7 +235,7 @@ describe('Sun', function () {
 
       // Get mocked eth/bean prices
       const ethPrice = (await this.chainlink.latestAnswer()).toNumber() / Math.pow(10, 8);
-      const beanPrice = 1; // TODO
+      const beanPrice = (await this.beanThreeCurve.get_bean_price()).toNumber() / Math.pow(10, 6);
       // How many beans are required to purcahse 1 eth
       const beanEthPrice = ethPrice / beanPrice;
 
@@ -248,6 +248,7 @@ describe('Sun', function () {
         viewGenericUint256Logs(logs);
         console.log('reward beans: ', rewardAmount);
         console.log('eth price', ethPrice);
+        console.log('bean price', beanPrice);
         console.log('gas used', gasUsed);
         console.log('base fee', blockBaseFee);
         console.log('failure adjusted gas cost (eth)', failAdjustedGasCostEth);
