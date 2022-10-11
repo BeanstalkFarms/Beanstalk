@@ -202,7 +202,7 @@ describe('Sun', function () {
     const mockedEthAndBasefee = [
       [1500 * Math.pow(10, 8), 15 * Math.pow(10, 9)],
       [3000 * Math.pow(10, 8), 30 * Math.pow(10, 9)],
-      [1500 * Math.pow(10, 8), 330 * Math.pow(10, 9)],
+      [1500 * Math.pow(10, 8), 200 * Math.pow(10, 9)],
       [3000 * Math.pow(10, 8), 150 * Math.pow(10, 9)]
     ];
 
@@ -235,7 +235,7 @@ describe('Sun', function () {
 
       // Get mocked eth/bean prices
       const ethPrice = (await this.chainlink.latestAnswer()).toNumber() / Math.pow(10, 8);
-      const beanPrice = 1.2; // TODO
+      const beanPrice = 1; // TODO
       // How many beans are required to purcahse 1 eth
       const beanEthPrice = ethPrice / beanPrice;
 

@@ -8,7 +8,7 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "../C.sol";
-import "./Oracle/LibCurveOracle.sol";
+import "./LibAppStorage.sol";
 import "./Curve/LibCurve.sol";
 
 /**
@@ -47,10 +47,10 @@ library LibIncentive {
     }
 
     function getBeanPrice() internal view returns (uint256 price) {
-        // Cumulative balances, based on twap
-        uint256[2] memory cum_balances = LibCurveOracle.get_cumulative_balances();
+        // Cumulative balances were just saved as a result of stepOracle(), retrieve from storage
+        AppStorage storage s = LibAppStorage.diamondStorage();
         uint256[2] memory rates = getRates();
-        uint256[2] memory xp = LibCurve.getXP(cum_balances, rates);
+        uint256[2] memory xp = LibCurve.getXP(s.co.balances, rates);
         uint256 a = C.curveMetapool().A_precise();
         uint256 D = LibCurve.getD(xp, a);
         price = LibCurve.getPrice(xp, rates, a, D);
