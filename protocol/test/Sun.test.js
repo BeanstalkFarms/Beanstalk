@@ -26,9 +26,6 @@ describe('Sun', function () {
     this.chainlink = await ethers.getContractAt('MockChainlink', CHAINLINK_CONTRACT);
     this.basefee = await ethers.getContractAt('MockBlockBasefee', BASE_FEE_CONTRACT);
 
-    await this.chainlink.setAnswer(1300 * Math.pow(10, 8));
-    await this.basefee.setAnswer(5 * Math.pow(10, 9));
-
     await this.usdc.mint(owner.address, to6('10000'))
     await this.usdc.connect(owner).approve(this.diamond.address, to6('10000'))
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)

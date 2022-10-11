@@ -13,7 +13,7 @@ import "../interfaces/IBlockBasefee.sol";
 **/
 contract MockBlockBasefee is IBlockBasefee  {
 
-    uint256 private answer = 215e9;
+    uint256 private answer;
 
     function block_basefee() external view override returns (uint256) {
         return answer;

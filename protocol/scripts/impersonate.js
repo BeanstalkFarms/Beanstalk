@@ -214,6 +214,9 @@ async function chainlink() {
     CHAINLINK_CONTRACT,
     JSON.parse(chainlinkJson).deployedBytecode,
   ]);
+
+  const chainlink = await ethers.getContractAt("MockChainlink", CHAINLINK_CONTRACT);
+  await chainlink.setAnswer(1300 * Math.pow(10, 8));
 }
 
 async function blockBasefee() {
@@ -223,6 +226,9 @@ async function blockBasefee() {
     BASE_FEE_CONTRACT,
     JSON.parse(basefeeJson).deployedBytecode,
   ]);
+
+  const basefee = await ethers.getContractAt("MockBlockBasefee", BASE_FEE_CONTRACT);
+  await basefee.setAnswer(20 * Math.pow(10, 9));
 }
 
 exports.impersonateRouter = router
