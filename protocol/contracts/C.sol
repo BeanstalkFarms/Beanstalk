@@ -34,6 +34,14 @@ library C {
     uint256 private constant BASE_ADVANCE_INCENTIVE = 100e6; // 100 beans
     uint256 private constant SOP_PRECISION = 1e24;
 
+    // Season Incentive
+    uint256 private constant BASE_REWARD = 5e6; // Fixed increase in Bean reward to cover cost of operating a bot
+    uint256 private constant MAX_REWARD = 100e6;
+    uint256 private constant PRIORITY_FEE_BUFFER = 5e9; // 5 gwei
+    uint256 private constant MAX_SUNRISE_GAS = 3e6; // TODO: TBD, 3mil probably too much
+    uint256 private constant SUNRISE_GAS_OVERHEAD = 5e4; // TODO: TBD, probably close to 50k though
+    uint256 private constant BLOCK_LENGTH_SECONDS = 12;
+
     // Sun
     uint256 private constant FERTILIZER_DENOMINATOR = 3;
     uint256 private constant HARVEST_DENOMINATOR = 2;
@@ -91,8 +99,28 @@ library C {
         return CURRENT_SEASON_PERIOD;
     }
 
-    function getAdvanceIncentive() internal pure returns (uint256) {
-        return BASE_ADVANCE_INCENTIVE;
+    function getBaseReward() internal pure returns (uint256) {
+        return BASE_REWARD;
+    }
+
+    function getMaxReward() internal pure returns (uint256) {
+        return MAX_REWARD;
+    }
+
+    function getSunrisePriorityFeeBuffer() internal pure returns (uint256) {
+        return PRIORITY_FEE_BUFFER;
+    }
+
+    function getMaxSunriseGas() internal pure returns (uint256) {
+        return MAX_SUNRISE_GAS;
+    }
+
+    function getSunriseGasOverhead() internal pure returns (uint256) {
+        return SUNRISE_GAS_OVERHEAD;
+    }
+
+    function getBlockLengthSeconds() internal pure returns (uint256) {
+        return BLOCK_LENGTH_SECONDS;
     }
 
     function getFertilizerDenominator() internal pure returns (uint256) {

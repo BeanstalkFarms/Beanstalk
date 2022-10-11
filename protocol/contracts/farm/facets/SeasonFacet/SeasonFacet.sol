@@ -36,7 +36,7 @@ contract SeasonFacet is Weather {
         int256 deltaB = stepOracle();
         uint256 caseId = stepWeather(deltaB);
         stepSun(deltaB, caseId);
-        return incentivize(msg.sender, C.getAdvanceIncentive(), initialGasLeft, mode);
+        return incentivize(msg.sender, initialGasLeft, mode);
     }
 
     /**
@@ -73,32 +73,31 @@ contract SeasonFacet is Weather {
 
     function incentivize(
         address account,
-        uint256 amount,
         uint256 initialGasLeft,
         LibTransfer.To mode
     ) private returns (uint256) {
-        uint256 timestamp = block.timestamp.sub(
+        // Number of blocks the sunrise is late by
+        uint256 blocksLate = block.timestamp.sub(
             s.season.start.add(s.season.period.mul(season()))
-        );
+        )
+        .div(C.getBlockLengthSeconds());
 
-        uint256 ethPrice = C.chainlinkContract().latestAnswer();
-        uint256 basefee = C.basefeeContract().block_basefee();
-        emit GenericUint256(ethPrice, "latestAnswer");
-        emit GenericUint256(basefee, "basefee");
+        // Maximum 300 seconds to reward exponent (25*C.getBlockLengthSeconds())
+        if (blocksLate > 25) {
+            blocksLate = 25;
+        }
 
-        // emit GenericUint256(s.season.start, "s.season.start");
-        // emit GenericUint256(s.season.period, "s.season.period");
-        // emit GenericUint256(timestamp, "incentivize.timestamp");
-        // emit GenericUint256(gasleft(), "gas left");
+        emit GenericUint256(blocksLate, "blocks late");
 
-        uint256 usedGas = initialGasLeft.sub(gasleft());
-        emit GenericUint256(usedGas, "usedGas");
+        (uint256 incentiveAmount, uint256 beanEthPrice, uint256 gasUsed, uint256 gasPriceWei) = LibIncentive.determineReward(initialGasLeft, blocksLate);
+        emit GenericUint256(incentiveAmount, "incentive");
+        emit GenericUint256(beanEthPrice, "beanethprice");
+        emit GenericUint256(gasUsed, "gasused");
+        emit GenericUint256(gasPriceWei, "gasPriceWei");
 
-        if (timestamp > 300) timestamp = 300;
-        uint256 incentive = LibIncentive.fracExp(amount, 100, timestamp, 1);
-
-        LibTransfer.mintToken(C.bean(), incentive, account, mode);
-        emit Incentivization(account, incentive);
-        return incentive;
+        // uint256 incentiveAmount = LibIncentive.determineReward(initialGasLeft, blocksLate);
+        LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);
+        emit Incentivization(account, incentiveAmount);
+        return incentiveAmount;
     }
 }

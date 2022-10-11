@@ -63,8 +63,8 @@ contract InitDiamond {
         s.w.lastSowTime = type(uint32).max;
         s.isFarm = 1;
 
-        C.bean().mint(msg.sender, C.getAdvanceIncentive());
-        emit Incentivization(msg.sender, C.getAdvanceIncentive());
+        C.bean().mint(msg.sender, C.getMaxReward());
+        emit Incentivization(msg.sender, C.getMaxReward());
     }
 
 }

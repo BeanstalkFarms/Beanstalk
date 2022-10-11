@@ -5,11 +5,43 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/Math.sol";
+import "../C.sol";
+
 /**
  * @author Publius
- * @title Incentive Library calculates the exponential incentive rewards efficiently.
+ * @title Incentive Library calculates the reward and the exponential increase efficiently.
  **/
 library LibIncentive {
+
+    using SafeMath for uint256;
+
+    // Calculates sunrise incentive amount based on current gas prices and bean/ether price
+    // Further reading here: https://beanstalk-farms.notion.site/RFC-Sunrise-Payout-Change-31a0ca8dd2cb4c3f9fe71ae5599e9102
+    function determineReward(
+        uint256 initialGasLeft,
+        uint256 blocksLate
+    ) internal view returns (uint256, uint256, uint256, uint256) {
+
+        // ethUsdPrice has 8 decimal precision, bean has 6.
+        uint256 beanEthPrice = C.chainlinkContract().latestAnswer() // Eth price in USD (8 decimals)
+                .mul(1e4) // Multiplies eth by 1e4 so that the result of division will also have 6 decimals
+                .div(1.2e6); // TODO sub in correct bean value here // number of beans required to purchase one eth
+
+        uint256 gasUsed = Math.min(initialGasLeft.sub(gasleft()) + C.getSunriseGasOverhead(), C.getMaxSunriseGas());
+        uint256 gasPriceWei = C.basefeeContract().block_basefee()   // (BASE_FEE
+                .add(C.getSunrisePriorityFeeBuffer())               // + PRIORITY_FEE_BUFFER)
+                .mul(gasUsed);                                      // * GAS_USED
+        uint256 sunriseReward = Math.min(
+                gasPriceWei.mul(beanEthPrice).div(1e18) + C.getBaseReward(), // divide by 1e18 to convert wei to eth
+                C.getMaxReward()
+        );
+
+        // return (LibIncentive.fracExp(sunriseReward, 100, blocksLate.mul(C.getBlockLengthSeconds()), 1), beanEthPrice, gasUsed, gasPriceWei);
+        return (sunriseReward, beanEthPrice, gasUsed, gasPriceWei);
+    }
+
     /// @notice fracExp estimates an exponential expression in the form: k * (1 + 1/q) ^ N.
     /// We use a binomial expansion to estimate the exponent to avoid running into integer overflow issues.
     /// @param k - the principle amount
