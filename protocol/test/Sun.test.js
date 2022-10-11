@@ -40,6 +40,7 @@ describe('Sun', function () {
     await this.beanThreeCurve.reset_cumulative();
 
     await this.usdc.mint(owner.address, to6('10000'))
+    await this.bean.mint(owner.address, to6('10000'))
     await this.usdc.connect(owner).approve(this.diamond.address, to6('10000'))
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
     await this.unripeLP.mint(owner.address, to6('10000'))
@@ -202,12 +203,14 @@ describe('Sun', function () {
     const mockedEthAndBasefee = [
       [1500 * Math.pow(10, 8), 15 * Math.pow(10, 9)],
       [3000 * Math.pow(10, 8), 30 * Math.pow(10, 9)],
-      [1500 * Math.pow(10, 8), 200 * Math.pow(10, 9)],
-      [3000 * Math.pow(10, 8), 150 * Math.pow(10, 9)]
+      [1500 * Math.pow(10, 8), 150 * Math.pow(10, 9)],
+      [3000 * Math.pow(10, 8), 100 * Math.pow(10, 9)]
     ];
 
-    let prevBalance = 0;
+    const startingBeanBalance = (await this.bean.balanceOf(owner.address)).toNumber() / Math.pow(10, 6);
     for (const mockAns of mockedEthAndBasefee) {
+
+      snapshotId = await takeSnapshot();
 
       await this.chainlink.setAnswer(mockAns[0]);
       await this.basefee.setAnswer(mockAns[1]);
@@ -219,17 +222,18 @@ describe('Sun', function () {
       
       // Verify that sunrise was profitable assuming a 50% average success rate
       // Get bean balance after reward. Assumption is that the balance of the sender was zero previously
-      const beanBalance = (await this.bean.balanceOf(this.result.from)).toNumber() / Math.pow(10, 6);
-      const rewardAmount = parseFloat((beanBalance - prevBalance).toFixed(6));
-      prevBalance = beanBalance;
+      const beanBalance = (await this.bean.balanceOf(owner.address)).toNumber() / Math.pow(10, 6);
+      const rewardAmount = parseFloat((beanBalance - startingBeanBalance).toFixed(6));
 
       // Determine how much gas was used
       const txReceipt = await ethers.provider.getTransactionReceipt(this.result.hash);
       const gasUsed = txReceipt.gasUsed.toNumber();
-      const FAIL_GAS_BUFFER = 36000;
 
       // Calculate gas amount using the mocked baseFee + priority
+      // The idea of failure adjusted cost is it includes the assumption that the call will
+      // fail half the time (cost of one sunrise = 1 success + 1 fail)
       const PRIORITY = 5;
+      const FAIL_GAS_BUFFER = 36000;
       const blockBaseFee = await this.basefee.block_basefee() / Math.pow(10, 9);
       const failAdjustedGasCostEth = (blockBaseFee + PRIORITY) * (gasUsed + FAIL_GAS_BUFFER) / Math.pow(10, 9);
 
@@ -259,6 +263,8 @@ describe('Sun', function () {
 
       await expect(this.result).to.emit(this.season, 'Incentivization')
           .withArgs(owner.address, Math.trunc(rewardAmount * Math.pow(10, 6)));
+
+      await revertToSnapshot(snapshotId);
     }
   })
 })

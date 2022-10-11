@@ -43,7 +43,7 @@ library C {
     // there will remain 2+ individual bots attempting the sunrise, and assuming they share it 50/50,
     // both will lose money if this is not increased by ~35k. BASE_REWARD is not enough as it does not scale
     // as gas prices become higher. Perhaps BASE_REWARD should be 2-3 beans, and we use +30k instead of +35k.
-    uint256 private constant SUNRISE_GAS_OVERHEAD = 12e4; // TODO: TBD, probably close to 50k + 35k offset
+    uint256 private constant SUNRISE_GAS_OVERHEAD = 9e4; // TODO: TBD, probably close to 50k + 35k offset
     uint256 private constant BLOCK_LENGTH_SECONDS = 12;
 
     // Sun
