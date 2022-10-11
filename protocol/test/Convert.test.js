@@ -1,6 +1,7 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
+const { ConvertEncoder } = require('./utils/encoder.js')
 const { BEAN } = require('./utils/constants')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
@@ -282,4 +283,56 @@ describe('Convert', function () {
       })
     })
   });
+
+  describe("lambda convert", async function () {
+    it('returns correct value', async function () {
+      this.result = await this.convert.connect(user).callStatic.convert(
+        ConvertEncoder.convertLambdaToLambda(
+          '100',
+          this.siloToken.address
+        ),
+        ['3'],
+        ['100']
+      )
+      expect(this.result.toSeason).to.be.equal(3)
+      expect(this.result.toAmount).to.be.equal('100')
+    })
+
+    beforeEach(async function () {
+      this.result = await this.convert.connect(user).convert(
+        ConvertEncoder.convertLambdaToLambda(
+          '200',
+          this.siloToken.address
+        ),
+        ['2', '3'],
+        ['100', '100']
+      )
+    })
+
+    it('removes and adds deposit', async function () {
+      let deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 2);
+      expect(deposit[0]).to.eq('0');
+      expect(deposit[1]).to.eq('0');
+
+      deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 3);
+      expect(deposit[0]).to.eq('200');
+      expect(deposit[1]).to.eq('200');
+    })
+
+    it('Decrements balances', async function () {
+      expect(await this.silo.balanceOfStalk(userAddress)).to.equal('2000000');
+      expect(await this.silo.balanceOfSeeds(userAddress)).to.equal('200');
+    })
+
+    it('Decrements totals', async function () {
+      expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.equal('200');
+      expect(await this.silo.totalStalk()).to.equal('2000000');
+      expect(await this.silo.totalSeeds()).to.equal('200');
+    })
+
+    it('Emits events', async function () {
+      await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [2, 3], ['100', '100'], '200');
+      await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, this.siloToken.address, 3, '200', '200');
+    })
+  })
 });

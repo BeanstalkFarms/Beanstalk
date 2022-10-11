@@ -3,7 +3,7 @@ const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE } = require('./utils/constants')
 const { ConvertEncoder } = require('./utils/encoder.js')
-const { to18, toBean, toStalk } = require('./utils/helpers.js')
+const { to18, toBean, toStalk, to6 } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -114,6 +114,16 @@ describe('Curve Convert', function () {
           BEAN_3_CURVE,
           toBean('100')
         )).to.be.equal('100634476734756985505')
+      })
+
+      it('returns correct values', async function () {
+        this.result = await this.convert.connect(user).callStatic.convert(ConvertEncoder.convertBeansToCurveLP(toBean('100'), to18('99'), this.beanMetapool.address), ['2'], [toBean('100')])
+        expect(this.result.toSeason).to.be.equal(2)
+        expect(this.result.fromAmount).to.be.equal(to6('100'))
+        expect(this.result.toAmount).to.be.equal('100634476734756985505')
+        expect(this.result.fromBdv).to.be.equal(to6('100'))
+        expect(this.result.toBdv).to.be.equal(to6('100'))
+
       })
 
       describe('it converts', async function () {

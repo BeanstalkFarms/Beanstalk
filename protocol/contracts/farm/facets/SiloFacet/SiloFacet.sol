@@ -82,25 +82,66 @@ contract SiloFacet is TokenSilo {
      */
 
     function transferDeposit(
+        address sender,
         address recipient,
         address token,
         uint32 season,
         uint256 amount
-    ) external payable nonReentrant updateSilo {
+    ) external payable nonReentrant returns (uint256 bdv) {
+        if (sender != msg.sender) {
+            _spendDepositAllowance(sender, msg.sender, token, amount);
+        }
+        _update(sender);
         // Need to update the recipient's Silo as well.
         _update(recipient);
-        _transferDeposit(msg.sender, recipient, token, season, amount);
+        bdv = _transferDeposit(sender, recipient, token, season, amount);
     }
 
     function transferDeposits(
+        address sender,
         address recipient,
         address token,
         uint32[] calldata seasons,
         uint256[] calldata amounts
-    ) external payable nonReentrant updateSilo {
+    ) external payable nonReentrant returns (uint256[] memory bdvs) {
+        require(amounts.length > 0, "Silo: amounts array is empty");
+        for (uint256 i = 0; i < amounts.length; i++) {
+            require(amounts[i] > 0, "Silo: amount in array is 0");
+            if (sender != msg.sender) {
+                _spendDepositAllowance(sender, msg.sender, token, amounts[i]);
+            }
+        }
+       
+        _update(sender);
         // Need to update the recipient's Silo as well.
         _update(recipient);
-        _transferDeposits(msg.sender, recipient, token, seasons, amounts);
+        bdvs = _transferDeposits(sender, recipient, token, seasons, amounts);
+    }
+
+    /*
+     * Approval
+     */
+
+    function approveDeposit(
+        address spender,
+        address token,
+        uint256 amount
+    ) external payable nonReentrant {
+        require(spender != address(0), "approve from the zero address");
+        require(token != address(0), "approve to the zero address");
+        _approveDeposit(msg.sender, spender, token, amount);
+    }
+
+    function increaseDepositAllowance(address spender, address token, uint256 addedValue) public virtual nonReentrant returns (bool) {
+        _approveDeposit(msg.sender, spender, token, depositAllowance(msg.sender, spender, token).add(addedValue));
+        return true;
+    }
+
+    function decreaseDepositAllowance(address spender, address token, uint256 subtractedValue) public virtual nonReentrant returns (bool) {
+        uint256 currentAllowance = depositAllowance(msg.sender, spender, token);
+        require(currentAllowance >= subtractedValue, "Silo: decreased allowance below zero");
+        _approveDeposit(msg.sender, spender, token, currentAllowance.sub(subtractedValue));
+        return true;
     }
 
     /*
@@ -115,8 +156,8 @@ contract SiloFacet is TokenSilo {
         return _plant(msg.sender);
     }
 
-    function claimPlenty(address account) external payable {
-        _claimPlenty(account);
+    function claimPlenty() external payable {
+        _claimPlenty(msg.sender);
     }
 
     /*

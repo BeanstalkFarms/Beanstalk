@@ -41,9 +41,9 @@ _Current Bean Sprout Core Staff_
 
 _Anticipated Q3 2022 Bean Sprout Hires_
 
-* Operating Manager (FT) \
-_ \
-_ Responsibilities will include: \
+* Operating Manager (FT)
+
+  Responsibilities will include: 
 
     * Project management across various internal and external Bean Sprout initiatives;
     * Sourcing and vetting new ideas for integrations or builders for Bean Sprout-funded projects; and
