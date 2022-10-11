@@ -15,8 +15,9 @@ import "../../farm/facets/FieldFacet.sol";
 contract MockFieldFacet is FieldFacet {
 
     using SafeMath for uint256;
+    using LibSafeMath128 for uint128;
 
-    function incrementTotalSoilE(uint256 amount) external {
+    function incrementTotalSoilE(uint128 amount) external {
         s.f.soil = s.f.soil.add(amount);
     }
 

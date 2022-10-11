@@ -18,7 +18,7 @@ contract ComplexWeatherTest is Weather, Test, InitDiamondDeployer {
       uint256 unharvestablePods;
       uint256 totalOutstandingBeans;
       uint256 startingSoil;
-      uint256 endingSoil;
+      uint128 endingSoil;
       uint256 lastSoil;
       int256 priceAvg;
       uint32 startingWeather;
@@ -67,7 +67,7 @@ contract ComplexWeatherTest is Weather, Test, InitDiamondDeployer {
         C.bean().burn(C.bean().balanceOf(brean));
         uint256 lastDSoil = data[i].lastSoil;
         uint256 startSoil = data[i].startingSoil;
-        uint256 endSoil = data[i].endingSoil;
+        uint128 endSoil = data[i].endingSoil;
         int256 deltaB = data[i].priceAvg;
         uint256 pods = data[i].unharvestablePods;
       

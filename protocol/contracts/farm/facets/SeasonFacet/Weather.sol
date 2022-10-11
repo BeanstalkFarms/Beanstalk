@@ -64,7 +64,9 @@ contract Weather is Sun {
         );
 
         // Calculate Delta Soil Demand
-        uint256 dsoil = s.w.startSoil.sub(endSoil);
+        
+        //uint256 dsoil = s.w.startSoil.sub(endSoil);
+        uint256 dsoil = s.f.beanSownInSeason;
 
         Decimal.D256 memory deltaPodDemand;
 

@@ -15,7 +15,11 @@ import "../ReentrancyGuard.sol";
  **/
 contract FieldFacet is ReentrancyGuard {
     using SafeMath for uint256;
+    using LibPRBMath for uint256;
     using LibSafeMath32 for uint32;
+    using LibSafeMath128 for uint128;
+    
+    uint128 private constant DECIMAL = 1e6;
 
     event Sow(
         address indexed account,
@@ -52,7 +56,7 @@ contract FieldFacet is ReentrancyGuard {
             "Field: Sowing below min or 0 pods."
         );
         require(
-            getMorningYield() >= minWeather,
+            yield() >= minWeather,
             "Field: Sowing below min weather."
         );
         if (amount < sowAmount) sowAmount = amount; 
@@ -65,6 +69,7 @@ contract FieldFacet is ReentrancyGuard {
     {
         amount = LibTransfer.burnToken(C.bean(), amount, msg.sender, mode);
         pods = LibDibbler.sow(amount, msg.sender);
+        s.f.beanSownInSeason = s.f.beanSownInSeason + uint128(amount); // need safeMath?
     }
 
     /**
@@ -148,25 +153,28 @@ contract FieldFacet is ReentrancyGuard {
 
     function totalSoil() public view returns (uint256) {
         if(s.season.AbovePeg){
-            return s.f.soil.mul(uint256(s.w.yield).add(100).mul(LibDibbler.DECIMALS)).div(getMorningYield().add(100*LibDibbler.DECIMALS));
+            uint256 _yield = uint256(yield()).add(100*DECIMAL);
+            return uint256(s.f.soil).mulDiv(uint256(s.w.yield).add(100).mul(DECIMAL),_yield);
         }
         else{
-            return s.f.soil;
+            return uint256(s.f.soil);
         }
     }
 
 
     //yield now has precision level 1e6 i.e 1% = 1 * 1e6
-    function getMorningYield() public view returns (uint256) {
+    function yield() public view returns (uint256) {
         return LibDibbler.morningAuction();
     }
+
     // Peas are the potential pods that can be issued within a season.
     // totalPeas gives the remaining pods that can be sown within a season, 
     // totalMaxPeas gives the maximum that can be sown wthin a season
-    function totalMaxPeas() public view returns (uint256){
-        return s.w.startSoil.mul(s.w.yield.add(100).div(100));
+    function maxPeas() external view returns (uint256) {
+        return s.w.startSoil.mul(s.w.yield.add(100)).div(100);
     }
-    function totalPeas() public view returns (uint256){
+
+    function peas() external view returns (uint256) {
         return s.f.soil.add(s.f.soil.mul(s.w.yield).div(100));
     }
 }

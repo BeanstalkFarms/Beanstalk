@@ -58,7 +58,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     assertEq(C.bean().balanceOf(address(field)),0);
     assertEq(C.bean().totalSupply(), 19900 * 1e6);
     assertEq(field.totalPods(), 101 * 1e6);
-    assertEq(field.totalSoil(), 0);
+    assertEq(uint256(field.totalSoil()), 0);
     assertEq(field.totalUnharvestable(), 101 * 1e6);
     assertEq(field.podIndex(), 101 * 1e6);
     assertEq(field.harvestableIndex(), 0);
@@ -76,7 +76,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     assertEq(C.bean().balanceOf(address(field)),0);
     assertEq(C.bean().totalSupply(), 19900 * 1e6);
     assertEq(field.totalPods(), 101 * 1e6);
-    assertEq(field.totalSoil(), 100 * 1e6);
+    assertEq(uint256(field.totalSoil()), 100 * 1e6);
     assertEq(field.totalUnharvestable(), 101 * 1e6);
     assertEq(field.podIndex(), 101 * 1e6);
     assertEq(field.harvestableIndex(), 0);
@@ -91,7 +91,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     assertEq(C.bean().balanceOf(address(field)),0);
     assertEq(C.bean().totalSupply(), 19900 * 1e6);
     assertEq(field.totalPods(), 101 * 1e6);
-    assertEq(field.totalSoil(), 100 * 1e6);
+    assertEq(uint256(field.totalSoil()), 100 * 1e6);
     assertEq(field.totalUnharvestable(), 101 * 1e6);
     assertEq(field.podIndex(), 101 * 1e6);
     assertEq(field.harvestableIndex(), 0);
@@ -106,7 +106,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     assertEq(C.bean().balanceOf(address(field)),0);
     assertEq(C.bean().totalSupply(), 19950 * 1e6);
     assertEq(field.totalPods(), 50.5 * 1e6);
-    assertEq(field.totalSoil(), 150 * 1e6);
+    assertEq(uint256(field.totalSoil()), 150 * 1e6);
     assertEq(field.totalUnharvestable(), 50.5 * 1e6);
     assertEq(field.podIndex(), 50.5 * 1e6);
     assertEq(field.harvestableIndex(), 0);
@@ -121,7 +121,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     assertEq(C.bean().balanceOf(address(field)),0);
     assertEq(C.bean().totalSupply(), 19900 * 1e6);
     assertEq(field.totalPods(), 101 * 1e6);
-    assertEq(field.totalSoil(), 0* 1e6);
+    assertEq(uint256(field.totalSoil()), 0* 1e6);
     assertEq(field.totalUnharvestable(), 101 * 1e6);
     assertEq(field.podIndex(), 101 * 1e6);
     assertEq(field.harvestableIndex(), 0);
@@ -136,7 +136,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     assertEq(C.bean().balanceOf(address(field)),0);
     assertEq(C.bean().totalSupply(), 19900 * 1e6);
     assertEq(field.totalPods(), 101 * 1e6);
-    assertEq(field.totalSoil(), 100* 1e6);
+    assertEq(uint256(field.totalSoil()), 100* 1e6);
     assertEq(field.totalUnharvestable(), 101 * 1e6);
     assertEq(field.podIndex(), 101 * 1e6);
     assertEq(field.harvestableIndex(), 0);
@@ -155,7 +155,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     assertEq(C.bean().balanceOf(address(field)),0);
     assertEq(C.bean().totalSupply(), 19800 * 1e6);
     assertEq(field.totalPods(), 202 * 1e6);
-    assertEq(field.totalSoil(), 0* 1e6);
+    assertEq(uint256(field.totalSoil()), 0* 1e6);
     assertEq(field.totalUnharvestable(), 202 * 1e6);
     assertEq(field.podIndex(), 202 * 1e6);
     assertEq(field.harvestableIndex(), 0);
@@ -233,7 +233,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     assertEq(C.bean().balanceOf(address(field)),0);
     assertEq(C.bean().totalSupply(), 19901 * 1e6);
     assertEq(field.totalPods(), 101 * 1e6);
-    assertEq(field.totalSoil(), 0 * 1e6);
+    assertEq(uint256(field.totalSoil()), 0 * 1e6);
     assertEq(field.totalUnharvestable(), 101 * 1e6);
     assertEq(field.totalHarvestable(), 0 * 1e6);
     assertEq(field.harvestableIndex(), 101 * 1e6);
@@ -255,7 +255,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     assertEq(C.bean().balanceOf(address(field)),0);
     assertEq(C.bean().totalSupply(), 19850 * 1e6);
     assertEq(field.totalPods(), 152 * 1e6);
-    assertEq(field.totalSoil(), 0 * 1e6);
+    assertEq(uint256(field.totalSoil()), 0 * 1e6);
     assertEq(field.totalUnharvestable(), 152 * 1e6);
     assertEq(field.totalHarvestable(), 0 * 1e6);
     assertEq(field.harvestableIndex(), 50 * 1e6);
@@ -274,7 +274,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     assertEq(C.bean().balanceOf(address(field)),0);
     assertEq(C.bean().totalSupply(), 19901 * 1e6);
     assertEq(field.totalPods(), 101 * 1e6);
-    assertEq(field.totalSoil(), 0 * 1e6);
+    assertEq(uint256(field.totalSoil()), 0 * 1e6);
     assertEq(field.totalUnharvestable(), 101 * 1e6);
     assertEq(field.totalHarvestable(), 0 * 1e6);
     assertEq(field.harvestableIndex(), 101 * 1e6);
@@ -286,6 +286,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
   }
   //MORNING AUCTION STUFF
   function testMorningAuctionValues(uint256 blockNo,uint32 __weather) public {
+
     //verify morning auction value align with manually calculated values
     uint256 _weather = bound(__weather,1,69420); // arbitary large number
     season.setYieldE(uint32(_weather));
@@ -323,68 +324,91 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
       vm.roll(blockNo);
       blockNo = blockNo > 26? 26 : blockNo;
       uint256 calcWeather = blockNo == 1 ? ScaleValues[blockNo - 1] : ScaleValues[blockNo - 1] * season.maxYield(); // weather is always 1% if sown at same block as sunrise, irregardless of weather
-      assertApproxEqRel(field.getMorningYield(),calcWeather,0.00001*1e18);
+      assertApproxEqRel(field.yield(),calcWeather,0.00001*1e18);
     }
   
   // Various sowing at differnt dutch auctions
   function testPeas() public {
     _beforeEachMorningAuction();
-    // sow 25% at delta 5
-    uint256 i = 1;
+    
+    uint256 _block = 1;
     uint256 TotalSoilSown = 0; 
-    console.log("Starting Soil:",field.totalSoil());
     while(field.totalSoil() > 1 * 1e6){
-      vm.roll(i);
-      console.log("rolling to block",i,",the delta is", i-1);
-      uint256 LastTotalSoil = field.totalSoil();
-      uint256 LastTrueSoil = field.totalTrueSoil();
-      vm.prank(brean);
-      uint256 AmtPodsGained = field.sowWithMin(5 * 1e6, 1 * 1e6, 5 * 1e6, LibTransfer.From.EXTERNAL);
-      TotalSoilSown = TotalSoilSown + 5 * 1e6;
-      assertApproxEqAbs(LastTotalSoil - field.totalSoil(), 5 * 1e6, 1);
-      console.log("TotalSoil Consumed:",LastTotalSoil - field.totalSoil());
-      console.log("TrueSoil Consumed:", LastTrueSoil - field.totalTrueSoil()); 
-      console.log("pods gained:",AmtPodsGained);
-      assertApproxEqAbs(AmtPodsGained, 5 * field.getMorningYield().add(100 * 1e6).div(100),10);
-      console.log("total pods:",field.totalPods());
-      console.log("Soil Left:",field.totalSoil());
-      if(i > 26){
-        assertEq(field.totalSoil(),field.totalTrueSoil());
-      }else{
-        assertGt(field.totalSoil(),field.totalTrueSoil());
-      }
-      i++;
-    }
-
-    // last sowing from 
-    vm.roll(36);
-    console.log("rolling to block",36,",the delta is", 35);
-
+    uint256 amount = uint256(keccak256(abi.encodePacked(_block))).mod(10 * 1e6);
+    vm.roll(_block);
+    //console.log("rolling to block",_block,",the delta is", _block - 1);
     uint256 LastTotalSoil = field.totalSoil();
+    uint256 BreanBal = C.bean().balanceOf(brean);
     uint256 LastTrueSoil = field.totalTrueSoil();
-    //dude im going crazy, why does field.totalSoil() not work but putting it as an input works??
-    if(LastTotalSoil != 0){
-      vm.prank(brean);
-      uint256 AmtPodsGained = field.sowWithMin(LastTotalSoil, 1 * 1e6, LastTotalSoil, LibTransfer.From.EXTERNAL);
-      TotalSoilSown = TotalSoilSown + LastTotalSoil;
-      console.log("TotalSoil Consumed:",LastTotalSoil - field.totalSoil());
-      console.log("TrueSoil Consumed:", LastTrueSoil - field.totalTrueSoil());
-      console.log("pods gained:",AmtPodsGained);
-      console.log("total pods:",field.totalPods());
-      console.log("Soil Left:",field.totalSoil());
+    uint256 AmtPodsGained = 0;
+    vm.prank(brean);
+    AmtPodsGained = field.sowWithMin(amount, 1 * 1e6, amount, LibTransfer.From.EXTERNAL);
+    TotalSoilSown = TotalSoilSown + amount;
+    assertApproxEqAbs(LastTotalSoil - field.totalSoil(), amount, 1);
+    // console.log("Current Yield:", field.yield());
+    // console.log("TotalSoil Start of Block:",LastTotalSoil);
+    // console.log("TotalSoil End of Block:",field.totalSoil());
+    // console.log("TrueSoil Start of Block:",LastTrueSoil);
+    // console.log("TrueSoil End of Block:",field.totalTrueSoil());
+    // console.log("TotalSoil Consumed:",LastTotalSoil - field.totalSoil());
+    // console.log("TrueSoil Consumed:", LastTrueSoil - field.totalTrueSoil()); 
+    // console.log("Beans Burnt:",BreanBal - C.bean().balanceOf(brean));
+    // console.log("pods gained:",AmtPodsGained);
+    // console.log("total pods:",field.totalPods());
+    _block++;
     }
-
-    assertApproxEqRel(field.totalMaxPeas(),field.totalUnharvestable(),0.0000001*1e18); //.00001% accuracy
+    uint256 soilLeft = field.totalSoil();
+    vm.prank(brean);
+    field.sowWithMin(soilLeft, 1 * 1e6, soilLeft, LibTransfer.From.EXTERNAL);
+    TotalSoilSown = TotalSoilSown + 1e6;
+    assertApproxEqRel(field.maxPeas(),field.totalUnharvestable(),0.000001*1e18); //.0001% accuracy
     assertGt(TotalSoilSown,100 * 1e6); // check the amt of soil sown at the end of the season is greater than the start soil
-
+    
   }
-  
+ 
+  function testRoundingError() public {
+     _beforeEachMorningAuction();
+    
+    uint256 _block = 1;
+    uint256 TotalSoilSown = 0; 
+    uint256 amount = 5 * 1e6;
+    while(field.totalSoil() > 5 * 1e6){
+    vm.roll(_block);
+    console.log("rolling to block",_block,",the delta is", _block - 1);
+    uint256 LastTotalSoil = field.totalSoil();
+    uint256 BreanBal = C.bean().balanceOf(brean);
+    uint256 LastTrueSoil = field.totalTrueSoil();
+    uint256 AmtPodsGained = 0;
+    vm.prank(brean);
+    AmtPodsGained = field.sowWithMin(amount, 1 * 1e6, amount, LibTransfer.From.EXTERNAL);
+    TotalSoilSown = TotalSoilSown + amount;
+    assertEq(LastTotalSoil - field.totalSoil(), amount, "Error: soil sown doesn't equal soil used.");
+    console.log("Current Yield:", field.yield());
+    console.log("TotalSoil Start of Block:",LastTotalSoil);
+    console.log("TotalSoil End of Block:",field.totalSoil());
+    console.log("TrueSoil Start of Block:",LastTrueSoil);
+    console.log("TrueSoil End of Block:",field.totalTrueSoil());
+    console.log("TotalSoil Consumed:",LastTotalSoil - field.totalSoil());
+    console.log("TrueSoil Consumed:", LastTrueSoil - field.totalTrueSoil()); 
+    console.log("Beans Burnt:",BreanBal - C.bean().balanceOf(brean));
+    console.log("pods gained:",AmtPodsGained);
+    console.log("total pods:",field.totalPods());
+    _block++;
+    }
+    uint256 soilLeft = field.totalSoil();
+    vm.prank(brean);
+    field.sowWithMin(soilLeft, 1 * 1e6, soilLeft, LibTransfer.From.EXTERNAL);
+    TotalSoilSown = TotalSoilSown + 1e6;
+    assertEq(field.maxPeas(),field.totalUnharvestable(), "Error: TotalUnharvestable doesn't equal maxPeas."); //.0001% accuracy
+    assertGt(TotalSoilSown,100 * 1e6, "Error: Total soil sown is less than inital soil issued."); // check the amt of soil sown at the end of the season is greater than the start soil
+    
+  }
   // check that the Soil decreases over 25 blocks, then stays stagent
   function testSoilDecrementsOverDutch() public {
     _beforeEachMorningAuction();
     for(uint i = 1; i < 30; ++i){
       vm.roll(i);
-      uint256 LastSoil = field.totalSoil();
+      uint256 LastSoil = uint256(field.totalSoil());
       uint256 TrueSoil = field.totalTrueSoil();
     
       if(i > 25) { //note the block saved on s.f.sunrise block is 1, so the delta is 25 at blockNo 26
@@ -398,10 +422,10 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
 
   function testSowAllMorningAuction() public {
     _beforeEachMorningAuction();
-    uint256 TotalSoil = field.totalSoil();
+    uint256 TotalSoil = uint256(field.totalSoil());
     vm.prank(brean);
     field.sowWithMin(TotalSoil, 1 * 1e6, TotalSoil, LibTransfer.From.EXTERNAL);
-    assertEq(field.totalSoil(),0);
+    assertEq(uint256(field.totalSoil()),0);
     assertApproxEqRel(field.totalUnharvestable(), 200 * 1e6,0.0000001*1e18); //.00001% accuracy
   }
 

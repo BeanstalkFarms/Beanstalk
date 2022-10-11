@@ -120,8 +120,8 @@ contract Sun is Oracle {
     }
 
     function setSoil(uint256 amount) internal {
-        s.f.soil = amount;
-        s.w.startSoil = amount;
+        s.f.soil = uint128(amount);
+        s.w.startSoil = amount; // do we need this?
         emit Soil(s.season.current, amount);
     }
 }

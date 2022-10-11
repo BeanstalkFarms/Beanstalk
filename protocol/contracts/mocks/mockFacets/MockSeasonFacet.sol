@@ -207,7 +207,7 @@ contract MockSeasonFacet is SeasonFacet {
         C.bean().burn(C.bean().balanceOf(address(this)));
     }
 
-    function stepWeatherE(int256 deltaB, uint256 endSoil) external {
+    function stepWeatherE(int256 deltaB, uint128 endSoil) external {
         s.f.soil = endSoil;
         stepWeather(deltaB);
     }
@@ -216,7 +216,7 @@ contract MockSeasonFacet is SeasonFacet {
         uint256 pods,
         uint256 lastDSoil,
         uint256 startSoil,
-        uint256 endSoil,
+        uint128 endSoil,
         int256 deltaB,
         bool raining,
         bool rainRoots

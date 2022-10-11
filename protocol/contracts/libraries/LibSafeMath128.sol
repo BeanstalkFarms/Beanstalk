@@ -7,6 +7,8 @@ pragma solidity >=0.6.0 <0.8.0;
  * @title LibSafeMath128 is a uint128 variation of Open Zeppelin's Safe Math library.
 **/
 library LibSafeMath128 {
+
+    uint128 internal constant DECIMALS = 1e6;
     /**
      * @dev Returns the addition of two unsigned integers, with an overflow flag.
      *
@@ -202,4 +204,5 @@ library LibSafeMath128 {
         require(b > 0, errorMessage);
         return a % b;
     }
+
 }
