@@ -26,6 +26,7 @@ describe('Sun', function () {
     // These are needed for sunrise incentive test
     this.chainlink = await ethers.getContractAt('MockChainlink', CHAINLINK_CONTRACT);
     this.basefee = await ethers.getContractAt('MockBlockBasefee', BASE_FEE_CONTRACT);
+    this.tokenFacet = await ethers.getContractAt('TokenFacet', contracts.beanstalkDiamond.address)
     this.bean = await ethers.getContractAt('MockToken', BEAN);
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
@@ -197,17 +198,20 @@ describe('Sun', function () {
   it("sunrise reward", async function() {
 
     const VERBOSE = true;
-    // [[pool balances], eth price, base fee, secondsLate]
+    // [[pool balances], eth price, base fee, secondsLate, toMode]
     const mockedValues = [
-      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 0],
-      [[toBean('10000'), to18('50000')], 3000 * Math.pow(10, 8), 30 * Math.pow(10, 9), 0],
-      [[toBean('50000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 0],
-      [[toBean('10000'), to18('10000')], 3000 * Math.pow(10, 8), 100 * Math.pow(10, 9), 0],
-      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 24],
-      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 500]
+      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 0, EXTERNAL],
+      [[toBean('10000'), to18('50000')], 3000 * Math.pow(10, 8), 30 * Math.pow(10, 9), 0, EXTERNAL],
+      [[toBean('50000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 0, EXTERNAL],
+      [[toBean('10000'), to18('10000')], 3000 * Math.pow(10, 8), 90 * Math.pow(10, 9), 0, INTERNAL],
+      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 24, INTERNAL],
+      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 500, INTERNAL]
     ];
 
-    const startingBeanBalance = (await this.bean.balanceOf(owner.address)).toNumber() / Math.pow(10, 6);
+    // Load some beans into the wallet's internal balance
+    await this.season.sunrise(INTERNAL);
+
+    const startingBeanBalance = (await this.tokenFacet.getAllBalance(owner.address, BEAN)).totalBalance.toNumber() / Math.pow(10, 6);
     for (const mockVal of mockedValues) {
 
       snapshotId = await takeSnapshot();
@@ -222,14 +226,12 @@ describe('Sun', function () {
       const effectiveSecondsLate = Math.min(secondsLate, 300);
       await this.season.resetSeasonStart(secondsLate);
 
-      this.result = await this.season.sunrise(EXTERNAL);
-      // Use this to test reward exponentiation
-      // const block = await ethers.provider.getBlock(this.result.blockNumber);
-      // console.log(block.timestamp, new Date(block.timestamp * 1000));
+      this.result = await this.season.sunrise(mockVal[4]);
       
       // Verify that sunrise was profitable assuming a 50% average success rate
       // Get bean balance after reward. Assumption is that the balance of the sender was zero previously
-      const beanBalance = (await this.bean.balanceOf(owner.address)).toNumber() / Math.pow(10, 6);
+      
+      const beanBalance = (await this.tokenFacet.getAllBalance(owner.address, BEAN)).totalBalance.toNumber() / Math.pow(10, 6);
       const rewardAmount = parseFloat((beanBalance - startingBeanBalance).toFixed(6));
 
       // Determine how much gas was used
@@ -254,13 +256,14 @@ describe('Sun', function () {
       const failAdjustedGasCostBean = failAdjustedGasCostEth * beanEthPrice;
 
       if (VERBOSE) {
-        console.log('sunrise call tx', this.result);
+        // console.log('sunrise call tx', this.result);
         const logs = await ethers.provider.getLogs(this.result.hash);
         viewGenericUint256Logs(logs);
         console.log('reward beans: ', rewardAmount);
         console.log('eth price', ethPrice);
         console.log('bean price', beanPrice);
         console.log('gas used', gasUsed);
+        console.log('to mode', mockVal[4]);
         console.log('base fee', blockBaseFee);
         console.log('failure adjusted gas cost (eth)', failAdjustedGasCostEth);
         console.log('failure adjusted cost (bean)', failAdjustedGasCostBean);
