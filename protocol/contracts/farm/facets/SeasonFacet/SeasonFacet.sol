@@ -89,6 +89,7 @@ contract SeasonFacet is Weather {
 
         emit GenericUint256(blocksLate, "blocks late");
 
+        // TODO: just one return value
         (uint256 incentiveAmount, uint256 beanEthPrice, uint256 gasUsed, uint256 gasCostWei, uint256 beanPrice) = LibIncentive.determineReward(initialGasLeft, blocksLate);
         emit GenericUint256(incentiveAmount, "incentive");
         emit GenericUint256(beanEthPrice, "beanethprice");

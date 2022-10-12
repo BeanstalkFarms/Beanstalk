@@ -24,7 +24,7 @@ library LibIncentive {
     function determineReward(
         uint256 initialGasLeft,
         uint256 blocksLate
-    ) internal view returns (uint256, uint256, uint256, uint256, uint256) {
+    ) internal view returns (uint256, uint256, uint256, uint256, uint256) { // TODO: just one return value
 
         // Gets the current bean price based on the curve pool.
         // In the future, this can be swapped out to another oracle
@@ -32,35 +32,29 @@ library LibIncentive {
 
         // ethUsdPrice has 8 decimal precision, bean has 6.
         uint256 beanEthPrice = C.chainlinkContract().latestAnswer() // Eth price in USD (8 decimals)
-                .mul(1e4)           // Multiplies eth by 1e4 so that the result of division will also have 6 decimals
-                .div(beanPriceUsd); // number of beans required to purchase one eth
+            .mul(1e4)           // Multiplies eth by 1e4 so that the result of division will also have 6 decimals
+            .div(beanPriceUsd); // number of beans required to purchase one eth
 
         uint256 gasUsed = Math.min(initialGasLeft.sub(gasleft()) + C.getSunriseGasOverhead(), C.getMaxSunriseGas());
         uint256 gasCostWei = C.basefeeContract().block_basefee()    // (BASE_FEE
-                .add(C.getSunrisePriorityFeeBuffer())               // + PRIORITY_FEE_BUFFER)
-                .mul(gasUsed);                                      // * GAS_USED
+            .add(C.getSunrisePriorityFeeBuffer())                   // + PRIORITY_FEE_BUFFER)
+            .mul(gasUsed);                                          // * GAS_USED
         uint256 sunriseReward = Math.min(
-                gasCostWei.mul(beanEthPrice).div(1e18) + C.getBaseReward(), // divide by 1e18 to convert wei to eth
-                C.getMaxReward()
+            gasCostWei.mul(beanEthPrice).div(1e18) + C.getBaseReward(), // divide by 1e18 to convert wei to eth
+            C.getMaxReward()
         );
 
         return (LibIncentive.fracExp(sunriseReward, 100, blocksLate.mul(C.getBlockLengthSeconds()), 1), beanEthPrice, gasUsed, gasCostWei, beanPriceUsd);
     }
 
     function getCurveBeanPrice() internal view returns (uint256 price) {
-        // Cumulative balances were just saved as a result of stepOracle(), retrieve from storage
+        // Cumulative balances were just calculated/saved as a result of stepOracle(), retrieve from storage
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256[2] memory rates = getRates();
         uint256[2] memory xp = LibCurve.getXP(s.co.balances, rates);
         uint256 a = C.curveMetapool().A_precise();
         uint256 D = LibCurve.getD(xp, a);
         price = LibCurve.getPrice(xp, rates, a, D);
-    }
-    
-    function getRates() private view returns (uint256[2] memory rates) {
-        // Decimals will always be 6 because we can only mint beans
-        // 10**(36-decimals)
-        return [1e30, C.curve3Pool().get_virtual_price()];
     }
 
     /// @notice fracExp estimates an exponential expression in the form: k * (1 + 1/q) ^ N.
@@ -160,5 +154,11 @@ library LibIncentive {
                 )
             )
         }
+    }
+
+    function getRates() private view returns (uint256[2] memory rates) {
+        // Decimals will always be 6 because we can only mint beans
+        // 10**(36-decimals)
+        return [1e30, C.curve3Pool().get_virtual_price()];
     }
 }
