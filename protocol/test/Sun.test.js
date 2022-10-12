@@ -196,28 +196,31 @@ describe('Sun', function () {
 
   it("sunrise reward", async function() {
 
-    // Reset start timestamp so these calls will still occur within the first block
-    await this.season.resetSeasonStart();
-
-    const VERBOSE = false;
-    // [[pool balances], eth price, base fee]
+    const VERBOSE = true;
+    // [[pool balances], eth price, base fee, secondsLate]
     const mockedValues = [
-      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9)],
-      [[toBean('10000'), to18('50000')], 3000 * Math.pow(10, 8), 30 * Math.pow(10, 9)],
-      [[toBean('50000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9)],
-      [[toBean('10000'), to18('10000')], 3000 * Math.pow(10, 8), 100 * Math.pow(10, 9)]
+      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 0],
+      [[toBean('10000'), to18('50000')], 3000 * Math.pow(10, 8), 30 * Math.pow(10, 9), 0],
+      [[toBean('50000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 0],
+      [[toBean('10000'), to18('10000')], 3000 * Math.pow(10, 8), 100 * Math.pow(10, 9), 0],
+      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 24],
+      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 500]
     ];
 
     const startingBeanBalance = (await this.bean.balanceOf(owner.address)).toNumber() / Math.pow(10, 6);
-    for (const mockAns of mockedValues) {
+    for (const mockVal of mockedValues) {
 
       snapshotId = await takeSnapshot();
 
-      await this.beanThreeCurve.set_balances(mockAns[0]);
+      await this.beanThreeCurve.set_balances(mockVal[0]);
       await this.beanThreeCurve.reset_cumulative();
 
-      await this.chainlink.setAnswer(mockAns[1]);
-      await this.basefee.setAnswer(mockAns[2]);
+      await this.chainlink.setAnswer(mockVal[1]);
+      await this.basefee.setAnswer(mockVal[2]);
+
+      const secondsLate = mockVal[3];
+      const effectiveSecondsLate = Math.min(secondsLate, 300);
+      await this.season.resetSeasonStart(secondsLate);
 
       this.result = await this.season.sunrise(EXTERNAL);
       // Use this to test reward exponentiation
@@ -261,9 +264,10 @@ describe('Sun', function () {
         console.log('base fee', blockBaseFee);
         console.log('failure adjusted gas cost (eth)', failAdjustedGasCostEth);
         console.log('failure adjusted cost (bean)', failAdjustedGasCostBean);
+        console.log('failure adjusted cost * late exponent (bean)', failAdjustedGasCostBean * Math.pow(1.01, effectiveSecondsLate));
       }
 
-      expect(rewardAmount).to.greaterThan(failAdjustedGasCostBean);
+      expect(rewardAmount).to.greaterThan(failAdjustedGasCostBean * Math.pow(1.01, effectiveSecondsLate));
 
       await expect(this.result).to.emit(this.season, 'Incentivization')
           .withArgs(owner.address, Math.trunc(rewardAmount * Math.pow(10, 6)));
