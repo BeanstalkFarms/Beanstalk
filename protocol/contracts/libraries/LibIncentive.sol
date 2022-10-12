@@ -26,7 +26,9 @@ library LibIncentive {
         uint256 blocksLate
     ) internal view returns (uint256, uint256, uint256, uint256, uint256) {
 
-        uint256 beanPriceUsd = LibIncentive.getBeanPrice();
+        // Gets the current bean price based on the curve pool.
+        // In the future, this can be swapped out to another oracle
+        uint256 beanPriceUsd = LibIncentive.getCurveBeanPrice();
 
         // ethUsdPrice has 8 decimal precision, bean has 6.
         uint256 beanEthPrice = C.chainlinkContract().latestAnswer() // Eth price in USD (8 decimals)
@@ -45,7 +47,7 @@ library LibIncentive {
         return (LibIncentive.fracExp(sunriseReward, 100, blocksLate.mul(C.getBlockLengthSeconds()), 1), beanEthPrice, gasUsed, gasCostWei, beanPriceUsd);
     }
 
-    function getBeanPrice() internal view returns (uint256 price) {
+    function getCurveBeanPrice() internal view returns (uint256 price) {
         // Cumulative balances were just saved as a result of stepOracle(), retrieve from storage
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256[2] memory rates = getRates();
