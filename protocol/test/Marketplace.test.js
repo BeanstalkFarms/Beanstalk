@@ -739,7 +739,7 @@ describe('Marketplace', function () {
         })
 
         it('emits event', async function () {
-          await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '1000');
+          await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '1000', '500');
         })
       })
 
@@ -776,7 +776,7 @@ describe('Marketplace', function () {
         })
 
         it('emits event', async function () {
-          await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '500');
+          await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '500', '250');
         })
       })
 
@@ -813,7 +813,7 @@ describe('Marketplace', function () {
         })
 
         it('emits event', async function () {
-          await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 500, '200');
+          await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 500, '200', '100');
         })
       })
 
@@ -886,7 +886,7 @@ describe('Marketplace', function () {
         })
 
         it('emits event', async function () {
-          await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '500');
+          await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '500', '250');
         })
       })
     })
@@ -1073,7 +1073,7 @@ describe('Marketplace', function () {
           })
 
           it('emits event', async function () {
-            await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '1000');
+            await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '1000', '500');
           })
         })
 
@@ -1109,7 +1109,7 @@ describe('Marketplace', function () {
           })
 
           it('emits event', async function () {
-            await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '500');
+            await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '500', '250');
           })
         })
 
@@ -1146,7 +1146,7 @@ describe('Marketplace', function () {
           })
 
           it('emits event', async function () {
-            await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 500, '200');
+            await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 500, '200', '100');
           })
         })
 
@@ -1216,7 +1216,7 @@ describe('Marketplace', function () {
           })
 
           it('emits event', async function () {
-            await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '500');
+            await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '500', '250');
           })
         })
       })
