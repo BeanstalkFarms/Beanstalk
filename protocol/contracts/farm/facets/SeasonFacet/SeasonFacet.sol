@@ -69,11 +69,16 @@ contract SeasonFacet is Weather {
         emit Sunrise(season());
     }
 
-    function incentivize(address account, uint256 amount, LibTransfer.To _mode) private returns (uint256) {
-        uint256 timestamp = block.timestamp.sub(
-            s.season.start.add(s.season.period.mul(season()))
-        );
-        if (timestamp > 300) timestamp = 300;
+    function incentivize(
+        address account, 
+        uint256 amount, 
+        LibTransfer.To _mode
+    ) 
+        private 
+        returns (uint256) 
+    {
+        uint256 timestamp = block.timestamp.sub(s.season.start.add(s.season.period.mul(season())));
+        if(timestamp > 300) timestamp = 300;
         uint256 incentive = LibIncentive.fracExp(amount, 100, timestamp, 1);
         LibTransfer.mintToken(C.bean(), incentive, account, _mode);
         emit Incentivization(account, incentive);

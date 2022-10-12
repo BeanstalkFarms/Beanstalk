@@ -30,7 +30,7 @@ contract MockFieldFacet is FieldFacet {
         s.f.pods = s.f.pods + amount;
     }
 
-    function totalTrueSoil() external returns(uint256) {
+    function totalTrueSoil() external view returns (uint256) {
         return s.f.soil;
     }
 }

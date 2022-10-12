@@ -94,7 +94,7 @@ contract Storage {
     // Field stores global Field balances.
     struct Field {
         uint128 soil; // The number of Soil currently available.
-        uint128 beanSownInSeason; // the number of bean sown within a season.
+        uint128 beanSown; // the number of bean sown within a season.
         uint256 pods; // The pod index; the total number of Pods ever minted.
         uint256 harvested; // The harvested index; the total number of Pods that have ever been Harvested.
         uint256 harvestable; // The harvestable index; the total number of Pods that have ever been Harvestable. Included previously Harvested Beans.
@@ -184,7 +184,8 @@ contract Storage {
 
     // Weather stores global level Weather balances.
     struct Weather {
-        uint256 startSoil; // The number of Soil at the start of the current Season.
+        // do we need startSoil?
+        uint256 startSoil; // The number of Soil at the start of the current Season. 
         uint256 lastDSoil; // Delta Soil; the number of Soil purchased last Season.
         uint96 lastSoilPercent; // DEPRECATED: Was removed with Extreme Weather V2
         uint32 lastSowTime; // The number of seconds it took for all but at most 1 Soil to sell out last Season.

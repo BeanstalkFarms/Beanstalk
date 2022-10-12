@@ -11,6 +11,8 @@ import "./LibAppStorage.sol";
 import "./LibSafeMath32.sol";
 import "./LibSafeMath128.sol";
 import "./LibPRBMath.sol";
+import { console } from "forge-std/console.sol";
+
 
 
 /**
@@ -24,12 +26,11 @@ library LibDibbler {
     using LibSafeMath128 for uint128;
 
     uint256 private constant A = 2;
-    uint256 private constant BLOCK_ELAPSED_MAX = 25;
-    uint256 private constant DENOMINATOR = 5672425341971495578; //LibPRBMath.logBase2(A.mul(BLOCK_ELAPSED_MAX.mul(LibPRBMath.LOG_SCALE)).add(LibPRBMath.LOG_SCALE));
+    uint256 private constant MAX_BLOCK_ELAPSED = 25;
+    uint256 private constant DENOMINATOR = 5672425341971495578; //log2(A * BLOCK_ELAPSED_MAX + 1)
     uint256 private constant SCALE = 1e18;
     uint256 private constant DECIMALS = 1e6;
-
-
+    
     event Sow(
         address indexed account,
         uint256 index,
@@ -43,15 +44,18 @@ library LibDibbler {
     function sow(uint256 amount, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // We can assume amount <= soil from getSowAmount
-
         // the amount of soil changes as a function of the morning auction;
-        // instead of updating soil, we scale down how much soil is used, and scale soil up in view function
+        // instead of updating soil, we scale down how much soil is used, and scale soil up in totalSoil function
         if (s.season.AbovePeg) {
-            uint128 maxYield = uint128(s.w.yield).add(100).mul(uint128(DECIMALS));
-            s.f.soil =
-                s.f.soil - // safeMath not needed, as morningAuction() will never be higher than s.w.yield
-                uint128(amount.mulDiv(morningAuction().add(100 * DECIMALS),maxYield,LibPRBMath.Rounding.Up));
-
+            uint256 maxYield = uint256(s.w.yield).add(100).mul((DECIMALS));
+            s.f.soil = s.f.soil - // safeMath not needed, as morningAuction() will never be higher than s.w.yield
+                uint128(
+                    amount.mulDiv(
+                        morningAuction().add(1e8),
+                        maxYield,
+                        LibPRBMath.Rounding.Up
+                        )
+                    );
         } else {
             s.f.soil = s.f.soil - uint128(amount);
         }
@@ -90,20 +94,73 @@ library LibDibbler {
         s.w.nextSowTime = uint32(block.timestamp.sub(s.season.timestamp));
     }
 
-    //this function returns the weather scaled down based on the dutch auction
-    //has precision level 1e6, as soil has 1e6 precision
+
+
+    /// @dev function returns the weather scaled down based on the dutch auction
+    // precision level 1e6, as soil has 1e6 precision (1% = 1e6)
+    // FuTuRe oF FiNaNcE
     function morningAuction() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 delta = block.number.sub(s.season.sunriseBlock);
         if (delta == 0) {
             return DECIMALS;
-        } else if (delta < 25) {
-            uint256 x = LibPRBMath.logBase2(
-                A.mul(delta.mul(SCALE)).add(SCALE)
-            );
-            return uint256(s.w.yield).mul(DECIMALS).mulDiv(x,DENOMINATOR).max(DECIMALS); //minimium of 1% yield
+        } else if (delta == 1) {
+            return AuctionMath(279415312704); //minimium of 1% yield
+        } else if (delta == 2) {
+            return AuctionMath(409336034395);
+        } else if (delta == 3) {
+            return AuctionMath(494912626048); 
+        } else if (delta == 4) {
+            return AuctionMath(558830625409);
+        } else if (delta == 5) {
+            return AuctionMath(609868162219);
+        } else if (delta == 6) {
+            return AuctionMath(652355825780);
+        } else if (delta == 7) {
+            return AuctionMath(688751347100); 
+        } else if (delta == 8) {
+            return AuctionMath(720584687295);
+        } else if (delta == 9) {
+            return AuctionMath(748873234524);
+        } else if (delta == 10) {
+            return AuctionMath(774327938752);
+        } else if (delta == 11) {
+            return AuctionMath(797465225780); 
+        } else if (delta == 12) {
+            return AuctionMath(818672068791);
+        } else if (delta == 13) {
+            return AuctionMath(838245938114);
+        } else if (delta == 14) {
+            return AuctionMath(856420437864);
+        } else if (delta == 15) {
+            return AuctionMath(873382373802); 
+        } else if (delta == 16) {
+            return AuctionMath(889283474924);
+        } else if (delta == 17) {
+            return AuctionMath(904248660443);
+        } else if (delta == 18) {
+            return AuctionMath(918382006208);
+        } else if (delta == 19) {
+            return AuctionMath(931771138485);
+        } else if (delta == 20) {
+            return AuctionMath(944490527707);
+        } else if (delta == 21) {
+            return AuctionMath(956603996980);
+        } else if (delta == 22) {
+            return AuctionMath(968166659804);
+        } else if (delta == 23) {
+            return AuctionMath(979226436102);
+        } else if (delta == 24) {
+            return AuctionMath(989825252096);
         } else {
             return uint256(s.w.yield).mul(DECIMALS);
         }
+    }
+
+    // helpers
+    /// @dev takes in 1e12 number to multiply with yield, to get 1e6 scaled down weather
+    function AuctionMath(uint256 a) internal view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return uint256(s.w.yield).mulDiv(a,1e6).max(DECIMALS);
     }
 }

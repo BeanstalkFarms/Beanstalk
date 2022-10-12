@@ -69,7 +69,7 @@ contract FieldFacet is ReentrancyGuard {
     {
         amount = LibTransfer.burnToken(C.bean(), amount, msg.sender, mode);
         pods = LibDibbler.sow(amount, msg.sender);
-        s.f.beanSownInSeason = s.f.beanSownInSeason + uint128(amount); // need safeMath?
+        s.f.beanSown = s.f.beanSown + uint128(amount); // safeMath not needed
     }
 
     /**
@@ -153,7 +153,7 @@ contract FieldFacet is ReentrancyGuard {
 
     function totalSoil() public view returns (uint256) {
         if(s.season.AbovePeg){
-            uint256 _yield = uint256(yield()).add(100*DECIMAL);
+            uint256 _yield = uint256(yield()).add(100 * DECIMAL);
             return uint256(s.f.soil).mulDiv(uint256(s.w.yield).add(100).mul(DECIMAL),_yield);
         }
         else{
@@ -161,20 +161,19 @@ contract FieldFacet is ReentrancyGuard {
         }
     }
 
-
-    //yield now has precision level 1e6 i.e 1% = 1 * 1e6
+    /// @dev yield now has precision level 1e6 (1% = 1e6)
     function yield() public view returns (uint256) {
         return LibDibbler.morningAuction();
     }
 
-    // Peas are the potential pods that can be issued within a season.
-    // totalPeas gives the remaining pods that can be sown within a season, 
-    // totalMaxPeas gives the maximum that can be sown wthin a season
+    /// @notice Peas are the potential pods that can be issued within a season.
+    /// Returns the maximum pods issued within a season
     function maxPeas() external view returns (uint256) {
         return s.w.startSoil.mul(s.w.yield.add(100)).div(100);
     }
 
-    function peas() external view returns (uint256) {
-        return s.f.soil.add(s.f.soil.mul(s.w.yield).div(100));
+    /// Returns the remaining pods that can be sown within a season.
+    function peas() external view returns (uint128) {
+        return s.f.soil.mul(s.w.yield.add(100)).div(100);
     }
 }

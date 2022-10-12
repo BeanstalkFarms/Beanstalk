@@ -7,9 +7,11 @@ import { console } from "forge-std/console.sol";
 import { FieldFacet } from "farm/facets/FieldFacet.sol";
 import "./utils/InitDiamondDeployer.sol";
 import "./utils/LibConstant.sol";
+import "libraries/LibPRBMath.sol";
 
 contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
   using SafeMath for uint256;
+  using LibPRBMath for uint256;
   using LibSafeMath32 for uint32;
   using Decimal for Decimal.D256;
 
@@ -284,91 +286,119 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     //deletes
     assertEq(marketplace.podListing(0), 0);
   }
-  //MORNING AUCTION STUFF
-  function testMorningAuctionValues(uint256 blockNo,uint32 __weather) public {
 
-    //verify morning auction value align with manually calculated values
+  // Morning Auction
+  function testMorningAuctionValues(uint256 blockNo,uint32 __weather) public {
+    // tests that morning auction values align with manually calculated values
     uint256 _weather = bound(__weather,1,69420); // arbitary large number
     season.setYieldE(uint32(_weather));
-    blockNo = bound(blockNo,1,301); // 12s block time = 300 blocks in an season
+    blockNo = bound(blockNo,1,26); // 12s block time = 300 blocks in an season
     uint256[26] memory ScaleValues;
     ScaleValues = [
-      uint256(1 * 1e6),
-      27.9415 * 1e6 / 100,
-      40.9336 * 1e6 / 100,
-      49.4912 * 1e6 / 100,
-      55.8830 * 1e6 / 100,
-      60.9868 * 1e6 / 100,
-      65.2355 * 1e6 / 100,
-      68.8751 * 1e6 / 100,
-      72.0584 * 1e6 / 100,
-      74.8873 * 1e6 / 100,
-      77.4327 * 1e6 / 100,
-      79.7465 * 1e6 / 100,
-      81.8672 * 1e6 / 100,
-      83.8245 * 1e6 / 100,
-      85.6420 * 1e6 / 100,
-      87.3382 * 1e6 / 100,
-      88.9283 * 1e6 / 100,
-      90.4248 * 1e6 / 100,
-      91.8382 * 1e6 / 100,
-      93.1771 * 1e6 / 100,
-      94.4490 * 1e6 / 100,
-      95.6603 * 1e6 / 100,
-      96.8166 * 1e6 / 100,
-      97.9226 * 1e6 / 100,
-      98.9825 * 1e6 / 100,
-      100 * 1e6 / 100
-      ];
+      uint256(1000000000000000000), //Delta = 0
+      27941531270472219644, // Delta = 1
+      40933603439553744066, // 2
+      49491262604822332450, // 3
+      55883062540944439288, // 4
+      60986816221982127737, // 5
+      65235582578068370432, // 6
+      68875134710025963710, // 7
+      72058468729527780355, // 8 
+      74887323452496691911, // 9
+      77432793875294552094, // 10
+      79746522578026803905, // 11
+      81867206879107488133, // 12
+      83824593811416658932, // 13
+      85642043786496853293, // 14
+      87338237380220956962, // 15
+      88928347492454347382, // 16
+      90424866044376076517, // 17
+      91838200620871701185, // 18
+      93177113848540590076, // 19
+      94449052770715264861, // 20
+      95660399698026829873, // 21
+      96816665980498183355, // 22
+      97922643610274415212, // 23
+      98982525209644664900, // 24
+      100000000000000000000
+    ];
+    ScaleValues = [
+      uint256(100000000000000000), //Delta = 0
+      2794153127047221964, // Delta = 1
+      4093360343955374406, // 2
+      4949126260482233245, // 3
+      5588306254094443928, // 4
+      6098681622198212773, // 5
+      6523558257806837043, // 6
+      6887513471002596371, // 7
+      7205846872952778035, // 8 
+      7488732345249669191, // 9
+      7743279387529455209, // 10
+      7974652257802680390, // 11
+      8186720687910748813, // 12
+      8382459381141665893, // 13
+      8564204378649685329, // 14
+      8733823738022095696, // 15
+      8892834749245434738, // 16
+      9042486604437607651, // 17
+      9183820062087170118, // 18
+      9317711384854059007, // 19
+      9444905277071526486, // 20
+      9566039969802682987, // 21
+      9681666598049818335, // 22
+      9792264361027441521, // 23
+      9898252520964466490, // 24
+      10000000000000000000
+    ];
   
-      vm.roll(blockNo);
-      blockNo = blockNo > 26? 26 : blockNo;
-      uint256 calcWeather = blockNo == 1 ? ScaleValues[blockNo - 1] : ScaleValues[blockNo - 1] * season.maxYield(); // weather is always 1% if sown at same block as sunrise, irregardless of weather
-      assertApproxEqRel(field.yield(),calcWeather,0.00001*1e18);
-    }
+    vm.roll(blockNo);
+    _weather = uint256(season.maxYield()).mulDiv(ScaleValues[blockNo - 1],1e13);
+    uint256 calcWeather = blockNo == 1 ? 1e6 : max(_weather,1 * 1e6); // weather is always 1% if sown at same block as sunrise, irregardless of weather
+    assertApproxEqRel(field.yield(),calcWeather,0.00001*1e18);
+    //assertEq(field.yield(),calcWeather);
+  }
   
   // Various sowing at differnt dutch auctions
   function testPeas() public {
     _beforeEachMorningAuction();
-    
     uint256 _block = 1;
     uint256 TotalSoilSown = 0; 
-    while(field.totalSoil() > 1 * 1e6){
-    uint256 amount = uint256(keccak256(abi.encodePacked(_block))).mod(10 * 1e6);
-    vm.roll(_block);
-    //console.log("rolling to block",_block,",the delta is", _block - 1);
-    uint256 LastTotalSoil = field.totalSoil();
-    uint256 BreanBal = C.bean().balanceOf(brean);
-    uint256 LastTrueSoil = field.totalTrueSoil();
-    uint256 AmtPodsGained = 0;
-    vm.prank(brean);
-    AmtPodsGained = field.sowWithMin(amount, 1 * 1e6, amount, LibTransfer.From.EXTERNAL);
-    TotalSoilSown = TotalSoilSown + amount;
-    assertApproxEqAbs(LastTotalSoil - field.totalSoil(), amount, 1);
-    // console.log("Current Yield:", field.yield());
-    // console.log("TotalSoil Start of Block:",LastTotalSoil);
-    // console.log("TotalSoil End of Block:",field.totalSoil());
-    // console.log("TrueSoil Start of Block:",LastTrueSoil);
-    // console.log("TrueSoil End of Block:",field.totalTrueSoil());
-    // console.log("TotalSoil Consumed:",LastTotalSoil - field.totalSoil());
-    // console.log("TrueSoil Consumed:", LastTrueSoil - field.totalTrueSoil()); 
-    // console.log("Beans Burnt:",BreanBal - C.bean().balanceOf(brean));
-    // console.log("pods gained:",AmtPodsGained);
-    // console.log("total pods:",field.totalPods());
-    _block++;
+    uint256 maxAmount = 10 * 1e6;
+    while(field.totalSoil() > maxAmount){
+      uint256 amount = uint256(keccak256(abi.encodePacked(_block))).mod(maxAmount);
+      vm.roll(_block);
+      console.log("rolling to block",_block);
+      uint256 LastTotalSoil = field.totalSoil();
+      uint256 BreanBal = C.bean().balanceOf(brean);
+      uint256 LastTrueSoil = field.totalTrueSoil();
+      vm.prank(brean);
+      uint256 AmtPodsGained = field.sowWithMin(amount, 1 * 1e6, amount, LibTransfer.From.EXTERNAL);
+      TotalSoilSown = TotalSoilSown + amount;
+      assertApproxEqAbs(LastTotalSoil - field.totalSoil(), amount, 1);
+      // console.log("Current Yield:", field.yield());
+      // console.log("TotalSoil Start of Block:",LastTotalSoil);
+      // console.log("TotalSoil End of Block:",field.totalSoil());
+      // console.log("TrueSoil Start of Block:",LastTrueSoil);
+      // console.log("TrueSoil End of Block:",field.totalTrueSoil());
+      // console.log("TotalSoil Consumed:",LastTotalSoil - field.totalSoil());
+      // console.log("TrueSoil Consumed:", LastTrueSoil - field.totalTrueSoil()); 
+      // console.log("Beans Burnt:",BreanBal - C.bean().balanceOf(brean));
+      // console.log("pods gained:",AmtPodsGained);
+      // console.log("total pods:",field.totalPods());
+      _block++;
     }
+    vm.roll(50);
     uint256 soilLeft = field.totalSoil();
     vm.prank(brean);
     field.sowWithMin(soilLeft, 1 * 1e6, soilLeft, LibTransfer.From.EXTERNAL);
-    TotalSoilSown = TotalSoilSown + 1e6;
+    TotalSoilSown = TotalSoilSown + soilLeft;
     assertApproxEqRel(field.maxPeas(),field.totalUnharvestable(),0.000001*1e18); //.0001% accuracy
     assertGt(TotalSoilSown,100 * 1e6); // check the amt of soil sown at the end of the season is greater than the start soil
-    
+
   }
  
-  function testRoundingError() public {
+  function _testRoundingError() public {
      _beforeEachMorningAuction();
-    
     uint256 _block = 1;
     uint256 TotalSoilSown = 0; 
     uint256 amount = 5 * 1e6;
@@ -429,6 +459,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     assertApproxEqRel(field.totalUnharvestable(), 200 * 1e6,0.0000001*1e18); //.00001% accuracy
   }
 
+  // BeforeEach Helpers
   function _beforeEachMorningAuction() public {
     season.setYieldE(100);
     season.setStartSoilE(100*1e6);
@@ -436,7 +467,6 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     season.setAbovePegE(true);
   }
 
-  // BeforeEach Helpers
   function _beforeEachFullHarvest() public {
     field.incrementTotalHarvestableE(101 * 1e6);
     uint256[] memory harvestPlot = new uint[](1);
@@ -547,6 +577,11 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     field.sowWithMin(100 * 1e6, 1 * 1e6, 50 * 1e6, LibTransfer.From.EXTERNAL);
     vm.stopPrank();
   } 
+
+  // Test Helpers
+  function max(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a >= b ? a : b;
+    }
 
   
 }

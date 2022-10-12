@@ -37,6 +37,7 @@ contract Weather is Sun {
         return s.r;
     }
 
+    // precision 1e6
     function maxYield() public view returns (uint32) {
         return s.w.yield;
     }
@@ -64,9 +65,9 @@ contract Weather is Sun {
         );
 
         // Calculate Delta Soil Demand
-        
-        //uint256 dsoil = s.w.startSoil.sub(endSoil);
-        uint256 dsoil = s.f.beanSownInSeason;
+        // is startSoil used anywhere else?
+        uint256 dsoil = s.f.beanSown;
+        s.f.beanSown = 0;
 
         Decimal.D256 memory deltaPodDemand;
 

@@ -169,7 +169,7 @@ contract SunTest is Sun, Test {
     field.incrementTotalPodsE(pods);
     console.log("Pods outstanding: %s", pods);
 
-    (uint256 toFert, uint256 toField, uint256 toSilo, uint256 newHarvestable, uint256 soil) 
+    (/*uint256 toFert, uint256 toField*/, , uint256 toSilo, , /*uint256 newHarvestable, uint256 soil*/) 
       = _testSunrise(deltaB, newBeans, pods, false, true);
 
     // @note only true if we've never minted to the silo before
@@ -187,7 +187,7 @@ contract SunTest is Sun, Test {
     field.incrementTotalPodsE(pods);
     console.log("Pods outstanding: %s", pods);
 
-    (uint256 toFert, uint256 toField, uint256 toSilo, uint256 newHarvestable, uint256 soil) 
+    (/*uint256 toFert, uint256 toField, */, , uint256 toSilo, uint256 newHarvestable,/* uint256 soil*/) 
       = _testSunrise(deltaB, newBeans, pods, false, true);
 
     // @note only true if we've never minted to the silo before
