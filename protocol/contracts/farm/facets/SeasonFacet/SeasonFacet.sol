@@ -96,7 +96,6 @@ contract SeasonFacet is Weather {
         emit GenericUint256(gasCostWei, "gasPriceWei");
         emit GenericUint256(beanPrice, "beanPrice");
 
-        // uint256 incentiveAmount = LibIncentive.determineReward(initialGasLeft, blocksLate);
         LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);
         emit Incentivization(account, incentiveAmount);
         return incentiveAmount;

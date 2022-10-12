@@ -42,8 +42,7 @@ library LibIncentive {
                 C.getMaxReward()
         );
 
-        // return (LibIncentive.fracExp(sunriseReward, 100, blocksLate.mul(C.getBlockLengthSeconds()), 1), beanEthPrice, gasUsed, gasCostWei);
-        return (sunriseReward, beanEthPrice, gasUsed, gasCostWei, beanPriceUsd);
+        return (LibIncentive.fracExp(sunriseReward, 100, blocksLate.mul(C.getBlockLengthSeconds()), 1), beanEthPrice, gasUsed, gasCostWei, beanPriceUsd);
     }
 
     function getBeanPrice() internal view returns (uint256 price) {
