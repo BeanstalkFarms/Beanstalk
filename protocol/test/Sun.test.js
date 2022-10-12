@@ -34,10 +34,6 @@ describe('Sun', function () {
     await this.beanThreeCurve.set_supply(toBean('100000'));
     await this.beanThreeCurve.set_A_precise('1000');
     await this.beanThreeCurve.set_virtual_price(to18('1'));
-    // Set twice so the prev balance is nonzero
-    await this.beanThreeCurve.set_balances([toBean('1000000'), to18('1000000')]);
-    await this.beanThreeCurve.set_balances([toBean('1000000'), to18('1000000')]);
-    await this.beanThreeCurve.reset_cumulative();
 
     await this.usdc.mint(owner.address, to6('10000'))
     await this.bean.mint(owner.address, to6('10000'))
@@ -199,21 +195,28 @@ describe('Sun', function () {
 
   it("sunrise reward", async function() {
 
+    // Reset start timestamp so these calls will still occur within the first block
+    await this.season.resetSeasonStart();
+
     const VERBOSE = true;
-    const mockedEthAndBasefee = [
-      [1500 * Math.pow(10, 8), 15 * Math.pow(10, 9)],
-      [3000 * Math.pow(10, 8), 30 * Math.pow(10, 9)],
-      [1500 * Math.pow(10, 8), 150 * Math.pow(10, 9)],
-      [3000 * Math.pow(10, 8), 100 * Math.pow(10, 9)]
+    // [[pool balances], eth price, base fee]
+    const mockedValues = [
+      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9)],
+      [[toBean('10000'), to18('50000')], 3000 * Math.pow(10, 8), 30 * Math.pow(10, 9)],
+      [[toBean('50000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9)],
+      [[toBean('10000'), to18('10000')], 3000 * Math.pow(10, 8), 100 * Math.pow(10, 9)]
     ];
 
     const startingBeanBalance = (await this.bean.balanceOf(owner.address)).toNumber() / Math.pow(10, 6);
-    for (const mockAns of mockedEthAndBasefee) {
+    for (const mockAns of mockedValues) {
 
       snapshotId = await takeSnapshot();
 
-      await this.chainlink.setAnswer(mockAns[0]);
-      await this.basefee.setAnswer(mockAns[1]);
+      await this.beanThreeCurve.set_balances(mockAns[0]);
+      await this.beanThreeCurve.reset_cumulative();
+
+      await this.chainlink.setAnswer(mockAns[1]);
+      await this.basefee.setAnswer(mockAns[2]);
 
       this.result = await this.season.sunrise(EXTERNAL);
       // Use this to test reward exponentiation

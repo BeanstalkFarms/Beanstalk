@@ -219,6 +219,10 @@ contract MockSeasonFacet is SeasonFacet {
         stepWeather(deltaB);
     }
 
+    function resetSeasonStart() public {
+        s.season.start = block.timestamp;
+    }
+
     function captureE() external returns (int256 deltaB) {
         stepOracle();
         emit DeltaB(deltaB);
