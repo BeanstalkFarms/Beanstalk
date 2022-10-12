@@ -34,6 +34,7 @@ describe('Sun', function () {
     await this.beanThreeCurve.set_supply(toBean('100000'));
     await this.beanThreeCurve.set_A_precise('1000');
     await this.beanThreeCurve.set_virtual_price(to18('1'));
+    await this.beanThreeCurve.set_balances([toBean('10000'), to18('10000')]);
 
     await this.usdc.mint(owner.address, to6('10000'))
     await this.bean.mint(owner.address, to6('10000'))
@@ -198,7 +199,7 @@ describe('Sun', function () {
     // Reset start timestamp so these calls will still occur within the first block
     await this.season.resetSeasonStart();
 
-    const VERBOSE = true;
+    const VERBOSE = false;
     // [[pool balances], eth price, base fee]
     const mockedValues = [
       [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9)],
