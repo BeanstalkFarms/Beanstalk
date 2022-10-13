@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "./LibWell2.sol";
 import "./LibWellN.sol";
+import "../LibWellData.sol";
 
 /**
  * @author Publius
@@ -22,13 +23,14 @@ library LibWellBalance {
      * State
     **/
 
+    function migrateBalances(bytes32 oldWH, bytes32 newWH, uint256 n) internal {
+        if (n == 2) LibWell2.migrateBalances(oldWH, newWH);
+        else LibWellN.migrateBalances(oldWH, newWH);
+    }
+
     function setBalances(bytes32 wh, uint128[] memory balances) internal {
         if (balances.length == 2) LibWell2.setBalances(wh, balances);
         else LibWellN.setBalances(wh, balances);
-    }
-
-    function getBalancesWithHash(LibWellStorage.WellInfo calldata w, bytes32 wh) internal view returns (uint128[] memory balances) {
-        balances = getBalancesFromHash(wh, w.tokens.length);
     }
 
     // From Hash
@@ -78,25 +80,25 @@ library LibWellBalance {
     // From Id
 
     function getBalancesFromId(address wellId) internal view returns (uint128[] memory balances) {
-        uint256 n = LibWellStorage.getN(wellId);
+        uint256 n = LibWellData.getN(wellId);
         bytes32 wh = LibWellStorage.getWellHash(wellId);
         balances = LibWellBalance.getBalancesFromHash(wh, n);
     }
 
     function getCumulativeBalancesFromId(address wellId) internal view returns (uint224[] memory, uint32) {
-        uint256 n = LibWellStorage.getN(wellId);
+        uint256 n = LibWellData.getN(wellId);
         bytes32 wh = LibWellStorage.getWellHash(wellId);
         return LibWellBalance.getCumulativeBalancesFromHash(wh, n);
     }
 
     function getEmaBalancesFromId(address wellId) internal view returns (uint128[] memory balances) {
-        uint256 n = LibWellStorage.getN(wellId);
+        uint256 n = LibWellData.getN(wellId);
         bytes32 wh = LibWellStorage.getWellHash(wellId);
         balances = LibWellBalance.getEmaBalancesFromHash(wh, n);
     }
 
     function getWellStateFromId(address wellId) internal view returns (LibWellStorage.Balances memory) {
-        uint256 n = LibWellStorage.getN(wellId);
+        uint256 n = LibWellData.getN(wellId);
         bytes32 wh = LibWellStorage.getWellHash(wellId);
         return LibWellBalance.getWellStateFromHash(wh, n);
     }

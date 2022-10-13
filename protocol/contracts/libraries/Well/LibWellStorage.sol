@@ -108,6 +108,10 @@ library LibWellStorage {
         wi = wellStorage().wi[wellId];
     }
 
+    function wellData(address wellId) internal view returns (bytes storage wd) {
+        wd = wellInfo(wellId).data;
+    }
+
     function wellNState(WellInfo calldata w)
         internal
         view
@@ -141,13 +145,5 @@ library LibWellStorage {
         wellHash = keccak256(
             abi.encodePacked(w.wellId, w.tokens, w.data)
         );
-    }
-
-    function getN(address wellId)
-        internal 
-        view 
-        returns (uint256 n)
-    {
-        n = uint256(uint8(wellInfo(wellId).data[1]));
     }
 }

@@ -31,7 +31,7 @@ async function getTimepassed() {
   return ethers.BigNumber.from(`${(await getTimestamp()) - timestamp}`)
 }
 
-describe('Well', function () {
+describe('N Token Well', function () {
   before(async function () {
     [owner,user,user2] = await ethers.getSigners();
     userAddress = user.address;
@@ -42,7 +42,7 @@ describe('Well', function () {
     this.beanstalk = await getAltBeanstalk(contracts.beanstalkDiamond.address)
     this.bean = await getBean()
     this.usdc = await getUsdc()
-    this.weth = await getWeth()
+    this.weth = await ethers.getContractAt('MockWETH', WETH);
 
     A = toBN(await readEmaAlpha())
 
@@ -60,15 +60,15 @@ describe('Well', function () {
     await this.weth.connect(user2).approve(this.beanstalk.address, to18('1'))
     await this.weth.connect(user).approve(this.beanstalk.address, to18('1'))
 
-    wellId = await this.beanstalk.callStatic.buildWell([USDC, BEAN, WETH], '0', typeParams, ['USDC', 'BEAN', 'WETH'])
+    wellId = await this.beanstalk.callStatic.buildWell([USDC, BEAN, WETH], '0', typeParams, ['USDC', 'BEAN', 'WETH'], [6,6,18])
     well = {
       wellId: wellId, 
       tokens: [USDC, BEAN, WETH], 
-      data: await this.beanstalk.encodeWellData(0, 3, '0x')
+      data: await this.beanstalk.encodeWellData(0, '0x', [6,6,18])
     }
     wellHash = await this.beanstalk.computeWellHash(well)
   
-    buildWellResult = await this.beanstalk.buildWell([USDC, BEAN, WETH], '0', typeParams, ['USDC', 'BEAN', 'WETH'])
+    buildWellResult = await this.beanstalk.buildWell([USDC, BEAN, WETH], '0', typeParams, ['USDC', 'BEAN', 'WETH'], [6,6,18])
     this.lp = await ethers.getContractAt('WellToken', wellId)
     await this.lp.connect(user).approve(this.beanstalk.address, to18('100000000'))
     await this.lp.connect(user2).approve(this.beanstalk.address, to18('100000000'))
@@ -87,11 +87,11 @@ describe('Well', function () {
 
   describe('Build Well', async function () {
     it('reverts if not alphabetical', async function () {
-      await expect(this.beanstalk.buildWell([BEAN, WETH, USDC], '0', typeParams, ["BEAN", "USDC"])).to.be.revertedWith("LibWell: Tokens not alphabetical")
+      await expect(this.beanstalk.buildWell([BEAN, WETH, USDC], '0', typeParams, ["BEAN", "USDC"], [6,6])).to.be.revertedWith("LibWell: Tokens not alphabetical")
     })
 
     it('reverts if type data', async function () {
-      await expect(this.beanstalk.buildWell([USDC, BEAN, WETH], '0', TypeEncoder.testType('1'), ["USDC", "BEAN"])).to.be.revertedWith("LibWell: Well not valid.")
+      await expect(this.beanstalk.buildWell([USDC, BEAN, WETH], '0', TypeEncoder.testType('1'), ["USDC", "BEAN"], [6,6])).to.be.revertedWith("LibWell: Well not valid.")
     })
     
     it('sets well info', async function () {

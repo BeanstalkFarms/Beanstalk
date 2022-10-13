@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../LibMath.sol";
 import "../../../C.sol";
@@ -23,17 +24,14 @@ import "../../../C.sol";
 library LibConstantProductWell {
 
     using SafeMath for uint256;
+    using SafeCast for uint256;
     using LibMath for uint256;
 
     // D = π(x_i)^(1/n) * n
     function getD(
         uint128[] memory xs
     ) internal pure returns (uint256 d) {
-        d = uint256(xs[0]);
-        uint256 n = xs.length;
-        for (uint i = 1; i < xs.length; ++i)
-            d = d.mul(uint256(xs[i]));
-        d = d.nthRoot(n).mul(n);
+        d = prodX(xs).nthRoot(xs.length).mul(xs.length);
     }
 
     // x_j = (D / n)^n / π_{i!=j}(x_i) 
@@ -68,43 +66,39 @@ library LibConstantProductWell {
         dX = precision.mul(xs[i]).div(d).mul(xs.length);
     }
 
-    function deltaX(
-        uint256 dXidXj,
+    function getXAtRatio(
         uint128[] memory xs,
         uint256 i,
-        uint256 j
-    ) internal pure returns (int256 dX) {
-        uint256 d;
-        if (xs.length == 2) {
-            d = getD(xs);
-        } else {
-            uint128[] memory _xs = new uint128[](2);
-            _xs[0] = xs[i]; _xs[1] = xs[j];
-            d = getD(_xs);
+        uint256[] memory ratios
+    ) internal pure returns (uint128 x) {
+        uint256 xTemp = prodX(xs);
+        uint256 sumRatio = 0;
+        for (uint _i = 0; _i < xs.length; ++_i) {
+            if (_i != i) sumRatio = sumRatio.add(ratios[_i]);
         }
-        uint256 targetX = d.mul(1e18).div(dXidXj).nthRoot(xs.length);
-        dX = int256(targetX - xs[i]);
+        xTemp = xTemp.mul(ratios[i]).div(sumRatio.div(xs.length-1));
+        x = xTemp.nthRoot(xs.length).toUint128();
     }
 
-    // function deltaD(
-    //     uint256 dXidXj,
-    //     uint128[] memory xs,
-    //     uint256 i,
-    //     uint256 j
-    // ) internal pure returns (int256 dD) {
-    //     uint256 d = getD(xs);
-    //     xs[i] = xs[j].mul(dXidXj).div(1e18);
-    //     uint256 d2 = getD(xs);
-    //     dD = int256(d2 - d);
-    // }
+    function getXDAtRatio(
+        uint128[] memory xs,
+        uint256 i,
+        uint256[] memory ratios
+    ) internal pure returns (uint128 x) {
+        uint256 xSum;
+        for (uint j = 0; j < xs.length; ++j) {
+            if (i != j) {
+                xSum = xSum.add(ratios[i].mul(xs[j]).div(ratios[j]));
+            }
+        }
+        x = xSum.div(xs.length-1).toUint128();
+    }
 
-    // function deltaDX(
-    //     uint256 dXidXj,
-    //     uint128[] memory xs,
-    //     uint256 i,
-    //     uint256 j
-    // ) internal pure returns (int256 dDX) {
-    // }
+    function prodX(uint128[] memory xs) private pure returns (uint256 pX) {
+        pX = uint256(xs[0]);
+        for (uint i = 1; i < xs.length; ++i)
+            pX = pX.mul(uint256(xs[i]));
+    }
 
     function getSignature() internal pure returns (string[] memory signature) {
         return signature;

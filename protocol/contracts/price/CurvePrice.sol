@@ -43,7 +43,8 @@ contract CurvePrice {
         rates[0] = rates[0].mul(pool.price).div(1e6);
         pool.liquidity = getCurveUSDValue(balances, rates);
         pool.deltaB = getCurveDeltaB(balances[0], D);
-        pool.lpUsd = pool.liquidity * 1e18 / ICurvePool(POOL).totalSupply();
+        pool.lpSupply = ICurvePool(POOL).totalSupply();
+        pool.lpUsd = pool.liquidity * 1e18 / pool.lpSupply;
         pool.lpBdv = IBDV(BEANSTALK).bdv(POOL, 1e18);
     }
 

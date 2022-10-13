@@ -68,6 +68,7 @@ library C {
     address private constant FERTILIZER = 0x402c84De2Ce49aF88f5e2eF3710ff89bFED36cB6;
     address private constant FERTILIZER_ADMIN = 0xfECB01359263C12Aa9eD838F878A596F0064aa6e;
     address private constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    address private constant USD = 0xd011400000000000000000000000000000000000;
 
     address private constant TRI_CRYPTO = 0xc4AD29ba4B3c580e6D59105FFf484999997675Ff;
     address private constant TRI_CRYPTO_POOL = 0xD51a44d3FaE010294C616388b506AcdA1bfAAE46;
@@ -176,6 +177,10 @@ library C {
 
     function bean() internal pure returns (IBean) {
         return IBean(BEAN);
+    }
+
+    function usdAddress() internal pure returns (address) {
+        return USD;
     }
 
     function usdc() internal pure returns (IERC20) {

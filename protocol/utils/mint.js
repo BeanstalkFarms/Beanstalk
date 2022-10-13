@@ -1,5 +1,5 @@
 const { USDC_MINTER, BEAN } = require('../test/utils/constants')
-const { getUsdc, getBean, getBeanstalkAdminControls } = require('./contracts.js')
+const { getUsdc, getBean, getBeanstalkAdminControls, getWeth } = require('./contracts.js')
 const { impersonateSigner, impersonateBeanstalkOwner } = require('./signer.js')
 
 async function mintUsdc(address, amount) {
@@ -17,6 +17,13 @@ async function mintEth(address) {
     await hre.network.provider.send("hardhat_setBalance", [address, "0x21E19E0C9BAB2400000"]);
 }
 
+async function mintWeth(address) {
+    await hre.network.provider.send("hardhat_setBalance", [address, "0x21E19E0C9BAB2400000"]);
+    const signer = await impersonateSigner(address)
+    await (await getWeth()).connect(signer).deposit({value: '0x3635C9ADC5DEA00000'})
+}
+
 exports.mintEth = mintEth
 exports.mintUsdc = mintUsdc
 exports.mintBeans = mintBeans
+exports.mintWeth = mintWeth

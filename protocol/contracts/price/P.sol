@@ -15,6 +15,7 @@ contract P {
         uint256 price;
         uint256 liquidity;
         int256 deltaB;
+        uint256 lpSupply;
         uint256 lpUsd;
         uint256 lpBdv;
     }

@@ -2245,11 +2245,57 @@
                 "type": "address"
             }
         ],
+        "name": "getOracle",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "oracle",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "bytes4",
+                        "name": "selector",
+                        "type": "bytes4"
+                    },
+                    {
+                        "internalType": "uint8",
+                        "name": "precision",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "flip",
+                        "type": "bool"
+                    }
+                ],
+                "internalType": "struct LibOracle.Oracle",
+                "name": "os",
+                "type": "tuple"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "tokenI",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "tokenJ",
+                "type": "address"
+            }
+        ],
         "name": "getPrice",
         "outputs": [
             {
                 "internalType": "uint256",
-                "name": "price",
+                "name": "p",
                 "type": "uint256"
             }
         ],
@@ -2267,28 +2313,55 @@
                 "internalType": "address",
                 "name": "tokenJ",
                 "type": "address"
+            }
+        ],
+        "name": "price",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "p",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "tokenI",
+                "type": "address"
             },
             {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "oracle",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "bytes4",
-                        "name": "selector",
-                        "type": "bytes4"
-                    },
-                    {
-                        "internalType": "uint8",
-                        "name": "precision",
-                        "type": "uint8"
-                    }
-                ],
-                "internalType": "struct LibOracle.Oracle",
-                "name": "o",
-                "type": "tuple"
+                "internalType": "address",
+                "name": "tokenJ",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "oracle",
+                "type": "address"
+            },
+            {
+                "internalType": "bytes4",
+                "name": "selector",
+                "type": "bytes4"
+            },
+            {
+                "internalType": "uint8",
+                "name": "precision",
+                "type": "uint8"
+            },
+            {
+                "internalType": "bool",
+                "name": "flip",
+                "type": "bool"
+            },
+            {
+                "internalType": "bool",
+                "name": "registerInverse",
+                "type": "bool"
             }
         ],
         "name": "registerOracle",
@@ -4576,6 +4649,11 @@
                 "internalType": "string[]",
                 "name": "symbols",
                 "type": "string[]"
+            },
+            {
+                "internalType": "uint8[]",
+                "name": "decimals",
+                "type": "uint8[]"
             }
         ],
         "name": "buildWell",
@@ -4597,14 +4675,14 @@
                 "type": "uint8"
             },
             {
-                "internalType": "uint8",
-                "name": "numTokens",
-                "type": "uint8"
-            },
-            {
                 "internalType": "bytes",
                 "name": "typeData",
                 "type": "bytes"
+            },
+            {
+                "internalType": "uint8[]",
+                "name": "decimals",
+                "type": "uint8[]"
             }
         ],
         "name": "encodeWellData",
@@ -5820,6 +5898,52 @@
     {
         "inputs": [
             {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "data",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "w",
+                "type": "tuple"
+            },
+            {
+                "internalType": "contract IERC20",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "pegToken",
+                "type": "address"
+            }
+        ],
+        "name": "getAddXToPeg",
+        "outputs": [
+            {
+                "internalType": "int256",
+                "name": "deltaX",
+                "type": "int256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "address",
                 "name": "wellId",
                 "type": "address"
@@ -5869,6 +5993,173 @@
             {
                 "internalType": "uint256",
                 "name": "value",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "data",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "w",
+                "type": "tuple"
+            },
+            {
+                "internalType": "contract IERC20",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "pegToken",
+                "type": "address"
+            }
+        ],
+        "name": "getPegRatio",
+        "outputs": [
+            {
+                "internalType": "uint256[]",
+                "name": "ratios",
+                "type": "uint256[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "data",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "w",
+                "type": "tuple"
+            },
+            {
+                "internalType": "contract IERC20",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "pegToken",
+                "type": "address"
+            }
+        ],
+        "name": "getRemoveDToPeg",
+        "outputs": [
+            {
+                "internalType": "int256",
+                "name": "deltaX",
+                "type": "int256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "data",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "w",
+                "type": "tuple"
+            },
+            {
+                "internalType": "contract IERC20",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "pegToken",
+                "type": "address"
+            }
+        ],
+        "name": "getSellXToPeg",
+        "outputs": [
+            {
+                "internalType": "int256",
+                "name": "deltaX",
+                "type": "int256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint128[]",
+                "name": "xs",
+                "type": "uint128[]"
+            },
+            {
+                "internalType": "uint256",
+                "name": "i",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256[]",
+                "name": "ratios",
+                "type": "uint256[]"
+            }
+        ],
+        "name": "getXDAtRatio",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "x",
                 "type": "uint256"
             }
         ],
@@ -6038,6 +6329,54 @@
         "name": "whitelistToken",
         "outputs": [],
         "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "a",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "b",
+                "type": "uint256"
+            }
+        ],
+        "name": "max",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "pure",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "a",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "b",
+                "type": "uint256"
+            }
+        ],
+        "name": "min",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "pure",
         "type": "function"
     },
     {

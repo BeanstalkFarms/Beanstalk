@@ -2,6 +2,8 @@
  SPDX-License-Identifier: MIT
 */
 
+import "../Well/LibWellStorage.sol";
+
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
@@ -16,7 +18,9 @@ library LibConvertData {
         BEANS_TO_CURVE_LP,
         CURVE_LP_TO_BEANS,
         UNRIPE_BEANS_TO_UNRIPE_LP,
-        UNRIPE_LP_TO_UNRIPE_BEANS
+        UNRIPE_LP_TO_UNRIPE_BEANS,
+        WELL_TOKENS_TO_BEANS,
+        BEANS_TO_WELL_TOKENS
     }
 
     /// @notice Decoder for the Convert Enum
@@ -58,5 +62,24 @@ library LibConvertData {
             self,
             (ConvertKind, uint256, uint256, address)
         );
+    }
+
+    function convertWell(bytes calldata self)
+        internal
+        pure
+        returns (
+            uint256 amountIn, 
+            uint256 minAmontOut //,
+            // LibWellStorage.WellInfo calldata wi
+        )
+    {
+        (, amountIn, minAmontOut) = abi.decode(
+            self,
+            (ConvertKind, uint256, uint256)
+        );
+        // assembly {
+        //     wi.offset := add(self.offset, 96)
+        //     wi.length := sub(self.length, 96)
+        // }
     }
 }

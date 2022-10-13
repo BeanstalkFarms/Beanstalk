@@ -8,6 +8,8 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../tokens/ERC20/WellToken.sol";
 import "./Type/LibWellType.sol";
+import "./Balance/LibWellBalance.sol";
+import "./LibWellData.sol";
 
 /**
  * @author Publius
@@ -41,29 +43,25 @@ library LibWellBuilding {
         IERC20[] calldata tokens,
         LibWellType.WellType wellType,
         bytes calldata typeData,
-        string[] calldata symbols
+        string[] calldata symbols,
+        uint8[] calldata decimals
     ) internal returns (address wellId) {
         require(isWellValid(tokens, wellType, typeData), "LibWell: Well not valid.");
+        require(tokens.length == symbols.length && tokens.length == decimals.length, "LibWell: arrays different lengths");
         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
 
         require(tokens.length < 9, "LibWell: 8 Tokens max");
 
-        string memory name = symbols[0];
-        string memory symbol = symbols[0];
-        for (uint i = 1; i < tokens.length; ++i) {
-            name = string(abi.encodePacked(name, ":", symbols[i]));
-            symbol = string(abi.encodePacked(symbol, symbols[i]));
-        }
-
         LibWellStorage.WellInfo memory w;
         w.tokens = tokens;
-        w.data = encodeData(wellType, uint8(w.tokens.length), typeData);
+        w.data = LibWellData.encodeData(wellType, uint8(w.tokens.length), decimals, typeData);
 
         LibWellType.registerIfNeeded(wellType);
 
-        // Compute Salt for LP Token Deployment
+        // Compute Salt for LP Token Deployment (Without Well Id being set)
         bytes32 wh = LibWellStorage.computeWellHash(w);
-        wellId = address(new WellToken{salt: wh}(name, symbol));
+
+        wellId = deployWellToken(symbols, wh);
 
         s.indices[s.numberOfWells] = wellId;
         s.numberOfWells = s.numberOfWells.add(1);
@@ -77,20 +75,36 @@ library LibWellBuilding {
         emit BuildWell(w.wellId, tokens, wellType, typeData, w.data, wh);
     }
 
+    function deployWellToken(
+        string[] calldata symbols,
+        bytes32 wh
+    ) private returns (address wellId) {
+        string memory name = symbols[0];
+        string memory symbol = symbols[0];
+        for (uint i = 1; i < symbols.length; ++i) {
+            name = string(abi.encodePacked(name, ":", symbols[i]));
+            symbol = string(abi.encodePacked(symbol, symbols[i]));
+        }
+        wellId = address(new WellToken{salt: wh}(name, symbol));
+
+    }
+
     function modifyWell(
-        LibWellStorage.WellInfo memory w,
+        LibWellStorage.WellInfo calldata w,
         LibWellType.WellType newWellType,
         bytes calldata newTypeData
     ) internal {
         LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
+        LibWellStorage.WellInfo memory newW = w;
+        newW.data = LibWellData.encodeData(newWellType, uint8(w.tokens.length), LibWellData.getDecimals(w.data), newTypeData);
+    
         bytes32 prevWH = LibWellStorage.computeWellHash(w);
-        w.data = encodeData(newWellType, uint8(w.tokens.length), newTypeData);
-        bytes32 newWH = LibWellStorage.computeWellHash(w);
+        bytes32 newWH = LibWellStorage.computeWellHash(newW);
 
-        s.wi[w.wellId] = w;
-        s.wh[w.wellId] = newWH;
-        // s.ws[newWH] = s.ws[prevWH]; //ToDo: fix
-        // delete s.ws[prevWH];
+        s.wi[newW.wellId] = newW;
+        s.wh[newW.wellId] = newWH;
+
+        LibWellBalance.migrateBalances(prevWH, newWH, w.tokens.length);
 
         emit ModifyWell(w.wellId, newWellType, newTypeData, prevWH, newWH);
     }
@@ -113,13 +127,5 @@ library LibWellBuilding {
         if (wellType == LibWellType.WellType.CONSTANT_PRODUCT) 
             return typeData.length == 0;
         else revert("LibWell: Well type not supported");
-    }
-
-    function encodeData(
-        LibWellType.WellType wellType,
-        uint8 numTokens,
-        bytes calldata typeData
-    ) internal pure returns (bytes memory data) {
-        data = abi.encodePacked(uint8(wellType), numTokens, typeData);
     }
 }

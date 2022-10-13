@@ -45,6 +45,7 @@ contract WellPrice {
         pool.price = uint256(balances.balances[0]).mul(1e36).div(balances.balances[1]).div(ethPrice);
         pool.liquidity = uint256(balances.balances[1]).mul(2).mul(ethPrice).div(1e30);
         pool.deltaB = 0; //LibConstantProductWell.deltaX(ethPrice, balances.balances, 0, 1);
+        pool.lpSupply = wellTokenSupply;
         pool.lpUsd = pool.liquidity * 1e18 / wellTokenSupply;
         pool.lpBdv = IBDV(BEANSTALK).bdv(info.wellId, 1e18);
     }

@@ -10,12 +10,48 @@ import "../../libraries/LibDiamond.sol";
  * @title Oracle Facet
  **/
 contract OracleFacet {
-    function getPrice(address tokenI, address tokenJ) external view returns (uint256 price) {
-        price = LibOracle.getPrice(tokenI, tokenJ);
+
+    function getPrice(address tokenI, address tokenJ)
+        external
+        view
+        returns (uint256 p)
+    {
+        p = LibOracle.getPrice(tokenI, tokenJ);
     }
 
-    function registerOracle(address tokenI, address tokenJ, LibOracle.Oracle calldata o) external {
+    function price(address tokenI, address tokenJ)
+        external
+        returns (uint256 p)
+    {
+        p = LibOracle.price(tokenI, tokenJ);
+    }
+
+    function getOracle(address tokenI, address tokenJ)
+        external
+        view
+        returns (LibOracle.Oracle memory os)
+    {
+        os = LibOracle.getOracle(tokenI, tokenJ);
+    }
+
+    function registerOracle(
+        address tokenI,
+        address tokenJ,
+        address oracle,
+        bytes4 selector,
+        uint8 precision,
+        bool flip,
+        bool registerInverse
+    ) external {
         LibDiamond.enforceIsOwnerOrContract();
-        LibOracle.registerOracle(tokenI, tokenJ, o);
+        LibOracle.registerOracle(
+            tokenI,
+            tokenJ,
+            oracle,
+            selector,
+            precision,
+            flip,
+            registerInverse
+        );
     }
 }

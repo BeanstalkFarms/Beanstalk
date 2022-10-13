@@ -33,7 +33,7 @@ library LibWell {
         int256 dx
     ) internal view returns (int256 dy) {
         uint128[] memory balances = LibWellBalance.getBalances(w);
-        (uint256 i, uint256 j) = getIJ(w.tokens, iToken, jToken);
+        (uint256 i, uint256 j) = LibWellData.getIJ(w.tokens, iToken, jToken);
         (, dy) = _getSwap(w.data, balances, i, j, dx);
     }
 
@@ -45,8 +45,8 @@ library LibWell {
         int256 minDy
     ) internal returns (int256 dy) {
         bytes32 wh = LibWellStorage.computeWellHash(w);
-        uint128[] memory balances = LibWellBalance.getBalancesWithHash(w, wh);
-        (uint256 i, uint256 j) = getIJ(w.tokens, iToken, jToken);
+        uint128[] memory balances = LibWellBalance.getBalancesFromHash(wh, w.tokens.length);
+        (uint256 i, uint256 j) = LibWellData.getIJ(w.tokens, iToken, jToken);
         (balances, dy) = _getSwap(
             w.data,
             balances,
@@ -91,7 +91,7 @@ library LibWell {
         LibTransfer.To toMode
     ) internal returns (uint256 amountOut) {
         bytes32 wh = LibWellStorage.computeWellHash(w);
-        uint128[] memory balances = LibWellBalance.getBalancesWithHash(w, wh);
+        uint128[] memory balances = LibWellBalance.getBalancesFromHash(wh, w.tokens.length);
         uint256 d1 = LibWellType.getD(w.data, balances);
         for (uint256 i; i < w.tokens.length; ++i)
             balances[i] = balances[i].add(uint128(amounts[i])); // Check
@@ -128,7 +128,7 @@ library LibWell {
         LibTransfer.From fromMode
     ) internal returns (uint256[] memory tokenAmountsOut) {
         bytes32 wh = LibWellStorage.computeWellHash(w);
-        uint128[] memory balances = LibWellBalance.getBalancesWithHash(w, wh);
+        uint128[] memory balances = LibWellBalance.getBalancesFromHash(wh, w.tokens.length);
         uint256 d = LibWellType.getD(w.data, balances);
         tokenAmountsOut = new uint256[](w.tokens.length);
         lpAmountIn = LibTransfer.burnToken(IBean(w.wellId), lpAmountIn, recipient, fromMode);
@@ -170,9 +170,9 @@ library LibWell {
         LibTransfer.From fromMode
     ) internal returns (uint256 tokenAmountOut) {
         bytes32 wh = LibWellStorage.computeWellHash(w);
-        uint128[] memory balances = LibWellBalance.getBalancesWithHash(w, wh);
+        uint128[] memory balances = LibWellBalance.getBalancesFromHash(wh, w.tokens.length);
         uint128 y;
-        uint256 i = getI(w.tokens, token);
+        uint256 i = LibWellData.getIMem(w.tokens, token);
         lpAmountIn = LibTransfer.burnToken(IBean(w.wellId), lpAmountIn, recipient, fromMode);
         (tokenAmountOut, y) = _getRemoveLiquidityOneTokenOut(w, balances, i, lpAmountIn);
         require(tokenAmountOut >= minTokenAmountOut, "LibWell: out too low.");
@@ -187,7 +187,7 @@ library LibWell {
         uint256 lpAmountIn
     ) internal view returns (uint256 tokenAmountOut) {
         uint128[] memory balances = LibWellBalance.getBalances(w);
-        uint256 i = getI(w.tokens, token);
+        uint256 i = LibWellData.getI(w.tokens, token);
         (tokenAmountOut, ) = _getRemoveLiquidityOneTokenOut(w, balances, i, lpAmountIn);
     }
 
@@ -216,7 +216,7 @@ library LibWell {
     ) internal returns (uint256 lpAmountIn) {
         require(fromMode <= LibTransfer.From.INTERNAL_TOLERANT, "Internal tolerant mode not supported");
         bytes32 wh = LibWellStorage.computeWellHash(w);
-        uint128[] memory balances = LibWellBalance.getBalancesWithHash(w, wh);
+        uint128[] memory balances = LibWellBalance.getBalancesFromHash(wh, w.tokens.length);
         (lpAmountIn, balances) = _getRemoveLiquidityImbalanced(w, balances, tokenAmountsOut);
         LibWellBalance.setBalances(wh, balances);
         require(lpAmountIn <= maxLPAmountIn, "LibWell: in too high.");
@@ -243,28 +243,5 @@ library LibWell {
         }
         uint256 d2 = LibWellType.getD(w.data, balances);
         return (d1.sub(d2), balances);
-    }
-
-    /**
-     * Token Indices
-     **/
-
-    function getIJ(
-        IERC20[] memory tokens,
-        IERC20 fromToken,
-        IERC20 toToken
-    ) private pure returns (uint256 from, uint256 to) {
-        for (uint i; i < tokens.length; ++i) {
-            if (fromToken == tokens[i]) from = i;
-            else if (toToken == tokens[i]) to = i;
-        }
-    }
-
-    function getI(
-        IERC20[] memory tokens,
-        IERC20 token
-    ) private pure returns (uint256 from) {
-        for (uint i; i < tokens.length; ++i)
-            if (token == tokens[i]) return i;
     }
 }

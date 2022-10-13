@@ -1,4 +1,4 @@
-const { getBeanstalk, getBean, getBeanMetapool, getUsdc, getBeanstalkAdminControls, getPrice, getEthUsdChainlinkOracle } = require("./contracts.js");
+const { getBeanstalk, getBean, getBeanMetapool, getUsdc, getBeanstalkAdminControls, getPrice, getEthUsdChainlinkOracle, getLiquityPriceFeed } = require("./contracts.js");
 const { impersonateSigner, impersonateBeanstalkOwner } = require("./signer.js");
 const { getEthUsdPrice } = require("./oracle.js")
 const { mintUsdc, mintBeans, mintEth } = require("./mint.js")
@@ -20,6 +20,7 @@ exports.getBeanstalkAdminControls = getBeanstalkAdminControls
 exports.impersonateSigner = impersonateSigner
 exports.impersonateBeanstalkOwner = impersonateBeanstalkOwner
 exports.getEthUsdChainlinkOracle = getEthUsdChainlinkOracle
+exports.getLiquityPriceFeed = getLiquityPriceFeed
 exports.mintUsdc = mintUsdc
 exports.mintBeans = mintBeans
 exports.mintEth = mintEth

@@ -20,6 +20,11 @@ library LibWell2 {
      * Accessors with Hash
     **/
 
+    function migrateBalances(bytes32 oldWH, bytes32 newWH) internal {
+        LibWellStorage.wellStorage().w2s[newWH] = LibWellStorage.wellStorage().w2s[oldWH];
+        delete LibWellStorage.wellStorage().w2s[oldWH];
+    }
+
     function setBalances(bytes32 wh, uint128[] memory balances) internal {
         setB2(LibWellStorage.wellStorage().w2s[wh], balances);
     }

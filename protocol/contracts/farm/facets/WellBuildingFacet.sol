@@ -20,9 +20,10 @@ contract WellBuildingFacet is ReentrancyGuard {
         IERC20[] calldata tokens,
         LibWellType.WellType wellType,
         bytes calldata typeData,
-        string[] calldata symbols
+        string[] calldata symbols,
+        uint8[] calldata decimals
     ) external payable returns (address wellId) {
-        wellId = LibWellBuilding.buildWell(tokens, wellType, typeData, symbols);
+        wellId = LibWellBuilding.buildWell(tokens, wellType, typeData, symbols, decimals);
     }
 
     function modifyWell(
@@ -49,9 +50,9 @@ contract WellBuildingFacet is ReentrancyGuard {
 
     function encodeWellData(
         LibWellType.WellType wellType,
-        uint8 numTokens,
-        bytes calldata typeData
+        bytes calldata typeData,
+        uint8[] calldata decimals
     ) external pure returns (bytes memory data) {
-        return LibWellBuilding.encodeData(wellType, numTokens, typeData);
+        return LibWellData.encodeData(wellType, uint8(decimals.length), decimals, typeData);
     }
 }

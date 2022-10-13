@@ -19,7 +19,9 @@ const {
   CURVE_REGISTRY,
   CURVE_ZAP,
   STABLE_FACTORY,
-  PRICE_DEPLOYER
+  PRICE_DEPLOYER,
+  ETH_USD_CHAINLINK_ORACLE,
+  LIQUITY_PRICE_FEED
 } = require('../test/utils/constants');
 const { impersonateSigner, mintEth } = require('../utils');
 
@@ -205,6 +207,30 @@ async function price() {
   await price.deployed()
 }
 
+async function ethUsdOracle() {
+  let chainlinkJson = fs.readFileSync(`./artifacts/contracts/mocks/oracles/MockEthUsdChainlinkOracle.sol/MockEthUsdChainlinkOracle.json`);
+  await network.provider.send("hardhat_setCode", [
+    ETH_USD_CHAINLINK_ORACLE,
+    JSON.parse(chainlinkJson).deployedBytecode,
+  ]);
+
+  const chainlinkOracle = await ethers.getContractAt("MockEthUsdChainlinkOracle", ETH_USD_CHAINLINK_ORACLE);
+  await chainlinkOracle.setRoundData(
+    '92233720368547792046',
+    '100000000000',
+    '1663776971',
+    '1663776971',
+    '92233720368547792046'
+  )
+
+  let liquityPriceFeedJson = fs.readFileSync(`./artifacts/contracts/mocks/oracles/MockLiquityPriceFeed.sol/MockLiquityPriceFeed.json`);
+  await network.provider.send("hardhat_setCode", [
+    LIQUITY_PRICE_FEED,
+    JSON.parse(liquityPriceFeedJson).deployedBytecode,
+  ]);
+
+}
+
 exports.impersonateRouter = router
 exports.impersonateBean = bean
 exports.impersonateCurve = curve
@@ -216,3 +242,4 @@ exports.impersonateUnripe = unripe
 exports.impersonateFertilizer = fertilizer
 exports.impersonateUsdc = usdc
 exports.impersonatePrice = price
+exports.impersonateEthUsdOracle = ethUsdOracle

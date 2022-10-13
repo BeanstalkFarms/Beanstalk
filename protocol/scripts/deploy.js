@@ -8,7 +8,8 @@ const {
   impersonateWeth, 
   impersonateUnripe, 
   impersonateFertilizer,
-  impersonatePrice
+  impersonatePrice,
+  impersonateEthUsdOracle
 } = require('./impersonate.js')
 function addCommas(nStr) {
   nStr += ''
@@ -106,6 +107,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     fieldFacet,
     fundraiserFacet,
     marketplaceFacet,
+    oracleFacet,
     ownershipFacet,
     pauseFacet,
     seasonFacet,
@@ -115,7 +117,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     unripeFacet,
     wellBuildingFacet,
     wellFacet,
-    wellOracleFacet,
+    wellPumpFacet,
     whitelistFacet
   ] = mock ? await deployFacets(
     verbose,
@@ -126,6 +128,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'MockFieldFacet',
       'MockFundraiserFacet',
       'MockMarketplaceFacet',
+      'OracleFacet',
       'PauseFacet',
       'MockSeasonFacet',
       'MockSiloFacet',
@@ -135,8 +138,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'MockUnripeFacet',
       'WellBuildingFacet',
       'WellFacet',
-      'WellOracleFacet',
-      'WhitelistFacet'],
+      'WellPumpFacet',
+      'WhitelistFacet' ],
   ) : await deployFacets(
     verbose,
     [ 'BDVFacet',
@@ -146,6 +149,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'FieldFacet',
       'FundraiserFacet',
       'MarketplaceFacet',
+      'OracleFacet',
       'OwnershipFacet',
       'PauseFacet',
       'SeasonFacet',
@@ -155,7 +159,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'UnripeFacet',
       'WellBuildingFacet',
       'WellFacet',
-      'WellOracleFacet',
+      'WellPumpFacet',
       'WhitelistFacet'],
   )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/init/InitDiamond.sol:InitDiamond'
@@ -169,6 +173,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       await impersonateCurve()
       await impersonateWeth()
     }
+    await impersonateEthUsdOracle()
     await impersonateCurveMetapool()
     await impersonateUnripe()
     await impersonateFertilizer()
@@ -185,6 +190,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['FieldFacet', fieldFacet],
       ['FundraiserFacet', fundraiserFacet],
       ['MarketplaceFacet', marketplaceFacet],
+      ['OracleFacet', oracleFacet],
       ['OwnershipFacet', ownershipFacet],
       ['PauseFacet', pauseFacet],
       ['SeasonFacet', seasonFacet],
@@ -194,7 +200,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['UnripeFacet', unripeFacet],
       ['WellBuildingFacet', wellBuildingFacet],
       ['WellFacet', wellFacet],
-      ['WellOracleFacet', wellOracleFacet],
+      ['WellPumpFacet', wellPumpFacet],
       ['WhitelistFacet', whitelistFacet]
     ],
     owner: account,
@@ -227,6 +233,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     fieldFacet,
     fundraiserFacet,
     marketplaceFacet,
+    oracleFacet,
     ownershipFacet,
     pauseFacet,
     seasonFacet,
@@ -235,7 +242,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     tokenFacet,
     unripeFacet,
     wellBuildingFacet,
-    wellOracleFacet,
+    wellPumpFacet,
     wellFacet,
   }
 }

@@ -20,6 +20,11 @@ library LibWellN {
      * Internal
     **/
 
+    function migrateBalances(bytes32 oldWH, bytes32 newWH) internal {
+        LibWellStorage.wellStorage().wNs[newWH] = LibWellStorage.wellStorage().wNs[oldWH];
+        delete LibWellStorage.wellStorage().wNs[oldWH];
+    }
+
     function setBalances(bytes32 wh, uint128[] memory balances) internal {
         setBN(LibWellStorage.wellStorage().wNs[wh], balances);
     }

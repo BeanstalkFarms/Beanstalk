@@ -1,11 +1,19 @@
 
 const { toX } = require('../test/utils/helpers.js')
-const { getEthUsdChainlinkOracle } = require('./contracts.js')
+const { getEthUsdChainlinkOracle, getLiquityPriceFeed } = require('./contracts.js')
 
 async function getEthUsdPrice() {
-    const ethUdsChainlinkOracle = await getEthUsdChainlinkOracle()
-    answer = await ethUdsChainlinkOracle.latestRoundData()
+    const ethUsdChainlinkOracle = await getEthUsdChainlinkOracle()
+    answer = await ethUsdChainlinkOracle.latestRoundData()
     return answer.answer
 }
 
+
+async function getLiquityEthUsdPrice() {
+    const liquityPriceFeed = await getLiquityPriceFeed()
+    return  await liquityPriceFeed.callStatic.fetchPrice()
+}
+
+
 exports.getEthUsdPrice = getEthUsdPrice
+exports.getLiquityEthUsdPrice = getLiquityEthUsdPrice

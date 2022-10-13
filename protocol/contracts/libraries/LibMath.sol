@@ -25,6 +25,14 @@ library LibMath {
         }
     }
 
+    function max(uint256 a, uint256 b) external pure returns (uint256) {
+        return a >= b ? a : b;
+    }
+
+    function min(uint256 a, uint256 b) external pure returns (uint256) {
+        return a <= b ? a : b;
+    }
+
     function nthRoot(uint _a, uint _n) internal pure returns(uint) {
         assert (_n > 1);
         if (_n == 2) return sqrt(_a);
