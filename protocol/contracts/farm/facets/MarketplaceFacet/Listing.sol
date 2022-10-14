@@ -65,7 +65,7 @@ contract Listing is PodTransfer {
     ) internal {
         uint256 plotSize = s.a[msg.sender].field.plots[index];
         
-        require(plotSize >= (start + amount) && amount > 0, "Marketplace: Invalid Plot/Amount.");
+        require(plotSize >= (start.add(amount)) && amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
         require(s.f.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
         
@@ -89,7 +89,7 @@ contract Listing is PodTransfer {
     ) internal {
         uint256 plotSize = s.a[msg.sender].field.plots[index];
 
-        require(plotSize >= (start + amount) && amount > 0, "Marketplace: Invalid Plot/Amount.");
+        require(plotSize >= (start.add(amount)) && amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(s.f.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
         
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
@@ -131,7 +131,7 @@ contract Listing is PodTransfer {
         
         require(s.podListings[l.index] == lHash, "Marketplace: Listing does not exist.");
         uint256 plotSize = s.a[l.account].field.plots[l.index];
-        require(plotSize >= (l.start + l.amount) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
+        require(plotSize >= (l.start.add(l.amount)) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
 
         uint256 amount = getAmountPodsFromFillListing(l.pricePerPod, l.amount, beanAmount);
@@ -159,10 +159,10 @@ contract Listing is PodTransfer {
 
         uint256 plotSize = s.a[l.account].field.plots[l.index];
 
-        require(plotSize >= (l.start + l.amount) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
+        require(plotSize >= (l.start.add(l.amount)) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
 
-        uint256 amount = getAmountPodsFromFillListingV2(l.index + l.start - s.f.harvestable, l.amount, beanAmount, pricingFunction);
+        uint256 amount = getAmountPodsFromFillListingV2(l.index.add(l.start).sub(s.f.harvestable), l.amount, beanAmount, pricingFunction);
 
         __fillListingV2(msg.sender, l, pricingFunction, amount, beanAmount);
         _transferPlot(l.account, msg.sender, l.index, l.start, amount);
