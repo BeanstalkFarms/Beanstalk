@@ -4,7 +4,8 @@ var fs = require('fs');
 const {
   BCM,
   FERTILIZER,
-  USDC_MINTER
+  USDC_MINTER,
+  BEANSTALK
 } = require('../test/utils/constants')
 
 async function deploy(account, pre=true, mock=false) {
@@ -52,5 +53,26 @@ async function impersonate() {
   return fertilizer
 }
 
+async function impersonateFertilizerWithDiamonAddress(diamondAddress) {
+  let tokenJson = fs.readFileSync(
+    `./artifacts/contracts/mocks/MockFertilizer.sol/MockFertilizer.json`
+  );
+
+  const beanstalkAddressSubstring = BEANSTALK.substring(2);
+
+  await network.provider.send("hardhat_setCode", [
+    FERTILIZER,
+    JSON.parse(tokenJson).deployedBytecode.replaceAll(
+      beanstalkAddressSubstring.toLowerCase(),
+      diamondAddress.substring(2).toLowerCase()
+    ),
+  ]);
+
+  const fertilizer = await ethers.getContractAt("MockFertilizer", FERTILIZER);
+  await fertilizer.initialize();
+  return fertilizer;
+}
+
+exports.impersonateFertilizerWithDiamonAddress = impersonateFertilizerWithDiamonAddress
 exports.deployFertilizer = deploy
 exports.impersonateFertilizer = impersonate
