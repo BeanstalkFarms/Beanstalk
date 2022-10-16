@@ -24,7 +24,7 @@ library LibIncentive {
         uint256 initialGasLeft,
         uint256[2] memory balances,
         uint256 blocksLate
-    ) internal view returns (uint256, uint256, uint256, uint256, uint256) { // TODO: just one return value
+    ) internal view returns (uint256) {
 
         // Gets the current bean price based on the curve pool.
         // In the future, this can be swapped out to another oracle
@@ -44,7 +44,7 @@ library LibIncentive {
             C.getMaxReward()
         );
 
-        return (LibIncentive.fracExp(sunriseReward, 100, blocksLate.mul(C.getBlockLengthSeconds()), 1), beanEthPrice, gasUsed, gasCostWei, beanPriceUsd);
+        return LibIncentive.fracExp(sunriseReward, 100, blocksLate.mul(C.getBlockLengthSeconds()), 1);
     }
 
     function getCurveBeanPrice(uint256[2] memory balances) internal view returns (uint256 price) {

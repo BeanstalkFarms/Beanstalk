@@ -210,6 +210,7 @@ describe('Sun', function () {
     ];
 
     // Load some beans into the wallet's internal balance, and note the starting time
+    // This also accomplishes initializing curve oracle
     const initial = await this.season.sunrise(INTERNAL);
     const block = await ethers.provider.getBlock(initial.blockNumber);
     const START_TIME = block.timestamp;
@@ -246,7 +247,7 @@ describe('Sun', function () {
       // The idea of failure adjusted cost is it includes the assumption that the call will
       // fail half the time (cost of one sunrise = 1 success + 1 fail)
       const PRIORITY = 5;
-      const FAIL_GAS_BUFFER = 36000;
+      const FAIL_GAS_BUFFER = 35000;
       const blockBaseFee = await this.basefee.block_basefee() / Math.pow(10, 9);
       const failAdjustedGasCostEth = (blockBaseFee + PRIORITY) * (gasUsed + FAIL_GAS_BUFFER) / Math.pow(10, 9);
 
