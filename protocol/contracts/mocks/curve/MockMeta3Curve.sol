@@ -9,15 +9,12 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../interfaces/IBean.sol";
 import "../MockToken.sol";
 import "../../libraries/Curve/LibCurve.sol";
+import "../../libraries/Oracle/LibCurveOracle.sol";
 
 /**
  * @author Publius + LeoFib
  * @title Mock Bean3Curve Pair/Pool
 **/
-
-interface I3Curve {
-    function get_virtual_price() external view returns (uint256);
-}
 
 interface IMockCurvePool {
     function A_precise() external view returns (uint256);
@@ -141,8 +138,9 @@ contract MockMeta3Curve {
     }
 
     function get_bean_price() external view returns (uint256 price) {
+        (uint256[2] memory twa_balances, ) = LibCurveOracle.twap();
         uint256[2] memory rates = get_rates();
-        uint256[2] memory xp = LibCurve.getXP(price_cumulative_last, rates);
+        uint256[2] memory xp = LibCurve.getXP(twa_balances, rates);
         uint256 D = LibCurve.getD(xp, a);
         price = LibCurve.getPrice(xp, rates, a, D);
     }

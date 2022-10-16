@@ -32,7 +32,7 @@ contract Oracle is ReentrancyGuard {
      * Oracle Internal
      **/
 
-    function stepOracle() internal returns (int256 deltaB) {
-        deltaB = LibCurveOracle.capture();
+    function stepOracle() internal returns (int256 deltaB, uint256[2] memory balances) {
+        (deltaB, balances) = LibCurveOracle.capture();
     }
 }

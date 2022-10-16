@@ -36,6 +36,7 @@ describe('Sun', function () {
     await this.beanThreeCurve.set_A_precise('1000');
     await this.beanThreeCurve.set_virtual_price(to18('1'));
     await this.beanThreeCurve.set_balances([toBean('10000'), to18('10000')]);
+    await this.beanThreeCurve.reset_cumulative();
 
     await this.usdc.mint(owner.address, to6('10000'))
     await this.bean.mint(owner.address, to6('10000'))
@@ -208,8 +209,10 @@ describe('Sun', function () {
       [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 500, INTERNAL]
     ];
 
-    // Load some beans into the wallet's internal balance
-    await this.season.sunrise(INTERNAL);
+    // Load some beans into the wallet's internal balance, and note the starting time
+    const initial = await this.season.sunrise(INTERNAL);
+    const block = await ethers.provider.getBlock(initial.blockNumber);
+    const START_TIME = block.timestamp;
 
     const startingBeanBalance = (await this.tokenFacet.getAllBalance(owner.address, BEAN)).totalBalance.toNumber() / Math.pow(10, 6);
     for (const mockVal of mockedValues) {
@@ -217,7 +220,8 @@ describe('Sun', function () {
       snapshotId = await takeSnapshot();
 
       await this.beanThreeCurve.set_balances(mockVal[0]);
-      await this.beanThreeCurve.reset_cumulative();
+      // Time skip an hour after setting new balance (twap will be very close to whats in mockVal)
+      await timeSkip(START_TIME + 60*60);
 
       await this.chainlink.setAnswer(mockVal[1]);
       await this.basefee.setAnswer(mockVal[2]);
@@ -226,10 +230,10 @@ describe('Sun', function () {
       const effectiveSecondsLate = Math.min(secondsLate, 300);
       await this.season.resetSeasonStart(secondsLate);
 
+      /// SUNRISE
       this.result = await this.season.sunrise(mockVal[4]);
       
       // Verify that sunrise was profitable assuming a 50% average success rate
-      // Get bean balance after reward. Assumption is that the balance of the sender was zero previously
       
       const beanBalance = (await this.tokenFacet.getAllBalance(owner.address, BEAN)).totalBalance.toNumber() / Math.pow(10, 6);
       const rewardAmount = parseFloat((beanBalance - startingBeanBalance).toFixed(6));
@@ -273,7 +277,7 @@ describe('Sun', function () {
       expect(rewardAmount).to.greaterThan(failAdjustedGasCostBean * Math.pow(1.01, effectiveSecondsLate));
 
       await expect(this.result).to.emit(this.season, 'Incentivization')
-          .withArgs(owner.address, Math.trunc(rewardAmount * Math.pow(10, 6)));
+          .withArgs(owner.address, Math.round(rewardAmount * Math.pow(10, 6)));
 
       await revertToSnapshot(snapshotId);
     }
@@ -298,4 +302,11 @@ function hexToAscii(str1) {
 		str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
 	}
 	return str;
+}
+
+async function timeSkip(timestamp) {
+  await hre.network.provider.request({
+    method: "evm_setNextBlockTimestamp",
+    params: [timestamp],
+  });
 }

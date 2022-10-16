@@ -229,7 +229,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function captureCurveE() external returns (int256 deltaB) {
-        deltaB = LibCurveOracle.capture();
+        (deltaB, ) = LibCurveOracle.capture();
         emit DeltaB(deltaB);
     }
 

@@ -33,10 +33,11 @@ contract SeasonFacet is Weather {
         require(!paused(), "Season: Paused.");
         require(seasonTime() > season(), "Season: Still current Season.");
         stepSeason();
-        int256 deltaB = stepOracle();
+        (int256 deltaB, uint256[2] memory balances) = stepOracle();
+        emit GenericUint256(uint256(deltaB), "deltaB");
         uint256 caseId = stepWeather(deltaB);
         stepSun(deltaB, caseId);
-        return incentivize(msg.sender, initialGasLeft, mode);
+        return incentivize(msg.sender, initialGasLeft, balances, mode);
     }
 
     /**
@@ -74,6 +75,7 @@ contract SeasonFacet is Weather {
     function incentivize(
         address account,
         uint256 initialGasLeft,
+        uint256[2] memory balances,
         LibTransfer.To mode
     ) private returns (uint256) {
         // Number of blocks the sunrise is late by
@@ -87,14 +89,9 @@ contract SeasonFacet is Weather {
             blocksLate = 25;
         }
 
-        emit GenericUint256(blocksLate, "blocks late");
-
         // TODO: just one return value
-        (uint256 incentiveAmount, uint256 beanEthPrice, uint256 gasUsed, uint256 gasCostWei, uint256 beanPrice) = LibIncentive.determineReward(initialGasLeft, blocksLate);
-        emit GenericUint256(incentiveAmount, "incentive");
-        emit GenericUint256(beanEthPrice, "beanethprice");
+        (uint256 incentiveAmount, uint256 beanEthPrice, uint256 gasUsed, uint256 gasCostWei, uint256 beanPrice) = LibIncentive.determineReward(initialGasLeft, balances, blocksLate);
         emit GenericUint256(gasUsed, "gasused");
-        emit GenericUint256(gasCostWei, "gasPriceWei");
         emit GenericUint256(beanPrice, "beanPrice");
 
         LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);

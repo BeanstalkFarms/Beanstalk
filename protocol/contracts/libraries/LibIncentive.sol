@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "../C.sol";
-import "./LibAppStorage.sol";
 import "./Curve/LibCurve.sol";
 
 /**
@@ -23,12 +22,13 @@ library LibIncentive {
     // Further reading here: https://beanstalk-farms.notion.site/RFC-Sunrise-Payout-Change-31a0ca8dd2cb4c3f9fe71ae5599e9102
     function determineReward(
         uint256 initialGasLeft,
+        uint256[2] memory balances,
         uint256 blocksLate
     ) internal view returns (uint256, uint256, uint256, uint256, uint256) { // TODO: just one return value
 
         // Gets the current bean price based on the curve pool.
         // In the future, this can be swapped out to another oracle
-        uint256 beanPriceUsd = LibIncentive.getCurveBeanPrice();
+        uint256 beanPriceUsd = LibIncentive.getCurveBeanPrice(balances);
 
         // ethUsdPrice has 8 decimal precision, bean has 6.
         uint256 beanEthPrice = C.chainlinkContract().latestAnswer() // Eth price in USD (8 decimals)
@@ -47,11 +47,9 @@ library LibIncentive {
         return (LibIncentive.fracExp(sunriseReward, 100, blocksLate.mul(C.getBlockLengthSeconds()), 1), beanEthPrice, gasUsed, gasCostWei, beanPriceUsd);
     }
 
-    function getCurveBeanPrice() internal view returns (uint256 price) {
-        // Cumulative balances were just calculated/saved as a result of stepOracle(), retrieve from storage
-        AppStorage storage s = LibAppStorage.diamondStorage();
+    function getCurveBeanPrice(uint256[2] memory balances) internal view returns (uint256 price) {
         uint256[2] memory rates = getRates();
-        uint256[2] memory xp = LibCurve.getXP(s.co.balances, rates);
+        uint256[2] memory xp = LibCurve.getXP(balances, rates);
         uint256 a = C.curveMetapool().A_precise();
         uint256 D = LibCurve.getD(xp, a);
         price = LibCurve.getPrice(xp, rates, a, D);
