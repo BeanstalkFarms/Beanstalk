@@ -20,9 +20,6 @@ contract SeasonFacet is Weather {
     event Sunrise(uint256 indexed season);
     event Incentivization(address indexed account, uint256 beans);
 
-    // Im using this for generic logging of integer values. will remove when finished testing
-    event GenericUint256(uint256 value, string label);
-
     /**
      * Sunrise
      **/
