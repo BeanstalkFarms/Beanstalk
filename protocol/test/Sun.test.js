@@ -198,7 +198,7 @@ describe('Sun', function () {
 
   it("sunrise reward", async function() {
 
-    const VERBOSE = true;
+    const VERBOSE = false;
     // [[pool balances], eth price, base fee, secondsLate, toMode]
     const mockedValues = [
       [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 0, EXTERNAL],
