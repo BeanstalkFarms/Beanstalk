@@ -8,7 +8,7 @@ pragma experimental ABIEncoderV2;
 import "./Order.sol";
 
 /**
- * @author Beanjoyer
+ * @author Beanjoyer, Malteasy
  * @title Pod Marketplace v2
  **/
  

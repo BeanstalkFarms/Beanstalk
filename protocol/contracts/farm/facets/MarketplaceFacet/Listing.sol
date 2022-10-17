@@ -10,7 +10,7 @@ import "../../../libraries/Token/LibTransfer.sol";
 import "../../../libraries/LibPolynomial.sol";
 
 /**
- * @author Beanjoyer
+ * @author Beanjoyer, Malteasy
  * @title Pod Marketplace v2
  **/
 
