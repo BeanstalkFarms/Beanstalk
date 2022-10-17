@@ -33,7 +33,7 @@ const signDelegate = async (
       },
       {
         name: "approval",
-        type: "bytes32",
+        type: "bytes",
       },
       {
         name: "nonce",

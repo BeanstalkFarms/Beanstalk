@@ -5,6 +5,7 @@ const { to6 } = require("./utils/helpers.js");
 const { signDelegate } = require("./utils/sign.js");
 const { BEAN } = require("./utils/constants");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+const { getBooleanApproval, getUint256Approval } = require("./utils/approval.js");
 
 let user, user2, delegatee, owner;
 let userAddress, user2Address, delegateeAddress, ownerAddress;
@@ -53,9 +54,8 @@ describe("FunctionApproval", function () {
       user,
       selector,
       delegateeAddress,
-      allowance
+      approval
     ) => {
-      const approval = ethers.utils.hexZeroPad(allowance.toHexString(), 32);
       await this.delegate
         .connect(user)
         .approveDelegate(selector, delegateeAddress, approval);
@@ -73,40 +73,40 @@ describe("FunctionApproval", function () {
   describe("Set Function Approval", function () {
     it("properly approves delegate", async function () {
       const selector = await this.silo.PLANT_DELEGATED_SELECTOR();
-      const allowance = ethers.BigNumber.from(100);
-      await this.approveDelegate(user, selector, delegateeAddress, allowance);
+      const approval = getBooleanApproval(true);
+      await this.approveDelegate(user, selector, delegateeAddress, approval);
       expect(
-        await this.delegate.delegateAllowance(
+        await this.delegate.delegateApproval(
           userAddress,
           selector,
           delegateeAddress
         )
-      ).to.eq(allowance);
+      ).to.eq(approval);
     });
 
-    it("properly approves delegate twice", async function () {
+    it("properly updates previous approval", async function () {
       const selector = await this.silo.PLANT_DELEGATED_SELECTOR();
+      const oldApproval = getBooleanApproval(true);
       await this.approveDelegate(
         user,
         selector,
         delegateeAddress,
-        ethers.BigNumber.from(100)
+        oldApproval
       );
-      const allowance = ethers.BigNumber.from(1000);
-      await this.approveDelegate(user, selector, delegateeAddress, allowance);
+      const newApproval = getUint256Approval(100);
+      await this.approveDelegate(user, selector, delegateeAddress, newApproval);
       expect(
-        await this.delegate.delegateAllowance(
+        await this.delegate.delegateApproval(
           userAddress,
           selector,
           delegateeAddress
         )
-      ).to.eq(allowance);
+      ).to.eq(newApproval);
     });
 
-    it("appove with permit", async function () {
+    it("approve with permit", async function () {
       const selector = await this.silo.PLANT_DELEGATED_SELECTOR();
-      const allowance = ethers.BigNumber.from(100);
-      const approval = ethers.utils.hexZeroPad(allowance.toHexString(), 32);
+      const approval = getUint256Approval(100);
       const nonce = await this.permit.nonces(userAddress);
       const deadline = Math.floor(new Date().getTime() / 1000) + 10 * 60;
 
@@ -172,48 +172,13 @@ describe("FunctionApproval", function () {
       );
 
       expect(
-        await this.delegate.delegateAllowance(
+        await this.delegate.delegateApproval(
           userAddress,
           selector,
           delegateeAddress
         )
-      ).to.eq(allowance);
+      ).to.eq(approval);
       expect(await this.permit.nonces(userAddress)).to.be.eq(nonce + 1);
-    });
-  });
-
-  describe("Spend Allowance", function () {
-    it("spend allowance - plantDelegated", async function () {
-      await expect(
-        this.silo.connect(delegatee).plantDelegated(userAddress)
-      ).to.be.revertedWith("Silo: unauthorized");
-
-      await this.season.siloSunrise(to6("100"));
-
-      const selector = await this.silo.PLANT_DELEGATED_SELECTOR();
-      await this.approveDelegate(user, selector, delegateeAddress, to6("40"));
-
-      await expect(
-        this.silo.connect(delegatee).plantDelegated(userAddress)
-      ).to.be.revertedWith("Silo: not enough allowance");
-
-      const allowance = to6("100");
-      await this.approveDelegate(user, selector, delegateeAddress, allowance);
-
-      const totalBeansBefore = await this.silo.totalEarnedBeans();
-
-      await this.silo.connect(delegatee).plantDelegated(userAddress);
-
-      const totalBeansAfter = await this.silo.totalEarnedBeans();
-      const beans = totalBeansBefore.sub(totalBeansAfter);
-
-      expect(
-        await this.delegate.delegateAllowance(
-          userAddress,
-          selector,
-          delegateeAddress
-        )
-      ).to.eq(allowance.sub(beans));
     });
   });
 });

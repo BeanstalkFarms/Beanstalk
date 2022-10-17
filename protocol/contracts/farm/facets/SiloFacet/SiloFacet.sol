@@ -117,7 +117,7 @@ contract SiloFacet is TokenSilo {
                 _spendDepositAllowance(sender, msg.sender, token, amounts[i]);
             }
         }
-       
+
         _update(sender);
         // Need to update the recipient's Silo as well.
         _update(recipient);
@@ -138,15 +138,36 @@ contract SiloFacet is TokenSilo {
         _approveDeposit(msg.sender, spender, token, amount);
     }
 
-    function increaseDepositAllowance(address spender, address token, uint256 addedValue) public virtual nonReentrant returns (bool) {
-        _approveDeposit(msg.sender, spender, token, depositAllowance(msg.sender, spender, token).add(addedValue));
+    function increaseDepositAllowance(
+        address spender,
+        address token,
+        uint256 addedValue
+    ) public virtual nonReentrant returns (bool) {
+        _approveDeposit(
+            msg.sender,
+            spender,
+            token,
+            depositAllowance(msg.sender, spender, token).add(addedValue)
+        );
         return true;
     }
 
-    function decreaseDepositAllowance(address spender, address token, uint256 subtractedValue) public virtual nonReentrant returns (bool) {
+    function decreaseDepositAllowance(
+        address spender,
+        address token,
+        uint256 subtractedValue
+    ) public virtual nonReentrant returns (bool) {
         uint256 currentAllowance = depositAllowance(msg.sender, spender, token);
-        require(currentAllowance >= subtractedValue, "Silo: decreased allowance below zero");
-        _approveDeposit(msg.sender, spender, token, currentAllowance.sub(subtractedValue));
+        require(
+            currentAllowance >= subtractedValue,
+            "Silo: decreased allowance below zero"
+        );
+        _approveDeposit(
+            msg.sender,
+            spender,
+            token,
+            currentAllowance.sub(subtractedValue)
+        );
         return true;
     }
 
@@ -192,30 +213,79 @@ contract SiloFacet is TokenSilo {
         return LibSiloPermit._domainSeparatorV4();
     }
 
-    /**
-     * @notice plant on behalf of account
-     * @param account user address
-     */
-    function plantDelegated(address account)
-        external
-        returns (uint256 beans, uint256 allowance)
-    {
-        allowance = LibDelegate.getAllowance(
-            account,
-            PLANT_DELEGATED_SELECTOR,
-            msg.sender
-        );
-        if (allowance == 0) revert("Silo: unauthorized");
+    /// @notice plant on behalf of account
+    /// @param account user address
+    /// @return beans number of beans planted
+    function plantDelegated(address account) external returns (uint256 beans) {
+        (bytes1 approvalType, bytes memory approvalValue) = LibDelegate
+            .getApprovalDetails(account, PLANT_DELEGATED_SELECTOR, msg.sender);
+
+        if (LibDelegate.isExternalType(approvalType))
+            revert("Silo: unauthorized");
+
+        if (LibDelegate.isBooleanType(approvalType)) {
+            require(abi.decode(approvalValue, (bool)), "Silo: unauthorized");
+        }
 
         beans = _plant(account);
-        if (allowance < beans) revert("Silo: not enough allowance");
-        allowance -= beans;
 
-        LibDelegate.spendAllowance(
+        if (LibDelegate.isUint256Type(approvalType)) {
+            uint256 allowance = abi.decode(approvalValue, (uint256));
+            if (allowance < beans) revert("Silo: not enough allowance");
+            allowance -= beans;
+            bytes memory newApproval = abi.encodePacked(
+                approvalType,
+                abi.encode(allowance)
+            );
+            LibDelegate.setApproval(
+                account,
+                PLANT_DELEGATED_SELECTOR,
+                msg.sender,
+                newApproval
+            );
+        }
+    }
+
+    /// @notice plant on behalf of account
+    /// @param account user address
+    /// @param data approval calldata for external contract call
+    /// @return beans number of beans planted
+    function plantDelegatedWithCalldata(address account, bytes calldata data)
+        external
+        returns (uint256 beans)
+    {
+        (bytes1 approvalType, bytes memory approvalValue) = LibDelegate
+            .getApprovalDetails(account, PLANT_DELEGATED_SELECTOR, msg.sender);
+
+        require(LibDelegate.isExternalType(approvalType), "Silo: unauthorized");
+
+        beans = _plant(account);
+
+        (address addr, bytes memory stateData) = abi.decode(
+            approvalValue,
+            (address, bytes)
+        );
+        (bool success, bytes memory returnData) = addr.staticcall(
+            abi.encodeWithSignature(
+                "check(bytes,bytes,bytes)",
+                data,
+                abi.encode(beans),
+                stateData
+            )
+        );
+        require(success, "Silo: unauthorized");
+
+        (bool approve, bytes memory newStateData) = abi.decode(
+            returnData,
+            (bool, bytes)
+        );
+        require(approve, "Silo: unauthorized");
+        bytes memory newApproval = abi.encode(addr, newStateData);
+        LibDelegate.setApproval(
             account,
             PLANT_DELEGATED_SELECTOR,
             msg.sender,
-            beans
+            newApproval
         );
     }
 
@@ -245,10 +315,18 @@ contract SiloFacet is TokenSilo {
         uint256[] calldata amounts
     ) external nonReentrant updateSilo {
         // First, remove Deposits because every deposit is in a different season, we need to get the total Stalk/Seeds, not just BDV
-        AssetsRemoved memory ar = removeDeposits(msg.sender, token, seasons, amounts);
+        AssetsRemoved memory ar = removeDeposits(
+            msg.sender,
+            token,
+            seasons,
+            amounts
+        );
 
         // Get new BDV and calculate Seeds (Seeds are not Season dependent like Stalk)
-        uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
+        uint256 newBDV = LibTokenSilo.beanDenominatedValue(
+            token,
+            ar.tokensRemoved
+        );
         uint256 newStalk;
 
         // Iterate through all seasons, redeposit the tokens with new BDV and summate new Stalk.

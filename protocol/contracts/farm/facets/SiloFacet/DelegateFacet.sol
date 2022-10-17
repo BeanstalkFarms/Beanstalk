@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: MIT
+/// SPDX-License-Identifier: MIT
  */
 
 pragma solidity ^0.7.6;
@@ -9,21 +9,17 @@ import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "../../Permit.sol";
 import "../../../libraries/Silo/LibDelegate.sol";
 
-/*
- * @author Publius
- * @title DelegateFacet handles delegating authority for Beanstalk functions.
- */
+/// @author Publius
+/// @title DelegateFacet handles delegating authority for Beanstalk functions.
 contract DelegateFacet is Permit {
-    /**
-     * @notice approveDelegate sets approval value for delegation
-     * @param selector function selector
-     * @param delegatee contract/EOA address to delegate to
-     * @param approval approval value bytes32 of uint256 or bool
-     */
+    /// @notice approveDelegate sets approval value for delegation
+    /// @param selector function selector
+    /// @param delegatee contract/EOA address to delegate to
+    /// @param approval generic bytes approval data
     function approveDelegate(
         bytes4 selector,
         address delegatee,
-        bytes32 approval
+        bytes memory approval
     ) external {
         _approveDelegate(msg.sender, selector, delegatee, approval);
     }
@@ -32,14 +28,14 @@ contract DelegateFacet is Permit {
     /// @param account account address
     /// @param selector function selector
     /// @param delegatee contract/EOA address to delegate to
-    /// @param approval approval value bytes32 of uint256 or bool
+    /// @param approval generic bytes approval data
     /// @param deadline permit deadline
     /// @param signature user's permit signature
     function permitDelegate(
         address account,
         bytes4 selector,
         address delegatee,
-        bytes32 approval,
+        bytes memory approval,
         uint256 deadline,
         bytes memory signature
     ) external {
@@ -50,12 +46,12 @@ contract DelegateFacet is Permit {
         bytes32 hashStruct = keccak256(
             abi.encode(
                 keccak256(
-                    "PermitDelegate(address account,bytes4 selector,address delegatee,bytes32 approval,uint256 nonce,uint256 deadline)"
+                    "PermitDelegate(address account,bytes4 selector,address delegatee,bytes approval,uint256 nonce,uint256 deadline)"
                 ),
                 account,
                 selector,
                 delegatee,
-                approval,
+                keccak256(abi.encodePacked(approval)),
                 _useNonce(account),
                 deadline
             )
@@ -75,37 +71,34 @@ contract DelegateFacet is Permit {
     /////////// VIEW FUNCTIONS ///////////
     //////////////////////////////////////
 
-    /**
-     * @notice delegateAllowance returns current allowance
-     * @param account account address
-     * @param selector function selector
-     * @param delegatee delegatee address
-     * @return allowance current allowance
-     */
-    function delegateAllowance(
+    /// @notice delegateApproval returns current approval type and data
+    /// @param account account address
+    /// @param selector function selector
+    /// @param delegatee delegatee address
+    /// @return approval approval value
+    function delegateApproval(
         address account,
         bytes4 selector,
         address delegatee
-    ) external view returns (uint256 allowance) {
-        allowance = LibDelegate.getAllowance(account, selector, delegatee);
+    ) external view returns (bytes memory approval) {
+        return LibDelegate.getApproval(account, selector, delegatee);
     }
 
     //////////////////////////////////////
     ///////// INTERNAL FUNCTIONS /////////
     //////////////////////////////////////
 
-    /**
-     * @dev sets function approval
-     * @param account account address
-     * @param selector function selector
-     * @param delegatee delegatee address
-     */
+    /// @dev sets function approval
+    /// @param account account address
+    /// @param selector function selector
+    /// @param delegatee delegatee address
+    /// @param approval generic bytes approval data
     function _approveDelegate(
         address account,
         bytes4 selector,
         address delegatee,
-        bytes32 approval
+        bytes memory approval
     ) internal {
-        LibDelegate.setAllowance(account, selector, delegatee, approval);
+        LibDelegate.setApproval(account, selector, delegatee, approval);
     }
 }
