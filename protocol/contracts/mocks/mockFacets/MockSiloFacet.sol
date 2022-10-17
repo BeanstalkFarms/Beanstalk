@@ -30,6 +30,10 @@ contract MockSiloFacet is SiloFacet {
         return amount;
     }
 
+    function mockBDVIncrease(uint256 amount) external pure returns (uint256) {
+        return amount.mul(3).div(2);
+    }
+
     function mockUnripeLPDeposit(uint256 t, uint32 _s, uint256 amount, uint256 bdv) external {
         _update(msg.sender);
         if (t == 0) {
