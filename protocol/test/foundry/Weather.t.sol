@@ -222,7 +222,7 @@ contract ExtremeWeatherTest is Weather, Test, InitDiamondDeployer {
 
   function _beforeExtremeWeatherTest() public {
     season.setLastDSoilE(100000);
-    season.setStartSoilE(10000);
+    //season.setStartSoilE(10000);
     C.bean().mint(publius, 1000000000);
     field.incrementTotalPodsE(100000000000);
   }

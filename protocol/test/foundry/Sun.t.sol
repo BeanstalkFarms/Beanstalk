@@ -15,10 +15,13 @@ import { DiamondDeployer } from "./utils/Deploy.sol";
 import "farm/AppStorage.sol";
 import "@beanstalk/libraries/Decimal.sol";
 import "@beanstalk/libraries/LibSafeMath32.sol";
+import "@beanstalk/libraries/LibPRBMath.sol";
+
 import "@beanstalk/C.sol";
 
 contract SunTest is Sun, Test {
   using SafeMath for uint256;
+  using LibPRBMath for uint256;
   using LibSafeMath32 for uint32;
 
   Utils internal utils;
@@ -79,7 +82,8 @@ contract SunTest is Sun, Test {
     assert(toFert.add(toField).add(toSilo) == newBeans); // should sum back up
 
     newHarvestable = s.f.harvestable + toField;
-    soil = newHarvestable.mul(100).div(100 + (s.w.yield + 1)); // FIXME: hardcode for case id 8 when deltaB > 0
+    //soil = newHarvestable.mul(100).div(100 + (s.w.yield + 1)); // FIXME: hardcode for case id 8 when deltaB > 0
+    soil = newHarvestable.mulDiv(100,101,LibPRBMath.Rounding.Up);
 
     console.log("Beans minted: %s", newBeans);
     console.log("To Fert: %s", toFert);
@@ -130,19 +134,26 @@ contract SunTest is Sun, Test {
   function test_deltaB_positive_podRate_low() public {
     field.incrementTotalPodsE(100);
     season.sunSunrise(300e6, 0); // deltaB = +300; case 0 = low pod rate
-    assertEq(uint256(field.totalSoil()), 148); // FIXME: how calculated?
+    vm.roll(26); // after dutch Auction
+    assertEq(uint256(field.totalSoil()), 150); // FIXME: how calculated?
+    // 300/3 = 100 *1.5 = 150
   }
   
   function test_deltaB_positive_podRate_medium() public {
     field.incrementTotalPodsE(100);
     season.sunSunrise(300e6, 8); // deltaB = +300; case 0 = medium pod rate
-    assertEq(uint256(field.totalSoil()), 99); // FIXME: how calculated?
+    vm.roll(26); // after dutch Auction
+    assertEq(uint256(field.totalSoil()), 100); // FIXME: how calculated?
+    // 300/3 = 100 * 1 = 100
   }
 
   function test_deltaB_positive_podRate_high() public {
     field.incrementTotalPodsE(100);
-    season.sunSunrise(300e6, 8); // deltaB = +300; case 0 = high pod rate
-    assertEq(uint256(field.totalSoil()), 99); // FIXME: how calculated?
+    season.sunSunrise(300e6, 25); // deltaB = +300; case 0 = high pod rate
+    vm.roll(26); // after dutch Auction
+    assertEq(uint256(field.totalSoil()), 50); // FIXME: how calculated?
+    // 300/3 = 100 * 0.5 = 50
+
   }
 
   ///////////////////////// Minting /////////////////////////

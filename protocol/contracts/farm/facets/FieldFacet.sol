@@ -8,6 +8,8 @@ pragma experimental ABIEncoderV2;
 import "../../libraries/Token/LibTransfer.sol";
 import "../../libraries/LibDibbler.sol";
 import "../ReentrancyGuard.sol";
+import { console } from "forge-std/console.sol";
+
 
 /**
  * @author Publius
@@ -69,7 +71,7 @@ contract FieldFacet is ReentrancyGuard {
     {
         amount = LibTransfer.burnToken(C.bean(), amount, msg.sender, mode);
         pods = LibDibbler.sow(amount, msg.sender);
-        s.f.beanSown = s.f.beanSown + uint128(amount); // safeMath not needed
+        s.w.beanSown = s.w.beanSown + amount; // safeMath not needed
     }
 
     /**
@@ -152,11 +154,10 @@ contract FieldFacet is ReentrancyGuard {
     }
 
     function totalSoil() public view returns (uint256) {
-        if(s.season.AbovePeg){
-            uint256 _yield = uint256(yield()).add(100 * DECIMAL);
-            return uint256(s.f.soil).mulDiv(uint256(s.w.yield).add(100).mul(DECIMAL),_yield);
-        }
-        else{
+        if(s.season.AbovePeg) { 
+            uint256 _yield = uint256(yield()).add(100e6);
+            return uint256(s.f.soil).mulDiv(101_000_000,_yield);
+        } else {
             return uint256(s.f.soil);
         }
     }
@@ -166,14 +167,8 @@ contract FieldFacet is ReentrancyGuard {
         return LibDibbler.morningAuction();
     }
 
-    /// @notice Peas are the potential pods that can be issued within a season.
-    /// Returns the maximum pods issued within a season
-    function maxPeas() external view returns (uint256) {
-        return s.w.startSoil.mul(s.w.yield.add(100)).div(100);
-    }
-
-    /// Returns the remaining pods that can be sown within a season.
-    function peas() external view returns (uint128) {
-        return s.f.soil.mul(s.w.yield.add(100)).div(100);
+    /// @dev peas are the potential pods that can be issued within a season.
+    function peas() external view returns (uint256) {
+       return s.f.peas;
     }
 }

@@ -35,6 +35,7 @@ contract MockSeasonFacet is SeasonFacet {
     function siloSunrise(uint256 amount) public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
+        s.season.sunriseBlock = uint32(block.number);
         mockStepSilo(amount);
         console.log("Sunrise called. Current season is:",s.season.current);
     }
@@ -42,12 +43,12 @@ contract MockSeasonFacet is SeasonFacet {
     function mockStepSilo(uint256 amount) public {
         C.bean().mint(address(this), amount);
         rewardToSilo(amount);
-
     }
 
     function rainSunrise() public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
+        s.season.sunriseBlock = uint32(block.number);
         handleRain(4);
     }
 
@@ -57,17 +58,20 @@ contract MockSeasonFacet is SeasonFacet {
             s.season.current += 1;
             handleRain(4);
         }
+        s.season.sunriseBlock = uint32(block.number);
     }
 
     function droughtSunrise() public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
+        s.season.sunriseBlock = uint32(block.number);
         handleRain(3);
     }
 
     function rainSiloSunrise(uint256 amount) public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
+        s.season.sunriseBlock = uint32(block.number);
         handleRain(4);
         mockStepSilo(amount);
     }
@@ -75,6 +79,7 @@ contract MockSeasonFacet is SeasonFacet {
     function droughtSiloSunrise(uint256 amount) public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
+        s.season.sunriseBlock = uint32(block.number);
         handleRain(3);
         mockStepSilo(amount);
     }
@@ -82,21 +87,25 @@ contract MockSeasonFacet is SeasonFacet {
     function sunSunrise(int256 deltaB, uint256 caseId) public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
+        s.season.sunriseBlock = uint32(block.number);
         stepSun(deltaB, caseId); // Check
     }
 
     function lightSunrise() public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
+        s.season.sunriseBlock = uint32(block.number);
         console.log("LightSunrise called. Current season is:",s.season.current);
     }
 
     function fastForward(uint32 _s) public {
         s.season.current += _s;
+        s.season.sunriseBlock = uint32(block.number);
     }
 
     function teleportSunrise(uint32 _s) public {
         s.season.current = _s;
+        s.season.sunriseBlock = uint32(block.number);
     }
 
     function farmSunrise() public {
@@ -113,6 +122,7 @@ contract MockSeasonFacet is SeasonFacet {
             s.season.current += 1;
             s.season.timestamp = block.timestamp;
         }
+        s.season.sunriseBlock = uint32(block.number);
     }
 
     function setYieldE(uint32 number) public {
@@ -123,9 +133,9 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.AbovePeg = num;
     }
 
-    function setStartSoilE(uint256 number) public {
-        s.w.startSoil = number;
-    }
+    // function setStartSoilE(uint256 number) public {
+    //     s.w.startSoil = number;
+    // }
 
     function setLastDSoilE(uint256 number) public {
         s.w.lastDSoil = number;
@@ -145,6 +155,10 @@ contract MockSeasonFacet is SeasonFacet {
 
     function setSoilE(uint256 amount) public {
         setSoil(amount);
+    }
+    
+    function setPeasE(uint256 amount) public {
+        setPeas(amount);
     }
 
     function resetAccount(address account) public {
@@ -225,7 +239,7 @@ contract MockSeasonFacet is SeasonFacet {
         s.r.roots = rainRoots ? 1 : 0;
         s.f.pods = pods;
         s.w.lastDSoil = lastDSoil;
-        s.w.startSoil = startSoil;
+        // s.w.startSoil = startSoil;
         s.f.soil = endSoil;
         stepWeather(deltaB);
     }

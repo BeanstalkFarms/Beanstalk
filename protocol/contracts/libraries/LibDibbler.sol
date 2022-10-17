@@ -46,22 +46,34 @@ library LibDibbler {
         // We can assume amount <= soil from getSowAmount
         // the amount of soil changes as a function of the morning auction;
         // instead of updating soil, we scale down how much soil is used, and scale soil up in totalSoil function
+        //uint256 _peas = peas();
         if (s.season.AbovePeg) {
-            uint256 maxYield = uint256(s.w.yield).add(100).mul((DECIMALS));
-            s.f.soil = s.f.soil - // safeMath not needed, as morningAuction() will never be higher than s.w.yield
+            console.log("amt of soil used:", amount);
+            console.log("amt of TrueSoil used:",uint128(
+                    amount.mulDiv(
+                        morningAuction().add(1e8),
+                        101_000_000,
+                        LibPRBMath.Rounding.Up
+                        )
+                    ));
+            s.f.soil = s.f.soil -
                 uint128(
                     amount.mulDiv(
                         morningAuction().add(1e8),
-                        maxYield,
+                        101_000_000,
                         LibPRBMath.Rounding.Up
                         )
                     );
         } else {
             s.f.soil = s.f.soil - uint128(amount);
         }
-        return sowNoSoil(amount, account);
+        
+        //return sowNoSoil(amount,account,_peas);
+        return sowNoSoil(amount,account);
+
     }
 
+    //function sowNoSoil(uint256 amount, address account,uint256 peas)
     function sowNoSoil(uint256 amount, address account)
         internal
         returns (uint256)
@@ -81,11 +93,31 @@ library LibDibbler {
     ) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.a[account].field.plots[s.f.pods] = pods;
+        console.log("pods issued is:", pods);
         emit Sow(account, s.f.pods, beans, pods);
     }
 
-    function beansToPods(uint256 beans) private view returns (uint256) {
-        return beans.add(beans.mulDiv(morningAuction(),100 * DECIMALS));
+
+    function beansToPods(uint256 beans/*,uint256 peas*/) private returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        console.log("init peas:", s.f.peas);
+        console.log("trueSoil after MaxSow:", s.f.soil);
+        /// @dev ensures that maximum pods issued is never above peas, as we round pods up
+        
+        if(s.f.soil == 0){
+            uint128 _peas = s.f.peas;
+            s.f.peas = 0;
+            return _peas;
+        } else {
+            uint256 _peas = 
+                beans.add(beans.mulDiv(
+                    morningAuction(),
+                    1e8,
+                    LibPRBMath.Rounding.Up
+                    ));
+            s.f.peas = s.f.peas - uint128(_peas); //Safemath Redundant since peas > _peas always
+            return _peas;
+        }
     }
 
     function saveSowTime() private {
@@ -94,18 +126,16 @@ library LibDibbler {
         s.w.nextSowTime = uint32(block.timestamp.sub(s.season.timestamp));
     }
 
-
-
     /// @dev function returns the weather scaled down based on the dutch auction
     // precision level 1e6, as soil has 1e6 precision (1% = 1e6)
     // FuTuRe oF FiNaNcE
     function morningAuction() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 delta = block.number.sub(s.season.sunriseBlock);
-        if (delta == 0) {
-            return DECIMALS;
+        if (delta > 24) { // check most likely case first
+            return uint256(s.w.yield).mul(DECIMALS);
         } else if (delta == 1) {
-            return AuctionMath(279415312704); //minimium of 1% yield
+            return AuctionMath(279415312704); 
         } else if (delta == 2) {
             return AuctionMath(409336034395);
         } else if (delta == 3) {
@@ -153,7 +183,7 @@ library LibDibbler {
         } else if (delta == 24) {
             return AuctionMath(989825252096);
         } else {
-            return uint256(s.w.yield).mul(DECIMALS);
+            return DECIMALS; //minimium 1% yield
         }
     }
 
@@ -162,5 +192,11 @@ library LibDibbler {
     function AuctionMath(uint256 a) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return uint256(s.w.yield).mulDiv(a,1e6).max(DECIMALS);
+    }
+
+    /// @dev peas are the potential pods that can be issued within a season.
+    function peas() internal view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return s.f.peas;
     }
 }
