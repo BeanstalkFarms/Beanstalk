@@ -460,9 +460,6 @@ async function upgradeWithNewFacets ({
       }
     }
 
-    if (initFacetAddress !== ethers.constants.AddressZero) {
-      initFacet = await ethers.getContractAt('InitFundraiser', initFacetAddress);
-    }
     if (!initFacet) {
       const InitFacet = await ethers.getContractFactory(initFacetName)
       initFacet = await InitFacet.deploy()
@@ -480,11 +477,16 @@ async function upgradeWithNewFacets ({
   }
   let result;
   if (object) {
-    return  {
+    dc = {
       diamondCut: diamondCut,
       initFacetAddress: initFacetAddress,
       functionCall: functionCall
     }
+    console.log(JSON.stringify(dc, null, 4))
+    const encodedDiamondCut = await diamondCutFacet.interface.encodeFunctionData('diamondCut', Object.values(dc))
+    console.log("Encoded: -------------------------------------------------------------")
+    console.log(encodedDiamondCut)
+    return dc
   }
   if (bip) {
     const governance = await ethers.getContractAt('GovernanceFacet', diamondAddress)

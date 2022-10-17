@@ -11,7 +11,7 @@ import "../../../libraries/LibPolynomial.sol";
 
 /**
  * @author Beanjoyer
- * @title Pod Marketplace v1
+ * @title Pod Marketplace v2
  **/
 
 contract Listing is PodTransfer {
@@ -45,7 +45,8 @@ contract Listing is PodTransfer {
         address indexed to,
         uint256 index,
         uint256 start,
-        uint256 amount
+        uint256 amount,
+        uint256 costInBeans
     );
 
     event PodListingCancelled(address indexed account, uint256 index);
@@ -64,7 +65,7 @@ contract Listing is PodTransfer {
     ) internal {
         uint256 plotSize = s.a[msg.sender].field.plots[index];
         
-        require(plotSize >= (start + amount) && amount > 0, "Marketplace: Invalid Plot/Amount.");
+        require(plotSize >= (start.add(amount)) && amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
         require(s.f.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
         
@@ -88,7 +89,7 @@ contract Listing is PodTransfer {
     ) internal {
         uint256 plotSize = s.a[msg.sender].field.plots[index];
 
-        require(plotSize >= (start + amount) && amount > 0, "Marketplace: Invalid Plot/Amount.");
+        require(plotSize >= (start.add(amount)) && amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(s.f.harvestable <= maxHarvestableIndex, "Marketplace: Expired.");
         
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
@@ -130,12 +131,12 @@ contract Listing is PodTransfer {
         
         require(s.podListings[l.index] == lHash, "Marketplace: Listing does not exist.");
         uint256 plotSize = s.a[l.account].field.plots[l.index];
-        require(plotSize >= (l.start + l.amount) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
+        require(plotSize >= (l.start.add(l.amount)) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
 
-        uint256 amount = getRoundedAmount(l, beanAmount);
+        uint256 amount = getAmountPodsFromFillListing(l.pricePerPod, l.amount, beanAmount);
 
-        __fillListing(msg.sender, l, amount);
+        __fillListing(msg.sender, l, amount, beanAmount);
         _transferPlot(l.account, msg.sender, l.index, l.start, amount);
 
     }
@@ -158,12 +159,12 @@ contract Listing is PodTransfer {
 
         uint256 plotSize = s.a[l.account].field.plots[l.index];
 
-        require(plotSize >= (l.start + l.amount) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
+        require(plotSize >= (l.start.add(l.amount)) && l.amount > 0, "Marketplace: Invalid Plot/Amount.");
         require(s.f.harvestable <= l.maxHarvestableIndex, "Marketplace: Listing has expired.");
 
-        uint256 amount = getRoundedAmountV2(l, beanAmount, pricingFunction);
+        uint256 amount = getAmountPodsFromFillListingV2(l.index.add(l.start).sub(s.f.harvestable), l.amount, beanAmount, pricingFunction);
 
-        __fillListingV2(msg.sender, l, pricingFunction, amount);
+        __fillListingV2(msg.sender, l, pricingFunction, amount, beanAmount);
         _transferPlot(l.account, msg.sender, l.index, l.start, amount);
 
     }
@@ -171,7 +172,8 @@ contract Listing is PodTransfer {
     function __fillListing(
         address to,
         PodListing calldata l,
-        uint256 amount
+        uint256 amount,
+        uint256 beanAmount
     ) private {
         require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
 
@@ -185,7 +187,7 @@ contract Listing is PodTransfer {
             );
         }
 
-        emit PodListingFilled(l.account, to, l.index, l.start, amount);
+        emit PodListingFilled(l.account, to, l.index, l.start, amount, beanAmount);
 
         delete s.podListings[l.index];
     }
@@ -194,7 +196,8 @@ contract Listing is PodTransfer {
         address to,
         PodListing calldata l,
         bytes calldata pricingFunction,
-        uint256 amount
+        uint256 amount,
+        uint256 beanAmount
     ) private {
         require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
 
@@ -209,7 +212,7 @@ contract Listing is PodTransfer {
             );
         }
 
-        emit PodListingFilled(l.account, to, l.index, l.start, amount);
+        emit PodListingFilled(l.account, to, l.index, l.start, amount, beanAmount);
 
         delete s.podListings[l.index];
     }
@@ -233,25 +236,24 @@ contract Listing is PodTransfer {
      * Helpers
      */
 
-    // If remainder left (always <1 pod) that would otherwise be unpurchaseable
-    // due to rounding from calculating amount, give it to last buyer
-    function getRoundedAmount(PodListing calldata l, uint256 beanAmount) internal pure returns (uint256 amount) {
-        amount = (beanAmount * 1000000) / l.pricePerPod;
+    function getAmountPodsFromFillListing(uint24 pricePerPod, uint256 podListingAmount, uint256 fillBeanAmount) internal pure returns (uint256 amount) {
+        amount = (fillBeanAmount * 1000000) / pricePerPod;
         
-        uint256 remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
-        if(remainingAmount <= (1000000 / l.pricePerPod)) amount = l.amount;
+        uint256 remainingAmount = podListingAmount.sub(amount, "Marketplace: Not enough pods in Listing.");
+        if(remainingAmount <= (1000000 / pricePerPod)) amount = podListingAmount;
     }
 
-    function getRoundedAmountV2(
-        PodListing calldata l, 
-        uint256 beanAmount,
+    function getAmountPodsFromFillListingV2(
+        uint256 placeInLine, 
+        uint256 podListingAmount,
+        uint256 fillBeanAmount,
         bytes calldata pricingFunction
-    ) public view returns (uint256 amount) {
-        uint256 pricePerPod = LibPolynomial.evaluatePolynomialPiecewise(pricingFunction, l.index + l.start - s.f.harvestable);
-        amount = (beanAmount.mul(1000000)) / pricePerPod;
+    ) public pure returns (uint256 amount) {
+        uint256 pricePerPod = LibPolynomial.evaluatePolynomialPiecewise(pricingFunction, placeInLine);
+        amount = (fillBeanAmount.mul(1000000)) / pricePerPod;
         
-        uint256 remainingAmount = l.amount.sub(amount, "Marketplace: Not enough pods in Listing.");
-        if(remainingAmount <= (1000000 / pricePerPod)) amount = l.amount;
+        uint256 remainingAmount = podListingAmount.sub(amount, "Marketplace: Not enough pods in Listing.");
+        if(remainingAmount <= (1000000 / pricePerPod)) amount = podListingAmount;
     }
 
     function hashListing(

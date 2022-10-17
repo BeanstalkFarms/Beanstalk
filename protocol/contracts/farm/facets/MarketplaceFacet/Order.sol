@@ -9,7 +9,7 @@ import "./Listing.sol";
 
 /**
  * @author Beanjoyer
- * @title Pod Marketplace v1
+ * @title Pod Marketplace v2
  **/
 
 contract Order is Listing {
@@ -93,8 +93,8 @@ contract Order is Listing {
         LibTransfer.To mode
     ) internal {
 
-        require(s.a[msg.sender].field.plots[index] >= (start + amount), "Marketplace: Invalid Plot.");
-        require((index + start - s.f.harvestable + amount) <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
+        require(s.a[msg.sender].field.plots[index] >= (start.add(amount)), "Marketplace: Invalid Plot.");
+        require(index.add(start).add(amount).sub(s.f.harvestable) <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
         
         bytes32 id = createOrderId(o.account, o.pricePerPod, o.maxPlaceInLine);
         uint256 costInBeans = amount.mul(o.pricePerPod).div(1000000);
@@ -120,11 +120,11 @@ contract Order is Listing {
         LibTransfer.To mode
     ) internal {
 
-        require(s.a[msg.sender].field.plots[index] >= (start + amount), "Marketplace: Invalid Plot.");
-        require((index + start - s.f.harvestable + amount) <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
+        require(s.a[msg.sender].field.plots[index] >= (start.add(amount)), "Marketplace: Invalid Plot.");
+        require(index.add(start).add(amount).sub(s.f.harvestable) <= o.maxPlaceInLine, "Marketplace: Plot too far in line.");
         
         bytes32 id = createOrderIdV2(o.account, 0, o.maxPlaceInLine, pricingFunction);
-        uint256 costInBeans = getAmountBeansToFillOrderV2(index + start - s.f.harvestable, amount, pricingFunction);
+        uint256 costInBeans = getAmountBeansToFillOrderV2(index.add(start).sub(s.f.harvestable), amount, pricingFunction);
         s.podOrders[id] = s.podOrders[id].sub(costInBeans, "Marketplace: Not enough beans in order.");
         
         LibTransfer.sendToken(C.bean(), costInBeans, msg.sender, mode);
@@ -185,7 +185,7 @@ contract Order is Listing {
         uint256 amountPodsFromOrder,
         bytes calldata pricingFunction
     ) public pure returns (uint256 beanAmount) { 
-        beanAmount = LibPolynomial.evaluatePolynomialIntegrationPiecewise(pricingFunction, placeInLine, placeInLine + amountPodsFromOrder);
+        beanAmount = LibPolynomial.evaluatePolynomialIntegrationPiecewise(pricingFunction, placeInLine, placeInLine.add(amountPodsFromOrder));
         beanAmount = beanAmount.div(1000000);
     }
 
