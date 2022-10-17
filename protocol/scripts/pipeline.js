@@ -1,4 +1,5 @@
 var fs = require('fs');
+const { PIPELINE } = require('../test/utils/constants');
 
 async function deploy(account) {
   const Pipeline = await ethers.getContractFactory('Pipeline', account);
