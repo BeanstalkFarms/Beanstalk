@@ -9,9 +9,11 @@ temp
 .env
 archived
 .vscode
+lcov.info
 
 # Foundry
 cache/
 out/
 coverage_data/
 protocol/remappings.txt
+.gas-snapshot
