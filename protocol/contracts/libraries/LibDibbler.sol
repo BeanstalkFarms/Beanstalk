@@ -11,7 +11,6 @@ import "./LibAppStorage.sol";
 import "./LibSafeMath32.sol";
 import "./LibSafeMath128.sol";
 import "./LibPRBMath.sol";
-import { console } from "forge-std/console.sol";
 
 
 
@@ -43,7 +42,6 @@ library LibDibbler {
      **/
     function sow(uint256 amount, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        // We can assume amount <= soil from getSowAmount
         // the amount of soil changes as a function of the morning auction;
         // soil consumed increases as dutch auction passes
         uint128 peas = s.f.soil;
@@ -53,10 +51,11 @@ library LibDibbler {
                 1e8,
                 LibPRBMath.Rounding.Up
                 ); 
-            if (scaledSoil > s.f.soil) scaledSoil = s.f.soil; // occurs due to rounding precision
-            s.f.soil = s.f.soil - uint128(scaledSoil);
+            //overflow caused by rounding up, but means all soil is sown
+            (, s.f.soil) = s.f.soil.trySub(uint128(scaledSoil)); 
         } else {
-            s.f.soil = s.f.soil - uint128(amount);
+            // We can assume amount <= soil from getSowAmount when below peg
+            s.f.soil = s.f.soil - uint128(amount); 
         }
         return sowNoSoil(amount,peas,account);
 
@@ -77,52 +76,6 @@ library LibDibbler {
         s.f.pods = s.f.pods.add(pods);
         saveSowTime();
         return pods;
-    }
-
-    function sowPlot(
-        address account,
-        uint256 beans,
-        uint256 pods
-    ) private {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        s.a[account].field.plots[s.f.pods] = pods;
-        emit Sow(account, s.f.pods, beans, pods);
-    }
-
- 
-
-    function beansToPodsAbovePeg(uint256 beans, uint256 maxPeas) 
-        private 
-        view
-        returns (uint256) 
-    {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        if(s.f.soil == 0){
-            uint256 pods = maxPeas; // if all soil is sown, the pods issued must equal peas. 
-            return pods;
-        } else {
-            return uint128(beans.add(
-                beans.mulDiv(
-                    morningAuction(),
-                    1e8,
-                    LibPRBMath.Rounding.Up
-                    )
-                ));
-        }
-    }
-
-    function beansToPods(uint256 beans, uint256 weather)
-        private
-        pure
-        returns (uint256)
-    {
-        return beans.add(beans.mul(weather).div(100));
-    }
-
-    function saveSowTime() private {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        if (s.f.soil > 1e6 || s.w.nextSowTime < type(uint32).max) return;
-        s.w.nextSowTime = uint32(block.timestamp.sub(s.season.timestamp));
     }
 
     /// @dev function returns the weather scaled down based on the dutch auction
@@ -185,11 +138,53 @@ library LibDibbler {
         }
     }
 
-    // helpers
-    /// @dev takes in 1e12 number to multiply with yield, to get 1e6 scaled down weather
-    /// @dev 1% = 1e11
-    function AuctionMath(uint256 a) internal view returns (uint256) {
+    /// @dev scales down weather, minimum 1e6
+    function AuctionMath(uint256 a) private view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return uint256(s.w.yield).mulDiv(a,1e6).max(DECIMALS); // minimum yield 1%
+        return uint256(s.w.yield).mulDiv(a,1e6).max(DECIMALS);
+    }
+
+    function beansToPodsAbovePeg(uint256 beans, uint256 maxPeas) 
+        private 
+        view
+        returns (uint256) 
+    {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        if(s.f.soil == 0){
+            uint256 pods = maxPeas; // if all soil is sown, the pods issued must equal peas. 
+            return pods;
+        } else {
+            return uint128(beans.add(
+                beans.mulDiv(
+                    morningAuction(),
+                    1e8,
+                    LibPRBMath.Rounding.Up
+                    )
+                )); 
+        }
+    }
+
+    function beansToPods(uint256 beans, uint256 weather)
+        private
+        pure
+        returns (uint256)
+    {
+        return beans.add(beans.mul(weather).div(100));
+    }
+
+    function sowPlot(
+        address account,
+        uint256 beans,
+        uint256 pods
+    ) private {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.a[account].field.plots[s.f.pods] = pods;
+        emit Sow(account, s.f.pods, beans, pods);
+    }
+
+    function saveSowTime() private {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        if (s.f.soil > 1e6 || s.w.nextSowTime < type(uint32).max) return;
+        s.w.nextSowTime = uint32(block.timestamp.sub(s.season.timestamp));
     }
 }

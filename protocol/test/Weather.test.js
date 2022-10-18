@@ -43,7 +43,6 @@ describe('Complex Weather', function () {
         this.result = await this.season.stepWeatherWithParams(this.pods, this.dsoil, this.startSoil, this.endSoil, this.price, this.testData.wasRaining, this.testData.rainStalk)
       })
       it('Checks New Weather', async function () {
-        
         expect(await this.season.yield()).to.eq(this.testData.newWeather)
       })
       it('Emits The Correct Case Weather', async function () {

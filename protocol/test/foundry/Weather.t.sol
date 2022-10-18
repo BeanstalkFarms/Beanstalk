@@ -80,7 +80,7 @@ contract ComplexWeatherTest is Weather, Test, InitDiamondDeployer {
         
         season.setLastSowTimeE(data[i].lastSowTime);
         season.setNextSowTimeE(data[i].nextSowTime);
-        season.stepWeatherWithParams(pods, lastDSoil, startSoil, endSoil, deltaB, raining, rainRoots);
+        season.stepWeatherWithParams(pods, lastDSoil, endSoil, deltaB, raining, rainRoots);
 
         //check that the season weather is the same as the one specified in the array:
         assertEq(uint256(season.maxYield()), uint256(data[i].newWeather));

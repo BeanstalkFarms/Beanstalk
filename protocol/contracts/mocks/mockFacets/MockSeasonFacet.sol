@@ -8,8 +8,6 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/SeasonFacet/SeasonFacet.sol";
 import "../MockToken.sol";
-import { console } from "forge-std/console.sol";
-
 
 /**
  * @author Publius
@@ -133,10 +131,6 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.abovePeg = num;
     }
 
-    // function setStartSoilE(uint256 number) public {
-    //     s.w.startSoil = number;
-    // }
-
     function setLastDSoilE(uint256 number) public {
         s.w.lastDSoil = number;
     }
@@ -225,7 +219,7 @@ contract MockSeasonFacet is SeasonFacet {
     function stepWeatherWithParams(
         uint256 pods,
         uint256 lastDSoil,
-        uint256 startSoil,
+        //uint256 startSoil,
         uint128 endSoil,
         int256 deltaB,
         bool raining,

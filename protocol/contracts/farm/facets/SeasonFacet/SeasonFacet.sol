@@ -65,6 +65,7 @@ contract SeasonFacet is Weather {
         s.season.timestamp = block.timestamp;
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
+        
         emit Sunrise(season());
     }
 

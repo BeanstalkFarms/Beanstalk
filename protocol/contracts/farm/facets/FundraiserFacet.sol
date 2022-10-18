@@ -56,7 +56,7 @@ contract FundraiserFacet is ReentrancyGuard {
         if (s.fundraisers[id].remaining == 0) completeFundraiser(id);
         C.bean().burn(amount);
 
-        return LibDibbler.sowNoSoil(amount, s.f.soil,msg.sender);
+        return LibDibbler.sowNoSoil(amount, amount, msg.sender);
     }
 
     function completeFundraiser(uint32 id) internal {

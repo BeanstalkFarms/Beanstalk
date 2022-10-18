@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import "../../libraries/Token/LibTransfer.sol";
 import "../../libraries/LibDibbler.sol";
 import "../ReentrancyGuard.sol";
-import { console } from "forge-std/console.sol";
 
 
 /**
@@ -36,13 +35,12 @@ contract FieldFacet is ReentrancyGuard {
      * Sow
      **/
 
-    //note minWeather has precision of 1e6
+    /// @dev minWeather has precision of 1e6
     function sow(uint256 amount, uint256 minWeather, LibTransfer.From mode)
         external
         payable
         returns (uint256)
     {
-        // maybe instead put this as minWeather = 1? 
         return sowWithMin(amount, minWeather, amount, mode);
     }
 

@@ -124,7 +124,6 @@ contract Sun is Oracle {
         setSoil(maxPeas);
     }
 
-    /// @dev should we round up or down?
     function setSoil(uint256 amount) internal {
         s.f.soil = uint128(amount);
         emit Soil(s.season.current, amount);
