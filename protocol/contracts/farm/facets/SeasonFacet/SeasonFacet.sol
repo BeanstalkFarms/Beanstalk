@@ -30,7 +30,6 @@ contract SeasonFacet is Weather {
         require(seasonTime() > season(), "Season: Still current Season.");
         stepSeason();
         int256 deltaB = stepOracle();
-        s.season.AbovePeg = deltaB > 0? true : false;
         uint256 caseId = stepWeather(deltaB);
         stepSun(deltaB, caseId);
         return incentivize(msg.sender, C.getAdvanceIncentive(),mode);

@@ -51,7 +51,6 @@ contract Weather is Sun {
      **/
 
     function stepWeather(int256 deltaB) internal returns (uint256 caseId) {
-        uint256 endSoil = s.f.soil;
         uint256 beanSupply = C.bean().totalSupply();
         if (beanSupply == 0) {
             s.w.yield = 1;
@@ -65,8 +64,8 @@ contract Weather is Sun {
         );
 
         // Calculate Delta Soil Demand
-        uint256 dsoil = s.w.beanSown;
-        s.w.beanSown = 0;
+        uint256 dsoil = s.f.beanSown;
+        s.f.beanSown = 0;
 
         Decimal.D256 memory deltaPodDemand;
 

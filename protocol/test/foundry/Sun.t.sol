@@ -31,6 +31,7 @@ contract SunTest is Sun, Test {
   MockSeasonFacet internal season;
   MockSiloFacet internal silo;
   MockFieldFacet internal field;
+
   
   function setUp() public {
     utils = new Utils();
@@ -71,7 +72,16 @@ contract SunTest is Sun, Test {
     uint256 pods,
     bool hasFert,
     bool hasField
-  ) internal returns (uint256 toFert, uint256 toField, uint256 toSilo, uint256 newHarvestable, uint256 soil) {
+  ) 
+    internal 
+    returns ( 
+      uint256 toFert, 
+      uint256 toField, 
+      uint256 toSilo, 
+      uint256 newHarvestable, 
+      uint256 soil
+    ) 
+  {
     uint256 caseId  = 8;
     toFert  = hasFert  ? newBeans.div(3) : uint256(0); //
     toField = hasField ? newBeans.sub(toFert).div(2) : uint256(0); // divide remainder by two, round down
@@ -82,8 +92,11 @@ contract SunTest is Sun, Test {
     assert(toFert.add(toField).add(toSilo) == newBeans); // should sum back up
 
     newHarvestable = s.f.harvestable + toField;
-    //soil = newHarvestable.mul(100).div(100 + (s.w.yield + 1)); // FIXME: hardcode for case id 8 when deltaB > 0
-    soil = newHarvestable.mulDiv(100,101,LibPRBMath.Rounding.Up);
+    if(deltaB > 0) {
+      soil = newHarvestable;
+    } else {
+      soil = uint256(-deltaB);
+    }
 
     console.log("Beans minted: %s", newBeans);
     console.log("To Fert: %s", toFert);
@@ -133,15 +146,15 @@ contract SunTest is Sun, Test {
 
   function test_deltaB_positive_podRate_low() public {
     field.incrementTotalPodsE(100);
-    season.sunSunrise(300e6, 0); // deltaB = +300; case 0 = low pod rate
+    season.sunSunrise(300, 0); // deltaB = +300; case 0 = low pod rate
     vm.roll(26); // after dutch Auction
-    assertEq(uint256(field.totalSoil()), 150); // FIXME: how calculated?
+    assertEq(uint256(field.totalSoil()), 149); // FIXME: how calculated?
     // 300/3 = 100 *1.5 = 150
   }
   
   function test_deltaB_positive_podRate_medium() public {
     field.incrementTotalPodsE(100);
-    season.sunSunrise(300e6, 8); // deltaB = +300; case 0 = medium pod rate
+    season.sunSunrise(300, 8); // deltaB = +300; case 0 = medium pod rate
     vm.roll(26); // after dutch Auction
     assertEq(uint256(field.totalSoil()), 100); // FIXME: how calculated?
     // 300/3 = 100 * 1 = 100
@@ -149,7 +162,7 @@ contract SunTest is Sun, Test {
 
   function test_deltaB_positive_podRate_high() public {
     field.incrementTotalPodsE(100);
-    season.sunSunrise(300e6, 25); // deltaB = +300; case 0 = high pod rate
+    season.sunSunrise(300, 25); // deltaB = +300; case 0 = high pod rate
     vm.roll(26); // after dutch Auction
     assertEq(uint256(field.totalSoil()), 50); // FIXME: how calculated?
     // 300/3 = 100 * 0.5 = 50
@@ -193,7 +206,6 @@ contract SunTest is Sun, Test {
     vm.assume(deltaB < 1e16);
     uint256 newBeans = _abs(deltaB); // FIXME: more efficient way to do this?
     vm.assume(pods < newBeans); // clear the whole pod line
-
     // Setup pods
     field.incrementTotalPodsE(pods);
     console.log("Pods outstanding: %s", pods);

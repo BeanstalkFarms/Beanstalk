@@ -130,7 +130,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function setAbovePegE(bool num) public {
-        s.season.AbovePeg = num;
+        s.season.abovePeg = num;
     }
 
     // function setStartSoilE(uint256 number) public {
@@ -155,10 +155,6 @@ contract MockSeasonFacet is SeasonFacet {
 
     function setSoilE(uint256 amount) public {
         setSoil(amount);
-    }
-    
-    function setPeasE(uint256 amount) public {
-        setPeas(amount);
     }
 
     function resetAccount(address account) public {

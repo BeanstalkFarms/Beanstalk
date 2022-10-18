@@ -33,9 +33,10 @@ contract Sun is Oracle {
         if (deltaB > 0) {
             uint256 newHarvestable = rewardBeans(uint256(deltaB));
             setSoilAndPeasAbovePeg(newHarvestable, caseId);
+            s.season.abovePeg = true;
         } else {
             setSoil(uint256(-deltaB));
-            setPeas(uint256(-deltaB).mulDiv(s.w.yield.add(100),100));
+            s.season.abovePeg = false;
         }
     }
 
@@ -116,22 +117,16 @@ contract Sun is Oracle {
             .add(amount);
     }
 
-    /// @dev should we round up or down?
     function setSoilAndPeasAbovePeg(uint256 newHarvestable, uint256 caseId) internal {
         uint256 maxPeas = newHarvestable;
-        if (caseId >= 24) maxPeas = maxPeas.mul(C.soilCoefficientHigh()).div(C.precision());
-        else if (caseId < 8) maxPeas = maxPeas.mul(C.soilCoefficientLow()).div(C.precision());
-        setPeas(maxPeas);
-        setSoil(maxPeas.mulDiv(100,101,LibPRBMath.Rounding.Up));
+        if (caseId >= 24) maxPeas = maxPeas.mul(C.soilCoefficientHigh()).div(C.precision()); // high podrate
+        else if (caseId < 8) maxPeas = maxPeas.mul(C.soilCoefficientLow()).div(C.precision()); // low podrate
+        setSoil(maxPeas);
     }
 
     /// @dev should we round up or down?
     function setSoil(uint256 amount) internal {
         s.f.soil = uint128(amount);
         emit Soil(s.season.current, amount);
-    }
-
-    function setPeas(uint256 amount) internal {
-        s.f.peas = uint128(amount);
     }
 }

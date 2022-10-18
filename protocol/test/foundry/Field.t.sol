@@ -60,6 +60,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     assertEq(C.bean().totalSupply(), 19900e6, "total supply");
     assertEq(field.totalPods(), 101e6, "total Pods");
     assertEq(uint256(field.totalSoil()), 0, "total Soil");
+    assertEq(uint256(field.totalTrueSoil()), 0, "true Soil");
     assertEq(field.totalUnharvestable(), 101e6, "totalUnharvestable");
     assertEq(field.podIndex(), 101e6, "podIndex");
     assertEq(field.harvestableIndex(), 0, "harvestableIndex");
@@ -284,9 +285,9 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
   }
 
   // Morning Auction
-  function testMorningAuctionValues(uint256 blockNo,uint32 __weather) public {
+  function testMorningAuctionValues(uint256 blockNo,uint32 _weather) public {
     // tests that morning auction values align with manually calculated values
-    uint256 _weather = bound(__weather,1,69420); // arbitary large number
+    uint256 _weather = bound(_weather,1,69420); // arbitary large number
     season.setYieldE(uint32(_weather));
     blockNo = bound(blockNo,1,26); // 12s block time = 300 blocks in an season
     uint256[26] memory ScaleValues;
@@ -334,19 +335,26 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     uint256 TotalSownTransactions = 0; 
     uint256 maxAmount = 5 * 1e6;
     uint256 totalPodsMinted = 0;
+    uint256 LastTotalSoil;
+    uint256 BreanBal;
+    uint256 LastTrueSoil;
+    uint256 AmtPodsGained;
+    console.log("starting Peas:",field.peas());
+
     vm.startPrank(brean);
     while(field.totalSoil() > maxAmount){
-      uint256 amount = uint256(keccak256(abi.encodePacked(_block))).mod(maxAmount);
+      uint256 amount = uint256(keccak256(abi.encodePacked(_block))).mod(maxAmount); // pseudo-random numbers to sow
+      
       vm.roll(_block);
-      console.log("rolling to block",_block);
+      console.log("------rolling to block",_block,"------");
       console.log("total sow transactions:",TotalSownTransactions);
-      uint256 LastTotalSoil = field.totalSoil();
-      uint256 BreanBal = C.bean().balanceOf(brean);
-      uint256 LastTrueSoil = field.totalTrueSoil();
-      uint256 AmtPodsGained = field.sowWithMin(amount, 1e6, amount, LibTransfer.From.EXTERNAL);
+      LastTotalSoil = field.totalSoil();
+      BreanBal = C.bean().balanceOf(brean);
+      LastTrueSoil = field.totalTrueSoil();
+      AmtPodsGained = field.sowWithMin(amount, 1e6, amount, LibTransfer.From.EXTERNAL);
       totalSoilSown = totalSoilSown + amount;
       totalPodsMinted = totalPodsMinted + AmtPodsGained;
-      assertApproxEqAbs(LastTotalSoil - field.totalSoil(), amount, 1);
+      assertApproxEqAbs(LastTotalSoil - field.totalSoil(), amount,1); // rounding error
       console.log("Current Yield:", field.yield());
       console.log("TotalSoil Start of Block:",LastTotalSoil);
       console.log("TotalSoil End of Block:",field.totalSoil());
@@ -356,16 +364,19 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
       console.log("TrueSoil Consumed:", LastTrueSoil - field.totalTrueSoil()); 
       console.log("Beans Burnt:",BreanBal - C.bean().balanceOf(brean));
       console.log("pods gained:",AmtPodsGained);
+      console.log("peas remaining:",field.peas());
+      console.log("TrueSoil End of Block:",field.totalTrueSoil());
       console.log("total pods:",field.totalPods());
-      if(_block < 26) _block++;
+      _block++;
       TotalSownTransactions++;
     }
     vm.roll(30);
+    console.log("------rolling to block",_block,"------");
     uint256 soilLeft = field.totalSoil();
-    uint256 LastTotalSoil = field.totalSoil();
-    uint256 BreanBal = C.bean().balanceOf(brean);
-    uint256 LastTrueSoil = field.totalTrueSoil();
-    uint256 AmtPodsGained = field.sowWithMin(soilLeft, 1e6, soilLeft, LibTransfer.From.EXTERNAL);
+    LastTotalSoil = field.totalSoil();
+    BreanBal = C.bean().balanceOf(brean);
+    LastTrueSoil = field.totalTrueSoil();
+    AmtPodsGained = field.sowWithMin(soilLeft, 1e6, soilLeft, LibTransfer.From.EXTERNAL);
     totalSoilSown = totalSoilSown + soilLeft;
     totalPodsMinted = totalPodsMinted + AmtPodsGained;
     console.log("Current Yield:", field.yield());
@@ -392,13 +403,17 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     uint256 totalSoilSown = 0; 
     uint256 amount = 5e6;
     uint256 totalPodsMinted = 0;
+    uint256 LastTotalSoil;
+    uint256 BreanBal;
+    uint256 LastTrueSoil;
+    uint256 AmtPodsGained;
     while(field.totalSoil() > 5e6 && _block < 25 ){
     vm.roll(_block);
     console.log("rolling to block",_block,",the delta is", _block - 1);
-    uint256 LastTotalSoil = field.totalSoil();
-    uint256 BreanBal = C.bean().balanceOf(brean);
-    uint256 LastTrueSoil = field.totalTrueSoil();
-    uint256 AmtPodsGained = 0;
+    LastTotalSoil = field.totalSoil();
+    BreanBal = C.bean().balanceOf(brean);
+    LastTrueSoil = field.totalTrueSoil();
+    AmtPodsGained = 0;
     vm.prank(brean);
     AmtPodsGained = field.sowWithMin(amount, 1e6, amount, LibTransfer.From.EXTERNAL);
     totalSoilSown = totalSoilSown + amount;
@@ -418,18 +433,16 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     console.log("total pods:",field.totalPods());
     _block++;
     }
-    console.log("THE LAST SOW!!!!!!!!!!!!!!!!!!!!!!");
-    uint256 LastTotalSoil = field.totalSoil();
-    uint256 BreanBal = C.bean().balanceOf(brean);
-    uint256 LastTrueSoil = field.totalTrueSoil();
+    LastTotalSoil = field.totalSoil();
+    BreanBal = C.bean().balanceOf(brean);
+    LastTrueSoil = field.totalTrueSoil();
     uint256 soilLeft = field.totalSoil();
-    console.log("soilLeft!!!!!:",soilLeft);
 
     vm.prank(brean);
-    uint256 AmtPodsGained = field.sowWithMin(soilLeft, 1e6, soilLeft, LibTransfer.From.EXTERNAL);
+    AmtPodsGained = field.sowWithMin(soilLeft, 1e6, soilLeft, LibTransfer.From.EXTERNAL);
     totalSoilSown = totalSoilSown + soilLeft;
     totalPodsMinted = totalPodsMinted + AmtPodsGained;
-    assertEq(soilLeft,LastTotalSoil - field.totalSoil(), "Error: soil sown doesn't equal soil used.");
+    assertEq(soilLeft,LastTotalSoil - field.totalSoil(), "soil sown doesn't equal soil used.");
     console.log("Current Yield:", field.yield());
     console.log("TotalSoil Start of Block:",LastTotalSoil);
     console.log("TotalSoil End of Block:",field.totalSoil());
@@ -440,65 +453,62 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     console.log("Beans Burnt:",BreanBal - C.bean().balanceOf(brean));
     console.log("pods gained:",AmtPodsGained);
     console.log("total pods:",field.totalPods());
-    assertEq(field.totalUnharvestable(),totalPodsMinted, "Error: TotalUnharvestable doesn't equal maxPeas."); //.0001% accuracy
-    assertGt(totalSoilSown,100e6, "Error: Total soil sown is less than inital soil issued."); // check the amt of soil sown at the end of the season is greater than the start soil
+    assertEq(field.totalUnharvestable(),totalPodsMinted, "TotalUnharvestable doesn't equal maxPeas."); //.0001% accuracy
+    assertGt(totalSoilSown,100e6, "Total soil sown is less than inital soil issued."); // check the amt of soil sown at the end of the season is greater than the start soil
     
   }
   // check that the Soil decreases over 25 blocks, then stays stagent
   // TrueSoil should be lower than TotalSoil
   function testSoilDecrementsOverDutch() public {
     _beforeEachMorningAuction();
+    uint256 startingSoil = 200e6;
+    startingSoil = startingSoil.mulDiv(100,101,LibPRBMath.Rounding.Up);
     for(uint i = 1; i < 30; ++i){
       vm.roll(i);
       uint256 LastSoil = uint256(field.totalSoil());
       uint256 TrueSoil = field.totalTrueSoil();
-    
-      if(i == 1) { // sunriseBlock is set at block 1;
-        assertEq(LastSoil,TrueSoil);
-      }
-      else{
+      if (i == 1) { // sunriseBlock is set at block 1;
+        assertEq(TrueSoil,200e6,"TrueSoil");
+        assertEq(LastSoil,startingSoil,"LastSoil");
+      } else {
+        console.log("TotalSoil:",LastSoil);
+        console.log("TrueSoil:",TrueSoil);
         assertLt(LastSoil,TrueSoil);
       }
     }
   }
   //sowing all with variable soil, weather, and delta
-  function testSowAllMorningAuction(uint256 soil,uint256 weather,uint256 delta) public {
+  function testSowAllMorningAuction(uint256 soil,uint256 _weather,uint256 delta) public {
     C.bean().mint(brean, 1000000e6);
     soil = bound(soil,1e6,100e6);
-    weather = bound(weather,1,69420);
+    _weather = bound(_weather,1,69420);
     delta = bound(delta,1,301); //maximum blockdelta within a season is 300 blocks  
-    season.setYieldE(uint32(weather));
+    season.setYieldE(uint32(_weather));
     season.setSoilE(soilAbovePeg(soil));
-    season.setPeasE(soil.mulDiv(weather.add(100),100));
-    console.log("TrueSoil:",field.totalTrueSoil());
-    console.log("TotalSoil:",field.totalSoil());
     season.setAbovePegE(true);
     vm.roll(delta);
     uint256 maxPeas = field.peas();
-    console.log("maxPeas:",maxPeas);
-
-    uint256 TotalSoil = uint256(field.totalSoil());
-      console.log("TotalSoil:",field.totalSoil());
-
+    uint256 TotalSoil = field.totalSoil();
     vm.prank(brean);
     field.sowWithMin(
       TotalSoil,
       1e6,
       TotalSoil,
-      LibTransfer.From.EXTERNAL);
-    assertEq(uint256(field.totalSoil()),0);
+      LibTransfer.From.EXTERNAL
+      );
+    assertEq(uint256(field.totalSoil()), 0, "totalSoil");
+    assertEq(uint256(field.totalTrueSoil()), 0, "totalTrueSoil");
     assertApproxEqAbs(
       field.totalUnharvestable(),
       maxPeas,
       1,
-      "Error: Unharvestable pods does not Equal Expected."
+      "Unharvestable pods does not Equal Expected."
       );
   }
   // BeforeEach Helpers
   function _beforeEachMorningAuction() public {
     season.setYieldE(100);
     season.setSoilE(soilAbovePeg(100e6));
-    //field.incrementTotalSoilE(uint128(soilAbovePeg(100e6)));
     season.setAbovePegE(true);
   }
   function _beforeEachFullHarvest() public {
@@ -522,7 +532,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     field.harvest(harvestPlot, LibTransfer.To.EXTERNAL);
   }
   function _beforeEachHarvest() public {
-    season.setSoilE(soilAbovePeg(200e6));
+    season.setSoilE(200e6);
     vm.roll(30); // after morning Auction
     vm.prank(brean);
     field.sow(100e6,1,LibTransfer.From.EXTERNAL);
@@ -542,15 +552,20 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     field.harvest(harvestPlot, LibTransfer.To.EXTERNAL);
   }
   function _beforeEachSow() public {
-    season.setSoilE(soilAbovePeg(100e6));
+    vm.roll(30);
+    season.setSoilE(100e6);
+    console.log("b4 field.totalSoil():",field.totalSoil());
     vm.prank(brean);
     vm.expectEmit(true,true,true,true);
     // account, index, beans, pods
     emit Sow(brean,0, 100e6, 101e6);
     field.sow(100e6, 1e6,LibTransfer.From.EXTERNAL);
+    console.log("after field.totalSoil():",field.totalSoil());
+    console.log("after field.trueSoil():",field.totalTrueSoil());
+
   }
   function _beforeEachSomeSow() public {
-    season.setSoilE(soilAbovePeg(200e6));
+    season.setSoilE(200e6);
     vm.prank(brean);
     vm.expectEmit(true,true,true,true);
     // account, index, beans, pods
@@ -558,7 +573,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     field.sow(100e6, 1e6, LibTransfer.From.EXTERNAL);
   }
   function _beforeEachSomeSowFromInternal() public {
-    season.setSoilE(soilAbovePeg(200e6));
+    season.setSoilE(200e6);
     vm.startPrank(brean);
     token.transferToken(C.bean(),brean, 100e6, LibTransfer.From.EXTERNAL, LibTransfer.To.INTERNAL);
     vm.expectEmit(true,true,true,true);
@@ -569,7 +584,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
 
   }
   function _beforeEachSomeSowFromInternalTolerant() public {
-    season.setSoilE(soilAbovePeg(200e6));
+    season.setSoilE(200e6);
     vm.startPrank(brean);
     token.transferToken(C.bean(),brean, 50e6, LibTransfer.From.EXTERNAL,LibTransfer.To.INTERNAL);
     vm.expectEmit(true,true,true,true);
@@ -579,7 +594,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     vm.stopPrank();
   }
   function _beforeEachSowMin() public {
-    season.setSoilE(soilAbovePeg(100e6));
+    season.setSoilE(100e6);
     vm.roll(30);
     vm.startPrank(brean);
     vm.expectEmit(true,true,true,true);
@@ -589,7 +604,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     vm.stopPrank();
   }
   function _beforeEachSowMinWithEnoughSoil() public {
-    season.setSoilE(soilAbovePeg(200e6));
+    season.setSoilE(200e6);
     vm.startPrank(brean);
     vm.expectEmit(true,true,true,true);
     // account, index, beans, pods
@@ -598,7 +613,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     vm.stopPrank();
   }
   function _beforeEachSow2Users() public {
-    season.setSoilE(soilAbovePeg(200e6));
+    season.setSoilE(200e6);
     vm.startPrank(brean);
     vm.expectEmit(true,true,true,true);
     // account, index, beans, pods
@@ -613,15 +628,20 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     field.sowWithMin(100e6, 1e6, 50e6, LibTransfer.From.EXTERNAL);
     vm.stopPrank();
   } 
+
   // Test Helpers
   function max(uint256 a, uint256 b) internal pure returns (uint256) {
     return a >= b ? a : b;
   }
-  /// @dev when above peg,the amt of soil issued is newHarvestable/1.01
+
+  /// @dev when above peg,the amt of soil now issued is newHarvestable/1.01
   /// previously, the amt of soil issued was newHarvestable/(s.w.yield + 1)
-  /// thus, this function replicates the previous behaviour with the new soil issuance.
+  /// this function replicates the previous behaviour with the new soil issuance when below peg.
   function soilAbovePeg(uint256 a) internal view returns(uint256) {
-    return a.mul(season.maxYield().add(100)).div(101); 
+    console.log("season.maxYield:",season.maxYield());
+    console.log("pre soil",a);
+    console.log("post soil",a.mul(season.maxYield().add(100)).div(100));
+    return a.mul(season.maxYield().add(100)).div(100); 
   }
 
   

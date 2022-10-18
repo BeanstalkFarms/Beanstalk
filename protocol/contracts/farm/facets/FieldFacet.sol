@@ -71,7 +71,7 @@ contract FieldFacet is ReentrancyGuard {
     {
         amount = LibTransfer.burnToken(C.bean(), amount, msg.sender, mode);
         pods = LibDibbler.sow(amount, msg.sender);
-        s.w.beanSown = s.w.beanSown + amount; // safeMath not needed
+        s.f.beanSown = s.f.beanSown + uint128(amount); // safeMath not needed
     }
 
     /**
@@ -154,9 +154,9 @@ contract FieldFacet is ReentrancyGuard {
     }
 
     function totalSoil() public view returns (uint256) {
-        if(s.season.AbovePeg) { 
-            uint256 _yield = uint256(yield()).add(100e6);
-            return uint256(s.f.soil).mulDiv(101_000_000,_yield);
+        if(s.season.abovePeg) {
+            uint256 _yield = yield().add(1e8); 
+            return uint256(s.f.soil).mulDiv(100e6,_yield,LibPRBMath.Rounding.Up); 
         } else {
             return uint256(s.f.soil);
         }
@@ -169,6 +169,10 @@ contract FieldFacet is ReentrancyGuard {
 
     /// @dev peas are the potential pods that can be issued within a season.
     function peas() external view returns (uint256) {
-       return s.f.peas;
+       if (s.season.abovePeg) {
+            return s.f.soil;
+        } else {
+            return s.f.soil.mul(100 + s.w.yield).div(100);
+        }
     }
 }
