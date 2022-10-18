@@ -8,7 +8,7 @@ const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 
-describe('Silo', function () {
+describe('Sop', function () {
   before(async function () {
     [owner,user,user2] = await ethers.getSigners()
     userAddress = user.address;
@@ -153,7 +153,7 @@ describe('Silo', function () {
 
     it('claims user plenty', async function () {
       await this.silo.update(user2Address);
-      await this.silo.claimPlenty(user2Address);
+      await this.silo.connect(user2).claimPlenty();
       expect(await this.silo.balanceOfPlenty(user2Address)).to.be.equal('0')
       expect(await this.threeCurve.balanceOf(user2Address)).to.be.equal('50208107346352812150')
     })

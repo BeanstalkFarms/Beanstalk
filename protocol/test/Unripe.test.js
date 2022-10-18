@@ -20,6 +20,7 @@ describe('Unripe', function () {
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address)
     this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)
+    this.token = await ethers.getContractAt('TokenFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('MockToken', BEAN)
     await this.bean.connect(owner).approve(this.diamond.address, to6('100000000'))
 
@@ -45,8 +46,8 @@ describe('Unripe', function () {
   })
 
   it('reverts on non-unripe address', async function () {
-    await expect(this.unripe.getPenalty(this.bean.address)).to.be.revertedWith('not vesting');
-    await expect(this.unripe.getRecapFundedPercent(this.bean.address)).to.be.revertedWith('not vesting');
+    await expect(this.unripe.getPenalty(this.bean.address)).to.be.reverted;
+    await expect(this.unripe.getRecapFundedPercent(this.bean.address)).to.be.reverted;
   })
 
   it('getters', async function () {
@@ -126,6 +127,52 @@ describe('Unripe', function () {
       )
       await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('100'))
       this.result = await this.unripe.connect(user).chop(UNRIPE_BEAN, to6('1'), EXTERNAL, EXTERNAL)
+    })
+
+    it('getters', async function () {
+      expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
+      expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal('100099')
+      expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.001'))
+      expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('99.999'))
+      expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
+      expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.001'))
+      expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.100099'))
+      expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('99.999'))
+      expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('0.99999'))
+    })
+
+    it('changes balaces', async function () {
+      expect(await this.unripeBean.balanceOf(userAddress)).to.be.equal(to6('999'))
+      expect(await this.bean.balanceOf(userAddress)).to.be.equal(to6('0.001'))
+      expect(await this.unripeBean.totalSupply()).to.be.equal(to6('999'))
+      expect(await this.bean.balanceOf(this.unripe.address)).to.be.equal(to6('99.999'))
+    })
+
+    it('emits an event', async function () {
+      await expect(this.result).to.emit(this.unripe, 'Chop').withArgs(
+        user.address,
+        UNRIPE_BEAN,
+        to6('1'),
+        to6('0.001')
+      )
+    })
+  })
+
+  describe('chop', async function () {
+    beforeEach(async function () {
+      await this.unripe.connect(owner).addUnderlying(
+        UNRIPE_BEAN,
+        to6('100')
+      )
+      await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('100'))
+      await this.token.connect(user).transferToken(
+        UNRIPE_BEAN,
+        user.address,
+        to6('1'),
+        EXTERNAL,
+        INTERNAL
+    )
+    this.result = await this.unripe.connect(user).chop(UNRIPE_BEAN, to6('10'), INTERNAL_TOLERANT, EXTERNAL)
     })
 
     it('getters', async function () {

@@ -16,7 +16,8 @@ library LibConvertData {
         BEANS_TO_CURVE_LP,
         CURVE_LP_TO_BEANS,
         UNRIPE_BEANS_TO_UNRIPE_LP,
-        UNRIPE_LP_TO_UNRIPE_BEANS
+        UNRIPE_LP_TO_UNRIPE_BEANS,
+        LAMBDA_LAMBDA
     }
 
     /// @notice Decoder for the Convert Enum
@@ -58,5 +59,13 @@ library LibConvertData {
             self,
             (ConvertKind, uint256, uint256, address)
         );
+    }
+
+    function lambdaConvert(bytes memory self)
+        internal
+        pure
+        returns (uint256 amount, address token)
+    {
+        (, amount, token) = abi.decode(self, (ConvertKind, uint256, address));
     }
 }

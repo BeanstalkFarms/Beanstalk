@@ -57,6 +57,13 @@ contract TokenSilo is Silo {
         uint256 amount
     );
 
+    event DepositApproval(
+        address indexed owner,
+        address indexed spender,
+        address token,
+        uint256 amount
+    );
+
     struct AssetsRemoved {
         uint256 tokensRemoved;
         uint256 stalkRemoved;
@@ -298,7 +305,7 @@ contract TokenSilo is Silo {
         address token,
         uint32 season,
         uint256 amount
-    ) internal {
+    ) internal returns (uint256) {
         (uint256 stalk, uint256 seeds, uint256 bdv) = removeDeposit(
             sender,
             token,
@@ -307,6 +314,7 @@ contract TokenSilo is Silo {
         );
         LibTokenSilo.addDeposit(recipient, token, season, amount, bdv);
         LibSilo.transferSiloAssets(sender, recipient, seeds, stalk);
+        return bdv;
     }
 
     function _transferDeposits(
@@ -315,12 +323,14 @@ contract TokenSilo is Silo {
         address token,
         uint32[] calldata seasons,
         uint256[] calldata amounts
-    ) internal {
+    ) internal returns (uint256[] memory) {
         require(
             seasons.length == amounts.length,
             "Silo: Crates, amounts are diff lengths."
         );
         AssetsRemoved memory ar;
+        uint256[] memory bdvs = new uint256[](seasons.length);
+
         for (uint256 i; i < seasons.length; ++i) {
             uint256 crateBdv = LibTokenSilo.removeDeposit(
                 sender,
@@ -343,6 +353,7 @@ contract TokenSilo is Silo {
                     _season() - seasons[i]
                 )
             );
+            bdvs[i] = crateBdv;
         }
         ar.seedsRemoved = ar.bdvRemoved.mul(s.ss[token].seeds);
         ar.stalkRemoved = ar.stalkRemoved.add(
@@ -355,6 +366,33 @@ contract TokenSilo is Silo {
             ar.seedsRemoved,
             ar.stalkRemoved
         );
+        return bdvs;
+    }
+
+    function _spendDepositAllowance(
+        address owner,
+        address spender,
+        address token,
+        uint256 amount
+    ) internal virtual {
+        uint256 currentAllowance = depositAllowance(owner, spender, token);
+        if (currentAllowance != type(uint256).max) {
+            require(currentAllowance >= amount, "Silo: insufficient allowance");
+            _approveDeposit(owner, spender, token, currentAllowance - amount);
+        }
+    }
+        
+    function _approveDeposit(address account, address spender, address token, uint256 amount) internal {
+        s.a[account].depositAllowances[spender][token] = amount;
+        emit DepositApproval(account, spender, token, amount);
+    }
+
+    function depositAllowance(
+        address account,
+        address spender,
+        address token
+    ) public view virtual returns (uint256) {
+        return s.a[account].depositAllowances[spender][token];
     }
 
     function _season() private view returns (uint32) {
