@@ -116,7 +116,7 @@ module.exports = {
     }
   },
   gasReporter: {
-    enabled: false//use this for debugging gas amounts
+    enabled: false
   },
   mocha: {
     timeout: 100000000

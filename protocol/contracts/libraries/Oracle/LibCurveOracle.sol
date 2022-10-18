@@ -26,7 +26,7 @@ interface IMeta3CurveOracle {
 }
 
 library LibCurveOracle {
-    int256 private constant mintPrecision = 100;
+    
     uint256 private constant MAX_DELTA_B_DENOMINATOR = 100;
 
     event MetapoolOracle(uint32 indexed season, int256 deltaB, uint256[2] balances);
@@ -39,19 +39,12 @@ library LibCurveOracle {
         deltaB = checkForMaxDeltaB(deltaB);
     }
 
-    function _check() internal view returns (int256) {
+    function _check() internal view returns (int256 db) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.co.initialized) {
-            (int256 db, , ) = twaDeltaB();
-            int256 mintedSeasons = int256(
-                s.season.current.sub(s.co.startSeason)
-            );
-            mintedSeasons = mintedSeasons > mintPrecision
-                ? mintPrecision
-                : mintedSeasons;
-            return (db * mintedSeasons) / mintPrecision;
+            (db, , ) = twaDeltaB();
         } else {
-            return 0;
+            db = 0;
         }
     }
 
@@ -65,14 +58,7 @@ library LibCurveOracle {
     function _capture() internal returns (int256 deltaB, uint256[2] memory balances) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.co.initialized) {
-            int256 mintedSeasons = int256(
-                s.season.current.sub(s.co.startSeason)
-            );
-            mintedSeasons = mintedSeasons > mintPrecision
-                ? mintPrecision
-                : mintedSeasons;
             (deltaB, balances) = updateOracle();
-            deltaB = (deltaB * mintedSeasons) / mintPrecision;
         } else {
             balances = initializeOracle();
         }
