@@ -5,7 +5,12 @@ const { to6 } = require("./utils/helpers.js");
 const { signDelegate } = require("./utils/sign.js");
 const { BEAN } = require("./utils/constants");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { getBooleanApproval, getUint256Approval } = require("./utils/approval.js");
+const {
+  getBooleanApproval,
+  getUint256Approval,
+  getExternalApproval,
+  getInvalidApproval,
+} = require("./utils/approval.js");
 
 let user, user2, delegatee, owner;
 let userAddress, user2Address, delegateeAddress, ownerAddress;
@@ -50,15 +55,8 @@ describe("FunctionApproval", function () {
       .connect(user2)
       .deposit(this.bean.address, to6("1000"), EXTERNAL);
 
-    this.approveDelegate = async (
-      user,
-      selector,
-      delegateeAddress,
-      approval
-    ) => {
-      await this.delegate
-        .connect(user)
-        .approveDelegate(selector, delegateeAddress, approval);
+    this.approveDelegate = async (user, selector, approval) => {
+      await this.delegate.connect(user).approveDelegate(selector, approval);
     };
   });
 
@@ -73,40 +71,27 @@ describe("FunctionApproval", function () {
   describe("Set Function Approval", function () {
     it("properly approves delegate", async function () {
       const selector = await this.silo.PLANT_DELEGATED_SELECTOR();
-      const approval = getBooleanApproval(true);
-      await this.approveDelegate(user, selector, delegateeAddress, approval);
-      expect(
-        await this.delegate.delegateApproval(
-          userAddress,
-          selector,
-          delegateeAddress
-        )
-      ).to.eq(approval);
+      const approval = getBooleanApproval(true, delegateeAddress, true);
+      await this.approveDelegate(user, selector, approval);
+      expect(await this.delegate.delegateApproval(userAddress, selector)).to.eq(
+        approval
+      );
     });
 
     it("properly updates previous approval", async function () {
       const selector = await this.silo.PLANT_DELEGATED_SELECTOR();
-      const oldApproval = getBooleanApproval(true);
-      await this.approveDelegate(
-        user,
-        selector,
-        delegateeAddress,
-        oldApproval
+      const oldApproval = getBooleanApproval(true, delegateeAddress, true);
+      await this.approveDelegate(user, selector, oldApproval);
+      const newApproval = getUint256Approval(false, delegateeAddress, 100);
+      await this.approveDelegate(user, selector, newApproval);
+      expect(await this.delegate.delegateApproval(userAddress, selector)).to.eq(
+        newApproval
       );
-      const newApproval = getUint256Approval(100);
-      await this.approveDelegate(user, selector, delegateeAddress, newApproval);
-      expect(
-        await this.delegate.delegateApproval(
-          userAddress,
-          selector,
-          delegateeAddress
-        )
-      ).to.eq(newApproval);
     });
 
     it("approve with permit", async function () {
       const selector = await this.silo.PLANT_DELEGATED_SELECTOR();
-      const approval = getUint256Approval(100);
+      const approval = getUint256Approval(false, delegateeAddress, 100);
       const nonce = await this.permit.nonces(userAddress);
       const deadline = Math.floor(new Date().getTime() / 1000) + 10 * 60;
 
@@ -115,7 +100,6 @@ describe("FunctionApproval", function () {
         this.delegate.address,
         ownerAddress,
         selector,
-        delegateeAddress,
         approval,
         nonce,
         deadline
@@ -124,7 +108,6 @@ describe("FunctionApproval", function () {
         this.delegate.permitDelegate(
           userAddress,
           selector,
-          delegateeAddress,
           approval,
           deadline,
           signature
@@ -136,7 +119,6 @@ describe("FunctionApproval", function () {
         this.delegate.address,
         userAddress,
         selector,
-        delegateeAddress,
         approval,
         nonce,
         deadline - 20 * 60
@@ -145,7 +127,6 @@ describe("FunctionApproval", function () {
         this.delegate.permitDelegate(
           userAddress,
           selector,
-          delegateeAddress,
           approval,
           deadline - 20 * 60,
           signature
@@ -157,7 +138,6 @@ describe("FunctionApproval", function () {
         this.delegate.address,
         userAddress,
         selector,
-        delegateeAddress,
         approval,
         nonce,
         deadline
@@ -165,19 +145,14 @@ describe("FunctionApproval", function () {
       await this.delegate.permitDelegate(
         userAddress,
         selector,
-        delegateeAddress,
         approval,
         deadline,
         signature
       );
 
-      expect(
-        await this.delegate.delegateApproval(
-          userAddress,
-          selector,
-          delegateeAddress
-        )
-      ).to.eq(approval);
+      expect(await this.delegate.delegateApproval(userAddress, selector)).to.eq(
+        approval
+      );
       expect(await this.permit.nonces(userAddress)).to.be.eq(nonce + 1);
     });
   });

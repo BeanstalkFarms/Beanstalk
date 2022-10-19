@@ -217,76 +217,41 @@ contract SiloFacet is TokenSilo {
     /// @param account user address
     /// @return beans number of beans planted
     function plantDelegated(address account) external returns (uint256 beans) {
-        (bytes1 approvalType, bytes memory approvalValue) = LibDelegate
-            .getApprovalDetails(account, PLANT_DELEGATED_SELECTOR, msg.sender);
+        (
+            bytes1 place,
+            bytes1 approvalType,
+            bytes memory approvalData
+        ) = LibDelegate.getApprovalDetails(account, PLANT_DELEGATED_SELECTOR);
 
-        if (LibDelegate.isExternalType(approvalType))
-            revert("Silo: unauthorized");
-
-        if (LibDelegate.isBooleanType(approvalType)) {
-            require(abi.decode(approvalValue, (bool)), "Silo: unauthorized");
-        }
-
-        beans = _plant(account);
-
-        if (LibDelegate.isUint256Type(approvalType)) {
-            uint256 allowance = abi.decode(approvalValue, (uint256));
-            if (allowance < beans) revert("Silo: not enough allowance");
-            allowance -= beans;
-            bytes memory newApproval = abi.encodePacked(
-                approvalType,
-                abi.encode(allowance)
-            );
-            LibDelegate.setApproval(
+        // PRE-APPROVAL
+        if (place == 0x00) {
+            LibDelegate.checkApproval(
                 account,
                 PLANT_DELEGATED_SELECTOR,
                 msg.sender,
-                newApproval
+                place,
+                approvalType,
+                approvalData,
+                "",
+                abi.encode(0)
             );
         }
-    }
-
-    /// @notice plant on behalf of account
-    /// @param account user address
-    /// @param data approval calldata for external contract call
-    /// @return beans number of beans planted
-    function plantDelegatedWithCalldata(address account, bytes calldata data)
-        external
-        returns (uint256 beans)
-    {
-        (bytes1 approvalType, bytes memory approvalValue) = LibDelegate
-            .getApprovalDetails(account, PLANT_DELEGATED_SELECTOR, msg.sender);
-
-        require(LibDelegate.isExternalType(approvalType), "Silo: unauthorized");
 
         beans = _plant(account);
 
-        (address addr, bytes memory stateData) = abi.decode(
-            approvalValue,
-            (address, bytes)
-        );
-        (bool success, bytes memory returnData) = addr.staticcall(
-            abi.encodeWithSignature(
-                "check(bytes,bytes,bytes)",
-                data,
-                abi.encode(beans),
-                stateData
-            )
-        );
-        require(success, "Silo: unauthorized");
-
-        (bool approve, bytes memory newStateData) = abi.decode(
-            returnData,
-            (bool, bytes)
-        );
-        require(approve, "Silo: unauthorized");
-        bytes memory newApproval = abi.encode(addr, newStateData);
-        LibDelegate.setApproval(
-            account,
-            PLANT_DELEGATED_SELECTOR,
-            msg.sender,
-            newApproval
-        );
+        // PRE-APPROVAL
+        if (place == 0x01) {
+            LibDelegate.checkApproval(
+                account,
+                PLANT_DELEGATED_SELECTOR,
+                msg.sender,
+                place,
+                approvalType,
+                approvalData,
+                "",
+                abi.encode(beans)
+            );
+        }
     }
 
     /*

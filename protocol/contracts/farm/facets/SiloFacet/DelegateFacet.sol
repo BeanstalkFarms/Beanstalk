@@ -14,27 +14,23 @@ import "../../../libraries/Silo/LibDelegate.sol";
 contract DelegateFacet is Permit {
     /// @notice approveDelegate sets approval value for delegation
     /// @param selector function selector
-    /// @param delegatee contract/EOA address to delegate to
-    /// @param approval generic bytes approval data
+    /// @param approval generic bytes approval value
     function approveDelegate(
         bytes4 selector,
-        address delegatee,
         bytes memory approval
     ) external {
-        _approveDelegate(msg.sender, selector, delegatee, approval);
+        _approveDelegate(msg.sender, selector, approval);
     }
 
     /// @notice permitDelegate sets function approval using permit
     /// @param account account address
     /// @param selector function selector
-    /// @param delegatee contract/EOA address to delegate to
-    /// @param approval generic bytes approval data
+    /// @param approval generic bytes approval value
     /// @param deadline permit deadline
     /// @param signature user's permit signature
     function permitDelegate(
         address account,
         bytes4 selector,
-        address delegatee,
         bytes memory approval,
         uint256 deadline,
         bytes memory signature
@@ -46,11 +42,10 @@ contract DelegateFacet is Permit {
         bytes32 hashStruct = keccak256(
             abi.encode(
                 keccak256(
-                    "PermitDelegate(address account,bytes4 selector,address delegatee,bytes approval,uint256 nonce,uint256 deadline)"
+                    "PermitDelegate(address account,bytes4 selector,bytes approval,uint256 nonce,uint256 deadline)"
                 ),
                 account,
                 selector,
-                delegatee,
                 keccak256(abi.encodePacked(approval)),
                 _useNonce(account),
                 deadline
@@ -64,7 +59,7 @@ contract DelegateFacet is Permit {
         address signer = ECDSA.recover(hash, signature);
         require(signer == account, "DelegateFacet: invalid signature");
 
-        _approveDelegate(account, selector, delegatee, approval);
+        _approveDelegate(account, selector, approval);
     }
 
     //////////////////////////////////////
@@ -74,14 +69,12 @@ contract DelegateFacet is Permit {
     /// @notice delegateApproval returns current approval type and data
     /// @param account account address
     /// @param selector function selector
-    /// @param delegatee delegatee address
     /// @return approval approval value
     function delegateApproval(
         address account,
-        bytes4 selector,
-        address delegatee
+        bytes4 selector
     ) external view returns (bytes memory approval) {
-        return LibDelegate.getApproval(account, selector, delegatee);
+        return LibDelegate.getApproval(account, selector);
     }
 
     //////////////////////////////////////
@@ -91,14 +84,12 @@ contract DelegateFacet is Permit {
     /// @dev sets function approval
     /// @param account account address
     /// @param selector function selector
-    /// @param delegatee delegatee address
-    /// @param approval generic bytes approval data
+    /// @param approval generic bytes approval value
     function _approveDelegate(
         address account,
         bytes4 selector,
-        address delegatee,
         bytes memory approval
     ) internal {
-        LibDelegate.setApproval(account, selector, delegatee, approval);
+        LibDelegate.setApproval(account, selector, approval);
     }
 }

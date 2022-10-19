@@ -27,35 +27,36 @@ library LibDelegate {
      * Delegate
      **/
 
-    /// @notice getApproval returns approval data
+    /// @notice getApproval returns approval value
     /// @param account account address
     /// @param selector function selector
-    /// @param delegatee delegatee address
-    /// @return approval generic bytes approval data
-    function getApproval(
-        address account,
-        bytes4 selector,
-        address delegatee
-    ) internal view returns (bytes memory approval) {
+    /// @return approval generic bytes approval value
+    function getApproval(address account, bytes4 selector)
+        internal
+        view
+        returns (bytes memory approval)
+    {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        approval = s.a[account].functionApprovals[selector][delegatee];
+        approval = s.a[account].functionApprovals[selector];
     }
 
-    /// @notice setApproval sets approval data
+    /// @notice setApproval sets approval value
     /// @param account account address
     /// @param selector function selector
-    /// @param delegatee delegatee address
-    /// @param approval generic bytes approval data
+    /// @param approval generic bytes approval value
     function setApproval(
         address account,
         bytes4 selector,
-        address delegatee,
         bytes memory approval
     ) internal {
-        (
-            bytes1 approvalType,
-            bytes memory approvalValue
-        ) = extractApprovalDetails(approval);
+        require(approval.length >= 3, "LibDelegate: Invalid Approval");
+
+        bytes1 place = extractApprovalPlace(approval);
+        bytes1 approvalType = extractApprovalType(approval);
+        require(
+            place == 0x00 || place == 0x01,
+            "LibDelegate: Invalid Approval Place"
+        );
         require(
             isBooleanType(approvalType) ||
                 isUint256Type(approvalType) ||
@@ -64,43 +65,276 @@ library LibDelegate {
         );
 
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.a[account].functionApprovals[selector][delegatee] = approval;
+        s.a[account].functionApprovals[selector] = approval;
     }
 
-    /// @notice getApprovalDetails returns approval type and value
+    /// @notice getApprovalDetails returns approval place, type and data
     /// @param account account address
     /// @param selector function selector
-    /// @param delegatee delegatee address
+    /// @return place bytes1 value representing where to perform check approval; pre/post approval
     /// @return approvalType byte1 value representing approval type
-    /// @return approvalValue bytes value representing approval value
-    function getApprovalDetails(
-        address account,
-        bytes4 selector,
-        address delegatee
-    ) internal view returns (bytes1 approvalType, bytes memory approvalValue) {
+    /// @return approvalData bytes value representing approval data
+    function getApprovalDetails(address account, bytes4 selector)
+        internal
+        view
+        returns (
+            bytes1 place,
+            bytes1 approvalType,
+            bytes memory approvalData
+        )
+    {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        bytes memory approval = s.a[account].functionApprovals[selector][
-            delegatee
-        ];
-        (approvalType, approvalValue) = extractApprovalDetails(approval);
+        bytes memory approval = s.a[account].functionApprovals[selector];
+        (place, approvalType, approvalData) = extractApprovalDetails(approval);
     }
 
-    /// @notice extractApprovalDetails extracts approval type and value from approval data
-    /// @dev first byte represents approvalType, rest represents approvalValue
-    ///      approvalType = approval[0]
-    ///      approvalValue = approval[1:]
-    /// @param approval generic bytes approval data
+    /// @notice extractApprovalDetails extracts approval place, type and data from approval value
+    /// @dev 1st byte represents place, 2nd byte represents approvalType, rest represents approvalData
+    ///      place = approval[0]
+    ///      approvalType = approval[1]
+    ///      approvalData = approval[2:]
+    /// @param approval generic bytes approval value
+    /// @return place bytes1 value representing where to perform check approval; pre/post silo action
     /// @return approvalType byte1 value representing approval type
-    /// @return approvalValue bytes value representing approval value
+    /// @return approvalData bytes value representing approval data
     function extractApprovalDetails(bytes memory approval)
         internal
         pure
-        returns (bytes1 approvalType, bytes memory approvalValue)
+        returns (
+            bytes1 place,
+            bytes1 approvalType,
+            bytes memory approvalData
+        )
     {
-        require(approval.length > 0, "LibDelegate: Empty Approval");
-        approvalType = approval[0];
-        approvalValue = slice(approval, 1, approval.length - 1);
-        require(approvalValue.length > 0, "LibDelegate: Empty Approval Value");
+        require(approval.length >= 3, "LibDelegate: Invalid Approval");
+        place = extractApprovalPlace(approval);
+        approvalType = extractApprovalType(approval);
+        approvalData = extractApprovalData(approval);
+    }
+
+    /// @notice extractApprovalPlace extracts approval place from approval value
+    /// @dev 1st byte represents place
+    ///      place = approval[0]
+    /// @param approval generic bytes approval value
+    /// @return place bytes1 value representing where to perform check approval; pre/post silo action
+    function extractApprovalPlace(bytes memory approval)
+        internal
+        pure
+        returns (bytes1 place)
+    {
+        place = approval[0];
+    }
+
+    /// @notice extractApprovalType extracts approval type from approval value
+    /// @dev 2nd byte represents approvalType
+    ///      approvalType = approval[1]
+    /// @param approval generic bytes approval value
+    /// @return approvalType byte1 value representing approval type
+    function extractApprovalType(bytes memory approval)
+        internal
+        pure
+        returns (bytes1 approvalType)
+    {
+        approvalType = approval[1];
+    }
+
+    /// @notice extractApprovalData extracts approval data from approval value
+    /// @dev approvalData = approval[2:]
+    /// @param approval generic bytes approval value
+    /// @return approvalData bytes value representing approval data
+    function extractApprovalData(bytes memory approval)
+        internal
+        pure
+        returns (bytes memory approvalData)
+    {
+        require(approval.length >= 3, "LibDelegate: Empty Approval Data");
+        approvalData = slice(approval, 2, approval.length - 2);
+    }
+
+    /// @notice checkApproval checks approval with given info
+    /// @param account user address
+    /// @param selector function selector
+    /// @param caller caller address
+    /// @param place approval place
+    /// @param approvalType approval type
+    /// @param approvalData approval data
+    /// @param callData call data
+    /// @param returnData return data
+    function checkApproval(
+        address account,
+        bytes4 selector,
+        address caller,
+        bytes1 place,
+        bytes1 approvalType,
+        bytes memory approvalData,
+        bytes memory callData,
+        bytes memory returnData
+    ) internal {
+        if (isBooleanType(approvalType)) {
+            _checkBooleanApproval(caller, approvalType, approvalData);
+        } else if (isUint256Type(approvalType)) {
+            _checkUint256Approval(
+                account,
+                selector,
+                caller,
+                place,
+                approvalType,
+                approvalData,
+                returnData
+            );
+        } else if (isExternalType(approvalType)) {
+            _checkExternalApproval(
+                account,
+                selector,
+                caller,
+                place,
+                approvalType,
+                approvalData,
+                callData,
+                returnData
+            );
+        } else {
+            revert("LibDelegate: Invalid Approval Type");
+        }
+    }
+
+    /// @notice _checkBooleanApproval checks approval with given info
+    /// @param caller caller address
+    /// @param approvalType approval type
+    /// @param approvalData approval data
+    function _checkBooleanApproval(
+        address caller,
+        bytes1 approvalType,
+        bytes memory approvalData
+    ) internal pure {
+        require(
+            isBooleanType(approvalType),
+            "LibDelegate: Invalid Approval Type"
+        );
+
+        (address expectedCaller, bool approve) = abi.decode(
+            approvalData,
+            (address, bool)
+        );
+        _checkCaller(caller, expectedCaller);
+
+        require(approve, "LibDelegate: Unauthorized");
+    }
+
+    /// @notice _checkUint256Approval checks approval with given info
+    /// @param account user address
+    /// @param selector function selector
+    /// @param caller caller address
+    /// @param place approval place
+    /// @param approvalType approval type
+    /// @param approvalData approval data
+    /// @param returnData return data
+    function _checkUint256Approval(
+        address account,
+        bytes4 selector,
+        address caller,
+        bytes1 place,
+        bytes1 approvalType,
+        bytes memory approvalData,
+        bytes memory returnData
+    ) internal {
+        require(
+            isUint256Type(approvalType),
+            "LibDelegate: Invalid Approval Type"
+        );
+
+        (address expectedCaller, uint256 allowance) = abi.decode(
+            approvalData,
+            (address, uint256)
+        );
+        _checkCaller(caller, expectedCaller);
+
+        uint256 spend = abi.decode(returnData, (uint256));
+        if (spend > 0) {
+            allowance -= spend;
+            bytes memory newApproval = abi.encodePacked(
+                place,
+                approvalType,
+                abi.encode(expectedCaller, allowance)
+            );
+            setApproval(account, selector, newApproval);
+        }
+    }
+
+    /// @notice _checkExternalApproval checks approval with given info
+    /// @param account user address
+    /// @param selector function selector
+    /// @param caller caller address
+    /// @param place approval place
+    /// @param approvalType approval type
+    /// @param approvalData approval data
+    /// @param callData call data
+    /// @param returnData return data
+    function _checkExternalApproval(
+        address account,
+        bytes4 selector,
+        address caller,
+        bytes1 place,
+        bytes1 approvalType,
+        bytes memory approvalData,
+        bytes memory callData,
+        bytes memory returnData
+    ) internal {
+        require(
+            isExternalType(approvalType),
+            "LibDelegate: Invalid Approval Type"
+        );
+
+        (
+            address expectedCaller,
+            address externalContract,
+            bytes memory stateData
+        ) = abi.decode(approvalData, (address, address, bytes));
+        _checkCaller(caller, expectedCaller);
+
+        (bool success, bytes memory returnValue) = externalContract.staticcall(
+            abi.encodeWithSignature(
+                "check(bytes,bytes,bytes)",
+                callData,
+                returnData,
+                stateData
+            )
+        );
+        require(success, "LibDelegate: Unauthorized");
+
+        (bool approve, bytes memory newStateData) = abi.decode(
+            returnValue,
+            (bool, bytes)
+        );
+        require(approve, "LibDelegate: Unauthorized");
+
+        if (
+            stateData.length != newStateData.length ||
+            keccak256(stateData) != keccak256(newStateData)
+        ) {
+            setApproval(
+                account,
+                selector,
+                abi.encodePacked(
+                    place,
+                    approvalType,
+                    abi.encode(expectedCaller, externalContract, newStateData)
+                )
+            );
+        }
+    }
+
+    /// @notice _checkCaller checks if the caller is approved
+    /// @param caller caller address
+    /// @param expectedCaller expected caller address
+    function _checkCaller(address caller, address expectedCaller)
+        internal
+        pure
+    {
+        require(
+            expectedCaller == address(0) || expectedCaller == caller,
+            "LibDelegate: Unauthorized Caller"
+        );
     }
 
     /// @notice isBooleanType checks if approval type is boolean approval

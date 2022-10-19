@@ -2,28 +2,58 @@ const { ethers } = require("ethers");
 
 const abi = ethers.utils.defaultAbiCoder;
 
-const getBooleanApproval = (approve) => {
-  const approvalType = "0x00";
-  const approvalValue = abi.encode(["bool"], [approve]);
+const getBooleanApproval = (placeBefore, expectedCaller, approve) => {
+  const approvalPlace = placeBefore ? 0 : 1;
+  const approvalType = 0;
+  const approvalValue = abi.encode(
+    ["address", "bool"],
+    [expectedCaller, approve]
+  );
   return ethers.utils.solidityPack(
-    ["bytes1", "bytes"],
-    [approvalType, approvalValue]
+    ["bytes1", "bytes1", "bytes"],
+    [approvalPlace, approvalType, approvalValue]
   );
 };
 
-const getUint256Approval = (allowance) => {
-  const approvalType = "0x01";
-  const approvalValue = abi.encode(["uint256"], [allowance]);
+const getUint256Approval = (placeBefore, expectedCaller, allowance) => {
+  const approvalPlace = placeBefore ? 0 : 1;
+  const approvalType = 1;
+  const approvalValue = abi.encode(
+    ["address", "uint256"],
+    [expectedCaller, allowance]
+  );
   return ethers.utils.solidityPack(
-    ["bytes1", "bytes"],
-    [approvalType, approvalValue]
+    ["bytes1", "bytes1", "bytes"],
+    [approvalPlace, approvalType, approvalValue]
   );
 };
 
-const getExternalApproval = (approve) => {};
+const getExternalApproval = (placeBefore, expectedCaller, externalContract, stateData) => {
+  const approvalPlace = placeBefore ? "0x00" : "0x01";
+  const approvalType = "0x02";
+  const approvalValue = abi.encode(
+    ["address", "address", "bytes"],
+    [expectedCaller, externalContract, stateData]
+  );
+  return ethers.utils.solidityPack(
+    ["bytes1", "bytes1", "bytes"],
+    [approvalPlace, approvalType, approvalValue]
+  );
+};
+
+const getInvalidApproval = (placeBefore, expectedCaller) => {
+  const approvalPlace = placeBefore ? "0x00" : "0x01";
+  const approvalType = "0x03";
+  const approvalValue = abi.encode(["address"], [expectedCaller]);
+  return ethers.utils.solidityPack(
+    ["bytes1", "bytes1", "bytes"],
+    [approvalPlace, approvalType, approvalValue]
+  );
+};
 
 module.exports = {
   getBooleanApproval,
   getUint256Approval,
   getExternalApproval,
+  getInvalidApproval,
 };

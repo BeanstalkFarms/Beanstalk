@@ -5,7 +5,6 @@ const signDelegate = async (
   verifier,
   account,
   selector,
-  delegatee,
   approval,
   nonce,
   deadline
@@ -28,10 +27,6 @@ const signDelegate = async (
         type: "bytes4",
       },
       {
-        name: "delegatee",
-        type: "address",
-      },
-      {
         name: "approval",
         type: "bytes",
       },
@@ -48,7 +43,6 @@ const signDelegate = async (
   const signature = await signer._signTypedData(domain, types, {
     account,
     selector,
-    delegatee,
     approval,
     nonce,
     deadline,
