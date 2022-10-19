@@ -9,7 +9,7 @@ const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
 
-describe('Field', function () {
+describe.only('Field', function () {
   before(async function () {
     [owner, user, user2] = await ethers.getSigners();
     userAddress = user.address;

@@ -9,13 +9,18 @@ import "../../libraries/Token/LibTransfer.sol";
 import "../../libraries/LibDibbler.sol";
 import "../ReentrancyGuard.sol";
 
+
 /**
  * @author Publius
  * @title Field sows Beans.
  **/
 contract FieldFacet is ReentrancyGuard {
     using SafeMath for uint256;
+    using LibPRBMath for uint256;
     using LibSafeMath32 for uint32;
+    using LibSafeMath128 for uint128;
+    
+    uint128 private constant DECIMAL = 1e6;
 
     event Sow(
         address indexed account,
@@ -30,25 +35,31 @@ contract FieldFacet is ReentrancyGuard {
      * Sow
      **/
 
-    function sow(uint256 amount, LibTransfer.From mode)
+    /// @dev minWeather has precision of 1e6
+    function sow(uint256 amount, uint256 minWeather, LibTransfer.From mode)
         external
         payable
         returns (uint256)
     {
-        return sowWithMin(amount, amount, mode);
+        return sowWithMin(amount, minWeather, amount, mode);
     }
 
     function sowWithMin(
         uint256 amount,
-        uint256 minAmount,
+        uint256 minWeather,
+        uint256 minSoil,
         LibTransfer.From mode
     ) public payable returns (uint256) {
-        uint256 sowAmount = s.f.soil;
+        uint256 sowAmount = totalSoil();
         require(
-            sowAmount >= minAmount && amount >= minAmount && minAmount > 0,
+            sowAmount >= minSoil && amount >= minSoil && minSoil > 0,
             "Field: Sowing below min or 0 pods."
         );
-        if (amount < sowAmount) sowAmount = amount;
+        require(
+            yield() >= minWeather,
+            "Field: Sowing below min weather."
+        );
+        if (amount < sowAmount) sowAmount = amount; 
         return _sow(sowAmount, mode);
     }
 
@@ -58,6 +69,7 @@ contract FieldFacet is ReentrancyGuard {
     {
         amount = LibTransfer.burnToken(C.bean(), amount, msg.sender, mode);
         pods = LibDibbler.sow(amount, msg.sender);
+        s.f.beanSown = s.f.beanSown + uint128(amount); // safeMath not needed
     }
 
     /**
@@ -140,6 +152,25 @@ contract FieldFacet is ReentrancyGuard {
     }
 
     function totalSoil() public view returns (uint256) {
-        return s.f.soil;
+        if(s.season.abovePeg) {
+            uint256 _yield = yield().add(1e8); 
+            return uint256(s.f.soil).mulDiv(100e6,_yield,LibPRBMath.Rounding.Up); 
+        } else {
+            return uint256(s.f.soil);
+        }
+    }
+
+    /// @dev yield now has precision level 1e6 (1% = 1e6)
+    function yield() public view returns (uint256) {
+        return LibDibbler.morningAuction();
+    }
+
+    /// @dev peas are the potential pods that can be issued within a season.
+    function peas() external view returns (uint256) {
+       if (s.season.abovePeg) {
+            return s.f.soil;
+        } else {
+            return s.f.soil.mul(100 + s.w.yield).div(100);
+        }
     }
 }

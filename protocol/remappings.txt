@@ -1,0 +1,14 @@
+@beanstalk/=contracts/
+@ensdomains/=node_modules/@ensdomains/
+@openzeppelin/=node_modules/@openzeppelin/
+ds-test/=lib/solmate/lib/ds-test/src/
+eth-gas-reporter/=node_modules/eth-gas-reporter/
+facets/=contracts/farm/facets/
+farm/=contracts/farm/
+forge-std/=lib/forge-std/src/
+hardhat/=node_modules/hardhat/
+interfaces/=contracts/interfaces/
+mockFacets/=contracts/mocks/mockFacets/
+mocks/=contracts/mocks/
+prb-math/=lib/prb-math/contracts/
+solmate/=lib/solmate/src/
