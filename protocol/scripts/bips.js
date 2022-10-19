@@ -4,6 +4,7 @@ const { upgradeWithNewFacets } = require("./diamond");
 const { impersonatePipeline, deployPipeline } = require('./pipeline')
 
 async function bip29(mock = true, account = undefined, deployAccount = undefined) {
+    console.log("Executing BIP-29")
     if (account == undefined) {
         account = await impersonateBeanstalkOwner()
         await mintEth(account.address)
@@ -27,12 +28,13 @@ async function bip29(mock = true, account = undefined, deployAccount = undefined
         ],
         bip: false,
         object: !mock,
-        verbose: true,
+        verbose: !mock,
         account: account
-      });
+    });
 }
 
 async function bip28(mock = true, account = undefined) {
+    console.log("Executing BIP-28")
     if (account == undefined) {
         account = await impersonateBeanstalkOwner()
         await mintEth(account.address)
@@ -48,9 +50,9 @@ async function bip28(mock = true, account = undefined) {
         ],
         bip: false,
         object: !mock,
-        verbose: true,
+        verbose: !mock,
         account: account
-      });
+    });
 }
 
 exports.bip28 = bip28

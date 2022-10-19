@@ -10,6 +10,7 @@ const {
   impersonateFertilizer,
   impersonatePrice
 } = require('./impersonate.js')
+
 function addCommas(nStr) {
   nStr += ''
   const x = nStr.split('.')
