@@ -9,6 +9,8 @@ import "./interfaces/IBean.sol";
 import "./interfaces/ICurve.sol";
 import "./interfaces/IFertilizer.sol";
 import "./interfaces/IProxyAdmin.sol";
+import "./interfaces/IChainlink.sol";
+import "./interfaces/IBlockBasefee.sol";
 import "./libraries/Decimal.sol";
 
 /**
@@ -31,6 +33,18 @@ library C {
     uint256 private constant CURRENT_SEASON_PERIOD = 3600; // 1 hour
     uint256 private constant BASE_ADVANCE_INCENTIVE = 100e6; // 100 beans
     uint256 private constant SOP_PRECISION = 1e24;
+
+    // Season Incentive
+    uint256 private constant BASE_REWARD = 3e6; // Fixed increase in Bean reward to cover cost of operating a bot
+    uint256 private constant MAX_REWARD = 100e6;
+    uint256 private constant PRIORITY_FEE_BUFFER = 5e9; // 5 gwei
+    uint256 private constant MAX_SUNRISE_GAS = 5e5; // TODO: TBD, 500k seems reasonable
+    // Discuss: This should be increased by 35k to offset failed transaction costs. It is likely
+    // there will remain 2+ individual bots attempting the sunrise, and assuming they share it 50/50,
+    // both will lose money if this is not increased by ~35k. BASE_REWARD is not enough as it does not scale
+    // as gas prices become higher. Perhaps BASE_REWARD should be 2-3 beans, and we use +30k instead of +35k.
+    uint256 private constant SUNRISE_GAS_OVERHEAD = 8.5e4; // TODO: TBD, current value includes a 35k offset to compensate failure
+    uint256 private constant BLOCK_LENGTH_SECONDS = 12;
 
     // Sun
     uint256 private constant FERTILIZER_DENOMINATOR = 3;
@@ -76,6 +90,10 @@ library C {
     address private constant UNRIPE_CURVE_BEAN_LUSD_POOL = 0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D;
     address private constant UNRIPE_CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
 
+    address private constant CHAINLINK_CONTRACT = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
+    // Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
+    address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
+
     /**
      * Getters
     **/
@@ -84,8 +102,28 @@ library C {
         return CURRENT_SEASON_PERIOD;
     }
 
-    function getAdvanceIncentive() internal pure returns (uint256) {
-        return BASE_ADVANCE_INCENTIVE;
+    function getBaseReward() internal pure returns (uint256) {
+        return BASE_REWARD;
+    }
+
+    function getMaxReward() internal pure returns (uint256) {
+        return MAX_REWARD;
+    }
+
+    function getSunrisePriorityFeeBuffer() internal pure returns (uint256) {
+        return PRIORITY_FEE_BUFFER;
+    }
+
+    function getMaxSunriseGas() internal pure returns (uint256) {
+        return MAX_SUNRISE_GAS;
+    }
+
+    function getSunriseGasOverhead() internal pure returns (uint256) {
+        return SUNRISE_GAS_OVERHEAD;
+    }
+
+    function getBlockLengthSeconds() internal pure returns (uint256) {
+        return BLOCK_LENGTH_SECONDS;
     }
 
     function getFertilizerDenominator() internal pure returns (uint256) {
@@ -202,6 +240,14 @@ library C {
 
     function threeCrv() internal pure returns (IERC20) {
         return IERC20(THREE_CRV);
+    }
+
+    function chainlinkContract() internal pure returns (IChainlink) {
+        return IChainlink(CHAINLINK_CONTRACT);
+    }
+
+    function basefeeContract() internal pure returns (IBlockBasefee) {
+        return IBlockBasefee(BASE_FEE_CONTRACT);
     }
 
     function fertilizer() internal pure returns (IFertilizer) {

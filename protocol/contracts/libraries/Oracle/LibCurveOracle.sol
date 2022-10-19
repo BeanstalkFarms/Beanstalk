@@ -26,7 +26,7 @@ interface IMeta3CurveOracle {
 }
 
 library LibCurveOracle {
-    int256 private constant mintPrecision = 100;
+    
     uint256 private constant MAX_DELTA_B_DENOMINATOR = 100;
 
     event MetapoolOracle(uint32 indexed season, int256 deltaB, uint256[2] balances);
@@ -39,58 +39,46 @@ library LibCurveOracle {
         deltaB = checkForMaxDeltaB(deltaB);
     }
 
-    function _check() internal view returns (int256) {
+    function _check() internal view returns (int256 db) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.co.initialized) {
-            (int256 db, ) = twaDeltaB();
-            int256 mintedSeasons = int256(
-                s.season.current.sub(s.co.startSeason)
-            );
-            mintedSeasons = mintedSeasons > mintPrecision
-                ? mintPrecision
-                : mintedSeasons;
-            return (db * mintedSeasons) / mintPrecision;
+            (db, , ) = twaDeltaB();
         } else {
-            return 0;
+            db = 0;
         }
     }
 
-    function capture() internal returns (int256 deltaB) {
-        deltaB = _capture();
+    function capture() internal returns (int256 deltaB, uint256[2] memory balances) {
+        (deltaB, balances) = _capture();
         deltaB = checkForMaxDeltaB(deltaB);
     }
 
-    function _capture() internal returns (int256) {
+    // balances stores the twa balances throughout the season.
+    // In the case of initializeOracle, it will be the current balances.
+    function _capture() internal returns (int256 deltaB, uint256[2] memory balances) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.co.initialized) {
-            int256 mintedSeasons = int256(
-                s.season.current.sub(s.co.startSeason)
-            );
-            mintedSeasons = mintedSeasons > mintPrecision
-                ? mintPrecision
-                : mintedSeasons;
-            return (updateOracle() * mintedSeasons) / mintPrecision;
+            (deltaB, balances) = updateOracle();
         } else {
-            initializeOracle();
-            return 0;
+            balances = initializeOracle();
         }
     }
 
-    function initializeOracle() internal {
+    function initializeOracle() internal returns (uint256[2] memory current_balances) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         Storage.Oracle storage o = s.co;
         uint256[2] memory balances = IMeta3CurveOracle(C.curveMetapoolAddress())
             .get_price_cumulative_last();
         uint256 timestamp = IMeta3CurveOracle(C.curveMetapoolAddress()).block_timestamp_last();
         if (balances[0] != 0 && balances[1] != 0 && timestamp != 0) {
-            (o.balances, o.timestamp) = get_cumulative();
+            (current_balances, o.balances, o.timestamp) = get_cumulative();
             o.initialized = true;
         }
     }
 
-    function updateOracle() internal returns (int256 deltaB) {
+    function updateOracle() internal returns (int256 deltaB, uint256[2] memory balances) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        (deltaB, s.co.balances) = twaDeltaB();
+        (deltaB, balances, s.co.balances) = twaDeltaB();
         emit MetapoolOracle(s.season.current, deltaB, s.co.balances);
         s.co.timestamp = block.timestamp;
     }
@@ -98,9 +86,8 @@ library LibCurveOracle {
     function twaDeltaB()
         internal
         view
-        returns (int256 deltaB, uint256[2] memory cum_balances)
+        returns (int256 deltaB, uint256[2] memory balances, uint256[2] memory cum_balances)
     {
-        uint256[2] memory balances;
         (balances, cum_balances) = twap();
         uint256 d = LibBeanMetaCurve.getDFroms(balances);
         deltaB = LibBeanMetaCurve.getDeltaBWithD(balances[0], d);
@@ -134,10 +121,10 @@ library LibCurveOracle {
     function get_cumulative()
         private
         view
-        returns (uint256[2] memory cum_balances, uint256 lastTimestamp)
+        returns (uint256[2] memory balances, uint256[2] memory cum_balances, uint256 lastTimestamp)
     {
         cum_balances = IMeta3CurveOracle(C.curveMetapoolAddress()).get_price_cumulative_last();
-        uint256[2] memory balances = IMeta3CurveOracle(C.curveMetapoolAddress()).get_balances();
+        balances = IMeta3CurveOracle(C.curveMetapoolAddress()).get_balances();
         lastTimestamp = IMeta3CurveOracle(C.curveMetapoolAddress()).block_timestamp_last();
 
         cum_balances[0] = cum_balances[0].add(

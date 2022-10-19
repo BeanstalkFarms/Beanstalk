@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "../../../libraries/Token/LibTransfer.sol";
 import "./Weather.sol";
 import "../../../libraries/LibIncentive.sol";
+import "../../../libraries/Token/LibTransfer.sol";
 
 /**
  * @author Publius
@@ -26,13 +27,14 @@ contract SeasonFacet is Weather {
 
     /// @notice advances Beanstalk to the next Season.
     function sunrise(LibTransfer.To mode) external payable returns (uint256) {
+        uint256 initialGasLeft = gasleft();
         require(!paused(), "Season: Paused.");
         require(seasonTime() > season(), "Season: Still current Season.");
         stepSeason();
-        int256 deltaB = stepOracle();
+        (int256 deltaB, uint256[2] memory balances) = stepOracle();
         uint256 caseId = stepWeather(deltaB);
         stepSun(deltaB, caseId);
-        return incentivize(msg.sender, C.getAdvanceIncentive(),mode);
+        return incentivize(msg.sender, initialGasLeft, balances, mode);
     }
 
     /**
@@ -70,18 +72,26 @@ contract SeasonFacet is Weather {
     }
 
     function incentivize(
-        address account, 
-        uint256 amount, 
-        LibTransfer.To _mode
-    ) 
-        private 
-        returns (uint256) 
-    {
-        uint256 timestamp = block.timestamp.sub(s.season.start.add(s.season.period.mul(season())));
-        if(timestamp > 300) timestamp = 300;
-        uint256 incentive = LibIncentive.fracExp(amount, 100, timestamp, 1);
-        LibTransfer.mintToken(C.bean(), incentive, account, _mode);
-        emit Incentivization(account, incentive);
-        return incentive;
+        address account,
+        uint256 initialGasLeft,
+        uint256[2] memory balances,
+        LibTransfer.To mode
+    ) private returns (uint256) {
+        // Number of blocks the sunrise is late by
+        uint256 blocksLate = block.timestamp.sub(
+            s.season.start.add(s.season.period.mul(season()))
+        )
+        .div(C.getBlockLengthSeconds());
+
+        // Maximum 300 seconds to reward exponent (25*C.getBlockLengthSeconds())
+        if (blocksLate > 25) {
+            blocksLate = 25;
+        }
+
+        uint256 incentiveAmount = LibIncentive.determineReward(initialGasLeft, balances, blocksLate);
+
+        LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);
+        emit Incentivization(account, incentiveAmount);
+        return incentiveAmount;
     }
 }

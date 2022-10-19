@@ -1,8 +1,10 @@
 const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
-const { to6, toStalk } = require('./utils/helpers.js');
-const { USDC, UNRIPE_LP } = require('./utils/constants.js');
+const { to6, toStalk, toBean, to18 } = require('./utils/helpers.js');
+const { USDC, UNRIPE_LP, BEAN, CHAINLINK_CONTRACT, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE } = require('./utils/constants.js');
+const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
+const { ethers } = require('hardhat');
 
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -20,7 +22,24 @@ describe('Sun', function () {
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.usdc = await ethers.getContractAt('MockToken', USDC);
+  
+    // These are needed for sunrise incentive test
+    this.chainlink = await ethers.getContractAt('MockChainlink', CHAINLINK_CONTRACT);
+    this.basefee = await ethers.getContractAt('MockBlockBasefee', BASE_FEE_CONTRACT);
+    this.tokenFacet = await ethers.getContractAt('TokenFacet', contracts.beanstalkDiamond.address)
+    this.bean = await ethers.getContractAt('MockToken', BEAN);
+    this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
+    this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
+    await this.threePool.set_virtual_price(to18('1'));
+    this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
+    await this.beanThreeCurve.set_supply(toBean('100000'));
+    await this.beanThreeCurve.set_A_precise('1000');
+    await this.beanThreeCurve.set_virtual_price(to18('1'));
+    await this.beanThreeCurve.set_balances([toBean('10000'), to18('10000')]);
+    await this.beanThreeCurve.reset_cumulative();
+
     await this.usdc.mint(owner.address, to6('10000'))
+    await this.bean.mint(owner.address, to6('10000'))
     await this.usdc.connect(owner).approve(this.diamond.address, to6('10000'))
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
     await this.unripeLP.mint(owner.address, to6('10000'))
@@ -176,4 +195,119 @@ describe('Sun', function () {
     expect(await this.silo.totalStalk()).to.be.equal(toStalk('200'));
     expect(await this.silo.totalEarnedBeans()).to.be.equal(to6('200'));
   })
+
+  it("sunrise reward", async function() {
+
+    const VERBOSE = false;
+    // [[pool balances], eth price, base fee, secondsLate, toMode]
+    const mockedValues = [
+      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 0, EXTERNAL],
+      [[toBean('10000'), to18('50000')], 3000 * Math.pow(10, 8), 30 * Math.pow(10, 9), 0, EXTERNAL],
+      [[toBean('50000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 0, EXTERNAL],
+      [[toBean('10000'), to18('10000')], 3000 * Math.pow(10, 8), 90 * Math.pow(10, 9), 0, INTERNAL],
+      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 24, INTERNAL],
+      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 500, INTERNAL]
+    ];
+
+    // Load some beans into the wallet's internal balance, and note the starting time
+    // This also accomplishes initializing curve oracle
+    const initial = await this.season.sunrise(INTERNAL);
+    const block = await ethers.provider.getBlock(initial.blockNumber);
+    const START_TIME = block.timestamp;
+
+    const startingBeanBalance = (await this.tokenFacet.getAllBalance(owner.address, BEAN)).totalBalance.toNumber() / Math.pow(10, 6);
+    for (const mockVal of mockedValues) {
+
+      snapshotId = await takeSnapshot();
+
+      await this.beanThreeCurve.set_balances(mockVal[0]);
+      // Time skip an hour after setting new balance (twap will be very close to whats in mockVal)
+      await timeSkip(START_TIME + 60*60);
+
+      await this.chainlink.setAnswer(mockVal[1]);
+      await this.basefee.setAnswer(mockVal[2]);
+
+      const secondsLate = mockVal[3];
+      const effectiveSecondsLate = Math.min(secondsLate, 300);
+      await this.season.resetSeasonStart(secondsLate);
+
+      /// SUNRISE
+      this.result = await this.season.sunrise(mockVal[4]);
+      
+      // Verify that sunrise was profitable assuming a 50% average success rate
+      
+      const beanBalance = (await this.tokenFacet.getAllBalance(owner.address, BEAN)).totalBalance.toNumber() / Math.pow(10, 6);
+      const rewardAmount = parseFloat((beanBalance - startingBeanBalance).toFixed(6));
+
+      // Determine how much gas was used
+      const txReceipt = await ethers.provider.getTransactionReceipt(this.result.hash);
+      const gasUsed = txReceipt.gasUsed.toNumber();
+
+      // Calculate gas amount using the mocked baseFee + priority
+      // The idea of failure adjusted cost is it includes the assumption that the call will
+      // fail half the time (cost of one sunrise = 1 success + 1 fail)
+      const PRIORITY = 5;
+      const FAIL_GAS_BUFFER = 35000;
+      const blockBaseFee = await this.basefee.block_basefee() / Math.pow(10, 9);
+      const failAdjustedGasCostEth = (blockBaseFee + PRIORITY) * (gasUsed + FAIL_GAS_BUFFER) / Math.pow(10, 9);
+
+      // Get mocked eth/bean prices
+      const ethPrice = (await this.chainlink.latestAnswer()).toNumber() / Math.pow(10, 8);
+      const beanPrice = (await this.beanThreeCurve.get_bean_price()).toNumber() / Math.pow(10, 6);
+      // How many beans are required to purcahse 1 eth
+      const beanEthPrice = ethPrice / beanPrice;
+
+      // Bean equivalent of the cost to execute sunrise
+      const failAdjustedGasCostBean = failAdjustedGasCostEth * beanEthPrice;
+
+      if (VERBOSE) {
+        // console.log('sunrise call tx', this.result);
+        const logs = await ethers.provider.getLogs(this.result.hash);
+        viewGenericUint256Logs(logs);
+        console.log('reward beans: ', rewardAmount);
+        console.log('eth price', ethPrice);
+        console.log('bean price', beanPrice);
+        console.log('gas used', gasUsed);
+        console.log('to mode', mockVal[4]);
+        console.log('base fee', blockBaseFee);
+        console.log('failure adjusted gas cost (eth)', failAdjustedGasCostEth);
+        console.log('failure adjusted cost (bean)', failAdjustedGasCostBean);
+        console.log('failure adjusted cost * late exponent (bean)', failAdjustedGasCostBean * Math.pow(1.01, effectiveSecondsLate));
+      }
+
+      expect(rewardAmount).to.greaterThan(failAdjustedGasCostBean * Math.pow(1.01, effectiveSecondsLate));
+
+      await expect(this.result).to.emit(this.season, 'Incentivization')
+          .withArgs(owner.address, Math.round(rewardAmount * Math.pow(10, 6)));
+
+      await revertToSnapshot(snapshotId);
+    }
+  })
 })
+
+function viewGenericUint256Logs(logs) {
+  const uint256Topic = '0x925a839279bd49ac1cea4c9d376477744867c1a536526f8c2fd13858e78341fb';
+  for (const log of logs) {
+    if (log.topics.includes(uint256Topic)) {
+      console.log('Value: ', parseInt(log.data.substring(2, 66), 16));
+      console.log('Label: ', hexToAscii(log.data.substring(66)));
+      console.log();
+    }
+  }
+}
+
+function hexToAscii(str1) {
+	var hex  = str1.toString();
+	var str = '';
+	for (var n = 0; n < hex.length; n += 2) {
+		str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
+	}
+	return str;
+}
+
+async function timeSkip(timestamp) {
+  await hre.network.provider.request({
+    method: "evm_setNextBlockTimestamp",
+    params: [timestamp],
+  });
+}
