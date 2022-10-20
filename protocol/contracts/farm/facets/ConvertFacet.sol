@@ -11,6 +11,7 @@ import "../../libraries/Silo/LibTokenSilo.sol";
 import "../../libraries/LibSafeMath32.sol";
 import "../../libraries/Convert/LibConvert.sol";
 import "../../libraries/LibInternal.sol";
+import "../../libraries/LibDelegate.sol";
 import "../ReentrancyGuard.sol";
 
 /**
@@ -20,6 +21,9 @@ import "../ReentrancyGuard.sol";
 contract ConvertFacet is ReentrancyGuard {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
+
+    bytes4 public constant CONVERT_FOR_SELECTOR =
+        bytes4(keccak256(bytes("convertFor(address,bytes,uint32[],uint256[])")));
 
     event Convert(
         address indexed account,
@@ -51,16 +55,101 @@ contract ConvertFacet is ReentrancyGuard {
         external
         payable
         nonReentrant
-        returns (uint32 toSeason, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
+        returns (
+            uint32 toSeason,
+            uint256 fromAmount,
+            uint256 toAmount,
+            uint256 fromBdv,
+            uint256 toBdv
+        )
     {
-        LibInternal.updateSilo(msg.sender);
+        return _convert(msg.sender, convertData, crates, amounts);
+    }
 
-        address toToken; address fromToken; uint256 grownStalk;
+    function convertFor(
+        address account,
+        bytes calldata convertData,
+        uint32[] memory crates,
+        uint256[] memory amounts
+    )
+        external
+        nonReentrant
+        returns (
+            uint32 toSeason,
+            uint256 fromAmount,
+            uint256 toAmount,
+            uint256 fromBdv,
+            uint256 toBdv
+        )
+    {
+        (
+            bytes1 place,
+            bytes1 approvalType,
+            bytes memory approvalData
+        ) = LibDelegate.getApprovalDetails(account, CONVERT_FOR_SELECTOR);
+
+        // PRE-APPROVAL
+        if (place == 0x00) {
+            LibDelegate.checkApproval(
+                account,
+                CONVERT_FOR_SELECTOR,
+                msg.sender,
+                place,
+                approvalType,
+                approvalData,
+                convertData,
+                ""
+            );
+        }
+
+        (toSeason, fromAmount, toAmount, fromBdv, toBdv) = _convert(
+            account,
+            convertData,
+            crates,
+            amounts
+        );
+
+        // POST-APPROVAL
+        if (place == 0x01) {
+            LibDelegate.checkApproval(
+                account,
+                CONVERT_FOR_SELECTOR,
+                msg.sender,
+                place,
+                approvalType,
+                approvalData,
+                convertData,
+                abi.encode(toSeason, fromAmount, toAmount, fromBdv, toBdv)
+            );
+        }
+    }
+
+    function _convert(
+        address account,
+        bytes calldata convertData,
+        uint32[] memory crates,
+        uint256[] memory amounts
+    )
+        internal
+        returns (
+            uint32 toSeason,
+            uint256 fromAmount,
+            uint256 toAmount,
+            uint256 fromBdv,
+            uint256 toBdv
+        )
+    {
+        LibInternal.updateSilo(account);
+
+        address toToken;
+        address fromToken;
+        uint256 grownStalk;
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(
             convertData
         );
 
         (grownStalk, fromBdv) = _withdrawTokens(
+            account,
             fromToken,
             crates,
             amounts,
@@ -70,12 +159,13 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
         toBdv = newBdv > fromBdv ? newBdv : fromBdv;
 
-        toSeason = _depositTokens(toToken, toAmount, toBdv, grownStalk);
+        toSeason = _depositTokens(account, toToken, toAmount, toBdv, grownStalk);
 
-        emit Convert(msg.sender, fromToken, toToken, fromAmount, toAmount);
+        emit Convert(account, fromToken, toToken, fromAmount, toAmount);
     }
 
     function _withdrawTokens(
+        address account,
         address token,
         uint32[] memory seasons,
         uint256[] memory amounts,
@@ -91,7 +181,7 @@ contract ConvertFacet is ReentrancyGuard {
         while ((i < seasons.length) && (a.tokensRemoved < maxTokens)) {
             if (a.tokensRemoved.add(amounts[i]) < maxTokens)
                 depositBDV = LibTokenSilo.removeDeposit(
-                    msg.sender,
+                    account,
                     token,
                     seasons[i],
                     amounts[i]
@@ -99,7 +189,7 @@ contract ConvertFacet is ReentrancyGuard {
             else {
                 amounts[i] = maxTokens.sub(a.tokensRemoved);
                 depositBDV = LibTokenSilo.removeDeposit(
-                    msg.sender,
+                    account,
                     token,
                     seasons[i],
                     amounts[i]
@@ -113,13 +203,7 @@ contract ConvertFacet is ReentrancyGuard {
             i++;
         }
         for (i; i < seasons.length; ++i) amounts[i] = 0;
-        emit RemoveDeposits(
-            msg.sender,
-            token,
-            seasons,
-            amounts,
-            a.tokensRemoved
-        );
+        emit RemoveDeposits(account, token, seasons, amounts, a.tokensRemoved);
 
         require(
             a.tokensRemoved == maxTokens,
@@ -128,7 +212,7 @@ contract ConvertFacet is ReentrancyGuard {
         a.stalkRemoved = a.stalkRemoved.mul(s.ss[token].seeds);
         LibTokenSilo.decrementDepositedToken(token, a.tokensRemoved);
         LibSilo.withdrawSiloAssets(
-            msg.sender,
+            account,
             a.bdvRemoved.mul(s.ss[token].seeds),
             a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalk))
         );
@@ -136,6 +220,7 @@ contract ConvertFacet is ReentrancyGuard {
     }
 
     function _depositTokens(
+        address account,
         address token,
         uint256 amount,
         uint256 bdv,
@@ -152,10 +237,10 @@ contract ConvertFacet is ReentrancyGuard {
             _s = __s - _s;
         } else _s = s.season.current;
         uint256 stalk = bdv.mul(LibTokenSilo.stalk(token)).add(grownStalk);
-        LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
+        LibSilo.depositSiloAssets(account, seeds, stalk);
 
         LibTokenSilo.incrementDepositedToken(token, amount);
-        LibTokenSilo.addDeposit(msg.sender, token, _s, amount, bdv);
+        LibTokenSilo.addDeposit(account, token, _s, amount, bdv);
     }
 
     function getMaxAmountIn(address tokenIn, address tokenOut)
