@@ -23,7 +23,9 @@ contract ConvertFacet is ReentrancyGuard {
     using LibSafeMath32 for uint32;
 
     bytes4 public constant CONVERT_FOR_SELECTOR =
-        bytes4(keccak256(bytes("convertFor(address,bytes,uint32[],uint256[])")));
+        bytes4(
+            keccak256(bytes("convertFor(address,bytes,uint32[],uint256[])"))
+        );
 
     event Convert(
         address indexed account,
@@ -47,22 +49,19 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 bdvRemoved;
     }
 
+    struct ConvertResult {
+        uint32 toSeason;
+        uint256 fromAmount;
+        uint256 toAmount;
+        uint256 fromBdv;
+        uint256 toBdv;
+    }
+
     function convert(
         bytes calldata convertData,
         uint32[] memory crates,
         uint256[] memory amounts
-    )
-        external
-        payable
-        nonReentrant
-        returns (
-            uint32 toSeason,
-            uint256 fromAmount,
-            uint256 toAmount,
-            uint256 fromBdv,
-            uint256 toBdv
-        )
-    {
+    ) external payable nonReentrant returns (ConvertResult memory result) {
         return _convert(msg.sender, convertData, crates, amounts);
     }
 
@@ -71,17 +70,7 @@ contract ConvertFacet is ReentrancyGuard {
         bytes calldata convertData,
         uint32[] memory crates,
         uint256[] memory amounts
-    )
-        external
-        nonReentrant
-        returns (
-            uint32 toSeason,
-            uint256 fromAmount,
-            uint256 toAmount,
-            uint256 fromBdv,
-            uint256 toBdv
-        )
-    {
+    ) external nonReentrant returns (ConvertResult memory result) {
         (
             bytes1 place,
             bytes1 approvalType,
@@ -102,12 +91,7 @@ contract ConvertFacet is ReentrancyGuard {
             );
         }
 
-        (toSeason, fromAmount, toAmount, fromBdv, toBdv) = _convert(
-            account,
-            convertData,
-            crates,
-            amounts
-        );
+        result = _convert(account, convertData, crates, amounts);
 
         // POST-APPROVAL
         if (place == 0x01) {
@@ -119,7 +103,13 @@ contract ConvertFacet is ReentrancyGuard {
                 approvalType,
                 approvalData,
                 convertData,
-                abi.encode(toSeason, fromAmount, toAmount, fromBdv, toBdv)
+                abi.encode(
+                    result.toSeason,
+                    result.fromAmount,
+                    result.toAmount,
+                    result.fromBdv,
+                    result.toBdv
+                )
             );
         }
     }
@@ -129,21 +119,17 @@ contract ConvertFacet is ReentrancyGuard {
         bytes calldata convertData,
         uint32[] memory crates,
         uint256[] memory amounts
-    )
-        internal
-        returns (
-            uint32 toSeason,
-            uint256 fromAmount,
-            uint256 toAmount,
-            uint256 fromBdv,
-            uint256 toBdv
-        )
-    {
+    ) internal returns (ConvertResult memory result) {
         LibInternal.updateSilo(account);
 
         address toToken;
         address fromToken;
         uint256 grownStalk;
+        uint32 toSeason;
+        uint256 fromAmount;
+        uint256 toAmount;
+        uint256 fromBdv;
+        uint256 toBdv;
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(
             convertData
         );
@@ -159,9 +145,17 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
         toBdv = newBdv > fromBdv ? newBdv : fromBdv;
 
-        toSeason = _depositTokens(account, toToken, toAmount, toBdv, grownStalk);
+        toSeason = _depositTokens(
+            account,
+            toToken,
+            toAmount,
+            toBdv,
+            grownStalk
+        );
 
         emit Convert(account, fromToken, toToken, fromAmount, toAmount);
+
+        return ConvertResult(toSeason, fromAmount, toAmount, fromBdv, toBdv);
     }
 
     function _withdrawTokens(
