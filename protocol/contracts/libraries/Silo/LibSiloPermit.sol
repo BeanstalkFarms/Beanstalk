@@ -65,12 +65,16 @@ library LibSiloPermit {
     }
 
     function _buildDomainSeparator(bytes32 typeHash, bytes32 name, bytes32 version) internal view returns (bytes32) {
+        uint256 chainId;
+        assembly {
+            chainId := chainid()
+        }
         return keccak256(
             abi.encode(
                 typeHash,
                 name,
                 version,
-                C.getChainId(),
+                chainId,
                 address(this)
             )
         );
