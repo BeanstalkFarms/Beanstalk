@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "../../Permit.sol";
 import "../../../libraries/Silo/LibDelegate.sol";
 
-/// @author Publius
+/// @author 0xm00neth
 /// @title DelegateFacet handles delegating authority for Beanstalk functions.
 contract DelegateFacet is Permit {
     /// @notice approveDelegate sets approval value for delegation

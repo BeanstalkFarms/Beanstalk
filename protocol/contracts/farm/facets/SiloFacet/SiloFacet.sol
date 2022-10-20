@@ -10,7 +10,6 @@ import "../../ReentrancyGuard.sol";
 import "../../../libraries/Token/LibTransfer.sol";
 import "../../../libraries/Silo/LibSiloPermit.sol";
 import "../../../libraries/Silo/LibDelegate.sol";
-import "hardhat/console.sol";
 
 /*
  * @author Publius
@@ -20,8 +19,8 @@ contract SiloFacet is TokenSilo {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
-    bytes4 public constant PLANT_DELEGATED_SELECTOR =
-        bytes4(keccak256(bytes("plantDelegated(address)")));
+    bytes4 public constant PLANT_FOR_SELECTOR =
+        bytes4(keccak256(bytes("plantFor(address)")));
 
     /*
      * Deposit
@@ -216,18 +215,18 @@ contract SiloFacet is TokenSilo {
     /// @notice plant on behalf of account
     /// @param account user address
     /// @return beans number of beans planted
-    function plantDelegated(address account) external returns (uint256 beans) {
+    function plantFor(address account) external returns (uint256 beans) {
         (
             bytes1 place,
             bytes1 approvalType,
             bytes memory approvalData
-        ) = LibDelegate.getApprovalDetails(account, PLANT_DELEGATED_SELECTOR);
+        ) = LibDelegate.getApprovalDetails(account, PLANT_FOR_SELECTOR);
 
         // PRE-APPROVAL
         if (place == 0x00) {
             LibDelegate.checkApproval(
                 account,
-                PLANT_DELEGATED_SELECTOR,
+                PLANT_FOR_SELECTOR,
                 msg.sender,
                 place,
                 approvalType,
@@ -243,7 +242,7 @@ contract SiloFacet is TokenSilo {
         if (place == 0x01) {
             LibDelegate.checkApproval(
                 account,
-                PLANT_DELEGATED_SELECTOR,
+                PLANT_FOR_SELECTOR,
                 msg.sender,
                 place,
                 approvalType,

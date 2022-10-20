@@ -10,7 +10,7 @@ import "../../C.sol";
 import "../LibAppStorage.sol";
 
 /**
- * @author Publius
+ * @author 0xm00neth
  * @title Lib Delegate
  **/
 library LibDelegate {
@@ -171,7 +171,7 @@ library LibDelegate {
         bytes memory returnData
     ) internal {
         if (isBooleanType(approvalType)) {
-            _checkBooleanApproval(caller, approvalType, approvalData);
+            _checkBooleanApproval(caller, approvalData);
         } else if (isUint256Type(approvalType)) {
             _checkUint256Approval(
                 account,
@@ -200,18 +200,11 @@ library LibDelegate {
 
     /// @notice _checkBooleanApproval checks approval with given info
     /// @param caller caller address
-    /// @param approvalType approval type
     /// @param approvalData approval data
     function _checkBooleanApproval(
         address caller,
-        bytes1 approvalType,
         bytes memory approvalData
     ) internal pure {
-        require(
-            isBooleanType(approvalType),
-            "LibDelegate: Invalid Approval Type"
-        );
-
         (address expectedCaller, bool approve) = abi.decode(
             approvalData,
             (address, bool)
@@ -238,11 +231,6 @@ library LibDelegate {
         bytes memory approvalData,
         bytes memory returnData
     ) internal {
-        require(
-            isUint256Type(approvalType),
-            "LibDelegate: Invalid Approval Type"
-        );
-
         (address expectedCaller, uint256 allowance) = abi.decode(
             approvalData,
             (address, uint256)
@@ -280,21 +268,15 @@ library LibDelegate {
         bytes memory callData,
         bytes memory returnData
     ) internal {
-        require(
-            isExternalType(approvalType),
-            "LibDelegate: Invalid Approval Type"
-        );
-
         (
-            address expectedCaller,
             address externalContract,
             bytes memory stateData
-        ) = abi.decode(approvalData, (address, address, bytes));
-        _checkCaller(caller, expectedCaller);
+        ) = abi.decode(approvalData, (address, bytes));
 
         (bool success, bytes memory returnValue) = externalContract.staticcall(
             abi.encodeWithSignature(
-                "check(bytes,bytes,bytes)",
+                "check(address,bytes,bytes,bytes)",
+                msg.sender,
                 callData,
                 returnData,
                 stateData
@@ -318,7 +300,7 @@ library LibDelegate {
                 abi.encodePacked(
                     place,
                     approvalType,
-                    abi.encode(expectedCaller, externalContract, newStateData)
+                    abi.encode(externalContract, newStateData)
                 )
             );
         }

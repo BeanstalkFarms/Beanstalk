@@ -70,7 +70,7 @@ describe("FunctionApproval", function () {
 
   describe("Set Function Approval", function () {
     it("properly approves delegate", async function () {
-      const selector = await this.silo.PLANT_DELEGATED_SELECTOR();
+      const selector = await this.silo.PLANT_FOR_SELECTOR();
       const approval = getBooleanApproval(true, delegateeAddress, true);
       await this.approveDelegate(user, selector, approval);
       expect(await this.delegate.delegateApproval(userAddress, selector)).to.eq(
@@ -79,7 +79,7 @@ describe("FunctionApproval", function () {
     });
 
     it("properly updates previous approval", async function () {
-      const selector = await this.silo.PLANT_DELEGATED_SELECTOR();
+      const selector = await this.silo.PLANT_FOR_SELECTOR();
       const oldApproval = getBooleanApproval(true, delegateeAddress, true);
       await this.approveDelegate(user, selector, oldApproval);
       const newApproval = getUint256Approval(false, delegateeAddress, 100);
@@ -90,7 +90,7 @@ describe("FunctionApproval", function () {
     });
 
     it("approve with permit", async function () {
-      const selector = await this.silo.PLANT_DELEGATED_SELECTOR();
+      const selector = await this.silo.PLANT_FOR_SELECTOR();
       const approval = getUint256Approval(false, delegateeAddress, 100);
       const nonce = await this.permit.nonces(userAddress);
       const deadline = Math.floor(new Date().getTime() / 1000) + 10 * 60;

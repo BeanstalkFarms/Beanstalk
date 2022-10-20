@@ -28,12 +28,12 @@ const getUint256Approval = (placeBefore, expectedCaller, allowance) => {
   );
 };
 
-const getExternalApproval = (placeBefore, expectedCaller, externalContract, stateData) => {
+const getExternalApproval = (placeBefore, externalContract, stateData) => {
   const approvalPlace = placeBefore ? "0x00" : "0x01";
   const approvalType = "0x02";
   const approvalValue = abi.encode(
-    ["address", "address", "bytes"],
-    [expectedCaller, externalContract, stateData]
+    ["address", "bytes"],
+    [externalContract, stateData]
   );
   return ethers.utils.solidityPack(
     ["bytes1", "bytes1", "bytes"],
