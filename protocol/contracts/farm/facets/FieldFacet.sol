@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "../../libraries/Token/LibTransfer.sol";
 import "../../libraries/LibDibbler.sol";
+import "../../libraries/LibDelegate.sol";
 import "../ReentrancyGuard.sol";
 
 /**
@@ -16,6 +17,13 @@ import "../ReentrancyGuard.sol";
 contract FieldFacet is ReentrancyGuard {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
+
+    /**
+     * Constants
+     */
+
+    bytes4 public constant SOW_FOR_SELECTOR =
+        bytes4(keccak256(bytes("sowFor(address,uint256,uint8)")));
 
     event Sow(
         address indexed account,
@@ -58,6 +66,59 @@ contract FieldFacet is ReentrancyGuard {
     {
         amount = LibTransfer.burnToken(C.bean(), amount, msg.sender, mode);
         pods = LibDibbler.sow(amount, msg.sender);
+    }
+
+    /**
+     * Approval
+     */
+
+    /**
+     * @notice sowFor sow on behalf of account
+     * @param account user address
+     * @param amount amount to sow
+     * @param mode transfer mode
+     * @return pods amount
+     */
+    function sowFor(
+        address account,
+        uint256 amount,
+        LibTransfer.From mode
+    ) external payable returns (uint256 pods) {
+        (
+            bytes1 place,
+            bytes1 approvalType,
+            bytes memory approvalData
+        ) = LibDelegate.getApprovalDetails(account, SOW_FOR_SELECTOR);
+
+        // PRE-APPROVAL
+        if (place == 0x00) {
+            LibDelegate.checkApproval(
+                account,
+                SOW_FOR_SELECTOR,
+                msg.sender,
+                place,
+                approvalType,
+                approvalData,
+                "",
+                abi.encode(0)
+            );
+        }
+
+        pods = sowWithMin(amount, amount, mode);
+
+        // POST-APPROVAL
+        if (place == 0x01) {
+            LibDelegate.checkApproval(
+                account,
+                SOW_FOR_SELECTOR,
+                msg.sender,
+                place,
+                approvalType,
+                approvalData,
+                "",
+                abi.encode(pods)
+            );
+        }
     }
 
     /**

@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "../Permit.sol";
-import "../../libraries/Silo/LibDelegate.sol";
+import "../../libraries/LibDelegate.sol";
 
 /*
  * @author Publius

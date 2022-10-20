@@ -9,7 +9,7 @@ import "./TokenSilo.sol";
 import "../../ReentrancyGuard.sol";
 import "../../../libraries/Token/LibTransfer.sol";
 import "../../../libraries/Silo/LibSiloPermit.sol";
-import "../../../libraries/Silo/LibDelegate.sol";
+import "../../../libraries/LibDelegate.sol";
 
 /*
  * @author Publius
@@ -238,7 +238,7 @@ contract SiloFacet is TokenSilo {
 
         beans = _plant(account);
 
-        // PRE-APPROVAL
+        // POST-APPROVAL
         if (place == 0x01) {
             LibDelegate.checkApproval(
                 account,
