@@ -92,7 +92,8 @@ describe("FunctionApproval", function () {
     it("approve with permit", async function () {
       const selector = await this.silo.PLANT_FOR_SELECTOR();
       const approval = getUint256Approval(false, delegateeAddress, 100);
-      const nonce = await this.permit.nonces(userAddress);
+      const permitSelector = this.delegate.interface.getSighash("permitDelegate");
+      const nonce = await this.permit.nonces(permitSelector, userAddress);
       const deadline = Math.floor(new Date().getTime() / 1000) + 10 * 60;
 
       let signature = await signDelegate(
@@ -153,7 +154,7 @@ describe("FunctionApproval", function () {
       expect(await this.delegate.delegateApproval(userAddress, selector)).to.eq(
         approval
       );
-      expect(await this.permit.nonces(userAddress)).to.be.eq(nonce + 1);
+      expect(await this.permit.nonces(permitSelector, userAddress)).to.be.eq(nonce + 1);
     });
   });
 });

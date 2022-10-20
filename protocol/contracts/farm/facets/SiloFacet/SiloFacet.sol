@@ -200,11 +200,7 @@ contract SiloFacet is TokenSilo {
         _approveDeposit(owner, spender, token, value);
     }
 
-    function depositPermitNonces(address owner) public view virtual returns (uint256) {
-        return LibSiloPermit.nonces(owner);
-    }
-
-     /**
+    /**
      * @dev See {IERC20Permit-DOMAIN_SEPARATOR}.
      */
     // solhint-disable-next-line func-name-mixedcase

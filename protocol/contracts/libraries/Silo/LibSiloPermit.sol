@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "../../C.sol";
 import "../LibAppStorage.sol";
+import "../LibPermit.sol";
 
 /**
  * @author Publius
@@ -33,7 +34,7 @@ library LibSiloPermit {
         bytes32 s
     ) internal {
         require(block.timestamp <= deadline, "Silo: permit expired deadline");
-        bytes32 structHash = keccak256(abi.encode(DEPOSIT_PERMIT_TYPEHASH, owner, spender, token, value, _useNonce(owner), deadline));
+        bytes32 structHash = keccak256(abi.encode(DEPOSIT_PERMIT_TYPEHASH, owner, spender, token, value, LibPermit.useNonce(msg.sig, owner), deadline));
         bytes32 hash = _hashTypedDataV4(structHash);
         address signer = ECDSA.recover(hash, v, r, s);
         require(signer == owner, "Silo: permit invalid signature");
@@ -50,21 +51,10 @@ library LibSiloPermit {
         bytes32 s
     ) internal {
         require(block.timestamp <= deadline, "Silo: permit expired deadline");
-        bytes32 structHash = keccak256(abi.encode(DEPOSITS_PERMIT_TYPEHASH, owner, spender, keccak256(abi.encodePacked(tokens)), keccak256(abi.encodePacked(values)), _useNonce(owner), deadline));
+        bytes32 structHash = keccak256(abi.encode(DEPOSITS_PERMIT_TYPEHASH, owner, spender, keccak256(abi.encodePacked(tokens)), keccak256(abi.encodePacked(values)), LibPermit.useNonce(msg.sig, owner), deadline));
         bytes32 hash = _hashTypedDataV4(structHash);
         address signer = ECDSA.recover(hash, v, r, s);
         require(signer == owner, "Silo: permit invalid signature");
-    }
-
-    function nonces(address owner) internal view returns (uint256) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.a[owner].depositPermitNonces;
-    }
-
-    function _useNonce(address owner) internal returns (uint256 current) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        current = s.a[owner].depositPermitNonces;
-        ++s.a[owner].depositPermitNonces;
     }
 
     /**

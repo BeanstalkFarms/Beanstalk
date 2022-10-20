@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "../../C.sol";
 import "../LibAppStorage.sol";
+import "../LibPermit.sol";
 
 /**
  * @author Publius
@@ -32,21 +33,10 @@ library LibTokenPermit {
         bytes32 s
     ) internal {
         require(block.timestamp <= deadline, "Token: permit expired deadline");
-        bytes32 structHash = keccak256(abi.encode(TOKEN_PERMIT_TYPEHASH, owner, spender, token, value, _useNonce(owner), deadline));
+        bytes32 structHash = keccak256(abi.encode(TOKEN_PERMIT_TYPEHASH, owner, spender, token, value, LibPermit.useNonce(msg.sig, owner), deadline));
         bytes32 hash = _hashTypedDataV4(structHash);
         address signer = ECDSA.recover(hash, v, r, s);
         require(signer == owner, "Token: permit invalid signature");
-    }
-
-    function nonces(address owner) internal view returns (uint256) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.a[owner].tokenPermitNonces;
-    }
-
-    function _useNonce(address owner) internal returns (uint256 current) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        current = s.a[owner].tokenPermitNonces;
-        ++s.a[owner].tokenPermitNonces;
     }
 
     /**

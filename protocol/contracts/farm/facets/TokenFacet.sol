@@ -161,15 +161,6 @@ contract TokenFacet is ReentrancyGuard {
         LibTokenApprove.approve(owner, spender, IERC20(token), value);
     }
 
-    function tokenPermitNonces(address owner)
-        public
-        view
-        virtual
-        returns (uint256)
-    {
-        return LibTokenPermit.nonces(owner);
-    }
-
     /**
      * @dev See {IERC20Permit-DOMAIN_SEPARATOR}.
      */

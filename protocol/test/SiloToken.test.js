@@ -36,6 +36,7 @@ describe('Silo Token', function () {
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address);
+    this.permit = await ethers.getContractAt('MockPermitFacet', this.diamond.address);
 
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
     this.beanMetapool = await ethers.getContractAt('IMockCurvePool', BEAN_3_CURVE);
@@ -1194,7 +1195,8 @@ describe('Silo Token', function () {
       describe("single token permit", async function() {
         describe('reverts', function () {
           it('reverts if permit expired', async function () {
-            const nonce = await this.silo.connect(user).depositPermitNonces(userAddress);
+            const selector = this.silo.interface.getSighash("permitDeposit");
+            const nonce = await this.permit.nonces(selector, userAddress);
             const signature = await signSiloDepositTokenPermit(user, userAddress, user2Address, this.siloToken.address, '1000', nonce, 1000);
             await expect(this.silo.connect(user).permitDeposit(
               signature.owner, 
@@ -1209,7 +1211,8 @@ describe('Silo Token', function () {
           });
   
           it('reverts if permit invalid signature', async function () {
-            const nonce = await this.silo.connect(user).depositPermitNonces(userAddress);
+            const selector = this.silo.interface.getSighash("permitDeposit");
+            const nonce = await this.permit.nonces(selector, userAddress);
             const signature = await signSiloDepositTokenPermit(user, userAddress, user2Address, this.siloToken.address, '1000', nonce);
             await expect(this.silo.connect(user).permitDeposit(
               user2Address, 
@@ -1225,7 +1228,8 @@ describe('Silo Token', function () {
   
           it("reverts when transfer too much", async function() {
             await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL)
-            const nonce = await this.silo.connect(user).depositPermitNonces(userAddress);
+            const selector = this.silo.interface.getSighash("permitDeposit");
+            const nonce = await this.permit.nonces(selector, userAddress);
             const signature = await signSiloDepositTokenPermit(user, userAddress, user2Address, this.siloToken.address, '500', nonce);
             await this.silo.connect(user2).permitDeposit(
               signature.owner, 
@@ -1249,9 +1253,11 @@ describe('Silo Token', function () {
         });
   
         describe("approve permit", async function() {
+          let selector;
           beforeEach(async function () {
             // Create permit
-            const nonce = await this.silo.connect(user).depositPermitNonces(userAddress);
+            selector = this.silo.interface.getSighash("permitDeposit");
+            const nonce = await this.permit.nonces(selector, userAddress);
             const signature = await signSiloDepositTokenPermit(user, userAddress, user2Address, this.siloToken.address, '1000', nonce);
             this.result = await this.silo.connect(user).permitDeposit(
               signature.owner, 
@@ -1305,7 +1311,7 @@ describe('Silo Token', function () {
           });
   
           it("properly updates user permit nonce", async function() {
-            expect(await this.silo.depositPermitNonces(userAddress)).to.be.equal('1')
+            expect(await this.permit.nonces(selector, userAddress)).to.be.equal('1')
           });
   
           it('properly updates user token allowance', async function () {
@@ -1321,7 +1327,8 @@ describe('Silo Token', function () {
       describe("multiple tokens permit", async function() {
         describe('reverts', function () {
           it('reverts if permit expired', async function () {
-            const nonce = await this.silo.connect(user).depositPermitNonces(userAddress);
+            const selector = this.silo.interface.getSighash("permitDeposits");
+            const nonce = await this.permit.nonces(selector, userAddress);
             const signature = await signSiloDepositTokensPermit(user, userAddress, user2Address, [this.siloToken.address], ['1000'], nonce, 1000);
             await expect(this.silo.connect(user).permitDeposits(
               signature.owner, 
@@ -1336,7 +1343,8 @@ describe('Silo Token', function () {
           });
   
           it('reverts if permit invalid signature', async function () {
-            const nonce = await this.silo.connect(user).depositPermitNonces(userAddress);
+            const selector = this.silo.interface.getSighash("permitDeposits");
+            const nonce = await this.permit.nonces(selector, userAddress);
             const signature = await signSiloDepositTokensPermit(user, userAddress, user2Address, [this.siloToken.address], ['1000'], nonce);
             await expect(this.silo.connect(user).permitDeposits(
               user2Address, 
@@ -1352,7 +1360,8 @@ describe('Silo Token', function () {
   
           it("reverts when transfer too much", async function() {
             await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL)
-            const nonce = await this.silo.connect(user).depositPermitNonces(userAddress);
+            const selector = this.silo.interface.getSighash("permitDeposits");
+            const nonce = await this.permit.nonces(selector, userAddress);
             const signature = await signSiloDepositTokensPermit(user, userAddress, user2Address, [this.siloToken.address], ['500'], nonce);
             await this.silo.connect(user2).permitDeposits(
               signature.owner, 
@@ -1376,9 +1385,11 @@ describe('Silo Token', function () {
         });
   
         describe("approve permit", async function() {
+          let selector;
           beforeEach(async function () {
             // Create permit
-            const nonce = await this.silo.connect(user).depositPermitNonces(userAddress);
+            selector = this.silo.interface.getSighash("permitDeposits");
+            const nonce = await this.permit.nonces(selector, userAddress);
             const signature = await signSiloDepositTokensPermit(user, userAddress, user2Address, [this.siloToken.address], ['1000'], nonce);
             this.result = await this.silo.connect(user).permitDeposits(
               signature.owner, 
@@ -1432,7 +1443,7 @@ describe('Silo Token', function () {
           });
   
           it("properly updates user permit nonce", async function() {
-            expect(await this.silo.depositPermitNonces(userAddress)).to.be.equal('1')
+            expect(await this.permit.nonces(selector, userAddress)).to.be.equal('1')
           });
   
           it('properly updates user token allowance', async function () {

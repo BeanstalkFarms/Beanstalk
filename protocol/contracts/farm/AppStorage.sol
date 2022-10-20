@@ -77,10 +77,8 @@ contract Account {
         SeasonOfPlenty sop; // A Farmer's Season Of Plenty storage.
         mapping(address => mapping(address => uint256)) depositAllowances; // Spender => Silo Token
         mapping(address => mapping(IERC20 => uint256)) tokenAllowances; // Token allowances
-        uint256 depositPermitNonces; // A Farmer's current deposit permit nonce
-        uint256 tokenPermitNonces; // A Farmer's current token permit nonce
         mapping(bytes4 => bytes) functionApprovals; // function selector => approval
-        uint256 nonce; // nonce for permit delegate
+        mapping(bytes4 => uint256) permitNonces; // function selector => permit nonce
     }
 }
 

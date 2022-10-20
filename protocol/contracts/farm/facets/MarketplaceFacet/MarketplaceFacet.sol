@@ -7,13 +7,13 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "./Order.sol";
-import "../../Permit.sol";
+import "../../../libraries/LibPermit.sol";
 
 /**
  * @author Beanjoyer
  * @title Pod Marketplace v2
  **/
-contract MarketplaceFacet is Order, Permit {
+contract MarketplaceFacet is Order {
     using SafeMath for uint256;
 
     /*
@@ -257,7 +257,7 @@ contract MarketplaceFacet is Order, Permit {
         require(spender != address(0), "Field: Pod Approve to 0 address.");
         require(block.timestamp <= deadline, "Field: expired deadline");
 
-        bytes32 eip712DomainHash = _getEIP712DomainHash();
+        bytes32 eip712DomainHash = LibPermit.getEIP712DomainHash();
 
         bytes32 hashStruct = keccak256(
             abi.encode(
@@ -267,7 +267,7 @@ contract MarketplaceFacet is Order, Permit {
                 account,
                 spender,
                 amount,
-                _useNonce(account),
+                LibPermit.useNonce(msg.sig, account),
                 deadline
             )
         );

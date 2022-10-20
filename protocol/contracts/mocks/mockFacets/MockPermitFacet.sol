@@ -6,14 +6,15 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../../farm/facets/PermitFacet.sol";
+import "../../libraries/LibPermit.sol";
 
 /**
- * @author Publius
+ * @author 0xm00neth
  * @title Mock Silo Facet
  **/
 
 contract MockPermitFacet is PermitFacet {
-    function useNonce() external {
-        _useNonce(msg.sender);
+    function useNonce(bytes4 selector) external {
+        LibPermit.useNonce(selector, msg.sender);
     }
 }
