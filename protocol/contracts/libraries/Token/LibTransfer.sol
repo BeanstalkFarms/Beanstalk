@@ -110,20 +110,4 @@ library LibTransfer {
             token.burn(burnt);
         }
     }
-
-
-    // ask publius, address(this) would refer to the beanstalk addy right
-    function mintToken(
-    IBean token,
-    uint256 amount,
-    address recipient,
-    To mode
-    ) internal {
-    if (mode == To.EXTERNAL) {
-        token.mint(recipient, amount);
-    } else {
-        token.mint(address(this), amount);
-        LibTransfer.sendToken(token, amount, recipient, mode);
-    }
-}
 }
