@@ -50,9 +50,7 @@ contract DelegateFacet is ReentrancyGuard {
             )
         );
 
-        bytes32 hash = keccak256(
-            abi.encodePacked("\x19\x01", eip712DomainHash, hashStruct)
-        );
+        bytes32 hash = LibPermit._hashTypedDataV4(hashStruct);
 
         address signer = ECDSA.recover(hash, signature);
         require(signer == account, "DelegateFacet: invalid signature");

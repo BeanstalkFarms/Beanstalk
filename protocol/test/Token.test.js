@@ -443,11 +443,6 @@ describe('Token', function () {
         })
     
         describe("Approve Token Permit", async function () {
-          describe('reverts', function () {
-            it('reverts if tokenPermitDomainSeparator is invalid', async function () {
-              expect(await this.tokenFacet.connect(this.user).tokenPermitDomainSeparator()).to.be.equal("0xd74031d32a83121ee5d7c0c14f2aac23c5603bf832f855c2e075ba6d0b20612e");
-            });
-          });
       
           describe("single token permit", async function() {
             describe('reverts', function () {

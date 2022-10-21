@@ -200,14 +200,6 @@ contract SiloFacet is TokenSilo {
         _approveDeposit(owner, spender, token, value);
     }
 
-    /**
-     * @dev See {IERC20Permit-DOMAIN_SEPARATOR}.
-     */
-    // solhint-disable-next-line func-name-mixedcase
-    function depositPermitDomainSeparator() external view returns (bytes32) {
-        return LibSiloPermit._domainSeparatorV4();
-    }
-
     /// @notice plant on behalf of account
     /// @param account user address
     /// @return beans number of beans planted

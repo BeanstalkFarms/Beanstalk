@@ -162,14 +162,6 @@ contract TokenFacet is ReentrancyGuard {
     }
 
     /**
-     * @dev See {IERC20Permit-DOMAIN_SEPARATOR}.
-     */
-    // solhint-disable-next-line func-name-mixedcase
-    function tokenPermitDomainSeparator() external view returns (bytes32) {
-        return LibTokenPermit._domainSeparatorV4();
-    }
-
-    /**
      * Weth
      **/
 

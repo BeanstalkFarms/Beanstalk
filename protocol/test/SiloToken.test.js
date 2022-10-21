@@ -1186,11 +1186,6 @@ describe('Silo Token', function () {
     })
 
     describe("Approve Deposit Permit", async function () {
-      describe('reverts', function () {
-        it('reverts if depositPermitDomainSeparator is invalid', async function () {
-          expect(await this.silo.connect(user).depositPermitDomainSeparator()).to.be.equal("0xf47372c4b0d604ded919ee3604a1b1e88c7cd7d7d2fcfffc36f016e19bede4ef");
-        });
-      });
   
       describe("single token permit", async function() {
         describe('reverts', function () {
