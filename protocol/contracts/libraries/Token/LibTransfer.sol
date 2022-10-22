@@ -79,20 +79,6 @@ library LibTransfer {
         else token.safeTransfer(recipient, amount);
     }
 
-    function mintToken(
-        IBean token,
-        uint256 amount,
-        address recipient,
-        To mode
-    ) internal {
-        if (mode == To.EXTERNAL) {
-            token.mint(recipient, amount);
-        } else {
-            token.mint(address(this), amount);
-            LibTransfer.sendToken(token, amount, recipient, To.INTERNAL);
-        }
-    }
-
     function burnToken(
         IBean token,
         uint256 amount, 

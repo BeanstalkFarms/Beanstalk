@@ -39,9 +39,12 @@ library LibIncentive {
         uint256 gasCostWei = C.basefeeContract().block_basefee()    // (BASE_FEE
             .add(C.getSunrisePriorityFeeBuffer())                   // + PRIORITY_FEE_BUFFER)
             .mul(gasUsed);                                          // * GAS_USED
-        uint256 sunriseReward = Math.min(
-            gasCostWei.mul(beanEthPrice).div(1e18) + C.getBaseReward(), // divide by 1e18 to convert wei to eth
-            C.getMaxReward()
+        uint256 sunriseReward = Math.max(
+            C.getMinReward(),
+            Math.min(
+                gasCostWei.mul(beanEthPrice).div(1e18) + C.getBaseReward(), // divide by 1e18 to convert wei to eth
+                C.getMaxReward()
+            )
         );
 
         return LibIncentive.fracExp(sunriseReward, 100, blocksLate.mul(C.getBlockLengthSeconds()), 1);
