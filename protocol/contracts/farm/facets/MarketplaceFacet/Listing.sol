@@ -129,7 +129,7 @@ contract Listing is PodTransfer {
         uint256 amount
     ) private {
         // Note: If l.amount < amount, the function roundAmount will revert
-
+        delete s.podListings[l.index];
         if (l.amount > amount)
             s.podListings[l.index.add(amount).add(l.start)] = hashListing(
                 0,
@@ -139,7 +139,6 @@ contract Listing is PodTransfer {
                 l.mode
             );
         emit PodListingFilled(l.account, to, l.index, l.start, amount);
-        delete s.podListings[l.index];
     }
 
     /*

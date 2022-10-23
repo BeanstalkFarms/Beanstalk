@@ -376,6 +376,41 @@ describe('Marketplace', function () {
           await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '500');
         })
       })
+
+      describe("Fill listing with 0", async function () {
+        beforeEach(async function () {
+          this.listing = [userAddress, '0', '0', '1000', '500000', '0', EXTERNAL]
+          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', EXTERNAL);
+          this.amountBeansBuyingWith = 0;
+
+          this.userBeanBalance = await this.bean.balanceOf(userAddress)
+          this.user2BeanBalance = await this.bean.balanceOf(user2Address)
+
+          this.result = await this.marketplace.connect(user2).fillPodListing(this.listing, this.amountBeansBuyingWith, EXTERNAL);
+
+          this.user2BeanBalanceAfter = await this.bean.balanceOf(user2Address)
+          this.userBeanBalanceAfter = await this.bean.balanceOf(userAddress)
+        })
+
+        it('Transfer Beans properly', async function () {
+          expect(this.user2BeanBalance.sub(this.user2BeanBalanceAfter)).to.equal(this.amountBeansBuyingWith);
+          expect(this.userBeanBalanceAfter.sub(this.userBeanBalance)).to.equal(this.amountBeansBuyingWith);
+          expect(await this.token.getInternalBalance(user.address, this.bean.address)).to.equal(0);
+        })
+
+        it('Deletes Pod Listing', async function () {
+          expect(await this.marketplace.podListing(0)).to.equal(getHashFromListing(['0', '1000', this.listing[4], this.listing[5], this.listing[6]]))
+        })
+
+        it('transfer pod listing', async function () {
+          expect((await this.field.plot(user2Address, 0)).toString()).to.equal('0');
+          expect((await this.field.plot(userAddress, 0)).toString()).to.equal('1000');
+        })
+
+        it('emits event', async function () {
+          await expect(this.result).to.emit(this.marketplace, 'PodListingFilled').withArgs(userAddress, user2Address, 0, 0, '0');
+        })
+      })
     })
 
     describe("Cancel", async function () {
