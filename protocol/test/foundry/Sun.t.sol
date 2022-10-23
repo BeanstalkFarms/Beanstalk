@@ -246,7 +246,8 @@ contract SunTest is Sun, Test {
     uint256 eth = getEthUsdcPrice();
     console.log("eth price is:",eth);
   }
-  
+
+  //helper
   function getEthUsdcPrice() private view returns (uint256) {
         (int24 tick,) = OracleLibrary.consult(C.UniV3EthUsdc(),3600); //1 season tick
         return OracleLibrary.getQuoteAtTick(

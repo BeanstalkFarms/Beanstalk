@@ -12,7 +12,7 @@ import "../C.sol";
 import "./Curve/LibCurve.sol";
 
 /**
- * @author Publius, Chaikitty
+ * @author Publius, Chaikitty, Brean
  * @title Incentive Library calculates the reward and the exponential increase efficiently.
  **/
 library LibIncentive {

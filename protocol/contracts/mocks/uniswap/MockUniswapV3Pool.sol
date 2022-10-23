@@ -27,6 +27,12 @@ import '@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3MintCallback.so
 import '@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol';
 import '@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3FlashCallback.sol';
 
+/**
+ * @author Brean
+ * @title MockUniswapV3Pool, allows to set the price of the oracle
+ * @notice observe() is the modified function to allow this.
+ **/
+
 contract MockUniswapV3Pool is IUniswapV3Pool, NoDelegateCall {
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for int256;
@@ -870,12 +876,15 @@ contract MockUniswapV3Pool is IUniswapV3Pool, NoDelegateCall {
         emit CollectProtocol(msg.sender, recipient, amount0, amount1);
     }
     
-    function setPrice(uint256 price,uint256 decimals) external { 
+    // sets price of oracle
+    ///@dev decimal precision of price is the lower of the two tokens,
+    ///@dev decimals is the precision of the token being quoted.
+    function setOraclePrice(uint256 price,uint256 decimals) external { 
         manual_sqrtPriceX96 = sqrt((uint256(1<<192))*(decimals)/(price));
         manual_ticks = TickMath.getTickAtSqrtRatio(uint160(manual_sqrtPriceX96));
     }
 
-    // //helper
+    //quick helper
     function sqrt(uint256 x) private pure returns (uint256 y) {
         uint256 z = (x + 1) / 2;
         y = x;
