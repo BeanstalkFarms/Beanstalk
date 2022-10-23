@@ -82,6 +82,8 @@ library C {
     address private constant FERTILIZER = 0x402c84De2Ce49aF88f5e2eF3710ff89bFED36cB6;
     address private constant FERTILIZER_ADMIN = 0xfECB01359263C12Aa9eD838F878A596F0064aa6e;
     address private constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    address private constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+
 
     address private constant TRI_CRYPTO = 0xc4AD29ba4B3c580e6D59105FFf484999997675Ff;
     address private constant TRI_CRYPTO_POOL = 0xD51a44d3FaE010294C616388b506AcdA1bfAAE46;
@@ -90,6 +92,8 @@ library C {
     address private constant UNRIPE_CURVE_BEAN_LUSD_POOL = 0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D;
     address private constant UNRIPE_CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
 
+
+    address private constant UNIV3_ETH_USDC_POOL = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
     address private constant CHAINLINK_CONTRACT = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
     // Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
     address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
@@ -218,6 +222,10 @@ library C {
         return IERC20(USDC);
     }
 
+    function weth() internal pure returns (IERC20) {
+        return IERC20(WETH);
+    }
+
     function curveMetapool() internal pure returns (ICurvePool) {
         return ICurvePool(CURVE_BEAN_METAPOOL);
     }
@@ -240,6 +248,10 @@ library C {
 
     function threeCrv() internal pure returns (IERC20) {
         return IERC20(THREE_CRV);
+    }
+
+    function UniV3EthUsdc() internal pure returns (address){
+        return UNIV3_ETH_USDC_POOL;
     }
 
     function chainlinkContract() internal pure returns (IChainlink) {

@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "../C.sol";
 import "./Curve/LibCurve.sol";
@@ -15,6 +16,8 @@ import "./Curve/LibCurve.sol";
  * @title Incentive Library calculates the reward and the exponential increase efficiently.
  **/
 library LibIncentive {
+    uint256 private constant PERIOD = 3600; //1 hour
+
 
     using SafeMath for uint256;
 
@@ -30,10 +33,10 @@ library LibIncentive {
         // In the future, this can be swapped out to another oracle
         uint256 beanPriceUsd = LibIncentive.getCurveBeanPrice(balances);
 
-        // ethUsdPrice has 8 decimal precision, bean has 6.
-        uint256 beanEthPrice = C.chainlinkContract().latestAnswer() // Eth price in USD (8 decimals)
-            .mul(1e4)           // Multiplies eth by 1e4 so that the result of division will also have 6 decimals
-            .div(beanPriceUsd); // number of beans required to purchase one eth
+        // ethUsdPrice has 6 Decimal Precision
+        uint256 beanEthPrice = getEthUsdcPrice()
+            .mul(1e6)
+            .div(beanPriceUsd);
 
         uint256 gasUsed = Math.min(initialGasLeft.sub(gasleft()) + C.getSunriseGasOverhead(), C.getMaxSunriseGas());
         uint256 gasCostWei = C.basefeeContract().block_basefee()    // (BASE_FEE
@@ -158,5 +161,15 @@ library LibIncentive {
         // Decimals will always be 6 because we can only mint beans
         // 10**(36-decimals)
         return [1e30, C.curve3Pool().get_virtual_price()];
+    }
+
+    function getEthUsdcPrice() private view returns (uint256) {
+        (int24 tick,) = OracleLibrary.consult(C.UniV3EthUsdc(),3600); //1 season tick
+        return OracleLibrary.getQuoteAtTick(
+            tick,
+            1e18,
+            address(C.weth()),
+            address(C.usdc())
+        );
     }
 }

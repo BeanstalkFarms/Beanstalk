@@ -36,6 +36,7 @@ out = 'out'
 remappings = [
   '@openzeppelin/=node_modules/@openzeppelin/',
   '@beanstalk/=contracts/',
+  '@uniswap/=node_modules/@uniswap/',
   'farm/=contracts/farm/',
   'facets/=contracts/farm/facets/',
   'interfaces/=contracts/interfaces/',

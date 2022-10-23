@@ -8,6 +8,7 @@ import { Sun } from "farm/facets/SeasonFacet/Sun.sol";
 import { MockSeasonFacet } from "mocks/mockFacets/MockSeasonFacet.sol";
 import { MockSiloFacet } from "mocks/mockFacets/MockSiloFacet.sol";
 import { MockFieldFacet } from "mocks/mockFacets/MockFieldFacet.sol";
+import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 
 import { Utils } from "./utils/Utils.sol";
 import { DiamondDeployer } from "./utils/Deploy.sol";
@@ -241,5 +242,19 @@ contract SunTest is Sun, Test {
   //   season.sunSunrise(300e6, 8); // deltaB = +300; case 0 = low pod rate
   //   assertEq(uint256(field.totalSoil()), 99); // FIXME: how calculated?
   // }
+  function testIncentivize() public {
+    uint256 eth = getEthUsdcPrice();
+    console.log("eth price is:",eth);
+  }
+  
+  function getEthUsdcPrice() private view returns (uint256) {
+        (int24 tick,) = OracleLibrary.consult(C.UniV3EthUsdc(),3600); //1 season tick
+        return OracleLibrary.getQuoteAtTick(
+            tick,
+            1e18,
+            address(C.weth()),
+            address(C.usdc())
+        );
+    }
 
 }

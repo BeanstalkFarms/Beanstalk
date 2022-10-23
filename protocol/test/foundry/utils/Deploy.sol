@@ -37,6 +37,8 @@ import {WhitelistFacet} from "facets/WhitelistFacet.sol";
 
 import {BeanstalkPrice} from "@beanstalk/price/BeanstalkPrice.sol";
 import {Mock3Curve} from "mocks/curve/Mock3Curve.sol";
+import {MockUniswapV3Pool} from "mocks/uniswap/MockUniswapV3Pool.sol";
+import {MockUniswapV3Factory} from "mocks/uniswap/MockUniswapV3Factory.sol";
 import {MockCurveFactory} from "mocks/curve/MockCurveFactory.sol";
 import {MockCurveZap} from "mocks/curve/MockCurveZap.sol";
 import {MockMeta3Curve} from "mocks/curve/MockMeta3Curve.sol";
@@ -95,6 +97,8 @@ contract DiamondDeployer is Test {
     _mockWeth(); // only if "reset"
     //_mockCurveMetapool();
     _mockUnripe();
+    _mockUniswap();
+    
     //_mockFertilizer();
 
     // create diamond    
@@ -164,12 +168,28 @@ contract DiamondDeployer is Test {
     curveZap.approve();
   }
 
+  function _mockUniswap() internal {
+    //address UNIV3_FACTORY = 0x1F98431c8aD98523631AE4a59f267346ea31F984; 
+    MockUniswapV3Factory uniFactory = MockUniswapV3Factory(new MockUniswapV3Factory());
+    address ethUsdc = 
+      uniFactory.createPool(
+        0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,//weth
+        address(C.usdc()),//usdc
+        3000
+      );
+    bytes memory code = at(ethUsdc);
+    address targetAddr = C.UniV3EthUsdc();
+    vm.etch(targetAddr, code);
+    MockUniswapV3Pool(C.UniV3EthUsdc()).setPrice(1000e6,1e18);
+  }
+  
   function _mockCurveMetapool() internal {
     MockMeta3Curve p = MockMeta3Curve(_etch("MockMeta3Curve.sol", C.curveMetapoolAddress()));
     p.init(C.beanAddress(), THREE_CRV, C.curve3PoolAddress());
     p.set_A_precise(1000);
     p.set_virtual_price(1 wei);
   }
+
 
   function _mockUnripe() internal {
     MockToken urbean = _mockToken("Unripe BEAN", C.unripeBeanAddress());

@@ -640,8 +640,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     emit Sow(siloChad, 101e6, 100e6, 101e6);
     field.sowWithMin(100e6, 1e6, 50e6, LibTransfer.From.EXTERNAL);
     vm.stopPrank();
-  } 
-
+  }
   // Test Helpers
   function max(uint256 a, uint256 b) internal pure returns (uint256) {
     return a >= b ? a : b;
@@ -653,4 +652,5 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
   function soilAbovePeg(uint256 a) internal view returns(uint256) {
     return a.mul(season.maxYield().add(100)).div(100); 
   }
+
 }
