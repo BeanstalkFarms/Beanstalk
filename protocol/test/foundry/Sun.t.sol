@@ -245,7 +245,7 @@ contract SunTest is Sun, Test {
   function testIncentivize() public {
     uint256 eth = getEthUsdcPrice();
     console.log("eth price is:",eth);
-  }
+  } 
 
   //helper
   function getEthUsdcPrice() private view returns (uint256) {

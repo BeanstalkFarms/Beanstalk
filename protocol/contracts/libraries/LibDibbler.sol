@@ -50,8 +50,9 @@ library LibDibbler {
                 morningAuction().add(1e8), 
                 1e8,
                 LibPRBMath.Rounding.Up
-                ); 
-            //overflow caused by rounding up, but means all soil is sown
+                );
+            /// @dev overflow can occur due to rounding up, 
+            /// but only occurs when all remaining soil is sown.
             (, s.f.soil) = s.f.soil.trySub(uint128(scaledSoil)); 
         } else {
             // We can assume amount <= soil from getSowAmount when below peg
@@ -78,7 +79,8 @@ library LibDibbler {
         return pods;
     }
 
-    /// @dev function returns the weather scaled down based on the dutch auction
+    /// @dev function returns the weather scaled down
+    /// @notice based on the block delta
     // precision level 1e6, as soil has 1e6 precision (1% = 1e6)
     function morningAuction() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -150,10 +152,10 @@ library LibDibbler {
         returns (uint256) 
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if(s.f.soil == 0){
-            uint256 pods = maxPeas; // if all soil is sown, the pods issued must equal peas. 
-            return pods;
+        if(s.f.soil == 0){ //all soil is sown, pods issued must equal peas.  
+            return maxPeas;
         } else {
+            /// @dev We round up as Beanstalk would rather issue too much pods than not enough.
             return uint128(beans.add(
                 beans.mulDiv(
                     morningAuction(),

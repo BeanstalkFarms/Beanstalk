@@ -16,7 +16,7 @@ import "./Curve/LibCurve.sol";
  * @title Incentive Library calculates the reward and the exponential increase efficiently.
  **/
 library LibIncentive {
-    uint256 private constant PERIOD = 3600; //1 hour
+    uint32 private constant PERIOD = 3600; //1 hour
 
 
     using SafeMath for uint256;
@@ -164,7 +164,7 @@ library LibIncentive {
     }
 
     function getEthUsdcPrice() private view returns (uint256) {
-        (int24 tick,) = OracleLibrary.consult(C.UniV3EthUsdc(),3600); //1 season tick
+        (int24 tick,) = OracleLibrary.consult(C.UniV3EthUsdc(),PERIOD); //1 season tick
         return OracleLibrary.getQuoteAtTick(
             tick,
             1e18,

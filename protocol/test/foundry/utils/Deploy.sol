@@ -180,7 +180,7 @@ contract DiamondDeployer is Test {
     bytes memory code = at(ethUsdc);
     address targetAddr = C.UniV3EthUsdc();
     vm.etch(targetAddr, code);
-    MockUniswapV3Pool(C.UniV3EthUsdc()).setPrice(1000e6,1e18);
+    MockUniswapV3Pool(C.UniV3EthUsdc()).setOraclePrice(1000e6,1e18);
   }
   
   function _mockCurveMetapool() internal {
