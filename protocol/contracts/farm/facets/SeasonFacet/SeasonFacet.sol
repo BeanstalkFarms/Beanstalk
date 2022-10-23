@@ -11,7 +11,7 @@ import "../../../libraries/LibIncentive.sol";
 import "../../../libraries/Token/LibTransfer.sol";
 
 /**
- * @author Publius
+ * @author Publius, Chaikitty
  * @title Season Facet
  * @notice holds the Sunrise function and handles all logic for Season changes.
  **/
@@ -25,8 +25,16 @@ contract SeasonFacet is Weather {
      * Sunrise
      **/
 
+    /// @notice advances Beanstalk to the next Season, sending reward beans to the caller's circulating balance
+    /// @return reward The number of beans minted for the caller.
+    function sunrise() external payable returns (uint256) {
+        return sunriseWithMode(LibTransfer.To.EXTERNAL);
+    }
+
     /// @notice advances Beanstalk to the next Season.
-    function sunrise(LibTransfer.To mode) external payable returns (uint256) {
+    /// @param mode Indicates whether the reward beans are sent to internal or circulating balance.
+    /// @return reward The number of beans minted for the caller.
+    function sunriseWithMode(LibTransfer.To mode) public payable returns (uint256) {
         uint256 initialGasLeft = gasleft();
         require(!paused(), "Season: Paused.");
         require(seasonTime() > season(), "Season: Still current Season.");
