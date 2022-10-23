@@ -15,7 +15,7 @@ import "./LibPRBMath.sol";
 
 
 /**
- * @author Publius
+ * @author Publius, Brean
  * @title Dibbler
  **/
 library LibDibbler {

@@ -175,7 +175,7 @@ contract Storage {
         uint32 rainStart; // rainStart stores the most recent Season in which Rain started.
         bool raining; // True if it is Raining (P < 1, Pod Rate Excessively Low).
         bool fertilizing; // True if Beanstalk has Fertilizer left to be paid off.
-        uint32 sunriseBlock; // The block of the start of the curren Season.
+        uint32 sunriseBlock; // The block of the start of the current Season.
         bool abovePeg; // Boolean indicating whether the previous season was above or below peg.
         uint256 start; // The timestamp of the Beanstalk deployment rounded down to the nearest hour.
         uint256 period; // The length of each season in Beanstalk.

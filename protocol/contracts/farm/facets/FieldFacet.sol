@@ -11,7 +11,7 @@ import "../ReentrancyGuard.sol";
 
 
 /**
- * @author Publius
+ * @author Publius, Brean
  * @title Field sows Beans.
  **/
 contract FieldFacet is ReentrancyGuard {
@@ -160,7 +160,7 @@ contract FieldFacet is ReentrancyGuard {
         }
     }
 
-    /// @dev yield now has precision level 1e6 (1% = 1e6)
+    /// @dev yield has precision level 1e6 (1% = 1e6)
     function yield() public view returns (uint256) {
         return LibDibbler.morningAuction();
     }

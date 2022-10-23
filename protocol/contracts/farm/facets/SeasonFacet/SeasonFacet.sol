@@ -53,6 +53,14 @@ contract SeasonFacet is Weather {
         return s.season;
     }
 
+    function abovePeg() external view returns (bool) {
+        return s.season.abovePeg;
+    }
+
+    function sunriseBlock() external view returns (uint32){
+        return s.season.sunriseBlock;
+    }
+
     function seasonTime() public view virtual returns (uint32) {
         if (block.timestamp < s.season.start) return 0;
         if (s.season.period == 0) return type(uint32).max;
