@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts-upgradeable-8/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
