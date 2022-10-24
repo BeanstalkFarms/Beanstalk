@@ -21,7 +21,8 @@ const {
   STABLE_FACTORY,
   PRICE_DEPLOYER,
   CHAINLINK_CONTRACT,
-  BASE_FEE_CONTRACT
+  BASE_FEE_CONTRACT,
+  ETH_USDC_UNISWAP_V3
 } = require('../test/utils/constants');
 const { impersonateSigner, mintEth } = require('../utils');
 
@@ -231,6 +232,22 @@ async function blockBasefee() {
   await basefee.setAnswer(20 * Math.pow(10, 9));
 }
 
+async function ethUsdcUniswap() {
+  const MockUniswapV3Factory = await ethers.getContractFactory('MockUniswapV3Factory')
+  const mockUniswapV3Factory = await MockUniswapV3Factory.deploy()
+  await mockUniswapV3Factory.deployed()
+  const ethUdscPool = await mockUniswapV3Factory.callStatic.createPool(WETH, USDC, 3000)
+  await mockUniswapV3Factory.createPool(WETH, USDC, 3000)
+  const bytecode = await ethers.provider.getCode(ethUdscPool)
+  await network.provider.send("hardhat_setCode", [
+    ETH_USDC_UNISWAP_V3,
+    bytecode,
+  ]);
+
+  const chainlink = await ethers.getContractAt("MockChainlink", CHAINLINK_CONTRACT);
+  await chainlink.setAnswer(1300 * Math.pow(10, 8));
+}
+
 exports.impersonateRouter = router
 exports.impersonateBean = bean
 exports.impersonateCurve = curve
@@ -244,3 +261,4 @@ exports.impersonateUsdc = usdc
 exports.impersonatePrice = price
 exports.impersonateChainlink = chainlink;
 exports.impersonateBlockBasefee = blockBasefee;
+exports.impersonateEthUsdcUniswap = ethUsdcUniswap

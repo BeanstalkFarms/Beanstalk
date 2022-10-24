@@ -10,7 +10,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/SeasonFacet/SeasonFacet.sol";
 import "../MockToken.sol";
 
-
 /**
  * @author Publius
  * @title Mock Season Facet
@@ -37,7 +36,11 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
         mockStepSilo(amount);
+<<<<<<< HEAD
         console2.log("Sunrise called. Current season is:",s.season.current);
+=======
+        // console.log("Sunrise called. Current season is:",s.season.current);
+>>>>>>> 3e12cd349b36a5144dc6c23bc86c3b922510808f
     }
 
     function mockStepSilo(uint256 amount) public {
@@ -95,7 +98,11 @@ contract MockSeasonFacet is SeasonFacet {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
+<<<<<<< HEAD
         console2.log("LightSunrise called. Current season is:",s.season.current);
+=======
+        // console.log("LightSunrise called. Current season is:",s.season.current);
+>>>>>>> 3e12cd349b36a5144dc6c23bc86c3b922510808f
     }
 
     function fastForward(uint32 _s) public {
@@ -113,7 +120,11 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.current += 1;
         s.season.timestamp = block.timestamp;
         s.season.sunriseBlock = uint32(block.number);
+<<<<<<< HEAD
         console2.log("farmSunrise called. Current season is:",s.season.current);
+=======
+        // console.log("farmSunrise called. Current season is:",s.season.current);
+>>>>>>> 3e12cd349b36a5144dc6c23bc86c3b922510808f
     }
 
     function farmSunrises(uint256 number) public {

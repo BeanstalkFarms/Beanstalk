@@ -37,7 +37,7 @@ contract MockAdminFacet is Sun {
     function forceSunrise() external {
         updateStart();
         SeasonFacet sf = SeasonFacet(address(this));
-        sf.sunrise(LibTransfer.To.EXTERNAL);
+        sf.sunrise();
     }
 
     function rewardSunrise(uint256 amount) public {
