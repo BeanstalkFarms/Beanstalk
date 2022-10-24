@@ -215,7 +215,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     }
 
     /// @dev return the min value of the three input values
-    function min(
+    function _min(
         uint256 num1,
         uint256 num2,
         uint256 num3
@@ -225,7 +225,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     }
 
     /// @dev return the max value of the three input values
-    function max(
+    function _max(
         uint256 num1,
         uint256 num2,
         uint256 num3
@@ -480,7 +480,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         } else if (isDeposit) {
             shares =
                 supply.mulDiv(
-                    min(
+                    _min(
                         underlyingBdvAfter.mulDiv(
                             PRECISION,
                             underlyingBdv,
@@ -505,7 +505,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             shares =
                 supply -
                 supply.mulDiv(
-                    max(
+                    _max(
                         underlyingBdvAfter.mulDiv(
                             PRECISION,
                             underlyingBdv,
