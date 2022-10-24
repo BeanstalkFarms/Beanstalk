@@ -50,6 +50,12 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     mapping(address => bool) public whitelisted;
     uint256 public underlyingBdv;
 
+    /// @notice Nominated candidate to be the owner of the contract
+    /// @dev The nominated candidate need to call the claimOwnership function
+    /// @return ownerCandidate The nomindated candidate to become the new owner of the contract
+    address public ownerCandidate;
+
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -66,6 +72,31 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
 
     function renounceOwnership() public virtual override onlyOwner {
         revert("Ownable: Can't renounceOwnership here"); // not possible with this smart contract
+    }
+
+    /// @notice Nominate a candidate to become the new owner of the contract
+    /// @dev The nominated candidate need to call claimOwnership function
+    function transferOwnership(address newOwner)
+        public
+        virtual
+        override
+        onlyOwner
+    {
+        require(
+            newOwner != address(0),
+            "Ownable: Non-zero owner address required"
+        );
+        ownerCandidate = newOwner;
+    }
+
+    /// @notice Nominated candidate claim ownership
+    function claimOwnership() external {
+        require(
+            msg.sender == ownerCandidate,
+            "Ownable: sender must be ownerCandidate to accept ownership"
+        );
+        _transferOwnership(ownerCandidate);
+        ownerCandidate = address(0);
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
