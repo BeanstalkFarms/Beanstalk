@@ -101,21 +101,35 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
 
-    function addWhitelistToken(address token) public onlyOwner {
+    /// @notice Owner whitelist a silo token
+    /// @param token Silo token to be add to the whitelist
+    function addWhitelistToken(address token) external onlyOwner {
+        require(token != address(0), "Non-zero token address required");
         whitelisted[token] = true;
         emit AddWhitelistToken(token);
     }
 
-    function removeWhitelistToken(address token) public onlyOwner {
+    /// @notice Remove silo token from the whitelist
+    /// @param token Silo token to be remove from the whitelist
+    function removeWhitelistToken(address token) external onlyOwner {
+        require(token != address(0), "Non-zero token address required");
         delete whitelisted[token];
         emit RemoveWhitelistToken(token);
     }
 
+    /// @notice Delegate snapshot voting power
+    /// @param _delegateContract snapshot delegate contract
+    /// @param _delegate account to delegate voting power
+    /// @param _snapshotId snapshot space key
     function setDelegate(
         address _delegateContract,
         address _delegate,
         bytes32 _snapshotId
     ) external onlyOwner {
+        require(
+            _delegateContract != address(0),
+            "Non-zero delegate address required"
+        );
         if (_delegate == address(0)) {
             IDelegation(_delegateContract).clearDelegate(_snapshotId);
         } else {
@@ -134,6 +148,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     }
 
     function _convertLambdaToLambda(address token, uint32 season) internal {
+        require(token != address(0), "Bdv: Non-zero token address required");
         (uint256 amount,) = IBeanstalk(BEANSTALK_ADDRESS).getDeposit(address(this), token, season);
         uint32[] memory seasons = new uint32[](1);
         seasons[0] = season;
