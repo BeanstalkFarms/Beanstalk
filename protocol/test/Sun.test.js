@@ -2,7 +2,7 @@ const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 const { to6, toStalk, toBean, to18 } = require('./utils/helpers.js');
-const { USDC, UNRIPE_LP, BEAN, CHAINLINK_CONTRACT, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE } = require('./utils/constants.js');
+const { USDC, UNRIPE_LP, BEAN, ETH, CHAINLINK_CONTRACT,UNISWAP_ETHUSDC_CONTRACT,UNISWAP_DEPLOYER2_CONTRACT, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE } = require('./utils/constants.js');
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
 const { ethers } = require('hardhat');
 
@@ -24,6 +24,7 @@ describe('Sun', function () {
     this.usdc = await ethers.getContractAt('MockToken', USDC);
   
     // These are needed for sunrise incentive test
+    //this.uniswap = await ethers.getContractAt('MockUniswapV3Factory',UNISWAP_DEPLOYER2_CONTRACT);
     this.chainlink = await ethers.getContractAt('MockChainlink', CHAINLINK_CONTRACT);
     this.basefee = await ethers.getContractAt('MockBlockBasefee', BASE_FEE_CONTRACT);
     this.tokenFacet = await ethers.getContractAt('TokenFacet', contracts.beanstalkDiamond.address)
@@ -32,6 +33,7 @@ describe('Sun', function () {
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
     await this.threePool.set_virtual_price(to18('1'));
     this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
+    //this.uniswapV3EthUsdc = await this.uniswap.createPool(ETH,USDC,3000);
     await this.beanThreeCurve.set_supply(toBean('100000'));
     await this.beanThreeCurve.set_A_precise('1000');
     await this.beanThreeCurve.set_virtual_price(to18('1'));
@@ -66,61 +68,60 @@ describe('Sun', function () {
   })
 
   it("delta B > 1, low pod rate", async function () {
-    await this.field.incrementTotalPodsE('100');
-    this.result = await this.season.sunSunrise('300', 0);
-    expect(await this.field.totalSoil()).to.be.equal('148')
+    await this.field.incrementTotalPodsE('10000');
+    this.result = await this.season.sunSunrise('30000', 0);
+    expect(await this.field.totalSoil()).to.be.equal('14852');
   })
 
   it("delta B > 1, medium pod rate", async function () {
-    await this.field.incrementTotalPodsE('100');
-    this.result = await this.season.sunSunrise('300', 8);
-    expect(await this.field.totalSoil()).to.be.equal('99')
+    await this.field.incrementTotalPodsE('10000');
+    this.result = await this.season.sunSunrise('30000', 8);
+    expect(await this.field.totalSoil()).to.be.equal('9901'); 
   })
 
   it("delta B > 1, high pod rate", async function () {
-    await this.field.incrementTotalPodsE('100');
-    this.result = await this.season.sunSunrise('300', 25);
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '49');
+    await this.field.incrementTotalPodsE('10000');
+    this.result = await this.season.sunSunrise('30000', 25);
+    expect(await this.field.totalSoil()).to.be.equal('4951');
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '5000');
   })
 
   it("only silo", async function () {
     this.result = await this.season.sunSunrise('100', 8);
     await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '0');
     await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '0', '100', '0');
-
     expect(await this.silo.totalStalk()).to.be.equal('1000000');
     expect(await this.silo.totalEarnedBeans()).to.be.equal('100');
   })
 
   it("some harvestable", async function () {
-    await this.field.incrementTotalPodsE('150');
-    this.result = await this.season.sunSunrise('200', 8);
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '99');
-    await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '100', '100', '0');
-
-    expect(await this.field.totalHarvestable()).to.be.equal('100');
-
-    expect(await this.silo.totalStalk()).to.be.equal('1000000');
-    expect(await this.silo.totalEarnedBeans()).to.be.equal('100');
+    await this.field.incrementTotalPodsE('15000');
+    this.result = await this.season.sunSunrise('20000', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '10000');
+    expect(await this.field.totalSoil()).to.be.equal('9901');
+    await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '10000', '10000', '0');
+    expect(await this.field.totalHarvestable()).to.be.equal('10000');
+    expect(await this.silo.totalStalk()).to.be.equal('100000000');
+    expect(await this.silo.totalEarnedBeans()).to.be.equal('10000');
   })
 
   it("all harvestable", async function () {
-    await this.field.incrementTotalPodsE('50');
-    this.result = await this.season.sunSunrise('150', 8);
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '49');
-    await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '50', '100', '0');
-
-    expect(await this.field.totalHarvestable()).to.be.equal('50');
-
-    expect(await this.silo.totalStalk()).to.be.equal('1000000');
-    expect(await this.silo.totalEarnedBeans()).to.be.equal('100');
+    await this.field.incrementTotalPodsE('5000');
+    this.result = await this.season.sunSunrise('15000', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '5000');
+    expect(await this.field.totalSoil()).to.be.equal('4951');
+    await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '5000', '10000', '0');
+    expect(await this.field.totalHarvestable()).to.be.equal('5000');
+    expect(await this.silo.totalStalk()).to.be.equal('100000000');
+    expect(await this.silo.totalEarnedBeans()).to.be.equal('10000');
   })
 
   it("all harvestable and all fertilizable", async function () {
     await this.field.incrementTotalPodsE(to6('50'));
-    await this.fertilizer.connect(owner).addFertilizerOwner('6274', '20', '0')
+    await this.fertilizer.connect(owner).addFertilizerOwner('6274', '20', '0');
     this.result = await this.season.sunSunrise(to6('200'), 8);
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '49504950');
+    expect(await this.field.totalSoil()).to.be.equal('49504951');
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, to6('50'));
     await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, to6('50'), to6('100'), to6('50'));
 
     expect(await this.fertilizer.isFertilizing()).to.be.equal(false);
@@ -137,43 +138,46 @@ describe('Sun', function () {
   })
 
   it("all harvestable, some fertilizable", async function () {
-    await this.field.incrementTotalPodsE('50');
-    await this.fertilizer.connect(owner).addFertilizerOwner('0', '1', '0')
-    this.result = await this.season.sunSunrise('200', 8);
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '49');
-    await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '50', '84', '66');
+    await this.field.incrementTotalPodsE('500');
+    await this.fertilizer.connect(owner).addFertilizerOwner('0', '1', '0');
+    this.result = await this.season.sunSunrise('2000', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '500');
+    expect(await this.field.totalSoil()).to.be.equal('496');
+    await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '500', '834', '666');
 
     expect(await this.fertilizer.isFertilizing()).to.be.equal(true);
-    expect(await this.fertilizer.totalFertilizedBeans()).to.be.equal('66');
+    expect(await this.fertilizer.totalFertilizedBeans()).to.be.equal('666');
     expect(await this.fertilizer.getActiveFertilizer()).to.be.equal('1');
     expect(await this.fertilizer.getFirst()).to.be.equal(to6('6'))
     expect(await this.fertilizer.getLast()).to.be.equal(to6('6'))
-    expect(await this.fertilizer.beansPerFertilizer()).to.be.equal(66)
+    expect(await this.fertilizer.beansPerFertilizer()).to.be.equal(666)
 
-    expect(await this.field.totalHarvestable()).to.be.equal('50');
+    expect(await this.field.totalHarvestable()).to.be.equal('500');
 
-    expect(await this.silo.totalStalk()).to.be.equal('840000');
-    expect(await this.silo.totalEarnedBeans()).to.be.equal('84');
+    expect(await this.silo.totalStalk()).to.be.equal('8340000');
+    expect(await this.silo.totalEarnedBeans()).to.be.equal('834');
   })
 
   it("some harvestable, some fertilizable", async function () {
-    await this.field.incrementTotalPodsE('100');
+    await this.field.incrementTotalPodsE('1000');
     await this.fertilizer.connect(owner).addFertilizerOwner('0', '1', '0')
-    this.result = await this.season.sunSunrise('150', 8);
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '49');
-    await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '50', '50', '50');
+    this.result = await this.season.sunSunrise('1500', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '500');
+    expect(await this.field.totalSoil()).to.be.equal('496');
+
+    await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '500', '500', '500');
 
     expect(await this.fertilizer.isFertilizing()).to.be.equal(true);
-    expect(await this.fertilizer.totalFertilizedBeans()).to.be.equal('50');
+    expect(await this.fertilizer.totalFertilizedBeans()).to.be.equal('500');
     expect(await this.fertilizer.getActiveFertilizer()).to.be.equal('1');
     expect(await this.fertilizer.getFirst()).to.be.equal(to6('6'))
     expect(await this.fertilizer.getLast()).to.be.equal(to6('6'))
-    expect(await this.fertilizer.beansPerFertilizer()).to.be.equal(50)
+    expect(await this.fertilizer.beansPerFertilizer()).to.be.equal(500)
 
-    expect(await this.field.totalHarvestable()).to.be.equal('50');
+    expect(await this.field.totalHarvestable()).to.be.equal('500');
 
-    expect(await this.silo.totalStalk()).to.be.equal('500000');
-    expect(await this.silo.totalEarnedBeans()).to.be.equal('50');
+    expect(await this.silo.totalStalk()).to.be.equal('5000000');
+    expect(await this.silo.totalEarnedBeans()).to.be.equal('500');
   })
 
   it("1 all and 1 some fertilizable", async function () {

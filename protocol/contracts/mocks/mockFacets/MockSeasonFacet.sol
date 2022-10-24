@@ -5,7 +5,7 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import { console } from "forge-std/console.sol";
+import "forge-std/console2.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/SeasonFacet/SeasonFacet.sol";
 import "../MockToken.sol";
@@ -37,7 +37,7 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
         mockStepSilo(amount);
-        console.log("Sunrise called. Current season is:",s.season.current);
+        console2.log("Sunrise called. Current season is:",s.season.current);
     }
 
     function mockStepSilo(uint256 amount) public {
@@ -95,7 +95,7 @@ contract MockSeasonFacet is SeasonFacet {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
-        console.log("LightSunrise called. Current season is:",s.season.current);
+        console2.log("LightSunrise called. Current season is:",s.season.current);
     }
 
     function fastForward(uint32 _s) public {
@@ -113,7 +113,7 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.current += 1;
         s.season.timestamp = block.timestamp;
         s.season.sunriseBlock = uint32(block.number);
-        console.log("farmSunrise called. Current season is:",s.season.current);
+        console2.log("farmSunrise called. Current season is:",s.season.current);
     }
 
     function farmSunrises(uint256 number) public {

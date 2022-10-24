@@ -11,7 +11,6 @@ import "./Oracle.sol";
 import "../../../C.sol";
 import "../../../libraries/LibFertilizer.sol";
 import "../../../libraries/LibPRBMath.sol";
-
 /**
  * @author Publius
  * @title Sun

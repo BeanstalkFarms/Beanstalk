@@ -152,17 +152,17 @@ library LibDibbler {
         returns (uint256) 
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if(s.f.soil == 0){ //all soil is sown, pods issued must equal peas.  
+        if(s.f.soil == 0){ //all soil is sown, pods issued must equal peas.
             return maxPeas;
         } else {
             /// @dev We round up as Beanstalk would rather issue too much pods than not enough.
-            return uint128(beans.add(
+            return beans.add(
                 beans.mulDiv(
                     morningAuction(),
                     1e8,
                     LibPRBMath.Rounding.Up
                     )
-                )); 
+                );
         }
     }
 
