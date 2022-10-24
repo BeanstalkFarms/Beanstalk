@@ -37,6 +37,7 @@ library C {
     // Season Incentive
     uint256 private constant BASE_REWARD = 3e6; // Fixed increase in Bean reward to cover cost of operating a bot
     uint256 private constant MAX_REWARD = 100e6;
+    uint256 private constant MIN_REWARD = 10e6;
     uint256 private constant PRIORITY_FEE_BUFFER = 5e9; // 5 gwei
     uint256 private constant MAX_SUNRISE_GAS = 5e5; // TODO: TBD, 500k seems reasonable
     // Discuss: This should be increased by 35k to offset failed transaction costs. It is likely
@@ -112,6 +113,10 @@ library C {
 
     function getMaxReward() internal pure returns (uint256) {
         return MAX_REWARD;
+    }
+
+    function getMinReward() internal pure returns (uint256) {
+        return MIN_REWARD;
     }
 
     function getSunrisePriorityFeeBuffer() internal pure returns (uint256) {

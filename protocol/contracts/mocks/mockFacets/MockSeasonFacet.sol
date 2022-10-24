@@ -37,7 +37,7 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
         mockStepSilo(amount);
-        console.log("Sunrise called. Current season is:",s.season.current);
+        // console.log("Sunrise called. Current season is:",s.season.current);
     }
 
     function mockStepSilo(uint256 amount) public {
@@ -95,7 +95,7 @@ contract MockSeasonFacet is SeasonFacet {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
-        console.log("LightSunrise called. Current season is:",s.season.current);
+        // console.log("LightSunrise called. Current season is:",s.season.current);
     }
 
     function fastForward(uint32 _s) public {
@@ -113,7 +113,7 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.current += 1;
         s.season.timestamp = block.timestamp;
         s.season.sunriseBlock = uint32(block.number);
-        console.log("farmSunrise called. Current season is:",s.season.current);
+        // console.log("farmSunrise called. Current season is:",s.season.current);
     }
 
     function farmSunrises(uint256 number) public {
