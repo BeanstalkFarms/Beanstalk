@@ -100,7 +100,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     /// @param name The name of this ERC-20 contract
     /// @param symbol The symbol of this ERC-20 contract
     function initialize(string memory name, string memory symbol)
-        public
+        external
         initializer
     {
         __ERC20_init(name, symbol);
@@ -177,11 +177,11 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         }
     }
 
-    function convertLambdaToLambda(address token, uint32 season) public {
+    function convertLambdaToLambda(address token, uint32 season) external {
         _convertLambdaToLambda(token, season);
     }
 
-    function convertLambdasToLambdas(address[] calldata tokens, uint32[] calldata seasons) public {
+    function convertLambdasToLambdas(address[] calldata tokens, uint32[] calldata seasons) external {
         for (uint256 i; i < tokens.length; ++i) {
             _convertLambdaToLambda(tokens[i], seasons[i]);
         }
@@ -203,13 +203,13 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     }
 
     /// @notice Return the ratio of underlyingBdv per ROOT token
-    function bdvPerRoot() public view returns (uint256) {
+    function bdvPerRoot() external view returns (uint256) {
         return (underlyingBdv * PRECISION) / totalSupply();
     }
 
     /// @notice Call plant function on Beanstalk
     /// @dev Anyone can call this function on behalf of the contract
-    function earn() public {
+    function earn() external {
         uint256 beans = IBeanstalk(BEANSTALK_ADDRESS).plant();
         underlyingBdv += beans;
     }
@@ -253,7 +253,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) public virtual returns (uint256) {
+    ) external virtual returns (uint256) {
         IBeanstalk(BEANSTALK_ADDRESS).permitDeposit(
             msg.sender,
             address(this),
@@ -286,7 +286,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) public virtual returns (uint256) {
+    ) external virtual returns (uint256) {
         IBeanstalk(BEANSTALK_ADDRESS).permitDeposits(
             msg.sender,
             address(this),
@@ -305,7 +305,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     /// @param depositTransfers silo deposit(s) to mint ROOT token
     /// @param mode Transfer ROOT token to
     function mint(DepositTransfer[] calldata depositTransfers, To mode)
-        public
+        external
         virtual
         returns (uint256)
     {
@@ -330,7 +330,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) public virtual returns (uint256) {
+    ) external virtual returns (uint256) {
         IBeanstalk(BEANSTALK_ADDRESS).permitToken(
             msg.sender,
             address(this),
@@ -348,7 +348,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     /// @param depositTransfers silo deposit(s) receive
     /// @param mode Burn ROOT token from
     function redeem(DepositTransfer[] calldata depositTransfers, From mode)
-        public
+        external
         virtual
         returns (uint256)
     {
@@ -421,7 +421,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     /// @return shares number of shares will be mint/burn
     /// @return bdv total bdv of depositTransfers
     /// @return stalk total stalk of depositTransfers
-    /// @return seeds total seeds of depositTransfers
+    /// @return seed total seeds of depositTransfers
     function _transferDeposits(
         DepositTransfer[] memory depositTransfers,
         bool isDeposit
