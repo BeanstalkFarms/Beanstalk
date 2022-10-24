@@ -64,6 +64,10 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         __Ownable_init();
     }
 
+    function renounceOwnership() public virtual override onlyOwner {
+        revert("Ownable: Can't renounceOwnership here"); // not possible with this smart contract
+    }
+
     function _authorizeUpgrade(address) internal override onlyOwner {}
 
     function addWhitelistToken(address token) public onlyOwner {
