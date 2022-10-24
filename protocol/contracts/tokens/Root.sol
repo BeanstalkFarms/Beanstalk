@@ -14,15 +14,28 @@ import "@openzeppelin/contracts-upgradeable-8/utils/math/MathUpgradeable.sol";
 import "../interfaces/IBeanstalk.sol";
 import "../interfaces/IDelegation.sol";
 
+/// @notice Silo deposit transfer
+/// @param token a whitelisted silo token address
+/// @param seasons a list of deposit season
+/// @param amounts a list of deposit amount
 struct DepositTransfer {
     address token;
     uint32[] seasons;
     uint256[] amounts;
 }
 
+/// @title Root FDBDV
+/// @author 0xkokonut, mistermanifold, publius
 contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     using MathUpgradeable for uint256;
 
+    /// @notice This event will emit after the user mint Root token
+    /// @param account minting user
+    /// @param deposits silo deposits transferred into contract
+    /// @param bdv total bdv used for deposits
+    /// @param stalk total stalk for deposits
+    /// @param seeds total seeds for deposits
+    /// @param shares total shares minted
     event Mint(
         address indexed account,
         DepositTransfer[] deposits,
@@ -32,6 +45,13 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         uint256 shares
     );
 
+    /// @notice This event will emit after the user redeem Root token
+    /// @param account redeeming user
+    /// @param deposits silo deposits transferred to the user
+    /// @param bdv total bdv for deposits
+    /// @param stalk total stalk for deposits
+    /// @param seeds total seeds for deposits
+    /// @param shares total shares burned
     event Redeem(
         address indexed account,
         DepositTransfer[] deposits,
@@ -41,13 +61,28 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         uint256 shares
     );
 
+    /// @notice This event will emit after the owner whitelist a silo token
+    /// @param token address of a silo token
     event AddWhitelistToken(address indexed token);
+
+    /// @notice This event will emit after the owner remove a silo token from whitelist
+    /// @param token address of a silo token
     event RemoveWhitelistToken(address indexed token);
 
+    /// @notice Beanstalk address
     address public constant BEANSTALK_ADDRESS =
         0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5;
+
+    /// @notice Decimal precision of this contract token
     uint256 private constant PRECISION = 1e18;
+
+    /// @notice A mapping of whitelisted token
+    /// @return whitelisted mapping of all whitelisted token
     mapping(address => bool) public whitelisted;
+
+    /// @notice The total bdv of the silo deposits in the contract
+    /// @dev only get updated on mint/earn/redeem
+    /// @return underlyingBdv total bdv of the silo deposit(s) in the contract
     uint256 public underlyingBdv;
 
     /// @notice Nominated candidate to be the owner of the contract
@@ -61,6 +96,9 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         _disableInitializers();
     }
 
+    /// @notice Initialize the contract
+    /// @param name The name of this ERC-20 contract
+    /// @param symbol The symbol of this ERC-20 contract
     function initialize(string memory name, string memory symbol)
         public
         initializer
@@ -70,8 +108,10 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         __Ownable_init();
     }
 
+    /// @notice Renounce ownership of contract
+    /// @dev Not possible with this smart contract
     function renounceOwnership() public virtual override onlyOwner {
-        revert("Ownable: Can't renounceOwnership here"); // not possible with this smart contract
+        revert("Ownable: Can't renounceOwnership here");
     }
 
     /// @notice Nominate a candidate to become the new owner of the contract
@@ -162,15 +202,19 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         underlyingBdv += toBdv - fromBdv;
     }
 
+    /// @notice Return the ratio of underlyingBdv per ROOT token
     function bdvPerRoot() public view returns (uint256) {
         return (underlyingBdv * PRECISION) / totalSupply();
     }
 
+    /// @notice Call plant function on Beanstalk
+    /// @dev Anyone can call this function on behalf of the contract
     function earn() public {
         uint256 beans = IBeanstalk(BEANSTALK_ADDRESS).plant();
         underlyingBdv += beans;
     }
 
+    /// @dev return the min value of the three input values
     function min(
         uint256 num1,
         uint256 num2,
@@ -180,6 +224,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         return MathUpgradeable.min(num1, num3);
     }
 
+    /// @dev return the max value of the three input values
     function max(
         uint256 num1,
         uint256 num2,
@@ -189,6 +234,16 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         return MathUpgradeable.max(num1, num3);
     }
 
+    /// @notice Mint ROOT token using silo deposit(s) with a silo deposit permit
+    /// @dev Make sure any token inside of DepositTransfer have sufficient approval either via permit in the arg or existing approval
+    /// @param depositTransfers silo deposit(s) to mint ROOT token
+    /// @param mode Transfer ROOT token to
+    /// @param token a silo deposit token address
+    /// @param value a silo deposit amount
+    /// @param deadline permit expiration
+    /// @param v permit signature
+    /// @param r permit signature
+    /// @param s permit signature
     function mintWithTokenPermit(
         DepositTransfer[] calldata depositTransfers,
         To mode,
@@ -213,6 +268,15 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         return _transferAndMint(depositTransfers, mode);
     }
 
+    /// @notice Mint ROOT token using silo deposit(s) with silo deposit tokens and values permit
+    /// @param depositTransfers silo deposit(s) to mint ROOT token
+    /// @param mode Transfer ROOT token to
+    /// @param tokens a list of silo deposit token address
+    /// @param values a list of silo deposit amount
+    /// @param deadline permit expiration
+    /// @param v permit signature
+    /// @param r permit signature
+    /// @param s permit signature
     function mintWithTokensPermit(
         DepositTransfer[] calldata depositTransfers,
         To mode,
@@ -237,6 +301,9 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         return _transferAndMint(depositTransfers, mode);
     }
 
+    /// @notice Mint ROOT token using silo deposit(s)
+    /// @param depositTransfers silo deposit(s) to mint ROOT token
+    /// @param mode Transfer ROOT token to
     function mint(DepositTransfer[] calldata depositTransfers, To mode)
         public
         virtual
@@ -245,6 +312,15 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         return _transferAndMint(depositTransfers, mode);
     }
 
+    /// @notice Redeem ROOT token for silo deposit(s) with farm balance permit
+    /// @param depositTransfers silo deposit(s) receive
+    /// @param mode Burn ROOT token from
+    /// @param token ROOT address
+    /// @param value amount of ROOT approved
+    /// @param deadline permit expiration
+    /// @param v permit signature
+    /// @param r permit signature
+    /// @param s permit signature
     function redeemWithFarmBalancePermit(
         DepositTransfer[] calldata depositTransfers,
         From mode,
@@ -268,6 +344,9 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         return _transferAndRedeem(depositTransfers, mode);
     }
 
+    /// @notice Redeem ROOT token for silo deposit(s)
+    /// @param depositTransfers silo deposit(s) receive
+    /// @param mode Burn ROOT token from
     function redeem(DepositTransfer[] calldata depositTransfers, From mode)
         public
         virtual
@@ -276,6 +355,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         return _transferAndRedeem(depositTransfers, mode);
     }
 
+    /// @notice Burn ROOT token to exchange for silo deposit(s)
     function _transferAndRedeem(
         DepositTransfer[] memory depositTransfers,
         From mode
@@ -306,6 +386,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         return shares;
     }
 
+    /// @notice Transfer silo deposit(s) to exchange ROOT token
     function _transferAndMint(
         DepositTransfer[] memory depositTransfers,
         To mode
@@ -336,6 +417,11 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         return shares;
     }
 
+    /// @notice Transfer Silo Deposit(s) between user/ROOT contract and update
+    /// @return shares number of shares will be mint/burn
+    /// @return bdv total bdv of depositTransfers
+    /// @return stalk total stalk of depositTransfers
+    /// @return seeds total seeds of depositTransfers
     function _transferDeposits(
         DepositTransfer[] memory depositTransfers,
         bool isDeposit
