@@ -21,6 +21,7 @@ const {
   UNRIPE_BEAN,
   THREE_CURVE,
   STABLE_FACTORY,
+  ZERO_ADDRESS,
 } = require("./utils/constants");
 const { to18, to6, toStalk, toBean } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
@@ -143,12 +144,92 @@ describe("Root", function () {
     });
   });
 
+  describe("ownership", function () {
+    describe("renounce", async function () {
+      describe("reverts", async function () {
+        it("reverts if not owner try to renounce", async function () {
+          await expect(
+            this.rootToken.connect(user).renounceOwnership()
+          ).to.revertedWith("Ownable: caller is not the owner");
+        });
+        it("reverts if owner try to renounce", async function () {
+          await expect(
+            this.rootToken.connect(owner).renounceOwnership()
+          ).to.revertedWith("Ownable: Can't renounceOwnership here");
+        });
+      });
+    });
+
+    describe("transfer", async function () {
+      describe("reverts", async function () {
+        it("reverts if not owner", async function () {
+          await expect(
+            this.rootToken.connect(user).transferOwnership(user.address)
+          ).to.revertedWith("Ownable: caller is not the owner");
+        });
+
+        it("reverts if transfer ownership to a zero address", async function () {
+          await expect(
+            this.rootToken.connect(owner).transferOwnership(ZERO_ADDRESS)
+          ).to.revertedWith("Ownable: Non-zero owner address required");
+        });
+      });
+
+      describe("transfers owner", async function () {
+        beforeEach(async function () {
+          await this.rootToken.connect(owner).transferOwnership(user.address);
+        });
+
+        it("property update ownerCandidate", async function () {
+          expect(await this.rootToken.ownerCandidate()).to.be.eq(user.address);
+        });
+      });
+    });
+
+    describe("claim", async function () {
+      describe("reverts", async function () {
+        it("reverts if not a candidate", async function () {
+          await expect(
+            this.rootToken.connect(user).claimOwnership()
+          ).to.revertedWith(
+            "Ownable: sender must be ownerCandidate to accept ownership"
+          );
+        });
+      });
+
+      describe("claims ownership", async function () {
+        beforeEach(async function () {
+          await this.rootToken.connect(owner).transferOwnership(user.address);
+          await this.rootToken.connect(user).claimOwnership();
+        });
+        it("property update ownership", async function () {
+          expect(await this.rootToken.owner()).to.be.eq(user.address);
+        });
+        it("property update ownerCandidate", async function () {
+          expect(await this.rootToken.ownerCandidate()).to.be.eq(ZERO_ADDRESS);
+        });
+      });
+    });
+  });
+
   describe("whitelist", async function () {
     describe("reverts", async function () {
       it("reverts if non-owner add token", async function () {
         await expect(
           this.rootToken.connect(user).addWhitelistToken(this.siloToken.address)
         ).to.revertedWith("Ownable: caller is not the owner");
+      });
+
+      it("reverts if adding zero address token", async function () {
+        await expect(
+          this.rootToken.connect(owner).addWhitelistToken(ZERO_ADDRESS)
+        ).to.revertedWith("Non-zero token address required");
+      });
+
+      it("reverts if removing zero address token", async function () {
+        await expect(
+          this.rootToken.connect(owner).removeWhitelistToken(ZERO_ADDRESS)
+        ).to.revertedWith("Non-zero token address required");
       });
 
       it("reverts if non-owner remove token", async function () {
@@ -230,7 +311,8 @@ describe("Root", function () {
             amounts: ["1000"],
           },
         ],
-        EXTERNAL
+        EXTERNAL,
+        1
       );
 
       await this.season.fastForward(48);
@@ -254,7 +336,7 @@ describe("Root", function () {
     });
   });
 
-  describe("convert lambda to lambda", async function () {
+  describe("updateBdv", async function () {
     beforeEach(async function () {
       await this.silo
         .connect(user)
@@ -280,7 +362,8 @@ describe("Root", function () {
             amounts: ["1000"],
           },
         ],
-        EXTERNAL
+        EXTERNAL,
+        1
       );
 
       await this.season.fastForward(48);
@@ -288,16 +371,21 @@ describe("Root", function () {
     });
 
     describe("reverts", async function () {
+      it("reverts if token is a zero address", async function () {
+        await expect(
+          this.rootToken.updateBdv(ZERO_ADDRESS, 22)
+        ).to.revertedWith("Bdv: Non-zero token address required");
+      });
       it("reverts if convert non-deposited season", async function () {
         await expect(
-          this.rootToken.convertLambdaToLambda(this.siloToken.address, 22)
+          this.rootToken.updateBdv(this.siloToken.address, 22)
         ).to.revertedWith("Convert: BDV or amount is 0.");
       });
     });
 
     describe("single convert p = 1", async function () {
       it("properly updates underlyingBdv", async function () {
-        await this.rootToken.convertLambdaToLambda(this.siloToken.address, 2);
+        await this.rootToken.updateBdv(this.siloToken.address, 2);
         expect(await this.rootToken.underlyingBdv()).to.eq("1000");
       });
     });
@@ -310,7 +398,7 @@ describe("Root", function () {
           "10000",
           "1"
         );
-        await this.rootToken.convertLambdaToLambda(this.siloToken.address, 2);
+        await this.rootToken.updateBdv(this.siloToken.address, 2);
         expect(await this.rootToken.underlyingBdv()).to.eq("1500");
       });
     });
@@ -335,12 +423,10 @@ describe("Root", function () {
               amounts: ["1000"],
             },
           ],
-          EXTERNAL
+          EXTERNAL,
+          1
         );
-        await this.rootToken.convertLambdasToLambdas(
-          [this.siloToken.address],
-          [2, 51]
-        );
+        await this.rootToken.updateBdvs([this.siloToken.address], [2, 51]);
         expect(await this.rootToken.underlyingBdv()).to.eq("3000");
       });
     });
@@ -364,7 +450,8 @@ describe("Root", function () {
                   amounts: ["1000"],
                 },
               ],
-              EXTERNAL
+              EXTERNAL,
+              1000000000
             )
           ).to.revertedWith("Token is not whitelisted");
         });
@@ -395,6 +482,7 @@ describe("Root", function () {
               },
             ],
             EXTERNAL,
+            1,
             this.signature.token,
             this.signature.value,
             this.signature.deadline,
@@ -412,7 +500,8 @@ describe("Root", function () {
                   amounts: ["2000"],
                 },
               ],
-              EXTERNAL
+              EXTERNAL,
+              1000000000
             )
           ).to.revertedWith("Silo: Crate balance too low.");
         });
@@ -443,6 +532,7 @@ describe("Root", function () {
               },
             ],
             EXTERNAL,
+            1,
             this.signature.token,
             this.signature.value,
             this.signature.deadline,
@@ -460,7 +550,8 @@ describe("Root", function () {
                   amounts: ["1000"],
                 },
               ],
-              EXTERNAL
+              EXTERNAL,
+              1000000000
             )
           ).to.revertedWith("ERC20: burn amount exceeds balance");
         });
@@ -491,6 +582,7 @@ describe("Root", function () {
               },
             ],
             EXTERNAL,
+            1,
             this.signature.token,
             this.signature.value,
             this.signature.deadline,
@@ -508,7 +600,8 @@ describe("Root", function () {
                   amounts: ["1000"],
                 },
               ],
-              INTERNAL
+              INTERNAL,
+              1000000000
             )
           ).to.revertedWith("Balance: Insufficient internal balance");
         });
@@ -539,6 +632,7 @@ describe("Root", function () {
               },
             ],
             EXTERNAL,
+            1,
             this.signature.token,
             this.signature.value,
             this.signature.deadline,
@@ -556,7 +650,8 @@ describe("Root", function () {
                   amounts: ["1000"],
                 },
               ],
-              INTERNAL_TOLERANT
+              INTERNAL_TOLERANT,
+              1000000000
             )
           ).to.revertedWith("ERC20: burn amount exceeds balance");
         });
@@ -587,6 +682,7 @@ describe("Root", function () {
               },
             ],
             INTERNAL,
+            1,
             this.signature.token,
             this.signature.value,
             this.signature.deadline,
@@ -604,7 +700,8 @@ describe("Root", function () {
                   amounts: ["1000"],
                 },
               ],
-              INTERNAL_EXTERNAL
+              INTERNAL_EXTERNAL,
+              1000000000
             )
           ).to.revertedWith("ERC20: insufficient allowance");
         });
@@ -623,9 +720,60 @@ describe("Root", function () {
                   amounts: [],
                 },
               ],
-              EXTERNAL
+              EXTERNAL,
+              1000000000
             )
           ).to.revertedWith("Silo: amounts array is empty");
+        });
+
+        it("reverts if redeem shares greater than maxRootsIn", async function () {
+          await this.rootToken
+            .connect(owner)
+            .addWhitelistToken(this.siloToken.address);
+
+          const nonce = await this.silo
+            .connect(user)
+            .depositPermitNonces(userAddress);
+          this.signature = await signSiloDepositTokenPermit(
+            user,
+            userAddress,
+            this.rootToken.address,
+            this.siloToken.address,
+            "1000",
+            nonce
+          );
+
+          await this.rootToken.connect(user).mintWithTokenPermit(
+            [
+              {
+                token: this.siloToken.address,
+                seasons: ["2"],
+                amounts: ["1000"],
+              },
+            ],
+            EXTERNAL,
+            1,
+            this.signature.token,
+            this.signature.value,
+            this.signature.deadline,
+            this.signature.split.v,
+            this.signature.split.r,
+            this.signature.split.s
+          );
+
+          await expect(
+            this.rootToken.connect(user).redeem(
+              [
+                {
+                  token: this.siloToken.address,
+                  seasons: ["2"],
+                  amounts: ["1000"],
+                },
+              ],
+              EXTERNAL,
+              9000000
+            )
+          ).to.revertedWith("Redeem: shares is greater than maxRootsIn");
         });
       });
 
@@ -675,7 +823,7 @@ describe("Root", function () {
           beforeEach(async function () {
             this.result = await this.rootToken
               .connect(user)
-              .redeem([], EXTERNAL);
+              .redeem([], EXTERNAL, 1000000000);
           });
 
           it("properly updates the root total balances", async function () {
@@ -723,6 +871,7 @@ describe("Root", function () {
                 },
               ],
               INTERNAL,
+              1,
               this.signature.token,
               this.signature.value,
               this.signature.deadline,
@@ -747,7 +896,8 @@ describe("Root", function () {
                   amounts: ["1000"],
                 },
               ],
-              INTERNAL
+              INTERNAL,
+              1000000000
             );
           });
 
@@ -797,6 +947,7 @@ describe("Root", function () {
                 },
               ],
               INTERNAL,
+              1,
               this.signature.token,
               this.signature.value,
               this.signature.deadline,
@@ -827,6 +978,7 @@ describe("Root", function () {
                 },
               ],
               INTERNAL,
+              1000000000,
               sig.token,
               sig.value,
               sig.deadline,
@@ -882,6 +1034,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
+              1,
               this.signature.token,
               this.signature.value,
               this.signature.deadline,
@@ -898,7 +1051,8 @@ describe("Root", function () {
                   amounts: ["1000"],
                 },
               ],
-              EXTERNAL
+              EXTERNAL,
+              1000000000
             );
           });
 
@@ -943,6 +1097,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
+              1,
               this.signature.token,
               this.signature.value,
               this.signature.deadline,
@@ -961,7 +1116,8 @@ describe("Root", function () {
                   amounts: ["1000"],
                 },
               ],
-              EXTERNAL
+              EXTERNAL,
+              1000000000
             );
           });
 
@@ -1006,6 +1162,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
+              1,
               this.signature.token,
               this.signature.value,
               this.signature.deadline,
@@ -1028,7 +1185,8 @@ describe("Root", function () {
                   amounts: ["1000"],
                 },
               ],
-              EXTERNAL
+              EXTERNAL,
+              1
             );
 
             await this.rootToken.connect(user).redeem(
@@ -1039,7 +1197,8 @@ describe("Root", function () {
                   amounts: ["1000"],
                 },
               ],
-              EXTERNAL
+              EXTERNAL,
+              1000000000
             );
           });
 
@@ -1086,6 +1245,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
+              1,
               this.signature.token,
               this.signature.value,
               this.signature.deadline,
@@ -1108,7 +1268,8 @@ describe("Root", function () {
                   amounts: ["1000"],
                 },
               ],
-              EXTERNAL
+              EXTERNAL,
+              1
             );
 
             await this.rootToken.connect(user).redeem(
@@ -1119,7 +1280,8 @@ describe("Root", function () {
                   amounts: ["1000", "1000"],
                 },
               ],
-              EXTERNAL
+              EXTERNAL,
+              1000000000
             );
           });
 
@@ -1169,6 +1331,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
+              1,
               this.signature.token,
               this.signature.value,
               this.signature.deadline,
@@ -1185,7 +1348,8 @@ describe("Root", function () {
                   amounts: ["1000"],
                 },
               ],
-              EXTERNAL
+              EXTERNAL,
+              1
             );
 
             await this.rootToken.connect(user).redeem(
@@ -1196,7 +1360,8 @@ describe("Root", function () {
                   amounts: ["1000"],
                 },
               ],
-              EXTERNAL
+              EXTERNAL,
+              1000000000
             );
           });
 
@@ -1248,6 +1413,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
+              1,
               this.signature.token,
               this.signature.value,
               this.signature.deadline,
@@ -1264,7 +1430,8 @@ describe("Root", function () {
                   amounts: ["1000"],
                 },
               ],
-              EXTERNAL
+              EXTERNAL,
+              1
             );
 
             await this.rootToken.connect(user).redeem(
@@ -1275,7 +1442,8 @@ describe("Root", function () {
                   amounts: ["1000", "1000"],
                 },
               ],
-              EXTERNAL
+              EXTERNAL,
+              1000000000
             );
           });
 
@@ -1326,7 +1494,8 @@ describe("Root", function () {
                   amounts: ["1000"],
                 },
               ],
-              EXTERNAL
+              EXTERNAL,
+              1
             )
           ).to.revertedWith("Token is not whitelisted");
         });
@@ -1353,7 +1522,8 @@ describe("Root", function () {
                   amounts: ["2000"],
                 },
               ],
-              EXTERNAL
+              EXTERNAL,
+              1
             )
           ).to.revertedWith("Silo: Crate balance too low.");
         });
@@ -1372,7 +1542,8 @@ describe("Root", function () {
                   amounts: ["1000"],
                 },
               ],
-              EXTERNAL
+              EXTERNAL,
+              1
             )
           ).to.revertedWith("Silo: insufficient allowance");
         });
@@ -1391,9 +1562,32 @@ describe("Root", function () {
                   amounts: [],
                 },
               ],
-              EXTERNAL
+              EXTERNAL,
+              1
             )
           ).to.revertedWith("Silo: amounts array is empty");
+        });
+
+        it("reverts if mint shares is less than minRootsOut", async function () {
+          await this.rootToken
+            .connect(owner)
+            .addWhitelistToken(this.siloToken.address);
+
+          await this.silo
+            .connect(user)
+            .approveDeposit(
+              this.rootToken.address,
+              this.siloToken.address,
+              "5000"
+            );
+
+          await this.silo
+            .connect(user)
+            .deposit(this.siloToken.address, "1000", EXTERNAL);
+
+          await expect(
+            this.rootToken.connect(user).mint([], EXTERNAL, 10000001)
+          ).to.revertedWith("Mint: shares is less than minRootsOut");
         });
       });
 
@@ -1428,13 +1622,15 @@ describe("Root", function () {
             );
         });
 
-        describe("empty redeem", async function () {
+        describe("empty mint", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            this.result = await this.rootToken.connect(user).mint([], EXTERNAL);
+            this.result = await this.rootToken
+              .connect(user)
+              .mint([], EXTERNAL, 0);
           });
 
           it("properly updates the root total balances", async function () {
@@ -1490,7 +1686,8 @@ describe("Root", function () {
                   amounts: ["1000"],
                 },
               ],
-              INTERNAL
+              INTERNAL,
+              1
             );
           });
 
@@ -1544,7 +1741,8 @@ describe("Root", function () {
                   amounts: ["1000"],
                 },
               ],
-              EXTERNAL
+              EXTERNAL,
+              1
             );
           });
 
@@ -1589,7 +1787,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .mint(this.deposits, EXTERNAL);
+              .mint(this.deposits, EXTERNAL, 1);
           });
 
           it("properly updates the total balances", async function () {
@@ -1641,7 +1839,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .mint(this.deposits, EXTERNAL);
+              .mint(this.deposits, EXTERNAL, 1);
           });
 
           it("properly updates the total balances", async function () {
@@ -1691,7 +1889,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .mint(this.deposits1, EXTERNAL);
+              .mint(this.deposits1, EXTERNAL, 1);
 
             this.deposits2 = [
               {
@@ -1702,7 +1900,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .mint(this.deposits2, EXTERNAL);
+              .mint(this.deposits2, EXTERNAL, 1);
           });
 
           it("properly updates the total balances on root", async function () {
@@ -1758,7 +1956,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .mint(this.deposits1, EXTERNAL);
+              .mint(this.deposits1, EXTERNAL, 1);
 
             this.deposits2 = [
               {
@@ -1769,7 +1967,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .mint(this.deposits2, EXTERNAL);
+              .mint(this.deposits2, EXTERNAL, 1);
           });
 
           it("properly updates the total balances on root", async function () {
@@ -1825,7 +2023,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .mint(this.deposits2, EXTERNAL);
+              .mint(this.deposits2, EXTERNAL, 1);
 
             this.deposits1 = [
               {
@@ -1836,7 +2034,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .mint(this.deposits1, EXTERNAL);
+              .mint(this.deposits1, EXTERNAL, 1);
           });
 
           it("properly updates the total balances on root", async function () {
@@ -1898,7 +2096,7 @@ describe("Root", function () {
             ];
             this.result3 = await this.rootToken
               .connect(user3)
-              .mint(this.deposits3, EXTERNAL);
+              .mint(this.deposits3, EXTERNAL, 1);
 
             this.deposits2 = [
               {
@@ -1909,7 +2107,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .mint(this.deposits2, EXTERNAL);
+              .mint(this.deposits2, EXTERNAL, 1);
 
             this.deposits1 = [
               {
@@ -1920,7 +2118,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .mint(this.deposits1, EXTERNAL);
+              .mint(this.deposits1, EXTERNAL, 1);
           });
 
           it("properly updates the total balances on root", async function () {
@@ -1988,7 +2186,7 @@ describe("Root", function () {
             ];
             this.result = await this.rootToken
               .connect(user)
-              .mint(this.deposits1, EXTERNAL);
+              .mint(this.deposits1, EXTERNAL, 1);
 
             this.deposits2 = [
               {
@@ -1999,7 +2197,7 @@ describe("Root", function () {
             ];
             this.result2 = await this.rootToken
               .connect(user2)
-              .mint(this.deposits2, EXTERNAL);
+              .mint(this.deposits2, EXTERNAL, 1);
 
             this.deposits3 = [
               {
@@ -2010,7 +2208,7 @@ describe("Root", function () {
             ];
             this.result3 = await this.rootToken
               .connect(user3)
-              .mint(this.deposits3, EXTERNAL);
+              .mint(this.deposits3, EXTERNAL, 1);
           });
 
           it("properly updates the total balances on root", async function () {
@@ -2083,6 +2281,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
+              1,
               this.signature.token,
               this.signature.value,
               this.signature.deadline,
@@ -2120,6 +2319,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
+              1,
               this.signature.token,
               this.signature.value,
               this.signature.deadline,
@@ -2157,6 +2357,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
+              1,
               this.signature.token,
               this.signature.value,
               this.signature.deadline,
@@ -2194,6 +2395,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
+              1,
               this.signature.token,
               this.signature.value,
               this.signature.deadline,
@@ -2231,6 +2433,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
+              1,
               this.signature.token,
               this.signature.value,
               this.signature.deadline,
@@ -2270,6 +2473,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
+              1,
               this.signature.token,
               this.signature.value,
               this.signature.deadline,
@@ -2278,6 +2482,45 @@ describe("Root", function () {
               this.signature.split.s
             )
           ).to.revertedWith("Silo: permit expired deadline");
+        });
+
+        it("reverts if deposit is empty", async function () {
+          await this.rootToken
+            .connect(owner)
+            .addWhitelistToken(this.siloToken.address);
+
+          const nonce = await this.silo
+            .connect(user)
+            .depositPermitNonces(userAddress);
+
+          this.signature = await signSiloDepositTokenPermit(
+            user,
+            userAddress,
+            this.rootToken.address,
+            this.siloToken.address,
+            "1000",
+            nonce
+          );
+
+          await expect(
+            this.rootToken.connect(user).mintWithTokenPermit(
+              [
+                {
+                  token: this.siloToken.address,
+                  seasons: [],
+                  amounts: [],
+                },
+              ],
+              EXTERNAL,
+              1,
+              this.signature.token,
+              this.signature.value,
+              this.signature.deadline,
+              this.signature.split.v,
+              this.signature.split.r,
+              this.signature.split.s
+            )
+          ).to.revertedWith("Silo: amounts array is empty");
         });
       });
       describe("start", async function () {
@@ -2322,58 +2565,6 @@ describe("Root", function () {
           );
         });
 
-        describe("empty deposit", async function () {
-          beforeEach(async function () {
-            await this.silo
-              .connect(user)
-              .deposit(this.siloToken.address, "1000", EXTERNAL);
-
-            this.result = await this.rootToken
-              .connect(user)
-              .mintWithTokenPermit(
-                [],
-                EXTERNAL,
-                this.signature.token,
-                this.signature.value,
-                this.signature.deadline,
-                this.signature.split.v,
-                this.signature.split.r,
-                this.signature.split.s
-              );
-          });
-
-          it("properly updates the root total balances", async function () {
-            expect(
-              await this.silo.balanceOfSeeds(this.rootToken.address)
-            ).to.eq("0");
-            expect(
-              await this.silo.balanceOfStalk(this.rootToken.address)
-            ).to.eq("0");
-          });
-
-          it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("0");
-          });
-
-          it("correctly update underlyingBdv", async function () {
-            expect(await this.rootToken.underlyingBdv()).to.be.eq("0");
-          });
-
-          it("properly updates the user balance", async function () {
-            expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("1000");
-            expect(await this.silo.balanceOfStalk(userAddress)).to.eq(
-              "10000000"
-            );
-            expect(await this.rootToken.balanceOf(userAddress)).to.eq("0");
-          });
-
-          it("emits Mint event", async function () {
-            await expect(this.result)
-              .to.emit(this.rootToken, "Mint")
-              .withArgs(user.address, [], "0", "0", "0", "0");
-          });
-        });
-
         describe("mint with a single season", async function () {
           beforeEach(async function () {
             await this.silo
@@ -2398,6 +2589,7 @@ describe("Root", function () {
                   },
                 ],
                 EXTERNAL,
+                1,
                 this.signature.token,
                 this.signature.value,
                 this.signature.deadline,
@@ -2439,18 +2631,17 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            this.deposits = [
-              {
-                token: this.siloToken.address,
-                seasons: ["2", "2"],
-                amounts: ["400", "500"],
-              },
-            ];
+            this.deposit = {
+              token: this.siloToken.address,
+              seasons: ["2", "2"],
+              amounts: ["400", "500"],
+            };
             this.result = await this.rootToken
               .connect(user)
               .mintWithTokenPermit(
-                this.deposits,
+                [this.deposit],
                 EXTERNAL,
+                1,
                 this.signature.token,
                 this.signature.value,
                 this.signature.deadline,
@@ -2500,18 +2691,17 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            this.deposits = [
-              {
-                token: this.siloToken.address,
-                seasons: ["2", "7"],
-                amounts: ["500", "500"],
-              },
-            ];
+            this.deposit = {
+              token: this.siloToken.address,
+              seasons: ["2", "7"],
+              amounts: ["500", "500"],
+            };
             this.result = await this.rootToken
               .connect(user)
               .mintWithTokenPermit(
-                this.deposits,
+                [this.deposit],
                 EXTERNAL,
+                1,
                 this.signature.token,
                 this.signature.value,
                 this.signature.deadline,
@@ -2559,18 +2749,18 @@ describe("Root", function () {
               .connect(user2)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            this.deposits1 = [
-              {
-                token: this.siloToken.address,
-                seasons: ["2"],
-                amounts: ["1000"],
-              },
-            ];
+            this.deposit1 = {
+              token: this.siloToken.address,
+              seasons: ["2"],
+              amounts: ["1000"],
+            };
+
             this.result = await this.rootToken
               .connect(user)
               .mintWithTokenPermit(
-                this.deposits1,
+                [this.deposit1],
                 EXTERNAL,
+                1,
                 this.signature.token,
                 this.signature.value,
                 this.signature.deadline,
@@ -2579,18 +2769,17 @@ describe("Root", function () {
                 this.signature.split.s
               );
 
-            this.deposits2 = [
-              {
-                token: this.siloToken.address,
-                seasons: ["2"],
-                amounts: ["1000"],
-              },
-            ];
+            this.deposit2 = {
+              token: this.siloToken.address,
+              seasons: ["2"],
+              amounts: ["1000"],
+            };
             this.result2 = await this.rootToken
               .connect(user2)
               .mintWithTokenPermit(
-                this.deposits2,
+                [this.deposit2],
                 EXTERNAL,
+                1,
                 this.signature2.token,
                 this.signature2.value,
                 this.signature2.deadline,
@@ -2644,18 +2833,17 @@ describe("Root", function () {
               .connect(user2)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            this.deposits1 = [
-              {
-                token: this.siloToken.address,
-                seasons: ["2"],
-                amounts: ["1000"],
-              },
-            ];
+            this.deposit1 = {
+              token: this.siloToken.address,
+              seasons: ["2"],
+              amounts: ["1000"],
+            };
             this.result = await this.rootToken
               .connect(user)
               .mintWithTokenPermit(
-                this.deposits1,
+                [this.deposit1],
                 EXTERNAL,
+                1,
                 this.signature.token,
                 this.signature.value,
                 this.signature.deadline,
@@ -2664,18 +2852,17 @@ describe("Root", function () {
                 this.signature.split.s
               );
 
-            this.deposits2 = [
-              {
-                token: this.siloToken.address,
-                seasons: ["12"],
-                amounts: ["1000"],
-              },
-            ];
+            this.deposit2 = {
+              token: this.siloToken.address,
+              seasons: ["12"],
+              amounts: ["1000"],
+            };
             this.result2 = await this.rootToken
               .connect(user2)
               .mintWithTokenPermit(
-                this.deposits2,
+                [this.deposit2],
                 EXTERNAL,
+                1,
                 this.signature2.token,
                 this.signature2.value,
                 this.signature2.deadline,
@@ -2729,18 +2916,17 @@ describe("Root", function () {
               .connect(user2)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            this.deposits2 = [
-              {
-                token: this.siloToken.address,
-                seasons: ["12"],
-                amounts: ["1000"],
-              },
-            ];
+            this.deposit2 = {
+              token: this.siloToken.address,
+              seasons: ["12"],
+              amounts: ["1000"],
+            };
             this.result2 = await this.rootToken
               .connect(user2)
               .mintWithTokenPermit(
-                this.deposits2,
+                [this.deposit2],
                 EXTERNAL,
+                1,
                 this.signature2.token,
                 this.signature2.value,
                 this.signature2.deadline,
@@ -2748,18 +2934,17 @@ describe("Root", function () {
                 this.signature2.split.r,
                 this.signature2.split.s
               );
-            this.deposits1 = [
-              {
-                token: this.siloToken.address,
-                seasons: ["2"],
-                amounts: ["1000"],
-              },
-            ];
+            this.deposit1 = {
+              token: this.siloToken.address,
+              seasons: ["2"],
+              amounts: ["1000"],
+            };
             this.result = await this.rootToken
               .connect(user)
               .mintWithTokenPermit(
-                this.deposits1,
+                [this.deposit1],
                 EXTERNAL,
+                1,
                 this.signature.token,
                 this.signature.value,
                 this.signature.deadline,
@@ -2819,18 +3004,17 @@ describe("Root", function () {
               .connect(user3)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            this.deposits3 = [
-              {
-                token: this.siloToken.address,
-                seasons: ["22"],
-                amounts: ["1000"],
-              },
-            ];
+            this.deposit3 = {
+              token: this.siloToken.address,
+              seasons: ["22"],
+              amounts: ["1000"],
+            };
             this.result3 = await this.rootToken
               .connect(user3)
               .mintWithTokenPermit(
-                this.deposits3,
+                [this.deposit3],
                 EXTERNAL,
+                1,
                 this.signature3.token,
                 this.signature3.value,
                 this.signature3.deadline,
@@ -2839,18 +3023,17 @@ describe("Root", function () {
                 this.signature3.split.s
               );
 
-            this.deposits2 = [
-              {
-                token: this.siloToken.address,
-                seasons: ["12"],
-                amounts: ["1000"],
-              },
-            ];
+            this.deposit2 = {
+              token: this.siloToken.address,
+              seasons: ["12"],
+              amounts: ["1000"],
+            };
             this.result2 = await this.rootToken
               .connect(user2)
               .mintWithTokenPermit(
-                this.deposits2,
+                [this.deposit2],
                 EXTERNAL,
+                1,
                 this.signature2.token,
                 this.signature2.value,
                 this.signature2.deadline,
@@ -2859,18 +3042,17 @@ describe("Root", function () {
                 this.signature2.split.s
               );
 
-            this.deposits1 = [
-              {
-                token: this.siloToken.address,
-                seasons: ["2"],
-                amounts: ["1000"],
-              },
-            ];
+            this.deposit1 = {
+              token: this.siloToken.address,
+              seasons: ["2"],
+              amounts: ["1000"],
+            };
             this.result = await this.rootToken
               .connect(user)
               .mintWithTokenPermit(
-                this.deposits1,
+                [this.deposit1],
                 EXTERNAL,
+                1,
                 this.signature.token,
                 this.signature.value,
                 this.signature.deadline,
@@ -2936,18 +3118,17 @@ describe("Root", function () {
               .connect(user3)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            this.deposits1 = [
-              {
-                token: this.siloToken.address,
-                seasons: ["2"],
-                amounts: ["1000"],
-              },
-            ];
+            this.deposit1 = {
+              token: this.siloToken.address,
+              seasons: ["2"],
+              amounts: ["1000"],
+            };
             this.result = await this.rootToken
               .connect(user)
               .mintWithTokenPermit(
-                this.deposits1,
+                [this.deposit1],
                 EXTERNAL,
+                1,
                 this.signature.token,
                 this.signature.value,
                 this.signature.deadline,
@@ -2956,18 +3137,17 @@ describe("Root", function () {
                 this.signature.split.s
               );
 
-            this.deposits2 = [
-              {
-                token: this.siloToken.address,
-                seasons: ["12"],
-                amounts: ["1000"],
-              },
-            ];
+            this.deposit2 = {
+              token: this.siloToken.address,
+              seasons: ["12"],
+              amounts: ["1000"],
+            };
             this.result2 = await this.rootToken
               .connect(user2)
               .mintWithTokenPermit(
-                this.deposits2,
+                [this.deposit2],
                 EXTERNAL,
+                1,
                 this.signature2.token,
                 this.signature2.value,
                 this.signature2.deadline,
@@ -2976,18 +3156,17 @@ describe("Root", function () {
                 this.signature2.split.s
               );
 
-            this.deposits3 = [
-              {
-                token: this.siloToken.address,
-                seasons: ["22"],
-                amounts: ["1000"],
-              },
-            ];
+            this.deposit3 = {
+              token: this.siloToken.address,
+              seasons: ["22"],
+              amounts: ["1000"],
+            };
             this.result3 = await this.rootToken
               .connect(user3)
               .mintWithTokenPermit(
-                this.deposits3,
+                [this.deposit3],
                 EXTERNAL,
+                1,
                 this.signature3.token,
                 this.signature3.value,
                 this.signature3.deadline,
@@ -3067,6 +3246,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
+              1,
               this.signature.tokens,
               this.signature.values,
               this.signature.deadline,
@@ -3107,6 +3287,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
+              1,
               this.signature.tokens,
               this.signature.values,
               this.signature.deadline,
@@ -3147,6 +3328,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
+              1,
               this.signature.tokens,
               this.signature.values,
               this.signature.deadline,
@@ -3184,6 +3366,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
+              1,
               this.signature.tokens,
               this.signature.values,
               this.signature.deadline,
@@ -3221,6 +3404,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
+              1,
               this.signature.tokens,
               this.signature.values,
               this.signature.deadline,
@@ -3260,6 +3444,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
+              1,
               this.signature.tokens,
               this.signature.values,
               this.signature.deadline,
@@ -3268,6 +3453,48 @@ describe("Root", function () {
               this.signature.split.s
             )
           ).to.revertedWith("Silo: permit expired deadline");
+        });
+
+        it("reverts if mint shares is less than minRootsOut", async function () {
+          await this.rootToken
+            .connect(owner)
+            .addWhitelistToken(this.siloToken.address);
+
+          const nonce = await this.silo
+            .connect(user)
+            .depositPermitNonces(userAddress);
+          this.signature = await signSiloDepositTokensPermit(
+            user,
+            userAddress,
+            this.rootToken.address,
+            [this.siloToken.address],
+            ["5000"],
+            nonce
+          );
+
+          await this.silo
+            .connect(user)
+            .deposit(this.siloToken.address, "1000", EXTERNAL);
+
+          await expect(
+            this.rootToken.connect(user).mintWithTokensPermit(
+              [
+                {
+                  token: this.siloToken.address,
+                  seasons: ["2"],
+                  amounts: ["1000"],
+                },
+              ],
+              EXTERNAL,
+              10000001,
+              this.signature.tokens,
+              this.signature.values,
+              this.signature.deadline,
+              this.signature.split.v,
+              this.signature.split.r,
+              this.signature.split.s
+            )
+          ).to.revertedWith("Mint: shares is less than minRootsOut");
         });
       });
 
@@ -3323,6 +3550,7 @@ describe("Root", function () {
               .mintWithTokensPermit(
                 [],
                 EXTERNAL,
+                0,
                 this.signature.tokens,
                 this.signature.values,
                 this.signature.deadline,
@@ -3388,6 +3616,7 @@ describe("Root", function () {
                   },
                 ],
                 EXTERNAL,
+                1,
                 this.signature.tokens,
                 this.signature.values,
                 this.signature.deadline,
@@ -3445,6 +3674,7 @@ describe("Root", function () {
               .mintWithTokensPermit(
                 this.deposits,
                 EXTERNAL,
+                1,
                 this.signature.tokens,
                 this.signature.values,
                 this.signature.deadline,
@@ -3510,6 +3740,7 @@ describe("Root", function () {
               .mintWithTokensPermit(
                 this.deposits,
                 EXTERNAL,
+                1,
                 this.signature.tokens,
                 this.signature.values,
                 this.signature.deadline,
@@ -3569,6 +3800,7 @@ describe("Root", function () {
               .mintWithTokensPermit(
                 this.deposits1,
                 EXTERNAL,
+                1,
                 this.signature.tokens,
                 this.signature.values,
                 this.signature.deadline,
@@ -3589,6 +3821,7 @@ describe("Root", function () {
               .mintWithTokensPermit(
                 this.deposits2,
                 EXTERNAL,
+                1,
                 this.signature2.tokens,
                 this.signature2.values,
                 this.signature2.deadline,
@@ -3658,6 +3891,7 @@ describe("Root", function () {
               .mintWithTokensPermit(
                 this.deposits1,
                 EXTERNAL,
+                1,
                 this.signature.tokens,
                 this.signature.values,
                 this.signature.deadline,
@@ -3678,6 +3912,7 @@ describe("Root", function () {
               .mintWithTokensPermit(
                 this.deposits2,
                 EXTERNAL,
+                1,
                 this.signature2.tokens,
                 this.signature2.values,
                 this.signature2.deadline,
@@ -3743,6 +3978,7 @@ describe("Root", function () {
               .mintWithTokensPermit(
                 this.deposits2,
                 EXTERNAL,
+                1,
                 this.signature2.tokens,
                 this.signature2.values,
                 this.signature2.deadline,
@@ -3762,6 +3998,7 @@ describe("Root", function () {
               .mintWithTokensPermit(
                 this.deposits1,
                 EXTERNAL,
+                1,
                 this.signature.tokens,
                 this.signature.values,
                 this.signature.deadline,
@@ -3833,6 +4070,7 @@ describe("Root", function () {
               .mintWithTokensPermit(
                 this.deposits3,
                 EXTERNAL,
+                1,
                 this.signature3.tokens,
                 this.signature3.values,
                 this.signature3.deadline,
@@ -3853,6 +4091,7 @@ describe("Root", function () {
               .mintWithTokensPermit(
                 this.deposits2,
                 EXTERNAL,
+                1,
                 this.signature2.tokens,
                 this.signature2.values,
                 this.signature2.deadline,
@@ -3873,6 +4112,7 @@ describe("Root", function () {
               .mintWithTokensPermit(
                 this.deposits1,
                 EXTERNAL,
+                1,
                 this.signature.tokens,
                 this.signature.values,
                 this.signature.deadline,
@@ -3950,6 +4190,7 @@ describe("Root", function () {
               .mintWithTokensPermit(
                 this.deposits1,
                 EXTERNAL,
+                1,
                 this.signature.tokens,
                 this.signature.values,
                 this.signature.deadline,
@@ -3970,6 +4211,7 @@ describe("Root", function () {
               .mintWithTokensPermit(
                 this.deposits2,
                 EXTERNAL,
+                1,
                 this.signature2.tokens,
                 this.signature2.values,
                 this.signature2.deadline,
@@ -3990,6 +4232,7 @@ describe("Root", function () {
               .mintWithTokensPermit(
                 this.deposits3,
                 EXTERNAL,
+                1,
                 this.signature3.tokens,
                 this.signature3.values,
                 this.signature3.deadline,

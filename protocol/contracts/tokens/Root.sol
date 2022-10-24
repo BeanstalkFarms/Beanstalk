@@ -90,7 +90,6 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     /// @return ownerCandidate The nomindated candidate to become the new owner of the contract
     address public ownerCandidate;
 
-
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -99,7 +98,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     /// @notice Initialize the contract
     /// @param name The name of this ERC-20 contract
     /// @param symbol The symbol of this ERC-20 contract
-    function initialize(string memory name, string memory symbol)
+    function initialize(string calldata name, string calldata symbol)
         external
         initializer
     {
@@ -177,28 +176,41 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         }
     }
 
-    function convertLambdaToLambda(address token, uint32 season) external {
-        _convertLambdaToLambda(token, season);
+    /// @notice Update bdv of a silo deposit and underlyingBdv
+    /// @dev Will revert if bdv doesn't increase
+    function updateBdv(address token, uint32 season) external {
+        _updateBdv(token, season);
     }
 
-    function convertLambdasToLambdas(address[] calldata tokens, uint32[] calldata seasons) external {
+    /// @notice Update Bdv of multiple silo deposits and underlyingBdv
+    /// @dev Will revert if the bdv of the deposits doesn't increase
+    function updateBdvs(address[] calldata tokens, uint32[] calldata seasons)
+        external
+    {
         for (uint256 i; i < tokens.length; ++i) {
-            _convertLambdaToLambda(tokens[i], seasons[i]);
+            _updateBdv(tokens[i], seasons[i]);
         }
     }
 
-    function _convertLambdaToLambda(address token, uint32 season) internal {
+    /// @notice Update silo deposit bdv and underlyingBdv
+    /// @dev Will revert if the BDV doesn't increase
+    function _updateBdv(address token, uint32 season) internal {
         require(token != address(0), "Bdv: Non-zero token address required");
-        (uint256 amount,) = IBeanstalk(BEANSTALK_ADDRESS).getDeposit(address(this), token, season);
+        (uint256 amount, ) = IBeanstalk(BEANSTALK_ADDRESS).getDeposit(
+            address(this),
+            token,
+            season
+        );
         uint32[] memory seasons = new uint32[](1);
         seasons[0] = season;
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = amount;
-        (,,,uint256 fromBdv, uint256 toBdv) = IBeanstalk(BEANSTALK_ADDRESS).convert(
-            abi.encode(ConvertKind.LAMBDA_LAMBDA, amount, token),
-            seasons,
-            amounts
-        );
+        (, , , uint256 fromBdv, uint256 toBdv) = IBeanstalk(BEANSTALK_ADDRESS)
+            .convert(
+                abi.encode(ConvertKind.LAMBDA_LAMBDA, amount, token),
+                seasons,
+                amounts
+            );
         underlyingBdv += toBdv - fromBdv;
     }
 
@@ -238,6 +250,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     /// @dev Make sure any token inside of DepositTransfer have sufficient approval either via permit in the arg or existing approval
     /// @param depositTransfers silo deposit(s) to mint ROOT token
     /// @param mode Transfer ROOT token to
+    /// @param minRootsOut Minimum number of ROOT token to receive
     /// @param token a silo deposit token address
     /// @param value a silo deposit amount
     /// @param deadline permit expiration
@@ -247,6 +260,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     function mintWithTokenPermit(
         DepositTransfer[] calldata depositTransfers,
         To mode,
+        uint256 minRootsOut,
         address token,
         uint256 value,
         uint256 deadline,
@@ -265,12 +279,13 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             s
         );
 
-        return _transferAndMint(depositTransfers, mode);
+        return _transferAndMint(depositTransfers, mode, minRootsOut);
     }
 
     /// @notice Mint ROOT token using silo deposit(s) with silo deposit tokens and values permit
     /// @param depositTransfers silo deposit(s) to mint ROOT token
     /// @param mode Transfer ROOT token to
+    /// @param minRootsOut Minimum number of ROOT token to receive
     /// @param tokens a list of silo deposit token address
     /// @param values a list of silo deposit amount
     /// @param deadline permit expiration
@@ -280,8 +295,9 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     function mintWithTokensPermit(
         DepositTransfer[] calldata depositTransfers,
         To mode,
-        address[] memory tokens,
-        uint256[] memory values,
+        uint256 minRootsOut,
+        address[] calldata tokens,
+        uint256[] calldata values,
         uint256 deadline,
         uint8 v,
         bytes32 r,
@@ -298,23 +314,25 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             s
         );
 
-        return _transferAndMint(depositTransfers, mode);
+        return _transferAndMint(depositTransfers, mode, minRootsOut);
     }
 
     /// @notice Mint ROOT token using silo deposit(s)
     /// @param depositTransfers silo deposit(s) to mint ROOT token
     /// @param mode Transfer ROOT token to
-    function mint(DepositTransfer[] calldata depositTransfers, To mode)
-        external
-        virtual
-        returns (uint256)
-    {
-        return _transferAndMint(depositTransfers, mode);
+    /// @param minRootsOut Minimum number of ROOT token to receive
+    function mint(
+        DepositTransfer[] calldata depositTransfers,
+        To mode,
+        uint256 minRootsOut
+    ) external virtual returns (uint256) {
+        return _transferAndMint(depositTransfers, mode, minRootsOut);
     }
 
     /// @notice Redeem ROOT token for silo deposit(s) with farm balance permit
     /// @param depositTransfers silo deposit(s) receive
     /// @param mode Burn ROOT token from
+    /// @param maxRootsIn Maximum number of ROOT token to burn
     /// @param token ROOT address
     /// @param value amount of ROOT approved
     /// @param deadline permit expiration
@@ -324,6 +342,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     function redeemWithFarmBalancePermit(
         DepositTransfer[] calldata depositTransfers,
         From mode,
+        uint256 maxRootsIn,
         address token,
         uint256 value,
         uint256 deadline,
@@ -341,31 +360,38 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             r,
             s
         );
-        return _transferAndRedeem(depositTransfers, mode);
+        return _transferAndRedeem(depositTransfers, mode, maxRootsIn);
     }
 
     /// @notice Redeem ROOT token for silo deposit(s)
     /// @param depositTransfers silo deposit(s) receive
     /// @param mode Burn ROOT token from
-    function redeem(DepositTransfer[] calldata depositTransfers, From mode)
-        external
-        virtual
-        returns (uint256)
-    {
-        return _transferAndRedeem(depositTransfers, mode);
+    /// @param maxRootsIn Maximum number of ROOT token to burn
+    function redeem(
+        DepositTransfer[] calldata depositTransfers,
+        From mode,
+        uint256 maxRootsIn
+    ) external virtual returns (uint256) {
+        return _transferAndRedeem(depositTransfers, mode, maxRootsIn);
     }
 
     /// @notice Burn ROOT token to exchange for silo deposit(s)
     function _transferAndRedeem(
-        DepositTransfer[] memory depositTransfers,
-        From mode
+        DepositTransfer[] calldata depositTransfers,
+        From mode,
+        uint256 maxRootsIn
     ) internal returns (uint256) {
         (
             uint256 shares,
             uint256 bdv,
             uint256 stalk,
-            uint256 seed
+            uint256 seeds
         ) = _transferDeposits(depositTransfers, false);
+
+        require(
+            shares <= maxRootsIn,
+            "Redeem: shares is greater than maxRootsIn"
+        );
 
         // Default mode is EXTERNAL
         address burnAddress = msg.sender;
@@ -382,21 +408,24 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             );
         }
         _burn(burnAddress, shares);
-        emit Redeem(msg.sender, depositTransfers, bdv, stalk, seed, shares);
+        emit Redeem(msg.sender, depositTransfers, bdv, stalk, seeds, shares);
         return shares;
     }
 
     /// @notice Transfer silo deposit(s) to exchange ROOT token
     function _transferAndMint(
-        DepositTransfer[] memory depositTransfers,
-        To mode
+        DepositTransfer[] calldata depositTransfers,
+        To mode,
+        uint256 minRootsOut
     ) internal returns (uint256) {
         (
             uint256 shares,
             uint256 bdv,
             uint256 stalk,
-            uint256 seed
+            uint256 seeds
         ) = _transferDeposits(depositTransfers, true);
+
+        require(shares >= minRootsOut, "Mint: shares is less than minRootsOut");
 
         // Transfer mint tokens to beanstalk internal balance
         if (mode == To.INTERNAL) {
@@ -413,7 +442,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             _mint(msg.sender, shares);
         }
 
-        emit Mint(msg.sender, depositTransfers, bdv, stalk, seed, shares);
+        emit Mint(msg.sender, depositTransfers, bdv, stalk, seeds, shares);
         return shares;
     }
 
@@ -421,9 +450,9 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     /// @return shares number of shares will be mint/burn
     /// @return bdv total bdv of depositTransfers
     /// @return stalk total stalk of depositTransfers
-    /// @return seed total seeds of depositTransfers
+    /// @return seeds total seeds of depositTransfers
     function _transferDeposits(
-        DepositTransfer[] memory depositTransfers,
+        DepositTransfer[] calldata depositTransfers,
         bool isDeposit
     )
         internal
@@ -431,11 +460,11 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             uint256 shares,
             uint256 bdv,
             uint256 stalk,
-            uint256 seed
+            uint256 seeds
         )
     {
         IBeanstalk(BEANSTALK_ADDRESS).update(address(this));
-        uint256 balanceOfSeedBefore = IBeanstalk(BEANSTALK_ADDRESS)
+        uint256 balanceOfSeedsBefore = IBeanstalk(BEANSTALK_ADDRESS)
             .balanceOfSeeds(address(this));
         uint256 balanceOfStalkBefore = IBeanstalk(BEANSTALK_ADDRESS)
             .balanceOfStalk(address(this));
@@ -446,20 +475,16 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
                 "Token is not whitelisted"
             );
 
-            uint256[] memory bdvs = IBeanstalk(BEANSTALK_ADDRESS)
-                .transferDeposits(
-                    isDeposit ? msg.sender : address(this),
-                    isDeposit ? address(this) : msg.sender,
-                    depositTransfers[i].token,
-                    depositTransfers[i].seasons,
-                    depositTransfers[i].amounts
-                );
+            uint256[] memory bdvs = _transferDeposit(
+                depositTransfers[i],
+                isDeposit
+            );
             for (uint256 j; j < bdvs.length; ++j) {
                 bdv += bdvs[j];
             }
         }
 
-        uint256 balanceOfSeedAfter = IBeanstalk(BEANSTALK_ADDRESS)
+        uint256 balanceOfSeedsAfter = IBeanstalk(BEANSTALK_ADDRESS)
             .balanceOfSeeds(address(this));
         uint256 balanceOfStalkAfter = IBeanstalk(BEANSTALK_ADDRESS)
             .balanceOfStalk(address(this));
@@ -468,11 +493,11 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         if (isDeposit) {
             underlyingBdvAfter = underlyingBdv + bdv;
             stalk = balanceOfStalkAfter - balanceOfStalkBefore;
-            seed = balanceOfSeedAfter - balanceOfSeedBefore;
+            seeds = balanceOfSeedsAfter - balanceOfSeedsBefore;
         } else {
             underlyingBdvAfter = underlyingBdv - bdv;
             stalk = balanceOfStalkBefore - balanceOfStalkAfter;
-            seed = balanceOfSeedBefore - balanceOfSeedAfter;
+            seeds = balanceOfSeedsBefore - balanceOfSeedsAfter;
         }
         uint256 supply = totalSupply();
         if (supply == 0) {
@@ -491,9 +516,9 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
                             balanceOfStalkBefore,
                             MathUpgradeable.Rounding.Down
                         ),
-                        balanceOfSeedAfter.mulDiv(
+                        balanceOfSeedsAfter.mulDiv(
                             PRECISION,
-                            balanceOfSeedBefore,
+                            balanceOfSeedsBefore,
                             MathUpgradeable.Rounding.Down
                         )
                     ),
@@ -516,9 +541,9 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
                             balanceOfStalkBefore,
                             MathUpgradeable.Rounding.Up
                         ),
-                        balanceOfSeedAfter.mulDiv(
+                        balanceOfSeedsAfter.mulDiv(
                             PRECISION,
-                            balanceOfSeedBefore,
+                            balanceOfSeedsBefore,
                             MathUpgradeable.Rounding.Up
                         )
                     ),
@@ -528,5 +553,19 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         }
 
         underlyingBdv = underlyingBdvAfter;
+    }
+
+    /// @notice Transfer silo deposit(s) between contract/user
+    function _transferDeposit(
+        DepositTransfer calldata depositTransfer,
+        bool isDeposit
+    ) internal returns (uint256[] memory bdvs) {
+        bdvs = IBeanstalk(BEANSTALK_ADDRESS).transferDeposits(
+            isDeposit ? msg.sender : address(this),
+            isDeposit ? address(this) : msg.sender,
+            depositTransfer.token,
+            depositTransfer.seasons,
+            depositTransfer.amounts
+        );
     }
 }
