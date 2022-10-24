@@ -10,7 +10,8 @@ const {
   impersonateFertilizer,
   impersonatePrice,
   impersonateChainlink,
-  impersonateBlockBasefee
+  impersonateBlockBasefee,
+  impersonateEthUsdcUniswap
 } = require('./impersonate.js')
 function addCommas(nStr) {
   nStr += ''
@@ -167,6 +168,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     await impersonateFertilizer()
     await impersonateChainlink();
     await impersonateBlockBasefee();
+    await impersonateEthUsdcUniswap()
   }
 
   const [beanstalkDiamond, diamondCut] = await diamond.deploy({
