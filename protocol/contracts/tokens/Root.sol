@@ -50,6 +50,11 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     mapping(address => bool) public whitelisted;
     uint256 public underlyingBdv;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(string memory name, string memory symbol)
         public
         initializer
