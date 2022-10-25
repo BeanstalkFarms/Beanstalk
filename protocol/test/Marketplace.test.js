@@ -40,8 +40,8 @@ describe('Marketplace', function () {
 
     await this.field.incrementTotalSoilE('100000');
     await this.season.setYieldE('0');
-    await this.field.connect(user).sow('1000', EXTERNAL);
-    await this.field.connect(user2).sow('1000', EXTERNAL);
+    await this.field.connect(user).sow('1000', 0, EXTERNAL);
+    await this.field.connect(user2).sow('1000', 0, EXTERNAL);
   })
 
   const getHash = async function (tx) {
@@ -457,7 +457,7 @@ describe('Marketplace', function () {
         })
 
         it("plot amount too large", async function () {
-          await this.field.connect(user2).sow('1200', EXTERNAL);
+          await this.field.connect(user2).sow('1200', 0, EXTERNAL);
           await expect(this.marketplace.connect(user2).fillPodOrder(this.order, 2000, 700, 500, INTERNAL)).to.revertedWith("Marketplace: Plot too far in line.");
         })
 
