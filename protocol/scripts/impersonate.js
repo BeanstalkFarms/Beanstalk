@@ -243,9 +243,6 @@ async function ethUsdcUniswap() {
     ETH_USDC_UNISWAP_V3,
     bytecode,
   ]);
-
-  const chainlink = await ethers.getContractAt("MockChainlink", CHAINLINK_CONTRACT);
-  await chainlink.setAnswer(1300 * Math.pow(10, 8));
 }
 
 exports.impersonateRouter = router
