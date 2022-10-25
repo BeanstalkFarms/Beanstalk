@@ -130,6 +130,7 @@ contract Listing is PodTransfer {
     ) private {
         // Note: If l.amount < amount, the function roundAmount will revert
 
+        require(amount > 0, "Marketplace: Must fill > 0 Pods.");
         if (l.amount > amount)
             s.podListings[l.index.add(amount).add(l.start)] = hashListing(
                 0,

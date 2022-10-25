@@ -195,6 +195,12 @@ describe('Marketplace', function () {
           await this.marketplace.connect(user).createPodListing('0', '0', '500', '500000', '0', INTERNAL);
           await expect(this.marketplace.connect(user2).fillPodListing(l, 500, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
         })
+
+        it("Fails if fillling 0 Pods", async function () {
+          this.listing = [userAddress, '0', '0', '1000', '500000', '0', EXTERNAL]
+          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', EXTERNAL);
+          await expect(this.marketplace.connect(user2).fillPodListing(this.listing, '0', EXTERNAL)).to.be.revertedWith("Marketplace: Must fill > 0 Pods.")
+        })
       })
 
       describe("Fill listing", async function () {
