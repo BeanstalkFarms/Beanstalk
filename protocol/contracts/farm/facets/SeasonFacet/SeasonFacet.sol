@@ -5,7 +5,6 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../../libraries/Token/LibTransfer.sol";
 import "./Weather.sol";
 import "../../../libraries/LibIncentive.sol";
 import "../../../libraries/Token/LibTransfer.sol";
@@ -83,7 +82,6 @@ contract SeasonFacet is Weather {
         s.season.timestamp = block.timestamp;
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
-        
         emit Sunrise(season());
     }
 
