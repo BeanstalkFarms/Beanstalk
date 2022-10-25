@@ -199,7 +199,7 @@ describe('Marketplace', function () {
         it("Fails if fillling 0 Pods", async function () {
           this.listing = [userAddress, '0', '0', '1000', '500000', '0', EXTERNAL]
           await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', EXTERNAL);
-          expect(this.marketplace.connect(user2).fillPodListing(this.listing, '0', EXTERNAL)).to.be.revertedWith("Marketplace: Must fill > 0 Pods.")
+          await expect(this.marketplace.connect(user2).fillPodListing(this.listing, '0', EXTERNAL)).to.be.revertedWith("Marketplace: Must fill > 0 Pods.")
         })
       })
 
