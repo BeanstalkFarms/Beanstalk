@@ -184,14 +184,11 @@ contract Storage {
 
     // Weather stores global level Weather balances.
     struct Weather {
-        uint256 startSoil; // DEPRECATED: in favor of BeanSown in field struct.
+        uint256[2] depreciated; // DEPRECIATED - 2 slots that were previously used
         uint256 lastDSoil; // Delta Soil; the number of Soil purchased last Season.
-        uint96 lastSoilPercent; // DEPRECATED: Was removed with Extreme Weather V2
         uint32 lastSowTime; // The number of seconds it took for all but at most 1 Soil to sell out last Season.
         uint32 nextSowTime; // The number of seconds it took for all but at most 1 Soil to sell out this Season
         uint32 yield; // Weather; the interest rate for sowing Beans in Soil.
-        bool didSowBelowMin; // DEPRECATED: Was removed with Extreme Weather V2
-        bool didSowFaster; // DEPRECATED: Was removed with Extreme Weather V2
     }
 
     // Fundraiser stores Fundraiser data for a given Fundraiser.

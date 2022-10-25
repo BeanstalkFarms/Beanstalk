@@ -40,6 +40,7 @@ library LibDibbler {
     /**
      * Shed
      **/
+
     function sow(uint256 amount, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // the amount of soil changes as a function of the morning auction;
@@ -141,7 +142,7 @@ library LibDibbler {
     }
 
     /// @dev scales down weather, minimum 1e6
-    function AuctionMath(uint256 a) private view returns (uint256) {
+    function auctionMath(uint256 a) private view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return uint256(s.w.yield).mulDiv(a,1e6).max(DECIMALS);
     }
