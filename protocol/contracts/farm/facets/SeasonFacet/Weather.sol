@@ -66,7 +66,7 @@ contract Weather is Sun {
         // Calculate Delta Soil Demand
         uint256 dsoil = s.f.beanSown;
         s.f.beanSown = 0;
-
+    
         Decimal.D256 memory deltaPodDemand;
 
         // If Sow'd all Soil
@@ -96,7 +96,7 @@ contract Weather is Sun {
             if (s.w.lastSowTime != type(uint32).max)
                 s.w.lastSowTime = type(uint32).max;
         }
-
+        
         // Calculate Weather Case
         caseId = 0;
 

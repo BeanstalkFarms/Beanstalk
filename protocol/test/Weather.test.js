@@ -40,10 +40,10 @@ describe('Complex Weather', function () {
         await this.bean.mint(userAddress, this.testData.totalOutstandingBeans)
         await this.season.setLastSowTimeE(this.testData.lastSowTime)
         await this.season.setNextSowTimeE(this.testData.nextSowTime)
-        this.result = await this.season.stepWeatherWithParams(this.pods, this.dsoil, this.startSoil, this.endSoil, this.price, this.testData.wasRaining, this.testData.rainStalk)
+        this.result = await this.season.stepWeatherWithParams(this.pods, this.dsoil,this.startSoil-this.endSoil, this.endSoil, this.price, this.testData.wasRaining, this.testData.rainStalk)
       })
       it('Checks New Weather', async function () {
-        expect(await this.season.yield()).to.eq(this.testData.newWeather)
+        expect(await this.season.maxYield()).to.eq(this.testData.newWeather)
       })
       it('Emits The Correct Case Weather', async function () {
         if (this.testData.totalOutstandingBeans !== 0) await expect(this.result).to.emit(this.season, 'WeatherChange').withArgs(await this.season.season(), this.testData.Code, this.testData.newWeather-this.testData.startingWeather)
@@ -54,7 +54,6 @@ describe('Complex Weather', function () {
   describe("Extreme Weather", async function () {
     before(async function () {
       await this.season.setLastDSoilE('100000');
-      await this.season.setStartSoilE('10000');
       await this.bean.mint(userAddress, '1000000000')
       await this.field.incrementTotalPodsE('100000000000');
     })

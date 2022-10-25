@@ -80,7 +80,7 @@ contract ComplexWeatherTest is Weather, Test, InitDiamondDeployer {
         
         season.setLastSowTimeE(data[i].lastSowTime);
         season.setNextSowTimeE(data[i].nextSowTime);
-        season.stepWeatherWithParams(pods, lastDSoil, endSoil, deltaB, raining, rainRoots);
+        season.stepWeatherWithParams(pods, lastDSoil, uint128(startSoil-endSoil), endSoil, deltaB, raining, rainRoots);
 
         //check that the season weather is the same as the one specified in the array:
         assertEq(uint256(season.maxYield()), uint256(data[i].newWeather));
@@ -193,11 +193,11 @@ contract ExtremeWeatherTest is Weather, Test, InitDiamondDeployer {
     assertEq(uint256(weather.nextSowTime), LibConstant.MAX_UINT32);
     assertEq(uint256(weather.lastSowTime), 1000);
   }
-  // not working
-  function _testExtremeLastSowTimeWtfDelta() public {
-    console.log("This stupid test has conquered brean. the hardhat test equilivant works, but this does not. after stepWeatherE, this emits case 28, whereas the hardhat emits case 29. For the love of god someone help me");
+
+  function testExtremeLastSowTimeDelta() public {
     _beforeEachExtremeWeatherTest();
-    console.log("LastSowTimewtfDelta");
+    console.log("LastSowTimeDelta");
+    season.setLastDSoilE(1);  
     season.setLastSowTimeE(900);
     season.setNextSowTimeE(LibConstant.MAX_UINT32);
     season.stepWeatherE(1 ether,1);
@@ -207,22 +207,11 @@ contract ExtremeWeatherTest is Weather, Test, InitDiamondDeployer {
     assertEq(uint256(weather.lastSowTime), LibConstant.MAX_UINT32);
   }
 
-  // it("lastSowTime max", async function () {
-  //     await this.season.setLastSowTimeE('900')
-  //     await this.season.setNextSowTimeE(MAX_UINT32)
-  //     await this.season.stepWeatherE(ethers.utils.parseEther('1'), '1');
-  //     const weather = await this.season.weather();
-  //     expect(weather.yield).to.equal(9)
-  //     expect(weather.nextSowTime).to.equal(parseInt(MAX_UINT32))
-  //     expect(weather.lastSowTime).to.equal(parseInt(MAX_UINT32))
-  //   })
-
 
   
 
   function _beforeExtremeWeatherTest() public {
     season.setLastDSoilE(100000);
-    //season.setStartSoilE(10000);
     C.bean().mint(publius, 1000000000);
     field.incrementTotalPodsE(100000000000);
   }
