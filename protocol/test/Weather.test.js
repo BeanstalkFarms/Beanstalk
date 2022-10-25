@@ -4,7 +4,7 @@ const { parseJson } = require('./utils/helpers.js')
 const { MAX_UINT32 } = require('./utils/constants.js')
 const { BEAN } = require('./utils/constants')
 
-// Set the test data
+// // Set the test data
 const [columns, tests] = parseJson('./coverage_data/weather.json')
 var numberTests = tests.length
 var startTest = 0
