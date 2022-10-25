@@ -242,10 +242,6 @@ contract SunTest is Sun, Test {
   //   season.sunSunrise(300e6, 8); // deltaB = +300; case 0 = low pod rate
   //   assertEq(uint256(field.totalSoil()), 99); // FIXME: how calculated?
   // }
-  function testIncentivize() public {
-    uint256 eth = getEthUsdcPrice();
-    console.log("eth price is:",eth);
-  } 
 
   //helper
   function getEthUsdcPrice() private view returns (uint256) {
