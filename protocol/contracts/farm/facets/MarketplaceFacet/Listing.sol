@@ -186,6 +186,8 @@ contract Listing is PodTransfer {
         require(amount >= l.minFillAmount, "Marketplace: Fill must be >= minimum amount.");
         require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
 
+        delete s.podListings[l.index];
+
         if (l.amount > amount) {
             s.podListings[l.index.add(amount).add(l.start)] = hashListing(
                 0,
@@ -198,8 +200,6 @@ contract Listing is PodTransfer {
         }
 
         emit PodListingFilled(l.account, to, l.index, l.start, amount, beanAmount);
-
-        delete s.podListings[l.index];
     }
 
     function __fillListingV2(
@@ -211,6 +211,8 @@ contract Listing is PodTransfer {
     ) private {
         require(amount >= l.minFillAmount, "Marketplace: Fill must be >= minimum amount.");
         require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
+
+        delete s.podListings[l.index];
 
         if (l.amount > amount) {
             s.podListings[l.index.add(amount).add(l.start)] = hashListingV2(
@@ -225,8 +227,6 @@ contract Listing is PodTransfer {
         }
 
         emit PodListingFilled(l.account, to, l.index, l.start, amount, beanAmount);
-
-        delete s.podListings[l.index];
     }
 
     /*
