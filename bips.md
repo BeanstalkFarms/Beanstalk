@@ -47,3 +47,4 @@ Markdown files for EBIPs are hosted in the [Beanstalk Governance Proposals GitHu
 * [EBIP-0](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/ebip/ebip-0-earned-beans-forfeiture.md): Earned Beans Forfeiture
 * [EBIP-1](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/ebip/ebip-1-remove-chop.md): Remove Chop
 * [EBIP-2](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/ebip/ebip-2-deltab-cap.md): deltaB Cap
+* [EBIP-3](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/ebip/ebip-3-pod-listing-cancellation.md): Pod Listing Cancellation
