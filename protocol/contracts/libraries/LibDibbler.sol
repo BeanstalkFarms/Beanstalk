@@ -89,53 +89,53 @@ library LibDibbler {
         if (delta > 24) { // check most likely case first
             return uint256(s.w.yield).mul(DECIMALS);
         } else if (delta == 1) {
-            return AuctionMath(279415312704); 
+            return auctionMath(279415312704); 
         } else if (delta == 2) {
-            return AuctionMath(409336034395);
+            return auctionMath(409336034395);
         } else if (delta == 3) {
-            return AuctionMath(494912626048); 
+            return auctionMath(494912626048); 
         } else if (delta == 4) {
-            return AuctionMath(558830625409);
+            return auctionMath(558830625409);
         } else if (delta == 5) {
-            return AuctionMath(609868162219);
+            return auctionMath(609868162219);
         } else if (delta == 6) {
-            return AuctionMath(652355825780);
+            return auctionMath(652355825780);
         } else if (delta == 7) {
-            return AuctionMath(688751347100); 
+            return auctionMath(688751347100); 
         } else if (delta == 8) {
-            return AuctionMath(720584687295);
+            return auctionMath(720584687295);
         } else if (delta == 9) {
-            return AuctionMath(748873234524);
+            return auctionMath(748873234524);
         } else if (delta == 10) {
-            return AuctionMath(774327938752);
+            return auctionMath(774327938752);
         } else if (delta == 11) {
-            return AuctionMath(797465225780); 
+            return auctionMath(797465225780); 
         } else if (delta == 12) {
-            return AuctionMath(818672068791);
+            return auctionMath(818672068791);
         } else if (delta == 13) {
-            return AuctionMath(838245938114);
+            return auctionMath(838245938114);
         } else if (delta == 14) {
-            return AuctionMath(856420437864);
+            return auctionMath(856420437864);
         } else if (delta == 15) {
-            return AuctionMath(873382373802); 
+            return auctionMath(873382373802); 
         } else if (delta == 16) {
-            return AuctionMath(889283474924);
+            return auctionMath(889283474924);
         } else if (delta == 17) {
-            return AuctionMath(904248660443);
+            return auctionMath(904248660443);
         } else if (delta == 18) {
-            return AuctionMath(918382006208);
+            return auctionMath(918382006208);
         } else if (delta == 19) {
-            return AuctionMath(931771138485);
+            return auctionMath(931771138485);
         } else if (delta == 20) {
-            return AuctionMath(944490527707);
+            return auctionMath(944490527707);
         } else if (delta == 21) {
-            return AuctionMath(956603996980);
+            return auctionMath(956603996980);
         } else if (delta == 22) {
-            return AuctionMath(968166659804);
+            return auctionMath(968166659804);
         } else if (delta == 23) {
-            return AuctionMath(979226436102);
+            return auctionMath(979226436102);
         } else if (delta == 24) {
-            return AuctionMath(989825252096);
+            return auctionMath(989825252096);
         } else {
             return DECIMALS; //minimium 1% yield
         }
