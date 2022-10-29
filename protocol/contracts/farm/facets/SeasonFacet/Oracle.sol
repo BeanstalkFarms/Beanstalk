@@ -9,7 +9,7 @@ import "../../../libraries/Oracle/LibCurveOracle.sol";
 import "../../ReentrancyGuard.sol";
 
 /**
- * @author Publius
+ * @author Publius, Chaikitty
  * @title Oracle tracks the Delta B across the Uniswap and Curve Liquidity pools
  **/
 contract Oracle is ReentrancyGuard {

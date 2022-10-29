@@ -27,13 +27,17 @@ contract SeasonFacet is Weather {
     /// @notice advances Beanstalk to the next Season, sending reward beans to the caller's circulating balance
     /// @return reward The number of beans minted for the caller.
     function sunrise() external payable returns (uint256) {
-        return gm(LibTransfer.To.EXTERNAL);
+        return gm(msg.sender, LibTransfer.To.EXTERNAL);
     }
 
     /// @notice advances Beanstalk to the next Season.
+    /// @param account Indicates to which address the reward beans should be sent.
     /// @param mode Indicates whether the reward beans are sent to internal or circulating balance.
     /// @return reward The number of beans minted for the caller.
-    function gm(LibTransfer.To mode) public payable returns (uint256) {
+    function gm(
+        address account,
+        LibTransfer.To mode
+    ) public payable returns (uint256) {
         uint256 initialGasLeft = gasleft();
         require(!paused(), "Season: Paused.");
         require(seasonTime() > season(), "Season: Still current Season.");
@@ -41,7 +45,7 @@ contract SeasonFacet is Weather {
         (int256 deltaB, uint256[2] memory balances) = stepOracle();
         uint256 caseId = stepWeather(deltaB);
         stepSun(deltaB, caseId);
-        return incentivize(msg.sender, initialGasLeft, balances, mode);
+        return incentivize(account, initialGasLeft, balances, mode);
     }
 
     /**

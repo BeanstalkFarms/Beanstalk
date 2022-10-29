@@ -144,9 +144,9 @@ contract MockSeasonFacet is SeasonFacet {
         s.w.lastSowTime = number;
     }
 
-    function setLastSoilPercentE(uint96 number) public {
-        s.w.lastSoilPercent = number;
-    }
+    // function setLastSoilPercentE(uint96 number) public {
+    //     s.w.lastSoilPercent = number;
+    // }
 
     function setSoilE(uint256 amount) public {
         setSoil(amount);

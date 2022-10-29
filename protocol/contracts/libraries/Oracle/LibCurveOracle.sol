@@ -10,7 +10,7 @@ import "../LibAppStorage.sol";
 import "../LibSafeMath32.sol";
 
 /**
- * @author Publius
+ * @author Publius, Chaikitty
  * @title Oracle tracks the TWAP price of the USDC/ETH and BEAN/ETH Uniswap pairs.
  **/
 
