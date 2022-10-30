@@ -524,6 +524,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     season.setSoilE(soilAbovePeg(100e6));
     season.setAbovePegE(true);
   }
+
   function _beforeEachFullHarvest() public {
     field.incrementTotalHarvestableE(101e6);
     uint256[] memory harvestPlot = new uint[](1);
@@ -534,6 +535,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     emit Harvest(brean,harvestPlot, 101* 1e6);
     field.harvest(harvestPlot, LibTransfer.To.EXTERNAL);
   }
+
   function _beforeEachPartialHarvest() public {
     field.incrementTotalHarvestableE(50e6);
     uint256[] memory harvestPlot = new uint[](1);
@@ -544,6 +546,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     emit Harvest(brean,harvestPlot, 50e6);
     field.harvest(harvestPlot, LibTransfer.To.EXTERNAL);
   }
+
   function _beforeEachHarvest() public {
     season.setSoilE(200e6);
     vm.roll(30); // after morning Auction
@@ -552,6 +555,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     vm.prank(siloChad);
     field.sow(100e6,1,LibTransfer.From.EXTERNAL);
   }
+
   function _beforeEachHarvestEntirePlotWithListing() public {
     field.incrementTotalHarvestableE(101e6);
     vm.prank(brean);
@@ -564,6 +568,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     emit Harvest(brean,harvestPlot,101e6);
     field.harvest(harvestPlot, LibTransfer.To.EXTERNAL);
   }
+
   function _beforeEachSow() public {
     vm.roll(30);
     season.setSoilE(100e6);
@@ -575,8 +580,8 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     field.sow(100e6, 1e6,LibTransfer.From.EXTERNAL);
     console.log("after field.totalSoil():",field.totalSoil());
     console.log("after field.trueSoil():",field.totalRealSoil());
-
   }
+
   function _beforeEachSomeSow() public {
     season.setSoilE(200e6);
     vm.prank(brean);
@@ -585,6 +590,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     emit Sow(brean, 0, 100e6, 101e6);
     field.sow(100e6, 1e6, LibTransfer.From.EXTERNAL);
   }
+
   function _beforeEachSomeSowFromInternal() public {
     season.setSoilE(200e6);
     vm.startPrank(brean);
@@ -594,8 +600,8 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     emit Sow(brean, 0, 100e6, 101e6);
     field.sow(100e6, 1e6, LibTransfer.From.INTERNAL);
     vm.stopPrank();
-
   }
+
   function _beforeEachSomeSowFromInternalTolerant() public {
     season.setSoilE(200e6);
     vm.startPrank(brean);
@@ -606,6 +612,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     field.sow(100e6, 1e6, LibTransfer.From.INTERNAL_TOLERANT);
     vm.stopPrank();
   }
+
   function _beforeEachSowMin() public {
     season.setSoilE(100e6);
     vm.roll(30);
@@ -616,6 +623,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     field.sowWithMin(200e6, 1e6, 100e6, LibTransfer.From.EXTERNAL);
     vm.stopPrank();
   }
+
   function _beforeEachSowMinWithEnoughSoil() public {
     season.setSoilE(200e6);
     vm.startPrank(brean);
@@ -625,6 +633,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     field.sowWithMin(100e6, 1e6, 50e6, LibTransfer.From.EXTERNAL);
     vm.stopPrank();
   }
+
   function _beforeEachSow2Users() public {
     season.setSoilE(200e6);
     vm.startPrank(brean);
@@ -641,6 +650,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
     field.sowWithMin(100e6, 1e6, 50e6, LibTransfer.From.EXTERNAL);
     vm.stopPrank();
   }
+
   // Test Helpers
   function max(uint256 a, uint256 b) internal pure returns (uint256) {
     return a >= b ? a : b;
@@ -649,6 +659,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
   /// @dev when above peg,the amount of soil now issued is newHarvestable/1.01
   /// previously, the amount of soil issued was newHarvestable/(s.w.yield + 1)
   /// this function replicates the previous behaviour with the new soil issuance when below peg.
+
   function soilAbovePeg(uint256 a) internal view returns(uint256) {
     return a.mul(season.maxYield().add(100)).div(100); 
   }
