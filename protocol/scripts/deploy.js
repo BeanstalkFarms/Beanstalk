@@ -9,7 +9,6 @@ const {
   impersonateUnripe, 
   impersonateFertilizer,
   impersonatePrice,
-  impersonateChainlink,
   impersonateBlockBasefee,
   impersonateEthUsdcUniswap
 } = require('./impersonate.js')
@@ -166,7 +165,6 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     await impersonateCurveMetapool()
     await impersonateUnripe()
     await impersonateFertilizer()
-    await impersonateChainlink();
     await impersonateBlockBasefee();
     await impersonateEthUsdcUniswap()
   }

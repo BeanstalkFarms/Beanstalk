@@ -2,7 +2,7 @@ const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 const { to6, toStalk, toBean, to18 } = require('./utils/helpers.js');
-const { USDC, UNRIPE_LP, BEAN, ETH, CHAINLINK_CONTRACT,UNISWAP_ETHUSDC_CONTRACT,UNISWAP_DEPLOYER2_CONTRACT, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE } = require('./utils/constants.js');
+const { USDC, UNRIPE_LP, BEAN,ETH_USDC_UNISWAP_V3, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE } = require('./utils/constants.js');
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
 const { ethers } = require('hardhat');
 
@@ -24,8 +24,6 @@ describe('Sun', function () {
     this.usdc = await ethers.getContractAt('MockToken', USDC);
   
     // These are needed for sunrise incentive test
-    //this.uniswap = await ethers.getContractAt('MockUniswapV3Factory',UNISWAP_DEPLOYER2_CONTRACT);
-    this.chainlink = await ethers.getContractAt('MockChainlink', CHAINLINK_CONTRACT);
     this.basefee = await ethers.getContractAt('MockBlockBasefee', BASE_FEE_CONTRACT);
     this.tokenFacet = await ethers.getContractAt('TokenFacet', contracts.beanstalkDiamond.address)
     this.bean = await ethers.getContractAt('MockToken', BEAN);
@@ -33,7 +31,7 @@ describe('Sun', function () {
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
     await this.threePool.set_virtual_price(to18('1'));
     this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
-    //this.uniswapV3EthUsdc = await this.uniswap.createPool(ETH,USDC,3000);
+    this.uniswapV3EthUsdc = await ethers.getContractAt('MockUniswapV3Pool', ETH_USDC_UNISWAP_V3);
     await this.beanThreeCurve.set_supply(toBean('100000'));
     await this.beanThreeCurve.set_A_precise('1000');
     await this.beanThreeCurve.set_virtual_price(to18('1'));
@@ -205,12 +203,12 @@ describe('Sun', function () {
     const VERBOSE = false;
     // [[pool balances], eth price, base fee, secondsLate, toMode]
     const mockedValues = [
-      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 0, EXTERNAL],
-      [[toBean('10000'), to18('50000')], 3000 * Math.pow(10, 8), 30 * Math.pow(10, 9), 0, EXTERNAL],
-      [[toBean('50000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 0, EXTERNAL],
-      [[toBean('10000'), to18('10000')], 3000 * Math.pow(10, 8), 90 * Math.pow(10, 9), 0, INTERNAL],
-      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 24, INTERNAL],
-      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 8), 50 * Math.pow(10, 9), 500, INTERNAL]
+      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 6), 50 * Math.pow(10, 9), 0, EXTERNAL],
+      [[toBean('10000'), to18('50000')], 3000 * Math.pow(10, 6), 30 * Math.pow(10, 9), 0, EXTERNAL],
+      [[toBean('50000'), to18('10000')], 1500 * Math.pow(10, 6), 50 * Math.pow(10, 9), 0, EXTERNAL],
+      [[toBean('10000'), to18('10000')], 3000 * Math.pow(10, 6), 90 * Math.pow(10, 9), 0, INTERNAL],
+      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 6), 50 * Math.pow(10, 9), 24, INTERNAL],
+      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 6), 50 * Math.pow(10, 9), 500, INTERNAL]
     ];
 
     // Load some beans into the wallet's internal balance, and note the starting time
@@ -228,7 +226,7 @@ describe('Sun', function () {
       // Time skip an hour after setting new balance (twap will be very close to whats in mockVal)
       await timeSkip(START_TIME + 60*60);
 
-      await this.chainlink.setAnswer(mockVal[1]);
+      await this.uniswapV3EthUsdc.setOraclePrice(mockVal[1], 18);
       await this.basefee.setAnswer(mockVal[2]);
 
       const secondsLate = mockVal[3];
@@ -256,7 +254,7 @@ describe('Sun', function () {
       const failAdjustedGasCostEth = (blockBaseFee + PRIORITY) * (gasUsed + FAIL_GAS_BUFFER) / Math.pow(10, 9);
 
       // Get mocked eth/bean prices
-      const ethPrice = (await this.chainlink.latestAnswer()).toNumber() / Math.pow(10, 8);
+      const ethPrice = mockVal[1] / Math.pow(10, 6);
       const beanPrice = (await this.beanThreeCurve.get_bean_price()).toNumber() / Math.pow(10, 6);
       // How many beans are required to purcahse 1 eth
       const beanEthPrice = ethPrice / beanPrice;
