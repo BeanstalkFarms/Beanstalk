@@ -16,6 +16,14 @@ async function bip28(mock = true, account = undefined) {
             'SiloFacet',  // Add Deposit Permit System
             'TokenFacet' // Add ERC-20 Token Approval System
         ],
+        selectorsToRemove: [
+            '0xeb6fa84f',
+            '0xed778f8e',
+            '0x72db799f',
+            '0x56e70811',
+            '0x6d679775',
+            '0x1aac9789'
+        ],
         bip: false,
         object: !mock,
         verbose: true,
