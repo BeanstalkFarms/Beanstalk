@@ -1330,7 +1330,14 @@ describe('Marketplace', function () {
               .to.emit(this.marketplace, "PodOrderCreated")
               .withArgs(userAddress, this.id, "500", 100000, "1000", '0', "0x", Fixed);
           });
+
+          it("cancels old order, replacing with new order", async function () {
+            let newOrder =  await this.marketplace.connect(user).createPodOrder("100", "100000", "1000", '0', EXTERNAL);
+            expect(newOrder).to.emit(this.marketplace, "PodOrderCancelled").withArgs(userAddress, this.id);
+            expect(await this.marketplace.podOrder(userAddress, "100000", "1000", "0")).to.equal("100");
+          })
         });
+
         describe("create order with min amount", async function () {
           beforeEach(async function () {
             this.userBeanBalance = await this.bean.balanceOf(userAddress);
@@ -1740,6 +1747,11 @@ describe('Marketplace', function () {
               );
 
           });
+          it("cancels old order, replacing with new order", async function () {
+            let newOrder =  await this.marketplace.connect(user).createPodOrderV2("100", "1000", '0', this.f.packedFunction, EXTERNAL);
+            expect(newOrder).to.emit(this.marketplace, "PodOrderCancelled").withArgs(userAddress, this.id);
+            expect(await this.marketplace.podOrderV2(userAddress, "1000", "0", this.f.packedFunction)).to.equal("100");
+          })
         });
       });
 

@@ -50,17 +50,6 @@ Number.prototype.calculateShifts = function (counter) {
     return counter;
 }
 
-function parseBigInt(str, base=10) {
-    base = BigInt(base)
-    var bigint = BigInt(0)
-    for (var i = 0; i < str.length; i++) {
-      var code = str[str.length-1-i].charCodeAt(0) - 48; if(code >= 10) code -= 39
-      bigint += base**BigInt(i) * BigInt(code)
-    }
-    return bigint
-  }
-
-
 function bnToHex(bn) {
     bn = BigInt(bn);
   
@@ -98,7 +87,6 @@ function bitnot(bn) {
 function interpolatePoints(xs, ys) {
     var length = xs.length;
     if(length < 2) return;
-    if(length > 64) return;
     if(ys.length != length) return;
 
     var dys = [], dxs = [], ms = [];
