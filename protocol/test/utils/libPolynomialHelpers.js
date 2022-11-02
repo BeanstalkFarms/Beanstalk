@@ -50,7 +50,7 @@ function evaluatePolynomialIntegration(f, start, end, pieceIndex) {
         } else {
             negativeSum = math.add(negativeSum, math.floor(math.chain(_x2).pow(math.add(degreeIndex, 1)).multiply(coefValue).divide(coefExponent).divide(math.add(degreeIndex, 1)).done()));
 
-            negativeSum = math.subtract(negativeSum, math.floor(math.chain(_x2).pow(math.add(degreeIndex, 1)).multiply(coefValue).divide(coefExponent).divide(math.add(degreeIndex, 1)).done()));
+            negativeSum = math.subtract(negativeSum, math.floor(math.chain(_x1).pow(math.add(degreeIndex, 1)).multiply(coefValue).divide(coefExponent).divide(math.add(degreeIndex, 1)).done()));
         }
         degreeIndex++;
     }
