@@ -9,6 +9,7 @@ import { MockSeasonFacet } from "mocks/mockFacets/MockSeasonFacet.sol";
 import { MockSiloFacet } from "mocks/mockFacets/MockSiloFacet.sol";
 import { MockFieldFacet } from "mocks/mockFacets/MockFieldFacet.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
+import {MockUniswapV3Pool} from "mocks/uniswap/MockUniswapV3Pool.sol";
 
 import { Utils } from "./utils/Utils.sol";
 import { DiamondDeployer } from "./utils/Deploy.sol";
@@ -32,7 +33,6 @@ contract SunTest is Sun, Test {
   MockSeasonFacet internal season;
   MockSiloFacet internal silo;
   MockFieldFacet internal field;
-
   
   function setUp() public {
     utils = new Utils();
@@ -143,7 +143,7 @@ contract SunTest is Sun, Test {
   //   season.sunSunrise(100e6, 8); // deltaB = 100
   // }
 
-  ///////////////////////// Pod Rate sets Soil /////////////////////////
+  ///////// //////////////// Pod Rate sets Soil /////////////////////////
 
   function test_deltaB_positive_podRate_low() public {
     field.incrementTotalPodsE(100);
@@ -243,15 +243,10 @@ contract SunTest is Sun, Test {
   //   assertEq(uint256(field.totalSoil()), 99); // FIXME: how calculated?
   // }
 
-  //helper
-  function getEthUsdcPrice() private view returns (uint256) {
-        (int24 tick,) = OracleLibrary.consult(C.UniV3EthUsdc(),3600); //1 season tick
-        return OracleLibrary.getQuoteAtTick(
-            tick,
-            1e18,
-            address(C.weth()),
-            address(C.usdc())
-        );
-    }
+  function testMockOraclePrice() public {
+    MockUniswapV3Pool(C.UniV3EthUsdc()).setOraclePrice(1000e6,1e18);
+    console.log("Eth Price is:", season.getEthPrice());
+    assertApproxEqRel(season.getEthPrice(),1000e6,0.01e18); //0.01% accuracy as ticks are spaced 0.01%
+  }
 
 }

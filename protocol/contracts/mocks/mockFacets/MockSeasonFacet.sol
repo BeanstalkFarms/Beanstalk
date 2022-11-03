@@ -273,7 +273,7 @@ contract MockSeasonFacet is SeasonFacet {
         C.bean().mint(address(this), amount);
     }
 
-    function getEthPrice() external returns (uint256 price) {
+    function getEthPrice() external view returns (uint256 price) {
         return LibIncentive.getEthUsdcPrice();
     }
 }

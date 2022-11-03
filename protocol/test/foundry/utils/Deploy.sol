@@ -92,9 +92,14 @@ contract DiamondDeployer is Test {
     //impersonate tokens and utilities
     _mockToken("Bean", address(C.bean()));
     _mockToken("USDC", address(C.usdc()));
+    MockToken(address(C.usdc())).setDecimals(6);
+    console.log("USDC DECIMALS:", MockToken(address(C.usdc())).decimals());
+    _mockWeth(); // only if "reset"
+    MockToken(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2)).setDecimals(18);
+    console.log("WETH DECIMALS:", MockToken(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2)).decimals());
     _mockPrice();
     _mockCurve(); // only if "reset"
-    _mockWeth(); // only if "reset"
+    
     //_mockCurveMetapool();
     _mockUnripe();
     _mockUniswap();

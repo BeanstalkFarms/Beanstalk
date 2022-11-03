@@ -2,7 +2,7 @@ const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 const { to6, toStalk, toBean, to18 } = require('./utils/helpers.js');
-const { USDC, UNRIPE_LP, BEAN, ETH, CHAINLINK_CONTRACT,UNISWAP_ETHUSDC_CONTRACT,UNISWAP_DEPLOYER2_CONTRACT, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE } = require('./utils/constants.js');
+const { USDC, UNRIPE_LP, BEAN, ETH, CHAINLINK_CONTRACT,ETH_USDC_UNISWAP_V3,UNISWAP_DEPLOYER2_CONTRACT, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE } = require('./utils/constants.js');
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
 const { ethers } = require('hardhat');
 
@@ -33,7 +33,7 @@ describe('Sun', function () {
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
     await this.threePool.set_virtual_price(to18('1'));
     this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
-    //this.uniswapV3EthUsdc = await this.uniswap.createPool(ETH,USDC,3000);
+    this.uniswapV3EthUsdc = await ethers.getContractAt('MockUniswapV3Pool', ETH_USDC_UNISWAP_V3);
     await this.beanThreeCurve.set_supply(toBean('100000'));
     await this.beanThreeCurve.set_A_precise('1000');
     await this.beanThreeCurve.set_virtual_price(to18('1'));
@@ -256,7 +256,10 @@ describe('Sun', function () {
       const failAdjustedGasCostEth = (blockBaseFee + PRIORITY) * (gasUsed + FAIL_GAS_BUFFER) / Math.pow(10, 9);
 
       // Get mocked eth/bean prices
-      const ethPrice = (await this.chainlink.latestAnswer()).toNumber() / Math.pow(10, 8);
+      //const ethPrice = (await this.chainlink.latestAnswer()).toNumber() / Math.pow(10, 8);
+      await this.uniswapV3EthUsdc.setOraclePrice(to6('1600'), to18('1'));
+      const ethPrice = (await this.season.getETHPrice());
+      console.log("ETH PRICE IS:", ethPrice);
       const beanPrice = (await this.beanThreeCurve.get_bean_price()).toNumber() / Math.pow(10, 6);
       // How many beans are required to purcahse 1 eth
       const beanEthPrice = ethPrice / beanPrice;
