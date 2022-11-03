@@ -11,7 +11,6 @@ import "@openzeppelin/contracts/math/Math.sol";
 import "../C.sol";
 import "./Curve/LibCurve.sol";
 
-
 /**
  * @author Publius, Chaikitty, Brean
  * @title Incentive Library calculates the reward and the exponential increase efficiently.
@@ -167,7 +166,7 @@ library LibIncentive {
         return [1e30, C.curve3Pool().get_virtual_price()];
     }
 
-    function getEthUsdcPrice() internal view returns (uint256) {
+    function getEthUsdcPrice() private view returns (uint256) {
         (int24 tick,) = OracleLibrary.consult(C.UniV3EthUsdc(),PERIOD); //1 season tick
         return OracleLibrary.getQuoteAtTick(
             tick,
