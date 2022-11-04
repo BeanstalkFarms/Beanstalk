@@ -85,6 +85,11 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     /// @return underlyingBdv total bdv of the silo deposit(s) in the contract
     uint256 public underlyingBdv;
 
+    /// @notice The total of outstanding loan balance
+    /// @dev only get updated on borrowLoan/repayLoan
+    /// @return outstandingLoanBalance total ROOT loan
+    uint256 public outstandingLoanBalance;
+
     /// @notice Nominated candidate to be the owner of the contract
     /// @dev The nominated candidate need to call the claimOwnership function
     /// @return ownerCandidate The nomindated candidate to become the new owner of the contract
@@ -214,9 +219,16 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         underlyingBdv += toBdv - fromBdv;
     }
 
+    /// @notice Return the total supply without outstanding loan balance
+    function totalSupplyMinusOutstandingLoanBalance() public view returns (uint256) {
+        return totalSupply() - outstandingLoanBalance;
+    }
+
     /// @notice Return the ratio of underlyingBdv per ROOT token
     function bdvPerRoot() external view returns (uint256) {
-        return (underlyingBdv * PRECISION) / totalSupply();
+        return
+            (underlyingBdv * PRECISION) /
+            totalSupplyMinusOutstandingLoanBalance();
     }
 
     /// @notice Call plant function on Beanstalk
@@ -499,7 +511,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             stalk = balanceOfStalkBefore - balanceOfStalkAfter;
             seeds = balanceOfSeedsBefore - balanceOfSeedsAfter;
         }
-        uint256 supply = totalSupply();
+        uint256 supply = totalSupplyMinusOutstandingLoanBalance();
         if (supply == 0) {
             shares = stalk;
         } else if (isDeposit) {
@@ -567,5 +579,21 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             depositTransfer.seasons,
             depositTransfer.amounts
         );
+    }
+
+    /// @notice Borrow ROOT as a loan
+    /// @param amount Amount of Root to loan out
+    function borrowLoan(uint256 amount) external onlyOwner {
+        require(amount > 0, "Borrow amount must be greater than 0");
+        outstandingLoanBalance += amount;
+        _mint(msg.sender, amount);
+    }
+
+    /// @notice Repay loan
+    /// @param amount Amount of Root to loan out
+    function repayLoan(uint256 amount) external onlyOwner {
+        require(amount > 0, "Repay amount must be greater than 0");
+        _burn(msg.sender, amount);
+        outstandingLoanBalance -= amount;
     }
 }

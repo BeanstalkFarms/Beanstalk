@@ -336,6 +336,239 @@ describe("Root", function () {
     });
   });
 
+  describe("borrow loan", async function () {
+    describe("reverts", async function () {
+      it("reverts if non-owner borrow loan", async function () {
+        await expect(
+          this.rootToken.connect(user).borrowLoan(1000)
+        ).to.revertedWith("Ownable: caller is not the owner");
+      });
+    });
+
+    describe("simple borrow", async function () {
+      beforeEach(async function () {
+        await this.rootToken.connect(owner).borrowLoan(1000);
+      });
+      it("properly updates outstandingLoanBalance", async function () {
+        expect(await this.rootToken.outstandingLoanBalance()).to.eq("1000");
+      });
+      it("properly updates totalSupply", async function () {
+        expect(await this.rootToken.totalSupply()).to.eq("1000");
+      });
+      it("properly updates totalSupplyMinusOutstandingLoanBalance", async function () {
+        expect(
+          await this.rootToken.totalSupplyMinusOutstandingLoanBalance()
+        ).to.eq("0");
+      });
+      it("properly updates borrower balance", async function () {
+        expect(await this.rootToken.balanceOf(owner.address)).to.eq("1000");
+      });
+    });
+
+    describe("borrow loan with existings ROOT", async function () {
+      beforeEach(async function () {
+        await this.silo
+          .connect(user)
+          .approveDeposit(
+            this.rootToken.address,
+            this.siloToken.address,
+            "1000000"
+          );
+
+        await this.rootToken
+          .connect(owner)
+          .addWhitelistToken(this.siloToken.address);
+
+        await this.silo
+          .connect(user)
+          .deposit(this.siloToken.address, "1000", EXTERNAL);
+
+        this.result = await this.rootToken.connect(user).mint(
+          [
+            {
+              token: this.siloToken.address,
+              seasons: ["2"],
+              amounts: ["1000"],
+            },
+          ],
+          EXTERNAL,
+          1
+        );
+
+        await this.rootToken.connect(owner).borrowLoan(1000);
+      });
+      it("properly updates outstandingLoanBalance", async function () {
+        expect(await this.rootToken.outstandingLoanBalance()).to.eq("1000");
+      });
+      it("properly updates totalSupply", async function () {
+        expect(await this.rootToken.totalSupply()).to.eq("10001000");
+      });
+      it("properly updates totalSupplyMinusOutstandingLoanBalance", async function () {
+        expect(
+          await this.rootToken.totalSupplyMinusOutstandingLoanBalance()
+        ).to.eq("10000000");
+      });
+      it("properly updates borrower balance", async function () {
+        expect(await this.rootToken.balanceOf(owner.address)).to.eq("1000");
+      });
+    });
+  });
+
+  describe("repay loan", async function () {
+    describe("reverts", async function () {
+      it("reverts if non-owner repay loan", async function () {
+        await expect(
+          this.rootToken.connect(user).repayLoan(1000)
+        ).to.revertedWith("Ownable: caller is not the owner");
+      });
+      it("reverts if repay more than owe", async function () {
+        await expect(
+          this.rootToken.connect(user).repayLoan(1000)
+        ).to.revertedWith("Ownable: caller is not the owner");
+      });
+    });
+
+    describe("simple repay in full", async function () {
+      beforeEach(async function () {
+        await this.rootToken.connect(owner).borrowLoan(1000);
+        await this.rootToken.connect(owner).repayLoan(1000);
+      });
+      it("properly updates outstandingLoanBalance", async function () {
+        expect(await this.rootToken.outstandingLoanBalance()).to.eq("0");
+      });
+      it("properly updates totalSupply", async function () {
+        expect(await this.rootToken.totalSupply()).to.eq("0");
+      });
+      it("properly updates totalSupplyMinusOutstandingLoanBalance", async function () {
+        expect(
+          await this.rootToken.totalSupplyMinusOutstandingLoanBalance()
+        ).to.eq("0");
+      });
+      it("properly updates borrower balance", async function () {
+        expect(await this.rootToken.balanceOf(owner.address)).to.eq("0");
+      });
+    });
+
+    describe("simple repay 1/2", async function () {
+      beforeEach(async function () {
+        await this.rootToken.connect(owner).borrowLoan(1000);
+        await this.rootToken.connect(owner).repayLoan(500);
+      });
+      it("properly updates outstandingLoanBalance", async function () {
+        expect(await this.rootToken.outstandingLoanBalance()).to.eq("500");
+      });
+      it("properly updates totalSupply", async function () {
+        expect(await this.rootToken.totalSupply()).to.eq("500");
+      });
+      it("properly updates totalSupplyMinusOutstandingLoanBalance", async function () {
+        expect(
+          await this.rootToken.totalSupplyMinusOutstandingLoanBalance()
+        ).to.eq("0");
+      });
+      it("properly updates borrower balance", async function () {
+        expect(await this.rootToken.balanceOf(owner.address)).to.eq("500");
+      });
+    });
+
+    describe("repay 1/2 loan with existings ROOT", async function () {
+      beforeEach(async function () {
+        await this.silo
+          .connect(user)
+          .approveDeposit(
+            this.rootToken.address,
+            this.siloToken.address,
+            "1000000"
+          );
+
+        await this.rootToken
+          .connect(owner)
+          .addWhitelistToken(this.siloToken.address);
+
+        await this.silo
+          .connect(user)
+          .deposit(this.siloToken.address, "1000", EXTERNAL);
+
+        this.result = await this.rootToken.connect(user).mint(
+          [
+            {
+              token: this.siloToken.address,
+              seasons: ["2"],
+              amounts: ["1000"],
+            },
+          ],
+          EXTERNAL,
+          1
+        );
+
+        await this.rootToken.connect(owner).borrowLoan(1000);
+        await this.rootToken.connect(owner).repayLoan(500);
+      });
+      it("properly updates outstandingLoanBalance", async function () {
+        expect(await this.rootToken.outstandingLoanBalance()).to.eq("500");
+      });
+      it("properly updates totalSupply", async function () {
+        expect(await this.rootToken.totalSupply()).to.eq("10000500");
+      });
+      it("properly updates totalSupplyMinusOutstandingLoanBalance", async function () {
+        expect(
+          await this.rootToken.totalSupplyMinusOutstandingLoanBalance()
+        ).to.eq("10000000");
+      });
+      it("properly updates borrower balance", async function () {
+        expect(await this.rootToken.balanceOf(owner.address)).to.eq("500");
+      });
+    });
+
+    describe("repay loan in full with existings ROOT", async function () {
+      beforeEach(async function () {
+        await this.silo
+          .connect(user)
+          .approveDeposit(
+            this.rootToken.address,
+            this.siloToken.address,
+            "1000000"
+          );
+
+        await this.rootToken
+          .connect(owner)
+          .addWhitelistToken(this.siloToken.address);
+
+        await this.silo
+          .connect(user)
+          .deposit(this.siloToken.address, "1000", EXTERNAL);
+
+        this.result = await this.rootToken.connect(user).mint(
+          [
+            {
+              token: this.siloToken.address,
+              seasons: ["2"],
+              amounts: ["1000"],
+            },
+          ],
+          EXTERNAL,
+          1
+        );
+
+        await this.rootToken.connect(owner).borrowLoan(1000);
+        await this.rootToken.connect(owner).repayLoan(1000);
+      });
+      it("properly updates outstandingLoanBalance", async function () {
+        expect(await this.rootToken.outstandingLoanBalance()).to.eq("0");
+      });
+      it("properly updates totalSupply", async function () {
+        expect(await this.rootToken.totalSupply()).to.eq("10000000");
+      });
+      it("properly updates totalSupplyMinusOutstandingLoanBalance", async function () {
+        expect(
+          await this.rootToken.totalSupplyMinusOutstandingLoanBalance()
+        ).to.eq("10000000");
+      });
+      it("properly updates borrower balance", async function () {
+        expect(await this.rootToken.balanceOf(owner.address)).to.eq("0");
+      });
+    });
+  });
+
   describe("updateBdv", async function () {
     beforeEach(async function () {
       await this.silo
