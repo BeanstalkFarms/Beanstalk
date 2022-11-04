@@ -2,7 +2,7 @@ const { getBeanstalk, impersonateBeanstalkOwner, mintEth } = require("../utils")
 const { upgradeWithNewFacets } = require("./diamond");
 const { BEANSTALK } = require("../test/utils/constants");
 
-async function bip28(mock = true, account = undefined) {
+async function bip29(mock = true, account = undefined) {
     if (account == undefined) {
         account = await impersonateBeanstalkOwner()
         await mintEth(account.address)
@@ -31,4 +31,4 @@ async function bip28(mock = true, account = undefined) {
       });
 }
 
-exports.bip28 = bip28
+exports.bip29 = bip29
