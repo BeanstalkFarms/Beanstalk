@@ -22,16 +22,8 @@ async function deploy(mock = true, account = undefined) {
     });
     console.log(`Root Token deployed at ${root.address}`);
 
-    await root
-        .connect(account)
-        .addWhitelistToken(BEAN);
-
-    await root
-        .connect(account)
-        .addWhitelistToken(BEAN_3_CURVE);
-
+    await root.connect(account).addWhitelistToken(BEAN);
     console.log(`Whitelisted Bean: ${await root.whitelisted(BEAN)}`)
-    console.log(`Whitelisted Bean3Crv: ${await root.whitelisted(BEAN_3_CURVE)}`)
 
     return root
 }
