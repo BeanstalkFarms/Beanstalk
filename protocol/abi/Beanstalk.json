@@ -4979,7 +4979,7 @@
         ],
         "name": "permitERC20",
         "outputs": [],
-        "stateMutability": "nonpayable",
+        "stateMutability": "payable",
         "type": "function"
     },
     {

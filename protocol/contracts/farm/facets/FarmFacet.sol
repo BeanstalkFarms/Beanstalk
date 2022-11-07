@@ -12,6 +12,7 @@ import {LibFunction} from "../../libraries/LibFunction.sol";
 
 /**
  * @title Farm Facet
+ * @author Beasley, Publius
  * @notice Perform mutliple Beanstalk function calls in a single transaction
  **/
 
@@ -26,9 +27,9 @@ contract FarmFacet {
     AppStorage internal s;
 
     /**
-     * @notice Call multiple functions in Beanstalk and return the data from all of them if they all succeed
-     * @param data The encoded function data for each of the calls to make to this contract
-     * @return results The results from each of the calls passed in via data
+     * @notice Call multiple functions in Beanstalk
+     * @param data The encoded function data for each of the calls
+     * @return results The return data from each of the calls
     **/
     function farm(bytes[] calldata data)
         external
@@ -43,7 +44,24 @@ contract FarmFacet {
     }
 
     /**
-     * @notice Perform a list of advanced function calls on Beanstalk
+     * @notice Call multiple functions in Beanstalk
+     * @param data The encoded function data for each of the calls
+     * @return results The return data from each of the calls
+    **/
+    function advancedFarm(bytes[] calldata data)
+        external
+        payable
+        withEth
+        returns (bytes[] memory results)
+    {
+        results = new bytes[](data.length);
+        for (uint256 i; i < data.length; ++i) {
+            results[i] = _farm(data[i]);
+        }
+    }
+
+    /**
+     * @notice Call multiple functions in Beanstalk using Advanced Function Calls
      * @param data The encoded function data for each of the calls to make to this contract
      * See LibFunction.buildAdvancedCalldata for details on advanced data
      * @return results The results from each of the calls passed in via data

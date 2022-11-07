@@ -9,6 +9,7 @@ import {LibDiamond} from "./LibDiamond.sol";
 
 /**
  * @title Lib Function
+ * @author Publius
  **/
 
 library LibFunction {
