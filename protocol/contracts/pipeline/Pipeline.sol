@@ -7,7 +7,9 @@ import "../libraries/LibFunction.sol";
 
 /**
  * @title Pipeline
+ * @author Publius
  * @notice Executes generic function calls to other contracts
+ * https://evmpipeline.org
  **/
 
 contract Pipeline is IPipeline {

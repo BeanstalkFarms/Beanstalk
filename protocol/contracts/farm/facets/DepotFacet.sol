@@ -11,6 +11,7 @@ import "../../libraries/Token/LibEth.sol";
 
 /**
  * @title Depot Facet
+ * @author Publius
  * @notice Perform function calls to external function calls through Pipeline in a single transcation
  **/
 

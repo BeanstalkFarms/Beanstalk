@@ -206,7 +206,7 @@ contract TokenFacet is ReentrancyGuard {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) public {
+    ) public payable {
         token.permit(owner, spender, value, deadline, v, r, s);
     }
 
