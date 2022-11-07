@@ -10,7 +10,7 @@ import "../../../libraries/Token/LibTransfer.sol";
 import "../../../libraries/LibPolynomial.sol";
 
 /**
- * @author Beanjoyer
+ * @author Beanjoyer, Malteasy
  * @title Pod Marketplace v2
  **/
 
@@ -25,6 +25,7 @@ contract Listing is PodTransfer {
         uint256 amount;
         uint24 pricePerPod;
         uint256 maxHarvestableIndex;
+        uint256 minFillAmount;
         LibTransfer.To mode;
     }
 
@@ -35,6 +36,7 @@ contract Listing is PodTransfer {
         uint256 amount, 
         uint24 pricePerPod, 
         uint256 maxHarvestableIndex, 
+        uint256 minFillAmount,
         bytes pricingFunction,
         LibTransfer.To mode,
         LibPolynomial.PriceType pricingType
@@ -61,6 +63,7 @@ contract Listing is PodTransfer {
         uint256 amount,
         uint24 pricePerPod,
         uint256 maxHarvestableIndex,
+        uint256 minFillAmount,
         LibTransfer.To mode
     ) internal {
         uint256 plotSize = s.a[msg.sender].field.plots[index];
@@ -71,11 +74,11 @@ contract Listing is PodTransfer {
         
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
 
-        s.podListings[index] = hashListing(start, amount, pricePerPod, maxHarvestableIndex, mode);
+        s.podListings[index] = hashListing(start, amount, pricePerPod, maxHarvestableIndex, minFillAmount, mode);
 
         bytes memory f;
         
-        emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, f, mode, LibPolynomial.PriceType.Fixed);
+        emit PodListingCreated(msg.sender, index, start, amount, pricePerPod, maxHarvestableIndex, minFillAmount, f, mode, LibPolynomial.PriceType.Fixed);
 
     }
 
@@ -84,6 +87,7 @@ contract Listing is PodTransfer {
         uint256 start,
         uint256 amount,
         uint256 maxHarvestableIndex,
+        uint256 minFillAmount,
         bytes calldata pricingFunction,
         LibTransfer.To mode
     ) internal {
@@ -99,6 +103,7 @@ contract Listing is PodTransfer {
             amount, 
             0, 
             maxHarvestableIndex, 
+            minFillAmount,
             pricingFunction,
             mode
         );
@@ -110,6 +115,7 @@ contract Listing is PodTransfer {
             amount, 
             0, 
             maxHarvestableIndex, 
+            minFillAmount,
             pricingFunction,
             mode,
             LibPolynomial.PriceType.Dynamic
@@ -126,6 +132,7 @@ contract Listing is PodTransfer {
                 l.amount,
                 l.pricePerPod,
                 l.maxHarvestableIndex,
+                l.minFillAmount,
                 l.mode
             );
         
@@ -151,6 +158,7 @@ contract Listing is PodTransfer {
             l.amount,
             l.pricePerPod,
             l.maxHarvestableIndex,
+            l.minFillAmount,
             pricingFunction,
             l.mode
         );
@@ -175,7 +183,10 @@ contract Listing is PodTransfer {
         uint256 amount,
         uint256 beanAmount
     ) private {
+        require(amount >= l.minFillAmount, "Marketplace: Fill must be >= minimum amount.");
         require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
+
+        delete s.podListings[l.index];
 
         if (l.amount > amount) {
             s.podListings[l.index.add(amount).add(l.start)] = hashListing(
@@ -183,13 +194,12 @@ contract Listing is PodTransfer {
                 l.amount.sub(amount),
                 l.pricePerPod,
                 l.maxHarvestableIndex,
+                l.minFillAmount,
                 l.mode
             );
         }
 
         emit PodListingFilled(l.account, to, l.index, l.start, amount, beanAmount);
-
-        delete s.podListings[l.index];
     }
 
     function __fillListingV2(
@@ -199,7 +209,10 @@ contract Listing is PodTransfer {
         uint256 amount,
         uint256 beanAmount
     ) private {
+        require(amount >= l.minFillAmount, "Marketplace: Fill must be >= minimum amount.");
         require(l.amount >= amount, "Marketplace: Not enough pods in Listing.");
+
+        delete s.podListings[l.index];
 
         if (l.amount > amount) {
             s.podListings[l.index.add(amount).add(l.start)] = hashListingV2(
@@ -207,14 +220,13 @@ contract Listing is PodTransfer {
                 l.amount.sub(amount),
                 l.pricePerPod,
                 l.maxHarvestableIndex,
+                l.minFillAmount,
                 pricingFunction,
                 l.mode
             );
         }
 
         emit PodListingFilled(l.account, to, l.index, l.start, amount, beanAmount);
-
-        delete s.podListings[l.index];
     }
 
     /*
@@ -261,9 +273,11 @@ contract Listing is PodTransfer {
         uint256 amount, 
         uint24 pricePerPod, 
         uint256 maxHarvestableIndex, 
+        uint256 minFillAmount,
         LibTransfer.To mode
     ) internal pure returns (bytes32 lHash) {
-        lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex,  mode == LibTransfer.To.EXTERNAL));
+        if(minFillAmount > 0) lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex,  minFillAmount, mode == LibTransfer.To.EXTERNAL));
+        else lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex,  mode == LibTransfer.To.EXTERNAL));
     }
 
     function hashListingV2(
@@ -271,11 +285,12 @@ contract Listing is PodTransfer {
         uint256 amount, 
         uint24 pricePerPod, 
         uint256 maxHarvestableIndex, 
+        uint256 minFillAmount,
         bytes calldata pricingFunction,
         LibTransfer.To mode
     ) internal pure returns (bytes32 lHash) {
         require(pricingFunction.length == LibPolynomial.getNumPieces(pricingFunction).mul(168).add(32), "Marketplace: Invalid pricing function.");
-        lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex, mode == LibTransfer.To.EXTERNAL, pricingFunction));
+        lHash = keccak256(abi.encodePacked(start, amount, pricePerPod, maxHarvestableIndex, minFillAmount, mode == LibTransfer.To.EXTERNAL, pricingFunction));
     }
 
 }
