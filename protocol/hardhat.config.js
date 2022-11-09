@@ -8,9 +8,10 @@ require('dotenv').config();
 const fs = require('fs')
 const { impersonateSigner, mintUsdc, mintBeans, getBeanMetapool, getUsdc, getBean, getBeanstalkAdminControls } = require('./utils');
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./test/utils/balances.js')
-const { PUBLIUS, BEAN_3_CURVE } = require('./test/utils/constants.js')  
+const { PUBLIUS, BEAN_3_CURVE, BCM } = require('./test/utils/constants.js')  
 const { to6 } = require('./test/utils/helpers.js')
 const { replant } = require("./replant/replant.js")
+const { rebalance } = require("./rebalance_seeds/rebalance.js")
 
 task('buyBeans').addParam("amount", "The amount of USDC to buy with").setAction(async(args) => {
   await mintUsdc(PUBLIUS, args.amount)
@@ -49,6 +50,11 @@ task('sunrise', async function () {
 task('replant', async () => {
   const account = await impersonateSigner(PUBLIUS)
   await replant(account)
+})
+
+task('rebalance', async () => {
+  const account = await impersonateSigner(BCM)
+  await rebalance(account)
 })
 
 task('diamondABI', 'Generates ABI file for diamond, includes all ABIs of facets', async () => {
