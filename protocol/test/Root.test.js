@@ -551,7 +551,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
-              1000000000
+              "100000000000000000"
             )
           ).to.revertedWith("ERC20: burn amount exceeds balance");
         });
@@ -601,7 +601,7 @@ describe("Root", function () {
                 },
               ],
               INTERNAL,
-              1000000000
+              "100000000000000000"
             )
           ).to.revertedWith("Balance: Insufficient internal balance");
         });
@@ -651,7 +651,7 @@ describe("Root", function () {
                 },
               ],
               INTERNAL_TOLERANT,
-              1000000000
+              "100000000000000000"
             )
           ).to.revertedWith("ERC20: burn amount exceeds balance");
         });
@@ -701,7 +701,7 @@ describe("Root", function () {
                 },
               ],
               INTERNAL_EXTERNAL,
-              1000000000
+              "100000000000000000"
             )
           ).to.revertedWith("ERC20: insufficient allowance");
         });
@@ -771,7 +771,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
-              9000000
+              "900000000000000"
             )
           ).to.revertedWith("Redeem: shares is greater than maxRootsIn");
         });
@@ -823,7 +823,7 @@ describe("Root", function () {
           beforeEach(async function () {
             this.result = await this.rootToken
               .connect(user)
-              .redeem([], EXTERNAL, 1000000000);
+              .redeem([], EXTERNAL, "100000000000000000");
           });
 
           it("properly updates the root total balances", async function () {
@@ -885,7 +885,7 @@ describe("Root", function () {
               .approveToken(
                 this.rootToken.address,
                 this.rootToken.address,
-                "10000000"
+                "1000000000000000"
               );
 
             await this.rootToken.connect(user).redeem(
@@ -897,7 +897,7 @@ describe("Root", function () {
                 },
               ],
               INTERNAL,
-              1000000000
+              "100000000000000000"
             );
           });
 
@@ -965,7 +965,7 @@ describe("Root", function () {
               userAddress,
               this.rootToken.address,
               this.rootToken.address,
-              "10000000",
+              "1000000000000000",
               nonce
             );
 
@@ -978,7 +978,7 @@ describe("Root", function () {
                 },
               ],
               INTERNAL,
-              1000000000,
+              "100000000000000000",
               sig.token,
               sig.value,
               sig.deadline,
@@ -1052,7 +1052,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
-              1000000000
+              "100000000000000000"
             );
           });
 
@@ -1117,7 +1117,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
-              1000000000
+              "100000000000000000"
             );
           });
 
@@ -1198,7 +1198,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
-              1000000000
+              "100000000000000000"
             );
           });
 
@@ -1212,7 +1212,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("9950495");
+            expect(await this.rootToken.totalSupply()).to.be.eq("995049504950495");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -1225,7 +1225,7 @@ describe("Root", function () {
               "10100000"
             );
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "9950495"
+              "995049504950495"
             );
           });
         });
@@ -1281,7 +1281,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
-              1000000000
+              "100000000000000000"
             );
           });
 
@@ -1361,7 +1361,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
-              1000000000
+              "100000000000000000"
             );
           });
 
@@ -1375,7 +1375,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("10000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq("1000000000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -1388,7 +1388,7 @@ describe("Root", function () {
               "10100000"
             );
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
           });
         });
@@ -1443,7 +1443,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
-              1000000000
+              "100000000000000000"
             );
           });
 
@@ -1586,7 +1586,7 @@ describe("Root", function () {
             .deposit(this.siloToken.address, "1000", EXTERNAL);
 
           await expect(
-            this.rootToken.connect(user).mint([], EXTERNAL, 10000001)
+            this.rootToken.connect(user).mint([], EXTERNAL, 1000000000000001)
           ).to.revertedWith("Mint: shares is less than minRootsOut");
         });
       });
@@ -1701,7 +1701,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("10000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq("1000000000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -1716,7 +1716,7 @@ describe("Root", function () {
                 userAddress,
                 this.rootToken.address
               )
-            ).to.eq("10000000");
+            ).to.eq("1000000000000000");
           });
         });
 
@@ -1756,7 +1756,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("10000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq("1000000000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -1767,7 +1767,7 @@ describe("Root", function () {
             expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
             expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
           });
         });
@@ -1800,7 +1800,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("9000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq("900000000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -1813,7 +1813,7 @@ describe("Root", function () {
               "1000000"
             );
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "9000000"
+              "900000000000000"
             );
           });
         });
@@ -1852,7 +1852,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("10002500");
+            expect(await this.rootToken.totalSupply()).to.be.eq("1000250000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -1865,7 +1865,7 @@ describe("Root", function () {
               "10002500"
             );
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10002500"
+              "1000250000000000"
             );
           });
         });
@@ -1913,7 +1913,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("20000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq("2000000000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -1924,13 +1924,13 @@ describe("Root", function () {
             expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
             expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
 
             expect(await this.silo.balanceOfSeeds(user2Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user2Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user2Address)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
           });
         });
@@ -1980,7 +1980,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("20009999");
+            expect(await this.rootToken.totalSupply()).to.be.eq("2000999999999999");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -1991,13 +1991,13 @@ describe("Root", function () {
             expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
             expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10010000"
+              "1001000000000000"
             );
 
             expect(await this.silo.balanceOfSeeds(user2Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user2Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user2Address)).to.eq(
-              "9999999"
+              "999999999999999"
             );
           });
         });
@@ -2047,7 +2047,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("20000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq("2000000000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -2058,13 +2058,13 @@ describe("Root", function () {
             expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
             expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
 
             expect(await this.silo.balanceOfSeeds(user2Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user2Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user2Address)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
           });
         });
@@ -2131,7 +2131,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("30000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq("3000000000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -2142,19 +2142,19 @@ describe("Root", function () {
             expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
             expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
 
             expect(await this.silo.balanceOfSeeds(user2Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user2Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user2Address)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
 
             expect(await this.silo.balanceOfSeeds(user3Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user3Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user3Address)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
           });
         });
@@ -2221,7 +2221,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("30029998");
+            expect(await this.rootToken.totalSupply()).to.be.eq("3002999999999998");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -2232,19 +2232,19 @@ describe("Root", function () {
             expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
             expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10020000"
+              "1002000000000000"
             );
 
             expect(await this.silo.balanceOfSeeds(user2Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user2Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user2Address)).to.eq(
-              "10009999"
+              "1000999999999999"
             );
 
             expect(await this.silo.balanceOfSeeds(user3Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user3Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user3Address)).to.eq(
-              "9999999"
+              "999999999999999"
             );
           });
         });
@@ -2609,7 +2609,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("10000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq("1000000000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -2620,7 +2620,7 @@ describe("Root", function () {
             expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
             expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
           });
         });
@@ -2661,7 +2661,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("9000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq("900000000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -2674,7 +2674,7 @@ describe("Root", function () {
               "1000000"
             );
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "9000000"
+              "900000000000000"
             );
           });
         });
@@ -2721,7 +2721,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("10002500");
+            expect(await this.rootToken.totalSupply()).to.be.eq("1000250000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -2734,7 +2734,7 @@ describe("Root", function () {
               "10002500"
             );
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10002500"
+              "1000250000000000"
             );
           });
         });
@@ -2799,7 +2799,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("20000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq("2000000000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -2810,13 +2810,13 @@ describe("Root", function () {
             expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
             expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
 
             expect(await this.silo.balanceOfSeeds(user2Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user2Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user2Address)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
           });
         });
@@ -2882,7 +2882,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("20009999");
+            expect(await this.rootToken.totalSupply()).to.be.eq("2000999999999999");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -2893,13 +2893,13 @@ describe("Root", function () {
             expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
             expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10010000"
+              "1001000000000000"
             );
 
             expect(await this.silo.balanceOfSeeds(user2Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user2Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user2Address)).to.eq(
-              "9999999"
+              "999999999999999"
             );
           });
         });
@@ -2964,7 +2964,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("20000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq("2000000000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -2975,13 +2975,13 @@ describe("Root", function () {
             expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
             expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
 
             expect(await this.silo.balanceOfSeeds(user2Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user2Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user2Address)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
           });
         });
@@ -3072,7 +3072,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("30000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq("3000000000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -3083,19 +3083,19 @@ describe("Root", function () {
             expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
             expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
 
             expect(await this.silo.balanceOfSeeds(user2Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user2Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user2Address)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
 
             expect(await this.silo.balanceOfSeeds(user3Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user3Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user3Address)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
           });
         });
@@ -3186,7 +3186,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("30029998");
+            expect(await this.rootToken.totalSupply()).to.be.eq("3002999999999998");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -3197,19 +3197,19 @@ describe("Root", function () {
             expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
             expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10020000"
+              "1002000000000000"
             );
 
             expect(await this.silo.balanceOfSeeds(user2Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user2Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user2Address)).to.eq(
-              "10009999"
+              "1000999999999999"
             );
 
             expect(await this.silo.balanceOfSeeds(user3Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user3Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user3Address)).to.eq(
-              "9999999"
+              "999999999999999"
             );
           });
         });
@@ -3486,7 +3486,7 @@ describe("Root", function () {
                 },
               ],
               EXTERNAL,
-              10000001,
+              1000000000000001,
               this.signature.tokens,
               this.signature.values,
               this.signature.deadline,
@@ -3512,7 +3512,7 @@ describe("Root", function () {
             userAddress,
             this.rootToken.address,
             [this.siloToken.address],
-            ["5000"],
+            ["5000000000"],
             nonce
           );
           const nonce2 = await this.silo
@@ -3596,13 +3596,13 @@ describe("Root", function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
-              .deposit(this.siloToken.address, "1000", EXTERNAL);
+              .deposit(this.siloToken.address, "1000000000", EXTERNAL);
 
             this.deposits = [
               {
                 token: this.siloToken.address,
                 seasons: ["2"],
-                amounts: ["1000"],
+                amounts: ["1000000000"],
               },
             ];
             this.result = await this.rootToken
@@ -3612,7 +3612,7 @@ describe("Root", function () {
                   {
                     token: this.siloToken.address,
                     seasons: ["2"],
-                    amounts: ["1000"],
+                    amounts: ["1000000000"],
                   },
                 ],
                 EXTERNAL,
@@ -3629,29 +3629,29 @@ describe("Root", function () {
           it("properly updates the total balances", async function () {
             expect(
               await this.silo.balanceOfSeeds(this.rootToken.address)
-            ).to.eq("1000");
+            ).to.eq("1000000000");
             expect(
               await this.silo.balanceOfStalk(this.rootToken.address)
-            ).to.eq("10000000");
+            ).to.eq("10000000000000");
           });
 
-          it("properly updates the rootPerBdv", async function () {
-            expect(await this.rootToken.bdvPerRoot()).to.eq(to18("0.0001"));
+          it("properly updates the bdvPerRoot", async function () {
+            expect(await this.rootToken.bdvPerRoot()).to.eq("1000000");
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("10000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq("1000000000000000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
-            expect(await this.rootToken.underlyingBdv()).to.be.eq("1000");
+            expect(await this.rootToken.underlyingBdv()).to.be.eq("1000000000");
           });
 
           it("properly updates the user balance", async function () {
             expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
             expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10000000"
+              "1000000000000000000000"
             );
           });
         });
@@ -3693,12 +3693,12 @@ describe("Root", function () {
             ).to.eq("9000000");
           });
 
-          it("properly updates the rootPerBdv", async function () {
-            expect(await this.rootToken.bdvPerRoot()).to.eq(to18("0.0001"));
+          it("properly updates the bdvPerRoot", async function () {
+            expect(await this.rootToken.bdvPerRoot()).to.eq("1000000");
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("9000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq("900000000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -3711,7 +3711,7 @@ describe("Root", function () {
               "1000000"
             );
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "9000000"
+              "900000000000000"
             );
           });
         });
@@ -3760,7 +3760,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("10002500");
+            expect(await this.rootToken.totalSupply()).to.be.eq("1000250000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -3773,7 +3773,7 @@ describe("Root", function () {
               "10002500"
             );
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10002500"
+              "1000250000000000"
             );
           });
         });
@@ -3840,12 +3840,12 @@ describe("Root", function () {
             ).to.eq("20000000");
           });
 
-          it("properly updates the rootPerBdv", async function () {
-            expect(await this.rootToken.bdvPerRoot()).to.eq(to18("0.0001"));
+          it("properly updates the bdvPerRoot", async function () {
+            expect(await this.rootToken.bdvPerRoot()).to.eq("1000000");
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("20000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq("2000000000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -3856,13 +3856,13 @@ describe("Root", function () {
             expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
             expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
 
             expect(await this.silo.balanceOfSeeds(user2Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user2Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user2Address)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
           });
         });
@@ -3932,7 +3932,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("20009999");
+            expect(await this.rootToken.totalSupply()).to.be.eq("2000999999999999");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -3943,13 +3943,13 @@ describe("Root", function () {
             expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
             expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10010000"
+              "1001000000000000"
             );
 
             expect(await this.silo.balanceOfSeeds(user2Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user2Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user2Address)).to.eq(
-              "9999999"
+              "999999999999999"
             );
           });
         });
@@ -4018,7 +4018,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("20000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq("2000000000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -4029,13 +4029,13 @@ describe("Root", function () {
             expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
             expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
 
             expect(await this.silo.balanceOfSeeds(user2Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user2Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user2Address)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
           });
         });
@@ -4132,7 +4132,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("30000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq("3000000000000000");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -4143,19 +4143,19 @@ describe("Root", function () {
             expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
             expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
 
             expect(await this.silo.balanceOfSeeds(user2Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user2Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user2Address)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
 
             expect(await this.silo.balanceOfSeeds(user3Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user3Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user3Address)).to.eq(
-              "10000000"
+              "1000000000000000"
             );
           });
         });
@@ -4252,7 +4252,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("30029998");
+            expect(await this.rootToken.totalSupply()).to.be.eq("3002999999999998");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -4263,19 +4263,19 @@ describe("Root", function () {
             expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
             expect(await this.silo.balanceOfStalk(userAddress)).to.eq("0");
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "10020000"
+              "1002000000000000"
             );
 
             expect(await this.silo.balanceOfSeeds(user2Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user2Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user2Address)).to.eq(
-              "10009999"
+              "1000999999999999"
             );
 
             expect(await this.silo.balanceOfSeeds(user3Address)).to.eq("0");
             expect(await this.silo.balanceOfStalk(user3Address)).to.eq("0");
             expect(await this.rootToken.balanceOf(user3Address)).to.eq(
-              "9999999"
+              "999999999999999"
             );
           });
         });
