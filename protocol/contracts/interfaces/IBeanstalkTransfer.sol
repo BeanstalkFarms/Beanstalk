@@ -16,7 +16,7 @@ enum To {
     INTERNAL
 }
 
-interface IDepot {
+interface IBeanstalkTransfer {
     function transferTokenFrom(
         IERC20 token,
         address sender,

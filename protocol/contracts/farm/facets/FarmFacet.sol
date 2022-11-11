@@ -13,21 +13,22 @@ import {LibFunction} from "../../libraries/LibFunction.sol";
 /**
  * @title Farm Facet
  * @author Beasley, Publius
- * @notice Perform mutliple Beanstalk function calls in a single transaction
+ * @notice Perform multiple Beanstalk functions calls in a single transaction using Farm calls. 
+ * Any function stored in Beanstalk's EIP-2535 DiamondStorage can be called as a Farm call. (https://eips.ethereum.org/EIPS/eip-2535)
  **/
 
-// Advanced Data is a function call that allows for return values from existing functions
-// See LibFunction.buildAdvancedCalldata for details
-struct AdvancedData {
+// AdvancedFarmCall is a Farm call that can use a Clipboard.
+// See LibFunction.useClipboard for details
+struct AdvancedFarmCall {
     bytes callData;
-    bytes advancedData;
+    bytes clipboard;
 }
 
 contract FarmFacet {
     AppStorage internal s;
 
     /**
-     * @notice Call multiple functions in Beanstalk
+     * @notice Execute multiple Farm calls.
      * @param data The encoded function data for each of the calls
      * @return results The return data from each of the calls
     **/
@@ -44,29 +45,12 @@ contract FarmFacet {
     }
 
     /**
-     * @notice Call multiple functions in Beanstalk
-     * @param data The encoded function data for each of the calls
-     * @return results The return data from each of the calls
-    **/
-    function advancedFarm(bytes[] calldata data)
-        external
-        payable
-        withEth
-        returns (bytes[] memory results)
-    {
-        results = new bytes[](data.length);
-        for (uint256 i; i < data.length; ++i) {
-            results[i] = _farm(data[i]);
-        }
-    }
-
-    /**
-     * @notice Call multiple functions in Beanstalk using Advanced Function Calls
+     * @notice Execute multiple AdvancedFarmCalls.
      * @param data The encoded function data for each of the calls to make to this contract
      * See LibFunction.buildAdvancedCalldata for details on advanced data
      * @return results The results from each of the calls passed in via data
     **/
-    function advancedFarm(AdvancedData[] calldata data)
+    function advancedFarm(AdvancedFarmCall[] calldata data)
         external
         payable
         withEth
@@ -78,17 +62,17 @@ contract FarmFacet {
         }
     }
 
-    function _advancedFarm(AdvancedData calldata d, bytes[] memory returnData)
+    function _advancedFarm(AdvancedFarmCall calldata data, bytes[] memory returnData)
         internal
         returns (bytes memory result)
     {
-        bytes1 pipeType = d.advancedData[0];
-        // 0x00 -> Normal pipe: Standard function call
-        // else > Advanced pipe: Copy return data into function call through buildAdvancedCalldata
+        bytes1 pipeType = data.clipboard[0];
+        // 0x00 -> Static Call - Execute static call
+        // else > Advanced Call - Use clipboard on and execute call
         if (pipeType == 0x00) {
-            result = _farm(d.callData);
+            result = _farm(data.callData);
         } else {
-            result = LibFunction.buildAdvancedCalldata(d.callData, d.advancedData, returnData);
+            result = LibFunction.useClipboard(data.callData, data.clipboard, returnData);
             _farmMem(result);
         }
     }
