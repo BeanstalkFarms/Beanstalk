@@ -35,6 +35,8 @@ Markdown files for BIPs are hosted in the [Beanstalk Governance Proposals GitHub
 * [BIP-25](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-25-bf-budget-q4-2022.md): Beanstalk Farms Q4 2022 Budget
 * [BIP-26](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-26-bug-bounty-program.md): Immunefi Bug Bounty Program
 * [BIP-27](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-27-bs-budget-q4-2022.md): Bean Sprout Q4 2022 Budget
+* [BIP-28](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-28-pod-market-price-functions.md): Pod Market Price Functions
+* [BIP-29](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-29-pod-market-price-functions.md): Pod Market Price Functions
 
 ## Emergency Beanstalk Improvement Proposal (EBIP)
 
