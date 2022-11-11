@@ -93,6 +93,7 @@ async function depositAndMintRoot(account, token, amount, toMode) {
                 token: token,
                 seasons: [season],
                 amounts: [amount],
+                minRootsOut: 1,
             },
         ],
         EXTERNAL
@@ -160,6 +161,7 @@ async function mintRoot(account, token, seasons, amounts, toMode) {
             },
         ],
         toMode,
+        1,
         depositPermit.token,
         depositPermit.value,
         depositPermit.deadline,
@@ -188,6 +190,7 @@ async function mintRootFromTokens(account, transfers, toMode) {
     await root.connect(account).mintWithTokensPermit(
         transfers,
         toMode,
+        1,
         depositPermit.tokens,
         depositPermit.values,
         depositPermit.deadline,
