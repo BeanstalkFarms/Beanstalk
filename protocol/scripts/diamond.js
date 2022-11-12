@@ -1,4 +1,7 @@
+const { BEANSTALK } = require("../test/utils/constants")
+const { impersonateBeanstalk } = require("./impersonate")
 const fs = require('fs')
+
 const FacetCutAction = {
   Add: 0,
   Replace: 1,
@@ -77,7 +80,8 @@ async function deploy ({
   facetLibraries = {},
   args = [],
   verbose = false,
-  txArgs = {}
+  txArgs = {},
+  impersonate = false
 }) {
   if (arguments.length !== 1) {
     throw Error(`Requires only 1 map argument. ${arguments.length} arguments used.`)
@@ -122,19 +126,25 @@ async function deploy ({
 
   if (verbose) console.log(`Deploying ${diamondName}`)
 
-  const deployedDiamond = await diamondFactory.deploy(owner)
-  await deployedDiamond.deployed()
-  result = await deployedDiamond.deployTransaction.wait()
-  if (!result.status) {
-    console.log('Deploying diamond TRANSACTION FAILED!!! -------------------------------------------')
-    console.log('See block explorer app for details.')
-    console.log('Transaction hash:' + deployedDiamond.deployTransaction.hash)
-    throw (Error('failed to deploy diamond'))
-  }
-  if (verbose) console.log('Diamond deploy transaction hash:' + deployedDiamond.deployTransaction.hash)
+  let deployedDiamond
+  if (!impersonate) {
+    deployedDiamond = await diamondFactory.deploy(owner)
+    await deployedDiamond.deployed()
+    result = await deployedDiamond.deployTransaction.wait()
+    if (!result.status) {
+      console.log('Deploying diamond TRANSACTION FAILED!!! -------------------------------------------')
+      console.log('See block explorer app for details.')
+      console.log('Transaction hash:' + deployedDiamond.deployTransaction.hash)
+      throw (Error('failed to deploy diamond'))
+    }
+    if (verbose) console.log('Diamond deploy transaction hash:' + deployedDiamond.deployTransaction.hash)
 
-  if (verbose) console.log(`${diamondName} deployed: ${deployedDiamond.address}`)
-  if (verbose) console.log(`Diamond owner: ${owner}`)
+    if (verbose) console.log(`${diamondName} deployed: ${deployedDiamond.address}`)
+    if (verbose) console.log(`Diamond owner: ${owner}`)
+  } else {
+    await impersonateBeanstalk(owner)
+    deployedDiamond = await ethers.getContractAt('Diamond', BEANSTALK)
+  }
 
   const diamondCutFacet = await ethers.getContractAt('DiamondCutFacet', deployedDiamond.address)
   const tx = await diamondCutFacet.diamondCut(diamondCut, initDiamond.address, functionCall, txArgs)

@@ -1,5 +1,4 @@
 var fs = require('fs');
-const { ethers } = require('hardhat');
 
 const {
   ZERO_ADDRESS,
@@ -19,7 +18,8 @@ const {
   CURVE_REGISTRY,
   CURVE_ZAP,
   STABLE_FACTORY,
-  PRICE_DEPLOYER
+  PRICE_DEPLOYER,
+  BEANSTALK
 } = require('../test/utils/constants');
 const { impersonateSigner, mintEth } = require('../utils');
 
@@ -205,6 +205,18 @@ async function price() {
   await price.deployed()
 }
 
+async function impersonateBeanstalk(owner) {
+  let beanstalkJson = fs.readFileSync(`./artifacts/contracts/mocks/MockDiamond.sol/MockDiamond.json`);
+
+  await network.provider.send("hardhat_setCode", [
+    BEANSTALK,
+    JSON.parse(beanstalkJson).deployedBytecode,
+  ]);
+
+  beanstalk = await ethers.getContractAt('MockDiamond', BEANSTALK)
+  await beanstalk.mockInit(owner);
+}
+
 exports.impersonateRouter = router
 exports.impersonateBean = bean
 exports.impersonateCurve = curve
@@ -216,3 +228,4 @@ exports.impersonateUnripe = unripe
 exports.impersonateFertilizer = fertilizer
 exports.impersonateUsdc = usdc
 exports.impersonatePrice = price
+exports.impersonateBeanstalk = impersonateBeanstalk
