@@ -1,11 +1,14 @@
 var fs = require('fs');
-const { PIPELINE } = require('../test/utils/constants');
+const { PIPELINE, PIPELINE_DEPLOYER } = require('../test/utils/constants');
+const { impersonateSigner, mintEth } = require('../utils');
+const { deployAtNonce } = require('./contracts');
 
-async function deploy(account) {
-  const Pipeline = await ethers.getContractFactory('Pipeline', account);
-  const pipeline = await Pipeline.deploy();
-  await pipeline.deployed()
-  return pipeline
+async function deploy(account=undefined) {
+  if (account == undefined) {
+    account = await impersonateSigner(PIPELINE_DEPLOYER)
+    await mintEth(account.address)
+  }
+  return await deployAtNonce('Pipeline', account, n = 8)
 }
 
 async function impersonate() {
