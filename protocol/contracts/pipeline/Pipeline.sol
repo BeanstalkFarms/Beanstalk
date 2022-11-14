@@ -8,19 +8,21 @@ import "../libraries/LibFunction.sol";
 /**
  * @title Pipeline
  * @author Publius
- * @notice Executes generic function calls to other contracts
+ * @notice Pipeline creates a sandbox to execute any series of function calls on any series of protocols through Pipe functions.
+ * Any assets left in Pipeline between transactions can be transferred out by any account.
+ * Users Pipe a series of PipeCalls that each execute a function call to another protocol through Pipeline.
  * https://evmpipeline.org
  **/
 
 contract Pipeline is IPipeline {
 
     /**
-     * @notice Perform 1 external function call
+     * @notice Execute a single PipeCall.
      * Supports sending Ether through msg.value
-     * @param p A function call to execute stored in Pipe struct
-     * @return result The pipe function call return data
+     * @param p PipeCall to execute
+     * @return result return value of PipeCall
     **/
-    function pipe(Pipe calldata p)
+    function pipe(PipeCall calldata p)
         external
         payable
         override
@@ -30,12 +32,11 @@ contract Pipeline is IPipeline {
     }
     
     /**
-     * @notice Perform a list of a external function calls
-     * Does not support sending Ether
-     * @param pipes A list of function calls to execute
-     * @return results A list of pipe function call return data
+     * @notice Execute a list of executes a list of PipeCalls.
+     * @param pipes list of PipeCalls to execute
+     * @return results list of return values for each PipeCall
     **/
-    function multiPipe(Pipe[] calldata pipes)
+    function multiPipe(PipeCall[] calldata pipes)
         external
         payable
         override
@@ -48,12 +49,11 @@ contract Pipeline is IPipeline {
     }
 
     /**
-     * @notice Perform a list of advanced function calls
-     * Advanced function calls supprt sending Ether and return data injection
-     * @param pipes a list of advanced pipe function calls
-     * @return results a list of return values from the advanced function calls
+     * @notice Execute a list of AdvancedPipeCalls.
+     * @param pipes list of AdvancedPipeCalls to execute
+     * @return results list of return values for each AdvancedPipeCalls
     **/
-    function advancedPipe(AdvancedPipe[] calldata pipes)
+    function advancedPipe(AdvancedPipeCall[] calldata pipes)
         external
         payable
         override
@@ -86,28 +86,28 @@ contract Pipeline is IPipeline {
         LibFunction.checkReturn(success, result);
     }
 
-    // Execute advanced Pipeline function call
+    // Execute an AdvancedPipeCall
     function _advancedPipe(
-        AdvancedPipe calldata p,
+        AdvancedPipeCall calldata p,
         bytes[] memory returnData
     ) private returns (bytes memory result) {
-        uint256 value = getEthValue(p.advancedData);
+        uint256 value = getEthValue(p.clipboard);
         // 0x00 -> Normal pipe: Standard function call
         // else > Advanced pipe: Copy return data into function call through buildAdvancedCalldata
-        if (p.advancedData[0] == 0x00) {
+        if (p.clipboard[0] == 0x00) {
             result = _pipe(p.target, p.callData, value);
         } else {
-            result = LibFunction.buildAdvancedCalldata(p.callData, p.advancedData, returnData);
+            result = LibFunction.useClipboard(p.callData, p.clipboard, returnData);
             result = _pipeMem(p.target, result, value);
         }
     }
 
-    // Extracts Ether value from Advanced Pipe data
-    // The 2nd byte indicates whether there is an Ether value in the advanced data
-    // 0x00 -> No Ether value
-    // 0x01 -> Read last 32 bytes of advancedData to get Ether value
-    function getEthValue(bytes calldata advancedData) private pure returns (uint256 value) {
-        if (advancedData[1] == 0x00) return 0;
-        assembly { value := calldataload(sub(add(advancedData.offset, advancedData.length), 32))}
+    // Extracts Ether value from a Clipboard
+    // clipboard[1] indicates whether there is an Ether value in the advanced data
+    // if 0x00 -> No Ether value, return 0
+    // else -> return the last 32 bytes of clipboard
+    function getEthValue(bytes calldata clipboard) private pure returns (uint256 value) {
+        if (clipboard[1] == 0x00) return 0;
+        assembly { value := calldataload(sub(add(clipboard.offset, clipboard.length), 32))}
     }
 }

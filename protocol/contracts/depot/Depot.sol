@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/drafts/IERC20Permit.sol";
 import "../farm/facets/DepotFacet.sol";
-import "../interfaces/IDepot.sol";
+import "../interfaces/IBeanstalkTransfer.sol";
 import "../libraries/LibFunction.sol";
 
 /**
@@ -15,10 +15,11 @@ import "../libraries/LibFunction.sol";
  * in the same transaction that loads Ether, Pipes calls to other protocols and unloads Pipeline.
  * https://evmpipeline.org
 **/
+
 contract Depot is DepotFacet {
 
-    IDepot private constant beanstalk =
-        IDepot(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
+    IBeanstalkTransfer private constant beanstalk =
+        IBeanstalkTransfer(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
 
     /**
      * 
