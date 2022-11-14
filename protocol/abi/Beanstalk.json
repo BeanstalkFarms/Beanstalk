@@ -539,11 +539,11 @@
                     },
                     {
                         "internalType": "bytes",
-                        "name": "advancedData",
+                        "name": "clipboard",
                         "type": "bytes"
                     }
                 ],
-                "internalType": "struct AdvancedPipe[]",
+                "internalType": "struct AdvancedPipeCall[]",
                 "name": "pipes",
                 "type": "tuple[]"
             },
@@ -579,7 +579,7 @@
                         "type": "bytes"
                     }
                 ],
-                "internalType": "struct Pipe",
+                "internalType": "struct PipeCall",
                 "name": "p",
                 "type": "tuple"
             },
@@ -615,7 +615,7 @@
                         "type": "bytes"
                     }
                 ],
-                "internalType": "struct Pipe[]",
+                "internalType": "struct PipeCall[]",
                 "name": "pipes",
                 "type": "tuple[]"
             }
@@ -646,7 +646,7 @@
                         "type": "bytes"
                     }
                 ],
-                "internalType": "struct Pipe",
+                "internalType": "struct PipeCall",
                 "name": "p",
                 "type": "tuple"
             }
@@ -677,7 +677,7 @@
                         "type": "bytes"
                     }
                 ],
-                "internalType": "struct Pipe",
+                "internalType": "struct PipeCall",
                 "name": "p",
                 "type": "tuple"
             }
@@ -881,11 +881,11 @@
                     },
                     {
                         "internalType": "bytes",
-                        "name": "advancedData",
+                        "name": "clipboard",
                         "type": "bytes"
                     }
                 ],
-                "internalType": "struct AdvancedData[]",
+                "internalType": "struct AdvancedFarmCall[]",
                 "name": "data",
                 "type": "tuple[]"
             }
