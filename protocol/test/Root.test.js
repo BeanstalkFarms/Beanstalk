@@ -936,7 +936,7 @@ describe("Root", function () {
               INTERNAL_EXTERNAL,
               1000000000
             )
-          ).to.revertedWith("ERC20: insufficient allowance");
+          ).to.revertedWith("ERC20: burn amount exceeds balance");
         });
 
         it("reverts if amounts is empty", async function () {
