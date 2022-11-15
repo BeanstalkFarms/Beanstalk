@@ -1,9 +1,10 @@
 const { BEANSTALK } = require("../test/utils/constants");
 const { mintEth, impersonateBeanstalkOwner, getBeanstalk } = require("../utils");
 const { upgradeWithNewFacets } = require("../scripts/diamond");
-const { bip29, bip30 } = require("../scripts/bips");
+const { bip30 } = require("../scripts/bips");
+const { ebip6 } = require("../scripts/ebips")
 const { deployRoot } = require("../scripts/root");
-const { deployDepot, impersonateDepot } = require("../scripts/depot");
+const { impersonateDepot } = require("../scripts/depot");
 
 async function mockAdmin() {
     console.log('Adding Mocks')
@@ -28,7 +29,7 @@ async function mockSunrise() {
 }
 
 async function deployV2_1() {
-    await bip29()
+    await ebip6()
     await bip30()
     await mockAdmin()
     await deployRoot()
