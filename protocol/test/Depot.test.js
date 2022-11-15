@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const { defaultAbiCoder } = require('ethers/lib/utils.js');
 const { deploy } = require('../scripts/deploy.js');
-const { deployPipeline } = require('../scripts/pipeline.js');
+const { deployPipeline, impersonatePipeline } = require('../scripts/pipeline.js');
 const { deployContract } = require('../scripts/contracts.js');
 const { getAltBeanstalk, getBean, getUsdc } = require('../utils/contracts.js');
 const { signERC2612Permit } = require("eth-permit");
@@ -11,6 +11,7 @@ const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./
 const { BEAN_3_CURVE, THREE_POOL, THREE_CURVE, STABLE_FACTORY, WETH, BEAN, PIPELINE } = require('./utils/constants.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+const { impersonateDepot } = require('../scripts/depot.js');
 
 let user, user2, owner;
 
@@ -27,9 +28,13 @@ describe('Depot', function () {
         this.beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE)
         this.weth = await ethers.getContractAt("MockWETH", WETH)
 
-        const account = impersonateSigner('0x533545dE45Bd44e6B5a6D649256CCfE3b6E1abA6')
-        pipeline = await deployContract('Pipeline', account)
-        this.depot = await deployContract('Depot', account)
+        pipeline = await impersonatePipeline()
+        this.depot = await impersonateDepot()
+
+        this.erc1155 = await (await ethers.getContractFactory('MockERC1155', owner)).deploy('Mock')
+        await this.erc1155.connect(user).setApprovalForAll(this.depot.address, true)
+
+        this.erc721 = await (await ethers.getContractFactory('MockERC721', owner)).deploy()
 
         this.mockContract = await (await ethers.getContractFactory('MockContract', owner)).deploy()
         await this.mockContract.deployed()
@@ -229,13 +234,23 @@ describe('Depot', function () {
         
     })
 
+    it("Reverts if not INTERNAL or EXTERNAL", async function () {
+        await expect(this.depot.transferToken(
+            this.siloToken.address,
+            PIPELINE,
+            to6('1'),
+            INTERNAL_TOLERANT,
+            EXTERNAL
+        )).to.be.revertedWith("Mode not supported")
+    })
+
     describe("Permit and Transfer ERC-20 token", async function () {
         beforeEach(async function () {
             const signature = await signERC2612Permit(
                 ethers.provider,
                 this.siloToken.address,
                 user.address,
-                this.beanstalk.address,
+                this.depot.address,
                 '10000000',
             );
 
@@ -294,6 +309,70 @@ describe('Depot', function () {
         it('transfers token', async function () {
             expect(await this.beanstalk.getInternalBalance(BEAN, user.address)).to.be.equal(to6('0'))
             expect(await this.bean.balanceOf(PIPELINE)).to.be.equal(to6('1'))
+        })
+    })
+
+    describe("Transfer ERC-1155", async function () {
+        beforeEach(async function () {
+            await this.erc1155.mockMint(user.address, '0', '5')
+            await this.depot.connect(user).transferERC1155(this.erc1155.address, PIPELINE, '0', '2')
+        })
+
+        it('transfers ERC-1155', async function () {
+            expect(await this.erc1155.balanceOf(PIPELINE, '0')).to.be.equal('2')
+            expect(await this.erc1155.balanceOf(user.address, '0')).to.be.equal('3')
+        })
+    })
+
+    describe("Batch Transfer ERC-1155", async function () {
+        beforeEach(async function () {
+            await this.erc1155.mockMint(user.address, '0', '5')
+            await this.erc1155.mockMint(user.address, '1', '10')
+            await this.depot.connect(user).batchTransferERC1155(this.erc1155.address, PIPELINE, ['0', '1'], ['2', '3'])
+        })
+
+        it('transfers ERC-1155', async function () {
+            const balances = await this.erc1155.balanceOfBatch(
+                [PIPELINE, PIPELINE, user.address, user.address], 
+                ['0', '1', '0', '1']
+            )
+            expect(balances[0]).to.be.equal('2')
+            expect(balances[1]).to.be.equal('3')
+            expect(balances[2]).to.be.equal('3')
+            expect(balances[3]).to.be.equal('7')
+        })
+    })
+
+    describe("Transfer ERC-721", async function () {
+        beforeEach(async function () {
+            await this.erc721.mockMint(user.address, '0')
+            await this.erc721.connect(user).approve(this.depot.address, '0')
+            await this.depot.connect(user).transferERC721(this.erc721.address, PIPELINE, '0')
+        })
+
+        it('transfers ERC-721', async function () {
+            expect(await this.erc721.ownerOf('0')).to.be.equal(PIPELINE)
+        })
+    })
+
+    describe("Permit and transfer ERC-721", async function () {
+        beforeEach(async function () {
+            await this.erc721.mockMint(user.address, '0')
+            const permit = this.depot.interface.encodeFunctionData("permitERC721", [
+                this.erc721.address,
+                this.depot.address,
+                '0',
+                '0',
+                ethers.constants.HashZero
+            ])
+            const transfer = this.depot.interface.encodeFunctionData('transferERC721', [
+                this.erc721.address, PIPELINE, '0'
+            ])
+            await this.depot.connect(user).farm([permit, transfer])
+        })
+
+        it('transfers ERC-721', async function () {
+            expect(await this.erc721.ownerOf('0')).to.be.equal(PIPELINE)
         })
     })
 })

@@ -4,6 +4,8 @@ pragma experimental ABIEncoderV2;
 
 import "../interfaces/IPipeline.sol";
 import "../libraries/LibFunction.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155Holder.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
 
 /**
  * @title Pipeline
@@ -14,8 +16,7 @@ import "../libraries/LibFunction.sol";
  * https://evmpipeline.org
  **/
 
-contract Pipeline is IPipeline {
-
+contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
     /**
      * @notice Execute a single PipeCall.
      * Supports sending Ether through msg.value

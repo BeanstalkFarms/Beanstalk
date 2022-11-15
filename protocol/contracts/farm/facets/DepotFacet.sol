@@ -18,7 +18,7 @@ import "../../libraries/Token/LibEth.sol";
 
 contract DepotFacet {
     address private constant PIPELINE =
-        0xc5a5C42992dECbae36851359345FE25997F5C42d; // TO DO: Update with final address.
+        0xb1b300007b05D708a4BBFE71aAF64fe0B27a0125; // TO DO: Update with final address.
 
     /**
      * @notice Pipe a PipeCall through Pipeline.

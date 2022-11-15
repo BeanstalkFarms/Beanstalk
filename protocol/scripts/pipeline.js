@@ -17,6 +17,7 @@ async function impersonate() {
     PIPELINE,
     JSON.parse(json).deployedBytecode,
   ]);
+  return await ethers.getContractAt('Pipeline', PIPELINE)
 }
 
 exports.deployPipeline = deploy
