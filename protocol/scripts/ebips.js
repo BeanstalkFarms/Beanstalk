@@ -10,8 +10,8 @@ async function ebip6(mock = true, account = undefined) {
     beanstalk = await getBeanstalk()
     const tokenFacet = await (await ethers.getContractFactory("TokenFacet", account)).deploy()
     console.log(`Token Facet deployed to: ${tokenFacet.address}`)
-    const ebip5 = await (await ethers.getContractFactory("InitEBip5", account)).deploy()
-    console.log(`EBIP-5 deployed to: ${ebip5.address}`)
+    const ebip6 = await (await ethers.getContractFactory("InitEBip6", account)).deploy()
+    console.log(`EBIP-6 deployed to: ${ebip6.address}`)
     const dc = {
         diamondCut: [
                         [
@@ -25,10 +25,9 @@ async function ebip6(mock = true, account = undefined) {
                             ['0xd3f4ec6f']
                         ]
                     ],
-        initFacetAddress: ebip5.address,
-        functionCall: ebip5.interface.encodeFunctionData('init', [])
+        initFacetAddress: ebip6.address,
+        functionCall: ebip6.interface.encodeFunctionData('init', [])
     }
-    console.log(Object.values(dc));
     if (mock) {
         const receipt = await beanstalk.connect(account).diamondCut(...Object.values(dc))
     } else {
@@ -36,7 +35,7 @@ async function ebip6(mock = true, account = undefined) {
         console.log(JSON.stringify(dc, null, 4))
         console.log("Encoded: -------------------------------------------------------------")
         console.log(encodedDiamondCut)
-        const dcName = `diamondCut-${'InitEBip5'}-${Math.floor(Date.now() / 1000)}-facets.json`
+        const dcName = `diamondCut-${'InitEBip6'}-${Math.floor(Date.now() / 1000)}-facets.json`
         await fs.writeFileSync(`./diamondCuts/${dcName}`, JSON.stringify({diamondCut: dc, encoded: encodedDiamondCut }, null, 4));
         return dc
     }

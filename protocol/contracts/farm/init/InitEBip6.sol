@@ -9,9 +9,9 @@ import {AppStorage} from "../AppStorage.sol";
 
 /**
  * @author Publius
- * @title InitEBip5 updates the mappings of Pod Orders created before BIP-29.
+ * @title InitEBip6 updates the mappings of Pod Orders created before BIP-29.
  **/
-contract InitEBip5 {
+contract InitEBip6 {
     AppStorage internal s;
 
     function init() external {
