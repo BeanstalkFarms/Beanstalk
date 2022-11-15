@@ -5,8 +5,9 @@ const { signERC2612Permit } = require("eth-permit");
 const { getPipeline, getRoot } = require("../utils/contracts");
 const { to18 } = require("../test/utils/helpers");
 const { printGasUsed } = require("../utils/helpers");
+const { increaseNonce } = require("./contracts");
 
-const MOCK_ROOT_DEPLOYER = '0x48CCD287c3D62A09F01210b9fa0b78f44769d1De'
+const MOCK_ROOT_DEPLOYER = '0xa6542Ba5588d275e2e7d0fB2b0aa295a56003B72'
 
 async function deploy(mock = true, account = undefined) {
 
@@ -14,6 +15,10 @@ async function deploy(mock = true, account = undefined) {
         account = await impersonateSigner(MOCK_ROOT_DEPLOYER)
         await mintEth(MOCK_ROOT_DEPLOYER)
     }
+    console.log(`Start Nonce: ${await ethers.provider.getTransactionCount(account.address)}`)
+    await increaseNonce(account, 7)
+    console.log(`Deploying Contract with nonce: ${await ethers.provider.getTransactionCount(account.address)}`)
+
     root = await ethers.getContractFactory("Root", {
         signer: account,
     });
