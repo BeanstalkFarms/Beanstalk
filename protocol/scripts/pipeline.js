@@ -8,7 +8,7 @@ async function deploy(account=undefined) {
     account = await impersonateSigner(PIPELINE_DEPLOYER)
     await mintEth(account.address)
   }
-  return await deployAtNonce('Pipeline', account, n = 8)
+  return await deployAtNonce('Pipeline', account, n = 3)
 }
 
 async function impersonate() {
@@ -17,6 +17,7 @@ async function impersonate() {
     PIPELINE,
     JSON.parse(json).deployedBytecode,
   ]);
+  return await ethers.getContractAt('Pipeline', PIPELINE)
 }
 
 exports.deployPipeline = deploy

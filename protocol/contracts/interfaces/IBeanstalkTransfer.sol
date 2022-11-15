@@ -17,12 +17,11 @@ enum To {
 }
 
 interface IBeanstalkTransfer {
-    function transferTokenFrom(
+    function transferInternalTokenFrom(
         IERC20 token,
         address sender,
         address recipient,
         uint256 amount,
-        From fromMode,
         To toMode
     ) external payable;
 

@@ -16,6 +16,7 @@ async function impersonate() {
     DEPOT,
     JSON.parse(json).deployedBytecode,
   ]);
+  return await ethers.getContractAt("Depot", DEPOT)
 }
 
 exports.deployDepot = deploy

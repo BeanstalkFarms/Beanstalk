@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const { defaultAbiCoder } = require('ethers/lib/utils.js');
 const { deploy } = require('../scripts/deploy.js');
-const { deployPipeline } = require('../scripts/pipeline.js');
+const { deployPipeline, impersonatePipeline } = require('../scripts/pipeline.js');
 const { getAltBeanstalk, getBean, getUsdc } = require('../utils/contracts.js');
 const { toBN, encodeAdvancedData } = require('../utils/index.js');
 const { impersonateSigner } = require('../utils/signer.js');
@@ -25,7 +25,7 @@ describe('Depot Facet', function () {
     this.weth = await ethers.getContractAt("MockWETH", WETH)
 
     const account = impersonateSigner('0x533545dE45Bd44e6B5a6D649256CCfE3b6E1abA6')
-    pipeline = await deployPipeline(account)
+    pipeline = await impersonatePipeline(account)
 
     this.mockContract = await (await ethers.getContractFactory('MockContract', owner)).deploy()
     await this.mockContract.deployed()
