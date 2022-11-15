@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts-upgradeable-8/token/ERC20/IERC20Upgradeable.sol";
@@ -62,12 +62,11 @@ interface IBeanstalk {
 
     function update(address account) external payable;
 
-    function transferTokenFrom(
+    function transferInternalTokenFrom(
         IERC20Upgradeable token,
         address from,
         address to,
         uint256 amount,
-        From fromMode,
         To toMode
     ) external payable;
 
