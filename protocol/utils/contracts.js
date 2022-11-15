@@ -1,6 +1,6 @@
 const fs = require('fs');
 const beanstalkABI = require("../abi/Beanstalk.json");
-const { BEANSTALK, BEAN, BEAN_3_CURVE, USDC, FERTILIZER, PRICE } = require('../test/utils/constants');
+const { BEANSTALK, BEAN, BEAN_3_CURVE, USDC, FERTILIZER, PRICE, PIPELINE, ROOT } = require('../test/utils/constants');
 
 async function getBeanstalk() {
     return await ethers.getContractAt(beanstalkABI, BEANSTALK);
@@ -8,6 +8,10 @@ async function getBeanstalk() {
 
 async function getBeanstalkAdminControls() {
     return await ethers.getContractAt('MockAdminFacet', BEANSTALK);
+}
+
+async function getAltBeanstalk(address) {
+    return await ethers.getContractAt(beanstalkABI, address);
 }
 
 async function getBean() {
@@ -35,6 +39,14 @@ async function getFertilizer() {
     return await ethers.getContractAt('Fertilizer', FERTILIZER)
 }
 
+async function getPipeline() {
+    return await ethers.getContractAt('Pipeline', PIPELINE)
+}
+
+async function getRoot() {
+    return await ethers.getContractAt('Root',  ROOT)
+}
+
 exports.getBeanstalk = getBeanstalk;
 exports.getBean = getBean;
 exports.getUsdc = getUsdc;
@@ -43,3 +55,6 @@ exports.getBeanMetapool = getBeanMetapool;
 exports.getBeanstalkAdminControls = getBeanstalkAdminControls;
 exports.getFertilizerPreMint = getFertilizerPreMint
 exports.getFertilizer = getFertilizer
+exports.getAltBeanstalk = getAltBeanstalk
+exports.getPipeline = getPipeline
+exports.getRoot = getRoot

@@ -20,6 +20,7 @@
     "csvtojson": "^2.0.10",
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.5.2",
+    "ganache-cli": "^6.12.2",
     "hardhat": "^2.4.3",
     "hardhat-contract-sizer": "^2.0.3",
     "hardhat-gas-reporter": "^1.0.4",
@@ -33,6 +34,7 @@
     "dotenv": "^10.0.0",
     "eth-permit": "^0.2.1",
     "keccak256": "^1.0.6",
+    "mathjs": "^11.0.1",
     "merkletreejs": "^0.2.31"
   }
 }

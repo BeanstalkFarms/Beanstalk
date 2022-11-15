@@ -55,6 +55,12 @@ The following facets are part of the [diamond functionality](https://github.com/
 |DiamondLoupeFacet    |[0xB51D5C699B749E0382e257244610039dDB272Da0](https://etherscan.io/address/0xB51D5C699B749E0382e257244610039dDB272Da0)|
 |OwnershipFacet       |[0x5D45283Ff53aabDb93693095039b489Af8b18Cf7](https://etherscan.io/address/0x5D45283Ff53aabDb93693095039b489Af8b18Cf7)|
 
+## Bug Bounty
+
+The Beanstalk DAO partnered with Immunefi to launch a bug bounty program with rewards up to 1.1M Beans.
+
+You can find the bug bounty program and submit bug reports [here](https://immunefi.com/bounty/beanstalk).
+
 ## Setup
 1. clone the repository
 2. run `cd protocol` to enter the protocol repository

@@ -10,6 +10,7 @@ const {
   impersonateFertilizer,
   impersonatePrice
 } = require('./impersonate.js')
+
 function addCommas(nStr) {
   nStr += ''
   const x = nStr.split('.')
@@ -108,6 +109,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     marketplaceFacet,
     ownershipFacet,
     pauseFacet,
+    depotFacet,
     seasonFacet,
     siloFacet,
     fertilizerFacet,
@@ -124,6 +126,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'MockFundraiserFacet',
       'MockMarketplaceFacet',
       'PauseFacet',
+      'DepotFacet',
       'MockSeasonFacet',
       'MockSiloFacet',
       'MockFertilizerFacet',
@@ -142,6 +145,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'MarketplaceFacet',
       'OwnershipFacet',
       'PauseFacet',
+      'DepotFacet',
       'SeasonFacet',
       'SiloFacet',
       'FertilizerFacet',
@@ -178,6 +182,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['MarketplaceFacet', marketplaceFacet],
       ['OwnershipFacet', ownershipFacet],
       ['PauseFacet', pauseFacet],
+      ['DepotFacet', depotFacet],
       ['SeasonFacet', seasonFacet],
       ['SiloFacet', siloFacet],
       ['FertilizerFacet', fertilizerFacet],
@@ -220,6 +225,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     marketplaceFacet,
     ownershipFacet,
     pauseFacet,
+    depotFacet,
     seasonFacet,
     siloFacet,
     fertilizerFacet,
