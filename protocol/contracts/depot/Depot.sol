@@ -179,7 +179,6 @@ contract Depot is DepotFacet {
         uint256 deadline,
         uint8 v,
         bytes32 r,
-      
         bytes32 s
     ) external payable {
         beanstalk.permitToken(owner, spender, token, value, deadline, v, r, s);
