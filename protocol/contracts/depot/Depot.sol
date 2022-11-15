@@ -6,6 +6,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/drafts/IERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "../farm/facets/DepotFacet.sol";
 import "../interfaces/IBeanstalkTransfer.sol";
 import "../interfaces/IERC4494.sol";
@@ -20,6 +21,8 @@ import "../libraries/LibFunction.sol";
 **/
 
 contract Depot is DepotFacet {
+
+    using SafeERC20 for IERC20;
 
     IBeanstalkTransfer private constant beanstalk =
         IBeanstalkTransfer(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
@@ -68,7 +71,7 @@ contract Depot is DepotFacet {
         To toMode
     ) external payable {
         if (fromMode == From.EXTERNAL) {
-            token.transferFrom(msg.sender, recipient, amount);
+            token.safeTransferFrom(msg.sender, recipient, amount);
         } else if (fromMode == From.INTERNAL) {
             beanstalk.transferInternalTokenFrom(token, msg.sender, recipient, amount, toMode);
         } else {
