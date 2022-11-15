@@ -512,7 +512,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         }
         uint256 supply = totalSupplyMinusOutstandingLoanBalance();
         if (supply == 0) {
-            shares = stalk;
+            shares = stalk * 1e8; // Stalk is 1e10 so we want to initialize the initial supply to 1e18
         } else if (isDeposit) {
             shares =
                 supply.mulDiv(
