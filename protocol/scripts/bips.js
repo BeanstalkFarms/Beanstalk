@@ -9,14 +9,6 @@ async function bip30(mock = true, account = undefined, deployAccount = undefined
         await mintEth(account.address)
     }
 
-    if (mock) {
-        await impersonatePipeline()
-    } else {
-        const pipeline = await deployPipeline(deployAccount)
-        console.log(pipeline.address);
-        // Note: Make sure pipeline is defined in C.sol correctly.
-    }
-
     beanstalk = await getBeanstalk()
     await upgradeWithNewFacets({
         diamondAddress: BEANSTALK,

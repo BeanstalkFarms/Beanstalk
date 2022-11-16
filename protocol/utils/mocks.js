@@ -3,7 +3,7 @@ const { mintEth, impersonateBeanstalkOwner, getBeanstalk } = require("../utils")
 const { upgradeWithNewFacets } = require("../scripts/diamond");
 const { bip30 } = require("../scripts/bips");
 const { ebip6 } = require("../scripts/ebips")
-const { deployRoot } = require("../scripts/root");
+const { deployRoot, whitelistBeanRoot } = require("../scripts/root");
 const { impersonateDepot } = require("../scripts/depot");
 
 async function mockAdmin() {
@@ -29,11 +29,9 @@ async function mockSunrise() {
 }
 
 async function deployV2_1() {
-    await ebip6()
     await bip30()
     await mockAdmin()
-    await deployRoot()
-    await impersonateDepot()
+    await whitelistBeanRoot()
 }
 
 exports.mockAdmin = mockAdmin

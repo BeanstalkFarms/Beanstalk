@@ -1,5 +1,5 @@
 const { EXTERNAL, INTERNAL } = require("../test/utils/balances");
-const { BEAN, BEAN_3_CURVE, PUBLIUS, BEANSTALK } = require("../test/utils/constants");
+const { BEAN, BEAN_3_CURVE, PUBLIUS, BEANSTALK, ROOT_DEPLOYER } = require("../test/utils/constants");
 const { impersonateSigner, mintEth, getBean, getBeanstalk, signSiloDepositTokenPermit, signSiloDepositTokensPermit, encodeAdvancedData, toBN } = require("../utils");
 const { signERC2612Permit } = require("eth-permit");
 const { getPipeline, getRoot } = require("../utils/contracts");
@@ -28,6 +28,16 @@ async function deploy(mock = true, account = undefined) {
     console.log(`Root Token deployed at ${root.address}`);
 
     await root.connect(account).addWhitelistToken(BEAN);
+    console.log(`Whitelisted Bean: ${await root.whitelisted(BEAN)}`)
+
+    return root
+}
+
+async function whitelistBean() {
+    const owner = await impersonateSigner(ROOT_DEPLOYER)
+    await mintEth(ROOT_DEPLOYER);
+    const root = await getRoot()
+    await root.connect(owner).addWhitelistToken(BEAN);
     console.log(`Whitelisted Bean: ${await root.whitelisted(BEAN)}`)
 
     return root
@@ -209,3 +219,4 @@ exports.deployRoot = deploy
 exports.mintRoot = mintRoot
 exports.depositAndMintRoot = depositAndMintRoot
 exports.mintRootFromTokens = mintRootFromTokens
+exports.whitelistBeanRoot = whitelistBean
