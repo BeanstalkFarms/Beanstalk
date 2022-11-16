@@ -30,6 +30,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^3.4.0",
     "@openzeppelin/contracts-upgradeable": "^3.4.0",
+    "@openzeppelin/contracts-upgradeable-8": "npm:@openzeppelin/contracts-upgradeable@^4.7.3",
     "dotenv": "^10.0.0",
     "eth-permit": "^0.2.1",
     "keccak256": "^1.0.6",
