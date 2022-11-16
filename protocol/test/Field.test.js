@@ -349,7 +349,7 @@ describe('Field', function () {
     describe("Full With Listing", async function () {
       beforeEach(async function () {
         await this.field.incrementTotalHarvestableE(to6('101'))
-        this.result = await this.marketplace.connect(user).createPodListing('0', '0', '500', '500000', to6('200'), EXTERNAL);
+        this.result = await this.marketplace.connect(user).createPodListing('0', '0', '500', '500000', to6('200'), '0', EXTERNAL);
         this.result = await this.field.connect(user).harvest(['0'], EXTERNAL);
       })
 
