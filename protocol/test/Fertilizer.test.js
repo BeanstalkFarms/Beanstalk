@@ -1,10 +1,12 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
-const { deployFertilizer, impersonateFertilizer } = require('../scripts/deployFertilizer.js')
+const { deployFertilizer, impersonateFertilizerWithDiamonAddress } = require('../scripts/deployFertilizer.js')
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { BEAN, FERTILIZER, USDC, BEAN_3_CURVE, THREE_CURVE, UNRIPE_BEAN, UNRIPE_LP } = require('./utils/constants');
+const { dataImage } = require("./utils/dataImage.js");
 const { to6, to18 } = require('./utils/helpers.js');
+const axios = require("axios");
 let user,user2,owner,fert
 let userAddress, ownerAddress, user2Address
 
@@ -27,10 +29,10 @@ describe('Fertilize', function () {
     userAddress = user.address
     user2Address = user2.address
     const contracts = await deploy("Test", false, true)
-    // this.fert = await deployFertilizer(owner, false, mock=true)
-    this.fert = await impersonateFertilizer()
     ownerAddress = contracts.account
     this.diamond = contracts.beanstalkDiamond
+    // this.fert = await deployFertilizer(owner, false, mock=true)
+    this.fert = await impersonateFertilizerWithDiamonAddress(this.diamond.address)
     await this.fert.transferOwnership(this.diamond.address)
     // await user.sendTransaction({to: FERTILIZER, value: ethers.utils.parseEther("0.1")});
     // await hre.network.provider.request({method: "hardhat_impersonateAccount", params: [FERTILIZER]});
@@ -465,6 +467,39 @@ describe('Fertilize', function () {
       })
     })
   })
+
+  describe("2 mints with different ids and uris", async function () {
+    let mintOneReceipt, mintTwoReceipt;
+    beforeEach(async function () {
+      await this.season.teleportSunrise("6074");
+      const mintOneTx = await this.fertilizer
+        .connect(user)
+        .mintFertilizer("100", "0", EXTERNAL);
+      mintOneReceipt = await mintOneTx.wait();
+      await this.season.rewardToFertilizerE(to6("50"));
+      await this.season.teleportSunrise("6174");
+      await this.fertilizer
+        .connect(user)
+        .claimFertilized([to6("3.5")], INTERNAL);
+      const mintTwoTx = await this.fertilizer
+        .connect(user)
+        .mintFertilizer("25", "0", EXTERNAL);
+      mintTwoReceipt = await mintTwoTx.wait();
+    });
+
+    it("sets on-chain metadata and token URIs", async function () {
+      const tokenId = ethers.BigNumber.from(
+        mintTwoReceipt.events[15].data.substring(0, 66)
+      ).toString();
+
+      const uri = await this.fert.uri(tokenId);
+      const response = await axios.get(uri);
+      jsonResponse = JSON.parse(response.data.toString());
+
+      expect(jsonResponse.name).to.be.equal(`Fertilizer - ${tokenId}`);
+      expect(jsonResponse.image).to.be.equal(dataImage);
+    });
+  });
 
   describe("Fertilize", async function () {
     beforeEach(async function () {
