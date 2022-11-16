@@ -4917,6 +4917,39 @@
             },
             {
                 "internalType": "address",
+                "name": "sender",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "recipient",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "enum LibTransfer.To",
+                "name": "toMode",
+                "type": "uint8"
+            }
+        ],
+        "name": "transferInternalTokenFrom",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "contract IERC20",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
                 "name": "recipient",
                 "type": "address"
             },
@@ -4937,44 +4970,6 @@
             }
         ],
         "name": "transferToken",
-        "outputs": [],
-        "stateMutability": "payable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "contract IERC20",
-                "name": "token",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "sender",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "recipient",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            },
-            {
-                "internalType": "enum LibTransfer.From",
-                "name": "fromMode",
-                "type": "uint8"
-            },
-            {
-                "internalType": "enum LibTransfer.To",
-                "name": "toMode",
-                "type": "uint8"
-            }
-        ],
-        "name": "transferTokenFrom",
         "outputs": [],
         "stateMutability": "payable",
         "type": "function"
