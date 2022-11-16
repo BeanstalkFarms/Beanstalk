@@ -51,3 +51,5 @@ Markdown files for EBIPs are hosted in the [Beanstalk Governance Proposals GitHu
 * [EBIP-2](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/ebip/ebip-2-deltab-cap.md): deltaB Cap
 * [EBIP-3](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/ebip/ebip-3-pod-listing-cancellation.md): Pod Listing Cancellation
 * [EBIP-4](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/ebip/ebip-4-remove-v1-pod-order-functions.md): Remove V1 Pod Order Functions
+* [EBIP-5](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/ebip/ebip-5-remove-transfertokenfrom-function.md): Remove transferTokenFrom Function
+* [EBIP-6](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/ebip/ebip-6-resolve-ebip-4-and-ebip5.md): Resolve EBIP-4 and EBIP-5
