@@ -529,7 +529,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
             shares =
                 supply -
                 supply.mulDiv(
-                    _max(
+                    _min(
                         underlyingBdvAfter.mulDiv(
                             PRECISION,
                             underlyingBdv,
