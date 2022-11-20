@@ -9,6 +9,7 @@ temp
 .env
 archived
 .vscode
+diamondCut-*.json
 
 # Foundry
 cache/

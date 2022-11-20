@@ -9,12 +9,15 @@ import "../AppStorage.sol";
 import "../../libraries/Token/LibTransfer.sol";
 import "../../libraries/Token/LibWeth.sol";
 import "../../libraries/Token/LibEth.sol";
+import "../../libraries/Token/LibTokenPermit.sol";
+import "../../libraries/Token/LibTokenApprove.sol";
+import "../ReentrancyGuard.sol";
 
 /**
  * @author Publius
  * @title Transfer Facet handles transfers of assets
  */
-contract TokenFacet {
+contract TokenFacet is ReentrancyGuard {
     struct Balance {
         uint256 internalBalance;
         uint256 externalBalance;
@@ -30,6 +33,13 @@ contract TokenFacet {
         int256 delta
     );
 
+     event TokenApproval(
+        address indexed owner,
+        address indexed spender,
+        IERC20 token,
+        uint256 amount
+    );
+
     /**
      * Transfer
      **/
@@ -41,7 +51,123 @@ contract TokenFacet {
         LibTransfer.From fromMode,
         LibTransfer.To toMode
     ) external payable {
-        LibTransfer.transferToken(token, recipient, amount, fromMode, toMode);
+        LibTransfer.transferToken(
+            token,
+            msg.sender,
+            recipient,
+            amount,
+            fromMode,
+            toMode
+        );
+    }
+
+    function transferInternalTokenFrom(
+        IERC20 token,
+        address sender,
+        address recipient,
+        uint256 amount,
+        LibTransfer.To toMode
+    ) external payable nonReentrant {
+        LibTransfer.transferToken(
+            token,
+            sender,
+            recipient,
+            amount,
+            LibTransfer.From.INTERNAL,
+            toMode
+        );
+
+        if (sender != msg.sender) {
+            LibTokenApprove.spendAllowance(sender, msg.sender, token, amount);
+        }
+    }
+
+    /**
+     * Approval
+     **/
+
+    function approveToken(
+        address spender,
+        IERC20 token,
+        uint256 amount
+    ) external payable nonReentrant {
+        LibTokenApprove.approve(msg.sender, spender, token, amount);
+    }
+
+    function increaseTokenAllowance(
+        address spender,
+        IERC20 token,
+        uint256 addedValue
+    ) public virtual nonReentrant returns (bool) {
+        LibTokenApprove.approve(
+            msg.sender,
+            spender,
+            token,
+            LibTokenApprove.allowance(msg.sender, spender, token).add(addedValue)
+        );
+        return true;
+    }
+
+    function tokenAllowance(
+        address account,
+        address spender,
+        IERC20 token
+    ) public view virtual returns (uint256) {
+        return LibTokenApprove.allowance(account, spender, token);
+    }
+
+    function decreaseTokenAllowance(
+        address spender,
+        IERC20 token,
+        uint256 subtractedValue
+    ) public virtual nonReentrant returns (bool) {
+        uint256 currentAllowance = LibTokenApprove.allowance(
+            msg.sender,
+            spender,
+            token
+        );
+        require(
+            currentAllowance >= subtractedValue,
+            "Silo: decreased allowance below zero"
+        );
+        LibTokenApprove.approve(
+            msg.sender,
+            spender,
+            token,
+            currentAllowance.sub(subtractedValue)
+        );
+        return true;
+    }
+
+    function permitToken(
+        address owner,
+        address spender,
+        address token,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external payable nonReentrant {
+        LibTokenPermit.permit(owner, spender, token, value, deadline, v, r, s);
+        LibTokenApprove.approve(owner, spender, IERC20(token), value);
+    }
+
+    function tokenPermitNonces(address owner)
+        public
+        view
+        virtual
+        returns (uint256)
+    {
+        return LibTokenPermit.nonces(owner);
+    }
+
+    /**
+     * @dev See {IERC20Permit-DOMAIN_SEPARATOR}.
+     */
+    // solhint-disable-next-line func-name-mixedcase
+    function tokenPermitDomainSeparator() external view returns (bytes32) {
+        return LibTokenPermit._domainSeparatorV4();
     }
 
     /**

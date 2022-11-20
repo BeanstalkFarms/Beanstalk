@@ -16,7 +16,9 @@ import "../../../C.sol";
  * @author Publius
  * @title Pod Transfer
  **/
+ 
 contract PodTransfer is ReentrancyGuard {
+    
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
@@ -92,7 +94,7 @@ contract PodTransfer is ReentrancyGuard {
             owner,
             spender,
             currentAllowance.sub(amount, "Field: Insufficient approval.")
-        );
+            );
     }
 
     function setAllowancePods(

@@ -20,19 +20,22 @@
     "csvtojson": "^2.0.10",
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.5.2",
+    "ganache-cli": "^6.12.2",
     "hardhat": "^2.4.3",
     "hardhat-contract-sizer": "^2.0.3",
     "hardhat-gas-reporter": "^1.0.4",
     "json-bigint": "^1.0.0",
-    "solidity-coverage": "^0.7.16"
+    "solidity-coverage": "^0.7.21"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^3.4.0",
     "@openzeppelin/contracts-upgradeable": "^3.4.0",
+    "@openzeppelin/contracts-upgradeable-8": "npm:@openzeppelin/contracts-upgradeable@^4.7.3",
     "dotenv": "^10.0.0",
     "eth-permit": "^0.2.1",
     "hardhat-tracer": "^1.1.0-rc.9",
     "keccak256": "^1.0.6",
+    "mathjs": "^11.0.1",
     "merkletreejs": "^0.2.31"
   }
 }
