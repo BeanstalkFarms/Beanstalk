@@ -185,25 +185,6 @@ contract TokenFacet is ReentrancyGuard {
     }
 
     /**
-     * Permit
-     */
-
-    /// @notice permitERC20 is wrapper function for permit of ERC20Permit token
-    /// @dev See {IERC20Permit-permit}.
-    function permitERC20(
-        IERC20Permit token,
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) public payable {
-        token.permit(owner, spender, value, deadline, v, r, s);
-    }
-
-    /**
      * Getters
      **/
 

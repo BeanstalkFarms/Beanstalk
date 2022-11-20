@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "../farm/facets/DepotFacet.sol";
+import "../farm/facets/TokenSupportFacet.sol";
 import "../interfaces/IBeanstalkTransfer.sol";
 import "../interfaces/IERC4494.sol";
 import "../libraries/LibFunction.sol";
@@ -20,7 +21,7 @@ import "../libraries/LibFunction.sol";
  * https://evmpipeline.org
 **/
 
-contract Depot is DepotFacet {
+contract Depot is DepotFacet, TokenSupportFacet {
 
     using SafeERC20 for IERC20;
 
@@ -80,44 +81,6 @@ contract Depot is DepotFacet {
     }
 
     /**
-     * @notice Execute an ERC-721 token transfer
-     * @dev Wraps {IERC721-safeBatchTransferFrom}.
-    **/
-    function transferERC721(
-        IERC721 token,
-        address to,
-        uint256 id
-    ) external payable {
-        token.safeTransferFrom(msg.sender, to, id);
-    }
-
-    /**
-     * @notice Execute an ERC-1155 token transfer of a single Id.
-     * @dev Wraps {IERC1155-safeTransferFrom}.
-    **/
-    function transferERC1155(
-        IERC1155 token,
-        address to,
-        uint256 id,
-        uint256 value
-    ) external payable {
-        token.safeTransferFrom(msg.sender, to, id, value, new bytes(0));
-    }
-
-    /**
-     * @notice Execute an ERC-1155 token transfer of multiple Ids.
-     * @dev Wraps {IERC1155-safeBatchTransferFrom}.
-    **/
-    function batchTransferERC1155(
-        IERC1155 token,
-        address to,
-        uint256[] calldata ids,
-        uint256[] calldata values
-    ) external payable {
-        token.safeBatchTransferFrom(msg.sender, to, ids, values, new bytes(0));
-    }
-
-    /**
      * @notice Execute a single Beanstalk Deposit transfer.
      * @dev See {SiloFacet-transferDeposit}.
     **/
@@ -154,23 +117,6 @@ contract Depot is DepotFacet {
     **/
 
     /**
-     * @notice Execute a permit for an ERC-20 token.
-     * @dev See {IERC20Permit-permit}.
-    **/
-    function permitERC20(
-        IERC20Permit token,
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external payable {
-        token.permit(owner, spender, value, deadline, v, r, s);
-    }
-
-    /**
      * @notice Execute a permit for an ERC-20 Token stored in a Beanstalk Farm balance.
      * @dev See {TokenFacet-permitToken}.
     **/
@@ -185,20 +131,6 @@ contract Depot is DepotFacet {
         bytes32 s
     ) external payable {
         beanstalk.permitToken(owner, spender, token, value, deadline, v, r, s);
-    }
-
-    /**
-     * @notice Execute a permit for an ERC-721 token.
-     * @dev See {IERC4494-permit}.
-    **/
-    function permitERC721(
-        IERC4494 token,
-        address spender,
-        uint256 tokenId,
-        uint256 deadline,
-        bytes memory sig
-    ) external payable {
-        token.permit(spender, tokenId, deadline, sig);
     }
 
     /**
