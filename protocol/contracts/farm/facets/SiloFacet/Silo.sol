@@ -60,7 +60,7 @@ contract Silo is SiloExit {
         // Calculate balance of Earned Beans.
         beans = _balanceOfEarnedBeans(account, accountStalk);
         if (beans == 0) return 0;
-        s.earnedBeans = s.earnedBeans.sub(beans);
+        s.earnedBeans = s.earnedBeans.sub(uint128(beans));
         // Deposit Earned Beans
         LibTokenSilo.addDeposit(
             account,

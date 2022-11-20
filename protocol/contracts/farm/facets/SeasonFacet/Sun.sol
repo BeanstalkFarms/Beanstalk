@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "../../../libraries/Decimal.sol";
 import "../../../libraries/LibSafeMath32.sol";
+import "../../../libraries/LibSafeMath128.sol";
 import "./Oracle.sol";
 import "../../../C.sol";
 import "../../../libraries/LibFertilizer.sol";
@@ -17,6 +18,7 @@ import "../../../libraries/LibFertilizer.sol";
  **/
 contract Sun is Oracle {
     using SafeMath for uint256;
+    using LibSafeMath128 for uint128;
     using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
 
@@ -104,8 +106,10 @@ contract Sun is Oracle {
     }
 
     function rewardToSilo(uint256 amount) internal {
-        s.s.stalk = s.s.stalk.add(amount.mul(C.getStalkPerBean()));
-        s.earnedBeans = s.earnedBeans.add(amount);
+        // remove stalk gain 
+        //s.s.stalk = s.s.stalk.add(amount.mul(C.getStalkPerBean()));
+        s.earnedBeans = s.earnedBeans.add(uint128(amount));
+        s.newEarnedStalk = amount.mul(C.getStalkPerBean();) 
         s.siloBalances[C.beanAddress()].deposited = s
             .siloBalances[C.beanAddress()]
             .deposited

@@ -251,7 +251,8 @@ struct AppStorage {
 
     //////////////////////////////////
 
-    uint256 earnedBeans; // The number of Beans distributed to the Silo that have not yet been Deposited as a result of the Earn function being called.
+    uint128 earnedBeans; // The number of Beans distributed to the Silo that have not yet been Deposited as a result of the Earn function being called.
+    uint128 newEarnedStalk; // The number of stalk distrubuted to the silo that has not been deposited. 
     uint256[14] depreciated; // DEPRECATED - 14 slots that used to store state variables which have been deprecated through various updates. Storage slots can be left alone or reused.
     mapping (address => Account.State) a; // A mapping from Farmer address to Account state.
     uint32 bip0Start; // DEPRECATED - bip0Start was used to aid in a migration that occured alongside BIP-0.

@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../ReentrancyGuard.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/LibSafeMath32.sol";
+import "../../../libraries/LibSafeMath128.sol";
 import "../../../C.sol";
 
 /**
@@ -17,6 +18,7 @@ import "../../../C.sol";
  **/
 contract SiloExit is ReentrancyGuard {
     using SafeMath for uint256;
+    using LibSafeMath128 for uint128;
     using LibSafeMath32 for uint32;
 
     struct AccountSeasonOfPlenty {
@@ -86,10 +88,12 @@ contract SiloExit is ReentrancyGuard {
     {
         // There will be no Roots when the first deposit is made.
         if (s.s.roots == 0) return 0;
-
+        uint256 percentSeasonRemaining = 
+            LibMath.min((block.timestamp - s.timestamp) * 1e18 / 3600, 1e18);  
         // Determine expected user Stalk based on Roots balance
         // userStalk / totalStalk = userRoots / totalRoots
-        uint256 stalk = s.s.stalk.mul(s.a[account].roots).div(s.s.roots);
+        uint256 vestingEarnedStalk = s.newEarnedStalk.mul(percentSeasonRemaining).div(1e18);
+        uint256 stalk = s.s.stalk.sub(vestingEarnedStalk).mul(s.a[account].roots).div(s.s.roots);
 
         // Handle edge case caused by rounding
         if (stalk <= accountStalk) return 0;
