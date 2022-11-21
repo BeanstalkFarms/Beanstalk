@@ -5,7 +5,7 @@ const { signERC2612Permit } = require("eth-permit");
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { signTokenPermit } = require('../utils');
+const { signTokenPermit, getBeanstalk } = require('../utils');
 
 describe('Token', function () {
 
@@ -372,87 +372,6 @@ describe('Token', function () {
         })
     })
 
-    describe("Permit", async function () {
-        before(async function() {
-            await hre.network.provider.request({
-                method: "hardhat_impersonateAccount",
-                params: [BEANSTALK],
-            });
-    
-            [owner, user, user2] = await ethers.getSigners()
-    
-            const Bean = await ethers.getContractFactory("Bean", owner)
-            bean = await Bean.deploy()
-            await bean.deployed();
-            await bean.mint(user.address, toBean('100'))
-
-            result = await signERC2612Permit(
-                ethers.provider,
-                bean.address,
-                user.address,
-                owner.address,
-                '10000000'
-            );
-
-            fakeResult = await signERC2612Permit(
-                ethers.provider,
-                user.address,
-                user.address,
-                owner.address,
-                '10000000'
-            );
-
-            endedResult = await signERC2612Permit(
-                ethers.provider,
-                user.address,
-                user.address,
-                owner.address,
-                '10000000',
-                '1'
-            );
-        });
-
-        it('revert if fake permit', async function () {
-            await expect(this.tokenFacet.connect(user).permitERC20(
-                bean.address,
-                user.address,
-                owner.address,
-                toBean('10'),
-                fakeResult.deadline,
-                fakeResult.v,
-                fakeResult.r,
-                fakeResult.s
-            )).to.be.revertedWith('ERC20Permit: invalid signature')
-        });
-
-        it('revert when too much', async function () {
-            await this.tokenFacet.connect(user).permitERC20(
-                bean.address,
-                user.address, 
-                owner.address, 
-                toBean('10'), 
-                result.deadline, 
-                result.v, 
-                result.r, 
-                result.s
-            )
-
-            await expect(bean.connect(owner).transferFrom(user.address, user2.address, toBean('20'))).to.be.revertedWith("ERC20: transfer amount exceeds allowance")
-        });
-
-        it('revert deadline passed', async function () {
-            await expect(this.tokenFacet.connect(user).permitERC20(
-                bean.address,
-                user.address, 
-                owner.address, 
-                toBean('10'), 
-                endedResult.deadline, 
-                endedResult.v, 
-                endedResult.r, 
-                endedResult.s
-            )).to.be.revertedWith("ERC20Permit: expired deadline")
-        });
-    });
     describe("Token Approval", async function () {
         describe("approve allowance", async function () {
           beforeEach(async function () {
