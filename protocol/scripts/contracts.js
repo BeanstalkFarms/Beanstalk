@@ -18,12 +18,12 @@ async function increaseToNonce(account, nonce) {
 }
 
 async function increaseNonce(account, n = 1) {
-  await Promise.all([...Array(n).keys()].map(
-      (n) => account.sendTransaction({
-                  to: account.address,
-                  value: ethers.utils.parseEther("0")
-              })
-  ))
+    for (let i = 0; i < n; i++) {
+      await account.sendTransaction({
+          to: account.address,
+          value: ethers.utils.parseEther("0"),
+      })
+    }
 }
 
 exports.increaseNonce = increaseNonce
