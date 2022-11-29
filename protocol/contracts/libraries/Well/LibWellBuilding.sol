@@ -8,8 +8,10 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../tokens/ERC20/WellToken.sol";
 import "./Type/LibWellType.sol";
-import "./Balance/LibWellBalance.sol";
+import "./LibWellBalance.sol";
 import "./LibWellData.sol";
+import "./Pump/LibPump.sol";
+
 
 /**
  * @author Publius
@@ -23,6 +25,7 @@ library LibWellBuilding {
         IERC20[] tokens,
         LibWellType.WellType wellType,
         bytes typeData,
+        bytes[] pumps,
         bytes encodedData,
         bytes32 wellHash
     );
@@ -43,36 +46,38 @@ library LibWellBuilding {
         IERC20[] calldata tokens,
         LibWellType.WellType wellType,
         bytes calldata typeData,
+        bytes[] calldata pumps,
         string[] calldata symbols,
         uint8[] calldata decimals
-    ) internal returns (address wellId) {
+    ) internal returns (LibWellStorage.WellInfo memory w) {
         require(isWellValid(tokens, wellType, typeData), "LibWell: Well not valid.");
         require(tokens.length == symbols.length && tokens.length == decimals.length, "LibWell: arrays different lengths");
-        LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
-
         require(tokens.length < 9, "LibWell: 8 Tokens max");
 
-        LibWellStorage.WellInfo memory w;
-        w.tokens = tokens;
-        w.data = LibWellData.encodeData(wellType, uint8(w.tokens.length), decimals, typeData);
+        LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
 
         LibWellType.registerIfNeeded(wellType);
 
+        w.tokens = tokens;
+        w.data = LibWellData.encodeData(wellType, uint8(w.tokens.length), decimals, typeData);
+
+        for (uint i; i < pumps.length; ++i) {
+            require(uint8(pumps[i][1]) == tokens.length, "Pump: Wrong number of tokens.");
+        }
+
+        w.pumps = pumps;
         // Compute Salt for LP Token Deployment (Without Well Id being set)
-        bytes32 wh = LibWellStorage.computeWellHash(w);
+        w.wellId = deployWellToken(symbols, LibWellStorage.computeWellHash(w));
 
-        wellId = deployWellToken(symbols, wh);
+        s.wi[w.wellId] = w;
+        s.wh[w.wellId] = LibWellStorage.computeWellHash(w);
 
-        s.indices[s.numberOfWells] = wellId;
+        emit BuildWell(w.wellId, tokens, wellType, typeData, pumps, w.data, s.wh[w.wellId]);
+
+        s.indices[s.numberOfWells] = w.wellId;
         s.numberOfWells = s.numberOfWells.add(1);
-        w.wellId = wellId;
 
-        wh = LibWellStorage.computeWellHash(w);
-
-        s.wi[wellId] = w;
-        s.wh[wellId] = wh;
-
-        emit BuildWell(w.wellId, tokens, wellType, typeData, w.data, wh);
+        LibPump.updateLastBlockNumber(s.wh[w.wellId], tokens.length);
     }
 
     function deployWellToken(

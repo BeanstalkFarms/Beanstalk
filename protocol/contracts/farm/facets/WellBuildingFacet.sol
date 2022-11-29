@@ -10,6 +10,35 @@ import "../ReentrancyGuard.sol";
  * @author Publius
  * @title Well Building Facet
  **/
+
+enum From {
+    EXTERNAL,
+    INTERNAL,
+    EXTERNAL_INTERNAL,
+    INTERNAL_TOLERANT
+}
+enum To {
+    EXTERNAL,
+    INTERNAL
+}
+
+interface IWell {
+    function addLiquidity(
+        LibWellStorage.WellInfo calldata w,
+        uint256[] memory tokenAmounts,
+        uint256 minLPAmountOut,
+        From fromMode,
+        To toMode
+    ) external payable returns (uint256 lpAmountOut);
+}
+
+struct AddInitialLiquidity {
+    uint256[] tokenAmounts;
+    uint256 minLPAmountOut;
+    From fromMode;
+    To toMode;
+}
+
 contract WellBuildingFacet is ReentrancyGuard {
 
     /**
@@ -20,15 +49,16 @@ contract WellBuildingFacet is ReentrancyGuard {
         IERC20[] calldata tokens,
         LibWellType.WellType wellType,
         bytes calldata typeData,
+        bytes[] calldata pumps,
         string[] calldata symbols,
         uint8[] calldata decimals
     ) external payable returns (address wellId) {
-        wellId = LibWellBuilding.buildWell(tokens, wellType, typeData, symbols, decimals);
+        wellId = LibWellBuilding.buildWell(tokens, wellType, typeData, pumps, symbols, decimals).wellId;
     }
 
     function modifyWell(
-         LibWellStorage.WellInfo calldata p,
-         LibWellType.WellType newWellType,
+        LibWellStorage.WellInfo calldata p,
+        LibWellType.WellType newWellType,
         bytes calldata newTypeData
     ) external payable {
         LibDiamond.enforceIsContractOwner();

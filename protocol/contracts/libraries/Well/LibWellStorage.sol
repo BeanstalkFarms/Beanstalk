@@ -30,6 +30,7 @@ library LibWellStorage {
         address wellId; // Note: wellId is same as token address
         IERC20[] tokens; // list of tokens
         bytes data; // Params specific to the well type
+        bytes[] pumps;
     }
 
     /**
@@ -143,7 +144,7 @@ library LibWellStorage {
         returns (bytes32 wellHash)
     {
         wellHash = keccak256(
-            abi.encodePacked(w.wellId, w.tokens, w.data)
+            abi.encodePacked(w.wellId, w.tokens, w.data, abi.encode(w.pumps))
         );
     }
 }

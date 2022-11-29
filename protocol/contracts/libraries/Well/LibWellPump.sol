@@ -6,9 +6,8 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./Type/LibWellType.sol";
-import "./Balance/LibWellBalance.sol";
+import "./LibWellBalance.sol";
 import "../LibOracle.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius

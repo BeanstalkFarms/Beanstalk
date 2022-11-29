@@ -8,7 +8,7 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../C.sol";
 import "./Type/LibWellType.sol";
-import "./Balance/LibWellBalance.sol";
+import "./LibWellBalance.sol";
 import "./LibWellStorage.sol";
 import "../LibSafeMath128.sol";
 import "../../tokens/ERC20/WellToken.sol";
@@ -45,7 +45,7 @@ library LibWell {
         int256 minDy
     ) internal returns (int256 dy) {
         bytes32 wh = LibWellStorage.computeWellHash(w);
-        uint128[] memory balances = LibWellBalance.getBalancesFromHash(wh, w.tokens.length);
+        uint128[] memory balances = LibWellBalance.getBalancesAndUpdatePumps(wh, w.tokens.length, w.pumps);
         (uint256 i, uint256 j) = LibWellData.getIJ(w.tokens, iToken, jToken);
         (balances, dy) = _getSwap(
             w.data,
@@ -54,7 +54,7 @@ library LibWell {
             j,
             dx
         );
-        LibWellBalance.setBalances(wh, balances);
+        LibWellBalance.updateBalances(wh, balances);
         require(dy >= minDy, "LibWell: too much slippage.");
         if (dx < 0)
             emit LibWellStorage.Swap(w.wellId, jToken, iToken, uint256(-dy), uint256(-dx));
@@ -91,11 +91,11 @@ library LibWell {
         LibTransfer.To toMode
     ) internal returns (uint256 amountOut) {
         bytes32 wh = LibWellStorage.computeWellHash(w);
-        uint128[] memory balances = LibWellBalance.getBalancesFromHash(wh, w.tokens.length);
+        uint128[] memory balances = LibWellBalance.getBalancesAndUpdatePumps(wh, w.tokens.length, w.pumps);
         uint256 d1 = LibWellType.getD(w.data, balances);
         for (uint256 i; i < w.tokens.length; ++i)
             balances[i] = balances[i].add(uint128(amounts[i])); // Check
-        LibWellBalance.setBalances(wh, balances);
+        LibWellBalance.updateBalances(wh, balances);
         uint256 d2 = LibWellType.getD(w.data, balances);
         amountOut = d2.sub(d1);
         require(amountOut >= minAmountOut, "LibWell: Not enough LP.");
@@ -128,7 +128,7 @@ library LibWell {
         LibTransfer.From fromMode
     ) internal returns (uint256[] memory tokenAmountsOut) {
         bytes32 wh = LibWellStorage.computeWellHash(w);
-        uint128[] memory balances = LibWellBalance.getBalancesFromHash(wh, w.tokens.length);
+        uint128[] memory balances = LibWellBalance.getBalancesAndUpdatePumps(wh, w.tokens.length, w.pumps);
         uint256 d = LibWellType.getD(w.data, balances);
         tokenAmountsOut = new uint256[](w.tokens.length);
         lpAmountIn = LibTransfer.burnToken(IBean(w.wellId), lpAmountIn, recipient, fromMode);
@@ -140,7 +140,7 @@ library LibWell {
                 "LibWell: Not enough out."
             );
         }
-        LibWellBalance.setBalances(wh, balances);
+        LibWellBalance.updateBalances(wh, balances);
         emit LibWellStorage.RemoveLiquidity(w.wellId, tokenAmountsOut);
     }
 
@@ -170,14 +170,14 @@ library LibWell {
         LibTransfer.From fromMode
     ) internal returns (uint256 tokenAmountOut) {
         bytes32 wh = LibWellStorage.computeWellHash(w);
-        uint128[] memory balances = LibWellBalance.getBalancesFromHash(wh, w.tokens.length);
+        uint128[] memory balances = LibWellBalance.getBalancesAndUpdatePumps(wh, w.tokens.length, w.pumps);
         uint128 y;
         uint256 i = LibWellData.getIMem(w.tokens, token);
         lpAmountIn = LibTransfer.burnToken(IBean(w.wellId), lpAmountIn, recipient, fromMode);
         (tokenAmountOut, y) = _getRemoveLiquidityOneTokenOut(w, balances, i, lpAmountIn);
         require(tokenAmountOut >= minTokenAmountOut, "LibWell: out too low.");
         balances[i] = y;
-        LibWellBalance.setBalances(wh, balances); // should we just set 1?
+        LibWellBalance.updateBalances(wh, balances); // should we just set 1?
         emit LibWellStorage.RemoveLiquidityOneToken(w.wellId, token, tokenAmountOut);
     }
 
@@ -216,9 +216,9 @@ library LibWell {
     ) internal returns (uint256 lpAmountIn) {
         require(fromMode <= LibTransfer.From.INTERNAL_TOLERANT, "Internal tolerant mode not supported");
         bytes32 wh = LibWellStorage.computeWellHash(w);
-        uint128[] memory balances = LibWellBalance.getBalancesFromHash(wh, w.tokens.length);
+        uint128[] memory balances = LibWellBalance.getBalancesAndUpdatePumps(wh, w.tokens.length, w.pumps);
         (lpAmountIn, balances) = _getRemoveLiquidityImbalanced(w, balances, tokenAmountsOut);
-        LibWellBalance.setBalances(wh, balances);
+        LibWellBalance.updateBalances(wh, balances);
         require(lpAmountIn <= maxLPAmountIn, "LibWell: in too high.");
         LibTransfer.burnToken(IBean(w.wellId), lpAmountIn, recipient, fromMode);
         emit LibWellStorage.RemoveLiquidity(w.wellId, tokenAmountsOut);

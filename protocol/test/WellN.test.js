@@ -60,15 +60,16 @@ describe('N Token Well', function () {
     await this.weth.connect(user2).approve(this.beanstalk.address, to18('1'))
     await this.weth.connect(user).approve(this.beanstalk.address, to18('1'))
 
-    wellId = await this.beanstalk.callStatic.buildWell([USDC, BEAN, WETH], '0', typeParams, ['USDC', 'BEAN', 'WETH'], [6,6,18])
+    wellId = await this.beanstalk.callStatic.buildWell([USDC, BEAN, WETH], '0', typeParams, [], ['USDC', 'BEAN', 'WETH'], [6,6,18])
     well = {
       wellId: wellId, 
       tokens: [USDC, BEAN, WETH], 
-      data: await this.beanstalk.encodeWellData(0, '0x', [6,6,18])
+      data: await this.beanstalk.encodeWellData(0, '0x', [6,6,18]),
+      pumps: []
     }
     wellHash = await this.beanstalk.computeWellHash(well)
   
-    buildWellResult = await this.beanstalk.buildWell([USDC, BEAN, WETH], '0', typeParams, ['USDC', 'BEAN', 'WETH'], [6,6,18])
+    buildWellResult = await this.beanstalk.buildWell([USDC, BEAN, WETH], '0', typeParams, [], ['USDC', 'BEAN', 'WETH'], [6,6,18])
     this.lp = await ethers.getContractAt('WellToken', wellId)
     await this.lp.connect(user).approve(this.beanstalk.address, to18('100000000'))
     await this.lp.connect(user2).approve(this.beanstalk.address, to18('100000000'))
@@ -87,11 +88,11 @@ describe('N Token Well', function () {
 
   describe('Build Well', async function () {
     it('reverts if not alphabetical', async function () {
-      await expect(this.beanstalk.buildWell([BEAN, WETH, USDC], '0', typeParams, ["BEAN", "USDC"], [6,6])).to.be.revertedWith("LibWell: Tokens not alphabetical")
+      await expect(this.beanstalk.buildWell([BEAN, WETH, USDC], '0', typeParams, [], ["BEAN", "USDC"], [6,6])).to.be.revertedWith("LibWell: Tokens not alphabetical")
     })
 
     it('reverts if type data', async function () {
-      await expect(this.beanstalk.buildWell([USDC, BEAN, WETH], '0', TypeEncoder.testType('1'), ["USDC", "BEAN"], [6,6])).to.be.revertedWith("LibWell: Well not valid.")
+      await expect(this.beanstalk.buildWell([USDC, BEAN, WETH], '0', TypeEncoder.testType('1'), [], ["USDC", "BEAN"], [6,6])).to.be.revertedWith("LibWell: Well not valid.")
     })
     
     it('sets well info', async function () {
@@ -166,7 +167,7 @@ describe('N Token Well', function () {
     })
 
     it('emits event', async function () {
-      await expect(buildWellResult).to.emit(this.beanstalk, 'BuildWell').withArgs(well.wellId, well.tokens, 0, '0x', well.data, wellHash);
+      await expect(buildWellResult).to.emit(this.beanstalk, 'BuildWell').withArgs(well.wellId, well.tokens, 0, '0x', [], well.data, wellHash);
     })
 
     it('sets the name/symbol of well token', async function () {

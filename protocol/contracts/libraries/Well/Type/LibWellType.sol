@@ -20,7 +20,8 @@ library LibWellType {
 
     // The WellType enum defines the supported Well types
     enum WellType {
-        CONSTANT_PRODUCT
+        CONSTANT_PRODUCT,
+        EXTERNAL
     }
 
     /**
@@ -50,7 +51,11 @@ library LibWellType {
         uint256 x;
         if (wellType == WellType.CONSTANT_PRODUCT)
             x = LibConstantProductWell.getX(i, xs, d);
-        else revert("LibWell: Well type not supported");
+        if (wellType == WellType.EXTERNAL) {
+            address target;
+            assembly { target := calldataload(add(data.offset,1)) }
+            x = LibConstantProductWell.getX(i, xs, d);
+        } else revert("LibWell: Well type not supported");
         require(x < type(uint128).max, "LibWell: y too high");
         return uint128(x);
     }

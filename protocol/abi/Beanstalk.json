@@ -4646,6 +4646,11 @@
                 "type": "bytes"
             },
             {
+                "internalType": "bytes[]",
+                "name": "pumps",
+                "type": "bytes[]"
+            },
+            {
                 "internalType": "string[]",
                 "name": "symbols",
                 "type": "string[]"
@@ -4752,6 +4757,11 @@
                         "internalType": "bytes",
                         "name": "data",
                         "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
@@ -4792,6 +4802,11 @@
                         "internalType": "bytes",
                         "name": "data",
                         "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
@@ -4848,6 +4863,11 @@
                         "internalType": "bytes",
                         "name": "data",
                         "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
@@ -4884,6 +4904,11 @@
                         "internalType": "bytes",
                         "name": "data",
                         "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
@@ -4910,30 +4935,6 @@
     {
         "inputs": [
             {
-                "internalType": "address",
-                "name": "wellId",
-                "type": "address"
-            }
-        ],
-        "name": "getCumulativeBalances",
-        "outputs": [
-            {
-                "internalType": "uint224[]",
-                "name": "cumulativeBalances",
-                "type": "uint224[]"
-            },
-            {
-                "internalType": "uint32",
-                "name": "lastTimestamp",
-                "type": "uint32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
                 "components": [
                     {
                         "internalType": "address",
@@ -4949,6 +4950,11 @@
                         "internalType": "bytes",
                         "name": "data",
                         "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
@@ -4990,6 +4996,11 @@
                         "internalType": "bytes",
                         "name": "data",
                         "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
@@ -5036,6 +5047,11 @@
                         "internalType": "bytes",
                         "name": "data",
                         "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
@@ -5077,6 +5093,11 @@
                         "internalType": "bytes",
                         "name": "data",
                         "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
@@ -5128,6 +5149,11 @@
                         "internalType": "bytes",
                         "name": "data",
                         "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
@@ -5188,198 +5214,6 @@
                 "type": "address"
             }
         ],
-        "name": "getWell",
-        "outputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "wellId",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "contract IERC20[]",
-                        "name": "tokens",
-                        "type": "address[]"
-                    },
-                    {
-                        "internalType": "bytes",
-                        "name": "data",
-                        "type": "bytes"
-                    }
-                ],
-                "internalType": "struct LibWellStorage.WellInfo",
-                "name": "info",
-                "type": "tuple"
-            },
-            {
-                "components": [
-                    {
-                        "internalType": "uint128[]",
-                        "name": "balances",
-                        "type": "uint128[]"
-                    },
-                    {
-                        "internalType": "uint128[]",
-                        "name": "emaBalances",
-                        "type": "uint128[]"
-                    },
-                    {
-                        "internalType": "uint224[]",
-                        "name": "cumulativeBalances",
-                        "type": "uint224[]"
-                    },
-                    {
-                        "internalType": "uint32",
-                        "name": "timestamp",
-                        "type": "uint32"
-                    }
-                ],
-                "internalType": "struct LibWellStorage.Balances",
-                "name": "state",
-                "type": "tuple"
-            },
-            {
-                "internalType": "uint256",
-                "name": "wellTokenSupply",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "bytes32",
-                "name": "wellHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "getWell2StateFromHash",
-        "outputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "uint128",
-                        "name": "balance0",
-                        "type": "uint128"
-                    },
-                    {
-                        "internalType": "uint128",
-                        "name": "balance1",
-                        "type": "uint128"
-                    },
-                    {
-                        "internalType": "uint128",
-                        "name": "emaBalance0",
-                        "type": "uint128"
-                    },
-                    {
-                        "internalType": "uint128",
-                        "name": "emaBalance1",
-                        "type": "uint128"
-                    },
-                    {
-                        "internalType": "uint224",
-                        "name": "cumulativeBalance0",
-                        "type": "uint224"
-                    },
-                    {
-                        "internalType": "uint224",
-                        "name": "cumulativeBalance1",
-                        "type": "uint224"
-                    },
-                    {
-                        "internalType": "uint32",
-                        "name": "timestamp",
-                        "type": "uint32"
-                    }
-                ],
-                "internalType": "struct LibWellStorage.B2",
-                "name": "state",
-                "type": "tuple"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "index",
-                "type": "uint256"
-            }
-        ],
-        "name": "getWellAtIndex",
-        "outputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "wellId",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "contract IERC20[]",
-                        "name": "tokens",
-                        "type": "address[]"
-                    },
-                    {
-                        "internalType": "bytes",
-                        "name": "data",
-                        "type": "bytes"
-                    }
-                ],
-                "internalType": "struct LibWellStorage.WellInfo",
-                "name": "info",
-                "type": "tuple"
-            },
-            {
-                "components": [
-                    {
-                        "internalType": "uint128[]",
-                        "name": "balances",
-                        "type": "uint128[]"
-                    },
-                    {
-                        "internalType": "uint128[]",
-                        "name": "emaBalances",
-                        "type": "uint128[]"
-                    },
-                    {
-                        "internalType": "uint224[]",
-                        "name": "cumulativeBalances",
-                        "type": "uint224[]"
-                    },
-                    {
-                        "internalType": "uint32",
-                        "name": "timestamp",
-                        "type": "uint32"
-                    }
-                ],
-                "internalType": "struct LibWellStorage.Balances",
-                "name": "state",
-                "type": "tuple"
-            },
-            {
-                "internalType": "uint256",
-                "name": "wellTokenSupply",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "wellId",
-                "type": "address"
-            }
-        ],
         "name": "getWellBalances",
         "outputs": [
             {
@@ -5399,12 +5233,12 @@
                 "type": "address"
             }
         ],
-        "name": "getWellEmaBalances",
+        "name": "getWellBlockNumber",
         "outputs": [
             {
-                "internalType": "uint128[]",
-                "name": "balances",
-                "type": "uint128[]"
+                "internalType": "uint32",
+                "name": "blockNumber",
+                "type": "uint32"
             }
         ],
         "stateMutability": "view",
@@ -5474,97 +5308,15 @@
                         "internalType": "bytes",
                         "name": "data",
                         "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
                 "name": "info",
-                "type": "tuple"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "bytes32",
-                "name": "wellHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "getWellNStateFromHash",
-        "outputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "uint128[8]",
-                        "name": "balances",
-                        "type": "uint128[8]"
-                    },
-                    {
-                        "internalType": "uint128[8]",
-                        "name": "emaBalances",
-                        "type": "uint128[8]"
-                    },
-                    {
-                        "internalType": "uint224[8]",
-                        "name": "cumulativeBalances",
-                        "type": "uint224[8]"
-                    },
-                    {
-                        "internalType": "uint224",
-                        "name": "lastCumulativeBalance",
-                        "type": "uint224"
-                    },
-                    {
-                        "internalType": "uint32",
-                        "name": "timestamp",
-                        "type": "uint32"
-                    }
-                ],
-                "internalType": "struct LibWellStorage.BN",
-                "name": "state",
-                "type": "tuple"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "wellId",
-                "type": "address"
-            }
-        ],
-        "name": "getWellState",
-        "outputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "uint128[]",
-                        "name": "balances",
-                        "type": "uint128[]"
-                    },
-                    {
-                        "internalType": "uint128[]",
-                        "name": "emaBalances",
-                        "type": "uint128[]"
-                    },
-                    {
-                        "internalType": "uint224[]",
-                        "name": "cumulativeBalances",
-                        "type": "uint224[]"
-                    },
-                    {
-                        "internalType": "uint32",
-                        "name": "timestamp",
-                        "type": "uint32"
-                    }
-                ],
-                "internalType": "struct LibWellStorage.Balances",
-                "name": "state",
                 "type": "tuple"
             }
         ],
@@ -5593,6 +5345,54 @@
     {
         "inputs": [
             {
+                "internalType": "bytes32",
+                "name": "wh",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes",
+                "name": "pump",
+                "type": "bytes"
+            }
+        ],
+        "name": "readPump",
+        "outputs": [
+            {
+                "internalType": "uint256[]",
+                "name": "byteBalances",
+                "type": "uint256[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "wh",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes",
+                "name": "pump",
+                "type": "bytes"
+            }
+        ],
+        "name": "readUpdatedPump",
+        "outputs": [
+            {
+                "internalType": "uint256[]",
+                "name": "byteBalances",
+                "type": "uint256[]"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "components": [
                     {
                         "internalType": "address",
@@ -5608,6 +5408,11 @@
                         "internalType": "bytes",
                         "name": "data",
                         "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
@@ -5664,6 +5469,11 @@
                         "internalType": "bytes",
                         "name": "data",
                         "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
@@ -5720,6 +5530,11 @@
                         "internalType": "bytes",
                         "name": "data",
                         "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
@@ -5781,6 +5596,11 @@
                         "internalType": "bytes",
                         "name": "data",
                         "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
@@ -5847,6 +5667,11 @@
                         "internalType": "bytes",
                         "name": "data",
                         "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
@@ -5913,6 +5738,11 @@
                         "internalType": "bytes",
                         "name": "data",
                         "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
@@ -6017,6 +5847,11 @@
                         "internalType": "bytes",
                         "name": "data",
                         "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
@@ -6063,6 +5898,11 @@
                         "internalType": "bytes",
                         "name": "data",
                         "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
@@ -6109,6 +5949,11 @@
                         "internalType": "bytes",
                         "name": "data",
                         "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
@@ -6332,54 +6177,6 @@
         "type": "function"
     },
     {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "a",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "b",
-                "type": "uint256"
-            }
-        ],
-        "name": "max",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "pure",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "a",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "b",
-                "type": "uint256"
-            }
-        ],
-        "name": "min",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "pure",
-        "type": "function"
-    },
-    {
         "anonymous": false,
         "inputs": [
             {
@@ -6405,6 +6202,12 @@
                 "internalType": "bytes",
                 "name": "typeData",
                 "type": "bytes"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes[]",
+                "name": "pumps",
+                "type": "bytes[]"
             },
             {
                 "indexed": false,

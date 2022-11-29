@@ -62,4 +62,8 @@ library LibMath {
         require(emaNow256 < type(uint128).max, "Number too big");
         emaNow = uint128(emaNow256);
     }
+
+    function calcGeometricEma(uint256 emaLast, uint256 balLast, uint256 aExp) internal pure returns (uint128 emaNow) {
+        
+    }
 }

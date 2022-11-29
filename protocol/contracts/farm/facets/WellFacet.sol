@@ -267,75 +267,25 @@ contract WellFacet is ReentrancyGuard {
         balances = LibWellBalance.getBalancesFromId(wellId);
     }
 
-    function getCumulativeBalances(address wellId)
-        external
-        view
-        returns (uint224[] memory cumulativeBalances, uint32 lastTimestamp)
-    {
-        return LibWellBalance.getCumulativeBalancesFromId(wellId);
-    }
-
-    function getWellEmaBalances(address wellId)
-        public
-        view
-        returns (uint128[] memory balances)
-    {
-        balances = LibWellBalance.getEmaBalancesFromId(wellId);
-    }
-
-    function getWellState(address wellId)
-        public
-        view
-        returns (LibWellStorage.Balances memory state)
-    {
-        state = LibWellBalance.getWellStateFromId(wellId);
-    }
-
-    function getWell2StateFromHash(bytes32 wellHash)
-        public
-        view
-        returns (LibWellStorage.B2 memory state)
-    {
-        LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
-        state = s.w2s[wellHash];
-    }
-
-    function getWellNStateFromHash(bytes32 wellHash)
-        public
-        view
-        returns (LibWellStorage.BN memory state)
-    {
-        LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
-        state = s.wNs[wellHash];
-    }
-
     /**
-     * Info + State
+     * Pumps
      **/
 
-    function getWellAtIndex(uint256 index)
+    function getWellBlockNumber(address wellId)
         external
         view
-        returns (
-            LibWellStorage.WellInfo memory info,
-            LibWellStorage.Balances memory state,
-            uint256 wellTokenSupply
-        )
+        returns (uint32 blockNumber)
     {
-        return getWell(getWellIdAtIndex(index));
+        LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
+        uint256 n = s.wi[wellId].tokens.length;
+        blockNumber = LibPump.getLastBlockNumber(s.wh[wellId], n);
     }
 
-    function getWell(address wellId)
-        public
-        view
-        returns (
-            LibWellStorage.WellInfo memory info,
-            LibWellStorage.Balances memory state,
-            uint256 wellTokenSupply
-        )
-    {
-        info = getWellInfo(wellId);
-        state = getWellState(wellId);
-        wellTokenSupply = IERC20(wellId).totalSupply();
+    function readPump(bytes32 wh, bytes calldata pump) external view returns (uint256[] memory byteBalances) {
+        byteBalances = LibPump.readPump(wh, pump);
+    }
+
+    function readUpdatedPump(bytes32 wh, bytes calldata pump) external returns (uint256[] memory byteBalances) {
+        return LibPump.readUpdatedPump(wh, pump);
     }
 }
