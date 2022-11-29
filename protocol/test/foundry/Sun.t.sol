@@ -8,6 +8,7 @@ import { Sun } from "farm/facets/SeasonFacet/Sun.sol";
 import { MockSeasonFacet } from "mocks/mockFacets/MockSeasonFacet.sol";
 import { MockSiloFacet } from "mocks/mockFacets/MockSiloFacet.sol";
 import { MockFieldFacet } from "mocks/mockFacets/MockFieldFacet.sol";
+import { MockUniswapV3Pool } from "mocks/uniswap/MockUniswapV3Pool.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 
 import { Utils } from "./utils/Utils.sol";
@@ -242,6 +243,12 @@ contract SunTest is Sun, Test {
   //   season.sunSunrise(300e6, 8); // deltaB = +300; case 0 = low pod rate
   //   assertEq(uint256(field.totalSoil()), 99); // FIXME: how calculated?
   // }
+
+  function testMockOraclePrice() public {
+    MockUniswapV3Pool(C.UniV3EthUsdc()).setOraclePrice(1000e6,18);
+    console.log("Eth Price is:", season.getEthPrice());
+    assertApproxEqRel(season.getEthPrice(),1000e6,0.01e18); //0.01% accuracy as ticks are spaced 0.01%
+  }
 
   //helper
   function getEthUsdcPrice() private view returns (uint256) {

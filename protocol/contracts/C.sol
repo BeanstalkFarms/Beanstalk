@@ -9,7 +9,6 @@ import "./interfaces/IBean.sol";
 import "./interfaces/ICurve.sol";
 import "./interfaces/IFertilizer.sol";
 import "./interfaces/IProxyAdmin.sol";
-import "./interfaces/IChainlink.sol";
 import "./interfaces/IBlockBasefee.sol";
 import "./libraries/Decimal.sol";
 
@@ -95,7 +94,6 @@ library C {
 
 
     address private constant UNIV3_ETH_USDC_POOL = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
-    address private constant CHAINLINK_CONTRACT = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
     // Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
     address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
 
@@ -257,10 +255,6 @@ library C {
 
     function UniV3EthUsdc() internal pure returns (address){
         return UNIV3_ETH_USDC_POOL;
-    }
-
-    function chainlinkContract() internal pure returns (IChainlink) {
-        return IChainlink(CHAINLINK_CONTRACT);
     }
 
     function basefeeContract() internal pure returns (IBlockBasefee) {

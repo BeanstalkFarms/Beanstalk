@@ -20,7 +20,6 @@ const {
   CURVE_ZAP,
   STABLE_FACTORY,
   PRICE_DEPLOYER,
-  CHAINLINK_CONTRACT,
   BASE_FEE_CONTRACT,
   ETH_USDC_UNISWAP_V3
 } = require('../test/utils/constants');
@@ -208,18 +207,6 @@ async function price() {
   await price.deployed()
 }
 
-async function chainlink() {
-  let chainlinkJson = fs.readFileSync(`./artifacts/contracts/mocks/MockChainlink.sol/MockChainlink.json`);
-
-  await network.provider.send("hardhat_setCode", [
-    CHAINLINK_CONTRACT,
-    JSON.parse(chainlinkJson).deployedBytecode,
-  ]);
-
-  const chainlink = await ethers.getContractAt("MockChainlink", CHAINLINK_CONTRACT);
-  await chainlink.setAnswer(1300 * Math.pow(10, 8));
-}
-
 async function blockBasefee() {
   let basefeeJson = fs.readFileSync(`./artifacts/contracts/mocks/MockBlockBasefee.sol/MockBlockBasefee.json`);
 
@@ -256,6 +243,5 @@ exports.impersonateUnripe = unripe
 exports.impersonateFertilizer = fertilizer
 exports.impersonateUsdc = usdc
 exports.impersonatePrice = price
-exports.impersonateChainlink = chainlink;
 exports.impersonateBlockBasefee = blockBasefee;
 exports.impersonateEthUsdcUniswap = ethUsdcUniswap

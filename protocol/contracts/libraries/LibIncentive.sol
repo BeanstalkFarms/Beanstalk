@@ -61,6 +61,16 @@ library LibIncentive {
         price = LibCurve.getPrice(xp, rates, a, D);
     }
 
+    function getEthUsdcPrice() internal view returns (uint256) {
+        (int24 tick,) = OracleLibrary.consult(C.UniV3EthUsdc(),PERIOD); //1 season tick
+        return OracleLibrary.getQuoteAtTick(
+            tick,
+            1e18,
+            address(C.weth()),
+            address(C.usdc())
+        );
+    }
+
     /// @notice fracExp estimates an exponential expression in the form: k * (1 + 1/q) ^ N.
     /// We use a binomial expansion to estimate the exponent to avoid running into integer overflow issues.
     /// @param k - the principle amount
@@ -164,15 +174,5 @@ library LibIncentive {
         // Decimals will always be 6 because we can only mint beans
         // 10**(36-decimals)
         return [1e30, C.curve3Pool().get_virtual_price()];
-    }
-
-    function getEthUsdcPrice() private view returns (uint256) {
-        (int24 tick,) = OracleLibrary.consult(C.UniV3EthUsdc(),PERIOD); //1 season tick
-        return OracleLibrary.getQuoteAtTick(
-            tick,
-            1e18,
-            address(C.weth()),
-            address(C.usdc())
-        );
     }
 }
