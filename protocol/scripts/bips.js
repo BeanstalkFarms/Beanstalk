@@ -14,7 +14,8 @@ async function bip30(mock = true, account = undefined) {
         facetNames: [
             'DepotFacet', // Add Depot
             'TokenSupportFacet', // Add ERC-20 permit function
-            'FarmFacet' // Add AdvancedFarm
+            'FarmFacet', // Add AdvancedFarm
+            'SeasonFacet'
         ],
         bip: false,
         object: !mock,

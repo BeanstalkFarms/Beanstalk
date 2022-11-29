@@ -39,6 +39,7 @@ describe('Depot', function () {
         this.mockContract = await (await ethers.getContractFactory('MockContract', owner)).deploy()
         await this.mockContract.deployed()
         await this.mockContract.setAccount(user2.address)
+        const season = await ethers.getContractAt('MockSeasonFacet', contracts.beanstalkDiamond.address)
 
         await this.bean.mint(user.address, to6('1004'))
         await this.usdc.mint(user.address, to6('1000'))
@@ -82,7 +83,7 @@ describe('Depot', function () {
 
         await this.beanstalk.connect(user).deposit(BEAN, to6('1'), 0)
         await this.beanstalk.connect(user).deposit(this.siloToken.address, to6('1'), 0)
-        await this.beanstalk.sunrise()
+        await season.siloSunrise('0')
         await this.beanstalk.connect(user).deposit(BEAN, to6('1'), 0)
         await this.beanstalk.connect(user).transferToken(BEAN, user.address, to6('1'), EXTERNAL, INTERNAL)
     });
