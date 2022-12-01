@@ -775,6 +775,90 @@ describe("Root", function () {
             )
           ).to.revertedWith("Redeem: shares is greater than maxRootsIn");
         });
+
+        it("reverts if redeem more than owned shares", async function () {
+          await this.rootToken
+            .connect(owner)
+            .addWhitelistToken(this.siloToken.address);
+
+          const nonce = await this.silo
+            .connect(user)
+            .depositPermitNonces(userAddress);
+          this.signature = await signSiloDepositTokenPermit(
+            user,
+            userAddress,
+            this.rootToken.address,
+            this.siloToken.address,
+            "1000",
+            nonce
+          );
+
+          await this.rootToken.connect(user).mintWithTokenPermit(
+            [
+              {
+                token: this.siloToken.address,
+                seasons: ["2"],
+                amounts: ["1000"],
+              },
+            ],
+            EXTERNAL,
+            1,
+            this.signature.token,
+            this.signature.value,
+            this.signature.deadline,
+            this.signature.split.v,
+            this.signature.split.r,
+            this.signature.split.s
+          );
+
+          await this.season.fastForward(100);
+
+
+          const nonce2 = await this.silo
+            .connect(user2)
+            .depositPermitNonces(user2Address);
+
+          this.signature2 = await signSiloDepositTokenPermit(
+            user2,
+            user2Address,
+            this.rootToken.address,
+            this.siloToken.address,
+            "1000",
+            nonce2
+          );
+
+          await this.rootToken.connect(user).mintWithTokenPermit(
+            [
+              {
+                token: this.siloToken.address,
+                seasons: ["102"],
+                amounts: ["1000"],
+              },
+            ],
+            EXTERNAL,
+            1,
+            this.signature.token,
+            this.signature.value,
+            this.signature.deadline,
+            this.signature.split.v,
+            this.signature.split.r,
+            this.signature.split.s
+          );
+
+          await expect(
+            this.rootToken.connect(user2).redeem(
+              [
+                {
+                  token: this.siloToken.address,
+                  seasons: ["102"],
+                  amounts: ["1000"],
+                },
+              ],
+              EXTERNAL,
+              "90000000000000000"
+            )
+          ).to.revertedWith("Redeem: shares is greater than maxRootsIn");
+        });
       });
 
       describe("start redeem", async function () {
@@ -1147,7 +1231,7 @@ describe("Root", function () {
           });
         });
 
-        describe("2 mints earliest first redeem earliest all", async function () {
+        describe("2 users 2 mints earliest first redeem earliest all", async function () {
           beforeEach(async function () {
             await this.silo
               .connect(user)
@@ -1174,20 +1258,27 @@ describe("Root", function () {
             await this.season.fastForward(100);
 
             await this.silo
-              .connect(user)
+              .connect(user2)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.rootToken.connect(user).mint(
-              [
-                {
-                  token: this.siloToken.address,
-                  seasons: ["102"],
-                  amounts: ["1000"],
-                },
-              ],
-              EXTERNAL,
-              1
-            );
+
+              await this.rootToken.connect(user2).mintWithTokenPermit(
+                [
+                  {
+                    token: this.siloToken.address,
+                    seasons: ["102"],
+                    amounts: ["1000"],
+                  },
+                ],
+                EXTERNAL,
+                1,
+                this.signature2.token,
+                this.signature2.value,
+                this.signature2.deadline,
+                this.signature2.split.v,
+                this.signature2.split.r,
+                this.signature2.split.s
+              );
 
             await this.rootToken.connect(user).redeem(
               [
@@ -1212,7 +1303,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("995049504950495");
+            expect(await this.rootToken.totalSupply()).to.be.eq("990099009900991");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -1224,8 +1315,112 @@ describe("Root", function () {
             expect(await this.silo.balanceOfStalk(userAddress)).to.eq(
               "10100000"
             );
+            expect(await this.silo.balanceOfSeeds(user2Address)).to.eq("0");
+            expect(await this.silo.balanceOfStalk(user2Address)).to.eq(
+              "0"
+            );
+
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "995049504950495"
+              "1"
+            );
+            expect(await this.rootToken.balanceOf(user2Address)).to.eq(
+              "990099009900990"
+            );
+          });
+        });
+
+        describe("2 users 2 mints. user 2 redeem own deposit", async function () {
+          beforeEach(async function () {
+            await this.silo
+              .connect(user)
+              .deposit(this.siloToken.address, "1000", EXTERNAL);
+
+            await this.rootToken.connect(user).mintWithTokenPermit(
+              [
+                {
+                  token: this.siloToken.address,
+                  seasons: ["2"],
+                  amounts: ["1000"],
+                },
+              ],
+              EXTERNAL,
+              1,
+              this.signature.token,
+              this.signature.value,
+              this.signature.deadline,
+              this.signature.split.v,
+              this.signature.split.r,
+              this.signature.split.s
+            );
+
+            await this.silo
+              .connect(user2)
+              .deposit(this.siloToken.address, "1000", EXTERNAL);
+
+
+              await this.rootToken.connect(user2).mintWithTokenPermit(
+                [
+                  {
+                    token: this.siloToken.address,
+                    seasons: ["2"],
+                    amounts: ["1000"],
+                  },
+                ],
+                EXTERNAL,
+                1,
+                this.signature2.token,
+                this.signature2.value,
+                this.signature2.deadline,
+                this.signature2.split.v,
+                this.signature2.split.r,
+                this.signature2.split.s
+              );
+
+            await this.rootToken.connect(user2).redeem(
+              [
+                {
+                  token: this.siloToken.address,
+                  seasons: ["2"],
+                  amounts: ["1000"],
+                },
+              ],
+              EXTERNAL,
+              "100000000000000000"
+            );
+          });
+
+          it("properly updates the total balances", async function () {
+            expect(
+              await this.silo.balanceOfSeeds(this.rootToken.address)
+            ).to.eq("1000");
+            expect(
+              await this.silo.balanceOfStalk(this.rootToken.address)
+            ).to.eq("10000000");
+          });
+
+          it("correctly update total supply", async function () {
+            expect(await this.rootToken.totalSupply()).to.be.eq("1000000000000000");
+          });
+
+          it("correctly update underlyingBdv", async function () {
+            expect(await this.rootToken.underlyingBdv()).to.be.eq("1000");
+          });
+
+          it("properly updates the user balance", async function () {
+            expect(await this.silo.balanceOfSeeds(userAddress)).to.eq("0");
+            expect(await this.silo.balanceOfStalk(userAddress)).to.eq(
+              "0"
+            );
+            expect(await this.silo.balanceOfSeeds(user2Address)).to.eq("1000");
+            expect(await this.silo.balanceOfStalk(user2Address)).to.eq(
+              "10000000"
+            );
+
+            expect(await this.rootToken.balanceOf(userAddress)).to.eq(
+              "1000000000000000"
+            );
+            expect(await this.rootToken.balanceOf(user2Address)).to.eq(
+              "0"
             );
           });
         });
@@ -1375,7 +1570,7 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("1000000000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq("995024875621891");
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -1388,7 +1583,7 @@ describe("Root", function () {
               "10100000"
             );
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "1000000000000000"
+              "995024875621891"
             );
           });
         });
