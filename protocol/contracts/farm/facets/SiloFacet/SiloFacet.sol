@@ -22,6 +22,24 @@ contract SiloFacet is TokenSilo {
      * Deposit
      */
 
+    /**
+     * @notice Deposit `amount` of `token` into the Silo.
+     * @param token The address of the token to Deposit. Must be Whitelisted.
+     * @param amount The amount of `token` to Deposit.
+     * @param mode The balance to pull tokens from. See {LibTransfer.From}.
+     *
+     * @dev:
+     * 
+     * Depositing should:
+     *  1. Transfer `amount` of `token` from `account` to Beanstalk.
+     *  2. Calculate the current Bean Denominated Value (BDV) for `amount` of `token`.
+     *  3. Create a Deposit entry for `account` in the current Season.
+     *  4. Allocate Stalk and Seeds to `account`.
+     *  5. Emit an `AddDeposit` event.
+     *
+     * FIXME(doc): explain "create a deposit" entry, "allocate stalk and seeds", etc.
+     * FIXME(doc): why is this payable?
+     */
     function deposit(
         address token,
         uint256 amount,

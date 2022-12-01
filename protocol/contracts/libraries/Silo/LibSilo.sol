@@ -213,6 +213,10 @@ library LibSilo {
     
     //////////////////////// UTILITIES ////////////////////////
 
+    /**
+     * @param seeds 
+     * @param seasons 
+     */
     function stalkReward(uint256 seeds, uint32 seasons)
         internal
         pure

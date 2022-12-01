@@ -59,6 +59,19 @@ contract SiloExit is ReentrancyGuard {
         return s.a[account].roots;
     }
 
+    /**
+     * @notice Returns the `account` balance of Grown Stalk, the Stalk that is earned each Season from Seeds.
+     *
+     * The amount of Grown Stalk is calculated as:
+     *
+     * ```
+     * elapsedSeasons = current season - last updated season
+     * grownStalk = balanceOfSeeds * elapsedSeasons
+     * ```
+     *
+     * @param account
+     * @return stalk
+     */
     function balanceOfGrownStalk(address account)
         public
         view
@@ -116,6 +129,9 @@ contract SiloExit is ReentrancyGuard {
         return balanceOfEarnedBeans(account).mul(C.getSeedsPerBean());
     }
 
+    /**
+     * @notice Return the Season number in which this `account`'s Silo was last updated.
+     */
     function lastUpdate(address account) public view returns (uint32) {
         return s.a[account].lastUpdate;
     }
@@ -190,6 +206,9 @@ contract SiloExit is ReentrancyGuard {
      * Internal
      **/
 
+    /**
+     * @dev Return the current Season number.
+     */
     function season() internal view returns (uint32) {
         return s.season.current;
     }

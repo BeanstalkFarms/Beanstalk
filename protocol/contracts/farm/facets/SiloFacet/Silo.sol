@@ -11,9 +11,9 @@ import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/Silo/LibTokenSilo.sol";
 
 /**
+ * @title Silo
  * @author Publius
- * @title Silo Entrance
- **/
+ */
 contract Silo is SiloExit {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -39,17 +39,30 @@ contract Silo is SiloExit {
         int256 deltaRoots
     );
 
-    /**
-     * Internal
-     **/
+    //////////////////////// INTERNAL ////////////////////////
 
+    /**
+     * @dev:
+     *
+     * Before performing any Silo accounting, we need to account for a user's Grown Stalk.
+     * 
+     * How updating works:
+     *  - FIXME(doc)
+     */
     function _update(address account) internal {
         uint32 _lastUpdate = lastUpdate(account);
+
+        /// If already updated this season, there's no Stalk to claim.
+        /// _lastUpdate > season() should not be possible, but we check it anyway.
         if (_lastUpdate >= season()) return;
-        // Increment Plenty if a SOP has occured or save Rain Roots if its Raining.
+
+        /// Increment Plenty if a SOP has occured or save Rain Roots if its Raining.
         handleRainAndSops(account, _lastUpdate);
-        // Earn Grown Stalk -> The Stalk gained from Seeds.
+
+        /// Earn Grown Stalk -> The Stalk gained from Seeds.
         earnGrownStalk(account);
+
+        /// Bump the lastUpdate season to the current `season()`.
         s.a[account].lastUpdate = season();
     }
 
@@ -57,10 +70,12 @@ contract Silo is SiloExit {
         // Need to update account before we make a Deposit
         _update(account);
         uint256 accountStalk = s.a[account].s.stalk;
+
         // Calculate balance of Earned Beans.
         beans = _balanceOfEarnedBeans(account, accountStalk);
         if (beans == 0) return 0;
         s.earnedBeans = s.earnedBeans.sub(beans);
+
         // Deposit Earned Beans
         LibTokenSilo.addDeposit(
             account,
@@ -92,8 +107,10 @@ contract Silo is SiloExit {
         emit ClaimPlenty(account, plenty);
     }
 
+    //////////////////////// PRIVATE ////////////////////////
+
     function earnGrownStalk(address account) private {
-        // If they have no seeds, we can save gas.
+        /// If this `account` has no Seeds, skip to save gas.
         if (s.a[account].s.seeds == 0) return;
         LibSilo.incrementBalanceOfStalk(account, balanceOfGrownStalk(account));
     }
@@ -126,6 +143,11 @@ contract Silo is SiloExit {
         }
     }
 
+    //////////////////////// MODIFIERS ////////////////////////
+
+    /**
+     * @dev Update the Silo for `msg.sender`.
+     */
     modifier updateSilo() {
         _update(msg.sender);
         _;
