@@ -71,10 +71,16 @@ contract TokenSilo is Silo {
         uint256 bdvRemoved;
     }
 
-    /**
-     * Getters
-     **/
+    //////////////////////// EXTERNAL ////////////////////////
 
+    /**
+     * @notice Find the amount and BDV of `token` that `account` has deposited in season `season`.
+     * 
+     * Returns a deposit tuple `(uint256 amount, uint256 bdv)`.
+     *
+     * @return amount The number of tokens contained in this deposit.
+     * @return bdv The BDV associated with this deposit. See {FIXME(doc)}.
+     */
     function getDeposit(
         address account,
         address token,
@@ -83,6 +89,12 @@ contract TokenSilo is Silo {
         return LibTokenSilo.tokenDeposit(account, token, season);
     }
 
+    /**
+     * @notice Find the amount of `token` that `account` has withdrawn from season `season`.
+     * @return amount The number of tokens contained in this withdrawal.
+     * @dev Withdrawals do not store BDV because Stalk & Seeds are burned upon when calling `withdraw()`.
+     * Thus, withdraw-related functions only return the `amount` of tokens withdrawn.
+     */
     function getWithdrawal(
         address account,
         address token,
@@ -91,14 +103,25 @@ contract TokenSilo is Silo {
         return LibTokenSilo.tokenWithdrawal(account, token, season);
     }
 
+    /**
+     * @notice Get the total amount of `token` currently deposited in the Silo across all users.
+     */
     function getTotalDeposited(address token) external view returns (uint256) {
         return s.siloBalances[token].deposited;
     }
 
+    /**
+     * @notice Get the total amount of `token` currently withdrawn from the Silo across all users.
+     */
     function getTotalWithdrawn(address token) external view returns (uint256) {
         return s.siloBalances[token].withdrawn;
     }
 
+    /**
+     * @notice Get the Storage.SiloSettings for a whitelisted Silo token.
+     * 
+     * FIXME(naming) getTokenSettings ?
+     */
     function tokenSettings(address token)
         external
         view
@@ -107,16 +130,36 @@ contract TokenSilo is Silo {
         return s.ss[token];
     }
 
+    /**
+     * @notice Returns the number of Seasons that must elapse before a Withdrawal can be Claimed.
+     * @dev:
+     * 
+     * The purpose of the withdraw freeze is to prevent a malicious user from receiving risk-free 
+     * seignorage with the following attack:
+     *  1. Right before the end of a Season, deposit assets in the Silo. Receive Stalk.
+     *  2. Call `sunrise()` and earn seignorage (Earned Beans).
+     *  3. Immediately withdraw assets from the Silo, burning Stalk but keeping Earned Beans.
+     * 
+     * Early in Beanstalk's life, this value was calculated based on the number of elapsed seasons.
+     * It's now hardcoded to its minimum value of 1.
+     * 
+     * Note: The Silo V3 upgrade will remove the withdrawFreeze entirely. More on this here:
+     * https://github.com/BeanstalkFarms/Beanstalk/issues/150
+     */
     function withdrawFreeze() public view returns (uint8) {
         return s.season.withdrawSeasons;
     }
 
+    //////////////////////// INTERNAL ////////////////////////
+
     /**
-     * Internal
-     **/
-
-    // Deposit
-
+     * @dev:
+     *
+     * {LibTokenSilo.deposit} 
+     * {LibSilo.depositSiloAssets}
+     * 
+     * Deposits are always placed into the current `_season()`.
+     */
     function _deposit(
         address account,
         address token,

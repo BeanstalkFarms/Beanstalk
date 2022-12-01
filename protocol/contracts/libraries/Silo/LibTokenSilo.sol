@@ -11,9 +11,10 @@ import "../../C.sol";
 import "./LibUnripeSilo.sol";
 
 /**
+ * @title LibTokenSilo
  * @author Publius
- * @title Lib Token Silo
- **/
+ * @notice This library contains functions for depositing, withdrawing and claiming whitelisted Silo tokens.
+ */
 library LibTokenSilo {
     using SafeMath for uint256;
 
@@ -25,10 +26,16 @@ library LibTokenSilo {
         uint256 bdv
     );
 
-    /*
-     * Deposit
-     */
+    //////////////////////// ADD DEPOSIT ////////////////////////
 
+    /**
+     * @return seeds The amount of Seeds received for this Deposit.
+     * @return stalk The amount of Stalk received for this Deposit.
+     * 
+     * @dev Calculate the current BDV for `amount` of `token` and propagate.
+     * 
+     * FIXME(doc): why `_s` instead of `season`?
+     */
     function deposit(
         address account,
         address token,
@@ -39,6 +46,17 @@ library LibTokenSilo {
         return depositWithBDV(account, token, _s, amount, bdv);
     }
 
+    /**
+     * @dev:
+     * 
+     * Once the current BDV for `amount` of `token` is known, perform deposit accounting.
+     * 
+     * Note that the conventional ordering used elsewhere in the Beanstalk
+     * ecosystem is (stalk, seeds), but this function returns `(uint256 seeds, uint256 stalk)`.
+     *
+     * `s.ss[token].seeds` stores the number of Seeds per BDV.
+     * `s.ss[token].stalk` stores the number of Stalk per BDV.
+     */
     function depositWithBDV(
         address account,
         address token,
@@ -48,11 +66,19 @@ library LibTokenSilo {
     ) internal returns (uint256, uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(bdv > 0, "Silo: No Beans under Token.");
-        incrementDepositedToken(token, amount);
-        addDeposit(account, token, _s, amount, bdv);
-        return (bdv.mul(s.ss[token].seeds), bdv.mul(s.ss[token].stalk));
+
+        incrementDepositedToken(token, amount); // global
+        addDeposit(account, token, _s, amount, bdv); // user
+
+        return (
+            bdv.mul(s.ss[token].seeds), // Seeds
+            bdv.mul(s.ss[token].stalk)  // Stalk
+        );
     }
 
+    /**
+     * @dev Increment the total amount of `token` deposited in the Silo.
+     */
     function incrementDepositedToken(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.siloBalances[token].deposited = s.siloBalances[token].deposited.add(
@@ -60,6 +86,15 @@ library LibTokenSilo {
         );
     }
 
+    /**
+     * @dev:
+     *
+     * Add `amount` of `token` to the user's Deposit for `season`.
+     *
+     * If a Deposit doesn't yet exist, one is created. Otherwise, the existing Deposit is updated.
+     * 
+     * FIXME(doc) why the casting to uint128?
+     */
     function addDeposit(
         address account,
         address token,
@@ -68,11 +103,16 @@ library LibTokenSilo {
         uint256 bdv
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
+
         s.a[account].deposits[token][_s].amount += uint128(amount);
         s.a[account].deposits[token][_s].bdv += uint128(bdv);
+
         emit AddDeposit(account, token, _s, amount, bdv);
     }
 
+    /**
+     * @dev Decrement the total amount of `token` deposited in the Silo.
+     */
     function decrementDepositedToken(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.siloBalances[token].deposited = s.siloBalances[token].deposited.sub(
@@ -80,9 +120,7 @@ library LibTokenSilo {
         );
     }
 
-    /*
-     * Remove
-     */
+    //////////////////////// REMOVE DEPOSIT ////////////////////////
 
     function removeDeposit(
         address account,
@@ -134,49 +172,81 @@ library LibTokenSilo {
         }
     }
 
-    /*
-     * Getters
-     */
+    //////////////////////// GETTERS ////////////////////////
 
+    /**
+     * @notice Locate the `amount` and `bdv` for a deposit in storage.
+     * 
+     * @dev: 
+     * Unripe BEAN and Unripe LP are handled independently so that data
+     * stored in the legacy Silo V1 format and the new Silo V2 format can
+     * be appropriately merged.
+     * 
+     * Refer to {FIXME(doc)} for more information.
+     * 
+     * FIXME(naming): rename `id` to `season`
+     */
     function tokenDeposit(
         address account,
         address token,
         uint32 id
     ) internal view returns (uint256, uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
+
         if (LibUnripeSilo.isUnripeBean(token))
             return LibUnripeSilo.unripeBeanDeposit(account, id);
+
         if (LibUnripeSilo.isUnripeLP(token))
             return LibUnripeSilo.unripeLPDeposit(account, id);
+
         return (
             s.a[account].deposits[token][id].amount,
             s.a[account].deposits[token][id].bdv
         );
     }
 
+    /**
+     * @dev Calculate the BDV ("Bean Denominated Value") for `amount` of `token`.
+     * 
+     * Makes a call to a BDV function defined in the SiloSettings for this token.
+     * 
+     * See {AppStorage.sol:Storage.SiloSettings} for more information.
+     *
+     * FIXME(naming): rename myFunctionCall
+     */
     function beanDenominatedValue(address token, uint256 amount)
         internal
         returns (uint256 bdv)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
+
+        /// BDV functions have accept one parameter: `uint256 amount`
         bytes memory myFunctionCall = abi.encodeWithSelector(
             s.ss[token].selector,
             amount
         );
+
         (bool success, bytes memory data) = address(this).call(
             myFunctionCall
         );
+
         if (!success) {
             if (data.length == 0) revert();
             assembly {
                 revert(add(32, data), mload(data))
             }
         }
+
         assembly {
             bdv := mload(add(data, add(0x20, 0)))
         }
     }
 
+    /**
+     * @dev Withdrawals are stored as a mapping of token => season => amount.
+     * 
+     * FIXME(naming): rename `id` to `season`
+     */
     function tokenWithdrawal(
         address account,
         address token,
@@ -186,11 +256,17 @@ library LibTokenSilo {
         return s.a[account].withdrawals[token][id];
     }
 
+    /**
+     * @dev Get the number of Seeds per BDV for a whitelisted token `token`.
+     */
     function seeds(address token) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return uint256(s.ss[token].seeds);
     }
 
+    /**
+     * @dev Get the number of Stalk per BDV for a whitelisted token `token`.
+     */
     function stalk(address token) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return uint256(s.ss[token].stalk);

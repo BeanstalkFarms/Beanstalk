@@ -14,7 +14,7 @@ import "../../../C.sol";
 /**
  * @author Publius
  * @title Silo Exit
- **/
+ */
 contract SiloExit is ReentrancyGuard {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;

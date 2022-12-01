@@ -12,15 +12,24 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 /**
  * @author Publius
  * @title App Storage defines the state object for Beanstalk.
-**/
+ */
 
-// The Account contract stores all of the Farmer specific storage data.
-// Each unique Ethereum address is a Farmer.
-// Account.State is the primary struct that is referenced in the greater Storage.State struct.
-// All other structs in Account are stored in Account.State.
+
+/**
+ * @dev {Account} stores all Farmer-specific data.
+ * 
+ * NOTE that "Account" and "Farmer" are synonymous in future descriptions.
+ * 
+ * Account.State is the primary struct that is referenced in the greater Storage.State struct.
+ * All other structs in Account are stored in Account.State.
+ */
 contract Account {
 
-    // Field stores a Farmer's Plots and Pod allowances.
+    /**
+     * @dev {Account.Field} stores a Farmer's Plots and Pod allowances.
+     * 
+     * This is used within {Account.State}.
+     */
     struct Field {
         mapping(uint256 => uint256) plots; // A Farmer's Plots. Maps from Plot index to Pod amount.
         mapping(address => uint256) podAllowances; // An allowance mapping for Pods similar to that of the ERC-20 standard. Maps from spender address to allowance amount.
@@ -60,9 +69,40 @@ contract Account {
     // The global AppStorage state stores a mapping from account address to Account.State.
     struct State {
         Field field; // A Farmer's Field storage.
-        AssetSilo bean; // A Farmer's Unripe Bean Deposits only as a result of Replant (previously held the V1 Silo Deposits/Withdrawals for Beans).
-        AssetSilo lp;  // A Farmer's Unripe LP Deposits as a result of Replant of BEAN:ETH Uniswap v2 LP Tokens (previously held the V1 Silo Deposits/Withdrawals for BEAN:ETH Uniswap v2 LP Tokens).
-        Silo s; // A Farmer's Silo storage.
+
+        /**
+         * @dev (Silo V1) A Farmer's Unripe Bean Deposits only as a result of Replant
+         *
+         * Previously held the V1 Silo Deposits/Withdrawals for Beans.
+
+         * NOTE: While the Silo V1 format is now deprecated, this storage slot is used for gas
+         * efficiency to store Unripe BEAN deposits. See {FIXME(doc)} for more.
+         */
+        AssetSilo bean; 
+
+        /**
+         * @dev (Silo V1) Unripe LP Deposits as a result of Replant.
+         * 
+         * Previously held the V1 Silo Deposits/Withdrawals for BEAN:ETH Uniswap v2 LP Tokens.
+         * 
+         * BEAN:3CRV and BEAN:LUSD tokens prior to Replant were stored in the Silo V2
+         * format in the next storage slot, `s.a[account].silo`.
+         *
+         * NOTE: While the Silo V1 format is now deprecated, this storage slot is used for gas
+         * efficiency to store Unripe BEAN:3CRV deposits. See {FIXME(doc)} for more.
+         */
+        AssetSilo lp; 
+
+        /**
+         * @dev Silo V2
+         */
+        Silo s;
+        
+        /**
+         * @notice DEPRECATED
+         * 
+         * @dev FIXME(doc)
+         */
         uint32 votedUntil; // DEPRECATED – Replant removed on-chain governance including the ability to vote on BIPs.
         uint32 lastUpdate; // The Season in which the Farmer last updated their Silo.
         uint32 lastSop; // The last Season that a SOP occured at the time the Farmer last updated their Silo.
@@ -87,16 +127,20 @@ contract Account {
 // All Facets define Storage.State as the first and only state variable in the contract.
 contract Storage {
 
-    // DEPRECATED – After Replant, Beanstalk stores Token addresses as constants to save gas.
-    // Contracts stored the contract addresses of various important contracts to Beanstalk.
+    /**
+     * @dev DEPRECATED: After Replant, Beanstalk stores Token addresses as constants to save gas.
+     * @dev: {Storage.Contracts} stored the contract addresses of various important contracts to Beanstalk.
+     */
     struct Contracts {
-        address bean; // DEPRECATED – See above note
-        address pair; // DEPRECATED – See above note
-        address pegPair; // DEPRECATED – See above note
-        address weth; // DEPRECATED – See above note
+        address bean;
+        address pair;
+        address pegPair;
+        address weth;
     }
 
-    // Field stores global Field balances.
+    /**
+     *
+     */
     struct Field {
         uint256 soil; // The number of Soil currently available.
         uint256 pods; // The pod index; the total number of Pods ever minted.
@@ -104,35 +148,41 @@ contract Storage {
         uint256 harvestable; // The harvestable index; the total number of Pods that have ever been Harvestable. Included previously Harvested Beans.
     }
 
-    // DEPRECATED – Replant moved governance off-chain.
-    // Bip stores Bip related data.
+    /**
+     * @dev DEPRECATED: Replant moved governance off-chain.
+     * @dev {Storage.Bip} stored BIP-related data.
+     */
     struct Bip {
-        address proposer; // DEPRECATED – See above note
-        uint32 start; // DEPRECATED – See above note
-        uint32 period; // DEPRECATED – See above note
-        bool executed; // DEPRECATED – See above note
-        int pauseOrUnpause; // DEPRECATED – See above note
-        uint128 timestamp; // DEPRECATED – See above note
-        uint256 roots; // DEPRECATED – See above note
-        uint256 endTotalRoots; // DEPRECATED – See above note
+        address proposer;
+        uint32 start;
+        uint32 period;
+        bool executed;
+        int pauseOrUnpause;
+        uint128 timestamp;
+        uint256 roots;
+        uint256 endTotalRoots;
     }
 
-    // DEPRECATED – Replant moved governance off-chain.
-    // DiamondCut stores DiamondCut related data for each Bip.
+    /**
+     * @dev DEPRECATED: Replant moved governance off-chain.
+     * @dev {Storage.DiamondCut} stored DiamondCut-related data for each {Bip}.
+     */
     struct DiamondCut {
         IDiamondCut.FacetCut[] diamondCut;
         address initAddress;
         bytes initData;
     }
 
-    // DEPRECATED – Replant moved governance off-chain.
-    // Governance stores global Governance balances.
+    /**
+     * @dev DEPRECATED: Replant moved governance off-chain.
+     * @dev {Storage.Governance} stored all BIPs and Farmer voting information.
+     */
     struct Governance {
-        uint32[] activeBips; // DEPRECATED – See above note
-        uint32 bipIndex; // DEPRECATED – See above note
-        mapping(uint32 => DiamondCut) diamondCuts; // DEPRECATED – See above note
-        mapping(uint32 => mapping(address => bool)) voted; // DEPRECATED – See above note
-        mapping(uint32 => Bip) bips; // DEPRECATED – See above note
+        uint32[] activeBips;
+        uint32 bipIndex;
+        mapping(uint32 => DiamondCut) diamondCuts;
+        mapping(uint32 => mapping(address => bool)) voted;
+        mapping(uint32 => Bip) bips;
     }
 
     // AssetSilo stores global Token level Silo balances.
@@ -173,7 +223,12 @@ contract Storage {
         // Apologies if this makes it confusing :(
         uint32 current; // The current Season in Beanstalk.
         uint32 lastSop; // The Season in which the most recent consecutive series of Seasons of Plenty started.
-        uint8 withdrawSeasons; // The number of seasons required to Withdraw a Deposit.
+
+        /**
+         * @notice The number of seasons required to Withdraw a Deposit.
+         * @dev Also referred to as the "withdraw freeze". See {LibTokenSilo.withdrawFreeze}.
+         */
+        uint8 withdrawSeasons;
         uint32 lastSopSeason; // The Season in which the most recent consecutive series of Seasons of Plenty ended.
         uint32 rainStart; // rainStart stores the most recent Season in which Rain started.
         bool raining; // True if it is Raining (P < 1, Pod Rate Excessively Low).
@@ -204,18 +259,37 @@ contract Storage {
         uint256 start; // The timestamp at which the Fundraiser started (Fundraisers cannot be started and funded in the same block).
     }
 
-    // SiloSettings stores the settings for each Token that has been Whitelisted into the Silo.
-    // A Token is considered whitelisted in the Silo if there exists a non-zero SiloSettings selector.
+    /**
+     * @notice SiloSettings stores the settings for each Token that has been Whitelisted into the Silo.
+     * @dev:
+     * 
+     * A Token is considered whitelisted in the Silo if there exists a non-zero SiloSettings selector.
+     */
     struct SiloSettings {
-        // selector is an encoded function selector 
-        // that pertains to an external view Beanstalk function 
-        // with the following signature:
-        // function tokenToBdv(uint256 amount) public view returns (uint256);
-        // It is called by `LibTokenSilo` through the use of delegatecall
-        // To calculate the BDV of a Deposit at the time of Deposit.
-        bytes4 selector; // The encoded BDV function selector for the Token.
-        uint32 seeds; // The Seeds Per BDV that the Silo mints in exchange for Depositing this Token.
-        uint32 stalk; // The Stalk Per BDV that the Silo mints in exchange for Depositing this Token.
+        /**
+         * @dev: 
+         * 
+         * `selector` is an encoded function selector that pertains to 
+         * an external view Beanstalk function with the following signature:
+         * 
+         * ```
+         * function tokenToBdv(uint256 amount) public view returns (uint256);
+         * ```
+         * 
+         * It is called by `LibTokenSilo` through the use of `delegatecall`
+         * to calculate a token's BDV at the time of Deposit.
+         *
+         * FIXME(doc) LibTokenSilo performs a call, not a delegatecall.
+         */
+        bytes4 selector;
+        /**
+         * @dev The Seeds Per BDV that the Silo mints in exchange for Depositing this Token.
+         */
+        uint32 seeds;
+        /**
+         * @dev The Stalk Per BDV that the Silo mints in exchange for Depositing this Token.
+         */
+        uint32 stalk;
     }
 
     // UnripeSettings stores the settings for an Unripe Token in Beanstalk.
@@ -262,8 +336,22 @@ struct AppStorage {
     mapping(uint256 => bytes32) podListings; // A mapping from Plot Index to the hash of the Pod Listing.
     mapping(bytes32 => uint256) podOrders; // A mapping from the hash of a Pod Order to the amount of Pods that the Pod Order is still willing to buy.
     mapping(address => Storage.AssetSilo) siloBalances; // A mapping from Token address to Silo Balance storage (amount deposited and withdrawn).
-    mapping(address => Storage.SiloSettings) ss; // A mapping from Token address to Silo Settings for each Whitelisted Token. If a non-zero storage exists, a Token is whitelisted.
-    uint256[3] depreciated2; // DEPRECATED - 3 slots that used to store state variables which have been depreciated through various updates. Storage slots can be left alone or reused.
+
+    /**
+     * @notice Storage.SiloSettings (ss)
+     * @dev A mapping from Token address to Silo Settings for each Whitelisted Token.
+     * 
+     * If a non-zero element exists at `address`, that address is whitelisted in Silo.
+     */
+    mapping(address => Storage.SiloSettings) ss;
+    
+    /**
+     * @dev DEPRECATED
+     * @dev 3 slots that used to store state variables which have been depreciated through various updates. 
+     * 
+     * Storage slots can be left alone or reused.
+     */
+    uint256[3] depreciated2;
 
     // New Sops
     mapping (uint32 => uint256) sops; // A mapping from Season to Plenty Per Root (PPR) in that Season. Plenty Per Root is 0 if a Season of Plenty did not occur.

@@ -148,18 +148,30 @@ library C {
         return CURVE_BEAN_METAPOOL;
     }
 
+    /**
+     * @dev The pre-exploit BEAN:3CRV Curve metapool address.
+     */
     function unripeLPPool1() internal pure returns (address) {
         return UNRIPE_CURVE_BEAN_METAPOOL;
     }
 
+    /**
+     * @dev The pre-exploit BEAN:LUSD Curve plain pool address.
+     */
     function unripeLPPool2() internal pure returns (address) {
         return UNRIPE_CURVE_BEAN_LUSD_POOL;
     }
 
+    /**
+     * @dev The post-exploit Unripe BEAN ERC20 token address.
+     */
     function unripeBeanAddress() internal pure returns (address) {
         return UNRIPE_BEAN;
     }
 
+    /**
+     * @dev The post-exploit Unripe BEAN:3CRV LP ERC20 token address.
+     */
     function unripeLPAddress() internal pure returns (address) {
         return UNRIPE_LP;
     }
