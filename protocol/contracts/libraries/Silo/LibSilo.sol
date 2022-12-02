@@ -20,7 +20,7 @@ library LibSilo {
     /**
      * @notice Emitted when `account` gains or loses Seeds.
      * @param account 
-     * @param delta int256 The change in Seeds.
+     * @param delta The change in Seeds.
      * 
      * @dev:
      *
@@ -43,8 +43,8 @@ library LibSilo {
     /**
      * @notice Emitted when `account` gains or loses Stalk.
      * @param account 
-     * @param delta int256 The change in Stalk.
-     * @param deltaRoots int256 FIXME(doc)
+     * @param delta The change in Stalk.
+     * @param deltaRoots FIXME(doc)
      * 
      * @dev:
      *
@@ -92,8 +92,8 @@ library LibSilo {
     }
 
     /**
-     * @dev Wrapper: Transferring increments balance of Stalk & Seeds for
-     * `receipient`, and decrepements balance of Stalk & Seeds for `sender`.
+     * @dev Wrapper: Transferring increments balance of Seeds & Stalk for
+     * `receipient`, and decrements balance of Seeds & Stalk for `sender`.
      */
     function transferSiloAssets(
         address sender,
@@ -108,7 +108,10 @@ library LibSilo {
     //////////////////////// INCREMENT ////////////////////////
 
     /**
-     * @dev 
+     * @dev:
+     *  
+     * FIXME(naming): perhaps "mintSeeds" would better convey that Seeds
+     * are being added to the account's balance AND to the total supply?
      */
     function incrementBalanceOfSeeds(address account, uint256 seeds) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -120,25 +123,26 @@ library LibSilo {
     }
 
     /**
-     * @dev Increase the balance of Stalk and Roots for an account.
+     * @dev Mint Stalk to `account`.
      * 
      * See {FIXME(doc)} for an explanation of Roots accounting.
-     *  
-     * FIXME(doc) why .s.stalk but not .s.roots?
+     *
+     * FIXME(naming): perhaps "mintStalk" would better convey that Stalk
+     * are being added to the account's balance AND to the total supply?
      */
     function incrementBalanceOfStalk(address account, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        /// Calculate amount of Roots for this amount of Stalk
+        // Calculate amount of Roots for this amount of Stalk
         uint256 roots;
         if (s.s.roots == 0) roots = stalk.mul(C.getRootsBase());
         else roots = s.s.roots.mul(stalk).div(s.s.stalk);
 
-        /// Add Stalk to global & user Silo
+        // Add Stalk -> totals, account balance
         s.s.stalk = s.s.stalk.add(stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
 
-        /// Add Roots to global & user Silo
+        // Add Roots -> totals, account balance
         s.s.roots = s.s.roots.add(roots);
         s.a[account].roots = s.a[account].roots.add(roots);
 
@@ -147,6 +151,12 @@ library LibSilo {
 
     //////////////////////// DECREMENT ////////////////////////
 
+    /**
+     * @dev:
+     *  
+     * FIXME(naming): perhaps "burnSeeds" would better convey that Seeds
+     * are being added to the account's balance AND to the total supply?
+     */
     function decrementBalanceOfSeeds(address account, uint256 seeds) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -156,6 +166,12 @@ library LibSilo {
         emit SeedsBalanceChanged(account, -int256(seeds));
     }
 
+    /**
+     * @dev:
+     *  
+     * FIXME(naming): perhaps "burnStalk" would better convey that Stalk
+     * are being added to the account's balance AND to the total supply?
+     */
     function decrementBalanceOfStalk(address account, uint256 stalk) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return;

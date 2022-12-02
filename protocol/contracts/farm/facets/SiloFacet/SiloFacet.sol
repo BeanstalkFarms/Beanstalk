@@ -10,7 +10,7 @@ import "../../ReentrancyGuard.sol";
 import "../../../libraries/Token/LibTransfer.sol";
 import "../../../libraries/Silo/LibSiloPermit.sol";
 
-/*
+/**
  * @author Publius
  * @title SiloFacet handles depositing, withdrawing and claiming whitelisted Silo tokens.
  */
@@ -197,7 +197,7 @@ contract SiloFacet is TokenSilo {
         return LibSiloPermit.nonces(owner);
     }
 
-     /**
+    /**
      * @dev See {IERC20Permit-DOMAIN_SEPARATOR}.
      */
     // solhint-disable-next-line func-name-mixedcase

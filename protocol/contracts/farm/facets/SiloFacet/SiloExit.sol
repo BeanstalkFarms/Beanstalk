@@ -27,50 +27,76 @@ contract SiloExit is ReentrancyGuard {
         uint256 plenty;
     }
 
+    //////////////////////// SILO: TOTALS ////////////////////////
+
     /**
-     * Silo
-     **/
-
-    function totalStalk() public view returns (uint256) {
-        return s.s.stalk;
-    }
-
-    function totalRoots() public view returns (uint256) {
-        return s.s.roots;
-    }
-
+     * @notice Returns the total amount of outstanding Seeds. Does NOT include Earned Seeds.
+     */
     function totalSeeds() public view returns (uint256) {
         return s.s.seeds;
     }
 
+    /**
+     * @notice Returns the total amount of outstanding Stalk. Does NOT include Grown Stalk.
+     */
+    function totalStalk() public view returns (uint256) {
+        return s.s.stalk;
+    }
+
+    /**
+     * @notice Returns the total amount of outstanding Roots.
+     */
+    function totalRoots() public view returns (uint256) {
+        return s.s.roots;
+    }
+
+    /**
+     * @notice Returns the total amount of outstanding Earned Beans.
+     */
     function totalEarnedBeans() public view returns (uint256) {
         return s.earnedBeans;
     }
 
+    //////////////////////// SILO: ACCOUNT BALANCES ////////////////////////
+
+    /**
+     * @notice Returns the balance of Seeds for `account`. Does NOT include Earned Seeds.
+     * @dev Earned Seeds do not earn Grown Stalk, so we do not include them.
+     *
+     * FIXME(doc): explain why ^
+     */
     function balanceOfSeeds(address account) public view returns (uint256) {
-        return s.a[account].s.seeds; // Earned Seeds do not earn Grown stalk, so we do not include them.
+        return s.a[account].s.seeds;
     }
 
+    /**
+     * @notice Returns the balance of Stalk for `account`. Does NOT include Grown Stalk.
+     * @dev Earned Stalk earns Bean Mints, but Grown Stalk does not.
+     *
+     * FIXME(doc): explain why ^
+     */
     function balanceOfStalk(address account) public view returns (uint256) {
-        return s.a[account].s.stalk.add(balanceOfEarnedStalk(account)); // Earned Stalk earns Bean Mints, but Grown Stalk does not.
+        return s.a[account].s.stalk.add(balanceOfEarnedStalk(account));
     }
 
+    /**
+     * @notice Returns the balance of Roots for `account`.
+     * @dev Roots within Beanstalk are entirely separate from the [ROOT ERC-20 token](https://roottoken.org/).
+     * 
+     * FIXME(doc): explain why we have Roots
+     */
     function balanceOfRoots(address account) public view returns (uint256) {
         return s.a[account].roots;
     }
 
     /**
      * @notice Returns the `account` balance of Grown Stalk, the Stalk that is earned each Season from Seeds.
-     *
-     * The amount of Grown Stalk is calculated as:
+     * @dev The balance of Grown Stalk for an account is calculated as:
      *
      * ```
-     * elapsedSeasons = current season - last updated season
+     * elapsedSeasons = currentSeason - lastUpdatedSeason
      * grownStalk = balanceOfSeeds * elapsedSeasons
      * ```
-     *
-     * @param account
-     * @return stalk
      */
     function balanceOfGrownStalk(address account)
         public
@@ -136,9 +162,7 @@ contract SiloExit is ReentrancyGuard {
         return s.a[account].lastUpdate;
     }
 
-    /**
-     * Season Of Plenty
-     **/
+    //////////////////////// SEASON OF PLENTY ////////////////////////
 
     function lastSeasonOfPlenty() public view returns (uint32) {
         return s.season.lastSop;
@@ -202,12 +226,10 @@ contract SiloExit is ReentrancyGuard {
         sop.plentyPerRoot = s.a[account].sop.plentyPerRoot;
     }
 
-    /**
-     * Internal
-     **/
+    //////////////////////// INTERNAL ////////////////////////
 
     /**
-     * @dev Return the current Season number.
+     * @dev Returns the current Season number.
      */
     function season() internal view returns (uint32) {
         return s.season.current;

@@ -46,23 +46,22 @@ contract Silo is SiloExit {
      *
      * Before performing any Silo accounting, we need to account for a user's Grown Stalk.
      * 
-     * How updating works:
-     *  - FIXME(doc)
+     * How updating works: FIXME(doc)
      */
     function _update(address account) internal {
         uint32 _lastUpdate = lastUpdate(account);
 
-        /// If already updated this season, there's no Stalk to claim.
-        /// _lastUpdate > season() should not be possible, but we check it anyway.
+        // If already updated this season, there's no Stalk to claim.
+        // _lastUpdate > season() should not be possible, but we check it anyway.
         if (_lastUpdate >= season()) return;
 
-        /// Increment Plenty if a SOP has occured or save Rain Roots if its Raining.
+        // Increment Plenty if a SOP has occured or save Rain Roots if its Raining.
         handleRainAndSops(account, _lastUpdate);
 
-        /// Earn Grown Stalk -> The Stalk gained from Seeds.
+        // Earn Grown Stalk -> The Stalk gained from Seeds.
         earnGrownStalk(account);
 
-        /// Bump the lastUpdate season to the current `season()`.
+        // Bump the lastUpdate season to the current `season()`.
         s.a[account].lastUpdate = season();
     }
 
@@ -110,7 +109,7 @@ contract Silo is SiloExit {
     //////////////////////// PRIVATE ////////////////////////
 
     function earnGrownStalk(address account) private {
-        /// If this `account` has no Seeds, skip to save gas.
+        // If this `account` has no Seeds, skip to save gas.
         if (s.a[account].s.seeds == 0) return;
         LibSilo.incrementBalanceOfStalk(account, balanceOfGrownStalk(account));
     }
