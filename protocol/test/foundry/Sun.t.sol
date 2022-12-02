@@ -4,20 +4,20 @@ pragma solidity =0.7.6;
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 
-import { Sun } from "farm/facets/SeasonFacet/Sun.sol";
-import { MockSeasonFacet } from "mocks/mockFacets/MockSeasonFacet.sol";
-import { MockSiloFacet } from "mocks/mockFacets/MockSiloFacet.sol";
-import { MockFieldFacet } from "mocks/mockFacets/MockFieldFacet.sol";
+import { Sun } from "~/beanstalk/facets/SeasonFacet/Sun.sol";
+import { MockSeasonFacet } from "~/mocks/mockFacets/MockSeasonFacet.sol";
+import { MockSiloFacet } from "~/mocks/mockFacets/MockSiloFacet.sol";
+import { MockFieldFacet } from "~/mocks/mockFacets/MockFieldFacet.sol";
 
 import { Utils } from "./utils/Utils.sol";
-import { DiamondDeployer } from "./utils/Deploy.sol";
+import { InitDiamondDeployer } from "./utils/InitDiamondDeployer.sol";
 
-import "farm/AppStorage.sol";
-import "@contracts/libraries/Decimal.sol";
-import "@contracts/libraries/LibSafeMath32.sol";
-import "@contracts/C.sol";
+import "~/beanstalk/AppStorage.sol";
+import "~/libraries/Decimal.sol";
+import "~/libraries/LibSafeMath32.sol";
+import "~/C.sol";
 
-contract SunTest is Sun, Test {
+contract SunTest is Sun, Test, InitDiamondDeployer {
   using SafeMath for uint256;
   using LibSafeMath32 for uint32;
 
@@ -29,19 +29,13 @@ contract SunTest is Sun, Test {
   MockSiloFacet internal silo;
   MockFieldFacet internal field;
   
-  function setUp() public {
+  function setUp() public override {
+    InitDiamondDeployer.setUp();
+
     utils = new Utils();
     users = utils.createUsers(2);
     alice = users[0];
     vm.label(alice, "Alice");
-
-    // deploy
-    address diamond = address(new DiamondDeployer().deployMock());
-
-    season = MockSeasonFacet(diamond);
-    silo = MockSiloFacet(diamond);
-    field = MockFieldFacet(diamond);
-    console.log("Sun: Initialized at season %s", season.season());
     
     // Mint beans
     C.bean().mint(address(this), 1000);
@@ -52,15 +46,6 @@ contract SunTest is Sun, Test {
   }
 
   ///////////////////////// Utilities /////////////////////////
-
-  function _abs(int256 v) pure internal returns (uint256) {
-    return uint256(v < 0 ? 0 : v);
-  }
-
-  function _reset(uint256 _snapId) internal returns (uint256) {
-    vm.revertTo(_snapId);
-    return vm.snapshot();
-  }
 
   function _testSunrise(
     int256 deltaB,
