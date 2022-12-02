@@ -5,7 +5,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../farm/facets/FertilizerFacet.sol";
+import "../../beanstalk/facets/FertilizerFacet.sol";
 
 /**
  * @author Publius
