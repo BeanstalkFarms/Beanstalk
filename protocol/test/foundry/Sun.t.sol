@@ -20,22 +20,9 @@ import "~/C.sol";
 contract SunTest is Sun, Test, InitDiamondDeployer {
   using SafeMath for uint256;
   using LibSafeMath32 for uint32;
-
-  Utils internal utils;
-  address payable[] internal users;
-  address internal alice;
-
-  MockSeasonFacet internal season;
-  MockSiloFacet internal silo;
-  MockFieldFacet internal field;
   
   function setUp() public override {
     InitDiamondDeployer.setUp();
-
-    utils = new Utils();
-    users = utils.createUsers(2);
-    alice = users[0];
-    vm.label(alice, "Alice");
     
     // Mint beans
     C.bean().mint(address(this), 1000);
