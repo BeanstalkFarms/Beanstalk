@@ -97,6 +97,8 @@ describe('Sun', function () {
     expect(await this.silo.totalEarnedBeans()).to.be.equal('100');
   })
 
+  //
+
   it("all harvestable and all fertilizable", async function () {
     await this.field.incrementTotalPodsE(to6('50'));
     await this.fertilizer.connect(owner).addFertilizerOwner('6274', '20', '0')
