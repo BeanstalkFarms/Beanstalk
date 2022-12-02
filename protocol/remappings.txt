@@ -3,6 +3,7 @@ hardhat/=node_modules/hardhat/
 @ensdomains/=node_modules/@ensdomains/
 eth-gas-reporter/=node_modules/eth-gas-reporter/
 @contracts/=contracts/
+~/=contracts/
 @beanstalk/=contracts/beanstalk/
 farm/=contracts/beanstalk/
 facets/=contracts/beanstalk/facets/
