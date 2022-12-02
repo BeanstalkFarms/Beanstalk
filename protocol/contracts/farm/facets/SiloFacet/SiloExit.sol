@@ -27,6 +27,15 @@ contract SiloExit is ReentrancyGuard {
         uint256 plenty;
     }
 
+    //////////////////////// UTILTIES ////////////////////////
+
+    /**
+     * @notice Get the last Season in which `account` updated their Silo.
+     */
+    function lastUpdate(address account) public view returns (uint32) {
+        return s.a[account].lastUpdate;
+    }
+
     //////////////////////// SILO: TOTALS ////////////////////////
 
     /**
@@ -109,7 +118,10 @@ contract SiloExit is ReentrancyGuard {
                 season() - lastUpdate(account)
             );
     }
-
+    
+    /**
+     * @notice Returns the `account` balance of Earned Beans, the seignorage that is distributed to Stalkholders.
+     */
     function balanceOfEarnedBeans(address account)
         public
         view
@@ -118,6 +130,12 @@ contract SiloExit is ReentrancyGuard {
         beans = _balanceOfEarnedBeans(account, s.a[account].s.stalk);
     }
 
+    /**
+     * @dev:
+     * 
+     * FIXME(doc) explain why we perform this calculation
+     * TODO(publius)
+     */
     function _balanceOfEarnedBeans(address account, uint256 accountStalk)
         internal
         view
@@ -131,14 +149,20 @@ contract SiloExit is ReentrancyGuard {
         uint256 stalk = s.s.stalk.mul(s.a[account].roots).div(s.s.roots);
 
         // Handle edge case caused by rounding
+        // FIXME(doc) describe this edge case
         if (stalk <= accountStalk) return 0;
 
         // Calculate Earned Stalk and convert to Earned Beans.
         beans = (stalk - accountStalk).div(C.getStalkPerBean()); // Note: SafeMath is redundant here.
         if (beans > s.earnedBeans) return s.earnedBeans;
+
         return beans;
     }
 
+    /**
+     * @notice Return the `account` balance of Earned Stalk, the Stalk associated with Earned Beans.
+     * @dev Earned Stalk can be derived from Earned Beans, because 1 Bean => 1 Stalk. See {C.getStalkPerBean()}.
+     */
     function balanceOfEarnedStalk(address account)
         public
         view
@@ -147,6 +171,10 @@ contract SiloExit is ReentrancyGuard {
         return balanceOfEarnedBeans(account).mul(C.getStalkPerBean());
     }
 
+    /**
+     * @notice Returns the `account` balance of Earned Seeds, the Seeds associated with Earned Beans.
+     * @dev Earned Seeds can be derived from Earned Beans, because 1 Bean => 2 Seeds. See {C.getSeedsPerBean()}.
+     */
     function balanceOfEarnedSeeds(address account)
         public
         view
@@ -155,19 +183,18 @@ contract SiloExit is ReentrancyGuard {
         return balanceOfEarnedBeans(account).mul(C.getSeedsPerBean());
     }
 
-    /**
-     * @notice Return the Season number in which this `account`'s Silo was last updated.
-     */
-    function lastUpdate(address account) public view returns (uint32) {
-        return s.a[account].lastUpdate;
-    }
-
     //////////////////////// SEASON OF PLENTY ////////////////////////
 
+    /**
+     * TODO(publius)
+     */
     function lastSeasonOfPlenty() public view returns (uint32) {
         return s.season.lastSop;
     }
 
+    /**
+     * TODO(publius)
+     */
     function balanceOfPlenty(address account)
         public
         view
@@ -210,10 +237,16 @@ contract SiloExit is ReentrancyGuard {
         }
     }
 
+    /**
+     * TODO(publius)
+     */
     function balanceOfRainRoots(address account) public view returns (uint256) {
         return s.a[account].sop.roots;
     }
 
+    /**
+     * TODO(publius)
+     */
     function balanceOfSop(address account)
         external
         view
