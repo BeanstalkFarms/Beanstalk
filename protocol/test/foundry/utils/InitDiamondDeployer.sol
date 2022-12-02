@@ -14,9 +14,12 @@ import {DiamondLoupeFacet} from "facets/DiamondLoupeFacet.sol";
 import {MockInitDiamond} from "mocks/MockInitDiamond.sol";
 
 // Facets
-import {BDVFacet} from "facets/BDVFacet.sol";
+import {MockSiloFacet} from "mockFacets/MockSiloFacet.sol";
+import {BDVFacet} from "@beanstalk/silo/BDVFacet.sol";
+import {ConvertFacet} from "@beanstalk/silo/ConvertFacet.sol";
+import {WhitelistFacet} from "@beanstalk/silo/WhitelistFacet.sol";
+
 import {CurveFacet} from "facets/CurveFacet.sol";
-import {ConvertFacet} from "facets/ConvertFacet.sol";
 import {MockConvertFacet} from "mockFacets/MockConvertFacet.sol";
 import {FarmFacet} from "facets/FarmFacet.sol";
 import {MockFieldFacet} from "mockFacets/MockFieldFacet.sol";
@@ -24,7 +27,6 @@ import {MockFundraiserFacet} from "mockFacets/MockFundraiserFacet.sol";
 import {MockMarketplaceFacet} from "mockFacets/MockMarketplaceFacet.sol";
 import {PauseFacet} from "facets/PauseFacet.sol";
 import {MockSeasonFacet} from "mockFacets/MockSeasonFacet.sol";
-import {MockSiloFacet} from "mockFacets/MockSiloFacet.sol";
 import {MockFertilizerFacet} from "mockFacets/MockFertilizerFacet.sol";
 import {OwnershipFacet} from "facets/OwnershipFacet.sol";
 import {TokenFacet} from "facets/TokenFacet.sol";
@@ -33,9 +35,7 @@ import {MockUnripeFacet} from "mockFacets/MockUnripeFacet.sol";
 // import {WellBuildingFacet} from "@beanstalk/farm/facets/WellBuildingFacet.sol";
 // import {WellFacet} from "@beanstalk/farm/facets/WellFacet.sol";
 // import {WellOracleFacet} fom "@beanstalk/farm/facets/WellOracleFacet.sol";
-import {WhitelistFacet} from "facets/WhitelistFacet.sol";
-
-import {BeanstalkPrice} from "@beanstalk/price/BeanstalkPrice.sol";
+import {BeanstalkPrice} from "@contracts/price/BeanstalkPrice.sol";
 import {Mock3Curve} from "mocks/curve/Mock3Curve.sol";
 import {MockCurveFactory} from "mocks/curve/MockCurveFactory.sol";
 import {MockCurveZap} from "mocks/curve/MockCurveZap.sol";
