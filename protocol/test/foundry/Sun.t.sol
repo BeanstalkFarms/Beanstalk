@@ -13,9 +13,9 @@ import { Utils } from "./utils/Utils.sol";
 import { DiamondDeployer } from "./utils/Deploy.sol";
 
 import "farm/AppStorage.sol";
-import "@beanstalk/libraries/Decimal.sol";
-import "@beanstalk/libraries/LibSafeMath32.sol";
-import "@beanstalk/C.sol";
+import "@contracts/libraries/Decimal.sol";
+import "@contracts/libraries/LibSafeMath32.sol";
+import "@contracts/C.sol";
 
 contract SunTest is Sun, Test {
   using SafeMath for uint256;

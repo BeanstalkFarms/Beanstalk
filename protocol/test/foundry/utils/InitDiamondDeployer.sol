@@ -42,13 +42,13 @@ import {MockCurveZap} from "mocks/curve/MockCurveZap.sol";
 import {MockMeta3Curve} from "mocks/curve/MockMeta3Curve.sol";
 import {MockWETH} from "mocks/MockWETH.sol";
 import "farm/AppStorage.sol";
-import "@beanstalk/libraries/Decimal.sol";
-import "@beanstalk/libraries/LibSafeMath32.sol";
-import "@beanstalk/libraries/Token/LibTransfer.sol";
+import "@contracts/libraries/Decimal.sol";
+import "@contracts/libraries/LibSafeMath32.sol";
+import "@contracts/libraries/Token/LibTransfer.sol";
 
-import "@beanstalk/C.sol";
+import "@contracts/C.sol";
 
-import "@beanstalk/C.sol";
+import "@contracts/C.sol";
 
 abstract contract InitDiamondDeployer is Test {
   

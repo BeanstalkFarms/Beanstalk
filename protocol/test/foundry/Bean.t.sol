@@ -4,7 +4,7 @@ pragma solidity =0.7.6;
 import "forge-std/Test.sol";
 import {console} from "forge-std/console.sol";
 
-import { Bean } from "@beanstalk/tokens/Bean.sol";
+import { Bean } from "@contracts/tokens/Bean.sol";
 import { Utils } from "./utils/Utils.sol";
 
 contract BeanTest is Bean, Test {
