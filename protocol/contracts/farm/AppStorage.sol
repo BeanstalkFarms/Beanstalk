@@ -82,6 +82,24 @@ contract Account {
     }
 }
 
+// The Tractor contract stores all of the Tractor specific storage data.
+contract Tractor {
+    // Blueprint stores blueprint related values
+    struct Blueprint {
+        address publisher;
+        bytes[] predicates;
+        bytes data;
+        bytes32[] calldataCopyParams;
+    }
+
+    // BlueprintState stores state of blueprint
+    // The global AppStorage state stores a mapping from Blueprint hash to Tractor.BlueprintState.
+    struct BlueprintState {
+        bool isActive;
+        mapping(uint256 => bytes) predicateStates;
+    }
+}
+
 // Storage stores the Global Beanstalk State.
 // Storage.State stores the highest level State
 // All Facets define Storage.State as the first and only state variable in the contract.
@@ -287,4 +305,7 @@ struct AppStorage {
     uint256 recapitalized; // The nubmer of USDC that has been recapitalized in the Barn Raise.
     uint256 isFarm; // Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
     address ownerCandidate; // Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
+
+    // Tractor
+    mapping(bytes32 => Tractor.BlueprintState) blueprintStates;
 }
