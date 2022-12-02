@@ -7,8 +7,8 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./SiloExit.sol";
-import "../../../libraries/Silo/LibSilo.sol";
-import "../../../libraries/Silo/LibTokenSilo.sol";
+import "@contracts/libraries/Silo/LibSilo.sol";
+import "@contracts/libraries/Silo/LibTokenSilo.sol";
 
 /**
  * @author Publius
