@@ -9,12 +9,12 @@ import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {IBean} from "../../interfaces/IBean.sol";
-import {LibDiamond} from "../../libraries/LibDiamond.sol";
-import {LibUnripe} from "../../libraries/LibUnripe.sol";
-import {LibTransfer} from "../../libraries/Token/LibTransfer.sol";
-import "../../C.sol";
-import "../ReentrancyGuard.sol";
+import {IBean} from "~/interfaces/IBean.sol";
+import {LibDiamond} from "~/libraries/LibDiamond.sol";
+import {LibUnripe} from "~/libraries/LibUnripe.sol";
+import {LibTransfer} from "~/libraries/Token/LibTransfer.sol";
+import "~/C.sol";
+import "~/beanstalk/ReentrancyGuard.sol";
 
 /// @author ZrowGz, Publius
 /// @title VestingFacet
