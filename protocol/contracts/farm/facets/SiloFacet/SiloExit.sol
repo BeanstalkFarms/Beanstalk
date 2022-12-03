@@ -11,13 +11,17 @@ import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/LibSafeMath32.sol";
 import "../../../libraries/LibSafeMath128.sol";
 import "../../../C.sol";
+import "../../../libraries/LibPRBMath.sol";
+import "hardhat/console.sol";
+
 
 /**
- * @author Publius
+ * @author Publius, Brean
  * @title Silo Exit
  **/
 contract SiloExit is ReentrancyGuard {
     using SafeMath for uint256;
+    using LibPRBMath for uint256;
     using LibSafeMath128 for uint128;
     using LibSafeMath32 for uint32;
 
@@ -88,18 +92,37 @@ contract SiloExit is ReentrancyGuard {
     {
         // There will be no Roots when the first deposit is made.
         if (s.s.roots == 0) return 0;
+        // obtain the vesting stalk, based on how much time has elasped within a season. 
+        // at t = 0, percentSeasonRemaining should be 1e18 (100%)
+        // at t = 1800, percentSeasonRemaining should be 5e17 (50%)
+        // at t = 3600, percentSeasonRemaining should be 0 (0%)
         uint256 percentSeasonRemaining = 
-            LibMath.min((block.timestamp - s.timestamp) * 1e18 / 3600, 1e18);  
+            1e18 - LibPRBMath.min((block.timestamp - s.season.timestamp) * 1e18 / 3600, 1e18); // safemath not needed
+        // stalk vested = new earned stalk * % season remanining
+        uint256 vestingEarnedStalk = uint256(s.newEarnedStalk).mul(percentSeasonRemaining).div(1e18);
         // Determine expected user Stalk based on Roots balance
         // userStalk / totalStalk = userRoots / totalRoots
-        uint256 vestingEarnedStalk = s.newEarnedStalk.mul(percentSeasonRemaining).div(1e18);
-        uint256 stalk = s.s.stalk.sub(vestingEarnedStalk).mul(s.a[account].roots).div(s.s.roots);
-
+        uint256 stalk = s.s.stalk.sub(vestingEarnedStalk).mulDiv(s.a[account].roots,s.s.roots,LibPRBMath.Rounding.Up);
         // Handle edge case caused by rounding
         if (stalk <= accountStalk) return 0;
 
+        // console.log("percentSeasonRemaining:", percentSeasonRemaining);
+        // // console.log("season timestamp:", s.season.timestamp);
+        // //console.log("block timestamp:", block.timestamp);
+        // console.log("difference:", block.timestamp - s.season.timestamp);
+        // console.log("accountStalk: ", accountStalk);
+        // console.log("stalk: ", stalk);
+        // console.log("total stalk: ", s.s.stalk);
+        // console.log("farmer root: ", s.a[account].roots);
+        // console.log("total root: ", s.s.roots);
+        // console.log("vestingEarnedStalk: ", vestingEarnedStalk);
+        console.log("-------");
+
+
         // Calculate Earned Stalk and convert to Earned Beans.
         beans = (stalk - accountStalk).div(C.getStalkPerBean()); // Note: SafeMath is redundant here.
+        console.log("bean amt:",beans);
+
         if (beans > s.earnedBeans) return s.earnedBeans;
         return beans;
     }

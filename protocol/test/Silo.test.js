@@ -4,11 +4,12 @@ const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./
 const { to18, to6, toStalk } = require('./utils/helpers.js')
 const { BEAN } = require('./utils/constants')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+const { time } = require("@nomicfoundation/hardhat-network-helpers");
 
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 
-describe('Silo', function () {
+describe.only('Silo', function () {
   before(async function () {
     [owner,user,user2] = await ethers.getSigners();
     userAddress = user.address;
@@ -74,6 +75,8 @@ describe('Silo', function () {
     describe("Single", async function () {
       beforeEach(async function () {
         await this.season.siloSunrise(to6('100'))
+        await time.increase(3600); // wait until end of season to get earned
+
       })
 
       it('properly updates the earned balances', async function () {
@@ -96,11 +99,12 @@ describe('Silo', function () {
         expect(await this.silo.totalRoots()).to.eq(toStalk('2000000000000000'));
       });
     })
-  })
+  });
 
   describe("Single Earn", async function () {
     beforeEach(async function () {
       await this.season.siloSunrise(to6('100'))
+      await time.increase(3600); // wait until end of season to get earned
       await this.silo.update(user2Address)
       this.result = await this.silo.connect(user).plant()
     })
@@ -133,5 +137,120 @@ describe('Silo', function () {
       await this.silo.connect(user2).plant()
       expect(await this.silo.totalEarnedBeans()).to.eq('0');
     });
-  })
+  });
+  
+  /// TODO: need to find rounding errors
+  describe("Time Weighted Earned Bean Emission", async function () {
+    
+    // tests a farmers deposit that has no earned bean prior
+    describe("No Earned Beans prior to sunrise", async function() {
+
+      beforeEach(async function () {
+        await this.season.siloSunrise(to6('100'))
+      })
+
+      it('Does not issue any Earned Beans at the start of the season.', async function () {
+        expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq('0');
+      });
+
+      it('Issues 1/4th the total Earned Beans at the start of the season.', async function () {
+        await time.increase(900); // 900 seconds = 30 minutes = half beans issued
+        expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('12.5'));
+      });
+
+      it('Issues half the total Earned Beans at the start of the season.', async function () {
+        await time.increase(1800); // 1800 seconds = 30 minutes = half beans issued
+        expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('25'));
+      });
+
+      it('Issues 3/4ths the total Earned Beans at the start of the season.', async function () {
+        await time.increase(2700); // 2700 seconds = 30 minutes = half beans issued
+        expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('37.5'));
+      });
+
+      it('Issues all Earned Beans at the end of the season.', async function () {
+        await time.increase(3600); //3600 seconds = 60 minutes = all beans issued
+        expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('50'));
+      });
+    })
+
+    describe("Some Earned Beans Prior to sunrise", async function () {
+      
+      beforeEach(async function () {
+        await this.season.siloSunrise(to6('100'))
+        await time.increase(3600); // 1800 + 1800 = 60 minutes = all beans issued
+        await this.season.siloSunrise(to6('100'))
+      })
+
+      it('Issues ONLY Earned Beans from last season.', async function () {
+        expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('50'));
+      });
+
+      it('Issues Earned Beans from last season + 25% of this season.', async function () {
+        await time.increase(900); // 900 seconds = 30 minutes = half beans issued
+        expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('62.5'));
+      });
+
+      it('Issues Earned Beans from last season + 50% of this season.', async function () {
+        await time.increase(1800); // 1800 seconds = 30 minutes = half beans issued
+        expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('75'));
+      });
+
+      it('Issues Earned Beans from last season + 75% of this season.', async function () {
+        await time.increase(2700); // 2700 seconds = 30 minutes = half beans issued
+        expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('87.5'));
+      });
+
+      it('Issues Earned Beans from last season + all of this season.', async function () {
+        await time.increase(3600); // 3600 seconds = 60 minutes = all beans issued
+        expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('100'));
+      });
+
+    })
+
+    describe("Partial Earned Beans", async function () {
+
+      beforeEach(async function () {
+        await this.season.siloSunrise(to6('100'))
+      })
+
+      // issue: farmer should get 12.5, but gets a bit more, because his stalk has increased; 
+      it('farmer harvests Earned Beans after mid harvest', async function () {
+        //var season = await this.season.season();
+        //console.log(season);
+        //expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('0'));
+        var inital_earned_beans = await this.silo.balanceOfEarnedBeans(userAddress);
+       //console.log('inital earned Beans prior to plant:', inital_earned_beans.toNumber());
+        await time.increase(900); 
+        var inital_earned_beans = await this.silo.balanceOfEarnedBeans(userAddress);
+        //expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('12.5'));
+        //console.log('earned Beans at 25% of the season:', inital_earned_beans);
+        this.result = await this.silo.connect(user).plant();
+        acutal_earned_beans = await this.silo.getDeposit(userAddress,this.bean.address,season);
+        //console.log('earned Beans actually gotten:', inital_earned_beans);
+
+        inital_earned_beans = await this.silo.balanceOfEarnedBeans(userAddress);
+
+        seeds = await this.silo.balanceOfSeeds(userAddress);
+        //console.log('seeds:', seeds);
+        await time.increase(2700); // 2700 + 900 = 60 minutes = all beans issued 
+        //expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq('37489680');
+        this.result = await this.silo.connect(user).plant();
+        seeds = await this.silo.balanceOfSeeds(userAddress);
+        //console.log('seeds:', seeds);
+        acutal_earned_beans = await this.silo.getDeposit(userAddress,this.bean.address,season);
+       //console.log('earned Beans actually gotten:', inital_earned_beans);
+      });
+
+      it('loop de loop', async function () {
+      
+      })
+      it('0 earned beans after mid-earned harvest', async function () {
+        await time.increase(3600); // 1800 seconds = 30 minutes = half Earned beans issued
+        //this.result = await this.silo.connect(user).plant();
+        expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('50'));
+      });
+
+    })
+  });
 });

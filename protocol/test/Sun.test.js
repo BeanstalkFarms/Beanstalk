@@ -176,4 +176,8 @@ describe('Sun', function () {
     expect(await this.silo.totalStalk()).to.be.equal(toStalk('200'));
     expect(await this.silo.totalEarnedBeans()).to.be.equal(to6('200'));
   })
+
+  // describe("Earned Bean Distrubution", function() {
+  //   it("Propertly distrubutes")
+  // })
 })

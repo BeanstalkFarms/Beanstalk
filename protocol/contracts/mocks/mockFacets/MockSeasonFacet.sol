@@ -32,6 +32,7 @@ contract MockSeasonFacet is SeasonFacet {
     function siloSunrise(uint256 amount) public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
+        s.season.timestamp = block.timestamp;
         mockStepSilo(amount);
     }
 

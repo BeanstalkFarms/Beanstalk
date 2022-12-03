@@ -13,7 +13,7 @@ import "../../../C.sol";
 import "../../../libraries/LibFertilizer.sol";
 
 /**
- * @author Publius
+ * @author Publius, Brean
  * @title Sun
  **/
 contract Sun is Oracle {
@@ -106,10 +106,10 @@ contract Sun is Oracle {
     }
 
     function rewardToSilo(uint256 amount) internal {
-        // remove stalk gain 
-        //s.s.stalk = s.s.stalk.add(amount.mul(C.getStalkPerBean()));
-        s.earnedBeans = s.earnedBeans.add(uint128(amount));
-        s.newEarnedStalk = amount.mul(C.getStalkPerBean();) 
+        uint256 seasonStalk = amount.mul(C.getStalkPerBean());
+        s.s.stalk = s.s.stalk.add(seasonStalk);
+        s.earnedBeans = s.earnedBeans.add(uint128(amount)); 
+        s.newEarnedStalk = uint128(seasonStalk);
         s.siloBalances[C.beanAddress()].deposited = s
             .siloBalances[C.beanAddress()]
             .deposited

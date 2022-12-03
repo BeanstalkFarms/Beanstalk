@@ -9,14 +9,19 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./SiloExit.sol";
 import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/Silo/LibTokenSilo.sol";
+import "../../../libraries/LibSafeMath128.sol";
+import "../../../libraries/LibPRBMath.sol";
+import "hardhat/console.sol";
 
 /**
- * @author Publius
+ * @author Publius, Brean
  * @title Silo Entrance
  **/
 contract Silo is SiloExit {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
+    using LibSafeMath128 for uint128;
+
 
     event Plant(
         address indexed account,
@@ -69,6 +74,7 @@ contract Silo is SiloExit {
             beans,
             beans
         );
+        // beans are rounded down, so we round up here
         uint256 seeds = beans.mul(C.getSeedsPerBean());
 
         // Earned Seeds don't auto-compound, so we need to mint new Seeds
@@ -77,6 +83,7 @@ contract Silo is SiloExit {
         // Earned Stalk auto-compounds and thus is minted alongside Earned Beans
         // Farmers don't receive additional Roots from Earned Stalk.
         uint256 stalk = beans.mul(C.getStalkPerBean());
+        //console.log("stalk amt:",stalk);
         s.a[account].s.stalk = accountStalk.add(stalk);
 
         emit StalkBalanceChanged(account, int256(stalk), 0);
