@@ -4,7 +4,7 @@ pragma solidity =0.7.6;
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 
-import { Sun } from "~/beanstalk/facets/SeasonFacet/Sun.sol";
+import { Sun } from "~/beanstalk/sun/SeasonFacet/Sun.sol";
 import { MockSeasonFacet } from "~/mocks/mockFacets/MockSeasonFacet.sol";
 import { MockSiloFacet } from "~/mocks/mockFacets/MockSiloFacet.sol";
 import { MockFieldFacet } from "~/mocks/mockFacets/MockFieldFacet.sol";

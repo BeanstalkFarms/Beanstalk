@@ -4,7 +4,7 @@ pragma abicoder v2;
 
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
-import { Weather } from "~/beanstalk/facets/SeasonFacet/Weather.sol";
+import { Weather } from "~/beanstalk/sun/SeasonFacet/Weather.sol";
 import "./utils/InitDiamondDeployer.sol";
 import "./utils/LibConstant.sol";
 
