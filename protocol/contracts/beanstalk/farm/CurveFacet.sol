@@ -6,11 +6,11 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 // import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "../../C.sol";
-import "../../interfaces/ICurve.sol";
-import "../../libraries/Token/LibTransfer.sol";
-import "../../libraries/Token/LibApprove.sol";
-import "../ReentrancyGuard.sol";
+import "~/C.sol";
+import "~/interfaces/ICurve.sol";
+import "~/libraries/Token/LibTransfer.sol";
+import "~/libraries/Token/LibApprove.sol";
+import "~/beanstalk/ReentrancyGuard.sol";
 
 /**
  * @author Publius
