@@ -28,7 +28,7 @@ This repository contains the code base for the Beanstalk protocol, all of its fa
 Conceptual documentation on Beanstalk can be found in the [Farmers' Almanac](https://docs.bean.money/almanac). <br>
 Technical documentation on Beanstalk can be found in the [Agronomics Handbook](https://docs.bean.money/developers).
 
-The latest version of the Beanstalk Whitepaper is available [here](https://bean.money/beanstalk.pdf).
+The latest version of the Beanstalk Whitepaper is available [here](https://bean.money/beanstalk.pdf) (version history can be found [here](https://github.com/BeanstalkFarms/Beanstalk-Whitepaper/tree/main/version-history)).
 
 ## Bug Bounty Program
 
