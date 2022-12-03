@@ -6,7 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "../../beanstalk/facets/FieldFacet.sol";
+import "~/beanstalk/field/FieldFacet.sol";
 
 /**
  * @author Publius
