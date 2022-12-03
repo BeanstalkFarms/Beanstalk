@@ -6,7 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "../../beanstalk/facets/MarketplaceFacet/MarketplaceFacet.sol";
+import "~/beanstalk/market/MarketplaceFacet/MarketplaceFacet.sol";
 // import "../../libraries/LibPolynomial.sol";
 
 /**
