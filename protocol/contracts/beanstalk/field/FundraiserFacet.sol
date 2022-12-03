@@ -8,9 +8,9 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "../ReentrancyGuard.sol";
-import "../../libraries/LibDiamond.sol";
-import "../../libraries/LibDibbler.sol";
-import "../../libraries/Token/LibTransfer.sol";
+import "~/libraries/LibDiamond.sol";
+import "~/libraries/LibDibbler.sol";
+import "~/libraries/Token/LibTransfer.sol";
 
 /**
  * @author Publius
