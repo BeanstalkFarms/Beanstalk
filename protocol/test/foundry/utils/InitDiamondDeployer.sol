@@ -9,26 +9,31 @@ import {Utils} from "./Utils.sol";
 // Diamond setup
 import {Diamond} from "~/beanstalk/Diamond.sol";
 import {IDiamondCut} from "~/interfaces/IDiamondCut.sol";
-import {DiamondCutFacet} from "~/beanstalk/facets/DiamondCutFacet.sol";
-import {DiamondLoupeFacet} from "~/beanstalk/facets/DiamondLoupeFacet.sol";
 import {MockInitDiamond} from "~/mocks/MockInitDiamond.sol";
 
-// Facets
+/// Modules
+// Diamond
+import {DiamondCutFacet} from "~/beanstalk/diamond/DiamondCutFacet.sol";
+import {DiamondLoupeFacet} from "~/beanstalk/diamond/DiamondLoupeFacet.sol";
+import {PauseFacet} from "~/beanstalk/diamond/PauseFacet.sol";
+import {OwnershipFacet} from "~/beanstalk/diamond/OwnershipFacet.sol";
+
+// Silo
 import {MockSiloFacet} from "~/mocks/mockFacets/MockSiloFacet.sol";
 import {BDVFacet} from "~/beanstalk/silo/BDVFacet.sol";
 import {ConvertFacet} from "~/beanstalk/silo/ConvertFacet.sol";
 import {WhitelistFacet} from "~/beanstalk/silo/WhitelistFacet.sol";
 
+// Field
+import {MockFieldFacet} from "~/mocks/mockFacets/MockFieldFacet.sol";
+import {MockFundraiserFacet} from "~/mocks/mockFacets/MockFundraiserFacet.sol";
+
 import {CurveFacet} from "~/beanstalk/facets/CurveFacet.sol";
 import {MockConvertFacet} from "~/mocks/mockFacets/MockConvertFacet.sol";
 import {FarmFacet} from "~/beanstalk/facets/FarmFacet.sol";
-import {MockFieldFacet} from "~/mocks/mockFacets/MockFieldFacet.sol";
-import {MockFundraiserFacet} from "~/mocks/mockFacets/MockFundraiserFacet.sol";
 import {MockMarketplaceFacet} from "~/mocks/mockFacets/MockMarketplaceFacet.sol";
-import {PauseFacet} from "~/beanstalk/facets/PauseFacet.sol";
 import {MockSeasonFacet} from "~/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockFertilizerFacet} from "~/mocks/mockFacets/MockFertilizerFacet.sol";
-import {OwnershipFacet} from "~/beanstalk/facets/OwnershipFacet.sol";
 import {TokenFacet} from "~/beanstalk/facets/TokenFacet.sol";
 import {MockToken} from "~/mocks/MockToken.sol";
 import {MockUnripeFacet} from "~/mocks/mockFacets/MockUnripeFacet.sol";
