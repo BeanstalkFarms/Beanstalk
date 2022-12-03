@@ -28,30 +28,33 @@ import {WhitelistFacet} from "~/beanstalk/silo/WhitelistFacet.sol";
 import {MockFieldFacet} from "~/mocks/mockFacets/MockFieldFacet.sol";
 import {MockFundraiserFacet} from "~/mocks/mockFacets/MockFundraiserFacet.sol";
 
-import {CurveFacet} from "~/beanstalk/facets/CurveFacet.sol";
-import {MockConvertFacet} from "~/mocks/mockFacets/MockConvertFacet.sol";
-import {FarmFacet} from "~/beanstalk/facets/FarmFacet.sol";
-import {MockMarketplaceFacet} from "~/mocks/mockFacets/MockMarketplaceFacet.sol";
-import {MockSeasonFacet} from "~/mocks/mockFacets/MockSeasonFacet.sol";
-import {MockFertilizerFacet} from "~/mocks/mockFacets/MockFertilizerFacet.sol";
-import {TokenFacet} from "~/beanstalk/facets/TokenFacet.sol";
-import {MockToken} from "~/mocks/MockToken.sol";
-import {MockUnripeFacet} from "~/mocks/mockFacets/MockUnripeFacet.sol";
+// Farm
+import {FarmFacet} from "~/beanstalk/farm/FarmFacet.sol";
+import {CurveFacet} from "~/beanstalk/farm/CurveFacet.sol";
+import {TokenFacet} from "~/beanstalk/farm/TokenFacet.sol";
+
 // import {WellBuildingFacet} from "~/beanstalk/farm/facets/WellBuildingFacet.sol";
 // import {WellFacet} from "~/beanstalk/farm/facets/WellFacet.sol";
 // import {WellOracleFacet} fom "~/beanstalk/farm/facets/WellOracleFacet.sol";
+
+// Mocks
+import {MockConvertFacet} from "~/mocks/mockFacets/MockConvertFacet.sol";
+import {MockMarketplaceFacet} from "~/mocks/mockFacets/MockMarketplaceFacet.sol";
+import {MockSeasonFacet} from "~/mocks/mockFacets/MockSeasonFacet.sol";
+import {MockFertilizerFacet} from "~/mocks/mockFacets/MockFertilizerFacet.sol";
+import {MockToken} from "~/mocks/MockToken.sol";
+import {MockUnripeFacet} from "~/mocks/mockFacets/MockUnripeFacet.sol";
 import {BeanstalkPrice} from "~/price/BeanstalkPrice.sol";
 import {Mock3Curve} from "~/mocks/curve/Mock3Curve.sol";
 import {MockCurveFactory} from "~/mocks/curve/MockCurveFactory.sol";
 import {MockCurveZap} from "~/mocks/curve/MockCurveZap.sol";
 import {MockMeta3Curve} from "~/mocks/curve/MockMeta3Curve.sol";
 import {MockWETH} from "~/mocks/MockWETH.sol";
+
 import "~/beanstalk/AppStorage.sol";
 import "~/libraries/Decimal.sol";
 import "~/libraries/LibSafeMath32.sol";
 import "~/libraries/Token/LibTransfer.sol";
-
-import "~/C.sol";
 
 import "~/C.sol";
 
