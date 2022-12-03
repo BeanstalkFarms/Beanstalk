@@ -6,8 +6,8 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./PodTransfer.sol";
-import "../../../libraries/Token/LibTransfer.sol";
-import "../../../libraries/LibPolynomial.sol";
+import "~/libraries/Token/LibTransfer.sol";
+import "~/libraries/LibPolynomial.sol";
 
 /**
  * @author Beanjoyer, Malteasy
