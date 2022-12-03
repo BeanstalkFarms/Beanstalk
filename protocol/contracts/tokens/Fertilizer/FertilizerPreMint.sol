@@ -4,9 +4,9 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./Internalizer.sol";
-import "../interfaces/ISwapRouter.sol";
-import "../interfaces/IQuoter.sol";
-import "../interfaces/IWETH.sol";
+import "~/interfaces/ISwapRouter.sol";
+import "~/interfaces/IQuoter.sol";
+import "~/interfaces/IWETH.sol";
 
 /**
  * @author publius

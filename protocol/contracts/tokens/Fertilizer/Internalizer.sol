@@ -10,8 +10,8 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Fertilizer1155.sol";
-import "../libraries/LibSafeMath32.sol";
-import "../libraries/LibSafeMath128.sol";
+import "~/libraries/LibSafeMath32.sol";
+import "~/libraries/LibSafeMath128.sol";
 
 /**
  * @author publius
