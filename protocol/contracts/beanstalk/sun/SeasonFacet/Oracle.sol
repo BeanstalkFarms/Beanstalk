@@ -5,8 +5,8 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../../libraries/Oracle/LibCurveOracle.sol";
-import "../../ReentrancyGuard.sol";
+import "~/libraries/Oracle/LibCurveOracle.sol";
+import "~/beanstalk/ReentrancyGuard.sol";
 
 /**
  * @author Publius

@@ -5,9 +5,9 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
+import {LibDiamond} from "~/libraries/LibDiamond.sol";
+import {LibEth} from "~/libraries/Token/LibEth.sol";
 import {AppStorage} from "../AppStorage.sol";
-import {LibDiamond} from "../../libraries/LibDiamond.sol";
-import {LibEth} from "../../libraries/Token/LibEth.sol";
 
 /**
  * @author Beasley

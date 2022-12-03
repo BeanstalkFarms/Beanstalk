@@ -5,9 +5,9 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../C.sol";
-import "../../libraries/Curve/LibBeanMetaCurve.sol";
-import "../../libraries/LibUnripe.sol";
+import "~/C.sol";
+import "~/libraries/Curve/LibBeanMetaCurve.sol";
+import "~/libraries/LibUnripe.sol";
 
 /*
  * @author Publius

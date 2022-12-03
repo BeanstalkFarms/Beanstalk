@@ -5,8 +5,8 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {LibDiamond} from "../../libraries/LibDiamond.sol";
-import {LibWhitelist} from "../../libraries/Silo/LibWhitelist.sol";
+import {LibDiamond} from "~/libraries/LibDiamond.sol";
+import {LibWhitelist} from "~/libraries/Silo/LibWhitelist.sol";
 import {AppStorage} from "../AppStorage.sol";
 
 /**

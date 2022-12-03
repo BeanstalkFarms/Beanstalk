@@ -9,8 +9,8 @@ pragma solidity =0.7.6;
 * EIP-2535 Diamond Standard: https://eips.ethereum.org/EIPS/eip-2535
 /******************************************************************************/
 
-import {IDiamondCut} from "../../interfaces/IDiamondCut.sol";
-import {LibDiamond} from "../../libraries/LibDiamond.sol";
+import {IDiamondCut} from "~/interfaces/IDiamondCut.sol";
+import {LibDiamond} from "~/libraries/LibDiamond.sol";
 
 contract DiamondCutFacet is IDiamondCut {
     /// @notice Add/replace/remove any number of functions and optionally execute

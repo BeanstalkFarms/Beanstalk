@@ -10,7 +10,6 @@ import "~/beanstalk/ReentrancyGuard.sol";
 import "~/libraries/Token/LibTransfer.sol";
 import "~/libraries/Silo/LibSiloPermit.sol";
 
-
 /*
  * @author Publius
  * @title SiloFacet handles depositing, withdrawing and claiming whitelisted Silo tokens.

@@ -5,8 +5,8 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../../libraries/Decimal.sol";
-import "../../../libraries/Curve/LibBeanMetaCurve.sol";
+import "~/libraries/Decimal.sol";
+import "~/libraries/Curve/LibBeanMetaCurve.sol";
 import "./Sun.sol";
 
 /**

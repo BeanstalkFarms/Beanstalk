@@ -3,7 +3,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {LibDiamond} from "../../libraries/LibDiamond.sol";
+import {LibDiamond} from "~/libraries/LibDiamond.sol";
 import {AppStorage} from "../AppStorage.sol";
 
 contract OwnershipFacet {

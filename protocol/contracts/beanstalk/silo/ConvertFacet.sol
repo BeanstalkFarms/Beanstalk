@@ -5,12 +5,12 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../C.sol";
-import "../../libraries/Silo/LibSilo.sol";
-import "../../libraries/Silo/LibTokenSilo.sol";
-import "../../libraries/LibSafeMath32.sol";
-import "../../libraries/Convert/LibConvert.sol";
-import "../../libraries/LibInternal.sol";
+import "~/C.sol";
+import "~/libraries/Silo/LibSilo.sol";
+import "~/libraries/Silo/LibTokenSilo.sol";
+import "~/libraries/LibSafeMath32.sol";
+import "~/libraries/Convert/LibConvert.sol";
+import "~/libraries/LibInternal.sol";
 import "../ReentrancyGuard.sol";
 
 /**

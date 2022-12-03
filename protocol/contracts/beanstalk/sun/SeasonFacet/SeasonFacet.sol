@@ -5,8 +5,8 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
+import "~/libraries/LibIncentive.sol";
 import "./Weather.sol";
-import "../../../libraries/LibIncentive.sol";
 
 /**
  * @author Publius

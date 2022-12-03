@@ -5,11 +5,11 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../../libraries/Decimal.sol";
-import "../../../libraries/LibSafeMath32.sol";
+import "~/libraries/Decimal.sol";
+import "~/libraries/LibSafeMath32.sol";
+import "~/C.sol";
+import "~/libraries/LibFertilizer.sol";
 import "./Oracle.sol";
-import "../../../C.sol";
-import "../../../libraries/LibFertilizer.sol";
 
 /**
  * @author Publius

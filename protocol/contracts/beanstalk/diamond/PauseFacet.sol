@@ -6,7 +6,7 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import {LibDiamond} from "../../libraries/LibDiamond.sol";
+import {LibDiamond} from "~/libraries/LibDiamond.sol";
 import {AppStorage} from "../AppStorage.sol";
 
 /**
