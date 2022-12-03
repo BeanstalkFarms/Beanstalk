@@ -11,8 +11,8 @@ import "@openzeppelin/contracts-upgradeable-8/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable-8/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable-8/utils/math/MathUpgradeable.sol";
 
-import "../interfaces/IBeanstalk.sol";
-import "../interfaces/IDelegation.sol";
+import "~/interfaces/IBeanstalk.sol";
+import "~/interfaces/IDelegation.sol";
 
 /// @notice Silo deposit transfer
 /// @param token a whitelisted silo token address
