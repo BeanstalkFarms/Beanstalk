@@ -5,8 +5,8 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../libraries/Token/LibTransfer.sol";
-import "../../libraries/LibDibbler.sol";
+import "~/libraries/Token/LibTransfer.sol";
+import "~/libraries/LibDibbler.sol";
 import "../ReentrancyGuard.sol";
 
 /**

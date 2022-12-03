@@ -4,7 +4,7 @@ pragma abicoder v2;
 
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
-import { FieldFacet } from "~/beanstalk/facets/FieldFacet.sol";
+import { FieldFacet } from "~/beanstalk/field/FieldFacet.sol";
 import "./utils/InitDiamondDeployer.sol";
 import "./utils/LibConstant.sol";
 

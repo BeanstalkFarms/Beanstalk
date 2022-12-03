@@ -5,7 +5,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../beanstalk/facets/FundraiserFacet.sol";
+import "~/beanstalk/field/FundraiserFacet.sol";
 
 /**
  * @author Publius
