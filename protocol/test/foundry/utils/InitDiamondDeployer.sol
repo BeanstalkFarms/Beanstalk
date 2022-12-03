@@ -7,48 +7,48 @@ import "forge-std/console2.sol";
 import {Utils} from "./Utils.sol";
 
 // Diamond setup
-import {Diamond} from "farm/Diamond.sol";
-import {IDiamondCut} from "interfaces/IDiamondCut.sol";
-import {DiamondCutFacet} from "facets/DiamondCutFacet.sol";
-import {DiamondLoupeFacet} from "facets/DiamondLoupeFacet.sol";
-import {MockInitDiamond} from "mocks/MockInitDiamond.sol";
+import {Diamond} from "~/beanstalk/Diamond.sol";
+import {IDiamondCut} from "~/interfaces/IDiamondCut.sol";
+import {DiamondCutFacet} from "~/beanstalk/facets/DiamondCutFacet.sol";
+import {DiamondLoupeFacet} from "~/beanstalk/facets/DiamondLoupeFacet.sol";
+import {MockInitDiamond} from "~/mocks/MockInitDiamond.sol";
 
 // Facets
-import {BDVFacet} from "facets/BDVFacet.sol";
-import {CurveFacet} from "facets/CurveFacet.sol";
-import {ConvertFacet} from "facets/ConvertFacet.sol";
-import {MockConvertFacet} from "mockFacets/MockConvertFacet.sol";
-import {FarmFacet} from "facets/FarmFacet.sol";
-import {MockFieldFacet} from "mockFacets/MockFieldFacet.sol";
-import {MockFundraiserFacet} from "mockFacets/MockFundraiserFacet.sol";
-import {MockMarketplaceFacet} from "mockFacets/MockMarketplaceFacet.sol";
-import {PauseFacet} from "facets/PauseFacet.sol";
-import {MockSeasonFacet} from "mockFacets/MockSeasonFacet.sol";
-import {MockSiloFacet} from "mockFacets/MockSiloFacet.sol";
-import {MockFertilizerFacet} from "mockFacets/MockFertilizerFacet.sol";
-import {OwnershipFacet} from "facets/OwnershipFacet.sol";
-import {TokenFacet} from "facets/TokenFacet.sol";
-import {MockToken} from "mocks/MockToken.sol";
-import {MockUnripeFacet} from "mockFacets/MockUnripeFacet.sol";
-// import {WellBuildingFacet} from "@beanstalk/farm/facets/WellBuildingFacet.sol";
-// import {WellFacet} from "@beanstalk/farm/facets/WellFacet.sol";
-// import {WellOracleFacet} fom "@beanstalk/farm/facets/WellOracleFacet.sol";
-import {WhitelistFacet} from "facets/WhitelistFacet.sol";
+import {MockSiloFacet} from "~/mocks/mockFacets/MockSiloFacet.sol";
+import {BDVFacet} from "~/beanstalk/silo/BDVFacet.sol";
+import {ConvertFacet} from "~/beanstalk/silo/ConvertFacet.sol";
+import {WhitelistFacet} from "~/beanstalk/silo/WhitelistFacet.sol";
 
-import {BeanstalkPrice} from "@beanstalk/price/BeanstalkPrice.sol";
-import {Mock3Curve} from "mocks/curve/Mock3Curve.sol";
-import {MockCurveFactory} from "mocks/curve/MockCurveFactory.sol";
-import {MockCurveZap} from "mocks/curve/MockCurveZap.sol";
-import {MockMeta3Curve} from "mocks/curve/MockMeta3Curve.sol";
-import {MockWETH} from "mocks/MockWETH.sol";
-import "farm/AppStorage.sol";
-import "@contracts/libraries/Decimal.sol";
-import "@contracts/libraries/LibSafeMath32.sol";
-import "@contracts/libraries/Token/LibTransfer.sol";
+import {CurveFacet} from "~/beanstalk/facets/CurveFacet.sol";
+import {MockConvertFacet} from "~/mocks/mockFacets/MockConvertFacet.sol";
+import {FarmFacet} from "~/beanstalk/facets/FarmFacet.sol";
+import {MockFieldFacet} from "~/mocks/mockFacets/MockFieldFacet.sol";
+import {MockFundraiserFacet} from "~/mocks/mockFacets/MockFundraiserFacet.sol";
+import {MockMarketplaceFacet} from "~/mocks/mockFacets/MockMarketplaceFacet.sol";
+import {PauseFacet} from "~/beanstalk/facets/PauseFacet.sol";
+import {MockSeasonFacet} from "~/mocks/mockFacets/MockSeasonFacet.sol";
+import {MockFertilizerFacet} from "~/mocks/mockFacets/MockFertilizerFacet.sol";
+import {OwnershipFacet} from "~/beanstalk/facets/OwnershipFacet.sol";
+import {TokenFacet} from "~/beanstalk/facets/TokenFacet.sol";
+import {MockToken} from "~/mocks/MockToken.sol";
+import {MockUnripeFacet} from "~/mocks/mockFacets/MockUnripeFacet.sol";
+// import {WellBuildingFacet} from "~/beanstalk/farm/facets/WellBuildingFacet.sol";
+// import {WellFacet} from "~/beanstalk/farm/facets/WellFacet.sol";
+// import {WellOracleFacet} fom "~/beanstalk/farm/facets/WellOracleFacet.sol";
+import {BeanstalkPrice} from "~/price/BeanstalkPrice.sol";
+import {Mock3Curve} from "~/mocks/curve/Mock3Curve.sol";
+import {MockCurveFactory} from "~/mocks/curve/MockCurveFactory.sol";
+import {MockCurveZap} from "~/mocks/curve/MockCurveZap.sol";
+import {MockMeta3Curve} from "~/mocks/curve/MockMeta3Curve.sol";
+import {MockWETH} from "~/mocks/MockWETH.sol";
+import "~/beanstalk/AppStorage.sol";
+import "~/libraries/Decimal.sol";
+import "~/libraries/LibSafeMath32.sol";
+import "~/libraries/Token/LibTransfer.sol";
 
-import "@contracts/C.sol";
+import "~/C.sol";
 
-import "@contracts/C.sol";
+import "~/C.sol";
 
 abstract contract InitDiamondDeployer is Test {
   

@@ -5,7 +5,7 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../beanstalk/facets/ConvertFacet.sol";
+import "../../beanstalk/silo/ConvertFacet.sol";
 
 /**
  * @author Publius

@@ -6,9 +6,10 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./TokenSilo.sol";
-import "../../ReentrancyGuard.sol";
-import "../../../libraries/Token/LibTransfer.sol";
-import "../../../libraries/Silo/LibSiloPermit.sol";
+import "~/beanstalk/ReentrancyGuard.sol";
+import "~/libraries/Token/LibTransfer.sol";
+import "~/libraries/Silo/LibSiloPermit.sol";
+
 
 /*
  * @author Publius
@@ -22,6 +23,13 @@ contract SiloFacet is TokenSilo {
      * Deposit
      */
 
+    /** 
+     * @notice deposits ERC20 token into internal farmer balances.
+     * @dev farmer is issued stalk and seeds based on token (i.e non-whitelisted tokens do not get any)
+     * @param token address of ERC20
+     * @param amount tokens to be transfered
+     * @param mode source of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
+     */
     function deposit(
         address token,
         uint256 amount,
@@ -40,6 +48,16 @@ contract SiloFacet is TokenSilo {
      * Withdraw
      */
 
+    /** 
+     * @notice withdraws from a single deposit.
+     * @dev 
+     *  season determines how much Stalk and Seeds are removed from the Farmer.
+     *  typically the user wants to withdraw from the latest season, as it has the lowest stalk allocation.
+     *  we rely on the subgraph in order to query farmer deposits
+     * @param token address of ERC20
+     * @param season season the farmer wants to withdraw
+     * @param amount tokens to be withdrawn
+     */
     function withdrawDeposit(
         address token,
         uint32 season,
@@ -48,6 +66,16 @@ contract SiloFacet is TokenSilo {
         _withdrawDeposit(msg.sender, token, season, amount);
     }
 
+    /** 
+     * @notice withdraws from multiple deposits.
+     * @dev
+     *  factor in gas costs when withdrawing from multiple deposits to ensure greater UX
+     *  for example, if a user wants to withdraw X beans, its better to withdraw from 1 earlier deposit
+     *  rather than multiple smaller recent deposits, if the season difference is minimal.
+     * @param token address of ERC20
+     * @param seasons array of seasons to withdraw from
+     * @param amounts array of amounts corresponding to each season to withdraw from
+     */
     function withdrawDeposits(
         address token,
         uint32[] calldata seasons,
@@ -60,6 +88,12 @@ contract SiloFacet is TokenSilo {
      * Claim
      */
 
+    /** 
+     * @notice claims tokens from a withdrawal.
+     * @param token address of ERC20
+     * @param season season to claim
+     * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
+     */
     function claimWithdrawal(
         address token,
         uint32 season,
@@ -69,6 +103,12 @@ contract SiloFacet is TokenSilo {
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
 
+    /** 
+     * @notice claims tokens from multiple withdrawals.
+     * @param token address of ERC20
+     * @param seasons array of seasons to claim
+     * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
+     */
     function claimWithdrawals(
         address token,
         uint32[] calldata seasons,
@@ -82,6 +122,15 @@ contract SiloFacet is TokenSilo {
      * Transfer
      */
 
+    /** 
+     * @notice transfers single farmer deposit.
+     * @param sender source of deposit
+     * @param recipient destination of deposit
+     * @param token address of ERC20
+     * @param season season of deposit to transfer
+     * @param amount tokens to transfer
+     * @return bdv Bean Denominated Value of transfer
+     */
     function transferDeposit(
         address sender,
         address recipient,
@@ -98,6 +147,15 @@ contract SiloFacet is TokenSilo {
         bdv = _transferDeposit(sender, recipient, token, season, amount);
     }
 
+    /** 
+     * @notice transfers multiple farmer deposits.
+     * @param sender source of deposit
+     * @param recipient destination of deposit
+     * @param token address of ERC20
+     * @param seasons array of seasons to withdraw from
+     * @param amounts array of amounts corresponding to each season to withdraw from
+     * @return bdvs array of Bean Denominated Value of transfer corresponding from each season
+     */
     function transferDeposits(
         address sender,
         address recipient,
@@ -123,6 +181,12 @@ contract SiloFacet is TokenSilo {
      * Approval
      */
 
+    /** 
+     * @notice approves an address to access a farmers deposit.
+     * @param spender address to be given approval
+     * @param token address of ERC20
+     * @param amount amount to be approved
+     */
     function approveDeposit(
         address spender,
         address token,
@@ -133,11 +197,25 @@ contract SiloFacet is TokenSilo {
         _approveDeposit(msg.sender, spender, token, amount);
     }
 
+    /** 
+     * @notice increases allowance of deposit.
+     * @param spender address to increase approval
+     * @param token address of ERC20
+     * @param addedValue additional value to be given 
+     * @return bool success
+     */
     function increaseDepositAllowance(address spender, address token, uint256 addedValue) public virtual nonReentrant returns (bool) {
         _approveDeposit(msg.sender, spender, token, depositAllowance(msg.sender, spender, token).add(addedValue));
         return true;
     }
 
+    /** 
+     * @notice decreases allowance of deposit.
+     * @param spender address to decrease approval
+     * @param token address of ERC20
+     * @param subtractedValue amount to be removed 
+     * @return bool success
+     */
     function decreaseDepositAllowance(address spender, address token, uint256 subtractedValue) public virtual nonReentrant returns (bool) {
         uint256 currentAllowance = depositAllowance(msg.sender, spender, token);
         require(currentAllowance >= subtractedValue, "Silo: decreased allowance below zero");
@@ -145,6 +223,25 @@ contract SiloFacet is TokenSilo {
         return true;
     }
 
+    /*
+     * Permits
+     * Farm balances and silo deposits support EIP-2612 permits, 
+     * which allows Farmers to delegate use of their Farm balances 
+     * through permits without the need for a separate transaction.
+     * https://eips.ethereum.org/EIPS/eip-2612 
+     */
+    
+    /** 
+     * @notice permits multiple deposits.
+     * @param owner address to give permit
+     * @param spender address to permit
+     * @param tokens array of ERC20s to permit
+     * @param values array of amount (corresponding to tokens) to permit
+     * @param deadline expiration of signature (unix time) 
+     * @param v recovery id
+     * @param r ECDSA signature output
+     * @param s ECDSA signature output
+     */
     function permitDeposits(
         address owner,
         address spender,
@@ -161,6 +258,17 @@ contract SiloFacet is TokenSilo {
         }
     }
 
+    /** 
+     * @notice permits deposit.
+     * @param owner address to give permit
+     * @param spender address to permit
+     * @param token ERC20 to permit
+     * @param value amount to permit
+     * @param deadline expiration of signature (unix time) 
+     * @param v recovery id
+     * @param r ECDSA signature output
+     * @param s ECDSA signature output
+     */
     function permitDeposit(
         address owner,
         address spender,
@@ -175,6 +283,9 @@ contract SiloFacet is TokenSilo {
         _approveDeposit(owner, spender, token, value);
     }
 
+    /** 
+     * @notice returns nonce of deposit permits.
+     */ 
     function depositPermitNonces(address owner) public view virtual returns (uint256) {
         return LibSiloPermit.nonces(owner);
     }
@@ -190,14 +301,26 @@ contract SiloFacet is TokenSilo {
      * Silo
      */
 
+    /** 
+     * @notice updates farmer state
+     * @dev accredits grown stalk
+     * @param account address to update
+     */
     function update(address account) external payable {
         _update(account);
     }
 
+    /** 
+     * @notice accredits earned beans and stalk to farmer
+     * @return beans amount of earned beans given
+     */
     function plant() external payable returns (uint256 beans) {
         return _plant(msg.sender);
     }
 
+    /** 
+     * @notice claims rewards from a Season Of Plenty (SOP)
+     */
     function claimPlenty() external payable {
         _claimPlenty(msg.sender);
     }
@@ -206,6 +329,13 @@ contract SiloFacet is TokenSilo {
      * Update Unripe Deposits
      */
 
+    /** 
+     * @notice adds Revitalized Stalk and Seeds to your Stalk and Seed balances
+     * @dev only applies to unripe assets
+     * @param token address of ERC20
+     * @param seasons array of seasons to enroot
+     * @param amounts array of amount (corresponding to seasons) to enroot
+     */
     function enrootDeposits(
         address token,
         uint32[] calldata seasons,
@@ -248,6 +378,12 @@ contract SiloFacet is TokenSilo {
         );
     }
 
+    /** 
+     * @notice updates unripe deposit
+     * @param token address of ERC20
+     * @param _season season to enroot
+     * @param amount amount to enroot
+     */
     function enrootDeposit(
         address token,
         uint32 _season,
