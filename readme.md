@@ -15,6 +15,7 @@ Beanstalk is a permissionless fiat stablecoin protocol built on Ethereum.
 This repository contains the code base for the Beanstalk protocol, all of its facets and related contracts in the Beanstalk ecosystem.
 
 - [Documentation](#documentation)
+- [Audits](#audits)
 - [Bug Bounty Program](#bug-bounty-program)
 - [Contracts](#contracts)
 - [EIP-2535 Diamond](#eip-2535-diamond)
@@ -29,6 +30,10 @@ Conceptual documentation on Beanstalk can be found in the [Farmers' Almanac](htt
 Technical documentation on Beanstalk can be found in the [Agronomics Handbook](https://docs.bean.money/developers).
 
 The latest version of the Beanstalk Whitepaper is available [here](https://bean.money/beanstalk.pdf) (version history can be found [here](https://github.com/BeanstalkFarms/Beanstalk-Whitepaper/tree/main/version-history)).
+
+## Audits
+
+Read more about Beanstalk audits [here](https://docs.bean.money/almanac/protocol/audits).
 
 ## Bug Bounty Program
 
