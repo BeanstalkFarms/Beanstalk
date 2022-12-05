@@ -10,17 +10,16 @@ import "~/beanstalk/ReentrancyGuard.sol";
 import "~/libraries/Token/LibTransfer.sol";
 import "~/libraries/Silo/LibSiloPermit.sol";
 
-/*
+/**
  * @author Publius
  * @title SiloFacet handles depositing, withdrawing and claiming whitelisted Silo tokens.
  */
 contract SiloFacet is TokenSilo {
+
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
-    /*
-     * Deposit
-     */
+    //////////////////////// DEPOSIT ////////////////////////
 
     /**
      * @notice Deposit `amount` of `token` into the Silo.
@@ -54,19 +53,18 @@ contract SiloFacet is TokenSilo {
         _deposit(msg.sender, token, amount);
     }
 
-    /*
-     * Withdraw
-     */
+    //////////////////////// WITHDRAW ////////////////////////
 
     /** 
      * @notice withdraws from a single deposit.
-     * @dev 
-     *  season determines how much Stalk and Seeds are removed from the Farmer.
-     *  typically the user wants to withdraw from the latest season, as it has the lowest stalk allocation.
-     *  we rely on the subgraph in order to query farmer deposits
      * @param token address of ERC20
      * @param season season the farmer wants to withdraw
      * @param amount tokens to be withdrawn
+     *
+     * @dev:
+     * Season determines how much Stalk and Seeds are removed from the Farmer.
+     * Typically the user wants to withdraw from the latest season, as it has the lowest stalk allocation.
+     * We rely on the subgraph in order to query farmer deposits.
      */
     function withdrawDeposit(
         address token,
@@ -78,13 +76,16 @@ contract SiloFacet is TokenSilo {
 
     /** 
      * @notice withdraws from multiple deposits.
-     * @dev
-     *  factor in gas costs when withdrawing from multiple deposits to ensure greater UX
-     *  for example, if a user wants to withdraw X beans, its better to withdraw from 1 earlier deposit
-     *  rather than multiple smaller recent deposits, if the season difference is minimal.
      * @param token address of ERC20
      * @param seasons array of seasons to withdraw from
      * @param amounts array of amounts corresponding to each season to withdraw from
+
+     * @dev:
+     *
+     * Factor in gas costs when withdrawing from multiple deposits to ensure greater UX.
+     *
+     * For example, if a user wants to withdraw X beans, its better to withdraw from 1 earlier deposit
+     * rather than multiple smaller recent deposits, if the season difference is minimal.
      */
     function withdrawDeposits(
         address token,
@@ -94,9 +95,7 @@ contract SiloFacet is TokenSilo {
         _withdrawDeposits(msg.sender, token, seasons, amounts);
     }
 
-    /*
-     * Claim
-     */
+    //////////////////////// CLAIM ////////////////////////
 
     /** 
      * @notice claims tokens from a withdrawal.
@@ -128,9 +127,7 @@ contract SiloFacet is TokenSilo {
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
 
-    /*
-     * Transfer
-     */
+    //////////////////////// TRANSFER ////////////////////////
 
     /** 
      * @notice transfers single farmer deposit.
@@ -187,9 +184,7 @@ contract SiloFacet is TokenSilo {
         bdvs = _transferDeposits(sender, recipient, token, seasons, amounts);
     }
 
-    /*
-     * Approval
-     */
+    //////////////////////// APPROVE ////////////////////////
 
     /** 
      * @notice approves an address to access a farmers deposit.
@@ -233,8 +228,9 @@ contract SiloFacet is TokenSilo {
         return true;
     }
 
+    //////////////////////// PERMIT ////////////////////////
+
     /*
-     * Permits
      * Farm balances and silo deposits support EIP-2612 permits, 
      * which allows Farmers to delegate use of their Farm balances 
      * through permits without the need for a separate transaction.
@@ -307,9 +303,8 @@ contract SiloFacet is TokenSilo {
     function depositPermitDomainSeparator() external view returns (bytes32) {
         return LibSiloPermit._domainSeparatorV4();
     }
-    /*
-     * Silo
-     */
+
+    //////////////////////// UPDATE SILO ////////////////////////
 
     /** 
      * @notice updates farmer state
@@ -335,9 +330,40 @@ contract SiloFacet is TokenSilo {
         _claimPlenty(msg.sender);
     }
 
-    /*
-     * Update Unripe Deposits
+    //////////////////////// UPDATE UNRIPE DEPOSITS ////////////////////////
+
+    /** 
+     * @notice updates unripe deposit
+     * @param token address of ERC20
+     * @param _season season to enroot
+     * @param amount amount to enroot
      */
+    function enrootDeposit(
+        address token,
+        uint32 _season,
+        uint256 amount
+    ) external nonReentrant updateSilo {
+        // First, remove Deposit and Redeposit with new BDV
+        uint256 ogBDV = LibTokenSilo.removeDeposit(
+            msg.sender,
+            token,
+            _season,
+            amount
+        );
+        emit RemoveDeposit(msg.sender, token, _season, amount); // Remove Deposit does not emit an event, while Add Deposit does.
+        uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
+        LibTokenSilo.addDeposit(msg.sender, token, _season, amount, newBDV);
+
+        // Calculate the different in BDV. Will fail if BDV is lower.
+        uint256 deltaBDV = newBDV.sub(ogBDV);
+
+        // Calculate the new Stalk/Seeds associated with BDV and increment Stalk/Seed balances
+        uint256 deltaSeeds = deltaBDV.mul(s.ss[token].seeds);
+        uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalk).add(
+            LibSilo.stalkReward(deltaSeeds, season() - _season)
+        );
+        LibSilo.depositSiloAssets(msg.sender, deltaSeeds, deltaStalk);
+    }
 
     /** 
      * @notice adds Revitalized Stalk and Seeds to your Stalk and Seed balances
@@ -386,38 +412,5 @@ contract SiloFacet is TokenSilo {
             newSeeds.sub(ar.seedsRemoved),
             newStalk.sub(ar.stalkRemoved)
         );
-    }
-
-    /** 
-     * @notice updates unripe deposit
-     * @param token address of ERC20
-     * @param _season season to enroot
-     * @param amount amount to enroot
-     */
-    function enrootDeposit(
-        address token,
-        uint32 _season,
-        uint256 amount
-    ) external nonReentrant updateSilo {
-        // First, remove Deposit and Redeposit with new BDV
-        uint256 ogBDV = LibTokenSilo.removeDeposit(
-            msg.sender,
-            token,
-            _season,
-            amount
-        );
-        emit RemoveDeposit(msg.sender, token, _season, amount); // Remove Deposit does not emit an event, while Add Deposit does.
-        uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
-        LibTokenSilo.addDeposit(msg.sender, token, _season, amount, newBDV);
-
-        // Calculate the different in BDV. Will fail if BDV is lower.
-        uint256 deltaBDV = newBDV.sub(ogBDV);
-
-        // Calculate the new Stalk/Seeds associated with BDV and increment Stalk/Seed balances
-        uint256 deltaSeeds = deltaBDV.mul(s.ss[token].seeds);
-        uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalk).add(
-            LibSilo.stalkReward(deltaSeeds, season() - _season)
-        );
-        LibSilo.depositSiloAssets(msg.sender, deltaSeeds, deltaStalk);
     }
 }
