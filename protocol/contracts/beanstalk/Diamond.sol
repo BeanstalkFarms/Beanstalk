@@ -9,19 +9,20 @@ pragma experimental ABIEncoderV2;
 /******************************************************************************/
 
 import {LibDiamond} from "../libraries/LibDiamond.sol";
-import {DiamondCutFacet} from "../beanstalk/diamond/DiamondCutFacet.sol";
-import {DiamondLoupeFacet} from "../beanstalk/diamond/DiamondLoupeFacet.sol";
-import {AppStorage} from "../beanstalk/AppStorage.sol";
+import {DiamondCutFacet} from "./diamond/DiamondCutFacet.sol";
+import {DiamondLoupeFacet} from "./diamond/DiamondLoupeFacet.sol";
+import {OwnershipFacet} from "./diamond/OwnershipFacet.sol";
+import {AppStorage} from "./AppStorage.sol";
 import {IERC165} from "../interfaces/IERC165.sol";
 import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../interfaces/IDiamondLoupe.sol";
 
-contract MockDiamond {
+contract Diamond {
     AppStorage internal s;
 
     receive() external payable {}
 
-    function mockInit(address _contractOwner) external {
+    constructor(address _contractOwner) {
         LibDiamond.setContractOwner(_contractOwner);
         LibDiamond.addDiamondFunctions(
             address(new DiamondCutFacet()),
@@ -44,12 +45,12 @@ contract MockDiamond {
             let result := delegatecall(gas(), facet, 0, calldatasize(), 0, 0)
             returndatacopy(0, 0, returndatasize())
             switch result
-            case 0 {
-                revert(0, returndatasize())
-            }
-            default {
-                return(0, returndatasize())
-            }
+                case 0 {
+                    revert(0, returndatasize())
+                }
+                default {
+                    return(0, returndatasize())
+                }
         }
     }
 }
