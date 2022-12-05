@@ -1,0 +1,8 @@
+@contracts/=contracts/
+@beanstalk/=contracts/beanstalk/
+~/=contracts/
+
+ds-test/=lib/solmate/lib/ds-test/src/
+forge-std/=lib/forge-std/src/
+prb-math/=lib/prb-math/contracts/
+solmate/=lib/solmate/src/
