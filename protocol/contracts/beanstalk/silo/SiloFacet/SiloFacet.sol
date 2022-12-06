@@ -334,24 +334,24 @@ contract SiloFacet is TokenSilo {
     /** 
      * @notice updates unripe deposit
      * @param token address of ERC20
-     * @param _season season to enroot
+     * @param season season to enroot
      * @param amount amount to enroot
      */
     function enrootDeposit(
         address token,
-        uint32 _season,
+        uint32 season,
         uint256 amount
     ) external nonReentrant updateSilo {
         // First, remove Deposit and Redeposit with new BDV
         uint256 ogBDV = LibTokenSilo.removeDeposit(
             msg.sender,
             token,
-            _season,
+            season,
             amount
         );
-        emit RemoveDeposit(msg.sender, token, _season, amount); // Remove Deposit does not emit an event, while Add Deposit does.
+        emit RemoveDeposit(msg.sender, token, season, amount); // Remove Deposit does not emit an event, while Add Deposit does.
         uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
-        LibTokenSilo.addDeposit(msg.sender, token, _season, amount, newBDV);
+        LibTokenSilo.addDeposit(msg.sender, token, season, amount, newBDV);
 
         // Calculate the different in BDV. Will fail if BDV is lower.
         uint256 deltaBDV = newBDV.sub(ogBDV);
@@ -359,7 +359,7 @@ contract SiloFacet is TokenSilo {
         // Calculate the new Stalk/Seeds associated with BDV and increment Stalk/Seed balances
         uint256 deltaSeeds = deltaBDV.mul(s.ss[token].seeds);
         uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalk).add(
-            LibSilo.stalkReward(deltaSeeds, _season() - _season)
+            LibSilo.stalkReward(deltaSeeds, _season() - season)
         );
         LibSilo.depositSiloAssets(msg.sender, deltaSeeds, deltaStalk);
     }
