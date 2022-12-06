@@ -160,6 +160,8 @@ contract TokenSilo is Silo {
 
     /**
      * @dev Convenience struct to simplify return value of {TokenSilo._withdrawDeposits()}.
+     *
+     * FIXME(naming): `tokensRemoved` -> `amountsRemoved`.
      */
     struct AssetsRemoved {
         uint256 tokensRemoved;
@@ -358,12 +360,13 @@ contract TokenSilo is Silo {
 
     /**
      * @dev Shared between `_withdrawDeposit()` and `_withdrawDeposits()`.
+     *
+     * FIXME(refactor): unconventional ordering of stalk -> seeds
      */
     function _withdraw(
         address account,
         address token,
         uint256 amount,
-        // FIXME(refactor): param ordering
         uint256 stalk,
         uint256 seeds
     ) private {
@@ -387,18 +390,9 @@ contract TokenSilo is Silo {
      * Withdraw function does two things:
      *  removes deposit
      *  adds withdrawal
-     * 
-     * Transfering deposit, updating BDV of deposit, not decrementing total supply.
-     * This is why
-     *
      *
      * FIXME(naming): LibTokenSilo offers `incrementTotalDeposited` to perform the operation 
      * under `// Total`. Should we create a similar helper for Withdrawals for symmetry?
-     *
-     * FIXME(naming): "Total" discussion
-     * - "Supply"? Withdrawn is a state >> an entirely different token
-     * - If deposits become ERC1155, they'll both be a state and a token 
-     *      - ERC1155: 2^256 possible IDs. Beanstalk becomes the token: STALK as ERC20, Deposits as 1155, Pods as NFT...
      */
     function addTokenWithdrawal(
         address account,
@@ -411,7 +405,7 @@ contract TokenSilo is Silo {
             .a[account]
             .withdrawals[token][arrivalSeason].add(amount);
         
-        // Total Supply (?)
+        // Total
         s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.add(
             amount
         );
@@ -422,6 +416,15 @@ contract TokenSilo is Silo {
     //////////////////////// REMOVE ////////////////////////
 
     /**
+     * @dev Removes from a single Deposit, emits the RemoveDeposit event, and returns Stalk/Seeds/BDV.
+     *
+     * This is a gas optimization. Used in:
+     * - {TokenSilo:_withdrawDeposit}
+     * - {TokenSilo:_transferDeposit}
+     *
+     * FIXME(refactor): ordering of stalk -> seeds -> bdv is against convention.
+     * FIXME(refactor): `removeDeposit` wraps `LibTokenSilo.removeDeposit`, but in some functions
+     * (like {SiloFacet:enrootDeposit}) is used directly. Hard to follow.
      */
     function removeDeposit(
         address account,
@@ -444,6 +447,12 @@ contract TokenSilo is Silo {
         emit RemoveDeposit(account, token, season, amount);
     }
 
+    /**
+     * @dev Removes from multiple single Deposit, emits the RemoveDeposits event, and returns Stalk/Seeds/BDV.
+     * 
+     * - {TokenSilo:_withdrawDeposits}
+     * - {SiloFacet:enrootDeposits}
+     */
     function removeDeposits(
         address account,
         address token,

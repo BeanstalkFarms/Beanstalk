@@ -23,7 +23,7 @@ contract SiloFacet is TokenSilo {
 
     /**
      * @notice Deposit `amount` of `token` into the Silo.
-     * @param token The address of the token to Deposit. Must be Whitelisted.
+     * @param token Address of the whitelisted ERC20 token to Deposit.
      * @param amount The amount of `token` to Deposit.
      * @param mode The balance to pull tokens from. See {LibTransfer.From}.
      *
@@ -31,12 +31,12 @@ contract SiloFacet is TokenSilo {
      * 
      *  1. Transfer `amount` of `token` from `account` to Beanstalk.
      *  2. Calculate the current Bean Denominated Value (BDV) for `amount` of `token`.
-     *  3. Create a Deposit entry for `account` in the current Season.
-     *  4. Allocate Stalk and Seeds to `account`.
+     *  3. Create or update a Deposit entry for `account` in the current Season.
+     *  4. Mint Stalk and Seeds to `account`.
      *  5. Emit an `AddDeposit` event.
      *
-     * FIXME(doc): explain "create a deposit" entry, "allocate stalk and seeds", etc.
      * FIXME(doc): why is this payable?
+     * FIXME(logic): return `(amount, bdv(, season))`
      */
     function deposit(
         address token,
@@ -55,16 +55,15 @@ contract SiloFacet is TokenSilo {
     //////////////////////// WITHDRAW ////////////////////////
 
     /** 
-     * @notice withdraws from a single deposit.
-     * @param token address of ERC20
-     * @param season season the farmer wants to withdraw
-     * @param amount tokens to be withdrawn
+     * @notice Withdraws from a single Deposit.
+     * @param token Address of the whitelisted ERC20 token to Withdraw.
+     * @param season The Season to Withdraw from.
+     * @param amount Amount of `token` to Withdraw.
      *
-     * @dev Season determines how much Stalk and Seeds are removed from the Farmer.
+     * @dev The Season determines how much Stalk and Seeds are burned.
      * 
-     * Typically the user wants to withdraw from the latest season, as it has the lowest stalk allocation.
-     * 
-     * We rely on the subgraph in order to query farmer deposits.
+     * Typically, the Farmer wants to withdraw more recent deposits first, since
+     * these require less Stalk to be burned.
      */
     function withdrawDeposit(
         address token,
@@ -75,15 +74,15 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice withdraws from multiple deposits.
-     * @param token address of ERC20
-     * @param seasons array of seasons to withdraw from
-     * @param amounts array of amounts corresponding to each season to withdraw from
-
-     * @dev Factor in gas costs when withdrawing from multiple deposits to ensure greater UX.
+     * @notice Withdraw from multiple Deposits.
+     * @param token Address of the whitelisted ERC20 token to Withdraw.
+     * @param seasons Seasons to Withdraw from.
+     * @param amounts Amounts of `token` to Withdraw from corresponding `seasons`.
      *
-     * For example, if a user wants to withdraw X beans, its better to withdraw from 1 earlier deposit
-     * rather than multiple smaller recent deposits, if the season difference is minimal.
+     * @dev Clients should factor in gas costs when withdrawing from multiple deposits.
+     *
+     * For example, if a user wants to withdraw X Beans, it may be preferred to withdraw from 1 older Deposit,
+     * rather than from multiple recent Deposits, if the difference in seasons is minimal.
      */
     function withdrawDeposits(
         address token,
@@ -96,10 +95,15 @@ contract SiloFacet is TokenSilo {
     //////////////////////// CLAIM ////////////////////////
 
     /** 
-     * @notice claims tokens from a withdrawal.
-     * @param token address of ERC20
-     * @param season season to claim
+     * @notice Claim tokens from a Withdrawal.
+     *
+     * Claiming a Withdrawal is all-or-nothing, hence an `amount` parameter is omitted.
+     *
+     * @param token Address of the whitelisted ERC20 token to Claim.
+     * @param season Season of Withdrawal to claim from.
      * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
+     *
+     * @dev FIXME(logic): return the amount claimed
      */
     function claimWithdrawal(
         address token,
@@ -111,10 +115,15 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice claims tokens from multiple withdrawals.
-     * @param token address of ERC20
-     * @param seasons array of seasons to claim
+     * @notice Claims tokens from multiple Withdrawals.
+     * 
+     * Claiming a Withdrawal is all-or-nothing, hence an `amount` parameter is omitted.
+     *
+     * @param token Address of the whitelisted ERC20 token to Claim.
+     * @param seasons Seasons of Withdrawal to claim from.
      * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
+     * 
+     * @dev FIXME(logic): return the amount claimed
      */
     function claimWithdrawals(
         address token,
@@ -128,13 +137,15 @@ contract SiloFacet is TokenSilo {
     //////////////////////// TRANSFER ////////////////////////
 
     /** 
-     * @notice transfers single farmer deposit.
-     * @param sender source of deposit
-     * @param recipient destination of deposit
-     * @param token address of ERC20
-     * @param season season of deposit to transfer
-     * @param amount tokens to transfer
-     * @return bdv Bean Denominated Value of transfer
+     * @notice Transfer a single Deposit.
+     * @param sender Source of Deposit.
+     * @param recipient Destination of Deposit.
+     * @param token Address of the whitelisted ERC20 token to Transfer.
+     * @param season Season of Deposit to Transfer.
+     * @param amount Amount of `token` to Transfer.
+     * @return bdv The BDV included in this transfer, now owned by `recipient`.
+     *
+     * @dev An allowance is required if `sender !== msg.sender`
      */
     function transferDeposit(
         address sender,
@@ -153,13 +164,16 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice transfers multiple farmer deposits.
-     * @param sender source of deposit
-     * @param recipient destination of deposit
-     * @param token address of ERC20
-     * @param seasons array of seasons to withdraw from
-     * @param amounts array of amounts corresponding to each season to withdraw from
-     * @return bdvs array of Bean Denominated Value of transfer corresponding from each season
+     * @notice Transfers multiple Deposits.
+     * @param sender Source of Deposit.
+     * @param recipient Destination of Deposit.
+     * @param token Address of the whitelisted ERC20 token to Transfer.
+     * @param seasons Seasons of Deposit to Transfer. 
+     * @param amounts Amounts of `token` to Transfer from corresponding `seasons`.
+     * @return bdvs Array of BDV transferred from each Season, now owned by `recipient`.
+     *
+     * @dev An allowance is required if `sender !== msg.sender`. There must be enough allowance
+     * to transfer all of the requested Deposits, otherwise the transaction should revert.
      */
     function transferDeposits(
         address sender,
@@ -185,10 +199,12 @@ contract SiloFacet is TokenSilo {
     //////////////////////// APPROVE ////////////////////////
 
     /** 
-     * @notice approves an address to access a farmers deposit.
-     * @param spender address to be given approval
-     * @param token address of ERC20
-     * @param amount amount to be approved
+     * @notice Approve an address to Transfer a Deposit for `msg.sender`.
+     *
+     * Sets the allowance to `amount`.
+     * 
+     * @dev Gas optimization: We neglect to check whether `token` is actually whitelisted.
+     * If a token is not whitelisted, it cannot be Deposited, therefore it cannot be Transferred.
      */
     function approveDeposit(
         address spender,
@@ -201,25 +217,40 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice increases allowance of deposit.
-     * @param spender address to increase approval
-     * @param token address of ERC20
-     * @param addedValue additional value to be given 
-     * @return bool success
+     * @notice Increase the Transfer allowance for `spender`.
+     * 
+     * @dev Gas optimization: We neglect to check whether `token` is actually whitelisted.
+     * If a token is not whitelisted, it cannot be Deposited, therefore it cannot be Transferred.
+     *
+     * FIXME(doc): why does this return `true`?
      */
-    function increaseDepositAllowance(address spender, address token, uint256 addedValue) public virtual nonReentrant returns (bool) {
-        _approveDeposit(msg.sender, spender, token, depositAllowance(msg.sender, spender, token).add(addedValue));
+    function increaseDepositAllowance(
+        address spender,
+        address token,
+        uint256 addedValue
+    ) public virtual nonReentrant returns (bool) {
+        _approveDeposit(
+            msg.sender,
+            spender,
+            token,
+            depositAllowance(msg.sender, spender, token).add(addedValue)
+        );
         return true;
     }
 
     /** 
-     * @notice decreases allowance of deposit.
-     * @param spender address to decrease approval
-     * @param token address of ERC20
-     * @param subtractedValue amount to be removed 
-     * @return bool success
+     * @notice Increase the Transfer allowance for `spender`.
+     * 
+     * @dev Gas optimization: We neglect to check whether `token` is actually whitelisted.
+     * If a token is not whitelisted, it cannot be Deposited, therefore it cannot be Transferred.
+     * 
+     * FIXME(doc): why does this return `true`?
      */
-    function decreaseDepositAllowance(address spender, address token, uint256 subtractedValue) public virtual nonReentrant returns (bool) {
+    function decreaseDepositAllowance(
+        address spender,
+        address token,
+        uint256 subtractedValue
+    ) public virtual nonReentrant returns (bool) {
         uint256 currentAllowance = depositAllowance(msg.sender, spender, token);
         require(currentAllowance >= subtractedValue, "Silo: decreased allowance below zero");
         _approveDeposit(msg.sender, spender, token, currentAllowance.sub(subtractedValue));
@@ -288,7 +319,7 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice returns nonce of deposit permits.
+     * @notice Returns the current nonce for Deposit permits.
      */ 
     function depositPermitNonces(address owner) public view virtual returns (uint256) {
         return LibSiloPermit.nonces(owner);
@@ -304,24 +335,31 @@ contract SiloFacet is TokenSilo {
     //////////////////////// UPDATE SILO ////////////////////////
 
     /** 
-     * @notice updates farmer state
-     * @dev accredits grown stalk
-     * @param account address to update
+     * @notice Claim Grown Stalk for `account`.
+     *
+     * Commonly referred to as "Mow".
+     *
+     * @dev See {Silo:_update}.
      */
     function update(address account) external payable {
         _update(account);
     }
 
     /** 
-     * @notice accredits earned beans and stalk to farmer
-     * @return beans amount of earned beans given
+     * @notice Claim Earned Beans and their associated Stalk & Seeds for `msg.sender`.
+     *
+     * The Stalk associated with Earned Beans is commonly called "Earned Stalk".
+     * The Seeds associated with Earned Beans are commonly called "Plantable Seeds". Plantable is used
+     *  to highlight that these Seeds aren't yet earning the Farmer new Stalk. In other words, Seeds do not
+     *  automatically compound; they must first be `plant()`ed.
      */
     function plant() external payable returns (uint256 beans) {
         return _plant(msg.sender);
     }
 
     /** 
-     * @notice claims rewards from a Season Of Plenty (SOP)
+     * @notice Claim rewards from a Season Of Plenty (SOP)
+     * @dev FIXME(doc): reference to SOP docs
      */
     function claimPlenty() external payable {
         _claimPlenty(msg.sender);
@@ -329,11 +367,18 @@ contract SiloFacet is TokenSilo {
 
     //////////////////////// UPDATE UNRIPE DEPOSITS ////////////////////////
 
-    /** 
-     * @notice updates unripe deposit
-     * @param token address of ERC20
-     * @param season season to enroot
-     * @param amount amount to enroot
+    /**
+     * @notice Update the BDV of an Unripe Deposit. Allows the user to claim Stalk and Seeds as the 
+     * BDV of Unripe tokens increases during the Barn Raise. This was introduced as a part of the Replant.
+     *
+     * @dev Should revert if `ogBDV > newBDV`. A user cannot lose BDV during an Enroot operation.
+     *
+     * Note: While this function was introduced during the REplant for Unripe deposits, it *could* be used to update the BDV of any Deposit.
+     *
+     * Gas optimization: We neglect to check if `token` is whitelisted. If a token is not whitelisted, it cannot be Deposited, and thus cannot be Removed.
+     * `{LibTokenSilo.removeDeposit}` should revert if there isn't enough balance of `token` to remove.
+     *
+     * FIXME(refactor): bump the contents out to an `_updateBDV()` internal function so that we can later rename the public function?
      */
     function enrootDeposit(
         address token,
@@ -348,13 +393,15 @@ contract SiloFacet is TokenSilo {
             amount
         );
         emit RemoveDeposit(msg.sender, token, season, amount); // Remove Deposit does not emit an event, while Add Deposit does.
-        uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
-        LibTokenSilo.addDeposit(msg.sender, token, season, amount, newBDV);
 
-        // Calculate the different in BDV. Will fail if BDV is lower.
+        // Calculate the current BDV for `amount` of `token` and add a Deposit.
+        uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
+        LibTokenSilo.addDeposit(msg.sender, token, season, amount, newBDV); // emits AddDeposit event
+
+        // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
         uint256 deltaBDV = newBDV.sub(ogBDV);
 
-        // Calculate the new Stalk/Seeds associated with BDV and increment Stalk/Seed balances
+        // Mint Stalk/Seeds associated with the new BDV.
         uint256 deltaSeeds = deltaBDV.mul(s.ss[token].seeds);
         uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalk).add(
             LibSilo.stalkReward(deltaSeeds, _season() - season)
@@ -363,11 +410,15 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice adds Revitalized Stalk and Seeds to your Stalk and Seed balances
-     * @param token address of ERC20
-     * @param seasons array of seasons to enroot
-     * @param amounts array of amount (corresponding to seasons) to enroot
-     * @dev only applies to unripe assets
+     * @notice Update the BDV of Unripe Deposits. Allows the user to claim Stalk and Seeds as the 
+     * BDV of Unripe tokens increases during the Barn Raise. This was introduced as a part of the Replant.
+     *
+     * @dev Should revert if `ogBDV > newBDV`. A user cannot lose BDV during an Enroot operation.
+     *
+     * Note: While this function was introduced during the REplant for Unripe deposits, it *could* be used to update the BDV of any Deposit.
+     *
+     * Gas optimization: We neglect to check if `token` is whitelisted. If a token is not whitelisted, it cannot be Deposited, and thus cannot be Removed.
+     * `{removeDeposits}` should revert if there isn't enough balance of `token` to remove.
      */
     function enrootDeposits(
         address token,
@@ -403,7 +454,9 @@ contract SiloFacet is TokenSilo {
 
         uint256 newSeeds = newBDV.mul(s.ss[token].seeds);
 
-        // Add new Stalk
+        // Mint Stalk/Seeds associated with the delta BDV.
+        // `newSeeds.sub(...)` will revert if `ar.seedsRemoved > newSeeds`.
+        // This enforces the constraint that `ogBDV > newBDV` since the two are linearly related.
         LibSilo.mintSeedsAndStalk(
             msg.sender,
             newSeeds.sub(ar.seedsRemoved),
