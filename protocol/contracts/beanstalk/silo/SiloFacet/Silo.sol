@@ -92,22 +92,30 @@ contract Silo is SiloExit {
     function _update(address account) internal {
         uint32 _lastUpdate = lastUpdate(account);
 
-        // If already updated this season, there's no Stalk to claim.
-        // _lastUpdate > _season() should not be possible, but we check it anyway.
+        // If 'account' was already updated this Season, there's no Stalk to Mow.
+        // _lastUpdate > _season() should not be possible, but it is checked anyway.
         if (_lastUpdate >= _season()) return;
 
-        // Increment Plenty if a SOP has occured or save Rain Roots if its Raining.
+        // {handleRainAndSops} increments plenty if a SOP has occured and 
+        // saves Rain Roots if its Raining for 'account'.
         handleRainAndSops(account, _lastUpdate);
 
-        // Earn Grown Stalk -> The Stalk gained from Seeds.
+        // {earnGrownStalk} Mows the Grown Stalk from Seeds associated with 'account'.
         earnGrownStalk(account);
 
-        // Bump the lastUpdate season to the current `_season()`.
+        // Update the lastUpdate Season to the current `_season()`.
         s.a[account].lastUpdate = _season();
     }
 
+    /**
+     * @dev anytime an account has Earned Beans, the Seeds associated with the Earned Beans
+     * must be Planted in order to start Growing Stalk. 
+     * {_plant} Plants the Plantable Seeds of 'account' associated with its Earned Beans.
+     * In practice, when Seeds are Planted all Earned Beans are Deposited in the current Season.
+     * For more info on Planting, see: FIXME(doc)
+     */
     function _plant(address account) internal returns (uint256 beans) {
-        // Need to update account before we make a Deposit
+        // Need to update 'account' before we make a Deposit.
         _update(account);
         uint256 accountStalk = s.a[account].s.stalk;
 
@@ -116,7 +124,7 @@ contract Silo is SiloExit {
         if (beans == 0) return 0;
         s.earnedBeans = s.earnedBeans.sub(beans);
 
-        // Deposit Earned Beans
+        // Deposit Earned Beans if there are any.
         LibTokenSilo.addDeposit(
             account,
             C.beanAddress(),
@@ -124,13 +132,16 @@ contract Silo is SiloExit {
             beans,
             beans
         );
+        // Calculate the Plantable Seeds assocaited with the Earned Beans that were Deposited.
         uint256 seeds = beans.mul(C.getSeedsPerBean());
 
-        // Earned Seeds don't auto-compound, so we need to mint new Seeds
+        // Earned Seeds don't generate Grown Stalk until they are Planted (i.e., not auto-compounding). 
+        // Plantable Seeds are not included in the Seed supply, so new Seeds are minted when Planted.
         LibSilo.mintSeeds(account, seeds);
 
-        // Earned Stalk auto-compounds and thus is minted alongside Earned Beans
-        // Farmers don't receive additional Roots from Earned Stalk.
+        // Earned Stalk associated with Earned Beans generate more Earned Beans automatically (i.e., auto compounding).
+        // Therefore, earned Stalk are minted when the Earned Beans are minted, not during the Plant.
+        // Similarly, 'account' does not receive additional Roots from Earned Stalk during a Plant.
         uint256 stalk = beans.mul(C.getStalkPerBean());
         s.a[account].s.stalk = accountStalk.add(stalk);
 
@@ -139,7 +150,7 @@ contract Silo is SiloExit {
     }
 
     function _claimPlenty(address account) internal {
-        // Each Plenty is earned in the form of 3Crv.
+        // Plenty is earned in the form of 3Crv.
         uint256 plenty = s.a[account].sop.plenty;
         C.threeCrv().safeTransfer(account, plenty);
         delete s.a[account].sop.plenty;
