@@ -126,7 +126,7 @@ contract ConvertFacet is ReentrancyGuard {
             "Convert: Not enough tokens removed."
         );
         a.stalkRemoved = a.stalkRemoved.mul(s.ss[token].seeds);
-        LibTokenSilo.decrementDepositedTokenSupply(token, a.tokensRemoved);
+        LibTokenSilo.decrementTotalDeposited(token, a.tokensRemoved);
         LibSilo.burnSeedsAndStalk(
             msg.sender,
             a.bdvRemoved.mul(s.ss[token].seeds),

@@ -373,7 +373,7 @@ contract TokenSilo is Silo {
         addTokenWithdrawal(account, token, arrivalSeason, amount); // Increment account & total Withdrawn
 
         // Remove deposit
-        LibTokenSilo.decrementDepositedTokenSupply(token, amount); // Decrement total Deposited
+        LibTokenSilo.decrementTotalDeposited(token, amount); // Decrement total Deposited
         LibSilo.burnSeedsAndStalk(account, seeds, stalk); // Burn Seeds and Stalk
     }
 
