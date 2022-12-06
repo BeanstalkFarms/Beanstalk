@@ -61,7 +61,7 @@ contract Silo is SiloExit {
         int256 delta
     );
 
-     /**
+    /**
      * @notice {StalkBalanceChanged} is emitted when `account` gains or loses Stalk.
      * @param account is the account that gained or lost Stalk.
      * @param delta is the change in Stalk.
@@ -85,11 +85,12 @@ contract Silo is SiloExit {
 
     /**
      * @dev anytime the state of an account's Silo changes, their Grown Stalk is Mown. 
-     * {_update} Mows the Grown Stalk of 'account' and is called at the beginning of 
-     * every interaction with the Silo. For more info on Mowing, see:
-     * FIXME(doc)
+     * {_mow} Mows the Grown Stalk of 'account' and is called at the beginning of 
+     * every interaction with the Silo.
+     *
+     * For more info on Mowing, see: FIXME(doc)
      */
-    function _update(address account) internal {
+    function _mow(address account) internal {
         uint32 _lastUpdate = lastUpdate(account);
 
         // If 'account' was already updated this Season, there's no Stalk to Mow.
@@ -100,11 +101,17 @@ contract Silo is SiloExit {
         // saves Rain Roots if its Raining for 'account'.
         handleRainAndSops(account, _lastUpdate);
 
-        // {earnGrownStalk} Mows the Grown Stalk from Seeds associated with 'account'.
-        earnGrownStalk(account);
+        // {__mow} Mows the Grown Stalk from Seeds associated with 'account'.
+        __mow(account);
 
         // Update the lastUpdate Season to the current `_season()`.
         s.a[account].lastUpdate = _season();
+    }
+
+    function __mow(address account) private {
+        // If this `account` has no Seeds, skip to save gas.
+        if (s.a[account].s.seeds == 0) return;
+        LibSilo.mintStalk(account, balanceOfGrownStalk(account));
     }
 
     /**
@@ -116,7 +123,7 @@ contract Silo is SiloExit {
      */
     function _plant(address account) internal returns (uint256 beans) {
         // Need to update 'account' before we make a Deposit.
-        _update(account);
+        _mow(account);
         uint256 accountStalk = s.a[account].s.stalk;
 
         // Calculate balance of Earned Beans.
@@ -160,12 +167,9 @@ contract Silo is SiloExit {
 
     //////////////////////// PRIVATE ////////////////////////
 
-    function earnGrownStalk(address account) private {
-        // If this `account` has no Seeds, skip to save gas.
-        if (s.a[account].s.seeds == 0) return;
-        LibSilo.mintStalk(account, balanceOfGrownStalk(account));
-    }
-
+    /**
+     * FIXME(refactor): replace `lastUpdate()` -> `_lastUpdate()` and rename this param?
+     */
     function handleRainAndSops(address account, uint32 _lastUpdate) private {
         // If no roots, reset Sop counters variables
         if (s.a[account].roots == 0) {
@@ -199,8 +203,8 @@ contract Silo is SiloExit {
     /**
      * @dev Update the Silo for `msg.sender`.
      */
-    modifier updateSilo() {
-        _update(msg.sender);
+    modifier mowSender() {
+        _mow(msg.sender);
         _;
     }
 }
