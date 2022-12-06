@@ -372,7 +372,7 @@ contract TokenSilo is Silo {
 
         // Remove deposit
         LibTokenSilo.decrementDepositedTokenSupply(token, amount); // Decrement total Deposited
-        LibSilo.withdrawSiloAssets(account, seeds, stalk); // Burn Seeds and Stalk
+        LibSilo.burnSeedsAndStalk(account, seeds, stalk); // Burn Seeds and Stalk
     }
 
     /**

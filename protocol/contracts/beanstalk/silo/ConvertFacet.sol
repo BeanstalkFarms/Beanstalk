@@ -127,7 +127,7 @@ contract ConvertFacet is ReentrancyGuard {
         );
         a.stalkRemoved = a.stalkRemoved.mul(s.ss[token].seeds);
         LibTokenSilo.decrementDepositedTokenSupply(token, a.tokensRemoved);
-        LibSilo.withdrawSiloAssets(
+        LibSilo.burnSeedsAndStalk(
             msg.sender,
             a.bdvRemoved.mul(s.ss[token].seeds),
             a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalk))

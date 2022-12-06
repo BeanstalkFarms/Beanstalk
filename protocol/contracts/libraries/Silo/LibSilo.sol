@@ -88,7 +88,7 @@ library LibSilo {
      * FIXME(naming): burnSeedsAndStalk, reorder
      *  - ✅ Approved
      */
-    function withdrawSiloAssets(
+    function burnSeedsAndStalk(
         address account,
         uint256 seeds,
         uint256 stalk
