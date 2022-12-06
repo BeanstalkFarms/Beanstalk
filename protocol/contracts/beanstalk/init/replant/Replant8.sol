@@ -9,7 +9,8 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../AppStorage.sol";
 import "../../../C.sol";
 import "../../../tokens/ERC20/BeanstalkERC20.sol";
-import "../../../libraries/Silo/LibWhitelist.sol";
+import "../InitWhitelist.sol";
+
 /**
  * @author Publius
  * @title Replant8 Deploys the Bean, Unripe Bean and Unripe Bean:3Crv Tokens. It also
@@ -34,7 +35,7 @@ interface NewCurveFactory {
     ) external returns (bool);
 }
 
-contract Replant8 {
+contract Replant8 is InitWhitelist {
 
     AppStorage internal s;
 
@@ -101,7 +102,7 @@ contract Replant8 {
         s.siloBalances[address(ub3)].deposited = DEPOSITED_UNRIPE_BEAN3CRV;
         addUnripeToken(address(ub3), metapool, UNRIPE_LP_MERKLE_ROOT);
 
-        LibWhitelist.whitelistPools();
+        whitelistPools();
         LibWhitelist.dewhitelistToken(C.unripeLPPool1());
         LibWhitelist.dewhitelistToken(C.unripeLPPool2());
     }

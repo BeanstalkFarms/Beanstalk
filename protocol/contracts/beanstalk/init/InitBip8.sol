@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import {AppStorage} from "../AppStorage.sol";
-import {IBean} from "../../interfaces/IBean.sol";
+import "~/C.sol";
 
 /**
  * @author Publius
@@ -27,7 +27,7 @@ contract InitBip8 {
     function init() external {
         s.isBudget[beanSprout] = true;
         s.isBudget[beanstalkFarms] = true;
-        IBean(s.c.bean).mint(beanSprout, beanSproutBudget);
-        IBean(s.c.bean).mint(beanstalkFarms, beanstalkFarmsBudget);
+        C.bean().mint(beanSprout, beanSproutBudget);
+        C.bean().mint(beanstalkFarms, beanstalkFarmsBudget);
     }
 }

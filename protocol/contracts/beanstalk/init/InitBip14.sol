@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import {AppStorage} from "../AppStorage.sol";
-import {IBean} from "../../interfaces/IBean.sol";
+import "~/C.sol";
 
 /**
  * @author Publius
@@ -21,6 +21,6 @@ contract InitBip14 {
     uint256 private constant beanstalkFarmsBudget = 2_000_000 * 1e6; // 2,000,000 Beans
 
     function init() external {
-        IBean(s.c.bean).mint(beanstalkFarms, beanstalkFarmsBudget);
+        C.bean().mint(beanstalkFarms, beanstalkFarmsBudget);
     }
 }

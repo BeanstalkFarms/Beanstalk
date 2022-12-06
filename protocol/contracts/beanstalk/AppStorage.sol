@@ -128,17 +128,6 @@ contract Account {
 contract Storage {
 
     /**
-     * @dev DEPRECATED: After Replant, Beanstalk stores Token addresses as constants to save gas.
-     * @dev: {Storage.Contracts} stored the contract addresses of various important contracts to Beanstalk.
-     */
-    struct Contracts {
-        address bean;
-        address pair;
-        address pegPair;
-        address weth;
-    }
-
-    /**
      *
      */
     struct Field {
@@ -211,7 +200,7 @@ contract Storage {
     // Rain stores global level Rain balances. (Rain is when P > 1, Pod rate Excessively Low).
     // Note: The `raining` storage variable is stored in the Season section for a gas efficient read operation.
     struct Rain {
-        uint256 depreciated; // Ocupies a storage slot in place of a deprecated State variable.
+        uint256 deprecated; // Ocupies a storage slot in place of a deprecated State variable.
         uint256 pods; // The number of Pods when it last started Raining.
         uint256 roots; // The number of Roots when it last started Raining.
     }
@@ -309,12 +298,12 @@ contract Storage {
 }
 
 struct AppStorage {
-    uint8 index; // DEPRECATED - Was the index of the Bean token in the Bean:Eth Uniswap v2 pool, which has been depreciated.
+    uint8 index; // DEPRECATED - Was the index of the Bean token in the Bean:Eth Uniswap v2 pool, which has been deprecated.
     int8[32] cases; // The 24 Weather cases (array has 32 items, but caseId = 3 (mod 4) are not cases).
     bool paused; // True if Beanstalk is Paused.
     uint128 pausedAt; // The timestamp at which Beanstalk was last paused. 
     Storage.Season season; // The Season storage struct found above.
-    Storage.Contracts c; // DEPRECATED - Previously stored the Contracts State struct. Removed when contract addresses were moved to constants in C.sol.
+    uint256[4] deprecated; // DEPRECATED - Previously stored the Contracts State struct. Removed when contract addresses were moved to constants in C.sol.
     Storage.Field f; // The Field storage struct found above.
     Storage.Governance g; // The Governance storage struct found above.
     Storage.Oracle co; // The Oracle storage struct found above.
@@ -326,7 +315,7 @@ struct AppStorage {
     //////////////////////////////////
 
     uint256 earnedBeans; // The number of Beans distributed to the Silo that have not yet been Deposited as a result of the Earn function being called.
-    uint256[14] depreciated; // DEPRECATED - 14 slots that used to store state variables which have been deprecated through various updates. Storage slots can be left alone or reused.
+    uint256[14] deprecated2; // DEPRECATED - 14 slots that used to store state variables which have been deprecated through various updates. Storage slots can be left alone or reused.
     mapping (address => Account.State) a; // A mapping from Farmer address to Account state.
     uint32 bip0Start; // DEPRECATED - bip0Start was used to aid in a migration that occured alongside BIP-0.
     uint32 hotFix3Start; // DEPRECATED - hotFix3Start was used to aid in a migration that occured alongside HOTFIX-3.
@@ -347,11 +336,11 @@ struct AppStorage {
     
     /*
      * @dev DEPRECATED
-     * @dev 3 slots that used to store state variables which have been depreciated through various updates. 
+     * @dev 3 slots that used to store state variables which have been deprecated through various updates.
      * 
      * Storage slots can be left alone or reused.
      */
-    uint256[3] depreciated2;
+    uint256[3] deprecated3;
 
     // New Sops
     mapping (uint32 => uint256) sops; // A mapping from Season to Plenty Per Root (PPR) in that Season. Plenty Per Root is 0 if a Season of Plenty did not occur.
