@@ -104,8 +104,20 @@ contract Sun is Oracle {
     }
 
     function rewardToSilo(uint256 amount) internal {
-        s.s.stalk = s.s.stalk.add(amount.mul(C.getStalkPerBean()));
+        // NOTE that the Beans have already been minted (see {rewardBeans}).
+        //
+        // `s.earnedBeans` is an accounting mechanism that tracks the total number
+        // of Earned Beans that are claimable by Stalkholders. When claimed via `plant()`,
+        // it is decremented. See {Silo.sol:_plant} for more details.
         s.earnedBeans = s.earnedBeans.add(amount);
+
+        // Mint Stalk (as Earned Stalk). Farmers can claim their Earned Stalk via {SiloFacet.sol:plant}.
+        //
+        // Stalk is created here, rather than in {rewardBeans}, because only
+        // Beans that are allocated to the Silo will receive Stalk. 
+        s.s.stalk = s.s.stalk.add(amount.mul(C.getStalkPerBean()));
+
+        // 
         s.siloBalances[C.beanAddress()].deposited = s
             .siloBalances[C.beanAddress()]
             .deposited
