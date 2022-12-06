@@ -101,11 +101,17 @@ contract Silo is SiloExit {
         // saves Rain Roots if its Raining for 'account'.
         handleRainAndSops(account, _lastUpdate);
 
-        // {earnGrownStalk} Mows the Grown Stalk from Seeds associated with 'account'.
-        earnGrownStalk(account);
+        // {__mow} Mows the Grown Stalk from Seeds associated with 'account'.
+        __mow(account);
 
         // Update the lastUpdate Season to the current `_season()`.
         s.a[account].lastUpdate = _season();
+    }
+
+    function __mow(address account) private {
+        // If this `account` has no Seeds, skip to save gas.
+        if (s.a[account].s.seeds == 0) return;
+        LibSilo.mintStalk(account, balanceOfGrownStalk(account));
     }
 
     /**
@@ -160,12 +166,6 @@ contract Silo is SiloExit {
     }
 
     //////////////////////// PRIVATE ////////////////////////
-
-    function earnGrownStalk(address account) private {
-        // If this `account` has no Seeds, skip to save gas.
-        if (s.a[account].s.seeds == 0) return;
-        LibSilo.mintStalk(account, balanceOfGrownStalk(account));
-    }
 
     /**
      * FIXME(refactor): replace `lastUpdate()` -> `_lastUpdate()` and rename this param?
