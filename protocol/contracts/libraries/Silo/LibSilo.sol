@@ -12,7 +12,7 @@ import "../LibAppStorage.sol";
 /**
  * @title LibSilo
  * @author Publius
- * @notice
+ * @notice FIXME(doc)
  */
 library LibSilo {
     using SafeMath for uint256;
@@ -65,10 +65,10 @@ library LibSilo {
         int256 deltaRoots
     );
 
-    //////////////////////// WRAPPERS ////////////////////////
+    //////////////////////// MINT ////////////////////////
 
     /**
-     * @dev Wrapper: Depositing increments balance of Stalk & Seeds.
+     * @dev WRAPPER: Increment the balance balance of Stalk & Seeds.
      */
     function mintSeedsAndStalk(
         address account,
@@ -78,34 +78,6 @@ library LibSilo {
         mintStalk(account, stalk);
         mintSeeds(account, seeds);
     }
-
-    /**
-     * @dev Wrapper: Withdrawing increments balance of Stalk & Seeds.
-     */
-    function burnSeedsAndStalk(
-        address account,
-        uint256 seeds,
-        uint256 stalk
-    ) internal {
-        burnStalk(account, stalk);
-        burnSeeds(account, seeds);
-    }
-
-    /**
-     * @dev Wrapper: Transferring increments balance of Seeds & Stalk for
-     * `receipient`, and decrements balance of Seeds & Stalk for `sender`.
-     */
-    function transferSeedsAndStalk(
-        address sender,
-        address recipient,
-        uint256 seeds,
-        uint256 stalk
-    ) internal {
-        transferStalk(sender, recipient, stalk);
-        transferSeeds(sender, recipient, seeds);
-    }
-
-    //////////////////////// INCREMENT ////////////////////////
 
     /**
      * @dev Mint Seeds to `account`.
@@ -122,7 +94,7 @@ library LibSilo {
     /**
      * @dev Mint Stalk to `account`.
      * 
-     * See {FIXME(doc)} for an explanation of Roots accounting.
+     * Minting Stalk also mints associated Roots. See {FIXME(doc)} for an explanation of Roots accounting.
      */
     function mintStalk(address account, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -143,13 +115,26 @@ library LibSilo {
         emit StalkBalanceChanged(account, int256(stalk), int256(roots));
     }
 
-    //////////////////////// DECREMENT ////////////////////////
+    //////////////////////// BURN ////////////////////////
+
+    /**
+     * @dev WRAPPER: Withdrawing increments balance of Stalk & Seeds.
+     */
+    function burnSeedsAndStalk(
+        address account,
+        uint256 seeds,
+        uint256 stalk
+    ) internal {
+        burnStalk(account, stalk);
+        burnSeeds(account, seeds);
+    }
 
     /**
      * @dev FIXME(doc)
      */
     function burnSeeds(address account, uint256 seeds) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        
         s.s.seeds = s.s.seeds.sub(seeds);
         s.a[account].s.seeds = s.a[account].s.seeds.sub(seeds);
 
@@ -181,6 +166,20 @@ library LibSilo {
     }
 
     //////////////////////// TRANSFER ////////////////////////
+
+    /**
+     * @dev WRAPPER: Transferring increments balance of Seeds & Stalk for
+     * `receipient`, and decrements balance of Seeds & Stalk for `sender`.
+     */
+    function transferSeedsAndStalk(
+        address sender,
+        address recipient,
+        uint256 seeds,
+        uint256 stalk
+    ) internal {
+        transferStalk(sender, recipient, stalk);
+        transferSeeds(sender, recipient, seeds);
+    }
 
     function transferSeeds(
         address sender,
