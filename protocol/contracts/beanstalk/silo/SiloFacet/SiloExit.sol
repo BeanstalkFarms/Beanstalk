@@ -131,9 +131,7 @@ contract SiloExit is ReentrancyGuard {
     }
 
     /**
-     * @dev:
-     * 
-     * FIXME(doc) explain why we perform this calculation
+     * @dev FIXME(doc) explain why we perform this calculation
      * TODO(publius)
      */
     function _balanceOfEarnedBeans(address account, uint256 accountStalk)

@@ -11,9 +11,7 @@ import "./Silo.sol";
  * @title TokenSilo
  * @author Publius
  * @notice This contract contains functions for depositing, withdrawing and claiming whitelisted Silo tokens.
- * @dev
- * 
- * ### Scratchpad
+ * @dev Scratchpad
  * 
  * - "amount" refers to erc20 token balance
  * - "bdv" refers to bean denominated value
@@ -39,19 +37,17 @@ contract TokenSilo is Silo {
     /**
      * @notice Emitted when `account` adds a single Deposit to the Silo.
      *
+     * There is no "AddDeposits" event because there is currently no operation in which Beanstalk
+     * creates multiple Deposits in different Seasons:
+     *
+     *  - `deposit()` always places the user's deposit in the current `_season()`.
+     *  - `convert()` collapses multiple deposits into a single Season to prevent loss of Stalk.
+     *
      * @param account The account that added a Deposit.
      * @param token Address of the whitelisted ERC20 token that was deposited.
      * @param season The Season that this `amount` was added to.
      * @param amount Amount of `token` added to `season`.
      * @param bdv The BDV associated with `amount` of `token` at the time of Deposit.
-     *
-     * @dev:
-     * 
-     * There is no "AddDeposits" event because there is currently no operation in which Beanstalk
-     * creates multiple Deposits in different Seasons.
-     *
-     *  - `deposit()` always places the user's deposit in the current `_season()`.
-     *  - `convert()` collapses multiple deposits into a single Season to prevent loss of Stalk.
      */
     event AddDeposit(
         address indexed account,
@@ -83,13 +79,13 @@ contract TokenSilo is Silo {
      *
      * Occurs during `withdraw()` and `convert()` operations. 
      *
+     * Gas optimization: emit 1 `RemoveDeposits` instead of N `RemoveDeposit` events.
+     *
      * @param account The account that removed Deposits.
      * @param token Address of the whitelisted ERC20 token that was removed.
      * @param seasons Seasons of Deposit to remove from.
      * @param amounts Amounts of `token` to remove from corresponding `seasons`.
      * @param amount Sum of `amounts`.
-     *
-     * @dev Gas optimization: emit 1 `RemoveDeposits` instead of N `RemoveDeposit` events.
      */
     event RemoveDeposits(
         address indexed account,
@@ -238,10 +234,9 @@ contract TokenSilo is Silo {
 
     /**
      * @notice Returns the number of Seasons that must elapse before a Withdrawal can be Claimed.
-     * @dev:
-     * 
-     * The purpose of the withdraw freeze is to prevent a malicious user from receiving risk-free 
+     * @dev The purpose of the withdraw freeze is to prevent a malicious user from receiving risk-free 
      * seignorage with the following attack:
+     * 
      *  1. Right before the end of a Season, deposit assets in the Silo. Receive Stalk.
      *  2. Call `sunrise()` and earn seignorage (Earned Beans).
      *  3. Immediately withdraw assets from the Silo, burning Stalk but keeping Earned Beans.
@@ -262,9 +257,10 @@ contract TokenSilo is Silo {
      * @notice Returns how much of a `token` Deposit that `spender` can transfer on behalf of `owner`.
      * @param owner The account that has given `spender` approval to transfer Deposits. 
      * @param spender The address (contract or EOA) that is allowed to transfer Deposits on behalf of `owner`.
-     * @param token 
+     * @param token Whitelisted ERC20 token.
      *
      * FIXME(naming): getDepositAllowance ?
+     * FIXME(doc): note that allowance only applies to transfers, not withdrawals
      */
     function depositAllowance(
         address owner,
@@ -277,10 +273,10 @@ contract TokenSilo is Silo {
     //////////////////////// DEPOSIT ////////////////////////
 
     /**
-     * @dev:
+     * @dev Deposit accounting.
      *
-     * {LibTokenSilo.deposit} creates a Deposit.
-     * {LibSilo.mintSeedsAndStalk} creates the Stalk associated with the Deposit.
+     * {LibTokenSilo.deposit} calculates BDV, adds a Deposit, and increments the total amount Deposited.
+     * {LibSilo.mintSeedsAndStalk} mints the Stalk and Seeds associated with the Deposit.
      * 
      * This step should enforce that new Deposits are placed into the current `_season()`.
      */

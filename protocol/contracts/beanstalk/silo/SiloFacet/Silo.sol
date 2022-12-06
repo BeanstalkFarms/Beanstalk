@@ -42,9 +42,7 @@ contract Silo is SiloExit {
     //////////////////////// INTERNAL ////////////////////////
 
     /**
-     * @dev:
-     *
-     * Before performing any Silo accounting, we need to account for a user's Grown Stalk.
+     * @dev Before performing any Silo accounting, we need to account for a user's Grown Stalk.
      * 
      * How updating works: FIXME(doc)
      */

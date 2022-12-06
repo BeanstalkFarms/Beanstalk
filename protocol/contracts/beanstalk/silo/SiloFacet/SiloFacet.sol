@@ -27,9 +27,8 @@ contract SiloFacet is TokenSilo {
      * @param amount The amount of `token` to Deposit.
      * @param mode The balance to pull tokens from. See {LibTransfer.From}.
      *
-     * @dev:
+     * @dev Depositing should:
      * 
-     * Depositing should:
      *  1. Transfer `amount` of `token` from `account` to Beanstalk.
      *  2. Calculate the current Bean Denominated Value (BDV) for `amount` of `token`.
      *  3. Create a Deposit entry for `account` in the current Season.
@@ -61,9 +60,10 @@ contract SiloFacet is TokenSilo {
      * @param season season the farmer wants to withdraw
      * @param amount tokens to be withdrawn
      *
-     * @dev:
-     * Season determines how much Stalk and Seeds are removed from the Farmer.
+     * @dev Season determines how much Stalk and Seeds are removed from the Farmer.
+     * 
      * Typically the user wants to withdraw from the latest season, as it has the lowest stalk allocation.
+     * 
      * We rely on the subgraph in order to query farmer deposits.
      */
     function withdrawDeposit(
@@ -80,9 +80,7 @@ contract SiloFacet is TokenSilo {
      * @param seasons array of seasons to withdraw from
      * @param amounts array of amounts corresponding to each season to withdraw from
 
-     * @dev:
-     *
-     * Factor in gas costs when withdrawing from multiple deposits to ensure greater UX.
+     * @dev Factor in gas costs when withdrawing from multiple deposits to ensure greater UX.
      *
      * For example, if a user wants to withdraw X beans, its better to withdraw from 1 earlier deposit
      * rather than multiple smaller recent deposits, if the season difference is minimal.
@@ -366,10 +364,10 @@ contract SiloFacet is TokenSilo {
 
     /** 
      * @notice adds Revitalized Stalk and Seeds to your Stalk and Seed balances
-     * @dev only applies to unripe assets
      * @param token address of ERC20
      * @param seasons array of seasons to enroot
      * @param amounts array of amount (corresponding to seasons) to enroot
+     * @dev only applies to unripe assets
      */
     function enrootDeposits(
         address token,
