@@ -57,18 +57,19 @@ library LibTokenSilo {
      * @return seeds The amount of Seeds received for this Deposit.
      * @return stalk The amount of Stalk received for this Deposit.
      * 
-     * @dev Calculate the current BDV for `amount` of `token` and propagate.
+     * @dev:
      * 
-     * FIXME(doc): _season is a function
+     * Calculate the current BDV for `amount` of `token`.
+     * Then perform deposit accounting with known BDV.
      */
     function deposit(
         address account,
         address token,
-        uint32 _s,
+        uint32 season,
         uint256 amount
     ) internal returns (uint256, uint256) {
         uint256 bdv = beanDenominatedValue(token, amount);
-        return depositWithBDV(account, token, _s, amount, bdv);
+        return depositWithBDV(account, token, season, amount, bdv);
     }
 
     /**
@@ -83,7 +84,7 @@ library LibTokenSilo {
     function depositWithBDV(
         address account,
         address token,
-        uint32 _s,
+        uint32 season,
         uint256 amount,
         uint256 bdv
     ) internal returns (uint256, uint256) {
@@ -91,7 +92,7 @@ library LibTokenSilo {
         require(bdv > 0, "Silo: No Beans under Token.");
 
         incrementDepositedToken(token, amount); // Total
-        addDeposit(account, token, _s, amount, bdv); // Account
+        addDeposit(account, token, season, amount, bdv); // Account
 
         return (
             bdv.mul(s.ss[token].seeds), // Seeds
@@ -109,16 +110,16 @@ library LibTokenSilo {
     function addDeposit(
         address account,
         address token,
-        uint32 _s,
+        uint32 season,
         uint256 amount,
         uint256 bdv
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        s.a[account].deposits[token][_s].amount += uint128(amount);
-        s.a[account].deposits[token][_s].bdv += uint128(bdv);
+        s.a[account].deposits[token][season].amount += uint128(amount);
+        s.a[account].deposits[token][season].bdv += uint128(bdv);
 
-        emit AddDeposit(account, token, _s, amount, bdv);
+        emit AddDeposit(account, token, season, amount, bdv);
     }
 
     //////////////////////// REMOVE DEPOSIT ////////////////////////
