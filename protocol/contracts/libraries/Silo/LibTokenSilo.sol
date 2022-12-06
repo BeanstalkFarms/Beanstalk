@@ -44,7 +44,7 @@ library LibTokenSilo {
     /**
      * @dev Decrement the total amount of `token` deposited in the Silo.
      */
-    function decrementDepositedToken(address token, uint256 amount) internal {
+    function decrementDepositedTokenSupply(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.siloBalances[token].deposited = s.siloBalances[token].deposited.sub(
             amount

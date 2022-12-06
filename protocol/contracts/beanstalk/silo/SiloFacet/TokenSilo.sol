@@ -355,7 +355,7 @@ contract TokenSilo is Silo {
      * @dev Shared between `_withdrawDeposit()` and `_withdrawDeposits()`.
      *
      * FIXME(naming): "withdrawAndBurn"? "withdrawAndReduceSupply"?
-     * FIXME(naming): change .decrementDepositedToken to .decrementDepositedTokenSupply
+     * FIXME(naming): change .decrementDepositedTokenSupply to .decrementDepositedTokenSupply
      *   NOT burn: burn = removing from user and from supply
      */
     function _withdraw(
@@ -372,7 +372,7 @@ contract TokenSilo is Silo {
         addTokenWithdrawal(account, token, arrivalSeason, amount); // Increment account & total Withdrawn
 
         // Remove deposit
-        LibTokenSilo.decrementDepositedToken(token, amount); // Decrement total Deposited
+        LibTokenSilo.decrementDepositedTokenSupply(token, amount); // Decrement total Deposited
         LibSilo.withdrawSiloAssets(account, seeds, stalk); // Burn Seeds and Stalk
     }
 
