@@ -111,7 +111,7 @@ contract Silo is SiloExit {
     function earnGrownStalk(address account) private {
         // If this `account` has no Seeds, skip to save gas.
         if (s.a[account].s.seeds == 0) return;
-        LibSilo.incrementBalanceOfStalk(account, balanceOfGrownStalk(account));
+        LibSilo.mintStalk(account, balanceOfGrownStalk(account));
     }
 
     function handleRainAndSops(address account, uint32 _lastUpdate) private {

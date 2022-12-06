@@ -78,7 +78,7 @@ library LibSilo {
         uint256 seeds,
         uint256 stalk
     ) internal {
-        incrementBalanceOfStalk(account, stalk);
+        mintStalk(account, stalk);
         incrementBalanceOfSeeds(account, seeds);
     }
 
@@ -141,7 +141,7 @@ library LibSilo {
      * are being added to the account's balance AND to the total supply?
      *  - ✅ Approved
      */
-    function incrementBalanceOfStalk(address account, uint256 stalk) internal {
+    function mintStalk(address account, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // Calculate amount of Roots for this amount of Stalk
