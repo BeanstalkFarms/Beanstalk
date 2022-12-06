@@ -93,7 +93,7 @@ library LibSilo {
         uint256 seeds,
         uint256 stalk
     ) internal {
-        decrementBalanceOfStalk(account, stalk);
+        burnStalk(account, stalk);
         decrementBalanceOfSeeds(account, seeds);
     }
 
@@ -184,7 +184,7 @@ library LibSilo {
      * are being added to the account's balance AND to the total supply?
      *  - ✅ Approved
      */
-    function decrementBalanceOfStalk(address account, uint256 stalk) private {
+    function burnStalk(address account, uint256 stalk) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return;
 
