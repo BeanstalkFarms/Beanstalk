@@ -157,9 +157,9 @@ contract SiloFacet is TokenSilo {
         if (sender != msg.sender) {
             _spendDepositAllowance(sender, msg.sender, token, amount);
         }
-        _update(sender);
+        _mow(sender);
         // Need to update the recipient's Silo as well.
-        _update(recipient);
+        _mow(recipient);
         bdv = _transferDeposit(sender, recipient, token, season, amount);
     }
 
@@ -190,9 +190,9 @@ contract SiloFacet is TokenSilo {
             }
         }
        
-        _update(sender);
+        _mow(sender);
         // Need to update the recipient's Silo as well.
-        _update(recipient);
+        _mow(recipient);
         bdvs = _transferDeposits(sender, recipient, token, seasons, amounts);
     }
 
@@ -342,7 +342,7 @@ contract SiloFacet is TokenSilo {
      * @dev See {Silo:_update}.
      */
     function update(address account) external payable {
-        _update(account);
+        _mow(account);
     }
 
     /** 
