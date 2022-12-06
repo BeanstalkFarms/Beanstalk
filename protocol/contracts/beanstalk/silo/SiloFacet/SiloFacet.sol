@@ -361,7 +361,7 @@ contract SiloFacet is TokenSilo {
         uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalk).add(
             LibSilo.stalkReward(deltaSeeds, _season() - season)
         );
-        LibSilo.depositSiloAssets(msg.sender, deltaSeeds, deltaStalk);
+        LibSilo.mintSeedsAndStalk(msg.sender, deltaSeeds, deltaStalk);
     }
 
     /** 
@@ -406,7 +406,7 @@ contract SiloFacet is TokenSilo {
         uint256 newSeeds = newBDV.mul(s.ss[token].seeds);
 
         // Add new Stalk
-        LibSilo.depositSiloAssets(
+        LibSilo.mintSeedsAndStalk(
             msg.sender,
             newSeeds.sub(ar.seedsRemoved),
             newStalk.sub(ar.stalkRemoved)

@@ -47,7 +47,7 @@ contract MockSiloFacet is SiloFacet {
         bdv = bdv.mul(C.initialRecap()).div(1e18);
         uint256 seeds = bdv.mul(s.ss[C.unripeLPAddress()].seeds);
         uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalk).add(LibSilo.stalkReward(seeds, season() - _s));
-        LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
+        LibSilo.mintSeedsAndStalk(msg.sender, seeds, stalk);
     }
 
     function mockUnripeBeanDeposit(uint32 _s, uint256 amount) external {
@@ -57,7 +57,7 @@ contract MockSiloFacet is SiloFacet {
         amount = amount.mul(C.initialRecap()).div(1e18);
         uint256 seeds = amount.mul(s.ss[C.unripeBeanAddress()].seeds);
         uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalk).add(LibSilo.stalkReward(seeds, season() - _s));
-        LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
+        LibSilo.mintSeedsAndStalk(msg.sender, seeds, stalk);
     }
 
     function getUnripeForAmount(uint256 t, uint256 amount) private pure returns (uint256) {

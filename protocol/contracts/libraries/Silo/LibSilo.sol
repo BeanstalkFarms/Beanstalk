@@ -73,7 +73,7 @@ library LibSilo {
      * FIXME(naming): mintSeedsAndStalk, reorder
      *  - ✅ Approved
      */
-    function depositSiloAssets(
+    function mintSeedsAndStalk(
         address account,
         uint256 seeds,
         uint256 stalk

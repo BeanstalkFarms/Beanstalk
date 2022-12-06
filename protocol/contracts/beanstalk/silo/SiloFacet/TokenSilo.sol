@@ -271,7 +271,7 @@ contract TokenSilo is Silo {
      * @dev:
      *
      * {LibTokenSilo.deposit} creates a Deposit.
-     * {LibSilo.depositSiloAssets} creates the Stalk associated with the Deposit.
+     * {LibSilo.mintSeedsAndStalk} creates the Stalk associated with the Deposit.
      * 
      * This step should enforce that new Deposits are placed into the current `_season()`.
      */
@@ -286,7 +286,7 @@ contract TokenSilo is Silo {
             _season(),
             amount
         );
-        LibSilo.depositSiloAssets(account, seeds, stalk);
+        LibSilo.mintSeedsAndStalk(account, seeds, stalk);
     }
 
     //////////////////////// WITHDRAW ////////////////////////
@@ -355,7 +355,6 @@ contract TokenSilo is Silo {
      * @dev Shared between `_withdrawDeposit()` and `_withdrawDeposits()`.
      *
      * FIXME(naming): "withdrawAndBurn"? "withdrawAndReduceSupply"?
-     * FIXME(naming): change .decrementDepositedTokenSupply to .decrementDepositedTokenSupply
      *   NOT burn: burn = removing from user and from supply
      */
     function _withdraw(

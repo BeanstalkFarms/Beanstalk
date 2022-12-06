@@ -152,7 +152,7 @@ contract ConvertFacet is ReentrancyGuard {
             _s = __s - _s;
         } else _s = s.season.current;
         uint256 stalk = bdv.mul(LibTokenSilo.stalk(token)).add(grownStalk);
-        LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
+        LibSilo.mintSeedsAndStalk(msg.sender, seeds, stalk);
 
         LibTokenSilo.incrementDepositedTokenSupply(token, amount);
         LibTokenSilo.addDeposit(msg.sender, token, _s, amount, bdv);
