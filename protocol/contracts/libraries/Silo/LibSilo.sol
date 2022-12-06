@@ -40,7 +40,6 @@ library LibSilo {
      * @param account is the account that gained or lost Stalk.
      * @param delta is the change in Stalk.
      * @param deltaRoots is the change is Roots. For more info on Roots, see: 
-     * FIXME(doc)
      *   
      * @dev {StalkBalanceChanged} should be emitted anytime a Deposit is added, removed or transferred AND
      * anytime an account Mows Grown Stalk.

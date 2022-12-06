@@ -81,7 +81,15 @@ contract Silo is SiloExit {
         int256 deltaRoots
     );
 
-    //////////////////////// INTERNAL ////////////////////////
+    //////////////////////// INTERNAL: MOW ////////////////////////
+
+    /**
+     * @dev Update the Silo for `msg.sender`.
+     */
+    modifier mowSender() {
+        _mow(msg.sender);
+        _;
+    }
 
     /**
      * @dev anytime the state of an account's Silo changes, their Grown Stalk is Mown. 
@@ -114,11 +122,15 @@ contract Silo is SiloExit {
         LibSilo.mintStalk(account, balanceOfGrownStalk(account));
     }
 
+    //////////////////////// INTERNAL: PLANT ////////////////////////
+
     /**
-     * @dev anytime an account has Earned Beans, the Seeds associated with the Earned Beans
-     * must be Planted in order to start Growing Stalk. 
-     * {_plant} Plants the Plantable Seeds of 'account' associated with its Earned Beans.
-     * In practice, when Seeds are Planted all Earned Beans are Deposited in the current Season.
+     * @dev Plants the Plantable Seeds of 'account' associated with its Earned Beans.
+     * 
+     * Anytime an account has Earned Beans, the Seeds associated with the Earned Beans must be Planted in order to start Growing Stalk. 
+     * 
+     * In practice, when Seeds are Planted, all Earned Beans are Deposited in the current Season.
+     *
      * For more info on Planting, see: FIXME(doc)
      */
     function _plant(address account) internal returns (uint256 beans) {
@@ -132,23 +144,27 @@ contract Silo is SiloExit {
         s.earnedBeans = s.earnedBeans.sub(beans);
 
         // Deposit Earned Beans if there are any.
+        // Note that 1 Bean = 1 BDV.
         LibTokenSilo.addDeposit(
             account,
             C.beanAddress(),
             _season(),
-            beans,
-            beans
+            beans, // amount
+            beans // bdv
         );
+        
         // Calculate the Plantable Seeds assocaited with the Earned Beans that were Deposited.
         uint256 seeds = beans.mul(C.getSeedsPerBean());
 
-        // Earned Seeds don't generate Grown Stalk until they are Planted (i.e., not auto-compounding). 
-        // Plantable Seeds are not included in the Seed supply, so new Seeds are minted when Planted.
-        LibSilo.mintSeeds(account, seeds);
+        // Plantable Seeds don't generate Grown Stalk until they are Planted (i.e., not auto-compounding). 
+        // Plantable Seeds are not included in the Seed supply, so new Seeds must be minted during `plant()`.
+        // (Notice that {Sun.sol:rewardToSilo} does not mint any Seeds, even though it updates Earned Beans.)
+        LibSilo.mintSeeds(account, seeds); // mints to `account` and updates totals
 
         // Earned Stalk associated with Earned Beans generate more Earned Beans automatically (i.e., auto compounding).
-        // Therefore, earned Stalk are minted when the Earned Beans are minted, not during the Plant.
-        // Similarly, 'account' does not receive additional Roots from Earned Stalk during a Plant.
+        // Earned Stalk are minted when Earned Beans are minted during Sunrise. See {Sun.sol:rewardToSilo} for details.
+        // Similarly, `account` does not receive additional Roots from Earned Stalk during a Plant.
+        // The following lines allocate Earned Stalk that has already been minted to `account`.
         uint256 stalk = beans.mul(C.getStalkPerBean());
         s.a[account].s.stalk = accountStalk.add(stalk);
 
@@ -156,6 +172,12 @@ contract Silo is SiloExit {
         emit Plant(account, beans);
     }
 
+    //////////////////////// INTERNAL: SEASON OF PLENTY ////////////////////////
+
+    /**
+     * @dev Gas optimization: An account can call `{SiloFacet:claimPlenty}` even if
+     * `s.a[account].sop.plenty == 0`. This would emit a ClaimPlenty event with an amount of 0.
+     */
     function _claimPlenty(address account) internal {
         // Plenty is earned in the form of 3Crv.
         uint256 plenty = s.a[account].sop.plenty;
@@ -164,8 +186,6 @@ contract Silo is SiloExit {
 
         emit ClaimPlenty(account, plenty);
     }
-
-    //////////////////////// PRIVATE ////////////////////////
 
     /**
      * FIXME(refactor): replace `lastUpdate()` -> `_lastUpdate()` and rename this param?
@@ -198,13 +218,4 @@ contract Silo is SiloExit {
         }
     }
 
-    //////////////////////// MODIFIERS ////////////////////////
-
-    /**
-     * @dev Update the Silo for `msg.sender`.
-     */
-    modifier mowSender() {
-        _mow(msg.sender);
-        _;
-    }
 }
