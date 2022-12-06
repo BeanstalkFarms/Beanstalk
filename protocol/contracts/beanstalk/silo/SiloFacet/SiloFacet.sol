@@ -339,7 +339,7 @@ contract SiloFacet is TokenSilo {
      *
      * Commonly referred to as "Mow".
      *
-     * @dev See {Silo:_update}.
+     * @dev See {Silo:_mow}.
      */
     function update(address account) external payable {
         _mow(account);

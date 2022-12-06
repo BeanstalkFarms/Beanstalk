@@ -85,7 +85,7 @@ contract Silo is SiloExit {
 
     /**
      * @dev anytime the state of an account's Silo changes, their Grown Stalk is Mown. 
-     * {_update} Mows the Grown Stalk of 'account' and is called at the beginning of 
+     * {_mow} Mows the Grown Stalk of 'account' and is called at the beginning of 
      * every interaction with the Silo.
      *
      * For more info on Mowing, see: FIXME(doc)
