@@ -75,8 +75,8 @@ library LibSilo {
         uint256 seeds,
         uint256 stalk
     ) internal {
-        mintStalk(account, stalk);
         mintSeeds(account, seeds);
+        mintStalk(account, stalk);
     }
 
     /**
@@ -125,8 +125,8 @@ library LibSilo {
         uint256 seeds,
         uint256 stalk
     ) internal {
-        burnStalk(account, stalk);
         burnSeeds(account, seeds);
+        burnStalk(account, stalk);
     }
 
     /**
@@ -134,7 +134,7 @@ library LibSilo {
      */
     function burnSeeds(address account, uint256 seeds) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        
+
         s.s.seeds = s.s.seeds.sub(seeds);
         s.a[account].s.seeds = s.a[account].s.seeds.sub(seeds);
 
@@ -177,8 +177,8 @@ library LibSilo {
         uint256 seeds,
         uint256 stalk
     ) internal {
-        transferStalk(sender, recipient, stalk);
         transferSeeds(sender, recipient, seeds);
+        transferStalk(sender, recipient, stalk);
     }
 
     function transferSeeds(
