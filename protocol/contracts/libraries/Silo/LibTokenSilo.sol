@@ -182,9 +182,7 @@ library LibTokenSilo {
     //////////////////////// GETTERS ////////////////////////
 
     /**
-     * @notice Locate the `amount` and `bdv` for a deposit in storage.
-     * 
-     * @dev: 
+     * @dev Locate the `amount` and `bdv` for a deposit in storage.
      * 
      * Unripe BEAN and Unripe LP are handled independently so that data
      * stored in the legacy Silo V1 format and the new Silo V2 format can
@@ -216,9 +214,7 @@ library LibTokenSilo {
     /**
      * @dev Calculate the BDV ("Bean Denominated Value") for `amount` of `token`.
      * 
-     * Makes a call to a BDV function defined in the SiloSettings for this token.
-     * 
-     * See {AppStorage.sol:Storage.SiloSettings} for more information.
+     * Makes a call to a BDV function defined in the SiloSettings for this token. See {AppStorage.sol:Storage.SiloSettings} for more information.
      *
      * FIXME(naming): rename myFunctionCall -> callData
      */

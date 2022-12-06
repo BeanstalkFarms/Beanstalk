@@ -25,7 +25,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
  */
 contract Account {
 
-    /**
+    /*
      * @dev {Account.Field} stores a Farmer's Plots and Pod allowances.
      * 
      * This is used within {Account.State}.
@@ -70,7 +70,7 @@ contract Account {
     struct State {
         Field field; // A Farmer's Field storage.
 
-        /**
+        /*
          * @dev (Silo V1) A Farmer's Unripe Bean Deposits only as a result of Replant
          *
          * Previously held the V1 Silo Deposits/Withdrawals for Beans.
@@ -80,7 +80,7 @@ contract Account {
          */
         AssetSilo bean; 
 
-        /**
+        /*
          * @dev (Silo V1) Unripe LP Deposits as a result of Replant.
          * 
          * Previously held the V1 Silo Deposits/Withdrawals for BEAN:ETH Uniswap v2 LP Tokens.
@@ -93,12 +93,12 @@ contract Account {
          */
         AssetSilo lp; 
 
-        /**
+        /*
          * @dev Silo V2
          */
         Silo s;
         
-        /**
+        /*
          * @notice DEPRECATED
          * 
          * @dev FIXME(doc)
@@ -224,7 +224,7 @@ contract Storage {
         uint32 current; // The current Season in Beanstalk.
         uint32 lastSop; // The Season in which the most recent consecutive series of Seasons of Plenty started.
 
-        /**
+        /*
          * @notice The number of seasons required to Withdraw a Deposit.
          * @dev Also referred to as the "withdraw freeze". See {LibTokenSilo.withdrawFreeze}.
          */
@@ -266,7 +266,7 @@ contract Storage {
      * A Token is considered whitelisted in the Silo if there exists a non-zero SiloSettings selector.
      */
     struct SiloSettings {
-        /**
+        /*
          * @dev: 
          * 
          * `selector` is an encoded function selector that pertains to 
@@ -282,11 +282,11 @@ contract Storage {
          * FIXME(doc) LibTokenSilo performs a call, not a delegatecall.
          */
         bytes4 selector;
-        /**
+        /*
          * @dev The Seeds Per BDV that the Silo mints in exchange for Depositing this Token.
          */
         uint32 seeds;
-        /**
+        /*
          * @dev The Stalk Per BDV that the Silo mints in exchange for Depositing this Token.
          */
         uint32 stalk;
@@ -337,7 +337,7 @@ struct AppStorage {
     mapping(bytes32 => uint256) podOrders; // A mapping from the hash of a Pod Order to the amount of Pods that the Pod Order is still willing to buy.
     mapping(address => Storage.AssetSilo) siloBalances; // A mapping from Token address to Silo Balance storage (amount deposited and withdrawn).
 
-    /**
+    /*
      * @notice Storage.SiloSettings (ss)
      * @dev A mapping from Token address to Silo Settings for each Whitelisted Token.
      * 
@@ -345,7 +345,7 @@ struct AppStorage {
      */
     mapping(address => Storage.SiloSettings) ss;
     
-    /**
+    /*
      * @dev DEPRECATED
      * @dev 3 slots that used to store state variables which have been depreciated through various updates. 
      * 
