@@ -353,15 +353,12 @@ contract TokenSilo is Silo {
 
     /**
      * @dev Shared between `_withdrawDeposit()` and `_withdrawDeposits()`.
-     *
-     * FIXME(naming): "withdrawAndBurn"? "withdrawAndReduceSupply"?
-     *   NOT burn: burn = removing from user and from supply
      */
     function _withdraw(
         address account,
         address token,
         uint256 amount,
-        // FIXME ?
+        // FIXME(refactor): param ordering
         uint256 stalk,
         uint256 seeds
     ) private {

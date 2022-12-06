@@ -69,9 +69,6 @@ library LibSilo {
 
     /**
      * @dev Wrapper: Depositing increments balance of Stalk & Seeds.
-     *
-     * FIXME(naming): mintSeedsAndStalk, reorder
-     *  - ✅ Approved
      */
     function mintSeedsAndStalk(
         address account,
@@ -84,9 +81,6 @@ library LibSilo {
 
     /**
      * @dev Wrapper: Withdrawing increments balance of Stalk & Seeds.
-     *
-     * FIXME(naming): burnSeedsAndStalk, reorder
-     *  - ✅ Approved
      */
     function burnSeedsAndStalk(
         address account,
@@ -100,9 +94,6 @@ library LibSilo {
     /**
      * @dev Wrapper: Transferring increments balance of Seeds & Stalk for
      * `receipient`, and decrements balance of Seeds & Stalk for `sender`.
-     *
-     * FIXME(naming): transferSeedsAndStalk, reorder
-     *  - ✅ Approved
      */
     function transferSiloAssets(
         address sender,
@@ -117,11 +108,7 @@ library LibSilo {
     //////////////////////// INCREMENT ////////////////////////
 
     /**
-     * @dev:
-     *  
-     * FIXME(naming): perhaps "mintSeeds" would better convey that Seeds
-     * are being added to the account's balance AND to the total supply?
-     *  - ✅ Approved
+     * @dev Mint Seeds to `account`.
      */
     function mintSeeds(address account, uint256 seeds) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -136,10 +123,6 @@ library LibSilo {
      * @dev Mint Stalk to `account`.
      * 
      * See {FIXME(doc)} for an explanation of Roots accounting.
-     *
-     * FIXME(naming): perhaps "mintStalk" would better convey that Stalk
-     * are being added to the account's balance AND to the total supply?
-     *  - ✅ Approved
      */
     function mintStalk(address account, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -163,11 +146,7 @@ library LibSilo {
     //////////////////////// DECREMENT ////////////////////////
 
     /**
-     * @dev:
-     *  
-     * FIXME(naming): perhaps "burnSeeds" would better convey that Seeds
-     * are being added to the account's balance AND to the total supply?
-     *  - ✅ Approved
+     * @dev FIXME(doc)
      */
     function burnSeeds(address account, uint256 seeds) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -178,11 +157,7 @@ library LibSilo {
     }
 
     /**
-     * @dev:
-     *  
-     * FIXME(naming): perhaps "burnStalk" would better convey that Stalk
-     * are being added to the account's balance AND to the total supply?
-     *  - ✅ Approved
+     * @dev FIXME(doc)
      */
     function burnStalk(address account, uint256 stalk) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
