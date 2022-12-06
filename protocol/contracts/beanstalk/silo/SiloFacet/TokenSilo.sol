@@ -391,7 +391,7 @@ contract TokenSilo is Silo {
      * This is why
      *
      *
-     * FIXME(naming): LibTokenSilo offers `incrementDepositedToken` to perform the operation 
+     * FIXME(naming): LibTokenSilo offers `incrementDepositedTokenSupply` to perform the operation 
      * under `// Total`. Should we create a similar helper for Withdrawals for symmetry?
      *
      * FIXME(naming): "Total" discussion
