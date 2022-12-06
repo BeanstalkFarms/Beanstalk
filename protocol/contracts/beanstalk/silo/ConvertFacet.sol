@@ -53,7 +53,7 @@ contract ConvertFacet is ReentrancyGuard {
         nonReentrant
         returns (uint32 toSeason, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
-        LibInternal.updateSilo(msg.sender);
+        LibInternal.mow(msg.sender);
 
         address toToken; address fromToken; uint256 grownStalk;
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(
