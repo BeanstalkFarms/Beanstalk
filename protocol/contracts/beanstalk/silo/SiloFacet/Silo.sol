@@ -13,26 +13,68 @@ import "~/libraries/Silo/LibTokenSilo.sol";
 /**
  * @title Silo
  * @author Publius
+ * @notice FIXME(doc)
  */
+ 
 contract Silo is SiloExit {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
+    //////////////////////// EVENTS ////////////////////////    
+
+    /**
+     * @notice {Plant} is emitted when the Seeds associated with the Earned Beans of 'account' are Planted.
+     * @param account is the account that owns the Earned Beans and receives the Planted Seeds.
+     * @param beans is the number of Earned Beans 'account' owns, which determines the Seeds Planted.
+     */
     event Plant(
         address indexed account,
         uint256 beans
     );
 
+    /**
+     * @notice {ClaimPlenty} is emitted when the assets paid to 'account' during a Flood are Claimed.
+     * @param account is the account that owns and receives the assets paid during a Flood being Claimed.
+     * @param plenty is the number of 3CRV the account has been Paid since their last ClaimPlenty.
+     *
+     * @dev Flood was previously called a Season of Plenty. For backwards compatibility, the event has
+     * not been changed. For more information on Flood, see: {Fixme(doc)}.
+     */
     event ClaimPlenty(
         address indexed account,
         uint256 plenty
     );
 
+    /**
+     * @notice {SeedsBalanceChanged} is emitted when `account` gains or loses Seeds.
+     * @param account is the account that gained or lost Seeds.
+     * @param delta is the change in Seeds.
+     *   
+     * @dev {SeedsBalanceChanged} should be emitted anytime a Deposit is added, removed or transferred.
+     * @dev BIP-24 included a one-time re-emission of {SeedsBalanceChanged} for accounts that had
+     * executed a Deposit transfer between the Replant and BIP-24 execution. For more, see:
+     * [BIP-24](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-24-fungible-bdv-support.md)
+     * [Event-24-Event-Emission](https://github.com/BeanstalkFarms/Event-24-Event-Emission)
+     */
     event SeedsBalanceChanged(
         address indexed account,
         int256 delta
     );
 
+     /**
+     * @notice {StalkBalanceChanged} is emitted when `account` gains or loses Stalk.
+     * @param account is the account that gained or lost Stalk.
+     * @param delta is the change in Stalk.
+     * @param deltaRoots is the change is Roots. For more info on Roots, see: 
+     * FIXME(doc)
+     *   
+     * @dev {StalkBalanceChanged} should be emitted anytime a Deposit is added, removed or transferred AND
+     * anytime an account Mows Grown Stalk.
+     * @dev BIP-24 included a one-time re-emission of {SeedsBalanceChanged} for accounts that had
+     * executed a Deposit transfer between the Replant and BIP-24 execution. For more, see:
+     * [BIP-24](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-24-fungible-bdv-support.md)
+     * [Event-24-Event-Emission](https://github.com/BeanstalkFarms/Event-24-Event-Emission)
+     */
     event StalkBalanceChanged(
         address indexed account,
         int256 delta,
@@ -42,9 +84,10 @@ contract Silo is SiloExit {
     //////////////////////// INTERNAL ////////////////////////
 
     /**
-     * @dev Before performing any Silo accounting, we need to account for a user's Grown Stalk.
-     * 
-     * How updating works: FIXME(doc)
+     * @dev anytime the state of an account's Silo changes, their Grown Stalk is Mown. 
+     * {_update} Mows the Grown Stalk of 'account' and is called at the beginning of 
+     * every interaction with the Silo. For more info on Mowing, see:
+     * FIXME(doc)
      */
     function _update(address account) internal {
         uint32 _lastUpdate = lastUpdate(account);
