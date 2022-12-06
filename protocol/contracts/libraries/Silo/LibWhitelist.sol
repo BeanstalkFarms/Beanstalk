@@ -10,23 +10,19 @@ import "../LibAppStorage.sol";
 
 /**
  * @author Publius
- * @title LibWhitelist handles the whitelisting of different tokens.
+ * @title LibWhitelist handles adding and removing ERC-20 tokens from the Silo Whitelist.
  **/
-
-interface IBS {
-    function lusdToBDV(uint256 amount) external view returns (uint256);
-
-    function curveToBDV(uint256 amount) external view returns (uint256);
-
-    function beanToBDV(uint256 amount) external pure returns (uint256);
-
-    function unripeBeanToBDV(uint256 amount) external view returns (uint256);
-
-    function unripeLPToBDV(uint256 amount) external view returns (uint256);
-}
 
 library LibWhitelist {
 
+    /**
+     * @notice Emitted when a token is added to the Silo Whitelist.
+     * @param token ERC-20 token being added to the Silo Whitelist.
+     * @param selector The function selector that returns the BDV of a given amount of `token`.
+     * must have signature `function bdv(uint256 amount) public view returns (uint256);`.
+     * @param seeds The Seeds per BDV received from depositing `token`.
+     * @param stalk The Stalk per BDV received from depositing `token`.
+    **/
     event WhitelistToken(
         address indexed token,
         bytes4 selector,
@@ -34,63 +30,15 @@ library LibWhitelist {
         uint256 stalk
     );
 
+    /**
+     * @notice Emitted when a token is removed from the Silo Whitelist.
+     * @param token ERC-20 token being removed to the Silo Whitelist.
+    **/
     event DewhitelistToken(address indexed token);
 
-    uint32 private constant BEAN_3CRV_STALK = 10000;
-    uint32 private constant BEAN_3CRV_SEEDS = 4;
-
-    uint32 private constant BEAN_STALK = 10000;
-    uint32 private constant BEAN_SEEDS = 2;
-
-    function whitelistPools() internal {
-        whitelistBean3Crv();
-        whitelistBean();
-        whitelistUnripeBean();
-        whitelistUnripeLP();
-    }
-
-    function whitelistBean3Crv() internal {
-        whitelistToken(
-            C.curveMetapoolAddress(),
-            IBS.curveToBDV.selector,
-            BEAN_3CRV_STALK,
-            BEAN_3CRV_SEEDS
-        );
-    }
-
-    function whitelistBean() internal {
-        whitelistToken(
-            C.beanAddress(),
-            IBS.beanToBDV.selector,
-            BEAN_STALK,
-            BEAN_SEEDS
-        );
-    }
-
-    function whitelistUnripeBean() internal {
-        whitelistToken(
-            C.unripeBeanAddress(),
-            IBS.unripeBeanToBDV.selector,
-            BEAN_STALK,
-            BEAN_SEEDS
-        );
-    }
-
-    function whitelistUnripeLP() internal {
-        whitelistToken(
-            C.unripeLPAddress(),
-            IBS.unripeLPToBDV.selector,
-            BEAN_3CRV_STALK,
-            BEAN_3CRV_SEEDS
-        );
-    }
-
-    function dewhitelistToken(address token) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        delete s.ss[token];
-        emit DewhitelistToken(token);
-    }
-
+    /**
+     * @dev Add an ERC-20 token to the Silo Whitelist.
+    **/
     function whitelistToken(
         address token,
         bytes4 selector,
@@ -103,5 +51,15 @@ library LibWhitelist {
         s.ss[token].seeds = seeds;
 
         emit WhitelistToken(token, selector, stalk, seeds);
+    }
+
+
+    /**
+     * @dev Remove an ERC-20 token from the Silo Whitelist.
+    **/
+    function dewhitelistToken(address token) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        delete s.ss[token];
+        emit DewhitelistToken(token);
     }
 }
