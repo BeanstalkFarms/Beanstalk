@@ -42,9 +42,7 @@ contract Silo is SiloExit {
     //////////////////////// INTERNAL ////////////////////////
 
     /**
-     * @dev:
-     *
-     * Before performing any Silo accounting, we need to account for a user's Grown Stalk.
+     * @dev Before performing any Silo accounting, we need to account for a user's Grown Stalk.
      * 
      * How updating works: FIXME(doc)
      */
@@ -52,8 +50,8 @@ contract Silo is SiloExit {
         uint32 _lastUpdate = lastUpdate(account);
 
         // If already updated this season, there's no Stalk to claim.
-        // _lastUpdate > season() should not be possible, but we check it anyway.
-        if (_lastUpdate >= season()) return;
+        // _lastUpdate > _season() should not be possible, but we check it anyway.
+        if (_lastUpdate >= _season()) return;
 
         // Increment Plenty if a SOP has occured or save Rain Roots if its Raining.
         handleRainAndSops(account, _lastUpdate);
@@ -61,8 +59,8 @@ contract Silo is SiloExit {
         // Earn Grown Stalk -> The Stalk gained from Seeds.
         earnGrownStalk(account);
 
-        // Bump the lastUpdate season to the current `season()`.
-        s.a[account].lastUpdate = season();
+        // Bump the lastUpdate season to the current `_season()`.
+        s.a[account].lastUpdate = _season();
     }
 
     function _plant(address account) internal returns (uint256 beans) {
@@ -79,14 +77,14 @@ contract Silo is SiloExit {
         LibTokenSilo.addDeposit(
             account,
             C.beanAddress(),
-            season(),
+            _season(),
             beans,
             beans
         );
         uint256 seeds = beans.mul(C.getSeedsPerBean());
 
         // Earned Seeds don't auto-compound, so we need to mint new Seeds
-        LibSilo.incrementBalanceOfSeeds(account, seeds);
+        LibSilo.mintSeeds(account, seeds);
 
         // Earned Stalk auto-compounds and thus is minted alongside Earned Beans
         // Farmers don't receive additional Roots from Earned Stalk.
@@ -111,7 +109,7 @@ contract Silo is SiloExit {
     function earnGrownStalk(address account) private {
         // If this `account` has no Seeds, skip to save gas.
         if (s.a[account].s.seeds == 0) return;
-        LibSilo.incrementBalanceOfStalk(account, balanceOfGrownStalk(account));
+        LibSilo.mintStalk(account, balanceOfGrownStalk(account));
     }
 
     function handleRainAndSops(address account, uint32 _lastUpdate) private {

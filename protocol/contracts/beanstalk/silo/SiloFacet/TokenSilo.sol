@@ -11,9 +11,7 @@ import "./Silo.sol";
  * @title TokenSilo
  * @author Publius
  * @notice This contract contains functions for depositing, withdrawing and claiming whitelisted Silo tokens.
- * @dev
- * 
- * ### Scratchpad
+ * @dev Scratchpad
  * 
  * - "amount" refers to erc20 token balance
  * - "bdv" refers to bean denominated value
@@ -25,6 +23,7 @@ import "./Silo.sol";
  * - events are on a per-account-per-token basis, if you want to claim across two tokens, two events are emitted.
  * - previous language was "transit" (withdrawn, not claimable) and "receivable" (withdrawn, claimable)
  * - "total" refers to the entire amount stored in the Silo
+ * - Note that `withdraw()` will emit a Remove and a Withdraw event, whereas Convert only emits Remove
  *
  * FIXME(doc): explain add -> [withdraw/remove] -> claim lifecycle
  * FIXME(doc): agree on name for "Season of Claiming". Alternative: "Season of Arrival" 
@@ -37,18 +36,18 @@ contract TokenSilo is Silo {
 
     /**
      * @notice Emitted when `account` adds a single Deposit to the Silo.
-     * @param account
-     * @param token
-     * @param season Season of Deposit to add to
-     * @param amount Amount of `token` to add to `season`
-     * @param bdv the BDV associated with `amount` of `token` at the time of deposit.
-     * @dev:
-     * 
-     * There is no "AddDeposits" event because there is currently no operation in which Beanstalk
-     * creates multiple Deposits in different Seasons.
      *
-     *  - `deposit()` always places the user's deposit in the current `season()`.
+     * There is no "AddDeposits" event because there is currently no operation in which Beanstalk
+     * creates multiple Deposits in different Seasons:
+     *
+     *  - `deposit()` always places the user's deposit in the current `_season()`.
      *  - `convert()` collapses multiple deposits into a single Season to prevent loss of Stalk.
+     *
+     * @param account The account that added a Deposit.
+     * @param token Address of the whitelisted ERC20 token that was deposited.
+     * @param season The Season that this `amount` was added to.
+     * @param amount Amount of `token` added to `season`.
+     * @param bdv The BDV associated with `amount` of `token` at the time of Deposit.
      */
     event AddDeposit(
         address indexed account,
@@ -59,14 +58,14 @@ contract TokenSilo is Silo {
     );
 
     /**
-     * @notice Emitted when a `account` removes a single Deposit from the Silo.
+     * @notice Emitted when `account` removes a single Deposit from the Silo.
      * 
-     * Occur during `withdraw()` and `convert()` operations.
+     * Occurs during `withdraw()` and `convert()` operations.
      * 
-     * @param account
-     * @param token
-     * @param season Season of Deposit to remove from
-     * @param amount Amount of `token` to remove from `season`
+     * @param account The account that removed a Deposit.
+     * @param token Address of the whitelisted ERC20 token that was removed.
+     * @param season The Season that this `amount` was removed from.
+     * @param amount Amount of `token` removed from `season`.
      */
     event RemoveDeposit(
         address indexed account,
@@ -76,15 +75,17 @@ contract TokenSilo is Silo {
     );
 
     /**
-     * @notice Emitted when a `account` removes multiple Deposits from the Silo.
+     * @notice Emitted when `account` removes multiple Deposits from the Silo.
      *
-     * Occurs during `withdraw()` and `convert()` operations.
+     * Occurs during `withdraw()` and `convert()` operations. 
      *
-     * @param account
-     * @param token
-     * @param seasons Seasons of Deposit to remove from
-     * @param amounts Amounts of `token` to remove from corresponding `seasons`
-     * @param amount Sum of `amounts`
+     * Gas optimization: emit 1 `RemoveDeposits` instead of N `RemoveDeposit` events.
+     *
+     * @param account The account that removed Deposits.
+     * @param token Address of the whitelisted ERC20 token that was removed.
+     * @param seasons Seasons of Deposit to remove from.
+     * @param amounts Amounts of `token` to remove from corresponding `seasons`.
+     * @param amount Sum of `amounts`.
      */
     event RemoveDeposits(
         address indexed account,
@@ -96,10 +97,12 @@ contract TokenSilo is Silo {
 
     /**
      * @notice Emitted when `account` creates a new Withdrawal.
-     * @param account
-     * @param token
-     * @param season The Season in which this Withdrawal becomes Claimable
-     * @param amount Amount of `token` withdrawn
+     * 
+     * @param account The account that created a Withdrawal.
+     * @param token Address of the whitelisted ERC20 token that was withdrawn.
+     * @param season The Season in which this Withdrawal becomes Claimable.
+     * @param amount Amount of `token` withdrawn.
+     *
      * @dev Note that `season` is the Season of Claiming, not the Season of Deposit.
      */
     event AddWithdrawal(
@@ -115,10 +118,10 @@ contract TokenSilo is Silo {
      * The name "RemoveWithdrawal" is used internally for accounting consistency. This
      * action is commonly referred to as "Claiming" assets from the Silo.
      *
-     * @param account
-     * @param token
-     * @param season The Season in which this Withdrawal became Claimable
-     * @param amount Amount of `token` claimed and delivered to `account`
+     * @param account The account that claimed a Withdrawal.
+     * @param token Address of the whitelisted ERC20 token that was claimed.
+     * @param season The Season in which this Withdrawal became Claimable.
+     * @param amount Amount of `token` claimed and delivered to `account`.
      */
     event RemoveWithdrawal(
         address indexed account,
@@ -129,10 +132,13 @@ contract TokenSilo is Silo {
 
     /**
      * @notice Emitted when `account` claims multiple Withdrawals.
-     * @param account
-     * @param token
+     *
+     * @param account The account that claimed Withdrawals.
+     * @param token The address of the whitelisted ERC20 token that was claimed.
      * @param seasons The Seasons in which Withdrawals became Claimable
      * @param amount Amount of `token` claimed and delivered to `account`
+     *
+     * @dev Gas optimization: emit 1 `RemoveWithdrawals` instead of N `RemoveWithdrawal` events.
      */
     event RemoveWithdrawals(
         address indexed account,
@@ -182,11 +188,8 @@ contract TokenSilo is Silo {
 
     /**
      * @notice Find the amount of `token` that `account` has withdrawn from season `season`.
-     * @dev:
-     * 
-     * Withdrawals do not store BDV because Stalk & Seeds are burned upon when calling `withdraw()`.
-     * 
-     * Thus, Withdraw-related functions only return the `amount` of tokens withdrawn.
+     * @return amount The amount of `token` contained in this Withdrawal.
+     * @dev Withdrawals don't store BDV because Stalk & Seeds are burned during `withdraw()`.
      */
     function getWithdrawal(
         address account,
@@ -213,11 +216,13 @@ contract TokenSilo is Silo {
     /**
      * @notice Get the Storage.SiloSettings for a whitelisted Silo token.
      *
-     * Contains the BDV function selector, Stalk per BDV, and Seeds per BDV.
-     * 
-     * @dev:
+     * Contains:
      *
-     * FIXME(naming) getTokenSettings ?
+     *  - the BDV function selector
+     *  - Stalk per BDV
+     *  - Seeds per BDV
+     * 
+     * @dev FIXME(naming) getTokenSettings ?
      */
     function tokenSettings(address token)
         external
@@ -229,10 +234,9 @@ contract TokenSilo is Silo {
 
     /**
      * @notice Returns the number of Seasons that must elapse before a Withdrawal can be Claimed.
-     * @dev:
-     * 
-     * The purpose of the withdraw freeze is to prevent a malicious user from receiving risk-free 
+     * @dev The purpose of the withdraw freeze is to prevent a malicious user from receiving risk-free 
      * seignorage with the following attack:
+     * 
      *  1. Right before the end of a Season, deposit assets in the Silo. Receive Stalk.
      *  2. Call `sunrise()` and earn seignorage (Earned Beans).
      *  3. Immediately withdraw assets from the Silo, burning Stalk but keeping Earned Beans.
@@ -250,30 +254,29 @@ contract TokenSilo is Silo {
     }
 
     /**
-     * @notice Returns how much of a `token` Deposit that `spender` can transfer on behalf of `account`.
-     * @param account The account that has given `spender` approval to transfer Deposits. 
-     * @param spender The address (contract or EOA) that is allowed to transfer Deposits on behalf of `account`.
-     * @param token 
-     * @dev: `account` is synonymous with "owner" in the ERC20 standard.
+     * @notice Returns how much of a `token` Deposit that `spender` can transfer on behalf of `owner`.
+     * @param owner The account that has given `spender` approval to transfer Deposits. 
+     * @param spender The address (contract or EOA) that is allowed to transfer Deposits on behalf of `owner`.
+     * @param token Whitelisted ERC20 token.
      *
-     * FIXME(naming): rename `account` to `owner` for consistency with ERC20 & the `DepositAllowance` event?
      * FIXME(naming): getDepositAllowance ?
+     * FIXME(doc): note that allowance only applies to transfers, not withdrawals
      */
     function depositAllowance(
-        address account,
+        address owner,
         address spender,
         address token
     ) public view virtual returns (uint256) {
-        return s.a[account].depositAllowances[spender][token];
+        return s.a[owner].depositAllowances[spender][token];
     }
 
     //////////////////////// DEPOSIT ////////////////////////
 
     /**
-     * @dev:
+     * @dev Deposit accounting.
      *
-     * {LibTokenSilo.deposit} creates a Deposit.
-     * {LibSilo.depositSiloAssets} creates the Stalk associated with the Deposit.
+     * {LibTokenSilo.deposit} calculates BDV, adds a Deposit, and increments the total amount Deposited.
+     * {LibSilo.mintSeedsAndStalk} mints the Stalk and Seeds associated with the Deposit.
      * 
      * This step should enforce that new Deposits are placed into the current `_season()`.
      */
@@ -288,7 +291,7 @@ contract TokenSilo is Silo {
             _season(),
             amount
         );
-        LibSilo.depositSiloAssets(account, seeds, stalk);
+        LibSilo.mintSeedsAndStalk(account, seeds, stalk);
     }
 
     //////////////////////// WITHDRAW ////////////////////////
@@ -311,6 +314,8 @@ contract TokenSilo is Silo {
             season,
             amount
         );
+
+        // Add a Withdrawal and reduce token supply.
         _withdraw(account, token, amount, stalkRemoved, seedsRemoved);
     }
 
@@ -340,6 +345,8 @@ contract TokenSilo is Silo {
             seasons,
             amounts
         );
+
+        // Add a Withdrawal and reduce token supply.
         _withdraw(
             account,
             token,
@@ -356,13 +363,18 @@ contract TokenSilo is Silo {
         address account,
         address token,
         uint256 amount,
+        // FIXME(refactor): param ordering
         uint256 stalk,
         uint256 seeds
     ) private {
         uint32 arrivalSeason = _season() + s.season.withdrawSeasons;
+
+        // Add withdrawal
         addTokenWithdrawal(account, token, arrivalSeason, amount); // Increment account & total Withdrawn
-        LibTokenSilo.decrementDepositedToken(token, amount); // Decrement total Deposited
-        LibSilo.withdrawSiloAssets(account, seeds, stalk); // Burn Seeds and Stalk
+
+        // Remove deposit
+        LibTokenSilo.decrementTotalDeposited(token, amount); // Decrement total Deposited
+        LibSilo.burnSeedsAndStalk(account, seeds, stalk); // Burn Seeds and Stalk
     }
 
     /**
@@ -372,9 +384,21 @@ contract TokenSilo is Silo {
      * Increment total Withdrawn balance of `token`.
      * Emit an AddWithdrawal event.
      *
-     * FIXME(naming): since this is private, can we prefix with `_` for consistency?
-     * FIXME(naming): LibTokenSilo offers `incrementDepositedToken` to perform the operation 
-     * under `/// Global`. Should we create a similar helper for Withdrawals for symmetry?
+     * Withdraw function does two things:
+     *  removes deposit
+     *  adds withdrawal
+     * 
+     * Transfering deposit, updating BDV of deposit, not decrementing total supply.
+     * This is why
+     *
+     *
+     * FIXME(naming): LibTokenSilo offers `incrementTotalDeposited` to perform the operation 
+     * under `// Total`. Should we create a similar helper for Withdrawals for symmetry?
+     *
+     * FIXME(naming): "Total" discussion
+     * - "Supply"? Withdrawn is a state >> an entirely different token
+     * - If deposits become ERC1155, they'll both be a state and a token 
+     *      - ERC1155: 2^256 possible IDs. Beanstalk becomes the token: STALK as ERC20, Deposits as 1155, Pods as NFT...
      */
     function addTokenWithdrawal(
         address account,
@@ -387,7 +411,7 @@ contract TokenSilo is Silo {
             .a[account]
             .withdrawals[token][arrivalSeason].add(amount);
         
-        // Total
+        // Total Supply (?)
         s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.add(
             amount
         );
@@ -511,7 +535,7 @@ contract TokenSilo is Silo {
             amount
         );
         LibTokenSilo.addDeposit(recipient, token, season, amount, bdv);
-        LibSilo.transferSiloAssets(sender, recipient, seeds, stalk);
+        LibSilo.transferSeedsAndStalk(sender, recipient, seeds, stalk);
         return bdv;
     }
 
@@ -558,7 +582,7 @@ contract TokenSilo is Silo {
             ar.bdvRemoved.mul(s.ss[token].stalk)
         );
         emit RemoveDeposits(sender, token, seasons, amounts, ar.tokensRemoved);
-        LibSilo.transferSiloAssets(
+        LibSilo.transferSeedsAndStalk(
             sender,
             recipient,
             ar.seedsRemoved,
@@ -585,9 +609,5 @@ contract TokenSilo is Silo {
     function _approveDeposit(address account, address spender, address token, uint256 amount) internal {
         s.a[account].depositAllowances[spender][token] = amount;
         emit DepositApproval(account, spender, token, amount);
-    }
-
-    function _season() private view returns (uint32) {
-        return s.season.current;
     }
 }

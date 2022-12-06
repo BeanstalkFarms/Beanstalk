@@ -115,7 +115,7 @@ contract SiloExit is ReentrancyGuard {
         return
             LibSilo.stalkReward(
                 s.a[account].s.seeds,
-                season() - lastUpdate(account)
+                _season() - lastUpdate(account)
             );
     }
     
@@ -131,9 +131,7 @@ contract SiloExit is ReentrancyGuard {
     }
 
     /**
-     * @dev:
-     * 
-     * FIXME(doc) explain why we perform this calculation
+     * @dev FIXME(doc) explain why we perform this calculation
      * TODO(publius)
      */
     function _balanceOfEarnedBeans(address account, uint256 accountStalk)
@@ -264,7 +262,7 @@ contract SiloExit is ReentrancyGuard {
     /**
      * @dev Returns the current Season number.
      */
-    function season() internal view returns (uint32) {
+    function _season() internal view returns (uint32) {
         return s.season.current;
     }
 }

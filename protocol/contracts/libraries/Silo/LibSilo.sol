@@ -12,19 +12,16 @@ import "../LibAppStorage.sol";
 /**
  * @title LibSilo
  * @author Publius
- * @notice
+ * @notice FIXME(doc)
  */
 library LibSilo {
     using SafeMath for uint256;
 
     /**
      * @notice Emitted when `account` gains or loses Seeds.
-     * @param account 
+     * @param account The account that gained or lost Seeds.
      * @param delta The change in Seeds.
      * 
-     * @dev:
-     *
-     * Emitted for ALL changes in Seeds balance for `account`, including:
      *   
      *   - Add or remove a Deposit
      *   - Transfer a Deposit
@@ -42,13 +39,11 @@ library LibSilo {
 
     /**
      * @notice Emitted when `account` gains or loses Stalk.
-     * @param account 
+     * @param account The account that gained or lost Stalk.
      * @param delta The change in Stalk.
      * @param deltaRoots FIXME(doc)
      * 
-     * @dev:
-     *
-     * Emitted for ALL changes in Stalk balance for `account`, including:
+     * @dev Emitted for ALL changes in Stalk balance for `account`, including:
      *   
      *   - Add or remove a Deposit
      *   - Transfer a Deposit
@@ -65,53 +60,24 @@ library LibSilo {
         int256 deltaRoots
     );
 
-    //////////////////////// WRAPPERS ////////////////////////
+    //////////////////////// MINT ////////////////////////
 
     /**
-     * @dev Wrapper: Depositing increments balance of Stalk & Seeds.
+     * @dev WRAPPER: Increment the balance balance of Stalk & Seeds.
      */
-    function depositSiloAssets(
+    function mintSeedsAndStalk(
         address account,
         uint256 seeds,
         uint256 stalk
     ) internal {
-        incrementBalanceOfStalk(account, stalk);
-        incrementBalanceOfSeeds(account, seeds);
+        mintSeeds(account, seeds);
+        mintStalk(account, stalk);
     }
 
     /**
-     * @dev Wrapper: Withdrawing increments balance of Stalk & Seeds.
+     * @dev Mint Seeds to `account`.
      */
-    function withdrawSiloAssets(
-        address account,
-        uint256 seeds,
-        uint256 stalk
-    ) internal {
-        decrementBalanceOfStalk(account, stalk);
-        decrementBalanceOfSeeds(account, seeds);
-    }
-
-    /**
-     * @dev Wrapper: Transferring increments balance of Seeds & Stalk for
-     * `receipient`, and decrements balance of Seeds & Stalk for `sender`.
-     */
-    function transferSiloAssets(
-        address sender,
-        address recipient,
-        uint256 seeds,
-        uint256 stalk
-    ) internal {
-        transferStalk(sender, recipient, stalk);
-        transferSeeds(sender, recipient, seeds);
-    }
-
-    //////////////////////// INCREMENT ////////////////////////
-
-    /**
-     * @dev: FIXME(naming): perhaps "mintSeeds" would better convey that Seeds
-     * are being added to the account's balance AND to the total supply?
-     */
-    function incrementBalanceOfSeeds(address account, uint256 seeds) internal {
+    function mintSeeds(address account, uint256 seeds) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         s.s.seeds = s.s.seeds.add(seeds);
@@ -123,12 +89,9 @@ library LibSilo {
     /**
      * @dev Mint Stalk to `account`.
      * 
-     * See {FIXME(doc)} for an explanation of Roots accounting.
-     *
-     * FIXME(naming): perhaps "mintStalk" would better convey that Stalk
-     * are being added to the account's balance AND to the total supply?
+     * Minting Stalk also mints associated Roots. See {FIXME(doc)} for an explanation of Roots accounting.
      */
-    function incrementBalanceOfStalk(address account, uint256 stalk) internal {
+    function mintStalk(address account, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // Calculate amount of Roots for this amount of Stalk
@@ -147,15 +110,24 @@ library LibSilo {
         emit StalkBalanceChanged(account, int256(stalk), int256(roots));
     }
 
-    //////////////////////// DECREMENT ////////////////////////
+    //////////////////////// BURN ////////////////////////
 
     /**
-     * @dev:
-     *  
-     * FIXME(naming): perhaps "burnSeeds" would better convey that Seeds
-     * are being added to the account's balance AND to the total supply?
+     * @dev WRAPPER: Withdrawing increments balance of Stalk & Seeds.
      */
-    function decrementBalanceOfSeeds(address account, uint256 seeds) private {
+    function burnSeedsAndStalk(
+        address account,
+        uint256 seeds,
+        uint256 stalk
+    ) internal {
+        burnSeeds(account, seeds);
+        burnStalk(account, stalk);
+    }
+
+    /**
+     * @dev FIXME(doc)
+     */
+    function burnSeeds(address account, uint256 seeds) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         s.s.seeds = s.s.seeds.sub(seeds);
@@ -165,12 +137,9 @@ library LibSilo {
     }
 
     /**
-     * @dev:
-     *  
-     * FIXME(naming): perhaps "burnStalk" would better convey that Stalk
-     * are being added to the account's balance AND to the total supply?
+     * @dev FIXME(doc)
      */
-    function decrementBalanceOfStalk(address account, uint256 stalk) private {
+    function burnStalk(address account, uint256 stalk) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return;
 
@@ -192,6 +161,20 @@ library LibSilo {
     }
 
     //////////////////////// TRANSFER ////////////////////////
+
+    /**
+     * @dev WRAPPER: Transferring increments balance of Seeds & Stalk for
+     * `receipient`, and decrements balance of Seeds & Stalk for `sender`.
+     */
+    function transferSeedsAndStalk(
+        address sender,
+        address recipient,
+        uint256 seeds,
+        uint256 stalk
+    ) internal {
+        transferSeeds(sender, recipient, seeds);
+        transferStalk(sender, recipient, stalk);
+    }
 
     function transferSeeds(
         address sender,
@@ -228,8 +211,19 @@ library LibSilo {
     //////////////////////// UTILITIES ////////////////////////
 
     /**
-     * @param seeds 
-     * @param seasons 
+     * @param seeds The number of Seeds held.
+     * @param seasons The number of Seasons that have elapsed.
+     *
+     * @dev Each Seed yields 1E-4 (0.0001, or 1 / 10_000) Stalk per Season.
+     *
+     * Seasons is measured to 0 decimals. There are no fractional Seasons.
+     * Seeds are measured to 6 decimals.
+     * Stalk is measured to 10 decimals.
+     * 
+     * Example:
+     *  - `seeds = 1E6` (1 Seed)
+     *  - `seasons = 1` (1 Season)
+     *  - The result is `1E6 * 1 = 1E6`. Since Stalk is measured to 10 decimals, this is `1E6/1E10 = 1E-4` Stalk.
      */
     function stalkReward(uint256 seeds, uint32 seasons)
         internal

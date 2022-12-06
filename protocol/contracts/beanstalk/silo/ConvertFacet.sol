@@ -126,8 +126,8 @@ contract ConvertFacet is ReentrancyGuard {
             "Convert: Not enough tokens removed."
         );
         a.stalkRemoved = a.stalkRemoved.mul(s.ss[token].seeds);
-        LibTokenSilo.decrementDepositedToken(token, a.tokensRemoved);
-        LibSilo.withdrawSiloAssets(
+        LibTokenSilo.decrementTotalDeposited(token, a.tokensRemoved);
+        LibSilo.burnSeedsAndStalk(
             msg.sender,
             a.bdvRemoved.mul(s.ss[token].seeds),
             a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalk))
@@ -152,9 +152,9 @@ contract ConvertFacet is ReentrancyGuard {
             _s = __s - _s;
         } else _s = s.season.current;
         uint256 stalk = bdv.mul(LibTokenSilo.stalk(token)).add(grownStalk);
-        LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
+        LibSilo.mintSeedsAndStalk(msg.sender, seeds, stalk);
 
-        LibTokenSilo.incrementDepositedToken(token, amount);
+        LibTokenSilo.incrementTotalDeposited(token, amount);
         LibTokenSilo.addDeposit(msg.sender, token, _s, amount, bdv);
     }
 
