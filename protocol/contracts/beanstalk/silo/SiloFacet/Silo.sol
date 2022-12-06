@@ -86,7 +86,7 @@ contract Silo is SiloExit {
         uint256 seeds = beans.mul(C.getSeedsPerBean());
 
         // Earned Seeds don't auto-compound, so we need to mint new Seeds
-        LibSilo.incrementBalanceOfSeeds(account, seeds);
+        LibSilo.mintSeeds(account, seeds);
 
         // Earned Stalk auto-compounds and thus is minted alongside Earned Beans
         // Farmers don't receive additional Roots from Earned Stalk.

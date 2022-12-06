@@ -79,7 +79,7 @@ library LibSilo {
         uint256 stalk
     ) internal {
         mintStalk(account, stalk);
-        incrementBalanceOfSeeds(account, seeds);
+        mintSeeds(account, seeds);
     }
 
     /**
@@ -123,7 +123,7 @@ library LibSilo {
      * are being added to the account's balance AND to the total supply?
      *  - ✅ Approved
      */
-    function incrementBalanceOfSeeds(address account, uint256 seeds) internal {
+    function mintSeeds(address account, uint256 seeds) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         s.s.seeds = s.s.seeds.add(seeds);
