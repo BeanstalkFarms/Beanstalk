@@ -108,9 +108,7 @@ library LibSilo {
     //////////////////////// INCREMENT ////////////////////////
 
     /**
-     * @dev:
-     *  
-     * FIXME(naming): perhaps "mintSeeds" would better convey that Seeds
+     * @dev: FIXME(naming): perhaps "mintSeeds" would better convey that Seeds
      * are being added to the account's balance AND to the total supply?
      */
     function incrementBalanceOfSeeds(address account, uint256 seeds) internal {

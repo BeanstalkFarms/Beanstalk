@@ -18,9 +18,7 @@ library LibUnripeSilo {
     using SafeMath for uint256;
     using LibSafeMath128 for uint128;
 
-    /**
-     * @dev:
-     * 
+    /*
      * At the time of exploit, Beanstalk had three pools: BEAN:ETH, BEAN:3CRV, BEAN:LUSD. The values
      * below represent the {LibTokenSilo.beanDenominatedValue} of each LP token at the moment of exploit.
      * 
@@ -62,14 +60,7 @@ library LibUnripeSilo {
     }
 
     /**
-     * @notice Calculate the `amount` and `bdv` for an Unripe BEAN deposit.
-     *
-     * @param account FIXME(doc)
-     * @param season FIXME(doc)
-     * @return amount FIXME(doc)
-     * @return bdv FIXME(doc)
-     *
-     * @dev:
+     * @dev Calculate the `amount` and `bdv` for an Unripe BEAN deposit.
      *
      * When Beanstalk was exploited in April 2022, a large number of user BEAN
      * deposits were stored in the legacy Silo V1 storage at `s.a[account].bean.deposits`.
@@ -206,9 +197,7 @@ library LibUnripeSilo {
     }
 
     /**
-     * @notice Calculate the `amount` and `bdv` for a Unripe LP deposit stored in Silo V1 LP storage.
-     * 
-     * @dev:
+     * @dev Calculate the `amount` and `bdv` for a Unripe LP deposit stored in Silo V1 LP storage.
      * 
      * In Silo V1, Beanstalk stored the number of Seeds associated with a BEAN:ETH LP Deposit, rather than the BDV.
      * BDV was then derived as `seeds / 4`. 

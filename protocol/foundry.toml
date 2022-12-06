@@ -16,7 +16,7 @@ force = false
 # https://book.getfoundry.sh/reference/config/solidity-compiler
 libraries = []
 auto_detect_solc = true
-ignored_error_codes = [1878]
+ignored_error_codes = [1878, 2837]
 optimizer = true
 optimizer_runs = 200
 via_ir = false
