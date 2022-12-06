@@ -263,8 +263,6 @@ contract SiloExit is ReentrancyGuard {
 
     /**
      * @dev Returns the current Season number.
-     *
-     * FIXME(naming) refactor to _season()
      */
     function _season() internal view returns (uint32) {
         return s.season.current;

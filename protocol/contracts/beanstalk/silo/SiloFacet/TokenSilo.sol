@@ -609,8 +609,4 @@ contract TokenSilo is Silo {
         s.a[account].depositAllowances[spender][token] = amount;
         emit DepositApproval(account, spender, token, amount);
     }
-
-    function _season() private view returns (uint32) {
-        return s.season.current;
-    }
 }
