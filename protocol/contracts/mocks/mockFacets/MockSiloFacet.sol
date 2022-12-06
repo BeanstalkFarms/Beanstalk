@@ -46,7 +46,7 @@ contract MockSiloFacet is SiloFacet {
         LibTokenSilo.incrementDepositedTokenSupply(C.unripeLPAddress(), unripeLP);
         bdv = bdv.mul(C.initialRecap()).div(1e18);
         uint256 seeds = bdv.mul(s.ss[C.unripeLPAddress()].seeds);
-        uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalk).add(LibSilo.stalkReward(seeds, season() - _s));
+        uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalk).add(LibSilo.stalkReward(seeds, _season() - _s));
         LibSilo.mintSeedsAndStalk(msg.sender, seeds, stalk);
     }
 
@@ -56,7 +56,7 @@ contract MockSiloFacet is SiloFacet {
         LibTokenSilo.incrementDepositedTokenSupply(C.unripeBeanAddress(), amount);
         amount = amount.mul(C.initialRecap()).div(1e18);
         uint256 seeds = amount.mul(s.ss[C.unripeBeanAddress()].seeds);
-        uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalk).add(LibSilo.stalkReward(seeds, season() - _s));
+        uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalk).add(LibSilo.stalkReward(seeds, _season() - _s));
         LibSilo.mintSeedsAndStalk(msg.sender, seeds, stalk);
     }
 
