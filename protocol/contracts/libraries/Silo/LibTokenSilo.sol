@@ -34,7 +34,7 @@ library LibTokenSilo {
     /**
      * @dev Increment the total amount of `token` deposited in the Silo.
      */
-    function incrementDepositedTokenSupply(address token, uint256 amount) internal {
+    function incrementTotalDeposited(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.siloBalances[token].deposited = s.siloBalances[token].deposited.add(
             amount
@@ -89,7 +89,7 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(bdv > 0, "Silo: No Beans under Token.");
 
-        incrementDepositedTokenSupply(token, amount); // Total
+        incrementTotalDeposited(token, amount); // Total
         addDeposit(account, token, season, amount, bdv); // Account
 
         return (

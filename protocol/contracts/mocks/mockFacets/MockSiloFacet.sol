@@ -43,7 +43,7 @@ contract MockSiloFacet is SiloFacet {
         else if (t == 1) LibTokenSilo.addDeposit(msg.sender, C.unripeLPPool1(), _s, amount, bdv);
         else if (t == 2) LibTokenSilo.addDeposit(msg.sender, C.unripeLPPool2(), _s, amount, bdv);
         uint256 unripeLP = getUnripeForAmount(t, amount);
-        LibTokenSilo.incrementDepositedTokenSupply(C.unripeLPAddress(), unripeLP);
+        LibTokenSilo.incrementTotalDeposited(C.unripeLPAddress(), unripeLP);
         bdv = bdv.mul(C.initialRecap()).div(1e18);
         uint256 seeds = bdv.mul(s.ss[C.unripeLPAddress()].seeds);
         uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalk).add(LibSilo.stalkReward(seeds, _season() - _s));
@@ -53,7 +53,7 @@ contract MockSiloFacet is SiloFacet {
     function mockUnripeBeanDeposit(uint32 _s, uint256 amount) external {
         _update(msg.sender);
         s.a[msg.sender].bean.deposits[_s] += amount;
-        LibTokenSilo.incrementDepositedTokenSupply(C.unripeBeanAddress(), amount);
+        LibTokenSilo.incrementTotalDeposited(C.unripeBeanAddress(), amount);
         amount = amount.mul(C.initialRecap()).div(1e18);
         uint256 seeds = amount.mul(s.ss[C.unripeBeanAddress()].seeds);
         uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalk).add(LibSilo.stalkReward(seeds, _season() - _s));
