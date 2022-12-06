@@ -213,8 +213,6 @@ library LibTokenSilo {
      * @dev Calculate the BDV ("Bean Denominated Value") for `amount` of `token`.
      * 
      * Makes a call to a BDV function defined in the SiloSettings for this token. See {AppStorage.sol:Storage.SiloSettings} for more information.
-     *
-     * FIXME(naming): rename myFunctionCall -> callData
      */
     function beanDenominatedValue(address token, uint256 amount)
         internal
@@ -223,13 +221,13 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // BDV functions accept one argument: `uint256 amount`
-        bytes memory myFunctionCall = abi.encodeWithSelector(
+        bytes memory callData = abi.encodeWithSelector(
             s.ss[token].selector,
             amount
         );
 
         (bool success, bytes memory data) = address(this).call(
-            myFunctionCall
+            callData
         );
 
         if (!success) {

@@ -25,11 +25,11 @@ library LibInternal {
         address facet = ds
             .selectorToFacetAndPosition[IBS.mow.selector]
             .facetAddress;
-        bytes memory myFunctionCall = abi.encodeWithSelector(
+        bytes memory callData = abi.encodeWithSelector(
             IBS.mow.selector,
             account
         );
-        (bool success, ) = address(facet).delegatecall(myFunctionCall);
+        (bool success, ) = address(facet).delegatecall(callData);
         require(success, "Silo: update failed.");
     }
 }
