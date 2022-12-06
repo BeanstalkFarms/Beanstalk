@@ -10,7 +10,9 @@ import {LibDiamond} from "./LibDiamond.sol";
 /**
  * @author Publius
  * @title Internal Library handles gas efficient function calls between facets.
- **/
+ * @dev FIXME(refactor): The public `update(address account)` function will be
+ * deprecated in favor of `mow(address account)`.
+ */
 
 interface IBS {
     function update(address account) external payable;

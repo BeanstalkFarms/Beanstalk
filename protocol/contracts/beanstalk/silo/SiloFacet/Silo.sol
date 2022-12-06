@@ -203,7 +203,7 @@ contract Silo is SiloExit {
     /**
      * @dev Update the Silo for `msg.sender`.
      */
-    modifier updateSilo() {
+    modifier mowSender() {
         _mow(msg.sender);
         _;
     }

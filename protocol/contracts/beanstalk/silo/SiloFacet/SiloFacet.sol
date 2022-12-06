@@ -42,7 +42,7 @@ contract SiloFacet is TokenSilo {
         address token,
         uint256 amount,
         LibTransfer.From mode
-    ) external payable nonReentrant updateSilo {
+    ) external payable nonReentrant mowSender {
         amount = LibTransfer.receiveToken(
             IERC20(token),
             amount,
@@ -69,7 +69,7 @@ contract SiloFacet is TokenSilo {
         address token,
         uint32 season,
         uint256 amount
-    ) external payable updateSilo {
+    ) external payable mowSender {
         _withdrawDeposit(msg.sender, token, season, amount);
     }
 
@@ -88,7 +88,7 @@ contract SiloFacet is TokenSilo {
         address token,
         uint32[] calldata seasons,
         uint256[] calldata amounts
-    ) external payable updateSilo {
+    ) external payable mowSender {
         _withdrawDeposits(msg.sender, token, seasons, amounts);
     }
 
@@ -389,7 +389,7 @@ contract SiloFacet is TokenSilo {
         address token,
         uint32 season,
         uint256 amount
-    ) external nonReentrant updateSilo {
+    ) external nonReentrant mowSender {
         // First, remove Deposit and Redeposit with new BDV
         uint256 ogBDV = LibTokenSilo.removeDeposit(
             msg.sender,
@@ -429,7 +429,7 @@ contract SiloFacet is TokenSilo {
         address token,
         uint32[] calldata seasons,
         uint256[] calldata amounts
-    ) external nonReentrant updateSilo {
+    ) external nonReentrant mowSender {
         // First, remove Deposits because every deposit is in a different season, we need to get the total Stalk/Seeds, not just BDV
         AssetsRemoved memory ar = removeDeposits(msg.sender, token, seasons, amounts);
 
