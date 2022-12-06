@@ -530,7 +530,7 @@ contract TokenSilo is Silo {
             amount
         );
         LibTokenSilo.addDeposit(recipient, token, season, amount, bdv);
-        LibSilo.transferSiloAssets(sender, recipient, seeds, stalk);
+        LibSilo.transferSeedsAndStalk(sender, recipient, seeds, stalk);
         return bdv;
     }
 
@@ -577,7 +577,7 @@ contract TokenSilo is Silo {
             ar.bdvRemoved.mul(s.ss[token].stalk)
         );
         emit RemoveDeposits(sender, token, seasons, amounts, ar.tokensRemoved);
-        LibSilo.transferSiloAssets(
+        LibSilo.transferSeedsAndStalk(
             sender,
             recipient,
             ar.seedsRemoved,

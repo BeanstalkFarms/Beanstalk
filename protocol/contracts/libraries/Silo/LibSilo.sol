@@ -95,7 +95,7 @@ library LibSilo {
      * @dev Wrapper: Transferring increments balance of Seeds & Stalk for
      * `receipient`, and decrements balance of Seeds & Stalk for `sender`.
      */
-    function transferSiloAssets(
+    function transferSeedsAndStalk(
         address sender,
         address recipient,
         uint256 seeds,
