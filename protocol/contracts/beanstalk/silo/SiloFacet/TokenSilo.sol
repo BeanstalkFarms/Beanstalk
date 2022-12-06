@@ -47,7 +47,7 @@ contract TokenSilo is Silo {
      * There is no "AddDeposits" event because there is currently no operation in which Beanstalk
      * creates multiple Deposits in different Seasons.
      *
-     *  - `deposit()` always places the user's deposit in the current `season()`.
+     *  - `deposit()` always places the user's deposit in the current `_season()`.
      *  - `convert()` collapses multiple deposits into a single Season to prevent loss of Stalk.
      */
     event AddDeposit(

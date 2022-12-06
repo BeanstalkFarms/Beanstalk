@@ -52,8 +52,8 @@ contract Silo is SiloExit {
         uint32 _lastUpdate = lastUpdate(account);
 
         // If already updated this season, there's no Stalk to claim.
-        // _lastUpdate > season() should not be possible, but we check it anyway.
-        if (_lastUpdate >= season()) return;
+        // _lastUpdate > _season() should not be possible, but we check it anyway.
+        if (_lastUpdate >= _season()) return;
 
         // Increment Plenty if a SOP has occured or save Rain Roots if its Raining.
         handleRainAndSops(account, _lastUpdate);
@@ -61,8 +61,8 @@ contract Silo is SiloExit {
         // Earn Grown Stalk -> The Stalk gained from Seeds.
         earnGrownStalk(account);
 
-        // Bump the lastUpdate season to the current `season()`.
-        s.a[account].lastUpdate = season();
+        // Bump the lastUpdate season to the current `_season()`.
+        s.a[account].lastUpdate = _season();
     }
 
     function _plant(address account) internal returns (uint256 beans) {
@@ -79,7 +79,7 @@ contract Silo is SiloExit {
         LibTokenSilo.addDeposit(
             account,
             C.beanAddress(),
-            season(),
+            _season(),
             beans,
             beans
         );
