@@ -59,7 +59,7 @@ library LibTokenSilo {
      * 
      * @dev Calculate the current BDV for `amount` of `token` and propagate.
      * 
-     * FIXME(naming): why `_s` instead of `season`?
+     * FIXME(doc): _season is a function
      */
     function deposit(
         address account,
@@ -219,7 +219,7 @@ library LibTokenSilo {
      * 
      * See {AppStorage.sol:Storage.SiloSettings} for more information.
      *
-     * FIXME(naming): rename myFunctionCall
+     * FIXME(naming): rename myFunctionCall -> callData
      */
     function beanDenominatedValue(address token, uint256 amount)
         internal

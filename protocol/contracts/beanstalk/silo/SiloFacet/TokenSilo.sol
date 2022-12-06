@@ -250,21 +250,19 @@ contract TokenSilo is Silo {
     }
 
     /**
-     * @notice Returns how much of a `token` Deposit that `spender` can transfer on behalf of `account`.
-     * @param account The account that has given `spender` approval to transfer Deposits. 
-     * @param spender The address (contract or EOA) that is allowed to transfer Deposits on behalf of `account`.
+     * @notice Returns how much of a `token` Deposit that `spender` can transfer on behalf of `owner`.
+     * @param owner The account that has given `spender` approval to transfer Deposits. 
+     * @param spender The address (contract or EOA) that is allowed to transfer Deposits on behalf of `owner`.
      * @param token 
-     * @dev: `account` is synonymous with "owner" in the ERC20 standard.
      *
-     * FIXME(naming): rename `account` to `owner` for consistency with ERC20 & the `DepositAllowance` event?
      * FIXME(naming): getDepositAllowance ?
      */
     function depositAllowance(
-        address account,
+        address owner,
         address spender,
         address token
     ) public view virtual returns (uint256) {
-        return s.a[account].depositAllowances[spender][token];
+        return s.a[owner].depositAllowances[spender][token];
     }
 
     //////////////////////// DEPOSIT ////////////////////////
@@ -311,6 +309,8 @@ contract TokenSilo is Silo {
             season,
             amount
         );
+
+        // Add a Withdrawal and reduce token supply.
         _withdraw(account, token, amount, stalkRemoved, seedsRemoved);
     }
 
@@ -340,6 +340,8 @@ contract TokenSilo is Silo {
             seasons,
             amounts
         );
+
+        // Add a Withdrawal and reduce token supply.
         _withdraw(
             account,
             token,
@@ -351,16 +353,25 @@ contract TokenSilo is Silo {
 
     /**
      * @dev Shared between `_withdrawDeposit()` and `_withdrawDeposits()`.
+     *
+     * FIXME(naming): "withdrawAndBurn"? "withdrawAndReduceSupply"?
+     * FIXME(naming): change .decrementDepositedToken to .decrementDepositedTokenSupply
+     *   NOT burn: burn = removing from user and from supply
      */
     function _withdraw(
         address account,
         address token,
         uint256 amount,
+        // FIXME ?
         uint256 stalk,
         uint256 seeds
     ) private {
         uint32 arrivalSeason = _season() + s.season.withdrawSeasons;
+
+        // Add withdrawal
         addTokenWithdrawal(account, token, arrivalSeason, amount); // Increment account & total Withdrawn
+
+        // Remove deposit
         LibTokenSilo.decrementDepositedToken(token, amount); // Decrement total Deposited
         LibSilo.withdrawSiloAssets(account, seeds, stalk); // Burn Seeds and Stalk
     }
@@ -372,9 +383,21 @@ contract TokenSilo is Silo {
      * Increment total Withdrawn balance of `token`.
      * Emit an AddWithdrawal event.
      *
-     * FIXME(naming): since this is private, can we prefix with `_` for consistency?
+     * Withdraw function does two things:
+     *  removes deposit
+     *  adds withdrawal
+     * 
+     * Transfering deposit, updating BDV of deposit, not decrementing total supply.
+     * This is why
+     *
+     *
      * FIXME(naming): LibTokenSilo offers `incrementDepositedToken` to perform the operation 
-     * under `/// Global`. Should we create a similar helper for Withdrawals for symmetry?
+     * under `// Total`. Should we create a similar helper for Withdrawals for symmetry?
+     *
+     * FIXME(naming): "Total" discussion
+     * - "Supply"? Withdrawn is a state >> an entirely different token
+     * - If deposits become ERC1155, they'll both be a state and a token 
+     *      - ERC1155: 2^256 possible IDs. Beanstalk becomes the token: STALK as ERC20, Deposits as 1155, Pods as NFT...
      */
     function addTokenWithdrawal(
         address account,
@@ -387,7 +410,7 @@ contract TokenSilo is Silo {
             .a[account]
             .withdrawals[token][arrivalSeason].add(amount);
         
-        // Total
+        // Total Supply (?)
         s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.add(
             amount
         );

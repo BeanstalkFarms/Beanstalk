@@ -296,10 +296,9 @@ contract SiloFacet is TokenSilo {
         return LibSiloPermit.nonces(owner);
     }
 
-     /**
+    /**
      * @dev See {IERC20Permit-DOMAIN_SEPARATOR}.
      */
-    // solhint-disable-next-line func-name-mixedcase
     function depositPermitDomainSeparator() external view returns (bytes32) {
         return LibSiloPermit._domainSeparatorV4();
     }
