@@ -335,13 +335,18 @@ contract SiloFacet is TokenSilo {
     //////////////////////// UPDATE SILO ////////////////////////
 
     /** 
-     * @notice Claim Grown Stalk for `account`.
-     *
-     * Commonly referred to as "Mow".
-     *
+     * @notice DEPRECATED: Renamed to `mow()`. Claim Grown Stalk for `account`.
      * @dev See {Silo:_mow}.
      */
     function update(address account) external payable {
+        _mow(account);
+    }
+
+    /**
+     * @notice Claim Grown Stalk for `account`.
+     * @dev See {Silo:_mow}.
+     */
+    function mow(address account) external payable {
         _mow(account);
     }
 
