@@ -18,8 +18,7 @@ import "../LibAppStorage.sol";
  * @dev Permits must be signed off-chain.
  * See https://github.com/BeanstalkFarms/Beanstalk/blob/d2a9a232f50e1d474d976a2e29488b70c8d19461/protocol/utils/permit.js
  * for details on signing Silo Deposit permits.
- * 
- **/
+ */
 library LibSiloPermit {
 
     bytes32 private constant DEPOSIT_PERMIT_HASHED_NAME = keccak256(bytes("SiloDeposit"));
@@ -55,7 +54,6 @@ library LibSiloPermit {
      * @dev Permits `spender` to spend `values` of multiple `tokens` Deposits on behalf of `owner`.
      * Sign permit with {signSiloDepositTokensPermit} found here:
      * https://github.com/BeanstalkFarms/Beanstalk/blob/master/protocol/utils/permit.js
-     * 
      */
     function permits(
         address owner,

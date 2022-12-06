@@ -252,7 +252,7 @@ contract SiloExit is ReentrancyGuard {
 
     /**
      * @notice Returns the `account` Season of Plenty related state variables.
-     * @dev See {AccountSeasonOfPlenty} strutct
+     * @dev See {AccountSeasonOfPlenty} struct.
      */
     function balanceOfSop(address account)
         external

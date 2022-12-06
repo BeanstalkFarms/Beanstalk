@@ -11,7 +11,7 @@ import "../LibAppStorage.sol";
 /**
  * @author Publius
  * @title LibWhitelist handles adding and removing ERC-20 tokens from the Silo Whitelist.
- **/
+ */
 
 library LibWhitelist {
 
@@ -22,7 +22,7 @@ library LibWhitelist {
      * must have signature `function bdv(uint256 amount) public view returns (uint256);`.
      * @param seeds The Seeds per BDV received from depositing `token`.
      * @param stalk The Stalk per BDV received from depositing `token`.
-    **/
+     */
     event WhitelistToken(
         address indexed token,
         bytes4 selector,
@@ -33,12 +33,12 @@ library LibWhitelist {
     /**
      * @notice Emitted when a token is removed from the Silo Whitelist.
      * @param token ERC-20 token being removed to the Silo Whitelist.
-    **/
+     */
     event DewhitelistToken(address indexed token);
 
     /**
      * @dev Add an ERC-20 token to the Silo Whitelist.
-    **/
+     */
     function whitelistToken(
         address token,
         bytes4 selector,
@@ -56,7 +56,7 @@ library LibWhitelist {
 
     /**
      * @dev Remove an ERC-20 token from the Silo Whitelist.
-    **/
+     */
     function dewhitelistToken(address token) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         delete s.ss[token];

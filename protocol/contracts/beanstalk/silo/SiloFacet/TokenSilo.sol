@@ -97,12 +97,10 @@ contract TokenSilo is Silo {
 
     /**
      * @notice Emitted when `account` creates a new Withdrawal.
-     * 
      * @param account The account that created a Withdrawal.
      * @param token Address of the whitelisted ERC20 token that was withdrawn.
      * @param season The Season in which this Withdrawal becomes Claimable.
      * @param amount Amount of `token` withdrawn.
-     *
      * @dev Note that `season` is the Season of Claiming, not the Season of Deposit.
      */
     event AddWithdrawal(
@@ -132,12 +130,10 @@ contract TokenSilo is Silo {
 
     /**
      * @notice Emitted when `account` claims multiple Withdrawals.
-     *
      * @param account The account that claimed Withdrawals.
      * @param token The address of the whitelisted ERC20 token that was claimed.
      * @param seasons The Seasons in which Withdrawals became Claimable
      * @param amount Amount of `token` claimed and delivered to `account`
-     *
      * @dev Gas optimization: emit 1 `RemoveWithdrawals` instead of N `RemoveWithdrawal` events.
      */
     event RemoveWithdrawals(
@@ -219,7 +215,6 @@ contract TokenSilo is Silo {
      * @notice Get the Storage.SiloSettings for a whitelisted Silo token.
      *
      * Contains:
-     *
      *  - the BDV function selector
      *  - Stalk per BDV
      *  - Seeds per BDV
@@ -301,7 +296,7 @@ contract TokenSilo is Silo {
     /**
      * @dev Withdraw a single Deposit.
      * 
-     * Withdrawing a Deposit performs a Removal followed by a Withdraw.
+     * Withdrawing a Deposit performs a Remove followed by a Withdraw.
      * See {FIXME(doc)} for an explanation of the Silo asset lifecycle. 
      */
     function _withdrawDeposit(
@@ -324,11 +319,10 @@ contract TokenSilo is Silo {
     /**
      * @dev Withdraw multiple Deposits.
      * 
-     * Withdrawing a Deposit performs a Removal followed by a Withdraw.
+     * Withdrawing a Deposit performs a Remove followed by a Withdraw.
      * See {FIXME(doc)} for an explanation of the Silo asset lifecycle. 
      *
      * Requirements:
-     * 
      * - Each item in `seasons` must have a corresponding item in `amounts`.
      */
     function _withdrawDeposits(
@@ -418,7 +412,7 @@ contract TokenSilo is Silo {
     /**
      * @dev Removes from a single Deposit, emits the RemoveDeposit event, and returns Stalk/Seeds/BDV.
      *
-     * This is a gas optimization. Used in:
+     * Used in:
      * - {TokenSilo:_withdrawDeposit}
      * - {TokenSilo:_transferDeposit}
      *
@@ -450,6 +444,7 @@ contract TokenSilo is Silo {
     /**
      * @dev Removes from multiple single Deposit, emits the RemoveDeposits event, and returns Stalk/Seeds/BDV.
      * 
+     * Used in:
      * - {TokenSilo:_withdrawDeposits}
      * - {SiloFacet:enrootDeposits}
      */

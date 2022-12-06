@@ -32,21 +32,22 @@ library LibUnripeSilo {
      * 
      * Note that the BDV of BEAN itself is always 1, hence why only LP tokens appear below.
      */
+    
     uint256 private constant AMOUNT_TO_BDV_BEAN_ETH = 119_894_802_186_829; // 18 decimal precision
     uint256 private constant AMOUNT_TO_BDV_BEAN_3CRV = 992_035; // 6 decimal precision
     uint256 private constant AMOUNT_TO_BDV_BEAN_LUSD = 983_108; // 6 decimal precision
 
     //////////////////////// Unripe BEAN ////////////////////////
+
     /**
-     * @dev Unripe Bean Deposits stored in the Silo V1 Bean storage reference have not yet been Enrooted as
+     * Unripe Bean Deposits stored in the Silo V1 Bean storage reference have not yet been Enrooted as
      * Enrooting moves the Deposit into the Unripe Bean Silo V2 storage reference (See {SiloFacet.enrootDeposit(s)}).
      * Thus, the BDV of Unripe Bean Deposits stored in the Silo V1 Bean storage is equal to the amount times the
      * initial % recapitalized when Beanstalk was Replanted.
      */
 
-
     /**
-     * @notice Removes `amount` Unripe Beans stored in the `account` legacy Bean Silo V1 storage
+     * @dev Removes `amount` Unripe Beans stored in the `account` legacy Bean Silo V1 storage
      * and returns the BDV.
      */
     function removeUnripeBeanDeposit(
@@ -59,7 +60,7 @@ library LibUnripeSilo {
     }
 
     /**
-     * @notice See {removeUnripeBeanDeposit}.
+     * @dev See {removeUnripeBeanDeposit}.
      */
     function _removeUnripeBeanDeposit(
         address account,
@@ -74,14 +75,14 @@ library LibUnripeSilo {
     }
 
     /**
-     * @notice returns true if the provided address is the Unripe Bean address.
+     * @dev returns true if the provided address is the Unripe Bean address.
      */
     function isUnripeBean(address token) internal pure returns (bool b) {
         b = token == C.unripeBeanAddress();
     }
 
     /**
-     * @notice Calculate the `amount` and `bdv` of an Unripe Bean deposit.
+     * @dev Calculate the `amount` and `bdv` of an Unripe Bean deposit.
      */
     function unripeBeanDeposit(address account, uint32 season)
         internal
@@ -103,8 +104,9 @@ library LibUnripeSilo {
     }
 
     //////////////////////// Unripe LP ////////////////////////
-    /**
-     * @dev Unripe LP Deposits stored in the pre-exploit Bean:LUSD and Bean:3Crv Silo V2 and the Bean:Eth legacy Silo V1 storage have not been Enrooted as
+
+    /*
+     * Unripe LP Deposits stored in the pre-exploit Bean:LUSD and Bean:3Crv Silo V2 and the Bean:Eth legacy Silo V1 storage have not been Enrooted as
      * Enrooting moves the Deposit into the Unripe Bean:3Crv Silo V2 storage reference (See {SiloFacet.enrootDeposit(s)}).
      * Thus, the BDV of Unripe Bean:3Crv Deposits stored in the Silo V1 Bean storage is equal to the BDV of the amount of token times
      * initial % recapitalized when Beanstalk was Replanted.
@@ -203,7 +205,6 @@ library LibUnripeSilo {
 
     /**
      * @notice Calculate the `amount` and `bdv` of a give Unripe Bean:3Crv deposit.
-     * 
      */
     function unripeLPDeposit(address account, uint32 season)
         internal
@@ -259,8 +260,9 @@ library LibUnripeSilo {
     }
 
     /**
-     * @notice Calculate the `amount` and `bdv` for a Unripe LP deposit stored in the pre-exploirt Bean:LUSD Silo V2 LP storage.
-     * @dev The BEAN:LUSD LP token had a precision of 18 decimals.
+     * @dev Calculate the `amount` and `bdv` for a Unripe LP deposit stored in the pre-exploitt Bean:LUSD Silo V2 LP storage.
+     * 
+     * The BEAN:LUSD LP token had a precision of 18 decimals.
      */
     function getBeanLusdUnripeLP(address account, uint32 season)
         private
@@ -276,8 +278,9 @@ library LibUnripeSilo {
     }
 
     /**
-     * @notice Calculate the `amount` and `bdv` for a Unripe LP deposit stored in the pre-exploirt Bean:3Crv Silo V2 LP storage.
-     * @dev The BEAN:3Crv LP token had a precision of 18 decimals.
+     * @dev Calculate the `amount` and `bdv` for a Unripe LP deposit stored in the pre-exploit Bean:3Crv Silo V2 LP storage.
+     * 
+     * The BEAN:3Crv LP token had a precision of 18 decimals.
      */
     function getBean3CrvUnripeLP(address account, uint32 season)
         private
