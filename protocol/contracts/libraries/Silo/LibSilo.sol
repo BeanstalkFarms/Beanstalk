@@ -19,12 +19,9 @@ library LibSilo {
 
     /**
      * @notice Emitted when `account` gains or loses Seeds.
-     * @param account 
+     * @param account The account that gained or lost Seeds.
      * @param delta The change in Seeds.
      * 
-     * @dev:
-     *
-     * Emitted for ALL changes in Seeds balance for `account`, including:
      *   
      *   - Add or remove a Deposit
      *   - Transfer a Deposit
@@ -42,13 +39,11 @@ library LibSilo {
 
     /**
      * @notice Emitted when `account` gains or loses Stalk.
-     * @param account 
+     * @param account The account that gained or lost Stalk.
      * @param delta The change in Stalk.
      * @param deltaRoots FIXME(doc)
      * 
-     * @dev:
-     *
-     * Emitted for ALL changes in Stalk balance for `account`, including:
+     * @dev Emitted for ALL changes in Stalk balance for `account`, including:
      *   
      *   - Add or remove a Deposit
      *   - Transfer a Deposit
@@ -216,8 +211,19 @@ library LibSilo {
     //////////////////////// UTILITIES ////////////////////////
 
     /**
-     * @param seeds 
-     * @param seasons 
+     * @param seeds The number of Seeds held.
+     * @param seasons The number of Seasons that have elapsed.
+     *
+     * @dev Each Seed yields 1E-4 (0.0001, or 1 / 10_000) Stalk per Season.
+     *
+     * Seasons is measured to 0 decimals. There are no fractional Seasons.
+     * Seeds are measured to 6 decimals.
+     * Stalk is measured to 10 decimals.
+     * 
+     * Example:
+     *  - `seeds = 1E6` (1 Seed)
+     *  - `seasons = 1` (1 Season)
+     *  - The result is `1E6 * 1 = 1E6`. Since Stalk is measured to 10 decimals, this is `1E6/1E10 = 1E-4` Stalk.
      */
     function stalkReward(uint256 seeds, uint32 seasons)
         internal

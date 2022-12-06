@@ -57,9 +57,7 @@ library LibTokenSilo {
      * @return seeds The amount of Seeds received for this Deposit.
      * @return stalk The amount of Stalk received for this Deposit.
      * 
-     * @dev:
-     * 
-     * Calculate the current BDV for `amount` of `token`.
+     * @dev Calculate the current BDV for `amount` of `token`.
      * Then perform deposit accounting with known BDV.
      */
     function deposit(
