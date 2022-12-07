@@ -190,6 +190,9 @@ contract TractorFacet is ReentrancyGuard {
         return s.blueprintStates[blueprintHash].isActive;
     }
 
+    /// @notice Tractor Operation
+    /// @param blueprint Blueprint struct
+    /// @param callData callData inputed by tractor operator
     function tractor(Blueprint memory blueprint, bytes calldata callData)
         external
     {
