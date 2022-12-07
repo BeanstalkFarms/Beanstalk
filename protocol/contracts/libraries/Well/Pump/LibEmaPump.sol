@@ -19,7 +19,7 @@ library LibEmaPump {
         uint32 blocksPassed,
         uint A
     ) internal {
-        uint256 aExp = LibPRBMath.powu(A, blocksPassed);
+        uint256 aExp = LibPRBMath60x18.powu(A, blocksPassed);
         uint128[] memory pumpBalances = LibByteStorage.readUint128(slot, balances.length);
         for (uint256 i; i < balances.length; ++i) {
             pumpBalances[i] = LibMath.calcEma(

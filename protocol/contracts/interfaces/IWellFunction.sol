@@ -7,16 +7,18 @@ pragma experimental ABIEncoderV2;
 
 /**
  * @author Publius
- * @title Pump Interface
+ * @title Well Function Interface
 **/
-interface IPump {
+interface IWellFunction {
     function getX(
-        uint256 j,
+        bytes calldata data,
         uint128[] memory xs,
+        uint256 i,
         uint256 d
-    ) external view returns (uint256 x);
+    ) external view returns (uint128 x);
 
     function getD(
+        bytes calldata data,
         uint128[] memory xs
     ) external view returns (uint256 d);
 }

@@ -46,43 +46,26 @@ contract WellBuildingFacet is ReentrancyGuard {
     **/
 
     function buildWell(
+        bytes calldata wellFunction,
         IERC20[] calldata tokens,
-        LibWellType.WellType wellType,
-        bytes calldata typeData,
-        bytes[] calldata pumps,
         string[] calldata symbols,
-        uint8[] calldata decimals
+        uint8[] calldata decimals,
+        bytes[] calldata pumps
     ) external payable returns (address wellId) {
-        wellId = LibWellBuilding.buildWell(tokens, wellType, typeData, pumps, symbols, decimals).wellId;
+        wellId = LibWellBuilding.buildWell(wellFunction, tokens, symbols, decimals, pumps).wellId;
     }
 
-    function modifyWell(
+    function modifyWellFunction(
         LibWellStorage.WellInfo calldata p,
-        LibWellType.WellType newWellType,
-        bytes calldata newTypeData
+        bytes calldata newWellFunction
     ) external payable {
         LibDiamond.enforceIsContractOwner();
-        LibWellBuilding.modifyWell(p, newWellType, newTypeData);
+        LibWellBuilding.modifyWellFunction(p, newWellFunction);
     }
 
-    function getWellTypeSignature(
-        LibWellType.WellType wellType
-    ) external pure returns (string[] memory signature) {
-        signature = LibWellType.getSignature(wellType);
-    }
-
-    function isWellTypeRegistered(
-        LibWellType.WellType wellType
-    ) external view returns (bool registered) {
-        LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage(); 
-        registered = s.registered[wellType];
-    }
-
-    function encodeWellData(
-        LibWellType.WellType wellType,
-        bytes calldata typeData,
+    function encodeWellDecimalData(
         uint8[] calldata decimals
     ) external pure returns (bytes memory data) {
-        return LibWellData.encodeData(wellType, uint8(decimals.length), decimals, typeData);
+        return LibWellTokens.encodeDecimalData(decimals);
     }
 }

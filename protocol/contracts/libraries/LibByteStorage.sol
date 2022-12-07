@@ -54,7 +54,10 @@ library LibByteStorage {
                 assembly {
                     sstore(
                         add(slot, maxI),
-                        shl(128, mload(add(balances, add(iByte, 32))))
+                        add(
+                            shl(128, mload(add(balances, add(iByte, 32)))),
+                            shr(128, shl(128, sload(add(slot, maxI))))
+                        )
                     )
                 }
             }

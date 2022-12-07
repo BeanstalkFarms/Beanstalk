@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import "./CurvePrice.sol";
 import "./WellPrice.sol";
 
-contract BeanstalkPrice is CurvePrice, WellPrice {
+contract BeanstalkPrice is CurvePrice {
 
     struct Prices {
         uint256 price;
@@ -17,7 +17,7 @@ contract BeanstalkPrice is CurvePrice, WellPrice {
     function price() external view returns (Prices memory p) {
         p.ps = new P.Pool[](2);
         p.ps[0] = getCurve();
-        p.ps[1] = getWell();
+        // p.ps[1] = getWell();
 
         for (uint256 i = 0; i < p.ps.length; i++) {
             p.price += p.ps[i].price * p.ps[i].liquidity;

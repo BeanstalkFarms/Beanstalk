@@ -6,7 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../LibByteStorage.sol";
-import "./LibWellData.sol";
+import "./LibWellTokens.sol";
 import "./LibWellStorage.sol";
 import "./Pump/LibPump.sol";
 
@@ -36,7 +36,6 @@ library LibWellBalance {
 
     function updateBalances(bytes32 wh, uint128[] memory balances) internal {
         setBalances(wh, balances);
-        // updatePumps(wh, pumps, balances);
     }
 
     function getBalancesAndUpdatePumps(bytes32 wh, uint256 n, bytes[] calldata pumps) internal returns (uint128[] memory balances) {
@@ -58,7 +57,7 @@ library LibWellBalance {
     }
 
     function getBalancesFromId(address wellId) internal view returns (uint128[] memory balances) {
-        uint256 n = LibWellData.getN(wellId);
+        uint256 n = LibWellTokens.getN(wellId);
         bytes32 wh = LibWellStorage.getWellHash(wellId);
         balances = LibWellBalance.getBalancesFromHash(wh, n);
     }

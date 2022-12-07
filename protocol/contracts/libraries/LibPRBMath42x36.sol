@@ -1,14 +1,12 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-
 /**
- * @title LibPRBMath contains functionality to compute powers of 60.18 unsigned floating point to uint256
+ * @title LibPRBMath contains functionality to compute powers of 42.36 unsigned floating point to uint256
  * Solution taken from https://github.com/paulrberg/prb-math/blob/main/contracts/PRBMathUD60x18.sol
  * and adapted to Solidity 0.7.6
-**/
-library LibPRBMath {
-
+ **/
+library LibPRBMath42x36 {
     // /// @dev How many trailing decimals can be represented.
     // uint256 internal constant SCALE = 1e18;
 
@@ -18,7 +16,6 @@ library LibPRBMath {
     // /// @dev SCALE inverted mod 2^256.
     // uint256 internal constant SCALE_INVERSE =
     //     78156646155174841979727994598816262306175212592076161876661_508869554232690281;
-
 
     /// @dev How many trailing decimals can be represented.
     uint256 internal constant SCALE = 1e36;
@@ -33,7 +30,7 @@ library LibPRBMath {
     function powu(uint256 x, uint256 y) internal pure returns (uint256 result) {
         // Calculate the first iteration of the loop in advance.
         result = y & 1 > 0 ? x : SCALE;
- 
+
         // Equivalent to "for(y /= 2; y > 0; y /= 2)" but faster.
         for (y >>= 1; y > 0; y >>= 1) {
             x = mulDivFixedPoint(x, x);
@@ -45,7 +42,10 @@ library LibPRBMath {
         }
     }
 
-    function mulDivFixedPoint(uint256 x, uint256 y) internal pure returns (uint256 result) {
+    function mulDivFixedPoint(
+        uint256 x,
+        uint256 y
+    ) internal pure returns (uint256 result) {
         uint256 prod0;
         uint256 prod1;
         assembly {
@@ -75,7 +75,10 @@ library LibPRBMath {
                 mul(
                     or(
                         div(sub(prod0, remainder), SCALE_LPOTD),
-                        mul(sub(prod1, gt(remainder, prod0)), add(div(sub(0, SCALE_LPOTD), SCALE_LPOTD), 1))
+                        mul(
+                            sub(prod1, gt(remainder, prod0)),
+                            add(div(sub(0, SCALE_LPOTD), SCALE_LPOTD), 1)
+                        )
                     ),
                     SCALE_INVERSE
                 ),

@@ -243,12 +243,12 @@ contract WellFacet is ReentrancyGuard {
         wellHash = LibWellStorage.getWellHash(wellId);
     }
 
-    function computeWellHash(LibWellStorage.WellInfo calldata p)
+    function computeWellHash(LibWellStorage.WellInfo calldata w)
         external
         pure
         returns (bytes32 wellHash)
     {
-        wellHash = LibWellStorage.computeWellHash(p);
+        wellHash = LibWellStorage.computeWellHash(w);
     }
 
     /**
@@ -268,11 +268,47 @@ contract WellFacet is ReentrancyGuard {
     }
 
     /**
+     * Well
+     **/
+
+    function getWell(address wellId)
+        public
+        view
+        returns (
+            LibWellStorage.WellInfo memory wellInfo,
+            uint128[] memory balances,
+            uint32 lastBlockNumber,
+            uint256 totalSupply
+        ) 
+    {
+        wellInfo = getWellInfo(wellId);
+        balances = getWellBalances(wellId);
+        totalSupply = getWellTokenSupply(wellId);
+        lastBlockNumber = getWellBlockNumber(wellId);
+    }
+
+    function getWellAtIndex(uint256 index)
+        public
+        view
+        returns (
+            LibWellStorage.WellInfo memory wellInfo,
+            uint128[] memory balances,
+            uint32 lastBlockNumber,
+            uint256 totalSupply
+        ) 
+    {
+
+        LibWellStorage.WellStorage storage s = LibWellStorage.wellStorage();
+        address wellId = s.indices[index];
+        return getWell(wellId);
+    }
+
+    /**
      * Pumps
      **/
 
     function getWellBlockNumber(address wellId)
-        external
+        public
         view
         returns (uint32 blockNumber)
     {

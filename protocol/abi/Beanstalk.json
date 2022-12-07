@@ -4631,24 +4631,14 @@
     {
         "inputs": [
             {
-                "internalType": "contract IERC20[]",
-                "name": "tokens",
-                "type": "address[]"
-            },
-            {
-                "internalType": "enum LibWellType.WellType",
-                "name": "wellType",
-                "type": "uint8"
-            },
-            {
                 "internalType": "bytes",
-                "name": "typeData",
+                "name": "wellFunction",
                 "type": "bytes"
             },
             {
-                "internalType": "bytes[]",
-                "name": "pumps",
-                "type": "bytes[]"
+                "internalType": "contract IERC20[]",
+                "name": "tokens",
+                "type": "address[]"
             },
             {
                 "internalType": "string[]",
@@ -4659,6 +4649,11 @@
                 "internalType": "uint8[]",
                 "name": "decimals",
                 "type": "uint8[]"
+            },
+            {
+                "internalType": "bytes[]",
+                "name": "pumps",
+                "type": "bytes[]"
             }
         ],
         "name": "buildWell",
@@ -4675,22 +4670,12 @@
     {
         "inputs": [
             {
-                "internalType": "enum LibWellType.WellType",
-                "name": "wellType",
-                "type": "uint8"
-            },
-            {
-                "internalType": "bytes",
-                "name": "typeData",
-                "type": "bytes"
-            },
-            {
                 "internalType": "uint8[]",
                 "name": "decimals",
                 "type": "uint8[]"
             }
         ],
-        "name": "encodeWellData",
+        "name": "encodeWellDecimalData",
         "outputs": [
             {
                 "internalType": "bytes",
@@ -4704,49 +4689,16 @@
     {
         "inputs": [
             {
-                "internalType": "enum LibWellType.WellType",
-                "name": "wellType",
-                "type": "uint8"
-            }
-        ],
-        "name": "getWellTypeSignature",
-        "outputs": [
-            {
-                "internalType": "string[]",
-                "name": "signature",
-                "type": "string[]"
-            }
-        ],
-        "stateMutability": "pure",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "enum LibWellType.WellType",
-                "name": "wellType",
-                "type": "uint8"
-            }
-        ],
-        "name": "isWellTypeRegistered",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "registered",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
                 "components": [
                     {
                         "internalType": "address",
                         "name": "wellId",
                         "type": "address"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "wellFunction",
+                        "type": "bytes"
                     },
                     {
                         "internalType": "contract IERC20[]",
@@ -4755,7 +4707,7 @@
                     },
                     {
                         "internalType": "bytes",
-                        "name": "data",
+                        "name": "decimalData",
                         "type": "bytes"
                     },
                     {
@@ -4769,17 +4721,12 @@
                 "type": "tuple"
             },
             {
-                "internalType": "enum LibWellType.WellType",
-                "name": "newWellType",
-                "type": "uint8"
-            },
-            {
                 "internalType": "bytes",
-                "name": "newTypeData",
+                "name": "newWellFunction",
                 "type": "bytes"
             }
         ],
-        "name": "modifyWell",
+        "name": "modifyWellFunction",
         "outputs": [],
         "stateMutability": "payable",
         "type": "function"
@@ -4794,13 +4741,18 @@
                         "type": "address"
                     },
                     {
+                        "internalType": "bytes",
+                        "name": "wellFunction",
+                        "type": "bytes"
+                    },
+                    {
                         "internalType": "contract IERC20[]",
                         "name": "tokens",
                         "type": "address[]"
                     },
                     {
                         "internalType": "bytes",
-                        "name": "data",
+                        "name": "decimalData",
                         "type": "bytes"
                     },
                     {
@@ -4855,13 +4807,18 @@
                         "type": "address"
                     },
                     {
+                        "internalType": "bytes",
+                        "name": "wellFunction",
+                        "type": "bytes"
+                    },
+                    {
                         "internalType": "contract IERC20[]",
                         "name": "tokens",
                         "type": "address[]"
                     },
                     {
                         "internalType": "bytes",
-                        "name": "data",
+                        "name": "decimalData",
                         "type": "bytes"
                     },
                     {
@@ -4871,7 +4828,7 @@
                     }
                 ],
                 "internalType": "struct LibWellStorage.WellInfo",
-                "name": "p",
+                "name": "w",
                 "type": "tuple"
             }
         ],
@@ -4896,13 +4853,18 @@
                         "type": "address"
                     },
                     {
+                        "internalType": "bytes",
+                        "name": "wellFunction",
+                        "type": "bytes"
+                    },
+                    {
                         "internalType": "contract IERC20[]",
                         "name": "tokens",
                         "type": "address[]"
                     },
                     {
                         "internalType": "bytes",
-                        "name": "data",
+                        "name": "decimalData",
                         "type": "bytes"
                     },
                     {
@@ -4942,13 +4904,18 @@
                         "type": "address"
                     },
                     {
+                        "internalType": "bytes",
+                        "name": "wellFunction",
+                        "type": "bytes"
+                    },
+                    {
                         "internalType": "contract IERC20[]",
                         "name": "tokens",
                         "type": "address[]"
                     },
                     {
                         "internalType": "bytes",
-                        "name": "data",
+                        "name": "decimalData",
                         "type": "bytes"
                     },
                     {
@@ -4988,13 +4955,18 @@
                         "type": "address"
                     },
                     {
+                        "internalType": "bytes",
+                        "name": "wellFunction",
+                        "type": "bytes"
+                    },
+                    {
                         "internalType": "contract IERC20[]",
                         "name": "tokens",
                         "type": "address[]"
                     },
                     {
                         "internalType": "bytes",
-                        "name": "data",
+                        "name": "decimalData",
                         "type": "bytes"
                     },
                     {
@@ -5039,13 +5011,18 @@
                         "type": "address"
                     },
                     {
+                        "internalType": "bytes",
+                        "name": "wellFunction",
+                        "type": "bytes"
+                    },
+                    {
                         "internalType": "contract IERC20[]",
                         "name": "tokens",
                         "type": "address[]"
                     },
                     {
                         "internalType": "bytes",
-                        "name": "data",
+                        "name": "decimalData",
                         "type": "bytes"
                     },
                     {
@@ -5085,13 +5062,18 @@
                         "type": "address"
                     },
                     {
+                        "internalType": "bytes",
+                        "name": "wellFunction",
+                        "type": "bytes"
+                    },
+                    {
                         "internalType": "contract IERC20[]",
                         "name": "tokens",
                         "type": "address[]"
                     },
                     {
                         "internalType": "bytes",
-                        "name": "data",
+                        "name": "decimalData",
                         "type": "bytes"
                     },
                     {
@@ -5141,13 +5123,18 @@
                         "type": "address"
                     },
                     {
+                        "internalType": "bytes",
+                        "name": "wellFunction",
+                        "type": "bytes"
+                    },
+                    {
                         "internalType": "contract IERC20[]",
                         "name": "tokens",
                         "type": "address[]"
                     },
                     {
                         "internalType": "bytes",
-                        "name": "data",
+                        "name": "decimalData",
                         "type": "bytes"
                     },
                     {
@@ -5201,6 +5188,128 @@
                 "internalType": "contract IERC20[]",
                 "name": "tokens",
                 "type": "address[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "wellId",
+                "type": "address"
+            }
+        ],
+        "name": "getWell",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "wellFunction",
+                        "type": "bytes"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "decimalData",
+                        "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "wellInfo",
+                "type": "tuple"
+            },
+            {
+                "internalType": "uint128[]",
+                "name": "balances",
+                "type": "uint128[]"
+            },
+            {
+                "internalType": "uint32",
+                "name": "lastBlockNumber",
+                "type": "uint32"
+            },
+            {
+                "internalType": "uint256",
+                "name": "totalSupply",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "index",
+                "type": "uint256"
+            }
+        ],
+        "name": "getWellAtIndex",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "wellId",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "wellFunction",
+                        "type": "bytes"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "decimalData",
+                        "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes[]",
+                        "name": "pumps",
+                        "type": "bytes[]"
+                    }
+                ],
+                "internalType": "struct LibWellStorage.WellInfo",
+                "name": "wellInfo",
+                "type": "tuple"
+            },
+            {
+                "internalType": "uint128[]",
+                "name": "balances",
+                "type": "uint128[]"
+            },
+            {
+                "internalType": "uint32",
+                "name": "lastBlockNumber",
+                "type": "uint32"
+            },
+            {
+                "internalType": "uint256",
+                "name": "totalSupply",
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",
@@ -5300,13 +5409,18 @@
                         "type": "address"
                     },
                     {
+                        "internalType": "bytes",
+                        "name": "wellFunction",
+                        "type": "bytes"
+                    },
+                    {
                         "internalType": "contract IERC20[]",
                         "name": "tokens",
                         "type": "address[]"
                     },
                     {
                         "internalType": "bytes",
-                        "name": "data",
+                        "name": "decimalData",
                         "type": "bytes"
                     },
                     {
@@ -5400,13 +5514,18 @@
                         "type": "address"
                     },
                     {
+                        "internalType": "bytes",
+                        "name": "wellFunction",
+                        "type": "bytes"
+                    },
+                    {
                         "internalType": "contract IERC20[]",
                         "name": "tokens",
                         "type": "address[]"
                     },
                     {
                         "internalType": "bytes",
-                        "name": "data",
+                        "name": "decimalData",
                         "type": "bytes"
                     },
                     {
@@ -5461,13 +5580,18 @@
                         "type": "address"
                     },
                     {
+                        "internalType": "bytes",
+                        "name": "wellFunction",
+                        "type": "bytes"
+                    },
+                    {
                         "internalType": "contract IERC20[]",
                         "name": "tokens",
                         "type": "address[]"
                     },
                     {
                         "internalType": "bytes",
-                        "name": "data",
+                        "name": "decimalData",
                         "type": "bytes"
                     },
                     {
@@ -5522,13 +5646,18 @@
                         "type": "address"
                     },
                     {
+                        "internalType": "bytes",
+                        "name": "wellFunction",
+                        "type": "bytes"
+                    },
+                    {
                         "internalType": "contract IERC20[]",
                         "name": "tokens",
                         "type": "address[]"
                     },
                     {
                         "internalType": "bytes",
-                        "name": "data",
+                        "name": "decimalData",
                         "type": "bytes"
                     },
                     {
@@ -5588,13 +5717,18 @@
                         "type": "address"
                     },
                     {
+                        "internalType": "bytes",
+                        "name": "wellFunction",
+                        "type": "bytes"
+                    },
+                    {
                         "internalType": "contract IERC20[]",
                         "name": "tokens",
                         "type": "address[]"
                     },
                     {
                         "internalType": "bytes",
-                        "name": "data",
+                        "name": "decimalData",
                         "type": "bytes"
                     },
                     {
@@ -5659,13 +5793,18 @@
                         "type": "address"
                     },
                     {
+                        "internalType": "bytes",
+                        "name": "wellFunction",
+                        "type": "bytes"
+                    },
+                    {
                         "internalType": "contract IERC20[]",
                         "name": "tokens",
                         "type": "address[]"
                     },
                     {
                         "internalType": "bytes",
-                        "name": "data",
+                        "name": "decimalData",
                         "type": "bytes"
                     },
                     {
@@ -5721,310 +5860,8 @@
         "type": "function"
     },
     {
-        "inputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "wellId",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "contract IERC20[]",
-                        "name": "tokens",
-                        "type": "address[]"
-                    },
-                    {
-                        "internalType": "bytes",
-                        "name": "data",
-                        "type": "bytes"
-                    },
-                    {
-                        "internalType": "bytes[]",
-                        "name": "pumps",
-                        "type": "bytes[]"
-                    }
-                ],
-                "internalType": "struct LibWellStorage.WellInfo",
-                "name": "w",
-                "type": "tuple"
-            },
-            {
-                "internalType": "contract IERC20",
-                "name": "token",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "pegToken",
-                "type": "address"
-            }
-        ],
-        "name": "getAddXToPeg",
-        "outputs": [
-            {
-                "internalType": "int256",
-                "name": "deltaX",
-                "type": "int256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "wellId",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "tokenI",
-                "type": "uint256"
-            }
-        ],
-        "name": "getInstantLPValue",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "wellId",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "tokenI",
-                "type": "uint256"
-            }
-        ],
-        "name": "getLPValue",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "wellId",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "contract IERC20[]",
-                        "name": "tokens",
-                        "type": "address[]"
-                    },
-                    {
-                        "internalType": "bytes",
-                        "name": "data",
-                        "type": "bytes"
-                    },
-                    {
-                        "internalType": "bytes[]",
-                        "name": "pumps",
-                        "type": "bytes[]"
-                    }
-                ],
-                "internalType": "struct LibWellStorage.WellInfo",
-                "name": "w",
-                "type": "tuple"
-            },
-            {
-                "internalType": "contract IERC20",
-                "name": "token",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "pegToken",
-                "type": "address"
-            }
-        ],
-        "name": "getPegRatio",
-        "outputs": [
-            {
-                "internalType": "uint256[]",
-                "name": "ratios",
-                "type": "uint256[]"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "wellId",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "contract IERC20[]",
-                        "name": "tokens",
-                        "type": "address[]"
-                    },
-                    {
-                        "internalType": "bytes",
-                        "name": "data",
-                        "type": "bytes"
-                    },
-                    {
-                        "internalType": "bytes[]",
-                        "name": "pumps",
-                        "type": "bytes[]"
-                    }
-                ],
-                "internalType": "struct LibWellStorage.WellInfo",
-                "name": "w",
-                "type": "tuple"
-            },
-            {
-                "internalType": "contract IERC20",
-                "name": "token",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "pegToken",
-                "type": "address"
-            }
-        ],
-        "name": "getRemoveDToPeg",
-        "outputs": [
-            {
-                "internalType": "int256",
-                "name": "deltaX",
-                "type": "int256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "wellId",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "contract IERC20[]",
-                        "name": "tokens",
-                        "type": "address[]"
-                    },
-                    {
-                        "internalType": "bytes",
-                        "name": "data",
-                        "type": "bytes"
-                    },
-                    {
-                        "internalType": "bytes[]",
-                        "name": "pumps",
-                        "type": "bytes[]"
-                    }
-                ],
-                "internalType": "struct LibWellStorage.WellInfo",
-                "name": "w",
-                "type": "tuple"
-            },
-            {
-                "internalType": "contract IERC20",
-                "name": "token",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "pegToken",
-                "type": "address"
-            }
-        ],
-        "name": "getSellXToPeg",
-        "outputs": [
-            {
-                "internalType": "int256",
-                "name": "deltaX",
-                "type": "int256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint128[]",
-                "name": "xs",
-                "type": "uint128[]"
-            },
-            {
-                "internalType": "uint256",
-                "name": "i",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256[]",
-                "name": "ratios",
-                "type": "uint256[]"
-            }
-        ],
-        "name": "getXDAtRatio",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "x",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "x",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "y",
-                "type": "uint256"
-            }
-        ],
-        "name": "powu",
+        "inputs": [],
+        "name": "wellPumpFacet",
         "outputs": [
             {
                 "internalType": "uint256",
@@ -6187,20 +6024,20 @@
             },
             {
                 "indexed": false,
+                "internalType": "bytes",
+                "name": "wellFunction",
+                "type": "bytes"
+            },
+            {
+                "indexed": false,
                 "internalType": "contract IERC20[]",
                 "name": "tokens",
                 "type": "address[]"
             },
             {
                 "indexed": false,
-                "internalType": "enum LibWellType.WellType",
-                "name": "wellType",
-                "type": "uint8"
-            },
-            {
-                "indexed": false,
                 "internalType": "bytes",
-                "name": "typeData",
+                "name": "decimalData",
                 "type": "bytes"
             },
             {
@@ -6208,12 +6045,6 @@
                 "internalType": "bytes[]",
                 "name": "pumps",
                 "type": "bytes[]"
-            },
-            {
-                "indexed": false,
-                "internalType": "bytes",
-                "name": "encodedData",
-                "type": "bytes"
             },
             {
                 "indexed": false,
@@ -6236,14 +6067,8 @@
             },
             {
                 "indexed": false,
-                "internalType": "enum LibWellType.WellType",
-                "name": "newWellType",
-                "type": "uint8"
-            },
-            {
-                "indexed": false,
                 "internalType": "bytes",
-                "name": "newTypeData",
+                "name": "wellFunction",
                 "type": "bytes"
             },
             {
@@ -6360,25 +6185,6 @@
             }
         ],
         "name": "Swap",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "enum LibWellType.WellType",
-                "name": "wellType",
-                "type": "uint8"
-            },
-            {
-                "indexed": false,
-                "internalType": "string[]",
-                "name": "parameterTypes",
-                "type": "string[]"
-            }
-        ],
-        "name": "RegisterWellType",
         "type": "event"
     }
 ]

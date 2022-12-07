@@ -1,14 +1,15 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js');
+const { deployContract } = require('../scripts/contracts.js');
 const { getAltBeanstalk, getBean, getUsdc } = require('../utils/contracts.js');
 const { toBN } = require('../utils/index.js');
 const { mintBeans, mintUsdc } = require('../utils/mint.js');
 const { encodePump, decodePumpBalance } = require('../utils/pumps.js');
 const { readEmaAlpha } = require('../utils/read.js');
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
-const { BEAN, USDC, WETH } = require('./utils/constants');
+const { BEAN, USDC, WETH, ZERO_ADDRESS } = require('./utils/constants');
 const { getEma } = require('./utils/ema.js');
-const { TypeEncoder } = require('./utils/encoder.js');
+const { WellFunctionEncoder } = require('./utils/encoder.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
@@ -47,7 +48,6 @@ describe('2 Token Well', function () {
     user2Address = user2.address;
     const contracts = await deploy("Test", false, true);
     ownerAddress = contracts.account;
-    typeParams = TypeEncoder.constantProductType()
     this.beanstalk = await getAltBeanstalk(contracts.beanstalkDiamond.address)
     this.bean = await getBean()
     this.usdc = await getUsdc()
@@ -66,23 +66,26 @@ describe('2 Token Well', function () {
 
     emaPump = await (await ethers.getContractFactory("EmaPump", owner)).deploy()
     await emaPump.deployed();
-    console.log(`Address: ${emaPump.address}`)
 
     this.pumps = [
-      encodePump(1, 2, [to18('999444598700000000')]), // Should be 32 not 64
+      encodePump(1, 2, ['999444598700000000']), // Should be 32 not 64
       encodePump(2, 2),
-      encodePump(0, 2, [emaPump.address, to18('999444598700000000')], ['uint128'])
+      encodePump(0, 2, [emaPump.address, '999444598700000000'], ['uint128'])
     ]
-    console.log(this.pumps[2])
-    wellId = await this.beanstalk.callStatic.buildWell([USDC, BEAN], '0', typeParams, this.pumps, ['USDC', 'BEAN'], [6,6])
+
+    constantProduct = await deployContract("ConstantProduct", owner)
+    wellFunction = WellFunctionEncoder.basicEncoder(constantProduct.address)
+
+    wellId = await this.beanstalk.callStatic.buildWell(wellFunction, [USDC, BEAN], ['USDC', 'BEAN'], [6,6], this.pumps)
     well = {
-      wellId: wellId, 
-      tokens: [USDC, BEAN], 
-      data: await this.beanstalk.encodeWellData(0,'0x', [6,6]),
+      wellId: wellId,
+      wellFunction: WellFunctionEncoder.basicEncoder(constantProduct.address),
+      tokens: [USDC, BEAN],
+      decimalData: await this.beanstalk.encodeWellDecimalData([6,6]),
       pumps: this.pumps
     }
     wellHash = await this.beanstalk.computeWellHash(well)
-    buildWellResult = await this.beanstalk.buildWell([USDC, BEAN], '0', typeParams, this.pumps, ['USDC', 'BEAN'], [6,6])
+    buildWellResult = await this.beanstalk.buildWell(wellFunction, [USDC, BEAN], ['USDC', 'BEAN'], [6,6], this.pumps)
 
     this.lp = await ethers.getContractAt('WellToken', wellId)
     await this.lp.connect(user).approve(this.beanstalk.address, to18('100000000'))
@@ -100,341 +103,327 @@ describe('2 Token Well', function () {
     await revertToSnapshot(snapshotId);
   });
 
-  // describe("Register Types", async function () {
-  //   describe("Successfully registers type", async function () {
-  //     it("type token", async function () {
-  //       const wellSignature = await this.beanstalk.getWellTypeSignature('0')
-  //       expect(wellSignature.length).to.be.equal(0)
-  //       expect(await this.beanstalk.isWellTypeRegistered('0')).to.be.equal(true)
-  //     })
+  describe('Build Well', async function () {
+    it('reverts if not alphabetical', async function () {
+      await expect(this.beanstalk.buildWell(wellFunction, [BEAN, USDC], ["BEAN", "USDC"], [6,6], this.pumps)).to.be.revertedWith("LibWell: Tokens not alphabetical")
+    })
 
-  //     it("emits event", async function () {
-  //       await expect(buildWellResult).to.emit(this.beanstalk, 'RegisterWellType').withArgs(0, []);
-  //     })
-  //   })
-  // })
-
-  // describe('Build Well', async function () {
-  //   it('reverts if not alphabetical', async function () {
-  //     await expect(this.beanstalk.buildWell([BEAN, USDC], '0', typeParams, [], ["BEAN", "USDC"], [6,6])).to.be.revertedWith("LibWell: Tokens not alphabetical")
-  //   })
-
-  //   it('reverts if type data', async function () {
-  //     await expect(this.beanstalk.buildWell([USDC, BEAN], '0', TypeEncoder.testType('1'), [], ["USDC", "BEAN"], [6,6])).to.be.revertedWith("LibWell: Well not valid.")
-  //   })
+    it('reverts if type data', async function () {
+      await expect(this.beanstalk.buildWell(ZERO_ADDRESS, [USDC, BEAN], ['USDC', 'BEAN'], [6,6], this.pumps)).to.be.reverted
+    })
     
-  //   it('sets well info', async function () {
-  //     const wellInfo = await this.beanstalk.getWellInfo(wellId);
-  //     expect(wellInfo.wellId).to.be.equal(wellId)
-  //     expect(wellInfo.tokens[0]).to.be.equal(well.tokens[0])
-  //     expect(wellInfo.tokens[1]).to.be.equal(well.tokens[1])
-  //     expect(wellInfo.data).to.be.equal(well.data)
+    it('sets well info', async function () {
+      const wellInfo = await this.beanstalk.getWellInfo(wellId);
+      expect(wellInfo.wellId).to.be.equal(wellId)
+      expect(wellInfo.tokens[0]).to.be.equal(well.tokens[0])
+      expect(wellInfo.tokens[1]).to.be.equal(well.tokens[1])
+      expect(wellInfo.data).to.be.equal(well.data)
 
-  //     const tokens = await this.beanstalk.getTokens(wellId)
-  //     expect(tokens[0]).to.be.equal(well.tokens[0])
-  //     expect(tokens[1]).to.be.equal(well.tokens[1])
-  //   })
+      const tokens = await this.beanstalk.getTokens(wellId)
+      expect(tokens[0]).to.be.equal(well.tokens[0])
+      expect(tokens[1]).to.be.equal(well.tokens[1])
+    })
 
-  //   it('adds the well to the index', async function () {
-  //     expect(await this.beanstalk.getWellIdAtIndex('0')).to.be.equal(wellId)
-  //   })
+    it('adds the well to the index', async function () {
+      expect(await this.beanstalk.getWellIdAtIndex('0')).to.be.equal(wellId)
+    })
 
-  //   it('sets the well hash', async function () {
-  //     expect(await this.beanstalk.getWellHash(wellId)).to.be.equal(wellHash)
-  //   })
+    it('sets the well hash', async function () {
+      expect(await this.beanstalk.getWellHash(wellId)).to.be.equal(wellHash)
+    })
 
-  //   it('sets the well state', async function () {
-  //     const balances = await this.beanstalk.getWellBalances(wellId)
-  //     expect(balances[0]).to.be.equal(to6('100'))
-  //     expect(balances[1]).to.be.equal(to6('100'))
+    it('sets the well state', async function () {
+      const balances = await this.beanstalk.getWellBalances(wellId)
+      expect(balances[0]).to.be.equal(to6('100'))
+      expect(balances[1]).to.be.equal(to6('100'))
 
-  //     expect(await this.beanstalk.getWellBlockNumber(wellId)).to.be.equal(await getBlockNumber())
+      expect(await this.beanstalk.getWellBlockNumber(wellId)).to.be.equal(await getBlockNumber())
 
-  //     expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('200'))
-  //   })
+      expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('200'))
+    })
 
-  //   it('set the pump', async function () {
-  //     const emaBalances = await this.beanstalk.readPump(wellHash, this.pumps[0]);
-  //     expect(emaBalances[0]).to.be.equal('0')
-  //     expect(emaBalances[1]).to.be.equal('0')
-  //   })
+    it('set the pump', async function () {
+      const emaBalances = await this.beanstalk.readPump(wellHash, this.pumps[0]);
+      expect(emaBalances[0]).to.be.equal('0')
+      expect(emaBalances[1]).to.be.equal('0')
+    })
 
-  //   it('emits event', async function () {
-  //     await expect(buildWellResult).to.emit(this.beanstalk, 'BuildWell').withArgs(well.wellId, well.tokens, 0, '0x', [], well.data, wellHash);
-  //   })
+    it('emits event', async function () {
+      await expect(buildWellResult).to.emit(this.beanstalk, 'BuildWell').withArgs(well.wellId, well.wellFunction, well.tokens, well.decimalData, well.pumps, wellHash);
+    })
 
-  //   it('sets the name/symbol of well token', async function () {
-  //     expect(await this.lp.symbol()).to.be.equal("USDCBEANwl")
-  //     expect(await this.lp.name()).to.be.equal("USDC:BEAN Well")
-  //   })
-  // })
+    it('sets the name/symbol of well token', async function () {
+      expect(await this.lp.symbol()).to.be.equal("USDCBEANwl")
+      expect(await this.lp.name()).to.be.equal("USDC:BEAN Well")
+    })
+  })
 
-  // describe('Modify Well', async function () {
-  //   // TODO: Can't really test this with only 1 whitelisted invariant.
-  // })
+  describe('Modify Well', async function () {
+    // TODO: Can't really test this with only 1 whitelisted invariant.
+  })
 
-  // describe("Swap from", async function () {
-  //   it("Gets amount out", async function () {
-  //     expect(await this.beanstalk.getSwapOut(well, USDC, BEAN, to6('100'))).to.be.equal(to6('50'))
-  //     expect(await this.beanstalk.getSwapOut(well, USDC, BEAN, to6('9900'))).to.be.equal(to6('99'))
-  //   })
+  describe("Swap from", async function () {
+    it("Gets amount out", async function () {
+      expect(await this.beanstalk.getSwapOut(well, USDC, BEAN, to6('100'))).to.be.equal(to6('50'))
+      expect(await this.beanstalk.getSwapOut(well, USDC, BEAN, to6('9900'))).to.be.equal(to6('99'))
+    })
 
-  //   it("reverts if max amount in too low", async function () {
-  //     await expect(this.beanstalk.connect(user).swapFrom(well, USDC, BEAN, to6('100'), to6('51'), EXTERNAL, EXTERNAL)).to.be.revertedWith("LibWell: too much slippage.")
-  //   })
+    it("reverts if max amount in too low", async function () {
+      await expect(this.beanstalk.connect(user).swapFrom(well, USDC, BEAN, to6('100'), to6('51'), EXTERNAL, EXTERNAL)).to.be.revertedWith("LibWell: too much slippage.")
+    })
 
-  //   describe("Basic Swap", async function () {
-  //     beforeEach(async function () {
-  //       this.result = await this.beanstalk.connect(user).swapFrom(well, USDC, BEAN, to6('100'), to6('49'), EXTERNAL, EXTERNAL)
-  //     })
+    describe("Basic Swap", async function () {
+      beforeEach(async function () {
+        this.result = await this.beanstalk.connect(user).swapFrom(well, USDC, BEAN, to6('100'), to6('49'), EXTERNAL, EXTERNAL)
+      })
 
-  //     it("transfers assets", async function () {
-  //       expect(await this.bean.balanceOf(user.address)).to.be.equal(to6('1050'))
-  //       expect(await this.usdc.balanceOf(user.address)).to.be.equal(to6('900'))
-  //     })
+      it("transfers assets", async function () {
+        expect(await this.bean.balanceOf(user.address)).to.be.equal(to6('1050'))
+        expect(await this.usdc.balanceOf(user.address)).to.be.equal(to6('900'))
+      })
 
-  //     it("updates balances", async function () {
-  //       const balances = await this.beanstalk.getWellBalances(wellId)
-  //       expect(balances[0]).to.be.equal(to6('200'))
-  //       expect(balances[1]).to.be.equal(to6('50'))
-  //       expect(await this.beanstalk.getWellBlockNumber(wellId)).to.be.equal(await getBlockNumber())
-  //       expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('200'))
-  //     })
+      it("updates balances", async function () {
+        const balances = await this.beanstalk.getWellBalances(wellId)
+        expect(balances[0]).to.be.equal(to6('200'))
+        expect(balances[1]).to.be.equal(to6('50'))
+        expect(await this.beanstalk.getWellBlockNumber(wellId)).to.be.equal(await getBlockNumber())
+        expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('200'))
+      })
 
-  //     it('updates lp balances', async function () {
-  //       expect(await this.lp.totalSupply()).to.be.equal(to6('200'))
-  //       expect(await this.lp.balanceOf(user2.address)).to.be.equal(to6('200'))
-  //     })
+      it('updates lp balances', async function () {
+        expect(await this.lp.totalSupply()).to.be.equal(to6('200'))
+        expect(await this.lp.balanceOf(user2.address)).to.be.equal(to6('200'))
+      })
 
-  //     it('emits event', async function () {
-  //       await expect(this.result).to.emit(this.beanstalk, 'Swap').withArgs(wellId, USDC, BEAN, to6('100'), to6('50'));
-  //     })
-  //   })
-  // })
+      it('emits event', async function () {
+        await expect(this.result).to.emit(this.beanstalk, 'Swap').withArgs(wellId, USDC, BEAN, to6('100'), to6('50'));
+      })
+    })
+  })
 
-  // describe("Swap to", async function () {
-  //   it("Gets amount in", async function () {
-  //     expect(await this.beanstalk.getSwapIn(well, USDC, BEAN, to6('50'))).to.be.equal(to6('100'))
-  //     expect(await this.beanstalk.getSwapIn(well, USDC, BEAN, to6('99'))).to.be.equal(to6('9900'))
-  //   })
+  describe("Swap to", async function () {
+    it("Gets amount in", async function () {
+      expect(await this.beanstalk.getSwapIn(well, USDC, BEAN, to6('50'))).to.be.equal(to6('100'))
+      expect(await this.beanstalk.getSwapIn(well, USDC, BEAN, to6('99'))).to.be.equal(to6('9900'))
+    })
 
-  //   it("reverts if max amount in too low", async function () {
-  //     await expect(this.beanstalk.connect(user).swapTo(well, USDC, BEAN, to6('99'), to6('50'), EXTERNAL, EXTERNAL)).to.be.revertedWith("LibWell: too much slippage.")
-  //   })
+    it("reverts if max amount in too low", async function () {
+      await expect(this.beanstalk.connect(user).swapTo(well, USDC, BEAN, to6('99'), to6('50'), EXTERNAL, EXTERNAL)).to.be.revertedWith("LibWell: too much slippage.")
+    })
 
-  //   describe("Basic Swap", async function () {
-  //     beforeEach(async function () {
-  //       this.result = await this.beanstalk.connect(user).swapTo(well, USDC, BEAN, to6('101'), to6('50'), EXTERNAL, EXTERNAL)
-  //     })
+    describe("Basic Swap", async function () {
+      beforeEach(async function () {
+        this.result = await this.beanstalk.connect(user).swapTo(well, USDC, BEAN, to6('101'), to6('50'), EXTERNAL, EXTERNAL)
+      })
 
-  //     it("transfers assets", async function () {
-  //       expect(await this.bean.balanceOf(user.address)).to.be.equal(to6('1050'))
-  //       expect(await this.usdc.balanceOf(user.address)).to.be.equal(to6('900'))
-  //     })
+      it("transfers assets", async function () {
+        expect(await this.bean.balanceOf(user.address)).to.be.equal(to6('1050'))
+        expect(await this.usdc.balanceOf(user.address)).to.be.equal(to6('900'))
+      })
 
-  //     it("updates balances", async function () {
-  //       const balances = await this.beanstalk.getWellBalances(wellId)
-  //       expect(balances[0]).to.be.equal(to6('200'))
-  //       expect(balances[1]).to.be.equal(to6('50'))
-  //       expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('200'))
-  //     })
+      it("updates balances", async function () {
+        const balances = await this.beanstalk.getWellBalances(wellId)
+        expect(balances[0]).to.be.equal(to6('200'))
+        expect(balances[1]).to.be.equal(to6('50'))
+        expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('200'))
+      })
 
-  //     it('updates lp balances', async function () {
-  //       expect(await this.lp.totalSupply()).to.be.equal(to6('200'))
-  //       expect(await this.lp.balanceOf(user2.address)).to.be.equal(to6('200'))
-  //     })
+      it('updates lp balances', async function () {
+        expect(await this.lp.totalSupply()).to.be.equal(to6('200'))
+        expect(await this.lp.balanceOf(user2.address)).to.be.equal(to6('200'))
+      })
 
-  //     it('emits event', async function () {
-  //       await expect(this.result).to.emit(this.beanstalk, 'Swap').withArgs(wellId, USDC, BEAN, to6('100'), to6('50'));
-  //     })
-  //   })
-  // })
+      it('emits event', async function () {
+        await expect(this.result).to.emit(this.beanstalk, 'Swap').withArgs(wellId, USDC, BEAN, to6('100'), to6('50'));
+      })
+    })
+  })
 
-  // describe("Add liquidity", async function () {
-  //   it("Gets amount out", async function () {
-  //     expect(await this.beanstalk.getAddLiquidityOut(well, [to6('90'), to6('110')])).to.be.equal(to6('199.499686'))
-  //   })
+  describe("Add liquidity", async function () {
+    it("Gets amount out", async function () {
+      expect(await this.beanstalk.getAddLiquidityOut(well, [to6('90'), to6('110')])).to.be.equal(to6('199.499686'))
+    })
 
-  //   it("reverts if amount out too low", async function () {
-  //     await expect(this.beanstalk.connect(user).addLiquidity(well, [to6('90'), to6('110')], to6('200'), EXTERNAL, EXTERNAL)).to.be.revertedWith("LibWell: Not enough LP.")
-  //   })
+    it("reverts if amount out too low", async function () {
+      await expect(this.beanstalk.connect(user).addLiquidity(well, [to6('90'), to6('110')], to6('200'), EXTERNAL, EXTERNAL)).to.be.revertedWith("LibWell: Not enough LP.")
+    })
 
 
-  //   describe("Basic", async function () {
-  //     beforeEach(async function () {
-  //       this.result = await this.beanstalk.connect(user).addLiquidity(well, [to6('90'), to6('110')], to6('199.499686'), EXTERNAL, EXTERNAL)
-  //     })
+    describe("Basic", async function () {
+      beforeEach(async function () {
+        this.result = await this.beanstalk.connect(user).addLiquidity(well, [to6('90'), to6('110')], to6('199.499686'), EXTERNAL, EXTERNAL)
+      })
 
-  //     it("transfers assets", async function () {
-  //       expect(await this.bean.balanceOf(user.address)).to.be.equal(to6('890'))
-  //       expect(await this.usdc.balanceOf(user.address)).to.be.equal(to6('910'))
-  //     })
+      it("transfers assets", async function () {
+        expect(await this.bean.balanceOf(user.address)).to.be.equal(to6('890'))
+        expect(await this.usdc.balanceOf(user.address)).to.be.equal(to6('910'))
+      })
 
-  //     it("updates state", async function () {
-  //       const balances = await this.beanstalk.getWellBalances(wellId)
-  //       expect(balances[0]).to.be.equal(to6('190'))
-  //       expect(balances[1]).to.be.equal(to6('210'))
-  //       expect(await this.beanstalk.getWellBlockNumber(wellId)).to.be.equal(await getBlockNumber())
-  //       expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('399.499686'))
-  //     })
+      it("updates state", async function () {
+        const balances = await this.beanstalk.getWellBalances(wellId)
+        expect(balances[0]).to.be.equal(to6('190'))
+        expect(balances[1]).to.be.equal(to6('210'))
+        expect(await this.beanstalk.getWellBlockNumber(wellId)).to.be.equal(await getBlockNumber())
+        expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('399.499686'))
+      })
 
-  //     it('updates lp balances', async function () {
-  //       expect(await this.lp.totalSupply()).to.be.equal(to6('399.499686'))
-  //       expect(await this.lp.balanceOf(user.address)).to.be.equal(to6('199.499686'))
-  //     })
+      it('updates lp balances', async function () {
+        expect(await this.lp.totalSupply()).to.be.equal(to6('399.499686'))
+        expect(await this.lp.balanceOf(user.address)).to.be.equal(to6('199.499686'))
+      })
 
-  //     it('emits event', async function () {
-  //       await expect(this.result).to.emit(this.beanstalk, 'AddLiquidity').withArgs(wellId, [to6('90'), to6('110')]);
-  //     })
-  //   })
-  // })
+      it('emits event', async function () {
+        await expect(this.result).to.emit(this.beanstalk, 'AddLiquidity').withArgs(wellId, [to6('90'), to6('110')]);
+      })
+    })
+  })
 
-  // describe("Remove liquidity", async function () {
-  //   it("Gets amount out", async function () {
-  //     const tokensOut = await this.beanstalk.getRemoveLiquidityOut(well, to6('10'))
-  //     expect(tokensOut[0]).to.be.equal(to6('5'))
-  //     expect(tokensOut[1]).to.be.equal(to6('5'))
-  //   })
+  describe("Remove liquidity", async function () {
+    it("Gets amount out", async function () {
+      const tokensOut = await this.beanstalk.getRemoveLiquidityOut(well, to6('10'))
+      expect(tokensOut[0]).to.be.equal(to6('5'))
+      expect(tokensOut[1]).to.be.equal(to6('5'))
+    })
 
-  //   it("reverts if amount out too low", async function () {
-  //     await expect(this.beanstalk.connect(user2).removeLiquidity(well, to6('10'), [to6('6'), to6('5')], EXTERNAL, EXTERNAL)).to.be.revertedWith("LibWell: Not enough out.")
-  //   })
+    it("reverts if amount out too low", async function () {
+      await expect(this.beanstalk.connect(user2).removeLiquidity(well, to6('10'), [to6('6'), to6('5')], EXTERNAL, EXTERNAL)).to.be.revertedWith("LibWell: Not enough out.")
+    })
 
-  //   describe("Basic", async function () {
-  //     beforeEach(async function () {
-  //       this.result = await this.beanstalk.connect(user2).removeLiquidity(well, to6('10'), [to6('5'), to6('5')], EXTERNAL, EXTERNAL)
-  //     })
+    describe("Basic", async function () {
+      beforeEach(async function () {
+        this.result = await this.beanstalk.connect(user2).removeLiquidity(well, to6('10'), [to6('5'), to6('5')], EXTERNAL, EXTERNAL)
+      })
 
-  //     it("transfers assets", async function () {
-  //       expect(await this.bean.balanceOf(user2.address)).to.be.equal(to6('99905'))
-  //       expect(await this.usdc.balanceOf(user2.address)).to.be.equal(to6('99905'))
-  //     })
+      it("transfers assets", async function () {
+        expect(await this.bean.balanceOf(user2.address)).to.be.equal(to6('99905'))
+        expect(await this.usdc.balanceOf(user2.address)).to.be.equal(to6('99905'))
+      })
 
-  //     it("updates state", async function () {
-  //       const balances = await this.beanstalk.getWellBalances(wellId)
-  //       expect(balances[0]).to.be.equal(to6('95'))
-  //       expect(balances[1]).to.be.equal(to6('95'))
-  //       expect(await this.beanstalk.getWellBlockNumber(wellId)).to.be.equal(await getBlockNumber())
-  //       expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('190'))
-  //     })
+      it("updates state", async function () {
+        const balances = await this.beanstalk.getWellBalances(wellId)
+        expect(balances[0]).to.be.equal(to6('95'))
+        expect(balances[1]).to.be.equal(to6('95'))
+        expect(await this.beanstalk.getWellBlockNumber(wellId)).to.be.equal(await getBlockNumber())
+        expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('190'))
+      })
 
-  //     it('updates lp balances', async function () {
-  //       expect(await this.lp.totalSupply()).to.be.equal(to6('190'))
-  //       expect(await this.lp.balanceOf(user2.address)).to.be.equal(to6('190'))
-  //     })
+      it('updates lp balances', async function () {
+        expect(await this.lp.totalSupply()).to.be.equal(to6('190'))
+        expect(await this.lp.balanceOf(user2.address)).to.be.equal(to6('190'))
+      })
 
-  //     it('emits event', async function () {
-  //       await expect(this.result).to.emit(this.beanstalk, 'RemoveLiquidity').withArgs(wellId, [to6('5'), to6('5')]);
-  //     })
-  //   })
-  // })
+      it('emits event', async function () {
+        await expect(this.result).to.emit(this.beanstalk, 'RemoveLiquidity').withArgs(wellId, [to6('5'), to6('5')]);
+      })
+    })
+  })
 
-  // describe("Remove liquidity one token", async function () {
-  //   it("Gets amount out", async function () {
-  //     expect(await this.beanstalk.getRemoveLiquidityOneTokenOut(well, BEAN, to6('10'))).to.be.equal(to6('9.75'))
-  //   })
+  describe("Remove liquidity one token", async function () {
+    it("Gets amount out", async function () {
+      expect(await this.beanstalk.getRemoveLiquidityOneTokenOut(well, BEAN, to6('10'))).to.be.equal(to6('9.75'))
+    })
 
-  //   it("reverts if amount out too low", async function () {
-  //     await expect(this.beanstalk.connect(user2).removeLiquidityOneToken(well, BEAN, to6('10'), to6('10'), EXTERNAL, EXTERNAL)).to.be.revertedWith("LibWell: out too low.")
-  //   })
+    it("reverts if amount out too low", async function () {
+      await expect(this.beanstalk.connect(user2).removeLiquidityOneToken(well, BEAN, to6('10'), to6('10'), EXTERNAL, EXTERNAL)).to.be.revertedWith("LibWell: out too low.")
+    })
 
-  //   describe("Basic", async function () {
-  //     beforeEach(async function () {
-  //       this.result = await this.beanstalk.connect(user2).removeLiquidityOneToken(well, BEAN, to6('10'), to6('5'), EXTERNAL, EXTERNAL)
-  //     })
+    describe("Basic", async function () {
+      beforeEach(async function () {
+        this.result = await this.beanstalk.connect(user2).removeLiquidityOneToken(well, BEAN, to6('10'), to6('5'), EXTERNAL, EXTERNAL)
+      })
 
-  //     it("transfers assets", async function () {
-  //       expect(await this.bean.balanceOf(user2.address)).to.be.equal(to6('99909.75'))
-  //       expect(await this.usdc.balanceOf(user2.address)).to.be.equal(to6('99900'))
-  //     })
+      it("transfers assets", async function () {
+        expect(await this.bean.balanceOf(user2.address)).to.be.equal(to6('99909.75'))
+        expect(await this.usdc.balanceOf(user2.address)).to.be.equal(to6('99900'))
+      })
 
-  //     it("updates state", async function () {
-  //       const balances = await this.beanstalk.getWellBalances(wellId)
-  //       expect(balances[0]).to.be.equal(to6('100'))
-  //       expect(balances[1]).to.be.equal(to6('90.25'))
-  //       expect(await this.beanstalk.getWellBlockNumber(wellId)).to.be.equal(await getBlockNumber())
-  //       expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('190'))
-  //     })
+      it("updates state", async function () {
+        const balances = await this.beanstalk.getWellBalances(wellId)
+        expect(balances[0]).to.be.equal(to6('100'))
+        expect(balances[1]).to.be.equal(to6('90.25'))
+        expect(await this.beanstalk.getWellBlockNumber(wellId)).to.be.equal(await getBlockNumber())
+        expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('190'))
+      })
 
-  //     it('updates lp balances', async function () {
-  //       expect(await this.lp.totalSupply()).to.be.equal(to6('190'))
-  //       expect(await this.lp.balanceOf(user2.address)).to.be.equal(to6('190'))
-  //     })
+      it('updates lp balances', async function () {
+        expect(await this.lp.totalSupply()).to.be.equal(to6('190'))
+        expect(await this.lp.balanceOf(user2.address)).to.be.equal(to6('190'))
+      })
 
-  //     it('emits event', async function () {
-  //       await expect(this.result).to.emit(this.beanstalk, 'RemoveLiquidityOneToken').withArgs(wellId, BEAN, to6('9.75'));
-  //     })
-  //   })
-  // })
+      it('emits event', async function () {
+        await expect(this.result).to.emit(this.beanstalk, 'RemoveLiquidityOneToken').withArgs(wellId, BEAN, to6('9.75'));
+      })
+    })
+  })
 
-  // describe("Remove liquidity one token 2", async function () {
-  //   describe("Basic", async function () {
-  //     beforeEach(async function () {
-  //       this.result = await this.beanstalk.connect(user2).removeLiquidityOneToken(well, USDC, to6('10'), to6('5'), EXTERNAL, EXTERNAL)
-  //     })
+  describe("Remove liquidity one token 2", async function () {
+    describe("Basic", async function () {
+      beforeEach(async function () {
+        this.result = await this.beanstalk.connect(user2).removeLiquidityOneToken(well, USDC, to6('10'), to6('5'), EXTERNAL, EXTERNAL)
+      })
 
-  //     it("transfers assets", async function () {
-  //       expect(await this.bean.balanceOf(user2.address)).to.be.equal(to6('99900'))
-  //       expect(await this.usdc.balanceOf(user2.address)).to.be.equal(to6('99909.75'))
-  //     })
+      it("transfers assets", async function () {
+        expect(await this.bean.balanceOf(user2.address)).to.be.equal(to6('99900'))
+        expect(await this.usdc.balanceOf(user2.address)).to.be.equal(to6('99909.75'))
+      })
 
-  //     it("updates state", async function () {
-  //       const balances = await this.beanstalk.getWellBalances(wellId)
-  //       expect(balances[0]).to.be.equal(to6('90.25'))
-  //       expect(balances[1]).to.be.equal(to6('100'))
-  //       expect(await this.beanstalk.getWellBlockNumber(wellId)).to.be.equal(await getBlockNumber())
-  //       expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('190'))
-  //     })
+      it("updates state", async function () {
+        const balances = await this.beanstalk.getWellBalances(wellId)
+        expect(balances[0]).to.be.equal(to6('90.25'))
+        expect(balances[1]).to.be.equal(to6('100'))
+        expect(await this.beanstalk.getWellBlockNumber(wellId)).to.be.equal(await getBlockNumber())
+        expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('190'))
+      })
 
-  //     it('updates lp balances', async function () {
-  //       expect(await this.lp.totalSupply()).to.be.equal(to6('190'))
-  //       expect(await this.lp.balanceOf(user2.address)).to.be.equal(to6('190'))
-  //     })
+      it('updates lp balances', async function () {
+        expect(await this.lp.totalSupply()).to.be.equal(to6('190'))
+        expect(await this.lp.balanceOf(user2.address)).to.be.equal(to6('190'))
+      })
 
-  //     it('emits event', async function () {
-  //       await expect(this.result).to.emit(this.beanstalk, 'RemoveLiquidityOneToken').withArgs(wellId, USDC, to6('9.75'));
-  //     })
-  //   })
-  // })
+      it('emits event', async function () {
+        await expect(this.result).to.emit(this.beanstalk, 'RemoveLiquidityOneToken').withArgs(wellId, USDC, to6('9.75'));
+      })
+    })
+  })
 
-  // describe("Remove liquidity imbalanced", async function () {
-  //   it("Gets amount out", async function () {
-  //     expect(await this.beanstalk.getRemoveLiquidityImbalancedIn(well, [to6('5'), to6('5')])).to.be.equal(to6('10'))
-  //     expect(await this.beanstalk.getRemoveLiquidityImbalancedIn(well, [to6('4'), to6('5')])).to.be.equal(to6('9.002618'))
-  //   })
+  describe("Remove liquidity imbalanced", async function () {
+    it("Gets amount out", async function () {
+      expect(await this.beanstalk.getRemoveLiquidityImbalancedIn(well, [to6('5'), to6('5')])).to.be.equal(to6('10'))
+      expect(await this.beanstalk.getRemoveLiquidityImbalancedIn(well, [to6('4'), to6('5')])).to.be.equal(to6('9.002618'))
+    })
 
-  //   it("reverts if amount out too low", async function () {
-  //     await expect(this.beanstalk.connect(user2).removeLiquidityImbalanced(well, to6('10'), [to6('5'), to6('6')], EXTERNAL, EXTERNAL)).to.be.revertedWith("LibWell: in too high.")
-  //   })
+    it("reverts if amount out too low", async function () {
+      await expect(this.beanstalk.connect(user2).removeLiquidityImbalanced(well, to6('10'), [to6('5'), to6('6')], EXTERNAL, EXTERNAL)).to.be.revertedWith("LibWell: in too high.")
+    })
 
-  //   describe("Basic", async function () {
-  //     beforeEach(async function () {
-  //       this.result = await this.beanstalk.connect(user2).removeLiquidityImbalanced(well, to6('10'), [to6('4'), to6('5')], EXTERNAL, EXTERNAL)
-  //     })
+    describe("Basic", async function () {
+      beforeEach(async function () {
+        this.result = await this.beanstalk.connect(user2).removeLiquidityImbalanced(well, to6('10'), [to6('4'), to6('5')], EXTERNAL, EXTERNAL)
+      })
 
-  //     it("transfers assets", async function () {
-  //       expect(await this.bean.balanceOf(user2.address)).to.be.equal(to6('99905'))
-  //       expect(await this.usdc.balanceOf(user2.address)).to.be.equal(to6('99904'))
-  //     })
+      it("transfers assets", async function () {
+        expect(await this.bean.balanceOf(user2.address)).to.be.equal(to6('99905'))
+        expect(await this.usdc.balanceOf(user2.address)).to.be.equal(to6('99904'))
+      })
 
-  //     it("updates state", async function () {
-  //       const balances = await this.beanstalk.getWellBalances(wellId)
-  //       expect(balances[0]).to.be.equal(to6('96'))
-  //       expect(balances[1]).to.be.equal(to6('95'))
-  //       expect(await this.beanstalk.getWellBlockNumber(wellId)).to.be.equal(await getBlockNumber())
-  //       expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('190.997382'))
-  //     })
+      it("updates state", async function () {
+        const balances = await this.beanstalk.getWellBalances(wellId)
+        expect(balances[0]).to.be.equal(to6('96'))
+        expect(balances[1]).to.be.equal(to6('95'))
+        expect(await this.beanstalk.getWellBlockNumber(wellId)).to.be.equal(await getBlockNumber())
+        expect(await this.beanstalk.getWellTokenSupply(wellId)).to.be.equal(to6('190.997382'))
+      })
 
-  //     it('updates lp balances', async function () {
-  //       expect(await this.lp.totalSupply()).to.be.equal(to6('190.997382'))
-  //       expect(await this.lp.balanceOf(user2.address)).to.be.equal(to6('190.997382'))
-  //     })
+      it('updates lp balances', async function () {
+        expect(await this.lp.totalSupply()).to.be.equal(to6('190.997382'))
+        expect(await this.lp.balanceOf(user2.address)).to.be.equal(to6('190.997382'))
+      })
 
-  //     it('emits event', async function () {
-  //       await expect(this.result).to.emit(this.beanstalk, 'RemoveLiquidity').withArgs(wellId, [to6('4'), to6('5')]);
-  //     })
-  //   })
-  // })
+      it('emits event', async function () {
+        await expect(this.result).to.emit(this.beanstalk, 'RemoveLiquidity').withArgs(wellId, [to6('4'), to6('5')]);
+      })
+    })
+  })
 
   // describe("Exp", async function () {
   //   it('calculates exp correctly', async function () {
@@ -497,80 +486,80 @@ describe('2 Token Well', function () {
       })
     })
     
-    // describe("add a couple liquiditys", async function () {
-    //   beforeEach(async function () {
-    //     ema = getEma(toBN('0'), to6('100'), 10, A)
-    //     await fastForward(10)
-    //     await this.beanstalk.connect(user2).addLiquidity(well, [to6('100'), to6('100')], to6('200'), EXTERNAL, EXTERNAL)
-    //     ema = getEma(ema, to6('200'), 10, A)
-    //     await fastForward(10)
-    //     await this.beanstalk.connect(user2).addLiquidity(well, [to6('100'), to6('100')], to6('200'), EXTERNAL, EXTERNAL)
-    //   })
+    describe("add a couple liquiditys", async function () {
+      beforeEach(async function () {
+        ema = getEma(toBN('0'), to6('100'), 10, A)
+        await fastForward(10)
+        await this.beanstalk.connect(user2).addLiquidity(well, [to6('100'), to6('100')], to6('200'), EXTERNAL, EXTERNAL)
+        ema = getEma(ema, to6('200'), 10, A)
+        await fastForward(10)
+        await this.beanstalk.connect(user2).addLiquidity(well, [to6('100'), to6('100')], to6('200'), EXTERNAL, EXTERNAL)
+      })
     
-    //   it("updates ema pump", async function () {
-    //     const emaBalances = await this.beanstalk.readPump(wellHash, this.pumps[0]);
-    //     expect(emaBalances[0]).to.be.within(ema, ema.add(toBN('1000')))
-    //     expect(emaBalances[1]).to.be.within(ema, ema.add(toBN('1000')))
-    //   })
+      it("updates ema pump", async function () {
+        const emaBalances = await this.beanstalk.readPump(wellHash, this.pumps[0]);
+        expect(emaBalances[0]).to.be.within(ema, ema.add(toBN('1000')))
+        expect(emaBalances[1]).to.be.within(ema, ema.add(toBN('1000')))
+      })
 
-    //   it("updates SMA pump", async function () {
-    //     const smaBalances = await this.beanstalk.readPump(wellHash, this.pumps[1]);
-    //     expect(smaBalances[0]).to.be.equal(to6('3000'))
-    //     expect(smaBalances[1]).to.be.equal(to6('3000'))
-    //   })
+      it("updates SMA pump", async function () {
+        const smaBalances = await this.beanstalk.readPump(wellHash, this.pumps[1]);
+        expect(smaBalances[0]).to.be.equal(to6('3000'))
+        expect(smaBalances[1]).to.be.equal(to6('3000'))
+      })
 
-    //   it("updates external pump", async function () {
-    //     const byteBalances = await this.beanstalk.readPump(wellHash, this.pumps[2]);
-    //     expect(byteBalances[0]).to.be.within(ema, ema.add(toBN('1000')))
-    //     expect(byteBalances[1]).to.be.within(ema, ema.add(toBN('1000')))
-    //   })
-    // })
+      it("updates external pump", async function () {
+        const byteBalances = await this.beanstalk.readPump(wellHash, this.pumps[2]);
+        expect(byteBalances[0]).to.be.within(ema, ema.add(toBN('1000')))
+        expect(byteBalances[1]).to.be.within(ema, ema.add(toBN('1000')))
+      })
+    })
 
-    // describe("add a at different amounts", async function () {
-    //   beforeEach(async function () {
-    //     time = 50
-    //     ema = getEma(toBN('0'), to6('100'), time, A)
-    //     await fastForward(time)
-    //     await this.beanstalk.connect(user2).addLiquidity(well, [to6('50'), to6('100')], to6('120'), EXTERNAL, EXTERNAL)
+    describe("add a at different amounts", async function () {
+      beforeEach(async function () {
+        time = 50
+        ema = getEma(toBN('0'), to6('100'), time, A)
+        await fastForward(time)
+        await this.beanstalk.connect(user2).addLiquidity(well, [to6('50'), to6('100')], to6('120'), EXTERNAL, EXTERNAL)
 
-    //     time = 100000
-    //     ema0 = getEma(ema, to6('150'), time, A)
-    //     ema1 = getEma(ema, to6('200'), time, A)
-    //     await fastForward(time)
-    //     await this.beanstalk.connect(user2).addLiquidity(well, [to6('50'), to6('100')], to6('120'), EXTERNAL, EXTERNAL)
+        time = 100000
+        ema0 = getEma(ema, to6('150'), time, A)
+        ema1 = getEma(ema, to6('200'), time, A)
+        await fastForward(time)
+        await this.beanstalk.connect(user2).addLiquidity(well, [to6('50'), to6('100')], to6('120'), EXTERNAL, EXTERNAL)
 
-    //     time = 105323
-    //     ema0 = getEma(ema0, to6('200'), time, A)
-    //     ema1 = getEma(ema1, to6('300'), time, A)
-    //     await fastForward(time)
-    //     await this.beanstalk.connect(user2).addLiquidity(well, [to6('1000'), to6('1000')], to6('200'), EXTERNAL, EXTERNAL)
+        time = 105323
+        ema0 = getEma(ema0, to6('200'), time, A)
+        ema1 = getEma(ema1, to6('300'), time, A)
+        await fastForward(time)
+        await this.beanstalk.connect(user2).addLiquidity(well, [to6('1000'), to6('1000')], to6('200'), EXTERNAL, EXTERNAL)
 
-    //     time = 13141
-    //     ema0 = getEma(ema0, to6('1200'), time, A)
-    //     ema1 = getEma(ema1, to6('1300'), time, A)
-    //     await fastForward(time)
-    //     await this.beanstalk.connect(user2).addLiquidity(well, [to6('1000'), to6('1500')], to6('200'), EXTERNAL, EXTERNAL)
+        time = 13141
+        ema0 = getEma(ema0, to6('1200'), time, A)
+        ema1 = getEma(ema1, to6('1300'), time, A)
+        await fastForward(time)
+        await this.beanstalk.connect(user2).addLiquidity(well, [to6('1000'), to6('1500')], to6('200'), EXTERNAL, EXTERNAL)
 
-    //     time = 3114
-    //     ema0 = getEma(ema0, to6('2200'), time, A)
-    //     ema1 = getEma(ema1, to6('2800'), time, A)
-    //     await fastForward(time)
-    //     await this.beanstalk.connect(user2).addLiquidity(well, [to6('0'), to6('10000')], to6('200'), EXTERNAL, EXTERNAL)
-    //   })
+        time = 3114
+        ema0 = getEma(ema0, to6('2200'), time, A)
+        ema1 = getEma(ema1, to6('2800'), time, A)
+        await fastForward(time)
+        await this.beanstalk.connect(user2).addLiquidity(well, [to6('0'), to6('10000')], to6('200'), EXTERNAL, EXTERNAL)
+      })
 
-    //   it("updates pumps", async function () {
-    //     const emaBalances = await this.beanstalk.readPump(wellHash, this.pumps[0]);
-    //     expect(emaBalances[0]).to.be.within(ema0, ema0.add(toBN('1000')))
-    //     expect(emaBalances[1]).to.be.within(ema1, ema1.add(toBN('1000')))
+      it("updates pumps", async function () {
+        const emaBalances = await this.beanstalk.readPump(wellHash, this.pumps[0]);
+        expect(emaBalances[0]).to.be.within(ema0, ema0.add(toBN('1000')))
+        expect(emaBalances[1]).to.be.within(ema1, ema1.add(toBN('1000')))
 
-    //     const smaBalances = await this.beanstalk.readPump(wellHash, this.pumps[1]);
-    //     expect(smaBalances[0]).to.be.equal(to6('58689600'))
-    //     expect(smaBalances[1]).to.be.equal(to6('77404400'))
+        const smaBalances = await this.beanstalk.readPump(wellHash, this.pumps[1]);
+        expect(smaBalances[0]).to.be.equal(to6('58689600'))
+        expect(smaBalances[1]).to.be.equal(to6('77404400'))
         
-    //     const byteBalances = await this.beanstalk.readPump(wellHash, this.pumps[2]);
-    //     expect(byteBalances[0]).to.be.within(ema0, ema0.add(toBN('1000')))
-    //     expect(byteBalances[1]).to.be.within(ema1, ema1.add(toBN('1000')))
-    //   })
-    // })
+        const byteBalances = await this.beanstalk.readPump(wellHash, this.pumps[2]);
+        expect(byteBalances[0]).to.be.within(ema0, ema0.add(toBN('1000')))
+        expect(byteBalances[1]).to.be.within(ema1, ema1.add(toBN('1000')))
+      })
+    })
   })
 })

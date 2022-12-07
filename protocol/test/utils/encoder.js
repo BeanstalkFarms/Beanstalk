@@ -52,11 +52,11 @@ class ConvertEncoder {
    );
 }
 
-class TypeEncoder {
-  static constantProductType = () =>
-    defaultAbiCoder.encode(
-      [],
-      []
+class WellFunctionEncoder {
+  static basicEncoder = (address) =>
+    ethers.utils.solidityPack(
+      ["address"],
+      [address]
     );
 
   static testType = (num) =>
@@ -68,4 +68,4 @@ class TypeEncoder {
 }
 
 exports.ConvertEncoder = ConvertEncoder
-exports.TypeEncoder = TypeEncoder
+exports.WellFunctionEncoder = WellFunctionEncoder

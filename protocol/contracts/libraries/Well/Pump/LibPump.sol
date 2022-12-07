@@ -25,9 +25,18 @@ library LibPump {
 
     function updatePump(bytes32 wh, bytes calldata pump, uint128[] memory newBalances, uint32 blocksPassed) private {
         bytes32 slot = keccak256(abi.encode(wh, pump));
+        byte pumpType = pump[0];
+        if (pumpType == 0x00) {
             address target;
             assembly { target := calldataload(sub(pump.offset,10)) }
             IPump(target).updatePump(pump[22:], slot, newBalances, blocksPassed);
+        } else if (pumpType == 0x01) {
+            bytes16 A;
+            assembly { A := calldataload(add(pump.offset,2)) }
+            LibEmaPump.updatePump(slot, newBalances, blocksPassed, uint128(A));
+        } else if (pumpType == 0x02) {
+            LibCumulativeSmaPump.updatePump(slot, newBalances, blocksPassed);
+        }
     }
 
     function readPump(bytes32 wh, bytes calldata pump) internal view returns (uint256[] memory balances) {
@@ -54,14 +63,33 @@ library LibPump {
     }
 
     function getLastBlockNumber(bytes32 wh, uint256 n) internal view returns (uint32 lastBlockNumber) {
-        uint256 offset = (n+1)/2;
+        uint256 offset = n/2;
+        bytes32 hi;
+        assembly { hi := sload(add(wh, offset)) }
         assembly { lastBlockNumber := sload(add(wh, offset)) }
     }
 
     function updateLastBlockNumber(bytes32 wh, uint256 n) internal returns (uint32 lastBlockNumber) {
-        uint256 offset = (n+1)/2;
-        assembly { lastBlockNumber := sload(add(wh, offset)) }
+        uint256 offset = n/2;
         uint32 blockNumber = uint32(block.number);
-        assembly { sstore(add(wh, offset), blockNumber) }
+        if (offset * 2 == n) {
+            assembly {
+                lastBlockNumber := sload(add(wh, offset))
+                sstore(add(wh, offset), blockNumber) 
+            }
+        } else {
+            bytes32 lastBlockSlot;
+            assembly { 
+                lastBlockSlot := sload(add(wh, offset))
+                lastBlockNumber := lastBlockSlot
+                sstore(
+                    add(wh, offset),
+                    add(
+                        shl(128, shr(128, lastBlockSlot)),
+                        blockNumber
+                    )
+                )
+            }
+        }
     }
 }
