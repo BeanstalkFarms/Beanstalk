@@ -298,7 +298,7 @@ contract Storage {
 }
 
 struct AppStorage {
-    uint8 index; // DEPRECATED - Was the index of the Bean token in the Bean:Eth Uniswap v2 pool, which has been deprecated.
+    uint8 index; // DEPRECATED - Was the index of the Bean token in the BEAN:ETH Uniswap v2 pool, which has been deprecated.
     int8[32] cases; // The 24 Weather cases (array has 32 items, but caseId = 3 (mod 4) are not cases).
     bool paused; // True if Beanstalk is Paused.
     uint128 pausedAt; // The timestamp at which Beanstalk was last paused. 
