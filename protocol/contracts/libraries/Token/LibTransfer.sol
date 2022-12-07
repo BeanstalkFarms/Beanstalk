@@ -30,6 +30,7 @@ library LibTransfer {
 
     function transferToken(
         IERC20 token,
+        address sender,
         address recipient,
         uint256 amount,
         From fromMode,
@@ -37,10 +38,10 @@ library LibTransfer {
     ) internal returns (uint256 transferredAmount) {
         if (fromMode == From.EXTERNAL && toMode == To.EXTERNAL) {
             uint256 beforeBalance = token.balanceOf(recipient);
-            token.safeTransferFrom(msg.sender, recipient, amount);
+            token.safeTransferFrom(sender, recipient, amount);
             return token.balanceOf(recipient).sub(beforeBalance);
         }
-        amount = receiveToken(token, amount, msg.sender, fromMode);
+        amount = receiveToken(token, amount, sender, fromMode);
         sendToken(token, amount, recipient, toMode);
         return amount;
     }
@@ -81,11 +82,11 @@ library LibTransfer {
 
     function burnToken(
         IBean token,
-        uint256 amount, 
+        uint256 amount,
         address sender,
-        From mode 
+        From mode
     ) internal returns (uint256 burnt) {
-        // burnToken only can be called with Unripe Bean, Unripe Bean:3Crv or Bean token, which are all Beanstalk tokens. 
+        // burnToken only can be called with Unripe Bean, Unripe Bean:3Crv or Bean token, which are all Beanstalk tokens.
         // Beanstalk's ERC-20 implementation uses OpenZeppelin's ERC20Burnable
         // which reverts if burnFrom function call cannot burn full amount.
         if (mode == From.EXTERNAL) {

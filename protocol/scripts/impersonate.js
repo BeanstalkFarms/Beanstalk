@@ -1,5 +1,4 @@
 var fs = require('fs');
-const { ethers } = require('hardhat');
 
 const {
   ZERO_ADDRESS,
@@ -21,7 +20,8 @@ const {
   STABLE_FACTORY,
   PRICE_DEPLOYER,
   ETH_USD_CHAINLINK_ORACLE,
-  LIQUITY_PRICE_FEED
+  LIQUITY_PRICE_FEED,
+  BEANSTALK
 } = require('../test/utils/constants');
 const { impersonateSigner, mintEth } = require('../utils');
 
@@ -45,7 +45,7 @@ async function curve() {
     JSON.parse(threeCurveJson).deployedBytecode,
   ]);
 
-  let curveFactoryJson = fs.readFileSync(`./artifacts/contracts/mocks/Curve/MockCurveFactory.sol/MockCurveFactory.json`);
+  let curveFactoryJson = fs.readFileSync(`./artifacts/contracts/mocks/curve/MockCurveFactory.sol/MockCurveFactory.json`);
   await network.provider.send("hardhat_setCode", [
     STABLE_FACTORY,
     JSON.parse(curveFactoryJson).deployedBytecode,
@@ -58,7 +58,7 @@ async function curve() {
   const curveStableFactory = await ethers.getContractAt("MockCurveFactory", STABLE_FACTORY);
   await curveStableFactory.set_coins(BEAN_3_CURVE, [BEAN, THREE_CURVE, ZERO_ADDRESS, ZERO_ADDRESS]);
 
-  let curveZapJson = fs.readFileSync(`./artifacts/contracts/mocks/Curve/MockCurveZap.sol/MockCurveZap.json`);
+  let curveZapJson = fs.readFileSync(`./artifacts/contracts/mocks/curve/MockCurveZap.sol/MockCurveZap.json`);
   await network.provider.send("hardhat_setCode", [
     CURVE_ZAP,
     JSON.parse(curveZapJson).deployedBytecode,
@@ -228,7 +228,18 @@ async function ethUsdOracle() {
     LIQUITY_PRICE_FEED,
     JSON.parse(liquityPriceFeedJson).deployedBytecode,
   ]);
+}
 
+async function impersonateBeanstalk(owner) {
+  let beanstalkJson = fs.readFileSync(`./artifacts/contracts/mocks/MockDiamond.sol/MockDiamond.json`);
+
+  await network.provider.send("hardhat_setCode", [
+    BEANSTALK,
+    JSON.parse(beanstalkJson).deployedBytecode,
+  ]);
+
+  beanstalk = await ethers.getContractAt('MockDiamond', BEANSTALK)
+  await beanstalk.mockInit(owner);
 }
 
 exports.impersonateRouter = router
@@ -243,3 +254,4 @@ exports.impersonateFertilizer = fertilizer
 exports.impersonateUsdc = usdc
 exports.impersonatePrice = price
 exports.impersonateEthUsdOracle = ethUsdOracle
+exports.impersonateBeanstalk = impersonateBeanstalk

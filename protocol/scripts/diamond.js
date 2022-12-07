@@ -1,3 +1,7 @@
+const { BEANSTALK } = require("../test/utils/constants")
+const { impersonateBeanstalk } = require("./impersonate")
+const fs = require('fs')
+
 const FacetCutAction = {
   Add: 0,
   Replace: 1,
@@ -54,7 +58,7 @@ async function deployFacets (facets, verbose = false) {
       if (typeof facet !== 'string') {
         throw Error(`Error deploying facet: facet name must be a string. Bad input: ${facet}`)
       }
-      const facetFactory = await ethers.getContractFactory(facet)
+      const facetFactory = await ethers.getContractFactory(facet, account)
       if (verbose) console.log(`Deploying ${facet}`)
       const deployedFactory = await facetFactory.deploy()
       await deployedFactory.deployed()
@@ -76,7 +80,8 @@ async function deploy ({
   facetLibraries = {},
   args = [],
   verbose = false,
-  txArgs = {}
+  txArgs = {},
+  impersonate = false
 }) {
   if (arguments.length !== 1) {
     throw Error(`Requires only 1 map argument. ${arguments.length} arguments used.`)
@@ -121,19 +126,25 @@ async function deploy ({
 
   if (verbose) console.log(`Deploying ${diamondName}`)
 
-  const deployedDiamond = await diamondFactory.deploy(owner)
-  await deployedDiamond.deployed()
-  result = await deployedDiamond.deployTransaction.wait()
-  if (!result.status) {
-    console.log('Deploying diamond TRANSACTION FAILED!!! -------------------------------------------')
-    console.log('See block explorer app for details.')
-    console.log('Transaction hash:' + deployedDiamond.deployTransaction.hash)
-    throw (Error('failed to deploy diamond'))
-  }
-  if (verbose) console.log('Diamond deploy transaction hash:' + deployedDiamond.deployTransaction.hash)
+  let deployedDiamond
+  if (!impersonate) {
+    deployedDiamond = await diamondFactory.deploy(owner)
+    await deployedDiamond.deployed()
+    result = await deployedDiamond.deployTransaction.wait()
+    if (!result.status) {
+      console.log('Deploying diamond TRANSACTION FAILED!!! -------------------------------------------')
+      console.log('See block explorer app for details.')
+      console.log('Transaction hash:' + deployedDiamond.deployTransaction.hash)
+      throw (Error('failed to deploy diamond'))
+    }
+    if (verbose) console.log('Diamond deploy transaction hash:' + deployedDiamond.deployTransaction.hash)
 
-  if (verbose) console.log(`${diamondName} deployed: ${deployedDiamond.address}`)
-  if (verbose) console.log(`Diamond owner: ${owner}`)
+    if (verbose) console.log(`${diamondName} deployed: ${deployedDiamond.address}`)
+    if (verbose) console.log(`Diamond owner: ${owner}`)
+  } else {
+    await impersonateBeanstalk(owner)
+    deployedDiamond = await ethers.getContractAt('Diamond', BEANSTALK)
+  }
 
   const diamondCutFacet = await ethers.getContractAt('DiamondCutFacet', deployedDiamond.address)
   const tx = await diamondCutFacet.diamondCut(diamondCut, initDiamond.address, functionCall, txArgs)
@@ -244,7 +255,7 @@ async function upgrade ({
         if (contract) {
           facetFactories.set(facetName, contract)
         } else {
-          facetFactory = await ethers.getContractFactory(facetName)
+          facetFactory = await ethers.getContractFactory(facetName, account)
           facetFactories.set(facetName, facetFactory)
         }
       }
@@ -296,7 +307,7 @@ async function upgrade ({
   if (initFacetName !== undefined) {
     let initFacet = facetFactories.get(initFacetName)
     if (!initFacet) {
-      const InitFacet = await ethers.getContractFactory(initFacetName)
+      const InitFacet = await ethers.getContractFactory(initFacetName, account)
       initFacet = await InitFacet.deploy()
       await initFacet.deployed()
       await initFacet.deployTransaction.wait()
@@ -360,7 +371,7 @@ async function upgradeWithNewFacets ({
   for (const name of libraryNames) {
     if (!Object.keys(libraries).includes(name)) {
       if (verbose) console.log(`Deploying: ${name}`)
-      let libraryFactory = await ethers.getContractFactory(name)
+      let libraryFactory = await ethers.getContractFactory(name, account)
       libraryFactory = await libraryFactory.deploy()
       await libraryFactory.deployed()
       const receipt = await libraryFactory.deployTransaction.wait()
@@ -381,9 +392,10 @@ async function upgradeWithNewFacets ({
       facetFactory = await ethers.getContractFactory(name, {
         libraries: facetLibrary
       },
+      account
       );
     }
-    else facetFactory = await ethers.getContractFactory(name)
+    else facetFactory = await ethers.getContractFactory(name, account)
     undeployed.push([name, facetFactory])
   }
   if (verbose) console.log('')
@@ -450,11 +462,8 @@ async function upgradeWithNewFacets ({
       }
     }
 
-    if (initFacetAddress !== ethers.constants.AddressZero) {
-      initFacet = await ethers.getContractAt('InitFundraiser', initFacetAddress);
-    }
     if (!initFacet) {
-      const InitFacet = await ethers.getContractFactory(initFacetName)
+      const InitFacet = await ethers.getContractFactory(initFacetName, account)
       initFacet = await InitFacet.deploy()
       await initFacet.deployed()
       const receipt = await initFacet.deployTransaction.wait()
@@ -470,22 +479,17 @@ async function upgradeWithNewFacets ({
   }
   let result;
   if (object) {
-    result = await diamondCutFacet.interface.encodeFunctionData('diamondCut', [
-      diamondCut,
-      initFacetAddress,
-      functionCall
-    ])
-    console.log('--------------')
-    console.log('Encoded Function Call:')
-    console.log(result)
     dc = {
       diamondCut: diamondCut,
       initFacetAddress: initFacetAddress,
       functionCall: functionCall
     }
-    console.log('--------------')
-    console.log('Function Call Params:')
+    const encodedDiamondCut = await diamondCutFacet.interface.encodeFunctionData('diamondCut', Object.values(dc))
     console.log(JSON.stringify(dc, null, 4))
+    console.log("Encoded: -------------------------------------------------------------")
+    console.log(encodedDiamondCut)
+    const dcName = `diamondCut-${initFacetName}-${Math.floor(Date.now() / 1000)}-${facetNames.length}-facets.json`
+    await fs.writeFileSync(`./diamondCuts/${dcName}`, JSON.stringify({diamondCut: dc, encoded: encodedDiamondCut }, null, 4));
     return dc
   }
   if (bip) {

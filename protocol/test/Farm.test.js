@@ -74,6 +74,16 @@ describe('Farm', function () {
       await revertToSnapshot(snapshotId);
     });
 
+    describe("Farm Revert", async function () {
+      it('revert if not valid selector', async function () {
+        await expect(this.farm.farm(['0xfd9f1e10'])).to.be.revertedWith('Diamond: Function does not exist')
+      })
+
+      it('revert if not function reverts', async function () {
+        await expect(this.farm.farm([wrapEth])).to.be.reverted
+      })
+    })
+
     describe('Farm Deposit', function () {
       before(async function () {
         deposit = await this.silo.interface.encodeFunctionData(

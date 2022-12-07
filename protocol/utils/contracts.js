@@ -14,6 +14,10 @@ async function getBeanstalkAdminControls() {
     return await ethers.getContractAt('MockAdminFacet', BEANSTALK);
 }
 
+async function getAltBeanstalk(address) {
+    return await ethers.getContractAt(beanstalkABI, address);
+}
+
 async function getBean() {
     return await ethers.getContractAt('Bean', BEAN);
 }
@@ -64,3 +68,4 @@ exports.getFertilizer = getFertilizer
 exports.getAltBeanstalk = getAltBeanstalk
 exports.getEthUsdChainlinkOracle = getEthUsdChainlinkOracle
 exports.getLiquityPriceFeed = getLiquityPriceFeed
+exports.getAltBeanstalk = getAltBeanstalk

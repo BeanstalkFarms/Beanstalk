@@ -5,11 +5,9 @@ const { mintUsdc, mintBeans, mintEth } = require("./mint.js")
 const { readPrune } = require("./read.js")
 const { printPools, printPool } = require('./price.js')
 const { sellBeansInBeanEth, buyBuysInBeanEth } = require('./wells.js')
-
-
-function toBN(a) {
-    return ethers.BigNumber.from(a)
-  }
+const { packAdvanced, encodeAdvancedData, decodeAdvancedData } = require('./function.js')
+const { toBN } = require('./helpers.js')
+const { signSiloDepositTokenPermit, signSiloDepositTokensPermit, signTokenPermit } = require("./permit.js");
 
 exports.toBN = toBN
 exports.getBeanstalk = getBeanstalk
@@ -26,8 +24,9 @@ exports.mintBeans = mintBeans
 exports.mintEth = mintEth
 exports.getPrice = getPrice
 exports.readPrune = readPrune
-exports.getEthUsdPrice = getEthUsdPrice
-exports.printPools = printPools
-exports.printPool = printPool
-exports.sellBeansInBeanEth = sellBeansInBeanEth
-exports.buyBuysInBeanEth = buyBuysInBeanEth
+exports.signSiloDepositTokenPermit = signSiloDepositTokenPermit
+exports.signSiloDepositTokensPermit = signSiloDepositTokensPermit
+exports.packAdvanced = packAdvanced
+exports.encodeAdvancedData = encodeAdvancedData
+exports.decodeAdvancedData = decodeAdvancedData
+exports.signTokenPermit = signTokenPermit

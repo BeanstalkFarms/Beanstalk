@@ -110,10 +110,12 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     oracleFacet,
     ownershipFacet,
     pauseFacet,
+    depotFacet,
     seasonFacet,
     siloFacet,
     fertilizerFacet,
     tokenFacet,
+    tokenSupportFacet,
     unripeFacet,
     wellBuildingFacet,
     wellFacet,
@@ -130,11 +132,13 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'MockMarketplaceFacet',
       'OracleFacet',
       'PauseFacet',
+      'DepotFacet',
       'MockSeasonFacet',
       'MockSiloFacet',
       'MockFertilizerFacet',
       'OwnershipFacet',
       'TokenFacet',
+      'TokenSupportFacet',
       'MockUnripeFacet',
       'WellBuildingFacet',
       'WellFacet',
@@ -152,10 +156,12 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'OracleFacet',
       'OwnershipFacet',
       'PauseFacet',
+      'DepotFacet',
       'SeasonFacet',
       'SiloFacet',
       'FertilizerFacet',
       'TokenFacet',
+      'TokenSupportFacet',
       'UnripeFacet',
       'WellBuildingFacet',
       'WellFacet',
@@ -193,10 +199,12 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['OracleFacet', oracleFacet],
       ['OwnershipFacet', ownershipFacet],
       ['PauseFacet', pauseFacet],
+      ['DepotFacet', depotFacet],
       ['SeasonFacet', seasonFacet],
       ['SiloFacet', siloFacet],
       ['FertilizerFacet', fertilizerFacet],
       ['TokenFacet', tokenFacet],
+      ['TokenSupportFacet', tokenSupportFacet],
       ['UnripeFacet', unripeFacet],
       ['WellBuildingFacet', wellBuildingFacet],
       ['WellFacet', wellFacet],
@@ -205,14 +213,17 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     ],
     owner: account,
     args: args,
-    verbose: verbose
+    verbose: verbose,
+    impersonate: mock && reset
   });
 
   tx = beanstalkDiamond.deployTransaction
-  receipt = await tx.wait()
-  if (verbose) console.log('Beanstalk diamond deploy gas used: ' + strDisplay(receipt.gasUsed))
-  if (verbose) console.log('Beanstalk diamond cut gas used: ' + strDisplay(diamondCut.gasUsed))
-  totalGasUsed = totalGasUsed.add(receipt.gasUsed).add(diamondCut.gasUsed)
+  if (!!tx) {
+    receipt = await tx.wait()
+    if (verbose) console.log('Beanstalk diamond deploy gas used: ' + strDisplay(receipt.gasUsed))
+    if (verbose) console.log('Beanstalk diamond cut gas used: ' + strDisplay(diamondCut.gasUsed))
+    totalGasUsed = totalGasUsed.add(receipt.gasUsed).add(diamondCut.gasUsed)
+  }
 
   if (verbose) {
     console.log("--");
@@ -236,14 +247,16 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     oracleFacet,
     ownershipFacet,
     pauseFacet,
+    depotFacet,
     seasonFacet,
     siloFacet,
     fertilizerFacet,
     tokenFacet,
     unripeFacet,
+    tokenSupportFacet,
     wellBuildingFacet,
     wellPumpFacet,
-    wellFacet,
+    wellFacet 
   }
 }
 

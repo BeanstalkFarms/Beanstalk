@@ -19,8 +19,7 @@ library LibConvertData {
         CURVE_LP_TO_BEANS,
         UNRIPE_BEANS_TO_UNRIPE_LP,
         UNRIPE_LP_TO_UNRIPE_BEANS,
-        WELL_TOKENS_TO_BEANS,
-        BEANS_TO_WELL_TOKENS
+        LAMBDA_LAMBDA
     }
 
     /// @notice Decoder for the Convert Enum
@@ -64,22 +63,11 @@ library LibConvertData {
         );
     }
 
-    function convertWell(bytes calldata self)
+    function lambdaConvert(bytes memory self)
         internal
         pure
-        returns (
-            uint256 amountIn, 
-            uint256 minAmontOut //,
-            // LibWellStorage.WellInfo calldata wi
-        )
+        returns (uint256 amount, address token)
     {
-        (, amountIn, minAmontOut) = abi.decode(
-            self,
-            (ConvertKind, uint256, uint256)
-        );
-        // assembly {
-        //     wi.offset := add(self.offset, 96)
-        //     wi.length := sub(self.length, 96)
-        // }
+        (, amount, token) = abi.decode(self, (ConvertKind, uint256, address));
     }
 }

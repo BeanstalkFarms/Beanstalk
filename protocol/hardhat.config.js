@@ -7,8 +7,9 @@ require("@openzeppelin/hardhat-upgrades")
 require('dotenv').config();
 const fs = require('fs')
 const { impersonateSigner, mintUsdc, mintBeans, getBeanMetapool, getUsdc, getBean, getBeanstalkAdminControls, buyBuysInBeanEth, sellBeansInBeanEth, printPools, toBN } = require('./utils');
+const { upgradeWithNewFacets } = require("./scripts/diamond")
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./test/utils/balances.js')
-const { PUBLIUS, BEAN_3_CURVE } = require('./test/utils/constants.js')  
+const { BEANSTALK, PUBLIUS, BEAN_3_CURVE } = require('./test/utils/constants.js')  
 const { to6 } = require('./test/utils/helpers.js')
 const { replant } = require("./replant/replant.js")
 const { deployWells } = require("./scripts/wells.js")
@@ -104,8 +105,21 @@ task('diamondABI', 'Generates ABI file for diamond, includes all ABIs of facets'
   console.log('ABI written to abi/Beanstalk.json')
 })
 
+task('marketplace', async function () {
+  const owner = await impersonateBeanstalkOwner();
+  await mintEth(owner.address);
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    facetNames:
+    ['MarketplaceFacet'],
+    bip: false,
+    verbose: false,
+    account: owner
+  });
+})
+
 module.exports = {
-  defaultNetwork: "localhost",
+  defaultNetwork: "hardhat",
   networks: {
     hardhat: {
       chainId: 1337,

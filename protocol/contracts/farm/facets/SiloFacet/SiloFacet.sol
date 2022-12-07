@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "./TokenSilo.sol";
 import "../../ReentrancyGuard.sol";
 import "../../../libraries/Token/LibTransfer.sol";
+import "../../../libraries/Silo/LibSiloPermit.sol";
 
 /*
  * @author Publius
@@ -82,27 +83,109 @@ contract SiloFacet is TokenSilo {
      */
 
     function transferDeposit(
+        address sender,
         address recipient,
         address token,
         uint32 season,
         uint256 amount
-    ) external payable nonReentrant updateSilo {
+    ) external payable nonReentrant returns (uint256 bdv) {
+        if (sender != msg.sender) {
+            _spendDepositAllowance(sender, msg.sender, token, amount);
+        }
+        _update(sender);
         // Need to update the recipient's Silo as well.
         _update(recipient);
-        _transferDeposit(msg.sender, recipient, token, season, amount);
+        bdv = _transferDeposit(sender, recipient, token, season, amount);
     }
 
     function transferDeposits(
+        address sender,
         address recipient,
         address token,
         uint32[] calldata seasons,
         uint256[] calldata amounts
-    ) external payable nonReentrant updateSilo {
+    ) external payable nonReentrant returns (uint256[] memory bdvs) {
+        require(amounts.length > 0, "Silo: amounts array is empty");
+        for (uint256 i = 0; i < amounts.length; i++) {
+            require(amounts[i] > 0, "Silo: amount in array is 0");
+            if (sender != msg.sender) {
+                _spendDepositAllowance(sender, msg.sender, token, amounts[i]);
+            }
+        }
+       
+        _update(sender);
         // Need to update the recipient's Silo as well.
         _update(recipient);
-        _transferDeposits(msg.sender, recipient, token, seasons, amounts);
+        bdvs = _transferDeposits(sender, recipient, token, seasons, amounts);
     }
 
+    /*
+     * Approval
+     */
+
+    function approveDeposit(
+        address spender,
+        address token,
+        uint256 amount
+    ) external payable nonReentrant {
+        require(spender != address(0), "approve from the zero address");
+        require(token != address(0), "approve to the zero address");
+        _approveDeposit(msg.sender, spender, token, amount);
+    }
+
+    function increaseDepositAllowance(address spender, address token, uint256 addedValue) public virtual nonReentrant returns (bool) {
+        _approveDeposit(msg.sender, spender, token, depositAllowance(msg.sender, spender, token).add(addedValue));
+        return true;
+    }
+
+    function decreaseDepositAllowance(address spender, address token, uint256 subtractedValue) public virtual nonReentrant returns (bool) {
+        uint256 currentAllowance = depositAllowance(msg.sender, spender, token);
+        require(currentAllowance >= subtractedValue, "Silo: decreased allowance below zero");
+        _approveDeposit(msg.sender, spender, token, currentAllowance.sub(subtractedValue));
+        return true;
+    }
+
+    function permitDeposits(
+        address owner,
+        address spender,
+        address[] calldata tokens,
+        uint256[] calldata values,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external payable nonReentrant {
+        LibSiloPermit.permits(owner, spender, tokens, values, deadline, v, r, s);
+        for (uint256 i; i < tokens.length; ++i) {
+            _approveDeposit(owner, spender, tokens[i], values[i]);
+        }
+    }
+
+    function permitDeposit(
+        address owner,
+        address spender,
+        address token,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external payable nonReentrant {
+        LibSiloPermit.permit(owner, spender, token, value, deadline, v, r, s);
+        _approveDeposit(owner, spender, token, value);
+    }
+
+    function depositPermitNonces(address owner) public view virtual returns (uint256) {
+        return LibSiloPermit.nonces(owner);
+    }
+
+     /**
+     * @dev See {IERC20Permit-DOMAIN_SEPARATOR}.
+     */
+    // solhint-disable-next-line func-name-mixedcase
+    function depositPermitDomainSeparator() external view returns (bytes32) {
+        return LibSiloPermit._domainSeparatorV4();
+    }
     /*
      * Silo
      */
@@ -115,8 +198,8 @@ contract SiloFacet is TokenSilo {
         return _plant(msg.sender);
     }
 
-    function claimPlenty(address account) external payable {
-        _claimPlenty(account);
+    function claimPlenty() external payable {
+        _claimPlenty(msg.sender);
     }
 
     /*
