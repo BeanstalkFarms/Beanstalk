@@ -12,7 +12,21 @@ import "../LibAppStorage.sol";
 /**
  * @title LibSilo
  * @author Publius
- * @notice FIXME(doc)
+ * @notice Contains functions minting, burning, and transferring of Seeds, Stalk
+ * and Roots within the Silo.
+ *
+ * @dev FIXME(DISCUSS): Here, we refer to "minting" as the combination of
+ * increasing the total balance of Stalk/Seeds/Roots, as well as allocating
+ * them to a particular account. However, in other places throughout Beanstalk
+ * (like during the Sunrise), Beanstalk's total balance of Stalk/Seeds increases
+ * without allocating to a particular account. One example is {Sun-rewardToSilo}
+ * which increases `s.s.stalk` but does not allocate it to any account. The
+ * allocation occurs during `{SiloFacet-plant}`. Does this change how we should
+ * call "minting"?
+ *
+ * In the ERC20 context, "minting" increases the supply of a token and allocates
+ * the new tokens to an account in one action. I've adjusted the comments below
+ * to use "mint" in the same sense.
  */
 library LibSilo {
     using SafeMath for uint256;
@@ -20,15 +34,19 @@ library LibSilo {
     //////////////////////// EVENTS ////////////////////////    
 
     /**
-     * @notice {SeedsBalanceChanged} is emitted when `account` gains or loses Seeds.
-     * @param account is the account that gained or lost Seeds.
-     * @param delta is the change in Seeds.
+     * @notice Emitted when `account` gains or loses Seeds.
+     * @param account The account that gained or lost Seeds.
+     * @param delta The change in Seeds.
      *   
-     * @dev {SeedsBalanceChanged} should be emitted anytime a Deposit is added, removed or transferred.
-     * @dev BIP-24 included a one-time re-emission of {SeedsBalanceChanged} for accounts that had
-     * executed a Deposit transfer between the Replant and BIP-24 execution. For more, see:
-     * [BIP-24](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-24-fungible-bdv-support.md)
-     * [Event-24-Event-Emission](https://github.com/BeanstalkFarms/Event-24-Event-Emission)
+     * @dev Should be emitted any time a Deposit is added, removed or
+     * transferred.
+     * 
+     * BIP-24 included a one-time re-emission of {SeedsBalanceChanged} for
+     * accounts that had executed a Deposit transfer between the Replant and
+     * BIP-24 execution. For more, see:
+     *
+     * [BIP-24](https://bean.money/bip-24)
+     * [Event-Emission](https://github.com/BeanstalkFarms/BIP-24-Event-Emission)
      */
     event SeedsBalanceChanged(
         address indexed account,
@@ -36,17 +54,20 @@ library LibSilo {
     );
      
      /**
-     * @notice {StalkBalanceChanged} is emitted when `account` gains or loses Stalk.
-     * @param account is the account that gained or lost Stalk.
-     * @param delta is the change in Stalk.
-     * @param deltaRoots is the change is Roots. For more info on Roots, see: 
+     * @notice Emitted when `account` gains or loses Stalk.
+     * @param account The account that gained or lost Stalk.
+     * @param delta The change in Stalk.
+     * @param deltaRoots The change in Roots.
      *   
-     * @dev {StalkBalanceChanged} should be emitted anytime a Deposit is added, removed or transferred AND
-     * anytime an account Mows Grown Stalk.
-     * @dev BIP-24 included a one-time re-emission of {SeedsBalanceChanged} for accounts that had
-     * executed a Deposit transfer between the Replant and BIP-24 execution. For more, see:
-     * [BIP-24](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-24-fungible-bdv-support.md)
-     * [Event-24-Event-Emission](https://github.com/BeanstalkFarms/Event-24-Event-Emission)
+     * @dev Should be emitted anytime a Deposit is added, removed or transferred
+     * AND anytime an account Mows Grown Stalk.
+     * 
+     * BIP-24 included a one-time re-emission of {StalkBalanceChanged} for
+     * accounts that had executed a Deposit transfer between the Replant and
+     * BIP-24 execution. For more, see:
+     *
+     * [BIP-24](https://bean.money/bip-24)
+     * [Event-Emission](https://github.com/BeanstalkFarms/BIP-24-Event-Emission)
      */
     event StalkBalanceChanged(
         address indexed account,
@@ -57,7 +78,7 @@ library LibSilo {
     //////////////////////// MINT ////////////////////////
 
     /**
-     * @dev WRAPPER: {mintSeedsAndStalk} increments the Seeds, Stalk and Roots of an account and Beanstalk.
+     * @dev WRAPPER: Mints Seeds, Stalk and Roots to `account`.
      */
     function mintSeedsAndStalk(
         address account,
@@ -65,11 +86,11 @@ library LibSilo {
         uint256 stalk
     ) internal {
         mintSeeds(account, seeds);
-        mintStalk(account, stalk);
+        mintStalk(account, stalk); // also mints Roots
     }
 
     /**
-     * @dev {mintSeeds} mints Seeds to `account` and increments Beanstalk's total Seeds.
+     * @dev Mints Seeds to `account`.
      */
     function mintSeeds(address account, uint256 seeds) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -82,8 +103,9 @@ library LibSilo {
     }
 
     /**
-     * @dev {mintStalk} mints Stalk and Roots to `account` and increments Beanstalk's total Stalk and Roots.
-     * For an explanation of Roots accounting see {FIXME(doc)}.
+     * @dev Mints Stalk and Roots to `account`.
+     *
+     * For an explanation of Roots accounting, see {FIXME(doc)}.
      */
     function mintStalk(address account, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -107,7 +129,7 @@ library LibSilo {
     //////////////////////// BURN ////////////////////////
 
     /**
-     * @dev WRAPPER: {burnSeedsAndStalk} decrements the Seeds, Stalk and Roots of an account and Beanstalk.
+     * @dev WRAPPER: Burns Seeds, Stalk and Roots from `account`.
      */
     function burnSeedsAndStalk(
         address account,
@@ -115,11 +137,11 @@ library LibSilo {
         uint256 stalk
     ) internal {
         burnSeeds(account, seeds);
-        burnStalk(account, stalk);
+        burnStalk(account, stalk); // also burns Roots
     }
     
     /**
-     * @dev {burnSeeds} burns Seeds from `account` and decrements Beanstalk's total Seeds.
+     * @dev Burns Seeds from `account`.
      */
     function burnSeeds(address account, uint256 seeds) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -132,7 +154,9 @@ library LibSilo {
     }
 
     /**
-     * @dev {burnStalk} burns Stalk and Roots from `account` and decrements Beanstalk's total Stalk and Roots.
+     * @dev Burns Stalk and Roots from `account`.
+     *
+     * For an explanation of Roots accounting, see {FIXME(doc)}.
      */
     function burnStalk(address account, uint256 stalk) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -150,7 +174,8 @@ library LibSilo {
         s.s.roots = s.s.roots.sub(roots);
         s.a[account].roots = s.a[account].roots.sub(roots);
         
-        // If it is Raining, subtract Roots from both the account's and Beanstalk's RainRoots balances.
+        // If it is Raining, subtract Roots from both the account's and 
+        // Beanstalk's RainRoots balances.
         // For more info on Rain, see {Fixme(doc)}. 
         if (s.season.raining) {
             s.r.roots = s.r.roots.sub(roots);
@@ -163,8 +188,8 @@ library LibSilo {
     //////////////////////// TRANSFER ////////////////////////
 
     /**
-     * @dev WRAPPER: {transferSeedsAndStalk} decrements the Seeds, Stalk and Roots of 'sender' account and 
-     * increments the Seeds, Stalk and Roots of 'recipient' account.
+     * @dev WRAPPER: Decrements the Seeds, Stalk and Roots of `sender` and 
+     * increments the Seeds, Stalk and Roots of `recipient` by the same amount.
      */
     function transferSeedsAndStalk(
         address sender,
@@ -177,8 +202,8 @@ library LibSilo {
     }
 
     /**
-     * @dev WRAPPER: {transferSeeds} decrements the Seeds of 'sender' account and 
-     * increments the Seeds of 'recipient' account.
+     * @dev Decrements the Seeds of `sender` and increments the Seeds of 
+     * `recipient` by the same amount.
      */
     function transferSeeds(
         address sender,
@@ -197,8 +222,8 @@ library LibSilo {
     }
 
     /**
-     * @dev WRAPPER: {transferStalk} decrements the Stalk and Roots of 'sender' account and 
-     * increments the Stalk and Roots of 'recipient' account.
+     * @dev Decrements the Stalk and Roots of `sender` and  increments the Stalk
+     * and Roots of `recipient` by the same amount.
      */
     function transferStalk(
         address sender,
@@ -225,19 +250,23 @@ library LibSilo {
     //////////////////////// UTILITIES ////////////////////////
 
     /**
-     * @notice {stalkReward} calculates the Stalk that has Grown from a given number of Seeds over a given number of Seasons.
-     * @param seeds is the number of Seeds held.
-     * @param seasons is the number of Seasons that have elapsed.
+     * @param seeds The number of Seeds held.
+     * @param seasons The number of Seasons that have elapsed.
      *
-     * @dev Each Seed yields 1E-4 (0.0001, or 1 / 10_000) Stalk per Season.
-     * @dev Seasons is measured to 0 decimals. There are no fractional Seasons.
-     * @dev Seeds are measured to 6 decimals.
-     * @dev Stalk is measured to 10 decimals.
+     * @dev Calculates the Stalk that has Grown from a given number of Seeds
+     * over a given number of Seasons.
+     *
+     * Each Seed yields 1E-4 (0.0001, or 1 / 10_000) Stalk per Season.
+     *
+     * Seasons is measured to 0 decimals. There are no fractional Seasons.
+     * Seeds are measured to 6 decimals.
+     * Stalk is measured to 10 decimals.
      * 
      * Example:
      *  - `seeds = 1E6` (1 Seed)
      *  - `seasons = 1` (1 Season)
-     *  - The result is `1E6 * 1 = 1E6`. Since Stalk is measured to 10 decimals, this is `1E6/1E10 = 1E-4` Stalk.
+     *  - The result is `1E6 * 1 = 1E6`. Since Stalk is measured to 10 decimals,
+     *    this is `1E6/1E10 = 1E-4` Stalk.
      */
     function stalkReward(uint256 seeds, uint32 seasons)
         internal
