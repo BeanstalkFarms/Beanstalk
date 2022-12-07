@@ -135,7 +135,7 @@ library LibTokenSilo {
      * @dev Remove `amount` of `token` from a Deposit in `season`.
      *
      * "Crate" refers to the existing Deposit in storage at:
-     * `s.a[account].deposits[token][id]`
+     * `s.a[account].deposits[token][season]`
      *
      * Partially removing a Deposit should scale its BDV proportionally. For ex.
      * removing 80% of the tokens from a Deposit should reduce its BDV by 80%.
@@ -146,37 +146,37 @@ library LibTokenSilo {
     function removeDeposit(
         address account,
         address token,
-        uint32 id,
+        uint32 season,
         uint256 amount
     ) internal returns (uint256 crateBDV) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         
         uint256 crateAmount;
         (crateAmount, crateBDV) = (
-            s.a[account].deposits[token][id].amount,
-            s.a[account].deposits[token][id].bdv
+            s.a[account].deposits[token][season].amount,
+            s.a[account].deposits[token][season].bdv
         );
 
         // Partial remove
         if (amount < crateAmount) {
             // 
             uint256 base = amount.mul(crateBDV).div(crateAmount);
-            uint256 newBase = uint256(s.a[account].deposits[token][id].bdv).sub(
+            uint256 newBase = uint256(s.a[account].deposits[token][season].bdv).sub(
                 base
             );
-            uint256 newAmount = uint256(s.a[account].deposits[token][id].amount)
+            uint256 newAmount = uint256(s.a[account].deposits[token][season].amount)
                 .sub(amount);
             require(
                 newBase <= uint128(-1) && newAmount <= uint128(-1),
                 "Silo: uint128 overflow."
             );
-            s.a[account].deposits[token][id].amount = uint128(newAmount);
-            s.a[account].deposits[token][id].bdv = uint128(newBase);
+            s.a[account].deposits[token][season].amount = uint128(newAmount);
+            s.a[account].deposits[token][season].bdv = uint128(newBase);
             return base;
         }
 
         // Full remove
-        if (crateAmount > 0) delete s.a[account].deposits[token][id];
+        if (crateAmount > 0) delete s.a[account].deposits[token][season];
 
         // Excess remove
         // This can only occur for Unripe Beans and Unripe LP Tokens, and is a
@@ -189,14 +189,14 @@ library LibTokenSilo {
                     crateBDV.add(
                         LibUnripeSilo.removeUnripeBeanDeposit(
                             account,
-                            id,
+                            season,
                             amount
                         )
                     );
             else if (LibUnripeSilo.isUnripeLP(token))
                 return
                     crateBDV.add(
-                        LibUnripeSilo.removeUnripeLPDeposit(account, id, amount)
+                        LibUnripeSilo.removeUnripeLPDeposit(account, season, amount)
                     );
             revert("Silo: Crate balance too low.");
         }
@@ -249,25 +249,23 @@ library LibTokenSilo {
      * be appropriately merged.
      * 
      * See {FIXME(doc)} for more information.
-     * 
-     * FIXME(naming): rename `id` to `season`
      */
     function tokenDeposit(
         address account,
         address token,
-        uint32 id
+        uint32 season
     ) internal view returns (uint256, uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         if (LibUnripeSilo.isUnripeBean(token))
-            return LibUnripeSilo.unripeBeanDeposit(account, id);
+            return LibUnripeSilo.unripeBeanDeposit(account, season);
 
         if (LibUnripeSilo.isUnripeLP(token))
-            return LibUnripeSilo.unripeLPDeposit(account, id);
+            return LibUnripeSilo.unripeLPDeposit(account, season);
 
         return (
-            s.a[account].deposits[token][id].amount,
-            s.a[account].deposits[token][id].bdv
+            s.a[account].deposits[token][season].amount,
+            s.a[account].deposits[token][season].bdv
         );
     }
 
@@ -276,16 +274,14 @@ library LibTokenSilo {
      * 
      * Withdrawals are stored within each {Account} as a mapping of:
      *  `address token => uint32 season => uint128 amount`
-     * 
-     * FIXME(naming): rename `id` to `season`
      */
     function tokenWithdrawal(
         address account,
         address token,
-        uint32 id
+        uint32 season
     ) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.a[account].withdrawals[token][id];
+        return s.a[account].withdrawals[token][season];
     }
 
     /**
