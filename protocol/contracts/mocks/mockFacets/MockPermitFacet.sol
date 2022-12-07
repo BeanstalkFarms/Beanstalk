@@ -9,8 +9,8 @@ import "../../farm/facets/PermitFacet.sol";
 import "../../libraries/LibPermit.sol";
 
 /**
- * @author 0xm00neth
  * @title Mock Silo Facet
+ * @author 0xm00neth
  **/
 
 contract MockPermitFacet is PermitFacet {

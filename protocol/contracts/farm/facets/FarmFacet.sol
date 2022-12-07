@@ -8,20 +8,12 @@ pragma experimental ABIEncoderV2;
 import {AppStorage} from "../AppStorage.sol";
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
 import {LibEth} from "../../libraries/Token/LibEth.sol";
-import {LibFunction} from "../../libraries/LibFunction.sol";
+import {LibFarm} from "../../libraries/LibFarm.sol";
 
 /**
  * @title Farm Facet
  * @notice Perform mutliple Beanstalk function calls in a single transaction
  **/
-
-// Advanced Data is a function call that allows for return values from existing functions
-// See LibFunction.buildAdvancedCalldata for details
-struct AdvancedData {
-    bytes callData;
-    bytes advancedData;
-}
-
 contract FarmFacet {
     AppStorage internal s;
 
@@ -38,7 +30,7 @@ contract FarmFacet {
     {
         results = new bytes[](data.length);
         for (uint256 i; i < data.length; ++i) {
-            results[i] = _farm(data[i]);
+            results[i] = LibFarm.farm(data[i]);
         }
     }
 
@@ -48,7 +40,7 @@ contract FarmFacet {
      * See LibFunction.buildAdvancedCalldata for details on advanced data
      * @return results The results from each of the calls passed in via data
     **/
-    function advancedFarm(AdvancedData[] calldata data)
+    function advancedFarm(LibFarm.AdvancedData[] calldata data)
         external
         payable
         withEth
@@ -56,41 +48,8 @@ contract FarmFacet {
     {
         results = new bytes[](data.length);
         for (uint256 i = 0; i < data.length; ++i) {
-            results[i] = _advancedFarm(data[i], results);
+            results[i] = LibFarm.advancedFarm(data[i], results);
         }
-    }
-
-    function _advancedFarm(AdvancedData calldata d, bytes[] memory returnData)
-        internal
-        returns (bytes memory result)
-    {
-        bytes1 pipeType = d.advancedData[0];
-        // 0x00 -> Normal pipe: Standard function call
-        // else > Advanced pipe: Copy return data into function call through buildAdvancedCalldata
-        if (pipeType == 0x00) {
-            result = _farm(d.callData);
-        } else {
-            result = LibFunction.buildAdvancedCalldata(d.callData, d.advancedData, returnData);
-            _farmMem(result);
-        }
-    }
-
-    // delegatecall a Beanstalk function using calldata data
-    function _farm(bytes calldata data) private returns (bytes memory result) {
-        bytes4 selector; bool success;
-        assembly { selector := calldataload(data.offset) }
-        address facet = LibFunction.facetForSelector(selector);
-        (success, result) = facet.delegatecall(data);
-        LibFunction.checkReturn(success, result);
-    }
-
-    // delegatecall a Beanstalk function using memory data
-    function _farmMem(bytes memory data) private returns (bytes memory result) {
-        bytes4 selector; bool success;
-        assembly { selector := mload(add(data, 32)) }
-        address facet = LibFunction.facetForSelector(selector);
-        (success, result) = facet.delegatecall(data);
-        LibFunction.checkReturn(success, result);
     }
 
     // signals to Beanstalk functions that they should not refund Eth 

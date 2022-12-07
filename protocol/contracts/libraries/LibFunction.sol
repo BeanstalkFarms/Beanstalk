@@ -16,7 +16,7 @@ library LibFunction {
      * @notice Checks The return of a any function call for success, if not returns the error returned in `results`
      * @param success Whether the corresponding function call succeeded
      * @param result The return data of the corresponding function call
-    **/
+     **/
     function checkReturn(bool success, bytes memory result) internal pure {
         if (!success) {
             // Next 5 lines from https://ethereum.stackexchange.com/a/83577
@@ -34,7 +34,7 @@ library LibFunction {
      * @param selector The function selector to fetch the facet address for
      * @dev Fails if no set Facet address
      * @return facet The facet address
-    **/
+     **/
     function facetForSelector(bytes4 selector)
         internal
         view
@@ -72,14 +72,18 @@ library LibFunction {
      @return data The function call return datas
     **/
     function buildAdvancedCalldata(
-        bytes calldata callData,
-        bytes calldata advancedData,
+        bytes memory callData,
+        bytes memory advancedData,
         bytes[] memory returnData
     ) internal pure returns (bytes memory data) {
         bytes1 typeId = advancedData[0];
         if (typeId == 0x01) {
             bytes32 copyParams = abi.decode(advancedData, (bytes32));
-            data = LibFunction.pasteAdvancedBytes(callData, returnData, copyParams);
+            data = LibFunction.pasteAdvancedBytes(
+                callData,
+                returnData,
+                copyParams
+            );
         } else if (typeId == 0x02) {
             (, bytes32[] memory copyParams) = abi.decode(
                 advancedData,
@@ -87,7 +91,11 @@ library LibFunction {
             );
             data = callData;
             for (uint256 i; i < copyParams.length; i++)
-                data = LibFunction.pasteAdvancedBytes(data, returnData, copyParams[i]);
+                data = LibFunction.pasteAdvancedBytes(
+                    data,
+                    returnData,
+                    copyParams[i]
+                );
         } else {
             revert("Function: Advanced Type not supported");
         }
@@ -125,7 +133,7 @@ library LibFunction {
      * @param copyIndex The index in copyData to copying from
      * @param pasteIndex The index in pasteData to paste into
      * @return pastedData The data with the copied with 32 bytes
-    **/
+     **/
     function paste32Bytes(
         bytes memory copyData,
         bytes memory pasteData,
@@ -134,6 +142,36 @@ library LibFunction {
     ) internal pure returns (bytes memory pastedData) {
         assembly {
             mstore(add(pasteData, pasteIndex), mload(add(copyData, copyIndex)))
+        }
+        pastedData = pasteData;
+    }
+
+    /**
+     * @notice Copy 32 Bytes from copyData at copyIndex and paste into pasteData at pasteIndex
+     * @param copyData The data bytes to copy from
+     * @param pasteData The data bytes to paste into
+     * @param copyIndex The index in copyData to copying from
+     * @param pasteIndex The index in pasteData to paste into
+     * @param length The length of bytes to copy
+     * @return pastedData The data with the copied with 32 bytes
+     **/
+    function pasteBytes(
+        bytes memory copyData,
+        bytes memory pasteData,
+        uint256 copyIndex,
+        uint256 pasteIndex,
+        uint256 length
+    ) internal pure returns (bytes memory pastedData) {
+        uint256 num = length / 32;
+        for (uint256 i; i != num; ++i) {
+            assembly {
+                mstore(
+                    add(pasteData, pasteIndex),
+                    mload(add(copyData, copyIndex))
+                )
+            }
+            pasteIndex += 32;
+            copyIndex += 32;
         }
         pastedData = pasteData;
     }

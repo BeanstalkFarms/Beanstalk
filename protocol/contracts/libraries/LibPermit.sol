@@ -9,8 +9,8 @@ import "../C.sol";
 import "./LibAppStorage.sol";
 
 /**
- * @author 0xm00neth
  * @title Lib Permit
+ * @author 0xm00neth
  **/
 library LibPermit {
     function useNonce(bytes4 selector, address account) internal returns (uint256 current) {

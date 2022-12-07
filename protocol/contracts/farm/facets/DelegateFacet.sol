@@ -10,8 +10,10 @@ import "../ReentrancyGuard.sol";
 import "../../libraries/LibDelegate.sol";
 import "../../libraries/LibPermit.sol";
 
-/// @author 0xm00neth
-/// @title DelegateFacet handles delegating authority for Beanstalk functions.
+/**
+ * @title DelegateFacet handles delegating authority for Beanstalk functions.
+ * @author 0xm00neth
+ */
 contract DelegateFacet is ReentrancyGuard {
     /// @notice approveDelegate sets approval value for delegation
     /// @param selector function selector
@@ -58,9 +60,9 @@ contract DelegateFacet is ReentrancyGuard {
         _approveDelegate(account, selector, approval);
     }
 
-    //////////////////////////////////////
-    /////////// VIEW FUNCTIONS ///////////
-    //////////////////////////////////////
+    /******************/
+    /* VIEW FUNCTIONS */
+    /******************/
 
     /// @notice delegateApproval returns current approval type and data
     /// @param account account address

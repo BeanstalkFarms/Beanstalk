@@ -82,22 +82,19 @@ contract Account {
     }
 }
 
-// The Tractor contract stores all of the Tractor specific storage data.
-contract Tractor {
-    // Blueprint stores blueprint related values
-    struct Blueprint {
-        address publisher;
-        bytes[] predicates;
-        bytes data;
-        bytes32[] calldataCopyParams;
-    }
+// Blueprint stores blueprint related values
+struct Blueprint {
+    address publisher;
+    bytes[] predicates;
+    bytes data;
+    bytes32[] calldataCopyParams;
+}
 
-    // BlueprintState stores state of blueprint
-    // The global AppStorage state stores a mapping from Blueprint hash to Tractor.BlueprintState.
-    struct BlueprintState {
-        bool isActive;
-        mapping(uint256 => bytes) predicateStates;
-    }
+// BlueprintState stores state of blueprint
+// The global AppStorage state stores a mapping from Blueprint hash to Tractor.BlueprintState.
+struct BlueprintState {
+    bool isActive;
+    mapping(uint256 => bytes) predicateStates;
 }
 
 // Storage stores the Global Beanstalk State.
@@ -307,5 +304,5 @@ struct AppStorage {
     address ownerCandidate; // Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
 
     // Tractor
-    mapping(bytes32 => Tractor.BlueprintState) blueprintStates;
+    mapping(bytes32 => BlueprintState) blueprintStates;
 }

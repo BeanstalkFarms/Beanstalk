@@ -8,10 +8,11 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../C.sol";
 import "./LibAppStorage.sol";
+import "./LibBytes.sol";
 
 /**
- * @author 0xm00neth
  * @title Lib Delegate
+ * @author 0xm00neth
  **/
 library LibDelegate {
     using SafeMath for uint256;
@@ -23,9 +24,9 @@ library LibDelegate {
         EXTERNAL
     }
 
-    /**
-     * Delegate
-     **/
+    /************/
+    /* Delegate */
+    /************/
 
     /// @notice getApproval returns approval value
     /// @param account account address
@@ -148,7 +149,7 @@ library LibDelegate {
         returns (bytes memory approvalData)
     {
         require(approval.length >= 3, "LibDelegate: Empty Approval Data");
-        approvalData = slice(approval, 2, approval.length - 2);
+        approvalData = LibBytes.sliceFrom(approval, 2);
     }
 
     /// @notice checkApproval checks approval with given info
@@ -335,63 +336,5 @@ library LibDelegate {
     /// @param approvalType approvalType value
     function isExternalType(bytes1 approvalType) internal pure returns (bool) {
         return uint8(approvalType) == uint8(Type.EXTERNAL);
-    }
-
-    /// @notice slices bytes memory
-    /// @param _bytes bytes array
-    /// @param _start start index to slice from
-    /// @param _length slice length
-    /// @return sliced bytes
-    function slice(
-        bytes memory _bytes,
-        uint256 _start,
-        uint256 _length
-    ) internal pure returns (bytes memory) {
-        require(_length + 31 >= _length, "slice_overflow");
-        require(_bytes.length >= _start + _length, "slice_outOfBounds");
-
-        bytes memory tempBytes;
-
-        assembly {
-            switch iszero(_length)
-            case 0 {
-                tempBytes := mload(0x40)
-
-                let lengthmod := and(_length, 31)
-
-                let mc := add(
-                    add(tempBytes, lengthmod),
-                    mul(0x20, iszero(lengthmod))
-                )
-                let end := add(mc, _length)
-
-                for {
-                    let cc := add(
-                        add(
-                            add(_bytes, lengthmod),
-                            mul(0x20, iszero(lengthmod))
-                        ),
-                        _start
-                    )
-                } lt(mc, end) {
-                    mc := add(mc, 0x20)
-                    cc := add(cc, 0x20)
-                } {
-                    mstore(mc, mload(cc))
-                }
-
-                mstore(tempBytes, _length)
-
-                mstore(0x40, and(add(mc, 31), not(31)))
-            }
-            default {
-                tempBytes := mload(0x40)
-                mstore(tempBytes, 0)
-
-                mstore(0x40, add(tempBytes, 0x20))
-            }
-        }
-
-        return tempBytes;
     }
 }
