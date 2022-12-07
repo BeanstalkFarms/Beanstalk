@@ -51,6 +51,12 @@ class ConvertEncoder {
      ['uint256', 'uint256', 'uint256'],
      [ConvertKind.UNRIPE_BEANS_TO_LP, beans, minLP]
    );
+
+   static convertLambdaToLambda = (amount, token) =>
+   defaultAbiCoder.encode(
+     ['uint256', 'uint256', 'address'],
+     [ConvertKind.LAMBDA_LAMBDA, amount, token]
+   );
 }
 
 class WellFunctionEncoder {
@@ -64,12 +70,6 @@ class WellFunctionEncoder {
     defaultAbiCoder.encode(
       ['uint256'],
       [num]
-    );
-
-   static convertLambdaToLambda = (amount, token) =>
-    defaultAbiCoder.encode(
-      ['uint256', 'uint256', 'address'],
-      [ConvertKind.LAMBDA_LAMBDA, amount, token]
     );
 }
 

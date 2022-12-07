@@ -60,7 +60,7 @@ describe('Depot', function () {
         await this.beanMetapool.connect(user).approve(this.threeCurve.address, to18('100000000000'))
         await this.beanMetapool.connect(user).approve(this.beanstalk.address, to18('100000000000'))
         await this.threeCurve.connect(user).approve(this.beanstalk.address, to18('100000000000'))
-        this.result = await this.beanstalk.connect(user).addLiquidity(
+        this.result = await this.beanstalk.connect(user).curve_addLiquidity(
             BEAN_3_CURVE,
             STABLE_FACTORY,
             [to6('1000'), to18('1000')],
