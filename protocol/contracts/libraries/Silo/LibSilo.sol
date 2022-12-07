@@ -12,8 +12,8 @@ import "../LibAppStorage.sol";
 /**
  * @title LibSilo
  * @author Publius
- * @notice Contains functions minting, burning, and transferring of Seeds, Stalk
- * and Roots within the Silo.
+ * @notice Contains functions for minting, burning, and transferring of Seeds,
+ * Stalk and Roots within the Silo.
  *
  * @dev FIXME(DISCUSS): Here, we refer to "minting" as the combination of
  * increasing the total balance of Stalk/Seeds/Roots, as well as allocating

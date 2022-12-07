@@ -13,6 +13,9 @@ import "../../C.sol";
 /**
  * @title LibUnripeSilo
  * @author Publius
+ * @notice Contains functions for interacting with Unripe Silo deposits.
+ * Provides a unified interface that works across legacy storage references.
+ * 
  * @dev When Beanstalk was relaunched in Aug 2022, new two tokens Unripe Bean 
  * and Unripe BEAN:3CRV were created and whitelisted in the Silo. 
  * See {Replant8-init}.
