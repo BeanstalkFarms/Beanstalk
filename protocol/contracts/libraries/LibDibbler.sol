@@ -24,10 +24,6 @@ library LibDibbler {
     using LibSafeMath32 for uint32;
     using LibSafeMath128 for uint128;
 
-    uint256 private constant A = 2;
-    uint256 private constant MAX_BLOCK_ELAPSED = 25;
-    uint256 private constant DENOMINATOR = 5672425341971495578; //log2(A * BLOCK_ELAPSED_MAX + 1)
-    uint256 private constant SCALE = 1e18;
     uint256 private constant DECIMALS = 1e6;
     
     event Sow(
@@ -83,6 +79,10 @@ library LibDibbler {
     /// @dev function returns the weather scaled down
     /// @notice based on the block delta
     // precision level 1e6, as soil has 1e6 precision (1% = 1e6)
+    // the formula log2(A * BLOCK_ELAPSED_MAX + 1) is applied, where
+    // A = 2;
+    // MAX_BLOCK_ELAPSED = 25;
+    
     function morningAuction() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 delta = block.number.sub(s.season.sunriseBlock);
@@ -137,14 +137,18 @@ library LibDibbler {
         } else if (delta == 24) {
             return auctionMath(989825252096);
         } else {
+            /// @dev should only occur when delta == 0 
+            /// (i.e called in the same block as sunrise) 
             return DECIMALS; //minimium 1% yield
         }
     }
 
-    /// @dev scales down weather, minimum 1e6
+    /// @dev scales down temperature, minimum 1e6 (unless temperature is 0%)
     function auctionMath(uint256 a) private view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return uint256(s.w.yield).mulDiv(a,1e6).max(DECIMALS);
+        uint256 _yield  = s.w.yield;
+        if(_yield == 0) return 0; 
+        return _yield.mulDiv(a,1e6).max(DECIMALS);
     }
 
     function beansToPodsAbovePeg(uint256 beans, uint256 maxPeas) 

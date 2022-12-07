@@ -19,8 +19,6 @@ contract FieldFacet is ReentrancyGuard {
     using LibPRBMath for uint256;
     using LibSafeMath32 for uint32;
     using LibSafeMath128 for uint128;
-    
-    uint128 private constant DECIMAL = 1e6;
 
     event Sow(
         address indexed account,
