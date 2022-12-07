@@ -141,7 +141,10 @@ library LibFunction {
         uint256 pasteIndex
     ) internal pure returns (bytes memory pastedData) {
         assembly {
-            mstore(add(pasteData, pasteIndex), mload(add(copyData, copyIndex)))
+            mstore(
+                add(pasteData, add(pasteIndex, 32)),
+                mload(add(copyData, add(copyIndex, 32)))
+            )
         }
         pastedData = pasteData;
     }
@@ -164,15 +167,21 @@ library LibFunction {
     ) internal pure returns (bytes memory pastedData) {
         uint256 num = length / 32;
         for (uint256 i; i != num; ++i) {
+            pasteIndex += 32;
+            copyIndex += 32;
             assembly {
                 mstore(
                     add(pasteData, pasteIndex),
                     mload(add(copyData, copyIndex))
                 )
             }
-            pasteIndex += 32;
-            copyIndex += 32;
         }
+
+        uint256 diff = length % 32;
+        for (uint256 i; i != diff; ++i) {
+            pasteData[pasteIndex + i] = copyData[copyIndex + i];
+        }
+
         pastedData = pasteData;
     }
 }
