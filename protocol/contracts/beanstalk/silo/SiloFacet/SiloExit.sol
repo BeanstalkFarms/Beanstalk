@@ -13,25 +13,36 @@ import "~/libraries/LibSafeMath32.sol";
 import "~/C.sol";
 
 /**
+ * @title SiloExit
  * @author Publius
- * @title Silo Exit
+ * @notice Exposes public view functions for Silo total balances, account
+ * balances, account update history, and Season of Plenty (SOP) balances.
+ *
+ * Provieds utility functions like {_season} for upstream usage throughout
+ * SiloFacet.
  */
 contract SiloExit is ReentrancyGuard {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
-
     /**
-     * @dev {AccountSeasonOfPlenty} stores account level Season of Plenty balances.
+     * @dev Stores account-level Season of Plenty balances.
      * 
      * Returned by {balanceOfSop}.
      */
     struct AccountSeasonOfPlenty {
-        uint32 lastRain; // The Season that it started Raining if it was Raining during the last Season in which `account` updated their Silo. Otherwise, 0.
-        uint32 lastSop; // The last Season of Plenty starting Season processed for `account`.
-        uint256 roots; // `account` balance of Roots when it started raining.
-        uint256 plentyPerRoot; // The global Plenty per Root at the last Season in which `account` updated their Silo.
-        uint256 plenty; // `account` balance of unclaimed Bean:3Crv from Seasons of Plenty.
+        // The Season that it started Raining, if it was Raining during the last
+        // Season in which `account` updated their Silo. Otherwise, 0.
+        uint32 lastRain; 
+        // The last Season of Plenty starting Season processed for `account`.
+        uint32 lastSop;
+        // `account` balance of Roots when it started raining. 
+        uint256 roots; 
+        // The global Plenty per Root at the last Season in which `account`
+        // updated their Silo.
+        uint256 plentyPerRoot; 
+        // `account` balance of unclaimed Bean:3Crv from Seasons of Plenty.
+        uint256 plenty; 
     }
 
     //////////////////////// UTILTIES ////////////////////////
@@ -46,28 +57,31 @@ contract SiloExit is ReentrancyGuard {
     //////////////////////// SILO: TOTALS ////////////////////////
 
     /**
-     * @notice Returns the total amount of outstanding Seeds. Does NOT include Earned Seeds.
+     * @notice Returns the total supply of Seeds. Does NOT include Earned Seeds.
      */
     function totalSeeds() public view returns (uint256) {
         return s.s.seeds;
     }
 
     /**
-     * @notice Returns the total amount of outstanding Stalk. Does NOT include Grown Stalk.
+     * @notice Returns the total supply of Stalk. Does NOT include Grown Stalk.
      */
     function totalStalk() public view returns (uint256) {
         return s.s.stalk;
     }
 
     /**
-     * @notice Returns the total amount of outstanding Roots.
+     * @notice Returns the total supply of Roots.
      */
     function totalRoots() public view returns (uint256) {
         return s.s.roots;
     }
 
     /**
-     * @notice Returns the total amount of outstanding Earned Beans.
+     * @notice Returns the total supply of Earned Beans.
+     * @dev Beanstalk's "supply" of Earned Beans is a subset of the total Bean
+     * supply. Earned Beans are simply seignorage Beans held by Beanstalk for 
+     * distribution to Stalkholders during {SiloFacet-plant}.   
      */
     function totalEarnedBeans() public view returns (uint256) {
         return s.earnedBeans;
@@ -76,16 +90,20 @@ contract SiloExit is ReentrancyGuard {
     //////////////////////// SILO: ACCOUNT BALANCES ////////////////////////
 
     /**
-     * @notice Returns the balance of Seeds for `account`. Does NOT include Earned Seeds.
-     * @dev Earned Seeds do not earn Grown Stalk due to computational complexity, so they are not included.
+     * @notice Returns the balance of Seeds for `account`.
+     * Does NOT include Earned Seeds.
+     * @dev Earned Seeds do not earn Grown Stalk due to computational
+     * complexity, so they are not included.
      */
     function balanceOfSeeds(address account) public view returns (uint256) {
         return s.a[account].s.seeds;
     }
 
     /**
-     * @notice Returns the balance of Stalk for `account`. Does NOT include Grown Stalk.
-     * @dev Earned Stalk earns Bean Mints, but Grown Stalk does not to computational complexity.
+     * @notice Returns the balance of Stalk for `account`. 
+     * Does NOT include Grown Stalk.
+     * @dev Earned Stalk earns Bean Mints, but Grown Stalk does not due to
+     * computational complexity.
      */
     function balanceOfStalk(address account) public view returns (uint256) {
         return s.a[account].s.stalk.add(balanceOfEarnedStalk(account));
@@ -93,19 +111,26 @@ contract SiloExit is ReentrancyGuard {
 
     /**
      * @notice Returns the balance of Roots for `account`.
-     * @dev
-     * Roots within Beanstalk are entirely separate from the [ROOT ERC-20 token](https://roottoken.org/).
+     * @dev Roots within Beanstalk are entirely separate from the 
+     * [ROOT ERC-20 token](https://roottoken.org/).
+     * 
      * Roots represent proportional ownership of Stalk:
-     * balanceOfStalk / totalStalk = balanceOfRoots / totalRoots ()
-     * Roots are used to calculate Earned Bean, Earned Stalk and Plantable Seed balances
+     *  `balanceOfStalk / totalStalk = balanceOfRoots / totalRoots`
+     * 
+     * Roots are used to calculate Earned Bean, Earned Stalk and Plantable Seed
+     * balances.
+     *
+     * FIXME(doc): how do Roots relate to Raining?
      */
     function balanceOfRoots(address account) public view returns (uint256) {
         return s.a[account].roots;
     }
 
     /**
-     * @notice Returns the `account` balance of Grown Stalk, the Stalk that is earned each Season from Seeds.
-     * @dev The balance of Grown Stalk for an account is calculated as:
+     * @notice Returns the balance of Grown Stalk for `account`. Grown Stalk is 
+     * earned each Season from Seeds and must be Mown via `SiloFacet-mow` to 
+     * apply it to a user's balance.
+     * @dev The balance of Grown Stalk for an account can be calculated as:
      *
      * ```
      * elapsedSeasons = currentSeason - lastUpdatedSeason
@@ -125,7 +150,8 @@ contract SiloExit is ReentrancyGuard {
     }
     
     /**
-     * @notice Returns the `account` balance of Earned Beans, the seignorage that is distributed to Stalkholders.
+     * @notice Returns the balance of Earned Beans for `account`. Earned Beans
+     * are the Beans distributed to Stalkholders during {Sun-rewardToSilo}.
      */
     function balanceOfEarnedBeans(address account)
         public
@@ -137,20 +163,23 @@ contract SiloExit is ReentrancyGuard {
 
     /**
      * @dev Internal function to compute `account` balance of Earned Beans.
-     * The number of Earned Beans is equal to the difference between the expected Stalk balance
-     * determined from the `account` Root balance (balanceOfRoots / totalRoots * totalStalk)
-     * and the `account` Stalk balance stored in account storage passed in as `accountStalk`.
+     *
+     * The number of Earned Beans is equal to the difference between: 
+     *  - the "expected" Stalk balance, determined from the account balance of 
+     *    Roots. 
+     *  - the "account" Stalk balance, stored in account storage.
+     * This works because FIXME(doc).
      */
     function _balanceOfEarnedBeans(address account, uint256 accountStalk)
         internal
         view
         returns (uint256 beans)
     {
-        // There will be no Roots when the first deposit is made.
+        // There will be no Roots before the first Deposit is made.
         if (s.s.roots == 0) return 0;
 
-        // Determine expected user Stalk based on Roots balance
-        // balanceOfStalk / totalStalk = balanceOfRoots / totalRoots
+        // Determine expected user Stalk based on Roots balance.
+        // `balanceOfStalk / totalStalk = balanceOfRoots / totalRoots`
         uint256 stalk = s.s.stalk.mul(s.a[account].roots).div(s.s.roots);
 
         // Beanstalk rounds down when minting Roots. Thus, it is possible that
@@ -166,8 +195,10 @@ contract SiloExit is ReentrancyGuard {
     }
 
     /**
-     * @notice Return the `account` balance of Earned Stalk, the Stalk associated with Earned Beans.
-     * @dev Earned Stalk can be derived from Earned Beans, because 1 Bean => 1 Stalk. See {C.getStalkPerBean()}.
+     * @notice Return the `account` balance of Earned Stalk, the Stalk
+     * associated with Earned Beans.
+     * @dev Earned Stalk can be derived from Earned Beans because 
+     * 1 Bean => 1 Stalk. See {C-getStalkPerBean}.
      */
     function balanceOfEarnedStalk(address account)
         public
@@ -178,8 +209,10 @@ contract SiloExit is ReentrancyGuard {
     }
 
     /**
-     * @notice Returns the `account` balance of Earned Seeds, the Seeds associated with Earned Beans.
-     * @dev Earned Seeds can be derived from Earned Beans, because 1 Bean => 2 Seeds. See {C.getSeedsPerBean()}.
+     * @notice Returns the `account` balance of Earned Seeds, the Seeds
+     * associated with Earned Beans.
+     * @dev Earned Seeds can be derived from Earned Beans, because
+     * 1 Bean => 2 Seeds. See {C-getSeedsPerBean}.
      */
     function balanceOfEarnedSeeds(address account)
         public
@@ -192,14 +225,16 @@ contract SiloExit is ReentrancyGuard {
     //////////////////////// SEASON OF PLENTY ////////////////////////
 
     /**
-     * @notice Returns the last Season that it started Raining resulting in a Season of Plenty.
+     * @notice Returns the last Season that it started Raining resulting in a 
+     * Season of Plenty.
      */
     function lastSeasonOfPlenty() public view returns (uint32) {
         return s.season.lastSop;
     }
 
     /**
-     * @notice Returns the `account` balance of unclaimed Bean:3Crv earned from Seasons of Plenty.
+     * @notice Returns the `account` balance of unclaimed BEAN:3CRV earned from 
+     * Seasons of Plenty.
      */
     function balanceOfPlenty(address account)
         public
@@ -209,6 +244,7 @@ contract SiloExit is ReentrancyGuard {
         Account.State storage a = s.a[account];
         plenty = a.sop.plenty;
         uint256 previousPPR;
+
         // If lastRain > 0, then check if SOP occured during the rain period.
         if (s.a[account].lastRain > 0) {
             // if the last processed SOP = the lastRain processed season,
@@ -244,7 +280,8 @@ contract SiloExit is ReentrancyGuard {
     }
 
     /**
-     * @notice Returns the `account` balance of Roots the last time it was Raining during a Silo update.
+     * @notice Returns the `account` balance of Roots the last time it was 
+     * Raining during a Silo update.
      */
     function balanceOfRainRoots(address account) public view returns (uint256) {
         return s.a[account].sop.roots;
