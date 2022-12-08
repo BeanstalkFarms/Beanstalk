@@ -75,7 +75,7 @@ library LibTokenSilo {
 
     /**
      * @dev Once the current BDV for `amount` of `token` is known, perform 
-     * deposit accounting.
+     * Deposit accounting.
      *
      * `s.ss[token].seeds` stores the number of Seeds per BDV for `token`.
      * `s.ss[token].stalk` stores the number of Stalk per BDV for `token`.
@@ -104,16 +104,19 @@ library LibTokenSilo {
     }
 
     /**
-     * @dev Add `amount` of `token` to a Deposit in `season`. Use a
+     * @dev Add `amount` of `token` to a user's Deposit in `season`. Requires a
      * precalculated `bdv`.
      *
      * If a Deposit doesn't yet exist, one is created. Otherwise, the existing
      * Deposit is updated.
      * 
-     * Note: `amount` & `bdv` are cast to uint128 to optimize storage cost, 
+     * `amount` & `bdv` are cast uint256 -> uint128 to optimize storage cost,
      * since both values can be packed into one slot.
      * 
-     * FIXME(naming) what about `addDepositToAccount`?
+     * Unlike {removeDeposit}, this function DOES EMIT an {AddDeposit} event.
+     * See {removeDeposit} for more details.
+     * 
+     * FIXME(naming): `addDepositToAccount`?
      */
     function addDeposit(
         address account,
@@ -133,16 +136,23 @@ library LibTokenSilo {
     //////////////////////// REMOVE DEPOSIT ////////////////////////
 
     /**
-     * @dev Remove `amount` of `token` from a Deposit in `season`.
+     * @dev Remove `amount` of `token` from a user's Deposit in `season`.
      *
      * A "Crate" refers to the existing Deposit in storage at:
-     * `s.a[account].deposits[token][season]`
+     *  `s.a[account].deposits[token][season]`
      *
      * Partially removing a Deposit should scale its BDV proportionally. For ex.
      * removing 80% of the tokens from a Deposit should reduce its BDV by 80%.
      *
-     * FIXME(naming): `base` to `removedBDV`
-     * FIXME(naming): `newBase` to `newBDV`
+     * During an update, `amount` & `bdv` are cast uint256 -> uint128 to
+     * optimize storage cost, since both values can be packed into one slot.
+     *
+     * This function DOES **NOT** EMIT a {RemoveDeposit} event. This
+     * asymmetry occurs because {LibTokenSilo-removeDeposit} is called in a loop
+     * in places where multiple deposits are removed simultaneously, including
+     * {TokenSilo-removeDeposits} and {TokenSilo-_transferDeposits}.
+     *
+     * FIXME(naming): `removeDepositFromAccount`?
      */
     function removeDeposit(
         address account,
@@ -241,16 +251,16 @@ library LibTokenSilo {
     }
 
     /**
-     * @dev Locate the `amount` and `bdv` for a Deposit in storage.
+     * @dev Locate the `amount` and `bdv` for a user's Deposit in storage.
      * 
      * Silo V2 Deposits are stored within each {Account} as a mapping of:
      *  `address token => uint32 season => { uint128 amount, uint128 bdv }`
      * 
      * Unripe BEAN and Unripe LP are handled independently so that data
      * stored in the legacy Silo V1 format and the new Silo V2 format can
-     * be appropriately merged.
-     * 
-     * See {FIXME(doc)} for more information.
+     * be appropriately merged. See {LibUnripeSilo} for more information.
+     *
+     * FIXME(naming): rename to `getDeposit()`?
      */
     function tokenDeposit(
         address account,
@@ -276,6 +286,8 @@ library LibTokenSilo {
      * 
      * Withdrawals are stored within each {Account} as a mapping of:
      *  `address token => uint32 season => uint128 amount`
+     * 
+     * FIXME(naming): rename to `getWithdrawal()`?
      */
     function tokenWithdrawal(
         address account,
