@@ -104,14 +104,15 @@ library LibTokenSilo {
     }
 
     /**
-     * @dev Add `amount` of `token` to a Deposit in `season`.
-     *
-     * The BDV asosciated with the Deposit must be calculated ahead of time.
+     * @dev Add `amount` of `token` to a Deposit in `season`. Use a
+     * precalculated `bdv`.
      *
      * If a Deposit doesn't yet exist, one is created. Otherwise, the existing
      * Deposit is updated.
      * 
-     * FIXME(doc) why the casting to uint128?
+     * Note: `amount` & `bdv` are cast to uint128 to optimize storage cost, 
+     * since both values can be packed into one slot.
+     * 
      * FIXME(naming) what about `addDepositToAccount`?
      */
     function addDeposit(
@@ -134,7 +135,7 @@ library LibTokenSilo {
     /**
      * @dev Remove `amount` of `token` from a Deposit in `season`.
      *
-     * "Crate" refers to the existing Deposit in storage at:
+     * A "Crate" refers to the existing Deposit in storage at:
      * `s.a[account].deposits[token][season]`
      *
      * Partially removing a Deposit should scale its BDV proportionally. For ex.
@@ -159,20 +160,21 @@ library LibTokenSilo {
 
         // Partial remove
         if (amount < crateAmount) {
-            // 
-            uint256 base = amount.mul(crateBDV).div(crateAmount);
-            uint256 newBase = uint256(s.a[account].deposits[token][season].bdv).sub(
-                base
-            );
-            uint256 newAmount = uint256(s.a[account].deposits[token][season].amount)
+            uint256 removedBDV = amount.mul(crateBDV).div(crateAmount);
+            uint256 updatedBDV = uint256(s.a[account].deposits[token][season].bdv)
+                .sub(removedBDV);
+            uint256 updatedAmount = uint256(s.a[account].deposits[token][season].amount)
                 .sub(amount);
+                
             require(
-                newBase <= uint128(-1) && newAmount <= uint128(-1),
+                updatedBDV <= uint128(-1) && updatedAmount <= uint128(-1),
                 "Silo: uint128 overflow."
             );
-            s.a[account].deposits[token][season].amount = uint128(newAmount);
-            s.a[account].deposits[token][season].bdv = uint128(newBase);
-            return base;
+
+            s.a[account].deposits[token][season].amount = uint128(updatedAmount);
+            s.a[account].deposits[token][season].bdv = uint128(updatedBDV);
+
+            return removedBDV;
         }
 
         // Full remove

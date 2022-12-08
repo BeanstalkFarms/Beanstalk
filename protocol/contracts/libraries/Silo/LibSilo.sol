@@ -95,7 +95,7 @@ library LibSilo {
     function mintSeeds(address account, uint256 seeds) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // Add Seeds to the account balance and Beanstalk total.
+        // Increase supply of Seeds; Add Seeds to the balance of `account`
         s.s.seeds = s.s.seeds.add(seeds);
         s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
 
@@ -115,11 +115,11 @@ library LibSilo {
         if (s.s.roots == 0) roots = stalk.mul(C.getRootsBase());
         else roots = s.s.roots.mul(stalk).div(s.s.stalk);
 
-        // Add Stalk to the account balance and Beanstalk total.
+        // Increase supply of Stalk; Add Stalk to the balance of `account`
         s.s.stalk = s.s.stalk.add(stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
 
-        // Add Roots to the account balance and Beanstalk total.
+        // Increase supply of Roots; Add Roots to the balance of `account`
         s.s.roots = s.s.roots.add(roots);
         s.a[account].roots = s.a[account].roots.add(roots);
 
@@ -146,7 +146,7 @@ library LibSilo {
     function burnSeeds(address account, uint256 seeds) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // Subtract Stalk from the account balance and Beanstalk total.
+        // Decrease supply of Seeds; Remove Seeds from the balance of `account`
         s.s.seeds = s.s.seeds.sub(seeds);
         s.a[account].s.seeds = s.a[account].s.seeds.sub(seeds);
 
@@ -166,17 +166,17 @@ library LibSilo {
         uint256 roots = s.s.roots.mul(stalk).div(s.s.stalk);
         if (roots > s.a[account].roots) roots = s.a[account].roots;
 
-        // Subtract Stalk from the account balance and Beanstalk total.
+        // Decrease supply of Stalk; Remove Stalk from the balance of `account`
         s.s.stalk = s.s.stalk.sub(stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
 
-        // Subtract Roots from the account balance and Beanstalk total.
+        // Decrease supply of Roots; Remove Roots from the balance of `account`
         s.s.roots = s.s.roots.sub(roots);
         s.a[account].roots = s.a[account].roots.sub(roots);
         
         // If it is Raining, subtract Roots from both the account's and 
         // Beanstalk's RainRoots balances.
-        // For more info on Rain, see {Fixme(doc)}. 
+        // For more info on Rain, see {FIXME(doc)}. 
         if (s.season.raining) {
             s.r.roots = s.r.roots.sub(roots);
             s.a[account].sop.roots = s.a[account].roots;
