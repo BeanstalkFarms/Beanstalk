@@ -11,13 +11,18 @@ import "../../C.sol";
 import "../LibAppStorage.sol";
 
 /**
+ * @title LibSiloPermit
  * @author Publius
- * @title Lib Silo Permit
- * @notice Set Silo Deposit allowance with permits.
- * 
+ * @notice Contains functions to read and update Silo Deposit allowances with
+ * permits.
  * @dev Permits must be signed off-chain.
- * See https://github.com/BeanstalkFarms/Beanstalk/blob/d2a9a232f50e1d474d976a2e29488b70c8d19461/protocol/utils/permit.js
- * for details on signing Silo Deposit permits.
+ *
+ * See here for details on signing Silo Deposit permits:
+ * https://github.com/BeanstalkFarms/Beanstalk/blob/d2a9a232f50e1d474d976a2e29488b70c8d19461/protocol/utils/permit.js
+ * 
+ * The Beanstalk SDK also provides Javascript wrappers for permit functionality:
+ * `permit`: https://github.com/BeanstalkFarms/Beanstalk-SDK/blob/df2684aee67241acdb89379d4d0c19322339436c/packages/sdk/src/lib/silo.ts#L657
+ * `permits`: https://github.com/BeanstalkFarms/Beanstalk-SDK/blob/df2684aee67241acdb89379d4d0c19322339436c/packages/sdk/src/lib/silo.ts#L698
  */
 library LibSiloPermit {
 
@@ -28,10 +33,11 @@ library LibSiloPermit {
     bytes32 private constant DEPOSITS_PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,address[] tokens,uint256[] values,uint256 nonce,uint256 deadline)");
 
     /**
-     * @dev Permits `spender` to spend `value` of `token` Deposits on behalf of `owner`.
-     * Only perits signed using the current nonce returned by {nonces} will be approved.
-     * Sign permit with {signSiloDepositTokenPermit} found here:
-     * https://github.com/BeanstalkFarms/Beanstalk/blob/d2a9a232f50e1d474d976a2e29488b70c8d19461/protocol/utils/permit.js
+     * @dev Permits `spender` to spend `value` of `token` Deposits on behalf of
+     * `owner`. Only permits signed using the current nonce returned by {nonces}
+     * will be approved.
+     * 
+     * See {LibSiloPermit} for a description of how to sign a permit.
      */
     function permit(
         address owner,
@@ -51,9 +57,10 @@ library LibSiloPermit {
     }
 
     /**
-     * @dev Permits `spender` to spend `values` of multiple `tokens` Deposits on behalf of `owner`.
-     * Sign permit with {signSiloDepositTokensPermit} found here:
-     * https://github.com/BeanstalkFarms/Beanstalk/blob/master/protocol/utils/permit.js
+     * @dev Permits `spender` to spend `values` of multiple `tokens` Deposits on
+     * behalf of `owner`.
+     * 
+     * See {LibSiloPermit} for a description of how to sign a multi-token permit.
      */
     function permits(
         address owner,
@@ -74,6 +81,7 @@ library LibSiloPermit {
 
     /**
      * @dev Returns the current `nonce` for `owner`.
+     * 
      * Use the current nonce to sign permits.
      */
     function nonces(address owner) internal view returns (uint256) {
@@ -113,10 +121,12 @@ library LibSiloPermit {
     }
 
     /**
-     * @dev Given an already https://eips.ethereum.org/EIPS/eip-712#definition-of-hashstruct[hashed struct], this
-     * function returns the hash of the fully encoded EIP712 message for this domain.
+     * @dev Given an already hashed struct, this function returns the hash of
+     * the fully encoded EIP712 message for this domain.
+     * https://eips.ethereum.org/EIPS/eip-712#definition-of-hashstruct
      *
-     * This hash can be used together with {ECDSA-recover} to obtain the signer of a message. For example:
+     * This hash can be used together with {ECDSA-recover} to obtain the signer
+     * of a message. For example:
      *
      * ```solidity
      * bytes32 digest = _hashTypedDataV4(keccak256(abi.encode(

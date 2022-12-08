@@ -208,7 +208,11 @@ library LibTokenSilo {
             else if (LibUnripeSilo.isUnripeLP(token))
                 return
                     crateBDV.add(
-                        LibUnripeSilo.removeUnripeLPDeposit(account, season, amount)
+                        LibUnripeSilo.removeUnripeLPDeposit(
+                            account,
+                            season,
+                            amount
+                        )
                     );
             revert("Silo: Crate balance too low.");
         }
