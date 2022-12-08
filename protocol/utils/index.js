@@ -3,7 +3,7 @@ const { impersonateSigner, impersonateBeanstalkOwner } = require("./signer.js");
 const { mintUsdc, mintBeans, mintEth } = require("./mint.js")
 const { readPrune } = require("./read.js")
 const { signSiloDepositTokenPermit, signSiloDepositTokensPermit, signTokenPermit } = require("./permit.js");
-
+const { strDisplay } = require('./string.js')
 
 function toBN(a) {
     return ethers.BigNumber.from(a)
@@ -25,3 +25,4 @@ exports.readPrune = readPrune
 exports.signSiloDepositTokenPermit = signSiloDepositTokenPermit
 exports.signSiloDepositTokensPermit = signSiloDepositTokensPermit
 exports.signTokenPermit = signTokenPermit
+exports.strDisplay = strDisplay
