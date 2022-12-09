@@ -538,7 +538,7 @@ contract TokenSilo is Silo {
             season,
             amount
         );
-        LibTokenSilo.addDeposit(recipient, token, season, amount, bdv);
+        LibTokenSilo.addDepositToAccount(recipient, token, season, amount, bdv);
         LibSilo.transferSeedsAndStalk(sender, recipient, seeds, stalk);
         return bdv;
     }
@@ -564,7 +564,7 @@ contract TokenSilo is Silo {
                 seasons[i],
                 amounts[i]
             );
-            LibTokenSilo.addDeposit(
+            LibTokenSilo.addDepositToAccount(
                 recipient,
                 token,
                 seasons[i],

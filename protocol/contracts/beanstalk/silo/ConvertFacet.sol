@@ -155,7 +155,7 @@ contract ConvertFacet is ReentrancyGuard {
         LibSilo.mintSeedsAndStalk(msg.sender, seeds, stalk);
 
         LibTokenSilo.incrementTotalDeposited(token, amount);
-        LibTokenSilo.addDeposit(msg.sender, token, _s, amount, bdv);
+        LibTokenSilo.addDepositToAccount(msg.sender, token, _s, amount, bdv);
     }
 
     function getMaxAmountIn(address tokenIn, address tokenOut)

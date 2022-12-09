@@ -145,7 +145,7 @@ contract Silo is SiloExit {
 
         // Deposit Earned Beans if there are any.
         // Note that 1 Bean = 1 BDV.
-        LibTokenSilo.addDeposit(
+        LibTokenSilo.addDepositToAccount(
             account,
             C.beanAddress(),
             _season(),

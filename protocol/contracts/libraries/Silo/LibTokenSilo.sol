@@ -81,7 +81,7 @@ library LibTokenSilo {
      * `s.ss[token].stalk` stores the number of Stalk per BDV for `token`.
      *
      * FIXME(discuss): If we think of Deposits like 1155s, we might call the
-     * combination of "incrementTotalDeposited" and "addDeposit" as "minting a
+     * combination of "incrementTotalDeposited" and "addDepositToAccount" as "minting a
      * deposit".
      */
     function depositWithBDV(
@@ -95,7 +95,7 @@ library LibTokenSilo {
         require(bdv > 0, "Silo: No Beans under Token.");
 
         incrementTotalDeposited(token, amount); // Update Totals
-        addDeposit(account, token, season, amount, bdv); // Add to Account
+        addDepositToAccount(account, token, season, amount, bdv); // Add to Account
 
         return (
             bdv.mul(s.ss[token].seeds),
@@ -118,7 +118,7 @@ library LibTokenSilo {
      * 
      * FIXME(naming): `addDepositToAccount`?
      */
-    function addDeposit(
+    function addDepositToAccount(
         address account,
         address token,
         uint32 season,

@@ -401,7 +401,7 @@ contract SiloFacet is TokenSilo {
 
         // Calculate the current BDV for `amount` of `token` and add a Deposit.
         uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
-        LibTokenSilo.addDeposit(msg.sender, token, season, amount, newBDV); // emits AddDeposit event
+        LibTokenSilo.addDepositToAccount(msg.sender, token, season, amount, newBDV); // emits AddDeposit event
 
         // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
         uint256 deltaBDV = newBDV.sub(ogBDV);
@@ -440,7 +440,7 @@ contract SiloFacet is TokenSilo {
         // Iterate through all seasons, redeposit the tokens with new BDV and summate new Stalk.
         for (uint256 i; i < seasons.length; ++i) {
             uint256 bdv = amounts[i].mul(newBDV).div(ar.tokensRemoved); // Cheaper than calling the BDV function multiple times.
-            LibTokenSilo.addDeposit(
+            LibTokenSilo.addDepositToAccount(
                 msg.sender,
                 token,
                 seasons[i],
