@@ -82,9 +82,7 @@ describe('Marketplace', function () {
     if (l[4] > 0) {
       return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'uint256', 'bool'], l);
     } else {
-      console.log(l)
       l.splice(4,1);
-      console.log(l)
       return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool'], l);
     }
   }

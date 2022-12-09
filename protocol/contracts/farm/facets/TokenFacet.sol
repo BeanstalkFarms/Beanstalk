@@ -5,6 +5,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/drafts/IERC20Permit.sol";
 import "../AppStorage.sol";
 import "../../libraries/Token/LibTransfer.sol";
 import "../../libraries/Token/LibWeth.sol";
