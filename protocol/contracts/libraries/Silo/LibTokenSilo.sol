@@ -15,6 +15,8 @@ import "./LibUnripeSilo.sol";
  * @author Publius
  * @notice Contains functions for depositing, withdrawing and claiming
  * whitelisted Silo tokens.
+ *
+ * For functionality related to Seeds, Stalk, and Roots, see {LibSilo}.
  */
 library LibTokenSilo {
     using SafeMath for uint256;
@@ -81,8 +83,8 @@ library LibTokenSilo {
      * `s.ss[token].stalk` stores the number of Stalk per BDV for `token`.
      *
      * FIXME(discuss): If we think of Deposits like 1155s, we might call the
-     * combination of "incrementTotalDeposited" and "addDepositToAccount" as "minting a
-     * deposit".
+     * combination of "incrementTotalDeposited" and "addDepositToAccount" as 
+     * "minting a deposit".
      */
     function depositWithBDV(
         address account,
@@ -113,10 +115,8 @@ library LibTokenSilo {
      * `amount` & `bdv` are cast uint256 -> uint128 to optimize storage cost,
      * since both values can be packed into one slot.
      * 
-     * Unlike {removeDepositFromAccount}, this function DOES EMIT an {AddDeposit} event.
-     * See {removeDepositFromAccount} for more details.
-     * 
-     * FIXME(naming): `addDepositToAccount`?
+     * Unlike {removeDepositFromAccount}, this function DOES EMIT an 
+     * {AddDeposit} event. See {removeDepositFromAccount} for more details.
      */
     function addDepositToAccount(
         address account,
@@ -148,11 +148,9 @@ library LibTokenSilo {
      * optimize storage cost, since both values can be packed into one slot.
      *
      * This function DOES **NOT** EMIT a {RemoveDeposit} event. This
-     * asymmetry occurs because {LibTokenSilo-removeDepositFromAccount} is called in a loop
+     * asymmetry occurs because {removeDepositFromAccount} is called in a loop
      * in places where multiple deposits are removed simultaneously, including
      * {TokenSilo-removeDeposits} and {TokenSilo-_transferDeposits}.
-     *
-     * FIXME(naming): `removeDepositFromAccount`?
      */
     function removeDepositFromAccount(
         address account,
@@ -286,9 +284,9 @@ library LibTokenSilo {
     }
 
     /**
-     * @dev Locate the `amount` for a Withdrawal in storage.
+     * @dev Locate the `amount` for a user's Withdrawal in storage.
      * 
-     * Withdrawals are stored within each {Account} as a mapping of:
+     * Silo V2 Withdrawals are stored within each {Account} as a mapping of:
      *  `address token => uint32 season => uint128 amount`
      * 
      * FIXME(naming): rename to `getWithdrawal()`?
