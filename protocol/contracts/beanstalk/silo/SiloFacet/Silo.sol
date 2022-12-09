@@ -35,6 +35,7 @@ contract Silo is SiloExit {
      * @param account Owns the Earned Beans and receives the Planted Seeds.
      * @param beans The amount of Earned Beans claimed by `account`. The number
      * of Seeds that were Planted can be derived, since 1 Bean => 2 Seeds.
+     * See {C-getSeedsPerBean}.
      */
     event Plant(
         address indexed account,
@@ -106,7 +107,8 @@ contract Silo is SiloExit {
     }
 
     /**
-     * @dev Claims the Grown Stalk for `account` and applies to their Stalk balance.
+     * @dev Claims the Grown Stalk for `account` and applies it to their Stalk
+     * balance.
      *
      * For more info on Mowing, see: {SiloFacet-mow}
      */
@@ -117,8 +119,8 @@ contract Silo is SiloExit {
         // _lastUpdate > _season() should not be possible, but it is checked anyway.
         if (_lastUpdate >= _season()) return;
 
-        // {handleRainAndSops} increments plenty if a SOP has occured and 
-        // saves Rain Roots if its Raining for 'account'.
+        // Increments `plenty` for `account` if a Flood has occured.
+        // Saves Rain Roots for `account` if it is Raining.
         handleRainAndSops(account, _lastUpdate);
 
         // Calculate the amount of Grown Stalk claimable by `account`.
