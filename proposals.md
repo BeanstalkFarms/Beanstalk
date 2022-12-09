@@ -53,6 +53,7 @@ You can read about the BCM's Emergency Response Procedures [here](https://docs.b
 * [EBIP-4](https://bean.money/ebip-4): Remove V1 Pod Order Functions
 * [EBIP-5](https://bean.money/ebip-5): Remove transferTokenFrom Function
 * [EBIP-6](https://bean.money/ebip-6): Resolve EBIP-4 and EBIP-5
+* [EBIP-7](https://bean.money/ebip-7): Enroot BDV Update
 
 ## Beanstalk Operations Proposal (BOP)
 
