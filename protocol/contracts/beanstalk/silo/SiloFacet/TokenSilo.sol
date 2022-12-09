@@ -410,15 +410,14 @@ contract TokenSilo is Silo {
     //////////////////////// REMOVE ////////////////////////
 
     /**
-     * @dev Removes from a single Deposit, emits the RemoveDeposit event, and returns Stalk/Seeds/BDV.
+     * @dev Removes from a single Deposit, emits the RemoveDeposit event,
+     * and returns Stalk/Seeds/BDV.
      *
      * Used in:
      * - {TokenSilo:_withdrawDeposit}
      * - {TokenSilo:_transferDeposit}
      *
      * FIXME(refactor): ordering of stalk -> seeds -> bdv is against convention.
-     * FIXME(refactor): `removeDeposit` wraps `LibTokenSilo.removeDeposit`, but in some functions
-     * (like {SiloFacet:enrootDeposit}) is used directly. Hard to follow.
      */
     function removeDeposit(
         address account,
@@ -433,7 +432,7 @@ contract TokenSilo is Silo {
             uint256 bdv
         )
     {
-        bdv = LibTokenSilo.removeDeposit(account, token, season, amount);
+        bdv = LibTokenSilo.removeDepositFromAccount(account, token, season, amount);
         seedsRemoved = bdv.mul(s.ss[token].seeds);
         stalkRemoved = bdv.mul(s.ss[token].stalk).add(
             LibSilo.stalkReward(seedsRemoved, _season() - season)
@@ -442,7 +441,8 @@ contract TokenSilo is Silo {
     }
 
     /**
-     * @dev Removes from multiple single Deposit, emits the RemoveDeposits event, and returns Stalk/Seeds/BDV.
+     * @dev Removes from multiple single Deposit, emits the RemoveDeposits
+     * event, and returns Stalk/Seeds/BDV.
      * 
      * Used in:
      * - {TokenSilo:_withdrawDeposits}
@@ -455,7 +455,7 @@ contract TokenSilo is Silo {
         uint256[] calldata amounts
     ) internal returns (AssetsRemoved memory ar) {
         for (uint256 i; i < seasons.length; ++i) {
-            uint256 crateBdv = LibTokenSilo.removeDeposit(
+            uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 account,
                 token,
                 seasons[i],
@@ -558,7 +558,7 @@ contract TokenSilo is Silo {
         uint256[] memory bdvs = new uint256[](seasons.length);
 
         for (uint256 i; i < seasons.length; ++i) {
-            uint256 crateBdv = LibTokenSilo.removeDeposit(
+            uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 sender,
                 token,
                 seasons[i],

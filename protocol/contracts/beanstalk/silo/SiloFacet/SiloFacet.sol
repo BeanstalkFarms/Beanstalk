@@ -381,7 +381,7 @@ contract SiloFacet is TokenSilo {
      * Note: While this function was introduced during the REplant for Unripe deposits, it *could* be used to update the BDV of any Deposit.
      *
      * Gas optimization: We neglect to check if `token` is whitelisted. If a token is not whitelisted, it cannot be Deposited, and thus cannot be Removed.
-     * `{LibTokenSilo.removeDeposit}` should revert if there isn't enough balance of `token` to remove.
+     * `{LibTokenSilo.removeDepositFromAccount}` should revert if there isn't enough balance of `token` to remove.
      *
      * FIXME(refactor): bump the contents out to an `_updateBDV()` internal function so that we can later rename the public function?
      */
@@ -391,7 +391,7 @@ contract SiloFacet is TokenSilo {
         uint256 amount
     ) external nonReentrant mowSender {
         // First, remove Deposit and Redeposit with new BDV
-        uint256 ogBDV = LibTokenSilo.removeDeposit(
+        uint256 ogBDV = LibTokenSilo.removeDepositFromAccount(
             msg.sender,
             token,
             season,

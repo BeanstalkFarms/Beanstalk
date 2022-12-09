@@ -90,7 +90,7 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 i = 0;
         while ((i < seasons.length) && (a.tokensRemoved < maxTokens)) {
             if (a.tokensRemoved.add(amounts[i]) < maxTokens)
-                depositBDV = LibTokenSilo.removeDeposit(
+                depositBDV = LibTokenSilo.removeDepositFromAccount(
                     msg.sender,
                     token,
                     seasons[i],
@@ -98,7 +98,7 @@ contract ConvertFacet is ReentrancyGuard {
                 );
             else {
                 amounts[i] = maxTokens.sub(a.tokensRemoved);
-                depositBDV = LibTokenSilo.removeDeposit(
+                depositBDV = LibTokenSilo.removeDepositFromAccount(
                     msg.sender,
                     token,
                     seasons[i],

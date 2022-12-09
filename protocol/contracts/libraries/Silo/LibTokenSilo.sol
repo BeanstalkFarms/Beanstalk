@@ -113,8 +113,8 @@ library LibTokenSilo {
      * `amount` & `bdv` are cast uint256 -> uint128 to optimize storage cost,
      * since both values can be packed into one slot.
      * 
-     * Unlike {removeDeposit}, this function DOES EMIT an {AddDeposit} event.
-     * See {removeDeposit} for more details.
+     * Unlike {removeDepositFromAccount}, this function DOES EMIT an {AddDeposit} event.
+     * See {removeDepositFromAccount} for more details.
      * 
      * FIXME(naming): `addDepositToAccount`?
      */
@@ -148,13 +148,13 @@ library LibTokenSilo {
      * optimize storage cost, since both values can be packed into one slot.
      *
      * This function DOES **NOT** EMIT a {RemoveDeposit} event. This
-     * asymmetry occurs because {LibTokenSilo-removeDeposit} is called in a loop
+     * asymmetry occurs because {LibTokenSilo-removeDepositFromAccount} is called in a loop
      * in places where multiple deposits are removed simultaneously, including
      * {TokenSilo-removeDeposits} and {TokenSilo-_transferDeposits}.
      *
      * FIXME(naming): `removeDepositFromAccount`?
      */
-    function removeDeposit(
+    function removeDepositFromAccount(
         address account,
         address token,
         uint32 season,
