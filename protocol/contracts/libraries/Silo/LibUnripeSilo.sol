@@ -16,23 +16,35 @@ import "../../C.sol";
  * @notice Contains functions for interacting with Unripe Silo deposits.
  * Provides a unified interface that works across legacy storage references.
  * 
- * @dev When Beanstalk was relaunched in Aug 2022, new two tokens Unripe Bean 
- * and Unripe BEAN:3CRV were created and whitelisted in the Silo. 
- * See {Replant8-init}.
+ * @dev Beanstalk was exploited on April 17, 2022. All tokens that existed at
+ * this time, including whitelisted LP tokens, are now defunct and referred to 
+ * as "legacy" or "pre-exploit" tokens.
+ *
+ * Legacy token addresses are listed here:
+ * https://docs.bean.money/almanac/protocol/contracts#pre-exploit-contracts
+ *
+ * When Beanstalk was Replanted on Aug 6, 2022, new two tokens — Unripe Bean and 
+ * Unripe BEAN:3CRV — were created and whitelisted in the Silo. See {Replant8-init}.
  * 
- * Existing Bean and Bean LP Depositors were credited with Unripe Bean Deposits 
- * and Unripe BEAN:3CRV Deposits respectively equal to the BDV of each Deposit
+ * At the time of exploit, there were three forms of LP whitelisted in the Silo:
+ * BEAN:ETH, BEAN:3CRV, and BEAN:LUSD. However, only one LP token was created
+ * during the Replant: BEAN:3CRV (at a new address). 
+ * 
+ * Existing Bean and LP Depositors were credited with Unripe Bean Deposits and 
+ * Unripe BEAN:3CRV Deposits respectively, equal to the BDV of each Deposit
  * at the end of the pre-exploit block.
  * 
  * {Replant7-init} migrated the Deposits through events by emitting:
  *  1. {RemoveSeason(s)} or {LPRemove} for Bean and LP Deposits
  *  2. {AddDeposit} for Unripe Bean and Unripe LP distributions
- * for all accounts.
  * 
- * Moving all on-chain non-zero Bean Deposit storage variables to the 
- * Unripe Bean Deposit storage mapping was prohibitively expensive.
+ * This operation was performed for all accounts with Silo Deposits to prevent
+ * users from being required to perform a manual migration (and thus pay gas).
+ * 
+ * However, moving all on-chain Bean Deposit storage variables to the Silo V2 
+ * storage mapping during {Replant7-init} was prohibitively expensive.
  *
- * {LibUnripeSilo} remaps pre-exploit Bean and LP Deposit storage references to
+ * This library remaps pre-exploit Bean and LP Deposit storage references to
  * Unripe Bean and Unripe BEAN:3CRV Deposits. New Unripe Bean and Unripe 
  * BEAN:3CRV Deposits are stored in the expected Silo V2 storage location.
  */
@@ -41,12 +53,11 @@ library LibUnripeSilo {
     using LibSafeMath128 for uint128;
 
     /*
-     * At the time of exploit, Beanstalk had three pools: BEAN:ETH, BEAN:3CRV, 
-     * and BEAN:LUSD. The values below represent the
-     * {LibTokenSilo-beanDenominatedValue} of each LP token at the end of the
-     * block 14602789 (the block before the exploit).
+     * The values below represent the {LibTokenSilo-beanDenominatedValue} of 
+     * each pre-exploit LP token at the end of Block 14602789 (the block before 
+     * the exploit).
      * 
-     * {LibUnripeSilo} uses these constants.
+     * {LibUnripeSilo} uses these constants to migrate pre-exploit LP Deposits.
      * 
      * Note that the BDV of BEAN itself is always 1, hence why only LP tokens
      * appear below.
@@ -64,13 +75,21 @@ library LibUnripeSilo {
      * Silo V2 storage reference (See {SiloFacet-enrootDeposit(s)}).
      * 
      * Thus, the BDV of Unripe Bean Deposits stored in the Silo V1 Bean storage 
-     * is equal to the amount times the initial % recapitalized when Beanstalk
-     * was Replanted.
+     * is equal to the amount deposited times the initial % recapitalized when 
+     * Beanstalk was Replanted.
+     *
+     * As Beanstalk continues to recapitalize, users can call 
+     * {SiloFacet-enrootDeposit(s)} to update the BDV of their Unripe Deposits. 
      */
 
     /**
-     * @dev Removes `amount` Unripe Beans stored in the `account` legacy Bean 
+     * @dev Removes `amount` of Unripe Beans deposited stored in `account` legacy 
      * Silo V1 storage and returns the BDV.
+     *
+     * Since Deposited Beans have a BDV of 1, 1 Bean in Silo V1 storage equals
+     * 1 Unripe Bean. 
+     *
+     * FIXME(naming): removeLegacyDepositAsUnripeBean ?
      */
     function removeUnripeBeanDeposit(
         address account,
@@ -83,6 +102,8 @@ library LibUnripeSilo {
 
     /**
      * @dev See {removeUnripeBeanDeposit}.
+     * 
+     * FIXME(naming): _removeLegacyDepositAsUnripeBean ?
      */
     function _removeUnripeBeanDeposit(
         address account,
@@ -106,6 +127,8 @@ library LibUnripeSilo {
     /**
      * @dev Calculate the `amount` and `bdv` of an Unripe Bean deposit. Sums
      * across the amounts stored in Silo V1 and Silo V2 storage.
+     * 
+     * This is Unripe Bean equivalent of {LibTokenSilo-tokenDeposit}.
      */
     function unripeBeanDeposit(address account, uint32 season)
         internal
@@ -167,7 +190,7 @@ library LibUnripeSilo {
      * With the above Deposits, the user should have received:
      *  500 + 610 + 290 = 1400 Unripe BEAN:3CRV LP.
      *
-     * Removing 600 Unripe BEAN:3CRV LP would remove the entire pre-exploit
+     * Removing 600 Unripe BEAN:3CRV LP would remove all 500 from the pre-exploit
      * BEAN:ETH Deposit and bring the pre-exploit BEAN:3CRV Deposit from
      * 610 -> 510.
      */
@@ -273,6 +296,8 @@ library LibUnripeSilo {
 
     /**
      * @dev Calculate the `amount` and `bdv` of a given Unripe BEAN:3CRV deposit.
+     *
+     * This is Unripe LP equivalent of {LibTokenSilo-tokenDeposit}.
      */
     function unripeLPDeposit(address account, uint32 season)
         internal
@@ -320,10 +345,10 @@ library LibUnripeSilo {
      * the pre-exploit BEAN:ETH storage location (Silo V1 format).
      *
      * Note: In Silo V1, Beanstalk stored the number of Seeds associated with a 
-     * BEAN:ETH LP Deposit, rather than the BDV. BDV was then derived as 
+     * BEAN:ETH LP Deposit instead of the BDV. BDV was then derived as 
      * `seeds / 4`. 
      * 
-     * The BEAN:ETH LP token had a precision of 18 decimals.
+     * The legacy BEAN:ETH LP token had a precision of 18 decimals.
      */
     function getBeanEthUnripeLP(address account, uint32 season)
         private
@@ -347,7 +372,7 @@ library LibUnripeSilo {
      * @dev Calculate the `amount` and `bdv` for a Unripe LP deposit stored in
      * the pre-exploit BEAN:LUSD storage location (Silo V2 format).
      * 
-     * The BEAN:LUSD LP token had a precision of 18 decimals.
+     * The legacy BEAN:LUSD LP token had a precision of 18 decimals.
      */
     function getBeanLusdUnripeLP(address account, uint32 season)
         private
@@ -368,7 +393,7 @@ library LibUnripeSilo {
      * @dev Calculate the `amount` and `bdv` for a Unripe LP deposit stored in 
      * the pre-exploit BEAN:3CRV storage location (Silo V2 format).
      * 
-     * The BEAN:3CRV LP token had a precision of 18 decimals.
+     * The legacy BEAN:3CRV LP token had a precision of 18 decimals.
      */
     function getBean3CrvUnripeLP(address account, uint32 season)
         private
