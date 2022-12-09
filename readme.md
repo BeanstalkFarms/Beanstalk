@@ -7,7 +7,7 @@
 [discord-badge]: https://img.shields.io/discord/880413392916054098?label=Beanstalk
 [discord-url]: https://discord.gg/beanstalk
 
-Code Version: `2.3.0` <br>
+Code Version: `2.3.1` <br>
 Whitepaper Version: `2.3.0`
 
 Beanstalk is a permissionless fiat stablecoin protocol built on Ethereum.
