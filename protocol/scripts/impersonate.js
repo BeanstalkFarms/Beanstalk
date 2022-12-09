@@ -43,7 +43,7 @@ async function curve() {
     JSON.parse(threeCurveJson).deployedBytecode,
   ]);
 
-  let curveFactoryJson = fs.readFileSync(`./artifacts/contracts/mocks/Curve/MockCurveFactory.sol/MockCurveFactory.json`);
+  let curveFactoryJson = fs.readFileSync(`./artifacts/contracts/mocks/curve/MockCurveFactory.sol/MockCurveFactory.json`);
   await network.provider.send("hardhat_setCode", [
     STABLE_FACTORY,
     JSON.parse(curveFactoryJson).deployedBytecode,
@@ -56,7 +56,7 @@ async function curve() {
   const curveStableFactory = await ethers.getContractAt("MockCurveFactory", STABLE_FACTORY);
   await curveStableFactory.set_coins(BEAN_3_CURVE, [BEAN, THREE_CURVE, ZERO_ADDRESS, ZERO_ADDRESS]);
 
-  let curveZapJson = fs.readFileSync(`./artifacts/contracts/mocks/Curve/MockCurveZap.sol/MockCurveZap.json`);
+  let curveZapJson = fs.readFileSync(`./artifacts/contracts/mocks/curve/MockCurveZap.sol/MockCurveZap.json`);
   await network.provider.send("hardhat_setCode", [
     CURVE_ZAP,
     JSON.parse(curveZapJson).deployedBytecode,
