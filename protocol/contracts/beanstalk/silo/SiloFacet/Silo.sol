@@ -13,7 +13,14 @@ import "~/libraries/Silo/LibTokenSilo.sol";
 /**
  * @title Silo
  * @author Publius
- * @notice FIXME(doc)
+ * @notice Provides utility functions for claiming Silo rewards, including:
+ *
+ * - Grown Stalk (see "Mow")
+ * - Earned Beans, Earned Stalk, Plantable Seeds (see "Plant")
+ * - 3CRV earned during a Flood (see "Flood")
+ *
+ * For backwards compatibility, a Flood is sometimes referred to by its old name
+ * "Season of Plenty".
  */
  
 contract Silo is SiloExit {
@@ -23,9 +30,11 @@ contract Silo is SiloExit {
     //////////////////////// EVENTS ////////////////////////    
 
     /**
-     * @notice {Plant} is emitted when the Seeds associated with the Earned Beans of 'account' are Planted.
-     * @param account is the account that owns the Earned Beans and receives the Planted Seeds.
-     * @param beans is the number of Earned Beans 'account' owns, which determines the Seeds Planted.
+     * @notice Emitted when the Seeds associated with the Earned Beans of
+     * `account` are Planted.
+     * @param account Owns the Earned Beans and receives the Planted Seeds.
+     * @param beans The amount of Earned Beans claimed by `account`. The number
+     * of Seeds that were Planted can be derived, since 1 Bean => 2 Seeds.
      */
     event Plant(
         address indexed account,
@@ -33,12 +42,14 @@ contract Silo is SiloExit {
     );
 
     /**
-     * @notice {ClaimPlenty} is emitted when the assets paid to 'account' during a Flood are Claimed.
-     * @param account is the account that owns and receives the assets paid during a Flood being Claimed.
-     * @param plenty is the number of 3CRV the account has been Paid since their last ClaimPlenty.
-     *
-     * @dev Flood was previously called a Season of Plenty. For backwards compatibility, the event has
-     * not been changed. For more information on Flood, see: {Fixme(doc)}.
+     * @notice Emitted when 3CRV paid to `account` during a Flood is Claimed.
+     * @param account Owns and receives the assets paid during a Flood.
+     * @param plenty The amount of 3CRV claimed by `account`. This is the amount
+     * that `account` has been paid since their last {ClaimPlenty}.
+     * 
+     * @dev Flood was previously called a "Season of Plenty". For backwards
+     * compatibility, the event has not been changed. For more information on 
+     * Flood, see: {FIXME(doc)}.
      */
     event ClaimPlenty(
         address indexed account,
@@ -46,13 +57,16 @@ contract Silo is SiloExit {
     );
 
     /**
-     * @notice {SeedsBalanceChanged} is emitted when `account` gains or loses Seeds.
-     * @param account is the account that gained or lost Seeds.
-     * @param delta is the change in Seeds.
+     * @notice Emitted when `account` gains or loses Seeds.
+     * @param account The account that gained or lost Seeds.
+     * @param delta The change in Seeds.
      *   
      * @dev {SeedsBalanceChanged} should be emitted anytime a Deposit is added, removed or transferred.
-     * @dev BIP-24 included a one-time re-emission of {SeedsBalanceChanged} for accounts that had
-     * executed a Deposit transfer between the Replant and BIP-24 execution. For more, see:
+     * 
+     * BIP-24 included a one-time re-emission of {SeedsBalanceChanged} for accounts that had
+     * executed a Deposit transfer between the Replant and BIP-24 execution.
+     * 
+     * For more, see:
      * [BIP-24](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-24-fungible-bdv-support.md)
      * [Event-24-Event-Emission](https://github.com/BeanstalkFarms/Event-24-Event-Emission)
      */
@@ -62,10 +76,10 @@ contract Silo is SiloExit {
     );
 
     /**
-     * @notice {StalkBalanceChanged} is emitted when `account` gains or loses Stalk.
-     * @param account is the account that gained or lost Stalk.
-     * @param delta is the change in Stalk.
-     * @param deltaRoots is the change is Roots. For more info on Roots, see: 
+     * @notice Emitted when `account` gains or loses Stalk.
+     * @param account The account that gained or lost Stalk.
+     * @param delta The change in Stalk.
+     * @param deltaRoots The change in Roots. For more info on Roots, see: 
      * FIXME(doc)
      *   
      * @dev {StalkBalanceChanged} should be emitted anytime a Deposit is added, removed or transferred AND
@@ -84,7 +98,7 @@ contract Silo is SiloExit {
     //////////////////////// INTERNAL: MOW ////////////////////////
 
     /**
-     * @dev Update the Silo for `msg.sender`.
+     * @dev Claims the Grown Stalk for `msg.sender`.
      */
     modifier mowSender() {
         _mow(msg.sender);
@@ -92,16 +106,14 @@ contract Silo is SiloExit {
     }
 
     /**
-     * @dev anytime the state of an account's Silo changes, their Grown Stalk is Mown. 
-     * {_mow} Mows the Grown Stalk of 'account' and is called at the beginning of 
-     * every interaction with the Silo.
+     * @dev Claims the Grown Stalk for `account` and applies to their Stalk balance.
      *
-     * For more info on Mowing, see: FIXME(doc)
+     * For more info on Mowing, see: {SiloFacet-mow}
      */
     function _mow(address account) internal {
         uint32 _lastUpdate = lastUpdate(account);
 
-        // If 'account' was already updated this Season, there's no Stalk to Mow.
+        // If `account` was already updated this Season, there's no Stalk to Mow.
         // _lastUpdate > _season() should not be possible, but it is checked anyway.
         if (_lastUpdate >= _season()) return;
 
@@ -109,10 +121,12 @@ contract Silo is SiloExit {
         // saves Rain Roots if its Raining for 'account'.
         handleRainAndSops(account, _lastUpdate);
 
-        // {__mow} Mows the Grown Stalk from Seeds associated with 'account'.
+        // Calculate the amount of Grown Stalk claimable by `account`.
+        // Increase the account's balance of Stalk and Roots.
         __mow(account);
 
-        // Update the lastUpdate Season to the current `_season()`.
+        // Reset timer so that Grown Stalk for a particular Season can only be 
+        // claimed one time. 
         s.a[account].lastUpdate = _season();
     }
 
@@ -125,13 +139,10 @@ contract Silo is SiloExit {
     //////////////////////// INTERNAL: PLANT ////////////////////////
 
     /**
-     * @dev Plants the Plantable Seeds of 'account' associated with its Earned Beans.
+     * @dev Plants the Plantable Seeds of `account` associated with its Earned
+     * Beans.
      * 
-     * Anytime an account has Earned Beans, the Seeds associated with the Earned Beans must be Planted in order to start Growing Stalk. 
-     * 
-     * In practice, when Seeds are Planted, all Earned Beans are Deposited in the current Season.
-     *
-     * For more info on Planting, see: FIXME(doc)
+     * For more info on Planting, see: {SiloFacet-plant}
      */
     function _plant(address account) internal returns (uint256 beans) {
         // Need to update 'account' before we make a Deposit.
@@ -141,10 +152,11 @@ contract Silo is SiloExit {
         // Calculate balance of Earned Beans.
         beans = _balanceOfEarnedBeans(account, accountStalk);
         if (beans == 0) return 0;
+
+        // Reduce the Silo's supply of Earned Beans.
         s.earnedBeans = s.earnedBeans.sub(beans);
 
-        // Deposit Earned Beans if there are any.
-        // Note that 1 Bean = 1 BDV.
+        // Deposit Earned Beans if there are any. Note that 1 Bean = 1 BDV.
         LibTokenSilo.addDepositToAccount(
             account,
             C.beanAddress(),
@@ -153,7 +165,7 @@ contract Silo is SiloExit {
             beans // bdv
         );
         
-        // Calculate the Plantable Seeds assocaited with the Earned Beans that were Deposited.
+        // Calculate the Plantable Seeds associated with the Earned Beans that were Deposited.
         uint256 seeds = beans.mul(C.getSeedsPerBean());
 
         // Plantable Seeds don't generate Grown Stalk until they are Planted (i.e., not auto-compounding). 
@@ -175,8 +187,9 @@ contract Silo is SiloExit {
     //////////////////////// INTERNAL: SEASON OF PLENTY ////////////////////////
 
     /**
-     * @dev Gas optimization: An account can call `{SiloFacet:claimPlenty}` even if
-     * `s.a[account].sop.plenty == 0`. This would emit a ClaimPlenty event with an amount of 0.
+     * @dev Gas optimization: An account can call `{SiloFacet:claimPlenty}` even
+     * if `s.a[account].sop.plenty == 0`. This would emit a ClaimPlenty event
+     * with an amount of 0.
      */
     function _claimPlenty(address account) internal {
         // Plenty is earned in the form of 3Crv.

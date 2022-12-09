@@ -11,8 +11,18 @@ import "~/libraries/Token/LibTransfer.sol";
 import "~/libraries/Silo/LibSiloPermit.sol";
 
 /**
+ * @title SiloFacet
  * @author Publius
- * @title SiloFacet handles depositing, withdrawing and claiming whitelisted Silo tokens.
+ * @notice  This is the entry point for all Silo functionality.
+ * 
+ * SiloFacet           public functions for modifying an account's Silo.
+ * ↖ TokenSilo         accounting & storage for Deposits, Withdrawals, allowances
+ * ↖ Silo              accounting & storage for Seeds, Stalk. and Roots
+ * ↖ SiloExit          public view funcs for total balances, account balances 
+ *                     & other account state.
+ * ↖ ReentrancyGuard   provides reentrancy guard modifier and access to {C}.
+ *
+ * 
  */
 contract SiloFacet is TokenSilo {
 
@@ -25,7 +35,7 @@ contract SiloFacet is TokenSilo {
      * @notice Deposit `amount` of `token` into the Silo.
      * @param token Address of the whitelisted ERC20 token to Deposit.
      * @param amount The amount of `token` to Deposit.
-     * @param mode The balance to pull tokens from. See {LibTransfer.From}.
+     * @param mode The balance to pull tokens from. See {LibTransfer-From}.
      *
      * @dev Depositing should:
      * 
@@ -34,8 +44,7 @@ contract SiloFacet is TokenSilo {
      *  3. Create or update a Deposit entry for `account` in the current Season.
      *  4. Mint Stalk and Seeds to `account`.
      *  5. Emit an `AddDeposit` event.
-     *
-     * FIXME(doc): why is this payable?
+     * 
      * FIXME(logic): return `(amount, bdv(, season))`
      */
     function deposit(
@@ -60,10 +69,18 @@ contract SiloFacet is TokenSilo {
      * @param season The Season to Withdraw from.
      * @param amount Amount of `token` to Withdraw.
      *
-     * @dev The Season determines how much Stalk and Seeds are burned.
+     * @dev When Withdrawing a Deposit, the user must burn all of the Stalk
+     * associated with it, including:
+     *
+     * - base Stalk, received based on the BDV of the Deposit.
+     * - Grown Stalk, grown from Seeds while the deposit was held in the Silo.
+     *
+     * Note that the Grown Stalk associated with a Deposit is a function of the 
+     * delta between the current Season and the Season in which a Deposit was made.
      * 
-     * Typically, the Farmer wants to withdraw more recent deposits first, since
-     * these require less Stalk to be burned.
+     * Typically, a Farmer wants to withdraw more recent Deposits first, since
+     * these require less Stalk to be burned. This functionality is the default
+     * provided by the Beanstalk SDK, but is NOT provided at the contract level.
      */
     function withdrawDeposit(
         address token,
@@ -81,8 +98,9 @@ contract SiloFacet is TokenSilo {
      *
      * @dev Clients should factor in gas costs when withdrawing from multiple deposits.
      *
-     * For example, if a user wants to withdraw X Beans, it may be preferred to withdraw from 1 older Deposit,
-     * rather than from multiple recent Deposits, if the difference in seasons is minimal.
+     * For example, if a user wants to withdraw X Beans, it may be preferable to
+     * withdraw from 1 older Deposit, rather than from multiple recent Deposits,
+     * if the difference in seasons is minimal.
      */
     function withdrawDeposits(
         address token,
@@ -97,11 +115,13 @@ contract SiloFacet is TokenSilo {
     /** 
      * @notice Claim tokens from a Withdrawal.
      *
-     * Claiming a Withdrawal is all-or-nothing, hence an `amount` parameter is omitted.
+     * Claiming a Withdrawal is all-or-nothing, hence an `amount` parameter is 
+     * omitted.
      *
      * @param token Address of the whitelisted ERC20 token to Claim.
      * @param season Season of Withdrawal to claim from.
-     * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
+     * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL,
+     * INTERNAL_TOLERANT)
      *
      * @dev FIXME(logic): return the amount claimed
      */
@@ -138,10 +158,10 @@ contract SiloFacet is TokenSilo {
 
     /** 
      * @notice Transfer a single Deposit.
-     * @param sender Source of Deposit.
-     * @param recipient Destination of Deposit.
+     * @param sender Current owner of Deposit.
+     * @param recipient Destination account of Deposit.
      * @param token Address of the whitelisted ERC20 token to Transfer.
-     * @param season Season of Deposit to Transfer.
+     * @param season Season of Deposit from which to Transfer.
      * @param amount Amount of `token` to Transfer.
      * @return bdv The BDV included in this transfer, now owned by `recipient`.
      *
@@ -335,8 +355,8 @@ contract SiloFacet is TokenSilo {
     //////////////////////// UPDATE SILO ////////////////////////
 
     /** 
-     * @notice DEPRECATED: Renamed to `mow()`. Claim Grown Stalk for `account`.
-     * @dev See {Silo:_mow}.
+     * @notice DEPRECATED: Renamed to `mow()`.
+     * @dev See {SiloFacet-mow}.
      */
     function update(address account) external payable {
         _mow(account);
@@ -351,12 +371,18 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice Claim Earned Beans and their associated Stalk & Seeds for `msg.sender`.
+     * @notice Claim Earned Beans and their associated Stalk & Seeds for 
+     * `msg.sender`.
      *
      * The Stalk associated with Earned Beans is commonly called "Earned Stalk".
-     * The Seeds associated with Earned Beans are commonly called "Plantable Seeds". Plantable is used
-     *  to highlight that these Seeds aren't yet earning the Farmer new Stalk. In other words, Seeds do not
-     *  automatically compound; they must first be `plant()`ed.
+     * 
+     * The Seeds associated with Earned Beans are commonly called "Plantable
+     * Seeds". The word "Plantable" is used to highlight that these Seeds aren't 
+     * yet earning the Farmer new Stalk. In other words, Seeds do NOT automatically
+     * compound; they must first be Planted with {plant}.
+     * 
+     * In practice, when Seeds are Planted, all Earned Beans are Deposited in 
+     * the current Season.
      */
     function plant() external payable returns (uint256 beans) {
         return _plant(msg.sender);

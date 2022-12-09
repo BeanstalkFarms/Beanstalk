@@ -222,7 +222,7 @@ library LibSilo {
     }
 
     /**
-     * @dev Decrements the Stalk and Roots of `sender` and  increments the Stalk
+     * @dev Decrements the Stalk and Roots of `sender` and increments the Stalk
      * and Roots of `recipient` by the same amount.
      */
     function transferStalk(

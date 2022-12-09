@@ -10,7 +10,9 @@ import "./Silo.sol";
 /**
  * @title TokenSilo
  * @author Publius
- * @notice This contract contains functions for depositing, withdrawing and claiming whitelisted Silo tokens.
+ * @notice This contract contains functions for depositing, withdrawing and 
+ * claiming whitelisted Silo tokens.
+ *
  * @dev Scratchpad
  * 
  * - "amount" refers to erc20 token balance
