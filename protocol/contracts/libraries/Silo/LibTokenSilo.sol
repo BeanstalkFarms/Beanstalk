@@ -150,7 +150,7 @@ library LibTokenSilo {
      * This function DOES **NOT** EMIT a {RemoveDeposit} event. This
      * asymmetry occurs because {removeDepositFromAccount} is called in a loop
      * in places where multiple deposits are removed simultaneously, including
-     * {TokenSilo-removeDeposits} and {TokenSilo-_transferDeposits}.
+     * {TokenSilo-removeDepositsFromAccount} and {TokenSilo-_transferDeposits}.
      */
     function removeDepositFromAccount(
         address account,

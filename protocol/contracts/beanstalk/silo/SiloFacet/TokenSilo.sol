@@ -347,7 +347,7 @@ contract TokenSilo is Silo {
         );
 
         // Remove the Deposits from `account`.
-        AssetsRemoved memory ar = removeDeposits(
+        AssetsRemoved memory ar = removeDepositsFromAccount(
             account,
             token,
             seasons,
@@ -463,7 +463,7 @@ contract TokenSilo is Silo {
      * - {TokenSilo:_withdrawDeposits}
      * - {SiloFacet:enrootDeposits}
      */
-    function removeDeposits(
+    function removeDepositsFromAccount(
         address account,
         address token,
         uint32[] calldata seasons,

@@ -469,7 +469,7 @@ contract SiloFacet is TokenSilo {
      *
      * Gas optimization: We neglect to check if `token` is whitelisted. If a
      * token is not whitelisted, it cannot be Deposited, and thus cannot be Removed.
-     * {removeDeposits} should revert if there isn't enough balance of `token`
+     * {removeDepositsFromAccount} should revert if there isn't enough balance of `token`
      * to remove.
      */
     function enrootDeposits(
@@ -479,7 +479,7 @@ contract SiloFacet is TokenSilo {
     ) external nonReentrant mowSender {
         // First, remove Deposits because every deposit is in a different season,
         // we need to get the total Stalk/Seeds, not just BDV.
-        AssetsRemoved memory ar = removeDeposits(msg.sender, token, seasons, amounts);
+        AssetsRemoved memory ar = removeDepositsFromAccount(msg.sender, token, seasons, amounts);
 
         // Get new BDV and calculate Seeds (Seeds are not Season dependent like Stalk)
         uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
