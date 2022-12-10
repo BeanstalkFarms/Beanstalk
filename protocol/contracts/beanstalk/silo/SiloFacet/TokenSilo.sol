@@ -312,7 +312,7 @@ contract TokenSilo is Silo {
         uint256 amount
     ) internal {
         // Remove the Deposit from `account`.
-        (uint256 stalkRemoved, uint256 seedsRemoved, ) = removeDeposit(
+        (uint256 stalkRemoved, uint256 seedsRemoved, ) = removeDepositFromAccount(
             account,
             token,
             season,
@@ -429,7 +429,7 @@ contract TokenSilo is Silo {
      * - {TokenSilo:_withdrawDeposit}
      * - {TokenSilo:_transferDeposit}
      */
-    function removeDeposit(
+    function removeDepositFromAccount(
         address account,
         address token,
         uint32 season,
@@ -549,7 +549,7 @@ contract TokenSilo is Silo {
         uint32 season,
         uint256 amount
     ) internal returns (uint256) {
-        (uint256 stalk, uint256 seeds, uint256 bdv) = removeDeposit(
+        (uint256 stalk, uint256 seeds, uint256 bdv) = removeDepositFromAccount(
             sender,
             token,
             season,
