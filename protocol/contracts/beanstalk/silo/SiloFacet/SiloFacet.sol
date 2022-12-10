@@ -13,7 +13,7 @@ import "~/libraries/Silo/LibSiloPermit.sol";
 /**
  * @title SiloFacet
  * @author Publius
- * @notice  This is the entry point for all Silo functionality.
+ * @notice SiloFacet is the entry point for all Silo functionality.
  * 
  * SiloFacet           public functions for modifying an account's Silo.
  * ↖ TokenSilo         accounting & storage for Deposits, Withdrawals, allowances
@@ -21,11 +21,8 @@ import "~/libraries/Silo/LibSiloPermit.sol";
  * ↖ SiloExit          public view funcs for total balances, account balances 
  *                     & other account state.
  * ↖ ReentrancyGuard   provides reentrancy guard modifier and access to {C}.
- *
- * 
  */
 contract SiloFacet is TokenSilo {
-
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
@@ -230,9 +227,13 @@ contract SiloFacet is TokenSilo {
     //////////////////////// APPROVE ////////////////////////
 
     /** 
-     * @notice Approve an address to Transfer a Deposit for `msg.sender`.
+     * @notice Approve `spender` to Transfer Deposits for `msg.sender`.
      *
      * Sets the allowance to `amount`.
+     *
+     * This allows Transferring of _any_ Deposit of `token`, up to `amount`.
+     * In other words, Deposit allowances do NOT take into account the Season of
+     * Deposit.
      * 
      * @dev Gas optimization: We neglect to check whether `token` is actually
      * whitelisted. If a token is not whitelisted, it cannot be Deposited,
@@ -254,8 +255,6 @@ contract SiloFacet is TokenSilo {
      * @dev Gas optimization: We neglect to check whether `token` is actually
      * whitelisted. If a token is not whitelisted, it cannot be Deposited,
      * therefore it cannot be Transferred.
-     *
-     * FIXME(doc): why does this return `true`?
      */
     function increaseDepositAllowance(
         address spender,
@@ -272,13 +271,11 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice Increase the Transfer allowance for `spender`.
+     * @notice Decrease the Transfer allowance for `spender`.
      * 
      * @dev Gas optimization: We neglect to check whether `token` is actually
      * whitelisted. If a token is not whitelisted, it cannot be Deposited,
      * therefore it cannot be Transferred.
-     * 
-     * FIXME(doc): why does this return `true`?
      */
     function decreaseDepositAllowance(
         address spender,
@@ -379,7 +376,7 @@ contract SiloFacet is TokenSilo {
 
     /**
      * @notice Claim Grown Stalk for `account`.
-     * @dev See {Silo:_mow}.
+     * @dev See {Silo-_mow}.
      */
     function mow(address account) external payable {
         _mow(account);
@@ -407,8 +404,8 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice Claim rewards from a Season Of Plenty (SOP)
-     * @dev FIXME(doc): reference to SOP docs
+     * @notice Claim rewards from a Season Of Plenty (SOP).
+     * @dev FIXME(naming): rename to Flood
      */
     function claimPlenty() external payable {
         _claimPlenty(msg.sender);
