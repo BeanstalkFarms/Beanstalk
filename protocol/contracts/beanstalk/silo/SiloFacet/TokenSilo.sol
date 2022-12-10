@@ -27,6 +27,13 @@ import "./Silo.sol";
  * - "total" refers to the entire amount stored in the Silo
  * - Note that `withdraw()` will emit a Remove and a Withdraw event, whereas Convert only emits Remove
  *
+ * WONTFIX: There is asymmetry in the structure of deposit / withdrawal functions.
+ * Since the withdraw + claim step is being removed in Silo V3 in the coming
+ * months, we'll leave these asymmetries present for now.
+ *
+ * - LibTokenSilo offers `incrementTotalDeposited` and `decrementTotalDeposited`
+ *   but these operations are performed directly for withdrawals.
+ *
  * FIXME(doc): explain add -> [withdraw/remove] -> claim lifecycle
  * FIXME(doc): agree on name for "Season of Claiming". Alternative: "Season of Arrival" 
  */
@@ -257,8 +264,6 @@ contract TokenSilo is Silo {
      * @param owner The account that has given `spender` approval to transfer Deposits. 
      * @param spender The address (contract or EOA) that is allowed to transfer Deposits on behalf of `owner`.
      * @param token Whitelisted ERC20 token.
-     *
-     * FIXME(naming): getDepositAllowance ?
      */
     function depositAllowance(
         address owner,
@@ -273,10 +278,13 @@ contract TokenSilo is Silo {
     /**
      * @dev Handle deposit accounting.
      *
-     * {LibTokenSilo.deposit} calculates BDV, adds a Deposit, and increments the total amount Deposited.
-     * {LibSilo.mintSeedsAndStalk} mints the Stalk and Seeds associated with the Deposit.
+     * - {LibTokenSilo.deposit} calculates BDV, adds a Deposit to `account`, and
+     *   increments the total amount Deposited.
+     * - {LibSilo.mintSeedsAndStalk} mints the Stalk and Seeds associated with
+     *   the Deposit.
      * 
-     * This step should enforce that new Deposits are placed into the current `_season()`.
+     * This step should enforce that new Deposits are placed into the current 
+     * `_season()`.
      */
     function _deposit(
         address account,
@@ -296,9 +304,6 @@ contract TokenSilo is Silo {
 
     /**
      * @dev Withdraw a single Deposit.
-     * 
-     * Withdrawing a Deposit performs a Remove followed by a Withdraw.
-     * See {FIXME(doc)} for an explanation of the Silo asset lifecycle. 
      */
     function _withdrawDeposit(
         address account,
@@ -306,7 +311,7 @@ contract TokenSilo is Silo {
         uint32 season,
         uint256 amount
     ) internal {
-        // Remove the Deposits from `account`.
+        // Remove the Deposit from `account`.
         (uint256 stalkRemoved, uint256 seedsRemoved, ) = removeDeposit(
             account,
             token,
@@ -326,9 +331,6 @@ contract TokenSilo is Silo {
 
     /**
      * @dev Withdraw multiple Deposits.
-     * 
-     * Withdrawing a Deposit performs a Remove followed by a Withdraw.
-     * See {FIXME(doc)} for an explanation of the Silo asset lifecycle. 
      *
      * Requirements:
      * - Each item in `seasons` must have a corresponding item in `amounts`.
