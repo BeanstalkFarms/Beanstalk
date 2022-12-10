@@ -431,13 +431,13 @@ contract TokenSilo is Silo {
         returns (
             uint256 stalkRemoved,
             uint256 seedsRemoved,
-            uint256 bdv
+            uint256 bdvRemoved
         )
     {
-        bdv = LibTokenSilo.removeDepositFromAccount(account, token, season, amount);
+        bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, season, amount);
 
-        seedsRemoved = bdv.mul(s.ss[token].seeds);
-        stalkRemoved = bdv.mul(s.ss[token].stalk).add(
+        seedsRemoved = bdvRemoved.mul(s.ss[token].seeds);
+        stalkRemoved = bdvRemoved.mul(s.ss[token].stalk).add(
             LibSilo.stalkReward(
                 seedsRemoved,
                 _season() - season
