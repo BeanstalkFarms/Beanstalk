@@ -110,7 +110,17 @@ contract Silo is SiloExit {
      * @dev Claims the Grown Stalk for `account` and applies it to their Stalk
      * balance.
      *
-     * For more info on Mowing, see: {SiloFacet-mow}
+     * A Farmer cannot receive Seeds unless the Farmer's `lastUpdate` Season is
+     * equal to the current Season. Otherwise, they would receive extra Grown
+     * Stalk when they receive Seeds.
+     *
+     * This is why `_mow()` must be called before any actions that change Seeds,
+     * including:
+     *  - {SiloFacet-deposit}
+     *  - {SiloFacet-withdrawDeposit}
+     *  - {SiloFacet-withdrawDeposits}
+     *  - {_plant}
+     *  - {SiloFacet-transferDeposit(s)}
      */
     function _mow(address account) internal {
         uint32 _lastUpdate = lastUpdate(account);
@@ -147,7 +157,8 @@ contract Silo is SiloExit {
      * For more info on Planting, see: {SiloFacet-plant}
      */
     function _plant(address account) internal returns (uint256 beans) {
-        // Need to update 'account' before we make a Deposit.
+        // Need to Mow for `account` before we calculate the balance of 
+        // Earned Beans.
         _mow(account);
         uint256 accountStalk = s.a[account].s.stalk;
 

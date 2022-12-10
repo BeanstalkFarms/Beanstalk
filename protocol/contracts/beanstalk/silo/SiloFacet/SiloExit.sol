@@ -168,7 +168,7 @@ contract SiloExit is ReentrancyGuard {
      *  - the "expected" Stalk balance, determined from the account balance of 
      *    Roots. 
      *  - the "account" Stalk balance, stored in account storage.
-     * This works because FIXME(doc).
+     * divided by the number of Stalk per Bean.
      */
     function _balanceOfEarnedBeans(address account, uint256 accountStalk)
         internal
@@ -184,7 +184,8 @@ contract SiloExit is ReentrancyGuard {
 
         // Beanstalk rounds down when minting Roots. Thus, it is possible that
         // balanceOfRoots / totalRoots * totalStalk < s.a[account].s.stalk.
-        // As `account` Earned Balance balance should never be negative, Beanstalk returns 0 instead.
+        // As `account` Earned Balance balance should never be negative, 
+        // Beanstalk returns 0 instead.
         if (stalk <= accountStalk) return 0;
 
         // Calculate Earned Stalk and convert to Earned Beans.

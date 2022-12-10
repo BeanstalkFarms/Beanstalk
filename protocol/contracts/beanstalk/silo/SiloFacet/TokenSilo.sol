@@ -383,9 +383,9 @@ contract TokenSilo is Silo {
      * Increment total Withdrawn balance of `token`.
      * Emit an AddWithdrawal event.
      *
-     * Withdraw function does two things:
-     *  removes deposit
-     *  adds withdrawal
+     * {withdrawDeposit} function does two things:
+     *  removes Deposit
+     *  adds Withdrawal
      *
      * FIXME(naming): LibTokenSilo offers `incrementTotalDeposited` to perform the operation 
      * under `// Total`. Should we create a similar helper for Withdrawals for symmetry?
@@ -413,13 +413,13 @@ contract TokenSilo is Silo {
 
     /**
      * @dev Removes from a single Deposit, emits the RemoveDeposit event,
-     * and returns Stalk/Seeds/BDV.
+     * and returns the Stalk/Seeds/BDV that were removed.
      *
      * Used in:
      * - {TokenSilo:_withdrawDeposit}
      * - {TokenSilo:_transferDeposit}
      *
-     * FIXME(refactor): ordering of stalk -> seeds -> bdv is against convention.
+     * FIXME(naming): rename return `bdv` to `bdvRemoved`
      */
     function removeDeposit(
         address account,
@@ -435,16 +435,21 @@ contract TokenSilo is Silo {
         )
     {
         bdv = LibTokenSilo.removeDepositFromAccount(account, token, season, amount);
+
         seedsRemoved = bdv.mul(s.ss[token].seeds);
         stalkRemoved = bdv.mul(s.ss[token].stalk).add(
-            LibSilo.stalkReward(seedsRemoved, _season() - season)
+            LibSilo.stalkReward(
+                seedsRemoved,
+                _season() - season
+            )
         );
+
         emit RemoveDeposit(account, token, season, amount);
     }
 
     /**
-     * @dev Removes from multiple single Deposit, emits the RemoveDeposits
-     * event, and returns Stalk/Seeds/BDV.
+     * @dev Removes from multiple Deposits, emits the RemoveDeposits
+     * event, and returns the Stalk/Seeds/BDV that were removed.
      * 
      * Used in:
      * - {TokenSilo:_withdrawDeposits}
@@ -467,15 +472,17 @@ contract TokenSilo is Silo {
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
             ar.stalkRemoved = ar.stalkRemoved.add(
                 LibSilo.stalkReward(
-                    crateBdv.mul(s.ss[token].seeds),
+                    crateBdv.mul(s.ss[token].seeds), // crateSeeds
                     _season() - seasons[i]
                 )
             );
         }
+
         ar.seedsRemoved = ar.bdvRemoved.mul(s.ss[token].seeds);
         ar.stalkRemoved = ar.stalkRemoved.add(
             ar.bdvRemoved.mul(s.ss[token].stalk)
         );
+
         emit RemoveDeposits(account, token, seasons, amounts, ar.tokensRemoved);
     }
 

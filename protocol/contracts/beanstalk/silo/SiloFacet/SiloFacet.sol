@@ -96,7 +96,8 @@ contract SiloFacet is TokenSilo {
      * @param seasons Seasons to Withdraw from.
      * @param amounts Amounts of `token` to Withdraw from corresponding `seasons`.
      *
-     * @dev Clients should factor in gas costs when withdrawing from multiple deposits.
+     * @dev Clients should factor in gas costs when withdrawing from multiple
+     * deposits.
      *
      * For example, if a user wants to withdraw X Beans, it may be preferable to
      * withdraw from 1 older Deposit, rather than from multiple recent Deposits,
@@ -137,11 +138,13 @@ contract SiloFacet is TokenSilo {
     /** 
      * @notice Claims tokens from multiple Withdrawals.
      * 
-     * Claiming a Withdrawal is all-or-nothing, hence an `amount` parameter is omitted.
+     * Claiming a Withdrawal is all-or-nothing, hence an `amount` parameter is
+     * omitted.
      *
      * @param token Address of the whitelisted ERC20 token to Claim.
      * @param seasons Seasons of Withdrawal to claim from.
-     * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
+     * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL,
+     * INTERNAL_TOLERANT)
      * 
      * @dev FIXME(logic): return the amount claimed
      */
@@ -166,6 +169,10 @@ contract SiloFacet is TokenSilo {
      * @return bdv The BDV included in this transfer, now owned by `recipient`.
      *
      * @dev An allowance is required if `sender !== msg.sender`
+     * 
+     * The {mowSender} modifier is not used here because _both_ the `sender` and
+     * `recipient` need their Silo updated, since both accounts experience a
+     * change in Seeds. See {Silo-_mow}.
      */
     function transferDeposit(
         address sender,
@@ -194,6 +201,10 @@ contract SiloFacet is TokenSilo {
      *
      * @dev An allowance is required if `sender !== msg.sender`. There must be enough allowance
      * to transfer all of the requested Deposits, otherwise the transaction should revert.
+     * 
+     * The {mowSender} modifier is not used here because _both_ the `sender` and
+     * `recipient` need their Silo updated, since both accounts experience a
+     * change in Seeds. See {Silo-_mow}.
      */
     function transferDeposits(
         address sender,
@@ -223,8 +234,9 @@ contract SiloFacet is TokenSilo {
      *
      * Sets the allowance to `amount`.
      * 
-     * @dev Gas optimization: We neglect to check whether `token` is actually whitelisted.
-     * If a token is not whitelisted, it cannot be Deposited, therefore it cannot be Transferred.
+     * @dev Gas optimization: We neglect to check whether `token` is actually
+     * whitelisted. If a token is not whitelisted, it cannot be Deposited,
+     * therefore it cannot be Transferred.
      */
     function approveDeposit(
         address spender,
@@ -239,8 +251,9 @@ contract SiloFacet is TokenSilo {
     /** 
      * @notice Increase the Transfer allowance for `spender`.
      * 
-     * @dev Gas optimization: We neglect to check whether `token` is actually whitelisted.
-     * If a token is not whitelisted, it cannot be Deposited, therefore it cannot be Transferred.
+     * @dev Gas optimization: We neglect to check whether `token` is actually
+     * whitelisted. If a token is not whitelisted, it cannot be Deposited,
+     * therefore it cannot be Transferred.
      *
      * FIXME(doc): why does this return `true`?
      */
@@ -261,8 +274,9 @@ contract SiloFacet is TokenSilo {
     /** 
      * @notice Increase the Transfer allowance for `spender`.
      * 
-     * @dev Gas optimization: We neglect to check whether `token` is actually whitelisted.
-     * If a token is not whitelisted, it cannot be Deposited, therefore it cannot be Transferred.
+     * @dev Gas optimization: We neglect to check whether `token` is actually
+     * whitelisted. If a token is not whitelisted, it cannot be Deposited,
+     * therefore it cannot be Transferred.
      * 
      * FIXME(doc): why does this return `true`?
      */
@@ -314,7 +328,8 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice permits deposit.
+     * @notice Increases the Deposit Transfer allowance of `spender`.
+     * 
      * @param owner address to give permit
      * @param spender address to permit
      * @param token ERC20 to permit
@@ -383,6 +398,9 @@ contract SiloFacet is TokenSilo {
      * 
      * In practice, when Seeds are Planted, all Earned Beans are Deposited in 
      * the current Season.
+     *
+     * FIXME(doc): Publius has suggested we explain `plant()` as "Planting Seeds"
+     * and that this happens to deposit Earned Beans, rather than the above approach.
      */
     function plant() external payable returns (uint256 beans) {
         return _plant(msg.sender);
@@ -399,17 +417,18 @@ contract SiloFacet is TokenSilo {
     //////////////////////// UPDATE UNRIPE DEPOSITS ////////////////////////
 
     /**
-     * @notice Update the BDV of an Unripe Deposit. Allows the user to claim Stalk and Seeds as the 
-     * BDV of Unripe tokens increases during the Barn Raise. This was introduced as a part of the Replant.
+     * @notice Update the BDV of an Unripe Deposit. Allows the user to claim
+     * Stalk and Seeds as the BDV of Unripe tokens increases during the Barn
+     * Raise. This was introduced as a part of the Replant.
      *
-     * @dev Should revert if `ogBDV > newBDV`. A user cannot lose BDV during an Enroot operation.
+     * @dev Should revert if `ogBDV > newBDV`. A user cannot lose BDV during an
+     * Enroot operation.
      *
-     * Note: While this function was introduced during the REplant for Unripe deposits, it *could* be used to update the BDV of any Deposit.
-     *
-     * Gas optimization: We neglect to check if `token` is whitelisted. If a token is not whitelisted, it cannot be Deposited, and thus cannot be Removed.
-     * `{LibTokenSilo.removeDepositFromAccount}` should revert if there isn't enough balance of `token` to remove.
-     *
-     * FIXME(refactor): bump the contents out to an `_updateBDV()` internal function so that we can later rename the public function?
+     * Gas optimization: We neglect to check if `token` is whitelisted. If a
+     * token is not whitelisted, it cannot be Deposited, and thus cannot be Removed.
+     * 
+     * {LibTokenSilo-removeDepositFromAccount} should revert if there isn't
+     * enough balance of `token` to remove.
      */
     function enrootDeposit(
         address token,
@@ -441,29 +460,33 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice Update the BDV of Unripe Deposits. Allows the user to claim Stalk and Seeds as the 
-     * BDV of Unripe tokens increases during the Barn Raise. This was introduced as a part of the Replant.
+     * @notice Update the BDV of Unripe Deposits. Allows the user to claim Stalk
+     * and Seeds as the BDV of Unripe tokens increases during the Barn Raise.
+     * This was introduced as a part of the Replant.
      *
-     * @dev Should revert if `ogBDV > newBDV`. A user cannot lose BDV during an Enroot operation.
+     * @dev Should revert if `ogBDV > newBDV`. A user cannot lose BDV during an
+     * Enroot operation.
      *
-     * Note: While this function was introduced during the REplant for Unripe deposits, it *could* be used to update the BDV of any Deposit.
-     *
-     * Gas optimization: We neglect to check if `token` is whitelisted. If a token is not whitelisted, it cannot be Deposited, and thus cannot be Removed.
-     * `{removeDeposits}` should revert if there isn't enough balance of `token` to remove.
+     * Gas optimization: We neglect to check if `token` is whitelisted. If a
+     * token is not whitelisted, it cannot be Deposited, and thus cannot be Removed.
+     * {removeDeposits} should revert if there isn't enough balance of `token`
+     * to remove.
      */
     function enrootDeposits(
         address token,
         uint32[] calldata seasons,
         uint256[] calldata amounts
     ) external nonReentrant mowSender {
-        // First, remove Deposits because every deposit is in a different season, we need to get the total Stalk/Seeds, not just BDV
+        // First, remove Deposits because every deposit is in a different season,
+        // we need to get the total Stalk/Seeds, not just BDV.
         AssetsRemoved memory ar = removeDeposits(msg.sender, token, seasons, amounts);
 
         // Get new BDV and calculate Seeds (Seeds are not Season dependent like Stalk)
         uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
         uint256 newStalk;
 
-        // Iterate through all seasons, redeposit the tokens with new BDV and summate new Stalk.
+        // Iterate through all seasons, redeposit the tokens with new BDV and
+        // summate new Stalk.
         for (uint256 i; i < seasons.length; ++i) {
             uint256 bdv = amounts[i].mul(newBDV).div(ar.tokensRemoved); // Cheaper than calling the BDV function multiple times.
             LibTokenSilo.addDepositToAccount(
@@ -487,7 +510,8 @@ contract SiloFacet is TokenSilo {
 
         // Mint Stalk/Seeds associated with the delta BDV.
         // `newSeeds.sub(...)` will revert if `ar.seedsRemoved > newSeeds`.
-        // This enforces the constraint that `ogBDV > newBDV` since the two are linearly related.
+        // This enforces the constraint that `ogBDV > newBDV` since the two are
+        // linearly related.
         LibSilo.mintSeedsAndStalk(
             msg.sender,
             newSeeds.sub(ar.seedsRemoved),
