@@ -259,7 +259,6 @@ contract TokenSilo is Silo {
      * @param token Whitelisted ERC20 token.
      *
      * FIXME(naming): getDepositAllowance ?
-     * FIXME(doc): note that allowance only applies to transfers, not withdrawals
      */
     function depositAllowance(
         address owner,
@@ -272,7 +271,7 @@ contract TokenSilo is Silo {
     //////////////////////// DEPOSIT ////////////////////////
 
     /**
-     * @dev Deposit accounting.
+     * @dev Handle deposit accounting.
      *
      * {LibTokenSilo.deposit} calculates BDV, adds a Deposit, and increments the total amount Deposited.
      * {LibSilo.mintSeedsAndStalk} mints the Stalk and Seeds associated with the Deposit.
@@ -307,6 +306,7 @@ contract TokenSilo is Silo {
         uint32 season,
         uint256 amount
     ) internal {
+        // Remove the Deposits from `account`.
         (uint256 stalkRemoved, uint256 seedsRemoved, ) = removeDeposit(
             account,
             token,
@@ -314,8 +314,14 @@ contract TokenSilo is Silo {
             amount
         );
 
-        // Add a Withdrawal and reduce token supply.
-        _withdraw(account, token, amount, stalkRemoved, seedsRemoved);
+        // Add a Withdrawal, update totals, burn Stalk and Seeds.
+        _withdraw(
+            account,
+            token,
+            amount,
+            stalkRemoved,
+            seedsRemoved
+        );
     }
 
     /**
@@ -337,6 +343,8 @@ contract TokenSilo is Silo {
             seasons.length == amounts.length,
             "Silo: Crates, amounts are diff lengths."
         );
+
+        // Remove the Deposits from `account`.
         AssetsRemoved memory ar = removeDeposits(
             account,
             token,
@@ -344,7 +352,7 @@ contract TokenSilo is Silo {
             amounts
         );
 
-        // Add a Withdrawal and reduce token supply.
+        // Add a Withdrawal, update totals, burn Stalk and Seeds.
         _withdraw(
             account,
             token,
@@ -368,10 +376,10 @@ contract TokenSilo is Silo {
     ) private {
         uint32 arrivalSeason = _season() + s.season.withdrawSeasons;
 
-        // Add withdrawal
+        // Add Withdrawal
         addTokenWithdrawal(account, token, arrivalSeason, amount); // Increment account & total Withdrawn
 
-        // Remove deposit
+        // Finish Removal
         LibTokenSilo.decrementTotalDeposited(token, amount); // Decrement total Deposited
         LibSilo.burnSeedsAndStalk(account, seeds, stalk); // Burn Seeds and Stalk
     }
@@ -418,8 +426,6 @@ contract TokenSilo is Silo {
      * Used in:
      * - {TokenSilo:_withdrawDeposit}
      * - {TokenSilo:_transferDeposit}
-     *
-     * FIXME(naming): rename return `bdv` to `bdvRemoved`
      */
     function removeDeposit(
         address account,

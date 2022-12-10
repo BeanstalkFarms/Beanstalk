@@ -63,7 +63,7 @@ library LibTokenSilo {
      * @return stalk The amount of Stalk received for this Deposit.
      * 
      * @dev Calculate the current BDV for `amount` of `token`, then perform 
-     * deposit accounting.
+     * Deposit accounting.
      */
     function deposit(
         address account,
@@ -76,8 +76,8 @@ library LibTokenSilo {
     }
 
     /**
-     * @dev Once the current BDV for `amount` of `token` is known, perform 
-     * Deposit accounting.
+     * @dev Once the BDV received for Depositing `amount` of `token` is known, 
+     * add a Deposit for `account` and update the total amount Deposited.
      *
      * `s.ss[token].seeds` stores the number of Seeds per BDV for `token`.
      * `s.ss[token].stalk` stores the number of Stalk per BDV for `token`.
