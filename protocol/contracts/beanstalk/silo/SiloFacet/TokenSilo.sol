@@ -13,29 +13,15 @@ import "./Silo.sol";
  * @notice This contract contains functions for depositing, withdrawing and 
  * claiming whitelisted Silo tokens.
  *
- * @dev Scratchpad
- * 
- * - "amount" refers to erc20 token balance
- * - "bdv" refers to bean denominated value
- * - "season" refers to the season number (integer) in which a deposit is made
- * - "withdraw" is a request to claim tokens from the Silo (in the future; see {TokenSilo.withdrawFreeze}).
- * - "remove" is Beanstalk's internal accounting term for removing a  
- * - a withdrawal cannot be partially claimed
- * - "Season of Deposit" vs. "Season of Claiming"
- * - events are on a per-account-per-token basis, if you want to claim across two tokens, two events are emitted.
- * - previous language was "transit" (withdrawn, not claimable) and "receivable" (withdrawn, claimable)
- * - "total" refers to the entire amount stored in the Silo
- * - Note that `withdraw()` will emit a Remove and a Withdraw event, whereas Convert only emits Remove
- *
- * WONTFIX: There is asymmetry in the structure of deposit / withdrawal functions.
+ * @dev WONTFIX: There is asymmetry in the structure of deposit / withdrawal functions.
  * Since the withdraw + claim step is being removed in Silo V3 in the coming
  * months, we'll leave these asymmetries present for now.
  *
  * - LibTokenSilo offers `incrementTotalDeposited` and `decrementTotalDeposited`
  *   but these operations are performed directly for withdrawals.
- *
- * FIXME(doc): explain add -> [withdraw/remove] -> claim lifecycle
- * FIXME(doc): agree on name for "Season of Claiming". Alternative: "Season of Arrival" 
+ * - "Removing a Deposit" only removes from the `account`; the total amount
+ *   deposited in the Silo is decremented during withdrawal, _after_ a Withdrawal
+ *   is created. See "Finish Removal".
  */
 contract TokenSilo is Silo {
     uint32 private constant ASSET_PADDING = 100;
@@ -303,7 +289,7 @@ contract TokenSilo is Silo {
     //////////////////////// WITHDRAW ////////////////////////
 
     /**
-     * @dev Withdraw a single Deposit.
+     * @dev Remove a single Deposit and create a single Withdrawal with its contents.
      */
     function _withdrawDeposit(
         address account,
@@ -330,7 +316,8 @@ contract TokenSilo is Silo {
     }
 
     /**
-     * @dev Withdraw multiple Deposits.
+     * @dev Remove multiple Deposits and create a single Withdrawal with the
+     * sum of their contents.
      *
      * Requirements:
      * - Each item in `seasons` must have a corresponding item in `amounts`.
@@ -365,9 +352,10 @@ contract TokenSilo is Silo {
     }
 
     /**
-     * @dev Shared between `_withdrawDeposit()` and `_withdrawDeposits()`.
+     * @dev Create a Withdrawal.
      *
-     * FIXME(refactor): unconventional ordering of stalk -> seeds
+     * Gas optimization: Completion of the Remove step (decrementing total
+     * Deposited and burning Seeds & Stalk) is performed here because there 
      */
     function _withdraw(
         address account,
@@ -386,32 +374,18 @@ contract TokenSilo is Silo {
         LibSilo.burnSeedsAndStalk(account, seeds, stalk); // Burn Seeds and Stalk
     }
 
-    /**
-     * @dev Handles Withdrawal accounting.
-     *
-     * Increment Withdrawn balance of `token` for `account`.
-     * Increment total Withdrawn balance of `token`.
-     * Emit an AddWithdrawal event.
-     *
-     * {withdrawDeposit} function does two things:
-     *  removes Deposit
-     *  adds Withdrawal
-     *
-     * FIXME(naming): LibTokenSilo offers `incrementTotalDeposited` to perform the operation 
-     * under `// Total`. Should we create a similar helper for Withdrawals for symmetry?
-     */
     function addTokenWithdrawal(
         address account,
         address token,
         uint32 arrivalSeason,
         uint256 amount
     ) private {
-        // Account
+        // Add to Account
         s.a[account].withdrawals[token][arrivalSeason] = s
             .a[account]
             .withdrawals[token][arrivalSeason].add(amount);
         
-        // Total
+        // Add to Totals
         s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.add(
             amount
         );
@@ -496,19 +470,31 @@ contract TokenSilo is Silo {
 
     //////////////////////// CLAIM ////////////////////////
 
+    /**
+     * @dev Removes a single Withdrawal, updates Silo totals, emits the
+     * {RemoveWithdrawal} event, and returns the `amount` that was Claimed.
+     */
     function _claimWithdrawal(
         address account,
         address token,
         uint32 season
     ) internal returns (uint256) {
         uint256 amount = removeWithdrawalFromAccount(account, token, season);
+
+        // Decrement total withdrawn. Similar to {LibSiloToken.decrementTotalDeposited}.
         s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(
             amount
         );
+
         emit RemoveWithdrawal(msg.sender, token, season, amount);
+
         return amount;
     }
 
+    /**
+     * @dev Removes multiple Withdrawals, updates Silo totals, emits the 
+     * {RemoveWithdrawals} event, and returns the total `amount` that was Claimed.
+     */
     function _claimWithdrawals(
         address account,
         address token,
@@ -519,13 +505,35 @@ contract TokenSilo is Silo {
                 removeWithdrawalFromAccount(account, token, seasons[i])
             );
         }
+
+        // Decrement total withdrawn. Similar to {LibSiloToken.decrementTotalDeposited}.
         s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(
             amount
         );
+
         emit RemoveWithdrawals(msg.sender, token, seasons, amount);
+
         return amount;
     }
 
+    /**
+     * @dev Remove a Withdrawal from `account`.
+     *
+     * A Withdrawal CANNOT be partially removed. This function deletes the
+     * corresponding Withdrawal entity and returns its total `amount`.
+     * 
+     * Should verify that the Withdrawal is Claimable, i.e. that the Season in
+     * which the withdrawal became Claimable is less than or equal to the current
+     * Season.
+     *
+     * Gas optimization: We neglect to check that the user actually has a
+     * Withdrawal of `token` in `season`. If they don't, `uint256 amount` will be 0,
+     * no modification of totals will take place, and an empty RemoveWithdrawal(s)
+     * event will be emitted in upstream functions.
+     *
+     * Important: Upstream functions MUST use the amount returned by this function
+     * to calculate how much of `token` to deliver to the user.
+     */
     function removeWithdrawalFromAccount(
         address account,
         address token,
@@ -535,13 +543,20 @@ contract TokenSilo is Silo {
             season <= s.season.current,
             "Claim: Withdrawal not receivable"
         );
+
         uint256 amount = s.a[account].withdrawals[token][season];
         delete s.a[account].withdrawals[token][season];
+
         return amount;
     }
 
     //////////////////////// TRANSFER ////////////////////////
 
+    /**
+     * @dev Removes `amount` of a single Deposit from `sender` and transfers
+     * it to `recipient`. No Stalk/Seeds are burned, and the total amount of
+     * Deposited `token` in the Silo doesn't change. 
+     */
     function _transferDeposit(
         address sender,
         address recipient,
@@ -560,6 +575,11 @@ contract TokenSilo is Silo {
         return bdv;
     }
 
+    /**
+     * @dev Removes `amounts` of multiple Deposits from `sender` and transfers
+     * them to `recipient`. No Stalk/Seeds are burned, and the total amount of
+     * Deposited `token` in the Silo doesn't change. 
+     */
     function _transferDeposits(
         address sender,
         address recipient,
@@ -571,9 +591,12 @@ contract TokenSilo is Silo {
             seasons.length == amounts.length,
             "Silo: Crates, amounts are diff lengths."
         );
+
         AssetsRemoved memory ar;
         uint256[] memory bdvs = new uint256[](seasons.length);
 
+        // Similar to {removeDepositsFromAccount}, however the Deposit is also 
+        // added to the recipient's account during each iteration.
         for (uint256 i; i < seasons.length; ++i) {
             uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 sender,
@@ -598,17 +621,22 @@ contract TokenSilo is Silo {
             );
             bdvs[i] = crateBdv;
         }
+
         ar.seedsRemoved = ar.bdvRemoved.mul(s.ss[token].seeds);
         ar.stalkRemoved = ar.stalkRemoved.add(
             ar.bdvRemoved.mul(s.ss[token].stalk)
         );
+
         emit RemoveDeposits(sender, token, seasons, amounts, ar.tokensRemoved);
+
+        // Transfer all the Seeds/Stalk in one batch.
         LibSilo.transferSeedsAndStalk(
             sender,
             recipient,
             ar.seedsRemoved,
             ar.stalkRemoved
         );
+
         return bdvs;
     }
 
