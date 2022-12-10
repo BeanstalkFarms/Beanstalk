@@ -33,9 +33,14 @@ library LibSiloPermit {
     bytes32 private constant DEPOSITS_PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,address[] tokens,uint256[] values,uint256 nonce,uint256 deadline)");
 
     /**
-     * @dev Permits `spender` to spend `value` of `token` Deposits on behalf of
-     * `owner`. Only permits signed using the current nonce returned by {nonces}
+     * @dev Verifies the integrity of a Silo Deposit permit. 
+     *
+     * Only permits signed using the current nonce returned by {nonces}
      * will be approved.
+     *
+     * Should revert if:
+     * - The permit has expired (deadline has passed)
+     * - The signer recovered from the permit signature does not match the owner
      * 
      * See {LibSiloPermit} for a description of how to sign a permit.
      */
@@ -50,15 +55,28 @@ library LibSiloPermit {
         bytes32 s
     ) internal {
         require(block.timestamp <= deadline, "Silo: permit expired deadline");
-        bytes32 structHash = keccak256(abi.encode(DEPOSIT_PERMIT_TYPEHASH, owner, spender, token, value, _useNonce(owner), deadline));
+        bytes32 structHash = keccak256(
+            abi.encode(
+                DEPOSIT_PERMIT_TYPEHASH,
+                owner,
+                spender,
+                token,
+                value,
+                _useNonce(owner),
+                deadline
+            )
+        );
         bytes32 hash = _hashTypedDataV4(structHash);
         address signer = ECDSA.recover(hash, v, r, s);
         require(signer == owner, "Silo: permit invalid signature");
     }
 
     /**
-     * @dev Permits `spender` to spend `values` of multiple `tokens` Deposits on
-     * behalf of `owner`.
+     * @dev Verifies the integrity of a Silo Deposits (multiple tokens & values)
+     * permit. 
+     *
+     * Only permits signed using the current nonce returned by {nonces}
+     * will be approved.
      * 
      * See {LibSiloPermit} for a description of how to sign a multi-token permit.
      */
@@ -73,7 +91,17 @@ library LibSiloPermit {
         bytes32 s
     ) internal {
         require(block.timestamp <= deadline, "Silo: permit expired deadline");
-        bytes32 structHash = keccak256(abi.encode(DEPOSITS_PERMIT_TYPEHASH, owner, spender, keccak256(abi.encodePacked(tokens)), keccak256(abi.encodePacked(values)), _useNonce(owner), deadline));
+        bytes32 structHash = keccak256(
+            abi.encode(
+                DEPOSITS_PERMIT_TYPEHASH,
+                owner,
+                spender,
+                keccak256(abi.encodePacked(tokens)),
+                keccak256(abi.encodePacked(values)),
+                _useNonce(owner),
+                deadline
+            )
+        );
         bytes32 hash = _hashTypedDataV4(structHash);
         address signer = ECDSA.recover(hash, v, r, s);
         require(signer == owner, "Silo: permit invalid signature");
@@ -102,13 +130,21 @@ library LibSiloPermit {
      * @dev Returns the domain separator for the current chain.
      */
     function _domainSeparatorV4() internal view returns (bytes32) {
-        return _buildDomainSeparator(DEPOSIT_PERMIT_EIP712_TYPE_HASH, DEPOSIT_PERMIT_HASHED_NAME, DEPOSIT_PERMIT_HASHED_VERSION);
+        return _buildDomainSeparator(
+            DEPOSIT_PERMIT_EIP712_TYPE_HASH,
+            DEPOSIT_PERMIT_HASHED_NAME,
+            DEPOSIT_PERMIT_HASHED_VERSION
+        );
     }
 
     /**
      * @dev See {_domainSeparatorV4}.
      */
-    function _buildDomainSeparator(bytes32 typeHash, bytes32 name, bytes32 version) internal view returns (bytes32) {
+    function _buildDomainSeparator(
+        bytes32 typeHash,
+        bytes32 name,
+        bytes32 version
+    ) internal view returns (bytes32) {
         return keccak256(
             abi.encode(
                 typeHash,
