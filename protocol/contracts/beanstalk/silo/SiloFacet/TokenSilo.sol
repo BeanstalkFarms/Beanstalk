@@ -501,7 +501,7 @@ contract TokenSilo is Silo {
         address token,
         uint32 season
     ) internal returns (uint256) {
-        uint256 amount = _removeTokenWithdrawal(account, token, season);
+        uint256 amount = removeWithdrawalFromAccount(account, token, season);
         s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(
             amount
         );
@@ -516,7 +516,7 @@ contract TokenSilo is Silo {
     ) internal returns (uint256 amount) {
         for (uint256 i; i < seasons.length; ++i) {
             amount = amount.add(
-                _removeTokenWithdrawal(account, token, seasons[i])
+                removeWithdrawalFromAccount(account, token, seasons[i])
             );
         }
         s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(
@@ -526,7 +526,7 @@ contract TokenSilo is Silo {
         return amount;
     }
 
-    function _removeTokenWithdrawal(
+    function removeWithdrawalFromAccount(
         address account,
         address token,
         uint32 season
