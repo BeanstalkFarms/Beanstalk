@@ -7,7 +7,7 @@ import { console } from "forge-std/console.sol";
 import { FieldFacet } from "~/beanstalk/field/FieldFacet.sol";
 import "./utils/InitDiamondDeployer.sol";
 import "./utils/LibConstant.sol";
-import "libraries/LibPRBMath.sol";
+import "~/libraries/LibPRBMath.sol";
 
 contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
   using SafeMath for uint256;
