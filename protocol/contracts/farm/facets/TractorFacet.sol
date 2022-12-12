@@ -191,10 +191,14 @@ contract TractorFacet is ReentrancyGuard {
     }
 
     /// @notice Tractor Operation
+    ///
+    /// Emits {Tractor} event
+    ///
     /// @param blueprint Blueprint struct
     /// @param callData callData inputed by tractor operator
     function tractor(Blueprint memory blueprint, bytes calldata callData)
         external
+        nonReentrant
     {
         // get hash for blueprint
         bytes32 hash = keccak256(abi.encode(blueprint));
