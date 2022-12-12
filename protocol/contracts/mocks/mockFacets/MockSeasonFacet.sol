@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "forge-std/console2.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "../../farm/facets/SeasonFacet/SeasonFacet.sol";
+import "~/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
 import "../MockToken.sol";
 
 /**

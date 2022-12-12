@@ -8,7 +8,7 @@ pragma experimental ABIEncoderV2;
 import "../interfaces/IBean.sol";
 import "../interfaces/IWETH.sol";
 import "../mocks/MockToken.sol";
-import {AppStorage} from "../farm/AppStorage.sol";
+import {AppStorage} from "../beanstalk/AppStorage.sol";
 import "../C.sol";
 import "../libraries/Silo/LibWhitelist.sol";
 

@@ -1,5 +1,4 @@
 var fs = require('fs');
-const { ethers } = require('hardhat');
 
 const {
   ZERO_ADDRESS,
@@ -21,7 +20,8 @@ const {
   STABLE_FACTORY,
   PRICE_DEPLOYER,
   BASE_FEE_CONTRACT,
-  ETH_USDC_UNISWAP_V3
+  ETH_USDC_UNISWAP_V3,
+  BEANSTALK
 } = require('../test/utils/constants');
 const { impersonateSigner, mintEth } = require('../utils');
 
@@ -207,31 +207,6 @@ async function price() {
   await price.deployed()
 }
 
-async function blockBasefee() {
-  let basefeeJson = fs.readFileSync(`./artifacts/contracts/mocks/MockBlockBasefee.sol/MockBlockBasefee.json`);
-
-  await network.provider.send("hardhat_setCode", [
-    BASE_FEE_CONTRACT,
-    JSON.parse(basefeeJson).deployedBytecode,
-  ]);
-
-  const basefee = await ethers.getContractAt("MockBlockBasefee", BASE_FEE_CONTRACT);
-  await basefee.setAnswer(20 * Math.pow(10, 9));
-}
-
-async function ethUsdcUniswap() {
-  const MockUniswapV3Factory = await ethers.getContractFactory('MockUniswapV3Factory')
-  const mockUniswapV3Factory = await MockUniswapV3Factory.deploy()
-  await mockUniswapV3Factory.deployed()
-  const ethUdscPool = await mockUniswapV3Factory.callStatic.createPool(WETH, USDC, 3000)
-  await mockUniswapV3Factory.createPool(WETH, USDC, 3000)
-  const bytecode = await ethers.provider.getCode(ethUdscPool)
-  await network.provider.send("hardhat_setCode", [
-    ETH_USDC_UNISWAP_V3,
-    bytecode,
-  ]);
-}
-
 exports.impersonateRouter = router
 exports.impersonateBean = bean
 exports.impersonateCurve = curve
@@ -243,5 +218,3 @@ exports.impersonateUnripe = unripe
 exports.impersonateFertilizer = fertilizer
 exports.impersonateUsdc = usdc
 exports.impersonatePrice = price
-exports.impersonateBlockBasefee = blockBasefee;
-exports.impersonateEthUsdcUniswap = ethUsdcUniswap

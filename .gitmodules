@@ -1,6 +1,9 @@
 [submodule "protocol/lib/forge-std"]
 	path = protocol/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "protocol/lib/prb-math"]
+	path = protocol/lib/prb-math
+	url = https://github.com/paulrberg/prb-math
 [submodule "protocol/lib/solmate"]
 	path = protocol/lib/solmate
 	url = https://github.com/transmissions11/solmate

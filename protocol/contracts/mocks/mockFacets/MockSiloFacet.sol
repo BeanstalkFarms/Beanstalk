@@ -6,7 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "../../farm/facets/SiloFacet/SiloFacet.sol";
+import "../../beanstalk/silo/SiloFacet/SiloFacet.sol";
 import "../../libraries/Silo/LibWhitelist.sol";
 
 /**
@@ -28,6 +28,10 @@ contract MockSiloFacet is SiloFacet {
 
     function mockBDV(uint256 amount) external pure returns (uint256) {
         return amount;
+    }
+
+    function mockBDVIncrease(uint256 amount) external pure returns (uint256) {
+        return amount.mul(3).div(2);
     }
 
     function mockUnripeLPDeposit(uint256 t, uint32 _s, uint256 amount, uint256 bdv) external {

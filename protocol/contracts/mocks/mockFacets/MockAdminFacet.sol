@@ -1,12 +1,12 @@
 /*
  SPDX-License-Identifier: MIT
 */
-import "../../C.sol";
-import "../../farm/facets/SeasonFacet/SeasonFacet.sol";
-import "../../libraries/Token/LibTransfer.sol";
-
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
+
+import "~/C.sol";
+import "~/libraries/Token/LibTransfer.sol";
+import "~/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
 
 /**
  * @author Publius

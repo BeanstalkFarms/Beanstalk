@@ -6,12 +6,28 @@ require("solidity-coverage")
 require("hardhat-tracer");
 require("@openzeppelin/hardhat-upgrades")
 require('dotenv').config();
+require("hardhat-preprocessor");
+
 const fs = require('fs')
-const { impersonateSigner, mintUsdc, mintBeans, getBeanMetapool, getUsdc, getBean, getBeanstalkAdminControls } = require('./utils');
+const { upgradeWithNewFacets } = require("./scripts/diamond")
+const { impersonateSigner, mintUsdc, mintBeans, getBeanMetapool, getUsdc, getBean, getBeanstalkAdminControls, impersonateBeanstalkOwner, mintEth } = require('./utils');
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./test/utils/balances.js')
-const { PUBLIUS, BEAN_3_CURVE } = require('./test/utils/constants.js')  
+const { BEANSTALK, PUBLIUS, BEAN_3_CURVE } = require('./test/utils/constants.js')  
 const { to6 } = require('./test/utils/helpers.js')
 const { replant } = require("./replant/replant.js")
+const { task } = require("hardhat/config")
+
+//////////////////////// UTILITIES ////////////////////////
+
+function getRemappings() {
+  return fs
+    .readFileSync("remappings.txt", "utf8")
+    .split("\n")
+    .filter(Boolean) // remove empty lines
+    .map((line) => line.trim().split("="));
+}
+
+//////////////////////// TASKS ////////////////////////
 
 task('buyBeans').addParam("amount", "The amount of USDC to buy with").setAction(async(args) => {
   await mintUsdc(PUBLIUS, args.amount)
@@ -77,6 +93,21 @@ task('diamondABI', 'Generates ABI file for diamond, includes all ABIs of facets'
   console.log('ABI written to abi/Beanstalk.json')
 })
 
+task('marketplace', async function () {
+  const owner = await impersonateBeanstalkOwner();
+  await mintEth(owner.address);
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    facetNames:
+    ['MarketplaceFacet'],
+    bip: false,
+    verbose: false,
+    account: owner
+  });
+})
+
+//////////////////////// CONFIGURATION ////////////////////////
+
 module.exports = {
   defaultNetwork: "hardhat",
   networks: {
@@ -108,18 +139,52 @@ module.exports = {
     apiKey: process.env.ETHERSCAN_KEY
   },
   solidity: {
-    version: "0.7.6",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 1000
-      }
-    }
+    compilers: [
+      {
+        version: "0.7.6",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1000
+          }
+        }
+      },
+      {
+        version: "0.8.17",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1000
+          }
+        }
+      },
+    ],
   },
   gasReporter: {
-    enabled: false
+    enabled: true
   },
   mocha: {
     timeout: 100000000
-  }
+  },
+  // The following is pulled from this Foundry guide:
+  // https://book.getfoundry.sh/config/hardhat#instructions
+  preprocess: {
+    eachLine: (hre) => ({
+      transform: (line) => {
+        if (line.match(/^\s*import /i)) {
+          for (const [from, to] of getRemappings()) {
+            if (line.includes(from)) {
+              line = line.replace(from, to);
+              break;
+            }
+          }
+        }
+        return line;
+      },
+    }),
+  },
+  paths: {
+    sources: "./contracts",
+    cache: "./cache",
+  },
 }

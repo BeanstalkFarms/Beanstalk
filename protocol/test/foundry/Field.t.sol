@@ -4,10 +4,10 @@ pragma abicoder v2;
 
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
-import { FieldFacet } from "farm/facets/FieldFacet.sol";
+import { FieldFacet } from "~/beanstalk/field/FieldFacet.sol";
 import "./utils/InitDiamondDeployer.sol";
 import "./utils/LibConstant.sol";
-import "libraries/LibPRBMath.sol";
+import "~/libraries/LibPRBMath.sol";
 
 contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
   using SafeMath for uint256;
@@ -559,7 +559,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
   function _beforeEachHarvestEntirePlotWithListing() public {
     field.incrementTotalHarvestableE(101e6);
     vm.prank(brean);
-    marketplace.createPodListing(0, 0, 500, 500000, 200e6, LibTransfer.To.EXTERNAL);
+    marketplace.createPodListing(0, 0, 500, 500000, 200 * 1e6, 1 * 1e6, LibTransfer.To.EXTERNAL);
     uint256[] memory harvestPlot = new uint[](1);
     harvestPlot[0] = 0;
     vm.prank(brean);
