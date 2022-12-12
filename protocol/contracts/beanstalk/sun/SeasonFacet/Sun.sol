@@ -7,8 +7,9 @@ pragma experimental ABIEncoderV2;
 
 import "~/libraries/Decimal.sol";
 import "~/libraries/LibSafeMath32.sol";
-import "~/C.sol";
 import "~/libraries/LibFertilizer.sol";
+import "~/libraries/LibPRBMath.sol";
+import "~/C.sol";
 import "./Oracle.sol";
 
 /**
@@ -17,6 +18,7 @@ import "./Oracle.sol";
  **/
 contract Sun is Oracle {
     using SafeMath for uint256;
+    using LibPRBMath for uint256;
     using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
 
@@ -30,9 +32,12 @@ contract Sun is Oracle {
     function stepSun(int256 deltaB, uint256 caseId) internal {
         if (deltaB > 0) {
             uint256 newHarvestable = rewardBeans(uint256(deltaB));
-            setSoilAbovePeg(newHarvestable, caseId);
+            setSoilAndPeasAbovePeg(newHarvestable, caseId);
+            s.season.abovePeg = true;
+        } else {
+            setSoil(uint256(-deltaB));
+            s.season.abovePeg = false;
         }
-        else setSoil(uint256(-deltaB));
     }
 
     function rewardBeans(uint256 newSupply) internal returns (uint256 newHarvestable) {
@@ -112,16 +117,15 @@ contract Sun is Oracle {
             .add(amount);
     }
 
-    function setSoilAbovePeg(uint256 newHarvestable, uint256 caseId) internal {
-        uint256 newSoil = newHarvestable.mul(100).div(100 + s.w.yield);
-        if (caseId >= 24) newSoil = newSoil.mul(C.soilCoefficientHigh()).div(C.precision());
-        else if (caseId < 8) newSoil = newSoil.mul(C.soilCoefficientLow()).div(C.precision());
-        setSoil(newSoil);
+    function setSoilAndPeasAbovePeg(uint256 newHarvestable, uint256 caseId) internal {
+        uint256 maxPeas = newHarvestable;
+        if (caseId >= 24) maxPeas = maxPeas.mul(C.soilCoefficientHigh()).div(C.precision()); // high podrate
+        else if (caseId < 8) maxPeas = maxPeas.mul(C.soilCoefficientLow()).div(C.precision()); // low podrate
+        setSoil(maxPeas);
     }
 
     function setSoil(uint256 amount) internal {
-        s.f.soil = amount;
-        s.w.startSoil = amount;
+        s.f.soil = uint128(amount);
         emit Soil(s.season.current, amount);
     }
 }

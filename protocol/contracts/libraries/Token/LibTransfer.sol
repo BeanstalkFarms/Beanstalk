@@ -65,7 +65,10 @@ library LibTransfer {
         }
         uint256 beforeBalance = token.balanceOf(address(this));
         token.safeTransferFrom(sender, address(this), amount - receivedAmount);
-        return receivedAmount.add(token.balanceOf(address(this)).sub(beforeBalance));
+        return
+            receivedAmount.add(
+                token.balanceOf(address(this)).sub(beforeBalance)
+            );
     }
 
     function sendToken(
@@ -95,6 +98,20 @@ library LibTransfer {
         } else {
             burnt = LibTransfer.receiveToken(token, amount, sender, mode);
             token.burn(burnt);
+        }
+    }
+
+    function mintToken(
+        IBean token,
+        uint256 amount,
+        address recipient,
+        To mode
+    ) internal {
+        if (mode == To.EXTERNAL) {
+            token.mint(recipient, amount);
+        } else {
+            token.mint(address(this), amount);
+            LibTransfer.sendToken(token, amount, recipient, mode);
         }
     }
 }

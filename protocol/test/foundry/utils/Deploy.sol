@@ -6,68 +6,49 @@ import "forge-std/Test.sol";
 import "forge-std/console2.sol";
 import {Utils} from "./Utils.sol";
 
-
 // Diamond setup
-import {Diamond} from "~/beanstalk/Diamond.sol";
-import {IDiamondCut} from "~/interfaces/IDiamondCut.sol";
-import {MockInitDiamond} from "~/mocks/MockInitDiamond.sol";
+import {Diamond} from "farm/Diamond.sol";
+import {IDiamondCut} from "interfaces/IDiamondCut.sol";
+import {DiamondCutFacet} from "facets/DiamondCutFacet.sol";
+import {DiamondLoupeFacet} from "facets/DiamondLoupeFacet.sol";
+import {MockInitDiamond} from "mocks/MockInitDiamond.sol";
 
-/// Modules
-// Diamond
-import {DiamondCutFacet} from "~/beanstalk/diamond/DiamondCutFacet.sol";
-import {DiamondLoupeFacet} from "~/beanstalk/diamond/DiamondLoupeFacet.sol";
-import {PauseFacet} from "~/beanstalk/diamond/PauseFacet.sol";
-import {OwnershipFacet} from "~/beanstalk/diamond/OwnershipFacet.sol";
+// Facets
+import {BDVFacet} from "facets/BDVFacet.sol";
+import {CurveFacet} from "facets/CurveFacet.sol";
+import {ConvertFacet} from "facets/ConvertFacet.sol";
+import {MockConvertFacet} from "mockFacets/MockConvertFacet.sol";
+import {FarmFacet} from "facets/FarmFacet.sol";
+import {MockFieldFacet} from "mockFacets/MockFieldFacet.sol";
+import {MockFundraiserFacet} from "mockFacets/MockFundraiserFacet.sol";
+import {MockMarketplaceFacet} from "mockFacets/MockMarketplaceFacet.sol";
+import {PauseFacet} from "facets/PauseFacet.sol";
+import {MockSeasonFacet} from "mockFacets/MockSeasonFacet.sol";
+import {MockSiloFacet} from "mockFacets/MockSiloFacet.sol";
+import {MockFertilizerFacet} from "mockFacets/MockFertilizerFacet.sol";
+import {OwnershipFacet} from "facets/OwnershipFacet.sol";
+import {TokenFacet} from "facets/TokenFacet.sol";
+import {MockToken} from "mocks/MockToken.sol";
+import {MockUnripeFacet} from "mockFacets/MockUnripeFacet.sol";
+// import {WellBuildingFacet} from "@beanstalk/farm/facets/WellBuildingFacet.sol";
+// import {WellFacet} from "@beanstalk/farm/facets/WellFacet.sol";
+// import {WellOracleFacet} from "@beanstalk/farm/facets/WellOracleFacet.sol";
+import {WhitelistFacet} from "facets/WhitelistFacet.sol";
 
-// Silo
-import {MockSiloFacet} from "~/mocks/mockFacets/MockSiloFacet.sol";
-import {BDVFacet} from "~/beanstalk/silo/BDVFacet.sol";
-import {ConvertFacet} from "~/beanstalk/silo/ConvertFacet.sol";
-import {WhitelistFacet} from "~/beanstalk/silo/WhitelistFacet.sol";
+import {BeanstalkPrice} from "@beanstalk/price/BeanstalkPrice.sol";
+import {Mock3Curve} from "mocks/curve/Mock3Curve.sol";
+import {MockUniswapV3Pool} from "mocks/uniswap/MockUniswapV3Pool.sol";
+import {MockUniswapV3Factory} from "mocks/uniswap/MockUniswapV3Factory.sol";
+import {MockCurveFactory} from "mocks/curve/MockCurveFactory.sol";
+import {MockCurveZap} from "mocks/curve/MockCurveZap.sol";
+import {MockMeta3Curve} from "mocks/curve/MockMeta3Curve.sol";
+import {MockWETH} from "mocks/MockWETH.sol";
 
-// Field
-import {MockFieldFacet} from "~/mocks/mockFacets/MockFieldFacet.sol";
-import {MockFundraiserFacet} from "~/mocks/mockFacets/MockFundraiserFacet.sol";
+import "@beanstalk/C.sol";
 
-// Farm
-import {FarmFacet} from "~/beanstalk/farm/FarmFacet.sol";
-import {CurveFacet} from "~/beanstalk/farm/CurveFacet.sol";
-import {TokenFacet} from "~/beanstalk/farm/TokenFacet.sol";
-
-// import {WellBuildingFacet} from "~/beanstalk/farm/facets/WellBuildingFacet.sol";
-// import {WellFacet} from "~/beanstalk/farm/facets/WellFacet.sol";
-// import {WellOracleFacet} fom "~/beanstalk/farm/facets/WellOracleFacet.sol";
-
-/// Ecosystem
-import {BeanstalkPrice} from "~/ecosystem/price/BeanstalkPrice.sol";
-
-/// Mocks
-import {MockConvertFacet} from "~/mocks/mockFacets/MockConvertFacet.sol";
-import {MockMarketplaceFacet} from "~/mocks/mockFacets/MockMarketplaceFacet.sol";
-import {MockSeasonFacet} from "~/mocks/mockFacets/MockSeasonFacet.sol";
-import {MockFertilizerFacet} from "~/mocks/mockFacets/MockFertilizerFacet.sol";
-import {MockToken} from "~/mocks/MockToken.sol";
-import {MockUnripeFacet} from "~/mocks/mockFacets/MockUnripeFacet.sol";
-import {Mock3Curve} from "~/mocks/curve/Mock3Curve.sol";
-import {MockCurveFactory} from "~/mocks/curve/MockCurveFactory.sol";
-import {MockCurveZap} from "~/mocks/curve/MockCurveZap.sol";
-import {MockMeta3Curve} from "~/mocks/curve/MockMeta3Curve.sol";
-import {MockWETH} from "~/mocks/MockWETH.sol";
-
-import "~/beanstalk/AppStorage.sol";
-import "~/libraries/Decimal.sol";
-import "~/libraries/LibSafeMath32.sol";
-import "~/libraries/Token/LibTransfer.sol";
-
-import "~/C.sol";
-
-abstract contract InitDiamondDeployer is Test {
-  
+contract DiamondDeployer is Test {
   Utils internal utils;
   address payable[] internal users;
-
-  // the cool dudes
-  address internal deployer;
   address internal publius;
   address internal brean;
   address internal siloChad;
@@ -75,51 +56,18 @@ abstract contract InitDiamondDeployer is Test {
   address internal bob;
   address internal diamond;
 
-
-  // season mocks
-  MockSeasonFacet internal season;
-  MockSiloFacet internal silo;
-  MockFieldFacet internal field;
-  MockConvertFacet internal convert;
-  MockFundraiserFacet internal fundraiser;
-  MockMarketplaceFacet internal marketplace;
-  MockFertilizerFacet internal fertilizer;
-  TokenFacet internal token;
-
-
-  function setUp() public virtual{
-    diamond = address(deployMock());
-
-    season = MockSeasonFacet(diamond);
-    silo = MockSiloFacet(diamond);
-    field = MockFieldFacet(diamond);
-    convert = MockConvertFacet(diamond);
-    fundraiser = MockFundraiserFacet(diamond);
-    marketplace = MockMarketplaceFacet(diamond);
-    fertilizer = MockFertilizerFacet(diamond);
-    token = TokenFacet(diamond);
-    
-    console.log("Sun: Initialized at season %s", season.season());
-  }
-
   address internal THREE_CRV = address(C.threeCrv());
 
   function deployMock() public returns (Diamond d) {
     // create accounts
     utils = new Utils();
-    users = utils.createUsers(6);
-    deployer = users[0];
-    publius = users[1];
-    brean = users[2];
-    siloChad = users[3];
-    alice = users[4];
-    bob = users[5];
-
+    users = utils.createUsers(1);
+    address deployer = users[0];
     vm.label(deployer, "Deployer");
     console.log("Deployer: %s", deployer);
 
     // create facet cuts
-    IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](15);
+    IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](14);
 
     cut[0] = _cut("BDVFacet", address(new BDVFacet()));
     cut[1] = _cut("CurveFacet", address(new CurveFacet()));
@@ -135,23 +83,22 @@ abstract contract InitDiamondDeployer is Test {
     cut[11] = _cut("TokenFacet", address(new TokenFacet()));
     cut[12] = _cut("MockUnripeFacet", address(new MockUnripeFacet()));
     cut[13] = _cut("WhitelistFacet", address(new WhitelistFacet()));
-    cut[14] = _cut("MockMarketplaceFacet", address(new MockMarketplaceFacet()));
-
-    // cut[14] = _cut("WellBuildingFacet", address(new WellBuildingFacet()));
-    // cut[15] = _cut("WellFacet", address(new WellFacet()));
-    // cut[16] = _cut("WellOracleFacet", address(new WellOracleFacet()));
+    // cut[13] = _cut("WellBuildingFacet", address(new WellBuildingFacet()));
+    // cut[14] = _cut("WellFacet", address(new WellFacet()));
+    // cut[15] = _cut("WellOracleFacet", address(new WellOracleFacet()));
 
     console.log("Deployed mock facets.");
 
     //impersonate tokens and utilities
     _mockToken("Bean", address(C.bean()));
-    MockToken(address(C.bean())).setDecimals(6);
     _mockToken("USDC", address(C.usdc()));
     _mockPrice();
     _mockCurve(); // only if "reset"
     _mockWeth(); // only if "reset"
     //_mockCurveMetapool();
     _mockUnripe();
+    _mockUniswap();
+    
     //_mockFertilizer();
 
     // create diamond    
@@ -171,20 +118,6 @@ abstract contract InitDiamondDeployer is Test {
 
     console.log("Diamond cut successful.");
   }
-
-  ///////////////////////// Utilities /////////////////////////
-
-  function _abs(int256 v) pure internal returns (uint256) {
-    return uint256(v < 0 ? 0 : v);
-  }
-
-  function _reset(uint256 _snapId) internal returns (uint256) {
-    vm.revertTo(_snapId);
-    return vm.snapshot();
-  }
-
-  //////////////////////// Deploy  /////////////////////////
-
 
   function _etch(string memory _file, address _address) internal returns (address) {
     address codeaddress = deployCode(_file, abi.encode(""));
@@ -211,10 +144,9 @@ abstract contract InitDiamondDeployer is Test {
 
   function _mockCurve() internal {
     MockToken crv3 = _mockToken("3CRV", THREE_CRV);
-    MockToken(crv3).setDecimals(18);
+
     //
     Mock3Curve pool3 = Mock3Curve(_etch("Mock3Curve.sol", C.curve3PoolAddress())); // 3Curve = 3Pool
-    Mock3Curve(pool3).set_virtual_price(1);
 
     //
     address STABLE_FACTORY = 0xB9fC157394Af804a3578134A6585C0dc9cc990d4;
@@ -236,12 +168,28 @@ abstract contract InitDiamondDeployer is Test {
     curveZap.approve();
   }
 
+  function _mockUniswap() internal {
+    //address UNIV3_FACTORY = 0x1F98431c8aD98523631AE4a59f267346ea31F984; 
+    MockUniswapV3Factory uniFactory = MockUniswapV3Factory(new MockUniswapV3Factory());
+    address ethUsdc = 
+      uniFactory.createPool(
+        0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,//weth
+        address(C.usdc()),//usdc
+        3000
+      );
+    bytes memory code = at(ethUsdc);
+    address targetAddr = C.UniV3EthUsdc();
+    vm.etch(targetAddr, code);
+    MockUniswapV3Pool(C.UniV3EthUsdc()).setOraclePrice(1000e6,18);
+  }
+  
   function _mockCurveMetapool() internal {
     MockMeta3Curve p = MockMeta3Curve(_etch("MockMeta3Curve.sol", C.curveMetapoolAddress()));
     p.init(C.beanAddress(), THREE_CRV, C.curve3PoolAddress());
     p.set_A_precise(1000);
     p.set_virtual_price(1 wei);
   }
+
 
   function _mockUnripe() internal {
     MockToken urbean = _mockToken("Unripe BEAN", C.unripeBeanAddress());
@@ -258,7 +206,7 @@ abstract contract InitDiamondDeployer is Test {
     returns (IDiamondCut.FacetCut memory cut) 
   {
     bytes4[] memory functionSelectors = _generateSelectors(_facetName);
-    //console.log("FacetCut: %s @ %s (%s selectors)", _facetName, _facetAddress, functionSelectors.length);
+    console.log("FacetCut: %s @ %s (%s selectors)", _facetName, _facetAddress, functionSelectors.length);
     cut = IDiamondCut.FacetCut({
       facetAddress: _facetAddress,
       action: IDiamondCut.FacetCutAction.Add,

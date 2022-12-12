@@ -98,7 +98,8 @@ contract Storage {
 
     // Field stores global Field balances.
     struct Field {
-        uint256 soil; // The number of Soil currently available.
+        uint128 soil; // The number of Soil currently available.
+        uint128 beanSown; // the number of bean sown within a season.
         uint256 pods; // The pod index; the total number of Pods ever minted.
         uint256 harvested; // The harvested index; the total number of Pods that have ever been Harvested.
         uint256 harvestable; // The harvestable index; the total number of Pods that have ever been Harvestable. Included previously Harvested Beans.
@@ -178,6 +179,8 @@ contract Storage {
         uint32 rainStart; // rainStart stores the most recent Season in which Rain started.
         bool raining; // True if it is Raining (P < 1, Pod Rate Excessively Low).
         bool fertilizing; // True if Beanstalk has Fertilizer left to be paid off.
+        uint32 sunriseBlock; // The block of the start of the current Season.
+        bool abovePeg; // Boolean indicating whether the previous season was above or below peg.
         uint256 start; // The timestamp of the Beanstalk deployment rounded down to the nearest hour.
         uint256 period; // The length of each season in Beanstalk.
         uint256 timestamp; // The timestamp of the start of the current Season.
@@ -185,14 +188,11 @@ contract Storage {
 
     // Weather stores global level Weather balances.
     struct Weather {
-        uint256 startSoil; // The number of Soil at the start of the current Season.
+        uint256[2] depreciated; // DEPRECIATED - 2 slots that were previously used
         uint256 lastDSoil; // Delta Soil; the number of Soil purchased last Season.
-        uint96 lastSoilPercent; // DEPRECATED: Was removed with Extreme Weather V2
         uint32 lastSowTime; // The number of seconds it took for all but at most 1 Soil to sell out last Season.
         uint32 nextSowTime; // The number of seconds it took for all but at most 1 Soil to sell out this Season
         uint32 yield; // Weather; the interest rate for sowing Beans in Soil.
-        bool didSowBelowMin; // DEPRECATED: Was removed with Extreme Weather V2
-        bool didSowFaster; // DEPRECATED: Was removed with Extreme Weather V2
     }
 
     // Fundraiser stores Fundraiser data for a given Fundraiser.

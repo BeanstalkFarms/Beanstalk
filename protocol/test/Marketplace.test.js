@@ -44,8 +44,8 @@ describe('Marketplace', function () {
 
     await this.field.incrementTotalSoilE('100000');
     await this.season.setYieldE('0');
-    await this.field.connect(user).sow('1000', EXTERNAL);
-    await this.field.connect(user2).sow('1000', EXTERNAL);
+    await this.field.connect(user).sow('1000', '0', EXTERNAL);
+    await this.field.connect(user2).sow('1000', '0', EXTERNAL);
   })
 
   const getHash = async function (tx) {
@@ -1050,11 +1050,10 @@ describe('Marketplace', function () {
             await expect(this.marketplace.connect(user).fillPodListingV2(brokenListing, 1000, this.f.packedFunction, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
           })
 
-          it('Fill Listing wrong price Fails', async function () {
-            let brokenListing = this.listing;
-            brokenListing[4] = '100001'
-            await expect(this.marketplace.connect(user).fillPodListingV2(brokenListing,1000, this.f.packedFunction, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
-          })
+        it("plot amount too large", async function () {
+          await this.field.connect(user2).sow('1200', '0', EXTERNAL);
+          await expect(this.marketplace.connect(user2).fillPodOrder(this.order, 2000, 700, 500, INTERNAL)).to.revertedWith("Marketplace: Plot too far in line.");
+        })
 
           it('Fill Listing after expired', async function () {
             await this.field.incrementTotalHarvestableE('2000');

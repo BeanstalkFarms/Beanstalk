@@ -8,6 +8,7 @@ import { Sun } from "~/beanstalk/sun/SeasonFacet/Sun.sol";
 import { MockSeasonFacet } from "~/mocks/mockFacets/MockSeasonFacet.sol";
 import { MockSiloFacet } from "~/mocks/mockFacets/MockSiloFacet.sol";
 import { MockFieldFacet } from "~/mocks/mockFacets/MockFieldFacet.sol";
+import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 
 import { Utils } from "./utils/Utils.sol";
 import { InitDiamondDeployer } from "./utils/InitDiamondDeployer.sol";
@@ -15,10 +16,12 @@ import { InitDiamondDeployer } from "./utils/InitDiamondDeployer.sol";
 import "~/beanstalk/AppStorage.sol";
 import "~/libraries/Decimal.sol";
 import "~/libraries/LibSafeMath32.sol";
+import "~/libraries/LibPRBMath.sol";
 import "~/C.sol";
 
 contract SunTest is Sun, Test, InitDiamondDeployer {
   using SafeMath for uint256;
+  using LibPRBMath for uint256;
   using LibSafeMath32 for uint32;
   
   function setUp() public override {
@@ -40,7 +43,16 @@ contract SunTest is Sun, Test, InitDiamondDeployer {
     uint256 pods,
     bool hasFert,
     bool hasField
-  ) internal returns (uint256 toFert, uint256 toField, uint256 toSilo, uint256 newHarvestable, uint256 soil) {
+  ) 
+    internal 
+    returns ( 
+      uint256 toFert, 
+      uint256 toField, 
+      uint256 toSilo, 
+      uint256 newHarvestable, 
+      uint256 soil
+    ) 
+  {
     uint256 caseId  = 8;
     toFert  = hasFert  ? newBeans.div(3) : uint256(0); //
     toField = hasField ? newBeans.sub(toFert).div(2) : uint256(0); // divide remainder by two, round down
@@ -51,7 +63,11 @@ contract SunTest is Sun, Test, InitDiamondDeployer {
     assert(toFert.add(toField).add(toSilo) == newBeans); // should sum back up
 
     newHarvestable = s.f.harvestable + toField;
-    soil = newHarvestable.mul(100).div(100 + (s.w.yield + 1)); // FIXME: hardcode for case id 8 when deltaB > 0
+    if(deltaB > 0) {
+      soil = newHarvestable;
+    } else {
+      soil = uint256(-deltaB);
+    }
 
     console.log("Beans minted: %s", newBeans);
     console.log("To Fert: %s", toFert);
@@ -101,20 +117,27 @@ contract SunTest is Sun, Test, InitDiamondDeployer {
 
   function test_deltaB_positive_podRate_low() public {
     field.incrementTotalPodsE(100);
-    season.sunSunrise(300e6, 0); // deltaB = +300; case 0 = low pod rate
-    assertEq(field.totalSoil(), 148); // FIXME: how calculated?
+    season.sunSunrise(300, 0); // deltaB = +300; case 0 = low pod rate
+    vm.roll(26); // after dutch Auction
+    assertEq(uint256(field.totalSoil()), 149); // FIXME: how calculated?
+    // 300/3 = 100 *1.5 = 150
   }
   
   function test_deltaB_positive_podRate_medium() public {
     field.incrementTotalPodsE(100);
-    season.sunSunrise(300e6, 8); // deltaB = +300; case 0 = medium pod rate
-    assertEq(field.totalSoil(), 99); // FIXME: how calculated?
+    season.sunSunrise(300, 8); // deltaB = +300; case 0 = medium pod rate
+    vm.roll(26); // after dutch Auction
+    assertEq(uint256(field.totalSoil()), 100); // FIXME: how calculated?
+    // 300/3 = 100 * 1 = 100
   }
 
   function test_deltaB_positive_podRate_high() public {
     field.incrementTotalPodsE(100);
-    season.sunSunrise(300e6, 8); // deltaB = +300; case 0 = high pod rate
-    assertEq(field.totalSoil(), 99); // FIXME: how calculated?
+    season.sunSunrise(300, 25); // deltaB = +300; case 0 = high pod rate
+    vm.roll(26); // after dutch Auction
+    assertEq(uint256(field.totalSoil()), 50); // FIXME: how calculated?
+    // 300/3 = 100 * 0.5 = 50
+
   }
 
   ///////////////////////// Minting /////////////////////////
@@ -141,7 +164,7 @@ contract SunTest is Sun, Test, InitDiamondDeployer {
     field.incrementTotalPodsE(pods);
     console.log("Pods outstanding: %s", pods);
 
-    (uint256 toFert, uint256 toField, uint256 toSilo, uint256 newHarvestable, uint256 soil) 
+    (/*uint256 toFert, uint256 toField*/, , uint256 toSilo, , /*uint256 newHarvestable, uint256 soil*/) 
       = _testSunrise(deltaB, newBeans, pods, false, true);
 
     // @note only true if we've never minted to the silo before
@@ -154,12 +177,11 @@ contract SunTest is Sun, Test, InitDiamondDeployer {
     vm.assume(deltaB < 1e16);
     uint256 newBeans = _abs(deltaB); // FIXME: more efficient way to do this?
     vm.assume(pods < newBeans); // clear the whole pod line
-
     // Setup pods
     field.incrementTotalPodsE(pods);
     console.log("Pods outstanding: %s", pods);
 
-    (uint256 toFert, uint256 toField, uint256 toSilo, uint256 newHarvestable, uint256 soil) 
+    (/*uint256 toFert, uint256 toField, */, , uint256 toSilo, uint256 newHarvestable,/* uint256 soil*/) 
       = _testSunrise(deltaB, newBeans, pods, false, true);
 
     // @note only true if we've never minted to the silo before
@@ -176,19 +198,36 @@ contract SunTest is Sun, Test, InitDiamondDeployer {
   //   // low pod rate
   //   field.incrementTotalPodsE(100);
   //   season.sunSunrise(300e6, 0); // deltaB = +300; case 0 = low pod rate
-  //   assertEq(field.totalSoil(), 148); // FIXME: how calculated?
+  //   assertEq(uint256(field.totalSoil()), 148); // FIXME: how calculated?
   //   snapId = _reset(snapId);
 
   //   // medium pod rate
   //   field.incrementTotalPodsE(100);
   //   season.sunSunrise(300e6, 8); // deltaB = +300; case 0 = low pod rate
-  //   assertEq(field.totalSoil(), 99); // FIXME: how calculated?
+  //   assertEq(uint256(field.totalSoil()), 99); // FIXME: how calculated?
   //   snapId = _reset(snapId);
 
   //   // high pod rate
   //   field.incrementTotalPodsE(100);
   //   season.sunSunrise(300e6, 8); // deltaB = +300; case 0 = low pod rate
-  //   assertEq(field.totalSoil(), 99); // FIXME: how calculated?
+  //   assertEq(uint256(field.totalSoil()), 99); // FIXME: how calculated?
   // }
+
+  function testMockOraclePrice() public {
+    MockUniswapV3Pool(C.UniV3EthUsdc()).setOraclePrice(1000e6,18);
+    console.log("Eth Price is:", season.getEthPrice());
+    assertApproxEqRel(season.getEthPrice(),1000e6,0.01e18); //0.01% accuracy as ticks are spaced 0.01%
+  }
+
+  //helper
+  function getEthUsdcPrice() private view returns (uint256) {
+        (int24 tick,) = OracleLibrary.consult(C.UniV3EthUsdc(),3600); //1 season tick
+        return OracleLibrary.getQuoteAtTick(
+            tick,
+            1e18,
+            address(C.weth()),
+            address(C.usdc())
+        );
+    }
 
 }

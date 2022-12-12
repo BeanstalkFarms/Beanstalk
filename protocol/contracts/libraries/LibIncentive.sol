@@ -5,11 +5,72 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
+import "@openzeppelin/contracts/math/Math.sol";
+import "../C.sol";
+import "./Curve/LibCurve.sol";
+
 /**
- * @author Publius
- * @title Incentive Library calculates the exponential incentive rewards efficiently.
+ * @author Publius, Chaikitty, Brean
+ * @title Incentive Library calculates the reward and the exponential increase efficiently.
  **/
 library LibIncentive {
+    uint32 private constant PERIOD = 3600; //1 hour
+
+
+    using SafeMath for uint256;
+
+    // Calculates sunrise incentive amount based on current gas prices and bean/ether price
+    // Further reading here: https://beanstalk-farms.notion.site/RFC-Sunrise-Payout-Change-31a0ca8dd2cb4c3f9fe71ae5599e9102
+    function determineReward(
+        uint256 initialGasLeft,
+        uint256[2] memory balances,
+        uint256 blocksLate
+    ) internal view returns (uint256) {
+
+        // Gets the current bean price based on the curve pool.
+        // In the future, this can be swapped out to another oracle
+        uint256 beanPriceUsd = LibIncentive.getCurveBeanPrice(balances);
+
+        // ethUsdPrice has 6 Decimal Precision
+        uint256 beanEthPrice = getEthUsdcPrice()
+            .mul(1e6)
+            .div(beanPriceUsd);
+
+        uint256 gasUsed = Math.min(initialGasLeft.sub(gasleft()) + C.getSunriseGasOverhead(), C.getMaxSunriseGas());
+        uint256 gasCostWei = C.basefeeContract().block_basefee()    // (BASE_FEE
+            .add(C.getSunrisePriorityFeeBuffer())                   // + PRIORITY_FEE_BUFFER)
+            .mul(gasUsed);                                          // * GAS_USED
+        uint256 sunriseReward = Math.max(
+            C.getMinReward(),
+            Math.min(
+                gasCostWei.mul(beanEthPrice).div(1e18) + C.getBaseReward(), // divide by 1e18 to convert wei to eth
+                C.getMaxReward()
+            )
+        );
+
+        return LibIncentive.fracExp(sunriseReward, 100, blocksLate.mul(C.getBlockLengthSeconds()), 1);
+    }
+
+    function getCurveBeanPrice(uint256[2] memory balances) internal view returns (uint256 price) {
+        uint256[2] memory rates = getRates();
+        uint256[2] memory xp = LibCurve.getXP(balances, rates);
+        uint256 a = C.curveMetapool().A_precise();
+        uint256 D = LibCurve.getD(xp, a);
+        price = LibCurve.getPrice(xp, rates, a, D);
+    }
+
+    function getEthUsdcPrice() internal view returns (uint256) {
+        (int24 tick,) = OracleLibrary.consult(C.UniV3EthUsdc(),PERIOD); //1 season tick
+        return OracleLibrary.getQuoteAtTick(
+            tick,
+            1e18,
+            address(C.weth()),
+            address(C.usdc())
+        );
+    }
+
     /// @notice fracExp estimates an exponential expression in the form: k * (1 + 1/q) ^ N.
     /// We use a binomial expansion to estimate the exponent to avoid running into integer overflow issues.
     /// @param k - the principle amount
@@ -107,5 +168,11 @@ library LibIncentive {
                 )
             )
         }
+    }
+
+    function getRates() private view returns (uint256[2] memory rates) {
+        // Decimals will always be 6 because we can only mint beans
+        // 10**(36-decimals)
+        return [1e30, C.curve3Pool().get_virtual_price()];
     }
 }
