@@ -82,7 +82,7 @@ contract Replant1 {
 
     function init() external {
         // 1. Remove Deposits
-        LibTokenSilo.removeDeposit(
+        LibTokenSilo.removeDepositFromAccount(
             EXPLOITER,
             EXPLOITER_TOKEN_1,
             EXPLOITER_SEASON,
@@ -95,7 +95,7 @@ contract Replant1 {
             EXPLOITER_AMOUNT_1
         );
 
-        LibTokenSilo.removeDeposit(
+        LibTokenSilo.removeDepositFromAccount(
             EXPLOITER,
             EXPLOITER_TOKEN_2,
             EXPLOITER_SEASON,

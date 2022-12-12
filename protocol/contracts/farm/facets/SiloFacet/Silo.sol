@@ -66,7 +66,7 @@ contract Silo is SiloExit {
         if (beans == 0) return 0;
         s.earnedBeans = s.earnedBeans.sub(uint128(beans));
         // Deposit Earned Beans
-        LibTokenSilo.addDeposit(
+        LibTokenSilo.addDepositToAccount(
             account,
             C.beanAddress(),
             season(),
@@ -76,7 +76,7 @@ contract Silo is SiloExit {
         uint256 seeds = beans.mul(C.getSeedsPerBean());
 
         // Earned Seeds don't auto-compound, so we need to mint new Seeds
-        LibSilo.incrementBalanceOfSeeds(account, seeds);
+        LibSilo.mintSeeds(account, seeds);
 
         // Earned Stalk auto-compounds and thus is minted alongside Earned Beans
         // Farmers don't receive additional Roots from Earned Stalk.
@@ -100,7 +100,7 @@ contract Silo is SiloExit {
     function earnGrownStalk(address account) private {
         // If they have no seeds, we can save gas.
         if (s.a[account].s.seeds == 0) return;
-        LibSilo.incrementBalanceOfStalk(account, balanceOfGrownStalk(account));
+        LibSilo.mintStalk(account, balanceOfGrownStalk(account));
     }
 
     function handleRainAndSops(address account, uint32 _lastUpdate) private {

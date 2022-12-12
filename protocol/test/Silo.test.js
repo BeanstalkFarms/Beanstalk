@@ -207,7 +207,7 @@ describe('Silo', function () {
         expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('100'));
         await this.silo.connect(user).plant();
         earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, season);
-        console.log("earned Beans -", earned_beans);
+        expect(earned_beans[0]).to.eq(100e6);
       });
 
     })

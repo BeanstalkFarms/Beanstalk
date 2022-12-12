@@ -99,7 +99,7 @@ contract TokenSilo is Silo {
             _season(),
             amount
         );
-        LibSilo.depositSiloAssets(account, seeds, stalk);
+        LibSilo.mintSeedsAndStalk(account, seeds, stalk);
     }
 
     // Withdraw
@@ -169,7 +169,7 @@ contract TokenSilo is Silo {
             uint256 bdv
         )
     {
-        bdv = LibTokenSilo.removeDeposit(account, token, season, amount);
+        bdv = LibTokenSilo.removeDepositFromAccount(account, token, season, amount);
         seedsRemoved = bdv.mul(s.ss[token].seeds);
         stalkRemoved = bdv.mul(s.ss[token].stalk).add(
             LibSilo.stalkReward(seedsRemoved, _season() - season)
@@ -184,7 +184,7 @@ contract TokenSilo is Silo {
         uint256[] calldata amounts
     ) internal returns (AssetsRemoved memory ar) {
         for (uint256 i; i < seasons.length; ++i) {
-            uint256 crateBdv = LibTokenSilo.removeDeposit(
+            uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 account,
                 token,
                 seasons[i],
@@ -221,8 +221,8 @@ contract TokenSilo is Silo {
             season,
             amount
         );
-        LibTokenSilo.addDeposit(recipient, token, season, amount, bdv);
-        LibSilo.transferSiloAssets(sender, recipient, seeds, stalk);
+        LibTokenSilo.addDepositToAccount(recipient, token, season, amount, bdv);
+        LibSilo.transferSeedsAndStalk(sender, recipient, seeds, stalk);
         return bdv;
     }
 
@@ -241,13 +241,13 @@ contract TokenSilo is Silo {
         uint256[] memory bdvs = new uint256[](seasons.length);
 
         for (uint256 i; i < seasons.length; ++i) {
-            uint256 crateBdv = LibTokenSilo.removeDeposit(
+            uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 sender,
                 token,
                 seasons[i],
                 amounts[i]
             );
-            LibTokenSilo.addDeposit(
+            LibTokenSilo.addDepositToAccount(
                 recipient,
                 token,
                 seasons[i],
@@ -269,7 +269,7 @@ contract TokenSilo is Silo {
             ar.bdvRemoved.mul(s.ss[token].stalk)
         );
         emit RemoveDeposits(sender, token, seasons, amounts, ar.tokensRemoved);
-        LibSilo.transferSiloAssets(
+        LibSilo.transferSeedsAndStalk(
             sender,
             recipient,
             ar.seedsRemoved,

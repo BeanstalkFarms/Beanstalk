@@ -90,7 +90,7 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 i = 0;
         while ((i < seasons.length) && (a.tokensRemoved < maxTokens)) {
             if (a.tokensRemoved.add(amounts[i]) < maxTokens)
-                depositBDV = LibTokenSilo.removeDeposit(
+                depositBDV = LibTokenSilo.removeDepositFromAccount(
                     msg.sender,
                     token,
                     seasons[i],
@@ -98,7 +98,7 @@ contract ConvertFacet is ReentrancyGuard {
                 );
             else {
                 amounts[i] = maxTokens.sub(a.tokensRemoved);
-                depositBDV = LibTokenSilo.removeDeposit(
+                depositBDV = LibTokenSilo.removeDepositFromAccount(
                     msg.sender,
                     token,
                     seasons[i],
@@ -152,10 +152,10 @@ contract ConvertFacet is ReentrancyGuard {
             _s = __s - _s;
         } else _s = s.season.current;
         uint256 stalk = bdv.mul(LibTokenSilo.stalk(token)).add(grownStalk);
-        LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
+        LibSilo.mintSeedsAndStalk(msg.sender, seeds, stalk);
 
-        LibTokenSilo.incrementDepositedToken(token, amount);
-        LibTokenSilo.addDeposit(msg.sender, token, _s, amount, bdv);
+        LibTokenSilo.incrementTotalDeposited(token, amount);
+        LibTokenSilo.addDepositToAccount(msg.sender, token, _s, amount, bdv);
     }
 
     function getMaxAmountIn(address tokenIn, address tokenOut)

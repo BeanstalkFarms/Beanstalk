@@ -1401,50 +1401,50 @@ describe('Silo Token', function () {
   });
 
   describe("0 withdraw timer failed exploit", async function () {
+    before(async function () {
+      await this.siloToken.mint(flashLoanExploiterAddress, '1000');
+      await this.siloToken.connect(flashLoanExploiter).approve(this.silo.address, '100000000000'); 
+    })
     beforeEach(async function () {
-      getStartTime = await time.latest();
-
       await network.provider.send("evm_setAutomine", [false]);
-      await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL);
+      await this.silo.connect(flashLoanExploiter).deposit(this.siloToken.address, '1000', EXTERNAL);
       await this.season.connect(user).siloSunrise(100);
-      this.result = await this.silo.connect(user).withdrawDeposit(this.siloToken.address, '2', '1000', EXTERNAL)
+      this.result = await this.silo.connect(flashLoanExploiter).withdrawDeposit(this.siloToken.address, '2', '1000', EXTERNAL)
       await network.provider.send("evm_mine");
       await network.provider.send("evm_setAutomine", [true]);
-
+      getStartTime = await time.latest();
     });
 
     it('0 grown stalk', async function () {
-      await expect(await this.silo.balanceOfGrownStalk(userAddress)).to.eq('0');
+      await expect(await this.silo.balanceOfGrownStalk(flashLoanExploiterAddress)).to.eq('0');
     });
 
     it('does not allocate bean mints to the user', async function () {
-      await expect( await this.silo.balanceOfEarnedBeans(userAddress)).to.eq('0');
+      await expect( await this.silo.balanceOfEarnedBeans(flashLoanExploiterAddress)).to.eq('0');
     });
 
 
     it('does not allocate bean mints to the user throughout the season', async function () {
       // immediately after season
-      await expect(await this.silo.balanceOfGrownStalk(userAddress)).to.eq('0');
-      await expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq('0');
+      await expect(await this.silo.balanceOfGrownStalk(flashLoanExploiterAddress)).to.eq('0');
+      await expect(await this.silo.balanceOfEarnedBeans(flashLoanExploiterAddress)).to.eq('0');
 
       // midway through the season (1800 seconds)
       await time.setNextBlockTimestamp(getStartTime + 1800);
-      await this.silo.connect(user).plant();
-      await expect(await this.silo.balanceOfGrownStalk(userAddress)).to.eq('0');
-      await expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq('0');
+      await this.silo.connect(flashLoanExploiter).plant();
+      await expect(await this.silo.balanceOfGrownStalk(flashLoanExploiterAddress)).to.eq('0');
+      await expect(await this.silo.balanceOfEarnedBeans(flashLoanExploiterAddress)).to.eq('0');
 
-      // at the end of the season (3600 seconds)
+      // at the end of the season, no plant (3600 seconds)
       await time.setNextBlockTimestamp(getStartTime + 3600);
-      await this.silo.update(userAddress);
-      await expect(await this.silo.balanceOfGrownStalk(userAddress)).to.eq('0');
-      await expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq('0');
+      await expect(await this.silo.balanceOfGrownStalk(flashLoanExploiterAddress)).to.eq('0');
+      await expect(await this.silo.balanceOfEarnedBeans(flashLoanExploiterAddress)).to.eq('0');
     });
   });
   
   describe("0 withdraw timer flash loan full withdraw", async function () {
     beforeEach(async function () {
-      await this.siloToken.mint(flashLoanExploiterAddress, '1000');
-      await this.siloToken.connect(flashLoanExploiter).approve(this.silo.address, '100000000000'); 
+      
 
       await network.provider.send("evm_setAutomine", [false]);
       await this.silo.connect(flashLoanExploiter).deposit(this.siloToken.address, '1000', EXTERNAL);
@@ -1459,17 +1459,14 @@ describe('Silo Token', function () {
     it('properly allocates bean mints throughout the season', async function () {
       // immediately after season
       await expect(await this.silo.balanceOfGrownStalk(flashLoanExploiterAddress)).to.eq('0');
-      await expect(await this.silo.balanceOfEarnedBeans(flashLoanExploiterAddress)).to.eq('0');
 
       // midway through the season (1800 seconds)
       await time.increase(getStartTime + 900);
       await expect(await this.silo.balanceOfGrownStalk(flashLoanExploiterAddress)).to.eq('0');
-      await expect(await this.silo.balanceOfEarnedBeans(flashLoanExploiterAddress)).to.eq('0');
 
       // at the end of the season (3600 seconds)
       await time.increase(getStartTime + 3600);
       await expect(await this.silo.balanceOfGrownStalk(flashLoanExploiterAddress)).to.eq('0');
-      await expect(await this.silo.balanceOfEarnedBeans(flashLoanExploiterAddress)).to.eq('0');
     });
 
   });
