@@ -38,24 +38,6 @@ contract TokenSilo is Silo {
         uint256 amount
     );
 
-    event AddWithdrawal(
-        address indexed account,
-        address indexed token,
-        uint32 season,
-        uint256 amount
-    );
-    event RemoveWithdrawals(
-        address indexed account,
-        address indexed token,
-        uint32[] seasons,
-        uint256 amount
-    );
-    event RemoveWithdrawal(
-        address indexed account,
-        address indexed token,
-        uint32 season,
-        uint256 amount
-    );
 
     event DepositApproval(
         address indexed owner,
@@ -83,20 +65,9 @@ contract TokenSilo is Silo {
         return LibTokenSilo.tokenDeposit(account, token, season);
     }
 
-    function getWithdrawal(
-        address account,
-        address token,
-        uint32 season
-    ) external view returns (uint256) {
-        return LibTokenSilo.tokenWithdrawal(account, token, season);
-    }
 
     function getTotalDeposited(address token) external view returns (uint256) {
         return s.siloBalances[token].deposited;
-    }
-
-    function getTotalWithdrawn(address token) external view returns (uint256) {
-        return s.siloBalances[token].withdrawn;
     }
 
     function tokenSettings(address token)
@@ -138,7 +109,7 @@ contract TokenSilo is Silo {
         address token,
         uint32[] calldata seasons,
         uint256[] calldata amounts
-    ) internal {
+    ) internal returns (uint256) {
         require(
             seasons.length == amounts.length,
             "Silo: Crates, amounts are diff lengths."
@@ -156,6 +127,7 @@ contract TokenSilo is Silo {
             ar.stalkRemoved,
             ar.seedsRemoved
         );
+        return ar.tokensRemoved;
     }
 
     function _withdrawDeposit(
@@ -180,10 +152,8 @@ contract TokenSilo is Silo {
         uint256 stalk,
         uint256 seeds
     ) private {
-        uint32 arrivalSeason = _season() + s.season.withdrawSeasons;
-        addTokenWithdrawal(account, token, arrivalSeason, amount);
-        LibTokenSilo.decrementDepositedToken(token, amount);
-        LibSilo.withdrawSiloAssets(account, seeds, stalk);
+        LibTokenSilo.decrementTotalDeposited(token, amount);
+        LibSilo.burnSeedsAndStalk(account, seeds, stalk);
     }
 
     function removeDeposit(
@@ -234,67 +204,6 @@ contract TokenSilo is Silo {
             ar.bdvRemoved.mul(s.ss[token].stalk)
         );
         emit RemoveDeposits(account, token, seasons, amounts, ar.tokensRemoved);
-    }
-
-    function addTokenWithdrawal(
-        address account,
-        address token,
-        uint32 arrivalSeason,
-        uint256 amount
-    ) private {
-        s.a[account].withdrawals[token][arrivalSeason] = s
-        .a[account]
-        .withdrawals[token][arrivalSeason].add(amount);
-        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.add(
-            amount
-        );
-        emit AddWithdrawal(account, token, arrivalSeason, amount);
-    }
-
-        // Claim
-
-    function _claimWithdrawal(
-        address account,
-        address token,
-        uint32 season
-    ) internal returns (uint256) {
-        uint256 amount = _removeTokenWithdrawal(account, token, season);
-        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(
-            amount
-        );
-        emit RemoveWithdrawal(msg.sender, token, season, amount);
-        return amount;
-    }
-
-    function _claimWithdrawals(
-        address account,
-        address token,
-        uint32[] calldata seasons
-    ) internal returns (uint256 amount) {
-        for (uint256 i; i < seasons.length; ++i) {
-            amount = amount.add(
-                _removeTokenWithdrawal(account, token, seasons[i])
-            );
-        }
-        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(
-            amount
-        );
-        emit RemoveWithdrawals(msg.sender, token, seasons, amount);
-        return amount;
-    }
-
-    function _removeTokenWithdrawal(
-        address account,
-        address token,
-        uint32 season
-    ) private returns (uint256) {
-        require(
-            season <= s.season.current,
-            "Claim: Withdrawal not receivable"
-        );
-        uint256 amount = s.a[account].withdrawals[token][season];
-        delete s.a[account].withdrawals[token][season];
-        return amount;
     }
 
     // Transfer

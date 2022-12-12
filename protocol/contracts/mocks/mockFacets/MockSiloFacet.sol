@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../farm/facets/SiloFacet/SiloFacet.sol";
 import "../../libraries/Silo/LibWhitelist.sol";
+import "../../libraries/Token/LibTransfer.sol";
 
 /**
  * @author Publius
@@ -48,8 +49,10 @@ contract MockSiloFacet is SiloFacet {
         uint256 seeds = bdv.mul(s.ss[C.unripeLPAddress()].seeds);
         uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalk).add(LibSilo.stalkReward(seeds, season() - _s));
         LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
-    }
+        LibTransfer.receiveToken(IERC20(C.unripeLPAddress()), unripeLP, msg.sender, LibTransfer.From.EXTERNAL);
 
+    }
+    
     function mockUnripeBeanDeposit(uint32 _s, uint256 amount) external {
         _update(msg.sender);
         s.a[msg.sender].bean.deposits[_s] += amount;
@@ -58,6 +61,7 @@ contract MockSiloFacet is SiloFacet {
         uint256 seeds = amount.mul(s.ss[C.unripeBeanAddress()].seeds);
         uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalk).add(LibSilo.stalkReward(seeds, season() - _s));
         LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
+        LibTransfer.receiveToken(IERC20(C.unripeBeanAddress()), amount, msg.sender, LibTransfer.From.EXTERNAL);
     }
 
     function getUnripeForAmount(uint256 t, uint256 amount) private pure returns (uint256) {

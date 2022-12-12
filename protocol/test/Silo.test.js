@@ -9,7 +9,7 @@ const { time } = require("@nomicfoundation/hardhat-network-helpers");
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 
-describe.only('Silo', function () {
+describe('Silo', function () {
   before(async function () {
     [owner,user,user2] = await ethers.getSigners();
     userAddress = user.address;
@@ -55,7 +55,7 @@ describe.only('Silo', function () {
 
   describe('Silo Balances After Withdrawal', function () {
     beforeEach(async function () {
-      await this.silo.connect(user).withdrawDeposit(this.bean.address, '2', to6('500'))
+      await this.silo.connect(user).withdrawDeposit(this.bean.address, '2', to6('500'), EXTERNAL)
     })
 
     it('properly updates the total balances', async function () {
@@ -139,7 +139,7 @@ describe.only('Silo', function () {
     });
   });
   
-  /// TODO: need to find rounding errors
+
   describe("Time Weighted Earned Bean Emission", async function () {
     
     // tests a farmers deposit that has no earned bean prior
@@ -203,7 +203,11 @@ describe.only('Silo', function () {
 
       it('Issues Earned Beans from last season + all of this season.', async function () {
         await time.increase(3600); // 3600 seconds = 60 minutes = all beans issued
+        season = await this.season.season();
         expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('100'));
+        await this.silo.connect(user).plant();
+        earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, season);
+        console.log("earned Beans -", earned_beans);
       });
 
     })
@@ -212,45 +216,94 @@ describe.only('Silo', function () {
 
       beforeEach(async function () {
         await this.season.siloSunrise(to6('100'))
+        beginning_timestamp = await time.latest();
+        season = await this.season.season();
       })
-
-      // issue: farmer should get 12.5, but gets a bit more, because his stalk has increased; 
-      it('farmer harvests Earned Beans after mid harvest', async function () {
-        //var season = await this.season.season();
-        //console.log(season);
-        //expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('0'));
-        var inital_earned_beans = await this.silo.balanceOfEarnedBeans(userAddress);
-       //console.log('inital earned Beans prior to plant:', inital_earned_beans.toNumber());
-        await time.increase(900); 
-        var inital_earned_beans = await this.silo.balanceOfEarnedBeans(userAddress);
-        //expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('12.5'));
-        //console.log('earned Beans at 25% of the season:', inital_earned_beans);
-        this.result = await this.silo.connect(user).plant();
-        acutal_earned_beans = await this.silo.getDeposit(userAddress,this.bean.address,season);
-        //console.log('earned Beans actually gotten:', inital_earned_beans);
-
-        inital_earned_beans = await this.silo.balanceOfEarnedBeans(userAddress);
-
-        seeds = await this.silo.balanceOfSeeds(userAddress);
-        //console.log('seeds:', seeds);
-        await time.increase(2700); // 2700 + 900 = 60 minutes = all beans issued 
-        //expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq('37489680');
-        this.result = await this.silo.connect(user).plant();
-        seeds = await this.silo.balanceOfSeeds(userAddress);
-        //console.log('seeds:', seeds);
-        acutal_earned_beans = await this.silo.getDeposit(userAddress,this.bean.address,season);
-       //console.log('earned Beans actually gotten:', inital_earned_beans);
-      });
-
-      it('loop de loop', async function () {
+    
       
-      })
-      it('0 earned beans after mid-earned harvest', async function () {
-        await time.increase(3600); // 1800 seconds = 30 minutes = half Earned beans issued
-        //this.result = await this.silo.connect(user).plant();
-        expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('50'));
+      it('single farmer harvests Earned Beans after mid harvest', async function () {
+        await time.setNextBlockTimestamp(beginning_timestamp + 1800);
+        // disable automine so they mine exactly 1800 seconds after
+        await network.provider.send("evm_setAutomine", [false]);
+        await this.silo.connect(user).plant();
+        await network.provider.send("evm_mine");
+        await network.provider.send("evm_setAutomine", [true]);
+  
+        earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, season)
+        expect(earned_beans[0]).to.eq(24997619);
+
+        await time.setNextBlockTimestamp(beginning_timestamp + 3600);
+        await network.provider.send("evm_setAutomine", [false]);
+        await this.silo.connect(user).plant();
+        await network.provider.send("evm_mine");
+        await network.provider.send("evm_setAutomine", [true]);
+        earned_beans = await this.silo.getDeposit(userAddress,this.bean.address,season);
+        expect(earned_beans[0]).to.eq(50e6);
       });
 
+      it('issues correct earned Beans after multiple plants', async function () {
+
+        await time.increase(800);
+        await this.silo.connect(user).plant();
+        await time.increase(1000);
+        await this.silo.connect(user).plant();
+        await time.increase(900);
+        await this.silo.connect(user).plant();
+        await time.increase(449);
+        await this.silo.connect(user).plant();
+        await time.increase(451);
+        await this.silo.connect(user).plant();
+
+        earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, season);
+        expect(earned_beans[0]).to.eq(50e6);
+
+        await this.silo.connect(user2).plant();
+        earned_beans2 = await this.silo.getDeposit(user2Address, this.bean.address, season);
+        expect(earned_beans2[0]).to.eq(50e6);
+      });
+
+      it('correctly issues amount after multiple different farmer plants', async function () {
+        await time.setNextBlockTimestamp(beginning_timestamp + 1800);
+        // disable automine so both plants can be done exactly 1800 seconds after timestamp start
+        await network.provider.send("evm_setAutomine", [false]);
+        await this.silo.connect(user).plant();
+        await this.silo.connect(user2).plant();
+        await network.provider.send("evm_mine");
+        await network.provider.send("evm_setAutomine", [true]);
+
+        earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, season)
+        expect(earned_beans[0]).to.eq(24997619);
+        earned_beans2 = await this.silo.getDeposit(user2Address, this.bean.address, season)
+        expect(earned_beans2[0]).to.eq(25e6);
+
+        beginning_timestamp += 3600;
+        await time.setNextBlockTimestamp(beginning_timestamp);
+        await this.season.siloSunrise(to6('100'))
+        beginning_timestamp += 3600;
+        await time.setNextBlockTimestamp(beginning_timestamp);
+
+        await network.provider.send("evm_setAutomine", [false]);
+        await this.silo.connect(user).plant();
+        await this.silo.connect(user2).plant();
+        await network.provider.send("evm_mine");
+        await network.provider.send("evm_setAutomine", [true]);
+
+        earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, season + 1)
+        // 50e6 + (25e6 - 24997619) = 75002381
+        expect(earned_beans[0]).to.eq(75002381);
+        earned_beans2 = await this.silo.getDeposit(user2Address, this.bean.address, season + 1)
+        expect(earned_beans2[0]).to.eq(75e6);
+      })
+
+      it('correctly issues Earned Beans from multiple seasons', async function () {
+        await time.increase(3600);
+        await this.season.siloSunrise(to6('100'))
+        season = await this.season.season();
+        await time.increase(3600); // 3600 seconds = 60 minutes = all beans issued
+        expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('100'));
+        await this.silo.connect(user).plant();
+        expect((await this.silo.getDeposit(userAddress, this.bean.address, season))[0]).to.eq(100e6);
+      });
     })
   });
 });

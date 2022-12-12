@@ -8,6 +8,10 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../C.sol";
 import "../LibAppStorage.sol";
+import "hardhat/console.sol";
+import "../LibPRBMath.sol";
+
+
 
 /**
  * @author Publius
@@ -15,6 +19,7 @@ import "../LibAppStorage.sol";
  **/
 library LibSilo {
     using SafeMath for uint256;
+    using LibPRBMath for uint256;
 
     event SeedsBalanceChanged(
         address indexed account,
@@ -40,7 +45,7 @@ library LibSilo {
         incrementBalanceOfSeeds(account, seeds);
     }
 
-    function withdrawSiloAssets(
+    function burnSeedsAndStalk(
         address account,
         uint256 seeds,
         uint256 stalk
@@ -90,21 +95,31 @@ library LibSilo {
     function decrementBalanceOfStalk(address account, uint256 stalk) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return;
+        // round up 
+        uint256 roots = s.s.roots.mulDiv(stalk,s.s.stalk,LibPRBMath.Rounding.Up);
 
-        uint256 roots = s.s.roots.mul(stalk).div(s.s.stalk);
         if (roots > s.a[account].roots) roots = s.a[account].roots;
 
+        // subtract stalk and roots from account and global state 
         s.s.stalk = s.s.stalk.sub(stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
 
-        s.s.roots = s.s.roots.sub(roots);
-        s.a[account].roots = s.a[account].roots.sub(roots);
+
+        // added due to zero withdraw change, as global stalk increases but roots stay the same
+        if(s.a[account].s.stalk == 0) {
+            s.s.roots = s.s.roots.sub(s.a[account].roots);
+            s.a[account].roots = 0;
+        } else {
+            s.s.roots = s.s.roots.sub(roots);
+            s.a[account].roots = s.a[account].roots.sub(roots);
+        }
+       
         
         if (s.season.raining) {
             s.r.roots = s.r.roots.sub(roots);
             s.a[account].sop.roots = s.a[account].roots;
         }
-
+    
         emit StalkBalanceChanged(account, -int256(stalk), -int256(roots));
     }
 

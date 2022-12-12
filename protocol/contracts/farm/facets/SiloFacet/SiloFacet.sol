@@ -57,13 +57,16 @@ contract SiloFacet is TokenSilo {
      * @param token address of ERC20
      * @param season season the farmer wants to withdraw
      * @param amount tokens to be withdrawn
+     * @param mode destination of funds (internal or external)
      */
     function withdrawDeposit(
         address token,
         uint32 season,
-        uint256 amount
-    ) external payable updateSilo {
+        uint256 amount,
+        LibTransfer.To mode
+    ) external payable updateSilo nonReentrant {
         _withdrawDeposit(msg.sender, token, season, amount);
+        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
 
     /** 
@@ -71,48 +74,18 @@ contract SiloFacet is TokenSilo {
      * @param token address of ERC20
      * @param seasons array of seasons to withdraw from
      * @param amounts array of amounts corresponding to each season to withdraw from
+     * @param mode destination of funds (internal or external)
      */
     function withdrawDeposits(
         address token,
         uint32[] calldata seasons,
-        uint256[] calldata amounts
-    ) external payable updateSilo {
-        _withdrawDeposits(msg.sender, token, seasons, amounts);
-    }
-
-    /*
-     * Claim
-     */
-
-    /** 
-     * @notice claims tokens from a withdrawal.
-     * @param token address of ERC20
-     * @param season season to claim
-     * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
-     */
-    function claimWithdrawal(
-        address token,
-        uint32 season,
+        uint256[] calldata amounts,
         LibTransfer.To mode
-    ) external payable nonReentrant {
-        uint256 amount = _claimWithdrawal(msg.sender, token, season);
-        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
+    ) external payable updateSilo nonReentrant {
+       uint256 amount = _withdrawDeposits(msg.sender, token, seasons, amounts);
+       LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
 
-    /** 
-     * @notice claims tokens from multiple withdrawals.
-     * @param token address of ERC20
-     * @param seasons array of seasons to claim
-     * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
-     */
-    function claimWithdrawals(
-        address token,
-        uint32[] calldata seasons,
-        LibTransfer.To mode
-    ) external payable nonReentrant {
-        uint256 amount = _claimWithdrawals(msg.sender, token, seasons);
-        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
-    }
 
     /*
      * Transfer

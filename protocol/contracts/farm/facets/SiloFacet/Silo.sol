@@ -11,7 +11,6 @@ import "../../../libraries/Silo/LibSilo.sol";
 import "../../../libraries/Silo/LibTokenSilo.sol";
 import "../../../libraries/LibSafeMath128.sol";
 import "../../../libraries/LibPRBMath.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius, Brean
@@ -61,8 +60,8 @@ contract Silo is SiloExit {
     function _plant(address account) internal returns (uint256 beans) {
         // Need to update account before we make a Deposit
         _update(account);
-        uint256 accountStalk = s.a[account].s.stalk;
         // Calculate balance of Earned Beans.
+        uint256 accountStalk = s.a[account].s.stalk;
         beans = _balanceOfEarnedBeans(account, accountStalk);
         if (beans == 0) return 0;
         s.earnedBeans = s.earnedBeans.sub(uint128(beans));
@@ -74,7 +73,6 @@ contract Silo is SiloExit {
             beans,
             beans
         );
-        // beans are rounded down, so we round up here
         uint256 seeds = beans.mul(C.getSeedsPerBean());
 
         // Earned Seeds don't auto-compound, so we need to mint new Seeds
@@ -83,7 +81,7 @@ contract Silo is SiloExit {
         // Earned Stalk auto-compounds and thus is minted alongside Earned Beans
         // Farmers don't receive additional Roots from Earned Stalk.
         uint256 stalk = beans.mul(C.getStalkPerBean());
-        //console.log("stalk amt:",stalk);
+        // console.log("stalk amt:",stalk);
         s.a[account].s.stalk = accountStalk.add(stalk);
 
         emit StalkBalanceChanged(account, int256(stalk), 0);

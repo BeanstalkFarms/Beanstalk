@@ -73,7 +73,7 @@ library LibTokenSilo {
         emit AddDeposit(account, token, _s, amount, bdv);
     }
 
-    function decrementDepositedToken(address token, uint256 amount) internal {
+    function decrementTotalDeposited(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.siloBalances[token].deposited = s.siloBalances[token].deposited.sub(
             amount
@@ -177,14 +177,15 @@ library LibTokenSilo {
         }
     }
 
-    function tokenWithdrawal(
-        address account,
-        address token,
-        uint32 id
-    ) internal view returns (uint256) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.a[account].withdrawals[token][id];
-    }
+    /// DEPRECIATED 
+    // function tokenWithdrawal(
+    //     address account,
+    //     address token,
+    //     uint32 id
+    // ) internal view returns (uint256) {
+    //     AppStorage storage s = LibAppStorage.diamondStorage();
+    //     return s.a[account].withdrawals[token][id];
+    // }
 
     function seeds(address token) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();

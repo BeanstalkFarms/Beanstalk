@@ -41,6 +41,10 @@ contract SiloExit is ReentrancyGuard {
         return s.s.stalk;
     }
 
+    function totalVestingStalk() public view returns (uint256) {
+        return s.newEarnedStalk;
+    }
+
     function totalRoots() public view returns (uint256) {
         return s.s.roots;
     }
@@ -102,26 +106,14 @@ contract SiloExit is ReentrancyGuard {
         uint256 vestingEarnedStalk = uint256(s.newEarnedStalk).mul(percentSeasonRemaining).div(1e18);
         // Determine expected user Stalk based on Roots balance
         // userStalk / totalStalk = userRoots / totalRoots
-        uint256 stalk = s.s.stalk.sub(vestingEarnedStalk).mulDiv(s.a[account].roots,s.s.roots,LibPRBMath.Rounding.Up);
+        uint256 stalk = s.s.stalk.sub(vestingEarnedStalk).mulDiv(s.a[account].roots,s.s.roots, LibPRBMath.Rounding.Up);
+        
         // Handle edge case caused by rounding
         if (stalk <= accountStalk) return 0;
-
-        // console.log("percentSeasonRemaining:", percentSeasonRemaining);
-        // // console.log("season timestamp:", s.season.timestamp);
-        // //console.log("block timestamp:", block.timestamp);
-        // console.log("difference:", block.timestamp - s.season.timestamp);
-        // console.log("accountStalk: ", accountStalk);
-        // console.log("stalk: ", stalk);
-        // console.log("total stalk: ", s.s.stalk);
-        // console.log("farmer root: ", s.a[account].roots);
-        // console.log("total root: ", s.s.roots);
-        // console.log("vestingEarnedStalk: ", vestingEarnedStalk);
-        console.log("-------");
 
 
         // Calculate Earned Stalk and convert to Earned Beans.
         beans = (stalk - accountStalk).div(C.getStalkPerBean()); // Note: SafeMath is redundant here.
-        console.log("bean amt:",beans);
 
         if (beans > s.earnedBeans) return s.earnedBeans;
         return beans;

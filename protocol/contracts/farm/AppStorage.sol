@@ -73,7 +73,7 @@ contract Account {
         uint256 roots; // A Farmer's Root balance.
         uint256 wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
         mapping(address => mapping(uint32 => Deposit)) deposits; // A Farmer's Silo Deposits stored as a map from Token address to Season of Deposit to Deposit.
-        mapping(address => mapping(uint32 => uint256)) withdrawals; // DEPRECATED – A Farmer's Withdrawals from the Silo stored as a map from Token address to Season the Withdrawal becomes Claimable to Withdrawn amount of Tokens.
+        mapping(address => mapping(uint32 => uint256)) withdrawals; // DEPRECATED DUE TO ZERO WITHDRAW TIMER – A Farmer's Withdrawals from the Silo stored as a map from Token address to Season the Withdrawal becomes Claimable to Withdrawn amount of Tokens.
         SeasonOfPlenty sop; // A Farmer's Season Of Plenty storage.
         mapping(address => mapping(address => uint256)) depositAllowances; // Spender => Silo Token
         mapping(address => mapping(IERC20 => uint256)) tokenAllowances; // Token allowances
@@ -173,7 +173,7 @@ contract Storage {
         // Apologies if this makes it confusing :(
         uint32 current; // The current Season in Beanstalk.
         uint32 lastSop; // The Season in which the most recent consecutive series of Seasons of Plenty started.
-        uint8 withdrawSeasons; // The number of seasons required to Withdraw a Deposit.
+        uint8 withdrawSeasons; // DEPRECIATED, NO MORE TIMER The number of seasons required to Withdraw a Deposit.
         uint32 lastSopSeason; // The Season in which the most recent consecutive series of Seasons of Plenty ended.
         uint32 rainStart; // rainStart stores the most recent Season in which Rain started.
         bool raining; // True if it is Raining (P < 1, Pod Rate Excessively Low).
