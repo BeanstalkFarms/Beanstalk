@@ -776,11 +776,10 @@ describe("Root", function () {
           ).to.revertedWith("Redeem: shares is greater than maxRootsIn");
         });
 
-        it("reverts if redeem more than owned shares", async function () {
+        it.only("reverts if redeem more than owned shares", async function () {
           await this.rootToken
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
-
           const nonce = await this.silo
             .connect(user)
             .depositPermitNonces(userAddress);
@@ -792,7 +791,6 @@ describe("Root", function () {
             "1000",
             nonce
           );
-
           await this.rootToken.connect(user).mintWithTokenPermit(
             [
               {
@@ -813,6 +811,9 @@ describe("Root", function () {
 
           await this.season.fastForward(100);
 
+          await this.silo
+            .connect(user2)
+            .deposit(this.siloToken.address, "1000", EXTERNAL);
 
           const nonce2 = await this.silo
             .connect(user2)
@@ -826,8 +827,7 @@ describe("Root", function () {
             "1000",
             nonce2
           );
-
-          await this.rootToken.connect(user).mintWithTokenPermit(
+          await this.rootToken.connect(user2).mintWithTokenPermit(
             [
               {
                 token: this.siloToken.address,
@@ -837,27 +837,26 @@ describe("Root", function () {
             ],
             EXTERNAL,
             1,
-            this.signature.token,
-            this.signature.value,
-            this.signature.deadline,
-            this.signature.split.v,
-            this.signature.split.r,
-            this.signature.split.s
+            this.signature2.token,
+            this.signature2.value,
+            this.signature2.deadline,
+            this.signature2.split.v,
+            this.signature2.split.r,
+            this.signature2.split.s
           );
-
           await expect(
             this.rootToken.connect(user2).redeem(
               [
                 {
                   token: this.siloToken.address,
-                  seasons: ["102"],
-                  amounts: ["1000"],
+                  seasons: ["2","102"],
+                  amounts: ["1000","1000"],
                 },
               ],
               EXTERNAL,
               "90000000000000000"
             )
-          ).to.revertedWith("Redeem: shares is greater than maxRootsIn");
+          ).to.be.revertedWith("ERC20: burn amount exceeds balance");
         });
       });
 
