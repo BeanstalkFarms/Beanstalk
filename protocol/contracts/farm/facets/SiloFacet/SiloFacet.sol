@@ -10,6 +10,7 @@ import "../../ReentrancyGuard.sol";
 import "../../../libraries/Token/LibTransfer.sol";
 import "../../../libraries/Silo/LibSiloPermit.sol";
 import "../../../libraries/LibDelegate.sol";
+import "../../../libraries/LibTractor.sol";
 
 /*
  * @author Publius
@@ -180,7 +181,16 @@ contract SiloFacet is TokenSilo {
         bytes32 r,
         bytes32 s
     ) external payable nonReentrant {
-        LibSiloPermit.permits(owner, spender, tokens, values, deadline, v, r, s);
+        LibSiloPermit.permits(
+            owner,
+            spender,
+            tokens,
+            values,
+            deadline,
+            v,
+            r,
+            s
+        );
         for (uint256 i; i < tokens.length; ++i) {
             _approveDeposit(owner, spender, tokens[i], values[i]);
         }
@@ -204,6 +214,14 @@ contract SiloFacet is TokenSilo {
     /// @param account user address
     /// @return beans number of beans planted
     function plantFor(address account) external returns (uint256 beans) {
+        address publisher = LibTractor.getBlueprintPublisher();
+
+        // if publisher is not address(1), it's in the middle of tractor operation
+        // and we can skip approval check
+        if (publisher != address(1)) {
+            return _plant(publisher);
+        }
+
         (
             bytes1 place,
             bytes1 approvalType,

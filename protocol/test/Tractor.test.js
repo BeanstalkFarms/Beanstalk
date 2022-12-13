@@ -211,7 +211,7 @@ describe("Tractor", function () {
         this.mockBlueprint.calldataCopyParams
       );
 
-      expect(isActive).to.be.eq(true);
+      expect(isActive).to.be.true;
       expect(predicateStates.length).to.be.eq(this.mockBlueprint.predicates.length);
       for (let i = 0; i < predicateStates.length; ++i) {
         expect(predicateStates[i]).to.be.eq(this.mockBlueprint.predicates[i]);
@@ -223,7 +223,7 @@ describe("Tractor", function () {
         this.mockBlueprint.data,
         this.mockBlueprint.calldataCopyParams
       );
-      expect(await this.tractor["viewBlueprint(bytes32)"](hash)).to.be.eq(true);
+      expect(await this.tractor["viewBlueprint(bytes32)"](hash)).to.be.true;
     });
 
     it("when blueprint does not exist", async function () {
@@ -245,7 +245,7 @@ describe("Tractor", function () {
         this.mockBlueprint.data,
         this.mockBlueprint.calldataCopyParams
       );
-      expect(await this.tractor["viewBlueprint(bytes32)"](hash)).to.be.eq(false);
+      expect(await this.tractor["viewBlueprint(bytes32)"](hash)).to.be.false;
     });
   });
 });

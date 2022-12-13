@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "../../libraries/Token/LibTransfer.sol";
 import "../../libraries/LibDibbler.sol";
 import "../../libraries/LibDelegate.sol";
+import "../../libraries/LibTractor.sol";
 import "../ReentrancyGuard.sol";
 
 /**
@@ -84,6 +85,14 @@ contract FieldFacet is ReentrancyGuard {
         uint256 amount,
         LibTransfer.From mode
     ) external payable returns (uint256 pods) {
+        address publisher = LibTractor.getBlueprintPublisher();
+
+        // if publisher is not address(1), it's in the middle of tractor operation
+        // and we can skip approval check
+        if (publisher != address(1)) {
+            return sowWithMin(amount, amount, mode);
+        }
+
         (
             bytes1 place,
             bytes1 approvalType,

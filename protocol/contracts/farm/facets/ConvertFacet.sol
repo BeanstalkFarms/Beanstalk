@@ -12,6 +12,7 @@ import "../../libraries/LibSafeMath32.sol";
 import "../../libraries/Convert/LibConvert.sol";
 import "../../libraries/LibInternal.sol";
 import "../../libraries/LibDelegate.sol";
+import "../../libraries/LibTractor.sol";
 import "../ReentrancyGuard.sol";
 
 /**
@@ -71,6 +72,16 @@ contract ConvertFacet is ReentrancyGuard {
         uint32[] memory crates,
         uint256[] memory amounts
     ) external nonReentrant returns (ConvertResult memory result) {
+        {
+            address publisher = LibTractor.getBlueprintPublisher();
+
+            // if publisher is not address(1), it's in the middle of tractor operation
+            // and we can skip approval check
+            if (publisher != address(1)) {
+                return _convert(publisher, convertData, crates, amounts);
+            }
+        }
+
         (
             bytes1 place,
             bytes1 approvalType,

@@ -3,9 +3,12 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "../ReentrancyGuard.sol";
 import "../../libraries/LibBytes.sol";
 import "../../libraries/LibFarm.sol";
+import "../../libraries/LibTractor.sol";
+import "../../libraries/LibPermit.sol";
 
 /**
  * @title TractorFacet handles tractor and blueprint operations.
@@ -27,16 +30,8 @@ contract TractorFacet is ReentrancyGuard {
     /**********/
 
     /// @dev Emitted on publishBlueprint()
-    /// @param publisher The publisher address
-    /// @param predicates Predicates data
-    /// @param data Blueprint data
-    /// @param calldataCopyParams Blueprint calldata copy params
-    event PublishBlueprint(
-        address indexed publisher,
-        bytes[] predicates,
-        bytes data,
-        bytes32[] calldataCopyParams
-    );
+    /// @param blueprint Blueprint object
+    event PublishBlueprint(LibTractor.Blueprint blueprint);
 
     /// @dev Emitted on destroyBlueprint()
     /// @param blueprintHash Blueprint Hash
@@ -47,6 +42,25 @@ contract TractorFacet is ReentrancyGuard {
     /// @param blueprintHash Blueprint Hash
     event Tractor(address indexed operator, bytes32 blueprintHash);
 
+    /*************/
+    /* Modifiers */
+    /*************/
+
+    modifier verifySignature(LibTractor.Blueprint calldata blueprint) {
+        // get blueprint hash
+        bytes32 blueprintHash = LibTractor.getBlueprintHash(blueprint);
+
+        bytes32 hash = LibPermit._hashTypedDataV4(blueprintHash);
+
+        address signer = ECDSA.recover(hash, blueprint.signature);
+        require(
+            signer == blueprint.publisher,
+            "TractorFacet: invalid signature"
+        );
+
+        _;
+    }
+
     /******************/
     /* User Functions */
     /******************/
@@ -55,167 +69,85 @@ contract TractorFacet is ReentrancyGuard {
     ///
     /// Emits {PublishBlueprint} event
     ///
-    /// @param predicates An array of predicates data
-    /// @param data Blueprint data
-    /// @param calldataCopyParams Blueprint calldata copy params
-    /// @param initialPredicateStates The initial predicate states
-    function publishBlueprint(
-        bytes[] calldata predicates,
-        bytes calldata data,
-        bytes32[] calldata calldataCopyParams,
-        bytes[] calldata initialPredicateStates
-    ) external {
-        // get publisher address
-        address publisher = msg.sender;
-
-        // create Blueprint instantce
-        Blueprint memory blueprint = Blueprint({
-            publisher: publisher,
-            predicates: predicates,
-            data: data,
-            calldataCopyParams: calldataCopyParams
-        });
-
-        // get blueprint hash
-        bytes32 hash = keccak256(abi.encode(blueprint));
-
-        // load blueprint state from storage
-        BlueprintState storage bs = s.blueprintStates[hash];
-
-        // blueprint must be inactive
-        require(!bs.isActive, "TractorFacet: Blueprint already exist");
-
-        // mark blueprint as active
-        bs.isActive = true;
-
-        // store initial predicate states for blueprint
-        uint256 length = initialPredicateStates.length;
-        for (uint256 i; i != length; ++i) {
-            bytes memory ps = initialPredicateStates[i];
-            if (ps.length > 0) {
-                bs.predicateStates[i] = ps;
-            }
-        }
-
+    /// @param blueprint Blueprint object
+    function publishBlueprint(LibTractor.Blueprint calldata blueprint)
+        external
+        verifySignature(blueprint)
+    {
         // emits event
-        emit PublishBlueprint(publisher, predicates, data, calldataCopyParams);
+        emit PublishBlueprint(blueprint);
     }
 
     /// @notice Destroy existing blueprint
     ///
     /// Emits {DestroyBlueprint} event
     ///
-    /// @param predicates An array of predicates data
-    /// @param data Blueprint data
-    /// @param calldataCopyParams Blueprint calldata copy params
-    function destroyBlueprint(
-        bytes[] calldata predicates,
-        bytes calldata data,
-        bytes32[] calldata calldataCopyParams
-    ) external {
-        // get publisher address
-        address publisher = msg.sender;
-
-        // create Blueprint instantce
-        Blueprint memory blueprint = Blueprint({
-            publisher: publisher,
-            predicates: predicates,
-            data: data,
-            calldataCopyParams: calldataCopyParams
-        });
-
+    /// @param blueprint Blueprint object
+    function destroyBlueprint(LibTractor.Blueprint calldata blueprint)
+        external
+        verifySignature(blueprint)
+    {
         // get blueprint hash
-        bytes32 hash = keccak256(abi.encode(blueprint));
+        bytes32 blueprintHash = LibTractor.getBlueprintHash(blueprint);
 
-        // blueprint must be active
-        require(
-            s.blueprintStates[hash].isActive,
-            "TractorFacet: Blueprint does not exist"
-        );
-
-        // destroy blueprint
-        delete s.blueprintStates[hash];
+        // cancel blueprint
+        LibTractor.cancelBlueprint(blueprintHash);
 
         // emits event
-        emit DestroyBlueprint(hash);
+        emit DestroyBlueprint(blueprintHash);
     }
 
-    /// @notice View blueprint state
-    /// @param publisher Publisher address
-    /// @param predicates An array of predicates data
-    /// @param data Blueprint data
-    /// @param calldataCopyParams Blueprint calldata copy params
-    /// @return isActive Boolean flag indicating whether blueprint is active or not
-    /// @return predicateStates Current predicate states of the blueprint. Empty if blueprint is not active
-    function viewBlueprint(
-        address publisher,
-        bytes[] calldata predicates,
-        bytes calldata data,
-        bytes32[] calldata calldataCopyParams
-    ) external view returns (bool isActive, bytes[] memory predicateStates) {
-        // create Blueprint instantce
-        Blueprint memory blueprint = Blueprint({
-            publisher: publisher,
-            predicates: predicates,
-            data: data,
-            calldataCopyParams: calldataCopyParams
-        });
-
-        // get blueprint hash
-        bytes32 hash = keccak256(abi.encode(blueprint));
-
-        // get blueprint state
-        BlueprintState storage bs = s.blueprintStates[hash];
-        isActive = bs.isActive;
-
-        // if blueprint is active, get current predicate states
-        if (isActive) {
-            uint256 length = predicates.length;
-            predicateStates = new bytes[](length);
-
-            for (uint256 i; i != length; ++i) {
-                predicateStates[i] = bs.predicateStates[i];
-            }
-        }
-    }
-
-    /// @notice View blueprint state
-    /// @param blueprintHash Blueprint hash
-    /// @return isActive Boolean flag indicating whether blueprint is active or not
-    function viewBlueprint(bytes32 blueprintHash)
+    /// @notice return current blueprint nonce
+    /// @param blueprint Blueprint object
+    /// @return nonce current blueprint nonce
+    function blueprintNonce(LibTractor.Blueprint calldata blueprint)
         external
         view
-        returns (bool isActive)
+        returns (uint256)
     {
-        return s.blueprintStates[blueprintHash].isActive;
+        // get blueprint hash
+        bytes32 blueprintHash = LibTractor.getBlueprintHash(blueprint);
+
+        return LibTractor.getBlueprintNonce(blueprintHash);
     }
 
     /// @notice Tractor Operation
     ///
     /// Emits {Tractor} event
     ///
-    /// @param blueprint Blueprint struct
+    /// @param blueprint Blueprint object
     /// @param callData callData inputed by tractor operator
-    function tractor(Blueprint memory blueprint, bytes calldata callData)
-        external
-        nonReentrant
-    {
-        // get hash for blueprint
-        bytes32 hash = keccak256(abi.encode(blueprint));
+    function tractor(
+        LibTractor.Blueprint calldata blueprint,
+        bytes calldata callData
+    ) external nonReentrant verifySignature(blueprint) {
+        require(
+            blueprint.startTime < block.timestamp &&
+                block.timestamp < blueprint.endTime,
+            "TractorFacet: blueprint is not active"
+        );
 
-        // get blueprint state
-        BlueprintState storage bs = s.blueprintStates[hash];
+        // get blueprint hash
+        bytes32 blueprintHash = LibTractor.getBlueprintHash(blueprint);
 
-        // gheck if blueprint is active
-        require(bs.isActive, "TractorFacet: Blueprint is not active");
+        // check/increment blueprint nonce
+        {
+            // get blueprint nonce
+            uint256 nonce = LibTractor.getBlueprintNonce(blueprintHash);
+
+            require(
+                nonce < blueprint.maxNonce,
+                "TractorFacet: maxNonce reached"
+            );
+
+            // increment blueprint nonce
+            LibTractor.incrementBlueprintNonce(blueprintHash);
+        }
 
         // extract blueprint type and data from blueprint.data
-        bytes1 blueprintType;
-        bytes memory blueprintData;
+        bytes1 blueprintType = blueprint.data[0];
+        bytes memory blueprintData = LibBytes.sliceFrom(blueprint.data, 1);
         {
-            blueprintData = blueprint.data;
-            bytes1 blueprintType = blueprintData[0];
-
             // copy callData
             uint256 length = blueprint.calldataCopyParams.length;
             for (uint256 i; i != length; ++i) {
@@ -244,8 +176,6 @@ contract TractorFacet is ReentrancyGuard {
                     );
                 }
             }
-
-            blueprintData = LibBytes.sliceFrom(blueprintData, 1);
         }
 
         bytes[] memory results;
@@ -272,10 +202,10 @@ contract TractorFacet is ReentrancyGuard {
                 results[i] = LibFarm.advancedFarmMem(data[i], results);
             }
         } else {
-            revert("TractorFacet: Unknown blueprint type");
+            revert("TractorFacet: unknown blueprint type");
         }
 
         // emits event
-        emit Tractor(msg.sender, hash);
+        emit Tractor(msg.sender, blueprintHash);
     }
 }

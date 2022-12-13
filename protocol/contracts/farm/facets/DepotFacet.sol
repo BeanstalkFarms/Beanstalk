@@ -22,7 +22,7 @@ contract DepotFacet {
      * @notice Perform 1 external function call through Pipeline
      * @param p A function call stored in Pipe struct
      * @return result The function call return data
-    **/
+     **/
     function pipe(Pipe calldata p)
         external
         payable
@@ -31,13 +31,12 @@ contract DepotFacet {
         result = IPipeline(PIPELINE).pipe(p);
     }
 
-
     /**
      * @notice Perform a list of a external function calls through Pipeline
      * Does not support sending Ether in the call
-     * @param pipes a list of function calls stored in Pipe struct 
+     * @param pipes a list of function calls stored in Pipe struct
      * @return results A list return data from pipe function calls
-    **/
+     **/
     function multiPipe(Pipe[] calldata pipes)
         external
         payable
@@ -51,7 +50,7 @@ contract DepotFacet {
      * Note: See IPipeline.AdvancedData and LibFunction.buildAdvancedCalldata
      * @param pipes a list of Advanced Pipes
      * @return results a list of return values from the advanced function calls
-    **/
+     **/
     function advancedPipe(AdvancedPipe[] calldata pipes, uint256 value)
         external
         payable
@@ -66,7 +65,7 @@ contract DepotFacet {
      * @param p A function call stored in Pipe struct
      * @param value The Ether value to send in the transaction
      * @return result The function call return data
-    **/
+     **/
     function etherPipe(Pipe calldata p, uint256 value)
         external
         payable
@@ -80,7 +79,7 @@ contract DepotFacet {
      * @notice View function to return the result of a function call
      * @param p A function call stored in Pipe struct
      * @return result The function call return data
-    **/
+     **/
     function readPipe(Pipe calldata p)
         external
         view
@@ -90,5 +89,24 @@ contract DepotFacet {
         // Use a static call to ensure no state modification
         (success, result) = p.target.staticcall(p.data);
         LibFunction.checkReturn(success, result);
+    }
+
+    /**
+     * @notice View function to return the result of a function call
+     * @dev if the return value is false, it reverts
+     * @param p A function call stored in Pipe struct
+     * @return result The function call return data
+     **/
+    function validPipe(Pipe calldata p) external returns (bytes memory result) {
+        bool success;
+        // Use a static call to ensure no state modification
+        (success, result) = p.target.staticcall(p.data);
+
+        LibFunction.checkReturn(success, result);
+
+        bool res = abi.decode(results, (bool));
+        if (!res) {
+            revert();
+        }
     }
 }
