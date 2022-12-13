@@ -159,6 +159,12 @@ module.exports = {
         }
       },
     ],
+    overrides: {
+      "@uniswap/v3-core/contracts/libraries/TickBitmap.sol": {
+        version: "0.7.6",
+        settings: { }
+      }
+    }
   },
   gasReporter: {
     enabled: true
