@@ -776,7 +776,7 @@ describe("Root", function () {
           ).to.revertedWith("Redeem: shares is greater than maxRootsIn");
         });
 
-        it.only("reverts if redeem more than owned shares", async function () {
+        it("reverts if redeem more than owned shares", async function () {
           await this.rootToken
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
