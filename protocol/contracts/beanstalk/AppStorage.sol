@@ -113,7 +113,7 @@ contract Account {
         uint256 roots; // A Farmer's Root balance.
         uint256 wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
         mapping(address => mapping(uint32 => Deposit)) deposits; // A Farmer's Silo Deposits stored as a map from Token address to Season of Deposit to Deposit.
-        mapping(address => mapping(uint32 => uint256)) withdrawals; // DEPRECATED - unneeded after removing the withdraw lockup. 
+        mapping(address => mapping(uint32 => uint256)) withdrawals; // A Farmer's Withdrawals from the Silo stored as a map from Token address to Season the Withdrawal becomes Claimable to Withdrawn amount of Tokens.
         SeasonOfPlenty sop; // A Farmer's Season Of Plenty storage.
         mapping(address => mapping(address => uint256)) depositAllowances; // Spender => Silo Token
         mapping(address => mapping(IERC20 => uint256)) tokenAllowances; // Token allowances
@@ -212,7 +212,12 @@ contract Storage {
         // Apologies if this makes it confusing :(
         uint32 current; // The current Season in Beanstalk.
         uint32 lastSop; // The Season in which the most recent consecutive series of Seasons of Plenty started.
-        uint8 withdrawSeasons;  // DEPRECATED due to removing the withdraw lockup.
+
+        /*
+         * @notice The number of seasons required to Withdraw a Deposit.
+         * @dev Also referred to as the "withdraw freeze". See {LibTokenSilo.withdrawFreeze}.
+         */
+        uint8 withdrawSeasons;
         uint32 lastSopSeason; // The Season in which the most recent consecutive series of Seasons of Plenty ended.
         uint32 rainStart; // rainStart stores the most recent Season in which Rain started.
         bool raining; // True if it is Raining (P < 1, Pod Rate Excessively Low).
@@ -309,8 +314,7 @@ struct AppStorage {
 
     //////////////////////////////////
 
-    uint128 earnedBeans; // The number of Beans distributed to the Silo that have not yet been Deposited as a result of the Earn function being called.
-    uint128 newEarnedStalk; // The number of stalk distrubuted to the silo that has not been deposited. 
+    uint256 earnedBeans; // The number of Beans distributed to the Silo that have not yet been Deposited as a result of the Earn function being called.
     uint256[14] deprecated2; // DEPRECATED - 14 slots that used to store state variables which have been deprecated through various updates. Storage slots can be left alone or reused.
     mapping (address => Account.State) a; // A mapping from Farmer address to Account state.
     uint32 bip0Start; // DEPRECATED - bip0Start was used to aid in a migration that occured alongside BIP-0.

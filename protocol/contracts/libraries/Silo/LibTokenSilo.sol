@@ -49,6 +49,14 @@ library LibTokenSilo {
     /**
      * @dev Decrement the total amount of `token` deposited in the Silo.
      */
+    function decrementTotalDeposited(address token, uint256 amount) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.siloBalances[token].deposited = s.siloBalances[token].deposited.sub(
+            amount
+        );
+    }
+
+    //////////////////////// ADD DEPOSIT ////////////////////////
 
     /**
      * @return seeds The amount of Seeds received for this Deposit.
@@ -143,22 +151,6 @@ library LibTokenSilo {
      * asymmetry occurs because {removeDepositFromAccount} is called in a loop
      * in places where multiple deposits are removed simultaneously, including
      * {TokenSilo-removeDepositsFromAccount} and {TokenSilo-_transferDeposits}.
-    /**
-     * @dev Remove `amount` of `token` from a user's Deposit in `season`.
-     *
-     * A "Crate" refers to the existing Deposit in storage at:
-     *  `s.a[account].deposits[token][season]`
-     *
-     * Partially removing a Deposit should scale its BDV proportionally. For ex.
-     * removing 80% of the tokens from a Deposit should reduce its BDV by 80%.
-     *
-     * During an update, `amount` & `bdv` are cast uint256 -> uint128 to
-     * optimize storage cost, since both values can be packed into one slot.
-     *
-     * This function DOES **NOT** EMIT a {RemoveDeposit} event. This
-     * asymmetry occurs because {removeDepositFromAccount} is called in a loop
-     * in places where multiple deposits are removed simultaneously, including
-     * {TokenSilo-removeDepositsFromAccount} and {TokenSilo-_transferDeposits}.
      */
     function removeDepositFromAccount(
         address account,
@@ -224,13 +216,6 @@ library LibTokenSilo {
         }
     }
 
-    //////////////////////// GETTERS ////////////////////////
-
-    /**
-     * @dev Calculate the BDV ("Bean Denominated Value") for `amount` of `token`.
-     * 
-     * Makes a call to a BDV function defined in the SiloSettings for this 
-     * `token`. See {AppStorage.sol:Storage-SiloSettings} for more information.
     //////////////////////// GETTERS ////////////////////////
 
     /**
@@ -318,17 +303,11 @@ library LibTokenSilo {
     /**
      * @dev Get the number of Seeds per BDV for a whitelisted token.
      */
-    /**
-     * @dev Get the number of Seeds per BDV for a whitelisted token.
-     */
     function seeds(address token) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return uint256(s.ss[token].seeds);
     }
 
-    /**
-     * @dev Get the number of Stalk per BDV for a whitelisted token.
-     */
     /**
      * @dev Get the number of Stalk per BDV for a whitelisted token.
      */

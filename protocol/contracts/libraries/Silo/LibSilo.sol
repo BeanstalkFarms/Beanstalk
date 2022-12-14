@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../C.sol";
 import "../LibAppStorage.sol";
-import "../LibPRBMath.sol";
 
 /**
  * @title LibSilo
@@ -16,7 +15,7 @@ import "../LibPRBMath.sol";
  * @notice Contains functions for minting, burning, and transferring of Seeds,
  * Stalk and Roots within the Silo.
  *
- * @dev FIXME (DISCUSS): Here, we refer to "minting" as the combination of
+ * @dev FIXME(DISCUSS): Here, we refer to "minting" as the combination of
  * increasing the total balance of Stalk/Seeds/Roots, as well as allocating
  * them to a particular account. However, in other places throughout Beanstalk
  * (like during the Sunrise), Beanstalk's total balance of Stalk/Seeds increases
@@ -31,7 +30,6 @@ import "../LibPRBMath.sol";
  */
 library LibSilo {
     using SafeMath for uint256;
-    using LibPRBMath for uint256;
     
     //////////////////////// EVENTS ////////////////////////    
 
@@ -165,11 +163,7 @@ library LibSilo {
         if (stalk == 0) return;
 
         // Calculate the amount of Roots for the given amount of Stalk.
-        // We round up to ensure withdraws don't leave roots with no stalk.
-         uint256 roots = s.s.roots.mulDiv(
-            stalk,
-            s.s.stalk,
-            LibPRBMath.Rounding.Up);
+        uint256 roots = s.s.roots.mul(stalk).div(s.s.stalk);
         if (roots > s.a[account].roots) roots = s.a[account].roots;
 
         // Decrease supply of Stalk; Remove Stalk from the balance of `account`

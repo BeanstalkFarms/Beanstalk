@@ -7,14 +7,12 @@ pragma experimental ABIEncoderV2;
 
 import "~/libraries/Decimal.sol";
 import "~/libraries/LibSafeMath32.sol";
-import "~/libraries/LibSafeMath128.sol";
-
 import "~/C.sol";
 import "~/libraries/LibFertilizer.sol";
 import "./Oracle.sol";
 
 /**
- * @author Publius, Brean
+ * @author Publius
  * @title Sun
  **/
 contract Sun is Oracle {
@@ -111,20 +109,15 @@ contract Sun is Oracle {
         // `s.earnedBeans` is an accounting mechanism that tracks the total number
         // of Earned Beans that are claimable by Stalkholders. When claimed via `plant()`,
         // it is decremented. See {Silo.sol:_plant} for more details.
-        s.earnedBeans = s.earnedBeans.add(uint128(amount));
+        s.earnedBeans = s.earnedBeans.add(amount);
 
         // Mint Stalk (as Earned Stalk). Farmers can claim their Earned Stalk via {SiloFacet.sol:plant}.
         //
         // Stalk is created here, rather than in {rewardBeans}, because only
         // Beans that are allocated to the Silo will receive Stalk. 
-        uint256 seasonStalk = amount.mul(C.getStalkPerBean());
-        s.s.stalk = s.s.stalk.add(seasonStalk);
+        s.s.stalk = s.s.stalk.add(amount.mul(C.getStalkPerBean()));
 
-        // `s.newEarnedStalk` is an accounting mechanism that tracks the 
-        //  newly Earned Stalk of the season. Used in plant() to account for 
-        //  linearly distrubting Earned Beans.
-        s.newEarnedStalk = uint128(seasonStalk);
-
+        // 
         s.siloBalances[C.beanAddress()].deposited = s
             .siloBalances[C.beanAddress()]
             .deposited
