@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "./Order.sol";
 import "../../../libraries/LibPermit.sol";
+import "../../../libraries/LibTractor.sol";
 
 /**
  * @author Beanjoyer
@@ -17,12 +18,12 @@ contract MarketplaceFacet is Order {
     using SafeMath for uint256;
 
     /*
-    * Pod Listing
-    */
-    
+     * Pod Listing
+     */
+
     /*
-    * @notice **LEGACY**
-    */
+     * @notice **LEGACY**
+     */
     function createPodListing(
         uint256 index,
         uint256 start,
@@ -54,7 +55,7 @@ contract MarketplaceFacet is Order {
             start,
             amount,
             maxHarvestableIndex,
-            pricingFunction, 
+            pricingFunction,
             mode
         );
     }
@@ -114,7 +115,12 @@ contract MarketplaceFacet is Order {
         uint256 maxPlaceInLine,
         LibTransfer.From mode
     ) external payable returns (bytes32 id) {
-        beanAmount = LibTransfer.receiveToken(C.bean(), beanAmount, msg.sender, mode);
+        beanAmount = LibTransfer.receiveToken(
+            C.bean(),
+            beanAmount,
+            msg.sender,
+            mode
+        );
         return _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine);
     }
 
@@ -124,7 +130,12 @@ contract MarketplaceFacet is Order {
         bytes calldata pricingFunction,
         LibTransfer.From mode
     ) external payable returns (bytes32 id) {
-        beanAmount = LibTransfer.receiveToken(C.bean(), beanAmount, msg.sender, mode);
+        beanAmount = LibTransfer.receiveToken(
+            C.bean(),
+            beanAmount,
+            msg.sender,
+            mode
+        );
         return _createPodOrderV2(beanAmount, maxPlaceInLine, pricingFunction);
     }
 
@@ -174,13 +185,7 @@ contract MarketplaceFacet is Order {
         uint24 pricePerPod,
         uint256 maxPlaceInLine
     ) external view returns (uint256) {
-        return s.podOrders[
-            createOrderId(
-                account, 
-                pricePerPod, 
-                maxPlaceInLine
-            )
-        ];
+        return s.podOrders[createOrderId(account, pricePerPod, maxPlaceInLine)];
     }
 
     function podOrderV2(
@@ -188,14 +193,10 @@ contract MarketplaceFacet is Order {
         uint256 maxPlaceInLine,
         bytes calldata pricingFunction
     ) external view returns (uint256) {
-        return s.podOrders[
-            createOrderIdV2(
-                account, 
-                0,
-                maxPlaceInLine, 
-                pricingFunction
-            )
-        ];
+        return
+            s.podOrders[
+                createOrderIdV2(account, 0, maxPlaceInLine, pricingFunction)
+            ];
     }
 
     function podOrderById(bytes32 id) external view returns (uint256) {
@@ -221,14 +222,37 @@ contract MarketplaceFacet is Order {
         require(amount > 0, "Field: Plot not owned by user.");
         require(end > start && amount >= end, "Field: Pod range invalid.");
         amount = end - start; // Note: SafeMath is redundant here.
-        if (msg.sender != sender && allowancePods(sender, msg.sender) != uint256(-1)) {
-                decrementAllowancePods(sender, msg.sender, amount);
+        if (
+            msg.sender != sender &&
+            allowancePods(sender, msg.sender) != uint256(-1)
+        ) {
+            decrementAllowancePods(sender, msg.sender, amount);
         }
 
-        if (s.podListings[id] != bytes32(0)){
+        if (s.podListings[id] != bytes32(0)) {
             _cancelPodListing(sender, id);
         }
         _transferPlot(sender, recipient, id, start, amount);
+    }
+
+    function tractorTransferPlot(
+        address recipient,
+        uint256 id,
+        uint256 start,
+        uint256 end
+    ) external payable nonReentrant {
+        address publisher = LibTractor.getBlueprintPublisher();
+        require(publisher != address(1));
+
+        uint256 amount = s.a[publisher].field.plots[id];
+        require(amount > 0, "Field: Plot not owned by user.");
+        require(end > start && amount >= end, "Field: Pod range invalid.");
+        amount = end - start; // Note: SafeMath is redundant here.
+
+        if (s.podListings[id] != bytes32(0)) {
+            _cancelPodListing(publisher, id);
+        }
+        _transferPlot(publisher, recipient, id, start, amount);
     }
 
     function approvePods(address spender, uint256 amount)
