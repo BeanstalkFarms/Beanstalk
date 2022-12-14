@@ -15,3 +15,4 @@ diamondCut-*.json
 cache/
 out/
 coverage_data/
+.openzeppelin
