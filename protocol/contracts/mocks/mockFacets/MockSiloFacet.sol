@@ -6,9 +6,8 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "../../farm/facets/SiloFacet/SiloFacet.sol";
+import "../../beanstalk/silo/SiloFacet/SiloFacet.sol";
 import "../../libraries/Silo/LibWhitelist.sol";
-import "../../libraries/Token/LibTransfer.sol";
 
 /**
  * @author Publius
@@ -36,7 +35,7 @@ contract MockSiloFacet is SiloFacet {
     }
 
     function mockUnripeLPDeposit(uint256 t, uint32 _s, uint256 amount, uint256 bdv) external {
-        _update(msg.sender);
+        _mow(msg.sender);
         if (t == 0) {
             s.a[msg.sender].lp.deposits[_s] += amount;
             s.a[msg.sender].lp.depositSeeds[_s] += bdv.mul(4);
@@ -47,21 +46,18 @@ contract MockSiloFacet is SiloFacet {
         LibTokenSilo.incrementTotalDeposited(C.unripeLPAddress(), unripeLP);
         bdv = bdv.mul(C.initialRecap()).div(1e18);
         uint256 seeds = bdv.mul(s.ss[C.unripeLPAddress()].seeds);
-        uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalk).add(LibSilo.stalkReward(seeds, season() - _s));
+        uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalk).add(LibSilo.stalkReward(seeds, _season() - _s));
         LibSilo.mintSeedsAndStalk(msg.sender, seeds, stalk);
-        LibTransfer.receiveToken(IERC20(C.unripeLPAddress()), unripeLP, msg.sender, LibTransfer.From.EXTERNAL);
-
     }
-    
+
     function mockUnripeBeanDeposit(uint32 _s, uint256 amount) external {
-        _update(msg.sender);
+        _mow(msg.sender);
         s.a[msg.sender].bean.deposits[_s] += amount;
         LibTokenSilo.incrementTotalDeposited(C.unripeBeanAddress(), amount);
         amount = amount.mul(C.initialRecap()).div(1e18);
         uint256 seeds = amount.mul(s.ss[C.unripeBeanAddress()].seeds);
-        uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalk).add(LibSilo.stalkReward(seeds, season() - _s));
+        uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalk).add(LibSilo.stalkReward(seeds, _season() - _s));
         LibSilo.mintSeedsAndStalk(msg.sender, seeds, stalk);
-        LibTransfer.receiveToken(IERC20(C.unripeBeanAddress()), amount, msg.sender, LibTransfer.From.EXTERNAL);
     }
 
     function getUnripeForAmount(uint256 t, uint256 amount) private pure returns (uint256) {

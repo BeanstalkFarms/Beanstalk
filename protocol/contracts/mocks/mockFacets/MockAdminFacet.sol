@@ -1,8 +1,8 @@
 /*
  SPDX-License-Identifier: MIT
 */
-import "../../C.sol";
-import "../../farm/facets/SeasonFacet/SeasonFacet.sol";
+import "~/C.sol";
+import "~/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;

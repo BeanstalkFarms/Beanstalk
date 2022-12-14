@@ -6,7 +6,7 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "../../farm/facets/SeasonFacet/SeasonFacet.sol";
+import "~/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
 import "../MockToken.sol";
 
 /**
@@ -21,6 +21,8 @@ interface ResetPool {
 contract MockSeasonFacet is SeasonFacet {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
+    using Decimal for Decimal.D256;
+
 
     event UpdateTWAPs(uint256[2] balances);
     event DeltaB(int256 deltaB);
@@ -32,7 +34,6 @@ contract MockSeasonFacet is SeasonFacet {
     function siloSunrise(uint256 amount) public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
-        s.season.timestamp = block.timestamp;
         mockStepSilo(amount);
     }
 

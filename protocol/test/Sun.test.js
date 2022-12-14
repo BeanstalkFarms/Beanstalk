@@ -97,6 +97,8 @@ describe('Sun', function () {
     expect(await this.silo.totalEarnedBeans()).to.be.equal('100');
   })
 
+  //
+
   it("all harvestable and all fertilizable", async function () {
     await this.field.incrementTotalPodsE(to6('50'));
     await this.fertilizer.connect(owner).addFertilizerOwner('6274', '20', '0')
@@ -176,8 +178,4 @@ describe('Sun', function () {
     expect(await this.silo.totalStalk()).to.be.equal(toStalk('200'));
     expect(await this.silo.totalEarnedBeans()).to.be.equal(to6('200'));
   })
-
-  // describe("Earned Bean Distrubution", function() {
-  //   it("Propertly distrubutes")
-  // })
 })

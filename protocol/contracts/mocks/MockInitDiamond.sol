@@ -8,15 +8,15 @@ pragma experimental ABIEncoderV2;
 import "../interfaces/IBean.sol";
 import "../interfaces/IWETH.sol";
 import "../mocks/MockToken.sol";
-import {AppStorage} from "../farm/AppStorage.sol";
+import {AppStorage} from "../beanstalk/AppStorage.sol";
 import "../C.sol";
-import "../libraries/Silo/LibWhitelist.sol";
+import "~/beanstalk/init/InitWhitelist.sol";
 
 /**
  * @author Publius
  * @title Mock Init Diamond
 **/
-contract MockInitDiamond {
+contract MockInitDiamond is InitWhitelist {
 
     event Incentivization(address indexed account, uint256 beans);
 
@@ -54,7 +54,7 @@ contract MockInitDiamond {
         s.season.timestamp = block.timestamp;
         s.isFarm = 1;
 
-        LibWhitelist.whitelistPools();
+        whitelistPools();
     }
 
 }

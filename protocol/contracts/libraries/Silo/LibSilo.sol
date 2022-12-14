@@ -8,23 +8,67 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../C.sol";
 import "../LibAppStorage.sol";
-import "../LibPRBMath.sol";
-
-
 
 /**
+ * @title LibSilo
  * @author Publius
- * @title Lib Silo
- **/
+ * @notice Contains functions for minting, burning, and transferring of Seeds,
+ * Stalk and Roots within the Silo.
+ *
+ * @dev FIXME(DISCUSS): Here, we refer to "minting" as the combination of
+ * increasing the total balance of Stalk/Seeds/Roots, as well as allocating
+ * them to a particular account. However, in other places throughout Beanstalk
+ * (like during the Sunrise), Beanstalk's total balance of Stalk/Seeds increases
+ * without allocating to a particular account. One example is {Sun-rewardToSilo}
+ * which increases `s.s.stalk` but does not allocate it to any account. The
+ * allocation occurs during `{SiloFacet-plant}`. Does this change how we should
+ * call "minting"?
+ *
+ * In the ERC20 context, "minting" increases the supply of a token and allocates
+ * the new tokens to an account in one action. I've adjusted the comments below
+ * to use "mint" in the same sense.
+ */
 library LibSilo {
     using SafeMath for uint256;
-    using LibPRBMath for uint256;
+    
+    //////////////////////// EVENTS ////////////////////////    
 
+    /**
+     * @notice Emitted when `account` gains or loses Seeds.
+     * @param account The account that gained or lost Seeds.
+     * @param delta The change in Seeds.
+     *   
+     * @dev Should be emitted any time a Deposit is added, removed or
+     * transferred.
+     * 
+     * BIP-24 included a one-time re-emission of {SeedsBalanceChanged} for
+     * accounts that had executed a Deposit transfer between the Replant and
+     * BIP-24 execution. For more, see:
+     *
+     * [BIP-24](https://bean.money/bip-24)
+     * [Event-Emission](https://github.com/BeanstalkFarms/BIP-24-Event-Emission)
+     */
     event SeedsBalanceChanged(
         address indexed account,
         int256 delta
     );
-
+     
+     /**
+     * @notice Emitted when `account` gains or loses Stalk.
+     * @param account The account that gained or lost Stalk.
+     * @param delta The change in Stalk.
+     * @param deltaRoots The change in Roots.
+     *   
+     * @dev Should be emitted anytime a Deposit is added, removed or transferred
+     * AND anytime an account Mows Grown Stalk.
+     * 
+     * BIP-24 included a one-time re-emission of {StalkBalanceChanged} for
+     * accounts that had executed a Deposit transfer between the Replant and
+     * BIP-24 execution. For more, see:
+     *
+     * [BIP-24](https://bean.money/bip-24)
+     * [Event-Emission](https://github.com/BeanstalkFarms/BIP-24-Event-Emission)
+     */
     event StalkBalanceChanged(
         address indexed account,
         int256 delta,
@@ -95,7 +139,7 @@ library LibSilo {
         burnSeeds(account, seeds);
         burnStalk(account, stalk); // also burns Roots
     }
-
+    
     /**
      * @dev Burns Seeds from `account`.
      */
@@ -117,29 +161,27 @@ library LibSilo {
     function burnStalk(address account, uint256 stalk) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return;
-        // round up 
-        uint256 roots = s.s.roots.mulDiv(
-            stalk,
-            s.s.stalk,
-            LibPRBMath.Rounding.Up);
+
+        // Calculate the amount of Roots for the given amount of Stalk.
+        uint256 roots = s.s.roots.mul(stalk).div(s.s.stalk);
         if (roots > s.a[account].roots) roots = s.a[account].roots;
 
-        // subtract stalk and roots from account and global state 
+        // Decrease supply of Stalk; Remove Stalk from the balance of `account`
         s.s.stalk = s.s.stalk.sub(stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
-
 
         // Decrease supply of Roots; Remove Roots from the balance of `account`
         s.s.roots = s.s.roots.sub(roots);
         s.a[account].roots = s.a[account].roots.sub(roots);
-
-       
         
+        // If it is Raining, subtract Roots from both the account's and 
+        // Beanstalk's RainRoots balances.
+        // For more info on Rain, see {FIXME(doc)}. 
         if (s.season.raining) {
             s.r.roots = s.r.roots.sub(roots);
             s.a[account].sop.roots = s.a[account].roots;
         }
-    
+
         emit StalkBalanceChanged(account, -int256(stalk), -int256(roots));
     }
 
@@ -204,7 +246,7 @@ library LibSilo {
         s.a[recipient].roots = s.a[recipient].roots.add(roots);
         emit StalkBalanceChanged(recipient, int256(stalk), int256(roots));
     }
-
+    
     //////////////////////// UTILITIES ////////////////////////
 
     /**

@@ -14,3 +14,5 @@ diamondCut-*.json
 # Foundry
 cache/
 out/
+coverage_data/
+.openzeppelin
