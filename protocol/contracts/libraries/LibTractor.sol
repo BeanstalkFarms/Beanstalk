@@ -14,7 +14,7 @@ library LibTractor {
 
     struct TractorStorage {
         mapping(bytes32 => uint256) blueprintNonce;
-        address isTractorAndBlueprintPublisher;
+        address activePublisher;
     }
 
     // Blueprint stores blueprint related values
@@ -58,18 +58,18 @@ library LibTractor {
     /// @notice set blueprint publisher address
     /// @param publisher blueprint publisher address
     function setPublisher(address publisher) internal {
-        tractorStorage().isTractorAndBlueprintPublisher = publisher;
+        tractorStorage().activePublisher = publisher;
     }
 
     /// @notice reset blueprint publisher address
     function resetPublisher() internal {
-        tractorStorage().isTractorAndBlueprintPublisher = address(1);
+        tractorStorage().activePublisher = address(1);
     }
 
-    /// @notice return current isTractorAndBlueprintPublisher address
-    /// @return publisher current isTractorAndBlueprintPublisher address
+    /// @notice return current activePublisher address
+    /// @return publisher current activePublisher address
     function getBlueprintPublisher() internal view returns (address) {
-        return tractorStorage().isTractorAndBlueprintPublisher;
+        return tractorStorage().activePublisher;
     }
 
     /// @notice calculates blueprint hash

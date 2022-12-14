@@ -44,11 +44,11 @@ describe('Field', function () {
 
     it('No Soil', async function () {
       await this.field.incrementTotalSoilE('100')
-      await expect(this.field.connect(user).sowWithMin('1', '3', EXTERNAL)).to.be.revertedWith('Field: Sowing below min or 0 pods.')
+      await expect(this.field.connect(user).sowWithMin(userAddress, '1', '3', EXTERNAL)).to.be.revertedWith('Field: Sowing below min or 0 pods.')
     });
 
     it('No Pods', async function () {
-      await expect(this.field.connect(user).sowWithMin('1', '0', EXTERNAL)).to.be.revertedWith('Field: Sowing below min or 0 pods.')
+      await expect(this.field.connect(user).sowWithMin(userAddress, '1', '0', EXTERNAL)).to.be.revertedWith('Field: Sowing below min or 0 pods.')
     });
   });
 
@@ -162,7 +162,7 @@ describe('Field', function () {
     describe('with min', async function () {
       beforeEach(async function () {
         await this.field.incrementTotalSoilE(to6('100'))
-        this.result = await this.field.connect(user).sowWithMin(to6('200'), to6('100'), EXTERNAL)
+        this.result = await this.field.connect(user).sowWithMin(userAddress, to6('200'), to6('100'), EXTERNAL)
       })
 
       it('updates user\'s balance', async function () {
@@ -188,7 +188,7 @@ describe('Field', function () {
     describe('with min, but enough soil', async function () {
       beforeEach(async function () {
         await this.field.incrementTotalSoilE(to6('200'))
-        this.result = await this.field.connect(user).sowWithMin(to6('100'), to6('50'), EXTERNAL)
+        this.result = await this.field.connect(user).sowWithMin(userAddress, to6('100'), to6('50'), EXTERNAL)
       })
 
       it('updates user\'s balance', async function () {

@@ -214,14 +214,6 @@ contract SiloFacet is TokenSilo {
     /// @param account user address
     /// @return beans number of beans planted
     function plantFor(address account) external returns (uint256 beans) {
-        address publisher = LibTractor.getBlueprintPublisher();
-
-        // if publisher is not address(1), it's in the middle of tractor operation
-        // and we can skip approval check
-        if (publisher != address(1)) {
-            return _plant(publisher);
-        }
-
         (
             bytes1 place,
             bytes1 approvalType,

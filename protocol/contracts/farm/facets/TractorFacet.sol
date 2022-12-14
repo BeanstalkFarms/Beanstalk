@@ -149,8 +149,8 @@ contract TractorFacet is ReentrancyGuard {
         bytes memory blueprintData = LibBytes.sliceFrom(blueprint.data, 1);
         {
             // copy callData
-            uint256 length = blueprint.calldataCopyParams.length;
-            for (uint256 i; i != length; ++i) {
+            uint256 copyParamsLength = blueprint.calldataCopyParams.length;
+            for (uint256 i; i != copyParamsLength; ++i) {
                 // bytes32 copyParams
                 // [ 2 bytes | 10 bytes  |  10 bytes  | 10 bytes ]
                 // [   N/A   | copyIndex | pasteIndex |  length  ]

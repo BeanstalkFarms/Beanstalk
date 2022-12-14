@@ -104,9 +104,9 @@ contract DepotFacet {
 
         LibFunction.checkReturn(success, result);
 
-        bool res = abi.decode(results, (bool));
+        bool res = abi.decode(result, (bool));
         if (!res) {
-            revert();
+            revert("Depot: Valid Pipe returned false");
         }
     }
 }

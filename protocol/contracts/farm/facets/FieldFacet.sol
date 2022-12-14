@@ -44,10 +44,11 @@ contract FieldFacet is ReentrancyGuard {
         payable
         returns (uint256)
     {
-        return sowWithMin(amount, amount, mode);
+        return sowWithMin(msg.sender, amount, amount, mode);
     }
 
     function sowWithMin(
+        address account,
         uint256 amount,
         uint256 minAmount,
         LibTransfer.From mode
@@ -58,15 +59,15 @@ contract FieldFacet is ReentrancyGuard {
             "Field: Sowing below min or 0 pods."
         );
         if (amount < sowAmount) sowAmount = amount;
-        return _sow(sowAmount, mode);
+        return _sow(account, sowAmount, mode);
     }
 
-    function _sow(uint256 amount, LibTransfer.From mode)
+    function _sow(address account, uint256 amount, LibTransfer.From mode)
         internal
         returns (uint256 pods)
     {
-        amount = LibTransfer.burnToken(C.bean(), amount, msg.sender, mode);
-        pods = LibDibbler.sow(amount, msg.sender);
+        amount = LibTransfer.burnToken(C.bean(), amount, account, mode);
+        pods = LibDibbler.sow(amount, account);
     }
 
     /**
@@ -74,25 +75,17 @@ contract FieldFacet is ReentrancyGuard {
      */
 
     /**
-     * @notice sowFor sow on behalf of account
+     * @notice sowWithMinFor sow on behalf of account
      * @param account user address
      * @param amount amount to sow
      * @param mode transfer mode
      * @return pods amount
      */
-    function sowFor(
+    function sowWithMinFor(
         address account,
         uint256 amount,
         LibTransfer.From mode
     ) external payable returns (uint256 pods) {
-        address publisher = LibTractor.getBlueprintPublisher();
-
-        // if publisher is not address(1), it's in the middle of tractor operation
-        // and we can skip approval check
-        if (publisher != address(1)) {
-            return sowWithMin(amount, amount, mode);
-        }
-
         (
             bytes1 place,
             bytes1 approvalType,
@@ -113,7 +106,7 @@ contract FieldFacet is ReentrancyGuard {
             );
         }
 
-        pods = sowWithMin(amount, amount, mode);
+        pods = sowWithMin(account, amount, amount, mode);
 
         // POST-APPROVAL
         if (place == 0x01) {
