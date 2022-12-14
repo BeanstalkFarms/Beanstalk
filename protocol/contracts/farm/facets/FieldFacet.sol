@@ -62,12 +62,24 @@ contract FieldFacet is ReentrancyGuard {
         return _sow(account, sowAmount, mode);
     }
 
-    function _sow(address account, uint256 amount, LibTransfer.From mode)
-        internal
-        returns (uint256 pods)
-    {
+    function _sow(
+        address account,
+        uint256 amount,
+        LibTransfer.From mode
+    ) internal returns (uint256 pods) {
         amount = LibTransfer.burnToken(C.bean(), amount, account, mode);
         pods = LibDibbler.sow(amount, account);
+    }
+
+    function tractorSowWithMin(
+        uint256 amount,
+        uint256 minAmount,
+        LibTransfer.From mode
+    ) public payable returns (uint256) {
+        address publisher = LibTractor.getBlueprintPublisher();
+        require(publisher != address(1));
+
+        sowWithMin(publisher, amount, minAmount, mode);
     }
 
     /**
