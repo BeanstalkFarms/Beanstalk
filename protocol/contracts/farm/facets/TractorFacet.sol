@@ -15,6 +15,8 @@ import "../../libraries/LibPermit.sol";
  * @author 0xm00neth
  */
 contract TractorFacet is ReentrancyGuard {
+    using ECDSA for bytes32;
+
     /*********/
     /* Enums */
     /*********/
@@ -50,9 +52,9 @@ contract TractorFacet is ReentrancyGuard {
         // get blueprint hash
         bytes32 blueprintHash = LibTractor.getBlueprintHash(blueprint);
 
-        bytes32 hash = LibPermit._hashTypedDataV4(blueprintHash);
+        bytes32 hash = blueprintHash.toEthSignedMessageHash();
 
-        address signer = ECDSA.recover(hash, blueprint.signature);
+        address signer = hash.recover(blueprint.signature);
         require(
             signer == blueprint.publisher,
             "TractorFacet: invalid signature"

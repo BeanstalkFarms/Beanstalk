@@ -4,7 +4,7 @@ const { deployPipeline } = require("../scripts/pipeline.js");
 const { getAltBeanstalk, getBean, getUsdc } = require("../utils/contracts.js");
 const { toBN, encodeAdvancedData } = require("../utils/index.js");
 const { impersonateSigner } = require("../utils/signer.js");
-const { getBlueprintHash } = require("./utils/tractor.js");
+const { getBlueprintHash, signBlueprint } = require("./utils/tractor.js");
 const {
   EXTERNAL,
   INTERNAL,
@@ -89,11 +89,13 @@ describe("Tractor", function () {
       .connect(user)
       .approve(this.beanstalk.address, to18("100000000000"));
 
-    this.mockBlueprint = {
-      predicates: ["0x1234567890", "0x1234567890"],
+    this.blueprint = {
+      publisher: publisher.address,
       data: "0x1234567890",
       calldataCopyParams: [],
-      initialPredicateStates: ["0x1234567890", "0x1234567890", "0x1234567890"],
+      maxNonce: 100,
+      startTime: Date.now() - 10 * 3600,
+      endTime: Date.now() + 10 * 3600,
     };
   });
 
@@ -106,146 +108,30 @@ describe("Tractor", function () {
   });
 
   describe("Publish Blueprint", function () {
+    it("should not publish when signature is invalid #1", async function () {
+      this.blueprint.signature = "0x0000";
+      await expect(
+        this.tractor.connect(publisher).publishBlueprint(this.blueprint)
+      ).to.be.revertedWith("ECDSA: invalid signature length");
+    });
+
+    it("should not publish when signature is invalid #2", async function () {
+      this.blueprint.signature = "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+      await expect(
+        this.tractor.connect(publisher).publishBlueprint(this.blueprint)
+      ).to.be.revertedWith("ECDSA: invalid signature 'v' value");
+    });
+
+    it("should not publish when signature is invalid #3", async function () {
+      await signBlueprint(this.blueprint, user);
+      await expect(
+        this.tractor.connect(publisher).publishBlueprint(this.blueprint)
+      ).to.be.revertedWith("TractorFacet: invalid signature");
+    });
+
     it("should publish new blueprint", async function () {
-      const tx = await this.tractor
-        .connect(publisher)
-        .publishBlueprint(
-          this.mockBlueprint.predicates,
-          this.mockBlueprint.data,
-          this.mockBlueprint.calldataCopyParams,
-          this.mockBlueprint.initialPredicateStates
-        );
-
-      await expect(tx)
-        .to.emit(this.tractor, "PublishBlueprint")
-        .withArgs(
-          publisher.address,
-          this.mockBlueprint.predicates,
-          this.mockBlueprint.data,
-          this.mockBlueprint.calldataCopyParams
-        );
-    });
-
-    it("should not publish same blueprint twice", async function () {
-      await this.tractor
-        .connect(publisher)
-        .publishBlueprint(
-          this.mockBlueprint.predicates,
-          this.mockBlueprint.data,
-          this.mockBlueprint.calldataCopyParams,
-          this.mockBlueprint.initialPredicateStates
-        );
-
-      await expect(
-        this.tractor
-          .connect(publisher)
-          .publishBlueprint(
-            this.mockBlueprint.predicates,
-            this.mockBlueprint.data,
-            this.mockBlueprint.calldataCopyParams,
-            this.mockBlueprint.initialPredicateStates
-          )
-      ).to.be.revertedWith("TractorFacet: Blueprint already exist");
-    });
-  });
-
-  describe("Destroy Blueprint", function () {
-    it("should revert when destroying unpublished blueprint", async function () {
-      await expect(
-        this.tractor
-          .connect(publisher)
-          .destroyBlueprint(
-            this.mockBlueprint.predicates,
-            this.mockBlueprint.data,
-            this.mockBlueprint.calldataCopyParams
-          )
-      ).to.be.revertedWith("TractorFacet: Blueprint does not exist");
-    });
-
-    it("should destroy blueprint", async function () {
-      await this.tractor
-        .connect(publisher)
-        .publishBlueprint(
-          this.mockBlueprint.predicates,
-          this.mockBlueprint.data,
-          this.mockBlueprint.calldataCopyParams,
-          this.mockBlueprint.initialPredicateStates
-        );
-
-      const tx = await this.tractor
-        .connect(publisher)
-        .destroyBlueprint(
-          this.mockBlueprint.predicates,
-          this.mockBlueprint.data,
-          this.mockBlueprint.calldataCopyParams
-        );
-
-      const hash = getBlueprintHash(
-        publisher.address,
-        this.mockBlueprint.predicates,
-        this.mockBlueprint.data,
-        this.mockBlueprint.calldataCopyParams
-      );
-
-      await expect(tx).to.emit(this.tractor, "DestroyBlueprint").withArgs(hash);
-    });
-  });
-
-  describe("View Blueprint", function () {
-    it("when blueprint exists", async function () {
-      await this.tractor
-        .connect(publisher)
-        .publishBlueprint(
-          this.mockBlueprint.predicates,
-          this.mockBlueprint.data,
-          this.mockBlueprint.calldataCopyParams,
-          this.mockBlueprint.initialPredicateStates
-        );
-
-      const { isActive, predicateStates } = await this.tractor[
-        "viewBlueprint(address,bytes[],bytes,bytes32[])"
-      ](
-        publisher.address,
-        this.mockBlueprint.predicates,
-        this.mockBlueprint.data,
-        this.mockBlueprint.calldataCopyParams
-      );
-
-      expect(isActive).to.be.true;
-      expect(predicateStates.length).to.be.eq(this.mockBlueprint.predicates.length);
-      for (let i = 0; i < predicateStates.length; ++i) {
-        expect(predicateStates[i]).to.be.eq(this.mockBlueprint.predicates[i]);
-      }
-
-      const hash = getBlueprintHash(
-        publisher.address,
-        this.mockBlueprint.predicates,
-        this.mockBlueprint.data,
-        this.mockBlueprint.calldataCopyParams
-      );
-      expect(await this.tractor["viewBlueprint(bytes32)"](hash)).to.be.true;
-    });
-
-    it("when blueprint does not exist", async function () {
-      const { isActive, predicateStates } = await this.tractor[
-        "viewBlueprint(address,bytes[],bytes,bytes32[])"
-      ](
-        publisher.address,
-        this.mockBlueprint.predicates,
-        this.mockBlueprint.data,
-        this.mockBlueprint.calldataCopyParams
-      );
-
-      expect(isActive).to.be.eq(false);
-      expect(predicateStates.length).to.be.eq(0);
-
-      const hash = getBlueprintHash(
-        publisher.address,
-        this.mockBlueprint.predicates,
-        this.mockBlueprint.data,
-        this.mockBlueprint.calldataCopyParams
-      );
-      expect(await this.tractor["viewBlueprint(bytes32)"](hash)).to.be.false;
+      await signBlueprint(this.blueprint, publisher);
+      await this.tractor.connect(publisher).publishBlueprint(this.blueprint);
     });
   });
 });
