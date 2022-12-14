@@ -251,6 +251,14 @@ contract SiloFacet is TokenSilo {
         }
     }
 
+    /// @notice Plants on behalf of the active publisher
+    /// @return beans Number of beans planted
+    function tractorPlant() external payable returns (uint256 beans) {
+        address publisher = LibTractor.getBlueprintPublisher();
+        require(publisher != address(1));
+        return _plant(publisher);
+    }
+
     /*
      * Silo
      */
