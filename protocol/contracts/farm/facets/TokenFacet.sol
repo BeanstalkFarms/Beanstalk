@@ -62,6 +62,26 @@ contract TokenFacet is ReentrancyGuard {
         );
     }
 
+    function tractorTransferToken(
+        IERC20 token,
+        address recipient,
+        uint256 amount,
+        LibTransfer.From fromMode,
+        LibTransfer.To toMode
+    ) external payable {
+        address publisher = LibTractor.getBlueprintPublisher();
+        require(publisher != address(1));
+
+        LibTransfer.transferToken(
+            token,
+            publisher,
+            recipient,
+            amount,
+            fromMode,
+            toMode
+        );
+    }
+
     function transferTokenFrom(
         IERC20 token,
         address sender,
