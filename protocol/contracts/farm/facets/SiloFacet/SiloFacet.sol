@@ -124,6 +124,26 @@ contract SiloFacet is TokenSilo {
         bdvs = _transferDeposits(sender, recipient, token, seasons, amounts);
     }
 
+    function tractorTransferDeposits(
+        address recipient,
+        address token,
+        uint32[] calldata seasons,
+        uint256[] calldata amounts
+    ) external payable nonReentrant returns (uint256[] memory bdvs) {
+        address publisher = LibTractor.getBlueprintPublisher();
+        require(publisher != address(1));
+
+        require(amounts.length > 0, "Silo: amounts array is empty");
+        for (uint256 i = 0; i < amounts.length; i++) {
+            require(amounts[i] > 0, "Silo: amount in array is 0");
+        }
+
+        _update(publisher);
+        // Need to update the recipient's Silo as well.
+        _update(recipient);
+        bdvs = _transferDeposits(publisher, recipient, token, seasons, amounts);
+    }
+
     /*
      * Approval
      */
