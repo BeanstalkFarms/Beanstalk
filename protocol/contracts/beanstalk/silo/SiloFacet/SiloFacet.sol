@@ -13,7 +13,7 @@ import "~/libraries/Silo/LibSiloPermit.sol";
 /**
  * @title SiloFacet
  * @author Publius
- * @notice  This is the entry point for all Silo functionality.
+ * @notice SiloFacet is the entry point for all Silo functionality.
  * 
  * SiloFacet           public functions for modifying an account's Silo.
  * ↖ TokenSilo         accounting & storage for Deposits, Withdrawals, allowances
@@ -230,7 +230,7 @@ contract SiloFacet is TokenSilo {
     //////////////////////// APPROVE ////////////////////////
 
     /** 
-     * @notice Approve an address to Transfer a Deposit for `msg.sender`.
+     * @notice Approve `spender` to Transfer Deposits for `msg.sender`.     
      *
      * Sets the allowance to `amount`.
      * 
@@ -272,7 +272,7 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice Increase the Transfer allowance for `spender`.
+     * @notice Decrease the Transfer allowance for `spender`.
      * 
      * @dev Gas optimization: We neglect to check whether `token` is actually
      * whitelisted. If a token is not whitelisted, it cannot be Deposited,
@@ -379,7 +379,7 @@ contract SiloFacet is TokenSilo {
 
     /**
      * @notice Claim Grown Stalk for `account`.
-     * @dev See {Silo:_mow}.
+     * @dev See {Silo-_mow}.
      */
     function mow(address account) external payable {
         _mow(account);

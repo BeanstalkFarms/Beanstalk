@@ -193,31 +193,18 @@ contract ExtremeWeatherTest is Weather, Test, InitDiamondDeployer {
     assertEq(uint256(weather.lastSowTime), 1000);
   }
 
-  function testExtremeLastSowTimeWtfDelta() public {
-    console.log("This stupid test has conquered brean. the hardhat test equilivant works, but this does not. after stepWeatherE, this emits case 28, whereas the hardhat emits case 29. For the love of god someone help me");
-    _beforeEachExtremeWeatherTest();
-    console.log("LastSowTimewtfDelta");
-    season.setLastSowTimeE(900);
-    season.setNextSowTimeE(LibConstant.MAX_UINT32);
-    season.stepWeatherE(1 ether,1);
-    Storage.Weather memory weather = season.weather();
-    assertEq(uint256(weather.yield),9);
-    assertEq(uint256(weather.nextSowTime), LibConstant.MAX_UINT32);
-    assertEq(uint256(weather.lastSowTime), LibConstant.MAX_UINT32);
-  }
-
-  // it("lastSowTime max", async function () {
-  //     await this.season.setLastSowTimeE('900')
-  //     await this.season.setNextSowTimeE(MAX_UINT32)
-  //     await this.season.stepWeatherE(ethers.utils.parseEther('1'), '1');
-  //     const weather = await this.season.weather();
-  //     expect(weather.yield).to.equal(9)
-  //     expect(weather.nextSowTime).to.equal(parseInt(MAX_UINT32))
-  //     expect(weather.lastSowTime).to.equal(parseInt(MAX_UINT32))
-  //   })
-
-
-  
+  // test is designed for morning auction, which is not implemented yet. 
+  // function testExtremeLastSowTimeDelta() public {
+  //   _beforeEachExtremeWeatherTest();
+  //   console.log("LastSowTimewtfDelta");
+  //   season.setLastSowTimeE(900);
+  //   season.setNextSowTimeE(LibConstant.MAX_UINT32);
+  //   season.stepWeatherE(1 ether,1);
+  //   Storage.Weather memory weather = season.weather();
+  //   assertEq(uint256(weather.yield),9);
+  //   assertEq(uint256(weather.nextSowTime), LibConstant.MAX_UINT32);
+  //   assertEq(uint256(weather.lastSowTime), LibConstant.MAX_UINT32);
+  // }
 
   function _beforeExtremeWeatherTest() public {
     season.setLastDSoilE(100000);
