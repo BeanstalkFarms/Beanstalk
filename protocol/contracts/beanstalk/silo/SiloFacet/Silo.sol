@@ -26,6 +26,8 @@ import "~/libraries/Silo/LibTokenSilo.sol";
 contract Silo is SiloExit {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
+    using LibSafeMath128 for uint128;
+
 
     //////////////////////// EVENTS ////////////////////////    
 
@@ -167,7 +169,7 @@ contract Silo is SiloExit {
         if (beans == 0) return 0;
 
         // Reduce the Silo's supply of Earned Beans.
-        s.earnedBeans = s.earnedBeans.sub(beans);
+        s.earnedBeans = s.earnedBeans.sub(uint128(beans));
 
         // Deposit Earned Beans if there are any. Note that 1 Bean = 1 BDV.
         LibTokenSilo.addDepositToAccount(

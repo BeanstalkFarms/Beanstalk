@@ -284,23 +284,6 @@ library LibTokenSilo {
     }
 
     /**
-     * @dev Locate the `amount` for a user's Withdrawal in storage.
-     * 
-     * Silo V2 Withdrawals are stored within each {Account} as a mapping of:
-     *  `address token => uint32 season => uint128 amount`
-     * 
-     * FIXME(naming): rename to `getWithdrawal()`?
-     */
-    function tokenWithdrawal(
-        address account,
-        address token,
-        uint32 season
-    ) internal view returns (uint256) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.a[account].withdrawals[token][season];
-    }
-
-    /**
      * @dev Get the number of Seeds per BDV for a whitelisted token.
      */
     function seeds(address token) internal view returns (uint256) {

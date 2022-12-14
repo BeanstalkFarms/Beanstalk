@@ -9,7 +9,7 @@ import "./Silo.sol";
 
 /**
  * @title TokenSilo
- * @author Publius
+ * @author Publius, Brean
  * @notice This contract contains functions for depositing, withdrawing and 
  * claiming whitelisted Silo tokens.
  *
@@ -90,53 +90,8 @@ contract TokenSilo is Silo {
         uint256 amount
     );
 
-    /**
-     * @notice Emitted when `account` creates a new Withdrawal.
-     * @param account The account that created a Withdrawal.
-     * @param token Address of the whitelisted ERC20 token that was withdrawn.
-     * @param season The Season in which this Withdrawal becomes Claimable.
-     * @param amount Amount of `token` withdrawn.
-     * @dev Note that `season` is the Season of Claiming, not the Season of Deposit.
-     */
-    event AddWithdrawal(
-        address indexed account,
-        address indexed token,
-        uint32 season,
-        uint256 amount
-    );
-
-    /**
-     * @notice Emitted when `account` claims a Withdrawal.
-     * 
-     * The name "RemoveWithdrawal" is used internally for accounting consistency. This
-     * action is commonly referred to as "Claiming" assets from the Silo.
-     *
-     * @param account The account that claimed a Withdrawal.
-     * @param token Address of the whitelisted ERC20 token that was claimed.
-     * @param season The Season in which this Withdrawal became Claimable.
-     * @param amount Amount of `token` claimed and delivered to `account`.
-     */
-    event RemoveWithdrawal(
-        address indexed account,
-        address indexed token,
-        uint32 season,
-        uint256 amount
-    );
-
-    /**
-     * @notice Emitted when `account` claims multiple Withdrawals.
-     * @param account The account that claimed Withdrawals.
-     * @param token The address of the whitelisted ERC20 token that was claimed.
-     * @param seasons The Seasons in which Withdrawals became Claimable
-     * @param amount Amount of `token` claimed and delivered to `account`
-     * @dev Gas optimization: emit 1 `RemoveWithdrawals` instead of N `RemoveWithdrawal` events.
-     */
-    event RemoveWithdrawals(
-        address indexed account,
-        address indexed token,
-        uint32[] seasons,
-        uint256 amount
-    );
+    // note add/remove withdrawal(s) are removed as claiming is removed
+    // FIXME: to discuss with subgraph team to update
 
     /**
      */
@@ -180,19 +135,6 @@ contract TokenSilo is Silo {
     }
 
     /**
-     * @notice Find the amount of `token` that `account` has withdrawn from season `season`.
-     * @return amount The amount of `token` contained in this Withdrawal.
-     * @dev Withdrawals don't store BDV because Stalk & Seeds are burned during `withdraw()`.
-     */
-    function getWithdrawal(
-        address account,
-        address token,
-        uint32 season
-    ) external view returns (uint256) {
-        return LibTokenSilo.tokenWithdrawal(account, token, season);
-    }
-
-    /**
      * @notice Get the total amount of `token` currently Deposited in the Silo across all users.
      */
     function getTotalDeposited(address token) external view returns (uint256) {
@@ -222,27 +164,6 @@ contract TokenSilo is Silo {
         returns (Storage.SiloSettings memory)
     {
         return s.ss[token];
-    }
-
-    /**
-     * @notice Returns the number of Seasons that must elapse before a Withdrawal can be Claimed.
-     * @dev The purpose of the withdraw freeze is to prevent a malicious user from receiving risk-free 
-     * seignorage with the following attack:
-     * 
-     *  1. Right before the end of a Season, deposit assets in the Silo. Receive Stalk.
-     *  2. Call `sunrise()` and earn seignorage (Earned Beans).
-     *  3. Immediately withdraw assets from the Silo, burning Stalk but keeping Earned Beans.
-     * 
-     * Early in Beanstalk's life, this value was calculated based on the number of elapsed Seasons.
-     * It's now hardcoded to its minimum value of 1.
-     * 
-     * Note: The Silo V3 upgrade will remove the withdrawFreeze entirely. More on this here:
-     * https://github.com/BeanstalkFarms/Beanstalk/issues/150
-     *
-     * FIXME(naming) getWithdrawFreeze ?
-     */
-    function withdrawFreeze() public view returns (uint8) {
-        return s.season.withdrawSeasons;
     }
 
     /**
@@ -327,7 +248,7 @@ contract TokenSilo is Silo {
         address token,
         uint32[] calldata seasons,
         uint256[] calldata amounts
-    ) internal {
+    ) internal returns (uint256) {
         require(
             seasons.length == amounts.length,
             "Silo: Crates, amounts are diff lengths."
@@ -349,6 +270,11 @@ contract TokenSilo is Silo {
             ar.stalkRemoved,
             ar.seedsRemoved
         );
+        /** @dev we return ar.tokensremoved here, but not in _withdrawDeposit()
+         *  to use in siloFacet.withdrawDeposits()
+         */ 
+
+        return ar.tokensRemoved;
     }
 
     /**
@@ -364,33 +290,8 @@ contract TokenSilo is Silo {
         uint256 stalk,
         uint256 seeds
     ) private {
-        uint32 arrivalSeason = _season() + s.season.withdrawSeasons;
-
-        // Add Withdrawal
-        addTokenWithdrawal(account, token, arrivalSeason, amount); // Increment account & total Withdrawn
-
-        // Finish Removal
         LibTokenSilo.decrementTotalDeposited(token, amount); // Decrement total Deposited
         LibSilo.burnSeedsAndStalk(account, seeds, stalk); // Burn Seeds and Stalk
-    }
-
-    function addTokenWithdrawal(
-        address account,
-        address token,
-        uint32 arrivalSeason,
-        uint256 amount
-    ) private {
-        // Add to Account
-        s.a[account].withdrawals[token][arrivalSeason] = s
-            .a[account]
-            .withdrawals[token][arrivalSeason].add(amount);
-        
-        // Add to Totals
-        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.add(
-            amount
-        );
-
-        emit AddWithdrawal(account, token, arrivalSeason, amount);
     }
 
     //////////////////////// REMOVE ////////////////////////
@@ -466,88 +367,6 @@ contract TokenSilo is Silo {
         );
 
         emit RemoveDeposits(account, token, seasons, amounts, ar.tokensRemoved);
-    }
-
-    //////////////////////// CLAIM ////////////////////////
-
-    /**
-     * @dev Removes a single Withdrawal, updates Silo totals, emits the
-     * {RemoveWithdrawal} event, and returns the `amount` that was Claimed.
-     */
-    function _claimWithdrawal(
-        address account,
-        address token,
-        uint32 season
-    ) internal returns (uint256) {
-        uint256 amount = removeWithdrawalFromAccount(account, token, season);
-
-        // Decrement total withdrawn. Similar to {LibSiloToken.decrementTotalDeposited}.
-        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(
-            amount
-        );
-
-        emit RemoveWithdrawal(msg.sender, token, season, amount);
-
-        return amount;
-    }
-
-    /**
-     * @dev Removes multiple Withdrawals, updates Silo totals, emits the 
-     * {RemoveWithdrawals} event, and returns the total `amount` that was Claimed.
-     */
-    function _claimWithdrawals(
-        address account,
-        address token,
-        uint32[] calldata seasons
-    ) internal returns (uint256 amount) {
-        for (uint256 i; i < seasons.length; ++i) {
-            amount = amount.add(
-                removeWithdrawalFromAccount(account, token, seasons[i])
-            );
-        }
-
-        // Decrement total withdrawn. Similar to {LibSiloToken.decrementTotalDeposited}.
-        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(
-            amount
-        );
-
-        emit RemoveWithdrawals(msg.sender, token, seasons, amount);
-
-        return amount;
-    }
-
-    /**
-     * @dev Remove a Withdrawal from `account`.
-     *
-     * A Withdrawal CANNOT be partially removed. This function deletes the
-     * corresponding Withdrawal entity and returns its total `amount`.
-     * 
-     * Should verify that the Withdrawal is Claimable, i.e. that the Season in
-     * which the withdrawal became Claimable is less than or equal to the current
-     * Season.
-     *
-     * Gas optimization: We neglect to check that the user actually has a
-     * Withdrawal of `token` in `season`. If they don't, `uint256 amount` will be 0,
-     * no modification of totals will take place, and an empty RemoveWithdrawal(s)
-     * event will be emitted in upstream functions.
-     *
-     * Important: Upstream functions MUST use the amount returned by this function
-     * to calculate how much of `token` to deliver to the user.
-     */
-    function removeWithdrawalFromAccount(
-        address account,
-        address token,
-        uint32 season
-    ) private returns (uint256) {
-        require(
-            season <= s.season.current,
-            "Claim: Withdrawal not receivable"
-        );
-
-        uint256 amount = s.a[account].withdrawals[token][season];
-        delete s.a[account].withdrawals[token][season];
-
-        return amount;
     }
 
     //////////////////////// TRANSFER ////////////////////////

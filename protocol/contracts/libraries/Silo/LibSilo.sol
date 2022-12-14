@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../C.sol";
 import "../LibAppStorage.sol";
+import "../LibPRBMath.sol";
 
 /**
  * @title LibSilo
@@ -30,6 +31,7 @@ import "../LibAppStorage.sol";
  */
 library LibSilo {
     using SafeMath for uint256;
+    using LibPRBMath for uint256;
     
     //////////////////////// EVENTS ////////////////////////    
 
@@ -163,7 +165,11 @@ library LibSilo {
         if (stalk == 0) return;
 
         // Calculate the amount of Roots for the given amount of Stalk.
-        uint256 roots = s.s.roots.mul(stalk).div(s.s.stalk);
+        // We round up as it prevents an account having roots but no stalk.
+         uint256 roots = s.s.roots.mulDiv(
+            stalk,
+            s.s.stalk,
+            LibPRBMath.Rounding.Up);
         if (roots > s.a[account].roots) roots = s.a[account].roots;
 
         // Decrease supply of Stalk; Remove Stalk from the balance of `account`

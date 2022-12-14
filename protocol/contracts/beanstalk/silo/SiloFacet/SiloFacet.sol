@@ -12,7 +12,7 @@ import "~/libraries/Silo/LibSiloPermit.sol";
 
 /**
  * @title SiloFacet
- * @author Publius
+ * @author Publius, Brean
  * @notice SiloFacet is the entry point for all Silo functionality.
  * 
  * SiloFacet           public functions for modifying an account's Silo.
@@ -85,9 +85,11 @@ contract SiloFacet is TokenSilo {
     function withdrawDeposit(
         address token,
         uint32 season,
-        uint256 amount
-    ) external payable mowSender {
+        uint256 amount,
+        LibTransfer.To mode
+    ) external payable mowSender nonReentrant {
         _withdrawDeposit(msg.sender, token, season, amount);
+        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
 
     /** 
@@ -106,56 +108,13 @@ contract SiloFacet is TokenSilo {
     function withdrawDeposits(
         address token,
         uint32[] calldata seasons,
-        uint256[] calldata amounts
-    ) external payable mowSender {
-        _withdrawDeposits(msg.sender, token, seasons, amounts);
-    }
-
-    //////////////////////// CLAIM ////////////////////////
-
-    /** 
-     * @notice Claim tokens from a Withdrawal.
-     *
-     * Claiming a Withdrawal is all-or-nothing, hence an `amount` parameter is 
-     * omitted.
-     *
-     * @param token Address of the whitelisted ERC20 token to Claim.
-     * @param season Season of Withdrawal to claim from.
-     * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL,
-     * INTERNAL_TOLERANT)
-     *
-     * @dev FIXME(logic): return the amount claimed
-     */
-    function claimWithdrawal(
-        address token,
-        uint32 season,
+        uint256[] calldata amounts,
         LibTransfer.To mode
-    ) external payable nonReentrant {
-        uint256 amount = _claimWithdrawal(msg.sender, token, season);
+    ) external payable mowSender nonReentrant {
+        uint256 amount = _withdrawDeposits(msg.sender, token, seasons, amounts);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
 
-    /** 
-     * @notice Claims tokens from multiple Withdrawals.
-     * 
-     * Claiming a Withdrawal is all-or-nothing, hence an `amount` parameter is
-     * omitted.
-     *
-     * @param token Address of the whitelisted ERC20 token to Claim.
-     * @param seasons Seasons of Withdrawal to claim from.
-     * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL,
-     * INTERNAL_TOLERANT)
-     * 
-     * @dev FIXME(logic): return the amount claimed
-     */
-    function claimWithdrawals(
-        address token,
-        uint32[] calldata seasons,
-        LibTransfer.To mode
-    ) external payable nonReentrant {
-        uint256 amount = _claimWithdrawals(msg.sender, token, seasons);
-        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
-    }
 
     //////////////////////// TRANSFER ////////////////////////
 
@@ -408,7 +367,7 @@ contract SiloFacet is TokenSilo {
 
     /** 
      * @notice Claim rewards from a Season Of Plenty (SOP)
-     * @dev FIXME(doc): reference to SOP docs
+     * @dev FIXME(naming): rename to Flood
      */
     function claimPlenty() external payable {
         _claimPlenty(msg.sender);

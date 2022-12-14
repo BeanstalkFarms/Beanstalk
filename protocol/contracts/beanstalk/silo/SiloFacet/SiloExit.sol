@@ -10,10 +10,12 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "~/beanstalk/ReentrancyGuard.sol";
 import "~/libraries/Silo/LibSilo.sol";
 import "~/libraries/LibSafeMath32.sol";
+import "~/libraries/LibSafeMath128.sol";
+import "~/libraries/LibPRBMath.sol";
 import "~/C.sol";
 
 /**
- * @title SiloExit
+ * @title SiloExit, Brean
  * @author Publius
  * @notice Exposes public view functions for Silo total balances, account
  * balances, account update history, and Season of Plenty (SOP) balances.
@@ -24,6 +26,8 @@ import "~/C.sol";
 contract SiloExit is ReentrancyGuard {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
+    using LibSafeMath128 for uint128;
+    using LibPRBMath for uint256;
 
     /**
      * @dev Stores account-level Season of Plenty balances.
@@ -169,6 +173,7 @@ contract SiloExit is ReentrancyGuard {
      *    Roots. 
      *  - the "account" Stalk balance, stored in account storage.
      * divided by the number of Stalk per Bean.
+     * The earned beans from the latest season 
      */
     function _balanceOfEarnedBeans(address account, uint256 accountStalk)
         internal
@@ -178,10 +183,23 @@ contract SiloExit is ReentrancyGuard {
         // There will be no Roots before the first Deposit is made.
         if (s.s.roots == 0) return 0;
 
+        // Calculate the % season remaining in the season, where 100% is 1e18.
+        uint256 percentSeasonRemaining =
+            1e18 - LibPRBMath.min(
+                    (block.timestamp - s.season.timestamp) * 1e18 / 3600, 
+                    1e18
+                );
+        
+        // vestingEarnedStalk
+        uint256 vestingEarnedStalk = uint256(s.newEarnedStalk).mul(percentSeasonRemaining).div(1e18);
         // Determine expected user Stalk based on Roots balance.
         // `balanceOfStalk / totalStalk = balanceOfRoots / totalRoots`
-        uint256 stalk = s.s.stalk.mul(s.a[account].roots).div(s.s.roots);
-
+        uint256 stalk = 
+            s.s.stalk.sub(vestingEarnedStalk).mulDiv(
+                s.a[account].roots,
+                s.s.roots,
+                LibPRBMath.Rounding.Up
+            );
         // Beanstalk rounds down when minting Roots. Thus, it is possible that
         // balanceOfRoots / totalRoots * totalStalk < s.a[account].s.stalk.
         // As `account` Earned Balance balance should never be negative, 
