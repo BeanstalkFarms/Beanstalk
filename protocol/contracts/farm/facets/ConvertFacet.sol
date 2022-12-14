@@ -66,6 +66,17 @@ contract ConvertFacet is ReentrancyGuard {
         return _convert(msg.sender, convertData, crates, amounts);
     }
 
+    function tractorConvert(
+        bytes calldata convertData,
+        uint32[] memory crates,
+        uint256[] memory amounts
+    ) external payable nonReentrant returns (ConvertResult memory result) {
+        address publisher = LibTractor.getBlueprintPublisher();
+        require(publisher != address(1));
+
+        return _convert(publisher, convertData, crates, amounts);
+    }
+
     function convertFor(
         address account,
         bytes calldata convertData,
