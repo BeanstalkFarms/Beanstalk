@@ -72,6 +72,36 @@ library LibFunction {
      @return data The function call return datas
     **/
     function buildAdvancedCalldata(
+        bytes calldata callData,
+        bytes calldata advancedData,
+        bytes[] memory returnData
+    ) internal pure returns (bytes memory data) {
+        bytes1 typeId = advancedData[0];
+        if (typeId == 0x01) {
+            bytes32 copyParams = abi.decode(advancedData, (bytes32));
+            data = LibFunction.pasteAdvancedBytes(
+                callData,
+                returnData,
+                copyParams
+            );
+        } else if (typeId == 0x02) {
+            (, bytes32[] memory copyParams) = abi.decode(
+                advancedData,
+                (uint256, bytes32[])
+            );
+            data = callData;
+            for (uint256 i; i < copyParams.length; i++)
+                data = LibFunction.pasteAdvancedBytes(
+                    data,
+                    returnData,
+                    copyParams[i]
+                );
+        } else {
+            revert("Function: Advanced Type not supported");
+        }
+    }
+
+    function buildAdvancedCalldataMem(
         bytes memory callData,
         bytes memory advancedData,
         bytes[] memory returnData

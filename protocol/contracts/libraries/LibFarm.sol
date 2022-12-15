@@ -46,7 +46,7 @@ library LibFarm {
         if (pipeType == 0x00) {
             result = farmMem(d.callData);
         } else {
-            result = LibFunction.buildAdvancedCalldata(
+            result = LibFunction.buildAdvancedCalldataMem(
                 d.callData,
                 d.advancedData,
                 returnData
