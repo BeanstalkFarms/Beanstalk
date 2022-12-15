@@ -70,8 +70,7 @@ contract TokenFacet is ReentrancyGuard {
         LibTransfer.From fromMode,
         LibTransfer.To toMode
     ) external payable {
-        address publisher = LibTractor.getBlueprintPublisher();
-        require(publisher != address(1));
+        address publisher = LibTractor.getActivePublisher();
 
         LibTransfer.transferToken(
             token,

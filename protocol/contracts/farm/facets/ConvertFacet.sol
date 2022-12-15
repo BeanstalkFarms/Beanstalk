@@ -71,8 +71,7 @@ contract ConvertFacet is ReentrancyGuard {
         uint32[] memory crates,
         uint256[] memory amounts
     ) external payable nonReentrant returns (ConvertResult memory result) {
-        address publisher = LibTractor.getBlueprintPublisher();
-        require(publisher != address(1));
+        address publisher = LibTractor.getActivePublisher();
 
         return _convert(publisher, convertData, crates, amounts);
     }

@@ -241,8 +241,7 @@ contract MarketplaceFacet is Order {
         uint256 start,
         uint256 end
     ) external payable nonReentrant {
-        address publisher = LibTractor.getBlueprintPublisher();
-        require(publisher != address(1));
+        address publisher = LibTractor.getActivePublisher();
 
         uint256 amount = s.a[publisher].field.plots[id];
         require(amount > 0, "Field: Plot not owned by user.");

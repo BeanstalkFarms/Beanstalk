@@ -76,8 +76,7 @@ contract FieldFacet is ReentrancyGuard {
         uint256 minAmount,
         LibTransfer.From mode
     ) public payable returns (uint256) {
-        address publisher = LibTractor.getBlueprintPublisher();
-        require(publisher != address(1));
+        address publisher = LibTractor.getActivePublisher();
 
         sowWithMin(publisher, amount, minAmount, mode);
     }

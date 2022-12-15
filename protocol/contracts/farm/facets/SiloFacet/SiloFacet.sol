@@ -130,8 +130,7 @@ contract SiloFacet is TokenSilo {
         uint32[] calldata seasons,
         uint256[] calldata amounts
     ) external payable nonReentrant returns (uint256[] memory bdvs) {
-        address publisher = LibTractor.getBlueprintPublisher();
-        require(publisher != address(1));
+        address publisher = LibTractor.getActivePublisher();
 
         require(amounts.length > 0, "Silo: amounts array is empty");
         for (uint256 i = 0; i < amounts.length; i++) {
@@ -274,8 +273,8 @@ contract SiloFacet is TokenSilo {
     /// @notice Plants on behalf of the active publisher
     /// @return beans Number of beans planted
     function tractorPlant() external payable returns (uint256 beans) {
-        address publisher = LibTractor.getBlueprintPublisher();
-        require(publisher != address(1));
+        address publisher = LibTractor.getActivePublisher();
+
         return _plant(publisher);
     }
 
