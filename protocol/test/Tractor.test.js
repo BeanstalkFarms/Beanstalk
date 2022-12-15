@@ -4,7 +4,12 @@ const { deployPipeline } = require("../scripts/pipeline.js");
 const { getAltBeanstalk, getBean, getUsdc } = require("../utils/contracts.js");
 const { toBN, encodeAdvancedData } = require("../utils/index.js");
 const { impersonateSigner } = require("../utils/signer.js");
-const { getBlueprintHash, signBlueprint } = require("./utils/tractor.js");
+const {
+  getBlueprintHash,
+  signBlueprint,
+  getNormalBlueprintData,
+  getAdvancedBlueprintData,
+} = require("./utils/tractor.js");
 const {
   EXTERNAL,
   INTERNAL,
@@ -94,8 +99,8 @@ describe("Tractor", function () {
       data: "0x1234567890",
       calldataCopyParams: [],
       maxNonce: 100,
-      startTime: Date.now() - 10 * 3600,
-      endTime: Date.now() + 10 * 3600,
+      startTime: Math.floor(Date.now() / 1000) - 10 * 3600,
+      endTime: Math.floor(Date.now() / 1000) + 10 * 3600,
     };
   });
 
@@ -116,7 +121,8 @@ describe("Tractor", function () {
     });
 
     it("should not fail when signature is invalid #2", async function () {
-      this.blueprint.signature = "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+      this.blueprint.signature =
+        "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
       await expect(
         this.tractor.connect(publisher).publishBlueprint(this.blueprint)
       ).to.be.revertedWith("ECDSA: invalid signature 'v' value");
@@ -144,7 +150,8 @@ describe("Tractor", function () {
     });
 
     it("should not fail when signature is invalid #2", async function () {
-      this.blueprint.signature = "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+      this.blueprint.signature =
+        "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
       await expect(
         this.tractor.connect(publisher).destroyBlueprint(this.blueprint)
       ).to.be.revertedWith("ECDSA: invalid signature 'v' value");
@@ -159,13 +166,99 @@ describe("Tractor", function () {
 
     it("should destroy blueprint", async function () {
       await signBlueprint(this.blueprint, publisher);
-      const tx = await this.tractor.connect(publisher).destroyBlueprint(this.blueprint);
+      const tx = await this.tractor
+        .connect(publisher)
+        .destroyBlueprint(this.blueprint);
 
       const hash = getBlueprintHash(this.blueprint);
       await expect(tx).to.emit(this.tractor, "DestroyBlueprint").withArgs(hash);
 
       const nonce = await this.tractor.blueprintNonce(this.blueprint);
       expect(nonce).to.be.eq(ethers.constants.MaxUint256);
+    });
+  });
+
+  describe.only("Tractor Operation", function () {
+    it("when blueprint is not active #1", async function () {
+      const blueprint = {
+        ...this.blueprint,
+        startTime: Math.floor(Date.now() / 1000) + 3600,
+      };
+      await signBlueprint(blueprint, publisher);
+
+      await expect(
+        this.tractor.connect(user).tractor(blueprint, "0x")
+      ).to.be.revertedWith("TractorFacet: blueprint is not active");
+    });
+
+    it("when blueprint is not active #2", async function () {
+      const blueprint = {
+        ...this.blueprint,
+        endTime: Math.floor(Date.now() / 1000) - 3600,
+      };
+      await signBlueprint(blueprint, publisher);
+
+      await expect(
+        this.tractor.connect(user).tractor(blueprint, "0x")
+      ).to.be.revertedWith("TractorFacet: blueprint is not active");
+    });
+
+    it("when maxNonce is reached", async function () {
+      const blueprint = {
+        ...this.blueprint,
+        maxNonce: 0,
+      };
+      await signBlueprint(blueprint, publisher);
+
+      await expect(
+        this.tractor.connect(user).tractor(blueprint, "0x")
+      ).to.be.revertedWith("TractorFacet: maxNonce reached");
+    });
+
+    it("blueprint type - unknown", async function () {
+      const blueprint = {
+        ...this.blueprint,
+        data: "0x0203040506070809",
+      };
+      await signBlueprint(blueprint, publisher);
+
+      await expect(
+        this.tractor.connect(user).tractor(blueprint, "0x")
+      ).to.be.revertedWith("TractorFacet: unknown blueprint type");
+    });
+
+    it("blueprint type - normal", async function () {
+      const data = getNormalBlueprintData([]);
+      const blueprint = {
+        ...this.blueprint,
+        data,
+      };
+
+      await signBlueprint(blueprint, publisher);
+
+      const tx = await this.tractor.connect(user).tractor(blueprint, "0x");
+
+      const hash = getBlueprintHash(blueprint);
+      await expect(tx)
+        .to.emit(this.tractor, "Tractor")
+        .withArgs(userAddress, hash);
+    });
+
+    it("blueprint type - advanced", async function () {
+      const data = getAdvancedBlueprintData([]);
+      const blueprint = {
+        ...this.blueprint,
+        data,
+      };
+
+      await signBlueprint(blueprint, publisher);
+
+      const tx = await this.tractor.connect(user).tractor(blueprint, "0x");
+
+      const hash = getBlueprintHash(blueprint);
+      await expect(tx)
+        .to.emit(this.tractor, "Tractor")
+        .withArgs(userAddress, hash);
     });
   });
 });
