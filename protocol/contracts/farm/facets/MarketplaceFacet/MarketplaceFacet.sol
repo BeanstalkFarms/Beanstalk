@@ -229,9 +229,6 @@ contract MarketplaceFacet is Order {
             decrementAllowancePods(sender, msg.sender, amount);
         }
 
-        if (s.podListings[id] != bytes32(0)) {
-            _cancelPodListing(sender, id);
-        }
         _transferPlot(sender, recipient, id, start, amount);
     }
 
@@ -248,9 +245,6 @@ contract MarketplaceFacet is Order {
         require(end > start && amount >= end, "Field: Pod range invalid.");
         amount = end - start; // Note: SafeMath is redundant here.
 
-        if (s.podListings[id] != bytes32(0)) {
-            _cancelPodListing(publisher, id);
-        }
         _transferPlot(publisher, recipient, id, start, amount);
     }
 

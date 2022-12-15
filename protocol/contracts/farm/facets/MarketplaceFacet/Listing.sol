@@ -233,6 +233,23 @@ contract Listing is PodTransfer {
     }
 
     /*
+     * Transfer
+     */
+
+    function _transferPlot(
+        address from,
+        address to,
+        uint256 index,
+        uint256 start,
+        uint256 amount
+    ) internal {
+        if (s.podListings[index] != bytes32(0)) {
+            _cancelPodListing(from, index);
+        }
+        __transferPlot(from, to, index, start, amount);
+    }
+
+    /*
      * Helpers
      */
 
