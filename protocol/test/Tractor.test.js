@@ -108,30 +108,64 @@ describe("Tractor", function () {
   });
 
   describe("Publish Blueprint", function () {
-    it("should not publish when signature is invalid #1", async function () {
+    it("should not fail when signature is invalid #1", async function () {
       this.blueprint.signature = "0x0000";
       await expect(
         this.tractor.connect(publisher).publishBlueprint(this.blueprint)
       ).to.be.revertedWith("ECDSA: invalid signature length");
     });
 
-    it("should not publish when signature is invalid #2", async function () {
+    it("should not fail when signature is invalid #2", async function () {
       this.blueprint.signature = "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
       await expect(
         this.tractor.connect(publisher).publishBlueprint(this.blueprint)
       ).to.be.revertedWith("ECDSA: invalid signature 'v' value");
     });
 
-    it("should not publish when signature is invalid #3", async function () {
+    it("should not fail when signature is invalid #3", async function () {
       await signBlueprint(this.blueprint, user);
       await expect(
         this.tractor.connect(publisher).publishBlueprint(this.blueprint)
       ).to.be.revertedWith("TractorFacet: invalid signature");
     });
 
-    it("should publish new blueprint", async function () {
+    it("should fail new blueprint", async function () {
       await signBlueprint(this.blueprint, publisher);
       await this.tractor.connect(publisher).publishBlueprint(this.blueprint);
+    });
+  });
+
+  describe("Destroy Blueprint", function () {
+    it("should not fail when signature is invalid #1", async function () {
+      this.blueprint.signature = "0x0000";
+      await expect(
+        this.tractor.connect(publisher).destroyBlueprint(this.blueprint)
+      ).to.be.revertedWith("ECDSA: invalid signature length");
+    });
+
+    it("should not fail when signature is invalid #2", async function () {
+      this.blueprint.signature = "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+      await expect(
+        this.tractor.connect(publisher).destroyBlueprint(this.blueprint)
+      ).to.be.revertedWith("ECDSA: invalid signature 'v' value");
+    });
+
+    it("should not fail when signature is invalid #3", async function () {
+      await signBlueprint(this.blueprint, user);
+      await expect(
+        this.tractor.connect(publisher).destroyBlueprint(this.blueprint)
+      ).to.be.revertedWith("TractorFacet: invalid signature");
+    });
+
+    it("should destroy blueprint", async function () {
+      await signBlueprint(this.blueprint, publisher);
+      const tx = await this.tractor.connect(publisher).destroyBlueprint(this.blueprint);
+
+      const hash = getBlueprintHash(this.blueprint);
+      await expect(tx).to.emit(this.tractor, "DestroyBlueprint").withArgs(hash);
+
+      const nonce = await this.tractor.blueprintNonce(this.blueprint);
+      expect(nonce).to.be.eq(ethers.constants.MaxUint256);
     });
   });
 });
