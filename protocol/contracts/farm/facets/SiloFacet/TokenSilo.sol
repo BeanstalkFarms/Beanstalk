@@ -328,6 +328,11 @@ contract TokenSilo is Silo {
             seasons.length == amounts.length,
             "Silo: Crates, amounts are diff lengths."
         );
+
+        _update(sender);
+        // Need to update the recipient's Silo as well.
+        _update(recipient);
+
         AssetsRemoved memory ar;
         uint256[] memory bdvs = new uint256[](seasons.length);
 

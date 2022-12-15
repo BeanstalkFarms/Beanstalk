@@ -118,9 +118,6 @@ contract SiloFacet is TokenSilo {
             }
         }
 
-        _update(sender);
-        // Need to update the recipient's Silo as well.
-        _update(recipient);
         bdvs = _transferDeposits(sender, recipient, token, seasons, amounts);
     }
 
@@ -137,9 +134,6 @@ contract SiloFacet is TokenSilo {
             require(amounts[i] > 0, "Silo: amount in array is 0");
         }
 
-        _update(publisher);
-        // Need to update the recipient's Silo as well.
-        _update(recipient);
         bdvs = _transferDeposits(publisher, recipient, token, seasons, amounts);
     }
 
