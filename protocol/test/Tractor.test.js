@@ -178,7 +178,7 @@ describe("Tractor", function () {
     });
   });
 
-  describe.only("Tractor Operation", function () {
+  describe("Tractor Operation", function () {
     it("when blueprint is not active #1", async function () {
       const blueprint = {
         ...this.blueprint,

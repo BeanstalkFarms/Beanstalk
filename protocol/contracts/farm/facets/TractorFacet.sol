@@ -122,18 +122,23 @@ contract TractorFacet is ReentrancyGuard {
     function tractor(
         LibTractor.Blueprint calldata blueprint,
         bytes calldata callData
-    ) external nonReentrant verifySignature(blueprint) {
+    )
+        external
+        nonReentrant
+        verifySignature(blueprint)
+        returns (bytes[] memory results)
+    {
         require(
             blueprint.startTime < block.timestamp &&
                 block.timestamp < blueprint.endTime,
             "TractorFacet: blueprint is not active"
         );
 
-        // get blueprint hash
-        bytes32 blueprintHash = LibTractor.getBlueprintHash(blueprint);
-
         // check/increment blueprint nonce
         {
+            // get blueprint hash
+            bytes32 blueprintHash = LibTractor.getBlueprintHash(blueprint);
+
             // get blueprint nonce
             uint256 nonce = LibTractor.getBlueprintNonce(blueprintHash);
 
@@ -144,6 +149,9 @@ contract TractorFacet is ReentrancyGuard {
 
             // increment blueprint nonce
             LibTractor.incrementBlueprintNonce(blueprintHash);
+
+            // emits event
+            emit Tractor(msg.sender, blueprintHash);
         }
 
         // extract blueprint type and data from blueprint.data
@@ -180,8 +188,6 @@ contract TractorFacet is ReentrancyGuard {
             }
         }
 
-        bytes[] memory results;
-
         if (uint8(blueprintType) == uint8(BlueprintType.NORMAL)) {
             // decode farm calldata
             bytes[] memory data = abi.decode(blueprintData, (bytes[]));
@@ -206,8 +212,5 @@ contract TractorFacet is ReentrancyGuard {
         } else {
             revert("TractorFacet: unknown blueprint type");
         }
-
-        // emits event
-        emit Tractor(msg.sender, blueprintHash);
     }
 }
