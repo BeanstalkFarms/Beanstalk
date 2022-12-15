@@ -105,8 +105,6 @@ contract DepotFacet {
         LibFunction.checkReturn(success, result);
 
         bool res = abi.decode(result, (bool));
-        if (!res) {
-            revert("Depot: Valid Pipe returned false");
-        }
+        require(res, "Depot: Valid Pipe returned false");
     }
 }

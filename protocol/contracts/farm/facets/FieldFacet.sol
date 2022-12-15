@@ -44,15 +44,23 @@ contract FieldFacet is ReentrancyGuard {
         payable
         returns (uint256)
     {
-        return sowWithMin(msg.sender, amount, amount, mode);
+        return _sowWithMin(msg.sender, amount, amount, mode);
     }
 
     function sowWithMin(
-        address account,
         uint256 amount,
         uint256 minAmount,
         LibTransfer.From mode
     ) public payable returns (uint256) {
+        return _sowWithMin(msg.sender, amount, minAmount, mode);
+    }
+
+    function _sowWithMin(
+        address account,
+        uint256 amount,
+        uint256 minAmount,
+        LibTransfer.From mode
+    ) internal returns (uint256) {
         uint256 sowAmount = s.f.soil;
         require(
             sowAmount >= minAmount && amount >= minAmount && minAmount > 0,
@@ -78,7 +86,7 @@ contract FieldFacet is ReentrancyGuard {
     ) public payable returns (uint256) {
         address publisher = LibTractor.getActivePublisher();
 
-        sowWithMin(publisher, amount, minAmount, mode);
+        return _sowWithMin(publisher, amount, minAmount, mode);
     }
 
     /**
@@ -117,7 +125,7 @@ contract FieldFacet is ReentrancyGuard {
             );
         }
 
-        pods = sowWithMin(account, amount, amount, mode);
+        pods = _sowWithMin(account, amount, amount, mode);
 
         // POST-APPROVAL
         if (place == 0x01) {
