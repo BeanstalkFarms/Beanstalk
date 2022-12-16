@@ -289,4 +289,52 @@ describe("Tractor", function () {
 
     await this.tractor.connect(user3).tractor(blueprint, calldata);
   });
+
+  it("Advanced Farm", async function () {
+    await this.beanstalk
+      .connect(user)
+      .transferToken(this.bean.address, user.address, to6("100"), 0, 1);
+
+    const selector = this.beanstalk.interface.encodeFunctionData(
+      "getInternalBalance",
+      [user.address, this.bean.address]
+    );
+    const data = encodeAdvancedData(0);
+    const selector2 = this.tokenFacet.interface.encodeFunctionData(
+      "tractorTransferToken",
+      [this.bean.address, ZERO_ADDRESS, to6("0"), 1, 0]
+    );
+    const data2 = encodeAdvancedData(1, (value = to6("0")), [0, 32, 100]);
+
+    const blueprint = {
+      publisher: userAddress,
+      data: getAdvancedBlueprintData([
+        [selector, data],
+        [selector2, data2],
+      ]),
+      calldataCopyParams: generateCalldataCopyParams([
+        [-1, 548, 0],
+        [32, 644, 32],
+      ]),
+      maxNonce: 100,
+      startTime: Math.floor(Date.now() / 1000) - 10 * 3600,
+      endTime: Math.floor(Date.now() / 1000) + 10 * 3600,
+    };
+
+    const calldata = ethers.utils.hexZeroPad(
+      ethers.BigNumber.from(1).toHexString(),
+      32
+    );
+
+    await signBlueprint(blueprint, user);
+
+    await this.tractor.connect(user3).tractor(blueprint, calldata);
+
+    expect(
+      await this.beanstalk.getInternalBalance(user.address, this.bean.address)
+    ).to.be.equal(toBN("0"));
+    expect(
+      await this.beanstalk.getInternalBalance(user3.address, this.bean.address)
+    ).to.be.equal(to6("100"));
+  });
 });
