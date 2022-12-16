@@ -274,8 +274,6 @@ contract MarketplaceFacet is Order {
         require(spender != address(0), "Field: Pod Approve to 0 address.");
         require(block.timestamp <= deadline, "Field: expired deadline");
 
-        bytes32 eip712DomainHash = LibPermit.getEIP712DomainHash();
-
         bytes32 hashStruct = keccak256(
             abi.encode(
                 keccak256(

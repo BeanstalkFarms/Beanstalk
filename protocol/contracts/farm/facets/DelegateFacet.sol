@@ -37,8 +37,6 @@ contract DelegateFacet is ReentrancyGuard {
     ) external {
         require(block.timestamp <= deadline, "DelegateFacet: expired deadline");
 
-        bytes32 eip712DomainHash = LibPermit.getEIP712DomainHash();
-
         bytes32 hashStruct = keccak256(
             abi.encode(
                 keccak256(

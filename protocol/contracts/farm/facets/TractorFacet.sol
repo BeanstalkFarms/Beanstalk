@@ -124,6 +124,7 @@ contract TractorFacet is ReentrancyGuard {
         bytes calldata callData
     )
         external
+        payable
         nonReentrant
         verifySignature(blueprint)
         returns (bytes[] memory results)
@@ -154,6 +155,9 @@ contract TractorFacet is ReentrancyGuard {
             emit Tractor(msg.sender, blueprintHash);
         }
 
+        // set blueprint publisher
+        LibTractor.setPublisher(blueprint.publisher);
+
         // extract blueprint type and data from blueprint.data
         bytes1 blueprintType = blueprint.data[0];
         bytes memory blueprintData = LibBytes.sliceFrom(blueprint.data, 1);
@@ -171,9 +175,9 @@ contract TractorFacet is ReentrancyGuard {
 
                 if (copyIndex == type(uint80).max) {
                     LibFunction.paste32Bytes(
-                        abi.encodePacked(msg.sender),
+                        abi.encodePacked(bytes32(uint256(uint160(msg.sender)))),
                         blueprintData,
-                        0,
+                        32,
                         pasteIndex
                     );
                 } else {
@@ -212,5 +216,8 @@ contract TractorFacet is ReentrancyGuard {
         } else {
             revert("TractorFacet: unknown blueprint type");
         }
+
+        // reset blueprint publisher
+        LibTractor.resetPublisher();
     }
 }

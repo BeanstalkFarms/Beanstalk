@@ -9,6 +9,7 @@ const {
   signBlueprint,
   getNormalBlueprintData,
   getAdvancedBlueprintData,
+  generateCalldataCopyParams,
 } = require("./utils/tractor.js");
 const {
   EXTERNAL,
@@ -17,82 +18,76 @@ const {
   INTERNAL_TOLERANT,
 } = require("./utils/balances.js");
 const {
+  BEAN,
   BEAN_3_CURVE,
+  TRI_CRYPTO_POOL,
+  CRYPTO_REGISTRY,
   THREE_POOL,
   THREE_CURVE,
   STABLE_FACTORY,
+  USDT,
   WETH,
   ZERO_ADDRESS,
 } = require("./utils/constants.js");
 const { to6, to18 } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 
-let user, user2, publisher, owner;
+let user, user2, user3, publisher, owner;
 let userAddress, ownerAddress, user2Address;
 
 describe("Tractor", function () {
   before(async function () {
-    [owner, user, user2, publisher] = await ethers.getSigners();
+    [owner, user, user2, user3, publisher] = await ethers.getSigners();
     userAddress = user.address;
     user2Address = user2.address;
     const contracts = await deploy("Test", false, true);
-    this.beanstalk = await getAltBeanstalk(contracts.beanstalkDiamond.address);
+    this.diamond = contracts.beanstalkDiamond;
+    this.beanstalk = await getAltBeanstalk(this.diamond.address);
     this.tractor = await ethers.getContractAt(
       "TractorFacet",
-      contracts.beanstalkDiamond.address
+      this.diamond.address
     );
-    this.bean = await getBean();
-    this.usdc = await getUsdc();
-    this.threeCurve = await ethers.getContractAt("MockToken", THREE_CURVE);
-    this.threePool = await ethers.getContractAt("Mock3Curve", THREE_POOL);
+    this.season = await ethers.getContractAt(
+      "MockSeasonFacet",
+      this.diamond.address
+    );
+    this.silo = await ethers.getContractAt(
+      "MockSiloFacet",
+      this.diamond.address
+    );
+    this.bean = await ethers.getContractAt("Bean", BEAN);
+    this.tokenFacet = await ethers.getContractAt(
+      "TokenFacet",
+      this.diamond.address
+    );
+    this.farm = await ethers.getContractAt("FarmFacet", this.diamond.address);
+    this.curve = await ethers.getContractAt("CurveFacet", this.diamond.address);
     this.beanMetapool = await ethers.getContractAt(
       "MockMeta3Curve",
       BEAN_3_CURVE
     );
-    this.weth = await ethers.getContractAt("MockWETH", WETH);
-
-    const account = impersonateSigner(
-      "0x533545dE45Bd44e6B5a6D649256CCfE3b6E1abA6"
-    );
-    pipeline = await deployPipeline(account);
-
-    this.mockContract = await (
-      await ethers.getContractFactory("MockContract", owner)
-    ).deploy();
-    await this.mockContract.deployed();
-    await this.mockContract.setAccount(user2.address);
-
-    await this.bean.mint(user.address, to6("1000"));
-    await this.usdc.mint(user.address, to6("1000"));
-
-    await this.bean.connect(user).approve(this.beanstalk.address, to18("1"));
-    await this.usdc.connect(user).approve(this.beanstalk.address, to18("1"));
-
-    await this.bean
-      .connect(user)
-      .approve(this.beanstalk.address, "100000000000");
-    await this.bean
-      .connect(user)
-      .approve(this.beanMetapool.address, "100000000000");
-    await this.bean.mint(userAddress, to6("10000"));
-
-    await this.threeCurve.mint(userAddress, to18("1000"));
-    await this.threePool.set_virtual_price(to18("1"));
-    await this.threeCurve
-      .connect(user)
-      .approve(this.beanMetapool.address, to18("100000000000"));
+    this.threeCurve = await ethers.getContractAt("IERC20", THREE_CURVE);
 
     await this.beanMetapool.set_A_precise("1000");
-    await this.beanMetapool.set_virtual_price(ethers.utils.parseEther("1"));
-    await this.beanMetapool
+    await this.beanMetapool.set_virtual_price(to18("1"));
+    await this.beanMetapool.set_balances([
+      "1",
+      ethers.utils.parseUnits("1", 12),
+    ]);
+    await this.beanMetapool.set_supply("0");
+
+    await this.season.lightSunrise();
+    await this.bean.connect(user).approve(this.silo.address, "100000000000");
+    await this.bean.connect(user2).approve(this.silo.address, "100000000000");
+    await this.bean.mint(userAddress, to6("10000"));
+    await this.bean.mint(user2Address, to6("10000"));
+    await this.silo.update(userAddress);
+    await this.silo
       .connect(user)
-      .approve(this.threeCurve.address, to18("100000000000"));
-    await this.beanMetapool
-      .connect(user)
-      .approve(this.beanstalk.address, to18("100000000000"));
-    await this.threeCurve
-      .connect(user)
-      .approve(this.beanstalk.address, to18("100000000000"));
+      .deposit(this.bean.address, to6("1000"), EXTERNAL);
+    await this.silo
+      .connect(user2)
+      .deposit(this.bean.address, to6("1000"), EXTERNAL);
 
     this.blueprint = {
       publisher: publisher.address,
@@ -260,5 +255,38 @@ describe("Tractor", function () {
         .to.emit(this.tractor, "Tractor")
         .withArgs(userAddress, hash);
     });
+  });
+
+  it("Plant Tractor", async function () {
+    const plant = await this.silo.interface.encodeFunctionData(
+      "tractorPlant",
+      []
+    );
+    const transferToken = await this.tokenFacet.interface.encodeFunctionData(
+      "tractorTransferToken",
+      [BEAN, ZERO_ADDRESS, to6("1"), 0, 0]
+    );
+
+    const blueprint = {
+      publisher: userAddress,
+      data: getNormalBlueprintData([plant, transferToken]),
+      calldataCopyParams: generateCalldataCopyParams([
+        [-1, 224 + 36 + 32, 0],
+        [32, 224 + 132 + 32, 32],
+      ]),
+      maxNonce: 100,
+      startTime: Math.floor(Date.now() / 1000) - 10 * 3600,
+      endTime: Math.floor(Date.now() / 1000) + 10 * 3600,
+    };
+    const calldata = ethers.utils.hexZeroPad(
+      ethers.BigNumber.from(1).toHexString(),
+      32
+    );
+
+    await signBlueprint(blueprint, user);
+
+    await this.season.siloSunrise(to6("100"));
+
+    await this.tractor.connect(user3).tractor(blueprint, calldata);
   });
 });

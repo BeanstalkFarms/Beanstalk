@@ -42,9 +42,32 @@ const getAdvancedBlueprintData = (data) => {
   );
 };
 
+const generateCalldataCopyParams = (info) => {
+  return info.map(([copyIndex, pasteIndex, length]) => {
+    let copyParams = "0x0000";
+
+    const _copyIndex =
+      copyIndex === -1
+        ? ethers.constants.MaxUint256
+        : ethers.BigNumber.from(copyIndex);
+    copyParams += ethers.utils
+      .hexZeroPad(_copyIndex.toHexString(), 32)
+      .substr(-20);
+    copyParams += ethers.utils
+      .hexZeroPad(ethers.BigNumber.from(pasteIndex).toHexString(), 20)
+      .substr(-20);
+    copyParams += ethers.utils
+      .hexZeroPad(ethers.BigNumber.from(length).toHexString(), 20)
+      .substr(-20);
+
+    return copyParams;
+  });
+};
+
 module.exports = {
   getBlueprintHash,
   signBlueprint,
   getNormalBlueprintData,
   getAdvancedBlueprintData,
+  generateCalldataCopyParams,
 };
