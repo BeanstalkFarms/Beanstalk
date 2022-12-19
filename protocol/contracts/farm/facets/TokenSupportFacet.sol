@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/drafts/IERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "../../interfaces/IERC4494.sol";
+import "../../libraries/LibTractor.sol";
 
 /**
  * @author Publius
@@ -102,5 +103,38 @@ contract TokenSupportFacet {
         uint256[] calldata values
     ) external payable {
         token.safeBatchTransferFrom(msg.sender, to, ids, values, new bytes(0));
+    }
+
+    /**
+     * Tractor
+     */
+
+    function tractorTransferERC721(
+        IERC721 token,
+        address to,
+        uint256 id
+    ) external payable {
+        address publisher = LibTractor.getActivePublisher();
+        token.safeTransferFrom(publisher, to, id);
+    }
+
+    function tractorTransferERC1155(
+        IERC1155 token,
+        address to,
+        uint256 id,
+        uint256 value
+    ) external payable {
+        address publisher = LibTractor.getActivePublisher();
+        token.safeTransferFrom(publisher, to, id, value, new bytes(0));
+    }
+
+    function tractorBatchTransferERC1155(
+        IERC1155 token,
+        address to,
+        uint256[] calldata ids,
+        uint256[] calldata values
+    ) external payable {
+        address publisher = LibTractor.getActivePublisher();
+        token.safeBatchTransferFrom(publisher, to, ids, values, new bytes(0));
     }
 }
