@@ -306,6 +306,10 @@ contract TokenSilo is Silo {
         uint32 season,
         uint256 amount
     ) internal returns (uint256) {
+        _update(sender);
+        // Need to update the recipient's Silo as well.
+        _update(recipient);
+
         (uint256 stalk, uint256 seeds, uint256 bdv) = removeDeposit(
             sender,
             token,

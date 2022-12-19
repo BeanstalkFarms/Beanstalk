@@ -97,9 +97,7 @@ contract SiloFacet is TokenSilo {
         if (sender != msg.sender) {
             _spendDepositAllowance(sender, msg.sender, token, amount);
         }
-        _update(sender);
-        // Need to update the recipient's Silo as well.
-        _update(recipient);
+
         bdv = _transferDeposit(sender, recipient, token, season, amount);
     }
 
@@ -119,6 +117,17 @@ contract SiloFacet is TokenSilo {
         }
 
         bdvs = _transferDeposits(sender, recipient, token, seasons, amounts);
+    }
+
+    function tractorTransferDeposit(
+        address recipient,
+        address token,
+        uint32 season,
+        uint256 amount
+    ) external payable nonReentrant returns (uint256 bdv) {
+        address publisher = LibTractor.getActivePublisher();
+
+        bdv = _transferDeposit(publisher, recipient, token, season, amount);
     }
 
     function tractorTransferDeposits(
