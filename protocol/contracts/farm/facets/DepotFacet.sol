@@ -11,19 +11,21 @@ import "../../libraries/Token/LibEth.sol";
 
 /**
  * @title Depot Facet
- * @notice Perform function calls to external function calls through Pipeline in a single transcation
+ * @author Publius
+ * @notice DepotFacet wraps Pipeline's Pipe functions to facilitate the loading of non-Ether assets in Pipeline
+ * in the same transaction that loads Ether, Pipes calls to other protocols and unloads Pipeline.
  **/
 
 contract DepotFacet {
     address private constant PIPELINE =
-        0xc5a5C42992dECbae36851359345FE25997F5C42d;
+        0xb1bE0000bFdcDDc92A8290202830C4Ef689dCeaa; // TO DO: Update with final address.
 
     /**
-     * @notice Perform 1 external function call through Pipeline
-     * @param p A function call stored in Pipe struct
-     * @return result The function call return data
+     * @notice Pipe a PipeCall through Pipeline.
+     * @param p PipeCall to pipe through Pipeline
+     * @return result PipeCall return value
      **/
-    function pipe(Pipe calldata p)
+    function pipe(PipeCall calldata p)
         external
         payable
         returns (bytes memory result)
@@ -32,12 +34,12 @@ contract DepotFacet {
     }
 
     /**
-     * @notice Perform a list of a external function calls through Pipeline
+     * @notice Pipe multiple PipeCalls through Pipeline.
      * Does not support sending Ether in the call
-     * @param pipes a list of function calls stored in Pipe struct
-     * @return results A list return data from pipe function calls
+     * @param pipes list of PipeCalls to pipe through Pipeline
+     * @return results list of return values from each PipeCall
      **/
-    function multiPipe(Pipe[] calldata pipes)
+    function multiPipe(PipeCall[] calldata pipes)
         external
         payable
         returns (bytes[] memory results)
@@ -46,12 +48,11 @@ contract DepotFacet {
     }
 
     /**
-     * @notice Perform a list of advanced functio calls through Pipeline
-     * Note: See IPipeline.AdvancedData and LibFunction.buildAdvancedCalldata
-     * @param pipes a list of Advanced Pipes
-     * @return results a list of return values from the advanced function calls
+     * @notice Pipe multiple AdvancedPipeCalls through Pipeline.
+     * @param pipes list of AdvancedPipeCalls to pipe through Pipeline
+     * @return results list of return values from each AdvancedPipeCall
      **/
-    function advancedPipe(AdvancedPipe[] calldata pipes, uint256 value)
+    function advancedPipe(AdvancedPipeCall[] calldata pipes, uint256 value)
         external
         payable
         returns (bytes[] memory results)
@@ -61,12 +62,12 @@ contract DepotFacet {
     }
 
     /**
-     * @notice Perform 1 external function call through Pipeline with an Ether value
-     * @param p A function call stored in Pipe struct
-     * @param value The Ether value to send in the transaction
-     * @return result The function call return data
+     * @notice Pipe a PipeCall through Pipeline with an Ether value.
+     * @param p PipeCall to pipe through Pipeline
+     * @param value Ether value to send in Pipecall
+     * @return result PipeCall return value
      **/
-    function etherPipe(Pipe calldata p, uint256 value)
+    function etherPipe(PipeCall calldata p, uint256 value)
         external
         payable
         returns (bytes memory result)
@@ -76,11 +77,11 @@ contract DepotFacet {
     }
 
     /**
-     * @notice View function to return the result of a function call
-     * @param p A function call stored in Pipe struct
-     * @return result The function call return data
+     * @notice Return the return value of a PipeCall without executing it.
+     * @param p PipeCall to execute with a staticcall
+     * @return result PipeCall return value
      **/
-    function readPipe(Pipe calldata p)
+    function readPipe(PipeCall calldata p)
         external
         view
         returns (bytes memory result)
@@ -92,12 +93,16 @@ contract DepotFacet {
     }
 
     /**
-     * @notice View function to return the result of a function call
+     * @notice View function to return the PipeCall return value
      * @dev if the return value is false, it reverts
-     * @param p A function call stored in Pipe struct
+     * @param p A function call stored in PipeCall struct
      * @return result The function call return data
      **/
-    function validPipe(Pipe calldata p) external returns (bytes memory result) {
+    function validPipe(PipeCall calldata p)
+        external
+        view
+        returns (bytes memory result)
+    {
         bool success;
         // Use a static call to ensure no state modification
         (success, result) = p.target.staticcall(p.data);

@@ -58,7 +58,7 @@ async function deployFacets (facets, verbose = false) {
       if (typeof facet !== 'string') {
         throw Error(`Error deploying facet: facet name must be a string. Bad input: ${facet}`)
       }
-      const facetFactory = await ethers.getContractFactory(facet)
+      const facetFactory = await ethers.getContractFactory(facet, account)
       if (verbose) console.log(`Deploying ${facet}`)
       const deployedFactory = await facetFactory.deploy()
       await deployedFactory.deployed()
@@ -255,7 +255,7 @@ async function upgrade ({
         if (contract) {
           facetFactories.set(facetName, contract)
         } else {
-          facetFactory = await ethers.getContractFactory(facetName)
+          facetFactory = await ethers.getContractFactory(facetName, account)
           facetFactories.set(facetName, facetFactory)
         }
       }
@@ -307,7 +307,7 @@ async function upgrade ({
   if (initFacetName !== undefined) {
     let initFacet = facetFactories.get(initFacetName)
     if (!initFacet) {
-      const InitFacet = await ethers.getContractFactory(initFacetName)
+      const InitFacet = await ethers.getContractFactory(initFacetName, account)
       initFacet = await InitFacet.deploy()
       await initFacet.deployed()
       await initFacet.deployTransaction.wait()
@@ -371,7 +371,7 @@ async function upgradeWithNewFacets ({
   for (const name of libraryNames) {
     if (!Object.keys(libraries).includes(name)) {
       if (verbose) console.log(`Deploying: ${name}`)
-      let libraryFactory = await ethers.getContractFactory(name)
+      let libraryFactory = await ethers.getContractFactory(name, account)
       libraryFactory = await libraryFactory.deploy()
       await libraryFactory.deployed()
       const receipt = await libraryFactory.deployTransaction.wait()
@@ -392,9 +392,10 @@ async function upgradeWithNewFacets ({
       facetFactory = await ethers.getContractFactory(name, {
         libraries: facetLibrary
       },
+      account
       );
     }
-    else facetFactory = await ethers.getContractFactory(name)
+    else facetFactory = await ethers.getContractFactory(name, account)
     undeployed.push([name, facetFactory])
   }
   if (verbose) console.log('')
@@ -462,7 +463,7 @@ async function upgradeWithNewFacets ({
     }
 
     if (!initFacet) {
-      const InitFacet = await ethers.getContractFactory(initFacetName)
+      const InitFacet = await ethers.getContractFactory(initFacetName, account)
       initFacet = await InitFacet.deploy()
       await initFacet.deployed()
       const receipt = await initFacet.deployTransaction.wait()

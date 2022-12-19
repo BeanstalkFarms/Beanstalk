@@ -524,6 +524,176 @@
         "type": "function"
     },
     {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "target",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "callData",
+                        "type": "bytes"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "clipboard",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct AdvancedPipeCall[]",
+                "name": "pipes",
+                "type": "tuple[]"
+            },
+            {
+                "internalType": "uint256",
+                "name": "value",
+                "type": "uint256"
+            }
+        ],
+        "name": "advancedPipe",
+        "outputs": [
+            {
+                "internalType": "bytes[]",
+                "name": "results",
+                "type": "bytes[]"
+            }
+        ],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "target",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "data",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct PipeCall",
+                "name": "p",
+                "type": "tuple"
+            },
+            {
+                "internalType": "uint256",
+                "name": "value",
+                "type": "uint256"
+            }
+        ],
+        "name": "etherPipe",
+        "outputs": [
+            {
+                "internalType": "bytes",
+                "name": "result",
+                "type": "bytes"
+            }
+        ],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "target",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "data",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct PipeCall[]",
+                "name": "pipes",
+                "type": "tuple[]"
+            }
+        ],
+        "name": "multiPipe",
+        "outputs": [
+            {
+                "internalType": "bytes[]",
+                "name": "results",
+                "type": "bytes[]"
+            }
+        ],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "target",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "data",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct PipeCall",
+                "name": "p",
+                "type": "tuple"
+            }
+        ],
+        "name": "pipe",
+        "outputs": [
+            {
+                "internalType": "bytes",
+                "name": "result",
+                "type": "bytes"
+            }
+        ],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "target",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "data",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct PipeCall",
+                "name": "p",
+                "type": "tuple"
+            }
+        ],
+        "name": "readPipe",
+        "outputs": [
+            {
+                "internalType": "bytes",
+                "name": "result",
+                "type": "bytes"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "anonymous": false,
         "inputs": [
             {
@@ -711,11 +881,11 @@
                     },
                     {
                         "internalType": "bytes",
-                        "name": "farmData",
+                        "name": "clipboard",
                         "type": "bytes"
                     }
                 ],
-                "internalType": "struct AdvancedData[]",
+                "internalType": "struct AdvancedFarmCall[]",
                 "name": "data",
                 "type": "tuple[]"
             }
@@ -1791,6 +1961,12 @@
             },
             {
                 "indexed": false,
+                "internalType": "uint256",
+                "name": "minFillAmount",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
                 "internalType": "bytes",
                 "name": "pricingFunction",
                 "type": "bytes"
@@ -1842,6 +2018,12 @@
                 "indexed": false,
                 "internalType": "uint256",
                 "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "costInBeans",
                 "type": "uint256"
             }
         ],
@@ -1898,6 +2080,12 @@
                 "indexed": false,
                 "internalType": "uint256",
                 "name": "maxPlaceInLine",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "minFillAmount",
                 "type": "uint256"
             },
             {
@@ -2033,6 +2221,11 @@
                 "type": "uint256"
             },
             {
+                "internalType": "uint256",
+                "name": "minFillAmount",
+                "type": "uint256"
+            },
+            {
                 "internalType": "enum LibTransfer.To",
                 "name": "mode",
                 "type": "uint8"
@@ -2048,6 +2241,11 @@
             {
                 "internalType": "uint256",
                 "name": "maxPlaceInLine",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "minFillAmount",
                 "type": "uint256"
             },
             {
@@ -2094,6 +2292,11 @@
                 "type": "uint256"
             },
             {
+                "internalType": "uint256",
+                "name": "minFillAmount",
+                "type": "uint256"
+            },
+            {
                 "internalType": "enum LibTransfer.To",
                 "name": "mode",
                 "type": "uint8"
@@ -2124,6 +2327,11 @@
             {
                 "internalType": "uint256",
                 "name": "maxHarvestableIndex",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "minFillAmount",
                 "type": "uint256"
             },
             {
@@ -2160,6 +2368,11 @@
                 "type": "uint256"
             },
             {
+                "internalType": "uint256",
+                "name": "minFillAmount",
+                "type": "uint256"
+            },
+            {
                 "internalType": "enum LibTransfer.From",
                 "name": "mode",
                 "type": "uint8"
@@ -2186,6 +2399,11 @@
             {
                 "internalType": "uint256",
                 "name": "maxPlaceInLine",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "minFillAmount",
                 "type": "uint256"
             },
             {
@@ -2242,6 +2460,11 @@
                     {
                         "internalType": "uint256",
                         "name": "maxHarvestableIndex",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "minFillAmount",
                         "type": "uint256"
                     },
                     {
@@ -2305,6 +2528,11 @@
                         "type": "uint256"
                     },
                     {
+                        "internalType": "uint256",
+                        "name": "minFillAmount",
+                        "type": "uint256"
+                    },
+                    {
                         "internalType": "enum LibTransfer.To",
                         "name": "mode",
                         "type": "uint8"
@@ -2352,6 +2580,11 @@
                     {
                         "internalType": "uint256",
                         "name": "maxPlaceInLine",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "minFillAmount",
                         "type": "uint256"
                     }
                 ],
@@ -2402,6 +2635,11 @@
                     {
                         "internalType": "uint256",
                         "name": "maxPlaceInLine",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "minFillAmount",
                         "type": "uint256"
                     }
                 ],
@@ -2472,50 +2710,18 @@
     {
         "inputs": [
             {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "account",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "index",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "start",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint24",
-                        "name": "pricePerPod",
-                        "type": "uint24"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "maxHarvestableIndex",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "enum LibTransfer.To",
-                        "name": "mode",
-                        "type": "uint8"
-                    }
-                ],
-                "internalType": "struct Listing.PodListing",
-                "name": "l",
-                "type": "tuple"
+                "internalType": "uint256",
+                "name": "placeInLine",
+                "type": "uint256"
             },
             {
                 "internalType": "uint256",
-                "name": "beanAmount",
+                "name": "podListingAmount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "fillBeanAmount",
                 "type": "uint256"
             },
             {
@@ -2524,7 +2730,7 @@
                 "type": "bytes"
             }
         ],
-        "name": "getRoundedAmountV2",
+        "name": "getAmountPodsFromFillListingV2",
         "outputs": [
             {
                 "internalType": "uint256",
@@ -2532,7 +2738,7 @@
                 "type": "uint256"
             }
         ],
-        "stateMutability": "view",
+        "stateMutability": "pure",
         "type": "function"
     },
     {
@@ -2569,6 +2775,11 @@
             {
                 "internalType": "uint256",
                 "name": "maxPlaceInLine",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "minFillAmount",
                 "type": "uint256"
             }
         ],
@@ -2612,6 +2823,11 @@
             {
                 "internalType": "uint256",
                 "name": "maxPlaceInLine",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "minFillAmount",
                 "type": "uint256"
             },
             {
@@ -2773,176 +2989,6 @@
         "name": "unpause",
         "outputs": [],
         "stateMutability": "payable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "target",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "bytes",
-                        "name": "callData",
-                        "type": "bytes"
-                    },
-                    {
-                        "internalType": "bytes",
-                        "name": "pipeData",
-                        "type": "bytes"
-                    }
-                ],
-                "internalType": "struct AdvancedPipe[]",
-                "name": "pipes",
-                "type": "tuple[]"
-            },
-            {
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-            }
-        ],
-        "name": "advancedPipe",
-        "outputs": [
-            {
-                "internalType": "bytes[]",
-                "name": "results",
-                "type": "bytes[]"
-            }
-        ],
-        "stateMutability": "payable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "target",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "bytes",
-                        "name": "data",
-                        "type": "bytes"
-                    }
-                ],
-                "internalType": "struct Pipe",
-                "name": "p",
-                "type": "tuple"
-            },
-            {
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-            }
-        ],
-        "name": "etherPipe",
-        "outputs": [
-            {
-                "internalType": "bytes",
-                "name": "result",
-                "type": "bytes"
-            }
-        ],
-        "stateMutability": "payable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "target",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "bytes",
-                        "name": "data",
-                        "type": "bytes"
-                    }
-                ],
-                "internalType": "struct Pipe[]",
-                "name": "pipes",
-                "type": "tuple[]"
-            }
-        ],
-        "name": "multiPipe",
-        "outputs": [
-            {
-                "internalType": "bytes[]",
-                "name": "results",
-                "type": "bytes[]"
-            }
-        ],
-        "stateMutability": "payable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "target",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "bytes",
-                        "name": "data",
-                        "type": "bytes"
-                    }
-                ],
-                "internalType": "struct Pipe",
-                "name": "p",
-                "type": "tuple"
-            }
-        ],
-        "name": "pipe",
-        "outputs": [
-            {
-                "internalType": "bytes",
-                "name": "result",
-                "type": "bytes"
-            }
-        ],
-        "stateMutability": "payable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "target",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "bytes",
-                        "name": "data",
-                        "type": "bytes"
-                    }
-                ],
-                "internalType": "struct Pipe",
-                "name": "p",
-                "type": "tuple"
-            }
-        ],
-        "name": "readPipe",
-        "outputs": [
-            {
-                "internalType": "bytes",
-                "name": "result",
-                "type": "bytes"
-            }
-        ],
-        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -4623,6 +4669,89 @@
         "type": "event"
     },
     {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "spender",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "contract IERC20",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "TokenApproval",
+        "type": "event"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "spender",
+                "type": "address"
+            },
+            {
+                "internalType": "contract IERC20",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "approveToken",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "spender",
+                "type": "address"
+            },
+            {
+                "internalType": "contract IERC20",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "subtractedValue",
+                "type": "uint256"
+            }
+        ],
+        "name": "decreaseTokenAllowance",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
         "inputs": [
             {
                 "internalType": "address",
@@ -4851,6 +4980,177 @@
     {
         "inputs": [
             {
+                "internalType": "address",
+                "name": "spender",
+                "type": "address"
+            },
+            {
+                "internalType": "contract IERC20",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "addedValue",
+                "type": "uint256"
+            }
+        ],
+        "name": "increaseTokenAllowance",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "spender",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "value",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "deadline",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint8",
+                "name": "v",
+                "type": "uint8"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "r",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "s",
+                "type": "bytes32"
+            }
+        ],
+        "name": "permitToken",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "spender",
+                "type": "address"
+            },
+            {
+                "internalType": "contract IERC20",
+                "name": "token",
+                "type": "address"
+            }
+        ],
+        "name": "tokenAllowance",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "tokenPermitDomainSeparator",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            }
+        ],
+        "name": "tokenPermitNonces",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "contract IERC20",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "sender",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "recipient",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "enum LibTransfer.To",
+                "name": "toMode",
+                "type": "uint8"
+            }
+        ],
+        "name": "transferInternalTokenFrom",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "contract IERC20",
                 "name": "token",
                 "type": "address"
@@ -4913,6 +5213,166 @@
             }
         ],
         "name": "wrapEth",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "contract IERC1155",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "to",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256[]",
+                "name": "ids",
+                "type": "uint256[]"
+            },
+            {
+                "internalType": "uint256[]",
+                "name": "values",
+                "type": "uint256[]"
+            }
+        ],
+        "name": "batchTransferERC1155",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "contract IERC20Permit",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "spender",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "value",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "deadline",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint8",
+                "name": "v",
+                "type": "uint8"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "r",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "s",
+                "type": "bytes32"
+            }
+        ],
+        "name": "permitERC20",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "contract IERC4494",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "spender",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "tokenId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "deadline",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bytes",
+                "name": "sig",
+                "type": "bytes"
+            }
+        ],
+        "name": "permitERC721",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "contract IERC1155",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "to",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "value",
+                "type": "uint256"
+            }
+        ],
+        "name": "transferERC1155",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "contract IERC721",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "to",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+            }
+        ],
+        "name": "transferERC721",
         "outputs": [],
         "stateMutability": "payable",
         "type": "function"

@@ -116,6 +116,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     fertilizerFacet,
     ownershipFacet,
     tokenFacet,
+    tokenSupportFacet,
     unripeFacet,
     whitelistFacet
   ] = mock ? await deployFacets(
@@ -137,6 +138,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'MockFertilizerFacet',
       'OwnershipFacet',
       'TokenFacet',
+      'TokenSupportFacet',
       'MockUnripeFacet',
       'WhitelistFacet'],
   ) : await deployFacets(
@@ -158,6 +160,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'PermitFacet',
       'FertilizerFacet',
       'TokenFacet',
+      'TokenSupportFacet',
       'UnripeFacet',
       'WhitelistFacet'],
   )
@@ -198,6 +201,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['PermitFacet', permitFacet],
       ['FertilizerFacet', fertilizerFacet],
       ['TokenFacet', tokenFacet],
+      ['TokenSupportFacet', tokenSupportFacet],
       ['UnripeFacet', unripeFacet],
       ['WhitelistFacet', whitelistFacet]
     ],
@@ -244,6 +248,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     permitFacet,
     fertilizerFacet,
     tokenFacet,
+    tokenSupportFacet,
     unripeFacet
   }
 }

@@ -5,7 +5,7 @@ const { signERC2612Permit } = require("eth-permit");
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { signTokenPermit } = require('../utils');
+const { signTokenPermit, getBeanstalk } = require('../utils');
 
 describe('Token', function () {
 
@@ -155,113 +155,170 @@ describe('Token', function () {
         })
     })
 
-    describe('transfer from', async function () {
-        describe('External to external', async function () {
-            it('basic', async function () {
-                await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', EXTERNAL, EXTERNAL);
-                checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
-                checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '0', '200', '200')
-            })
+    describe('transfer internal from', async function () {
+      beforeEach(async function () {
+        await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
+      })
+
+      describe("spender = msg.sender", async function () {
+        it('to external', async function () {
+            this.result = await this.tokenFacet.connect(this.user).transferInternalTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', EXTERNAL);
+            checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
+            checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '0', '200', '200')
+            await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
+        })
+  
+        it('to internal', async function () {
+          this.result = await this.tokenFacet.connect(this.user).transferInternalTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL);
+          checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
+          checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '200', '0', '200')
+          await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
+        })
+      })
+
+      describe('spender != msg.sender', async function () {
+        describe('without approval', async function () {
+          it('reverts if approval = 0', async function () {
+            await expect(this.tokenFacet.connect(this.user2).transferInternalTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL)).to.be.revertedWith('Token: insufficient allowance')
+          })
+
+          it('reverts if approval < amount', async function () {
+            await this.tokenFacet.connect(this.user).approveToken(this.user2.address, this.token.address, '100')
+            await expect(this.tokenFacet.connect(this.user2).transferInternalTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL)).to.be.revertedWith('Token: insufficient allowance')
+          })
         })
 
-        describe('External to internal', async function () {
-            it('basic', async function () {
-                this.result = await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address,this.user.address,this.recipient.address, '200', EXTERNAL, INTERNAL);
-                checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
-                checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '200', '0', '200')
-                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.recipient.address, this.token.address, '200')
-            })
+        describe('with approval', async function () {
+          it('max approval', async function () {
+            await this.tokenFacet.connect(this.user).approveToken(this.user2.address, this.token.address, ethers.constants.MaxUint256)
+            this.result = await this.tokenFacet.connect(this.user2).transferInternalTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL)
+            checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
+            checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '200', '0', '200')
+            await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
+          })
+
+          it('some approval', async function () {
+            await this.tokenFacet.connect(this.user).approveToken(this.user2.address, this.token.address, '200')
+            this.result = await this.tokenFacet.connect(this.user2).transferInternalTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL)
+            checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
+            checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '200', '0', '200')
+            await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
+
+          })
         })
+      })
+  })
 
-        describe('internal to internal', async function () {
-            it('reverts if > than internal, not tolerant', async function () {
-                await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.user.address, '200', EXTERNAL, INTERNAL);
-                await expect(this.tokenFacet.connect(this.user).transferToken(this.token.address, this.recipient.address, '300', INTERNAL, INTERNAL)).to.be.revertedWith("Balance: Insufficient internal balance")
-            })
-            it('internal', async function () {
-                await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.user.address, '200', EXTERNAL, INTERNAL);
-                this.result = await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL, INTERNAL);
-                checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
-                checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '200', '0', '200')
-                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
-                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.recipient.address, this.token.address, '200')
-            })
 
-            it('internal tolerant', async function () {
-                await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.user.address, '200', EXTERNAL, INTERNAL);
-                this.result = await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address,this.recipient.address, '300', INTERNAL_EXTERNAL, INTERNAL);
-                checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '700', '700')
-                checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '300', '0', '300')
-                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
-                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.recipient.address, this.token.address, '300')
-            })
+    // EBIP-5 renamed 
 
-            it('internal + external', async function () {
-                await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.user.address, '200', EXTERNAL, INTERNAL);
-                this.result = await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '250', INTERNAL_TOLERANT, INTERNAL);
-                checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
-                checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '200', '0', '200')
-                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
-                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.recipient.address, this.token.address, '200')
-            })
+    // describe('transfer from', async function () {
+    //     describe('External to external', async function () {
+    //         it('basic', async function () {
+    //             await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', EXTERNAL, EXTERNAL);
+    //             checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
+    //             checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '0', '200', '200')
+    //         })
+    //     })
 
-            it('0 internal tolerant', async function () {
-                this.result = await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address,this.recipient.address, '0', INTERNAL_TOLERANT, INTERNAL);
-                checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '1000', '1000')
-                checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '0', '0', '0')
-            })
-        })
+    //     describe('External to internal', async function () {
+    //         it('basic', async function () {
+    //             this.result = await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address,this.user.address,this.recipient.address, '200', EXTERNAL, INTERNAL);
+    //             checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
+    //             checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '200', '0', '200')
+    //             await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.recipient.address, this.token.address, '200')
+    //         })
+    //     })
 
-        describe('internal to external', async function () {
-            it('basic', async function () {
-                await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.user.address, '200', EXTERNAL, INTERNAL);
-                this.result = await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL, EXTERNAL);
-                checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
-                checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '0', '200', '200')
-                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
-            })
-        })
+    //     describe('internal to internal', async function () {
+    //         it('reverts if > than internal, not tolerant', async function () {
+    //             await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.user.address, '200', EXTERNAL, INTERNAL);
+    //             await expect(this.tokenFacet.connect(this.user).transferToken(this.token.address, this.recipient.address, '300', INTERNAL, INTERNAL)).to.be.revertedWith("Balance: Insufficient internal balance")
+    //         })
+    //         it('internal', async function () {
+    //             await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.user.address, '200', EXTERNAL, INTERNAL);
+    //             this.result = await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL, INTERNAL);
+    //             checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
+    //             checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '200', '0', '200')
+    //             await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
+    //             await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.recipient.address, this.token.address, '200')
+    //         })
 
-        describe('internal to external allowance', async function () {
-            it('reverts if spender has insuffient allowance', async function () {
-                await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
-                await expect(this.tokenFacet.connect(this.user2).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL, EXTERNAL)).to.be.revertedWith("Token: insufficient allowance")
-            })
-            it('reverts if > than internal, not tolerant', async function () {
-                await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
-                await this.tokenFacet.connect(this.user).approveToken(this.user2.address,this.token.address, '500');
-                await expect(this.tokenFacet.connect(this.user2).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '300', INTERNAL, EXTERNAL)).to.be.revertedWith("Balance: Insufficient internal balance")
-            })
-            it('basic', async function () {
-                await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
-                await this.tokenFacet.connect(this.user).approveToken(this.user2.address, this.token.address, '200');
-                this.result = await this.tokenFacet.connect(this.user2).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL, EXTERNAL);
-                checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
-                checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '0', '200', '200')
-                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
-            })
-        })
+    //         it('internal tolerant', async function () {
+    //             await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.user.address, '200', EXTERNAL, INTERNAL);
+    //             this.result = await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address,this.recipient.address, '300', INTERNAL_EXTERNAL, INTERNAL);
+    //             checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '700', '700')
+    //             checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '300', '0', '300')
+    //             await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
+    //             await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.recipient.address, this.token.address, '300')
+    //         })
 
-        describe('internal to external tolerant allowance', async function () {
-            it('reverts if spender has insuffient allowance', async function () {
-                await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
-                await expect(this.tokenFacet.connect(this.user2).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL_EXTERNAL, EXTERNAL)).to.be.revertedWith("Token: insufficient allowance")
-            })
-            it('reverts if > than internal and external', async function () {
-                await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
-                await this.tokenFacet.connect(this.user).approveToken(this.user2.address, this.token.address, '500');
-                await expect(this.tokenFacet.connect(this.user2).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '1200', INTERNAL_EXTERNAL, EXTERNAL)).to.be.revertedWith("ERC20: transfer amount exceeds balance")
-            })
-            it('basic', async function () {
-                await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
-                await this.tokenFacet.connect(this.user).approveToken(this.user2.address, this.token.address, '200');
-                this.result = await this.tokenFacet.connect(this.user2).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '300', INTERNAL_EXTERNAL, EXTERNAL);
-                checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '700', '700')
-                checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '0', '300', '300')
-                await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
-            })
-        })
-    })
+    //         it('internal + external', async function () {
+    //             await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.user.address, '200', EXTERNAL, INTERNAL);
+    //             this.result = await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '250', INTERNAL_TOLERANT, INTERNAL);
+    //             checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
+    //             checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '200', '0', '200')
+    //             await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
+    //             await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.recipient.address, this.token.address, '200')
+    //         })
+
+    //         it('0 internal tolerant', async function () {
+    //             this.result = await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address,this.recipient.address, '0', INTERNAL_TOLERANT, INTERNAL);
+    //             checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '1000', '1000')
+    //             checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '0', '0', '0')
+    //         })
+    //     })
+
+    //     describe('internal to external', async function () {
+    //         it('basic', async function () {
+    //             await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.user.address, '200', EXTERNAL, INTERNAL);
+    //             this.result = await this.tokenFacet.connect(this.user).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL, EXTERNAL);
+    //             checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
+    //             checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '0', '200', '200')
+    //             await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
+    //         })
+    //     })
+
+    //     describe('internal to external allowance', async function () {
+    //         it('reverts if spender has insuffient allowance', async function () {
+    //             await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
+    //             await expect(this.tokenFacet.connect(this.user2).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL, EXTERNAL)).to.be.revertedWith("Token: insufficient allowance")
+    //         })
+    //         it('reverts if > than internal, not tolerant', async function () {
+    //             await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
+    //             await this.tokenFacet.connect(this.user).approveToken(this.user2.address,this.token.address, '500');
+    //             await expect(this.tokenFacet.connect(this.user2).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '300', INTERNAL, EXTERNAL)).to.be.revertedWith("Balance: Insufficient internal balance")
+    //         })
+    //         it('basic', async function () {
+    //             await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
+    //             await this.tokenFacet.connect(this.user).approveToken(this.user2.address, this.token.address, '200');
+    //             this.result = await this.tokenFacet.connect(this.user2).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL, EXTERNAL);
+    //             checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '800', '800')
+    //             checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '0', '200', '200')
+    //             await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
+    //         })
+    //     })
+
+    //     describe('internal to external tolerant allowance', async function () {
+    //         it('reverts if spender has insuffient allowance', async function () {
+    //             await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
+    //             await expect(this.tokenFacet.connect(this.user2).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '200', INTERNAL_EXTERNAL, EXTERNAL)).to.be.revertedWith("Token: insufficient allowance")
+    //         })
+    //         it('reverts if > than internal and external', async function () {
+    //             await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
+    //             await this.tokenFacet.connect(this.user).approveToken(this.user2.address, this.token.address, '500');
+    //             await expect(this.tokenFacet.connect(this.user2).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '1200', INTERNAL_EXTERNAL, EXTERNAL)).to.be.revertedWith("ERC20: transfer amount exceeds balance")
+    //         })
+    //         it('basic', async function () {
+    //             await this.tokenFacet.connect(this.user).transferToken(this.token.address, this.user.address, '200', EXTERNAL, INTERNAL);
+    //             await this.tokenFacet.connect(this.user).approveToken(this.user2.address, this.token.address, '200');
+    //             this.result = await this.tokenFacet.connect(this.user2).transferTokenFrom(this.token.address, this.user.address, this.recipient.address, '300', INTERNAL_EXTERNAL, EXTERNAL);
+    //             checkAllBalance(await this.tokenFacet.getAllBalance(this.user.address, this.token.address), '0', '700', '700')
+    //             checkAllBalance(await this.tokenFacet.getAllBalance(this.recipient.address, this.token.address), '0', '300', '300')
+    //             await expect(this.result).to.emit(this.tokenFacet, 'InternalBalanceChanged').withArgs(this.user.address, this.token.address, '-200')
+    //         })
+    //     })
+    // })
 
     describe("weth", async function () {
         it('deposit WETH to external', async function () {
@@ -316,87 +373,6 @@ describe('Token', function () {
         })
     })
 
-    describe("Permit", async function () {
-        before(async function() {
-            await hre.network.provider.request({
-                method: "hardhat_impersonateAccount",
-                params: [BEANSTALK],
-            });
-    
-            [owner, user, user2] = await ethers.getSigners()
-    
-            const Bean = await ethers.getContractFactory("Bean", owner)
-            bean = await Bean.deploy()
-            await bean.deployed();
-            await bean.mint(user.address, toBean('100'))
-
-            result = await signERC2612Permit(
-                ethers.provider,
-                bean.address,
-                user.address,
-                owner.address,
-                '10000000'
-            );
-
-            fakeResult = await signERC2612Permit(
-                ethers.provider,
-                user.address,
-                user.address,
-                owner.address,
-                '10000000'
-            );
-
-            endedResult = await signERC2612Permit(
-                ethers.provider,
-                user.address,
-                user.address,
-                owner.address,
-                '10000000',
-                '1'
-            );
-        });
-
-        it('revert if fake permit', async function () {
-            await expect(this.tokenFacet.connect(user).permitERC20(
-                bean.address,
-                user.address,
-                owner.address,
-                toBean('10'),
-                fakeResult.deadline,
-                fakeResult.v,
-                fakeResult.r,
-                fakeResult.s
-            )).to.be.revertedWith('ERC20Permit: invalid signature')
-        });
-
-        it('revert when too much', async function () {
-            await this.tokenFacet.connect(user).permitERC20(
-                bean.address,
-                user.address, 
-                owner.address, 
-                toBean('10'), 
-                result.deadline, 
-                result.v, 
-                result.r, 
-                result.s
-            )
-
-            await expect(bean.connect(owner).transferFrom(user.address, user2.address, toBean('20'))).to.be.revertedWith("ERC20: transfer amount exceeds allowance")
-        });
-
-        it('revert deadline passed', async function () {
-            await expect(this.tokenFacet.connect(user).permitERC20(
-                bean.address,
-                user.address, 
-                owner.address, 
-                toBean('10'), 
-                endedResult.deadline, 
-                endedResult.v, 
-                endedResult.r, 
-                endedResult.s
-            )).to.be.revertedWith("ERC20Permit: expired deadline")
-        });
-    });
     describe("Token Approval", async function () {
         describe("approve allowance", async function () {
           beforeEach(async function () {

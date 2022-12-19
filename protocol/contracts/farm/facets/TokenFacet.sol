@@ -82,31 +82,24 @@ contract TokenFacet is ReentrancyGuard {
         );
     }
 
-    function transferTokenFrom(
+    function transferInternalTokenFrom(
         IERC20 token,
         address sender,
         address recipient,
         uint256 amount,
-        LibTransfer.From fromMode,
         LibTransfer.To toMode
     ) external payable nonReentrant {
-        uint256 beforeAmount = LibBalance.getInternalBalance(sender, token);
         LibTransfer.transferToken(
             token,
             sender,
             recipient,
             amount,
-            fromMode,
+            LibTransfer.From.INTERNAL,
             toMode
         );
 
         if (sender != msg.sender) {
-            uint256 deltaAmount = beforeAmount.sub(
-                LibBalance.getInternalBalance(sender, token)
-            );
-            if (deltaAmount > 0) {
-                LibTokenApprove.spendAllowance(sender, msg.sender, token, deltaAmount);
-            }
+            LibTokenApprove.spendAllowance(sender, msg.sender, token, amount);
         }
     }
 
@@ -192,25 +185,6 @@ contract TokenFacet is ReentrancyGuard {
 
     function unwrapEth(uint256 amount, LibTransfer.From mode) external payable {
         LibWeth.unwrap(amount, mode);
-    }
-
-    /**
-     * Permit
-     */
-
-    /// @notice permitERC20 is wrapper function for permit of ERC20Permit token
-    /// @dev See {IERC20Permit-permit}.
-    function permitERC20(
-        IERC20Permit token,
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) public {
-        token.permit(owner, spender, value, deadline, v, r, s);
     }
 
     /**

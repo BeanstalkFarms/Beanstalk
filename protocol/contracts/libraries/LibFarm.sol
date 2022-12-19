@@ -11,7 +11,7 @@ import "./LibFunction.sol";
  **/
 library LibFarm {
     // Advanced Data is a function call that allows for return values from existing functions
-    // See LibFunction.buildAdvancedCalldata for details
+    // See LibFunction.useClipboard for details
     struct AdvancedData {
         bytes callData;
         bytes advancedData;
@@ -23,11 +23,11 @@ library LibFarm {
     {
         bytes1 pipeType = d.advancedData[0];
         // 0x00 -> Normal pipe: Standard function call
-        // else > Advanced pipe: Copy return data into function call through buildAdvancedCalldata
+        // else > Advanced pipe: Copy return data into function call through useClipboard
         if (pipeType == 0x00) {
             result = farm(d.callData);
         } else {
-            result = LibFunction.buildAdvancedCalldata(
+            result = LibFunction.useClipboard(
                 d.callData,
                 d.advancedData,
                 returnData
@@ -42,11 +42,11 @@ library LibFarm {
     {
         bytes1 pipeType = d.advancedData[0];
         // 0x00 -> Normal pipe: Standard function call
-        // else > Advanced pipe: Copy return data into function call through buildAdvancedCalldata
+        // else > Advanced pipe: Copy return data into function call through useClipboardMem
         if (pipeType == 0x00) {
             result = farmMem(d.callData);
         } else {
-            result = LibFunction.buildAdvancedCalldataMem(
+            result = LibFunction.useClipboardMem(
                 d.callData,
                 d.advancedData,
                 returnData
