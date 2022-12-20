@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import '@halborn/seraph/contracts/SeraphProtected.sol';
 import "../ReentrancyGuard.sol";
 import "../../libraries/LibDiamond.sol";
 import "../../libraries/LibDibbler.sol";
@@ -16,7 +17,7 @@ import "../../libraries/Token/LibTransfer.sol";
  * @author Publius
  * @title Funding Facet
  **/
-contract FundraiserFacet is ReentrancyGuard {
+contract FundraiserFacet is ReentrancyGuard, SeraphProtected {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -75,7 +76,7 @@ contract FundraiserFacet is ReentrancyGuard {
         address payee,
         address token,
         uint256 amount
-    ) external payable {
+    ) external payable withSeraphPayable() {
         LibDiamond.enforceIsOwnerOrContract();
         uint32 id = s.fundraiserIndex;
         s.fundraisers[id].token = token;

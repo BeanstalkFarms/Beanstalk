@@ -3,16 +3,17 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
+import '@halborn/seraph/contracts/SeraphProtected.sol';
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
 import {AppStorage} from "../AppStorage.sol";
 
-contract OwnershipFacet {
+contract OwnershipFacet is SeraphProtected {
 
     AppStorage internal s;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
-    function transferOwnership(address _newOwner) external {
+    function transferOwnership(address _newOwner) external withSeraph() {
         LibDiamond.enforceIsContractOwner();
         s.ownerCandidate = _newOwner;
     }
