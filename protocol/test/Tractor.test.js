@@ -31,6 +31,7 @@ const {
 } = require("./utils/constants.js");
 const { to6, to18 } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+const { ethers } = require("hardhat");
 
 let user, user2, user3, publisher, owner;
 let userAddress, ownerAddress, user2Address;
@@ -56,6 +57,15 @@ describe("Tractor", function () {
       this.diamond.address
     );
     this.bean = await ethers.getContractAt("Bean", BEAN);
+    const OracleFactory = await ethers.getContractFactory(
+      "CheckEarnedBeanBalanceOracle"
+    );
+    this.oracle = await OracleFactory.deploy(
+      this.diamond.address,
+      this.bean.address
+    );
+    await this.oracle.deployed();
+    this.depot = await ethers.getContractAt("DepotFacet", this.diamond.address);
     this.tokenFacet = await ethers.getContractAt(
       "TokenFacet",
       this.diamond.address
@@ -258,6 +268,14 @@ describe("Tractor", function () {
   });
 
   it("Plant Tractor", async function () {
+    const checkEarnedBean = await this.oracle.interface.encodeFunctionData(
+      "checkEarnedBeanBalance",
+      [userAddress, to6("50")]
+    );
+    const validPipe = await this.depot.interface.encodeFunctionData(
+      "validPipe",
+      [[this.oracle.address, checkEarnedBean]]
+    );
     const plant = await this.silo.interface.encodeFunctionData(
       "tractorPlant",
       []
@@ -269,10 +287,10 @@ describe("Tractor", function () {
 
     const blueprint = {
       publisher: userAddress,
-      data: getNormalBlueprintData([plant, transferToken]),
+      data: getNormalBlueprintData([validPipe, plant, transferToken]),
       calldataCopyParams: generateCalldataCopyParams([
-        [-1, 224 + 36 + 32, 0],
-        [32, 224 + 132 + 32, 32],
+        [-1, 612, 0],
+        [32, 708, 32],
       ]),
       maxNonce: 100,
       startTime: Math.floor(Date.now() / 1000) - 10 * 3600,
