@@ -10,6 +10,10 @@ const { deploy } = require('../scripts/deploy.js')
 const { BEAN, ZERO_ADDRESS } = require('./utils/constants')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { ethers } = require('hardhat');
+const {
+  signBlueprint,
+  getNormalBlueprintData,
+} = require("./utils/tractor.js");
 
 const ZERO_HASH = '0x0000000000000000000000000000000000000000000000000000000000000000'
 let user, user2, owner;
@@ -28,6 +32,10 @@ describe('Marketplace', function () {
 
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond
+    this.tractor = await ethers.getContractAt(
+      "TractorFacet",
+      this.diamond.address
+    );
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address);
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.marketplace = await ethers.getContractAt('MockMarketplaceFacet', this.diamond.address);
@@ -2075,6 +2083,39 @@ describe('Marketplace', function () {
         beforeEach(async function () {
           await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', '0', EXTERNAL);
           this.result = await this.marketplace.connect(user).transferPlot(userAddress, user2Address, '0', '0', '100')
+        })
+  
+        it('transfers the plot', async function () {
+          expect(await this.field.plot(user2Address, '0')).to.be.equal('100')
+          expect(await this.field.plot(userAddress, '0')).to.be.equal('0')
+          expect(await this.field.plot(userAddress, '100')).to.be.equal('900')
+          expect(await this.marketplace.podListing('0')).to.be.equal('0x0000000000000000000000000000000000000000000000000000000000000000')
+        })
+  
+        it('emits plot transfer the plot', async function () {
+          await expect(this.result).to.emit(this.marketplace, 'PlotTransfer').withArgs(userAddress, user2Address, '0', '100');
+          await expect(this.result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, '0');
+        })
+      })
+  
+      describe('tractor transfers with existing pod listing', async function () {
+        beforeEach(async function () {
+          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', '0', EXTERNAL);
+
+          const transferPlot = await this.marketplace.interface.encodeFunctionData(
+            "tractorTransferPlot",
+            [user2Address, '0', '0', '100'],
+          );
+          const blueprint = {
+            publisher: userAddress,
+            data: getNormalBlueprintData([transferPlot]),
+            calldataCopyParams: [],
+            maxNonce: 100,
+            startTime: Math.floor(Date.now() / 1000) - 10 * 3600,
+            endTime: Math.floor(Date.now() / 1000) + 10 * 3600,
+          };
+          await signBlueprint(blueprint, user);
+          this.result = await this.tractor.connect(user2).tractor(blueprint, "0x");
         })
   
         it('transfers the plot', async function () {
