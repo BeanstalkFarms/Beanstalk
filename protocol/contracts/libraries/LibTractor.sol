@@ -58,6 +58,11 @@ library LibTractor {
     /// @notice set blueprint publisher address
     /// @param publisher blueprint publisher address
     function setPublisher(address publisher) internal {
+        require(
+            tractorStorage().activePublisher == address(0) ||
+                tractorStorage().activePublisher == address(1),
+            "LibTractor: publisher already set"
+        );
         tractorStorage().activePublisher = publisher;
     }
 

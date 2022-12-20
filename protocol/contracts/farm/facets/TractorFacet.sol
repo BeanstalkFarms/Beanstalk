@@ -125,7 +125,6 @@ contract TractorFacet is ReentrancyGuard {
     )
         external
         payable
-        nonReentrant
         verifySignature(blueprint)
         returns (bytes[] memory results)
     {

@@ -1,9 +1,7 @@
 const { expect } = require("chai");
 const { deploy } = require("../scripts/deploy.js");
-const { deployPipeline } = require("../scripts/pipeline.js");
-const { getAltBeanstalk, getBean, getUsdc } = require("../utils/contracts.js");
+const { getAltBeanstalk } = require("../utils/contracts.js");
 const { toBN, encodeAdvancedData } = require("../utils/index.js");
-const { impersonateSigner } = require("../utils/signer.js");
 const {
   getBlueprintHash,
   signBlueprint,
@@ -11,22 +9,11 @@ const {
   getAdvancedBlueprintData,
   generateCalldataCopyParams,
 } = require("./utils/tractor.js");
-const {
-  EXTERNAL,
-  INTERNAL,
-  INTERNAL_EXTERNAL,
-  INTERNAL_TOLERANT,
-} = require("./utils/balances.js");
+const { EXTERNAL } = require("./utils/balances.js");
 const {
   BEAN,
   BEAN_3_CURVE,
-  TRI_CRYPTO_POOL,
-  CRYPTO_REGISTRY,
-  THREE_POOL,
   THREE_CURVE,
-  STABLE_FACTORY,
-  USDT,
-  WETH,
   ZERO_ADDRESS,
 } = require("./utils/constants.js");
 const { to6, to18 } = require("./utils/helpers.js");
@@ -34,7 +21,7 @@ const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { ethers } = require("hardhat");
 
 let user, user2, user3, publisher, owner;
-let userAddress, ownerAddress, user2Address;
+let userAddress, user2Address;
 
 describe("Tractor", function () {
   before(async function () {
