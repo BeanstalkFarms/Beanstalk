@@ -39,6 +39,7 @@ You can read more about BIPs [here](https://docs.bean.money/almanac/governance/p
 * [BIP-28](https://bean.money/bip-28): Pod Market Price Functions
 * [BIP-29](https://bean.money/bip-29): Pod Market Price Functions
 * [BIP-30](https://bean.money/bip-30): Generalized Pipeline and ERC-20 and ERC-721 Permit Support
+* [BIP-31](https://bean.money/bip-31): Beanstalk Farms Q1 2023 Budget
 
 ## Emergency Beanstalk Improvement Proposal (EBIP)
 
