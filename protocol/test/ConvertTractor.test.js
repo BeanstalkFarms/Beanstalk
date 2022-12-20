@@ -124,7 +124,7 @@ describe("Unripe Convert Tractor", function () {
     await revertToSnapshot(snapshotId);
   });
 
-  describe.only("convert beans to lp", async function () {
+  describe("convert beans to lp", async function () {
     beforeEach(async function () {
       await this.silo
         .connect(user)

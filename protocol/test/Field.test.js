@@ -5,6 +5,10 @@ const { BEAN } = require('./utils/constants')
 const { to18, to6, toStalk } = require('./utils/helpers.js')
 const { MAX_UINT32 } = require('./utils/constants.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+const {
+  signBlueprint,
+  getNormalBlueprintData,
+} = require("./utils/tractor.js");
 
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -17,6 +21,10 @@ describe('Field', function () {
     const contracts = await deploy("Test", false, true);
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
+    this.tractor = await ethers.getContractAt(
+      "TractorFacet",
+      this.diamond.address
+    );
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address);
     this.tokenFacet = await ethers.getContractAt('TokenFacet', this.diamond.address);
@@ -163,6 +171,46 @@ describe('Field', function () {
       beforeEach(async function () {
         await this.field.incrementTotalSoilE(to6('100'))
         this.result = await this.field.connect(user).sowWithMin(to6('200'), to6('100'), EXTERNAL)
+      })
+
+      it('updates user\'s balance', async function () {
+        expect(await this.bean.balanceOf(userAddress)).to.eq(to6('9900'))
+        expect(await this.field.plot(userAddress, 0)).to.eq(to6('101'))
+      })
+
+      it('updates total balance', async function () {
+        expect(await this.bean.balanceOf(this.field.address)).to.eq('0')
+        expect(await this.bean.totalSupply()).to.eq(to6('19900'))
+        expect(await this.field.totalPods()).to.eq(to6('101'))
+        expect(await this.field.totalSoil()).to.eq(to6('0'))
+        expect(await this.field.totalUnharvestable()).to.eq(to6('101'))
+        expect(await this.field.podIndex()).to.eq(to6('101'))
+        expect(await this.field.harvestableIndex()).to.eq('0')
+      })
+
+      it('emits Sow event', async function () {
+        await expect(this.result).to.emit(this.field, 'Sow').withArgs(userAddress, '0', to6('100'), to6('101'))
+      })
+    })
+
+    describe('tractor sow with min', async function () {
+      beforeEach(async function () {
+        const sowWithMin = await this.field.interface.encodeFunctionData(
+          "tractorSowWithMin",
+          [to6('200'), to6('100'), EXTERNAL]
+        )
+        const blueprint = {
+          publisher: userAddress,
+          data: getNormalBlueprintData([sowWithMin]),
+          calldataCopyParams: [],
+          maxNonce: 100,
+          startTime: Math.floor(Date.now() / 1000) - 10 * 3600,
+          endTime: Math.floor(Date.now() / 1000) + 10 * 3600,
+        };
+        await signBlueprint(blueprint, user);
+
+        await this.field.incrementTotalSoilE(to6('100'))
+        this.result = await this.tractor.connect(user2).tractor(blueprint, "0x");
       })
 
       it('updates user\'s balance', async function () {
