@@ -10,18 +10,18 @@ import "./LibFunction.sol";
  * @title Lib Farm
  **/
 library LibFarm {
-    // Advanced Data is a function call that allows for return values from existing functions
+    // AdvancedFarmCall is a Farm call that can use a Clipboard.
     // See LibFunction.useClipboard for details
-    struct AdvancedData {
+    struct AdvancedFarmCall {
         bytes callData;
-        bytes advancedData;
+        bytes clipboard;
     }
 
-    function advancedFarm(AdvancedData calldata d, bytes[] memory returnData)
+    function advancedFarm(AdvancedFarmCall calldata d, bytes[] memory returnData)
         internal
         returns (bytes memory result)
     {
-        bytes1 pipeType = d.advancedData[0];
+        bytes1 pipeType = d.clipboard[0];
         // 0x00 -> Normal pipe: Standard function call
         // else > Advanced pipe: Copy return data into function call through useClipboard
         if (pipeType == 0x00) {
@@ -29,18 +29,18 @@ library LibFarm {
         } else {
             result = LibFunction.useClipboard(
                 d.callData,
-                d.advancedData,
+                d.clipboard,
                 returnData
             );
             farmMem(result);
         }
     }
 
-    function advancedFarmMem(AdvancedData memory d, bytes[] memory returnData)
+    function advancedFarmMem(AdvancedFarmCall memory d, bytes[] memory returnData)
         internal
         returns (bytes memory result)
     {
-        bytes1 pipeType = d.advancedData[0];
+        bytes1 pipeType = d.clipboard[0];
         // 0x00 -> Normal pipe: Standard function call
         // else > Advanced pipe: Copy return data into function call through useClipboardMem
         if (pipeType == 0x00) {
@@ -48,7 +48,7 @@ library LibFarm {
         } else {
             result = LibFunction.useClipboardMem(
                 d.callData,
-                d.advancedData,
+                d.clipboard,
                 returnData
             );
             farmMem(result);
@@ -68,10 +68,7 @@ library LibFarm {
     }
 
     // delegatecall a Beanstalk function using memory data
-    function farmMem(bytes memory data)
-        internal
-        returns (bytes memory result)
-    {
+    function farmMem(bytes memory data) internal returns (bytes memory result) {
         bytes4 selector;
         bool success;
         assembly {

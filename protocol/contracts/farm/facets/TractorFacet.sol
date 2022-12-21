@@ -202,9 +202,9 @@ contract TractorFacet is ReentrancyGuard {
             }
         } else if (uint8(blueprintType) == uint8(BlueprintType.ADVANCED)) {
             // decode farm calldata
-            LibFarm.AdvancedData[] memory data = abi.decode(
+            LibFarm.AdvancedFarmCall[] memory data = abi.decode(
                 blueprintData,
-                (LibFarm.AdvancedData[])
+                (LibFarm.AdvancedFarmCall[])
             );
 
             // call advancedFarm function
