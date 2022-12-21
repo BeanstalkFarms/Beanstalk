@@ -156,7 +156,8 @@ async function signSiloDepositTokenPermit(
     deadline: deadline || MAX_INT,
   };
 
-  const domain = await getDomain();
+  const chainId = BigNumber.from(await provider.getChainId())
+  const domain = await getDomain(chainId);
   const typedData = createTypedDepositTokenPermitData(message, domain);
   const sig = await signWithEthers(provider, owner, typedData);
 

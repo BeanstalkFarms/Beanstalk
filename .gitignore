@@ -10,6 +10,7 @@ temp
 archived
 .vscode
 diamondCut-*.json
+.openzeppelin
 
 # Foundry
 cache/
