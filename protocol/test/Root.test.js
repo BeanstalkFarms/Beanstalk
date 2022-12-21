@@ -824,6 +824,10 @@ describe("Root", function () {
 
           await this.season.fastForward(100);
 
+          await this.silo
+            .connect(user2)
+            .deposit(this.siloToken.address, "1000", EXTERNAL);
+
           const nonce2 = await this.permit.nonces(permitSelector, user2Address);
 
           this.signature2 = await signSiloDepositTokenPermit(
@@ -835,7 +839,7 @@ describe("Root", function () {
             nonce2
           );
 
-          await this.rootToken.connect(user).mintWithTokenPermit(
+          await this.rootToken.connect(user2).mintWithTokenPermit(
             [
               {
                 token: this.siloToken.address,
@@ -845,12 +849,12 @@ describe("Root", function () {
             ],
             EXTERNAL,
             1,
-            this.signature.token,
-            this.signature.value,
-            this.signature.deadline,
-            this.signature.split.v,
-            this.signature.split.r,
-            this.signature.split.s
+            this.signature2.token,
+            this.signature2.value,
+            this.signature2.deadline,
+            this.signature2.split.v,
+            this.signature2.split.r,
+            this.signature2.split.s
           );
 
           await expect(
@@ -858,14 +862,14 @@ describe("Root", function () {
               [
                 {
                   token: this.siloToken.address,
-                  seasons: ["102"],
-                  amounts: ["1000"],
+                  seasons: ["2", "102"],
+                  amounts: ["1000", "1000"],
                 },
               ],
               EXTERNAL,
               "90000000000000000"
             )
-          ).to.revertedWith("Redeem: shares is greater than maxRootsIn");
+          ).to.be.revertedWith("ERC20: burn amount exceeds balance");
         });
       });
 
@@ -1045,7 +1049,9 @@ describe("Root", function () {
               this.signature.split.s
             );
 
-            const permitSelector = await this.tokenFacet.interface.getSighash("permitToken");
+            const permitSelector = await this.tokenFacet.interface.getSighash(
+              "permitToken"
+            );
             const nonce = await this.permit.nonces(permitSelector, userAddress);
 
             const sig = await signTokenPermit(
