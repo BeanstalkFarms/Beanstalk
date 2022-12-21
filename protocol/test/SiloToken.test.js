@@ -1079,6 +1079,67 @@ describe('Silo Token', function () {
         expect(await this.silo.totalSeeds()).to.be.equal('100')
       })
     })
+    
+    describe("Tractor transfer deposits", async function () {
+      beforeEach(async function () {
+        await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
+        await this.season.siloSunrise('0')
+        await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
+
+        const transferDeposits = await this.silo.interface.encodeFunctionData(
+          "tractorTransferDeposits",
+          [
+            user2Address,
+            this.siloToken.address,
+            ['2', '3'],
+            ['50','25']
+          ]
+        )
+        const blueprint = {
+          publisher: userAddress,
+          data: getNormalBlueprintData([transferDeposits]),
+          calldataCopyParams: [],
+          maxNonce: 100,
+          startTime: Math.floor(Date.now() / 1000) - 10 * 3600,
+          endTime: Math.floor(Date.now() / 1000) + 10 * 3600,
+        };
+        await signBlueprint(blueprint, user);
+        await this.tractor.connect(user2).tractor(blueprint, "0x");
+      })
+
+      it('removes the deposit from the sender', async function () {
+        let deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, '2')
+        expect(deposit[0]).to.equal('50');
+        expect(deposit[0]).to.equal('50');
+        deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, '3')
+        expect(deposit[0]).to.equal('75');
+        expect(deposit[0]).to.equal('75');
+      })
+
+      it('updates users stalk and seeds', async function () {
+        expect(await this.silo.balanceOfStalk(userAddress)).to.be.equal('1250050')
+        expect(await this.silo.balanceOfSeeds(userAddress)).to.be.equal('125')
+      })
+
+      it('add the deposit to the recipient', async function () {
+        let deposit = await this.silo.getDeposit(user2Address, this.siloToken.address, '2')
+        expect(deposit[0]).to.equal('50');
+        expect(deposit[0]).to.equal('50');
+        deposit = await this.silo.getDeposit(user2Address, this.siloToken.address, '3')
+        expect(deposit[0]).to.equal('25');
+        expect(deposit[0]).to.equal('25');
+      })
+
+      it('updates users stalk and seeds', async function () {
+        expect(await this.silo.balanceOfStalk(user2Address)).to.be.equal('750050')
+        expect(await this.silo.balanceOfSeeds(user2Address)).to.be.equal('75')
+      })
+
+      it('updates total stalk and seeds', async function () {
+        expect(await this.silo.totalStalk()).to.be.equal('2000100')
+        expect(await this.silo.totalSeeds()).to.be.equal('200')
+      })
+    })
   })
 
   describe("Update Unripe Deposit", async function () {
