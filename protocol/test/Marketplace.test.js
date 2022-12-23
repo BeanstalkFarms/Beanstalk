@@ -8,6 +8,7 @@ const { waffleChai } = require("@ethereum-waffle/chai");
 use(waffleChai);
 const { deploy } = require('../scripts/deploy.js')
 const { BEAN, ZERO_ADDRESS } = require('./utils/constants')
+const { signPermitPods } = require("./utils/sign.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { ethers } = require('hardhat');
 const {
@@ -41,6 +42,10 @@ describe('Marketplace', function () {
     this.marketplace = await ethers.getContractAt('MockMarketplaceFacet', this.diamond.address);
     this.token = await ethers.getContractAt('TokenFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('MockToken', BEAN);
+    this.permit = await ethers.getContractAt(
+      "MockPermitFacet",
+      this.diamond.address
+    );
 
     await this.bean.mint(userAddress, '500000')
     await this.bean.mint(user2Address, '500000')
@@ -2156,4 +2161,62 @@ describe('Marketplace', function () {
       })
     })
   })
+
+  it("Permit Pods", async function () {
+    const selector =
+      this.marketplace.interface.getSighash("permitPods");
+    const nonce = await this.permit.nonces(selector, userAddress);
+    const deadline = Math.floor(new Date().getTime() / 1000) + 10 * 60;
+
+    const signature = await signPermitPods(
+      user,
+      this.marketplace.address,
+      userAddress,
+      user2Address,
+      100,
+      nonce,
+      deadline
+    );
+
+    await expect(
+      this.marketplace.connect(user2).permitPods(
+        userAddress,
+        ethers.constants.AddressZero,
+        100,
+        deadline,
+        signature
+      )
+    ).to.be.revertedWith("Field: Pod Approve to 0 address.");
+
+    await expect(
+      this.marketplace.connect(user2).permitPods(
+        userAddress,
+        user2Address,
+        100,
+        deadline - 20 * 60,
+        signature
+      )
+    ).to.be.revertedWith("Field: expired deadline");
+
+    await expect(
+      this.marketplace.connect(user2).permitPods(
+        user2Address,
+        user2Address,
+        100,
+        deadline,
+        signature
+      )
+    ).to.be.revertedWith("Field: invalid signature");
+
+    const tx = await this.marketplace.connect(user2).permitPods(
+      userAddress,
+      user2Address,
+      100,
+      deadline,
+      signature
+    );
+
+    await expect(tx).to.emit(this.marketplace, "PodApproval")
+      .withArgs(userAddress, user2Address, 100);
+  });
 })
