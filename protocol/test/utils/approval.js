@@ -41,19 +41,8 @@ const getExternalApproval = (placeBefore, externalContract, stateData) => {
   );
 };
 
-const getInvalidApproval = (placeBefore, expectedCaller) => {
-  const approvalPlace = placeBefore ? "0x00" : "0x01";
-  const approvalType = "0x03";
-  const approvalValue = abi.encode(["address"], [expectedCaller]);
-  return ethers.utils.solidityPack(
-    ["bytes1", "bytes1", "bytes"],
-    [approvalPlace, approvalType, approvalValue]
-  );
-};
-
 module.exports = {
   getBooleanApproval,
   getUint256Approval,
   getExternalApproval,
-  getInvalidApproval,
 };

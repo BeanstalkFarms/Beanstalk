@@ -23,8 +23,8 @@ contract FieldFacet is ReentrancyGuard {
      * Constants
      */
 
-    bytes4 public constant SOW_FOR_SELECTOR =
-        bytes4(keccak256(bytes("sowFor(address,uint256,uint8)")));
+    bytes4 public constant SOW_WITH_MIN_FOR_SELECTOR =
+        bytes4(keccak256(bytes("sowWithMinFor(address,uint256,uint8)")));
 
     event Sow(
         address indexed account,
@@ -109,13 +109,13 @@ contract FieldFacet is ReentrancyGuard {
             bytes1 place,
             bytes1 approvalType,
             bytes memory approvalData
-        ) = LibDelegate.getApprovalDetails(account, SOW_FOR_SELECTOR);
+        ) = LibDelegate.getApprovalDetails(account, SOW_WITH_MIN_FOR_SELECTOR);
 
         // PRE-APPROVAL
         if (place == 0x00) {
             LibDelegate.checkApproval(
                 account,
-                SOW_FOR_SELECTOR,
+                SOW_WITH_MIN_FOR_SELECTOR,
                 msg.sender,
                 place,
                 approvalType,
@@ -131,7 +131,7 @@ contract FieldFacet is ReentrancyGuard {
         if (place == 0x01) {
             LibDelegate.checkApproval(
                 account,
-                SOW_FOR_SELECTOR,
+                SOW_WITH_MIN_FOR_SELECTOR,
                 msg.sender,
                 place,
                 approvalType,

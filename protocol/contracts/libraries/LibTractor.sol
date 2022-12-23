@@ -81,7 +81,7 @@ library LibTractor {
     /// @dev reverts if activePublisher is 0x0
     /// @return publisher current activePublisher address
     function getActivePublisher() internal view returns (address publisher) {
-        publisher = tractorStorage().activePublisher;
+        publisher = getBlueprintPublisher();
         require(publisher != address(1), "Tractor: No active publisher");
     }
 
