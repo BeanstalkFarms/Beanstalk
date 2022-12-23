@@ -72,25 +72,6 @@ library LibBytes {
      * @notice slices bytes memory
      * @param b The memory bytes array to load from
      * @param start The start of the slice
-     * @param length The length of the slice
-     * @return sliced bytes
-     */
-    function slice(
-        bytes memory b,
-        uint256 start,
-        uint256 length
-    ) internal pure returns (bytes memory) {
-        bytes memory memBytes = new bytes(length);
-        for (uint256 i = 0; i < length; ++i) {
-            memBytes[i] = b[start + i];
-        }
-        return memBytes;
-    }
-
-    /**
-     * @notice slices bytes memory
-     * @param b The memory bytes array to load from
-     * @param start The start of the slice
      * @return sliced bytes
      */
     function sliceFrom(

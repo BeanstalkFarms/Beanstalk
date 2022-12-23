@@ -226,22 +226,13 @@ contract MarketplaceFacet is Order {
         uint256 start,
         uint256 end
     ) external payable nonReentrant {
-        require(
-            sender != address(0) && recipient != address(0),
-            "Field: Transfer to/from 0 address."
-        );
-        uint256 amount = s.a[sender].field.plots[id];
-        require(amount > 0, "Field: Plot not owned by user.");
-        require(end > start && amount >= end, "Field: Pod range invalid.");
-        amount = end - start; // Note: SafeMath is redundant here.
+        uint amount = _transferPlot(sender, recipient, id, start, end);
         if (
             msg.sender != sender &&
             allowancePods(sender, msg.sender) != uint256(-1)
         ) {
             decrementAllowancePods(sender, msg.sender, amount);
         }
-
-        _transferPlot(sender, recipient, id, start, amount);
     }
 
     function tractorTransferPlot(
@@ -251,13 +242,27 @@ contract MarketplaceFacet is Order {
         uint256 end
     ) external payable nonReentrant {
         address publisher = LibTractor.getActivePublisher();
+        _transferPlot(publisher, recipient, id, start, end);
+    }
 
-        uint256 amount = s.a[publisher].field.plots[id];
+    function _transferPlot(
+        address sender,
+        address recipient,
+        uint256 id,
+        uint256 start,
+        uint256 end
+    ) internal returns (uint amount) {
+        require(recipient != address(0), "Field: Transfer to 0 address.");
+        amount = s.a[sender].field.plots[id];
         require(amount > 0, "Field: Plot not owned by user.");
         require(end > start && amount >= end, "Field: Pod range invalid.");
         amount = end - start; // Note: SafeMath is redundant here.
 
-        _transferPlot(publisher, recipient, id, start, amount);
+        if (s.podListings[id] != bytes32(0)) {
+            _cancelPodListing(sender, id);
+        }
+
+        __transferPlot(sender, recipient, id, start, amount);
     }
 
     function approvePods(address spender, uint256 amount)

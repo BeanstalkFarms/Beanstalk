@@ -2024,8 +2024,8 @@ describe('Marketplace', function () {
 
     describe("Plot Transfer", async function () {
       describe("reverts", async function () {
-        it('doesn\'t sent to 0 address', async function () {
-          await expect(this.marketplace.connect(user).transferPlot(userAddress, ZERO_ADDRESS, '0', '0', '100')).to.be.revertedWith('Field: Transfer to/from 0 address.')
+        it('doesn\'t send to 0 address', async function () {
+          await expect(this.marketplace.connect(user).transferPlot(userAddress, ZERO_ADDRESS, '0', '0', '100')).to.be.revertedWith('Field: Transfer to 0 address.')
         })
   
         it('Plot not owned by user.', async function () {

@@ -144,7 +144,7 @@ contract Listing is PodTransfer {
         uint256 amount = getAmountPodsFromFillListing(l.pricePerPod, l.amount, beanAmount);
 
         __fillListing(msg.sender, l, amount, beanAmount);
-        _transferPlot(l.account, msg.sender, l.index, l.start, amount);
+        __transferPlot(l.account, msg.sender, l.index, l.start, amount);
 
     }
 
@@ -173,7 +173,7 @@ contract Listing is PodTransfer {
         uint256 amount = getAmountPodsFromFillListingV2(l.index.add(l.start).sub(s.f.harvestable), l.amount, beanAmount, pricingFunction);
 
         __fillListingV2(msg.sender, l, pricingFunction, amount, beanAmount);
-        _transferPlot(l.account, msg.sender, l.index, l.start, amount);
+        __transferPlot(l.account, msg.sender, l.index, l.start, amount);
 
     }
 
@@ -242,23 +242,6 @@ contract Listing is PodTransfer {
         delete s.podListings[index];
 
         emit PodListingCancelled(account, index);
-    }
-
-    /*
-     * Transfer
-     */
-
-    function _transferPlot(
-        address from,
-        address to,
-        uint256 index,
-        uint256 start,
-        uint256 amount
-    ) internal {
-        if (s.podListings[index] != bytes32(0)) {
-            _cancelPodListing(from, index);
-        }
-        __transferPlot(from, to, index, start, amount);
     }
 
     /*
