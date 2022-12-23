@@ -74,9 +74,9 @@ contract DelegateFacet is ReentrancyGuard {
         return LibDelegate.getApproval(account, selector);
     }
 
-    //////////////////////////////////////
-    ///////// INTERNAL FUNCTIONS /////////
-    //////////////////////////////////////
+    /**********************/
+    /* INTERNAL FUNCTIONS */
+    /**********************/
 
     /// @dev sets function approval
     /// @param account account address

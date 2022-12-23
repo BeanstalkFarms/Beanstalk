@@ -43,6 +43,11 @@ describe("Tractor", function () {
       "MockSiloFacet",
       this.diamond.address
     );
+    this.mockContract = await (
+      await ethers.getContractFactory("MockContract", owner)
+    ).deploy();
+    await this.mockContract.deployed();
+    await this.mockContract.setAccount(user2.address);
     this.bean = await ethers.getContractAt("Bean", BEAN);
     const OracleFactory = await ethers.getContractFactory(
       "CheckEarnedBeanBalanceOracle"
@@ -295,7 +300,7 @@ describe("Tractor", function () {
     await this.tractor.connect(user3).tractor(blueprint, calldata);
   });
 
-  it("Advanced Farm", async function () {
+  it("Advanced Farm - 1 Return Data", async function () {
     await this.beanstalk
       .connect(user)
       .transferToken(this.bean.address, user.address, to6("100"), 0, 1);
@@ -341,5 +346,75 @@ describe("Tractor", function () {
     expect(
       await this.beanstalk.getInternalBalance(user3.address, this.bean.address)
     ).to.be.equal(to6("100"));
+  });
+
+  it("Advanced Farm - Multiple Return Data", async function () {
+    await this.beanstalk
+      .connect(user)
+      .transferToken(this.bean.address, user.address, to6("100"), 0, 1);
+    const selector = this.beanstalk.interface.encodeFunctionData(
+      "getInternalBalance",
+      [user.address, this.bean.address]
+    );
+    const pipe = this.mockContract.interface.encodeFunctionData(
+      "getAccount",
+      []
+    );
+    const selector2 = this.beanstalk.interface.encodeFunctionData("readPipe", [
+      [this.mockContract.address, pipe],
+    ]);
+    const data12 = encodeAdvancedData(0);
+    const selector3 = this.tokenFacet.interface.encodeFunctionData(
+      "tractorTransferToken",
+      [this.bean.address, ZERO_ADDRESS, to6("0"), 1, 1]
+    );
+    const data3 = encodeAdvancedData(2, toBN("0"), [
+      [0, 32, 100],
+      [1, 96, 68],
+    ]);
+
+    const blueprint = {
+      publisher: userAddress,
+      data: getAdvancedBlueprintData([
+        [selector, data12],
+        [selector2, data12],
+        [selector3, data3],
+      ]),
+      calldataCopyParams: [],
+      maxNonce: 100,
+      startTime: Math.floor(Date.now() / 1000) - 10 * 3600,
+      endTime: Math.floor(Date.now() / 1000) + 10 * 3600,
+    };
+
+    await signBlueprint(blueprint, user);
+
+    await this.tractor.connect(user3).tractor(blueprint, "0x");
+
+    expect(
+      await this.beanstalk.getInternalBalance(user.address, this.bean.address)
+    ).to.be.equal(toBN("0"));
+    expect(
+      await this.beanstalk.getInternalBalance(user2.address, this.bean.address)
+    ).to.be.equal(to6("100"));
+  });
+
+  it("Advanced Farm - Invalid advanced type", async function () {
+    const selector = this.beanstalk.interface.encodeFunctionData("sunrise", []);
+    const data = encodeAdvancedData(9);
+
+    const blueprint = {
+      publisher: userAddress,
+      data: getAdvancedBlueprintData([[selector, data]]),
+      calldataCopyParams: [],
+      maxNonce: 100,
+      startTime: Math.floor(Date.now() / 1000) - 10 * 3600,
+      endTime: Math.floor(Date.now() / 1000) + 10 * 3600,
+    };
+
+    await signBlueprint(blueprint, user);
+
+    await expect(
+      this.tractor.connect(user3).tractor(blueprint, "0x")
+    ).to.be.revertedWith("Function: Advanced Type not supported");
   });
 });
