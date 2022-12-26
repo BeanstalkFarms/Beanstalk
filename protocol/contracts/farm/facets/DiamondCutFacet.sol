@@ -9,7 +9,7 @@ pragma solidity =0.7.6;
 * EIP-2535 Diamond Standard: https://eips.ethereum.org/EIPS/eip-2535
 /******************************************************************************/
 
-import '@halborn/seraph/contracts/SeraphProtected.sol';
+import '../../seraph/SeraphProtected.sol';
 import {IDiamondCut} from "../../interfaces/IDiamondCut.sol";
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
 
