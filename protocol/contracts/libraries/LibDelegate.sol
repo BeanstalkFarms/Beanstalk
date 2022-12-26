@@ -277,7 +277,7 @@ library LibDelegate {
         (bool success, bytes memory returnValue) = externalContract.staticcall(
             abi.encodeWithSignature(
                 "check(address,bytes,bytes,bytes)",
-                msg.sender,
+                caller,
                 callData,
                 returnData,
                 stateData
@@ -285,6 +285,7 @@ library LibDelegate {
         );
         require(success, "LibDelegate: Unauthorized");
 
+        returnValue = abi.decode(returnValue, (bytes));
         (bool approve, bytes memory newStateData) = abi.decode(
             returnValue,
             (bool, bytes)

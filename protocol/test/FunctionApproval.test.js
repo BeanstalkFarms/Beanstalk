@@ -54,6 +54,10 @@ describe("FunctionApproval", function () {
     this.siloToken = await this.siloToken.deploy("Silo", "SILO");
     await this.siloToken.deployed();
 
+    this.checker = await ethers.getContractFactory("MockChecker");
+    this.checker = await this.checker.deploy();
+    await this.checker.deployed();
+
     await this.silo.mockWhitelistToken(
       this.siloToken.address,
       this.silo.interface.getSighash("mockBDV(uint256 amount)"),
@@ -214,6 +218,30 @@ describe("FunctionApproval", function () {
       expect(await this.permit.nonces(permitSelector, userAddress)).to.be.eq(
         nonce + 1
       );
+    });
+  });
+
+  describe("External Approval", function () {
+    it("external approval fail", async function () {
+      const selector = await this.silo.PLANT_FOR_SELECTOR();
+      const approval = getExternalApproval(true, this.checker.address, "0x");
+      await this.approveDelegate(user, selector, approval);
+
+      await this.checker.setApprove(false);
+
+      await expect(
+        this.silo.connect(delegatee).plantFor(userAddress)
+      ).to.be.revertedWith("LibDelegate: Unauthorized");
+    });
+
+    it("external approval success", async function () {
+      const selector = await this.silo.PLANT_FOR_SELECTOR();
+      const approval = getExternalApproval(false, this.checker.address, "0x");
+      await this.approveDelegate(user, selector, approval);
+
+      await this.checker.setApprove(true);
+
+      await this.silo.connect(delegatee).plantFor(userAddress);
     });
   });
 
