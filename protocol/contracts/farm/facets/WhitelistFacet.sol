@@ -5,7 +5,7 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import '@halborn/seraph/contracts/SeraphProtected.sol';
+import '../../seraph/SeraphProtected.sol';
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
 import {LibWhitelist} from "../../libraries/Silo/LibWhitelist.sol";
 import {AppStorage} from "../AppStorage.sol";
@@ -24,7 +24,7 @@ contract WhitelistFacet is SeraphProtected {
 
     event DewhitelistToken(address indexed token);
 
-    function dewhitelistToken(address token) external payable withSeraphPayable() {
+    function dewhitelistToken(address token) external payable withSeraphPayable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.dewhitelistToken(token);
     }
@@ -34,7 +34,7 @@ contract WhitelistFacet is SeraphProtected {
         bytes4 selector,
         uint32 stalk,
         uint32 seeds
-    ) external payable withSeraphPayable() {
+    ) external payable withSeraphPayable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistToken(
             token,

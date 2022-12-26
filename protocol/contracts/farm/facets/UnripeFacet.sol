@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import '@halborn/seraph/contracts/SeraphProtected.sol';
+import '../../seraph/SeraphProtected.sol';
 import {IBean} from "../../interfaces/IBean.sol";
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
 import {LibUnripe} from "../../libraries/LibUnripe.sol";
@@ -229,7 +229,7 @@ contract UnripeFacet is ReentrancyGuard, SeraphProtected {
         address unripeToken,
         address underlyingToken,
         bytes32 root
-    ) external payable nonReentrant withSeraphPayable() {
+    ) external payable nonReentrant withSeraphPayable {
         LibDiamond.enforceIsOwnerOrContract();
         s.u[unripeToken].underlyingToken = underlyingToken;
         s.u[unripeToken].merkleRoot = root;

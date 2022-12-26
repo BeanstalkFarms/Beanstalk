@@ -19,7 +19,8 @@ const {
   CURVE_ZAP,
   STABLE_FACTORY,
   PRICE_DEPLOYER,
-  BEANSTALK
+  BEANSTALK,
+  SERAPH
 } = require('../test/utils/constants');
 const { impersonateSigner, mintEth } = require('../utils');
 
@@ -217,6 +218,14 @@ async function impersonateBeanstalk(owner) {
   await beanstalk.mockInit(owner);
 }
 
+async function seraph() {
+  let meta3CurveJson = fs.readFileSync(`./artifacts/contracts/mocks/MockSeraph.sol/MockSeraph.json`);
+  await network.provider.send("hardhat_setCode", [
+    SERAPH,
+    JSON.parse(meta3CurveJson).deployedBytecode,
+  ]);
+}
+
 exports.impersonateRouter = router
 exports.impersonateBean = bean
 exports.impersonateCurve = curve
@@ -229,3 +238,4 @@ exports.impersonateFertilizer = fertilizer
 exports.impersonateUsdc = usdc
 exports.impersonatePrice = price
 exports.impersonateBeanstalk = impersonateBeanstalk
+exports.impersonateSeraph = seraph

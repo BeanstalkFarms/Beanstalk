@@ -2933,6 +2933,19 @@
         "type": "function"
     },
     {
+        "inputs": [],
+        "name": "seraph",
+        "outputs": [
+            {
+                "internalType": "contract ISeraph",
+                "name": "__seraph",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "pure",
+        "type": "function"
+    },
+    {
         "inputs": [
             {
                 "internalType": "address",

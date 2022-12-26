@@ -148,4 +148,8 @@ describe('Ownership', function () {
       await expect(this.result).to.emit(this.pause, 'Unpause')
     })
   })
+
+  it('seraph', async function () {
+    expect(await this.ownership.seraph()).to.be.equal('0xAac09eEdCcf664a9A6a594Fc527A0A4eC6cc2788')
+  })
 })

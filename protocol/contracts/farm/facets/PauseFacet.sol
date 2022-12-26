@@ -6,7 +6,7 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import '@halborn/seraph/contracts/SeraphProtected.sol';
+import '../../seraph/SeraphProtected.sol';
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
 import {AppStorage} from "../AppStorage.sol";
 
@@ -35,7 +35,7 @@ contract PauseFacet is SeraphProtected {
         emit Pause(block.timestamp);
     }
 
-    function unpause() external payable withSeraphPayable() {
+    function unpause() external payable withSeraphPayable {
         LibDiamond.enforceIsOwnerOrContract();
         require(s.paused, "Pause: not paused.");
         s.paused = false;

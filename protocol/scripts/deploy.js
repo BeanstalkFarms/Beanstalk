@@ -8,7 +8,8 @@ const {
   impersonateWeth, 
   impersonateUnripe, 
   impersonateFertilizer,
-  impersonatePrice
+  impersonatePrice,
+  impersonateSeraph
 } = require('./impersonate.js')
 function addCommas(nStr) {
   nStr += ''
@@ -162,6 +163,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
   if (mock) {
     await impersonateBean()
     await impersonatePrice()
+    await impersonateSeraph()
     if (reset) {
       await impersonateCurve()
       await impersonateWeth()
