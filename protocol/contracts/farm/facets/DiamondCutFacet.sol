@@ -24,7 +24,7 @@ contract DiamondCutFacet is IDiamondCut, SeraphProtected {
         FacetCut[] calldata _diamondCut,
         address _init,
         bytes calldata _calldata
-    ) external override withSeraph() {
+    ) external override withSeraph {
         LibDiamond.enforceIsContractOwner();
         LibDiamond.diamondCut(_diamondCut, _init, _calldata);
     }
