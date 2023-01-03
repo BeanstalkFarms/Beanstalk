@@ -11,7 +11,7 @@ import "./LibAppStorage.sol";
 import "./LibSafeMath32.sol";
 import "./LibSafeMath128.sol";
 import "./LibPRBMath.sol";
-
+import "forge-std/console.sol";
 
 
 /**
@@ -59,7 +59,7 @@ library LibDibbler {
 
     }
 
-    function sowNoSoil(uint256 amount,uint256 _maxPeas, address account)
+    function sowNoSoil(uint256 amount, uint256 _maxPeas, address account)
         internal
         returns (uint256)
     {
@@ -82,64 +82,101 @@ library LibDibbler {
     // the formula log2(A * BLOCK_ELAPSED_MAX + 1) is applied, where
     // A = 2;
     // MAX_BLOCK_ELAPSED = 25;
-    
     function morningAuction() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 delta = block.number.sub(s.season.sunriseBlock);
         if (delta > 24) { // check most likely case first
             return uint256(s.w.yield).mul(DECIMALS);
-        } else if (delta == 1) {
-            return auctionMath(279415312704); 
-        } else if (delta == 2) {
-            return auctionMath(409336034395);
-        } else if (delta == 3) {
-            return auctionMath(494912626048); 
-        } else if (delta == 4) {
-            return auctionMath(558830625409);
-        } else if (delta == 5) {
-            return auctionMath(609868162219);
-        } else if (delta == 6) {
-            return auctionMath(652355825780);
-        } else if (delta == 7) {
-            return auctionMath(688751347100); 
-        } else if (delta == 8) {
-            return auctionMath(720584687295);
-        } else if (delta == 9) {
-            return auctionMath(748873234524);
-        } else if (delta == 10) {
-            return auctionMath(774327938752);
-        } else if (delta == 11) {
-            return auctionMath(797465225780); 
-        } else if (delta == 12) {
-            return auctionMath(818672068791);
-        } else if (delta == 13) {
-            return auctionMath(838245938114);
-        } else if (delta == 14) {
-            return auctionMath(856420437864);
-        } else if (delta == 15) {
-            return auctionMath(873382373802); 
-        } else if (delta == 16) {
-            return auctionMath(889283474924);
-        } else if (delta == 17) {
-            return auctionMath(904248660443);
-        } else if (delta == 18) {
-            return auctionMath(918382006208);
-        } else if (delta == 19) {
-            return auctionMath(931771138485);
-        } else if (delta == 20) {
-            return auctionMath(944490527707);
-        } else if (delta == 21) {
-            return auctionMath(956603996980);
-        } else if (delta == 22) {
-            return auctionMath(968166659804);
-        } else if (delta == 23) {
-            return auctionMath(979226436102);
-        } else if (delta == 24) {
+        }
+        //Binary Search
+        if (delta < 13) {
+            if (delta < 7) { 
+                if (delta < 4) {
+                    if (delta < 2) {
+                        if (delta < 1) {
+                            return DECIMALS; // delta == 0, same block as sunrise
+                        }
+                        else return auctionMath(279415312704); // delta == 1
+                    }
+                    if (delta == 2) {
+                       return auctionMath(409336034395); // delta == 2
+                    }
+                    else return auctionMath(494912626048); // delta == 3
+                }
+                if (delta < 6) {
+                    if (delta == 4) {
+                        return auctionMath(558830625409);
+                    }
+                    else { // delta == 5
+                        return auctionMath(609868162219);
+                    }
+                }
+                else return auctionMath(652355825780); // delta == 6
+            }
+            if (delta < 10) {
+                if (delta < 9) {
+                    if (delta == 7) {
+                        return auctionMath(688751347100);
+                    }
+                    else { // delta == 8
+                        return auctionMath(720584687295);
+                    }
+                }
+                else return auctionMath(748873234524); // delta == 9
+            }
+            if (delta < 12) {
+                if (delta == 10) {
+                    return auctionMath(774327938752);
+                }
+                else{ // delta == 11
+                    return auctionMath(797465225780); 
+                }
+            }
+            else return auctionMath(818672068791); //delta == 12
+        } 
+        if (delta < 19){
+            if (delta < 16) {
+                if (delta < 15) {
+                    if (delta == 13) {
+                        return auctionMath(838245938114); 
+                    }
+                    else{ // delta == 14
+                        return auctionMath(856420437864);
+                    }
+                }
+                else return auctionMath(873382373802); //delta == 15
+            }
+            if (delta < 18) {
+                if (delta == 16) {
+                    return auctionMath(889283474924);
+                }
+                else{ // delta == 17
+                    return auctionMath(904248660443);
+                }
+            }
+            return auctionMath(918382006208); // delta == 18
+        }
+        if (delta < 22) {
+            if (delta < 21) {
+                if (delta == 19) {
+                    return auctionMath(931771138485); 
+                }
+                else{ // delta == 20
+                    return auctionMath(944490527707);
+                }
+            }
+            return auctionMath(956603996980); // delta == 21
+        }
+        if (delta <= 23){ 
+            if (delta == 22) {
+                return auctionMath(968166659804);
+            }
+            else { // delta == 23
+                return auctionMath(979226436102);
+            }
+        }
+        else {
             return auctionMath(989825252096);
-        } else {
-            /// @dev should only occur when delta == 0 
-            /// (i.e called in the same block as sunrise) 
-            return DECIMALS; //minimium 1% yield
         }
     }
 

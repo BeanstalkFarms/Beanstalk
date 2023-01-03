@@ -188,8 +188,8 @@ contract Storage {
 
     // Weather stores global level Weather balances.
     struct Weather {
-        uint256[2] depreciated; // DEPRECIATED - 2 slots that were previously used
-        uint256 lastDSoil; // Delta Soil; the number of Soil purchased last Season.
+        uint256[2] depreciated; // DEPRECATED - 2 slots that were previously used
+        uint128 lastDSoil; // Delta Soil; the number of Soil purchased last Season.
         uint32 lastSowTime; // The number of seconds it took for all but at most 1 Soil to sell out last Season.
         uint32 nextSowTime; // The number of seconds it took for all but at most 1 Soil to sell out this Season
         uint32 yield; // Weather; the interest rate for sowing Beans in Soil.

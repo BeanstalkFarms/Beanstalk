@@ -50,7 +50,7 @@ contract FieldFacet is ReentrancyGuard {
     ) public payable returns (uint256) {
         uint256 sowAmount = totalSoil();
         require(
-            sowAmount >= minSoil && amount >= minSoil && minSoil > 0,
+            sowAmount >= minSoil && amount >= minSoil,
             "Field: Sowing below min or 0 pods."
         );
         require(

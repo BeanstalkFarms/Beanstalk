@@ -18,6 +18,8 @@ contract Weather is Sun {
     using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
 
+    uint256 private constant SOWTIMEDEMAND = 600;
+    
     event WeatherChange(uint256 indexed season, uint256 caseId, int8 change);
     event SeasonOfPlenty(
         uint256 indexed season,
@@ -73,7 +75,7 @@ contract Weather is Sun {
         if (s.w.nextSowTime < type(uint32).max) {
             if (
                 s.w.lastSowTime == type(uint32).max || // Didn't Sow all last Season
-                s.w.nextSowTime < 600 || // Sow'd all instantly this Season
+                s.w.nextSowTime < SOWTIMEDEMAND || // Sow'd all instantly this Season
                 (s.w.lastSowTime > C.getSteadySowTime() &&
                     s.w.nextSowTime < s.w.lastSowTime.sub(C.getSteadySowTime())) // Sow'd all faster
             ) deltaPodDemand = Decimal.from(1e18);
@@ -119,7 +121,7 @@ contract Weather is Sun {
         else if (deltaPodDemand.greaterThanOrEqualTo(C.getLowerBoundDPD()))
             caseId += 1;
 
-        s.w.lastDSoil = dsoil;
+        s.w.lastDSoil = uint128(dsoil);
 
         changeWeather(caseId);
         handleRain(caseId);

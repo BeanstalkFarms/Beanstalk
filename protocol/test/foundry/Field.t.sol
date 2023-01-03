@@ -42,13 +42,6 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
 
   }
 
-  function testCannotSowWithNoSoilBelowMin() public {
-    vm.prank(brean);
-    vm.expectRevert("Field: Sowing below min or 0 pods.");
-    field.sowWithMin(1,1e6,0,LibTransfer.From.EXTERNAL);
-
-  }
-
   function testSowAllSoil() public {
     _beforeEachSow();
     vm.prank(brean);
@@ -484,6 +477,7 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
         assertEq(TrueSoil,200e6,"TrueSoil");
         assertEq(LastSoil,startingSoil,"LastSoil");
       } else {
+        console.log("delta:",i);
         console.log("TotalSoil:",LastSoil);
         console.log("TrueSoil:",TrueSoil);
         assertLt(LastSoil,TrueSoil);

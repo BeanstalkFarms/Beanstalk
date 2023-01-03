@@ -69,27 +69,61 @@ task('replant', async () => {
 })
 
 task('diamondABI', 'Generates ABI file for diamond, includes all ABIs of facets', async () => {
-  const basePath = '/contracts/farm/facets/'
-  const libraryBasePath = '/contracts/farm/libraries/'
-  let files = fs.readdirSync('.' + basePath)
-  let abi = []
-  for (var file of files) {
-    var file2
-    var jsonFile
+  const basePath = '/contracts/beanstalk/';
+  const modules = [
+    'barn',
+    'diamond',
+    'farm',
+    'field',
+    'market',
+    'silo',
+    'sun'
+  ];
+
+  // Load files across all modules
+  const paths = [];
+  modules.forEach((m) => {
+    const filesInModule = fs.readdirSync(`.${basePath}${m}`);
+    paths.push(
+      ...filesInModule.map((f) => ([m, f]))
+    );
+  });
+
+  // Build ABI
+  let abi = [];
+  for (var [module, file] of paths) {
+    // We're only interested in facets
     if (file.includes('Facet')) {
+      let jsonFile
+
+      // A Facet can be packaged in two formats:
+      //  1. XYZFacet.sol
+      //  2. XYZFacet/XYZFacet.sol 
+      // By convention, a folder ending with "Facet" will also contain a .sol file with the same name.
       if (!file.includes('.sol')) {
+        // This is a directory
         jsonFile = `${file}.json`
         file = `${file}/${file}.sol`
       } else {
+        // This is a file
         jsonFile = file.replace('sol', 'json');
       }
-      let json = fs.readFileSync(`./artifacts${basePath}${file}/${jsonFile}`)
-      json = JSON.parse(json)
+
+      const loc = `./artifacts${basePath}${module}/${file}/${jsonFile}`;
+      console.log(`ADD:  `, module, file, '=>', loc)
+
+      const json = JSON.parse(fs.readFileSync(loc))
       abi.push(...json.abi)
+    } else {
+      console.log(`SKIP: `, module, file);
     }
   }
-  abi = JSON.stringify(abi.filter((item, pos) => abi.map((a)=>a.name).indexOf(item.name) == pos), null, 4)
-  fs.writeFileSync('./abi/Beanstalk.json', abi)
+
+  fs.writeFileSync(
+    './abi/Beanstalk.json',
+    JSON.stringify(abi.filter((item, pos) => abi.map((a)=>a.name).indexOf(item.name) == pos))
+  );
+
   console.log('ABI written to abi/Beanstalk.json')
 })
 
