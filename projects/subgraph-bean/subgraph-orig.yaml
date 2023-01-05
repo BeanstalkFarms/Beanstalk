@@ -1,0 +1,88 @@
+- kind: ethereum/contract
+    name: BeanUniswapV2Pair
+    network: mainnet
+    source:
+      address: "0x87898263B6C5BABe34b4ec53F22d98430b91e371"
+      abi: UniswapV2Pair
+      startBlock: 12974077
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Approval
+        - Burn
+        - Mint
+        - Swap
+        - Sync
+        - Transfer
+      abis:
+        - name: UniswapV2Pair
+          file: ./abis/UniswapV2Pair.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: Approval(indexed address,indexed address,uint256)
+          handler: handleApproval
+        - event: Burn(indexed address,uint256,uint256,indexed address)
+          handler: handleBurn
+        - event: Mint(indexed address,uint256,uint256)
+          handler: handleMint
+        - event: Swap(indexed address,uint256,uint256,uint256,uint256,indexed address)
+          handler: handleSwap
+        - event: Sync(uint112,uint112)
+          handler: handleSync
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/mapping.ts
+  - kind: ethereum/contract
+    name: USDCUniswapV2Pair
+    network: mainnet
+    source:
+      address: "0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc"
+      abi: UniswapV2Pair
+      startBlock: 12974077
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Approval
+        - Burn
+        - Mint
+        - Swap
+        - Sync
+        - Transfer
+      abis:
+        - name: UniswapV2Pair
+          file: ./abis/UniswapV2Pair.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: Sync(uint112,uint112)
+          handler: handleSync
+      file: ./src/mapping.ts
+  - kind: ethereum/contract
+    name: Bean
+    network: mainnet
+    source:
+      address: "0xDC59ac4FeFa32293A95889Dc396682858d52e5Db"
+      abi: Bean
+      startBlock: 12974077
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Approval
+        - Burn
+        - Mint
+        - Transfer
+      abis:
+        - name: Bean
+          file: ./abis/ERC20.json
+      eventHandlers:
+      - event: Transfer(indexed address,indexed address,uint256)
+        handler: handleTransfer
+      file: ./src/mapping.ts
+      
