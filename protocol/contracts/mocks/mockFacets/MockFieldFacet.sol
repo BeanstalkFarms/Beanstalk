@@ -34,5 +34,7 @@ contract MockFieldFacet is FieldFacet {
         return s.f.soil;
     }
 
-    
+    function beanSown() external view returns (uint256) {
+        return s.f.beanSown;
+    }
 }
