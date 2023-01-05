@@ -1,0 +1,22 @@
+/** Spinning animation for Sun icon when awaiting = true */
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/** Pulse animation for when Season is new */
+@keyframes pulse {
+  0% {
+    border-color: rgba(240, 223, 146, 1);
+  }
+  50% {
+    border-color: rgba(240, 223, 146, 0.5);
+  }
+  100% {
+    border-color: rgba(240, 223, 146, 1);
+  }
+}

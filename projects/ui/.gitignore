@@ -1,0 +1,35 @@
+# Filesystem
+.DS_Store
+
+# Build files
+tsconfig.tsbuildinfo
+src/generated
+build
+dist
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Editors
+.vscode/
+.idea/
+stats.json
+
+# Netlify
+.netlify/
+
+# Packages
+node_modules/
+package-lock.json
+yarn-error.log
+
+# Yarn v2
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions

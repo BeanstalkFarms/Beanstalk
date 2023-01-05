@@ -1,0 +1,278 @@
+## elements marked with ** are used in time-series charts in the UI
+query {
+  ## ---------------------------------------------------------------------------
+  ## Internally, the UI splits up `beanstalk` + `farmer` data for ease of access.
+  ## It would be great if the subgraph matched this structure, however it's not
+  ## crucial as long as naming conventions are clear and consistent.
+  ## ---------------------------------------------------------------------------
+  beanstalk {
+    seasons(
+      # limit (most recent 5)
+      # filter by a property
+      
+    ) {
+      id
+      timestamp
+
+      ## Field
+      weather   # ** new weather at the end of the season
+      numSowers # ** number of unique sowers
+      numSows   # number of unique sow txns
+      sownBeans # number of beans sown
+      newPods   # pods minted this season
+      pods      # ** total outsanding pods
+      harvestablePods # pods that are now harvestable
+      harvestedPods   # pods that were harvested last season
+      newSoil   # 
+      podRate   # **
+
+      ## Bean + Pools
+      twap      # ** previously called `price`
+      beans     # ** total supply of beans (?)
+      lp        # ** total supply of lp
+      newBeans  # newly minted beans
+
+      ## Silo
+      stalk     # ** total stalk
+      seeds     # ** total seeds
+      
+      # NOTE
+      # The below were used to show the amount of deposited
+      # Beans & LP (LP = BEAN:ETH UNIV2 LP) over time. Metrics
+      # for BEAN:3CRV and BEAN:LUSD were never added to the subgraph
+      # or to the UI. These need to be included in a new format that
+      # generalizes across all pools. I've developed two schema
+      # suggestions below - please provide feedback!
+      # ------------------------------------------------------------
+      # depositedBeans  # **
+      # withdrawnBeans  # **
+      # depositedLP     # **
+      # withdrawnLP     # **
+
+      # SUGGESTION #1: Return the amount and BDV of all Whitelisted
+      # Silo Tokens upon request. 
+      # If we use this nested structure, I would suggest moving 
+      # `stalk`and `seeds` under the Silo entity.
+      # ------------------------------------------------------------
+      silo {
+        # All whitelisted tokens...
+        tokens {
+          token           # string; token address
+          deposited {
+            amount
+            bdv
+          }
+          withdrawn {
+            amount
+            bdv 
+          }
+        }
+      }
+
+      # SUGGESTION #2: Provide a `Token` entity accessible by its ID
+      # and require the frontend to query by ID directly. This means
+      # that a consumer of the subgraph has to know what tokens are
+      # whitelisted before requesting metrics. Probably fine.
+      # ------------------------------------------------------------
+      silo {
+        bean: token(id: "0xBEAN") {
+          deposited {
+            amount
+            bdv
+          }
+          withdrawn {
+            amount
+            bdv 
+          }
+        }
+        beanCrv3: token(id: "0xBEANCRV3") {
+          # ...
+        }
+        # ... continue for all Whitelisted Silo Tokens
+      }
+
+      ## Rolling metrics (for APY calculations)
+      farmableBeansPerSeason7
+      farmableBeansPerSeason30
+      harvestableBeansPerSeason7
+      harvestableBeansPerSeason30
+      # TODO: finish seasonal metrics
+    }
+    marketplace {
+      listings(
+        # filter by `PodListing` properties
+        # sort by price, size
+      ) {
+        id      # the ID of a listing is the `index` of the Plot
+        index   # The absolute index of the listed Plot in the Pod Line.
+        start   # The difference in index of where the listing starts selling pods from and where the plot starts
+        pricePerPod
+        maxHarvestableIndex
+        totalAmount
+        remainingAmount
+        filledAmount
+        status  # 'active' | 'filled' | 'cancelled' (should we have cancelled?)
+        ## Metadata
+        account
+        createdAt   # initial creation
+        updatedAt   # last time this was updated (e.g. price adjustment or cancellation)
+      }
+
+      orders(
+        # filter by `PodOrder` properties
+        # sort by price, size
+      ) {
+        id    # the ID of an order is returned from the event; it's a specific hash
+        pricePerPod
+        maxPlaceInLine
+        totalAmount
+        remainingAmount
+        filledAmount
+        status # 'active' | 'filled' | 'cancelled'
+        ## Metadata
+        account
+        createdAt   # initial creation
+        updatedAt   # last time this was updated (e.g. price adjustment or cancellation)
+      }
+
+			# TO DISCUSS: If we can make a top-level "events" entity that contains
+      # "parsed historical transactions" for any account, we could query against
+      # that for Pod Marketplace events only. This would provide a single schema
+      # for displaying event history rather than a marketplace-specific one.
+      history {
+        event       # [Create|Update|Cancel]Pod[Listing|Order]
+        timestamp
+        data        # parsed returnValues for this event depending on `event`, see src/state/v1/marketplace/updater.ts for examples
+        hash        # transaction hash for this event
+      }
+
+      analytics(
+        # constrain by time window 
+        # (default to all time; can also get volume in last 7d or since season 6074, etc)
+      ) {
+        podVolume
+        beanVolume
+        countFills
+        listings {
+          totalRemaining
+          # more here later
+        }
+        orders {
+          totalRemaining
+          # more here later
+        }
+      }
+    }
+  }
+
+  ## ---------------------------------------------------------------------------
+
+  farmer(account: "0xFARMER") {
+    silo {
+      ## Aggregate value of all Silo deposits over time (regardless of Token)
+      ## Pre-compute the USD & Bean value of deposits at each season.
+      value(
+        # limit number of data points 
+        # select time window
+        # filter by a particular token?
+      ) {
+        season {
+          id
+          timestamp
+        }
+        beans  # aggregate deposit value across all tokens, denominated in Beans
+        usd    # aggregate deposit value across all tokens, denominated in USD
+      }
+
+
+      ## Whitelisted Silo token address.
+      ## We nest the values below under `token` because we cannot aggregate the
+      ## `amount` of different tokens under `deposited`, `withdrawn` etc.
+      ## 
+      ## Within the UI, we call this "silo token", "whitelisted silo token". If the entity
+      ## name needs to be more specific than "token" we could call it "siloToken"
+      ## or come up with a new name for a "section" of the silo.
+      ## 
+      ## "whitelisted assets" and "whitelisted tokens" seems the same. pubs has generally used assets
+      ## "silo tokens" doesn't exclude stalk and seeds as much
+      ## ----------------------------------------------------------------------
+      token(
+        id: "0xSILOTOKEN"  
+      ) {
+        ## State: `DEPOSITED`
+        deposited {
+          amount      # the amount of this `token` that is currently in the `DEPOSITED` state.
+          bdv         # the total BDV of all Deposits of this `token`.
+        }
+        deposits(
+          # limit number of data points
+          # select time window
+        ) {
+          amount      # the amount of this `token` that was Deposited
+          bdv         # the BDV prescribed to this Deposit at the time of Deposit
+          ## NOTE:
+          ## Stalk & Seeds are calculated depending on the `token` of deposit.
+          ## e.g. Beans gets 1 Stalk 2 Seeds, LP gets 1 Stalk 4 Seeds, etc.
+          ## These values are hardcoded into the frontend currently, but could
+          ## be derived by looking at Silo Whitelist events which define the
+          ## number of Stalk and Seeds to give per BDV of a deposit.
+          stalk       #
+          seeds       # 
+          season {}   # the Season of deposit
+          ## Metadata
+          hash        # transaction hash containing the deposit
+          createdAt   # the block timestamp of deposit
+        }
+        ## State: `WITHDRAWN`
+        withdrawn {
+          amount      # the amount of this `token` that is currently in the `DEPOSITED` state.
+          bdv         # ???
+        }
+        withdrawals {
+          amount
+          season {}
+          hash
+          createdAt
+        }
+        ## TODO: tracking of Claimable, Wrapped assets.
+      }
+    }
+    field {
+      pods
+      plots {
+        id              # the ID of a Plot is the `index` of the Plot
+        index           # the absolute index in the Pod Line (with respect to Pod #0)
+        pods            # the number of Pods in the plot
+        # OPTIONAL
+        placeInLine     # index - current harvestable index. nice to have if it's easy to recompute; I presume it isn't.
+        listing {}      # null | Listing (if the Plot is listed)
+      }
+    }
+    ## NOTE: This is redundant and unnecessary IF we can
+    ## filter beanstalk.marketplace by a particular `account`. 
+    marketplace {
+      listings {}
+      orders {}
+      analytics {}
+    }
+  }
+
+  ## ---------------------------------------------------------------------------
+  ## "events" here are not mapped 1:1 with emitted Ethereum events; they
+  ## represent Beanstalk's interpretation of on-chain events, which behave
+  ## differently depending on the context.
+  ## 
+  ## For example: there is no "PodListingUpdated" event; instead, a Listing can
+  ## be updated by reissuing the PodListingCreated event with new parameters but
+  ## the same plot index. In this scenario, we want to treat the second event
+  ## differently from the first.
+  ## ---------------------------------------------------------------------------
+  events {
+    event       # parsed event name; ex. the second PodListingCreated event is renamed to PodListingUpdated.
+                # Why do this? We may want subgraph consumers to be able to view all updated listings, for example.
+    timestamp   # transaction timestamp
+    block       # block number
+    data        # parsed returnValues for this event depending on `event`, see src/state/v1/marketplace/updater.ts for examples
+    hash        # transaction hash for this event
+  }
+}

@@ -1,0 +1,21 @@
+query HistoricalPodListings(
+  $historyIDs: [String!]!
+) {
+  podListings(where: {
+    historyID_in: $historyIDs
+  }, orderBy: updatedAt, orderDirection: desc) {
+    #// Identifiers
+    id
+    status
+    historyID
+    #// Pricing
+    pricePerPod
+    #// Configuration
+    index
+    #// Amounts
+    amount
+    filledAmount
+    #// Metadata
+    updatedAt
+  }
+}

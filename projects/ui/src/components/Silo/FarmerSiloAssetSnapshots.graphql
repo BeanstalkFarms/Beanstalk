@@ -1,0 +1,19 @@
+query FarmerSiloAssetSnapshots(
+  $account: ID!
+) {
+  farmer(id: $account) {
+    silo {
+      assets {
+        token
+        hourlySnapshots(orderBy: season, orderDirection: asc) {
+          id
+          season
+          deltaDepositedBDV # hourly Deposited BDV
+          deltaDepositedAmount #hourly Deposited Amount
+          depositedBDV # total Deposited BDV
+          createdAt
+        }
+      }
+    }
+  }
+}
