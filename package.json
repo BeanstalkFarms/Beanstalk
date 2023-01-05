@@ -3,7 +3,8 @@
   "private": true,
   "packageManager": "yarn@3.2.0",
   "workspaces": [
-    "projects/*"
+    "projects/*",
+    "protocol"
   ],
   "devDependencies": {
     "@types/prettier": "^2",
@@ -29,6 +30,10 @@
     "generate": "yarn sdk:generate",
     "build": "yarn sdk:build",
     "install-husky": "node -e \"try { require('husky').install() } catch (e) {if (e.code !== 'MODULE_NOT_FOUND') throw e}\"",
-    "postinstall": "yarn generate && yarn build && yarn install-husky"
+    "protocol:compile": "yarn workspace protocol compile",
+    "ui:start": "yarn workspace ui start",
+    "ui:build": "yarn workspace ui build",
+    "ui:generate": "yarn workspace ui generate",
+    "ui:test": "yarn workspace ui test"
   }
 }

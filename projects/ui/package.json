@@ -1,5 +1,5 @@
 {
-  "name": "beanstalk-ui",
+  "name": "ui",
   "version": "2.1.0",
   "private": true,
   "homepage": "https://app.bean.money",
@@ -136,8 +136,7 @@
     "generate:graphql": "echo \"Generating: graphql-codegen\" && graphql-codegen --config codegen.yml",
     "storybook": "start-storybook -p 6006 -s public",
     "build-storybook": "build-storybook -s public",
-    "postpack": "yarn generate",
-    "postinstall": "husky install"
+    "postpack": "yarn generate"
   },
   "engines": {
     "node": ">=14"
