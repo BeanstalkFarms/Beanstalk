@@ -1,0 +1,6 @@
+#import "./PodOrder.fragment.graphql"
+query PodOrder($id: ID!) {
+  podOrder(id: $id) {
+    ...PodOrder
+  }
+}

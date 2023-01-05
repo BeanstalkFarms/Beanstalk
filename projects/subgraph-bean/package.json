@@ -1,0 +1,19 @@
+{
+  "name": "subgraph-bean",
+  "license": "MIT License",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ bean",
+    "create-local": "graph create --node http://graph.playgrounds.academy:8020/ bean",
+    "remove-local": "graph remove --node http://graph.playgrounds.academy:8020/ bean",
+    "deploy-local": "graph deploy --node http://graph.playgrounds.academy:8020/ --ipfs http://graph.playgrounds.academy:5001 bean",
+    "deploy-hosted": "graph deploy --product hosted-service cujowolf/bean"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "0.30.4",
+    "@graphprotocol/graph-ts": "0.27.0",
+    "matchstick-as": "^0.5.0"
+  },
+  "private": true
+}

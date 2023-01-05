@@ -1,0 +1,17 @@
+.mg-point {
+
+}
+.mg-point.mg-active {
+  animation: mg-pulse 0.75s ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+@keyframes mg-pulse {
+  0% {
+    r: 9px;
+  }
+  100% {
+    r: 10.5px;
+  }
+}
