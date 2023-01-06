@@ -5,6 +5,7 @@
   "homepage": "https://app.bean.money",
   "dependencies": {
     "@apollo/client": "^3.4.10",
+    "@beanstalk/protocol": "workspace:*",
     "@curvefi/api": "^2.1.0",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
@@ -124,7 +125,7 @@
     "dev": "netlify dev --command \"yarn start\" --targetPort 4173",
     "serve": "vite preview",
     "build": "yarn generate && tsc && vite build",
-    "build:dev":  "tsc --noEmit --watch",
+    "build:dev": "tsc --noEmit --watch",
     "build-netlify": "VITE_NAME=$npm_package_name VITE_VERSION=$npm_package_version VITE_HOST='netlify' VITE_NETLIFY_CONTEXT=$CONTEXT VITE_NETLIFY_BUILD_ID=$BUILD_ID VITE_GIT_COMMIT_REF=$COMMIT_REF yarn build",
     "build-fleek": "VITE_NAME=$npm_package_name VITE_VERSION=$npm_package_version VITE_HOST='fleek' VITE_GIT_COMMIT_REF=$(git rev-parse HEAD) yarn build",
     "build:vite": "vite build",
