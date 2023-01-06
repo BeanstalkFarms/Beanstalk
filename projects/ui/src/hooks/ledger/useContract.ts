@@ -2,7 +2,7 @@ import { Contract, ContractInterface, ethers } from 'ethers';
 import { useCallback, useMemo } from 'react';
 import { useProvider, useContract as useWagmiContract } from 'wagmi';
 
-import BEANSTALK_ABI from '~/constants/abi/Beanstalk/Beanstalk.json';
+import BEANSTALK_ABI from '@beanstalk/protocol/abi/Beanstalk.json';
 import BEANSTALK_PRICE_ABI from '~/constants/abi/Beanstalk/BeanstalkPrice.json';
 import BEANSTALK_FERTILIZER_ABI from '~/constants/abi/Beanstalk/BeanstalkFertilizer.json';
 import ERC20_ABI from '~/constants/abi/ERC20.json';

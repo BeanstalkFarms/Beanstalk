@@ -1,6 +1,6 @@
 import { BigNumber as EBN } from 'ethers';
 import BigNumber from 'bignumber.js';
-import { AddDepositEvent, AddWithdrawalEvent, PlotTransferEvent, RemoveDepositEvent, RemoveWithdrawalEvent, RemoveWithdrawalsEvent, SowEvent , HarvestEvent } from '~/generated/Beanstalk/Beanstalk';
+import { AddDepositEvent, AddWithdrawalEvent, PlotTransferEvent, RemoveDepositEvent, RemoveWithdrawalEvent, RemoveWithdrawalsEvent, SowEvent , HarvestEvent } from '~/generated/protocol/abi/Beanstalk';
 
 import { BEAN, BEAN_CRV3_LP, SILO_WHITELIST } from '~/constants/tokens';
 import { TokenMap } from '~/constants';
