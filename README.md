@@ -36,7 +36,7 @@ Beanstalk is a permissionless fiat stablecoin protocol built on Ethereum.
 |-------------------------------------------------|--------------------------------------------------------------------------------------|
 | [`protocol`][proj-protocol]                     | The Beanstalk protocol, its facets and related contracts in the Beanstalk ecosystem. |
 | [`subgraph-beanstalk`][proj-subgraph-beanstalk] | A subgraph indexing Beanstalk ([0xC1E088][es-beanstalk]).                            |
-| [`subgraph-bean`][proj-subgraph-bean]           | A subgraph indexing the Bean ERC-20 token ([0xBEA000][es-beanstalk]).                |
+| [`subgraph-bean`][proj-subgraph-bean]           | A subgraph indexing the Bean ERC-20 token ([0xBEA000][es-bean]).                     |
 | [`sdk`][proj-sdk]                               | A Typescript SDK for interacting with Beanstalk and ecosystem contracts.             |
 | [`ui`][proj-ui]                                 | The Beanstalk UI hosted at [app.bean.money](https://app.bean.money).                 |
 | [`cli`][proj-cli]                               | A tool for interacting with Beanstalk in a development environment.                  |
