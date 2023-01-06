@@ -1,12 +1,12 @@
 [discord-badge]: https://img.shields.io/discord/880413392916054098?label=Beanstalk
 [discord-url]: https://discord.gg/beanstalk
 
-[proj-protocol]: https://github.com/BeanstalkFarms/Beanstalk/tree/master/protocol
-[proj-sdk]: https://github.com/BeanstalkFarms/Beanstalk/tree/master/projects/sdk
-[proj-ui]: https://github.com/BeanstalkFarms/Beanstalk/tree/master/projects/ui
-[proj-subgraph-beanstalk]: https://github.com/BeanstalkFarms/Beanstalk/tree/master/projects/subgraph-beanstalk
-[proj-subgraph-bean]: https://github.com/BeanstalkFarms/Beanstalk/tree/master/projects/subgraph-bean
-[proj-cli]: https://github.com/BeanstalkFarms/Beanstalk/tree/master/projects/cli
+[proj-protocol]: /protocol
+[proj-sdk]: /projects/sdk
+[proj-ui]: /projects/ui
+[proj-subgraph-beanstalk]: /projects/subgraph-beanstalk
+[proj-subgraph-bean]: /projects/subgraph-bean
+[proj-cli]: /projects/cli
 [es-beanstalk]: https://etherscan.io/address/0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5
 [es-bean]: https://etherscan.io/address/0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab
 
