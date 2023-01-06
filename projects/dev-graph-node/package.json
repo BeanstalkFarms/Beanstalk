@@ -1,0 +1,12 @@
+{
+  "name": "dev-graph-node",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "node:setup": "../../utils/setup-graph-node.sh",
+    "node:start": "cd graph-node/docker && docker compose up",
+    "node:cleanstart": "rm -rf graph-node/docker/data && yarn node:start",
+    "node:stop": "cd graph-node/docker && docker compose down"
+  }
+}
