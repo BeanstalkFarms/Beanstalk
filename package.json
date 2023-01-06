@@ -27,13 +27,13 @@
     "ex": "yarn workspace @beanstalk/examples x",
     "format": "yarn sdk:prettier",
     "test": "yarn sdk:test",
-    "generate": "yarn sdk:generate",
+    "generate": "yarn protocol:generate && yarn ui:generate && yarn sdk:generate",
     "build": "yarn sdk:build",
-    "install-husky": "node -e \"try { require('husky').install() } catch (e) {if (e.code !== 'MODULE_NOT_FOUND') throw e}\"",
-    "protocol:compile": "yarn workspace protocol compile",
+    "protocol:generate": "yarn workspace protocol generate",
     "ui:start": "yarn workspace ui start",
     "ui:build": "yarn workspace ui build",
     "ui:generate": "yarn workspace ui generate",
-    "ui:test": "yarn workspace ui test"
+    "ui:test": "yarn workspace ui test",
+    "bootstrap": "yarn husky install && yarn generate"
   }
 }
