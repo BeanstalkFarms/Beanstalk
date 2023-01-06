@@ -16,7 +16,7 @@ import {
   PodOrderCreatedEvent,
   PodOrderCancelledEvent,
   PodOrderFilledEvent
-} from "../../constants/generated/Beanstalk/Beanstalk";
+} from "src/constants/generated/protocol/abi/Beanstalk";
 import { StringMap } from "../../types";
 import { BeanstalkSDK } from "../BeanstalkSDK";
 import { PodListing, PodOrder } from "./types";

@@ -5,7 +5,7 @@ import {
   RemoveDepositEvent,
   RemoveWithdrawalEvent,
   RemoveWithdrawalsEvent
-} from "../../constants/generated/Beanstalk/Beanstalk";
+} from "src/constants/generated/protocol/abi/Beanstalk";
 import EventProcessor, { EventProcessingParameters } from "./processor";
 import { BeanstalkSDK } from "../BeanstalkSDK";
 import { getProvider } from "../../utils/TestUtils/provider";
