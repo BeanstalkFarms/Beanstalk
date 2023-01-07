@@ -711,7 +711,7 @@ const Graph: FC<GraphProps> = ({
                 offsetTop={-40}
                 left={tooltipLeft}
                 top={tooltipTop}
-                width={tooltipWidth}
+                // width={tooltipWidth}
                 applyPositionStyle
                 style={{
                   backgroundColor: 'transparent',
