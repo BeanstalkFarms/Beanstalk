@@ -12,7 +12,7 @@ FieldFacet -
 ## Inheritance
 
 ```
-FieldFacet - 
+FundraiserFacet - 
   is ReentrancyGuard - OpenZeppelin Contract module that helps prevent reentrant calls to a function.
 ```
 
