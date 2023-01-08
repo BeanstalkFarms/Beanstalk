@@ -158,8 +158,6 @@ const useMarketActivityData = () => {
               ? podAmount.multipliedBy(pricePerPod)
               : undefined;
 
-            console.log('PodOrderCancelled', podOrder);
-              
             return <MarketEvent>{
               id: podOrder.id,
               eventId: e.id,
