@@ -401,7 +401,10 @@ const generateScale = (
         Math.abs(1 - (yMax as number))
       );
       yScale = scaleLinear<number>({
-        domain: [1 - biggestDifference, 1 + biggestDifference],
+        domain: [
+          1 - biggestDifference < 0 ? 0 : 1 - biggestDifference,
+          1 + biggestDifference
+        ],
       });
     } else {
       const y1Min = stackedArea

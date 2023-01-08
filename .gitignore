@@ -11,6 +11,9 @@ archived
 .vscode
 diamondCut-*.json
 
+#Editors
+.idea/
+
 # Foundry
 cache/
 out/
