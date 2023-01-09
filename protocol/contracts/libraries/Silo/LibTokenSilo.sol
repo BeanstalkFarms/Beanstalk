@@ -89,7 +89,7 @@ library LibTokenSilo {
     function depositWithBDV(
         address account,
         address token,
-        uint32 season,
+        int32 cumulativeGrownStalkPerBdv,
         uint256 amount,
         uint256 bdv
     ) internal returns (uint256, uint256) {
@@ -97,7 +97,8 @@ library LibTokenSilo {
         require(bdv > 0, "Silo: No Beans under Token.");
 
         incrementTotalDeposited(token, amount); // Update Totals
-        addDepositToAccount(account, token, season, amount, bdv); // Add to Account
+
+        addDepositToAccount(account, token, cumulativeGrownStalkPerBdv, amount, bdv); // Add to Account
 
         return (
             bdv.mul(s.ss[token].seeds),
@@ -106,7 +107,7 @@ library LibTokenSilo {
     }
 
     /**
-     * @dev Add `amount` of `token` to a user's Deposit in `season`. Requires a
+     * @dev Add `amount` of `token` to a user's Deposit in `cumulativeGrownStalkPerBdv`. Requires a
      * precalculated `bdv`.
      *
      * If a Deposit doesn't yet exist, one is created. Otherwise, the existing
@@ -121,16 +122,16 @@ library LibTokenSilo {
     function addDepositToAccount(
         address account,
         address token,
-        uint32 season,
+        int32 grownStalkPerBdv,
         uint256 amount,
         uint256 bdv
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        s.a[account].deposits[token][season].amount += uint128(amount);
-        s.a[account].deposits[token][season].bdv += uint128(bdv);
+        s.a[account].deposits[token][cumulativeGrownStalkPerBdv].amount += uint128(amount);
+        s.a[account].deposits[token][cumulativeGrownStalkPerBdv].bdv += uint128(bdv);
 
-        emit AddDeposit(account, token, season, amount, bdv);
+        emit AddDeposit(account, token, cumulativeGrownStalkPerBdv, amount, bdv);
     }
 
     //////////////////////// REMOVE DEPOSIT ////////////////////////
@@ -155,7 +156,7 @@ library LibTokenSilo {
     function removeDepositFromAccount(
         address account,
         address token,
-        uint32 season,
+        int32 grownStalkPerBdv,
         uint256 amount
     ) internal returns (uint256 crateBDV) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -190,29 +191,13 @@ library LibTokenSilo {
 
         // Excess remove
         // This can only occur for Unripe Beans and Unripe LP Tokens, and is a
-        // result of using Silo V1 storage slots to store Unripe BEAN/LP 
+        // result of using Silo V1 storage slots to store Unripe BEAN/LP
         // Deposit information. See {AppStorage.sol:Account-State}.
         if (amount > crateAmount) {
             amount -= crateAmount;
-            if (LibUnripeSilo.isUnripeBean(token))
-                return
-                    crateBDV.add(
-                        LibUnripeSilo.removeUnripeBeanDeposit(
-                            account,
-                            season,
-                            amount
-                        )
-                    );
-            else if (LibUnripeSilo.isUnripeLP(token))
-                return
-                    crateBDV.add(
-                        LibUnripeSilo.removeUnripeLPDeposit(
-                            account,
-                            season,
-                            amount
-                        )
-                    );
-            revert("Silo: Crate balance too low.");
+            
+            uint128 season = LibLegacyTokenSilo.grownStalkPerBdvToSeason(grownStalkPerBdv);
+            LibLegacyTokenSilo.removeDepositFromAccount(account, token, season, amount);
         }
     }
 
@@ -267,22 +252,18 @@ library LibTokenSilo {
     function tokenDeposit(
         address account,
         address token,
-        uint32 season
-    ) internal view returns (uint256, uint256) {
+        int128 grownStalkPerBdv
+    ) internal view returns (uint256 amount, uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-
-        if (LibUnripeSilo.isUnripeBean(token))
-            return LibUnripeSilo.unripeBeanDeposit(account, season);
-
-        if (LibUnripeSilo.isUnripeLP(token))
-            return LibUnripeSilo.unripeLPDeposit(account, season);
-
-        return (
-            s.a[account].deposits[token][season].amount,
-            s.a[account].deposits[token][season].bdv
-        );
+        amount = s.a[account].deposits[token][season].amount;
+        bdv = s.a[account].deposits[token][season].bdv;
+        if (isDepositSeason(token, grownStalkPerBdv)) {
+            (uint legacyAmount, uint legacyBdv) =
+                LibLegacyTokenSilo.tokenDeposit(account, token, grownStalkPerBdvToSeason(grownStalkPerBdv));
+            amount = amount.add(legacyAmount);
+            bdv = bdv.add(legacyBdv);
+        }
     }
-
     /**
      * @dev Get the number of Seeds per BDV for a whitelisted token.
      */
@@ -297,5 +278,33 @@ library LibTokenSilo {
     function stalk(address token) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return uint256(s.ss[token].stalk);
+    }
+
+    function cumulativeGrownStalkPerBdv(IERC20 token)
+        internal
+        view
+        returns (int128 _cumulativeGrownStalkPerBdv)
+    {
+        SiloSettings storage ss = s.ss[token];
+        cumulativeGrownStalkPerBdv = s.ss[token].lastCumulativeStalkPerBdv.add(
+            ss.grownStalkPerBdvPerSeason.mul(_season().sub(ss.lastUpdateSeason))
+        );
+    }
+
+    function grownStalkForDeposit(
+        address account,
+        IERC20 token,
+        int128 grownStalkPerBdv
+    )
+        internal
+        view
+        returns (uint grownStalk)
+    {
+        // cumulativeGrownStalkPerBdv(token) > depositGrownStalkPerBdv for all valid Deposits
+        int128 _cumulativeGrownStalkPerBdv = cumulativeGrownStalkPerBdv(token);
+        require(depositGrownStalkPerBdv <= _cumulativeGrownStalkPerBdv, "Silo: Invalid Deposit");
+        uint deltaGrownStalkPerBdv = uint(cumulativeGrownStalkPerBdv(token).sub(depositGrownStalkPerBdv));
+        (, uint bdv) = tokenDeposit(account, token, depositGrownStalkPerBdv);
+        grownStalk = deltaGrownStalkPerBdv.mul(bdv);
     }
 }

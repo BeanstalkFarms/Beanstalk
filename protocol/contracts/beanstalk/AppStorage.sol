@@ -112,13 +112,14 @@ contract Account {
         SeasonOfPlenty deprecated; // DEPRECATED – Replant reset the Season of Plenty mechanism
         uint256 roots; // A Farmer's Root balance.
         uint256 wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
-        mapping(address => mapping(uint32 => Deposit)) deposits; // A Farmer's Silo Deposits stored as a map from Token address to Season of Deposit to Deposit.
+        mapping(address => mapping(uint32 => Deposit)) legacyDeposits; // Legacy Silo Deposits stored as a map from Token address to Season of Deposit to Deposit.
         mapping(address => mapping(uint32 => uint256)) withdrawals; // DEPRECATED - Zero withdraw eliminates a need for withdraw mapping
         SeasonOfPlenty sop; // A Farmer's Season Of Plenty storage.
         mapping(address => mapping(address => uint256)) depositAllowances; // Spender => Silo Token
         mapping(address => mapping(IERC20 => uint256)) tokenAllowances; // Token allowances
         uint256 depositPermitNonces; // A Farmer's current deposit permit nonce
         uint256 tokenPermitNonces; // A Farmer's current token permit nonce
+        mapping(address => mapping(int128 => Deposit)) deposits; //SiloV3 deposits stored as a map from Cumulative Grown Stalk
     }
 }
 
@@ -267,13 +268,25 @@ contract Storage {
          */
         bytes4 selector;
         /*
-         * @dev The Seeds Per BDV that the Silo mints in exchange for Depositing this Token.
+         * @dev The Stalk Per BDV that the Silo grants in exchange for Depositing this Token.
          */
-        uint32 seeds;
+        uint32 stalkPerBdv;
         /*
-         * @dev The Stalk Per BDV that the Silo mints in exchange for Depositing this Token.
+         * @dev The Grown Stalk Per BDV Per Season represents how much Stalk one BDV of the underlaying deposited token grows each season. In the past, this was represented by seeds.
          */
-        uint32 stalk;
+        uint32 grownStalkPerBdvPerSeason;
+        /*
+         * @dev The last season in which the Cumulative Grown Stalk Per BDV was updated
+         */
+		uint32 lastUpdateSeason;
+        /*
+         * @dev The cumulative amount of grown stalk per BDV for this Silo depositable token.
+         */
+		int128 lastCumulativeGrownStalkPerBdv;
+        /*
+         * @dev This is the old seedsPerBdv value (previously 2 for Bean and 4 for LP tokens)
+         */
+		uint32 legacySeedsPerBdv;
     }
 
     // UnripeSettings stores the settings for an Unripe Token in Beanstalk.

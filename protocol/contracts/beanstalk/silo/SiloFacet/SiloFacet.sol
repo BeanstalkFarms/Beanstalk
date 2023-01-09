@@ -477,4 +477,23 @@ contract SiloFacet is TokenSilo {
             newStalk.sub(ar.stalkRemoved)
         );
     }
+
+    //////////////////////// GETTERS ////////////////////////
+
+    function cumulativeGrownStalkPerBdv(IERC20 token)
+        view
+        returns (int128 _cumulativeGrownStalkPerBdv)
+    {
+        cumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(
+            token
+        );
+    }
+
+    function grownStalkPerBdvToSeason(IERC20 token, int128 grownStalkPerBdv)
+        view
+        returns (uint32 season)
+    {
+        require(LibLegacyTokenSilo.isDepositSeason(token, grownStalkPerBdv, "No matching season for input grownStalkPerBdv"));
+        season = LibLegacyTokenSilo.grownStalkPerBdvToSeason(token, grownStalkPerBdv);
+    }
 }
