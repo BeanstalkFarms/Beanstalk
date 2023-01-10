@@ -124,7 +124,7 @@ export const BeanstalkPalette = {
   lightGreen: '#E1F8E6',
   supportGreen: '#19873B',
   lightestGreen: '#EDF8EE',
-
+  hoverGreen: '#C8EACC',
   winterGreen: '#1D8A79',
 
   // Blues
@@ -137,6 +137,7 @@ export const BeanstalkPalette = {
   skyBlue: '#DBEDFD',
   // Other
   grey: '#657265',
+  inputGrey: '#F0F0F0',
   realGrey: '#808080',
   lightGrey: '#9E9E9E',
   lightestGrey: '#DDDDDD',

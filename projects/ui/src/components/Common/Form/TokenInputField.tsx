@@ -17,6 +17,24 @@ import FieldWrapper from './FieldWrapper';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import { ZERO_BN } from '~/constants';
+import InputFieldBorder from './FocusField';
+
+export enum BalanceOrigin {
+  FARM = 'FARM',
+  CIRCULATING = 'CIRCULATING',
+  COMBINED = 'COMBINED',
+}
+
+export type TokenInputVariantProps = {
+  /**
+   * whether to use the wrapped variant or the default text field variant
+   */
+  inputVariant?: 'default' | 'wrapped'
+  /**
+   * to show the token origin options (FARM, CIRCULATING, COMBINED)
+   */
+  balanceOrigin?: boolean;
+}
 
 export type TokenInputCustomProps = {
   /**
@@ -58,10 +76,9 @@ export type TokenInputCustomProps = {
   onChange?: (finalValue: BigNumber | undefined) => void;
 };
 
-// const preventNegative = (e: React.)
-
 export type TokenInputProps = (
   TokenInputCustomProps // custom
+  & TokenInputVariantProps // custom variant
   & Partial<Omit<TextFieldProps, 'onChange'>>  // MUI TextField
 );
 
@@ -72,6 +89,55 @@ export const preventNegativeInput = (e: React.KeyboardEvent<HTMLInputElement>) =
     e.preventDefault();
   }
 };
+
+const styles = {
+  input: {
+    wrapped: {
+      borderRadius: 1,
+      '& label.Mui-focused': {
+        color: '#fff',
+      },
+      '& .MuiOutlinedInput-root': {
+        background: '#fff',
+        pr: 0,
+        '& fieldset': {
+          border: 'none',
+        },
+        '&.Mui-focused fieldset': {
+          border: 'none',
+        },
+        '&:hover fieldset': {
+          border: 'none'
+        },
+        '& .MuiOutlinedInput-input': {
+          pl: 0,
+          py: 1.5,
+        }
+      },
+    },
+    default: {
+      borderRadius: 1,
+      '& .MuiOutlinedInput-root': {
+        background: '#fff',
+      },
+    }
+  },
+  infoSection: {
+    wrapped: {
+      gap: 0.5,
+      py: 1,
+    },
+    default: {
+      gap: 0.5,
+      px: 0.5, 
+      pt: 0.75
+    }
+  },
+  infoTypography: {
+    wrapped: 'text.secondary',
+    default: 'text.primary',
+  }
+} as const;
 
 const TokenInput: FC<
   TokenInputProps & FieldProps
@@ -85,6 +151,8 @@ const TokenInput: FC<
   max: _max = 'use-balance',
   min,
   allowNegative = false,
+  inputVariant = 'default',
+  balanceOrigin = false,
   /// Formik props
   field,
   form,
@@ -232,43 +300,51 @@ const TokenInput: FC<
 
   return (
     <FieldWrapper label={label}>
-      {/* Input */}
-      <TextField
-        type="text"
-        color="primary"
-        placeholder={placeholder || '0'}
+      <InputFieldBorder
+        enabled={inputVariant === 'wrapped'} 
         disabled={isInputDisabled}
-        fullWidth // default to fullWidth
-        {...textFieldProps}
-        // Override the following props.
-        onWheel={handleWheel}
-        value={displayAmount || ''}
-        onChange={handleChange}
-        InputProps={inputProps}
-        onKeyDown={!allowNegative ? preventNegativeInput : undefined}
-        sx={{
-          borderRadius: 1,
-          '& .MuiOutlinedInput-root': {
-            background: '#fff',
-          },
-          ...sx
-        }}
-      />
-      {/* Bottom Adornment */}
-      {(balance && !hideBalance || quote) && (
-        <Row gap={0.5} px={0.5} pt={0.75}>
+        fullWidth
+      >
+        {/* Input */}
+        <TextField
+          type="text"
+          color="primary"
+          placeholder={placeholder || '0'}
+          disabled={isInputDisabled}
+          fullWidth // default to fullWidth
+          {...textFieldProps}
+          // Override the following props.
+          onWheel={handleWheel}
+          value={displayAmount || ''}
+          onChange={handleChange}
+          InputProps={inputProps}
+          onKeyDown={!allowNegative ? preventNegativeInput : undefined}
+          sx={{
+            ...(styles.input[inputVariant]),
+            ...sx
+          }}
+        />
+        {/* Bottom Adornment */}
+        {(balance && !hideBalance || quote) && (
+        <Row {...styles.infoSection[inputVariant]}>
           {/* Leaving the Stack rendered regardless of whether `quote` is defined
             * ensures that the Balance section gets flexed to the right side of
             * the input. */}
           <Row sx={{ flex: 1 }} spacing={1}>
-            <Typography variant="bodySmall">
+            <Typography 
+              variant="bodySmall" 
+              color={styles.infoTypography[inputVariant]}
+            >
               {quote}
             </Typography>
           </Row>
           {(balance && !hideBalance) && (
             <>
               <Tooltip title={balanceTooltip}>
-                <Typography variant="body1">
+                <Typography 
+                  variant="body1" 
+                  color={styles.infoTypography[inputVariant]}
+                >
                   {balanceLabel}: {(
                     balance
                       ? token
@@ -293,6 +369,7 @@ const TokenInput: FC<
           )}
         </Row>
       )}
+      </InputFieldBorder>
     </FieldWrapper>
   );
 };
