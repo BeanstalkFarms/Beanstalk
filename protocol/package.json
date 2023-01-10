@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "compile": "hardhat compile",
-    "generate": "yarn compile && hardhat diamondABI",
+    "generate": "echo '\nProtocol Generate' && yarn compile && hardhat diamondABI",
     "test": "hardhat compile && hardhat test --network hardhat",
     "clean": "hardhat clean"
   },
