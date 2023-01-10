@@ -1,8 +1,6 @@
 import { BigNumber, ContractTransaction } from "ethers";
-import { ERC20__factory } from "src/constants/generated";
+import { ERC20Permit, ERC20__factory, ERC20Permit__factory } from "src/constants/generated";
 import { PromiseOrValue } from "src/constants/generated/common";
-import { ERC20Permit } from "src/constants/generated/ERC20Permit";
-import { ERC20Permit__factory } from "src/constants/generated/factories/ERC20Permit__factory";
 import { Token } from "./Token";
 import { TokenValue } from "src/classes/TokenValue";
 

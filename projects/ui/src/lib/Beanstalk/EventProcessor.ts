@@ -11,7 +11,7 @@ import {
   RemoveDepositEvent,
   RemoveWithdrawalsEvent,
   RemoveDepositsEvent,
-  PodListingCancelledEvent, PodListingCreatedEvent, PodListingFilledEvent, PodOrderCancelledEvent, PodOrderCreatedEvent, PodOrderFilledEvent } from '~/generated/Beanstalk/Beanstalk';
+  PodListingCancelledEvent, PodListingCreatedEvent, PodListingFilledEvent, PodOrderCancelledEvent, PodOrderCreatedEvent, PodOrderFilledEvent } from '~/generated/protocol/abi/Beanstalk';
 import { BEAN, PODS } from '~/constants/tokens';
 import { TokenMap } from '~/constants';
 import { FarmerSiloBalance, WithdrawalCrate } from '~/state/farmer/silo';

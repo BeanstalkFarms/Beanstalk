@@ -1,15 +1,22 @@
 {
-  "name": "protocol",
+  "name": "@beanstalk/protocol",
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
     "compile": "hardhat compile",
+    "generate": "yarn compile && hardhat diamondABI",
     "test": "hardhat compile && hardhat test --network hardhat",
     "clean": "hardhat clean"
   },
   "author": "",
   "license": "ISC",
+  "files": [
+    "abi/"
+  ],
+  "exports": {
+    "./abi/*": "./abi/*"
+  },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.2.1",
     "@nomiclabs/hardhat-etherscan": "^3.1.2",
