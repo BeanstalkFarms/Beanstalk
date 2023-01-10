@@ -154,19 +154,35 @@ export default function App() {
             <Route path="/field" element={<FieldPage />} />
             <Route path="/governance" element={<GovernancePage />} />
             <Route path="/history" element={<TransactionHistoryPage />} />
-            <Route path="/market" index element={<Navigate to="/market/buy" />} />
+            <Route
+              path="/market"
+              index
+              element={<Navigate to="/market/buy" />}
+            />
             <Route path="/market" element={<PodMarketPage />}>
               {/* https://ui.dev/react-router-nested-routes */}
               <Route path="/market/buy" element={<PodMarketBuy />}>
                 <Route index element={<PodMarketCreateOrder />} />
-                <Route path="/market/buy/:listingID" element={<PodMarketFillListing />} />
+                <Route
+                  path="/market/buy/:listingID"
+                  element={<PodMarketFillListing />}
+                />
               </Route>
               <Route path="/market/sell" element={<PodMarketSell />}>
                 <Route index element={<PodMarketCreateListing />} />
-                <Route path="/market/sell/:orderID" element={<PodMarketFillOrder />} />
+                <Route
+                  path="/market/sell/:orderID"
+                  element={<PodMarketFillOrder />}
+                />
               </Route>
-              <Route path="listing/:listingID" element={<Navigate to="/market/buy/:listingID" />} />
-              <Route path="order/:orderID" element={<Navigate to="/market/sell/:orderID" />} />
+              <Route
+                path="listing/:listingID"
+                element={<Navigate to="/market/buy/:listingID" />}
+              />
+              <Route
+                path="order/:orderID"
+                element={<Navigate to="/market/sell/:orderID" />}
+              />
             </Route>
             {/* DEX CODE (hidden) */}
             {/* <Route path="/market/wells" element={<WellHomePage />} /> */}
@@ -191,7 +207,8 @@ export default function App() {
             }}
           >
             <Typography fontSize="small">
-              v{import.meta.env.VITE_VERSION || '0.0.0'} &middot; {sgEnvKey}
+              v{(import.meta.env.VITE_VERSION || '000000').substring(0, 6)}{' '}
+              &middot; {sgEnvKey}
             </Typography>
           </Box>
         </Box>
