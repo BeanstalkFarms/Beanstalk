@@ -8,11 +8,11 @@ describe("app", () => {
   it("has has accurate slugs and navigates properly", () => {
     cy.fixture("navbar.json").then((nav) => {
       for (const item of nav.fields as NavbarItem[]) {
-        cy.wait(300).then(() => {
+        cy.wait(300).then(async () => {
           cy.getBySel(`Navbar-${item.title}`)
             .should("contain.text", item.title)
             .click()
-            .then(() => {
+            .then(async () => {
               if (item.slug !== "") {
                 cy.url().should("contain", item.slug);
               }
@@ -23,11 +23,11 @@ describe("app", () => {
       for (const menuItem of nav.menu as NavbarItem[]) {
         cy
           .wait(300) // wait for async requests to finish
-          .then(() => {
+          .then(async () => {
             cy.getBySel(`Navbar-More`).trigger("mouseover");
             cy.getBySel('HoverMenu-MenuList').should("be.visible");
           })
-          .then(() => {
+          .then(async () => {
             cy.getBySel(`MenuItem-${menuItem.title}`)
             .click()
             .then(() => {

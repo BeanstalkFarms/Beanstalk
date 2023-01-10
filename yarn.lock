@@ -9446,6 +9446,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/cypress@npm:1.1.3":
+  version: 1.1.3
+  resolution: "@types/cypress@npm:1.1.3"
+  dependencies:
+    cypress: "*"
+  checksum: c03ea0a88430e987c32b499a4f0c8f3d32efb01f651d5b8518bc38a2b7de274924cb4f8c656811c3b6a70caf9e0e4af21c028e66be96a3264640469eb79896f9
+  languageName: node
+  linkType: hard
+
 "@types/d3-array@npm:^3.0.2":
   version: 3.0.4
   resolution: "@types/d3-array@npm:3.0.4"
@@ -16870,7 +16879,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cypress@npm:12.3.0":
+"cypress@npm:*, cypress@npm:12.3.0":
   version: 12.3.0
   resolution: "cypress@npm:12.3.0"
   dependencies:
@@ -36530,6 +36539,7 @@ __metadata:
     "@testing-library/jest-dom": 5.16.5
     "@testing-library/react": 13.4.0
     "@testing-library/user-event": 14.4.3
+    "@types/cypress": 1.1.3
     "@types/jest": 29.2.5
     cypress: 12.3.0
     identity-obj-proxy: 3.0.0
@@ -37693,6 +37703,7 @@ __metadata:
     util: ^0.12.4
     vite: ^3.0.4
     vite-plugin-html: ^3.2.0
+    vite-plugin-react-remove-attributes: 1.0.3
     vitest: ^0.21.0
     wagmi: ^0.7.7
     web-vitals: ^1.0.1
@@ -38493,6 +38504,15 @@ __metadata:
   peerDependencies:
     vite: ">=2.0.0"
   checksum: f5222247b65da1c36215f0b2f509fd3975a7426b8d44546beb49f3ba51ee87b3a6b6e6afc9e7567a0d8bd1016631f2db3f934808f62a7c8f7f83fa83d8561d2d
+  languageName: node
+  linkType: hard
+
+"vite-plugin-react-remove-attributes@npm:1.0.3":
+  version: 1.0.3
+  resolution: "vite-plugin-react-remove-attributes@npm:1.0.3"
+  peerDependencies:
+    vite: ^2.4.4
+  checksum: 9ae11525a6b4d111a6d655b7495c319cb99dc2aadaf2f5e1a6c311b3db32a93118f0d4b314f2c039a27e21a15a644bbfafbb7fb87963afcc06912b95c505505b
   languageName: node
   linkType: hard
 

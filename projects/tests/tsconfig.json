@@ -1,6 +1,5 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["**/*.ts", "browser/cypress/support/index.tsx"],
   "compilerOptions": {
     "target": "es5",
     "lib": ["es5", "DOM"],

@@ -1,10 +1,12 @@
-module.exports = {
-  presets: [
+{
+  "extends": "../../babel.config.js",
+  "rootMode": "upward",
+  "presets": [
     [
       "@babel/preset-env",
       {
-        targets: {
-          node: "current"
+        "targets": {
+          "node": "current"
         }
       }
     ],
