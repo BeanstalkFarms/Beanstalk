@@ -34,6 +34,7 @@
     "ui:start": "yarn workspace ui start",
     "ui:build": "yarn workspace ui build",
     "ui:generate": "yarn workspace ui generate",
-    "ui:test": "yarn workspace ui test"
+    "ui:test": "yarn workspace ui test",
+    "test:browser": "yarn workspace tests test:browser"
   }
 }
