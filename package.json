@@ -16,25 +16,25 @@
     "typescript": "4.8.4"
   },
   "scripts": {
+    "bootstrap": "yarn husky install && yarn generate",
+    "generate": "yarn protocol:generate && yarn sdk:generate && yarn ui:generate",
+    "build": "yarn sdk:build",
+    "test": "yarn sdk:test",
+    "format": "yarn sdk:prettier",
+    "protocol:generate": "yarn workspace @beanstalk/protocol generate",
+    "sdk:generate": "yarn workspace @beanstalk/sdk generate",
     "sdk:dev": "yarn workspace @beanstalk/sdk dev",
     "sdk:build": "yarn workspace @beanstalk/sdk build",
     "sdk:test": "jest --selectProjects sdk --silent --runInBand --",
     "sdk:testdev": "jest --selectProjects sdk --watch --runInBand --",
-    "sdk:generate": "yarn workspace @beanstalk/sdk generate",
     "sdk:prettier": "yarn prettier projects/sdk -w",
     "sdk:publish": "yarn workspace @beanstalk/sdk publish",
     "sdk:version": "yarn workspace @beanstalk/sdk version",
-    "ex": "yarn workspace @beanstalk/examples x",
-    "format": "yarn sdk:prettier",
-    "test": "yarn sdk:test",
-    "generate": "yarn sdk:generate",
-    "build": "yarn sdk:build",
-    "install-husky": "node -e \"try { require('husky').install() } catch (e) {if (e.code !== 'MODULE_NOT_FOUND') throw e}\"",
-    "protocol:compile": "yarn workspace protocol compile",
+    "ui:generate": "yarn workspace ui generate",
     "ui:start": "yarn workspace ui start",
     "ui:build": "yarn workspace ui build",
-    "ui:generate": "yarn workspace ui generate",
     "ui:test": "yarn workspace ui test",
-    "test:browser": "yarn workspace tests test:browser"
+    "test:browser": "yarn workspace tests test:browser",
+    "ex": "yarn workspace @beanstalk/examples x"
   }
 }

@@ -1,8 +1,9 @@
 import { ethers, Overrides } from "ethers";
 import { ERC20Token } from "src/classes/Token";
+import { DepositTransferStruct } from "src/constants/generated/projects/sdk/src/constants/abi/Ecosystem/Root";
 import { TokenSiloBalance } from "src/lib/silo";
 import { TokenValue } from "src/TokenValue";
-import { DepositTransferStruct } from "../constants/generated/Ecosystem/Root";
+
 import { BeanstalkSDK } from "./BeanstalkSDK";
 import { FarmToMode } from "./farm/types";
 import { SignedPermit } from "./permit";

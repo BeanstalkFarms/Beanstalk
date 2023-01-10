@@ -6,7 +6,7 @@ import { Beanstalk, Depot } from "src/constants/generated";
 import { TokenValue } from "src/TokenValue";
 import { CallOverrides, ethers } from "ethers";
 import { AdvancedPipeWorkflow } from "src/lib/depot/pipe";
-import { AdvancedFarmCallStruct } from "src/constants/generated/Beanstalk/Beanstalk";
+import { AdvancedFarmCallStruct } from "src/constants/generated/protocol/abi/Beanstalk";
 import { Clipboard } from "src/lib/depot";
 
 type FarmPreparedResult = { callData: string };

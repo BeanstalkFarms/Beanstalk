@@ -30,10 +30,13 @@
   },
   "scripts": {
     "generate": "yarn generate:typechain && yarn generate:graphql",
-    "generate:typechain": "typechain --target=ethers-v5 --ts-nocheck --out-dir=./src/constants/generated/ './src/constants/abi/**/*.json'",
+    "generate:typechain": "typechain --target=ethers-v5 --ts-nocheck --out-dir=./src/constants/generated/ '{./src/constants/abi/**/*.json,../../protocol/abi/Beanstalk.json}'",
     "generate:graphql": "graphql-codegen --config codegen.ts",
+    "clean:generated": "rimraf ./src/constants/generated && rimraf ./src/constants/generated-gql",
+    "clean:build": "rimraf dist",
+    "clean": "yarn clean:generated && yarn clean:build",
     "dev": "tsc --noEmit --watch",
-    "ts": "rimraf dist && tsc && tsc-alias -p tsconfig.json",
+    "ts": "yarn clean:build && tsc && tsc-alias -p tsconfig.json",
     "build": "yarn ts && rollup -c --bundleConfigAsCjs --silent && rimraf dist/js",
     "publish": "yarn build && yarn npm publish --access public"
   },

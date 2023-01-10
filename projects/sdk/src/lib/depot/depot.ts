@@ -1,4 +1,4 @@
-import { AdvancedPipeCallStruct, PipeCallStruct } from "../../constants/generated/Beanstalk/Beanstalk";
+import { AdvancedPipeCallStruct, PipeCallStruct } from "src/constants/generated/protocol/abi/Beanstalk";
 
 export type { AdvancedPipeCallStruct, PipeCallStruct };
 
