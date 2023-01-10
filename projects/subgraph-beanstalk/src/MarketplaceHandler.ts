@@ -521,6 +521,7 @@ export function handlePodListingFilled_v2(event: PodListingFilled_v2): void {
         remainingListing.maxHarvestableIndex = listing.maxHarvestableIndex
         remainingListing.mode = listing.mode
         remainingListing.creationHash = event.transaction.hash.toHexString()
+        remainingListing.minFillAmount = listing.minFillAmount
         remainingListing.save()
         market.listingIndexes.push(remainingListing.index)
         market.save()
