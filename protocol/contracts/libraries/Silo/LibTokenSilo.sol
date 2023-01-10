@@ -9,6 +9,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../LibAppStorage.sol";
 import "../../C.sol";
 import "./LibUnripeSilo.sol";
+import "./LibLegacyTokenSilo.sol";
 
 /**
  * @title LibTokenSilo
@@ -89,7 +90,7 @@ library LibTokenSilo {
     function depositWithBDV(
         address account,
         address token,
-        int32 cumulativeGrownStalkPerBdv,
+        int32 grownStalkPerBdv,
         uint256 amount,
         uint256 bdv
     ) internal returns (uint256, uint256) {
@@ -98,7 +99,7 @@ library LibTokenSilo {
 
         incrementTotalDeposited(token, amount); // Update Totals
 
-        addDepositToAccount(account, token, cumulativeGrownStalkPerBdv, amount, bdv); // Add to Account
+        addDepositToAccount(account, token, grownStalkPerBdv, amount, bdv); // Add to Account
 
         return (
             bdv.mul(s.ss[token].seeds),
@@ -163,16 +164,16 @@ library LibTokenSilo {
         
         uint256 crateAmount;
         (crateAmount, crateBDV) = (
-            s.a[account].deposits[token][season].amount,
-            s.a[account].deposits[token][season].bdv
+            s.a[account].deposits[token][grownStalkPerBdv].amount,
+            s.a[account].deposits[token][grownStalkPerBdv].bdv
         );
 
         // Partial remove
         if (amount < crateAmount) {
             uint256 removedBDV = amount.mul(crateBDV).div(crateAmount);
-            uint256 updatedBDV = uint256(s.a[account].deposits[token][season].bdv)
+            uint256 updatedBDV = uint256(s.a[account].deposits[token][grownStalkPerBdv].bdv)
                 .sub(removedBDV);
-            uint256 updatedAmount = uint256(s.a[account].deposits[token][season].amount)
+            uint256 updatedAmount = uint256(s.a[account].deposits[token][grownStalkPerBdv].amount)
                 .sub(amount);
                 
             require(
@@ -180,14 +181,14 @@ library LibTokenSilo {
                 "Silo: uint128 overflow."
             );
 
-            s.a[account].deposits[token][season].amount = uint128(updatedAmount);
-            s.a[account].deposits[token][season].bdv = uint128(updatedBDV);
+            s.a[account].deposits[token][grownStalkPerBdv].amount = uint128(updatedAmount);
+            s.a[account].deposits[token][grownStalkPerBdv].bdv = uint128(updatedBDV);
 
             return removedBDV;
         }
 
         // Full remove
-        if (crateAmount > 0) delete s.a[account].deposits[token][season];
+        if (crateAmount > 0) delete s.a[account].deposits[token][grownStalkPerBdv];
 
         // Excess remove
         // This can only occur for Unripe Beans and Unripe LP Tokens, and is a
@@ -255,11 +256,11 @@ library LibTokenSilo {
         int128 grownStalkPerBdv
     ) internal view returns (uint256 amount, uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        amount = s.a[account].deposits[token][season].amount;
-        bdv = s.a[account].deposits[token][season].bdv;
-        if (isDepositSeason(token, grownStalkPerBdv)) {
+        amount = s.a[account].deposits[token][grownStalkPerBdv].amount;
+        bdv = s.a[account].deposits[token][grownStalkPerBdv].bdv;
+        if (LibLegacyTokenSilo.isDepositSeason(token, grownStalkPerBdv)) {
             (uint legacyAmount, uint legacyBdv) =
-                LibLegacyTokenSilo.tokenDeposit(account, token, grownStalkPerBdvToSeason(grownStalkPerBdv));
+                LibLegacyTokenSilo.tokenDeposit(account, token, LibLegacyTokenSilo.grownStalkPerBdvToSeason(grownStalkPerBdv));
             amount = amount.add(legacyAmount);
             bdv = bdv.add(legacyBdv);
         }
@@ -285,9 +286,10 @@ library LibTokenSilo {
         view
         returns (int128 _cumulativeGrownStalkPerBdv)
     {
-        SiloSettings storage ss = s.ss[token];
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        // SiloSettings storage ss = s.ss[token]; //tried to use this, but I get `DeclarationError: Identifier not found or not unique.`
         cumulativeGrownStalkPerBdv = s.ss[token].lastCumulativeStalkPerBdv.add(
-            ss.grownStalkPerBdvPerSeason.mul(_season().sub(ss.lastUpdateSeason))
+            s.ss[token].grownStalkPerBdvPerSeason.mul(s.season.current.sub(s.ss[token].lastUpdateSeason))
         );
     }
 
@@ -301,7 +303,9 @@ library LibTokenSilo {
         returns (uint grownStalk)
     {
         // cumulativeGrownStalkPerBdv(token) > depositGrownStalkPerBdv for all valid Deposits
+        AppStorage storage s = LibAppStorage.diamondStorage();
         int128 _cumulativeGrownStalkPerBdv = cumulativeGrownStalkPerBdv(token);
+        int128 depositGrownStalkPerBdv = s.ss[token].lastCumulativeGrownStalkPerBdv;
         require(depositGrownStalkPerBdv <= _cumulativeGrownStalkPerBdv, "Silo: Invalid Deposit");
         uint deltaGrownStalkPerBdv = uint(cumulativeGrownStalkPerBdv(token).sub(depositGrownStalkPerBdv));
         (, uint bdv) = tokenDeposit(account, token, depositGrownStalkPerBdv);

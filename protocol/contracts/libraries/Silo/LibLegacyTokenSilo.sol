@@ -9,6 +9,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../LibAppStorage.sol";
 import "../../C.sol";
 import "./LibUnripeSilo.sol";
+import "./LibTokenSilo.sol";
 
 /**
  * @title LibLegacyTokenSilo
@@ -42,8 +43,8 @@ library LibLegacyTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(bdv > 0, "Silo: No Beans under Token.");
 
-        incrementTotalDeposited(token, amount); // Update Totals
-        addDepositToAccount(account, token, season, amount, bdv); // Add to Account
+        LibTokenSilo.incrementTotalDeposited(token, amount); // Update Totals
+        LibTokenSilo.addDepositToAccount(account, token, season, amount, bdv); // Add to Account
 
         return (bdv.mul(s.ss[token].seeds), bdv.mul(s.ss[token].stalk));
     }
@@ -176,9 +177,11 @@ library LibLegacyTokenSilo {
         view
         returns (bool)
     {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 seedsPerBdv = uint256(s.ss[token].legacySeedsPerBdv);
         return
             grownStalkPerBdv < 0 &&
-            uint256(-_grownStalkPerBdv) % seedsPerBdv != 0;
+            uint256(-grownStalkPerBdv) % seedsPerBdv != 0;
     }
 
     function grownStalkPerBdvToSeason(IERC20 token, int128 grownStalkPerBdv)
@@ -186,6 +189,7 @@ library LibLegacyTokenSilo {
         view
         returns (uint32 season)
     {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 seedsPerBdv = uint256(s.ss[token].legacySeedsPerBdv);
         season = uint256(-grownStalkPerBdv).div(seedsPerBdv).toUint32(); // use OpenZeppelin's safecast to uint32
     }

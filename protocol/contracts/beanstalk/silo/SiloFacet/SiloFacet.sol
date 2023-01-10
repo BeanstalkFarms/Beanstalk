@@ -481,6 +481,7 @@ contract SiloFacet is TokenSilo {
     //////////////////////// GETTERS ////////////////////////
 
     function cumulativeGrownStalkPerBdv(IERC20 token)
+        public
         view
         returns (int128 _cumulativeGrownStalkPerBdv)
     {
@@ -490,6 +491,7 @@ contract SiloFacet is TokenSilo {
     }
 
     function grownStalkPerBdvToSeason(IERC20 token, int128 grownStalkPerBdv)
+        public
         view
         returns (uint32 season)
     {
