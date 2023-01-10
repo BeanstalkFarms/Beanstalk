@@ -17338,6 +17338,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dev-graph-node@workspace:projects/dev-graph-node":
+  version: 0.0.0-use.local
+  resolution: "dev-graph-node@workspace:projects/dev-graph-node"
+  languageName: unknown
+  linkType: soft
+
 "dicer@npm:0.3.0":
   version: 0.3.0
   resolution: "dicer@npm:0.3.0"
