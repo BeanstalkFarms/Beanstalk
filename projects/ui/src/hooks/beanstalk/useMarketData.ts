@@ -6,6 +6,8 @@ import useHarvestableIndex from '~/hooks/beanstalk/useHarvestableIndex';
 import usePodListings from '~/hooks/beanstalk/usePodListings';
 import { castPodListing, castPodOrder, PodListing, PodOrder } from '~/state/farmer/market';
 
+const MIN_POD_AMOUNT = 1;
+
 const useMarketData = () => {
   /// Beanstalk data
   const harvestableIndex = useHarvestableIndex();
@@ -20,7 +22,8 @@ const useMarketData = () => {
 
   /// Cast query data to BigNumber, etc.
   const listings = useCastApolloQuery<PodListing>(listingsQuery, 'podListings', useCallback((_listing) => castPodListing(_listing, harvestableIndex), [harvestableIndex]), loading);
-  const orders   = useCastApolloQuery<PodOrder>(ordersQuery, 'podOrders', castPodOrder, loading);
+  let orders   = useCastApolloQuery<PodOrder>(ordersQuery, 'podOrders', castPodOrder, loading);
+  orders = orders?.filter((order) => order.beanAmountRemaining.gt(MIN_POD_AMOUNT));
 
   /// Calculations
   const maxPlaceInLine = useMemo(() => (

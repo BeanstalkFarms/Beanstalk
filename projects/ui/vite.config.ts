@@ -20,7 +20,44 @@ function buildCSP(data: CSPData) {
   ).join(';');
 }
 
-// default-src 'self'; connect-src 'self' *.alchemyapi.io *.bean.money *.snapshot.org wss://*.walletconnect.org wss://*.bridge.walletconnect.org registry.walletconnect.com wss://*.walletlink.org *.google-analytics.com *.doubleclick.net; style-src 'self' 'unsafe-inline'; script-src 'self' *.google-analytics.com *.googletagmanager.com 'sha256-D0XQFeW9gcWWp4NGlqN0xpmiObsjqCewnVFeAsys7qM=';
+const CSP = buildCSP({
+  'default-src': [
+    '\'self\''
+  ],
+  'connect-src': [
+    '\'self\'',
+    '*.alchemyapi.io', // Alchemy RPC
+    'https://cloudflare-eth.com', // Cloudflare RPC
+    '*.infura.io', // Infura RPC
+    '*.bean.money', // Beanstalk APIs
+    '*.snapshot.org', // Snapshot GraphQL API
+    'wss://*.walletconnect.org',
+    'wss://*.bridge.walletconnect.org',
+    'registry.walletconnect.com',
+    'wss://*.walletlink.org',
+    '*.coinbase.com', // Wallet: Coinbase
+    '*.google-analytics.com',
+    '*.doubleclick.net'
+  ],
+  'style-src': [
+    '\'self\'',
+    '\'unsafe-inline\'' // Required for Emotion
+  ],
+  'script-src': [
+    '\'self\'',
+    '*.google-analytics.com',
+    '*.googletagmanager.com',
+    '\'sha256-D0XQFeW9gcWWp4NGlqN0xpmiObsjqCewnVFeAsys7qM=\'' // GA inline script
+  ],
+  'img-src': [
+    '\'self\'',
+    '*.githubusercontent.com', // Github imgaes included in gov proposals
+    'https://*.arweave.net', // Arweave images included in gov proposals
+    'https://arweave.net', // Arweave images included in gov proposals
+    '*.walletconnect.com', // WalletConnect wallet viewer
+    'data:', // Wallet connectors use data-uri QR codes
+  ],
+});
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => ({
@@ -43,41 +80,9 @@ export default defineConfig(({ command, mode }) => ({
       minify: true,
       inject: {
         data: {
-          csp: buildCSP({
-            'default-src': [
-              '\'self\''
-            ],
-            'connect-src': [
-              '\'self\'',
-              '*.alchemyapi.io',
-              '*.bean.money',
-              '*.snapshot.org',
-              'wss://*.walletconnect.org',
-              'wss://*.bridge.walletconnect.org',
-              'registry.walletconnect.com',
-              'wss://*.walletlink.org',
-              '*.coinbase.com',
-              '*.google-analytics.com',
-              '*.doubleclick.net'
-            ],
-            'style-src': [
-              '\'self\'',
-              '\'unsafe-inline\''
-            ],
-            'script-src': [
-              '\'self\'',
-              '*.google-analytics.com',
-              '*.googletagmanager.com',
-              '\'sha256-D0XQFeW9gcWWp4NGlqN0xpmiObsjqCewnVFeAsys7qM=\'' // GA inline script
-            ],
-            'img-src': [
-              '\'self\'',
-              '*.githubusercontent.com',
-              'https://*.arweave.net',
-              'https://arweave.net',
-              'data:',
-            ],
-          })
+          csp: (process.env.NODE_ENV === 'production')
+            ? `<meta http-equiv="Content-Security-Policy" content="${CSP}" />`
+            : ''
         }
       }
     }),
