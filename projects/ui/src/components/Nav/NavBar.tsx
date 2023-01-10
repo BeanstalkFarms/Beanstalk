@@ -41,7 +41,7 @@ const NavBar: FC<{}> = ({ children }) => (
       <Row sx={{ flex: 1 }} height="100%" gap={1}>
         <PriceButton sx={{ height: NAV_ELEM_HEIGHT }} />
         <SunButton sx={{ height: NAV_ELEM_HEIGHT }} />
-        <Row sx={{ display: { lg: 'flex', xs: 'none' } }} height="100%">
+        <Row sx={{ display: { lg: 'flex', xs: 'none' } }} height="100%" data-cy="Navbar-links">
           {ROUTES.top.map((item) => (
             <LinkButton
               key={item.path}
