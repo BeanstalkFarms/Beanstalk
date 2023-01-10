@@ -1467,7 +1467,11 @@ type PodOrderCreated implements MarketplaceEvent @entity(immutable: true) {
   account: String!
   " ID of the pod order"
   orderId: String!
-  "Amount of pods listed"
+  """
+  The represented value emitted with this event changed with BIP-29 at block 15277986
+  Pre  BIP-29: The number of pods ordered is emitted
+  Post BIP-29: The number of beans supplied for the order is emitted.
+  """
   amount: BigInt!
   "Price per pod"
   pricePerPod: Int!
