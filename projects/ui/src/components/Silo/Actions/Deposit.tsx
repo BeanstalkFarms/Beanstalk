@@ -125,8 +125,8 @@ const DepositForm : FC<
             state={tokenState}
             showTokenSelect={showTokenSelect}
             handleQuote={handleQuote}
-            inputVariant="wrapped"
-            adornmentVariant="outlined-compact"
+            // inputVariant="wrapped"
+            // adornmentVariant="outlined-compact"
           />
         ))}
         {isReady ? (

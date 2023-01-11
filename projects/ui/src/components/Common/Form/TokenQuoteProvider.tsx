@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { CircularProgress, Typography } from '@mui/material';
 import { useFormikContext } from 'formik';
 import BigNumber from 'bignumber.js';
-import TokenInputField, { BalanceOrigin, TokenInputProps, TokenInputVariantProps } from '~/components/Common/Form/TokenInputField';
+import TokenInputField, { TokenInputProps, TokenInputVariantProps } from '~/components/Common/Form/TokenInputField';
 import TokenAdornment, { TokenAdornmentProps, TokenAdornmentTypeProps } from '~/components/Common/Form/TokenAdornment';
 import useQuote, { QuoteHandler, QuoteSettings } from '~/hooks/ledger/useQuote';
 import Token, { ERC20Token, NativeToken } from '~/classes/Token';
@@ -117,7 +117,8 @@ const TokenQuoteProvider : FC<TokenQuoteProviderProps> = ({
       <TokenAdornment
         token={state.token}
         adornmentVariant={props.adornmentVariant}
-        balanceOrigin={BalanceOrigin.COMBINED}
+        // TEMP
+        // balanceOrigin={BalanceOrigin.COMBINED}
         onClick={showTokenSelect}
         disabled={isSubmitting || disableTokenSelect}
         sx={{ opacity: disableTokenSelect ? 0.3 : 1 }}

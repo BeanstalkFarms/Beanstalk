@@ -72,7 +72,7 @@ const TokenAdornment: FC<TokenAdornmentProps & TokenAdornmentTypeProps> = ({
         }}
       >
         <Row gap={0.5}>
-          {balanceOrigin ? (
+          {balanceOrigin !== undefined ? (
             <>
               {balanceOrigin !== BalanceOrigin.FARM ? (
                 <AddressIcon size={IconSize[iconSize]} />
