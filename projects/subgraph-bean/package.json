@@ -1,7 +1,7 @@
 {
   "name": "subgraph-bean",
   "license": "MIT License",
-  "description": "x",
+  "description": "subgraph-bean project",
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",

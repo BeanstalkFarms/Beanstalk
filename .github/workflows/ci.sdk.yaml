@@ -24,38 +24,27 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-modules-
       - name: Install Dependencies
-        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        if: steps.nodeg-modules-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
       - name: Generate Typedefs
         run: yarn generate
         working-directory: projects/sdk
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-unknown-unknown
+          profile: minimal
+          override: true
+      - name: Install Anvil
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+      # TODO: Cache Anvil RPC calls between runs to speed up tests
+      - name: Launch Anvil
+        run: anvil --fork-url $ANVIL_FORK_URL --chain-id 1337 --fork-block-number $ANVIL_BLOCK_NUMBER &
+        env:
+          ANVIL_FORK_URL: ${{ secrets.ANVIL_FORK_URL }}
+          ANVIL_BLOCK_NUMBER: 16386192
       - run: yarn sdk:test
         working-directory: projects/sdk
-
-      - name: Test Passed
-        if: ${{ success() }}
-        run: |
-          curl --request POST \
-          --url https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }} \
-          --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
-          --header 'content-type: application/json' \
-          --data '{
-            "context": "tests",
-            "state": "success",
-            "description": "SDK Tests Passed",
-            "target_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          }'
-
-      - name: Tests Failed
-        if: ${{ failure() }}
-        run: |
-          curl --request POST \
-          --url https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }} \
-          --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
-          --header 'content-type: application/json' \
-          --data '{
-            "context": "tests",
-            "state": "failure",
-            "description": "SDK Tests Failed",
-            "target_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          }'

@@ -1,6 +1,6 @@
 {
   "name": "subgraph-beanstalk",
-  "description": "x",
+  "description": "subgraph-beanstalk project",
   "license": "MIT License",
   "scripts": {
     "codegen": "graph codegen",
