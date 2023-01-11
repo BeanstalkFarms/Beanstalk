@@ -102,13 +102,26 @@ const Graph: React.FC<Props> = (props) => {
 
   // const yTickNum = height > 180 ? undefined : 5;
   const xTickNum = width > 700 ? undefined : Math.floor(width / 70);
-  const xTickFormat = useCallback(
-    (v: any) => {
-      const d = scales[0].dScale.invert(v);
-      return `${d.getMonth() + 1}/${d.getDate()}`;
+
+  const [
+    tickSeasons,
+    tickDates,
+  ] = useMemo(
+    () => {
+      const interval = Math.ceil(series[0].length / 12);
+      const shift    = Math.ceil(interval / 3); // slight shift on tick labels
+      return series[0].reduce<[number[], string[]]>((prev, curr, i) => {
+        if (i % interval === shift) {
+          prev[0].push(curr.season);
+          prev[1].push(`${(curr.date).getMonth() + 1}/${(curr.date).getDate()}`);
+        }
+        return prev;
+      }, [[], []]);
     },
-    [scales]
+    [series]
   );
+
+  const xTickFormat = useCallback((_: any, i: number) => tickDates[i], [tickDates]);
 
   const { getStyle } = useMemo(
     () => common.getChartStyles(stylesConfig),
@@ -190,6 +203,7 @@ const Graph: React.FC<Props> = (props) => {
             tickStroke={common.axisColor}
             tickLabelProps={common.xTickLabelProps}
             numTicks={xTickNum}
+            tickValues={tickSeasons}
           />
         </g>
         <g transform={`translate(${width - 17}, 1)`}>
