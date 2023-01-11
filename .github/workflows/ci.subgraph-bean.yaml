@@ -17,17 +17,25 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: '16'
+    - name: Cache Node Modules
+      id: node-modules-cache
+      uses: actions/cache@v3
+      with:
+        path: '**/node_modules'
+        key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-modules-
     - name: Install The Graph CLI
       run: npm install -g @graphprotocol/graph-cli
-    - name: Install dependencies
-      run: npm install
-      working-directory: "${{ matrix.value }}"
+    - name: Install Dependencies
+      if: steps.node-modules-cache.outputs.cache-hit != 'true'
+      run: yarn install --immutable
 
     # Generate code and check for uncommitted changes
     # https://github.com/marketplace/actions/check-uncommitted-changes
     - name: Generate Subgraph Code
       run: npm run codegen
-      working-directory: "${{ matrix.value }}"
+      working-directory: projects/subgraph-bean
     - name: Check for uncommitted changes
       id: check-changes
       uses: mskri/check-uncommitted-changes-action@v1.0.1
@@ -37,7 +45,7 @@ jobs:
 
     - name: Build Subgraph
       run: npm run build
-      working-directory: "${{ matrix.value }}"
+      working-directory: projects/subgraph-bean
     # TODO: add matchstick test suite
     #- name: Run Tests
     #  run: npm run test

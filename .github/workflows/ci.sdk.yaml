@@ -1,4 +1,4 @@
-name: Continuous Integration - Subgraph SDK
+name: Continuous Integration - SDK
 
 on:
   pull_request:
@@ -15,9 +15,22 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '16'
-      - run: yarn install
-      - run: yarn postinstall
+      - name: Cache Node Modules
+        id: node-modules-cache
+        uses: actions/cache@v3
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-modules-
+      - name: Install Dependencies
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        run: yarn install --immutable
+      - name: Generate Typedefs
+        run: yarn generate
+        working-directory: projects/sdk
       - run: yarn sdk:test
+        working-directory: projects/sdk
 
       - name: Test Passed
         if: ${{ success() }}

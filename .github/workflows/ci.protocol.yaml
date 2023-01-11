@@ -1,4 +1,4 @@
-name: Continuous Integration - Subgraph Protocol
+name: Continuous Integration - Protocol
 
 on:
   pull_request:
@@ -15,10 +15,23 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '16'
-      - run: yarn install
+      - name: Cache Node Modules
+        id: node-modules-cache
+        uses: actions/cache@v3
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-modules-
+      - name: Install Dependencies
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        run: yarn install --immutable
       - run: yarn compile
+        working-directory: protocol
       - run: yarn generate
+        working-directory: protocol
       - run: yarn test
+        working-directory: protocol
 
       - name: Test Passed
         if: ${{ success() }}
