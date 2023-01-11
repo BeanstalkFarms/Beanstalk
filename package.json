@@ -35,6 +35,7 @@
     "ui:start": "yarn workspace ui start",
     "ui:build": "yarn workspace ui build",
     "ui:test": "yarn workspace ui test",
+    "test:browser": "yarn workspace tests test:browser",
     "ex": "yarn workspace @beanstalk/examples x"
   }
 }

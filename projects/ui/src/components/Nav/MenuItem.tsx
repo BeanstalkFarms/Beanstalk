@@ -36,7 +36,12 @@ const MenuItem : FC<{
         <span>
           <Row gap={1}>
             {item.icon && <img src={item.icon} alt={item.title} width={IconSize.small} />}
-            <Typography variant="body1">{item.title}</Typography>
+            <Typography 
+              variant="body1" 
+              data-cy={`MenuItem-${item.title}`}
+            >
+              {item.title}
+            </Typography>
           </Row>
         </span>
       </Tooltip>
@@ -44,7 +49,12 @@ const MenuItem : FC<{
         <ListItemText>
           <Row gap={1}>
             {item.icon && <img src={item.icon} alt={item.title} width={IconSize.small} />}
-            <Typography variant="body1">{item.title}</Typography>
+            <Typography 
+              variant="body1" 
+              data-cy={`MenuItem-${item.title}`}
+            >
+              {item.title}
+            </Typography>
           </Row>
         </ListItemText>
       )}

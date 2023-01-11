@@ -1,10 +1,11 @@
-import { splitVendorChunkPlugin } from 'vite';
+import { splitVendorChunkPlugin, UserConfig } from 'vite';
 import { defineConfig } from 'vitest/config';
 import path from 'path';
 import { createHtmlPlugin } from 'vite-plugin-html';
 import react from '@vitejs/plugin-react';
 import strip from '@rollup/plugin-strip';
 import analyze from 'rollup-plugin-analyzer';
+import removeHTMLAttributes from 'vite-plugin-react-remove-attributes';
 
 type CSPData = {
   'default-src': string[];
@@ -88,6 +89,12 @@ export default defineConfig(({ command, mode }) => ({
     }),
     splitVendorChunkPlugin(),
     analyze({ limit: 10 }),
+    (process.env.NODE_ENV === 'production') && 
+      removeHTMLAttributes({
+        include: ['**/*.tsx', '**/*.jsx'],
+        attributes: ['data-cy'],
+        exclude: 'node_modules'
+      })
   ],
   resolve: {
     alias: [
@@ -109,4 +116,4 @@ export default defineConfig(({ command, mode }) => ({
       ]
     }
   }
-}));
+} as UserConfig));

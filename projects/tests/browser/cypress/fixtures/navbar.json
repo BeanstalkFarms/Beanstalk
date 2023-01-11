@@ -1,0 +1,50 @@
+{
+  "fields": [
+    {
+      "title": "Forecast",
+      "slug": ""
+    },
+    {
+      "title": "Silo",
+      "slug": "silo"
+    },
+    {
+      "title": "Field",
+      "slug": "field"
+    },
+    {
+      "title": "Barn",
+      "slug": "barn"
+    },
+    {
+      "title": "Balances",
+      "slug": "balances"
+    },
+    {
+      "title": "Market",
+      "slug": "market"
+    }
+  ],
+  "menu": [
+    {
+      "title": "BeaNFTs",
+      "slug": "nft"
+    },
+    {
+      "title": "Swap",
+      "slug": "swap"
+    },
+    {
+      "title": "Analytics",
+      "slug": "analytics"
+    },
+    {
+      "title": "Governance",
+      "slug": "governance"
+    },
+    {
+      "title": "Docs",
+      "slug": ""
+    }
+  ]
+}
