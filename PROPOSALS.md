@@ -39,6 +39,8 @@ You can read more about BIPs [here](https://docs.bean.money/almanac/governance/p
 * [BIP-28](https://bean.money/bip-28): Pod Market Price Functions
 * [BIP-29](https://bean.money/bip-29): Pod Market Price Functions
 * [BIP-30](https://bean.money/bip-30): Generalized Pipeline and ERC-20 and ERC-721 Permit Support
+* [BIP-31](https://bean.money/bip-31): Beanstalk Farms Q1 2023 Budget
+* [BIP-32](https://bean.money/bip-32): Seraph
 
 ## Emergency Beanstalk Improvement Proposal (EBIP)
 
@@ -62,3 +64,4 @@ Beanstalk Operations Proposals, or BOPs, are proposals for the DAO to agree on p
 You can read more about BOPs [here](https://docs.bean.money/almanac/governance/proposals#bop).
 
 * [BOP-1](https://bean.money/bop-1): Ratify Disclosures Statement
+* [BOP-2](https://bean.money/bop-2): Increase and Revisit Bounty for April Governance Exploit
