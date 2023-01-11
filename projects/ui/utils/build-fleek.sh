@@ -7,11 +7,11 @@ cd $ui_root
 
 COMMIT_HASH=$(git rev-parse HEAD)
 export VITE_NAME=$npm_package_name 
-export VITE_VERSION=$COMMIT_HASH
+export VITE_COMMIT_HASH=$COMMIT_HASH
 export VITE_HOST='fleek' 
 export VITE_GIT_COMMIT_REF=$COMMIT_HASH
 
 echo "VITE_NAME=$VITE_NAME"
-echo "VITE_VERSION=$VITE_VERSION"
+echo "VITE_COMMIT_HASH=$VITE_COMMIT_HASH"
 
 yarn build

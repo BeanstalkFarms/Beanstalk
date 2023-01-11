@@ -132,7 +132,7 @@ const SettingsDialog : FC<{ open: boolean; onClose?: () => void; }> = ({ open, o
             <Typography variant="h4">Info</Typography>
             <Split>
               <Typography color="text.secondary">Version</Typography>
-              <Box>{(import.meta.env.VITE_VERSION || '0.0.0').substring(0,6)}</Box>
+              <Box>{(import.meta.env.VITE_COMMIT_HASH || '0.0.0').substring(0,6)}</Box>
             </Split>
             <Split>
               <Typography color="text.secondary">Commit</Typography>
