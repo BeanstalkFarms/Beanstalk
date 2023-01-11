@@ -191,7 +191,7 @@ export default function App() {
             }}
           >
             <Typography fontSize="small">
-              v{import.meta.env.VITE_VERSION || '0.0.0'} &middot; {sgEnvKey}
+              {(import.meta.env.VITE_COMMIT_HASH || '0.0.0').substring(0,6)} &middot; {sgEnvKey}
             </Typography>
           </Box>
         </Box>
