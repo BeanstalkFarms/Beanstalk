@@ -1,4 +1,4 @@
-import { Box, ClickAwayListener } from '@mui/material';
+import { Box, BoxProps, ClickAwayListener } from '@mui/material';
 import React, { useEffect, useMemo } from 'react';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import { FC } from '~/types';
@@ -7,13 +7,14 @@ type IInputFieldBorder = {
   enabled?: boolean;
   fullWidth?: boolean;
   disabled?: boolean;
-};
+} & BoxProps;
 
 const InputFieldBorder: FC<IInputFieldBorder> = ({
   children,
   enabled = true,
   fullWidth = false,
   disabled = false,
+  ...props
 }) => {
   const ref = React.useRef<HTMLDivElement | null>(null);
   const activeRef = React.useRef<boolean>(false);
@@ -76,7 +77,7 @@ const InputFieldBorder: FC<IInputFieldBorder> = ({
       onClick={actions.handleOnClick}
     >
       <ClickAwayListener onClickAway={actions.handleClickAway}>
-        <Box px={2} py={1} sx={{ boxSizing: 'border-box' }}>
+        <Box px={2} py={1} {...props} sx={{ ...props.sx, boxSizing: 'border-box' }}>
           {children}
         </Box>
       </ClickAwayListener>
