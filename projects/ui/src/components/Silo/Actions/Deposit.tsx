@@ -42,6 +42,7 @@ import { useFetchBeanstalkSilo } from '~/state/beanstalk/silo/updater';
 import useFarm from '~/hooks/sdk/useFarm';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
+import ClaimableAssets from '../ClaimableAssets';
 
 // -----------------------------------------------------------------------
 
@@ -129,6 +130,7 @@ const DepositForm : FC<
             // adornmentVariant="outlined-compact"
           />
         ))}
+        <ClaimableAssets />
         {isReady ? (
           <>
             <TxnSeparator />

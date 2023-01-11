@@ -6,6 +6,7 @@ import {
   ThemeOptions,
 } from '@mui/material/styles';
 import React from 'react';
+import { hexToRgba } from '~/util/ui';
 
 // --------------------------------------------------
 
@@ -53,7 +54,7 @@ declare module '@mui/material/Button' {
     naked: true;
   }
   interface ButtonPropsVariantOverrides {
-    'outlined-secondary': true
+    'outlined-secondary': true;
   }
 }
 declare module '@mui/material/IconButton' {
@@ -86,30 +87,6 @@ declare module '@mui/material/Tooltip' {
 
 const BASE_FONT_SIZE = 16;
 const remBase = (n: number) => `${(n / BASE_FONT_SIZE).toFixed(4)}rem`;
-
-export const hexToRgba = (hex: string, alpha?: number) => {
-  const stripped = hex.replace('#', '').split('');
-  if (stripped.length % 3 !== 0 || stripped.length > 6) {
-    throw new Error(`unexpected invalid hex value: ${hex}`);
-  }
-
-  const isCondensedHex = stripped.length === 3;
-  const hexArr = stripped
-    .reduce((prev, curr) => {
-      if (isCondensedHex) {
-        prev += curr;
-      }
-      prev += curr;
-      return prev;
-    }, '' as string)
-    .toString();
-
-  const r = parseInt(hexArr.slice(0, 2), 16);
-  const g = parseInt(hexArr.slice(2, 4), 16);
-  const b = parseInt(hexArr.slice(4, 6), 16);
-
-  return `rgba(${r}, ${g}, ${b}, ${alpha ?? 1})`;
-};
 
 /**
  * Beanstalk's primary color pallete.
@@ -289,12 +266,12 @@ const muiThemeBase: ThemeOptions = {
       primary: BeanstalkPalette.textBlue,
       secondary: BeanstalkPalette.grey,
       tertiary: BeanstalkPalette.lightGrey,
-      light: BeanstalkPalette.lightestGrey
+      light: BeanstalkPalette.lightestGrey,
     },
     background: {
       default: BeanstalkPalette.theme.winter.iceBlue,
       paper: BeanstalkPalette.offWhite,
-    }
+    },
   },
 
   /**
@@ -391,18 +368,19 @@ const muiThemeBase: ThemeOptions = {
         color: 'secondary',
       },
       styleOverrides: {
-        root: (t) => t.theme.unstable_sx({
-          border: 'none'
-
-        }),
+        root: (t) =>
+          t.theme.unstable_sx({
+            border: 'none',
+          }),
       },
     },
     MuiDivider: {
       styleOverrides: {
-        root: (t) => t.theme.unstable_sx({
-          borderColor: 'divider',
-          borderWidth: 0.5,
-        }),
+        root: (t) =>
+          t.theme.unstable_sx({
+            borderColor: 'divider',
+            borderWidth: 0.5,
+          }),
       },
     },
     MuiButton: {
@@ -421,13 +399,14 @@ const muiThemeBase: ThemeOptions = {
             variant: 'outlined',
             color: 'light',
           },
-          style: (t) => t.theme.unstable_sx({
-            borderColor: BeanstalkPalette.lightestGrey,
-            ':hover': {
-              borderColor: 'primary.main',
-              background: BeanstalkPalette.theme.winter.primaryHover
-            }
-          })
+          style: (t) =>
+            t.theme.unstable_sx({
+              borderColor: BeanstalkPalette.lightestGrey,
+              ':hover': {
+                borderColor: 'primary.main',
+                background: BeanstalkPalette.theme.winter.primaryHover,
+              },
+            }),
         },
         {
           props: {
@@ -446,16 +425,17 @@ const muiThemeBase: ThemeOptions = {
             variant: 'outlined-secondary',
             color: 'secondary',
           },
-          style: (t) => t.theme.unstable_sx({
-            border: '1px solid',
-            color: 'text.primary',
-            borderColor: 'divider',
-            ':hover': {
-              borderColor: 'primary.main',
-              background: BeanstalkPalette.theme.winter.primaryHover
-            }
-          })
-        }
+          style: (t) =>
+            t.theme.unstable_sx({
+              border: '1px solid',
+              color: 'text.primary',
+              borderColor: 'divider',
+              ':hover': {
+                borderColor: 'primary.main',
+                background: BeanstalkPalette.theme.winter.primaryHover,
+              },
+            }),
+        },
       ],
       defaultProps: {
         disableElevation: true,
@@ -463,40 +443,46 @@ const muiThemeBase: ThemeOptions = {
         disableRipple: true,
       },
       styleOverrides: {
-        root: (t) => t.theme.unstable_sx({
-          textTransform: 'none',
-          // fontWeight: 'bold',
-          '&.MuiButton-root:hover': {
-            // backgroundColor: BeanstalkPalette.supportGreen,
-          },
-          '&.MuiLoadingButton-root:hover': {
-            // backgroundColor: BeanstalkPalette.supportGreen,
-          },
-          fontWeight: 700,
-          fontSize: '1rem',
-          lineHeight: '1.25rem',
-        }),
+        root: (t) =>
+          t.theme.unstable_sx({
+            textTransform: 'none',
+            // fontWeight: 'bold',
+            '&.MuiButton-root:hover': {
+              // backgroundColor: BeanstalkPalette.supportGreen,
+            },
+            '&.MuiLoadingButton-root:hover': {
+              // backgroundColor: BeanstalkPalette.supportGreen,
+            },
+            fontWeight: 700,
+            fontSize: '1rem',
+            lineHeight: '1.25rem',
+          }),
         /// Sizes
         sizeSmall: (t) => t.theme.unstable_sx({}),
-        sizeMedium: (t) => t.theme.unstable_sx({
-          py: 1,
-          px: 1,
-          height: '45px',
-        }),
-        sizeLarge: (t) => t.theme.unstable_sx({
-          py: 1.5,
-          px: 1.5,
-          height: '60px',
-        }),
-        disabled: (t) => t.theme.unstable_sx({
-          pointerEvents: 'auto',
-        }),
-        startIcon: (t) => t.theme.unstable_sx({
-          marginLeft: 0, // prevent adornment from pulling close to right margin
-        }),
-        endIcon: (t) => t.theme.unstable_sx({
-          marginRight: 0, // prevent adornment from pulling close to right margin
-        }),
+        sizeMedium: (t) =>
+          t.theme.unstable_sx({
+            py: 1,
+            px: 1,
+            height: '45px',
+          }),
+        sizeLarge: (t) =>
+          t.theme.unstable_sx({
+            py: 1.5,
+            px: 1.5,
+            height: '60px',
+          }),
+        disabled: (t) =>
+          t.theme.unstable_sx({
+            pointerEvents: 'auto',
+          }),
+        startIcon: (t) =>
+          t.theme.unstable_sx({
+            marginLeft: 0, // prevent adornment from pulling close to right margin
+          }),
+        endIcon: (t) =>
+          t.theme.unstable_sx({
+            marginRight: 0, // prevent adornment from pulling close to right margin
+          }),
       },
     },
     MuiAlert: {
@@ -505,25 +491,28 @@ const muiThemeBase: ThemeOptions = {
           props: {
             color: 'warning',
           },
-          style: (t) => t.theme.unstable_sx({
-            backgroundColor: 'rgba(253, 244, 231, 0.3)',
-            color: 'text.primary',
-          }),
+          style: (t) =>
+            t.theme.unstable_sx({
+              backgroundColor: 'rgba(253, 244, 231, 0.3)',
+              color: 'text.primary',
+            }),
         },
       ],
       defaultProps: {},
       styleOverrides: {
-        root: (t) => t.theme.unstable_sx({
-          px: 1,
-          alignItems: 'center',
-          '& .MuiAlert-icon': {
-            m: 0,
-            p: 0,
-          },
-        }),
-        message: (t) => t.theme.unstable_sx({
-          ml: 0.5,
-        }),
+        root: (t) =>
+          t.theme.unstable_sx({
+            px: 1,
+            alignItems: 'center',
+            '& .MuiAlert-icon': {
+              m: 0,
+              p: 0,
+            },
+          }),
+        message: (t) =>
+          t.theme.unstable_sx({
+            ml: 0.5,
+          }),
       },
     },
     MuiTooltip: {
@@ -541,17 +530,18 @@ const muiThemeBase: ThemeOptions = {
         },
       ],
       styleOverrides: {
-        tooltip: (t) => t.theme.unstable_sx({
-          typography: 'body1',
-          borderColor: 'divider',
-          borderWidth: 1,
-          borderStyle: 'solid',
-          backgroundColor: BeanstalkPalette.lightestBlue,
-          color: 'text.primary',
-          p: 1,
-          px: 1.25,
-          transition: 'box-shadow none 300ms',
-        }),
+        tooltip: (t) =>
+          t.theme.unstable_sx({
+            typography: 'body1',
+            borderColor: 'divider',
+            borderWidth: 1,
+            borderStyle: 'solid',
+            backgroundColor: BeanstalkPalette.lightestBlue,
+            color: 'text.primary',
+            p: 1,
+            px: 1.25,
+            transition: 'box-shadow none 300ms',
+          }),
       },
     },
     MuiAccordion: {
@@ -579,23 +569,26 @@ const muiThemeBase: ThemeOptions = {
         // FIXME: trying to disable the increase
         // in margin on AccordionSummary during expansion.
         // None of these work...
-        root: (t) => t.theme.unstable_sx({
-          minHeight: '0 !important',
-          my: 0,
-          px: 1,
-        }),
-        expanded: (t) => t.theme.unstable_sx({
-          minHeight: '0 !important',
-          m: [0, 0],
-        }),
+        root: (t) =>
+          t.theme.unstable_sx({
+            minHeight: '0 !important',
+            my: 0,
+            px: 1,
+          }),
+        expanded: (t) =>
+          t.theme.unstable_sx({
+            minHeight: '0 !important',
+            m: [0, 0],
+          }),
       },
     },
     MuiAccordionDetails: {
       styleOverrides: {
-        root: (t) => t.theme.unstable_sx({
-          pt: 0,
-          pb: 1,
-        }),
+        root: (t) =>
+          t.theme.unstable_sx({
+            pt: 0,
+            pb: 1,
+          }),
       },
     },
     MuiTextField: {
@@ -619,20 +612,22 @@ const muiThemeBase: ThemeOptions = {
     },
     MuiListItem: {
       styleOverrides: {
-        root: (t) => t.theme.unstable_sx({
-          borderRadius: 1,
-        }),
+        root: (t) =>
+          t.theme.unstable_sx({
+            borderRadius: 1,
+          }),
       },
     },
     MuiListItemButton: {
       styleOverrides: {
-        root: (t) => t.theme.unstable_sx({
-          borderRadius: 1,
-          px: 1,
-          py: 1,
-          border: '0.5px solid',
-          borderColor: BeanstalkPalette.white,
-        }),
+        root: (t) =>
+          t.theme.unstable_sx({
+            borderRadius: 1,
+            px: 1,
+            py: 1,
+            border: '0.5px solid',
+            borderColor: BeanstalkPalette.white,
+          }),
       },
     },
     MuiList: {
@@ -650,11 +645,12 @@ const muiThemeBase: ThemeOptions = {
         variant: 'scrollable',
       },
       styleOverrides: {
-        root: (t) => t.theme.unstable_sx({
-          fontWeight: 'normal',
-          mr: { xs: 2, md: 0 },
-          minHeight: 0,
-        }),
+        root: (t) =>
+          t.theme.unstable_sx({
+            fontWeight: 'normal',
+            mr: { xs: 2, md: 0 },
+            minHeight: 0,
+          }),
         indicator: {
           display: 'none',
         },
@@ -665,29 +661,30 @@ const muiThemeBase: ThemeOptions = {
         disableRipple: true,
       },
       styleOverrides: {
-        root: (t) => t.theme.unstable_sx({
-          p: 0,
-          minHeight: 0,
-          mr: 2,
-          textAlign: 'left',
-          minWidth: 0,
-          fontWeight: 700,
-          fontSize: '1rem', // 1*16 = 16px
-          textTransform: 'none',
-          color: 'text.tertiary',
-          '&:active': {},
-          '&:hover': {
-            color: 'text.primary',
-            labelIcon: {
-              color: 'text.primary',
-            },
-          },
-          '&.Mui-selected': {
+        root: (t) =>
+          t.theme.unstable_sx({
+            p: 0,
+            minHeight: 0,
+            mr: 2,
+            textAlign: 'left',
+            minWidth: 0,
             fontWeight: 700,
             fontSize: '1rem', // 1*16 = 16px
-            color: 'text.primary',
-          },
-        }),
+            textTransform: 'none',
+            color: 'text.tertiary',
+            '&:active': {},
+            '&:hover': {
+              color: 'text.primary',
+              labelIcon: {
+                color: 'text.primary',
+              },
+            },
+            '&.Mui-selected': {
+              fontWeight: 700,
+              fontSize: '1rem', // 1*16 = 16px
+              color: 'text.primary',
+            },
+          }),
       },
     },
     MuiButtonGroup: {
@@ -731,23 +728,25 @@ const muiThemeBase: ThemeOptions = {
     },
     MuiDialogContent: {
       styleOverrides: {
-        root: (t) => t.theme.unstable_sx({
-          px: 1,
-        }),
+        root: (t) =>
+          t.theme.unstable_sx({
+            px: 1,
+          }),
       },
     },
     MuiContainer: {
       styleOverrides: {
-        root: (t) => t.theme.unstable_sx({
-          paddingTop: {
-            md: 4,
-            xs: 2,
-          },
-          paddingBottom: {
-            md: 4,
-            xs: 2,
-          },
-        }),
+        root: (t) =>
+          t.theme.unstable_sx({
+            paddingTop: {
+              md: 4,
+              xs: 2,
+            },
+            paddingBottom: {
+              md: 4,
+              xs: 2,
+            },
+          }),
       },
     },
     MuiChip: {
@@ -757,28 +756,33 @@ const muiThemeBase: ThemeOptions = {
             variant: 'filled',
             color: 'primary',
           },
-          style: (t) => t.theme.unstable_sx({
-            color: BeanstalkPalette.theme.winter.primary,
-            backgroundColor: hexToRgba(BeanstalkPalette.theme.winter.primary, 0.1),
-
-          }),
+          style: (t) =>
+            t.theme.unstable_sx({
+              color: BeanstalkPalette.theme.winter.primary,
+              backgroundColor: hexToRgba(
+                BeanstalkPalette.theme.winter.primary,
+                0.1
+              ),
+            }),
         },
         {
           props: {
             variant: 'filled',
             color: 'secondary',
           },
-          style: (t) => t.theme.unstable_sx({
-            color: BeanstalkPalette.textBlue,
-            backgroundColor: BeanstalkPalette.lightestBlue,
-          }),
+          style: (t) =>
+            t.theme.unstable_sx({
+              color: BeanstalkPalette.textBlue,
+              backgroundColor: BeanstalkPalette.lightestBlue,
+            }),
         },
       ],
       styleOverrides: {
-        root: (t) => t.theme.unstable_sx({
-          fontWeight: 'normal',
-          borderRadius: 1,
-        }),
+        root: (t) =>
+          t.theme.unstable_sx({
+            fontWeight: 'normal',
+            borderRadius: 1,
+          }),
       },
     },
     MuiCircularProgress: {
@@ -786,13 +790,14 @@ const muiThemeBase: ThemeOptions = {
         root: {
           animationDuration: '0.8s',
         },
-        circleIndeterminate: (t) => t.theme.unstable_sx({
-          animation: 'none',
-          strokeDasharray: '80px, 200px',
-          strokeDashoffset: '0px',
-        }),
+        circleIndeterminate: (t) =>
+          t.theme.unstable_sx({
+            animation: 'none',
+            strokeDasharray: '80px, 200px',
+            strokeDashoffset: '0px',
+          }),
       },
-    }
+    },
   },
 };
 

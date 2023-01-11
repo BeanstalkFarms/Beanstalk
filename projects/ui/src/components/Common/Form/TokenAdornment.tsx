@@ -8,12 +8,13 @@ import {
 } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import Token from '~/classes/Token';
-import { BeanstalkPalette, hexToRgba, IconSize } from '../../App/muiTheme';
+import { BeanstalkPalette, IconSize } from '../../App/muiTheme';
 import Row from '~/components/Common/Row';
 import AddressIcon from '../AddressIcon';
 
 import { FC } from '~/types';
 import { BalanceOrigin } from './TokenInputField';
+import { hexToRgba } from '~/util/ui';
 
 export type TokenAdornmentTypeProps = {
   adornmentVariant?: 'default' | 'outlined-compact';
