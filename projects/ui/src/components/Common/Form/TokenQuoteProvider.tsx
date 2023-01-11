@@ -2,8 +2,8 @@ import React, { useEffect, useMemo } from 'react';
 import { CircularProgress, Typography } from '@mui/material';
 import { useFormikContext } from 'formik';
 import BigNumber from 'bignumber.js';
-import TokenInputField, { TokenInputProps, TokenInputVariantProps } from '~/components/Common/Form/TokenInputField';
-import TokenAdornment, { TokenAdornmentProps } from '~/components/Common/Form/TokenAdornment';
+import TokenInputField, { BalanceOrigin, TokenInputProps, TokenInputVariantProps } from '~/components/Common/Form/TokenInputField';
+import TokenAdornment, { TokenAdornmentProps, TokenAdornmentTypeProps } from '~/components/Common/Form/TokenAdornment';
 import useQuote, { QuoteHandler, QuoteSettings } from '~/hooks/ledger/useQuote';
 import Token, { ERC20Token, NativeToken } from '~/classes/Token';
 import { displayFullBN } from '~/util/Tokens';
@@ -37,7 +37,8 @@ type TokenQuoteProviderCustomProps = {
 
 type TokenQuoteProviderProps = (
   TokenQuoteProviderCustomProps
-  & TokenInputVariantProps // pass {balanceOrigin, inputVariant} to TokenInputField 
+  & TokenInputVariantProps // pass { balanceOrigin, inputVariant } to TokenInputField 
+  & TokenAdornmentTypeProps // pass { adornmentVariant } to TokenAdornment
   & Partial<TokenInputProps>
 );
 
@@ -115,15 +116,11 @@ const TokenQuoteProvider : FC<TokenQuoteProviderProps> = ({
     endAdornment: (
       <TokenAdornment
         token={state.token}
+        adornmentVariant={props.adornmentVariant}
+        balanceOrigin={BalanceOrigin.COMBINED}
         onClick={showTokenSelect}
         disabled={isSubmitting || disableTokenSelect}
-        sx={{ 
-          // TEMP:
-          // Before Unpause, grey out the token selector
-          // if `disableTokenSelect` is provided; also
-          // reduce the opacity to make it less obvious.
-          opacity: disableTokenSelect ? 0.3 : 1,
-        }}
+        sx={{ opacity: disableTokenSelect ? 0.3 : 1 }}
         size={props.size}
         buttonLabel={tokenSelectLabel}
       />
@@ -134,6 +131,7 @@ const TokenQuoteProvider : FC<TokenQuoteProviderProps> = ({
     isSubmitting,
     disableTokenSelect,
     tokenSelectLabel,
+    props.adornmentVariant,
     props.size
   ]);
 

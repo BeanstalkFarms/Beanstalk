@@ -126,6 +126,7 @@ const DepositForm : FC<
             showTokenSelect={showTokenSelect}
             handleQuote={handleQuote}
             inputVariant="wrapped"
+            adornmentVariant="outlined-compact"
           />
         ))}
         {isReady ? (
@@ -177,7 +178,7 @@ const DepositForm : FC<
         ) : null}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={isSubmitting || amount.lte(0)}
+          disabled={isSubmitting}
           type="submit"
           variant="contained"
           color="primary"

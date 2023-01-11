@@ -138,6 +138,7 @@ export const BeanstalkPalette = {
   // Other
   grey: '#657265',
   inputGrey: '#F0F0F0',
+  ctaGrey: '#3B3B3B',
   realGrey: '#808080',
   lightGrey: '#9E9E9E',
   lightestGrey: '#DDDDDD',

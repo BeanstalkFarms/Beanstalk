@@ -12,29 +12,12 @@ import BigNumber from 'bignumber.js';
 import Token from '~/classes/Token';
 import { displayBN, displayFullBN, displayTokenAmount } from '~/util';
 import { FarmerBalances } from '~/state/farmer/balances';
+import InputFieldBorder from './InputFieldBorder';
 import NumberFormatInput from './NumberFormatInput';
 import FieldWrapper from './FieldWrapper';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import { ZERO_BN } from '~/constants';
-import InputFieldBorder from './FocusField';
-
-export enum BalanceOrigin {
-  FARM = 'FARM',
-  CIRCULATING = 'CIRCULATING',
-  COMBINED = 'COMBINED',
-}
-
-export type TokenInputVariantProps = {
-  /**
-   * whether to use the wrapped variant or the default text field variant
-   */
-  inputVariant?: 'default' | 'wrapped'
-  /**
-   * to show the token origin options (FARM, CIRCULATING, COMBINED)
-   */
-  balanceOrigin?: boolean;
-}
 
 export type TokenInputCustomProps = {
   /**
@@ -76,6 +59,23 @@ export type TokenInputCustomProps = {
   onChange?: (finalValue: BigNumber | undefined) => void;
 };
 
+export type TokenInputVariantProps = {
+  /**
+   * whether to use the wrapped variant or the default text field variant
+   */
+  inputVariant?: 'default' | 'wrapped'
+  /**
+   * to show the token origin options (FARM, CIRCULATING, COMBINED)
+   */
+  balanceOrigin?: boolean;
+}
+
+export enum BalanceOrigin {
+  FARM = 'FARM',
+  CIRCULATING = 'CIRCULATING',
+  COMBINED = 'COMBINED',
+}
+
 export type TokenInputProps = (
   TokenInputCustomProps // custom
   & TokenInputVariantProps // custom variant
@@ -90,7 +90,7 @@ export const preventNegativeInput = (e: React.KeyboardEvent<HTMLInputElement>) =
   }
 };
 
-const styles = {
+const stylesConfig = {
   input: {
     wrapped: {
       borderRadius: 1,
@@ -100,6 +100,9 @@ const styles = {
       '& .MuiOutlinedInput-root': {
         background: '#fff',
         pr: 0,
+        // '& .MuiInputAdornment-root': {  ----> should we add this
+        //   ml: 0,
+        // },
         '& fieldset': {
           border: 'none',
         },
@@ -111,7 +114,7 @@ const styles = {
         },
         '& .MuiOutlinedInput-input': {
           pl: 0,
-          py: 1.5,
+          py: 1.25,
         }
       },
     },
@@ -320,20 +323,20 @@ const TokenInput: FC<
           InputProps={inputProps}
           onKeyDown={!allowNegative ? preventNegativeInput : undefined}
           sx={{
-            ...(styles.input[inputVariant]),
+            ...stylesConfig.input[inputVariant],
             ...sx
           }}
         />
         {/* Bottom Adornment */}
         {(balance && !hideBalance || quote) && (
-        <Row {...styles.infoSection[inputVariant]}>
+        <Row {...stylesConfig.infoSection[inputVariant]}>
           {/* Leaving the Stack rendered regardless of whether `quote` is defined
             * ensures that the Balance section gets flexed to the right side of
             * the input. */}
           <Row sx={{ flex: 1 }} spacing={1}>
             <Typography 
               variant="bodySmall" 
-              color={styles.infoTypography[inputVariant]}
+              color={stylesConfig.infoTypography[inputVariant]}
             >
               {quote}
             </Typography>
@@ -343,7 +346,7 @@ const TokenInput: FC<
               <Tooltip title={balanceTooltip}>
                 <Typography 
                   variant="body1" 
-                  color={styles.infoTypography[inputVariant]}
+                  color={stylesConfig.infoTypography[inputVariant]}
                 >
                   {balanceLabel}: {(
                     balance
