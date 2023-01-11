@@ -71,7 +71,6 @@ const FillOrderV2Form: FC<
     numEligiblePlots > 0
     && plot.index
     && plot.amount?.gt(0)
-    && values.destination
   );
 
   return (
@@ -118,7 +117,7 @@ const FillOrderV2Form: FC<
         )}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={!isReady}
+          disabled={!(isReady && values.destination)}
           type="submit"
           variant="contained"
           color="primary"
