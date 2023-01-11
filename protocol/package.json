@@ -1,7 +1,7 @@
 {
   "name": "@beanstalk/protocol",
   "version": "0.0.1",
-  "description": "",
+  "description": "x",
   "main": "index.js",
   "scripts": {
     "compile": "hardhat compile",

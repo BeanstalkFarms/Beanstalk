@@ -1,6 +1,7 @@
 {
   "name": "ui",
   "version": "2.1.0",
+  "description": "x",
   "private": true,
   "homepage": "https://app.bean.money",
   "dependencies": {
