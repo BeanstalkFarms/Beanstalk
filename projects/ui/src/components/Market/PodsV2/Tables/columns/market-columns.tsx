@@ -3,7 +3,7 @@ import {
   GridColumns,
   GridRenderCellParams,
   GridRenderEditCellParams,
-  GridValueFormatterParams, GridValueGetterParams,
+  GridValueFormatterParams,
 } from '@mui/x-data-grid';
 import BigNumber from 'bignumber.js';
 import { Box, IconButton, Link, Stack, Tooltip, TooltipProps, Typography } from '@mui/material';
