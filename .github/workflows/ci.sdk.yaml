@@ -1,0 +1,48 @@
+name: Continuous Integration - Subgraph SDK
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'projects/sdk/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: SDK Tests
+        uses: actions/setup-node@v1
+        with:
+          node-version: '16'
+      - run: yarn install
+      - run: yarn postinstall
+      - run: yarn sdk:test
+
+      - name: Test Passed
+        if: ${{ success() }}
+        run: |
+          curl --request POST \
+          --url https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }} \
+          --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+          --header 'content-type: application/json' \
+          --data '{
+            "context": "tests",
+            "state": "success",
+            "description": "SDK Tests Passed",
+            "target_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          }'
+
+      - name: Tests Failed
+        if: ${{ failure() }}
+        run: |
+          curl --request POST \
+          --url https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }} \
+          --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+          --header 'content-type: application/json' \
+          --data '{
+            "context": "tests",
+            "state": "failure",
+            "description": "SDK Tests Failed",
+            "target_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          }'
