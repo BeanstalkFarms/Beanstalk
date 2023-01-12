@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Button, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, Link } from '@mui/material';
+import { Button, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, Link, Stack, Box } from '@mui/material';
 import { StyledDialog, StyledDialogActions, StyledDialogContent, StyledDialogTitle } from '~/components/Common/Dialog';
 import Token from '~/classes/Token';
 import { displayBN } from '~/util';
@@ -9,6 +9,8 @@ import { FarmerBalances } from '~/state/farmer/balances';
 import { FarmerSilo } from '~/state/farmer/silo';
 import { BeanstalkPalette, FontSize, IconSize } from '../../App/muiTheme';
 import Row from '~/components/Common/Row';
+import { BalanceOrigin } from './TokenInputField';
+import BalanceOriginField from './BalanceOriginField';
 
 export enum TokenSelectMode { MULTI, SINGLE }
 
@@ -31,7 +33,14 @@ export type TokenSelectDialogProps<K extends keyof TokenBalanceMode> = {
   title?: string | JSX.Element;
   /** */
   description?: string | JSX.Element;
-
+  /**
+   * 
+   */
+  balanceOrigin?: BalanceOrigin;
+  /**
+   * 
+   */
+  setBalanceOrigin?: (v: BalanceOrigin) => void;
   /**
    * 
    */
@@ -58,6 +67,8 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
   title,
   description,
   // Balances
+  balanceOrigin,
+  setBalanceOrigin,
   balancesType = 'farm',
   balances: _balances,
   // Tokens
@@ -69,7 +80,9 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
 
   const getBalance = useCallback((addr: string) => {
     if (!_balances) return ZERO_BN;
-    if (balancesType === 'farm') return (_balances as TokenBalanceMode['farm'])?.[addr]?.total || ZERO_BN;
+    if (balancesType === 'farm') {
+      return (_balances as TokenBalanceMode['farm'])?.[addr]?.total || ZERO_BN;
+    }
     return (_balances as TokenBalanceMode['silo-deposits'])?.[addr]?.deposited?.amount || ZERO_BN;
   }, [_balances, balancesType]);
 
@@ -130,6 +143,21 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
             : 'Select Token')}
       </StyledDialogTitle>
       <StyledDialogContent sx={{ pb: mode === TokenSelectMode.MULTI ? 0 : 1, pt: 0 }}>
+        {/**
+         * Balance Origin
+         */}
+        {balanceOrigin && setBalanceOrigin 
+          ? (
+            <Stack pt={1.5} pb={2}>
+              <BalanceOriginField 
+                selected={balanceOrigin} 
+                setSelected={setBalanceOrigin} 
+              />
+              <Box 
+                pt={2}
+                sx={{ borderBottom: '0.5px solid', borderColor: 'text.light', width: '100%' }} 
+              />
+            </Stack>) : null}
         {/**
           * Tokens
           */}

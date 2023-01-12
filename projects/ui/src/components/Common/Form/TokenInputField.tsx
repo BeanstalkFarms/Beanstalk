@@ -67,7 +67,7 @@ export type TokenInputVariantProps = {
   /**
    * to show the token origin options (FARM, CIRCULATING, COMBINED)
    */
-  balanceOrigin?: boolean;
+  balanceOrigin?: BalanceOrigin;
 }
 
 export enum BalanceOrigin {
@@ -155,7 +155,7 @@ const TokenInput: FC<
   min,
   allowNegative = false,
   inputVariant = 'default',
-  balanceOrigin = false,
+  balanceOrigin = undefined,
   /// Formik props
   field,
   form,

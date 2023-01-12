@@ -445,13 +445,6 @@ const muiThemeBase: ThemeOptions = {
         root: (t) =>
           t.theme.unstable_sx({
             textTransform: 'none',
-            // fontWeight: 'bold',
-            '&.MuiButton-root:hover': {
-              // backgroundColor: BeanstalkPalette.supportGreen,
-            },
-            '&.MuiLoadingButton-root:hover': {
-              // backgroundColor: BeanstalkPalette.supportGreen,
-            },
             fontWeight: 700,
             fontSize: '1rem',
             lineHeight: '1.25rem',

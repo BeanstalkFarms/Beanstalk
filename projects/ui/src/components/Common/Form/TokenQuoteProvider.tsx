@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { CircularProgress, Typography } from '@mui/material';
 import { useFormikContext } from 'formik';
 import BigNumber from 'bignumber.js';
-import TokenInputField, { TokenInputProps, TokenInputVariantProps } from '~/components/Common/Form/TokenInputField';
+import TokenInputField, {  BalanceOrigin, TokenInputProps, TokenInputVariantProps } from '~/components/Common/Form/TokenInputField';
 import TokenAdornment, { TokenAdornmentProps, TokenAdornmentTypeProps } from '~/components/Common/Form/TokenAdornment';
 import useQuote, { QuoteHandler, QuoteSettings } from '~/hooks/ledger/useQuote';
 import Token, { ERC20Token, NativeToken } from '~/classes/Token';
@@ -33,6 +33,11 @@ type TokenQuoteProviderCustomProps = {
   quoteSettings?: Partial<QuoteSettings>
   /** */
   TokenAdornmentProps?: Partial<TokenAdornmentProps>
+
+  /**
+   * TEMPP
+   */
+  setBalanceOrigin?: (v: BalanceOrigin) => void;
 };
 
 type TokenQuoteProviderProps = (
@@ -67,6 +72,7 @@ const TokenQuoteProvider : FC<TokenQuoteProviderProps> = ({
   /// Adornment
   // TokenAdornmentProps: _TokenAdornmentProps,
   /// Other props
+  setBalanceOrigin,
   ...props
 }) => {
   // Setup a price quote for this token
@@ -124,9 +130,11 @@ const TokenQuoteProvider : FC<TokenQuoteProviderProps> = ({
         sx={{ opacity: disableTokenSelect ? 0.3 : 1 }}
         size={props.size}
         buttonLabel={tokenSelectLabel}
+        balanceOrigin={props.balanceOrigin}
       />
     )
   }), [
+    props.balanceOrigin,
     state.token,
     showTokenSelect,
     isSubmitting,

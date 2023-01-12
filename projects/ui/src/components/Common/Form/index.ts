@@ -1,40 +1,49 @@
 import BigNumber from 'bignumber.js';
-import { ERC20Token, NativeToken } from '~/classes/Token';
+
+import { BeanstalkToken, ERC20Token, NativeToken } from '~/classes/Token';
 import { QuoteHandlerResult } from '~/hooks/ledger/useQuote';
 
 /**
- * 
+ *
  */
 export type FormState = {
   /** */
   tokens: FormTokenState[];
   /** */
-  approving?: FormApprovingState; 
-}
+  approving?: FormApprovingState;
+};
+
+/**
+ * 
+ */
+export type ClaimableBeanAssetFormState = {
+  /** */
+  totalClaimable: BigNumber;
+  /** */
+  claiming: { [k: string]: ClaimableBeanAssetsFormState };
+};
 
 /// FIXME: use type composition instead of this
 export type FormStateWithPlotSelect = FormState & {
   plot?: BigNumber;
-}
+};
 
 /**
  * Fragment: A single Token stored within a form.
  */
-export type FormTokenState = (
+export type FormTokenState =
   /// Form inputs
   {
     /** The selected token. */
-    token:      ERC20Token | NativeToken;
+    token: ERC20Token | NativeToken;
     /** The amount of the selected token, usually input by the user.
      * @value undefined if the input is empty */
-    amount:     BigNumber | undefined;
-  } 
-  /// Quoting
-  & {
+    amount: BigNumber | undefined;
+  } & /// Quoting
+  {
     /** Whether we're currently looking up a quoted `amountOut` for this token. */
-    quoting?:   boolean;
-  } & Partial<QuoteHandlerResult>
-);
+    quoting?: boolean;
+  } & Partial<QuoteHandlerResult>;
 
 // /** Some `amountOut` received for inputting `amount` of this token into a function. */
 // amountOut?: BigNumber;
@@ -47,31 +56,42 @@ export type FormApprovingState = {
   /** */
   contract: string;
   /** */
-  token:    ERC20Token | NativeToken;
+  token: ERC20Token | NativeToken;
   /** */
-  amount:   BigNumber;
-}
+  amount: BigNumber;
+};
 
 export type PlotFragment = {
   /** The absolute index of the plot. @decimals 6 */
-  index:  string    | null;
+  index: string | null;
   /** The user's selected start position. @decimals 6 */
-  start:  BigNumber | null;
+  start: BigNumber | null;
   /** The user's selected end position. @decimals 6 */
-  end:    BigNumber | null;
+  end: BigNumber | null;
   /** end - start. @decimals 6 */
   amount: BigNumber | null;
-}
+};
 
 export type SlippageSettingsFragment = {
   /** When performing a swap of some kind, set the slippage
    * value applied to all exchanges. */
   slippage: number;
-}
+};
 export type PlotSettingsFragment = {
   /** Let the Farmer select the exact range from which their
    * Pods are being transferred, sold, etc. */
   showRangeSelect: boolean;
+};
+
+export type ClaimableBeanAssetsFormState = {
+  /**
+   * claimable bean token (BEAN, PODS, or SPROUTS)
+   */
+  token: BeanstalkToken | ERC20Token;
+  /**
+   * amount to claim from (claimable beans | harvestable pods | rinsable sprouts)
+   */
+  amount: BigNumber;
 }
 
 // ----------------------------------------------------------------------

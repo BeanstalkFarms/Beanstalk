@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Accordion, AccordionDetails, Box, Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
@@ -10,7 +10,7 @@ import { BEAN, CRV3, DAI, ETH, SEEDS, STALK, UNRIPE_BEAN, UNRIPE_BEAN_CRV3, USDC
 import TokenSelectDialog, { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import TokenOutputField from '~/components/Common/Form/TokenOutputField';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
-import { FormState, SettingInput, TxnSettings } from '~/components/Common/Form';
+import { ClaimableBeanAssetFormState, FormState, SettingInput, TxnSettings } from '~/components/Common/Form';
 import TokenQuoteProvider from '~/components/Common/Form/TokenQuoteProvider';
 import TxnPreview from '~/components/Common/Form/TxnPreview';
 import BeanstalkSDK from '~/lib/Beanstalk';
@@ -43,10 +43,15 @@ import useFarm from '~/hooks/sdk/useFarm';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import ClaimableAssets from '../ClaimableAssets';
+import { BalanceOrigin } from '~/components/Common/Form/TokenInputField';
+import useFarmerClaimableBeanAssets, { 
+  ClaimableBeanToken, 
+  FarmerClaimableBeanAsset 
+} from '~/hooks/farmer/useFarmerClaimableBeanAssets';
 
 // -----------------------------------------------------------------------
 
-type DepositFormValues = FormState & {
+type DepositFormValues = FormState & ClaimableBeanAssetFormState & {
   settings: {
     slippage: number;
   }
@@ -62,6 +67,7 @@ const DepositForm : FC<
     balances: FarmerBalances;
     contract: ethers.Contract;
     handleQuote: QuoteHandler;
+    claimableBalances: Record<ClaimableBeanToken, FarmerClaimableBeanAsset>;
   }
 > = ({
   // Custom
@@ -105,6 +111,8 @@ const DepositForm : FC<
     ]);
   }, [values.tokens, setFieldValue]);
 
+  const [origin, setOrigin] = useState(BalanceOrigin.COMBINED);
+
   return (
     <Form noValidate autoComplete="off">
       <TokenSelectDialog
@@ -115,6 +123,9 @@ const DepositForm : FC<
         balances={balances}
         tokenList={tokenList}
         mode={TokenSelectMode.SINGLE}
+        title="Assets"
+        balanceOrigin={origin}
+        setBalanceOrigin={(v: BalanceOrigin) => setOrigin(v)}
       />
       <Stack gap={1}>
         {values.tokens.map((tokenState, index) => (
@@ -126,8 +137,10 @@ const DepositForm : FC<
             state={tokenState}
             showTokenSelect={showTokenSelect}
             handleQuote={handleQuote}
-            // inputVariant="wrapped"
-            // adornmentVariant="outlined-compact"
+            inputVariant="wrapped"
+            adornmentVariant="outlined-compact"
+            balanceOrigin={origin}
+            setBalanceOrigin={(v: BalanceOrigin) => setOrigin(v)}
           />
         ))}
         <ClaimableAssets />
@@ -267,6 +280,7 @@ const Deposit : FC<{
 
   /// Farmer
   const balances                = useFarmerBalances();
+  const claimable               = useFarmerClaimableBeanAssets();
   const [refetchFarmerSilo]     = useFetchFarmerSilo();
   const [refetchFarmerBalances] = useFetchFarmerBalances();
   const [refetchPools]          = useFetchPools();
@@ -292,7 +306,9 @@ const Deposit : FC<{
         amountOut: undefined,
       },
     ],
-  }), [baseToken]);
+    totalClaimable: claimable.total,
+    claiming: {}
+  }), [baseToken, claimable.total]);
 
   /// Handlers
   // This handler does not run when _tokenIn = _tokenOut (direct deposit)
@@ -554,6 +570,7 @@ const Deposit : FC<{
             amountToBdv={amountToBdv}
             tokenList={tokenList as (ERC20Token | NativeToken)[]}
             whitelistedToken={whitelistedToken}
+            claimableBalances={claimable.assets}
             balances={balances}
             contract={beanstalk}
             {...formikProps}

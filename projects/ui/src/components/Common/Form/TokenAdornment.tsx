@@ -66,7 +66,7 @@ const TokenAdornment: FC<TokenAdornmentProps & TokenAdornmentTypeProps> = ({
           py: isDefaultVariant ? undefined : 0.1,
           height: isDefaultVariant ? undefined : 'unset',
           border: `1px solid ${isDefaultVariant ? 'transparent' : 'text.light'}`,
-          backgroundColor: isDefaultVariant ? BeanstalkPalette.lightestBlue : 'transparent',
+          backgroundColor: isDefaultVariant && balanceOrigin ? BeanstalkPalette.lightestBlue : 'transparent !important',
           boxSizing: 'border-box',
           ...props.sx,
         }}

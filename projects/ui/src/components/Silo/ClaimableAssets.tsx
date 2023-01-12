@@ -2,35 +2,39 @@ import React, { useMemo, useState } from 'react';
 import { Stack, Switch, Tooltip, Typography } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import useFarmerClaimableAssets, {
-  FarmerClaimableAsset,
-} from '~/hooks/farmer/useFarmerClaimableAssets';
+  ClaimableBeanToken,
+  FarmerClaimableBeanAsset,
+} from '~/hooks/farmer/useFarmerClaimableBeanAssets';
 import Row from '../Common/Row';
 import TokenSelectionCard from '~/components/Common/Card/TokenSelectionCard';
-import { AddressMap, ZERO_BN } from '~/constants';
 import { displayFullBN } from '~/util';
 import SidelineAlert from '../Common/Alert/SidelineAlert';
 
+const uiDescriptions = {
+  [ClaimableBeanToken.SPROUTS]: 'Rinsable Sprouts',
+  [ClaimableBeanToken.BEAN]: 'Claimable Beans',
+  [ClaimableBeanToken.PODS]: 'Harvestable Pods',
+} as const;
+
 const ClaimableAssets: React.FC<{}> = () => {
   // global state
-  const claimable = useFarmerClaimableAssets();
+  const { total: totalClaimable, assets: claimable } =
+    useFarmerClaimableAssets();
 
   // local state
-  const [selected, setSelected] = useState<AddressMap<FarmerClaimableAsset>>(
-    {}
-  );
+  const [selected, setSelected] = useState<Record<string, FarmerClaimableBeanAsset>>({});
 
   // claimable assets map with a balance gt 0
   const assetsWithBalance = useMemo(() => {
     const arr = Object.entries(claimable);
-    return arr.reduce<AddressMap<FarmerClaimableAsset>>((prev, [k, v]) => {
+    return arr.reduce<Record<string, FarmerClaimableBeanAsset>>((prev, [k, v]) => {
       if (v.amount?.gt(0)) prev[k] = v;
       return prev;
     }, {});
   }, [claimable]);
 
   // component state functions
-  const handleToggle = (data: FarmerClaimableAsset) => {
-    const key = data.token.symbol;
+  const handleToggle = (key: ClaimableBeanToken,data: FarmerClaimableBeanAsset) => {
     if (key in selected) {
       setSelected((prev) => {
         delete prev[key];
@@ -48,10 +52,6 @@ const ClaimableAssets: React.FC<{}> = () => {
   // component state
   const allSelected = Object.keys(assetsWithBalance).every((k) => selected[k]);
   const disabled = Object.values(claimable).every((v) => v.amount.lte(0));
-  const totalClaimAmount = Object.values(selected).reduce((prev, curr) => {
-    prev = prev.plus(curr.amount);
-    return prev;
-  }, ZERO_BN);
 
   return (
     <Stack gap={1} width="100%">
@@ -89,14 +89,14 @@ const ClaimableAssets: React.FC<{}> = () => {
       {/*
        *Alert
        */}
-      <SidelineAlert color="success" hide={totalClaimAmount?.lte(0)}>
+      <SidelineAlert color="success" hide={totalClaimable?.lte(0)}>
         <Typography
           color="text.primary"
           variant="bodySmall"
           sx={{ whitespace: 'nowrap' }}
         >
           <Typography component="span" variant="caption" fontWeight="bold">
-            + {displayFullBN(totalClaimAmount, 2)}
+            + {displayFullBN(totalClaimable, 2)}
           </Typography>{' '}
           <Typography component="span" variant="inherit">
             Beans applied to use on your{' '}
@@ -106,7 +106,6 @@ const ClaimableAssets: React.FC<{}> = () => {
           </Typography>
         </Typography>
       </SidelineAlert>
-
       {/*
        *Selection Cards
        */}
@@ -117,9 +116,9 @@ const ClaimableAssets: React.FC<{}> = () => {
             key={k}
             token={data.token}
             amount={data.amount}
-            title={data.description}
+            title={uiDescriptions[k as ClaimableBeanToken]}
             selected={k in selected}
-            toggle={() => handleToggle(data)}
+            toggle={() => handleToggle(k as ClaimableBeanToken, data)}
           />
         ))}
       </Stack>
