@@ -1,5 +1,5 @@
 import React from 'react';
-import MuiMarkdown from 'mui-markdown';
+import MuiMarkdown from 'mui-markdown'; // peer dep: prism-react-renderer
 import { BeanstalkPalette, FontSize, FontWeight } from '~/components/App/muiTheme';
 import { FC } from '~/types';
 
