@@ -1,9 +1,15 @@
 {
   "name": "ui",
   "version": "2.1.0",
-  "description": "x",
+  "description": "A user interface for interacting with Beanstalk.",
   "private": true,
   "homepage": "https://app.bean.money",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BeanstalkFarms/Beanstalk.git",
+    "directory": "projects/ui"
+  },
   "dependencies": {
     "@apollo/client": "^3.4.10",
     "@beanstalk/protocol": "workspace:*",

@@ -1,8 +1,12 @@
 {
   "name": "@beanstalk/protocol",
-  "version": "0.0.1",
-  "description": "beanstalk protocol project",
-  "main": "index.js",
+  "version": "2.7.1",
+  "description": "Beanstalk is a permissionless fiat stablecoin protocol built on Ethereum.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BeanstalkFarms/Beanstalk.git",
+    "directory": "protocol"
+  },
   "scripts": {
     "compile": "hardhat compile",
     "generate": "echo '\nProtocol Generate' && yarn compile && hardhat diamondABI",
@@ -10,7 +14,7 @@
     "clean": "hardhat clean"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "files": [
     "abi/"
   ],

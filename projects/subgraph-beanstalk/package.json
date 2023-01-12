@@ -1,7 +1,12 @@
 {
   "name": "subgraph-beanstalk",
-  "description": "subgraph-beanstalk project",
-  "license": "MIT License",
+  "license": "MIT",
+  "description": "A subgraph for indexing events emitted by Beanstalk.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BeanstalkFarms/Beanstalk.git",
+    "directory": "projects/subgraph-beanstalk"
+  },
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",

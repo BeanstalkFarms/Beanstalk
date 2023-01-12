@@ -1,11 +1,11 @@
 {
   "name": "@beanstalk/sdk",
   "version": "0.1.0-beta.9",
-  "description": "Beanstalk protocol SDK project",
+  "description": "A JavaScript framework for interacting with the Beanstalk protocol and ecosystem.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/BeanstalkFarms/Beanstalk-SDK.git",
+    "url": "https://github.com/BeanstalkFarms/Beanstalk.git",
     "directory": "projects/sdk"
   },
   "homepage": "https://bean.money",
