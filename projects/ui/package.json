@@ -1,7 +1,7 @@
 {
   "name": "ui",
   "version": "2.1.0",
-  "description": "A user interface for interacting with Beanstalk.",
+  "description": "A user interface for interacting with Beanstalk..",
   "private": true,
   "homepage": "https://app.bean.money",
   "license": "MIT",
