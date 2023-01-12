@@ -4,9 +4,8 @@ import React from 'react';
 import Token from '~/classes/Token';
 import SelectionCard, {
   SelectionCardProps,
-} from '~/components/Common/Selection/SelectionCard';
+} from '~/components/Common/Card/SelectionCard';
 import { displayBN } from '~/util';
-import Row from '../Row';
 import TokenIcon from '../TokenIcon';
 
 export type TokenSelectionCardProps = {
@@ -23,21 +22,21 @@ const TokenSelectionCard: React.FC<TokenSelectionCardProps> = ({
 }) => (
   <SelectionCard {...props}>
     <Stack gap={0.2} width="100%" alignItems="flex-start">
-      {/* FIX ME TO USE color as CONST */}
-      <Row gap={0.5}>
-        <TokenIcon token={token} />
-        <Typography
-          variant="body1"
-          sx={{ color: '#4D4D4D', display: 'inline-flex' }}
-          component="span"
-        >
-          {amount.gt(0) ? displayBN(amount) : '0'}
-        </Typography>
-      </Row>
-
       <Typography
-        variant="body1"
-        sx={{ color: '#4D4D4D', whiteSpace: 'nowrap' }}
+        color={props.disabled ? 'text.disabled' : 'text.primary'}
+        component="span"
+        sx={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          flexWrap: 'nowrap',
+        }}
+      >
+        <TokenIcon token={token} css={{ marginRight: '5px' }} />
+        {amount.gt(0) ? displayBN(amount) : '0'}
+      </Typography>
+      <Typography
+        color={props.disabled ? 'text.disabled' : 'text.primary'}
+        sx={{ whiteSpace: 'nowrap' }}
       >
         {title || token.symbol}
       </Typography>

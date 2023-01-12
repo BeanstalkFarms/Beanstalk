@@ -47,15 +47,15 @@ export default function useFarmerClaimableAssets() {
         token: sprouts,
         description: 'Rinsable Sprouts',
       },
-      [bean.symbol]: {
-        amount: claimableBean?.gt(0) ? claimableBean : ZERO_BN,
-        token: bean,
-        description: 'Claimable Beans',
-      },
       [pods.symbol]: {
         amount: havestablePods?.gt(0) ? havestablePods : ZERO_BN,
         token: pods,
         description: 'Harvestable Pods',
+      },
+      [bean.symbol]: {
+        amount: claimableBean?.gt(0) ? claimableBean : ZERO_BN,
+        token: bean,
+        description: 'Claimable Beans',
       },
     };
   }, [

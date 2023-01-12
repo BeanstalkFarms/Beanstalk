@@ -1,7 +1,7 @@
 import React from 'react';
 
 import Check from '@mui/icons-material/Check';
-import { Box, BoxProps } from '@mui/material';
+import { BoxProps, Stack } from '@mui/material';
 
 import { BeanstalkPalette, FontSize } from '~/components/App/muiTheme';
 
@@ -12,6 +12,8 @@ export type SelectionIndicatorProps = {
   size?: keyof typeof FontSize | number;
 } & BoxProps;
 
+const SIZE_MULTIPLIER = 0.75;
+
 const SelectionIndicator: React.FC<SelectionIndicatorProps> = ({
   selected,
   size: _size = 'base',
@@ -20,19 +22,17 @@ const SelectionIndicator: React.FC<SelectionIndicatorProps> = ({
   const size = typeof _size === 'number' ? _size : remToPx(FontSize[_size]);
 
   return (
-    <Box
+    <Stack
+      alignItems="center"
+      justifyContent="center"
+      width={size}
+      height="auto"
       sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: size,
-        height: size,
-        maxWidth: size,
-        maxHeight: size,
+        aspectRatio: '1',
         borderRadius: '100%',
-        backgroundColor: selected ? 'primary.main' : BeanstalkPalette.white,
+        backgroundColor: selected ? 'primary.main' : 'light.main',
         border: '1px solid',
-        borderColor: selected ? 'primary.main' : BeanstalkPalette.lightestGrey,
+        borderColor: selected ? 'primary.main' : 'text.light',
         boxSizing: 'border-box',
         ...sx,
       }}
@@ -41,12 +41,12 @@ const SelectionIndicator: React.FC<SelectionIndicatorProps> = ({
         <Check
           sx={{
             color: BeanstalkPalette.white,
-            width: size * 0.75,
+            width: size * SIZE_MULTIPLIER,
             height: 'auto',
           }}
         />
       ) : null}
-    </Box>
+    </Stack>
   );
 };
 

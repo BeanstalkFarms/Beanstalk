@@ -101,7 +101,6 @@ export const BeanstalkPalette = {
   lightGreen: '#E1F8E6',
   supportGreen: '#19873B',
   lightestGreen: '#EDF8EE',
-  hoverGreen: '#C8EACC',
   winterGreen: '#1D8A79',
 
   // Blues

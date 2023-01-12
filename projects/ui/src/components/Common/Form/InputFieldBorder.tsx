@@ -22,14 +22,15 @@ const InputFieldBorder: FC<IInputFieldBorder> = ({
   const actions = useMemo(() => {
     const handleMouseOver = () => {
       if (!ref.current || activeRef.current || disabled) return;
-      ref.current.style.borderColor = BeanstalkPalette.hoverGreen;
+      ref.current.style.borderColor =
+        BeanstalkPalette.theme.winter.primaryHover;
     };
-  
+
     const handleMouseLeave = () => {
       if (!ref.current || activeRef.current || disabled) return;
       ref.current.style.borderColor = BeanstalkPalette.inputGrey;
     };
-  
+
     const handleOnClick = () => {
       if (!ref.current || activeRef.current || disabled) return;
       ref.current.style.padding = '0px';
@@ -37,7 +38,7 @@ const InputFieldBorder: FC<IInputFieldBorder> = ({
       ref.current.style.borderColor = BeanstalkPalette.theme.winter.primary;
       activeRef.current = true;
     };
-  
+
     const handleClickAway = () => {
       if (!ref.current || !activeRef.current || disabled) return;
       ref.current.style.padding = '1px';
@@ -46,7 +47,12 @@ const InputFieldBorder: FC<IInputFieldBorder> = ({
       activeRef.current = false;
     };
 
-    return { handleMouseOver, handleMouseLeave, handleOnClick, handleClickAway };
+    return {
+      handleMouseOver,
+      handleMouseLeave,
+      handleOnClick,
+      handleClickAway,
+    };
   }, [disabled]);
 
   useEffect(() => {
@@ -77,7 +83,12 @@ const InputFieldBorder: FC<IInputFieldBorder> = ({
       onClick={actions.handleOnClick}
     >
       <ClickAwayListener onClickAway={actions.handleClickAway}>
-        <Box px={2} py={1} {...props} sx={{ ...props.sx, boxSizing: 'border-box' }}>
+        <Box
+          px={2}
+          py={1}
+          {...props}
+          sx={{ ...props.sx, boxSizing: 'border-box' }}
+        >
           {children}
         </Box>
       </ClickAwayListener>
