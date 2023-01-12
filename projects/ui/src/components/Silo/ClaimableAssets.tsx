@@ -15,6 +15,8 @@ import {
 import { ZERO_BN } from '~/constants';
 import { FarmerBalances } from '~/state/farmer/balances';
 import FarmModeField from '../Common/Form/FarmModeField';
+import copyText from '~/constants/copy';
+import { FarmToMode } from '~/lib/Beanstalk/Farm';
 
 const FIELD_VALUE = 'claiming' as const;
 
@@ -29,6 +31,8 @@ const ClaimableAssets: React.FC<{
   farmerBalances: FarmerBalances;
 }> = ({ balances, farmerBalances }) => {
   const { values, setFieldValue } = useFormikContext<FormState &  FarmWithClaimFormState>();
+
+  console.log(values.totalClaimable.toString());
 
   const { assetsWithBalance, allSelected, totalClaiming, disabled } =
     useMemo(() => {
@@ -149,7 +153,8 @@ const ClaimableAssets: React.FC<{
             Beans applied to use on your{' '}
           </Typography>
           <Typography component="span" variant="inherit" fontStyle="italic">
-            Farm balance
+            {/* TODO FIX ME TO BE DYNAMIC */}
+            {copyText.MODES[values.destination || FarmToMode.EXTERNAL]} 
           </Typography>
         </Typography>
       </SidelineAlert>

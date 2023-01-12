@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { Accordion, AccordionDetails, Box, Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
@@ -10,18 +10,18 @@ import { BEAN, CRV3, DAI, ETH, SEEDS, STALK, UNRIPE_BEAN, UNRIPE_BEAN_CRV3, USDC
 import TokenSelectDialog, { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import TokenOutputField from '~/components/Common/Form/TokenOutputField';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
-import { ClaimableBeanAssetFragment, FarmWithClaimFormState, FormState, SettingInput, TxnSettings } from '~/components/Common/Form';
+import { FarmWithClaimFormState, FormState, SettingInput, TxnSettings } from '~/components/Common/Form';
 import TokenQuoteProvider from '~/components/Common/Form/TokenQuoteProvider';
 import TxnPreview from '~/components/Common/Form/TxnPreview';
 import BeanstalkSDK from '~/lib/Beanstalk';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
-import { Balance, FarmerBalances } from '~/state/farmer/balances';
+import {  ApplicableBalance, Balance, FarmerBalances } from '~/state/farmer/balances';
 import { displayFullBN, toStringBaseUnitBN, toTokenUnitsBN } from '~/util/Tokens';
 import TransactionToast from '~/components/Common/TxnToast';
 import { Beanstalk } from '~/generated/index';
 import { QuoteHandler } from '~/hooks/ledger/useQuote';
-import { ZERO_BN } from '~/constants';
+import { AddressMap, ZERO_BN } from '~/constants';
 import { ERC20Token, NativeToken } from '~/classes/Token';
 import Pool from '~/classes/Pool';
 import SmartSubmitButton from '~/components/Common/Form/SmartSubmitButton';
@@ -44,9 +44,7 @@ import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import ClaimableAssets from '../ClaimableAssets';
 
-import useFarmerClaimableBeanAssets, { 
-  ClaimableBeanToken 
-} from '~/hooks/farmer/useFarmerClaimableBeanAssets';
+import useFarmerClaimableBeanAssets from '~/hooks/farmer/useFarmerClaimableBeanAssets';
 import { BalanceFrom } from '~/components/Common/Form/BalanceOriginField';
 
 // -----------------------------------------------------------------------
@@ -68,13 +66,12 @@ const DepositForm : FC<
     balances: FarmerBalances;
     contract: ethers.Contract;
     handleQuote: QuoteHandler;
-    claimableBalances: Record<ClaimableBeanToken, ClaimableBeanAssetFragment>;
+    // claimableBalances: Record<ClaimableBeanToken, ClaimableBeanAssetFragment>;
   }
 > = ({
   // Custom
   tokenList,
   whitelistedToken,
-  claimableBalances,
   amountToBdv,
   balances,
   contract,
@@ -84,6 +81,7 @@ const DepositForm : FC<
   isSubmitting,
   setFieldValue,
 }) => {
+  const claimable = useFarmerClaimableBeanAssets();
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const { amount, bdv, stalk, seeds, actions } = BeanstalkSDK.Silo.Deposit.deposit(
     whitelistedToken,
@@ -91,10 +89,29 @@ const DepositForm : FC<
     amountToBdv,
   );
 
-  console.log(values);
+  // update max claimable if it changes
+  useEffect(() => {
+    if (values.totalClaimable.eq(claimable.total)) return;
+    setFieldValue('totalClaimable', claimable.total);
+  }, [claimable.total, setFieldValue, values.totalClaimable]);
 
   /// Derived
   const isReady = bdv.gt(0);
+
+  const applicableBalances: AddressMap<ApplicableBalance> = useMemo(() => {
+    const beanClaimAmount = Object.values(values.claiming).reduce((prev, curr) => {
+      if (curr.amount?.gt(0)) prev = prev.plus(curr.amount);
+      return prev;
+    }, ZERO_BN);
+    
+    return {
+      [BEAN[1].address]: {
+        total: values.totalClaimable,
+        applied: beanClaimAmount,
+        remaining: values.totalClaimable.minus(beanClaimAmount),
+      }
+    };
+  }, [values.claiming, values.totalClaimable]);
 
   ///
   const handleSelectTokens = useCallback((_tokens: Set<Token>) => {
@@ -132,6 +149,7 @@ const DepositForm : FC<
         title="Assets"
         balanceFrom={values.balanceFrom}
         setBalanceFrom={handleSetBalanceFrom}
+        applicableBalances={applicableBalances}
       />
       <Stack gap={1}>
         {values.tokens.map((tokenState, index) => (
@@ -149,7 +167,7 @@ const DepositForm : FC<
           />
         ))}
         <ClaimableAssets
-          balances={claimableBalances}
+          balances={claimable.assets}
           farmerBalances={balances}
         />
         {isReady ? (
@@ -288,7 +306,6 @@ const Deposit : FC<{
 
   /// Farmer
   const balances                = useFarmerBalances();
-  const claimable               = useFarmerClaimableBeanAssets();
   const [refetchFarmerSilo]     = useFetchFarmerSilo();
   const [refetchFarmerBalances] = useFetchFarmerBalances();
   const [refetchPools]          = useFetchPools();
@@ -314,11 +331,11 @@ const Deposit : FC<{
         amountOut: undefined,
       },
     ],
-    totalClaimable: claimable.total,
+    totalClaimable: ZERO_BN,
     claiming: {},
     balanceFrom: BalanceFrom.TOTAL,
     destination: undefined,
-  }), [baseToken, claimable.total]);
+  }), [baseToken]);
 
   /// Handlers
   // This handler does not run when _tokenIn = _tokenOut (direct deposit)
@@ -580,7 +597,6 @@ const Deposit : FC<{
             amountToBdv={amountToBdv}
             tokenList={tokenList as (ERC20Token | NativeToken)[]}
             whitelistedToken={whitelistedToken}
-            claimableBalances={claimable.assets}
             balances={balances}
             contract={beanstalk}
             {...formikProps}

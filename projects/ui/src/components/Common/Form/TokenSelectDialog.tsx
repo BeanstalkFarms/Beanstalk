@@ -4,8 +4,8 @@ import { Button, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typ
 import { StyledDialog, StyledDialogActions, StyledDialogContent, StyledDialogTitle } from '~/components/Common/Dialog';
 import Token from '~/classes/Token';
 import { displayBN } from '~/util';
-import { ZERO_BN } from '~/constants';
-import { FarmerBalances } from '~/state/farmer/balances';
+import { AddressMap, ZERO_BN } from '~/constants';
+import { ApplicableBalance, FarmerBalances } from '~/state/farmer/balances';
 import { FarmerSilo } from '~/state/farmer/silo';
 import { BeanstalkPalette, FontSize, IconSize } from '../../App/muiTheme';
 import Row from '~/components/Common/Row';
@@ -47,9 +47,17 @@ export type TokenSelectDialogProps<K extends keyof TokenBalanceMode> = {
   tokenList: Token[];
   /** Single or multi-select */
   mode?: TokenSelectMode;
+  /** maping of additional balances to show along with balances */
+  applicableBalances?: AddressMap<ApplicableBalance>;
 }
 
 type TokenSelectDialogC = React.FC<TokenSelectDialogProps<keyof TokenBalanceMode>>;
+
+const balanceFromText = {
+  [BalanceFrom.INTERNAL]: 'Displaying Farm Balances.',
+  [BalanceFrom.EXTERNAL]: 'Displaying Circulating Balances.',
+  [BalanceFrom.TOTAL]: 'Displaying Total Farm and Circulating Balances.',
+};
 
 const TokenSelectDialog : TokenSelectDialogC = React.memo(({
   // Dialog
@@ -67,6 +75,8 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
   // Tokens
   tokenList,
   mode = TokenSelectMode.MULTI,
+  // FarmWithClaim props
+  applicableBalances,
 }) => {
   /** keep an internal copy of selected tokens */
   const [selectedInternal, setSelectedInternal] = useState<Set<Token>>(new Set<Token>());
@@ -201,6 +211,25 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
                   {_balances ? (
                     <Typography variant="bodyLarge">
                       {displayBN(getBalance(_token.address))}
+                      {applicableBalances && _token.address in applicableBalances ? (() => {
+                        console.log('token address: ', _token.address);
+                        const applied = applicableBalances[_token.address].applied;
+                        const remaining = applicableBalances[_token.address].remaining;
+                        console.log('applied: ', applied.toString());
+                        console.log('remaining: ', remaining.toString());
+                        return (
+                          <>
+                            {applied.gt(0) ? (
+                              <Typography variant="inherit" color="primary" component="span">
+                                &nbsp; + {displayBN(applied)}
+                              </Typography>) : null}
+                            {remaining.gt(0) ? (
+                              <Typography variant="inherit" color="text.tertiary" component="span">
+                                &nbsp; + {displayBN(remaining)}
+                              </Typography>) : null}
+                          </>
+                        );
+                      })() : null}
                     </Typography>
                   ) : null}
                 </Row>
@@ -212,7 +241,7 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
             */}
           {_balances ? (
             <Typography ml={1} pt={0.5} textAlign="center" fontSize={FontSize.sm} color="gray">
-              Displaying total Farm and Circulating balances.&nbsp;
+              {balanceFromText[balanceFrom || BalanceFrom.TOTAL]}&nbsp;
               <Link href="https://docs.bean.money/almanac/protocol/asset-states" target="_blank" rel="noreferrer" underline="none">
                 Learn more &rarr;
               </Link>
