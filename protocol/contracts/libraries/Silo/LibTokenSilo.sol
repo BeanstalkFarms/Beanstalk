@@ -305,10 +305,9 @@ library LibTokenSilo {
         // cumulativeGrownStalkPerBdv(token) > depositGrownStalkPerBdv for all valid Deposits
         AppStorage storage s = LibAppStorage.diamondStorage();
         int128 _cumulativeGrownStalkPerBdv = cumulativeGrownStalkPerBdv(token);
-        int128 depositGrownStalkPerBdv = s.ss[token].lastCumulativeGrownStalkPerBdv;
-        require(depositGrownStalkPerBdv <= _cumulativeGrownStalkPerBdv, "Silo: Invalid Deposit");
-        uint deltaGrownStalkPerBdv = uint(cumulativeGrownStalkPerBdv(token).sub(depositGrownStalkPerBdv));
-        (, uint bdv) = tokenDeposit(account, token, depositGrownStalkPerBdv);
+        require(grownStalkPerBdv <= _cumulativeGrownStalkPerBdv, "Silo: Invalid Deposit");
+        uint deltaGrownStalkPerBdv = uint(cumulativeGrownStalkPerBdv(token).sub(grownStalkPerBdv));
+        (, uint bdv) = tokenDeposit(account, token, grownStalkPerBdv);
         grownStalk = deltaGrownStalkPerBdv.mul(bdv);
     }
 }
