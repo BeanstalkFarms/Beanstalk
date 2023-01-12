@@ -18,6 +18,7 @@ import FieldWrapper from './FieldWrapper';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import { ZERO_BN } from '~/constants';
+import { BalanceFrom } from './BalanceOriginField';
 
 export type TokenInputCustomProps = {
   /**
@@ -67,13 +68,7 @@ export type TokenInputVariantProps = {
   /**
    * to show the token origin options (FARM, CIRCULATING, COMBINED)
    */
-  balanceOrigin?: BalanceOrigin;
-}
-
-export enum BalanceOrigin {
-  FARM = 'FARM',
-  CIRCULATING = 'CIRCULATING',
-  COMBINED = 'COMBINED',
+  balanceFrom?: BalanceFrom;
 }
 
 export type TokenInputProps = (
@@ -155,7 +150,7 @@ const TokenInput: FC<
   min,
   allowNegative = false,
   inputVariant = 'default',
-  balanceOrigin = undefined,
+  balanceFrom = undefined,
   /// Formik props
   field,
   form,

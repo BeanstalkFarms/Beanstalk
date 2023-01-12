@@ -9,8 +9,7 @@ import { FarmerBalances } from '~/state/farmer/balances';
 import { FarmerSilo } from '~/state/farmer/silo';
 import { BeanstalkPalette, FontSize, IconSize } from '../../App/muiTheme';
 import Row from '~/components/Common/Row';
-import { BalanceOrigin } from './TokenInputField';
-import BalanceOriginField from './BalanceOriginField';
+import BalanceOriginField, { BalanceFrom } from './BalanceOriginField';
 
 export enum TokenSelectMode { MULTI, SINGLE }
 
@@ -33,17 +32,11 @@ export type TokenSelectDialogProps<K extends keyof TokenBalanceMode> = {
   title?: string | JSX.Element;
   /** */
   description?: string | JSX.Element;
-  /**
-   * 
-   */
-  balanceOrigin?: BalanceOrigin;
-  /**
-   * 
-   */
-  setBalanceOrigin?: (v: BalanceOrigin) => void;
-  /**
-   * 
-   */
+  /** the balance (circulating |farm | combined) being used */
+  balanceFrom?: BalanceFrom;
+  /** set the balance (circulating |farm | combined) to use */
+  setBalanceFrom?: (v: BalanceFrom) => void;
+  /** * */
   balancesType?: K;
   /** The Farmer's current balances. Displayed alongside each token.
    * Shows 0 for missing balances if `balances` is an object.
@@ -67,8 +60,8 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
   title,
   description,
   // Balances
-  balanceOrigin,
-  setBalanceOrigin,
+  balanceFrom,
+  setBalanceFrom,
   balancesType = 'farm',
   balances: _balances,
   // Tokens
@@ -146,12 +139,12 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
         {/**
          * Balance Origin
          */}
-        {balanceOrigin && setBalanceOrigin 
+        {balanceFrom && setBalanceFrom 
           ? (
             <Stack pt={1.5} pb={2}>
               <BalanceOriginField 
-                selected={balanceOrigin} 
-                setSelected={setBalanceOrigin} 
+                balanceFrom={balanceFrom} 
+                setBalanceFrom={setBalanceFrom} 
               />
               <Box 
                 pt={2}

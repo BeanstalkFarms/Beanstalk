@@ -1,14 +1,22 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Stack, Switch, Tooltip, Typography } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import useFarmerClaimableAssets, {
-  ClaimableBeanToken,
-  FarmerClaimableBeanAsset,
-} from '~/hooks/farmer/useFarmerClaimableBeanAssets';
+import { useFormikContext } from 'formik';
+import { ClaimableBeanToken } from '~/hooks/farmer/useFarmerClaimableBeanAssets';
 import Row from '../Common/Row';
 import TokenSelectionCard from '~/components/Common/Card/TokenSelectionCard';
 import { displayFullBN } from '~/util';
 import SidelineAlert from '../Common/Alert/SidelineAlert';
+import {
+  ClaimableBeanAssetFragment,
+  FarmWithClaimFormState,
+  FormState,
+} from '../Common/Form';
+import { ZERO_BN } from '~/constants';
+import { FarmerBalances } from '~/state/farmer/balances';
+import FarmModeField from '../Common/Form/FarmModeField';
+
+const FIELD_VALUE = 'claiming' as const;
 
 const uiDescriptions = {
   [ClaimableBeanToken.SPROUTS]: 'Rinsable Sprouts',
@@ -16,48 +24,89 @@ const uiDescriptions = {
   [ClaimableBeanToken.PODS]: 'Harvestable Pods',
 } as const;
 
-const ClaimableAssets: React.FC<{}> = () => {
-  // global state
-  const { total: totalClaimable, assets: claimable } =
-    useFarmerClaimableAssets();
+const ClaimableAssets: React.FC<{
+  balances: Record<string, ClaimableBeanAssetFragment>;
+  farmerBalances: FarmerBalances;
+}> = ({ balances, farmerBalances }) => {
+  const { values, setFieldValue } = useFormikContext<FormState &  FarmWithClaimFormState>();
 
-  // local state
-  const [selected, setSelected] = useState<Record<string, FarmerClaimableBeanAsset>>({});
+  const { assetsWithBalance, allSelected, totalClaiming, disabled } =
+    useMemo(() => {
+      const _disabled = Object.values(balances).every((v) => v.amount.lte(0));
+      const _totalClaiming = Object.values(values.claiming).reduce(
+        (prev, curr) => {
+          if (curr?.amount?.gt(0)) prev = prev.plus(curr.amount);
+          return prev;
+        },
+        ZERO_BN
+      );
+      const _assetsWithBalance = Object.entries(balances).reduce(
+        (prev, [k, v]) => {
+          if (v.amount?.gt(0)) prev[k] = v;
+          return prev;
+        },
+        {} as Record<string, ClaimableBeanAssetFragment>
+      );
+      const _allSelected = Object.keys(_assetsWithBalance).every(
+        (k) => values.claiming[k]
+      );
 
-  // claimable assets map with a balance gt 0
-  const assetsWithBalance = useMemo(() => {
-    const arr = Object.entries(claimable);
-    return arr.reduce<Record<string, FarmerClaimableBeanAsset>>((prev, [k, v]) => {
-      if (v.amount?.gt(0)) prev[k] = v;
-      return prev;
-    }, {});
-  }, [claimable]);
+      return {
+        assetsWithBalance: _assetsWithBalance,
+        allSelected: _allSelected,
+        disabled: _disabled,
+        totalClaiming: _totalClaiming,
+      };
+    }, [balances, values.claiming]);
+
+  const surplus = useMemo(() => {
+    if (totalClaiming.eq(0)) return ZERO_BN;
+    const data = values.tokens[0] || undefined;
+    if (!data) return totalClaiming;
+    if (data.token !== balances[ClaimableBeanToken.BEAN].token) {
+      return totalClaiming;
+    }
+    // if (selectedToken && balances[ClaimableBeanToken.BEAN].token.address === selectedToken.token.address) {
+    //   const beanBalance = farmerBalances?.[selectedToken.token.address]?.[values.balanceFrom] || ZERO_BN;
+
+    //   // FIX ME
+    //   return ZERO_BN;
+    // }
+    // return totalClaiming;
+  }, [balances, totalClaiming, values.tokens]);
 
   // component state functions
-  const handleToggle = (key: ClaimableBeanToken,data: FarmerClaimableBeanAsset) => {
-    if (key in selected) {
-      setSelected((prev) => {
-        delete prev[key];
-        return { ...prev };
-      });
+  const handleToggle = (
+    key: ClaimableBeanToken,
+    data: ClaimableBeanAssetFragment
+  ) => {
+    if (key in values.claiming) {
+      const copy = { ...values.claiming };
+      delete copy[key];
+      if (!Object.keys(copy).length) {
+        setFieldValue('destination', undefined);
+      }
+      setFieldValue(FIELD_VALUE, copy);
     } else {
-      setSelected((prev) => ({ ...prev, [key]: data }));
+      setFieldValue(FIELD_VALUE, {
+        ...values.claiming,
+        [key]: data as ClaimableBeanAssetFragment,
+      });
     }
   };
 
   const handleToggleAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelected({ ...(e.target.checked ? assetsWithBalance : {}) });
+    setFieldValue(FIELD_VALUE, {
+      ...(e.target.checked ? assetsWithBalance : {}),
+    });
+    if (!e.target.checked) {
+      setFieldValue('destination', undefined);
+    }
   };
-
-  // component state
-  const allSelected = Object.keys(assetsWithBalance).every((k) => selected[k]);
-  const disabled = Object.values(claimable).every((v) => v.amount.lte(0));
 
   return (
     <Stack gap={1} width="100%">
-      {/*
-       *Title
-       */}
+      {/* *Title */}
       <Row width="100%" justifyContent="space-between">
         <Typography variant="h4">
           Claimable Assets
@@ -86,17 +135,15 @@ const ClaimableAssets: React.FC<{}> = () => {
           />
         </Row>
       </Row>
-      {/*
-       *Alert
-       */}
-      <SidelineAlert color="success" hide={totalClaimable?.lte(0)}>
+      {/* *Alert */}
+      <SidelineAlert color="success" hide={totalClaiming.lte(0)}>
         <Typography
           color="text.primary"
           variant="bodySmall"
           sx={{ whitespace: 'nowrap' }}
         >
           <Typography component="span" variant="caption" fontWeight="bold">
-            + {displayFullBN(totalClaimable, 2)}
+            + {displayFullBN(totalClaiming, 2)}
           </Typography>{' '}
           <Typography component="span" variant="inherit">
             Beans applied to use on your{' '}
@@ -106,22 +153,35 @@ const ClaimableAssets: React.FC<{}> = () => {
           </Typography>
         </Typography>
       </SidelineAlert>
-      {/*
-       *Selection Cards
-       */}
+      {/* *Selection Cards */}
       <Stack gap={1} width="100%" direction={{ xs: 'column', sm: 'row' }}>
-        {Object.entries(claimable).map(([k, data]) => (
+        {Object.entries(balances).map(([k, data]) => (
           <TokenSelectionCard
             disabled={data.amount.lte(0)}
             key={k}
             token={data.token}
             amount={data.amount}
             title={uiDescriptions[k as ClaimableBeanToken]}
-            selected={k in selected}
+            selected={k in values.claiming}
             toggle={() => handleToggle(k as ClaimableBeanToken, data)}
           />
         ))}
       </Stack>
+      {/* FIX ME */}
+      {surplus && surplus?.gt(0) 
+        ? <FarmModeField 
+            name="destination"
+            infoLabel={
+              <Typography>
+                Send remaining{' '} 
+                <Typography component="span" color="primary.main">
+                  {displayFullBN(surplus, 2)} BEAN{' '}
+                </Typography>
+                to..
+              </Typography>
+            } 
+          />
+        : null}
     </Stack>
   );
 };

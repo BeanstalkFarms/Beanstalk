@@ -2,6 +2,8 @@ import BigNumber from 'bignumber.js';
 
 import { BeanstalkToken, ERC20Token, NativeToken } from '~/classes/Token';
 import { QuoteHandlerResult } from '~/hooks/ledger/useQuote';
+import { FarmToMode } from '~/lib/Beanstalk/Farm';
+import { BalanceFrom } from './BalanceOriginField';
 
 /**
  *
@@ -14,14 +16,32 @@ export type FormState = {
 };
 
 /**
- * 
+ *
  */
 export type ClaimableBeanAssetFormState = {
   /** */
   totalClaimable: BigNumber;
   /** */
-  claiming: { [k: string]: ClaimableBeanAssetsFormState };
+  claiming: { [k: string]: ClaimableBeanAssetFragment };
 };
+
+/**
+ *
+ */
+export type BalanceFromFragment = {
+  balanceFrom: BalanceFrom;
+};
+
+/**
+ *
+ */
+export type FarmToModeFragment = {
+  destination?: FarmToMode;
+};
+
+export type FarmWithClaimFormState = BalanceFromFragment &
+  FarmToModeFragment &
+  ClaimableBeanAssetFormState;
 
 /// FIXME: use type composition instead of this
 export type FormStateWithPlotSelect = FormState & {
@@ -39,8 +59,8 @@ export type FormTokenState =
     /** The amount of the selected token, usually input by the user.
      * @value undefined if the input is empty */
     amount: BigNumber | undefined;
-  } & /// Quoting
-  {
+  } & {
+    /// Quoting
     /** Whether we're currently looking up a quoted `amountOut` for this token. */
     quoting?: boolean;
   } & Partial<QuoteHandlerResult>;
@@ -83,7 +103,7 @@ export type PlotSettingsFragment = {
   showRangeSelect: boolean;
 };
 
-export type ClaimableBeanAssetsFormState = {
+export type ClaimableBeanAssetFragment = {
   /**
    * claimable bean token (BEAN, PODS, or SPROUTS)
    */
@@ -92,7 +112,7 @@ export type ClaimableBeanAssetsFormState = {
    * amount to claim from (claimable beans | harvestable pods | rinsable sprouts)
    */
   amount: BigNumber;
-}
+};
 
 // ----------------------------------------------------------------------
 

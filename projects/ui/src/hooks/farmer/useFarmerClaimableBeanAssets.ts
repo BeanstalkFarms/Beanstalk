@@ -1,7 +1,5 @@
 import BigNumber from 'bignumber.js';
 import { useMemo } from 'react';
-import { useFetchFarmerBarn } from '../../state/farmer/barn/updater';
-import Token from '~/classes/Token';
 import { ZERO_BN } from '~/constants';
 import {
   BEAN as BEAN_T,
@@ -9,31 +7,15 @@ import {
   SPROUTS as SPROUTS_T,
 } from '~/constants/tokens';
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
-import { useFetchFarmerField } from '~/state/farmer/field/updater';
-import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import useFarmerFertilizer from './useFarmerFertilizer';
 import useFarmerField from './useFarmerField';
+import { ClaimableBeanAssetFragment } from '~/components/Common/Form';
 
 export enum ClaimableBeanToken {
   BEAN = 'BEAN',
   SPROUTS = 'SPROUTS',
   PODS = 'PODS',
 }
-
-export type FarmerClaimableBeanAsset = {
-  /**
-   * claimable token
-   */
-  token: Token;
-  /**
-   * claimable amount asset
-   */
-  amount: BigNumber;
-  // /**
-  //  * ui description of claimable token
-  //  */
-  // uiDescription: string;
-};
 
 const normalize = (v: BigNumber | undefined) => (v && v.gt(0) ? v : ZERO_BN);
 
@@ -49,32 +31,11 @@ export default function useFarmerClaimableBeanAssets(): {
   /**
    * mapping of claimable assets that are 'claimed' in Bean
    */
-  assets: Record<ClaimableBeanToken, FarmerClaimableBeanAsset>;
-  /**
-   *
-   */
-  fetch: {
-    silo: () => Promise<void>;
-    field: () => Promise<void>;
-    barn: () => Promise<void>;
-  };
+  assets: Record<ClaimableBeanToken, ClaimableBeanAssetFragment>;
 } {
   const farmerBarn = useFarmerFertilizer();
   const farmerField = useFarmerField();
   const farmerSilo = useFarmerSilo();
-
-  const [fetchFarmerSilo] = useFetchFarmerSilo();
-  const [fetchFarmerField] = useFetchFarmerField();
-  const [fetchFarmerBarn] = useFetchFarmerBarn();
-
-  const fetch = useMemo(
-    () => ({
-      silo: fetchFarmerSilo,
-      field: fetchFarmerField,
-      barn: fetchFarmerBarn,
-    }),
-    [fetchFarmerBarn, fetchFarmerField, fetchFarmerSilo]
-  );
 
   return useMemo(() => {
     const claimableBean = normalize(
@@ -100,10 +61,10 @@ export default function useFarmerClaimableBeanAssets(): {
           amount: claimableBean,
         },
       },
-      fetch,
+      // fetch,
     };
   }, [
-    fetch,
+    // fetch,
     farmerSilo.balances,
     farmerBarn.fertilizedSprouts,
     farmerField.harvestablePods,

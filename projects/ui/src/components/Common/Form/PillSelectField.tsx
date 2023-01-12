@@ -19,7 +19,9 @@ export type PillSelectFieldProps = {
   /** Field name */
   name: string;
   /** Field label */
-  label: string;
+  label: string | JSX.Element;
+  /** pill description override. otherwise use label prop  */
+  infoLabel?: string | JSX.Element;
   /** Field label props */
   labelProps?: Omit<TypographyProps, 'color'>
   /** Tooltip */
@@ -32,6 +34,7 @@ const PillSelectField : FC<PillSelectFieldProps> = ({
   options,
   name,
   label,
+  infoLabel,
   labelProps,
   tooltip,
   onChange,
@@ -56,6 +59,7 @@ const PillSelectField : FC<PillSelectFieldProps> = ({
             pill={pill}
             pl={0.5}
             labelProps={labelProps}
+            infoLabel={infoLabel}
           >
             {/* Dialog contents */}
             <Stack gap={1}>

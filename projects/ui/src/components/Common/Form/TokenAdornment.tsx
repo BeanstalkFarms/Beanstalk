@@ -13,8 +13,8 @@ import Row from '~/components/Common/Row';
 import AddressIcon from '../AddressIcon';
 
 import { FC } from '~/types';
-import { BalanceOrigin } from './TokenInputField';
 import { hexToRgba } from '~/util/ui';
+import { BalanceFrom } from './BalanceOriginField';
 
 export type TokenAdornmentTypeProps = {
   adornmentVariant?: 'default' | 'outlined-compact';
@@ -22,7 +22,7 @@ export type TokenAdornmentTypeProps = {
 
 export type TokenAdornmentProps = {
   token: Token;
-  balanceOrigin?: BalanceOrigin;
+  balanceFrom?: BalanceFrom;
   buttonLabel?: string | JSX.Element;
   iconSize?: keyof typeof IconSize;
   downArrowIconSize?: keyof typeof IconSize;
@@ -31,7 +31,7 @@ export type TokenAdornmentProps = {
 const TokenAdornment: FC<TokenAdornmentProps & TokenAdornmentTypeProps> = ({
   // Config
   adornmentVariant: _variant = 'default',
-  balanceOrigin,
+  balanceFrom,
   token,
   // Button
   size,
@@ -66,18 +66,18 @@ const TokenAdornment: FC<TokenAdornmentProps & TokenAdornmentTypeProps> = ({
           py: isDefaultVariant ? undefined : 0.1,
           height: isDefaultVariant ? undefined : 'unset',
           border: `1px solid ${isDefaultVariant ? 'transparent' : 'text.light'}`,
-          backgroundColor: isDefaultVariant && balanceOrigin ? BeanstalkPalette.lightestBlue : 'transparent !important',
+          backgroundColor: isDefaultVariant && balanceFrom ? BeanstalkPalette.lightestBlue : 'transparent !important',
           boxSizing: 'border-box',
           ...props.sx,
         }}
       >
         <Row gap={0.5}>
-          {balanceOrigin !== undefined ? (
+          {balanceFrom !== undefined ? (
             <>
-              {balanceOrigin !== BalanceOrigin.FARM ? (
+              {balanceFrom !== BalanceFrom.INTERNAL ? (
                 <AddressIcon size={IconSize[iconSize]} />
               ) : null}
-              {balanceOrigin !== BalanceOrigin.CIRCULATING ? (
+              {balanceFrom !== BalanceFrom.EXTERNAL ? (
                 <Typography>🚜</Typography>
               ) : null}
               <Box

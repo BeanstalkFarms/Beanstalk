@@ -2,7 +2,12 @@ import { Button, Typography } from '@mui/material';
 import React from 'react';
 import AddressIcon from '../AddressIcon';
 import Row from '../Row';
-import { BalanceOrigin } from './TokenInputField';
+
+export enum BalanceFrom {
+  INTERNAL = 'internal',
+  EXTERNAL = 'external',
+  TOTAL = 'total',
+}
 
 const selectedSx = {
   color: 'primary.main',
@@ -17,21 +22,21 @@ const unselectedSx = {
 
 const SIZE = 20;
 
-const options = [
-  BalanceOrigin.COMBINED,
-  BalanceOrigin.CIRCULATING,
-  BalanceOrigin.FARM,
-] as const;
+const options: BalanceFrom[] = [
+  BalanceFrom.TOTAL,
+  BalanceFrom.EXTERNAL,
+  BalanceFrom.INTERNAL,
+];
 
 const BalanceOriginField: React.FC<{
-  selected: BalanceOrigin;
-  setSelected: (v: BalanceOrigin) => void;
-}> = ({ selected, setSelected }) => {
-  console.log('selected: ', selected);
+  balanceFrom: BalanceFrom;
+  setBalanceFrom: (v: BalanceFrom) => void;
+}> = ({ balanceFrom, setBalanceFrom }) => {
+  console.log('selected: ', balanceFrom);
   return (
     <Row gap={1}>
       {options.map((option) => {
-        const isSelected = selected === option;
+        const isSelected = balanceFrom === option;
         return (
           <Button
             key={option.toString()}
@@ -50,13 +55,13 @@ const BalanceOriginField: React.FC<{
               },
               ...(isSelected ? selectedSx : unselectedSx),
             }}
-            onClick={() => setSelected(option)}
+            onClick={() => setBalanceFrom(option)}
           >
             <Row gap={0.5}>
-              {option !== BalanceOrigin.FARM ? (
+              {option !== BalanceFrom.INTERNAL ? (
                 <AddressIcon size={SIZE} width={SIZE} height={SIZE} />
               ) : null}
-              {option !== BalanceOrigin.CIRCULATING ? (
+              {option !== BalanceFrom.EXTERNAL ? (
                 <Typography variant="body1">🚜</Typography>
               ) : null}
               <Typography

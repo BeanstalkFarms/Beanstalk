@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Accordion, AccordionDetails, Box, Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
@@ -10,7 +10,7 @@ import { BEAN, CRV3, DAI, ETH, SEEDS, STALK, UNRIPE_BEAN, UNRIPE_BEAN_CRV3, USDC
 import TokenSelectDialog, { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import TokenOutputField from '~/components/Common/Form/TokenOutputField';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
-import { ClaimableBeanAssetFormState, FormState, SettingInput, TxnSettings } from '~/components/Common/Form';
+import { ClaimableBeanAssetFragment, FarmWithClaimFormState, FormState, SettingInput, TxnSettings } from '~/components/Common/Form';
 import TokenQuoteProvider from '~/components/Common/Form/TokenQuoteProvider';
 import TxnPreview from '~/components/Common/Form/TxnPreview';
 import BeanstalkSDK from '~/lib/Beanstalk';
@@ -43,19 +43,20 @@ import useFarm from '~/hooks/sdk/useFarm';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import ClaimableAssets from '../ClaimableAssets';
-import { BalanceOrigin } from '~/components/Common/Form/TokenInputField';
+
 import useFarmerClaimableBeanAssets, { 
-  ClaimableBeanToken, 
-  FarmerClaimableBeanAsset 
+  ClaimableBeanToken 
 } from '~/hooks/farmer/useFarmerClaimableBeanAssets';
+import { BalanceFrom } from '~/components/Common/Form/BalanceOriginField';
 
 // -----------------------------------------------------------------------
 
-type DepositFormValues = FormState & ClaimableBeanAssetFormState & {
-  settings: {
-    slippage: number;
-  }
-};
+type DepositFormValues = FormState &
+FarmWithClaimFormState & {
+    settings: {
+      slippage: number;
+    };
+  };
 
 // -----------------------------------------------------------------------
 
@@ -67,12 +68,13 @@ const DepositForm : FC<
     balances: FarmerBalances;
     contract: ethers.Contract;
     handleQuote: QuoteHandler;
-    claimableBalances: Record<ClaimableBeanToken, FarmerClaimableBeanAsset>;
+    claimableBalances: Record<ClaimableBeanToken, ClaimableBeanAssetFragment>;
   }
 > = ({
   // Custom
   tokenList,
   whitelistedToken,
+  claimableBalances,
   amountToBdv,
   balances,
   contract,
@@ -88,6 +90,8 @@ const DepositForm : FC<
     values.tokens,
     amountToBdv,
   );
+
+  console.log(values);
 
   /// Derived
   const isReady = bdv.gt(0);
@@ -111,7 +115,9 @@ const DepositForm : FC<
     ]);
   }, [values.tokens, setFieldValue]);
 
-  const [origin, setOrigin] = useState(BalanceOrigin.COMBINED);
+  const handleSetBalanceFrom = useCallback((_balanceFrom: BalanceFrom) => {
+    setFieldValue('balanceFrom', _balanceFrom);
+  }, [setFieldValue]);
 
   return (
     <Form noValidate autoComplete="off">
@@ -124,8 +130,8 @@ const DepositForm : FC<
         tokenList={tokenList}
         mode={TokenSelectMode.SINGLE}
         title="Assets"
-        balanceOrigin={origin}
-        setBalanceOrigin={(v: BalanceOrigin) => setOrigin(v)}
+        balanceFrom={values.balanceFrom}
+        setBalanceFrom={handleSetBalanceFrom}
       />
       <Stack gap={1}>
         {values.tokens.map((tokenState, index) => (
@@ -139,11 +145,13 @@ const DepositForm : FC<
             handleQuote={handleQuote}
             inputVariant="wrapped"
             adornmentVariant="outlined-compact"
-            balanceOrigin={origin}
-            setBalanceOrigin={(v: BalanceOrigin) => setOrigin(v)}
+            balanceFrom={values.balanceFrom}
           />
         ))}
-        <ClaimableAssets />
+        <ClaimableAssets
+          balances={claimableBalances}
+          farmerBalances={balances}
+        />
         {isReady ? (
           <>
             <TxnSeparator />
@@ -307,7 +315,9 @@ const Deposit : FC<{
       },
     ],
     totalClaimable: claimable.total,
-    claiming: {}
+    claiming: {},
+    balanceFrom: BalanceFrom.TOTAL,
+    destination: undefined,
   }), [baseToken, claimable.total]);
 
   /// Handlers
