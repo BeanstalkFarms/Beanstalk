@@ -13,7 +13,6 @@
   "dependencies": {
     "@apollo/client": "^3.4.10",
     "@beanstalk/protocol": "workspace:*",
-    "@curvefi/api": "^2.1.0",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@middy/http-cors": "^3.5.0",
