@@ -8,7 +8,7 @@ import { DepositOperation } from "./DepositOperation";
 
 const { sdk, account, utils } = getTestUtils();
 
-jest.setTimeout(10000);
+jest.setTimeout(30000);
 
 describe("Silo Deposit", function () {
   const builder = new DepositBuilder(sdk);

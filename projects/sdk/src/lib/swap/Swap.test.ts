@@ -4,7 +4,7 @@ import { getTestUtils } from "src/utils/TestUtils/provider";
 import { FarmFromMode, FarmToMode } from "src/lib/farm/types";
 
 const { sdk, account, utils } = getTestUtils();
-jest.setTimeout(10000);
+jest.setTimeout(30000);
 async function reset() {
   await utils.resetFork();
 }

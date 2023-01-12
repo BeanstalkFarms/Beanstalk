@@ -1,6 +1,12 @@
 {
   "name": "subgraph-bean",
-  "license": "MIT License",
+  "license": "MIT",
+  "description": "A subgraph for indexing events emitted by the Bean ERC-20 token.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BeanstalkFarms/Beanstalk.git",
+    "directory": "projects/subgraph-bean"
+  },
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",

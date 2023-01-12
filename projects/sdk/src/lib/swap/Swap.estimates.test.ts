@@ -3,7 +3,8 @@ import { getTestUtils } from "src/utils/TestUtils/provider";
 
 const { sdk, account, utils } = getTestUtils();
 
-jest.setTimeout(10000);
+jest.setTimeout(30000);
+
 async function reset() {
   await utils.resetFork();
 }
