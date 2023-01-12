@@ -21,14 +21,11 @@ jobs:
         with:
           path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-modules-
       - name: Install Dependencies
-        if: steps.nodeg-modules-cache.outputs.cache-hit != 'true'
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
       - name: Generate Typedefs
-        run: yarn generate
-        working-directory: projects/sdk
+        run: yarn sdk:generate
       - name: Install rust
         uses: actions-rs/toolchain@v1
         with:
@@ -42,9 +39,8 @@ jobs:
           version: nightly
       # TODO: Cache Anvil RPC calls between runs to speed up tests
       - name: Launch Anvil
-        run: anvil --fork-url $ANVIL_FORK_URL --chain-id 1337 --fork-block-number $ANVIL_BLOCK_NUMBER &
+        run: anvil --fork-url $ANVIL_FORK_URL --chain-id 1337 &
         env:
           ANVIL_FORK_URL: ${{ secrets.ANVIL_FORK_URL }}
-          ANVIL_BLOCK_NUMBER: 16386192
       - run: yarn sdk:test
         working-directory: projects/sdk
