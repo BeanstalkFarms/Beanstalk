@@ -101,7 +101,6 @@
     "@typescript-eslint/eslint-plugin": "4.13.0",
     "@typescript-eslint/parser": "4.13.0",
     "@visx/gradient": "^2.10.0",
-    "@visx/mock-data": "^2.1.2",
     "@vitejs/plugin-react": "^2.0.0",
     "eslint": "^7.32.0",
     "eslint-config-airbnb": "18.2.1",
@@ -120,8 +119,7 @@
     "vite": "^3.0.4",
     "vite-plugin-html": "^3.2.0",
     "vite-plugin-react-remove-attributes": "1.0.3",
-    "vitest": "^0.21.0",
-    "webpack-cli": "^4.9.2"
+    "vitest": "^0.21.0"
   },
   "scripts": {
     "start": "vite --port 4173",
