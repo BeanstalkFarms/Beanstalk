@@ -336,7 +336,7 @@ const Deposit : FC<{
     totalClaimable: ZERO_BN,
     claiming: {},
     balanceFrom: BalanceFrom.TOTAL,
-    destination: undefined,
+    destination: FarmToMode.INTERNAL,
   }), [baseToken]);
 
   /// Handlers

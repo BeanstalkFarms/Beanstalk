@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, Link, Stack, Box } from '@mui/material';
 import { StyledDialog, StyledDialogActions, StyledDialogContent, StyledDialogTitle } from '~/components/Common/Dialog';
@@ -10,6 +10,8 @@ import { FarmerSilo } from '~/state/farmer/silo';
 import { BeanstalkPalette, FontSize, IconSize } from '../../App/muiTheme';
 import Row from '~/components/Common/Row';
 import BalanceFromRow, { BalanceFrom } from './BalanceFromRow';
+import useGetChainToken from '~/hooks/chain/useGetChainToken';
+import { ETH } from '~/constants/tokens';
 
 export enum TokenSelectMode { MULTI, SINGLE }
 
@@ -91,6 +93,10 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
   // FarmWithClaim props
   applicableBalances,
 }) => {
+  /// Chain Constants
+  const getChainToken = useGetChainToken();
+  const Eth           = getChainToken(ETH);
+
   /** keep an internal copy of selected tokens */
   const [selectedInternal, setSelectedInternal] = useState<Set<Token>>(new Set<Token>());
 
@@ -150,6 +156,13 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
     return onClickSubmit(new Set([_token])); // submit just this token
   }, [mode, onClickSubmit, toggle]);
 
+  const filteredTokenList = useMemo(() => {
+    if (balanceFrom === BalanceFrom.INTERNAL) {
+      return tokenList.filter((tk) => tk !== Eth);
+    }
+    return tokenList;
+  }, [Eth, balanceFrom, tokenList]);
+
   if (!selectedInternal) return null;
 
   return (
@@ -184,8 +197,7 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
           * Tokens
           */}
         <List sx={{ p: 0 }}>
-          {tokenList 
-            ? tokenList.map((_token) => {
+          {filteredTokenList.map((_token) => {
               const tokenBalance = getBalance(_token.address);
               const applicableBalance = getApplicableBalances(_token.address);
               return (
@@ -240,7 +252,7 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
                   </ListItemButton>
                 </ListItem>
               ); 
-            }) : null}
+            })}
           {/**
             * Farm + Circulating Balances notification
             */}

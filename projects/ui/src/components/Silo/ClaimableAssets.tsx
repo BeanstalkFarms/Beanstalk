@@ -154,7 +154,7 @@ const ClaimableAssets: React.FC<{
           </Typography>
           <Typography component="span" variant="inherit" fontStyle="italic">
             {/* TODO FIX ME TO BE DYNAMIC */}
-            {copyText.MODES[values.destination || FarmToMode.EXTERNAL]} 
+            {copyText.MODES[values.destination || FarmToMode.INTERNAL]} 
           </Typography>
         </Typography>
       </SidelineAlert>
