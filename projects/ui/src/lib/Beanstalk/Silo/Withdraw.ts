@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js';
 import { Token } from '~/classes';
 import { FormState } from '~/components/Common/Form';
 import { DepositCrate } from '~/state/farmer/silo';
+import { STALK_PER_SEED_PER_SEASON } from '~/util';
 import { sortCratesBySeason } from './Utils';
 
 /**
@@ -41,7 +42,7 @@ export function selectCratesToWithdraw(
     //  'base stalk' associated with the initial deposit is forfeited
     //  'accrued stalk' earned from Seeds over time is forfeited.
     const baseStalkToRemove     = token.getStalk(crateBDVToRemove); // more or less, BDV * 1
-    const accruedStalkToRemove  = crateSeedsToRemove.times(elapsedSeasons).times(0.0001); // FIXME: use constant
+    const accruedStalkToRemove  = crateSeedsToRemove.times(elapsedSeasons).times(STALK_PER_SEED_PER_SEASON); // FIXME: use constant
     const crateStalkToRemove    = baseStalkToRemove.plus(accruedStalkToRemove);
 
     // Update totals
