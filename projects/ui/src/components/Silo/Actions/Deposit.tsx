@@ -45,7 +45,7 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import ClaimableAssets from '../ClaimableAssets';
 
 import useFarmerClaimableBeanAssets from '~/hooks/farmer/useFarmerClaimableBeanAssets';
-import { BalanceFrom } from '~/components/Common/Form/BalanceOriginField';
+import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 
 // -----------------------------------------------------------------------
 
@@ -165,6 +165,7 @@ const DepositForm : FC<
             inputVariant="wrapped"
             adornmentVariant="outlined-compact"
             balanceFrom={values.balanceFrom}
+            additionalBalance={applicableBalances[tokenState.token.address]?.applied}
           />
         ))}
         <ClaimableAssets

@@ -18,7 +18,7 @@ import FieldWrapper from './FieldWrapper';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import { ZERO_BN } from '~/constants';
-import { BalanceFrom } from './BalanceOriginField';
+import { BalanceFrom } from './BalanceFromRow';
 
 export type TokenInputCustomProps = {
   /**
@@ -30,6 +30,10 @@ export type TokenInputCustomProps = {
    *
    */
   balance?: FarmerBalances[string] | BigNumber | undefined;
+  /**
+   * 
+   */
+  additionalBalance?: BigNumber | undefined;
   /**
    *
    */
@@ -143,6 +147,7 @@ const TokenInput: FC<
   /// Balances
   token,
   balance: _balance,
+  additionalBalance,
   balanceLabel = 'Balance',
   hideBalance = false,
   quote,
@@ -192,13 +197,15 @@ const TokenInput: FC<
   // submitting, or if a zero balance is provided.
   // Otherwise fall back to the disabled prop.
   const isInputDisabled = (
-    disabled
-    || (balance && balance.eq(0))
-    || form.isSubmitting
+    disabled || (
+      (balance && balance.eq(0)) && 
+      (!additionalBalance || additionalBalance.lte(0))
+    ) || form.isSubmitting
   );
 
   const clamp = useCallback((amount: BigNumber | null) => {
     const max = _max === 'use-balance' ? balance : _max; // fallback to balance
+    const actualMax = additionalBalance ? max?.plus(additionalBalance || ZERO_BN) : max;
     console.debug(`[TokenInputField@${field.name}] clamp: `, {
       amount: amount?.toString(),
       max: max?.toString(),
@@ -207,9 +214,9 @@ const TokenInput: FC<
     if (!amount) return undefined; // if no amount, exit
     if (min?.gt(amount)) return min; // clamp @ min
     if (!allowNegative && amount?.lt(ZERO_BN)) return ZERO_BN; // clamp negative 
-    if (max?.lt(amount)) return max; // clamp @ max
+    if (actualMax?.lt(amount)) return actualMax; // clamp @ max
     return amount; // no max; always return amount
-  }, [_max, balance, field.name, min, allowNegative]);
+  }, [_max, balance, additionalBalance, field.name, min, allowNegative]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     /// If e.target.value is non-empty string, parse it into a BigNumber.
@@ -242,7 +249,7 @@ const TokenInput: FC<
   const handleMax = useCallback(() => {
     console.debug('[TokenInputField] handleMax');
     if (balance) {
-      const clampedValue = clamp(balance);
+      const clampedValue = clamp(balance.plus(additionalBalance || ZERO_BN));
       console.debug('[TokenInputField] handleMax: balance exists', {
         balance,
         clampedValue,
@@ -250,7 +257,7 @@ const TokenInput: FC<
       form.setFieldValue(field.name, clampedValue);
       onChange?.(clampedValue);  // bubble up if necessary
     }
-  }, [form, field.name,balance, onChange, clamp]);
+  }, [balance, clamp, additionalBalance, form, field.name, onChange]);
 
   // Ignore scroll events on the input. Prevents
   // accidentally scrolling up/down the number input.
@@ -336,7 +343,7 @@ const TokenInput: FC<
               {quote}
             </Typography>
           </Row>
-          {(balance && !hideBalance) && (
+          {((balance || additionalBalance?.gt(0)) && !hideBalance) && (
             <>
               <Tooltip title={balanceTooltip}>
                 <Typography 
@@ -353,6 +360,11 @@ const TokenInput: FC<
                         : `${displayFullBN(balance, 2)}`
                       : '0'
                   )}
+                  {additionalBalance?.gt(0) ? (
+                    <Typography component="span" color="primary">
+                      &nbsp;+ {displayFullBN(additionalBalance, token?.displayDecimals || 2)}
+                    </Typography>
+                  ) : null}
                 </Typography>
               </Tooltip>
               <Typography

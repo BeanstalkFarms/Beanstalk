@@ -9,7 +9,7 @@ import { ApplicableBalance, FarmerBalances } from '~/state/farmer/balances';
 import { FarmerSilo } from '~/state/farmer/silo';
 import { BeanstalkPalette, FontSize, IconSize } from '../../App/muiTheme';
 import Row from '~/components/Common/Row';
-import BalanceOriginField, { BalanceFrom } from './BalanceOriginField';
+import BalanceFromRow, { BalanceFrom } from './BalanceFromRow';
 
 export enum TokenSelectMode { MULTI, SINGLE }
 
@@ -59,10 +59,17 @@ const balanceFromText = {
   [BalanceFrom.TOTAL]: 'Displaying Total Farm and Circulating Balances.',
 };
 
-const balanceColors = { 
-  0: 'text.primary', 
-  1: 'primary', 
-  2: 'text.tertiary' 
+const listItemSx = {
+  // ListItem is used elsewhere so we define here instead of in muiTheme.ts
+  '& .MuiListItemText-primary': {
+    fontSize: FontSize['1xl'],
+    lineHeight: '1.875rem'
+  },
+  '& .MuiListItemText-secondary': {
+    fontSize: FontSize.base,
+    lineHeight: '1.25rem',
+    color: BeanstalkPalette.lightGrey
+  }
 };
 
 const TokenSelectDialog : TokenSelectDialogC = React.memo(({
@@ -160,20 +167,19 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
       </StyledDialogTitle>
       <StyledDialogContent sx={{ pb: mode === TokenSelectMode.MULTI ? 0 : 1, pt: 0 }}>
         {/**
-         * Balance Origin
+         * Balance From
          */}
-        {setBalanceFrom 
-          ? (
-            <Stack pt={1.5} pb={2}>
-              <BalanceOriginField 
-                balanceFrom={balanceFrom} 
-                setBalanceFrom={setBalanceFrom} 
-              />
-              <Box 
-                pt={2}
-                sx={{ borderBottom: '0.5px solid', borderColor: 'text.light', width: '100%' }} 
-              />
-            </Stack>) : null}
+        {setBalanceFrom ? (
+          <Stack pt={1.5} pb={2}>
+            <BalanceFromRow 
+              balanceFrom={balanceFrom} 
+              setBalanceFrom={setBalanceFrom} 
+            />
+            <Box 
+              pt={2}
+              sx={{ borderBottom: '0.5px solid', borderColor: 'text.light', width: '100%' }} 
+            />
+          </Stack>) : null}
         {/**
           * Tokens
           */}
@@ -188,19 +194,7 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
                   color="primary"
                   disablePadding
                   onClick={onClickItem(_token)}
-                  sx={{
-                    // ListItem is used elsewhere so we define here
-                    // instead of in muiTheme.ts
-                    '& .MuiListItemText-primary': {
-                      fontSize: FontSize['1xl'],
-                      lineHeight: '1.875rem'
-                    },
-                    '& .MuiListItemText-secondary': {
-                      fontSize: FontSize.base,
-                      lineHeight: '1.25rem',
-                      color: BeanstalkPalette.lightGrey
-                    }
-                  }}
+                  sx={listItemSx}
                 >
                   <ListItemButton disableRipple selected={selectedInternal.has(_token)}>
                     {/* Top-level button stack */}

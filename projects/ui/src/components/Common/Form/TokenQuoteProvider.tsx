@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { CircularProgress, Typography } from '@mui/material';
 import { useFormikContext } from 'formik';
 import BigNumber from 'bignumber.js';
-import TokenInputField, {  TokenInputProps, TokenInputVariantProps } from '~/components/Common/Form/TokenInputField';
+import TokenInputField, {  TokenInputProps } from '~/components/Common/Form/TokenInputField';
 import TokenAdornment, { TokenAdornmentProps, TokenAdornmentTypeProps } from '~/components/Common/Form/TokenAdornment';
 import useQuote, { QuoteHandler, QuoteSettings } from '~/hooks/ledger/useQuote';
 import Token, { ERC20Token, NativeToken } from '~/classes/Token';
@@ -37,7 +37,6 @@ type TokenQuoteProviderCustomProps = {
 
 type TokenQuoteProviderProps = (
   TokenQuoteProviderCustomProps
-  & TokenInputVariantProps // pass { balanceOrigin, inputVariant } to TokenInputField 
   & TokenAdornmentTypeProps // pass { adornmentVariant } to TokenAdornment
   & Partial<TokenInputProps>
 );

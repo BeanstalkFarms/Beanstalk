@@ -3,7 +3,7 @@ import BigNumber from 'bignumber.js';
 import { BeanstalkToken, ERC20Token, NativeToken } from '~/classes/Token';
 import { QuoteHandlerResult } from '~/hooks/ledger/useQuote';
 import { FarmToMode } from '~/lib/Beanstalk/Farm';
-import { BalanceFrom } from './BalanceOriginField';
+import { BalanceFrom } from './BalanceFromRow';
 
 /**
  *
@@ -31,6 +31,13 @@ export type ClaimableBeanAssetFormState = {
 export type BalanceFromFragment = {
   balanceFrom: BalanceFrom;
 };
+
+export type AdditionalBalanceFragment = {
+  /** */
+  additionMax: BigNumber;
+  /** */
+  additionApplied: BigNumber;
+}
 
 /**
  *

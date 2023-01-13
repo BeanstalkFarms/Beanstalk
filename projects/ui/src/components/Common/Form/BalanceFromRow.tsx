@@ -28,7 +28,7 @@ const options: BalanceFrom[] = [
   BalanceFrom.INTERNAL,
 ];
 
-const BalanceOriginField: React.FC<{
+const BalanceFromRow: React.FC<{
   balanceFrom: BalanceFrom;
   setBalanceFrom: (v: BalanceFrom) => void;
 }> = ({ balanceFrom, setBalanceFrom }) => {
@@ -78,4 +78,4 @@ const BalanceOriginField: React.FC<{
   );
 };
 
-export default BalanceOriginField;
+export default BalanceFromRow;

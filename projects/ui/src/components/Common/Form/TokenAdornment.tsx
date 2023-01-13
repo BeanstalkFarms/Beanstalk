@@ -14,7 +14,7 @@ import AddressIcon from '../AddressIcon';
 
 import { FC } from '~/types';
 import { hexToRgba } from '~/util/ui';
-import { BalanceFrom } from './BalanceOriginField';
+import { BalanceFrom } from './BalanceFromRow';
 
 export type TokenAdornmentTypeProps = {
   adornmentVariant?: 'default' | 'outlined-compact';
