@@ -10,6 +10,7 @@ import "../LibAppStorage.sol";
 import "../../C.sol";
 import "./LibUnripeSilo.sol";
 import "./LibLegacyTokenSilo.sol";
+import "~/libraries/LibSafeMathSigned128.sol";
 
 /**
  * @title LibTokenSilo
@@ -21,6 +22,9 @@ import "./LibLegacyTokenSilo.sol";
  */
 library LibTokenSilo {
     using SafeMath for uint256;
+    using SafeMath for int128;
+    using SafeMath for uint32;
+    using LibSafeMathSigned128 for int128;
 
     //////////////////////// EVENTS ////////////////////////
 
@@ -30,7 +34,7 @@ library LibTokenSilo {
     event AddDeposit(
         address indexed account,
         address indexed token,
-        uint32 season,
+        int32 grownStalkPerBdv,
         uint256 amount,
         uint256 bdv
     );
@@ -69,11 +73,11 @@ library LibTokenSilo {
     function deposit(
         address account,
         address token,
-        uint32 season,
+        int32 grownStalkPerBdv,
         uint256 amount
     ) internal returns (uint256, uint256) {
         uint256 bdv = beanDenominatedValue(token, amount);
-        return depositWithBDV(account, token, season, amount, bdv);
+        return depositWithBDV(account, token, grownStalkPerBdv, amount, bdv);
     }
 
     /**
@@ -102,8 +106,8 @@ library LibTokenSilo {
         addDepositToAccount(account, token, grownStalkPerBdv, amount, bdv); // Add to Account
 
         return (
-            bdv.mul(s.ss[token].seeds),
-            bdv.mul(s.ss[token].stalk)
+            bdv.mul(s.ss[token].stalkPerBdvPerSeason), //formerly seeds
+            bdv.mul(s.ss[token].stalkPerBdv) //formerly stalk
         );
     }
 
@@ -129,10 +133,10 @@ library LibTokenSilo {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        s.a[account].deposits[token][cumulativeGrownStalkPerBdv].amount += uint128(amount);
-        s.a[account].deposits[token][cumulativeGrownStalkPerBdv].bdv += uint128(bdv);
+        s.a[account].deposits[token][grownStalkPerBdv].amount += uint128(amount); //need safecast here?
+        s.a[account].deposits[token][grownStalkPerBdv].bdv += uint128(bdv); //need safecast here?
 
-        emit AddDeposit(account, token, cumulativeGrownStalkPerBdv, amount, bdv);
+        emit AddDeposit(account, token, grownStalkPerBdv, amount, bdv);
     }
 
     //////////////////////// REMOVE DEPOSIT ////////////////////////
@@ -197,7 +201,7 @@ library LibTokenSilo {
         if (amount > crateAmount) {
             amount -= crateAmount;
             
-            uint128 season = LibLegacyTokenSilo.grownStalkPerBdvToSeason(grownStalkPerBdv);
+            uint32 season = LibLegacyTokenSilo.grownStalkPerBdvToSeason(IERC20(token), grownStalkPerBdv);
             LibLegacyTokenSilo.removeDepositFromAccount(account, token, season, amount);
         }
     }
@@ -258,27 +262,27 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         amount = s.a[account].deposits[token][grownStalkPerBdv].amount;
         bdv = s.a[account].deposits[token][grownStalkPerBdv].bdv;
-        if (LibLegacyTokenSilo.isDepositSeason(token, grownStalkPerBdv)) {
+        if (LibLegacyTokenSilo.isDepositSeason(IERC20(token), grownStalkPerBdv)) {
             (uint legacyAmount, uint legacyBdv) =
-                LibLegacyTokenSilo.tokenDeposit(account, token, LibLegacyTokenSilo.grownStalkPerBdvToSeason(grownStalkPerBdv));
+                LibLegacyTokenSilo.tokenDeposit(account, address(token), LibLegacyTokenSilo.grownStalkPerBdvToSeason(IERC20(token), grownStalkPerBdv));
             amount = amount.add(legacyAmount);
             bdv = bdv.add(legacyBdv);
         }
     }
     /**
-     * @dev Get the number of Seeds per BDV for a whitelisted token.
+     * @dev Get the number of Stalk per BDV per Season for a whitelisted token. Formerly just seeds.
      */
-    function seeds(address token) internal view returns (uint256) {
+    function stalkPerBdvPerSeason(address token) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return uint256(s.ss[token].seeds);
+        return uint256(s.ss[token].stalkPerBdvPerSeason);
     }
 
     /**
-     * @dev Get the number of Stalk per BDV for a whitelisted token.
+     * @dev Get the number of Stalk per BDV for a whitelisted token. Formerly just stalk.
      */
-    function stalk(address token) internal view returns (uint256) {
+    function stalkPerBdv(address token) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return uint256(s.ss[token].stalk);
+        return uint256(s.ss[token].stalkPerBdv);
     }
 
     function cumulativeGrownStalkPerBdv(IERC20 token)
@@ -288,8 +292,8 @@ library LibTokenSilo {
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // SiloSettings storage ss = s.ss[token]; //tried to use this, but I get `DeclarationError: Identifier not found or not unique.`
-        cumulativeGrownStalkPerBdv = s.ss[token].lastCumulativeStalkPerBdv.add(
-            s.ss[token].grownStalkPerBdvPerSeason.mul(s.season.current.sub(s.ss[token].lastUpdateSeason))
+        _cumulativeGrownStalkPerBdv = s.ss[address(token)].lastCumulativeGrownStalkPerBdv.add(
+            int128(s.ss[address(token)].stalkPerBdvPerSeason.mul(s.season.current.sub(s.ss[address(token)].lastUpdateSeason)))
         );
     }
 
@@ -307,7 +311,7 @@ library LibTokenSilo {
         int128 _cumulativeGrownStalkPerBdv = cumulativeGrownStalkPerBdv(token);
         require(grownStalkPerBdv <= _cumulativeGrownStalkPerBdv, "Silo: Invalid Deposit");
         uint deltaGrownStalkPerBdv = uint(cumulativeGrownStalkPerBdv(token).sub(grownStalkPerBdv));
-        (, uint bdv) = tokenDeposit(account, token, grownStalkPerBdv);
+        (, uint bdv) = tokenDeposit(account, address(token), grownStalkPerBdv);
         grownStalk = deltaGrownStalkPerBdv.mul(bdv);
     }
 }

@@ -272,9 +272,9 @@ contract Storage {
          */
         uint32 stalkPerBdv;
         /*
-         * @dev The Grown Stalk Per BDV Per Season represents how much Stalk one BDV of the underlaying deposited token grows each season. In the past, this was represented by seeds.
+         * @dev The Stalk Per BDV Per Season represents how much Stalk one BDV of the underlaying deposited token grows each season. In the past, this was represented by seeds.
          */
-        uint32 grownStalkPerBdvPerSeason;
+        uint32 stalkPerBdvPerSeason;
         /*
          * @dev The last season in which the Cumulative Grown Stalk Per BDV was updated
          */

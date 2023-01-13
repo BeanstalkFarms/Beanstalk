@@ -6,10 +6,12 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import "~/libraries/LibBytes.sol";
 import "../LibAppStorage.sol";
 import "../../C.sol";
 import "./LibUnripeSilo.sol";
 import "./LibTokenSilo.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 
 /**
  * @title LibLegacyTokenSilo
@@ -21,33 +23,7 @@ import "./LibTokenSilo.sol";
  */
 library LibLegacyTokenSilo {
     using SafeMath for uint256;
-
-    /**
-     * @dev Once the BDV received for Depositing `amount` of `token` is known,
-     * add a Deposit for `account` and update the total amount Deposited.
-     *
-     * `s.ss[token].seeds` stores the number of Seeds per BDV for `token`.
-     * `s.ss[token].stalk` stores the number of Stalk per BDV for `token`.
-     *
-     * FIXME(discuss): If we think of Deposits like 1155s, we might call the
-     * combination of "incrementTotalDeposited" and "addDepositToAccount" as
-     * "minting a deposit".
-     */
-    function depositWithBDV(
-        address account,
-        address token,
-        uint32 season,
-        uint256 amount,
-        uint256 bdv
-    ) internal returns (uint256, uint256) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        require(bdv > 0, "Silo: No Beans under Token.");
-
-        LibTokenSilo.incrementTotalDeposited(token, amount); // Update Totals
-        LibTokenSilo.addDepositToAccount(account, token, season, amount, bdv); // Add to Account
-
-        return (bdv.mul(s.ss[token].seeds), bdv.mul(s.ss[token].stalk));
-    }
+    using SafeCast for uint256;
 
     //////////////////////// REMOVE DEPOSIT ////////////////////////
 
@@ -178,7 +154,7 @@ library LibLegacyTokenSilo {
         returns (bool)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 seedsPerBdv = uint256(s.ss[token].legacySeedsPerBdv);
+        uint256 seedsPerBdv = uint256(s.ss[address(token)].legacySeedsPerBdv);
         return
             grownStalkPerBdv < 0 &&
             uint256(-grownStalkPerBdv) % seedsPerBdv != 0;
@@ -190,7 +166,7 @@ library LibLegacyTokenSilo {
         returns (uint32 season)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 seedsPerBdv = uint256(s.ss[token].legacySeedsPerBdv);
+        uint256 seedsPerBdv = uint256(s.ss[address(token)].legacySeedsPerBdv);
         season = uint256(-grownStalkPerBdv).div(seedsPerBdv).toUint32(); // use OpenZeppelin's safecast to uint32
     }
 }

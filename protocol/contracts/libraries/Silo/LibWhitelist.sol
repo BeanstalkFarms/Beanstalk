@@ -47,16 +47,16 @@ library LibWhitelist {
     function whitelistToken(
         address token,
         bytes4 selector,
-        uint32 stalk,
-        uint32 seeds
+        uint32 stalkPerBdv,
+        uint32 stalkPerBdvPerSeason
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         s.ss[token].selector = selector;
-        s.ss[token].stalk = stalk;
-        s.ss[token].seeds = seeds;
+        s.ss[token].stalkPerBdv = stalkPerBdv; //previously just called "stalk"
+        s.ss[token].stalkPerBdvPerSeason = stalkPerBdvPerSeason; //previously called "seeds"
 
-        emit WhitelistToken(token, selector, stalk, seeds);
+        emit WhitelistToken(token, selector, stalkPerBdv, stalkPerBdvPerSeason);
     }
 
 
