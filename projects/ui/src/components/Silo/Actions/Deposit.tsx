@@ -66,7 +66,6 @@ const DepositForm : FC<
     balances: FarmerBalances;
     contract: ethers.Contract;
     handleQuote: QuoteHandler;
-    // claimableBalances: Record<ClaimableBeanToken, ClaimableBeanAssetFragment>;
   }
 > = ({
   // Custom
@@ -88,12 +87,6 @@ const DepositForm : FC<
     values.tokens,
     amountToBdv,
   );
-
-  // update max claimable if it changes
-  useEffect(() => {
-    if (values.totalClaimable.eq(claimable.total)) return;
-    setFieldValue('totalClaimable', claimable.total);
-  }, [claimable.total, setFieldValue, values.totalClaimable]);
 
   /// Derived
   const isReady = bdv.gt(0);
@@ -135,6 +128,14 @@ const DepositForm : FC<
   const handleSetBalanceFrom = useCallback((_balanceFrom: BalanceFrom) => {
     setFieldValue('balanceFrom', _balanceFrom);
   }, [setFieldValue]);
+
+  /// Effects
+  useEffect(() => {
+    // update max claimable if it changes
+    // do this here instead of in its parent to avoid it not being set in initial values
+    if (values.totalClaimable.eq(claimable.total)) return;
+    setFieldValue('totalClaimable', claimable.total);
+  }, [claimable.total, setFieldValue, values.totalClaimable]);
 
   return (
     <Form noValidate autoComplete="off">

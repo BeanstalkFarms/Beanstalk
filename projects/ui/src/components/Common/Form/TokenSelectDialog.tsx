@@ -59,6 +59,12 @@ const balanceFromText = {
   [BalanceFrom.TOTAL]: 'Displaying Total Farm and Circulating Balances.',
 };
 
+const balanceColors = { 
+  0: 'text.primary', 
+  1: 'primary', 
+  2: 'text.tertiary' 
+};
+
 const TokenSelectDialog : TokenSelectDialogC = React.memo(({
   // Dialog
   open,
@@ -68,7 +74,7 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
   title,
   description,
   // Balances
-  balanceFrom,
+  balanceFrom = BalanceFrom.TOTAL,
   setBalanceFrom,
   balancesType = 'farm',
   balances: _balances,
@@ -84,10 +90,17 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
   const getBalance = useCallback((addr: string) => {
     if (!_balances) return ZERO_BN;
     if (balancesType === 'farm') {
-      return (_balances as TokenBalanceMode['farm'])?.[addr]?.total || ZERO_BN;
+      return (_balances as TokenBalanceMode['farm'])?.[addr]?.[balanceFrom] || ZERO_BN;
     }
     return (_balances as TokenBalanceMode['silo-deposits'])?.[addr]?.deposited?.amount || ZERO_BN;
-  }, [_balances, balancesType]);
+  }, [_balances, balancesType, balanceFrom]);
+
+  const getApplicableBalances = useCallback((addr: string) => {
+    if (!applicableBalances || !(addr in applicableBalances)) return undefined;
+    const applied = applicableBalances[addr].applied;
+    const remaining = applicableBalances[addr].remaining;
+    return { applied, remaining };
+  }, [applicableBalances]);
 
   // Toggle the selection state of a token.
   const toggle = useCallback((token: Token) => {
@@ -149,7 +162,7 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
         {/**
          * Balance Origin
          */}
-        {balanceFrom && setBalanceFrom 
+        {setBalanceFrom 
           ? (
             <Stack pt={1.5} pb={2}>
               <BalanceOriginField 
@@ -165,83 +178,81 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
           * Tokens
           */}
         <List sx={{ p: 0 }}>
-          {tokenList ? tokenList.map((_token) => (
-            <ListItem
-              key={_token.address}
-              color="primary"
-              // selected={selectedInternal.has(_token)}
-              disablePadding
-              onClick={onClickItem(_token)}
-              sx={{
-                // ListItem is used elsewhere so we define here
-                // instead of in muiTheme.ts
-                '& .MuiListItemText-primary': {
-                  fontSize: FontSize['1xl'],
-                  lineHeight: '1.875rem'
-                },
-                '& .MuiListItemText-secondary': {
-                  fontSize: FontSize.base,
-                  lineHeight: '1.25rem',
-                  color: BeanstalkPalette.lightGrey
-                }
-              }}
-            >
-              <ListItemButton disableRipple selected={selectedInternal.has(_token)}>
-                {/* Top-level button stack */}
-                <Row justifyContent="space-between" sx={{ width: '100%' }}>
-                  {/* Icon & text left side */}
-                  <Row justifyContent="center" gap={0}>
-                    <ListItemIcon>
-                      <img
-                        src={_token.logo}
-                        alt=""
-                        css={{ 
-                          width: IconSize.tokenSelect,
-                          height: IconSize.tokenSelect
-                        }}
-                      />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={_token.symbol}
-                      secondary={_token.name}
-                      sx={{ my: 0 }}
-                    />
-                  </Row>
-                  {/* Balances right side */}
-                  {_balances ? (
-                    <Typography variant="bodyLarge">
-                      {displayBN(getBalance(_token.address))}
-                      {applicableBalances && _token.address in applicableBalances ? (() => {
-                        console.log('token address: ', _token.address);
-                        const applied = applicableBalances[_token.address].applied;
-                        const remaining = applicableBalances[_token.address].remaining;
-                        console.log('applied: ', applied.toString());
-                        console.log('remaining: ', remaining.toString());
-                        return (
-                          <>
-                            {applied.gt(0) ? (
-                              <Typography variant="inherit" color="primary" component="span">
-                                &nbsp; + {displayBN(applied)}
-                              </Typography>) : null}
-                            {remaining.gt(0) ? (
-                              <Typography variant="inherit" color="text.tertiary" component="span">
-                                &nbsp; + {displayBN(remaining)}
-                              </Typography>) : null}
-                          </>
-                        );
-                      })() : null}
-                    </Typography>
-                  ) : null}
-                </Row>
-              </ListItemButton>
-            </ListItem>
-          )) : null}
+          {tokenList 
+            ? tokenList.map((_token) => {
+              const tokenBalance = getBalance(_token.address);
+              const applicableBalance = getApplicableBalances(_token.address);
+              return (
+                <ListItem
+                  key={_token.address}
+                  color="primary"
+                  disablePadding
+                  onClick={onClickItem(_token)}
+                  sx={{
+                    // ListItem is used elsewhere so we define here
+                    // instead of in muiTheme.ts
+                    '& .MuiListItemText-primary': {
+                      fontSize: FontSize['1xl'],
+                      lineHeight: '1.875rem'
+                    },
+                    '& .MuiListItemText-secondary': {
+                      fontSize: FontSize.base,
+                      lineHeight: '1.25rem',
+                      color: BeanstalkPalette.lightGrey
+                    }
+                  }}
+                >
+                  <ListItemButton disableRipple selected={selectedInternal.has(_token)}>
+                    {/* Top-level button stack */}
+                    <Row justifyContent="space-between" sx={{ width: '100%' }}>
+                      {/* Icon & text left side */}
+                      <Row justifyContent="center" gap={0}>
+                        <ListItemIcon>
+                          <img
+                            src={_token.logo}
+                            alt=""
+                            css={{ 
+                            width: IconSize.tokenSelect,
+                            height: IconSize.tokenSelect
+                          }}
+                        />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={_token.symbol}
+                          secondary={_token.name}
+                          sx={{ my: 0 }}
+                        />
+                      </Row>
+                      {/* Balances right side */}
+                      {_balances ? (
+                        <Typography variant="bodyLarge">
+                          {/* Token balance */}
+                          {displayBN(tokenBalance)}
+                          {/* additionally applied balance */}
+                          {applicableBalance?.applied.gt(0) ? (
+                            <Typography variant="inherit" color="primary" component="span">
+                              &nbsp; + {displayBN(applicableBalance.applied)}
+                            </Typography>
+                          ) : null}
+                          {/* remaining applicable balance */}
+                          {applicableBalance?.remaining.gt(0) ? (
+                            <Typography variant="inherit" color="text.tertiary" component="span">
+                              &nbsp; + {displayBN(applicableBalance.remaining)}
+                            </Typography>
+                          ) : null}
+                        </Typography>
+                      ) : null}
+                    </Row>
+                  </ListItemButton>
+                </ListItem>
+              ); 
+            }) : null}
           {/**
             * Farm + Circulating Balances notification
             */}
           {_balances ? (
             <Typography ml={1} pt={0.5} textAlign="center" fontSize={FontSize.sm} color="gray">
-              {balanceFromText[balanceFrom || BalanceFrom.TOTAL]}&nbsp;
+              {balanceFromText[balanceFrom]}&nbsp;
               <Link href="https://docs.bean.money/almanac/protocol/asset-states" target="_blank" rel="noreferrer" underline="none">
                 Learn more &rarr;
               </Link>
