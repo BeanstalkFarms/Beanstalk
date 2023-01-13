@@ -126,8 +126,8 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
               )}
               {`${
                 apys
-                  ? parseInt(apys[metric].times(100).toFixed(1), 10) > 0 &&
-                    parseInt(apys[metric].times(100).toFixed(1), 10) < 0.1
+                  ? parseFloat(apys[metric].times(100).toFixed(2)) > 0 &&
+                    parseFloat(apys[metric].times(100).toFixed(2)) < 0.1
                     ? '> 0.1%'
                     : apys[metric].times(100).toFixed(1)
                   : '0.0'
