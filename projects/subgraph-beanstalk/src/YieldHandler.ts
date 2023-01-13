@@ -32,10 +32,12 @@ export function updateBeanEMA(t: i32, timestamp: BigInt): void {
             priorEMA = currentEMA
         }
     } else {
-        // Beta has become stable
-        let season = loadSiloHourlySnapshot(BEANSTALK, t, timestamp)
-        let priorYield = loadSiloYield(t - 1)
-        currentEMA = ((toDecimal(season.deltaBeanMints).minus(priorYield.beansPerSeasonEMA)).times(siloYield.beta)).plus(priorYield.beansPerSeasonEMA)
+        // Calculate EMA for the prior 720 seasons
+        for (let i = t - MAX_WINDOW + 1; i <= t; i++) {
+            let season = loadSiloHourlySnapshot(BEANSTALK, i, timestamp)
+            currentEMA = ((toDecimal(season.deltaBeanMints).minus(priorEMA)).times(siloYield.beta)).plus(priorEMA)
+            priorEMA = currentEMA
+        }
     }
 
     siloYield.beansPerSeasonEMA = currentEMA
