@@ -17,6 +17,7 @@ import { FarmerBalances } from '~/state/farmer/balances';
 import FarmModeField from '../Common/Form/FarmModeField';
 import copyText from '~/constants/copy';
 import { FarmToMode } from '~/lib/Beanstalk/Farm';
+import EmbeddedCard from '../Common/EmbeddedCard';
 
 const FIELD_VALUE = 'claiming' as const;
 
@@ -109,71 +110,72 @@ const ClaimableAssets: React.FC<{
   };
 
   return (
-    <Stack gap={1} width="100%">
-      {/* *Title */}
-      <Row width="100%" justifyContent="space-between">
-        <Typography variant="h4">
-          Claimable Assets
-          <Tooltip
-            title="tooltip data goes here" // TODO FIX ME
-            placement="right"
+    <EmbeddedCard sx={{ p: 1.5, borderRadius: 1 }}>
+      <Stack gap={1} width="100%">
+        {/* *Title */}
+        <Row width="100%" justifyContent="space-between">
+          <Typography variant="h4">
+            Claimable Assets
+            <Tooltip
+              title="tooltip data goes here" // TODO FIX ME
+              placement="right"
           >
-            <HelpOutlineIcon
-              sx={{
+              <HelpOutlineIcon
+                sx={{
                 color: 'text.secondary',
                 display: 'inline',
                 mb: 0.5,
                 fontSize: '11px',
               }}
             />
-          </Tooltip>
-        </Typography>
-        <Row>
-          <Typography color={disabled ? 'text.disabled' : 'text.primary'}>
-            Claim all
+            </Tooltip>
           </Typography>
-          <Switch
-            checked={allSelected || false}
-            disabled={disabled}
-            onChange={handleToggleAll}
-          />
+          <Row>
+            <Typography color={disabled ? 'text.disabled' : 'text.primary'}>
+              Claim all
+            </Typography>
+            <Switch
+              checked={allSelected || false}
+              disabled={disabled}
+              onChange={handleToggleAll}
+            />
+          </Row>
         </Row>
-      </Row>
-      {/* *Alert */}
-      <SidelineAlert color="success" hide={totalClaiming.lte(0)}>
-        <Typography
-          color="text.primary"
-          variant="bodySmall"
-          sx={{ whitespace: 'nowrap' }}
+        {/* *Alert */}
+        <SidelineAlert color="success" hide={totalClaiming.lte(0)}>
+          <Typography
+            color="text.primary"
+            variant="bodySmall"
+            sx={{ whitespace: 'nowrap' }}
         >
-          <Typography component="span" variant="caption" fontWeight="bold">
-            + {displayFullBN(totalClaiming, 2)}
-          </Typography>{' '}
-          <Typography component="span" variant="inherit">
-            Beans applied to use on your{' '}
+            <Typography component="span" variant="caption" fontWeight="bold">
+              + {displayFullBN(totalClaiming, 2)}
+            </Typography>{' '}
+            <Typography component="span" variant="inherit">
+              Beans applied to use on your{' '}
+            </Typography>
+            <Typography component="span" variant="inherit" fontStyle="italic">
+              {/* TODO FIX ME TO BE DYNAMIC */}
+              {copyText.MODES[values.destination || FarmToMode.INTERNAL]} 
+            </Typography>
           </Typography>
-          <Typography component="span" variant="inherit" fontStyle="italic">
-            {/* TODO FIX ME TO BE DYNAMIC */}
-            {copyText.MODES[values.destination || FarmToMode.INTERNAL]} 
-          </Typography>
-        </Typography>
-      </SidelineAlert>
-      {/* *Selection Cards */}
-      <Stack gap={1} width="100%" direction={{ xs: 'column', sm: 'row' }}>
-        {Object.entries(balances).map(([k, data]) => (
-          <TokenSelectionCard
-            disabled={data.amount.lte(0)}
-            key={k}
-            token={data.token}
-            amount={data.amount}
-            title={uiDescriptions[k as ClaimableBeanToken]}
-            selected={k in values.claiming}
-            toggle={() => handleToggle(k as ClaimableBeanToken, data)}
+        </SidelineAlert>
+        {/* *Selection Cards */}
+        <Stack gap={1} width="100%" direction={{ xs: 'column', sm: 'row' }}>
+          {Object.entries(balances).map(([k, data]) => (
+            <TokenSelectionCard
+              disabled={data.amount.lte(0)}
+              key={k}
+              token={data.token}
+              amount={data.amount}
+              title={uiDescriptions[k as ClaimableBeanToken]}
+              selected={k in values.claiming}
+              toggle={() => handleToggle(k as ClaimableBeanToken, data)}
           />
         ))}
-      </Stack>
-      {/* FIX ME */}
-      {surplus && surplus?.gt(0) 
+        </Stack>
+        {/* FIX ME */}
+        {surplus && surplus?.gt(0) 
         ? <FarmModeField 
             name="destination"
             infoLabel={
@@ -187,7 +189,8 @@ const ClaimableAssets: React.FC<{
             } 
           />
         : null}
-    </Stack>
+      </Stack>
+    </EmbeddedCard>
   );
 };
 export default ClaimableAssets;

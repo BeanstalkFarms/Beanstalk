@@ -271,6 +271,9 @@ const muiThemeBase: ThemeOptions = {
       default: BeanstalkPalette.theme.winter.iceBlue,
       paper: BeanstalkPalette.offWhite,
     },
+    error: {
+      main: BeanstalkPalette.theme.winter.red,
+    }
   },
 
   /**

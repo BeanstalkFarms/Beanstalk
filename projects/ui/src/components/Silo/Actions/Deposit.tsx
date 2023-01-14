@@ -8,7 +8,6 @@ import { useSelector } from 'react-redux';
 import { Token } from '~/classes';
 import { BEAN, CRV3, DAI, ETH, SEEDS, STALK, UNRIPE_BEAN, UNRIPE_BEAN_CRV3, USDC, USDT, WETH } from '~/constants/tokens';
 import TokenSelectDialog, { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
-import TokenOutputField from '~/components/Common/Form/TokenOutputField';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import { FarmWithClaimFormState, FormState, SettingInput, TxnSettings } from '~/components/Common/Form';
 import TokenQuoteProvider from '~/components/Common/Form/TokenQuoteProvider';
@@ -46,6 +45,7 @@ import ClaimableAssets from '../ClaimableAssets';
 
 import useFarmerClaimableBeanAssets from '~/hooks/farmer/useFarmerClaimableBeanAssets';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
+import TokenOutputsField from '~/components/Common/Form/TokenOutputsField';
 
 // -----------------------------------------------------------------------
 
@@ -175,38 +175,40 @@ const DepositForm : FC<
         {isReady ? (
           <>
             <TxnSeparator />
-            <TokenOutputField
-              token={whitelistedToken}
-              amount={amount}
+            <TokenOutputsField 
+              groups={[
+                {
+                  title: 'asdfasdf',
+                  data: [{
+                    token: whitelistedToken,
+                    amount: amount,
+                    disablePrefix: true,
+                  },
+                  {
+                    token: STALK,
+                    amount: stalk,
+                    amountTooltip: (
+                      <>
+                        1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
+                        1 BDV &rarr; {whitelistedToken.getStalk().toString()} STALK
+                        {/* {displayFullBN(bdv, BEAN[1].displayDecimals)} BDV &rarr; {displayFullBN(stalk, STALK.displayDecimals)} STALK */}
+                      </>
+                    ),
+                  },
+                  {
+                    token: SEEDS,
+                    amount: seeds,
+                    amountTooltip: (
+                      <>
+                        1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
+                        1 BDV &rarr; {whitelistedToken.getSeeds().toString()} SEEDS
+                        {/* {displayFullBN(bdv, BEAN[1].displayDecimals)} BDV &rarr; {displayFullBN(seeds, SEEDS.displayDecimals)} SEED */}
+                      </>
+                    )
+                  }]
+                }
+              ]}
             />
-            <Stack direction={{ xs: 'column', md: 'row' }} gap={1} justifyContent="center">
-              <Box sx={{ flex: 1 }}>
-                <TokenOutputField
-                  token={STALK}
-                  amount={stalk}
-                  amountTooltip={(
-                    <>
-                      1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
-                      1 BDV &rarr; {whitelistedToken.getStalk().toString()} STALK
-                      {/* {displayFullBN(bdv, BEAN[1].displayDecimals)} BDV &rarr; {displayFullBN(stalk, STALK.displayDecimals)} STALK */}
-                    </>
-                  )}
-                />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <TokenOutputField
-                  token={SEEDS}
-                  amount={seeds}
-                  amountTooltip={(
-                    <>
-                      1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
-                      1 BDV &rarr; {whitelistedToken.getSeeds().toString()} SEEDS
-                      {/* {displayFullBN(bdv, BEAN[1].displayDecimals)} BDV &rarr; {displayFullBN(seeds, SEEDS.displayDecimals)} SEED */}
-                    </>
-                  )}
-                />
-              </Box>
-            </Stack>
             <Box>
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />
