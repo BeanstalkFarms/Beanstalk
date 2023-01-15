@@ -5,7 +5,7 @@ import { FC } from '~/types';
 
 const InfoRow: FC<
   {
-    label: string;
+    label: string  | JSX.Element;
     labelVariant?: TypographyVariant;
     infoVariant?: TypographyVariant;
     labelColor?: string;
@@ -21,9 +21,13 @@ const InfoRow: FC<
   ...props
 }) => (
   <Row width="100%" justifyContent="space-between" {...props}>
-    <Typography variant={labelVariant} color={labelColor}>
-      {label}
-    </Typography>
+    {typeof label === 'string' ? (
+      <Typography variant={labelVariant} color={labelColor}>
+        {label}
+      </Typography>
+    ) : (
+      label
+    )}
     {typeof children === 'string' ? (
       <Typography variant={infoVariant} color={infoColor}>
         {children}
