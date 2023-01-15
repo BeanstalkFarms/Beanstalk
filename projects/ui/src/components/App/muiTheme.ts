@@ -138,6 +138,8 @@ export const BeanstalkPalette = {
   // Other
   grey: '#657265',
   realGrey: '#808080',
+  inputGrey: '#F0F0F0',
+  ctaGrey: '#3B3B3B',
   lightGrey: '#9E9E9E',
   lightestGrey: '#DDDDDD',
   white: '#fff',
@@ -292,6 +294,9 @@ const muiThemeBase: ThemeOptions = {
     background: {
       default: BeanstalkPalette.theme.winter.iceBlue,
       paper: BeanstalkPalette.offWhite,
+    },
+    error: {
+      main: BeanstalkPalette.theme.winter.red,
     }
   },
 
