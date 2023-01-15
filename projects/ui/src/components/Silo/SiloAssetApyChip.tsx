@@ -50,6 +50,15 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
     ? Bean
     : ({ symbol: 'Stalk', logo: stalkIconBlue } as Token);
 
+  const val = apys ? apys[metric].times(100) : null;
+  const displayString = `${
+    val
+      ? val.gt(0) && val.lt(0.1)
+        ? '< 0.1'
+        : val.toFixed(1)
+      : '0.0'
+  }%`;
+
   return (
     <Tooltip
       placement="right"
@@ -124,14 +133,7 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                   <TokenIcon token={tokenProps} /> vAPY:{' '}
                 </>
               )}
-              {`${
-                apys
-                  ? parseFloat(apys[metric].times(100).toFixed(2)) > 0 &&
-                    parseFloat(apys[metric].times(100).toFixed(2)) < 0.1
-                    ? '< 0.1%'
-                    : apys[metric].times(100).toFixed(1)
-                  : '0.0'
-              }%`}
+              {displayString}
             </Row>
           </Typography>
         }
