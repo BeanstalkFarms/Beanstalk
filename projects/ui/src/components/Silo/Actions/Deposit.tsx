@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { Accordion, AccordionDetails, Box, Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
@@ -10,13 +10,13 @@ import { BEAN, CRV3, DAI, ETH, SEEDS, STALK, UNRIPE_BEAN, UNRIPE_BEAN_CRV3, USDC
 import TokenSelectDialog, { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import TokenOutputField from '~/components/Common/Form/TokenOutputField';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
-import { FormState, SettingInput, TxnSettings } from '~/components/Common/Form';
+import { FarmWithClaimFormState, FormState, SettingInput, TxnSettings } from '~/components/Common/Form';
 import TokenQuoteProvider from '~/components/Common/Form/TokenQuoteProvider';
 import TxnPreview from '~/components/Common/Form/TxnPreview';
 import BeanstalkSDK from '~/lib/Beanstalk';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
-import { Balance, FarmerBalances } from '~/state/farmer/balances';
+import { ApplicableBalance, Balance, FarmerBalances } from '~/state/farmer/balances';
 import { displayFullBN, toStringBaseUnitBN, toTokenUnitsBN } from '~/util/Tokens';
 import TransactionToast from '~/components/Common/TxnToast';
 import { Beanstalk } from '~/generated/index';
@@ -42,10 +42,15 @@ import { useFetchBeanstalkSilo } from '~/state/beanstalk/silo/updater';
 import useFarm from '~/hooks/sdk/useFarm';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
+import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
+import useFarmerClaimableBeanAssets from '~/hooks/farmer/useFarmerClaimableBeanAssets';
+import ClaimableAssets from '../ClaimableAssets';
+import TokenOutputsField from '~/components/Common/Form/TokenOutputsField';
 
 // -----------------------------------------------------------------------
 
-type DepositFormValues = FormState & {
+type DepositFormValues = FormState 
+& FarmWithClaimFormState & {
   settings: {
     slippage: number;
   }
@@ -75,6 +80,7 @@ const DepositForm : FC<
   isSubmitting,
   setFieldValue,
 }) => {
+  const claimable = useFarmerClaimableBeanAssets();
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const { amount, bdv, stalk, seeds, actions } = BeanstalkSDK.Silo.Deposit.deposit(
     whitelistedToken,
@@ -84,6 +90,21 @@ const DepositForm : FC<
 
   /// Derived
   const isReady = bdv.gt(0);
+
+  const applicableBalances: Record<string, ApplicableBalance> = useMemo(() => {
+    const beanClaimAmount = Object.values(values.beansClaiming).reduce((prev, curr) => {
+      if (curr.amount?.gt(0)) prev = prev.plus(curr.amount);
+      return prev;
+    }, ZERO_BN);
+
+    return {
+      [BEAN[1].address]: {
+        total: values.maxBeansClaimable,
+        applied: beanClaimAmount,
+        remaining: values.maxBeansClaimable.minus(beanClaimAmount),
+      }
+    };
+  }, [values.beansClaiming, values.maxBeansClaimable]);
 
   ///
   const handleSelectTokens = useCallback((_tokens: Set<Token>) => {
@@ -104,6 +125,18 @@ const DepositForm : FC<
     ]);
   }, [values.tokens, setFieldValue]);
 
+  const handleSetBalanceFrom = useCallback((_balanceFrom: BalanceFrom) => {
+    setFieldValue('balanceFrom', _balanceFrom);
+  }, [setFieldValue]);
+
+  /// Effects
+  useEffect(() => {
+    // update max claimable if it changes
+    // do this here instead of in its parent to avoid it not being set in initial values
+    if (values.maxBeansClaimable.eq(claimable.total)) return;
+    setFieldValue('maxBeansClaimable', claimable.total);
+  }, [claimable.total, setFieldValue, values.maxBeansClaimable]);
+
   return (
     <Form noValidate autoComplete="off">
       <TokenSelectDialog
@@ -114,6 +147,10 @@ const DepositForm : FC<
         balances={balances}
         tokenList={tokenList}
         mode={TokenSelectMode.SINGLE}
+        title="Assets"
+        balanceFrom={values.balanceFrom}
+        setBalanceFrom={handleSetBalanceFrom}
+        applicableBalances={applicableBalances}
       />
       <Stack gap={1}>
         {values.tokens.map((tokenState, index) => (
@@ -125,8 +162,17 @@ const DepositForm : FC<
             state={tokenState}
             showTokenSelect={showTokenSelect}
             handleQuote={handleQuote}
+            inputVariant="wrapped"
+            additionalBalance={applicableBalances[tokenState.token.address]?.applied}
+            TokenAdornmentProps={{
+              balanceFrom: values.balanceFrom
+            }}
           />
         ))}
+        <ClaimableAssets
+          balances={claimable.assets}
+          farmerBalances={balances}
+        />
         {isReady ? (
           <>
             <TxnSeparator />
@@ -134,34 +180,39 @@ const DepositForm : FC<
               token={whitelistedToken}
               amount={amount}
             />
-            <Stack direction={{ xs: 'column', md: 'row' }} gap={1} justifyContent="center">
-              <Box sx={{ flex: 1 }}>
-                <TokenOutputField
-                  token={STALK}
-                  amount={stalk}
-                  amountTooltip={(
-                    <>
-                      1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
-                      1 BDV &rarr; {whitelistedToken.getStalk().toString()} STALK
-                      {/* {displayFullBN(bdv, BEAN[1].displayDecimals)} BDV &rarr; {displayFullBN(stalk, STALK.displayDecimals)} STALK */}
-                    </>
-                  )}
-                />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <TokenOutputField
-                  token={SEEDS}
-                  amount={seeds}
-                  amountTooltip={(
-                    <>
-                      1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
-                      1 BDV &rarr; {whitelistedToken.getSeeds().toString()} SEEDS
-                      {/* {displayFullBN(bdv, BEAN[1].displayDecimals)} BDV &rarr; {displayFullBN(seeds, SEEDS.displayDecimals)} SEED */}
-                    </>
-                  )}
-                />
-              </Box>
-            </Stack>
+            <TokenOutputsField 
+              groups={[
+                {
+                  data: [{
+                    token: whitelistedToken,
+                    amount: amount,
+                    disablePrefix: true,
+                  },
+                  {
+                    token: STALK,
+                    amount: stalk,
+                    amountTooltip: (
+                      <>
+                        1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
+                        1 BDV &rarr; {whitelistedToken.getStalk().toString()} STALK
+                        {/* {displayFullBN(bdv, BEAN[1].displayDecimals)} BDV &rarr; {displayFullBN(stalk, STALK.displayDecimals)} STALK */}
+                      </>
+                    ),
+                  },
+                  {
+                    token: SEEDS,
+                    amount: seeds,
+                    amountTooltip: (
+                      <>
+                        1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
+                        1 BDV &rarr; {whitelistedToken.getSeeds().toString()} SEEDS
+                        {/* {displayFullBN(bdv, BEAN[1].displayDecimals)} BDV &rarr; {displayFullBN(seeds, SEEDS.displayDecimals)} SEED */}
+                      </>
+                    )
+                  }]
+                }
+              ]}
+            />
             <Box>
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />
@@ -176,7 +227,7 @@ const DepositForm : FC<
         ) : null}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={isSubmitting || amount.lte(0)}
+          disabled={isSubmitting}
           type="submit"
           variant="contained"
           color="primary"
@@ -288,6 +339,10 @@ const Deposit : FC<{
         amountOut: undefined,
       },
     ],
+    maxBeansClaimable: ZERO_BN,
+    beansClaiming: {},
+    balanceFrom: BalanceFrom.TOTAL,
+    destination: FarmToMode.INTERNAL,
   }), [baseToken]);
 
   /// Handlers

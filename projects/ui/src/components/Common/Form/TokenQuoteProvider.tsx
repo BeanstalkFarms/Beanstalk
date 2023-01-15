@@ -125,6 +125,7 @@ const TokenQuoteProvider : FC<TokenQuoteProviderProps> = ({
         }}
         size={props.size}
         buttonLabel={tokenSelectLabel}
+        balanceFrom={props.TokenAdornmentProps?.balanceFrom}
       />
     )
   }), [
@@ -133,7 +134,8 @@ const TokenQuoteProvider : FC<TokenQuoteProviderProps> = ({
     isSubmitting,
     disableTokenSelect,
     tokenSelectLabel,
-    props.size
+    props.size,
+    props.TokenAdornmentProps?.balanceFrom
   ]);
 
   // Render info about the quote beneath the input.
