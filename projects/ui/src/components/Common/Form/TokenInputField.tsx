@@ -17,6 +17,7 @@ import FieldWrapper from './FieldWrapper';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import { ZERO_BN } from '~/constants';
+import InputFieldBorder from './InputFieldBorder';
 
 export type TokenInputCustomProps = {
   /**
@@ -28,6 +29,10 @@ export type TokenInputCustomProps = {
    *
    */
   balance?: FarmerBalances[string] | BigNumber | undefined;
+  /**
+   * 
+   */
+  additionalBalance?: BigNumber | undefined;
   /**
    *
    */
@@ -53,6 +58,10 @@ export type TokenInputCustomProps = {
    */
   allowNegative?: boolean;
   /**
+   * whether to use the wrapped variant or the default text field variant
+   */
+  inputVariant?: 'default' | 'wrapped'
+  /**
    * 
    */
   onChange?: (finalValue: BigNumber | undefined) => void;
@@ -73,18 +82,72 @@ export const preventNegativeInput = (e: React.KeyboardEvent<HTMLInputElement>) =
   }
 };
 
+const stylesConfig = {
+  input: {
+    wrapped: {
+      borderRadius: 1,
+      '& label.Mui-focused': {
+        color: '#fff',
+      },
+      '& .MuiOutlinedInput-root': {
+        background: '#fff',
+        pr: 0,
+        // '& .MuiInputAdornment-root': {  ----> should we add this
+        //   ml: 0,
+        // },
+        '& fieldset': {
+          border: 'none',
+        },
+        '&.Mui-focused fieldset': {
+          border: 'none',
+        },
+        '&:hover fieldset': {
+          border: 'none'
+        },
+        '& .MuiOutlinedInput-input': {
+          pl: 0,
+          py: 1.25,
+        }
+      },
+    },
+    default: {
+      borderRadius: 1,
+      '& .MuiOutlinedInput-root': {
+        background: '#fff',
+      },
+    }
+  },
+  infoSection: {
+    wrapped: {
+      gap: 0.5,
+      py: 1,
+    },
+    default: {
+      gap: 0.5,
+      px: 0.5, 
+      pt: 0.75
+    }
+  },
+  infoTypography: {
+    wrapped: 'text.secondary',
+    default: 'text.primary',
+  }
+} as const;
+
 const TokenInput: FC<
   TokenInputProps & FieldProps
 > = ({
   /// Balances
   token,
   balance: _balance,
+  additionalBalance,
   balanceLabel = 'Balance',
   hideBalance = false,
   quote,
   max: _max = 'use-balance',
   min,
   allowNegative = false,
+  inputVariant = 'default',
   /// Formik props
   field,
   form,
@@ -127,12 +190,15 @@ const TokenInput: FC<
   // Otherwise fall back to the disabled prop.
   const isInputDisabled = (
     disabled
-    || (balance && balance.eq(0))
+    || (
+      (balance && balance.eq(0)) 
+      && (!additionalBalance || additionalBalance.lte(0)))
     || form.isSubmitting
   );
 
   const clamp = useCallback((amount: BigNumber | null) => {
     const max = _max === 'use-balance' ? balance : _max; // fallback to balance
+    const actualMax = additionalBalance ? max?.plus(additionalBalance || ZERO_BN) : max;
     console.debug(`[TokenInputField@${field.name}] clamp: `, {
       amount: amount?.toString(),
       max: max?.toString(),
@@ -141,9 +207,9 @@ const TokenInput: FC<
     if (!amount) return undefined; // if no amount, exit
     if (min?.gt(amount)) return min; // clamp @ min
     if (!allowNegative && amount?.lt(ZERO_BN)) return ZERO_BN; // clamp negative 
-    if (max?.lt(amount)) return max; // clamp @ max
+    if (actualMax?.lt(amount)) return actualMax; // clamp @ max
     return amount; // no max; always return amount
-  }, [_max, balance, field.name, min, allowNegative]);
+  }, [_max, additionalBalance, balance, field.name, min, allowNegative]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     /// If e.target.value is non-empty string, parse it into a BigNumber.
@@ -176,7 +242,7 @@ const TokenInput: FC<
   const handleMax = useCallback(() => {
     console.debug('[TokenInputField] handleMax');
     if (balance) {
-      const clampedValue = clamp(balance);
+      const clampedValue = clamp(balance.plus(additionalBalance || ZERO_BN));
       console.debug('[TokenInputField] handleMax: balance exists', {
         balance,
         clampedValue,
@@ -184,7 +250,7 @@ const TokenInput: FC<
       form.setFieldValue(field.name, clampedValue);
       onChange?.(clampedValue);  // bubble up if necessary
     }
-  }, [form, field.name,balance, onChange, clamp]);
+  }, [balance, clamp, additionalBalance, form, field.name, onChange]);
 
   // Ignore scroll events on the input. Prevents
   // accidentally scrolling up/down the number input.
@@ -232,43 +298,50 @@ const TokenInput: FC<
 
   return (
     <FieldWrapper label={label}>
-      {/* Input */}
-      <TextField
-        type="text"
-        color="primary"
-        placeholder={placeholder || '0'}
+      <InputFieldBorder
+        enabled={inputVariant === 'wrapped'}
         disabled={isInputDisabled}
-        fullWidth // default to fullWidth
-        {...textFieldProps}
+      >
+        {/* Input */}
+        <TextField
+          type="text"
+          color="primary"
+          placeholder={placeholder || '0'}
+          disabled={isInputDisabled}
+          fullWidth // default to fullWidth
+          {...textFieldProps}
         // Override the following props.
-        onWheel={handleWheel}
-        value={displayAmount || ''}
-        onChange={handleChange}
-        InputProps={inputProps}
-        onKeyDown={!allowNegative ? preventNegativeInput : undefined}
-        sx={{
-          borderRadius: 1,
-          '& .MuiOutlinedInput-root': {
-            background: '#fff',
-          },
+          onWheel={handleWheel}
+          value={displayAmount || ''}
+          onChange={handleChange}
+          InputProps={inputProps}
+          onKeyDown={!allowNegative ? preventNegativeInput : undefined}
+          sx={{
+          ...stylesConfig.input[inputVariant],
           ...sx
         }}
       />
-      {/* Bottom Adornment */}
-      {(balance && !hideBalance || quote) && (
+        {/* Bottom Adornment */}
+        {(balance && !hideBalance || quote) && (
         <Row gap={0.5} px={0.5} pt={0.75}>
           {/* Leaving the Stack rendered regardless of whether `quote` is defined
             * ensures that the Balance section gets flexed to the right side of
             * the input. */}
           <Row sx={{ flex: 1 }} spacing={1}>
-            <Typography variant="bodySmall">
+            <Typography 
+              variant="bodySmall" 
+              color={stylesConfig.infoTypography[inputVariant]}
+            >
               {quote}
             </Typography>
           </Row>
-          {(balance && !hideBalance) && (
+          {((balance || additionalBalance?.gt(0)) && !hideBalance) && (
             <>
               <Tooltip title={balanceTooltip}>
-                <Typography variant="body1">
+                <Typography 
+                  variant="body1"
+                  color={stylesConfig.infoTypography[inputVariant]}
+                >
                   {balanceLabel}: {(
                     balance
                       ? token
@@ -279,6 +352,11 @@ const TokenInput: FC<
                         : `${displayFullBN(balance, 2)}`
                       : '0'
                   )}
+                  {additionalBalance?.gt(0) ? (
+                    <Typography component="span" color="primary">
+                      &nbsp;+ {displayFullBN(additionalBalance, token?.displayDecimals || 2)}
+                    </Typography>
+                  ) : null}
                 </Typography>
               </Tooltip>
               <Typography
@@ -293,6 +371,7 @@ const TokenInput: FC<
           )}
         </Row>
       )}
+      </InputFieldBorder>
     </FieldWrapper>
   );
 };
