@@ -7,4 +7,10 @@ export type Balance = {
   total:    BigNumber;
 };
 
+export type ApplicableBalance = {
+  total: BigNumber;
+  applied: BigNumber;
+  remaining: BigNumber;
+}
+
 export type FarmerBalances = AddressMap<Balance>;

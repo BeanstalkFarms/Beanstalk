@@ -26,7 +26,7 @@ const FarmModeField : FC<
 }) => {
   let circDesc : string;
   let farmDesc : string;
-  let label    : string;
+  let label    : string | JSX.Element;
   if (baseMode === FarmToMode) {
     circDesc = _circDesc || 'Send assets to your wallet.';
     farmDesc = _farmDesc || 'Send assets to your internal balance within Beanstalk.';
