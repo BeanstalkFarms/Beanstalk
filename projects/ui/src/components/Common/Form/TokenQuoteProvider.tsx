@@ -3,7 +3,7 @@ import { CircularProgress, Typography } from '@mui/material';
 import { useFormikContext } from 'formik';
 import BigNumber from 'bignumber.js';
 import TokenInputField, {  TokenInputProps } from '~/components/Common/Form/TokenInputField';
-import TokenAdornment, { TokenAdornmentProps, TokenAdornmentTypeProps } from '~/components/Common/Form/TokenAdornment';
+import TokenAdornment, { TokenAdornmentProps } from '~/components/Common/Form/TokenAdornment';
 import useQuote, { QuoteHandler, QuoteSettings } from '~/hooks/ledger/useQuote';
 import Token, { ERC20Token, NativeToken } from '~/classes/Token';
 import { displayFullBN } from '~/util/Tokens';
@@ -37,7 +37,6 @@ type TokenQuoteProviderCustomProps = {
 
 type TokenQuoteProviderProps = (
   TokenQuoteProviderCustomProps
-  & TokenAdornmentTypeProps // pass { adornmentVariant } to TokenAdornment
   & Partial<TokenInputProps>
 );
 
@@ -115,7 +114,6 @@ const TokenQuoteProvider : FC<TokenQuoteProviderProps> = ({
     endAdornment: (
       <TokenAdornment
         token={state.token}
-        adornmentVariant={props.adornmentVariant}
         // TEMP
         // balanceOrigin={BalanceOrigin.COMBINED}
         onClick={showTokenSelect}
@@ -123,17 +121,16 @@ const TokenQuoteProvider : FC<TokenQuoteProviderProps> = ({
         sx={{ opacity: disableTokenSelect ? 0.3 : 1 }}
         size={props.size}
         buttonLabel={tokenSelectLabel}
-        balanceFrom={props.balanceFrom}
+        balanceFrom={props.TokenAdornmentProps?.balanceFrom}
       />
     )
   }), [
-    props.balanceFrom,
+    props.TokenAdornmentProps?.balanceFrom,
     state.token,
     showTokenSelect,
     isSubmitting,
     disableTokenSelect,
     tokenSelectLabel,
-    props.adornmentVariant,
     props.size
   ]);
 

@@ -20,9 +20,9 @@ export type FormState = {
  */
 export type ClaimableBeanAssetFormState = {
   /** */
-  totalClaimable: BigNumber;
+  maxBeansClaimable: BigNumber;
   /** */
-  claiming: { [k: string]: ClaimableBeanAssetFragment };
+  beansClaiming: { [k: string]: ClaimableBeanAssetFragment };
 };
 
 /**

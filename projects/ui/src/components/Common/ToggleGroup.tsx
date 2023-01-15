@@ -7,10 +7,10 @@ import {
 } from '@mui/material';
 import {
   BeanstalkPalette,
-  hexToRgba,
   FontSize,
   FontWeight,
 } from '../App/muiTheme';
+import { hexToRgba } from '~/util/ui';
 
 export type IToggleGroup<T extends string | number> = ToggleButtonGroupProps & {
   options: {

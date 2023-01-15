@@ -18,7 +18,6 @@ import FieldWrapper from './FieldWrapper';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import { ZERO_BN } from '~/constants';
-import { BalanceFrom } from './BalanceFromRow';
 
 export type TokenInputCustomProps = {
   /**
@@ -59,25 +58,17 @@ export type TokenInputCustomProps = {
    */
   allowNegative?: boolean;
   /**
+   * whether to use the wrapped variant or the default text field variant
+   */
+  inputVariant?: 'default' | 'wrapped'
+  /**
    * 
    */
   onChange?: (finalValue: BigNumber | undefined) => void;
 };
 
-export type TokenInputVariantProps = {
-  /**
-   * whether to use the wrapped variant or the default text field variant
-   */
-  inputVariant?: 'default' | 'wrapped'
-  /**
-   * to show the token origin options (FARM, CIRCULATING, COMBINED)
-   */
-  balanceFrom?: BalanceFrom;
-}
-
 export type TokenInputProps = (
   TokenInputCustomProps // custom
-  & TokenInputVariantProps // custom variant
   & Partial<Omit<TextFieldProps, 'onChange'>>  // MUI TextField
 );
 
@@ -155,7 +146,6 @@ const TokenInput: FC<
   min,
   allowNegative = false,
   inputVariant = 'default',
-  balanceFrom = undefined,
   /// Formik props
   field,
   form,

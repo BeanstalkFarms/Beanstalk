@@ -15,11 +15,11 @@ import {
 import { ZERO_BN } from '~/constants';
 import { FarmerBalances } from '~/state/farmer/balances';
 import FarmModeField from '../Common/Form/FarmModeField';
-import copyText from '~/constants/copy';
-import { FarmToMode } from '~/lib/Beanstalk/Farm';
 import EmbeddedCard from '../Common/EmbeddedCard';
+import { BEAN } from '~/constants/tokens';
+import { balanceFromLabels } from '../Common/Form/BalanceFromRow';
 
-const FIELD_VALUE = 'claiming' as const;
+const FIELD_VALUE = 'beansClaiming' as const;
 
 const uiDescriptions = {
   [ClaimableBeanToken.SPROUTS]: 'Rinsable Sprouts',
@@ -31,62 +31,53 @@ const ClaimableAssets: React.FC<{
   balances: Record<string, ClaimableBeanAssetFragment>;
   farmerBalances: FarmerBalances;
 }> = ({ balances, farmerBalances }) => {
-  const { values, setFieldValue } = useFormikContext<FormState &  FarmWithClaimFormState>();
+  const { values, setFieldValue } = useFormikContext<FormState & FarmWithClaimFormState>();
 
-  console.log(values.totalClaimable.toString());
+  const { assetsWithBalance, allSelected, totalClaiming, disabled } = useMemo(() => {
+    const _disabled = Object.values(balances).every((v) => v.amount.lte(0));
+    const _totalClaiming = Object.values(values.beansClaiming).reduce(
+      (prev, curr) => {
+        if (curr?.amount?.gt(0)) prev = prev.plus(curr.amount);
+        return prev;
+      },
+      ZERO_BN
+    );
+    const _assetsWithBalance = Object.entries(balances).reduce(
+      (prev, [k, v]) => {
+        if (v.amount?.gt(0)) prev[k] = v;
+        return prev;
+      },
+      {} as Record<string, ClaimableBeanAssetFragment>
+    );
+    const _allSelected = Object.keys(_assetsWithBalance).every(
+      (k) => values.beansClaiming[k]
+    );
 
-  const { assetsWithBalance, allSelected, totalClaiming, disabled } =
-    useMemo(() => {
-      const _disabled = Object.values(balances).every((v) => v.amount.lte(0));
-      const _totalClaiming = Object.values(values.claiming).reduce(
-        (prev, curr) => {
-          if (curr?.amount?.gt(0)) prev = prev.plus(curr.amount);
-          return prev;
-        },
-        ZERO_BN
-      );
-      const _assetsWithBalance = Object.entries(balances).reduce(
-        (prev, [k, v]) => {
-          if (v.amount?.gt(0)) prev[k] = v;
-          return prev;
-        },
-        {} as Record<string, ClaimableBeanAssetFragment>
-      );
-      const _allSelected = Object.keys(_assetsWithBalance).every(
-        (k) => values.claiming[k]
-      );
-
-      return {
-        assetsWithBalance: _assetsWithBalance,
-        allSelected: _allSelected,
-        disabled: _disabled,
-        totalClaiming: _totalClaiming,
-      };
-    }, [balances, values.claiming]);
+    return {
+      assetsWithBalance: _assetsWithBalance,
+      allSelected: _allSelected,
+      disabled: _disabled,
+      totalClaiming: _totalClaiming,
+    };
+  }, [balances, values.beansClaiming]);
 
   const surplus = useMemo(() => {
-    if (totalClaiming.eq(0)) return ZERO_BN;
     const data = values.tokens[0] || undefined;
-    if (!data) return totalClaiming;
-    if (data.token !== balances[ClaimableBeanToken.BEAN].token) {
-      return totalClaiming;
+    if (totalClaiming.eq(0) || !data) return ZERO_BN;
+    // this is only correct if claimed beans are used first
+    if (data.token === BEAN[1] && data.amount?.lt(totalClaiming)) {
+      return totalClaiming.minus(data.amount || ZERO_BN);
     }
-    // if (selectedToken && balances[ClaimableBeanToken.BEAN].token.address === selectedToken.token.address) {
-    //   const beanBalance = farmerBalances?.[selectedToken.token.address]?.[values.balanceFrom] || ZERO_BN;
-
-    //   // FIX ME
-    //   return ZERO_BN;
-    // }
-    // return totalClaiming;
-  }, [balances, totalClaiming, values.tokens]);
+    return totalClaiming;
+  }, [totalClaiming, values.tokens]);
 
   // component state functions
   const handleToggle = (
     key: ClaimableBeanToken,
     data: ClaimableBeanAssetFragment
   ) => {
-    if (key in values.claiming) {
-      const copy = { ...values.claiming };
+    if (key in values.beansClaiming) {
+      const copy = { ...values.beansClaiming };
       delete copy[key];
       if (!Object.keys(copy).length) {
         setFieldValue('destination', undefined);
@@ -94,7 +85,7 @@ const ClaimableAssets: React.FC<{
       setFieldValue(FIELD_VALUE, copy);
     } else {
       setFieldValue(FIELD_VALUE, {
-        ...values.claiming,
+        ...values.beansClaiming,
         [key]: data as ClaimableBeanAssetFragment,
       });
     }
@@ -119,15 +110,15 @@ const ClaimableAssets: React.FC<{
             <Tooltip
               title="tooltip data goes here" // TODO FIX ME
               placement="right"
-          >
+            >
               <HelpOutlineIcon
                 sx={{
-                color: 'text.secondary',
-                display: 'inline',
-                mb: 0.5,
-                fontSize: '11px',
-              }}
-            />
+                  color: 'text.secondary',
+                  display: 'inline',
+                  mb: 0.5,
+                  fontSize: '11px',
+                }}
+              />
             </Tooltip>
           </Typography>
           <Row>
@@ -154,9 +145,9 @@ const ClaimableAssets: React.FC<{
             <Typography component="span" variant="inherit">
               Beans applied to use on your{' '}
             </Typography>
-            <Typography component="span" variant="inherit" fontStyle="italic">
+            <Typography component="span" variant="inherit" fontStyle="italic" sx={{ textTransform: 'capitalize' }}>
               {/* TODO FIX ME TO BE DYNAMIC */}
-              {copyText.MODES[values.destination || FarmToMode.INTERNAL]} 
+              {balanceFromLabels[values.balanceFrom]} Balance
             </Typography>
           </Typography>
         </SidelineAlert>
@@ -169,7 +160,7 @@ const ClaimableAssets: React.FC<{
               token={data.token}
               amount={data.amount}
               title={uiDescriptions[k as ClaimableBeanToken]}
-              selected={k in values.claiming}
+              selected={k in values.beansClaiming}
               toggle={() => handleToggle(k as ClaimableBeanToken, data)}
           />
         ))}

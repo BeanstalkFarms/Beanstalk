@@ -16,10 +16,6 @@ import { FC } from '~/types';
 import { hexToRgba } from '~/util/ui';
 import { BalanceFrom } from './BalanceFromRow';
 
-export type TokenAdornmentTypeProps = {
-  adornmentVariant?: 'default' | 'outlined-compact';
-};
-
 export type TokenAdornmentProps = {
   token: Token;
   balanceFrom?: BalanceFrom;
@@ -28,9 +24,20 @@ export type TokenAdornmentProps = {
   downArrowIconSize?: keyof typeof IconSize;
 } & ButtonProps;
 
-const TokenAdornment: FC<TokenAdornmentProps & TokenAdornmentTypeProps> = ({
+const wrappedVariantSx = {
+  px: 1,
+  py: 0.1,
+  height: 'unset',
+  border: '1px solid',
+  borderColor: 'text.light',
+  ':hover': {
+    borderColor: 'text.light',
+    backgroundColor: BeanstalkPalette.lightestBlue
+  }
+};
+
+const TokenAdornment: FC<TokenAdornmentProps> = ({
   // Config
-  adornmentVariant: _variant = 'default',
   balanceFrom,
   token,
   // Button
@@ -44,35 +51,31 @@ const TokenAdornment: FC<TokenAdornmentProps & TokenAdornmentTypeProps> = ({
 }) => {
   const iconSize = size && size === 'small' ? 'xs' : _iconSize;
   const textVariant = size && size === 'small' ? 'body2' : 'bodyMedium';
-  const isDefaultVariant = _variant === 'default';
 
   return (
     <InputAdornment position="end">
       <Button
+        id="token-adornment-button"
         {...props}
         // If no click handler is provided, disable so that
         // no mouse events work (i.e. no hover bg)
         disabled={disabled || !onClick}
         onClick={onClick}
-        variant={isDefaultVariant ? 'text' : 'outlined'}
-        color={isDefaultVariant ? 'primary' : undefined}
+        variant={!balanceFrom ? 'text' : 'outlined'}
+        color={!balanceFrom ? 'primary' : undefined}
         sx={{
           display: 'inline-flex',
           alignItems: 'center',
           fontWeight: 'normal',
           cursor: 'pointer',
           color: 'text.primary',
-          px: isDefaultVariant ? undefined : 1,
-          py: isDefaultVariant ? undefined : 0.1,
-          height: isDefaultVariant ? undefined : 'unset',
-          border: `1px solid ${isDefaultVariant ? 'transparent' : 'text.light'}`,
-          backgroundColor: isDefaultVariant && balanceFrom ? BeanstalkPalette.lightestBlue : 'transparent !important',
           boxSizing: 'border-box',
+          ...(balanceFrom ? wrappedVariantSx : {}),
           ...props.sx,
         }}
       >
         <Row gap={0.5}>
-          {balanceFrom !== undefined ? (
+          {balanceFrom ? (
             <>
               {balanceFrom !== BalanceFrom.INTERNAL ? (
                 <AddressIcon size={IconSize[iconSize]} />

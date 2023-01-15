@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Button, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, Link, Stack, Box } from '@mui/material';
+import { Button, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, Link, Stack, Box, Tooltip } from '@mui/material';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { StyledDialog, StyledDialogActions, StyledDialogContent, StyledDialogTitle } from '~/components/Common/Dialog';
 import Token from '~/classes/Token';
 import { displayBN } from '~/util';
@@ -198,61 +199,76 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
           */}
         <List sx={{ p: 0 }}>
           {filteredTokenList.map((_token) => {
-              const tokenBalance = getBalance(_token.address);
-              const applicableBalance = getApplicableBalances(_token.address);
-              return (
-                <ListItem
-                  key={_token.address}
-                  color="primary"
-                  disablePadding
-                  onClick={onClickItem(_token)}
-                  sx={listItemSx}
-                >
-                  <ListItemButton disableRipple selected={selectedInternal.has(_token)}>
-                    {/* Top-level button stack */}
-                    <Row justifyContent="space-between" sx={{ width: '100%' }}>
-                      {/* Icon & text left side */}
-                      <Row justifyContent="center" gap={0}>
-                        <ListItemIcon>
-                          <img
-                            src={_token.logo}
-                            alt=""
-                            css={{ 
-                            width: IconSize.tokenSelect,
-                            height: IconSize.tokenSelect
-                          }}
-                        />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={_token.symbol}
-                          secondary={_token.name}
-                          sx={{ my: 0 }}
-                        />
-                      </Row>
-                      {/* Balances right side */}
-                      {_balances ? (
-                        <Typography variant="bodyLarge">
-                          {/* Token balance */}
-                          {displayBN(tokenBalance)}
-                          {/* additionally applied balance */}
-                          {applicableBalance?.applied.gt(0) ? (
-                            <Typography variant="inherit" color="primary" component="span">
-                              &nbsp; + {displayBN(applicableBalance.applied)}
-                            </Typography>
-                          ) : null}
-                          {/* remaining applicable balance */}
-                          {applicableBalance?.remaining.gt(0) ? (
-                            <Typography variant="inherit" color="text.tertiary" component="span">
-                              &nbsp; + {displayBN(applicableBalance.remaining)}
-                            </Typography>
-                          ) : null}
-                        </Typography>
-                      ) : null}
+            const tokenBalance = getBalance(_token.address);
+            const applicableBalance = getApplicableBalances(_token.address);
+            return (
+              <ListItem
+                key={_token.address}
+                color="primary"
+                disablePadding
+                onClick={onClickItem(_token)}
+                sx={listItemSx}
+              >
+                <ListItemButton disableRipple selected={selectedInternal.has(_token)}>
+                  {/* Top-level button stack */}
+                  <Row justifyContent="space-between" sx={{ width: '100%' }}>
+                    {/* Icon & text left side */}
+                    <Row justifyContent="center" gap={0}>
+                      <ListItemIcon>
+                        <img
+                          src={_token.logo}
+                          alt=""
+                          css={{ 
+                          width: IconSize.tokenSelect,
+                          height: IconSize.tokenSelect
+                        }}
+                      />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={_token.symbol}
+                        secondary={_token.name}
+                        sx={{ my: 0 }}
+                      />
                     </Row>
-                  </ListItemButton>
-                </ListItem>
-              ); 
-            })}
+                    {/* Balances right side */}
+                    {_balances ? (
+                      <Typography variant="bodyLarge">
+                        {/* Token balance */}
+                        {displayBN(tokenBalance)}
+                        {/* additionally applied balance */}
+                        {applicableBalance?.applied.gt(0) ? (
+                          <Typography variant="inherit" color="primary" component="span">
+                            &nbsp; + {displayBN(applicableBalance.applied)}
+                          </Typography>
+                        ) : null}
+                        {/* remaining applicable balance */}
+                        {applicableBalance?.remaining.gt(0) ? (
+                          <Typography variant="inherit" color="text.tertiary" component="span">
+                            &nbsp; + {displayBN(applicableBalance.remaining)}
+                          </Typography>
+                        ) : null}
+                        {applicableBalance?.applied.gt(0) || applicableBalance?.remaining.gt(0) ? (
+                          <Tooltip
+                            title="tooltip data goes here" // TODO FIX ME
+                            placement="right"
+                          >
+                            <HelpOutlineIcon
+                              sx={{
+                                color: 'text.secondary',
+                                display: 'inline',
+                                mb: 0.5,
+                                fontSize: '12px',
+                              }}
+                            />
+                          </Tooltip>
+                        ) : null}
+                      </Typography>
+                    ) : null}
+                  </Row>
+                </ListItemButton>
+              </ListItem>
+            ); 
+          })}
           {/**
             * Farm + Circulating Balances notification
             */}

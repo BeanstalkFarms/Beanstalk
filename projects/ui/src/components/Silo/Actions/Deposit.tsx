@@ -92,19 +92,19 @@ const DepositForm : FC<
   const isReady = bdv.gt(0);
 
   const applicableBalances: AddressMap<ApplicableBalance> = useMemo(() => {
-    const beanClaimAmount = Object.values(values.claiming).reduce((prev, curr) => {
+    const beanClaimAmount = Object.values(values.beansClaiming).reduce((prev, curr) => {
       if (curr.amount?.gt(0)) prev = prev.plus(curr.amount);
       return prev;
     }, ZERO_BN);
     
     return {
       [BEAN[1].address]: {
-        total: values.totalClaimable,
+        total: values.maxBeansClaimable,
         applied: beanClaimAmount,
-        remaining: values.totalClaimable.minus(beanClaimAmount),
+        remaining: values.maxBeansClaimable.minus(beanClaimAmount),
       }
     };
-  }, [values.claiming, values.totalClaimable]);
+  }, [values.beansClaiming, values.maxBeansClaimable]);
 
   ///
   const handleSelectTokens = useCallback((_tokens: Set<Token>) => {
@@ -133,9 +133,9 @@ const DepositForm : FC<
   useEffect(() => {
     // update max claimable if it changes
     // do this here instead of in its parent to avoid it not being set in initial values
-    if (values.totalClaimable.eq(claimable.total)) return;
-    setFieldValue('totalClaimable', claimable.total);
-  }, [claimable.total, setFieldValue, values.totalClaimable]);
+    if (values.maxBeansClaimable.eq(claimable.total)) return;
+    setFieldValue('maxBeansClaimable', claimable.total);
+  }, [claimable.total, setFieldValue, values.maxBeansClaimable]);
 
   return (
     <Form noValidate autoComplete="off">
@@ -163,9 +163,10 @@ const DepositForm : FC<
             showTokenSelect={showTokenSelect}
             handleQuote={handleQuote}
             inputVariant="wrapped"
-            adornmentVariant="outlined-compact"
-            balanceFrom={values.balanceFrom}
             additionalBalance={applicableBalances[tokenState.token.address]?.applied}
+            TokenAdornmentProps={{
+              balanceFrom: values.balanceFrom
+            }}
           />
         ))}
         <ClaimableAssets
@@ -178,7 +179,6 @@ const DepositForm : FC<
             <TokenOutputsField 
               groups={[
                 {
-                  title: 'asdfasdf',
                   data: [{
                     token: whitelistedToken,
                     amount: amount,
@@ -335,8 +335,8 @@ const Deposit : FC<{
         amountOut: undefined,
       },
     ],
-    totalClaimable: ZERO_BN,
-    claiming: {},
+    maxBeansClaimable: ZERO_BN,
+    beansClaiming: {},
     balanceFrom: BalanceFrom.TOTAL,
     destination: FarmToMode.INTERNAL,
   }), [baseToken]);
