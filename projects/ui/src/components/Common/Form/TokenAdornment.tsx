@@ -12,19 +12,35 @@ import { BeanstalkPalette, hexToRgba, IconSize } from '../../App/muiTheme';
 import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
+import { BalanceFrom } from './BalanceFromRow';
+import AddressIcon from '../AddressIcon';
 
 export type TokenAdornmentProps = (
   {
     token: Token;
+    balanceFrom?: BalanceFrom;
     buttonLabel?: string | JSX.Element;
     iconSize?: keyof typeof IconSize;
     downArrowIconSize?: keyof typeof IconSize;
   } & ButtonProps
 );
 
+const wrappedVariantSx = {
+  px: 1,
+  py: 0.1,
+  height: 'unset',
+  border: '1px solid',
+  borderColor: 'text.light',
+  ':hover': {
+    borderColor: 'text.light',
+    backgroundColor: BeanstalkPalette.lightestBlue
+  }
+};
+
 const TokenAdornment: FC<TokenAdornmentProps> = ({
   // Config
   token,
+  balanceFrom,
   // Button
   size,
   sx, 
@@ -40,8 +56,8 @@ const TokenAdornment: FC<TokenAdornmentProps> = ({
   return (
     <InputAdornment position="end">
       <Button
-        variant="text"
-        color="primary"
+        variant={!balanceFrom ? 'text' : 'outlined'}
+        color={!balanceFrom ? 'primary' : undefined}
         size={size}
         sx={{
           display: 'inline-flex',
@@ -49,6 +65,9 @@ const TokenAdornment: FC<TokenAdornmentProps> = ({
           cursor: 'pointer',
           border: '1px solid transparent',
           fontWeight: 'normal',
+          color: 'text.primary',
+          boxSizing: 'border-box',
+          ...(balanceFrom ? wrappedVariantSx : {}),
           ...sx,
         }}
         // If no click handler is provided, disable so that
@@ -58,6 +77,23 @@ const TokenAdornment: FC<TokenAdornmentProps> = ({
         {...props}
       >
         <Row gap={0.5}>
+          {balanceFrom ? (
+            <>
+              {balanceFrom !== BalanceFrom.INTERNAL ? (
+                <AddressIcon size={IconSize[iconSize]} />
+              ) : null}
+              {balanceFrom !== BalanceFrom.EXTERNAL ? (
+                <Typography>🚜</Typography>
+              ) : null}
+              <Box
+                sx={{
+                  borderRight: `1px solid ${BeanstalkPalette.lightestGrey}`,
+                  height: textVariant === 'body2' ? 12 : 16,
+                  mx: 0.3,
+                }}
+              />
+            </>
+          ) : null}
           {token.logo ? (
             <Box
               component="img"
@@ -71,7 +107,11 @@ const TokenAdornment: FC<TokenAdornmentProps> = ({
             />
           ) : null}
           <Box sx={{ color: 'text.primary' }}>
-            <Typography variant={textVariant} fontWeight="fontWeightRegular">
+            <Typography 
+              variant={textVariant} 
+              fontWeight="fontWeightRegular" 
+              color="text.primary"
+            >
               {buttonLabel || token.symbol}
             </Typography>
           </Box>
@@ -80,7 +120,6 @@ const TokenAdornment: FC<TokenAdornmentProps> = ({
               sx={{
                 fontSize: downArrowIconSize || 18,
                 color: hexToRgba(BeanstalkPalette.textBlue, 0.87)
-                // color: hexToRgba(BeanstalkPalette.theme.winter.primary, 0.87)
               }}
             />
           )}
