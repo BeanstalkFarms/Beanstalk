@@ -4,7 +4,8 @@
   "packageManager": "yarn@3.3.1",
   "workspaces": [
     "projects/*",
-    "protocol"
+    "protocol",
+    "utils"
   ],
   "devDependencies": {
     "@types/prettier": "^2",
