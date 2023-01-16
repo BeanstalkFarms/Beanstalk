@@ -54,9 +54,10 @@ const Graph: React.FC<Props> = (props) => {
   );
 
   // tooltip
-  const { containerBounds, containerRef } = useTooltipInPortal(
-    { scroll: true, detectBounds: true }
-  );
+  const { containerBounds, containerRef } = useTooltipInPortal({
+    scroll: true,
+    detectBounds: true,
+  });
 
   const {
     showTooltip,
@@ -103,25 +104,25 @@ const Graph: React.FC<Props> = (props) => {
   // const yTickNum = height > 180 ? undefined : 5;
   const xTickNum = width > 700 ? undefined : Math.floor(width / 70);
 
-  const [
-    tickSeasons,
-    tickDates,
-  ] = useMemo(
-    () => {
-      const interval = Math.ceil(series[0].length / 12);
-      const shift    = Math.ceil(interval / 3); // slight shift on tick labels
-      return series[0].reduce<[number[], string[]]>((prev, curr, i) => {
+  const [tickSeasons, tickDates] = useMemo(() => {
+    const interval = Math.ceil(series[0].length / 12);
+    const shift = Math.ceil(interval / 3); // slight shift on tick labels
+    return series[0].reduce<[number[], string[]]>(
+      (prev, curr, i) => {
         if (i % interval === shift) {
           prev[0].push(curr.season);
-          prev[1].push(`${(curr.date).getMonth() + 1}/${(curr.date).getDate()}`);
+          prev[1].push(`${curr.date.getMonth() + 1}/${curr.date.getDate()}`);
         }
         return prev;
-      }, [[], []]);
-    },
-    [series]
-  );
+      },
+      [[], []]
+    );
+  }, [series]);
 
-  const xTickFormat = useCallback((_: any, i: number) => tickDates[i], [tickDates]);
+  const xTickFormat = useCallback(
+    (_: any, i: number) => tickDates[i],
+    [tickDates]
+  );
 
   const { getStyle } = useMemo(
     () => common.getChartStyles(stylesConfig),
@@ -266,7 +267,24 @@ const MultiLineChart: React.FC<BaseChartProps> = (props) => (
             {...providerProps}
             {...props}
           >
-            {(childProps) => <ExploitLine {...childProps} />}
+            {(childProps) => (
+              <>
+                <ExploitLine {...childProps} />
+                {props.isZeroHorizontal && (
+                  <Line
+                    from={{ x: 0, y: childProps.scales[0].yScale(1) as number }}
+                    to={{
+                      x: childProps.width - providerProps.common.yAxisWidth,
+                      y: childProps.scales[0].yScale(1) as number,
+                    }}
+                    stroke={BeanstalkPalette.logoGreen}
+                    strokeDasharray={4}
+                    strokeDashoffset={2}
+                    strokeWidth={1}
+                  />
+                )}
+              </>
+            )}
           </Graph>
         )}
       </ParentSize>
