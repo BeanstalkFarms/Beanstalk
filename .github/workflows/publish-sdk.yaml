@@ -2,7 +2,7 @@ name: Publish SDK to NPM
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - 'projects/sdk/package.json'
 jobs:
