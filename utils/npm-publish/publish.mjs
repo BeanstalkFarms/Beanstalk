@@ -94,4 +94,3 @@ function exit(error) {
   process.exit(0);
 }
 
-// Start publishing
