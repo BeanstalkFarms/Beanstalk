@@ -1,6 +1,5 @@
-import { Button, Tooltip, Typography } from '@mui/material';
+import { Button, Typography } from '@mui/material';
 import React from 'react';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import AddressIcon from '../AddressIcon';
 import Row from '../Row';
 
@@ -74,19 +73,6 @@ const BalanceFromRow: React.FC<{
             >
               {balanceFromLabels[option]} Balance
             </Typography>
-            {option === BalanceFrom.INTERNAL &&
-            balanceFrom === BalanceFrom.INTERNAL ? (
-              <Tooltip title="asdf">
-                <ErrorOutlineIcon
-                  sx={{
-                    color: 'text.primary',
-                    display: 'inline',
-                    // mb: 0.5,
-                    fontSize: '16px',
-                  }}
-                />
-              </Tooltip>
-            ) : null}
           </Row>
         </Button>
       );

@@ -8,7 +8,8 @@ import {
 } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import Token from '~/classes/Token';
-import { BeanstalkPalette, hexToRgba, IconSize } from '../../App/muiTheme';
+import { BeanstalkPalette, IconSize } from '../../App/muiTheme';
+import { hexToRgba } from '~/util/UI';
 import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';

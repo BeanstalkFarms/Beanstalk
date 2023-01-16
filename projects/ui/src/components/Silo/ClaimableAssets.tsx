@@ -31,42 +31,49 @@ const ClaimableAssets: React.FC<{
   balances: Record<string, ClaimableBeanAssetFragment>;
   farmerBalances: FarmerBalances;
 }> = ({ balances, farmerBalances }) => {
-  const { values, setFieldValue } = useFormikContext<FormState & FarmWithClaimFormState>();
+  const { values, setFieldValue } = useFormikContext<
+    FormState & FarmWithClaimFormState
+  >();
 
-  const { assetsWithBalance, allSelected, totalClaiming, disabled } = useMemo(() => {
-    const _disabled = Object.values(balances).every((v) => v.amount.lte(0));
-    const _totalClaiming = Object.values(values.beansClaiming).reduce(
-      (prev, curr) => {
-        if (curr?.amount?.gt(0)) prev = prev.plus(curr.amount);
-        return prev;
-      },
-      ZERO_BN
-    );
-    const _assetsWithBalance = Object.entries(balances).reduce(
-      (prev, [k, v]) => {
-        if (v.amount?.gt(0)) prev[k] = v;
-        return prev;
-      },
-      {} as Record<string, ClaimableBeanAssetFragment>
-    );
-    const _allSelected = Object.keys(_assetsWithBalance).every(
-      (k) => values.beansClaiming[k]
-    );
+  const { assetsWithBalance, allSelected, totalClaiming, disabled } =
+    useMemo(() => {
+      const _disabled = Object.values(balances).every((v) => v.amount.lte(0));
+      const _totalClaiming = Object.values(values.beansClaiming).reduce(
+        (prev, curr) => {
+          if (curr?.amount?.gt(0)) prev = prev.plus(curr.amount);
+          return prev;
+        },
+        ZERO_BN
+      );
+      const _assetsWithBalance = Object.entries(balances).reduce(
+        (prev, [k, v]) => {
+          if (v.amount?.gt(0)) prev[k] = v;
+          return prev;
+        },
+        {} as Record<string, ClaimableBeanAssetFragment>
+      );
+      const _allSelected = Object.keys(_assetsWithBalance).every(
+        (k) => values.beansClaiming[k]
+      );
 
-    return {
-      assetsWithBalance: _assetsWithBalance,
-      allSelected: _allSelected,
-      disabled: _disabled,
-      totalClaiming: _totalClaiming,
-    };
-  }, [balances, values.beansClaiming]);
+      return {
+        assetsWithBalance: _assetsWithBalance,
+        allSelected: _allSelected,
+        disabled: _disabled,
+        totalClaiming: _totalClaiming,
+      };
+    }, [balances, values.beansClaiming]);
 
   const surplus = useMemo(() => {
     const data = values.tokens[0] || undefined;
     if (totalClaiming.eq(0) || !data) return ZERO_BN;
     // this is only correct if claimed beans are used first
-    if (data.token === BEAN[1] && data.amount?.lt(totalClaiming)) {
-      return totalClaiming.minus(data.amount || ZERO_BN);
+    if (data.token === BEAN[1]) {
+      if (!data.amount) return totalClaiming;
+      if (data.amount?.lt(totalClaiming)) {
+        return totalClaiming.minus(data.amount || ZERO_BN);
+      }
+      return undefined;
     }
     return totalClaiming;
   }, [totalClaiming, values.tokens]);
@@ -138,14 +145,19 @@ const ClaimableAssets: React.FC<{
             color="text.primary"
             variant="bodySmall"
             sx={{ whitespace: 'nowrap' }}
-        >
+          >
             <Typography component="span" variant="caption" fontWeight="bold">
               + {displayFullBN(totalClaiming, 2)}
             </Typography>{' '}
             <Typography component="span" variant="inherit">
               Beans applied to use on your{' '}
             </Typography>
-            <Typography component="span" variant="inherit" fontStyle="italic" sx={{ textTransform: 'capitalize' }}>
+            <Typography
+              component="span"
+              variant="inherit"
+              fontStyle="italic"
+              sx={{ textTransform: 'capitalize' }}
+            >
               {/* TODO FIX ME TO BE DYNAMIC */}
               {balanceFromLabels[values.balanceFrom]} Balance
             </Typography>
@@ -162,24 +174,24 @@ const ClaimableAssets: React.FC<{
               title={uiDescriptions[k as ClaimableBeanToken]}
               selected={k in values.beansClaiming}
               toggle={() => handleToggle(k as ClaimableBeanToken, data)}
-          />
-        ))}
+            />
+          ))}
         </Stack>
         {/* FIX ME */}
-        {surplus && surplus?.gt(0) 
-        ? <FarmModeField 
+        {surplus && surplus?.gt(0) ? (
+          <FarmModeField
             name="destination"
             infoLabel={
               <Typography>
-                Send remaining{' '} 
+                Send remaining{' '}
                 <Typography component="span" color="primary.main">
                   {displayFullBN(surplus, 2)} BEAN{' '}
                 </Typography>
                 to..
               </Typography>
-            } 
+            }
           />
-        : null}
+        ) : null}
       </Stack>
     </EmbeddedCard>
   );
