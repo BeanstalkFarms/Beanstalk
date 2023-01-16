@@ -15,3 +15,16 @@ npm i -g @beanstalk/cli
 bean balance
 bean setbalance
 ```
+
+## Local development use
+
+
+While developing, execute the _ts_ file in ./src w/o building via:
+```
+yarn beandev
+```
+
+To run the built output, run:
+```
+yarn bean
+```

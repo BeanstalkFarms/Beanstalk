@@ -25,10 +25,14 @@ const TOOLTIP_COMPONENT_PROPS = {
 type SiloAssetApyChipProps = {
   token: Token;
   metric: 'bean' | 'stalk';
-  variant?: 'default' | 'labeled'
+  variant?: 'default' | 'labeled';
 };
 
-const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({ token, metric, variant = 'default' }) => {
+const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
+  token,
+  metric,
+  variant = 'default',
+}) => {
   const { data: latestYield } = useAPY();
   const Bean = useChainConstant(BEAN);
   const isBean = metric === 'bean';
@@ -42,7 +46,18 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({ token, metric, variant = 
       : null
     : null;
 
-  const tokenProps = isBean ? Bean : ({ symbol: 'Stalk', logo: stalkIconBlue } as Token);
+  const tokenProps = isBean
+    ? Bean
+    : ({ symbol: 'Stalk', logo: stalkIconBlue } as Token);
+
+  const val = apys ? apys[metric].times(100) : null;
+  const displayString = `${
+    val
+      ? val.gt(0) && val.lt(0.1)
+        ? '< 0.1'
+        : val.toFixed(1)
+      : '0.0'
+  }%`;
 
   return (
     <Tooltip
@@ -52,22 +67,55 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({ token, metric, variant = 
         <Row gap={0}>
           {metric === 'bean' && (
             <Box sx={{ px: 1, py: 0.5, maxWidth: 245 }}>
-              <Stat 
-                title={<Row gap={0.5}><TokenIcon token={Bean} />Total Beans per Season</Row>}
+              <Stat
+                title={
+                  <Row gap={0.5}>
+                    <TokenIcon token={Bean} />
+                    Total Beans per Season
+                  </Row>
+                }
                 gap={0.25}
                 variant="h4"
-                amount={latestYield ? displayFullBN(latestYield.beansPerSeasonEMA, Bean.displayDecimals) : '0'}
+                amount={
+                  latestYield
+                    ? displayFullBN(
+                        latestYield.beansPerSeasonEMA,
+                        Bean.displayDecimals
+                      )
+                    : '0'
+                }
                 subtitle="30-day exponential moving average of Beans earned by all Stalkholders per Season."
               />
             </Box>
           )}
-          <Box sx={{ maxWidth: isBean ? 285 : 245, px: isBean ? 1 : 0, py: isBean ? 0.5 : 0 }}>
+          <Box
+            sx={{
+              maxWidth: isBean ? 285 : 245,
+              px: isBean ? 1 : 0,
+              py: isBean ? 0.5 : 0,
+            }}
+          >
             {metric === 'bean' ? (
-              <> The Variable Bean APY uses a moving average of Beans earned by Stalkholders during recent Seasons to estimate a future rate of return, accounting for Stalk growth.&nbsp; </>
+              <>
+                {' '}
+                The Variable Bean APY uses a moving average of Beans earned by
+                Stalkholders during recent Seasons to estimate a future rate of
+                return, accounting for Stalk growth.&nbsp;{' '}
+              </>
             ) : (
-              <> The Variable Stalk APY estimates the growth in your Stalk balance for Depositing {token.name}.&nbsp; </>
+              <>
+                {' '}
+                The Variable Stalk APY estimates the growth in your Stalk
+                balance for Depositing {token.name}.&nbsp;{' '}
+              </>
             )}
-            <Link underline="hover" href="https://docs.bean.money/almanac/guides/silo/understand-vapy" target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+            <Link
+              underline="hover"
+              href="https://docs.bean.money/almanac/guides/silo/understand-vapy"
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
               Learn more
             </Link>
           </Box>
@@ -80,8 +128,12 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({ token, metric, variant = 
         label={
           <Typography sx={{ whiteSpace: 'nowrap' }}>
             <Row gap={0.5} flexWrap="nowrap" justifyContent="center">
-              {variant === 'labeled' && <><TokenIcon token={tokenProps} /> vAPY:{' '}</>}
-              {`${apys ? apys[metric].times(100).toFixed(1) : '0.0'}%`}
+              {variant === 'labeled' && (
+                <>
+                  <TokenIcon token={tokenProps} /> vAPY:{' '}
+                </>
+              )}
+              {displayString}
             </Row>
           </Typography>
         }

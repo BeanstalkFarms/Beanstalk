@@ -1,0 +1,35 @@
+name: Continuous Integration - UI
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'projects/ui/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: UI Tests
+        uses: actions/setup-node@v1
+        with:
+          node-version: '16'
+      - name: Cache Node Modules
+        id: node-modules-cache
+        uses: actions/cache@v3
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Install Dependencies
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        run: yarn install --immutable
+      - name: Generate Typedefs
+        run: yarn ui:generate
+      - name: Unit Tests
+        run: yarn ui:test
+      - name: Browser Tests
+        uses: cypress-io/github-action@v4
+        with:
+          start: yarn ui:start
+          command: yarn test:browser
