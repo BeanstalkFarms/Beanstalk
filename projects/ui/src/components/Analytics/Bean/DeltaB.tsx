@@ -20,7 +20,7 @@ const statProps = {
 };
 const lineChartProps : Partial<LineChartProps> = {
   yTickFormat: tickFormatLocale,
-  isZeroHorizontal: true,
+  horizontalLineNumber: 0,
 };
 
 const DeltaB: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({

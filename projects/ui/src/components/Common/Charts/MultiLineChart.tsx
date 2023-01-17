@@ -270,12 +270,12 @@ const MultiLineChart: React.FC<BaseChartProps> = (props) => (
             {(childProps) => (
               <>
                 <ExploitLine {...childProps} />
-                {props.isZeroHorizontal && (
+                {props.horizontalLineNumber !== undefined && (
                   <Line
-                    from={{ x: 0, y: childProps.scales[0].yScale(1) as number }}
+                    from={{ x: 0, y: childProps.scales[0].yScale(props.horizontalLineNumber) as number }}
                     to={{
                       x: childProps.width - providerProps.common.yAxisWidth,
-                      y: childProps.scales[0].yScale(1) as number,
+                      y: childProps.scales[0].yScale(props.horizontalLineNumber) as number,
                     }}
                     stroke={BeanstalkPalette.logoGreen}
                     strokeDasharray={4}

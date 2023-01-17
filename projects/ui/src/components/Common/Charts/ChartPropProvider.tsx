@@ -135,7 +135,7 @@ export type BaseChartProps = {
   curve?: CurveFactory | keyof typeof CURVES;
   scale?: keyof typeof SCALES;
   isTWAP?: boolean;
-  isZeroHorizontal?: boolean;
+  horizontalLineNumber?: number;
   stylesConfig?: ChartMultiStyles;
   stackedArea?: boolean;
   tooltip?: boolean | (({ d }: { d?: BaseDataPoint[] }) => JSX.Element | null);

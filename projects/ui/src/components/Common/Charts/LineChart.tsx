@@ -55,7 +55,7 @@ export type LineChartProps = {
     }
   ) => React.ReactElement | null;
   yTickFormat?: TickFormatter<NumberLike>;
-  isZeroHorizontal?: boolean;
+  horizontalLineNumber?: number;
 };
 
 type GraphProps = {
