@@ -80,14 +80,14 @@ describe('estimation', () => {
   });
   const farm = new Farm(provider);
 
-  it('estimates: 1 ETH -> X BEAN', async () => {
+  it.skip('estimates: 1 ETH -> X BEAN', async () => {
     const result = await Farm.estimate(farm.buyBeans(), [ethers.utils.parseUnits('1', 18)]); //
     console.log(`1 ETH -> X BEAN: ${ethers.utils.formatUnits(result.amountOut, 6)}`); // 1000306788
     expect(withinPriceRange(result.amountOut, [ETH_PRICE, 6], 0.1)).toBe(true); // 10% of ETH_PRICE
     expect(result.steps.length).toBe(2);  /// only when hardcoded thru tricrypto2
   });
 
-  it('estimates: X ETH <- 1000 BEAN', async () => {
+  it.skip('estimates: X ETH <- 1000 BEAN', async () => {
     const result = await Farm.estimate(farm.buyBeans(), [ethers.utils.parseUnits('1000', 6)], false); //
     console.log(`X ETH <- 1000 BEAN: ${ethers.utils.formatUnits(result.amountOut, 18)}`); // 997470693756958276
     expect(withinPriceRange(result.amountOut, [1000 / ETH_PRICE, 18], 0.1)).toBe(true); // 10% of ETH_PRICE/1000

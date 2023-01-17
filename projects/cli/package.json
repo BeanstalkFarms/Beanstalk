@@ -1,6 +1,6 @@
 {
   "name": "@beanstalk/cli",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Beanstalk protocol development cli tool",
   "license": "MIT",
   "repository": {
@@ -14,8 +14,9 @@
     "bean": "build/cli.js"
   },
   "scripts": {
-    "publish": "yarn build && yarn npm publish --access public",
-    "build": "rimraf build && tsc && chmod u+x build/cli.js"
+    "cli:publish": "yarn cli:build && yarn npm publish --access public",
+    "cli:build": "rimraf build && tsc && chmod u+x build/cli.js",
+    "beandev": "yarn ts-node-esm src/cli.ts"
   },
   "devDependencies": {
     "@types/command-line-args": "^5",
