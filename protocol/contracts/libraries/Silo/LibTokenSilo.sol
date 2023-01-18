@@ -11,6 +11,7 @@ import "../../C.sol";
 import "./LibUnripeSilo.sol";
 import "./LibLegacyTokenSilo.sol";
 import "~/libraries/LibSafeMathSigned128.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 
 /**
  * @title LibTokenSilo
@@ -18,13 +19,14 @@ import "~/libraries/LibSafeMathSigned128.sol";
  * @notice Contains functions for depositing, withdrawing and claiming
  * whitelisted Silo tokens.
  *
- * For functionality related to Seeds, Stalk, and Roots, see {LibSilo}.
+ * For functionality related to Stalk, and Roots, see {LibSilo}.
  */
 library LibTokenSilo {
     using SafeMath for uint256;
     using SafeMath for int128;
     using SafeMath for uint32;
     using LibSafeMathSigned128 for int128;
+    using SafeCast for int128;
 
     //////////////////////// EVENTS ////////////////////////
 
@@ -64,7 +66,6 @@ library LibTokenSilo {
     //////////////////////// ADD DEPOSIT ////////////////////////
 
     /**
-     * @return seeds The amount of Seeds received for this Deposit.
      * @return stalk The amount of Stalk received for this Deposit.
      * 
      * @dev Calculate the current BDV for `amount` of `token`, then perform 
@@ -75,7 +76,7 @@ library LibTokenSilo {
         address token,
         int32 grownStalkPerBdv,
         uint256 amount
-    ) internal returns (uint256, uint256) {
+    ) internal returns (uint256) {
         uint256 bdv = beanDenominatedValue(token, amount);
         return depositWithBDV(account, token, grownStalkPerBdv, amount, bdv);
     }
@@ -84,7 +85,6 @@ library LibTokenSilo {
      * @dev Once the BDV received for Depositing `amount` of `token` is known, 
      * add a Deposit for `account` and update the total amount Deposited.
      *
-     * `s.ss[token].seeds` stores the number of Seeds per BDV for `token`.
      * `s.ss[token].stalk` stores the number of Stalk per BDV for `token`.
      *
      * FIXME(discuss): If we think of Deposits like 1155s, we might call the
@@ -97,7 +97,7 @@ library LibTokenSilo {
         int32 grownStalkPerBdv,
         uint256 amount,
         uint256 bdv
-    ) internal returns (uint256, uint256) {
+    ) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(bdv > 0, "Silo: No Beans under Token.");
 
@@ -106,7 +106,6 @@ library LibTokenSilo {
         addDepositToAccount(account, token, grownStalkPerBdv, amount, bdv); // Add to Account
 
         return (
-            bdv.mul(s.ss[token].stalkPerBdvPerSeason), //formerly seeds
             bdv.mul(s.ss[token].stalkPerBdv) //formerly stalk
         );
     }
@@ -135,6 +134,10 @@ library LibTokenSilo {
 
         s.a[account].deposits[token][grownStalkPerBdv].amount += uint128(amount); //need safecast here?
         s.a[account].deposits[token][grownStalkPerBdv].bdv += uint128(bdv); //need safecast here?
+
+        //setup or update the MowStatus for this deposit. We should have _just_ mowed before calling this function.
+        s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBDV = grownStalkPerBdv;
+        s.a[account].mowStatuses[token].bdv = uint128(bdv); //need safecast here?
 
         emit AddDeposit(account, token, grownStalkPerBdv, amount, bdv);
     }

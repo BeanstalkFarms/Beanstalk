@@ -149,7 +149,9 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(async (_, __, runSuper
   const paths = await runSuper();
 
   // Apply a filter function to exclude paths that contain the string "replant" to ignore replant code
-  return paths.filter((p) => !p.includes("replant"));
+  paths = paths.filter((p) => !p.includes("replant"));
+  paths = paths.filter((p) => !p.includes("InitWhitelist"));
+  return paths;
 });
 
 //////////////////////// CONFIGURATION ////////////////////////

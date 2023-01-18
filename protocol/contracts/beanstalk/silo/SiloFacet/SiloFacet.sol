@@ -17,7 +17,7 @@ import "~/libraries/Silo/LibSiloPermit.sol";
  * 
  * SiloFacet           public functions for modifying an account's Silo.
  * ↖ TokenSilo         accounting & storage for Deposits, Withdrawals, allowances
- * ↖ Silo              accounting & storage for Seeds, Stalk. and Roots
+ * ↖ Silo              accounting & storage for Stalk, and Roots.
  * ↖ SiloExit          public view funcs for total balances, account balances 
  *                     & other account state.
  * ↖ ReentrancyGuard   provides reentrancy guard modifier and access to {C}.
@@ -42,7 +42,7 @@ contract SiloFacet is TokenSilo {
      *  1. Transfer `amount` of `token` from `account` to Beanstalk.
      *  2. Calculate the current Bean Denominated Value (BDV) for `amount` of `token`.
      *  3. Create or update a Deposit entry for `account` in the current Season.
-     *  4. Mint Stalk and Seeds to `account`.
+     *  4. Mint Stalk to `account`.
      *  5. Emit an `AddDeposit` event.
      * 
      * FIXME(logic): return `(amount, bdv(, season))`
@@ -73,7 +73,7 @@ contract SiloFacet is TokenSilo {
      * associated with it, including:
      *
      * - base Stalk, received based on the BDV of the Deposit.
-     * - Grown Stalk, grown from Seeds while the deposit was held in the Silo.
+     * - Grown Stalk, grown from BDV and stalkPerBdvPerSeason while the deposit was held in the Silo.
      *
      * Note that the Grown Stalk associated with a Deposit is a function of the 
      * delta between the current Season and the Season in which a Deposit was made.
@@ -131,7 +131,7 @@ contract SiloFacet is TokenSilo {
      * 
      * The {mowSender} modifier is not used here because _both_ the `sender` and
      * `recipient` need their Silo updated, since both accounts experience a
-     * change in Seeds. See {Silo-_mow}.
+     * change in deposited BDV. See {Silo-_mow}.
      */
     function transferDeposit(
         address sender,
@@ -154,8 +154,8 @@ contract SiloFacet is TokenSilo {
      * @param sender Source of Deposit.
      * @param recipient Destination of Deposit.
      * @param token Address of the whitelisted ERC20 token to Transfer.
-     * @param seasons Seasons of Deposit to Transfer. 
-     * @param amounts Amounts of `token` to Transfer from corresponding `seasons`.
+     * @param grownStalkPerBdv grownStalkPerBdv of Deposit to Transfer. 
+     * @param amounts Amounts of `token` to Transfer from corresponding `grownStalkPerBdv`.
      * @return bdvs Array of BDV transferred from each Season, now owned by `recipient`.
      *
      * @dev An allowance is required if `sender !== msg.sender`. There must be enough allowance
@@ -169,7 +169,7 @@ contract SiloFacet is TokenSilo {
         address sender,
         address recipient,
         address token,
-        uint32[] calldata seasons,
+        uint32[] calldata grownStalkPerBdv,
         uint256[] calldata amounts
     ) external payable nonReentrant returns (uint256[] memory bdvs) {
         require(amounts.length > 0, "Silo: amounts array is empty");
@@ -183,7 +183,7 @@ contract SiloFacet is TokenSilo {
         _mow(sender);
         // Need to update the recipient's Silo as well.
         _mow(recipient);
-        bdvs = _transferDeposits(sender, recipient, token, seasons, amounts);
+        bdvs = _transferDeposits(sender, recipient, token, grownStalkPerBdv, amounts);
     }
 
     //////////////////////// APPROVE ////////////////////////
@@ -345,7 +345,7 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice Claim Earned Beans and their associated Stalk & Seeds for 
+     * @notice Claim Earned Beans and their associated Stalk for 
      * `msg.sender`.
      *
      * The Stalk associated with Earned Beans is commonly called "Earned Stalk".
@@ -377,7 +377,7 @@ contract SiloFacet is TokenSilo {
 
     /**
      * @notice Update the BDV of an Unripe Deposit. Allows the user to claim
-     * Stalk and Seeds as the BDV of Unripe tokens increases during the Barn
+     * Stalk as the BDV of Unripe tokens increases during the Barn
      * Raise. This was introduced as a part of the Replant.
      *
      * @dev Should revert if `ogBDV > newBDV`. A user cannot lose BDV during an
@@ -391,36 +391,37 @@ contract SiloFacet is TokenSilo {
      */
     function enrootDeposit(
         address token,
-        uint32 season,
+        uint128 grownStalkPerBdv,
         uint256 amount
     ) external nonReentrant mowSender {
         // First, remove Deposit and Redeposit with new BDV
         uint256 ogBDV = LibTokenSilo.removeDepositFromAccount(
             msg.sender,
             token,
-            season,
+            grownStalkPerBdv,
             amount
         );
-        emit RemoveDeposit(msg.sender, token, season, amount); // Remove Deposit does not emit an event, while Add Deposit does.
+        emit RemoveDeposit(msg.sender, token, grownStalkPerBdv, amount); // Remove Deposit does not emit an event, while Add Deposit does.
 
         // Calculate the current BDV for `amount` of `token` and add a Deposit.
         uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
-        LibTokenSilo.addDepositToAccount(msg.sender, token, season, amount, newBDV); // emits AddDeposit event
+        LibTokenSilo.addDepositToAccount(msg.sender, token, grownStalkPerBdv, amount, newBDV); // emits AddDeposit event
 
         // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
         uint256 deltaBDV = newBDV.sub(ogBDV);
 
-        // Mint Stalk/Seeds associated with the new BDV.
-        uint256 deltaSeeds = deltaBDV.mul(s.ss[token].seeds);
+        // Mint Stalk associated with the new BDV.
         uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalk).add(
-            LibSilo.stalkReward(deltaSeeds, _season() - season)
+            LibSilo.stalkReward(grownStalkPerBdv,
+                                s.ss[address(token)].lastCumulativeGrownStalkPerBdv,
+                                newBDV)
         );
-        LibSilo.mintSeedsAndStalk(msg.sender, deltaSeeds, deltaStalk);
+        LibSilo.mintStalk(msg.sender, deltaStalk);
     }
 
     /** 
      * @notice Update the BDV of Unripe Deposits. Allows the user to claim Stalk
-     * and Seeds as the BDV of Unripe tokens increases during the Barn Raise.
+     * as the BDV of Unripe tokens increases during the Barn Raise.
      * This was introduced as a part of the Replant.
      *
      * @dev Should revert if `ogBDV > newBDV`. A user cannot lose BDV during an
@@ -433,47 +434,44 @@ contract SiloFacet is TokenSilo {
      */
     function enrootDeposits(
         address token,
-        uint32[] calldata seasons,
+        uint32[] calldata grownStalkPerBdvs,
         uint256[] calldata amounts
     ) external nonReentrant mowSender {
         // First, remove Deposits because every deposit is in a different season,
-        // we need to get the total Stalk/Seeds, not just BDV.
-        AssetsRemoved memory ar = removeDepositsFromAccount(msg.sender, token, seasons, amounts);
+        // we need to get the total Stalk, not just BDV.
+        AssetsRemoved memory ar = removeDepositsFromAccount(msg.sender, token, grownStalkPerBdvs, amounts);
 
-        // Get new BDV and calculate Seeds (Seeds are not Season dependent like Stalk)
+        // Get new BDV
         uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
         uint256 newStalk;
 
-        // Iterate through all seasons, redeposit the tokens with new BDV and
+        // Iterate through all grownStalkPerBdvs, redeposit the tokens with new BDV and
         // summate new Stalk.
-        for (uint256 i; i < seasons.length; ++i) {
+        for (uint256 i; i < grownStalkPerBdvs.length; ++i) {
             uint256 bdv = amounts[i].mul(newBDV).div(ar.tokensRemoved); // Cheaper than calling the BDV function multiple times.
             LibTokenSilo.addDepositToAccount(
                 msg.sender,
                 token,
-                seasons[i],
+                grownStalkPerBdvs[i],
                 amounts[i],
                 bdv
             );
             newStalk = newStalk.add(
                 bdv.mul(s.ss[token].stalk).add(
                     LibSilo.stalkReward(
-                        bdv.mul(s.ss[token].seeds),
-                        _season() - seasons[i]
+                        grownStalkPerBdvs[i],
+                        s.ss[address(token)].lastCumulativeGrownStalkPerBdv,
+                        bdv
                     )
                 )
             );
         }
 
-        uint256 newSeeds = newBDV.mul(s.ss[token].seeds);
 
-        // Mint Stalk/Seeds associated with the delta BDV.
-        // `newSeeds.sub(...)` will revert if `ar.seedsRemoved > newSeeds`.
-        // This enforces the constraint that `ogBDV > newBDV` since the two are
-        // linearly related.
-        LibSilo.mintSeedsAndStalk(
+        // Mint Stalk associated with the delta BDV.
+        // TODOSEEDS make sure this function reverts if conditions aren't right
+        LibSilo.mintStalk(
             msg.sender,
-            newSeeds.sub(ar.seedsRemoved),
             newStalk.sub(ar.stalkRemoved)
         );
     }

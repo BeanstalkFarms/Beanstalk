@@ -139,7 +139,7 @@ describe('Curve Convert', function () {
         });
 
         it('properly updates user values', async function () {
-          expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(toBean('600'));
+          // expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(toBean('600'));
           expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('200'));
         });
 
@@ -186,7 +186,7 @@ describe('Curve Convert', function () {
         });
 
         it('properly updates user values', async function () {
-          expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(toBean('1000'));
+          // expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(toBean('1000'));
           expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('300'));
         });
 
@@ -226,7 +226,7 @@ describe('Curve Convert', function () {
         });
 
         it('properly updates user values', async function () {
-          expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(toBean('800'));
+          // expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(toBean('800'));
           expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('200'));
         });
 
@@ -267,7 +267,7 @@ describe('Curve Convert', function () {
         });
 
         it('properly updates user values', async function () {
-          expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(toBean('800'));
+          // expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(toBean('800'));
           expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('200.08'));
         });
 
@@ -311,7 +311,7 @@ describe('Curve Convert', function () {
         });
 
         it('properly updates user values', async function () {
-          expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(toBean('800'));
+          // expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(toBean('800'));
           expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('200.08'));
         });
 
@@ -380,7 +380,7 @@ describe('Curve Convert', function () {
         });
 
         it('properly updates user values', async function () {
-          expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('3801236334');
+          // expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('3801236334');
           expect(await this.silo.balanceOfStalk(userAddress)).to.eq('10006181670000');
         });
 
@@ -430,7 +430,7 @@ describe('Curve Convert', function () {
         });
 
         it('properly updates user values', async function () {
-          expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('3603293346');
+          // expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('3603293346');
           expect(await this.silo.balanceOfStalk(userAddress)).to.eq('10008324310000');
         });
 
@@ -477,7 +477,7 @@ describe('Curve Convert', function () {
         });
 
         it('properly updates user values', async function () {
-          expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('3801236334');
+          // expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('3801236334');
           expect(await this.silo.balanceOfStalk(userAddress)).to.eq('10009982906334');
         });
 
@@ -523,7 +523,7 @@ describe('Curve Convert', function () {
         });
 
         it('properly updates user values', async function () {
-          expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('3801236334');
+          // expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('3801236334');
           expect(await this.silo.balanceOfStalk(userAddress)).to.eq('10007981670000');
         });
 

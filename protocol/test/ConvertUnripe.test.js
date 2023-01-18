@@ -141,7 +141,7 @@ describe('Unripe Convert', function () {
       });
 
       it('properly updates user values', async function () {
-        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(toBean('600'));
+        // expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(toBean('600'));
         expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('200'));
       });
 
@@ -180,7 +180,7 @@ describe('Unripe Convert', function () {
       });
 
       it('properly updates user values', async function () {
-        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(toBean('800'));
+        // expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(toBean('800'));
         expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('200.08'));
       });
 
@@ -219,7 +219,7 @@ describe('Unripe Convert', function () {
       });
 
       it('properly updates user values', async function () {
-        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(toBean('1000'));
+        // expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(toBean('1000'));
         expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('400'));
       });
 
@@ -257,7 +257,7 @@ describe('Unripe Convert', function () {
       });
 
       it('properly updates user values', async function () {
-        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('689368856');
+        // expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('689368856');
         expect(await this.silo.balanceOfStalk(userAddress)).to.eq('2473422140000');
       });
 
@@ -309,7 +309,7 @@ describe('Unripe Convert', function () {
       });
 
       it('properly updates user values', async function () {
-        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('201.236334'));
+        // expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('201.236334'));
         expect(await this.silo.totalStalk()).to.eq(toStalk('100.618167'));
       });
     });
@@ -332,7 +332,7 @@ describe('Unripe Convert', function () {
       });
 
       it('properly updates user values', async function () {
-        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('201236334');
+        // expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('201236334');
         expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('100.6382906334'));
       });
 
@@ -370,7 +370,7 @@ describe('Unripe Convert', function () {
       });
 
       it('properly updates user values', async function () {
-        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('384.075704'));
+        // expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('384.075704'));
         expect(await this.silo.totalStalk()).to.eq(toStalk('192.037852'));
       });
     });
@@ -394,7 +394,7 @@ describe('Unripe Convert', function () {
       });
 
       it('properly updates user values', async function () {
-        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('600'));
+        // expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('600'));
         expect(await this.silo.totalStalk()).to.eq(toStalk('200'));
       });
     });

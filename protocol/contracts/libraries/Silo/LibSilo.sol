@@ -13,13 +13,13 @@ import "../LibPRBMath.sol";
 /**
  * @title LibSilo
  * @author Publius
- * @notice Contains functions for minting, burning, and transferring of Seeds,
+ * @notice Contains functions for minting, burning, and transferring of
  * Stalk and Roots within the Silo.
  *
  * @dev FIXME(DISCUSS): Here, we refer to "minting" as the combination of
- * increasing the total balance of Stalk/Seeds/Roots, as well as allocating
+ * increasing the total balance of Stalk/Roots, as well as allocating
  * them to a particular account. However, in other places throughout Beanstalk
- * (like during the Sunrise), Beanstalk's total balance of Stalk/Seeds increases
+ * (like during the Sunrise), Beanstalk's total balance of Stalk increases
  * without allocating to a particular account. One example is {Sun-rewardToSilo}
  * which increases `s.s.stalk` but does not allocate it to any account. The
  * allocation occurs during `{SiloFacet-plant}`. Does this change how we should
@@ -35,21 +35,7 @@ library LibSilo {
     
     //////////////////////// EVENTS ////////////////////////    
 
-    /**
-     * @notice Emitted when `account` gains or loses Seeds.
-     * @param account The account that gained or lost Seeds.
-     * @param delta The change in Seeds.
-     *   
-     * @dev Should be emitted any time a Deposit is added, removed or
-     * transferred.
-     * 
-     * BIP-24 included a one-time re-emission of {SeedsBalanceChanged} for
-     * accounts that had executed a Deposit transfer between the Replant and
-     * BIP-24 execution. For more, see:
-     *
-     * [BIP-24](https://bean.money/bip-24)
-     * [Event-Emission](https://github.com/BeanstalkFarms/BIP-24-Event-Emission)
-     */
+    //TODOSEEDS what should we emit here? presumably now seeds could change every season even
     event SeedsBalanceChanged(
         address indexed account,
         int256 delta
@@ -80,31 +66,6 @@ library LibSilo {
     //////////////////////// MINT ////////////////////////
 
     /**
-     * @dev WRAPPER: Mints Seeds, Stalk and Roots to `account`.
-     */
-    function mintSeedsAndStalk(
-        address account,
-        uint256 seeds,
-        uint256 stalk
-    ) internal {
-        mintSeeds(account, seeds);
-        mintStalk(account, stalk); // also mints Roots
-    }
-
-    /**
-     * @dev Mints Seeds to `account`.
-     */
-    function mintSeeds(address account, uint256 seeds) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
-        // Increase supply of Seeds; Add Seeds to the balance of `account`
-        s.s.seeds = s.s.seeds.add(seeds);
-        s.a[account].s.seeds = s.a[account].s.seeds.add(seeds);
-
-        emit SeedsBalanceChanged(account, int256(seeds));
-    }
-
-    /**
      * @dev Mints Stalk and Roots to `account`.
      *
      * For an explanation of Roots accounting, see {FIXME(doc)}.
@@ -129,31 +90,6 @@ library LibSilo {
     }
 
     //////////////////////// BURN ////////////////////////
-
-    /**
-     * @dev WRAPPER: Burns Seeds, Stalk and Roots from `account`.
-     */
-    function burnSeedsAndStalk(
-        address account,
-        uint256 seeds,
-        uint256 stalk
-    ) internal {
-        burnSeeds(account, seeds);
-        burnStalk(account, stalk); // also burns Roots
-    }
-    
-    /**
-     * @dev Burns Seeds from `account`.
-     */
-    function burnSeeds(address account, uint256 seeds) private {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
-        // Decrease supply of Seeds; Remove Seeds from the balance of `account`
-        s.s.seeds = s.s.seeds.sub(seeds);
-        s.a[account].s.seeds = s.a[account].s.seeds.sub(seeds);
-
-        emit SeedsBalanceChanged(account, -int256(seeds));
-    }
 
     /**
      * @dev Burns Stalk and Roots from `account`.
@@ -194,40 +130,6 @@ library LibSilo {
     //////////////////////// TRANSFER ////////////////////////
 
     /**
-     * @dev WRAPPER: Decrements the Seeds, Stalk and Roots of `sender` and 
-     * increments the Seeds, Stalk and Roots of `recipient` by the same amount.
-     */
-    function transferSeedsAndStalk(
-        address sender,
-        address recipient,
-        uint256 seeds,
-        uint256 stalk
-    ) internal {
-        transferSeeds(sender, recipient, seeds);
-        transferStalk(sender, recipient, stalk);
-    }
-
-    /**
-     * @dev Decrements the Seeds of `sender` and increments the Seeds of 
-     * `recipient` by the same amount.
-     */
-    function transferSeeds(
-        address sender,
-        address recipient,
-        uint256 seeds
-    ) private {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        
-        // Subtract Seeds from the 'sender' balance.
-        s.a[sender].s.seeds = s.a[sender].s.seeds.sub(seeds);
-        emit SeedsBalanceChanged(sender, -int256(seeds));
-        
-        // Add Seeds to the 'recipient' balance.
-        s.a[recipient].s.seeds = s.a[recipient].s.seeds.add(seeds);
-        emit SeedsBalanceChanged(recipient, int256(seeds));
-    }
-
-    /**
      * @dev Decrements the Stalk and Roots of `sender` and increments the Stalk
      * and Roots of `recipient` by the same amount.
      */
@@ -256,11 +158,8 @@ library LibSilo {
     //////////////////////// UTILITIES ////////////////////////
 
     /**
-     * @param seeds The number of Seeds held.
-     * @param seasons The number of Seasons that have elapsed.
-     *
-     * @dev Calculates the Stalk that has Grown from a given number of Seeds
-     * over a given number of Seasons.
+     * This function will take in a start stalk per bdv, end stalk per bdv,
+     * and the deposited bdv amount, and return
      *
      * Each Seed yields 1E-4 (0.0001, or 1 / 10_000) Stalk per Season.
      *
@@ -274,11 +173,11 @@ library LibSilo {
      *  - The result is `1E6 * 1 = 1E6`. Since Stalk is measured to 10 decimals,
      *    this is `1E6/1E10 = 1E-4` Stalk.
      */
-    function stalkReward(uint256 seeds, uint32 seasons)
+    function stalkReward(uint128 startStalkPerBDV, uint128 endStalkPerBDV, uint128 bdv)
         internal
         pure
         returns (uint256)
     {
-        return seeds.mul(seasons);
+        return endStalkPerBDV.sub(startStalkPerBDV).mul(bdv);
     }
 }

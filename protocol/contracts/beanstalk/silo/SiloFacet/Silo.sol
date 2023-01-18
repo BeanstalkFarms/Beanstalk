@@ -16,7 +16,7 @@ import "~/libraries/Silo/LibTokenSilo.sol";
  * @notice Provides utility functions for claiming Silo rewards, including:
  *
  * - Grown Stalk (see "Mow")
- * - Earned Beans, Earned Stalk, Plantable Seeds (see "Plant")
+ * - Earned Beans, Earned Stalk (see "Plant")
  * - 3CRV earned during a Flood (see "Flood")
  *
  * For backwards compatibility, a Flood is sometimes referred to by its old name
@@ -32,12 +32,10 @@ contract Silo is SiloExit {
     //////////////////////// EVENTS ////////////////////////    
 
     /**
-     * @notice Emitted when the Seeds associated with the Earned Beans of
+     * @notice Emitted when the deposit associated with the Earned Beans of
      * `account` are Planted.
-     * @param account Owns the Earned Beans and receives the Planted Seeds.
-     * @param beans The amount of Earned Beans claimed by `account`. The number
-     * of Seeds that were Planted can be derived, since 1 Bean => 2 Seeds.
-     * See {C-getSeedsPerBean}.
+     * @param account Owns the Earned Beans
+     * @param beans The amount of Earned Beans claimed by `account`.
      */
     event Plant(
         address indexed account,
@@ -59,24 +57,6 @@ contract Silo is SiloExit {
         uint256 plenty
     );
 
-    /**
-     * @notice Emitted when `account` gains or loses Seeds.
-     * @param account The account that gained or lost Seeds.
-     * @param delta The change in Seeds.
-     *   
-     * @dev {SeedsBalanceChanged} should be emitted anytime a Deposit is added, removed or transferred.
-     * 
-     * BIP-24 included a one-time re-emission of {SeedsBalanceChanged} for accounts that had
-     * executed a Deposit transfer between the Replant and BIP-24 execution.
-     * 
-     * For more, see:
-     * [BIP-24](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-24-fungible-bdv-support.md)
-     * [Event-24-Event-Emission](https://github.com/BeanstalkFarms/Event-24-Event-Emission)
-     */
-    event SeedsBalanceChanged(
-        address indexed account,
-        int256 delta
-    );
 
     /**
      * @notice Emitted when `account` gains or loses Stalk.
@@ -112,9 +92,7 @@ contract Silo is SiloExit {
      * @dev Claims the Grown Stalk for `account` and applies it to their Stalk
      * balance.
      *
-     * A Farmer cannot receive Seeds unless the Farmer's `lastUpdate` Season is
-     * equal to the current Season. Otherwise, they would receive extra Grown
-     * Stalk when they receive Seeds.
+     * 
      *
      * This is why `_mow()` must be called before any actions that change Seeds,
      * including:
@@ -124,7 +102,7 @@ contract Silo is SiloExit {
      *  - {_plant}
      *  - {SiloFacet-transferDeposit(s)}
      */
-    function _mow(address account) internal {
+    function _mow(address account, address token) internal {
         uint32 _lastUpdate = lastUpdate(account);
 
         // If `account` was already updated this Season, there's no Stalk to Mow.
@@ -141,19 +119,19 @@ contract Silo is SiloExit {
 
         // Reset timer so that Grown Stalk for a particular Season can only be 
         // claimed one time. 
-        s.a[account].lastUpdate = _season();
+        s.a[account].lastUpdate = _season(); // move this to __mow
     }
 
-    function __mow(address account) private {
-        // If this `account` has no Seeds, skip to save gas.
-        if (s.a[account].s.seeds == 0) return;
+    function __mow(address account, address token) private {
+        // If this `account` has no Seeds, skip to save gas. //TODOSEEDS is there a post-seeds equiv?
+        // if (s.a[account].s.seeds == 0) return;
         LibSilo.mintStalk(account, balanceOfGrownStalk(account));
     }
 
     //////////////////////// INTERNAL: PLANT ////////////////////////
 
     /**
-     * @dev Plants the Plantable Seeds of `account` associated with its Earned
+     * @dev Plants the Plantable BDV of `account` associated with its Earned
      * Beans.
      * 
      * For more info on Planting, see: {SiloFacet-plant}
@@ -181,12 +159,12 @@ contract Silo is SiloExit {
         );
         
         // Calculate the Plantable Seeds associated with the Earned Beans that were Deposited.
-        uint256 seeds = beans.mul(C.getSeedsPerBean());
+        //TODOSEEDS figure out what to do here
 
         // Plantable Seeds don't generate Grown Stalk until they are Planted (i.e., not auto-compounding). 
         // Plantable Seeds are not included in the Seed supply, so new Seeds must be minted during `plant()`.
         // (Notice that {Sun.sol:rewardToSilo} does not mint any Seeds, even though it updates Earned Beans.)
-        LibSilo.mintSeeds(account, seeds); // mints to `account` and updates totals
+        // LibSilo.mintSeeds(account, seeds); // mints to `account` and updates totals
 
         // Earned Stalk associated with Earned Beans generate more Earned Beans automatically (i.e., auto compounding).
         // Earned Stalk are minted when Earned Beans are minted during Sunrise. See {Sun.sol:rewardToSilo} for details.

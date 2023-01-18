@@ -56,6 +56,12 @@ contract Account {
         uint256 seeds; // Balance of the Farmer's normal Seeds.
     }
 
+    // This struct stores the mow status for each Silo-able token, for each farmer. This gets updated each time a farmer mows, or adds/removes deposits.
+    struct MowStatus {
+        int128 lastCumulativeGrownStalkPerBDV; // the last cumulative grown stalk per bdv index at which the farmer mowed
+        uint128 bdv; // bdv of all of a farmer's deposits of this token type
+    }
+
     // Season Of Plenty stores Season of Plenty (SOP) related balances
     struct SeasonOfPlenty {
         // uint256 base; // DEPRECATED – Post Replant SOPs are denominated in plenty Tokens instead of base.
@@ -120,6 +126,7 @@ contract Account {
         uint256 depositPermitNonces; // A Farmer's current deposit permit nonce
         uint256 tokenPermitNonces; // A Farmer's current token permit nonce
         mapping(address => mapping(int128 => Deposit)) deposits; //SiloV3 deposits stored as a map from Cumulative Grown Stalk
+        mapping(address => MowStatus) mowStatuses; //Store a MowStatus for each Silo-able token
     }
 }
 
@@ -185,7 +192,7 @@ contract Storage {
     // Silo stores global level Silo balances.
     struct Silo {
         uint256 stalk; // The total amount of active Stalk (including Earned Stalk, excluding Grown Stalk).
-        uint256 seeds; // The total amount of active Seeds (excluding Earned Seeds).
+        uint256 seeds; // The total amount of active Seeds (excluding Earned Seeds). No longer used.
         uint256 roots; // Total amount of Roots.
     }
 

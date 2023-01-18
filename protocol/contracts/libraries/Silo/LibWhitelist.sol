@@ -25,13 +25,13 @@ library LibWhitelist {
      * function bdv(uint256 amount) public view returns (uint256);
      * ```
      * 
-     * @param seeds The Seeds per BDV received from depositing `token`.
+     * @param stalkPerBdvPerSeason The Stalk per BDV per Season received from depositing `token`.
      * @param stalk The Stalk per BDV received from depositing `token`.
      */
     event WhitelistToken(
         address indexed token,
         bytes4 selector,
-        uint256 seeds,
+        uint256 stalkPerBdvPerSeason,
         uint256 stalk
     );
 

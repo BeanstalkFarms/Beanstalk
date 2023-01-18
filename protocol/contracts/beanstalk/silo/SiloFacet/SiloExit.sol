@@ -61,13 +61,6 @@ contract SiloExit is ReentrancyGuard {
     //////////////////////// SILO: TOTALS ////////////////////////
 
     /**
-     * @notice Returns the total supply of Seeds. Does NOT include Earned Seeds.
-     */
-    function totalSeeds() public view returns (uint256) {
-        return s.s.seeds;
-    }
-
-    /**
      * @notice Returns the total supply of Stalk. Does NOT include Grown Stalk.
      */
     function totalStalk() public view returns (uint256) {
@@ -92,16 +85,6 @@ contract SiloExit is ReentrancyGuard {
     }
 
     //////////////////////// SILO: ACCOUNT BALANCES ////////////////////////
-
-    /**
-     * @notice Returns the balance of Seeds for `account`.
-     * Does NOT include Earned Seeds.
-     * @dev Earned Seeds do not earn Grown Stalk due to computational
-     * complexity, so they are not included.
-     */
-    function balanceOfSeeds(address account) public view returns (uint256) {
-        return s.a[account].s.seeds;
-    }
 
     /**
      * @notice Returns the balance of Stalk for `account`. 
@@ -132,7 +115,7 @@ contract SiloExit is ReentrancyGuard {
 
     /**
      * @notice Returns the balance of Grown Stalk for `account`. Grown Stalk is 
-     * earned each Season from Seeds and must be Mown via `SiloFacet-mow` to 
+     * earned each Season from BDV and must be Mown via `SiloFacet-mow` to 
      * apply it to a user's balance.
      * @dev The balance of Grown Stalk for an account can be calculated as:
      *
@@ -141,15 +124,17 @@ contract SiloExit is ReentrancyGuard {
      * grownStalk = balanceOfSeeds * elapsedSeasons
      * ```
      */
-    function balanceOfGrownStalk(address account)
+    function balanceOfGrownStalk(address account, address token, uint128 bdv)
         public
         view
         returns (uint256)
     {
+        //need to fetch last updated grownStalkPerBdv for this deposit and current grownStalkPerBdv
         return
             LibSilo.stalkReward(
-                s.a[account].s.seeds,
-                _season() - lastUpdate(account)
+                s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBDV, //last GSPBDV farmer mowed
+                s.ss[address(token)].lastCumulativeGrownStalkPerBdv, //latest index, updated at last sunrise
+                bdv
             );
     }
     
@@ -225,20 +210,6 @@ contract SiloExit is ReentrancyGuard {
         returns (uint256)
     {
         return balanceOfEarnedBeans(account).mul(C.getStalkPerBean());
-    }
-
-    /**
-     * @notice Returns the `account` balance of Earned Seeds, the Seeds
-     * associated with Earned Beans.
-     * @dev Earned Seeds can be derived from Earned Beans, because
-     * 1 Bean => 2 Seeds. See {C-getSeedsPerBean}.
-     */
-    function balanceOfEarnedSeeds(address account)
-        public
-        view
-        returns (uint256)
-    {
-        return balanceOfEarnedBeans(account).mul(C.getSeedsPerBean());
     }
 
     //////////////////////// SEASON OF PLENTY ////////////////////////

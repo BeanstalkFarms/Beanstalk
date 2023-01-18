@@ -45,7 +45,7 @@ contract ConvertFacet is ReentrancyGuard {
 
     function convert(
         bytes calldata convertData,
-        uint32[] memory crates,
+        int32[] memory cumulativeGrownStalks,
         uint256[] memory amounts
     )
         external
@@ -77,23 +77,23 @@ contract ConvertFacet is ReentrancyGuard {
 
     function _withdrawTokens(
         address token,
-        uint32[] memory seasons,
+        int32[] memory cumulativeGrownStalks,
         uint256[] memory amounts,
         uint256 maxTokens
     ) internal returns (uint256, uint256) {
         require(
-            seasons.length == amounts.length,
-            "Convert: seasons, amounts are diff lengths."
+            cumulativeGrownStalks.length == amounts.length,
+            "Convert: cumulativeGrownStalks, amounts are diff lengths."
         );
         AssetsRemoved memory a;
         uint256 depositBDV;
         uint256 i = 0;
-        while ((i < seasons.length) && (a.tokensRemoved < maxTokens)) {
+        while ((i < cumulativeGrownStalks.length) && (a.tokensRemoved < maxTokens)) {
             if (a.tokensRemoved.add(amounts[i]) < maxTokens)
                 depositBDV = LibTokenSilo.removeDepositFromAccount(
                     msg.sender,
                     token,
-                    seasons[i],
+                    cumulativeGrownStalks[i],
                     amounts[i]
                 );
             else {
@@ -101,22 +101,21 @@ contract ConvertFacet is ReentrancyGuard {
                 depositBDV = LibTokenSilo.removeDepositFromAccount(
                     msg.sender,
                     token,
-                    seasons[i],
+                    cumulativeGrownStalks[i],
                     amounts[i]
                 );
             }
             a.tokensRemoved = a.tokensRemoved.add(amounts[i]);
             a.bdvRemoved = a.bdvRemoved.add(depositBDV);
-            a.stalkRemoved = a.stalkRemoved.add(
-                depositBDV.mul(s.season.current - seasons[i])
-            );
+            a.stalkRemoved = a.stalkRemoved.add(LibTokenSilo.grownStalkForDeposit(msg.sender, token, cumulativeGrownStalks[i]));
+            
             i++;
         }
-        for (i; i < seasons.length; ++i) amounts[i] = 0;
+        for (i; i < cumulativeGrownStalks.length; ++i) amounts[i] = 0;
         emit RemoveDeposits(
             msg.sender,
             token,
-            seasons,
+            cumulativeGrownStalks,
             amounts,
             a.tokensRemoved
         );
@@ -125,11 +124,9 @@ contract ConvertFacet is ReentrancyGuard {
             a.tokensRemoved == maxTokens,
             "Convert: Not enough tokens removed."
         );
-        a.stalkRemoved = a.stalkRemoved.mul(s.ss[token].seeds);
         LibTokenSilo.decrementTotalDeposited(token, a.tokensRemoved);
-        LibSilo.burnSeedsAndStalk(
+        LibSilo.burnStalk(
             msg.sender,
-            a.bdvRemoved.mul(s.ss[token].seeds),
             a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalk))
         );
         return (a.stalkRemoved, a.bdvRemoved);
@@ -143,16 +140,9 @@ contract ConvertFacet is ReentrancyGuard {
     ) internal returns (uint32 _s) {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
 
-        uint256 seeds = bdv.mul(LibTokenSilo.seeds(token));
-        if (grownStalk > 0) {
-            _s = uint32(grownStalk.div(seeds));
-            uint32 __s = s.season.current;
-            if (_s >= __s) _s = __s - 1;
-            grownStalk = uint256(_s).mul(seeds);
-            _s = __s - _s;
-        } else _s = s.season.current;
+        
         uint256 stalk = bdv.mul(LibTokenSilo.stalk(token)).add(grownStalk);
-        LibSilo.mintSeedsAndStalk(msg.sender, seeds, stalk);
+        LibSilo.mintStalk(msg.sender, stalk);
 
         LibTokenSilo.incrementTotalDeposited(token, amount);
         LibTokenSilo.addDepositToAccount(msg.sender, token, _s, amount, bdv);
