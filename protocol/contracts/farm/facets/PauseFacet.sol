@@ -6,6 +6,7 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import '../../seraph/SeraphProtected.sol';
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
 import {AppStorage} from "../AppStorage.sol";
 
@@ -13,7 +14,7 @@ import {AppStorage} from "../AppStorage.sol";
  * @author Publius
  * @title Pause Facet handles the pausing/unpausing of Beanstalk.
  **/
-contract PauseFacet {
+contract PauseFacet is SeraphProtected {
     AppStorage internal s;
 
     using SafeMath for uint256;
@@ -34,7 +35,7 @@ contract PauseFacet {
         emit Pause(block.timestamp);
     }
 
-    function unpause() external payable {
+    function unpause() external payable withSeraphPayable {
         LibDiamond.enforceIsOwnerOrContract();
         require(s.paused, "Pause: not paused.");
         s.paused = false;

@@ -9,10 +9,11 @@ pragma solidity =0.7.6;
 * EIP-2535 Diamond Standard: https://eips.ethereum.org/EIPS/eip-2535
 /******************************************************************************/
 
+import '../../seraph/SeraphProtected.sol';
 import {IDiamondCut} from "../../interfaces/IDiamondCut.sol";
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
 
-contract DiamondCutFacet is IDiamondCut {
+contract DiamondCutFacet is IDiamondCut, SeraphProtected {
     /// @notice Add/replace/remove any number of functions and optionally execute
     ///         a function with delegatecall
     /// @param _diamondCut Contains the facet addresses and function selectors
@@ -23,7 +24,7 @@ contract DiamondCutFacet is IDiamondCut {
         FacetCut[] calldata _diamondCut,
         address _init,
         bytes calldata _calldata
-    ) external override {
+    ) external override withSeraph {
         LibDiamond.enforceIsContractOwner();
         LibDiamond.diamondCut(_diamondCut, _init, _calldata);
     }

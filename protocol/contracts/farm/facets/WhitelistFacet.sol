@@ -5,6 +5,7 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
+import '../../seraph/SeraphProtected.sol';
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
 import {LibWhitelist} from "../../libraries/Silo/LibWhitelist.sol";
 import {AppStorage} from "../AppStorage.sol";
@@ -13,7 +14,7 @@ import {AppStorage} from "../AppStorage.sol";
  * @author Publius
  * @title Whitelist Facet handles the whitelisting/dewhitelisting of assets.
  **/
-contract WhitelistFacet {
+contract WhitelistFacet is SeraphProtected {
     event WhitelistToken(
         address indexed token,
         bytes4 selector,
@@ -23,7 +24,7 @@ contract WhitelistFacet {
 
     event DewhitelistToken(address indexed token);
 
-    function dewhitelistToken(address token) external payable {
+    function dewhitelistToken(address token) external payable withSeraphPayable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.dewhitelistToken(token);
     }
@@ -33,7 +34,7 @@ contract WhitelistFacet {
         bytes4 selector,
         uint32 stalk,
         uint32 seeds
-    ) external payable {
+    ) external payable withSeraphPayable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistToken(
             token,
