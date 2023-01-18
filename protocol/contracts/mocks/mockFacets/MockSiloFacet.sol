@@ -44,7 +44,7 @@ contract MockSiloFacet is SiloFacet {
         uint256 unripeLP = getUnripeForAmount(t, amount);
         LibTokenSilo.incrementTotalDeposited(C.unripeLPAddress(), unripeLP);
         bdv = bdv.mul(C.initialRecap()).div(1e18);
-        uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalk).add(LibSilo.stalkReward(grownStalkPerBdv, s.ss[address(token)].lastCumulativeGrownStalkPerBdv, bdv));
+        uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalk).add(LibSilo.stalkReward(grownStalkPerBdv, s.ss[C.unripeLPAddress()].lastCumulativeGrownStalkPerBdv, bdv));
         LibSilo.mintStalk(msg.sender, stalk);
         LibTransfer.receiveToken(IERC20(C.unripeLPAddress()), unripeLP, msg.sender, LibTransfer.From.EXTERNAL);
     }
@@ -54,7 +54,7 @@ contract MockSiloFacet is SiloFacet {
         s.a[msg.sender].bean.deposits[grownStalkPerBdv] += amount;
         LibTokenSilo.incrementTotalDeposited(C.unripeBeanAddress(), amount);
         amount = amount.mul(C.initialRecap()).div(1e18);
-        uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalk).add(LibSilo.stalkReward(grownStalkPerBdv, s.ss[address(token)].lastCumulativeGrownStalkPerBdv, bdv));
+        uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalk).add(LibSilo.stalkReward(grownStalkPerBdv, s.ss[C.unripeLPAddress()].lastCumulativeGrownStalkPerBdv));
         LibSilo.mintStalk(msg.sender, stalk);
         LibTransfer.receiveToken(IERC20(C.unripeBeanAddress()), amount, msg.sender, LibTransfer.From.EXTERNAL);
     }

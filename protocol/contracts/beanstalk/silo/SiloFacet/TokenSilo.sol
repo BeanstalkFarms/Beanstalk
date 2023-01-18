@@ -27,6 +27,7 @@ contract TokenSilo is Silo {
     uint32 private constant ASSET_PADDING = 100;
 
     using SafeMath for uint256;
+    using SafeCast for uint256;
     using LibSafeMath32 for uint32;
 
     /**
@@ -40,14 +41,14 @@ contract TokenSilo is Silo {
      *
      * @param account The account that added a Deposit.
      * @param token Address of the whitelisted ERC20 token that was deposited.
-     * @param season The Season that this `amount` was added to.
-     * @param amount Amount of `token` added to `season`.
+     * @param grownStalkPerBdv The grownStalkPerBdv index that this `amount` was added to.
+     * @param amount Amount of `token` added to `grownStalkPerBdv`.
      * @param bdv The BDV associated with `amount` of `token` at the time of Deposit.
      */
     event AddDeposit(
         address indexed account,
         address indexed token,
-        uint32 season,
+        int32 grownStalkPerBdv,
         uint256 amount,
         uint256 bdv
     );
@@ -59,13 +60,13 @@ contract TokenSilo is Silo {
      * 
      * @param account The account that removed a Deposit.
      * @param token Address of the whitelisted ERC20 token that was removed.
-     * @param season The Season that this `amount` was removed from.
-     * @param amount Amount of `token` removed from `season`.
+     * @param grownStalkPerBdv The grownStalkPerBdv that this `amount` was removed from.
+     * @param amount Amount of `token` removed from `grownStalkPerBdv`.
      */
     event RemoveDeposit(
         address indexed account,
         address indexed token,
-        uint32 season,
+        int128 grownStalkPerBdv,
         uint256 amount
     );
 
@@ -85,7 +86,7 @@ contract TokenSilo is Silo {
     event RemoveDeposits(
         address indexed account,
         address indexed token,
-        uint32[] grownStalkPerBdvs,
+        uint128[] grownStalkPerBdvs,
         uint256[] amounts,
         uint256 amount
     );
@@ -118,7 +119,7 @@ contract TokenSilo is Silo {
     //////////////////////// GETTERS ////////////////////////
 
     /**
-     * @notice Find the amount and BDV of `token` that `account` has Deposited in Season `season`.
+     * @notice Find the amount and BDV of `token` that `account` has Deposited in grownStalkPerBdv `grownStalkPerBdv`.
      * 
      * Returns a deposit tuple `(uint256 amount, uint256 bdv)`.
      *
@@ -128,9 +129,9 @@ contract TokenSilo is Silo {
     function getDeposit(
         address account,
         address token,
-        uint32 season
+        uint32 grownStalkPerBdv
     ) external view returns (uint256, uint256) {
-        return LibTokenSilo.tokenDeposit(account, token, season);
+        return LibTokenSilo.tokenDeposit(account, token, grownStalkPerBdv);
     }
 
     /**
@@ -199,12 +200,10 @@ contract TokenSilo is Silo {
         address token,
         uint256 amount
     ) internal {
-        //get current cumulative grown stalk per bdv
-        int128 lastCumulativeGrownStalkPerBDV = ;
         (uint256 stalk) = LibTokenSilo.deposit(
             account,
             token,
-            LibTokenSilo.cumulativeGrownStalkPerBdv(token),
+            LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)),
             amount
         );
         LibSilo.mintStalk(account, stalk);
@@ -218,14 +217,14 @@ contract TokenSilo is Silo {
     function _withdrawDeposit(
         address account,
         address token,
-        uint32 season,
+        int32 grownStalkPerBdv,
         uint256 amount
     ) internal {
         // Remove the Deposit from `account`.
-        (uint256 stalkRemoved ) = removeDepositFromAccount(
+        (uint256 stalkRemoved, uint256 bdvRemoved) = removeDepositFromAccount(
             account,
             token,
-            season,
+            grownStalkPerBdv,
             amount
         );
 
@@ -269,7 +268,7 @@ contract TokenSilo is Silo {
             account,
             token,
             ar.tokensRemoved,
-            ar.stalkRemoved,
+            ar.stalkRemoved
         );
         /** @dev we return ar.tokensremoved here, but not in _withdrawDeposit()
          *  to use in siloFacet.withdrawDeposits()
@@ -288,10 +287,10 @@ contract TokenSilo is Silo {
         address account,
         address token,
         uint256 amount,
-        uint256 stalk,
+        uint256 stalk
     ) private {
         LibTokenSilo.decrementTotalDeposited(token, amount); // Decrement total Deposited
-        LibSilo.burnSeedsAndStalk(account, stalk); // Burn Stalk
+        LibSilo.burnStalk(account, stalk); // Burn Stalk
     }
 
     //////////////////////// REMOVE ////////////////////////
@@ -319,15 +318,15 @@ contract TokenSilo is Silo {
         bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, grownStalkPerBdv, amount);
 
         //need to get amount of stalk earned by this deposit (index of now minus index of when deposited)
-        stalkRemoved = bdvRemoved.mul(s.ss[token].stalk).add(
+        stalkRemoved = bdvRemoved.mul(s.ss[token].stalkPerBdv).add(
             LibSilo.stalkReward(
                 grownStalkPerBdv,
                 s.ss[address(token)].lastCumulativeGrownStalkPerBdv,
-                bdvRemoved
+                bdvRemoved.toUint128()
             )
         );
 
-        emit RemoveDeposit(account, token, season, amount);
+        emit RemoveDeposit(account, token, grownStalkPerBdv, amount);
     }
 
     /**
@@ -355,7 +354,7 @@ contract TokenSilo is Silo {
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
             ar.stalkRemoved = crateBdv.mul(s.ss[token].stalk).add(
                 LibSilo.stalkReward(
-                    grownStalkPerBdv,
+                    grownStalkPerBdvs[i],
                     s.ss[address(token)].lastCumulativeGrownStalkPerBdv,
                     crateBdv
                 )
@@ -434,7 +433,7 @@ contract TokenSilo is Silo {
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
             ar.stalkRemoved = crateBdv.mul(s.ss[token].stalk).add(
                 LibSilo.stalkReward(
-                    grownStalkPerBdv,
+                    grownStalkPerBdvs[i],
                     s.ss[address(token)].lastCumulativeGrownStalkPerBdv,
                     crateBdv
                 )

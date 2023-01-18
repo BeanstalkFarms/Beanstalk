@@ -9,6 +9,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../C.sol";
 import "../LibAppStorage.sol";
 import "../LibPRBMath.sol";
+import "~/libraries/LibSafeMathSigned128.sol";
 
 /**
  * @title LibSilo
@@ -31,6 +32,8 @@ import "../LibPRBMath.sol";
  */
 library LibSilo {
     using SafeMath for uint256;
+    using SafeMath for uint128;
+    using SafeMath for int128;
     using LibPRBMath for uint256;
     
     //////////////////////// EVENTS ////////////////////////    
@@ -96,7 +99,7 @@ library LibSilo {
      *
      * For an explanation of Roots accounting, see {FIXME(doc)}.
      */
-    function burnStalk(address account, uint256 stalk) private {
+    function burnStalk(address account, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return;
 
@@ -173,11 +176,11 @@ library LibSilo {
      *  - The result is `1E6 * 1 = 1E6`. Since Stalk is measured to 10 decimals,
      *    this is `1E6/1E10 = 1E-4` Stalk.
      */
-    function stalkReward(uint128 startStalkPerBDV, uint128 endStalkPerBDV, uint128 bdv)
+    function stalkReward(int128 startStalkPerBDV, int128 endStalkPerBDV, uint128 bdv)
         internal
         pure
         returns (uint256)
     {
-        return endStalkPerBDV.sub(startStalkPerBDV).mul(bdv);
+        return uint128(endStalkPerBDV-startStalkPerBDV)*bdv; //TODOSEEDS get safemath working here? endStalkPerBDV.sub(startStalkPerBDV).mul(bdv);
     }
 }

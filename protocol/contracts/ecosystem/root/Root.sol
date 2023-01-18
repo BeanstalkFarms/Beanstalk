@@ -449,7 +449,6 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
     /// @return shares number of shares will be mint/burn
     /// @return bdv total bdv of depositTransfers
     /// @return stalk total stalk of depositTransfers
-    /// @return stalkPerBdvPerSeasons total stalkPerBdvPerSeasons of depositTransfers
     function _transferDeposits(
         DepositTransfer[] calldata depositTransfers,
         bool isDeposit
@@ -458,7 +457,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         returns (
             uint256 shares,
             uint256 bdv,
-            uint256 stalk,
+            uint256 stalk
         )
     {
         IBeanstalk(BEANSTALK_ADDRESS).update(address(this));
@@ -509,7 +508,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
                             PRECISION,
                             balanceOfStalkBefore,
                             MathUpgradeable.Rounding.Down
-                        ),
+                        )
                     ),
                     PRECISION,
                     MathUpgradeable.Rounding.Down
@@ -529,7 +528,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
                             PRECISION,
                             balanceOfStalkBefore,
                             MathUpgradeable.Rounding.Up
-                        ),
+                        )
                     ),
                     PRECISION,
                     MathUpgradeable.Rounding.Up

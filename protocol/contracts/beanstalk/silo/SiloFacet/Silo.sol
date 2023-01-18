@@ -83,10 +83,12 @@ contract Silo is SiloExit {
     /**
      * @dev Claims the Grown Stalk for `msg.sender`.
      */
-    modifier mowSender() {
-        _mow(msg.sender);
+    modifier mowSender(address token) {
+        _mow(msg.sender, token);
         _;
     }
+
+    //TODO: make function that can mow multiple tokens
 
     /**
      * @dev Claims the Grown Stalk for `account` and applies it to their Stalk
@@ -115,7 +117,7 @@ contract Silo is SiloExit {
 
         // Calculate the amount of Grown Stalk claimable by `account`.
         // Increase the account's balance of Stalk and Roots.
-        __mow(account);
+        __mow(account, token);
 
         // Reset timer so that Grown Stalk for a particular Season can only be 
         // claimed one time. 
@@ -125,7 +127,7 @@ contract Silo is SiloExit {
     function __mow(address account, address token) private {
         // If this `account` has no Seeds, skip to save gas. //TODOSEEDS is there a post-seeds equiv?
         // if (s.a[account].s.seeds == 0) return;
-        LibSilo.mintStalk(account, balanceOfGrownStalk(account));
+        LibSilo.mintStalk(account, balanceOfGrownStalk(account, token, s.a[account].mowStatuses[token].bdv));
     }
 
     //////////////////////// INTERNAL: PLANT ////////////////////////
@@ -136,10 +138,10 @@ contract Silo is SiloExit {
      * 
      * For more info on Planting, see: {SiloFacet-plant}
      */
-    function _plant(address account) internal returns (uint256 beans) {
+    function _plant(address account, address token) internal returns (uint256 beans) {
         // Need to Mow for `account` before we calculate the balance of 
-        // Earned Beans.
-        _mow(account);
+        // Earned Beans. //TODOSEEDS do we need to mow all tokens?
+        _mow(account, token);
         uint256 accountStalk = s.a[account].s.stalk;
 
         // Calculate balance of Earned Beans.

@@ -146,7 +146,7 @@ task('marketplace', async function () {
 // Add a subtask that sets the action for the TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS task
 subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(async (_, __, runSuper) => {
   // Get the list of source paths that would normally be passed to the Solidity compiler
-  const paths = await runSuper();
+  var paths = await runSuper();
 
   // Apply a filter function to exclude paths that contain the string "replant" to ignore replant code
   paths = paths.filter((p) => !p.includes("replant"));

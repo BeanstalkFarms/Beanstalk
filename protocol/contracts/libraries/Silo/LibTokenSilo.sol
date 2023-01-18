@@ -36,7 +36,7 @@ library LibTokenSilo {
     event AddDeposit(
         address indexed account,
         address indexed token,
-        int32 grownStalkPerBdv,
+        int128 grownStalkPerBdv,
         uint256 amount,
         uint256 bdv
     );
@@ -74,7 +74,7 @@ library LibTokenSilo {
     function deposit(
         address account,
         address token,
-        int32 grownStalkPerBdv,
+        int128 grownStalkPerBdv,
         uint256 amount
     ) internal returns (uint256) {
         uint256 bdv = beanDenominatedValue(token, amount);
@@ -94,7 +94,7 @@ library LibTokenSilo {
     function depositWithBDV(
         address account,
         address token,
-        int32 grownStalkPerBdv,
+        int128 grownStalkPerBdv,
         uint256 amount,
         uint256 bdv
     ) internal returns (uint256) {
@@ -126,7 +126,7 @@ library LibTokenSilo {
     function addDepositToAccount(
         address account,
         address token,
-        int32 grownStalkPerBdv,
+        int128 grownStalkPerBdv,
         uint256 amount,
         uint256 bdv
     ) internal {
@@ -136,8 +136,12 @@ library LibTokenSilo {
         s.a[account].deposits[token][grownStalkPerBdv].bdv += uint128(bdv); //need safecast here?
 
         //setup or update the MowStatus for this deposit. We should have _just_ mowed before calling this function.
-        s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBDV = grownStalkPerBdv;
-        s.a[account].mowStatuses[token].bdv = uint128(bdv); //need safecast here?
+        s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBDV = grownStalkPerBdv; //maybe updating this here is not totally necessary if we just mowed?
+        s.a[account].mowStatuses[token].bdv += uint128(bdv); //need safecast here?
+
+        //add to account-level total token deposited total amount inside the MowStatus
+
+
 
         emit AddDeposit(account, token, grownStalkPerBdv, amount, bdv);
     }
@@ -145,10 +149,10 @@ library LibTokenSilo {
     //////////////////////// REMOVE DEPOSIT ////////////////////////
 
     /**
-     * @dev Remove `amount` of `token` from a user's Deposit in `season`.
+     * @dev Remove `amount` of `token` from a user's Deposit in `grownStalkPerBdv`.
      *
      * A "Crate" refers to the existing Deposit in storage at:
-     *  `s.a[account].deposits[token][season]`
+     *  `s.a[account].deposits[token][grownStalkPerBdv]`
      *
      * Partially removing a Deposit should scale its BDV proportionally. For ex.
      * removing 80% of the tokens from a Deposit should reduce its BDV by 80%.
@@ -164,7 +168,7 @@ library LibTokenSilo {
     function removeDepositFromAccount(
         address account,
         address token,
-        int32 grownStalkPerBdv,
+        int128 grownStalkPerBdv,
         uint256 amount
     ) internal returns (uint256 crateBDV) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -191,11 +195,16 @@ library LibTokenSilo {
             s.a[account].deposits[token][grownStalkPerBdv].amount = uint128(updatedAmount);
             s.a[account].deposits[token][grownStalkPerBdv].bdv = uint128(updatedBDV);
 
+            //remove from the mow status bdv amount, which keeps track of total token deposited per farmer
+            s.a[account].mowStatuses[token].bdv -= uint128(removedBDV); //need some kind of safety check here?
+
             return removedBDV;
         }
 
         // Full remove
         if (crateAmount > 0) delete s.a[account].deposits[token][grownStalkPerBdv];
+
+        s.a[account].mowStatuses[token].bdv -= uint128(crateAmount);
 
         // Excess remove
         // This can only occur for Unripe Beans and Unripe LP Tokens, and is a
@@ -316,5 +325,18 @@ library LibTokenSilo {
         uint deltaGrownStalkPerBdv = uint(cumulativeGrownStalkPerBdv(token).sub(grownStalkPerBdv));
         (, uint bdv) = tokenDeposit(account, address(token), grownStalkPerBdv);
         grownStalk = deltaGrownStalkPerBdv.mul(bdv);
+    }
+
+        function grownStalkAndBdvToCumulativeGrownStalk(IERC20 token, uint256 grownStalk, uint256 bdv)
+        public
+        view
+        returns (int128 cumulativeGrownStalk)
+    {
+        //first get current latest grown stalk index
+        int128 latestCumulativeGrownStalkPerBdvForToken = LibTokenSilo.cumulativeGrownStalkPerBdv(token);
+        //then calculate how much stalk each individual bdv has grown
+        int128 grownStalkPerBdv = int128(grownStalk.div(bdv));
+        //then subtract from the current latest index, so we get the index the deposit should have happened at
+        return latestCumulativeGrownStalkPerBdvForToken.sub(grownStalkPerBdv);
     }
 }
