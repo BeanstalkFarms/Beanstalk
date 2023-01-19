@@ -81,14 +81,15 @@ export default defineConfig(({ command, mode }) => ({
       minify: true,
       inject: {
         data: {
-          csp: (process.env.NODE_ENV === 'production')
+          csp: (process.env.NODE_ENV === 'production' && !process.env.DISABLE_CSP)
             ? `<meta http-equiv="Content-Security-Policy" content="${CSP}" />`
             : ''
         }
       }
     }),
     splitVendorChunkPlugin(),
-    analyze({ limit: 10 }),
+    (process.env.NODE_ENV === 'production') &&
+      analyze({ limit: 10 }),
     (process.env.NODE_ENV === 'production') && 
       removeHTMLAttributes({
         include: ['**/*.tsx', '**/*.jsx'],
