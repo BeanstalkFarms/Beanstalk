@@ -22,7 +22,8 @@ import {
     PodListingCancelled as PodListingCancelledEvent,
     PodOrderCreated as PodOrderCreatedEvent,
     PodOrderFilled as PodOrderFilledEvent,
-    PodOrderCancelled as PodOrderCancelledEvent
+    PodOrderCancelled as PodOrderCancelledEvent,
+    PodOrder
 } from "../generated/schema";
 import { toDecimal, ZERO_BI } from "./utils/Decimals";
 import { loadFarmer } from "./utils/Farmer";
@@ -304,22 +305,28 @@ export function handlePodOrderFilled(event: PodOrderFilled_v1): void {
     rawEvent.save()
 }
 
+let historyID = ""
+
 export function handlePodOrderCancelled(event: PodOrderCancelled): void {
-    let order = loadPodOrder(event.params.id)
+    let orderCheck = PodOrder.load(event.params.id.toHexString())
+    if (orderCheck !== null) {
+        let order = loadPodOrder(event.params.id)
 
-    order.status = order.podAmountFilled == ZERO_BI ? 'CANCELLED' : 'CANCELLED_PARTIAL'
-    order.updatedAt = event.block.timestamp
-    order.save()
+        order.status = order.podAmountFilled == ZERO_BI ? 'CANCELLED' : 'CANCELLED_PARTIAL'
+        order.updatedAt = event.block.timestamp
+        order.save()
 
-    updateMarketOrderBalances(event.address, order.id, ZERO_BI, order.podAmount.minus(order.podAmountFilled), ZERO_BI, order.beanAmount.minus(order.beanAmountFilled), ZERO_BI, ZERO_BI, event.block.timestamp)
+        updateMarketOrderBalances(event.address, order.id, ZERO_BI, order.podAmount.minus(order.podAmountFilled), ZERO_BI, order.beanAmount.minus(order.beanAmountFilled), ZERO_BI, ZERO_BI, event.block.timestamp)
 
+        historyID = order.historyID
+    }
     // Save the raw event data
     let id = 'podOrderCancelled-' + event.transaction.hash.toHexString() + '-' + event.logIndex.toString()
     let rawEvent = new PodOrderCancelledEvent(id)
     rawEvent.hash = event.transaction.hash.toHexString()
     rawEvent.logIndex = event.logIndex.toI32()
     rawEvent.protocol = event.address.toHexString()
-    rawEvent.historyID = order.historyID
+    rawEvent.historyID = historyID
     rawEvent.account = event.params.account.toHexString()
     rawEvent.orderId = event.params.id.toHexString()
     rawEvent.blockNumber = event.block.number
