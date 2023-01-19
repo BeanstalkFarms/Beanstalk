@@ -140,7 +140,7 @@ library LibSilo {
         address sender,
         address recipient,
         uint256 stalk
-    ) private {
+    ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // (Fixme?) Calculate the amount of Roots for the given amount of Stalk.
         uint256 roots = stalk == s.a[sender].s.stalk
@@ -176,7 +176,7 @@ library LibSilo {
      *  - The result is `1E6 * 1 = 1E6`. Since Stalk is measured to 10 decimals,
      *    this is `1E6/1E10 = 1E-4` Stalk.
      */
-    function stalkReward(int128 startStalkPerBDV, int128 endStalkPerBDV, uint128 bdv)
+    function stalkReward(int128 startStalkPerBDV, int128 endStalkPerBDV, uint128 bdv) //are the types what we want here?
         internal
         pure
         returns (uint256)

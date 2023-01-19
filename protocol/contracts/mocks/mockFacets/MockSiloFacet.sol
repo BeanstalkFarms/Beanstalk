@@ -22,7 +22,7 @@ contract MockSiloFacet is SiloFacet {
 
     using SafeMath for uint256;
 
-    function mockWhitelistToken(address token, bytes4 selector, uint32 stalk, uint32 stalkPerBdvPerSeason) external {
+    function mockWhitelistToken(address token, bytes4 selector, uint32 stalk, int128 stalkPerBdvPerSeason) external {
        LibWhitelist.whitelistToken(token, selector, stalk, stalkPerBdvPerSeason);
     }
 
@@ -35,7 +35,7 @@ contract MockSiloFacet is SiloFacet {
     }
 
     function mockUnripeLPDeposit(uint256 t, int128 grownStalkPerBdv, uint256 amount, uint256 bdv) external {
-        _mow(msg.sender);
+        _mow(msg.sender, C.unripeLPAddress());
         if (t == 0) {
             s.a[msg.sender].lp.deposits[grownStalkPerBdv] += amount;
         }
@@ -44,7 +44,7 @@ contract MockSiloFacet is SiloFacet {
         uint256 unripeLP = getUnripeForAmount(t, amount);
         LibTokenSilo.incrementTotalDeposited(C.unripeLPAddress(), unripeLP);
         bdv = bdv.mul(C.initialRecap()).div(1e18);
-        uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalk).add(LibSilo.stalkReward(grownStalkPerBdv, s.ss[C.unripeLPAddress()].lastCumulativeGrownStalkPerBdv, bdv));
+        uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalkPerBdv).add(LibSilo.stalkReward(grownStalkPerBdv, s.ss[C.unripeLPAddress()].lastCumulativeGrownStalkPerBdv, bdv));
         LibSilo.mintStalk(msg.sender, stalk);
         LibTransfer.receiveToken(IERC20(C.unripeLPAddress()), unripeLP, msg.sender, LibTransfer.From.EXTERNAL);
     }

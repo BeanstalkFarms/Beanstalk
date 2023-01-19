@@ -184,7 +184,7 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
 
     /// @notice Update Bdv of multiple silo deposits and underlyingBdv
     /// @dev Will revert if the bdv of the deposits doesn't increase
-    function updateBdvs(address[] calldata tokens, uint32[] calldata grownStalkPerBdvs)
+    function updateBdvs(address[] calldata tokens, uint128[] calldata grownStalkPerBdvs)
         external
     {
         for (uint256 i; i < tokens.length; ++i) {

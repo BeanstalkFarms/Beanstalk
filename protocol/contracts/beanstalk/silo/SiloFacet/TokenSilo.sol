@@ -86,7 +86,7 @@ contract TokenSilo is Silo {
     event RemoveDeposits(
         address indexed account,
         address indexed token,
-        uint128[] grownStalkPerBdvs,
+        int128[] grownStalkPerBdvs,
         uint256[] amounts,
         uint256 amount
     );
@@ -217,7 +217,7 @@ contract TokenSilo is Silo {
     function _withdrawDeposit(
         address account,
         address token,
-        int32 grownStalkPerBdv,
+        int128 grownStalkPerBdv,
         uint256 amount
     ) internal {
         // Remove the Deposit from `account`.
@@ -247,7 +247,7 @@ contract TokenSilo is Silo {
     function _withdrawDeposits(
         address account,
         address token,
-        uint32[] calldata grownStalkPerBdvs,
+        int128[] calldata grownStalkPerBdvs,
         uint256[] calldata amounts
     ) internal returns (uint256) {
         require(
@@ -340,7 +340,7 @@ contract TokenSilo is Silo {
     function removeDepositsFromAccount(
         address account,
         address token,
-        uint32[] calldata grownStalkPerBdvs,
+        int128[] calldata grownStalkPerBdvs,
         uint256[] calldata amounts
     ) internal returns (AssetsRemoved memory ar) {
         for (uint256 i; i < grownStalkPerBdvs.length; ++i) {
@@ -352,17 +352,17 @@ contract TokenSilo is Silo {
             );
             ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
-            ar.stalkRemoved = crateBdv.mul(s.ss[token].stalk).add(
+            ar.stalkRemoved = crateBdv.mul(s.ss[token].stalkPerBdv).add(
                 LibSilo.stalkReward(
                     grownStalkPerBdvs[i],
                     s.ss[address(token)].lastCumulativeGrownStalkPerBdv,
-                    crateBdv
+                    uint128(crateBdv)
                 )
             );
         }
 
         ar.stalkRemoved = ar.stalkRemoved.add(
-            ar.bdvRemoved.mul(s.ss[token].stalk)
+            ar.bdvRemoved.mul(s.ss[token].stalkPerBdv)
         );
 
         emit RemoveDeposits(account, token, grownStalkPerBdvs, amounts, ar.tokensRemoved);
@@ -379,7 +379,7 @@ contract TokenSilo is Silo {
         address sender,
         address recipient,
         address token,
-        uint32 grownStalkPerBdvs,
+        int128 grownStalkPerBdvs,
         uint256 amount
     ) internal returns (uint256) {
         (uint256 stalk, uint256 bdv) = removeDepositFromAccount(
@@ -402,7 +402,7 @@ contract TokenSilo is Silo {
         address sender,
         address recipient,
         address token,
-        uint32[] calldata grownStalkPerBdvs,
+        int128[] calldata grownStalkPerBdvs,
         uint256[] calldata amounts
     ) internal returns (uint256[] memory) {
         require(
@@ -431,18 +431,18 @@ contract TokenSilo is Silo {
             );
             ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
-            ar.stalkRemoved = crateBdv.mul(s.ss[token].stalk).add(
+            ar.stalkRemoved = crateBdv.mul(s.ss[token].stalkPerBdv).add(
                 LibSilo.stalkReward(
                     grownStalkPerBdvs[i],
                     s.ss[address(token)].lastCumulativeGrownStalkPerBdv,
-                    crateBdv
+                    uint128(crateBdv)
                 )
             );
             bdvs[i] = crateBdv;
         }
 
         ar.stalkRemoved = ar.stalkRemoved.add(
-            ar.bdvRemoved.mul(s.ss[token].stalk)
+            ar.bdvRemoved.mul(s.ss[token].stalkPerBdv)
         );
 
         emit RemoveDeposits(sender, token, grownStalkPerBdvs, amounts, ar.tokensRemoved);

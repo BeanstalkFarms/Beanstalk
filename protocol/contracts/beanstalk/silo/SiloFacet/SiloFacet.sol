@@ -51,7 +51,7 @@ contract SiloFacet is TokenSilo {
         address token,
         uint256 amount,
         LibTransfer.From mode
-    ) external payable nonReentrant mowSender {
+    ) external payable nonReentrant mowSender(token) {
         amount = LibTransfer.receiveToken(
             IERC20(token),
             amount,
@@ -66,7 +66,7 @@ contract SiloFacet is TokenSilo {
     /** 
      * @notice Withdraws from a single Deposit.
      * @param token Address of the whitelisted ERC20 token to Withdraw.
-     * @param season The Season to Withdraw from.
+     * @param grownStalkPerBdv The grownStalkPerBdv to Withdraw from.
      * @param amount Amount of `token` to Withdraw.
      *
      * @dev When Withdrawing a Deposit, the user must burn all of the Stalk
@@ -84,34 +84,34 @@ contract SiloFacet is TokenSilo {
      */
     function withdrawDeposit(
         address token,
-        uint32 season,
+        int128 grownStalkPerBdv,
         uint256 amount,
         LibTransfer.To mode
-    ) external payable mowSender nonReentrant {
-        _withdrawDeposit(msg.sender, token, season, amount);
+    ) external payable mowSender(token) nonReentrant {
+        _withdrawDeposit(msg.sender, token, grownStalkPerBdv, amount);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
 
     /** 
      * @notice Withdraw from multiple Deposits.
      * @param token Address of the whitelisted ERC20 token to Withdraw.
-     * @param seasons Seasons to Withdraw from.
-     * @param amounts Amounts of `token` to Withdraw from corresponding `seasons`.
+     * @param grownStalkPerBdvs grownStalkPerBdvs to Withdraw from.
+     * @param amounts Amounts of `token` to Withdraw from corresponding `grownStalkPerBdvs`.
      *
      * @dev Clients should factor in gas costs when withdrawing from multiple
      * deposits.
      *
      * For example, if a user wants to withdraw X Beans, it may be preferable to
      * withdraw from 1 older Deposit, rather than from multiple recent Deposits,
-     * if the difference in seasons is minimal.
+     * if the difference in grownStalkPerBdvs is minimal.
      */
     function withdrawDeposits(
         address token,
-        uint32[] calldata seasons,
+        int128[] calldata grownStalkPerBdvs,
         uint256[] calldata amounts,
         LibTransfer.To mode
-    ) external payable mowSender nonReentrant {
-        uint256 amount = _withdrawDeposits(msg.sender, token, seasons, amounts);
+    ) external payable mowSender(token) nonReentrant {
+        uint256 amount = _withdrawDeposits(msg.sender, token, grownStalkPerBdvs, amounts);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
 
@@ -123,7 +123,7 @@ contract SiloFacet is TokenSilo {
      * @param sender Current owner of Deposit.
      * @param recipient Destination account of Deposit.
      * @param token Address of the whitelisted ERC20 token to Transfer.
-     * @param season Season of Deposit from which to Transfer.
+     * @param grownStalkPerBdv grownStalkPerBdv of Deposit from which to Transfer.
      * @param amount Amount of `token` to Transfer.
      * @return bdv The BDV included in this transfer, now owned by `recipient`.
      *
@@ -137,16 +137,16 @@ contract SiloFacet is TokenSilo {
         address sender,
         address recipient,
         address token,
-        uint32 season,
+        int128 grownStalkPerBdv,
         uint256 amount
     ) external payable nonReentrant returns (uint256 bdv) {
         if (sender != msg.sender) {
             _spendDepositAllowance(sender, msg.sender, token, amount);
         }
-        _mow(sender);
+        _mow(sender, token);
         // Need to update the recipient's Silo as well.
-        _mow(recipient);
-        bdv = _transferDeposit(sender, recipient, token, season, amount);
+        _mow(recipient, token);
+        bdv = _transferDeposit(sender, recipient, token, grownStalkPerBdv, amount);
     }
 
     /** 
@@ -169,7 +169,7 @@ contract SiloFacet is TokenSilo {
         address sender,
         address recipient,
         address token,
-        uint32[] calldata grownStalkPerBdv,
+        int128[] calldata grownStalkPerBdv,
         uint256[] calldata amounts
     ) external payable nonReentrant returns (uint256[] memory bdvs) {
         require(amounts.length > 0, "Silo: amounts array is empty");
@@ -180,9 +180,9 @@ contract SiloFacet is TokenSilo {
             }
         }
        
-        _mow(sender);
+        _mow(sender, token);
         // Need to update the recipient's Silo as well.
-        _mow(recipient);
+        _mow(recipient, token);
         bdvs = _transferDeposits(sender, recipient, token, grownStalkPerBdv, amounts);
     }
 
@@ -332,16 +332,17 @@ contract SiloFacet is TokenSilo {
      * @notice DEPRECATED: Renamed to `mow()`.
      * @dev See {SiloFacet-mow}.
      */
-    function update(address account) external payable {
-        _mow(account);
-    }
+    //TODOSEEDS is this update function still used by somebody?
+    // function update(address account) external payable {
+    //     _mow(account);
+    // }
 
     /**
      * @notice Claim Grown Stalk for `account`.
      * @dev See {Silo-_mow}.
      */
-    function mow(address account) external payable {
-        _mow(account);
+    function mow(address account, address token) external payable {
+        _mow(account, token);
     }
 
     /** 
@@ -361,8 +362,8 @@ contract SiloFacet is TokenSilo {
      * FIXME(doc): Publius has suggested we explain `plant()` as "Planting Seeds"
      * and that this happens to deposit Earned Beans, rather than the above approach.
      */
-    function plant() external payable returns (uint256 beans) {
-        return _plant(msg.sender);
+    function plant(address token) external payable returns (uint256 beans) {
+        return _plant(msg.sender, token);
     }
 
     /** 
@@ -391,9 +392,9 @@ contract SiloFacet is TokenSilo {
      */
     function enrootDeposit(
         address token,
-        uint128 grownStalkPerBdv,
+        int128 grownStalkPerBdv,
         uint256 amount
-    ) external nonReentrant mowSender {
+    ) external nonReentrant mowSender(token) {
         // First, remove Deposit and Redeposit with new BDV
         uint256 ogBDV = LibTokenSilo.removeDepositFromAccount(
             msg.sender,
@@ -411,10 +412,10 @@ contract SiloFacet is TokenSilo {
         uint256 deltaBDV = newBDV.sub(ogBDV);
 
         // Mint Stalk associated with the new BDV.
-        uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalk).add(
+        uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalkPerBdv).add(
             LibSilo.stalkReward(grownStalkPerBdv,
                                 s.ss[address(token)].lastCumulativeGrownStalkPerBdv,
-                                newBDV)
+                                uint128(newBDV))
         );
         LibSilo.mintStalk(msg.sender, deltaStalk);
     }
@@ -434,9 +435,9 @@ contract SiloFacet is TokenSilo {
      */
     function enrootDeposits(
         address token,
-        uint32[] calldata grownStalkPerBdvs,
+        int128[] calldata grownStalkPerBdvs,
         uint256[] calldata amounts
-    ) external nonReentrant mowSender {
+    ) external nonReentrant mowSender(token) {
         // First, remove Deposits because every deposit is in a different season,
         // we need to get the total Stalk, not just BDV.
         AssetsRemoved memory ar = removeDepositsFromAccount(msg.sender, token, grownStalkPerBdvs, amounts);
@@ -444,6 +445,10 @@ contract SiloFacet is TokenSilo {
         // Get new BDV
         uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
         uint256 newStalk;
+
+        //pulled these vars out because of "CompilerError: Stack too deep, try removing local variables."
+        int128 _lastCumulativeGrownStalkPerBdv = s.ss[address(token)].lastCumulativeGrownStalkPerBdv;
+        uint32 _stalkPerBdv = s.ss[token].stalkPerBdv;
 
         // Iterate through all grownStalkPerBdvs, redeposit the tokens with new BDV and
         // summate new Stalk.
@@ -457,11 +462,11 @@ contract SiloFacet is TokenSilo {
                 bdv
             );
             newStalk = newStalk.add(
-                bdv.mul(s.ss[token].stalk).add(
+                bdv.mul(_stalkPerBdv).add(
                     LibSilo.stalkReward(
                         grownStalkPerBdvs[i],
-                        s.ss[address(token)].lastCumulativeGrownStalkPerBdv,
-                        bdv
+                        _lastCumulativeGrownStalkPerBdv,
+                        uint128(bdv)
                     )
                 )
             );
@@ -483,7 +488,7 @@ contract SiloFacet is TokenSilo {
         view
         returns (int128 _cumulativeGrownStalkPerBdv)
     {
-        cumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(
+        _cumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(
             token
         );
     }
@@ -493,7 +498,7 @@ contract SiloFacet is TokenSilo {
         view
         returns (uint32 season)
     {
-        require(LibLegacyTokenSilo.isDepositSeason(token, grownStalkPerBdv, "No matching season for input grownStalkPerBdv"));
+        require(LibLegacyTokenSilo.isDepositSeason(token, grownStalkPerBdv), "No matching season for input grownStalkPerBdv");
         season = LibLegacyTokenSilo.grownStalkPerBdvToSeason(token, grownStalkPerBdv);
     }
 }
