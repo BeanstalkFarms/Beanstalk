@@ -124,7 +124,7 @@ contract SiloExit is ReentrancyGuard {
      * grownStalk = balanceOfSeeds * elapsedSeasons
      * ```
      */
-    function balanceOfGrownStalk(address account, address token, uint128 bdv)
+    function balanceOfGrownStalk(address account, address token)
         public
         view
         returns (uint256)
@@ -134,7 +134,7 @@ contract SiloExit is ReentrancyGuard {
             LibSilo.stalkReward(
                 s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBDV, //last GSPBDV farmer mowed
                 s.ss[address(token)].lastCumulativeGrownStalkPerBdv, //latest index, updated at last sunrise
-                bdv
+                s.a[account].mowStatuses[token].bdv
             );
     }
     

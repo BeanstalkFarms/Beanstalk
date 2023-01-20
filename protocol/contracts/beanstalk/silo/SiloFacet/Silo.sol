@@ -118,16 +118,14 @@ contract Silo is SiloExit {
         // Calculate the amount of Grown Stalk claimable by `account`.
         // Increase the account's balance of Stalk and Roots.
         __mow(account, token);
-
-        // Reset timer so that Grown Stalk for a particular Season can only be 
-        // claimed one time. 
-        s.a[account].lastUpdate = _season(); // move this to __mow
     }
 
     function __mow(address account, address token) private {
         // If this `account` has no Seeds, skip to save gas. //TODOSEEDS is there a post-seeds equiv?
         // if (s.a[account].s.seeds == 0) return;
-        LibSilo.mintStalk(account, balanceOfGrownStalk(account, token, s.a[account].mowStatuses[token].bdv));
+        LibSilo.mintStalk(account, balanceOfGrownStalk(account, token));
+
+        s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBDV = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
     }
 
     //////////////////////// INTERNAL: PLANT ////////////////////////

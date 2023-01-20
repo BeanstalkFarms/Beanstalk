@@ -136,12 +136,7 @@ library LibTokenSilo {
         s.a[account].deposits[token][grownStalkPerBdv].bdv += uint128(bdv); //need safecast here?
 
         //setup or update the MowStatus for this deposit. We should have _just_ mowed before calling this function.
-        s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBDV = grownStalkPerBdv; //maybe updating this here is not totally necessary if we just mowed?
         s.a[account].mowStatuses[token].bdv += uint128(bdv); //need safecast here?
-
-        //add to account-level total token deposited total amount inside the MowStatus
-
-
 
         emit AddDeposit(account, token, grownStalkPerBdv, amount, bdv);
     }
