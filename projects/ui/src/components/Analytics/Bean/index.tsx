@@ -11,20 +11,32 @@ import Crosses from '~/components/Analytics/Bean/Crosses';
 import DeltaB from '~/components/Analytics/Bean/DeltaB';
 import { FC } from '~/types';
 
-const SLUGS = ['price', 'volume', 'liquidity', 'mktcap', 'supply', 'crosses', 'DeltaB'];
+const SLUGS = [
+  'price',
+  'volume',
+  'liquidity',
+  'mktcap',
+  'supply',
+  'crosses',
+  'delta_b',
+];
 
 const BeanAnalytics: FC<{}> = () => {
-  const [tab, handleChangeTab] = useTabs(SLUGS, 'lens');
+  const [tab, handleChangeTab] = useTabs(SLUGS, 'bean');
   return (
     <Card>
-      <Tabs value={tab} onChange={handleChangeTab} sx={{ px: 2, pt: 2, pb: 1.5 }}>
+      <Tabs
+        value={tab}
+        onChange={handleChangeTab}
+        sx={{ px: 2, pt: 2, pb: 1.5 }}
+      >
         <Tab label="Bean Price" />
         <Tab label="Volume" />
         <Tab label="Liquidity" />
         <Tab label="Market Cap" />
         <Tab label="Supply" />
         <Tab label="Crosses" />
-        <Tab label="DeltaB" />
+        <Tab label="Delta B" />
       </Tabs>
       {tab === 0 && <Price height={300} />}
       {tab === 1 && <Volume height={300} />}

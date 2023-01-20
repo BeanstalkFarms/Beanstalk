@@ -36,7 +36,7 @@ const FieldAnalytics: FC<{}> = () => {
         <Tab label="Pod Rate" />
         <Tab label="Sown" />
         <Tab label="Harvested" />
-        <Tab label="TotalSowers" />
+        <Tab label="Total Sowers" />
       </Tabs>
       {tab === 0 && <RRoR height={300} />}
       {tab === 1 && <Temperature height={300} />}

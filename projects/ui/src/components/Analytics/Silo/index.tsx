@@ -28,7 +28,7 @@ const SLUGS = [
 ];
 
 const SiloAnalytics: FC<{}> = () => {
-  const [tab, handleChangeTab] = useTabs(SLUGS, 'deposits');
+  const [tab, handleChangeTab] = useTabs(SLUGS, 'silo');
   return (
     <Card>
       <Tabs
