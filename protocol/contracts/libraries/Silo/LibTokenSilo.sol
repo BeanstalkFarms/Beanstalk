@@ -23,10 +23,12 @@ import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
  */
 library LibTokenSilo {
     using SafeMath for uint256;
+    using SafeMath for uint128;
     using SafeMath for int128;
     using SafeMath for uint32;
     using LibSafeMathSigned128 for int128;
     using SafeCast for int128;
+    using SafeCast for uint256;
 
     //////////////////////// EVENTS ////////////////////////
 
@@ -132,11 +134,15 @@ library LibTokenSilo {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        s.a[account].deposits[token][grownStalkPerBdv].amount += uint128(amount); //need safecast here?
-        s.a[account].deposits[token][grownStalkPerBdv].bdv += uint128(bdv); //need safecast here?
+        uint256 updatedAmount = s.a[account].deposits[token][grownStalkPerBdv].amount.add(uint128(amount));
+        s.a[account].deposits[token][grownStalkPerBdv].amount = uint128(updatedAmount);
+
+        uint256 updatedTotalTokenBdv = s.a[account].deposits[token][grownStalkPerBdv].bdv.add(uint128(bdv));
+        s.a[account].deposits[token][grownStalkPerBdv].bdv = uint128(updatedTotalTokenBdv);
 
         //setup or update the MowStatus for this deposit. We should have _just_ mowed before calling this function.
-        s.a[account].mowStatuses[token].bdv += uint128(bdv); //need safecast here?
+        uint256 updatedMowStatusBdv = s.a[account].mowStatuses[token].bdv.add(bdv.toUint128());
+        s.a[account].mowStatuses[token].bdv = uint128(updatedMowStatusBdv);
 
         emit AddDeposit(account, token, grownStalkPerBdv, amount, bdv);
     }
@@ -190,8 +196,10 @@ library LibTokenSilo {
             s.a[account].deposits[token][grownStalkPerBdv].amount = uint128(updatedAmount);
             s.a[account].deposits[token][grownStalkPerBdv].bdv = uint128(updatedBDV);
 
+            uint256 updatedTotalBdv = uint256(s.a[account].deposits[token][grownStalkPerBdv].amount).sub(removedBDV);
+
             //remove from the mow status bdv amount, which keeps track of total token deposited per farmer
-            s.a[account].mowStatuses[token].bdv -= uint128(removedBDV); //need some kind of safety check here?
+            s.a[account].mowStatuses[token].bdv = uint128(updatedTotalBdv); //need some kind of safety check here?
 
             return removedBDV;
         }
@@ -199,7 +207,8 @@ library LibTokenSilo {
         // Full remove
         if (crateAmount > 0) delete s.a[account].deposits[token][grownStalkPerBdv];
 
-        s.a[account].mowStatuses[token].bdv -= uint128(crateAmount);
+        uint256 updatedTotalBdv = uint256(s.a[account].mowStatuses[token].bdv).sub(crateAmount);
+        s.a[account].mowStatuses[token].bdv = updatedTotalBdv;
 
         // Excess remove
         // This can only occur for Unripe Beans and Unripe LP Tokens, and is a
