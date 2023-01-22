@@ -221,7 +221,7 @@ contract TokenSilo is Silo {
         uint256 amount
     ) internal {
         // Remove the Deposit from `account`.
-        (uint256 stalkRemoved, uint256 bdvRemoved) = removeDepositFromAccount(
+        (uint256 stalkRemoved, ) = removeDepositFromAccount(
             account,
             token,
             grownStalkPerBdv,

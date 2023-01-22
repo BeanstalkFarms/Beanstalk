@@ -196,10 +196,10 @@ library LibTokenSilo {
             s.a[account].deposits[token][grownStalkPerBdv].amount = uint128(updatedAmount);
             s.a[account].deposits[token][grownStalkPerBdv].bdv = uint128(updatedBDV);
 
-            uint256 updatedTotalBdv = uint256(s.a[account].deposits[token][grownStalkPerBdv].amount).sub(removedBDV);
+            uint256 updatedTotalBdvPartial = uint256(s.a[account].deposits[token][grownStalkPerBdv].amount).sub(removedBDV);
 
             //remove from the mow status bdv amount, which keeps track of total token deposited per farmer
-            s.a[account].mowStatuses[token].bdv = uint128(updatedTotalBdv); //need some kind of safety check here?
+            s.a[account].mowStatuses[token].bdv = uint128(updatedTotalBdvPartial); //need some kind of safety check here?
 
             return removedBDV;
         }
@@ -208,7 +208,7 @@ library LibTokenSilo {
         if (crateAmount > 0) delete s.a[account].deposits[token][grownStalkPerBdv];
 
         uint256 updatedTotalBdv = uint256(s.a[account].mowStatuses[token].bdv).sub(crateAmount);
-        s.a[account].mowStatuses[token].bdv = updatedTotalBdv;
+        s.a[account].mowStatuses[token].bdv = uint128(updatedTotalBdv);
 
         // Excess remove
         // This can only occur for Unripe Beans and Unripe LP Tokens, and is a
@@ -323,7 +323,6 @@ library LibTokenSilo {
         returns (uint grownStalk)
     {
         // cumulativeGrownStalkPerBdv(token) > depositGrownStalkPerBdv for all valid Deposits
-        AppStorage storage s = LibAppStorage.diamondStorage();
         int128 _cumulativeGrownStalkPerBdv = cumulativeGrownStalkPerBdv(token);
         require(grownStalkPerBdv <= _cumulativeGrownStalkPerBdv, "Silo: Invalid Deposit");
         uint deltaGrownStalkPerBdv = uint(cumulativeGrownStalkPerBdv(token).sub(grownStalkPerBdv));
