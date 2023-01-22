@@ -6,182 +6,11 @@ import { ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "./utils/Decimals";
 import { loadBean, loadBeanDailySnapshot, loadBeanHourlySnapshot, loadCross } from "./utils/EntityLoaders";
 
 export function handleTokenExchange(event: TokenExchange): void {
-    // Get Curve Price Details
-    let curvePrice = CurvePrice.bind(CURVE_PRICE)
-    let curve = curvePrice.try_getCurve()
-
-    if (curve.reverted) { return }
-
-    let bean = loadBean()
-    let beanHourly = loadBeanHourlySnapshot(event.block.timestamp)
-    let beanDaily = loadBeanDailySnapshot(event.block.timestamp)
-
-    let oldPrice = bean.price
-    let newPrice = toDecimal(curve.value.price)
-    let beanVolume = ZERO_BI
-
-    if (event.params.sold_id == ZERO_BI) {
-        beanVolume = event.params.tokens_sold
-    } else if (event.params.bought_id == ZERO_BI) {
-        beanVolume = event.params.tokens_bought
-    }
-    let deltaLiquidityUSD = toDecimal(curve.value.liquidity).minus(bean.totalLiquidityUSD)
-
-    bean.totalVolume = bean.totalVolume.plus(beanVolume)
-    bean.totalVolumeUSD = bean.totalVolumeUSD.plus(toDecimal(beanVolume).times(newPrice))
-    //bean.totalLiquidity = curve.value.lpBdv
-    bean.totalLiquidityUSD = toDecimal(curve.value.liquidity)
-    bean.price = toDecimal(curve.value.price)
-    bean.save()
-
-    beanHourly.totalVolume = bean.totalVolume
-    beanHourly.totalVolumeUSD = bean.totalVolumeUSD
-    beanHourly.totalLiquidityUSD = bean.totalLiquidityUSD
-    beanHourly.price = bean.price
-    beanHourly.hourlyVolume = beanHourly.hourlyVolume.plus(beanVolume)
-    beanHourly.hourlyVolumeUSD = beanHourly.hourlyVolumeUSD.plus(toDecimal(beanVolume).times(newPrice))
-    beanHourly.hourlyLiquidityUSD = beanHourly.hourlyLiquidityUSD.plus(deltaLiquidityUSD)
-    beanHourly.save()
-
-    beanDaily.totalVolume = bean.totalVolume
-    beanDaily.totalVolumeUSD = bean.totalVolumeUSD
-    beanDaily.totalLiquidityUSD = bean.totalLiquidityUSD
-    beanDaily.price = bean.price
-    beanDaily.dailyVolume = beanDaily.dailyVolume.plus(beanVolume)
-    beanDaily.dailyVolumeUSD = beanDaily.dailyVolumeUSD.plus(toDecimal(beanVolume).times(newPrice))
-    beanDaily.dailyLiquidityUSD = beanDaily.dailyLiquidityUSD.plus(deltaLiquidityUSD)
-    beanDaily.save()
-
-    // Handle a peg cross
-    if (oldPrice >= ONE_BD && newPrice < ONE_BD) {
-        let cross = loadCross(bean.totalCrosses + 1, event.block.timestamp)
-        cross.price = newPrice
-        cross.timeSinceLastCross = event.block.timestamp.minus(bean.lastCross)
-        cross.above = false
-        cross.save()
-
-        bean.lastCross = event.block.timestamp
-        bean.totalCrosses += 1
-        bean.save()
-
-        beanHourly.totalCrosses += 1
-        beanHourly.hourlyCrosses += 1
-        beanHourly.save()
-
-        beanDaily.totalCrosses += 1
-        beanDaily.dailyCrosses += 1
-        beanDaily.save()
-    }
-
-    if (oldPrice < ONE_BD && newPrice >= ONE_BD) {
-        let cross = loadCross(bean.totalCrosses + 1, event.block.timestamp)
-        cross.price = newPrice
-        cross.timeSinceLastCross = event.block.timestamp.minus(bean.lastCross)
-        cross.above = true
-        cross.save()
-
-        bean.lastCross = event.block.timestamp
-        bean.totalCrosses += 1
-        bean.save()
-
-        beanHourly.totalCrosses += 1
-        beanHourly.hourlyCrosses += 1
-        beanHourly.save()
-
-        beanDaily.totalCrosses += 1
-        beanDaily.dailyCrosses += 1
-        beanDaily.save()
-    }
+    handleSwap(event.params.sold_id, event.params.tokens_sold, event.params.bought_id, event.params.tokens_bought, event.block.timestamp)
 }
 
 export function handleTokenExchangeUnderlying(event: TokenExchangeUnderlying): void {
-
-    // Get Curve Price Details
-    let curvePrice = CurvePrice.bind(CURVE_PRICE)
-    let curve = curvePrice.try_getCurve()
-
-    if (curve.reverted) { return }
-
-    let bean = loadBean()
-    let beanHourly = loadBeanHourlySnapshot(event.block.timestamp)
-    let beanDaily = loadBeanDailySnapshot(event.block.timestamp)
-
-    let oldPrice = bean.price
-    let newPrice = toDecimal(curve.value.price)
-    let beanVolume = ZERO_BI
-
-    if (event.params.sold_id == ZERO_BI) {
-        beanVolume = event.params.tokens_sold
-    } else if (event.params.bought_id == ZERO_BI) {
-        beanVolume = event.params.tokens_bought
-    }
-    let deltaLiquidityUSD = toDecimal(curve.value.liquidity).minus(bean.totalLiquidityUSD)
-
-    bean.totalVolume = bean.totalVolume.plus(beanVolume)
-    bean.totalVolumeUSD = bean.totalVolumeUSD.plus(toDecimal(beanVolume).times(newPrice))
-    //bean.totalLiquidity = curve.value.lpBdv
-    bean.totalLiquidityUSD = toDecimal(curve.value.liquidity)
-    bean.price = toDecimal(curve.value.price)
-    bean.save()
-
-    beanHourly.totalVolume = bean.totalVolume
-    beanHourly.totalVolumeUSD = bean.totalVolumeUSD
-    beanHourly.totalLiquidityUSD = bean.totalLiquidityUSD
-    beanHourly.price = bean.price
-    beanHourly.hourlyVolume = beanHourly.hourlyVolume.plus(beanVolume)
-    beanHourly.hourlyVolumeUSD = beanHourly.hourlyVolumeUSD.plus(toDecimal(beanVolume).times(newPrice))
-    beanHourly.hourlyLiquidityUSD = beanHourly.hourlyLiquidityUSD.plus(deltaLiquidityUSD)
-    beanHourly.save()
-
-    beanDaily.totalVolume = bean.totalVolume
-    beanDaily.totalVolumeUSD = bean.totalVolumeUSD
-    beanDaily.totalLiquidityUSD = bean.totalLiquidityUSD
-    beanDaily.price = bean.price
-    beanDaily.dailyVolume = beanDaily.dailyVolume.plus(beanVolume)
-    beanDaily.dailyVolumeUSD = beanDaily.dailyVolumeUSD.plus(toDecimal(beanVolume).times(newPrice))
-    beanDaily.dailyLiquidityUSD = beanDaily.dailyLiquidityUSD.plus(deltaLiquidityUSD)
-    beanDaily.save()
-
-    // Handle a peg cross
-    if (oldPrice >= ONE_BD && newPrice < ONE_BD) {
-        let cross = loadCross(bean.totalCrosses + 1, event.block.timestamp)
-        cross.price = newPrice
-        cross.timeSinceLastCross = event.block.timestamp.minus(bean.lastCross)
-        cross.above = false
-        cross.save()
-
-        bean.lastCross = event.block.timestamp
-        bean.totalCrosses += 1
-        bean.save()
-
-        beanHourly.totalCrosses += 1
-        beanHourly.hourlyCrosses += 1
-        beanHourly.save()
-
-        beanDaily.totalCrosses += 1
-        beanDaily.dailyCrosses += 1
-        beanDaily.save()
-    }
-
-    if (oldPrice < ONE_BD && newPrice >= ONE_BD) {
-        let cross = loadCross(bean.totalCrosses + 1, event.block.timestamp)
-        cross.price = newPrice
-        cross.timeSinceLastCross = event.block.timestamp.minus(bean.lastCross)
-        cross.above = true
-        cross.save()
-
-        bean.lastCross = event.block.timestamp
-        bean.totalCrosses += 1
-        bean.save()
-
-        beanHourly.totalCrosses += 1
-        beanHourly.hourlyCrosses += 1
-        beanHourly.save()
-
-        beanDaily.totalCrosses += 1
-        beanDaily.dailyCrosses += 1
-        beanDaily.save()
-    }
+    handleSwap(event.params.sold_id, event.params.tokens_sold, event.params.bought_id, event.params.tokens_bought, event.block.timestamp)
 }
 
 export function handleAddLiquidity(event: AddLiquidity): void {
@@ -213,7 +42,7 @@ function handleLiquidityChange(timestamp: BigInt, token0Amount: BigInt, token1Am
 
     let oldPrice = bean.price
     let newPrice = toDecimal(curve.value.price)
-    let deltaLiquidityUSD = toDecimal(curve.value.liquidity).minus(bean.totalLiquidityUSD)
+    let deltaLiquidityUSD = toDecimal(curve.value.liquidity).minus(bean.liquidityUSD)
 
     let volumeUSD = deltaLiquidityUSD < ZERO_BD ? deltaLiquidityUSD.div(BigDecimal.fromString('2')).times(BigDecimal.fromString('-1')) : deltaLiquidityUSD.div(BigDecimal.fromString('2'))
     let beanVolume = BigInt.fromString(volumeUSD.div(newPrice).times(BigDecimal.fromString('1000000')).truncate(0).toString())
@@ -222,68 +51,162 @@ function handleLiquidityChange(timestamp: BigInt, token0Amount: BigInt, token1Am
         volumeUSD = ZERO_BD
         beanVolume = ZERO_BI
     }
-    bean.totalVolume = bean.totalVolume.plus(beanVolume)
-    bean.totalVolumeUSD = bean.totalVolumeUSD.plus(volumeUSD)
-    bean.totalLiquidityUSD = toDecimal(curve.value.liquidity)
+    bean.volume = bean.volume.plus(beanVolume)
+    bean.volumeUSD = bean.volumeUSD.plus(volumeUSD)
+    bean.liquidityUSD = toDecimal(curve.value.liquidity)
     bean.price = toDecimal(curve.value.price)
     bean.save()
 
-    beanHourly.totalVolume = bean.totalVolume
-    beanHourly.totalVolumeUSD = bean.totalVolumeUSD
-    beanHourly.totalLiquidityUSD = bean.totalLiquidityUSD
+    beanHourly.volume = bean.volume
+    beanHourly.volumeUSD = bean.volumeUSD
+    beanHourly.liquidityUSD = bean.liquidityUSD
     beanHourly.price = bean.price
-    beanHourly.hourlyLiquidityUSD = beanHourly.hourlyLiquidityUSD.plus(deltaLiquidityUSD)
-    beanHourly.hourlyVolume = beanHourly.hourlyVolume.plus(beanVolume)
-    beanHourly.hourlyVolumeUSD = beanHourly.hourlyVolumeUSD.plus(volumeUSD)
+    beanHourly.deltaLiquidityUSD = beanHourly.deltaLiquidityUSD.plus(deltaLiquidityUSD)
+    beanHourly.deltaVolume = beanHourly.deltaVolume.plus(beanVolume)
+    beanHourly.deltaVolumeUSD = beanHourly.deltaVolumeUSD.plus(volumeUSD)
     beanHourly.save()
 
-    beanHourly.totalVolume = bean.totalVolume
-    beanHourly.totalVolumeUSD = bean.totalVolumeUSD
-    beanDaily.totalLiquidityUSD = bean.totalLiquidityUSD
+    beanHourly.volume = bean.volume
+    beanHourly.volumeUSD = bean.volumeUSD
+    beanDaily.liquidityUSD = bean.liquidityUSD
     beanDaily.price = bean.price
-    beanDaily.dailyLiquidityUSD = beanDaily.dailyLiquidityUSD.plus(deltaLiquidityUSD)
-    beanDaily.dailyVolume = beanDaily.dailyVolume.plus(beanVolume)
-    beanDaily.dailyVolumeUSD = beanDaily.dailyVolumeUSD.plus(volumeUSD)
+    beanDaily.deltaLiquidityUSD = beanDaily.deltaLiquidityUSD.plus(deltaLiquidityUSD)
+    beanDaily.deltaVolume = beanDaily.deltaVolume.plus(beanVolume)
+    beanDaily.deltaVolumeUSD = beanDaily.deltaVolumeUSD.plus(volumeUSD)
     beanDaily.save()
 
     // Handle a peg cross
     if (oldPrice >= ONE_BD && newPrice < ONE_BD) {
-        let cross = loadCross(bean.totalCrosses + 1, timestamp)
+        let cross = loadCross(bean.crosses + 1, timestamp)
         cross.price = newPrice
         cross.timeSinceLastCross = timestamp.minus(bean.lastCross)
         cross.above = false
         cross.save()
 
         bean.lastCross = timestamp
-        bean.totalCrosses += 1
+        bean.crosses += 1
         bean.save()
 
-        beanHourly.totalCrosses += 1
-        beanHourly.hourlyCrosses += 1
+        beanHourly.crosses += 1
+        beanHourly.deltaCrosses += 1
         beanHourly.save()
 
-        beanDaily.totalCrosses += 1
-        beanDaily.dailyCrosses += 1
+        beanDaily.crosses += 1
+        beanDaily.deltaCrosses += 1
         beanDaily.save()
     }
 
     if (oldPrice < ONE_BD && newPrice >= ONE_BD) {
-        let cross = loadCross(bean.totalCrosses + 1, timestamp)
+        let cross = loadCross(bean.crosses + 1, timestamp)
         cross.price = newPrice
         cross.timeSinceLastCross = timestamp.minus(bean.lastCross)
         cross.above = true
         cross.save()
 
         bean.lastCross = timestamp
-        bean.totalCrosses += 1
+        bean.crosses += 1
         bean.save()
 
-        beanHourly.totalCrosses += 1
-        beanHourly.hourlyCrosses += 1
+        beanHourly.crosses += 1
+        beanHourly.deltaCrosses += 1
         beanHourly.save()
 
-        beanDaily.totalCrosses += 1
-        beanDaily.dailyCrosses += 1
+        beanDaily.crosses += 1
+        beanDaily.deltaCrosses += 1
+        beanDaily.save()
+    }
+}
+
+function handleSwap(
+    sold_id: BigInt,
+    tokens_sold: BigInt,
+    bought_id: BigInt,
+    tokens_bought: BigInt,
+    timestamp: BigInt
+): void {
+    // Get Curve Price Details
+    let curvePrice = CurvePrice.bind(CURVE_PRICE)
+    let curve = curvePrice.try_getCurve()
+
+    if (curve.reverted) { return }
+
+    let bean = loadBean()
+    let beanHourly = loadBeanHourlySnapshot(timestamp)
+    let beanDaily = loadBeanDailySnapshot(timestamp)
+
+    let oldPrice = bean.price
+    let newPrice = toDecimal(curve.value.price)
+    let beanVolume = ZERO_BI
+
+    if (sold_id == ZERO_BI) {
+        beanVolume = tokens_sold
+    } else if (bought_id == ZERO_BI) {
+        beanVolume = tokens_bought
+    }
+    let deltaLiquidityUSD = toDecimal(curve.value.liquidity).minus(bean.liquidityUSD)
+
+    bean.volume = bean.volume.plus(beanVolume)
+    bean.volumeUSD = bean.volumeUSD.plus(toDecimal(beanVolume).times(newPrice))
+    bean.liquidityUSD = toDecimal(curve.value.liquidity)
+    bean.price = toDecimal(curve.value.price)
+    bean.save()
+
+    beanHourly.volume = bean.volume
+    beanHourly.volumeUSD = bean.volumeUSD
+    beanHourly.liquidityUSD = bean.liquidityUSD
+    beanHourly.price = bean.price
+    beanHourly.deltaVolume = beanHourly.deltaVolume.plus(beanVolume)
+    beanHourly.deltaVolumeUSD = beanHourly.deltaVolumeUSD.plus(toDecimal(beanVolume).times(newPrice))
+    beanHourly.deltaLiquidityUSD = beanHourly.deltaLiquidityUSD.plus(deltaLiquidityUSD)
+    beanHourly.save()
+
+    beanDaily.volume = bean.volume
+    beanDaily.volumeUSD = bean.volumeUSD
+    beanDaily.liquidityUSD = bean.liquidityUSD
+    beanDaily.price = bean.price
+    beanDaily.deltaVolume = beanDaily.deltaVolume.plus(beanVolume)
+    beanDaily.deltaVolumeUSD = beanDaily.deltaVolumeUSD.plus(toDecimal(beanVolume).times(newPrice))
+    beanDaily.deltaLiquidityUSD = beanDaily.deltaLiquidityUSD.plus(deltaLiquidityUSD)
+    beanDaily.save()
+
+    // Handle a peg cross
+    if (oldPrice >= ONE_BD && newPrice < ONE_BD) {
+        let cross = loadCross(bean.crosses + 1, timestamp)
+        cross.price = newPrice
+        cross.timeSinceLastCross = timestamp.minus(bean.lastCross)
+        cross.above = false
+        cross.save()
+
+        bean.lastCross = timestamp
+        bean.crosses += 1
+        bean.save()
+
+        beanHourly.crosses += 1
+        beanHourly.deltaCrosses += 1
+        beanHourly.save()
+
+        beanDaily.crosses += 1
+        beanDaily.deltaCrosses += 1
+        beanDaily.save()
+    }
+
+    if (oldPrice < ONE_BD && newPrice >= ONE_BD) {
+        let cross = loadCross(bean.crosses + 1, timestamp)
+        cross.price = newPrice
+        cross.timeSinceLastCross = timestamp.minus(bean.lastCross)
+        cross.above = true
+        cross.save()
+
+        bean.lastCross = timestamp
+        bean.crosses += 1
+        bean.save()
+
+        beanHourly.crosses += 1
+        beanHourly.deltaCrosses += 1
+        beanHourly.save()
+
+        beanDaily.crosses += 1
+        beanDaily.deltaCrosses += 1
         beanDaily.save()
     }
 }

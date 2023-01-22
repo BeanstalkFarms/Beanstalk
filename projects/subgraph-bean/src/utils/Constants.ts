@@ -4,7 +4,8 @@ import { Address, BigDecimal } from "@graphprotocol/graph-ts"
 export const ADDRESS_ZERO = Address.fromString('0x0000000000000000000000000000000000000000')
 
 // Token Addresses
-export const BEAN_ERC20 = Address.fromString('0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab')
+export const BEAN_ERC20_V1 = Address.fromString('0xDC59ac4FeFa32293A95889Dc396682858d52e5Db')
+export const BEAN_ERC20_V2 = Address.fromString('0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab')
 export const BEAN_3CRV = Address.fromString('0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49')
 
 // Protocol Addresses

@@ -1,22 +1,22 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Bean, BeanDailySnapshot, BeanHourlySnapshot, Cross } from "../../generated/schema";
-import { BEAN_ERC20 } from "./Constants";
+import { BEAN_ERC20_V2 } from "./Constants";
 import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
 import { ZERO_BD, ZERO_BI } from "./Decimals";
 
 export function loadBean(): Bean {
-    let bean = Bean.load(BEAN_ERC20.toHexString())
+    let bean = Bean.load(BEAN_ERC20_V2.toHexString())
     if (bean == null) {
-        bean = new Bean(BEAN_ERC20.toHexString())
+        bean = new Bean(BEAN_ERC20_V2.toHexString())
         bean.decimals = BigInt.fromI32(6)
-        bean.totalSupply = ZERO_BI
+        bean.supply = ZERO_BI
         bean.marketCap = ZERO_BD
-        bean.totalVolume = ZERO_BI
-        bean.totalVolumeUSD = ZERO_BD
-        bean.totalLiquidity = ZERO_BI
-        bean.totalLiquidityUSD = ZERO_BD
+        bean.volume = ZERO_BI
+        bean.volumeUSD = ZERO_BD
+        bean.liquidity = ZERO_BI
+        bean.liquidityUSD = ZERO_BD
         bean.price = BigDecimal.fromString('1.072')
-        bean.totalCrosses = 0
+        bean.crosses = 0
         bean.lastCross = ZERO_BI
         bean.save()
     }
@@ -29,21 +29,21 @@ export function loadBeanHourlySnapshot(timestamp: BigInt): BeanHourlySnapshot {
     if (snapshot == null) {
         let bean = loadBean()
         snapshot = new BeanHourlySnapshot(hour)
-        snapshot.bean = BEAN_ERC20.toHexString()
+        snapshot.bean = BEAN_ERC20_V2.toHexString()
         snapshot.totalSupply = ZERO_BI
         snapshot.marketCap = bean.marketCap
-        snapshot.totalVolume = bean.totalVolume
-        snapshot.totalVolumeUSD = bean.totalVolumeUSD
-        snapshot.totalLiquidity = bean.totalLiquidity
-        snapshot.totalLiquidityUSD = bean.totalLiquidityUSD
+        snapshot.volume = bean.volume
+        snapshot.volumeUSD = bean.volumeUSD
+        snapshot.liquidity = bean.liquidity
+        snapshot.liquidityUSD = bean.liquidityUSD
         snapshot.price = bean.price
-        snapshot.totalCrosses = bean.totalCrosses
+        snapshot.crosses = bean.crosses
         snapshot.deltaBeans = ZERO_BI
-        snapshot.hourlyVolume = ZERO_BI
-        snapshot.hourlyVolumeUSD = ZERO_BD
-        snapshot.hourlyLiquidity = ZERO_BI
-        snapshot.hourlyLiquidityUSD = ZERO_BD
-        snapshot.hourlyCrosses = 0
+        snapshot.deltaVolume = ZERO_BI
+        snapshot.deltaVolumeUSD = ZERO_BD
+        snapshot.deltaLiquidity = ZERO_BI
+        snapshot.deltaLiquidityUSD = ZERO_BD
+        snapshot.deltaCrosses = 0
         snapshot.season = 6074
         snapshot.timestamp = timestamp
         snapshot.blockNumber = ZERO_BI
@@ -58,21 +58,21 @@ export function loadBeanDailySnapshot(timestamp: BigInt): BeanDailySnapshot {
     if (snapshot == null) {
         let bean = loadBean()
         snapshot = new BeanDailySnapshot(day)
-        snapshot.bean = BEAN_ERC20.toHexString()
+        snapshot.bean = BEAN_ERC20_V2.toHexString()
         snapshot.totalSupply = ZERO_BI
         snapshot.marketCap = bean.marketCap
-        snapshot.totalVolume = bean.totalVolume
-        snapshot.totalVolumeUSD = bean.totalVolumeUSD
-        snapshot.totalLiquidity = bean.totalLiquidity
-        snapshot.totalLiquidityUSD = bean.totalLiquidityUSD
+        snapshot.volume = bean.volume
+        snapshot.volumeUSD = bean.volumeUSD
+        snapshot.liquidity = bean.liquidity
+        snapshot.liquidityUSD = bean.liquidityUSD
         snapshot.price = bean.price
-        snapshot.totalCrosses = bean.totalCrosses
+        snapshot.crosses = bean.crosses
         snapshot.deltaBeans = ZERO_BI
-        snapshot.dailyVolume = ZERO_BI
-        snapshot.dailyVolumeUSD = ZERO_BD
-        snapshot.dailyLiquidity = ZERO_BI
-        snapshot.dailyLiquidityUSD = ZERO_BD
-        snapshot.dailyCrosses = 0
+        snapshot.deltaVolume = ZERO_BI
+        snapshot.deltaVolumeUSD = ZERO_BD
+        snapshot.deltaLiquidity = ZERO_BI
+        snapshot.deltaLiquidityUSD = ZERO_BD
+        snapshot.deltaCrosses = 0
         snapshot.season = 6074
         snapshot.timestamp = timestamp
         snapshot.blockNumber = ZERO_BI
