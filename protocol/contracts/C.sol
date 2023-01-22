@@ -30,7 +30,6 @@ library C {
 
     // Season
     uint256 private constant CURRENT_SEASON_PERIOD = 3600; // 1 hour
-    uint256 private constant BASE_ADVANCE_INCENTIVE = 100e6; // 100 beans
     uint256 private constant SOP_PRECISION = 1e24;
 
     // Season Incentive
