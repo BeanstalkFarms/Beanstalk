@@ -1,18 +1,9 @@
-import { loadBeanDailySnapshot, loadBeanHourlySnapshot } from "./utils/EntityLoaders";
 import { Sunrise } from '../generated/Beanstalk/Beanstalk'
+import { updateBeanSeason } from './utils/Bean'
+import { BEAN_ERC20_V2 } from './utils/Constants'
 
 export function handleSunrise(event: Sunrise): void {
     // Update the season for hourly and daily liquidity metrics
-    let hourly = loadBeanHourlySnapshot(event.block.timestamp)
-    let daily = loadBeanDailySnapshot(event.block.timestamp)
 
-    hourly.season = event.params.season.toI32()
-    hourly.timestamp = event.block.timestamp
-    hourly.blockNumber = event.block.number
-    hourly.save()
-
-    daily.season = event.params.season.toI32()
-    daily.timestamp = event.block.timestamp
-    daily.blockNumber = event.block.number
-    daily.save()
+    updateBeanSeason(BEAN_ERC20_V2.toHexString(), event.block.timestamp, event.params.season.toI32())
 }
