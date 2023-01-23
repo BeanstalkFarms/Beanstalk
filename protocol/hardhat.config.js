@@ -152,8 +152,8 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(async (_, __, runSuper
   paths = paths.filter((p) => !p.includes("replant"));
   paths = paths.filter((p) => !p.includes("InitWhitelist"));
   paths = paths.filter((p) => !p.includes("Root.sol"));
-  paths = paths.filter((p) => !p.includes("MockSiloFacet"));
-  paths = paths.filter((p) => !p.includes("MockConvertFacet"));
+  // paths = paths.filter((p) => !p.includes("MockSiloFacet"));
+  // paths = paths.filter((p) => !p.includes("MockConvertFacet"));
   return paths;
 });
 

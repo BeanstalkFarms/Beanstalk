@@ -183,4 +183,12 @@ library LibSilo {
     {
         return uint128(endStalkPerBDV-startStalkPerBDV)*bdv; //TODOSEEDS get safemath working here? endStalkPerBDV.sub(startStalkPerBDV).mul(bdv);
     }
+
+    function stalkRewardLegacy(uint256 seeds, uint32 seasons)
+        internal
+        pure
+        returns (uint256)
+    {
+        return seeds.mul(seasons);
+    }
 }

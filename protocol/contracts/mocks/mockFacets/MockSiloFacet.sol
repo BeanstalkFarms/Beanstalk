@@ -22,7 +22,7 @@ contract MockSiloFacet is SiloFacet {
 
     using SafeMath for uint256;
 
-    function mockWhitelistToken(address token, bytes4 selector, uint32 stalk, int128 stalkPerBdvPerSeason) external {
+    function mockWhitelistToken(address token, bytes4 selector, uint32 stalk, uint32 stalkPerBdvPerSeason) external {
        LibWhitelist.whitelistToken(token, selector, stalk, stalkPerBdvPerSeason);
     }
 
@@ -34,28 +34,41 @@ contract MockSiloFacet is SiloFacet {
         return amount.mul(3).div(2);
     }
 
-    function mockUnripeLPDeposit(uint256 t, int128 grownStalkPerBdv, uint256 amount, uint256 bdv) external {
+    function mockUnripeLPDeposit(uint256 t, uint32 _s, uint256 amount, uint256 bdv) external {
         _mow(msg.sender, C.unripeLPAddress());
         if (t == 0) {
-            s.a[msg.sender].lp.deposits[grownStalkPerBdv] += amount;
+            s.a[msg.sender].lp.deposits[_s] += amount;
+            s.a[msg.sender].lp.depositSeeds[_s] += bdv.mul(4);
         }
-        else if (t == 1) LibTokenSilo.addDepositToAccount(msg.sender, C.unripeLPPool1(), grownStalkPerBdv, amount, bdv);
-        else if (t == 2) LibTokenSilo.addDepositToAccount(msg.sender, C.unripeLPPool2(), grownStalkPerBdv, amount, bdv);
+        else if (t == 1) LibTokenSilo.addDepositToAccount(msg.sender, C.unripeLPPool1(), _s, amount, bdv);
+        else if (t == 2) LibTokenSilo.addDepositToAccount(msg.sender, C.unripeLPPool2(), _s, amount, bdv);
         uint256 unripeLP = getUnripeForAmount(t, amount);
         LibTokenSilo.incrementTotalDeposited(C.unripeLPAddress(), unripeLP);
         bdv = bdv.mul(C.initialRecap()).div(1e18);
-        uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalkPerBdv).add(LibSilo.stalkReward(grownStalkPerBdv, s.ss[C.unripeLPAddress()].lastCumulativeGrownStalkPerBdv, bdv));
-        LibSilo.mintStalk(msg.sender, stalk);
+        uint256 seeds = bdv.mul(s.ss[C.unripeLPAddress()].legacySeedsPerBdv);
+        uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalkPerBdv).add(LibSilo.stalkRewardLegacy(seeds, _season() - _s));
+        // LibSilo.mintSeedsAndStalk(msg.sender, seeds, stalk);
         LibTransfer.receiveToken(IERC20(C.unripeLPAddress()), unripeLP, msg.sender, LibTransfer.From.EXTERNAL);
     }
 
-    function mockUnripeBeanDeposit(int128 grownStalkPerBdv, uint256 amount) external {
-        _mow(msg.sender);
+/*    function mockUnripeBeanDeposit(int128 grownStalkPerBdv, uint256 amount) external {
+        _mow(msg.sender, C.unripeBeanAddress());
         s.a[msg.sender].bean.deposits[grownStalkPerBdv] += amount;
         LibTokenSilo.incrementTotalDeposited(C.unripeBeanAddress(), amount);
         amount = amount.mul(C.initialRecap()).div(1e18);
-        uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalk).add(LibSilo.stalkReward(grownStalkPerBdv, s.ss[C.unripeLPAddress()].lastCumulativeGrownStalkPerBdv));
+        uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalkPerBdv).add(LibSilo.stalkRewardLegacy(grownStalkPerBdv, s.ss[C.unripeLPAddress()].lastCumulativeGrownStalkPerBdv));
         LibSilo.mintStalk(msg.sender, stalk);
+        LibTransfer.receiveToken(IERC20(C.unripeBeanAddress()), amount, msg.sender, LibTransfer.From.EXTERNAL);
+    }*/
+
+   function mockUnripeBeanDeposit(uint32 _s, uint256 amount) external {
+        _mow(msg.sender, C.unripeBeanAddress());
+        s.a[msg.sender].bean.deposits[_s] += amount;
+        LibTokenSilo.incrementTotalDeposited(C.unripeBeanAddress(), amount);
+        amount = amount.mul(C.initialRecap()).div(1e18);
+        uint256 seeds = amount.mul(s.ss[C.unripeBeanAddress()].legacySeedsPerBdv);
+        uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalkPerBdv).add(LibSilo.stalkRewardLegacy(seeds, _season() - _s));
+        // LibSilo.mintSeedsAndStalk(msg.sender, seeds, stalk);
         LibTransfer.receiveToken(IERC20(C.unripeBeanAddress()), amount, msg.sender, LibTransfer.From.EXTERNAL);
     }
 
