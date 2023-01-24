@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
 import BigNumber from 'bignumber.js';
-import Token from '~/classes/Token';
+import { Token } from '@beanstalk/sdk';
+import TokenOld from '~/classes/Token';
 import { ChainConstant } from '~/constants';
 import useGetChainToken from '../chain/useGetChainToken';
 import useFarmerBalances from './useFarmerBalances';
 
-type TokenOrTokenMap = Token | ChainConstant<Token>;
+type TokenOrTokenMap = TokenOld | ChainConstant<TokenOld> | Token;
 
 export type PreferredToken = {
   token: TokenOrTokenMap;
@@ -55,4 +56,27 @@ export default function usePreferredToken(
     balances,
     fallbackMode
   ]);
+}
+
+export function useGetPreferredToken(
+  list: {
+    token: Token;
+    minimum?: BigNumber;
+  }[],
+  fallbackMode : FallbackMode = 'use-best'
+) {
+  const balances = useFarmerBalances();
+  return useMemo(() => {
+    const index = list.findIndex((pt) => {
+      const min = pt.minimum || new BigNumber(pt.token.displayDecimals / 100);
+      const bal = balances[pt.token.address];
+      return bal?.total?.gte(min) || false;
+    });
+    if (index > -1) return list[index].token;
+    switch (fallbackMode) {
+      default:
+      case 'use-best':
+        return list[0].token;
+    }
+  }, [balances, fallbackMode, list]);
 }

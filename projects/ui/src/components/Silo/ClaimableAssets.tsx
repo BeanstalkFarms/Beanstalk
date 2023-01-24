@@ -68,7 +68,7 @@ const ClaimableAssets: React.FC<{
     const data = values.tokens[0] || undefined;
     if (totalClaiming.eq(0) || !data) return ZERO_BN;
     // this is only correct if claimed beans are used first
-    if (data.token === BEAN[1]) {
+    if (data.token.symbol === BEAN[1].symbol) {
       if (!data.amount) return totalClaiming;
       if (data.amount?.lt(totalClaiming)) {
         return totalClaiming.minus(data.amount || ZERO_BN);

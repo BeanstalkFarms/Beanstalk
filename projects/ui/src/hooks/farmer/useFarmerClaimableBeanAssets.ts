@@ -1,15 +1,12 @@
 import BigNumber from 'bignumber.js';
 import { useMemo } from 'react';
 import { ZERO_BN } from '~/constants';
-import {
-  BEAN as BEAN_T,
-  PODS as PODS_T,
-  SPROUTS as SPROUTS_T,
-} from '~/constants/tokens';
+
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import useFarmerFertilizer from './useFarmerFertilizer';
 import useFarmerField from './useFarmerField';
 import { ClaimableBeanAssetFragment } from '~/components/Common/Form';
+import useSdk from '../sdk';
 
 export enum ClaimableBeanToken {
   BEAN = 'BEAN',
@@ -33,13 +30,14 @@ export default function useFarmerClaimableBeanAssets(): {
    */
   assets: Record<ClaimableBeanToken, ClaimableBeanAssetFragment>;
 } {
+  const sdk = useSdk();
   const farmerBarn = useFarmerFertilizer();
   const farmerField = useFarmerField();
   const farmerSilo = useFarmerSilo();
 
   return useMemo(() => {
     const claimableBean = normalize(
-      farmerSilo.balances[BEAN_T[1].address]?.claimable?.amount
+      farmerSilo.balances[sdk.tokens.BEAN.address]?.claimable?.amount
     );
     const claimableSprouts = normalize(farmerBarn.fertilizedSprouts);
     const havestablePods = normalize(farmerField.harvestablePods);
@@ -49,24 +47,25 @@ export default function useFarmerClaimableBeanAssets(): {
       total: claimableBean.plus(claimableSprouts.plus(havestablePods)),
       assets: {
         [ClaimableBeanToken.SPROUTS]: {
-          token: SPROUTS_T,
+          token: sdk.tokens.SPROUTS,
           amount: claimableSprouts,
         },
         [ClaimableBeanToken.PODS]: {
-          token: PODS_T,
+          token: sdk.tokens.PODS,
           amount: havestablePods,
         },
         [ClaimableBeanToken.BEAN]: {
-          token: BEAN_T[1],
+          token: sdk.tokens.BEAN,
           amount: claimableBean,
         },
       },
-      // fetch,
     };
   }, [
-    // fetch,
-    farmerSilo.balances,
-    farmerBarn.fertilizedSprouts,
-    farmerField.harvestablePods,
+    farmerSilo.balances, 
+    farmerBarn.fertilizedSprouts, 
+    farmerField.harvestablePods, 
+    sdk.tokens.SPROUTS, 
+    sdk.tokens.PODS, 
+    sdk.tokens.BEAN
   ]);
 }

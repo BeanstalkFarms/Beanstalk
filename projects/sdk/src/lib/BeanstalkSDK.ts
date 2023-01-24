@@ -15,7 +15,7 @@ import { Swap } from "src/lib/swap/Swap";
 import { TokenValue } from "src/classes/TokenValue";
 import { Bean } from "./bean";
 import { Pools } from "./pools";
-import defaultSettings from "src/defaultSettings.json";
+import defaultSettings from "../defaultSettings.json";
 
 export type Provider = ethers.providers.JsonRpcProvider;
 export type Signer = ethers.Signer;

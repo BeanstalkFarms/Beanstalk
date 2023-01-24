@@ -156,7 +156,10 @@ module.exports = {
   settings: {
     'import/resolver': {
       typescript: {
-        project: ['projects/ui/tsconfig.json'],
+        project: [
+          'projects/ui/tsconfig.json',
+          'projects/sdk/tsconfig.json',
+        ],
       },
     }
   },

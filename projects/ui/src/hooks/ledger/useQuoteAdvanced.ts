@@ -2,30 +2,25 @@ import { BigNumber } from 'bignumber.js';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import debounce from 'lodash/debounce';
 import toast from 'react-hot-toast';
-import { ethers } from 'ethers';
-import { ChainableFunctionResult } from '~/lib/Beanstalk/Farm';
-import { ERC20Token as ERC20TokenOld , NativeToken as NativeTokenOld } from '~/classes/Token';
+import { ERC20Token, NativeToken, FarmFromMode } from '@beanstalk/sdk';
+import ethers from 'ethers';
+import { QuoteSettings } from './useQuote';
 
-export type QuoteHandlerResult = {
+// ------------ USE WITH SDK ------------
+
+export type QuoteAdvancedHandlerResult = {
   amountOut: BigNumber;
   value?: ethers.BigNumber;
-  steps?: ChainableFunctionResult[];
 };
-export type QuoteHandler = (
-  tokenIn: ERC20TokenOld | NativeTokenOld,
+
+export type QuoteHandlerAdvanced = (
+  tokenIn: ERC20Token | NativeToken,
   amountIn: BigNumber,
   /** Calculate `amountOut` of this `tokenOut`. */
-  tokenOut: ERC20TokenOld | NativeTokenOld,
-) => Promise<null | QuoteHandlerResult['amountOut'] | QuoteHandlerResult>;
-
-export type QuoteSettings = {
-  /** The number of milliseconds to wait before calling */
-  debounceMs : number;
-  /** If true, returns amountOut = amountIn when tokenOut = tokenIn. Otherwise returns void. */
-  ignoreSameToken : boolean;
-  /** */
-  onReset: () => QuoteHandlerResult | null;
-}
+  tokenOut: ERC20Token | NativeToken,
+  slippage: number,
+  from?: FarmFromMode,
+) => Promise<null | QuoteAdvancedHandlerResult>;
 
 const baseSettings = {
   debounceMs: 250,
@@ -33,23 +28,17 @@ const baseSettings = {
   onReset: () => null,
 };
 
-/**
- * 
- * @param tokenOut 
- * @param quoteHandler A function that returns a quoted amountOut value.
- * @param _settings 
- * @returns 
- */
-export default function useQuote(
-  tokenOut: ERC20TokenOld | NativeTokenOld,
-  quoteHandler: QuoteHandler,
+export default function useQuoteAdvanced(
+  tokenOut: ERC20Token | NativeToken,
+  quoteHandler: QuoteHandlerAdvanced,
+  slippage: number,
   _settings?: Partial<QuoteSettings>,
 ) : [
-  result: QuoteHandlerResult | null,
+  result: QuoteAdvancedHandlerResult | null,
   quoting: boolean,
-  refreshAmountOut: (_tokenIn: ERC20TokenOld | NativeTokenOld, _amountIn: BigNumber) => void,
+  refreshAmountOut: (_tokenIn: ERC20Token | NativeToken, _amountIn: BigNumber) => void,
 ] {
-  const [result, setResult]   = useState<QuoteHandlerResult | null>(null);
+  const [result, setResult]   = useState<QuoteAdvancedHandlerResult | null>(null);
   const [quoting, setQuoting] = useState<boolean>(false);
   const settings              = useMemo(() => ({ ...baseSettings, ..._settings }), [_settings]);
   const abortController       = useRef<null | AbortController>(null);
@@ -61,7 +50,7 @@ export default function useQuote(
   }, [tokenOut, settings]);
 
   const __getAmountOut = useCallback((
-    tokenIn: ERC20TokenOld | NativeTokenOld,
+    tokenIn: ERC20Token | NativeToken,
     amountIn: BigNumber
   ) => {
     /// If a quote request is currently in flight, cancel it.
@@ -76,7 +65,7 @@ export default function useQuote(
         reject();
       });
       // NOTE: quoteHandler should parse amountOut to the necessary decimals
-      quoteHandler(tokenIn, amountIn, tokenOut)
+      quoteHandler(tokenIn, amountIn, tokenOut, slippage)
         .then((_result) => {
           /// This line is crucial: it ignores the request if it was cancelled in-flight.
           if (abortController.current?.signal.aborted) return reject();
@@ -101,13 +90,7 @@ export default function useQuote(
           /// request is about to be in flight behind this one.
         });
     });
-  }, [
-    tokenOut,
-    setQuoting,
-    setResult,
-    quoteHandler,
-    abortController,
-  ]);
+  }, [quoteHandler, tokenOut, slippage]);
 
   /// Debounced function is pulled out of the useCallback method
   /// to (a) allow React to calculate the right dependency array,
@@ -118,7 +101,7 @@ export default function useQuote(
   );
 
   // Handler to refresh
-  const getAmountOut = useCallback((tokenIn: ERC20TokenOld | NativeTokenOld, amountIn: BigNumber) => {
+  const getAmountOut = useCallback((tokenIn: ERC20Token | NativeToken, amountIn: BigNumber) => {
     if (tokenIn === tokenOut) {
       if (settings.ignoreSameToken) return;
       setQuoting(true);

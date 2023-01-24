@@ -5,13 +5,14 @@ import BigNumber from 'bignumber.js';
 import { Token, ERC20Token, NativeToken } from '@beanstalk/sdk';
 import TokenInputField, { TokenInputProps } from '~/components/Common/Form/TokenInputField';
 import TokenAdornment, { TokenAdornmentProps } from '~/components/Common/Form/TokenAdornment';
-import { QuoteHandlerNew, QuoteSettings, useQuoteNew } from '~/hooks/ledger/useQuote';
+import useQuoteAdvanced, { QuoteHandlerAdvanced } from '~/hooks/ledger/useQuoteAdvanced';
 import { displayFullBN } from '~/util/Tokens';
 import { FormState, FormTokenStateNew } from '.';
 import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
 import useSdk from '~/hooks/sdk';
+import { QuoteSettings } from '~/hooks/ledger/useQuote';
 
 type TokenQuoteProviderCustomProps = {
   /** Field name */
@@ -27,7 +28,7 @@ type TokenQuoteProviderCustomProps = {
   /** Text to show isnide the clickable TokenAdornment */
   tokenSelectLabel?: string | JSX.Element;
   /** */
-  handleQuote: QuoteHandlerNew;
+  handleQuote: QuoteHandlerAdvanced;
   /** */
   displayQuote?: false | ((state: BigNumber | undefined, tokenOut: Token) => React.ReactElement | undefined)
 
@@ -73,7 +74,7 @@ const TokenQuoteProviderNew : FC<TokenQuoteProviderProps> = ({
 }) => {
   const sdk = useSdk();
   // Setup a price quote for this token
-  const [result, quoting, getAmountOut] = useQuoteNew(tokenOut, handleQuote, slippage, quoteSettings);
+  const [result, quoting, getAmountOut] = useQuoteAdvanced(tokenOut, handleQuote, slippage, quoteSettings);
   const { isSubmitting, setFieldValue } = useFormikContext<FormState>();
 
   const displayQuote = _displayQuote === undefined ? DefaultQuoteDisplay : _displayQuote;
@@ -106,8 +107,6 @@ const TokenQuoteProviderNew : FC<TokenQuoteProviderProps> = ({
   useEffect(() => {
     console.debug(`[TokenQuoteProvider] update ${name}.amountOut =>`, result?.amountOut?.toString());
     setFieldValue(`${name}.amountOut`, result?.amountOut); // calculated amountOut
-    setFieldValue(`${name}.value`, result?.value);  // ether value used
-    setFieldValue(`${name}.steps`, result?.steps);  // steps
   }, [name, setFieldValue, result]);
   useEffect(() => {
     console.debug(`[TokenQuoteProvider] update ${name}.quoting =>`, quoting);

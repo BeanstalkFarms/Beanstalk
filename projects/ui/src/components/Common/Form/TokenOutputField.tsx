@@ -1,7 +1,8 @@
 import { Box, CircularProgress, Tooltip, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import React from 'react';
-import { Token } from '~/classes';
+import { Token } from '@beanstalk/sdk';
+import { Token as TokenOld } from '~/classes';
 import { displayFullBN } from '~/util';
 import TokenIcon from '../TokenIcon';
 import OutputField from './OutputField';
@@ -12,7 +13,7 @@ import { FC } from '~/types';
 
 const TokenOutputField : FC<{
   /** */
-  token: Token;
+  token: TokenOld | Token;
   /** The `amount` of `token` */
   amount: BigNumber;
   /** The $ value (or other derived value) of the `amount` */

@@ -5,7 +5,6 @@ import { ERC20Token } from '~/classes/Token';
 import { FarmerSiloBalance } from '~/state/farmer/silo';
 import useTabs from '~/hooks/display/useTabs';
 import BadgeTab from '~/components/Common/BadgeTab';
-import Deposit from './Deposit';
 import Withdraw from './Withdraw';
 import Claim from './Claim';
 import Deposits from './Deposits';
@@ -24,6 +23,8 @@ import { Module, ModuleTabs, ModuleContent } from '~/components/Common/Module';
  *     "claimable" row and is shown for both Withdraw & Claim tabs.
  */
 import { FC } from '~/types';
+import { useSdkMiddleware } from '~/hooks/sdk';
+import Deposit3 from './Deposit3';
 
 const SLUGS = ['deposit', 'convert', 'transfer', 'withdraw', 'claim'];
 
@@ -34,6 +35,9 @@ const SiloActions : FC<{
 }> = (props) => {
   const [tab, handleChange] = useTabs(SLUGS, 'action');
   const hasClaimable = props.siloBalance?.claimable?.amount.gt(0);
+
+  const { getSdkToken, getSdkPool } = useSdkMiddleware();
+
   return (
     <>
       <Module>
@@ -46,11 +50,17 @@ const SiloActions : FC<{
         </ModuleTabs>
         <ModuleContent>
           {tab === 0 ? (
-            <Deposit
+            <Deposit3
+              pool={getSdkPool(props.pool)}
+              token={getSdkToken(props.token)} // FIX ME
+            />
+          ) : null}
+          {/* {tab === 0 ? (
+            <Deposit 
               pool={props.pool}
               token={props.token}
             />
-          ) : null}
+          ) : null} */}
           {tab === 1 ? (
             <Convert
               pool={props.pool}

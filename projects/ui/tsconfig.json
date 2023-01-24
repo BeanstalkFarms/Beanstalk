@@ -28,8 +28,9 @@
     "downlevelIteration": true,
     "incremental": true,
     "paths": {
-      "~/*": ["./src/*"]
-    }
+      "~/*": ["./src/*"],
+      "@beanstalk/sdk": ["../sdk/src/*"]
+    },
   },
   "include": [
     "src"
@@ -38,5 +39,7 @@
     "./src/generated/**/*",
     "./src/graph/graphql.schema.json",
     "./node_modules"
-  ]
+  ],
+  // "references": [
+  //   { "path": "../sdk" }]
 }

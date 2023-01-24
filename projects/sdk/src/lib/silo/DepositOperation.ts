@@ -30,6 +30,7 @@ export class DepositOperation {
     this.fromMode = fromMode;
     if (!this.inputToken || !this.inputToken.equals(token)) {
       this.inputToken = token;
+      console.log("...building workflow...");
       this.buildWorkflow();
     }
   }
@@ -58,6 +59,7 @@ export class DepositOperation {
       }
       this.workflow.add(route.getStep(i).build(this.account, from, to));
     }
+    console.log("finished building workflow...");
   }
 
   getGraph() {

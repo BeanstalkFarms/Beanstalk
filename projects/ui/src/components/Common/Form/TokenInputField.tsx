@@ -9,7 +9,8 @@ import {
 import { Field, FieldProps } from 'formik';
 import BigNumber from 'bignumber.js';
 
-import Token from '~/classes/Token';
+import { Token } from '@beanstalk/sdk';
+import TokenOld from '~/classes/Token';
 import { displayBN, displayFullBN, displayTokenAmount } from '~/util';
 import { FarmerBalances } from '~/state/farmer/balances';
 import NumberFormatInput from './NumberFormatInput';
@@ -24,7 +25,7 @@ export type TokenInputCustomProps = {
    * If provided, the Balance is displayed with respect
    * to this token's displayDecimals.
    */
-  token?: Token;
+  token?: Token | TokenOld;
   /**
    *
    */

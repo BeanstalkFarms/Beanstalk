@@ -1,12 +1,13 @@
 import BigNumber from 'bignumber.js';
-import { BeanstalkToken, ERC20Token, NativeToken } from '~/classes/Token';
-import { QuoteHandlerResult } from '~/hooks/ledger/useQuote';
-import { FarmToMode } from '~/lib/Beanstalk/Farm';
+import { ERC20Token, NativeToken, BeanstalkToken, FarmToMode } from '@beanstalk/sdk';
+import { ERC20Token as ERC20TokenOld, NativeToken as NativeTokenOld } from '~/classes/Token';
+import { QuoteHandlerResult, QuoteHandlerResultNew } from '~/hooks/ledger/useQuote';
 import { BalanceFrom } from './BalanceFromRow';
-
 /**
  * 
  */
+// ---------------------------------------------------------
+
 export type FormState = {
   /** */
   tokens: FormTokenState[];
@@ -14,11 +15,19 @@ export type FormState = {
   approving?: FormApprovingState; 
 }
 
+// for new SDK class types. Eventually FormState will be replaced with this.
+export type FormStateNew = {
+    tokens: FormTokenStateNew[]
+    approving?: FormApprovingStateNew; 
+}
+
 /// FIXME: use type composition instead of this
 export type FormStateWithPlotSelect = FormState & {
   plot?: BigNumber;
 }
+// ---------------------------------------------------------
 
+// ---------------------------------------------------------
 /**
  * Fragment: A single Token stored within a form.
  */
@@ -26,7 +35,7 @@ export type FormTokenState = (
   /// Form inputs
   {
     /** The selected token. */
-    token:      ERC20Token | NativeToken;
+    token:      ERC20TokenOld | NativeTokenOld;
     /** The amount of the selected token, usually input by the user.
      * @value undefined if the input is empty */
     amount:     BigNumber | undefined;
@@ -38,6 +47,18 @@ export type FormTokenState = (
   } & Partial<QuoteHandlerResult>
 );
 
+// for new SDK class types. Eventually FormTokenState will be replaced with this.
+export type FormTokenStateNew = (
+  {
+    token:      ERC20Token | NativeToken;
+    amount:     BigNumber | undefined;
+  } 
+  & {
+    quoting?:   boolean;
+  } & Partial<QuoteHandlerResultNew>
+);
+// ---------------------------------------------------------
+
 // /** Some `amountOut` received for inputting `amount` of this token into a function. */
 // amountOut?: BigNumber;
 // /** Amount of ETH used in the transaction; applied to the `value` override. */
@@ -46,6 +67,15 @@ export type FormTokenState = (
 // steps?:     ChainableFunctionResult[];
 
 export type FormApprovingState = {
+  /** */
+  contract: string;
+  /** */
+  token:    ERC20TokenOld | NativeTokenOld;
+  /** */
+  amount:   BigNumber;
+}
+
+export type FormApprovingStateNew = {
   /** */
   contract: string;
   /** */
@@ -103,13 +133,6 @@ export type ClaimableBeanAssetFormState = {
 export type BalanceFromFragment = {
   balanceFrom: BalanceFrom;
 };
-
-export type AdditionalBalanceFragment = {
-  /** */
-  additionMax: BigNumber;
-  /** */
-  additionApplied: BigNumber;
-}
 
 /**
  *

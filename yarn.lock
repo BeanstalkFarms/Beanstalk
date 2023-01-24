@@ -37386,6 +37386,7 @@ __metadata:
   dependencies:
     "@apollo/client": ^3.4.10
     "@beanstalk/protocol": "workspace:*"
+    "@beanstalk/sdk": "workspace:*"
     "@emotion/react": ^11.10.5
     "@emotion/styled": ^11.10.5
     "@graphql-codegen/cli": 2.7.0
@@ -37416,6 +37417,7 @@ __metadata:
     "@testing-library/react": ^11.1.0
     "@testing-library/user-event": ^12.1.10
     "@typechain/ethers-v5": ^10.0.0
+    "@types/bn.js": ^5
     "@types/d3-array": ^3.0.2
     "@types/d3-time-format": ^4.0.0
     "@types/jest": ^26.0.15

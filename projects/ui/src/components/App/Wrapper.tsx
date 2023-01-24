@@ -12,16 +12,19 @@ import { apolloClient } from '~/graph/client';
 import store from '~/state';
 
 import { FC } from '~/types';
+import SdkProvider from './SdkProvider';
 
 const Wrapper : FC<{}> = ({ children }) => (
   <HashRouter>
     <ReduxProvider store={store}>
       <ApolloProvider client={apolloClient}>
         <WagmiConfig client={client}>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            {children}
-          </ThemeProvider>
+          <SdkProvider>
+            <ThemeProvider theme={theme}>
+              <CssBaseline />
+              {children}
+            </ThemeProvider>
+          </SdkProvider>
         </WagmiConfig>
       </ApolloProvider>
     </ReduxProvider>

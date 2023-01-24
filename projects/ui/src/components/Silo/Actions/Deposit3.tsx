@@ -1,40 +1,40 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { Stack } from '@mui/material';
-import { Form, Formik, FormikHelpers, FormikHelpers, FormikProps } from 'formik';
+import { Form, Formik,  FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
 import { useSelector } from 'react-redux';
-import { Token, ERC20Token, NativeToken } from '@beanstalk/sdk';
+import { Token, ERC20Token, NativeToken, TokenValue, FarmWorkflow } from '@beanstalk/sdk';
 import { LoadingButton } from '@mui/lab';
-import { BEAN, ETH } from '~/constants/tokens';
+import toast from 'react-hot-toast';
+import { BEAN } from '~/constants/tokens';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import { FarmWithClaimFormState, FormStateNew, SettingInput, TxnSettings } from '~/components/Common/Form';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
-import { ApplicableBalance, Balance, FarmerBalances } from '~/state/farmer/balances';
-import { toStringBaseUnitBN, toTokenUnitsBN } from '~/util/Tokens';
-import { QuoteHandlerNew } from '~/hooks/ledger/useQuote';
+import { ApplicableBalance, FarmerBalances } from '~/state/farmer/balances';
 import { ZERO_BN } from '~/constants';
 import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
 import useToggle from '~/hooks/display/useToggle';
-import { combineBalances, optimizeFromMode } from '~/util/Farm';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import { AppState } from '~/state';
 import { useFetchPools } from '~/state/bean/pools/updater';
 import { useFetchBeanstalkSilo } from '~/state/beanstalk/silo/updater';
-import useFarm from '~/hooks/sdk/useFarm';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import useFarmerClaimableBeanAssets from '~/hooks/farmer/useFarmerClaimableBeanAssets';
 import ClaimableAssets from '../ClaimableAssets';
-import useDepositFormUtils from '~/hooks/farmer/silo/useDepositFormUtils';
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
 import useSdk, { useToTokenMap } from '~/hooks/sdk';
 import TokenQuoteProviderNew from '~/components/Common/Form/TokenQuoteProviderNew';
 import { useGetPreferredToken } from '~/hooks/farmer/usePreferredToken';
+import TransactionToast from '~/components/Common/TxnToast';
+import { parseError } from '~/util';
+import useClaimAndDoX from '~/hooks/sdk/useClaimAndDoX';
+import { QuoteHandlerAdvanced } from '~/hooks/ledger/useQuoteAdvanced';
 
 // -----------------------------------------------------------------------
 
@@ -61,7 +61,7 @@ const DepositForm : FC<
     amountToBdv: (amount: BigNumber) => BigNumber;
     balances: FarmerBalances;
     contract: ethers.Contract;
-    handleQuote: QuoteHandlerNew;
+    handleQuote: QuoteHandlerAdvanced;
   }
 > = ({
   // Custom
@@ -261,9 +261,6 @@ const Deposit3 : FC<{
   const { data: signer } = useSigner();
   const beanstalk = useBeanstalkContract(signer);
 
-  /// Farm
-  const farm = useFarm();
-
   /// Form setup
   const initialValues : DepositFormValuesNew = useMemo(() => ({
     settings: {
@@ -283,230 +280,60 @@ const Deposit3 : FC<{
     destination: FarmToMode.INTERNAL,
   }), [baseToken]);
 
-  // const amIn = ethers.BigNumber.from(toStringBaseUnitBN(new BigNumber(100_000), sdk.tokens.BEAN.decimals)).toString();
-  // const am2In = sdk.tokens.BEAN.amount(100_000).toBlockchain();
+  const { getEncodedSteps, transferExcess, refetch } = useClaimAndDoX(whitelistedToken.address);
 
-  const getWorkflow = useCallback((
-    _tokenIn: ERC20Token | NativeToken, 
-    _amountIn: BigNumber,
-    _tokenOut: ERC20Token | NativeToken) => {
-      const tokenIn  : ERC20Token = _tokenIn  instanceof NativeToken ? sdk.tokens.WETH : _tokenIn;
-      const tokenOut : ERC20Token = _tokenOut instanceof NativeToken ? sdk.tokens.WETH : _tokenOut;
-      const amountIn = ethers.BigNumber.from(toStringBaseUnitBN(_amountIn, tokenIn.decimals));
-      const balanceIn : Balance   = _tokenIn  instanceof NativeToken 
-        ? combineBalances(balances[sdk.tokens.WETH.address], balances[ETH[1].address])
-        : balances[_tokenIn.address];
+  const getWorkflow = useCallback(async (
+    tokenIn: Token, _amountIn: BigNumber, tokenOut: Token, _fromMode?: FarmFromMode
+  ): Promise<{
+    handleEstimate: (amt: TokenValue) => Promise<TokenValue>,
+    workflow: FarmWorkflow<{ slippage: number } & Record<string, any>>;
+  }> => {
+    const account = await sdk.getAccount();
 
-      const work = sdk.farm.create();
+    const deposit = await sdk.silo.buildDeposit(tokenOut, account);
+    deposit.setInputToken(tokenIn);
+    const from = tokenIn.symbol === tokenOut.symbol ? FarmFromMode.INTERNAL_EXTERNAL : FarmFromMode.INTERNAL_TOLERANT;
 
-      // Depositing BEAN
-      if (tokenOut === sdk.tokens.BEAN) {
-        if (tokenIn === sdk.tokens.WETH) {
-          work.add([
-            new sdk.farm.actions.Exchange(
-              sdk.contracts.curve.pools.tricrypto2.address,
-              sdk.contracts.curve.registries.cryptoFactory.address,
-              sdk.tokens.WETH,
-              sdk.tokens.USDT
-            ),
-            new sdk.farm.actions.ExchangeUnderlying(
-              sdk.contracts.curve.pools.beanCrv3.address,
-              sdk.tokens.USDT,
-              sdk.tokens.BEAN,
-              undefined, // defaults to INTERNAL_TOLERANT
-              FarmToMode.EXTERNAL
-            )
-          ]);
-          // estimate = await Farm.estimate(
-          //   farm.buyBeans(), // this assumes we're coming from WETH
-          //   [amountIn]
-          // );
-        }
-      }
-      
-      // Depositing LP Tokens
-      else {
-        if (!pool) throw new Error(`Depositing to ${tokenOut.symbol} but no corresponding pool data found.`);
-        
-        // This is a Curve MetaPool...
-        const isMetapool = true;
-        if (isMetapool) {
-          // ...and we're depositing one of the underlying pool tokens.
-          // Ex. for BEAN:3CRV this could be [BEAN, (DAI, USDC, USDT)].
-          // pool.tokens      = [BEAN, CRV3]
-          // pool.underlying  = [BEAN, DAI, USDC, USDT] 
-          const tokenIndex = pool.tokens.indexOf(tokenIn);
-          const underlyingTokenIndex = pool.underlying.indexOf(tokenIn);
-          console.debug('[Deposit] LP Deposit', {
-            pool,
-            tokenIn,
-            tokenIndex,
-            underlyingTokenIndex,
-          });
-          
-          // This is X or CRV3
-          if (tokenIndex > -1) {
-            const indices = [0, 0];
-            indices[tokenIndex] = 1; // becomes [0, 1] or [1, 0]
-            console.debug('[Deposit] LP Deposit: indices=', indices);
-            work.add(
-              new sdk.farm.actions.AddLiquidity(
-                pool.address,
-                farm.contracts.curve.registries.metaFactory.address,
-                indices as [number, number],
-                optimizeFromMode(_amountIn, balanceIn) // use the BN version here
-              )
-            );
-            // estimate = await Farm.estimate([
-            //   farm.addLiquidity(
-            //     pool.address,
-            //     // FIXME: bean:lusd was a plain pool, bean:eth on curve would be a crypto pool
-            //     // perhaps the Curve pool instance needs to track a registry
-            //     farm.contracts.curve.registries.metaFactory.address,
-            //     // FIXME: find a better way to define this above
-            //     indices as [number, number],
-            //     optimizeFromMode(_amountIn, balanceIn) // use the BN version here
-            //   ),
-            // ], [amountIn]);
-          }
+    deposit.fromMode = from;
 
-          // This is a CRV3-underlying stable (DAI/USDC/USDT etc)
-          else if (underlyingTokenIndex > -1) {
-            if (underlyingTokenIndex === 0) throw new Error('Malformatted pool.tokens / pool.underlying');
-            const indices = [0, 0, 0];
-            indices[underlyingTokenIndex - 1] = 1;
-            console.debug('[Deposit] LP Deposit: indices=', indices);
-            work.add([
-              new sdk.farm.actions.AddLiquidity(
-                farm.contracts.curve.pools.pool3.address,
-                farm.contracts.curve.registries.poolRegistry.address,
-                indices as [number, number, number], // [DAI, USDC, USDT] use Tether from previous call
-                optimizeFromMode(_amountIn, balanceIn) // use the BN version here
-              ),
-              new sdk.farm.actions.AddLiquidity(
-                pool.address,
-                farm.contracts.curve.registries.metaFactory.address,
-                // adding the 3CRV side of liquidity
-                // FIXME: assuming that 3CRV is the second index (X:3CRV)
-                // not sure if this is always the case
-                [0, 1]
-              )
-            ]);
-            // estimate = await Farm.estimate([
-            //   // Deposit token into 3pool for 3CRV
-            //   farm.addLiquidity(
-            //     farm.contracts.curve.pools.pool3.address,
-            //     farm.contracts.curve.registries.poolRegistry.address,
-            //     indices as [number, number, number], // [DAI, USDC, USDT] use Tether from previous call
-            //     optimizeFromMode(_amountIn, balanceIn) // use the BN version here
-            //   ),
-            //   farm.addLiquidity(
-            //     pool.address,
-            //     farm.contracts.curve.registries.metaFactory.address,
-            //     // adding the 3CRV side of liquidity
-            //     // FIXME: assuming that 3CRV is the second index (X:3CRV)
-            //     // not sure if this is always the case
-            //     [0, 1]
-            //   ),
-            // ], [amountIn]);
-          }
+    console.log('deposit: ', deposit);
 
-          // This is ETH or WETH
-          else if (tokenIn.equals(sdk.tokens.WETH)) {
-            work.add([
-              new sdk.farm.actions.Exchange(
-                farm.contracts.curve.pools.tricrypto2.address,
-                farm.contracts.curve.registries.cryptoFactory.address,
-                sdk.tokens.WETH,
-                sdk.tokens.USDT,
-                // The prior step is a ETH->WETH "swap", from which
-                // we should expect to get an exact amount of WETH.
-                FarmFromMode.INTERNAL,
-              ),
-              new sdk.farm.actions.AddLiquidity(
-                farm.contracts.curve.pools.pool3.address,
-                farm.contracts.curve.registries.poolRegistry.address,
-                [0, 0, 1], // [DAI, USDC, USDT]; use Tether from previous call
-              ),
-              new sdk.farm.actions.AddLiquidity(
-                pool.address,
-                farm.contracts.curve.registries.metaFactory.address,
-                [0, 1],    // [BEAN, CRV3] use CRV3 from previous call
-              )
-            ]);
-            // estimate = await Farm.estimate([
-            //   // FIXME: this assumes the best route from
-            //   // WETH to [DAI, USDC, USDT] is via tricrypto2
-            //   // swapping to USDT. we should use routing logic here to
-            //   // find the best pool and output token.
-            //   // --------------------------------------------------
-            //   // WETH -> USDT
-            //   farm.exchange(
-            //     farm.contracts.curve.pools.tricrypto2.address,
-            //     farm.contracts.curve.registries.cryptoFactory.address,
-            //     sdk.tokens.WETH.address,
-            //     getChainToken(USDT).address,
-            //     // The prior step is a ETH->WETH "swap", from which
-            //     // we should expect to get an exact amount of WETH.
-            //     FarmFromMode.INTERNAL,
-            //   ),
-            //   // USDT -> deposit into pool3 for CRV3
-            //   // FIXME: assumes USDT is the third index
-            //   farm.addLiquidity(
-            //     farm.contracts.curve.pools.pool3.address,
-            //     farm.contracts.curve.registries.poolRegistry.address,
-            //     [0, 0, 1], // [DAI, USDC, USDT]; use Tether from previous call
-            //   ),
-            //   // CRV3 -> deposit into right side of X:CRV3
-            //   // FIXME: assumes CRV3 is the second index
-            //   farm.addLiquidity(
-            //     pool.address,
-            //     farm.contracts.curve.registries.metaFactory.address,
-            //     [0, 1],    // [BEAN, CRV3] use CRV3 from previous call
-            //   ),
-            // ], [amountIn]);
-          }
-        }
-      }
-
-      return { work, tokenIn, tokenOut, amountIn };
-  }, [balances, farm.contracts.curve.pools.pool3.address, farm.contracts.curve.pools.tricrypto2.address, farm.contracts.curve.registries.cryptoFactory.address, farm.contracts.curve.registries.metaFactory.address, farm.contracts.curve.registries.poolRegistry.address, pool, sdk.contracts.curve.pools.beanCrv3.address, sdk.contracts.curve.pools.tricrypto2.address, sdk.contracts.curve.registries.cryptoFactory.address, sdk.farm, sdk.tokens.BEAN, sdk.tokens.USDT, sdk.tokens.WETH]);
+    return { 
+      handleEstimate: async (amt) => deposit.estimate(amt),
+      workflow: deposit.workflow
+    };
+  }, [sdk]);
 
   /// Handlers
   // This handler does not run when _tokenIn = _tokenOut (direct deposit)
-  const handleQuote = useCallback<QuoteHandlerNew>(
-    async (_tokenIn, _amountIn, _tokenOut, slippage) => {
-      const { work, tokenIn, tokenOut, amountIn  } = getWorkflow(_tokenIn, _amountIn, _tokenOut);
+  const handleQuote = useCallback<QuoteHandlerAdvanced>(
+    async (_tokenIn, _amountIn, _tokenOut, _slippage, _fromMode) => {
+      const { handleEstimate } = await getWorkflow(_tokenIn, _amountIn, _tokenOut, _fromMode);
+      const amountIn = _tokenIn.fromHuman(_amountIn.toString());
 
-      const estimate = await work.estimate(amountIn);
-      console.log('estimate: ', estimate.toString());
-
+      const estimate = await handleEstimate(amountIn);
       if (!estimate) {
-        throw new Error(`Depositing ${tokenOut.symbol} to the Silo via ${tokenIn.symbol} is currently unsupported.`);
+        throw new Error(`Depositing ${_tokenOut.symbol} to the Silo via ${_tokenIn.symbol} is currently unsupported.`);
       }
       console.debug('[chain] estimate = ', estimate);
 
       return {
-        amountOut: toTokenUnitsBN(estimate.toString(), tokenOut.decimals),
-        encoded: ''
+        amountOut: new BigNumber(estimate.toHuman()),
       };
     },
     [getWorkflow]
   );
 
-  const { onSubmit: handleOnSubmit } = useDepositFormUtils({
-    whitelistedTokenAddress: whitelistedToken.address,
-  });
-
-  const onSubmit2 = useCallback(async (
+  const onSubmit = useCallback(async (
     values: DepositFormValuesNew,
     formActions: FormikHelpers<DepositFormValuesNew>
   ) => {
+    let txToast;
     try {
       // Check for errors
       middleware.before();
       const formData = values.tokens[0];
-      const tokenIn = sdk.tokens.findByAddress(formData.token.address);
+      const tokenIn = sdk.tokens.findBySymbol(formData.token.symbol);
 
       if (!values.settings.slippage) throw new Error(DepositTxnErr.NoSlippage);
       if (values.tokens.length > 1) throw new Error(DepositTxnErr.MoreThanOneToken);
@@ -514,53 +341,135 @@ const Deposit3 : FC<{
       if (!tokenIn) throw new Error(DepositTxnErr.NoTokenIn);
       // shoud never happen but need to check to unwrap optional
       if (!whitelistedToken) throw new Error(DepositTxnErr.NoTokenOut);
-      if (tokenIn !== sdk.tokens.ETH) throw new Error('not ETH');
 
-      const amount = tokenIn.amount(formData.amount.toString());
-      console.log(`Depositing ${formData.amount} ${tokenIn.symbol} to ${whitelistedToken.symbol} silo`);
-
-      const account = await sdk.getAccount();
-
-      console.log('building deposit');
-      const deposit = await sdk.silo.buildDeposit(whitelistedToken, account);
-      deposit.setInputToken(sdk.tokens.ETH);
-
-      // if (tokenIn.equals(sdk.tokens.ETH)) {
-      //   deposit.workflow.add(new sdk.farm.actions.WrapEth());
-      //   await deposit.buildWorkflow();
-      // }
-
-      // console.log('workflowlength: ', deposit.workflow);
-  
-      // console.log('inputAmount : ', deposit.inputAmount);
-      // console.log('input token: ', deposit.inputToken.symbol);
-      // console.log('targetToken: ', deposit.targetToken.symbol);
-
-      // deposit.getGraph();
-
-      const estimate = await deposit.estimate(amount);
-      console.log('Estimate:', estimate.toHuman());
-
-      // console.log('steps...');
-      // const steps = await deposit.workflow.encodeWorkflow();
+      const work = sdk.farm.create();
       
-      // console.log('summary...');
-      // for (const s of await deposit.getSummary()) {
-      //   console.log(s);
-      // }
+      const amountIn = tokenIn.fromHuman(formData.amount.toString());
+      const beanClaimAmount = Object.values(values.beansClaiming).reduce((acc, curr) => acc.plus(curr.amount), ZERO_BN);
+      const isClaimingBeans = beanClaimAmount.gt(0) && values.maxBeansClaimable.gt(0);
+      const toMode = values.destination;
+      let surplus: BigNumber = ZERO_BN;
 
-      // console.log('steps: ', steps);
-      // console.log('stepslen: ', steps.length);
-      
-      // formActions.resetForm();
+      if (isClaimingBeans) {
+        if (tokenIn.equals(sdk.tokens.BEAN)) {
+          if (formData.amount?.lt(beanClaimAmount)) {
+            surplus = beanClaimAmount.minus(formData.amount);
+            console.log('beanClaimAmount: ', surplus.toString());
+          }
+        } else {
+          surplus = beanClaimAmount;
+          console.log('beanClaimAmount: ', surplus.toString());
+        }
+        
+        if (toMode) {
+          const bClaiming = Object.keys(values.beansClaiming);
+          console.log('bclaiming: ', bClaiming);
+          for (const k of bClaiming) {
+            const encodedStep = getEncodedSteps[k]?.(toMode);
+            if (encodedStep) {
+              work.add(async () => encodedStep);
+            }
+          }
+        }
+      }
+
+      if (surplus?.gt(0) && !toMode) {
+        throw new Error('You must select a destination for your excess beans.');
+      }
+
+      const { workflow } = await getWorkflow(tokenIn, formData.amount, whitelistedToken);
+
+      if (surplus.gt(0) && values.destination === FarmToMode.EXTERNAL) {
+        // work.add(async () => ({
+        //   name: 'transfer',
+        //   amountOut: surplus.toString(),
+        //   prepare: () => ({
+        //     target: '',
+        //     callData: ''
+        //   }),
+        //   decode: () => undefined,
+        //   decodeResult: () => undefined,
+        // }), { onlyLocal: true });
+        const transferStep = await transferExcess(sdk.tokens.BEAN.fromHuman(surplus.toString()));
+        transferStep && work.add(async () => transferStep);
+        console.log('transferStep: ', transferStep);
+      }
+
+      if (isClaimingBeans) {
+        work.add(async () => ({
+          name: 'pre-deposit',
+          amountOut: amountIn.toBigNumber(),
+          prepare: () => ({
+            target: '',
+            callData: ''
+          }),
+          decode: () => undefined,
+          decodeResult: () => undefined,
+        }), { onlyLocal: true });
+      }
+      /*
+        farm([
+          harvest 10 beans
+          deposit 5 beans + 1 ETH
+        ])
+      */
+
+      work.add([...workflow.generators]);
+
+      /*
+        is the user claiming beans?
+          if no, just deposit
+          if yes...
+            is the user depositing beans?
+              is the user depositing all claimed beans?
+                yes: claim => internal balance, deposit
+                no: claim => internal balance, deposit, send the excess beans to the destination
+            no: 
+              claim => destination, deposit
+
+        if is claiming beans, generate the claim work flow
+       */
+
+      const est = await work.estimate(amountIn);
+
+      const estimate = whitelistedToken.fromBlockchain(est);
+      console.log('estimate: ', estimate.toHuman());
+
+      const summary = await work.summarizeSteps();
+      summary.forEach((d) => {
+        const name = d.name || 'unknown';
+        const amount = d.amountOut.toString();
+
+        console.log(`[chain] ${name} = ${amount}`);
+      });
+
+      txToast = new TransactionToast({
+        loading: `Depositing ${estimate.toHuman()} ${whitelistedToken.name} into the Silo...`,
+        success: 'Deposit successful.'
+      });
+
+      // const txn = await handleExecute(amountIn, values.settings.slippage);
+      // txToast.confirming(txn);
+      // const reciept = await txn.wait();
+
+      // await Promise.all([
+      //   refetchFarmerSilo(),
+      //   refetchFarmerBalances(),
+      //   refetchPools(),
+      //   refetchSilo(),
+      // ]);
+      // txToast.success(reciept);
+      txToast.success();
+      formActions.resetForm();
     } catch (err) {
+      txToast ? txToast.error(err) : toast.error(parseError(err));
       formActions.setSubmitting(false);
       console.log('err: ', err);
     }
-  }, [middleware, sdk, whitelistedToken]);
+  }, [getEncodedSteps, getWorkflow, middleware, sdk.farm, sdk.tokens, transferExcess, whitelistedToken]);
   
   return (
-    <Formik<DepositFormValuesNew> initialValues={initialValues} onSubmit={onSubmit2}>
+    <Formik<DepositFormValuesNew> initialValues={initialValues} onSubmit={onSubmit}>
       {(formikProps) => (
         <>
           <TxnSettings placement="form-top-right">
