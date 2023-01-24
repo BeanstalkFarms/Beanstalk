@@ -1,0 +1,742 @@
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { Stack } from '@mui/material';
+import { Form, Formik, FormikHelpers, FormikHelpers, FormikProps } from 'formik';
+import BigNumber from 'bignumber.js';
+import { ethers } from 'ethers';
+import { useSelector } from 'react-redux';
+import { Token, ERC20Token, NativeToken } from '@beanstalk/sdk';
+import { LoadingButton } from '@mui/lab';
+import { BEAN, ETH } from '~/constants/tokens';
+import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
+import { FarmWithClaimFormState, FormStateNew, SettingInput, TxnSettings } from '~/components/Common/Form';
+import { useBeanstalkContract } from '~/hooks/ledger/useContract';
+import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
+import { ApplicableBalance, Balance, FarmerBalances } from '~/state/farmer/balances';
+import { toStringBaseUnitBN, toTokenUnitsBN } from '~/util/Tokens';
+import { QuoteHandlerNew } from '~/hooks/ledger/useQuote';
+import { ZERO_BN } from '~/constants';
+import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
+import useToggle from '~/hooks/display/useToggle';
+import { combineBalances, optimizeFromMode } from '~/util/Farm';
+import { useSigner } from '~/hooks/ledger/useSigner';
+import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
+import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
+import { AppState } from '~/state';
+import { useFetchPools } from '~/state/bean/pools/updater';
+import { useFetchBeanstalkSilo } from '~/state/beanstalk/silo/updater';
+import useFarm from '~/hooks/sdk/useFarm';
+import { FC } from '~/types';
+import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
+import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
+import useFarmerClaimableBeanAssets from '~/hooks/farmer/useFarmerClaimableBeanAssets';
+import ClaimableAssets from '../ClaimableAssets';
+import useDepositFormUtils from '~/hooks/farmer/silo/useDepositFormUtils';
+import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
+import useSdk, { useToTokenMap } from '~/hooks/sdk';
+import TokenQuoteProviderNew from '~/components/Common/Form/TokenQuoteProviderNew';
+import { useGetPreferredToken } from '~/hooks/farmer/usePreferredToken';
+
+// -----------------------------------------------------------------------
+
+type DepositFormValuesNew = FormStateNew & FarmWithClaimFormState & {
+  settings: {
+    slippage: number;
+  }
+};
+
+enum DepositTxnErr {
+  NoSlippage = 'No slippage value set',
+  MoreThanOneToken = 'Only one token supported at this time',
+  NoAmount = 'Enter an amount to deposit',
+  NoTokenIn = 'Deposit Token not found',
+  NoTokenOut = 'Whitelisted Silo Token not found',
+}
+
+// -----------------------------------------------------------------------
+
+const DepositForm : FC<
+  FormikProps<DepositFormValuesNew> & {
+    tokenList: (ERC20Token | NativeToken)[];
+    whitelistedToken: ERC20Token | NativeToken;
+    amountToBdv: (amount: BigNumber) => BigNumber;
+    balances: FarmerBalances;
+    contract: ethers.Contract;
+    handleQuote: QuoteHandlerNew;
+  }
+> = ({
+  // Custom
+  tokenList,
+  whitelistedToken,
+  amountToBdv,
+  balances,
+  contract,
+  handleQuote,
+  // Formik
+  values,
+  isSubmitting,
+  setFieldValue,
+}) => {
+  const claimable = useFarmerClaimableBeanAssets();
+  const sdk = useSdk();
+  const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
+  // const { amount, bdv, stalk, seeds, actions } = BeanstalkSDK.Silo.Deposit.deposit(
+  //   whitelistedToken,
+  //   values.tokens,
+  //   amountToBdv,
+  // );
+
+  /// Derived
+  // const isReady = bdv.gt(0);
+
+  const applicableBalances: Record<string, ApplicableBalance> = useMemo(() => {
+    const beanClaimAmount = Object.values(values.beansClaiming).reduce((prev, curr) => {
+      if (curr.amount?.gt(0)) prev = prev.plus(curr.amount);
+      return prev;
+    }, ZERO_BN);
+
+    return {
+      [BEAN[1].address]: {
+        total: values.maxBeansClaimable,
+        applied: beanClaimAmount,
+        remaining: values.maxBeansClaimable.minus(beanClaimAmount),
+      }
+    };
+  }, [values.beansClaiming, values.maxBeansClaimable]);
+
+  ///
+  const handleSelectTokens = useCallback((_tokens: Set<Token>) => {
+    // If the user has typed some existing values in,
+    // save them. Add new tokens to the end of the list.
+    // FIXME: match sorting of erc20TokenList
+    const copy = new Set(_tokens);
+    const newValue = values.tokens.filter((x) => {
+      copy.delete(x.token);
+      return _tokens.has(x.token);
+    });
+    setFieldValue('tokens', [
+      ...newValue,
+      ...Array.from(copy).map((_token) => ({
+        token: _token,
+        amount: undefined
+      })),
+    ]);
+  }, [values.tokens, setFieldValue]);
+
+  const handleSetBalanceFrom = useCallback((_balanceFrom: BalanceFrom) => {
+    setFieldValue('balanceFrom', _balanceFrom);
+  }, [setFieldValue]);
+
+  /// Effects
+  useEffect(() => {
+    // update max claimable if it changes
+    // do this here instead of in its parent to avoid it not being set in initial values
+    if (values.maxBeansClaimable.eq(claimable.total)) return;
+    setFieldValue('maxBeansClaimable', claimable.total);
+  }, [claimable.total, setFieldValue, values.maxBeansClaimable]);
+
+  return (
+    <Form noValidate autoComplete="off">
+      <TokenSelectDialogNew
+        open={isTokenSelectVisible}
+        handleClose={hideTokenSelect}
+        handleSubmit={handleSelectTokens}
+        selected={values.tokens}
+        balances={balances}
+        tokenList={tokenList}
+        mode={TokenSelectMode.SINGLE}
+        title="Assets"
+        balanceFrom={values.balanceFrom}
+        setBalanceFrom={handleSetBalanceFrom}
+        applicableBalances={applicableBalances}
+      />
+      <Stack gap={1}>
+        {values.tokens.map((tokenState, index) => (
+          <TokenQuoteProviderNew
+            slippage={values.settings.slippage}
+            key={`tokens.${index}`}
+            name={`tokens.${index}`}
+            tokenOut={whitelistedToken}
+            balance={balances[
+              tokenState.token.equals(sdk.tokens.ETH) ? 'eth' : tokenState.token.address
+            ] || ZERO_BN}
+            state={tokenState}
+            showTokenSelect={showTokenSelect}
+            handleQuote={handleQuote}
+            inputVariant="wrapped"
+            additionalBalance={applicableBalances[tokenState.token.address]?.applied}
+            TokenAdornmentProps={{
+              balanceFrom: values.balanceFrom
+            }}
+          />
+        ))}
+        <ClaimableAssets
+          balances={claimable.assets}
+          farmerBalances={balances}
+        />
+
+        <LoadingButton
+          type="submit"
+          variant="contained"
+          color="primary"
+          size="large"
+          loading={isSubmitting}
+          disabled={isSubmitting}
+        >
+          Deposit
+        </LoadingButton>
+      </Stack>
+    </Form>
+  );
+};
+
+// -----------------------------------------------------------------------
+
+const Deposit3 : FC<{
+  pool: any;
+  token: ERC20Token | NativeToken;
+}> = ({
+  pool,
+  token: whitelistedToken
+}) => {
+  const sdk = useSdk();
+  /// Chain Constants
+
+  /// FIXME: name
+  /// FIXME: finish deposit functionality for other tokens
+  const middleware = useFormMiddleware();
+  const initTokenList = useMemo(() => (whitelistedToken.address === sdk.tokens.BEAN.address ? [
+    sdk.tokens.BEAN,
+    sdk.tokens.ETH,
+  ] : [
+    sdk.tokens.BEAN,
+    sdk.tokens.ETH,
+    whitelistedToken,
+    sdk.tokens.CRV3,
+    sdk.tokens.DAI,
+    sdk.tokens.USDC,
+    sdk.tokens.USDT
+  ]), [sdk, whitelistedToken]);
+  const allAvailableTokens = useToTokenMap(initTokenList);
+
+  /// Derived
+  const isUnripe = sdk.tokens.unripeTokens.has(whitelistedToken);
+
+  /// Token List
+  const [tokenList, preferredTokens] = useMemo(() => {
+    // Exception: if page is Depositing Unripe assets
+    // then constrain the token list to only unripe.
+    if (isUnripe) {
+      return [
+        [whitelistedToken],
+        [{ token: whitelistedToken }]
+      ];
+    } 
+
+    const _tokenList = Object.values(allAvailableTokens);
+    return [
+      _tokenList,
+      _tokenList.map((t) => ({ token: t })),
+    ];
+  }, [
+    isUnripe,
+    whitelistedToken,
+    allAvailableTokens,
+  ]);
+  const baseToken = useGetPreferredToken(preferredTokens, 'use-best') as (ERC20Token | NativeToken);
+
+  /// Beanstalk
+  const bdvPerToken = useSelector<AppState, AppState['_beanstalk']['silo']['balances'][string]['bdvPerToken'] | BigNumber>(
+    (state) => state._beanstalk.silo.balances[whitelistedToken.address]?.bdvPerToken || ZERO_BN
+  );
+  const amountToBdv = useCallback((amount: BigNumber) => bdvPerToken.times(amount), [bdvPerToken]);
+
+  /// Farmer
+  const balances                = useFarmerBalances();
+  const [refetchFarmerSilo]     = useFetchFarmerSilo();
+  const [refetchFarmerBalances] = useFetchFarmerBalances();
+  const [refetchPools]          = useFetchPools();
+  const [refetchSilo]           = useFetchBeanstalkSilo();
+
+  /// Network
+  const { data: signer } = useSigner();
+  const beanstalk = useBeanstalkContract(signer);
+
+  /// Farm
+  const farm = useFarm();
+
+  /// Form setup
+  const initialValues : DepositFormValuesNew = useMemo(() => ({
+    settings: {
+      slippage: 0.1,
+    },
+    tokens: [
+      {
+        token: baseToken,
+        amount: undefined,
+        quoting: false,
+        amountOut: undefined,
+      },
+    ],
+    maxBeansClaimable: ZERO_BN,
+    beansClaiming: {},
+    balanceFrom: BalanceFrom.TOTAL,
+    destination: FarmToMode.INTERNAL,
+  }), [baseToken]);
+
+  // const amIn = ethers.BigNumber.from(toStringBaseUnitBN(new BigNumber(100_000), sdk.tokens.BEAN.decimals)).toString();
+  // const am2In = sdk.tokens.BEAN.amount(100_000).toBlockchain();
+
+  const getWorkflow = useCallback((
+    _tokenIn: ERC20Token | NativeToken, 
+    _amountIn: BigNumber,
+    _tokenOut: ERC20Token | NativeToken) => {
+      const tokenIn  : ERC20Token = _tokenIn  instanceof NativeToken ? sdk.tokens.WETH : _tokenIn;
+      const tokenOut : ERC20Token = _tokenOut instanceof NativeToken ? sdk.tokens.WETH : _tokenOut;
+      const amountIn = ethers.BigNumber.from(toStringBaseUnitBN(_amountIn, tokenIn.decimals));
+      const balanceIn : Balance   = _tokenIn  instanceof NativeToken 
+        ? combineBalances(balances[sdk.tokens.WETH.address], balances[ETH[1].address])
+        : balances[_tokenIn.address];
+
+      const work = sdk.farm.create();
+
+      // Depositing BEAN
+      if (tokenOut === sdk.tokens.BEAN) {
+        if (tokenIn === sdk.tokens.WETH) {
+          work.add([
+            new sdk.farm.actions.Exchange(
+              sdk.contracts.curve.pools.tricrypto2.address,
+              sdk.contracts.curve.registries.cryptoFactory.address,
+              sdk.tokens.WETH,
+              sdk.tokens.USDT
+            ),
+            new sdk.farm.actions.ExchangeUnderlying(
+              sdk.contracts.curve.pools.beanCrv3.address,
+              sdk.tokens.USDT,
+              sdk.tokens.BEAN,
+              undefined, // defaults to INTERNAL_TOLERANT
+              FarmToMode.EXTERNAL
+            )
+          ]);
+          // estimate = await Farm.estimate(
+          //   farm.buyBeans(), // this assumes we're coming from WETH
+          //   [amountIn]
+          // );
+        }
+      }
+      
+      // Depositing LP Tokens
+      else {
+        if (!pool) throw new Error(`Depositing to ${tokenOut.symbol} but no corresponding pool data found.`);
+        
+        // This is a Curve MetaPool...
+        const isMetapool = true;
+        if (isMetapool) {
+          // ...and we're depositing one of the underlying pool tokens.
+          // Ex. for BEAN:3CRV this could be [BEAN, (DAI, USDC, USDT)].
+          // pool.tokens      = [BEAN, CRV3]
+          // pool.underlying  = [BEAN, DAI, USDC, USDT] 
+          const tokenIndex = pool.tokens.indexOf(tokenIn);
+          const underlyingTokenIndex = pool.underlying.indexOf(tokenIn);
+          console.debug('[Deposit] LP Deposit', {
+            pool,
+            tokenIn,
+            tokenIndex,
+            underlyingTokenIndex,
+          });
+          
+          // This is X or CRV3
+          if (tokenIndex > -1) {
+            const indices = [0, 0];
+            indices[tokenIndex] = 1; // becomes [0, 1] or [1, 0]
+            console.debug('[Deposit] LP Deposit: indices=', indices);
+            work.add(
+              new sdk.farm.actions.AddLiquidity(
+                pool.address,
+                farm.contracts.curve.registries.metaFactory.address,
+                indices as [number, number],
+                optimizeFromMode(_amountIn, balanceIn) // use the BN version here
+              )
+            );
+            // estimate = await Farm.estimate([
+            //   farm.addLiquidity(
+            //     pool.address,
+            //     // FIXME: bean:lusd was a plain pool, bean:eth on curve would be a crypto pool
+            //     // perhaps the Curve pool instance needs to track a registry
+            //     farm.contracts.curve.registries.metaFactory.address,
+            //     // FIXME: find a better way to define this above
+            //     indices as [number, number],
+            //     optimizeFromMode(_amountIn, balanceIn) // use the BN version here
+            //   ),
+            // ], [amountIn]);
+          }
+
+          // This is a CRV3-underlying stable (DAI/USDC/USDT etc)
+          else if (underlyingTokenIndex > -1) {
+            if (underlyingTokenIndex === 0) throw new Error('Malformatted pool.tokens / pool.underlying');
+            const indices = [0, 0, 0];
+            indices[underlyingTokenIndex - 1] = 1;
+            console.debug('[Deposit] LP Deposit: indices=', indices);
+            work.add([
+              new sdk.farm.actions.AddLiquidity(
+                farm.contracts.curve.pools.pool3.address,
+                farm.contracts.curve.registries.poolRegistry.address,
+                indices as [number, number, number], // [DAI, USDC, USDT] use Tether from previous call
+                optimizeFromMode(_amountIn, balanceIn) // use the BN version here
+              ),
+              new sdk.farm.actions.AddLiquidity(
+                pool.address,
+                farm.contracts.curve.registries.metaFactory.address,
+                // adding the 3CRV side of liquidity
+                // FIXME: assuming that 3CRV is the second index (X:3CRV)
+                // not sure if this is always the case
+                [0, 1]
+              )
+            ]);
+            // estimate = await Farm.estimate([
+            //   // Deposit token into 3pool for 3CRV
+            //   farm.addLiquidity(
+            //     farm.contracts.curve.pools.pool3.address,
+            //     farm.contracts.curve.registries.poolRegistry.address,
+            //     indices as [number, number, number], // [DAI, USDC, USDT] use Tether from previous call
+            //     optimizeFromMode(_amountIn, balanceIn) // use the BN version here
+            //   ),
+            //   farm.addLiquidity(
+            //     pool.address,
+            //     farm.contracts.curve.registries.metaFactory.address,
+            //     // adding the 3CRV side of liquidity
+            //     // FIXME: assuming that 3CRV is the second index (X:3CRV)
+            //     // not sure if this is always the case
+            //     [0, 1]
+            //   ),
+            // ], [amountIn]);
+          }
+
+          // This is ETH or WETH
+          else if (tokenIn.equals(sdk.tokens.WETH)) {
+            work.add([
+              new sdk.farm.actions.Exchange(
+                farm.contracts.curve.pools.tricrypto2.address,
+                farm.contracts.curve.registries.cryptoFactory.address,
+                sdk.tokens.WETH,
+                sdk.tokens.USDT,
+                // The prior step is a ETH->WETH "swap", from which
+                // we should expect to get an exact amount of WETH.
+                FarmFromMode.INTERNAL,
+              ),
+              new sdk.farm.actions.AddLiquidity(
+                farm.contracts.curve.pools.pool3.address,
+                farm.contracts.curve.registries.poolRegistry.address,
+                [0, 0, 1], // [DAI, USDC, USDT]; use Tether from previous call
+              ),
+              new sdk.farm.actions.AddLiquidity(
+                pool.address,
+                farm.contracts.curve.registries.metaFactory.address,
+                [0, 1],    // [BEAN, CRV3] use CRV3 from previous call
+              )
+            ]);
+            // estimate = await Farm.estimate([
+            //   // FIXME: this assumes the best route from
+            //   // WETH to [DAI, USDC, USDT] is via tricrypto2
+            //   // swapping to USDT. we should use routing logic here to
+            //   // find the best pool and output token.
+            //   // --------------------------------------------------
+            //   // WETH -> USDT
+            //   farm.exchange(
+            //     farm.contracts.curve.pools.tricrypto2.address,
+            //     farm.contracts.curve.registries.cryptoFactory.address,
+            //     sdk.tokens.WETH.address,
+            //     getChainToken(USDT).address,
+            //     // The prior step is a ETH->WETH "swap", from which
+            //     // we should expect to get an exact amount of WETH.
+            //     FarmFromMode.INTERNAL,
+            //   ),
+            //   // USDT -> deposit into pool3 for CRV3
+            //   // FIXME: assumes USDT is the third index
+            //   farm.addLiquidity(
+            //     farm.contracts.curve.pools.pool3.address,
+            //     farm.contracts.curve.registries.poolRegistry.address,
+            //     [0, 0, 1], // [DAI, USDC, USDT]; use Tether from previous call
+            //   ),
+            //   // CRV3 -> deposit into right side of X:CRV3
+            //   // FIXME: assumes CRV3 is the second index
+            //   farm.addLiquidity(
+            //     pool.address,
+            //     farm.contracts.curve.registries.metaFactory.address,
+            //     [0, 1],    // [BEAN, CRV3] use CRV3 from previous call
+            //   ),
+            // ], [amountIn]);
+          }
+        }
+      }
+
+      return { work, tokenIn, tokenOut, amountIn };
+  }, [balances, farm.contracts.curve.pools.pool3.address, farm.contracts.curve.pools.tricrypto2.address, farm.contracts.curve.registries.cryptoFactory.address, farm.contracts.curve.registries.metaFactory.address, farm.contracts.curve.registries.poolRegistry.address, pool, sdk.contracts.curve.pools.beanCrv3.address, sdk.contracts.curve.pools.tricrypto2.address, sdk.contracts.curve.registries.cryptoFactory.address, sdk.farm, sdk.tokens.BEAN, sdk.tokens.USDT, sdk.tokens.WETH]);
+
+  /// Handlers
+  // This handler does not run when _tokenIn = _tokenOut (direct deposit)
+  const handleQuote = useCallback<QuoteHandlerNew>(
+    async (_tokenIn, _amountIn, _tokenOut, slippage) => {
+      const { work, tokenIn, tokenOut, amountIn  } = getWorkflow(_tokenIn, _amountIn, _tokenOut);
+
+      const estimate = await work.estimate(amountIn);
+      console.log('estimate: ', estimate.toString());
+
+      if (!estimate) {
+        throw new Error(`Depositing ${tokenOut.symbol} to the Silo via ${tokenIn.symbol} is currently unsupported.`);
+      }
+      console.debug('[chain] estimate = ', estimate);
+
+      return {
+        amountOut: toTokenUnitsBN(estimate.toString(), tokenOut.decimals),
+        encoded: ''
+      };
+    },
+    [getWorkflow]
+  );
+
+  const { onSubmit: handleOnSubmit } = useDepositFormUtils({
+    whitelistedTokenAddress: whitelistedToken.address,
+  });
+
+  const onSubmit2 = useCallback(async (
+    values: DepositFormValuesNew,
+    formActions: FormikHelpers<DepositFormValuesNew>
+  ) => {
+    try {
+      // Check for errors
+      middleware.before();
+      const formData = values.tokens[0];
+      const tokenIn = sdk.tokens.findByAddress(formData.token.address);
+
+      if (!values.settings.slippage) throw new Error(DepositTxnErr.NoSlippage);
+      if (values.tokens.length > 1) throw new Error(DepositTxnErr.MoreThanOneToken);
+      if (!formData?.amount || formData.amount.eq(0)) throw new Error(DepositTxnErr.NoAmount);
+      if (!tokenIn) throw new Error(DepositTxnErr.NoTokenIn);
+      // shoud never happen but need to check to unwrap optional
+      if (!whitelistedToken) throw new Error(DepositTxnErr.NoTokenOut);
+      if (tokenIn !== sdk.tokens.ETH) throw new Error('not ETH');
+
+      const amount = tokenIn.amount(formData.amount.toString());
+      console.log(`Depositing ${formData.amount} ${tokenIn.symbol} to ${whitelistedToken.symbol} silo`);
+
+      const account = await sdk.getAccount();
+
+      console.log('building deposit');
+      const deposit = await sdk.silo.buildDeposit(whitelistedToken, account);
+      deposit.setInputToken(sdk.tokens.ETH);
+
+      // if (tokenIn.equals(sdk.tokens.ETH)) {
+      //   deposit.workflow.add(new sdk.farm.actions.WrapEth());
+      //   await deposit.buildWorkflow();
+      // }
+
+      // console.log('workflowlength: ', deposit.workflow);
+  
+      // console.log('inputAmount : ', deposit.inputAmount);
+      // console.log('input token: ', deposit.inputToken.symbol);
+      // console.log('targetToken: ', deposit.targetToken.symbol);
+
+      // deposit.getGraph();
+
+      const estimate = await deposit.estimate(amount);
+      console.log('Estimate:', estimate.toHuman());
+
+      // console.log('steps...');
+      // const steps = await deposit.workflow.encodeWorkflow();
+      
+      // console.log('summary...');
+      // for (const s of await deposit.getSummary()) {
+      //   console.log(s);
+      // }
+
+      // console.log('steps: ', steps);
+      // console.log('stepslen: ', steps.length);
+      
+      // formActions.resetForm();
+    } catch (err) {
+      formActions.setSubmitting(false);
+      console.log('err: ', err);
+    }
+  }, [middleware, sdk, whitelistedToken]);
+  
+  return (
+    <Formik<DepositFormValuesNew> initialValues={initialValues} onSubmit={onSubmit2}>
+      {(formikProps) => (
+        <>
+          <TxnSettings placement="form-top-right">
+            <SettingInput name="settings.slippage" label="Slippage Tolerance" endAdornment="%" />
+          </TxnSettings>
+          <DepositForm
+            handleQuote={handleQuote}
+            amountToBdv={amountToBdv}
+            tokenList={tokenList}
+            whitelistedToken={whitelistedToken}
+            balances={balances}
+            contract={beanstalk}
+            {...formikProps}
+          />
+        </>
+      )}
+    </Formik>
+  );
+};
+
+export default Deposit3;
+
+/* {isReady ? (
+  <>
+    <TxnSeparator />
+    <TokenOutputField
+      token={whitelistedToken}
+      amount={amount}
+    />
+    <TokenOutputsField 
+      groups={[
+        {
+          data: [{
+            token: whitelistedToken,
+            amount: amount,
+            disablePrefix: true,
+          },
+          {
+            token: STALK,
+            amount: stalk,
+            amountTooltip: (
+              <>
+                1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
+                1 BDV &rarr; {whitelistedToken.getStalk().toString()} STALK
+              </>
+            ),
+          },
+          {
+            token: SEEDS,
+            amount: seeds,
+            amountTooltip: (
+              <>
+                1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
+                1 BDV &rarr; {whitelistedToken.getSeeds().toString()} SEEDS
+              </>
+            )
+          }]
+        }
+      ]}
+    />
+    <Box>
+      <Accordion variant="outlined">
+        <StyledAccordionSummary title="Transaction Details" />
+        <AccordionDetails>
+          <TxnPreview
+            actions={actions}
+          />
+        </AccordionDetails>
+      </Accordion>
+    </Box>
+  </>
+) : null} */
+
+// const onSubmit = useCallback(async (values: DepositFormValues, formActions: FormikHelpers<DepositFormValues>) => {
+//   let txToast;
+//   try {
+//     middleware.before();
+//     if (!values.settings.slippage) throw new Error('No slippage value set');
+//     const formData = values.tokens[0];
+//     if (values.tokens.length > 1) throw new Error('Only one token supported at this time');
+//     if (!formData?.amount || formData.amount.eq(0)) throw new Error('Enter an amount to deposit');
+
+//     // FIXME: getting BDV per amount here
+//     const { amount } = BeanstalkSDK.Silo.Deposit.deposit(
+//       whitelistedToken,
+//       values.tokens,
+//       amountToBdv,
+//     );
+
+//     txToast = new TransactionToast({
+//       loading: `Depositing ${displayFullBN(amount.abs(), whitelistedToken.displayDecimals, whitelistedToken.displayDecimals)} ${whitelistedToken.name} into the Silo...`,
+//       success: 'Deposit successful.',
+//     });
+
+//     console.log('amount: ', amount.toString());
+
+//     // TEMP: recast as Beanstalk 
+//     const b = ((beanstalk as unknown) as Beanstalk);
+//     const data : string[] = [];
+//     const inputToken = formData.token;
+//     let value = ZERO_BN;
+//     let depositAmount;
+//     let depositFrom;
+
+//     // Direct Deposit
+//     if (inputToken === whitelistedToken) {
+//       // TODO: verify we have approval for `inputToken`
+//       depositAmount = formData.amount; // implicit: amount = amountOut since the tokens are the same
+//       depositFrom   = FarmFromMode.INTERNAL_EXTERNAL;
+//     }
+    
+//     // Swap and Deposit
+//     else {
+//       // Require a quote
+//       if (!formData.steps || !formData.amountOut) throw new Error(`No quote available for ${formData.token.symbol}`);
+
+//       // Wrap ETH to WETH
+//       if (inputToken === Eth) {
+//         value = value.plus(formData.amount); 
+//         data.push(b.interface.encodeFunctionData('wrapEth', [
+//           toStringBaseUnitBN(value, Eth.decimals),
+//           FarmToMode.INTERNAL, // to
+//         ]));
+//       }
+      
+//       // `amountOut` of `siloToken` is received when swapping for 
+//       // `amount` of `inputToken`. this may include multiple swaps.
+//       // using "tolerant" mode allows for slippage during swaps.
+//       depositAmount = formData.amountOut;
+//       depositFrom   = FarmFromMode.INTERNAL_TOLERANT;
+
+//       // Encode steps to get from token i to siloToken
+//       const encoded = Farm.encodeStepsWithSlippage(
+//         formData.steps,
+//         values.settings.slippage / 100,
+//       );
+//       data.push(...encoded);
+//       encoded.forEach((_data, index) => 
+//         console.debug(`[Deposit] step ${index}:`, formData.steps?.[index]?.decode(_data).map((elem) => (elem instanceof ethers.BigNumber ? elem.toString() : elem)))
+//       );
+//     } 
+
+//     // Deposit step
+//     data.push(
+//       b.interface.encodeFunctionData('deposit', [
+//         whitelistedToken.address,
+//         toStringBaseUnitBN(depositAmount, whitelistedToken.decimals),  // expected amountOut from all steps
+//         depositFrom,
+//       ])
+//     );
+  
+//     const txn = await b.farm(data, { value: toStringBaseUnitBN(value, Eth.decimals) });
+//     txToast.confirming(txn);
+
+//     const receipt = await txn.wait();
+//     await Promise.all([
+//       refetchFarmerSilo(),
+//       refetchFarmerBalances(),
+//       refetchPools(),
+//       refetchSilo(),
+//     ]);
+//     txToast.success(receipt);
+//     txToast.success();
+//     formActions.resetForm();
+//   } catch (err) {
+//     txToast ? txToast.error(err) : toast.error(parseError(err));
+//     formActions.setSubmitting(false);
+//   }
+// }, [
+//   Eth,
+//   beanstalk,
+//   whitelistedToken,
+//   amountToBdv,
+//   refetchFarmerSilo,
+//   refetchFarmerBalances,
+//   refetchPools,
+//   refetchSilo,
+//   middleware,
+// ]);
