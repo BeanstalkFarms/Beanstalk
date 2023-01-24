@@ -38,56 +38,64 @@ library LibDibbler {
 
     function sow(uint256 amount, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
+
         // the amount of soil changes as a function of the morning auction;
         // soil consumed increases as dutch auction passes
-        uint128 peas = s.f.soil;
+        uint256 pods;
+
         if (s.season.abovePeg) {
+            // t = 0 -> tons of soil
+            // t = 300 -> however much soil to get fixed number of pods at current temperature
+            //         -> scaledSoil = soil
             uint256 scaledSoil = amount.mulDiv(
                 morningAuction().add(1e8), 
                 1e8,
                 LibPRBMath.Rounding.Up
-                );
-            /// @dev overflow can occur due to rounding up, 
-            /// but only occurs when all remaining soil is sown.
+            );
+
+            pods = beansToPodsAbovePeg(amount, s.f.soil);
+
+            // Overflow can occur due to rounding up, 
+            // but only occurs when all remaining soil is sown.
             (, s.f.soil) = s.f.soil.trySub(uint128(scaledSoil)); 
         } else {
+            pods = beansToPods(amount, s.w.yield);
+
             // We can assume amount <= soil from getSowAmount when below peg
             s.f.soil = s.f.soil - uint128(amount); 
         }
-        return sowNoSoil(amount,peas,account);
 
+        return sowNoSoil(amount, pods, account);
     }
 
-    function sowNoSoil(uint256 amount, uint256 _maxPeas, address account)
+    /**
+     * @dev Sow plot, increment pods, update sow time.
+     */
+    function sowNoSoil(uint256 amount, uint256 pods, address account)
         internal
         returns (uint256)
     {
-        uint256 pods;
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if(s.season.abovePeg) {
-            pods = beansToPodsAbovePeg(amount,_maxPeas);
-        } else {
-            pods = beansToPods(amount,s.w.yield);
-        }
         sowPlot(account, amount, pods);
         s.f.pods = s.f.pods.add(pods);
         saveSowTime();
         return pods;
     }
 
-    /// @dev function returns the weather scaled down
-    /// @notice based on the block delta
-    // precision level 1e6, as soil has 1e6 precision (1% = 1e6)
-    // the formula log2(A * BLOCK_ELAPSED_MAX + 1) is applied, where
-    // A = 2;
-    // MAX_BLOCK_ELAPSED = 25;
+    /// @dev Returns the temperature scaled down based on the block delta.
+    /// Precision level 1e6, as soil has 1e6 precision (1% = 1e6)
+    /// the formula log2(A * MAX_BLOCK_ELAPSED + 1) is applied, where
+    /// A = 2;
+    /// MAX_BLOCK_ELAPSED = 25;
     function morningAuction() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 delta = block.number.sub(s.season.sunriseBlock);
+
         if (delta > 24) { // check most likely case first
             return uint256(s.w.yield).mul(DECIMALS);
         }
-        //Binary Search
+
+        // Binary Search
         if (delta < 13) {
             if (delta < 7) { 
                 if (delta < 4) {
@@ -182,13 +190,13 @@ library LibDibbler {
     /// @dev scales down temperature, minimum 1e6 (unless temperature is 0%)
     function auctionMath(uint256 a) private view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 _yield  = s.w.yield;
+        uint256 _yield  = s.w.yield; // 1e6 = temperature of 1%
         if(_yield == 0) return 0; 
-        return _yield.mulDiv(a,1e6).max(DECIMALS);
+        return LibPRBMath.max(_yield.mulDiv(a, 1e6), DECIMALS);
     }
 
     function beansToPodsAbovePeg(uint256 beans, uint256 maxPeas) 
-        private 
+        internal 
         view
         returns (uint256) 
     {
@@ -207,8 +215,9 @@ library LibDibbler {
         }
     }
 
+    /// @dev beans * (1 + (weather / 1e2))
     function beansToPods(uint256 beans, uint256 weather)
-        private
+        internal
         pure
         returns (uint256)
     {

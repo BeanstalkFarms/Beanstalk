@@ -56,6 +56,15 @@ contract FundraiserFacet is ReentrancyGuard {
         if (s.fundraisers[id].remaining == 0) completeFundraiser(id);
         C.bean().burn(amount);
 
+        // Calculate the numbher of Pods to Sow.
+        // The fundraiser bypasses Morning Auction behavior and Soil requirements.
+        uint256 pods;
+        if (s.season.abovePeg) {
+            pods = LibDibbler.beansToPodsAbovePeg(amount, s.f.soil);
+        } else {
+            pods = LibDibbler.beansToPods(amount, s.w.yield);
+        }
+
         return LibDibbler.sowNoSoil(amount, amount, msg.sender);
     }
 
