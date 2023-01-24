@@ -39,7 +39,11 @@ contract Weather is Sun {
         return s.r;
     }
 
-    /// @dev Yield() has precision 1e8, but maxYield has precision 1e3
+    /// @dev {FieldFacet.yield} has precision 1e8, but maxYield has precision 1e2.
+    /// i.e.:
+    /// maxYield() = 6674   => 6674% temperature = 66.74
+    /// yield()    = 1e6    at t = 0
+    ///            = 6674e6 at t >> 0
     function maxYield() public view returns (uint32) {
         return s.w.yield;
     }

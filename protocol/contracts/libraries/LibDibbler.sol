@@ -35,9 +35,7 @@ library LibDibbler {
         uint256 pods
     );
 
-    /**
-     * Shed
-     **/
+    //////////////////// SOW ////////////////////
 
     /**
      * @param amount The number of Beans to Sow
@@ -61,6 +59,8 @@ library LibDibbler {
      * | 300 | 6750e6 (500e6 * (1+1250%))      | 500e6 | 1250e6                        | 1250         |
      * 
      * Yield is floored at 1%.
+     * 
+     * FIXME: `amount` here is the same as `beans` in functions elsewhere in LibDibbler.
      */
     function sow(uint256 amount, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -73,6 +73,8 @@ library LibDibbler {
             // t = 0   -> tons of soil
             // t = 300 -> however much soil to get fixed number of pods at current temperature
             //         -> scaledSoil = soil
+
+            // The amount of soil to consume given the current block delta.
             uint256 scaledSoil = amount.mulDiv(
                 yield().add(1e8), 
                 1e8,
@@ -85,7 +87,7 @@ library LibDibbler {
             // but only occurs when all remaining soil is sown.
             (, s.f.soil) = s.f.soil.trySub(uint128(scaledSoil)); 
         } else {
-            pods = beansToPods(amount, s.w.yield);
+            pods = beansToPods(amount, yield() / 1e6); // FIXME!
 
             // We can assume amount <= soil from getSowAmount when below peg
             s.f.soil = s.f.soil - uint128(amount); 
@@ -107,6 +109,8 @@ library LibDibbler {
         saveSowTime();
         return pods;
     }
+
+    //////////////////// YIELD ////////////////////
 
     /// @dev Returns the temperature `s.f.yield` scaled down based on the block delta.
     /// Precision level 1e6, as soil has 1e6 precision (1% = 1e6)
@@ -220,11 +224,14 @@ library LibDibbler {
         uint256 _yield  = s.w.yield;
         if(_yield == 0) return 0; 
         // minimum temperature is applied by DECIMALS
-        return LibPRBMath.max(_yield.mulDiv(a, 1e6), TEMPERATURE_SCALE);
+        return LibPRBMath.max(
+            _yield.mulDiv(a, 1e6),
+            TEMPERATURE_SCALE
+        );
     }
 
     /**
-     * 
+     * @dev 
      */
     function beansToPodsAbovePeg(uint256 beans, uint256 maxPeas) 
         internal 
@@ -234,29 +241,43 @@ library LibDibbler {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // All soil is sown, pods issued must equal peas.
-        if(s.f.soil == 0){ 
+        if (s.f.soil == 0) { 
             return maxPeas;
         } 
 
         // We round up as Beanstalk would rather issue too much pods than not enough.
         else {
-            return beans.add(
-                beans.mulDiv(
-                    yield(),
-                    1e8,
-                    LibPRBMath.Rounding.Up
-                )
+            return beans.mulDiv(
+                yield().add(1e8),
+                1e8,
+                LibPRBMath.Rounding.Up
             );
+            // return beans.add(
+            //     beans.mulDiv(
+            //         yield(),
+            //         1e8,
+            //         LibPRBMath.Rounding.Up
+            //     )
+            // );
         }
     }
 
-    /// @dev beans * (1 + (weather / 1e2))
-    function beansToPods(uint256 beans, uint256 weather)
+    /**
+     * @param beans The number of Beans to convert to Pods.
+     * @param _yield The current temperature, measured to 1e2. 
+     * @dev `pods = beans * (100 + _yield) / 1e2`
+     */
+    function beansToPods(uint256 beans, uint256 _yield)
         internal
         pure
         returns (uint256)
     {
-        return beans.add(beans.mul(weather).div(100));
+        return beans.mulDiv(
+            _yield.add(1e2),
+            1e2,
+            LibPRBMath.Rounding.Up // CHECK
+        );
+        // return beans.add(beans.mul(_yield).div(100));
     }
 
     function sowPlot(

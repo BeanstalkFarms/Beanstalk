@@ -149,6 +149,7 @@ contract FieldFacet is ReentrancyGuard {
         return s.a[account].field.plots[plotId];
     }
 
+    /// @dev FIXME: overlap with LibDibbler
     function totalSoil() public view returns (uint256) {
         if(s.season.abovePeg) {
             uint256 _yield = yield().add(1e8); 

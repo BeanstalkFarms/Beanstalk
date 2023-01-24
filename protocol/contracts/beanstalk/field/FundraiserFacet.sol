@@ -37,6 +37,13 @@ contract FundraiserFacet is ReentrancyGuard {
      * Fundraise
      **/
 
+    /**
+     * @param id fundraiser id
+     * @param amount amount of `fundraisers[id].token` to provide
+     * @param mode balance to spend tokens from
+     * @dev FIXME: this assumes that `.token` is measured to the same number
+     * of decimals as Bean (1e6).
+     */
     function fund(
         uint32 id,
         uint256 amount,
@@ -56,16 +63,12 @@ contract FundraiserFacet is ReentrancyGuard {
         if (s.fundraisers[id].remaining == 0) completeFundraiser(id);
         C.bean().burn(amount);
 
-        // Calculate the numbher of Pods to Sow.
-        // The fundraiser bypasses Morning Auction behavior and Soil requirements.
-        uint256 pods;
-        if (s.season.abovePeg) {
-            pods = LibDibbler.beansToPodsAbovePeg(amount, s.f.soil);
-        } else {
-            pods = LibDibbler.beansToPods(amount, s.w.yield);
-        }
+        // Calculate the number of Pods to Sow.
+        // Fundraisers bypass Morning Auction behavior and Soil requirements.
+        uint256 pods = LibDibbler.beansToPods(amount, s.w.yield); // yield measured to 1e2;
 
-        return LibDibbler.sowNoSoil(amount, amount, msg.sender);
+        // FIXME: tests pass when `pods` was accidentally set to `amount`
+        return LibDibbler.sowNoSoil(amount, pods, msg.sender);
     }
 
     function completeFundraiser(uint32 id) internal {
