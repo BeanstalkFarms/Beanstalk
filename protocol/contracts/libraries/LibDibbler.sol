@@ -23,7 +23,10 @@ library LibDibbler {
     using LibSafeMath32 for uint32;
     using LibSafeMath128 for uint128;
 
-    uint256 private constant DECIMALS = 1e6;
+    // Morning Auction scales temperature by 1e6
+    // 1e6 = 1%
+    // (6674 * 279415312704)/1e6 ~= 1864e6 = 1864%?
+    uint256 private constant TEMPERATURE_SCALE = 1e6;
     
     event Sow(
         address indexed account,
@@ -36,6 +39,29 @@ library LibDibbler {
      * Shed
      **/
 
+    /**
+     * @param amount The number of Beans to Sow
+     * @param account The account sowing Beans
+     * @dev 
+     * 
+     * ## Above Peg 
+     * 
+     * | t   | pods  | soil                                | yield                         | maxYield     |
+     * |-----|-------|-------------------------------------|-------------------------------|--------------|
+     * | 0   | 500e6 | 495e6 (500e6 / (1+1%))              | 1e6 (1%)                      | 1250 (1250%) |
+     * | 12  | 500e6 | 111.42e6 (500e6 / (1+348.75%))      | 348.75e6 (27.9% * 1250 * 1e6) | 1250         |
+     * | 300 | 500e6 | 22.22e6 (500e6 / (1+1250%))         | 1250e6                        | 1250         |
+     * 
+     * ## Below Peg
+     * 
+     * | t   | pods                            | soil  | yield                         | maxYield     |
+     * |-----|---------------------------------|-------|-------------------------------|--------------|
+     * | 0   | 505e6 (500e6 * (1+1%))          | 500e6 | 1e6 (1%)                      | 1250 (1250%) |
+     * | 12  | 2243.75e6 (500e6 * (1+348.75%)) | 500e6 | 348.75e6 (27.9% * 1250 * 1e6) | 1250         |
+     * | 300 | 6750e6 (500e6 * (1+1250%))      | 500e6 | 1250e6                        | 1250         |
+     * 
+     * Yield is floored at 1%.
+     */
     function sow(uint256 amount, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -44,7 +70,7 @@ library LibDibbler {
         uint256 pods;
 
         if (s.season.abovePeg) {
-            // t = 0 -> tons of soil
+            // t = 0   -> tons of soil
             // t = 300 -> however much soil to get fixed number of pods at current temperature
             //         -> scaledSoil = soil
             uint256 scaledSoil = amount.mulDiv(
@@ -92,7 +118,7 @@ library LibDibbler {
         uint256 delta = block.number.sub(s.season.sunriseBlock);
 
         if (delta > 24) { // check most likely case first
-            return uint256(s.w.yield).mul(DECIMALS);
+            return uint256(s.w.yield).mul(TEMPERATURE_SCALE);
         }
 
         // Binary Search
@@ -101,7 +127,7 @@ library LibDibbler {
                 if (delta < 4) {
                     if (delta < 2) {
                         if (delta < 1) {
-                            return DECIMALS; // delta == 0, same block as sunrise
+                            return TEMPERATURE_SCALE; // delta == 0, same block as sunrise
                         }
                         else return auctionMath(279415312704); // delta == 1
                     }
@@ -188,30 +214,41 @@ library LibDibbler {
     }
 
     /// @dev scales down temperature, minimum 1e6 (unless temperature is 0%)
+    /// 1e6 = 1% temperature
     function auctionMath(uint256 a) private view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 _yield  = s.w.yield; // 1e6 = temperature of 1%
+        uint256 _yield  = s.w.yield;
         if(_yield == 0) return 0; 
-        return LibPRBMath.max(_yield.mulDiv(a, 1e6), DECIMALS);
+        // minimum temperature is applied by DECIMALS
+        return LibPRBMath.max(_yield.mulDiv(a, 1e6), TEMPERATURE_SCALE);
     }
 
+    /**
+     * 
+     * @param beans 
+     * @param maxPeas 
+     */
     function beansToPodsAbovePeg(uint256 beans, uint256 maxPeas) 
         internal 
         view
         returns (uint256) 
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if(s.f.soil == 0){ //all soil is sown, pods issued must equal peas.
+
+        // All soil is sown, pods issued must equal peas.
+        if(s.f.soil == 0){ 
             return maxPeas;
-        } else {
-            /// @dev We round up as Beanstalk would rather issue too much pods than not enough.
+        } 
+
+        // We round up as Beanstalk would rather issue too much pods than not enough.
+        else {
             return beans.add(
                 beans.mulDiv(
                     morningAuction(),
                     1e8,
                     LibPRBMath.Rounding.Up
-                    )
-                );
+                )
+            );
         }
     }
 
