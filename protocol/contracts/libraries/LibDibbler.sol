@@ -129,93 +129,93 @@ library LibDibbler {
                         if (delta < 1) {
                             return TEMPERATURE_SCALE; // delta == 0, same block as sunrise
                         }
-                        else return auctionMath(279415312704); // delta == 1
+                        else return scaleYield(279415312704); // delta == 1
                     }
                     if (delta == 2) {
-                       return auctionMath(409336034395); // delta == 2
+                       return scaleYield(409336034395); // delta == 2
                     }
-                    else return auctionMath(494912626048); // delta == 3
+                    else return scaleYield(494912626048); // delta == 3
                 }
                 if (delta < 6) {
                     if (delta == 4) {
-                        return auctionMath(558830625409);
+                        return scaleYield(558830625409);
                     }
                     else { // delta == 5
-                        return auctionMath(609868162219);
+                        return scaleYield(609868162219);
                     }
                 }
-                else return auctionMath(652355825780); // delta == 6
+                else return scaleYield(652355825780); // delta == 6
             }
             if (delta < 10) {
                 if (delta < 9) {
                     if (delta == 7) {
-                        return auctionMath(688751347100);
+                        return scaleYield(688751347100);
                     }
                     else { // delta == 8
-                        return auctionMath(720584687295);
+                        return scaleYield(720584687295);
                     }
                 }
-                else return auctionMath(748873234524); // delta == 9
+                else return scaleYield(748873234524); // delta == 9
             }
             if (delta < 12) {
                 if (delta == 10) {
-                    return auctionMath(774327938752);
+                    return scaleYield(774327938752);
                 }
                 else{ // delta == 11
-                    return auctionMath(797465225780); 
+                    return scaleYield(797465225780); 
                 }
             }
-            else return auctionMath(818672068791); //delta == 12
+            else return scaleYield(818672068791); //delta == 12
         } 
         if (delta < 19){
             if (delta < 16) {
                 if (delta < 15) {
                     if (delta == 13) {
-                        return auctionMath(838245938114); 
+                        return scaleYield(838245938114); 
                     }
                     else{ // delta == 14
-                        return auctionMath(856420437864);
+                        return scaleYield(856420437864);
                     }
                 }
-                else return auctionMath(873382373802); //delta == 15
+                else return scaleYield(873382373802); //delta == 15
             }
             if (delta < 18) {
                 if (delta == 16) {
-                    return auctionMath(889283474924);
+                    return scaleYield(889283474924);
                 }
                 else{ // delta == 17
-                    return auctionMath(904248660443);
+                    return scaleYield(904248660443);
                 }
             }
-            return auctionMath(918382006208); // delta == 18
+            return scaleYield(918382006208); // delta == 18
         }
         if (delta < 22) {
             if (delta < 21) {
                 if (delta == 19) {
-                    return auctionMath(931771138485); 
+                    return scaleYield(931771138485); 
                 }
                 else{ // delta == 20
-                    return auctionMath(944490527707);
+                    return scaleYield(944490527707);
                 }
             }
-            return auctionMath(956603996980); // delta == 21
+            return scaleYield(956603996980); // delta == 21
         }
         if (delta <= 23){ 
             if (delta == 22) {
-                return auctionMath(968166659804);
+                return scaleYield(968166659804);
             }
             else { // delta == 23
-                return auctionMath(979226436102);
+                return scaleYield(979226436102);
             }
         }
         else {
-            return auctionMath(989825252096);
+            return scaleYield(989825252096);
         }
     }
 
     /// @dev scales down temperature, minimum 1e6 (unless temperature is 0%)
     /// 1e6 = 1% temperature
-    function auctionMath(uint256 a) private view returns (uint256) {
+    function scaleYield(uint256 a) private view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 _yield  = s.w.yield;
         if(_yield == 0) return 0; 
