@@ -331,7 +331,7 @@ library LibTokenSilo {
     }
 
         function grownStalkAndBdvToCumulativeGrownStalk(IERC20 token, uint256 grownStalk, uint256 bdv)
-        public
+        internal
         view
         returns (int128 cumulativeGrownStalk)
     {
