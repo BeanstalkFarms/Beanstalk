@@ -21,6 +21,7 @@ contract MockSiloFacet is SiloFacet {
     uint256 constant private AMOUNT_TO_BDV_BEAN_LUSD = 983108;
 
     using SafeMath for uint256;
+    using SafeMath for uint128;
 
     function mockWhitelistToken(address token, bytes4 selector, uint32 stalk, uint32 stalkPerBdvPerSeason) external {
        LibWhitelist.whitelistToken(token, selector, stalk, stalkPerBdvPerSeason);
@@ -47,19 +48,11 @@ contract MockSiloFacet is SiloFacet {
         bdv = bdv.mul(C.initialRecap()).div(1e18);
         uint256 seeds = bdv.mul(s.ss[C.unripeLPAddress()].legacySeedsPerBdv);
         uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalkPerBdv).add(LibSilo.stalkRewardLegacy(seeds, _season() - _s));
-        // LibSilo.mintSeedsAndStalk(msg.sender, seeds, stalk);
+        LibSilo.mintStalk(msg.sender, stalk);
+        uint256 newBdv = s.a[msg.sender].mowStatuses[C.unripeLPAddress()].bdv.add(amount);
+        s.a[msg.sender].mowStatuses[C.unripeLPAddress()].bdv = uint128(newBdv);
         LibTransfer.receiveToken(IERC20(C.unripeLPAddress()), unripeLP, msg.sender, LibTransfer.From.EXTERNAL);
     }
-
-/*    function mockUnripeBeanDeposit(int128 grownStalkPerBdv, uint256 amount) external {
-        _mow(msg.sender, C.unripeBeanAddress());
-        s.a[msg.sender].bean.deposits[grownStalkPerBdv] += amount;
-        LibTokenSilo.incrementTotalDeposited(C.unripeBeanAddress(), amount);
-        amount = amount.mul(C.initialRecap()).div(1e18);
-        uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalkPerBdv).add(LibSilo.stalkRewardLegacy(grownStalkPerBdv, s.ss[C.unripeLPAddress()].lastCumulativeGrownStalkPerBdv));
-        LibSilo.mintStalk(msg.sender, stalk);
-        LibTransfer.receiveToken(IERC20(C.unripeBeanAddress()), amount, msg.sender, LibTransfer.From.EXTERNAL);
-    }*/
 
    function mockUnripeBeanDeposit(uint32 _s, uint256 amount) external {
         _mow(msg.sender, C.unripeBeanAddress());
@@ -68,7 +61,9 @@ contract MockSiloFacet is SiloFacet {
         amount = amount.mul(C.initialRecap()).div(1e18);
         uint256 seeds = amount.mul(s.ss[C.unripeBeanAddress()].legacySeedsPerBdv);
         uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalkPerBdv).add(LibSilo.stalkRewardLegacy(seeds, _season() - _s));
-        // LibSilo.mintSeedsAndStalk(msg.sender, seeds, stalk);
+        LibSilo.mintStalk(msg.sender, stalk);
+        uint256 newBdv = s.a[msg.sender].mowStatuses[C.unripeBeanAddress()].bdv.add(amount);
+        s.a[msg.sender].mowStatuses[C.unripeBeanAddress()].bdv = uint128(newBdv);
         LibTransfer.receiveToken(IERC20(C.unripeBeanAddress()), amount, msg.sender, LibTransfer.From.EXTERNAL);
     }
 
