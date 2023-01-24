@@ -121,8 +121,8 @@ contract Silo is SiloExit {
     }
 
     function __mow(address account, address token) private {
-        // If this `account` has no Seeds, skip to save gas. //TODOSEEDS is there a post-seeds equiv?
-        // if (s.a[account].s.seeds == 0) return;
+        // If this `account` has no BDV, skip to save gas.
+        if (s.a[account].mowStatuses[token].bdv == 0) return;
         LibSilo.mintStalk(account, balanceOfGrownStalk(account, token));
 
         s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBDV = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));

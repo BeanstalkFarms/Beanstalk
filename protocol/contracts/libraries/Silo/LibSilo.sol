@@ -33,7 +33,7 @@ import "~/libraries/LibSafeMathSigned128.sol";
 library LibSilo {
     using SafeMath for uint256;
     using SafeMath for uint128;
-    using SafeMath for int128;
+    using LibSafeMathSigned128 for int128;
     using LibPRBMath for uint256;
     
     //////////////////////// EVENTS ////////////////////////    
@@ -181,7 +181,8 @@ library LibSilo {
         pure
         returns (uint256)
     {
-        return uint128(endStalkPerBDV-startStalkPerBDV)*bdv; //TODOSEEDS get safemath working here? endStalkPerBDV.sub(startStalkPerBDV).mul(bdv);
+        int128 reward = endStalkPerBDV.sub(startStalkPerBDV).mul(int128(bdv));
+        return uint128(reward);
     }
 
     function stalkRewardLegacy(uint256 seeds, uint32 seasons)
