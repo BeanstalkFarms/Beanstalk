@@ -74,7 +74,7 @@ library LibDibbler {
             // t = 300 -> however much soil to get fixed number of pods at current temperature
             //         -> scaledSoil = soil
             uint256 scaledSoil = amount.mulDiv(
-                morningAuction().add(1e8), 
+                yield().add(1e8), 
                 1e8,
                 LibPRBMath.Rounding.Up
             );
@@ -108,12 +108,12 @@ library LibDibbler {
         return pods;
     }
 
-    /// @dev Returns the temperature scaled down based on the block delta.
+    /// @dev Returns the temperature `s.f.yield` scaled down based on the block delta.
     /// Precision level 1e6, as soil has 1e6 precision (1% = 1e6)
     /// the formula log2(A * MAX_BLOCK_ELAPSED + 1) is applied, where
     /// A = 2;
     /// MAX_BLOCK_ELAPSED = 25;
-    function morningAuction() internal view returns (uint256) {
+    function yield() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 delta = block.number.sub(s.season.sunriseBlock);
 
@@ -225,8 +225,6 @@ library LibDibbler {
 
     /**
      * 
-     * @param beans 
-     * @param maxPeas 
      */
     function beansToPodsAbovePeg(uint256 beans, uint256 maxPeas) 
         internal 
@@ -244,7 +242,7 @@ library LibDibbler {
         else {
             return beans.add(
                 beans.mulDiv(
-                    morningAuction(),
+                    yield(),
                     1e8,
                     LibPRBMath.Rounding.Up
                 )

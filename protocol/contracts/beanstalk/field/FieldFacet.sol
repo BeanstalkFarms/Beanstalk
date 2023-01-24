@@ -160,7 +160,7 @@ contract FieldFacet is ReentrancyGuard {
 
     /// @dev yield has precision level 1e6 (1% = 1e6)
     function yield() public view returns (uint256) {
-        return LibDibbler.morningAuction();
+        return LibDibbler.yield();
     }
 
     /// @dev peas are the potential pods that can be issued within a season.
