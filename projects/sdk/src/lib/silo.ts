@@ -581,8 +581,7 @@ export class Silo {
     sortedCrates.some((crate) => {
       const thisAmount = crate.amount.gt(remaining) ? crate.amount.sub(remaining) : crate.amount;
       seasons.push(crate.season.toString());
-      // amounts.push(token.stringify(thisAmount));
-      amounts.push(thisAmount.toString());
+      amounts.push(thisAmount.toBlockchain());
       remaining = remaining.sub(thisAmount);
       return remaining.eq(0); // done
     });
