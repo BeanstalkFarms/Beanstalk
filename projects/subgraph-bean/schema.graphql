@@ -1,3 +1,9 @@
+type Token @entity {
+  id: ID!
+  decimals: BigInt!
+  lastPriceUSD: BigDecimal!
+}
+
 type Bean @entity {
   id: ID!
   decimals: BigInt!
@@ -10,7 +16,8 @@ type Bean @entity {
   price: BigDecimal!
   crosses: Int!
   lastCross: BigInt!
-  pools: [Pool!]! @derivedFrom(field: "bean") # The pools containing the Bean token 
+  lastSeason: Int!
+  pools: [Pool!]! #@derivedFrom(field: "bean") # The pools containing the Bean token 
   hourlySnapshot: [BeanHourlySnapshot!]! @derivedFrom(field: "bean")
   dailySnapshot: [BeanDailySnapshot!]! @derivedFrom(field: "bean")
 }
@@ -77,11 +84,12 @@ type Cross @entity {
 type Pool @entity {
   id: ID!
   bean: Bean!
+  lastSeason: Int!
+  lastPrice: BigDecimal!
   volume: BigInt!
   volumeUSD: BigDecimal!
   liquidity: BigInt!
   liquidityUSD: BigDecimal!
-  utilization: BigDecimal!
   crosses: Int!
   crossEvents: [Cross!]! @derivedFrom(field: "pool")
   deltaBeans: BigInt!
@@ -92,12 +100,13 @@ type Pool @entity {
 type PoolHourlySnapshot @entity {
   id: ID!
   pool: Pool!
+  lastPrice: BigDecimal!
   volume: BigInt!
   volumeUSD: BigDecimal!
   liquidity: BigInt!
   liquidityUSD: BigDecimal!
-  utilization: BigDecimal!
   crosses: Int!
+  utilization: BigDecimal!
   deltaBeans: BigInt!
   deltaVolume: BigInt!
   deltaVolumeUSD: BigDecimal!
@@ -106,20 +115,21 @@ type PoolHourlySnapshot @entity {
   deltaCrosses: Int!
   crossEvents: [Cross!]! @derivedFrom(field: "poolHourlySnapshot")
   season: Int!
-  timestamp: BigInt!
-  blockNumber: BigInt!
+  createdAt: BigInt!
+  updatedAt: BigInt!
 }
 
 
 type PoolDailySnapshot @entity {
   id: ID!
   pool: Pool!
+  lastPrice: BigDecimal!
   volume: BigInt!
   volumeUSD: BigDecimal!
   liquidity: BigInt!
   liquidityUSD: BigDecimal!
-  utilization: BigDecimal!
   crosses: Int!
+  utilization: BigDecimal!
   deltaBeans: BigInt!
   deltaVolume: BigInt!
   deltaVolumeUSD: BigDecimal!
@@ -128,6 +138,6 @@ type PoolDailySnapshot @entity {
   deltaCrosses: Int!
   crossEvents: [Cross!]! @derivedFrom(field: "poolDailySnapshot")
   season: Int!
-  timestamp: BigInt!
-  blockNumber: BigInt!
+  createdAt: BigInt!
+  updatedAt: BigInt!
 }

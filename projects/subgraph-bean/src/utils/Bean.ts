@@ -1,5 +1,6 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts"
 import { Bean, BeanDailySnapshot, BeanHourlySnapshot } from "../../generated/schema"
+import { BEAN_ERC20_V1, BEAN_ERC20_V2 } from "./Constants"
 import { dayFromTimestamp, hourFromTimestamp } from "./Dates"
 import { ZERO_BD, ZERO_BI } from "./Decimals"
 
@@ -17,6 +18,8 @@ export function loadBean(token: string): Bean {
         bean.price = BigDecimal.fromString('1.072')
         bean.crosses = 0
         bean.lastCross = ZERO_BI
+        bean.lastSeason = token == BEAN_ERC20_V2.toHexString() ? 6074 : 0
+        bean.pools = []
         bean.save()
     }
     return bean as Bean
@@ -43,7 +46,7 @@ export function loadOrCreateBeanHourlySnapshot(token: string, timestamp: BigInt)
         snapshot.deltaLiquidity = ZERO_BI
         snapshot.deltaLiquidityUSD = ZERO_BD
         snapshot.deltaCrosses = 0
-        snapshot.season = 6074
+        snapshot.season = bean.lastSeason
         snapshot.timestamp = timestamp
         snapshot.blockNumber = ZERO_BI
         snapshot.save()
@@ -72,7 +75,7 @@ export function loadOrCreateBeanDailySnapshot(token: string, timestamp: BigInt):
         snapshot.deltaLiquidity = ZERO_BI
         snapshot.deltaLiquidityUSD = ZERO_BD
         snapshot.deltaCrosses = 0
-        snapshot.season = 6074
+        snapshot.season = bean.lastSeason
         snapshot.timestamp = timestamp
         snapshot.blockNumber = ZERO_BI
         snapshot.save()
@@ -131,4 +134,8 @@ export function updateBeanSeason(token: string, timestamp: BigInt, season: i32):
 
     beanDaily.season = season
     beanDaily.save()
+}
+
+export function getBeanTokenAddress(blockNumber: BigInt): string {
+    return blockNumber < BigInt.fromString('15278082') ? BEAN_ERC20_V1.toHexString() : BEAN_ERC20_V2.toHexString()
 }

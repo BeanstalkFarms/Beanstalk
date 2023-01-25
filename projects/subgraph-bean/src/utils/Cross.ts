@@ -3,6 +3,7 @@ import { Cross } from "../../generated/schema"
 import { loadBean, loadOrCreateBeanDailySnapshot, loadOrCreateBeanHourlySnapshot } from "./Bean"
 import { dayFromTimestamp, hourFromTimestamp } from "./Dates"
 import { ONE_BD, ZERO_BD, ZERO_BI } from "./Decimals"
+import { incrementPoolCross, loadOrCreatePool } from "./Pool"
 
 export function loadOrCreateCross(id: i32, pool: string, timestamp: BigInt): Cross {
     let cross = Cross.load(id.toString())
@@ -24,8 +25,10 @@ export function loadOrCreateCross(id: i32, pool: string, timestamp: BigInt): Cro
     return cross as Cross
 }
 
-export function checkCrossAndUpdate(token: string, pool: string, timestamp: BigInt, oldPrice: BigDecimal, newPrice: BigDecimal): void {
+export function checkCrossAndUpdate(pool: string, timestamp: BigInt, blockNumber: BigInt, oldPrice: BigDecimal, newPrice: BigDecimal): void {
 
+    let poolInfo = loadOrCreatePool(pool, blockNumber)
+    let token = poolInfo.bean
     let bean = loadBean(token)
     let beanHourly = loadOrCreateBeanHourlySnapshot(token, timestamp)
     let beanDaily = loadOrCreateBeanDailySnapshot(token, timestamp)
@@ -48,6 +51,8 @@ export function checkCrossAndUpdate(token: string, pool: string, timestamp: BigI
         beanDaily.crosses += 1
         beanDaily.deltaCrosses += 1
         beanDaily.save()
+
+        incrementPoolCross(pool, timestamp, blockNumber)
     }
 
     if (oldPrice < ONE_BD && newPrice >= ONE_BD) {
@@ -68,5 +73,7 @@ export function checkCrossAndUpdate(token: string, pool: string, timestamp: BigI
         beanDaily.crosses += 1
         beanDaily.deltaCrosses += 1
         beanDaily.save()
+
+        incrementPoolCross(pool, timestamp, blockNumber)
     }
 }
