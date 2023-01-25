@@ -5,6 +5,7 @@ const useTabs = (
   /**
    * An array of url slugs corresponding to tab indices.
    * These are the URLs that will trigger each respective tab.
+   * Leave empty to disable search param behavior.
    */
   slugs?: string[],
   /**
@@ -25,7 +26,7 @@ const useTabs = (
         const index = slugs!.indexOf(slug);
         if (index > -1) return index;
       }
-      return 0;
+      return 0; // defualt to tab 0
     },
     [slugs]
   );
@@ -41,6 +42,8 @@ const useTabs = (
         const updatedParams = new URLSearchParams(params);
         updatedParams.set(key, slugs[newIndex]);
         update(updatedParams);
+      } else {
+        setTab(newIndex);
       }
     },
     [key, params, slugs, update]
