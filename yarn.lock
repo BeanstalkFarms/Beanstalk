@@ -37556,6 +37556,7 @@ __metadata:
   dependencies:
     "@apollo/client": ^3.4.10
     "@beanstalk/protocol": "workspace:*"
+    "@beanstalk/sdk": "workspace:*"
     "@emotion/react": ^11.10.5
     "@emotion/styled": ^11.10.5
     "@graphql-codegen/cli": 2.7.0
@@ -37655,7 +37656,7 @@ __metadata:
     typechain: ^8.0.0
     typescript: ^4.7.4
     util: ^0.12.4
-    vite: ^3.0.4
+    vite: ^3.2.5
     vite-plugin-html: ^3.2.0
     vite-plugin-react-remove-attributes: 1.0.3
     vitest: ^0.21.0
@@ -38478,7 +38479,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:^2.9.12 || ^3.0.0-0, vite@npm:^3.0.4":
+"vite@npm:^2.9.12 || ^3.0.0-0, vite@npm:^3.2.5":
   version: 3.2.5
   resolution: "vite@npm:3.2.5"
   dependencies:

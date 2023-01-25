@@ -10,17 +10,18 @@ import theme from '~/components/App/muiTheme';
 import client from '~/util/Client';
 import { apolloClient } from '~/graph/client';
 import store from '~/state';
+import { SDKProvider } from '~/components/App/SDKProvider';
 
 import { FC } from '~/types';
 
-const Wrapper : FC<{}> = ({ children }) => (
+const Wrapper: FC<{}> = ({ children }) => (
   <HashRouter>
     <ReduxProvider store={store}>
       <ApolloProvider client={apolloClient}>
         <WagmiConfig client={client}>
           <ThemeProvider theme={theme}>
             <CssBaseline />
-            {children}
+            <SDKProvider>{children}</SDKProvider>
           </ThemeProvider>
         </WagmiConfig>
       </ApolloProvider>
