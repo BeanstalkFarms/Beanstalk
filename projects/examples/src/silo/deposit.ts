@@ -16,6 +16,8 @@ async function main() {
   // and work off of msg.sender, so we need to impersonate the passed account.
   const { sdk, stop } = await impersonate(account);
   sdk.DEBUG = false;
+  
+  await deposit(sdk.tokens.ETH, sdk.tokens.BEAN, 5000, account, sdk);
 
   // await deposit(sdk.tokens.BEAN_CRV3_LP, sdk.tokens.BEAN_CRV3_LP, 500, account, sdk);
   // await deposit(sdk.tokens.CRV3, sdk.tokens.BEAN_CRV3_LP, 400, account, sdk);
@@ -24,7 +26,7 @@ async function main() {
   // await deposit(sdk.tokens.USDC, sdk.tokens.BEAN_CRV3_LP, 400, account, sdk);
   // await deposit(sdk.tokens.USDT, sdk.tokens.BEAN_CRV3_LP, 400, account, sdk);
   // await deposit(sdk.tokens.ETH, sdk.tokens.BEAN_CRV3_LP, 3, account, sdk);
-  await deposit(sdk.tokens.UNRIPE_BEAN_CRV3, sdk.tokens.UNRIPE_BEAN_CRV3, 3, account, sdk);
+  // await deposit(sdk.tokens.UNRIPE_BEAN_CRV3, sdk.tokens.UNRIPE_BEAN_CRV3, 3, account, sdk);
 
   await stop();
 }
