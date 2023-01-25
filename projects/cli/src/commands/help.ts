@@ -33,6 +33,12 @@ export const help = () => {
           alias: "r",
           typeLabel: "{underline url}",
           description: "http[s] RPC url to connect with. \n{gray Default: http://localhost:8545}"
+        },
+        {
+          name: "force",
+          alias: "f",
+          typeLabel: " ",
+          description: "forces a sunrise() by fastforwarding the blockchain time to the next hour first"
         }
       ]
     },
@@ -72,6 +78,10 @@ export const help = () => {
         {
           desc: "5. Call sunrise",
           example: "$ bean sunrise"
+        },
+        {
+          desc: "6. Call sunrise, forcing blockchain into the future",
+          example: "$ bean sunrise --force"
         }
       ]
     },

@@ -22,6 +22,7 @@ async function main() {
     { name: "amount", alias: "m", defaultValue: "50000" },
     { name: "rpcUrl", alias: "r", defaultValue: "http://127.0.0.1:8545" },
     { name: "no-imp", type: Boolean },
+    { name: "force", alias: "f", type: Boolean}
   ];
   const args = commandLineArgs(commands, { partial: true });
 
@@ -35,7 +36,7 @@ async function main() {
       await setbalance(sdk, chain, { account: args.account, symbol: args.token, amount: args.amount });
       break;
     case "sunrise":
-      await sunrise(sdk, chain, { account: args.account, symbol: args.token, amount: args.amount });
+      await sunrise(sdk, chain, { force: args.force });
       break;
     case "setprice":
       await setPrice(sdk, chain, { params: args._unknown });
