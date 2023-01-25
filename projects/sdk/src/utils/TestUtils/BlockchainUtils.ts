@@ -89,6 +89,10 @@ export class BlockchainUtils {
     await this.sdk.provider.send("evm_mine", []); // Just mines to the next block
   }
 
+  async getCurrentBlock() {
+    await this.sdk.provider.send("eth_getBlockByNumber", ["latest", "false"]); // Just mines to the next block
+  }
+
   async impersonate(account: string) {
     await this.provider.send("anvil_impersonateAccount", [account]);
     return () => this.stopImpersonating(account);
