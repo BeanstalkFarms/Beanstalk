@@ -22,14 +22,14 @@ const COL_ITEM = "space-y-4 min-w-[300px]";
 
 const Home: NextPage = () => {
   const [raw, setRaw] = useState(false);
-  const rightHeader = (
-    <>
-      <label htmlFor="raw">Show raw values</label>
-      <input id="raw" type="checkbox" checked={raw} onChange={() => setRaw(!raw)} />
-    </>
-  );
+  // const rightHeader = (
+  //   <>
+  //     <label htmlFor="raw">Show raw values</label>
+  //     <input id="raw" type="checkbox" checked={raw} onChange={() => setRaw(!raw)} />
+  //   </>
+  // );
   return (
-    <Page rightHeader={rightHeader}>
+    <>
       <div className={COL_ITEM}>
         <CallsModule
           title="Sun"
@@ -178,7 +178,7 @@ const Home: NextPage = () => {
           raw={raw}
         />
       </div>
-    </Page>
+    </>
   )
 }
 

@@ -13,12 +13,14 @@
   "dependencies": {
     "@beanstalk/sdk": "workspace:*",
     "@types/lodash": "^4.14.182",
-    "ethers": "^5.6.9",
+    "ethers": "5.7.2",
     "ethers-multicall": "^0.2.3",
     "lodash": "^4.17.21",
     "next": "latest",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "swr": "2.0.1",
+    "wagmi": "0.10.15"
   },
   "devDependencies": {
     "@typechain/ethers-v5": "^10.1.0",
