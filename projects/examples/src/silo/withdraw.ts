@@ -17,15 +17,16 @@ async function main() {
   let { sdk: _sdk, stop } = await impersonate(account);
   sdk = _sdk;
 
-  const token = sdk.tokens.BEAN_CRV3_LP;
-  const amount = token.amount(9000);
-
-  await go(token, amount);
-
+  await go(sdk.tokens.BEAN, sdk.tokens.BEAN.amount(200000));
+  // await go(sdk.tokens.BEAN_CRV3_LP, sdk.tokens.BEAN_CRV3_LP.amount(1000));
+  // await go(sdk.tokens.UNRIPE_BEAN, sdk.tokens.UNRIPE_BEAN.amount(1000));
+  // await go(sdk.tokens.UNRIPE_BEAN_CRV3, sdk.tokens.UNRIPE_BEAN_CRV3.amount(1000));
+  
   await stop();
 }
 
 async function go(token: Token, amount: TokenValue) {
+  console.log(`Withdrawing ${amount.toHuman()} from ${token.symbol} Silo`);
   const tx = await sdk.silo.withdraw.withdraw(token, amount)
   await tx.wait();
 
