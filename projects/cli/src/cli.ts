@@ -4,6 +4,8 @@ import { BeanstalkSDK, TestUtils, DataSource } from "@beanstalk/sdk";
 import { ethers } from "ethers";
 import { balance } from "./commands/balance.js";
 import { setbalance } from "./commands/setbalance.js";
+import { sunrise } from "./commands/sunrise.js";
+import { setPrice } from "./commands/setprice.js";
 import { help } from "./commands/help.js";
 
 main().catch((e) => {
@@ -19,7 +21,8 @@ async function main() {
     { name: "token", alias: "t" },
     { name: "amount", alias: "m", defaultValue: "50000" },
     { name: "rpcUrl", alias: "r", defaultValue: "http://127.0.0.1:8545" },
-    { name: "no-imp", type: Boolean }
+    { name: "no-imp", type: Boolean },
+    { name: "force", alias: "f", type: Boolean}
   ];
   const args = commandLineArgs(commands, { partial: true });
 
@@ -31,6 +34,12 @@ async function main() {
       break;
     case "setbalance":
       await setbalance(sdk, chain, { account: args.account, symbol: args.token, amount: args.amount });
+      break;
+    case "sunrise":
+      await sunrise(sdk, chain, { force: args.force });
+      break;
+    case "setprice":
+      await setPrice(sdk, chain, { params: args._unknown });
       break;
     case "help":
     default:

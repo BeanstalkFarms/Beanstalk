@@ -37,7 +37,6 @@
     "ui:build": "yarn workspace ui build",
     "ui:test": "yarn workspace ui test",
     "test:browser": "yarn workspace tests test:browser",
-    "ex": "yarn workspace @beanstalk/examples x",
-    "bean": "yarn workspace @beanstalk/cli bean"
+    "ex": "yarn workspace @beanstalk/examples x"
   }
 }
