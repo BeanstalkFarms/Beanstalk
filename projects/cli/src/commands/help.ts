@@ -41,6 +41,8 @@ export const help = () => {
       content: [
         { name: "{bold.greenBright balance}", summary: "Display balance(s). Optionally specify account or token" },
         { name: "{bold.greenBright setbalance}", summary: "Set balance(s). Optionally specify account, token, or amount" },
+        { name: "{bold.greenBright setprice}", summary: "Set BEAN price by setting liquidity. Defaults to 20M BEAN and 20M 3CRV. Parameters are millions. See examples below" },
+        { name: "{bold.greenBright sunrise}", summary: "Calls the sunrise() function" },
         { name: "{bold.greenBright help}", summary: "You're looking at it :)" }
       ]
     },
@@ -62,6 +64,14 @@ export const help = () => {
         {
           desc: "4. Set BEAN balance for account 0x123 to 3.14",
           example: "$ bean setbalance -a 0x123 -t BEAN -m 3.14"
+        },
+        {
+          desc: "5. Set BEAN price above a dollar (20M BEAN, 30M 3CRV)",
+          example: "$ bean setprice 20 30"
+        },
+        {
+          desc: "5. Call sunrise",
+          example: "$ bean sunrise"
         }
       ]
     },
