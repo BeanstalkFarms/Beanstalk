@@ -9,15 +9,27 @@ import Volume from '~/components/Analytics/Bean/Volume';
 import Liquidity from '~/components/Analytics/Bean/Liquidity';
 import Crosses from '~/components/Analytics/Bean/Crosses';
 import DeltaB from '~/components/Analytics/Bean/DeltaB';
-
-// const SLUGS = ['price', 'volume', 'liquidity', 'mktcap', 'supply', 'crosses'];
 import { FC } from '~/types';
 
+const SLUGS = [
+  'price',
+  'volume',
+  'liquidity',
+  'mktcap',
+  'supply',
+  'crosses',
+  'delta_b',
+];
+
 const BeanAnalytics: FC<{}> = () => {
-  const [tab, handleChangeTab] = useTabs();
+  const [tab, handleChangeTab] = useTabs(SLUGS, 'bean');
   return (
     <Card>
-      <Tabs value={tab} onChange={handleChangeTab} sx={{ px: 2, pt: 2, pb: 1.5 }}>
+      <Tabs
+        value={tab}
+        onChange={handleChangeTab}
+        sx={{ px: 2, pt: 2, pb: 1.5 }}
+      >
         <Tab label="Bean Price" />
         <Tab label="Volume" />
         <Tab label="Liquidity" />

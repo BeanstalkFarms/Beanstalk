@@ -9,15 +9,27 @@ import Temperature from './Temperature';
 import Sown from './Sown';
 import TotalSowers from './TotalSowers';
 import RRoR from './RRoR';
-
-// const SLUGS = ['rror', 'weather', 'pods', 'podrate', 'sown', 'harvested', 'sowers'];
 import { FC } from '~/types';
 
+const SLUGS = [
+  'rror',
+  'weather',
+  'pods',
+  'podrate',
+  'sown',
+  'harvested',
+  'sowers',
+];
+
 const FieldAnalytics: FC<{}> = () => {
-  const [tab, handleChangeTab] = useTabs();
+  const [tab, handleChangeTab] = useTabs(SLUGS, 'field');
   return (
     <Card>
-      <Tabs value={tab} onChange={handleChangeTab} sx={{ px: 2, pt: 2, pb: 1.5 }}>
+      <Tabs
+        value={tab}
+        onChange={handleChangeTab}
+        sx={{ px: 2, pt: 2, pb: 1.5 }}
+      >
         <Tab label="RRoR" />
         <Tab label="Temperature" />
         <Tab label="Pods" />
