@@ -3,9 +3,8 @@ import { AddLiquidity, RemoveLiquidity, RemoveLiquidityImbalance, RemoveLiquidit
 import { CurvePrice } from "../generated/Bean3CRV/CurvePrice";
 import { loadBean, updateBeanValues } from "./utils/Bean";
 import { BEAN_ERC20_V2, CURVE_PRICE } from "./utils/Constants";
-import { checkCrossAndUpdate } from "./utils/Cross";
 import { toDecimal, ZERO_BD, ZERO_BI } from "./utils/Decimals";
-import { updatePoolValues } from "./utils/Pool";
+import { updatePoolPrice, updatePoolValues } from "./utils/Pool";
 
 export function handleTokenExchange(event: TokenExchange): void {
     handleSwap(event.address.toHexString(), event.params.sold_id, event.params.tokens_sold, event.params.bought_id, event.params.tokens_bought, event.block.timestamp, event.block.number)
@@ -46,7 +45,6 @@ function handleLiquidityChange(
 
     let bean = loadBean(BEAN_ERC20_V2.toHexString())
 
-    let oldPrice = bean.price
     let newPrice = toDecimal(curve.value.price)
     let deltaLiquidityUSD = toDecimal(curve.value.liquidity).minus(bean.liquidityUSD)
 
@@ -70,9 +68,7 @@ function handleLiquidityChange(
     )
 
     updatePoolValues(pool, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD)
-
-    // Handle a peg cross
-    checkCrossAndUpdate(pool, timestamp, blockNumber, oldPrice, newPrice)
+    updatePoolPrice(pool, timestamp, blockNumber, newPrice)
 }
 
 function handleSwap(
@@ -92,7 +88,6 @@ function handleSwap(
 
     let bean = loadBean(BEAN_ERC20_V2.toHexString())
 
-    let oldPrice = bean.price
     let newPrice = toDecimal(curve.value.price)
     let volumeBean = ZERO_BI
 
@@ -116,7 +111,5 @@ function handleSwap(
     )
 
     updatePoolValues(pool, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD)
-
-    // Handle a peg cross
-    checkCrossAndUpdate(pool, timestamp, blockNumber, oldPrice, newPrice)
+    updatePoolPrice(pool, timestamp, blockNumber, newPrice)
 }

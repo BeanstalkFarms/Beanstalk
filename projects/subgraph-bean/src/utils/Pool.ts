@@ -3,6 +3,7 @@ import { Pool, PoolDailySnapshot, PoolHourlySnapshot } from "../../generated/sch
 import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
 import { ZERO_BD, ZERO_BI } from "./Decimals";
 import { getBeanTokenAddress, loadBean } from "./Bean";
+import { checkCrossAndUpdate } from "./Cross";
 
 
 export function loadOrCreatePool(poolAddress: string, blockNumber: BigInt): Pool {
@@ -168,6 +169,8 @@ export function updatePoolPrice(poolAddress: string, timestamp: BigInt, blockNum
     let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber)
     let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber)
 
+    let oldPrice = pool.lastPrice
+
     pool.lastPrice = price
     pool.save()
 
@@ -176,4 +179,6 @@ export function updatePoolPrice(poolAddress: string, timestamp: BigInt, blockNum
 
     poolDaily.lastPrice = price
     poolDaily.save()
+
+    checkCrossAndUpdate(poolAddress, timestamp, blockNumber, oldPrice, price)
 }

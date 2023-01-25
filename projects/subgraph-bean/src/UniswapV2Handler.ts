@@ -2,7 +2,6 @@ import { BigDecimal } from "@graphprotocol/graph-ts";
 import { Burn, Mint, UniswapV2Pair } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
 import { ZERO_BD, ZERO_BI } from "./helpers";
 import { WETH, WETH_USDC_PAIR } from "./utils/Constants";
-import { checkCrossAndUpdate } from "./utils/Cross";
 import { toDecimal } from "./utils/Decimals";
 import { loadOrCreatePool, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 import { loadOrCreateToken } from "./utils/Token";
@@ -33,8 +32,6 @@ export function handleSync(event: Mint): void {
     let currentBeanPrice = beanBalance.div((wethBalance).times(weth.lastPriceUSD))
 
     updatePoolPrice(event.address.toHexString(), event.block.timestamp, event.block.number, currentBeanPrice)
-
-    checkCrossAndUpdate(event.address.toHexString(), event.block.timestamp, event.block.number, oldPrice, currentBeanPrice)
 }
 
 function updatePriceETH(): void {
