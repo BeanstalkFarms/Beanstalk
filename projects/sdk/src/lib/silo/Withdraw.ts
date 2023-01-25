@@ -12,12 +12,26 @@ export class Withdraw {
     Withdraw.sdk = sdk;
   }
 
+  /**
+   * Initates a withdraw from the silo. The `token` specified dictates which silo to withdraw
+   * from, and therefore is limited to only whitelisted assets.
+   * Behind the scenes, the `amount` to be withdrawn must be taken from individual
+   * deposits, aka crates. A user's deposits are not summarized into one large bucket, from
+   * which we can withdraw at will. Each deposit is independently tracked, so each withdraw must
+   * calculate how many crates it must span to attain the desired `amount`.
+   * @param token The whitelisted token to withdraw. ex, BEAN vs BEAN_3CRV_LP
+   * @param amount The desired amount to withdraw. Must be 0 < amount <= total deposits for token
+   * @returns Promise of Transaction
+   */
   async withdraw(token: Token, amount: TokenValue): Promise<ContractTransaction> {
+    Withdraw.sdk.debug("silo.withdraw()", { token, amount });
     if (!Withdraw.sdk.tokens.siloWhitelist.has(token)) {
       throw new Error(`Withdraw error; token ${token.symbol} is not a whitelisted asset`);
     }
 
     const { deposited } = await Withdraw.sdk.silo.getBalance(token);
+    Withdraw.sdk.debug("silo.withdraw(): deposited balance", { deposited });
+
     if (deposited.amount.lt(amount)) {
       throw new Error("Insufficient balance");
     }
@@ -25,24 +39,36 @@ export class Withdraw {
     const season = await Withdraw.sdk.sun.getSeason();
 
     const withdrawData = this.calculateWithdraw(token, amount, deposited.crates, season);
+    Withdraw.sdk.debug("silo.withdraw(): withdrawData", { withdrawData });
 
     const seasons = withdrawData.crates.map((crate) => crate.season.toString());
     const amounts = withdrawData.crates.map((crate) => crate.amount.toBlockchain());
-    let call;
+
+    let contractCall;
+
     if (seasons.length === 0) {
       throw new Error("Malformatted crates");
     }
 
     if (seasons.length === 1) {
-      call = Withdraw.sdk.contracts.beanstalk.withdrawDeposit(token.address, seasons[0], amounts[0]);
+      Withdraw.sdk.debug("silo.withdraw(): withdrawDeposit()", { address: token.address, season: seasons[0], amount: amounts[0] });
+      contractCall = Withdraw.sdk.contracts.beanstalk.withdrawDeposit(token.address, seasons[0], amounts[0]);
     } else {
-      call = Withdraw.sdk.contracts.beanstalk.withdrawDeposits(token.address, seasons, amounts);
+      Withdraw.sdk.debug("silo.withdraw(): withdrawDeposits()", { address: token.address, seasons: seasons, amounts: amounts });
+      contractCall = Withdraw.sdk.contracts.beanstalk.withdrawDeposits(token.address, seasons, amounts);
     }
 
-    return call;
+    return contractCall;
   }
 
+  /**
+   * This methods figures out which deposits, or crates, the withdraw must take from
+   * in order to reach the desired amount. It returns extra information that may be useful
+   * in a UI to show the user how much stalk and seed they will forfeit as a result of the withdraw
+   */
   calculateWithdraw(token: Token, amount: TokenValue, crates: DepositCrate[], season: number) {
+    if (crates.length === 0) throw new Error("No crates to withdraw from");
+
     const sortedCrates = sortCratesBySeason(crates, "desc");
     const pickedCrates = this.pickCrates(sortedCrates, amount, token, season);
 
@@ -58,10 +84,6 @@ export class Withdraw {
 
   /**
    * Selects the number of crates needed to add up to the desired `amount`.
-   * @param crates A list of crates from which to pick
-   * @param amount The target amount
-   * @param token The whitelisted token the crates represent
-   * @param currentSeason The current season
    */
   pickCrates(crates: DepositCrate[], amount: TokenValue, token: Token, currentSeason: number) {
     let totalAmount = TokenValue.ZERO;
@@ -75,10 +97,6 @@ export class Withdraw {
       const cratePct = amountToRemoveFromCrate.div(crate.amount);
       const crateBDV = cratePct.mul(crate.bdv);
       const crateSeeds = cratePct.mul(crate.seeds);
-
-      // Stalk is removed for two reasons:
-      //  'base stalk' associated with the initial deposit is forfeited
-      //  'grown stalk' earned from Seeds over time is forfeited.
       const baseStalk = token.getStalk(crateBDV);
       const grownStalk = crateSeeds.mul(elapsedSeasons).mul(Silo.STALK_PER_SEED_PER_SEASON);
       const crateStalk = baseStalk.add(grownStalk);
@@ -97,7 +115,6 @@ export class Withdraw {
         seeds: crateSeeds
       });
 
-      // Finish when...
       return totalAmount.eq(amount);
     });
 
