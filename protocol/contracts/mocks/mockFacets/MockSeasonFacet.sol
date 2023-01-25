@@ -220,7 +220,7 @@ contract MockSeasonFacet is SeasonFacet {
 
     function stepWeatherWithParams(
         uint256 pods,
-        uint256 lastDSoil,
+        uint256 _lastDSoil,
         uint128 beanSown,
         uint128 endSoil,
         int256 deltaB,
@@ -230,7 +230,7 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.raining = raining;
         s.r.roots = rainRoots ? 1 : 0;
         s.f.pods = pods;
-        s.w.lastDSoil = uint128(lastDSoil);
+        s.w.lastDSoil = uint128(_lastDSoil);
         // s.w.startSoil = startSoil;
         s.f.beanSown = beanSown;
         s.f.soil = endSoil;

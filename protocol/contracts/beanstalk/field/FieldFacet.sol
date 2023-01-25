@@ -149,27 +149,30 @@ contract FieldFacet is ReentrancyGuard {
         return s.a[account].field.plots[plotId];
     }
 
-    /// @dev FIXME: overlap with LibDibbler
     function totalSoil() public view returns (uint256) {
-        if(s.season.abovePeg) {
-            uint256 _yield = yield().add(1e8); 
-            return uint256(s.f.soil).mulDiv(100e6,_yield,LibPRBMath.Rounding.Up); 
-        } else {
+
+        if (!s.season.abovePeg) {
             return uint256(s.f.soil);
         }
+        // uint256 _yield = yield().add(100e6); 
+        // return uint256(s.f.soil).mulDiv(100e6,_yield, LibPRBMath.Rounding.Up);
+        // totalAbovePegSoil * temp = s.f.soil * s.w.yield 
+        // totalAbovePegSoil = s.f.soil*s.w.yield/temp 
+        ///@dev need to cast s.w.yield to an uint256 due to overflow.
+        // we round up here as yield() is rounded down.
+        return uint256(s.f.soil).mulDiv(
+            uint256(s.w.yield).add(100).mul(1e6),
+            yield().add(100e6)
+        );
     }
 
     /// @dev yield has precision level 1e6 (1% = 1e6)
     function yield() public view returns (uint256) {
         return LibDibbler.yield();
     }
-
-    /// @dev peas are the potential pods that can be issued within a season.
+    
+    // @FIXME change the name
     function peas() external view returns (uint256) {
-       if (s.season.abovePeg) {
-            return s.f.soil;
-        } else {
-            return s.f.soil.mul(100 + s.w.yield).div(100);
-        }
+        return uint256(LibDibbler.peas());
     }
 }

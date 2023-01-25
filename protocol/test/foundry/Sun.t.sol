@@ -1,36 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.7.6;
+pragma abicoder v2;
 
-import "forge-std/Test.sol";
-import { console } from "forge-std/console.sol";
-
+import "./utils/TestHelper.sol";
 import { Sun } from "~/beanstalk/sun/SeasonFacet/Sun.sol";
-import { MockSeasonFacet } from "~/mocks/mockFacets/MockSeasonFacet.sol";
-import { MockSiloFacet } from "~/mocks/mockFacets/MockSiloFacet.sol";
-import { MockFieldFacet } from "~/mocks/mockFacets/MockFieldFacet.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
-import {MockUniswapV3Pool} from "~/mocks/uniswap/MockUniswapV3Pool.sol";
-import { Utils } from "./utils/Utils.sol";
-import { InitDiamondDeployer } from "./utils/InitDiamondDeployer.sol";
 
-import "~/beanstalk/AppStorage.sol";
-import "~/libraries/Decimal.sol";
 import "~/libraries/LibSafeMath32.sol";
 import "~/libraries/LibPRBMath.sol";
-import "~/C.sol";
 
-contract SunTest is Sun, Test, InitDiamondDeployer {
+contract SunTest is  Sun, TestHelper {
   using SafeMath for uint256;
   using LibPRBMath for uint256;
   using LibSafeMath32 for uint32;
   
-  function setUp() public override {
-    InitDiamondDeployer.setUp();
-    
+  function setUp() public {
+    setupDiamond();
     // Mint beans
     C.bean().mint(address(this), 1000);
     console.log("Sun: Bean supply is", C.bean().totalSupply());
-
     // FIXME: Setup silo 
     season.siloSunrise(0);
   }
@@ -119,7 +107,7 @@ contract SunTest is Sun, Test, InitDiamondDeployer {
     field.incrementTotalPodsE(100);
     season.sunSunrise(300, 0); // deltaB = +300; case 0 = low pod rate
     vm.roll(26); // after dutch Auction
-    assertEq(uint256(field.totalSoil()), 149); // FIXME: how calculated?
+    assertEq(uint256(field.totalSoil()), 150); // FIXME: how calculated?
     // 300/3 = 100 *1.5 = 150
   }
   

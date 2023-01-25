@@ -12,6 +12,8 @@ import "./LibSafeMath32.sol";
 import "./LibSafeMath128.sol";
 import "./LibPRBMath.sol";
 
+// import "forge-std/console.sol";
+
 
 /**
  * @author Publius, Brean
@@ -27,6 +29,7 @@ library LibDibbler {
     // 1e6 = 1%
     // (6674 * 279415312704)/1e6 ~= 1864e6 = 1864%?
     uint256 private constant TEMPERATURE_SCALE = 1e6;
+    uint256 private constant PRECISION = 1e8;
     
     event Sow(
         address indexed account,
@@ -62,44 +65,67 @@ library LibDibbler {
      * 
      * FIXME: `amount` here is the same as `beans` in functions elsewhere in LibDibbler.
      */
+
     function sow(uint256 amount, address account) internal returns (uint256) {
+        
+        // multiple equations are scaled up and down: 
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // the amount of soil changes as a function of the morning auction;
         // soil consumed increases as dutch auction passes
-        uint256 pods;
 
-        if (s.season.abovePeg) {
-            // t = 0   -> tons of soil
-            // t = 300 -> however much soil to get fixed number of pods at current temperature
-            //         -> scaledSoil = soil
+        // The amount of soil to consume given the current block delta.
+        // pods = soilSown * (1+yield)/ precision 
+        //  we round down as yield() is rounded up. Pods are always capped to peas, 
+        // which avoids beanstalk from issuing too many pods.
 
-            // The amount of soil to consume given the current block delta.
-            uint256 scaledSoil = amount.mulDiv(
-                yield().add(1e8), 
-                1e8,
-                LibPRBMath.Rounding.Up
+        // we multiply pods here by a factor of 1e8 for precision.
+        uint256 pods = amount.mulDiv(
+                yield().add(100e6).mul(PRECISION), 
+                100e6
             );
 
-            pods = beansToPodsAbovePeg(amount, s.f.soil);
-
-            // Overflow can occur due to rounding up, 
-            // but only occurs when all remaining soil is sown.
-            (, s.f.soil) = s.f.soil.trySub(uint128(scaledSoil)); 
+        // t = 0   -> tons of soil
+        // t = 300 -> however much soil to get fixed number of pods at current temperature
+        // soil subtracted is thus scaled down:
+        // soilSubtracted = s.f.soil * SoilSowed/totalSoilAbovePeg
+        // soilSubtracted = s.f.soil * SoilSowed/(s.f.soil * ((1 + s.w.yield) /(1 + yield())))
+        // soilSubtracted = Amt * (1 + yield())/(1+ s.w.yield) 
+        // soilSubtracted = pods/(1+ s.w.yield) 
+        if (s.season.abovePeg) {
+            // we round up the amount 
+            amount = pods.mulDiv(
+                100,
+                uint256(s.w.yield).add(100).mul(PRECISION),
+                LibPRBMath.Rounding.Up
+            );
+            if (amount >= s.f.soil) {
+                pods = uint256(s.f.soil).mulDiv(
+                    uint256(s.w.yield).add(100),
+                    100
+                    );
+                s.f.soil = 0;
+            } else {
+                pods = pods.div(PRECISION);
+                s.f.soil = s.f.soil.sub(uint128(amount));
+            }
         } else {
-            pods = beansToPods(amount, yield() / 1e6); // FIXME!
-
-            // We can assume amount <= soil from getSowAmount when below peg
-            s.f.soil = s.f.soil - uint128(amount); 
+            pods = pods.div(PRECISION);
+            s.f.soil = s.f.soil.sub(uint128(amount));
         }
-
-        return sowNoSoil(amount, pods, account);
+        // if (amount >= s.f.soil) {
+        //     pods = peas();
+        //     s.f.soil = 0;
+        // } else {
+           
+        // }
+        return sowPlot(amount, pods, account);
     }
 
     /**
      * @dev Sow plot, increment pods, update sow time.
      */
-    function sowNoSoil(uint256 amount, uint256 pods, address account)
+    function sowPlot(uint256 amount, uint256 pods, address account)
         internal
         returns (uint256)
     {
@@ -225,42 +251,16 @@ library LibDibbler {
         if(_yield == 0) return 0; 
         // minimum temperature is applied by DECIMALS
         return LibPRBMath.max(
-            _yield.mulDiv(a, 1e6),
+            _yield.mulDiv(
+                a, 
+                1e6,
+                LibPRBMath.Rounding.Up
+                ),
             TEMPERATURE_SCALE
         );
     }
 
-    /**
-     * @dev 
-     */
-    function beansToPodsAbovePeg(uint256 beans, uint256 maxPeas) 
-        internal 
-        view
-        returns (uint256) 
-    {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
-        // All soil is sown, pods issued must equal peas.
-        if (s.f.soil == 0) { 
-            return maxPeas;
-        } 
-
-        // We round up as Beanstalk would rather issue too much pods than not enough.
-        else {
-            return beans.mulDiv(
-                yield().add(1e8),
-                1e8,
-                LibPRBMath.Rounding.Up
-            );
-            // return beans.add(
-            //     beans.mulDiv(
-            //         yield(),
-            //         1e8,
-            //         LibPRBMath.Rounding.Up
-            //     )
-            // );
-        }
-    }
+    
 
     /**
      * @param beans The number of Beans to convert to Pods.
@@ -273,11 +273,27 @@ library LibDibbler {
         returns (uint256)
     {
         return beans.mulDiv(
-            _yield.add(1e2),
-            1e2,
+            _yield.add(100),
+            100,
             LibPRBMath.Rounding.Up // CHECK
         );
         // return beans.add(beans.mul(_yield).div(100));
+    }
+
+    // / @dev peas are the potential remaining pods that can be issued within a season.
+    function peas() internal view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        if(s.season.abovePeg) {
+            return uint256(s.f.soil).mulDiv(
+                uint256(s.w.yield).add(100),
+                100
+            );
+        } else {
+            return uint256(s.f.soil).mulDiv(
+                yield().add(100e6),
+                100e6
+            );
+        }
     }
 
     function sowPlot(

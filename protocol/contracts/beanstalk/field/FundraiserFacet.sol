@@ -68,7 +68,7 @@ contract FundraiserFacet is ReentrancyGuard {
         uint256 pods = LibDibbler.beansToPods(amount, s.w.yield); // yield measured to 1e2;
 
         // FIXME: tests pass when `pods` was accidentally set to `amount`
-        return LibDibbler.sowNoSoil(amount, pods, msg.sender);
+        return LibDibbler.sowPlot(amount, pods, msg.sender);
     }
 
     function completeFundraiser(uint32 id) internal {
