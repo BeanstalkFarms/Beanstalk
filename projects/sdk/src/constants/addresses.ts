@@ -10,7 +10,7 @@ export const addresses = {
   // ----------------------------------------
   // Ecosystem Contracts
   // ----------------------------------------
-  BEANSTALK_PRICE: Address.make("0xA57289161FF18D67A68841922264B317170b0b81"),
+  BEANSTALK_PRICE: Address.make("0xF2C2b7eabcB353bF6f2128a7f8e1e32Eeb112530"),
   MATH: Address.make("0x16a903b66403d3de69db50e6d1ad0b07490b740a"),
   DEPOT: Address.make("0xDEb0f000082fD56C10f449d4f8497682494da84D"),
   PIPELINE: Address.make("0xb1bE0000bFdcDDc92A8290202830C4Ef689dCeaa"),
