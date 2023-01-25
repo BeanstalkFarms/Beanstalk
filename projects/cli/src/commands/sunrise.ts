@@ -11,8 +11,10 @@ export const sunrise = async (sdk, chain, {}) => {
   }
 
   const diff = seasonTime - localSeason;
-
   callSunrise(sdk);
+  if (diff > 1) {
+    console.log(`You are still behind by ${diff - 1} seasons. May need to call it again.`);
+  }
 };
 
 async function callSunrise(sdk: BeanstalkSDK) {
