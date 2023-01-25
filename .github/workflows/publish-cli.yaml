@@ -1,0 +1,30 @@
+name: Publish CLI to NPM
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'projects/cli/package.json'
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/setup-node@v1
+        with:
+          node-version: '16'
+      - name: Cache Node Modules
+        id: node-modules-cache
+        uses: actions/cache@v3
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - name: Install Dependencies
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        run: yarn install --immutable
+      - name: Publish
+        run: yarn workspace @beanstalk/cli g:publish
+        env:
+          YARN_NPM_AUTH_TOKEN: ${{ secrets.YARN_NPM_AUTH_TOKEN }}
+          TOKEN_GITHUB: ${{ secrets.TOKEN_GITHUB }}

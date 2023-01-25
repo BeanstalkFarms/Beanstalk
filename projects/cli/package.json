@@ -14,8 +14,8 @@
     "bean": "build/cli.js"
   },
   "scripts": {
-    "cli:publish": "yarn cli:build && yarn npm publish --access public",
-    "cli:build": "rimraf build && tsc && chmod u+x build/cli.js",
+    "publish": "yarn build && yarn npm publish --access public",
+    "build": "rimraf build && tsc && chmod u+x build/cli.js",
     "beandev": "yarn ts-node-esm src/cli.ts"
   },
   "devDependencies": {
