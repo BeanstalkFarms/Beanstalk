@@ -61,7 +61,7 @@ describe('Sop', function () {
     it("Raining", async function () {
       await this.field.incrementTotalPodsE(to18('100'))
       await this.season.rainSunrise()
-      await this.silo.update(userAddress);
+      await this.silo.update(userAddress, this.beanMetapool);
       const rain = await this.season.rain()
       const season = await this.season.time()
       expect(season.rainStart).to.be.equal(season.current)
@@ -76,9 +76,9 @@ describe('Sop', function () {
     it("Stops raining", async function () {
       await this.field.incrementTotalPodsE(to18('100'))
       await this.season.rainSunrise()
-      await this.silo.update(userAddress);
+      await this.silo.update(userAddress, this.beanMetapool);
       await this.season.droughtSunrise()
-      await this.silo.update(userAddress);
+      await this.silo.update(userAddress, this.beanMetapool);
       const season = await this.season.time()
       expect(season.rainStart).to.be.equal(season.current - 1)
       const userRain = await this.silo.balanceOfSop(userAddress);
@@ -128,7 +128,7 @@ describe('Sop', function () {
     })
 
     it('tracks user plenty after update', async function () {
-      await this.silo.update(userAddress);
+      await this.silo.update(userAddress, this.beanMetapool);
       const userSop = await this.silo.balanceOfSop(userAddress);
       expect(userSop.lastRain).to.be.equal(3)
       expect(userSop.lastSop).to.be.equal(3)
@@ -185,7 +185,7 @@ describe('Sop', function () {
     })
 
     it('tracks user plenty after update', async function () {
-      await this.silo.update(userAddress);
+      await this.silo.update(userAddress, this.beanMetapool);
       const userSop = await this.silo.balanceOfSop(userAddress);
       expect(userSop.lastRain).to.be.equal(29)
       expect(userSop.lastSop).to.be.equal(29)

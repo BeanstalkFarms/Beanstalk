@@ -52,7 +52,7 @@ describe('Farm', function () {
       await this.bean.connect(user2).approve(this.silo.address, '100000000000');
       await this.bean.mint(userAddress, to6('10000'));
       await this.bean.mint(user2Address, to6('10000'));
-      await this.silo.update(userAddress);
+      await this.silo.mow(userAddress, this.beanMetapool);
 
       this.usdt = await ethers.getContractAt('IERC20', USDT)
       this.usdc = await ethers.getContractAt('IERC20', USDC)

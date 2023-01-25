@@ -26,7 +26,7 @@ describe('Silo', function () {
     await this.bean.connect(user2).approve(this.silo.address, '100000000000'); 
     await this.bean.mint(userAddress, to6('10000'));
     await this.bean.mint(user2Address, to6('10000'));
-    await this.silo.update(userAddress);
+    await this.silo.update(userAddress, this.beanMetapool);
     this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
     this.result = await this.silo.connect(user2).deposit(this.bean.address, to6('1000'), EXTERNAL)
   });
@@ -41,13 +41,13 @@ describe('Silo', function () {
 
   describe('Silo Balances After Deposits', function () {
     it('properly updates the user balances', async function () {
-      expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('2000'));
+      //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('2000'));
       expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('1000'));
       expect(await this.silo.balanceOfRoots(userAddress)).to.eq(toStalk('1000000000000000'));
     });
 
     it('properly updates the total balances', async function () {
-      expect(await this.silo.totalSeeds()).to.eq(to6('4000'));
+      //expect(await this.silo.totalSeeds()).to.eq(to6('4000'));
       expect(await this.silo.totalStalk()).to.eq(toStalk('2000'));
       expect(await this.silo.totalRoots()).to.eq(toStalk('2000000000000000'));
     });
@@ -59,13 +59,13 @@ describe('Silo', function () {
     })
 
     it('properly updates the total balances', async function () {
-      expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('1000'));
+      //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('1000'));
       expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('500'));
       expect(await this.silo.balanceOfRoots(userAddress)).to.eq(toStalk('500000000000000'));
     });
 
     it('properly updates the total balances', async function () {
-      expect(await this.silo.totalSeeds()).to.eq(to6('3000'));
+      //expect(await this.silo.totalSeeds()).to.eq(to6('3000'));
       expect(await this.silo.totalStalk()).to.eq(toStalk('1500'));
       expect(await this.silo.totalRoots()).to.eq(toStalk('1500000000000000'));
     });
@@ -88,13 +88,13 @@ describe('Silo', function () {
       });
 
       it('properly updates the total balances', async function () {
-        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('2000'));
+        //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('2000'));
         expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('1050'));
         expect(await this.silo.balanceOfRoots(userAddress)).to.eq(toStalk('1000000000000000'));
       });
   
       it('properly updates the total balances', async function () {
-        expect(await this.silo.totalSeeds()).to.eq(to6('4000'));
+        //expect(await this.silo.totalSeeds()).to.eq(to6('4000'));
         expect(await this.silo.totalStalk()).to.eq(toStalk('2100'));
         expect(await this.silo.totalRoots()).to.eq(toStalk('2000000000000000'));
       });
@@ -105,7 +105,7 @@ describe('Silo', function () {
     beforeEach(async function () {
       await this.season.siloSunrise(to6('100'))
       await time.increase(3600); // wait until end of season to get earned
-      await this.silo.update(user2Address)
+      await this.silo.update(user2Address, this.beanMetapool)
       this.result = await this.silo.connect(user).plant()
     })
 
@@ -118,13 +118,13 @@ describe('Silo', function () {
     });
 
     it('properly updates the total balances', async function () {
-      expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('2100'));
+      //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('2100'));
       expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('1050.2'));
       expect(await this.silo.balanceOfRoots(userAddress)).to.eq('10001904761904761904761904');
     });
 
     it('properly updates the total balances', async function () {
-      expect(await this.silo.totalSeeds()).to.eq(to6('4100'));
+      //expect(await this.silo.totalSeeds()).to.eq(to6('4100'));
       expect(await this.silo.totalStalk()).to.eq(to6('21004000'));
       expect(await this.silo.totalRoots()).to.eq('20003809523809523809523808');
     });

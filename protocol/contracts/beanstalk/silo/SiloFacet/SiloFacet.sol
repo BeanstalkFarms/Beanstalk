@@ -328,15 +328,6 @@ contract SiloFacet is TokenSilo {
 
     //////////////////////// UPDATE SILO ////////////////////////
 
-    /** 
-     * @notice DEPRECATED: Renamed to `mow()`.
-     * @dev See {SiloFacet-mow}.
-     */
-    //TODOSEEDS is this update function still used by somebody?
-    // function update(address account) external payable {
-    //     _mow(account);
-    // }
-
     /**
      * @notice Claim Grown Stalk for `account`.
      * @dev See {Silo-_mow}.
@@ -344,6 +335,10 @@ contract SiloFacet is TokenSilo {
     function mow(address account, address token) external payable {
         _mow(account, token);
     }
+
+    // function mowMultiple(address account, address token) external payable {
+        // _mow(account, token);
+    // }
 
     /** 
      * @notice Claim Earned Beans and their associated Stalk for 
