@@ -1,0 +1,16 @@
+.button {
+  @apply flex flex-row items-center;
+  @apply px-2 py-0.5 mb-1 rounded-md w-full;
+  @apply text-left text-gray-300 font-normal;
+
+  &.top {
+    @apply font-semibold;
+  }
+
+  &.active {
+    @apply bg-blue-500 text-white;
+  }
+  &:not(.active):hover {
+    @apply bg-white text-gray-100 bg-opacity-10;
+  }
+}

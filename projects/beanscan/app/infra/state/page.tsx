@@ -1,11 +1,12 @@
+"use client";
+
 import React, { useState } from 'react';
 import type { NextPage } from 'next'
-import CallsModule from '../components/CallsModule';
+import CallsModule from 'components/CallsModule';
 import { ethers } from 'ethers';
-import Sunrises from '../components/Sunrises';
-import FertQueue from '../components/FertQueue';
-import { Storage } from '../generated/Beanstalk'; 
-import Page from '../components/layout/Page';
+import Sunrises from 'components/Sunrises';
+import FertQueue from 'components/FertQueue';
+import { Storage } from 'generated/Beanstalk'; 
 
 const BEAN            = "0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab";
 const BEANCRV3        = "0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49";
@@ -18,18 +19,12 @@ export const localeNumber = (decimals: number, maxFractionDigits?: number) =>
 export const percentNumber = (decimals: number) =>
   (v: ethers.BigNumber) => `${(parseFloat(ethers.utils.formatUnits(v, decimals))*100).toFixed(4)}%`
 
-const COL_ITEM = "space-y-4 min-w-[300px]";
+const COL_ITEM = "space-y-4 w-full";
 
-const Home: NextPage = () => {
+const State: NextPage = () => {
   const [raw, setRaw] = useState(false);
-  // const rightHeader = (
-  //   <>
-  //     <label htmlFor="raw">Show raw values</label>
-  //     <input id="raw" type="checkbox" checked={raw} onChange={() => setRaw(!raw)} />
-  //   </>
-  // );
   return (
-    <>
+    <div className="space-y-4">
       <div className={COL_ITEM}>
         <CallsModule
           title="Sun"
@@ -40,9 +35,9 @@ const Home: NextPage = () => {
           ]}
           raw={raw}
         />
-        <Sunrises />
+        {/* <Sunrises /> */}
         <CallsModule
-          title="Owner"
+          title="Ownership"
           slots={[
             ['Owner', 'owner', (owner) => `${owner.substring(0,15)}...`],
           ]}
@@ -178,8 +173,8 @@ const Home: NextPage = () => {
           raw={raw}
         />
       </div>
-    </>
+    </div>
   )
 }
 
-export default Home
+export default State;

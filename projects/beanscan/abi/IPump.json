@@ -1,0 +1,599 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "n",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "name": "attach",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "well",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "readData",
+          "type": "bytes"
+        }
+      ],
+      "name": "read",
+      "outputs": [
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "reserves",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "name": "update",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "attach(uint256,bytes)": "b1c59779",
+    "read(address,bytes)": "d79f44eb",
+    "update(uint256[],bytes)": "497163ef"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.17+commit.8df45f5f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"n\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"attach\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"well\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"readData\",\"type\":\"bytes\"}],\"name\":\"read\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256[]\",\"name\":\"reserves\",\"type\":\"uint256[]\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"update\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Pumps are on-chain oracles that are updated upon each interaction with a {IWell}. When reading a Pump, always verify the Pump's functionality.\",\"kind\":\"dev\",\"methods\":{\"attach(uint256,bytes)\":{\"details\":\"Should be called by a Well during construction. See {Well-constructor}. `msg.sender` should be assumed to be the Well address.\",\"params\":{\"data\":\"Pump data provided on every call\",\"n\":\"The number of tokens in the Well\"}},\"read(address,bytes)\":{\"params\":{\"readData\":\"The data to be read by the Pump\",\"well\":\"The address of the Well\"},\"returns\":{\"data\":\"The data read from the Pump\"}},\"update(uint256[],bytes)\":{\"details\":\"Pumps are updated every time a user swaps, adds liquidity, or removes liquidity from a Well.\",\"params\":{\"data\":\"Pump data provided on every call\",\"reserves\":\"The previous reserves of the tokens in the Well.\"}}},\"title\":\"IPump defines the interface for a Pump.\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"attach(uint256,bytes)\":{\"notice\":\"Attaches the Pump to a Well.\"},\"read(address,bytes)\":{\"notice\":\"Reads Pump data related to an attached Well.\"},\"update(uint256[],bytes)\":{\"notice\":\"Updates the Pump with the given reserves.\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/interfaces/IPump.sol\":\"IPump\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":800},\"remappings\":[\":@openzeppelin/=node_modules/@openzeppelin/\",\":@prb/test/=lib/prb-math/lib/prb-test/src/\",\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":forge-std/=lib/forge-std/src/\",\":mocks/=mocks/\",\":oz/=lib/openzeppelin-contracts/contracts/\",\":ozu/=lib/openzeppelin-contracts-upgradeable/contracts/\",\":prb-math/=lib/prb-math/src/\",\":prb-test/=lib/prb-math/lib/prb-test/src/\",\":prb/math/=lib/prb-math/src/\",\":src/=src/\",\":tests/=tests/\",\":utils/=utils/\"]},\"sources\":{\"src/interfaces/IPump.sol\":{\"keccak256\":\"0x8238c0efdfe9a5343aaf859216f09c6c63c80cea78c9f2d8a68881bed32a3d53\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://c22bee986505f640a3d214db066803631a711afa5a3f28941bc6f2ddc73280cd\",\"dweb:/ipfs/QmZzFBSk3oeg92AMrum7WCaFh9anpce49SiNxawocRHEZi\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.17+commit.8df45f5f"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "n",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "attach"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "well",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes",
+              "name": "readData",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "read",
+          "outputs": [
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256[]",
+              "name": "reserves",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "update"
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {
+          "attach(uint256,bytes)": {
+            "details": "Should be called by a Well during construction. See {Well-constructor}. `msg.sender` should be assumed to be the Well address.",
+            "params": {
+              "data": "Pump data provided on every call",
+              "n": "The number of tokens in the Well"
+            }
+          },
+          "read(address,bytes)": {
+            "params": {
+              "readData": "The data to be read by the Pump",
+              "well": "The address of the Well"
+            },
+            "returns": {
+              "data": "The data read from the Pump"
+            }
+          },
+          "update(uint256[],bytes)": {
+            "details": "Pumps are updated every time a user swaps, adds liquidity, or removes liquidity from a Well.",
+            "params": {
+              "data": "Pump data provided on every call",
+              "reserves": "The previous reserves of the tokens in the Well."
+            }
+          }
+        },
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {
+          "attach(uint256,bytes)": {
+            "notice": "Attaches the Pump to a Well."
+          },
+          "read(address,bytes)": {
+            "notice": "Reads Pump data related to an attached Well."
+          },
+          "update(uint256[],bytes)": {
+            "notice": "Updates the Pump with the given reserves."
+          }
+        },
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        ":@openzeppelin/=node_modules/@openzeppelin/",
+        ":@prb/test/=lib/prb-math/lib/prb-test/src/",
+        ":ds-test/=lib/forge-std/lib/ds-test/src/",
+        ":forge-std/=lib/forge-std/src/",
+        ":mocks/=mocks/",
+        ":oz/=lib/openzeppelin-contracts/contracts/",
+        ":ozu/=lib/openzeppelin-contracts-upgradeable/contracts/",
+        ":prb-math/=lib/prb-math/src/",
+        ":prb-test/=lib/prb-math/lib/prb-test/src/",
+        ":prb/math/=lib/prb-math/src/",
+        ":src/=src/",
+        ":tests/=tests/",
+        ":utils/=utils/"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 800
+      },
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "compilationTarget": {
+        "src/interfaces/IPump.sol": "IPump"
+      },
+      "libraries": {}
+    },
+    "sources": {
+      "src/interfaces/IPump.sol": {
+        "keccak256": "0x8238c0efdfe9a5343aaf859216f09c6c63c80cea78c9f2d8a68881bed32a3d53",
+        "urls": [
+          "bzz-raw://c22bee986505f640a3d214db066803631a711afa5a3f28941bc6f2ddc73280cd",
+          "dweb:/ipfs/QmZzFBSk3oeg92AMrum7WCaFh9anpce49SiNxawocRHEZi"
+        ],
+        "license": "MIT"
+      }
+    },
+    "version": 1
+  },
+  "ast": {
+    "absolutePath": "src/interfaces/IPump.sol",
+    "id": 31297,
+    "exportedSymbols": {
+      "IPump": [
+        31296
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "42:1375:39",
+    "nodes": [
+      {
+        "id": 31266,
+        "nodeType": "PragmaDirective",
+        "src": "42:24:39",
+        "nodes": [],
+        "literals": [
+          "solidity",
+          "=",
+          "0.8",
+          ".17"
+        ]
+      },
+      {
+        "id": 31267,
+        "nodeType": "PragmaDirective",
+        "src": "67:33:39",
+        "nodes": [],
+        "literals": [
+          "experimental",
+          "ABIEncoderV2"
+        ]
+      },
+      {
+        "id": 31296,
+        "nodeType": "ContractDefinition",
+        "src": "320:1096:39",
+        "nodes": [
+          {
+            "id": 31276,
+            "nodeType": "FunctionDefinition",
+            "src": "650:54:39",
+            "nodes": [],
+            "documentation": {
+              "id": 31269,
+              "nodeType": "StructuredDocumentation",
+              "src": "343:302:39",
+              "text": " @notice Attaches the Pump to a Well.\n @param n The number of tokens in the Well\n @param data Pump data provided on every call\n @dev Should be called by a Well during construction. See {Well-constructor}.\n `msg.sender` should be assumed to be the Well address."
+            },
+            "functionSelector": "b1c59779",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "attach",
+            "nameLocation": "659:6:39",
+            "parameters": {
+              "id": 31274,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31271,
+                  "mutability": "mutable",
+                  "name": "n",
+                  "nameLocation": "671:1:39",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31276,
+                  "src": "666:6:39",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 31270,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "666:4:39",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31273,
+                  "mutability": "mutable",
+                  "name": "data",
+                  "nameLocation": "689:4:39",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31276,
+                  "src": "674:19:39",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes_calldata_ptr",
+                    "typeString": "bytes"
+                  },
+                  "typeName": {
+                    "id": 31272,
+                    "name": "bytes",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "674:5:39",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes_storage_ptr",
+                      "typeString": "bytes"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "665:29:39"
+            },
+            "returnParameters": {
+              "id": 31275,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "703:0:39"
+            },
+            "scope": 31296,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "id": 31285,
+            "nodeType": "FunctionDefinition",
+            "src": "1019:72:39",
+            "nodes": [],
+            "documentation": {
+              "id": 31277,
+              "nodeType": "StructuredDocumentation",
+              "src": "710:304:39",
+              "text": " @notice Updates the Pump with the given reserves.\n @param reserves The previous reserves of the tokens in the Well.\n @param data Pump data provided on every call\n @dev Pumps are updated every time a user swaps, adds liquidity, or\n removes liquidity from a Well."
+            },
+            "functionSelector": "497163ef",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "update",
+            "nameLocation": "1028:6:39",
+            "parameters": {
+              "id": 31283,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31280,
+                  "mutability": "mutable",
+                  "name": "reserves",
+                  "nameLocation": "1051:8:39",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31285,
+                  "src": "1035:24:39",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_uint256_$dyn_calldata_ptr",
+                    "typeString": "uint256[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 31278,
+                      "name": "uint",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "1035:4:39",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "id": 31279,
+                    "nodeType": "ArrayTypeName",
+                    "src": "1035:6:39",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                      "typeString": "uint256[]"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31282,
+                  "mutability": "mutable",
+                  "name": "data",
+                  "nameLocation": "1076:4:39",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31285,
+                  "src": "1061:19:39",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes_calldata_ptr",
+                    "typeString": "bytes"
+                  },
+                  "typeName": {
+                    "id": 31281,
+                    "name": "bytes",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1061:5:39",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes_storage_ptr",
+                      "typeString": "bytes"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1034:47:39"
+            },
+            "returnParameters": {
+              "id": 31284,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1090:0:39"
+            },
+            "scope": 31296,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "id": 31295,
+            "nodeType": "FunctionDefinition",
+            "src": "1319:95:39",
+            "nodes": [],
+            "documentation": {
+              "id": 31286,
+              "nodeType": "StructuredDocumentation",
+              "src": "1097:217:39",
+              "text": " @notice Reads Pump data related to an attached Well.\n @param well The address of the Well\n @param readData The data to be read by the Pump\n @return data The data read from the Pump"
+            },
+            "functionSelector": "d79f44eb",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "read",
+            "nameLocation": "1328:4:39",
+            "parameters": {
+              "id": 31291,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31288,
+                  "mutability": "mutable",
+                  "name": "well",
+                  "nameLocation": "1341:4:39",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31295,
+                  "src": "1333:12:39",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 31287,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1333:7:39",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31290,
+                  "mutability": "mutable",
+                  "name": "readData",
+                  "nameLocation": "1362:8:39",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31295,
+                  "src": "1347:23:39",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes_calldata_ptr",
+                    "typeString": "bytes"
+                  },
+                  "typeName": {
+                    "id": 31289,
+                    "name": "bytes",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1347:5:39",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes_storage_ptr",
+                      "typeString": "bytes"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1332:39:39"
+            },
+            "returnParameters": {
+              "id": 31294,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31293,
+                  "mutability": "mutable",
+                  "name": "data",
+                  "nameLocation": "1408:4:39",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31295,
+                  "src": "1395:17:39",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes_memory_ptr",
+                    "typeString": "bytes"
+                  },
+                  "typeName": {
+                    "id": 31292,
+                    "name": "bytes",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1395:5:39",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes_storage_ptr",
+                      "typeString": "bytes"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1394:19:39"
+            },
+            "scope": 31296,
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "IPump",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": {
+          "id": 31268,
+          "nodeType": "StructuredDocumentation",
+          "src": "102:217:39",
+          "text": " @title IPump defines the interface for a Pump.\n @dev\n Pumps are on-chain oracles that are updated upon each interaction with a {IWell}.\n When reading a Pump, always verify the Pump's functionality."
+        },
+        "fullyImplemented": false,
+        "linearizedBaseContracts": [
+          31296
+        ],
+        "name": "IPump",
+        "nameLocation": "330:5:39",
+        "scope": 31297,
+        "usedErrors": []
+      }
+    ],
+    "license": "MIT"
+  },
+  "id": 39
+}

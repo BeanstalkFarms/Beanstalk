@@ -101,8 +101,10 @@ const { chains, provider } = configureChains(
     jsonRpcBatchProvider({
       priority: 1,
       rpc: (_chain) => {
-        if (!TESTNET_RPC_ADDRESSES[_chain.id]) return null;
-        return { http: TESTNET_RPC_ADDRESSES[_chain.id] };
+        if (_chain.id === 1337 || _chain.id === 31337) {
+          return { http: 'http://localhost:8545' };
+        }
+        return null;
       },
     }),
     publicProvider({

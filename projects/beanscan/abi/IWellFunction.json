@@ -1,0 +1,781 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "reserves",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "name": "calcLpTokenSupply",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "lpTokenSupply",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "reserves",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "j",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "lpTokenSupply",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "name": "calcReserve",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "reserve",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "name",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "symbol",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "calcLpTokenSupply(uint256[],bytes)": "14c15fc0",
+    "calcReserve(uint256[],uint256,uint256,bytes)": "7f35e83d",
+    "name()": "06fdde03",
+    "symbol()": "95d89b41"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.17+commit.8df45f5f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256[]\",\"name\":\"reserves\",\"type\":\"uint256[]\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"calcLpTokenSupply\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"lpTokenSupply\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256[]\",\"name\":\"reserves\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"j\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"lpTokenSupply\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"calcReserve\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"reserve\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Well Functions can contain arbitrary logic, but should be deterministic  if expected to be used alongside a Pump. When interacing with a Well or Well Function, always verify that the Well Function is valid.\",\"kind\":\"dev\",\"methods\":{\"calcLpTokenSupply(uint256[],bytes)\":{\"params\":{\"data\":\"Well function data provided on every call\",\"reserves\":\"A list of token reserves\"},\"returns\":{\"lpTokenSupply\":\"The resulting supply of LP tokens\"}},\"calcReserve(uint256[],uint256,uint256,bytes)\":{\"params\":{\"data\":\"Well function data provided on every call\",\"j\":\"The index of the reserve to solve for\",\"lpTokenSupply\":\"The supply of LP tokens\",\"reserves\":\"A list of token reserves. The jth reserve will be ignored, but a placeholder must be provided.\"},\"returns\":{\"reserve\":\"The resulting reserve at the jth index\"}},\"name()\":{\"details\":\"Used in Well building.\"},\"symbol()\":{\"details\":\"Used in Well building.\"}},\"title\":\"IWellFunction\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"calcLpTokenSupply(uint256[],bytes)\":{\"notice\":\"Gets the LP token supply given a list of reserves.\"},\"calcReserve(uint256[],uint256,uint256,bytes)\":{\"notice\":\"Calculates the `j`th reserve given a list of `reserves` and `lpTokenSupply`.\"},\"name()\":{\"notice\":\"Returns the name of the Well function.\"},\"symbol()\":{\"notice\":\"Returns the symbol of the Well function.\"}},\"notice\":\"Defines a relationship between token reserves and LP token supply.\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/interfaces/IWellFunction.sol\":\"IWellFunction\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":800},\"remappings\":[\":@openzeppelin/=node_modules/@openzeppelin/\",\":@prb/test/=lib/prb-math/lib/prb-test/src/\",\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":forge-std/=lib/forge-std/src/\",\":mocks/=mocks/\",\":oz/=lib/openzeppelin-contracts/contracts/\",\":ozu/=lib/openzeppelin-contracts-upgradeable/contracts/\",\":prb-math/=lib/prb-math/src/\",\":prb-test/=lib/prb-math/lib/prb-test/src/\",\":prb/math/=lib/prb-math/src/\",\":src/=src/\",\":tests/=tests/\",\":utils/=utils/\"]},\"sources\":{\"src/interfaces/IWellFunction.sol\":{\"keccak256\":\"0xda522eb35d87dc3287793fbbee68edfe812373821bcfa1cbf8898dd40caaf1af\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://be1edb65e5ca9ffa56ae9346e4f2ff03a908cace83b08cdc03050d64cf02ef4a\",\"dweb:/ipfs/QmYsca6WHD3sTJMGEUQEY7RhHKZoVK6KZ3JG3KEgZaTeaS\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.17+commit.8df45f5f"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "uint256[]",
+              "name": "reserves",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "calcLpTokenSupply",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "lpTokenSupply",
+              "type": "uint256"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256[]",
+              "name": "reserves",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "uint256",
+              "name": "j",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "lpTokenSupply",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "calcReserve",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "reserve",
+              "type": "uint256"
+            }
+          ]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "name",
+          "outputs": [
+            {
+              "internalType": "string",
+              "name": "",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "symbol",
+          "outputs": [
+            {
+              "internalType": "string",
+              "name": "",
+              "type": "string"
+            }
+          ]
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {
+          "calcLpTokenSupply(uint256[],bytes)": {
+            "params": {
+              "data": "Well function data provided on every call",
+              "reserves": "A list of token reserves"
+            },
+            "returns": {
+              "lpTokenSupply": "The resulting supply of LP tokens"
+            }
+          },
+          "calcReserve(uint256[],uint256,uint256,bytes)": {
+            "params": {
+              "data": "Well function data provided on every call",
+              "j": "The index of the reserve to solve for",
+              "lpTokenSupply": "The supply of LP tokens",
+              "reserves": "A list of token reserves. The jth reserve will be ignored, but a placeholder must be provided."
+            },
+            "returns": {
+              "reserve": "The resulting reserve at the jth index"
+            }
+          },
+          "name()": {
+            "details": "Used in Well building."
+          },
+          "symbol()": {
+            "details": "Used in Well building."
+          }
+        },
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {
+          "calcLpTokenSupply(uint256[],bytes)": {
+            "notice": "Gets the LP token supply given a list of reserves."
+          },
+          "calcReserve(uint256[],uint256,uint256,bytes)": {
+            "notice": "Calculates the `j`th reserve given a list of `reserves` and `lpTokenSupply`."
+          },
+          "name()": {
+            "notice": "Returns the name of the Well function."
+          },
+          "symbol()": {
+            "notice": "Returns the symbol of the Well function."
+          }
+        },
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        ":@openzeppelin/=node_modules/@openzeppelin/",
+        ":@prb/test/=lib/prb-math/lib/prb-test/src/",
+        ":ds-test/=lib/forge-std/lib/ds-test/src/",
+        ":forge-std/=lib/forge-std/src/",
+        ":mocks/=mocks/",
+        ":oz/=lib/openzeppelin-contracts/contracts/",
+        ":ozu/=lib/openzeppelin-contracts-upgradeable/contracts/",
+        ":prb-math/=lib/prb-math/src/",
+        ":prb-test/=lib/prb-math/lib/prb-test/src/",
+        ":prb/math/=lib/prb-math/src/",
+        ":src/=src/",
+        ":tests/=tests/",
+        ":utils/=utils/"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 800
+      },
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "compilationTarget": {
+        "src/interfaces/IWellFunction.sol": "IWellFunction"
+      },
+      "libraries": {}
+    },
+    "sources": {
+      "src/interfaces/IWellFunction.sol": {
+        "keccak256": "0xda522eb35d87dc3287793fbbee68edfe812373821bcfa1cbf8898dd40caaf1af",
+        "urls": [
+          "bzz-raw://be1edb65e5ca9ffa56ae9346e4f2ff03a908cace83b08cdc03050d64cf02ef4a",
+          "dweb:/ipfs/QmYsca6WHD3sTJMGEUQEY7RhHKZoVK6KZ3JG3KEgZaTeaS"
+        ],
+        "license": "MIT"
+      }
+    },
+    "version": 1
+  },
+  "ast": {
+    "absolutePath": "src/interfaces/IWellFunction.sol",
+    "id": 31602,
+    "exportedSymbols": {
+      "IWellFunction": [
+        31601
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "42:1796:41",
+    "nodes": [
+      {
+        "id": 31560,
+        "nodeType": "PragmaDirective",
+        "src": "42:24:41",
+        "nodes": [],
+        "literals": [
+          "solidity",
+          "^",
+          "0.8",
+          ".17"
+        ]
+      },
+      {
+        "id": 31561,
+        "nodeType": "PragmaDirective",
+        "src": "67:33:41",
+        "nodes": [],
+        "literals": [
+          "experimental",
+          "ABIEncoderV2"
+        ]
+      },
+      {
+        "id": 31601,
+        "nodeType": "ContractDefinition",
+        "src": "433:1405:41",
+        "nodes": [
+          {
+            "id": 31577,
+            "nodeType": "FunctionDefinition",
+            "src": "918:181:41",
+            "nodes": [],
+            "documentation": {
+              "id": 31563,
+              "nodeType": "StructuredDocumentation",
+              "src": "463:450:41",
+              "text": " @notice Calculates the `j`th reserve given a list of `reserves` and `lpTokenSupply`.\n @param reserves A list of token reserves. The jth reserve will be ignored, but a placeholder must be provided.\n @param j The index of the reserve to solve for\n @param lpTokenSupply The supply of LP tokens\n @param data Well function data provided on every call\n @return reserve The resulting reserve at the jth index"
+            },
+            "functionSelector": "7f35e83d",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "calcReserve",
+            "nameLocation": "927:11:41",
+            "parameters": {
+              "id": 31573,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31566,
+                  "mutability": "mutable",
+                  "name": "reserves",
+                  "nameLocation": "965:8:41",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31577,
+                  "src": "948:25:41",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_uint256_$dyn_memory_ptr",
+                    "typeString": "uint256[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 31564,
+                      "name": "uint256",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "948:7:41",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "id": 31565,
+                    "nodeType": "ArrayTypeName",
+                    "src": "948:9:41",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                      "typeString": "uint256[]"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31568,
+                  "mutability": "mutable",
+                  "name": "j",
+                  "nameLocation": "991:1:41",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31577,
+                  "src": "983:9:41",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 31567,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "983:7:41",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31570,
+                  "mutability": "mutable",
+                  "name": "lpTokenSupply",
+                  "nameLocation": "1010:13:41",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31577,
+                  "src": "1002:21:41",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 31569,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1002:7:41",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31572,
+                  "mutability": "mutable",
+                  "name": "data",
+                  "nameLocation": "1048:4:41",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31577,
+                  "src": "1033:19:41",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes_calldata_ptr",
+                    "typeString": "bytes"
+                  },
+                  "typeName": {
+                    "id": 31571,
+                    "name": "bytes",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1033:5:41",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes_storage_ptr",
+                      "typeString": "bytes"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "938:120:41"
+            },
+            "returnParameters": {
+              "id": 31576,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31575,
+                  "mutability": "mutable",
+                  "name": "reserve",
+                  "nameLocation": "1090:7:41",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31577,
+                  "src": "1082:15:41",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 31574,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1082:7:41",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1081:17:41"
+            },
+            "scope": 31601,
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "id": 31588,
+            "nodeType": "FunctionDefinition",
+            "src": "1359:143:41",
+            "nodes": [],
+            "documentation": {
+              "id": 31578,
+              "nodeType": "StructuredDocumentation",
+              "src": "1105:249:41",
+              "text": " @notice Gets the LP token supply given a list of reserves.\n @param reserves A list of token reserves\n @param data Well function data provided on every call\n @return lpTokenSupply The resulting supply of LP tokens"
+            },
+            "functionSelector": "14c15fc0",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "calcLpTokenSupply",
+            "nameLocation": "1368:17:41",
+            "parameters": {
+              "id": 31584,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31581,
+                  "mutability": "mutable",
+                  "name": "reserves",
+                  "nameLocation": "1412:8:41",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31588,
+                  "src": "1395:25:41",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_uint256_$dyn_memory_ptr",
+                    "typeString": "uint256[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 31579,
+                      "name": "uint256",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "1395:7:41",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "id": 31580,
+                    "nodeType": "ArrayTypeName",
+                    "src": "1395:9:41",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                      "typeString": "uint256[]"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31583,
+                  "mutability": "mutable",
+                  "name": "data",
+                  "nameLocation": "1445:4:41",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31588,
+                  "src": "1430:19:41",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes_calldata_ptr",
+                    "typeString": "bytes"
+                  },
+                  "typeName": {
+                    "id": 31582,
+                    "name": "bytes",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1430:5:41",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes_storage_ptr",
+                      "typeString": "bytes"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1385:70:41"
+            },
+            "returnParameters": {
+              "id": 31587,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31586,
+                  "mutability": "mutable",
+                  "name": "lpTokenSupply",
+                  "nameLocation": "1487:13:41",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31588,
+                  "src": "1479:21:41",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 31585,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1479:7:41",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1478:23:41"
+            },
+            "scope": 31601,
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "id": 31594,
+            "nodeType": "FunctionDefinition",
+            "src": "1613:54:41",
+            "nodes": [],
+            "documentation": {
+              "id": 31589,
+              "nodeType": "StructuredDocumentation",
+              "src": "1508:100:41",
+              "text": " @notice Returns the name of the Well function.\n @dev Used in Well building."
+            },
+            "functionSelector": "06fdde03",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "name",
+            "nameLocation": "1622:4:41",
+            "parameters": {
+              "id": 31590,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1626:2:41"
+            },
+            "returnParameters": {
+              "id": 31593,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31592,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31594,
+                  "src": "1652:13:41",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_string_memory_ptr",
+                    "typeString": "string"
+                  },
+                  "typeName": {
+                    "id": 31591,
+                    "name": "string",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1652:6:41",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_string_storage_ptr",
+                      "typeString": "string"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1651:15:41"
+            },
+            "scope": 31601,
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "id": 31600,
+            "nodeType": "FunctionDefinition",
+            "src": "1780:56:41",
+            "nodes": [],
+            "documentation": {
+              "id": 31595,
+              "nodeType": "StructuredDocumentation",
+              "src": "1673:102:41",
+              "text": " @notice Returns the symbol of the Well function.\n @dev Used in Well building."
+            },
+            "functionSelector": "95d89b41",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "symbol",
+            "nameLocation": "1789:6:41",
+            "parameters": {
+              "id": 31596,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1795:2:41"
+            },
+            "returnParameters": {
+              "id": 31599,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31598,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31600,
+                  "src": "1821:13:41",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_string_memory_ptr",
+                    "typeString": "string"
+                  },
+                  "typeName": {
+                    "id": 31597,
+                    "name": "string",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1821:6:41",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_string_storage_ptr",
+                      "typeString": "string"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1820:15:41"
+            },
+            "scope": 31601,
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "IWellFunction",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": {
+          "id": 31562,
+          "nodeType": "StructuredDocumentation",
+          "src": "102:330:41",
+          "text": " @title IWellFunction\n @notice Defines a relationship between token reserves and LP token supply.\n @dev Well Functions can contain arbitrary logic, but should be deterministic \n if expected to be used alongside a Pump. When interacing with a Well or\n Well Function, always verify that the Well Function is valid."
+        },
+        "fullyImplemented": false,
+        "linearizedBaseContracts": [
+          31601
+        ],
+        "name": "IWellFunction",
+        "nameLocation": "443:13:41",
+        "scope": 31602,
+        "usedErrors": []
+      }
+    ],
+    "license": "MIT"
+  },
+  "id": 41
+}

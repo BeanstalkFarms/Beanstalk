@@ -1,14 +1,15 @@
+"use client";
+
 import { ethers } from "ethers";
 import { NextPage } from "next"
 import { useEffect, useState } from "react";
-import Page from "../components/layout/Page"
 import omit from 'lodash/omit'
-import Module from "../components/Module"
-import { Beanstalk__factory } from "../generated";
-import { TypedEvent } from '../generated/common';
-import contracts from "../lib/contracts"
-import { parseArgs } from "../lib/utils";
-import { chainId } from "../lib/provider";
+import Module from "../../../components/Module"
+import { Beanstalk__factory } from "../../../generated";
+import { TypedEvent } from '../../../generated/common';
+import contracts from "../../../lib/contracts"
+import { parseArgs } from "../../../lib/utils";
+import { chainId } from "../../../lib/provider";
 
 const activateListeners = (
   handler: (event: TypedEvent<any>
@@ -115,11 +116,10 @@ const Events : NextPage = () => {
   }, [on])
 
   return (
-    <Page rightHeader={
+    <div>
       <button onClick={on ? end : start}>
         {on ? 'Stop' : 'Start'} listening
       </button>
-    }>
       <div className="w-[800px] space-y-2">
         {evts.map((evt) => (
           <EventItem
@@ -128,7 +128,7 @@ const Events : NextPage = () => {
           />
         ))}
       </div>
-    </Page>
+    </div>
   )
 }
 

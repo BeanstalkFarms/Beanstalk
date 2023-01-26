@@ -12,13 +12,18 @@
   },
   "dependencies": {
     "@beanstalk/sdk": "workspace:*",
+    "@heroicons/react": "2.0.14",
     "@types/lodash": "^4.14.182",
+    "clsx": "1.2.1",
     "ethers": "5.7.2",
     "ethers-multicall": "^0.2.3",
     "lodash": "^4.17.21",
     "next": "latest",
     "react": "latest",
+    "react-data-grid": "7.0.0-beta.22",
     "react-dom": "latest",
+    "react-hook-form": "7.42.1",
+    "sass": "1.57.1",
     "swr": "2.0.1",
     "wagmi": "0.10.15"
   },

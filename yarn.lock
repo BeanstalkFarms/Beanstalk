@@ -4404,6 +4404,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@heroicons/react@npm:2.0.14":
+  version: 2.0.14
+  resolution: "@heroicons/react@npm:2.0.14"
+  peerDependencies:
+    react: ">= 16"
+  checksum: d1623865c04e2bedc1ae370ca0a305bb0c775c7db171e29d03afc3032598105b7e8c9290e7d6b34a5f334e2a2c92e8e2aac1c5e89d1ea1fb7073cce6e03a7f16
+  languageName: node
+  linkType: hard
+
 "@humanwhocodes/config-array@npm:^0.11.6":
   version: 0.11.7
   resolution: "@humanwhocodes/config-array@npm:0.11.7"
@@ -14907,12 +14916,14 @@ __metadata:
   resolution: "beanscan@workspace:projects/beanscan"
   dependencies:
     "@beanstalk/sdk": "workspace:*"
+    "@heroicons/react": 2.0.14
     "@typechain/ethers-v5": ^10.1.0
     "@types/lodash": ^4.14.182
     "@types/node": 18.0.0
     "@types/react": 18.0.14
     "@types/react-dom": 18.0.5
     autoprefixer: ^10.4.7
+    clsx: 1.2.1
     eslint: 8.18.0
     eslint-config-next: latest
     ethers: 5.7.2
@@ -14921,7 +14932,10 @@ __metadata:
     next: latest
     postcss: ^8.4.14
     react: latest
+    react-data-grid: 7.0.0-beta.22
     react-dom: latest
+    react-hook-form: 7.42.1
+    sass: 1.57.1
     swr: 2.0.1
     tailwindcss: ^3.1.4
     typechain: ^8.1.0
@@ -16310,7 +16324,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chokidar@npm:3.5.3, chokidar@npm:^3.0.2, chokidar@npm:^3.4.0, chokidar@npm:^3.4.1, chokidar@npm:^3.4.2, chokidar@npm:^3.5.2, chokidar@npm:^3.5.3":
+"chokidar@npm:3.5.3, chokidar@npm:>=3.0.0 <4.0.0, chokidar@npm:^3.0.2, chokidar@npm:^3.4.0, chokidar@npm:^3.4.1, chokidar@npm:^3.4.2, chokidar@npm:^3.5.2, chokidar@npm:^3.5.3":
   version: 3.5.3
   resolution: "chokidar@npm:3.5.3"
   dependencies:
@@ -16755,7 +16769,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"clsx@npm:^1.0.4, clsx@npm:^1.1.0, clsx@npm:^1.2.1":
+"clsx@npm:1.2.1, clsx@npm:^1.0.4, clsx@npm:^1.1.0, clsx@npm:^1.1.1, clsx@npm:^1.2.1":
   version: 1.2.1
   resolution: "clsx@npm:1.2.1"
   checksum: 30befca8019b2eb7dbad38cff6266cf543091dae2825c856a62a8ccf2c3ab9c2907c4d12b288b73101196767f66812365400a227581484a05f968b0307cfaf12
@@ -24678,6 +24692,13 @@ __metadata:
   version: 3.8.2
   resolution: "immutable@npm:3.8.2"
   checksum: 41909b386950ff84ca3cfca77c74cfc87d225a914e98e6c57996fa81a328da61a7c32216d6d5abad40f54747ffdc5c4b02b102e6ad1a504c1752efde8041f964
+  languageName: node
+  linkType: hard
+
+"immutable@npm:^4.0.0":
+  version: 4.2.2
+  resolution: "immutable@npm:4.2.2"
+  checksum: 4d6437ea9388fe8ceca7eed5c768cf438cda7fa14d2831b87b90aa00cc60d536964d107c255b8a2e5dbf4f44a0e1295afbb9d1f0a65fb4f57b936e71df601862
   languageName: node
   linkType: hard
 
@@ -34060,6 +34081,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-data-grid@npm:7.0.0-beta.22":
+  version: 7.0.0-beta.22
+  resolution: "react-data-grid@npm:7.0.0-beta.22"
+  dependencies:
+    clsx: ^1.1.1
+  peerDependencies:
+    react: ^18.0
+    react-dom: ^18.0
+  checksum: 2a99f83f8f98429ee36c33d5f4e163fe996df54fb4e2500971d576b39990fe6d2fbb143f389dc390b6604758197a8a56c49c8f8a46739e81169482b968049837
+  languageName: node
+  linkType: hard
+
 "react-docgen-typescript@npm:^2.1.1":
   version: 2.2.2
   resolution: "react-docgen-typescript@npm:2.2.2"
@@ -34119,6 +34152,15 @@ __metadata:
   version: 2.0.4
   resolution: "react-fast-compare@npm:2.0.4"
   checksum: 06046595f90a4e3e3a56f40a8078c00aa71bdb064ddb98343f577f546aa22e888831fd45f009c93b34707cc842b4c637737e956fd13d6f80607ee92fb9cf9a1c
+  languageName: node
+  linkType: hard
+
+"react-hook-form@npm:7.42.1":
+  version: 7.42.1
+  resolution: "react-hook-form@npm:7.42.1"
+  peerDependencies:
+    react: ^16.8.0 || ^17 || ^18
+  checksum: f0dcf5d7f6f90b4ba5efe58ce14b7adda6f2327c80c444df259c31d8bc785e823c9ec77c27a4f1db5bef70992235ae420acd190b1c767bec2c7fb8d11d639880
   languageName: node
   linkType: hard
 
@@ -35667,6 +35709,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"sass@npm:1.57.1":
+  version: 1.57.1
+  resolution: "sass@npm:1.57.1"
+  dependencies:
+    chokidar: ">=3.0.0 <4.0.0"
+    immutable: ^4.0.0
+    source-map-js: ">=0.6.2 <2.0.0"
+  bin:
+    sass: sass.js
+  checksum: 734a08781bcbe0e8defb2d54864e7012014ed3e68ba5fcb766189b002929019fc37b2f83a18d4be0b5f69ad77317c92396ce6112447ab47a194ed600ae1afb27
+  languageName: node
+  linkType: hard
+
 "saxes@npm:^6.0.0":
   version: 6.0.0
   resolution: "saxes@npm:6.0.0"
@@ -36473,7 +36528,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"source-map-js@npm:^1.0.2":
+"source-map-js@npm:>=0.6.2 <2.0.0, source-map-js@npm:^1.0.2":
   version: 1.0.2
   resolution: "source-map-js@npm:1.0.2"
   checksum: c049a7fc4deb9a7e9b481ae3d424cc793cb4845daa690bc5a05d428bf41bf231ced49b4cf0c9e77f9d42fdb3d20d6187619fc586605f5eabe995a316da8d377c
