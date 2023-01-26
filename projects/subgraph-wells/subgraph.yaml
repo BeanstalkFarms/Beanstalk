@@ -3,12 +3,31 @@ schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum/contract
-    name: Well
+    name: WellBuilder
     network: mainnet
     source:
       address: "0x0000000000000000000000000000000000000000"
-      abi: Well
+      abi: WellBuilder
       startBlock: 16200000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - WellBuilder
+      abis:
+        - name: WellBuilder
+          file: ./abis/WellBuilder.json
+      eventHandlers:
+        - event: BuildWell(address,address[],(address,bytes),(address,bytes))
+          handler: handleBuildWell
+      file: ./src/WellHandler.ts
+templates:
+  - kind: ethereum/contract
+    name: Well
+    network: mainnet
+    source:
+      abi: Well
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
