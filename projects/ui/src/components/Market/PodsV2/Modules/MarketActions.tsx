@@ -12,8 +12,6 @@ const tabSx = {
   },
 };
 
-export const MARKET_SLUGS = ['buy', 'sell'];
-
 const MarketActions: React.FC<{}> = () => {
   const location = useLocation();
   const action = useMemo(() => location.pathname.split('/')[2], [location.pathname]);

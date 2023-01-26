@@ -1,8 +1,8 @@
 ---
 name: RFC Template
 about: A template for publishing RFCs on the Beanstalk repo.
-title: 'RFC: To Do'
-labels: ''
+title: 'RFC: TODO'
+labels: ['📜 RFC', '⛓ Contracts']
 assignees: ''
 
 ---
