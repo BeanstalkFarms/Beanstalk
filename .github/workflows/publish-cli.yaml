@@ -1,17 +1,16 @@
-name: Continuous Integration - Protocol
-
+name: Publish CLI to NPM
 on:
-  pull_request:
-    types: [opened, synchronize]
+  push:
+    branches:
+      - master
     paths:
-      - 'protocol/**'
-
+      - 'projects/cli/package.json'
 jobs:
-  test:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Protocol Tests
+      - name: Checkout
         uses: actions/setup-node@v3
         with:
           node-version: '16'
@@ -20,11 +19,12 @@ jobs:
         uses: actions/cache@v3
         with:
           path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - name: Install Dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
-      - run: yarn generate
-        working-directory: protocol
-      - run: yarn test
-        working-directory: protocol
+      - name: Publish
+        run: yarn workspace @beanstalk/cli g:publish
+        env:
+          YARN_NPM_AUTH_TOKEN: ${{ secrets.YARN_NPM_AUTH_TOKEN }}
+          TOKEN_GITHUB: ${{ secrets.TOKEN_GITHUB }}
