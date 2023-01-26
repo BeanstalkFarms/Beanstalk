@@ -715,7 +715,7 @@ const Swap: FC<{}> = () => {
           success: 'Swap successful.'
         });
 
-        const txn = await values.swapOperation.execute(amountIn, values.settings.slippage / 100);
+        const txn = await values.swapOperation.execute(amountIn, values.settings.slippage);
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
