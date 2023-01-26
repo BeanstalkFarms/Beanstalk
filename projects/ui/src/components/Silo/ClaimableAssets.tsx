@@ -13,7 +13,6 @@ import {
   FormState,
 } from '../Common/Form';
 import { ZERO_BN } from '~/constants';
-import { FarmerBalances } from '~/state/farmer/balances';
 import FarmModeField from '../Common/Form/FarmModeField';
 import EmbeddedCard from '../Common/EmbeddedCard';
 import { BEAN } from '~/constants/tokens';
@@ -29,40 +28,36 @@ const uiDescriptions = {
 
 const ClaimableAssets: React.FC<{
   balances: Record<string, ClaimableBeanAssetFragment>;
-  farmerBalances: FarmerBalances;
-}> = ({ balances, farmerBalances }) => {
-  const { values, setFieldValue } = useFormikContext<
-    FormState & FarmWithClaimFormState
-  >();
+}> = ({ balances }) => {
+  const { values, setFieldValue } = useFormikContext<FormState & FarmWithClaimFormState>();
 
-  const { assetsWithBalance, allSelected, totalClaiming, disabled } =
-    useMemo(() => {
-      const _disabled = Object.values(balances).every((v) => v.amount.lte(0));
-      const _totalClaiming = Object.values(values.beansClaiming).reduce(
-        (prev, curr) => {
-          if (curr?.amount?.gt(0)) prev = prev.plus(curr.amount);
-          return prev;
-        },
-        ZERO_BN
-      );
-      const _assetsWithBalance = Object.entries(balances).reduce(
-        (prev, [k, v]) => {
-          if (v.amount?.gt(0)) prev[k] = v;
-          return prev;
-        },
-        {} as Record<string, ClaimableBeanAssetFragment>
-      );
-      const _allSelected = Object.keys(_assetsWithBalance).every(
-        (k) => values.beansClaiming[k]
-      );
+  const { assetsWithBalance, allSelected, totalClaiming, disabled } = useMemo(() => {
+    const _disabled = Object.values(balances).every((v) => v.amount.lte(0));
+    const _totalClaiming = Object.values(values.beansClaiming).reduce(
+      (prev, curr) => {
+        if (curr?.amount?.gt(0)) prev = prev.plus(curr.amount);
+        return prev;
+      },
+      ZERO_BN
+    );
+    const _assetsWithBalance = Object.entries(balances).reduce(
+      (prev, [k, v]) => {
+        if (v.amount?.gt(0)) prev[k] = v;
+        return prev;
+      },
+      {} as Record<string, ClaimableBeanAssetFragment>
+    );
+    const _allSelected = Object.keys(_assetsWithBalance).every(
+      (k) => values.beansClaiming[k]
+    );
 
-      return {
-        assetsWithBalance: _assetsWithBalance,
-        allSelected: _allSelected,
-        disabled: _disabled,
-        totalClaiming: _totalClaiming,
-      };
-    }, [balances, values.beansClaiming]);
+    return {
+      assetsWithBalance: _assetsWithBalance,
+      allSelected: _allSelected,
+      disabled: _disabled,
+      totalClaiming: _totalClaiming,
+    };
+  }, [balances, values.beansClaiming]);
 
   const surplus = useMemo(() => {
     const data = values.tokens[0] || undefined;
@@ -86,9 +81,6 @@ const ClaimableAssets: React.FC<{
     if (key in values.beansClaiming) {
       const copy = { ...values.beansClaiming };
       delete copy[key];
-      if (!Object.keys(copy).length) {
-        setFieldValue('destination', undefined);
-      }
       setFieldValue(FIELD_VALUE, copy);
     } else {
       setFieldValue(FIELD_VALUE, {
@@ -100,11 +92,8 @@ const ClaimableAssets: React.FC<{
 
   const handleToggleAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFieldValue(FIELD_VALUE, {
-      ...(e.target.checked ? assetsWithBalance : {}),
+      ...(e.target.checked ? assetsWithBalance : {})
     });
-    if (!e.target.checked) {
-      setFieldValue('destination', undefined);
-    }
   };
 
   return (

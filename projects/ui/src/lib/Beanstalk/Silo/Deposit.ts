@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js';
-import { Token } from '~/classes';
-import { FormState } from '~/components/Common/Form';
+import { BeanstalkSDK, Token } from '@beanstalk/sdk';
+import { Token as TokenOld } from '~/classes';
+import { FormState, FormStateNew } from '~/components/Common/Form';
 import { Action, ActionType } from '~/util/Actions';
 import { ZERO_BN } from '~/constants';
 
@@ -13,7 +14,7 @@ import { ZERO_BN } from '~/constants';
  * @param tokens Input Tokens to Deposit. Could be multiple Tokens.
  */
 export function deposit(
-  to: Token,
+  to: TokenOld,
   tokens: FormState['tokens'],
   amountToBDV: (amount: BigNumber) => BigNumber,
 ) {
@@ -80,4 +81,65 @@ export function deposit(
   });
 
   return summary;
+}
+
+export type DepositTxnSummary = {
+  amount: BigNumber;
+  bdv: BigNumber;
+  stalk: BigNumber;
+  seeds: BigNumber;
+  actions: Action[];
+}
+
+export async function getDepositTxnSummary(
+  sdk: BeanstalkSDK,
+  to: Token,
+  tokens: FormStateNew['tokens'],
+  getOldToken: (tk: Token) => TokenOld,
+): Promise<DepositTxnSummary> {
+  const to_old = getOldToken(to);
+
+  const summary = {
+    amount: to.fromHuman(0), //
+    bdv:    to.fromHuman(0), // The aggregate BDV to be Deposited.
+    stalk:  sdk.tokens.STALK.fromHuman(0), // The Stalk earned for the Deposit.
+    seeds:  sdk.tokens.SEEDS.fromHuman(0), // The Seeds earned for the Deposit.
+    actions: [] as Action[],
+  };
+
+  for (const token of tokens) {
+    const _amount = to.equals(token.token) ? token.amount : token.amountOut;
+    
+    if (_amount) {
+      const amount = to.fromHuman((_amount).toString());
+      const bdv = await sdk.bean.getBDV(to, amount);
+      summary.amount = summary.amount.add(amount);
+      summary.bdv = summary.bdv.add(bdv);
+
+      summary.stalk = summary.stalk.add(to.getStalk(bdv));
+
+      summary.seeds = summary.seeds.add(to.getSeeds(bdv));
+    }
+  }
+
+  // DEPOSIT and RECEIVE_REWARDS always come last
+  summary.actions.push({
+    type: ActionType.DEPOSIT,
+    amount: new BigNumber(summary.amount.toHuman()),
+    // from the perspective of the deposit, the token is "coming in".
+    token: to_old, 
+  });
+  summary.actions.push({
+    type: ActionType.UPDATE_SILO_REWARDS,
+    stalk: new BigNumber(summary.stalk.toHuman()),
+    seeds: new BigNumber(summary.seeds.toHuman()),
+  });
+
+  return {
+    amount: new BigNumber(summary.amount.toHuman()),
+    bdv:    new BigNumber(summary.bdv.toHuman()), // The aggregate BDV to be Deposited.
+    stalk:  new BigNumber(summary.stalk.toHuman()), // The Stalk earned for the Deposit.
+    seeds:  new BigNumber(summary.seeds.toHuman()), // The Seeds earned for the Deposit.
+    actions: [] as Action[],
+  };
 }

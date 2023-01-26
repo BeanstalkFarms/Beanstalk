@@ -11,6 +11,7 @@ import Deposits from './Deposits';
 import Withdrawals from './Withdrawals';
 import Transfer from './Transfer';
 import Convert from './Convert';
+import Deposit from './Deposit';
 import { Module, ModuleTabs, ModuleContent } from '~/components/Common/Module';
 
 /**
@@ -24,7 +25,6 @@ import { Module, ModuleTabs, ModuleContent } from '~/components/Common/Module';
  */
 import { FC } from '~/types';
 import { useSdkMiddleware } from '~/hooks/sdk';
-import Deposit3 from './Deposit3';
 
 const SLUGS = ['deposit', 'convert', 'transfer', 'withdraw', 'claim'];
 
@@ -36,7 +36,7 @@ const SiloActions : FC<{
   const [tab, handleChange] = useTabs(SLUGS, 'action');
   const hasClaimable = props.siloBalance?.claimable?.amount.gt(0);
 
-  const { getSdkToken, getSdkPool } = useSdkMiddleware();
+  const { getSdkToken } = useSdkMiddleware();
 
   return (
     <>
@@ -50,17 +50,11 @@ const SiloActions : FC<{
         </ModuleTabs>
         <ModuleContent>
           {tab === 0 ? (
-            <Deposit3
-              pool={getSdkPool(props.pool)}
-              token={getSdkToken(props.token)} // FIX ME
+            <Deposit
+              // this is a temporary solution until we migrate everything to the new SDK
+              token={getSdkToken(props.token)}
             />
           ) : null}
-          {/* {tab === 0 ? (
-            <Deposit 
-              pool={props.pool}
-              token={props.token}
-            />
-          ) : null} */}
           {tab === 1 ? (
             <Convert
               pool={props.pool}

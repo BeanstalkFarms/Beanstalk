@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { useMemo } from 'react';
+import { FarmFromMode } from '@beanstalk/sdk';
 import { ZERO_BN } from '~/constants';
 
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
@@ -7,6 +8,7 @@ import useFarmerFertilizer from './useFarmerFertilizer';
 import useFarmerField from './useFarmerField';
 import { ClaimableBeanAssetFragment } from '~/components/Common/Form';
 import useSdk from '../sdk';
+import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 
 export enum ClaimableBeanToken {
   BEAN = 'BEAN',
@@ -15,6 +17,17 @@ export enum ClaimableBeanToken {
 }
 
 const normalize = (v: BigNumber | undefined) => (v && v.gt(0) ? v : ZERO_BN);
+
+export const balanceFromToMode = (from: BalanceFrom) => {
+  switch (from) {
+    case BalanceFrom.EXTERNAL:
+      return FarmFromMode.EXTERNAL;
+    case BalanceFrom.INTERNAL:
+      return FarmFromMode.INTERNAL;
+    default:
+      return FarmFromMode.INTERNAL_EXTERNAL;
+  }
+};
 
 /**
  * @returns a map of claimable assets for the current farmer

@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 import { ERC20Token, NativeToken, BeanstalkToken, FarmToMode } from '@beanstalk/sdk';
 import { ERC20Token as ERC20TokenOld, NativeToken as NativeTokenOld } from '~/classes/Token';
-import { QuoteHandlerResult, QuoteHandlerResultNew } from '~/hooks/ledger/useQuote';
+import { QuoteHandlerResult } from '~/hooks/ledger/useQuote';
 import { BalanceFrom } from './BalanceFromRow';
 /**
  * 
@@ -55,7 +55,7 @@ export type FormTokenStateNew = (
   } 
   & {
     quoting?:   boolean;
-  } & Partial<QuoteHandlerResultNew>
+  } & Partial<QuoteHandlerResult>
 );
 // ---------------------------------------------------------
 
@@ -138,7 +138,7 @@ export type BalanceFromFragment = {
  *
  */
 export type FarmToModeFragment = {
-  destination?: FarmToMode;
+  destination: FarmToMode;
 };
 
 export type FarmWithClaimFormState = BalanceFromFragment &
