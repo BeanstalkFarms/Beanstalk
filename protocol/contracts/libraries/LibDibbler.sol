@@ -12,7 +12,6 @@ import "./LibSafeMath32.sol";
 import "./LibSafeMath128.sol";
 import "./LibPRBMath.sol";
 
-// import "forge-std/console.sol";
 
 
 /**
@@ -66,24 +65,11 @@ library LibDibbler {
      * FIXME: `amount` here is the same as `beans` in functions elsewhere in LibDibbler.
      */
 
-    function sow(uint256 amount, address account) internal returns (uint256) {
-        
-        // multiple equations are scaled up and down: 
+    function sow(uint256 amount, uint256 yield, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // the amount of soil changes as a function of the morning auction;
         // soil consumed increases as dutch auction passes
-
-        // The amount of soil to consume given the current block delta.
-        // pods = soilSown * (1+yield)/ precision 
-        //  we round down as yield() is rounded up. Pods are always capped to peas, 
-        // which avoids beanstalk from issuing too many pods.
-
-        // we multiply pods here by a factor of 1e8 for precision.
-        uint256 pods = amount.mulDiv(
-                yield().add(100e6).mul(PRECISION), 
-                100e6
-            );
 
         // t = 0   -> tons of soil
         // t = 300 -> however much soil to get fixed number of pods at current temperature
@@ -92,33 +78,29 @@ library LibDibbler {
         // soilSubtracted = s.f.soil * SoilSowed/(s.f.soil * ((1 + s.w.yield) /(1 + yield())))
         // soilSubtracted = Amt * (1 + yield())/(1+ s.w.yield) 
         // soilSubtracted = pods/(1+ s.w.yield) 
+        uint256 pods;
+        uint256 maxYield =  uint256(s.w.yield).add(100).mul(1e6);
         if (s.season.abovePeg) {
-            // we round up the amount 
-            amount = pods.mulDiv(
-                100,
-                uint256(s.w.yield).add(100).mul(PRECISION),
+            // amount sown is rounded up, because 
+            // 1: yield is rounded down.
+            // 2: pods are rounded down.
+            amount = amount.mulDiv(
+                yield.add(100e6),
+                maxYield,
                 LibPRBMath.Rounding.Up
             );
-            if (amount >= s.f.soil) {
-                pods = uint256(s.f.soil).mulDiv(
-                    uint256(s.w.yield).add(100),
-                    100
-                    );
-                s.f.soil = 0;
-            } else {
-                pods = pods.div(PRECISION);
-                s.f.soil = s.f.soil.sub(uint128(amount));
-            }
+            pods = amount.mulDiv(
+                maxYield,
+                100e6
+            );
         } else {
-            pods = pods.div(PRECISION);
-            s.f.soil = s.f.soil.sub(uint128(amount));
+            pods = amount.mulDiv(
+                yield.add(100e6),
+                100e6
+            );
         }
-        // if (amount >= s.f.soil) {
-        //     pods = peas();
-        //     s.f.soil = 0;
-        // } else {
-           
-        // }
+        (,s.f.soil) = s.f.soil.trySub(uint128(amount));
+
         return sowPlot(amount, pods, account);
     }
 
@@ -146,7 +128,6 @@ library LibDibbler {
     function yield() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 delta = block.number.sub(s.season.sunriseBlock);
-
         if (delta > 24) { // check most likely case first
             return uint256(s.w.yield).mul(TEMPERATURE_SCALE);
         }
@@ -260,8 +241,6 @@ library LibDibbler {
         );
     }
 
-    
-
     /**
      * @param beans The number of Beans to convert to Pods.
      * @param _yield The current temperature, measured to 1e2. 
@@ -274,10 +253,8 @@ library LibDibbler {
     {
         return beans.mulDiv(
             _yield.add(100),
-            100,
-            LibPRBMath.Rounding.Up // CHECK
+            100
         );
-        // return beans.add(beans.mul(_yield).div(100));
     }
 
     // / @dev peas are the potential remaining pods that can be issued within a season.

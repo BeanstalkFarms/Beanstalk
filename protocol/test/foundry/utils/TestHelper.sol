@@ -144,7 +144,6 @@ abstract contract TestHelper is Test {
         );
 
         console.log("Initialized diamond at", address(d));
-        console.log("Diamond cut successful.");
     }
 
     function deployMockTokens() public {
@@ -175,19 +174,19 @@ abstract contract TestHelper is Test {
     //////////////////////// Deploy  /////////////////////////
 
 
-    function _etch(string memory _file, address _address) internal returns (address) {
-        address codeaddress = deployCode(_file, abi.encode(""));
+    function _etch(string memory _file, address _address, bytes memory args) internal returns (address) {
+        address codeaddress = deployCode(_file, args);
         vm.etch(_address, at(codeaddress));
         return _address;
     }
 
     function _mockToken(string memory _tokenName, address _tokenAddress) internal returns (MockToken) {
-        return MockToken(_etch("MockToken.sol", _tokenAddress));
+        return MockToken(_etch("MockToken.sol", _tokenAddress,abi.encode(_tokenName,"")));
     }
 
     function _mockWeth() internal returns (MockWETH) {
         address payable weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-        return MockWETH(payable(_etch("MockWETH.sol", weth)));
+        return MockWETH(payable(_etch("MockWETH.sol", weth, abi.encode("Wrapped Ether","WETH"))));
     }
 
     function _mockPrice() internal returns (BeanstalkPrice p) {
@@ -202,17 +201,17 @@ abstract contract TestHelper is Test {
         MockToken crv3 = _mockToken("3CRV", THREE_CRV);
         MockToken(crv3).setDecimals(18);
         //
-        Mock3Curve pool3 = Mock3Curve(_etch("Mock3Curve.sol", C.curve3PoolAddress())); // 3Curve = 3Pool
+        Mock3Curve pool3 = Mock3Curve(_etch("Mock3Curve.sol", C.curve3PoolAddress(), abi.encode(""))); // 3Curve = 3Pool
         Mock3Curve(pool3).set_virtual_price(1);
 
         //
         address STABLE_FACTORY = 0xB9fC157394Af804a3578134A6585C0dc9cc990d4;
-        MockCurveFactory stableFactory = MockCurveFactory(_etch("MockCurveFactory.sol", STABLE_FACTORY));
+        MockCurveFactory stableFactory = MockCurveFactory(_etch("MockCurveFactory.sol", STABLE_FACTORY, abi.encode("")));
 
 
         // address CRYPTO_REGISTRY = 0x8F942C20D02bEfc377D41445793068908E2250D0;
         address CURVE_REGISTRY = 0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5;
-        _etch("MockToken.sol", CURVE_REGISTRY); // why this interface?
+        _etch("MockToken.sol", CURVE_REGISTRY, abi.encode("")); // why this interface?
         stableFactory.set_coins(C.curveMetapoolAddress(), [
             C.beanAddress(),
             THREE_CRV,
@@ -220,7 +219,7 @@ abstract contract TestHelper is Test {
             address(0)
         ]);
         //
-        MockCurveZap curveZap = MockCurveZap(_etch("MockCurveZap.sol", C.curveZapAddress()));
+        MockCurveZap curveZap = MockCurveZap(_etch("MockCurveZap.sol", C.curveZapAddress(), abi.encode("")));
         curveZap.approve();
     }
 
@@ -241,7 +240,7 @@ abstract contract TestHelper is Test {
 
     function _mockCurveMetapool() internal {
         address THREE_CRV = address(C.threeCrv());
-        MockMeta3Curve p = MockMeta3Curve(_etch("MockMeta3Curve.sol", C.curveMetapoolAddress()));
+        MockMeta3Curve p = MockMeta3Curve(_etch("MockMeta3Curve.sol", C.curveMetapoolAddress(), abi.encode("")));
         p.init(C.beanAddress(), THREE_CRV, C.curve3PoolAddress());
         p.set_A_precise(1000);
         p.set_virtual_price(1 wei);
@@ -262,7 +261,6 @@ abstract contract TestHelper is Test {
         returns (IDiamondCut.FacetCut memory cut) 
     {
         bytes4[] memory functionSelectors = _generateSelectors(_facetName);
-        //console.log("FacetCut: %s @ %s (%s selectors)", _facetName, _facetAddress, functionSelectors.length);
         cut = IDiamondCut.FacetCut({
             facetAddress: _facetAddress,
             action: IDiamondCut.FacetCutAction.Add,

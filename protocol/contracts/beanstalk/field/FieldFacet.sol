@@ -48,25 +48,26 @@ contract FieldFacet is ReentrancyGuard {
         uint256 minSoil,
         LibTransfer.From mode
     ) public payable returns (uint256) {
-        uint256 sowAmount = totalSoil();
+        (uint256 sowAmount, uint256 _yield) = totalSoilAndYield();
+        // uint256 sowAmount = totalSoil();
         require(
             sowAmount >= minSoil && amount >= minSoil,
             "Field: Sowing below min or 0 pods."
         );
         require(
-            yield() >= minWeather,
+            _yield >= minWeather,
             "Field: Sowing below min weather."
         );
         if (amount < sowAmount) sowAmount = amount; 
-        return _sow(sowAmount, mode);
+        return _sow(sowAmount, mode, _yield);
     }
 
-    function _sow(uint256 amount, LibTransfer.From mode)
+    function _sow(uint256 amount, LibTransfer.From mode, uint256 _yield)
         internal
         returns (uint256 pods)
     {
         amount = LibTransfer.burnToken(C.bean(), amount, msg.sender, mode);
-        pods = LibDibbler.sow(amount, msg.sender);
+        pods = LibDibbler.sow(amount, _yield, msg.sender);
         s.f.beanSown = s.f.beanSown + uint128(amount); // safeMath not needed
     }
 
@@ -159,11 +160,29 @@ contract FieldFacet is ReentrancyGuard {
         // totalAbovePegSoil * temp = s.f.soil * s.w.yield 
         // totalAbovePegSoil = s.f.soil*s.w.yield/temp 
         ///@dev need to cast s.w.yield to an uint256 due to overflow.
-        // we round up here as yield() is rounded down.
         return uint256(s.f.soil).mulDiv(
             uint256(s.w.yield).add(100).mul(1e6),
             yield().add(100e6)
         );
+    }
+
+    /// @dev gets both the yield and soil, since totalSoil calls yield(),
+    /// saving a calculation when above peg.
+    function totalSoilAndYield() internal view returns (uint256,uint256) {
+        uint256 _yield = yield();
+        if (!s.season.abovePeg) {
+            return (uint256(s.f.soil),_yield);
+        }
+        // uint256 _yield = yield().add(100e6); 
+        // return uint256(s.f.soil).mulDiv(100e6,_yield, LibPRBMath.Rounding.Up);
+        // totalAbovePegSoil * temp = s.f.soil * s.w.yield 
+        // totalAbovePegSoil = s.f.soil*s.w.yield/temp 
+        ///@dev need to cast s.w.yield to an uint256 due to overflow.
+        // we round up here as yield() is rounded down.
+        return (uint256(s.f.soil).mulDiv(
+            uint256(s.w.yield).add(100).mul(1e6),
+            _yield.add(100e6)
+            ), _yield);
     }
 
     /// @dev yield has precision level 1e6 (1% = 1e6)
