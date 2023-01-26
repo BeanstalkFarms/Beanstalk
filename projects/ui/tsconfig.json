@@ -28,8 +28,7 @@
     "downlevelIteration": true,
     "incremental": true,
     "paths": {
-      "~/*": ["./src/*"],
-      "@beanstalk/sdk": ["../sdk/src/*"]
+      "~/*": ["./src/*"]
     },
   },
   "include": [

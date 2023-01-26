@@ -17,6 +17,7 @@ import FarmModeField from '../Common/Form/FarmModeField';
 import EmbeddedCard from '../Common/EmbeddedCard';
 import { BEAN } from '~/constants/tokens';
 import { balanceFromLabels } from '../Common/Form/BalanceFromRow';
+import useSdk from '~/hooks/sdk';
 
 const FIELD_VALUE = 'beansClaiming' as const;
 
@@ -29,6 +30,7 @@ const uiDescriptions = {
 const ClaimableAssets: React.FC<{
   balances: Record<string, ClaimableBeanAssetFragment>;
 }> = ({ balances }) => {
+  const sdk = useSdk();
   const { values, setFieldValue } = useFormikContext<FormState & FarmWithClaimFormState>();
 
   const { assetsWithBalance, allSelected, totalClaiming, disabled } = useMemo(() => {
@@ -174,7 +176,7 @@ const ClaimableAssets: React.FC<{
               <Typography>
                 Send remaining{' '}
                 <Typography component="span" color="primary.main">
-                  {displayFullBN(surplus, 2)} BEAN{' '}
+                  {displayFullBN(surplus, surplus?.lt(0.01) ? sdk.tokens.BEAN.decimals : sdk.tokens.BEAN.displayDecimals)} BEAN{' '}
                 </Typography>
                 to..
               </Typography>
