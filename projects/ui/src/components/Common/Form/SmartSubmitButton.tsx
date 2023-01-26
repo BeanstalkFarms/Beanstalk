@@ -12,10 +12,10 @@ import { useGetERC20Contract } from '~/hooks/ledger/useContract';
 import Token from '~/classes/Token';
 import { parseError, trimAddress } from '~/util';
 import { BEANSTALK_ADDRESSES, BEANSTALK_FERTILIZER_ADDRESSES } from '~/constants/addresses';
-import { CHAIN_INFO, SupportedChainId, MAX_UINT256 } from '~/constants';
+import { CHAIN_INFO, MAX_UINT256, SupportedChainId } from '~/constants';
 import { StyledDialog, StyledDialogActions, StyledDialogContent, StyledDialogTitle } from '../Dialog';
 import TransactionToast from '../TxnToast';
-import { FormState, FormTokenState } from '.';
+import { FormState, FormTokenState, FormTokenStateNew } from '.';
 import WalletButton from '../Connection/WalletButton';
 import Row from '~/components/Common/Row';
 import useChainId from '~/hooks/chain/useChainId';
@@ -27,6 +27,7 @@ import NetworkButton from '~/components/Common/Connection/NetworkButton';
  *   form state, it changes every time an input value changes.
  */
 import { FC } from '~/types';
+import { getNewToOldToken } from '~/hooks/sdk';
 
 const CONTRACT_NAMES : { [address: string] : string } = {
   [BEANSTALK_ADDRESSES[SupportedChainId.MAINNET]]: 'Beanstalk',
@@ -43,7 +44,7 @@ const SmartSubmitButton : FC<{
    * The tokens (and respective values) currently tracked in the form.
    * Pass an empty list if no tokens need to be approved for this txn.
    */
-  tokens: FormTokenState[];
+  tokens: (FormTokenState | FormTokenStateNew)[];
   /**
    * auto = the module assumes the user wants to max out their allowance.
    * manual = show a modal to let the user decide their allowance.
@@ -72,7 +73,10 @@ const SmartSubmitButton : FC<{
 
   // Convert the current `FormTokenState[]` into more convenient forms,
   // and find the next token that we need to seek approval for.
-  const selectedTokens : Token[] = useMemo(() => tokens?.map((elem) => elem.token), [tokens]);
+  const selectedTokens : Token[] = useMemo(() => tokens?.map((elem) => {
+      if (elem.token instanceof Token) return elem.token;
+      return getNewToOldToken(elem.token);
+    }), [tokens]);
   const [allowances, refetchAllowances] = useAllowances(
     contract?.address,
     selectedTokens,

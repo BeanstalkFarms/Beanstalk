@@ -1,7 +1,7 @@
 import { Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import React from 'react';
-import Token from '~/classes/Token';
+import { Token } from '@beanstalk/sdk';
 import SelectionCard, {
   SelectionCardProps,
 } from '~/components/Common/Card/SelectionCard';

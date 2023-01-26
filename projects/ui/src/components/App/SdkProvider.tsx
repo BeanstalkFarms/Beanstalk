@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import useChainId from '~/hooks/chain/useChainId';
 import { SupportedChainId, TESTNET_RPC_ADDRESSES } from '~/constants';
-import { BEAN, ETH, PODS, SPROUTS } from '~/constants/tokens';
+import { BEAN, BEAN_CRV3_LP, CRV3, DAI, ETH, PODS, SPROUTS, UNRIPE_BEAN, UNRIPE_BEAN_CRV3, USDC, USDT, WETH } from '~/constants/tokens';
 
 const useBeanstalkSdkContext = () => {
   const { data: signer } = useSigner();
@@ -35,10 +35,21 @@ const useBeanstalkSdkContext = () => {
       provider: _provider,
     });
     // set metadata
-    _sdk.tokens.BEAN.setMetadata({ logo: BEAN[1].logo });
     _sdk.tokens.ETH.setMetadata({ logo: ETH[1].logo });
+    _sdk.tokens.WETH.setMetadata({ logo: WETH[1].logo });
+
+    _sdk.tokens.BEAN.setMetadata({ logo: BEAN[1].logo });
+    _sdk.tokens.BEAN_CRV3_LP.setMetadata({ logo: BEAN_CRV3_LP[1].logo });
+    _sdk.tokens.UNRIPE_BEAN.setMetadata({ logo: UNRIPE_BEAN[1].logo });
+    _sdk.tokens.UNRIPE_BEAN_CRV3.setMetadata({ logo: UNRIPE_BEAN_CRV3[1].logo });
+
     _sdk.tokens.SPROUTS.setMetadata({ logo: SPROUTS.logo });
     _sdk.tokens.PODS.setMetadata({ logo: PODS.logo });
+    
+    _sdk.tokens.DAI.setMetadata({ logo: DAI[1].logo });
+    _sdk.tokens.USDC.setMetadata({ logo: USDC[1].logo });
+    _sdk.tokens.USDT.setMetadata({ logo: USDT[1].logo });
+    _sdk.tokens.CRV3.setMetadata({ logo: CRV3[1].logo });
 
     return _sdk;
   }, [chainId, signer]);
