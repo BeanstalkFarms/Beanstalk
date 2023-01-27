@@ -1,3 +1,18 @@
+type Token @entity {
+  id: ID!
+  name: String!
+  symbol: String!
+  decimals: Int!
+}
+
 type Well @entity {
   id: Bytes!
+  tokens: [Token!]!
+  wellFunction: Bytes!
+  pumps: [Pump!]!
+  auger: Bytes!
+}
+
+type Pump @entity {
+  id: ID!
 }

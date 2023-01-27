@@ -51,12 +51,18 @@
                     }
                 ],
                 "indexed": false,
-                "internalType": "struct Call",
-                "name": "pump",
-                "type": "tuple"
+                "internalType": "struct Call[]",
+                "name": "pumps",
+                "type": "tuple[]"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "auger",
+                "type": "address"
             }
         ],
-        "name": "BuildWell",
+        "name": "BoreWell",
         "type": "event"
     },
     {
@@ -96,12 +102,17 @@
                         "type": "bytes"
                     }
                 ],
-                "internalType": "struct Call",
-                "name": "pump",
-                "type": "tuple"
+                "internalType": "struct Call[]",
+                "name": "pumps",
+                "type": "tuple[]"
+            },
+            {
+                "internalType": "contract IAuger",
+                "name": "auger",
+                "type": "address"
             }
         ],
-        "name": "buildWell",
+        "name": "boreWell",
         "outputs": [
             {
                 "internalType": "address",
@@ -109,7 +120,7 @@
                 "type": "address"
             }
         ],
-        "stateMutability": "payable",
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
