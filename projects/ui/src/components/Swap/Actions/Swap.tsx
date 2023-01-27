@@ -23,7 +23,7 @@ import FarmModeField from '~/components/Common/Form/FarmModeField';
 import Token, { ERC20Token, NativeToken } from '~/classes/Token';
 import { Beanstalk } from '~/generated/index';
 import { ZERO_BN } from '~/constants';
-import { BEAN, CRV3, CRV3_UNDERLYING, DAI, ETH, USDC, USDT, WETH } from '~/constants/tokens';
+import { BEAN, CRV3, DAI, ETH, USDC, USDT, WETH } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import useTokenMap from '~/hooks/chain/useTokenMap';
@@ -67,15 +67,6 @@ type DirectionalQuoteHandler = (
   swapOperation: SwapOperation
 ) => QuoteHandler;
 
-enum Pathway {
-  TRANSFER,   // 0
-  ETH_WETH,   // 1
-  BEAN_CRV3,  // 2
-  BEAN_ETH,   // 3
-  BEAN_WETH,  // 4; make this BEAN_TRICRYPTO_UNDERLYING
-  BEAN_CRV3_UNDERLYING, // 5
-}
-
 const QUOTE_SETTINGS = {
   ignoreSameToken: false
 };
@@ -87,19 +78,15 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
   beanstalk: Beanstalk;
   handleQuote: DirectionalQuoteHandler;
   tokenList: (ERC20Token | NativeToken)[];
-  getPathway: (tokenIn: Token, tokenOut: Token) => Pathway | false;
   defaultValues: SwapFormValues;
 }> = ({
-  //
   values,
   setFieldValue,
   handleQuote,
   isSubmitting,
-  //
   balances,
   beanstalk,
   tokenList,
-  getPathway,
   defaultValues,
   submitForm
 }) => {
@@ -107,20 +94,17 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
   const Eth = useChainConstant(ETH);
   const { status } = useConnect();
   const account = useAccount();
+  const sdk = useContext<BeanstalkSDK>(SDKContext);
   
   /// Derived values
-  // Inputs
   const stateIn   = values.tokensIn[0];
   const tokenIn   = stateIn.token;
   const modeIn    = values.modeIn;
   const amountIn  = stateIn.amount;
-  // Outputs
   const stateOut  = values.tokenOut;
   const tokenOut  = stateOut.token;
   const modeOut   = values.modeOut;
   const amountOut = stateOut.amount;
-  // Other
-  const sdk = useContext<BeanstalkSDK>(SDKContext);
 
   const tokensMatch = tokenIn === tokenOut;
   const noBalancesFound = useMemo(() => Object.keys(balances).length === 0, [balances]);
@@ -136,7 +120,7 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
     } 
     return [_balanceIn, _balanceIn, _balanceIn?.total || ZERO_BN] as const;
   }, [balances, modeIn, tokenIn.address, tokensMatch]);
-  const pathway   = getPathway(tokenIn, tokenOut);
+
   const noBalance = !(balanceInMax?.gt(0));
   const expectedFromMode = balanceIn
     ? optimizeFromMode(
@@ -146,6 +130,7 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
       balanceIn
     )
     : FarmFromMode.INTERNAL;
+
   const shouldApprove = tokensMatch 
     /// If matching tokens, only approve if input token is using EXTERNAL balances.
     ? modeIn === FarmFromMode.EXTERNAL
@@ -168,7 +153,8 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
     return sdk.swap.buildSwap(sdkTokenIn, sdkTokenOut, account!, farmFrom, farmTo);
   }, [sdk.tokens, sdk.swap, account]);
 
-  const optimizedFromMode = useMemo(() => (balanceIn
+  const optimizedFromMode = useMemo(() => (
+    balanceIn
       ? optimizeFromMode(
           /// Manually set a maximum of `total` to prevent
           /// throwing INTERNAL_EXTERNAL_TOLERANT error.
@@ -307,7 +293,7 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
     }
   }, [noBalancesFound, handleReverse, handleSetDefault, setInitialModes]);
 
-   const handleTokenSelectSubmit = useCallback((_tokens: Set<Token>) => {
+  const handleTokenSelectSubmit = useCallback((_tokens: Set<Token>) => {
     if (tokenSelect === 'tokenOut') {
       const newTokenOut = Array.from(_tokens)[0];
       setFieldValue('tokenOut', {
@@ -337,9 +323,6 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
     quotingIn
     || quotingOut
   );
-  const pathwayCheck = (
-    pathway !== false
-  );
   const ethModeCheck = (
     /// If ETH is selected as an output, the only possible destination is EXTERNAL.
     tokenOut === Eth
@@ -361,8 +344,7 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
       : true
   );
   const isValid = (
-    pathwayCheck
-    && ethModeCheck
+    ethModeCheck
     && amountsCheck
     && diffModeCheck
     && enoughBalanceCheck
@@ -417,7 +399,7 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
             }
             disabled={
               quotingIn
-              || !pathwayCheck
+              // || !pathwayCheck
             }
             quote={
               quotingOut
@@ -465,7 +447,7 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
               /// user has no balance of the input.
               || noBalance
               /// No way to quote for this pathway
-              || !pathwayCheck
+              // || !pathwayCheck
             }
             quote={
               quotingIn
@@ -494,11 +476,6 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
             >
               Switch &rarr;
             </Link>
-          </Alert>
-        ) : null}
-        {pathwayCheck === false ? (
-          <Alert variant="standard" color="warning" icon={<WarningIcon />}>
-            Swapping from {tokenIn.symbol} to {tokenOut.symbol} is currently unsupported.
           </Alert>
         ) : null}
         {/**
@@ -605,14 +582,6 @@ const SUPPORTED_TOKENS = [
 ];
 
 /**
- * Ensure that both `_tokenIn` and `_tokenOut` are in `_pair`, regardless of order.
- */
-const isPair = (_tokenIn : Token, _tokenOut : Token, _pair : [Token, Token]) => {
-  const s = new Set(_pair);
-  return s.has(_tokenIn) && s.has(_tokenOut);
-};
-
-/**
  * SWAP
  * Implementation notes
  * 
@@ -661,11 +630,8 @@ const Swap: FC<{}> = () => {
   /// Tokens
   const getChainToken = useGetChainToken();
   const Eth           = getChainToken(ETH);
-  const Weth          = getChainToken(WETH);
   const Bean          = getChainToken(BEAN);
-  const Crv3          = getChainToken(CRV3);
-  const crv3Underlying = useMemo(() => new Set(CRV3_UNDERLYING.map(getChainToken)), [getChainToken]);
-
+  
   /// Token List
   const tokenMap      = useTokenMap<ERC20Token | NativeToken>(SUPPORTED_TOKENS);
   const tokenList     = useMemo(() => Object.values(tokenMap), [tokenMap]);
@@ -692,27 +658,16 @@ const Swap: FC<{}> = () => {
       settings: {
         slippage: 0.1,
       },
-      swapOperation: sdk.swap.buildSwap(sdk.tokens.ETH, sdk.tokens.BEAN, account!, FarmFromMode.EXTERNAL, FarmToMode.EXTERNAL)
+      swapOperation: sdk.swap.buildSwap(
+        sdk.tokens.ETH,
+        sdk.tokens.BEAN,
+        account!,
+        FarmFromMode.EXTERNAL,
+        FarmToMode.EXTERNAL
+      )
     }), [Bean, Eth, account, sdk.swap, sdk.tokens]);
 
   /// Handlers
-
-  const getPathway = useCallback((
-    _tokenIn: Token,
-    _tokenOut: Token,
-  ) => {
-    if (_tokenIn === _tokenOut) return Pathway.TRANSFER;
-    if (isPair(_tokenIn, _tokenOut, [Eth, Weth]))   return Pathway.ETH_WETH;
-    if (isPair(_tokenIn, _tokenOut, [Bean, Crv3]))  return Pathway.BEAN_CRV3;
-    if (isPair(_tokenIn, _tokenOut, [Bean, Eth]))   return Pathway.BEAN_ETH;
-    if (isPair(_tokenIn, _tokenOut, [Bean, Weth]))  return Pathway.BEAN_WETH;
-    if (
-      (_tokenIn === Bean && crv3Underlying.has(_tokenOut as any))
-      || (_tokenOut === Bean && crv3Underlying.has(_tokenIn as any))
-    ) return Pathway.BEAN_CRV3_UNDERLYING;
-    return false;
-  }, [Bean, Crv3, Eth, Weth, crv3Underlying]);
-
   const handleQuote = useCallback<DirectionalQuoteHandler>(
     (direction, swapOperation) => async (__tokenIn, _amountIn, __tokenOut) => {
       console.debug('[handleQuoteWithSdk] ', {
@@ -724,9 +679,9 @@ const Swap: FC<{}> = () => {
 
       const forward: Boolean = direction === 'forward';
 
-      const amountIn = forward ? 
-        ethers.BigNumber.from(toStringBaseUnitBN(_amountIn, swapOperation.tokenIn.decimals)) 
-      : ethers.BigNumber.from(toStringBaseUnitBN(_amountIn, swapOperation.tokenOut.decimals));
+      const amountIn = forward
+        ? ethers.BigNumber.from(toStringBaseUnitBN(_amountIn, swapOperation.tokenIn.decimals)) 
+        : ethers.BigNumber.from(toStringBaseUnitBN(_amountIn, swapOperation.tokenOut.decimals));
 
       const estimate = forward ? await swapOperation.estimate(amountIn) : await swapOperation.estimateReversed(amountIn);
 
@@ -760,7 +715,7 @@ const Swap: FC<{}> = () => {
           success: 'Swap successful.'
         });
 
-        const txn = await values.swapOperation.execute(amountIn, values.settings.slippage / 100);
+        const txn = await values.swapOperation.execute(amountIn, values.settings.slippage);
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
@@ -802,7 +757,6 @@ const Swap: FC<{}> = () => {
             tokenList={tokenList}
             defaultValues={initialValues}
             handleQuote={handleQuote}
-            getPathway={getPathway}
             {...formikProps}
           />
         </>
