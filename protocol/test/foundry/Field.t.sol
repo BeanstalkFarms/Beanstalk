@@ -87,7 +87,7 @@ contract FieldTest is FieldFacet, TestHelper {
     assertEq(field.harvestableIndex(), 0);
   }
 
-  
+  // sow soil from internal balances
   function testSowSomeSoilFromInternal() public {
     uint256 beanBalanceBefore = C.bean().balanceOf(brean);
     uint256 totalBeanSupplyBefore = C.bean().totalSupply();
@@ -104,6 +104,7 @@ contract FieldTest is FieldFacet, TestHelper {
     assertEq(field.harvestableIndex(), 0);
   }
 
+  // sow soil from internal tolerant mode
   function testSowSomeSoilFromInternalTolerant() public {
     uint256 beanBalanceBefore = C.bean().balanceOf(brean);
     uint256 totalBeanSupplyBefore = C.bean().totalSupply();
@@ -122,7 +123,7 @@ contract FieldTest is FieldFacet, TestHelper {
     assertEq(field.harvestableIndex(), 0);
   }
 
-
+  // sowing with min
   function testSowMin() public {
     uint256 beanBalanceBefore = C.bean().balanceOf(brean);
     uint256 totalBeanSupplyBefore = C.bean().totalSupply();
@@ -141,6 +142,7 @@ contract FieldTest is FieldFacet, TestHelper {
     assertEq(field.harvestableIndex(), 0);
   }
 
+  // sow min w/enough soil
   function testSowMinWithEnoughSoil() public {
     uint256 beanBalanceBefore = C.bean().balanceOf(brean);
     uint256 totalBeanSupplyBefore = C.bean().totalSupply();
@@ -159,6 +161,7 @@ contract FieldTest is FieldFacet, TestHelper {
     assertEq(field.harvestableIndex(), 0);
   }
 
+  // sowing from 2 users
   function testSowFrom2Users() public {
     uint256 beanBalanceBefore = C.bean().balanceOf(brean);
     uint256 beanBalanceBefore2 = C.bean().balanceOf(siloChad);
@@ -182,6 +185,7 @@ contract FieldTest is FieldFacet, TestHelper {
     assertEq(field.harvestableIndex(), 0);
   }
 
+  // checking next sow time
   function testComplexDPDMoreThan1Soil() public {
     // Does not set nextSowTime if Soil > 1;
     season.setSoilE(3e6);
@@ -223,6 +227,7 @@ contract FieldTest is FieldFacet, TestHelper {
 
   }
 
+  // reverts if the usser does not own the flot
   function testCannotHarvestUnownedPlot() public {
     _beforeEachHarvest();
     field.incrementTotalHarvestableE(101e6);
@@ -233,6 +238,7 @@ contract FieldTest is FieldFacet, TestHelper {
     field.harvest(harvestPlot,LibTransfer.To.EXTERNAL);
   }
 
+  // reverts if the plot is unharvestable
   function testCannotHarvestUnharvestablePlot() public {
     _beforeEachHarvest();
     uint256[] memory harvestPlot = new uint[](1);
@@ -242,6 +248,7 @@ contract FieldTest is FieldFacet, TestHelper {
     field.harvest(harvestPlot,LibTransfer.To.EXTERNAL);
   }
 
+  // entire plot
   function testHarvestEntirePlot() public {
     uint256 beanBalanceBefore = C.bean().balanceOf(brean);
     uint256 totalBeanSupplyBefore = C.bean().totalSupply();
@@ -265,7 +272,8 @@ contract FieldTest is FieldFacet, TestHelper {
     assertEq(field.podIndex(), 202e6);
 
   }
-  
+
+  // partial plot
   function testHarvestPartialPlot() public {
     uint256 beanBalanceBefore = C.bean().balanceOf(brean);
     uint256 totalBeanSupplyBefore = C.bean().totalSupply();
@@ -289,7 +297,8 @@ contract FieldTest is FieldFacet, TestHelper {
     assertEq(field.totalHarvested(), 50e6);
     assertEq(field.podIndex(), 202e6);
   }
-
+  
+  // harvest with plot listing (removes listing)
   function testHarvestEntirePlotWithListing() public {
     uint256 beanBalanceBefore = C.bean().balanceOf(brean);
     uint256 totalBeanSupplyBefore = C.bean().totalSupply();
@@ -362,6 +371,9 @@ contract FieldTest is FieldFacet, TestHelper {
   }
   
   // various sowing at different dutch auctions + different soil amount
+  // @FIXME: way to fuzz test this while keeping state?
+  // soil sown should be larger than starting soil
+  // pods issued should be the same maximum
   function testPeasAbovePeg() public {
     _beforeEachMorningAuction();
     uint256 _block = 1;
@@ -442,6 +454,9 @@ contract FieldTest is FieldFacet, TestHelper {
     vm.stopPrank();
   }
 
+  // same test as above, but below peg
+  // soil sown should be equal to starting soil
+  // pods issued should be less than maximum
   function testPeasBelowPeg() public prank(brean) {
     _beforeEachMorningAuctionBelowPeg();
     uint256 _block = 1;
@@ -535,8 +550,8 @@ contract FieldTest is FieldFacet, TestHelper {
     AmtPodsGained = field.sowWithMin(amount, 1e6, amount, LibTransfer.From.EXTERNAL);
     totalSoilSown = totalSoilSown + amount;
     totalPodsMinted = totalPodsMinted + AmtPodsGained;
-    /// @dev due to rounding precision, the soil used may +/- 1 of true amount
-    /// we accept this error as we cap the total pods minted given all soil is sown
+    /// @dev due to rounding precision as totalsoil is scaled up,
+    ///  and does not represent the amount of soil removed
     assertApproxEqAbs(LastTotalSoil - field.totalSoil(), amount, 1);
     console.log("Current Yield:", field.yield());
     console.log("TotalSoil Start of Block:",LastTotalSoil);
@@ -573,13 +588,11 @@ contract FieldTest is FieldFacet, TestHelper {
     assertEq(field.totalUnharvestable(),totalPodsMinted, "TotalUnharvestable doesn't equal maxPeas."); //.0001% accuracy
     assertGt(totalSoilSown,100e6, "Total soil sown is less than inital soil issued."); // check the amt of soil sown at the end of the season is greater than the start soil
   }
+
   // check that the Soil decreases over 25 blocks, then stays stagent
   // when beanstalk is above peg, the soil issued is now: 
   // soil = s.f.soil * (1+ s.w.yield)/(1+ yield())
-  // thus, soil should always be greater/ equal to s.f.soil
-  // soil is rounded down 
-  // temperature is rounded up  
-  // 
+  // soil should always be greater/ equal to s.f.soil
   function testSoilDecrementsOverDutchAbovePeg() public {
     _beforeEachMorningAuction();
     uint256 startingSoil = 100e6;
@@ -603,7 +616,9 @@ contract FieldTest is FieldFacet, TestHelper {
       }
     }
   }
-  //sowing all with variable soil, weather, and delta
+  // sowing all with variable soil, weather, and delta
+  // pods issued should always be equal to maxPods (peas)
+  // soil/bean used should always be greater/equal to soil issued. 
   function testSowAllMorningAuctionAbovePeg(uint256 soil,uint32 _weather,uint256 delta) public {
     soil = bound(soil,1e6,100e6);
     _weather = uint32(bound(_weather,1,69420));
@@ -626,6 +641,9 @@ contract FieldTest is FieldFacet, TestHelper {
     assertEq(field.totalUnharvestable(), maxPeas, "Unharvestable pods does not Equal Expected.");
   }
 
+  // sowing all with variable soil, weather, and delta
+  // pods issued should always be lower than maxPods (peas)
+  // soil/bean used should always be equal to soil issued. 
   function testSowAllMorningAuctionBelowPeg(uint256 soil,uint32 _weather,uint256 delta) public {
     soil = bound(soil,1e6,100e6);
     _weather = uint32(bound(_weather,1,69420));

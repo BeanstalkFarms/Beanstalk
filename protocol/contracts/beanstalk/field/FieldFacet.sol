@@ -49,7 +49,6 @@ contract FieldFacet is ReentrancyGuard {
         LibTransfer.From mode
     ) public payable returns (uint256) {
         (uint256 sowAmount, uint256 _yield) = totalSoilAndYield();
-        // uint256 sowAmount = totalSoil();
         require(
             sowAmount >= minSoil && amount >= minSoil,
             "Field: Sowing below min or 0 pods."
@@ -74,7 +73,6 @@ contract FieldFacet is ReentrancyGuard {
     /**
      * Harvest
      **/
-
     function harvest(uint256[] calldata plots, LibTransfer.To mode)
         external
         payable
@@ -150,39 +148,35 @@ contract FieldFacet is ReentrancyGuard {
         return s.a[account].field.plots[plotId];
     }
 
-    function totalSoil() public view returns (uint256) {
-
-        if (!s.season.abovePeg) {
-            return uint256(s.f.soil);
-        }
-        // uint256 _yield = yield().add(100e6); 
-        // return uint256(s.f.soil).mulDiv(100e6,_yield, LibPRBMath.Rounding.Up);
-        // totalAbovePegSoil * temp = s.f.soil * s.w.yield 
-        // totalAbovePegSoil = s.f.soil*s.w.yield/temp 
-        ///@dev need to cast s.w.yield to an uint256 due to overflow.
-        return uint256(s.f.soil).mulDiv(
-            uint256(s.w.yield).add(100).mul(1e6),
-            yield().add(100e6)
-        );
-    }
-
     /// @dev gets both the yield and soil, since totalSoil calls yield(),
-    /// saving a calculation when above peg.
-    function totalSoilAndYield() internal view returns (uint256,uint256) {
+    /// saving a calculation when sowing.
+    function totalSoilAndYield() private view returns (uint256,uint256) {
         uint256 _yield = yield();
         if (!s.season.abovePeg) {
             return (uint256(s.f.soil),_yield);
         }
-        // uint256 _yield = yield().add(100e6); 
-        // return uint256(s.f.soil).mulDiv(100e6,_yield, LibPRBMath.Rounding.Up);
-        // totalAbovePegSoil * temp = s.f.soil * s.w.yield 
-        // totalAbovePegSoil = s.f.soil*s.w.yield/temp 
-        ///@dev need to cast s.w.yield to an uint256 due to overflow.
-        // we round up here as yield() is rounded down.
-        return (uint256(s.f.soil).mulDiv(
-            uint256(s.w.yield).add(100).mul(1e6),
-            _yield.add(100e6)
-            ), _yield);
+        return (LibDibbler.scaleSoilUp(
+            uint256(s.f.soil),
+            uint256(s.w.yield),
+            _yield
+        ),_yield);
+    }
+
+    /// @dev
+    // soilAbovePeg * yield = soil * maxYield = pods (when above peg)
+    // soilAbovePeg = soil * maxYield/yield
+    ///@dev need to cast s.w.yield to an uint256 due prevent overflow.
+    function totalSoil() external view returns (uint256) {
+
+        if (!s.season.abovePeg) {
+            return uint256(s.f.soil);
+        }
+
+        return LibDibbler.scaleSoilUp(
+            uint256(s.f.soil),
+            uint256(s.w.yield),
+            yield()
+        );
     }
 
     /// @dev yield has precision level 1e6 (1% = 1e6)

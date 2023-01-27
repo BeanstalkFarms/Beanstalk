@@ -65,10 +65,11 @@ contract FundraiserFacet is ReentrancyGuard {
 
         // Calculate the number of Pods to Sow.
         // Fundraisers bypass Morning Auction behavior and Soil requirements.
-        uint256 pods = LibDibbler.beansToPods(amount, s.w.yield); // yield measured to 1e2;
-
-        // FIXME: tests pass when `pods` was accidentally set to `amount`
-        return LibDibbler.sowPlot(amount, pods, msg.sender);
+        uint256 pods = LibDibbler.beansToPods(
+            amount, 
+            uint256(s.w.yield).mul(1e6)
+        ); // yield measured to 1e8;
+        return LibDibbler.sowNoSoil(amount, pods, msg.sender);
     }
 
     function completeFundraiser(uint32 id) internal {
