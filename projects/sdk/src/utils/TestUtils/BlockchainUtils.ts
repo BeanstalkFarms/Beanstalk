@@ -5,6 +5,7 @@ import { TokenSiloBalance } from "src/lib/silo";
 import { TokenValue } from "src/TokenValue";
 import * as addr from "./addresses";
 import { logSiloBalance } from "./log";
+import chalk from "chalk";
 
 export class BlockchainUtils {
   sdk: BeanstalkSDK;
@@ -87,6 +88,10 @@ export class BlockchainUtils {
 
   async mine() {
     await this.sdk.provider.send("evm_mine", []); // Just mines to the next block
+  }
+
+  async increaseTime(time: number) {
+    await this.sdk.provider.send("evm_increaseTime", [time]);
   }
 
   async impersonate(account: string) {
@@ -183,6 +188,111 @@ export class BlockchainUtils {
       amount.toBlockchain(), // bdv
       _currentSeason || season + 100
     );
+  }
+
+  /** stolen from cli/src/commands/setPrice */
+  async setPrice(beanLiquidityAmount: number, crv3liquidityAmout: number) {
+    const BALANCE_SLOT = 3;
+    const PREV_BALANCE_SLOT = 5;
+    const POOL_ADDRESS = this.sdk.pools.BEAN_CRV3.address;
+
+    const [currentBean, currentCrv3] = await this.getPoolBalance(BALANCE_SLOT, POOL_ADDRESS);
+    console.log(`Current Balances: ${currentBean.toHuman()} ${currentCrv3.toHuman()}`);
+
+    const [beanInput, crv3Input] = [beanLiquidityAmount, crv3liquidityAmout];
+    console.log(beanInput, crv3Input);
+
+    const newBeanAmount = (beanInput ? beanInput : 20) * 1_000_000;
+    const newCrv3Amount = (crv3Input ? crv3Input : beanInput ? beanInput : 20) * 1_000_000;
+
+    const newBean = this.sdk.tokens.BEAN.amount(newBeanAmount);
+    const newCrv3 = this.sdk.tokens.CRV3.amount(newCrv3Amount);
+
+    ////// Set the new balance
+    console.log(`New Balances: ${newBean.toHuman()} ${newCrv3.toHuman()}`);
+    // update the array tracking balances
+    await this.setPoolBalance(POOL_ADDRESS, BALANCE_SLOT, newBean, newCrv3);
+    // actually give the pool the ERC20's
+    await this.setBEANBalance(POOL_ADDRESS, newBean);
+    await this.setCRV3Balance(POOL_ADDRESS, newCrv3);
+
+    // Curve also keeps track of the previous balance, so we just copy the existing current to old.
+    await this.setPoolBalance(POOL_ADDRESS, PREV_BALANCE_SLOT, currentBean, currentCrv3);
+  }
+  async getPoolBalance(slot: any, address: string) {
+    const beanLocation = ethers.utils.solidityKeccak256(["uint256"], [slot]);
+    const crv3Location = this.addOne(beanLocation);
+  
+    const t1 = await this.sdk.provider.getStorageAt(address, beanLocation);
+    const beanAmount = TokenValue.fromBlockchain(t1, this.sdk.tokens.BEAN.decimals);
+  
+    const t2 = await this.sdk.provider.getStorageAt(address, crv3Location);
+    const crv3Amount = TokenValue.fromBlockchain(t2, this.sdk.tokens.CRV3.decimals);
+  
+    return [beanAmount, crv3Amount];
+  }
+  async setPoolBalance(address: string, slot: number, beanBalance: TokenValue, crv3Balance: TokenValue) {
+    const beanLocation = ethers.utils.solidityKeccak256(["uint256"], [slot]);
+    const crv3Location = this.addOne(beanLocation);
+  
+    // Set BEAN balance
+    await this.setStorageAt(address, beanLocation, this.toBytes32(beanBalance.toBigNumber()).toString());
+    // Set 3CRV balance
+    await this.setStorageAt(address, crv3Location, this.toBytes32(crv3Balance.toBigNumber()).toString());
+  }
+  private addOne(kek: ReturnType<typeof ethers.utils.solidityKeccak256>) {
+    let b = ethers.BigNumber.from(kek);
+    b = b.add(1);
+    return b.toHexString();
+  }
+
+  /** stolen from cli/src/commands/sunrise */
+  async sunrise(_force?: boolean) {
+    const force = _force || true;
+    const localSeason = await this.sdk.contracts.beanstalk.season();
+    const seasonTime = await this.sdk.contracts.beanstalk.seasonTime();
+    const diff = seasonTime - localSeason;
+  
+    if (force) {
+      if (diff <= 0) {
+        await this.fastForward();
+      }
+    } else if (localSeason === seasonTime) {
+      console.log(`No need, ${chalk.bold.yellowBright(localSeason)} is the current season.`);
+      return;
+    }
+  
+    await this.callSunrise();
+  
+    if (diff > 1) {
+      console.log(`You are still behind by ${diff - 1} seasons. May need to call it again.`);
+    }
+  };
+  async callSunrise() {
+    try {
+      const res = await this.sdk.contracts.beanstalk.sunrise();
+      await res.wait();
+      const season = await this.sdk.contracts.beanstalk.season();
+      console.log(`${chalk.bold.greenBright("sunrise()")} called. New season is ${chalk.bold.yellowBright(season)}`);
+    } catch (err: any) {
+      console.log(`sunrise() call failed: ${err.reason}`);
+    }
+  }  
+  private async fastForward() {
+    console.log("Fast forwarding time to next season...");
+    try {
+      const block = await this.sdk.provider.send("eth_getBlockByNumber", ["latest", false]);
+      const blockTs = parseInt(block.timestamp, 16);
+      const blockDate = new Date(blockTs * 1000);
+      const secondsTillNextHour = (3600000 - (blockDate.getTime() % 3600000)) / 1000;
+      await this.increaseTime(secondsTillNextHour);
+      await this.mine();
+      await this.increaseTime(12);
+      await this.mine();
+    } catch (err: any) {
+      console.log(`Fast forwarding time failed`);
+      console.log(err);
+    }
   }
 
   ethersError(e: any) {
