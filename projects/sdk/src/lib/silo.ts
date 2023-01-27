@@ -17,6 +17,7 @@ import { assert } from "src/utils";
 import { DepositBuilder } from "./silo/DepositBuilder";
 import { DepositOperation } from "./silo/DepositOperation";
 import { Withdraw } from "./silo/Withdraw";
+import { Claim } from "./silo/Claim";
 
 /**
  * A Crate is an `amount` of a token Deposited or
@@ -82,6 +83,7 @@ export class Silo {
   static sdk: BeanstalkSDK;
   private depositBuilder: DepositBuilder;
   withdraw: Withdraw;
+  claim: Claim;
   // 1 Seed grows 1 / 10_000 Stalk per Season.
   // 1/10_000 = 1E-4
   // FIXME
@@ -91,6 +93,7 @@ export class Silo {
     Silo.sdk = sdk;
     this.depositBuilder = new DepositBuilder(sdk);
     this.withdraw = new Withdraw(sdk);
+    this.claim = new Claim(sdk);
   }
 
   //////////////////////// UTILITIES ////////////////////////
