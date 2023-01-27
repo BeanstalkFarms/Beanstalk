@@ -85,12 +85,11 @@ describe("Workflow: Claim and Do X", () => {
     expect(farmBalance.eq(depositValue)).toBe(true);
   });
 
-  it("should claim and deposit all + some in silo", async () => {
-    const balancesBefore = await sdk.silo
-      .getBalance(sdk.tokens.BEAN, account, { source: DataSource.LEDGER });
+  it("should claim and deposit all in silo", async () => {
+    const balancesBefore = await sdk.silo.getBalance(sdk.tokens.BEAN, account, { source: DataSource.LEDGER });
 
     expect(balancesBefore.claimable.crates.length).toBeGreaterThan(0);
-    expect(balancesBefore.withdrawn.crates[0].amount.eq(depositValue)).toBe(true);
+    expect(balancesBefore.claimable.crates[0].amount.eq(depositValue)).toBe(true);
 
     work.add(new sdk.farm.actions.ClaimWithdrawals(
       sdk.tokens.BEAN.address,
@@ -113,12 +112,100 @@ describe("Workflow: Claim and Do X", () => {
       .then(() => work.execute(sdk.tokens.BEAN.fromHuman(0), { slippage: 0.1 }))
       .then((r) => r.wait());
     
-    const balancesAfter = await sdk.silo
-      .getBalance(sdk.tokens.BEAN, account, { source: DataSource.LEDGER });
+    const balancesAfter = await sdk.silo.getBalance(sdk.tokens.BEAN, account, { source: DataSource.LEDGER });
     
     expect(balancesAfter.claimable.crates.length).toEqual(0);
     expect(balancesAfter.deposited.crates.length).toBeGreaterThan(0);
     expect(balancesAfter.deposited.crates[0].amount.eq(depositValue)).toBe(true);
+  })
+
+  it("should claim and deposit all + some in silo", async ()  => {
+    const balancesBefore = await sdk.silo.getBalance(sdk.tokens.BEAN, account, { source: DataSource.LEDGER });
+
+    expect(balancesBefore.claimable.crates.length).toBeGreaterThan(0);
+    expect(balancesBefore.claimable.crates[0].amount.eq(depositValue)).toBe(true);
+
+    work.add(new sdk.farm.actions.ClaimWithdrawals(
+      sdk.tokens.BEAN.address,
+      crates.map((c) => c.season.toString()),
+      FarmToMode.INTERNAL
+    ));
+
+    const deposit = sdk.silo.buildDeposit(sdk.tokens.BEAN, account);
+    deposit.setInputToken(sdk.tokens.BEAN);
+    deposit.fromMode = FarmFromMode.INTERNAL_TOLERANT;
+    await deposit.estimate(depositValue);
+
+    const totalAmount = depositValue.add(1_000);
+
+    work.add(createLocalOnlyStep("pre-deposit", totalAmount), { onlyLocal: true });
+    work.add([...deposit.workflow.generators]);
+
+    await work
+      .estimate(sdk.tokens.BEAN.fromHuman(0))
+      .then(() => sdk.tokens.BEAN.approveBeanstalk(depositValue))
+      .then((r) => r.wait())
+      .then(() => work.execute(sdk.tokens.BEAN.fromHuman(0), { slippage: 0.1 }))
+      .then((r) => r.wait());
+  
+    const balancesAfter = await sdk.silo.getBalance(sdk.tokens.BEAN, account, { source: DataSource.LEDGER });
+    
+    expect(balancesAfter.claimable.crates.length).toEqual(0);
+    expect(balancesAfter.deposited.crates.length).toBeGreaterThan(0);
+    expect(balancesAfter.deposited.crates[0].amount.eq(totalAmount)).toBe(true);
+  })
+
+  it("should claim and deposit half + some -> transfer surplus to EOA", async () => {
+    const siloBalancesBefore = await sdk.silo.getBalance(sdk.tokens.BEAN, account, { source: DataSource.LEDGER });
+    const accBalancesBefore = await getTokenBalances(sdk, account, sdk.tokens.BEAN);
+
+    expect(siloBalancesBefore.claimable.crates.length).toBeGreaterThan(0);
+    expect(siloBalancesBefore.claimable.crates[0].amount.eq(depositValue)).toBe(true);
+
+    work.add(new sdk.farm.actions.ClaimWithdrawals(
+      sdk.tokens.BEAN.address,
+      crates.map((c) => c.season.toString()),
+      FarmToMode.INTERNAL
+    ));
+    
+    const totalAmount = depositValue.div(2); // 500
+    work.add(createLocalOnlyStep("pre-transfer", totalAmount), { onlyLocal: true });
+    work.add(new sdk.farm.actions.TransferToken(
+      sdk.tokens.BEAN.address,
+      account,
+      FarmFromMode.INTERNAL,
+      FarmToMode.EXTERNAL
+    ));
+
+    const deposit = sdk.silo.buildDeposit(sdk.tokens.BEAN, account);
+    deposit.setInputToken(sdk.tokens.BEAN);
+    deposit.fromMode = FarmFromMode.INTERNAL_TOLERANT;
+    await deposit.estimate(depositValue);
+
+    work.add(createLocalOnlyStep("pre-deposit", totalAmount), { onlyLocal: true });
+    work.add([...deposit.workflow.generators]);
+
+    await work
+      .estimate(sdk.tokens.BEAN.fromHuman(0))
+      .then(() => sdk.tokens.BEAN.approveBeanstalk(depositValue))
+      .then((r) => r.wait())
+      .then(() => work.execute(sdk.tokens.BEAN.fromHuman(0), { slippage: 0.1 }))
+      .then((r) => r.wait());
+  
+    const siloBalancesAfter = await sdk.silo.getBalance(sdk.tokens.BEAN, account, { source: DataSource.LEDGER });
+    
+    expect(siloBalancesAfter.claimable.crates.length).toEqual(0);
+    expect(siloBalancesAfter.deposited.crates.length).toBeGreaterThan(0);
+    expect(siloBalancesAfter.deposited.crates[0].amount.eq(totalAmount)).toBe(true);
+
+    const accBalancesAfter = await getTokenBalances(sdk, account, sdk.tokens.BEAN);
+    expect(accBalancesBefore.farmBalance
+      .eq(accBalancesAfter.farmBalance))
+      .toBe(true);
+
+    expect(accBalancesBefore.circulatingBalance.add(totalAmount)
+      .eq(accBalancesAfter.circulatingBalance))
+      .toBe(true);
   })
 });
 
