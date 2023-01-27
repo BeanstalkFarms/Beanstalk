@@ -2125,6 +2125,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@beanstalk/protocol@workspace:protocol"
   dependencies:
+    "@halborn/seraph": ^1.0.9
     "@nomiclabs/hardhat-ethers": ^2.2.1
     "@nomiclabs/hardhat-etherscan": ^3.1.2
     "@nomiclabs/hardhat-waffle": ^2.0.3
@@ -4368,6 +4369,13 @@ __metadata:
   peerDependencies:
     graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
   checksum: 87ff4cee308f1075f4472b80f9f9409667979940f8f701e87f0aa35ce5cf104d94b41258ea8192d05a0893475cd0f086a3929a07663b4fe8d0e805a277f07ed5
+  languageName: node
+  linkType: hard
+
+"@halborn/seraph@npm:^1.0.9":
+  version: 1.0.9
+  resolution: "@halborn/seraph@npm:1.0.9"
+  checksum: 08c64196217383496ff4f300865c11294b8fbe4623431c8dcd929837a68a8ff8a23cbbe322d421b0c1b51450c212d4b528d13ee4c8a22940cb3e3cf99ba7f25a
   languageName: node
   linkType: hard
 
