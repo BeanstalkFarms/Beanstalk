@@ -3,25 +3,25 @@ schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum/contract
-    name: WellBuilder
+    name: Aquifer
     network: mainnet
     source:
-      address: "0x0000000000000000000000000000000000000000"
-      abi: WellBuilder
+      address: "0xF6a8aD553b265405526030c2102fda2bDcdDC177"
+      abi: Aquifer
       startBlock: 16200000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - WellBuilder
+        - Aquifer
       abis:
-        - name: WellBuilder
-          file: ./abis/WellBuilder.json
+        - name: Aquifer
+          file: ./abis/Aquifer.json
       eventHandlers:
-        - event: BuildWell(address,address[],(address,bytes),(address,bytes))
-          handler: handleBuildWell
-      file: ./src/WellHandler.ts
+        - event: BoreWell(address,address[],(address,bytes),(address,bytes)[],address)
+          handler: handleBoreWell
+      file: ./src/mappings/AquiferHandler.ts
 templates:
   - kind: ethereum/contract
     name: Well
