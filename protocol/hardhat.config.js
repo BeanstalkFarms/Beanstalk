@@ -150,7 +150,7 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(async (_, __, runSuper
 
   // Apply a filter function to exclude paths that contain the string "replant" to ignore replant code
   paths = paths.filter((p) => !p.includes("replant"));
-  paths = paths.filter((p) => !p.includes("InitWhitelist"));
+  // paths = paths.filter((p) => !p.includes("InitWhitelist"));
   paths = paths.filter((p) => !p.includes("Root.sol"));
   // paths = paths.filter((p) => !p.includes("MockSiloFacet"));
   // paths = paths.filter((p) => !p.includes("MockConvertFacet"));

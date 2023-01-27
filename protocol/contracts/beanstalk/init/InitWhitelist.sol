@@ -41,37 +41,41 @@ contract InitWhitelist {
     }
 
     function whitelistBean3Crv() internal {
-        LibWhitelist.whitelistToken(
+        LibWhitelist.whitelistTokenLegacy(
             C.curveMetapoolAddress(),
             IBS.curveToBDV.selector,
             BEAN_3CRV_STALK,
+            BEAN_3CRV_SEEDS * 1e6, //stalkPerBdvPerSeason stored as 1e6 equals 1 legacy seed
             BEAN_3CRV_SEEDS
         );
     }
 
     function whitelistBean() internal {
-        LibWhitelist.whitelistToken(
+        LibWhitelist.whitelistTokenLegacy(
             C.beanAddress(),
             IBS.beanToBDV.selector,
             BEAN_STALK,
+            BEAN_SEEDS * 1e6,
             BEAN_SEEDS
         );
     }
 
     function whitelistUnripeBean() internal {
-        LibWhitelist.whitelistToken(
+        LibWhitelist.whitelistTokenLegacy(
             C.unripeBeanAddress(),
             IBS.unripeBeanToBDV.selector,
             BEAN_STALK,
+            BEAN_SEEDS * 1e6,
             BEAN_SEEDS
         );
     }
 
     function whitelistUnripeLP() internal {
-        LibWhitelist.whitelistToken(
+        LibWhitelist.whitelistTokenLegacy(
             C.unripeLPAddress(),
             IBS.unripeLPToBDV.selector,
             BEAN_3CRV_STALK,
+            BEAN_3CRV_SEEDS * 1e6,
             BEAN_3CRV_SEEDS
         );
     }

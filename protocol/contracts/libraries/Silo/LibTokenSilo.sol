@@ -287,6 +287,7 @@ library LibTokenSilo {
     }
     /**
      * @dev Get the number of Stalk per BDV per Season for a whitelisted token. Formerly just seeds.
+     * Note this is stored as 1e6, i.e. 1_000_000 units of this is equal to 1 old seed.
      */
     function stalkPerBdvPerSeason(address token) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -309,7 +310,7 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // SiloSettings storage ss = s.ss[token]; //tried to use this, but I get `DeclarationError: Identifier not found or not unique.`
         _cumulativeGrownStalkPerBdv = s.ss[address(token)].lastCumulativeGrownStalkPerBdv.add(
-            int128(s.ss[address(token)].stalkPerBdvPerSeason.mul(s.season.current.sub(s.ss[address(token)].lastUpdateSeason)))
+            int128(s.ss[address(token)].stalkPerBdvPerSeason.mul(s.season.current.sub(s.ss[address(token)].lastUpdateSeason)).div(1e6)) //1e6 here becauase stalkPerBdvPerSeason stored as 1e6
         );
     }
 

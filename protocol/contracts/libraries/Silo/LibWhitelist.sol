@@ -59,6 +59,22 @@ library LibWhitelist {
         emit WhitelistToken(token, selector, stalkPerBdv, stalkPerBdvPerSeason);
     }
 
+    function whitelistTokenLegacy(
+        address token,
+        bytes4 selector,
+        uint32 stalkPerBdv,
+        uint32 stalkPerBdvPerSeason,
+        uint32 seeds
+    ) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        s.ss[token].selector = selector;
+        s.ss[token].stalkPerBdv = stalkPerBdv; //previously just called "stalk"
+        s.ss[token].stalkPerBdvPerSeason = stalkPerBdvPerSeason; //previously called "seeds"
+        s.ss[token].legacySeedsPerBdv = seeds;
+
+        emit WhitelistToken(token, selector, stalkPerBdv, seeds);
+    }
 
     /**
      * @dev Remove an ERC-20 token from the Silo Whitelist.

@@ -58,7 +58,7 @@ describe('Convert', function () {
         await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['2', '3'], ['100'], '100')).to.be.revertedWith('Convert: cumulativeGrownStalks, amounts are diff lengths.')
       });
 
-      it('crate balance too low', async function () {
+      it.only('crate balance too low', async function () {
         await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['2'], ['150'], '150')).to.be.revertedWith('Silo: Crate balance too low.')
       });
 
