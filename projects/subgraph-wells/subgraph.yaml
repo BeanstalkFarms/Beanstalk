@@ -21,7 +21,7 @@ dataSources:
       eventHandlers:
         - event: BoreWell(address,address[],(address,bytes),(address,bytes)[],address)
           handler: handleBoreWell
-      file: ./src/mappings/AquiferHandler.ts
+      file: ./src/templates/AquiferHandler.ts
 templates:
   - kind: ethereum/contract
     name: Well
