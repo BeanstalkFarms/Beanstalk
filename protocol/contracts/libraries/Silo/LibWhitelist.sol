@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "../../C.sol";
 import "../LibAppStorage.sol";
+import "hardhat/console.sol";
 
 /**
  * @title LibWhitelist
@@ -56,6 +57,8 @@ library LibWhitelist {
         s.ss[token].stalkPerBdv = stalkPerBdv; //previously just called "stalk"
         s.ss[token].stalkPerBdvPerSeason = stalkPerBdvPerSeason; //previously called "seeds"
 
+        s.ss[token].lastUpdateSeason = s.season.current; //hydrate as current season
+
         emit WhitelistToken(token, selector, stalkPerBdv, stalkPerBdvPerSeason);
     }
 
@@ -72,6 +75,10 @@ library LibWhitelist {
         s.ss[token].stalkPerBdv = stalkPerBdv; //previously just called "stalk"
         s.ss[token].stalkPerBdvPerSeason = stalkPerBdvPerSeason; //previously called "seeds"
         s.ss[token].legacySeedsPerBdv = seeds;
+
+        s.ss[token].lastUpdateSeason = s.season.current; //hydrate as current season
+
+        console.log('seeds: ', seeds, ' for ', token);
 
         emit WhitelistToken(token, selector, stalkPerBdv, seeds);
     }

@@ -279,7 +279,8 @@ contract Storage {
          */
         uint32 stalkPerBdv;
         /*
-         * @dev The Stalk Per BDV Per Season represents how much Stalk one BDV of the underlaying deposited token grows each season. In the past, this was represented by seeds. This is stored as 1e6, i.e. 1 old "seed" means 1_000_000 units of stalkPerBdvPerSeason.
+         * @dev The Stalk Per BDV Per Season represents how much Stalk one BDV of the underlaying deposited token grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored as 1e10, so 1 legacy
+         seed would be 1e6 * 1e10.
          */
         uint32 stalkPerBdvPerSeason;
         /*

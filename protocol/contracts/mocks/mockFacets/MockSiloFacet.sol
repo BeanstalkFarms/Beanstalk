@@ -23,8 +23,8 @@ contract MockSiloFacet is SiloFacet {
     using SafeMath for uint256;
     using SafeMath for uint128;
 
-    function mockWhitelistToken(address token, bytes4 selector, uint32 stalk, uint32 stalkPerBdvPerSeason) external {
-       LibWhitelist.whitelistToken(token, selector, stalk, stalkPerBdvPerSeason);
+    function mockWhitelistToken(address token, bytes4 selector, uint32 stalk, uint32 stalkPerBdvPerSeason, uint32 legacySeedsPerBdv) external {
+       LibWhitelist.whitelistTokenLegacy(token, selector, stalk, stalkPerBdvPerSeason, legacySeedsPerBdv);
     }
 
     function mockBDV(uint256 amount) external pure returns (uint256) {

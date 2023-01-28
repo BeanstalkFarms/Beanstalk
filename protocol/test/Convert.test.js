@@ -29,6 +29,7 @@ describe('Convert', function () {
       this.siloToken.address, 
       this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
       '10000', 
+      1e6, //aka "1 seed"
       '1'
     );
 
@@ -58,20 +59,21 @@ describe('Convert', function () {
         await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['2', '3'], ['100'], '100')).to.be.revertedWith('Convert: cumulativeGrownStalks, amounts are diff lengths.')
       });
 
-      it.only('crate balance too low', async function () {
-        await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['2'], ['150'], '150')).to.be.revertedWith('Silo: Crate balance too low.')
+      it('crate balance too low', async function () {
+        //params are token, grownStalkPerBdv, amounts, maxtokens
+        await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['0'], ['150'], '150')).to.be.revertedWith('Silo: Crate balance too low.')
       });
 
       it('not enough removed', async function () {
-        await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['2'], ['100'], '150')).to.be.revertedWith('Convert: Not enough tokens removed.')
+        await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['2000000'], ['100'], '150')).to.be.revertedWith('Convert: Not enough tokens removed.')
       });
     })
     describe("Withdraw 1 Crate", async function () {
       beforeEach(async function () {
-        this.result = await this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['3'], ['100'], '100');
+        this.result = await this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['2000000'], ['100'], '100');
       })
 
-      it('Emits event', async function () {
+      it.only('Emits event', async function () {
         await expect(this.result).to.emit(this.convert, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [3], ['100'], '100');
         await expect(this.result).to.emit(this.convert, 'MockConvert').withArgs('0', '100');
       })

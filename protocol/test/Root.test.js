@@ -397,6 +397,7 @@ describe("Root", function () {
           this.siloToken.address,
           this.silo.interface.getSighash("mockBDVIncrease(uint256 amount)"),
           "10000",
+          1e6, //aka "1 seed"
           "1"
         );
         await this.rootToken.updateBdv(this.siloToken.address, 2);
@@ -410,6 +411,7 @@ describe("Root", function () {
           this.siloToken.address,
           this.silo.interface.getSighash("mockBDVIncrease(uint256 amount)"),
           "10000",
+          1e6, //aka "1 seed"
           "1"
         );
         await this.silo

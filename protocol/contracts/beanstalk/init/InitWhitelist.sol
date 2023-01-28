@@ -45,7 +45,7 @@ contract InitWhitelist {
             C.curveMetapoolAddress(),
             IBS.curveToBDV.selector,
             BEAN_3CRV_STALK,
-            BEAN_3CRV_SEEDS * 1e6, //stalkPerBdvPerSeason stored as 1e6 equals 1 legacy seed
+            BEAN_3CRV_SEEDS * 1e6 * 1e4, //stalkPerBdvPerSeason stored as 1e6, but each old seed yielded 1e4 stalk every season
             BEAN_3CRV_SEEDS
         );
     }
@@ -55,7 +55,7 @@ contract InitWhitelist {
             C.beanAddress(),
             IBS.beanToBDV.selector,
             BEAN_STALK,
-            BEAN_SEEDS * 1e6,
+            BEAN_SEEDS * 1e6 * 1e4,
             BEAN_SEEDS
         );
     }
@@ -65,7 +65,7 @@ contract InitWhitelist {
             C.unripeBeanAddress(),
             IBS.unripeBeanToBDV.selector,
             BEAN_STALK,
-            BEAN_SEEDS * 1e6,
+            BEAN_SEEDS * 1e6 * 1e4,
             BEAN_SEEDS
         );
     }
@@ -75,7 +75,7 @@ contract InitWhitelist {
             C.unripeLPAddress(),
             IBS.unripeLPToBDV.selector,
             BEAN_3CRV_STALK,
-            BEAN_3CRV_SEEDS * 1e6,
+            BEAN_3CRV_SEEDS * 1e6 * 1e4,
             BEAN_3CRV_SEEDS
         );
     }

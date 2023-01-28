@@ -120,7 +120,7 @@ contract SiloExit is ReentrancyGuard {
      * @dev The balance of Grown Stalk for an account can be calculated as:
      *
      * ```
-     * elapsedSeasons = currentSeason - lastUpdatedSeason
+     * elapsedSeasons = currentSeason - lastUpdateSeason
      * grownStalk = balanceOfSeeds * elapsedSeasons
      * ```
      */

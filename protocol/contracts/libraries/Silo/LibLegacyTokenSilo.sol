@@ -12,6 +12,8 @@ import "../../C.sol";
 import "./LibUnripeSilo.sol";
 import "./LibTokenSilo.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import "~/libraries/LibSafeMathSigned128.sol";
+import "hardhat/console.sol";
 
 /**
  * @title LibLegacyTokenSilo
@@ -24,6 +26,7 @@ import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 library LibLegacyTokenSilo {
     using SafeMath for uint256;
     using SafeCast for uint256;
+    using LibSafeMathSigned128 for int128;
 
     //////////////////////// REMOVE DEPOSIT ////////////////////////
 
@@ -165,8 +168,24 @@ library LibLegacyTokenSilo {
         view
         returns (uint32 season)
     {
+        // require(grownStalkPerBdv > 0);
+        console.log('logging grown stalk per bdv');
+        console.logInt(grownStalkPerBdv);
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 seedsPerBdv = uint256(s.ss[address(token)].legacySeedsPerBdv);
-        season = uint256(-grownStalkPerBdv).div(seedsPerBdv).toUint32(); // use OpenZeppelin's safecast to uint32
+
+        uint32 lastUpdateSeasonStored = s.ss[address(token)].lastUpdateSeason;
+        console.log('lastUpdateSeasonStored: ', lastUpdateSeasonStored);
+
+        console.log('token: ', address(token));
+        // console.log('s.ss[address(token)]: ', s.ss[address(token)]);
+        console.log('seedsPerBdv: ', seedsPerBdv);
+        // console.log('grownStalkPerBdv: %d', grownStalkPerBdv);
+        // console.log('uint256(-grownStalkPerBdv).div(seedsPerBdv): ', uint256(-grownStalkPerBdv).div(seedsPerBdv));
+
+        uint256 seasonAs256 = uint256(int128(s.ss[address(token)].lastUpdateSeason).sub(grownStalkPerBdv)).div(seedsPerBdv);
+        console.log('seasonAs256: ', seasonAs256);
+
+        season = seasonAs256.toUint32();
     }
 }

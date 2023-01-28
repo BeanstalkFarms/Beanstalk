@@ -12,6 +12,7 @@ import "./LibUnripeSilo.sol";
 import "./LibLegacyTokenSilo.sol";
 import "~/libraries/LibSafeMathSigned128.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import "hardhat/console.sol";
 
 /**
  * @title LibTokenSilo
@@ -79,6 +80,11 @@ library LibTokenSilo {
         int128 grownStalkPerBdv,
         uint256 amount
     ) internal returns (uint256) {
+        console.log('deposit account: ', account);
+        console.log('token: ', token);
+        console.log('logging grown stalk per bdv:');
+        console.logInt(grownStalkPerBdv);
+        console.log('amount: ', amount);
         uint256 bdv = beanDenominatedValue(token, amount);
         return depositWithBDV(account, token, grownStalkPerBdv, amount, bdv);
     }
@@ -172,6 +178,11 @@ library LibTokenSilo {
         int128 grownStalkPerBdv,
         uint256 amount
     ) internal returns (uint256 crateBDV) {
+        console.log('account: ', account);
+        console.log('token: ', token);
+        console.log('logging grown stalk per bdv');
+        console.logInt(grownStalkPerBdv);
+        console.log('amount: ', amount);
         AppStorage storage s = LibAppStorage.diamondStorage();
         
         uint256 crateAmount;
@@ -218,6 +229,7 @@ library LibTokenSilo {
             amount -= crateAmount;
             
             uint32 season = LibLegacyTokenSilo.grownStalkPerBdvToSeason(IERC20(token), grownStalkPerBdv);
+            console.log('season: ', season);
             LibLegacyTokenSilo.removeDepositFromAccount(account, token, season, amount);
         }
     }
@@ -310,7 +322,7 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // SiloSettings storage ss = s.ss[token]; //tried to use this, but I get `DeclarationError: Identifier not found or not unique.`
         _cumulativeGrownStalkPerBdv = s.ss[address(token)].lastCumulativeGrownStalkPerBdv.add(
-            int128(s.ss[address(token)].stalkPerBdvPerSeason.mul(s.season.current.sub(s.ss[address(token)].lastUpdateSeason)).div(1e6)) //1e6 here becauase stalkPerBdvPerSeason stored as 1e6
+            int128(s.ss[address(token)].stalkPerBdvPerSeason.mul(s.season.current.sub(s.ss[address(token)].lastUpdateSeason))) //multiply by 1e6 here becauase stalkPerBdvPerSeason stored as 1e6, but then div by 1e6 to get from seed to stalk, so do nothing
         );
     }
 
