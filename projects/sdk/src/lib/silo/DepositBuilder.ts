@@ -34,4 +34,13 @@ export class DepositBuilder {
 
     return op;
   }
+
+    /**
+   * Generate text to paste into http://www.webgraphviz.com/
+   * which will show an image based visualization of the current
+   * graph
+   */
+    public getGraph() {
+      console.log(this.router.getGraphCode());
+    }
 }
