@@ -23,13 +23,6 @@ describe("Silo Withdrawl", function () {
     deposit.setInputToken(token);
     const tx1 = await deposit.execute(token.amount(500), 0.1);
     await tx1.wait();
-
-    // // go to next season
-    // await utils.sunriseFF();
-
-    // // make another deposit
-    // const tx2 = await deposit.execute(token.amount(100), 0.1);
-    // await tx2.wait();
   });
 
   it("Validate starting state", async () => {

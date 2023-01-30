@@ -1,10 +1,8 @@
 import { ContractTransaction } from "ethers";
 import { Token } from "src/classes/Token";
-import { TokenValue } from "src/classes/TokenValue";
 import { BeanstalkSDK, DataSource } from "../BeanstalkSDK";
 import { FarmToMode } from "../farm";
-import { DepositCrate, Silo } from "../silo";
-import { sortCratesBySeason } from "../silo.utils";
+import { TokenSiloBalance } from "../silo";
 
 export class Claim {
   static sdk: BeanstalkSDK;
@@ -13,25 +11,14 @@ export class Claim {
     Claim.sdk = sdk;
   }
 
-  /**
-   * Returns the claimable amount for the given whitelisted token, and the underlying crates
-   * @param token Which Silo token to withdraw. Must be a whitelisted token
-   * @param dataSource Dictates where to lookup the available claimable amount, subgraph vs onchain
-   */
-  async getClaimableAmount(token: Token, dataSource?: DataSource) {
+  async getClaimableAmount(token: Token, dataSource?: DataSource): Promise<TokenSiloBalance["claimable"]> {
     this.validate(token);
     const { claimable } = await Claim.sdk.silo.getBalance(token, undefined, dataSource && { source: dataSource });
 
     return claimable;
   }
 
-  /**
-   * Claims all claimable amount of the given whitelisted token
-   * @param token Which Silo token to withdraw. Must be a whitelisted token
-   * @param dataSource Dictates where to lookup the available claimable amount, subgraph vs onchain
-   * @param toMode Where to send the output tokens (circulating or farm balance)
-   */
-  async claim(token: Token, dataSource?: DataSource, toMode: FarmToMode = FarmToMode.EXTERNAL) {
+  async claim(token: Token, dataSource?: DataSource, toMode: FarmToMode = FarmToMode.EXTERNAL): Promise<ContractTransaction> {
     this.validate(token);
     const { crates } = await this.getClaimableAmount(token, dataSource);
 
@@ -40,14 +27,7 @@ export class Claim {
     return this.claimSeasons(token, seasons, toMode);
   }
 
-  /**
-   * Claims specific seasons from Silo claimable amount.
-   * @param token Which Silo token to withdraw. Must be a whitelisted token
-   * @param seasons Which seasons to claim, from the available claimable list. List of seasons
-   * can be retrieved with .getClaimableAmount()
-   * @param toMode Where to send the output tokens (circulating or farm balance)
-   */
-  async claimSeasons(token: Token, seasons: string[], toMode: FarmToMode = FarmToMode.EXTERNAL) {
+  async claimSeasons(token: Token, seasons: string[], toMode: FarmToMode = FarmToMode.EXTERNAL): Promise<ContractTransaction> {
     this.validate(token);
     const { crates } = await this.getClaimableAmount(token);
     const availableSeasons = crates.map((c) => c.season.toString());
