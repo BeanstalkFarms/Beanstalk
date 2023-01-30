@@ -69,7 +69,7 @@ contract FundraiserFacet is ReentrancyGuard {
             amount, 
             uint256(s.w.yield).mul(1e6)
         ); // yield measured to 1e8;
-        return LibDibbler.sowNoSoil(amount, pods, msg.sender);
+        return LibDibbler.sowNoSoil(msg.sender, amount, pods);
     }
 
     function completeFundraiser(uint32 id) internal {

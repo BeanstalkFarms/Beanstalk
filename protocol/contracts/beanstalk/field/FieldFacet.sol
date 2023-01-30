@@ -264,6 +264,16 @@ contract FieldFacet is ReentrancyGuard {
      * prevent recalculation of {LibDibbler.morningYield} for some upstream functions.
      *
      * Note: the first return value is symmetric with `totalSoil`.
+     * 
+     * FIXME:
+     * 
+     * When beanstalk is above peg, max amount of pods should be constant
+     * Since pods are a function of soil and yield, if temperature is going to go
+     * down then we need soil to go up in order for Pods to be the same
+     * If someone sowed all the Soil instantaneously when above peg, beanstalk would
+     * mint a small number of pods, which isn't an accurate representation of demand.
+     * 
+     * Whole point of sowing above peg is to gauge demand.
      */
     function _totalSoilAndYield() private view returns (uint256 soil, uint256 morningYield) {
         uint256 morningYield = LibDibbler.morningYield();
@@ -278,12 +288,13 @@ contract FieldFacet is ReentrancyGuard {
             );
         }
 
-        // Above peg: Yield is fixed to the amount set during {stepWeather}, 
-        // Soil is dynamic
+        // Above peg: the maximum amount of Pods that Beanstalk is willing to mint
+        // stays fixed; since {morningYield} is scaled down when `delta < 25`, we
+        // need to scale up the amount of Soil to hold Pods constant.
         return (
             LibDibbler.scaleSoilUp(
-                uint256(s.f.soil), // min soil
-                uint256(s.w.yield), // max yield
+                uint256(s.f.soil), // max soil offered this Season, reached when `t >= 25`
+                uint256(s.w.yield).mul(LibDibbler.YIELD_PRECISION), // max yield
                 morningYield // yield adjusted by number of blocks since Sunrise
             ),
             morningYield
@@ -299,6 +310,8 @@ contract FieldFacet is ReentrancyGuard {
      * ```
      * 
      * Need to cast s.w.yield to an uint256 due prevent overflow.
+     * 
+     * FIXME: probably should be named {remainingSoil}.
      */
     function totalSoil() external view returns (uint256) {
         // Below peg: Soil is fixed to the amount set during {stepWeather}.
@@ -309,7 +322,7 @@ contract FieldFacet is ReentrancyGuard {
         // Above peg: Soil is dynamic
         return LibDibbler.scaleSoilUp(
             uint256(s.f.soil), // min soil
-            uint256(s.w.yield), // max yield
+            uint256(s.w.yield).mul(LibDibbler.YIELD_PRECISION), // max yield
             LibDibbler.morningYield() // yield adjusted by number of blocks since Sunrise
         );
     }
@@ -321,6 +334,7 @@ contract FieldFacet is ReentrancyGuard {
      * 
      * FIXME Migration notes:
      * - this function previously returned uint32
+     * - DISCUSS: switching this to uint256 at YIELD_PRECISION
      */
     function yield() external view returns (uint32) {
         return SafeCast.toUint32(
@@ -330,7 +344,10 @@ contract FieldFacet is ReentrancyGuard {
     
     /**
      * @notice Peas are the potential remaining Pods that can be issued within a Season.
-     * @dev FIXME: rename `maxPods`.
+     * @dev FIXME: rename 
+     * 
+     * Can't use totalPods
+     * remainingPods
      */
     function peas() external view returns (uint256) {
         return uint256(LibDibbler.peas());

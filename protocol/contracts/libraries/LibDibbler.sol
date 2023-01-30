@@ -27,7 +27,9 @@ library LibDibbler {
     // Morning Auction scales temperature by 1e6
     // 1e6 = 1%
     // (6674 * 0.279415312704e12)/1e6 ~= 1864e6 = 1864%?
-    uint256 constant YIELD_PRECISION = 1e6;
+    // 1e6 = 1% = 0.01
+    uint256 constant YIELD_PRECISION = 1e6; 
+    uint256 constant ONE_HUNDRED_PCT = 100 * YIELD_PRECISION;
     
     event Sow(
         address indexed account,
@@ -39,8 +41,8 @@ library LibDibbler {
     //////////////////// SOW ////////////////////
 
     /**
-     * @param amount The number of Beans to Sow
-     * @param _yield FIXME
+     * @param beans The number of Beans to Sow
+     * @param morningYield FIXME
      * @param account The account sowing Beans
      * @dev 
      * 
@@ -71,47 +73,51 @@ library LibDibbler {
      * soilSubtracted = Amt * (1 + yield())/(1+ s.w.yield) 
      * soilSubtracted = pods/(1+ s.w.yield) 
      */
-    function sow(uint256 amount, uint256 _yield, address account) internal returns (uint256) {
+    function sow(uint256 beans, uint256 morningYield, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         
         uint256 pods;
         uint256 maxYield = uint256(s.w.yield).mul(YIELD_PRECISION);
 
+        // Above peg: FIXME
         if (s.season.abovePeg) {
             // amount sown is rounded up, because 
             // 1: yield is rounded down.
             // 2: pods are rounded down.
-            amount = scaleSoilDown(
-                amount,
-                _yield,
+            beans = scaleSoilDown(
+                beans,
+                morningYield,
                 maxYield
             );
             pods = beansToPods(
-                amount,
+                beans,
                 maxYield
             );
-        } else {
+        } 
+        
+        // Below peg: FIXME
+        else {
             pods = beansToPods(
-                amount,
-                _yield
+                beans,
+                morningYield
             );
         }
 
-        (, s.f.soil) = s.f.soil.trySub(uint128(amount));
+        (, s.f.soil) = s.f.soil.trySub(uint128(beans));
 
-        return sowNoSoil(amount, pods, account);
+        return sowNoSoil(account, beans, pods);
     }
 
     /**
-     * @dev Sow a new Plot, increment total Pods, update Sow time.
+     * @dev Sows a new Plot, increments total Pods, updates Sow time.
      */
-    function sowNoSoil(uint256 amount, uint256 pods, address account)
+    function sowNoSoil(address account, uint256 beans, uint256 pods)
         internal
         returns (uint256)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        sowPlot(account, amount, pods);
+        sowPlot(account, beans, pods);
         s.f.pods = s.f.pods.add(pods);
         saveSowTime();
 
@@ -120,14 +126,8 @@ library LibDibbler {
 
     /**
      * @dev 
-     * FIXME: beans vs. amount
-     * FIXME: ordering of parameters
      */
-    function sowPlot(
-        address account,
-        uint256 beans,
-        uint256 pods
-    ) private {
+    function sowPlot(address account, uint256 beans, uint256 pods) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.a[account].field.plots[s.f.pods] = pods;
         emit Sow(account, s.f.pods, beans, pods);
@@ -272,48 +272,59 @@ library LibDibbler {
     }
 
     /**
+     * @param pct The percentage to scale down by, measured to 1e12.
+     * @return scaledYield The scaled yield, measured to 1e8 = 100e6 = 100% = 1.
      * @dev Scales down temperature, minimum 1e6 (unless temperature is 0%)
      * 1e6 = 1% temperature
      *
-     * FIXME: "scales down" except that 
-     *
      * 279415312704 = 0.279415312704e12
+     * 
+     * `s.f.yield = 6674 => 6674% = 66.74 `
+     * 
+     * FIXME: think on how to explain decimals
      */
-    function scaleYield(uint256 a) private view returns (uint256 scaledYield) {
+    function scaleYield(uint256 pct) private view returns (uint256 scaledYield) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        uint256 _yield  = s.w.yield;
-        if(_yield == 0) return 0; 
+        uint256 maxYield = s.w.yield;
+        if(maxYield == 0) return 0; 
 
-        // provides a floor of YIELD_PRECISION
         return LibPRBMath.max(
-            _yield.mulDiv(
-                a,
+            // To save gas, `pct` is pre-calculated to 12 digits. Here we
+            // perform the following transformation:
+            // (1e2)    maxYield                100%
+            // (1e12)    * pct 
+            // (1e6)     / YIELD_PRECISION      1%
+            // (1e8)     = scaledYield 
+            maxYield.mulDiv(
+                pct, 
                 YIELD_PRECISION,
                 LibPRBMath.Rounding.Up
             ),
+            // Floor at YIELD_PRECISION (1%)
             YIELD_PRECISION
         );
     }
 
     /**
-     * @param amount The number of Beans to convert to Pods.
+     * @param beans The number of Beans to convert to Pods.
      * @param _yield The current yield, measured to 1e8. 
-     * @dev Converts an `amount` of Beans to Pods based on `_yield`.
+     * @dev Converts Beans to Pods based on `_yield`.
      * 
-     * `pods = amount * (1e8 + _yield) / 1e8`
-     * `pods = `
+     * `pods = beans * (100e6 + _yield) / 100e6`
+     * 
+     * `beans * (1 + _yield / 100e6)`
      *
      * Beans and Pods are measured to 6 decimals.
      */
-    function beansToPods(uint256 amount, uint256 _yield)
+    function beansToPods(uint256 beans, uint256 _yield)
         internal
         pure
         returns (uint256 pods)
     {
-        return amount.mulDiv(
-            _yield.add(100e6),
-            100e6
+        return beans.mulDiv(
+            _yield.add(ONE_HUNDRED_PCT),
+            ONE_HUNDRED_PCT
         );
     }
 
@@ -321,16 +332,23 @@ library LibDibbler {
      * @dev Scales Soil up when Beanstalk is above peg.
      * maxYield comes from s.w.yield, which has a precision 1e2 (100 = 1%)
      * yield comes from yield(), which has a precision of 1e8 (1e6 = 1%)
-     * thus we need to scale maxYield up. 
+     * thus we need to scale maxYield up.
+     * 
+     * Scaling up -> round down
+     * Scaling down -> round up
+     * 
+     * (1 + maxYield) / (1 + morningYield)
+     * 
+     * 1e6 = 1%
      */
     function scaleSoilUp(
         uint256 soil, 
         uint256 maxYield,
-        uint256 _yield
+        uint256 morningYield
     ) internal pure returns (uint256) {
         return soil.mulDiv(
-            maxYield.add(100).mul(YIELD_PRECISION),
-            _yield.add(100e6)
+            maxYield.add(ONE_HUNDRED_PCT),
+            morningYield.add(ONE_HUNDRED_PCT)
         );
     }
     
@@ -345,15 +363,17 @@ library LibDibbler {
      * If someone sow'd ~495 soil, it's equilivant to sowing 250 soil at t > 25.
      * Thus when someone sows during this time, the amount subtracted from s.f.soil
      * should be scaled down.
+     * 
+     * Note: param ordering matches the mulDiv operation
      */
     function scaleSoilDown(
         uint256 soil, 
-        uint256 _yield, 
+        uint256 morningYield, 
         uint256 maxYield
     ) internal pure returns (uint256) {
         return soil.mulDiv(
-            _yield.add(100e6),
-            maxYield.add(100e6),
+            morningYield.add(ONE_HUNDRED_PCT),
+            maxYield.add(ONE_HUNDRED_PCT),
             LibPRBMath.Rounding.Up
         );
     }
@@ -367,7 +387,7 @@ library LibDibbler {
         // Above peg: use current yield
         if(s.season.abovePeg) {
             return beansToPods(
-                s.f.soil,
+                s.f.soil, // 1 bean = 1 soil
                 uint256(s.w.yield).mul(YIELD_PRECISION) // 1e2 -> 1e8
             );
         } 
@@ -375,7 +395,7 @@ library LibDibbler {
         // Below peg: use adjusted yield
         else {
             return beansToPods(
-                s.f.soil,
+                s.f.soil,  // 1 bean = 1 soil
                 morningYield()
             );
         }

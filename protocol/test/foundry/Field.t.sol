@@ -33,14 +33,14 @@ contract FieldTest is FieldFacet, TestHelper {
   // user should not be able to sow if there is no soil. 
   function testCannotSowWithNoSoil() public {
     vm.prank(brean);
-    vm.expectRevert("Field: Sowing below min or 0 pods.");
+    vm.expectRevert("Field: Soil Slippage");
     field.sow(1,1e6,LibTransfer.From.EXTERNAL);
   }
 
   // user should not sow if the amount input is less than the minSoil
   function testCannotSowBelowMinSoil() public {
     vm.prank(brean);
-    vm.expectRevert("Field: Sowing below min or 0 pods.");
+    vm.expectRevert("Field: Soil Slippage");
     field.sowWithMin(1,1e6,3,LibTransfer.From.EXTERNAL);
 
   }
@@ -234,7 +234,7 @@ contract FieldTest is FieldFacet, TestHelper {
     uint256[] memory harvestPlot = new uint[](1);
     harvestPlot[0] = 0;
     vm.prank(siloChad);
-    vm.expectRevert("Field: Plot is empty.");
+    vm.expectRevert("Field: No plot");
     field.harvest(harvestPlot,LibTransfer.To.EXTERNAL);
   }
 
@@ -244,7 +244,7 @@ contract FieldTest is FieldFacet, TestHelper {
     uint256[] memory harvestPlot = new uint[](1);
     harvestPlot[0] = 0;
     vm.prank(brean);
-    vm.expectRevert("Field: Plot not Harvestable.");
+    vm.expectRevert("Field: Plot not Harvestable");
     field.harvest(harvestPlot,LibTransfer.To.EXTERNAL);
   }
 
@@ -323,11 +323,12 @@ contract FieldTest is FieldFacet, TestHelper {
   }
 
   // Morning Auction
-  function testMorningAuctionValues(uint256 blockNo,uint32 _weather) public {
+  function testMorningAuctionValues(uint256 blockNo, uint32 _weather) public {
     // tests that morning auction values align with manually calculated values
-     _weather = uint32(bound(_weather,1,69420)); // arbitary large number
+    _weather = uint32(bound(_weather, 1, 69420)); // arbitary large number
     season.setYieldE(_weather);
     blockNo = bound(blockNo,1,26); // 12s block time = 300 blocks in an season
+    
     uint256[26] memory ScaleValues;
     ScaleValues = [
       uint256(1000000), //Delta = 0
