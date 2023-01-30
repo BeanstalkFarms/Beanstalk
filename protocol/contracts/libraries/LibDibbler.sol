@@ -5,19 +5,19 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../C.sol";
-import "../interfaces/IBean.sol";
-import "./LibAppStorage.sol";
-import "./LibSafeMath32.sol";
-import "./LibSafeMath128.sol";
-import "./LibPRBMath.sol";
-
-
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {C} from "../C.sol";
+import {IBean} from "../interfaces/IBean.sol";
+import {LibAppStorage} from "./LibAppStorage.sol";
+import {LibSafeMath32} from "./LibSafeMath32.sol";
+import {LibSafeMath128} from "./LibSafeMath128.sol";
+import {LibPRBMath} from "./LibPRBMath.sol";
+import {AppStorage} from "~/beanstalk/AppStorage.sol";
 
 /**
- * @author Publius, Brean
  * @title Dibbler
- **/
+ * @author Publius, Brean
+ */
 library LibDibbler {
     using SafeMath for uint256;
     using LibPRBMath for uint256;
@@ -26,8 +26,10 @@ library LibDibbler {
 
     // Morning Auction scales temperature by 1e6
     // 1e6 = 1%
-    // (6674 * 279415312704)/1e6 ~= 1864e6 = 1864%?
+    // (6674 * 0.279415312704e12)/1e6 ~= 1864e6 = 1864%?
     uint256 private constant TEMPERATURE_SCALE = 1e6;
+
+    // FIXME: unused    
     uint256 private constant PRECISION = 1e8;
     
     event Sow(
@@ -41,6 +43,7 @@ library LibDibbler {
 
     /**
      * @param amount The number of Beans to Sow
+     * @param yield FIXME
      * @param account The account sowing Beans
      * @dev 
      * 
@@ -70,15 +73,13 @@ library LibDibbler {
      * soilSubtracted = s.f.soil * SoilSowed/(s.f.soil * ((1 + s.w.yield) /(1 + yield())))
      * soilSubtracted = Amt * (1 + yield())/(1+ s.w.yield) 
      * soilSubtracted = pods/(1+ s.w.yield) 
-     * 
-     * 
      */
     function sow(uint256 amount, uint256 _yield, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-
         
         uint256 pods;
         uint256 maxYield = uint256(s.w.yield).mul(1e6);
+
         if (s.season.abovePeg) {
             // amount sown is rounded up, because 
             // 1: yield is rounded down.
@@ -98,24 +99,33 @@ library LibDibbler {
                 _yield
             );
         }
-        (,s.f.soil) = s.f.soil.trySub(uint128(amount));
+
+        (, s.f.soil) = s.f.soil.trySub(uint128(amount));
 
         return sowNoSoil(amount, pods, account);
     }
 
     /**
-     * @dev Sow plot, increment pods, update sow time.
+     * @dev Sow a new Plot, increment total Pods, update Sow time.
      */
     function sowNoSoil(uint256 amount, uint256 pods, address account)
         internal
         returns (uint256)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
+
         sowPlot(account, amount, pods);
         s.f.pods = s.f.pods.add(pods);
         saveSowTime();
+
         return pods;
     }
+
+    /**
+     * @dev 
+     * FIXME: beans vs. amount
+     * FIXME: ordering of parameters
+     */
     function sowPlot(
         address account,
         uint256 beans,
@@ -126,6 +136,9 @@ library LibDibbler {
         emit Sow(account, s.f.pods, beans, pods);
     }
 
+    /**
+     * 
+     */
     function saveSowTime() private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.f.soil > 1e6 || s.w.nextSowTime < type(uint32).max) return;
@@ -133,16 +146,22 @@ library LibDibbler {
     }
 
     //////////////////// YIELD ////////////////////
-
-    /// @dev Returns the temperature `s.f.yield` scaled down based on the block delta.
-    /// Precision level 1e6, as soil has 1e6 precision (1% = 1e6)
-    /// the formula log2(A * MAX_BLOCK_ELAPSED + 1) is applied, where
-    /// A = 2;
-    /// MAX_BLOCK_ELAPSED = 25;
-    function yield() internal view returns (uint256) {
+    
+    /**
+     * @dev Returns the temperature `s.f.yield` scaled down based on the block delta.
+     * Precision level 1e6, as soil has 1e6 precision (1% = 1e6)
+     * the formula `log2(A * MAX_BLOCK_ELAPSED + 1)` is applied, where:
+     * `A = 2`
+     * `MAX_BLOCK_ELAPSED = 25`
+     *
+     * FIXME: rename to currentYield() or blockYield() to highlight that it's adjusted based on block
+     */
+    function yield() internal view returns (uint256 yield) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 delta = block.number.sub(s.season.sunriseBlock);
-        if (delta > 24) { // check most likely case first
+
+        // check most likely case first
+        if (delta > 24) {
             return uint256(s.w.yield).mul(TEMPERATURE_SCALE);
         }
 
@@ -151,15 +170,21 @@ library LibDibbler {
             if (delta < 7) { 
                 if (delta < 4) {
                     if (delta < 2) {
+                        // delta == 0, same block as sunrise
                         if (delta < 1) {
-                            return TEMPERATURE_SCALE; // delta == 0, same block as sunrise
+                            return TEMPERATURE_SCALE;
                         }
-                        else return scaleYield(279415312704); // delta == 1
+                        // delta == 1
+                        else {
+                            return scaleYield(279415312704);
+                        }
                     }
                     if (delta == 2) {
-                       return scaleYield(409336034395); // delta == 2
+                       return scaleYield(409336034395);
                     }
-                    else return scaleYield(494912626048); // delta == 3
+                    else { // delta == 3
+                        return scaleYield(494912626048);
+                    }
                 }
                 if (delta < 6) {
                     if (delta == 4) {
@@ -169,7 +194,9 @@ library LibDibbler {
                         return scaleYield(609868162219);
                     }
                 }
-                else return scaleYield(652355825780); // delta == 6
+                else { // delta == 6
+                    return scaleYield(652355825780); 
+                }
             }
             if (delta < 10) {
                 if (delta < 9) {
@@ -180,17 +207,21 @@ library LibDibbler {
                         return scaleYield(720584687295);
                     }
                 }
-                else return scaleYield(748873234524); // delta == 9
+                else { // delta == 9
+                    return scaleYield(748873234524); 
+                }
             }
             if (delta < 12) {
                 if (delta == 10) {
                     return scaleYield(774327938752);
                 }
-                else{ // delta == 11
+                else { // delta == 11
                     return scaleYield(797465225780); 
                 }
             }
-            else return scaleYield(818672068791); //delta == 12
+            else { // delta == 12
+                return scaleYield(818672068791); 
+            }
         } 
         if (delta < 19){
             if (delta < 16) {
@@ -198,17 +229,19 @@ library LibDibbler {
                     if (delta == 13) {
                         return scaleYield(838245938114); 
                     }
-                    else{ // delta == 14
+                    else { // delta == 14
                         return scaleYield(856420437864);
                     }
                 }
-                else return scaleYield(873382373802); //delta == 15
+                else { // delta == 15
+                    return scaleYield(873382373802);
+                }
             }
             if (delta < 18) {
                 if (delta == 16) {
                     return scaleYield(889283474924);
                 }
-                else{ // delta == 17
+                else { // delta == 17
                     return scaleYield(904248660443);
                 }
             }
@@ -219,7 +252,7 @@ library LibDibbler {
                 if (delta == 19) {
                     return scaleYield(931771138485); 
                 }
-                else{ // delta == 20
+                else { // delta == 20
                     return scaleYield(944490527707);
                 }
             }
@@ -233,37 +266,45 @@ library LibDibbler {
                 return scaleYield(979226436102);
             }
         }
-        else {
+        else { // delta == 24
             return scaleYield(989825252096);
         }
     }
 
-    /// @dev scales down temperature, minimum 1e6 (unless temperature is 0%)
-    /// 1e6 = 1% temperature
-    function scaleYield(uint256 a) private view returns (uint256) {
+    /**
+     * @dev Scales down temperature, minimum 1e6 (unless temperature is 0%)
+     * 1e6 = 1% temperature
+     *
+     * FIXME: "scales down" except that 
+     *
+     * 279415312704 = 0.279415312704e12
+     */
+    function scaleYield(uint256 a) private view returns (uint256 scaledYield) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 _yield  = s.w.yield;
         if(_yield == 0) return 0; 
+
         // provides a floor of TEMPERATURE_SCALE
         return LibPRBMath.max(
-            _yield.mulDiv(
-                a, 
-                1e6,
-                LibPRBMath.Rounding.Up
-                ),
+            _yield.mulDiv(a, 1e6, LibPRBMath.Rounding.Up),
             TEMPERATURE_SCALE
         );
     }
 
     /**
      * @param amount The number of Beans to convert to Pods.
-     * @param _yield The current temperature, measured to 1e8. 
-     * @dev `pods = beans * (100e6 + _yield) / 1e8`
+     * @param _yield The current yield, measured to 1e8. 
+     * @dev Converts an `amount` of Beans to Pods based on `_yield`.
+     * 
+     * `pods = amount * (1e8 + _yield) / 1e8`
+     * `pods = `
+     *
+     * Beans and Pods are measured to 6 decimals.
      */
     function beansToPods(uint256 amount, uint256 _yield)
         internal
         pure
-        returns (uint256)
+        returns (uint256 pods)
     {
         return amount.mulDiv(
             _yield.add(100e6),
@@ -271,10 +312,12 @@ library LibDibbler {
         );
     }
 
-    /// @dev scales Soil Up when beanstalk is above peg. 
-    // maxYield comes from s.w.yield, which has a precision 1e2 (100 = 1%)
-    // yield comes from yield(), which has a precision of 1e8 (1e6 = 1%)
-    // thus we need to scale maxYield up. 
+    /**
+     * @dev Scales Soil up when Beanstalk is above peg.
+     * maxYield comes from s.w.yield, which has a precision 1e2 (100 = 1%)
+     * yield comes from yield(), which has a precision of 1e8 (1e6 = 1%)
+     * thus we need to scale maxYield up. 
+     */
     function scaleSoilUp(
         uint256 soil, 
         uint256 maxYield,
@@ -285,14 +328,19 @@ library LibDibbler {
             _yield.add(100e6)
         );
     }
-
-    /// @dev scales Soil Down when beanstalk is above peg
-    // when beanstalk is above peg, the soil issued changes. 
-    // example - if 500 soil is issued, at temperature = 100%
-    // at delta = 0, temperature = 1%, soil = 500*(100 + 100%)/(100 + 1%) = 990.09901 soil
-    // if someone sow'd ~495 soil, its equilivant to sowing 250 soil at t > 25.
-    // Thus when someone sows during this time, the amount subtracted from s.f.soil
-    // should be scaled down. 
+    
+    /**
+     * @dev Scales Soil down when Beanstalk is above peg.
+     * 
+     * When Beanstalk is above peg, the Soil issued changes. Example:
+     * 
+     * If 500 Spoil is issued when `s.f.yield = 100e2 = 100%`
+     * At delta = 0: yield() = 1%, Soil = 500*(100 + 100%)/(100 + 1%) = 990.09901 soil
+     *
+     * If someone sow'd ~495 soil, it's equilivant to sowing 250 soil at t > 25.
+     * Thus when someone sows during this time, the amount subtracted from s.f.soil
+     * should be scaled down.
+     */
     function scaleSoilDown(
         uint256 soil, 
         uint256 _yield, 
@@ -305,15 +353,22 @@ library LibDibbler {
         );
     }
 
-    /// @dev peas are the potential remaining pods that can be issued within a season.
+    /**
+     * @dev Peas are the potential remaining Pods that can be issued within a Season.
+     */
     function peas() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
+
+        // Above peg: use current yield
         if(s.season.abovePeg) {
             return beansToPods(
                 s.f.soil,
-                uint256(s.w.yield).mul(1e6)
+                uint256(s.w.yield).mul(1e6) // 1e2 -> 1e8
             );
-        } else {
+        } 
+        
+        // Below peg: use adjusted yield
+        else {
             return beansToPods(
                 s.f.soil,
                 yield()
