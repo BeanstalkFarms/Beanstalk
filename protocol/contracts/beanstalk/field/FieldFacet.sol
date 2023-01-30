@@ -40,26 +40,40 @@ contract FieldFacet is ReentrancyGuard {
 
     /**
      * @notice Sow Beans in exchange for Pods.
-     * @param amount The number of Beans to Sow
-     * @param minWeather The mininum Temperature at which to Sow
+     * @param beans The number of Beans to Sow
+     * @param minYield The mininum Temperature at which to Sow
      * @param mode The balance to transfer Beans from; see {LibTrasfer.From}
      * @return pods The number of Pods received.
-     * @dev `minWeather` has precision of 1e6. Delegates to {sowWithMin} with `minSoil = amount`.
+     * @dev 
      * 
-     * FIXME: rename `amount` to `beans`?
-     * FIXME: rename `minWeather`?
+     * `minYield` has precision of 1e6. Wraps {sowWithMin} with `minSoil = beans`.
+     * 
+     * NOTE: previously minYield was measured to 1e2
+     * 
+     * Reason for `minYield` on the Sow function:
+     * If someone sends a Sow transaction at the end of the season, it could be 
+     * executed early in the following Season, at which time the yield may be
+     * significantly lower due to the Morning Auction functionality.
+     * 
+     * FIXME Migration notes:
+     * - Added `minYield` as second parameter
+     * - `minYield` is uint256 measured to 1e6 instead of uint32s
      */
-    function sow(uint256 amount, uint256 minWeather, LibTransfer.From mode)
+    function sow(
+        uint256 beans,
+        uint256 minYield,
+        LibTransfer.From mode
+    )
         external
         payable
         returns (uint256 pods)
     {
-        return sowWithMin(amount, minWeather, amount, mode);
+        return sowWithMin(beans, minYield, beans, mode);
     }
 
     /**
      * @notice Sow Beans in exchange for Pods. Use at least `minSoil`.
-     * @param amount The number of Beans to Sow
+     * @param beans The number of Beans to Sow
      * @param minWeather The mininum Temperature at which to Sow
      * @param minSoil The minimum amount of Soil to use; reverts if there is less than this much Soil available upon execution
      * @param mode The balance to transfer Beans from; see {LibTrasfer.From}
@@ -69,35 +83,42 @@ contract FieldFacet is ReentrancyGuard {
      * FIXME: rename `amount` to `beans`?
      */
     function sowWithMin(
-        uint256 amount,
-        uint256 minWeather,
+        uint256 beans,
+        uint256 minYield,
         uint256 minSoil,
         LibTransfer.From mode
     ) public payable returns (uint256 pods) {
-        (uint256 sowAmount, uint256 _yield) = totalSoilAndYield();
+        // `soil` is the remaining Soil
+        (uint256 soil, uint256 morningYield) = totalSoilAndYield();
+
         require(
-            sowAmount >= minSoil && amount >= minSoil,
-            "Field: Sowing below min or 0 pods."
+            soil >= minSoil && beans >= minSoil,
+            "Field: Soil Slippage"
         );
         require(
-            _yield >= minWeather,
-            "Field: Sowing below min weather."
+            morningYield >= minYield,
+            "Field: Temperature Slippage"
         );
-        if (amount < sowAmount) sowAmount = amount; 
-        return _sow(sowAmount, mode, _yield);
+
+        if (beans < soil) {
+            soil = beans; 
+        }
+
+        // 1 Bean is Sown in 1 Soil, i.e. soil = beans
+        return _sow(soil, morningYield, mode);
     }
 
     /**
-     * @dev Burn Beans, Sows at the provided `_yield`, increments the total
+     * @dev Burn Beans, Sows at the provided `morningYield`, increments the total
      * number of `beanSown`.
      */
-    function _sow(uint256 amount, LibTransfer.From mode, uint256 _yield)
+    function _sow(uint256 beans, uint256 morningYield, LibTransfer.From mode)
         internal
         returns (uint256 pods)
     {
-        amount = LibTransfer.burnToken(C.bean(), amount, msg.sender, mode);
-        pods = LibDibbler.sow(amount, _yield, msg.sender);
-        s.f.beanSown = s.f.beanSown + uint128(amount); // safeMath not needed
+        beans = LibTransfer.burnToken(C.bean(), beans, msg.sender, mode);
+        pods = LibDibbler.sow(beans, morningYield, msg.sender);
+        s.f.beanSown = s.f.beanSown + SafeCast.toUint128(beans); // SafeMath not needed
     }
 
     //////////// HARVEST ////////////
@@ -239,6 +260,8 @@ contract FieldFacet is ReentrancyGuard {
     /**
      * @dev Gets the current soil and yield. Provided as a gas optimization to 
      * prevent recalculation of {LibDibbler.morningYield} for some upstream functions.
+     *
+     * Note: the first return value is symmetric with `totalSoil`.
      */
     function totalSoilAndYield() private view returns (uint256 soil, uint256 morningYield) {
         uint256 morningYield = LibDibbler.morningYield();
@@ -290,12 +313,14 @@ contract FieldFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Returns the current yield (aka "Temperature") offered by Beanstalk.
-     * @dev Yield has precision level 1e6 (1% = 1e6)
+     * @notice Returns the current yield (aka "Temperature") offered by Beanstalk
+     * when burning Beans in exchange for Pods.
+     * @dev {LibDibbler.morningYield} has precision level 1e6 (1% = 1e6)
      * 
-     * FIXME: downcast to uint32
+     * FIXME Migration notes:
+     * - this function previously returned uint32
      */
-    function yield() external view returns (uint256) {
+    function yield() external view returns (uint32) {
         return SafeCast.toUint32(
             LibDibbler.morningYield().div(LibDibbler.YIELD_PRECISION)
         );
