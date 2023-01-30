@@ -98,6 +98,41 @@ export class Silo {
   }
 
   /**
+   * Make a deposit into a whitelisted token silo. Any supported token is allowed
+   * as input and will be swaped for the desired targetToken.
+   * @param inputToken The token you want to spend. It will be swaped into targetToken if needed
+   * @param targetToken The whitelisted token we are _actually_ depositing
+   * @param amount The amount of the inputToken to use
+   * @param slippage Slipage to use if a swap is needed.
+   * @param _account Address of the user
+   * @returns
+   */
+  async deposit(
+    inputToken: Token,
+    targetToken: Token,
+    amount: TokenValue,
+    slippage: number = 0.1,
+    _account?: string
+  ): Promise<ContractTransaction> {
+    const account = _account ?? (await Silo.sdk.getAccount(_account));
+
+    const depositOperation = await this.buildDeposit(targetToken, account);
+    depositOperation.setInputToken(inputToken);
+
+    return depositOperation.execute(amount, slippage);
+  }
+
+  /**
+   * Create a DepositOperation helper object. Using a builder/depositOperation pattern
+   * is useful in UIs or scenarios where we want to reuse a pre-calculated route.
+   * @param targetToken The token we want to deposit. Must be a white-listed token
+   * @returns DepositOperation
+   */
+  buildDeposit(targetToken: Token, account: string): DepositOperation {
+    return this.depositBuilder.buildDeposit(targetToken, account);
+  }
+
+  /**
    * Initates a withdraw from the silo. The `token` specified dictates which silo to withdraw
    * from, and therefore is limited to only whitelisted assets.
    * Behind the scenes, the `amount` to be withdrawn must be taken from individual
@@ -670,23 +705,6 @@ export class Silo {
     return Silo.sdk.contracts.beanstalk
       .bdv(_token.address, (_amount || _token.amount(1)).toBlockchain())
       .then((v) => Silo.sdk.tokens.BEAN.fromBlockchain(v));
-  }
-
-  //////////////////////// ACTION: Deposit ////////////////////////
-
-  // public deposit = wrapped(Silo.sdk.contracts.beanstalk, 'deposit')
-  // $deposit = Silo.sdk.contracts.beanstalk.deposit;
-  // $plant = Silo.sdk.contracts.beanstalk.plant;
-  // $update = Silo.sdk.contracts.beanstalk.update;
-  // $lastUpdate = Silo.sdk.contracts.beanstalk.lastUpdate;
-
-  /**
-   * Create a DepositOperation helper object
-   * @param targetToken The token we want to deposit. Must be a white-listed token
-   * @returns DepositOperation
-   */
-  buildDeposit(targetToken: Token, account: string): DepositOperation {
-    return this.depositBuilder.buildDeposit(targetToken, account);
   }
 
   //////////////////////// ACTION: Claim Rewards ////////////////////////
