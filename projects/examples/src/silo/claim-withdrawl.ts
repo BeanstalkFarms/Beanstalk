@@ -25,11 +25,11 @@ async function main() {
 async function go(token: Token) {
   console.log(`Claiming from ${token.symbol} Silo`);
 
-  let claimable = await sdk.silo.claim.getClaimableAmount(token);
+  let claimable = await sdk.silo.getClaimableAmount(token);
   console.log(claimable.amount);
   console.log(claimable.crates.map((c) => c.season.toString()));
 
-  let tx = await sdk.silo.claim.claim(token);
+  let tx = await sdk.silo.claim(token);
   await tx.wait();
 
   console.log("Done");
