@@ -27,7 +27,7 @@ library LibDibbler {
     // Morning Auction scales temperature by 1e6
     // 1e6 = 1%
     // (6674 * 0.279415312704e12)/1e6 ~= 1864e6 = 1864%?
-    uint256 private constant YIELD_PRECISION = 1e6;
+    uint256 constant YIELD_PRECISION = 1e6;
     
     event Sow(
         address indexed account,
@@ -40,7 +40,7 @@ library LibDibbler {
 
     /**
      * @param amount The number of Beans to Sow
-     * @param yield FIXME
+     * @param _yield FIXME
      * @param account The account sowing Beans
      * @dev 
      * 
@@ -156,7 +156,7 @@ library LibDibbler {
      *
      * FIXME: rename to currentYield() or blockYield() to highlight that it's adjusted based on block
      */
-    function yield() internal view returns (uint256 yield) {
+    function morningYield() internal view returns (uint256 morningYield) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 delta = block.number.sub(s.season.sunriseBlock);
 
@@ -376,7 +376,7 @@ library LibDibbler {
         else {
             return beansToPods(
                 s.f.soil,
-                yield()
+                morningYield()
             );
         }
     }

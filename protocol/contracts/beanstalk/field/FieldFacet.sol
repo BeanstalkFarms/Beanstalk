@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 
 import {C} from "~/C.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {LibTransfer} from "~/libraries/Token/LibTransfer.sol";
 import {LibDibbler} from "~/libraries/LibDibbler.sol";
 import {LibPRBMath} from "~/libraries/LibPRBMath.sol";
@@ -237,10 +238,10 @@ contract FieldFacet is ReentrancyGuard {
 
     /**
      * @dev Gets the current soil and yield. Provided as a gas optimization to 
-     * prevent recalculation of {yield()} for some upstream functions.
+     * prevent recalculation of {LibDibbler.morningYield} for some upstream functions.
      */
-    function totalSoilAndYield() private view returns (uint256 _soil, uint256 _yield) {
-        uint256 _yield = yield();
+    function totalSoilAndYield() private view returns (uint256 soil, uint256 morningYield) {
+        uint256 morningYield = LibDibbler.morningYield();
 
         // Below peg: Soil is fixed to the amount set during {stepWeather},
         // Yield is dynamic, starting small and logarithmically increasing to 
@@ -248,7 +249,7 @@ contract FieldFacet is ReentrancyGuard {
         if (!s.season.abovePeg) {
             return (
                 uint256(s.f.soil),
-                _yield
+                morningYield
             );
         }
 
@@ -258,9 +259,9 @@ contract FieldFacet is ReentrancyGuard {
             LibDibbler.scaleSoilUp(
                 uint256(s.f.soil), // min soil
                 uint256(s.w.yield), // max yield
-                _yield // yield adjusted by number of blocks since Sunrise
+                morningYield // yield adjusted by number of blocks since Sunrise
             ),
-            _yield
+            morningYield
         );
     }
 
@@ -284,16 +285,20 @@ contract FieldFacet is ReentrancyGuard {
         return LibDibbler.scaleSoilUp(
             uint256(s.f.soil), // min soil
             uint256(s.w.yield), // max yield
-            yield() // yield adjusted by number of blocks since Sunrise
+            LibDibbler.morningYield() // yield adjusted by number of blocks since Sunrise
         );
     }
 
     /**
      * @notice Returns the current yield (aka "Temperature") offered by Beanstalk.
      * @dev Yield has precision level 1e6 (1% = 1e6)
+     * 
+     * FIXME: downcast to uint32
      */
-    function yield() public view returns (uint256) {
-        return LibDibbler.yield();
+    function yield() external view returns (uint256) {
+        return SafeCast.toUint32(
+            LibDibbler.morningYield().div(LibDibbler.YIELD_PRECISION)
+        );
     }
     
     /**
