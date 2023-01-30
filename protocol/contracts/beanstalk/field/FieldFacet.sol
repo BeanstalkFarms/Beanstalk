@@ -74,7 +74,7 @@ contract FieldFacet is ReentrancyGuard {
     /**
      * @notice Sow Beans in exchange for Pods. Use at least `minSoil`.
      * @param beans The number of Beans to Sow
-     * @param minWeather The mininum Temperature at which to Sow
+     * @param minYield The mininum Temperature at which to Sow
      * @param minSoil The minimum amount of Soil to use; reverts if there is less than this much Soil available upon execution
      * @param mode The balance to transfer Beans from; see {LibTrasfer.From}
      * @dev 
@@ -89,7 +89,7 @@ contract FieldFacet is ReentrancyGuard {
         LibTransfer.From mode
     ) public payable returns (uint256 pods) {
         // `soil` is the remaining Soil
-        (uint256 soil, uint256 morningYield) = totalSoilAndYield();
+        (uint256 soil, uint256 morningYield) = _totalSoilAndYield();
 
         require(
             soil >= minSoil && beans >= minSoil,
@@ -100,6 +100,8 @@ contract FieldFacet is ReentrancyGuard {
             "Field: Temperature Slippage"
         );
 
+        // If beans >= soil, Sow all of the remaining Soil
+        // Logic is inverted to overwrite memory var `soil` instead of calldata `beans`
         if (beans < soil) {
             soil = beans; 
         }
@@ -156,7 +158,7 @@ contract FieldFacet is ReentrancyGuard {
             // The Plot is partially harvestable if its index is less than
             // the current harvestable index.
             require(plots[i] < s.f.harvestable, "Field: Plot not Harvestable");
-            uint256 harvested = harvestPlot(msg.sender, plots[i]);
+            uint256 harvested = _harvestPlot(msg.sender, plots[i]);
             beansHarvested = beansHarvested.add(harvested);
         }
         s.f.harvested = s.f.harvested.add(beansHarvested);
@@ -167,7 +169,7 @@ contract FieldFacet is ReentrancyGuard {
      * @dev 
      * FIXME: rename to _harvestPlot
      */
-    function harvestPlot(address account, uint256 index)
+    function _harvestPlot(address account, uint256 index)
         private
         returns (uint256 harvestablePods)
     {
@@ -263,7 +265,7 @@ contract FieldFacet is ReentrancyGuard {
      *
      * Note: the first return value is symmetric with `totalSoil`.
      */
-    function totalSoilAndYield() private view returns (uint256 soil, uint256 morningYield) {
+    function _totalSoilAndYield() private view returns (uint256 soil, uint256 morningYield) {
         uint256 morningYield = LibDibbler.morningYield();
 
         // Below peg: Soil is fixed to the amount set during {stepWeather},
