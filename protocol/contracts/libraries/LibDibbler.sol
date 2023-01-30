@@ -27,10 +27,7 @@ library LibDibbler {
     // Morning Auction scales temperature by 1e6
     // 1e6 = 1%
     // (6674 * 0.279415312704e12)/1e6 ~= 1864e6 = 1864%?
-    uint256 private constant TEMPERATURE_SCALE = 1e6;
-
-    // FIXME: unused    
-    uint256 private constant PRECISION = 1e8;
+    uint256 private constant YIELD_PRECISION = 1e6;
     
     event Sow(
         address indexed account,
@@ -78,7 +75,7 @@ library LibDibbler {
         AppStorage storage s = LibAppStorage.diamondStorage();
         
         uint256 pods;
-        uint256 maxYield = uint256(s.w.yield).mul(1e6);
+        uint256 maxYield = uint256(s.w.yield).mul(YIELD_PRECISION);
 
         if (s.season.abovePeg) {
             // amount sown is rounded up, because 
@@ -141,7 +138,10 @@ library LibDibbler {
      */
     function saveSowTime() private {
         AppStorage storage s = LibAppStorage.diamondStorage();
+
+        // 1e6 = all but one soil
         if (s.f.soil > 1e6 || s.w.nextSowTime < type(uint32).max) return;
+
         s.w.nextSowTime = uint32(block.timestamp.sub(s.season.timestamp));
     }
 
@@ -162,7 +162,7 @@ library LibDibbler {
 
         // check most likely case first
         if (delta > 24) {
-            return uint256(s.w.yield).mul(TEMPERATURE_SCALE);
+            return uint256(s.w.yield).mul(YIELD_PRECISION);
         }
 
         // Binary Search
@@ -172,7 +172,7 @@ library LibDibbler {
                     if (delta < 2) {
                         // delta == 0, same block as sunrise
                         if (delta < 1) {
-                            return TEMPERATURE_SCALE;
+                            return YIELD_PRECISION;
                         }
                         // delta == 1
                         else {
@@ -281,13 +281,18 @@ library LibDibbler {
      */
     function scaleYield(uint256 a) private view returns (uint256 scaledYield) {
         AppStorage storage s = LibAppStorage.diamondStorage();
+
         uint256 _yield  = s.w.yield;
         if(_yield == 0) return 0; 
 
-        // provides a floor of TEMPERATURE_SCALE
+        // provides a floor of YIELD_PRECISION
         return LibPRBMath.max(
-            _yield.mulDiv(a, 1e6, LibPRBMath.Rounding.Up),
-            TEMPERATURE_SCALE
+            _yield.mulDiv(
+                a,
+                YIELD_PRECISION,
+                LibPRBMath.Rounding.Up
+            ),
+            YIELD_PRECISION
         );
     }
 
@@ -324,7 +329,7 @@ library LibDibbler {
         uint256 _yield
     ) internal pure returns (uint256) {
         return soil.mulDiv(
-            maxYield.add(100).mul(1e6),
+            maxYield.add(100).mul(YIELD_PRECISION),
             _yield.add(100e6)
         );
     }
@@ -363,7 +368,7 @@ library LibDibbler {
         if(s.season.abovePeg) {
             return beansToPods(
                 s.f.soil,
-                uint256(s.w.yield).mul(1e6) // 1e2 -> 1e8
+                uint256(s.w.yield).mul(YIELD_PRECISION) // 1e2 -> 1e8
             );
         } 
         
