@@ -115,7 +115,6 @@ export class Silo {
     _account?: string
   ): Promise<ContractTransaction> {
     const account = _account ?? (await Silo.sdk.getAccount(_account));
-
     const depositOperation = await this.buildDeposit(targetToken, account);
     depositOperation.setInputToken(inputToken);
 

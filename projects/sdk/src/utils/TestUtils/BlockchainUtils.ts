@@ -194,7 +194,7 @@ export class BlockchainUtils {
     return `${(e as any).error?.reason || (e as any).toString()}`;
   }
 
-  async sunriseFF() {
+  async sunriseForward() {
     // Calculate how many seconds till next hour
     const block = await this.sdk.provider.send("eth_getBlockByNumber", ["latest", false]);
     const blockTs = parseInt(block.timestamp, 16);
