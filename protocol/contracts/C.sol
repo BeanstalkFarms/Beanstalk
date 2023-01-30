@@ -35,11 +35,9 @@ library C {
     // Season Incentive
     uint256 private constant BASE_REWARD = 3e6; // Fixed increase in Bean reward to cover cost of operating a bot
     uint256 private constant MAX_REWARD = 100e6;
-    uint256 private constant MIN_REWARD = 5e6;
     uint256 private constant PRIORITY_FEE_BUFFER = 5e9; // 5 gwei
     uint256 private constant MAX_SUNRISE_GAS = 5e5;
-    // sunrise_gas_overhead = 21k (constant cost for a transction) + 29k for overhead
-    uint256 private constant SUNRISE_GAS_OVERHEAD = 50000;
+    uint256 private constant SUNRISE_GAS_OVERHEAD = 50000; // 21k (constant cost for a transction) + 29k for overhead
     uint256 private constant BLOCK_LENGTH_SECONDS = 12;
 
     // Sun
@@ -109,9 +107,9 @@ library C {
         return MAX_REWARD;
     }
 
-    function getMinReward() internal pure returns (uint256) {
-        return MIN_REWARD;
-    }
+    // function getMinReward() internal pure returns (uint256) {
+    //     return MIN_REWARD;
+    // }
 
     function getSunrisePriorityFeeBuffer() internal pure returns (uint256) {
         return PRIORITY_FEE_BUFFER;
