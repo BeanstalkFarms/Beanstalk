@@ -167,23 +167,23 @@ contract FieldFacet is ReentrancyGuard {
      * @dev 
      * FIXME: rename to _harvestPlot
      */
-    function harvestPlot(address account, uint256 plotId)
+    function harvestPlot(address account, uint256 index)
         private
         returns (uint256 harvestablePods)
     {
         // Check that `account` holds this Plot.
-        uint256 pods = s.a[account].field.plots[plotId];
+        uint256 pods = s.a[account].field.plots[index];
         require(pods > 0, "Field: no plot");
 
         // Calculate how many Pods are harvestable. 
         // Since we already checked that some Pods are harvestable
-        harvestablePods = s.f.harvestable.sub(plotId);
-        delete s.a[account].field.plots[plotId];
+        harvestablePods = s.f.harvestable.sub(index);
+        delete s.a[account].field.plots[index];
 
         // Check if there's a Pod Listing active for this Plot.
-        if (s.podListings[plotId] > 0) {
-            delete s.podListings[plotId];
-            emit PodListingCancelled(msg.sender, plotId);
+        if (s.podListings[index] > 0) {
+            delete s.podListings[index];
+            emit PodListingCancelled(msg.sender, index);
         }
 
         // If the entire Plot was harvested, exit.
@@ -192,7 +192,7 @@ contract FieldFacet is ReentrancyGuard {
         }
         
         // Create a new Plot with the remaining Pods.
-        s.a[account].field.plots[plotId.add(harvestablePods)] = pods.sub(
+        s.a[account].field.plots[index.add(harvestablePods)] = pods.sub(
             harvestablePods
         );
     }
@@ -249,12 +249,12 @@ contract FieldFacet is ReentrancyGuard {
      * @notice Returns the number of Pods remaining in a Plot.
      * @dev Plots are only stored in the `s.a[account].field.plots` mapping.
      */
-    function plot(address account, uint256 plotId)
+    function plot(address account, uint256 index)
         public
         view
         returns (uint256 pods)
     {
-        return s.a[account].field.plots[plotId];
+        return s.a[account].field.plots[index];
     }
 
     /**
