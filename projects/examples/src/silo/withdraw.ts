@@ -16,11 +16,13 @@ async function main() {
   console.log(`${chalk.bold.whiteBright("Account:")} ${chalk.greenBright(account)}`);
   let { sdk: _sdk, stop } = await impersonate(account);
   sdk = _sdk;
+  sdk.DEBUG = false;
 
-  await go(sdk.tokens.BEAN, sdk.tokens.BEAN.amount(200000));
-  // await go(sdk.tokens.BEAN_CRV3_LP, sdk.tokens.BEAN_CRV3_LP.amount(1000));
-  // await go(sdk.tokens.UNRIPE_BEAN, sdk.tokens.UNRIPE_BEAN.amount(1000));
-  // await go(sdk.tokens.UNRIPE_BEAN_CRV3, sdk.tokens.UNRIPE_BEAN_CRV3.amount(1000));
+  const amount = 100
+  await go(sdk.tokens.BEAN, sdk.tokens.BEAN.amount(amount));
+  await go(sdk.tokens.BEAN_CRV3_LP, sdk.tokens.BEAN_CRV3_LP.amount(amount));
+  await go(sdk.tokens.UNRIPE_BEAN, sdk.tokens.UNRIPE_BEAN.amount(amount));
+  await go(sdk.tokens.UNRIPE_BEAN_CRV3, sdk.tokens.UNRIPE_BEAN_CRV3.amount(amount));
   
   await stop();
 }
