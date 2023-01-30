@@ -1,36 +1,37 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { createContext, useMemo } from 'react';
 import { BeanstalkSDK } from '@beanstalk/sdk';
 import { useSigner } from '~/hooks/ledger/useSigner';
 
 const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== 'production';
 
-export const SDKContext = React.createContext<BeanstalkSDK>(new BeanstalkSDK());
-
-export const SDKProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [address, setAddress] = useState('');
+const useBeanstalkSdkContext = () => {
   const { data: signer } = useSigner();
 
-  useEffect(() => {
-    async function getAddress() {
-      const signerAddress = await signer?.getAddress();
-      setAddress(signerAddress ?? '');
-    }
+  const sdk = useMemo(() => {
+    const _sdk = new BeanstalkSDK({
+      signer: signer ?? undefined,
+      DEBUG: IS_DEVELOPMENT_ENV,
+    });
 
-    getAddress();
+    return _sdk;
   }, [signer]);
 
-  const sdk = useMemo(() => {
-    if (signer && address) {
-      return new BeanstalkSDK({
-        signer: signer,
-        DEBUG: IS_DEVELOPMENT_ENV,
-      });
-    }
-    
-    return new BeanstalkSDK();
-  }, [address, signer]);
-
-  return <SDKContext.Provider value={sdk}>{children}</SDKContext.Provider>;
+  return sdk;
 };
+
+export const BeanstalkSDKContext = createContext<
+  ReturnType<typeof useBeanstalkSdkContext> | undefined
+>(undefined);
+
+function BeanstalkSDKProvider({ children }: { children: React.ReactNode }) {
+  // use the same instance of the sdk across the app
+  const sdk = useBeanstalkSdkContext();
+
+  return (
+    <BeanstalkSDKContext.Provider value={sdk}>
+      {children}
+    </BeanstalkSDKContext.Provider>
+  );
+}
+
+export default React.memo(BeanstalkSDKProvider);

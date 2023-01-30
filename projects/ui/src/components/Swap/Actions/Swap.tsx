@@ -6,7 +6,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import toast from 'react-hot-toast';
 import { useConnect } from 'wagmi';
 import BigNumber from 'bignumber.js';
-import { BeanstalkSDK, SwapOperation } from '@beanstalk/sdk';
+import { SwapOperation } from '@beanstalk/sdk';
 import {
   FormApprovingState, FormTokenState,
   SettingInput,
@@ -45,7 +45,7 @@ import WarningIcon from '~/components/Common/Alert/WarningIcon';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
-import { SDKContext } from '~/components/App/SDKProvider';
+import useSdk from '~/hooks/sdk';
 
 /// ---------------------------------------------------------------
 
@@ -94,7 +94,7 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
   const Eth = useChainConstant(ETH);
   const { status } = useConnect();
   const account = useAccount();
-  const sdk = useContext<BeanstalkSDK>(SDKContext);
+  const sdk = useSdk();
   
   /// Derived values
   const stateIn   = values.tokensIn[0];
@@ -619,7 +619,7 @@ const Swap: FC<{}> = () => {
   const { data: signer } = useSigner();
   const beanstalk = useBeanstalkContract(signer);
   const account = useAccount();
-  const sdk = useContext<BeanstalkSDK>(SDKContext);
+  const sdk = useSdk();
 
   if (!sdk) {
     throw new Error(

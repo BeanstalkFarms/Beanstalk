@@ -10,7 +10,7 @@ import theme from '~/components/App/muiTheme';
 import client from '~/util/Client';
 import { apolloClient } from '~/graph/client';
 import store from '~/state';
-import { SDKProvider } from '~/components/App/SDKProvider';
+import SdkProvider from './SdkProvider';
 
 import { FC } from '~/types';
 
@@ -21,7 +21,7 @@ const Wrapper: FC<{}> = ({ children }) => (
         <WagmiConfig client={client}>
           <ThemeProvider theme={theme}>
             <CssBaseline />
-            <SDKProvider>{children}</SDKProvider>
+            <SdkProvider>{children}</SdkProvider>
           </ThemeProvider>
         </WagmiConfig>
       </ApolloProvider>
