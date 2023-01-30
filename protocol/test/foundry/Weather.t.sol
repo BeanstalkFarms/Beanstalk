@@ -4,8 +4,8 @@ pragma abicoder v2;
 
 
 import { Weather } from "~/beanstalk/sun/SeasonFacet/Weather.sol";
-import "./utils/TestHelper.sol";
-import "./utils/LibConstant.sol";
+import "test/foundry/utils/TestHelper.sol";
+import "test/foundry/utils/LibConstant.sol";
 
 contract ComplexWeatherTest is Weather, TestHelper {
   using SafeMath for uint256;

@@ -31,7 +31,7 @@ library LibIncentive {
 
         // Gets the current bean price based on the curve pool.
         // In the future, this can be swapped out to another oracle
-        uint256 beanPriceUsd = LibIncentive.getCurveBeanPrice(balances);
+        uint256 beanPriceUsd = getCurveBeanPrice(balances);
 
         // ethUsdPrice has 6 Decimal Precision
         uint256 beanEthPrice = getEthUsdcPrice()
@@ -49,8 +49,7 @@ library LibIncentive {
                 C.getMaxReward()
             )
         );
-
-        return LibIncentive.fracExp(sunriseReward, 100, blocksLate.mul(C.getBlockLengthSeconds()), 1);
+        return fracExp(sunriseReward, 100, blocksLate.mul(C.getBlockLengthSeconds()), 1);
     }
 
     function getCurveBeanPrice(uint256[2] memory balances) internal view returns (uint256 price) {

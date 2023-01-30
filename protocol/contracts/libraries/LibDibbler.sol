@@ -73,7 +73,7 @@ library LibDibbler {
      * 
      * 
      */
-    function sow(uint256 amount, uint256 yield, address account) internal returns (uint256) {
+    function sow(uint256 amount, uint256 _yield, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         
@@ -85,7 +85,7 @@ library LibDibbler {
             // 2: pods are rounded down.
             amount = scaleSoilDown(
                 amount,
-                yield,
+                _yield,
                 maxYield
             );
             pods = beansToPods(
@@ -95,7 +95,7 @@ library LibDibbler {
         } else {
             pods = beansToPods(
                 amount,
-                yield
+                _yield
             );
         }
         (,s.f.soil) = s.f.soil.trySub(uint128(amount));
@@ -278,11 +278,11 @@ library LibDibbler {
     function scaleSoilUp(
         uint256 soil, 
         uint256 maxYield,
-        uint256 yield
+        uint256 _yield
     ) internal pure returns (uint256) {
         return soil.mulDiv(
             maxYield.add(100).mul(1e6),
-            yield.add(100e6)
+            _yield.add(100e6)
         );
     }
 
@@ -295,11 +295,11 @@ library LibDibbler {
     // should be scaled down. 
     function scaleSoilDown(
         uint256 soil, 
-        uint256 yield, 
+        uint256 _yield, 
         uint256 maxYield
-    ) internal view returns (uint256) {
+    ) internal pure returns (uint256) {
         return soil.mulDiv(
-            yield.add(100e6),
+            _yield.add(100e6),
             maxYield.add(100e6),
             LibPRBMath.Rounding.Up
         );

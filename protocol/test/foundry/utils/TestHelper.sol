@@ -8,7 +8,7 @@ pragma abicoder v2;
 import "forge-std/console.sol";
 import "forge-std/Test.sol";
 
-import {Utils} from "utils/Utils.sol";
+import {Utils} from "test/foundry/utils/Utils.sol";
 
 // Diamond setup
 import {Diamond} from "~/beanstalk/Diamond.sol";

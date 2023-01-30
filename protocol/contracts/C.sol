@@ -35,14 +35,11 @@ library C {
     // Season Incentive
     uint256 private constant BASE_REWARD = 3e6; // Fixed increase in Bean reward to cover cost of operating a bot
     uint256 private constant MAX_REWARD = 100e6;
-    uint256 private constant MIN_REWARD = 10e6;
+    uint256 private constant MIN_REWARD = 5e6;
     uint256 private constant PRIORITY_FEE_BUFFER = 5e9; // 5 gwei
-    uint256 private constant MAX_SUNRISE_GAS = 5e5; // TODO: TBD, 500k seems reasonable
-    // Discuss: This should be increased by 35k to offset failed transaction costs. It is likely
-    // there will remain 2+ individual bots attempting the sunrise, and assuming they share it 50/50,
-    // both will lose money if this is not increased by ~35k. BASE_REWARD is not enough as it does not scale
-    // as gas prices become higher. Perhaps BASE_REWARD should be 2-3 beans, and we use +30k instead of +35k.
-    uint256 private constant SUNRISE_GAS_OVERHEAD = 8.5e4; // TODO: TBD, current value includes a 35k offset to compensate failure
+    uint256 private constant MAX_SUNRISE_GAS = 5e5;
+    // sunrise_gas_overhead = 21k (constant cost for a transction) + 29k for overhead
+    uint256 private constant SUNRISE_GAS_OVERHEAD = 50000;
     uint256 private constant BLOCK_LENGTH_SECONDS = 12;
 
     // Sun

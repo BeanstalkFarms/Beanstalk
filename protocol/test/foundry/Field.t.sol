@@ -3,7 +3,7 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 import { FieldFacet } from "~/beanstalk/field/FieldFacet.sol";
-import "./utils/LibConstant.sol";
+import "test/foundry/utils/LibConstant.sol";
 import "~/libraries/LibPRBMath.sol";
 import "./utils/TestHelper.sol";
 

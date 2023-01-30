@@ -2,7 +2,7 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import "./utils/TestHelper.sol";
+import "test/foundry/utils/TestHelper.sol";
 
 contract SunriseTest is TestHelper {
 //   Storage.Season initalTime;

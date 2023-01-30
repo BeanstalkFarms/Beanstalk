@@ -2,7 +2,7 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import "./utils/TestHelper.sol";
+import "test/foundry/utils/TestHelper.sol";
 import { Sun } from "~/beanstalk/sun/SeasonFacet/Sun.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 
@@ -107,7 +107,7 @@ contract SunTest is  Sun, TestHelper {
     field.incrementTotalPodsE(100);
     season.sunSunrise(300, 0); // deltaB = +300; case 0 = low pod rate
     vm.roll(26); // after dutch Auction
-    assertEq(uint256(field.totalSoil()), 150); // FIXME: how calculated?
+    assertEq(uint256(field.totalSoil()), 150); 
     // 300/3 = 100 *1.5 = 150
   }
   

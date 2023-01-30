@@ -1,7 +1,6 @@
 @contracts/=contracts/
 @beanstalk/=contracts/beanstalk/
 ~/=contracts/
-utils/=test/foundry/utils
 ds-test/=lib/solmate/lib/ds-test/src/
 forge-std/=lib/forge-std/src/
 prb-math/=lib/prb-math/contracts/
