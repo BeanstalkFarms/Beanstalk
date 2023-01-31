@@ -89,15 +89,19 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 depositBDV;
         uint256 i = 0;
         while ((i < cumulativeGrownStalks.length) && (a.tokensRemoved < maxTokens)) {
-            if (a.tokensRemoved.add(amounts[i]) < maxTokens)
+            if (a.tokensRemoved.add(amounts[i]) < maxTokens) {
+                //keeping track of stalk removed must happen before we actually remove the deposit
+                //this is because LibTokenSilo.grownStalkForDeposit() uses the current deposit info
+                a.stalkRemoved = a.stalkRemoved.add(LibTokenSilo.grownStalkForDeposit(msg.sender, IERC20(token), cumulativeGrownStalks[i]));
                 depositBDV = LibTokenSilo.removeDepositFromAccount(
                     msg.sender,
                     token,
                     cumulativeGrownStalks[i],
                     amounts[i]
                 );
-            else {
+            } else {
                 amounts[i] = maxTokens.sub(a.tokensRemoved);
+                a.stalkRemoved = a.stalkRemoved.add(LibTokenSilo.grownStalkForDeposit(msg.sender, IERC20(token), cumulativeGrownStalks[i]));
                 depositBDV = LibTokenSilo.removeDepositFromAccount(
                     msg.sender,
                     token,
@@ -105,13 +109,18 @@ contract ConvertFacet is ReentrancyGuard {
                     amounts[i]
                 );
             }
+            console.log('logging amounts');
+            console.log('amounts[i]: ', amounts[i]);
+            console.log('logging cumulativeGrownStalks i');
+            console.logInt(cumulativeGrownStalks[i]);
             a.tokensRemoved = a.tokensRemoved.add(amounts[i]);
             a.bdvRemoved = a.bdvRemoved.add(depositBDV);
-            a.stalkRemoved = a.stalkRemoved.add(LibTokenSilo.grownStalkForDeposit(msg.sender, IERC20(token), cumulativeGrownStalks[i]));
+            console.log('_withdrawTokens depositBDV: ', depositBDV);
             
             i++;
         }
         for (i; i < cumulativeGrownStalks.length; ++i) amounts[i] = 0;
+        console.log('emitting RemoveDeposits event');
         emit RemoveDeposits(
             msg.sender,
             token,
@@ -129,6 +138,8 @@ contract ConvertFacet is ReentrancyGuard {
             msg.sender,
             a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalkPerBdv))
         );
+        console.log('a.stalkRemoved: ', a.stalkRemoved);
+        console.log('a.bdvRemoved: ', a.bdvRemoved);
         return (a.stalkRemoved, a.bdvRemoved);
     }
 
@@ -136,15 +147,24 @@ contract ConvertFacet is ReentrancyGuard {
         address token,
         uint256 amount,
         uint256 bdv,
-        uint256 grownStalk
+        uint256 grownStalk //stalk grown previously by this deposit
     ) internal returns (int128 _cumulativeGrownStalk) {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
 
-        //calculate cumulativeGrownStalk index from grownStalk and bdv
+        //calculate cumulativeGrownStalk index we need to deposit at from grownStalk and bdv
         _cumulativeGrownStalk = LibTokenSilo.grownStalkAndBdvToCumulativeGrownStalk(IERC20(token), grownStalk, bdv);
+        console.log('_depositTokens _cumulativeGrownStalk:');
+        console.logInt(_cumulativeGrownStalk);
 
+
+        //if we attempt to deposit at a half-season (a grown stalk index that would fall between seasons)
+        //then in affect we lose that partial season's worth of stalk when we deposit
+        //so here we need to update grownStalk to be the amount you'd have with the above deposit
+        grownStalk = uint256(LibTokenSilo.calculateStalkFromGrownStalkIndexAndBdv(IERC20(token), _cumulativeGrownStalk, bdv));
+        console.log('_depositTokens grownStalk: ', grownStalk);
 
         uint256 stalk = bdv.mul(LibTokenSilo.stalkPerBdv(token)).add(grownStalk);
+        console.log('_depositTokens mint stalk: ', stalk);
         LibSilo.mintStalk(msg.sender, stalk);
 
         LibTokenSilo.incrementTotalDeposited(token, amount);

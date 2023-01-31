@@ -1,7 +1,7 @@
 /**
  * SPDX-License-Identifier: MIT
  **/
-
+/*
 pragma solidity ^0.8.17;
 pragma experimental ABIEncoderV2;
 
@@ -551,3 +551,4 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
         );
     }
 }
+*/

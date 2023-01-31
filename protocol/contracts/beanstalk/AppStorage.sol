@@ -58,7 +58,7 @@ contract Account {
 
     // This struct stores the mow status for each Silo-able token, for each farmer. This gets updated each time a farmer mows, or adds/removes deposits.
     struct MowStatus {
-        int128 lastCumulativeGrownStalkPerBDV; // the last cumulative grown stalk per bdv index at which the farmer mowed
+        int128 lastCumulativeGrownStalkPerBdv; // the last cumulative grown stalk per bdv index at which the farmer mowed
         uint128 bdv; // bdv of all of a farmer's deposits of this token type
     }
 

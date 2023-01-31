@@ -25,6 +25,7 @@ import "hardhat/console.sol";
  */
 library LibLegacyTokenSilo {
     using SafeMath for uint256;
+    using SafeMath for uint32;
     using SafeCast for uint256;
     using LibSafeMathSigned128 for int128;
 
@@ -169,23 +170,26 @@ library LibLegacyTokenSilo {
         returns (uint32 season)
     {
         // require(grownStalkPerBdv > 0);
-        console.log('logging grown stalk per bdv');
+        console.log('grownStalkPerBdvToSeason logging grown stalk per bdv');
         console.logInt(grownStalkPerBdv);
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 seedsPerBdv = uint256(s.ss[address(token)].legacySeedsPerBdv);
 
         uint32 lastUpdateSeasonStored = s.ss[address(token)].lastUpdateSeason;
-        console.log('lastUpdateSeasonStored: ', lastUpdateSeasonStored);
+        console.log('grownStalkPerBdvToSeason lastUpdateSeasonStored: ', lastUpdateSeasonStored);
 
-        console.log('token: ', address(token));
+        console.log('grownStalkPerBdvToSeason token: ', address(token));
         // console.log('s.ss[address(token)]: ', s.ss[address(token)]);
-        console.log('seedsPerBdv: ', seedsPerBdv);
+        console.log('grownStalkPerBdvToSeason seedsPerBdv: ', seedsPerBdv);
         // console.log('grownStalkPerBdv: %d', grownStalkPerBdv);
         // console.log('uint256(-grownStalkPerBdv).div(seedsPerBdv): ', uint256(-grownStalkPerBdv).div(seedsPerBdv));
 
-        uint256 seasonAs256 = uint256(int128(s.ss[address(token)].lastUpdateSeason).sub(grownStalkPerBdv)).div(seedsPerBdv);
-        console.log('seasonAs256: ', seasonAs256);
+        // uint256 seasonAs256 = uint256(int128(s.ss[address(token)].lastCumulativeGrownStalkPerBdv).sub(grownStalkPerBdv)).div(seedsPerBdv);
+        // console.log('seasonAs256: ', seasonAs256);
 
-        season = seasonAs256.toUint32();
+        //need to divide by 1e6 but make sure we don't round
+        season = s.season.current.sub(uint(grownStalkPerBdv).div(seedsPerBdv)).toUint32();
+        console.log('grownStalkPerBdvToSeason season: ', season);
+        // season = seasonAs256.toUint32();
     }
 }

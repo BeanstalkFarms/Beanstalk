@@ -9,6 +9,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "~/beanstalk/ReentrancyGuard.sol";
 import "~/libraries/Silo/LibSilo.sol";
+import "~/libraries/Silo/LibTokenSilo.sol";
 import "~/libraries/LibSafeMath32.sol";
 import "~/libraries/LibSafeMath128.sol";
 import "~/libraries/LibPRBMath.sol";
@@ -132,8 +133,8 @@ contract SiloExit is ReentrancyGuard {
         //need to fetch last updated grownStalkPerBdv for this deposit and current grownStalkPerBdv
         return
             LibSilo.stalkReward(
-                s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBDV, //last GSPBDV farmer mowed
-                s.ss[address(token)].lastCumulativeGrownStalkPerBdv, //latest index, updated at last sunrise
+                s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv, //last GSPBDV farmer mowed
+                LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)), //get latest grown stalk per bdv for this token
                 s.a[account].mowStatuses[token].bdv
             );
     }

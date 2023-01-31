@@ -30,8 +30,8 @@ contract InitWhitelist {
     uint32 private constant BEAN_3CRV_STALK = 10000;
     uint32 private constant BEAN_3CRV_SEEDS = 4;
 
-    uint32 private constant BEAN_STALK = 10000;
-    uint32 private constant BEAN_SEEDS = 2;
+    uint32 private constant BEAN_STALK = 10000; //stalk per bdv (bdv is 6, stalk is 10, so need 4 here)
+    uint32 private constant BEAN_SEEDS = 2; //seeds per bdv of bean (1e6 is one bean)
 
     function whitelistPools() internal {
         whitelistBean3Crv();
@@ -45,7 +45,7 @@ contract InitWhitelist {
             C.curveMetapoolAddress(),
             IBS.curveToBDV.selector,
             BEAN_3CRV_STALK,
-            BEAN_3CRV_SEEDS * 1e6 * 1e4, //stalkPerBdvPerSeason stored as 1e6, but each old seed yielded 1e4 stalk every season
+            BEAN_3CRV_SEEDS * 1e6, //stalkPerBdvPerSeason stored as 1e6, but each old seed yielded 1e4 stalk every season
             BEAN_3CRV_SEEDS
         );
     }
@@ -55,7 +55,7 @@ contract InitWhitelist {
             C.beanAddress(),
             IBS.beanToBDV.selector,
             BEAN_STALK,
-            BEAN_SEEDS * 1e6 * 1e4,
+            BEAN_SEEDS * 1e6,
             BEAN_SEEDS
         );
     }
@@ -65,7 +65,7 @@ contract InitWhitelist {
             C.unripeBeanAddress(),
             IBS.unripeBeanToBDV.selector,
             BEAN_STALK,
-            BEAN_SEEDS * 1e6 * 1e4,
+            BEAN_SEEDS * 1e6,
             BEAN_SEEDS
         );
     }
@@ -75,7 +75,7 @@ contract InitWhitelist {
             C.unripeLPAddress(),
             IBS.unripeLPToBDV.selector,
             BEAN_3CRV_STALK,
-            BEAN_3CRV_SEEDS * 1e6 * 1e4,
+            BEAN_3CRV_SEEDS * 1e6,
             BEAN_3CRV_SEEDS
         );
     }

@@ -10,6 +10,7 @@ import "../../C.sol";
 import "../LibAppStorage.sol";
 import "../LibPRBMath.sol";
 import "~/libraries/LibSafeMathSigned128.sol";
+import "hardhat/console.sol";
 
 /**
  * @title LibSilo
@@ -74,6 +75,8 @@ library LibSilo {
      * For an explanation of Roots accounting, see {FIXME(doc)}.
      */
     function mintStalk(address account, uint256 stalk) internal {
+        console.log('mintStalk account: ', account);
+        console.log('mintStalk stalk: ', stalk);
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // Calculate the amount of Roots for the given amount of Stalk.
@@ -83,7 +86,10 @@ library LibSilo {
 
         // Increase supply of Stalk; Add Stalk to the balance of `account`
         s.s.stalk = s.s.stalk.add(stalk);
+        console.log('new total stalk s.s.stalk: ', s.s.stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
+
+        // console.log('new total stalk s.a[account].s.stalk: ', s.a[account].s.stalk);
 
         // Increase supply of Roots; Add Roots to the balance of `account`
         s.s.roots = s.s.roots.add(roots);
@@ -103,6 +109,7 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return;
 
+        console.log('burnStalk: ', stalk);
         // Calculate the amount of Roots for the given amount of Stalk.
         // We round up as it prevents an account having roots but no stalk.
          uint256 roots = s.s.roots.mulDiv(
@@ -113,6 +120,7 @@ library LibSilo {
 
         // Decrease supply of Stalk; Remove Stalk from the balance of `account`
         s.s.stalk = s.s.stalk.sub(stalk);
+        console.log('new stalk after burn s.s.stalk: ', s.s.stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
 
         // Decrease supply of Roots; Remove Roots from the balance of `account`
@@ -164,23 +172,17 @@ library LibSilo {
      * This function will take in a start stalk per bdv, end stalk per bdv,
      * and the deposited bdv amount, and return
      *
-     * Each Seed yields 1E-4 (0.0001, or 1 / 10_000) Stalk per Season.
-     *
-     * Seasons is measured to 0 decimals. There are no fractional Seasons.
-     * Seeds are measured to 6 decimals.
-     * Stalk is measured to 10 decimals.
-     * 
-     * Example:
-     *  - `seeds = 1E6` (1 Seed)
-     *  - `seasons = 1` (1 Season)
-     *  - The result is `1E6 * 1 = 1E6`. Since Stalk is measured to 10 decimals,
-     *    this is `1E6/1E10 = 1E-4` Stalk.
      */
     function stalkReward(int128 startStalkPerBDV, int128 endStalkPerBDV, uint128 bdv) //are the types what we want here?
         internal
-        pure
+        view //change back to pure
         returns (uint256)
     {
+        console.log('stalkReward startStalkPerBDV: ');
+        console.logInt(startStalkPerBDV);
+        console.log('stalkReward endStalkPerBDV: ');
+        console.logInt(endStalkPerBDV);
+        console.log('stalkReward bdv: ', bdv);
         int128 reward = endStalkPerBDV.sub(startStalkPerBDV).mul(int128(bdv));
         return uint128(reward);
     }

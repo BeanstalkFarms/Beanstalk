@@ -121,11 +121,17 @@ contract Silo is SiloExit {
     }
 
     function __mow(address account, address token) private {
-        // If this `account` has no BDV, skip to save gas.
-        if (s.a[account].mowStatuses[token].bdv == 0) return;
-        LibSilo.mintStalk(account, balanceOfGrownStalk(account, token));
+        // If this `account` has no BDV, skip to save gas. Still need to update lastCumulativeGrownStalkPerBdv (happen on initial deposit, since mow is called before any deposit)
+        if (s.a[account].mowStatuses[token].bdv == 0) {
+            s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
+            return;
+        }
 
-        s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBDV = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
+        uint256 grownStalk = balanceOfGrownStalk(account, token);
+        console.log('__mow grownStalk: ', grownStalk);
+
+        LibSilo.mintStalk(account, balanceOfGrownStalk(account, token));
+        s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
     }
 
     //////////////////////// INTERNAL: PLANT ////////////////////////

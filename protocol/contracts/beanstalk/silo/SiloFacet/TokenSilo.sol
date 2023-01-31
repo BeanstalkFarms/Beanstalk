@@ -48,7 +48,7 @@ contract TokenSilo is Silo {
     event AddDeposit(
         address indexed account,
         address indexed token,
-        int32 grownStalkPerBdv,
+        int128 grownStalkPerBdv,
         uint256 amount,
         uint256 bdv
     );
@@ -129,7 +129,7 @@ contract TokenSilo is Silo {
     function getDeposit(
         address account,
         address token,
-        uint32 grownStalkPerBdv
+        int128 grownStalkPerBdv
     ) external view returns (uint256, uint256) {
         return LibTokenSilo.tokenDeposit(account, token, grownStalkPerBdv);
     }
@@ -206,6 +206,7 @@ contract TokenSilo is Silo {
             LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)),
             amount
         );
+        console.log('_deposit now mint stalk: ', stalk);
         LibSilo.mintStalk(account, stalk);
     }
 
