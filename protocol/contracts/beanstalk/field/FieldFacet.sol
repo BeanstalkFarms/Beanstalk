@@ -73,7 +73,7 @@ contract FieldFacet is ReentrancyGuard {
      * 
      * Rationale for {sow} accepting a `minTemperature` parameter:
      * If someone sends a Sow transaction at the end of a Season, it could be 
-     * executed early in the following Season, at which time the yield may be
+     * executed early in the following Season, at which time the temperature may be
      * significantly lower due to Morning Auction functionality.
      * 
      * FIXME Migration notes:
@@ -108,7 +108,7 @@ contract FieldFacet is ReentrancyGuard {
         LibTransfer.From mode
     ) public payable returns (uint256 pods) {
         // `soil` is the remaining Soil
-        (uint256 soil, uint256 morningTemperature) = _totalSoilAndYield();
+        (uint256 soil, uint256 morningTemperature) = _totalSoilAndTemperature();
 
         require(
             soil >= minSoil && beans >= minSoil,
@@ -293,12 +293,12 @@ contract FieldFacet is ReentrancyGuard {
      *
      * Note: the `soil` return value is symmetric with `totalSoil`.
      */
-    function _totalSoilAndYield() private view returns (uint256 soil, uint256 morningTemperature) {
+    function _totalSoilAndTemperature() private view returns (uint256 soil, uint256 morningTemperature) {
         uint256 morningTemperature = LibDibbler.morningTemperature();
 
         // Below peg: Soil is fixed to the amount set during {stepWeather}.
-        // Yield is dynamic, starting small and logarithmically increasing to 
-        // `s.w.t` across the first 25 blocks of the Season.
+        // Morning Temperature is dynamic, starting small and logarithmically 
+        // increasing to `s.w.t` across the first 25 blocks of the Season.
         if (!s.season.abovePeg) {
             return (
                 uint256(s.f.soil),
@@ -312,8 +312,8 @@ contract FieldFacet is ReentrancyGuard {
         return (
             LibDibbler.scaleSoilUp(
                 uint256(s.f.soil), // max soil offered this Season, reached when `t >= 25`
-                uint256(s.w.t).mul(LibDibbler.YIELD_PRECISION), // max yield
-                morningTemperature // yield adjusted by number of blocks since Sunrise
+                uint256(s.w.t).mul(LibDibbler.YIELD_PRECISION), // max temperature
+                morningTemperature // temperature adjusted by number of blocks since Sunrise
             ),
             morningTemperature
         );
@@ -323,8 +323,8 @@ contract FieldFacet is ReentrancyGuard {
      * @dev
      * 
      * ```
-     * soilAbovePeg * yield = soil * maxYield = pods (when above peg)
-     * soilAbovePeg = soil * maxYield / yield
+     * soilAbovePeg * temperature = soil * maxYield = pods (when above peg)
+     * soilAbovePeg = soil * maxYield / temperature
      * ```
      * 
      * Need to cast s.w.t to an uint256 due prevent overflow.
@@ -340,19 +340,16 @@ contract FieldFacet is ReentrancyGuard {
         // Above peg: Soil is dynamic
         return LibDibbler.scaleSoilUp(
             uint256(s.f.soil), // min soil
-            uint256(s.w.t).mul(LibDibbler.YIELD_PRECISION), // max yield
-            LibDibbler.morningTemperature() // yield adjusted by number of blocks since Sunrise
+            uint256(s.w.t).mul(LibDibbler.YIELD_PRECISION), // max temperature
+            LibDibbler.morningTemperature() // temperature adjusted by number of blocks since Sunrise
         );
     }
 
     /**
-     * @notice Returns the current yield (aka "Temperature") offered by Beanstalk
+     * @notice DEPRECATED: Returns the current yield (aka "Temperature") offered by Beanstalk
      * when burning Beans in exchange for Pods.
-     * @dev {LibDibbler.morningTemperature} has precision level 1e6 (1% = 1e6)
-     * 
-     * FIXME Migration notes:
-     * - this function previously returned uint32
-     * - DISCUSS: switching this to uint256 at YIELD_PRECISION
+     * @dev Left for backwards compatibility. Scales down the {morningTemperature}. There
+     * is a loss of precision (max 1%) during this operation.
      */
     function yield() external view returns (uint32) {
         return SafeCast.toUint32(
