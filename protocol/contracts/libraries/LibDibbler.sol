@@ -133,13 +133,35 @@ library LibDibbler {
         emit Sow(account, s.f.pods, beans, pods);
     }
 
-    /**
+    /** 
+     * @dev Stores the time elapsed from the start of the Season to the first
+     * Sow of the season, or if all but 1 Soil is Sown.
      * 
+     * Rationale: Beanstalk utilize the time in which Soil was Sown to gauge
+     * demand for Soil, which affects how the Temperature is adjusted. If all 
+     * Soil is Sown in 1 second vs. 1 hour, Beanstalk assumes that the former
+     * shows more demand than the latter.
+     *
+     * `nextSowTime` represents the target time of the first Sow for the *next*
+     * Season to be considered increasing in demand.
+     * 
+     * If there more than 1 Soil still available, or `nextSowTime` is less than 
+     * type(uint32).max, do nothing.
+     * 
+     * Otherwise, set `nextSowTime` to be the difference between the Season
+     * start timestamp and the current block timestamp.
+     * 
+     * `nextSowTime` is therefore only updated when:
+     *  - After this Sow, there is less than 1 Soil available
+     *  - `nextSowTime` has not been updated this Season; it is reset to
+     *    type(uint32).max during {sunrise}.
+     * 
+     * Note that `s.f.soil` was decremented in the upstream {sow} function.
      */
     function saveSowTime() private {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // 1e6 = all but one soil
+        // 1e6 = 1 Soil
         if (s.f.soil > 1e6 || s.w.nextSowTime < type(uint32).max) return;
 
         s.w.nextSowTime = uint32(block.timestamp.sub(s.season.timestamp));
@@ -153,8 +175,6 @@ library LibDibbler {
      * the formula `log2(A * MAX_BLOCK_ELAPSED + 1)` is applied, where:
      * `A = 2`
      * `MAX_BLOCK_ELAPSED = 25`
-     *
-     * FIXME: rename to currentYield() or blockYield() to highlight that it's adjusted based on block
      */
     function morningYield() internal view returns (uint256 morningYield) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -312,8 +332,7 @@ library LibDibbler {
      * @dev Converts Beans to Pods based on `_yield`.
      * 
      * `pods = beans * (100e6 + _yield) / 100e6`
-     * 
-     * `beans * (1 + _yield / 100e6)`
+     * `pods = beans * (1 + _yield / 100e6)`
      *
      * Beans and Pods are measured to 6 decimals.
      */
@@ -338,8 +357,6 @@ library LibDibbler {
      * Scaling down -> round up
      * 
      * (1 + maxYield) / (1 + morningYield)
-     * 
-     * 1e6 = 1%
      */
     function scaleSoilUp(
         uint256 soil, 
@@ -384,7 +401,7 @@ library LibDibbler {
     function peas() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // Above peg: use current yield
+        // Above peg: number of Pods is fixed based on `s.w.yield`, Soil adjusts
         if(s.season.abovePeg) {
             return beansToPods(
                 s.f.soil, // 1 bean = 1 soil
@@ -392,10 +409,10 @@ library LibDibbler {
             );
         } 
         
-        // Below peg: use adjusted yield
+        // Below peg: amount of Soil is fixed, yield adjusts
         else {
             return beansToPods(
-                s.f.soil,  // 1 bean = 1 soil
+                s.f.soil, // 1 bean = 1 soil
                 morningYield()
             );
         }

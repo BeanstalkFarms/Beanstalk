@@ -27,12 +27,27 @@ contract FieldFacet is ReentrancyGuard {
     using LibSafeMath32 for uint32;
     using LibSafeMath128 for uint128;
 
+    /**
+     * @notice Emitted from {LibDibbler.sowNoSoil} when an `account` creates a plot. 
+     * A Plot is a set of Pods created in from a single {sow} or {fund} call. 
+     * @param account The account that sowed Beans for Pods
+     * @param index The place in line of the Plot
+     * @param beans The amount of Beans burnt to create the Plot
+     * @param pods The amount of Pods assocated with the created Plot
+     */
     event Sow(
         address indexed account,
         uint256 index,
         uint256 beans,
         uint256 pods
     );
+
+    /**
+     * @notice Emitted when `account` claims the Beans associated with Harvestable Pods.
+     * @param account The account that owns the `plots`
+     * @param plots The indices of Plots that were harvested
+     * @param beans The amount of Beans transferred to `account`
+     */
     event Harvest(address indexed account, uint256[] plots, uint256 beans);
     event PodListingCancelled(address indexed account, uint256 index);
 
@@ -80,7 +95,6 @@ contract FieldFacet is ReentrancyGuard {
      * @dev 
      * 
      * FIXME: rename to sowWithMinSoil? This has already been deployed.
-     * FIXME: rename `amount` to `beans`?
      */
     function sowWithMin(
         uint256 beans,
@@ -113,6 +127,11 @@ contract FieldFacet is ReentrancyGuard {
     /**
      * @dev Burn Beans, Sows at the provided `morningYield`, increments the total
      * number of `beanSown`.
+     * 
+     * NOTE: {FundraiserFacet} also burns Beans but bypasses the soil mechanism
+     * by calling {LibDibbler.sowWithMin} which bypasses updates to `s.f.beanSown`
+     * and `s.f.soil`. This is by design, as the Fundraiser has no impact on peg
+     * maintenance and thus should not change the supply of Soil.
      */
     function _sow(uint256 beans, uint256 morningYield, LibTransfer.From mode)
         internal
@@ -166,8 +185,8 @@ contract FieldFacet is ReentrancyGuard {
     }
 
     /**
-     * @dev 
-     * FIXME: rename to _harvestPlot
+     * @dev Check if a Plot is at least partially Harvestable; calculate how many
+     * Pods are Harvestable, create a new Plot if necessary.
      */
     function _harvestPlot(address account, uint256 index)
         private
@@ -178,11 +197,14 @@ contract FieldFacet is ReentrancyGuard {
         require(pods > 0, "Field: no plot");
 
         // Calculate how many Pods are harvestable. 
-        // Since we already checked that some Pods are harvestable
+        // The upstream _harvest function checks that at least some Pods 
+        // are harvestable.
         harvestablePods = s.f.harvestable.sub(index);
         delete s.a[account].field.plots[index];
 
-        // Check if there's a Pod Listing active for this Plot.
+        // Cancel any active Pod Listings active for this Plot.
+        // Note: duplicate of {Listing._cancelPodListing} without the 
+        // ownership check, which is done above.
         if (s.podListings[index] > 0) {
             delete s.podListings[index];
             emit PodListingCancelled(msg.sender, index);
@@ -193,7 +215,7 @@ contract FieldFacet is ReentrancyGuard {
             return pods;
         }
         
-        // Create a new Plot with the remaining Pods.
+        // Create a new Plot with remaining Pods.
         s.a[account].field.plots[index.add(harvestablePods)] = pods.sub(
             harvestablePods
         );

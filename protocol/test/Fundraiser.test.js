@@ -105,7 +105,7 @@ describe('Fundraiser', function () {
       })
 
       it('reverts on over fund', async function () {
-        await expect(this.fundraiser.connect(user).fund(0, '0', EXTERNAL)).to.be.revertedWith('Fundraiser: already completed.')
+        await expect(this.fundraiser.connect(user).fund(0, '0', EXTERNAL)).to.be.revertedWith('Fundraiser: completed')
       })
 
       it('burns beans from protocol', async function () {
@@ -119,7 +119,7 @@ describe('Fundraiser', function () {
       })
 
       it('reverts on over fund', async function () {
-        await expect(this.fundraiser.connect(user).fund(0, '0', EXTERNAL)).to.be.revertedWith('Fundraiser: already completed.')
+        await expect(this.fundraiser.connect(user).fund(0, '0', EXTERNAL)).to.be.revertedWith('Fundraiser: completed')
       })
 
       it('burns beans from protocol', async function () {
