@@ -43,15 +43,6 @@ contract Weather is Sun {
         return s.r;
     }
 
-    /// @dev {FieldFacet.yield} has precision 1e8, but maxYield has precision 1e2.
-    /// i.e.:
-    /// maxYield() = 6674   => 6674% temperature = 66.74
-    /// yield()    = 1e6    at t = 0
-    ///            = 6674e6 at t >> 0
-    function maxYield() public view returns (uint32) {
-        return s.w.t;
-    }
-
     function plentyPerRoot(uint32 season) external view returns (uint256) {
         return s.sops[season];
     }
@@ -135,18 +126,22 @@ contract Weather is Sun {
         handleRain(caseId);
     }
 
-    // FIXME: check if recalling maxYield() is extra gas
     function changeWeather(uint256 caseId) private {
         int8 change = s.cases[caseId];
+        uint32 t = s.w.t;
         if (change < 0) {
-            if (maxYield() <= (uint32(-change))) {
-                // if (change < 0 && maxYield() <= uint32(-change)),
-                // then 0 <= maxYield() <= type(int8).max because change is an int8.
-                // Thus, downcasting maxYield() to an int8 will not cause overflow.
-                change = 1 - int8(maxYield());
+            if (t <= (uint32(-change))) {
+                // if (change < 0 && t <= uint32(-change)),
+                // then 0 <= t <= type(int8).max because change is an int8.
+                // Thus, downcasting t to an int8 will not cause overflow.
+                change = 1 - int8(t);
                 s.w.t = 1;
-            } else s.w.t = maxYield() - (uint32(-change));
-        } else s.w.t = maxYield() + (uint32(change));
+            } else {
+                s.w.t = t - (uint32(-change));
+            }
+        } else {
+            s.w.t = t + (uint32(change));
+        }
 
         emit WeatherChange(s.season.current, caseId, change);
     }
