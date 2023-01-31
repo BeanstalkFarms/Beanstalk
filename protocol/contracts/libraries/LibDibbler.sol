@@ -43,7 +43,7 @@ library LibDibbler {
 
     /**
      * @param beans The number of Beans to Sow
-     * @param morningYield FIXME
+     * @param morningTemperature FIXME
      * @param account The account sowing Beans
      * @dev 
      * 
@@ -74,7 +74,7 @@ library LibDibbler {
      * soilSubtracted = Amt * (1 + yield())/(1+ s.w.t) 
      * soilSubtracted = pods/(1+ s.w.t) 
      */
-    function sow(uint256 beans, uint256 morningYield, address account) internal returns (uint256) {
+    function sow(uint256 beans, uint256 morningTemperature, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         
         uint256 pods;
@@ -85,13 +85,13 @@ library LibDibbler {
             // amount sown is rounded up, because 
             // 1: yield is rounded down.
             // 2: pods are rounded down.
-            beans = scaleSoilDown(beans, morningYield, maxYield);
+            beans = scaleSoilDown(beans, morningTemperature, maxYield);
             pods = beansToPods(beans, maxYield);
         } 
         
         // Below peg: FIXME
         else {
-            pods = beansToPods(beans, morningYield);
+            pods = beansToPods(beans, morningTemperature);
         }
 
         (, s.f.soil) = s.f.soil.trySub(uint128(beans));
@@ -166,7 +166,7 @@ library LibDibbler {
      * `A = 2`
      * `MAX_BLOCK_ELAPSED = 25`
      */
-    function morningYield() internal view returns (uint256 morningYield) {
+    function morningTemperature() internal view returns (uint256 morningTemperature) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 delta = block.number.sub(s.season.sunriseBlock);
 
@@ -342,16 +342,16 @@ library LibDibbler {
      * Scaling up -> round down
      * Scaling down -> round up
      * 
-     * (1 + maxYield) / (1 + morningYield)
+     * (1 + maxYield) / (1 + morningTemperature)
      */
     function scaleSoilUp(
         uint256 soil, 
         uint256 maxYield,
-        uint256 morningYield
+        uint256 morningTemperature
     ) internal pure returns (uint256) {
         return soil.mulDiv(
             maxYield.add(ONE_HUNDRED_PCT),
-            morningYield.add(ONE_HUNDRED_PCT)
+            morningTemperature.add(ONE_HUNDRED_PCT)
         );
     }
     
@@ -371,11 +371,11 @@ library LibDibbler {
      */
     function scaleSoilDown(
         uint256 soil, 
-        uint256 morningYield, 
+        uint256 morningTemperature, 
         uint256 maxYield
     ) internal pure returns (uint256) {
         return soil.mulDiv(
-            morningYield.add(ONE_HUNDRED_PCT),
+            morningTemperature.add(ONE_HUNDRED_PCT),
             maxYield.add(ONE_HUNDRED_PCT),
             LibPRBMath.Rounding.Up
         );
@@ -400,7 +400,7 @@ library LibDibbler {
         else {
             return beansToPods(
                 s.f.soil, // 1 bean = 1 soil
-                morningYield()
+                morningTemperature()
             );
         }
     }

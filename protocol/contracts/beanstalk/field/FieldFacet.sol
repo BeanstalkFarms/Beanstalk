@@ -108,14 +108,14 @@ contract FieldFacet is ReentrancyGuard {
         LibTransfer.From mode
     ) public payable returns (uint256 pods) {
         // `soil` is the remaining Soil
-        (uint256 soil, uint256 morningYield) = _totalSoilAndYield();
+        (uint256 soil, uint256 morningTemperature) = _totalSoilAndYield();
 
         require(
             soil >= minSoil && beans >= minSoil,
             "Field: Soil Slippage"
         );
         require(
-            morningYield >= minYield,
+            morningTemperature >= minYield,
             "Field: Temperature Slippage"
         );
 
@@ -126,11 +126,11 @@ contract FieldFacet is ReentrancyGuard {
         }
 
         // 1 Bean is Sown in 1 Soil, i.e. soil = beans
-        return _sow(soil, morningYield, mode);
+        return _sow(soil, morningTemperature, mode);
     }
 
     /**
-     * @dev Burn Beans, Sows at the provided `morningYield`, increments the total
+     * @dev Burn Beans, Sows at the provided `morningTemperature`, increments the total
      * number of `beanSown`.
      * 
      * NOTE: {FundraiserFacet} also burns Beans but bypasses the soil mechanism
@@ -138,12 +138,12 @@ contract FieldFacet is ReentrancyGuard {
      * and `s.f.soil`. This is by design, as the Fundraiser has no impact on peg
      * maintenance and thus should not change the supply of Soil.
      */
-    function _sow(uint256 beans, uint256 morningYield, LibTransfer.From mode)
+    function _sow(uint256 beans, uint256 morningTemperature, LibTransfer.From mode)
         internal
         returns (uint256 pods)
     {
         beans = LibTransfer.burnToken(C.bean(), beans, msg.sender, mode);
-        pods = LibDibbler.sow(beans, morningYield, msg.sender);
+        pods = LibDibbler.sow(beans, morningTemperature, msg.sender);
         s.f.beanSown = s.f.beanSown + SafeCast.toUint128(beans); // SafeMath not needed
     }
 
@@ -287,14 +287,14 @@ contract FieldFacet is ReentrancyGuard {
     }
 
     /**
-     * @dev Gets the current `soil` and `morningYield`. Provided as a gas 
-     * optimization to prevent recalculation of {LibDibbler.morningYield} for 
+     * @dev Gets the current `soil` and `morningTemperature`. Provided as a gas 
+     * optimization to prevent recalculation of {LibDibbler.morningTemperature} for 
      * upstream functions.
      *
      * Note: the `soil` return value is symmetric with `totalSoil`.
      */
-    function _totalSoilAndYield() private view returns (uint256 soil, uint256 morningYield) {
-        uint256 morningYield = LibDibbler.morningYield();
+    function _totalSoilAndYield() private view returns (uint256 soil, uint256 morningTemperature) {
+        uint256 morningTemperature = LibDibbler.morningTemperature();
 
         // Below peg: Soil is fixed to the amount set during {stepWeather}.
         // Yield is dynamic, starting small and logarithmically increasing to 
@@ -302,20 +302,20 @@ contract FieldFacet is ReentrancyGuard {
         if (!s.season.abovePeg) {
             return (
                 uint256(s.f.soil),
-                morningYield
+                morningTemperature
             );
         }
 
         // Above peg: the maximum amount of Pods that Beanstalk is willing to mint
-        // stays fixed; since {morningYield} is scaled down when `delta < 25`, we
+        // stays fixed; since {morningTemperature} is scaled down when `delta < 25`, we
         // need to scale up the amount of Soil to hold Pods constant.
         return (
             LibDibbler.scaleSoilUp(
                 uint256(s.f.soil), // max soil offered this Season, reached when `t >= 25`
                 uint256(s.w.t).mul(LibDibbler.YIELD_PRECISION), // max yield
-                morningYield // yield adjusted by number of blocks since Sunrise
+                morningTemperature // yield adjusted by number of blocks since Sunrise
             ),
-            morningYield
+            morningTemperature
         );
     }
 
@@ -341,14 +341,14 @@ contract FieldFacet is ReentrancyGuard {
         return LibDibbler.scaleSoilUp(
             uint256(s.f.soil), // min soil
             uint256(s.w.t).mul(LibDibbler.YIELD_PRECISION), // max yield
-            LibDibbler.morningYield() // yield adjusted by number of blocks since Sunrise
+            LibDibbler.morningTemperature() // yield adjusted by number of blocks since Sunrise
         );
     }
 
     /**
      * @notice Returns the current yield (aka "Temperature") offered by Beanstalk
      * when burning Beans in exchange for Pods.
-     * @dev {LibDibbler.morningYield} has precision level 1e6 (1% = 1e6)
+     * @dev {LibDibbler.morningTemperature} has precision level 1e6 (1% = 1e6)
      * 
      * FIXME Migration notes:
      * - this function previously returned uint32
@@ -356,7 +356,7 @@ contract FieldFacet is ReentrancyGuard {
      */
     function yield() external view returns (uint32) {
         return SafeCast.toUint32(
-            LibDibbler.morningYield().div(LibDibbler.YIELD_PRECISION)
+            LibDibbler.morningTemperature().div(LibDibbler.YIELD_PRECISION)
         );
     }
     
