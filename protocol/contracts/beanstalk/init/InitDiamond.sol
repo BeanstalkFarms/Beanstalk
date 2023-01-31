@@ -49,7 +49,7 @@ contract InitDiamond {
              3,   3,   1,   0,  // Exs Hgh: P < 1
              0,  -1,  -3,   0   //          P > 1
         ];
-        s.w.yield = 1;
+        s.w.t = 1;
 
         s.season.current = 1;
         s.season.withdrawSeasons = 25;

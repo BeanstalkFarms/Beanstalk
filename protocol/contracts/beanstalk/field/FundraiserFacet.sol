@@ -134,10 +134,10 @@ contract FundraiserFacet is ReentrancyGuard {
 
         // Calculate the number of Pods to Sow.
         // Fundraisers bypass Morning Auction behavior and Soil requirements,
-        // calculating return only based on the current `s.w.yield`.
+        // calculating return only based on the current `s.w.t`.
         uint256 pods = LibDibbler.beansToPods(
             amount, 
-            uint256(s.w.yield).mul(LibDibbler.YIELD_PRECISION)
+            uint256(s.w.t).mul(LibDibbler.YIELD_PRECISION)
         ); 
 
         // Sow for Pods and return the number of Pods received.

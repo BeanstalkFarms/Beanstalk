@@ -49,7 +49,7 @@ contract Weather is Sun {
     /// yield()    = 1e6    at t = 0
     ///            = 6674e6 at t >> 0
     function maxYield() public view returns (uint32) {
-        return s.w.yield;
+        return s.w.t;
     }
 
     function plentyPerRoot(uint32 season) external view returns (uint256) {
@@ -63,7 +63,7 @@ contract Weather is Sun {
     function stepWeather(int256 deltaB) internal returns (uint256 caseId) {
         uint256 beanSupply = C.bean().totalSupply();
         if (beanSupply == 0) {
-            s.w.yield = 1;
+            s.w.t = 1;
             return 8; // Reasonably low
         }
 
@@ -144,9 +144,9 @@ contract Weather is Sun {
                 // then 0 <= maxYield() <= type(int8).max because change is an int8.
                 // Thus, downcasting maxYield() to an int8 will not cause overflow.
                 change = 1 - int8(maxYield());
-                s.w.yield = 1;
-            } else s.w.yield = maxYield() - (uint32(-change));
-        } else s.w.yield = maxYield() + (uint32(change));
+                s.w.t = 1;
+            } else s.w.t = maxYield() - (uint32(-change));
+        } else s.w.t = maxYield() + (uint32(change));
 
         emit WeatherChange(s.season.current, caseId, change);
     }

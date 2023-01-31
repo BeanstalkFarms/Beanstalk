@@ -125,7 +125,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function setYieldE(uint32 number) public {
-        s.w.yield = number;
+        s.w.t = number;
     }
 
     function setAbovePegE(bool num) public {

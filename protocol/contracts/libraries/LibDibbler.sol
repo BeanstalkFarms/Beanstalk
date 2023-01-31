@@ -70,15 +70,15 @@ library LibDibbler {
      * t = 300 -> however much soil to get fixed number of pods at current temperature
      * soil subtracted is thus scaled down:
      * soilSubtracted = s.f.soil * SoilSowed/totalSoilAbovePeg
-     * soilSubtracted = s.f.soil * SoilSowed/(s.f.soil * ((1 + s.w.yield) /(1 + yield())))
-     * soilSubtracted = Amt * (1 + yield())/(1+ s.w.yield) 
-     * soilSubtracted = pods/(1+ s.w.yield) 
+     * soilSubtracted = s.f.soil * SoilSowed/(s.f.soil * ((1 + s.w.t) /(1 + yield())))
+     * soilSubtracted = Amt * (1 + yield())/(1+ s.w.t) 
+     * soilSubtracted = pods/(1+ s.w.t) 
      */
     function sow(uint256 beans, uint256 morningYield, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         
         uint256 pods;
-        uint256 maxYield = uint256(s.w.yield).mul(YIELD_PRECISION);
+        uint256 maxYield = uint256(s.w.t).mul(YIELD_PRECISION);
 
         // Above peg: FIXME
         if (s.season.abovePeg) {
@@ -160,7 +160,7 @@ library LibDibbler {
     //////////////////// YIELD ////////////////////
     
     /**
-     * @dev Returns the temperature `s.w.yield` scaled down based on the block delta.
+     * @dev Returns the temperature `s.w.t` scaled down based on the block delta.
      * Precision level 1e6, as soil has 1e6 precision (1% = 1e6)
      * the formula `log2(A * MAX_BLOCK_ELAPSED + 1)` is applied, where:
      * `A = 2`
@@ -172,7 +172,7 @@ library LibDibbler {
 
         // check most likely case first
         if (delta > 24) {
-            return uint256(s.w.yield).mul(YIELD_PRECISION);
+            return uint256(s.w.t).mul(YIELD_PRECISION);
         }
 
         // Binary Search
@@ -284,15 +284,15 @@ library LibDibbler {
     /**
      * @param pct The percentage to scale down by, measured to 1e12.
      * @return scaledYield The scaled yield, measured to 1e8 = 100e6 = 100% = 1.
-     * @dev Scales down `s.w.yield` and imposes a minimum of 1e6 (1%) unless 
-     * `s.w.yield` is 0%.
+     * @dev Scales down `s.w.t` and imposes a minimum of 1e6 (1%) unless 
+     * `s.w.t` is 0%.
      * 
      * FIXME: think on how to explain decimals
      */
     function scaleYield(uint256 pct) private view returns (uint256 scaledYield) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        uint256 maxYield = s.w.yield;
+        uint256 maxYield = s.w.t;
         if(maxYield == 0) return 0; 
 
         return LibPRBMath.max(
@@ -335,7 +335,7 @@ library LibDibbler {
 
     /**
      * @dev Scales Soil up when Beanstalk is above peg.
-     * maxYield comes from s.w.yield, which has a precision 1e2 (100 = 1%)
+     * maxYield comes from s.w.t, which has a precision 1e2 (100 = 1%)
      * yield comes from yield(), which has a precision of 1e8 (1e6 = 1%)
      * thus we need to scale maxYield up.
      * 
@@ -360,7 +360,7 @@ library LibDibbler {
      * 
      * When Beanstalk is above peg, the Soil issued changes. Example:
      * 
-     * If 500 Spoil is issued when `s.w.yield = 100e2 = 100%`
+     * If 500 Spoil is issued when `s.w.t = 100e2 = 100%`
      * At delta = 0: yield() = 1%, Soil = 500*(100 + 100%)/(100 + 1%) = 990.09901 soil
      *
      * If someone sow'd ~495 soil, it's equilivant to sowing 250 soil at t > 25.
@@ -388,11 +388,11 @@ library LibDibbler {
     function peas() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // Above peg: number of Pods is fixed based on `s.w.yield`, Soil adjusts
+        // Above peg: number of Pods is fixed based on `s.w.t`, Soil adjusts
         if(s.season.abovePeg) {
             return beansToPods(
                 s.f.soil, // 1 bean = 1 soil
-                uint256(s.w.yield).mul(YIELD_PRECISION) // 1e2 -> 1e8
+                uint256(s.w.t).mul(YIELD_PRECISION) // 1e2 -> 1e8
             );
         } 
         

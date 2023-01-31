@@ -592,7 +592,7 @@ contract FieldTest is FieldFacet, TestHelper {
 
   // check that the Soil decreases over 25 blocks, then stays stagent
   // when beanstalk is above peg, the soil issued is now: 
-  // soil = s.f.soil * (1+ s.w.yield)/(1+ yield())
+  // soil = s.f.soil * (1+ s.w.t)/(1+ yield())
   // soil should always be greater/ equal to s.f.soil
   function testSoilDecrementsOverDutchAbovePeg() public {
     _beforeEachMorningAuction();
@@ -809,7 +809,7 @@ contract FieldTest is FieldFacet, TestHelper {
   }
 
   /// @dev when above peg,the amount of soil now issued is newHarvestable/1.01
-  /// previously, the amount of soil issued was newHarvestable/(s.w.yield + 1)
+  /// previously, the amount of soil issued was newHarvestable/(s.w.t + 1)
   /// this function replicates the previous behaviour with the new soil issuance when below peg.
   // above peg now does not do this anymore
   // function soilAbovePeg(uint256 a) internal view returns(uint256) {

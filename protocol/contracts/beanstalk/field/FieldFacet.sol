@@ -298,7 +298,7 @@ contract FieldFacet is ReentrancyGuard {
 
         // Below peg: Soil is fixed to the amount set during {stepWeather}.
         // Yield is dynamic, starting small and logarithmically increasing to 
-        // `s.w.yield` across the first 25 blocks of the Season.
+        // `s.w.t` across the first 25 blocks of the Season.
         if (!s.season.abovePeg) {
             return (
                 uint256(s.f.soil),
@@ -312,7 +312,7 @@ contract FieldFacet is ReentrancyGuard {
         return (
             LibDibbler.scaleSoilUp(
                 uint256(s.f.soil), // max soil offered this Season, reached when `t >= 25`
-                uint256(s.w.yield).mul(LibDibbler.YIELD_PRECISION), // max yield
+                uint256(s.w.t).mul(LibDibbler.YIELD_PRECISION), // max yield
                 morningYield // yield adjusted by number of blocks since Sunrise
             ),
             morningYield
@@ -327,7 +327,7 @@ contract FieldFacet is ReentrancyGuard {
      * soilAbovePeg = soil * maxYield / yield
      * ```
      * 
-     * Need to cast s.w.yield to an uint256 due prevent overflow.
+     * Need to cast s.w.t to an uint256 due prevent overflow.
      * 
      * FIXME: probably should be named {remainingSoil}.
      */
@@ -340,7 +340,7 @@ contract FieldFacet is ReentrancyGuard {
         // Above peg: Soil is dynamic
         return LibDibbler.scaleSoilUp(
             uint256(s.f.soil), // min soil
-            uint256(s.w.yield).mul(LibDibbler.YIELD_PRECISION), // max yield
+            uint256(s.w.t).mul(LibDibbler.YIELD_PRECISION), // max yield
             LibDibbler.morningYield() // yield adjusted by number of blocks since Sunrise
         );
     }

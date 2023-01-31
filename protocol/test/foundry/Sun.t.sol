@@ -63,7 +63,7 @@ contract SunTest is  Sun, TestHelper {
     console.log("To Silo: %s", toSilo);
     console.log("New Harvestable: %s", newHarvestable);
     console.log("Soil: %s", soil);
-    console.log("Yield: %s", s.w.yield);
+    console.log("Yield: %s", s.w.t);
 
     vm.expectEmit(true, false, false, true);
     emit Reward(nextSeason, toField, toSilo, toFert);
