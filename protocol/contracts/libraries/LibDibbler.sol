@@ -49,7 +49,7 @@ library LibDibbler {
      * 
      * ## Above Peg 
      * 
-     * | t   | pods  | soil                                   | yield                          | maxTemperature     |
+     * | t   | pods  | soil                                   | temperature                          | maxTemperature     |
      * |-----|-------|----------------------------------------|--------------------------------|--------------|
      * | 0   | 500e6 | ~6683e6 (500e6 * (1 + 1250%)/(1+1%))   | 1e6 (1%)                       | 1250 (1250%) |
      * | 12  | 500e6 | ~1507e6 (500e6 * (1 + 1250%)/(1+348%)) | 348.75e6 (27.9% * 1250 * 1e6)  | 1250         |
@@ -57,12 +57,13 @@ library LibDibbler {
      * 
      * ## Below Peg
      * 
-     * | t   | pods                            | soil  | yield                         | maxTemperature     |
+     * | t   | pods                            | soil  | temperature                         | maxTemperature     |
      * |-----|---------------------------------|-------|-------------------------------|--------------|
      * | 0   | 505e6 (500e6 * (1+1%))          | 500e6 | 1e6 (1%)                      | 1250 (1250%) |
      * | 12  | 2243.75e6 (500e6 * (1+348.75%)) | 500e6 | 348.75e6 (27.9% * 1250 * 1e6) | 1250         |
      * | 300 | 6750e6 (500e6 * (1+1250%))      | 500e6 | 1250e6                        | 1250         |
      * 
+     * FIXME:
      * Yield is floored at 1%.
      * the amount of soil changes as a function of the morning auction;
      * soil consumed increases as dutch auction passes
@@ -83,7 +84,7 @@ library LibDibbler {
         // Above peg: FIXME
         if (s.season.abovePeg) {
             // amount sown is rounded up, because 
-            // 1: yield is rounded down.
+            // 1: temperature is rounded down.
             // 2: pods are rounded down.
             beans = scaleSoilDown(beans, morningTemperature, maxTemperature);
             pods = beansToPods(beans, maxTemperature);
@@ -186,98 +187,98 @@ library LibDibbler {
                         }
                         // delta == 1
                         else {
-                            return scaleYield(279415312704);
+                            return _scaleTemperature(279415312704);
                         }
                     }
                     if (delta == 2) {
-                       return scaleYield(409336034395);
+                       return _scaleTemperature(409336034395);
                     }
                     else { // delta == 3
-                        return scaleYield(494912626048);
+                        return _scaleTemperature(494912626048);
                     }
                 }
                 if (delta < 6) {
                     if (delta == 4) {
-                        return scaleYield(558830625409);
+                        return _scaleTemperature(558830625409);
                     }
                     else { // delta == 5
-                        return scaleYield(609868162219);
+                        return _scaleTemperature(609868162219);
                     }
                 }
                 else { // delta == 6
-                    return scaleYield(652355825780); 
+                    return _scaleTemperature(652355825780); 
                 }
             }
             if (delta < 10) {
                 if (delta < 9) {
                     if (delta == 7) {
-                        return scaleYield(688751347100);
+                        return _scaleTemperature(688751347100);
                     }
                     else { // delta == 8
-                        return scaleYield(720584687295);
+                        return _scaleTemperature(720584687295);
                     }
                 }
                 else { // delta == 9
-                    return scaleYield(748873234524); 
+                    return _scaleTemperature(748873234524); 
                 }
             }
             if (delta < 12) {
                 if (delta == 10) {
-                    return scaleYield(774327938752);
+                    return _scaleTemperature(774327938752);
                 }
                 else { // delta == 11
-                    return scaleYield(797465225780); 
+                    return _scaleTemperature(797465225780); 
                 }
             }
             else { // delta == 12
-                return scaleYield(818672068791); 
+                return _scaleTemperature(818672068791); 
             }
         } 
         if (delta < 19){
             if (delta < 16) {
                 if (delta < 15) {
                     if (delta == 13) {
-                        return scaleYield(838245938114); 
+                        return _scaleTemperature(838245938114); 
                     }
                     else { // delta == 14
-                        return scaleYield(856420437864);
+                        return _scaleTemperature(856420437864);
                     }
                 }
                 else { // delta == 15
-                    return scaleYield(873382373802);
+                    return _scaleTemperature(873382373802);
                 }
             }
             if (delta < 18) {
                 if (delta == 16) {
-                    return scaleYield(889283474924);
+                    return _scaleTemperature(889283474924);
                 }
                 else { // delta == 17
-                    return scaleYield(904248660443);
+                    return _scaleTemperature(904248660443);
                 }
             }
-            return scaleYield(918382006208); // delta == 18
+            return _scaleTemperature(918382006208); // delta == 18
         }
         if (delta < 22) {
             if (delta < 21) {
                 if (delta == 19) {
-                    return scaleYield(931771138485); 
+                    return _scaleTemperature(931771138485); 
                 }
                 else { // delta == 20
-                    return scaleYield(944490527707);
+                    return _scaleTemperature(944490527707);
                 }
             }
-            return scaleYield(956603996980); // delta == 21
+            return _scaleTemperature(956603996980); // delta == 21
         }
         if (delta <= 23){ 
             if (delta == 22) {
-                return scaleYield(968166659804);
+                return _scaleTemperature(968166659804);
             }
             else { // delta == 23
-                return scaleYield(979226436102);
+                return _scaleTemperature(979226436102);
             }
         }
         else { // delta == 24
-            return scaleYield(989825252096);
+            return _scaleTemperature(989825252096);
         }
     }
 
@@ -289,7 +290,7 @@ library LibDibbler {
      * 
      * FIXME: think on how to explain decimals
      */
-    function scaleYield(uint256 pct) private view returns (uint256 scaledYield) {
+    function _scaleTemperature(uint256 pct) private view returns (uint256 scaledYield) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         uint256 maxTemperature = s.w.t;
@@ -314,21 +315,21 @@ library LibDibbler {
 
     /**
      * @param beans The number of Beans to convert to Pods.
-     * @param _yield The current yield, measured to 1e8. 
-     * @dev Converts Beans to Pods based on `_yield`.
+     * @param morningTemperature The current temperature, measured to 1e8. 
+     * @dev Converts Beans to Pods based on `morningTemperature`.
      * 
-     * `pods = beans * (100e6 + _yield) / 100e6`
-     * `pods = beans * (1 + _yield / 100e6)`
+     * `pods = beans * (100e6 + morningTemperature) / 100e6`
+     * `pods = beans * (1 + morningTemperature / 100e6)`
      *
      * Beans and Pods are measured to 6 decimals.
      */
-    function beansToPods(uint256 beans, uint256 _yield)
+    function beansToPods(uint256 beans, uint256 morningTemperature)
         internal
         pure
         returns (uint256 pods)
     {
         return beans.mulDiv(
-            _yield.add(ONE_HUNDRED_PCT),
+            morningTemperature.add(ONE_HUNDRED_PCT),
             ONE_HUNDRED_PCT
         );
     }
@@ -361,7 +362,7 @@ library LibDibbler {
      * When Beanstalk is above peg, the Soil issued changes. Example:
      * 
      * If 500 Spoil is issued when `s.w.t = 100e2 = 100%`
-     * At delta = 0: yield() = 1%, Soil = 500*(100 + 100%)/(100 + 1%) = 990.09901 soil
+     * At delta = 0: morningTemperature() = 1%, Soil = 500*(100 + 100%)/(100 + 1%) = 990.09901 soil
      *
      * If someone sow'd ~495 soil, it's equilivant to sowing 250 soil at t > 25.
      * Thus when someone sows during this time, the amount subtracted from s.f.soil
@@ -388,7 +389,7 @@ library LibDibbler {
     function peas() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // Above peg: number of Pods is fixed based on `s.w.t`, Soil adjusts
+        // Above peg: number of Pods is fixed, Soil adjusts
         if(s.season.abovePeg) {
             return beansToPods(
                 s.f.soil, // 1 bean = 1 soil
@@ -396,7 +397,7 @@ library LibDibbler {
             );
         } 
         
-        // Below peg: amount of Soil is fixed, yield adjusts
+        // Below peg: amount of Soil is fixed, temperature adjusts
         else {
             return beansToPods(
                 s.f.soil, // 1 bean = 1 soil
