@@ -6,25 +6,38 @@ import { loadOrCreateToken } from '../utils/Token'
 import { loadOrCreateWell } from '../utils/Well'
 
 export function handleBoreWell(event: BoreWell): void {
+
     Well.create(event.params.well)
 
-    let tokens = ['']
+    let well = loadOrCreateWell(event.params.well)
+    let wellToken = loadOrCreateToken(event.params.well)
+
+    well.aquifer = event.address
+    well.name = wellToken.name
+    well.symbol = wellToken.symbol
+    well.liquidityToken = well.id
+    well.liquidityTokenType = "ERC20"
+
+    // A bit crude, but it works
+
     for (let i = 0; i < event.params.tokens.length; i++) {
         loadOrCreateToken(event.params.tokens[i])
-        tokens.push(event.params.tokens[i].toHexString())
     }
 
-    let pumps = ['']
+    if (event.params.tokens.length == 2) {
+        well.inputTokens = [event.params.tokens[0], event.params.tokens[1]]
+    } else if (event.params.tokens.length == 3) {
+        well.inputTokens = [event.params.tokens[0], event.params.tokens[1], event.params.tokens[2]]
+    } else if (event.params.tokens.length == 4) {
+        well.inputTokens = [event.params.tokens[0], event.params.tokens[1], event.params.tokens[2], event.params.tokens[3]]
+    }
 
     for (let i = 0; i < event.params.pumps.length; i++) {
-        let pump = loadOrCreatePump(event.params.pumps[i][0].toAddress())
-        pumps.push(pump.id)
+        loadOrCreatePump(event.params.pumps[i][0].toAddress(), event.address)
     }
 
-    let well = loadOrCreateWell(event.params.well)
-    well.tokens = tokens
     well.wellFunction = event.params.wellFunction[0].toAddress()
-    well.pumps = pumps
-    well.auger = event.params.auger
+    well.createdTimestamp = event.block.timestamp
+    well.createdBlockNumber = event.block.number
     well.save()
 }

@@ -15,6 +15,7 @@ export const BEANSTALK_FARMS = Address.fromString('0x21de18b6a8f78ede6d16c50a167
 export const BEANSTALK = Address.fromString('0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5')
 export const CURVE_PRICE = Address.fromString('0xA57289161FF18D67A68841922264B317170b0b81')
 export const FERTILIZER = Address.fromString('0x402c84De2Ce49aF88f5e2eF3710ff89bFED36cB6')
+export const AQUIFER = Address.fromString('0xF6a8aD553b265405526030c2102fda2bDcdDC177')
 
 // LP Addresses
 
