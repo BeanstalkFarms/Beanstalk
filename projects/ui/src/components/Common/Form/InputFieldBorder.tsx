@@ -1,5 +1,5 @@
+import React, { useEffect, useRef } from 'react';
 import { Box, BoxProps, ClickAwayListener } from '@mui/material';
-import React, { useEffect, useMemo } from 'react';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import { FC } from '~/types';
 
@@ -16,44 +16,30 @@ const InputFieldBorder: FC<
   disabled = false,
   ...props
 }) => {
-  const ref = React.useRef<HTMLDivElement | null>(null);
-  const activeRef = React.useRef<boolean>(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+  const activeRef = useRef<boolean>(false);
 
-  const actions = useMemo(() => {
-    const handleMouseOver = () => {
-      if (!ref.current || activeRef.current || disabled) return;
-      ref.current.style.borderColor =
-        BeanstalkPalette.theme.winter.primaryHover;
-    };
+  const handleMouseOver = () => {
+    if (!ref.current || activeRef.current || disabled) return;
+    ref.current.style.borderColor = BeanstalkPalette.textBlue;
+  };
 
-    const handleMouseLeave = () => {
-      if (!ref.current || activeRef.current || disabled) return;
-      ref.current.style.borderColor = BeanstalkPalette.inputGrey;
-    };
+  const handleMouseLeave = () => {
+    if (!ref.current || activeRef.current || disabled) return;
+    ref.current.style.borderColor = BeanstalkPalette.inputGrey;
+  };
 
-    const handleOnClick = () => {
-      if (!ref.current || activeRef.current || disabled) return;
-      ref.current.style.padding = '0px';
-      ref.current.style.border = '2px solid';
-      ref.current.style.borderColor = BeanstalkPalette.theme.winter.primary;
-      activeRef.current = true;
-    };
+  const handleOnClick = () => {
+    if (!ref.current || activeRef.current || disabled) return;
+    ref.current.style.borderColor = BeanstalkPalette.theme.winter.primary;
+    activeRef.current = true;
+  };
 
-    const handleClickAway = () => {
-      if (!ref.current || !activeRef.current || disabled) return;
-      ref.current.style.padding = '1px';
-      ref.current.style.border = '1px solid';
-      ref.current.style.borderColor = BeanstalkPalette.inputGrey;
-      activeRef.current = false;
-    };
-
-    return {
-      handleMouseOver,
-      handleMouseLeave,
-      handleOnClick,
-      handleClickAway,
-    };
-  }, [disabled]);
+  const handleClickAway = () => {
+    if (!ref.current || !activeRef.current || disabled) return;
+    ref.current.style.borderColor = BeanstalkPalette.inputGrey;
+    activeRef.current = false;
+  };
 
   useEffect(() => {
     if (!enabled || !ref.current) return;
@@ -71,18 +57,18 @@ const InputFieldBorder: FC<
       ref={ref}
       sx={{
         borderRadius: 1,
-        border: '1px solid',
+        border: '0.75px solid',
         borderColor: BeanstalkPalette.inputGrey,
-        padding: '1px',
+        // padding: '0.2px',
         boxSizing: 'border-box',
         backgroundColor: BeanstalkPalette.white,
       }}
       width={fullWidth ? '100%' : undefined}
-      onMouseOver={actions.handleMouseOver}
-      onMouseLeave={actions.handleMouseLeave}
-      onClick={actions.handleOnClick}
+      onMouseOver={handleMouseOver}
+      onMouseLeave={handleMouseLeave}
+      onClick={handleOnClick}
     >
-      <ClickAwayListener onClickAway={actions.handleClickAway}>
+      <ClickAwayListener onClickAway={handleClickAway}>
         <Box
           px={2}
           py={1}
