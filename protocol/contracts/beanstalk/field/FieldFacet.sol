@@ -5,7 +5,6 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-
 import {C} from "~/C.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
@@ -20,6 +19,7 @@ import {ReentrancyGuard} from "../ReentrancyGuard.sol";
  * @title FieldFacet
  * @notice Field sows Beans.
  * @author Publius, Brean
+ * @dev 
  */
 contract FieldFacet is ReentrancyGuard {
     using SafeMath for uint256;
@@ -49,30 +49,36 @@ contract FieldFacet is ReentrancyGuard {
      * @param beans The amount of Beans transferred to `account`
      */
     event Harvest(address indexed account, uint256[] plots, uint256 beans);
+
+    /**
+     * @param account The account that created the Pod Listing
+     * @param index The index of the Plot listed
+     * @dev NOTE: must mirrow {Listing.PodListingCancelled}
+     */
     event PodListingCancelled(address indexed account, uint256 index);
 
-    //////////// SOW ////////////
+    //////////////////// SOW ////////////////////
 
     /**
      * @notice Sow Beans in exchange for Pods.
      * @param beans The number of Beans to Sow
-     * @param minYield The mininum Temperature at which to Sow
+     * @param minYield The minimum Temperature at which to Sow
      * @param mode The balance to transfer Beans from; see {LibTrasfer.From}
-     * @return pods The number of Pods received.
+     * @return pods The number of Pods received
      * @dev 
      * 
      * `minYield` has precision of 1e6. Wraps {sowWithMin} with `minSoil = beans`.
      * 
      * NOTE: previously minYield was measured to 1e2
      * 
-     * Reason for `minYield` on the Sow function:
-     * If someone sends a Sow transaction at the end of the season, it could be 
+     * Rationale for {sow} accepting a `minYield` parameter:
+     * If someone sends a Sow transaction at the end of a Season, it could be 
      * executed early in the following Season, at which time the yield may be
-     * significantly lower due to the Morning Auction functionality.
+     * significantly lower due to Morning Auction functionality.
      * 
      * FIXME Migration notes:
      * - Added `minYield` as second parameter
-     * - `minYield` is uint256 measured to 1e6 instead of uint32s
+     * - `minYield` is uint256 measured to 1e6 instead of uint32
      */
     function sow(
         uint256 beans,
@@ -89,12 +95,11 @@ contract FieldFacet is ReentrancyGuard {
     /**
      * @notice Sow Beans in exchange for Pods. Use at least `minSoil`.
      * @param beans The number of Beans to Sow
-     * @param minYield The mininum Temperature at which to Sow
-     * @param minSoil The minimum amount of Soil to use; reverts if there is less than this much Soil available upon execution
+     * @param minYield The minimum Temperature at which to Sow
+     * @param minSoil The minimum amount of Soil to use; reverts if there is 
+     * less than this much Soil available upon execution
      * @param mode The balance to transfer Beans from; see {LibTrasfer.From}
-     * @dev 
-     * 
-     * FIXME: rename to sowWithMinSoil? This has already been deployed.
+     * @return pods The number of Pods received
      */
     function sowWithMin(
         uint256 beans,
@@ -142,11 +147,11 @@ contract FieldFacet is ReentrancyGuard {
         s.f.beanSown = s.f.beanSown + SafeCast.toUint128(beans); // SafeMath not needed
     }
 
-    //////////// HARVEST ////////////
+    //////////////////// HARVEST ////////////////////
 
     /**
      * @notice Harvest Pods from the Field.
-     * @param plots List of plot IDs to Harvest.
+     * @param plots List of plot IDs to Harvest
      * @param mode The balance to transfer Beans to; see {LibTrasfer.To}
      * @dev Redeems Pods for Beans. When Pods become Harvestable, they are
      * redeemable for 1 Bean each.
@@ -221,7 +226,7 @@ contract FieldFacet is ReentrancyGuard {
         );
     }
 
-    //////////// GETTERS ////////////
+    //////////////////// GETTERS ////////////////////
 
     /**
      * @notice Returns the total number of Pods ever minted.
@@ -282,27 +287,18 @@ contract FieldFacet is ReentrancyGuard {
     }
 
     /**
-     * @dev Gets the current soil and yield. Provided as a gas optimization to 
-     * prevent recalculation of {LibDibbler.morningYield} for some upstream functions.
+     * @dev Gets the current `soil` and `morningYield`. Provided as a gas 
+     * optimization to prevent recalculation of {LibDibbler.morningYield} for 
+     * upstream functions.
      *
-     * Note: the first return value is symmetric with `totalSoil`.
-     * 
-     * FIXME:
-     * 
-     * When beanstalk is above peg, max amount of pods should be constant
-     * Since pods are a function of soil and yield, if temperature is going to go
-     * down then we need soil to go up in order for Pods to be the same
-     * If someone sowed all the Soil instantaneously when above peg, beanstalk would
-     * mint a small number of pods, which isn't an accurate representation of demand.
-     * 
-     * Whole point of sowing above peg is to gauge demand.
+     * Note: the `soil` return value is symmetric with `totalSoil`.
      */
     function _totalSoilAndYield() private view returns (uint256 soil, uint256 morningYield) {
         uint256 morningYield = LibDibbler.morningYield();
 
-        // Below peg: Soil is fixed to the amount set during {stepWeather},
+        // Below peg: Soil is fixed to the amount set during {stepWeather}.
         // Yield is dynamic, starting small and logarithmically increasing to 
-        // `s.f.yield` across the first 25 blocks of the Season.
+        // `s.w.yield` across the first 25 blocks of the Season.
         if (!s.season.abovePeg) {
             return (
                 uint256(s.f.soil),

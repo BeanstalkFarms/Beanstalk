@@ -48,11 +48,11 @@ library LibDibbler {
      * 
      * ## Above Peg 
      * 
-     * | t   | pods  | soil                                 | yield                          | maxYield     |
-     * |-----|-------|--------------------------------------|--------------------------------|--------------|
-     * | 0   | 500e6 | ~6683e6 (500e6 *(1 + 1250%)/(1+1%))  | 1e6 (1%)                       | 1250 (1250%) |
-     * | 12  | 500e6 | ~1507e6 (500e6 *(1 + 1250%)/(1+348%))| 348.75e6 (27.9% * 1250 * 1e6)  | 1250         |
-     * | 300 | 500e6 |  500e6 (500e6 *(1 + 1250%)/(1+1250%))| 1250e6                         | 1250         |
+     * | t   | pods  | soil                                   | yield                          | maxYield     |
+     * |-----|-------|----------------------------------------|--------------------------------|--------------|
+     * | 0   | 500e6 | ~6683e6 (500e6 * (1 + 1250%)/(1+1%))   | 1e6 (1%)                       | 1250 (1250%) |
+     * | 12  | 500e6 | ~1507e6 (500e6 * (1 + 1250%)/(1+348%)) | 348.75e6 (27.9% * 1250 * 1e6)  | 1250         |
+     * | 300 | 500e6 |  500e6 (500e6 * (1 + 1250%)/(1+1250%)) | 1250e6                         | 1250         |
      * 
      * ## Below Peg
      * 
@@ -170,7 +170,7 @@ library LibDibbler {
     //////////////////// YIELD ////////////////////
     
     /**
-     * @dev Returns the temperature `s.f.yield` scaled down based on the block delta.
+     * @dev Returns the temperature `s.w.yield` scaled down based on the block delta.
      * Precision level 1e6, as soil has 1e6 precision (1% = 1e6)
      * the formula `log2(A * MAX_BLOCK_ELAPSED + 1)` is applied, where:
      * `A = 2`
@@ -294,12 +294,8 @@ library LibDibbler {
     /**
      * @param pct The percentage to scale down by, measured to 1e12.
      * @return scaledYield The scaled yield, measured to 1e8 = 100e6 = 100% = 1.
-     * @dev Scales down temperature, minimum 1e6 (unless temperature is 0%)
-     * 1e6 = 1% temperature
-     *
-     * 279415312704 = 0.279415312704e12
-     * 
-     * `s.f.yield = 6674 => 6674% = 66.74 `
+     * @dev Scales down `s.w.yield` and imposes a minimum of 1e6 (1%) unless 
+     * `s.w.yield` is 0%.
      * 
      * FIXME: think on how to explain decimals
      */
@@ -374,7 +370,7 @@ library LibDibbler {
      * 
      * When Beanstalk is above peg, the Soil issued changes. Example:
      * 
-     * If 500 Spoil is issued when `s.f.yield = 100e2 = 100%`
+     * If 500 Spoil is issued when `s.w.yield = 100e2 = 100%`
      * At delta = 0: yield() = 1%, Soil = 500*(100 + 100%)/(100 + 1%) = 990.09901 soil
      *
      * If someone sow'd ~495 soil, it's equilivant to sowing 250 soil at t > 25.
@@ -397,6 +393,7 @@ library LibDibbler {
 
     /**
      * @dev Peas are the potential remaining Pods that can be issued within a Season.
+     * TODO: rename
      */
     function peas() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();

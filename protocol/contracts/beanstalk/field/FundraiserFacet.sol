@@ -15,6 +15,7 @@ import "~/libraries/Token/LibTransfer.sol";
 
 /**
  * @title Fundraiser Facet
+ * @notice Handles the creation, funding, and completion of a Fundraiser.
  * @author Publius
  */
 contract FundraiserFacet is ReentrancyGuard {
