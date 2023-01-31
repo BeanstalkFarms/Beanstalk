@@ -312,7 +312,7 @@ contract FieldFacet is ReentrancyGuard {
         return (
             LibDibbler.scaleSoilUp(
                 uint256(s.f.soil), // max soil offered this Season, reached when `t >= 25`
-                uint256(s.w.t).mul(LibDibbler.YIELD_PRECISION), // max temperature
+                uint256(s.w.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
                 morningTemperature // temperature adjusted by number of blocks since Sunrise
             ),
             morningTemperature
@@ -340,7 +340,7 @@ contract FieldFacet is ReentrancyGuard {
         // Above peg: Soil is dynamic
         return LibDibbler.scaleSoilUp(
             uint256(s.f.soil), // min soil
-            uint256(s.w.t).mul(LibDibbler.YIELD_PRECISION), // max temperature
+            uint256(s.w.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
             LibDibbler.morningTemperature() // temperature adjusted by number of blocks since Sunrise
         );
     }
@@ -353,7 +353,7 @@ contract FieldFacet is ReentrancyGuard {
      */
     function yield() external view returns (uint32) {
         return SafeCast.toUint32(
-            LibDibbler.morningTemperature().div(LibDibbler.YIELD_PRECISION)
+            LibDibbler.morningTemperature().div(LibDibbler.TEMPERATURE_PRECISION)
         );
     }
     

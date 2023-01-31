@@ -28,8 +28,8 @@ library LibDibbler {
     // 1e6 = 1%
     // (6674 * 0.279415312704e12)/1e6 ~= 1864e6 = 1864%?
     // 1e6 = 1% = 0.01
-    uint256 constant YIELD_PRECISION = 1e6; 
-    uint256 constant ONE_HUNDRED_PCT = 100 * YIELD_PRECISION;
+    uint256 constant TEMPERATURE_PRECISION = 1e6; 
+    uint256 constant ONE_HUNDRED_PCT = 100 * TEMPERATURE_PRECISION;
     uint256 private constant SOIL_SOLD_OUT_THRESHOLD = 1e6;
     
     event Sow(
@@ -78,7 +78,7 @@ library LibDibbler {
         AppStorage storage s = LibAppStorage.diamondStorage();
         
         uint256 pods;
-        uint256 maxYield = uint256(s.w.t).mul(YIELD_PRECISION);
+        uint256 maxYield = uint256(s.w.t).mul(TEMPERATURE_PRECISION);
 
         // Above peg: FIXME
         if (s.season.abovePeg) {
@@ -172,7 +172,7 @@ library LibDibbler {
 
         // check most likely case first
         if (delta > 24) {
-            return uint256(s.w.t).mul(YIELD_PRECISION);
+            return uint256(s.w.t).mul(TEMPERATURE_PRECISION);
         }
 
         // Binary Search
@@ -182,7 +182,7 @@ library LibDibbler {
                     if (delta < 2) {
                         // delta == 0, same block as sunrise
                         if (delta < 1) {
-                            return YIELD_PRECISION;
+                            return TEMPERATURE_PRECISION;
                         }
                         // delta == 1
                         else {
@@ -300,15 +300,15 @@ library LibDibbler {
             // perform the following transformation:
             // (1e2)    maxYield                100%
             // (1e12)    * pct 
-            // (1e6)     / YIELD_PRECISION      1%
+            // (1e6)     / TEMPERATURE_PRECISION      1%
             // (1e8)     = scaledYield 
             maxYield.mulDiv(
                 pct, 
-                YIELD_PRECISION,
+                TEMPERATURE_PRECISION,
                 LibPRBMath.Rounding.Up
             ),
-            // Floor at YIELD_PRECISION (1%)
-            YIELD_PRECISION
+            // Floor at TEMPERATURE_PRECISION (1%)
+            TEMPERATURE_PRECISION
         );
     }
 
@@ -392,7 +392,7 @@ library LibDibbler {
         if(s.season.abovePeg) {
             return beansToPods(
                 s.f.soil, // 1 bean = 1 soil
-                uint256(s.w.t).mul(YIELD_PRECISION) // 1e2 -> 1e8
+                uint256(s.w.t).mul(TEMPERATURE_PRECISION) // 1e2 -> 1e8
             );
         } 
         

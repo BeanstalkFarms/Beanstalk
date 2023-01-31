@@ -137,7 +137,7 @@ contract FundraiserFacet is ReentrancyGuard {
         // calculating return only based on the current `s.w.t`.
         uint256 pods = LibDibbler.beansToPods(
             amount, 
-            uint256(s.w.t).mul(LibDibbler.YIELD_PRECISION)
+            uint256(s.w.t).mul(LibDibbler.TEMPERATURE_PRECISION)
         ); 
 
         // Sow for Pods and return the number of Pods received.
