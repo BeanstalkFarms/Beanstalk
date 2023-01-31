@@ -67,7 +67,7 @@ describe('Complex Weather', function () {
         await this.season.setNextSowTimeE('10')
         await this.season.stepWeatherE(ethers.utils.parseEther('1'), '1');
         const weather = await this.season.weather();
-        expect(weather.yield).to.equal(7)
+        expect(weather.t).to.equal(7)
         expect(weather.nextSowTime).to.equal(parseInt(MAX_UINT32))
         expect(weather.lastSowTime).to.equal(10)
     })
@@ -77,7 +77,7 @@ describe('Complex Weather', function () {
       await this.season.setNextSowTimeE('1000')
       await this.season.stepWeatherE(ethers.utils.parseEther('1'), '1');
       const weather = await this.season.weather();
-      expect(weather.yield).to.equal(7)
+      expect(weather.t).to.equal(7)
       expect(weather.nextSowTime).to.equal(parseInt(MAX_UINT32))
       expect(weather.lastSowTime).to.equal(1000)
     })
@@ -87,7 +87,7 @@ describe('Complex Weather', function () {
       await this.season.setNextSowTimeE('1000')
       await this.season.stepWeatherE(ethers.utils.parseEther('1'), '1');
       const weather = await this.season.weather();
-      expect(weather.yield).to.equal(7)
+      expect(weather.t).to.equal(7)
       expect(weather.nextSowTime).to.equal(parseInt(MAX_UINT32))
       expect(weather.lastSowTime).to.equal(1000)
     })
@@ -97,7 +97,7 @@ describe('Complex Weather', function () {
       await this.season.setNextSowTimeE('1000')
       await this.season.stepWeatherE(ethers.utils.parseEther('1'), '1');
       const weather = await this.season.weather();
-      expect(weather.yield).to.equal(9)
+      expect(weather.t).to.equal(9)
       expect(weather.nextSowTime).to.equal(parseInt(MAX_UINT32))
       expect(weather.lastSowTime).to.equal(1000)
     })
@@ -107,7 +107,7 @@ describe('Complex Weather', function () {
       await this.season.setNextSowTimeE('1000')
       await this.season.stepWeatherE(ethers.utils.parseEther('1'), '1');
       const weather = await this.season.weather();
-      expect(weather.yield).to.equal(9)
+      expect(weather.t).to.equal(9)
       expect(weather.nextSowTime).to.equal(parseInt(MAX_UINT32))
       expect(weather.lastSowTime).to.equal(1000)
     })
@@ -117,7 +117,7 @@ describe('Complex Weather', function () {
       await this.season.setNextSowTimeE('1000')
       await this.season.stepWeatherE(ethers.utils.parseEther('1'), '1');
       const weather = await this.season.weather();
-      expect(weather.yield).to.equal(10)
+      expect(weather.t).to.equal(10)
       expect(weather.nextSowTime).to.equal(parseInt(MAX_UINT32))
       expect(weather.lastSowTime).to.equal(1000)
     })
@@ -127,7 +127,7 @@ describe('Complex Weather', function () {
       await this.season.setNextSowTimeE(MAX_UINT32)
       await this.season.stepWeatherE(ethers.utils.parseEther('1'), '1');
       const weather = await this.season.weather();
-      expect(weather.yield).to.equal(9)
+      expect(weather.t).to.equal(9)
       expect(weather.nextSowTime).to.equal(parseInt(MAX_UINT32))
       expect(weather.lastSowTime).to.equal(parseInt(MAX_UINT32))
     })

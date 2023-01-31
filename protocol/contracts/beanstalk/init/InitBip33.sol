@@ -29,7 +29,7 @@ contract InitBip33 {
         uint128 lastDSoil;
         uint32 lastSowTime;
         uint32 nextSowTime;
-        uint32 yield;
+        uint32 t;
     }
 
     function init() external {
@@ -42,7 +42,7 @@ contract InitBip33 {
         newWeather.lastDSoil = uint128(oldWeather.lastDSoil);
         newWeather.lastSowTime = oldWeather.lastSowTime;
         newWeather.nextSowTime = oldWeather.nextSowTime;
-        newWeather.yield = oldWeather.yield;
+        newWeather.t = oldWeather.yield;
         s.w = newWeather;
     }
 }

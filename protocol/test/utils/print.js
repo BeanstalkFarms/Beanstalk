@@ -53,7 +53,7 @@ async function printWeather(season) {
   console.log(`lastSoilPercent ${weather.lastSoilPercent}`)
   console.log(`lastSowTime ${weather.lastSowTime}`)
   console.log(`nextSowTime ${weather.nextSowTime}`)
-  console.log(`yield ${weather.yield}`)
+  console.log(`yield ${weather.t}`)
   console.log(`didSowBelowMin ${weather.didSowBelowMin}`)
   console.log(`didSowFaster ${weather.didSowFaster}`)
   console.log('---------------------------------------------')
