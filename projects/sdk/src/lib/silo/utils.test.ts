@@ -4,7 +4,7 @@ import { sum } from "lodash";
 import { Token } from "src/classes/Token";
 import { TokenValue } from "src/TokenValue";
 import { getTestUtils } from "src/utils/TestUtils/provider";
-import { DepositCrate } from "../silo";
+import { DepositCrate } from "../silo/types";
 import { pickCrates } from "./utils";
 import { Withdraw } from "./Withdraw";
 

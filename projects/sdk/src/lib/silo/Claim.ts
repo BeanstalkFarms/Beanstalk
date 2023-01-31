@@ -2,7 +2,7 @@ import { ContractTransaction } from "ethers";
 import { Token } from "src/classes/Token";
 import { BeanstalkSDK, DataSource } from "../BeanstalkSDK";
 import { FarmToMode } from "../farm";
-import { TokenSiloBalance } from "../silo";
+import { TokenSiloBalance } from "src/lib/silo/types";
 
 export class Claim {
   static sdk: BeanstalkSDK;

@@ -2,8 +2,9 @@ import { BigNumber } from "ethers";
 import { Token } from "src/classes/Token";
 import { EventProcessorData } from "src/lib/events/processor";
 import { EIP712PermitMessage } from "src/lib/permit";
-import { Crate, DepositCrate, Silo, TokenSiloBalance, WithdrawalCrate } from "../silo";
+import { Silo } from "../silo";
 import { TokenValue } from "src/classes/TokenValue";
+import { Crate, TokenSiloBalance, WithdrawalCrate, DepositCrate } from "./types";
 
 export type MapValueType<A> = A extends Map<any, infer V> ? V : never;
 
@@ -31,7 +32,7 @@ export type CrateSortFn = <T extends Crate<TokenValue>>(crates: T[]) => T[];
  *    "claimable" (aka receivable), which are eligible to be claimed
  * 2. Convert each crate amount to the appropriate number of decimals.
  */
-export const _parseWithdrawalCrates = (
+export const parseWithdrawalCrates = (
   token: Token,
   withdrawals: MapValueType<EventProcessorData["withdrawals"]>,
   currentSeason: BigNumber

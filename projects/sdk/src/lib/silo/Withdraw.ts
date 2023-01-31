@@ -2,7 +2,7 @@ import { ContractTransaction } from "ethers";
 import { Token } from "src/classes/Token";
 import { TokenValue } from "src/classes/TokenValue";
 import { BeanstalkSDK } from "../BeanstalkSDK";
-import { DepositCrate, Silo } from "../silo";
+import { DepositCrate } from "../silo/types";
 import { sortCratesBySeason } from "./utils";
 import { pickCrates } from "./utils";
 
