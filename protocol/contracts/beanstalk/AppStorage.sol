@@ -192,7 +192,7 @@ contract Storage {
         uint128 lastDSoil; // Delta Soil; the number of Soil purchased last Season.
         uint32 lastSowTime; // The number of seconds it took for all but at most 1 Soil to sell out last Season.
         uint32 nextSowTime; // The number of seconds it took for all but at most 1 Soil to sell out this Season
-        uint32 yield; // Weather; the interest rate for sowing Beans in Soil.
+        uint32 t; // Temperature: the maximum interest rate during the current Season for sowing Beans in Soil.
     }
 
     // Fundraiser stores Fundraiser data for a given Fundraiser.
