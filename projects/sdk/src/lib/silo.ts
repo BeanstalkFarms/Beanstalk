@@ -10,7 +10,7 @@ import {
   DepositTokensPermitMessage,
   sortCratesBySeason,
   _parseWithdrawalCrates
-} from "./silo.utils";
+} from "./silo/utils";
 import { TokenValue } from "src/classes/TokenValue";
 import { MAX_UINT256 } from "src/constants";
 import { assert } from "src/utils";

@@ -5,7 +5,7 @@ import { getTestUtils, setupConnection } from "../utils/TestUtils/provider";
 import { BeanstalkSDK } from "./BeanstalkSDK";
 import { Token } from "../classes/Token";
 import { TokenSiloBalance } from "./silo";
-import { _parseWithdrawalCrates } from "./silo.utils";
+import { _parseWithdrawalCrates } from "./silo/utils";
 import { BigNumber, ethers } from "ethers";
 import { TokenValue } from "../classes/TokenValue";
 import { BF_MULTISIG } from "src/utils/TestUtils/addresses";

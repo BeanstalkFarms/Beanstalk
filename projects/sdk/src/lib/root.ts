@@ -7,7 +7,7 @@ import { TokenValue } from "src/TokenValue";
 import { BeanstalkSDK } from "./BeanstalkSDK";
 import { FarmToMode } from "./farm/types";
 import { SignedPermit } from "./permit";
-import { DepositTokenPermitMessage, DepositTokensPermitMessage } from "./silo.utils";
+import { DepositTokenPermitMessage, DepositTokensPermitMessage } from "./silo/utils";
 
 // const PRECISION = ethers.utils.parseEther("1");
 const PRECISION = TokenValue.fromBlockchain(ethers.utils.parseEther("1"), 18);
