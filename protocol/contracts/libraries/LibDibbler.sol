@@ -49,7 +49,7 @@ library LibDibbler {
      * 
      * ## Above Peg 
      * 
-     * | t   | pods  | soil                                   | yield                          | maxYield     |
+     * | t   | pods  | soil                                   | yield                          | maxTemperature     |
      * |-----|-------|----------------------------------------|--------------------------------|--------------|
      * | 0   | 500e6 | ~6683e6 (500e6 * (1 + 1250%)/(1+1%))   | 1e6 (1%)                       | 1250 (1250%) |
      * | 12  | 500e6 | ~1507e6 (500e6 * (1 + 1250%)/(1+348%)) | 348.75e6 (27.9% * 1250 * 1e6)  | 1250         |
@@ -57,7 +57,7 @@ library LibDibbler {
      * 
      * ## Below Peg
      * 
-     * | t   | pods                            | soil  | yield                         | maxYield     |
+     * | t   | pods                            | soil  | yield                         | maxTemperature     |
      * |-----|---------------------------------|-------|-------------------------------|--------------|
      * | 0   | 505e6 (500e6 * (1+1%))          | 500e6 | 1e6 (1%)                      | 1250 (1250%) |
      * | 12  | 2243.75e6 (500e6 * (1+348.75%)) | 500e6 | 348.75e6 (27.9% * 1250 * 1e6) | 1250         |
@@ -78,15 +78,15 @@ library LibDibbler {
         AppStorage storage s = LibAppStorage.diamondStorage();
         
         uint256 pods;
-        uint256 maxYield = uint256(s.w.t).mul(TEMPERATURE_PRECISION);
+        uint256 maxTemperature = uint256(s.w.t).mul(TEMPERATURE_PRECISION);
 
         // Above peg: FIXME
         if (s.season.abovePeg) {
             // amount sown is rounded up, because 
             // 1: yield is rounded down.
             // 2: pods are rounded down.
-            beans = scaleSoilDown(beans, morningTemperature, maxYield);
-            pods = beansToPods(beans, maxYield);
+            beans = scaleSoilDown(beans, morningTemperature, maxTemperature);
+            pods = beansToPods(beans, maxTemperature);
         } 
         
         // Below peg: FIXME
@@ -292,17 +292,17 @@ library LibDibbler {
     function scaleYield(uint256 pct) private view returns (uint256 scaledYield) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        uint256 maxYield = s.w.t;
-        if(maxYield == 0) return 0; 
+        uint256 maxTemperature = s.w.t;
+        if(maxTemperature == 0) return 0; 
 
         return LibPRBMath.max(
             // To save gas, `pct` is pre-calculated to 12 digits. Here we
             // perform the following transformation:
-            // (1e2)    maxYield                100%
+            // (1e2)    maxTemperature                100%
             // (1e12)    * pct 
             // (1e6)     / TEMPERATURE_PRECISION      1%
             // (1e8)     = scaledYield 
-            maxYield.mulDiv(
+            maxTemperature.mulDiv(
                 pct, 
                 TEMPERATURE_PRECISION,
                 LibPRBMath.Rounding.Up
@@ -335,22 +335,22 @@ library LibDibbler {
 
     /**
      * @dev Scales Soil up when Beanstalk is above peg.
-     * maxYield comes from s.w.t, which has a precision 1e2 (100 = 1%)
+     * maxTemperature comes from s.w.t, which has a precision 1e2 (100 = 1%)
      * yield comes from yield(), which has a precision of 1e8 (1e6 = 1%)
-     * thus we need to scale maxYield up.
+     * thus we need to scale maxTemperature up.
      * 
      * Scaling up -> round down
      * Scaling down -> round up
      * 
-     * (1 + maxYield) / (1 + morningTemperature)
+     * (1 + maxTemperature) / (1 + morningTemperature)
      */
     function scaleSoilUp(
         uint256 soil, 
-        uint256 maxYield,
+        uint256 maxTemperature,
         uint256 morningTemperature
     ) internal pure returns (uint256) {
         return soil.mulDiv(
-            maxYield.add(ONE_HUNDRED_PCT),
+            maxTemperature.add(ONE_HUNDRED_PCT),
             morningTemperature.add(ONE_HUNDRED_PCT)
         );
     }
@@ -372,11 +372,11 @@ library LibDibbler {
     function scaleSoilDown(
         uint256 soil, 
         uint256 morningTemperature, 
-        uint256 maxYield
+        uint256 maxTemperature
     ) internal pure returns (uint256) {
         return soil.mulDiv(
             morningTemperature.add(ONE_HUNDRED_PCT),
-            maxYield.add(ONE_HUNDRED_PCT),
+            maxTemperature.add(ONE_HUNDRED_PCT),
             LibPRBMath.Rounding.Up
         );
     }
