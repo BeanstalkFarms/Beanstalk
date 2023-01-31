@@ -109,9 +109,9 @@ library LibDibbler {
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        sowPlot(account, beans, pods);
+        _sowPlot(account, beans, pods);
         s.f.pods = s.f.pods.add(pods);
-        saveSowTime();
+        _saveSowTime();
 
         return pods;
     }
@@ -119,7 +119,7 @@ library LibDibbler {
     /**
      * @dev Create a Plot.
      */
-    function sowPlot(address account, uint256 beans, uint256 pods) private {
+    function _sowPlot(address account, uint256 beans, uint256 pods) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.a[account].field.plots[s.f.pods] = pods;
         emit Sow(account, s.f.pods, beans, pods);
@@ -146,7 +146,7 @@ library LibDibbler {
      *  - `s.f.soil` was decremented in the upstream {sow} function.
      *  - `s.w.nextSowTime` is set to `type(uint32).max` during {sunrise}.
      */
-    function saveSowTime() private {
+    function _saveSowTime() private {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // s.f.soil is now the soil remaining after this Sow.
@@ -284,13 +284,13 @@ library LibDibbler {
 
     /**
      * @param pct The percentage to scale down by, measured to 1e12.
-     * @return scaledYield The scaled yield, measured to 1e8 = 100e6 = 100% = 1.
+     * @return scaledTemperature The scaled temperature, measured to 1e8 = 100e6 = 100% = 1.
      * @dev Scales down `s.w.t` and imposes a minimum of 1e6 (1%) unless 
      * `s.w.t` is 0%.
      * 
      * FIXME: think on how to explain decimals
      */
-    function _scaleTemperature(uint256 pct) private view returns (uint256 scaledYield) {
+    function _scaleTemperature(uint256 pct) private view returns (uint256 scaledTemperature) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         uint256 maxTemperature = s.w.t;
