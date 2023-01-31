@@ -1,6 +1,7 @@
 import { BigNumber } from "ethers";
 import { TokenValue } from "src/TokenValue";
 import { StringMap } from "src/types";
+import { EIP712PermitMessage } from "src/lib/permit";
 
 /**
  * A Crate is an `amount` of a token Deposited or
@@ -61,3 +62,18 @@ export type TokenSiloBalance = {
 };
 
 export type UpdateFarmerSiloBalancesPayload = StringMap<Partial<TokenSiloBalance>>;
+
+export type CrateSortFn = <T extends Crate<TokenValue>>(crates: T[]) => T[];
+
+export type MapValueType<A> = A extends Map<any, infer V> ? V : never;
+
+// FIXME: resolve with EIP712PermitMessage
+export type DepositTokenPermitMessage = EIP712PermitMessage<{
+  token: string;
+  value: number | string;
+}>;
+
+export type DepositTokensPermitMessage = EIP712PermitMessage<{
+  tokens: string[];
+  values: (number | string)[];
+}>;
