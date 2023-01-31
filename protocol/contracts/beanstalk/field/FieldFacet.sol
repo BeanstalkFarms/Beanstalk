@@ -323,8 +323,8 @@ contract FieldFacet is ReentrancyGuard {
      * @dev
      * 
      * ```
-     * soilAbovePeg * temperature = soil * maxYield = pods (when above peg)
-     * soilAbovePeg = soil * maxYield / temperature
+     * soilAbovePeg * temperature = soil * maxTemperature = pods (when above peg)
+     * soilAbovePeg = soil * maxTemperature / temperature
      * ```
      * 
      * Need to cast s.w.t to an uint256 due prevent overflow.

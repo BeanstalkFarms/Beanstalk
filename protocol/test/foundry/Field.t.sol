@@ -361,7 +361,8 @@ contract FieldTest is FieldFacet, TestHelper {
   
     vm.roll(blockNo);
     uint256 __weather = uint256(
-      season.maxYield()).mulDiv(
+      season.weather().t
+    ).mulDiv(
         ScaleValues[blockNo - 1],
         1e6,
         LibPRBMath.Rounding.Up
@@ -408,8 +409,8 @@ contract FieldTest is FieldFacet, TestHelper {
       totalSoilSown = totalSoilSown + amount;
       totalPodsMinted = totalPodsMinted + AmtPodsGained;
       // assertApproxEqAbs(LastTotalSoil - field.totalSoil(), amount, 1); // rounding error
-      console.log("Current Yield:", field.yield());
-      console.log("maxYield:", season.maxYield());
+      console.log("Current Temperature:", field.yield());
+      console.log("Max Temperature:", season.weather().t);
       console.log("TotalSoil Start of Block:",LastTotalSoil);
       console.log("TotalSoil End of Block:",field.totalSoil());
       console.log("TrueSoil Start of Block:",LastTrueSoil);

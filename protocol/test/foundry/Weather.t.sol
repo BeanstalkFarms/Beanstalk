@@ -80,7 +80,7 @@ contract ComplexWeatherTest is Weather, TestHelper {
         season.stepWeatherWithParams(pods, lastDSoil, uint128(startSoil-endSoil), endSoil, deltaB, raining, rainRoots);
 
         //check that the season weather is the same as the one specified in the array:
-        assertEq(uint256(season.maxYield()), uint256(data[i].newWeather));
+        assertEq(uint256(season.weather().t), uint256(data[i].newWeather));
         // if(data[i].totalOutstandingBeans != 0){
           
         // }

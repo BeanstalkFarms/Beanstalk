@@ -62,18 +62,6 @@ library LibDibbler {
      * | 0   | 505e6 (500e6 * (1+1%))          | 500e6 | 1e6 (1%)                      | 1250 (1250%) |
      * | 12  | 2243.75e6 (500e6 * (1+348.75%)) | 500e6 | 348.75e6 (27.9% * 1250 * 1e6) | 1250         |
      * | 300 | 6750e6 (500e6 * (1+1250%))      | 500e6 | 1250e6                        | 1250         |
-     * 
-     * FIXME:
-     * Yield is floored at 1%.
-     * the amount of soil changes as a function of the morning auction;
-     * soil consumed increases as dutch auction passes
-     * t = 0   -> tons of soil
-     * t = 300 -> however much soil to get fixed number of pods at current temperature
-     * soil subtracted is thus scaled down:
-     * soilSubtracted = s.f.soil * SoilSowed/totalSoilAbovePeg
-     * soilSubtracted = s.f.soil * SoilSowed/(s.f.soil * ((1 + s.w.t) /(1 + yield())))
-     * soilSubtracted = Amt * (1 + yield())/(1+ s.w.t) 
-     * soilSubtracted = pods/(1+ s.w.t) 
      */
     function sow(uint256 beans, uint256 morningTemperature, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -158,7 +146,7 @@ library LibDibbler {
         s.w.nextSowTime = uint32(block.timestamp.sub(s.season.timestamp));
     }
 
-    //////////////////// YIELD ////////////////////
+    //////////////////// TEMPERATURE ////////////////////
     
     /**
      * @dev Returns the temperature `s.w.t` scaled down based on the block delta.
@@ -336,14 +324,7 @@ library LibDibbler {
 
     /**
      * @dev Scales Soil up when Beanstalk is above peg.
-     * maxTemperature comes from s.w.t, which has a precision 1e2 (100 = 1%)
-     * yield comes from yield(), which has a precision of 1e8 (1e6 = 1%)
-     * thus we need to scale maxTemperature up.
-     * 
-     * Scaling up -> round down
-     * Scaling down -> round up
-     * 
-     * (1 + maxTemperature) / (1 + morningTemperature)
+     * `(1 + maxTemperature) / (1 + morningTemperature)`
      */
     function scaleSoilUp(
         uint256 soil, 
@@ -361,8 +342,10 @@ library LibDibbler {
      * 
      * When Beanstalk is above peg, the Soil issued changes. Example:
      * 
-     * If 500 Spoil is issued when `s.w.t = 100e2 = 100%`
-     * At delta = 0: morningTemperature() = 1%, Soil = 500*(100 + 100%)/(100 + 1%) = 990.09901 soil
+     * If 500 Soil is issued when `s.w.t = 100e2 = 100%`
+     * At delta = 0: 
+     *  morningTemperature() = 1%
+     *  Soil = `500*(100 + 100%)/(100 + 1%)` = 990.09901 soil
      *
      * If someone sow'd ~495 soil, it's equilivant to sowing 250 soil at t > 25.
      * Thus when someone sows during this time, the amount subtracted from s.f.soil
