@@ -163,9 +163,7 @@ const DepositForm : FC<
             handleQuote={handleQuote}
             inputVariant="wrapped"
             additionalBalance={applicableBalances[tokenState.token.address]?.applied}
-            TokenAdornmentProps={{
-              balanceFrom: values.balanceFrom
-            }}
+            balanceFrom={values.balanceFrom}
           />
         ))}
         <ClaimableAssets

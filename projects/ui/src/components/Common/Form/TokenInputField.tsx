@@ -18,6 +18,7 @@ import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import { ZERO_BN } from '~/constants';
 import InputFieldBorder from './InputFieldBorder';
+import { BalanceFrom } from './BalanceFromRow';
 
 export type TokenInputCustomProps = {
   /**
@@ -29,6 +30,10 @@ export type TokenInputCustomProps = {
    *
    */
   balance?: FarmerBalances[string] | BigNumber | undefined;
+  /**
+   * 
+   */
+  balanceFrom?: BalanceFrom;
   /**
    * 
    */
@@ -141,6 +146,7 @@ const TokenInput: FC<
   token,
   balance: _balance,
   additionalBalance,
+  balanceFrom = BalanceFrom.TOTAL,
   balanceLabel = 'Balance',
   hideBalance = false,
   quote,
@@ -174,15 +180,21 @@ const TokenInput: FC<
   const [balance, balanceTooltip] = useMemo(() => {
     if (!_balance) return [undefined, ''];
     if (_balance instanceof BigNumber) return [_balance, ''];
+
+    const getBalance = (b: BigNumber) => (token ? displayTokenAmount(b, token) : displayBN(b));
     return [_balance.total, (
       <>
-        Farm Balance: {token ? displayTokenAmount(_balance.internal, token) : displayBN(_balance.internal)}<br />
-        Circulating Balance: {token ? displayTokenAmount(_balance.external, token) : displayBN(_balance.external)}<br />
+        {balanceFrom === BalanceFrom.INTERNAL || balanceFrom === BalanceFrom.TOTAL
+          ? (<>{`Farm Balance: ${getBalance(_balance.internal)}`}<br /></>) 
+          : null}
+        {balanceFrom === BalanceFrom.EXTERNAL || balanceFrom === BalanceFrom.TOTAL
+         ? (<>{`Circulating balance: ${getBalance(_balance.external)}`}<br /></>) 
+         : null}
         <Divider color="secondary" sx={{ my: 1 }} />
         The Beanstalk UI first spends the balance that is most gas-efficient based on the specified amount.
       </>
     )];
-  }, [_balance, token]);
+  }, [_balance, balanceFrom, token]);
 
   // Automatically disable the input if
   // the form it's contained within is 
