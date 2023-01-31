@@ -38,6 +38,10 @@ export function pickCrates(crates: DepositCrate[], amount: TokenValue, token: To
     return totalAmount.eq(amount);
   });
 
+  if (totalAmount.lt(amount)) {
+    throw new Error("Not enough deposits");
+  }
+
   return {
     totalAmount,
     totalBDV,
