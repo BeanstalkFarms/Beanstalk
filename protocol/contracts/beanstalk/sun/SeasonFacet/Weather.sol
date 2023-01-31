@@ -20,7 +20,11 @@ contract Weather is Sun {
 
     uint256 private constant SOWTIMEDEMAND = 600;
     
-    event WeatherChange(uint256 indexed season, uint256 caseId, int8 change);
+    event WeatherChange(
+        uint256 indexed season,
+        uint256 caseId,
+        int8 change
+    );
     event SeasonOfPlenty(
         uint256 indexed season,
         uint256 amount,
@@ -131,6 +135,7 @@ contract Weather is Sun {
         handleRain(caseId);
     }
 
+    // FIXME: check if recalling maxYield() is extra gas
     function changeWeather(uint256 caseId) private {
         int8 change = s.cases[caseId];
         if (change < 0) {

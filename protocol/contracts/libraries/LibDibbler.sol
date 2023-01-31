@@ -30,6 +30,7 @@ library LibDibbler {
     // 1e6 = 1% = 0.01
     uint256 constant YIELD_PRECISION = 1e6; 
     uint256 constant ONE_HUNDRED_PCT = 100 * YIELD_PRECISION;
+    uint256 private constant SOIL_SOLD_OUT_THRESHOLD = 1e6;
     
     event Sow(
         address indexed account,
@@ -84,23 +85,13 @@ library LibDibbler {
             // amount sown is rounded up, because 
             // 1: yield is rounded down.
             // 2: pods are rounded down.
-            beans = scaleSoilDown(
-                beans,
-                morningYield,
-                maxYield
-            );
-            pods = beansToPods(
-                beans,
-                maxYield
-            );
+            beans = scaleSoilDown(beans, morningYield, maxYield);
+            pods = beansToPods(beans, maxYield);
         } 
         
         // Below peg: FIXME
         else {
-            pods = beansToPods(
-                beans,
-                morningYield
-            );
+            pods = beansToPods(beans, morningYield);
         }
 
         (, s.f.soil) = s.f.soil.trySub(uint128(beans));
@@ -125,7 +116,7 @@ library LibDibbler {
     }
 
     /**
-     * @dev 
+     * @dev Create a Plot.
      */
     function sowPlot(address account, uint256 beans, uint256 pods) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -134,35 +125,34 @@ library LibDibbler {
     }
 
     /** 
-     * @dev Stores the time elapsed from the start of the Season to the first
-     * Sow of the season, or if all but 1 Soil is Sown.
+     * @dev Stores the time elapsed from the start of the Season to the time
+     * at which Soil is "sold out", i.e. the remaining Soil is less than a 
+     * threshold `SOIL_SOLD_OUT_THRESHOLD`.
      * 
-     * Rationale: Beanstalk utilize the time in which Soil was Sown to gauge
-     * demand for Soil, which affects how the Temperature is adjusted. If all 
-     * Soil is Sown in 1 second vs. 1 hour, Beanstalk assumes that the former
-     * shows more demand than the latter.
+     * RATIONALE: Beanstalk utilizes the time elapsed for Soil to "sell out" to 
+     * gauge demand for Soil, which affects how the Temperature is adjusted. For
+     * example, if all Soil is Sown in 1 second vs. 1 hour, Beanstalk assumes 
+     * that the former shows more demand than the latter.
      *
      * `nextSowTime` represents the target time of the first Sow for the *next*
      * Season to be considered increasing in demand.
      * 
-     * If there more than 1 Soil still available, or `nextSowTime` is less than 
-     * type(uint32).max, do nothing.
+     * `nextSowTime` should only be updated if:
+     *  (a) there is less than 1 Soil available after this Sow, and 
+     *  (b) it has not yet been updated this Season.
      * 
-     * Otherwise, set `nextSowTime` to be the difference between the Season
-     * start timestamp and the current block timestamp.
-     * 
-     * `nextSowTime` is therefore only updated when:
-     *  - After this Sow, there is less than 1 Soil available
-     *  - `nextSowTime` has not been updated this Season; it is reset to
-     *    type(uint32).max during {sunrise}.
-     * 
-     * Note that `s.f.soil` was decremented in the upstream {sow} function.
+     * Note that:
+     *  - `s.f.soil` was decremented in the upstream {sow} function.
+     *  - `s.w.nextSowTime` is set to `type(uint32).max` during {sunrise}.
      */
     function saveSowTime() private {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // 1e6 = 1 Soil
-        if (s.f.soil > 1e6 || s.w.nextSowTime < type(uint32).max) return;
+        // s.f.soil is now the soil remaining after this Sow.
+        if (s.f.soil > SOIL_SOLD_OUT_THRESHOLD || s.w.nextSowTime < type(uint32).max) {
+            // haven't sold enough soil, or already set nextSowTime for this Season.
+            return;
+        }
 
         s.w.nextSowTime = uint32(block.timestamp.sub(s.season.timestamp));
     }
