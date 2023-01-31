@@ -1,12 +1,13 @@
-import { Address, ByteArray, Bytes, log } from '@graphprotocol/graph-ts'
 import { BoreWell } from '../../generated/Aquifer/Aquifer'
 import { Well } from '../../generated/templates'
+import { loadOrCreateAquifer } from '../utils/Aquifer'
 import { loadOrCreatePump } from '../utils/Pump'
 import { loadOrCreateToken } from '../utils/Token'
 import { loadOrCreateWell } from '../utils/Well'
 
 export function handleBoreWell(event: BoreWell): void {
 
+    loadOrCreateAquifer(event.address, event.params.auger)
     Well.create(event.params.well)
 
     let well = loadOrCreateWell(event.params.well)
