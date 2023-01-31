@@ -60,7 +60,7 @@ contract ComplexWeatherTest is Weather, TestHelper {
     vm.startPrank(brean);
     console.log("Testing for complex weather cases:");
       for(uint256 i = 0; i< data.length; ++i){
-        season.setYieldE(data[i].startingWeather);
+        season.setMaxTempE(data[i].startingWeather);
 
         C.bean().burn(C.bean().balanceOf(brean));
         uint256 lastDSoil = data[i].lastSoil;
@@ -213,7 +213,7 @@ contract ExtremeWeatherTest is Weather, TestHelper {
   }
 
   function _beforeEachExtremeWeatherTest() public {
-    season.setYieldE(10);
+    season.setMaxTempE(10);
   }
 
 }
