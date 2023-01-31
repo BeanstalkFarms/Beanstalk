@@ -41,13 +41,13 @@ templates:
         - event: AddLiquidity(uint256[],uint256)
           handler: handleAddDeposit
         - event: Approval(indexed address,indexed address,uint256)
-          handler: handleRemoveDeposit
+          handler: handleApproval
         - event: RemoveLiquidity(uint256,uint256[])
-          handler: handleRemoveDeposits
+          handler: handleRemoveLiquidity
         - event: RemoveLiquidityOneToken(uint256,address,uint256)
-          handler: handleAddWithdrawal
+          handler: handleRemoveLiquidityOneToken
         - event: Swap(address,address,uint256,uint256)
-          handler: handleRemoveWithdrawal
+          handler: handleSwap
         - event: Transfer(indexed address,indexed address,uint256)
-          handler: handleRemoveWithdrawals
+          handler: handleTransfer
       file: ./src/WellHandler.ts
