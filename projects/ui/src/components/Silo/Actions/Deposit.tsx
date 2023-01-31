@@ -8,7 +8,6 @@ import { useSelector } from 'react-redux';
 import { Token } from '~/classes';
 import { BEAN, CRV3, DAI, ETH, SEEDS, STALK, UNRIPE_BEAN, UNRIPE_BEAN_CRV3, USDC, USDT, WETH } from '~/constants/tokens';
 import TokenSelectDialog, { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
-import TokenOutputField from '~/components/Common/Form/TokenOutputField';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import { FarmWithClaimFormState, FormState, SettingInput, TxnSettings } from '~/components/Common/Form';
 import TokenQuoteProvider from '~/components/Common/Form/TokenQuoteProvider';
@@ -176,10 +175,6 @@ const DepositForm : FC<
         {isReady ? (
           <>
             <TxnSeparator />
-            <TokenOutputField
-              token={whitelistedToken}
-              amount={amount}
-            />
             <TokenOutputsField 
               groups={[
                 {
@@ -195,7 +190,6 @@ const DepositForm : FC<
                       <>
                         1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
                         1 BDV &rarr; {whitelistedToken.getStalk().toString()} STALK
-                        {/* {displayFullBN(bdv, BEAN[1].displayDecimals)} BDV &rarr; {displayFullBN(stalk, STALK.displayDecimals)} STALK */}
                       </>
                     ),
                   },
@@ -206,7 +200,6 @@ const DepositForm : FC<
                       <>
                         1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
                         1 BDV &rarr; {whitelistedToken.getSeeds().toString()} SEEDS
-                        {/* {displayFullBN(bdv, BEAN[1].displayDecimals)} BDV &rarr; {displayFullBN(seeds, SEEDS.displayDecimals)} SEED */}
                       </>
                     )
                   }]

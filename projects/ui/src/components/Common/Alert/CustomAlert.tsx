@@ -13,7 +13,7 @@ const accentColorMap = {
   error: lighten(BeanstalkPalette.trueRed, 0.75),
 };
 
-const SidelineAlert: React.FC<SidelineAlertProps> = ({ hide, ...props }) => {
+const CustomAlert: React.FC<SidelineAlertProps> = ({ hide, ...props }) => {
   if (hide) return null;
 
   return (
@@ -42,4 +42,4 @@ const SidelineAlert: React.FC<SidelineAlertProps> = ({ hide, ...props }) => {
   );
 };
 
-export default SidelineAlert;
+export default CustomAlert;

@@ -6,7 +6,7 @@ import { ClaimableBeanToken } from '~/hooks/farmer/useFarmerClaimableBeanAssets'
 import Row from '../Common/Row';
 import TokenSelectionCard from '~/components/Common/Card/TokenSelectionCard';
 import { displayFullBN } from '~/util';
-import SidelineAlert from '../Common/Alert/SidelineAlert';
+import CustomAlert from '../Common/Alert/CustomAlert';
 import {
   ClaimableBeanAssetFragment,
   FarmWithClaimFormState,
@@ -35,8 +35,8 @@ const ClaimableAssets: React.FC<{
     FormState & FarmWithClaimFormState
   >();
 
-  const { assetsWithBalance, allSelected, totalClaiming, disabled } =
-    useMemo(() => {
+  const { assetsWithBalance, allSelected, totalClaiming, disabled } = useMemo(
+    () => {
       const _disabled = Object.values(balances).every((v) => v.amount.lte(0));
       const _totalClaiming = Object.values(values.beansClaiming).reduce(
         (prev, curr) => {
@@ -52,7 +52,9 @@ const ClaimableAssets: React.FC<{
         },
         {} as Record<string, ClaimableBeanAssetFragment>
       );
-      const _allSelected = Object.keys(_assetsWithBalance).every(
+      
+      const claimingKeys = Object.keys(_assetsWithBalance);
+      const _allSelected = claimingKeys.length && claimingKeys.every(
         (k) => values.beansClaiming[k]
       );
 
@@ -115,7 +117,7 @@ const ClaimableAssets: React.FC<{
           <Typography variant="h4">
             Claimable Assets
             <Tooltip
-              title="tooltip data goes here" // TODO FIX ME
+              title="These Beans are claimable from around the Farm. Claiming and using them in this transaction can reduce gas costs."
               placement="right"
             >
               <HelpOutlineIcon
@@ -140,7 +142,7 @@ const ClaimableAssets: React.FC<{
           </Row>
         </Row>
         {/* *Alert */}
-        <SidelineAlert color="success" hide={totalClaiming.lte(0)}>
+        <CustomAlert color="success" hide={totalClaiming.lte(0)}>
           <Typography
             color="text.primary"
             variant="bodySmall"
@@ -158,11 +160,10 @@ const ClaimableAssets: React.FC<{
               fontStyle="italic"
               sx={{ textTransform: 'capitalize' }}
             >
-              {/* TODO FIX ME TO BE DYNAMIC */}
               {balanceFromLabels[values.balanceFrom]} Balance
             </Typography>
           </Typography>
-        </SidelineAlert>
+        </CustomAlert>
         {/* *Selection Cards */}
         <Stack gap={1} width="100%" direction={{ xs: 'column', sm: 'row' }}>
           {Object.entries(balances).map(([k, data]) => (

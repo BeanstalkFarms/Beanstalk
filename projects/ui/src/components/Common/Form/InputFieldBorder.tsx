@@ -16,7 +16,10 @@ const InputFieldBorder: FC<
   disabled = false,
   ...props
 }) => {
+  // ref for this component to control border color
   const ref = useRef<HTMLDivElement | null>(null);
+
+  // ref state to keep track of active state
   const activeRef = useRef<boolean>(false);
 
   const handleMouseOver = () => {
@@ -58,9 +61,8 @@ const InputFieldBorder: FC<
       sx={{
         borderRadius: 1,
         border: '0.75px solid',
-        borderColor: BeanstalkPalette.inputGrey,
-        // padding: '0.2px',
         boxSizing: 'border-box',
+        borderColor: BeanstalkPalette.inputGrey,
         backgroundColor: BeanstalkPalette.white,
       }}
       width={fullWidth ? '100%' : undefined}
