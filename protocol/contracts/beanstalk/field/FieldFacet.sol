@@ -62,40 +62,40 @@ contract FieldFacet is ReentrancyGuard {
     /**
      * @notice Sow Beans in exchange for Pods.
      * @param beans The number of Beans to Sow
-     * @param minYield The minimum Temperature at which to Sow
+     * @param minTemperature The minimum Temperature at which to Sow
      * @param mode The balance to transfer Beans from; see {LibTrasfer.From}
      * @return pods The number of Pods received
      * @dev 
      * 
-     * `minYield` has precision of 1e6. Wraps {sowWithMin} with `minSoil = beans`.
+     * `minTemperature` has precision of 1e6. Wraps {sowWithMin} with `minSoil = beans`.
      * 
-     * NOTE: previously minYield was measured to 1e2
+     * NOTE: previously minTemperature was measured to 1e2
      * 
-     * Rationale for {sow} accepting a `minYield` parameter:
+     * Rationale for {sow} accepting a `minTemperature` parameter:
      * If someone sends a Sow transaction at the end of a Season, it could be 
      * executed early in the following Season, at which time the yield may be
      * significantly lower due to Morning Auction functionality.
      * 
      * FIXME Migration notes:
-     * - Added `minYield` as second parameter
-     * - `minYield` is uint256 measured to 1e6 instead of uint32
+     * - Added `minTemperature` as second parameter
+     * - `minTemperature` is uint256 measured to 1e6 instead of uint32
      */
     function sow(
         uint256 beans,
-        uint256 minYield,
+        uint256 minTemperature,
         LibTransfer.From mode
     )
         external
         payable
         returns (uint256 pods)
     {
-        return sowWithMin(beans, minYield, beans, mode);
+        return sowWithMin(beans, minTemperature, beans, mode);
     }
 
     /**
      * @notice Sow Beans in exchange for Pods. Use at least `minSoil`.
      * @param beans The number of Beans to Sow
-     * @param minYield The minimum Temperature at which to Sow
+     * @param minTemperature The minimum Temperature at which to Sow
      * @param minSoil The minimum amount of Soil to use; reverts if there is 
      * less than this much Soil available upon execution
      * @param mode The balance to transfer Beans from; see {LibTrasfer.From}
@@ -103,7 +103,7 @@ contract FieldFacet is ReentrancyGuard {
      */
     function sowWithMin(
         uint256 beans,
-        uint256 minYield,
+        uint256 minTemperature,
         uint256 minSoil,
         LibTransfer.From mode
     ) public payable returns (uint256 pods) {
@@ -115,7 +115,7 @@ contract FieldFacet is ReentrancyGuard {
             "Field: Soil Slippage"
         );
         require(
-            morningTemperature >= minYield,
+            morningTemperature >= minTemperature,
             "Field: Temperature Slippage"
         );
 
