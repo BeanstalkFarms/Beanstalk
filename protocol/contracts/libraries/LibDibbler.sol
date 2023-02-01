@@ -366,10 +366,9 @@ library LibDibbler {
     }
 
     /**
-     * @dev Peas are the potential remaining Pods that can be issued within a Season.
-     * TODO: rename
+     * @notice Returns the remaining Pods that could be issued this Season.
      */
-    function peas() internal view returns (uint256) {
+    function remainingPods() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // Above peg: number of Pods is fixed, Soil adjusts

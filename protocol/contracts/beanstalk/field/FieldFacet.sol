@@ -319,15 +319,16 @@ contract FieldFacet is ReentrancyGuard {
         );
     }
 
+    //////////////////// GETTERS: SOIL ////////////////////
+
     /**
+     * @notice Returns 
      * @dev
      * 
      * ```
      * soilAbovePeg * temperature = soil * maxTemperature = pods (when above peg)
      * soilAbovePeg = soil * maxTemperature / temperature
      * ```
-     * 
-     * Need to cast s.w.t to an uint256 due prevent overflow.
      * 
      * FIXME: probably should be named {remainingSoil}.
      */
@@ -344,11 +345,13 @@ contract FieldFacet is ReentrancyGuard {
         );
     }
 
+    //////////////////// GETTERS: TEMPERATURE ////////////////////
+
     /**
-     * @notice DEPRECATED: Returns the current yield (aka "Temperature") offered by Beanstalk
-     * when burning Beans in exchange for Pods.
-     * @dev Left for backwards compatibility. Scales down the {morningTemperature}. There
-     * is a loss of precision (max 1%) during this operation.
+     * @notice DEPRECATED: Returns the current yield (aka "Temperature") offered 
+     * by Beanstalk when burning Beans in exchange for Pods.
+     * @dev Left for backwards compatibility. Scales down the {morningTemperature}. 
+     * There is a loss of precision (max 1%) during this operation.
      */
     function yield() external view returns (uint32) {
         return SafeCast.toUint32(
@@ -356,18 +359,30 @@ contract FieldFacet is ReentrancyGuard {
         );
     }
 
+    /**
+     * @notice Returns the current Temperature, the interest rate offered by Beanstalk.
+     * The Temperature scales up during the first 25 blocks after Sunrise.
+     */
     function temperature() external view returns (uint256) {
         return LibDibbler.morningTemperature();
     }
+
+    /**
+     * @notice Returns the max Temperature that Beanstalk is willing to offer this Season.
+     * @dev For gas efficiency, Beanstalk stores `s.w.t` as a uint32 with precision of 1e2.
+     * Here we convert to uint256 and scale up by TEMPERATURE_PRECISION to match the 
+     * precision needed for the Morning Auction functionality.
+     */
+    function maxTemperature() external view returns (uint256) {
+        return uint256(s.w.t).mul(LibDibbler.TEMPERATURE_PRECISION);
+    }
+
+    //////////////////// GETTERS: PODS ////////////////////
     
     /**
-     * @notice Peas are the potential remaining Pods that can be issued within a Season.
-     * @dev FIXME: rename 
-     * 
-     * Can't use totalPods
-     * remainingPods
+     * @notice Returns the remaining Pods that could be issued this Season.
      */
-    function peas() external view returns (uint256) {
-        return uint256(LibDibbler.peas());
+    function remainingPods() external view returns (uint256) {
+        return uint256(LibDibbler.remainingPods());
     }
 }
