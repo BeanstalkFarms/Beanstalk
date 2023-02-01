@@ -321,8 +321,8 @@ contract TokenSilo is Silo {
         //need to get amount of stalk earned by this deposit (index of now minus index of when deposited)
         stalkRemoved = bdvRemoved.mul(s.ss[token].stalkPerBdv).add(
             LibSilo.stalkReward(
-                grownStalkPerBdv,
-                s.ss[address(token)].lastCumulativeGrownStalkPerBdv,
+                grownStalkPerBdv, //this is the index of when it was deposited
+                LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)), //this is latest for this token
                 bdvRemoved.toUint128()
             )
         );
@@ -356,8 +356,8 @@ contract TokenSilo is Silo {
             ar.stalkRemoved = crateBdv.mul(s.ss[token].stalkPerBdv).add(
                 LibSilo.stalkReward(
                     grownStalkPerBdvs[i],
-                    s.ss[address(token)].lastCumulativeGrownStalkPerBdv,
-                    uint128(crateBdv)
+                    LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)),
+                    crateBdv.toUint128()
                 )
             );
         }

@@ -20,15 +20,17 @@ describe('Silo', function () {
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('Bean', BEAN);
-
     await this.season.lightSunrise();
     await this.bean.connect(user).approve(this.silo.address, '100000000000');
     await this.bean.connect(user2).approve(this.silo.address, '100000000000'); 
     await this.bean.mint(userAddress, to6('10000'));
     await this.bean.mint(user2Address, to6('10000'));
-    await this.silo.update(userAddress, this.beanMetapool);
+    await this.silo.mow(userAddress, this.bean.address);
     this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
     this.result = await this.silo.connect(user2).deposit(this.bean.address, to6('1000'), EXTERNAL)
+
+    console.log('current season: ', await this.season.season());
+    console.log('deposited in cumulativeGrownStalkPerBdv: ', await this.silo.cumulativeGrownStalkPerBdv(this.bean.address));
   });
 
   beforeEach(async function () {
@@ -55,17 +57,15 @@ describe('Silo', function () {
 
   describe('Silo Balances After Withdrawal', function () {
     beforeEach(async function () {
-      await this.silo.connect(user).withdrawDeposit(this.bean.address, '2', to6('500'), EXTERNAL)
+      await this.silo.connect(user).withdrawDeposit(this.bean.address, '2', to6('500'), EXTERNAL) //we deposited at grownStalkPerBdv of 2, need to withdraw from 2
     })
 
     it('properly updates the total balances', async function () {
-      //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('1000'));
       expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('500'));
       expect(await this.silo.balanceOfRoots(userAddress)).to.eq(toStalk('500000000000000'));
     });
 
     it('properly updates the total balances', async function () {
-      //expect(await this.silo.totalSeeds()).to.eq(to6('3000'));
       expect(await this.silo.totalStalk()).to.eq(toStalk('1500'));
       expect(await this.silo.totalRoots()).to.eq(toStalk('1500000000000000'));
     });
@@ -80,21 +80,18 @@ describe('Silo', function () {
       })
 
       it('properly updates the earned balances', async function () {
-        expect(await this.silo.balanceOfGrownStalk(userAddress)).to.eq(toStalk('0.2'));
+        expect(await this.silo.balanceOfGrownStalk(userAddress, this.bean.address)).to.eq(toStalk('0.2'));
         expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('50'));
-        expect(await this.silo.balanceOfEarnedSeeds(userAddress)).to.eq(to6('100'));
         expect(await this.silo.balanceOfEarnedStalk(userAddress)).to.eq(toStalk('50'));
         expect(await this.silo.totalEarnedBeans()).to.eq(to6('100'));
       });
 
       it('properly updates the total balances', async function () {
-        //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('2000'));
         expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('1050'));
         expect(await this.silo.balanceOfRoots(userAddress)).to.eq(toStalk('1000000000000000'));
       });
   
       it('properly updates the total balances', async function () {
-        //expect(await this.silo.totalSeeds()).to.eq(to6('4000'));
         expect(await this.silo.totalStalk()).to.eq(toStalk('2100'));
         expect(await this.silo.totalRoots()).to.eq(toStalk('2000000000000000'));
       });
@@ -105,14 +102,14 @@ describe('Silo', function () {
     beforeEach(async function () {
       await this.season.siloSunrise(to6('100'))
       await time.increase(3600); // wait until end of season to get earned
-      await this.silo.update(user2Address, this.beanMetapool)
-      this.result = await this.silo.connect(user).plant()
+      await this.silo.mow(user2Address, this.bean.address)
+      this.result = await this.silo.connect(user).plant(this.bean.address)
     })
 
     it('properly updates the earned balances', async function () {
-      expect(await this.silo.balanceOfGrownStalk(userAddress)).to.eq('0');
+      expect(await this.silo.balanceOfGrownStalk(userAddress, this.bean.address)).to.eq('0');
       expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq('0');
-      expect(await this.silo.balanceOfEarnedSeeds(userAddress)).to.eq('0');
+      // expect(await this.silo.balanceOfEarnedSeeds(userAddress)).to.eq('0');
       expect(await this.silo.balanceOfEarnedStalk(userAddress)).to.eq('0');
       expect(await this.silo.totalEarnedBeans()).to.eq(to6('50'));
     });
@@ -134,7 +131,7 @@ describe('Silo', function () {
     })
 
     it('user2 earns rest', async function () {
-      await this.silo.connect(user2).plant()
+      await this.silo.connect(user2).plant(this.bean.address)
       expect(await this.silo.totalEarnedBeans()).to.eq('0');
     });
   });
@@ -206,7 +203,7 @@ describe('Silo', function () {
         await time.increase(3600); // 3600 seconds = 60 minutes = all beans issued
         season = await this.season.season();
         expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('100'));
-        await this.silo.connect(user).plant();
+        await this.silo.connect(user).plant(this.bean.address);
         earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, season);
         console.log("earned Beans -", earned_beans);
       });
@@ -226,7 +223,7 @@ describe('Silo', function () {
         await time.setNextBlockTimestamp(beginning_timestamp + 1800);
         // disable automine so they mine exactly 1800 seconds after
         await network.provider.send("evm_setAutomine", [false]);
-        await this.silo.connect(user).plant();
+        await this.silo.connect(user).plant(this.bean.address);
         await network.provider.send("evm_mine");
         await network.provider.send("evm_setAutomine", [true]);
   
@@ -235,7 +232,7 @@ describe('Silo', function () {
 
         await time.setNextBlockTimestamp(beginning_timestamp + 3600);
         await network.provider.send("evm_setAutomine", [false]);
-        await this.silo.connect(user).plant();
+        await this.silo.connect(user).plant(this.bean.address);
         await network.provider.send("evm_mine");
         await network.provider.send("evm_setAutomine", [true]);
         earned_beans = await this.silo.getDeposit(userAddress,this.bean.address,season);
@@ -245,20 +242,20 @@ describe('Silo', function () {
       it('issues correct earned Beans after multiple plants', async function () {
 
         await time.increase(800);
-        await this.silo.connect(user).plant();
+        await this.silo.connect(user).plant(this.bean.address);
         await time.increase(1000);
-        await this.silo.connect(user).plant();
+        await this.silo.connect(user).plant(this.bean.address);
         await time.increase(900);
-        await this.silo.connect(user).plant();
+        await this.silo.connect(user).plant(this.bean.address);
         await time.increase(449);
-        await this.silo.connect(user).plant();
+        await this.silo.connect(user).plant(this.bean.address);
         await time.increase(451);
-        await this.silo.connect(user).plant();
+        await this.silo.connect(user).plant(this.bean.address);
 
         earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, season);
         expect(earned_beans[0]).to.eq(50e6);
 
-        await this.silo.connect(user2).plant();
+        await this.silo.connect(user2).plant(this.bean.address);
         earned_beans2 = await this.silo.getDeposit(user2Address, this.bean.address, season);
         expect(earned_beans2[0]).to.eq(50e6);
       });
@@ -267,8 +264,8 @@ describe('Silo', function () {
         await time.setNextBlockTimestamp(beginning_timestamp + 1800);
         // disable automine so both plants can be done exactly 1800 seconds after timestamp start
         await network.provider.send("evm_setAutomine", [false]);
-        await this.silo.connect(user).plant();
-        await this.silo.connect(user2).plant();
+        await this.silo.connect(user).plant(this.bean.address);
+        await this.silo.connect(user2).plant(this.bean.address);
         await network.provider.send("evm_mine");
         await network.provider.send("evm_setAutomine", [true]);
 
@@ -284,8 +281,8 @@ describe('Silo', function () {
         await time.setNextBlockTimestamp(beginning_timestamp);
 
         await network.provider.send("evm_setAutomine", [false]);
-        await this.silo.connect(user).plant();
-        await this.silo.connect(user2).plant();
+        await this.silo.connect(user).plant(this.bean.address);
+        await this.silo.connect(user2).plant(this.bean.address);
         await network.provider.send("evm_mine");
         await network.provider.send("evm_setAutomine", [true]);
 
@@ -302,7 +299,7 @@ describe('Silo', function () {
         season = await this.season.season();
         await time.increase(3600); // 3600 seconds = 60 minutes = all beans issued
         expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(to6('100'));
-        await this.silo.connect(user).plant();
+        await this.silo.connect(user).plant(this.bean.address);
         expect((await this.silo.getDeposit(userAddress, this.bean.address, season))[0]).to.eq(100e6);
       });
     })
