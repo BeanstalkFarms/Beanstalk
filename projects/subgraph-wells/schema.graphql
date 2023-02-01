@@ -160,7 +160,7 @@ type Well @entity {
 
 type Pump @entity {
   " Well address-Pump address"
-  id: Bytes!
+  id: ID!
   " Well associated with this pump"
   well: Well!
 }

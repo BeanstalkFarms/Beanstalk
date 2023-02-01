@@ -1,6 +1,5 @@
 import { Address, Bytes, ethereum } from "@graphprotocol/graph-ts";
-import { afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
-import { BoreWellPumpsStruct, BoreWellWellFunctionStruct } from "../generated/Aquifer/Aquifer";
+import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { handleBoreWell } from "../src/templates/AquiferHandler";
 import { BEAN_ERC20, WETH } from "../src/utils/Constants";
 import { createBoreWellEvent } from "./event-mocking/Aquifer";
@@ -12,12 +11,7 @@ let wellFunction = Address.fromString('0x3E661784267F128e5f706De17Fac1Fc1c9d56f3
 let pump = Address.fromString('0x6732128F9cc0c4344b2d4DC6285BCd516b7E59E6')
 
 describe("Aquifer Well Deployment", () => {
-    afterEach(() => {
-        clearStore()
-    })
-
-    test("Aquifer entity exists", () => {
-
+    beforeEach(() => {
         let wellFunctionTuple = new ethereum.Tuple()
         wellFunctionTuple.push(ethereum.Value.fromAddress(wellFunction))
         wellFunctionTuple.push(ethereum.Value.fromBytes(Bytes.empty()))
@@ -36,7 +30,26 @@ describe("Aquifer Well Deployment", () => {
         )
 
         handleBoreWell(boreWellEvent)
+    })
 
+    afterEach(() => {
+        clearStore()
+    })
+
+    test("Aquifer entity exists", () => {
         assert.fieldEquals("Aquifer", aquifer.toHexString(), "id", aquifer.toHexString())
+    })
+
+    test("Well entity exists", () => {
+        assert.fieldEquals("Well", well.toHexString(), "id", well.toHexString())
+    })
+
+    test("Token entities exists", () => {
+        assert.fieldEquals("Token", BEAN_ERC20.toHexString(), "id", BEAN_ERC20.toHexString())
+        assert.fieldEquals("Token", WETH.toHexString(), "id", WETH.toHexString())
+    })
+
+    test("Pump entity exists", () => {
+        assert.fieldEquals("Pump", pump.toHexString() + '-' + well.toHexString(), "id", pump.toHexString() + '-' + well.toHexString())
     })
 })
