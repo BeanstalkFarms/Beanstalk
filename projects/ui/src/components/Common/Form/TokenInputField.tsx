@@ -279,7 +279,7 @@ const TokenInput: FC<
 
   return (
     <FieldWrapper label={label}>
-      <BorderEffect disabled={isInputDisabled} size={textFieldProps?.size}>
+      <BorderEffect disabled={isInputDisabled}>
         <Box 
           width="100%"
           sx={{ 

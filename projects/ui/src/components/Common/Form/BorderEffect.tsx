@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Box, BoxProps, ClickAwayListener, TextFieldProps } from '@mui/material';
+import { Box, BoxProps, ClickAwayListener } from '@mui/material';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import { FC } from '~/types';
 
@@ -8,15 +8,8 @@ const BorderEffect: FC<
     enabled?: boolean;
     fullWidth?: boolean;
     disabled?: boolean;
-  } & BoxProps & Pick<TextFieldProps, 'size'>
-> = ({
-  children,
-  enabled = true,
-  fullWidth = false,
-  disabled = false,
-  size = 'medium',
-  ...props
-}) => {
+  } & BoxProps
+> = ({ children, enabled = true, fullWidth = false, disabled = false }) => {
   // ref for this component to control border color
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -30,14 +23,14 @@ const BorderEffect: FC<
       ref.current.style.border = '1px solid';
       ref.current.style.borderColor = BeanstalkPalette.textBlue;
     };
-  
+
     const handleMouseLeave = () => {
       if (!ref.current || activeRef.current || disabled) return;
       ref.current.style.padding = '1px';
       ref.current.style.border = '1px solid';
       ref.current.style.borderColor = BeanstalkPalette.inputGrey;
     };
-  
+
     const handleOnClick = () => {
       if (!ref.current || activeRef.current || disabled) return;
       ref.current.style.padding = '0px';
@@ -45,7 +38,7 @@ const BorderEffect: FC<
       ref.current.style.borderColor = BeanstalkPalette.theme.winter.primary;
       activeRef.current = true;
     };
-  
+
     const handleClickAway = () => {
       if (!ref.current || !activeRef.current || disabled) return;
       ref.current.style.padding = '1px';
@@ -70,9 +63,7 @@ const BorderEffect: FC<
   }, [enabled, disabled]);
 
   return !enabled ? (
-    <>
-      {children}
-    </>
+    <>{children}</>
   ) : (
     <Box
       ref={ref}
@@ -90,9 +81,7 @@ const BorderEffect: FC<
       onClick={actions.handleOnClick}
     >
       <ClickAwayListener onClickAway={actions.handleClickAway}>
-        <Box>
-          {children}
-        </Box>
+        <Box>{children}</Box>
       </ClickAwayListener>
     </Box>
   );
