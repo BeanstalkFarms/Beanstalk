@@ -25,10 +25,16 @@ contract SunTest is  Sun, TestHelper {
 
   ///////////////////////// Utilities /////////////////////////
 
+
+  // FIXME: Currently this tests with a fixed temperature, as
+  // soil issued above peg is dependent on the temperature.
+  // to automate this, we'd have to calculate the caseId from the deltaB. 
+
   function _testSunrise(
     int256 deltaB,
     uint256 newBeans,
     uint256 pods,
+    uint32 temperature,
     bool hasFert,
     bool hasField
   ) 
@@ -41,18 +47,18 @@ contract SunTest is  Sun, TestHelper {
       uint256 soil
     ) 
   {
-    uint256 caseId  = 8;
+    uint256 caseId  = 8; // need to fix 
     toFert  = hasFert  ? newBeans.div(3) : uint256(0); //
     toField = hasField ? newBeans.sub(toFert).div(2) : uint256(0); // divide remainder by two, round down
     toField = toField > pods ? pods : toField; // send up to the amount of pods outstanding
     toSilo  = newBeans.sub(toFert).sub(toField); // all remaining beans go to silo
     uint32 nextSeason = season.season() + 1;
-
     assert(toFert.add(toField).add(toSilo) == newBeans); // should sum back up
 
     newHarvestable = s.f.harvestable + toField;
     if(deltaB > 0) {
-      soil = newHarvestable;
+      soil = newHarvestable.mul(100).div(100 + temperature);
+
     } else {
       soil = uint256(-deltaB);
     }
@@ -70,7 +76,7 @@ contract SunTest is  Sun, TestHelper {
     vm.expectEmit(true, false, false, true);
     emit Soil(nextSeason, soil);
 
-    season.sunSunrise(deltaB, caseId); // Soil emission is slightly too low
+    season.sunTemperatureSunrise(deltaB, caseId, uint32(temperature)); // Soil emission is slightly too low
   }
 
   ///////////////////////// Reentrancy /////////////////////////
@@ -104,26 +110,29 @@ contract SunTest is  Sun, TestHelper {
   ///////////////////////// Pod Rate sets Soil /////////////////////////
 
   function test_deltaB_positive_podRate_low() public {
-    field.incrementTotalPodsE(100);
-    season.sunSunrise(300, 0); // deltaB = +300; case 0 = low pod rate
-    vm.roll(26); // after dutch Auction
-    assertEq(uint256(field.totalSoil()), 150); 
+    field.incrementTotalPodsE(10000);
+    season.setAbovePegE(true);
+    season.sunSunrise(30000, 0); // deltaB = +300; case 0 = low pod rate
+    vm.roll(30); // after dutch Auction
+    assertEq(uint256(field.totalSoil()), 14850); 
     // 300/3 = 100 *1.5 = 150
   }
   
   function test_deltaB_positive_podRate_medium() public {
-    field.incrementTotalPodsE(100);
-    season.sunSunrise(300, 8); // deltaB = +300; case 0 = medium pod rate
-    vm.roll(26); // after dutch Auction
-    assertEq(uint256(field.totalSoil()), 100); // FIXME: how calculated?
+    field.incrementTotalPodsE(10000);
+    season.setAbovePegE(true);
+    season.sunSunrise(30000, 8); // deltaB = +300; case 0 = medium pod rate
+    vm.roll(30); // after dutch Auction
+    assertEq(uint256(field.totalSoil()), 9900); // FIXME: how calculated?
     // 300/3 = 100 * 1 = 100
   }
 
   function test_deltaB_positive_podRate_high() public {
-    field.incrementTotalPodsE(100);
-    season.sunSunrise(300, 25); // deltaB = +300; case 0 = high pod rate
-    vm.roll(26); // after dutch Auction
-    assertEq(uint256(field.totalSoil()), 50); // FIXME: how calculated?
+    field.incrementTotalPodsE(10000);
+    season.setAbovePegE(true);
+    season.sunSunrise(30000, 25); // deltaB = +300; case 0 = high pod rate
+    vm.roll(30); // after dutch Auction
+    assertEq(uint256(field.totalSoil()), 4950); // FIXME: how calculated?
     // 300/3 = 100 * 0.5 = 50
 
   }
@@ -135,7 +144,7 @@ contract SunTest is  Sun, TestHelper {
     vm.assume(deltaB < 1e16); // FIXME: right way to prevent overflows
     uint256 newBeans = _abs(deltaB); // will be positive
 
-    _testSunrise(deltaB, newBeans, 0, false, false);
+    _testSunrise(deltaB, newBeans, 0, uint32(1), false, false);
 
     // @note only true if we've never minted to the silo before
     assertEq(silo.totalStalk(), newBeans * 1e4); // 6 -> 10 decimals
@@ -153,7 +162,7 @@ contract SunTest is  Sun, TestHelper {
     console.log("Pods outstanding: %s", pods);
 
     (/*uint256 toFert, uint256 toField*/, , uint256 toSilo, , /*uint256 newHarvestable, uint256 soil*/) 
-      = _testSunrise(deltaB, newBeans, pods, false, true);
+      = _testSunrise(deltaB, newBeans, pods, uint32(1), false, true);
 
     // @note only true if we've never minted to the silo before
     assertEq(silo.totalStalk(), toSilo * 1e4); // 6 -> 10 decimals
@@ -167,10 +176,10 @@ contract SunTest is  Sun, TestHelper {
     vm.assume(pods < newBeans); // clear the whole pod line
     // Setup pods
     field.incrementTotalPodsE(pods);
-    console.log("Pods outstanding: %s", pods);
-
+    console.log("Pods outstanding:", pods);
+    console.log("sw.t. before:", s.w.t);
     (/*uint256 toFert, uint256 toField, */, , uint256 toSilo, uint256 newHarvestable,/* uint256 soil*/) 
-      = _testSunrise(deltaB, newBeans, pods, false, true);
+      = _testSunrise(deltaB, newBeans, pods, uint32(1), false, true);
 
     // @note only true if we've never minted to the silo before
     assertEq(silo.totalStalk(), toSilo * 1e4); // 6 -> 10 decimals

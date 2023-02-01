@@ -118,9 +118,10 @@ contract Sun is Oracle {
     }
 
     function setSoilAndPeasAbovePeg(uint256 newHarvestable, uint256 caseId) internal {
-        if (caseId >= 24) newHarvestable = newHarvestable.mul(C.soilCoefficientHigh()).div(C.precision()); // high podrate
-        else if (caseId < 8) newHarvestable = newHarvestable.mul(C.soilCoefficientLow()).div(C.precision()); // low podrate
-        setSoil(newHarvestable);
+        uint256 newSoil = newHarvestable.mul(100).div(100 + s.w.t);
+        if (caseId >= 24) newSoil = newSoil.mul(C.soilCoefficientHigh()).div(C.precision()); // high podrate
+        else if (caseId < 8) newSoil = newSoil.mul(C.soilCoefficientLow()).div(C.precision()); // low podrate
+        setSoil(newSoil);
     }
 
     function setSoil(uint256 amount) internal {

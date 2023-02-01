@@ -24,6 +24,7 @@ describe('Fundraiser', function () {
     let tokenFacet = await ethers.getContractFactory('MockToken')
     this.token = await tokenFacet.deploy('MockToken', 'TOKEN')
     await this.token.deployed()
+    await this.token.setDecimals(6);
     await this.season.setYieldE('0')
 
     await this.season.siloSunrise(0)

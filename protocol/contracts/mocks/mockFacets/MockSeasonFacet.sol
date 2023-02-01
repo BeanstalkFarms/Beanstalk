@@ -31,6 +31,10 @@ contract MockSeasonFacet is SeasonFacet {
         reentrancyGuardTest();
     }
 
+    function setYieldE(uint256 t) public {
+        s.w.t = uint32(t);
+    }
+
     function siloSunrise(uint256 amount) public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
@@ -90,6 +94,14 @@ contract MockSeasonFacet is SeasonFacet {
         stepSun(deltaB, caseId); // Check
     }
 
+    function sunTemperatureSunrise(int256 deltaB, uint256 caseId, uint32 t) public {
+        require(!paused(), "Season: Paused.");
+        s.season.current += 1;
+        s.w.t = t;
+        s.season.sunriseBlock = uint32(block.number);
+        stepSun(deltaB, caseId); // Check
+    }
+
     function lightSunrise() public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
@@ -128,8 +140,8 @@ contract MockSeasonFacet is SeasonFacet {
         s.w.t = number;
     }
 
-    function setAbovePegE(bool num) public {
-        s.season.abovePeg = num;
+    function setAbovePegE(bool peg) public {
+        s.season.abovePeg = peg;
     }
 
     function setLastDSoilE(uint128 number) public {
@@ -284,5 +296,9 @@ contract MockSeasonFacet is SeasonFacet {
     }
     function nextSowTime() external view returns (uint256) {
         return uint256(s.w.nextSowTime);
+    }
+
+    function getT() external view returns (uint256) {
+        return uint256(s.w.t);
     }
 }

@@ -234,7 +234,7 @@ contract FieldTest is FieldFacet, TestHelper {
     uint256[] memory harvestPlot = new uint[](1);
     harvestPlot[0] = 0;
     vm.prank(siloChad);
-    vm.expectRevert("Field: No plot");
+    vm.expectRevert("Field: no plot");
     field.harvest(harvestPlot,LibTransfer.To.EXTERNAL);
   }
 
@@ -369,7 +369,7 @@ contract FieldTest is FieldFacet, TestHelper {
       );
     // weather is always 1% if sown at same block as sunrise, irregardless of weather
     uint256 calcWeather = blockNo == 1 ? 1e6 : max(__weather,1e6); 
-    assertApproxEqAbs(field.yield(),calcWeather, 0); // +/- 1 due to rounding
+    assertApproxEqAbs(field.temperature(),calcWeather, 0); // +/- 1 due to rounding
   }
   
   // various sowing at different dutch auctions + different soil amount

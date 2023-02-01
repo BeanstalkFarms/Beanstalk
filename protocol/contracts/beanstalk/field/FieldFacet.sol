@@ -336,7 +336,6 @@ contract FieldFacet is ReentrancyGuard {
         if (!s.season.abovePeg) {
             return uint256(s.f.soil);
         }
-
         // Above peg: Soil is dynamic
         return LibDibbler.scaleSoilUp(
             uint256(s.f.soil), // min soil
@@ -355,6 +354,10 @@ contract FieldFacet is ReentrancyGuard {
         return SafeCast.toUint32(
             LibDibbler.morningTemperature().div(LibDibbler.TEMPERATURE_PRECISION)
         );
+    }
+
+    function temperature() external view returns (uint256) {
+        return LibDibbler.morningTemperature();
     }
     
     /**
