@@ -28,6 +28,8 @@ import { useSdkMiddleware } from '~/hooks/sdk';
 
 const SLUGS = ['deposit', 'convert', 'transfer', 'withdraw', 'claim'];
 
+const SILO_ACTIONS_MAX_WIDTH = '470px';
+
 const SiloActions : FC<{
   pool: Pool;
   token: ERC20Token;
@@ -40,7 +42,7 @@ const SiloActions : FC<{
 
   return (
     <>
-      <Module>
+      <Module sx={{ maxWidth: { lg: SILO_ACTIONS_MAX_WIDTH } }}>
         <ModuleTabs value={tab} onChange={handleChange}>
           <Tab label="Deposit" />
           <Tab label="Convert" />

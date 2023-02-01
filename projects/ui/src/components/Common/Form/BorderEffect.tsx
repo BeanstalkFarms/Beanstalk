@@ -1,33 +1,33 @@
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Box, BoxProps, ClickAwayListener } from '@mui/material';
-import React, { useEffect, useMemo } from 'react';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import { FC } from '~/types';
 
-const InputFieldBorder: FC<
+const BorderEffect: FC<
   {
     enabled?: boolean;
     fullWidth?: boolean;
     disabled?: boolean;
   } & BoxProps
-> = ({
-  children,
-  enabled = true,
-  fullWidth = false,
-  disabled = false,
-  ...props
-}) => {
-  const ref = React.useRef<HTMLDivElement | null>(null);
-  const activeRef = React.useRef<boolean>(false);
+> = ({ children, enabled = true, fullWidth = false, disabled = false }) => {
+  // ref for this component to control border color
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  // ref state to keep track of active state
+  const activeRef = useRef<boolean>(false);
 
   const actions = useMemo(() => {
     const handleMouseOver = () => {
       if (!ref.current || activeRef.current || disabled) return;
-      ref.current.style.borderColor =
-        BeanstalkPalette.theme.winter.primaryHover;
+      ref.current.style.padding = '1px';
+      ref.current.style.border = '1px solid';
+      ref.current.style.borderColor = BeanstalkPalette.textBlue;
     };
 
     const handleMouseLeave = () => {
       if (!ref.current || activeRef.current || disabled) return;
+      ref.current.style.padding = '1px';
+      ref.current.style.border = '1px solid';
       ref.current.style.borderColor = BeanstalkPalette.inputGrey;
     };
 
@@ -62,19 +62,17 @@ const InputFieldBorder: FC<
     }
   }, [enabled, disabled]);
 
-  if (!enabled) {
-    return <>{children}</>;
-  }
-
-  return (
+  return !enabled ? (
+    <>{children}</>
+  ) : (
     <Box
       ref={ref}
       sx={{
         borderRadius: 1,
         border: '1px solid',
-        borderColor: BeanstalkPalette.inputGrey,
         padding: '1px',
         boxSizing: 'border-box',
+        borderColor: BeanstalkPalette.inputGrey,
         backgroundColor: BeanstalkPalette.white,
       }}
       width={fullWidth ? '100%' : undefined}
@@ -83,17 +81,10 @@ const InputFieldBorder: FC<
       onClick={actions.handleOnClick}
     >
       <ClickAwayListener onClickAway={actions.handleClickAway}>
-        <Box
-          px={2}
-          py={1}
-          {...props}
-          sx={{ ...props.sx, boxSizing: 'border-box' }}
-        >
-          {children}
-        </Box>
+        <Box>{children}</Box>
       </ClickAwayListener>
     </Box>
   );
 };
 
-export default InputFieldBorder;
+export default BorderEffect;

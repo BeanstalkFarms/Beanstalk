@@ -202,12 +202,8 @@ const DepositForm: FC<
               state={tokenState}
               showTokenSelect={showTokenSelect}
               handleQuote={handleQuote}
-              inputVariant="wrapped"
               additionalBalance={additionalBalance}
               params={quoteParams}
-              TokenAdornmentProps={{
-                balanceFrom: values.balanceFrom,
-              }}
             />
           );
         })}
