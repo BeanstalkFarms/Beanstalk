@@ -1,4 +1,5 @@
 import { ContractTransaction } from "ethers";
+import { Token } from "src/classes/Token";
 import { TokenValue } from "src/classes/TokenValue";
 import { BeanstalkSDK } from "../BeanstalkSDK";
 
@@ -15,8 +16,12 @@ export class Transfer {
    * @param destinationAddress The destination address for the transfer
    * @returns Promise of Transaction
    */
-  async transfer(amount: TokenValue, destinationAddress: string): Promise<ContractTransaction> {
-    Transfer.sdk.debug("silo.transfer()", { amount, destinationAddress });
+  async transfer(token: Token, amount: TokenValue, destinationAddress: string): Promise<ContractTransaction> {
+    if (!Transfer.sdk.tokens.siloWhitelist.has(token)) {
+      throw new Error(`Transfer error; token ${token.symbol} is not a whitelisted asset`);
+    }
+
+    Transfer.sdk.debug("silo.transfer()", { token, amount, destinationAddress });
 
     const SOURCE_BEAN_TOKEN = Transfer.sdk.tokens.BEAN;
 
@@ -29,7 +34,7 @@ export class Transfer {
 
     const season = await Transfer.sdk.sun.getSeason();
 
-    const transferData = Transfer.sdk.silo.withdraw.calculateWithdraw(SOURCE_BEAN_TOKEN, amount, deposited.crates, season);
+    const transferData = await Transfer.sdk.silo.calculateWithdraw(SOURCE_BEAN_TOKEN, amount, deposited.crates, season);
     Transfer.sdk.debug("silo.transfer(): transferData", { transferData });
 
     const seasons = transferData.crates.map((crate) => crate.season.toString());

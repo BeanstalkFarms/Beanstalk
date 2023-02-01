@@ -100,6 +100,17 @@ export class Silo {
   }
 
   /**
+   * Initates a transfer of a token from the silo.
+   * @param token The whitelisted token to withdraw. ex, BEAN vs BEAN_3CRV_LP
+   * @param amount The desired amount to transfer. Must be 0 < amount <= total deposits for token
+   * @param destinationAddress The destination address for the transfer
+   * @returns Promise of Transaction
+   */
+  async transfer(token: Token, amount: TokenValue, destinationAddress: string): Promise<ContractTransaction> {
+    return this.siloTransfer.transfer(token, amount, destinationAddress);
+  }
+
+  /**
    * This methods figures out which deposits, or crates, the withdraw must take from
    * in order to reach the desired amount. It returns extra information that may be useful
    * in a UI to show the user how much stalk and seed they will forfeit as a result of the withdraw
