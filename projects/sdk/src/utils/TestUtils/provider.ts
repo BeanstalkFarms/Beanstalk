@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
+import { BeanstalkSDK, DataSource } from "src/lib/BeanstalkSDK";
 import { BlockchainUtils } from "./BlockchainUtils";
 
 // private key + account mapping
@@ -27,7 +27,8 @@ export const setupConnection = (provider: ethers.providers.JsonRpcProvider = get
 export const getTestUtils = () => {
   const { signer, account } = setupConnection();
   const sdk = new BeanstalkSDK({
-    signer
+    signer,
+    source: DataSource.LEDGER
   });
 
   const utils = new BlockchainUtils(sdk);

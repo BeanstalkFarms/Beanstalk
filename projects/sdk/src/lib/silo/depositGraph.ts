@@ -169,5 +169,17 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
       label: "wrapEth"
     });
   }
+
+  {
+    /**
+     * Handle Other swaps to BEAN
+     */
+    graph.setEdge("USDT", "BEAN", {
+      build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.usdt2bean(from, to),
+      from: "USDT",
+      to: "BEAN"
+    });
+  }
+
   return graph;
 };

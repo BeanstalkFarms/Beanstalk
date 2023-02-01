@@ -89,6 +89,10 @@ export class BlockchainUtils {
     await this.sdk.provider.send("evm_mine", []); // Just mines to the next block
   }
 
+  async getCurrentBlock() {
+    await this.sdk.provider.send("eth_getBlockByNumber", ["latest", "false"]); // Just mines to the next block
+  }
+
   async impersonate(account: string) {
     await this.provider.send("anvil_impersonateAccount", [account]);
     return () => this.stopImpersonating(account);
@@ -168,6 +172,7 @@ export class BlockchainUtils {
   private async setStorageAt(address: string, index: string, value: string) {
     await this.sdk.provider.send("hardhat_setStorageAt", [address, index, value]);
   }
+
   private toBytes32(bn: ethers.BigNumber) {
     return ethers.utils.hexlify(ethers.utils.zeroPad(bn.toHexString(), 32));
   }
@@ -187,5 +192,31 @@ export class BlockchainUtils {
 
   ethersError(e: any) {
     return `${(e as any).error?.reason || (e as any).toString()}`;
+  }
+
+  async sunriseForward() {
+    // Calculate how many seconds till next hour
+    const block = await this.sdk.provider.send("eth_getBlockByNumber", ["latest", false]);
+    const blockTs = parseInt(block.timestamp, 16);
+    const blockDate = new Date(blockTs * 1000);
+    const secondsTillNextHour = (3600000 - (blockDate.getTime() % 3600000)) / 1000;
+
+    // fast forward evm, to just past the hour and mine a new block
+    await this.sdk.provider.send("evm_increaseTime", [secondsTillNextHour + 5]);
+    await this.sdk.provider.send("evm_mine", []);
+
+    // call sunrise
+    const res = await this.sdk.contracts.beanstalk.sunrise();
+    await res.wait();
+
+    // get the new season
+    const season = await this.sdk.contracts.beanstalk.season();
+
+    return season;
+  }
+
+  async forceBlock() {
+    await this.sdk.provider.send("evm_increaseTime", [12]);
+    await this.sdk.provider.send("evm_mine", []);
   }
 }

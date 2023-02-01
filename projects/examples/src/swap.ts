@@ -11,8 +11,8 @@ async function main() {
   const sdk = new BeanstalkSDK({ signer, DEBUG: false });
 
   // await swap(sdk, sdk.tokens.USDT, sdk.tokens.USDT, "500", FarmFromMode.INTERNAL, FarmToMode.EXTERNAL);
-  await swap(sdk, sdk.tokens.ETH, sdk.tokens.BEAN, "300");
-  await swap(sdk, sdk.tokens.ETH, sdk.tokens.WETH, "1");
+  await swap(sdk, sdk.tokens.ETH, sdk.tokens.BEAN, "10");
+  // await swap(sdk, sdk.tokens.ETH, sdk.tokens.WETH, "1");
 
   // await swap(sdk, sdk.tokens.BEAN, sdk.tokens.ETH, "30");
   // await estimate(sdk, sdk.tokens.ETH, sdk.tokens.WETH, "30");

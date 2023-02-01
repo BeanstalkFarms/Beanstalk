@@ -2,7 +2,7 @@ import { ethers, BigNumber, ContractTransaction } from "ethers";
 import { ERC20Token, Token } from "src/classes/Token";
 import { StringMap } from "src/types";
 import { BeanstalkSDK, DataSource } from "./BeanstalkSDK";
-import EventProcessor from "./events/processor";
+import EventProcessor from "src/lib/events/processor";
 import { EIP712Domain, EIP712TypedData, Permit } from "./permit";
 import {
   CrateSortFn,
@@ -16,6 +16,9 @@ import { MAX_UINT256 } from "src/constants";
 import { assert } from "src/utils";
 import { DepositBuilder } from "./silo/DepositBuilder";
 import { DepositOperation } from "./silo/DepositOperation";
+import { Withdraw } from "./silo/Withdraw";
+import { Claim } from "./silo/Claim";
+import { FarmToMode } from "./farm";
 
 /**
  * A Crate is an `amount` of a token Deposited or
@@ -80,6 +83,8 @@ export type UpdateFarmerSiloBalancesPayload = StringMap<Partial<TokenSiloBalance
 export class Silo {
   static sdk: BeanstalkSDK;
   private depositBuilder: DepositBuilder;
+  siloWithdraw: Withdraw;
+  siloClaim: Claim;
   // 1 Seed grows 1 / 10_000 Stalk per Season.
   // 1/10_000 = 1E-4
   // FIXME
@@ -88,9 +93,97 @@ export class Silo {
   constructor(sdk: BeanstalkSDK) {
     Silo.sdk = sdk;
     this.depositBuilder = new DepositBuilder(sdk);
+    this.siloWithdraw = new Withdraw(sdk);
+    this.siloClaim = new Claim(sdk);
   }
 
-  //////////////////////// UTILITIES ////////////////////////
+  /**
+   * Make a deposit into a whitelisted token silo. Any supported token is allowed
+   * as input and will be swaped for the desired targetToken.
+   * @param inputToken The token you want to spend. It will be swaped into targetToken if needed
+   * @param targetToken The whitelisted token we are _actually_ depositing
+   * @param amount The amount of the inputToken to use
+   * @param slippage Slipage to use if a swap is needed.
+   * @param _account Address of the user
+   * @returns
+   */
+  async deposit(
+    inputToken: Token,
+    targetToken: Token,
+    amount: TokenValue,
+    slippage: number = 0.1,
+    _account?: string
+  ): Promise<ContractTransaction> {
+    const account = _account ?? (await Silo.sdk.getAccount(_account));
+    const depositOperation = await this.buildDeposit(targetToken, account);
+    depositOperation.setInputToken(inputToken);
+
+    return depositOperation.execute(amount, slippage);
+  }
+
+  /**
+   * Create a DepositOperation helper object. Using a builder/depositOperation pattern
+   * is useful in UIs or scenarios where we want to reuse a pre-calculated route.
+   * @param targetToken The token we want to deposit. Must be a white-listed token
+   * @returns DepositOperation
+   */
+  buildDeposit(targetToken: Token, account: string): DepositOperation {
+    return this.depositBuilder.buildDeposit(targetToken, account);
+  }
+
+  /**
+   * Initates a withdraw from the silo. The `token` specified dictates which silo to withdraw
+   * from, and therefore is limited to only whitelisted assets.
+   * Behind the scenes, the `amount` to be withdrawn must be taken from individual
+   * deposits, aka crates. A user's deposits are not summarized into one large bucket, from
+   * which we can withdraw at will. Each deposit is independently tracked, so each withdraw must
+   * calculate how many crates it must span to attain the desired `amount`.
+   * @param token The whitelisted token to withdraw. ex, BEAN vs BEAN_3CRV_LP
+   * @param amount The desired amount to withdraw. Must be 0 < amount <= total deposits for token
+   * @returns Promise of Transaction
+   */
+  async withdraw(token: Token, amount: TokenValue): Promise<ContractTransaction> {
+    return this.siloWithdraw.withdraw(token, amount);
+  }
+
+  /**
+   * This methods figures out which deposits, or crates, the withdraw must take from
+   * in order to reach the desired amount. It returns extra information that may be useful
+   * in a UI to show the user how much stalk and seed they will forfeit as a result of the withdraw
+   */
+  async calculateWithdraw(token: Token, amount: TokenValue, crates: DepositCrate[], season: number) {
+    return this.siloWithdraw.calculateWithdraw(token, amount, crates, season);
+  }
+
+  /**
+   * Returns the claimable amount for the given whitelisted token, and the underlying crates
+   * @param token Which Silo token to withdraw. Must be a whitelisted token
+   * @param dataSource Dictates where to lookup the available claimable amount, subgraph vs onchain
+   */
+  async getClaimableAmount(token: Token, dataSource?: DataSource) {
+    return this.siloClaim.getClaimableAmount(token, dataSource);
+  }
+
+  /**
+   * Claims all claimable amount of the given whitelisted token
+   * @param token Which Silo token to withdraw. Must be a whitelisted token
+   * @param dataSource Dictates where to lookup the available claimable amount, subgraph vs onchain
+   * @param toMode Where to send the output tokens (circulating or farm balance)
+   */
+  async claim(token: Token, dataSource?: DataSource, toMode: FarmToMode = FarmToMode.EXTERNAL) {
+    return this.siloClaim.claim(token, dataSource, toMode);
+  }
+
+  /**
+   * Claims specific seasons from Silo claimable amount.
+   * @param token Which Silo token to withdraw. Must be a whitelisted token
+   * @param seasons Which seasons to claim, from the available claimable list. List of seasons
+   * can be retrieved with .getClaimableAmount()
+   * @param toMode Where to send the output tokens (circulating or farm balance)
+   */
+  async claimSeasons(token: Token, seasons: string[], toMode: FarmToMode = FarmToMode.EXTERNAL) {
+    return this.siloClaim.claimSeasons(token, seasons, toMode);
+  }
 
   /**
    * Sort the incoming map so that tokens are ordered in the same order
@@ -581,8 +674,7 @@ export class Silo {
     sortedCrates.some((crate) => {
       const thisAmount = crate.amount.gt(remaining) ? crate.amount.sub(remaining) : crate.amount;
       seasons.push(crate.season.toString());
-      // amounts.push(token.stringify(thisAmount));
-      amounts.push(thisAmount.toString());
+      amounts.push(thisAmount.toBlockchain());
       remaining = remaining.sub(thisAmount);
       return remaining.eq(0); // done
     });
@@ -612,23 +704,6 @@ export class Silo {
     return Silo.sdk.contracts.beanstalk
       .bdv(_token.address, (_amount || _token.amount(1)).toBlockchain())
       .then((v) => Silo.sdk.tokens.BEAN.fromBlockchain(v));
-  }
-
-  //////////////////////// ACTION: Deposit ////////////////////////
-
-  // public deposit = wrapped(Silo.sdk.contracts.beanstalk, 'deposit')
-  // $deposit = Silo.sdk.contracts.beanstalk.deposit;
-  // $plant = Silo.sdk.contracts.beanstalk.plant;
-  // $update = Silo.sdk.contracts.beanstalk.update;
-  // $lastUpdate = Silo.sdk.contracts.beanstalk.lastUpdate;
-
-  /**
-   * Create a DepositOperation helper object
-   * @param targetToken The token we want to deposit. Must be a white-listed token
-   * @returns DepositOperation
-   */
-  buildDeposit(targetToken: Token, account: string): DepositOperation {
-    return this.depositBuilder.buildDeposit(targetToken, account);
   }
 
   //////////////////////// ACTION: Claim Rewards ////////////////////////
