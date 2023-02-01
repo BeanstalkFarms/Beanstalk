@@ -387,7 +387,7 @@ contract FieldTest is FieldFacet, TestHelper {
     uint256 BreanBal;
     uint256 LastTrueSoil;
     uint256 AmtPodsGained;
-    console.log("starting Peas:",field.peas());
+    console.log("starting Peas:",field.remainingPods());
 
     vm.startPrank(brean);
     while(field.totalSoil() > maxAmount){
@@ -419,9 +419,9 @@ contract FieldTest is FieldFacet, TestHelper {
       console.log("TrueSoil Consumed:", LastTrueSoil - field.totalRealSoil()); 
       console.log("Beans Burnt:",BreanBal - C.bean().balanceOf(brean));
       console.log("pods gained:",AmtPodsGained);
-      console.log("peas remaining:",field.peas());
+      console.log("peas remaining:",field.remainingPods());
       console.log("total pods:",field.totalPods());
-        console.log("total effective pods:", field.peas() + field.totalPods());
+        console.log("total effective pods:", field.remainingPods() + field.totalPods());
 
       _block++;
       TotalSownTransactions++;
@@ -451,7 +451,7 @@ contract FieldTest is FieldFacet, TestHelper {
     console.log("total pods:",field.totalPods());
     assertEq(field.totalPods(),field.totalUnharvestable(),"totalUnharvestable");
     assertEq(totalPodsMinted,field.totalPods(),"totalPodsMinted");
-    assertEq(field.peas(),0, "peas");
+    assertEq(field.remainingPods(),0, "peas");
     assertGt(totalSoilSown,100e6,"totalSoilSown"); // check the amt of soil sown at the end of the season is greater than the start soil 
     vm.stopPrank();
   }
@@ -493,7 +493,7 @@ contract FieldTest is FieldFacet, TestHelper {
       console.log("TotalSoil Consumed:",LastTotalSoil - field.totalSoil()); 
       console.log("Beans Burnt:",BreanBal - C.bean().balanceOf(brean));
       console.log("pods gained:",AmtPodsGained);
-      console.log("peas remaining:",field.peas());
+      console.log("peas remaining:",field.remainingPods());
       console.log("total pods:",field.totalPods());
       _block++;
       TotalSownTransactions++;
@@ -525,7 +525,7 @@ contract FieldTest is FieldFacet, TestHelper {
     assertLt(field.totalUnharvestable(), maxPods);
     assertEq(field.totalPods(),field.totalUnharvestable() , "totalUnharvestable");
     assertEq(totalPodsMinted,field.totalPods() , "totalPodsMinted");
-    assertEq(field.peas() , 0, "peas is not 0");
+    assertEq(field.remainingPods() , 0, "peas is not 0");
     assertEq(totalSoilSown, 100e6, "totalSoilSown"); // check the amt of soil sown at the end of the season is equal to start soil 
     assertEq(totalSoilSown, initalBreanBal - C.bean().balanceOf(brean), "total bean used does not equal total soil sown");
   }
@@ -629,7 +629,7 @@ contract FieldTest is FieldFacet, TestHelper {
     season.setSoilE(soil);
     season.setAbovePegE(true);
     vm.roll(delta);
-    uint256 maxPeas = field.peas();
+    uint256 maxPeas = field.remainingPods();
     uint256 TotalSoil = field.totalSoil();
     vm.prank(brean);
     field.sowWithMin(
@@ -654,7 +654,7 @@ contract FieldTest is FieldFacet, TestHelper {
     season.setSoilE(soil);
     season.setAbovePegE(false);
     vm.roll(delta);
-    uint256 maxPeas = field.peas();
+    uint256 maxPeas = field.remainingPods();
     uint256 TotalSoil = field.totalSoil();
     vm.prank(brean);
     field.sow(
