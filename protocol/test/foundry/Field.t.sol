@@ -376,7 +376,7 @@ contract FieldTest is FieldFacet, TestHelper {
   // @FIXME: way to fuzz test this while keeping state?
   // soil sown should be larger than starting soil
   // pods issued should be the same maximum
-  function testPeasAbovePeg() public {
+  function test_remainingPods_abovePeg() public {
     _beforeEachMorningAuction();
     uint256 _block = 1;
     uint256 totalSoilSown = 0;
@@ -387,7 +387,7 @@ contract FieldTest is FieldFacet, TestHelper {
     uint256 BreanBal;
     uint256 LastTrueSoil;
     uint256 AmtPodsGained;
-    console.log("starting Peas:",field.remainingPods());
+    console.log("Initial remainingPods:",field.remainingPods());
 
     vm.startPrank(brean);
     while(field.totalSoil() > maxAmount){
@@ -419,7 +419,7 @@ contract FieldTest is FieldFacet, TestHelper {
       console.log("TrueSoil Consumed:", LastTrueSoil - field.totalRealSoil()); 
       console.log("Beans Burnt:",BreanBal - C.bean().balanceOf(brean));
       console.log("pods gained:",AmtPodsGained);
-      console.log("peas remaining:",field.remainingPods());
+      console.log("remaining pods:",field.remainingPods());
       console.log("total pods:",field.totalPods());
         console.log("total effective pods:", field.remainingPods() + field.totalPods());
 
@@ -451,7 +451,7 @@ contract FieldTest is FieldFacet, TestHelper {
     console.log("total pods:",field.totalPods());
     assertEq(field.totalPods(),field.totalUnharvestable(),"totalUnharvestable");
     assertEq(totalPodsMinted,field.totalPods(),"totalPodsMinted");
-    assertEq(field.remainingPods(),0, "peas");
+    assertEq(field.remainingPods(),0, "remainingPods");
     assertGt(totalSoilSown,100e6,"totalSoilSown"); // check the amt of soil sown at the end of the season is greater than the start soil 
     vm.stopPrank();
   }
@@ -459,7 +459,7 @@ contract FieldTest is FieldFacet, TestHelper {
   // same test as above, but below peg
   // soil sown should be equal to starting soil
   // pods issued should be less than maximum
-  function testPeasBelowPeg() public prank(brean) {
+  function test_remainingPods_belowPeg() public prank(brean) {
     _beforeEachMorningAuctionBelowPeg();
     uint256 _block = 1;
     uint256 totalSoilSown = 0;
@@ -493,7 +493,7 @@ contract FieldTest is FieldFacet, TestHelper {
       console.log("TotalSoil Consumed:",LastTotalSoil - field.totalSoil()); 
       console.log("Beans Burnt:",BreanBal - C.bean().balanceOf(brean));
       console.log("pods gained:",AmtPodsGained);
-      console.log("peas remaining:",field.remainingPods());
+      console.log("remainingPods:",field.remainingPods());
       console.log("total pods:",field.totalPods());
       _block++;
       TotalSownTransactions++;
@@ -525,7 +525,7 @@ contract FieldTest is FieldFacet, TestHelper {
     assertLt(field.totalUnharvestable(), maxPods);
     assertEq(field.totalPods(),field.totalUnharvestable() , "totalUnharvestable");
     assertEq(totalPodsMinted,field.totalPods() , "totalPodsMinted");
-    assertEq(field.remainingPods() , 0, "peas is not 0");
+    assertEq(field.remainingPods() , 0, "remainingPods is not 0");
     assertEq(totalSoilSown, 100e6, "totalSoilSown"); // check the amt of soil sown at the end of the season is equal to start soil 
     assertEq(totalSoilSown, initalBreanBal - C.bean().balanceOf(brean), "total bean used does not equal total soil sown");
   }
@@ -587,7 +587,7 @@ contract FieldTest is FieldFacet, TestHelper {
     console.log("Beans Burnt:",BreanBal - C.bean().balanceOf(brean));
     console.log("pods gained:",AmtPodsGained);
     console.log("total pods:",field.totalPods());
-    assertEq(field.totalUnharvestable(),totalPodsMinted, "TotalUnharvestable doesn't equal maxPeas."); //.0001% accuracy
+    assertEq(field.totalUnharvestable(),totalPodsMinted, "TotalUnharvestable doesn't equal totalPodsMinted"); //.0001% accuracy
     assertGt(totalSoilSown,100e6, "Total soil sown is less than inital soil issued."); // check the amt of soil sown at the end of the season is greater than the start soil
   }
 
@@ -619,7 +619,7 @@ contract FieldTest is FieldFacet, TestHelper {
     }
   }
   // sowing all with variable soil, weather, and delta
-  // pods issued should always be equal to maxPods (peas)
+  // pods issued should always be equal to remainingPods
   // soil/bean used should always be greater/equal to soil issued. 
   function testSowAllMorningAuctionAbovePeg(uint256 soil,uint32 _weather,uint256 delta) public {
     soil = bound(soil,1e6,100e6);
@@ -629,7 +629,7 @@ contract FieldTest is FieldFacet, TestHelper {
     season.setSoilE(soil);
     season.setAbovePegE(true);
     vm.roll(delta);
-    uint256 maxPeas = field.remainingPods();
+    uint256 remainingPods = field.remainingPods();
     uint256 TotalSoil = field.totalSoil();
     vm.prank(brean);
     field.sowWithMin(
@@ -640,11 +640,11 @@ contract FieldTest is FieldFacet, TestHelper {
       );
     assertEq(uint256(field.totalSoil()), 0, "totalSoil greater than 0");
     assertEq(uint256(field.totalRealSoil()), 0, "s.f.soil greater than 0");
-    assertEq(field.totalUnharvestable(), maxPeas, "Unharvestable pods does not Equal Expected.");
+    assertEq(field.totalUnharvestable(), remainingPods, "Unharvestable pods does not Equal Expected.");
   }
 
   // sowing all with variable soil, weather, and delta
-  // pods issued should always be lower than maxPods (peas)
+  // pods issued should always be lower than remainingPods
   // soil/bean used should always be equal to soil issued. 
   function testSowAllMorningAuctionBelowPeg(uint256 soil,uint32 _weather,uint256 delta) public {
     soil = bound(soil,1e6,100e6);
@@ -654,7 +654,7 @@ contract FieldTest is FieldFacet, TestHelper {
     season.setSoilE(soil);
     season.setAbovePegE(false);
     vm.roll(delta);
-    uint256 maxPeas = field.remainingPods();
+    uint256 remainingPods = field.remainingPods();
     uint256 TotalSoil = field.totalSoil();
     vm.prank(brean);
     field.sow(
@@ -663,7 +663,7 @@ contract FieldTest is FieldFacet, TestHelper {
       LibTransfer.From.EXTERNAL
       );
     assertEq(uint256(field.totalSoil()), 0, "totalSoil greater than 0");
-    assertEq(field.totalUnharvestable(), maxPeas, "Unharvestable pods does not Equal Expected.");
+    assertEq(field.totalUnharvestable(), remainingPods, "Unharvestable pods does not Equal Expected.");
   }
   // BeforeEach Helpers
   function _beforeEachMorningAuction() public {
