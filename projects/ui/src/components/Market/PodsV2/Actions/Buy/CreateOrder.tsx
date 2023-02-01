@@ -73,7 +73,6 @@ const PlaceInLineInputProps = {
           sx={{
             opacity: '0.4',
             // HOTFIX: Small forms
-            mt: 0.2,
             mr: -0.2,
             fontSize: 17.6,
           }}>

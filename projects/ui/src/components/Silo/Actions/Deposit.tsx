@@ -161,7 +161,6 @@ const DepositForm : FC<
             state={tokenState}
             showTokenSelect={showTokenSelect}
             handleQuote={handleQuote}
-            inputVariant="wrapped"
             additionalBalance={applicableBalances[tokenState.token.address]?.applied}
             balanceFrom={values.balanceFrom}
           />

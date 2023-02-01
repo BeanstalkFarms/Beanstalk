@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Box,
   Divider,
   TextField,
   TextFieldProps,
@@ -17,7 +18,7 @@ import FieldWrapper from './FieldWrapper';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import { ZERO_BN } from '~/constants';
-import InputFieldBorder from './InputFieldBorder';
+import BorderEffect from './BorderEffect';
 import { BalanceFrom } from './BalanceFromRow';
 
 export type TokenInputCustomProps = {
@@ -63,10 +64,6 @@ export type TokenInputCustomProps = {
    */
   allowNegative?: boolean;
   /**
-   * whether to use the wrapped variant or the default text field variant
-   */
-  inputVariant?: 'default' | 'wrapped'
-  /**
    * 
    */
   onChange?: (finalValue: BigNumber | undefined) => void;
@@ -87,55 +84,28 @@ export const preventNegativeInput = (e: React.KeyboardEvent<HTMLInputElement>) =
   }
 };
 
-const stylesConfig = {
-  input: {
-    wrapped: {
-      borderRadius: 1,
-      '& label.Mui-focused': {
-        color: '#fff',
-      },
-      '& .MuiOutlinedInput-root': {
-        background: '#fff',
-        pr: 0,
-        // '& .MuiInputAdornment-root': {  ----> should we add this
-        //   ml: 0,
-        // },
-        '& fieldset': {
-          border: 'none',
-        },
-        '&.Mui-focused fieldset': {
-          border: 'none',
-        },
-        '&:hover fieldset': {
-          border: 'none'
-        },
-        '& .MuiOutlinedInput-input': {
-          pl: 0,
-          py: 1.25,
-        }
-      },
-    },
-    default: {
-      borderRadius: 1,
-      '& .MuiOutlinedInput-root': {
-        background: '#fff',
-      },
-    }
+const textFieldStyles = {
+  borderRadius: 1,
+  '& label.Mui-focused': {
+    color: '#fff',
   },
-  infoSection: {
-    wrapped: {
-      gap: 0.5,
-      py: 1,
+  '& .MuiOutlinedInput-root': {
+    background: '#fff',
+    pr: 0,
+    pl: 0,
+    '& fieldset': {
+      border: 'none',
     },
-    default: {
-      gap: 0.5,
-      px: 0.5, 
-      pt: 0.75
+    '&.Mui-focused fieldset': {
+      border: 'none',
+    },
+    '&:hover fieldset': {
+      border: 'none'
+    },
+    '& .MuiOutlinedInput-input': {
+      pl: 0,
+      py: 1.25,
     }
-  },
-  infoTypography: {
-    wrapped: 'text.secondary',
-    default: 'text.primary',
   }
 } as const;
 
@@ -153,7 +123,6 @@ const TokenInput: FC<
   max: _max = 'use-balance',
   min,
   allowNegative = false,
-  inputVariant = 'default',
   /// Formik props
   field,
   form,
@@ -310,50 +279,48 @@ const TokenInput: FC<
 
   return (
     <FieldWrapper label={label}>
-      <InputFieldBorder
-        enabled={inputVariant === 'wrapped'}
-        disabled={isInputDisabled}
-      >
-        {/* Input */}
-        <TextField
-          type="text"
-          color="primary"
-          placeholder={placeholder || '0'}
-          disabled={isInputDisabled}
-          fullWidth // default to fullWidth
-          {...textFieldProps}
-        // Override the following props.
-          onWheel={handleWheel}
-          value={displayAmount || ''}
-          onChange={handleChange}
-          InputProps={inputProps}
-          onKeyDown={!allowNegative ? preventNegativeInput : undefined}
-          sx={{
-          ...stylesConfig.input[inputVariant],
-          ...sx
-        }}
-      />
-        {/* Bottom Adornment */}
-        {(balance && !hideBalance || quote) && (
-        <Row gap={0.5} px={0.5} pt={0.75}>
-          {/* Leaving the Stack rendered regardless of whether `quote` is defined
+      <BorderEffect disabled={isInputDisabled} size={textFieldProps?.size}>
+        <Box 
+          width="100%"
+          sx={{ 
+            px: 2, 
+            py: textFieldProps?.size === 'small' && !balance || hideBalance ? 0 : 1,
+          }}
+        >
+          {/* Input */}
+          <TextField
+            type="text"
+            color="primary"
+            placeholder={placeholder || '0'}
+            disabled={isInputDisabled}
+            fullWidth // default to fullWidth
+            {...textFieldProps}
+            // Override the following props.
+            onWheel={handleWheel}
+            value={displayAmount || ''}
+            onChange={handleChange}
+            InputProps={inputProps}
+            onKeyDown={!allowNegative ? preventNegativeInput : undefined}
+            sx={{
+              ...textFieldStyles,
+              ...sx
+            }}
+          />
+          {/* Bottom Adornment */}
+          {(balance && !hideBalance || quote) && (
+          <Row gap={0.5} px={0.5} pt={0.75}>
+            {/* Leaving the Stack rendered regardless of whether `quote` is defined
             * ensures that the Balance section gets flexed to the right side of
             * the input. */}
-          <Row sx={{ flex: 1 }} spacing={1}>
-            <Typography 
-              variant="bodySmall" 
-              color={stylesConfig.infoTypography[inputVariant]}
-            >
-              {quote}
-            </Typography>
-          </Row>
-          {((balance || additionalBalance?.gt(0)) && !hideBalance) && (
+            <Row sx={{ flex: 1 }} spacing={1}>
+              <Typography variant="bodySmall" color="text.secondary">
+                {quote}
+              </Typography>
+            </Row>
+            {((balance || additionalBalance?.gt(0)) && !hideBalance) && (
             <>
               <Tooltip title={balanceTooltip}>
-                <Typography 
-                  variant="body1"
-                  color={stylesConfig.infoTypography[inputVariant]}
-                >
+                <Typography variant="body1" color="text.secondary">
                   {balanceLabel}: {(
                     balance
                       ? token
@@ -381,9 +348,10 @@ const TokenInput: FC<
               </Typography>
             </>
           )}
-        </Row>
+          </Row>
       )}
-      </InputFieldBorder>
+        </Box>
+      </BorderEffect>
     </FieldWrapper>
   );
 };
