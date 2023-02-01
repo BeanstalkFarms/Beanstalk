@@ -1,7 +1,8 @@
 import { ethers } from "ethers";
 import { ERC20Token } from "src/classes/Token";
 import { BeanstalkSDK, DataSource } from "src/lib/BeanstalkSDK";
-import { TokenSiloBalance } from "src/lib/silo";
+import { TokenSiloBalance } from "src/lib/silo/types";
+import { makeDepositCrate } from "src/lib/silo/utils";
 import { TokenValue } from "src/TokenValue";
 import * as addr from "./addresses";
 import { logSiloBalance } from "./log";
@@ -180,8 +181,8 @@ export class BlockchainUtils {
   //
   mockDepositCrate(token: ERC20Token, season: number, _amount: string, _currentSeason?: number) {
     const amount = token.amount(_amount);
-    // @ts-ignore use private method
-    return this.sdk.silo.makeDepositCrate(
+    
+    return makeDepositCrate(
       token,
       season,
       amount.toBlockchain(), // amount
