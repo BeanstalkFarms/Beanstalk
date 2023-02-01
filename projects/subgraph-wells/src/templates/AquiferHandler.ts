@@ -34,7 +34,7 @@ export function handleBoreWell(event: BoreWell): void {
     }
 
     for (let i = 0; i < event.params.pumps.length; i++) {
-        loadOrCreatePump(event.params.pumps[i][0].toAddress(), event.address)
+        loadOrCreatePump(event.params.pumps[i][0].toAddress(), event.params.well)
     }
 
     well.wellFunction = event.params.wellFunction[0].toAddress()
