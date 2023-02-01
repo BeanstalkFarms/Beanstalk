@@ -108,14 +108,14 @@ contract FieldFacet is ReentrancyGuard {
         LibTransfer.From mode
     ) public payable returns (uint256 pods) {
         // `soil` is the remaining Soil
-        (uint256 soil, uint256 morningTemperature) = _totalSoilAndTemperature();
+        (uint256 soil, uint256 _morningTemperature) = _totalSoilAndTemperature();
 
         require(
             soil >= minSoil && beans >= minSoil,
             "Field: Soil Slippage"
         );
         require(
-            morningTemperature >= minTemperature,
+            _morningTemperature >= minTemperature,
             "Field: Temperature Slippage"
         );
 
@@ -126,7 +126,7 @@ contract FieldFacet is ReentrancyGuard {
         }
 
         // 1 Bean is Sown in 1 Soil, i.e. soil = beans
-        return _sow(soil, morningTemperature, mode);
+        return _sow(soil, _morningTemperature, mode);
     }
 
     /**
@@ -138,12 +138,12 @@ contract FieldFacet is ReentrancyGuard {
      * and `s.f.soil`. This is by design, as the Fundraiser has no impact on peg
      * maintenance and thus should not change the supply of Soil.
      */
-    function _sow(uint256 beans, uint256 morningTemperature, LibTransfer.From mode)
+    function _sow(uint256 beans, uint256 _morningTemperature, LibTransfer.From mode)
         internal
         returns (uint256 pods)
     {
         beans = LibTransfer.burnToken(C.bean(), beans, msg.sender, mode);
-        pods = LibDibbler.sow(beans, morningTemperature, msg.sender);
+        pods = LibDibbler.sow(beans, _morningTemperature, msg.sender);
         s.f.beanSown = s.f.beanSown + SafeCast.toUint128(beans); // SafeMath not needed
     }
 
@@ -293,8 +293,8 @@ contract FieldFacet is ReentrancyGuard {
      *
      * Note: the `soil` return value is symmetric with `totalSoil`.
      */
-    function _totalSoilAndTemperature() private view returns (uint256 soil, uint256 morningTemperature) {
-        uint256 morningTemperature = LibDibbler.morningTemperature();
+    function _totalSoilAndTemperature() private view returns (uint256 soil, uint256 _morningTemperature) {
+        _morningTemperature = LibDibbler.morningTemperature();
 
         // Below peg: Soil is fixed to the amount set during {stepWeather}.
         // Morning Temperature is dynamic, starting small and logarithmically 
@@ -302,7 +302,7 @@ contract FieldFacet is ReentrancyGuard {
         if (!s.season.abovePeg) {
             return (
                 uint256(s.f.soil),
-                morningTemperature
+                _morningTemperature
             );
         }
 
@@ -313,9 +313,9 @@ contract FieldFacet is ReentrancyGuard {
             LibDibbler.scaleSoilUp(
                 uint256(s.f.soil), // max soil offered this Season, reached when `t >= 25`
                 uint256(s.w.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
-                morningTemperature // temperature adjusted by number of blocks since Sunrise
+                _morningTemperature // temperature adjusted by number of blocks since Sunrise
             ),
-            morningTemperature
+            _morningTemperature
         );
     }
 

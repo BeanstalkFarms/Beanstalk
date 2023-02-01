@@ -43,7 +43,7 @@ library LibDibbler {
 
     /**
      * @param beans The number of Beans to Sow
-     * @param morningTemperature FIXME
+     * @param _morningTemperature FIXME
      * @param account The account sowing Beans
      * @dev 
      * 
@@ -63,7 +63,7 @@ library LibDibbler {
      * | 12  | 2243.75e6 (500e6 * (1+348.75%)) | 500e6 | 348.75e6 (27.9% * 1250 * 1e6) | 1250         |
      * | 300 | 6750e6 (500e6 * (1+1250%))      | 500e6 | 1250e6                        | 1250         |
      */
-    function sow(uint256 beans, uint256 morningTemperature, address account) internal returns (uint256) {
+    function sow(uint256 beans, uint256 _morningTemperature, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         
         uint256 pods;
@@ -74,13 +74,13 @@ library LibDibbler {
             // amount sown is rounded up, because 
             // 1: temperature is rounded down.
             // 2: pods are rounded down.
-            beans = scaleSoilDown(beans, morningTemperature, maxTemperature);
+            beans = scaleSoilDown(beans, _morningTemperature, maxTemperature);
             pods = beansToPods(beans, maxTemperature);
         } 
         
         // Below peg: FIXME
         else {
-            pods = beansToPods(beans, morningTemperature);
+            pods = beansToPods(beans, _morningTemperature);
         }
 
         (, s.f.soil) = s.f.soil.trySub(uint128(beans));
@@ -155,7 +155,7 @@ library LibDibbler {
      * `A = 2`
      * `MAX_BLOCK_ELAPSED = 25`
      */
-    function morningTemperature() internal view returns (uint256 morningTemperature) {
+    function morningTemperature() internal view returns (uint256 _morningTemperature) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 delta = block.number.sub(s.season.sunriseBlock);
 
@@ -303,21 +303,21 @@ library LibDibbler {
 
     /**
      * @param beans The number of Beans to convert to Pods.
-     * @param morningTemperature The current temperature, measured to 1e8. 
-     * @dev Converts Beans to Pods based on `morningTemperature`.
+     * @param _morningTemperature The current temperature, measured to 1e8. 
+     * @dev Converts Beans to Pods based on `_morningTemperature`.
      * 
-     * `pods = beans * (100e6 + morningTemperature) / 100e6`
-     * `pods = beans * (1 + morningTemperature / 100e6)`
+     * `pods = beans * (100e6 + _morningTemperature) / 100e6`
+     * `pods = beans * (1 + _morningTemperature / 100e6)`
      *
      * Beans and Pods are measured to 6 decimals.
      */
-    function beansToPods(uint256 beans, uint256 morningTemperature)
+    function beansToPods(uint256 beans, uint256 _morningTemperature)
         internal
         pure
         returns (uint256 pods)
     {
         return beans.mulDiv(
-            morningTemperature.add(ONE_HUNDRED_PCT),
+            _morningTemperature.add(ONE_HUNDRED_PCT),
             ONE_HUNDRED_PCT
         );
     }
@@ -329,11 +329,11 @@ library LibDibbler {
     function scaleSoilUp(
         uint256 soil, 
         uint256 maxTemperature,
-        uint256 morningTemperature
+        uint256 _morningTemperature
     ) internal pure returns (uint256) {
         return soil.mulDiv(
             maxTemperature.add(ONE_HUNDRED_PCT),
-            morningTemperature.add(ONE_HUNDRED_PCT)
+            _morningTemperature.add(ONE_HUNDRED_PCT)
         );
     }
     
@@ -355,11 +355,11 @@ library LibDibbler {
      */
     function scaleSoilDown(
         uint256 soil, 
-        uint256 morningTemperature, 
+        uint256 _morningTemperature, 
         uint256 maxTemperature
     ) internal pure returns (uint256) {
         return soil.mulDiv(
-            morningTemperature.add(ONE_HUNDRED_PCT),
+            _morningTemperature.add(ONE_HUNDRED_PCT),
             maxTemperature.add(ONE_HUNDRED_PCT),
             LibPRBMath.Rounding.Up
         );
