@@ -10,51 +10,74 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 /**
  * @title Account
  * @author Publius
- * @notice Contains all of the Farmer specific storage data.
- * @dev {Account.State} is the primary struct that is referenced from the 
- * {Storage.State} struct. All other structs in {Account} are referenced in
- * {Account.State}. Each unique Ethereum address is a Farmer.
+ * @notice Stores Farmer-level Beanstalk state.
+ * @dev {Account.State} is the primary struct that is referenced from {Storage.State}. 
+ * All other structs in {Account} are referenced in {Account.State}. Each unique
+ * Ethereum address is a Farmer.
  */
 contract Account {
-
-    // Field stores a Farmer's Plots and Pod allowances.
+    /**
+     * @notice Stores a Farmer's Plots and Pod allowances.
+     * @param plots A Farmer's Plots. Maps from Plot index to Pod amount.
+     * @param podAllowances An allowance mapping for Pods similar to that of the ERC-20 standard. Maps from spender address to allowance amount.
+     */
     struct Field {
-        mapping(uint256 => uint256) plots; // A Farmer's Plots. Maps from Plot index to Pod amount.
-        mapping(address => uint256) podAllowances; // An allowance mapping for Pods similar to that of the ERC-20 standard. Maps from spender address to allowance amount.
+        mapping(uint256 => uint256) plots;
+        mapping(address => uint256) podAllowances;
     }
 
-    // Asset Silo is a struct that stores Deposits and Seeds per Deposit, and formerly stored Withdrawals.
-    // Asset Silo currently stores Unripe Bean and Unripe LP Deposits.
+    /**
+     * @notice Stores a Farmer's Deposits and Seeds per Deposit, and formerly stored Withdrawals.
+     * @param withdrawals DEPRECATED: Silo V1 Withdrawals are no longer referenced.
+     * @param deposits Unripe Bean/LP Deposits (previously Bean/LP Deposits).
+     * @param depositSeeds BDV of Unripe LP Deposits / 4 (previously # of Seeds in corresponding LP Deposit).
+     */
     struct AssetSilo {
-        mapping(uint32 => uint256) withdrawals; // DEPRECATED – Silo V1 Withdrawals are no longer referenced.
-        mapping(uint32 => uint256) deposits; // Unripe Bean/LP Deposits (previously Bean/LP Deposits).
-        mapping(uint32 => uint256) depositSeeds; // BDV of Unripe LP Deposits / 4 (previously # of Seeds in corresponding LP Deposit).
+        mapping(uint32 => uint256) withdrawals;
+        mapping(uint32 => uint256) deposits;
+        mapping(uint32 => uint256) depositSeeds;
     }
 
-    // Deposit represents a Deposit in the Silo of a given Token at a given Season.
-    // Stored as two uint128 state variables to save gas.
+    /**
+     * @notice Represents a Deposit of a given Token in the Silo at a given Season.
+     * @param amount The amount of Tokens in the Deposit.
+     * @param bdv The Bean-denominated value of the total amount of Tokens in the Deposit.
+     * @dev `amount` and `bdv` are packed as uint128 to save gas.
+     */
     struct Deposit {
-        uint128 amount; // The amount of Tokens in the Deposit.
-        uint128 bdv; // The Bean-denominated-value of the total amount of Tokens in the Deposit.
+        uint128 amount;
+        uint128 bdv;
     }
 
-    // Silo stores Silo-related balances
+    /**
+     * @notice Stores a Farmer's Stalk and Seeds balances.
+     * @param stalk Balance of the Farmer's Stalk.
+     * @param seeds Balance of the Farmer's Seeds.
+     */
     struct Silo {
-        uint256 stalk; // Balance of the Farmer's normal Stalk.
-        uint256 seeds; // Balance of the Farmer's normal Seeds.
+        uint256 stalk;
+        uint256 seeds;
     }
 
-    // Season Of Plenty stores Season of Plenty (SOP) related balances
+    /**
+     * @notice Stores a Farmer's Season of Plenty (SOP) balances.
+     * @param roots The number of Roots a Farmer had when it started Raining.
+     * @param plentyPerRoot The global Plenty Per Root index at the last time a Farmer updated their Silo.
+     * @param plenty The balance of a Farmer's plenty. Plenty can be claimed directly for 3CRV.
+     * @dev Before Replant:
+     * 
+     * Slot 1 => `uint256 base;` Post Replant SOPs are denominated in plenty Tokens instead of base.
+     * Slot 2 => `uint256 basePerRoot;` Post Replant SOPs are denominated in plenty Tokens instead of base.
+     */
     struct SeasonOfPlenty {
-        // uint256 base; // DEPRECATED – Post Replant SOPs are denominated in plenty Tokens instead of base.
-        uint256 roots; // The number of Roots a Farmer had when it started Raining.
-        // uint256 basePerRoot; // DEPRECATED – Post Replant SOPs are denominated in plenty Tokens instead of base.
-        uint256 plentyPerRoot; // The global Plenty Per Root index at the last time a Farmer updated their Silo. 
-        uint256 plenty; // The balance of a Farmer's plenty. Plenty can be claimed directly for 3Crv.
+        uint256 roots; // Slot 1
+        uint256 plentyPerRoot; // Slot 2
+        uint256 plenty; // Slot 3
     }
-
-    // The Account level State stores all of the Farmer's balances in the contract.
-    // The global AppStorage state stores a mapping from account address to Account.State.
+    
+    /**
+     * @notice Defines the state object for a Farmer.
+     */
     struct State {
         Field field; // A Farmer's Field storage.
         AssetSilo bean; // A Farmer's Unripe Bean Deposits only as a result of Replant (previously held the V1 Silo Deposits/Withdrawals for Beans).
@@ -80,7 +103,7 @@ contract Account {
 }
 
 /**
- * @title Account
+ * @title Storage
  * @author Publius
  * @notice Stores system-level Beanstalk state.
  */
@@ -150,7 +173,7 @@ contract Storage {
     }
 
     /**
-     * @notice System-level Silo state; contains deposits and withdrawal data for a particular whitelisted Token.
+     * @notice System-level Silo state; contains deposit and withdrawal data for a particular whitelisted Token.
      * @param deposited The total amount of this Token currently Deposited in the Silo.
      * @param withdrawn The total amount of this Token currently Withdrawn From the Silo.
      * @dev {Storage.State} contains a mapping from Token address => AssetSilo.
@@ -330,10 +353,8 @@ struct AppStorage {
     uint256 reentrantStatus; // An intra-transaction state variable to protect against reentrance.
     Storage.Weather w;
 
-    //////////////////////////////////
-
     uint256 earnedBeans; // The number of Beans distributed to the Silo that have not yet been Deposited as a result of the Earn function being called.
-    uint256[14] depreciated; // DEPRECATED - 14 slots that used to store state variables which have been deprecated through various updates. Storage slots can be left alone or reused.
+    uint256[14] deprecated; // DEPRECATED - 14 slots that used to store state variables which have been deprecated through various updates. Storage slots can be left alone or reused.
     mapping (address => Account.State) a; // A mapping from Farmer address to Account state.
     uint32 bip0Start; // DEPRECATED - bip0Start was used to aid in a migration that occured alongside BIP-0.
     uint32 hotFix3Start; // DEPRECATED - hotFix3Start was used to aid in a migration that occured alongside HOTFIX-3.
