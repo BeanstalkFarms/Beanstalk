@@ -238,7 +238,7 @@ describe('Sun', function () {
 
     // Load some beans into the wallet's internal balance, and note the starting time
     // This also accomplishes initializing curve oracle
-    const initial = await this.season.gm(owner.address, INTERNAL);
+    const initial = await this.season.sunriseTo(owner.address, INTERNAL);
     const block = await ethers.provider.getBlock(initial.blockNumber);
     const START_TIME = block.timestamp;
 
@@ -259,7 +259,7 @@ describe('Sun', function () {
       await this.season.resetSeasonStart(secondsLate);
 
       /// SUNRISE
-      this.result = await this.season.gm(owner.address, mockVal[4]);
+      this.result = await this.season.sunriseTo(owner.address, mockVal[4]);
       
       // Verify that sunrise was profitable assuming a 50% average success rate
       
