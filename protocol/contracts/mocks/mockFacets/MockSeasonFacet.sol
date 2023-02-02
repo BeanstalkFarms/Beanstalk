@@ -149,7 +149,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function setNextSowTimeE(uint32 time) public {
-        s.w.nextSowTime = time;
+        s.w.thisSowTime = time;
     }
 
     function setLastSowTimeE(uint32 number) public {
@@ -208,7 +208,7 @@ contract MockSeasonFacet is SeasonFacet {
         delete s.s;
         delete s.w;
         s.w.lastSowTime = type(uint32).max;
-        s.w.nextSowTime = type(uint32).max;
+        s.w.thisSowTime = type(uint32).max;
         delete s.g;
         delete s.r;
         delete s.co;
@@ -294,8 +294,8 @@ contract MockSeasonFacet is SeasonFacet {
     function lastSowTime() external view returns (uint256) {
         return uint256(s.w.lastSowTime);
     }
-    function nextSowTime() external view returns (uint256) {
-        return uint256(s.w.nextSowTime);
+    function thisSowTime() external view returns (uint256) {
+        return uint256(s.w.thisSowTime);
     }
 
     function getT() external view returns (uint256) {

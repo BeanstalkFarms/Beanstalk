@@ -187,35 +187,35 @@ contract FieldTest is FieldFacet, TestHelper {
 
   // checking next sow time
   function testComplexDPDMoreThan1Soil() public {
-    // Does not set nextSowTime if Soil > 1;
+    // Does not set thisSowTime if Soil > 1;
     season.setSoilE(3e6);
     vm.prank(brean);
     field.sow(1e6,1,LibTransfer.From.EXTERNAL);
     weather = season.weather();
-    assertEq(uint256(weather.nextSowTime), uint256(LibConstant.MAX_UINT32));
+    assertEq(uint256(weather.thisSowTime), uint256(LibConstant.MAX_UINT32));
   }
 
   function testComplexDPD1Soil() public {
-    // Does set nextSowTime if Soil = 1;
+    // Does set thisSowTime if Soil = 1;
     season.setSoilE(1e6);
     vm.prank(brean);
     field.sow(1e6,1,LibTransfer.From.EXTERNAL);
     weather = season.weather();
-    assertLt(uint256(weather.nextSowTime), uint256(LibConstant.MAX_UINT32));
+    assertLt(uint256(weather.thisSowTime), uint256(LibConstant.MAX_UINT32));
   }
 
   function testComplexDPDLessThan1Soil() public {
-    // Does set nextSowTime if Soil < 1;
+    // Does set thisSowTime if Soil < 1;
     season.setSoilE(1.5e6);
     vm.prank(brean);
     field.sow(1*1e6,1,LibTransfer.From.EXTERNAL);
     weather = season.weather();
-    assertLt(uint256(weather.nextSowTime), uint256(LibConstant.MAX_UINT32));
+    assertLt(uint256(weather.thisSowTime), uint256(LibConstant.MAX_UINT32));
   
   }
 
   function testComplexDPDLessThan1SoilNoSetterino() public {
-    // Does not set nextSowTime if Soil already < 1;
+    // Does not set thisSowTime if Soil already < 1;
     season.setSoilE(1.5e6);
     vm.prank(brean);
     field.sow(1e6,1,LibTransfer.From.EXTERNAL);
@@ -223,7 +223,7 @@ contract FieldTest is FieldFacet, TestHelper {
     vm.prank(siloChad);
     field.sow(0.5e6,1,LibTransfer.From.EXTERNAL);
     weather2 = season.weather();
-    assertEq(uint256(weather2.nextSowTime), uint256(weather.nextSowTime));
+    assertEq(uint256(weather2.thisSowTime), uint256(weather.thisSowTime));
 
   }
 

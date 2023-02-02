@@ -41,7 +41,7 @@ contract MockInitDiamond {
         ];
         s.w.t = 1;
 
-        s.w.nextSowTime = type(uint32).max;
+        s.w.thisSowTime = type(uint32).max;
         s.w.lastSowTime = type(uint32).max;
     
         // s.refundStatus = 1;
