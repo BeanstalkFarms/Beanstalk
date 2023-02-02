@@ -108,7 +108,7 @@ contract FieldFacet is ReentrancyGuard {
         LibTransfer.From mode
     ) public payable returns (uint256 pods) {
         // `soil` is the remaining Soil
-        (uint256 soil, uint256 _morningTemperature) = _totalSoilAndTemperature();
+        (uint256 soil, uint256 _morningTemperature, bool abovePeg) = _totalSoilAndTemperature();
 
         require(
             soil >= minSoil && beans >= minSoil,
@@ -126,7 +126,7 @@ contract FieldFacet is ReentrancyGuard {
         }
 
         // 1 Bean is Sown in 1 Soil, i.e. soil = beans
-        return _sow(soil, _morningTemperature, mode);
+        return _sow(soil, _morningTemperature, abovePeg, mode);
     }
 
     /**
@@ -138,12 +138,12 @@ contract FieldFacet is ReentrancyGuard {
      * and `s.f.soil`. This is by design, as the Fundraiser has no impact on peg
      * maintenance and thus should not change the supply of Soil.
      */
-    function _sow(uint256 beans, uint256 _morningTemperature, LibTransfer.From mode)
+    function _sow(uint256 beans, uint256 _morningTemperature, bool peg, LibTransfer.From mode)
         internal
         returns (uint256 pods)
     {
         beans = LibTransfer.burnToken(C.bean(), beans, msg.sender, mode);
-        pods = LibDibbler.sow(beans, _morningTemperature, msg.sender);
+        pods = LibDibbler.sow(beans, _morningTemperature, msg.sender, peg);
         s.f.beanSown = s.f.beanSown + SafeCast.toUint128(beans); // SafeMath not needed
     }
 
@@ -287,13 +287,13 @@ contract FieldFacet is ReentrancyGuard {
     }
 
     /**
-     * @dev Gets the current `soil` and `morningTemperature`. Provided as a gas 
+     * @dev Gets the current `soil`, `morningTemperature` and `abovePeg`. Provided as a gas 
      * optimization to prevent recalculation of {LibDibbler.morningTemperature} for 
      * upstream functions.
      *
      * Note: the `soil` return value is symmetric with `totalSoil`.
      */
-    function _totalSoilAndTemperature() private view returns (uint256 soil, uint256 _morningTemperature) {
+    function _totalSoilAndTemperature() private view returns (uint256 soil, uint256 _morningTemperature, bool) {
         _morningTemperature = LibDibbler.morningTemperature();
 
         // Below peg: Soil is fixed to the amount set during {stepWeather}.
@@ -302,7 +302,8 @@ contract FieldFacet is ReentrancyGuard {
         if (!s.season.abovePeg) {
             return (
                 uint256(s.f.soil),
-                _morningTemperature
+                _morningTemperature,
+                false
             );
         }
 
@@ -315,7 +316,8 @@ contract FieldFacet is ReentrancyGuard {
                 uint256(s.w.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
                 _morningTemperature // temperature adjusted by number of blocks since Sunrise
             ),
-            _morningTemperature
+            _morningTemperature,
+            true
         );
     }
 

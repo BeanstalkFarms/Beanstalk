@@ -51,9 +51,9 @@ library LibDibbler {
      * 
      * | t   | Max pods  | s.f.soil              | soil                    | temperature              | maxTemperature |
      * |-----|-----------|-----------------------|-------------------------|--------------------------|----------------|
-     * | 0   | 500e6     | ~37e6 500e6/(1+1250%) | ~495e6  500e6/(1+1%))   | 1e6 (1%)                 | 1250 (1250%)   |
-     * | 12  | 500e6     | ~37e6                 | ~1507e6 500e6/(1+348%)) | 348.75e6 (27.9% * 1250)  | 1250           |
-     * | 300 | 500e6     | ~37e6                 |  ~37e6  500e6/(1+1250%) | 1250e6                   | 1250           |
+     * | 0   | 500e6     | ~37e6 500e6/(1+1250%) | ~495e6 500e6/(1+1%))    | 1e6 (1%)                 | 1250 (1250%)   |
+     * | 12  | 500e6     | ~37e6                 | ~111e6 500e6/(1+348%))  | 348.75e6 (27.9% * 1250)  | 1250           |
+     * | 300 | 500e6     | ~37e6                 |  ~37e6 500e6/(1+1250%)  | 1250e6                   | 1250           |
      * 
      * ## Below Peg
      * 
@@ -63,14 +63,12 @@ library LibDibbler {
      * | 12  | 2243.75e6 (500e6 * (1+348.75%)) | 500e6 | 348.75e6 (27.9% * 1250 * 1e6) | 1250               |
      * | 300 | 6750e6 (500e6 * (1+1250%))      | 500e6 | 1250e6                        | 1250               |
      */
-    function sow(uint256 beans, uint256 _morningTemperature, address account) internal returns (uint256) {
+    function sow(uint256 beans, uint256 _morningTemperature, address account, bool abovePeg) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         
         uint256 pods;
-        uint256 maxTemperature = uint256(s.w.t).mul(TEMPERATURE_PRECISION);
-
-        // Above peg: FIXME
-        if (s.season.abovePeg) {
+        if (abovePeg) {
+            uint256 maxTemperature = uint256(s.w.t).mul(TEMPERATURE_PRECISION);
             // amount sown is rounded up, because 
             // 1: temperature is rounded down.
             // 2: pods are rounded down.
@@ -78,7 +76,6 @@ library LibDibbler {
             pods = beansToPods(beans, maxTemperature);
         } 
         
-        // Below peg: FIXME
         else {
             pods = beansToPods(beans, _morningTemperature);
         }
