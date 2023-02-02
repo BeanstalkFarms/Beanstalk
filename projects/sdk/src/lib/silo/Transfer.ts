@@ -23,9 +23,7 @@ export class Transfer {
 
     Transfer.sdk.debug("silo.transfer()", { token, amount, destinationAddress });
 
-    const SOURCE_BEAN_TOKEN = Transfer.sdk.tokens.BEAN;
-
-    const { deposited } = await Transfer.sdk.silo.getBalance(SOURCE_BEAN_TOKEN);
+    const { deposited } = await Transfer.sdk.silo.getBalance(token);
     Transfer.sdk.debug("silo.transfer(): deposited balance", { deposited });
 
     if (deposited.amount.lt(amount)) {
@@ -34,7 +32,7 @@ export class Transfer {
 
     const season = await Transfer.sdk.sun.getSeason();
 
-    const transferData = await Transfer.sdk.silo.calculateWithdraw(SOURCE_BEAN_TOKEN, amount, deposited.crates, season);
+    const transferData = await Transfer.sdk.silo.calculateWithdraw(token, amount, deposited.crates, season);
     Transfer.sdk.debug("silo.transfer(): transferData", { transferData });
 
     const seasons = transferData.crates.map((crate) => crate.season.toString());
@@ -51,7 +49,7 @@ export class Transfer {
       contractCall = Transfer.sdk.contracts.beanstalk.transferDeposit(
         sender,
         destinationAddress,
-        SOURCE_BEAN_TOKEN.address,
+        token.address,
         seasons[0],
         amounts[0]
       );
@@ -59,7 +57,7 @@ export class Transfer {
       contractCall = Transfer.sdk.contracts.beanstalk.transferDeposits(
         sender,
         destinationAddress,
-        SOURCE_BEAN_TOKEN.address,
+        token.address,
         seasons,
         amounts
       );

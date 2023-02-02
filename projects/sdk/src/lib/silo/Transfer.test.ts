@@ -8,97 +8,111 @@ jest.setTimeout(30000);
 
 describe("Silo Transfer", function () {
   const transfer = new Transfer(sdk);
-  const BEAN_TOKEN = sdk.tokens.BEAN;
+
+  const SUPPORTED_TOKENS = [sdk.tokens.BEAN, sdk.tokens.BEAN_CRV3_LP, sdk.tokens.UNRIPE_BEAN, sdk.tokens.UNRIPE_BEAN_CRV3];
 
   const testDestination = ACCOUNTS[1][1];
 
   it("Fails when using a non-whitelisted token", async () => {
     const t = async () => {
-      const tx = await transfer.transfer(sdk.tokens.ETH, BEAN_TOKEN.amount(3000), testDestination);
+      const tx = await transfer.transfer(sdk.tokens.ETH, sdk.tokens.BEAN.amount(3000), testDestination);
     };
     expect(t).rejects.toThrow("Transfer error; token ETH is not a whitelisted asset");
   });
 
-  describe("Transfer sourced from single crate", () => {
-    beforeAll(async () => {
-      await utils.resetFork();
+  SUPPORTED_TOKENS.forEach((siloToken) => {
+    describe(`Transfer ${siloToken.symbol}`, () => {
+      describe("Transfer sourced from single crate", () => {
+        beforeAll(async () => {
+          await utils.resetFork();
 
-      // make a deposit
-      await BEAN_TOKEN.approveBeanstalk(TokenValue.MAX_UINT256);
-      await utils.setBEANBalance(account, BEAN_TOKEN.amount(2000));
-      const deposit = await sdk.silo.deposit(BEAN_TOKEN, BEAN_TOKEN, BEAN_TOKEN.amount(500), 0.1);
-      await deposit.wait();
-    });
+          // make a deposit
+          await siloToken.approveBeanstalk(TokenValue.MAX_UINT256);
+          // TODO: We can could a new util method to set only the applicable balance
+          await utils.setBEANBalance(account, sdk.tokens.BEAN.amount(2000));
+          await utils.setBEAN3CRVBalance(account, sdk.tokens.BEAN_CRV3_LP.amount(2000));
+          await utils.seturBEANBalance(account, sdk.tokens.UNRIPE_BEAN.amount(2000));
+          await utils.seturBEAN3CRVBalance(account, sdk.tokens.UNRIPE_BEAN_CRV3.amount(2000));
+          const deposit = await sdk.silo.deposit(siloToken, siloToken, siloToken.amount(500), 0.1);
+          await deposit.wait();
+        });
 
-    it("Validate starting state", async () => {
-      const { deposited } = await sdk.silo.getBalance(BEAN_TOKEN);
-      expect(deposited.crates.length).toBe(1);
-      expect(deposited.amount.eq(BEAN_TOKEN.amount(500))).toBe(true);
-    });
+        it("Validate starting state", async () => {
+          const { deposited } = await sdk.silo.getBalance(siloToken);
+          expect(deposited.crates.length).toBe(1);
+          expect(deposited.amount.eq(siloToken.amount(500))).toBe(true);
+        });
 
-    it("Successfully transfers", async () => {
-      const tx = await transfer.transfer(BEAN_TOKEN, BEAN_TOKEN.amount(100), testDestination);
-      await tx.wait();
-      const { deposited } = await sdk.silo.getBalance(BEAN_TOKEN);
+        it("Successfully transfers", async () => {
+          const tx = await transfer.transfer(siloToken, siloToken.amount(100), testDestination);
+          await tx.wait();
+          const { deposited } = await sdk.silo.getBalance(siloToken);
 
-      expect(deposited.crates.length).toBe(1);
-      expect(deposited.amount.eq(BEAN_TOKEN.amount(400))).toBe(true);
+          expect(deposited.crates.length).toBe(1);
+          expect(deposited.amount.eq(siloToken.amount(400))).toBe(true);
 
-      const { deposited: destinationBalance } = await sdk.silo.getBalance(BEAN_TOKEN, testDestination);
-      expect(destinationBalance.crates.length).toBe(1);
-      expect(destinationBalance.amount.eq(BEAN_TOKEN.amount(100))).toBe(true);
-    });
+          const { deposited: destinationBalance } = await sdk.silo.getBalance(siloToken, testDestination);
+          expect(destinationBalance.crates.length).toBe(1);
+          expect(destinationBalance.amount.eq(siloToken.amount(100))).toBe(true);
+        });
 
-    it("Fails when transfer amount exceeds balance", async () => {
-      const t = async () => {
-        const tx = await transfer.transfer(BEAN_TOKEN, BEAN_TOKEN.amount(3000), testDestination);
-      };
-      expect(t).rejects.toThrow("Insufficient balance");
-    });
-  });
+        it("Fails when transfer amount exceeds balance", async () => {
+          const t = async () => {
+            const tx = await transfer.transfer(siloToken, siloToken.amount(3000), testDestination);
+          };
+          expect(t).rejects.toThrow("Insufficient balance");
+        });
+      });
 
-  describe("Transfer sourced from multiple crates", () => {
-    beforeAll(async () => {
-      await utils.resetFork();
+      describe("Transfer sourced from multiple crates", () => {
+        beforeAll(async () => {
+          await utils.resetFork();
 
-      // make a deposit
-      await BEAN_TOKEN.approveBeanstalk(TokenValue.MAX_UINT256);
-      await utils.setBEANBalance(account, BEAN_TOKEN.amount(1000));
-      let deposit = await sdk.silo.deposit(BEAN_TOKEN, BEAN_TOKEN, BEAN_TOKEN.amount(500), 0.1);
-      await deposit.wait();
+          // make a deposit
+          await siloToken.approveBeanstalk(TokenValue.MAX_UINT256);
+          // TODO: We can could a new util method to set only the applicable balance
+          await utils.setBEANBalance(account, sdk.tokens.BEAN.amount(2000));
+          await utils.setBEAN3CRVBalance(account, sdk.tokens.BEAN_CRV3_LP.amount(2000));
+          await utils.seturBEANBalance(account, sdk.tokens.UNRIPE_BEAN.amount(2000));
+          await utils.seturBEAN3CRVBalance(account, sdk.tokens.UNRIPE_BEAN_CRV3.amount(2000));
 
-      // go to next season
-      await utils.sunriseForward();
+          let deposit = await sdk.silo.deposit(siloToken, siloToken, siloToken.amount(500), 0.1);
+          await deposit.wait();
 
-      // make another deposit
-      deposit = await sdk.silo.deposit(BEAN_TOKEN, BEAN_TOKEN, BEAN_TOKEN.amount(100), 0.1);
-      await deposit.wait();
-    });
+          // go to next season
+          await utils.sunriseForward();
 
-    it("Validate starting state", async () => {
-      const { deposited } = await sdk.silo.getBalance(BEAN_TOKEN);
-      expect(deposited.crates.length).toBe(2);
-      expect(deposited.amount.eq(BEAN_TOKEN.amount(600))).toBe(true);
-    });
+          // make another deposit
+          deposit = await sdk.silo.deposit(siloToken, siloToken, siloToken.amount(100), 0.1);
+          await deposit.wait();
+        });
 
-    it("Successfully transfers", async () => {
-      const tx = await transfer.transfer(BEAN_TOKEN, BEAN_TOKEN.amount(150), testDestination);
-      await tx.wait();
-      const { deposited } = await sdk.silo.getBalance(BEAN_TOKEN);
+        it("Validate starting state", async () => {
+          const { deposited } = await sdk.silo.getBalance(siloToken);
+          expect(deposited.crates.length).toBe(2);
+          expect(deposited.amount.eq(siloToken.amount(600))).toBe(true);
+        });
 
-      expect(deposited.crates.length).toBe(1);
-      expect(deposited.amount.eq(BEAN_TOKEN.amount(450))).toBe(true);
+        it("Successfully transfers", async () => {
+          const tx = await transfer.transfer(siloToken, siloToken.amount(150), testDestination);
+          await tx.wait();
+          const { deposited } = await sdk.silo.getBalance(siloToken);
 
-      const { deposited: destinationBalance } = await sdk.silo.getBalance(BEAN_TOKEN, testDestination);
-      expect(destinationBalance.crates.length).toBe(2);
-      expect(destinationBalance.amount.eq(BEAN_TOKEN.amount(150))).toBe(true);
-    });
+          expect(deposited.crates.length).toBe(1);
+          expect(deposited.amount.eq(siloToken.amount(450))).toBe(true);
 
-    it("Fails when transfer amount exceeds balance", async () => {
-      const t = async () => {
-        const tx = await transfer.transfer(BEAN_TOKEN, BEAN_TOKEN.amount(3000), testDestination);
-      };
-      expect(t).rejects.toThrow("Insufficient balance");
+          const { deposited: destinationBalance } = await sdk.silo.getBalance(siloToken, testDestination);
+          expect(destinationBalance.crates.length).toBe(2);
+          expect(destinationBalance.amount.eq(siloToken.amount(150))).toBe(true);
+        });
+
+        it("Fails when transfer amount exceeds balance", async () => {
+          const t = async () => {
+            const tx = await transfer.transfer(siloToken, siloToken.amount(3000), testDestination);
+          };
+          expect(t).rejects.toThrow("Insufficient balance");
+        });
+      });
     });
   });
 });
