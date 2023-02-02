@@ -401,7 +401,7 @@ const generateScale = (
         Math.abs(1 - yMin),
         Math.abs(1 - yMax)
       );
-      const M = 3;
+      const M = 5;
 
       // TWAP: floor at 0, max at 1.2 * highest price
       yScale = scaleLinear<number>({
@@ -421,7 +421,7 @@ const generateScale = (
     } else {
       const yMin = min(data, getY) as number;
       const yMax = max(data, getY) as number;
-      const M = [0.9988, 1.0012]; 
+      const M = [0.9980, 1.002]; 
 
       yScale = scaleLinear<number>({
         clamp: false,
