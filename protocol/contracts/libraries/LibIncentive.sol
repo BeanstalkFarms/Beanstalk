@@ -16,20 +16,19 @@ import "./Curve/LibCurve.sol";
  * @title Incentive Library calculates the reward and the exponential increase efficiently.
  **/
 library LibIncentive {
-    uint32 private constant PERIOD = 3600; //1 hour
-
-
     using SafeMath for uint256;
 
-    // Calculates sunrise incentive amount based on current gas prices and bean/ether price
-    // Further reading here: https://beanstalk-farms.notion.site/RFC-Sunrise-Payout-Change-31a0ca8dd2cb4c3f9fe71ae5599e9102
+    uint32 private constant PERIOD = 3600; //1 hour
+
+    /**
+     * @dev Calculates Sunrise incentive amount based on current gas prices and BEAN:ETH price
+     */
     function determineReward(
         uint256 initialGasLeft,
         uint256[2] memory balances,
         uint256 blocksLate
     ) internal view returns (uint256) {
-
-        // Gets the current bean price based on the curve pool.
+        // Gets the current Bean price based on the Curve pool.
         // In the future, this can be swapped out to another oracle
         uint256 beanPriceUsd = getCurveBeanPrice(balances);
 
@@ -38,7 +37,10 @@ library LibIncentive {
             .mul(1e6)
             .div(beanPriceUsd);
 
-        uint256 gasUsed = Math.min(initialGasLeft.sub(gasleft()) + C.getSunriseGasOverhead(), C.getMaxSunriseGas());
+        uint256 gasUsed = Math.min(
+            initialGasLeft.sub(gasleft()) + C.getSunriseGasOverhead(),
+            C.getMaxSunriseGas()
+        );
         uint256 gasCostWei = C.basefeeContract().block_basefee()    // (BASE_FEE
             .add(C.getSunrisePriorityFeeBuffer())                   // + PRIORITY_FEE_BUFFER)
             .mul(gasUsed);                                          // * GAS_USED

@@ -13,9 +13,9 @@ import "~/C.sol";
 import "./Oracle.sol";
 
 /**
- * @author Publius
  * @title Sun
- **/
+ * @author Publius
+ */
 contract Sun is Oracle {
     using SafeMath for uint256;
     using LibPRBMath for uint256;

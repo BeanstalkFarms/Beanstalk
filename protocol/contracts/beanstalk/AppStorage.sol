@@ -96,13 +96,20 @@ contract Storage {
         address weth; // DEPRECATED – See above note
     }
 
-    // Field stores global Field balances.
+    /**
+     * @notice System-level Field state variables.
+     * @param soil The number of Soil currently available. Adjusted during {Sun.stepSun}.
+     * @param beanSown The number of Bean sown within the current Season. Reset during {Weather.stepWeather}.
+     * @param pods The pod index; the total number of Pods ever minted.
+     * @param harvested The harvested index; the total number of Pods that have ever been Harvested.
+     * @param harvestable The harvestable index; the total number of Pods that have ever been Harvestable. Included previously Harvested Beans.
+     */
     struct Field {
-        uint128 soil; // The number of Soil currently available.
-        uint128 beanSown; // the number of bean sown within a season.
-        uint256 pods; // The pod index; the total number of Pods ever minted.
-        uint256 harvested; // The harvested index; the total number of Pods that have ever been Harvested.
-        uint256 harvestable; // The harvestable index; the total number of Pods that have ever been Harvestable. Included previously Harvested Beans.
+        uint128 soil;
+        uint128 beanSown;
+        uint256 pods;
+        uint256 harvested;
+        uint256 harvestable;
     }
 
     // DEPRECATED – Replant moved governance off-chain.
@@ -186,22 +193,36 @@ contract Storage {
         uint256 timestamp; // The timestamp of the start of the current Season.
     }
 
-    // Weather stores global level Weather balances.
+    /**
+     * @notice System-level Weather state variables.
+     * @param deprecated 2 slots that were previously used
+     * @param lastDSoil Delta Soil; the number of Soil purchased last Season.
+     * @param lastSowTime The number of seconds it for Soil to sell out last Season.
+     * @param nextSowTime The number of seconds it for Soil to sell out this Season.
+     * @param t The Temperature; the maximum interest rate during the current Season for sowing Beans in Soil. Adjusted each Season.
+     */
     struct Weather {
-        uint256[2] depreciated; // DEPRECATED - 2 slots that were previously used
-        uint128 lastDSoil; // Delta Soil; the number of Soil purchased last Season.
-        uint32 lastSowTime; // The number of seconds it took for all but at most 1 Soil to sell out last Season.
-        uint32 nextSowTime; // The number of seconds it took for all but at most 1 Soil to sell out this Season
-        uint32 t; // Temperature: the maximum interest rate during the current Season for sowing Beans in Soil.
+        uint256[2] deprecated;
+        uint128 lastDSoil;
+        uint32 lastSowTime;
+        uint32 nextSowTime;
+        uint32 t;
     }
 
-    // Fundraiser stores Fundraiser data for a given Fundraiser.
+    /**
+     * @notice Describes a Fundraiser.
+     * @param payee The address to be paid after the Fundraiser has been fully funded.
+     * @param token The token address that used to raise funds for the Fundraiser.
+     * @param total The total number of Tokens that need to be raised to complete the Fundraiser.
+     * @param remaining The remaining number of Tokens that need to to complete the Fundraiser.
+     * @param start The timestamp at which the Fundraiser started (Fundraisers cannot be started and funded in the same block).
+     */
     struct Fundraiser {
-        address payee; // The address to be paid after the Fundraiser has been fully funded.
-        address token; // The token address that used to raise funds for the Fundraiser.
-        uint256 total; // The total number of Tokens that need to be raised to complete the Fundraiser.
-        uint256 remaining; // The remaining number of Tokens that need to to complete the Fundraiser.
-        uint256 start; // The timestamp at which the Fundraiser started (Fundraisers cannot be started and funded in the same block).
+        address payee;
+        address token;
+        uint256 total;
+        uint256 remaining;
+        uint256 start;
     }
 
     // SiloSettings stores the settings for each Token that has been Whitelisted into the Silo.

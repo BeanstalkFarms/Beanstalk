@@ -1,6 +1,4 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
@@ -10,9 +8,10 @@ import "~/libraries/Curve/LibBeanMetaCurve.sol";
 import "./Sun.sol";
 
 /**
- * @author Publius
  * @title Weather
- **/
+ * @notice Weather controls the Temperature of the Farm.
+ * @author Publius
+ */
 contract Weather is Sun {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
@@ -20,39 +19,63 @@ contract Weather is Sun {
 
     uint256 private constant SOWTIMEDEMAND = 600;
     
+    /**
+     * @notice Emitted when the Temperature (fka "Weather") changes.
+     * @param season The current Season
+     * @param caseId The "Weather Case", see {FIXME}
+     * @param change The change in Temperature as a delta from the previous value
+     * @dev `change` is emitted as a delta for gas efficiency
+     */
     event WeatherChange(
         uint256 indexed season,
         uint256 caseId,
         int8 change
     );
+
+    /**
+     * @notice FIXME
+     */
     event SeasonOfPlenty(
         uint256 indexed season,
         uint256 amount,
         uint256 toField
     );
 
-    /**
-     * Weather Getters
-     **/
+    //////////////////// WEATHER GETTERS ////////////////////
 
+    /**
+     * @notice Returns the current Weather struct. See {AppStorage:Storage.Weather}.
+     */
     function weather() public view returns (Storage.Weather memory) {
         return s.w;
     }
 
+    /**
+     * @notice Returns the current Rain struct. See {AppStorage:Storage.Rain}.
+     */
     function rain() public view returns (Storage.Rain memory) {
         return s.r;
     }
 
+    /**
+     * @notice Returns the Plenty per Root for `season`.
+     * @dev FIXME
+     */
     function plentyPerRoot(uint32 season) external view returns (uint256) {
         return s.sops[season];
     }
 
-    /**
-     * Weather Internal
-     **/
+    //////////////////// WEATHER INTERNAL ////////////////////
 
+    /**
+     * @param deltaB Pre-calculated deltaB from {Oracle.stepOracle}.
+     * @dev A detailed explanation of the Weather mechanism can be found in the
+     * Beanstalk whitepaper. An explanation of state variables can be found in {AppStorage}.
+     */
     function stepWeather(int256 deltaB) internal returns (uint256 caseId) {
         uint256 beanSupply = C.bean().totalSupply();
+
+        // FIXME: can we eliminate this check?
         if (beanSupply == 0) {
             s.w.t = 1;
             return 8; // Reasonably low
@@ -129,6 +152,7 @@ contract Weather is Sun {
     function changeWeather(uint256 caseId) private {
         int8 change = s.cases[caseId];
         uint32 t = s.w.t;
+
         if (change < 0) {
             if (t <= (uint32(-change))) {
                 // if (change < 0 && t <= uint32(-change)),
