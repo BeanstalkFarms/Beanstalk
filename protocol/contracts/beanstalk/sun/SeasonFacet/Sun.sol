@@ -1,6 +1,4 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
@@ -15,6 +13,7 @@ import "./Oracle.sol";
 /**
  * @title Sun
  * @author Publius
+ * @notice Sun controls the minting of new Beans to Fertilizer, the Field, and the Silo.
  */
 contract Sun is Oracle {
     using SafeMath for uint256;
@@ -23,7 +22,7 @@ contract Sun is Oracle {
     using Decimal for Decimal.D256;
 
     /**
-     * @notice Emitted during Sunrise when Beans are distributed to the Field, Silo, and Fertilizer.
+     * @notice Emitted during Sunrise when Beans are distributed to the Field, the Silo, and Fertilizer.
      * @param season The Season in which Beans were distributed.
      * @param toField The number of Beans distributed to the Field.
      * @param toSilo The number of Beans distributed to the Silo.
@@ -95,7 +94,7 @@ contract Sun is Oracle {
     }
 
     /**
-     * @dev Distribute Beans to Fertilizer.
+     * @dev Distributes Beans to Fertilizer.
      */
     function rewardToFertilizer(uint256 amount)
         internal
@@ -139,6 +138,10 @@ contract Sun is Oracle {
         s.fertilizedIndex = s.fertilizedIndex.add(newFertilized);
     }
 
+    /**
+     * @dev Distributes Beans to the Field. The next `amount` Pods in the Pod Line
+     * become Harvestable.
+     */
     function rewardToHarvestable(uint256 amount)
         internal    
         returns (uint256 newHarvestable)
@@ -151,6 +154,10 @@ contract Sun is Oracle {
         s.f.harvestable = s.f.harvestable.add(newHarvestable);
     }
 
+    /**
+     * @dev Distribute Beans to the Silo. Stalk & Earned Beans are created here;
+     * Farmers can claim them through {SiloFacet.plant}.
+     */
     function rewardToSilo(uint256 amount) internal {
         s.s.stalk = s.s.stalk.add(amount.mul(C.getStalkPerBean()));
         s.earnedBeans = s.earnedBeans.add(amount);

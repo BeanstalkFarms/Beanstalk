@@ -6,7 +6,9 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import "../Curve/LibMetaCurve.sol";
+import {LibMetaCurve} from "../Curve/LibMetaCurve.sol";
+import {LibCurve} from "../Curve/LibCurve.sol";
+import {ICurvePool} from "~/interfaces/ICurve.sol";
 
 /**
  * @author Publius

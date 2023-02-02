@@ -4,7 +4,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import "./LibCurve.sol";
+import {LibCurve} from "./LibCurve.sol";
 import "../../C.sol";
 
 /**

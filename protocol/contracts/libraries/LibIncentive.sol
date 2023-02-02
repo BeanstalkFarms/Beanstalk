@@ -18,7 +18,9 @@ import "./Curve/LibCurve.sol";
 library LibIncentive {
     using SafeMath for uint256;
 
-    uint32 private constant PERIOD = 3600; //1 hour
+    uint32 private constant PERIOD = 3600; // 1 hour
+
+    //////////////////// CALCULATE REWARD ////////////////////
 
     /**
      * @dev Calculates Sunrise incentive amount based on current gas prices and BEAN:ETH price
@@ -44,13 +46,15 @@ library LibIncentive {
         uint256 gasCostWei = C.basefeeContract().block_basefee()    // (BASE_FEE
             .add(C.getSunrisePriorityFeeBuffer())                   // + PRIORITY_FEE_BUFFER)
             .mul(gasUsed);                                          // * GAS_USED
-        uint256 sunriseReward =
-            Math.min(
-                gasCostWei.mul(beanEthPrice).div(1e18) + C.getBaseReward(), // divide by 1e18 to convert wei to eth
-                C.getMaxReward()
-            );
+        uint256 sunriseReward = Math.min(
+            gasCostWei.mul(beanEthPrice).div(1e18) + C.getBaseReward(), // divide by 1e18 to convert wei to eth
+            C.getMaxReward()
+        );
+
         return fracExp(sunriseReward, 100, blocksLate.mul(C.getBlockLengthSeconds()), 1);
     }
+
+    //////////////////// PRICES ////////////////////
 
     function getCurveBeanPrice(uint256[2] memory balances) internal view returns (uint256 price) {
         uint256[2] memory rates = getRates();
@@ -61,7 +65,7 @@ library LibIncentive {
     }
 
     function getEthUsdcPrice() internal view returns (uint256) {
-        (int24 tick,) = OracleLibrary.consult(C.UniV3EthUsdc(),PERIOD); //1 season tick
+        (int24 tick,) = OracleLibrary.consult(C.UniV3EthUsdc(), PERIOD); // 1 season tick
         return OracleLibrary.getQuoteAtTick(
             tick,
             1e18,
@@ -69,6 +73,14 @@ library LibIncentive {
             address(C.usdc())
         );
     }
+
+    function getRates() private view returns (uint256[2] memory rates) {
+        // Decimals will always be 6 because we can only mint beans
+        // 10**(36-decimals)
+        return [1e30, C.curve3Pool().get_virtual_price()];
+    }
+
+    //////////////////// MATH UTILITIES ////////////////////
 
     /// @notice fracExp estimates an exponential expression in the form: k * (1 + 1/q) ^ N.
     /// We use a binomial expansion to estimate the exponent to avoid running into integer overflow issues.
@@ -167,11 +179,5 @@ library LibIncentive {
                 )
             )
         }
-    }
-
-    function getRates() private view returns (uint256[2] memory rates) {
-        // Decimals will always be 6 because we can only mint beans
-        // 10**(36-decimals)
-        return [1e30, C.curve3Pool().get_virtual_price()];
     }
 }

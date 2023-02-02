@@ -10,6 +10,7 @@ import "../../C.sol";
 /**
  * @title LibBeanMetaCurve
  * @author Publius
+ * @notice Calculates BDV and deltaB for the BEAN:3CRV Metapool.
  */
 library LibBeanMetaCurve {
     using SafeMath for uint256;
@@ -19,6 +20,9 @@ library LibBeanMetaCurve {
     uint256 private constant i = 0;
     uint256 private constant j = 1;
 
+    /**
+     * @param amount An amount of the BEAN:3CRV LP token.
+     */
     function bdv(uint256 amount) internal view returns (uint256) {
         // By using previous balances and the virtual price, we protect against flash loan
         uint256[2] memory balances = IMeta3Curve(C.curveMetapoolAddress()).get_previous_balances();

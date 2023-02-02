@@ -17,7 +17,8 @@ contract Weather is Sun {
     using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
 
-    uint256 private constant SOWTIMEDEMAND = 600;
+    /* If all Soil is Sown faster than this, Beanstalk considers demand for Soil to be increasing. */
+    uint256 private constant SOW_TIME_DEMAND_INCR = 600; // seconds
     
     /**
      * @notice Emitted when the Temperature (fka "Weather") changes.
@@ -65,7 +66,6 @@ contract Weather is Sun {
 
     /**
      * @notice Returns the Plenty per Root for `season`.
-     * @dev FIXME
      */
     function plentyPerRoot(uint32 season) external view returns (uint256) {
         return s.sops[season];
@@ -106,7 +106,7 @@ contract Weather is Sun {
         if (s.w.nextSowTime < type(uint32).max) {
             if (
                 s.w.lastSowTime == type(uint32).max || // Didn't Sow all last Season
-                s.w.nextSowTime < SOWTIMEDEMAND || // Sow'd all instantly this Season
+                s.w.nextSowTime < SOW_TIME_DEMAND_INCR || // Sow'd all instantly this Season
                 (s.w.lastSowTime > C.getSteadySowTime() &&
                     s.w.nextSowTime < s.w.lastSowTime.sub(C.getSteadySowTime())) // Sow'd all faster
             ) {
