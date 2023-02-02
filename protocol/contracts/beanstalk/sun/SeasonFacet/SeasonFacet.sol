@@ -11,8 +11,8 @@ import "./Weather.sol";
 
 /**
  * @title SeasonFacet
- * @notice Holds the Sunrise function and handles all logic for Season changes.
  * @author Publius, Chaikitty
+ * @notice Holds the Sunrise function and handles all logic for Season changes.
  */
 contract SeasonFacet is Weather {
     using SafeMath for uint256;

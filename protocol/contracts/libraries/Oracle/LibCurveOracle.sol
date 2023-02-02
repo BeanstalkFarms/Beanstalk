@@ -1,6 +1,4 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
@@ -10,29 +8,38 @@ import "../LibAppStorage.sol";
 import "../LibSafeMath32.sol";
 
 /**
- * @author Publius, Chaikitty
- * @title Oracle tracks the TWAP price of the USDC/ETH and BEAN/ETH Uniswap pairs.
- **/
-
+ * @dev Curve metapool functions used by LibCurveOracle. 
+ */
 interface IMeta3CurveOracle {
     function block_timestamp_last() external view returns (uint256);
-
-    function get_price_cumulative_last()
-        external
-        view
-        returns (uint256[2] memory);
-
+    function get_price_cumulative_last() external view returns (uint256[2] memory);
     function get_balances() external view returns (uint256[2] memory);
 }
 
+/**
+ * @title Oracle
+ * @author Publius, Chaikitty
+ * @notice Tracks the TWAP of the BEAN:3CRV Curve Metapool.
+ */
 library LibCurveOracle {
-    
-    uint256 private constant MAX_DELTA_B_DENOMINATOR = 100;
-
-    event MetapoolOracle(uint32 indexed season, int256 deltaB, uint256[2] balances);
-
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
+    
+    /* Constrains the deltaB to be +/- 1/X of the current Bean supply */
+    uint256 private constant MAX_DELTA_B_DENOMINATOR = 100;
+
+    /**
+     * @param season The Season in which the oracle was updated.
+     * @param deltaB The deltaB
+     * @param balances The TWA 
+     */
+    event MetapoolOracle(
+        uint32 indexed season,
+        int256 deltaB,
+        uint256[2] balances
+    );
+
+    //////////////////// CHECK ////////////////////
 
     function check() internal view returns (int256 deltaB) {
         deltaB = _check();
@@ -47,6 +54,8 @@ library LibCurveOracle {
             db = 0;
         }
     }
+
+    //////////////////// CAPTURE ////////////////////
 
     function capture() internal returns (int256 deltaB, uint256[2] memory balances) {
         (deltaB, balances) = _capture();
@@ -64,12 +73,16 @@ library LibCurveOracle {
         }
     }
 
+    //////////////////// INITIALIZE ////////////////////
+
     function initializeOracle() internal returns (uint256[2] memory current_balances) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         Storage.Oracle storage o = s.co;
+
         uint256[2] memory balances = IMeta3CurveOracle(C.curveMetapoolAddress())
             .get_price_cumulative_last();
         uint256 timestamp = IMeta3CurveOracle(C.curveMetapoolAddress()).block_timestamp_last();
+        
         if (balances[0] != 0 && balances[1] != 0 && timestamp != 0) {
             (current_balances, o.balances, o.timestamp) = get_cumulative();
             o.initialized = true;
@@ -78,10 +91,14 @@ library LibCurveOracle {
 
     function updateOracle() internal returns (int256 deltaB, uint256[2] memory balances) {
         AppStorage storage s = LibAppStorage.diamondStorage();
+
         (deltaB, balances, s.co.balances) = twaDeltaB();
+
         emit MetapoolOracle(s.season.current, deltaB, s.co.balances);
         s.co.timestamp = block.timestamp;
     }
+
+    //////////////////// CALCULATIONS ////////////////////
 
     function twaDeltaB()
         internal
@@ -136,6 +153,13 @@ library LibCurveOracle {
         lastTimestamp = block.timestamp;
     }
 
+    /**
+     * @dev Constrain `deltaB` to be less than +/- 1% of the total supply of Bean.
+     * 
+     * `1% = 1/MAX_DELTA_B_DENOMINATOR`
+     * 
+     * FIXME: rename to `constrainDeltaB` or `clampDeltaB`
+     */
     function checkForMaxDeltaB(int256 deltaB) private view returns (int256) {
         int256 maxDeltaB = int256(C.bean().totalSupply().div(MAX_DELTA_B_DENOMINATOR));
         if (deltaB < 0) return deltaB > -maxDeltaB ? deltaB : -maxDeltaB;

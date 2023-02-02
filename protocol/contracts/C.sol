@@ -1,6 +1,4 @@
-/*
- SPDX-License-Identifier: MIT
-*/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
@@ -13,9 +11,10 @@ import "./interfaces/IBlockBasefee.sol";
 import "./libraries/Decimal.sol";
 
 /**
+ * @title C
  * @author Publius
- * @title C holds the contracts for Beanstalk.
-**/
+ * @notice Contains constants used throughout Beanstalk.
+ */
 library C {
 
     using Decimal for Decimal.D256;
@@ -91,10 +90,6 @@ library C {
     // Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
     address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
 
-    /**
-     * Getters
-    **/
-
     function getSeasonPeriod() internal pure returns (uint256) {
         return CURRENT_SEASON_PERIOD;
     }
@@ -106,10 +101,6 @@ library C {
     function getMaxReward() internal pure returns (uint256) {
         return MAX_REWARD;
     }
-
-    // function getMinReward() internal pure returns (uint256) {
-    //     return MIN_REWARD;
-    // }
 
     function getSunrisePriorityFeeBuffer() internal pure returns (uint256) {
         return PRIORITY_FEE_BUFFER;

@@ -1,6 +1,4 @@
-/*
- SPDX-License-Identifier: MIT
-*/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
@@ -10,14 +8,16 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
 /**
+ * @title Account
  * @author Publius
- * @title App Storage defines the state object for Beanstalk.
-**/
-
-// The Account contract stores all of the Farmer specific storage data.
-// Each unique Ethereum address is a Farmer.
-// Account.State is the primary struct that is referenced in the greater Storage.State struct.
-// All other structs in Account are stored in Account.State.
+ * @notice Contains all of the Farmer specific storage data.
+ * @dev 
+ * 
+ * {Account.State} is the primary struct that is referenced from the {Storage.State} struct. 
+ * All other structs in {Account} are referenced in {Account.State}.
+ * 
+ * Each unique Ethereum address is a Farmer.
+ */
 contract Account {
 
     // Field stores a Farmer's Plots and Pod allowances.
@@ -157,13 +157,19 @@ contract Storage {
         uint256 roots; // Total amount of Roots.
     }
 
-    // Oracle stores global level Oracle balances.
-    // Currently the oracle refers to the time weighted average delta b calculated from the Bean:3Crv pool.
+    /**
+     * @notice System-level Oracle state variables.
+     * @param initialized True if the Oracle has been initialzed. It needs to be initialized on Deployment and re-initialized each Unpause.
+     * @param startSeason The Season the Oracle started minting. Used to ramp up delta b when oracle is first added.
+     * @param balances The cumulative reserve balances of the pool at the start of the Season (used for computing time weighted average delta b).
+     * @param timestamp The timestamp of the start of the current Season.
+     * @dev Currently refers to the time weighted average deltaB calculated from the BEAN:3CRV pool.
+     */
     struct Oracle {
-        bool initialized; // True if the Oracle has been initialzed. It needs to be initialized on Deployment and re-initialized each Unpause.
-        uint32 startSeason; // The Season the Oracle started minting. Used to ramp up delta b when oracle is first added.
-        uint256[2] balances; // The cumulative reserve balances of the pool at the start of the Season (used for computing time weighted average delta b).
-        uint256 timestamp; // The timestamp of the start of the current Season.
+        bool initialized;
+        uint32 startSeason;
+        uint256[2] balances;
+        uint256 timestamp;
     }
 
     // Rain stores global level Rain balances. (Rain is when P > 1, Pod rate Excessively Low).
@@ -174,23 +180,34 @@ contract Storage {
         uint256 roots; // The number of Roots when it last started Raining.
     }
 
-    // Sesaon stores global level Season balances.
+    /**
+     * @notice System-level Season state variables.
+     * @param current The current Season in Beanstalk.
+     * @param lastSop The Season in which the most recent consecutive series of Seasons of Plenty started.
+     * @param withdrawSeasons The number of Seasons required to Withdraw a Deposit.
+     * @param lastSopSeason The Season in which the most recent consecutive series of Seasons of Plenty ended.
+     * @param rainStart Stores the most recent Season in which Rain started.
+     * @param raining True if it is Raining (P > 1, Pod Rate Excessively Low).
+     * @param fertilizing True if Beanstalk has Fertilizer left to be paid off.
+     * @param sunriseBlock The block of the start of the current Season.
+     * @param abovePeg Boolean indicating whether the previous Season was above or below peg.
+     * @param start The timestamp of the Beanstalk deployment rounded down to the nearest hour.
+     * @param period The length of each season in Beanstalk in seconds.
+     * @param timestamp The timestamp of the start of the current Season.
+     */
     struct Season {
-        // The first storage slot in Season is filled with a variety of somewhat unrelated storage variables.
-        // Given that they are all smaller numbers, they are stored together for gas efficient read/write operations. 
-        // Apologies if this makes it confusing :(
-        uint32 current; // The current Season in Beanstalk.
-        uint32 lastSop; // The Season in which the most recent consecutive series of Seasons of Plenty started.
-        uint8 withdrawSeasons; // The number of seasons required to Withdraw a Deposit.
-        uint32 lastSopSeason; // The Season in which the most recent consecutive series of Seasons of Plenty ended.
-        uint32 rainStart; // rainStart stores the most recent Season in which Rain started.
-        bool raining; // True if it is Raining (P < 1, Pod Rate Excessively Low).
-        bool fertilizing; // True if Beanstalk has Fertilizer left to be paid off.
-        uint32 sunriseBlock; // The block of the start of the current Season.
-        bool abovePeg; // Boolean indicating whether the previous season was above or below peg.
-        uint256 start; // The timestamp of the Beanstalk deployment rounded down to the nearest hour.
-        uint256 period; // The length of each season in Beanstalk.
-        uint256 timestamp; // The timestamp of the start of the current Season.
+        uint32 current; // Slot 1
+        uint32 lastSop;
+        uint8 withdrawSeasons;
+        uint32 lastSopSeason;
+        uint32 rainStart;
+        bool raining;
+        bool fertilizing;
+        uint32 sunriseBlock;
+        bool abovePeg;
+        uint256 start; // Slot 2
+        uint256 period; // Slot 3
+        uint256 timestamp; // Slot 4
     }
 
     /**
@@ -255,20 +272,25 @@ contract Storage {
     }
 }
 
+/**
+ * @title AppStorage
+ * @author Publius
+ * @notice Defines the state object for Beanstalk.
+ */
 struct AppStorage {
-    uint8 index; // DEPRECATED - Was the index of the Bean token in the Bean:Eth Uniswap v2 pool, which has been depreciated.
+    uint8 index; // DEPRECATED - Was the index of the Bean token in the Bean:Eth Uniswap v2 pool, which has been deprecated.
     int8[32] cases; // The 24 Weather cases (array has 32 items, but caseId = 3 (mod 4) are not cases).
     bool paused; // True if Beanstalk is Paused.
     uint128 pausedAt; // The timestamp at which Beanstalk was last paused. 
-    Storage.Season season; // The Season storage struct found above.
+    Storage.Season season;
     Storage.Contracts c; // DEPRECATED - Previously stored the Contracts State struct. Removed when contract addresses were moved to constants in C.sol.
-    Storage.Field f; // The Field storage struct found above.
-    Storage.Governance g; // The Governance storage struct found above.
-    Storage.Oracle co; // The Oracle storage struct found above.
-    Storage.Rain r; // The Rain storage struct found above.
-    Storage.Silo s; // The Silo storage struct found above.
+    Storage.Field f;
+    Storage.Governance g;
+    Storage.Oracle co;
+    Storage.Rain r;
+    Storage.Silo s;
     uint256 reentrantStatus; // An intra-transaction state variable to protect against reentrance.
-    Storage.Weather w; // The Weather storage struct found above.
+    Storage.Weather w;
 
     //////////////////////////////////
 

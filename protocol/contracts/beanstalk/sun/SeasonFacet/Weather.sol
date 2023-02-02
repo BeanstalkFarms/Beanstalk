@@ -9,8 +9,8 @@ import "./Sun.sol";
 
 /**
  * @title Weather
- * @notice Weather controls the Temperature of the Farm.
  * @author Publius
+ * @notice Weather controls the Temperature on the Farm.
  */
 contract Weather is Sun {
     using SafeMath for uint256;
@@ -36,7 +36,10 @@ contract Weather is Sun {
     );
 
     /**
-     * @notice FIXME
+     * @notice Emitted when Beans are minted during the Season of Plenty.
+     * @param season The Season in which Beans were minted for distribution.
+     * @param amount The amount of 3CRV which was received for swapping Beans.
+     * @param toField The amount of Beans which were distributed to remaining Pods in the Field.
      */
     event SeasonOfPlenty(
         uint256 indexed season,

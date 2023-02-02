@@ -17,9 +17,8 @@ import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 
 /**
  * @title FieldFacet
- * @notice Field sows Beans.
  * @author Publius, Brean
- * @dev 
+ * @notice Field sows Beans.
  */
 contract FieldFacet is ReentrancyGuard {
     using SafeMath for uint256;
