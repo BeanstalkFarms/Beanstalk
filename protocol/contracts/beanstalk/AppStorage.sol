@@ -11,12 +11,9 @@ import "@openzeppelin/contracts/utils/Counters.sol";
  * @title Account
  * @author Publius
  * @notice Contains all of the Farmer specific storage data.
- * @dev 
- * 
- * {Account.State} is the primary struct that is referenced from the {Storage.State} struct. 
- * All other structs in {Account} are referenced in {Account.State}.
- * 
- * Each unique Ethereum address is a Farmer.
+ * @dev {Account.State} is the primary struct that is referenced from the 
+ * {Storage.State} struct. All other structs in {Account} are referenced in
+ * {Account.State}. Each unique Ethereum address is a Farmer.
  */
 contract Account {
 
@@ -82,18 +79,21 @@ contract Account {
     }
 }
 
-// Storage stores the Global Beanstalk State.
-// Storage.State stores the highest level State
-// All Facets define Storage.State as the first and only state variable in the contract.
+/**
+ * @title Account
+ * @author Publius
+ * @notice Stores system-level Beanstalk state.
+ */
 contract Storage {
-
-    // DEPRECATED – After Replant, Beanstalk stores Token addresses as constants to save gas.
-    // Contracts stored the contract addresses of various important contracts to Beanstalk.
+    /**
+     * @notice DEPRECATED: System-level contract addresses.
+     * @dev After Replant, Beanstalk stores Token addresses as constants to save gas.
+     */
     struct Contracts {
-        address bean; // DEPRECATED – See above note
-        address pair; // DEPRECATED – See above note
-        address pegPair; // DEPRECATED – See above note
-        address weth; // DEPRECATED – See above note
+        address bean;
+        address pair;
+        address pegPair;
+        address weth;
     }
 
     /**
@@ -112,49 +112,67 @@ contract Storage {
         uint256 harvestable;
     }
 
-    // DEPRECATED – Replant moved governance off-chain.
-    // Bip stores Bip related data.
+    /**
+     * @notice DEPRECATED: Contained data about each BIP (Beanstalk Improvement Proposal).
+     * @dev Replant moved governance off-chain. This struct is left for future reference.
+     */
     struct Bip {
-        address proposer; // DEPRECATED – See above note
-        uint32 start; // DEPRECATED – See above note
-        uint32 period; // DEPRECATED – See above note
-        bool executed; // DEPRECATED – See above note
-        int pauseOrUnpause; // DEPRECATED – See above note
-        uint128 timestamp; // DEPRECATED – See above note
-        uint256 roots; // DEPRECATED – See above note
-        uint256 endTotalRoots; // DEPRECATED – See above note
+        address proposer;
+        uint32 start;
+        uint32 period;
+        bool executed;
+        int pauseOrUnpause;
+        uint128 timestamp;
+        uint256 roots;
+        uint256 endTotalRoots;
     }
 
-    // DEPRECATED – Replant moved governance off-chain.
-    // DiamondCut stores DiamondCut related data for each Bip.
+    /**
+     * @notice DEPRECATED: Contained data for the DiamondCut associated with each BIP.
+     * @dev Replant moved governance off-chain. This struct is left for future reference.
+     */
     struct DiamondCut {
         IDiamondCut.FacetCut[] diamondCut;
         address initAddress;
         bytes initData;
     }
 
-    // DEPRECATED – Replant moved governance off-chain.
-    // Governance stores global Governance balances.
+    /**
+     * @notice DEPRECATED: Contained all governance-related data, including a list of BIPs, votes for each BIP, and the DiamondCut needed to execute each BIP.
+     * @dev Replant moved governance off-chain. This struct is left for future reference.
+     */
     struct Governance {
-        uint32[] activeBips; // DEPRECATED – See above note
-        uint32 bipIndex; // DEPRECATED – See above note
-        mapping(uint32 => DiamondCut) diamondCuts; // DEPRECATED – See above note
-        mapping(uint32 => mapping(address => bool)) voted; // DEPRECATED – See above note
-        mapping(uint32 => Bip) bips; // DEPRECATED – See above note
+        uint32[] activeBips;
+        uint32 bipIndex;
+        mapping(uint32 => DiamondCut) diamondCuts;
+        mapping(uint32 => mapping(address => bool)) voted;
+        mapping(uint32 => Bip) bips;
     }
 
-    // AssetSilo stores global Token level Silo balances.
-    // In Storage.State there is a mapping from Token address to AssetSilo.
+    /**
+     * @notice System-level Silo state; contains deposits and withdrawal data for a particular whitelisted Token.
+     * @param deposited The total amount of this Token currently Deposited in the Silo.
+     * @param withdrawn The total amount of this Token currently Withdrawn From the Silo.
+     * @dev {Storage.State} contains a mapping from Token address => AssetSilo.
+     * 
+     * Note that "Withdrawn" refers to the amount of Tokens that have been Withdrawn
+     * but not yet Claimed. This will be removed in a future BIP.
+     */
     struct AssetSilo {
-        uint256 deposited; // The total number of a given Token currently Deposited in the Silo.
-        uint256 withdrawn; // The total number of a given Token currently Withdrawn From the Silo but not Claimed.
+        uint256 deposited;
+        uint256 withdrawn;
     }
 
-    // Silo stores global level Silo balances.
+    /**
+     * @notice System-level Silo state variables.
+     * @param stalk The total amount of active Stalk (including Earned Stalk, excluding Grown Stalk).
+     * @param seeds The total amount of active Seeds (excluding Earned Seeds).
+     * @param roots The total amount of Roots.
+     */
     struct Silo {
-        uint256 stalk; // The total amount of active Stalk (including Earned Stalk, excluding Grown Stalk).
-        uint256 seeds; // The total amount of active Seeds (excluding Earned Seeds).
-        uint256 roots; // Total amount of Roots.
+        uint256 stalk;
+        uint256 seeds;
+        uint256 roots;
     }
 
     /**
@@ -172,12 +190,17 @@ contract Storage {
         uint256 timestamp;
     }
 
-    // Rain stores global level Rain balances. (Rain is when P > 1, Pod rate Excessively Low).
-    // Note: The `raining` storage variable is stored in the Season section for a gas efficient read operation.
+    /**
+     * @notice System-level Rain balances. Rain occurs when P > 1 and the Pod Rate Excessively Low.
+     * @dev The `raining` storage variable is stored in the Season section for a gas efficient read operation.
+     * @param deprecated Previously held FIXME
+     * @param pods The number of Pods when it last started Raining.
+     * @param roots The number of Roots when it last started Raining.
+     */
     struct Rain {
-        uint256 depreciated; // Ocupies a storage slot in place of a deprecated State variable.
-        uint256 pods; // The number of Pods when it last started Raining.
-        uint256 roots; // The number of Roots when it last started Raining.
+        uint256 deprecated;
+        uint256 pods;
+        uint256 roots;
     }
 
     /**
@@ -242,33 +265,48 @@ contract Storage {
         uint256 start;
     }
 
-    // SiloSettings stores the settings for each Token that has been Whitelisted into the Silo.
-    // A Token is considered whitelisted in the Silo if there exists a non-zero SiloSettings selector.
+    /**
+     * @notice Describes the settings for each Token that is Whitelisted in the Silo.
+     * @param selector The encoded BDV function selector for the Token.
+     * @param seeds The Seeds Per BDV that the Silo mints in exchange for Depositing this Token.
+     * @param stalk The Stalk Per BDV that the Silo mints in exchange for Depositing this Token.
+     * @dev A Token is considered Whitelisted if there exists a non-zero {SiloSettings} selector.
+     * 
+     * Note: `selector` is an encoded function selector that pertains to an 
+     * external view function with the following signature:
+     * 
+     * `function tokenToBdv(uint256 amount) public view returns (uint256);`
+     * 
+     * It is called by {LibTokenSilo} through the use of delegate call to calculate 
+     * the BDV of Tokens at the time of Deposit.
+     */
     struct SiloSettings {
-        // selector is an encoded function selector 
-        // that pertains to an external view Beanstalk function 
-        // with the following signature:
-        // function tokenToBdv(uint256 amount) public view returns (uint256);
-        // It is called by `LibTokenSilo` through the use of delegatecall
-        // To calculate the BDV of a Deposit at the time of Deposit.
-        bytes4 selector; // The encoded BDV function selector for the Token.
-        uint32 seeds; // The Seeds Per BDV that the Silo mints in exchange for Depositing this Token.
-        uint32 stalk; // The Stalk Per BDV that the Silo mints in exchange for Depositing this Token.
+        bytes4 selector;
+        uint32 seeds;
+        uint32 stalk;
     }
 
-    // UnripeSettings stores the settings for an Unripe Token in Beanstalk.
-    // An Unripe token is a vesting Token that is redeemable for a a pro rata share
-    // of the balanceOfUnderlying subject to a penalty based on the percent of
-    // Unfertilized Beans paid back.
-    // There were two Unripe Tokens added at Replant: 
-    // Unripe Bean with its underlying Token as Bean; and
-    // Unripe LP with its underlying Token as Bean:3Crv LP.
-    // Unripe Tokens are distirbuted through the use of a merkleRoot.
-    // The existence of a non-zero UnripeSettings implies that a Token is an Unripe Token.
+    /**
+     * @notice Describes the settings for each Unripe Token in Beanstalk.
+     * @param underlyingToken The address of the Token underlying the Unripe Token.
+     * @param balanceOfUnderlying The number of Tokens underlying the Unripe Tokens (redemption pool).
+     * @param merkleRoot The Merkle Root used to validate a claim of Unripe Tokens.
+     * @dev An Unripe Token is a vesting Token that is redeemable for a a pro rata share
+     * of the `balanceOfUnderlying`, subject to a penalty based on the percent of
+     * Unfertilized Beans paid back.
+     * 
+     * There were two Unripe Tokens added at Replant: 
+     *  - Unripe Bean, with its `underlyingToken` as BEAN;
+     *  - Unripe LP, with its `underlyingToken` as BEAN:3CRV LP.
+     * 
+     * Unripe Tokens are initially distributed through the use of a `merkleRoot`.
+     * 
+     * The existence of a non-zero {UnripeSettings} implies that a Token is an Unripe Token.
+     */
     struct UnripeSettings {
-        address underlyingToken; // The address of the Token underlying the Unripe Token.
-        uint256 balanceOfUnderlying; // The number of Tokens underlying the Unripe Tokens (redemption pool).
-        bytes32 merkleRoot; // The Merkle Root used to validate a claim of Unripe Tokens.
+        address underlyingToken;
+        uint256 balanceOfUnderlying;
+        bytes32 merkleRoot;
     }
 }
 
@@ -278,12 +316,12 @@ contract Storage {
  * @notice Defines the state object for Beanstalk.
  */
 struct AppStorage {
-    uint8 index; // DEPRECATED - Was the index of the Bean token in the Bean:Eth Uniswap v2 pool, which has been deprecated.
-    int8[32] cases; // The 24 Weather cases (array has 32 items, but caseId = 3 (mod 4) are not cases).
+    uint8 index; // DEPRECATED: Was the index of the BEAN token in the BEAN:ETH Uniswap V2 pool.
+    int8[32] cases; // The 24 Weather cases (array has 32 items, but caseId = 3 (mod 4) are not cases)
     bool paused; // True if Beanstalk is Paused.
     uint128 pausedAt; // The timestamp at which Beanstalk was last paused. 
     Storage.Season season;
-    Storage.Contracts c; // DEPRECATED - Previously stored the Contracts State struct. Removed when contract addresses were moved to constants in C.sol.
+    Storage.Contracts c;
     Storage.Field f;
     Storage.Governance g;
     Storage.Oracle co;
