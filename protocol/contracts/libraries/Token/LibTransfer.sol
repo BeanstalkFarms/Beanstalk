@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
@@ -8,8 +9,8 @@ import "./LibBalance.sol";
 
 /**
  * @title LibTransfer
- * @notice Handles the recieving and sending of Tokens to/from internal Balances.
  * @author Publius
+ * @notice Handles the recieving and sending of Tokens to/from internal Balances.
  */
 library LibTransfer {
     using SafeERC20 for IERC20;

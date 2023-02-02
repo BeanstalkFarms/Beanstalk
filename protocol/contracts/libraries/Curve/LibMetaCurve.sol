@@ -8,7 +8,7 @@ import {LibCurve} from "./LibCurve.sol";
 import "../../C.sol";
 
 /**
- * @dev Interface for the 3Pool curve metapool?
+ * @dev Interface for the 3Pool Curve pool
  */
 interface IMeta3Curve {
     function A_precise() external view returns (uint256);
@@ -19,7 +19,7 @@ interface IMeta3Curve {
 /**
  * @title LibMetaCurve
  * @author Publius
- * @notice 
+ * @notice Calculates the price of Curve metapools.
  */
 library LibMetaCurve {
     using SafeMath for uint256;
@@ -29,7 +29,7 @@ library LibMetaCurve {
     function price(
         address pool,
         uint256 decimals
-    ) internal view returns (uint256 p) {
+    ) internal view returns (uint256) {
         uint256 a = IMeta3Curve(pool).A_precise();
         uint256[2] memory balances = IMeta3Curve(pool).get_previous_balances();
         uint256[2] memory xp = getXP(balances, 10**MAX_DECIMALS.sub(decimals));

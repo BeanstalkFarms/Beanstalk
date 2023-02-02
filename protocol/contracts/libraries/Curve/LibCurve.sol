@@ -5,6 +5,11 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
+/**
+ * @title LibCurve
+ * @author Publius
+ * @notice Low-level Curve swap math for a 2-token StableSwap pool.
+ */
 library LibCurve {
     using SafeMath for uint256;
 

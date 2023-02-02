@@ -62,8 +62,10 @@ library LibCurveOracle {
         deltaB = checkForMaxDeltaB(deltaB);
     }
 
-    // balances stores the twa balances throughout the season.
-    // In the case of initializeOracle, it will be the current balances.
+    /** 
+     * @dev `balances` stores the TWA balances throughout the Season.
+     * In the case of {initializeOracle}, it will be the current balances.
+     */
     function _capture() internal returns (int256 deltaB, uint256[2] memory balances) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.co.initialized) {

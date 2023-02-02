@@ -81,7 +81,7 @@ contract Weather is Sun {
     function stepWeather(int256 deltaB) internal returns (uint256 caseId) {
         uint256 beanSupply = C.bean().totalSupply();
 
-        // FIXME: can we eliminate this check?
+        // Prevent infinite pod rate
         if (beanSupply == 0) {
             s.w.t = 1;
             return 8; // Reasonably low
@@ -94,7 +94,6 @@ contract Weather is Sun {
         );
 
         // Calculate Delta Soil Demand
-        // FIXME: possible gas savings by resetting to non-zero?
         uint256 dsoil = s.f.beanSown;
         s.f.beanSown = 0;
     
