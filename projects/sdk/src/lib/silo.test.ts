@@ -4,8 +4,8 @@ import { getTestUtils, setupConnection } from "../utils/TestUtils/provider";
 
 import { BeanstalkSDK } from "./BeanstalkSDK";
 import { Token } from "../classes/Token";
-import { TokenSiloBalance } from "./silo";
-import { _parseWithdrawalCrates } from "./silo.utils";
+import { TokenSiloBalance } from "./silo/types";
+import { calculateGrownStalk, parseWithdrawalCrates } from "./silo/utils";
 import { BigNumber, ethers } from "ethers";
 import { TokenValue } from "../classes/TokenValue";
 import { BF_MULTISIG } from "src/utils/TestUtils/addresses";
@@ -31,7 +31,7 @@ describe("Utilities", function () {
     const crate1 = { amount: ethers.BigNumber.from(1000 * 1e6) };
     const crate2 = { amount: ethers.BigNumber.from(2000 * 1e6) };
     const crate3 = { amount: ethers.BigNumber.from(3000 * 1e6) };
-    const result = _parseWithdrawalCrates(
+    const result = parseWithdrawalCrates(
       sdk.tokens.BEAN,
       {
         "6074": crate1, // => claimable
@@ -160,17 +160,17 @@ describe("Silo Balance loading", () => {
   describe("Grown Stalk calculations", () => {
     const seeds = sdk.tokens.SEEDS.amount(1);
     it("returns zero when deltaSeasons = 0", () => {
-      expect(sdk.silo.calculateGrownStalk(6074, 6074, seeds).toHuman()).to.eq("0");
+      expect(calculateGrownStalk(6074, 6074, seeds).toHuman()).to.eq("0");
     });
     it("throws if currentSeason < depositSeason", () => {
-      expect(() => sdk.silo.calculateGrownStalk(5000, 6074, seeds).toHuman()).to.throw();
+      expect(() => calculateGrownStalk(5000, 6074, seeds).toHuman()).to.throw();
     });
     it("works when deltaSeasons > 0", () => {
       // 1 seed grows 1/10_000 STALK per Season
-      expect(sdk.silo.calculateGrownStalk(6075, 6074, seeds).toHuman()).to.eq((1 / 10_000).toString());
-      expect(sdk.silo.calculateGrownStalk(6075, 6074, seeds.mul(10)).toHuman()).to.eq((10 / 10_000).toString());
-      expect(sdk.silo.calculateGrownStalk(6076, 6074, seeds).toHuman()).to.eq((2 / 10_000).toString());
-      expect(sdk.silo.calculateGrownStalk(6076, 6074, seeds.mul(10)).toHuman()).to.eq((20 / 10_000).toString());
+      expect(calculateGrownStalk(6075, 6074, seeds).toHuman()).to.eq((1 / 10_000).toString());
+      expect(calculateGrownStalk(6075, 6074, seeds.mul(10)).toHuman()).to.eq((10 / 10_000).toString());
+      expect(calculateGrownStalk(6076, 6074, seeds).toHuman()).to.eq((2 / 10_000).toString());
+      expect(calculateGrownStalk(6076, 6074, seeds.mul(10)).toHuman()).to.eq((20 / 10_000).toString());
     });
   });
 });

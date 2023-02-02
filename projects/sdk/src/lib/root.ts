@@ -1,13 +1,13 @@
 import { ethers, Overrides } from "ethers";
 import { ERC20Token } from "src/classes/Token";
 import { DepositTransferStruct } from "src/constants/generated/projects/sdk/src/constants/abi/Ecosystem/Root";
-import { TokenSiloBalance } from "src/lib/silo";
+import { TokenSiloBalance, DepositTokenPermitMessage, DepositTokensPermitMessage } from "src/lib/silo/types";
 import { TokenValue } from "src/TokenValue";
 
 import { BeanstalkSDK } from "./BeanstalkSDK";
 import { FarmToMode } from "./farm/types";
 import { SignedPermit } from "./permit";
-import { DepositTokenPermitMessage, DepositTokensPermitMessage } from "./silo.utils";
+import { sumDeposits } from "./silo/utils";
 
 // const PRECISION = ethers.utils.parseEther("1");
 const PRECISION = TokenValue.fromBlockchain(ethers.utils.parseEther("1"), 18);
@@ -107,11 +107,7 @@ export class Root {
     console.log("root stalk before", rootStalkBefore.toHuman());
     console.log("root seeds before", rootSeedsBefore.toHuman());
 
-    const {
-      bdv: totalBdvFromDeposits,
-      stalk: totalStalkFromDeposits,
-      seeds: totalSeedsFromDeposits
-    } = Root.sdk.silo.sumDeposits(token, deposits);
+    const { bdv: totalBdvFromDeposits, stalk: totalStalkFromDeposits, seeds: totalSeedsFromDeposits } = sumDeposits(token, deposits);
 
     console.log("bdv from deposits", totalBdvFromDeposits.toHuman());
     console.log("stalk from deposits", totalStalkFromDeposits.toHuman());
