@@ -377,51 +377,67 @@ const generateScale = (
   height: number,
   width: number,
   keys: string[],
-  stackedArea?: boolean,
+  isStackedArea?: boolean,
   isTWAP?: boolean
 ) =>
   seriesData.map((data) => {
-    // generate yScale
+    // Generate xScale
     const xDomain = extent(data, getX) as [number, number];
     const xScale = scaleLinear<number>({ domain: xDomain });
-    // generate dScale (only for non-stacked Area charts)
+
+    // Generate dScale (only for non-stacked Area charts)
     const dScale = scaleTime() as ScaleTime<number, number, never>;
-    if (!stackedArea) {
+    if (!isStackedArea) {
       dScale.domain(extent(data, getD) as [Date, Date]);
       dScale.range(xDomain);
     }
 
-    // generate yScale
+    // Generate yScale
     let yScale;
-
     if (isTWAP) {
-      const yMin = min(data, getY);
-      const yMax = max(data, getY);
+      const yMin = min(data, getY) as number;
+      const yMax = max(data, getY) as number;
       const biggestDifference = Math.max(
-        Math.abs(1 - (yMin as number)),
-        Math.abs(1 - (yMax as number))
+        Math.abs(1 - yMin),
+        Math.abs(1 - yMax)
       );
+      const M = 3;
+
+      // TWAP: floor at 0, max at 1.2 * highest price
       yScale = scaleLinear<number>({
         domain: [
-          1 - biggestDifference < 0 ? 0 : 1 - biggestDifference,
-          1 + biggestDifference
+          Math.max(1 - (biggestDifference * M), 0),
+          Math.min(1 + (biggestDifference * M), 1.2 * yMax)
+        ],
+      });
+    } else if (isStackedArea) {
+      yScale = scaleLinear<number>({
+        clamp: true,
+        domain: [
+          0,
+          1.05 * (max(data, getY) as number),
         ],
       });
     } else {
-      const y1Min = stackedArea
-        ? getStackedAreaYDomainMin(data, keys)
-        : (min(data, getY) as number);
-      const multiple = stackedArea ? [0.95, 1.05] : [1, 1];
+      const yMin = min(data, getY) as number;
+      const yMax = max(data, getY) as number;
+      const M = [0.9988, 1.0012]; 
+
       yScale = scaleLinear<number>({
-        clamp: !!stackedArea,
+        clamp: false,
         domain: [
-          stackedArea ? 0 : multiple[0] * y1Min as number,
-          multiple[1] * (max(data, getY) as number),
+          yMin * (yMin < 0 ? M[1] : M[0]),
+          yMax * (yMax < 0 ? M[0] : M[1]),
         ],
       });
     }
+
     // Set range for xScale
-    xScale.range([0, width - yAxisWidth]);
+    xScale.range([
+      0,
+      width - yAxisWidth
+    ]);
+
     // Set range for yScale
     yScale.range([
       height - axisHeight - margin.bottom - strokeBuffer, // bottom edge
@@ -496,14 +512,13 @@ const getScale = (scale?: keyof typeof SCALES) => {
 // ------------------------------- COMPONENT -------------------------------
 // -------------------------------------------------------------------------
 
-/**
- * hook used to access commonly used chart functions and values
- */
-
 type ChartWrapperProps = {
   children: (props: ProviderChartProps) => React.ReactNode;
 };
 
+/**
+ * hook used to access commonly used chart functions and values
+ */
 const ChartPropProvider: React.FC<ChartWrapperProps> = ({ children }) => {
   const props = useMemo(
     () => ({
@@ -552,6 +567,9 @@ const ChartPropProvider: React.FC<ChartWrapperProps> = ({ children }) => {
 
 export default ChartPropProvider;
 
+/**
+ * Adds a horizontal line at Season 6074.
+ */
 export const ExploitLine = (props: ChartChildParams) => {
   if (!props.scales.length) return null;
   const exploitSeason = props.scales[0].xScale(6074) as number;

@@ -22,7 +22,7 @@ type Props = {
 //      Graph (Inner)
 // ------------------------
 
-const Graph: React.FC<Props> = (props) => {
+const MultiLineChartInner: React.FC<Props> = (props) => {
   const {
     // Chart sizing
     stylesConfig,
@@ -53,7 +53,7 @@ const Graph: React.FC<Props> = (props) => {
     [generateScale, height, isTWAP, series, width, keys]
   );
 
-  // tooltip
+  // Tooltip
   const { containerBounds, containerRef } = useTooltipInPortal({
     scroll: true,
     detectBounds: true,
@@ -63,8 +63,6 @@ const Graph: React.FC<Props> = (props) => {
     showTooltip,
     hideTooltip,
     tooltipData,
-    // eslint-disable-next-line unused-imports/no-unused-vars
-    tooltipTop = 0,
     tooltipLeft = 0,
   } = useTooltip<BaseDataPoint[] | undefined>();
 
@@ -164,12 +162,13 @@ const Graph: React.FC<Props> = (props) => {
       />
       <svg width={width} height={height}>
         {/**
-         * Lines
-         */}
+          * Lines
+          */}
         <Group
           width={width - common.yAxisWidth}
           height={dataRegion.yBottom - dataRegion.yTop}
         >
+          {/** Add TWAP line */}
           {isTWAP && (
             <Line
               from={{ x: 0, y: scales[0].yScale(1) }}
@@ -178,7 +177,9 @@ const Graph: React.FC<Props> = (props) => {
               strokeWidth={0.5}
             />
           )}
+          {/* Apply children */}
           {children && children({ scales, dataRegion, ...props })}
+          {/* Apply lines */}
           {series.map((_data, index) => (
             <LinePath
               key={index}
@@ -192,8 +193,8 @@ const Graph: React.FC<Props> = (props) => {
           ))}
         </Group>
         {/**
-         * Axis
-         */}
+          * Axis
+          */}
         <g transform={`translate(0, ${dataRegion.yBottom})`}>
           <Axis
             key="axis"
@@ -221,8 +222,8 @@ const Graph: React.FC<Props> = (props) => {
           />
         </g>
         {/**
-         * Cursor
-         */}
+          * Cursor
+          */}
         {tooltipData && (
           <>
             <Line
@@ -261,7 +262,7 @@ const MultiLineChart: React.FC<BaseChartProps> = (props) => (
     {({ ...providerProps }) => (
       <ParentSize debounceTime={50}>
         {({ width: visWidth, height: visHeight }) => (
-          <Graph
+          <MultiLineChartInner
             width={visWidth}
             height={visHeight}
             {...providerProps}
@@ -285,7 +286,7 @@ const MultiLineChart: React.FC<BaseChartProps> = (props) => (
                 )}
               </>
             )}
-          </Graph>
+          </MultiLineChartInner>
         )}
       </ParentSize>
     )}
