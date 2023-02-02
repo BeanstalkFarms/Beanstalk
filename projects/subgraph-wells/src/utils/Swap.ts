@@ -2,7 +2,7 @@ import { Swap } from "../../generated/templates/Well/Well"
 import { Swap as SwapEvent } from "../../generated/schema"
 
 export function recordSwapEvent(event: Swap): void {
-    let swap = new SwapEvent(event.transaction.hash.concatI32(event.logIndex.toI32()))
+    let swap = new SwapEvent(event.transaction.hash.toHexString() + '-' + event.logIndex.toString())
     let receipt = event.receipt
 
     swap.hash = event.transaction.hash
