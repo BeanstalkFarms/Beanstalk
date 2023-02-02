@@ -11,7 +11,8 @@ export class Transfer {
   }
 
   /**
-   * Initates a transfer of BEAN from the silo.
+   * Initates a transfer from the silo.
+   * @param token The token to transfer.
    * @param amount The desired amount to transfer. Must be 0 < amount <= total deposits for token
    * @param destinationAddress The destination address for the transfer
    * @returns Promise of Transaction
