@@ -155,7 +155,7 @@ library LibTokenSilo {
         //setup or update the MowStatus for this deposit. We should have _just_ mowed before calling this function.
         uint256 updatedMowStatusBdv = s.a[account].mowStatuses[token].bdv.add(bdv.toUint128());
         s.a[account].mowStatuses[token].bdv = uint128(updatedMowStatusBdv);
-
+        console.log('s.a[account].mowStatuses[token].bdv mowstatus bdv after deposit: ', uint256(s.a[account].mowStatuses[token].bdv));
         //needs to update the mow status
 
         emit AddDeposit(account, token, grownStalkPerBdv, amount, bdv);
@@ -210,13 +210,16 @@ library LibTokenSilo {
         if (amount < crateAmount) {
             console.log('removeDepositFromAccount doing partial remove');
             uint256 removedBDV = amount.mul(crateBDV).div(crateAmount);
+            console.log('removedBDV: ', removedBDV);
             uint256 updatedBDV = uint256(s.a[account].deposits[token][grownStalkPerBdv].bdv)
                 .sub(removedBDV);
+            console.log('updatedBDV: ', updatedBDV);
             uint256 updatedAmount = uint256(s.a[account].deposits[token][grownStalkPerBdv].amount)
                 .sub(amount);
+            console.log('updatedAmount: ', updatedAmount);
                 
             require(
-                updatedBDV <= uint128(-1) && updatedAmount <= uint128(-1),
+                updatedBDV <= uint128(-1) && updatedAmount <= uint128(-1), //this code was here before, but maybe there's a better way to do this?
                 "Silo: uint128 overflow."
             );
 
@@ -224,10 +227,12 @@ library LibTokenSilo {
             s.a[account].deposits[token][grownStalkPerBdv].bdv = uint128(updatedBDV);
 
             //verify this has to be a different var?
-            uint256 updatedTotalBdvPartial = uint256(s.a[account].deposits[token][grownStalkPerBdv].amount).sub(removedBDV);
-
+            uint256 updatedTotalBdvPartial = uint256(s.a[account].mowStatuses[token].bdv).sub(removedBDV);
+            console.log('updatedTotalBdvPartial: ', updatedTotalBdvPartial);
             //remove from the mow status bdv amount, which keeps track of total token deposited per farmer
+            console.log('s.a[account].mowStatuses[token].bdv before partial remove: ', uint256(s.a[account].mowStatuses[token].bdv));    
             s.a[account].mowStatuses[token].bdv = updatedTotalBdvPartial.toUint128();
+            console.log('s.a[account].mowStatuses[token].bdv after partial remove: ', uint256(s.a[account].mowStatuses[token].bdv));    
 
             return removedBDV;
         }
@@ -235,6 +240,10 @@ library LibTokenSilo {
         console.log('removeDepositFromAccount doing full remove');
         // Full remove
         if (crateAmount > 0) delete s.a[account].deposits[token][grownStalkPerBdv];
+
+        console.log('attempting to update mow status');
+        console.log('s.a[account].mowStatuses[token].bdv: ', uint256(s.a[account].mowStatuses[token].bdv));
+        console.log('crateAmount: ', crateAmount);
 
         uint256 updatedTotalBdv = uint256(s.a[account].mowStatuses[token].bdv).sub(crateAmount);
         s.a[account].mowStatuses[token].bdv = uint128(updatedTotalBdv);

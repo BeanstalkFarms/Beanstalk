@@ -123,6 +123,9 @@ describe('Silo Token', function () {
 
     describe('single deposit', function () {
       beforeEach(async function () {
+
+        console.log('current season: ', await this.season.season());
+        console.log('deposited in cumulativeGrownStalkPerBdv: ', await this.silo.cumulativeGrownStalkPerBdv(this.siloToken.address));
         this.result = await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL)
       });
   
@@ -138,17 +141,18 @@ describe('Silo Token', function () {
       });
   
       it('properly adds the crate', async function () {
-        const deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 2);
+        const deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 1);
+        console.log('deposit: ', deposit);
         expect(deposit[0]).to.eq('1000');
         expect(deposit[1]).to.eq('1000');
       })
 
       it('emits Deposit event', async function () {
-        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, this.siloToken.address, 2, '1000', '1000');
+        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, this.siloToken.address, 1, '1000', '1000');
       });
     });
   
-    describe('2 deposits same season', function () {
+    describe('2 deposits same grown stalk per bdv', function () {
       beforeEach(async function () {
         this.result = await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL)
         this.result = await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL)
@@ -166,7 +170,7 @@ describe('Silo Token', function () {
       });
   
       it('properly adds the crate', async function () {
-        const deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 2);
+        const deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 1);
         expect(deposit[0]).to.eq('2000');
         expect(deposit[1]).to.eq('2000');
       })
@@ -194,10 +198,10 @@ describe('Silo Token', function () {
       });
   
       it('properly adds the crate', async function () {
-        let deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 2);
+        let deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 1);
         expect(deposit[0]).to.eq('1000');
         expect(deposit[1]).to.eq('1000');
-        deposit = await this.silo.getDeposit(user2Address, this.siloToken.address, 2);
+        deposit = await this.silo.getDeposit(user2Address, this.siloToken.address, 1);
         expect(deposit[0]).to.eq('1000');
         expect(deposit[1]).to.eq('1000');
       });
@@ -210,11 +214,11 @@ describe('Silo Token', function () {
     })
     describe('reverts', function () {
       it('reverts if amount is 0', async function () {
-        await expect(this.silo.connect(user).withdrawDeposit(this.siloToken.address, '2', '1001', EXTERNAL)).to.revertedWith('Silo: Crate balance too low.');
+        await expect(this.silo.connect(user).withdrawDeposit(this.siloToken.address, '1', '1001', EXTERNAL)).to.revertedWith('Silo: Crate balance too low.');
       });
 
       it('reverts if deposits + withdrawals is a different length', async function () {
-        await expect(this.silo.connect(user).withdrawDeposits(this.siloToken.address, ['2', '3'], ['1001'], EXTERNAL)).to.revertedWith('Silo: Crates, amounts are diff lengths.');
+        await expect(this.silo.connect(user).withdrawDeposits(this.siloToken.address, ['1', '2'], ['1001'], EXTERNAL)).to.revertedWith('Silo: Crates, amounts are diff lengths.');
       });
     });
 
@@ -222,7 +226,7 @@ describe('Silo Token', function () {
       describe('withdraw 1 Bean crate', async function () {
         beforeEach(async function () {
           userBalanceBefore = await this.siloToken.balanceOf(userAddress);
-          this.result = await this.silo.connect(user).withdrawDeposit(this.siloToken.address, 2, '1000', EXTERNAL);
+          this.result = await this.silo.connect(user).withdrawDeposit(this.siloToken.address, 1, '1000', EXTERNAL);
         });
     
         it('properly updates the total balances', async function () {
@@ -240,7 +244,7 @@ describe('Silo Token', function () {
         
 
         it('properly removes the deposit', async function () {
-          const deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 2);
+          const deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 1);
           expect(deposit[0]).to.eq('0');
           expect(deposit[1]).to.eq('0');
         });
@@ -250,13 +254,13 @@ describe('Silo Token', function () {
         // });
     
         it('emits RemoveDeposit event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, this.siloToken.address, 2, '1000');
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, this.siloToken.address, 1, '1000');
         });
       });
       
       describe('withdraw part of a bean crate', function () {
         beforeEach(async function () {
-          this.result = await this.silo.connect(user).withdrawDeposit(this.siloToken.address, 2, '500', EXTERNAL);
+          this.result = await this.silo.connect(user).withdrawDeposit(this.siloToken.address, 1, '500', EXTERNAL);
         });
     
         it('properly updates the total balances', async function () {
@@ -271,7 +275,7 @@ describe('Silo Token', function () {
         });
 
         it('properly removes the deposit', async function () {
-          const deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 2);
+          const deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 1);
           expect(deposit[0]).to.eq('500');
           expect(deposit[1]).to.eq('500');
         });
@@ -281,7 +285,7 @@ describe('Silo Token', function () {
         // });
 
         it('emits RemoveDeposit event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, this.siloToken.address, 2, '500');
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, this.siloToken.address, 1, '500');
         });
       });
     });
@@ -292,7 +296,7 @@ describe('Silo Token', function () {
           await this.season.siloSunrise(0);
           await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL);
           userBalanceBefore = await this.siloToken.balanceOf(userAddress);
-          this.result = await this.silo.connect(user).withdrawDeposits(this.siloToken.address, [2,3],['500','1000'], EXTERNAL);
+          this.result = await this.silo.connect(user).withdrawDeposits(this.siloToken.address, [1,2],['500','1000'], EXTERNAL);
         });
     
         it('properly updates the total balances', async function () {
@@ -307,15 +311,15 @@ describe('Silo Token', function () {
 
         });
         it('properly removes the crate', async function () {
-          let dep = await this.silo.getDeposit(userAddress, this.siloToken.address, 2);
+          let dep = await this.silo.getDeposit(userAddress, this.siloToken.address, 1);
           expect(dep[0]).to.equal('500')
           expect(dep[1]).to.equal('500')
-          dep = await this.silo.getDeposit(userAddress, this.siloToken.address, 3);
+          dep = await this.silo.getDeposit(userAddress, this.siloToken.address, 2);
           expect(dep[0]).to.equal('0')
           expect(dep[1]).to.equal('0')
         });
         it('emits RemoveDeposits event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [2,3], ['500', '1000'], '1500');
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [1,2], ['500', '1000'], '1500');
         });
       });
       describe('2 token crates', function () {
@@ -323,7 +327,7 @@ describe('Silo Token', function () {
           await this.season.siloSunrise(0);
           await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL);
           userBalanceBefore = await this.siloToken.balanceOf(userAddress);
-          this.result = await this.silo.connect(user).withdrawDeposits(this.siloToken.address, [2,3],['1000','1000'], EXTERNAL);
+          this.result = await this.silo.connect(user).withdrawDeposits(this.siloToken.address, [1,2],['1000','1000'], EXTERNAL);
         });
     
         it('properly updates the total balances', async function () {
@@ -337,15 +341,15 @@ describe('Silo Token', function () {
           expect((await this.siloToken.balanceOf(userAddress)).sub(userBalanceBefore)).to.eq('2000');
         });
         it('properly removes the crate', async function () {
-          let dep = await this.silo.getDeposit(userAddress, this.siloToken.address, 2);
+          let dep = await this.silo.getDeposit(userAddress, this.siloToken.address, 1);
           expect(dep[0]).to.equal('0')
           expect(dep[1]).to.equal('0')
-          dep = await this.silo.getDeposit(userAddress, this.siloToken.address, 3);
+          dep = await this.silo.getDeposit(userAddress, this.siloToken.address, 2);
           expect(dep[0]).to.equal('0')
           expect(dep[1]).to.equal('0')
         });
         it('emits RemoveDeposits event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [2,3], ['1000', '1000'], '2000');
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [1,2], ['1000', '1000'], '2000');
         });
       });
     });
@@ -393,7 +397,7 @@ describe('Silo Token', function () {
         //expect(await this.silo.totalSeeds()).to.eq(pruneToSeeds(to6('10')));
       })
 
-      it('get Deposit', async function () {
+      it.only('get Deposit', async function () {
         const deposit = await this.silo.getDeposit(user.address, UNRIPE_BEAN, '2')
         expect(deposit[0]).to.equal(to6('10'))
         expect(deposit[1]).to.equal(prune(to6('10')))

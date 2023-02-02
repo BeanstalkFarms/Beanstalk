@@ -344,6 +344,7 @@ contract TokenSilo is Silo {
         int128[] calldata grownStalkPerBdvs,
         uint256[] calldata amounts
     ) internal returns (AssetsRemoved memory ar) {
+        console.log('removeDepositsFromAccount: ', account);
         for (uint256 i; i < grownStalkPerBdvs.length; ++i) {
             uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 account,
@@ -353,18 +354,21 @@ contract TokenSilo is Silo {
             );
             ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
-            ar.stalkRemoved = crateBdv.mul(s.ss[token].stalkPerBdv).add(
+            console.log('s.ss[token].stalkPerBdv: ', s.ss[token].stalkPerBdv);
+            ar.stalkRemoved = ar.stalkRemoved.add(
                 LibSilo.stalkReward(
                     grownStalkPerBdvs[i],
                     LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)),
                     crateBdv.toUint128()
                 )
             );
+            console.log('ar.stalkRemoved from: ', i, ar.stalkRemoved);
         }
-
+        console.log('1 ar.stalkRemoved: ', ar.stalkRemoved);
         ar.stalkRemoved = ar.stalkRemoved.add(
             ar.bdvRemoved.mul(s.ss[token].stalkPerBdv)
         );
+        console.log('2 ar.stalkRemoved: ', ar.stalkRemoved);
 
         emit RemoveDeposits(account, token, grownStalkPerBdvs, amounts, ar.tokensRemoved);
     }

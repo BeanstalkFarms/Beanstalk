@@ -110,6 +110,7 @@ library LibSilo {
         if (stalk == 0) return;
 
         console.log('burnStalk: ', stalk);
+        console.log('current total stalk s.s.stalk: ', s.s.stalk);
         // Calculate the amount of Roots for the given amount of Stalk.
         // We round up as it prevents an account having roots but no stalk.
          uint256 roots = s.s.roots.mulDiv(
