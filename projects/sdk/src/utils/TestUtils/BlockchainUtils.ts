@@ -133,39 +133,58 @@ export class BlockchainUtils {
     await this.sdk.provider.send("hardhat_setBalance", [account, balance.toHex()]);
   }
   async setDAIBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.DAI.address, account, balance, 2);
+    this.setBalance(this.sdk.tokens.DAI.address, account, balance);
   }
   async setUSDCBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.USDC.address, account, balance, 9);
+    this.setBalance(this.sdk.tokens.USDC.address, account, balance);
   }
   async setUSDTBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.USDT.address, account, balance, 2);
+    this.setBalance(this.sdk.tokens.USDT.address, account, balance);
   }
   async setCRV3Balance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.CRV3.address, account, balance, 3, true);
+    this.setBalance(this.sdk.tokens.CRV3.address, account, balance, true);
   }
   async setWETHBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.WETH.address, account, balance, 3);
+    this.setBalance(this.sdk.tokens.WETH.address, account, balance);
   }
   async setBEANBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.BEAN.address, account, balance, 0);
+    this.setBalance(this.sdk.tokens.BEAN.address, account, balance);
   }
   async setROOTBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.ROOT.address, account, balance, 151);
+    this.setBalance(this.sdk.tokens.ROOT.address, account, balance);
   }
   async seturBEANBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.UNRIPE_BEAN.address, account, balance, 0);
+    this.setBalance(this.sdk.tokens.UNRIPE_BEAN.address, account, balance);
   }
   async seturBEAN3CRVBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.UNRIPE_BEAN_CRV3.address, account, balance, 0);
+    this.setBalance(this.sdk.tokens.UNRIPE_BEAN_CRV3.address, account, balance);
   }
   async setBEAN3CRVBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.BEAN_CRV3_LP.address, account, balance, 15, true);
+    this.setBalance(this.sdk.tokens.BEAN_CRV3_LP.address, account, balance, true);
   }
 
-  private async setBalance(tokenAddress: string, account: string, balance: TokenValue, slot: number, reverse: boolean = false) {
+  private getBalanceConfig(tokenAddress: string) {
+    const slotConfig = new Map();
+    slotConfig.set(this.sdk.tokens.DAI.address, [2, false]);
+    slotConfig.set(this.sdk.tokens.USDC.address, [9, false]);
+    slotConfig.set(this.sdk.tokens.USDT.address, [2, false]);
+    slotConfig.set(this.sdk.tokens.CRV3.address, [3, true]);
+    slotConfig.set(this.sdk.tokens.WETH.address, [3, false]);
+    slotConfig.set(this.sdk.tokens.BEAN.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.ROOT.address, [151, false]);
+    slotConfig.set(this.sdk.tokens.UNRIPE_BEAN.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.UNRIPE_BEAN_CRV3.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.BEAN_CRV3_LP.address, [15, true]);
+    console.log(slotConfig.get(tokenAddress));
+    return slotConfig.get(tokenAddress);
+  }
+
+  async setBalance(tokenAddress: string, account: string, balance: TokenValue, reverse: boolean = false) {
+    const [slot, isTokenReverse] = this.getBalanceConfig(tokenAddress);
     const values = [account, slot];
-    if (reverse) values.reverse();
+    
+    if (reverse || isTokenReverse) values.reverse();
+
     const index = ethers.utils.solidityKeccak256(["uint256", "uint256"], values);
     await this.setStorageAt(tokenAddress, index.toString(), this.toBytes32(balance.toBigNumber()).toString());
   }

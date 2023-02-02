@@ -22,17 +22,13 @@ describe("Silo Transfer", function () {
   });
 
   describe.each(SUPPORTED_TOKENS)("Transfer", (siloToken: Token) => {
-    describe("Transfer sourced from single crate", () => {
+    describe(`Transfer ${siloToken.displayName} sourced from single crate`, () => {
       beforeAll(async () => {
         await utils.resetFork();
 
         // make a deposit
         await siloToken.approveBeanstalk(TokenValue.MAX_UINT256);
-        // TODO: We can could a new util method to set only the applicable balance
-        await utils.setBEANBalance(account, sdk.tokens.BEAN.amount(2000));
-        await utils.setBEAN3CRVBalance(account, sdk.tokens.BEAN_CRV3_LP.amount(2000));
-        await utils.seturBEANBalance(account, sdk.tokens.UNRIPE_BEAN.amount(2000));
-        await utils.seturBEAN3CRVBalance(account, sdk.tokens.UNRIPE_BEAN_CRV3.amount(2000));
+        await utils.setBalance(siloToken.address, account, siloToken.amount(2000));
         const deposit = await sdk.silo.deposit(siloToken, siloToken, siloToken.amount(500), 0.1);
         await deposit.wait();
       });
