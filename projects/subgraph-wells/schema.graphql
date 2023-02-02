@@ -343,7 +343,7 @@ type Withdraw @entity(immutable: true) {
 
 type Swap @entity(immutable: true) {
   " Transaction hash-log index"
-  id: Bytes!
+  id: ID!
 
   " Transaction hash of the event "
   hash: Bytes!

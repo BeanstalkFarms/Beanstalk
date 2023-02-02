@@ -3,14 +3,14 @@ import { Well } from '../../generated/templates'
 import { loadOrCreateAquifer } from '../utils/Aquifer'
 import { loadOrCreatePump } from '../utils/Pump'
 import { loadOrCreateToken } from '../utils/Token'
-import { loadOrCreateWell } from '../utils/Well'
+import { createWell } from '../utils/Well'
 
 export function handleBoreWell(event: BoreWell): void {
 
     loadOrCreateAquifer(event.address, event.params.auger)
     Well.create(event.params.well)
 
-    let well = loadOrCreateWell(event.params.well)
+    let well = createWell(event.params.well, event.params.tokens)
     let wellToken = loadOrCreateToken(event.params.well)
 
     well.aquifer = event.address
