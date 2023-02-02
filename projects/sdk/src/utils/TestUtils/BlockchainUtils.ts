@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { ERC20Token } from "src/classes/Token";
+import { ERC20Token, Token } from "src/classes/Token";
 import { BeanstalkSDK, DataSource } from "src/lib/BeanstalkSDK";
 import { TokenSiloBalance } from "src/lib/silo/types";
 import { makeDepositCrate } from "src/lib/silo/utils";
@@ -133,34 +133,34 @@ export class BlockchainUtils {
     await this.sdk.provider.send("hardhat_setBalance", [account, balance.toHex()]);
   }
   async setDAIBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.DAI.address, account, balance);
+    this.setBalance(this.sdk.tokens.DAI, account, balance);
   }
   async setUSDCBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.USDC.address, account, balance);
+    this.setBalance(this.sdk.tokens.USDC, account, balance);
   }
   async setUSDTBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.USDT.address, account, balance);
+    this.setBalance(this.sdk.tokens.USDT, account, balance);
   }
   async setCRV3Balance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.CRV3.address, account, balance, true);
+    this.setBalance(this.sdk.tokens.CRV3, account, balance);
   }
   async setWETHBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.WETH.address, account, balance);
+    this.setBalance(this.sdk.tokens.WETH, account, balance);
   }
   async setBEANBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.BEAN.address, account, balance);
+    this.setBalance(this.sdk.tokens.BEAN, account, balance);
   }
   async setROOTBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.ROOT.address, account, balance);
+    this.setBalance(this.sdk.tokens.ROOT, account, balance);
   }
   async seturBEANBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.UNRIPE_BEAN.address, account, balance);
+    this.setBalance(this.sdk.tokens.UNRIPE_BEAN, account, balance);
   }
   async seturBEAN3CRVBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.UNRIPE_BEAN_CRV3.address, account, balance);
+    this.setBalance(this.sdk.tokens.UNRIPE_BEAN_CRV3, account, balance);
   }
   async setBEAN3CRVBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.BEAN_CRV3_LP.address, account, balance, true);
+    this.setBalance(this.sdk.tokens.BEAN_CRV3_LP, account, balance);
   }
 
   private getBalanceConfig(tokenAddress: string) {
@@ -175,18 +175,25 @@ export class BlockchainUtils {
     slotConfig.set(this.sdk.tokens.UNRIPE_BEAN.address, [0, false]);
     slotConfig.set(this.sdk.tokens.UNRIPE_BEAN_CRV3.address, [0, false]);
     slotConfig.set(this.sdk.tokens.BEAN_CRV3_LP.address, [15, true]);
-    console.log(slotConfig.get(tokenAddress));
     return slotConfig.get(tokenAddress);
   }
 
-  async setBalance(tokenAddress: string, account: string, balance: TokenValue, reverse: boolean = false) {
-    const [slot, isTokenReverse] = this.getBalanceConfig(tokenAddress);
+  async setBalance(token: Token | string, account: string, balance: TokenValue | number) {
+    const _token = token instanceof Token ? token : this.sdk.tokens.findBySymbol(token);
+    if (!_token) {
+      throw new Error("token not found");
+    }
+
+    const _balance = typeof balance === "number" ? _token.amount(balance) : balance;
+    const balanceAmount = _balance.toBigNumber();
+
+    const [slot, isTokenReverse] = this.getBalanceConfig(_token.address);
     const values = [account, slot];
-    
-    if (reverse || isTokenReverse) values.reverse();
+
+    if (isTokenReverse) values.reverse();
 
     const index = ethers.utils.solidityKeccak256(["uint256", "uint256"], values);
-    await this.setStorageAt(tokenAddress, index.toString(), this.toBytes32(balance.toBigNumber()).toString());
+    await this.setStorageAt(_token.address, index.toString(), this.toBytes32(balanceAmount).toString());
   }
 
   private async setStorageAt(address: string, index: string, value: string) {
@@ -200,7 +207,7 @@ export class BlockchainUtils {
   //
   mockDepositCrate(token: ERC20Token, season: number, _amount: string, _currentSeason?: number) {
     const amount = token.amount(_amount);
-    
+
     return makeDepositCrate(
       token,
       season,

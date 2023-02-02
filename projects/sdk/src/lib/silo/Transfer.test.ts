@@ -28,7 +28,7 @@ describe("Silo Transfer", function () {
 
         // make a deposit
         await siloToken.approveBeanstalk(TokenValue.MAX_UINT256);
-        await utils.setBalance(siloToken.address, account, siloToken.amount(2000));
+        await utils.setBalance(siloToken, account, 2000);
         const deposit = await sdk.silo.deposit(siloToken, siloToken, siloToken.amount(500), 0.1);
         await deposit.wait();
       });
@@ -67,7 +67,7 @@ describe("Silo Transfer", function () {
 
       // make a deposit
       await sdk.tokens.BEAN.approveBeanstalk(TokenValue.MAX_UINT256);
-      await utils.setBEANBalance(account, sdk.tokens.BEAN.amount(2000));
+      await utils.setBalance(sdk.tokens.BEAN, account, 2000);
 
       let deposit = await sdk.silo.deposit(sdk.tokens.BEAN, sdk.tokens.BEAN, sdk.tokens.BEAN.amount(500), 0.1);
       await deposit.wait();
