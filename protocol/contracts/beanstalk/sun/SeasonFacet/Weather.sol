@@ -24,7 +24,10 @@ contract Weather is Sun {
      * @param season The current Season
      * @param caseId The "Weather Case", see {FIXME}
      * @param change The change in Temperature as a delta from the previous value
-     * @dev `change` is emitted as a delta for gas efficiency
+     * @dev The name {WeatherChange} is kept for backwards compatibility, 
+     * however the state variable included as `change` is now called Temperature.
+     * 
+     * `change` is emitted as a delta for gas efficiency.
      */
     event WeatherChange(
         uint256 indexed season,
@@ -83,72 +86,94 @@ contract Weather is Sun {
 
         // Calculate Pod Rate
         Decimal.D256 memory podRate = Decimal.ratio(
-            s.f.pods.sub(s.f.harvestable),
+            s.f.pods.sub(s.f.harvestable), // same as totalUnharvestable()
             beanSupply
         );
 
         // Calculate Delta Soil Demand
+        // FIXME: possible gas savings by resetting to non-zero?
         uint256 dsoil = s.f.beanSown;
         s.f.beanSown = 0;
     
         Decimal.D256 memory deltaPodDemand;
 
-        // If Sow'd all Soil
+        // `s.w.nextSowTime` is set to the number of seconds in it took for 
+        // Soil to sell out during the current Season. If Soil didn't sell out,
+        // it remains `type(uint32).max`.
         if (s.w.nextSowTime < type(uint32).max) {
             if (
                 s.w.lastSowTime == type(uint32).max || // Didn't Sow all last Season
                 s.w.nextSowTime < SOWTIMEDEMAND || // Sow'd all instantly this Season
                 (s.w.lastSowTime > C.getSteadySowTime() &&
                     s.w.nextSowTime < s.w.lastSowTime.sub(C.getSteadySowTime())) // Sow'd all faster
-            ) deltaPodDemand = Decimal.from(1e18);
-            else if (
+            ) {
+                deltaPodDemand = Decimal.from(1e18);
+            } else if (
                 s.w.nextSowTime <= s.w.lastSowTime.add(C.getSteadySowTime())
-            )
+            ) {
                 // Sow'd all in same time
                 deltaPodDemand = Decimal.one();
-            else deltaPodDemand = Decimal.zero();
-            s.w.lastSowTime = s.w.nextSowTime;
-            s.w.nextSowTime = type(uint32).max;
-            // If soil didn't sell out
-        } else {
+            } else { 
+                deltaPodDemand = Decimal.zero();
+            }
+
+            s.w.lastSowTime = s.w.nextSowTime;  // Overwrite last Season
+            s.w.nextSowTime = type(uint32).max; // Reset for next Season
+        } 
+
+        // Soil didn't sell out
+        else {
             uint256 lastDSoil = s.w.lastDSoil;
-            if (dsoil == 0)
+
+            if (dsoil == 0) {
                 deltaPodDemand = Decimal.zero(); // If no one sow'd
-            else if (lastDSoil == 0)
+            } else if (lastDSoil == 0) {
                 deltaPodDemand = Decimal.from(1e18); // If no one sow'd last Season
-            else deltaPodDemand = Decimal.ratio(dsoil, lastDSoil);
-            if (s.w.lastSowTime != type(uint32).max)
+            } else { 
+                deltaPodDemand = Decimal.ratio(dsoil, lastDSoil);
+            }
+
+            if (s.w.lastSowTime != type(uint32).max) {
                 s.w.lastSowTime = type(uint32).max;
+            }
         }
         
         // Calculate Weather Case
         caseId = 0;
 
         // Evaluate Pod Rate
-        if (podRate.greaterThanOrEqualTo(C.getUpperBoundPodRate())) caseId = 24;
-        else if (podRate.greaterThanOrEqualTo(C.getOptimalPodRate()))
+        if (podRate.greaterThanOrEqualTo(C.getUpperBoundPodRate())) {
+            caseId = 24;
+        } else if (podRate.greaterThanOrEqualTo(C.getOptimalPodRate())) {
             caseId = 16;
-        else if (podRate.greaterThanOrEqualTo(C.getLowerBoundPodRate()))
+        } else if (podRate.greaterThanOrEqualTo(C.getLowerBoundPodRate())) {
             caseId = 8;
+        }
 
         // Evaluate Price
         if (
             deltaB > 0 ||
             (deltaB == 0 && podRate.lessThanOrEqualTo(C.getOptimalPodRate()))
-        ) caseId += 4;
+        ) {
+            caseId += 4;
+        }
 
         // Evaluate Delta Soil Demand
-        if (deltaPodDemand.greaterThanOrEqualTo(C.getUpperBoundDPD()))
+        if (deltaPodDemand.greaterThanOrEqualTo(C.getUpperBoundDPD())) {
             caseId += 2;
-        else if (deltaPodDemand.greaterThanOrEqualTo(C.getLowerBoundDPD()))
+        } else if (deltaPodDemand.greaterThanOrEqualTo(C.getLowerBoundDPD())) {
             caseId += 1;
+        }
 
         s.w.lastDSoil = uint128(dsoil);
-
+        
         changeWeather(caseId);
         handleRain(caseId);
     }
 
+    /**
+     * @dev Changes the current Temperature `s.w.t` based on the Weather Case.
+     */
     function changeWeather(uint256 caseId) private {
         int8 change = s.cases[caseId];
         uint32 t = s.w.t;
@@ -170,9 +195,14 @@ contract Weather is Sun {
         emit WeatherChange(s.season.current, caseId, change);
     }
 
+    /**
+     * @dev Update Rain state based on the current state and Weather Case.
+     */
     function handleRain(uint256 caseId) internal {
         if (caseId < 4 || caseId > 7) {
-            if (s.season.raining) s.season.raining = false;
+            if (s.season.raining) {
+                s.season.raining = false;
+            }
             return;
         } else if (!s.season.raining) {
             s.season.raining = true;
@@ -182,29 +212,43 @@ contract Weather is Sun {
             s.r.pods = s.f.pods;
             s.r.roots = s.s.roots;
         } else if (
-            s.season.current >=
-            s.season.rainStart.add(s.season.withdrawSeasons - 1)
+            s.season.current >= s.season.rainStart.add(s.season.withdrawSeasons - 1)
         ) {
-            if (s.r.roots > 0) sop();
+            if (s.r.roots > 0) {
+                sop();
+            }
         }
     }
 
+    /**
+     * @dev Sell Beans on the Curve pool for 3CRV.
+     */
     function sop() private {
         int256 newBeans = LibBeanMetaCurve.getDeltaB();
         if (newBeans <= 0) return;
-        uint256 sopBeans = uint256(newBeans);
 
+        uint256 sopBeans = uint256(newBeans);
         uint256 newHarvestable;
+
+        // Pay off remaining Pods if any exist.
         if (s.f.harvestable < s.r.pods) {
             newHarvestable = s.r.pods - s.f.harvestable;
             s.f.harvestable = s.f.harvestable.add(newHarvestable);
             C.bean().mint(address(this), newHarvestable.add(sopBeans));
-        } else C.bean().mint(address(this), sopBeans);
+        } else {
+            C.bean().mint(address(this), sopBeans);
+        }
+
+        // Swap Beans for 3CRV.
         uint256 amountOut = C.curveMetapool().exchange(0, 1, sopBeans, 0);
+
         rewardSop(amountOut);
         emit SeasonOfPlenty(s.season.current, amountOut, newHarvestable);
     }
 
+    /**
+     * @dev Allocate 3CRV during a Season of Plenty.
+     */
     function rewardSop(uint256 amount) private {
         s.sops[s.season.rainStart] = s.sops[s.season.lastSop].add(
             amount.mul(C.getSopPrecision()).div(s.r.roots)
