@@ -78,6 +78,7 @@ const Graph: React.FC<Props> = (props) => {
     (
       event: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>
     ) => {
+      if (series[0].length === 0) return;
       const { left, top } = containerBounds;
       const containerX = ('clientX' in event ? event.clientX : 0) - left;
       const containerY = ('clientY' in event ? event.clientY : 0) - top;
