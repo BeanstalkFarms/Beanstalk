@@ -152,10 +152,26 @@ export class Silo {
     return this.siloClaim.claimSeasons(token, seasons, toMode);
   }
 
+  /**
+   * Convert from one Silo whitelisted token to another. 
+   * @param fromToken Token to convert from
+   * @param toToken  Token to cnvert to
+   * @param fromAmount Amount to convert
+   * @returns Promise of Transaction
+   */
   async convert(fromToken: Token, toToken: Token, fromAmount: TokenValue) {
     return this.siloConvert.convert(fromToken, toToken, fromAmount);
   }
 
+  /**
+   * Estimate a Silo convert() operation. 
+   * @param fromToken 
+   * @param toToken 
+   * @param fromAmount 
+   * @returns An object containing minAmountOut, which is the estimated convert amount
+   * and conversion, which contains details of the convert operation. conversion property
+   * would be useful in a UI
+   */
   async convertEstimate(
     fromToken: Token,
     toToken: Token,
