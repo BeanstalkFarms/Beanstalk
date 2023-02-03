@@ -179,6 +179,9 @@ export class BlockchainUtils {
     return slotConfig.get(tokenAddress);
   }
 
+  /**
+   * Writes the new bean & 3crv balances to the evm storage
+   */
   async setBalance(token: Token | string, account: string, balance: TokenValue | number) {
     const _token = token instanceof Token ? token : this.sdk.tokens.findBySymbol(token);
     if (!_token) {
@@ -229,6 +232,9 @@ export class BlockchainUtils {
     await this.setCurvePoolBalances(POOL_ADDRESS, PREV_BALANCE_SLOT, currentBean, currentCrv3);
   }
 
+  /**
+   * Returns the amounts of bean and 3crv in the Curve pool
+   */
   private async getCurvePoolBalances(slot: number, address: string) {
     const beanLocation = ethers.utils.solidityKeccak256(["uint256"], [slot]);
     const crv3Location = this.addOne(beanLocation);
@@ -255,7 +261,6 @@ export class BlockchainUtils {
    * @param beanBalance
    * @param crv3Balance
    */
-
   private async setCurvePoolBalances(address: string, slot: number, beanBalance: TokenValue, crv3Balance: TokenValue) {
     const beanLocation = ethers.utils.solidityKeccak256(["uint256"], [slot]);
     const crv3Location = this.addOne(beanLocation);
@@ -274,6 +279,7 @@ export class BlockchainUtils {
     return ethers.utils.hexlify(ethers.utils.zeroPad(bn.toHexString(), 32));
   }
 
+  // Used by setCurveLiquidity() 
   private addOne(kek: string) {
     let b = ethers.BigNumber.from(kek);
     b = b.add(1);
