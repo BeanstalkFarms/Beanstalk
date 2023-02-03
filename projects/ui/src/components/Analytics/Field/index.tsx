@@ -13,7 +13,7 @@ import { FC } from '~/types';
 
 const SLUGS = [
   'rror',
-  'weather',
+  'temperature',
   'pods',
   'podrate',
   'sown',
