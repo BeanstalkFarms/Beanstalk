@@ -13,12 +13,14 @@ import { Withdraw } from "./silo/Withdraw";
 import { Claim } from "./silo/Claim";
 import { FarmToMode } from "./farm";
 import { DepositCrate, TokenSiloBalance, DepositTokenPermitMessage, DepositTokensPermitMessage } from "./silo/types";
+import { Transfer } from "./silo/Transfer";
 
 export class Silo {
   static sdk: BeanstalkSDK;
   private depositBuilder: DepositBuilder;
   siloWithdraw: Withdraw;
   siloClaim: Claim;
+  siloTransfer: Transfer;
   // 1 Seed grows 1 / 10_000 Stalk per Season.
   // 1/10_000 = 1E-4
   // FIXME
@@ -29,6 +31,7 @@ export class Silo {
     this.depositBuilder = new DepositBuilder(sdk);
     this.siloWithdraw = new Withdraw(sdk);
     this.siloClaim = new Claim(sdk);
+    this.siloTransfer = new Transfer(sdk);
   }
 
   /**
@@ -94,6 +97,17 @@ export class Silo {
    */
   async withdraw(token: Token, amount: TokenValue): Promise<ContractTransaction> {
     return this.siloWithdraw.withdraw(token, amount);
+  }
+
+  /**
+   * Initates a transfer of a token from the silo.
+   * @param token The whitelisted token to withdraw. ex, BEAN vs BEAN_3CRV_LP
+   * @param amount The desired amount to transfer. Must be 0 < amount <= total deposits for token
+   * @param destinationAddress The destination address for the transfer
+   * @returns Promise of Transaction
+   */
+  async transfer(token: Token, amount: TokenValue, destinationAddress: string): Promise<ContractTransaction> {
+    return this.siloTransfer.transfer(token, amount, destinationAddress);
   }
 
   /**

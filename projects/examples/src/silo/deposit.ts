@@ -18,9 +18,9 @@ async function main() {
   sdk.DEBUG = false;
 
   await deposit(sdk.tokens.BEAN, sdk.tokens.BEAN, 2000, account, sdk);
-  await deposit(sdk.tokens.BEAN_CRV3_LP, sdk.tokens.BEAN_CRV3_LP, 2000, account, sdk);
-  await deposit(sdk.tokens.UNRIPE_BEAN, sdk.tokens.UNRIPE_BEAN, 2000, account, sdk);
-  await deposit(sdk.tokens.UNRIPE_BEAN_CRV3, sdk.tokens.UNRIPE_BEAN_CRV3, 2000, account, sdk);
+  // await deposit(sdk.tokens.BEAN_CRV3_LP, sdk.tokens.BEAN_CRV3_LP, 2000, account, sdk);
+  // await deposit(sdk.tokens.UNRIPE_BEAN, sdk.tokens.UNRIPE_BEAN, 2000, account, sdk);
+  // await deposit(sdk.tokens.UNRIPE_BEAN_CRV3, sdk.tokens.UNRIPE_BEAN_CRV3, 2000, account, sdk);
 
   await stop();
 }
