@@ -14,7 +14,6 @@ type BaseToGrownStalk = {
 
 export default function useFarmerStalkByToken() {
   const balances = useFarmerSiloBalances();
-  console.log("BALANCES: ", balances)
   const season = useSeason();
 
   return useMemo(
