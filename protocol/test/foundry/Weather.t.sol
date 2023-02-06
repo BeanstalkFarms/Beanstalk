@@ -22,7 +22,7 @@ contract ComplexWeatherTest is Weather, TestHelper {
       int256 priceAvg;
       uint32 startingWeather;
       uint32 lastSowTime;
-      uint32 nextSowTime;
+      uint32 thisSowTime;
       bool wasRaining;
       uint256 rainingSeasons;
       uint256 rainStalk;
@@ -76,7 +76,7 @@ contract ComplexWeatherTest is Weather, TestHelper {
         C.bean().mint(brean,data[i].totalOutstandingBeans);
         
         season.setLastSowTimeE(data[i].lastSowTime);
-        season.setNextSowTimeE(data[i].nextSowTime);
+        season.setNextSowTimeE(data[i].thisSowTime);
         season.stepWeatherWithParams(pods, lastDSoil, uint128(startSoil-endSoil), endSoil, deltaB, raining, rainRoots);
 
         //check that the season weather is the same as the one specified in the array:
@@ -103,7 +103,7 @@ contract ExtremeWeatherTest is Weather, TestHelper {
       int256 priceAvg;
       uint32 startingWeather;
       uint32 lastSowTime;
-      uint32 nextSowTime;
+      uint32 thisSowTime;
       bool wasRaining;
       uint256 rainingSeasons;
       uint256 rainStalk;
@@ -126,7 +126,7 @@ contract ExtremeWeatherTest is Weather, TestHelper {
     season.stepWeatherE(1 ether,1);
     Storage.Weather memory weather = season.weather();
     assertEq(uint256(weather.t),7);
-    assertEq(uint256(weather.nextSowTime), LibConstant.MAX_UINT32);
+    assertEq(uint256(weather.thisSowTime), LibConstant.MAX_UINT32);
     assertEq(uint256(weather.lastSowTime), 10);
   }
 
@@ -138,7 +138,7 @@ contract ExtremeWeatherTest is Weather, TestHelper {
     season.stepWeatherE(1 ether,1);
     Storage.Weather memory weather = season.weather();
     assertEq(uint256(weather.t),7);
-    assertEq(uint256(weather.nextSowTime), LibConstant.MAX_UINT32);
+    assertEq(uint256(weather.thisSowTime), LibConstant.MAX_UINT32);
     assertEq(uint256(weather.lastSowTime), 1000);
   }
 
@@ -150,7 +150,7 @@ contract ExtremeWeatherTest is Weather, TestHelper {
     season.stepWeatherE(1 ether,1);
     Storage.Weather memory weather = season.weather();
     assertEq(uint256(weather.t),7);
-    assertEq(uint256(weather.nextSowTime), LibConstant.MAX_UINT32);
+    assertEq(uint256(weather.thisSowTime), LibConstant.MAX_UINT32);
     assertEq(uint256(weather.lastSowTime), 1000);
   }
 
@@ -162,7 +162,7 @@ contract ExtremeWeatherTest is Weather, TestHelper {
     season.stepWeatherE(1 ether,1);
     Storage.Weather memory weather = season.weather();
     assertEq(uint256(weather.t),9);
-    assertEq(uint256(weather.nextSowTime), LibConstant.MAX_UINT32);
+    assertEq(uint256(weather.thisSowTime), LibConstant.MAX_UINT32);
     assertEq(uint256(weather.lastSowTime), 1000);
   }
 
@@ -174,7 +174,7 @@ contract ExtremeWeatherTest is Weather, TestHelper {
     season.stepWeatherE(1 ether,1);
     Storage.Weather memory weather = season.weather();
     assertEq(uint256(weather.t),9);
-    assertEq(uint256(weather.nextSowTime), LibConstant.MAX_UINT32);
+    assertEq(uint256(weather.thisSowTime), LibConstant.MAX_UINT32);
     assertEq(uint256(weather.lastSowTime), 1000);
   }
 
@@ -186,7 +186,7 @@ contract ExtremeWeatherTest is Weather, TestHelper {
     season.stepWeatherE(1 ether,1);
     Storage.Weather memory weather = season.weather();
     assertEq(uint256(weather.t),10);
-    assertEq(uint256(weather.nextSowTime), LibConstant.MAX_UINT32);
+    assertEq(uint256(weather.thisSowTime), LibConstant.MAX_UINT32);
     assertEq(uint256(weather.lastSowTime), 1000);
   }
 
@@ -199,7 +199,7 @@ contract ExtremeWeatherTest is Weather, TestHelper {
     season.stepWeatherE(1 ether,1);
     Storage.Weather memory weather = season.weather();
     assertEq(uint256(weather.t),9);
-    assertEq(uint256(weather.nextSowTime), LibConstant.MAX_UINT32);
+    assertEq(uint256(weather.thisSowTime), LibConstant.MAX_UINT32);
     assertEq(uint256(weather.lastSowTime), LibConstant.MAX_UINT32);
   }
 

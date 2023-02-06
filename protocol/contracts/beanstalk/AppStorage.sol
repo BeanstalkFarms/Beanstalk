@@ -191,7 +191,7 @@ contract Storage {
         uint256[2] depreciated; // DEPRECATED - 2 slots that were previously used
         uint128 lastDSoil; // Delta Soil; the number of Soil purchased last Season.
         uint32 lastSowTime; // The number of seconds it took for all but at most 1 Soil to sell out last Season.
-        uint32 nextSowTime; // The number of seconds it took for all but at most 1 Soil to sell out this Season
+        uint32 thisSowTime; // The number of seconds it took for all but at most 1 Soil to sell out this Season
         uint32 t; // Temperature: the maximum interest rate during the current Season for sowing Beans in Soil.
     }
 

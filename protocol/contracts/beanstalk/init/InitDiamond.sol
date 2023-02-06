@@ -59,7 +59,7 @@ contract InitDiamond {
             (block.timestamp / s.season.period) * s.season.period :
             block.timestamp;
 
-        s.w.nextSowTime = type(uint32).max;
+        s.w.thisSowTime = type(uint32).max;
         s.w.lastSowTime = type(uint32).max;
         s.isFarm = 1;
 

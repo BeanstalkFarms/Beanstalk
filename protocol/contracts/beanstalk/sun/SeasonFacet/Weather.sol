@@ -71,21 +71,21 @@ contract Weather is Sun {
         Decimal.D256 memory deltaPodDemand;
 
         // If Sow'd all Soil
-        if (s.w.nextSowTime < type(uint32).max) {
+        if (s.w.thisSowTime < type(uint32).max) {
             if (
                 s.w.lastSowTime == type(uint32).max || // Didn't Sow all last Season
-                s.w.nextSowTime < SOWTIMEDEMAND || // Sow'd all instantly this Season
+                s.w.thisSowTime < SOWTIMEDEMAND || // Sow'd all instantly this Season
                 (s.w.lastSowTime > C.getSteadySowTime() &&
-                    s.w.nextSowTime < s.w.lastSowTime.sub(C.getSteadySowTime())) // Sow'd all faster
+                    s.w.thisSowTime < s.w.lastSowTime.sub(C.getSteadySowTime())) // Sow'd all faster
             ) deltaPodDemand = Decimal.from(1e18);
             else if (
-                s.w.nextSowTime <= s.w.lastSowTime.add(C.getSteadySowTime())
+                s.w.thisSowTime <= s.w.lastSowTime.add(C.getSteadySowTime())
             )
                 // Sow'd all in same time
                 deltaPodDemand = Decimal.one();
             else deltaPodDemand = Decimal.zero();
-            s.w.lastSowTime = s.w.nextSowTime;
-            s.w.nextSowTime = type(uint32).max;
+            s.w.lastSowTime = s.w.thisSowTime;
+            s.w.thisSowTime = type(uint32).max;
             // If soil didn't sell out
         } else {
             uint256 lastDSoil = s.w.lastDSoil;
