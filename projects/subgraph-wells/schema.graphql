@@ -293,7 +293,7 @@ type Deposit @entity(immutable: true) {
 " This maps to RemoveLiquidity and RemoveLiquidityOneToken events "
 type Withdraw @entity(immutable: true) {
   " { Transaction hash }-{ Log index }"
-  id: Bytes!
+  id: ID!
 
   " Transaction hash of the transaction that emitted this event "
   hash: Bytes!

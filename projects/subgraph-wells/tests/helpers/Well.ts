@@ -1,6 +1,6 @@
 import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { newMockEvent } from "matchstick-as/assembly/index";
-import { AddLiquidity, Swap } from "../../generated/templates/Well/Well";
+import { AddLiquidity, RemoveLiquidity, Swap } from "../../generated/templates/Well/Well";
 
 export function createAddLiquidityEvent(well: Address, account: Address, lpAmountOut: BigInt, tokenAmountsIn: BigInt[]): AddLiquidity {
     let event = changetype<AddLiquidity>(newMockEvent())
@@ -22,7 +22,20 @@ export function createApprovalEvent(): void {
 
 }
 
-export function createRemoveLiquidityEvent(): void {
+export function createRemoveLiquidityEvent(well: Address, account: Address, lpAmountIn: BigInt, tokenAmountsOut: BigInt[]): RemoveLiquidity {
+    let event = changetype<RemoveLiquidity>(newMockEvent())
+
+    event.address = well
+    event.transaction.from = account
+    event.parameters = new Array()
+
+    let param1 = new ethereum.EventParam("lpAmountOut", ethereum.Value.fromUnsignedBigInt(lpAmountIn))
+    let param2 = new ethereum.EventParam("tokenAmountsIn", ethereum.Value.fromUnsignedBigIntArray(tokenAmountsOut))
+
+    event.parameters.push(param1)
+    event.parameters.push(param2)
+
+    return event as RemoveLiquidity
 
 }
 

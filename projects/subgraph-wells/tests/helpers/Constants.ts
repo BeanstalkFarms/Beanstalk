@@ -4,6 +4,7 @@ export const WELL_ENTITY_TYPE = "Well"
 export const SWAP_ENTITY_TYPE = "Swap"
 export const ACCOUNT_ENTITY_TYPE = "Account"
 export const DEPOSIT_ENTITY_TYPE = "Deposit"
+export const WITHDRAW_ENTITY_TYPE = "Withdraw"
 
 export const WELL = Address.fromString('0x90767D012E17F8d1D2f7a257ECB951db703D7b3D')
 export const AQUIFER = Address.fromString('0xF6a8aD553b265405526030c2102fda2bDcdDC177')
