@@ -45,8 +45,8 @@ contract Account {
      * @dev `amount` and `bdv` are packed as uint128 to save gas.
      */
     struct Deposit {
-        uint128 amount;
-        uint128 bdv;
+        uint128 amount; // ───┐ 16
+        uint128 bdv; // ──────┘ 16
     }
 
     /**
@@ -64,41 +64,57 @@ contract Account {
      * @param roots The number of Roots a Farmer had when it started Raining.
      * @param plentyPerRoot The global Plenty Per Root index at the last time a Farmer updated their Silo.
      * @param plenty The balance of a Farmer's plenty. Plenty can be claimed directly for 3CRV.
-     * @dev Before Replant:
-     * 
-     * Slot 1 => `uint256 base;` Post Replant SOPs are denominated in plenty Tokens instead of base.
-     * Slot 2 => `uint256 basePerRoot;` Post Replant SOPs are denominated in plenty Tokens instead of base.
      */
     struct SeasonOfPlenty {
-        uint256 roots; // Slot 1
-        uint256 plentyPerRoot; // Slot 2
-        uint256 plenty; // Slot 3
+        uint256 roots;
+        uint256 plentyPerRoot;
+        uint256 plenty;
     }
     
     /**
      * @notice Defines the state object for a Farmer.
+     * @param field A Farmer's Field storage.
+     * @param bean A Farmer's Unripe Bean Deposits only as a result of Replant (previously held the V1 Silo Deposits/Withdrawals for Beans).
+     * @param lp A Farmer's Unripe LP Deposits as a result of Replant of BEAN:ETH Uniswap v2 LP Tokens (previously held the V1 Silo Deposits/Withdrawals for BEAN:ETH Uniswap v2 LP Tokens).
+     * @param s A Farmer's Silo storage.
+     * @param deprecated_votedUntil DEPRECATED – Replant removed on-chain governance including the ability to vote on BIPs.
+     * @param lastUpdate The Season in which the Farmer last updated their Silo.
+     * @param lastSop The last Season that a SOP occured at the time the Farmer last updated their Silo.
+     * @param lastRain The last Season that it started Raining at the time the Farmer last updated their Silo.
+     * @param deprecated_lastSIs DEPRECATED – In Silo V1.2, the Silo reward mechanism was updated to no longer need to store the number of the Supply Increases at the time the Farmer last updated their Silo.
+     * @param deprecated_proposedUntil DEPRECATED – Replant removed on-chain governance including the ability to propose BIPs.
+     * @param deprecated_sop DEPRECATED – Replant reset the Season of Plenty mechanism
+     * @param roots A Farmer's Root balance.
+     * @param deprecated_wrappedBeans DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
+     * @param deposits A Farmer's Silo Deposits stored as a map from Token address to Season of Deposit to Deposit.
+     * @param withdrawals A Farmer's Withdrawals from the Silo stored as a map from Token address to Season the Withdrawal becomes Claimable to Withdrawn amount of Tokens.
+     * @param sop A Farmer's Season of Plenty storage.
+     * @param depositAllowances A mapping of `spender => Silo token address => amount`.
+     * @param tokenAllowances Internal balance token allowances.
+     * @param depositPermitNonces A Farmer's current deposit permit nonce
+     * @param tokenPermitNonces A Farmer's current token permit nonce
      */
     struct State {
-        Field field; // A Farmer's Field storage.
-        AssetSilo bean; // A Farmer's Unripe Bean Deposits only as a result of Replant (previously held the V1 Silo Deposits/Withdrawals for Beans).
-        AssetSilo lp;  // A Farmer's Unripe LP Deposits as a result of Replant of BEAN:ETH Uniswap v2 LP Tokens (previously held the V1 Silo Deposits/Withdrawals for BEAN:ETH Uniswap v2 LP Tokens).
-        Silo s; // A Farmer's Silo storage.
-        uint32 votedUntil; // DEPRECATED – Replant removed on-chain governance including the ability to vote on BIPs.
-        uint32 lastUpdate; // The Season in which the Farmer last updated their Silo.
-        uint32 lastSop; // The last Season that a SOP occured at the time the Farmer last updated their Silo.
-        uint32 lastRain; // The last Season that it started Raining at the time the Farmer last updated their Silo.
-        uint32 lastSIs; // DEPRECATED – In Silo V1.2, the Silo reward mechanism was updated to no longer need to store the number of the Supply Increases at the time the Farmer last updated their Silo.
-        uint32 proposedUntil; // DEPRECATED – Replant removed on-chain governance including the ability to propose BIPs.
-        SeasonOfPlenty deprecated; // DEPRECATED – Replant reset the Season of Plenty mechanism
-        uint256 roots; // A Farmer's Root balance.
-        uint256 wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
-        mapping(address => mapping(uint32 => Deposit)) deposits; // A Farmer's Silo Deposits stored as a map from Token address to Season of Deposit to Deposit.
-        mapping(address => mapping(uint32 => uint256)) withdrawals; // A Farmer's Withdrawals from the Silo stored as a map from Token address to Season the Withdrawal becomes Claimable to Withdrawn amount of Tokens.
-        SeasonOfPlenty sop; // A Farmer's Season Of Plenty storage.
-        mapping(address => mapping(address => uint256)) depositAllowances; // Spender => Silo Token
-        mapping(address => mapping(IERC20 => uint256)) tokenAllowances; // Token allowances
-        uint256 depositPermitNonces; // A Farmer's current deposit permit nonce
-        uint256 tokenPermitNonces; // A Farmer's current token permit nonce
+        Field field;
+        AssetSilo bean;
+        AssetSilo lp;
+        Silo s;
+        uint32 deprecated_votedUntil; // ─────┐ 4
+        uint32 lastUpdate; //                 │ 4
+        uint32 lastSop; //                    │ 4
+        uint32 lastRain; //                   │ 4
+        uint32 deprecated_lastSIs; //         │ 4
+        uint32 deprecated_proposedUntil; // ──┘ 4
+        SeasonOfPlenty deprecated_sop;
+        uint256 roots;
+        uint256 deprecated_wrappedBeans;
+        mapping(address => mapping(uint32 => Deposit)) deposits;
+        mapping(address => mapping(uint32 => uint256)) withdrawals;
+        SeasonOfPlenty sop;
+        mapping(address => mapping(address => uint256)) depositAllowances;
+        mapping(address => mapping(IERC20 => uint256)) tokenAllowances;
+        uint256 depositPermitNonces;
+        uint256 tokenPermitNonces;
     }
 }
 
@@ -128,8 +144,8 @@ contract Storage {
      * @param harvestable The harvestable index; the total number of Pods that have ever been Harvestable. Included previously Harvested Beans.
      */
     struct Field {
-        uint128 soil;
-        uint128 beanSown;
+        uint128 soil; // ──────┐ 16
+        uint128 beanSown; // ──┘ 16
         uint256 pods;
         uint256 harvested;
         uint256 harvestable;
@@ -138,13 +154,15 @@ contract Storage {
     /**
      * @notice DEPRECATED: Contained data about each BIP (Beanstalk Improvement Proposal).
      * @dev Replant moved governance off-chain. This struct is left for future reference.
+     * 
+     * FIXME: pauseOrUnpause takes up an entire slot
      */
     struct Bip {
-        address proposer;
-        uint32 start;
-        uint32 period;
-        bool executed;
-        int pauseOrUnpause;
+        address proposer; // ───┐ 20
+        uint32 start; //        │ 4
+        uint32 period; //       │ 4
+        bool executed; // ──────┘ 1
+        int pauseOrUnpause; 
         uint128 timestamp;
         uint256 roots;
         uint256 endTotalRoots;
@@ -207,8 +225,8 @@ contract Storage {
      * @dev Currently refers to the time weighted average deltaB calculated from the BEAN:3CRV pool.
      */
     struct Oracle {
-        bool initialized;
-        uint32 startSeason;
+        bool initialized; // ────┐ 1
+        uint32 startSeason; // ──┘ 4
         uint256[2] balances;
         uint256 timestamp;
     }
@@ -242,23 +260,23 @@ contract Storage {
      * @param timestamp The timestamp of the start of the current Season.
      */
     struct Season {
-        uint32 current; // Slot 1
-        uint32 lastSop;
-        uint8 withdrawSeasons;
-        uint32 lastSopSeason;
-        uint32 rainStart;
-        bool raining;
-        bool fertilizing;
-        uint32 sunriseBlock;
-        bool abovePeg;
-        uint256 start; // Slot 2
-        uint256 period; // Slot 3
-        uint256 timestamp; // Slot 4
+        uint32 current; // ───────┐ 4  
+        uint32 lastSop; //        │ 4
+        uint8 withdrawSeasons; // │ 1
+        uint32 lastSopSeason; //  │ 4
+        uint32 rainStart; //      │ 4
+        bool raining; //          │ 1
+        bool fertilizing; //      │ 1
+        uint32 sunriseBlock; //   │ 4
+        bool abovePeg; // ────────┘ 1
+        uint256 start;
+        uint256 period;
+        uint256 timestamp;
     }
 
     /**
      * @notice System-level Weather state variables.
-     * @param deprecated 2 slots that were previously used
+     * @param deprecated 2 slots that were previously used.
      * @param lastDSoil Delta Soil; the number of Soil purchased last Season.
      * @param lastSowTime The number of seconds it for Soil to sell out last Season.
      * @param thisSowTime The number of seconds it for Soil to sell out this Season.
@@ -266,10 +284,10 @@ contract Storage {
      */
     struct Weather {
         uint256[2] deprecated;
-        uint128 lastDSoil;
-        uint32 lastSowTime;
-        uint32 thisSowTime;
-        uint32 t;
+        uint128 lastDSoil; // ───┐ 16
+        uint32 lastSowTime; //   │ 4
+        uint32 thisSowTime; //   │ 4
+        uint32 t; // ────────────┘ 4
     }
 
     /**
@@ -304,9 +322,9 @@ contract Storage {
      * the BDV of Tokens at the time of Deposit.
      */
     struct SiloSettings {
-        bytes4 selector;
-        uint32 seeds;
-        uint32 stalk;
+        bytes4 selector; // ───┐ 4
+        uint32 seeds; //       │ 4
+        uint32 stalk; // ──────┘ 4
     }
 
     /**
@@ -337,12 +355,53 @@ contract Storage {
  * @title AppStorage
  * @author Publius
  * @notice Defines the state object for Beanstalk.
+ * @param deprecated_index DEPRECATED: Was the index of the BEAN token in the BEAN:ETH Uniswap V2 pool.
+ * @param cases The 24 Weather cases (array has 32 items, but caseId = 3 (mod 4) are not cases)
+ * @param paused True if Beanstalk is Paused.
+ * @param pausedAt The timestamp at which Beanstalk was last paused.
+ * @param season Storage.Season
+ * @param c Storage.Contracts
+ * @param f Storage.Field
+ * @param g Storage.Governance
+ * @param co Storage.Oracle
+ * @param r Storage.Rain
+ * @param s Storage.Silo
+ * @param reentrantStatus An intra-transaction state variable to protect against reentrance.
+ * @param w Storage.Weather
+ * @param earnedBeans The number of Beans distributed to the Silo that have not yet been Deposited as a result of the Earn function being called.
+ * @param deprecated DEPRECATED - 14 slots that used to store state variables which have been deprecated through various updates. Storage slots can be left alone or reused.
+ * @param a mapping (address => Account.State)
+ * @param deprecated_bip0Start DEPRECATED - bip0Start was used to aid in a migration that occured alongside BIP-0.
+ * @param deprecated_hotFix3Start DEPRECATED - hotFix3Start was used to aid in a migration that occured alongside HOTFIX-3.
+ * @param fundraisers A mapping from Fundraiser ID to Storage.Fundraiser.
+ * @param fundraiserIndex The number of Fundraisers that have occured.
+ * @param deprecated_isBudget DEPRECATED - Budget Facet was removed in BIP-14. 
+ * @param podListings A mapping from Plot Index to the hash of the Pod Listing.
+ * @param podOrders A mapping from the hash of a Pod Order to the amount of Pods that the Pod Order is still willing to buy.
+ * @param siloBalances A mapping from Token address to Silo Balance storage (amount deposited and withdrawn).
+ * @param ss A mapping from Token address to Silo Settings for each Whitelisted Token. If a non-zero storage exists, a Token is whitelisted.
+ * @param deprecated2 DEPRECATED - 3 slots that used to store state variables which have been depreciated through various updates. Storage slots can be left alone or reused.
+ * @param sops A mapping from Season to Plenty Per Root (PPR) in that Season. Plenty Per Root is 0 if a Season of Plenty did not occur.
+ * @param internalTokenBalance A mapping from Farmer address to Token address to Internal Balance. It stores the amount of the Token that the Farmer has stored as an Internal Balance in Beanstalk.
+ * @param unripeClaimed True if a Farmer has Claimed an Unripe Token. A mapping from Farmer to Unripe Token to its Claim status.
+ * @param u Unripe Settings for a given Token address. The existence of a non-zero Unripe Settings implies that the token is an Unripe Token. The mapping is from Token address to Unripe Settings.
+ * @param fertilizer A mapping from Fertilizer Id to the supply of Fertilizer for each Id.
+ * @param nextFid A linked list of Fertilizer Ids ordered by Id number. Fertilizer Id is the Beans Per Fertilzer level at which the Fertilizer no longer receives Beans. Sort in order by which Fertilizer Id expires next.
+ * @param activeFertilizer The number of active Fertilizer.
+ * @param fertilizedIndex The total number of Fertilizer Beans.
+ * @param unfertilizedIndex The total number of Unfertilized Beans ever.
+ * @param fFirst The lowest active Fertilizer Id (start of linked list that is stored by nextFid). 
+ * @param fLast The highest active Fertilizer Id (end of linked list that is stored by nextFid). 
+ * @param bpf The cumulative Beans Per Fertilizer (bfp) minted over all Season.
+ * @param recapitalized The nubmer of USDC that has been recapitalized in the Barn Raise.
+ * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
+ * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
  */
 struct AppStorage {
-    uint8 index; // DEPRECATED: Was the index of the BEAN token in the BEAN:ETH Uniswap V2 pool.
-    int8[32] cases; // The 24 Weather cases (array has 32 items, but caseId = 3 (mod 4) are not cases)
-    bool paused; // True if Beanstalk is Paused.
-    uint128 pausedAt; // The timestamp at which Beanstalk was last paused. 
+    uint8 deprecated_index;
+    int8[32] cases; 
+    bool paused; // ────────┐ 1
+    uint128 pausedAt; // ───┘ 16
     Storage.Season season;
     Storage.Contracts c;
     Storage.Field f;
@@ -350,43 +409,43 @@ struct AppStorage {
     Storage.Oracle co;
     Storage.Rain r;
     Storage.Silo s;
-    uint256 reentrantStatus; // An intra-transaction state variable to protect against reentrance.
+    uint256 reentrantStatus;
     Storage.Weather w;
 
-    uint256 earnedBeans; // The number of Beans distributed to the Silo that have not yet been Deposited as a result of the Earn function being called.
-    uint256[14] deprecated; // DEPRECATED - 14 slots that used to store state variables which have been deprecated through various updates. Storage slots can be left alone or reused.
-    mapping (address => Account.State) a; // A mapping from Farmer address to Account state.
-    uint32 bip0Start; // DEPRECATED - bip0Start was used to aid in a migration that occured alongside BIP-0.
-    uint32 hotFix3Start; // DEPRECATED - hotFix3Start was used to aid in a migration that occured alongside HOTFIX-3.
-    mapping (uint32 => Storage.Fundraiser) fundraisers; // A mapping from Fundraiser Id to Fundraiser storage.
-    uint32 fundraiserIndex; // The number of Fundraisers that have occured.
-    mapping (address => bool) isBudget; // DEPRECATED - Budget Facet was removed in BIP-14. 
-    mapping(uint256 => bytes32) podListings; // A mapping from Plot Index to the hash of the Pod Listing.
-    mapping(bytes32 => uint256) podOrders; // A mapping from the hash of a Pod Order to the amount of Pods that the Pod Order is still willing to buy.
-    mapping(address => Storage.AssetSilo) siloBalances; // A mapping from Token address to Silo Balance storage (amount deposited and withdrawn).
-    mapping(address => Storage.SiloSettings) ss; // A mapping from Token address to Silo Settings for each Whitelisted Token. If a non-zero storage exists, a Token is whitelisted.
-    uint256[3] depreciated2; // DEPRECATED - 3 slots that used to store state variables which have been depreciated through various updates. Storage slots can be left alone or reused.
+    uint256 earnedBeans;
+    uint256[14] deprecated;
+    mapping (address => Account.State) a;
+    uint32 deprecated_bip0Start; // ─────┐ 4
+    uint32 deprecated_hotFix3Start; // ──┘ 4
+    mapping (uint32 => Storage.Fundraiser) fundraisers;
+    uint32 fundraiserIndex;
+    mapping (address => bool) deprecated_isBudget;
+    mapping(uint256 => bytes32) podListings;
+    mapping(bytes32 => uint256) podOrders;
+    mapping(address => Storage.AssetSilo) siloBalances;
+    mapping(address => Storage.SiloSettings) ss;
+    uint256[3] deprecated2;
 
     // New Sops
-    mapping (uint32 => uint256) sops; // A mapping from Season to Plenty Per Root (PPR) in that Season. Plenty Per Root is 0 if a Season of Plenty did not occur.
+    mapping (uint32 => uint256) sops;
 
     // Internal Balances
-    mapping(address => mapping(IERC20 => uint256)) internalTokenBalance; // A mapping from Farmer address to Token address to Internal Balance. It stores the amount of the Token that the Farmer has stored as an Internal Balance in Beanstalk.
+    mapping(address => mapping(IERC20 => uint256)) internalTokenBalance;
 
     // Unripe
-    mapping(address => mapping(address => bool)) unripeClaimed; // True if a Farmer has Claimed an Unripe Token. A mapping from Farmer to Unripe Token to its Claim status.
-    mapping(address => Storage.UnripeSettings) u; // Unripe Settings for a given Token address. The existence of a non-zero Unripe Settings implies that the token is an Unripe Token. The mapping is from Token address to Unripe Settings.
+    mapping(address => mapping(address => bool)) unripeClaimed;
+    mapping(address => Storage.UnripeSettings) u;
 
     // Fertilizer
-    mapping(uint128 => uint256) fertilizer; // A mapping from Fertilizer Id to the supply of Fertilizer for each Id.
-    mapping(uint128 => uint128) nextFid; // A linked list of Fertilizer Ids ordered by Id number. Fertilizer Id is the Beans Per Fertilzer level at which the Fertilizer no longer receives Beans. Sort in order by which Fertilizer Id expires next.
-    uint256 activeFertilizer; // The number of active Fertilizer.
-    uint256 fertilizedIndex; // The total number of Fertilizer Beans.
-    uint256 unfertilizedIndex; // The total number of Unfertilized Beans ever.
-    uint128 fFirst; // The lowest active Fertilizer Id (start of linked list that is stored by nextFid). 
-    uint128 fLast; // The highest active Fertilizer Id (end of linked list that is stored by nextFid). 
-    uint128 bpf; // The cumulative Beans Per Fertilizer (bfp) minted over all Season.
-    uint256 recapitalized; // The nubmer of USDC that has been recapitalized in the Barn Raise.
-    uint256 isFarm; // Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
-    address ownerCandidate; // Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
+    mapping(uint128 => uint256) fertilizer;
+    mapping(uint128 => uint128) nextFid;
+    uint256 activeFertilizer;
+    uint256 fertilizedIndex;
+    uint256 unfertilizedIndex;
+    uint128 fFirst; // ───┐ 16
+    uint128 fLast; // ────┘ 16
+    uint128 bpf;
+    uint256 recapitalized;
+    uint256 isFarm;
+    address ownerCandidate;
 }
