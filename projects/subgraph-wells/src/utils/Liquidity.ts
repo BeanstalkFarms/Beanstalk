@@ -1,6 +1,7 @@
+import { BigInt } from "@graphprotocol/graph-ts";
 import { Deposit, Withdraw } from "../../generated/schema";
-import { AddLiquidity, RemoveLiquidity } from "../../generated/templates/Well/Well";
-import { ZERO_BD } from "./Decimals";
+import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken } from "../../generated/templates/Well/Well";
+import { ZERO_BD, ZERO_BI } from "./Decimals";
 import { loadWell } from "./Well";
 
 export function recordAddLiquidityEvent(event: AddLiquidity): void {
@@ -45,6 +46,29 @@ export function recordRemoveLiquidityEvent(event: RemoveLiquidity): void {
     withdraw.liquidity = event.params.lpAmountIn
     withdraw.inputTokens = well.inputTokens
     withdraw.inputTokenAmounts = event.params.tokenAmountsOut
+    withdraw.amountUSD = ZERO_BD
+    withdraw.save()
+}
+
+export function recordRemoveLiquidityOneEvent(event: RemoveLiquidityOneToken, tokenAmounts: BigInt[]): void {
+    let id = event.transaction.hash.toHexString() + '-' + event.logIndex.toString()
+    let withdraw = new Withdraw(id)
+    let receipt = event.receipt
+    let well = loadWell(event.address)
+
+    withdraw.hash = event.transaction.hash
+    withdraw.nonce = event.transaction.nonce
+    withdraw.logIndex = event.logIndex.toI32()
+    withdraw.gasLimit = event.transaction.gasLimit
+    if (receipt !== null) { withdraw.gasUsed = receipt.gasUsed }
+    withdraw.gasPrice = event.transaction.gasPrice
+    withdraw.account = event.transaction.from
+    withdraw.well = event.address
+    withdraw.blockNumber = event.block.number
+    withdraw.timestamp = event.block.timestamp
+    withdraw.liquidity = event.params.lpAmountIn
+    withdraw.inputTokens = well.inputTokens
+    withdraw.inputTokenAmounts = tokenAmounts
     withdraw.amountUSD = ZERO_BD
     withdraw.save()
 }
