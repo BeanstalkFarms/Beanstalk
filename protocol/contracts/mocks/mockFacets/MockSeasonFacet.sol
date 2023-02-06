@@ -31,6 +31,10 @@ contract MockSeasonFacet is SeasonFacet {
         reentrancyGuardTest();
     }
 
+    function setYieldE(uint256 t) public {
+        s.w.t = uint32(t);
+    }
+
     function siloSunrise(uint256 amount) public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
@@ -90,6 +94,14 @@ contract MockSeasonFacet is SeasonFacet {
         stepSun(deltaB, caseId); // Check
     }
 
+    function sunTemperatureSunrise(int256 deltaB, uint256 caseId, uint32 t) public {
+        require(!paused(), "Season: Paused.");
+        s.season.current += 1;
+        s.w.t = t;
+        s.season.sunriseBlock = uint32(block.number);
+        stepSun(deltaB, caseId); // Check
+    }
+
     function lightSunrise() public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
@@ -124,12 +136,12 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.sunriseBlock = uint32(block.number);
     }
 
-    function setYieldE(uint32 number) public {
-        s.w.yield = number;
+    function setMaxTempE(uint32 number) public {
+        s.w.t = number;
     }
 
-    function setAbovePegE(bool num) public {
-        s.season.abovePeg = num;
+    function setAbovePegE(bool peg) public {
+        s.season.abovePeg = peg;
     }
 
     function setLastDSoilE(uint128 number) public {
@@ -137,7 +149,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function setNextSowTimeE(uint32 time) public {
-        s.w.nextSowTime = time;
+        s.w.thisSowTime = time;
     }
 
     function setLastSowTimeE(uint32 number) public {
@@ -196,7 +208,7 @@ contract MockSeasonFacet is SeasonFacet {
         delete s.s;
         delete s.w;
         s.w.lastSowTime = type(uint32).max;
-        s.w.nextSowTime = type(uint32).max;
+        s.w.thisSowTime = type(uint32).max;
         delete s.g;
         delete s.r;
         delete s.co;
@@ -282,7 +294,11 @@ contract MockSeasonFacet is SeasonFacet {
     function lastSowTime() external view returns (uint256) {
         return uint256(s.w.lastSowTime);
     }
-    function nextSowTime() external view returns (uint256) {
-        return uint256(s.w.nextSowTime);
+    function thisSowTime() external view returns (uint256) {
+        return uint256(s.w.thisSowTime);
+    }
+
+    function getT() external view returns (uint256) {
+        return uint256(s.w.t);
     }
 }

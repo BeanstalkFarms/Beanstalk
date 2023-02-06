@@ -43,15 +43,6 @@ contract Weather is Sun {
         return s.r;
     }
 
-    /// @dev {FieldFacet.yield} has precision 1e8, but maxYield has precision 1e2.
-    /// i.e.:
-    /// maxYield() = 6674   => 6674% temperature = 66.74
-    /// yield()    = 1e6    at t = 0
-    ///            = 6674e6 at t >> 0
-    function maxYield() public view returns (uint32) {
-        return s.w.yield;
-    }
-
     function plentyPerRoot(uint32 season) external view returns (uint256) {
         return s.sops[season];
     }
@@ -63,7 +54,7 @@ contract Weather is Sun {
     function stepWeather(int256 deltaB) internal returns (uint256 caseId) {
         uint256 beanSupply = C.bean().totalSupply();
         if (beanSupply == 0) {
-            s.w.yield = 1;
+            s.w.t = 1;
             return 8; // Reasonably low
         }
 
@@ -80,21 +71,21 @@ contract Weather is Sun {
         Decimal.D256 memory deltaPodDemand;
 
         // If Sow'd all Soil
-        if (s.w.nextSowTime < type(uint32).max) {
+        if (s.w.thisSowTime < type(uint32).max) {
             if (
                 s.w.lastSowTime == type(uint32).max || // Didn't Sow all last Season
-                s.w.nextSowTime < SOWTIMEDEMAND || // Sow'd all instantly this Season
+                s.w.thisSowTime < SOWTIMEDEMAND || // Sow'd all instantly this Season
                 (s.w.lastSowTime > C.getSteadySowTime() &&
-                    s.w.nextSowTime < s.w.lastSowTime.sub(C.getSteadySowTime())) // Sow'd all faster
+                    s.w.thisSowTime < s.w.lastSowTime.sub(C.getSteadySowTime())) // Sow'd all faster
             ) deltaPodDemand = Decimal.from(1e18);
             else if (
-                s.w.nextSowTime <= s.w.lastSowTime.add(C.getSteadySowTime())
+                s.w.thisSowTime <= s.w.lastSowTime.add(C.getSteadySowTime())
             )
                 // Sow'd all in same time
                 deltaPodDemand = Decimal.one();
             else deltaPodDemand = Decimal.zero();
-            s.w.lastSowTime = s.w.nextSowTime;
-            s.w.nextSowTime = type(uint32).max;
+            s.w.lastSowTime = s.w.thisSowTime;
+            s.w.thisSowTime = type(uint32).max;
             // If soil didn't sell out
         } else {
             uint256 lastDSoil = s.w.lastDSoil;
@@ -135,18 +126,22 @@ contract Weather is Sun {
         handleRain(caseId);
     }
 
-    // FIXME: check if recalling maxYield() is extra gas
     function changeWeather(uint256 caseId) private {
         int8 change = s.cases[caseId];
+        uint32 t = s.w.t;
         if (change < 0) {
-            if (maxYield() <= (uint32(-change))) {
-                // if (change < 0 && maxYield() <= uint32(-change)),
-                // then 0 <= maxYield() <= type(int8).max because change is an int8.
-                // Thus, downcasting maxYield() to an int8 will not cause overflow.
-                change = 1 - int8(maxYield());
-                s.w.yield = 1;
-            } else s.w.yield = maxYield() - (uint32(-change));
-        } else s.w.yield = maxYield() + (uint32(change));
+            if (t <= (uint32(-change))) {
+                // if (change < 0 && t <= uint32(-change)),
+                // then 0 <= t <= type(int8).max because change is an int8.
+                // Thus, downcasting t to an int8 will not cause overflow.
+                change = 1 - int8(t);
+                s.w.t = 1;
+            } else {
+                s.w.t = t - (uint32(-change));
+            }
+        } else {
+            s.w.t = t + (uint32(change));
+        }
 
         emit WeatherChange(s.season.current, caseId, change);
     }

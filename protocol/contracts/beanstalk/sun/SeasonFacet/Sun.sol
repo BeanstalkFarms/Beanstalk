@@ -32,7 +32,7 @@ contract Sun is Oracle {
     function stepSun(int256 deltaB, uint256 caseId) internal {
         if (deltaB > 0) {
             uint256 newHarvestable = rewardBeans(uint256(deltaB));
-            setSoilAndPeasAbovePeg(newHarvestable, caseId);
+            setSoilAbovePeg(newHarvestable, caseId);
             s.season.abovePeg = true;
         } else {
             setSoil(uint256(-deltaB));
@@ -117,10 +117,11 @@ contract Sun is Oracle {
             .add(amount);
     }
 
-    function setSoilAndPeasAbovePeg(uint256 newHarvestable, uint256 caseId) internal {
-        if (caseId >= 24) newHarvestable = newHarvestable.mul(C.soilCoefficientHigh()).div(C.precision()); // high podrate
-        else if (caseId < 8) newHarvestable = newHarvestable.mul(C.soilCoefficientLow()).div(C.precision()); // low podrate
-        setSoil(newHarvestable);
+    function setSoilAbovePeg(uint256 newHarvestable, uint256 caseId) internal {
+        uint256 newSoil = newHarvestable.mul(100).div(100 + s.w.t);
+        if (caseId >= 24) newSoil = newSoil.mul(C.soilCoefficientHigh()).div(C.precision()); // high podrate
+        else if (caseId < 8) newSoil = newSoil.mul(C.soilCoefficientLow()).div(C.precision()); // low podrate
+        setSoil(newSoil);
     }
 
     function setSoil(uint256 amount) internal {
