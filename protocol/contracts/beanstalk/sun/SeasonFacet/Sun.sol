@@ -175,6 +175,9 @@ contract Sun is Oracle {
      * @dev When above peg, Beanstalk wants to gauge demand for Soil. Here it
      * issues the amount of Soil that would result in the same number of Pods
      * as became Harvestable during the last Season.
+     * 
+     * When the Pod Rate is high, Beanstalk issues less Soil.
+     * When the Pod Rate is low, Beanstalk issues more Soil.
      */
     function setSoilAbovePeg(uint256 newHarvestable, uint256 caseId) internal {
         uint256 newSoil = newHarvestable.mul(100).div(100 + s.w.t);

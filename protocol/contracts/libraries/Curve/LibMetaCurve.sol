@@ -40,7 +40,7 @@ library LibMetaCurve {
     function getXP(
         uint256[2] memory balances,
         uint256 padding
-    ) internal view returns (uint256[2] memory xp) {
+    ) internal view returns (uint256[2] memory) {
         return LibCurve.getXP(
             balances,
             padding,
