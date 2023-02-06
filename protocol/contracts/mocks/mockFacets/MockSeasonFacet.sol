@@ -91,7 +91,7 @@ contract MockSeasonFacet is SeasonFacet {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
-        stepSun(deltaB, caseId); // Check
+        stepSun(deltaB, caseId);
     }
 
     function sunTemperatureSunrise(int256 deltaB, uint256 caseId, uint32 t) public {
@@ -99,7 +99,7 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.current += 1;
         s.w.t = t;
         s.season.sunriseBlock = uint32(block.number);
-        stepSun(deltaB, caseId); // Check
+        stepSun(deltaB, caseId);
     }
 
     function lightSunrise() public {
