@@ -2,10 +2,11 @@ import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { newMockEvent } from "matchstick-as/assembly/index";
 import { Swap } from "../../generated/templates/Well/Well";
 
-export function createSwapEvent(well: Address, fromToken: Address, toToken: Address, amountIn: BigInt, amountOut: BigInt): Swap {
+export function createSwapEvent(well: Address, account: Address, fromToken: Address, toToken: Address, amountIn: BigInt, amountOut: BigInt): Swap {
     let event = changetype<Swap>(newMockEvent())
 
     event.address = well
+    event.transaction.from = account
     event.parameters = new Array()
 
     let param1 = new ethereum.EventParam("fromToken", ethereum.Value.fromAddress(fromToken))
