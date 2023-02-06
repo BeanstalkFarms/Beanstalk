@@ -31,6 +31,10 @@ describe("Well Entity: Single Event Tests", () => {
             assert.bigIntEquals(BEAN_SWAP_AMOUNT, endingBalances[0])
             assert.bigIntEquals(WETH_SWAP_AMOUNT, endingBalances[1])
         })
+        test("Liquidity Token balance", () => {
+            createDefaultAddLiquidity()
+            assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), 'totalLiquidity', WELL_LP_AMOUNT.toString())
+        })
     })
 
     describe("Swap", () => {
