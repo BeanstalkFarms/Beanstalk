@@ -1,9 +1,9 @@
 import { AddLiquidity, Approval, RemoveLiquidity, RemoveLiquidityOneToken, Swap, Transfer } from "../generated/templates/Well/Well";
 import { loadOrCreateAccount } from "./utils/Account";
 import { ZERO_BI } from "./utils/Decimals";
-import { recordAddLiquidityEvent, recordRemoveLiquidityEvent } from "./utils/Liquidity";
+import { recordAddLiquidityEvent, recordRemoveLiquidityEvent, recordRemoveLiquidityOneEvent } from "./utils/Liquidity";
 import { recordSwapEvent } from "./utils/Swap";
-import { incrementWellDeposit, incrementWellSwap, incrementWellWithdraw, updateWellLiquidityTokenBalance, updateWellTokenBalances, updateWellVolumes } from "./utils/Well";
+import { incrementWellDeposit, incrementWellSwap, incrementWellWithdraw, loadWell, updateWellLiquidityTokenBalance, updateWellTokenBalances, updateWellVolumes } from "./utils/Well";
 
 export function handleAddLiquidity(event: AddLiquidity): void {
 
@@ -41,6 +41,28 @@ export function handleRemoveLiquidity(event: RemoveLiquidity): void {
 }
 
 export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): void {
+
+    // Pre-process amount out into an indexed array for the well's input tokens.
+
+    let well = loadWell(event.address)
+    let indexedBalances = [ZERO_BI, ZERO_BI]
+
+    for (let i = 2; i < well.inputTokens.length; i++)  indexedBalances.push(ZERO_BI)
+
+    indexedBalances[well.inputTokens.indexOf(event.params.tokenOut)] = indexedBalances[well.inputTokens.indexOf(event.params.tokenOut)].plus(event.params.tokenAmountOut)
+
+    loadOrCreateAccount(event.transaction.from)
+
+    recordRemoveLiquidityOneEvent(event, indexedBalances)
+
+    // Flip to negative for updating well balances
+    for (let i = 0; i < indexedBalances.length; i++) indexedBalances[i] = ZERO_BI.minus(indexedBalances[i])
+
+    updateWellTokenBalances(event.address, indexedBalances)
+
+    updateWellLiquidityTokenBalance(event.address, ZERO_BI.minus(event.params.lpAmountIn))
+
+    incrementWellWithdraw(event.address)
 
 }
 

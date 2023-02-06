@@ -5,7 +5,7 @@ import { loadWell } from "../src/utils/Well";
 import { ACCOUNT_ENTITY_TYPE, BEAN_SWAP_AMOUNT, DEPOSIT_ENTITY_TYPE, SWAP_ACCOUNT, SWAP_ENTITY_TYPE, WELL, WELL_ENTITY_TYPE, WELL_LP_AMOUNT, WETH_SWAP_AMOUNT, WITHDRAW_ENTITY_TYPE } from "./helpers/Constants";
 import { boreDefaultWell } from "./helpers/Aquifer";
 import { createDefaultSwap } from "./helpers/Swap";
-import { createDefaultAddLiquidity, createDefaultRemoveLiquidity, loadWithdraw } from "./helpers/Liquidity";
+import { createDefaultAddLiquidity, createDefaultRemoveLiquidity, createRemoveLiquidityOneBean, createRemoveLiquidityOneWeth, loadWithdraw } from "./helpers/Liquidity";
 import { loadDeposit } from "./helpers/Liquidity";
 
 describe("Well Entity: Single Event Tests", () => {
@@ -53,6 +53,46 @@ describe("Well Entity: Single Event Tests", () => {
         })
         test("Liquidity Token balance", () => {
             createDefaultRemoveLiquidity()
+            assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), 'totalLiquidity', ZERO_BI.minus(WELL_LP_AMOUNT).toString())
+        })
+    })
+
+    describe("Remove Liquidity One - Bean", () => {
+        test("Withdraw counter incremented", () => {
+            createRemoveLiquidityOneBean()
+            assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), 'cumulativeWithdrawCount', '1')
+        })
+        test("Token Balances updated", () => {
+            createRemoveLiquidityOneBean()
+
+            let updatedStore = loadWell(WELL)
+            let endingBalances = updatedStore.inputTokenBalances
+
+            assert.bigIntEquals(ZERO_BI.minus(BEAN_SWAP_AMOUNT), endingBalances[0])
+            assert.bigIntEquals(ZERO_BI, endingBalances[1])
+        })
+        test("Liquidity Token balance", () => {
+            createRemoveLiquidityOneBean()
+            assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), 'totalLiquidity', ZERO_BI.minus(WELL_LP_AMOUNT).toString())
+        })
+    })
+
+    describe("Remove Liquidity One - WETH", () => {
+        test("Withdraw counter incremented", () => {
+            createRemoveLiquidityOneWeth()
+            assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), 'cumulativeWithdrawCount', '1')
+        })
+        test("Token Balances updated", () => {
+            createRemoveLiquidityOneWeth()
+
+            let updatedStore = loadWell(WELL)
+            let endingBalances = updatedStore.inputTokenBalances
+
+            assert.bigIntEquals(ZERO_BI, endingBalances[0])
+            assert.bigIntEquals(ZERO_BI.minus(WETH_SWAP_AMOUNT), endingBalances[1])
+        })
+        test("Liquidity Token balance", () => {
+            createRemoveLiquidityOneWeth()
             assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), 'totalLiquidity', ZERO_BI.minus(WELL_LP_AMOUNT).toString())
         })
     })
@@ -211,5 +251,50 @@ describe("RemoveLiquidity => Withdraw Entity", () => {
 
         assert.bigIntEquals(BEAN_SWAP_AMOUNT, inputTokenAmounts[0])
         assert.bigIntEquals(WETH_SWAP_AMOUNT, inputTokenAmounts[1])
+    })
+})
+
+describe("RemoveLiquidityOneToken => Withdraw Entity", () => {
+    beforeEach(() => {
+        boreDefaultWell()
+    })
+
+    afterEach(() => {
+        clearStore()
+    })
+
+    test("Withdraw entity exists", () => {
+        let id = createRemoveLiquidityOneBean()
+        assert.fieldEquals(WITHDRAW_ENTITY_TYPE, id, 'id', id)
+    })
+    test("Account entity exists", () => {
+        let id = createRemoveLiquidityOneBean()
+        assert.fieldEquals(ACCOUNT_ENTITY_TYPE, SWAP_ACCOUNT.toHexString(), 'id', SWAP_ACCOUNT.toHexString())
+    })
+    test("Well value", () => {
+        let id = createRemoveLiquidityOneBean()
+        assert.fieldEquals(WITHDRAW_ENTITY_TYPE, id, 'well', WELL.toHexString())
+    })
+    test("lpAmountIn => liquidity value", () => {
+        let id = createRemoveLiquidityOneBean()
+        assert.fieldEquals(WITHDRAW_ENTITY_TYPE, id, 'liquidity', WELL_LP_AMOUNT.toString())
+    })
+    test("inputTokens value", () => {
+        let id = createRemoveLiquidityOneBean()
+
+        let updatedStore = loadWithdraw(id)
+        let inputTokens = updatedStore.inputTokens
+
+        assert.bytesEquals(BEAN_ERC20, inputTokens[0])
+        assert.bytesEquals(WETH, inputTokens[1])
+    })
+    test("inputTokenAmounts value", () => {
+        let id = createRemoveLiquidityOneBean()
+
+        let updatedStore = loadWithdraw(id)
+        let inputTokenAmounts = updatedStore.inputTokenAmounts
+
+        assert.bigIntEquals(BEAN_SWAP_AMOUNT, inputTokenAmounts[0])
+        assert.bigIntEquals(ZERO_BI, inputTokenAmounts[1])
     })
 })
