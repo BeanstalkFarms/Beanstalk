@@ -9,6 +9,7 @@ export { Token, NativeToken, ERC20Token, BeanstalkToken } from "src/classes/Toke
 export { TokenValue } from "src/classes/TokenValue";
 export { Workflow } from "src/classes/Workflow";
 export { DecimalBigNumber } from "src/classes/DecimalBigNumber";
+export { SwapOperation } from 'src/lib/swap/SwapOperation';
 
 // Modules
 export { FarmWorkflow, FarmFromMode, FarmToMode } from "src/lib/farm";

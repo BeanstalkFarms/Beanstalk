@@ -12,11 +12,11 @@ import BigNumber from 'bignumber.js';
 import Token from '~/classes/Token';
 import { displayBN, displayFullBN, displayTokenAmount } from '~/util';
 import { FarmerBalances } from '~/state/farmer/balances';
-import NumberFormatInput from './NumberFormatInput';
-import FieldWrapper from './FieldWrapper';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import { ZERO_BN } from '~/constants';
+import FieldWrapper from './FieldWrapper';
+import NumberFormatInput from './NumberFormatInput';
 
 export type TokenInputCustomProps = {
   /**
