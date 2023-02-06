@@ -1,8 +1,9 @@
 import { AddLiquidity, Approval, RemoveLiquidity, RemoveLiquidityOneToken, Swap, Transfer } from "../generated/templates/Well/Well";
 import { loadOrCreateAccount } from "./utils/Account";
-import { recordAddLiquidityEvent } from "./utils/Liquidity";
+import { ZERO_BI } from "./utils/Decimals";
+import { recordAddLiquidityEvent, recordRemoveLiquidityEvent } from "./utils/Liquidity";
 import { recordSwapEvent } from "./utils/Swap";
-import { incrementWellDeposit, incrementWellSwap, updateWellLiquidityTokenBalance, updateWellTokenBalances, updateWellVolumes } from "./utils/Well";
+import { incrementWellDeposit, incrementWellSwap, incrementWellWithdraw, updateWellLiquidityTokenBalance, updateWellTokenBalances, updateWellVolumes } from "./utils/Well";
 
 export function handleAddLiquidity(event: AddLiquidity): void {
 
@@ -24,6 +25,19 @@ export function handleApproval(event: Approval): void {
 
 export function handleRemoveLiquidity(event: RemoveLiquidity): void {
 
+    loadOrCreateAccount(event.transaction.from)
+
+    recordRemoveLiquidityEvent(event)
+
+    // Treat token balances as negative since we are removing liquidity
+    let balances = event.params.tokenAmountsOut
+    for (let i = 0; i < balances.length; i++) balances[i] = ZERO_BI.minus(balances[i])
+
+    updateWellTokenBalances(event.address, balances)
+
+    updateWellLiquidityTokenBalance(event.address, ZERO_BI.minus(event.params.lpAmountIn))
+
+    incrementWellWithdraw(event.address)
 }
 
 export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): void {
