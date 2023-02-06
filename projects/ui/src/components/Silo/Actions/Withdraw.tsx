@@ -298,34 +298,12 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
       if (seasons.length === 0) {
         throw new Error('Malformatted crates.');
       } else if (seasons.length === 1) {
-        if (farmerSilo.beans.earned.gt(0)) {
-          console.debug('[silo/withdraw] strategy: plant + withdrawDeposit');
-          call = beanstalk.farm([
-            beanstalk.interface.encodeFunctionData('plant'),
-            beanstalk.interface.encodeFunctionData('withdrawDeposit', [
-              token.address,
-              seasons[0],
-              amounts[0],
-            ])
-          ]);
-        } else {
           console.debug('[silo/withdraw] strategy: withdrawDeposit');
           call = beanstalk.withdrawDeposit(
             token.address,
             seasons[0],
             amounts[0],
           );
-        }
-      } else if (farmerSilo.beans.earned.gt(0)) {
-        console.debug('[silo/withdraw] strategy: plant + withdrawDeposits');
-        call = beanstalk.farm([
-          beanstalk.interface.encodeFunctionData('plant'),
-          beanstalk.interface.encodeFunctionData('withdrawDeposits', [
-            token.address,
-            seasons,
-            amounts,
-          ])
-        ]);
       } else {
         console.debug('[silo/withdraw] strategy: withdrawDeposits');
         call = beanstalk.withdrawDeposits(
