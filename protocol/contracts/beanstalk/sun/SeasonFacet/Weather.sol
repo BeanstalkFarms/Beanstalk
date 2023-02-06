@@ -99,19 +99,19 @@ contract Weather is Sun {
     
         Decimal.D256 memory deltaPodDemand;
 
-        // `s.w.nextSowTime` is set to the number of seconds in it took for 
+        // `s.w.thisSowTime` is set to the number of seconds in it took for 
         // Soil to sell out during the current Season. If Soil didn't sell out,
         // it remains `type(uint32).max`.
-        if (s.w.nextSowTime < type(uint32).max) {
+        if (s.w.thisSowTime < type(uint32).max) {
             if (
                 s.w.lastSowTime == type(uint32).max || // Didn't Sow all last Season
-                s.w.nextSowTime < SOW_TIME_DEMAND_INCR || // Sow'd all instantly this Season
+                s.w.thisSowTime < SOW_TIME_DEMAND_INCR || // Sow'd all instantly this Season
                 (s.w.lastSowTime > C.getSteadySowTime() &&
-                    s.w.nextSowTime < s.w.lastSowTime.sub(C.getSteadySowTime())) // Sow'd all faster
+                    s.w.thisSowTime < s.w.lastSowTime.sub(C.getSteadySowTime())) // Sow'd all faster
             ) {
                 deltaPodDemand = Decimal.from(1e18);
             } else if (
-                s.w.nextSowTime <= s.w.lastSowTime.add(C.getSteadySowTime())
+                s.w.thisSowTime <= s.w.lastSowTime.add(C.getSteadySowTime())
             ) {
                 // Sow'd all in same time
                 deltaPodDemand = Decimal.one();
@@ -119,8 +119,8 @@ contract Weather is Sun {
                 deltaPodDemand = Decimal.zero();
             }
 
-            s.w.lastSowTime = s.w.nextSowTime;  // Overwrite last Season
-            s.w.nextSowTime = type(uint32).max; // Reset for next Season
+            s.w.lastSowTime = s.w.thisSowTime;  // Overwrite last Season
+            s.w.thisSowTime = type(uint32).max; // Reset for next Season
         } 
 
         // Soil didn't sell out

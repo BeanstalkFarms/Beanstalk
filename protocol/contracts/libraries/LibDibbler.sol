@@ -123,27 +123,27 @@ library LibDibbler {
      * example, if all Soil is Sown in 1 second vs. 1 hour, Beanstalk assumes 
      * that the former shows more demand than the latter.
      *
-     * `nextSowTime` represents the target time of the first Sow for the *next*
+     * `thisSowTime` represents the target time of the first Sow for the *next*
      * Season to be considered increasing in demand.
      * 
-     * `nextSowTime` should only be updated if:
+     * `thisSowTime` should only be updated if:
      *  (a) there is less than 1 Soil available after this Sow, and 
      *  (b) it has not yet been updated this Season.
      * 
      * Note that:
      *  - `s.f.soil` was decremented in the upstream {sow} function.
-     *  - `s.w.nextSowTime` is set to `type(uint32).max` during {sunrise}.
+     *  - `s.w.thisSowTime` is set to `type(uint32).max` during {sunrise}.
      */
     function _saveSowTime() private {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // s.f.soil is now the soil remaining after this Sow.
-        if (s.f.soil > SOIL_SOLD_OUT_THRESHOLD || s.w.nextSowTime < type(uint32).max) {
-            // haven't sold enough soil, or already set nextSowTime for this Season.
+        if (s.f.soil > SOIL_SOLD_OUT_THRESHOLD || s.w.thisSowTime < type(uint32).max) {
+            // haven't sold enough soil, or already set thisSowTime for this Season.
             return;
         }
 
-        s.w.nextSowTime = uint32(block.timestamp.sub(s.season.timestamp));
+        s.w.thisSowTime = uint32(block.timestamp.sub(s.season.timestamp));
     }
 
     //////////////////// TEMPERATURE ////////////////////

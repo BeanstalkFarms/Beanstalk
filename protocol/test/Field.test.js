@@ -243,34 +243,34 @@
 //   })
 
 //   describe("complex DPD", async function () {
-//     it("Does not set nextSowTime if Soil > 1", async function () {
+//     it("Does not set thisSowTime if Soil > 1", async function () {
 //       this.season.setSoilE(to6('3'));
 //       await this.field.connect(user).sow(to6('1'), EXTERNAL)
 //       const weather = await this.season.weather()
-//       expect(weather.nextSowTime).to.be.equal(parseInt(MAX_UINT32))
+//       expect(weather.thisSowTime).to.be.equal(parseInt(MAX_UINT32))
 //     })
 
-//     it("Does set nextSowTime if Soil = 1", async function () {
+//     it("Does set thisSowTime if Soil = 1", async function () {
 //       this.season.setSoilE(to6('1'));
 //       await this.field.connect(user).sow(to6('1'), EXTERNAL)
 //       const weather = await this.season.weather()
-//       expect(weather.nextSowTime).to.be.not.equal(parseInt(MAX_UINT32))
+//       expect(weather.thisSowTime).to.be.not.equal(parseInt(MAX_UINT32))
 //     })
 
-//     it("Does set nextSowTime if Soil < 1", async function () {
+//     it("Does set thisSowTime if Soil < 1", async function () {
 //       this.season.setSoilE(to6('1.5'));
 //       await this.field.connect(user).sow(to6('1'), EXTERNAL)
 //       const weather = await this.season.weather()
-//       expect(weather.nextSowTime).to.be.not.equal(parseInt(MAX_UINT32))
+//       expect(weather.thisSowTime).to.be.not.equal(parseInt(MAX_UINT32))
 //     })
 
-//     it("Does not set nextSowTime if Soil already < 1", async function () {
+//     it("Does not set thisSowTime if Soil already < 1", async function () {
 //       this.season.setSoilE(to6('1.5'));
 //       await this.field.connect(user).sow(to6('1'), EXTERNAL)
 //       const weather = await this.season.weather()
 //       await this.field.connect(user).sow(to6('0.5'), EXTERNAL)
 //       const weather2 = await this.season.weather()
-//       expect(weather2.nextSowTime).to.be.equal(weather.nextSowTime)
+//       expect(weather2.thisSowTime).to.be.equal(weather.thisSowTime)
 //     })
 //   })
 

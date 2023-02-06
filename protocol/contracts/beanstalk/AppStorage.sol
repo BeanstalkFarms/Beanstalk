@@ -261,14 +261,14 @@ contract Storage {
      * @param deprecated 2 slots that were previously used
      * @param lastDSoil Delta Soil; the number of Soil purchased last Season.
      * @param lastSowTime The number of seconds it for Soil to sell out last Season.
-     * @param nextSowTime The number of seconds it for Soil to sell out this Season.
+     * @param thisSowTime The number of seconds it for Soil to sell out this Season.
      * @param t The Temperature; the maximum interest rate during the current Season for sowing Beans in Soil. Adjusted each Season.
      */
     struct Weather {
         uint256[2] deprecated;
         uint128 lastDSoil;
         uint32 lastSowTime;
-        uint32 nextSowTime;
+        uint32 thisSowTime;
         uint32 t;
     }
 
