@@ -95,6 +95,12 @@ export function updateWellTokenBalances(
     well.save()
 }
 
+export function updateWellLiquidityTokenBalance(wellAddress: Address, deltaAmount: BigInt): void {
+    let well = loadWell(wellAddress)
+    well.totalLiquidity = well.totalLiquidity.plus(deltaAmount)
+    well.save()
+}
+
 export function incrementWellSwap(wellAddress: Address): void {
     let well = loadWell(wellAddress)
     well.cumulativeSwapCount += 1
