@@ -242,7 +242,7 @@ type Position @entity {
 " This maps to the AddLiquidity event "
 type Deposit @entity(immutable: true) {
   " { Transaction hash }-{ Log index } "
-  id: Bytes!
+  id: ID!
 
   " Transaction hash of the transaction that emitted this event "
   hash: Bytes!

@@ -80,8 +80,35 @@ export function updateWellVolumes(
 
 }
 
+export function updateWellTokenBalances(
+    wellAddress: Address,
+    inputTokenAmounts: BigInt[]
+): void {
+    let well = loadWell(wellAddress)
+    let balances = well.inputTokenBalances
+
+    for (let i = 0; i < balances.length; i++) {
+        balances[i] = balances[i].plus(inputTokenAmounts[i])
+    }
+
+    well.inputTokenBalances = balances
+    well.save()
+}
+
 export function incrementWellSwap(wellAddress: Address): void {
     let well = loadWell(wellAddress)
     well.cumulativeSwapCount += 1
+    well.save()
+}
+
+export function incrementWellDeposit(wellAddress: Address): void {
+    let well = loadWell(wellAddress)
+    well.cumulativeDepositCount += 1
+    well.save()
+}
+
+export function incrementWellWithdraw(wellAddress: Address): void {
+    let well = loadWell(wellAddress)
+    well.cumulativeWithdrawCount += 1
     well.save()
 }

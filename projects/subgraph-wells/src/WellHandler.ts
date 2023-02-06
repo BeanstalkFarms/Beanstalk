@@ -1,9 +1,18 @@
 import { AddLiquidity, Approval, RemoveLiquidity, RemoveLiquidityOneToken, Swap, Transfer } from "../generated/templates/Well/Well";
 import { loadOrCreateAccount } from "./utils/Account";
+import { recordAddLiquidityEvent } from "./utils/Liquidity";
 import { recordSwapEvent } from "./utils/Swap";
-import { incrementWellSwap, updateWellVolumes } from "./utils/Well";
+import { incrementWellDeposit, incrementWellSwap, updateWellTokenBalances, updateWellVolumes } from "./utils/Well";
 
 export function handleAddLiquidity(event: AddLiquidity): void {
+
+    loadOrCreateAccount(event.transaction.from)
+
+    recordAddLiquidityEvent(event)
+
+    updateWellTokenBalances(event.address, event.params.tokenAmountsIn)
+
+    incrementWellDeposit(event.address)
 
 }
 
