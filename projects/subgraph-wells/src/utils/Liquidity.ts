@@ -1,5 +1,5 @@
-import { Deposit } from "../../generated/schema";
-import { AddLiquidity } from "../../generated/templates/Well/Well";
+import { Deposit, Withdraw } from "../../generated/schema";
+import { AddLiquidity, RemoveLiquidity } from "../../generated/templates/Well/Well";
 import { ZERO_BD } from "./Decimals";
 import { loadWell } from "./Well";
 
@@ -26,6 +26,25 @@ export function recordAddLiquidityEvent(event: AddLiquidity): void {
     deposit.save()
 }
 
-export function loadDeposit(id: string): Deposit {
-    return Deposit.load(id) as Deposit
+export function recordRemoveLiquidityEvent(event: RemoveLiquidity): void {
+    let id = event.transaction.hash.toHexString() + '-' + event.logIndex.toString()
+    let withdraw = new Withdraw(id)
+    let receipt = event.receipt
+    let well = loadWell(event.address)
+
+    withdraw.hash = event.transaction.hash
+    withdraw.nonce = event.transaction.nonce
+    withdraw.logIndex = event.logIndex.toI32()
+    withdraw.gasLimit = event.transaction.gasLimit
+    if (receipt !== null) { withdraw.gasUsed = receipt.gasUsed }
+    withdraw.gasPrice = event.transaction.gasPrice
+    withdraw.account = event.transaction.from
+    withdraw.well = event.address
+    withdraw.blockNumber = event.block.number
+    withdraw.timestamp = event.block.timestamp
+    withdraw.liquidity = event.params.lpAmountIn
+    withdraw.inputTokens = well.inputTokens
+    withdraw.inputTokenAmounts = event.params.tokenAmountsOut
+    withdraw.amountUSD = ZERO_BD
+    withdraw.save()
 }
