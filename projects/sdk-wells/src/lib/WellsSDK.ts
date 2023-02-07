@@ -1,5 +1,6 @@
+import { ChainId } from "@beanstalk/sdk-core";
 import { ethers } from "ethers";
-import { addresses, ChainId } from "src/constants";
+import { addresses } from "src/constants/addresses";
 import { enumFromValue } from "src/utils";
 import { Contracts } from "./contracts";
 import { Tokens } from "./tokens";

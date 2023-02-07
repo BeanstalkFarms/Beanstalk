@@ -12,15 +12,12 @@ require("@swc/register")({
       "~sdk/*": ["../sdk/src/*"],
       "~sdk-core/*": ["../sdk-core/src/*"]
     },
-    baseUrl: ".",
-    // target: "es2017"
+    baseUrl: "."
   },
   sourceMaps: true,
   module: {
     type: "commonjs"
-  },
-  // // This line is important
-  // isModule: true
+  }
 });
 
 const arg = process.argv[2];
