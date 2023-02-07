@@ -19,6 +19,9 @@ library LibIncentive {
     /// @dev The time range over which to consult the Uniswap V3 ETH:USDC pool oracle. Measured in seconds.
     uint32 private constant PERIOD = 3600; // 1 hour
 
+    /// @dev The Sunrise reward reaches its maximum after this many blocks elapse.
+    uint256 private constant MAX_BLOCKS_LATE = 25;
+
     //////////////////// CALCULATE REWARD ////////////////////
 
     /**
@@ -48,6 +51,11 @@ library LibIncentive {
         uint256 beanEthPrice = getEthUsdcPrice() // WETH / USDC
             .mul(1e6)
             .div(beanUsdPrice);
+
+        // Maximum 300 seconds to reward exponent (25*C.getBlockLengthSeconds())
+        if (blocksLate > MAX_BLOCKS_LATE) {
+            blocksLate = MAX_BLOCKS_LATE;
+        }
 
         // Sunrise gas overhead includes:
         //  - 21K for base transaction cost

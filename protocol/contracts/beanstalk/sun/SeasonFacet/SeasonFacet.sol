@@ -28,9 +28,6 @@ contract SeasonFacet is Weather {
      */
     event Incentivization(address indexed account, uint256 beans);
 
-    /* The Sunrise reward reaches its maximum after this many blocks elapse. */
-    uint256 private constant MAX_BLOCKS_LATE = 25;
-
     //////////////////// SUNRISE ////////////////////
 
     /**
@@ -142,11 +139,6 @@ contract SeasonFacet is Weather {
             s.season.start.add(s.season.period.mul(season()))
         )
         .div(C.getBlockLengthSeconds());
-
-        // Maximum 300 seconds to reward exponent (25*C.getBlockLengthSeconds())
-        if (blocksLate > MAX_BLOCKS_LATE) {
-            blocksLate = MAX_BLOCKS_LATE;
-        }
         
         uint256 incentiveAmount = LibIncentive.determineReward(initialGasLeft, balances, blocksLate);
 
