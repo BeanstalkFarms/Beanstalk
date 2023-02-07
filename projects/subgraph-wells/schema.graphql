@@ -167,14 +167,15 @@ type Pump @entity {
 
 type Account @entity {
   id: Bytes!
+  positions: [Position!]! @derivedFrom(field: "account")
   deposits: [Deposit!]! @derivedFrom(field: "account")
   withdraws: [Withdraw!]! @derivedFrom(field: "account")
   swaps: [Swap!]! @derivedFrom(field: "account")
 }
 
 type Position @entity {
-  " { Account address }-{ Market address }-{ Count } "
-  id: Bytes!
+  " { Account address }-{ Market address } "
+  id: ID!
 
   " Account that owns this position "
   account: Account!

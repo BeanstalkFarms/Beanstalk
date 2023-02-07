@@ -1,23 +1,13 @@
 import { Address, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 import { Well } from "../../generated/schema";
 import { ADDRESS_ZERO } from "./Constants";
-import { ZERO_BD, ZERO_BI } from "./Decimals";
+import { emptyBigDecimalArray, emptyBigIntArray, ZERO_BD, ZERO_BI } from "./Decimals";
 
 export function createWell(wellAddress: Address, inputTokens: Address[]): Well {
     let well = Well.load(wellAddress)
     if (well !== null) { return well as Well }
 
     well = new Well(wellAddress)
-
-    // Every well must be deployed with at least 2 tokens. Push additional if needed.
-    let emptyBigIntArray = [ZERO_BI, ZERO_BI]
-    let emptyBigDecimalArray = [ZERO_BD, ZERO_BD]
-
-    for (let i = 2; i < inputTokens.length; i++) {
-        emptyBigIntArray.push(ZERO_BI)
-        emptyBigDecimalArray.push(ZERO_BD)
-    }
-
 
     well.aquifer = Bytes.empty()
     well.inputTokens = [] // This is currently set in the `handleBoreWell` function
@@ -26,11 +16,11 @@ export function createWell(wellAddress: Address, inputTokens: Address[]): Well {
     well.createdBlockNumber = ZERO_BI
     well.totalLiquidity = ZERO_BI
     well.totalLiquidityUSD = ZERO_BD
-    well.cumulativeVolumeTokenAmounts = emptyBigIntArray
-    well.cumulativeVolumesUSD = emptyBigDecimalArray
+    well.cumulativeVolumeTokenAmounts = emptyBigIntArray(inputTokens.length)
+    well.cumulativeVolumesUSD = emptyBigDecimalArray(inputTokens.length)
     well.cumulativeVolumeUSD = ZERO_BD
-    well.inputTokenBalances = emptyBigIntArray
-    well.inputTokenBalancesUSD = emptyBigDecimalArray
+    well.inputTokenBalances = emptyBigIntArray(inputTokens.length)
+    well.inputTokenBalancesUSD = emptyBigDecimalArray(inputTokens.length)
     well.cumulativeDepositCount = 0
     well.cumulativeWithdrawCount = 0
     well.cumulativeSwapCount = 0
@@ -116,5 +106,12 @@ export function incrementWellDeposit(wellAddress: Address): void {
 export function incrementWellWithdraw(wellAddress: Address): void {
     let well = loadWell(wellAddress)
     well.cumulativeWithdrawCount += 1
+    well.save()
+}
+
+export function incrementWellPositions(wellAddress: Address): void {
+    let well = loadWell(wellAddress)
+    well.positionCount += 1
+    well.openPositionCount += 1
     well.save()
 }

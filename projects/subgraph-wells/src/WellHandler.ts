@@ -1,13 +1,16 @@
 import { AddLiquidity, Approval, RemoveLiquidity, RemoveLiquidityOneToken, Swap, Transfer } from "../generated/templates/Well/Well";
 import { loadOrCreateAccount } from "./utils/Account";
-import { ZERO_BI } from "./utils/Decimals";
+import { emptyBigIntArray, ZERO_BI } from "./utils/Decimals";
 import { recordAddLiquidityEvent, recordRemoveLiquidityEvent, recordRemoveLiquidityOneEvent } from "./utils/Liquidity";
+import { addDepositToPosition, loadOrCreatePosition } from "./utils/Position";
 import { recordSwapEvent } from "./utils/Swap";
 import { incrementWellDeposit, incrementWellSwap, incrementWellWithdraw, loadWell, updateWellLiquidityTokenBalance, updateWellTokenBalances, updateWellVolumes } from "./utils/Well";
 
 export function handleAddLiquidity(event: AddLiquidity): void {
 
-    loadOrCreateAccount(event.transaction.from)
+    loadOrCreatePosition(event.transaction.from, event.address, event)
+
+    addDepositToPosition(event.transaction.from, event.address, event.params.tokenAmountsIn, event.params.lpAmountOut)
 
     recordAddLiquidityEvent(event)
 
@@ -45,9 +48,7 @@ export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): v
     // Pre-process amount out into an indexed array for the well's input tokens.
 
     let well = loadWell(event.address)
-    let indexedBalances = [ZERO_BI, ZERO_BI]
-
-    for (let i = 2; i < well.inputTokens.length; i++)  indexedBalances.push(ZERO_BI)
+    let indexedBalances = emptyBigIntArray(well.inputTokens.length)
 
     indexedBalances[well.inputTokens.indexOf(event.params.tokenOut)] = indexedBalances[well.inputTokens.indexOf(event.params.tokenOut)].plus(event.params.tokenAmountOut)
 
