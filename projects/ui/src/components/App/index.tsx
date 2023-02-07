@@ -60,6 +60,8 @@ import PodMarketFillOrder from '~/components/Market/PodsV2/Actions/Sell/FillOrde
 import FarmerDelegationsUpdater from '~/state/farmer/delegations/updater';
 import VotingPowerPage from '~/pages/governance/votingPower';
 import MorningUpdater from '~/state/beanstalk/sun/morning';
+import WellHomePage from '~/pages/market/wells';
+import WellPage from '~/pages/market/wells/well';
 
 BigNumber.set({ EXPONENTIAL_AT: [-12, 20] });
 
@@ -190,8 +192,9 @@ export default function App() {
               />
             </Route>
             {/* DEX CODE (hidden) */}
-            {/* <Route path="/market/wells" element={<WellHomePage />} /> */}
-            {/* <Route path="/market/wells/:id" element={<WellPage />} /> */}
+            {/* TODO: Env/feature flag */}
+            <Route path="/market/wells" element={<WellHomePage />} />
+            <Route path="/market/wells/:id" element={<WellPage />} />
             <Route path="/nft" element={<NFTPage />} />
             <Route path="/governance/:id" element={<ProposalPage />} />
             <Route
