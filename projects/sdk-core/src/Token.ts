@@ -1,1 +1,1 @@
-export { Token } from "src/classes/Token";
+export { Token } from "src/lib/token";
