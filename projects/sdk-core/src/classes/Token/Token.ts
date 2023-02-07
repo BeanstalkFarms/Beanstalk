@@ -62,7 +62,7 @@ export abstract class Token {
     Token.provider = provider;
 
     this.name = metadata?.name ?? "Unknown";
-    this.displayName = metadata?.displayName ?? "Unknown Token";
+    this.displayName = metadata?.displayName ?? metadata?.name ?? "Unknown Token";
     this.displayDecimals = metadata?.displayDecimals ?? 2;
     this.logo = metadata?.logo;
     this.color = metadata?.color;
