@@ -57,6 +57,8 @@ import PodMarketFillListing from '~/components/Market/PodsV2/Actions/Buy/FillLis
 import PodMarketSell from '~/components/Market/PodsV2/Actions/Sell';
 import PodMarketCreateListing from '~/components/Market/PodsV2/Actions/Sell/CreateListing';
 import PodMarketFillOrder from '~/components/Market/PodsV2/Actions/Sell/FillOrder';
+import WellHomePage from '~/pages/market/wells';
+import WellPage from '~/pages/market/wells/well';
 
 BigNumber.set({ EXPONENTIAL_AT: [-12, 20] });
 
@@ -169,8 +171,9 @@ export default function App() {
               <Route path="order/:orderID" element={<Navigate to="/market/sell/:orderID" />} />
             </Route>
             {/* DEX CODE (hidden) */}
-            {/* <Route path="/market/wells" element={<WellHomePage />} /> */}
-            {/* <Route path="/market/wells/:id" element={<WellPage />} /> */}
+            {/* TODO: Env/feature flag */}
+            <Route path="/market/wells" element={<WellHomePage />} />
+            <Route path="/market/wells/:id" element={<WellPage />} />
             <Route path="/nft" element={<NFTPage />} />
             <Route path="/governance/:id" element={<ProposalPage />} />
             <Route path="/silo" element={<SiloPage />} />
