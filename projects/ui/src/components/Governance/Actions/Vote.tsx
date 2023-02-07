@@ -77,7 +77,7 @@ const VoteForm: FC<FormikProps<VoteFormValues> & {
   //     <CircularProgress variant="determinate" value={(quorumPctComplete.times(100)).toNumber()} size={12} thickness={8}  />
   //   </>
   // )}
-
+  console.log('VOTEEE', displayFullBN(new BigNumber(null || 0)))
   return (
     <Form autoComplete="off">
       <Stack gap={1}>
@@ -144,7 +144,7 @@ const VoteForm: FC<FormikProps<VoteFormValues> & {
                   {choice}
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                  {displayFullBN(new BigNumber(proposal.scores[index]), 0, 0)} STALK
+                  {displayFullBN(new BigNumber(proposal.scores[index] || 0), 0, 0)} STALK
                   <Typography
                     display={proposal.scores_total > 0 ? 'inline' : 'none'}> · {((proposal.scores[index] / proposal.scores_total) * 100).toFixed(2)}%
                   </Typography>
