@@ -1,0 +1,103 @@
+{
+  "name": "@beanstalk/sdk-core",
+  "version": "0.0.1",
+  "description": "Beanstalk SDK Core",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BeanstalkFarms/Beanstalk.git",
+    "directory": "projects/sdk-core"
+  },
+  "homepage": "https://bean.money",
+  "keywords": [
+    "stablecoin",
+    "eth",
+    "ethereum",
+    "dapps",
+    "web3"
+  ],
+  "main": "./dist/sdk/sdk.cjs.js",
+  "module": "./dist/sdk/sdk.esm.js",
+  "browser": "./dist/sdk/sdk.udm.js",
+  "typings": "./dist/types/index.d.ts",
+  "licenses": [],
+  "files": [
+    "/dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "generate": "echo '\nSDK Generate' && yarn generate:typechain",
+    "generate:typechain": "typechain --target=ethers-v5 --ts-nocheck --out-dir=./src/constants/generated/ ./src/constants/abi/**/*.json",
+    "clean:generated": "rimraf ./src/constants/generated",
+    "clean:build": "rimraf dist",
+    "clean": "yarn clean:generated && yarn clean:build",
+    "dev": "tsc --noEmit --watch",
+    "ts": "yarn clean:build && tsc && tsc-alias -p tsconfig.json",
+    "build": "yarn ts && rollup -c --bundleConfigAsCjs --silent && rimraf dist/js",
+    "publish": "yarn build && yarn npm publish --access public"
+  },
+  "dependencies": {
+    "ethers": "5.6.8"
+  },
+  "peerDependencies": {
+    "ethers": "5.6.8"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "23.0.2",
+    "@rollup/plugin-json": "5.0.1",
+    "@rollup/plugin-multi-entry": "6.0.0",
+    "@rollup/plugin-node-resolve": "15.0.1",
+    "@typechain/ethers-v5": "^10.1.0",
+    "@types/chai": "^4",
+    "@types/jest": "^29.1.2",
+    "@types/rimraf": "^3",
+    "chai": "4.3.6",
+    "dotenv": "^16.0.3",
+    "jest": "^29.2.0",
+    "rimraf": "3.0.2",
+    "rollup": "3.2.5",
+    "rollup-plugin-alias": "2.2.0",
+    "rollup-plugin-exclude-dependencies-from-bundle": "1.1.23",
+    "rollup-plugin-typescript2": "0.34.1",
+    "tsc-alias": "1.7.0",
+    "tslib": "2.4.1",
+    "typechain": "^8.1.0",
+    "typescript": "4.8.4"
+  },
+  "packageManager": "yarn@3.2.3",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "module": "./dist/core/core.esm.js",
+      "default": "./dist/core/core.cjs.js",
+      "browser": "./dist/core/core.umd.js"
+    },
+    "./DecimalBigNumber": {
+      "types": "./dist/types/DecimalBigNumber.d.ts",
+      "module": "./dist/DecimalBigNumber/DecimalBigNumber.esm.js",
+      "default": "./dist/DecimalBigNumber/DecimalBigNumber.cjs.js",
+      "browser": "./dist/DecimalBigNumber/DecimalBigNumber.umd.js"
+    },
+    "./TokenValue": {
+      "types": "./dist/types/TokenValue.d.ts",
+      "module": "./dist/TokenValue/TokenValue.esm.js",
+      "default": "./dist/TokenValue/TokenValue.cjs.js",
+      "browser": "./dist/TokenValue/TokenValue.umd.js"
+    },
+    "./Token": {
+      "types": "./dist/types/Token.d.ts",
+      "module": "./dist/Token/Token.esm.js",
+      "default": "./dist/Token/Token.cjs.js",
+      "browser": "./dist/Token/Token.umd.js"
+    },
+    "./Address": {
+      "types": "./dist/types/Address.d.ts",
+      "module": "./dist/Address/Address.esm.js",
+      "default": "./dist/Address/Address.cjs.js",
+      "browser": "./dist/Address/Address.umd.js"
+    }
+  }
+}
