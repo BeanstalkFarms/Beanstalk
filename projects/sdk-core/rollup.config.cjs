@@ -6,6 +6,7 @@ import json from "@rollup/plugin-json";
 import multi from "@rollup/plugin-multi-entry";
 import excludeDeps from "rollup-plugin-exclude-dependencies-from-bundle";
 import alias from "rollup-plugin-alias";
+import sourcemaps from 'rollup-plugin-sourcemaps';
 
 const pkg = require("./package.json");
 delete pkg.exports;
@@ -53,7 +54,8 @@ function makeEntry(inputFile, name) {
       alias({
         resolve: [".js", ".d.ts"],
         entries: [{ find: "src", replacement: path.join(__dirname, "./dist/js") }]
-      })
+      }),
+      sourcemaps()
     ]
   };
 
