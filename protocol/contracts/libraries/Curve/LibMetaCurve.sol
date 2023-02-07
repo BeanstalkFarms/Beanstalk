@@ -34,7 +34,7 @@ library LibMetaCurve {
         uint256[2] memory balances = IMeta3Curve(pool).get_previous_balances();
         uint256[2] memory xp = getXP(balances, 10**MAX_DECIMALS.sub(decimals));
         uint256 D = LibCurve.getD(xp, a);
-        return LibCurve.getPrice(xp, a, D, 1e6);
+        return LibCurve.getPrice(xp, a, D, 1e6); // FIXME: document derivation of 1e6
     }
 
     function getXP(

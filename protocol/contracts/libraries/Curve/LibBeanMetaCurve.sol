@@ -15,13 +15,15 @@ import "../../C.sol";
 library LibBeanMetaCurve {
     using SafeMath for uint256;
 
-    uint256 private constant RATE_MULTIPLIER = 1e12; // Bean has 6 Decimals
+    uint256 private constant RATE_MULTIPLIER = 1e12; // Bean has 6 Decimals => 1e(18 - delta decimals)
     uint256 private constant PRECISION = 1e18;
     uint256 private constant i = 0;
     uint256 private constant j = 1;
 
     /**
      * @param amount An amount of the BEAN:3CRV LP token.
+     * @dev Calculates the current BDV of BEAN given the balances in the BEAN:3CRV
+     * Metapool. NOTE: assumes that `balances[0]` is BEAN.
      */
     function bdv(uint256 amount) internal view returns (uint256) {
         // By using previous balances and the virtual price, we protect against flash loan
@@ -45,29 +47,44 @@ library LibBeanMetaCurve {
         deltaB = getDeltaBWithD(balances[0], d);
     }
 
-    function getDFroms(uint256[2] memory balances)
-        internal
-        view
-        returns (uint256)
-    {
-        return LibMetaCurve.getDFroms(C.curveMetapoolAddress(), balances, RATE_MULTIPLIER);
-    }
-
-    function getXP(uint256[2] memory balances)
-        internal
-        view
-        returns (uint256[2] memory xp)
-    {
-        return LibMetaCurve.getXP(balances, RATE_MULTIPLIER);
-    }
-
     function getDeltaBWithD(uint256 balance, uint256 D)
         internal
         pure
         returns (int256 deltaB)
     {
-        uint256 pegBeans = D / 2 / 1e12;
+        uint256 pegBeans = D / 2 / RATE_MULTIPLIER;
         deltaB = int256(pegBeans) - int256(balance);
+    }
+
+    /**
+     * @dev D = the number of LP tokens times the virtual price.
+     * LP supply = D / virtual price. D increases as pool accumulates fees.
+     * D = number of stable tokens in the pool when the pool is balanced. 
+     * 
+     * Rate multiplier for BEAN is 1e12
+     * Rate multiplier for 3CRV is virtual price
+     */
+    function getDFroms(uint256[2] memory balances)
+        internal
+        view
+        returns (uint256)
+    {
+        return LibMetaCurve.getDFroms(
+            C.curveMetapoolAddress(),
+            balances,
+            RATE_MULTIPLIER
+        );
+    }
+
+    /**
+     * @dev `xp = balances * rate multiplier`
+     */
+    function getXP(uint256[2] memory balances)
+        internal
+        view
+        returns (uint256[2] memory xp)
+    {
+        xp = LibMetaCurve.getXP(balances, RATE_MULTIPLIER);
     }
 
     function getXP0(uint256 balance)
@@ -75,7 +92,7 @@ library LibBeanMetaCurve {
         pure
         returns (uint256 xp0)
     {
-        return balance.mul(RATE_MULTIPLIER);
+        xp0 = balance.mul(RATE_MULTIPLIER);
     }
 
     function getX0(uint256 xp0)
@@ -83,6 +100,6 @@ library LibBeanMetaCurve {
         pure
         returns (uint256 balance0)
     {
-        return xp0.div(RATE_MULTIPLIER);
+        balance0 = xp0.div(RATE_MULTIPLIER);
     }
 }

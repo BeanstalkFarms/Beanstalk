@@ -19,6 +19,9 @@ library LibCurve {
     uint256 private constant i = 0;
     uint256 private constant j = 1;
 
+    /**
+     * @dev Find the change in token `j` given a change in token `i`.
+     */
     function getPrice(
         uint256[2] memory xp,
         uint256 a,
@@ -31,6 +34,9 @@ library LibCurve {
         return dy;
     }
 
+    /**
+     * @dev UNUSED: previously written for BEAN:LUSD plain pool conversions.
+     */
     function getPrice(
         uint256[2] memory xp,
         uint256[2] memory rates,
@@ -40,7 +46,7 @@ library LibCurve {
         uint256 x = xp[i] + ((1 * rates[i]) / PRECISION);
         uint256 y = getY(x, xp, a, D);
         uint256 dy = xp[j] - y - 1;
-        return dy / 1e6;
+        return dy / 1e6; // !
     }
 
     function getY(
