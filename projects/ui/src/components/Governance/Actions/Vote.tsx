@@ -77,7 +77,6 @@ const VoteForm: FC<FormikProps<VoteFormValues> & {
   //     <CircularProgress variant="determinate" value={(quorumPctComplete.times(100)).toNumber()} size={12} thickness={8}  />
   //   </>
   // )}
-  console.log('VOTEEE', displayFullBN(new BigNumber(null || 0)))
   return (
     <Form autoComplete="off">
       <Stack gap={1}>
