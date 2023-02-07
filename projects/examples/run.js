@@ -9,13 +9,18 @@ require("@swc/register")({
       syntax: "typescript"
     },
     paths: {
-      "@sdk/*": ["../sdk/src/*"]
+      "~sdk/*": ["../sdk/src/*"],
+      "~sdk-core/*": ["../sdk-core/src/*"]
     },
-    baseUrl: "."
+    baseUrl: ".",
+    // target: "es2017"
   },
+  sourceMaps: true,
   module: {
     type: "commonjs"
-  }
+  },
+  // // This line is important
+  // isModule: true
 });
 
 const arg = process.argv[2];
