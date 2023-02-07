@@ -9,7 +9,6 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../LibAppStorage.sol";
 import "./LibConvertData.sol";
 import "./LibMetaCurveConvert.sol";
-import "./LibBeanLUSDConvert.sol";
 import "../Curve/LibBeanMetaCurve.sol";
 
 /**
