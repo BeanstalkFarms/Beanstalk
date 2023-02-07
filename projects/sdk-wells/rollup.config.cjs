@@ -6,6 +6,7 @@ import json from "@rollup/plugin-json";
 import multi from "@rollup/plugin-multi-entry";
 import excludeDeps from "rollup-plugin-exclude-dependencies-from-bundle";
 import alias from "rollup-plugin-alias";
+import sourcemaps from 'rollup-plugin-sourcemaps';
 
 const pkg = require("./package.json");
 delete pkg.exports;
@@ -16,20 +17,20 @@ delete pkg.exports;
 const config = [
   // do not change the "sdk" value, it is a 'magic string' that represents
   // the main entry point in various ways
-  makeEntry("dist/js/index.js", "sdk"),
+  makeEntry("dist/js/index.js", "wells")
 
   // This is just an example of how to create a new module entry.
   // This lets you do this on the client side:
   // import { Thing } from "@beanstalk/sdk/Thing"
-  makeEntry("dist/js/DecimalBigNumber.js", "DecimalBigNumber"),
-  makeEntry("dist/js/TokenValue.js", "TokenValue")
+  // makeEntry("dist/js/DecimalBigNumber.js", "DecimalBigNumber"),
+  // makeEntry("dist/js/TokenValue.js", "TokenValue")
 ];
 
 export default config;
 
 function makeEntry(inputFile, name) {
   const outRoot = "dist";
-  const typesPath = `./${outRoot}/types/${name === "sdk" ? "index" : name}.d.ts`;
+  const typesPath = `./${outRoot}/types/${name === "wells" ? "index" : name}.d.ts`;
   const esmPath = `./${outRoot}/${name}/${name}.esm.js`;
   const cjsPath = `./${outRoot}/${name}/${name}.cjs.js`;
   const udmPath = `./${outRoot}/${name}/${name}.umd.js`;
@@ -39,9 +40,9 @@ function makeEntry(inputFile, name) {
     output: [
       { file: esmPath, format: "es", sourcemap: true },
       { file: cjsPath, format: "cjs", sourcemap: true },
-      { file: udmPath, format: "umd", sourcemap: true, name: "BeanstalkSDK" }
+      { file: udmPath, format: "umd", sourcemap: true, name: "WellsSDK" }
     ],
-    external: Object.keys(pkg.dependencies),
+    external: Object.keys(pkg.dependencies || {}),
     plugins: [
       resolve(),
       commonjs(),
@@ -51,7 +52,8 @@ function makeEntry(inputFile, name) {
       alias({
         resolve: [".js", ".d.ts"],
         entries: [{ find: "src", replacement: path.join(__dirname, "./dist/js") }]
-      })
+      }),
+      sourcemaps()
     ]
   };
 
@@ -63,7 +65,7 @@ function makeEntry(inputFile, name) {
   };
 
   pkg.exports = pkg.exports || {};
-  const key = name === "sdk" ? "." : `./${name}`;
+  const key = name === "wells" ? "." : `./${name}`;
   pkg.exports[key] = pkgExport;
 
   // Write back to package.json !!!!

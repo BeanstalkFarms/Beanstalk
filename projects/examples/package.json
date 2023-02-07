@@ -4,6 +4,7 @@
   "dependencies": {
     "@beanstalk/sdk": "workspace:*",
     "@beanstalk/sdk-core": "workspace:*",
+    "@beanstalk/wells": "workspace:*",
     "chalk": "4",
     "table": "6.8.1"
   },

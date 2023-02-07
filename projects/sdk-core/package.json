@@ -30,20 +30,20 @@
   },
   "scripts": {
     "generate": "echo '\nSDK Generate' && yarn generate:typechain",
-    "generate:typechain": "typechain --target=ethers-v5 --ts-nocheck --out-dir=./src/constants/generated/ ./src/constants/abi/**/*.json",
-    "clean:generated": "rimraf ./src/constants/generated",
-    "clean:build": "rimraf dist",
-    "clean": "yarn clean:generated && yarn clean:build",
+    "generate-typechain": "typechain --target=ethers-v5 --ts-nocheck --out-dir=./src/constants/generated/ ./src/constants/abi/**/*.json",
+    "clean-generated": "rimraf ./src/constants/generated",
+    "clean-build": "rimraf dist",
+    "clean": "yarn clean-generated && yarn clean-build",
     "dev": "tsc --noEmit --watch",
-    "ts": "yarn clean:build && tsc && tsc-alias -p tsconfig.json",
+    "ts": "yarn clean-build && tsc && tsc-alias -p tsconfig.json",
     "build": "yarn ts && rollup -c --bundleConfigAsCjs --silent && rimraf dist/js",
     "publish": "yarn build && yarn npm publish --access public"
   },
   "dependencies": {
-    "ethers": "5.6.8"
+    "ethers": "^5.0.0"
   },
   "peerDependencies": {
-    "ethers": "5.6.8"
+    "ethers": "^5.0.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "23.0.2",
@@ -61,6 +61,7 @@
     "rollup": "3.2.5",
     "rollup-plugin-alias": "2.2.0",
     "rollup-plugin-exclude-dependencies-from-bundle": "1.1.23",
+    "rollup-plugin-sourcemaps": "0.6.3",
     "rollup-plugin-typescript2": "0.34.1",
     "tsc-alias": "1.7.0",
     "tslib": "2.4.1",
