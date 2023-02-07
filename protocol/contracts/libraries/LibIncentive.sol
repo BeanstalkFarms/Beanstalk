@@ -1,6 +1,4 @@
-/*
- SPDX-License-Identifier: MIT
-*/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
@@ -18,58 +16,93 @@ import "./Curve/LibCurve.sol";
 library LibIncentive {
     using SafeMath for uint256;
 
+    /// @dev The time range over which to consult the Uniswap V3 ETH:USDC pool oracle. Measured in seconds.
     uint32 private constant PERIOD = 3600; // 1 hour
 
     //////////////////// CALCULATE REWARD ////////////////////
 
     /**
-     * @dev Calculates Sunrise incentive amount based on current gas prices and BEAN:ETH price
+     * @param initialGasLeft The amount of gas left at the start of the transaction
+     * @param balances The current balances of the BEAN:3CRV pool returned by {stepOracle}
+     * @param blocksLate The number of blocks late that {sunrise()} was called.
+     * @dev Calculates Sunrise incentive amount based on current gas prices and a computed
+     * BEAN:ETH price. This function is called at the end of {sunriseTo()} after all
+     * "step" functions have been executed.
+     * 
+     * Price calculation:
+     * `X := BEAN / USD`
+     * `Y := ETH / USDC`
+     * `Y * 1E6 / X = 1E6 * (ETH/USDC)/(BEAN/USD) = ...`
      */
     function determineReward(
         uint256 initialGasLeft,
         uint256[2] memory balances,
         uint256 blocksLate
     ) internal view returns (uint256) {
-        // Gets the current Bean price based on the Curve pool.
+        // Gets the current BEAN/USD price based on the Curve pool.
         // In the future, this can be swapped out to another oracle
-        uint256 beanPriceUsd = getCurveBeanPrice(balances);
+        uint256 beanUsdPrice = getBeanUsdPrice(balances); // BEAN / USD
 
-        // ethUsdPrice has 6 Decimal Precision
-        uint256 beanEthPrice = getEthUsdcPrice()
+        // `getEthUsdcPrice()` has 6 decimal precision
+        // Assumption: 1 USDC = 1 USD
+        uint256 beanEthPrice = getEthUsdcPrice() // WETH / USDC
             .mul(1e6)
-            .div(beanPriceUsd);
+            .div(beanUsdPrice);
 
+        // Sunrise gas overhead includes:
+        //  - 21K for base transaction cost
+        //  - 29K for calculations following the below line, like {fracExp}
+        // Max gas which Beanstalk will pay for is 500K.
         uint256 gasUsed = Math.min(
             initialGasLeft.sub(gasleft()) + C.getSunriseGasOverhead(),
             C.getMaxSunriseGas()
         );
+
+        // Calculate the current cost in Wei of `gasUsed` gas.
+        // {block_basefee()} returns the base fee of the current block in Wei.
+        // Adds a buffer for priority fee.
         uint256 gasCostWei = C.basefeeContract().block_basefee()    // (BASE_FEE
             .add(C.getSunrisePriorityFeeBuffer())                   // + PRIORITY_FEE_BUFFER)
             .mul(gasUsed);                                          // * GAS_USED
+        
+        // Calculates the Sunrise reward to pay in BEAN.
+        // 1 ETH = 1e18 wei
         uint256 sunriseReward = Math.min(
-            gasCostWei.mul(beanEthPrice).div(1e18) + C.getBaseReward(), // divide by 1e18 to convert wei to eth
+            C.getBaseReward() + gasCostWei.mul(beanEthPrice).div(1e18), // divide by 1e18 to convert wei to eth
             C.getMaxReward()
         );
 
-        return fracExp(sunriseReward, 100, blocksLate.mul(C.getBlockLengthSeconds()), 1);
+        // Scale the reward
+        // `N = blocks late * seconds per block`
+        // `sunriseReward * (1 + 1/100)^N`
+        return fracExp(
+            sunriseReward,
+            100,
+            blocksLate.mul(C.getBlockLengthSeconds()),
+            1
+        );
     }
 
     //////////////////// PRICES ////////////////////
 
     /**
+     * @param balances The current balances of the BEAN:3CRV pool returned by {stepOracle}.
      * @dev Calculate the price of BEAN denominated in USD.
      */
-    function getCurveBeanPrice(uint256[2] memory balances) internal view returns (uint256 price) {
+    function getBeanUsdPrice(uint256[2] memory balances) internal view returns (uint256 price) {
         uint256[2] memory rates = getRates();
         uint256[2] memory xp = LibCurve.getXP(balances, rates);
         
         uint256 a = C.curveMetapool().A_precise();
         uint256 D = LibCurve.getD(xp, a);
+        
         price = LibCurve.getPrice(xp, rates, a, D);
     }
 
     /**
      * @dev Uses the Uniswap V3 Oracle to get the price of WETH denominated in USDC.
+     * 
+     * {OracleLibrary.getQuoteAtTick} returns an arithmetic mean.
      */
     function getEthUsdcPrice() internal view returns (uint256) {
         (int24 tick,) = OracleLibrary.consult(C.UniV3EthUsdc(), PERIOD); // 1 season tick
