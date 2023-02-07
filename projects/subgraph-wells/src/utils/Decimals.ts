@@ -35,3 +35,15 @@ export function toDecimal(
 
     return value.divDecimal(precision);
 }
+
+export function emptyBigIntArray(length: i32): BigInt[] {
+    let array = [ZERO_BI, ZERO_BI]
+    for (let i = 2; i < length; i++) array.push(ZERO_BI)
+    return array
+}
+
+export function emptyBigDecimalArray(length: i32): BigDecimal[] {
+    let array = [ZERO_BD, ZERO_BD]
+    for (let i = 2; i < length; i++) array.push(ZERO_BD)
+    return array
+}

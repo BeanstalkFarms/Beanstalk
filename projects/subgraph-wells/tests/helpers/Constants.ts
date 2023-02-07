@@ -5,6 +5,7 @@ export const SWAP_ENTITY_TYPE = "Swap"
 export const ACCOUNT_ENTITY_TYPE = "Account"
 export const DEPOSIT_ENTITY_TYPE = "Deposit"
 export const WITHDRAW_ENTITY_TYPE = "Withdraw"
+export const POSITION_ENTITY_TYPE = "Position"
 
 export const WELL = Address.fromString('0x90767D012E17F8d1D2f7a257ECB951db703D7b3D')
 export const AQUIFER = Address.fromString('0xF6a8aD553b265405526030c2102fda2bDcdDC177')
@@ -17,3 +18,5 @@ export const WETH_SWAP_AMOUNT = BigInt.fromI64(<i64>(0.1 * (10 ** 18)))
 export const WELL_LP_AMOUNT = BigInt.fromI64(<i64>(10 * (10 ** 18)))
 
 export const SWAP_ACCOUNT = Address.fromString('0x1234567890abcdef1234567890abcdef12345678')
+
+export const POSITION_ID = SWAP_ACCOUNT.toHexString() + '-' + WELL.toHexString()
