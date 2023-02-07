@@ -58,7 +58,7 @@ export class TokenValue {
       const units = utils.formatUnits(value, decimals);
       return TokenValue.fromString(units, decimals);
     }
-    if (value instanceof BigNumber) return TokenValue.fromBigNumber(value, decimals);
+    if (value._isBigNumber) return TokenValue.fromBigNumber(value, decimals);
 
     throw new Error("Invalid value parameter");
   }
