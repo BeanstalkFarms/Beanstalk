@@ -2,11 +2,12 @@ import { afterEach, assert, beforeEach, clearStore, describe, test } from "match
 import { BEAN_ERC20, WETH } from "../src/utils/Constants";
 import { ZERO_BI } from "../src/utils/Decimals";
 import { loadWell } from "../src/utils/Well";
-import { ACCOUNT_ENTITY_TYPE, BEAN_SWAP_AMOUNT, DEPOSIT_ENTITY_TYPE, SWAP_ACCOUNT, SWAP_ENTITY_TYPE, WELL, WELL_ENTITY_TYPE, WELL_LP_AMOUNT, WETH_SWAP_AMOUNT, WITHDRAW_ENTITY_TYPE } from "./helpers/Constants";
+import { ACCOUNT_ENTITY_TYPE, BEAN_SWAP_AMOUNT, DEPOSIT_ENTITY_TYPE, POSITION_ENTITY_TYPE, POSITION_ID, SWAP_ACCOUNT, SWAP_ENTITY_TYPE, WELL, WELL_ENTITY_TYPE, WELL_LP_AMOUNT, WETH_SWAP_AMOUNT, WITHDRAW_ENTITY_TYPE } from "./helpers/Constants";
 import { boreDefaultWell } from "./helpers/Aquifer";
 import { createDefaultSwap } from "./helpers/Swap";
 import { createDefaultAddLiquidity, createDefaultRemoveLiquidity, createRemoveLiquidityOneBean, createRemoveLiquidityOneWeth, loadWithdraw } from "./helpers/Liquidity";
 import { loadDeposit } from "./helpers/Liquidity";
+import { loadPosition } from "../src/utils/Position";
 
 describe("Well Entity: Single Event Tests", () => {
     beforeEach(() => {
@@ -121,6 +122,36 @@ describe("Well Entity: Single Event Tests", () => {
 
             assert.bigIntEquals(BEAN_SWAP_AMOUNT, endingBalances[0])
             assert.bigIntEquals(WETH_SWAP_AMOUNT, endingBalances[1])
+        })
+    })
+})
+
+describe("Position Entity: Single Event Tests", () => {
+    beforeEach(() => {
+        boreDefaultWell()
+    })
+
+    afterEach(() => {
+        clearStore()
+    })
+
+    describe("Add Liquidity", () => {
+        test("Deposit counter incremented", () => {
+            createDefaultAddLiquidity()
+            assert.fieldEquals(POSITION_ENTITY_TYPE, POSITION_ID, 'depositCount', '1')
+        })
+        test("Token Balances updated", () => {
+            createDefaultAddLiquidity()
+
+            let updatedStore = loadPosition(SWAP_ACCOUNT, WELL)
+            let endingBalances = updatedStore.cumulativeDepositTokenAmounts
+
+            assert.bigIntEquals(BEAN_SWAP_AMOUNT, endingBalances[0])
+            assert.bigIntEquals(WETH_SWAP_AMOUNT, endingBalances[1])
+        })
+        test("Liquidity Token balance", () => {
+            createDefaultAddLiquidity()
+            assert.fieldEquals(POSITION_ENTITY_TYPE, POSITION_ID, 'liquidity', WELL_LP_AMOUNT.toString())
         })
     })
 })
