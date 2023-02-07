@@ -58,6 +58,12 @@ const ROUTES: { [key in RouteKeys]: RouteData[] } = {
   // More Menu
   more: [
     {
+      path: '/market/wells',
+      title: 'Wells',
+      icon: swapIcon,
+      small: true
+    },
+    {
       path: 'nft',
       title: 'BeaNFTs',
       icon: beanNFTIcon,
