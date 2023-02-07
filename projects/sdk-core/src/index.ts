@@ -1,4 +1,5 @@
-export { Token, NativeToken, ERC20Token } from "src/classes/Token";
-export { TokenValue } from "src/classes/TokenValue";
-export { DecimalBigNumber } from "src/classes/DecimalBigNumber";
-export { Address } from "src/classes/Address";
+export { Token, NativeToken, ERC20Token } from "src/lib/token";
+export { TokenValue } from "src/lib/TokenValue";
+export { DecimalBigNumber } from "src/lib/DecimalBigNumber";
+export { Address } from "src/lib/Address";
+export * from "src/constants/chains";

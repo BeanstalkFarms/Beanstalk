@@ -1,1 +1,1 @@
-export { Address } from "src/classes/Address";
+export { Address } from "src/lib/Address";

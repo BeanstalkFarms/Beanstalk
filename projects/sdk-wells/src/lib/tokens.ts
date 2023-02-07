@@ -1,5 +1,4 @@
 import { Token, ERC20Token, NativeToken } from "@beanstalk/sdk-core";
-import { addresses } from "src/constants";
 import { WellsSDK } from "./WellsSDK";
 
 export type TokenSTokensymbol = {
@@ -29,7 +28,7 @@ export class Tokens {
     // WETH
     this.WETH = new ERC20Token(
       cid,
-      addresses.WETH.get(cid),
+      sdk.addresses.WETH.get(cid),
       18,
       "WETH",
       {
@@ -43,7 +42,7 @@ export class Tokens {
     // BEAN
     this.BEAN = new ERC20Token(
       cid,
-      addresses.BEAN.get(Tokens.sdk.chainId),
+      sdk.addresses.BEAN.get(Tokens.sdk.chainId),
       6,
       "BEAN",
       {
@@ -55,7 +54,7 @@ export class Tokens {
     this.tokens.add(this.BEAN);
 
     // USDC
-    this.USDC = new ERC20Token(cid, addresses.USDC.get(Tokens.sdk.chainId), 6, "USDC", {
+    this.USDC = new ERC20Token(cid, sdk.addresses.USDC.get(Tokens.sdk.chainId), 6, "USDC", {
       name: "USD Coin",
       displayDecimals: 2
     });
