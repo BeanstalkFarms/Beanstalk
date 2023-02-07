@@ -1,6 +1,4 @@
-/*
- SPDX-License-Identifier: MIT
-*/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
@@ -9,9 +7,9 @@ import "./LibUnripeConvert.sol";
 import "./LibLambdaConvert.sol";
 
 /**
+ * @title LibConvert
  * @author Publius
- * @title Lib Convert
- **/
+ */
 library LibConvert {
     using SafeMath for uint256;
     using LibConvertData for bytes;
@@ -90,7 +88,7 @@ library LibConvert {
         if (tokenIn == C.beanAddress() && tokenOut == C.curveMetapoolAddress())
             return LibCurveConvert.getLPAmountOut(C.curveMetapoolAddress(), amountIn);
 
-        /// urBEAN:3CRV LP -> BEAN
+        /// urBEAN:3CRV LP -> urBEAN
         if (tokenIn == C.unripeLPAddress() && tokenOut == C.unripeBeanAddress())
             return LibUnripeConvert.getBeanAmountOut(amountIn);
         

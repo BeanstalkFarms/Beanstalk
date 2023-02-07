@@ -1,6 +1,4 @@
-/*
- SPDX-License-Identifier: MIT
-*/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
@@ -12,9 +10,9 @@ import "./LibMetaCurveConvert.sol";
 import "../Curve/LibBeanMetaCurve.sol";
 
 /**
+ * @title LibCurveConvert
  * @author Publius
- * @title Lib Curve Convert
- **/
+ */
 library LibCurveConvert {
     using SafeMath for uint256;
     using LibConvertData for bytes;

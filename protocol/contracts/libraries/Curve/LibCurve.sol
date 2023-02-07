@@ -147,6 +147,13 @@ library LibCurve {
         require(false, "Price: Convergence false");
     }
 
+    /**
+     * @dev Return the `xp` array for two tokens. Adjusts `balances[0]` by `padding`
+     * and `balances[1]` by `rate / PRECISION`.
+     * 
+     * This is provided as a gas optimization when `rates[0] * PRECISION` has been
+     * pre-computed.
+     */
     function getXP(
         uint256[2] memory balances,
         uint256 padding,
@@ -156,11 +163,14 @@ library LibCurve {
         xp[1] = balances[1].mul(rate).div(PRECISION);
     }
 
-    function getXP(uint256[2] memory balances, uint256[2] memory rates)
-        internal
-        pure
-        returns (uint256[2] memory xp)
-    {
+    /**
+     * @dev Return the `xp` array for two tokens. Adjusts `balances[0]` by `rates[0]`
+     * and `balances[1]` by `rates[1] / PRECISION`.
+     */
+    function getXP(
+        uint256[2] memory balances,
+        uint256[2] memory rates
+    ) internal pure returns (uint256[2] memory xp) {
         xp[0] = balances[0].mul(rates[0]).div(PRECISION);
         xp[1] = balances[1].mul(rates[1]).div(PRECISION);
     }

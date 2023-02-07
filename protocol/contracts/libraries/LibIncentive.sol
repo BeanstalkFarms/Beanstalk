@@ -56,14 +56,21 @@ library LibIncentive {
 
     //////////////////// PRICES ////////////////////
 
+    /**
+     * @dev Calculate the price of BEAN denominated in USD.
+     */
     function getCurveBeanPrice(uint256[2] memory balances) internal view returns (uint256 price) {
         uint256[2] memory rates = getRates();
         uint256[2] memory xp = LibCurve.getXP(balances, rates);
+        
         uint256 a = C.curveMetapool().A_precise();
         uint256 D = LibCurve.getD(xp, a);
         price = LibCurve.getPrice(xp, rates, a, D);
     }
 
+    /**
+     * @dev Uses the Uniswap V3 Oracle to get the price of WETH denominated in USDC.
+     */
     function getEthUsdcPrice() internal view returns (uint256) {
         (int24 tick,) = OracleLibrary.consult(C.UniV3EthUsdc(), PERIOD); // 1 season tick
         return OracleLibrary.getQuoteAtTick(

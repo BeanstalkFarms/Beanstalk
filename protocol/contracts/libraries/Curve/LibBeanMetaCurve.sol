@@ -46,7 +46,7 @@ library LibBeanMetaCurve {
         uint256 d = getDFroms(balances);
         deltaB = getDeltaBWithD(balances[0], d);
     }
-
+    
     function getDeltaBWithD(uint256 balance, uint256 D)
         internal
         pure
@@ -56,13 +56,15 @@ library LibBeanMetaCurve {
         deltaB = int256(pegBeans) - int256(balance);
     }
 
+    //////////////////// CURVE HELPERS ////////////////////
+
     /**
      * @dev D = the number of LP tokens times the virtual price.
      * LP supply = D / virtual price. D increases as pool accumulates fees.
      * D = number of stable tokens in the pool when the pool is balanced. 
      * 
-     * Rate multiplier for BEAN is 1e12
-     * Rate multiplier for 3CRV is virtual price
+     * Rate multiplier for BEAN is 1e12.
+     * Rate multiplier for 3CRV is virtual price.
      */
     function getDFroms(uint256[2] memory balances)
         internal
@@ -77,7 +79,7 @@ library LibBeanMetaCurve {
     }
 
     /**
-     * @dev `xp = balances * rate multiplier`
+     * @dev `xp = balances * RATE_MULTIPLIER`
      */
     function getXP(uint256[2] memory balances)
         internal
@@ -87,6 +89,9 @@ library LibBeanMetaCurve {
         xp = LibMetaCurve.getXP(balances, RATE_MULTIPLIER);
     }
 
+    /**
+     * @dev Convert from `balance` -> `xp0`, which is scaled up by `RATE_MULTIPLIER`.
+     */
     function getXP0(uint256 balance)
         internal
         pure
@@ -95,6 +100,9 @@ library LibBeanMetaCurve {
         xp0 = balance.mul(RATE_MULTIPLIER);
     }
 
+    /**
+     * @dev Convert from `xp0` -> `balance`, which is scaled down by `RATE_MULTIPLIER`.
+     */
     function getX0(uint256 xp0)
         internal
         pure

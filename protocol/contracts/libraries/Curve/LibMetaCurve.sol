@@ -5,10 +5,10 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {LibCurve} from "./LibCurve.sol";
-import "../../C.sol";
+import {C} from "../../C.sol";
 
 /**
- * @dev Interface for the 3Pool Curve pool
+ * @dev Curve Metapool extended interface.
  */
 interface IMeta3Curve {
     function A_precise() external view returns (uint256);
@@ -19,7 +19,8 @@ interface IMeta3Curve {
 /**
  * @title LibMetaCurve
  * @author Publius
- * @notice Calculates the price of Curve metapools.
+ * @notice Wraps {LibCurve} with metadata about Curve Metapools, including the
+ * `A` parameter and virtual price.
  */
 library LibMetaCurve {
     using SafeMath for uint256;
@@ -37,6 +38,9 @@ library LibMetaCurve {
         return LibCurve.getPrice(xp, a, D, 1e6); // FIXME: document derivation of 1e6
     }
 
+    /**
+     * @dev Used in {LibBeanMetaCurve}.
+     */
     function getXP(
         uint256[2] memory balances,
         uint256 padding
@@ -48,6 +52,9 @@ library LibMetaCurve {
         );
     }
 
+    /**
+     * @dev Used in {LibBeanMetaCurve}.
+     */
     function getDFroms(
         address pool,
         uint256[2] memory balances,
