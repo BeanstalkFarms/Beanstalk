@@ -42,7 +42,7 @@ library LibMetaCurveConvert {
         uint256[2] memory xp = LibBeanMetaCurve.getXP(balances);
         uint256 d0 = LibCurve.getD(xp, a);
         uint256 toPeg = balances[0].sub(atPeg);
-        toPeg = toPegWithFee(toPeg, balances, d0, a);
+        toPeg = _toPegWithFee(toPeg, balances, d0, a);
         lp = calcLPTokenAmount(toPeg, balances, d0, a);
     }
 
@@ -54,7 +54,12 @@ library LibMetaCurveConvert {
         return diff.mul(C.curveMetapool().totalSupply()).div(D0);
     }
 
-    function toPegWithFee(uint256 amount, uint256[2] memory balances, uint256 D0, uint256 a) internal view returns (uint256) {
+    function _toPegWithFee(
+        uint256 amount,
+        uint256[2] memory balances,
+        uint256 D0,
+        uint256 a
+    ) internal view returns (uint256) {
         uint256[2] memory xp = LibBeanMetaCurve.getXP(balances);
         uint256 new_y = LibBeanMetaCurve.getXP0(balances[0].sub(amount));
         uint256 D1 = LibCurve.getD([new_y, xp[1]], a);
