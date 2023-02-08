@@ -16,7 +16,7 @@ import "./Curve/LibCurve.sol";
  * @title Incentive Library calculates the reward and the exponential increase efficiently.
  **/
 library LibIncentive {
-    uint32 private constant PERIOD = 3600; //1 hour
+    uint32 private constant PERIOD = 1800; // 30 minutes
     /// @dev The scaling factor `sunriseReward` is precomputed in {fracExp} using this precision.
     uint256 private constant FRAC_EXP_PRECISION = 1e18;
 
