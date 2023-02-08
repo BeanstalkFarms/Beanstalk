@@ -12,21 +12,18 @@ import "../Curve/LibBeanMetaCurve.sol";
 /**
  * @title LibCurveConvert
  * @author Publius
+ * @dev FIXME: `tokenOut` vs. `outAmount` throughout this file
  */
 library LibCurveConvert {
     using SafeMath for uint256;
     using LibConvertData for bytes;
 
-    function getBeansAtPeg(address pool, uint256[2] memory balances)
-        internal
-        view
-        returns (uint256 beans)
-    {
-        if (pool == C.curveMetapoolAddress())
-            return LibMetaCurveConvert.beansAtPeg(balances);
-        revert("Convert: Not a whitelisted Curve pool.");
-    }
+    //////////////////// GETTERS ////////////////////
 
+    /**
+     * @notice Calculate the number of BEAN needed to return `pool` back to peg.
+     * @dev Assumes that BEAN is the first token in the pool.
+     */
     function beansToPeg(address pool) internal view returns (uint256 beans) {
         uint256[2] memory balances = ICurvePool(pool).get_balances();
         uint256 xp1 = getBeansAtPeg(pool, balances);
@@ -34,6 +31,9 @@ library LibCurveConvert {
         beans = xp1.sub(balances[0]);
     }
 
+    /**
+     * @notice Calculate the amount of 
+     */
     function lpToPeg(address pool) internal view returns (uint256 lp) {
         uint256[2] memory balances = ICurvePool(pool).get_balances();
         uint256 xp1 = getBeansAtPeg(pool, balances);
@@ -41,22 +41,32 @@ library LibCurveConvert {
         return LibMetaCurveConvert.lpToPeg(balances, xp1);
     }
 
-    /// @param amountIn The amount of the LP token of `pool` to remove as BEAN.
-    /// @return beans The amount of BEAN received for removing `amountIn` LP tokens.
-    /// @notice Assumes that i=0 corresponds to BEAN.
+    /**
+     * @param pool The address of the Curve pool where `amountIn` will be withdrawn
+     * @param amountIn The amount of the LP token of `pool` to remove as BEAN
+     * @return beans The amount of BEAN received for removing `amountIn` LP tokens.
+     * @dev Assumes that i=0 corresponds to BEAN.
+     */
     function getBeanAmountOut(address pool, uint256 amountIn) internal view returns(uint256 beans) {
         beans = ICurvePool(pool).calc_withdraw_one_coin(amountIn, 0); // i=0 -> BEAN
     }
 
-    /// @param amountIn The amount of BEAN to deposit into `pool`.
-    /// @return lp The amount of LP received for depositing BEAN.
-    /// @notice Assumes that i=0 corresponds to BEAN.
+    /**
+     * @param pool The address of the Curve pool where `amountIn` will be deposited
+     * @param amountIn The amount of BEAN to deposit into `pool`
+     * @return lp The amount of LP received for depositing BEAN.
+     * @dev Assumes that i=0 corresponds to BEAN.
+     */
     function getLPAmountOut(address pool, uint256 amountIn) internal view returns(uint256 lp) {
         lp = ICurvePool(pool).calc_token_amount([amountIn, 0], true); // i=0 -> BEAN
     }
 
-    /// @notice Takes in encoded bytes for adding Curve LP in beans, extracts the input data, and then calls the
-    /// @param convertData Contains convert input parameters for a Curve AddLPInBeans convert
+    //////////////////// CURVE CONVERT: KINDS ////////////////////
+
+    /**
+     * @notice Takes in encoded bytes for adding Curve LP in beans, extracts the input data, and then calls the
+     * @param convertData Contains convert input parameters for a Curve AddLPInBeans convert
+     */
     function convertLPToBeans(bytes memory convertData)
         internal
         returns (
@@ -70,11 +80,13 @@ library LibCurveConvert {
             .convertWithAddress();
         (outAmount, inAmount) = _curveRemoveLPAndBuyToPeg(lp, minBeans, pool);
         tokenOut = C.beanAddress();
-        tokenIn = pool;
+        tokenIn = pool; // The Curve metapool also issues the LP token
     }
 
-    /// @notice Takes in encoded bytes for adding beans in Curve LP, extracts the input data, and then calls the
-    /// @param convertData Contains convert input parameters for a Curve AddBeansInLP convert
+    /**
+     * @notice Takes in encoded bytes for adding beans in Curve LP, extracts the input data, 
+     * @param convertData Contains convert input parameters for a Curve AddBeansInLP convert
+     */
     function convertBeansToLP(bytes memory convertData)
         internal
         returns (
@@ -95,9 +107,14 @@ library LibCurveConvert {
         tokenIn = C.beanAddress();
     }
 
-    /// @notice Takes in parameters to convert beans into LP using Curve
-    /// @param beans - amount of beans to convert to Curve LP
-    /// @param minLP - min amount of Curve LP to receive
+    //////////////////// CURVE CONVERT: LOGIC ////////////////////
+
+    /**
+     * @notice Converts Beans into LP via Curve.
+     * @param beans The mount of beans to convert to Curve LP
+     * @param minLP The min amount of Curve LP to receive
+     * @param pool The address of the Curve pool to add to
+     */
     function _curveSellToPegAndAddLiquidity(
         uint256 beans,
         uint256 minLP,
@@ -109,9 +126,12 @@ library LibCurveConvert {
         lp = ICurvePool(pool).add_liquidity([beansConverted, 0], minLP);
     }
 
-    /// @notice Takes in parameters to remove LP into beans by removing LP in curve through removing beans
-    /// @param lp - the amount of Curve lp to be removed
-    /// @param minBeans - min amount of beans to receive
+    /**
+     * @notice Removes LP into Beans via Curve.
+     * @param lp The amount of Curve LP to be removed
+     * @param minBeans The minimum amount of Beans to receive
+     * @param pool The address of the Curve pool to remove from
+     */
     function _curveRemoveLPAndBuyToPeg(
         uint256 lp,
         uint256 minBeans,
@@ -125,5 +145,19 @@ library LibCurveConvert {
             0,
             minBeans
         );
+    }
+
+    //////////////////// HELPERS ////////////////////
+    
+    function getBeansAtPeg(address pool, uint256[2] memory balances)
+        internal
+        view
+        returns (uint256)
+    {
+        if (pool == C.curveMetapoolAddress()) {
+            return LibMetaCurveConvert.beansAtPeg(balances);
+        }
+
+        revert("Convert: Not a whitelisted Curve pool.");
     }
 }
