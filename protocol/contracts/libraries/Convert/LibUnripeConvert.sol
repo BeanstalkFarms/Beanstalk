@@ -1,6 +1,4 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
@@ -11,9 +9,9 @@ import "../../interfaces/IBean.sol";
 import "../LibUnripe.sol";
 
 /**
- * @author Publius
  * @title LibUnripeConvert
- **/
+ * @author Publius
+ */
 library LibUnripeConvert {
     using LibConvertData for bytes;
     using SafeMath for uint256;
@@ -39,7 +37,7 @@ library LibUnripeConvert {
         (
             uint256 outUnderlyingAmount,
             uint256 inUnderlyingAmount
-        ) = LibCurveConvert._curveRemoveLPAndBuyToPeg(
+        ) = LibCurveConvert.curveRemoveLPAndBuyToPeg(
                 LibUnripe.unripeToUnderlying(tokenIn, lp),
                 minAmountOut,
                 C.curveMetapoolAddress()
@@ -78,7 +76,7 @@ library LibUnripeConvert {
         (
             uint256 outUnderlyingAmount,
             uint256 inUnderlyingAmount
-        ) = LibCurveConvert._curveSellToPegAndAddLiquidity(
+        ) = LibCurveConvert.curveSellToPegAndAddLiquidity(
                 LibUnripe.unripeToUnderlying(tokenIn, beans),
                 minAmountOut,
                 C.curveMetapoolAddress()

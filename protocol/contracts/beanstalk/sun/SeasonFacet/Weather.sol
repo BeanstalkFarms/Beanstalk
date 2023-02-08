@@ -17,13 +17,13 @@ contract Weather is Sun {
     using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
 
-    /* If all Soil is Sown faster than this, Beanstalk considers demand for Soil to be increasing. */
+    /// @dev If all Soil is Sown faster than this, Beanstalk considers demand for Soil to be increasing.
     uint256 private constant SOW_TIME_DEMAND_INCR = 600; // seconds
     
     /**
      * @notice Emitted when the Temperature (fka "Weather") changes.
      * @param season The current Season
-     * @param caseId The "Weather Case", see {FIXME}
+     * @param caseId The Weather case, which determines how much the Temperature is adjusted.
      * @param change The change in Temperature as a delta from the previous value
      * @dev The name {WeatherChange} is kept for backwards compatibility, 
      * however the state variable included as `change` is now called Temperature.

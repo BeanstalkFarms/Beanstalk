@@ -8,8 +8,8 @@ import "~/beanstalk/ReentrancyGuard.sol";
 
 /**
  * @title Oracle
- * @notice Tracks the Delta B in available pools.
  * @author Publius, Chaikitty
+ * @notice Tracks the Delta B in available pools.
  */
 contract Oracle is ReentrancyGuard {
     
@@ -25,9 +25,9 @@ contract Oracle is ReentrancyGuard {
     /**
      * @notice Returns the current Delta B for the requested pool.
      */
-    function poolDeltaB(address pool) external view returns (int256 deltaB) {
+    function poolDeltaB(address pool) external view returns (int256) {
         if (pool == C.curveMetapoolAddress()) return LibCurveOracle.check();
-        require(false, "Oracle: Pool not supported");
+        revert("Oracle: Pool not supported");
     }
 
     //////////////////// ORACLE INTERNAL ////////////////////
