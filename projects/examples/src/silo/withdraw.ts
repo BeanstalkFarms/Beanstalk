@@ -29,7 +29,7 @@ async function main() {
 
 async function go(token: Token, amount: TokenValue) {
   console.log(`Withdrawing ${amount.toHuman()} from ${token.symbol} Silo`);
-  const tx = await sdk.silo.withdraw.withdraw(token, amount)
+  const tx = await sdk.silo.withdraw(token, amount)
   await tx.wait();
 
   console.log('Done');

@@ -18,6 +18,15 @@ export class Bean {
     return TokenValue.fromBlockchain(price, 6);
   }
 
+    /**
+   * Returns the deltaB
+   */
+    async getDeltaB() {
+      const [price, totalSupply, deltaB] = await Bean.sdk.contracts.beanstalkPrice.price();
+  
+      return TokenValue.fromBlockchain(deltaB, 6);
+    }
+
   /**
    * Get the chop rate for an Unripe asset.
    * `chopRate` is the conversion rate between Unripe -> Ripe, for ex: 0.5%
