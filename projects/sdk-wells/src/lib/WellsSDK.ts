@@ -2,8 +2,8 @@ import { ChainId } from "@beanstalk/sdk-core";
 import { ethers } from "ethers";
 import { addresses } from "src/constants/addresses";
 import { enumFromValue } from "src/utils";
-import { Contracts } from "./contracts";
 import { Tokens } from "./tokens";
+import { Well } from "./Well";
 
 export type Provider = ethers.providers.JsonRpcProvider;
 export type Signer = ethers.Signer;
@@ -23,7 +23,6 @@ export class WellsSDK {
   public readonly chainId: ChainId;
 
   public readonly addresses: typeof addresses;
-  public readonly contracts: Contracts;
   public readonly tokens: Tokens;
 
   constructor(config?: SDKConfig) {
@@ -33,16 +32,17 @@ export class WellsSDK {
 
     // Globals
     this.addresses = addresses;
-    this.contracts = new Contracts(this);
     this.tokens = new Tokens(this);
+  }
+
+  getWell(address: string): Well {
+    return new Well(this, address);
   }
 
   debug(...args: any[]) {
     if (!this.DEBUG) return;
     console.debug(...args);
   }
-
-  ////// Configuration //////
 
   handleConfig(config: SDKConfig = {}) {
     if (config.rpcUrl) {
