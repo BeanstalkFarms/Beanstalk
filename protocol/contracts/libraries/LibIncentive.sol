@@ -70,10 +70,12 @@ library LibIncentive {
         );
     }
 
-    // fraxExp scales up the bean reward based on the blocks late.
-    // the formula is beans * (1.01)^(Blocks Late * 12 second block time).
-    // since block time is capped at 25 blocks,
-    // we only need to check cases 0 - 25
+    /**  
+     * @dev fraxExp scales up the bean reward based on the blocks late.
+     * the formula is beans * (1.01)^(Blocks Late * 12 second block time).
+     * since block time is capped at 25 blocks,
+     * we only need to check cases 0 - 25 
+     */
     function fracExp(uint256 beans, uint256 blocksLate) internal pure returns (uint256 scaledSunriseReward) {
         // check most likely case first
         if (blocksLate == 0) {
