@@ -185,7 +185,7 @@ library LibIncentive {
         pure 
         returns (uint256 scaledTemperature) 
     {
-        return beans.mul(scaler).div(PRECISION);
+        return beans.mul(scaler).div(FRAC_EXP_PRECISION);
     }
 
 
