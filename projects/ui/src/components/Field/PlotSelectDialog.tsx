@@ -40,14 +40,14 @@ const PlotSelectDialog: FC<PlotSelectDialogProps & DialogProps> = ({
 
   return (
     <Dialog
-      onClose={onClose}
+      onClose={handleClose}
       open={open}
       fullWidth
     >
       <StyledDialogTitle onClose={handleClose}>My Plots</StyledDialogTitle>
       <StyledDialogContent
         sx={{
-          pb: 1, // enforces 10px padding around all 
+          pb: 1, // enforces 10px padding around all
         }}
       >
         {Object.keys(plots).length > 0 ? (
