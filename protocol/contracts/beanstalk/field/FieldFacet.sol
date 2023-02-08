@@ -88,7 +88,7 @@ contract FieldFacet is ReentrancyGuard {
         payable
         returns (uint256 pods)
     {
-        return sowWithMin(beans, minTemperature, beans, mode);
+        pods = sowWithMin(beans, minTemperature, beans, mode);
     }
 
     /**
@@ -125,11 +125,11 @@ contract FieldFacet is ReentrancyGuard {
         }
 
         // 1 Bean is Sown in 1 Soil, i.e. soil = beans
-        return _sow(soil, _morningTemperature, mode);
+        pods = _sow(soil, _morningTemperature, mode);
     }
 
     /**
-     * @dev Burn Beans, Sows at the provided `morningTemperature`, increments the total
+     * @dev Burn Beans, Sows at the provided `_morningTemperature`, increments the total
      * number of `beanSown`.
      * 
      * NOTE: {FundraiserFacet} also burns Beans but bypasses the soil mechanism
@@ -280,7 +280,7 @@ contract FieldFacet is ReentrancyGuard {
     function plot(address account, uint256 index)
         public
         view
-        returns (uint256 pods)
+        returns (uint256)
     {
         return s.a[account].field.plots[index];
     }
@@ -299,37 +299,28 @@ contract FieldFacet is ReentrancyGuard {
         // Morning Temperature is dynamic, starting small and logarithmically 
         // increasing to `s.w.t` across the first 25 blocks of the Season.
         if (!s.season.abovePeg) {
-            return (
-                uint256(s.f.soil),
-                _morningTemperature
-            );
-        }
-
+            soil = uint256(s.f.soil);
+        } 
+        
         // Above peg: the maximum amount of Pods that Beanstalk is willing to mint
         // stays fixed; since {morningTemperature} is scaled down when `delta < 25`, we
         // need to scale up the amount of Soil to hold Pods constant.
-        return (
-            LibDibbler.scaleSoilUp(
+        else {
+            soil = LibDibbler.scaleSoilUp(
                 uint256(s.f.soil), // max soil offered this Season, reached when `t >= 25`
                 uint256(s.w.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
                 _morningTemperature // temperature adjusted by number of blocks since Sunrise
-            ),
-            _morningTemperature
-        );
+            );
+        }
     }
 
     //////////////////// GETTERS: SOIL ////////////////////
 
     /**
-     * @notice Returns 
-     * @dev
-     * 
-     * ```
-     * soilAbovePeg * temperature = soil * maxTemperature = pods (when above peg)
-     * soilAbovePeg = soil * maxTemperature / temperature
-     * ```
-     * 
-     * FIXME: probably should be named {remainingSoil}.
+     * @notice Returns the total amount of available Soil. 1 Bean can be Sown in
+     * 1 Soil for Pods.
+     * @dev When above peg, Soil is dynamic because the number of Pods that
+     * Beanstalk is willing to mint is fixed.
      */
     function totalSoil() external view returns (uint256) {
         // Below peg: Soil is fixed to the amount set during {stepWeather}.

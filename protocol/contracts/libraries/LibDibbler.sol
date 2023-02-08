@@ -154,11 +154,12 @@ library LibDibbler {
     /**
      * @dev Returns the temperature `s.w.t` scaled down based on the block delta.
      * Precision level 1e6, as soil has 1e6 precision (1% = 1e6)
-     * the formula `log2(A * MAX_BLOCK_ELAPSED + 1)` is applied, where:
-     * `A = 2`
-     * `MAX_BLOCK_ELAPSED = 25`
+     * 
+     * The formula `log2(A * MAX_BLOCK_ELAPSED + 1)` is applied, where:
+     *  `A = 2`
+     *  `MAX_BLOCK_ELAPSED = 25`
      */
-    function morningTemperature() internal view returns (uint256 _morningTemperature) {
+    function morningTemperature() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 delta = block.number.sub(s.season.sunriseBlock);
 
@@ -282,8 +283,6 @@ library LibDibbler {
      * @return scaledTemperature The scaled temperature, measured to 1e8 = 100e6 = 100% = 1.
      * @dev Scales down `s.w.t` and imposes a minimum of 1e6 (1%) unless 
      * `s.w.t` is 0%.
-     * 
-     * FIXME: think on how to explain decimals
      */
     function _scaleTemperature(uint256 pct) private view returns (uint256 scaledTemperature) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -291,13 +290,13 @@ library LibDibbler {
         uint256 maxTemperature = s.w.t;
         if(maxTemperature == 0) return 0; 
 
-        return LibPRBMath.max(
+        scaledTemperature = LibPRBMath.max(
             // To save gas, `pct` is pre-calculated to 12 digits. Here we
             // perform the following transformation:
-            // (1e2)    maxTemperature                100%
-            // (1e12)    * pct 
-            // (1e6)     / TEMPERATURE_PRECISION      1%
-            // (1e8)     = scaledYield 
+            // (1e2)    maxTemperature
+            // (1e12)    * pct
+            // (1e6)     / TEMPERATURE_PRECISION
+            // (1e8)     = scaledYield
             maxTemperature.mulDiv(
                 pct, 
                 TEMPERATURE_PRECISION,
@@ -310,20 +309,22 @@ library LibDibbler {
 
     /**
      * @param beans The number of Beans to convert to Pods.
-     * @param _morningTemperature The current temperature, measured to 1e8. 
+     * @param _morningTemperature The current Temperature, measured to 1e8. 
      * @dev Converts Beans to Pods based on `_morningTemperature`.
      * 
      * `pods = beans * (100e6 + _morningTemperature) / 100e6`
      * `pods = beans * (1 + _morningTemperature / 100e6)`
      *
      * Beans and Pods are measured to 6 decimals.
+     * 
+     * 1e8 = 100e6 = 100% = 1.
      */
     function beansToPods(uint256 beans, uint256 _morningTemperature)
         internal
         pure
         returns (uint256 pods)
     {
-        return beans.mulDiv(
+        pods = beans.mulDiv(
             _morningTemperature.add(ONE_HUNDRED_PCT),
             ONE_HUNDRED_PCT
         );
