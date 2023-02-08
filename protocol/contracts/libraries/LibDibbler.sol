@@ -15,8 +15,11 @@ import {LibPRBMath} from "./LibPRBMath.sol";
 import {AppStorage} from "~/beanstalk/AppStorage.sol";
 
 /**
- * @title Dibbler
+ * @title LibDibbler
  * @author Publius, Brean
+ * @notice Calculates the amount of Pods received for Sowing under certain conditions.
+ * Provides functions to calculate the instantaneous Temperature, which is adjusted by the
+ * Morning Auction functionality. Provides math helpers for scaling Soil.
  */
 library LibDibbler {
     using SafeMath for uint256;
@@ -24,12 +27,16 @@ library LibDibbler {
     using LibSafeMath32 for uint32;
     using LibSafeMath128 for uint128;
 
-    // Morning Auction scales temperature by 1e6
-    // 1e6 = 1%
-    // (6674 * 0.279415312704e12)/1e6 ~= 1864e6 = 1864%?
-    // 1e6 = 1% = 0.01
-    uint256 constant TEMPERATURE_PRECISION = 1e6; 
-    uint256 constant ONE_HUNDRED_PCT = 100 * TEMPERATURE_PRECISION;
+    /// @dev Morning Auction scales temperature by 1e6.
+    uint256 internal constant TEMPERATURE_PRECISION = 1e6; 
+
+    /// @dev Simplifies conversion of Beans to Pods:
+    /// `pods = beans * (1 + temperature)`
+    /// `pods = beans * (100% + temperature) / 100%`
+    uint256 private constant ONE_HUNDRED_PCT = 100 * TEMPERATURE_PRECISION;
+
+    /// @dev If less than `SOIL_SOLD_OUT_THRESHOLD` Soil is left, consider 
+    /// Soil to be "sold out"; affects how Temperature is adjusted.
     uint256 private constant SOIL_SOLD_OUT_THRESHOLD = 1e6;
     
     event Sow(
@@ -43,25 +50,25 @@ library LibDibbler {
 
     /**
      * @param beans The number of Beans to Sow
-     * @param _morningTemperature FIXME
+     * @param _morningTemperature Pre-calculated {morningTemperature()}
      * @param account The account sowing Beans
      * @dev 
      * 
      * ## Above Peg 
      * 
-     * | t   | pods  | soil                                   | temperature                          | maxTemperature     |
-     * |-----|-------|----------------------------------------|--------------------------------|--------------|
-     * | 0   | 500e6 | ~6683e6 (500e6 * (1 + 1250%)/(1+1%))   | 1e6 (1%)                       | 1250 (1250%) |
-     * | 12  | 500e6 | ~1507e6 (500e6 * (1 + 1250%)/(1+348%)) | 348.75e6 (27.9% * 1250 * 1e6)  | 1250         |
-     * | 300 | 500e6 |  500e6 (500e6 * (1 + 1250%)/(1+1250%)) | 1250e6                         | 1250         |
+     * | t   | pods  | soil                                   | temperature                    | maxTemperature  |
+     * |-----|-------|----------------------------------------|--------------------------------|-----------------|
+     * | 0   | 500e6 | ~6683e6 (500e6 * (1 + 1250%)/(1+1%))   | 1e6 (1%)                       | 1250 (1250%)    |
+     * | 12  | 500e6 | ~1507e6 (500e6 * (1 + 1250%)/(1+348%)) | 348.75e6 (27.9% * 1250 * 1e6)  | 1250            |
+     * | 300 | 500e6 |  500e6 (500e6 * (1 + 1250%)/(1+1250%)) | 1250e6                         | 1250            |
      * 
      * ## Below Peg
      * 
-     * | t   | pods                            | soil  | temperature                         | maxTemperature     |
-     * |-----|---------------------------------|-------|-------------------------------|--------------|
-     * | 0   | 505e6 (500e6 * (1+1%))          | 500e6 | 1e6 (1%)                      | 1250 (1250%) |
-     * | 12  | 2243.75e6 (500e6 * (1+348.75%)) | 500e6 | 348.75e6 (27.9% * 1250 * 1e6) | 1250         |
-     * | 300 | 6750e6 (500e6 * (1+1250%))      | 500e6 | 1250e6                        | 1250         |
+     * | t   | pods                            | soil  | temperature                   | maxTemperature  |
+     * |-----|---------------------------------|-------|-------------------------------|-----------------|
+     * | 0   | 505e6 (500e6 * (1+1%))          | 500e6 | 1e6 (1%)                      | 1250 (1250%)    |
+     * | 12  | 2243.75e6 (500e6 * (1+348.75%)) | 500e6 | 348.75e6 (27.9% * 1250 * 1e6) | 1250            |
+     * | 300 | 6750e6 (500e6 * (1+1250%))      | 500e6 | 1250e6                        | 1250            |
      */
     function sow(uint256 beans, uint256 _morningTemperature, address account) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -69,17 +76,13 @@ library LibDibbler {
         uint256 pods;
         uint256 maxTemperature = uint256(s.w.t).mul(TEMPERATURE_PRECISION);
 
-        // Above peg: FIXME
         if (s.season.abovePeg) {
             // amount sown is rounded up, because 
             // 1: temperature is rounded down.
             // 2: pods are rounded down.
             beans = scaleSoilDown(beans, _morningTemperature, maxTemperature);
             pods = beansToPods(beans, maxTemperature);
-        } 
-        
-        // Below peg: FIXME
-        else {
+        } else {
             pods = beansToPods(beans, _morningTemperature);
         }
 

@@ -10,9 +10,11 @@ import "../C.sol";
 import "./Curve/LibCurve.sol";
 
 /**
+ * @title LibIncentive
  * @author Publius, Chaikitty, Brean
- * @title Incentive Library calculates the reward and the exponential increase efficiently.
- **/
+ * @notice Calculates the reward offered for calling Sunrise, adjusts for current gas & ETH prices,
+ * and scales the reward up when the Sunrise is called late.
+ */
 library LibIncentive {
     using SafeMath for uint256;
 

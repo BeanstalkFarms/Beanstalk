@@ -23,7 +23,7 @@ contract Weather is Sun {
     /**
      * @notice Emitted when the Temperature (fka "Weather") changes.
      * @param season The current Season
-     * @param caseId The "Weather Case", see {FIXME}
+     * @param caseId The Weather case, which determines how much the Temperature is adjusted.
      * @param change The change in Temperature as a delta from the previous value
      * @dev The name {WeatherChange} is kept for backwards compatibility, 
      * however the state variable included as `change` is now called Temperature.
