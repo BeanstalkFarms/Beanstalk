@@ -70,7 +70,10 @@ library LibIncentive {
         );
     }
 
-    // 1.01^N
+    // fraxExp scales up the bean reward based on the blocks late.
+    // the formula is beans * (1.01)^(Blocks Late * 12 second block time).
+    // since block time is capped at 25 blocks,
+    // we only need to check cases 0 - 25
     function fracExp(uint256 beans, uint256 blocksLate) internal pure returns (uint256 scaledSunriseReward) {
         // check most likely case first
         if (blocksLate == 0) {
@@ -173,7 +176,7 @@ library LibIncentive {
                 return _scaleReward(beans, 15_584_725_741_558_756_931); 
             }
         }
-        if (blocksLate > 25){ // block rewards are capped at 25 (MAX_BLOCKS_LATE)
+        if (blocksLate >= 25){ // block rewards are capped at 25 (MAX_BLOCKS_LATE)
             return _scaleReward(beans, 19_788_466_261_924_388_319); 
         } else { // blocksLate == 24
             return _scaleReward(beans, 17_561_259_053_330_430_428);
