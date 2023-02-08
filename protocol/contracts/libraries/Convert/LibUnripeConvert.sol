@@ -39,7 +39,7 @@ library LibUnripeConvert {
         (
             uint256 outUnderlyingAmount,
             uint256 inUnderlyingAmount
-        ) = LibCurveConvert._curveRemoveLPAndBuyToPeg(
+        ) = LibCurveConvert.curveRemoveLPAndBuyToPeg(
                 LibUnripe.unripeToUnderlying(tokenIn, lp),
                 minAmountOut,
                 C.curveMetapoolAddress()

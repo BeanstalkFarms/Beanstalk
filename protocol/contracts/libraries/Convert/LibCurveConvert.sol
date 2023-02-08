@@ -78,7 +78,7 @@ library LibCurveConvert {
     {
         (uint256 lp, uint256 minBeans, address pool) = convertData
             .convertWithAddress();
-        (outAmount, inAmount) = _curveRemoveLPAndBuyToPeg(lp, minBeans, pool);
+        (outAmount, inAmount) = curveRemoveLPAndBuyToPeg(lp, minBeans, pool);
         tokenOut = C.beanAddress();
         tokenIn = pool; // The Curve metapool also issues the LP token
     }
@@ -132,7 +132,7 @@ library LibCurveConvert {
      * @param minBeans The minimum amount of Beans to receive
      * @param pool The address of the Curve pool to remove from
      */
-    function _curveRemoveLPAndBuyToPeg(
+    function curveRemoveLPAndBuyToPeg(
         uint256 lp,
         uint256 minBeans,
         address pool
