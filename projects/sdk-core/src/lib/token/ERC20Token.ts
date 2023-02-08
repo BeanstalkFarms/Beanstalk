@@ -5,18 +5,20 @@ import { Token } from "./Token";
 import { TokenValue } from "src/lib/TokenValue";
 
 export class ERC20Token extends Token {
-  private static contract: ERC20Permit;
-
-  //////////////////////// Contract Instance ////////////////////////
+  private contract: ERC20Permit;
 
   public getContract() {
-    if (!ERC20Token.contract) {
-      ERC20Token.contract = ERC20Permit__factory.connect(this.address, this.getProvider());
+    if (!this.contract) {
+      // Make this.contract "invisible" to console.log, and immutable
+      Object.defineProperty(this, "contract", {
+        enumerable: false,
+        configurable: false,
+        writable: false,
+        value: ERC20Permit__factory.connect(this.address, this.getProvider())
+      });
     }
-    return ERC20Token.contract;
+    return this.contract;
   }
-
-  //////////////////////// On-chain Configuration ////////////////////////
 
   public async getName() {
     if (this.name) return this.name;
