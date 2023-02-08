@@ -17,7 +17,7 @@ contract Weather is Sun {
     using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
 
-    /* If all Soil is Sown faster than this, Beanstalk considers demand for Soil to be increasing. */
+    /// @dev If all Soil is Sown faster than this, Beanstalk considers demand for Soil to be increasing.
     uint256 private constant SOW_TIME_DEMAND_INCR = 600; // seconds
     
     /**

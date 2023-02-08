@@ -62,7 +62,7 @@ contract FieldFacet is ReentrancyGuard {
      * @notice Sow Beans in exchange for Pods.
      * @param beans The number of Beans to Sow
      * @param minTemperature The minimum Temperature at which to Sow
-     * @param mode The balance to transfer Beans from; see {LibTrasfer.From}
+     * @param mode The balance to transfer Beans from; see {LibTransfer.From}
      * @return pods The number of Pods received
      * @dev 
      * 
