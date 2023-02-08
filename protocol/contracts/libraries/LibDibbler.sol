@@ -50,37 +50,39 @@ library LibDibbler {
      * @param beans The number of Beans to Sow
      * @param _morningTemperature Pre-calculated {morningTemperature()}
      * @param account The account sowing Beans
+     * @param abovePeg Whether the TWA deltaB of the previous season was positive (true) or negative (false)
      * @dev 
      * 
      * ## Above Peg 
      * 
-     * | t   | pods  | soil                                   | temperature                    | maxTemperature  |
-     * |-----|-------|----------------------------------------|--------------------------------|-----------------|
-     * | 0   | 500e6 | ~6683e6 (500e6 * (1 + 1250%)/(1+1%))   | 1e6 (1%)                       | 1250 (1250%)    |
-     * | 12  | 500e6 | ~1507e6 (500e6 * (1 + 1250%)/(1+348%)) | 348.75e6 (27.9% * 1250 * 1e6)  | 1250            |
-     * | 300 | 500e6 |  500e6 (500e6 * (1 + 1250%)/(1+1250%)) | 1250e6                         | 1250            |
+     * | t   | Max pods  | s.f.soil              | soil                    | temperature              | maxTemperature |
+     * |-----|-----------|-----------------------|-------------------------|--------------------------|----------------|
+     * | 0   | 500e6     | ~37e6 500e6/(1+1250%) | ~495e6 500e6/(1+1%))    | 1e6 (1%)                 | 1250 (1250%)   |
+     * | 12  | 500e6     | ~37e6                 | ~111e6 500e6/(1+348%))  | 348.75e6 (27.9% * 1250)  | 1250           |
+     * | 300 | 500e6     | ~37e6                 |  ~37e6 500e6/(1+1250%)  | 1250e6                   | 1250           |
      * 
      * ## Below Peg
      * 
-     * | t   | pods                            | soil  | temperature                   | maxTemperature  |
-     * |-----|---------------------------------|-------|-------------------------------|-----------------|
-     * | 0   | 505e6 (500e6 * (1+1%))          | 500e6 | 1e6 (1%)                      | 1250 (1250%)    |
-     * | 12  | 2243.75e6 (500e6 * (1+348.75%)) | 500e6 | 348.75e6 (27.9% * 1250 * 1e6) | 1250            |
-     * | 300 | 6750e6 (500e6 * (1+1250%))      | 500e6 | 1250e6                        | 1250            |
+     * | t   | Max pods                        | soil  | temperature                   | maxTemperature     |
+     * |-----|---------------------------------|-------|-------------------------------|--------------------|
+     * | 0   | 505e6 (500e6 * (1+1%))          | 500e6 | 1e6 (1%)                      | 1250 (1250%)       |
+     * | 12  | 2243.75e6 (500e6 * (1+348.75%)) | 500e6 | 348.75e6 (27.9% * 1250 * 1e6) | 1250               |
+     * | 300 | 6750e6 (500e6 * (1+1250%))      | 500e6 | 1250e6                        | 1250               |
      */
-    function sow(uint256 beans, uint256 _morningTemperature, address account) internal returns (uint256) {
+    function sow(uint256 beans, uint256 _morningTemperature, address account, bool abovePeg) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         
         uint256 pods;
-        uint256 maxTemperature = uint256(s.w.t).mul(TEMPERATURE_PRECISION);
-
-        if (s.season.abovePeg) {
+        if (abovePeg) {
+            uint256 maxTemperature = uint256(s.w.t).mul(TEMPERATURE_PRECISION);
             // amount sown is rounded up, because 
             // 1: temperature is rounded down.
             // 2: pods are rounded down.
             beans = scaleSoilDown(beans, _morningTemperature, maxTemperature);
             pods = beansToPods(beans, maxTemperature);
-        } else {
+        } 
+        
+        else {
             pods = beansToPods(beans, _morningTemperature);
         }
 
