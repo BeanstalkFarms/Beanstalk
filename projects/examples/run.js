@@ -9,10 +9,12 @@ require("@swc/register")({
       syntax: "typescript"
     },
     paths: {
-      "@sdk/*": ["../sdk/src/*"]
+      "~sdk/*": ["../sdk/src/*"],
+      "~sdk-core/*": ["../sdk-core/src/*"]
     },
     baseUrl: "."
   },
+  sourceMaps: true,
   module: {
     type: "commonjs"
   }
