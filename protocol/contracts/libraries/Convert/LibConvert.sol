@@ -14,9 +14,11 @@ library LibConvert {
     using SafeMath for uint256;
     using LibConvertData for bytes;
 
-    /// @notice Takes in bytes object that has convert input data encoded into it for a particular convert for
-    ///         a specified pool and returns the in and out convert amounts and token addresses and bdv
-    /// @param convertData Contains convert input parameters for a specified convert
+    /**
+     * @notice Takes in bytes object that has convert input data encoded into it for a particular convert for
+     * a specified pool and returns the in and out convert amounts and token addresses and bdv
+     * @param convertData Contains convert input parameters for a specified convert
+     */
     function convert(bytes calldata convertData)
         internal
         returns (
@@ -51,7 +53,7 @@ library LibConvert {
     function getMaxAmountIn(address tokenIn, address tokenOut)
         internal
         view
-        returns (uint256 amountIn)
+        returns (uint256)
     {
         /// BEAN:3CRV LP -> BEAN
         if (tokenIn == C.curveMetapoolAddress() && tokenOut == C.beanAddress())
@@ -70,15 +72,16 @@ library LibConvert {
             return LibUnripeConvert.beansToPeg();
 
         // Lambda -> Lambda
-        if (tokenIn == tokenOut) return type(uint256).max;
+        if (tokenIn == tokenOut) 
+            return type(uint256).max;
 
-        require(false, "Convert: Tokens not supported");
+        revert("Convert: Tokens not supported");
     }
 
     function getAmountOut(address tokenIn, address tokenOut, uint256 amountIn)
         internal 
         view
-        returns (uint256 amountOut)
+        returns (uint256)
     {
         /// BEAN:3CRV LP -> BEAN
         if (tokenIn == C.curveMetapoolAddress() && tokenOut == C.beanAddress())
@@ -97,8 +100,9 @@ library LibConvert {
             return LibUnripeConvert.getLPAmountOut(amountIn);
         
         // Lambda -> Lambda
-        if (tokenIn == tokenOut) return amountIn;
+        if (tokenIn == tokenOut)
+            return amountIn;
 
-        require(false, "Convert: Tokens not supported");
+        revert("Convert: Tokens not supported");
     }
 }
