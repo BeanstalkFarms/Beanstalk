@@ -26,7 +26,7 @@ library LibCurveConvert {
      */
     function beansToPeg(address pool) internal view returns (uint256 beans) {
         uint256[2] memory balances = ICurvePool(pool).get_balances();
-        uint256 xp1 = getBeansAtPeg(pool, balances);
+        uint256 xp1 = _getBeansAtPeg(pool, balances);
         if (xp1 <= balances[0]) return 0;
         beans = xp1.sub(balances[0]);
     }
@@ -36,7 +36,7 @@ library LibCurveConvert {
      */
     function lpToPeg(address pool) internal view returns (uint256 lp) {
         uint256[2] memory balances = ICurvePool(pool).get_balances();
-        uint256 xp1 = getBeansAtPeg(pool, balances);
+        uint256 xp1 = _getBeansAtPeg(pool, balances);
         if (balances[0] <= xp1) return 0;
         return LibMetaCurveConvert.lpToPeg(balances, xp1);
     }
@@ -149,7 +149,7 @@ library LibCurveConvert {
 
     //////////////////// HELPERS ////////////////////
     
-    function getBeansAtPeg(address pool, uint256[2] memory balances)
+    function _getBeansAtPeg(address pool, uint256[2] memory balances)
         internal
         view
         returns (uint256)
