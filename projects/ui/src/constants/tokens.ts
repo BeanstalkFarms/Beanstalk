@@ -17,7 +17,7 @@ import beanEthLpLogoUrl from '~/img/tokens/bean-eth-lp-logo.svg';
 import beanLusdLogoUrl from '~/img/tokens/bean-lusd-logo.svg';
 
 // ERC-20 Token Images
-import crv3LogoUrl from '~/img/tokens/crv3-logo.svg';
+import crv3LogoUrl from '~/img/tokens/crv3-logo.png';
 import daiLogoUrl from '~/img/tokens/dai-logo.svg';
 import usdcLogoUrl from '~/img/tokens/usdc-logo.svg';
 import usdtLogoUrl from '~/img/tokens/usdt-logo.svg';
