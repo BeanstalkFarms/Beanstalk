@@ -10,7 +10,6 @@ import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLib
 import "@openzeppelin/contracts/math/Math.sol";
 import "../C.sol";
 import "./Curve/LibCurve.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius, Chaikitty, Brean
@@ -180,7 +179,7 @@ library LibIncentive {
             return _scaleReward(beans, 17_561_259_053_330_430_428);
         }
     }
-    
+
     function _scaleReward(uint256 beans, uint256 scaler) 
         private 
         pure 
