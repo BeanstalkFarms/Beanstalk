@@ -48,8 +48,7 @@ library LibIncentive {
                 gasCostWei.mul(beanEthPrice).div(1e18) + C.getBaseReward(), // divide by 1e18 to convert wei to eth
                 C.getMaxReward()
             );
-        // return fracExpOld(sunriseReward, 100, blocksLate.mul(C.getBlockLengthSeconds()), 1);
-        return fracExp(sunriseReward,blocksLate);
+        return fracExp(sunriseReward, blocksLate);
     }
 
     function getCurveBeanPrice(uint256[2] memory balances) internal view returns (uint256 price) {
