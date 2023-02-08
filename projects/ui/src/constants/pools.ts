@@ -1,7 +1,7 @@
 import { CurveMetaPool } from '~/classes/Pool';
 import { SupportedChainId } from '~/constants/chains';
 
-import curveLogo from '~/img/dexes/curve-logo.svg';
+import curveLogo from '~/img/dexes/curve-logo.png';
 
 import { ChainConstant, PoolMap } from '.';
 import { BEAN_CRV3_ADDRESSES } from './addresses';
