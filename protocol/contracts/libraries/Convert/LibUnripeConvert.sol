@@ -78,7 +78,7 @@ library LibUnripeConvert {
         (
             uint256 outUnderlyingAmount,
             uint256 inUnderlyingAmount
-        ) = LibCurveConvert._curveSellToPegAndAddLiquidity(
+        ) = LibCurveConvert.curveSellToPegAndAddLiquidity(
                 LibUnripe.unripeToUnderlying(tokenIn, beans),
                 minAmountOut,
                 C.curveMetapoolAddress()

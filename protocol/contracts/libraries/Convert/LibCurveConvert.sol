@@ -98,7 +98,7 @@ library LibCurveConvert {
     {
         (uint256 beans, uint256 minLP, address pool) = convertData
             .convertWithAddress();
-        (outAmount, inAmount) = _curveSellToPegAndAddLiquidity(
+        (outAmount, inAmount) = curveSellToPegAndAddLiquidity(
             beans,
             minLP,
             pool
@@ -115,7 +115,7 @@ library LibCurveConvert {
      * @param minLP The min amount of Curve LP to receive
      * @param pool The address of the Curve pool to add to
      */
-    function _curveSellToPegAndAddLiquidity(
+    function curveSellToPegAndAddLiquidity(
         uint256 beans,
         uint256 minLP,
         address pool
