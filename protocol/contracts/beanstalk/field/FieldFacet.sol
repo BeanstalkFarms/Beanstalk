@@ -17,9 +17,8 @@ import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 
 /**
  * @title FieldFacet
- * @notice Field sows Beans.
  * @author Publius, Brean
- * @dev 
+ * @notice The Field is where Beans are Sown and Pods are Harvested.
  */
 contract FieldFacet is ReentrancyGuard {
     using SafeMath for uint256;
@@ -243,7 +242,8 @@ contract FieldFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Returns the number of outstanding Pods.
+     * @notice Returns the number of outstanding Pods. Includes Pods that are
+     * currently Harvestable but have not yet been Harvested.
      */
     function totalPods() public view returns (uint256) {
         return s.f.pods.sub(s.f.harvested);
@@ -267,8 +267,7 @@ contract FieldFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Returns the number of Pods that are not yet Harvestable.
-     * @dev Also referred to as the Pod Line.
+     * @notice Returns the number of Pods that are not yet Harvestable. Also known as the Pod Line.
      */
     function totalUnharvestable() public view returns (uint256) {
         return s.f.pods.sub(s.f.harvestable);
@@ -339,6 +338,7 @@ contract FieldFacet is ReentrancyGuard {
         if (!s.season.abovePeg) {
             return uint256(s.f.soil);
         }
+
         // Above peg: Soil is dynamic
         return LibDibbler.scaleSoilUp(
             uint256(s.f.soil), // min soil

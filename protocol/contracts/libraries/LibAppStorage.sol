@@ -1,6 +1,4 @@
-/*
- SPDX-License-Identifier: MIT
-*/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
@@ -8,15 +6,14 @@ pragma experimental ABIEncoderV2;
 import "../beanstalk/AppStorage.sol";
 
 /**
+ * @title LibAppStorage 
  * @author Publius
- * @title App Storage Library allows libaries to access Beanstalk's state.
-**/
+ * @notice Allows libaries to access Beanstalk's state.
+ */
 library LibAppStorage {
-
     function diamondStorage() internal pure returns (AppStorage storage ds) {
         assembly {
             ds.slot := 0
         }
     }
-
 }

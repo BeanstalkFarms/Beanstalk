@@ -1,6 +1,4 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
@@ -9,6 +7,11 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "./LibMetaCurve.sol";
 import "../../C.sol";
 
+/**
+ * @title LibBeanMetaCurve
+ * @author Publius
+ * @notice Calculates BDV and deltaB for the BEAN:3CRV Metapool.
+ */
 library LibBeanMetaCurve {
     using SafeMath for uint256;
 
@@ -17,17 +20,22 @@ library LibBeanMetaCurve {
     uint256 private constant i = 0;
     uint256 private constant j = 1;
 
+    /**
+     * @param amount An amount of the BEAN:3CRV LP token.
+     */
     function bdv(uint256 amount) internal view returns (uint256) {
         // By using previous balances and the virtual price, we protect against flash loan
         uint256[2] memory balances = IMeta3Curve(C.curveMetapoolAddress()).get_previous_balances();
         uint256 virtualPrice = C.curveMetapool().get_virtual_price();
         uint256[2] memory xp = LibMetaCurve.getXP(balances, RATE_MULTIPLIER);
+
         uint256 a = C.curveMetapool().A_precise();
         uint256 D = LibCurve.getD(xp, a);
         uint256 price = LibCurve.getPrice(xp, a, D, RATE_MULTIPLIER);
         uint256 totalSupply = (D * PRECISION) / virtualPrice;
         uint256 beanValue = balances[0].mul(amount).div(totalSupply);
         uint256 curveValue = xp[1].mul(amount).div(totalSupply).div(price);
+        
         return beanValue.add(curveValue);
     }
 

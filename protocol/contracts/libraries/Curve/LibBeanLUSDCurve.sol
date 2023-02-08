@@ -14,6 +14,12 @@ interface IPlainCurve {
     function get_virtual_price() external view returns (uint256);
 }
 
+/**
+ * @title LibBeanLUSDCurve
+ * @author Publius
+ * @notice CURRENTLY UNUSED: Calculates BDV for the BEAN:LUSD Plain pool. Uses
+ * data from the LUSD:3CRV metapool.
+ */
 library LibBeanLUSDCurve {
     using SafeMath for uint256;
 
