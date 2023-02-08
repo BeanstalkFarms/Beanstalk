@@ -244,7 +244,9 @@ library LibDibbler {
                     return _scaleTemperature(904248660443);
                 }
             }
-            return _scaleTemperature(918382006208); // delta == 18
+            else { // delta == 18
+                return _scaleTemperature(918382006208); 
+            }
         }
         if (delta < 22) {
             if (delta < 21) {
@@ -254,8 +256,10 @@ library LibDibbler {
                 else { // delta == 20
                     return _scaleTemperature(944490527707);
                 }
+            } 
+            else { // delta = 21
+                return _scaleTemperature(956603996980); 
             }
-            return _scaleTemperature(956603996980); // delta == 21
         }
         if (delta <= 23){ 
             if (delta == 22) {

@@ -35,7 +35,7 @@ library LibIncentive {
      * Price calculation:
      * `X := BEAN / USD`
      * `Y := ETH / USDC`
-     * `Y * 1E6 / X = 1E6 * (ETH/USDC)/(BEAN/USD) = ...`
+     * `Y / X := (ETH/USDC)/(BEAN/USD) := ETH / BEAN` (assuming 1 USD == 1 USDC)
      */
     function determineReward(
         uint256 initialGasLeft,
@@ -52,7 +52,8 @@ library LibIncentive {
             .mul(1e6)
             .div(beanUsdPrice);
 
-        // Maximum 300 seconds to reward exponent (25*C.getBlockLengthSeconds())
+        // Cap the maximum number of blocks late. If the sunrise is later than
+        // this, Beanstalk will pay the same amount. Prevents unbounded return value.
         if (blocksLate > MAX_BLOCKS_LATE) {
             blocksLate = MAX_BLOCKS_LATE;
         }
@@ -60,7 +61,7 @@ library LibIncentive {
         // Sunrise gas overhead includes:
         //  - 21K for base transaction cost
         //  - 29K for calculations following the below line, like {fracExp}
-        // Max gas which Beanstalk will pay for is 500K.
+        // Max gas which Beanstalk will pay for = 500K.
         uint256 gasUsed = Math.min(
             initialGasLeft.sub(gasleft()) + C.getSunriseGasOverhead(),
             C.getMaxSunriseGas()
@@ -74,15 +75,15 @@ library LibIncentive {
             .mul(gasUsed);                                          // * GAS_USED
         
         // Calculates the Sunrise reward to pay in BEAN.
-        // 1 ETH = 1e18 wei
         uint256 sunriseReward = Math.min(
             C.getBaseReward() + gasCostWei.mul(beanEthPrice).div(1e18), // divide by 1e18 to convert wei to eth
             C.getMaxReward()
         );
 
-        // Scale the reward
-        // `N = blocks late * seconds per block`
-        // `sunriseReward * (1 + 1/100)^N`
+        // Scale the reward up as the number of blocks after expected sunrise increases. 
+        // `sunriseReward * (1 + 1/100)^(blocks late * seconds per block)`
+        // NOTE: 1.01^(25 * 12) = 19.78, This is the maximum multiplier.
+        // FIXME: compute discretely for all 25 values?
         return fracExp(
             sunriseReward,
             100,
@@ -129,14 +130,16 @@ library LibIncentive {
     }
 
     //////////////////// MATH UTILITIES ////////////////////
-
-    /// @notice fracExp estimates an exponential expression in the form: k * (1 + 1/q) ^ N.
-    /// We use a binomial expansion to estimate the exponent to avoid running into integer overflow issues.
-    /// @param k - the principle amount
-    /// @param q - the base of the fraction being exponentiated
-    /// @param n - the exponent
-    /// @param x - the excess # of times to run the iteration.
-    /// @return s - the solution to the exponential equation
+    
+    /**
+     * @notice fracExp estimates an exponential expression in the form: k * (1 + 1/q) ^ N.
+     * We use a binomial expansion to estimate the exponent to avoid running into integer overflow issues.
+     * @param k - the principle amount
+     * @param q - the base of the fraction being exponentiated
+     * @param n - the exponent
+     * @param x - the excess # of times to run the iteration.
+     * @return s - the solution to the exponential equation
+     */
     function fracExp(
         uint256 k,
         uint256 q,
@@ -158,9 +161,11 @@ library LibIncentive {
         }
     }
 
-    /// @notice log_two calculates the log2 solution in a gas efficient manner
-    /// Motivation: https://ethereum.stackexchange.com/questions/8086
-    /// @param x - the base to calculate log2 of
+    /**
+     * @notice log_two calculates the log2 solution in a gas efficient manner
+     * Motivation: https://ethereum.stackexchange.com/questions/8086
+     * @param x - the base to calculate log2 of
+     */
     function log_two(uint256 x) private pure returns (uint256 y) {
         assembly {
             let arg := x
