@@ -32,7 +32,7 @@ library LibCurveConvert {
     }
 
     /**
-     * @notice Calculate the amount of 
+     * @notice Calculate the amount of LP needed to return `pool` back to peg.
      */
     function lpToPeg(address pool) internal view returns (uint256 lp) {
         uint256[2] memory balances = ICurvePool(pool).get_balances();
@@ -147,13 +147,12 @@ library LibCurveConvert {
         );
     }
 
-    //////////////////// HELPERS ////////////////////
+    //////////////////// INTERNAL ////////////////////
     
-    function _getBeansAtPeg(address pool, uint256[2] memory balances)
-        internal
-        view
-        returns (uint256)
-    {
+    function _getBeansAtPeg(
+        address pool,
+        uint256[2] memory balances
+    ) internal view returns (uint256) {
         if (pool == C.curveMetapoolAddress()) {
             return LibMetaCurveConvert.beansAtPeg(balances);
         }

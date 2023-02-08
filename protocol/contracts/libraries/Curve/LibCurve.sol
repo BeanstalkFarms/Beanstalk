@@ -34,9 +34,6 @@ library LibCurve {
         return dy;
     }
 
-    /**
-     * @dev UNUSED: previously written for BEAN:LUSD plain pool conversions.
-     */
     function getPrice(
         uint256[2] memory xp,
         uint256[2] memory rates,

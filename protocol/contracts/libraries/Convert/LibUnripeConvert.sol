@@ -1,6 +1,4 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
@@ -11,9 +9,9 @@ import "../../interfaces/IBean.sol";
 import "../LibUnripe.sol";
 
 /**
- * @author Publius
  * @title LibUnripeConvert
- **/
+ * @author Publius
+ */
 library LibUnripeConvert {
     using LibConvertData for bytes;
     using SafeMath for uint256;

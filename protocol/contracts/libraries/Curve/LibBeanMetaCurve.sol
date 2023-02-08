@@ -20,6 +20,8 @@ library LibBeanMetaCurve {
     uint256 private constant i = 0;
     uint256 private constant j = 1;
 
+    //////////////////// GETTERS ////////////////////
+
     /**
      * @param amount An amount of the BEAN:3CRV LP token.
      * @dev Calculates the current BDV of BEAN given the balances in the BEAN:3CRV
