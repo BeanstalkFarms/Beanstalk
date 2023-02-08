@@ -157,11 +157,45 @@ library LibLegacyTokenSilo {
         view
         returns (bool)
     {
+        console.log('isDepositSeason: ', address(token));
+        console.log('isDepositSeason logging grownStalkPerBdv:');
+        console.logInt(grownStalkPerBdv);
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 seedsPerBdv = uint256(s.ss[address(token)].legacySeedsPerBdv);
+        console.log('seedsPerBdv: ', seedsPerBdv);
         return
-            grownStalkPerBdv < 0 &&
-            uint256(-grownStalkPerBdv) % seedsPerBdv != 0;
+            grownStalkPerBdv < 0 && //old deposits in seasons will have a negative grown stalk per bdv
+            uint256(-grownStalkPerBdv) % seedsPerBdv == 0;
+    }
+
+    function seasonToGrownStalkPerBdv(IERC20 token, uint32 season)
+        internal
+        view
+        returns (int128 grownStalkPerBdv)
+    {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 seedsPerBdv = uint256(s.ss[address(token)].legacySeedsPerBdv);
+
+        //need current cumulativeGrownStalkPerBdv so we know what to subtract from?
+        //int128 cumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(token);
+
+        //need to go back in time, calculate the delta between the current season and that old deposit season,
+        //and that's how many seasons back we need to go. Then, multiply that by seedsPerBdv, and that's our
+        //negative grown stalk index.
+
+        //find the difference between the input season and the Silo v3 epoch season
+
+        console.log('seasonToGrownStalkPerBdv C.siloV3StartSeason(): ', C.siloV3StartSeason());
+        console.log('seasonToGrownStalkPerBdv season: ', season);
+        console.log('seasonToGrownStalkPerBdv s.season.current: ', s.season.current);
+        console.log('seasonToGrownStalkPerBdv seedsPerBdv: ', seedsPerBdv);
+        
+        int128 firstPart = int128(season)-int128(C.siloV3StartSeason());
+        console.log('seasonToGrownStalkPerBdv firstPart: ');
+        console.logInt(firstPart);
+
+        //using regular - here because we want it to overflow negative
+        grownStalkPerBdv = (int128(season)-int128(C.siloV3StartSeason())).mul(int128(seedsPerBdv));
     }
 
     function grownStalkPerBdvToSeason(IERC20 token, int128 grownStalkPerBdv)
@@ -175,8 +209,8 @@ library LibLegacyTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 seedsPerBdv = uint256(s.ss[address(token)].legacySeedsPerBdv);
 
-        uint32 lastUpdateSeasonStored = s.ss[address(token)].lastUpdateSeason;
-        console.log('grownStalkPerBdvToSeason lastUpdateSeasonStored: ', lastUpdateSeasonStored);
+        // uint32 lastUpdateSeasonStored = s.ss[address(token)].lastUpdateSeason;
+        // console.log('grownStalkPerBdvToSeason lastUpdateSeasonStored: ', lastUpdateSeasonStored);
 
         console.log('grownStalkPerBdvToSeason token: ', address(token));
         // console.log('s.ss[address(token)]: ', s.ss[address(token)]);
@@ -187,8 +221,11 @@ library LibLegacyTokenSilo {
         // uint256 seasonAs256 = uint256(int128(s.ss[address(token)].lastCumulativeGrownStalkPerBdv).sub(grownStalkPerBdv)).div(seedsPerBdv);
         // console.log('seasonAs256: ', seasonAs256);
 
-        //need to divide by 1e6 but make sure we don't round
-        season = s.season.current.sub(uint(grownStalkPerBdv).div(seedsPerBdv)).toUint32();
+        int128 diff = grownStalkPerBdv.div(int128(seedsPerBdv));
+        console.log('diff: ');
+        console.logInt(diff);
+        //using regular + here becauase we want to "overflow" (which for signed just means add negative)
+        season = uint256(int128(s.season.current)+diff).toUint32();
         console.log('grownStalkPerBdvToSeason season: ', season);
         // season = seasonAs256.toUint32();
     }

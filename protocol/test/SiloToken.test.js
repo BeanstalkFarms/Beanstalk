@@ -388,7 +388,11 @@ describe('Silo Token', function () {
   describe('Withdraw Unripe Beans', async function () {
     describe("Just legacy Bean Deposit", async function () {
       beforeEach(async function () {
-        await this.silo.connect(user).mockUnripeBeanDeposit('2', to6('10'))
+        //fast forward to season 10 because that's the zero point for our grownStalkPerBdv index
+        await this.season.teleportSunrise(10);
+
+        await this.silo.connect(user).mockUnripeBeanDeposit('2', to6('10')) //deposit in season 2
+        
       })
 
       it("Check mock works", async function () {
@@ -398,7 +402,21 @@ describe('Silo Token', function () {
       })
 
       it.only('get Deposit', async function () {
-        const deposit = await this.silo.getDeposit(user.address, UNRIPE_BEAN, '2')
+
+        //get current grown stalk per bdv for unripe bean token
+        const cumulative = await this.silo.cumulativeGrownStalkPerBdv(UNRIPE_BEAN);
+        console.log('cumulative: ', cumulative);
+
+
+
+        //if the deposit season was 2, what should the grownStalkPerBdv be?
+        //call silo.grownStalkPerBdvToSeason()
+        console.log('going to call seasonToGrownStalkPerBdv');
+        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '2');
+        console.log('seasonToGrownStalkPerBdv: ', grownStalkPerBdv);
+
+        const deposit = await this.silo.getDeposit(user.address, UNRIPE_BEAN, grownStalkPerBdv)
+        console.log('deposit: ', deposit);
         expect(deposit[0]).to.equal(to6('10'))
         expect(deposit[1]).to.equal(prune(to6('10')))
       })

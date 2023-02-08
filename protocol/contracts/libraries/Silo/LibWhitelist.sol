@@ -57,7 +57,7 @@ library LibWhitelist {
         s.ss[token].stalkPerBdv = stalkPerBdv; //previously just called "stalk"
         s.ss[token].stalkPerBdvPerSeason = stalkPerBdvPerSeason; //previously called "seeds"
 
-        s.ss[token].lastUpdateSeason = s.season.current; //hydrate as current season
+        s.ss[token].lastUpdateSeason = C.siloV3StartSeason(); //hydrate as current season
 
         emit WhitelistToken(token, selector, stalkPerBdv, stalkPerBdvPerSeason);
     }
@@ -76,7 +76,7 @@ library LibWhitelist {
         s.ss[token].stalkPerBdvPerSeason = stalkPerBdvPerSeason; //previously called "seeds"
         s.ss[token].legacySeedsPerBdv = seeds;
 
-        s.ss[token].lastUpdateSeason = s.season.current; //hydrate as current season
+        s.ss[token].lastUpdateSeason = C.siloV3StartSeason(); //hydrate as the constant season when we flip over 
 
         console.log('seeds: ', seeds, ' for ', token);
 

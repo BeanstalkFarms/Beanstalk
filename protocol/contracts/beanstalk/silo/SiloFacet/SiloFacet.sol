@@ -496,4 +496,12 @@ contract SiloFacet is TokenSilo {
         require(LibLegacyTokenSilo.isDepositSeason(token, grownStalkPerBdv), "No matching season for input grownStalkPerBdv");
         season = LibLegacyTokenSilo.grownStalkPerBdvToSeason(token, grownStalkPerBdv);
     }
+
+    function seasonToGrownStalkPerBdv(IERC20 token, uint32 season)
+        public
+        view
+        returns (int128 grownStalkPerBdv)
+    {
+        grownStalkPerBdv = LibLegacyTokenSilo.seasonToGrownStalkPerBdv(token, season);
+    }
 }

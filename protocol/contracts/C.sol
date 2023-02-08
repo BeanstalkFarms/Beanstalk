@@ -51,6 +51,7 @@ library C {
     uint256 private constant SEEDS_PER_BEAN = 2;
     uint256 private constant STALK_PER_BEAN = 10000;
     uint256 private constant ROOTS_BASE = 1e12;
+    uint32 private constant SILOV3_START_SEASON = 10;
 
 
     // Exploit
@@ -262,5 +263,9 @@ library C {
 
     function soilCoefficientLow() internal pure returns (uint256) {
         return SOIL_COEFFICIENT_LOW;
+    }
+
+    function siloV3StartSeason() internal pure returns (uint32) {
+        return SILOV3_START_SEASON;
     }
 }

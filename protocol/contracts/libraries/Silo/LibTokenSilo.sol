@@ -362,6 +362,12 @@ library LibTokenSilo {
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // SiloSettings storage ss = s.ss[token]; //tried to use this, but I get `DeclarationError: Identifier not found or not unique.`
+        console.log('s.ss[address(token)].lastCumulativeGrownStalkPerBdv: ');
+        console.logInt(s.ss[address(token)].lastCumulativeGrownStalkPerBdv);
+        console.log('s.season.current: ', s.season.current);
+        console.log('s.ss[address(token)].lastUpdateSeason: ', s.ss[address(token)].lastUpdateSeason);
+        console.log('s.ss[address(token)].stalkPerBdvPerSeason: ', s.ss[address(token)].stalkPerBdvPerSeason);
+
         _cumulativeGrownStalkPerBdv = s.ss[address(token)].lastCumulativeGrownStalkPerBdv.add(
             int128(s.ss[address(token)].stalkPerBdvPerSeason.mul(s.season.current.sub(s.ss[address(token)].lastUpdateSeason)).div(1e6)) //round here
         );
