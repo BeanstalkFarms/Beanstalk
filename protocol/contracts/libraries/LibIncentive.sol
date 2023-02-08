@@ -100,14 +100,14 @@ library LibIncentive {
      * @param balances The current balances of the BEAN:3CRV pool returned by {stepOracle}.
      * @dev Calculate the price of BEAN denominated in USD.
      */
-    function getBeanUsdPrice(uint256[2] memory balances) internal view returns (uint256 price) {
+    function getBeanUsdPrice(uint256[2] memory balances) internal view returns (uint256) {
         uint256[2] memory rates = getRates();
         uint256[2] memory xp = LibCurve.getXP(balances, rates);
         
         uint256 a = C.curveMetapool().A_precise();
         uint256 D = LibCurve.getD(xp, a);
         
-        price = LibCurve.getPrice(xp, rates, a, D);
+        return LibCurve.getPrice(xp, rates, a, D);
     }
 
     /**
@@ -125,7 +125,7 @@ library LibIncentive {
         );
     }
 
-    function getRates() private view returns (uint256[2] memory rates) {
+    function getRates() private view returns (uint256[2] memory) {
         // Decimals will always be 6 because we can only mint beans
         // 10**(36-decimals)
         return [1e30, C.curve3Pool().get_virtual_price()];
