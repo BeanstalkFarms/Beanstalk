@@ -21,6 +21,9 @@ contract Sun is Oracle {
     using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
 
+    /// @dev 
+    uint256 private constant FERTILIZER_DENOMINATOR = 3;
+
     /**
      * @notice Emitted during Sunrise when Beans are distributed to the Field, the Silo, and Fertilizer.
      * @param season The Season in which Beans were distributed.
@@ -101,7 +104,7 @@ contract Sun is Oracle {
         returns (uint256 newFertilized)
     {
         // 1/3 of new Beans being minted
-        uint256 maxNewFertilized = amount.div(C.getFertilizerDenominator());
+        uint256 maxNewFertilized = amount.div(FERTILIZER_DENOMINATOR);
 
         // Get the new Beans per Fertilizer and the total new Beans per Fertilizer
         uint256 newBpf = maxNewFertilized.div(s.activeFertilizer);

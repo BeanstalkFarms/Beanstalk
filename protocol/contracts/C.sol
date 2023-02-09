@@ -141,10 +141,6 @@ library C {
         return BLOCK_LENGTH_SECONDS;
     }
 
-    function getFertilizerDenominator() internal pure returns (uint256) {
-        return FERTILIZER_DENOMINATOR;
-    }
-
     function getHarvestDenominator() internal pure returns (uint256) {
         return HARVEST_DENOMINATOR;
     }
