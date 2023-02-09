@@ -61,8 +61,6 @@ library C {
 
     //////////////////// Sun ////////////////////
 
-    uint256 private constant FERTILIZER_DENOMINATOR = 3;
-    uint256 private constant HARVEST_DENOMINATOR = 2;
     uint256 private constant SOIL_COEFFICIENT_HIGH = 0.5e18;
     uint256 private constant SOIL_COEFFICIENT_LOW = 1.5e18;
 
@@ -139,10 +137,6 @@ library C {
 
     function getBlockLengthSeconds() internal pure returns (uint256) {
         return BLOCK_LENGTH_SECONDS;
-    }
-
-    function getHarvestDenominator() internal pure returns (uint256) {
-        return HARVEST_DENOMINATOR;
     }
 
     function getChainId() internal pure returns (uint256) {

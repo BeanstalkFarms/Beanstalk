@@ -24,6 +24,9 @@ contract Sun is Oracle {
     /// @dev 
     uint256 private constant FERTILIZER_DENOMINATOR = 3;
 
+    /// @dev
+    uint256 private constant HARVEST_DENOMINATOR = 2;
+
     /**
      * @notice Emitted during Sunrise when Beans are distributed to the Field, the Silo, and Fertilizer.
      * @param season The Season in which Beans were distributed.
@@ -150,7 +153,7 @@ contract Sun is Oracle {
         returns (uint256 newHarvestable)
     {
         uint256 notHarvestable = s.f.pods - s.f.harvestable; // Note: SafeMath is redundant here.
-        newHarvestable = amount.div(C.getHarvestDenominator());
+        newHarvestable = amount.div(HARVEST_DENOMINATOR);
         newHarvestable = newHarvestable > notHarvestable
             ? notHarvestable
             : newHarvestable;
