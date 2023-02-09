@@ -42,9 +42,6 @@ library C {
     /// @dev Base precision when calculating ratios with the {Decimal} library.
     uint256 private constant PERCENT_BASE = 1e18;
 
-    uint256 private constant DELTA_POD_DEMAND_LOWER_BOUND = 0.95e18; // 95%
-    uint256 private constant DELTA_POD_DEMAND_UPPER_BOUND = 1.05e18; // 105%
-
     //////////////////// Silo ////////////////////
 
     /// @dev
@@ -92,17 +89,7 @@ library C {
     function getChainId() internal pure returns (uint256) {
         return CHAIN_ID;
     }
-
-    //
-
-    function getUpperBoundDPD() internal pure returns (Decimal.D256 memory) {
-        return Decimal.ratio(DELTA_POD_DEMAND_UPPER_BOUND, PERCENT_BASE);
-    }
-
-    function getLowerBoundDPD() internal pure returns (Decimal.D256 memory) {
-        return Decimal.ratio(DELTA_POD_DEMAND_LOWER_BOUND, PERCENT_BASE);
-    }
-
+    
     //
 
     function getSeedsPerBean() internal pure returns (uint256) {
