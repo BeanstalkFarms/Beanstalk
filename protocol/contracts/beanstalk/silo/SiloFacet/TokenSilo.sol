@@ -228,7 +228,7 @@ contract TokenSilo is Silo {
             grownStalkPerBdv,
             amount
         );
-
+        console.log('_withdrawDeposit stalkRemoved: ', stalkRemoved);
         // Add a Withdrawal, update totals, burn Stalk.
         _withdraw(
             account,
@@ -291,6 +291,8 @@ contract TokenSilo is Silo {
         uint256 stalk
     ) private {
         LibTokenSilo.decrementTotalDeposited(token, amount); // Decrement total Deposited
+        console.log('_withdraw amount: ', amount);
+        console.log('_withdraw stalk: ', stalk);
         LibSilo.burnStalk(account, stalk); // Burn Stalk
     }
 
@@ -317,7 +319,12 @@ contract TokenSilo is Silo {
         )
     {
         bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, grownStalkPerBdv, amount);
+        console.log('removeDepositFromAccount grownStalkPerBdv: ');
+        console.logInt(grownStalkPerBdv);
 
+        console.log('removeDepositFromAccount cumulativeGrownStalkPerBdv: ');
+        console.logInt(LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)));
+        console.log('removeDepositFromAccount bdvRemoved: ', bdvRemoved);
         //need to get amount of stalk earned by this deposit (index of now minus index of when deposited)
         stalkRemoved = bdvRemoved.mul(s.ss[token].stalkPerBdv).add(
             LibSilo.stalkReward(
@@ -326,6 +333,7 @@ contract TokenSilo is Silo {
                 bdvRemoved.toUint128()
             )
         );
+        console.log('removeDepositFromAccount stalkRemoved: ', stalkRemoved);
 
         emit RemoveDeposit(account, token, grownStalkPerBdv, amount);
     }

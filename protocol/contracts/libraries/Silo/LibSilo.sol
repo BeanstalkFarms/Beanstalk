@@ -85,8 +85,9 @@ library LibSilo {
         else roots = s.s.roots.mul(stalk).div(s.s.stalk);
 
         // Increase supply of Stalk; Add Stalk to the balance of `account`
+        console.log('mintStalk previous total stalk s.s.stalk: ', s.s.stalk);
         s.s.stalk = s.s.stalk.add(stalk);
-        console.log('new total stalk s.s.stalk: ', s.s.stalk);
+        console.log('mintStalk new total stalk s.s.stalk: ', s.s.stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
 
         // console.log('new total stalk s.a[account].s.stalk: ', s.a[account].s.stalk);
@@ -110,7 +111,7 @@ library LibSilo {
         if (stalk == 0) return;
 
         console.log('burnStalk: ', stalk);
-        console.log('current total stalk s.s.stalk: ', s.s.stalk);
+        console.log('burnStalk current total stalk s.s.stalk: ', s.s.stalk);
         // Calculate the amount of Roots for the given amount of Stalk.
         // We round up as it prevents an account having roots but no stalk.
          uint256 roots = s.s.roots.mulDiv(
@@ -120,8 +121,9 @@ library LibSilo {
         if (roots > s.a[account].roots) roots = s.a[account].roots;
 
         // Decrease supply of Stalk; Remove Stalk from the balance of `account`
+        console.log('burnStalk previous total stalk s.s.stalk: ', s.s.stalk);
         s.s.stalk = s.s.stalk.sub(stalk);
-        console.log('new stalk after burn s.s.stalk: ', s.s.stalk);
+        console.log('burnStalk new stalk after burn s.s.stalk: ', s.s.stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
 
         // Decrease supply of Roots; Remove Roots from the balance of `account`

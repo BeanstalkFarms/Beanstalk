@@ -54,6 +54,7 @@ library LibLegacyTokenSilo {
         uint32 season,
         uint256 amount
     ) internal returns (uint256 crateBDV) {
+        console.log('removeDepositFromAccount season: ', season);
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         uint256 crateAmount;
@@ -164,7 +165,7 @@ library LibLegacyTokenSilo {
         uint256 seedsPerBdv = uint256(s.ss[address(token)].legacySeedsPerBdv);
         console.log('seedsPerBdv: ', seedsPerBdv);
         return
-            grownStalkPerBdv < 0 && //old deposits in seasons will have a negative grown stalk per bdv
+            grownStalkPerBdv <= 0 && //old deposits in seasons will have a negative grown stalk per bdv
             uint256(-grownStalkPerBdv) % seedsPerBdv == 0;
     }
 

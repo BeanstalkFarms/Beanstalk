@@ -9,6 +9,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../LibAppStorage.sol";
 import "../LibSafeMath128.sol";
 import "../../C.sol";
+import "hardhat/console.sol";
 
 /**
  * @title LibUnripeSilo
@@ -98,6 +99,7 @@ library LibUnripeSilo {
     ) internal returns (uint256 bdv) {
         _removeUnripeBeanDeposit(account, season, amount);
         bdv = amount.mul(C.initialRecap()).div(1e18);
+        console.log('removeUnripeBeanDeposit: ', bdv);
     }
 
     /**
@@ -111,6 +113,7 @@ library LibUnripeSilo {
         uint256 amount
     ) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        console.log('_removeUnripeBeanDeposit: ', amount);
         s.a[account].bean.deposits[season] = s.a[account].bean.deposits[season].sub(
             amount,
             "Silo: Crate balance too low."

@@ -276,6 +276,7 @@ contract Storage {
         bytes4 selector;
         /*
          * @dev The Stalk Per BDV that the Silo grants in exchange for Depositing this Token.
+         * previously just called stalk.
          */
         uint32 stalkPerBdv;
         /*

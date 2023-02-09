@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../beanstalk/silo/SiloFacet/SiloFacet.sol";
 import "../../libraries/Silo/LibWhitelist.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -59,8 +60,13 @@ contract MockSiloFacet is SiloFacet {
         s.a[msg.sender].bean.deposits[_s] += amount;
         LibTokenSilo.incrementTotalDeposited(C.unripeBeanAddress(), amount);
         amount = amount.mul(C.initialRecap()).div(1e18);
+        console.log('mockUnripeBeanDeposit amount: ', amount);
         uint256 seeds = amount.mul(s.ss[C.unripeBeanAddress()].legacySeedsPerBdv);
+        console.log('mockUnripeBeanDeposit _season(): ', _season());
+        console.log('mockUnripeBeanDeposit _s: ', _s);
+        console.log('s.ss[C.unripeBeanAddress()].stalkPerBdv: ', s.ss[C.unripeBeanAddress()].stalkPerBdv);
         uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalkPerBdv).add(LibSilo.stalkRewardLegacy(seeds, _season() - _s));
+        console.log('mockUnripeBeanDeposit stalk: ', stalk);
         LibSilo.mintStalk(msg.sender, stalk);
         uint256 newBdv = s.a[msg.sender].mowStatuses[C.unripeBeanAddress()].bdv.add(amount);
         s.a[msg.sender].mowStatuses[C.unripeBeanAddress()].bdv = uint128(newBdv);

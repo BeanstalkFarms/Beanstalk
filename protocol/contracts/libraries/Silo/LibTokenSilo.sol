@@ -261,7 +261,7 @@ library LibTokenSilo {
             
             uint32 season = LibLegacyTokenSilo.grownStalkPerBdvToSeason(IERC20(token), grownStalkPerBdv);
             console.log('removeDepositFromAccount season: ', season);
-            LibLegacyTokenSilo.removeDepositFromAccount(account, token, season, amount);
+            return LibLegacyTokenSilo.removeDepositFromAccount(account, token, season, amount);
         }
     }
 
@@ -367,6 +367,10 @@ library LibTokenSilo {
         console.log('s.season.current: ', s.season.current);
         console.log('s.ss[address(token)].lastUpdateSeason: ', s.ss[address(token)].lastUpdateSeason);
         console.log('s.ss[address(token)].stalkPerBdvPerSeason: ', s.ss[address(token)].stalkPerBdvPerSeason);
+
+        //need to take into account the lastUpdateSeason for this token here
+
+
 
         _cumulativeGrownStalkPerBdv = s.ss[address(token)].lastCumulativeGrownStalkPerBdv.add(
             int128(s.ss[address(token)].stalkPerBdvPerSeason.mul(s.season.current.sub(s.ss[address(token)].lastUpdateSeason)).div(1e6)) //round here
