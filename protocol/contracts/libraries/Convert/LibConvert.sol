@@ -64,11 +64,11 @@ library LibConvert {
             return LibCurveConvert.beansToPeg(C.CURVE_BEAN_METAPOOL);
         
         /// urBEAN:3CRV LP -> urBEAN
-        if (tokenIn == C.UNRIPE_LP && tokenOut == C.unripeBeanAddress())
+        if (tokenIn == C.UNRIPE_LP && tokenOut == C.UNRIPE_BEAN)
             return LibUnripeConvert.lpToPeg();
 
         /// urBEAN -> urBEAN:3CRV LP
-        if (tokenIn == C.unripeBeanAddress() && tokenOut == C.UNRIPE_LP)
+        if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.UNRIPE_LP)
             return LibUnripeConvert.beansToPeg();
 
         // Lambda -> Lambda
@@ -92,11 +92,11 @@ library LibConvert {
             return LibCurveConvert.getLPAmountOut(C.CURVE_BEAN_METAPOOL, amountIn);
 
         /// urBEAN:3CRV LP -> urBEAN
-        if (tokenIn == C.UNRIPE_LP && tokenOut == C.unripeBeanAddress())
+        if (tokenIn == C.UNRIPE_LP && tokenOut == C.UNRIPE_BEAN)
             return LibUnripeConvert.getBeanAmountOut(amountIn);
         
         /// urBEAN -> urBEAN:3CRV LP
-        if (tokenIn == C.unripeBeanAddress() && tokenOut == C.UNRIPE_LP)
+        if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.UNRIPE_LP)
             return LibUnripeConvert.getLPAmountOut(amountIn);
         
         // Lambda -> Lambda

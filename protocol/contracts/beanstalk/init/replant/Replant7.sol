@@ -53,7 +53,7 @@ contract Replant7 {
             s.a[account].lastUpdate = s.season.current;
             LibTokenSilo.addDeposit(
                 account,
-                C.unripeBeanAddress(),
+                C.UNRIPE_BEAN,
                 REPLANT_SEASON,
                 earned[i].earnedBeans,
                 earnedBeans.mul(C.initialRecap()).div(1e18)

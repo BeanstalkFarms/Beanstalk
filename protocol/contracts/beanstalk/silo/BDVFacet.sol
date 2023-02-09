@@ -31,7 +31,7 @@ contract BDVFacet {
     }
 
     function unripeBeanToBDV(uint256 amount) public view returns (uint256) {
-        return LibUnripe.unripeToUnderlying(C.unripeBeanAddress(), amount);
+        return LibUnripe.unripeToUnderlying(C.UNRIPE_BEAN, amount);
     }
 
     function bdv(address token, uint256 amount)
@@ -41,7 +41,7 @@ contract BDVFacet {
     {
         if (token == C.BEAN) return beanToBDV(amount);
         else if (token == C.CURVE_BEAN_METAPOOL) return curveToBDV(amount);
-        else if (token == C.unripeBeanAddress()) return unripeBeanToBDV(amount);
+        else if (token == C.UNRIPE_BEAN) return unripeBeanToBDV(amount);
         else if (token == C.UNRIPE_LP) return unripeLPToBDV(amount);
         revert("BDV: Token not whitelisted");
     }

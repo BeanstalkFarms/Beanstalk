@@ -176,7 +176,7 @@ contract UnripeFacet is ReentrancyGuard {
         view
         returns (uint256 percent)
     {
-        if (unripeToken == C.unripeBeanAddress()) {
+        if (unripeToken == C.UNRIPE_BEAN) {
             return LibUnripe.percentBeansRecapped();
         } else if (unripeToken == C.UNRIPE_LP) {
             return LibUnripe.percentLPRecapped();

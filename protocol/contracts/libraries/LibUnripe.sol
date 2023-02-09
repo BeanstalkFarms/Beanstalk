@@ -24,7 +24,7 @@ library LibUnripe {
     function percentBeansRecapped() internal view returns (uint256 percent) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return
-            s.u[C.unripeBeanAddress()].balanceOfUnderlying.mul(DECIMALS).div(
+            s.u[C.UNRIPE_BEAN].balanceOfUnderlying.mul(DECIMALS).div(
                 C.unripeBean().totalSupply()
             );
     }

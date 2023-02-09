@@ -69,7 +69,7 @@ library LibWhitelist {
 
     function whitelistUnripeBean() internal {
         whitelistToken(
-            C.unripeBeanAddress(),
+            C.UNRIPE_BEAN,
             IBS.unripeBeanToBDV.selector,
             BEAN_STALK,
             BEAN_SEEDS

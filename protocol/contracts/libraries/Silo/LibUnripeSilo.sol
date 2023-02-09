@@ -44,7 +44,7 @@ library LibUnripeSilo {
     }
 
     function isUnripeBean(address token) internal pure returns (bool b) {
-        b = token == C.unripeBeanAddress();
+        b = token == C.UNRIPE_BEAN;
     }
 
     function unripeBeanDeposit(address account, uint32 season)
@@ -55,9 +55,9 @@ library LibUnripeSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 legacyAmount = s.a[account].bean.deposits[season];
         amount = uint256(
-            s.a[account].deposits[C.unripeBeanAddress()][season].amount
+            s.a[account].deposits[C.UNRIPE_BEAN][season].amount
         ).add(legacyAmount);
-        bdv = uint256(s.a[account].deposits[C.unripeBeanAddress()][season].bdv)
+        bdv = uint256(s.a[account].deposits[C.UNRIPE_BEAN][season].bdv)
             .add(legacyAmount.mul(C.initialRecap()).div(1e18));
     }
 

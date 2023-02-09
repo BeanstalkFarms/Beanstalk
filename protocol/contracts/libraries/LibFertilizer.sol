@@ -73,9 +73,9 @@ library LibFertilizer {
             remainingRecapitalization()
         );
         uint256 newDepositedBeans;
-        if (C.unripeBean().totalSupply() > s.u[C.unripeBeanAddress()].balanceOfUnderlying) {
+        if (C.unripeBean().totalSupply() > s.u[C.UNRIPE_BEAN].balanceOfUnderlying) {
             newDepositedBeans = (C.unripeBean().totalSupply()).sub(
-                s.u[C.unripeBeanAddress()].balanceOfUnderlying
+                s.u[C.UNRIPE_BEAN].balanceOfUnderlying
             );
             newDepositedBeans = newDepositedBeans.mul(percentToFill).div(
                 C.precision()
@@ -98,7 +98,7 @@ library LibFertilizer {
             minAmountOut
         );
         // Increment underlying balances of Unripe Tokens
-        LibUnripe.incrementUnderlying(C.unripeBeanAddress(), newDepositedBeans);
+        LibUnripe.incrementUnderlying(C.UNRIPE_BEAN, newDepositedBeans);
         LibUnripe.incrementUnderlying(C.UNRIPE_LP, newLP);
 
         s.recapitalized = s.recapitalized.add(amount);

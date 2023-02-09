@@ -25,7 +25,7 @@ library LibUnripeConvert {
             uint256 inAmount
         )
     {
-        tokenOut = C.unripeBeanAddress();
+        tokenOut = C.UNRIPE_BEAN;
         tokenIn = C.UNRIPE_LP;
         (uint256 lp, uint256 minBeans) = convertData.basicConvert();
 
@@ -64,7 +64,7 @@ library LibUnripeConvert {
             uint256 inAmount
         )
     {
-        tokenIn = C.unripeBeanAddress();
+        tokenIn = C.UNRIPE_BEAN;
         tokenOut = C.UNRIPE_LP;
         (uint256 beans, uint256 minLP) = convertData.basicConvert();
 
@@ -99,7 +99,7 @@ library LibUnripeConvert {
             C.CURVE_BEAN_METAPOOL
         );
         beans = LibUnripe.underlyingToUnripe(
-            C.unripeBeanAddress(),
+            C.UNRIPE_BEAN,
             underlyingBeans
         );
     }
@@ -117,7 +117,7 @@ library LibUnripeConvert {
         returns (uint256 lp)
     {
         uint256 beans = LibUnripe.unripeToUnderlying(
-            C.unripeBeanAddress(),
+            C.UNRIPE_BEAN,
             amountIn
         );
         lp = LibCurveConvert.getLPAmountOut(C.CURVE_BEAN_METAPOOL, beans);
@@ -138,7 +138,7 @@ library LibUnripeConvert {
         );
         bean = LibCurveConvert.getBeanAmountOut(C.CURVE_BEAN_METAPOOL, lp);
         bean = LibUnripe
-            .underlyingToUnripe(C.unripeBeanAddress(), bean)
+            .underlyingToUnripe(C.UNRIPE_BEAN, bean)
             .mul(LibUnripe.percentBeansRecapped())
             .div(LibUnripe.percentLPRecapped());
     }
