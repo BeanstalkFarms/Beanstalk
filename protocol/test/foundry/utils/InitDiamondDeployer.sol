@@ -241,6 +241,7 @@ abstract contract InitDiamondDeployer is Test {
   
   function _mockUniswap() internal {
     //address UNIV3_FACTORY = 0x1F98431c8aD98523631AE4a59f267346ea31F984; 
+    address UNIV3_ETH_USDC_POOL = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
     MockUniswapV3Factory uniFactory = MockUniswapV3Factory(new MockUniswapV3Factory());
     address ethUsdc = 
       uniFactory.createPool(
@@ -249,9 +250,9 @@ abstract contract InitDiamondDeployer is Test {
         3000
       );
     bytes memory code = at(ethUsdc);
-    address targetAddr = C.UniV3EthUsdc();
-    vm.etch(targetAddr, code);
-    MockUniswapV3Pool(C.UniV3EthUsdc()).setOraclePrice(1000e6,18);
+    address targetAddr = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
+    vm.etch(targetAddr, code); 
+    MockUniswapV3Pool(UNIV3_ETH_USDC_POOL).setOraclePrice(1000e6,18);
   }
 
   function _mockCurveMetapool() internal {

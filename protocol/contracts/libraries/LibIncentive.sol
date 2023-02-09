@@ -16,9 +16,16 @@ import "./Curve/LibCurve.sol";
  * @title Incentive Library calculates the reward and the exponential increase efficiently.
  **/
 library LibIncentive {
+    // Season Incentive
+    uint256 private constant BASE_REWARD = 3e6; // Fixed increase in Bean reward to cover cost of operating a bot
+    uint256 private constant MAX_REWARD = 100e6;
+    uint256 private constant PRIORITY_FEE_BUFFER = 5e9; // 5 gwei
+    uint256 private constant MAX_SUNRISE_GAS = 5e5;
+    uint256 private constant SUNRISE_GAS_OVERHEAD = 50000; // 21k (constant cost for a transction) + 29k for overhead
+    uint256 private constant FRAC_EXP_PRECISION = 1e18; // `sunriseReward` is precomputed in {fracExp} using this precision.
+    address private constant UNIV3_ETH_USDC_POOL = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
     uint32 private constant PERIOD = 1800; // 30 minutes
-    /// @dev The scaling factor `sunriseReward` is precomputed in {fracExp} using this precision.
-    uint256 private constant FRAC_EXP_PRECISION = 1e18;
+
 
 
     using SafeMath for uint256;
@@ -40,14 +47,14 @@ library LibIncentive {
             .mul(1e6)
             .div(beanPriceUsd);
 
-        uint256 gasUsed = Math.min(initialGasLeft.sub(gasleft()) + C.getSunriseGasOverhead(), C.getMaxSunriseGas());
+        uint256 gasUsed = Math.min(initialGasLeft.sub(gasleft()) + SUNRISE_GAS_OVERHEAD, MAX_SUNRISE_GAS);
         uint256 gasCostWei = C.basefeeContract().block_basefee()    // (BASE_FEE
-            .add(C.getSunrisePriorityFeeBuffer())                   // + PRIORITY_FEE_BUFFER)
+            .add(PRIORITY_FEE_BUFFER)                               // + PRIORITY_FEE_BUFFER)
             .mul(gasUsed);                                          // * GAS_USED
         uint256 sunriseReward =
             Math.min(
-                gasCostWei.mul(beanEthPrice).div(1e18) + C.getBaseReward(), // divide by 1e18 to convert wei to eth
-                C.getMaxReward()
+                gasCostWei.mul(beanEthPrice).div(1e18) + BASE_REWARD, // divide by 1e18 to convert wei to eth
+                MAX_REWARD
             );
         return fracExp(sunriseReward, blocksLate);
     }
@@ -61,7 +68,7 @@ library LibIncentive {
     }
 
     function getEthUsdcPrice() internal view returns (uint256) {
-        (int24 tick,) = OracleLibrary.consult(C.UniV3EthUsdc(),PERIOD); //1 season tick
+        (int24 tick,) = OracleLibrary.consult(UNIV3_ETH_USDC_POOL, PERIOD); //1 season tick
         return OracleLibrary.getQuoteAtTick(
             tick,
             1e18,

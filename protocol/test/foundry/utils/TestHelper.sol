@@ -239,9 +239,9 @@ abstract contract TestHelper is Test {
             3000
             );
         bytes memory code = at(ethUsdc);
-        address targetAddr = C.UniV3EthUsdc();
+        address targetAddr = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
         vm.etch(targetAddr, code);
-        MockUniswapV3Pool(C.UniV3EthUsdc()).setOraclePrice(1000e6,18);
+        MockUniswapV3Pool(0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8).setOraclePrice(1000e6,18);
     }
 
     function _mockCurveMetapool() internal {

@@ -6,7 +6,6 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {C} from "../C.sol";
 import {IBean} from "../interfaces/IBean.sol";
 import {LibAppStorage} from "./LibAppStorage.sol";
 import {LibSafeMath32} from "./LibSafeMath32.sol";
@@ -28,9 +27,9 @@ library LibDibbler {
     // 1e6 = 1%
     // (6674 * 0.279415312704e12)/1e6 ~= 1864e6 = 1864%?
     // 1e6 = 1% = 0.01
-    uint256 constant TEMPERATURE_PRECISION = 1e6; 
-    uint256 constant ONE_HUNDRED_PCT = 100 * TEMPERATURE_PRECISION;
-    uint256 private constant SOIL_SOLD_OUT_THRESHOLD = 1e6;
+    uint256 internal constant TEMPERATURE_PRECISION = 1e6; 
+    uint256 internal constant ONE_HUNDRED_PCT = 100 * TEMPERATURE_PRECISION;
+    uint256 internal constant SOIL_SOLD_OUT_THRESHOLD = 1e6;
     
     event Sow(
         address indexed account,

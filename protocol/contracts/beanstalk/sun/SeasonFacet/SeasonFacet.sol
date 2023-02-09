@@ -21,6 +21,8 @@ contract SeasonFacet is Weather {
     event Incentivization(address indexed account, uint256 beans);
 
     uint256 private constant MAXBLOCKSLATE = 25;
+    uint256 private constant BLOCK_LENGTH_SECONDS = 12;
+
     /**
      * Sunrise
      **/
@@ -100,9 +102,9 @@ contract SeasonFacet is Weather {
         uint256 blocksLate = block.timestamp.sub(
             s.season.start.add(s.season.period.mul(season()))
         )
-        .div(C.getBlockLengthSeconds());
+        .div(BLOCK_LENGTH_SECONDS);
 
-        // Maximum 300 seconds to reward exponent (25*C.getBlockLengthSeconds())
+        // Maximum 300 seconds to reward exponent (25*BLOCK_LENGTH_SECONDS)
         if (blocksLate > MAXBLOCKSLATE) {
             blocksLate = MAXBLOCKSLATE;
         }
@@ -113,4 +115,6 @@ contract SeasonFacet is Weather {
         emit Incentivization(account, incentiveAmount);
         return incentiveAmount;
     }
+
+
 }

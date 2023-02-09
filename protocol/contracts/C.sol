@@ -32,14 +32,6 @@ library C {
     uint256 private constant CURRENT_SEASON_PERIOD = 3600; // 1 hour
     uint256 private constant SOP_PRECISION = 1e24;
 
-    // Season Incentive
-    uint256 private constant BASE_REWARD = 3e6; // Fixed increase in Bean reward to cover cost of operating a bot
-    uint256 private constant MAX_REWARD = 100e6;
-    uint256 private constant PRIORITY_FEE_BUFFER = 5e9; // 5 gwei
-    uint256 private constant MAX_SUNRISE_GAS = 5e5;
-    uint256 private constant SUNRISE_GAS_OVERHEAD = 50000; // 21k (constant cost for a transction) + 29k for overhead
-    uint256 private constant BLOCK_LENGTH_SECONDS = 12;
-
     // Sun
     uint256 private constant FERTILIZER_DENOMINATOR = 3;
     uint256 private constant HARVEST_DENOMINATOR = 2;
@@ -94,38 +86,6 @@ library C {
     /**
      * Getters
     **/
-
-    function getSeasonPeriod() internal pure returns (uint256) {
-        return CURRENT_SEASON_PERIOD;
-    }
-
-    function getBaseReward() internal pure returns (uint256) {
-        return BASE_REWARD;
-    }
-
-    function getMaxReward() internal pure returns (uint256) {
-        return MAX_REWARD;
-    }
-
-    // function getMinReward() internal pure returns (uint256) {
-    //     return MIN_REWARD;
-    // }
-
-    function getSunrisePriorityFeeBuffer() internal pure returns (uint256) {
-        return PRIORITY_FEE_BUFFER;
-    }
-
-    function getMaxSunriseGas() internal pure returns (uint256) {
-        return MAX_SUNRISE_GAS;
-    }
-
-    function getSunriseGasOverhead() internal pure returns (uint256) {
-        return SUNRISE_GAS_OVERHEAD;
-    }
-
-    function getBlockLengthSeconds() internal pure returns (uint256) {
-        return BLOCK_LENGTH_SECONDS;
-    }
 
     function getFertilizerDenominator() internal pure returns (uint256) {
         return FERTILIZER_DENOMINATOR;
@@ -245,10 +205,6 @@ library C {
 
     function threeCrv() internal pure returns (IERC20) {
         return IERC20(THREE_CRV);
-    }
-
-    function UniV3EthUsdc() internal pure returns (address){
-        return UNIV3_ETH_USDC_POOL;
     }
 
     function basefeeContract() internal pure returns (IBlockBasefee) {
