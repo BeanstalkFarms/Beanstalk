@@ -20,9 +20,6 @@ library C {
 
     //////////////////// Globals ////////////////////
 
-    /// @dev Base precision when calculating ratios with the {Decimal} library.
-    uint256 private constant PERCENT_BASE = 1e18;
-
     /// @dev 
     uint256 internal constant PRECISION = 1e18;
 
@@ -42,10 +39,12 @@ library C {
 
     //////////////////// Weather ////////////////////
 
+    /// @dev Base precision when calculating ratios with the {Decimal} library.
+    uint256 private constant PERCENT_BASE = 1e18;
+
     uint256 private constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%
     uint256 private constant OPTIMAL_POD_RATE = 0.15e18; // 15%
     uint256 private constant POD_RATE_UPPER_BOUND = 0.25e18; // 25%
-    uint32 private constant STEADY_SOW_TIME = 60; // 1 minute
 
     uint256 private constant DELTA_POD_DEMAND_LOWER_BOUND = 0.95e18; // 95%
     uint256 private constant DELTA_POD_DEMAND_UPPER_BOUND = 1.05e18; // 105%
@@ -118,9 +117,7 @@ library C {
         return Decimal.ratio(DELTA_POD_DEMAND_LOWER_BOUND, PERCENT_BASE);
     }
 
-    function getSteadySowTime() internal pure returns (uint32) {
-        return STEADY_SOW_TIME;
-    }
+    //
 
     function getSeedsPerBean() internal pure returns (uint256) {
         return SEEDS_PER_BEAN;

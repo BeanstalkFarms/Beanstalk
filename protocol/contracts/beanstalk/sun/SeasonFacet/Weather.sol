@@ -19,6 +19,9 @@ contract Weather is Sun {
 
     /// @dev If all Soil is Sown faster than this, Beanstalk considers demand for Soil to be increasing.
     uint256 private constant SOW_TIME_DEMAND_INCR = 600; // seconds
+
+    /// @dev
+    uint32 private constant SOW_TIME_STEADY = 60; // seconds
     
     /**
      * @notice Emitted when the Temperature (fka "Weather") changes.
@@ -106,12 +109,12 @@ contract Weather is Sun {
             if (
                 s.w.lastSowTime == type(uint32).max || // Didn't Sow all last Season
                 s.w.thisSowTime < SOW_TIME_DEMAND_INCR || // Sow'd all instantly this Season
-                (s.w.lastSowTime > C.getSteadySowTime() &&
-                    s.w.thisSowTime < s.w.lastSowTime.sub(C.getSteadySowTime())) // Sow'd all faster
+                (s.w.lastSowTime > SOW_TIME_STEADY &&
+                    s.w.thisSowTime < s.w.lastSowTime.sub(SOW_TIME_STEADY)) // Sow'd all faster
             ) {
                 deltaPodDemand = Decimal.from(1e18);
             } else if (
-                s.w.thisSowTime <= s.w.lastSowTime.add(C.getSteadySowTime())
+                s.w.thisSowTime <= s.w.lastSowTime.add(SOW_TIME_STEADY)
             ) {
                 // Sow'd all in same time
                 deltaPodDemand = Decimal.one();
