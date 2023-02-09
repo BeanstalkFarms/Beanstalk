@@ -148,7 +148,7 @@ library LibDibbler {
     /**
      * @dev Returns the temperature `s.w.t` scaled down based on the block delta.
      * Precision level 1e6, as soil has 1e6 precision (1% = 1e6)
-     * the formula `log2(A * MAX_BLOCK_ELAPSED + 1)` is applied, where:
+     * the formula `log51(A * MAX_BLOCK_ELAPSED + 1)` is applied, where:
      * `A = 2`
      * `MAX_BLOCK_ELAPSED = 25`
      */

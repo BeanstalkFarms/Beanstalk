@@ -3,6 +3,7 @@
 # https://book.getfoundry.sh/reference/config/project
 src = 'contracts'
 test = 'test'
+no_match_test = "FFI"
 out = 'out'
 libs = [
   'node_modules',
@@ -30,12 +31,18 @@ fs_permissions = [{ access = "read", path = "./out" }]
 sender = '0x00a329c0648769a73afac7f9381e08fb43dbea72' # The value of `msg.sender` in tests.
 tx_origin = '0x00a329c0648769a73afac7f9381e08fb43dbea72' # The value of `tx.origin` in tests.
 gas_reports = ['*']
-no_storage_caching = false # Cache to `$HOME/.foundry/cache/<chain id>/<block number>`.
+ # Cache to `$HOME/.foundry/cache/<chain id>/<block number>`.
+no_storage_caching = false
  
+[profile.differential]
+match_test = "FFI"
+no_match_test = "a^"
+
 # Formatter
 # https://book.getfoundry.sh/reference/config/formatter
 # ...pass...
-
 [profile.default.rpc_storage_caching]
 chains = 'all'
 endpoints = 'all'
+
+
