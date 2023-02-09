@@ -4,10 +4,12 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import "../LibAppStorage.sol";
-import "./LibConvertData.sol";
-import "./LibMetaCurveConvert.sol";
-import "../Curve/LibBeanMetaCurve.sol";
+import {ICurvePool} from "../../interfaces/ICurve.sol";
+import {LibConvertData} from "./LibConvertData.sol";
+import {LibMetaCurveConvert} from "./LibMetaCurveConvert.sol";
+import {LibBeanMetaCurve} from "../Curve/LibBeanMetaCurve.sol";
+import {LibAppStorage} from "../LibAppStorage.sol";
+import {C} from "../../C.sol";
 
 /**
  * @title LibCurveConvert
