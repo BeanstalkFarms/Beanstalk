@@ -3,7 +3,8 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {AppStorage} from "../beanstalk/AppStorage.sol";
+// Import all of AppStorage to give importers of LibAppStorage access to {Account}, etc.
+import "../beanstalk/AppStorage.sol";
 
 /**
  * @title LibAppStorage 
