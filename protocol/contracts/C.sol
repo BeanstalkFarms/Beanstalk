@@ -35,7 +35,7 @@ library C {
     uint256 private constant CURRENT_SEASON_PERIOD = 3600; // 1 hour
 
     /// @dev 
-    uint256 private constant SOP_PRECISION = 1e24;
+    uint256 internal constant SOP_PRECISION = 1e24;
 
     //////////////////// Weather ////////////////////
 
@@ -80,7 +80,6 @@ library C {
     address private constant UNRIPE_CURVE_BEAN_LUSD_POOL = 0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D;
     address private constant UNRIPE_CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
 
-
     address private constant UNIV3_ETH_USDC_POOL = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
 
     function getSeasonPeriod() internal pure returns (uint256) {
@@ -103,10 +102,6 @@ library C {
 
     function getRootsBase() internal pure returns (uint256) {
         return ROOTS_BASE;
-    }
-
-    function getSopPrecision() internal pure returns (uint256) {
-        return SOP_PRECISION;
     }
 
     function beanAddress() internal pure returns (address) {

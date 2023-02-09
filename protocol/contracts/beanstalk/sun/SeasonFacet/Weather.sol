@@ -272,7 +272,7 @@ contract Weather is Sun {
      */
     function rewardSop(uint256 amount) private {
         s.sops[s.season.rainStart] = s.sops[s.season.lastSop].add(
-            amount.mul(C.getSopPrecision()).div(s.r.roots)
+            amount.mul(C.SOP_PRECISION).div(s.r.roots)
         );
         s.season.lastSop = s.season.rainStart;
         s.season.lastSopSeason = s.season.current;
