@@ -8,7 +8,7 @@ import "../LibAppStorage.sol";
 import "../LibSafeMath32.sol";
 
 /**
- * @dev Curve metapool functions used by LibCurveOracle. 
+ * @dev Curve metapool functions used by {LibCurveOracle}. 
  */
 interface IMeta3CurveOracle {
     function block_timestamp_last() external view returns (uint256);
