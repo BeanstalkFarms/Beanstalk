@@ -140,8 +140,8 @@ library LibIncentive {
         return OracleLibrary.getQuoteAtTick(
             tick,
             1e18,
-            address(C.weth()),
-            address(C.usdc())
+            C.WETH,
+            C.USDC
         );
     }
 

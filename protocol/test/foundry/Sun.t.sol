@@ -222,7 +222,7 @@ contract SunTest is  Sun, TestHelper {
         return OracleLibrary.getQuoteAtTick(
             tick,
             1e18,
-            address(C.weth()),
+            address(C.WETH),
             address(C.usdc())
         );
     }
