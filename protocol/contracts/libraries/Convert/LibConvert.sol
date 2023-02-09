@@ -3,8 +3,12 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./LibUnripeConvert.sol";
-import "./LibLambdaConvert.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibCurveConvert} from "./LibCurveConvert.sol";
+import {LibUnripeConvert} from "./LibUnripeConvert.sol";
+import {LibLambdaConvert} from "./LibLambdaConvert.sol";
+import {LibConvertData} from "./LibConvertData.sol";
+import {C} from "../../C.sol";
 
 /**
  * @title LibConvert
