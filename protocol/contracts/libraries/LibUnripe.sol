@@ -1,19 +1,17 @@
-/*
- SPDX-License-Identifier: MIT
-*/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "./LibAppStorage.sol";
-import "../C.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {IBean} from "../interfaces/IBean.sol";
+import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
+import {C} from "../C.sol";
 
 /**
+ * @title LibUnripe
  * @author Publius
- * @title Unripe
- **/
-
+ */
 library LibUnripe {
     using SafeMath for uint256;
 

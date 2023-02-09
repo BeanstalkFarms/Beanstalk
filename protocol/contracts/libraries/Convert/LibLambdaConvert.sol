@@ -3,7 +3,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./LibConvertData.sol";
+import {LibConvertData} from "./LibConvertData.sol";
 
 /**
  * @title LibLambdaConvert
