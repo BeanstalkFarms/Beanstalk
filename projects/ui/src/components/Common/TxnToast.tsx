@@ -1,7 +1,7 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ContractReceipt, ContractTransaction } from 'ethers';
 import toast from 'react-hot-toast';
-import { Box, IconButton, Link, Typography } from '@mui/material';
+import { Box, Button, IconButton, Link, Typography } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
 import useChainConstant from '~/hooks/chain/useChainConstant';
 import { parseError } from '~/util';
@@ -15,9 +15,10 @@ function dismissErrors(id?: any) {
   }
 }
 
-export function ToastAlert({ desc, hash, msg, id }: { desc?: string, hash?: string, msg?: string, id?: any }) {
+export function ToastAlert({ desc, hash, msg, rawError, id }: { desc?: string, hash?: string, msg?: string, rawError?: string, id?: any }) {
   const handleClick = useCallback(() => (id !== null ? dismissErrors(id) : dismissErrors()), [id]);
   const chainInfo = useChainConstant(CHAIN_INFO);
+  const [showRawError, setShowRawError] = useState(false)
   return (
     <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
       <Typography sx={{ pl: 1, pr: 2, flex: 1, textAlign: 'center' }}>
@@ -41,12 +42,42 @@ export function ToastAlert({ desc, hash, msg, id }: { desc?: string, hash?: stri
             {msg}
           </Box>
         )}
+        {rawError && (
+            <Box
+            sx={{
+              ...(showRawError ? {height: 150, width: 235, mt: 1, border: 1} : {height: 0, width: 0, mt: 0, border: 0}),
+              backgroundColor: "white",
+              borderColor: 'black',
+              borderRadius: 0.5,
+              wordBreak: 'break-all',
+              overflow: "hidden",
+              overflowY: "scroll",
+            }}
+            >
+            {rawError}
+            </Box>
+        )}
+        {rawError && (
+          <Button
+          onClick={() => {
+            setShowRawError(!showRawError)
+          }}
+          sx={{
+            mt: 1,
+          }}
+          >
+            {showRawError ? "Hide Error Message" : "Show Error Message"}
+          </Button>
+        )}
       </Typography>
       {msg && (
         <IconButton
           sx={{
             backgroundColor: 'transparent',
             p: 0,
+            ...(showRawError === true && {
+              ml: -1,
+            }),
             width: '20px',
             height: '20px',
             '& svg': {
@@ -140,7 +171,8 @@ export default class TransactionToast {
     toast.error(
       <ToastAlert
         desc={this.messages.error}
-        msg={msg}
+        msg={msg.error}
+        rawError={msg.rawError}
         id={this.toastId}
       />,
       {

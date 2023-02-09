@@ -39,68 +39,95 @@ export const tokenResult = (_token: Token | ChainConstant<Token>) => {
  * Return a formatted error string from a transaction error thrown by ethers.
  * @FIXME improve parsing
  */
+interface Error {
+  error?: string,
+  rawError?: string,
+}
+
 export const parseError = (error: any) => {
+
+  const errorMessage: Error = {}
+
+  const rawError = error.toString()
+
+  errorMessage.rawError = rawError
 
   switch (error.code) {
     /// ethers
     case 'UNSUPPORTED_OPERATION':
     case 'CALL_EXCEPTION':
     case 'UNPREDICTABLE_GAS_LIMIT':
-      return `Error: ${error.reason}`;
+      errorMessage.error = `Error: ${error.reason}`;
+      return errorMessage;
     
     ///
     case -32603:
       if (error.data && error.data.message) {
         const matches = (error.data.message as string).match(/(["'])(?:(?=(\\?))\2.)*?\1/);
-        return matches?.[0]?.replace(/^'(.+(?='$))'$/, '$1') || error.data.message;
+        const regExMatch = matches?.[0]?.replace(/^'(.+(?='$))'$/, '$1')
+        if (regExMatch)
+        {
+          errorMessage.error = regExMatch
+          return errorMessage
+        }
+        errorMessage.error = error.data.message
+        return errorMessage
       }
-      return error.message.replace('execution reverted: ', '');
+      errorMessage.error = error.message.replace('execution reverted: ', '');
+      return errorMessage
     
     /// MetaMask - RPC Error: MetaMask Tx Signature: User denied transaction signature.
     case 4001:
-      return 'You rejected the signature request.';
+      errorMessage.error = 'You rejected the signature request.'
+      return errorMessage
 
     /// Unknown
     default:
 
-      const errorString = error.toString()
-
       for (const key in ERROR_STRINGS) {
-        if (errorString.includes(key))
+        if (rawError.includes(key))
         {
           if (key == "CALL_EXCEPTION" && error.reason)
           {
-            return `Call Exception: ${error.reason}`;
+            errorMessage.error = `Call Exception: ${error.reason}`
+            return errorMessage
           }
 
           if (key == "UNPREDICTABLE_GAS_LIMIT" && error.reason)
           {
-            return `Unpredictable Gas Limit: ${error.reason}`;
+            errorMessage.error = `Unpredictable Gas Limit: ${error.reason}`
+            return errorMessage
           }
 
           if (key == "TRANSACTION_REPLACED" && error.reason)
           {
             if (error.reason == "cancelled") {
-              return "Transaction cancelled."
+              errorMessage.error = "Transaction cancelled."
+              return errorMessage
             }
             if (error.reason == "replaced") {
-              return "Transaction replaced by one with a higher gas price."
+              errorMessage.error = "Transaction replaced by one with a higher gas price."
+              return errorMessage
             }
             if (error.reason == "repriced") {
-              return "Transaction repriced."
+              errorMessage.error = "Transaction repriced."
+              return errorMessage
             }
           }
 
           if (key == "UNSUPPORTED_OPERATION" && error.reason)
           {
-            return `Unsupported Operation: ${error.reason}`
+            errorMessage.error = `Unsupported Operation: ${error.reason}`
+            return errorMessage
           }
 
-          return ERROR_STRINGS[key];
+          errorMessage.error = ERROR_STRINGS[key]
+          return errorMessage
         }
       }
 
-      return "Unhandled error."
+      errorMessage.error = "Unhandled error."
+      return errorMessage
   }
 };
 
