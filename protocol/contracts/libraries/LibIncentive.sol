@@ -136,7 +136,7 @@ library LibIncentive {
      * {OracleLibrary.getQuoteAtTick} returns an arithmetic mean.
      */
     function getEthUsdcPrice() internal view returns (uint256) {
-        (int24 tick,) = OracleLibrary.consult(C.UniV3EthUsdc(), PERIOD); // 1 season tick
+        (int24 tick,) = OracleLibrary.consult(C.UNIV3_ETH_USDC_POOL, PERIOD); // 1 season tick
         return OracleLibrary.getQuoteAtTick(
             tick,
             1e18,

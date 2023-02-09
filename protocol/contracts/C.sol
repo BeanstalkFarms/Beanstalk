@@ -166,10 +166,6 @@ library C {
         return IERC20(THREE_CRV);
     }
 
-    function UniV3EthUsdc() internal pure returns (address){
-        return UNIV3_ETH_USDC_POOL;
-    }
-
     function fertilizer() internal pure returns (IFertilizer) {
         return IFertilizer(FERTILIZER);
     }
