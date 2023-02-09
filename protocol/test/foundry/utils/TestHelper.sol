@@ -212,7 +212,7 @@ abstract contract TestHelper is Test {
         // address CRYPTO_REGISTRY = 0x8F942C20D02bEfc377D41445793068908E2250D0;
         address CURVE_REGISTRY = 0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5;
         _etch("MockToken.sol", CURVE_REGISTRY, abi.encode("")); // why this interface?
-        stableFactory.set_coins(C.curveMetapoolAddress(), [
+        stableFactory.set_coins(C.CURVE_BEAN_METAPOOL, [
             C.beanAddress(),
             THREE_CRV,
             address(0),
@@ -240,7 +240,7 @@ abstract contract TestHelper is Test {
 
     function _mockCurveMetapool() internal {
         address THREE_CRV = address(C.threeCrv());
-        MockMeta3Curve p = MockMeta3Curve(_etch("MockMeta3Curve.sol", C.curveMetapoolAddress(), abi.encode("")));
+        MockMeta3Curve p = MockMeta3Curve(_etch("MockMeta3Curve.sol", C.CURVE_BEAN_METAPOOL, abi.encode("")));
         p.init(C.beanAddress(), THREE_CRV, C.curve3PoolAddress());
         p.set_A_precise(1000);
         p.set_virtual_price(1 wei);

@@ -40,7 +40,7 @@ contract BDVFacet {
         returns (uint256)
     {
         if (token == C.beanAddress()) return beanToBDV(amount);
-        else if (token == C.curveMetapoolAddress()) return curveToBDV(amount);
+        else if (token == C.CURVE_BEAN_METAPOOL) return curveToBDV(amount);
         else if (token == C.unripeBeanAddress()) return unripeBeanToBDV(amount);
         else if (token == C.unripeLPAddress()) return unripeLPToBDV(amount);
         revert("BDV: Token not whitelisted");

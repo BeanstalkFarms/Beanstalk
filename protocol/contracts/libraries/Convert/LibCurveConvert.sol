@@ -153,7 +153,7 @@ library LibCurveConvert {
         address pool,
         uint256[2] memory balances
     ) internal view returns (uint256) {
-        if (pool == C.curveMetapoolAddress()) {
+        if (pool == C.CURVE_BEAN_METAPOOL) {
             return LibMetaCurveConvert.beansAtPeg(balances);
         }
 

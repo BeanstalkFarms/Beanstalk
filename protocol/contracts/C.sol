@@ -108,10 +108,6 @@ library C {
         return BEAN;
     }
 
-    function curveMetapoolAddress() internal pure returns (address) {
-        return CURVE_BEAN_METAPOOL;
-    }
-
     function unripeLPPool1() internal pure returns (address) {
         return UNRIPE_CURVE_BEAN_METAPOOL;
     }

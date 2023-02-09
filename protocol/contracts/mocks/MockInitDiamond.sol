@@ -24,7 +24,7 @@ contract MockInitDiamond {
 
     function init() external {
 
-        C.bean().approve(C.curveMetapoolAddress(), type(uint256).max);
+        C.bean().approve(C.CURVE_BEAN_METAPOOL, type(uint256).max);
         C.bean().approve(C.curveZapAddress(), type(uint256).max);
         C.usdc().approve(C.curveZapAddress(), type(uint256).max);
 

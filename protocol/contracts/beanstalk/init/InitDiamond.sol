@@ -35,7 +35,7 @@ contract InitDiamond {
         ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
 
-        C.bean().approve(C.curveMetapoolAddress(), type(uint256).max);
+        C.bean().approve(C.CURVE_BEAN_METAPOOL, type(uint256).max);
         C.bean().approve(C.curveZapAddress(), type(uint256).max);
         C.usdc().approve(C.curveZapAddress(), type(uint256).max);
 

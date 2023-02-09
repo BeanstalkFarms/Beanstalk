@@ -40,7 +40,7 @@ library LibUnripeConvert {
         ) = LibCurveConvert.curveRemoveLPAndBuyToPeg(
                 LibUnripe.unripeToUnderlying(tokenIn, lp),
                 minAmountOut,
-                C.curveMetapoolAddress()
+                C.CURVE_BEAN_METAPOOL
             );
 
         inAmount = LibUnripe.underlyingToUnripe(tokenIn, inUnderlyingAmount);
@@ -79,7 +79,7 @@ library LibUnripeConvert {
         ) = LibCurveConvert.curveSellToPegAndAddLiquidity(
                 LibUnripe.unripeToUnderlying(tokenIn, beans),
                 minAmountOut,
-                C.curveMetapoolAddress()
+                C.CURVE_BEAN_METAPOOL
             );
 
         inAmount = LibUnripe.underlyingToUnripe(tokenIn, inUnderlyingAmount);
@@ -96,7 +96,7 @@ library LibUnripeConvert {
 
     function beansToPeg() internal view returns (uint256 beans) {
         uint256 underlyingBeans = LibCurveConvert.beansToPeg(
-            C.curveMetapoolAddress()
+            C.CURVE_BEAN_METAPOOL
         );
         beans = LibUnripe.underlyingToUnripe(
             C.unripeBeanAddress(),
@@ -106,7 +106,7 @@ library LibUnripeConvert {
 
     function lpToPeg() internal view returns (uint256 lp) {
         uint256 underlyingLP = LibCurveConvert.lpToPeg(
-            C.curveMetapoolAddress()
+            C.CURVE_BEAN_METAPOOL
         );
         lp = LibUnripe.underlyingToUnripe(C.unripeLPAddress(), underlyingLP);
     }
@@ -120,7 +120,7 @@ library LibUnripeConvert {
             C.unripeBeanAddress(),
             amountIn
         );
-        lp = LibCurveConvert.getLPAmountOut(C.curveMetapoolAddress(), beans);
+        lp = LibCurveConvert.getLPAmountOut(C.CURVE_BEAN_METAPOOL, beans);
         lp = LibUnripe
             .underlyingToUnripe(C.unripeLPAddress(), lp)
             .mul(LibUnripe.percentLPRecapped())
@@ -136,7 +136,7 @@ library LibUnripeConvert {
             C.unripeLPAddress(),
             amountIn
         );
-        bean = LibCurveConvert.getBeanAmountOut(C.curveMetapoolAddress(), lp);
+        bean = LibCurveConvert.getBeanAmountOut(C.CURVE_BEAN_METAPOOL, lp);
         bean = LibUnripe
             .underlyingToUnripe(C.unripeBeanAddress(), bean)
             .mul(LibUnripe.percentBeansRecapped())

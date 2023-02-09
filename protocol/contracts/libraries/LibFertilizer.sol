@@ -93,7 +93,7 @@ library LibFertilizer {
         );
         // Add Liquidity
         uint256 newLP = C.curveZap().add_liquidity(
-            C.curveMetapoolAddress(),
+            C.CURVE_BEAN_METAPOOL,
             [newDepositedLPBeans, 0, amount, 0],
             minAmountOut
         );

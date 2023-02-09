@@ -51,7 +51,7 @@ library LibWhitelist {
 
     function whitelistBean3Crv() internal {
         whitelistToken(
-            C.curveMetapoolAddress(),
+            C.CURVE_BEAN_METAPOOL,
             IBS.curveToBDV.selector,
             BEAN_3CRV_STALK,
             BEAN_3CRV_SEEDS

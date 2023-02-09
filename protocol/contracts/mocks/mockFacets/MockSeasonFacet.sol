@@ -181,7 +181,7 @@ contract MockSeasonFacet is SeasonFacet {
         }
         delete s.a[account];
         
-        resetAccountToken(account, C.curveMetapoolAddress());
+        resetAccountToken(account, C.CURVE_BEAN_METAPOOL);
     }
 
     function resetAccountToken(address account, address token) public {
