@@ -264,7 +264,7 @@ abstract contract InitDiamondDeployer is Test {
   function _mockUnripe() internal {
     MockToken urbean = _mockToken("Unripe BEAN", C.unripeBeanAddress());
     urbean.setDecimals(6);
-    _mockToken("Unripe BEAN:3CRV", C.unripeLPAddress());
+    _mockToken("Unripe BEAN:3CRV", C.UNRIPE_LP);
   }
 
   function _printAddresses() internal view {

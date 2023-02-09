@@ -43,10 +43,10 @@ contract MockSiloFacet is SiloFacet {
         else if (t == 1) LibTokenSilo.addDeposit(msg.sender, C.unripeLPPool1(), _s, amount, bdv);
         else if (t == 2) LibTokenSilo.addDeposit(msg.sender, C.unripeLPPool2(), _s, amount, bdv);
         uint256 unripeLP = getUnripeForAmount(t, amount);
-        LibTokenSilo.incrementDepositedToken(C.unripeLPAddress(), unripeLP);
+        LibTokenSilo.incrementDepositedToken(C.UNRIPE_LP, unripeLP);
         bdv = bdv.mul(C.initialRecap()).div(1e18);
-        uint256 seeds = bdv.mul(s.ss[C.unripeLPAddress()].seeds);
-        uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalk).add(LibSilo.stalkReward(seeds, season() - _s));
+        uint256 seeds = bdv.mul(s.ss[C.UNRIPE_LP].seeds);
+        uint256 stalk = bdv.mul(s.ss[C.UNRIPE_LP].stalk).add(LibSilo.stalkReward(seeds, season() - _s));
         LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
     }
 

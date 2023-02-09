@@ -178,7 +178,7 @@ contract UnripeFacet is ReentrancyGuard {
     {
         if (unripeToken == C.unripeBeanAddress()) {
             return LibUnripe.percentBeansRecapped();
-        } else if (unripeToken == C.unripeLPAddress()) {
+        } else if (unripeToken == C.UNRIPE_LP) {
             return LibUnripe.percentLPRecapped();
         }
         revert("not vesting");

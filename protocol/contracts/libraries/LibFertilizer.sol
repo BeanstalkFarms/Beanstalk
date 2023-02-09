@@ -99,7 +99,7 @@ library LibFertilizer {
         );
         // Increment underlying balances of Unripe Tokens
         LibUnripe.incrementUnderlying(C.unripeBeanAddress(), newDepositedBeans);
-        LibUnripe.incrementUnderlying(C.unripeLPAddress(), newLP);
+        LibUnripe.incrementUnderlying(C.UNRIPE_LP, newLP);
 
         s.recapitalized = s.recapitalized.add(amount);
     }

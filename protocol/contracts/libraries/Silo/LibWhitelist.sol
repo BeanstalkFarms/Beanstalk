@@ -78,7 +78,7 @@ library LibWhitelist {
 
     function whitelistUnripeLP() internal {
         whitelistToken(
-            C.unripeLPAddress(),
+            C.UNRIPE_LP,
             IBS.unripeLPToBDV.selector,
             BEAN_3CRV_STALK,
             BEAN_3CRV_SEEDS

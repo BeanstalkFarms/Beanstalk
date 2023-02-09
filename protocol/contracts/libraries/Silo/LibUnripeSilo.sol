@@ -135,7 +135,7 @@ library LibUnripeSilo {
     }
 
     function isUnripeLP(address token) internal pure returns (bool b) {
-        b = token == C.unripeLPAddress();
+        b = token == C.UNRIPE_LP;
     }
 
     function unripeLPDeposit(address account, uint32 season)
@@ -149,13 +149,13 @@ library LibUnripeSilo {
         (uint256 amount2, uint256 bdv2) = getBeanLusdUnripeLP(account, season);
 
         amount = uint256(
-            s.a[account].deposits[C.unripeLPAddress()][season].amount
+            s.a[account].deposits[C.UNRIPE_LP][season].amount
         ).add(amount.add(amount1).add(amount2));
 
         uint256 legBdv = bdv.add(bdv1).add(bdv2).mul(C.initialRecap()).div(
             C.precision()
         );
-        bdv = uint256(s.a[account].deposits[C.unripeLPAddress()][season].bdv)
+        bdv = uint256(s.a[account].deposits[C.UNRIPE_LP][season].bdv)
             .add(legBdv);
     }
 

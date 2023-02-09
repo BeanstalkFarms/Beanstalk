@@ -77,9 +77,9 @@ library LibUnripe {
 
     function addUnderlying(address token, uint256 underlying) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if (token == C.unripeLPAddress()) {
+        if (token == C.UNRIPE_LP) {
             uint256 recapped = underlying.mul(s.recapitalized).div(
-                s.u[C.unripeLPAddress()].balanceOfUnderlying
+                s.u[C.UNRIPE_LP].balanceOfUnderlying
             );
             s.recapitalized = s.recapitalized.add(recapped);
         }
@@ -88,9 +88,9 @@ library LibUnripe {
 
     function removeUnderlying(address token, uint256 underlying) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if (token == C.unripeLPAddress()) {
+        if (token == C.UNRIPE_LP) {
             uint256 recapped = underlying.mul(s.recapitalized).div(
-                s.u[C.unripeLPAddress()].balanceOfUnderlying
+                s.u[C.UNRIPE_LP].balanceOfUnderlying
             );
             s.recapitalized = s.recapitalized.sub(recapped);
         }
