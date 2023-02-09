@@ -44,7 +44,6 @@ library C {
 
     uint256 private constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%
     uint256 private constant OPTIMAL_POD_RATE = 0.15e18; // 15%
-    uint256 private constant POD_RATE_UPPER_BOUND = 0.25e18; // 25%
 
     uint256 private constant DELTA_POD_DEMAND_LOWER_BOUND = 0.95e18; // 95%
     uint256 private constant DELTA_POD_DEMAND_UPPER_BOUND = 1.05e18; // 105%
@@ -97,12 +96,10 @@ library C {
         return CHAIN_ID;
     }
 
+    //
+
     function getOptimalPodRate() internal pure returns (Decimal.D256 memory) {
         return Decimal.ratio(OPTIMAL_POD_RATE, PERCENT_BASE);
-    }
-
-    function getUpperBoundPodRate() internal pure returns (Decimal.D256 memory) {
-        return Decimal.ratio(POD_RATE_UPPER_BOUND, PERCENT_BASE);
     }
 
     function getLowerBoundPodRate() internal pure returns (Decimal.D256 memory) {

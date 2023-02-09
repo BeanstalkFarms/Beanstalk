@@ -7,6 +7,14 @@ import "~/libraries/Decimal.sol";
 import "~/libraries/Curve/LibBeanMetaCurve.sol";
 import "./Sun.sol";
 
+library DecimalExtended {
+    uint256 private constant PERCENT_BASE = 1e18;
+
+    function toDecimal(uint256 a) internal pure returns (Decimal.D256 memory) {
+        return Decimal.ratio(a, PERCENT_BASE);
+    }
+}
+
 /**
  * @title Weather
  * @author Publius
@@ -14,6 +22,7 @@ import "./Sun.sol";
  */
 contract Weather is Sun {
     using SafeMath for uint256;
+    using DecimalExtended for uint256;
     using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
 
@@ -22,6 +31,8 @@ contract Weather is Sun {
 
     /// @dev
     uint32 private constant SOW_TIME_STEADY = 60; // seconds
+
+    uint256 private constant POD_RATE_UPPER_BOUND = 0.25e18; // 25%
     
     /**
      * @notice Emitted when the Temperature (fka "Weather") changes.
@@ -50,6 +61,7 @@ contract Weather is Sun {
         uint256 amount,
         uint256 toField
     );
+
 
     //////////////////// WEATHER GETTERS ////////////////////
 
@@ -147,7 +159,7 @@ contract Weather is Sun {
         caseId = 0;
 
         // Evaluate Pod Rate
-        if (podRate.greaterThanOrEqualTo(C.getUpperBoundPodRate())) {
+        if (podRate.greaterThanOrEqualTo(POD_RATE_UPPER_BOUND.toDecimal())) {
             caseId = 24;
         } else if (podRate.greaterThanOrEqualTo(C.getOptimalPodRate())) {
             caseId = 16;
