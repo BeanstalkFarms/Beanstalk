@@ -68,7 +68,7 @@ export const parseError = (error: any) => {
       for (const key in ERROR_STRINGS) {
         if (errorString.includes(key))
         {
-          if (key === "CALL_EXCEPTION" && error.reason)
+          if (key == "CALL_EXCEPTION" && error.reason)
           {
             return `Call Exception: ${error.reason}`;
           }
@@ -99,7 +99,7 @@ export const parseError = (error: any) => {
           return ERROR_STRINGS[key];
         }
       }
-      
+
       return "Unhandled error."
   }
 };
