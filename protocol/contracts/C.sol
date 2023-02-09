@@ -104,10 +104,6 @@ library C {
         return ROOTS_BASE;
     }
 
-    function beanAddress() internal pure returns (address) {
-        return BEAN;
-    }
-
     function unripeLPPool1() internal pure returns (address) {
         return UNRIPE_CURVE_BEAN_METAPOOL;
     }

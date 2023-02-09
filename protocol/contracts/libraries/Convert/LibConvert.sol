@@ -56,11 +56,11 @@ library LibConvert {
         returns (uint256)
     {
         /// BEAN:3CRV LP -> BEAN
-        if (tokenIn == C.CURVE_BEAN_METAPOOL && tokenOut == C.beanAddress())
+        if (tokenIn == C.CURVE_BEAN_METAPOOL && tokenOut == C.BEAN)
             return LibCurveConvert.lpToPeg(C.CURVE_BEAN_METAPOOL);
         
         /// BEAN -> BEAN:3CRV LP
-        if (tokenIn == C.beanAddress() && tokenOut == C.CURVE_BEAN_METAPOOL)
+        if (tokenIn == C.BEAN && tokenOut == C.CURVE_BEAN_METAPOOL)
             return LibCurveConvert.beansToPeg(C.CURVE_BEAN_METAPOOL);
         
         /// urBEAN:3CRV LP -> urBEAN
@@ -84,11 +84,11 @@ library LibConvert {
         returns (uint256)
     {
         /// BEAN:3CRV LP -> BEAN
-        if (tokenIn == C.CURVE_BEAN_METAPOOL && tokenOut == C.beanAddress())
+        if (tokenIn == C.CURVE_BEAN_METAPOOL && tokenOut == C.BEAN)
             return LibCurveConvert.getBeanAmountOut(C.CURVE_BEAN_METAPOOL, amountIn);
         
         /// BEAN -> BEAN:3CRV LP
-        if (tokenIn == C.beanAddress() && tokenOut == C.CURVE_BEAN_METAPOOL)
+        if (tokenIn == C.BEAN && tokenOut == C.CURVE_BEAN_METAPOOL)
             return LibCurveConvert.getLPAmountOut(C.CURVE_BEAN_METAPOOL, amountIn);
 
         /// urBEAN:3CRV LP -> urBEAN

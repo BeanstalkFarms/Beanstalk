@@ -39,7 +39,7 @@ contract BDVFacet {
         view
         returns (uint256)
     {
-        if (token == C.beanAddress()) return beanToBDV(amount);
+        if (token == C.BEAN) return beanToBDV(amount);
         else if (token == C.CURVE_BEAN_METAPOOL) return curveToBDV(amount);
         else if (token == C.unripeBeanAddress()) return unripeBeanToBDV(amount);
         else if (token == C.unripeLPAddress()) return unripeLPToBDV(amount);

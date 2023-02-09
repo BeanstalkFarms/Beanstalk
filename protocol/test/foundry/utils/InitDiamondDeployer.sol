@@ -228,7 +228,7 @@ abstract contract InitDiamondDeployer is Test {
     address CURVE_REGISTRY = 0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5;
     _etch("MockToken.sol", CURVE_REGISTRY); // why this interface?
     stableFactory.set_coins(C.CURVE_BEAN_METAPOOL, [
-      C.beanAddress(),
+      C.BEAN,
       THREE_CRV,
       address(0),
       address(0)
@@ -256,7 +256,7 @@ abstract contract InitDiamondDeployer is Test {
 
   function _mockCurveMetapool() internal {
     MockMeta3Curve p = MockMeta3Curve(_etch("MockMeta3Curve.sol", C.CURVE_BEAN_METAPOOL));
-    p.init(C.beanAddress(), THREE_CRV, C.curve3PoolAddress());
+    p.init(C.BEAN, THREE_CRV, C.curve3PoolAddress());
     p.set_A_precise(1000);
     p.set_virtual_price(1 wei);
   }

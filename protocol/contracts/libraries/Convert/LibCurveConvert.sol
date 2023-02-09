@@ -79,7 +79,7 @@ library LibCurveConvert {
         (uint256 lp, uint256 minBeans, address pool) = convertData
             .convertWithAddress();
         (outAmount, inAmount) = curveRemoveLPAndBuyToPeg(lp, minBeans, pool);
-        tokenOut = C.beanAddress();
+        tokenOut = C.BEAN;
         tokenIn = pool; // The Curve metapool also issues the LP token
     }
 
@@ -104,7 +104,7 @@ library LibCurveConvert {
             pool
         );
         tokenOut = pool;
-        tokenIn = C.beanAddress();
+        tokenIn = C.BEAN;
     }
 
     //////////////////// CURVE CONVERT: LOGIC ////////////////////

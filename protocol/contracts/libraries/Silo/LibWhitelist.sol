@@ -60,7 +60,7 @@ library LibWhitelist {
 
     function whitelistBean() internal {
         whitelistToken(
-            C.beanAddress(),
+            C.BEAN,
             IBS.beanToBDV.selector,
             BEAN_STALK,
             BEAN_SEEDS
