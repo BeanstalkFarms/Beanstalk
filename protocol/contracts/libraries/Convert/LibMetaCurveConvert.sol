@@ -4,9 +4,11 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import "../LibAppStorage.sol";
-import "./LibConvertData.sol";
-import "../Curve/LibBeanMetaCurve.sol";
+import {LibConvertData} from "./LibConvertData.sol";
+import {LibBeanMetaCurve} from "../Curve/LibBeanMetaCurve.sol";
+import {LibCurve} from "../Curve/LibCurve.sol";
+import {LibAppStorage} from "../LibAppStorage.sol";
+import {C} from "~/C.sol";
 
 /**
  * @title LibMetaCurveConvert
@@ -34,9 +36,6 @@ library LibMetaCurveConvert {
         return balances[1].mul(C.curve3Pool().get_virtual_price()).div(1e30);
     }
 
-    /**
-     * 
-     */
     function lpToPeg(uint256[2] memory balances, uint256 atPeg) internal view returns (uint256 lp) {
         uint256 a = C.curveMetapool().A_precise();
         uint256[2] memory xp = LibBeanMetaCurve.getXP(balances);
@@ -83,6 +82,8 @@ library LibMetaCurveConvert {
         dy = LibBeanMetaCurve.getX0(dy.sub(1));
         uint256 dy_0 = LibBeanMetaCurve.getX0(xp[0].sub(new_y));
 
-        return dy_0.add((dy_0.sub(dy)).mul(ADMIN_FEE).div(FEE_DENOMINATOR));
+        return dy_0.add(
+            dy_0.sub(dy).mul(ADMIN_FEE).div(FEE_DENOMINATOR)
+        );
     }
 }

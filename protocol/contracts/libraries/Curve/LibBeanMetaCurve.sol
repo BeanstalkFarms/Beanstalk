@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {LibMetaCurve, IMeta3Curve} from "./LibMetaCurve.sol";
 import {LibCurve} from "./LibCurve.sol";
-import "../../C.sol";
+import "~/C.sol";
 
 /**
  * @title LibBeanMetaCurve
