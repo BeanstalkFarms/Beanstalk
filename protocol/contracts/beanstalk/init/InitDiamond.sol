@@ -10,6 +10,7 @@ import {IERC165} from "../../interfaces/IERC165.sol";
 import {IDiamondCut} from "../../interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../../interfaces/IDiamondLoupe.sol";
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
+import {LibIncentive} from "../../libraries/LibIncentive.sol";
 import "../../C.sol";
 import "../../interfaces/IBean.sol";
 import "../../interfaces/IWETH.sol";
@@ -62,9 +63,9 @@ contract InitDiamond {
         s.w.thisSowTime = type(uint32).max;
         s.w.lastSowTime = type(uint32).max;
         s.isFarm = 1;
-
-        C.bean().mint(msg.sender, C.getMaxReward());
-        emit Incentivization(msg.sender, C.getMaxReward());
+        
+        C.bean().mint(msg.sender, LibIncentive.MAX_REWARD);
+        emit Incentivization(msg.sender, LibIncentive.MAX_REWARD);
     }
 
 }

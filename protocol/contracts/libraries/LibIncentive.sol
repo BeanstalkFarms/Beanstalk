@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
+import {IBlockBasefee} from "../interfaces/IBlockBasefee.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "../C.sol";
 import "./Curve/LibCurve.sol";
@@ -19,10 +20,29 @@ library LibIncentive {
     using SafeMath for uint256;
 
     /// @dev The time range over which to consult the Uniswap V3 ETH:USDC pool oracle. Measured in seconds.
-    uint32 private constant PERIOD = 3600; // 1 hour
+    uint32 internal constant PERIOD = 3600; // 1 hour
 
     /// @dev The Sunrise reward reaches its maximum after this many blocks elapse.
-    uint256 private constant MAX_BLOCKS_LATE = 25;
+    uint256 internal constant MAX_BLOCKS_LATE = 25;
+
+    /// @dev Base BEAN reward to cover cost of operating a bot.
+    uint256 internal constant BASE_REWARD = 3e6;  // 3 BEAN
+
+    /// @dev Max BEAN reward for calling Sunrise. 
+    uint256 internal constant MAX_REWARD = 100e6; // 100 BEAN
+
+    /// @dev Wei buffer to account for the priority fee.
+    uint256 internal constant PRIORITY_FEE_BUFFER = 5e9; // 5e9 wei = 5 gwei
+
+    /// @dev The maximum gas which Beanstalk will pay for a Sunrise transaction.
+    uint256 internal constant MAX_SUNRISE_GAS = 500_000; // 500k gas
+
+    /// @dev Accounts for extra gas overhead for completing a Sunrise tranasaction.
+    // 21k gas (base cost for a transction) + ~29k gas for other overhead
+    uint256 internal constant SUNRISE_GAS_OVERHEAD = 50_000; // 50k gas
+
+    /// @dev Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
+    address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
 
     //////////////////// CALCULATE REWARD ////////////////////
 
@@ -65,21 +85,21 @@ library LibIncentive {
         //  - 29K for calculations following the below line, like {fracExp}
         // Max gas which Beanstalk will pay for = 500K.
         uint256 gasUsed = Math.min(
-            initialGasLeft.sub(gasleft()) + C.getSunriseGasOverhead(),
-            C.getMaxSunriseGas()
+            initialGasLeft.sub(gasleft()) + SUNRISE_GAS_OVERHEAD,
+            MAX_SUNRISE_GAS
         );
 
         // Calculate the current cost in Wei of `gasUsed` gas.
         // {block_basefee()} returns the base fee of the current block in Wei.
         // Adds a buffer for priority fee.
-        uint256 gasCostWei = C.basefeeContract().block_basefee()    // (BASE_FEE
-            .add(C.getSunrisePriorityFeeBuffer())                   // + PRIORITY_FEE_BUFFER)
-            .mul(gasUsed);                                          // * GAS_USED
+        uint256 gasCostWei = IBlockBasefee(BASE_FEE_CONTRACT).block_basefee()    // (BASE_FEE
+            .add(PRIORITY_FEE_BUFFER)                                            // + PRIORITY_FEE_BUFFER)
+            .mul(gasUsed);                                                       // * GAS_USED
         
         // Calculates the Sunrise reward to pay in BEAN.
         uint256 sunriseReward = Math.min(
-            C.getBaseReward() + gasCostWei.mul(beanEthPrice).div(1e18), // divide by 1e18 to convert wei to eth
-            C.getMaxReward()
+            BASE_REWARD + gasCostWei.mul(beanEthPrice).div(1e18), // divide by 1e18 to convert wei to eth
+            MAX_REWARD
         );
 
         // Scale the reward up as the number of blocks after expected sunrise increases. 
@@ -89,7 +109,7 @@ library LibIncentive {
         return fracExp(
             sunriseReward,
             100,
-            blocksLate.mul(C.getBlockLengthSeconds()),
+            blocksLate.mul(C.BLOCK_LENGTH_SECONDS),
             1
         );
     }

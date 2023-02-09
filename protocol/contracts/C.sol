@@ -7,7 +7,6 @@ import "./interfaces/IBean.sol";
 import "./interfaces/ICurve.sol";
 import "./interfaces/IFertilizer.sol";
 import "./interfaces/IProxyAdmin.sol";
-import "./interfaces/IBlockBasefee.sol";
 import "./libraries/Decimal.sol";
 
 /**
@@ -25,10 +24,13 @@ library C {
     uint256 private constant PERCENT_BASE = 1e18;
 
     /// @dev 
-    uint256 private constant PRECISION = 1e18;
+    uint256 internal constant PRECISION = 1e18;
 
     /// @dev Mainnet
     uint256 private constant CHAIN_ID = 1;
+
+    /// @dev The block time for the chain in seconds.
+    uint256 internal constant BLOCK_LENGTH_SECONDS = 12;
 
     //////////////////// Season ////////////////////
 
@@ -37,32 +39,6 @@ library C {
 
     /// @dev 
     uint256 private constant SOP_PRECISION = 1e24;
-
-    //////////////////// Sunrise Incentive ////////////////////
-    
-    /// @dev Base BEAN reward to cover cost of operating a bot.
-    uint256 private constant BASE_REWARD = 3e6;  // 3 BEAN
-
-    /// @dev Max BEAN reward for calling Sunrise. 
-    uint256 private constant MAX_REWARD = 100e6; // 100 BEAN
-
-    /// @dev Wei buffer to account for the priority fee.
-    uint256 private constant PRIORITY_FEE_BUFFER = 5e9; // 5e9 wei = 5 gwei
-
-    /// @dev The maximum gas which Beanstalk will pay for a Sunrise transaction.
-    uint256 private constant MAX_SUNRISE_GAS = 500_000; // 500k gas
-
-    /// @dev Accounts for extra gas overhead for completing a Sunrise tranasaction.
-    // 21k gas (base cost for a transction) + ~29k gas for other overhead
-    uint256 private constant SUNRISE_GAS_OVERHEAD = 50_000; // 50k gas
-
-    /// @dev The block time for the chain in seconds.
-    uint256 private constant BLOCK_LENGTH_SECONDS = 12; // seconds
-
-    //////////////////// Sun ////////////////////
-
-    uint256 private constant SOIL_COEFFICIENT_HIGH = 0.5e18;
-    uint256 private constant SOIL_COEFFICIENT_LOW = 1.5e18;
 
     //////////////////// Weather ////////////////////
 
@@ -76,8 +52,13 @@ library C {
 
     //////////////////// Silo ////////////////////
 
-    uint256 private constant SEEDS_PER_BEAN = 2;
-    uint256 private constant STALK_PER_BEAN = 10000;
+    /// @dev
+    uint256 internal constant SEEDS_PER_BEAN = 2;
+
+    /// @dev 
+    uint256 internal constant STALK_PER_BEAN = 10000;
+
+    /// @dev
     uint256 private constant ROOTS_BASE = 1e12;
 
     //////////////////// Exploit Migration ////////////////////
@@ -88,7 +69,7 @@ library C {
 
     //////////////////// Contracts ////////////////////
 
-    address private constant BEAN = 0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab;
+    address public constant BEAN = 0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab;
     address private constant CURVE_BEAN_METAPOOL = 0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49;
     address private constant CURVE_3_POOL = 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7;
     address private constant THREE_CRV = 0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490;
@@ -108,35 +89,9 @@ library C {
 
 
     address private constant UNIV3_ETH_USDC_POOL = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
-    // Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
-    address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
 
     function getSeasonPeriod() internal pure returns (uint256) {
         return CURRENT_SEASON_PERIOD;
-    }
-
-    function getBaseReward() internal pure returns (uint256) {
-        return BASE_REWARD;
-    }
-
-    function getMaxReward() internal pure returns (uint256) {
-        return MAX_REWARD;
-    }
-
-    function getSunrisePriorityFeeBuffer() internal pure returns (uint256) {
-        return PRIORITY_FEE_BUFFER;
-    }
-
-    function getMaxSunriseGas() internal pure returns (uint256) {
-        return MAX_SUNRISE_GAS;
-    }
-
-    function getSunriseGasOverhead() internal pure returns (uint256) {
-        return SUNRISE_GAS_OVERHEAD;
-    }
-
-    function getBlockLengthSeconds() internal pure returns (uint256) {
-        return BLOCK_LENGTH_SECONDS;
     }
 
     function getChainId() internal pure returns (uint256) {
@@ -255,10 +210,6 @@ library C {
         return UNIV3_ETH_USDC_POOL;
     }
 
-    function basefeeContract() internal pure returns (IBlockBasefee) {
-        return IBlockBasefee(BASE_FEE_CONTRACT);
-    }
-
     function fertilizer() internal pure returns (IFertilizer) {
         return IFertilizer(FERTILIZER);
     }
@@ -299,11 +250,4 @@ library C {
         return INITIAL_HAIRCUT;
     }
 
-    function soilCoefficientHigh() internal pure returns (uint256) {
-        return SOIL_COEFFICIENT_HIGH;
-    }
-
-    function soilCoefficientLow() internal pure returns (uint256) {
-        return SOIL_COEFFICIENT_LOW;
-    }
 }

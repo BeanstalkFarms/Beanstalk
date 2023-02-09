@@ -21,11 +21,17 @@ contract Sun is Oracle {
     using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
 
-    /// @dev 
+    /// @dev When Fertilizer is Active, it receives 1/3 of new Bean mints.
     uint256 private constant FERTILIZER_DENOMINATOR = 3;
 
-    /// @dev
+    /// @dev After Fertilizer, Harvestable Pods receive 1/2 of new Bean mints. 
     uint256 private constant HARVEST_DENOMINATOR = 2;
+
+    /// @dev When the Pod Rate is high, issue less Soil.
+    uint256 private constant SOIL_COEFFICIENT_HIGH = 0.5e18;
+    
+    /// @dev When the Pod Rate is low, issue more Soil.
+    uint256 private constant SOIL_COEFFICIENT_LOW = 1.5e18;
 
     /**
      * @notice Emitted during Sunrise when Beans are distributed to the Field, the Silo, and Fertilizer.
@@ -79,6 +85,7 @@ contract Sun is Oracle {
      */
     function rewardBeans(uint256 newSupply) internal returns (uint256 newHarvestable) {
         uint256 newFertilized;
+        
         C.bean().mint(address(this), newSupply);
 
         // Distribute first to Fertilizer if some Fertilizer are active
@@ -165,10 +172,10 @@ contract Sun is Oracle {
      * Farmers can claim them through {SiloFacet.plant}.
      */
     function rewardToSilo(uint256 amount) internal {
-        s.s.stalk = s.s.stalk.add(amount.mul(C.getStalkPerBean()));
+        s.s.stalk = s.s.stalk.add(amount.mul(C.STALK_PER_BEAN));
         s.earnedBeans = s.earnedBeans.add(amount);
-        s.siloBalances[C.beanAddress()].deposited = s
-            .siloBalances[C.beanAddress()]
+        s.siloBalances[C.BEAN].deposited = s
+            .siloBalances[C.BEAN]
             .deposited
             .add(amount);
     }
@@ -188,9 +195,9 @@ contract Sun is Oracle {
     function setSoilAbovePeg(uint256 newHarvestable, uint256 caseId) internal {
         uint256 newSoil = newHarvestable.mul(100).div(100 + s.w.t);
         if (caseId >= 24) {
-            newSoil = newSoil.mul(C.soilCoefficientHigh()).div(C.precision()); // high podrate
+            newSoil = newSoil.mul(SOIL_COEFFICIENT_HIGH).div(C.PRECISION); // high podrate
         } else if (caseId < 8) {
-            newSoil = newSoil.mul(C.soilCoefficientLow()).div(C.precision()); // low podrate
+            newSoil = newSoil.mul(SOIL_COEFFICIENT_LOW).div(C.PRECISION); // low podrate
         }
         setSoil(newSoil);
     }

@@ -138,11 +138,12 @@ contract SeasonFacet is Weather {
         uint256 blocksLate = block.timestamp.sub(
             s.season.start.add(s.season.period.mul(season()))
         )
-        .div(C.getBlockLengthSeconds());
+        .div(C.BLOCK_LENGTH_SECONDS);
         
         uint256 incentiveAmount = LibIncentive.determineReward(initialGasLeft, balances, blocksLate);
 
         LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);
+        
         emit Incentivization(account, incentiveAmount);
         return incentiveAmount;
     }
