@@ -32,6 +32,8 @@ contract Weather is Sun {
     /// @dev
     uint32 private constant SOW_TIME_STEADY = 60; // seconds
 
+    uint256 private constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%
+    uint256 private constant OPTIMAL_POD_RATE = 0.15e18; // 15%
     uint256 private constant POD_RATE_UPPER_BOUND = 0.25e18; // 25%
     
     /**
@@ -161,16 +163,16 @@ contract Weather is Sun {
         // Evaluate Pod Rate
         if (podRate.greaterThanOrEqualTo(POD_RATE_UPPER_BOUND.toDecimal())) {
             caseId = 24;
-        } else if (podRate.greaterThanOrEqualTo(C.getOptimalPodRate())) {
+        } else if (podRate.greaterThanOrEqualTo(OPTIMAL_POD_RATE.toDecimal())) {
             caseId = 16;
-        } else if (podRate.greaterThanOrEqualTo(C.getLowerBoundPodRate())) {
+        } else if (podRate.greaterThanOrEqualTo(POD_RATE_LOWER_BOUND.toDecimal())) {
             caseId = 8;
         }
 
         // Evaluate Price
         if (
             deltaB > 0 ||
-            (deltaB == 0 && podRate.lessThanOrEqualTo(C.getOptimalPodRate()))
+            (deltaB == 0 && podRate.lessThanOrEqualTo(OPTIMAL_POD_RATE.toDecimal()))
         ) {
             caseId += 4;
         }
