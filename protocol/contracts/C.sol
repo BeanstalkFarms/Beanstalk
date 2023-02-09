@@ -20,10 +20,7 @@ library C {
 
     //////////////////// Globals ////////////////////
 
-    /// @dev 
     uint256 internal constant PRECISION = 1e18;
-
-    /// @dev Mainnet
     uint256 private constant CHAIN_ID = 1;
 
     /// @dev The block time for the chain in seconds.
@@ -33,31 +30,19 @@ library C {
 
     /// @dev The length of a Season meaured in seconds.
     uint256 private constant CURRENT_SEASON_PERIOD = 3600; // 1 hour
-
-    /// @dev 
     uint256 internal constant SOP_PRECISION = 1e24;
-
-    //////////////////// Weather ////////////////////
-
-    /// @dev Base precision when calculating ratios with the {Decimal} library.
-    uint256 private constant PERCENT_BASE = 1e18;
 
     //////////////////// Silo ////////////////////
 
-    /// @dev
     uint256 internal constant SEEDS_PER_BEAN = 2;
-
-    /// @dev 
     uint256 internal constant STALK_PER_BEAN = 10000;
-
-    /// @dev
     uint256 private constant ROOTS_BASE = 1e12;
 
     //////////////////// Exploit Migration ////////////////////
 
     uint256 private constant UNRIPE_LP_PER_DOLLAR = 1884592; // 145_113_507_403_282 / 77_000_000
     uint256 private constant ADD_LP_RATIO = 866616;
-    uint256 private constant INITIAL_HAIRCUT = 185564685220298701; // SET
+    uint256 private constant INITIAL_HAIRCUT = 185564685220298701;
 
     //////////////////// Contracts ////////////////////
 
@@ -92,8 +77,6 @@ library C {
         return CHAIN_ID;
     }
 
-    //
-
     function getSeedsPerBean() internal pure returns (uint256) {
         return SEEDS_PER_BEAN;
     }
@@ -114,14 +97,6 @@ library C {
         return UNRIPE_CURVE_BEAN_LUSD_POOL;
     }
 
-    function unripeBeanAddress() internal pure returns (address) {
-        return UNRIPE_BEAN;
-    }
-
-    function unripeLPAddress() internal pure returns (address) {
-        return UNRIPE_LP;
-    }
-
     function unripeBean() internal pure returns (IERC20) {
         return IERC20(UNRIPE_BEAN);
     }
@@ -136,10 +111,6 @@ library C {
 
     function usdc() internal pure returns (IERC20) {
         return IERC20(USDC);
-    }
-
-    function weth() internal pure returns (IERC20) {
-        return IERC20(WETH);
     }
 
     function curveMetapool() internal pure returns (ICurvePool) {
