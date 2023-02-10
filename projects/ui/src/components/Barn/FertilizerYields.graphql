@@ -1,0 +1,9 @@
+#// NOTE: we use fertilizerYields instead of fertilizerYield for caching
+query FertilizerYields($season: ID!) {
+  fertilizerYield(id: $season) {
+    id
+    season
+    simpleAPY
+    beansPerSeasonEMA
+  }
+}
