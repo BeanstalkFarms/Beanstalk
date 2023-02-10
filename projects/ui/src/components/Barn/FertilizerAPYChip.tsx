@@ -2,6 +2,7 @@ import { Chip, Tooltip, Link, Typography, Box } from '@mui/material';
 import React from 'react';
 import useFertilizerYieldData from '~/hooks/beanstalk/useFertilizerYieldData';
 import useSdk from '~/hooks/sdk';
+import { displayFullBN } from '~/util';
 import Row from '../Common/Row';
 import Stat from '../Common/Stat';
 import TokenIcon from '../Common/TokenIcon';
@@ -22,7 +23,7 @@ const FertilizerAPYChip: React.FC<{}> = () => {
   const vApyString =
     yieldData.vApy.gt(0) && yieldData.vApy.lt(0.1)
       ? '< 0.1'
-      : yieldData.vApy.toFixed(2);
+      : displayFullBN(yieldData.vApy, 2);
 
   return (
     <Tooltip
@@ -30,7 +31,7 @@ const FertilizerAPYChip: React.FC<{}> = () => {
       componentsProps={{ tooltip: { sx: { maxWidth: 'none !important' } } }}
       title={
         <Row direction={{ xs: 'column', sm: 'row' }} alignItems="flex-start">
-          <Box px={1} py={0.5} sx={{ maxWidth: 250 }}>
+          <Box px={1} py={0.5} sx={{ maxWidth: 260 }}>
             <Stat
               title={
                 <Row gap={0.5}>
@@ -41,10 +42,10 @@ const FertilizerAPYChip: React.FC<{}> = () => {
               subtitle={copy.fertilizedAmounts}
               variant="h4"
               gap={0.25}
-              amount={yieldData.beansPerSeasonEMA.toFixed(2)}
+              amount={displayFullBN(yieldData.beansPerSeasonEMA, 2)}
             />
           </Box>
-          <Box px={1} py={0.5} sx={{ maxWidth: 250 }}>
+          <Box px={1} py={0.5} sx={{ maxWidth: 260 }}>
             <Typography component="span">
               {copy.vAPY} &nbsp;
               <Link
