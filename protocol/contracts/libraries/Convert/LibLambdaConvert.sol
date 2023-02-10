@@ -1,16 +1,14 @@
-/*
- SPDX-License-Identifier: MIT
-*/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./LibConvertData.sol";
+import {LibConvertData} from "./LibConvertData.sol";
 
 /**
- * @title Lib Lambda Convert
- **/
-
+ * @title LibLambdaConvert
+ * @author Publius
+ */
 library LibLambdaConvert {
     using LibConvertData for bytes;
 

@@ -1,82 +1,152 @@
-/*
- SPDX-License-Identifier: MIT
-*/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
+import {IBlockBasefee} from "../interfaces/IBlockBasefee.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "../C.sol";
 import "./Curve/LibCurve.sol";
 
 /**
+ * @title LibIncentive
  * @author Publius, Chaikitty, Brean
- * @title Incentive Library calculates the reward and the exponential increase efficiently.
- **/
+ * @notice Calculates the reward offered for calling Sunrise, adjusts for current gas & ETH prices,
+ * and scales the reward up when the Sunrise is called late.
+ */
 library LibIncentive {
-    // Season Incentive
-    uint256 private constant BASE_REWARD = 3e6; // Fixed increase in Bean reward to cover cost of operating a bot
-    uint256 private constant MAX_REWARD = 100e6;
-    uint256 private constant PRIORITY_FEE_BUFFER = 5e9; // 5 gwei
-    uint256 private constant MAX_SUNRISE_GAS = 5e5;
-    uint256 private constant SUNRISE_GAS_OVERHEAD = 50000; // 21k (constant cost for a transction) + 29k for overhead
-    uint256 private constant FRAC_EXP_PRECISION = 1e18; // `sunriseReward` is precomputed in {fracExp} using this precision.
-    address private constant UNIV3_ETH_USDC_POOL = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
-    uint32 private constant PERIOD = 1800; // 30 minutes
-
-
-
     using SafeMath for uint256;
 
-    // Calculates sunrise incentive amount based on current gas prices and bean/ether price
-    // Further reading here: https://beanstalk-farms.notion.site/RFC-Sunrise-Payout-Change-31a0ca8dd2cb4c3f9fe71ae5599e9102
+    /// @dev The time range over which to consult the Uniswap V3 ETH:USDC pool oracle. Measured in seconds.
+    uint32 internal constant PERIOD = 1800; // 30 minutes
+
+    /// @dev The Sunrise reward reaches its maximum after this many blocks elapse.
+    uint256 internal constant MAX_BLOCKS_LATE = 25;
+
+    /// @dev Base BEAN reward to cover cost of operating a bot.
+    uint256 internal constant BASE_REWARD = 3e6;  // 3 BEAN
+
+    /// @dev Max BEAN reward for calling Sunrise. 
+    uint256 internal constant MAX_REWARD = 100e6; // 100 BEAN
+
+    /// @dev Wei buffer to account for the priority fee.
+    uint256 internal constant PRIORITY_FEE_BUFFER = 5e9; // 5e9 wei = 5 gwei
+
+    /// @dev The maximum gas which Beanstalk will pay for a Sunrise transaction.
+    uint256 internal constant MAX_SUNRISE_GAS = 500_000; // 500k gas
+
+    /// @dev Accounts for extra gas overhead for completing a Sunrise tranasaction.
+    // 21k gas (base cost for a transction) + ~29k gas for other overhead
+    uint256 internal constant SUNRISE_GAS_OVERHEAD = 50_000; // 50k gas
+
+    /// @dev Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
+    address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
+
+    //////////////////// CALCULATE REWARD ////////////////////
+
+    /**
+     * @param initialGasLeft The amount of gas left at the start of the transaction
+     * @param balances The current balances of the BEAN:3CRV pool returned by {stepOracle}
+     * @param blocksLate The number of blocks late that {sunrise()} was called.
+     * @dev Calculates Sunrise incentive amount based on current gas prices and a computed
+     * BEAN:ETH price. This function is called at the end of {sunriseTo()} after all
+     * "step" functions have been executed.
+     * 
+     * Price calculation:
+     * `X := BEAN / USD`
+     * `Y := ETH / USDC`
+     * `Y / X := (ETH/USDC)/(BEAN/USD) := ETH / BEAN` (assuming 1 USD == 1 USDC)
+     */
     function determineReward(
         uint256 initialGasLeft,
         uint256[2] memory balances,
         uint256 blocksLate
     ) internal view returns (uint256) {
-
-        // Gets the current bean price based on the curve pool.
+        // Gets the current BEAN/USD price based on the Curve pool.
         // In the future, this can be swapped out to another oracle
-        uint256 beanPriceUsd = getCurveBeanPrice(balances);
+        uint256 beanUsdPrice = getBeanUsdPrice(balances); // BEAN / USD
 
-        // ethUsdPrice has 6 Decimal Precision
-        uint256 beanEthPrice = getEthUsdcPrice()
+        // `getEthUsdcPrice()` has 6 decimal precision
+        // Assumption: 1 USDC = 1 USD
+        uint256 beanEthPrice = getEthUsdcPrice() // WETH / USDC
             .mul(1e6)
-            .div(beanPriceUsd);
+            .div(beanUsdPrice);
 
-        uint256 gasUsed = Math.min(initialGasLeft.sub(gasleft()) + SUNRISE_GAS_OVERHEAD, MAX_SUNRISE_GAS);
-        uint256 gasCostWei = C.basefeeContract().block_basefee()    // (BASE_FEE
-            .add(PRIORITY_FEE_BUFFER)                               // + PRIORITY_FEE_BUFFER)
-            .mul(gasUsed);                                          // * GAS_USED
-        uint256 sunriseReward =
-            Math.min(
-                gasCostWei.mul(beanEthPrice).div(1e18) + BASE_REWARD, // divide by 1e18 to convert wei to eth
-                MAX_REWARD
-            );
+        // Cap the maximum number of blocks late. If the sunrise is later than
+        // this, Beanstalk will pay the same amount. Prevents unbounded return value.
+        if (blocksLate > MAX_BLOCKS_LATE) {
+            blocksLate = MAX_BLOCKS_LATE;
+        }
+
+        // Sunrise gas overhead includes:
+        //  - 21K for base transaction cost
+        //  - 29K for calculations following the below line, like {fracExp}
+        // Max gas which Beanstalk will pay for = 500K.
+        uint256 gasUsed = Math.min(
+            initialGasLeft.sub(gasleft()) + SUNRISE_GAS_OVERHEAD,
+            MAX_SUNRISE_GAS
+        );
+
+        // Calculate the current cost in Wei of `gasUsed` gas.
+        // {block_basefee()} returns the base fee of the current block in Wei.
+        // Adds a buffer for priority fee.
+        uint256 gasCostWei = IBlockBasefee(BASE_FEE_CONTRACT).block_basefee()    // (BASE_FEE
+            .add(PRIORITY_FEE_BUFFER)                                            // + PRIORITY_FEE_BUFFER)
+            .mul(gasUsed);                                                       // * GAS_USED
+        
+        // Calculates the Sunrise reward to pay in BEAN.
+        uint256 sunriseReward = Math.min(
+            BASE_REWARD + gasCostWei.mul(beanEthPrice).div(1e18), // divide by 1e18 to convert wei to eth
+            MAX_REWARD
+        );
+
+        // Scale the reward up as the number of blocks after expected sunrise increases. 
+        // `sunriseReward * (1 + 1/100)^(blocks late * seconds per block)`
+        // NOTE: 1.01^(25 * 12) = 19.78, This is the maximum multiplier.
         return fracExp(sunriseReward, blocksLate);
     }
 
-    function getCurveBeanPrice(uint256[2] memory balances) internal view returns (uint256 price) {
+    //////////////////// PRICES ////////////////////
+
+    /**
+     * @param balances The current balances of the BEAN:3CRV pool returned by {stepOracle}.
+     * @dev Calculate the price of BEAN denominated in USD.
+     */
+    function getBeanUsdPrice(uint256[2] memory balances) internal view returns (uint256) {
         uint256[2] memory rates = getRates();
         uint256[2] memory xp = LibCurve.getXP(balances, rates);
+        
         uint256 a = C.curveMetapool().A_precise();
         uint256 D = LibCurve.getD(xp, a);
-        price = LibCurve.getPrice(xp, rates, a, D);
+        
+        return LibCurve.getPrice(xp, rates, a, D);
     }
 
+    /**
+     * @dev Uses the Uniswap V3 Oracle to get the price of WETH denominated in USDC.
+     * 
+     * {OracleLibrary.getQuoteAtTick} returns an arithmetic mean.
+     */
     function getEthUsdcPrice() internal view returns (uint256) {
-        (int24 tick,) = OracleLibrary.consult(UNIV3_ETH_USDC_POOL, PERIOD); //1 season tick
+        (int24 tick,) = OracleLibrary.consult(C.UNIV3_ETH_USDC_POOL, PERIOD); // 1 season tick
         return OracleLibrary.getQuoteAtTick(
             tick,
             1e18,
-            address(C.weth()),
-            address(C.usdc())
+            C.WETH,
+            C.USDC
         );
     }
 
+    function getRates() private view returns (uint256[2] memory) {
+        // Decimals will always be 6 because we can only mint beans
+        // 10**(36-decimals)
+        return [1e30, C.curve3Pool().get_virtual_price()];
+    }
+
+    //////////////////// MATH UTILITIES ////////////////////
+    
     /**  
      * @dev fraxExp scales up the bean reward based on the blocks late.
      * the formula is beans * (1.01)^(Blocks Late * 12 second block time).
@@ -198,12 +268,5 @@ library LibIncentive {
         returns (uint256 scaledTemperature) 
     {
         return beans.mul(scaler).div(FRAC_EXP_PRECISION);
-    }
-
-
-    function getRates() private view returns (uint256[2] memory rates) {
-        // Decimals will always be 6 because we can only mint beans
-        // 10**(36-decimals)
-        return [1e30, C.curve3Pool().get_virtual_price()];
     }
 }

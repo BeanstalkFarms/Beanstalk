@@ -213,18 +213,18 @@ contract SunTest is  Sun, TestHelper {
   // }
 
   function testMockOraclePrice() public {
-    MockUniswapV3Pool(UNIV3_ETH_USDC_POOL).setOraclePrice(1000e6, 18);
+    MockUniswapV3Pool(C.UNIV3_ETH_USDC_POOL).setOraclePrice(1000e6,18);
     console.log("Eth Price is:", season.getEthPrice());
     assertApproxEqRel(season.getEthPrice(), 1000e6, 0.01e18); //0.01% accuracy as ticks are spaced 0.01%
   }
 
   //helper
   function getEthUsdcPrice() private view returns (uint256) {
-        (int24 tick,) = OracleLibrary.consult(UNIV3_ETH_USDC_POOL, 3600); //1 season tick
+        (int24 tick,) = OracleLibrary.consult(C.UNIV3_ETH_USDC_POOL,3600); //1 season tick
         return OracleLibrary.getQuoteAtTick(
             tick,
             1e18,
-            address(C.weth()),
+            address(C.WETH),
             address(C.usdc())
         );
     }

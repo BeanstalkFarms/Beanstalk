@@ -17,9 +17,8 @@ import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 
 /**
  * @title FieldFacet
- * @notice Field sows Beans.
  * @author Publius, Brean
- * @dev 
+ * @notice The Field is where Beans are Sown and Pods are Harvested.
  */
 contract FieldFacet is ReentrancyGuard {
     using SafeMath for uint256;
@@ -63,7 +62,7 @@ contract FieldFacet is ReentrancyGuard {
      * @notice Sow Beans in exchange for Pods.
      * @param beans The number of Beans to Sow
      * @param minTemperature The minimum Temperature at which to Sow
-     * @param mode The balance to transfer Beans from; see {LibTrasfer.From}
+     * @param mode The balance to transfer Beans from; see {LibTransfer.From}
      * @return pods The number of Pods received
      * @dev 
      * 
@@ -89,7 +88,7 @@ contract FieldFacet is ReentrancyGuard {
         payable
         returns (uint256 pods)
     {
-        return sowWithMin(beans, minTemperature, beans, mode);
+        pods = sowWithMin(beans, minTemperature, beans, mode);
     }
 
     /**
@@ -126,11 +125,11 @@ contract FieldFacet is ReentrancyGuard {
         }
 
         // 1 Bean is Sown in 1 Soil, i.e. soil = beans
-        return _sow(soil, _morningTemperature, abovePeg, mode);
+        pods = _sow(soil, _morningTemperature, abovePeg, mode);
     }
 
     /**
-     * @dev Burn Beans, Sows at the provided `morningTemperature`, increments the total
+     * @dev Burn Beans, Sows at the provided `_morningTemperature`, increments the total
      * number of `beanSown`.
      * 
      * NOTE: {FundraiserFacet} also burns Beans but bypasses the soil mechanism
@@ -243,7 +242,8 @@ contract FieldFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Returns the number of outstanding Pods.
+     * @notice Returns the number of outstanding Pods. Includes Pods that are
+     * currently Harvestable but have not yet been Harvested.
      */
     function totalPods() public view returns (uint256) {
         return s.f.pods.sub(s.f.harvested);
@@ -267,8 +267,7 @@ contract FieldFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Returns the number of Pods that are not yet Harvestable.
-     * @dev Also referred to as the Pod Line.
+     * @notice Returns the number of Pods that are not yet Harvestable. Also known as the Pod Line.
      */
     function totalUnharvestable() public view returns (uint256) {
         return s.f.pods.sub(s.f.harvestable);
@@ -281,64 +280,54 @@ contract FieldFacet is ReentrancyGuard {
     function plot(address account, uint256 index)
         public
         view
-        returns (uint256 pods)
+        returns (uint256)
     {
         return s.a[account].field.plots[index];
     }
 
     /**
-     * @dev Gets the current `soil`, `morningTemperature` and `abovePeg`. Provided as a gas 
+     * @dev Gets the current `soil`, `_morningTemperature` and `abovePeg`. Provided as a gas 
      * optimization to prevent recalculation of {LibDibbler.morningTemperature} for 
      * upstream functions.
-     *
      * Note: the `soil` return value is symmetric with `totalSoil`.
      */
-    function _totalSoilAndTemperature() private view returns (uint256 soil, uint256 _morningTemperature, bool) {
+    function _totalSoilAndTemperature() private view returns (uint256 soil, uint256 _morningTemperature, bool abovePeg) {
         _morningTemperature = LibDibbler.morningTemperature();
+        abovePeg = s.season.abovePeg;
 
         // Below peg: Soil is fixed to the amount set during {stepWeather}.
         // Morning Temperature is dynamic, starting small and logarithmically 
         // increasing to `s.w.t` across the first 25 blocks of the Season.
-        if (!s.season.abovePeg) {
-            return (
-                uint256(s.f.soil),
-                _morningTemperature,
-                false
-            );
-        }
-
+        if (!abovePeg) {
+            soil = uint256(s.f.soil);
+        } 
+        
         // Above peg: the maximum amount of Pods that Beanstalk is willing to mint
         // stays fixed; since {morningTemperature} is scaled down when `delta < 25`, we
         // need to scale up the amount of Soil to hold Pods constant.
-        return (
-            LibDibbler.scaleSoilUp(
+        else {
+            soil = LibDibbler.scaleSoilUp(
                 uint256(s.f.soil), // max soil offered this Season, reached when `t >= 25`
                 uint256(s.w.t).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
                 _morningTemperature // temperature adjusted by number of blocks since Sunrise
-            ),
-            _morningTemperature,
-            true
-        );
+            );
+        }
     }
 
     //////////////////// GETTERS: SOIL ////////////////////
 
     /**
-     * @notice Returns 
-     * @dev
-     * 
-     * ```
-     * soilAbovePeg * temperature = soil * maxTemperature = pods (when above peg)
-     * soilAbovePeg = soil * maxTemperature / temperature
-     * ```
-     * 
-     * FIXME: probably should be named {remainingSoil}.
+     * @notice Returns the total amount of available Soil. 1 Bean can be Sown in
+     * 1 Soil for Pods.
+     * @dev When above peg, Soil is dynamic because the number of Pods that
+     * Beanstalk is willing to mint is fixed.
      */
     function totalSoil() external view returns (uint256) {
         // Below peg: Soil is fixed to the amount set during {stepWeather}.
         if (!s.season.abovePeg) {
             return uint256(s.f.soil);
         }
+
         // Above peg: Soil is dynamic
         return LibDibbler.scaleSoilUp(
             uint256(s.f.soil), // min soil
