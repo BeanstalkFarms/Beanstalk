@@ -1,5 +1,4 @@
-#// NOTE: we use fertilizerYields instead of fertilizerYield for caching
-query FertilizerYields($season: ID!) {
+query FertilizerYield($season: ID!) {
   fertilizerYield(id: $season) {
     id
     season

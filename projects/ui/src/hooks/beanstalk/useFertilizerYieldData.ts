@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import BigNumber from 'bignumber.js';
 
-import { useFertilizerYieldsQuery } from '~/generated/graphql';
+import { useFertilizerYieldQuery } from '~/generated/graphql';
 import useSeason from './useSeason';
 
 export default function useFertilizerYieldData() {
@@ -9,7 +9,7 @@ export default function useFertilizerYieldData() {
   const season = useSeason();
 
   // Query
-  const { data: queryData, previousData, refetch } = useFertilizerYieldsQuery({
+  const { data: queryData, previousData, refetch } = useFertilizerYieldQuery({
     variables: { season: season.toString() },
     fetchPolicy: 'network-only',
     notifyOnNetworkStatusChange: true,
