@@ -1,6 +1,6 @@
 import { Address, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
-import { Well } from "../../generated/schema";
-import { ADDRESS_ZERO } from "./Constants";
+import { BoreWellWellFunctionStruct } from "../../generated/Aquifer/Aquifer";
+import { Well, WellFunction } from "../../generated/schema";
 import { emptyBigDecimalArray, emptyBigIntArray, ZERO_BD, ZERO_BI } from "./Decimals";
 
 export function createWell(wellAddress: Address, inputTokens: Address[]): Well {
@@ -10,23 +10,19 @@ export function createWell(wellAddress: Address, inputTokens: Address[]): Well {
     well = new Well(wellAddress)
 
     well.aquifer = Bytes.empty()
-    well.inputTokens = [] // This is currently set in the `handleBoreWell` function
-    well.wellFunction = ADDRESS_ZERO
+    well.tokens = [] // This is currently set in the `handleBoreWell` function
     well.createdTimestamp = ZERO_BI
     well.createdBlockNumber = ZERO_BI
-    well.totalLiquidity = ZERO_BI
+    well.lpTokenSupply = ZERO_BI
     well.totalLiquidityUSD = ZERO_BD
-    well.cumulativeVolumeTokenAmounts = emptyBigIntArray(inputTokens.length)
-    well.cumulativeVolumesUSD = emptyBigDecimalArray(inputTokens.length)
+    well.reserves = emptyBigIntArray(inputTokens.length)
+    well.reservesUSD = emptyBigDecimalArray(inputTokens.length)
+    well.cumulativeVolumeReserves = emptyBigIntArray(inputTokens.length)
+    well.cumulativeVolumeReservesUSD = emptyBigDecimalArray(inputTokens.length)
     well.cumulativeVolumeUSD = ZERO_BD
-    well.inputTokenBalances = emptyBigIntArray(inputTokens.length)
-    well.inputTokenBalancesUSD = emptyBigDecimalArray(inputTokens.length)
     well.cumulativeDepositCount = 0
     well.cumulativeWithdrawCount = 0
     well.cumulativeSwapCount = 0
-    well.positionCount = 0
-    well.openPositionCount = 0
-    well.closedPositionCount = 0
     well.lastSnapshotDayID = 0
     well.lastSnapshotHourID = 0
     well.lastUpdateTimestamp = ZERO_BI
@@ -40,6 +36,19 @@ export function loadWell(wellAddress: Address): Well {
     return Well.load(wellAddress) as Well
 }
 
+export function loadOrCreateWellFunction(functionData: BoreWellWellFunctionStruct, wellAddress: Address): WellFunction {
+    let id = wellAddress.toHexString() + '-' + functionData.target.toHexString()
+    let wellFunction = WellFunction.load(id)
+    if (wellFunction == null) {
+        wellFunction = new WellFunction(id)
+        wellFunction.target = functionData.target
+        wellFunction.data = functionData.data
+        wellFunction.well = wellAddress
+        wellFunction.save()
+    }
+    return wellFunction as WellFunction
+}
+
 export function updateWellVolumes(
     wellAddress: Address,
     fromToken: Address,
@@ -49,13 +58,13 @@ export function updateWellVolumes(
 ): void {
     let well = loadWell(wellAddress)
 
-    let fromTokenIndex = well.inputTokens.indexOf(fromToken)
-    let toTokenIndex = well.inputTokens.indexOf(toToken)
+    let fromTokenIndex = well.tokens.indexOf(fromToken)
+    let toTokenIndex = well.tokens.indexOf(toToken)
 
     // Update fromToken amounts
 
-    let tokenVolumes = well.cumulativeVolumeTokenAmounts
-    let tokenBalances = well.inputTokenBalances
+    let tokenVolumes = well.cumulativeVolumeReserves
+    let tokenBalances = well.reserves
 
     tokenVolumes[fromTokenIndex] = tokenVolumes[fromTokenIndex].plus(amountIn)
     tokenBalances[fromTokenIndex] = tokenBalances[fromTokenIndex].plus(amountIn)
@@ -63,11 +72,10 @@ export function updateWellVolumes(
     tokenVolumes[toTokenIndex] = tokenVolumes[toTokenIndex].plus(amountOut)
     tokenBalances[toTokenIndex] = tokenBalances[toTokenIndex].minus(amountOut)
 
-    well.cumulativeVolumeTokenAmounts = tokenVolumes
-    well.inputTokenBalances = tokenBalances
+    well.cumulativeVolumeReserves = tokenVolumes
+    well.reserves = tokenBalances
 
     well.save()
-
 }
 
 export function updateWellTokenBalances(
@@ -75,19 +83,19 @@ export function updateWellTokenBalances(
     inputTokenAmounts: BigInt[]
 ): void {
     let well = loadWell(wellAddress)
-    let balances = well.inputTokenBalances
+    let balances = well.reserves
 
     for (let i = 0; i < balances.length; i++) {
         balances[i] = balances[i].plus(inputTokenAmounts[i])
     }
 
-    well.inputTokenBalances = balances
+    well.reserves = balances
     well.save()
 }
 
 export function updateWellLiquidityTokenBalance(wellAddress: Address, deltaAmount: BigInt): void {
     let well = loadWell(wellAddress)
-    well.totalLiquidity = well.totalLiquidity.plus(deltaAmount)
+    well.lpTokenSupply = well.lpTokenSupply.plus(deltaAmount)
     well.save()
 }
 
@@ -106,12 +114,5 @@ export function incrementWellDeposit(wellAddress: Address): void {
 export function incrementWellWithdraw(wellAddress: Address): void {
     let well = loadWell(wellAddress)
     well.cumulativeWithdrawCount += 1
-    well.save()
-}
-
-export function incrementWellPositions(wellAddress: Address): void {
-    let well = loadWell(wellAddress)
-    well.positionCount += 1
-    well.openPositionCount += 1
     well.save()
 }
