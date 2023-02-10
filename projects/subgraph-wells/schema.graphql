@@ -3,18 +3,6 @@
 # Version: 3.0.3
 # See https://github.com/messari/subgraphs/blob/master/docs/Schema.md for details
 
-enum TokenType {
-  MULTIPLE
-  UNKNOWN
-  ERC20
-  ERC721
-  ERC1155
-  BEP20
-  BEP721
-  BEP1155
-  # Will add more
-}
-
 type Token @entity {
   " Smart contract address of the token "
   id: Bytes!
@@ -39,8 +27,30 @@ type Aquifer @entity(immutable: true) {
   " Smart contract address of the aquifer "
   id: Bytes!
 
-  " Auguer used by this aquifer "
-  auguer: Bytes!
+  " Augers used by this aquifer "
+  auger: [Bytes!]
+}
+
+type WellFunction @entity {
+  " {Well address}-{Well Function address}"
+  id: ID!
+  " Contract address of the well function"
+  target: Bytes!
+  " Calldata passed to the well function "
+  data: Bytes!
+  " Well associated with this well function"
+  well: Well!
+}
+
+type Pump @entity {
+  " {Well address}-{Pump address}"
+  id: ID!
+  " Contract address of the pump"
+  target: Bytes!
+  " Calldata passed to the pump "
+  data: Bytes!
+  " Well associated with this pump"
+  well: Well!
 }
 
 type Well @entity {
@@ -56,20 +66,18 @@ type Well @entity {
   " Symbol of liquidity pool (e.g. 3CRV) "
   symbol: String
 
-  " Token that is to represent ownership of liquidity "
-  liquidityToken: Token
-
-  " Type of token used to track liquidity "
-  liquidityTokenType: TokenType
-
   " Tokens that need to be deposited to take a position in protocol. e.g. WETH and USDC to deposit into the WETH-USDC pool. Array to account for multi-asset pools like Curve and Balancer "
-  inputTokens: [Token!]!
+  # Check for forced indexing of tokens
+  tokens: [Token!]!
 
   " Pricing function contract used with this well "
-  wellFunction: Bytes!
+  wellFunction: WellFunction! @derivedFrom(field: "well")
 
   " Pumps associated with this well "
   pumps: [Pump!]! @derivedFrom(field: "well")
+
+  " The auger used to deploy this well "
+  auger: Bytes
 
   " Creation timestamp "
   createdTimestamp: BigInt!
@@ -79,52 +87,40 @@ type Well @entity {
 
   ##### Quantitative Data #####
 
-  " The sum of all active and non-active liquidity for this pool. "
-  totalLiquidity: BigInt!
+  " Total liquidity token supply for the well. "
+  lpTokenSupply: BigInt!
 
-  " The sum of all active and non-active liquidity in USD for this pool. "
+  " The sum of all active and non-active liquidity in USD for this well. "
   totalLiquidityUSD: BigDecimal!
 
-  " All trade volume occurred for a specific input token, in native amount. The ordering should be the same as the pool's `inputTokens` field. "
-  cumulativeVolumeTokenAmounts: [BigInt!]!
+  " Amount of each token in the well. The ordering should be the same as the well's `tokens` field. "
+  reserves: [BigInt!]!
 
-  " All trade volume occurred for a specific input token, in USD. The ordering should be the same as the pool's `inputTokens` field. "
-  cumulativeVolumesUSD: [BigDecimal!]!
+  " USD value of each token in the well. The ordering should be the same as the well's `tokens` field. "
+  reservesUSD: [BigDecimal!]!
 
-  " All historical trade volume occurred in this pool, in USD "
+  " All trade volume occurred for a specific token, in native amount. The ordering should be the same as the well's `tokens` field. "
+  cumulativeVolumeReserves: [BigInt!]!
+
+  " All trade volume occurred for a specific token, in USD. The ordering should be the same as the well's `tokens` field. "
+  cumulativeVolumeReservesUSD: [BigDecimal!]!
+
+  " All historical trade volume occurred in this well, in USD "
   cumulativeVolumeUSD: BigDecimal!
 
-  " Amount of input tokens in the pool. The ordering should be the same as the pool's `inputTokens` field. "
-  inputTokenBalances: [BigInt!]!
-
-  " Amount of input tokens in USD in the pool. The ordering should be the same as the pool's `inputTokens` field. "
-  inputTokenBalancesUSD: [BigDecimal!]!
-
-  " Total supply of well tokens that are deposited in the Silo. "
-  depositedWellTokenAmount: BigInt
-
-  " Total number of deposits (add liquidity) "
+  " Total number of deposit events (add liquidity) "
   cumulativeDepositCount: Int!
 
-  " Total number of withdrawals (remove liquidity) "
+  " Total number of withdrawal events (remove liquidity) "
   cumulativeWithdrawCount: Int!
 
   " Total number of trades (swaps) "
   cumulativeSwapCount: Int!
 
-  ##### Account/Position Data #####
+  ##### Beanstalk Specific Data #####
 
-  " All positions in this market "
-  positions: [Position!]! @derivedFrom(field: "well")
-
-  " Number of positions in this market "
-  positionCount: Int!
-
-  " Number of open positions in this market "
-  openPositionCount: Int!
-
-  " Number of closed positions in this market "
-  closedPositionCount: Int!
+  " Total supply of well tokens that are deposited in the Silo. "
+  depositedWellTokenAmount: BigInt
 
   " Day ID of the most recent daily snapshot "
   lastSnapshotDayID: Int!
@@ -140,11 +136,11 @@ type Well @entity {
 
   ##### Snapshots #####
 
-  # " Liquidity pool daily snapshots "
-  # dailySnapshots: [LiquidityPoolDailySnapshot!]! @derivedFrom(field: "pool")
+  " Liquidity pool daily snapshots "
+  dailySnapshots: [WellDailySnapshot!]! @derivedFrom(field: "well")
 
-  # " Liquidity pool hourly snapshots "
-  # hourlySnapshots: [LiquidityPoolHourlySnapshot!]! @derivedFrom(field: "pool")
+  " Liquidity pool hourly snapshots "
+  hourlySnapshots: [WellHourlySnapshot!]! @derivedFrom(field: "well")
 
   # ##### Events #####
 
@@ -158,84 +154,135 @@ type Well @entity {
   swaps: [Swap!]! @derivedFrom(field: "well")
 }
 
-type Pump @entity {
-  " Well address-Pump address"
-  id: ID!
-  " Well associated with this pump"
+type WellDailySnapshot @entity {
+  " {Smart contract address of the pool}-{ # of days since Unix epoch time } "
+  id: Bytes!
+
+  " Number of hours since Unix epoch time "
+  day: Int!
+
+  " The well this snapshot belongs to "
   well: Well!
+
+  ##### Quantitative Data #####
+
+  ##### Cumulative Data #####
+
+  " Total liquidity token supply for the well. "
+  lpTokenSupply: BigInt!
+
+  " The sum of all active and non-active liquidity in USD for this well. "
+  totalLiquidityUSD: BigDecimal!
+
+  " All trade volume occurred for a specific token, in native amount. The ordering should be the same as the well's `tokens` field. "
+  cumulativeVolumeReserves: [BigInt!]!
+
+  " All trade volume occurred for a specific token, in USD. The ordering should be the same as the well's `tokens` field. "
+  cumulativeVolumeReservesUSD: [BigDecimal!]!
+
+  " All historical trade volume occurred in this well, in USD "
+  cumulativeVolumeUSD: BigDecimal!
+
+  ##### Delta Amounts #####
+
+  " Total liquidity token supply for the well. "
+  deltalpTokenSupply: BigInt!
+
+  " The sum of all active and non-active liquidity in USD for this well. "
+  deltaLiquidityUSD: BigDecimal!
+
+  " All trade volume occurred for a specific token, in native amount. The ordering should be the same as the well's `tokens` field. "
+  deltaVolumeReserves: [BigInt!]!
+
+  " All trade volume occurred for a specific token, in USD. The ordering should be the same as the well's `tokens` field. "
+  deltaVolumeReservesUSD: [BigDecimal!]!
+
+  " All historical trade volume occurred in this well, in USD "
+  deltaVolumeUSD: BigDecimal!
+
+  " Total number of deposit events (add liquidity) "
+  deltaDepositCount: Int!
+
+  " Total number of withdrawal events (remove liquidity) "
+  deltaWithdrawCount: Int!
+
+  " Total number of trades (swaps) "
+  deltaSwapCount: Int!
+
+  " Timestamp of the last time this entity was updated "
+  lastUpdateTimestamp: BigInt!
+
+  " Block number of the last time this entity was updated "
+  lastUpdateBlockNumber: BigInt!
+}
+
+type WellHourlySnapshot @entity {
+  " {Smart contract address of the pool}-{ # of days since Unix epoch time } "
+  id: Bytes!
+
+  " Number of hours since Unix epoch time "
+  hour: Int!
+
+  " The well this snapshot belongs to "
+  well: Well!
+
+  ##### Quantitative Data #####
+
+  ##### Cumulative Data #####
+
+  " Total liquidity token supply for the well. "
+  lpTokenSupply: BigInt!
+
+  " The sum of all active and non-active liquidity in USD for this well. "
+  totalLiquidityUSD: BigDecimal!
+
+  " All trade volume occurred for a specific token, in native amount. The ordering should be the same as the well's `tokens` field. "
+  cumulativeVolumeReserves: [BigInt!]!
+
+  " All trade volume occurred for a specific token, in USD. The ordering should be the same as the well's `tokens` field. "
+  cumulativeVolumeReservesUSD: [BigDecimal!]!
+
+  " All historical trade volume occurred in this well, in USD "
+  cumulativeVolumeUSD: BigDecimal!
+
+  ##### Delta Amounts #####
+
+  " Total liquidity token supply for the well. "
+  deltalpTokenSupply: BigInt!
+
+  " The sum of all active and non-active liquidity in USD for this well. "
+  deltaLiquidityUSD: BigDecimal!
+
+  " All trade volume occurred for a specific token, in native amount. The ordering should be the same as the well's `tokens` field. "
+  deltaVolumeReserves: [BigInt!]!
+
+  " All trade volume occurred for a specific token, in USD. The ordering should be the same as the well's `tokens` field. "
+  deltaVolumeReservesUSD: [BigDecimal!]!
+
+  " All historical trade volume occurred in this well, in USD "
+  deltaVolumeUSD: BigDecimal!
+
+  " Total number of deposit events (add liquidity) "
+  deltaDepositCount: Int!
+
+  " Total number of withdrawal events (remove liquidity) "
+  deltaWithdrawCount: Int!
+
+  " Total number of trades (swaps) "
+  deltaSwapCount: Int!
+
+  " Timestamp of the last time this entity was updated "
+  lastUpdateTimestamp: BigInt!
+
+  " Block number of the last time this entity was updated "
+  lastUpdateBlockNumber: BigInt!
 }
 
 type Account @entity {
   id: Bytes!
-  positions: [Position!]! @derivedFrom(field: "account")
   deposits: [Deposit!]! @derivedFrom(field: "account")
   withdraws: [Withdraw!]! @derivedFrom(field: "account")
   swaps: [Swap!]! @derivedFrom(field: "account")
-}
-
-type Position @entity {
-  " { Account address }-{ Market address } "
-  id: ID!
-
-  " Account that owns this position "
-  account: Account!
-
-  " The well in which this position was opened "
-  well: Well!
-
-  " The hash of the transaction that opened this position "
-  hashOpened: Bytes!
-
-  " The hash of the transaction that closed this position "
-  hashClosed: Bytes
-
-  " Block number of when the position was opened "
-  blockNumberOpened: BigInt!
-
-  " Timestamp when the position was opened "
-  timestampOpened: BigInt!
-
-  " Block number of when the position was closed (0 if still open) "
-  blockNumberClosed: BigInt
-
-  " Timestamp when the position was closed (0 if still open) "
-  timestampClosed: BigInt
-
-  " Token that is to represent ownership of liquidity "
-  liquidityToken: Token
-
-  " Type of token used to track liquidity "
-  liquidityTokenType: TokenType
-
-  " total position liquidity "
-  liquidity: BigInt!
-
-  " total position liquidity in USD "
-  liquidityUSD: BigDecimal!
-
-  " amount of tokens ever deposited to position "
-  cumulativeDepositTokenAmounts: [BigInt!]!
-
-  " amount of tokens in USD deposited to position "
-  cumulativeDepositUSD: BigDecimal!
-
-  " amount of tokens ever withdrawn from position (without fees) "
-  cumulativeWithdrawTokenAmounts: [BigInt!]!
-
-  " amount of tokens in USD withdrawn from position (without fees) "
-  cumulativeWithdrawUSD: BigDecimal!
-
-  " Number of deposits related to this position "
-  depositCount: Int!
-
-  " All deposit events of this position "
-  deposits: [Deposit!]! @derivedFrom(field: "position")
-
-  " Number of withdrawals related to this position "
-  withdrawCount: Int!
-
-  " All withdraw events of this position "
-  withdraws: [Withdraw!]! @derivedFrom(field: "position")
 }
 
 ##### EVENT LEVEL ENTITIES #####
@@ -266,8 +313,8 @@ type Deposit @entity(immutable: true) {
   " Account that emitted this event "
   account: Account!
 
-  " The user position changed by this event "
-  position: Position
+  #" The user position changed by this event "
+  #position: Position
 
   " The well involving this event "
   well: Well!
@@ -317,8 +364,8 @@ type Withdraw @entity(immutable: true) {
   " Account that emitted this event "
   account: Account!
 
-  " The user position changed by this event "
-  position: Position
+  #" The user position changed by this event "
+  #position: Position
 
   " The well involving this event "
   well: Well!
@@ -366,7 +413,7 @@ type Swap @entity(immutable: true) {
 
   " Address that sent the transaction "
   account: Account!
-  
+
   " Well involving this event "
   well: Well!
 
@@ -386,5 +433,5 @@ type Swap @entity(immutable: true) {
   toToken: Token!
 
   " Amount of the token withdrawn from the well in native units "
-  amountOut: BigInt! 
+  amountOut: BigInt!
 }
