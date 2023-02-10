@@ -69,52 +69,15 @@ library C {
     address internal constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address internal constant UNIV3_ETH_USDC_POOL = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
 
-    address private constant UNIV3_ETH_USDC_POOL = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
     // Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
     address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
-
-    /**
-     * Getters
-    **/
 
     function getSeasonPeriod() internal pure returns (uint256) {
         return CURRENT_SEASON_PERIOD;
     }
 
-    function getBaseReward() internal pure returns (uint256) {
-        return BASE_REWARD;
-    }
-
-    function getMaxReward() internal pure returns (uint256) {
-        return MAX_REWARD;
-    }
-
-    // function getMinReward() internal pure returns (uint256) {
-    //     return MIN_REWARD;
-    // }
-
-    function getSunrisePriorityFeeBuffer() internal pure returns (uint256) {
-        return PRIORITY_FEE_BUFFER;
-    }
-
-    function getMaxSunriseGas() internal pure returns (uint256) {
-        return MAX_SUNRISE_GAS;
-    }
-
-    function getSunriseGasOverhead() internal pure returns (uint256) {
-        return SUNRISE_GAS_OVERHEAD;
-    }
-
     function getBlockLengthSeconds() internal pure returns (uint256) {
         return BLOCK_LENGTH_SECONDS;
-    }
-
-    function getFertilizerDenominator() internal pure returns (uint256) {
-        return FERTILIZER_DENOMINATOR;
-    }
-
-    function getHarvestDenominator() internal pure returns (uint256) {
-        return HARVEST_DENOMINATOR;
     }
 
     function getChainId() internal pure returns (uint256) {
@@ -183,10 +146,6 @@ library C {
 
     function UniV3EthUsdc() internal pure returns (address){
         return UNIV3_ETH_USDC_POOL;
-    }
-
-    function basefeeContract() internal pure returns (IBlockBasefee) {
-        return IBlockBasefee(BASE_FEE_CONTRACT);
     }
 
     function fertilizer() internal pure returns (IFertilizer) {

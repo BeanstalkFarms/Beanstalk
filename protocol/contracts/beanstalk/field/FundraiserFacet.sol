@@ -12,6 +12,7 @@ import "../ReentrancyGuard.sol";
 import "~/libraries/LibDiamond.sol";
 import "~/libraries/LibDibbler.sol";
 import "~/libraries/Token/LibTransfer.sol";
+import {C} from "~/C.sol";
 
 /**
  * @title Fundraiser Facet

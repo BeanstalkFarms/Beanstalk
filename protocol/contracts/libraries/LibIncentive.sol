@@ -43,6 +43,9 @@ library LibIncentive {
 
     /// @dev Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
     address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
+    
+    /// @dev `sunriseReward` is precomputed in {fracExp} using this precision.
+    uint256 private constant FRAC_EXP_PRECISION = 1e18; 
 
     //////////////////// CALCULATE REWARD ////////////////////
 
