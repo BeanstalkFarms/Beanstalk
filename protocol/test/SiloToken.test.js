@@ -432,7 +432,7 @@ describe('Silo Token', function () {
           this.result = await this.silo.connect(user).withdrawDeposit(UNRIPE_BEAN, grownStalkPerBdv, to6('1'), EXTERNAL)
         })
 
-        it.only('properly updates the total balances', async function () {
+        it('properly updates the total balances', async function () {
 
           console.log('here 1');
           console.log('await this.silo.getTotalDeposited(UNRIPE_BEAN): ', await this.silo.getTotalDeposited(UNRIPE_BEAN));
@@ -466,8 +466,17 @@ describe('Silo Token', function () {
     })
     describe("Legacy and new Bean Deposit", async function () {
       beforeEach(async function () {
+        //fast forward to season 10 because that's the zero point for our grownStalkPerBdv index
+        await this.season.teleportSunrise(10);
+
+        console.log('1 this.silo.totalStalk(): ', await this.silo.totalStalk());
+        console.log('deposited in cumulativeGrownStalkPerBdv: ', await this.silo.cumulativeGrownStalkPerBdv(UNRIPE_BEAN));
         await this.silo.connect(user).deposit(UNRIPE_BEAN, to6('10'), EXTERNAL)
+
+        console.log('2 this.silo.totalStalk(): ', await this.silo.totalStalk());
         await this.silo.connect(user).mockUnripeBeanDeposit('10', to6('10'))
+
+        console.log('3 this.silo.totalStalk(): ', await this.silo.totalStalk());
       })
 
       it("Check mock works", async function () {
@@ -491,12 +500,19 @@ describe('Silo Token', function () {
       describe("Withdraw", async function () {
         beforeEach(async function () {
           userBalanceBefore = await this.unripeBeans.balanceOf(userAddress);
+
+          console.log('before this.silo.totalStalk(): ', await this.silo.totalStalk());
           const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '10');
-          this.result = await this.silo.connect(user).withdrawDeposit(UNRIPE_BEAN, grownStalkPerBdv, to6('11'), EXTERNAL)
+          this.result = await this.silo.connect(user).withdrawDeposit(UNRIPE_BEAN, grownStalkPerBdv, to6('11'), EXTERNAL);
+
+          console.log('after this.silo.totalStalk(): ', await this.silo.totalStalk());
         })
 
         it('properly updates the total balances', async function () {
+          console.log('await this.silo.getTotalDeposited(UNRIPE_BEAN): ', await this.silo.getTotalDeposited(UNRIPE_BEAN));
           expect(await this.silo.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6('9'));
+          console.log('await this.silo.totalStalk(): ', await this.silo.totalStalk());
+          console.log('pruneToStalk(to6(\'9\')): ', pruneToStalk(to6('9')));
           expect(await this.silo.totalStalk()).to.eq(pruneToStalk(to6('9')));
           //expect(await this.silo.totalSeeds()).to.eq(pruneToSeeds(to6('9')));
         });
@@ -506,12 +522,14 @@ describe('Silo Token', function () {
           expect((await this.unripeBeans.balanceOf(userAddress)).sub(userBalanceBefore)).to.eq(to6('11'));
         });
         it('properly removes the crate', async function () {
-          let dep = await this.silo.getDeposit(userAddress, UNRIPE_BEAN, 10);
+          const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '10');
+          let dep = await this.silo.getDeposit(userAddress, UNRIPE_BEAN, grownStalkPerBdv);
           expect(dep[0]).to.equal(to6('9'))
           expect(dep[1]).to.equal(prune(to6('9')))
         });
         it('emits RemoveDeposit event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, 10, to6('11'));
+          const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '10');
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, grownStalkPerBdv, to6('11'));
         });
       })
     })
@@ -520,7 +538,8 @@ describe('Silo Token', function () {
   describe('Withdraw Unripe LP from BDV', async function () {
     describe("Just legacy LP Deposit BDV", async function () {
       beforeEach(async function () {
-        await this.silo.connect(user).mockUnripeLPDeposit('0', '2', to18('0.000000083406453'), to6('10'))
+        await this.season.teleportSunrise(10);
+        await this.silo.connect(user).mockUnripeLPDeposit('0', '10', to18('0.000000083406453'), to6('10'))
       })
 
       it("Check mock works", async function () {
@@ -530,7 +549,7 @@ describe('Silo Token', function () {
       })
 
       it('get Deposit', async function () {
-        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '2');
+        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
         const deposit = await this.silo.getDeposit(user.address, UNRIPE_LP, grownStalkPerBdv)
         expect(deposit[0]).to.equal(to6('10'))
         expect(deposit[1]).to.equal(prune(to6('10')))
@@ -538,13 +557,13 @@ describe('Silo Token', function () {
       
       it('revert if withdrawn too much', async function () {
         userBalanceBefore = await this.unripeLP.balanceOf(userAddress);
-        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '2');
+        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
         await expect(this.silo.connect(user).withdrawDeposit(UNRIPE_LP, grownStalkPerBdv, to6('11'), EXTERNAL)).to.be.revertedWith('Silo: Crate balance too low.')
       });
       
       describe("Withdraw", async function () {
         beforeEach(async function () {
-          const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '2');
+          const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
           this.result = await this.silo.connect(user).withdrawDeposit(UNRIPE_LP, grownStalkPerBdv, to6('1'), EXTERNAL)
         })
 
@@ -561,13 +580,14 @@ describe('Silo Token', function () {
         });
 
         it('properly removes the crate', async function () {
-          let dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, 2);
+          const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
+          let dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, grownStalkPerBdv);
           expect(dep[0]).to.equal(to6('9'))
           expect(dep[1]).to.equal(prune(to6('9')))
         });
 
         it('emits RemoveDeposit event', async function () {
-          const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '2');
+          const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
           await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_LP, grownStalkPerBdv, to6('1'));
         });
       })
@@ -575,7 +595,8 @@ describe('Silo Token', function () {
   
     describe("Just 3CRV LP Deposit", async function () {
       beforeEach(async function () {
-        await this.silo.connect(user).mockUnripeLPDeposit('1', '2', to18('10.08028951'), to6('10'))
+        await this.season.teleportSunrise(10);
+        await this.silo.connect(user).mockUnripeLPDeposit('1', '10', to18('10.08028951'), to6('10'))
       })
 
       it("Check mock works", async function () {
@@ -585,22 +606,22 @@ describe('Silo Token', function () {
       })
 
       it('get Deposit', async function () {
-        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '2');
+        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
         const deposit = await this.silo.getDeposit(user.address, UNRIPE_LP, grownStalkPerBdv)
         expect(deposit[0]).to.equal(to6('10'))
         expect(deposit[1]).to.equal(prune(to6('10')))
       })
       
       it('revert if withdrawn too much', async function () {
-        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '2');
+        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
         await expect(this.silo.connect(user).withdrawDeposit(UNRIPE_LP, grownStalkPerBdv, to6('11'), EXTERNAL)).to.be.revertedWith('Silo: Crate balance too low.')
       });
       
       describe("Withdraw", async function () {
         beforeEach(async function () {
           userBalanceBefore = await this.unripeLP.balanceOf(userAddress);
-          const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '2');
-          this.result = await this.silo.connect(user).withdrawDeposit(UNRIPE_LP, '2', to6('1'), EXTERNAL)
+          const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
+          this.result = await this.silo.connect(user).withdrawDeposit(UNRIPE_LP, grownStalkPerBdv, to6('1'), EXTERNAL)
         })
 
         it('properly updates the total balances', async function () {
@@ -616,20 +637,23 @@ describe('Silo Token', function () {
         });
 
         it('properly removes the crate', async function () {
-          let dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, 2);
+          const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
+          let dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, grownStalkPerBdv);
           expect(dep[0]).to.equal(to6('9'))
           expect(dep[1]).to.equal(prune(to6('9')))
         });
 
         it('emits RemoveDeposit event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_LP, 2, to6('1'));
+          const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_LP, grownStalkPerBdv, to6('1'));
         });
       })
     })
 
     describe("Just BEAN:LUSD LP Deposit", async function () {
       beforeEach(async function () {
-        await this.silo.connect(user).mockUnripeLPDeposit('2', '2', to18('10.17182243'), to6('10'))
+        await this.season.teleportSunrise(10);
+        await this.silo.connect(user).mockUnripeLPDeposit('2', '10', to18('10.17182243'), to6('10'))
       })
 
       it("Check mock works", async function () {
@@ -639,19 +663,22 @@ describe('Silo Token', function () {
       })
 
       it('get Deposit', async function () {
-        const deposit = await this.silo.getDeposit(user.address, UNRIPE_LP, '2')
+        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
+        const deposit = await this.silo.getDeposit(user.address, UNRIPE_LP, grownStalkPerBdv)
         expect(deposit[0]).to.equal(to6('10'))
         expect(deposit[1]).to.equal(prune(to6('10')))
       })
       
       it('revert if withdrawn too much', async function () {
-        await expect(this.silo.connect(user).withdrawDeposit(UNRIPE_LP, '2', to6('11'), EXTERNAL)).to.be.revertedWith('Silo: Crate balance too low.')
+        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
+        await expect(this.silo.connect(user).withdrawDeposit(UNRIPE_LP, grownStalkPerBdv, to6('11'), EXTERNAL)).to.be.revertedWith('Silo: Crate balance too low.')
       });
       
       describe("Withdraw", async function () {
         beforeEach(async function () {
           userBalanceBefore = await this.unripeLP.balanceOf(userAddress);
-          this.result = await this.silo.connect(user).withdrawDeposit(UNRIPE_LP, '2', to6('1'), EXTERNAL)
+          const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
+          this.result = await this.silo.connect(user).withdrawDeposit(UNRIPE_LP, grownStalkPerBdv, to6('1'), EXTERNAL)
         })
 
         it('properly updates the total balances', async function () {
@@ -668,22 +695,25 @@ describe('Silo Token', function () {
         });
 
         it('properly removes the crate', async function () {
-          let dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, 2);
+          const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
+          let dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, grownStalkPerBdv);
           expect(dep[0]).to.equal(to6('9'))
           expect(dep[1]).to.equal(prune(to6('9')))
         });
 
         it('emits RemoveDeposit event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_LP, 2, to6('1'));
+          const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_LP, grownStalkPerBdv, to6('1'));
         });
       })
     })
 
     describe("All 4 LP Deposit", async function () {
       beforeEach(async function () {
-        await this.silo.connect(user).mockUnripeLPDeposit('0', '2', to18('0.000000020851613'), to6('2.5'))
-        await this.silo.connect(user).mockUnripeLPDeposit('1', '2', to18('2.5200723775'), to6('2.5'))
-        await this.silo.connect(user).mockUnripeLPDeposit('2', '2', to18('2.5429556075'), to6('2.5'))
+        await this.season.teleportSunrise(10);
+        await this.silo.connect(user).mockUnripeLPDeposit('0', '10', to18('0.000000020851613'), to6('2.5'))
+        await this.silo.connect(user).mockUnripeLPDeposit('1', '10', to18('2.5200723775'), to6('2.5'))
+        await this.silo.connect(user).mockUnripeLPDeposit('2', '10', to18('2.5429556075'), to6('2.5'))
         await this.silo.connect(user).deposit(UNRIPE_LP, to6('2.5'), EXTERNAL)
       })
 
@@ -694,19 +724,22 @@ describe('Silo Token', function () {
       })
 
       it('get Deposit', async function () {
-        const deposit = await this.silo.getDeposit(user.address, UNRIPE_LP, '2')
+        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
+        const deposit = await this.silo.getDeposit(user.address, UNRIPE_LP, grownStalkPerBdv)
         expect(deposit[0]).to.equal(to6('10'))
         expect(deposit[1]).to.equal(prune(to6('7.5')).add(prune(to6('2.5'))).sub(toBN('1')))
       })
       
       it('revert if withdrawn too much', async function () {
-        await expect(this.silo.connect(user).withdrawDeposit(UNRIPE_LP, '2', to6('11'), EXTERNAL)).to.be.revertedWith('Silo: Crate balance too low.')
+        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
+        await expect(this.silo.connect(user).withdrawDeposit(UNRIPE_LP, grownStalkPerBdv, to6('11'), EXTERNAL)).to.be.revertedWith('Silo: Crate balance too low.')
       });
       
       describe("Withdraw", async function () {
         beforeEach(async function () {
           userBalanceBefore = await this.unripeLP.balanceOf(userAddress);
-          this.result = await this.silo.connect(user).withdrawDeposit(UNRIPE_LP, '2', to6('9'), EXTERNAL)
+          const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
+          this.result = await this.silo.connect(user).withdrawDeposit(UNRIPE_LP, grownStalkPerBdv, to6('9'), EXTERNAL)
         })
 
         it('properly updates the total balances', async function () {
@@ -722,19 +755,21 @@ describe('Silo Token', function () {
         });
 
         it('properly removes the crate', async function () {
-          let dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, 2);
+          const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
+          let dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, grownStalkPerBdv);
           expect(dep[0]).to.equal(to6('1'))
           expect(dep[1]).to.equal(prune(to6('1')))
         });
 
         it('emits RemoveDeposit event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_LP, 2, to6('9'));
+          const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_LP, grownStalkPerBdv, to6('9'));
         });
       })
     })
   })
 
-  describe("Transfer", async function () {
+  describe.only("Transfer", async function () {
     describe("reverts", async function() {
       beforeEach(async function () {
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)

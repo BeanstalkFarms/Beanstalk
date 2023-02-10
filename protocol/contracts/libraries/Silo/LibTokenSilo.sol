@@ -241,28 +241,32 @@ library LibTokenSilo {
         // Full remove
         if (crateAmount > 0) delete s.a[account].deposits[token][grownStalkPerBdv];
 
-        console.log('attempting to update mow status');
-        console.log('s.a[account].mowStatuses[token].bdv: ', uint256(s.a[account].mowStatuses[token].bdv));
-        console.log('crateAmount: ', crateAmount);
-
-        uint256 updatedTotalBdv = uint256(s.a[account].mowStatuses[token].bdv).sub(crateAmount);
-        s.a[account].mowStatuses[token].bdv = uint128(updatedTotalBdv);
-        console.log('removeDepositFromAccount updatedTotalBdv: ', updatedTotalBdv);
-
         // Excess remove
         // This can only occur for Unripe Beans and Unripe LP Tokens, and is a
         // result of using Silo V1 storage slots to store Unripe BEAN/LP
         // Deposit information. See {AppStorage.sol:Account-State}.
         // This is now handled by LibLegacyTokenSilo.
         
+        uint256 originalCrateBDV = crateBDV;
+
         if (amount > crateAmount) {
             require(LibLegacyTokenSilo.isDepositSeason(IERC20(token),grownStalkPerBdv), "Must line up with season");
             amount -= crateAmount;
             
             uint32 season = LibLegacyTokenSilo.grownStalkPerBdvToSeason(IERC20(token), grownStalkPerBdv);
             console.log('removeDepositFromAccount season: ', season);
-            return LibLegacyTokenSilo.removeDepositFromAccount(account, token, season, amount);
+            crateBDV = crateBDV.add(LibLegacyTokenSilo.removeDepositFromAccount(account, token, season, amount));
         }
+
+
+        console.log('attempting to update mow status');
+        console.log('s.a[account].mowStatuses[token].bdv: ', uint256(s.a[account].mowStatuses[token].bdv));
+        console.log('crateAmount: ', crateAmount);
+
+        uint256 updatedTotalBdv = uint256(s.a[account].mowStatuses[token].bdv).sub(originalCrateBDV); //this will `SafeMath: subtraction overflow` if amount > crateAmount, but I want it to be able to call through to the Legacy stuff below for excess remove
+        s.a[account].mowStatuses[token].bdv = uint128(updatedTotalBdv);
+        console.log('removeDepositFromAccount updatedTotalBdv: ', updatedTotalBdv);
+
     }
 
     //////////////////////// GETTERS ////////////////////////

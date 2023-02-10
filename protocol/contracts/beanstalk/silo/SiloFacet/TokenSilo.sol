@@ -319,12 +319,23 @@ contract TokenSilo is Silo {
         )
     {
         bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, grownStalkPerBdv, amount);
+        console.log('s.ss[token].stalk: ', s.ss[token].stalkPerBdv);
+        console.log('bdvRemoved.mul(s.ss[token].stalk: ', bdvRemoved.mul(s.ss[token].stalkPerBdv));
         console.log('removeDepositFromAccount grownStalkPerBdv: ');
         console.logInt(grownStalkPerBdv);
 
         console.log('removeDepositFromAccount cumulativeGrownStalkPerBdv: ');
         console.logInt(LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)));
         console.log('removeDepositFromAccount bdvRemoved: ', bdvRemoved);
+
+        uint256 stalkReward = LibSilo.stalkReward(
+                grownStalkPerBdv, //this is the index of when it was deposited
+                LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)), //this is latest for this token
+                bdvRemoved.toUint128()
+            );
+        console.log('removeDepositFromAccount stalkReward: ', stalkReward);
+
+
         //need to get amount of stalk earned by this deposit (index of now minus index of when deposited)
         stalkRemoved = bdvRemoved.mul(s.ss[token].stalkPerBdv).add(
             LibSilo.stalkReward(
