@@ -48,7 +48,7 @@ export const parseError = (error: any) => {
 
   const errorMessage: Error = {}
 
-  const rawError = error.toString()
+  const rawError = JSON.stringify(error)
 
   errorMessage.rawError = rawError
 
@@ -62,6 +62,22 @@ export const parseError = (error: any) => {
     
     ///
     case -32603:
+      if (error.message) {
+        const fixedString = error.message.replace(`[ethjs-query]`, "")
+                                         .replace("while", "")
+                                         .replace("formatting", "")
+                                         .replace("outputs", "")
+                                         .replace("from", "")
+                                         .replace("RPC", "")
+                                         .replaceAll("/\/", "")
+                                         .replaceAll("'", "")
+        const nestedError = JSON.parse(fixedString)
+        if (nestedError) {
+          errorMessage.error = `${nestedError.value.data.message}.`
+          return errorMessage
+        }
+      }
+
       if (error.data && error.data.message) {
         const matches = (error.data.message as string).match(/(["'])(?:(?=(\\?))\2.)*?\1/);
         const regExMatch = matches?.[0]?.replace(/^'(.+(?='$))'$/, '$1')

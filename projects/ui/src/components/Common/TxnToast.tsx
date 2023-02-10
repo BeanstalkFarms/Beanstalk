@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { ContractReceipt, ContractTransaction } from 'ethers';
 import toast from 'react-hot-toast';
 import { Box, Button, IconButton, Link, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles'
 import ClearIcon from '@mui/icons-material/Clear';
 import useChainConstant from '~/hooks/chain/useChainConstant';
 import { parseError } from '~/util';
@@ -19,6 +20,7 @@ export function ToastAlert({ desc, hash, msg, rawError, id }: { desc?: string, h
   const handleClick = useCallback(() => (id !== null ? dismissErrors(id) : dismissErrors()), [id]);
   const chainInfo = useChainConstant(CHAIN_INFO);
   const [showRawError, setShowRawError] = useState(false)
+  const theme = useTheme()
   return (
     <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
       <Typography sx={{ pl: 1, pr: 2, flex: 1, textAlign: 'center' }}>
@@ -36,19 +38,18 @@ export function ToastAlert({ desc, hash, msg, rawError, id }: { desc?: string, h
             display="inline"
             sx={{ 
               wordBreak: 'break-all',
-              '&:first-letter': { textTransform: 'capitalize' },
+              'div:first-letter': { textTransform: 'capitalize' },
             }}
           >
-            {msg}
+            <div>{msg}</div>
           </Box>
         )}
         {rawError && (
             <Box
             sx={{
-              ...(showRawError ? {height: 150, width: 235, mt: 1, border: 1} : {height: 0, width: 0, mt: 0, border: 0}),
+              ...(showRawError ? {height: 100, mt: 1, border: 1} : {height: 0, width: 0, mt: 0, border: 0}),
               backgroundColor: "white",
-              borderColor: 'black',
-              borderRadius: 0.5,
+              borderColor: theme.palette.divider,
               wordBreak: 'break-all',
               overflow: "hidden",
               overflowY: "scroll",
@@ -60,13 +61,19 @@ export function ToastAlert({ desc, hash, msg, rawError, id }: { desc?: string, h
         {rawError && (
           <Button
           onClick={() => {
-            setShowRawError(!showRawError)
+            if (showRawError === false) {
+              setShowRawError(!showRawError)
+            }
+            else {
+              navigator.clipboard.writeText(rawError)
+            }
           }}
           sx={{
+            height: 35,
             mt: 1,
           }}
           >
-            {showRawError ? "Hide Error Message" : "Show Error Message"}
+            {showRawError ? "Copy To Clipboard" : "Show Error Message"}
           </Button>
         )}
       </Typography>
@@ -166,7 +173,7 @@ export default class TransactionToast {
   }
 
   error(error: any) {
-    const duration = Infinity;
+    const duration = 7000;
     const msg = parseError(error);
     toast.error(
       <ToastAlert
