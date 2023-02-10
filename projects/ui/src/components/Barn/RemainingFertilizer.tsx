@@ -17,18 +17,13 @@ import FertilizerAPYChip from './FertilizerAPYChip';
 const RemainingFertilizer: FC<{}> = () => {
   // eslint-disable-next-line unused-imports/no-unused-vars
   const [humidity, nextDecreaseAmount] = useHumidity();
-  const { recapFundedPct, remaining } = useSelector<
-    AppState,
-    AppState['_beanstalk']['barn']
-  >((state) => state._beanstalk.barn);
+  const { recapFundedPct, remaining } = useSelector<AppState, AppState['_beanstalk']['barn']>((state) => state._beanstalk.barn);
   const season = useSeason();
 
   // eslint-disable-next-line unused-imports/no-unused-vars
-  const nextDecreaseTimeString = season.eq(6074) ? (
-    'per Season upon Unpause'
-  ) : (
-    <SunriseCountdown />
-  );
+  const nextDecreaseTimeString = season.eq(6074) 
+  ? 'per Season upon Unpause'
+   : <SunriseCountdown />;
 
   return (
     <Card sx={{ p: 2 }}>
@@ -41,16 +36,8 @@ const RemainingFertilizer: FC<{}> = () => {
           gap={3}
         >
           {/* left column */}
-          <Box
-            sx={{
-              width: 130,
-              display: { xs: 'none', md: 'block' },
-              aspectRatio: '1/1',
-            }}
-          >
-            <FertilizerImage
-              progress={Math.max(recapFundedPct.toNumber(), 0.05)}
-            />
+          <Box sx={{ width: 130, display: { xs: 'none', md: 'block' }, aspectRatio: '1/1' }}>
+            <FertilizerImage progress={Math.max(recapFundedPct.toNumber(), 0.05)} />
           </Box>
           {/* right column */}
           <Stack justifyContent="space-between" gap={2}>
