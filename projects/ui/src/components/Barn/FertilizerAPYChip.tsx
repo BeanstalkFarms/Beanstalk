@@ -8,22 +8,19 @@ import Stat from '../Common/Stat';
 import TokenIcon from '../Common/TokenIcon';
 
 const copy = {
-  fertilizedAmounts:
-    '30-day exponential moving average of Fertilized Sprouts per Season. Fertilized Sprouts can be Rinsed to be redeemed for Beans.',
+  fertilizedAmounts: '30-day exponential moving average of Fertilized Sprouts per Season. Fertilized Sprouts can be Rinsed to be redeemed for Beans.',
   vAPY: 'The Variable FERT APY uses a moving average of Fertilized Sprouts during recent Seasons to estimate a future rate of return.',
 };
 
 const FertilizerAPYChip: React.FC<{}> = () => {
   const sdk = useSdk();
-
   const yieldData = useFertilizerYieldData();
-
+  
   if (!yieldData) return null;
 
-  const vApyString =
-    yieldData.vApy.gt(0) && yieldData.vApy.lt(0.1)
-      ? '< 0.1'
-      : displayFullBN(yieldData.vApy, 2);
+  const vApyString = yieldData.vApy.gt(0) && yieldData.vApy.lt(0.01)
+    ? '< 0.01'
+    : yieldData.vApy.toFixed(2);
 
   return (
     <Tooltip
