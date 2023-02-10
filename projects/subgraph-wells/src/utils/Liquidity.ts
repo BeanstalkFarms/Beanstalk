@@ -21,8 +21,8 @@ export function recordAddLiquidityEvent(event: AddLiquidity): void {
     deposit.blockNumber = event.block.number
     deposit.timestamp = event.block.timestamp
     deposit.liquidity = event.params.lpAmountOut
-    deposit.inputTokens = well.inputTokens
-    deposit.inputTokenAmounts = event.params.tokenAmountsIn
+    deposit.tokens = well.tokens
+    deposit.reserves = event.params.tokenAmountsIn
     deposit.amountUSD = ZERO_BD
     deposit.save()
 }
@@ -44,8 +44,8 @@ export function recordRemoveLiquidityEvent(event: RemoveLiquidity): void {
     withdraw.blockNumber = event.block.number
     withdraw.timestamp = event.block.timestamp
     withdraw.liquidity = event.params.lpAmountIn
-    withdraw.inputTokens = well.inputTokens
-    withdraw.inputTokenAmounts = event.params.tokenAmountsOut
+    withdraw.tokens = well.tokens
+    withdraw.reserves = event.params.tokenAmountsOut
     withdraw.amountUSD = ZERO_BD
     withdraw.save()
 }
@@ -67,8 +67,8 @@ export function recordRemoveLiquidityOneEvent(event: RemoveLiquidityOneToken, to
     withdraw.blockNumber = event.block.number
     withdraw.timestamp = event.block.timestamp
     withdraw.liquidity = event.params.lpAmountIn
-    withdraw.inputTokens = well.inputTokens
-    withdraw.inputTokenAmounts = tokenAmounts
+    withdraw.tokens = well.tokens
+    withdraw.reserves = tokenAmounts
     withdraw.amountUSD = ZERO_BD
     withdraw.save()
 }
