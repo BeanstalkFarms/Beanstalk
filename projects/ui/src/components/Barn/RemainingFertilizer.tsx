@@ -22,8 +22,8 @@ const RemainingFertilizer: FC<{}> = () => {
 
   // eslint-disable-next-line unused-imports/no-unused-vars
   const nextDecreaseTimeString = season.eq(6074) 
-  ? 'per Season upon Unpause'
-   : <SunriseCountdown />;
+    ? 'per Season upon Unpause'
+    : <SunriseCountdown />;
 
   return (
     <Card sx={{ p: 2 }}>
