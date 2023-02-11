@@ -5,9 +5,9 @@ pragma abicoder v2;
 import { LibDibbler } from "~/libraries/LibDibbler.sol";
 import { LibIncentive } from "~/libraries/LibIncentive.sol";
 import { LibPRBMath } from "~/libraries/LibPRBMath.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeMath} from "node_modules/@openzeppelin/contracts/math/SafeMath.sol";
 import "forge-std/Test.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
+import "node_modules/@openzeppelin/contracts/utils/Strings.sol";
 
 
 /**
