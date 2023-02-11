@@ -66,6 +66,17 @@ library LibSilo {
         emit SeedsBalanceChanged(account, int256(seeds));
     }
 
+    function multiIncrementBalanceOfSeeds(address[] memory accounts, uint256[]memory accountsSeeds) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 seedsSum = 0; // SOLIDITY(funder): Does this need to be inited? What is actually most gas efficient?
+        for (uint256 i = 0; i < accounts.length; ++i) {
+            s.a[accounts[i]].s.seeds = s.a[accounts[i]].s.seeds.add(accountsSeeds[i]);
+            seedsSum += accountsSeeds[i];
+            emit SeedsBalanceChanged(accounts[i], int256(accountsSeeds[i])); // IMPLEMENTATION(funder): Are gas savings worth merging all events into a single multiEvent?
+        }
+        s.s.seeds = s.s.seeds.add(seedsSum);
+    }
+
     function incrementBalanceOfStalk(address account, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 roots;
@@ -78,6 +89,27 @@ library LibSilo {
         s.s.roots = s.s.roots.add(roots);
         s.a[account].roots = s.a[account].roots.add(roots);
         emit StalkBalanceChanged(account, int256(stalk), int256(roots));
+    }
+
+    function multiIncrementBalanceOfStalk(address[] calldata accounts, uint256[] memory stalk) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 roots;
+        uint256 siloStalk = s.s.stalk;
+        uint256 siloRoots = s.s.roots;
+        for (uint256 i = 0; i < accounts.length; ++i) {
+            if (stalk[i] == 0) continue;
+            if (siloRoots == 0) roots = stalk[i].mul(C.getRootsBase());
+            else roots = siloRoots.mul(stalk[i]).div(siloStalk);
+
+            siloStalk = siloStalk.add(stalk[i]);
+            s.a[accounts[i]].s.stalk = s.a[accounts[i]].s.stalk.add(stalk[i]);
+
+            siloRoots = siloRoots.add(roots);
+            s.a[accounts[i]].roots = s.a[accounts[i]].roots.add(roots);
+            emit StalkBalanceChanged(accounts[i], int256(stalk[i]), int256(roots));
+        }
+        s.s.stalk = siloStalk;
+        s.s.roots = siloRoots;
     }
 
     function decrementBalanceOfSeeds(address account, uint256 seeds) private {

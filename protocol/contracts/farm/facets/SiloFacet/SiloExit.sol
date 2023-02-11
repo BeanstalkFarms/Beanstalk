@@ -76,10 +76,10 @@ contract SiloExit is ReentrancyGuard {
         view
         returns (uint256 beans)
     {
-        beans = _balanceOfEarnedBeans(account, s.a[account].s.stalk);
+        beans = _balanceOfEarnedBeans(account, s.a[account].s.stalk, 0);
     }
 
-    function _balanceOfEarnedBeans(address account, uint256 accountStalk)
+    function _balanceOfEarnedBeans(address account, uint256 accountStalk, uint256 otherEarnedBeans)
         internal
         view
         returns (uint256 beans)
@@ -96,7 +96,7 @@ contract SiloExit is ReentrancyGuard {
 
         // Calculate Earned Stalk and convert to Earned Beans.
         beans = (stalk - accountStalk).div(C.getStalkPerBean()); // Note: SafeMath is redundant here.
-        if (beans > s.earnedBeans) return s.earnedBeans;
+        if (beans > s.earnedBeans - otherEarnedBeans) return s.earnedBeans - otherEarnedBeans; // IMPL(funder): Is this check just for rounding issues?
         return beans;
     }
 
