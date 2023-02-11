@@ -21,8 +21,10 @@ export function ToastAlert({ desc, hash, msg, rawError, id }: { desc?: string, h
   const chainInfo = useChainConstant(CHAIN_INFO);
   const [showRawError, setShowRawError] = useState(false)
   const theme = useTheme()
+  const commonStyles = { width: '100%', display: 'flex', alignItems: 'center' }
+  const errorStyles = { borderRadius: '0px 0px 8px 8px', boxShadow: '0 5px 5px rgba(0, 0, 0, 0.1), 0 3px 3px rgba(0, 0, 0, 0.05)', backgroundColor: "white" }
   return (
-    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+    <Box sx={{ ...commonStyles, flexDirection: 'row' }}>
       <Typography sx={{ pl: 1, pr: 2, flex: 1, textAlign: 'center' }}>
         <span>
           {desc}
@@ -41,40 +43,20 @@ export function ToastAlert({ desc, hash, msg, rawError, id }: { desc?: string, h
               'div:first-letter': { textTransform: 'capitalize' },
             }}
           >
-            <div>{msg}</div>
-          </Box>
-        )}
-        {rawError && (
+          <div>{msg}</div>
+          {rawError && (
             <Box
-            sx={{
-              ...(showRawError ? {height: 100, mt: 1, border: 1} : {height: 0, width: 0, mt: 0, border: 0}),
-              backgroundColor: "white",
-              borderColor: theme.palette.divider,
-              wordBreak: 'break-all',
-              overflow: "hidden",
-              overflowY: "scroll",
-            }}
-            >
-            {rawError}
+              onClick={() => {navigator.clipboard.writeText(rawError)}}
+              sx={{
+                color: theme.palette.primary.main,
+                '&:hover': {color: theme.palette.primary.dark},
+                textDecoration: 'underline',
+                cursor: 'pointer'
+              }}
+            >Copy Error to Clipboard
             </Box>
-        )}
-        {rawError && (
-          <Button
-          onClick={() => {
-            if (showRawError === false) {
-              setShowRawError(!showRawError)
-            }
-            else {
-              navigator.clipboard.writeText(rawError)
-            }
-          }}
-          sx={{
-            height: 35,
-            mt: 1,
-          }}
-          >
-            {showRawError ? "Copy To Clipboard" : "Show Error Message"}
-          </Button>
+          )}
+          </Box>
         )}
       </Typography>
       {msg && (
@@ -82,9 +64,6 @@ export function ToastAlert({ desc, hash, msg, rawError, id }: { desc?: string, h
           sx={{
             backgroundColor: 'transparent',
             p: 0,
-            ...(showRawError === true && {
-              ml: -1,
-            }),
             width: '20px',
             height: '20px',
             '& svg': {
@@ -173,7 +152,7 @@ export default class TransactionToast {
   }
 
   error(error: any) {
-    const duration = 7000;
+    const duration = Infinity;
     const msg = parseError(error);
     toast.error(
       <ToastAlert
@@ -184,7 +163,7 @@ export default class TransactionToast {
       />,
       {
         id: this.toastId,
-        duration: duration
+        duration: duration,
       }
     );
     return msg;

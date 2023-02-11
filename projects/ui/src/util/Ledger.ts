@@ -53,43 +53,47 @@ export const parseError = (error: any) => {
   errorMessage.rawError = rawError
 
   switch (error.code) {
-    /// ethers
+    /// Common error codes
+    case -32000:
+    case -32603:
+    case "UNPREDICTABLE_GAS_LIMIT":
     case 'UNSUPPORTED_OPERATION':
     case 'CALL_EXCEPTION':
-    case 'UNPREDICTABLE_GAS_LIMIT':
-      errorMessage.error = `Error: ${error.reason}`;
-      return errorMessage;
-    
-    ///
-    case -32603:
-      if (error.message) {
-        const fixedString = error.message.replace(`[ethjs-query]`, "")
-                                         .replace("while", "")
-                                         .replace("formatting", "")
-                                         .replace("outputs", "")
-                                         .replace("from", "")
-                                         .replace("RPC", "")
-                                         .replaceAll("/\/", "")
-                                         .replaceAll("'", "")
-        const nestedError = JSON.parse(fixedString)
-        if (nestedError) {
-          errorMessage.error = `${nestedError.value.data.message}.`
-          return errorMessage
-        }
-      }
 
-      if (error.data && error.data.message) {
-        const matches = (error.data.message as string).match(/(["'])(?:(?=(\\?))\2.)*?\1/);
-        const regExMatch = matches?.[0]?.replace(/^'(.+(?='$))'$/, '$1')
-        if (regExMatch)
-        {
-          errorMessage.error = regExMatch
-          return errorMessage
-        }
-        errorMessage.error = error.data.message
+      if (error.reason) {
+        errorMessage.error = error.reason.replace('execution reverted: ', '')
         return errorMessage
       }
-      errorMessage.error = error.message.replace('execution reverted: ', '');
+      
+      if (error.data && error.data.message) {
+        errorMessage.error = error.data.message.replace('execution reverted: ', '')
+        return errorMessage
+      }
+
+      if (error.message) {
+        if (!error.message.includes("RPC '"))
+        {
+          errorMessage.error = `${error.message}.`
+          return errorMessage
+        }
+        else
+        {
+          const fixedString = error.message.split("RPC '")[1].slice(0, -1)
+          const nestedError = JSON.parse(fixedString)
+          if (nestedError) {
+            if (error.code == -32603) {
+            errorMessage.error = `${nestedError.value.data.message}.`
+            return errorMessage
+            }
+            errorMessage.error = `${nestedError.value.message}.`
+            return errorMessage
+          }
+        }
+        errorMessage.error = "Unhandled error."
+        return errorMessage
+      }
+
+      errorMessage.error = "Unhandled error."
       return errorMessage
     
     /// MetaMask - RPC Error: MetaMask Tx Signature: User denied transaction signature.
@@ -97,7 +101,7 @@ export const parseError = (error: any) => {
       errorMessage.error = 'You rejected the signature request.'
       return errorMessage
 
-    /// Unknown
+    /// Unknown Error
     default:
 
       for (const key in ERROR_STRINGS) {
@@ -111,7 +115,7 @@ export const parseError = (error: any) => {
 
           if (key == "UNPREDICTABLE_GAS_LIMIT" && error.reason)
           {
-            errorMessage.error = `Unpredictable Gas Limit: ${error.reason}`
+            errorMessage.error = `Transaction Reverted: ${error.reason}`
             return errorMessage
           }
 
