@@ -80,7 +80,7 @@ contract Replant6 {
             for (uint256 j; j < d.seasons.length; ++j) {
                 emit AddDeposit(
                     d.account,
-                    C.unripeLPAddress(),
+                    C.UNRIPE_LP,
                     d.seasons[j],
                     getTokenAmount(d.token, d.amounts[j]),
                     d.bdv[j].mul(C.initialRecap()).div(C.precision())

@@ -4,8 +4,9 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import "./LibMetaCurve.sol";
-import "../../C.sol";
+import {LibMetaCurve, IMeta3Curve} from "./LibMetaCurve.sol";
+import {LibCurve} from "./LibCurve.sol";
+import "~/C.sol";
 
 /**
  * @title LibBeanMetaCurve
@@ -29,7 +30,7 @@ library LibBeanMetaCurve {
      */
     function bdv(uint256 amount) internal view returns (uint256) {
         // By using previous balances and the virtual price, we protect against flash loan
-        uint256[2] memory balances = IMeta3Curve(C.curveMetapoolAddress()).get_previous_balances();
+        uint256[2] memory balances = IMeta3Curve(C.CURVE_BEAN_METAPOOL).get_previous_balances();
         uint256 virtualPrice = C.curveMetapool().get_virtual_price();
         uint256[2] memory xp = LibMetaCurve.getXP(balances, RATE_MULTIPLIER);
 
@@ -74,7 +75,7 @@ library LibBeanMetaCurve {
         returns (uint256)
     {
         return LibMetaCurve.getDFroms(
-            C.curveMetapoolAddress(),
+            C.CURVE_BEAN_METAPOOL,
             balances,
             RATE_MULTIPLIER
         );

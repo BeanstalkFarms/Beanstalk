@@ -3,8 +3,12 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./LibUnripeConvert.sol";
-import "./LibLambdaConvert.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibCurveConvert} from "./LibCurveConvert.sol";
+import {LibUnripeConvert} from "./LibUnripeConvert.sol";
+import {LibLambdaConvert} from "./LibLambdaConvert.sol";
+import {LibConvertData} from "./LibConvertData.sol";
+import {C} from "~/C.sol";
 
 /**
  * @title LibConvert
@@ -56,19 +60,19 @@ library LibConvert {
         returns (uint256)
     {
         /// BEAN:3CRV LP -> BEAN
-        if (tokenIn == C.curveMetapoolAddress() && tokenOut == C.beanAddress())
-            return LibCurveConvert.lpToPeg(C.curveMetapoolAddress());
+        if (tokenIn == C.CURVE_BEAN_METAPOOL && tokenOut == C.BEAN)
+            return LibCurveConvert.lpToPeg(C.CURVE_BEAN_METAPOOL);
         
         /// BEAN -> BEAN:3CRV LP
-        if (tokenIn == C.beanAddress() && tokenOut == C.curveMetapoolAddress())
-            return LibCurveConvert.beansToPeg(C.curveMetapoolAddress());
+        if (tokenIn == C.BEAN && tokenOut == C.CURVE_BEAN_METAPOOL)
+            return LibCurveConvert.beansToPeg(C.CURVE_BEAN_METAPOOL);
         
         /// urBEAN:3CRV LP -> urBEAN
-        if (tokenIn == C.unripeLPAddress() && tokenOut == C.unripeBeanAddress())
+        if (tokenIn == C.UNRIPE_LP && tokenOut == C.UNRIPE_BEAN)
             return LibUnripeConvert.lpToPeg();
 
         /// urBEAN -> urBEAN:3CRV LP
-        if (tokenIn == C.unripeBeanAddress() && tokenOut == C.unripeLPAddress())
+        if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.UNRIPE_LP)
             return LibUnripeConvert.beansToPeg();
 
         // Lambda -> Lambda
@@ -84,19 +88,19 @@ library LibConvert {
         returns (uint256)
     {
         /// BEAN:3CRV LP -> BEAN
-        if (tokenIn == C.curveMetapoolAddress() && tokenOut == C.beanAddress())
-            return LibCurveConvert.getBeanAmountOut(C.curveMetapoolAddress(), amountIn);
+        if (tokenIn == C.CURVE_BEAN_METAPOOL && tokenOut == C.BEAN)
+            return LibCurveConvert.getBeanAmountOut(C.CURVE_BEAN_METAPOOL, amountIn);
         
         /// BEAN -> BEAN:3CRV LP
-        if (tokenIn == C.beanAddress() && tokenOut == C.curveMetapoolAddress())
-            return LibCurveConvert.getLPAmountOut(C.curveMetapoolAddress(), amountIn);
+        if (tokenIn == C.BEAN && tokenOut == C.CURVE_BEAN_METAPOOL)
+            return LibCurveConvert.getLPAmountOut(C.CURVE_BEAN_METAPOOL, amountIn);
 
         /// urBEAN:3CRV LP -> urBEAN
-        if (tokenIn == C.unripeLPAddress() && tokenOut == C.unripeBeanAddress())
+        if (tokenIn == C.UNRIPE_LP && tokenOut == C.UNRIPE_BEAN)
             return LibUnripeConvert.getBeanAmountOut(amountIn);
         
         /// urBEAN -> urBEAN:3CRV LP
-        if (tokenIn == C.unripeBeanAddress() && tokenOut == C.unripeLPAddress())
+        if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.UNRIPE_LP)
             return LibUnripeConvert.getLPAmountOut(amountIn);
         
         // Lambda -> Lambda

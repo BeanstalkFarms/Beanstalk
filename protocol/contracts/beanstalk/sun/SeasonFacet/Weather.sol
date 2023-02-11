@@ -7,6 +7,14 @@ import "~/libraries/Decimal.sol";
 import "~/libraries/Curve/LibBeanMetaCurve.sol";
 import "./Sun.sol";
 
+library DecimalExtended {
+    uint256 private constant PERCENT_BASE = 1e18;
+
+    function toDecimal(uint256 a) internal pure returns (Decimal.D256 memory) {
+        return Decimal.ratio(a, PERCENT_BASE);
+    }
+}
+
 /**
  * @title Weather
  * @author Publius
@@ -14,11 +22,21 @@ import "./Sun.sol";
  */
 contract Weather is Sun {
     using SafeMath for uint256;
+    using DecimalExtended for uint256;
     using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
 
     /// @dev If all Soil is Sown faster than this, Beanstalk considers demand for Soil to be increasing.
     uint256 private constant SOW_TIME_DEMAND_INCR = 600; // seconds
+
+    uint32 private constant SOW_TIME_STEADY = 60; // seconds
+
+    uint256 private constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%
+    uint256 private constant POD_RATE_OPTIMAL = 0.15e18; // 15%
+    uint256 private constant POD_RATE_UPPER_BOUND = 0.25e18; // 25%
+
+    uint256 private constant DELTA_POD_DEMAND_LOWER_BOUND = 0.95e18; // 95%
+    uint256 private constant DELTA_POD_DEMAND_UPPER_BOUND = 1.05e18; // 105%
     
     /**
      * @notice Emitted when the Temperature (fka "Weather") changes.
@@ -47,6 +65,7 @@ contract Weather is Sun {
         uint256 amount,
         uint256 toField
     );
+
 
     //////////////////// WEATHER GETTERS ////////////////////
 
@@ -106,12 +125,12 @@ contract Weather is Sun {
             if (
                 s.w.lastSowTime == type(uint32).max || // Didn't Sow all last Season
                 s.w.thisSowTime < SOW_TIME_DEMAND_INCR || // Sow'd all instantly this Season
-                (s.w.lastSowTime > C.getSteadySowTime() &&
-                    s.w.thisSowTime < s.w.lastSowTime.sub(C.getSteadySowTime())) // Sow'd all faster
+                (s.w.lastSowTime > SOW_TIME_STEADY &&
+                    s.w.thisSowTime < s.w.lastSowTime.sub(SOW_TIME_STEADY)) // Sow'd all faster
             ) {
                 deltaPodDemand = Decimal.from(1e18);
             } else if (
-                s.w.thisSowTime <= s.w.lastSowTime.add(C.getSteadySowTime())
+                s.w.thisSowTime <= s.w.lastSowTime.add(SOW_TIME_STEADY)
             ) {
                 // Sow'd all in same time
                 deltaPodDemand = Decimal.one();
@@ -144,26 +163,26 @@ contract Weather is Sun {
         caseId = 0;
 
         // Evaluate Pod Rate
-        if (podRate.greaterThanOrEqualTo(C.getUpperBoundPodRate())) {
+        if (podRate.greaterThanOrEqualTo(POD_RATE_UPPER_BOUND.toDecimal())) {
             caseId = 24;
-        } else if (podRate.greaterThanOrEqualTo(C.getOptimalPodRate())) {
+        } else if (podRate.greaterThanOrEqualTo(POD_RATE_OPTIMAL.toDecimal())) {
             caseId = 16;
-        } else if (podRate.greaterThanOrEqualTo(C.getLowerBoundPodRate())) {
+        } else if (podRate.greaterThanOrEqualTo(POD_RATE_LOWER_BOUND.toDecimal())) {
             caseId = 8;
         }
 
         // Evaluate Price
         if (
             deltaB > 0 ||
-            (deltaB == 0 && podRate.lessThanOrEqualTo(C.getOptimalPodRate()))
+            (deltaB == 0 && podRate.lessThanOrEqualTo(POD_RATE_OPTIMAL.toDecimal()))
         ) {
             caseId += 4;
         }
 
         // Evaluate Delta Soil Demand
-        if (deltaPodDemand.greaterThanOrEqualTo(C.getUpperBoundDPD())) {
+        if (deltaPodDemand.greaterThanOrEqualTo(DELTA_POD_DEMAND_UPPER_BOUND.toDecimal())) {
             caseId += 2;
-        } else if (deltaPodDemand.greaterThanOrEqualTo(C.getLowerBoundDPD())) {
+        } else if (deltaPodDemand.greaterThanOrEqualTo(DELTA_POD_DEMAND_LOWER_BOUND.toDecimal())) {
             caseId += 1;
         }
 
@@ -253,7 +272,7 @@ contract Weather is Sun {
      */
     function rewardSop(uint256 amount) private {
         s.sops[s.season.rainStart] = s.sops[s.season.lastSop].add(
-            amount.mul(C.getSopPrecision()).div(s.r.roots)
+            amount.mul(C.SOP_PRECISION).div(s.r.roots)
         );
         s.season.lastSop = s.season.rainStart;
         s.season.lastSopSeason = s.season.current;

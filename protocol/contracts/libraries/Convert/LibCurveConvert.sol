@@ -4,10 +4,12 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import "../LibAppStorage.sol";
-import "./LibConvertData.sol";
-import "./LibMetaCurveConvert.sol";
-import "../Curve/LibBeanMetaCurve.sol";
+import {ICurvePool} from "~/interfaces/ICurve.sol";
+import {LibConvertData} from "./LibConvertData.sol";
+import {LibMetaCurveConvert} from "./LibMetaCurveConvert.sol";
+import {LibBeanMetaCurve} from "../Curve/LibBeanMetaCurve.sol";
+import {LibAppStorage} from "../LibAppStorage.sol";
+import {C} from "~/C.sol";
 
 /**
  * @title LibCurveConvert
@@ -79,7 +81,7 @@ library LibCurveConvert {
         (uint256 lp, uint256 minBeans, address pool) = convertData
             .convertWithAddress();
         (outAmount, inAmount) = curveRemoveLPAndBuyToPeg(lp, minBeans, pool);
-        tokenOut = C.beanAddress();
+        tokenOut = C.BEAN;
         tokenIn = pool; // The Curve metapool also issues the LP token
     }
 
@@ -104,7 +106,7 @@ library LibCurveConvert {
             pool
         );
         tokenOut = pool;
-        tokenIn = C.beanAddress();
+        tokenIn = C.BEAN;
     }
 
     //////////////////// CURVE CONVERT: LOGIC ////////////////////
@@ -153,7 +155,7 @@ library LibCurveConvert {
         address pool,
         uint256[2] memory balances
     ) internal view returns (uint256) {
-        if (pool == C.curveMetapoolAddress()) {
+        if (pool == C.CURVE_BEAN_METAPOOL) {
             return LibMetaCurveConvert.beansAtPeg(balances);
         }
 

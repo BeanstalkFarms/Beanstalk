@@ -26,7 +26,7 @@ contract Oracle is ReentrancyGuard {
      * @notice Returns the current Delta B for the requested pool.
      */
     function poolDeltaB(address pool) external view returns (int256) {
-        if (pool == C.curveMetapoolAddress()) return LibCurveOracle.check();
+        if (pool == C.CURVE_BEAN_METAPOOL) return LibCurveOracle.check();
         revert("Oracle: Pool not supported");
     }
 

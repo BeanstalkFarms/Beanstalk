@@ -8,7 +8,7 @@ import "../LibAppStorage.sol";
 import "../LibSafeMath32.sol";
 
 /**
- * @dev Curve metapool functions used by LibCurveOracle. 
+ * @dev Curve metapool functions used by {LibCurveOracle}. 
  */
 interface IMeta3CurveOracle {
     function block_timestamp_last() external view returns (uint256);
@@ -81,9 +81,9 @@ library LibCurveOracle {
         AppStorage storage s = LibAppStorage.diamondStorage();
         Storage.Oracle storage o = s.co;
 
-        uint256[2] memory balances = IMeta3CurveOracle(C.curveMetapoolAddress())
+        uint256[2] memory balances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL)
             .get_price_cumulative_last();
-        uint256 timestamp = IMeta3CurveOracle(C.curveMetapoolAddress()).block_timestamp_last();
+        uint256 timestamp = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).block_timestamp_last();
         
         if (balances[0] != 0 && balances[1] != 0 && timestamp != 0) {
             (current_balances, o.balances, o.timestamp) = get_cumulative();
@@ -117,9 +117,9 @@ library LibCurveOracle {
         view
         returns (uint256[2] memory balances, uint256[2] memory cum_balances)
     {
-        cum_balances = IMeta3CurveOracle(C.curveMetapoolAddress()).get_price_cumulative_last();
-        balances = IMeta3CurveOracle(C.curveMetapoolAddress()).get_balances();
-        uint256 lastTimestamp = IMeta3CurveOracle(C.curveMetapoolAddress()).block_timestamp_last();
+        cum_balances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_price_cumulative_last();
+        balances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_balances();
+        uint256 lastTimestamp = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).block_timestamp_last();
 
         cum_balances[0] = cum_balances[0].add(
             balances[0].mul(block.timestamp.sub(lastTimestamp))
@@ -142,9 +142,9 @@ library LibCurveOracle {
         view
         returns (uint256[2] memory balances, uint256[2] memory cum_balances, uint256 lastTimestamp)
     {
-        cum_balances = IMeta3CurveOracle(C.curveMetapoolAddress()).get_price_cumulative_last();
-        balances = IMeta3CurveOracle(C.curveMetapoolAddress()).get_balances();
-        lastTimestamp = IMeta3CurveOracle(C.curveMetapoolAddress()).block_timestamp_last();
+        cum_balances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_price_cumulative_last();
+        balances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_balances();
+        lastTimestamp = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).block_timestamp_last();
 
         cum_balances[0] = cum_balances[0].add(
             balances[0].mul(block.timestamp.sub(lastTimestamp))
@@ -159,8 +159,6 @@ library LibCurveOracle {
      * @dev Constrain `deltaB` to be less than +/- 1% of the total supply of Bean.
      * 
      * `1% = 1/MAX_DELTA_B_DENOMINATOR`
-     * 
-     * FIXME: rename to `constrainDeltaB` or `clampDeltaB`
      */
     function checkForMaxDeltaB(int256 deltaB) private view returns (int256) {
         int256 maxDeltaB = int256(C.bean().totalSupply().div(MAX_DELTA_B_DENOMINATOR));
