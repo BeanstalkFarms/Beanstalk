@@ -40,6 +40,7 @@ library LibSilo {
     //////////////////////// EVENTS ////////////////////////    
 
     //TODOSEEDS what should we emit here? presumably now seeds could change every season even
+    //should probably include token, grown stalk index, current season?
     event SeedsBalanceChanged(
         address indexed account,
         int256 delta

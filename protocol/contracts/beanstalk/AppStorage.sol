@@ -42,7 +42,7 @@ contract Account {
         mapping(uint32 => uint256) deposits; // Unripe Bean/LP Deposits (previously Bean/LP Deposits).
         mapping(uint32 => uint256) depositSeeds; // BDV of Unripe LP Deposits / 4 (previously # of Seeds in corresponding LP Deposit).
     }
-
+ 
     // Deposit represents a Deposit in the Silo of a given Token at a given Season.
     // Stored as two uint128 state variables to save gas.
     struct Deposit {

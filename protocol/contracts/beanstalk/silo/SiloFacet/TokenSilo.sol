@@ -62,12 +62,14 @@ contract TokenSilo is Silo {
      * @param token Address of the whitelisted ERC20 token that was removed.
      * @param grownStalkPerBdv The grownStalkPerBdv that this `amount` was removed from.
      * @param amount Amount of `token` removed from `grownStalkPerBdv`.
+     * //add bdv here?
      */
     event RemoveDeposit(
         address indexed account,
         address indexed token,
         int128 grownStalkPerBdv,
         uint256 amount
+        
     );
 
     /**
@@ -88,8 +90,8 @@ contract TokenSilo is Silo {
         address indexed token,
         int128[] grownStalkPerBdvs,
         uint256[] amounts,
-        uint256 amount
-    );
+        uint256 amount 
+    ); //add bdv[] here? in favor of array
 
     // note add/remove withdrawal(s) are removed as claiming is removed
     // FIXME: to discuss with subgraph team to update
@@ -364,6 +366,7 @@ contract TokenSilo is Silo {
         uint256[] calldata amounts
     ) internal returns (AssetsRemoved memory ar) {
         console.log('removeDepositsFromAccount: ', account);
+        //make bdv array and add here?
         for (uint256 i; i < grownStalkPerBdvs.length; ++i) {
             uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 account,
@@ -389,6 +392,7 @@ contract TokenSilo is Silo {
         );
         console.log('2 ar.stalkRemoved: ', ar.stalkRemoved);
 
+        //need to add BDV array here
         emit RemoveDeposits(account, token, grownStalkPerBdvs, amounts, ar.tokensRemoved);
     }
 
@@ -455,11 +459,11 @@ contract TokenSilo is Silo {
             );
             ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
-            ar.stalkRemoved = crateBdv.mul(s.ss[token].stalkPerBdv).add(
+            ar.stalkRemoved = ar.stalkRemoved.add(
                 LibSilo.stalkReward(
                     grownStalkPerBdvs[i],
-                    s.ss[address(token)].lastCumulativeGrownStalkPerBdv,
-                    uint128(crateBdv)
+                    LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)),
+                    crateBdv.toUint128()
                 )
             );
             bdvs[i] = crateBdv;

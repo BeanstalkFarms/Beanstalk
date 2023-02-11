@@ -127,6 +127,9 @@ contract Silo is SiloExit {
             return;
         }
 
+        //TODOSEEDS handle case where mow status hasn't been init'd, if last upadte season > 0 and older than update season
+
+
         uint256 grownStalk = balanceOfGrownStalk(account, token);
         console.log('__mow grownStalk: ', grownStalk);
 
