@@ -1,18 +1,18 @@
 import argparse
 from eth_abi import encode_single
 import math
-from sympy import log
-from decimal import *
-
+from decimal import Decimal
 
 def main(args):
     if(args.type == "fracExp"):
         fracExp(args.input_1, args.input_2)
     elif(args.type == "morningAuctionLog"):
         morningAuctionLog(args.input_1, args.input_2)
+    else:
+        raise(Exception("Unknown type"))
 
 def fracExp(beanReward, blocks):
-    # cap b at 25 blocks
+    # cap at 25 blocks
     blocks = blocks if blocks < 25 else 25
     newReward = (beanReward) * pow(1.01, blocks * 12) 
     enc = encode_single('uint256', int(newReward))
@@ -27,6 +27,7 @@ def morningAuctionLog(t, blocks):
     tempScale = t * scale
     tempScale = math.ceil(Decimal(tempScale) / Decimal(1e6))
     new_t = max(tempScale, 1e6)
+    
     if t == 0:
         new_t = 0
     if blocks == 0:
@@ -38,11 +39,9 @@ def morningAuctionLog(t, blocks):
     # this print statement must be here for ffi to work
     print("0x" + enc.hex())
 
-
-
 def parse_args(): 
     parser = argparse.ArgumentParser()
-    parser.add_argument("type", choices=["fracExp","morningAuctionLog"])
+    parser.add_argument("type", choices=["fracExp", "morningAuctionLog"])
     parser.add_argument("--input_1", type=int)
     parser.add_argument("--input_2", type=int)
     return parser.parse_args()

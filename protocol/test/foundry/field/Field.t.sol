@@ -5,7 +5,7 @@ pragma abicoder v2;
 import { FieldFacet } from "~/beanstalk/field/FieldFacet.sol";
 import "test/foundry/utils/LibConstant.sol";
 import "~/libraries/LibPRBMath.sol";
-import "./utils/TestHelper.sol";
+import "../utils/TestHelper.sol";
 
 contract FieldTest is FieldFacet, TestHelper {
   using SafeMath for uint256;

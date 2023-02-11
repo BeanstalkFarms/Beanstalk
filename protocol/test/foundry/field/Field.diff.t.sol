@@ -1,57 +1,60 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity =0.7.6;
 pragma abicoder v2;
+
+import "forge-std/Test.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 import { LibDibbler } from "~/libraries/LibDibbler.sol";
 import { LibIncentive } from "~/libraries/LibIncentive.sol";
 import { LibPRBMath } from "~/libraries/LibPRBMath.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import "forge-std/Test.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-
 
 /**
  * @dev This is used to test {LibIncentive.fracExp} and 
  * {LibDibbler.morningAuction} functions using differential testing.
  * morningAuction is replicated here as it does not take inputs.
  */
-contract FFImathTest is Test {
-    uint256 private constant TEMPERATURE_PRECISION = 1e6;
-
+contract FieldDiffTest is Test {
     using Strings for uint256;
     using LibPRBMath for uint256;
     using SafeMath for uint256;
 
+    uint256 private constant TEMPERATURE_PRECISION = 1e6;
 
-    function testFFIfracExp(uint256 baseReward, uint256 blocksLate) public {
-
+    function testDiff_fracExp(uint256 baseReward, uint256 blocksLate) public {
         vm.assume(blocksLate < 30);
         // max base reward is 100 beans
         vm.assume(baseReward < 100e6);
+
         string[] memory cmds = new string[](7);
         cmds[0] = "python3";
-        cmds[1] = "test/foundry/python/maths.py";
+        cmds[1] = "test/foundry/field/auction-math.py";
         cmds[2] = "fracExp";
         cmds[3] = "--input_1";
         cmds[4] = uint256(baseReward).toString();
         cmds[5] = "--input_2";
         cmds[6] = uint256(blocksLate).toString();
+
         bytes memory data = vm.ffi(cmds);
         uint256 calculatedAns = abi.decode(data, (uint256));
         uint256 actualAns = LibIncentive.fracExp(baseReward, blocksLate);
 
         assertEq(actualAns, calculatedAns, "fracExp failed");
     }
-    function testFFIMorningAuction(uint32 t, uint256 deltaBlocks) public {
+    function testDiff_morningAuction(uint32 t, uint256 deltaBlocks) public {
         vm.assume(deltaBlocks < 30);
+
         string[] memory cmds = new string[](7);
         cmds[0] = "python3";
-        cmds[1] = "test/foundry/python/maths.py";
+        cmds[1] = "test/foundry/field/auction-math.py";
         cmds[2] = "morningAuctionLog";
         cmds[3] = "--input_1";
         cmds[4] = uint256(t).toString();
         cmds[5] = "--input_2";
         cmds[6] = uint256(deltaBlocks).toString();
+        
         bytes memory data = vm.ffi(cmds);
         uint256 calculatedAns = abi.decode(data, (uint256));
         uint256 actualAns = morningTemperature(t, deltaBlocks);

@@ -3,7 +3,7 @@
 # https://book.getfoundry.sh/reference/config/project
 src = 'contracts'
 test = 'test'
-no_match_test = "FFI"
+no_match_test = "testDiff"
 out = 'out'
 libs = [
   'node_modules',
@@ -35,7 +35,7 @@ gas_reports = ['*']
 no_storage_caching = false
  
 [profile.differential]
-match_test = "FFI"
+match_test = "testDiff"
 no_match_test = "a^"
 
 # Formatter
