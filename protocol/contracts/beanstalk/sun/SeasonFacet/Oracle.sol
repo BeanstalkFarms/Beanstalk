@@ -1,6 +1,4 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
@@ -9,28 +7,30 @@ import "~/libraries/Oracle/LibCurveOracle.sol";
 import "~/beanstalk/ReentrancyGuard.sol";
 
 /**
+ * @title Oracle
  * @author Publius, Chaikitty
- * @title Oracle tracks the Delta B across the Uniswap and Curve Liquidity pools
- **/
+ * @notice Tracks the Delta B in available pools.
+ */
 contract Oracle is ReentrancyGuard {
+    
+    //////////////////// ORACLE GETTERS ////////////////////
+
     /**
-     * Oracle Getters
-     **/
-
-    event MetapoolOracle(uint32 indexed season, int256 deltaB, uint256[2] balances);
-
+     * @notice Returns the current Delta B in the Curve liquidity pool.
+     */
     function totalDeltaB() external view returns (int256 deltaB) {
         deltaB = LibCurveOracle.check();
     }
 
-    function poolDeltaB(address pool) external view returns (int256 deltaB) {
-        if (pool == C.curveMetapoolAddress()) return LibCurveOracle.check();
-        require(false, "Oracle: Pool not supported");
+    /**
+     * @notice Returns the current Delta B for the requested pool.
+     */
+    function poolDeltaB(address pool) external view returns (int256) {
+        if (pool == C.CURVE_BEAN_METAPOOL) return LibCurveOracle.check();
+        revert("Oracle: Pool not supported");
     }
 
-    /**
-     * Oracle Internal
-     **/
+    //////////////////// ORACLE INTERNAL ////////////////////
 
     function stepOracle() internal returns (int256 deltaB, uint256[2] memory balances) {
         (deltaB, balances) = LibCurveOracle.capture();

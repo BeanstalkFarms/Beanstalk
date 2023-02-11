@@ -227,8 +227,8 @@ abstract contract InitDiamondDeployer is Test {
     // address CRYPTO_REGISTRY = 0x8F942C20D02bEfc377D41445793068908E2250D0;
     address CURVE_REGISTRY = 0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5;
     _etch("MockToken.sol", CURVE_REGISTRY); // why this interface?
-    stableFactory.set_coins(C.curveMetapoolAddress(), [
-      C.beanAddress(),
+    stableFactory.set_coins(C.CURVE_BEAN_METAPOOL, [
+      C.BEAN,
       THREE_CRV,
       address(0),
       address(0)
@@ -241,6 +241,7 @@ abstract contract InitDiamondDeployer is Test {
   
   function _mockUniswap() internal {
     //address UNIV3_FACTORY = 0x1F98431c8aD98523631AE4a59f267346ea31F984; 
+    address UNIV3_ETH_USDC_POOL = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
     MockUniswapV3Factory uniFactory = MockUniswapV3Factory(new MockUniswapV3Factory());
     address ethUsdc = 
       uniFactory.createPool(
@@ -249,22 +250,22 @@ abstract contract InitDiamondDeployer is Test {
         3000
       );
     bytes memory code = at(ethUsdc);
-    address targetAddr = C.UniV3EthUsdc();
+    address targetAddr = UNIV3_ETH_USDC_POOL;
     vm.etch(targetAddr, code);
-    MockUniswapV3Pool(C.UniV3EthUsdc()).setOraclePrice(1000e6,18);
+    MockUniswapV3Pool(UNIV3_ETH_USDC_POOL).setOraclePrice(1000e6,18);
   }
 
   function _mockCurveMetapool() internal {
-    MockMeta3Curve p = MockMeta3Curve(_etch("MockMeta3Curve.sol", C.curveMetapoolAddress()));
-    p.init(C.beanAddress(), THREE_CRV, C.curve3PoolAddress());
+    MockMeta3Curve p = MockMeta3Curve(_etch("MockMeta3Curve.sol", C.CURVE_BEAN_METAPOOL));
+    p.init(C.BEAN, THREE_CRV, C.curve3PoolAddress());
     p.set_A_precise(1000);
     p.set_virtual_price(1 wei);
   }
 
   function _mockUnripe() internal {
-    MockToken urbean = _mockToken("Unripe BEAN", C.unripeBeanAddress());
+    MockToken urbean = _mockToken("Unripe BEAN", C.UNRIPE_BEAN);
     urbean.setDecimals(6);
-    _mockToken("Unripe BEAN:3CRV", C.unripeLPAddress());
+    _mockToken("Unripe BEAN:3CRV", C.UNRIPE_LP);
   }
 
   function _printAddresses() internal view {

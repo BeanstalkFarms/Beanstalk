@@ -24,7 +24,7 @@ contract MockInitDiamond {
 
     function init() external {
 
-        C.bean().approve(C.curveMetapoolAddress(), type(uint256).max);
+        C.bean().approve(C.CURVE_BEAN_METAPOOL, type(uint256).max);
         C.bean().approve(C.curveZapAddress(), type(uint256).max);
         C.usdc().approve(C.curveZapAddress(), type(uint256).max);
 
@@ -39,9 +39,9 @@ contract MockInitDiamond {
              3,   3,   1,   0,  // Exs Hgh: P < 1
              0,  -1,  -3,   0   //          P > 1
         ];
-        s.w.yield = 1;
+        s.w.t = 1;
 
-        s.w.nextSowTime = type(uint32).max;
+        s.w.thisSowTime = type(uint32).max;
         s.w.lastSowTime = type(uint32).max;
     
         // s.refundStatus = 1;

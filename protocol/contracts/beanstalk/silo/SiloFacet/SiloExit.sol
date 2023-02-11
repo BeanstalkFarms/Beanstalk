@@ -150,7 +150,7 @@ contract SiloExit is ReentrancyGuard {
                 previousPPR = lastRainPPR;
                 plenty = plenty.add(
                     plentyPerRoot.mul(s.a[account].sop.roots).div(
-                        C.getSopPrecision()
+                        C.SOP_PRECISION
                     )
                 );
             }
@@ -164,7 +164,7 @@ contract SiloExit is ReentrancyGuard {
             uint256 plentyPerRoot = s.sops[s.season.lastSop].sub(previousPPR);
             plenty = plenty.add(
                 plentyPerRoot.mul(balanceOfRoots(account)).div(
-                    C.getSopPrecision()
+                    C.SOP_PRECISION
                 )
             );
         }

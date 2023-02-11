@@ -1,12 +1,15 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
+/**
+ * @title LibCurve
+ * @author Publius
+ * @notice Low-level Curve swap math for a 2-token StableSwap pool.
+ */
 library LibCurve {
     using SafeMath for uint256;
 
@@ -16,6 +19,9 @@ library LibCurve {
     uint256 private constant i = 0;
     uint256 private constant j = 1;
 
+    /**
+     * @dev Find the change in token `j` given a change in token `i`.
+     */
     function getPrice(
         uint256[2] memory xp,
         uint256 a,
@@ -37,7 +43,7 @@ library LibCurve {
         uint256 x = xp[i] + ((1 * rates[i]) / PRECISION);
         uint256 y = getY(x, xp, a, D);
         uint256 dy = xp[j] - y - 1;
-        return dy / 1e6;
+        return dy / 1e6; // !
     }
 
     function getY(
@@ -138,6 +144,13 @@ library LibCurve {
         require(false, "Price: Convergence false");
     }
 
+    /**
+     * @dev Return the `xp` array for two tokens. Adjusts `balances[0]` by `padding`
+     * and `balances[1]` by `rate / PRECISION`.
+     * 
+     * This is provided as a gas optimization when `rates[0] * PRECISION` has been
+     * pre-computed.
+     */
     function getXP(
         uint256[2] memory balances,
         uint256 padding,
@@ -147,11 +160,14 @@ library LibCurve {
         xp[1] = balances[1].mul(rate).div(PRECISION);
     }
 
-    function getXP(uint256[2] memory balances, uint256[2] memory rates)
-        internal
-        pure
-        returns (uint256[2] memory xp)
-    {
+    /**
+     * @dev Return the `xp` array for two tokens. Adjusts `balances[0]` by `rates[0]`
+     * and `balances[1]` by `rates[1] / PRECISION`.
+     */
+    function getXP(
+        uint256[2] memory balances,
+        uint256[2] memory rates
+    ) internal pure returns (uint256[2] memory xp) {
         xp[0] = balances[0].mul(rates[0]).div(PRECISION);
         xp[1] = balances[1].mul(rates[1]).div(PRECISION);
     }

@@ -1,46 +1,42 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.7.6;
+pragma abicoder v2;
 
-import "forge-std/Test.sol";
-import { console } from "forge-std/console.sol";
-
+import "test/foundry/utils/TestHelper.sol";
 import { Sun } from "~/beanstalk/sun/SeasonFacet/Sun.sol";
-import { MockSeasonFacet } from "~/mocks/mockFacets/MockSeasonFacet.sol";
-import { MockSiloFacet } from "~/mocks/mockFacets/MockSiloFacet.sol";
-import { MockFieldFacet } from "~/mocks/mockFacets/MockFieldFacet.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
-import {MockUniswapV3Pool} from "~/mocks/uniswap/MockUniswapV3Pool.sol";
-import { Utils } from "./utils/Utils.sol";
-import { InitDiamondDeployer } from "./utils/InitDiamondDeployer.sol";
 
-import "~/beanstalk/AppStorage.sol";
-import "~/libraries/Decimal.sol";
 import "~/libraries/LibSafeMath32.sol";
 import "~/libraries/LibPRBMath.sol";
-import "~/C.sol";
 
-contract SunTest is Sun, Test, InitDiamondDeployer {
+contract SunTest is  Sun, TestHelper {
   using SafeMath for uint256;
   using LibPRBMath for uint256;
   using LibSafeMath32 for uint32;
   
-  function setUp() public override {
-    InitDiamondDeployer.setUp();
-    
+  address private constant UNIV3_ETH_USDC_POOL = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
+
+  function setUp() public {
+    setupDiamond();
     // Mint beans
     C.bean().mint(address(this), 1000);
     console.log("Sun: Bean supply is", C.bean().totalSupply());
-
     // FIXME: Setup silo 
     season.siloSunrise(0);
   }
 
   ///////////////////////// Utilities /////////////////////////
 
+
+  // FIXME: Currently this tests with a fixed temperature, as
+  // soil issued above peg is dependent on the temperature.
+  // to automate this, we'd have to calculate the caseId from the deltaB. 
+
   function _testSunrise(
     int256 deltaB,
     uint256 newBeans,
     uint256 pods,
+    uint32 temperature,
     bool hasFert,
     bool hasField
   ) 
@@ -53,18 +49,18 @@ contract SunTest is Sun, Test, InitDiamondDeployer {
       uint256 soil
     ) 
   {
-    uint256 caseId  = 8;
+    uint256 caseId  = 8; // need to fix 
     toFert  = hasFert  ? newBeans.div(3) : uint256(0); //
     toField = hasField ? newBeans.sub(toFert).div(2) : uint256(0); // divide remainder by two, round down
     toField = toField > pods ? pods : toField; // send up to the amount of pods outstanding
     toSilo  = newBeans.sub(toFert).sub(toField); // all remaining beans go to silo
     uint32 nextSeason = season.season() + 1;
-
     assert(toFert.add(toField).add(toSilo) == newBeans); // should sum back up
 
     newHarvestable = s.f.harvestable + toField;
     if(deltaB > 0) {
-      soil = newHarvestable;
+      soil = newHarvestable.mul(100).div(100 + temperature);
+
     } else {
       soil = uint256(-deltaB);
     }
@@ -75,14 +71,14 @@ contract SunTest is Sun, Test, InitDiamondDeployer {
     console.log("To Silo: %s", toSilo);
     console.log("New Harvestable: %s", newHarvestable);
     console.log("Soil: %s", soil);
-    console.log("Yield: %s", s.w.yield);
+    console.log("Yield: %s", s.w.t);
 
     vm.expectEmit(true, false, false, true);
     emit Reward(nextSeason, toField, toSilo, toFert);
     vm.expectEmit(true, false, false, true);
     emit Soil(nextSeason, soil);
 
-    season.sunSunrise(deltaB, caseId); // Soil emission is slightly too low
+    season.sunTemperatureSunrise(deltaB, caseId, uint32(temperature)); // Soil emission is slightly too low
   }
 
   ///////////////////////// Reentrancy /////////////////////////
@@ -116,26 +112,29 @@ contract SunTest is Sun, Test, InitDiamondDeployer {
   ///////////////////////// Pod Rate sets Soil /////////////////////////
 
   function test_deltaB_positive_podRate_low() public {
-    field.incrementTotalPodsE(100);
-    season.sunSunrise(300, 0); // deltaB = +300; case 0 = low pod rate
-    vm.roll(26); // after dutch Auction
-    assertEq(uint256(field.totalSoil()), 149); // FIXME: how calculated?
+    field.incrementTotalPodsE(10000);
+    season.setAbovePegE(true);
+    season.sunSunrise(30000, 0); // deltaB = +300; case 0 = low pod rate
+    vm.roll(30); // after dutch Auction
+    assertEq(uint256(field.totalSoil()), 14850); 
     // 300/3 = 100 *1.5 = 150
   }
   
   function test_deltaB_positive_podRate_medium() public {
-    field.incrementTotalPodsE(100);
-    season.sunSunrise(300, 8); // deltaB = +300; case 0 = medium pod rate
-    vm.roll(26); // after dutch Auction
-    assertEq(uint256(field.totalSoil()), 100); // FIXME: how calculated?
+    field.incrementTotalPodsE(10000);
+    season.setAbovePegE(true);
+    season.sunSunrise(30000, 8); // deltaB = +300; case 0 = medium pod rate
+    vm.roll(30); // after dutch Auction
+    assertEq(uint256(field.totalSoil()), 9900); // FIXME: how calculated?
     // 300/3 = 100 * 1 = 100
   }
 
   function test_deltaB_positive_podRate_high() public {
-    field.incrementTotalPodsE(100);
-    season.sunSunrise(300, 25); // deltaB = +300; case 0 = high pod rate
-    vm.roll(26); // after dutch Auction
-    assertEq(uint256(field.totalSoil()), 50); // FIXME: how calculated?
+    field.incrementTotalPodsE(10000);
+    season.setAbovePegE(true);
+    season.sunSunrise(30000, 25); // deltaB = +300; case 0 = high pod rate
+    vm.roll(30); // after dutch Auction
+    assertEq(uint256(field.totalSoil()), 4950); // FIXME: how calculated?
     // 300/3 = 100 * 0.5 = 50
 
   }
@@ -147,7 +146,7 @@ contract SunTest is Sun, Test, InitDiamondDeployer {
     vm.assume(deltaB < 1e16); // FIXME: right way to prevent overflows
     uint256 newBeans = _abs(deltaB); // will be positive
 
-    _testSunrise(deltaB, newBeans, 0, false, false);
+    _testSunrise(deltaB, newBeans, 0, uint32(1), false, false);
 
     // @note only true if we've never minted to the silo before
     assertEq(silo.totalStalk(), newBeans * 1e4); // 6 -> 10 decimals
@@ -165,7 +164,7 @@ contract SunTest is Sun, Test, InitDiamondDeployer {
     console.log("Pods outstanding: %s", pods);
 
     (/*uint256 toFert, uint256 toField*/, , uint256 toSilo, , /*uint256 newHarvestable, uint256 soil*/) 
-      = _testSunrise(deltaB, newBeans, pods, false, true);
+      = _testSunrise(deltaB, newBeans, pods, uint32(1), false, true);
 
     // @note only true if we've never minted to the silo before
     assertEq(silo.totalStalk(), toSilo * 1e4); // 6 -> 10 decimals
@@ -179,10 +178,10 @@ contract SunTest is Sun, Test, InitDiamondDeployer {
     vm.assume(pods < newBeans); // clear the whole pod line
     // Setup pods
     field.incrementTotalPodsE(pods);
-    console.log("Pods outstanding: %s", pods);
-
+    console.log("Pods outstanding:", pods);
+    console.log("sw.t. before:", s.w.t);
     (/*uint256 toFert, uint256 toField, */, , uint256 toSilo, uint256 newHarvestable,/* uint256 soil*/) 
-      = _testSunrise(deltaB, newBeans, pods, false, true);
+      = _testSunrise(deltaB, newBeans, pods, uint32(1), false, true);
 
     // @note only true if we've never minted to the silo before
     assertEq(silo.totalStalk(), toSilo * 1e4); // 6 -> 10 decimals
@@ -214,18 +213,18 @@ contract SunTest is Sun, Test, InitDiamondDeployer {
   // }
 
   function testMockOraclePrice() public {
-    MockUniswapV3Pool(C.UniV3EthUsdc()).setOraclePrice(1000e6,18);
+    MockUniswapV3Pool(C.UNIV3_ETH_USDC_POOL).setOraclePrice(1000e6,18);
     console.log("Eth Price is:", season.getEthPrice());
-    assertApproxEqRel(season.getEthPrice(),1000e6,0.01e18); //0.01% accuracy as ticks are spaced 0.01%
+    assertApproxEqRel(season.getEthPrice(), 1000e6, 0.01e18); //0.01% accuracy as ticks are spaced 0.01%
   }
 
   //helper
   function getEthUsdcPrice() private view returns (uint256) {
-        (int24 tick,) = OracleLibrary.consult(C.UniV3EthUsdc(),3600); //1 season tick
+        (int24 tick,) = OracleLibrary.consult(C.UNIV3_ETH_USDC_POOL,3600); //1 season tick
         return OracleLibrary.getQuoteAtTick(
             tick,
             1e18,
-            address(C.weth()),
+            address(C.WETH),
             address(C.usdc())
         );
     }

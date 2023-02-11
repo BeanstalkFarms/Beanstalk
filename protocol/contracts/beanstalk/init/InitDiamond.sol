@@ -10,6 +10,7 @@ import {IERC165} from "../../interfaces/IERC165.sol";
 import {IDiamondCut} from "../../interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../../interfaces/IDiamondLoupe.sol";
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
+import {LibIncentive} from "../../libraries/LibIncentive.sol";
 import "../../C.sol";
 import "../../interfaces/IBean.sol";
 import "../../interfaces/IWETH.sol";
@@ -34,7 +35,7 @@ contract InitDiamond {
         ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
 
-        C.bean().approve(C.curveMetapoolAddress(), type(uint256).max);
+        C.bean().approve(C.CURVE_BEAN_METAPOOL, type(uint256).max);
         C.bean().approve(C.curveZapAddress(), type(uint256).max);
         C.usdc().approve(C.curveZapAddress(), type(uint256).max);
 
@@ -49,7 +50,7 @@ contract InitDiamond {
              3,   3,   1,   0,  // Exs Hgh: P < 1
              0,  -1,  -3,   0   //          P > 1
         ];
-        s.w.yield = 1;
+        s.w.t = 1;
 
         s.season.current = 1;
         s.season.withdrawSeasons = 25;
@@ -59,12 +60,12 @@ contract InitDiamond {
             (block.timestamp / s.season.period) * s.season.period :
             block.timestamp;
 
-        s.w.nextSowTime = type(uint32).max;
+        s.w.thisSowTime = type(uint32).max;
         s.w.lastSowTime = type(uint32).max;
         s.isFarm = 1;
-
-        C.bean().mint(msg.sender, C.getMaxReward());
-        emit Incentivization(msg.sender, C.getMaxReward());
+        
+        C.bean().mint(msg.sender, LibIncentive.MAX_REWARD);
+        emit Incentivization(msg.sender, LibIncentive.MAX_REWARD);
     }
 
 }

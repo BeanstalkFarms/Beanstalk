@@ -1,29 +1,40 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
-
+// SPDX-License-Identifier: MIT
+ 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../C.sol";
-import "../interfaces/IBean.sol";
-import "./LibAppStorage.sol";
-import "./LibSafeMath32.sol";
-import "./LibSafeMath128.sol";
-import "./LibPRBMath.sol";
-
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {IBean} from "../interfaces/IBean.sol";
+import {LibAppStorage} from "./LibAppStorage.sol";
+import {LibSafeMath32} from "./LibSafeMath32.sol";
+import {LibSafeMath128} from "./LibSafeMath128.sol";
+import {LibPRBMath} from "./LibPRBMath.sol";
+import {AppStorage} from "~/beanstalk/AppStorage.sol";
 
 /**
+ * @title LibDibbler
  * @author Publius, Brean
- * @title Dibbler
- **/
+ * @notice Calculates the amount of Pods received for Sowing under certain conditions.
+ * Provides functions to calculate the instantaneous Temperature, which is adjusted by the
+ * Morning Auction functionality. Provides math helpers for scaling Soil.
+ */
 library LibDibbler {
     using SafeMath for uint256;
     using LibPRBMath for uint256;
     using LibSafeMath32 for uint32;
     using LibSafeMath128 for uint128;
 
-    uint256 private constant DECIMALS = 1e6;
+    /// @dev Morning Auction scales temperature by 1e6.
+    uint256 internal constant TEMPERATURE_PRECISION = 1e6; 
+
+    /// @dev Simplifies conversion of Beans to Pods:
+    /// `pods = beans * (1 + temperature)`
+    /// `pods = beans * (100% + temperature) / 100%`
+    uint256 private constant ONE_HUNDRED_PCT = 100 * TEMPERATURE_PRECISION;
+
+    /// @dev If less than `SOIL_SOLD_OUT_THRESHOLD` Soil is left, consider 
+    /// Soil to be "sold out"; affects how Temperature is adjusted.
+    uint256 private constant SOIL_SOLD_OUT_THRESHOLD = 1e6;
     
     event Sow(
         address indexed account,
@@ -32,202 +43,354 @@ library LibDibbler {
         uint256 pods
     );
 
+    //////////////////// SOW ////////////////////
+
     /**
-     * Shed
-     **/
-
-    function sow(uint256 amount, address account) internal returns (uint256) {
+     * @param beans The number of Beans to Sow
+     * @param _morningTemperature Pre-calculated {morningTemperature()}
+     * @param account The account sowing Beans
+     * @param abovePeg Whether the TWA deltaB of the previous season was positive (true) or negative (false)
+     * @dev 
+     * 
+     * ## Above Peg 
+     * 
+     * | t   | Max pods  | s.f.soil              | soil                    | temperature              | maxTemperature |
+     * |-----|-----------|-----------------------|-------------------------|--------------------------|----------------|
+     * | 0   | 500e6     | ~37e6 500e6/(1+1250%) | ~495e6 500e6/(1+1%))    | 1e6 (1%)                 | 1250 (1250%)   |
+     * | 12  | 500e6     | ~37e6                 | ~111e6 500e6/(1+348%))  | 348.75e6 (27.9% * 1250)  | 1250           |
+     * | 300 | 500e6     | ~37e6                 |  ~37e6 500e6/(1+1250%)  | 1250e6                   | 1250           |
+     * 
+     * ## Below Peg
+     * 
+     * | t   | Max pods                        | soil  | temperature                   | maxTemperature     |
+     * |-----|---------------------------------|-------|-------------------------------|--------------------|
+     * | 0   | 505e6 (500e6 * (1+1%))          | 500e6 | 1e6 (1%)                      | 1250 (1250%)       |
+     * | 12  | 2243.75e6 (500e6 * (1+348.75%)) | 500e6 | 348.75e6 (27.9% * 1250 * 1e6) | 1250               |
+     * | 300 | 6750e6 (500e6 * (1+1250%))      | 500e6 | 1250e6                        | 1250               |
+     */
+    function sow(uint256 beans, uint256 _morningTemperature, address account, bool abovePeg) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        // the amount of soil changes as a function of the morning auction;
-        // soil consumed increases as dutch auction passes
-        uint128 peas = s.f.soil;
-        if (s.season.abovePeg) {
-            uint256 scaledSoil = amount.mulDiv(
-                morningAuction().add(1e8), 
-                1e8,
-                LibPRBMath.Rounding.Up
-                );
-            /// @dev overflow can occur due to rounding up, 
-            /// but only occurs when all remaining soil is sown.
-            (, s.f.soil) = s.f.soil.trySub(uint128(scaledSoil)); 
-        } else {
-            // We can assume amount <= soil from getSowAmount when below peg
-            s.f.soil = s.f.soil - uint128(amount); 
+        
+        uint256 pods;
+        if (abovePeg) {
+            uint256 maxTemperature = uint256(s.w.t).mul(TEMPERATURE_PRECISION);
+            // amount sown is rounded up, because 
+            // 1: temperature is rounded down.
+            // 2: pods are rounded down.
+            beans = scaleSoilDown(beans, _morningTemperature, maxTemperature);
+            pods = beansToPods(beans, maxTemperature);
+        } 
+        
+        else {
+            pods = beansToPods(beans, _morningTemperature);
         }
-        return sowNoSoil(amount,peas,account);
 
+        (, s.f.soil) = s.f.soil.trySub(uint128(beans));
+
+        return sowNoSoil(account, beans, pods);
     }
 
-    function sowNoSoil(uint256 amount, uint256 _maxPeas, address account)
+    /**
+     * @dev Sows a new Plot, increments total Pods, updates Sow time.
+     */
+    function sowNoSoil(address account, uint256 beans, uint256 pods)
         internal
         returns (uint256)
     {
-        uint256 pods;
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if(s.season.abovePeg) {
-            pods = beansToPodsAbovePeg(amount,_maxPeas);
-        } else {
-            pods = beansToPods(amount,s.w.yield);
-        }
-        sowPlot(account, amount, pods);
+
+        _sowPlot(account, beans, pods);
         s.f.pods = s.f.pods.add(pods);
-        saveSowTime();
+        _saveSowTime();
+
         return pods;
     }
 
-    /// @dev function returns the weather scaled down
-    /// @notice based on the block delta
-    // precision level 1e6, as soil has 1e6 precision (1% = 1e6)
-    // the formula log2(A * BLOCK_ELAPSED_MAX + 1) is applied, where
-    // A = 2;
-    // MAX_BLOCK_ELAPSED = 25;
-    function morningAuction() internal view returns (uint256) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 delta = block.number.sub(s.season.sunriseBlock);
-        if (delta > 24) { // check most likely case first
-            return uint256(s.w.yield).mul(DECIMALS);
-        }
-        //Binary Search
-        if (delta < 13) {
-            if (delta < 7) { 
-                if (delta < 4) {
-                    if (delta < 2) {
-                        if (delta < 1) {
-                            return DECIMALS; // delta == 0, same block as sunrise
-                        }
-                        else return auctionMath(279415312704); // delta == 1
-                    }
-                    if (delta == 2) {
-                       return auctionMath(409336034395); // delta == 2
-                    }
-                    else return auctionMath(494912626048); // delta == 3
-                }
-                if (delta < 6) {
-                    if (delta == 4) {
-                        return auctionMath(558830625409);
-                    }
-                    else { // delta == 5
-                        return auctionMath(609868162219);
-                    }
-                }
-                else return auctionMath(652355825780); // delta == 6
-            }
-            if (delta < 10) {
-                if (delta < 9) {
-                    if (delta == 7) {
-                        return auctionMath(688751347100);
-                    }
-                    else { // delta == 8
-                        return auctionMath(720584687295);
-                    }
-                }
-                else return auctionMath(748873234524); // delta == 9
-            }
-            if (delta < 12) {
-                if (delta == 10) {
-                    return auctionMath(774327938752);
-                }
-                else{ // delta == 11
-                    return auctionMath(797465225780); 
-                }
-            }
-            else return auctionMath(818672068791); //delta == 12
-        } 
-        if (delta < 19){
-            if (delta < 16) {
-                if (delta < 15) {
-                    if (delta == 13) {
-                        return auctionMath(838245938114); 
-                    }
-                    else{ // delta == 14
-                        return auctionMath(856420437864);
-                    }
-                }
-                else return auctionMath(873382373802); //delta == 15
-            }
-            if (delta < 18) {
-                if (delta == 16) {
-                    return auctionMath(889283474924);
-                }
-                else{ // delta == 17
-                    return auctionMath(904248660443);
-                }
-            }
-            return auctionMath(918382006208); // delta == 18
-        }
-        if (delta < 22) {
-            if (delta < 21) {
-                if (delta == 19) {
-                    return auctionMath(931771138485); 
-                }
-                else{ // delta == 20
-                    return auctionMath(944490527707);
-                }
-            }
-            return auctionMath(956603996980); // delta == 21
-        }
-        if (delta <= 23){ 
-            if (delta == 22) {
-                return auctionMath(968166659804);
-            }
-            else { // delta == 23
-                return auctionMath(979226436102);
-            }
-        }
-        else {
-            return auctionMath(989825252096);
-        }
-    }
-
-    /// @dev scales down temperature, minimum 1e6 (unless temperature is 0%)
-    function auctionMath(uint256 a) private view returns (uint256) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 _yield  = s.w.yield;
-        if(_yield == 0) return 0; 
-        return _yield.mulDiv(a,1e6).max(DECIMALS);
-    }
-
-    function beansToPodsAbovePeg(uint256 beans, uint256 maxPeas) 
-        private 
-        view
-        returns (uint256) 
-    {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        if(s.f.soil == 0){ //all soil is sown, pods issued must equal peas.
-            return maxPeas;
-        } else {
-            /// @dev We round up as Beanstalk would rather issue too much pods than not enough.
-            return beans.add(
-                beans.mulDiv(
-                    morningAuction(),
-                    1e8,
-                    LibPRBMath.Rounding.Up
-                    )
-                );
-        }
-    }
-
-    function beansToPods(uint256 beans, uint256 weather)
-        private
-        pure
-        returns (uint256)
-    {
-        return beans.add(beans.mul(weather).div(100));
-    }
-
-    function sowPlot(
-        address account,
-        uint256 beans,
-        uint256 pods
-    ) private {
+    /**
+     * @dev Create a Plot.
+     */
+    function _sowPlot(address account, uint256 beans, uint256 pods) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.a[account].field.plots[s.f.pods] = pods;
         emit Sow(account, s.f.pods, beans, pods);
     }
 
-    function saveSowTime() private {
+    /** 
+     * @dev Stores the time elapsed from the start of the Season to the time
+     * at which Soil is "sold out", i.e. the remaining Soil is less than a 
+     * threshold `SOIL_SOLD_OUT_THRESHOLD`.
+     * 
+     * RATIONALE: Beanstalk utilizes the time elapsed for Soil to "sell out" to 
+     * gauge demand for Soil, which affects how the Temperature is adjusted. For
+     * example, if all Soil is Sown in 1 second vs. 1 hour, Beanstalk assumes 
+     * that the former shows more demand than the latter.
+     *
+     * `thisSowTime` represents the target time of the first Sow for the *next*
+     * Season to be considered increasing in demand.
+     * 
+     * `thisSowTime` should only be updated if:
+     *  (a) there is less than 1 Soil available after this Sow, and 
+     *  (b) it has not yet been updated this Season.
+     * 
+     * Note that:
+     *  - `s.f.soil` was decremented in the upstream {sow} function.
+     *  - `s.w.thisSowTime` is set to `type(uint32).max` during {sunrise}.
+     */
+    function _saveSowTime() private {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if (s.f.soil > 1e6 || s.w.nextSowTime < type(uint32).max) return;
-        s.w.nextSowTime = uint32(block.timestamp.sub(s.season.timestamp));
+
+        // s.f.soil is now the soil remaining after this Sow.
+        if (s.f.soil > SOIL_SOLD_OUT_THRESHOLD || s.w.thisSowTime < type(uint32).max) {
+            // haven't sold enough soil, or already set thisSowTime for this Season.
+            return;
+        }
+
+        s.w.thisSowTime = uint32(block.timestamp.sub(s.season.timestamp));
+    }
+
+    //////////////////// TEMPERATURE ////////////////////
+    
+    /**
+     * @dev Returns the temperature `s.w.t` scaled down based on the block delta.
+     * Precision level 1e6, as soil has 1e6 precision (1% = 1e6)
+     * the formula `log51(A * MAX_BLOCK_ELAPSED + 1)` is applied, where:
+     * `A = 2`
+     * `MAX_BLOCK_ELAPSED = 25`
+     */
+    function morningTemperature() internal view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 delta = block.number.sub(s.season.sunriseBlock);
+
+        // check most likely case first
+        if (delta > 24) {
+            return uint256(s.w.t).mul(TEMPERATURE_PRECISION);
+        }
+
+        // Binary Search
+        if (delta < 13) {
+            if (delta < 7) { 
+                if (delta < 4) {
+                    if (delta < 2) {
+                        // delta == 0, same block as sunrise
+                        if (delta < 1) {
+                            return TEMPERATURE_PRECISION;
+                        }
+                        // delta == 1
+                        else {
+                            return _scaleTemperature(279415312704);
+                        }
+                    }
+                    if (delta == 2) {
+                       return _scaleTemperature(409336034395);
+                    }
+                    else { // delta == 3
+                        return _scaleTemperature(494912626048);
+                    }
+                }
+                if (delta < 6) {
+                    if (delta == 4) {
+                        return _scaleTemperature(558830625409);
+                    }
+                    else { // delta == 5
+                        return _scaleTemperature(609868162219);
+                    }
+                }
+                else { // delta == 6
+                    return _scaleTemperature(652355825780); 
+                }
+            }
+            if (delta < 10) {
+                if (delta < 9) {
+                    if (delta == 7) {
+                        return _scaleTemperature(688751347100);
+                    }
+                    else { // delta == 8
+                        return _scaleTemperature(720584687295);
+                    }
+                }
+                else { // delta == 9
+                    return _scaleTemperature(748873234524); 
+                }
+            }
+            if (delta < 12) {
+                if (delta == 10) {
+                    return _scaleTemperature(774327938752);
+                }
+                else { // delta == 11
+                    return _scaleTemperature(797465225780); 
+                }
+            }
+            else { // delta == 12
+                return _scaleTemperature(818672068791); 
+            }
+        } 
+        if (delta < 19){
+            if (delta < 16) {
+                if (delta < 15) {
+                    if (delta == 13) {
+                        return _scaleTemperature(838245938114); 
+                    }
+                    else { // delta == 14
+                        return _scaleTemperature(856420437864);
+                    }
+                }
+                else { // delta == 15
+                    return _scaleTemperature(873382373802);
+                }
+            }
+            if (delta < 18) {
+                if (delta == 16) {
+                    return _scaleTemperature(889283474924);
+                }
+                else { // delta == 17
+                    return _scaleTemperature(904248660443);
+                }
+            }
+            else { // delta == 18
+                return _scaleTemperature(918382006208); 
+            }
+        }
+        if (delta < 22) {
+            if (delta < 21) {
+                if (delta == 19) {
+                    return _scaleTemperature(931771138485); 
+                }
+                else { // delta == 20
+                    return _scaleTemperature(944490527707);
+                }
+            } 
+            else { // delta = 21
+                return _scaleTemperature(956603996980); 
+            }
+        }
+        if (delta <= 23){ 
+            if (delta == 22) {
+                return _scaleTemperature(968166659804);
+            }
+            else { // delta == 23
+                return _scaleTemperature(979226436102);
+            }
+        }
+        else { // delta == 24
+            return _scaleTemperature(989825252096);
+        }
+    }
+
+    /**
+     * @param pct The percentage to scale down by, measured to 1e12.
+     * @return scaledTemperature The scaled temperature, measured to 1e8 = 100e6 = 100% = 1.
+     * @dev Scales down `s.w.t` and imposes a minimum of 1e6 (1%) unless 
+     * `s.w.t` is 0%.
+     */
+    function _scaleTemperature(uint256 pct) private view returns (uint256 scaledTemperature) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        uint256 maxTemperature = s.w.t;
+        if(maxTemperature == 0) return 0; 
+
+        scaledTemperature = LibPRBMath.max(
+            // To save gas, `pct` is pre-calculated to 12 digits. Here we
+            // perform the following transformation:
+            // (1e2)    maxTemperature
+            // (1e12)    * pct
+            // (1e6)     / TEMPERATURE_PRECISION
+            // (1e8)     = scaledYield
+            maxTemperature.mulDiv(
+                pct, 
+                TEMPERATURE_PRECISION,
+                LibPRBMath.Rounding.Up
+            ),
+            // Floor at TEMPERATURE_PRECISION (1%)
+            TEMPERATURE_PRECISION
+        );
+    }
+
+    /**
+     * @param beans The number of Beans to convert to Pods.
+     * @param _morningTemperature The current Temperature, measured to 1e8. 
+     * @dev Converts Beans to Pods based on `_morningTemperature`.
+     * 
+     * `pods = beans * (100e6 + _morningTemperature) / 100e6`
+     * `pods = beans * (1 + _morningTemperature / 100e6)`
+     *
+     * Beans and Pods are measured to 6 decimals.
+     * 
+     * 1e8 = 100e6 = 100% = 1.
+     */
+    function beansToPods(uint256 beans, uint256 _morningTemperature)
+        internal
+        pure
+        returns (uint256 pods)
+    {
+        pods = beans.mulDiv(
+            _morningTemperature.add(ONE_HUNDRED_PCT),
+            ONE_HUNDRED_PCT
+        );
+    }
+
+    /**
+     * @dev Scales Soil up when Beanstalk is above peg.
+     * `(1 + maxTemperature) / (1 + morningTemperature)`
+     */
+    function scaleSoilUp(
+        uint256 soil, 
+        uint256 maxTemperature,
+        uint256 _morningTemperature
+    ) internal pure returns (uint256) {
+        return soil.mulDiv(
+            maxTemperature.add(ONE_HUNDRED_PCT),
+            _morningTemperature.add(ONE_HUNDRED_PCT)
+        );
+    }
+    
+    /**
+     * @dev Scales Soil down when Beanstalk is above peg.
+     * 
+     * When Beanstalk is above peg, the Soil issued changes. Example:
+     * 
+     * If 500 Soil is issued when `s.w.t = 100e2 = 100%`
+     * At delta = 0: 
+     *  morningTemperature() = 1%
+     *  Soil = `500*(100 + 100%)/(100 + 1%)` = 990.09901 soil
+     *
+     * If someone sow'd ~495 soil, it's equilivant to sowing 250 soil at t > 25.
+     * Thus when someone sows during this time, the amount subtracted from s.f.soil
+     * should be scaled down.
+     * 
+     * Note: param ordering matches the mulDiv operation
+     */
+    function scaleSoilDown(
+        uint256 soil, 
+        uint256 _morningTemperature, 
+        uint256 maxTemperature
+    ) internal pure returns (uint256) {
+        return soil.mulDiv(
+            _morningTemperature.add(ONE_HUNDRED_PCT),
+            maxTemperature.add(ONE_HUNDRED_PCT),
+            LibPRBMath.Rounding.Up
+        );
+    }
+
+    /**
+     * @notice Returns the remaining Pods that could be issued this Season.
+     */
+    function remainingPods() internal view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        // Above peg: number of Pods is fixed, Soil adjusts
+        if(s.season.abovePeg) {
+            return beansToPods(
+                s.f.soil, // 1 bean = 1 soil
+                uint256(s.w.t).mul(TEMPERATURE_PRECISION) // 1e2 -> 1e8
+            );
+        } 
+        
+        // Below peg: amount of Soil is fixed, temperature adjusts
+        else {
+            return beansToPods(
+                s.f.soil, // 1 bean = 1 soil
+                morningTemperature()
+            );
+        }
     }
 }

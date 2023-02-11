@@ -10,7 +10,7 @@ import "~/beanstalk/AppStorage.sol";
  * @title InitBip33 re-initalizes the weather struct for BIP-33, for gas efficency  
  **/
 
-contract InitBip33 {
+contract InitBip33 {    
     AppStorage internal s;
     
     struct OldWeather {
@@ -18,7 +18,7 @@ contract InitBip33 {
         uint256 lastDSoil; // slot 2 
         uint96 lastSoilPercent; // gone
         uint32 lastSowTime; // slot 3
-        uint32 nextSowTime; // slot 3
+        uint32 thisSowTime; // slot 3
         uint32 yield; // slot 3
         bool didSowBelowMin; // no
         bool didSowFaster; // no
@@ -28,8 +28,8 @@ contract InitBip33 {
         uint256[2] x; //DEPRECATED
         uint128 lastDSoil;
         uint32 lastSowTime;
-        uint32 nextSowTime;
-        uint32 yield;
+        uint32 thisSowTime;
+        uint32 t;
     }
 
     function init() external {
@@ -41,8 +41,8 @@ contract InitBip33 {
         }
         newWeather.lastDSoil = uint128(oldWeather.lastDSoil);
         newWeather.lastSowTime = oldWeather.lastSowTime;
-        newWeather.nextSowTime = oldWeather.nextSowTime;
-        newWeather.yield = oldWeather.yield;
+        newWeather.thisSowTime = oldWeather.thisSowTime;
+        newWeather.t = oldWeather.yield;
         s.w = newWeather;
     }
 }

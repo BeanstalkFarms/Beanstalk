@@ -64,7 +64,7 @@ contract Silo is SiloExit {
         // Deposit Earned Beans
         LibTokenSilo.addDeposit(
             account,
-            C.beanAddress(),
+            C.BEAN,
             season(),
             beans,
             beans

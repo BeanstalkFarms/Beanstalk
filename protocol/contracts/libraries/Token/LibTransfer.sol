@@ -1,11 +1,5 @@
-/*
- SPDX-License-Identifier: MIT
-*/
+// SPDX-License-Identifier: MIT
 
-/**
- * @author publius
- * @title LibTransfer handles the recieving and sending of Tokens to/from internal Balances.
- **/
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
@@ -13,6 +7,11 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "../../interfaces/IBean.sol";
 import "./LibBalance.sol";
 
+/**
+ * @title LibTransfer
+ * @author Publius
+ * @notice Handles the recieving and sending of Tokens to/from internal Balances.
+ */
 library LibTransfer {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;

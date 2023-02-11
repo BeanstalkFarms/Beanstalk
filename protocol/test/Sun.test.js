@@ -65,23 +65,35 @@ describe('Sun', function () {
     await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '0');
   })
 
+  // 30000 beans were minted
+  // 10000 beans given to the silo
+  // 10000 beans given to pay back podholders
+  // 10000 beans given to fert holders
+  // current temperature: 1%
+  // soil issued with no coefficent: 10000/1.01 = 9900 
+  // soil issued with low podrate: 9900 * 1.5 = 14850
+  // soil issued with high podrate: 9000 * 0.5 = 4500
   it("delta B > 1, low pod rate", async function () {
+    await this.season.setAbovePegE(true);
     await this.field.incrementTotalPodsE('10000');
     this.result = await this.season.sunSunrise('30000', 0);
-    expect(await this.field.totalSoil()).to.be.equal('14852');
+    console.log("temperature:",await this.field.temperature()); 
+    console.log("yield:",await this.field.yield()); 
+    console.log("totalSoil:",await this.field.totalSoil()); 
+    expect(await this.field.totalSoil()).to.be.equal('14850');
   })
 
   it("delta B > 1, medium pod rate", async function () {
     await this.field.incrementTotalPodsE('10000');
     this.result = await this.season.sunSunrise('30000', 8);
-    expect(await this.field.totalSoil()).to.be.equal('9901'); 
+    expect(await this.field.totalSoil()).to.be.equal('9900'); 
   })
 
   it("delta B > 1, high pod rate", async function () {
     await this.field.incrementTotalPodsE('10000');
     this.result = await this.season.sunSunrise('30000', 25);
-    expect(await this.field.totalSoil()).to.be.equal('4951');
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '5000');
+    expect(await this.field.totalSoil()).to.be.equal('4950');
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '4950');
   })
 
   it("only silo", async function () {
@@ -93,10 +105,12 @@ describe('Sun', function () {
   })
 
   it("some harvestable", async function () {
+    // issue 15000 macro-pods
     await this.field.incrementTotalPodsE('15000');
+    // 10000 microBeans to Field, 10000 microBeans to Silo 
     this.result = await this.season.sunSunrise('20000', 8);
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '10000');
-    expect(await this.field.totalSoil()).to.be.equal('9901');
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '9900');
+    expect(await this.field.totalSoil()).to.be.equal('9900');
     await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '10000', '10000', '0');
     expect(await this.field.totalHarvestable()).to.be.equal('10000');
     expect(await this.silo.totalStalk()).to.be.equal('100000000');
@@ -105,9 +119,12 @@ describe('Sun', function () {
 
   it("all harvestable", async function () {
     await this.field.incrementTotalPodsE('5000');
+    await this.season.setAbovePegE(true);
     this.result = await this.season.sunSunrise('15000', 8);
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '5000');
-    expect(await this.field.totalSoil()).to.be.equal('4951');
+    // 5000 to barn, field, and silo
+    // 5000/1.01 = 4950
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '4950');
+    expect(await this.field.totalSoil()).to.be.equal('4950');
     await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '5000', '10000', '0');
     expect(await this.field.totalHarvestable()).to.be.equal('5000');
     expect(await this.silo.totalStalk()).to.be.equal('100000000');
@@ -118,8 +135,9 @@ describe('Sun', function () {
     await this.field.incrementTotalPodsE(to6('50'));
     await this.fertilizer.connect(owner).addFertilizerOwner('6274', '20', '0');
     this.result = await this.season.sunSunrise(to6('200'), 8);
-    expect(await this.field.totalSoil()).to.be.equal('49504951');
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, to6('50'));
+    
+    expect(await this.field.totalSoil()).to.be.equal('49504950');
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, 49504950);
     await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, to6('50'), to6('100'), to6('50'));
 
     expect(await this.fertilizer.isFertilizing()).to.be.equal(false);
@@ -139,8 +157,8 @@ describe('Sun', function () {
     await this.field.incrementTotalPodsE('500');
     await this.fertilizer.connect(owner).addFertilizerOwner('0', '1', '0');
     this.result = await this.season.sunSunrise('2000', 8);
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '500');
-    expect(await this.field.totalSoil()).to.be.equal('496');
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '495');
+    expect(await this.field.totalSoil()).to.be.equal('495');
     await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '500', '834', '666');
 
     expect(await this.fertilizer.isFertilizing()).to.be.equal(true);
@@ -157,11 +175,18 @@ describe('Sun', function () {
   })
 
   it("some harvestable, some fertilizable", async function () {
+    // increments pods by 1000
+    // temperature is 1% 
     await this.field.incrementTotalPodsE('1000');
+    // add 1 fertilizer owner, 1 fert (which is equal to 5 beans)
     await this.fertilizer.connect(owner).addFertilizerOwner('0', '1', '0')
+    //sunrise with 1500 beans 500 given to field, silo, and barn
     this.result = await this.season.sunSunrise('1500', 8);
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '500');
-    expect(await this.field.totalSoil()).to.be.equal('496');
+    // emit a event that 495 soil was issued at season 3 
+    // 500/1.01 = ~495 (rounded down)
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '495');
+
+    expect(await this.field.totalSoil()).to.be.equal('495');
 
     await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '500', '500', '500');
 
@@ -213,7 +238,7 @@ describe('Sun', function () {
 
     // Load some beans into the wallet's internal balance, and note the starting time
     // This also accomplishes initializing curve oracle
-    const initial = await this.season.gm(owner.address, INTERNAL);
+    const initial = await this.season.sunriseTo(owner.address, INTERNAL);
     const block = await ethers.provider.getBlock(initial.blockNumber);
     const START_TIME = block.timestamp;
 
@@ -234,7 +259,7 @@ describe('Sun', function () {
       await this.season.resetSeasonStart(secondsLate);
 
       /// SUNRISE
-      this.result = await this.season.gm(owner.address, mockVal[4]);
+      this.result = await this.season.sunriseTo(owner.address, mockVal[4]);
       
       // Verify that sunrise was profitable assuming a 50% average success rate
       
@@ -249,9 +274,8 @@ describe('Sun', function () {
       // The idea of failure adjusted cost is it includes the assumption that the call will
       // fail half the time (cost of one sunrise = 1 success + 1 fail)
       const PRIORITY = 5;
-      const FAIL_GAS_BUFFER = 35000;
       const blockBaseFee = await this.basefee.block_basefee() / Math.pow(10, 9);
-      const failAdjustedGasCostEth = (blockBaseFee + PRIORITY) * (gasUsed + FAIL_GAS_BUFFER) / Math.pow(10, 9);
+      const failAdjustedGasCostEth = (blockBaseFee + PRIORITY) * gasUsed / Math.pow(10, 9);
 
       // Get mocked eth/bean prices
       const ethPrice = mockVal[1] / Math.pow(10, 6);
