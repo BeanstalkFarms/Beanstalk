@@ -50,8 +50,6 @@ export const parseError = (error: any) => {
 
   const rawError = JSON.stringify(error)
 
-  errorMessage.rawError = rawError
-
   switch (error.code) {
     /// Common error codes
     case -32000:
@@ -89,10 +87,13 @@ export const parseError = (error: any) => {
             return errorMessage
           }
         }
+
+        errorMessage.rawError = rawError
         errorMessage.error = "Unhandled error."
         return errorMessage
       }
 
+      errorMessage.rawError = rawError
       errorMessage.error = "Unhandled error."
       return errorMessage
     
@@ -101,7 +102,7 @@ export const parseError = (error: any) => {
       errorMessage.error = 'You rejected the signature request.'
       return errorMessage
 
-    /// Unknown Error
+    /// Unknown Error (Ideally, we shouldn't be reaching this stage)
     default:
 
       for (const key in ERROR_STRINGS) {
@@ -141,11 +142,13 @@ export const parseError = (error: any) => {
             return errorMessage
           }
 
+          errorMessage.rawError = rawError
           errorMessage.error = ERROR_STRINGS[key]
           return errorMessage
         }
       }
 
+      errorMessage.rawError = rawError
       errorMessage.error = "Unhandled error."
       return errorMessage
   }

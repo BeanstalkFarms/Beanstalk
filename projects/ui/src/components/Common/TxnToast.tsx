@@ -1,9 +1,10 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import { ContractReceipt, ContractTransaction } from 'ethers';
 import toast from 'react-hot-toast';
-import { Box, Button, IconButton, Link, Typography } from '@mui/material';
+import { Box, IconButton, Link, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles'
 import ClearIcon from '@mui/icons-material/Clear';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import useChainConstant from '~/hooks/chain/useChainConstant';
 import { parseError } from '~/util';
 import { CHAIN_INFO } from '~/constants';
@@ -19,12 +20,9 @@ function dismissErrors(id?: any) {
 export function ToastAlert({ desc, hash, msg, rawError, id }: { desc?: string, hash?: string, msg?: string, rawError?: string, id?: any }) {
   const handleClick = useCallback(() => (id !== null ? dismissErrors(id) : dismissErrors()), [id]);
   const chainInfo = useChainConstant(CHAIN_INFO);
-  const [showRawError, setShowRawError] = useState(false)
   const theme = useTheme()
-  const commonStyles = { width: '100%', display: 'flex', alignItems: 'center' }
-  const errorStyles = { borderRadius: '0px 0px 8px 8px', boxShadow: '0 5px 5px rgba(0, 0, 0, 0.1), 0 3px 3px rgba(0, 0, 0, 0.05)', backgroundColor: "white" }
   return (
-    <Box sx={{ ...commonStyles, flexDirection: 'row' }}>
+    <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', flexDirection: 'row' }}>
       <Typography sx={{ pl: 1, pr: 2, flex: 1, textAlign: 'center' }}>
         <span>
           {desc}
@@ -44,21 +42,27 @@ export function ToastAlert({ desc, hash, msg, rawError, id }: { desc?: string, h
             }}
           >
           <div>{msg}</div>
-          {rawError && (
-            <Box
-              onClick={() => {navigator.clipboard.writeText(rawError)}}
-              sx={{
-                color: theme.palette.primary.main,
-                '&:hover': {color: theme.palette.primary.dark},
-                textDecoration: 'underline',
-                cursor: 'pointer'
-              }}
-            >Copy Error to Clipboard
-            </Box>
-          )}
           </Box>
         )}
       </Typography>
+      {rawError && (
+        <IconButton
+        sx={{
+          backgroundColor: 'transparent',
+          mr: 1,
+          width: '20px',
+          height: '20px',
+          '& svg': {
+            width: '18px',
+            height: '18px',
+          }
+        }}
+        size="small"
+        onClick={() => {navigator.clipboard.writeText(rawError)}}
+      >
+        <ContentCopyIcon />
+      </IconButton>
+      )}
       {msg && (
         <IconButton
           sx={{
