@@ -69,8 +69,15 @@ library C {
     address internal constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address internal constant UNIV3_ETH_USDC_POOL = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
 
+    // Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
+    address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
+
     function getSeasonPeriod() internal pure returns (uint256) {
         return CURRENT_SEASON_PERIOD;
+    }
+
+    function getBlockLengthSeconds() internal pure returns (uint256) {
+        return BLOCK_LENGTH_SECONDS;
     }
 
     function getChainId() internal pure returns (uint256) {
@@ -135,6 +142,10 @@ library C {
 
     function threeCrv() internal pure returns (IERC20) {
         return IERC20(THREE_CRV);
+    }
+
+    function UniV3EthUsdc() internal pure returns (address){
+        return UNIV3_ETH_USDC_POOL;
     }
 
     function fertilizer() internal pure returns (IFertilizer) {

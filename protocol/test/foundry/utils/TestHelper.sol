@@ -7,6 +7,7 @@ pragma abicoder v2;
 
 import "forge-std/console.sol";
 import "forge-std/Test.sol";
+import "./Strings.sol";
 
 import {Utils} from "test/foundry/utils/Utils.sol";
 
@@ -62,7 +63,12 @@ import "~/libraries/Token/LibTransfer.sol";
 
 import "~/C.sol";
 
+// FIXME: 
+// currently with all tests, we deploy every facet, even if its unused
+// 
 abstract contract TestHelper is Test {
+    using strings for *;
+    
     Utils internal utils;
   
     address payable[] internal users;

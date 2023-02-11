@@ -4,7 +4,6 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {C} from "../C.sol";
 import {IBean} from "../interfaces/IBean.sol";
 import {LibAppStorage} from "./LibAppStorage.sol";
 import {LibSafeMath32} from "./LibSafeMath32.sol";
@@ -154,10 +153,9 @@ library LibDibbler {
     /**
      * @dev Returns the temperature `s.w.t` scaled down based on the block delta.
      * Precision level 1e6, as soil has 1e6 precision (1% = 1e6)
-     * 
-     * The formula `log2(A * MAX_BLOCK_ELAPSED + 1)` is applied, where:
-     *  `A = 2`
-     *  `MAX_BLOCK_ELAPSED = 25`
+     * the formula `log51(A * MAX_BLOCK_ELAPSED + 1)` is applied, where:
+     * `A = 2`
+     * `MAX_BLOCK_ELAPSED = 25`
      */
     function morningTemperature() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();

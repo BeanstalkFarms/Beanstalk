@@ -147,4 +147,6 @@ contract SeasonFacet is Weather {
         emit Incentivization(account, incentiveAmount);
         return incentiveAmount;
     }
+
+
 }

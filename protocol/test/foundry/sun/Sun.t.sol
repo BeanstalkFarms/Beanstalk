@@ -14,6 +14,8 @@ contract SunTest is  Sun, TestHelper {
   using LibPRBMath for uint256;
   using LibSafeMath32 for uint32;
   
+  address private constant UNIV3_ETH_USDC_POOL = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
+
   function setUp() public {
     setupDiamond();
     // Mint beans
@@ -213,7 +215,7 @@ contract SunTest is  Sun, TestHelper {
   function testMockOraclePrice() public {
     MockUniswapV3Pool(C.UNIV3_ETH_USDC_POOL).setOraclePrice(1000e6,18);
     console.log("Eth Price is:", season.getEthPrice());
-    assertApproxEqRel(season.getEthPrice(),1000e6,0.01e18); //0.01% accuracy as ticks are spaced 0.01%
+    assertApproxEqRel(season.getEthPrice(), 1000e6, 0.01e18); //0.01% accuracy as ticks are spaced 0.01%
   }
 
   //helper
