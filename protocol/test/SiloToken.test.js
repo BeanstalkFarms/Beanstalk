@@ -1109,7 +1109,7 @@ describe('Silo Token', function () {
   })
 
   describe("Update Unripe Deposit", async function () {
-    describe.only("1 deposit, some", async function () {
+    describe("1 deposit, some", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
         await this.silo.connect(user).deposit(UNRIPE_BEAN, to6('5'), EXTERNAL)
@@ -1148,10 +1148,11 @@ describe('Silo Token', function () {
       });
     });
 
-    describe("1 deposit after 1 sesaon, all", async function () {
+    describe("1 deposit after 1 season, all", async function () {
       beforeEach(async function () {
+        await this.season.teleportSunrise(10);
         await this.silo.connect(user).deposit(UNRIPE_BEAN, to6('5'), EXTERNAL)
-        await this.silo.connect(user).mockUnripeBeanDeposit('2', to6('5'))
+        await this.silo.connect(user).mockUnripeBeanDeposit('10', to6('5'))
         
         await this.season.lightSunrise()
 
@@ -1160,7 +1161,9 @@ describe('Silo Token', function () {
           to6('5000').sub(to6('10000').mul(toBN(pru)).div(to18('1')))
         )
 
-        this.result = await this.silo.connect(user).enrootDeposit(UNRIPE_BEAN, '2', to6('10'));
+        const grownStalkPerBdv10 = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '10');
+        console.log('grownStalkPerBdv10: ', grownStalkPerBdv10);
+        this.result = await this.silo.connect(user).enrootDeposit(UNRIPE_BEAN, grownStalkPerBdv10, to6('10'));
       })
 
       it('properly updates the total balances', async function () {
@@ -1175,18 +1178,20 @@ describe('Silo Token', function () {
       });
 
       it('properly removes the crate', async function () {
-        let dep = await this.silo.getDeposit(userAddress, UNRIPE_BEAN, 2);
+        const grownStalkPerBdv10 = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '10');
+        let dep = await this.silo.getDeposit(userAddress, UNRIPE_BEAN, grownStalkPerBdv10);
         expect(dep[0]).to.equal(to6('10'))
         expect(dep[1]).to.equal(to6('5'))
       });
 
       it('emits Remove and Add Deposit event', async function () {
-        await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, 2, to6('10'));
-        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, 2, to6('10'), to6('5'));
+        const grownStalkPerBdv10 = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '10');
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, grownStalkPerBdv10, to6('10'));
+        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, grownStalkPerBdv10, to6('10'), to6('5'));
       });
     });
 
-    describe("2 deposit, all", async function () {
+    describe.only("2 deposit, all", async function () {
       beforeEach(async function () {
         await this.silo.connect(user).mockUnripeBeanDeposit('2', to6('5'))
 

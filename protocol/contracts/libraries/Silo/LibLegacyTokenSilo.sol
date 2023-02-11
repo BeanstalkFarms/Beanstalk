@@ -226,7 +226,7 @@ library LibLegacyTokenSilo {
         console.log('diff: ');
         console.logInt(diff);
         //using regular + here becauase we want to "overflow" (which for signed just means add negative)
-        season = uint256(int128(s.season.current)+diff).toUint32();
+        season = uint256(int128(C.siloV3StartSeason())+diff).toUint32();
         console.log('grownStalkPerBdvToSeason season: ', season);
         // season = seasonAs256.toUint32();
     }

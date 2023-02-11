@@ -397,10 +397,12 @@ contract SiloFacet is TokenSilo {
             grownStalkPerBdv,
             amount
         );
+        console.log('enrootDeposit ogBDV: ', ogBDV);
         emit RemoveDeposit(msg.sender, token, grownStalkPerBdv, amount); // Remove Deposit does not emit an event, while Add Deposit does.
 
         // Calculate the current BDV for `amount` of `token` and add a Deposit.
         uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
+        console.log('newBDV: ', newBDV);
         LibTokenSilo.addDepositToAccount(msg.sender, token, grownStalkPerBdv, amount, newBDV); // emits AddDeposit event
 
         // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
@@ -409,9 +411,10 @@ contract SiloFacet is TokenSilo {
         // Mint Stalk associated with the new BDV.
         uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalkPerBdv).add(
             LibSilo.stalkReward(grownStalkPerBdv,
-                                s.ss[address(token)].lastCumulativeGrownStalkPerBdv,
-                                uint128(newBDV))
+                                LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)),
+                                uint128(deltaBDV))
         );
+        console.log('deltaStalk: ', deltaStalk);
         LibSilo.mintStalk(msg.sender, deltaStalk);
     }
 
@@ -442,7 +445,7 @@ contract SiloFacet is TokenSilo {
         uint256 newStalk;
 
         //pulled these vars out because of "CompilerError: Stack too deep, try removing local variables."
-        int128 _lastCumulativeGrownStalkPerBdv = s.ss[address(token)].lastCumulativeGrownStalkPerBdv;
+        int128 _lastCumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)); //need for present season
         uint32 _stalkPerBdv = s.ss[token].stalkPerBdv;
 
         // Iterate through all grownStalkPerBdvs, redeposit the tokens with new BDV and
