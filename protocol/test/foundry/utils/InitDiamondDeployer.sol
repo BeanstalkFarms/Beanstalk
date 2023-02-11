@@ -250,9 +250,9 @@ abstract contract InitDiamondDeployer is Test {
         3000
       );
     bytes memory code = at(ethUsdc);
-    address targetAddr = C.UNIV3_ETH_USDC_POOL;
+    address targetAddr = UNIV3_ETH_USDC_POOL;
     vm.etch(targetAddr, code);
-    MockUniswapV3Pool(C.UNIV3_ETH_USDC_POOL).setOraclePrice(1000e6,18);
+    MockUniswapV3Pool(UNIV3_ETH_USDC_POOL).setOraclePrice(1000e6,18);
   }
 
   function _mockCurveMetapool() internal {

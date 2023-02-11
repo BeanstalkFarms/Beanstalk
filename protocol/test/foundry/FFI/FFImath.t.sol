@@ -5,9 +5,9 @@ pragma abicoder v2;
 import { LibDibbler } from "~/libraries/LibDibbler.sol";
 import { LibIncentive } from "~/libraries/LibIncentive.sol";
 import { LibPRBMath } from "~/libraries/LibPRBMath.sol";
-import {SafeMath} from "node_modules/@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "forge-std/Test.sol";
-import "node_modules/@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 
 /**
@@ -63,7 +63,7 @@ contract FFImathTest is Test {
      * @dev this copies the logic from {LibDibbler.morningTemperature()},
      * but allows us to set the temperature and block delta
      */
-    function morningTemperature(uint32 t, uint256 delta) internal view returns (uint256 _morningTemperature) {
+    function morningTemperature(uint32 t, uint256 delta) internal pure returns (uint256 _morningTemperature) {
         // check most likely case first
         if (delta > 24) {
             return uint256(t).mul(TEMPERATURE_PRECISION);
@@ -175,7 +175,7 @@ contract FFImathTest is Test {
         }
     }
 
-    function _scaleTemperature(uint32 t, uint256 pct) private view returns (uint256 scaledTemperature) {
+    function _scaleTemperature(uint32 t, uint256 pct) private pure returns (uint256 scaledTemperature) {
         uint256 maxTemperature = t;
         if(maxTemperature == 0) return 0; 
         return LibPRBMath.max(
