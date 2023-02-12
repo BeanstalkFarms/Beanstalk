@@ -47,3 +47,19 @@ export function emptyBigDecimalArray(length: i32): BigDecimal[] {
     for (let i = 2; i < length; i++) array.push(ZERO_BD)
     return array
 }
+
+export function deltaBigIntArray(current: BigInt[], prior: BigInt[]):BigInt[]{
+    let finalArray = emptyBigIntArray(current.length)
+    for (let i = 0; i < current.length; i++) {
+        finalArray[i] = current[i].minus(prior[i])
+    }
+    return finalArray
+}
+
+export function deltaBigDecimalArray(current: BigDecimal[], prior: BigDecimal[]):BigDecimal[]{
+    let finalArray = emptyBigDecimalArray(current.length)
+    for (let i = 0; i < current.length; i++) {
+        finalArray[i] = current[i].minus(prior[i])
+    }
+    return finalArray
+}
