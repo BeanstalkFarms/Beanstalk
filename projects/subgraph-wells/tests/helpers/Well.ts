@@ -1,12 +1,14 @@
 import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { newMockEvent } from "matchstick-as/assembly/index";
 import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Swap } from "../../generated/templates/Well/Well";
+import { CURRENT_BLOCK_TIMESTAMP } from "./Constants";
 
 export function createAddLiquidityEvent(well: Address, account: Address, lpAmountOut: BigInt, tokenAmountsIn: BigInt[]): AddLiquidity {
     let event = changetype<AddLiquidity>(newMockEvent())
 
     event.address = well
     event.transaction.from = account
+    event.block.timestamp = CURRENT_BLOCK_TIMESTAMP
     event.parameters = new Array()
 
     let param1 = new ethereum.EventParam("tokenAmountsIn", ethereum.Value.fromUnsignedBigIntArray(tokenAmountsIn))
@@ -27,6 +29,7 @@ export function createRemoveLiquidityEvent(well: Address, account: Address, lpAm
 
     event.address = well
     event.transaction.from = account
+    event.block.timestamp = CURRENT_BLOCK_TIMESTAMP
     event.parameters = new Array()
 
     let param1 = new ethereum.EventParam("lpAmountOut", ethereum.Value.fromUnsignedBigInt(lpAmountIn))
@@ -43,6 +46,7 @@ export function createRemoveLiquidityOneTokenEvent(well: Address, account: Addre
 
     event.address = well
     event.transaction.from = account
+    event.block.timestamp = CURRENT_BLOCK_TIMESTAMP
     event.parameters = new Array()
 
     let param1 = new ethereum.EventParam("lpAmountOut", ethereum.Value.fromUnsignedBigInt(lpAmountIn))
@@ -68,6 +72,7 @@ export function createSwapEvent(
 
     event.address = well
     event.transaction.from = account
+    event.block.timestamp = CURRENT_BLOCK_TIMESTAMP
     event.parameters = new Array()
 
     let param1 = new ethereum.EventParam("fromToken", ethereum.Value.fromAddress(fromToken))

@@ -3,13 +3,15 @@ import { loadOrCreateAccount } from "./utils/Account";
 import { emptyBigIntArray, ZERO_BI } from "./utils/Decimals";
 import { recordAddLiquidityEvent, recordRemoveLiquidityEvent, recordRemoveLiquidityOneEvent } from "./utils/Liquidity";
 import { recordSwapEvent } from "./utils/Swap";
-import { incrementWellDeposit, incrementWellSwap, incrementWellWithdraw, loadWell, updateWellLiquidityTokenBalance, updateWellTokenBalances, updateWellVolumes } from "./utils/Well";
+import { checkForSnapshot, incrementWellDeposit, incrementWellSwap, incrementWellWithdraw, loadWell, updateWellLiquidityTokenBalance, updateWellTokenBalances, updateWellVolumes } from "./utils/Well";
 
 export function handleAddLiquidity(event: AddLiquidity): void {
 
     loadOrCreateAccount(event.transaction.from)
     
     recordAddLiquidityEvent(event)
+
+    checkForSnapshot(event.address, event.block.timestamp, event.block.number)
 
     updateWellTokenBalances(event.address, event.params.tokenAmountsIn)
 
@@ -33,6 +35,8 @@ export function handleRemoveLiquidity(event: RemoveLiquidity): void {
     let balances = event.params.tokenAmountsOut
     for (let i = 0; i < balances.length; i++) balances[i] = ZERO_BI.minus(balances[i])
 
+    checkForSnapshot(event.address, event.block.timestamp, event.block.number)
+    
     updateWellTokenBalances(event.address, balances)
 
     updateWellLiquidityTokenBalance(event.address, ZERO_BI.minus(event.params.lpAmountIn))
@@ -56,6 +60,8 @@ export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): v
     // Flip to negative for updating well balances
     for (let i = 0; i < indexedBalances.length; i++) indexedBalances[i] = ZERO_BI.minus(indexedBalances[i])
 
+    checkForSnapshot(event.address, event.block.timestamp, event.block.number)
+    
     updateWellTokenBalances(event.address, indexedBalances)
 
     updateWellLiquidityTokenBalance(event.address, ZERO_BI.minus(event.params.lpAmountIn))
@@ -70,6 +76,8 @@ export function handleSwap(event: Swap): void {
 
     recordSwapEvent(event)
 
+    checkForSnapshot(event.address, event.block.timestamp, event.block.number)
+    
     updateWellVolumes(event.address, event.params.fromToken, event.params.amountIn, event.params.toToken, event.params.amountOut)
 
     incrementWellSwap(event.address)
