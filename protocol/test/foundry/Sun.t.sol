@@ -4,9 +4,6 @@ pragma experimental ABIEncoderV2;
 
 
 import { Sun } from "~/beanstalk/sun/SeasonFacet/Sun.sol";
-import { MockSeasonFacet } from "~/mocks/mockFacets/MockSeasonFacet.sol";
-import { MockSiloFacet } from "~/mocks/mockFacets/MockSiloFacet.sol";
-import { MockFieldFacet } from "~/mocks/mockFacets/MockFieldFacet.sol";
 
 import { Utils } from "./utils/Utils.sol";
 import "./utils/TestHelper.sol";

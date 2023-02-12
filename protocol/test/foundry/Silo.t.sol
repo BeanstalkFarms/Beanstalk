@@ -29,6 +29,6 @@ contract SiloTest is MockSiloFacet, TestHelper {
         IERC20(C.bean()).approve(diamond, uint256(-1));
     }
     function testAAA() public {
-        console.log("testAAA");
+        
     }
 }
