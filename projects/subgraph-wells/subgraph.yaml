@@ -6,9 +6,9 @@ dataSources:
     name: Aquifer
     network: mainnet
     source:
-      address: "0xF6a8aD553b265405526030c2102fda2bDcdDC177"
+      address: "0xD1760AA0FCD9e64bA4ea43399Ad789CFd63C7809"
       abi: Aquifer
-      startBlock: 16200000
+      startBlock: 16578800
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -19,7 +19,7 @@ dataSources:
         - name: Aquifer
           file: ./abis/Aquifer.json
       eventHandlers:
-        - event: BoreWell(address,address[],(address,bytes),(address,bytes)[],address)
+        - event: BoreWell(address,address,address[],(address,bytes),(address,bytes)[],bytes)
           handler: handleBoreWell
       file: ./src/templates/AquiferHandler.ts
 templates:
