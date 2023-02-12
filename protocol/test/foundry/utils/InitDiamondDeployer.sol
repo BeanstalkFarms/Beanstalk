@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import "forge-std/console2.sol";
 import {Utils} from "./Utils.sol";
 
+
 // Diamond setup
 import {Diamond} from "~/beanstalk/Diamond.sol";
 import {IDiamondCut} from "~/interfaces/IDiamondCut.sol";
@@ -48,6 +49,8 @@ import {MockFertilizerFacet} from "~/mocks/mockFacets/MockFertilizerFacet.sol";
 import {MockToken} from "~/mocks/MockToken.sol";
 import {MockUnripeFacet} from "~/mocks/mockFacets/MockUnripeFacet.sol";
 import {Mock3Curve} from "~/mocks/curve/Mock3Curve.sol";
+import {MockUniswapV3Pool} from "~/mocks/uniswap/MockUniswapV3Pool.sol";
+import {MockUniswapV3Factory} from "~/mocks/uniswap/MockUniswapV3Factory.sol";
 import {MockCurveFactory} from "~/mocks/curve/MockCurveFactory.sol";
 import {MockCurveZap} from "~/mocks/curve/MockCurveZap.sol";
 import {MockMeta3Curve} from "~/mocks/curve/MockMeta3Curve.sol";
@@ -152,6 +155,7 @@ abstract contract InitDiamondDeployer is Test {
     //_mockCurveMetapool();
     _mockUnripe();
     //_mockFertilizer();
+    _mockUniswap();
 
     // create diamond    
     d = new Diamond(deployer);
@@ -192,7 +196,7 @@ abstract contract InitDiamondDeployer is Test {
   }
 
   function _mockToken(string memory _tokenName, address _tokenAddress) internal returns (MockToken) {
-   // console.log("Mock token: %s @ %s", _tokenName, _tokenAddress);
+    console.log("Mock token: %s @ %s", _tokenName, _tokenAddress);
     return MockToken(_etch("MockToken.sol", _tokenAddress));
   }
 
@@ -210,9 +214,10 @@ abstract contract InitDiamondDeployer is Test {
 
   function _mockCurve() internal {
     MockToken crv3 = _mockToken("3CRV", THREE_CRV);
-
+    MockToken(crv3).setDecimals(18);
     //
     Mock3Curve pool3 = Mock3Curve(_etch("Mock3Curve.sol", C.curve3PoolAddress())); // 3Curve = 3Pool
+    Mock3Curve(pool3).set_virtual_price(1);
 
     //
     address STABLE_FACTORY = 0xB9fC157394Af804a3578134A6585C0dc9cc990d4;
@@ -222,8 +227,9 @@ abstract contract InitDiamondDeployer is Test {
     // address CRYPTO_REGISTRY = 0x8F942C20D02bEfc377D41445793068908E2250D0;
     address CURVE_REGISTRY = 0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5;
     _etch("MockToken.sol", CURVE_REGISTRY); // why this interface?
-    stableFactory.set_coins(C.curveMetapoolAddress(), [
-      C.beanAddress(),
+    address CURVE_BEAN_METAPOOL = 0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49;
+    stableFactory.set_coins(CURVE_BEAN_METAPOOL, [
+      address(C.bean()),
       THREE_CRV,
       address(0),
       address(0)
@@ -233,18 +239,34 @@ abstract contract InitDiamondDeployer is Test {
     MockCurveZap curveZap = MockCurveZap(_etch("MockCurveZap.sol", C.curveZapAddress()));
     curveZap.approve();
   }
+  
+  function _mockUniswap() internal {
+    //address UNIV3_FACTORY = 0x1F98431c8aD98523631AE4a59f267346ea31F984; 
+    address UNIV3_ETH_USDC_POOL = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
+    MockUniswapV3Factory uniFactory = MockUniswapV3Factory(new MockUniswapV3Factory());
+    address ethUsdc = 
+      uniFactory.createPool(
+        0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,//weth
+        address(C.usdc()),//usdc
+        3000
+      );
+    bytes memory code = at(ethUsdc);
+    address targetAddr = UNIV3_ETH_USDC_POOL;
+    vm.etch(targetAddr, code);
+    MockUniswapV3Pool(UNIV3_ETH_USDC_POOL).setOraclePrice(1000e6,18);
+  }
 
   function _mockCurveMetapool() internal {
     MockMeta3Curve p = MockMeta3Curve(_etch("MockMeta3Curve.sol", C.curveMetapoolAddress()));
-    p.init(C.beanAddress(), THREE_CRV, C.curve3PoolAddress());
+    p.init(address(C.bean()), THREE_CRV, C.curve3PoolAddress());
     p.set_A_precise(1000);
     p.set_virtual_price(1 wei);
   }
 
   function _mockUnripe() internal {
-    MockToken urbean = _mockToken("Unripe BEAN", C.unripeBeanAddress());
+    MockToken urbean = _mockToken("Unripe BEAN", C.UNRIPE_BEAN);
     urbean.setDecimals(6);
-    _mockToken("Unripe BEAN:3CRV", C.unripeLPAddress());
+    _mockToken("Unripe BEAN:3CRV", C.UNRIPE_LP);
   }
 
   function _printAddresses() internal view {
