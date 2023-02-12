@@ -40,13 +40,13 @@ export const tokenResult = (_token: Token | ChainConstant<Token>) => {
  * @FIXME improve parsing
  */
 interface Error {
-  error?: string,
+  message: string,
   rawError?: string,
 }
 
 export const parseError = (error: any) => {
 
-  const errorMessage: Error = {}
+  const errorMessage: Error = {message: ''}
 
   const rawError = JSON.stringify(error)
 
@@ -59,19 +59,19 @@ export const parseError = (error: any) => {
     case 'CALL_EXCEPTION':
 
       if (error.reason) {
-        errorMessage.error = error.reason.replace('execution reverted: ', '')
+        errorMessage.message = error.reason.replace('execution reverted: ', '')
         return errorMessage
       }
       
       if (error.data && error.data.message) {
-        errorMessage.error = error.data.message.replace('execution reverted: ', '')
+        errorMessage.message = error.data.message.replace('execution reverted: ', '')
         return errorMessage
       }
 
       if (error.message) {
         if (!error.message.includes("RPC '"))
         {
-          errorMessage.error = `${error.message}.`
+          errorMessage.message = `${error.message}.`
           return errorMessage
         }
         else
@@ -80,26 +80,27 @@ export const parseError = (error: any) => {
           const nestedError = JSON.parse(fixedString)
           if (nestedError) {
             if (error.code == -32603) {
-            errorMessage.error = `${nestedError.value.data.message}.`
+            errorMessage.message = `${nestedError.value.data.message}.`
             return errorMessage
             }
-            errorMessage.error = `${nestedError.value.message}.`
+            errorMessage.message = `${nestedError.value.message}.`
             return errorMessage
           }
         }
 
         errorMessage.rawError = rawError
-        errorMessage.error = "Unhandled error."
+        errorMessage.message = "Unhandled error."
         return errorMessage
       }
 
       errorMessage.rawError = rawError
-      errorMessage.error = "Unhandled error."
+      errorMessage.message = "Unhandled error."
       return errorMessage
     
     /// MetaMask - RPC Error: MetaMask Tx Signature: User denied transaction signature.
     case 4001:
-      errorMessage.error = 'You rejected the signature request.'
+    case 'ACTION_REJECTED':
+      errorMessage.message = 'You rejected the signature request.'
       return errorMessage
 
     /// Unknown Error (Ideally, we shouldn't be reaching this stage)
@@ -110,46 +111,46 @@ export const parseError = (error: any) => {
         {
           if (key == "CALL_EXCEPTION" && error.reason)
           {
-            errorMessage.error = `Call Exception: ${error.reason}`
+            errorMessage.message = `Call Exception: ${error.reason}`
             return errorMessage
           }
 
           if (key == "UNPREDICTABLE_GAS_LIMIT" && error.reason)
           {
-            errorMessage.error = `Transaction Reverted: ${error.reason}`
+            errorMessage.message = `Transaction Reverted: ${error.reason}`
             return errorMessage
           }
 
           if (key == "TRANSACTION_REPLACED" && error.reason)
           {
             if (error.reason == "cancelled") {
-              errorMessage.error = "Transaction cancelled."
+              errorMessage.message = "Transaction cancelled."
               return errorMessage
             }
             if (error.reason == "replaced") {
-              errorMessage.error = "Transaction replaced by one with a higher gas price."
+              errorMessage.message = "Transaction replaced by one with a higher gas price."
               return errorMessage
             }
             if (error.reason == "repriced") {
-              errorMessage.error = "Transaction repriced."
+              errorMessage.message = "Transaction repriced."
               return errorMessage
             }
           }
 
           if (key == "UNSUPPORTED_OPERATION" && error.reason)
           {
-            errorMessage.error = `Unsupported Operation: ${error.reason}`
+            errorMessage.message = `Unsupported Operation: ${error.reason}`
             return errorMessage
           }
 
           errorMessage.rawError = rawError
-          errorMessage.error = ERROR_STRINGS[key]
+          errorMessage.message = ERROR_STRINGS[key]
           return errorMessage
         }
       }
 
       errorMessage.rawError = rawError
-      errorMessage.error = "Unhandled error."
+      errorMessage.message = "Unhandled error."
       return errorMessage
   }
 };

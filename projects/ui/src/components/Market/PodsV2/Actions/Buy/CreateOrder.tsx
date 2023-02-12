@@ -469,7 +469,7 @@ const CreateOrder: FC<{}> = () => {
         txToast.success(receipt);
         formActions.resetForm();
       } catch (err) {
-        txToast?.error(err) || toast.error(parseError(err));
+        txToast?.error(err) || toast.error(parseError(err).message);
         console.error(err);
       }
     },

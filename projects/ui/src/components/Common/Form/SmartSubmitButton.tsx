@@ -133,7 +133,7 @@ const SmartSubmitButton : FC<{
       if (refetchAllowances) await refetchAllowances();
       txToast.success(receipt);
     } catch (err) {
-      txToast?.error(err) || toast.error(parseError(err));
+      txToast?.error(err) || toast.error(parseError(err).message);
     } finally {
       setFieldValue('approving', undefined);
     }

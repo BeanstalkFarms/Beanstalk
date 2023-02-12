@@ -417,7 +417,7 @@ const Buy : FC<{}> = () => {
       formActions.resetForm();
     } catch (err) {
       // this sucks
-      txToast ? txToast.error(err) : toast.error(parseError(err));
+      txToast ? txToast.error(err) : toast.error(parseError(err).message);
       console.error(err);
     }
   }, [beanstalk, account, Usdc, farm.contracts.curve.zap.callStatic, farm.contracts.curve.pools.beanCrv3.address, refetchFertilizer, refetchBalances, refetchAllowances, fertContract.address, Bean, Eth, middleware]);

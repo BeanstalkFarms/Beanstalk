@@ -221,7 +221,7 @@ const Rinse : FC<{ quick?: boolean }> = ({ quick }) => {
         }
       });
     } catch (err) {
-      txToast ? txToast.error(err) : toast.error(parseError(err));
+      txToast ? txToast.error(err) : toast.error(parseError(err).message);
     }
   }, [
     beanstalk,

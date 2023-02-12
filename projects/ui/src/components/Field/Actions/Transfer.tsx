@@ -172,7 +172,7 @@ const Transfer: FC<{}> = () => {
       txToast.success(receipt);
       formActions.resetForm();
     } catch (e) {
-      txToast ? txToast.error(e) : toast.error(parseError(e));
+      txToast ? txToast.error(e) : toast.error(parseError(e).message);
     }
   }, [
     account,

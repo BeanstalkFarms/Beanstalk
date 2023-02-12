@@ -161,7 +161,7 @@ export default class TransactionToast {
     toast.error(
       <ToastAlert
         desc={this.messages.error}
-        msg={msg.error}
+        msg={msg.message}
         rawError={msg.rawError}
         id={this.toastId}
       />,

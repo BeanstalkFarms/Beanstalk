@@ -161,7 +161,7 @@ const PickBeansDialog: FC<{
         }
       } catch (err) {
         console.error(err);
-        toast.error(parseError(err));
+        toast.error(parseError(err).message);
       }
     })();
   }, [account, beanstalk, open, urBean.address, urBeanCRV3.address]);

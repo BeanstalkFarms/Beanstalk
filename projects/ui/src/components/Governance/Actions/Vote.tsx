@@ -295,7 +295,7 @@ const Vote: FC<{
         txToast.success();
       } catch (err) {
         console.error(err);
-        txToast ? txToast.error(err) : toast.error(parseError(err));
+        txToast ? txToast.error(err) : toast.error(parseError(err).message);
         formActions.setSubmitting(false);
       }
     },

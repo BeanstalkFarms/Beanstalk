@@ -250,7 +250,7 @@ const Chop: FC<{}> = () => {
         txToast.success(receipt);
         formActions.resetForm();
       } catch (err) {
-        txToast ? txToast.error(err) : toast.error(parseError(err));
+        txToast ? txToast.error(err) : toast.error(parseError(err).message);
         formActions.setSubmitting(false);
       }
     },

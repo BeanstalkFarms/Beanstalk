@@ -439,7 +439,7 @@ const FillListingForm : FC<{
       formActions.resetForm();
     } catch (err) {
       console.error(err);
-      txToast?.error(err) || toast.error(parseError(err));
+      txToast?.error(err) || toast.error(parseError(err).message);
     } finally {
       formActions.setSubmitting(false);
     }
