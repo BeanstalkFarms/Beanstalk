@@ -43,16 +43,14 @@ describe('Convert', function () {
     await this.bean.connect(user2).approve(this.silo.address, '100000000000'); 
     await this.siloToken.connect(user).approve(this.silo.address, '100000000000');
     await this.siloToken.mint(userAddress, '10000');
-    console.log('start season: ', await this.season.season());
-    console.log('totalstalk 2: ', await this.silo.totalStalk());
+    await this.season.teleportSunrise(10);
     await this.season.siloSunrise(0);
-    console.log('totalstalk 3: ', await this.silo.totalStalk());
+
     await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL);
-    console.log('totalstalk 3a: ', await this.silo.totalStalk());
+
     await this.season.siloSunrise(0);
-    console.log('totalstalk 4: ', await this.silo.totalStalk());
+
     await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL); //something about this deposit adds extra stalk
-    console.log('totalstalk 5: ', await this.silo.totalStalk());
   });
 
   beforeEach(async function () {
@@ -71,8 +69,8 @@ describe('Convert', function () {
 
       it('crate balance too low', async function () {
         //params are token, grownStalkPerBdv, amounts, maxtokens
-        // await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['0'], ['150'], '150')).to.be.revertedWith('Silo: Crate balance too low.') //TODOSEEDS write a test that reverts with Silo: Crate balance too low.
-        await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['0'], ['150'], '150')).to.be.revertedWith('Must line up with season')
+        await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['0'], ['150'], '150')).to.be.revertedWith('Silo: Crate balance too low.') //TODOSEEDS write a test that reverts with Silo: Crate balance too low.
+        // await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['0'], ['150'], '150')).to.be.revertedWith('Must line up with season')
       });
 
       it('not enough removed', async function () {
@@ -283,9 +281,6 @@ describe('Convert', function () {
 
     describe('Deposit Tokens more grown', async function () {
       beforeEach(async function () {
-        //current season
-        console.log('this.season.season(): ', await this.season.season());
-        
         this.result = await this.convert.connect(user2).depositForConvertE(this.siloToken.address, '100', '100', '250');
       });
 

@@ -30,9 +30,6 @@ describe('Silo', function () {
     await this.silo.mow(userAddress, this.bean.address);
     this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
     this.result = await this.silo.connect(user2).deposit(this.bean.address, to6('1000'), EXTERNAL)
-
-    console.log('current season: ', await this.season.season());
-    console.log('deposited in cumulativeGrownStalkPerBdv: ', await this.silo.cumulativeGrownStalkPerBdv(this.bean.address));
   });
 
   beforeEach(async function () {
