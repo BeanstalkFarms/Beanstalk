@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.7.6;
+pragma experimental ABIEncoderV2;
+
 
 import { Sun } from "~/beanstalk/sun/SeasonFacet/Sun.sol";
 import { MockSeasonFacet } from "~/mocks/mockFacets/MockSeasonFacet.sol";
