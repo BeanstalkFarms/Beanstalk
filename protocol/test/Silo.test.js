@@ -11,6 +11,7 @@ let userAddress, ownerAddress, user2Address;
 
 describe('Silo', function () {
   before(async function () {
+
     [owner,user,user2] = await ethers.getSigners();
     userAddress = user.address;
     user2Address = user2.address;
@@ -18,6 +19,7 @@ describe('Silo', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
+    await this.season.teleportSunrise(10);
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('Bean', BEAN);
     await this.season.lightSunrise();
