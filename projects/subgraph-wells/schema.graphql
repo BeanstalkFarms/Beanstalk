@@ -54,19 +54,19 @@ type Pump @entity {
 }
 
 type Well @entity {
-  " Smart contract address of the pool "
+  " Smart contract address of the well "
   id: Bytes!
 
-  " The aquifer this pool belongs to "
+  " The aquifer this well belongs to "
   aquifer: Aquifer!
 
-  " Name of liquidity pool (e.g. Curve.fi DAI/USDC/USDT) "
+  " Name of liquidity well (e.g. Curve.fi DAI/USDC/USDT) "
   name: String
 
-  " Symbol of liquidity pool (e.g. 3CRV) "
+  " Symbol of liquidity well (e.g. 3CRV) "
   symbol: String
 
-  " Tokens that need to be deposited to take a position in protocol. e.g. WETH and USDC to deposit into the WETH-USDC pool. Array to account for multi-asset pools like Curve and Balancer "
+  " Tokens that need to be deposited to take a position in protocol. e.g. WETH and USDC to deposit into the WETH-USDC well. Array to account for multi-asset wells like Curve and Balancer "
   # Check for forced indexing of tokens
   tokens: [Token!]!
 
@@ -136,26 +136,26 @@ type Well @entity {
 
   ##### Snapshots #####
 
-  " Liquidity pool daily snapshots "
+  " Liquidity well daily snapshots "
   dailySnapshots: [WellDailySnapshot!]! @derivedFrom(field: "well")
 
-  " Liquidity pool hourly snapshots "
+  " Liquidity well hourly snapshots "
   hourlySnapshots: [WellHourlySnapshot!]! @derivedFrom(field: "well")
 
   # ##### Events #####
 
-  " All deposit (add liquidity) events occurred in this pool "
+  " All deposit (add liquidity) events occurred in this well "
   deposits: [Deposit!]! @derivedFrom(field: "well")
 
-  " All withdraw (remove liquidity) events occurred in this pool "
+  " All withdraw (remove liquidity) events occurred in this well "
   withdraws: [Withdraw!]! @derivedFrom(field: "well")
 
-  " All trade (swap) events occurred in this pool "
+  " All trade (swap) events occurred in this well "
   swaps: [Swap!]! @derivedFrom(field: "well")
 }
 
 type WellDailySnapshot @entity {
-  " {Smart contract address of the pool}-{ # of days since Unix epoch time } "
+  " {Smart contract address of the well}-{ # of days since Unix epoch time } "
   id: Bytes!
 
   " Number of hours since Unix epoch time "
@@ -226,7 +226,7 @@ type WellDailySnapshot @entity {
 }
 
 type WellHourlySnapshot @entity {
-  " {Smart contract address of the pool}-{ # of days since Unix epoch time } "
+  " {Smart contract address of the well}-{ # of days since Unix epoch time } "
   id: Bytes!
 
   " Number of hours since Unix epoch time "
@@ -346,13 +346,13 @@ type Deposit @entity(immutable: true) {
   " Amount of liquidity tokens minted "
   liquidity: BigInt!
 
-  " Input tokens of the pool. E.g. WETH and USDC to a WETH-USDC pool "
+  " Input tokens of the well. E.g. WETH and USDC to a WETH-USDC well "
   tokens: [Token!]!
 
   " Amount of input tokens in the token's native unit "
   reserves: [BigInt!]!
 
-  " USD-normalized value of the transaction of the underlying (e.g. sum of tokens deposited into a pool) "
+  " USD-normalized value of the transaction of the underlying (e.g. sum of tokens deposited into a well) "
   amountUSD: BigDecimal!
 }
 
@@ -397,13 +397,13 @@ type Withdraw @entity(immutable: true) {
   " Amount of liquidity tokens burned "
   liquidity: BigInt!
 
-  " Input tokens of the pool (not input tokens of the event/transaction). E.g. WETH and USDC from a WETH-USDC pool "
+  " Input tokens of the well (not input tokens of the event/transaction). E.g. WETH and USDC from a WETH-USDC well "
   tokens: [Token!]!
 
   " Amount of input tokens in the token's native unit "
   reserves: [BigInt!]!
 
-  " USD-normalized value of the transaction of the underlying (e.g. sum of tokens withdrawn from a pool) "
+  " USD-normalized value of the transaction of the underlying (e.g. sum of tokens withdrawn from a well) "
   amountUSD: BigDecimal!
 }
 
