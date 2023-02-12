@@ -1,6 +1,8 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts"
 
 export const WELL_ENTITY_TYPE = "Well"
+export const WELL_DAILY_ENTITY_TYPE = "WellDailySnapshot"
+export const WELL_HOURLY_ENTITY_TYPE = "WellHourlySnapshot"
 export const SWAP_ENTITY_TYPE = "Swap"
 export const ACCOUNT_ENTITY_TYPE = "Account"
 export const DEPOSIT_ENTITY_TYPE = "Deposit"
@@ -18,3 +20,4 @@ export const WELL_LP_AMOUNT = BigInt.fromI64(<i64>(10 * (10 ** 18)))
 
 export const SWAP_ACCOUNT = Address.fromString('0x1234567890abcdef1234567890abcdef12345678')
 
+export const CURRENT_BLOCK_TIMESTAMP = BigInt.fromI32(1676229656)
