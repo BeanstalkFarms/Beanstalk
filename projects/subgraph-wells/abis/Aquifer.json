@@ -1,254 +1,127 @@
 [
     {
-        "inputs": [],
-        "stateMutability": "nonpayable",
-        "type": "constructor"
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
     },
     {
-        "anonymous": false,
-        "inputs": [
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "well",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "implementation",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "contract IERC20[]",
+          "name": "tokens",
+          "type": "address[]"
+        },
+        {
+          "components": [
             {
-                "indexed": false,
-                "internalType": "address",
-                "name": "well",
-                "type": "address"
+              "internalType": "address",
+              "name": "target",
+              "type": "address"
             },
             {
-                "indexed": false,
-                "internalType": "contract IERC20[]",
-                "name": "tokens",
-                "type": "address[]"
-            },
-            {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "target",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "bytes",
-                        "name": "data",
-                        "type": "bytes"
-                    }
-                ],
-                "indexed": false,
-                "internalType": "struct Call",
-                "name": "wellFunction",
-                "type": "tuple"
-            },
-            {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "target",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "bytes",
-                        "name": "data",
-                        "type": "bytes"
-                    }
-                ],
-                "indexed": false,
-                "internalType": "struct Call[]",
-                "name": "pumps",
-                "type": "tuple[]"
-            },
-            {
-                "indexed": false,
-                "internalType": "address",
-                "name": "auger",
-                "type": "address"
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
             }
-        ],
-        "name": "BoreWell",
-        "type": "event"
+          ],
+          "indexed": false,
+          "internalType": "struct Call",
+          "name": "wellFunction",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            }
+          ],
+          "indexed": false,
+          "internalType": "struct Call[]",
+          "name": "pumps",
+          "type": "tuple[]"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes",
+          "name": "wellData",
+          "type": "bytes"
+        }
+      ],
+      "name": "BoreWell",
+      "type": "event"
     },
     {
-        "inputs": [
-            {
-                "internalType": "contract IERC20[]",
-                "name": "tokens",
-                "type": "address[]"
-            },
-            {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "target",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "bytes",
-                        "name": "data",
-                        "type": "bytes"
-                    }
-                ],
-                "internalType": "struct Call",
-                "name": "wellFunction",
-                "type": "tuple"
-            },
-            {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "target",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "bytes",
-                        "name": "data",
-                        "type": "bytes"
-                    }
-                ],
-                "internalType": "struct Call[]",
-                "name": "pumps",
-                "type": "tuple[]"
-            },
-            {
-                "internalType": "contract IAuger",
-                "name": "auger",
-                "type": "address"
-            }
-        ],
-        "name": "boreWell",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "well",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "implementation",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "constructorArgs",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "initFunctionCall",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "salt",
+          "type": "bytes32"
+        }
+      ],
+      "name": "boreWell",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "well",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
-        "inputs": [
-            {
-                "internalType": "contract IERC20",
-                "name": "token0",
-                "type": "address"
-            },
-            {
-                "internalType": "contract IERC20",
-                "name": "token1",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "i",
-                "type": "uint256"
-            }
-        ],
-        "name": "getWellBy2Tokens",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "well",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "index",
-                "type": "uint256"
-            }
-        ],
-        "name": "getWellByIndex",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "well",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "contract IERC20[]",
-                "name": "tokens",
-                "type": "address[]"
-            },
-            {
-                "internalType": "uint256",
-                "name": "i",
-                "type": "uint256"
-            }
-        ],
-        "name": "getWellByNTokens",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "well",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "contract IERC20",
-                "name": "token0",
-                "type": "address"
-            },
-            {
-                "internalType": "contract IERC20",
-                "name": "token1",
-                "type": "address"
-            }
-        ],
-        "name": "getWellsBy2Tokens",
-        "outputs": [
-            {
-                "internalType": "address[]",
-                "name": "wells",
-                "type": "address[]"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "contract IERC20[]",
-                "name": "tokens",
-                "type": "address[]"
-            }
-        ],
-        "name": "getWellsByNTokens",
-        "outputs": [
-            {
-                "internalType": "address[]",
-                "name": "wells",
-                "type": "address[]"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "numberOfWells",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "well",
+          "type": "address"
+        }
+      ],
+      "name": "wellImplementation",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "implementation",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
     }
-]
+  ]

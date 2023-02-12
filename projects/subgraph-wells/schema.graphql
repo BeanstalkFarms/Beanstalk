@@ -27,8 +27,8 @@ type Aquifer @entity(immutable: true) {
   " Smart contract address of the aquifer "
   id: Bytes!
 
-  " Augers used by this aquifer "
-  augers: [Bytes!]!
+  " Wells deployed by this aquifer "
+  wells: [Well!]! @derivedFrom(field: "aquifer")
 }
 
 type WellFunction @entity {
@@ -76,8 +76,8 @@ type Well @entity {
   " Pumps associated with this well "
   pumps: [Pump!]! @derivedFrom(field: "well")
 
-  " The auger used to deploy this well "
-  auger: Bytes
+  " The well implementation used to deploy this well "
+  implementation: Bytes!
 
   " Creation timestamp "
   createdTimestamp: BigInt!

@@ -7,13 +7,7 @@ import { createWell, loadOrCreateWellFunction } from '../utils/Well'
 
 export function handleBoreWell(event: BoreWell): void {
 
-    let aquifer = loadOrCreateAquifer(event.address)
-    if (aquifer.augers.indexOf(event.params.auger) == -1) {
-        let augers = aquifer.augers
-        augers.push(event.params.auger)
-        aquifer.augers = augers
-        aquifer.save()
-    }
+    loadOrCreateAquifer(event.address)
 
     Well.create(event.params.well)
 
@@ -44,7 +38,7 @@ export function handleBoreWell(event: BoreWell): void {
 
     loadOrCreateWellFunction(event.params.wellFunction, event.params.well)
 
-    well.auger = event.params.auger
+    well.implementation = event.params.implementation
     well.createdTimestamp = event.block.timestamp
     well.createdBlockNumber = event.block.number
     well.save()
