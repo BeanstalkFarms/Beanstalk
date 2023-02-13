@@ -6,7 +6,7 @@ export const provider = new ethers.providers.StaticJsonRpcProvider("http://127.0
 export const { signer, account } = TestUtils.setupConnection(provider);
 
 export const sdk = new BeanstalkSDK({
-  provider,
+  signer,
   source: DataSource.LEDGER,
   DEBUG: true
 });
