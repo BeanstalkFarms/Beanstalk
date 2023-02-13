@@ -7,7 +7,7 @@ import { Token } from "../classes/Token";
 import { TokenSiloBalance } from "./silo/types";
 import { calculateGrownStalk, parseWithdrawalCrates } from "./silo/utils";
 import { BigNumber, ethers } from "ethers";
-import { TokenValue } from "../classes/TokenValue";
+import { TokenValue } from "@beanstalk/sdk-core";
 import { BF_MULTISIG } from "src/utils/TestUtils/addresses";
 
 /// Utilities

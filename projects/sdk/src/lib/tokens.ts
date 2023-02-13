@@ -2,7 +2,7 @@ import { addresses, ZERO_BN } from "src/constants";
 import { Token, BeanstalkToken, ERC20Token, NativeToken } from "src/classes/Token";
 import { BeanstalkSDK } from "./BeanstalkSDK";
 import { EIP2612PermitMessage, EIP712Domain, EIP712TypedData, Permit } from "./permit";
-import { TokenValue } from "src/classes/TokenValue";
+import { TokenValue } from "@beanstalk/sdk-core";
 import { BigNumber } from "ethers";
 
 export type TokenBalance = {

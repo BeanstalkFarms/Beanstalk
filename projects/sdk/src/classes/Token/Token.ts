@@ -1,7 +1,7 @@
 import { BaseContract, ContractTransaction, ethers, utils } from "ethers";
 import type { BeanstalkSDK } from "../../lib/BeanstalkSDK";
 import { BigNumber } from "ethers";
-import { TokenValue } from "../TokenValue";
+import { TokenValue } from "@beanstalk/sdk-core";
 import { PromiseOrValue } from "src/constants/generated/common";
 
 /**
