@@ -1,4 +1,4 @@
-import { BigNumber, BaseContract, ContractTransaction, ethers, utils, providers } from "ethers";
+import { BigNumber, BaseContract, ContractTransaction, ethers, utils, providers, Signer } from "ethers";
 import { TokenValue } from "../TokenValue";
 import { PromiseOrValue } from "src/constants/generated/common";
 
@@ -12,7 +12,8 @@ type TokenMetadata = {
 };
 
 export abstract class Token {
-  private static provider?: providers.Provider;
+  /** Provider for chain interactions */
+  private providerOrSigner?: providers.Provider | Signer;
 
   /** The chain id of the chain this token lives on */
   public chainId: number;
@@ -22,8 +23,6 @@ export abstract class Token {
 
   /** The decimals used in representing currency amounts */
   public decimals: number;
-
-  /** Provider for chain interactions */
 
   /** The name of the currency, i.e. a descriptive textual non-unique identifier */
   public name: string = "Unknown";
@@ -52,14 +51,21 @@ export abstract class Token {
     decimals?: number,
     symbol?: string,
     metadata?: TokenMetadata,
-    provider?: providers.Provider
+    signerOrProvider?: providers.Provider | Signer
   ) {
     this.chainId = chainId;
     this.address = address?.toLowerCase() ?? "";
 
     this.decimals = decimals ?? 0;
     this.symbol = symbol ?? "UNKNOWN";
-    Token.provider = provider;
+
+    // make this.provider not enumerable (ie, hide it from console.log output)
+    Object.defineProperty(this, "providerOrSigner", {
+      value: signerOrProvider,
+      writable: true,
+      configurable: false,
+      enumerable: false
+    });
 
     this.name = metadata?.name ?? "Unknown";
     this.displayName = metadata?.displayName ?? metadata?.name ?? "Unknown Token";
@@ -79,13 +85,18 @@ export abstract class Token {
 
   abstract getTotalSupply(): Promise<TokenValue> | undefined;
 
-  setProvider(provider: providers.Provider) {
-    Token.provider = provider;
+  setSignerOrProvider(provider: providers.Provider | Signer) {
+    this.providerOrSigner = provider;
+    
+    // Remove the cached contract when changing provider/signer
+    // @ts-ignore - NativeToken does not have 'this.contract', but instead of implementing two copies of this
+    // method, for NativeToken and ERC20, we just do it here once and ignore the ts warning
+    delete this.contract;
   }
 
-  getProvider(): providers.Provider {
-    if (!Token.provider) throw new Error("Provider not set");
-    return Token.provider;
+  getSignerOrProvider(): providers.Provider | Signer {
+    if (!this.providerOrSigner) throw new Error("Signer or Provider not set");
+    return this.providerOrSigner;
   }
 
   /**

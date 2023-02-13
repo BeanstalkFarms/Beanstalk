@@ -7,7 +7,7 @@ export class NativeToken extends Token {
   }
 
   public getBalance(account: string): Promise<TokenValue> {
-    return this.getProvider()
+    return this.getSignerOrProvider()
       .getBalance(account)
       .then((result) => TokenValue.fromBlockchain(result, this.decimals));
   }

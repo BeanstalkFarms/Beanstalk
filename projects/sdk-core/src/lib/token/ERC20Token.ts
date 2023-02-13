@@ -14,7 +14,7 @@ export class ERC20Token extends Token {
         enumerable: false,
         configurable: false,
         writable: false,
-        value: ERC20Permit__factory.connect(this.address, this.getProvider())
+        value: ERC20Permit__factory.connect(this.address, this.getSignerOrProvider())
       });
     }
     return this.contract;
@@ -37,18 +37,6 @@ export class ERC20Token extends Token {
       if (this.displayName === "Unknown Token") this.displayName = name;
     }
   }
-
-  // /**
-  //  * Get the on-chain `.decimals()` for an ERC-20 token.
-  //  * @todo make this work with ERC-1155 (does it already?)
-  //  * @note stored onchain in hex format, need to decode.
-  //  */
-  // static getDecimals(tokenAddress: string) {
-  //   const tok = ERC20__factory.connect(tokenAddress, this.getProvider());
-  //   return tok.decimals();
-  // }
-
-  //////////////////////// Contract Method Extensions ////////////////////////
 
   public getBalance(account: string) {
     return this.getContract()
@@ -78,6 +66,10 @@ export class ERC20Token extends Token {
   }
 
   public approve(spenderContract: PromiseOrValue<string>, amount: TokenValue | BigNumber): Promise<ContractTransaction> {
+    if (!this.getContract().signer) {
+      throw new Error(`A signer is required to call .approve() - ${this.symbol}`);
+    }
+
     return this.getContract().approve(spenderContract, amount instanceof TokenValue ? amount.toBigNumber() : amount);
   }
 }
