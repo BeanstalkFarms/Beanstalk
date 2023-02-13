@@ -183,14 +183,12 @@ export class BlockchainUtils {
    * Writes the new bean & 3crv balances to the evm storage
    */
   async setBalance(token: Token | string, account: string, balance: TokenValue | number) {
-    const _token = token instanceof Token ? token : this.sdk.tokens.findBySymbol(token);
+    const _token = token instanceof Token ? token : this.sdk.tokens.findByAddress(token);
     if (!_token) {
       throw new Error("token not found");
     }
-
     const _balance = typeof balance === "number" ? _token.amount(balance) : balance;
     const balanceAmount = _balance.toBigNumber();
-
     const [slot, isTokenReverse] = this.getBalanceConfig(_token.address);
     const values = [account, slot];
 
