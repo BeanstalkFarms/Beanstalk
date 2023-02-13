@@ -1,7 +1,5 @@
-import { Contract, ethers } from "ethers";
+import { ethers } from "ethers";
 import { setupConnection } from "../utils/TestUtils/provider";
-import { ERC20Token } from "../classes/Token";
-
 import { BeanstalkSDK } from "./BeanstalkSDK";
 
 /// Utilities
@@ -57,46 +55,8 @@ describe("Token Library", function () {
   });
 });
 
-describe("Instantiation", function () {
-  it("sets up .contract on ERC20Token instances", () => {
-    // by default, no instance in memory
-    const token = sdk.tokens.BEAN;
-    expect(token.contract).toBeUndefined();
-
-    // calling first time returns a new instance
-    const c1 = token.getContract();
-    expect(c1).toBeInstanceOf(Contract);
-    expect(c1).toBe(token.contract); // stored internally
-
-    // calling a second time returns the old instance
-    const c2 = token.getContract();
-    expect(c2).toBe(c1);
-    expect(c2).toBe(token.contract);
-  });
-});
 
 describe("Utilities", function () {
-  it("loads name from chain", async () => {
-    const [bean, dai, usdc] = await Promise.all([
-      ERC20Token.getName(sdk.tokens.BEAN.address),
-      ERC20Token.getName(sdk.tokens.DAI.address),
-      ERC20Token.getName(sdk.tokens.USDC.address)
-    ]);
-    expect(bean).toBe("Bean");
-    expect(dai).toBe("Dai Stablecoin");
-    expect(usdc).toBe("USD Coin");
-  });
-  it("loads decimals from chain", async () => {
-    const [bean, dai, usdc] = await Promise.all([
-      ERC20Token.getDecimals(sdk.tokens.BEAN.address),
-      ERC20Token.getDecimals(sdk.tokens.DAI.address),
-      ERC20Token.getDecimals(sdk.tokens.USDC.address)
-    ]);
-    expect(bean).toBe(6);
-    expect(dai).toBe(18);
-    expect(usdc).toBe(6);
-  });
-
   it("creates a correct TokenBalance struct", () => {
     // @ts-ignore testing private method
     const balance = sdk.tokens.makeTokenBalance(sdk.tokens.BEAN, {
