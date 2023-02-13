@@ -19,7 +19,7 @@ export class Tokens {
     Tokens.sdk = sdk;
 
     const cid = Tokens.sdk.chainId;
-    const provider = Tokens.sdk.provider ?? Tokens.sdk.signer?.provider;
+    const provider = Tokens.sdk.providerOrSigner;
 
     // ETH
     this.ETH = new NativeToken(cid, null, 18, "ETH", { name: "Ether", displayDecimals: 4 }, provider);
@@ -54,10 +54,18 @@ export class Tokens {
     this.tokens.add(this.BEAN);
 
     // USDC
-    this.USDC = new ERC20Token(cid, sdk.addresses.USDC.get(Tokens.sdk.chainId), 6, "USDC", {
-      name: "USD Coin",
-      displayDecimals: 2
-    });
+    this.USDC = new ERC20Token(
+      cid,
+      sdk.addresses.USDC.get(Tokens.sdk.chainId),
+      6,
+      "USDC",
+      {
+        name: "USD Coin",
+        displayDecimals: 2
+      },
+      provider
+    );
+
     this.tokens.add(this.USDC);
   }
 
