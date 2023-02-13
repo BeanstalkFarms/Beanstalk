@@ -2,7 +2,7 @@ import { BigNumber, ContractTransaction } from "ethers";
 import { ERC20Permit, ERC20__factory, ERC20Permit__factory } from "src/constants/generated";
 import { PromiseOrValue } from "src/constants/generated/common";
 import { Token } from "./Token";
-import { TokenValue } from "src/classes/TokenValue";
+import { TokenValue } from "@beanstalk/sdk-core";
 
 export class ERC20Token extends Token {
   public contract: ERC20Permit;
