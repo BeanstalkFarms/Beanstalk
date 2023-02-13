@@ -2197,6 +2197,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@beanstalk/sdk@workspace:projects/sdk"
   dependencies:
+    "@beanstalk/sdk-core": "workspace:*"
     "@ethersproject/bytes": 5.7.0
     "@ethersproject/logger": 5.7.0
     "@foundry-rs/hardhat-anvil": ^0.1.6
