@@ -2,7 +2,7 @@ import { BigNumber, ethers } from "ethers";
 import { ERC20Token, Token } from "src/classes/Token";
 import { EventProcessorData } from "src/lib/events/processor";
 import { Silo } from "../silo";
-import { TokenValue } from "src/classes/TokenValue";
+import { TokenValue } from "@beanstalk/sdk-core";
 import { Crate, TokenSiloBalance, WithdrawalCrate, DepositCrate, MapValueType } from "./types";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { assert } from "src/utils";

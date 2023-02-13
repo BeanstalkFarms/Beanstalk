@@ -1,5 +1,5 @@
 import { Token } from "src/classes/Token";
-import { TokenValue } from "src/classes/TokenValue";
+import { TokenValue } from "@beanstalk/sdk-core";
 import { BeanstalkSDK } from "./BeanstalkSDK";
 
 export class Bean {

@@ -5,7 +5,7 @@ import EventProcessor from "src/lib/events/processor";
 import { EIP712TypedData } from "./permit";
 import * as utils from "./silo/utils";
 import * as permitUtils from "./silo/utils.permit";
-import { TokenValue } from "src/classes/TokenValue";
+import { TokenValue } from "@beanstalk/sdk-core";
 import { MAX_UINT256 } from "src/constants";
 import { DepositBuilder } from "./silo/DepositBuilder";
 import { DepositOperation } from "./silo/DepositOperation";
