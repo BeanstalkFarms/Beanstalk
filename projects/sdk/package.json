@@ -37,7 +37,8 @@
     "clean": "yarn clean:generated && yarn clean:build",
     "dev": "tsc --noEmit --watch",
     "ts": "yarn clean:build && tsc && tsc-alias -p tsconfig.json",
-    "build": "yarn ts && rollup -c --bundleConfigAsCjs --silent && rimraf dist/js",
+    "build": "echo '\nSDK Build' && yarn ts && rollup -c --bundleConfigAsCjs --silent && rimraf dist/js",
+    "sdk:build": "yarn build",
     "publish": "yarn clean && yarn generate && yarn build && yarn npm publish --access public"
   },
   "peerDependencies": {
