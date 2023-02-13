@@ -11,12 +11,13 @@ export type QuoteHandlerResult = {
   value?: ethers.BigNumber;
   steps?: ChainableFunctionResult[];
 };
+
 export type QuoteHandler = (
   tokenIn: ERC20Token | NativeToken,
   amountIn: BigNumber,
   /** Calculate `amountOut` of this `tokenOut`. */
   tokenOut: ERC20Token | NativeToken
-) => Promise<null | QuoteHandlerResult['amountOut'] | QuoteHandlerResult>; 
+) => Promise<null | QuoteHandlerResult['amountOut'] | QuoteHandlerResult>;
 
 export type QuoteSettings = {
   /** The number of milliseconds to wait before calling */

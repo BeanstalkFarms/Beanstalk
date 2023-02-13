@@ -113,6 +113,7 @@ const Graph = (props: Props) => {
     (
       event: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>
     ) => {
+      if (series[0].length === 0) return;
       const containerX = ('clientX' in event ? event.clientX : 0) - containerBounds.left;
       const containerY = ('clientY' in event ? event.clientY : 0) - containerBounds.top - 10;
       const pointerData = getPointerValue(event, scales, series)[0];

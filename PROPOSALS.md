@@ -41,6 +41,7 @@ You can read more about BIPs [here](https://docs.bean.money/almanac/governance/p
 * [BIP-30](https://bean.money/bip-30): Generalized Pipeline and ERC-20 and ERC-721 Permit Support
 * [BIP-31](https://bean.money/bip-31): Beanstalk Farms Q1 2023 Budget
 * [BIP-32](https://bean.money/bip-32): Seraph
+* [BIP-33](https://bean.money/bip-33): Beanstalk Farms H1 2023 Budget
 
 ## Emergency Beanstalk Improvement Proposal (EBIP)
 

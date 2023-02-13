@@ -1,0 +1,8 @@
+query FertilizerYield($season: ID!) {
+  fertilizerYield(id: $season) {
+    id
+    season
+    simpleAPY
+    beansPerSeasonEMA
+  }
+}

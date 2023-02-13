@@ -16,20 +16,16 @@ async function main() {
   console.log(`${chalk.bold.whiteBright("Account:")} ${chalk.greenBright(account)}`);
   let { sdk: _sdk, stop } = await impersonate(account);
   sdk = _sdk;
-  sdk.DEBUG = false;
 
-  const amount = 100
-  await go(sdk.tokens.BEAN, sdk.tokens.BEAN.amount(amount));
-  await go(sdk.tokens.BEAN_CRV3_LP, sdk.tokens.BEAN_CRV3_LP.amount(amount));
-  await go(sdk.tokens.UNRIPE_BEAN, sdk.tokens.UNRIPE_BEAN.amount(amount));
-  await go(sdk.tokens.UNRIPE_BEAN_CRV3, sdk.tokens.UNRIPE_BEAN_CRV3.amount(amount));
-  
+  await transfer(sdk.tokens.BEAN.amount(500));
+
   await stop();
 }
 
-async function go(token: Token, amount: TokenValue) {
-  console.log(`Withdrawing ${amount.toHuman()} from ${token.symbol} Silo`);
-  const tx = await sdk.silo.withdraw(token, amount)
+async function transfer(amount: TokenValue) {
+  const destinationAddress = '0x70997970c51812dc3a010c7d01b50e0d17dc79c8';
+  console.log(`Transferring ${amount.toHuman()} to ${destinationAddress}`);
+  const tx = await sdk.silo.transfer.transfer(amount, destinationAddress);
   await tx.wait();
 
   console.log('Done');

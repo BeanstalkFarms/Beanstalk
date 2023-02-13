@@ -243,6 +243,10 @@ export class Tokens {
     this.crv3Underlying = new Set([this.DAI, this.USDC, this.USDT]);
   }
 
+  isWhitelisted(token: Token){
+    return this.siloWhitelist.has(token)
+  }
+
   // TODO: why do we need this?
   getMap(): Readonly<Map<string, Token>> {
     return Object.freeze(new Map(this.map));

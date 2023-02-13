@@ -13,12 +13,16 @@ import { Withdraw } from "./silo/Withdraw";
 import { Claim } from "./silo/Claim";
 import { FarmToMode } from "./farm";
 import { DepositCrate, TokenSiloBalance, DepositTokenPermitMessage, DepositTokensPermitMessage } from "./silo/types";
+import { Transfer } from "./silo/Transfer";
+import { Convert, ConvertDetails } from "./silo/Convert";
 
 export class Silo {
   static sdk: BeanstalkSDK;
   private depositBuilder: DepositBuilder;
   siloWithdraw: Withdraw;
   siloClaim: Claim;
+  siloTransfer: Transfer;
+  siloConvert: Convert;
   // 1 Seed grows 1 / 10_000 Stalk per Season.
   // 1/10_000 = 1E-4
   // FIXME
@@ -29,6 +33,8 @@ export class Silo {
     this.depositBuilder = new DepositBuilder(sdk);
     this.siloWithdraw = new Withdraw(sdk);
     this.siloClaim = new Claim(sdk);
+    this.siloTransfer = new Transfer(sdk);
+    this.siloConvert = new Convert(sdk);
   }
 
   /**
@@ -97,6 +103,17 @@ export class Silo {
   }
 
   /**
+   * Initates a transfer of a token from the silo.
+   * @param token The whitelisted token to withdraw. ex, BEAN vs BEAN_3CRV_LP
+   * @param amount The desired amount to transfer. Must be 0 < amount <= total deposits for token
+   * @param destinationAddress The destination address for the transfer
+   * @returns Promise of Transaction
+   */
+  async transfer(token: Token, amount: TokenValue, destinationAddress: string): Promise<ContractTransaction> {
+    return this.siloTransfer.transfer(token, amount, destinationAddress);
+  }
+
+  /**
    * This methods figures out which deposits, or crates, the withdraw must take from
    * in order to reach the desired amount. It returns extra information that may be useful
    * in a UI to show the user how much stalk and seed they will forfeit as a result of the withdraw
@@ -133,6 +150,34 @@ export class Silo {
    */
   async claimSeasons(token: Token, seasons: string[], toMode: FarmToMode = FarmToMode.EXTERNAL) {
     return this.siloClaim.claimSeasons(token, seasons, toMode);
+  }
+
+  /**
+   * Convert from one Silo whitelisted token to another. 
+   * @param fromToken Token to convert from
+   * @param toToken  Token to cnvert to
+   * @param fromAmount Amount to convert
+   * @returns Promise of Transaction
+   */
+  async convert(fromToken: Token, toToken: Token, fromAmount: TokenValue) {
+    return this.siloConvert.convert(fromToken, toToken, fromAmount);
+  }
+
+  /**
+   * Estimate a Silo convert() operation. 
+   * @param fromToken 
+   * @param toToken 
+   * @param fromAmount 
+   * @returns An object containing minAmountOut, which is the estimated convert amount
+   * and conversion, which contains details of the convert operation. conversion property
+   * would be useful in a UI
+   */
+  async convertEstimate(
+    fromToken: Token,
+    toToken: Token,
+    fromAmount: TokenValue
+  ): Promise<{ minAmountOut: TokenValue; conversion: ConvertDetails }> {
+    return this.siloConvert.convertEstimate(fromToken, toToken, fromAmount);
   }
 
   /**

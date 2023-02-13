@@ -44754,7 +44754,7 @@
           },
           {
             "name": "index",
-            "description": "The Pod Index of the listed Plot.",
+            "description": "The absolute index of the listed Plot in the Pod Line.\n\nMeasured from the front, so the Listing contains all Pods between\n(index) and (index + totalAmount).\n\nAn example where the podLine is 50,000 but the index is 150,000:\n   0         the first Pod issued\n   100,000   harvestableIndex\n   150,000   index\n",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -44818,7 +44818,7 @@
           },
           {
             "name": "originalAmount",
-            "description": "The original amount of Pods listed in the first PodListing in a parent->child\nchain.\n",
+            "description": "The total number of Pods listed during the first emission of PodListingCreated.\n",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -44834,7 +44834,7 @@
           },
           {
             "name": "originalIndex",
-            "description": "The original index of the first PodListing in a parent->child chain.\n\nIf `originalIndex !== index`, then this PodListing was created when a parent\nPodListing was partially filled.\n",
+            "description": "The original index from the first emission of PodListingCreated in a chain.\n\nIf `originalIndex !== index`, then this PodListing was created when a parent\nPodListing was partially filled.\n",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -65912,7 +65912,7 @@
           },
           {
             "name": "maxPlaceInLine",
-            "description": "Any Pod before `maxPlaceInLine` is eligible to Fill this PodOrder.",
+            "description": "The Farmer is willing to buy any Pod that is before maxPlaceInLine at pricePerPod.\nAs the Pod Line moves, this value stays the same because new Pods meet the criteria.\n",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -68080,7 +68080,7 @@
           },
           {
             "name": "amount",
-            "description": "Amount of pods listed",
+            "description": "The represented value emitted with this event changed with BIP-29 at block 15277986\nPre  BIP-29: The number of pods ordered is emitted\nPost BIP-29: The number of beans supplied for the order is emitted.\n",
             "args": [],
             "type": {
               "kind": "NON_NULL",

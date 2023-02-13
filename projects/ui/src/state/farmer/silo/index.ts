@@ -37,6 +37,8 @@ export type WithdrawalCrate = Crate & {}
  * about a Farmer's ownership of a Whitelisted Silo Token.
  */
 export type FarmerSiloBalance = {
+  /** Season in which the farmer last updated their Silo */
+  lastUpdate: BigNumber;
   deposited: {
     /** The total amount of this Token currently in the Deposited state. */
     amount: BigNumber;
