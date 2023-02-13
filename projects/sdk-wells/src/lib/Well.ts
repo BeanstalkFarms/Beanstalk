@@ -58,7 +58,7 @@ export class Well {
    * - getReserves()
    * */
   async loadWell() {
-    await Promise.allSettled([this.getName(), this.getLPToken(), this.getWell(), this.getReserves()]);
+    await Promise.all([this.getName(), this.getLPToken(), this.getWell(), this.getReserves()]);
   }
 
   /**
@@ -147,22 +147,18 @@ export class Well {
     if (!all) {
       const { _tokens, _wellFunction, _pumps, _auger } = await this.contract.well();
 
-      // Tokens
       if (!this.tokens) {
         await this.setTokens(_tokens);
       }
 
-      // Well Function
       if (!this.wellFunction) {
         this.setWellFunction(_wellFunction);
       }
 
-      // Pumps
       if (!this.pumps) {
         this.setPumps(_pumps);
       }
 
-      // Auger
       if (!this.auger) {
         this.setAuger(_auger);
       }
