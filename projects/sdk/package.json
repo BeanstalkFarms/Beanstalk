@@ -44,6 +44,7 @@
     "ethers": "5.6.8"
   },
   "dependencies": {
+    "@beanstalk/sdk-core": "workspace:*",
     "@ethersproject/bytes": "5.7.0",
     "@ethersproject/logger": "5.7.0",
     "bn.js": "5.2.1",
