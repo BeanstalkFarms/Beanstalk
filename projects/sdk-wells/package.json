@@ -30,7 +30,7 @@
     "node": ">=16"
   },
   "scripts": {
-    "generate": "echo '\nSDK Generate' && yarn generate-typechain",
+    "generate": "echo '\nWELLS Generate' && yarn generate-typechain",
     "generate-typechain": "typechain --target=ethers-v5 --ts-nocheck --out-dir=./src/constants/generated/ ./src/constants/abi/**/*.json",
     "generate-graphql": "graphql-codegen --config codegen.ts",
     "clean-generated": "rimraf ./src/constants/generated && rimraf ./src/constants/generated-gql",
@@ -39,7 +39,7 @@
     "dev": "tsc --noEmit --watch",
     "ts": "yarn clean-build && tsc && tsc-alias -p tsconfig.json",
     "build": "echo '\nWELLS Build' && yarn ts && rollup -c --bundleConfigAsCjs --silent && rimraf dist/js",
-    "wells:build": "yarn build",
+    "wells:build": "yarn generate && yarn build",
     "publish": "yarn build && yarn npm publish --access public"
   },
   "peerDependencies": {
