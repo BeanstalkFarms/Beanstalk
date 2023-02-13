@@ -1,1 +1,1 @@
-export { TokenValue } from "src/classes/TokenValue";
+export { TokenValue } from "@beanstalk/sdk-core";
