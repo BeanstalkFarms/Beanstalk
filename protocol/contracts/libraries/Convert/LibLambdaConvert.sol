@@ -17,7 +17,6 @@ library LibLambdaConvert {
 
     function convert(bytes memory convertData)
         internal
-        pure
         returns (
             address tokenOut,
             address tokenIn,
@@ -26,7 +25,7 @@ library LibLambdaConvert {
         )
     {
         (inAmount, tokenIn) = convertData.lambdaConvert();
-        LibInternal.mow(msg.sender, tokenIn);
+        LibInternal.mow(msg.sender, tokenIn); //this convert function used to be pure, had to remove pure in order to mow
         tokenOut = tokenIn;
         outAmount = inAmount;
     }

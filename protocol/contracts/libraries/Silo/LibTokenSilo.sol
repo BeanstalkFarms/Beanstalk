@@ -414,6 +414,8 @@ library LibTokenSilo {
     }
 
 
+    //takes in grownStalk total by a previous deposit, and a bdv, returns
+    //what the grownStalkPerBdv index should be to have that same amount of grown stalk for the input token
     function grownStalkAndBdvToCumulativeGrownStalk(IERC20 token, uint256 grownStalk, uint256 bdv)
         internal
         view
@@ -428,6 +430,9 @@ library LibTokenSilo {
         console.log('grownStalkAndBdvToCumulativeGrownStalk grownStalkPerBdv:');
         console.logInt(grownStalkPerBdv);
         //then subtract from the current latest index, so we get the index the deposit should have happened at
-        return latestCumulativeGrownStalkPerBdvForToken.sub(grownStalkPerBdv);
+        //note that we want this to be able to "subtraction overflow" aka go below zero, because
+        //there will be many cases where you'd want to convert and need to go far back enough in the
+        //grown stalk index to need a negative index
+        return latestCumulativeGrownStalkPerBdvForToken-grownStalkPerBdv;
     }
 }

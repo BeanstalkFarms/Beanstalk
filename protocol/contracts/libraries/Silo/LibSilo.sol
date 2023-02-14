@@ -111,7 +111,7 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return;
 
-        console.log('burnStalk: ', stalk);
+        console.log('burnStalk burn amount: ', stalk);
         console.log('burnStalk current total stalk s.s.stalk: ', s.s.stalk);
         // Calculate the amount of Roots for the given amount of Stalk.
         // We round up as it prevents an account having roots but no stalk.
