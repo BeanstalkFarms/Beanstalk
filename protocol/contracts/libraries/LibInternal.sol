@@ -8,7 +8,7 @@ pragma experimental ABIEncoderV2;
 import {LibDiamond} from "./LibDiamond.sol";
 
 interface IBS {
-    function mow(address account) external payable;
+    function mow(address account, address token) external payable;
 }
 
 /**
@@ -16,7 +16,7 @@ interface IBS {
  * @title Internal Library handles gas efficient function calls between facets.
  */
 library LibInternal {
-    function mow(address account) internal {
+    function mow(address account, address token) internal {
         LibDiamond.DiamondStorage storage ds;
         bytes32 position = LibDiamond.DIAMOND_STORAGE_POSITION;
         assembly {
@@ -27,7 +27,8 @@ library LibInternal {
             .facetAddress;
         bytes memory callData = abi.encodeWithSelector(
             IBS.mow.selector,
-            account
+            account,
+            token
         );
         (bool success, ) = address(facet).delegatecall(callData);
         require(success, "Silo: update failed.");

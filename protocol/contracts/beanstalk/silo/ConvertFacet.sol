@@ -53,7 +53,10 @@ contract ConvertFacet is ReentrancyGuard {
         nonReentrant
         returns (int128 toCumulativeGrownStalk, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
-        LibInternal.mow(msg.sender);
+
+        //a mow must be done before any convert, currently this happens in the guts of each convert
+        //function. TODOSEEDS: pull out the parsing of convert data, find tokenIn, mow here, then pass
+        //parsed data in to corresponding mow functions?
 
         address toToken; address fromToken; uint256 grownStalk;
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(
@@ -90,6 +93,8 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 i = 0;
         while ((i < grownStalkPerBdvs.length) && (a.tokensRemoved < maxTokens)) {
             if (a.tokensRemoved.add(amounts[i]) < maxTokens) {
+                console.log('grownStalkPerBdvs[i]: ');
+                console.logInt(grownStalkPerBdvs[i]);
                 //keeping track of stalk removed must happen before we actually remove the deposit
                 //this is because LibTokenSilo.grownStalkForDeposit() uses the current deposit info
                 a.stalkRemoved = a.stalkRemoved.add(LibTokenSilo.grownStalkForDeposit(msg.sender, IERC20(token), grownStalkPerBdvs[i]));

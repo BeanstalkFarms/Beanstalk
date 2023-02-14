@@ -11,6 +11,7 @@ import "./LibConvertData.sol";
 import "./LibMetaCurveConvert.sol";
 import "./LibBeanLUSDConvert.sol";
 import "../Curve/LibBeanMetaCurve.sol";
+import "~/libraries/LibInternal.sol";
 
 /**
  * @author Publius
@@ -69,6 +70,7 @@ library LibCurveConvert {
             uint256 inAmount
         )
     {
+        LibInternal.mow(msg.sender, C.curveMetapoolAddress());
         (uint256 lp, uint256 minBeans, address pool) = convertData
             .convertWithAddress();
         (outAmount, inAmount) = _curveRemoveLPAndBuyToPeg(lp, minBeans, pool);
@@ -87,6 +89,7 @@ library LibCurveConvert {
             uint256 inAmount
         )
     {
+        LibInternal.mow(msg.sender, C.beanAddress());
         (uint256 beans, uint256 minLP, address pool) = convertData
             .convertWithAddress();
         (outAmount, inAmount) = _curveSellToPegAndAddLiquidity(
