@@ -3,7 +3,6 @@ import { setupConnection } from "../utils/TestUtils/provider";
 import { ERC20Token } from "../classes/Token";
 
 import { BeanstalkSDK } from "./BeanstalkSDK";
-import { _parseWithdrawalCrates } from "./silo.utils";
 
 /// Utilities
 const RUN_TIMER = false;

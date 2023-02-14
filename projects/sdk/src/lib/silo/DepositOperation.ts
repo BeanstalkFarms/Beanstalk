@@ -101,7 +101,7 @@ export class DepositOperation {
   }
 
   async estimate(amountIn: TokenValue): Promise<TokenValue> {
-    if (this.workflow.length === 0) throw new Error("No available route in workflow");
+    this.validate();
 
     this.lastAmountIn = amountIn;
     const est = await this.workflow.estimate(amountIn);
@@ -110,9 +110,14 @@ export class DepositOperation {
   }
 
   async execute(amountIn: TokenValue, slippage: number): Promise<ContractTransaction> {
-    if (this.workflow.length === 0) throw new Error("No available route in workflow");
+    this.validate();
 
     this.lastAmountIn = amountIn;
     return this.workflow.execute(amountIn, { slippage });
+  }
+
+  validate() {
+    if (!this.inputToken) throw new Error("inputToken not set");
+    if (this.workflow.length === 0) throw new Error("No available route in workflow");
   }
 }

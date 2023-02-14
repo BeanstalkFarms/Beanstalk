@@ -20,7 +20,7 @@
   "scripts": {
     "bootstrap": "yarn husky install && yarn generate",
     "generate": "yarn protocol:generate && yarn sdk:generate && yarn ui:generate",
-    "build": "yarn sdk:build",
+    "build":"yarn core:build && yarn wells:build && yarn sdk:build", 
     "test": "yarn sdk:test",
     "format": "yarn sdk:prettier",
     "protocol:generate": "yarn workspace @beanstalk/protocol generate",

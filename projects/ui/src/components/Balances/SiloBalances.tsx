@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import {
   Box,
   Button,
+  Divider,
   Grid,
   Stack,
   Tooltip,
@@ -12,6 +13,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import { useSelector } from 'react-redux';
 import {
+  BEAN,
   SEEDS,
   STALK,
   UNRIPE_BEAN,
@@ -48,6 +50,7 @@ const SiloBalances: React.FC<{}> = () => {
   const whitelist = useWhitelist();
   const getChainToken = useGetChainToken();
 
+  const Bean = getChainToken(BEAN);
   const urBean = getChainToken(UNRIPE_BEAN);
   const urBeanCrv3 = getChainToken(UNRIPE_BEAN_CRV3);
   const unripeUnderlyingTokens = useUnripeUnderlyingMap();
@@ -60,6 +63,9 @@ const SiloBalances: React.FC<{}> = () => {
   const unripeTokens = useSelector<AppState, AppState['_bean']['unripe']>(
     (state) => state._bean.unripe
   );
+
+  const farmerSilo = useSelector<AppState, AppState['_farmer']['silo']>((state) => state._farmer.silo)
+
   const stalkByToken = useFarmerStalkByToken();
 
   const tokens = useMemo(() => Object.entries(whitelist), [whitelist]);
@@ -85,7 +91,7 @@ const SiloBalances: React.FC<{}> = () => {
           </Grid>
           <Grid
             item
-            {...{ xs: 0, sm: 4, md: 2 }}
+            {...{ xs: 0, sm: 3.75, md: 3.25 }}
             display={{ xs: 'none', sm: 'block' }}
             textAlign="left"
           >
@@ -93,7 +99,7 @@ const SiloBalances: React.FC<{}> = () => {
           </Grid>
           <Grid
             item
-            {...{ xs: 6, sm: 3, md: 2.5 }}
+            {...{ xs: 6, sm: 3.25, md: 2 }}
             pr={{ xs: 4, md: 0 }}
             textAlign="right"
           >
@@ -101,7 +107,7 @@ const SiloBalances: React.FC<{}> = () => {
           </Grid>
           <Grid
             item
-            {...{ xs: 0, md: 2 }}
+            {...{ xs: 0, md: 1.75 }}
             display={{ xs: 'none', md: 'block' }}
             textAlign="right"
           >
@@ -109,7 +115,7 @@ const SiloBalances: React.FC<{}> = () => {
           </Grid>
           <Grid
             item
-            {...{ xs: 0, md: 2.5 }}
+            {...{ xs:0, md: 2 }}
             display={{ xs: 'none', md: 'block' }}
             textAlign="right"
             pr={4}
@@ -165,13 +171,75 @@ const SiloBalances: React.FC<{}> = () => {
                    */}
                   <Grid
                     item
-                    {...{ xs: 0, sm: 4, md: 2 }}
+                    {...{ xs: 0, sm: 3.75, md: 3.25 }}
                     display={{ xs: 'none', sm: 'block' }}
                     textAlign="left"
                   >
                     <Typography color="text.primary">
-                      {displayFullBN(deposits?.amount || ZERO_BN, 0)}{' '}
-                      {token.symbol}
+                    {token === Bean ? (
+                        <Tooltip
+                          title={
+                            <>
+                              {displayFullBN(
+                                deposits?.amount || ZERO_BN,
+                                token.displayDecimals
+                              )}{' '}
+                              Deposited BEAN
+                              <br />
+                              +&nbsp;
+                              <Typography display="inline" color="primary">
+                                {displayFullBN(
+                                  farmerSilo.beans.earned || ZERO_BN,
+                                  token.displayDecimals
+                                )}
+                              </Typography>{' '}
+                              Earned BEAN
+                              <br />
+                              <Divider
+                                sx={{
+                                  my: 0.5,
+                                  opacity: 0.7,
+                                  borderBottomWidth: 0,
+                                  borderColor: 'divider',
+                                }}
+                              />
+                              ={' '}
+                              {displayFullBN(
+                                farmerSilo.beans.earned.plus(
+                                  deposits?.amount || ZERO_BN
+                                ),
+                                token.displayDecimals
+                              )}{' '}
+                              BEAN
+                              <br />
+                            </>
+                          }
+                        >
+                          <span>
+                            {displayFullBN(
+                              deposits?.amount || ZERO_BN,
+                              token.displayDecimals
+                            )}
+                            {farmerSilo.beans.earned.gt(0) ? (
+                              <Typography component="span" color="primary.main">
+                                {' + '}
+                                {displayFullBN(
+                                  farmerSilo.beans.earned,
+                                  token.displayDecimals
+                                )}
+                              </Typography>
+                            ) : null}
+                          </span>
+                        </Tooltip>
+                      ) : (
+                        displayFullBN(
+                          deposits?.amount || ZERO_BN,
+                          token.displayDecimals
+                        )
+                      )}
+                      <Box display={{ md: 'inline', xs: 'none' }}>
+                        &nbsp;{token.symbol}
+                      </Box>
                     </Typography>
                   </Grid>
                   {/**
@@ -179,7 +247,7 @@ const SiloBalances: React.FC<{}> = () => {
                    */}
                   <Grid
                     item
-                    {...{ xs: 6, sm: 3, md: 2.5 }}
+                    {...{ xs: 6, sm: 3.25, md: 2 }}
                     textAlign="right"
                     pr={{ xs: 2, md: 0 }}
                   >
@@ -327,19 +395,27 @@ const SiloBalances: React.FC<{}> = () => {
                    */}
                   <Grid
                     item
-                    {...{ xs: 0, md: 2 }}
+                    {...{ xs: 0, md: 1.75 }}
                     display={{ xs: 'none', md: 'block' }}
                     textAlign="right"
                   >
                     <Row justifyContent="flex-end" gap={0.2}>
                       <TokenIcon token={STALK} css={{ marginBottom: '2px' }} />
                       <Typography color="text.primary" component="span">
-                        {displayFullBN(
-                          (stalkByToken[address]?.base ?? ZERO_BN).plus(
-                            stalkByToken[address]?.grown ?? ZERO_BN
-                          ) ?? ZERO_BN,
-                          STALK.displayDecimals
-                        )}
+                        {token === Bean ? (
+                          displayFullBN(
+                            ((stalkByToken[address]?.base ?? ZERO_BN)
+                            .plus(stalkByToken[address]?.grown ?? ZERO_BN)
+                            .plus((farmerSilo.stalk.earned.gt(ZERO_BN) ? farmerSilo.stalk.earned : ZERO_BN))
+                            .minus(stalkByToken[address]?.unclaimed ?? ZERO_BN)) ?? ZERO_BN,
+                            STALK.displayDecimals)
+                        ) : (
+                          displayFullBN(
+                            ((stalkByToken[address]?.base ?? ZERO_BN)
+                            .plus(stalkByToken[address]?.grown ?? ZERO_BN)
+                            .minus(stalkByToken[address]?.unclaimed ?? ZERO_BN)) ?? ZERO_BN,
+                            STALK.displayDecimals)
+                        )}                        
                       </Typography>
                     </Row>
                   </Grid>
@@ -348,7 +424,7 @@ const SiloBalances: React.FC<{}> = () => {
                    */}
                   <Grid
                     item
-                    {...{ xs: 0, md: 2.5 }}
+                    {...{ xs: 0, md: 2 }}
                     display={{ xs: 'none', md: 'block' }}
                     textAlign="right"
                     pr={2}

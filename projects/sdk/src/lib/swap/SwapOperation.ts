@@ -15,8 +15,8 @@ export class SwapOperation {
 
   constructor(
     sdk: BeanstalkSDK,
-    private readonly tokenIn: Token,
-    private readonly tokenOut: Token,
+    readonly tokenIn: Token,
+    readonly tokenOut: Token,
     private readonly workflow: Workflow,
     private readonly route: Route
   ) {

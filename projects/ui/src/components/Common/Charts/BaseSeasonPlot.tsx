@@ -69,6 +69,7 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
     ChartProps: chartProps,
     timeTabParams,
   } = props;
+  
   /// Display values
   const [displayValue, setDisplayValue] = useState<number | undefined>(
     undefined

@@ -1,7 +1,8 @@
 import { ethers } from "ethers";
-import { ERC20Token } from "src/classes/Token";
+import { ERC20Token, Token } from "src/classes/Token";
 import { BeanstalkSDK, DataSource } from "src/lib/BeanstalkSDK";
-import { TokenSiloBalance } from "src/lib/silo";
+import { TokenSiloBalance } from "src/lib/silo/types";
+import { makeDepositCrate } from "src/lib/silo/utils";
 import { TokenValue } from "src/TokenValue";
 import * as addr from "./addresses";
 import { logSiloBalance } from "./log";
@@ -89,6 +90,10 @@ export class BlockchainUtils {
     await this.sdk.provider.send("evm_mine", []); // Just mines to the next block
   }
 
+  async getCurrentBlock() {
+    await this.sdk.provider.send("eth_getBlockByNumber", ["latest", "false"]); // Just mines to the next block
+  }
+
   async impersonate(account: string) {
     await this.provider.send("anvil_impersonateAccount", [account]);
     return () => this.stopImpersonating(account);
@@ -128,46 +133,71 @@ export class BlockchainUtils {
     await this.sdk.provider.send("hardhat_setBalance", [account, balance.toHex()]);
   }
   async setDAIBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.DAI.address, account, balance, 2);
+    this.setBalance(this.sdk.tokens.DAI, account, balance);
   }
   async setUSDCBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.USDC.address, account, balance, 9);
+    this.setBalance(this.sdk.tokens.USDC, account, balance);
   }
   async setUSDTBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.USDT.address, account, balance, 2);
+    this.setBalance(this.sdk.tokens.USDT, account, balance);
   }
   async setCRV3Balance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.CRV3.address, account, balance, 3, true);
+    this.setBalance(this.sdk.tokens.CRV3, account, balance);
   }
   async setWETHBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.WETH.address, account, balance, 3);
+    this.setBalance(this.sdk.tokens.WETH, account, balance);
   }
   async setBEANBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.BEAN.address, account, balance, 0);
+    this.setBalance(this.sdk.tokens.BEAN, account, balance);
   }
   async setROOTBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.ROOT.address, account, balance, 151);
+    this.setBalance(this.sdk.tokens.ROOT, account, balance);
   }
   async seturBEANBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.UNRIPE_BEAN.address, account, balance, 0);
+    this.setBalance(this.sdk.tokens.UNRIPE_BEAN, account, balance);
   }
   async seturBEAN3CRVBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.UNRIPE_BEAN_CRV3.address, account, balance, 0);
+    this.setBalance(this.sdk.tokens.UNRIPE_BEAN_CRV3, account, balance);
   }
   async setBEAN3CRVBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.BEAN_CRV3_LP.address, account, balance, 15, true);
+    this.setBalance(this.sdk.tokens.BEAN_CRV3_LP, account, balance);
   }
 
-  private async setBalance(tokenAddress: string, account: string, balance: TokenValue, slot: number, reverse: boolean = false) {
+  private getBalanceConfig(tokenAddress: string) {
+    const slotConfig = new Map();
+    slotConfig.set(this.sdk.tokens.DAI.address, [2, false]);
+    slotConfig.set(this.sdk.tokens.USDC.address, [9, false]);
+    slotConfig.set(this.sdk.tokens.USDT.address, [2, false]);
+    slotConfig.set(this.sdk.tokens.CRV3.address, [3, true]);
+    slotConfig.set(this.sdk.tokens.WETH.address, [3, false]);
+    slotConfig.set(this.sdk.tokens.BEAN.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.ROOT.address, [151, false]);
+    slotConfig.set(this.sdk.tokens.UNRIPE_BEAN.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.UNRIPE_BEAN_CRV3.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.BEAN_CRV3_LP.address, [15, true]);
+    return slotConfig.get(tokenAddress);
+  }
+
+  async setBalance(token: Token | string, account: string, balance: TokenValue | number) {
+    const _token = token instanceof Token ? token : this.sdk.tokens.findByAddress(token);
+    if (!_token) {
+      throw new Error("token not found");
+    }
+    const _balance = typeof balance === "number" ? _token.amount(balance) : balance;
+    const balanceAmount = _balance.toBigNumber();
+    const [slot, isTokenReverse] = this.getBalanceConfig(_token.address);
     const values = [account, slot];
-    if (reverse) values.reverse();
+
+    if (isTokenReverse) values.reverse();
+
     const index = ethers.utils.solidityKeccak256(["uint256", "uint256"], values);
-    await this.setStorageAt(tokenAddress, index.toString(), this.toBytes32(balance.toBigNumber()).toString());
+    await this.setStorageAt(_token.address, index.toString(), this.toBytes32(balanceAmount).toString());
   }
 
   private async setStorageAt(address: string, index: string, value: string) {
     await this.sdk.provider.send("hardhat_setStorageAt", [address, index, value]);
   }
+
   private toBytes32(bn: ethers.BigNumber) {
     return ethers.utils.hexlify(ethers.utils.zeroPad(bn.toHexString(), 32));
   }
@@ -175,8 +205,8 @@ export class BlockchainUtils {
   //
   mockDepositCrate(token: ERC20Token, season: number, _amount: string, _currentSeason?: number) {
     const amount = token.amount(_amount);
-    // @ts-ignore use private method
-    return this.sdk.silo.makeDepositCrate(
+
+    return makeDepositCrate(
       token,
       season,
       amount.toBlockchain(), // amount
@@ -187,5 +217,31 @@ export class BlockchainUtils {
 
   ethersError(e: any) {
     return `${(e as any).error?.reason || (e as any).toString()}`;
+  }
+
+  async sunriseForward() {
+    // Calculate how many seconds till next hour
+    const block = await this.sdk.provider.send("eth_getBlockByNumber", ["latest", false]);
+    const blockTs = parseInt(block.timestamp, 16);
+    const blockDate = new Date(blockTs * 1000);
+    const secondsTillNextHour = (3600000 - (blockDate.getTime() % 3600000)) / 1000;
+
+    // fast forward evm, to just past the hour and mine a new block
+    await this.sdk.provider.send("evm_increaseTime", [secondsTillNextHour + 5]);
+    await this.sdk.provider.send("evm_mine", []);
+
+    // call sunrise
+    const res = await this.sdk.contracts.beanstalk.sunrise();
+    await res.wait();
+
+    // get the new season
+    const season = await this.sdk.contracts.beanstalk.season();
+
+    return season;
+  }
+
+  async forceBlock() {
+    await this.sdk.provider.send("evm_increaseTime", [12]);
+    await this.sdk.provider.send("evm_mine", []);
   }
 }

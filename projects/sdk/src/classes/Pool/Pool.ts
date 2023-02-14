@@ -1,7 +1,6 @@
-import { Beanstalk } from "src/constants/generated";
-import { BeanstalkSDK } from "../..";
-import { ERC20Token } from "../Token/ERC20Token";
-import { TokenValue } from "../TokenValue";
+import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
+import { ERC20Token } from "src/classes/Token/ERC20Token";
+import { TokenValue } from "@beanstalk/sdk-core";
 
 export type Reserves = [TokenValue, TokenValue];
 

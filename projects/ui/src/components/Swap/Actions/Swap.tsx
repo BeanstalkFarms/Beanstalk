@@ -1,11 +1,12 @@
 import { Accordion, AccordionDetails, Alert, Box, CircularProgress, IconButton, Link, Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { ethers } from 'ethers';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import toast from 'react-hot-toast';
 import { useConnect } from 'wagmi';
 import BigNumber from 'bignumber.js';
+import { SwapOperation } from '@beanstalk/sdk';
 import {
   FormApprovingState, FormTokenState,
   SettingInput,
@@ -22,15 +23,14 @@ import FarmModeField from '~/components/Common/Form/FarmModeField';
 import Token, { ERC20Token, NativeToken } from '~/classes/Token';
 import { Beanstalk } from '~/generated/index';
 import { ZERO_BN } from '~/constants';
-import { BEAN, CRV3, CRV3_UNDERLYING, DAI, ETH, USDC, USDT, WETH } from '~/constants/tokens';
+import { BEAN, CRV3, DAI, ETH, USDC, USDT, WETH } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import { useSigner } from '~/hooks/ledger/useSigner';
-import Farm, { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
+import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useQuote, { QuoteHandler } from '~/hooks/ledger/useQuote';
-import useFarm from '~/hooks/sdk/useFarm';
 import useAccount from '~/hooks/ledger/useAccount';
 import { toStringBaseUnitBN, toTokenUnitsBN, parseError, MinBN } from '~/util';
 import { IconSize } from '~/components/App/muiTheme';
@@ -45,6 +45,7 @@ import WarningIcon from '~/components/Common/Alert/WarningIcon';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
+import useSdk from '~/hooks/sdk';
 
 /// ---------------------------------------------------------------
 
@@ -58,20 +59,13 @@ type SwapFormValues = {
   approving?: FormApprovingState;
   /** */
   settings:   SlippageSettingsFragment;
+  swapOperation: SwapOperation
 };
 
 type DirectionalQuoteHandler = (
   direction: 'forward' | 'backward',
+  swapOperation: SwapOperation
 ) => QuoteHandler;
-
-enum Pathway {
-  TRANSFER,   // 0
-  ETH_WETH,   // 1
-  BEAN_CRV3,  // 2
-  BEAN_ETH,   // 3
-  BEAN_WETH,  // 4; make this BEAN_TRICRYPTO_UNDERLYING
-  BEAN_CRV3_UNDERLYING, // 5
-}
 
 const QUOTE_SETTINGS = {
   ignoreSameToken: false
@@ -84,38 +78,34 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
   beanstalk: Beanstalk;
   handleQuote: DirectionalQuoteHandler;
   tokenList: (ERC20Token | NativeToken)[];
-  getPathway: (tokenIn: Token, tokenOut: Token) => Pathway | false;
   defaultValues: SwapFormValues;
 }> = ({
-  //
   values,
   setFieldValue,
   handleQuote,
   isSubmitting,
-  //
   balances,
   beanstalk,
   tokenList,
-  getPathway,
-  defaultValues
+  defaultValues,
+  submitForm
 }) => {
   /// Tokens
   const Eth = useChainConstant(ETH);
   const { status } = useConnect();
   const account = useAccount();
+  const sdk = useSdk();
   
   /// Derived values
-  // Inputs
   const stateIn   = values.tokensIn[0];
   const tokenIn   = stateIn.token;
   const modeIn    = values.modeIn;
   const amountIn  = stateIn.amount;
-  // Outputs
   const stateOut  = values.tokenOut;
   const tokenOut  = stateOut.token;
   const modeOut   = values.modeOut;
   const amountOut = stateOut.amount;
-  // Other
+
   const tokensMatch = tokenIn === tokenOut;
   const noBalancesFound = useMemo(() => Object.keys(balances).length === 0, [balances]);
   const [balanceIn, balanceInInput, balanceInMax] = useMemo(() => {
@@ -130,7 +120,7 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
     } 
     return [_balanceIn, _balanceIn, _balanceIn?.total || ZERO_BN] as const;
   }, [balances, modeIn, tokenIn.address, tokensMatch]);
-  const pathway   = getPathway(tokenIn, tokenOut);
+
   const noBalance = !(balanceInMax?.gt(0));
   const expectedFromMode = balanceIn
     ? optimizeFromMode(
@@ -140,21 +130,51 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
       balanceIn
     )
     : FarmFromMode.INTERNAL;
+
   const shouldApprove = tokensMatch 
     /// If matching tokens, only approve if input token is using EXTERNAL balances.
     ? modeIn === FarmFromMode.EXTERNAL
-    /// Otherwise, approve if we expect to use an EXTERNAL baalnce.
+    /// Otherwise, approve if we expect to use an EXTERNAL balance.
     : (
       (expectedFromMode === FarmFromMode.EXTERNAL
       || expectedFromMode === FarmFromMode.INTERNAL_EXTERNAL)
     );
 
+  const buildSwapHelper = useCallback((uiTokenIn: Token, uiTokenOut: Token, farmFrom: FarmFromMode, farmTo: FarmToMode) => {
+    const sdkTokenIn = sdk.tokens.findByAddress(uiTokenIn.address);
+    if (!sdkTokenIn) {
+      throw new Error(`Address of ${uiTokenIn.symbol} was not found in SDK tokens.`);
+    }
+    const sdkTokenOut = sdk.tokens.findByAddress(uiTokenOut.address);
+    if (!sdkTokenOut) {
+      throw new Error(`Address of ${uiTokenOut.symbol} was not found in SDK tokens.`);
+    }
+
+    return sdk.swap.buildSwap(sdkTokenIn, sdkTokenOut, account!, farmFrom, farmTo);
+  }, [sdk.tokens, sdk.swap, account]);
+
+  const optimizedFromMode = useMemo(() => (
+    balanceIn
+      ? optimizeFromMode(
+          /// Manually set a maximum of `total` to prevent
+          /// throwing INTERNAL_EXTERNAL_TOLERANT error.
+          MinBN(amountIn || ZERO_BN, balanceIn.total),
+          balanceIn
+        )
+      : FarmFromMode.INTERNAL
+  ), [balanceIn, amountIn]);
+
+  const swapOperation = useMemo(
+    () => buildSwapHelper(tokenIn, tokenOut, optimizedFromMode, modeOut),
+    [buildSwapHelper, optimizedFromMode, tokenIn, tokenOut, modeOut]
+  );
+
   /// Memoize to prevent infinite loop on useQuote
-  const handleBackward = useMemo(() => handleQuote('backward'), [handleQuote]);
-  const handleForward  = useMemo(() => handleQuote('forward'),  [handleQuote]);
+  const handleBackward = useMemo(() => handleQuote('backward', swapOperation), [handleQuote, swapOperation]);
+  const handleForward  = useMemo(() => handleQuote('forward', swapOperation),  [handleQuote, swapOperation]);
   const [resultIn,  quotingIn,  getMinAmountIn] = useQuote(tokenIn, handleBackward, QUOTE_SETTINGS);
   const [resultOut, quotingOut, getAmountOut]   = useQuote(tokenOut, handleForward, QUOTE_SETTINGS);
-  
+
   const handleSetDefault = useCallback(() => {
     setFieldValue('modeIn', defaultValues.modeIn);
     setFieldValue('modeOut', defaultValues.modeOut);
@@ -235,13 +255,13 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
     /// Otherwise show the reverse.
     const [newModeIn, newModeOut] = (
       !balanceIn || balanceIn.internal.gt(0) || balanceIn.total.eq(0)
-        ? [FarmFromMode.INTERNAL, FarmToMode.EXTERNAL]
-        : [FarmFromMode.EXTERNAL, FarmToMode.INTERNAL]
-    );
+      ? [FarmFromMode.INTERNAL, FarmToMode.EXTERNAL]
+      : [FarmFromMode.EXTERNAL, FarmToMode.INTERNAL]
+      );
     setFieldValue('modeIn', newModeIn);
     setFieldValue('modeOut', newModeOut);
   }, [balanceIn, setFieldValue]);
- 
+
   const handleReverse = useCallback(() => {
     if (tokensMatch) {
       /// Flip destinations.
@@ -273,7 +293,7 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
     }
   }, [noBalancesFound, handleReverse, handleSetDefault, setInitialModes]);
 
-   const handleSubmit = useCallback((_tokens: Set<Token>) => {
+  const handleTokenSelectSubmit = useCallback((_tokens: Set<Token>) => {
     if (tokenSelect === 'tokenOut') {
       const newTokenOut = Array.from(_tokens)[0];
       setFieldValue('tokenOut', {
@@ -297,14 +317,11 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
     setFieldValue('tokensIn.0.amount', balanceInMax);
     getAmountOut(tokenIn, balanceInMax);
   }, [balanceInMax, getAmountOut, setFieldValue, tokenIn]);
-  
+
   /// Checks
   const isQuoting = (
     quotingIn
     || quotingOut
-  );
-  const pathwayCheck = (
-    pathway !== false
   );
   const ethModeCheck = (
     /// If ETH is selected as an output, the only possible destination is EXTERNAL.
@@ -327,15 +344,21 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
       : true
   );
   const isValid = (
-    pathwayCheck
-    && ethModeCheck
+    ethModeCheck
     && amountsCheck
     && diffModeCheck
     && enoughBalanceCheck
   );
 
+  const handleSubmitWrapper = useCallback((e: React.FormEvent) => {
+    // Note: We need to wrap the formik handler to set the swapOperation form value first
+    e.preventDefault();
+    setFieldValue('swapOperation', swapOperation);
+    submitForm();
+  }, [setFieldValue, swapOperation, submitForm]);
+
   return (
-    <Form autoComplete="off">
+    <Form autoComplete="off" onSubmit={handleSubmitWrapper}>
       <TokenSelectDialog
         title={(
           tokenSelect === 'tokensIn'
@@ -344,7 +367,7 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
         )}
         open={tokenSelect !== null}   // 'tokensIn' | 'tokensOut'
         handleClose={handleCloseTokenSelect}     //
-        handleSubmit={handleSubmit}   //
+        handleSubmit={handleTokenSelectSubmit}   //
         selected={selectedTokens}
         balances={balances}
         tokenList={tokenList}
@@ -376,7 +399,7 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
             }
             disabled={
               quotingIn
-              || !pathwayCheck
+              // || !pathwayCheck
             }
             quote={
               quotingOut
@@ -424,7 +447,7 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
               /// user has no balance of the input.
               || noBalance
               /// No way to quote for this pathway
-              || !pathwayCheck
+              // || !pathwayCheck
             }
             quote={
               quotingIn
@@ -453,11 +476,6 @@ const SwapForm: FC<FormikProps<SwapFormValues> & {
             >
               Switch &rarr;
             </Link>
-          </Alert>
-        ) : null}
-        {pathwayCheck === false ? (
-          <Alert variant="standard" color="warning" icon={<WarningIcon />}>
-            Swapping from {tokenIn.symbol} to {tokenOut.symbol} is currently unsupported.
           </Alert>
         ) : null}
         {/**
@@ -564,14 +582,6 @@ const SUPPORTED_TOKENS = [
 ];
 
 /**
- * Ensure that both `_tokenIn` and `_tokenOut` are in `_pair`, regardless of order.
- */
-const isPair = (_tokenIn : Token, _tokenOut : Token, _pair : [Token, Token]) => {
-  const s = new Set(_pair);
-  return s.has(_tokenIn) && s.has(_tokenOut);
-};
-
-/**
  * SWAP
  * Implementation notes
  * 
@@ -609,22 +619,23 @@ const Swap: FC<{}> = () => {
   const { data: signer } = useSigner();
   const beanstalk = useBeanstalkContract(signer);
   const account = useAccount();
+  const sdk = useSdk();
+
+  if (!sdk) {
+    throw new Error(
+      'Sdk not initialized'
+    );
+  }
 
   /// Tokens
   const getChainToken = useGetChainToken();
   const Eth           = getChainToken(ETH);
-  const Weth          = getChainToken(WETH);
   const Bean          = getChainToken(BEAN);
-  const Crv3          = getChainToken(CRV3);
-  const crv3Underlying = useMemo(() => new Set(CRV3_UNDERLYING.map(getChainToken)), [getChainToken]);
-
+  
   /// Token List
   const tokenMap      = useTokenMap<ERC20Token | NativeToken>(SUPPORTED_TOKENS);
   const tokenList     = useMemo(() => Object.values(tokenMap), [tokenMap]);
 
-  /// Farm
-  const farm          = useFarm();
-  
   /// Farmer
   const farmerBalances = useFarmerBalances();
   const [refetchFarmerBalances] = useFetchFarmerBalances();
@@ -632,232 +643,56 @@ const Swap: FC<{}> = () => {
   /// Form
   const middleware = useFormMiddleware();
   const initialValues: SwapFormValues = useMemo(() => ({
-    tokensIn: [
-      {
-        token: Eth,
-        amount: undefined,
-      }
-    ],
-    modeIn: FarmFromMode.EXTERNAL,
-    tokenOut: {
-      token: Bean,
-      amount: undefined
-    },
-    modeOut: FarmToMode.EXTERNAL,
-    settings: {
-      slippage: 0.1,
-    }
-  }), [Bean, Eth]);
+      tokensIn: [
+        {
+          token: Eth,
+          amount: undefined,
+        }
+      ],
+      modeIn: FarmFromMode.EXTERNAL,
+      tokenOut: {
+        token: Bean,
+        amount: undefined
+      },
+      modeOut: FarmToMode.EXTERNAL,
+      settings: {
+        slippage: 0.1,
+      },
+      swapOperation: sdk.swap.buildSwap(
+        sdk.tokens.ETH,
+        sdk.tokens.BEAN,
+        account!,
+        FarmFromMode.EXTERNAL,
+        FarmToMode.EXTERNAL
+      )
+    }), [Bean, Eth, account, sdk.swap, sdk.tokens]);
 
   /// Handlers
-
-  const getPathway = useCallback((
-    _tokenIn: Token,
-    _tokenOut: Token,
-  ) => {
-    if (_tokenIn === _tokenOut) return Pathway.TRANSFER;
-    if (isPair(_tokenIn, _tokenOut, [Eth, Weth]))   return Pathway.ETH_WETH;
-    if (isPair(_tokenIn, _tokenOut, [Bean, Crv3]))  return Pathway.BEAN_CRV3;
-    if (isPair(_tokenIn, _tokenOut, [Bean, Eth]))   return Pathway.BEAN_ETH;
-    if (isPair(_tokenIn, _tokenOut, [Bean, Weth]))  return Pathway.BEAN_WETH;
-    if (
-      (_tokenIn === Bean && crv3Underlying.has(_tokenOut as any))
-      || (_tokenOut === Bean && crv3Underlying.has(_tokenIn as any))
-    ) return Pathway.BEAN_CRV3_UNDERLYING;
-    return false;
-  }, [Bean, Crv3, Eth, Weth, crv3Underlying]);
-
-  const handleEstimate = useCallback(async (
-    forward : boolean,
-    amountIn : ethers.BigNumber,
-    _account : string,
-    _tokenIn : Token,
-    _tokenOut : Token,
-    _fromMode : FarmFromMode,
-    _toMode : FarmToMode,
-  ) => {
-    console.debug('[handleEstimate]', {
-      forward,
-      amountIn,
-      _account,
-      _tokenIn,
-      _tokenOut,
-      _fromMode,
-      _toMode,
-    });
-
-    const pathway = getPathway(_tokenIn, _tokenOut);
-
-    console.debug('[handleEstimate] got pathway: ', pathway);
-
-    /// Say I want to buy 1000 BEAN and I have ETH.
-    /// I select ETH as the input token, BEAN as the output token.
-    /// Then I type 1000 into the BEAN input.
-    ///
-    /// When this happens, `handleEstimate` is called
-    /// with `forward = false` (since we are finding the amount of
-    /// ETH needed to buy 1,000 BEAN, rather than the amount of BEAN
-    /// received for a set amount of ETH). 
-    /// 
-    /// In this instance, `_tokenIn` is BEAN and `_tokenOut` is ETH,
-    /// since we are quoting from BEAN to ETH.
-    /// 
-    /// If forward-quoting, then the user's selected input token (the
-    /// first one that appears in the form) is the same as _tokenIn.
-    /// If backward-quoting, then we flip things.
-    const startToken = forward ? _tokenIn : _tokenOut;
-
-    /// Token <-> Token
-    if (pathway === Pathway.TRANSFER) {
-      console.debug('[handleEstimate] estimating: transferToken');
-      return Farm.estimate(
-        [
-          farm.transferToken(
-            _tokenIn.address,
-            _account,
-            _fromMode,
-            _toMode,
-          )
-        ],
-        [amountIn],
-        forward
-      );
-    } 
-
-    /// ETH <-> WETH
-    if (pathway === Pathway.ETH_WETH) {
-      console.debug(`[handleEstimate] estimating: ${startToken === Eth ? 'wrap' : 'unwrap'}`);
-      return Farm.estimate(
-        [
-          startToken === Eth
-            ? farm.wrapEth(_toMode)
-            : farm.unwrapEth(_fromMode)
-        ],
-        [amountIn],
-        forward,
-      );
-    } 
-
-    /// BEAN <-> 3CRV
-    if (pathway === Pathway.BEAN_CRV3) {
-      console.debug('[handleEstimate] estimating: BEAN <-> CRV3');
-      return Farm.estimate(
-        [
-          farm.exchange(
-            farm.contracts.curve.pools.beanCrv3.address,
-            farm.contracts.curve.registries.metaFactory.address,
-            _tokenIn.address,
-            _tokenOut.address,
-            _fromMode,
-            _toMode
-          )
-        ],
-        [amountIn],
-        forward,
-      );
-    }
-
-    /// BEAN <-> ETH
-    if (pathway === Pathway.BEAN_ETH) {
-      console.debug('[handleEstimate] estimating: BEAN <-> ETH');
-      return Farm.estimate(
-        startToken === Eth
-         ? [
-            farm.wrapEth(
-              FarmToMode.INTERNAL
-            ),
-            ...farm.pair.WETH_BEAN(
-              'WETH',
-              FarmFromMode.INTERNAL,
-              _toMode,
-            ),
-         ]
-         : [
-            ...farm.pair.WETH_BEAN(
-              'BEAN',
-              _fromMode,
-              FarmToMode.INTERNAL, // send WETH to INTERNAL
-            ), // amountOut is not exact
-            farm.unwrapEth(
-              FarmFromMode.INTERNAL_TOLERANT  // unwrap WETH from INTERNAL
-            ), // always goes to EXTERNAL because ETH is not ERC20 and therefore not circ. bal. compatible
-         ],
-       [amountIn],
-       forward,
-     );
-    }
-
-    /// BEAN <-> WETH
-    if (pathway === Pathway.BEAN_WETH) {
-      console.debug('[handleEstimate] estimating: BEAN <-> WETH');
-      return Farm.estimate(
-        startToken === Weth
-          ? farm.pair.WETH_BEAN(
-            'WETH',
-            _fromMode,
-            _toMode,
-          )
-          : farm.pair.WETH_BEAN(
-            'BEAN',
-            _fromMode,
-            _toMode,
-          ),
-       [amountIn],
-       forward,
-     );
-    } 
-
-    /// BEAN <-> CRV3 Underlying
-    if (pathway === Pathway.BEAN_CRV3_UNDERLYING) {
-      console.debug('[handleEstimate] estimating: BEAN <-> 3CRV Underlying');
-      return Farm.estimate(
-        [
-          farm.exchangeUnderlying(
-            farm.contracts.curve.pools.beanCrv3.address,
-            _tokenIn.address,
-            _tokenOut.address,
-            _fromMode,
-            _toMode
-          )
-        ],
-        [amountIn],
-        forward,
-      );
-    }
-
-    throw new Error('Unsupported swap mode.');
-  }, [Eth, Weth, farm, getPathway]);
-
   const handleQuote = useCallback<DirectionalQuoteHandler>(
-    (direction) => async (_tokenIn, _amountIn, _tokenOut) => {
-      console.debug('[handleQuote] ', {
+    (direction, swapOperation) => async (__tokenIn, _amountIn, __tokenOut) => {
+      console.debug('[handleQuoteWithSdk] ', {
         direction,
-        _tokenIn,
         _amountIn,
-        _tokenOut
+        swapOperationPath: swapOperation.getDisplay(),
       }); 
       if (!account) throw new Error('Connect a wallet first.');
-      
-      const amountIn = ethers.BigNumber.from(toStringBaseUnitBN(_amountIn, _tokenIn.decimals));
-      const estimate = await handleEstimate(
-        direction === 'forward',
-        amountIn,
-        account,
-        _tokenIn,
-        _tokenOut,
-        FarmFromMode.INTERNAL_EXTERNAL,
-        FarmToMode.EXTERNAL,
-      );
+
+      const forward: Boolean = direction === 'forward';
+
+      const amountIn = forward
+        ? ethers.BigNumber.from(toStringBaseUnitBN(_amountIn, swapOperation.tokenIn.decimals)) 
+        : ethers.BigNumber.from(toStringBaseUnitBN(_amountIn, swapOperation.tokenOut.decimals));
+
+      const estimate = forward ? await swapOperation.estimate(amountIn) : await swapOperation.estimateReversed(amountIn);
 
       return {
         amountOut: toTokenUnitsBN(
-          estimate.amountOut.toString(),
-          _tokenOut.decimals
+          estimate.toBlockchain(),
+          forward ? swapOperation.tokenOut.decimals : swapOperation.tokenIn.decimals
         ),
-        steps: estimate.steps,
       };
     },
-    [account, handleEstimate]
+    [account]
   );
 
   const onSubmit = useCallback(
@@ -867,41 +702,20 @@ const Swap: FC<{}> = () => {
         middleware.before();
         const stateIn = values.tokensIn[0];
         const tokenIn = stateIn.token;
-        const modeIn  = values.modeIn;
-        const balanceIn = farmerBalances[tokenIn.address];
         const stateOut = values.tokenOut;
         const tokenOut = stateOut.token;
-        const modeOut  = values.modeOut;
         if (!stateIn.amount) throw new Error('No input amount set.');
         if (!account) throw new Error('Connect a wallet first.');
-        if (!modeOut) throw new Error('No destination selected.');
         const amountIn = ethers.BigNumber.from(
           stateIn.token.stringify(stateIn.amount)
-        );
-        const estimate = await handleEstimate(
-          true,
-          amountIn,
-          account,
-          tokenIn,
-          tokenOut,
-          tokenIn === tokenOut
-            ? modeIn
-            : optimizeFromMode(stateIn.amount || ZERO_BN, balanceIn),
-          /// FIXME: no such thing as "internal ETH"
-          modeOut, 
         );
 
         txToast = new TransactionToast({
           loading: 'Swapping...',
           success: 'Swap successful.'
         });
-        
-        if (!estimate.steps) throw new Error('Unable to generate a transaction sequence');
-        const data = Farm.encodeStepsWithSlippage(
-          estimate.steps,
-          values.settings.slippage / 100,
-        );
-        const txn = await beanstalk.farm(data, { value: estimate.value });
+
+        const txn = await values.swapOperation.execute(amountIn, values.settings.slippage);
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
@@ -923,14 +737,14 @@ const Swap: FC<{}> = () => {
         formActions.setSubmitting(false);
       }
     },
-    [account, beanstalk, farmerBalances, handleEstimate, refetchFarmerBalances, middleware]
+    [account, refetchFarmerBalances, middleware]
   );
 
   return (
     <Formik<SwapFormValues>
       enableReinitialize
       initialValues={initialValues}
-      onSubmit={onSubmit}
+      onSubmit={onSubmit} 
     >
       {(formikProps: FormikProps<SwapFormValues>) => (
         <>
@@ -943,7 +757,6 @@ const Swap: FC<{}> = () => {
             tokenList={tokenList}
             defaultValues={initialValues}
             handleQuote={handleQuote}
-            getPathway={getPathway}
             {...formikProps}
           />
         </>

@@ -1,5 +1,5 @@
 import { BigNumber, utils, constants } from "ethers";
-import { DecimalBigNumber } from "src/classes/DecimalBigNumber";
+import { DecimalBigNumber } from "src/lib/DecimalBigNumber";
 
 const blocker = {};
 
@@ -58,7 +58,7 @@ export class TokenValue {
       const units = utils.formatUnits(value, decimals);
       return TokenValue.fromString(units, decimals);
     }
-    if (value instanceof BigNumber) return TokenValue.fromBigNumber(value, decimals);
+    if (value._isBigNumber) return TokenValue.fromBigNumber(value, decimals);
 
     throw new Error("Invalid value parameter");
   }
@@ -221,5 +221,33 @@ export class TokenValue {
     const minDecimals = this.decimals < 2 ? 2 : this.decimals;
     if (num < 0) throw new Error("Percent value must be bigger than 0");
     return TokenValue.from(this.value.mul(num.toString()).div("100", minDecimals));
+  }
+
+  /**
+   * Calculates value after substracting slippage.
+   *
+   * For ex, a value of 100, with slippage 3 would return 97
+   *
+   * @param slippage The percent to remove from the value. Slippage should be
+   * a human readable percentage; 3 = 3%, 25=25%, .1 = 0.1%
+   *
+   * @return The original value minus slippage
+   */
+  subSlippage(slippage: number) {
+    return this.pct(100 - slippage);
+  }
+
+  /**
+   * Calculates value after adding slippage.
+   *
+   * For ex, a value of 100, with slippage 3 would return 103
+   *
+   * @param slippage The percent to remove from the value. Slippage should be
+   * a human readable percentage; 3 = 3%, 25=25%, .1 = 0.1%
+   *
+   * @return The original value plus slippage
+   */
+  addSlippage(slippage: number) {
+    return this.pct(100 + slippage);
   }
 }
