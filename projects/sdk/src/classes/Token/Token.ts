@@ -6,7 +6,8 @@ const STALK_DECIMALS = 10;
 const SEED_DECIMALS = 6;
 
 declare module "@beanstalk/sdk-core" {
-  interface Token {
+  abstract class Token {
+    static _source: string;
     isUnripe: boolean;
     rewards?: { stalk: TokenValue; seeds: TokenValue };
     getStalk(bdv?: TokenValue): TokenValue;
@@ -14,6 +15,10 @@ declare module "@beanstalk/sdk-core" {
     approveBeanstalk(amount: TokenValue | BigNumber): Promise<ContractTransaction>;
   }
 }
+
+Object.defineProperty(CoreToken, "_source", {
+  value: "BeanstalkSDK"
+});
 
 /**
  * Get the amount of Stalk rewarded per deposited BDV of this Token.
@@ -40,5 +45,5 @@ CoreToken.prototype.approveBeanstalk = function (amount: TokenValue | BigNumber)
   return;
 };
 
-export type Token = InstanceType<typeof CoreToken>
+export type Token = InstanceType<typeof CoreToken>;
 export const Token = CoreToken;
