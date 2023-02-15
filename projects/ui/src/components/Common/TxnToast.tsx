@@ -90,8 +90,8 @@ ToastAlert.defaultProps = {
 };
 
 type ToastMessages = {
-  loading: string;
-  success: string;
+  loading?: string;
+  success?: string;
   error?: string;
 }
 

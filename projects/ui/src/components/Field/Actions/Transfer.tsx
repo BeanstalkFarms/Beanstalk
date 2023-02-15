@@ -171,8 +171,13 @@ const Transfer: FC<{}> = () => {
 
       txToast.success(receipt);
       formActions.resetForm();
-    } catch (e) {
-      txToast ? txToast.error(e) : toast.error(parseError(e).message);
+    } catch (err) {
+      if (txToast) {
+        txToast.error(err)
+      } else {
+        let errorToast = new TransactionToast({})
+        errorToast.error(err)
+      }
     }
   }, [
     account,
