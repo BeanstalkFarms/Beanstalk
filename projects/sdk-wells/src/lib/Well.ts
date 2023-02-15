@@ -23,7 +23,7 @@ export type CallStruct = {
 
 export type TxOverrides = Overrides & { from?: string };
 
-export type LoadOptions = {
+export type PreloadOptions = {
   name?: boolean;
   lpToken?: boolean;
   tokens?: boolean;
@@ -66,7 +66,7 @@ export class Well {
    * loadWell({tokens: true}) - only loads tokens
    *
    */
-  async loadWell(options?: LoadOptions): Promise<void> {
+  async loadWell(options?: PreloadOptions): Promise<void> {
     // TODO: use a multicall
     const toLoad = [];
 
