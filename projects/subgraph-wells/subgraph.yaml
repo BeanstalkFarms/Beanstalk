@@ -37,6 +37,8 @@ templates:
       abis:
         - name: Well
           file: ./abis/Well.json
+        - name: CurvePrice
+          file: ./abis/CurvePrice.json
       eventHandlers:
         - event: AddLiquidity(uint256[],uint256)
           handler: handleAddDeposit
