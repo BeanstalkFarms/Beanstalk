@@ -21,7 +21,7 @@ export function handleAddLiquidity(event: AddLiquidity): void {
 
   checkForSnapshot(event.address, event.block.timestamp, event.block.number);
 
-  updateWellTokenBalances(event.address, event.params.tokenAmountsIn);
+  updateWellTokenBalances(event.address, event.params.tokenAmountsIn, event.block.timestamp, event.block.number);
 
   updateWellLiquidityTokenBalance(event.address, event.params.lpAmountOut);
 
@@ -41,7 +41,7 @@ export function handleRemoveLiquidity(event: RemoveLiquidity): void {
 
   checkForSnapshot(event.address, event.block.timestamp, event.block.number);
 
-  updateWellTokenBalances(event.address, balances);
+  updateWellTokenBalances(event.address, balances, event.block.timestamp, event.block.number);
 
   updateWellLiquidityTokenBalance(event.address, ZERO_BI.minus(event.params.lpAmountIn));
 
@@ -67,7 +67,7 @@ export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): v
 
   checkForSnapshot(event.address, event.block.timestamp, event.block.number);
 
-  updateWellTokenBalances(event.address, indexedBalances);
+  updateWellTokenBalances(event.address, indexedBalances, event.block.timestamp, event.block.number);
 
   updateWellLiquidityTokenBalance(event.address, ZERO_BI.minus(event.params.lpAmountIn));
 
