@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import { addresses } from "src/constants/addresses";
 import { enumFromValue } from "src/utils";
 import { Tokens } from "./tokens";
-import { Well } from "./Well";
+import { LoadOptions, Well } from "./Well";
 
 export type Provider = ethers.providers.JsonRpcProvider;
 export type Signer = ethers.Signer;
@@ -35,8 +35,11 @@ export class WellsSDK {
     this.tokens = new Tokens(this);
   }
 
-  getWell(address: string): Well {
-    return new Well(this, address);
+  async getWell(address: string, options?: LoadOptions): Promise<Well> {
+    const well = new Well(this, address);
+    await well.loadWell(options);
+
+    return well;
   }
 
   debug(...args: any[]) {

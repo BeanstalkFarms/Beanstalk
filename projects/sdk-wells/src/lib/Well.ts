@@ -23,17 +23,28 @@ export type CallStruct = {
 
 export type TxOverrides = Overrides & { from?: string };
 
+export type LoadOptions = {
+  name?: boolean;
+  lpToken?: boolean;
+  tokens?: boolean;
+  wellFunction?: boolean;
+  pumps?: boolean;
+  auger?: boolean;
+  reserves?: boolean;
+};
+
 export class Well {
   public sdk: WellsSDK;
   public address: string;
   public contract: WellContract;
 
-  private name: string | undefined = undefined;
-  private lpToken: ERC20Token | undefined = undefined;
-  private tokens: ERC20Token[] | undefined = undefined;
-  private wellFunction: WellFunction | undefined = undefined;
-  private pumps: Pump[] | undefined = undefined;
-  private auger: Auger | undefined = undefined;
+  public name: string | undefined = undefined;
+  public lpToken: ERC20Token | undefined = undefined;
+  public tokens: ERC20Token[] | undefined = undefined;
+  public wellFunction: WellFunction | undefined = undefined;
+  public pumps: Pump[] | undefined = undefined;
+  public auger: Auger | undefined = undefined;
+  public reserves: TokenValue[] | undefined = undefined;
 
   constructor(sdk: WellsSDK, address: string) {
     if (!address) {
@@ -45,20 +56,38 @@ export class Well {
   }
 
   /**
-   * Retrieves all the well data and stores it in the Well object. Future
-   * getXXX() calls will retrive the local data instead of making an RPC call.
-   * Effectively caches data for:
-   * - getName()
-   * - getWell()
-   * - getLPToken()
-   * - getTokens()
-   * - getWellFunction()
-   * - getPumps()
-   * - getAuger()
-   * - getReserves()
-   * */
-  async loadWell() {
-    await Promise.all([this.getName(), this.getLPToken(), this.getWell(), this.getReserves()]);
+   * Loads Well data from chain
+   *
+   * If no options are specified, it will load everything. However, if
+   * an options object is passed, it will only load those the data
+   * whose options is set to true.
+   *
+   * loadWell() -- loads everything
+   * loadWell({tokens: true}) - only loads tokens
+   *
+   */
+  async loadWell(options?: LoadOptions): Promise<void> {
+    // TODO: use a multicall
+    const toLoad = [];
+
+    if (!options) {
+      toLoad.push(this.getName(), this.getLPToken(), this.getWell());
+    } else {
+      // console.log("load", options);
+      if (options.name) toLoad.push(this.getName());
+      if (options.lpToken) toLoad.push(this.getLPToken());
+      if (options.tokens || options.wellFunction || options.pumps || options.auger) toLoad.push(this.getWell());
+    }
+
+    await Promise.allSettled(toLoad);
+
+    // We have to do getReserves separately to avoid a race condition
+    // with setToken(), where both .getWell() and .getReserves() call setToken()
+    // at roughly the same time, causing the writing to .tokens twice, the second time
+    // which would fail due to the readonly definition of the prop.
+    if (!options || options.reserves) {
+      await this.getReserves();
+    }
   }
 
   /**
@@ -66,7 +95,7 @@ export class Well {
    */
   async getName(): Promise<string> {
     if (!this.name) {
-      setReadOnly(this, "name", await this.contract.name());
+      setReadOnly(this, "name", await this.contract.name(), true);
     }
 
     return this.name!;
@@ -429,9 +458,9 @@ export class Well {
   async getReserves(overrides?: CallOverrides): Promise<TokenValue[]> {
     const tokens = await this.getTokens();
     const res = await this.contract.getReserves(overrides ?? {});
-    const quote = res.map((value: BigNumber, i: number) => tokens[i].fromBlockchain(value));
+    this.reserves = res.map((value: BigNumber, i: number) => tokens[i].fromBlockchain(value));
 
-    return quote;
+    return this.reserves;
   }
 
   /**
