@@ -18,6 +18,8 @@ dataSources:
       abis:
         - name: Aquifer
           file: ./abis/Aquifer.json
+        - name: ERC20
+          file: ./abis/ERC20.json
       eventHandlers:
         - event: BoreWell(address,address,address[],(address,bytes),(address,bytes)[],bytes)
           handler: handleBoreWell
@@ -39,6 +41,8 @@ templates:
           file: ./abis/Well.json
         - name: CurvePrice
           file: ./abis/CurvePrice.json
+        - name: ERC20
+          file: ./abis/ERC20.json
       eventHandlers:
         - event: AddLiquidity(uint256[],uint256)
           handler: handleAddDeposit
