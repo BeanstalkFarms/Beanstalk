@@ -1,6 +1,5 @@
 import { provider } from "../setup";
-import { WellsSDK } from "@beanstalk/wells";
-import { Well } from "@beanstalk/wells/dist/types/lib/Well";
+import { WellsSDK, Well } from "@beanstalk/wells";
 
 const WELL_ADDRESS = "0xd94a92749c0bb33c4e4ba7980c6dad0e3effb720";
 
@@ -13,6 +12,6 @@ async function main() {
   const sdk = new WellsSDK({ provider });
 
   // get Well object
-  const well: Well = await sdk.getWell(WELL_ADDRESS);
+  const well: Well = await sdk.getWell(WELL_ADDRESS, { name: true });
   console.log(well);
 }
