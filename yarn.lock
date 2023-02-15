@@ -37063,6 +37063,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"subgraph-wells@workspace:projects/subgraph-wells":
+  version: 0.0.0-use.local
+  resolution: "subgraph-wells@workspace:projects/subgraph-wells"
+  dependencies:
+    "@graphprotocol/graph-cli": ^0.30.4
+    "@graphprotocol/graph-ts": ^0.27.0
+    matchstick-as: ^0.5.0
+  languageName: unknown
+  linkType: soft
+
 "superstruct@npm:^0.14.2":
   version: 0.14.2
   resolution: "superstruct@npm:0.14.2"
