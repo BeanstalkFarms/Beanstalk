@@ -493,13 +493,23 @@ const CreateOrder: FC<{}> = () => {
     >
       {(formikProps: FormikProps<CreateOrderFormValues>) => (
         <>
-          <TxnSettings placement="condensed-form-top-right">
-            <SettingInput
-              name="settings.slippage"
-              label="Slippage Tolerance"
-              endAdornment="%"
-            />
-          </TxnSettings>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              height: '100%',
+              zIndex: 10,
+            }}
+          >
+            <TxnSettings placement="condensed-form-top-right">
+              <SettingInput
+                name="settings.slippage"
+                label="Slippage Tolerance"
+                endAdornment="%"
+              />
+            </TxnSettings>
+          </Box>
           <CreateOrderV2Form
             podLine={beanstalkField.podLine}
             handleQuote={handleQuote}

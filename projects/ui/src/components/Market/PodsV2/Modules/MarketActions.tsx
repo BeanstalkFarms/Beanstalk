@@ -12,7 +12,7 @@ const tabSx = {
   },
 };
 
-const MarketActions: React.FC<{}> = () => {
+const MarketActions: React.FC<{ chartHeight: string }> = (chartHeight) => {
   const location = useLocation();
   const action = useMemo(
     () => location.pathname.split('/')[2],
@@ -25,7 +25,7 @@ const MarketActions: React.FC<{}> = () => {
         width: '100%',
         overflow: 'auto',
         position: 'relative',
-        maxHeight: { xs: '100%', lg: '78vh' },
+        maxHeight: { xs: '100%', lg: chartHeight },
       }}
     >
       <Box
@@ -34,6 +34,10 @@ const MarketActions: React.FC<{}> = () => {
           py: 1.2,
           borderBottom: '0.5px solid',
           borderColor: 'divider',
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+          background: 'white',
         }}
       >
         <Tabs value={!action || action === 'buy' ? 0 : 1}>
