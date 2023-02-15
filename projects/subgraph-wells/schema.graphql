@@ -17,10 +17,10 @@ type Token @entity {
   decimals: Int!
 
   " Optional field to track the price of a token, mostly for caching purposes "
-  lastPriceUSD: BigDecimal
+  lastPriceUSD: BigDecimal!
 
   " Optional field to track the block number of the last token price "
-  lastPriceBlockNumber: BigInt
+  lastPriceBlockNumber: BigInt!
 }
 
 type Aquifer @entity(immutable: true) {
