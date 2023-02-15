@@ -46,11 +46,11 @@ export class Tokens {
     this.map = new Map();
 
     ////////// Ethereum //////////
-    const cid = this.sdk.chainId;
-    const pos = this.sdk.providerOrSigner;
+    const chainId = this.sdk.chainId;
+    const providerOrSigner = this.sdk.providerOrSigner;
 
     this.ETH = new NativeToken(
-      cid,
+      chainId,
       null,
       18,
       "ETH",
@@ -58,57 +58,57 @@ export class Tokens {
         name: "Ether",
         displayDecimals: 4
       },
-      pos
+      providerOrSigner
     );
 
     this.WETH = new ERC20Token(
-      cid,
-      addresses.WETH.get(cid),
+      chainId,
+      addresses.WETH.get(chainId),
       18,
       "WETH",
       {
         name: "Wrapped Ether"
       },
-      pos
+      providerOrSigner
     );
 
     this.map.set("eth", this.ETH);
-    this.map.set(addresses.WETH.get(cid), this.WETH);
+    this.map.set(addresses.WETH.get(chainId), this.WETH);
 
     ////////// Beanstalk //////////
 
     this.STALK = new BeanstalkToken(
-      cid,
+      chainId,
       null,
       10,
       "STALK",
       {
         name: "Stalk"
       },
-      pos
+      providerOrSigner
     );
 
     this.SEEDS = new BeanstalkToken(
-      cid,
+      chainId,
       null,
       6,
       "SEED",
       {
         name: "Seeds"
       },
-      pos
+      providerOrSigner
     );
 
     this.BEAN = new ERC20Token(
-      cid,
-      addresses.BEAN.get(cid),
+      chainId,
+      addresses.BEAN.get(chainId),
       6,
       "BEAN",
       {
         name: "Bean",
         displayName: "Bean"
       },
-      pos
+      providerOrSigner
     );
     this.BEAN.rewards = {
       stalk: this.STALK.amount(1),
@@ -116,8 +116,8 @@ export class Tokens {
     };
 
     this.BEAN_CRV3_LP = new ERC20Token(
-      cid,
-      addresses.BEAN_CRV3.get(cid),
+      chainId,
+      addresses.BEAN_CRV3.get(chainId),
       18,
       "BEAN3CRV",
       {
@@ -126,7 +126,7 @@ export class Tokens {
         isLP: true,
         color: "#DFB385"
       },
-      pos
+      providerOrSigner
     );
     this.BEAN_CRV3_LP.rewards = {
       stalk: this.STALK.amount(1),
@@ -134,8 +134,8 @@ export class Tokens {
     };
 
     this.UNRIPE_BEAN = new ERC20Token(
-      cid,
-      addresses.UNRIPE_BEAN.get(cid),
+      chainId,
+      addresses.UNRIPE_BEAN.get(chainId),
       6,
       "urBEAN",
       {
@@ -143,7 +143,7 @@ export class Tokens {
         displayName: "Unripe Bean",
         displayDecimals: 2
       },
-      pos
+      providerOrSigner
     );
     this.UNRIPE_BEAN.rewards = {
       stalk: this.STALK.amount(1),
@@ -152,8 +152,8 @@ export class Tokens {
     this.UNRIPE_BEAN.isUnripe = true;
 
     this.UNRIPE_BEAN_CRV3 = new ERC20Token(
-      cid,
-      addresses.UNRIPE_BEAN_CRV3.get(cid),
+      chainId,
+      addresses.UNRIPE_BEAN_CRV3.get(chainId),
       6,
       "urBEAN3CRV",
       {
@@ -161,7 +161,7 @@ export class Tokens {
         displayName: "Unripe BEAN:3CRV LP",
         displayDecimals: 2
       },
-      pos
+      providerOrSigner
     );
     this.UNRIPE_BEAN_CRV3.rewards = {
       stalk: this.STALK.amount(1),
@@ -169,44 +169,44 @@ export class Tokens {
     };
     this.UNRIPE_BEAN_CRV3.isUnripe = true;
 
-    this.map.set(addresses.BEAN.get(cid), this.BEAN);
-    this.map.set(addresses.BEAN_CRV3.get(cid), this.BEAN_CRV3_LP);
-    this.map.set(addresses.UNRIPE_BEAN.get(cid), this.UNRIPE_BEAN);
-    this.map.set(addresses.UNRIPE_BEAN_CRV3.get(cid), this.UNRIPE_BEAN_CRV3);
+    this.map.set(addresses.BEAN.get(chainId), this.BEAN);
+    this.map.set(addresses.BEAN_CRV3.get(chainId), this.BEAN_CRV3_LP);
+    this.map.set(addresses.UNRIPE_BEAN.get(chainId), this.UNRIPE_BEAN);
+    this.map.set(addresses.UNRIPE_BEAN_CRV3.get(chainId), this.UNRIPE_BEAN_CRV3);
 
     ////////// Beanstalk "Tokens" (non ERC-20) //////////
 
     this.PODS = new BeanstalkToken(
-      cid,
+      chainId,
       null,
       6,
       "PODS",
       {
         name: "Pods"
       },
-      pos
+      providerOrSigner
     );
 
     this.SPROUTS = new BeanstalkToken(
-      cid,
+      chainId,
       null,
       6,
       "SPROUT",
       {
         name: "Sprouts"
       },
-      pos
+      providerOrSigner
     );
 
     this.RINSABLE_SPROUTS = new BeanstalkToken(
-      cid,
+      chainId,
       null,
       6,
       "rSPROUT",
       {
         name: "Rinsable Sprouts"
       },
-      pos
+      providerOrSigner
     );
 
     this.map.set("STALK", this.STALK);
@@ -218,89 +218,89 @@ export class Tokens {
     ////////// Beanstalk Ecosystem Tokens //////////
 
     this.ROOT = new ERC20Token(
-      cid,
-      addresses.ROOT.get(cid),
+      chainId,
+      addresses.ROOT.get(chainId),
       18,
       "ROOT",
       {
         name: "Root"
       },
-      pos
+      providerOrSigner
     );
 
-    this.map.set(addresses.ROOT.get(cid), this.ROOT);
+    this.map.set(addresses.ROOT.get(chainId), this.ROOT);
 
     ////////// Common ERC-20 Tokens //////////
 
     this.CRV3 = new ERC20Token(
-      cid,
-      addresses.CRV3.get(cid),
+      chainId,
+      addresses.CRV3.get(chainId),
       18,
       "3CRV",
       {
         name: "3CRV",
         isLP: true
       },
-      pos
+      providerOrSigner
     );
 
     this.DAI = new ERC20Token(
-      cid,
-      addresses.DAI.get(cid),
+      chainId,
+      addresses.DAI.get(chainId),
       18,
       "DAI",
       {
         name: "Dai"
       },
-      pos
+      providerOrSigner
     );
 
     this.USDC = new ERC20Token(
-      cid,
-      addresses.USDC.get(cid),
+      chainId,
+      addresses.USDC.get(chainId),
       6,
       "USDC",
       {
         name: "USD Coin"
       },
-      pos
+      providerOrSigner
     );
 
     this.USDT = new ERC20Token(
-      cid,
-      addresses.USDT.get(cid),
+      chainId,
+      addresses.USDT.get(chainId),
       6,
       "USDT",
       {
         name: "Tether"
       },
-      pos
+      providerOrSigner
     );
 
     this.LUSD = new ERC20Token(
-      cid,
-      addresses.LUSD.get(cid),
+      chainId,
+      addresses.LUSD.get(chainId),
       6,
       "LUSD",
       {
         name: "LUSD"
       },
-      pos
+      providerOrSigner
     );
 
-    this.map.set(addresses.CRV3.get(cid), this.CRV3);
-    this.map.set(addresses.DAI.get(cid), this.DAI);
-    this.map.set(addresses.USDC.get(cid), this.USDC);
-    this.map.set(addresses.USDT.get(cid), this.USDT);
-    this.map.set(addresses.LUSD.get(cid), this.LUSD);
+    this.map.set(addresses.CRV3.get(chainId), this.CRV3);
+    this.map.set(addresses.DAI.get(chainId), this.DAI);
+    this.map.set(addresses.USDC.get(chainId), this.USDC);
+    this.map.set(addresses.USDT.get(chainId), this.USDT);
+    this.map.set(addresses.LUSD.get(chainId), this.LUSD);
 
     ////////// Legacy //////////
 
     // Keep the old BEAN_ETH and BEAN_LUSD tokens to let
     // the Pick dialog properly display pickable assets.
     this.BEAN_ETH_UNIV2_LP = new ERC20Token(
-      cid,
-      addresses.BEAN_ETH_UNIV2_LP.get(cid),
+      chainId,
+      addresses.BEAN_ETH_UNIV2_LP.get(chainId),
       18,
       "BEAN:ETH",
       {
@@ -308,14 +308,14 @@ export class Tokens {
         displayDecimals: 9,
         isLP: true
       },
-      pos
+      providerOrSigner
     );
     this.BEAN_ETH_UNIV2_LP.rewards = {
       stalk: this.STALK.amount(1),
       seeds: this.SEEDS.amount(4)
     };
 
-    this.map.set(addresses.BEAN_ETH_UNIV2_LP.get(cid), this.BEAN_ETH_UNIV2_LP);
+    this.map.set(addresses.BEAN_ETH_UNIV2_LP.get(chainId), this.BEAN_ETH_UNIV2_LP);
 
     ////////// Groups //////////
 
