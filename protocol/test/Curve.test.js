@@ -426,6 +426,7 @@ describe('Curve', function () {
 
   describe("farm LP and Deposit", async function () {
     beforeEach('add LP and Deposits', async function () {
+      await this.season.teleportSunrise(10);
       const addLiquidity = await this.curve.interface.encodeFunctionData("addLiquidity", [
         BEAN_3_CURVE,
         STABLE_FACTORY,
@@ -450,7 +451,8 @@ describe('Curve', function () {
 
     it('add lp and deposit', async function () {
       const season = await this.season.season()
-      const dep = await this.silo.getDeposit(user2Address, this.beanMetapool.address, season)
+      const grownStalkPerBdvBean = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, season);
+      const dep = await this.silo.getDeposit(user2Address, this.beanMetapool.address, grownStalkPerBdvBean)
       expect(dep[0]).to.be.equal(to18('1000'))
       expect(dep[1]).to.be.equal(to6('1000'))
     })
