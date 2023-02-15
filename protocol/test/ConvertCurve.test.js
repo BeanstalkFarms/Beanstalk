@@ -335,7 +335,7 @@ describe('Curve Convert', function () {
 
       describe('it converts', async function () {
         beforeEach(async function () {
-          console.log('0 current season: ', await this.season.season());
+          // console.log('0 current season: ', await this.season.season());
           const grownStalkPerBdvBean10 = await this.silo.seasonToGrownStalkPerBdv(this.bean.address, '10');
           const grownStalkPerBdvBean14 = await this.silo.seasonToGrownStalkPerBdv(this.bean.address, '14');
           this.result = await this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('250'), to18('190'), this.beanMetapool.address), [grownStalkPerBdvBean10, grownStalkPerBdvBean14], [toBean('100'), toBean('100')])
@@ -527,7 +527,7 @@ describe('Curve Convert', function () {
 
       describe('it converts', async function () {
         beforeEach(async function () {
-          console.log('0 current season: ', await this.season.season());
+          // console.log('0 current season: ', await this.season.season());
           const grownStalkPerBdvMetapool = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, '10');
           this.result = await this.convert.connect(user).convert(ConvertEncoder.convertCurveLPToBeans(to18('100'), toBean('99'), this.beanMetapool.address), [grownStalkPerBdvMetapool], [to18('100')])
         });
@@ -565,7 +565,7 @@ describe('Curve Convert', function () {
       });
     });
 
-    describe.only('multiple crates', function () {
+    describe('multiple crates', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
@@ -582,25 +582,24 @@ describe('Curve Convert', function () {
       describe('it converts', async function () {
         beforeEach(async function () {
           const grownStalkPerBdvMetapool10 = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, '10');
-          const grownStalkPerBdvMetapool11 = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, '10');
+          const grownStalkPerBdvMetapool11 = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, '11');
           this.result = await this.convert.connect(user).convert(ConvertEncoder.convertCurveLPToBeans(to18('100'), toBean('99'), this.beanMetapool.address), [grownStalkPerBdvMetapool10, grownStalkPerBdvMetapool11], [to18('50'), to18('50')])
         });
 
         it('properly updates total values', async function () {
           expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq('100618167');
           expect(await this.silo.getTotalDeposited(this.beanMetapool.address)).to.eq(to18('900'));
-          //expect(await this.silo.totalSeeds()).to.eq('3801236334');
-          expect(await this.silo.totalStalk()).to.eq('10007981670000');
+          expect(await this.silo.totalStalk()).to.eq('10008082288167'); //updated from 10007981670000 for season based system
         });
 
         it('properly updates user values', async function () {
-          //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('3801236334');
-          expect(await this.silo.balanceOfStalk(userAddress)).to.eq('10007981670000');
+          expect(await this.silo.balanceOfStalk(userAddress)).to.eq('10008082288167');
         });
 
         it('properly updates user deposits', async function () {
           const grownStalkPerBdvMetapool10 = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, '10');
-          expect((await this.silo.getDeposit(userAddress, this.bean.address, 3))[0]).to.eq('100618167');
+          const grownStalkPerBdvBean10 = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, '10');
+          expect((await this.silo.getDeposit(userAddress, this.bean.address, 1))[0]).to.eq('100618167');
           const deposit = await this.silo.getDeposit(userAddress, this.beanMetapool.address, grownStalkPerBdvMetapool10);
           expect(deposit[0]).to.eq(to18('450'));
           expect(deposit[1]).to.eq(toBean('450'));
@@ -608,11 +607,12 @@ describe('Curve Convert', function () {
 
         it('emits events', async function () {
           const grownStalkPerBdvMetapool10 = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, '10');
-          const grownStalkPerBdvMetapool11 = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, '10');
+          const grownStalkPerBdvMetapool11 = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, '11');
+
           await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
             .withArgs(userAddress, this.beanMetapool.address, [grownStalkPerBdvMetapool10, grownStalkPerBdvMetapool11], [to18('50'), to18('50')], to18('100'));
           await expect(this.result).to.emit(this.silo, 'AddDeposit')
-            .withArgs(userAddress, this.bean.address, grownStalkPerBdvMetapool11, '100618167', '100618167');
+            .withArgs(userAddress, this.bean.address, 1, '100618167', '100618167');
         });
       });
     });

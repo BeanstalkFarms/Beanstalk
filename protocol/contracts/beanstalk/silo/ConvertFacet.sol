@@ -140,7 +140,9 @@ contract ConvertFacet is ReentrancyGuard {
             i++;
         }
         for (i; i < grownStalkPerBdvs.length; ++i) amounts[i] = 0;
+
         console.log('emitting RemoveDeposits event');
+        
         emit RemoveDeposits(
             msg.sender,
             token,
