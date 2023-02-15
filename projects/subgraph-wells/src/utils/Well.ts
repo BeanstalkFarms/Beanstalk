@@ -3,10 +3,19 @@ import { BoreWellWellFunctionStruct } from "../../generated/Aquifer/Aquifer";
 import { Well, WellDailySnapshot, WellFunction, WellHourlySnapshot } from "../../generated/schema";
 import { BEAN_ERC20 } from "./Constants";
 import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
-import { deltaBigDecimalArray, deltaBigIntArray, emptyBigDecimalArray, emptyBigIntArray, toDecimal, ZERO_BD, ZERO_BI } from "./Decimals";
-import { loadToken, updateTokenUSD } from "./Token";
+import {
+  deltaBigDecimalArray,
+  deltaBigIntArray,
+  emptyBigDecimalArray,
+  emptyBigIntArray,
+  getBigDecimalArrayTotal,
+  toDecimal,
+  ZERO_BD,
+  ZERO_BI
+} from "./Decimals";
+import { getTokenDecimals, loadToken, updateTokenUSD } from "./Token";
 
-export function createWell(wellAddress: Address, inputTokens: Address[]): Well {
+export function createWell(wellAddress: Address, implementation: Address, inputTokens: Address[]): Well {
   let well = Well.load(wellAddress);
   if (well !== null) {
     return well as Well;
@@ -15,6 +24,7 @@ export function createWell(wellAddress: Address, inputTokens: Address[]): Well {
   well = new Well(wellAddress);
 
   well.aquifer = Bytes.empty();
+  well.implementation = implementation;
   well.tokens = []; // This is currently set in the `handleBoreWell` function
   well.createdTimestamp = ZERO_BI;
   well.createdBlockNumber = ZERO_BI;
@@ -112,7 +122,7 @@ export function updateWellVolumes(
   well.save();
 }
 
-export function updateWellTokenBalances(wellAddress: Address, inputTokenAmounts: BigInt[]): void {
+export function updateWellTokenBalances(wellAddress: Address, inputTokenAmounts: BigInt[], timestamp: BigInt, blockNumber: BigInt): void {
   let well = loadWell(wellAddress);
   let balances = well.reserves;
 
@@ -120,7 +130,28 @@ export function updateWellTokenBalances(wellAddress: Address, inputTokenAmounts:
     balances[i] = balances[i].plus(inputTokenAmounts[i]);
   }
 
+  let token0 = Address.fromBytes(well.tokens[0]);
+  let token1 = Address.fromBytes(well.tokens[1]);
+
+  // Update USD Values. Assumes 2 token wells currently
+  updateTokenUSD(
+    token0,
+    blockNumber,
+    token0 == BEAN_ERC20
+      ? BigDecimal.fromString("1")
+      : toDecimal(balances[1], getTokenDecimals(token1)).div(toDecimal(balances[0], getTokenDecimals(token0)))
+  );
+  updateTokenUSD(
+    token1,
+    blockNumber,
+    token1 == BEAN_ERC20
+      ? BigDecimal.fromString("1")
+      : toDecimal(balances[0], getTokenDecimals(token0)).div(toDecimal(balances[1], getTokenDecimals(token1)))
+  );
+
   well.reserves = balances;
+  well.reservesUSD = getCalculatedReserveUSDValues(well.tokens, well.reserves);
+  well.totalLiquidityUSD = getBigDecimalArrayTotal(well.reservesUSD);
   well.save();
 }
 
@@ -207,7 +238,7 @@ export function takeWellDailySnapshot(wellAddress: Address, dayID: i32, timestam
 
 export function loadOrCreateWellDailySnapshot(wellAddress: Address, dayID: i32, timestamp: BigInt, blockNumber: BigInt): WellDailySnapshot {
   let snapshot = WellDailySnapshot.load(wellAddress.concatI32(dayID));
-  log.info("Creating daily snapshot", []);
+
   if (snapshot == null) {
     let well = loadWell(wellAddress);
     snapshot = new WellDailySnapshot(wellAddress.concatI32(dayID));
