@@ -160,8 +160,9 @@ const PickBeansDialog: FC<{
           setPicked(_picked);
         }
       } catch (err) {
-        console.error(err);
-        toast.error(parseError(err));
+        console.error(err)
+        let errorToast = new TransactionToast({})
+        errorToast.error(err)
       }
     })();
   }, [account, beanstalk, open, urBean.address, urBeanCRV3.address]);

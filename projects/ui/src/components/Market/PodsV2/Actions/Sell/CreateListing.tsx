@@ -264,7 +264,12 @@ const CreateListingV2: FC<{}> = () => {
       txToast.success(receipt);
       formActions.resetForm();
     } catch (err) {
-      txToast?.error(err) || toast.error(parseError(err));
+      if (txToast) {
+        txToast.error(err)
+      } else {
+        let errorToast = new TransactionToast({})
+        errorToast.error(err)
+      }
       console.error(err);
     }
   }, [middleware, plots, harvestableIndex, beanstalk, refetchFarmerMarketItems, getChainToken]);
