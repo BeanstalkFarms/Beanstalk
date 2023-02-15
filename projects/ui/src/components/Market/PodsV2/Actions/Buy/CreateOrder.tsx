@@ -269,6 +269,7 @@ const CreateOrderV2Form: FC<
             </Box>
           </>
         ) : null}
+        <Box sx={{position: 'sticky', bottom: 6.5, zIndex: 10}}>
         <SmartSubmitButton
           loading={isSubmitting}
           disabled={isSubmitting || !isReady}
@@ -278,9 +279,11 @@ const CreateOrderV2Form: FC<
           contract={contract}
           tokens={values.tokens}
           mode="auto"
+          sx={{width: '100%', outline: '6.5px solid white'}}
         >
           Order
         </SmartSubmitButton>
+        </Box>
       </Stack>
     </Form>
   );
@@ -498,13 +501,23 @@ const CreateOrder: FC<{}> = () => {
     >
       {(formikProps: FormikProps<CreateOrderFormValues>) => (
         <>
-          <TxnSettings placement="condensed-form-top-right">
-            <SettingInput
-              name="settings.slippage"
-              label="Slippage Tolerance"
-              endAdornment="%"
-            />
-          </TxnSettings>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              height: '100%',
+              zIndex: 10,
+            }}
+          >
+            <TxnSettings placement="condensed-form-top-right">
+              <SettingInput
+                name="settings.slippage"
+                label="Slippage Tolerance"
+                endAdornment="%"
+              />
+            </TxnSettings>
+          </Box>
           <CreateOrderV2Form
             podLine={beanstalkField.podLine}
             handleQuote={handleQuote}
