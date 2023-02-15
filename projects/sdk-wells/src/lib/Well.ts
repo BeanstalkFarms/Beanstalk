@@ -73,13 +73,12 @@ export class Well {
     if (!options) {
       toLoad.push(this.getName(), this.getLPToken(), this.getWell());
     } else {
-      // console.log("load", options);
       if (options.name) toLoad.push(this.getName());
       if (options.lpToken) toLoad.push(this.getLPToken());
       if (options.tokens || options.wellFunction || options.pumps || options.auger) toLoad.push(this.getWell());
     }
 
-    await Promise.allSettled(toLoad);
+    await Promise.all(toLoad);
 
     // We have to do getReserves separately to avoid a race condition
     // with setToken(), where both .getWell() and .getReserves() call setToken()
