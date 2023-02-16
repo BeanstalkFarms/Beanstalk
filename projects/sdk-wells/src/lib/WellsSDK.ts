@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import { addresses } from "src/constants/addresses";
 import { enumFromValue } from "src/utils";
 import { Tokens } from "./tokens";
-import { Well } from "./Well";
+import { PreloadOptions, Well } from "./Well";
 
 export type Provider = ethers.providers.JsonRpcProvider;
 export type Signer = ethers.Signer;
@@ -35,8 +35,25 @@ export class WellsSDK {
     this.tokens = new Tokens(this);
   }
 
-  getWell(address: string): Well {
-    return new Well(this, address);
+  /**
+   * Get a Well object from a well address.
+   *
+   * By default, this also pre-loads well details from the chain. What data
+   * is preloaded, or to avoid preloading, can be controlled via the preloadOptions
+   * object.
+   *
+   * @param address - address where well is deployed
+   * @param preloadOptions - What data to pre fetch. If undefined, all data will be
+   * prefetched, otherwise only the properties defined as true will be retrieved
+   *
+   *
+   * @returns Well object
+   */
+  async getWell(address: string, preloadOptions?: PreloadOptions): Promise<Well> {
+    const well = new Well(this, address);
+    await well.loadWell(preloadOptions);
+
+    return well;
   }
 
   debug(...args: any[]) {
