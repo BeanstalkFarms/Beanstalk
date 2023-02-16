@@ -130,7 +130,7 @@ const useMarketActivityData = () => {
         switch (e.__typename) {
           case 'PodOrderCreated': {
             const pricePerPod = toTokenUnitsBN(e.pricePerPod, BEAN[1].decimals);
-            const amount = toTokenUnitsBN(e.amount, BEAN[1].decimals);
+            const amount = toTokenUnitsBN(e.amount, 9);
             const placeInLine = toTokenUnitsBN(e.maxPlaceInLine, BEAN[1].decimals);        
             // HOTFIX: amountPods is using the legacy bean amount format for these events
             const amountPods = amount.div(pricePerPod);
@@ -180,7 +180,7 @@ const useMarketActivityData = () => {
             if (!e.historyID || !podOrder) return null;
 
             const pricePerPod = toTokenUnitsBN(new BigNumber(podOrder.pricePerPod || 0), BEAN[1].decimals);
-            const podAmountFilled = toTokenUnitsBN(podOrder.podAmountFilled, BEAN[1].decimals);
+            const podAmountFilled = toTokenUnitsBN(podOrder.podAmountFilled, 9);
             const totalBeans =  getUSD(BEAN[1], podAmountFilled.multipliedBy(pricePerPod));
             return <MarketEvent> {
               id: podOrder.id,
