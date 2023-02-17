@@ -85,16 +85,17 @@ describe('Ownership', function () {
         '10000',
         '1')
       const settings = await this.silo.tokenSettings(this.siloToken.address)
+      console.log('settings: ', settings);
       console.log('settings[0]: ', settings[0]);
       expect(settings[0]).to.equal(this.silo.interface.getSighash("mockBDV(uint256 amount)"))
-      expect(settings[1]).to.equal(1)
       console.log('settings[1]: ', settings[1]);
-      expect(settings[2]).to.equal(10000)
+      expect(settings[1]).to.equal(10000)
       console.log('settings[2]: ', settings[2]);
+      expect(settings[2]).to.equal(1)
       await expect(this.result).to.emit(this.whitelist, 'WhitelistToken').withArgs(this.siloToken.address, 
         this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
-        10000,
-        1)
+        1,
+        10000)
     })
   })
 
