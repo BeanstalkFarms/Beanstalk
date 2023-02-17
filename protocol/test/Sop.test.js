@@ -61,7 +61,7 @@ describe('Sop', function () {
     it("Raining", async function () {
       await this.field.incrementTotalPodsE(to18('100'))
       await this.season.rainSunrise()
-      await this.silo.mow(userAddress, this.beanMetapool);
+      await this.silo.mow(userAddress, this.beanMetapool.address);
       const rain = await this.season.rain()
       const season = await this.season.time()
       expect(season.rainStart).to.be.equal(season.current)
@@ -76,9 +76,9 @@ describe('Sop', function () {
     it("Stops raining", async function () {
       await this.field.incrementTotalPodsE(to18('100'))
       await this.season.rainSunrise()
-      await this.silo.mow(userAddress, this.beanMetapool);
+      await this.silo.mow(userAddress, this.beanMetapool.address);
       await this.season.droughtSunrise()
-      await this.silo.mow(userAddress, this.beanMetapool);
+      await this.silo.mow(userAddress, this.beanMetapool.address);
       const season = await this.season.time()
       expect(season.rainStart).to.be.equal(season.current - 1)
       const userRain = await this.silo.balanceOfSop(userAddress);
@@ -109,7 +109,7 @@ describe('Sop', function () {
     beforeEach(async function () {
       await this.beanMetapool.connect(user).add_liquidity([to6('0'), to18('200')], to18('50'))
       await this.season.rainSunrise();
-      await this.silo.mow(user2Address);
+      await this.silo.mow(user2Address, this.bean.address);
       await this.season.rainSunrises(24);
     })
 
@@ -128,7 +128,7 @@ describe('Sop', function () {
     })
 
     it('tracks user plenty after update', async function () {
-      await this.silo.mow(userAddress, this.beanMetapool);
+      await this.silo.mow(userAddress, this.beanMetapool.address);
       const userSop = await this.silo.balanceOfSop(userAddress);
       expect(userSop.lastRain).to.be.equal(3)
       expect(userSop.lastSop).to.be.equal(3)
@@ -141,8 +141,9 @@ describe('Sop', function () {
       expect(await this.silo.connect(user).balanceOfPlenty(user2Address)).to.be.equal('50208107346352812150')
     })
 
-    it('tracks user2 plenty after update', async function () {
-      await this.silo.mow(user2Address);
+    it.only('tracks user2 plenty after update', async function () {
+      await this.silo.mow(user2Address, this.beanMetapool.address);
+      // await this.silo.mow(user2Address, this.bean.address); //with this one uncommented it's 10002000000000000000000000
       const userSop = await this.silo.balanceOfSop(user2Address);
       expect(userSop.lastRain).to.be.equal(3)
       expect(userSop.lastSop).to.be.equal(3)
@@ -152,7 +153,7 @@ describe('Sop', function () {
     })
 
     it('claims user plenty', async function () {
-      await this.silo.mow(user2Address);
+      await this.silo.mow(user2Address, this.beanMetapool.address);
       await this.silo.connect(user2).claimPlenty();
       expect(await this.silo.balanceOfPlenty(user2Address)).to.be.equal('0')
       expect(await this.threeCurve.balanceOf(user2Address)).to.be.equal('50208107346352812150')
@@ -161,13 +162,22 @@ describe('Sop', function () {
 
   describe('multiple sop', async function () {
     beforeEach(async function () {
+      console.log('stalk 1: ', await this.silo.balanceOfStalk(user2Address));
+      console.log('roots 1: ', await this.silo.balanceOfRoots(user2Address));
       await this.beanMetapool.connect(user).add_liquidity([to6('0'), to18('200')], to18('50'))
       await this.season.rainSunrise();
-      await this.silo.mow(user2Address);
+      console.log('stalk 2a: ', await this.silo.balanceOfStalk(user2Address));
+      console.log('roots 2a: ', await this.silo.balanceOfRoots(user2Address));
+      await this.silo.mow(user2Address, this.beanMetapool.address);
+      await this.silo.mow(user2Address, this.bean.address);
+      console.log('stalk 2b: ', await this.silo.balanceOfStalk(user2Address));
+      console.log('roots 2b: ', await this.silo.balanceOfRoots(user2Address));
       await this.season.rainSunrises(24);
       await this.season.droughtSunrise();
       await this.beanMetapool.connect(user).add_liquidity([to6('0'), to18('200')], to18('50'))
       await this.season.rainSunrises(25);
+      console.log('stalk 3: ', await this.silo.balanceOfStalk(user2Address));
+      console.log('roots 3: ', await this.silo.balanceOfRoots(user2Address));
     })
 
     it('sops p > 1', async function () {
@@ -185,7 +195,7 @@ describe('Sop', function () {
     })
 
     it('tracks user plenty after update', async function () {
-      await this.silo.mow(userAddress, this.beanMetapool);
+      await this.silo.mow(userAddress, this.beanMetapool.address);
       const userSop = await this.silo.balanceOfSop(userAddress);
       expect(userSop.lastRain).to.be.equal(29)
       expect(userSop.lastSop).to.be.equal(29)
@@ -199,7 +209,8 @@ describe('Sop', function () {
     })
 
     it('tracks user2 plenty after update', async function () {
-      await this.silo.mow(user2Address);
+      await this.silo.mow(user2Address, this.beanMetapool.address);
+      await this.silo.mow(user2Address, this.bean.address);
       const userSop = await this.silo.balanceOfSop(user2Address);
       expect(userSop.lastRain).to.be.equal(29)
       expect(userSop.lastSop).to.be.equal(29)

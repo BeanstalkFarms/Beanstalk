@@ -136,6 +136,7 @@ library LibSilo {
         // For more info on Rain, see {FIXME(doc)}. 
         if (s.season.raining) {
             s.r.roots = s.r.roots.sub(roots);
+            console.log('burnStalk updating s.a[account].sop.roots', s.a[account].sop.roots);
             s.a[account].sop.roots = s.a[account].roots;
         }
 

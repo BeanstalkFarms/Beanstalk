@@ -59,7 +59,7 @@ library LibWhitelist {
 
         s.ss[token].lastUpdateSeason = C.siloV3StartSeason(); //hydrate as current season
 
-        emit WhitelistToken(token, selector, stalkPerBdv, stalkPerBdvPerSeason);
+        emit WhitelistToken(token, selector, stalkPerBdvPerSeason, stalkPerBdv);
     }
 
     function whitelistTokenLegacy(
@@ -80,7 +80,7 @@ library LibWhitelist {
 
         console.log('seeds: ', seeds, ' for ', token);
 
-        emit WhitelistToken(token, selector, stalkPerBdv, seeds);
+        emit WhitelistToken(token, selector, stalkPerBdvPerSeason, stalkPerBdv);
     }
 
     /**

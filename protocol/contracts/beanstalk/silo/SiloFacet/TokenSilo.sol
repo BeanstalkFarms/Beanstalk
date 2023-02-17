@@ -202,6 +202,7 @@ contract TokenSilo is Silo {
         address token,
         uint256 amount
     ) internal {
+        console.log('_deposit: ', amount);
         (uint256 stalk) = LibTokenSilo.deposit(
             account,
             token,

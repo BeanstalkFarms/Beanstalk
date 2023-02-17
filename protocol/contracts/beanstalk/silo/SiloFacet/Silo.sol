@@ -118,11 +118,17 @@ contract Silo is SiloExit {
         // Calculate the amount of Grown Stalk claimable by `account`.
         // Increase the account's balance of Stalk and Roots.
         __mow(account, token);
+
+        // Reset timer so that Grown Stalk for a particular Season can only be 
+        // claimed one time. 
+        s.a[account].lastUpdate = _season();
     }
 
     function __mow(address account, address token) private {
+        console.log('__mow, current season:', s.season.current);
         // If this `account` has no BDV, skip to save gas. Still need to update lastCumulativeGrownStalkPerBdv (happen on initial deposit, since mow is called before any deposit)
         if (s.a[account].mowStatuses[token].bdv == 0) {
+            console.log('mow status bdv was zero for token: ', token);
             s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
             return;
         }
@@ -206,6 +212,7 @@ contract Silo is SiloExit {
      * FIXME(refactor): replace `lastUpdate()` -> `_lastUpdate()` and rename this param?
      */
     function handleRainAndSops(address account, uint32 _lastUpdate) private {
+        console.log('handleRainAndSops s.a[account].lastSop: ', s.a[account].lastSop);
         // If no roots, reset Sop counters variables
         if (s.a[account].roots == 0) {
             s.a[account].lastSop = s.season.rainStart;
@@ -215,7 +222,9 @@ contract Silo is SiloExit {
         // If a Sop has occured since last update, calculate rewards and set last Sop.
         if (s.season.lastSopSeason > _lastUpdate) {
             s.a[account].sop.plenty = balanceOfPlenty(account);
+            console.log('s.a[account].sop.plenty: ', s.a[account].sop.plenty);
             s.a[account].lastSop = s.season.lastSop;
+            console.log('s.a[account].lastSop: ', s.a[account].lastSop);
         }
         if (s.season.raining) {
             // If rain started after update, set account variables to track rain.
@@ -225,12 +234,15 @@ contract Silo is SiloExit {
             }
             // If there has been a Sop since rain started,
             // save plentyPerRoot in case another SOP happens during rain.
-            if (s.season.lastSop == s.season.rainStart)
+            if (s.season.lastSop == s.season.rainStart) {
                 s.a[account].sop.plentyPerRoot = s.sops[s.season.lastSop];
+                console.log('s.a[account].sop.plentyPerRoot: ', s.a[account].sop.plentyPerRoot);
+            }
         } else if (s.a[account].lastRain > 0) {
             // Reset Last Rain if not raining.
             s.a[account].lastRain = 0;
         }
+        console.log('end handleRainAndSops s.a[account].lastSop: ', s.a[account].lastSop);
     }
 
 }

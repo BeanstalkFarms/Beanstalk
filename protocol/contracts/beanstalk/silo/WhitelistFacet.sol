@@ -17,7 +17,7 @@ contract WhitelistFacet {
     event WhitelistToken(
         address indexed token,
         bytes4 selector,
-        uint256 stalkPerBdvPerSeason,
+        uint32 stalkPerBdvPerSeason,
         uint256 stalk
     );
 

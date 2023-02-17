@@ -139,7 +139,7 @@ library LibTokenSilo {
         uint256 bdv
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        console.log('addDepositToAccount: ', account);
+        console.log('addDepositToAccount token: ', token);
         console.log('addDepositToAccount logging grown stalk per bdv:');
         console.logInt(grownStalkPerBdv);
         uint256 updatedAmount = s.a[account].deposits[token][grownStalkPerBdv].amount.add(amount.toUint128());
@@ -366,19 +366,18 @@ library LibTokenSilo {
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // SiloSettings storage ss = s.ss[token]; //tried to use this, but I get `DeclarationError: Identifier not found or not unique.`
-        console.log('s.ss[address(token)].lastCumulativeGrownStalkPerBdv: ');
-        console.logInt(s.ss[address(token)].lastCumulativeGrownStalkPerBdv);
-        console.log('s.season.current: ', s.season.current);
-        console.log('s.ss[address(token)].lastUpdateSeason: ', s.ss[address(token)].lastUpdateSeason);
-        console.log('s.ss[address(token)].stalkPerBdvPerSeason: ', s.ss[address(token)].stalkPerBdvPerSeason);
+        console.log('cumulativeGrownStalkPerBdv s.ss[address(token)].lastCumulativeGrownStalkPerBdv: ', uint256(s.ss[address(token)].lastCumulativeGrownStalkPerBdv));
+        console.log('cumulativeGrownStalkPerBdv s.season.current: ', s.season.current);
+        console.log('cumulativeGrownStalkPerBdv s.ss[address(token)].lastUpdateSeason: ', s.ss[address(token)].lastUpdateSeason);
+        console.log('cumulativeGrownStalkPerBdv s.ss[address(token)].stalkPerBdvPerSeason: ', s.ss[address(token)].stalkPerBdvPerSeason);
 
         //need to take into account the lastUpdateSeason for this token here
 
 
-
-        _cumulativeGrownStalkPerBdv = s.ss[address(token)].lastCumulativeGrownStalkPerBdv.add(
-            int128(s.ss[address(token)].stalkPerBdvPerSeason.mul(s.season.current.sub(s.ss[address(token)].lastUpdateSeason)).div(1e6)) //round here
-        );
+        //replace the - here with sub to disable support for when the current season is less than the silov3 epoch season
+        _cumulativeGrownStalkPerBdv = s.ss[address(token)].lastCumulativeGrownStalkPerBdv +
+            int128(int128(s.ss[address(token)].stalkPerBdvPerSeason).mul(int128(s.season.current)-int128(s.ss[address(token)].lastUpdateSeason)).div(1e6)) //round here
+        ;
     }
 
     function grownStalkForDeposit(

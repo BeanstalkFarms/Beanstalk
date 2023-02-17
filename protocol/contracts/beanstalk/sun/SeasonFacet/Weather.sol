@@ -162,7 +162,7 @@ contract Weather is Sun {
         int256 newBeans = LibBeanMetaCurve.getDeltaB();
         if (newBeans <= 0) return;
         uint256 sopBeans = uint256(newBeans);
-
+        console.log('sop() sopBeans: ', sopBeans);
         uint256 newHarvestable;
         if (s.f.harvestable < s.r.pods) {
             newHarvestable = s.r.pods - s.f.harvestable;
@@ -170,15 +170,19 @@ contract Weather is Sun {
             C.bean().mint(address(this), newHarvestable.add(sopBeans));
         } else C.bean().mint(address(this), sopBeans);
         uint256 amountOut = C.curveMetapool().exchange(0, 1, sopBeans, 0);
+        console.log('amountOut: ', amountOut);
         rewardSop(amountOut);
         emit SeasonOfPlenty(s.season.current, amountOut, newHarvestable);
     }
 
     function rewardSop(uint256 amount) private {
+        console.log('rewardSop: ', amount);
         s.sops[s.season.rainStart] = s.sops[s.season.lastSop].add(
             amount.mul(C.getSopPrecision()).div(s.r.roots)
         );
         s.season.lastSop = s.season.rainStart;
+        console.log('rewardSop s.season.lastSop: ', s.season.lastSop);
         s.season.lastSopSeason = s.season.current;
+        console.log('rewardSop s.season.lastSopSeason: ', s.season.lastSopSeason);
     }
 }

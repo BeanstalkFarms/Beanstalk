@@ -247,26 +247,31 @@ contract SiloExit is ReentrancyGuard {
             // If there has been a SOP duing the rain sesssion since last update, process SOP.
             if (lastRainPPR > previousPPR) {
                 uint256 plentyPerRoot = lastRainPPR - previousPPR;
+                console.log('1 plentyPerRoot: ', plentyPerRoot);
                 previousPPR = lastRainPPR;
                 plenty = plenty.add(
                     plentyPerRoot.mul(s.a[account].sop.roots).div(
                         C.getSopPrecision()
                     )
                 );
+                console.log('1 plenty: ', plenty);
             }
         } else {
             // If it was not raining, just use the PPR at previous SOP.
             previousPPR = s.sops[s.a[account].lastSop];
+            console.log('previousPPR: ', previousPPR);
         }
 
         // Handle and SOPs that started + ended before after last Silo update.
         if (s.season.lastSop > lastUpdate(account)) {
             uint256 plentyPerRoot = s.sops[s.season.lastSop].sub(previousPPR);
+            console.log('2 plentyPerRoot: ', plentyPerRoot);
             plenty = plenty.add(
                 plentyPerRoot.mul(balanceOfRoots(account)).div(
                     C.getSopPrecision()
                 )
             );
+            console.log('2 plenty: ', plenty);
         }
     }
 
