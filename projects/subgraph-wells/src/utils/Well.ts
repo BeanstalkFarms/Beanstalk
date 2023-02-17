@@ -164,9 +164,11 @@ export function getCalculatedReserveUSDValues(tokens: Bytes[], reserves: BigInt[
   return results;
 }
 
-export function updateWellLiquidityTokenBalance(wellAddress: Address, deltaAmount: BigInt): void {
+export function updateWellLiquidityTokenBalance(wellAddress: Address, deltaAmount: BigInt, timestamp: BigInt, blockNumber: BigInt): void {
   let well = loadWell(wellAddress);
   well.lpTokenSupply = well.lpTokenSupply.plus(deltaAmount);
+  well.lastUpdateTimestamp = timestamp;
+  well.lastUpdateBlockNumber = blockNumber;
   well.save();
 }
 
