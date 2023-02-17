@@ -1,4 +1,5 @@
 import { BoreWell } from "../../generated/Aquifer/Aquifer";
+import { ERC20 } from "../../generated/Aquifer/ERC20";
 import { Well } from "../../generated/templates";
 import { loadOrCreateAquifer } from "../utils/Aquifer";
 import { loadOrCreatePump } from "../utils/Pump";
@@ -11,11 +12,18 @@ export function handleBoreWell(event: BoreWell): void {
   Well.create(event.params.well);
 
   let well = createWell(event.params.well, event.params.implementation, event.params.tokens);
-  let wellToken = loadOrCreateToken(event.params.well);
+
+  let wellContract = ERC20.bind(event.params.well);
+
+  let nameCall = wellContract.try_name();
+  if (nameCall.reverted) well.name = "";
+  else well.name = nameCall.value;
+
+  let symbolCall = wellContract.try_symbol();
+  if (symbolCall.reverted) well.symbol = "";
+  else well.symbol = symbolCall.value;
 
   well.aquifer = event.address;
-  well.name = wellToken.name;
-  well.symbol = wellToken.symbol;
 
   // A bit crude, but it works
 

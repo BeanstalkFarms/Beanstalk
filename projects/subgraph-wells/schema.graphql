@@ -117,11 +117,6 @@ type Well @entity {
   " Total number of trades (swaps) "
   cumulativeSwapCount: Int!
 
-  ##### Beanstalk Specific Data #####
-
-  " Total supply of well tokens that are deposited in the Silo. "
-  depositedWellTokenAmount: BigInt
-
   " Day ID of the most recent daily snapshot "
   lastSnapshotDayID: Int!
 
@@ -163,8 +158,6 @@ type WellDailySnapshot @entity {
 
   " The well this snapshot belongs to "
   well: Well!
-
-  ##### Quantitative Data #####
 
   ##### Cumulative Data #####
 
@@ -234,8 +227,6 @@ type WellHourlySnapshot @entity {
 
   " The well this snapshot belongs to "
   well: Well!
-
-  ##### Quantitative Data #####
 
   ##### Cumulative Data #####
 
@@ -331,9 +322,6 @@ type Deposit @entity(immutable: true) {
   " Account that emitted this event "
   account: Account!
 
-  #" The user position changed by this event "
-  #position: Position
-
   " The well involving this event "
   well: Well!
 
@@ -381,9 +369,6 @@ type Withdraw @entity(immutable: true) {
 
   " Account that emitted this event "
   account: Account!
-
-  #" The user position changed by this event "
-  #position: Position
 
   " The well involving this event "
   well: Well!
