@@ -141,7 +141,7 @@ describe('Sop', function () {
       expect(await this.silo.connect(user).balanceOfPlenty(user2Address)).to.be.equal('50208107346352812150')
     })
 
-    it.only('tracks user2 plenty after update', async function () {
+    it('tracks user2 plenty after update', async function () {
       await this.silo.mow(user2Address, this.beanMetapool.address);
       // await this.silo.mow(user2Address, this.bean.address); //with this one uncommented it's 10002000000000000000000000
       const userSop = await this.silo.balanceOfSop(user2Address);
@@ -168,7 +168,6 @@ describe('Sop', function () {
       await this.season.rainSunrise();
       console.log('stalk 2a: ', await this.silo.balanceOfStalk(user2Address));
       console.log('roots 2a: ', await this.silo.balanceOfRoots(user2Address));
-      await this.silo.mow(user2Address, this.beanMetapool.address);
       await this.silo.mow(user2Address, this.bean.address);
       console.log('stalk 2b: ', await this.silo.balanceOfStalk(user2Address));
       console.log('roots 2b: ', await this.silo.balanceOfRoots(user2Address));
