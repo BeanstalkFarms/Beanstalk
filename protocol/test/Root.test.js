@@ -26,7 +26,7 @@ const {
 const { to18, to6, toStalk, toBean } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const ZERO_BYTES = ethers.utils.formatBytes32String("0x0");
-const { time } = require("@nomicfoundation/hardhat-network-helpers");
+const { time, mineUpTo } = require("@nomicfoundation/hardhat-network-helpers");
 
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -318,7 +318,7 @@ describe("Root", function () {
 
       await this.season.fastForward(48);
       await this.season.siloSunrise(100);
-      time.increase(3600);
+      await mineUpTo((await ethers.provider.getBlockNumber()) + 25 + 1);
       await this.rootToken.connect(user).earn();
     });
 
