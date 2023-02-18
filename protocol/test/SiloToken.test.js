@@ -261,7 +261,7 @@ describe('Silo Token', function () {
     
         it('emits RemoveDeposit event', async function () {
           const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(this.siloToken.address, '10');
-          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, this.siloToken.address, grownStalkPerBdv, '1000');
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, this.siloToken.address, grownStalkPerBdv, '1000', '1000');
         });
       });
       
@@ -295,7 +295,7 @@ describe('Silo Token', function () {
 
         it('emits RemoveDeposit event', async function () {
           const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(this.siloToken.address, '10');
-          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, this.siloToken.address, grownStalkPerBdv, '500');
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, this.siloToken.address, grownStalkPerBdv, '500', '500');
         });
       });
     });
@@ -330,7 +330,7 @@ describe('Silo Token', function () {
           expect(dep[1]).to.equal('0')
         });
         it('emits RemoveDeposits event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [0,1], ['500', '1000'], '1500');
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [0,1], ['500', '1000'], '1500', ['500', '1000']);
         });
       });
       describe('2 token crates', function () {
@@ -361,7 +361,7 @@ describe('Silo Token', function () {
           expect(dep[1]).to.equal('0')
         });
         it('emits RemoveDeposits event', async function () {
-          await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [0,1], ['1000', '1000'], '2000');
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [0,1], ['1000', '1000'], '2000', ['1000', '1000']);
         });
       });
     });
@@ -434,15 +434,11 @@ describe('Silo Token', function () {
 
           const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '10');
 
-
-
           this.result = await this.silo.connect(user).withdrawDeposit(UNRIPE_BEAN, grownStalkPerBdv, to6('1'), EXTERNAL)
         })
 
         it('properly updates the total balances', async function () {
-
           expect(await this.silo.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6('9'));
-
           expect(await this.silo.totalStalk()).to.eq(pruneToStalk(to6('9')));
         });
         it('properly updates the user balance', async function () {
@@ -460,7 +456,7 @@ describe('Silo Token', function () {
         it('emits RemoveDeposit event', async function () {
           const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '10');
 
-          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, grownStalkPerBdv, to6('1'));
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, grownStalkPerBdv, to6('1'), '185564');
         });
       })
     })
@@ -524,7 +520,7 @@ describe('Silo Token', function () {
         });
         it('emits RemoveDeposit event', async function () {
           const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '10');
-          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, grownStalkPerBdv, to6('11'));
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, grownStalkPerBdv, to6('11'), '2041210');
         });
       })
     })
@@ -583,7 +579,7 @@ describe('Silo Token', function () {
 
         it('emits RemoveDeposit event', async function () {
           const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
-          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_LP, grownStalkPerBdv, to6('1'));
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_LP, grownStalkPerBdv, to6('1'), '185564');
         });
       })
     })
@@ -640,7 +636,7 @@ describe('Silo Token', function () {
 
         it('emits RemoveDeposit event', async function () {
           const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
-          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_LP, grownStalkPerBdv, to6('1'));
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_LP, grownStalkPerBdv, to6('1'), '185564');
         });
       })
     })
@@ -698,7 +694,7 @@ describe('Silo Token', function () {
 
         it('emits RemoveDeposit event', async function () {
           const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
-          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_LP, grownStalkPerBdv, to6('1'));
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_LP, grownStalkPerBdv, to6('1'), '185564');
         });
       })
     })
@@ -758,7 +754,7 @@ describe('Silo Token', function () {
 
         it('emits RemoveDeposit event', async function () {
           const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_LP, '10');
-          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_LP, grownStalkPerBdv, to6('9'));
+          await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_LP, grownStalkPerBdv, to6('9'), '1670080');
         });
       })
     })
@@ -1134,7 +1130,7 @@ describe('Silo Token', function () {
 
       it('emits Remove and Add Deposit event', async function () {
         const grownStalkPerBdv10 = await this.silo.seasonToGrownStalkPerBdv(this.siloToken.address, '10');
-        await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, grownStalkPerBdv10, to6('5'));
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, grownStalkPerBdv10, to6('5'), '927823');
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, grownStalkPerBdv10, to6('5'), prune(to6('5')).add(to6('0.5')));
       });
     });
@@ -1177,7 +1173,7 @@ describe('Silo Token', function () {
 
       it('emits Remove and Add Deposit event', async function () {
         const grownStalkPerBdv10 = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '10');
-        await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, grownStalkPerBdv10, to6('10'));
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, grownStalkPerBdv10, to6('10'), '1855646');
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, grownStalkPerBdv10, to6('10'), to6('5'));
       });
     });
@@ -1223,7 +1219,7 @@ describe('Silo Token', function () {
       it('emits Remove and Add Deposits event', async function () {
         const grownStalkPerBdv10 = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '10');
         const grownStalkPerBdv11 = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '11');
-        await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, UNRIPE_BEAN, [grownStalkPerBdv10,grownStalkPerBdv11], [to6('5'), to6('5')], to6('10'));
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, UNRIPE_BEAN, [grownStalkPerBdv10,grownStalkPerBdv11], [to6('5'), to6('5')], to6('10'), ['927823', '927823']);
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, grownStalkPerBdv10, to6('5'), to6('2.5'));
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, grownStalkPerBdv11, to6('5'), to6('2.5'));
       });

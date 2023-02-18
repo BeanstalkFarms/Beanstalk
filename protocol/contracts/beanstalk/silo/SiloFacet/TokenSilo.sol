@@ -68,8 +68,8 @@ contract TokenSilo is Silo {
         address indexed account,
         address indexed token,
         int128 grownStalkPerBdv,
-        uint256 amount
-        
+        uint256 amount,
+        uint256 bdv
     );
 
     /**
@@ -90,7 +90,8 @@ contract TokenSilo is Silo {
         address indexed token,
         int128[] grownStalkPerBdvs,
         uint256[] amounts,
-        uint256 amount 
+        uint256 amount,
+        uint256[] bdvs
     ); //add bdv[] here? in favor of array
 
     // note add/remove withdrawal(s) are removed as claiming is removed
@@ -349,7 +350,7 @@ contract TokenSilo is Silo {
         );
         console.log('removeDepositFromAccount stalkRemoved: ', stalkRemoved);
 
-        emit RemoveDeposit(account, token, grownStalkPerBdv, amount);
+        emit RemoveDeposit(account, token, grownStalkPerBdv, amount, bdvRemoved);
     }
 
     /**
@@ -368,6 +369,7 @@ contract TokenSilo is Silo {
     ) internal returns (AssetsRemoved memory ar) {
         console.log('removeDepositsFromAccount: ', account);
         //make bdv array and add here?
+        uint256[] memory bdvsRemoved = new uint256[](grownStalkPerBdvs.length);
         for (uint256 i; i < grownStalkPerBdvs.length; ++i) {
             uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 account,
@@ -375,6 +377,7 @@ contract TokenSilo is Silo {
                 grownStalkPerBdvs[i],
                 amounts[i]
             );
+            bdvsRemoved[i] = crateBdv;
             ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
             console.log('s.ss[token].stalkPerBdv: ', s.ss[token].stalkPerBdv);
@@ -394,7 +397,7 @@ contract TokenSilo is Silo {
         console.log('2 ar.stalkRemoved: ', ar.stalkRemoved);
 
         //need to add BDV array here
-        emit RemoveDeposits(account, token, grownStalkPerBdvs, amounts, ar.tokensRemoved);
+        emit RemoveDeposits(account, token, grownStalkPerBdvs, amounts, ar.tokensRemoved, bdvsRemoved);
     }
 
     //////////////////////// TRANSFER ////////////////////////
@@ -474,7 +477,7 @@ contract TokenSilo is Silo {
             ar.bdvRemoved.mul(s.ss[token].stalkPerBdv)
         );
 
-        emit RemoveDeposits(sender, token, grownStalkPerBdvs, amounts, ar.tokensRemoved);
+        emit RemoveDeposits(sender, token, grownStalkPerBdvs, amounts, ar.tokensRemoved, bdvs);
 
         // Transfer all the Stalk
         LibSilo.transferStalk(

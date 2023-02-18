@@ -85,7 +85,7 @@ describe('Convert', function () {
       })
 
       it('Emits event', async function () {
-        await expect(this.result).to.emit(this.convert, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [2], ['100'], '100');
+        await expect(this.result).to.emit(this.convert, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [2], ['100'], '100', ['100']);
         await expect(this.result).to.emit(this.convert, 'MockConvert').withArgs('0', '100');
       })
 
@@ -119,7 +119,7 @@ describe('Convert', function () {
       })
 
       it('Emits event', async function () {
-        await expect(this.result).to.emit(this.convert, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [2, 1], ['100', '0'], '100');
+        await expect(this.result).to.emit(this.convert, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [2, 1], ['100', '0'], '100',['100', '0'] );
         await expect(this.result).to.emit(this.convert, 'MockConvert').withArgs('0', '100');
       })
 
@@ -184,7 +184,7 @@ describe('Convert', function () {
       })
 
       it('Emits event', async function () { 
-        await expect(this.result).to.emit(this.convert, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [1, 2], ['100','50'], '150');
+        await expect(this.result).to.emit(this.convert, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [1, 2], ['100','50'], '150', ['100','50']);
         await expect(this.result).to.emit(this.convert, 'MockConvert').withArgs('100', '150');
       })
 
@@ -357,7 +357,7 @@ describe('Convert', function () {
     })
 
     it('Emits events', async function () {
-      await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [1, 2], ['100', '100'], '200');
+      await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [1, 2], ['100', '100'], '200', ['100', '100']);
       await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, this.siloToken.address, 2, '200', '200');
     })
   })

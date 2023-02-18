@@ -35,7 +35,8 @@ contract ConvertFacet is ReentrancyGuard {
         address indexed token,
         int128[] grownStalkPerBdvs,
         uint256[] amounts,
-        uint256 amount
+        uint256 amount,
+        uint256[] bdvs
     );
 
     struct AssetsRemoved {
@@ -92,6 +93,7 @@ contract ConvertFacet is ReentrancyGuard {
         AssetsRemoved memory a;
         uint256 depositBDV;
         uint256 i = 0;
+        uint256[] memory bdvsRemoved = new uint256[](grownStalkPerBdvs.length);
         while ((i < grownStalkPerBdvs.length) && (a.tokensRemoved < maxTokens)) {
             if (a.tokensRemoved.add(amounts[i]) < maxTokens) {
                 console.log('grownStalkPerBdvs[i]: ');
@@ -105,6 +107,8 @@ contract ConvertFacet is ReentrancyGuard {
                     grownStalkPerBdvs[i],
                     amounts[i]
                 );
+                console.log('_withdrawTokens depositBDV: ', depositBDV);
+                bdvsRemoved[i] = depositBDV;
                 a.stalkRemoved = a.stalkRemoved.add(
                     LibSilo.stalkReward(
                         grownStalkPerBdvs[i],
@@ -121,6 +125,8 @@ contract ConvertFacet is ReentrancyGuard {
                     grownStalkPerBdvs[i],
                     amounts[i]
                 );
+                console.log('_withdrawTokens depositBDV: ', depositBDV);
+                bdvsRemoved[i] = depositBDV;
                 a.stalkRemoved = a.stalkRemoved.add(
                     LibSilo.stalkReward(
                         grownStalkPerBdvs[i],
@@ -148,7 +154,8 @@ contract ConvertFacet is ReentrancyGuard {
             token,
             grownStalkPerBdvs,
             amounts,
-            a.tokensRemoved
+            a.tokensRemoved,
+            bdvsRemoved
         );
 
         require(

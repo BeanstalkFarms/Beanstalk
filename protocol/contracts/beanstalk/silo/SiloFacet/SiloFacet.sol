@@ -398,7 +398,7 @@ contract SiloFacet is TokenSilo {
             amount
         );
         console.log('enrootDeposit ogBDV: ', ogBDV);
-        emit RemoveDeposit(msg.sender, token, grownStalkPerBdv, amount); // Remove Deposit does not emit an event, while Add Deposit does.
+        emit RemoveDeposit(msg.sender, token, grownStalkPerBdv, amount, ogBDV); // Remove Deposit does not emit an event, while Add Deposit does.
 
         // Calculate the current BDV for `amount` of `token` and add a Deposit.
         uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);

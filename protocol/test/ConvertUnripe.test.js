@@ -159,7 +159,7 @@ describe('Unripe Convert', function () {
 
       it('emits events', async function () {
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
-          .withArgs(userAddress, this.unripeBean.address, [0], [to6('1000')], to6('1000'));
+          .withArgs(userAddress, this.unripeBean.address, [0], [to6('1000')], to6('1000'), [to6('100')]);
         await expect(this.result).to.emit(this.silo, 'AddDeposit')
           .withArgs(userAddress, this.unripeLP.address, 0, '1006344767', toBean('100'));
       });
@@ -203,7 +203,7 @@ describe('Unripe Convert', function () {
       it('emits events', async function () {
         const grownStalkPerBdvUnripeBean = await this.silo.seasonToGrownStalkPerBdv(this.unripeBean.address, '14');
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
-          .withArgs(userAddress, this.unripeBean.address, [0, grownStalkPerBdvUnripeBean], [to6('1000'), to6('1000')], to6('2000'));
+          .withArgs(userAddress, this.unripeBean.address, [0, grownStalkPerBdvUnripeBean], [to6('1000'), to6('1000')], to6('2000'), [to6('100'), to6('100')]);
         await expect(this.result).to.emit(this.silo, 'AddDeposit')
           .withArgs(userAddress, this.unripeLP.address, 12, '2008324306', toBean('200'));
       });
@@ -242,7 +242,7 @@ describe('Unripe Convert', function () {
 
       it('emits events', async function () {
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
-          .withArgs(userAddress, this.unripeBean.address, [0], [to6('500')], to6('500'));
+          .withArgs(userAddress, this.unripeBean.address, [0], [to6('500')], to6('500'), [to6('100')]);
         await expect(this.result).to.emit(this.silo, 'AddDeposit')
           .withArgs(userAddress, this.unripeLP.address, 0, '503172383', toBean('100'));
       });
@@ -279,7 +279,7 @@ describe('Unripe Convert', function () {
 
       it('emits events', async function () {
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
-          .withArgs(userAddress, this.unripeBean.address, [0], [to6('500')], to6('500'));
+          .withArgs(userAddress, this.unripeBean.address, [0], [to6('500')], to6('500'), [to6('50')]);
         await expect(this.result).to.emit(this.silo, 'AddDeposit')
           .withArgs(userAddress, this.unripeLP.address, 0, '503761210', '97342214');
       });
@@ -357,7 +357,7 @@ describe('Unripe Convert', function () {
 
       it('emits events', async function () {
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
-          .withArgs(userAddress, this.unripeLP.address, [0, 8], [to6('500'), to6('500')], to6('1000'));
+          .withArgs(userAddress, this.unripeLP.address, [0, 8], [to6('500'), to6('500')], to6('1000'), [to6('50'), to6('50')]);
         await expect(this.result).to.emit(this.silo, 'AddDeposit')
           .withArgs(userAddress, this.unripeBean.address, 1, to6('1006.18167'), to6('100.618167'));
       });

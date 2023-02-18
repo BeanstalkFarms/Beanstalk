@@ -164,7 +164,7 @@ describe('Curve Convert', function () {
           const grownStalkPerBdvBean = await this.silo.seasonToGrownStalkPerBdv(this.bean.address, '12');
           const grownStalkPerBdvMetapool = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, '12');
           await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
-            .withArgs(userAddress, this.bean.address, [grownStalkPerBdvBean], [toBean('100')], toBean('100'));
+            .withArgs(userAddress, this.bean.address, [grownStalkPerBdvBean], [toBean('100')], toBean('100'), [toBean('100')]);
           await expect(this.result).to.emit(this.silo, 'AddDeposit')
             .withArgs(userAddress, this.beanMetapool.address, grownStalkPerBdvMetapool, '100634476734756985505', toBean('100'));
         });
@@ -216,7 +216,7 @@ describe('Curve Convert', function () {
         it('emits events', async function () {
           const grownStalkPerBdvBean = await this.silo.seasonToGrownStalkPerBdv(this.bean.address, '12');
           await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
-            .withArgs(userAddress, this.bean.address, [grownStalkPerBdvBean], [toBean('200')], toBean('200'));
+            .withArgs(userAddress, this.bean.address, [grownStalkPerBdvBean], [toBean('200')], toBean('200'), [toBean('200')]);
             const grownStalkPerBdvMetapool = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, '12');
           await expect(this.result).to.emit(this.silo, 'AddDeposit')
             .withArgs(userAddress, this.beanMetapool.address, grownStalkPerBdvMetapool, '200832430692705624354', toBean('200'));
@@ -263,7 +263,7 @@ describe('Curve Convert', function () {
         it('emits events', async function () {
           const grownStalkPerBdvBean = await this.silo.seasonToGrownStalkPerBdv(this.bean.address, '12');
           await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
-            .withArgs(userAddress, this.bean.address, [grownStalkPerBdvBean], [toBean('200')], toBean('200'));
+            .withArgs(userAddress, this.bean.address, [grownStalkPerBdvBean], [toBean('200')], toBean('200'), [toBean('200')]);
           const grownStalkPerBdvMetapool = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, '12');
           await expect(this.result).to.emit(this.silo, 'AddDeposit')
             .withArgs(userAddress, this.beanMetapool.address, grownStalkPerBdvMetapool, '200832430692705624354', toBean('200'));
@@ -313,7 +313,7 @@ describe('Curve Convert', function () {
         it('emits events', async function () {
           const grownStalkPerBdvBean = await this.silo.seasonToGrownStalkPerBdv(this.bean.address, '12');
           await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
-            .withArgs(userAddress, this.bean.address, [grownStalkPerBdvBean], [toBean('200')], toBean('200'));
+            .withArgs(userAddress, this.bean.address, [grownStalkPerBdvBean], [toBean('200')], toBean('200'), [toBean('200')]);
             const grownStalkPerBdvMetapool = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, '13');
           await expect(this.result).to.emit(this.silo, 'AddDeposit')
             .withArgs(userAddress, this.beanMetapool.address, grownStalkPerBdvMetapool, '200832430692705624354', toBean('200'));
@@ -368,7 +368,7 @@ describe('Curve Convert', function () {
           const grownStalkPerBdvBean10 = await this.silo.seasonToGrownStalkPerBdv(this.bean.address, '10');
           const grownStalkPerBdvBean14 = await this.silo.seasonToGrownStalkPerBdv(this.bean.address, '14');
           await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
-            .withArgs(userAddress, this.bean.address, [grownStalkPerBdvBean10, grownStalkPerBdvBean14], [toBean('100'), toBean('100')], toBean('200'));
+            .withArgs(userAddress, this.bean.address, [grownStalkPerBdvBean10, grownStalkPerBdvBean14], [toBean('100'), toBean('100')], toBean('200'), [toBean('100'), toBean('100')]);
           await expect(this.result).to.emit(this.silo, 'AddDeposit')
             .withArgs(userAddress, this.beanMetapool.address, 12, '200832430692705624354', toBean('200'));
         });
@@ -449,7 +449,7 @@ describe('Curve Convert', function () {
           const grownStalkPerBdvMetapool = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, '10');
           const grownStalkPerBdvBean = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, '10');
           await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
-            .withArgs(userAddress, this.beanMetapool.address, [grownStalkPerBdvMetapool], [to18('100')], to18('100'));
+            .withArgs(userAddress, this.beanMetapool.address, [grownStalkPerBdvMetapool], [to18('100')], to18('100'), [toBean('100')]);
           await expect(this.result).to.emit(this.silo, 'AddDeposit')
             .withArgs(userAddress, this.bean.address, grownStalkPerBdvBean, '100618167', '100618167');
         });
@@ -505,7 +505,7 @@ describe('Curve Convert', function () {
           const grownStalkPerBdvMetapool = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, '10');
           const grownStalkPerBdvBean = await this.silo.seasonToGrownStalkPerBdv(this.bean.address, '10');
           await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
-            .withArgs(userAddress, this.beanMetapool.address, [grownStalkPerBdvMetapool], ['199185758314813528598'], '199185758314813528598');
+            .withArgs(userAddress, this.beanMetapool.address, [grownStalkPerBdvMetapool], ['199185758314813528598'], '199185758314813528598', ['199185758']);
           await expect(this.result).to.emit(this.silo, 'AddDeposit')
             .withArgs(userAddress, this.bean.address, grownStalkPerBdvBean, '200018189', '200018189');
         });
@@ -558,7 +558,7 @@ describe('Curve Convert', function () {
           const grownStalkPerBdvMetapool = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, '10');
           const grownStalkPerBdvBean = await this.silo.seasonToGrownStalkPerBdv(this.bean.address, '10');
           await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
-            .withArgs(userAddress, this.beanMetapool.address, [grownStalkPerBdvMetapool], [to18('100')], to18('100'));
+            .withArgs(userAddress, this.beanMetapool.address, [grownStalkPerBdvMetapool], [to18('100')], to18('100'), [toBean('100')]);
           await expect(this.result).to.emit(this.silo, 'AddDeposit')
             .withArgs(userAddress, this.bean.address, -1, '100618167', '100618167');
         });
@@ -610,7 +610,7 @@ describe('Curve Convert', function () {
           const grownStalkPerBdvMetapool11 = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, '11');
 
           await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
-            .withArgs(userAddress, this.beanMetapool.address, [grownStalkPerBdvMetapool10, grownStalkPerBdvMetapool11], [to18('50'), to18('50')], to18('100'));
+            .withArgs(userAddress, this.beanMetapool.address, [grownStalkPerBdvMetapool10, grownStalkPerBdvMetapool11], [to18('50'), to18('50')], to18('100'), [toBean('50'), toBean('50')]);
           await expect(this.result).to.emit(this.silo, 'AddDeposit')
             .withArgs(userAddress, this.bean.address, 1, '100618167', '100618167');
         });
