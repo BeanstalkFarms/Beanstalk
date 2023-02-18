@@ -10,6 +10,9 @@ import "./SiloExit.sol";
 import "~/libraries/Silo/LibSilo.sol";
 import "~/libraries/Silo/LibTokenSilo.sol";
 
+import "hardhat/console.sol";
+import "~/libraries/LibPRBMath.sol";
+
 /**
  * @title Silo
  * @author Publius
@@ -25,6 +28,7 @@ import "~/libraries/Silo/LibTokenSilo.sol";
  
 contract Silo is SiloExit {
     using SafeMath for uint256;
+    using LibPRBMath for uint256;
     using SafeERC20 for IERC20;
     using LibSafeMath128 for uint128;
 
@@ -127,9 +131,8 @@ contract Silo is SiloExit {
     function _mow(address account) internal {
         uint32 _lastUpdate = lastUpdate(account);
 
-        // If `account` was already updated this Season, there's no Stalk to Mow.
-        // _lastUpdate > _season() should not be possible, but it is checked anyway.
         if (_lastUpdate >= _season()) return;
+
 
         // Increments `plenty` for `account` if a Flood has occured.
         // Saves Rain Roots for `account` if it is Raining.
@@ -146,8 +149,27 @@ contract Silo is SiloExit {
 
     function __mow(address account) private {
         // If this `account` has no Seeds, skip to save gas.
+        uint256 _stalk = balanceOfGrownStalk(account);
         if (s.a[account].s.seeds == 0) return;
-        LibSilo.mintStalk(account, balanceOfGrownStalk(account));
+        LibSilo.mintStalk(account, _stalk);
+    }
+
+    // the amount of roots issued to the user is based on the total stalk. 
+    // during the first 5 blocks, the earned beans from the previous seasons are not issued.
+    // since roots are a function of total stalk, this means the roots issued is different from
+    // a regular mow. 
+    // super mow increments the stalk and roots of the user by total stalk, but stores the roots
+    // needed to correctly issue the earned beans.
+    function __superMow(address account) private {
+        console.log("SUPER MOW");
+        uint32 _lastUpdate = lastUpdate(account);
+        if (_lastUpdate >= _season()) return;
+        // If this `account` has no Seeds, skip to save gas.
+        uint256 _stalk = balanceOfGrownStalk(account);
+
+        if (s.a[account].s.seeds == 0) return;
+        s.a[account].lastUpdate = _season();
+        LibSilo.mintStalkAndStoreRoots(account, _stalk);
     }
 
     //////////////////////// INTERNAL: PLANT ////////////////////////
@@ -161,11 +183,18 @@ contract Silo is SiloExit {
     function _plant(address account) internal returns (uint256 beans) {
         // Need to Mow for `account` before we calculate the balance of 
         // Earned Beans.
-        _mow(account);
+        bool is25Blocks;
+        if(block.number - s.season.sunriseBlock <= 25){
+            __superMow(account);
+            is25Blocks = false;
+        } else {
+            _mow(account);
+            is25Blocks = true;
+        }
         uint256 accountStalk = s.a[account].s.stalk;
 
         // Calculate balance of Earned Beans.
-        beans = _balanceOfEarnedBeans(account, accountStalk);
+        beans = _balanceOfEarnedBeans(account, accountStalk, is25Blocks);
         if (beans == 0) return 0;
 
         // Reduce the Silo's supply of Earned Beans.

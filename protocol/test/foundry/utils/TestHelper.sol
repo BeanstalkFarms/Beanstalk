@@ -49,8 +49,6 @@ import {MockFertilizerFacet} from "~/mocks/mockFacets/MockFertilizerFacet.sol";
 import {MockToken} from "~/mocks/MockToken.sol";
 import {MockUnripeFacet} from "~/mocks/mockFacets/MockUnripeFacet.sol";
 import {Mock3Curve} from "~/mocks/curve/Mock3Curve.sol";
-import {MockUniswapV3Pool} from "~/mocks/uniswap/MockUniswapV3Pool.sol";
-import {MockUniswapV3Factory} from "~/mocks/uniswap/MockUniswapV3Factory.sol";
 import {MockCurveFactory} from "~/mocks/curve/MockCurveFactory.sol";
 import {MockCurveZap} from "~/mocks/curve/MockCurveZap.sol";
 import {MockMeta3Curve} from "~/mocks/curve/MockMeta3Curve.sol";
@@ -159,7 +157,6 @@ abstract contract TestHelper is Test {
         _mockToken("USDC", address(C.usdc()));
         _mockPrice();
         _mockCurve(); // only if "reset"
-        // _mockUniswap(); // only needed for sunrise improvements
         _mockUnripe();
         _mockWeth(); // only if "reset"
         //_mockCurveMetapool();

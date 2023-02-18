@@ -13,6 +13,7 @@ import "~/libraries/LibSafeMath32.sol";
 import "~/libraries/LibSafeMath128.sol";
 import "~/libraries/LibPRBMath.sol";
 import "~/C.sol";
+import "hardhat/console.sol";
 
 /**
  * @title SiloExit, Brean
@@ -28,6 +29,8 @@ contract SiloExit is ReentrancyGuard {
     using LibSafeMath32 for uint32;
     using LibSafeMath128 for uint128;
     using LibPRBMath for uint256;
+
+    uint256 constant private EARNED_BEAN_VESTING_BLOCKS = 25; //  5 minutes
 
     /**
      * @dev Stores account-level Season of Plenty balances.
@@ -106,6 +109,7 @@ contract SiloExit is ReentrancyGuard {
     /**
      * @notice Returns the balance of Stalk for `account`. 
      * Does NOT include Grown Stalk.
+     * DOES include Earned Stalk.
      * @dev Earned Stalk earns Bean Mints, but Grown Stalk does not due to
      * computational complexity.
      */
@@ -162,8 +166,35 @@ contract SiloExit is ReentrancyGuard {
         view
         returns (uint256 beans)
     {
-        beans = _balanceOfEarnedBeans(account, s.a[account].s.stalk);
+        // currently this function does not include the vesting period, 
+        // as we would have to calculate the amount of to issue:
+        if(block.number - s.season.sunriseBlock <= 25){
+            (uint256 deltaRoots, uint256 newEarnedRoots) = _calcRoots(account);
+            console.log("deltaRoots:", deltaRoots);
+            console.log("newEarnedRoots:", newEarnedRoots);
+            beans = _balanceOfEarnedBeansVested(account, s.a[account].s.stalk, deltaRoots, newEarnedRoots);
+        } else {
+            beans = _balanceOfEarnedBeans(account, s.a[account].s.stalk, true);
+        }
     }
+    
+    function _calcRoots(address account) internal view returns (uint256 delta_roots, uint256 newEarnedRoots) {
+        uint256 _stalk = balanceOfGrownStalk(account);
+        if(_stalk == 0) {
+            console.log("stalk is 0");
+            delta_roots = s.a[account].deltaRoots;
+            newEarnedRoots = s.newEarnedRoots;
+        } else {
+            console.log("stalk is non 0");
+            uint256 rootEarned = s.s.roots.mul(_stalk).div(s.s.stalk);
+            uint256 rootUnEarned = s.s.roots.add(s.newEarnedRoots).mulDiv(_stalk, s.s.stalk - s.newEarnedStalk, LibPRBMath.Rounding.Up);
+            console.log("rootEarned:", rootEarned);
+            delta_roots = rootUnEarned;
+            newEarnedRoots = uint256(s.newEarnedRoots).add(delta_roots);
+        }
+    }
+           
+        
 
     /**
      * @dev Internal function to compute `account` balance of Earned Beans.
@@ -175,31 +206,44 @@ contract SiloExit is ReentrancyGuard {
      * divided by the number of Stalk per Bean.
      * The earned beans from the latest season 
      */
-    function _balanceOfEarnedBeans(address account, uint256 accountStalk)
+    function _balanceOfEarnedBeans(address account, uint256 accountStalk, bool hasVested) 
         internal
         view
-        returns (uint256 beans)
-    {
+        returns (uint256 beans) {
         // There will be no Roots before the first Deposit is made.
         if (s.s.roots == 0) return 0;
 
         // Calculate the % season remaining in the season, where 100% is 1e18.
-        uint256 percentSeasonRemaining =
-            1e18 - LibPRBMath.min(
-                    (block.timestamp - s.season.timestamp) * 1e18 / 3600, 
-                    1e18
-                );
-        
-        // vestingEarnedStalk
-        uint256 vestingEarnedStalk = uint256(s.newEarnedStalk).mul(percentSeasonRemaining).div(1e18);
-        // Determine expected user Stalk based on Roots balance.
-        // `balanceOfStalk / totalStalk = balanceOfRoots / totalRoots`
-        uint256 stalk = 
-            s.s.stalk.sub(vestingEarnedStalk).mulDiv(
+        uint256 stalk;
+        if(hasVested == false){
+            console.log("balanceOfEarnedBeans, < 25 blocks");
+            uint128 addedRoots = s.a[account].deltaRoots;
+            console.log("accountStalk:", accountStalk);
+            console.log("addedRoots: %s", addedRoots);
+            console.log("stalk with new stalk stuff:", s.s.stalk.sub(s.newEarnedStalk));
+            console.log("newStalkStuff:", s.newStalkStuff);
+            console.log("newEarnedStalk:", s.newEarnedStalk);
+            console.log("user roots w/added :", s.a[account].roots.add(addedRoots));
+            console.log("total roots w/total:", s.s.roots.add(addedRoots));
+            console.log("user roots w/out added :", s.a[account].roots);
+            console.log("total roots w/out total:", s.s.roots);
+            console.log("newEarnedRoots:", s.newEarnedRoots);
+            stalk = s.s.stalk.sub(s.newEarnedStalk).mulDiv(
+                s.a[account].roots.add(addedRoots),
+                s.s.roots.add(s.newEarnedRoots),
+                LibPRBMath.Rounding.Up
+            );
+            console.log("stalk:", stalk);
+            console.log("stalk without change:", s.s.stalk.mulDiv(s.a[account].roots, s.s.roots, LibPRBMath.Rounding.Up));
+        } else {
+            console.log("balanceOfEarnedBeans, greater than 25 blocks");
+            stalk = s.s.stalk.mulDiv(
                 s.a[account].roots,
                 s.s.roots,
                 LibPRBMath.Rounding.Up
             );
+        }
+        
         // Beanstalk rounds down when minting Roots. Thus, it is possible that
         // balanceOfRoots / totalRoots * totalStalk < s.a[account].s.stalk.
         // As `account` Earned Balance balance should never be negative, 
@@ -211,6 +255,34 @@ contract SiloExit is ReentrancyGuard {
         if (beans > s.earnedBeans) return s.earnedBeans;
 
         return beans;
+    }
+
+    function _balanceOfEarnedBeansVested(address account, uint256 accountStalk, uint256 deltaRoots, uint256 newEarnedRoots) 
+        internal
+        view
+        returns (uint256 beans) {
+         if (s.s.roots == 0) return 0;
+
+        // Calculate the % season remaining in the season, where 100% is 1e18.
+        uint256 stalk;
+        uint256 grownStalk = balanceOfGrownStalk(account);
+        stalk = s.s.stalk.add(grownStalk).sub(s.newEarnedStalk).mulDiv(
+            s.a[account].roots.add(uint128(deltaRoots)),
+            s.s.roots.add(uint128(newEarnedRoots)),
+            LibPRBMath.Rounding.Up
+        );        
+        // Beanstalk rounds down when minting Roots. Thus, it is possible that
+        // balanceOfRoots / totalRoots * totalStalk < s.a[account].s.stalk.
+        // As `account` Earned Balance balance should never be negative, 
+        // Beanstalk returns 0 instead.
+        if (stalk <= accountStalk) return 0;
+
+        // Calculate Earned Stalk and convert to Earned Beans.
+        beans = (stalk - accountStalk.add(grownStalk)).div(C.getStalkPerBean()); // Note: SafeMath is redundant here.
+        if (beans > s.earnedBeans) return s.earnedBeans;
+
+        return beans;
+
     }
 
     /**
@@ -329,5 +401,12 @@ contract SiloExit is ReentrancyGuard {
      */
     function _season() internal view returns (uint32) {
         return s.season.current;
+    }
+
+    function currentStalk() public view returns (uint256) {
+        return s.s.stalk - LibSilo.getVestingEarnedStalk();
+    }
+    function _getVestingEarnedStalk() external view returns (uint256){
+        return LibSilo.getVestingEarnedStalk();
     }
 }

@@ -35,13 +35,13 @@ contract MockSeasonFacet is SeasonFacet {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
         s.season.timestamp = block.timestamp;
+        s.season.sunriseBlock = uint32(block.number);
         mockStepSilo(amount);
     }
 
     function mockStepSilo(uint256 amount) public {
         C.bean().mint(address(this), amount);
         rewardToSilo(amount);
-
     }
 
     function rainSunrise() public {
@@ -87,6 +87,7 @@ contract MockSeasonFacet is SeasonFacet {
     function lightSunrise() public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
+        s.season.sunriseBlock = uint32(block.number);
     }
 
     function fastForward(uint32 _s) public {
@@ -251,5 +252,13 @@ contract MockSeasonFacet is SeasonFacet {
     function rewardToFertilizerE(uint256 amount) external {
         rewardToFertilizer(amount*3);
         C.bean().mint(address(this), amount);
+    }
+
+    function setSunriseBlock(uint256 _block) external {
+        s.season.sunriseBlock = uint32(_block);
+    }
+    
+    function getSunriseBlock() external view returns (uint256) {
+        return uint256(s.season.sunriseBlock);
     }
 }

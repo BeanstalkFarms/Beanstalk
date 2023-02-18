@@ -9,6 +9,10 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../C.sol";
 import "../LibAppStorage.sol";
 import "../LibPRBMath.sol";
+import "../LibSafeMath128.sol";
+
+import "hardhat/console.sol";
+
 
 /**
  * @title LibSilo
@@ -32,6 +36,7 @@ import "../LibPRBMath.sol";
 library LibSilo {
     using SafeMath for uint256;
     using LibPRBMath for uint256;
+    using LibSafeMath128 for uint128;
     
     //////////////////////// EVENTS ////////////////////////    
 
@@ -114,16 +119,68 @@ library LibSilo {
 
         // Calculate the amount of Roots for the given amount of Stalk.
         uint256 roots;
-        if (s.s.roots == 0) roots = stalk.mul(C.getRootsBase());
-        else roots = s.s.roots.mul(stalk).div(s.s.stalk);
+        if (s.s.roots == 0) {
+            roots = uint256(stalk.mul(C.getRootsBase()));
+        } else  {
+            roots = s.s.roots.mul(stalk).div(s.s.stalk);
+        }
+        console.log("-----");
+        console.log("root Gain:",roots);
+        console.log("Stalk Gain:", stalk);
 
-        // Increase supply of Stalk; Add Stalk to the balance of `account`
         s.s.stalk = s.s.stalk.add(stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
 
-        // Increase supply of Roots; Add Roots to the balance of `account`
         s.s.roots = s.s.roots.add(roots);
-        s.a[account].roots = s.a[account].roots.add(roots);
+        s.a[account].roots = s.a[account].roots.add(uint128(roots));
+
+        console.log("new root balance:", s.a[account].roots);
+        console.log("new stalk balance:", s.a[account].s.stalk);
+
+        emit StalkBalanceChanged(account, int256(stalk), int256(roots));
+    }
+
+
+    function mintStalkAndStoreRoots(address account, uint256 stalk) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        // Calculate the amount of Roots for the given amount of Stalk.
+        // while the issuance of roots are the same here, 
+        // we add another variable to store the difference, which is called in 
+        // the plant function. 
+        // this is seperated from the typical mintStalk as there is no need to store this difference
+        // if the user mints stalk after the block period, 
+        // nor if the mint was because of a deposit.
+        uint256 roots;
+        uint256 roots_without_earned;
+        console.log("roots used in calculation:", s.s.roots.sub(s.newEarnedRoots));
+        if (s.s.roots == 0) {
+            roots = uint256(stalk.mul(C.getRootsBase()));
+        } else  {
+            roots = s.s.roots.mul(stalk).div(s.s.stalk);
+            uint256 roots_with_earned = s.s.roots.mul(stalk).div(s.s.stalk);
+            roots_without_earned = s.s.roots.add(s.newEarnedRoots).mul(stalk).div(s.s.stalk - (s.newEarnedStalk));
+            s.a[account].deltaRoots = uint128(roots_without_earned - roots_with_earned);
+            s.newEarnedRoots = s.newEarnedRoots.add(uint128(s.a[account].deltaRoots));
+        }
+        console.log("-----");
+        console.log("newEarnedRoots:", s.newEarnedRoots);
+        console.log("root Gain:",roots);
+        console.log("root Gained if there was no earned beans:", roots_without_earned);
+        console.log("Stalk Gain:", stalk);
+        console.log("deltaRootsNoGain:", s.a[account].deltaRoots);
+
+        s.s.stalk = s.s.stalk.add(stalk);
+        s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
+
+        s.s.roots = s.s.roots.add(roots);
+        s.a[account].roots = s.a[account].roots.add(uint128(roots));
+
+        console.log("new root balance:", s.a[account].roots);
+        console.log("new stalk balance:", s.a[account].s.stalk);
+
+        console.log("total Root balance:", s.s.roots);
+        console.log("total Stalk Balnace:", s.s.stalk);
 
         emit StalkBalanceChanged(account, int256(stalk), int256(roots));
     }
@@ -164,12 +221,27 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return;
 
+       
+        uint128 roots;
         // Calculate the amount of Roots for the given amount of Stalk.
         // We round up as it prevents an account having roots but no stalk.
-         uint256 roots = s.s.roots.mulDiv(
+        if(block.number == s.season.sunriseBlock){
+            roots = uint128(s.s.roots.mulDiv(
+            stalk,
+            s.s.stalk-s.newEarnedStalk,
+            LibPRBMath.Rounding.Up));
+
+        } else { 
+            roots = uint128(s.s.roots.mulDiv(
             stalk,
             s.s.stalk,
-            LibPRBMath.Rounding.Up);
+            LibPRBMath.Rounding.Up));
+        }
+        
+        console.log("stalk burnt:", stalk);
+        console.log("total stalk:", s.s.stalk);
+        console.log("roots burnt:", roots);
+
         if (roots > s.a[account].roots) roots = s.a[account].roots;
 
         // Decrease supply of Stalk; Remove Stalk from the balance of `account`
@@ -238,9 +310,9 @@ library LibSilo {
     ) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // (Fixme?) Calculate the amount of Roots for the given amount of Stalk.
-        uint256 roots = stalk == s.a[sender].s.stalk
+        uint128 roots = stalk == s.a[sender].s.stalk
             ? s.a[sender].roots
-            : s.s.roots.sub(1).mul(stalk).div(s.s.stalk).add(1);
+            : uint128(s.s.roots.sub(1).mul(stalk).div(s.s.stalk).add(1));
 
         // Subtract Stalk and Roots from the 'sender' balance.        
         s.a[sender].s.stalk = s.a[sender].s.stalk.sub(stalk);
@@ -280,5 +352,22 @@ library LibSilo {
         returns (uint256)
     {
         return seeds.mul(seasons);
+    }
+
+    // at start of season, this should be 100% of s.newEarnedStalk
+    // at end of season, this should be 0% of s.newEarnedStalk
+    function getVestingEarnedStalk() internal view returns (uint256 vestingEarnedStalk){
+        AppStorage storage s = LibAppStorage.diamondStorage();
+         // calculate the effective stalk 
+        uint256 percentSeasonRemaining =
+            1e18 - LibPRBMath.min(
+                    (block.timestamp - s.season.timestamp) * 1e18 / 3600, 
+                    1e18
+                );
+        vestingEarnedStalk = 
+            uint256(s.newEarnedStalk).mulDiv(
+                percentSeasonRemaining,
+                1e18
+            );
     }
 }
