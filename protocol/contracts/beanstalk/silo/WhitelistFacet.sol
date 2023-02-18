@@ -20,6 +20,12 @@ contract WhitelistFacet {
         uint32 stalkPerBdvPerSeason,
         uint256 stalk
     );
+    
+    event UpdatedStalkPerBdvPerSeason(
+        address indexed token,
+        uint32 stalkPerBdvPerSeason,
+        uint32 season
+    );
 
     event DewhitelistToken(address indexed token);
 
@@ -39,6 +45,17 @@ contract WhitelistFacet {
             token,
             selector,
             stalk,
+            stalkPerBdvPerSeason
+        );
+    }
+
+    function updateStalkPerBdvPerSeasonForToken(
+        address token,
+        uint32 stalkPerBdvPerSeason
+    ) external payable {
+        LibDiamond.enforceIsOwnerOrContract();
+        LibWhitelist.updateStalkPerBdvPerSeasonForToken(
+            token,
             stalkPerBdvPerSeason
         );
     }

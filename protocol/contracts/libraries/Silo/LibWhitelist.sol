@@ -80,8 +80,7 @@ library LibWhitelist {
     function updateStalkPerBdvPerSeasonForToken(
         address token,
         uint32 stalkPerBdvPerSeason
-        ) internal {
-
+    ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.ss[token].stalkPerBdvPerSeason = stalkPerBdvPerSeason;
 
