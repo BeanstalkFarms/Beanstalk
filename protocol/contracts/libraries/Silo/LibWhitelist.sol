@@ -37,6 +37,18 @@ library LibWhitelist {
     );
 
     /**
+     * @notice Emitted when the stalk per bdv per season for a Silo token is updated.
+     * @param token ERC-20 token being updated in the Silo Whitelist.
+     * @param stalkPerBdvPerSeason new stalk per bdv per season value for this token.
+     * @param season the current season.
+     */
+    event UpdatedStalkPerBdvPerSeason(
+        address indexed token,
+        uint32 stalkPerBdvPerSeason,
+        uint32 season
+    );
+
+    /**
      * @notice Emitted when a token is removed from the Silo Whitelist.
      * @param token ERC-20 token being removed from the Silo Whitelist.
      */
@@ -57,9 +69,23 @@ library LibWhitelist {
         s.ss[token].stalkPerBdv = stalkPerBdv; //previously just called "stalk"
         s.ss[token].stalkPerBdvPerSeason = stalkPerBdvPerSeason; //previously called "seeds"
 
-        s.ss[token].lastUpdateSeason = C.siloV3StartSeason(); //hydrate as current season
+        s.ss[token].lastUpdateSeason = C.siloV3StartSeason(); //TODOSEEDS hydrate as current season?
 
         emit WhitelistToken(token, selector, stalkPerBdvPerSeason, stalkPerBdv);
+    }
+    
+    /**
+     * @dev Add an ERC-20 token to the Silo Whitelist.
+     */
+    function updateStalkPerBdvPerSeasonForToken(
+        address token,
+        uint32 stalkPerBdvPerSeason
+        ) internal {
+
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.ss[token].stalkPerBdvPerSeason = stalkPerBdvPerSeason;
+
+        emit UpdatedStalkPerBdvPerSeason(token, stalkPerBdvPerSeason, s.season.current);
     }
 
     function whitelistTokenLegacy(
