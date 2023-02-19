@@ -1,5 +1,7 @@
 import BigNumber from 'bignumber.js';
-import { BeanstalkToken, ERC20Token, NativeToken } from '~/classes/Token';
+import { ERC20Token as ERC20TokenNew, NativeToken as NativeTokenNew } from '@beanstalk/sdk';
+import { ERC20Token, NativeToken } from '~/classes/Token';
+import { ClaimPlantAction } from '~/hooks/beanstalk/useClaimAndPlantActions';
 import { QuoteHandlerResult } from '~/hooks/ledger/useQuote';
 import { FarmToMode } from '~/lib/Beanstalk/Farm';
 import { BalanceFrom } from './BalanceFromRow';
@@ -12,6 +14,11 @@ export type FormState = {
   tokens: FormTokenState[];
   /** */
   approving?: FormApprovingState; 
+}
+
+export type FormStateNew = {
+  tokens: FormTokenStateNew[];
+  approving?: FormApprovingStateNew;
 }
 
 /// FIXME: use type composition instead of this
@@ -38,6 +45,19 @@ export type FormTokenState = (
   } & Partial<QuoteHandlerResult>
 );
 
+/**
+ * Fragment: A single Token stored within a form.
+ * NOTE: Duplicated from FromTokenState but to use types from @beanstalk/sdk
+ */
+export type FormTokenStateNew = (
+  {
+    token:     ERC20TokenNew | NativeTokenNew;
+    amount:    BigNumber | undefined;
+  } & {
+    quoting?:  boolean;
+  } & Partial<QuoteHandlerResult>
+)
+
 // /** Some `amountOut` received for inputting `amount` of this token into a function. */
 // amountOut?: BigNumber;
 // /** Amount of ETH used in the transaction; applied to the `value` override. */
@@ -51,6 +71,12 @@ export type FormApprovingState = {
   /** */
   token:    ERC20Token | NativeToken;
   /** */
+  amount:   BigNumber;
+}
+
+export type FormApprovingStateNew = {
+  contract: string;
+  token:    ERC20TokenNew | NativeTokenNew;
   amount:   BigNumber;
 }
 
@@ -76,27 +102,6 @@ export type PlotSettingsFragment = {
   showRangeSelect: boolean;
 }
 
-export type ClaimableBeanAssetFragment = {
-  /**
-   * claimable bean token (BEAN, PODS, or SPROUTS)
-   */
-  token: BeanstalkToken | ERC20Token;
-  /**
-   * amount to claim from (claimable beans | harvestable pods | rinsable sprouts)
-   */
-  amount: BigNumber;
-};
-
-/**
- *
- */
-export type ClaimableBeanAssetFormState = {
-  /** */
-  maxBeansClaimable: BigNumber;
-  /** */
-  beansClaiming: { [k: string]: ClaimableBeanAssetFragment };
-};
-
 /**
  *
  */
@@ -118,9 +123,40 @@ export type FarmToModeFragment = {
   destination?: FarmToMode;
 };
 
-export type FarmWithClaimFormState = BalanceFromFragment &
-  FarmToModeFragment &
-  ClaimableBeanAssetFormState;
+export type ClaimAndPlantFormState = {
+  /**
+   * actions to be performed with any given transaction (e.g. deposit, convert, harvest, etc). 
+   * Possible Actions are [Claim, Harvest, Rinse, Mow, Plant, Enroot]
+   */
+  farmActions: {
+    /**
+     * The farm actions that can be performed.
+     */
+    options: ClaimPlantAction[];
+    /**
+     * actions that have been selected by the user.
+     */
+    selected: ClaimPlantAction[];
+    /**
+     * 
+     */
+    additional: {
+      /**
+       * Any additional 'ClaimPlantAction's to perform that have been selected by the user.
+       * NOTE:
+       * the set of options for 'additional.selected' is the complement of 'farmActions.options'
+       * For example, if 'farmActions.options' is defined as the set of [Claim, Harvest, Rinse],
+       * the options for 'additional.selected' are the set of [Mow, Plant, Enroot]
+       */
+      selected: ClaimPlantAction[];
+      /**
+       * any additional ClaimPlantActions that are required to be performed if possible.
+       * Ex: If the user is performing a silo deposit, the we required 'MOW' as well if grown stalk > 0
+       */
+      required?: ClaimPlantAction[];
+    }
+  };
+} & BalanceFromFragment;
 
 // ----------------------------------------------------------------------
 
