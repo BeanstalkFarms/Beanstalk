@@ -126,7 +126,6 @@ contract Sun is Oracle {
         // beans over the course of the season.
         s.newEarnedStalk = uint128(seasonStalk);
         s.newEarnedRoots = 0;
-        s.newStalkStuff = 0;
 
         s.siloBalances[C.beanAddress()].deposited = s
             .siloBalances[C.beanAddress()]

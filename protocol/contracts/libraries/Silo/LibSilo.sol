@@ -119,7 +119,7 @@ library LibSilo {
         uint256 roots;
         if (s.s.roots == 0) {
             roots = uint256(stalk.mul(C.getRootsBase()));
-        } else  {
+        } else {
             roots = s.s.roots.mul(stalk).div(s.s.stalk);
         }
 
@@ -129,29 +129,34 @@ library LibSilo {
         s.s.roots = s.s.roots.add(roots);
         s.a[account].roots = s.a[account].roots.add(uint128(roots));
 
+
         emit StalkBalanceChanged(account, int256(stalk), int256(roots));
     }
 
 
-    function mintStalkAndStoreRoots(address account, uint256 stalk) internal returns (uint128 deltaRoots) {
+    /**
+     * @dev mints grownStalk to `account`.
+     * per the zero-withdraw update, if a user plants during the morning,
+     * the roots needed to properly calculate the earned beans would be higher 
+     * than outside the morning. Thus, if a user mows in the morning, 
+     * additional calculation is done and stored for the {plant} function.
+     * @param account farmer
+     * @param stalk the amount of stalk to mint
+     */
+    function mintGrownStalkAndGrownRoots(address account, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // Calculate the amount of Roots for the given amount of Stalk.
-        // while the issuance of roots are the same here, 
-        // we add another variable to store the difference, which is called in 
-        // the plant function. 
-        // this is seperated from the typical mintStalk as there is no need to store this difference
-        // if the user mints stalk after the block period, 
-        // nor if the mint was because of a deposit.
         uint256 roots;
-        uint256 roots_without_earned;
         if (s.s.roots == 0) {
             roots = uint256(stalk.mul(C.getRootsBase()));
         } else  {
             roots = s.s.roots.mul(stalk).div(s.s.stalk);
-            roots_without_earned = s.s.roots.add(s.newEarnedRoots).mul(stalk).div(s.s.stalk - (s.newEarnedStalk));
-            deltaRoots = uint128(roots_without_earned - roots);
-            s.newEarnedRoots = s.newEarnedRoots.add(deltaRoots);
+            if (block.number - s.season.sunriseBlock <= 25) {
+                uint256 rootsWithoutEarned = s.s.roots.add(s.newEarnedRoots).mul(stalk).div(s.s.stalk - (s.newEarnedStalk));
+                uint256 deltaRoots = rootsWithoutEarned - roots;
+                s.newEarnedRoots = s.newEarnedRoots.add(uint128(deltaRoots));
+                s.a[account].deltaRoots = uint128(deltaRoots);
+            } 
         }
 
         s.s.stalk = s.s.stalk.add(stalk);
@@ -200,7 +205,7 @@ library LibSilo {
         if (stalk == 0) return;
 
        
-        uint128 roots;
+        uint256 roots;
         // Calculate the amount of Roots for the given amount of Stalk.
         // We round up as it prevents an account having roots but no stalk.
         
@@ -288,9 +293,9 @@ library LibSilo {
     ) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // (Fixme?) Calculate the amount of Roots for the given amount of Stalk.
-        uint128 roots = stalk == s.a[sender].s.stalk
+        uint256 roots = stalk == s.a[sender].s.stalk
             ? s.a[sender].roots
-            : uint128(s.s.roots.sub(1).mul(stalk).div(s.s.stalk).add(1));
+            : s.s.roots.sub(1).mul(stalk).div(s.s.stalk).add(1);
 
         // Subtract Stalk and Roots from the 'sender' balance.        
         s.a[sender].s.stalk = s.a[sender].s.stalk.sub(stalk);

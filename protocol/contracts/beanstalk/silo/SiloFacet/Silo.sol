@@ -147,24 +147,9 @@ contract Silo is SiloExit {
         // If this `account` has no Seeds, skip to save gas.
         uint256 _stalk = balanceOfGrownStalk(account);
         if (s.a[account].s.seeds == 0) return;
-        LibSilo.mintStalk(account, _stalk);
-    }
-
-    // the amount of roots issued to the user is based on the total stalk. 
-    // during the first 5 blocks, the earned beans from the previous seasons are not issued.
-    // since roots are a function of total stalk, this means the roots issued is different from
-    // a regular mow. 
-    // super mow increments the stalk and roots of the user by total stalk, but stores the roots
-    // needed to correctly issue the earned beans.
-    function __superMow(address account) private returns (uint128 deltaRoots) {
-        uint32 _lastUpdate = lastUpdate(account);
-        if (_lastUpdate >= _season()) return 0;
-        handleRainAndSops(account, _lastUpdate);
-        // If this `account` has no Seeds, skip to save gas.
-        uint256 _stalk = balanceOfGrownStalk(account);
-        if (s.a[account].s.seeds == 0) return 0;
-        s.a[account].lastUpdate = _season();
-        deltaRoots = LibSilo.mintStalkAndStoreRoots(account, _stalk);
+        // if the account mows in the morning, we need the last update to calculate the grownStalk,
+        // which is then used to calculate the additional roots given to the user: 
+        LibSilo.mintGrownStalkAndGrownRoots(account, _stalk);
     }
 
     //////////////////////// INTERNAL: PLANT ////////////////////////
@@ -181,19 +166,9 @@ contract Silo is SiloExit {
         // during the vesting period, the earned beans are not issued to the user.
         // thus, the roots calculated for a given user is different. 
         // This is handled by the super mow function, which stores the difference in roots.
-
-        // Earned Beans.
-        uint256 accountStalk;
-        if(block.number - s.season.sunriseBlock <= 25){
-            uint128 deltaRoots = __superMow(account);
-            accountStalk =  s.a[account].s.stalk;
-            beans = _balanceOfEarnedBeans(account, accountStalk, deltaRoots, false);
-        } else {
-            _mow(account);
-            // Calculate balance of Earned Beans.
-            accountStalk =  s.a[account].s.stalk;
-            beans = _balanceOfEarnedBeans(account, accountStalk, 0, true);  
-        }
+        _mow(account);
+        uint256 accountStalk =  s.a[account].s.stalk;
+        beans = _balanceOfEarnedBeans(account, accountStalk);
 
         if (beans == 0) return 0;
 

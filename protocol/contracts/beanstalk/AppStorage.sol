@@ -107,11 +107,9 @@ contract Account {
         uint32 lastUpdate; // The Season in which the Farmer last updated their Silo.
         uint32 lastSop; // The last Season that a SOP occured at the time the Farmer last updated their Silo.
         uint32 lastRain; // The last Season that it started Raining at the time the Farmer last updated their Silo.
-        uint32 lastSIs; // DEPRECATED – In Silo V1.2, the Silo reward mechanism was updated to no longer need to store the number of the Supply Increases at the time the Farmer last updated their Silo.
-        uint32 proposedUntil; // DEPRECATED – Replant removed on-chain governance including the ability to propose BIPs.
-        SeasonOfPlenty deprecated; // DEPRECATED – Replant reset the Season of Plenty mechanism
-        uint128 roots; // A Farmer's Root balance.
         uint128 deltaRoots; // vesting roots
+        SeasonOfPlenty deprecated; // DEPRECATED – Replant reset the Season of Plenty mechanism
+        uint256 roots; // A Farmer's Root balance.
         uint256 wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
         mapping(address => mapping(uint32 => Deposit)) deposits; // A Farmer's Silo Deposits stored as a map from Token address to Season of Deposit to Deposit.
         mapping(address => mapping(uint32 => uint256)) withdrawals; // DEPRECATED - Zero withdraw eliminates a need for withdraw mapping
@@ -314,9 +312,7 @@ struct AppStorage {
 
     uint128 earnedBeans; // The number of Beans distributed to the Silo that have not yet been Deposited as a result of the Earn function being called.
     uint128 newEarnedStalk; // The number of stalk distrubuted to the silo that has not been deposited.    
-    uint128 newEarnedRoots; // add this later
-    uint128 newStalkStuff; // add this later
-    uint256[13] deprecated2; // DEPRECATED - 14 slots that used to store state variables which have been deprecated through various updates. Storage slots can be left alone or reused.
+    uint256[14] deprecated2; // DEPRECATED - 14 slots that used to store state variables which have been deprecated through various updates. Storage slots can be left alone or reused.
     mapping (address => Account.State) a; // A mapping from Farmer address to Account state.
     uint32 bip0Start; // DEPRECATED - bip0Start was used to aid in a migration that occured alongside BIP-0.
     uint32 hotFix3Start; // DEPRECATED - hotFix3Start was used to aid in a migration that occured alongside HOTFIX-3.
@@ -362,6 +358,7 @@ struct AppStorage {
     uint128 fFirst; // The lowest active Fertilizer Id (start of linked list that is stored by nextFid). 
     uint128 fLast; // The highest active Fertilizer Id (end of linked list that is stored by nextFid). 
     uint128 bpf; // The cumulative Beans Per Fertilizer (bfp) minted over all Season.
+    uint128 newEarnedRoots; // the number of roots to add to the global roots, in the case the user plants in the morning. // placed here to save a storage slot.s
     uint256 recapitalized; // The nubmer of USDC that has been recapitalized in the Barn Raise.
     uint256 isFarm; // Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
     address ownerCandidate; // Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.

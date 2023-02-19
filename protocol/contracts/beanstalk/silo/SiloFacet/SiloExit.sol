@@ -174,17 +174,22 @@ contract SiloExit is ReentrancyGuard {
             (uint256 deltaRoots, uint256 newEarnedRoots) = _calcRoots(account);
             beans = _balanceOfEarnedBeansVested(account, s.a[account].s.stalk, deltaRoots, newEarnedRoots);
         } else {
-            beans = _balanceOfEarnedBeans(account, s.a[account].s.stalk, 0, true);
+            beans = _balanceOfEarnedBeans(account, s.a[account].s.stalk);
         }
     }
     
     function _calcRoots(address account) internal view returns (uint256 delta_roots, uint256 newEarnedRoots) {
         uint256 _stalk = balanceOfGrownStalk(account);
         if(_stalk == 0) {
+            // user already planted, no need to recalculate
             delta_roots = s.a[account].deltaRoots;
             newEarnedRoots = s.newEarnedRoots;
         } else {
-            delta_roots = s.s.roots.add(s.newEarnedRoots).mulDiv(_stalk, s.s.stalk - s.newEarnedStalk, LibPRBMath.Rounding.Up);
+            delta_roots = s.s.roots.add(s.newEarnedRoots).mulDiv(
+                _stalk, 
+                s.s.stalk - s.newEarnedStalk, 
+                LibPRBMath.Rounding.Up
+            );
             newEarnedRoots = uint256(s.newEarnedRoots).add(delta_roots);
         }
     }
@@ -201,7 +206,7 @@ contract SiloExit is ReentrancyGuard {
      * divided by the number of Stalk per Bean.
      * The earned beans from the latest season 
      */
-    function _balanceOfEarnedBeans(address account, uint256 accountStalk, uint128 deltaRoots, bool hasVested) 
+    function _balanceOfEarnedBeans(address account, uint256 accountStalk) 
         internal
         view
         returns (uint256 beans) {
@@ -210,11 +215,10 @@ contract SiloExit is ReentrancyGuard {
 
         // Calculate the % season remaining in the season, where 100% is 1e18.
         uint256 stalk;
-        if(hasVested == false){
-           
+        if(block.number - s.season.sunriseBlock <= 25){
             stalk = s.s.stalk.sub(s.newEarnedStalk).mulDiv(
-                s.a[account].roots.add(deltaRoots),
-                s.s.roots.add(s.newEarnedRoots),
+                s.a[account].roots.add(s.a[account].deltaRoots), // add the delta roots of the user
+                s.s.roots.add(uint128(s.newEarnedRoots)), // add delta of global roots 
                 LibPRBMath.Rounding.Up
             );
         } else {
