@@ -13,13 +13,13 @@ export default function useGetClaimAppliedBalances(
 ) {
   const sdk = useSdk();
 
-  const { getClaimableAmount } = useFarmerClaimPlantOptions();
+  const { getBeansClaiming } = useFarmerClaimPlantOptions();
 
   const balance: Record<string, ApplicableBalance> = useMemo(() => {
     const usingInternal = balanceSource !== BalanceFrom.EXTERNAL;
 
-    const total = getClaimableAmount(allOptions);
-    const applied = getClaimableAmount(selectedOptions);
+    const total = getBeansClaiming(allOptions).bn;
+    const applied = getBeansClaiming(selectedOptions).bn;
 
     return {
       [sdk.tokens.BEAN.address]: {
@@ -32,8 +32,8 @@ export default function useGetClaimAppliedBalances(
     allOptions,
     balanceSource,
     selectedOptions,
-    getClaimableAmount,
     sdk.tokens.BEAN.address,
+    getBeansClaiming,
   ]);
 
   return balance;

@@ -5,7 +5,7 @@ import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
 import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
-import { ERC20Token, NativeToken, Token, FarmFromMode, TokenValue } from '@beanstalk/sdk';
+import { ERC20Token, NativeToken, Token, FarmFromMode, TokenValue, FarmToMode } from '@beanstalk/sdk';
 import {
   SEEDS,
   STALK,
@@ -21,24 +21,18 @@ import {
   TxnSettings,
 } from '~/components/Common/Form';
 import TxnPreview from '~/components/Common/Form/TxnPreview';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import { FarmerBalances } from '~/state/farmer/balances';
 import {
   displayFullBN,
-  toStringBaseUnitBN,
 } from '~/util/Tokens';
 import TransactionToast from '~/components/Common/TxnToast';
-import { Beanstalk } from '~/generated/index';
 import { ZERO_BN } from '~/constants';
-import Pool from '~/classes/Pool';
 import SmartSubmitButton from '~/components/Common/Form/SmartSubmitButton';
-import Farm from '~/lib/Beanstalk/Farm';
 import TxnSeparator from '~/components/Common/Form/TxnSeparator';
 import useToggle from '~/hooks/display/useToggle';
 import usePreferredToken from '~/hooks/farmer/usePreferredToken';
 import useTokenMap from '~/hooks/chain/useTokenMap';
-import { useSigner } from '~/hooks/ledger/useSigner';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import { parseError } from '~/util';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
@@ -100,6 +94,8 @@ const DepositForm: FC<
   setFieldValue,
 }) => {
   const sdk = useSdk();
+  const { options } = useFarmerClaimAndPlantOptions();
+
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const { amount, bdv, stalk, seeds, actions } = depositSummary(
       whitelistedToken,
@@ -110,15 +106,11 @@ const DepositForm: FC<
   /// Derived
   const isReady = bdv.gt(0);
 
-  // console.log(values);
-
   const applicableBalances = useGetClaimAppliedBalances(
     values.farmActions.options,
     values.farmActions.selected,
     values.balanceFrom
   );
-
-  const { options } = useFarmerClaimAndPlantOptions();
 
   const quoteProviderParams: DepositQuoteHandlerParams = useMemo(() => {
     const claimedBeans = values.farmActions.selected.reduce((prev, curr) => {
@@ -263,14 +255,13 @@ const DepositForm: FC<
 // -----------------------------------------------------------------------
 
 const Deposit: FC<{
-  pool: Pool;
   token: ERC20Token | NativeToken;
 }> = ({ 
-  pool, 
   token: whitelistedToken 
 }) => {
   const sdk = useSdk();
-  const actions = useFarmerClaimAndPlantActions();
+  const claimPlant = useFarmerClaimAndPlantActions();
+  const claimPlantOptions = useFarmerClaimAndPlantOptions();
 
   /// FIXME: name
   /// FIXME: finish deposit functionality for other tokens
@@ -327,10 +318,6 @@ const Deposit: FC<{
   const [refetchPools]          = useFetchPools();
   const [refetchSilo]           = useFetchBeanstalkSilo();
 
-  /// Network
-  const { data: signer } = useSigner();
-  const beanstalk = useBeanstalkContract(signer);
-
   /// Form setup
   const initialValues: DepositFormValues = useMemo(() => ({
     settings: {
@@ -372,16 +359,11 @@ const Deposit: FC<{
       fromMode = FarmFromMode.EXTERNAL;
     }
 
-      const account = await sdk.getAccount();
-      const op = sdk.silo.buildDeposit(_tokenOut, account);
-      op.setInputToken(_tokenIn, fromMode);
+    const account = await sdk.getAccount();
+    const op = sdk.silo.buildDeposit(_tokenOut, account);
+    op.setInputToken(_tokenIn, fromMode);
 
-      const estimate = async (amount: TokenValue) => op.estimate(amount);
-
-      return {
-        estimate,
-        op,
-      };
+    return op;
   }, [sdk]);
 
   /// Handlers
@@ -397,130 +379,91 @@ const Deposit: FC<{
       totalAmountIn = tokenIn.amount(amountIn.toString());
     }
 
-    const work = await getWorkflow(tokenIn, tokenOut, balanceFrom);
+    const deposit = await getWorkflow(tokenIn, tokenOut, balanceFrom);
 
-    const estimate = await work.estimate(totalAmountIn);
-    
-      if (!estimate) {
-        throw new Error(
-          `Depositing ${tokenOut.symbol} to the Silo via ${tokenIn.symbol} is currently unsupported.`
-        );
-      }
+    const estimate = await deposit.estimate(totalAmountIn);
+  
+    if (!estimate) {
+      throw new Error(
+        `Depositing ${tokenOut.symbol} to the Silo via ${tokenIn.symbol} is currently unsupported.`
+      );
+    }
 
-      console.debug('[chain] estimate = ', estimate);
+    console.debug('[chain] estimate = ', estimate);
 
-      return {
-        amountOut: new BigNumber(estimate.toHuman()),
-      };
-    },
-    [sdk.tokens.BEAN, getWorkflow]
-  );
+    return {
+      amountOut: new BigNumber(estimate.toHuman()),
+    };
+  }, [sdk.tokens.BEAN, getWorkflow]);
 
   const onSubmit = useCallback(
     async (
       values: DepositFormValues,
       formActions: FormikHelpers<DepositFormValues>
     ) => {
+      const { BEAN } = sdk.tokens;
       let txToast;
       try {
         middleware.before();
-        if (!values.settings.slippage) throw new Error('No slippage value set');
         const formData = values.tokens[0];
+        const tokenIn = formData.token;
+        
+        if (!values.settings.slippage) {
+          throw new Error('No slippage value set');
+        }
         if (values.tokens.length > 1) {
           throw new Error('Only one token supported at this time');
         }
         if (!formData?.amount || formData.amount.eq(0)) {
           throw new Error('Enter an amount to deposit');
         }
+        const slippage = values.settings.slippage;
+        
+        const amountIn: TokenValue = tokenIn.amount(formData.amount.toString());
+        
+        const deposit = await getWorkflow(tokenIn, whitelistedToken, values.balanceFrom);
+        console.log(deposit.getGraph());
+        const estimate = await deposit.estimate(amountIn);
 
-        // FIXME: getting BDV per amount here
-        const { amount } = depositSummary(
-          whitelistedToken,
-          values.tokens,
-          amountToBdv
-        );
+        console.log(values.farmActions);
+        
+        const work = sdk.farm.create();
+
+        values.farmActions.additional.selected.forEach((action) => {
+          if (claimPlant.isPlantAction(action)) {
+            const actionData = claimPlant.actions[action]();
+            work.add(actionData.txn.steps);
+          }
+        });
+        
+        values.farmActions.selected.forEach((action) => {
+          if (claimPlant.isClaimAction(action)) {
+            const actionData = claimPlant.actions[action]({ toMode: FarmToMode.INTERNAL });
+            work.add(actionData.txn.steps);
+          }
+        });
+
+        work.add(claimPlant.injectOnlyLocal('pre-deposit', amountIn), { onlyLocal: true });
+        work.add([...deposit.workflow.generators]);
 
         txToast = new TransactionToast({
           loading: `Depositing ${displayFullBN(
-            amount.abs(),
+            new BigNumber(estimate.abs().toHuman()),
             whitelistedToken.displayDecimals,
             whitelistedToken.displayDecimals
           )} ${whitelistedToken.name} into the Silo...`,
           success: 'Deposit successful.',
         });
 
-        // TEMP: recast as Beanstalk
-        const b = beanstalk as unknown as Beanstalk;
-        const data: string[] = [];
-        const inputToken = formData.token;
-        const value = ZERO_BN;
-        let depositAmount;
-        let depositFrom;
+        const est2 = await work.estimate(amountIn);
+        console.log(whitelistedToken.fromBlockchain(est2).toHuman(), ' ', whitelistedToken.name);
+        console.log(work.summarizeSteps());
 
-        // Direct Deposit
-        if (inputToken === whitelistedToken) {
-          // TODO: verify we have approval for `inputToken`
-          depositAmount = formData.amount; // implicit: amount = amountOut since the tokens are the same
-          depositFrom = FarmFromMode.INTERNAL_EXTERNAL;
-        }
-
-        // Swap and Deposit
-        else {
-          // Require a quote
-          if (!formData.steps || !formData.amountOut) {
-            throw new Error(`No quote available for ${formData.token.symbol}`);
-          }
-
-          // Wrap ETH to WETH
-          // if (inputToken === Eth) {
-          //   value = value.plus(formData.amount);
-          //   data.push(
-          //     b.interface.encodeFunctionData('wrapEth', [
-          //       toStringBaseUnitBN(value, Eth.decimals),
-          //       FarmToMode.INTERNAL, // to
-          //     ])
-          //   );
-          // }
-
-          // `amountOut` of `siloToken` is received when swapping for
-          // `amount` of `inputToken`. this may include multiple swaps.
-          // using "tolerant" mode allows for slippage during swaps.
-          depositAmount = formData.amountOut;
-          depositFrom = FarmFromMode.INTERNAL_TOLERANT;
-
-          // Encode steps to get from token i to siloToken
-          const encoded = Farm.encodeStepsWithSlippage(
-            formData.steps,
-            values.settings.slippage / 100
-          );
-          data.push(...encoded);
-          encoded.forEach((_data, index) =>
-            console.debug(
-              `[Deposit] step ${index}:`,
-              formData.steps?.[index]
-                ?.decode(_data)
-                .map((elem) =>
-                  (elem instanceof ethers.BigNumber ? elem.toString() : elem)
-                )
-            )
-          );
-        }
-
-        // Deposit step
-        data.push(
-          b.interface.encodeFunctionData('deposit', [
-            whitelistedToken.address,
-            toStringBaseUnitBN(depositAmount, whitelistedToken.decimals), // expected amountOut from all steps
-            depositFrom,
-          ])
-        );
-
-        const txn = await b.farm(data, {
-          value: toStringBaseUnitBN(value, sdk.tokens.ETH.decimals),
-        });
+        const txn = await work.execute(amountIn, { slippage });
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
+
         await Promise.all([
           refetchFarmerSilo(),
           refetchFarmerBalances(),
@@ -533,13 +476,13 @@ const Deposit: FC<{
         txToast ? txToast.error(err) : toast.error(parseError(err));
         formActions.setSubmitting(false);
       }
-    },
-    [
+    }, [
       middleware, 
+      sdk.tokens, 
+      sdk.farm, 
       whitelistedToken, 
-      amountToBdv, 
-      beanstalk, 
-      sdk.tokens.ETH.decimals, 
+      claimPlant, 
+      getWorkflow, 
       refetchFarmerSilo, 
       refetchFarmerBalances, 
       refetchPools, 

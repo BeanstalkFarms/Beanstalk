@@ -1,6 +1,8 @@
 import { useCallback, useMemo } from 'react';
 import { BeanstalkSDK, Token } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
+import { useFetchFarmerField } from '../../state/farmer/field/updater';
+import { useFetchFarmerBarn } from '~/state/farmer/barn/updater';
 import { ZERO_BN } from '~/constants';
 import { ClaimPlantAction } from '~/hooks/beanstalk/useClaimAndPlantActions';
 import useSdk from '../sdk';
@@ -10,6 +12,8 @@ import useFarmerField from './useFarmerField';
 import useFarmerSilo from './useFarmerSilo';
 import useRevitalized from './useRevitalized';
 import { normalizeBN } from '~/util';
+import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
+import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 
 export type ClaimPlantActionSummary = {
   /** */
@@ -20,6 +24,10 @@ export type ClaimPlantActionSummary = {
    * Whether or not this claim / plant action can be performed
    */
   enabled: boolean;
+  /**
+   * actions that are performed automatically when this action is performed in the contract
+   */
+  implied: ClaimPlantAction[],
   /**
    * The amounts of BEAN, SEEDS, and STALK being claimed / planted.
    * For Example, for Enroot, this would be the amount of revitalized seeds and stalk
@@ -69,10 +77,7 @@ export type ClaimPlantOptionsMap = {
  * - amounts: the amounts of BEAN, SEEDS, and STALK being claimed / planted
  * - claimable?: the amount of beans that can be used upon performing claim / plant action
  */
-export default function useFarmerClaimAndPlantOptions(_sdk?: BeanstalkSDK): {
-  options: ClaimPlantOptionsMap;
-  getClaimableAmount: (action: ClaimPlantAction[]) => BigNumber;
-} {
+export default function useFarmerClaimAndPlantOptions(_sdk?: BeanstalkSDK) {
   /// Beanstalk SDK
   const _SDK = useSdk();
   const sdk = useMemo(() => _sdk || _SDK, [_SDK, _sdk]);
@@ -83,9 +88,7 @@ export default function useFarmerClaimAndPlantOptions(_sdk?: BeanstalkSDK): {
   const farmerBarn = useFarmerFertilizer();
   const { revitalizedStalk, revitalizedSeeds } = useRevitalized();
 
-  const options: {
-    [action in ClaimPlantAction]: ClaimPlantActionSummary;
-  } = useMemo(() => {
+  const options: ClaimPlantOptionsMap = useMemo(() => {
     const { SEEDS, STALK, BEAN, PODS, SPROUTS } = sdk.tokens;
 
     const grownStalk = normalizeBN(farmerSilo.stalk.grown);
@@ -105,6 +108,7 @@ export default function useFarmerClaimAndPlantOptions(_sdk?: BeanstalkSDK): {
         title: 'Mow',
         tooltip: 'tooltip',
         enabled: grownStalk.gt(0),
+        implied: [],
         summary: [
           {
             description: 'Grown Stalk',
@@ -118,6 +122,7 @@ export default function useFarmerClaimAndPlantOptions(_sdk?: BeanstalkSDK): {
         title: 'Plant',
         tooltip: 'tooltip',
         enabled: earnedSeeds.gt(0),
+        implied: [ClaimPlantAction.MOW],
         summary: [
           {
             description: 'Earned Beans',
@@ -143,6 +148,7 @@ export default function useFarmerClaimAndPlantOptions(_sdk?: BeanstalkSDK): {
         title: 'Enroot',
         tooltip: 'tooltip',
         enabled: revitalizedSeeds.gt(0) && revitalizedStalk.gt(0),
+        implied: [ClaimPlantAction.MOW],
         summary: [
           {
             description: 'Revitalized Seeds',
@@ -162,6 +168,7 @@ export default function useFarmerClaimAndPlantOptions(_sdk?: BeanstalkSDK): {
         title: 'Harvest',
         tooltip: 'tooltip',
         enabled: harvestablePods.gt(0),
+        implied: [],
         claimable: {
           token: PODS,
           amount: harvestablePods,
@@ -179,6 +186,7 @@ export default function useFarmerClaimAndPlantOptions(_sdk?: BeanstalkSDK): {
         title: 'Rinse',
         tooltip: 'tooltip',
         enabled: rinsableSprouts.gt(0),
+        implied: [],
         claimable: {
           token: SPROUTS,
           amount: rinsableSprouts,
@@ -196,6 +204,7 @@ export default function useFarmerClaimAndPlantOptions(_sdk?: BeanstalkSDK): {
         title: 'Claim',
         tooltip: 'tooltip',
         enabled: claimableBeans.gt(0),
+        implied: [],
         claimable: {
           token: BEAN,
           amount: claimableBeans,
@@ -223,16 +232,21 @@ export default function useFarmerClaimAndPlantOptions(_sdk?: BeanstalkSDK): {
     sdk.tokens,
   ]);
 
-  const getClaimableAmount = useCallback((_options: ClaimPlantAction[] = []) => {
-    const maxAmount = _options.reduce((prev, curr) => {
+  const getBeansClaiming = useCallback((_options: ClaimPlantAction[] = []) => {
+    const amount = _options.reduce((prev, curr) => {
       prev = prev.plus(normalizeBN(options[curr]?.claimable?.amount));
       return prev;
     }, ZERO_BN);
 
-    return maxAmount;
-  }, [options]);
+    const tokenValue = sdk.tokens.BEAN.amount(amount.toString());
 
-  return { options, getClaimableAmount };
+    return {
+      bn: amount,
+      tokenValue,
+    };
+  }, [options, sdk.tokens.BEAN]);
+
+  return { options, getBeansClaiming };
 }
 
 export const ClaimPlantPresets = {
@@ -248,3 +262,31 @@ export const ClaimPlantPresets = {
     required: [ClaimPlantAction.MOW],
   },
 };
+
+export function useClaimPlantRefetch() {
+  // Fetchers
+  const [refetchFarmerSilo]     = useFetchFarmerSilo();
+  const [refetchFarmerBalances] = useFetchFarmerBalances();
+  const [refetchFarmerField]    = useFetchFarmerField();
+  const [fefetchBarn]           = useFetchFarmerBarn();
+
+  const refetchMap = useMemo(() => ({
+    [ClaimPlantAction.MOW]:     [refetchFarmerSilo],
+    [ClaimPlantAction.PLANT]:   [refetchFarmerSilo],
+    [ClaimPlantAction.ENROOT]:  [refetchFarmerSilo],
+    [ClaimPlantAction.HARVEST]: [refetchFarmerField, refetchFarmerBalances],
+    [ClaimPlantAction.RINSE]:   [fefetchBarn, refetchFarmerBalances],
+    [ClaimPlantAction.CLAIM]:   [refetchFarmerSilo, refetchFarmerBalances],
+  }), [fefetchBarn, refetchFarmerBalances, refetchFarmerField, refetchFarmerSilo]);
+
+  const fetch = useCallback((options: ClaimPlantAction[]) => {
+    const promises = new Set<() => Promise<any>>();
+    options.forEach((option) => {
+      refetchMap[option].forEach((promise) => promises.add(promise));
+    });
+
+    return promises;
+  }, [refetchMap]);
+
+  return [fetch] as const;
+}

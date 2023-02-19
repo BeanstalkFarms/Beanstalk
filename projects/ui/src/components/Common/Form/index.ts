@@ -135,6 +135,8 @@ export type ClaimAndPlantFormState = {
     options: ClaimPlantAction[];
     /**
      * actions that have been selected by the user.
+     * NOTE: typically these are the actions that must be peformed BEFORE the user performs the 'main' action.
+     * 
      */
     selected: ClaimPlantAction[];
     /**

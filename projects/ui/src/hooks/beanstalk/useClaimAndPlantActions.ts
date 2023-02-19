@@ -27,9 +27,25 @@ export enum ClaimPlantAction {
 }
 
 export type ClaimPlantActionData = {
-  steps: StepGenerator<BasicPreparedResult>[];
-  estimateGas: () => Promise<ethers.BigNumber>;
-  callData: string;
+  txn: {
+    /**
+     * workflow steps to execute
+     */
+    steps: StepGenerator<BasicPreparedResult>[];
+    /**
+     * function to estimate gas of the transaction
+     */
+    estimateGas: () => Promise<ethers.BigNumber>;
+    /**
+     * encoded calldata for given steps
+     */
+    callData: string;
+  },
+  txnType: 'claim' | 'plant',
+}
+
+export type ClaimPlantActions = {
+  [action in ClaimPlantAction]: (...parameters: (Partial<ClaimPlantActionParams[action]>)[]) => ClaimPlantActionData 
 }
 
 type ClaimBeansParams<T extends Record<string, unknown>> = {
@@ -46,7 +62,9 @@ type ClaimPlantActionParams = {
   [ClaimPlantAction.ENROOT]: { crates: { [addr: string]: DepositCrate[] } };
 }
 
-type ClaimPlantFunctions<T extends ClaimPlantAction> = (sdk: BeanstalkSDK, ...parameters: (ClaimPlantActionParams[T])[]) => ClaimPlantActionData;
+type ClaimPlantFunctions<T extends ClaimPlantAction> = (
+  sdk: BeanstalkSDK, ...parameters: (ClaimPlantActionParams[T])[]
+) => ClaimPlantActionData;
 
 const harvest: ClaimPlantFunctions<ClaimPlantAction.HARVEST> = (sdk, { plotIds, amount, toMode }) => {
   const { beanstalk } = sdk.contracts;
@@ -56,20 +74,23 @@ const harvest: ClaimPlantFunctions<ClaimPlantAction.HARVEST> = (sdk, { plotIds, 
   ]);
 
   return {
-    callData,
-    steps: [
-      async (_amountInStep: ethers.BigNumber, _context: any) => ({
-        name: 'harvest',
-        amountOut: amount?.toBigNumber() || _amountInStep,
-        prepare: () => ({
-          target: beanstalk.address,
-          callData,
-        }),
-        decode: (data: string) => beanstalk.interface.decodeFunctionData('harvest', data),
-        decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('harvest', result),
-      })
-    ],
-    estimateGas: () => beanstalk.estimateGas.harvest(plotIds, toMode || FarmToMode.INTERNAL)
+    txn: {
+      callData,
+      steps: [
+        async (_amountInStep: ethers.BigNumber, _context: any) => ({
+          name: 'harvest',
+          amountOut: amount?.toBigNumber() || _amountInStep,
+          prepare: () => ({
+            target: beanstalk.address,
+            callData,
+          }),
+          decode: (data: string) => beanstalk.interface.decodeFunctionData('harvest', data),
+          decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('harvest', result),
+        })
+      ],
+      estimateGas: () => beanstalk.estimateGas.harvest(plotIds, toMode || FarmToMode.INTERNAL)
+    },
+    txnType: 'claim',
   };
 };
 
@@ -83,37 +104,43 @@ const claim: ClaimPlantFunctions<ClaimPlantAction.CLAIM> = (sdk, { seasons, amou
     ]);
 
     return {
-      callData,
-      steps: [
-        async (_amountInStep: ethers.BigNumber, _context: any) => ({
-          name: 'claimWithdrawal',
-          amountOut: amount?.toBigNumber() || _amountInStep,
-          prepare: () => ({
-            target: beanstalk.address,
-            callData
+      txn: {
+        callData,
+        steps: [
+          async (_amountInStep: ethers.BigNumber, _context: any) => ({
+            name: 'claimWithdrawal',
+            amountOut: amount?.toBigNumber() || _amountInStep,
+            prepare: () => ({
+              target: beanstalk.address,
+              callData
+            }),
+            decode: (data: string) => beanstalk.interface.decodeFunctionData('claimWithdrawal', data),
+            decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('claimWithdrawal', result),
           }),
-          decode: (data: string) => beanstalk.interface.decodeFunctionData('claimWithdrawal', data),
-          decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('claimWithdrawal', result),
-        }),
-      ],
-      estimateGas: () => beanstalk.estimateGas.claimWithdrawal(sdk.tokens.BEAN.address, seasons[0], toMode || FarmToMode.INTERNAL)
+        ],
+        estimateGas: () => beanstalk.estimateGas.claimWithdrawal(sdk.tokens.BEAN.address, seasons[0], toMode || FarmToMode.INTERNAL)
+      },
+      txnType: 'claim',
     };
   }
 
   return {
-    callData: beanstalk.interface.encodeFunctionData('claimWithdrawals', [
-      sdk.tokens.BEAN.address,
-      seasons,
-      toMode || FarmToMode.INTERNAL,
-    ]),
-    steps: [
-      new sdk.farm.actions.ClaimWithdrawals(
+    txn: {
+      callData: beanstalk.interface.encodeFunctionData('claimWithdrawals', [
         sdk.tokens.BEAN.address,
         seasons,
-        toMode || FarmToMode.INTERNAL
-      ),
-    ],
-    estimateGas: () => beanstalk.estimateGas.claimWithdrawals(sdk.tokens.BEAN.address, seasons, toMode || FarmToMode.INTERNAL)
+        toMode || FarmToMode.INTERNAL,
+      ]),
+      steps: [
+        new sdk.farm.actions.ClaimWithdrawals(
+          sdk.tokens.BEAN.address,
+          seasons,
+          toMode || FarmToMode.INTERNAL
+        ),
+      ],
+      estimateGas: () => beanstalk.estimateGas.claimWithdrawals(sdk.tokens.BEAN.address, seasons, toMode || FarmToMode.INTERNAL)
+    },
+    txnType: 'claim',
   };
 };
 
@@ -125,20 +152,23 @@ const rinse: ClaimPlantFunctions<ClaimPlantAction.RINSE> = (sdk, { tokenIds, amo
   ]);
  
   return {
-    callData,
-    steps: [
-      async (_amountInStep: ethers.BigNumber, _context: any) => ({
-        name: 'claimFertilized',
-        amountOut: amount?.toBigNumber() || _amountInStep,
-        prepare: () => ({
-          target: beanstalk.address,
-          callData
+    txn: {
+      callData,
+      steps: [
+        async (_amountInStep: ethers.BigNumber, _context: any) => ({
+          name: 'claimFertilized',
+          amountOut: amount?.toBigNumber() || _amountInStep,
+          prepare: () => ({
+            target: beanstalk.address,
+            callData
+          }),
+          decode: (data: string) => beanstalk.interface.decodeFunctionData('claimFertilized', data),
+          decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('claimFertilized', result),
         }),
-        decode: (data: string) => beanstalk.interface.decodeFunctionData('claimFertilized', data),
-        decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('claimFertilized', result),
-      }),
-    ],
-    estimateGas: () => beanstalk.estimateGas.claimFertilized(tokenIds, toMode || FarmToMode.INTERNAL)
+      ],
+      estimateGas: () => beanstalk.estimateGas.claimFertilized(tokenIds, toMode || FarmToMode.INTERNAL)
+    },
+    txnType: 'claim'
   };
 };
 
@@ -149,20 +179,23 @@ const mow: ClaimPlantFunctions<ClaimPlantAction.MOW> = (sdk, { account }) => {
   ]);
 
   return {
-    callData,
-    steps: [
-      async (_amountInStep: ethers.BigNumber, _context: any) => ({
-        name: 'update',
-        amountOut: _amountInStep,
-        prepare: () => ({
-          target: beanstalk.address,
-          callData
+    txn: {
+      callData,
+      steps: [
+        async (_amountInStep: ethers.BigNumber, _context: any) => ({
+          name: 'update',
+          amountOut: _amountInStep,
+          prepare: () => ({
+            target: beanstalk.address,
+            callData
+          }),
+          decode: (data: string) => beanstalk.interface.decodeFunctionData('update', data),
+          decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('update', result),
         }),
-        decode: (data: string) => beanstalk.interface.decodeFunctionData('update', data),
-        decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('update', result),
-      }),
-    ],
-    estimateGas: () => beanstalk.estimateGas.update(account)
+      ],
+      estimateGas: () => beanstalk.estimateGas.update(account)
+    }, 
+    txnType: 'plant'
   };
 };
 
@@ -170,32 +203,34 @@ const plant: ClaimPlantFunctions<ClaimPlantAction.PLANT> = (sdk) => {
   const { beanstalk } = sdk.contracts;
   const callData = beanstalk.interface.encodeFunctionData('plant', undefined);
   return {
-    callData,
-    steps: [
-      async (_amountInStep: ethers.BigNumber, _context: any) => ({
-        name: 'plant',
-        amountOut: _amountInStep,
-        prepare: () => ({
-          target: beanstalk.address,
-          callData
+    txn: {
+      callData,
+      steps: [
+        async (_amountInStep: ethers.BigNumber, _context: any) => ({
+          name: 'plant',
+          amountOut: _amountInStep,
+          prepare: () => ({
+            target: beanstalk.address,
+            callData
+          }),
+          decode: (data: string) => beanstalk.interface.decodeFunctionData('plant', data),
+          decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('plant', result),
         }),
-        decode: (data: string) => beanstalk.interface.decodeFunctionData('plant', data),
-        decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('plant', result),
-      }),
-    ],
-    estimateGas: () => beanstalk.estimateGas.plant(undefined)
+      ],
+      estimateGas: () => beanstalk.estimateGas.plant(undefined)
+    }, 
+    txnType: 'plant'
   };
 };
 
 const enroot: ClaimPlantFunctions<ClaimPlantAction.ENROOT> = (sdk, { crates }) => {
   const { beanstalk } = sdk.contracts;
-  const steps: StepGenerator<BasicPreparedResult>[] = [];
   const callData: string[] = []; 
   let _callData: string;
+  let hasMultipleCrates = false;
 
   Array.from(sdk.tokens.unripeTokens).forEach((urToken) => {
     const _crates = crates[urToken.address];
-
     if (_crates.length === 1) {
       _callData = beanstalk.interface.encodeFunctionData('enrootDeposit', [
         urToken.address,
@@ -203,36 +238,41 @@ const enroot: ClaimPlantFunctions<ClaimPlantAction.ENROOT> = (sdk, { crates }) =
         urToken.amount(_crates[0].amount.toString()).blockchainString,
       ]);
       callData.push(_callData);
-      steps.push(async (_amountInStep: ethers.BigNumber, _context: any) => ({
-        name: 'enrootDeposit',
-        amountOut: _amountInStep,
-        prepare: () => ({ target: beanstalk.address, callData: _callData }),
-        decode: (data: string) => beanstalk.interface.decodeFunctionData('enrootDeposit', data),
-        decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('enrootDeposit', result),
-      }));
     } else if (_crates.length > 1) {
+      hasMultipleCrates = true;
       _callData = beanstalk.interface.encodeFunctionData('enrootDeposits', [
         urToken.address,
         _crates.map((crate) => crate.season.toString()),
         _crates.map((crate) => urToken.amount(crate.amount.toString()).blockchainString)
       ]);
+      callData.push(_callData);
+    }
+  });
+  _callData = callData.join('');
 
-      steps.push(async (_amountInStep: ethers.BigNumber, _context: any) => ({
+  const step = hasMultipleCrates 
+    ? async (_amountInStep: ethers.BigNumber, _context: any) => ({
         name: 'enrootDeposits',
         amountOut: _amountInStep,
         prepare: () => ({ target: beanstalk.address, callData: _callData }),
         decode: (data: string) => beanstalk.interface.decodeFunctionData('enrootDeposits', data),
-        decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('enrootDeposits', result),
-      }));
-      callData.push(_callData);
-    }
-  });
+        decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('enrootDeposits', result)
+      }) 
+    : async (_amountInStep: ethers.BigNumber, _context: any) => ({
+        name: 'enrootDeposit',
+        amountOut: _amountInStep,
+        prepare: () => ({ target: beanstalk.address, callData: _callData }),
+        decode: (data: string) => beanstalk.interface.decodeFunctionData('enrootDeposit', data),
+        decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('enrootDeposit', result),
+      });
 
-  _callData = callData.join('');
   return {
-    callData: _callData,
-    steps,
-    estimateGas: () => beanstalk.estimateGas.farm([..._callData])
+    txn: {
+      callData: _callData,
+      steps: [step],
+      estimateGas: () => beanstalk.estimateGas.farm([..._callData])
+    },
+    txnType: 'plant'
   };
 };
 
@@ -262,10 +302,12 @@ export function useClaimAndPlantActions(sdk: BeanstalkSDK) {
     [farmerSilo.balances, getBDV, sdk.tokens.unripeTokens]
   );
 
-  const claimAndPlantActions: (
-    { [action in ClaimPlantAction]: () => ClaimPlantActionData } | undefined
-  ) = useMemo(() => {
-    if (!account) return undefined;
+  const claimAndPlantActions: { 
+    [action in ClaimPlantAction]: (...parameters: (Partial<ClaimPlantActionParams[action]>)[]) => ClaimPlantActionData 
+  } = useMemo(() => {
+    if (!account) {
+      throw new Error('Wallet connection is required');
+    }
     const crates = farmerSilo.balances[sdk.tokens.BEAN.address]?.claimable?.crates || [];
     const plotIds = Object.keys(farmerField.harvestablePlots).map(
       (harvestIndex) => sdk.tokens.PODS.fromBlockchain(harvestIndex).blockchainString
@@ -273,17 +315,49 @@ export function useClaimAndPlantActions(sdk: BeanstalkSDK) {
     const fertilizerIds = farmerBarn.balances.map((bal) => bal.token.id.toString());
 
     return {
-      [ClaimPlantAction.MOW]: () => mow(sdk, { account }),
-      [ClaimPlantAction.PLANT]: () => plant(sdk),
-      [ClaimPlantAction.ENROOT]: () => enroot(sdk, { crates: cratesForEnroot }),
-      [ClaimPlantAction.CLAIM]: () => claim(sdk, { seasons: crates.map((crate) => crate.season.toString()) }),
-      [ClaimPlantAction.HARVEST]: () => harvest(sdk, { plotIds: plotIds }),
-      [ClaimPlantAction.RINSE]: () => rinse(sdk, { tokenIds: fertilizerIds }),
+      [ClaimPlantAction.MOW]: (params) => mow(sdk, { account, ...params }),
+      [ClaimPlantAction.PLANT]: (_params) => plant(sdk),
+      [ClaimPlantAction.ENROOT]: (params) => enroot(sdk, { crates: cratesForEnroot, ...params }),
+      [ClaimPlantAction.CLAIM]: (params) => claim(sdk, { seasons: crates.map((crate) => crate.season.toString()), ...params }),
+      [ClaimPlantAction.HARVEST]: (params) => harvest(sdk, { plotIds: plotIds, ...params }),
+      [ClaimPlantAction.RINSE]: (params) => rinse(sdk, { tokenIds: fertilizerIds, ...params }),
     };
   }, [account, cratesForEnroot, farmerBarn.balances, farmerField.harvestablePlots, farmerSilo.balances, sdk]);
 
+  const utils = useMemo(() => {
+    const isClaimAction = (action: ClaimPlantAction) => {
+      if (action === ClaimPlantAction.RINSE || action === ClaimPlantAction.HARVEST || action === ClaimPlantAction.CLAIM) {
+        return true;
+      }
+      return false;
+    };
+
+    const isPlantAction = (action: ClaimPlantAction) => {
+      if (action === ClaimPlantAction.PLANT || action === ClaimPlantAction.ENROOT || action === ClaimPlantAction.MOW) {
+        return true;
+      }
+      return false;
+    };
+
+    const injectOnlyLocal = (name: string, amount: TokenValue) => 
+      async () => ({
+        name,
+        amountOut: amount.toBigNumber(),
+        prepare: () => ({ target: '', callData: '' }),
+        decode: () => undefined,
+        decodeResult: () => undefined,
+      });
+
+    return { 
+      isClaimAction,
+      isPlantAction,
+      injectOnlyLocal,
+    };
+  }, []);
+
   return { 
-    actions: claimAndPlantActions
+    actions: claimAndPlantActions,
+    ...utils
   };
 }
 
@@ -291,6 +365,10 @@ export default function useFarmerClaimAndPlantActions() {
   const sdk = useSdk();
 
   return useClaimAndPlantActions(sdk);
+}
+
+export function useClaimAndPlantWorkflowBuilder() {
+
 }
 
 export function buildClaimPlantWithFarm<T>(
@@ -302,43 +380,3 @@ export function buildClaimPlantWithFarm<T>(
 ) {
   
 }
-
-// function getCratesForUnroot(sdk: BeanstalkSDK, balances: FarmerSilo['balances'], getBDV: ReturnType<typeof useBDV>) {
-//   return Array.from(sdk.tokens.unripeTokens).reduce<{ [addr: string]: DepositCrate[] }>((prev, token) => {
-//     const depositCrates = balances[token.address]?.deposited.crates;
-//         const crates = depositCrates?.filter((crate) =>
-//           new BigNumber(getBDV(token).times(crate.amount).toFixed(6, 1)).gt(crate.bdv)
-//         );
-//         prev[token.address] = crates;
-//         return prev;
-//   }, {});
-// }
-
-// const getHarvest: {
-//   getStep: ClaimAndPlantFunction<ClaimBeansParams<{ plotIds: string[] }>>,
-//   estimateGas: EstimateGasFunction<ClaimBeansParams<{ plotIds: string[] }>>
-// } = {
-//   getStep: (sdk, { plotIds, amount, toMode }) => {
-//     const { beanstalk } = sdk.contracts;
-//     const callData = beanstalk.interface.encodeFunctionData('harvest', [
-//       plotIds,
-//       toMode || FarmToMode.INTERNAL,
-//     ]);
-//     return {
-//       callData,
-//       steps: [
-//         async (_amountInStep: ethers.BigNumber, _context: any) => ({
-//           name: 'harvest',
-//           amountOut: amount?.toBigNumber() || _amountInStep,
-//           prepare: () => ({
-//             target: beanstalk.address,
-//             callData,
-//           }),
-//           decode: (data: string) => beanstalk.interface.decodeFunctionData('harvest', data),
-//           decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('harvest', result),
-//         })
-//       ],
-//     };
-//   },
-//   estimateGas: (sdk,) => beanstalk.estimateGas.harvest(plotIds, toMode || FarmToMode.INTERNAL)
-// }

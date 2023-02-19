@@ -59,10 +59,7 @@ const SiloActions : FC<{
         </ModuleTabs>
         <ModuleContent>
           {tab === 0 && token ? (
-            <Deposit
-              pool={props.pool}
-              token={token}
-            />
+            <Deposit token={token} />
           ) : null}
           {tab === 1 ? (
             <Convert

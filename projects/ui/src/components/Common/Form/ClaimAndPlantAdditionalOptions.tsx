@@ -63,7 +63,7 @@ const ClaimAndPlantAdditionalOptions: React.FC<{}> = () => {
       if (!hasAllRequired) {
         const updatedSelected = new Set([...local, ...required]);
         setLocal(updatedSelected);
-        setFieldValue('farmActions.additional.selected', updatedSelected);
+        setFieldValue('farmActions.additional.selected', Array.from(updatedSelected));
       }
     }
   }, [local, required, setFieldValue]);
