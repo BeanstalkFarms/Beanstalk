@@ -1,21 +1,15 @@
-import { Accordion, AccordionDetails, Alert, Box, CircularProgress, IconButton, Link, Stack } from '@mui/material';
+import { Accordion, AccordionDetails, Box, Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ethers } from 'ethers';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import toast from 'react-hot-toast';
 import { useConnect } from 'wagmi';
-import BigNumber from 'bignumber.js';
-import { SwapOperation, FarmWorkflow } from '@beanstalk/sdk';
 import {
-  FormApprovingState, FormTokenState,
-  SettingInput,
-  SlippageSettingsFragment,
+  FormTokenState,
   SmartSubmitButton,
   TokenAdornment,
   TokenSelectDialog,
   TxnPreview,
-  TxnSettings,
 } from '~/components/Common/Form';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import TokenInputField from '~/components/Common/Form/TokenInputField';
@@ -30,26 +24,17 @@ import useTokenMap from '~/hooks/chain/useTokenMap';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
-import useQuote, { QuoteHandler } from '~/hooks/ledger/useQuote';
 import useAccount from '~/hooks/ledger/useAccount';
-import { toStringBaseUnitBN, toTokenUnitsBN, parseError, MinBN } from '~/util';
-import { IconSize } from '~/components/App/muiTheme';
+import { toStringBaseUnitBN, parseError } from '~/util';
 import TransactionToast from '~/components/Common/TxnToast';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
-import useChainConstant from '~/hooks/chain/useChainConstant';
-import { optimizeFromMode } from '~/util/Farm';
-import copy from '~/constants/copy';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import { ActionType } from '~/util/Actions';
-import WarningIcon from '~/components/Common/Alert/WarningIcon';
-import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
-import useFarm from '~/hooks/sdk/useFarm';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import AddressInputField from '~/components/Common/Form/AddressInputField';
 import FieldWrapper from '~/components/Common/Form/FieldWrapper';
-import { Tokens } from '@beanstalk/sdk/dist/types/lib/tokens';
 
 /// ---------------------------------------------------------------
 
@@ -89,7 +74,7 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
   const balanceFrom = values.balanceFrom;
   const amount      = stateIn.amount;
   const destination = values.destination;
-  const approving = values.approving;
+  const approving   = values.approving;
 
   const [balanceIn, balanceInInput, balanceInMax] = useMemo(() => {
     const _balanceIn = balances[tokenIn.address];
