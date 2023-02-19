@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Box, Tab } from '@mui/material';
+import { ERC20Token, NativeToken } from '@beanstalk/sdk';
 import { Pool } from '~/classes';
-import { ERC20Token } from '~/classes/Token';
+import { ERC20Token as ERC20TokenOld } from '~/classes/Token';
 import { FarmerSiloBalance } from '~/state/farmer/silo';
 import useTabs from '~/hooks/display/useTabs';
 import BadgeTab from '~/components/Common/BadgeTab';
@@ -24,6 +25,7 @@ import { Module, ModuleTabs, ModuleContent } from '~/components/Common/Module';
  *     "claimable" row and is shown for both Withdraw & Claim tabs.
  */
 import { FC } from '~/types';
+import useSdk from '~/hooks/sdk';
 
 const SLUGS = ['deposit', 'convert', 'transfer', 'withdraw', 'claim'];
 
@@ -31,11 +33,20 @@ const SILO_ACTIONS_MAX_WIDTH = '470px';
 
 const SiloActions : FC<{
   pool: Pool;
-  token: ERC20Token;
+  token: ERC20TokenOld;
   siloBalance: FarmerSiloBalance;
 }> = (props) => {
+  const sdk = useSdk();
   const [tab, handleChange] = useTabs(SLUGS, 'action');
   const hasClaimable = props.siloBalance?.claimable?.amount.gt(0);
+
+  // temp solution
+  const token = useMemo(() => {
+    const match = sdk.tokens.findBySymbol(props.token.symbol);
+    if (match) return match as ERC20Token | NativeToken;
+    return undefined;
+  }, [props.token.symbol, sdk.tokens]);
+
   return (
     <>
       <Module sx={{ maxWidth: { lg: SILO_ACTIONS_MAX_WIDTH } }}>
@@ -47,10 +58,10 @@ const SiloActions : FC<{
           <BadgeTab label="Claim" showBadge={hasClaimable} />
         </ModuleTabs>
         <ModuleContent>
-          {tab === 0 ? (
+          {tab === 0 && token ? (
             <Deposit
               pool={props.pool}
-              token={props.token}
+              token={token}
             />
           ) : null}
           {tab === 1 ? (

@@ -2,8 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, Link, Box, Stack, Tooltip } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { Token } from '@beanstalk/sdk';
 import { StyledDialog, StyledDialogActions, StyledDialogContent, StyledDialogTitle } from '~/components/Common/Dialog';
-import Token from '~/classes/Token';
 import { displayBN, displayFullBN } from '~/util';
 import { ZERO_BN } from '~/constants';
 import { ApplicableBalance, FarmerBalances } from '~/state/farmer/balances';
@@ -11,8 +11,7 @@ import { FarmerSilo } from '~/state/farmer/silo';
 import { BeanstalkPalette, FontSize, IconSize } from '../../App/muiTheme';
 import Row from '~/components/Common/Row';
 import BalanceFromRow, { BalanceFrom } from './BalanceFromRow';
-import { ETH } from '~/constants/tokens';
-import useGetChainToken from '~/hooks/chain/useGetChainToken';
+import useSdk from '~/hooks/sdk';
 
 export enum TokenSelectMode { MULTI, SINGLE }
 
@@ -49,7 +48,7 @@ export type TokenSelectDialogProps<K extends keyof TokenBalanceMode> = {
   balances?: TokenBalanceMode[K] | undefined;
   // balances: FarmerSiloBalance['deposited'] | FarmerBalances | undefined;
   /** A list of tokens to show in the Dialog. */
-  tokenList: Token[];
+  tokenList: (Token)[];
   /** Single or multi-select */
   mode?: TokenSelectMode;
   /** maping of additional balances to show along with balances */
@@ -64,7 +63,7 @@ const balanceFromText = {
   [BalanceFrom.TOTAL]: 'Displaying Total Farm and Circulating Balances.',
 };
 
-const TokenSelectDialog : TokenSelectDialogC = React.memo(({
+const TokenSelectDialogNew : TokenSelectDialogC = React.memo(({
   // Dialog
   open,
   handleClose,
@@ -82,12 +81,9 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
   mode = TokenSelectMode.MULTI,
   applicableBalances,
 }) => {
-  /// Chain Constants
-  const getChainToken = useGetChainToken();
-  const Eth           = getChainToken(ETH);
-
+  const sdk = useSdk();
   /** keep an internal copy of selected tokens */
-  const [selectedInternal, setSelectedInternal] = useState<Set<Token>>(new Set<Token>());
+  const [selectedInternal, setSelectedInternal] = useState<Set<Token>>(new Set());
 
   const getBalance = useCallback((addr: string) => {
     if (!_balances) return ZERO_BN;
@@ -117,10 +113,10 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
   // ETH can only be used from EXTERNAL balance
   const filteredTokenList = useMemo(() => {
     if (balanceFrom === BalanceFrom.INTERNAL) {
-      return tokenList.filter((tk) => tk !== Eth);
+      return tokenList.filter((tk) => tk.symbol !== sdk.tokens.ETH.symbol);
     }
     return tokenList;
-  }, [Eth, balanceFrom, tokenList]);
+  }, [balanceFrom, sdk.tokens.ETH, tokenList]);
 
   // Whenever the Dialog opens, store a temporary copy of the currently
   // selected tokens so we can manipulate them quickly here without
@@ -186,8 +182,9 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
           */}
         <List sx={{ p: 0 }}>
           {filteredTokenList ? filteredTokenList.map((_token) => {
-            const tokenBalance = getBalance(_token.address);
-            const applicableBalance = getApplicableBalances(_token.address);
+            const key = (_token.equals(sdk.tokens.ETH)) ? 'eth' : _token.address;
+            const tokenBalance = getBalance(key);
+            const applicableBalance = getApplicableBalances(key);
             return (
               <ListItem
                 key={_token.address}
@@ -302,4 +299,4 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
   );
 });
 
-export default TokenSelectDialog;
+export default TokenSelectDialogNew;

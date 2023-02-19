@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Divider,
+  Stack,
   TextField,
   TextFieldProps,
   Tooltip,
@@ -10,7 +11,8 @@ import {
 import { Field, FieldProps } from 'formik';
 import BigNumber from 'bignumber.js';
 
-import Token from '~/classes/Token';
+import { Token } from '@beanstalk/sdk';
+import TokenOld from '~/classes/Token';
 import { displayBN, displayFullBN, displayTokenAmount } from '~/util';
 import { FarmerBalances } from '~/state/farmer/balances';
 import Row from '~/components/Common/Row';
@@ -20,13 +22,14 @@ import BorderEffect from './BorderEffect';
 import { BalanceFrom } from './BalanceFromRow';
 import FieldWrapper from './FieldWrapper';
 import NumberFormatInput from './NumberFormatInput';
+import { BeanstalkPalette } from '~/components/App/muiTheme';
 
 export type TokenInputCustomProps = {
   /**
    * If provided, the Balance is displayed with respect
    * to this token's displayDecimals.
    */
-  token?: Token;
+  token?: Token | TokenOld;
   /**
    *
    */
@@ -67,6 +70,10 @@ export type TokenInputCustomProps = {
    * 
    */
   onChange?: (finalValue: BigNumber | undefined) => void;
+  /**
+   * 
+   */
+  belowComponent?: JSX.Element;
 };
 
 // const preventNegative = (e: React.)
@@ -133,6 +140,7 @@ const TokenInput: FC<
   sx,
   InputProps,
   label,
+  belowComponent,
   ...textFieldProps
 }) => {
   const [displayAmount, setDisplayAmount] = useState<string>(field.value?.toString() || '');
@@ -280,77 +288,87 @@ const TokenInput: FC<
   return (
     <FieldWrapper label={label}>
       <BorderEffect disabled={isInputDisabled}>
-        <Box 
-          width="100%"
-          sx={{ 
-            px: 2, 
-            py: textFieldProps?.size === 'small' && !balance || hideBalance ? 0 : 1,
-          }}
-        >
-          {/* Input */}
-          <TextField
-            type="text"
-            color="primary"
-            placeholder={placeholder || '0'}
-            disabled={isInputDisabled}
-            fullWidth // default to fullWidth
-            {...textFieldProps}
-            // Override the following props.
-            onWheel={handleWheel}
-            value={displayAmount || ''}
-            onChange={handleChange}
-            InputProps={inputProps}
-            onKeyDown={!allowNegative ? preventNegativeInput : undefined}
-            sx={{
-              ...textFieldStyles,
-              ...sx
+        <Stack width="100%">
+          <Box 
+            width="100%"
+            sx={{ 
+              px: 2, 
+              py: textFieldProps?.size === 'small' && !balance || hideBalance ? 0 : 1,
             }}
-          />
-          {/* Bottom Adornment */}
-          {(balance && !hideBalance || quote) && (
-          <Row gap={0.5} px={0.5} pt={0.75}>
-            {/* Leaving the Stack rendered regardless of whether `quote` is defined
-            * ensures that the Balance section gets flexed to the right side of
-            * the input. */}
-            <Row sx={{ flex: 1 }} spacing={1}>
-              <Typography variant="bodySmall" color="text.secondary">
-                {quote}
-              </Typography>
-            </Row>
-            {((balance || additionalBalance?.gt(0)) && !hideBalance) && (
-            <>
-              <Tooltip title={balanceTooltip}>
-                <Typography variant="body1" color="text.secondary">
-                  {balanceLabel}: {(
-                    balance
-                      ? token
-                        // If `token` is provided, use its requested decimals
-                        ? `${displayFullBN(balance, token.displayDecimals)}`
-                        // Otherwise... *shrug*
-                        // : balance.toString()
-                        : `${displayFullBN(balance, 2)}`
-                      : '0'
-                  )}
-                  {additionalBalance?.gt(0) ? (
-                    <Typography component="span" color="primary">
-                      &nbsp;+ {displayFullBN(additionalBalance, token?.displayDecimals || 2)}
+          >
+            {/* Input */}
+            <TextField
+              type="text"
+              color="primary"
+              placeholder={placeholder || '0'}
+              disabled={isInputDisabled}
+              fullWidth // default to fullWidth
+              {...textFieldProps}
+              // Override the following props.
+              onWheel={handleWheel}
+              value={displayAmount || ''}
+              onChange={handleChange}
+              InputProps={inputProps}
+              onKeyDown={!allowNegative ? preventNegativeInput : undefined}
+              sx={{
+                ...textFieldStyles,
+                ...sx
+              }}
+            />
+            {/* Bottom Adornment */}
+            {(balance && !hideBalance || quote) && (
+              <Row gap={0.5} px={0.5} pt={0.75}>
+                {/* Leaving the Stack rendered regardless of whether `quote` is defined
+                  * ensures that the Balance section gets flexed to the right side of
+                  * the input. */}
+                <Row sx={{ flex: 1 }} spacing={1}>
+                  <Typography variant="bodySmall" color="text.secondary">
+                    {quote}
+                  </Typography>
+                </Row>
+                {((balance || additionalBalance?.gt(0)) && !hideBalance) && (
+                  <>
+                    <Tooltip title={balanceTooltip}>
+                      <Typography variant="body1" color="text.secondary">
+                        {balanceLabel}: {(
+                          balance
+                            ? token
+                              // If `token` is provided, use its requested decimals
+                              ? `${displayFullBN(balance, token.displayDecimals)}`
+                              // Otherwise... *shrug*
+                              // : balance.toString()
+                              : `${displayFullBN(balance, 2)}`
+                            : '0'
+                        )}
+                        {additionalBalance?.gt(0) ? (
+                          <Typography component="span" color="primary">
+                            &nbsp;+ {displayFullBN(additionalBalance, token?.displayDecimals || 2)}
+                          </Typography>
+                        ) : null}
+                      </Typography>
+                    </Tooltip>
+                    <Typography
+                      variant="body1"
+                      onClick={isInputDisabled ? undefined : handleMax}
+                      color={isInputDisabled ? 'text.secondary' : 'primary'}
+                      sx={{ cursor: isInputDisabled ? 'inherit' : 'pointer' }}
+                    >
+                      (Max)
                     </Typography>
-                  ) : null}
-                </Typography>
-              </Tooltip>
-              <Typography
-                variant="body1"
-                onClick={isInputDisabled ? undefined : handleMax}
-                color={isInputDisabled ? 'text.secondary' : 'primary'}
-                sx={{ cursor: isInputDisabled ? 'inherit' : 'pointer' }}
-              >
-                (Max)
-              </Typography>
-            </>
+                  </>
+                )}
+              </Row>
+            )}
+          </Box>
+          {belowComponent && (
+            <Box
+              width="100%"
+              sx={{ borderTop: `1px solid ${BeanstalkPalette.inputGrey}` }}
+            >
+              {belowComponent ? <>{belowComponent}</> : null}
+            </Box>
           )}
-          </Row>
-      )}
-        </Box>
+        </Stack>
       </BorderEffect>
     </FieldWrapper>
   );

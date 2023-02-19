@@ -9,7 +9,8 @@ import {
   Typography,
 } from '@mui/material';
 import BigNumber from 'bignumber.js';
-import { Token } from '~/classes';
+import { Token } from '@beanstalk/sdk';
+import { Token as TokenOld } from '~/classes';
 import { displayFullBN } from '~/util';
 import EmbeddedCard from '../EmbeddedCard';
 import Row from '../Row';
@@ -18,7 +19,7 @@ import InfoRow from './InfoRow';
 
 export type TokenOutputRowProps = {
   /** */
-  token: Token;
+  token: TokenOld | Token;
   /** the 'amount' of token */
   amount: BigNumber;
   /** The $ value (or other derived value) of the `amount` */

@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
-import Token from '~/classes/Token';
+import { Token } from '@beanstalk/sdk';
+import TokenOld from '~/classes/Token';
 import { ZERO_BN } from '~/constants';
 import { STALK } from '~/constants/tokens';
 
@@ -83,7 +84,7 @@ export function displayFullBN(
  */
 export function displayTokenAmount(
   amount: BigNumber,
-  token: Token,
+  token: TokenOld | Token,
   config: {
     allowNegative?: boolean,
     showName?: boolean,
