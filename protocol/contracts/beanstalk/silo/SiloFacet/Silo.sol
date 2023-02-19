@@ -10,9 +10,6 @@ import "./SiloExit.sol";
 import "~/libraries/Silo/LibSilo.sol";
 import "~/libraries/Silo/LibTokenSilo.sol";
 
-import "hardhat/console.sol";
-import "~/libraries/LibPRBMath.sol";
-
 /**
  * @title Silo
  * @author Publius
@@ -28,7 +25,6 @@ import "~/libraries/LibPRBMath.sol";
  
 contract Silo is SiloExit {
     using SafeMath for uint256;
-    using LibPRBMath for uint256;
     using SafeERC20 for IERC20;
     using LibSafeMath128 for uint128;
 
@@ -160,16 +156,15 @@ contract Silo is SiloExit {
     // a regular mow. 
     // super mow increments the stalk and roots of the user by total stalk, but stores the roots
     // needed to correctly issue the earned beans.
-    function __superMow(address account) private {
-        console.log("SUPER MOW");
+    function __superMow(address account) private returns (uint128 deltaRoots) {
         uint32 _lastUpdate = lastUpdate(account);
-        if (_lastUpdate >= _season()) return;
+        if (_lastUpdate >= _season()) return 0;
+        handleRainAndSops(account, _lastUpdate);
         // If this `account` has no Seeds, skip to save gas.
         uint256 _stalk = balanceOfGrownStalk(account);
-
-        if (s.a[account].s.seeds == 0) return;
+        if (s.a[account].s.seeds == 0) return 0;
         s.a[account].lastUpdate = _season();
-        LibSilo.mintStalkAndStoreRoots(account, _stalk);
+        deltaRoots = LibSilo.mintStalkAndStoreRoots(account, _stalk);
     }
 
     //////////////////////// INTERNAL: PLANT ////////////////////////
@@ -181,20 +176,25 @@ contract Silo is SiloExit {
      * For more info on Planting, see: {SiloFacet-plant}
      */
     function _plant(address account) internal returns (uint256 beans) {
-        // Need to Mow for `account` before we calculate the balance of 
+        // per the zero withdraw update, planting is handled differently 
+        // depending whether or not the user plants during the vesting period of beanstalk. 
+        // during the vesting period, the earned beans are not issued to the user.
+        // thus, the roots calculated for a given user is different. 
+        // This is handled by the super mow function, which stores the difference in roots.
+
         // Earned Beans.
-        bool is25Blocks;
+        uint256 accountStalk;
         if(block.number - s.season.sunriseBlock <= 25){
-            __superMow(account);
-            is25Blocks = false;
+            uint128 deltaRoots = __superMow(account);
+            accountStalk =  s.a[account].s.stalk;
+            beans = _balanceOfEarnedBeans(account, accountStalk, deltaRoots, false);
         } else {
             _mow(account);
-            is25Blocks = true;
+            // Calculate balance of Earned Beans.
+            accountStalk =  s.a[account].s.stalk;
+            beans = _balanceOfEarnedBeans(account, accountStalk, 0, true);  
         }
-        uint256 accountStalk = s.a[account].s.stalk;
 
-        // Calculate balance of Earned Beans.
-        beans = _balanceOfEarnedBeans(account, accountStalk, is25Blocks);
         if (beans == 0) return 0;
 
         // Reduce the Silo's supply of Earned Beans.

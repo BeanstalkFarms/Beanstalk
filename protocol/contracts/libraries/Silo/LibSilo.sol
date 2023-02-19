@@ -11,8 +11,6 @@ import "../LibAppStorage.sol";
 import "../LibPRBMath.sol";
 import "../LibSafeMath128.sol";
 
-import "hardhat/console.sol";
-
 
 /**
  * @title LibSilo
@@ -124,9 +122,6 @@ library LibSilo {
         } else  {
             roots = s.s.roots.mul(stalk).div(s.s.stalk);
         }
-        console.log("-----");
-        console.log("root Gain:",roots);
-        console.log("Stalk Gain:", stalk);
 
         s.s.stalk = s.s.stalk.add(stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
@@ -134,14 +129,11 @@ library LibSilo {
         s.s.roots = s.s.roots.add(roots);
         s.a[account].roots = s.a[account].roots.add(uint128(roots));
 
-        console.log("new root balance:", s.a[account].roots);
-        console.log("new stalk balance:", s.a[account].s.stalk);
-
         emit StalkBalanceChanged(account, int256(stalk), int256(roots));
     }
 
 
-    function mintStalkAndStoreRoots(address account, uint256 stalk) internal {
+    function mintStalkAndStoreRoots(address account, uint256 stalk) internal returns (uint128 deltaRoots) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // Calculate the amount of Roots for the given amount of Stalk.
@@ -153,34 +145,20 @@ library LibSilo {
         // nor if the mint was because of a deposit.
         uint256 roots;
         uint256 roots_without_earned;
-        console.log("roots used in calculation:", s.s.roots.sub(s.newEarnedRoots));
         if (s.s.roots == 0) {
             roots = uint256(stalk.mul(C.getRootsBase()));
         } else  {
             roots = s.s.roots.mul(stalk).div(s.s.stalk);
-            uint256 roots_with_earned = s.s.roots.mul(stalk).div(s.s.stalk);
             roots_without_earned = s.s.roots.add(s.newEarnedRoots).mul(stalk).div(s.s.stalk - (s.newEarnedStalk));
-            s.a[account].deltaRoots = uint128(roots_without_earned - roots_with_earned);
-            s.newEarnedRoots = s.newEarnedRoots.add(uint128(s.a[account].deltaRoots));
+            deltaRoots = uint128(roots_without_earned - roots);
+            s.newEarnedRoots = s.newEarnedRoots.add(deltaRoots);
         }
-        console.log("-----");
-        console.log("newEarnedRoots:", s.newEarnedRoots);
-        console.log("root Gain:",roots);
-        console.log("root Gained if there was no earned beans:", roots_without_earned);
-        console.log("Stalk Gain:", stalk);
-        console.log("deltaRootsNoGain:", s.a[account].deltaRoots);
 
         s.s.stalk = s.s.stalk.add(stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
 
         s.s.roots = s.s.roots.add(roots);
         s.a[account].roots = s.a[account].roots.add(uint128(roots));
-
-        console.log("new root balance:", s.a[account].roots);
-        console.log("new stalk balance:", s.a[account].s.stalk);
-
-        console.log("total Root balance:", s.s.roots);
-        console.log("total Stalk Balnace:", s.s.stalk);
 
         emit StalkBalanceChanged(account, int256(stalk), int256(roots));
     }
@@ -225,6 +203,10 @@ library LibSilo {
         uint128 roots;
         // Calculate the amount of Roots for the given amount of Stalk.
         // We round up as it prevents an account having roots but no stalk.
+        
+        // if the user withdraws in the same block as sunrise, they forfeit their earned beans for that season
+        // this is distrubuted to the other users.
+        // should this be the same as the vesting period?
         if(block.number == s.season.sunriseBlock){
             roots = uint128(s.s.roots.mulDiv(
             stalk,
@@ -237,10 +219,6 @@ library LibSilo {
             s.s.stalk,
             LibPRBMath.Rounding.Up));
         }
-        
-        console.log("stalk burnt:", stalk);
-        console.log("total stalk:", s.s.stalk);
-        console.log("roots burnt:", roots);
 
         if (roots > s.a[account].roots) roots = s.a[account].roots;
 

@@ -143,7 +143,7 @@ describe("Root", function () {
 
       expect(await this.rootToken.connect(user).symbol()).to.be.equal("ROOT");
     });
-  });
+});
 
   describe("ownership", function () {
     describe("renounce", async function () {

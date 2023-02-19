@@ -323,13 +323,8 @@ describe('Silo', function () {
       describe("With Multiple Users", async function () {
         
         it('a single farmer plants during and after vesting period', async function () {
-          console.log("Current Block", await ethers.provider.getBlockNumber());
           await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
-          console.log("Sunrise Block", (await this.season.getSunriseBlock()).toString());
-  
           
-    
-         
           await this.silo.connect(user).plant();
           earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, season)
 
