@@ -52,6 +52,7 @@ const SmartSubmitButton : FC<{
   /**
    * 
    */
+  nowApproving?: (v: boolean) => void;
 } & {
   /**
    * LoadingButton
@@ -61,6 +62,7 @@ const SmartSubmitButton : FC<{
   contract,
   tokens,
   mode = 'auto',
+  nowApproving,
   children,
   ...props
 }) => {
@@ -127,6 +129,7 @@ const SmartSubmitButton : FC<{
       });
       
       // Execute
+      nowApproving?.(true)
       const txn = await tokenContract.approve(contract.address, amount);
       txToast.confirming(txn);
       const receipt = await txn.wait();
@@ -135,6 +138,7 @@ const SmartSubmitButton : FC<{
     } catch (err) {
       txToast?.error(err) || toast.error(parseError(err));
     } finally {
+      nowApproving?.(false)
       setFieldValue('approving', undefined);
     }
   }, [

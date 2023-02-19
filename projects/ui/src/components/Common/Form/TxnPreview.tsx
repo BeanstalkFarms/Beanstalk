@@ -14,11 +14,12 @@ import {
   SiloDepositAction,
   SiloRewardsAction,
   SiloTransitAction,
-  SwapAction
+  SwapAction,
+  TransferBalanceAction
 } from '~/util/Actions';
 import { SupportedChainId } from '~/constants/chains';
 import { BEAN, PODS, SEEDS, SPROUTS, STALK, USDC } from '~/constants/tokens';
-import { FarmToMode } from '~/lib/Beanstalk/Farm';
+import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
 import AddressIcon from '~/components/Common/AddressIcon';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
@@ -100,7 +101,21 @@ const TxnStep : FC<{
           {a.destination !== undefined ? (
             a.destination === FarmToMode.INTERNAL
               ? <Typography>🚜</Typography>
-              : <AddressIcon />
+              : <AddressIcon address={a.to} />
+          ) : null}
+        </IconRow>
+      );
+      break;
+    }
+
+    case ActionType.TRANSFER_BALANCE: {
+      const a = actions[0] as TransferBalanceAction;
+      step = (
+        <IconRow spacing={0.5}>
+          {a.source !== undefined ? (
+            a.source === FarmFromMode.INTERNAL ? <Typography>🚜</Typography>
+            : a.source === FarmFromMode.EXTERNAL ? <AddressIcon />
+            : <IconRow><AddressIcon />🚜</IconRow>
           ) : null}
         </IconRow>
       );
