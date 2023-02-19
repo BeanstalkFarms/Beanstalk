@@ -207,7 +207,7 @@ library LibSilo {
         // if the user withdraws in the same block as sunrise, they forfeit their earned beans for that season
         // this is distrubuted to the other users.
         // should this be the same as the vesting period?
-        if(block.number == s.season.sunriseBlock){
+        if(block.number - s.season.sunriseBlock <= 25){
             roots = uint128(s.s.roots.mulDiv(
             stalk,
             s.s.stalk-s.newEarnedStalk,
