@@ -1,12 +1,13 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useFormikContext } from 'formik';
-import SelectionAccordion from '~/components/Common/Selection/SelectionAccordion';
+import SelectionAccordion from '~/components/Common/Accordion/SelectionAccordion';
 import { ClaimPlantAction } from '~/hooks/beanstalk/useClaimAndPlantActions';
 import useFarmerClaimPlantOptions from '~/hooks/farmer/useFarmerClaimAndPlantOptions';
 
 import ClaimPlantAccordionPill from '~/components/Common/Selection/ClaimPlantOptionPill';
 import ClaimPlantAccordionCard from '~/components/Common/Selection/ClaimPlantOptionCard';
 import { ClaimAndPlantFormState } from '.';
+import useToggle from '~/hooks/display/useToggle';
 
 const presets = {
   claim: {
@@ -33,6 +34,7 @@ const ClaimAndPlantFarmActions: React.FC<{
 
   /// State
   const [local, setLocal] = useState<Set<ClaimPlantAction>>(new Set(farmActions.selected));
+  const [open, show, hide] = useToggle();
 
   /// Helpers
   const { options } = useFarmerClaimPlantOptions();
@@ -49,8 +51,17 @@ const ClaimAndPlantFarmActions: React.FC<{
     setFieldValue('farmActions.selected', Array.from(copy));
   }, [setFieldValue, local]);
 
+  useEffect(() => {
+    if (farmActions.selected.length === 0) {
+      setLocal(new Set());
+      hide();
+    }
+  }, [farmActions.selected, hide, local.size]);
+
   return (
     <SelectionAccordion<ClaimPlantAction>
+      open={open}
+      onChange={open ? hide : show}
       title="Add Claimable Assets to this transaction"
       options={presets[preset].options}
       selected={local}

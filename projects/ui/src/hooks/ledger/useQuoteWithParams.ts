@@ -77,7 +77,6 @@ export default function useQuoteWithParams<T>(
           /// This line is crucial: it ignores the request if it was cancelled in-flight.
           if (abortController.current?.signal.aborted) return reject();
           if (_result === null) return resolve(_result);
-          console.log('quoting...');
           /// FIXME: this is for backwards-compat, find everywhere that doesnt use the obj form.
           setResult(_result instanceof BigNumber ? { amountOut: _result } : _result);
           /// Return the result back to wherever it was called.

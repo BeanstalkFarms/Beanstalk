@@ -5,7 +5,7 @@ import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
 import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
-import { ERC20Token, NativeToken, Token, FarmFromMode, TokenValue, FarmToMode } from '@beanstalk/sdk';
+import { ERC20Token, NativeToken, Token, FarmFromMode, TokenValue } from '@beanstalk/sdk';
 import {
   SEEDS,
   STALK,
@@ -45,15 +45,15 @@ import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 // import ClaimableAssets from '../ClaimableAssets';
 import TokenOutputsField from '~/components/Common/Form/TokenOutputsField';
 import useSdk from '~/hooks/sdk';
-import useFarmerClaimAndPlantActions, { ClaimPlantAction } from '~/hooks/beanstalk/useClaimAndPlantActions';
+import useFarmerClaimAndPlantActions, { ClaimPlantAction, ClaimPlantActionMap } from '~/hooks/beanstalk/useClaimAndPlantActions';
 import useGetClaimAppliedBalances from '~/hooks/farmer/useGetClaimAppliedBalances';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
-import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import { depositSummary } from '~/lib/Beanstalk/Silo/Deposit';
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
 import useFarmerClaimAndPlantOptions from '~/hooks/farmer/useFarmerClaimAndPlantOptions';
+import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 
 // -----------------------------------------------------------------------
 
@@ -79,6 +79,7 @@ const DepositForm: FC<
     balances: FarmerBalances;
     contract: ethers.Contract;
     handleQuote: QuoteHandlerWithParams<DepositQuoteHandlerParams>;
+    actionsMap: ClaimPlantActionMap;
   }
 > = ({
   // Custom
@@ -87,13 +88,13 @@ const DepositForm: FC<
   amountToBdv,
   balances,
   contract,
+  actionsMap,
   handleQuote,
   // Formik
   values,
   isSubmitting,
   setFieldValue,
 }) => {
-  const sdk = useSdk();
   const { options } = useFarmerClaimAndPlantOptions();
 
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
@@ -108,7 +109,7 @@ const DepositForm: FC<
 
   const applicableBalances = useGetClaimAppliedBalances(
     values.farmActions.options,
-    values.farmActions.selected,
+    values.farmActions?.selected || [],
     values.balanceFrom
   );
 
@@ -206,7 +207,7 @@ const DepositForm: FC<
                     amountTooltip: (
                       <>
                         1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
-                        1 BDV &rarr; {whitelistedToken.getStalk().toString()} STALK
+                        1 BDV &rarr; {whitelistedToken.getStalk()?.toHuman()} STALK
                       </>
                     ),
                   },
@@ -216,14 +217,16 @@ const DepositForm: FC<
                     amountTooltip: (
                       <>
                         1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
-                        1 BDV &rarr; {whitelistedToken.getSeeds().toString()} SEEDS
+                        1 BDV &rarr; {whitelistedToken.getSeeds()?.toHuman()} SEEDS
                       </>
                     )
                   }]
                 }
               ]}
             />
-            <ClaimAndPlantAdditionalOptions />
+            <ClaimAndPlantAdditionalOptions
+              actions={actionsMap}
+            />
             <Box>
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />
@@ -260,8 +263,7 @@ const Deposit: FC<{
   token: whitelistedToken 
 }) => {
   const sdk = useSdk();
-  const claimPlant = useFarmerClaimAndPlantActions();
-  const claimPlantOptions = useFarmerClaimAndPlantOptions();
+  const claimPlant = useFarmerClaimAndPlantActions(sdk);
 
   /// FIXME: name
   /// FIXME: finish deposit functionality for other tokens
@@ -391,60 +393,31 @@ const Deposit: FC<{
 
     console.debug('[chain] estimate = ', estimate);
 
-    return {
-      amountOut: new BigNumber(estimate.toHuman()),
-    };
+    return { amountOut: new BigNumber(estimate.toHuman()) };
   }, [sdk.tokens.BEAN, getWorkflow]);
 
-  const onSubmit = useCallback(
-    async (
-      values: DepositFormValues,
-      formActions: FormikHelpers<DepositFormValues>
-    ) => {
-      const { BEAN } = sdk.tokens;
-      let txToast;
+  const onSubmit = useCallback(async (values: DepositFormValues, formActions: FormikHelpers<DepositFormValues>) => {
+    let txToast;
       try {
         middleware.before();
-        const formData = values.tokens[0];
-        const tokenIn = formData.token;
         
-        if (!values.settings.slippage) {
+        if (!values.settings.slippage) { 
           throw new Error('No slippage value set');
         }
         if (values.tokens.length > 1) {
           throw new Error('Only one token supported at this time');
         }
+        
+        const formData = values.tokens[0];
+        const tokenIn = formData.token;
+
         if (!formData?.amount || formData.amount.eq(0)) {
           throw new Error('Enter an amount to deposit');
         }
-        const slippage = values.settings.slippage;
-        
+
         const amountIn: TokenValue = tokenIn.amount(formData.amount.toString());
-        
         const deposit = await getWorkflow(tokenIn, whitelistedToken, values.balanceFrom);
-        console.log(deposit.getGraph());
         const estimate = await deposit.estimate(amountIn);
-
-        console.log(values.farmActions);
-        
-        const work = sdk.farm.create();
-
-        values.farmActions.additional.selected.forEach((action) => {
-          if (claimPlant.isPlantAction(action)) {
-            const actionData = claimPlant.actions[action]();
-            work.add(actionData.txn.steps);
-          }
-        });
-        
-        values.farmActions.selected.forEach((action) => {
-          if (claimPlant.isClaimAction(action)) {
-            const actionData = claimPlant.actions[action]({ toMode: FarmToMode.INTERNAL });
-            work.add(actionData.txn.steps);
-          }
-        });
-
-        work.add(claimPlant.injectOnlyLocal('pre-deposit', amountIn), { onlyLocal: true });
-        work.add([...deposit.workflow.generators]);
 
         txToast = new TransactionToast({
           loading: `Depositing ${displayFullBN(
@@ -455,11 +428,16 @@ const Deposit: FC<{
           success: 'Deposit successful.',
         });
 
-        const est2 = await work.estimate(amountIn);
-        console.log(whitelistedToken.fromBlockchain(est2).toHuman(), ' ', whitelistedToken.name);
-        console.log(work.summarizeSteps());
+        const work = claimPlant.buildWorkflow(
+          sdk.farm.create(),
+          claimPlant.toActionMap(values.farmActions.selected),
+          claimPlant.toActionMap(values.farmActions.additional.selected),
+          deposit.workflow,
+          amountIn,
+        );
 
-        const txn = await work.execute(amountIn, { slippage });
+        await work.estimate(amountIn);
+        const txn = await work.execute(tokenIn.amount(0), { slippage: values.settings.slippage });
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
@@ -478,10 +456,9 @@ const Deposit: FC<{
       }
     }, [
       middleware, 
-      sdk.tokens, 
-      sdk.farm, 
       whitelistedToken, 
       claimPlant, 
+      sdk.farm, 
       getWorkflow, 
       refetchFarmerSilo, 
       refetchFarmerBalances, 
@@ -508,6 +485,7 @@ const Deposit: FC<{
             whitelistedToken={whitelistedToken}
             balances={balances}
             contract={sdk.contracts.beanstalk}
+            actionsMap={claimPlant.actions}
             {...formikProps}
           />
         </>

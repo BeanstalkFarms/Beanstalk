@@ -2,15 +2,35 @@ import { Box, Button, ButtonProps, Stack, Typography } from '@mui/material';
 import React from 'react';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import { FontSize } from '~/components/App/muiTheme';
-import Row from '../Row';
+import Row from './Row';
 
 export type SelectionItemProps = {
+  /** 
+   * 
+   */
   selected: boolean;
+  /** 
+   * Placement of the check icon
+   */
   checkIcon?: 'top-left' | 'top-right';
+  /** 
+   * 
+   */
   title?: string | JSX.Element;
+  /** 
+   * NOTE: pill variant ignores 'title' and 'checkIcon' props
+   */
   variant?: 'pill' | 'card';
+  /** 
+   * 
+   */
+  isHovered?: boolean;
 } & Omit<ButtonProps, 'variant' | 'title'>;
 
+/**
+ * border & background color are applied when 'selected' is true
+ * background color is applied when hovered
+ */
 const SelectionItem: React.FC<SelectionItemProps> = ({
   children,
   selected,
@@ -18,6 +38,7 @@ const SelectionItem: React.FC<SelectionItemProps> = ({
   variant = 'card',
   checkIcon,
   disabled = false,
+  isHovered,
   ...props
 }) => (
   <Button
@@ -31,7 +52,7 @@ const SelectionItem: React.FC<SelectionItemProps> = ({
       ':not(.Mui-disabled)': {
         color: selected && variant === 'pill' ? 'primary.main' : 'text.secondary',
         borderColor: selected ? 'primary.main' : 'text.light',
-        backgroundColor: selected ? 'primary.light' : 'transparent',
+        backgroundColor: selected || isHovered === true ? 'primary.light' : 'transparent',
         '&:hover': {
           backgroundColor: 'primary.light',
         },
@@ -54,7 +75,7 @@ const SelectionItem: React.FC<SelectionItemProps> = ({
       <>{children}</>
     ) : (
       <Stack width="100%" p={1} gap={1}>
-        {title ? (
+        {title || checkIcon ? (
           <Row
             direction={checkIcon === 'top-right' ? 'row-reverse' : 'row'}
             justifyContent={checkIcon === 'top-left' ? 'flex-start' : 'space-between'}
@@ -75,11 +96,13 @@ const SelectionItem: React.FC<SelectionItemProps> = ({
                 />
               </Box>
             ) : null}
-            {typeof title === 'string' ? (
-              <Typography color="inherit">{title}</Typography>
-            ) : (
-              <>{title}</>
-            )}
+            {title 
+              ? typeof title === 'string' ? (
+                <Typography color="inherit">{title}</Typography>
+              ) : (
+                <>{title}</>
+              ) 
+            : null}
           </Row>
         ) : null}
         <Box sx={{ boxSizing: 'border-box', px: 1 }}>{children}</Box>

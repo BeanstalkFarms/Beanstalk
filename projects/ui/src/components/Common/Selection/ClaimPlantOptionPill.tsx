@@ -5,7 +5,7 @@ import { ClaimPlantActionSummary } from '~/hooks/farmer/useFarmerClaimAndPlantOp
 import { displayFullBN } from '~/util';
 import Row from '../Row';
 import TokenIcon from '../TokenIcon';
-import SelectionItem from './SelectionItem';
+import SelectionItem from '../SelectionItem';
 
 import podIconGrey from '~/img/beanstalk/pod-icon-grey.svg';
 import podIconGreen from '~/img/beanstalk/pod-icon-green.svg';

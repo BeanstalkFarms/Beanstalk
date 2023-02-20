@@ -1,13 +1,13 @@
 import React from 'react';
-import { Typography, Stack, ButtonProps, Tooltip } from '@mui/material';
-import { Partial } from '@react-spring/types';
+import { Typography, Stack, Tooltip } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import BigNumber from 'bignumber.js';
 import { ClaimPlantAction } from '~/hooks/beanstalk/useClaimAndPlantActions';
 import { ClaimPlantActionSummary } from '~/hooks/farmer/useFarmerClaimAndPlantOptions';
 import { displayFullBN } from '~/util';
 import Row from '../Row';
 import TokenIcon from '../TokenIcon';
-import SelectionItem from './SelectionItem';
+import SelectionItem, { SelectionItemProps } from '../SelectionItem';
 
 import podIconGrey from '~/img/beanstalk/pod-icon-grey.svg';
 
@@ -18,6 +18,7 @@ import beanIconGrey from '~/img/tokens/bean-logo-circled-grey.svg';
 import seedIconGrey from '~/img/beanstalk/seed-icon-grey.svg';
 import stalkIconGrey from '~/img/beanstalk/stalk-icon-grey.svg';
 import LockIcon from '~/img/misc/lock-icon.svg';
+import GasTag from '../GasTag';
 
 const icons = {
   SEED: seedIconGrey,
@@ -27,12 +28,13 @@ const icons = {
   STALK: stalkIconGrey,
 };
 
-export type ClaimPlantSelectionItemProps = {
+type Props = {
   option: ClaimPlantAction;
   summary: ClaimPlantActionSummary;
   selected: boolean;
+  gas?: BigNumber;
   required?: boolean;
-} & Partial<ButtonProps['onClick']>;
+} & Omit<SelectionItemProps, 'checkIcon' | 'title' | 'variant'>
 
 const tooltipIconProps = {
   sx: {
@@ -43,10 +45,11 @@ const tooltipIconProps = {
   },
 };
 
-const ClaimPlantAccordionCard: React.FC<ClaimPlantSelectionItemProps> = ({
+const ClaimPlantOptionCard: React.FC<Props> = ({
   summary,
   selected,
   required,
+  gas,
   ...props
 }) => (
   <SelectionItem
@@ -55,16 +58,19 @@ const ClaimPlantAccordionCard: React.FC<ClaimPlantSelectionItemProps> = ({
     checkIcon="top-left"
     disabled={!summary.enabled}
     title={
-      <Row gap={0.5}>
-        {required && (
+      <Row width="100%" justifyContent="space-between">
+        <Row gap={0.5}>
+          {required && (
           <img src={LockIcon} alt="" css={{ width: '1rem', height: '1rem' }} />
         )}
-        <Typography color="inherit">
-          {summary.title}
-          <Tooltip title={summary.tooltip}>
-            <HelpOutlineIcon {...tooltipIconProps} />
-          </Tooltip>
-        </Typography>
+          <Typography color="inherit">
+            {summary.title}
+            <Tooltip title={summary.tooltip}>
+              <HelpOutlineIcon {...tooltipIconProps} />
+            </Tooltip>
+          </Typography>
+        </Row>
+        <GasTag gasLimit={gas || null} />
       </Row>
     }
     sx={{
@@ -97,4 +103,4 @@ const ClaimPlantAccordionCard: React.FC<ClaimPlantSelectionItemProps> = ({
   </SelectionItem>
 );
 
-export default ClaimPlantAccordionCard;
+export default ClaimPlantOptionCard;

@@ -12,7 +12,6 @@ import {
 import React, { useMemo } from 'react';
 
 import { BeanstalkPalette, IconSize } from '~/components/App/muiTheme';
-import useToggle from '~/hooks/display/useToggle';
 import Row from '../Row';
 
 export type SelectionAccordionItemProps<T> = {
@@ -22,6 +21,14 @@ export type SelectionAccordionItemProps<T> = {
 };
 
 export type SelectionAccordionProps<T> = {
+  /**
+   * 
+   */
+  open: boolean;
+  /** 
+   * 
+   */
+  onChange: () => void;
   /**
    * render function
    */
@@ -62,6 +69,8 @@ export type SelectionAccordionProps<T> = {
 };
 
 export default function SelectionAccordion<T>({
+  open,
+  onChange,
   render,
   onToggle,
   title,
@@ -72,8 +81,6 @@ export default function SelectionAccordion<T>({
   subtitle,
   sx,
 }: SelectionAccordionProps<T>) {
-  const [open, show, hide] = useToggle();
-
   const selectedText = useMemo(() => {
     const activeItems = selected.size;
     if (options.size === 1) {
@@ -86,7 +93,7 @@ export default function SelectionAccordion<T>({
     <Stack>
       <Accordion
         expanded={open}
-        onChange={() => (open ? hide() : show())}
+        onChange={onChange}
         sx={{ background: BeanstalkPalette.white, ...sx }}
       >
         <AccordionSummary
