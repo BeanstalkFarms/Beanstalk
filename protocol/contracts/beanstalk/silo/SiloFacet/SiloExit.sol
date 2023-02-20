@@ -171,7 +171,7 @@ contract SiloExit is ReentrancyGuard {
         
         // if the function is called within the morning, then we have to manually calculate the deltaRoots and newEarnedRoots
         // due to the fact that in the typical {_balanceOfEarnedBeans} function, the user and totalRoots are updated.abi
-        if(block.number - s.season.sunriseBlock <= 25){
+        if(block.number - s.season.sunriseBlock <= EARNED_BEAN_VESTING_BLOCKS){
             (uint256 deltaRoots, uint256 newEarnedRoots) = _calcRoots(account);
             beans = _balanceOfEarnedBeansVested(account, s.a[account].s.stalk, deltaRoots, newEarnedRoots);
         } else {
@@ -215,7 +215,7 @@ contract SiloExit is ReentrancyGuard {
         if (s.s.roots == 0) return 0;
 
         uint256 stalk;
-        if(block.number - s.season.sunriseBlock <= 25){
+        if(block.number - s.season.sunriseBlock <= EARNED_BEAN_VESTING_BLOCKS){
             stalk = s.s.stalk.sub(s.newEarnedStalk).mulDiv(
                 s.a[account].roots.add(s.a[account].deltaRoots), // add the delta roots of the user
                 s.s.roots.add(s.newEarnedRoots), // add delta of global roots 

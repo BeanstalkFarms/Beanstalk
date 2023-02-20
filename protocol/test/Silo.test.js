@@ -164,8 +164,6 @@ describe('Silo', function () {
 
       describe("With Multiple Users", async function () {
         it('a single farmer plants during and after vesting period', async function () {
-          console.log("Current Block", await ethers.provider.getBlockNumber());
-          console.log("Sunrise Block", (await this.season.getSunriseBlock()).toString());
           await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
   
           await this.silo.connect(user).plant();
@@ -220,8 +218,6 @@ describe('Silo', function () {
         });
   
         it('some farmers plants during, some farmers plant after vesting period', async function () {
-          console.log("Current Block", await ethers.provider.getBlockNumber());
-          console.log("Sunrise Block", (await this.season.getSunriseBlock()).toString());
           await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
     
          
@@ -347,12 +343,8 @@ describe('Silo', function () {
         });
   
         it('multiple farmers plants during and after vesting period', async function () {
-          console.log("Current Block", await ethers.provider.getBlockNumber());
           await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
-          console.log("Sunrise Block", (await this.season.getSunriseBlock()).toString());
-      
-    
-         
+
           await this.silo.connect(user).plant();
           await this.silo.connect(user3).plant();
   
@@ -381,8 +373,6 @@ describe('Silo', function () {
         });
   
         it('some farmers plants during, some farmers plant after vesting period', async function () {
-          console.log("Current Block", await ethers.provider.getBlockNumber());
-          console.log("Sunrise Block", (await this.season.getSunriseBlock()).toString());
           await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
     
          

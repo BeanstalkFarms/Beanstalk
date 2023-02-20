@@ -66,7 +66,7 @@ contract Replant7 {
     function prune(Earned calldata e) private {
         s.a[e.account].s.stalk = e.stalk;
         s.a[e.account].s.seeds = e.seeds;
-        s.a[e.account].roots = uint128(s.a[e.account].s.stalk.mul(ROOTS_PADDING));
+        s.a[e.account].roots = s.a[e.account].s.stalk.mul(ROOTS_PADDING);
 
         emit SeedsBalanceChanged(
             e.account,

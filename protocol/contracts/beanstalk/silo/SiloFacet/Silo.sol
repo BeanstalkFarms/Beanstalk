@@ -145,13 +145,12 @@ contract Silo is SiloExit {
 
     function __mow(address account) private {
         // If this `account` has no Seeds, skip to save gas.
-        uint256 grownStalk = balanceOfGrownStalk(account);
         if (s.a[account].s.seeds == 0) return;
 
         // per the zero withdraw update, if a user plants within the morning, 
         // addtional roots will need to be issued, to properly calculate the earned beans. 
         // thus, a different mint stalk function is used to differ between deposits.
-        LibSilo.mintGrownStalkAndGrownRoots(account, grownStalk);
+        LibSilo.mintGrownStalkAndGrownRoots(account, balanceOfGrownStalk(account));
     }
 
     //////////////////////// INTERNAL: PLANT ////////////////////////

@@ -34,7 +34,6 @@ import "../LibSafeMath128.sol";
 library LibSilo {
     using SafeMath for uint256;
     using LibPRBMath for uint256;
-    using LibSafeMath128 for uint128;
     
     //////////////////////// EVENTS ////////////////////////    
 
@@ -123,11 +122,13 @@ library LibSilo {
             roots = s.s.roots.mul(stalk).div(s.s.stalk);
         }
 
+        // increment user and total stalk
         s.s.stalk = s.s.stalk.add(stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
 
+        // increment user and total roots
         s.s.roots = s.s.roots.add(roots);
-        s.a[account].roots = s.a[account].roots.add(uint128(roots));
+        s.a[account].roots = s.a[account].roots.add(roots);
 
 
         emit StalkBalanceChanged(account, int256(stalk), int256(roots));
@@ -154,14 +155,16 @@ library LibSilo {
             if (block.number - s.season.sunriseBlock <= 25) {
                 uint256 rootsWithoutEarned = s.s.roots.add(s.newEarnedRoots).mul(stalk).div(s.s.stalk - (s.newEarnedStalk));
                 uint256 deltaRoots = rootsWithoutEarned - roots;
-                s.newEarnedRoots = s.newEarnedRoots.add(uint128(deltaRoots));
-                s.a[account].deltaRoots = uint128(deltaRoots);
+                s.newEarnedRoots = s.newEarnedRoots.add(deltaRoots);
+                s.a[account].deltaRoots = deltaRoots;
             } 
         }
 
+        // increment user and total stalk
         s.s.stalk = s.s.stalk.add(stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
 
+        // increment user and total roots
         s.s.roots = s.s.roots.add(roots);
         s.a[account].roots = s.a[account].roots.add(roots);
 
@@ -213,16 +216,16 @@ library LibSilo {
         // this is distrubuted to the other users.
         // should this be the same as the vesting period?
         if(block.number - s.season.sunriseBlock <= 25){
-            roots = uint128(s.s.roots.mulDiv(
+            roots = s.s.roots.mulDiv(
             stalk,
             s.s.stalk-s.newEarnedStalk,
-            LibPRBMath.Rounding.Up));
+            LibPRBMath.Rounding.Up);
 
         } else { 
-            roots = uint128(s.s.roots.mulDiv(
+            roots = s.s.roots.mulDiv(
             stalk,
             s.s.stalk,
-            LibPRBMath.Rounding.Up));
+            LibPRBMath.Rounding.Up);
         }
 
         if (roots > s.a[account].roots) roots = s.a[account].roots;
