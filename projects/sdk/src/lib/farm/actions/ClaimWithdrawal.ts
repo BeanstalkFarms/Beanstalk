@@ -5,14 +5,14 @@ import { FarmToMode } from "../types";
 export class ClaimWithdrawal extends StepClass<BasicPreparedResult> {
   public name: string = "claimWithdrawal";
 
-  constructor(private _tokenIn: string, private _seasons: ethers.BigNumberish, private _to: FarmToMode) {
+  constructor(private _tokenIn: string, private _season: ethers.BigNumberish, private _to: FarmToMode) {
     super();
   }
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext) {
     ClaimWithdrawal.sdk.debug(`[${this.name}.run()]`, {
       tokenIn: this._tokenIn,
-      seasons: this._seasons,
+      seasons: this._season,
       to: this._to
     });
     return {
@@ -21,14 +21,14 @@ export class ClaimWithdrawal extends StepClass<BasicPreparedResult> {
       prepare: () => {
         ClaimWithdrawal.sdk.debug(`[${this.name}.encode()]`, {
           tokenIn: this._tokenIn,
-          seasons: this._seasons,
+          seasons: this._season,
           to: this._to
         });
         return {
           target: ClaimWithdrawal.sdk.contracts.beanstalk.address,
           callData: ClaimWithdrawal.sdk.contracts.beanstalk.interface.encodeFunctionData("claimWithdrawal", [
             this._tokenIn, //
-            this._seasons, //
+            this._season, //
             this._to
           ])
         };

@@ -95,7 +95,7 @@ const harvest: ClaimPlantFunctions<ClaimPlantAction.HARVEST> = (sdk, { plotIds, 
   };
 };
 
-const claim: ClaimPlantFunctions<ClaimPlantAction.CLAIM> = (sdk, { seasons, amount, toMode }) => {
+const claim: ClaimPlantFunctions<ClaimPlantAction.CLAIM> = (sdk, { seasons, toMode }) => {
   const { beanstalk } = sdk.contracts;
   if (seasons.length === 0) {
     return {
