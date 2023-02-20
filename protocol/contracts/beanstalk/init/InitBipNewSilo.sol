@@ -52,11 +52,11 @@ contract InitBipNewSilo {
         s.ss[C.unripeBeanAddress()].legacySeedsPerBdv = 2;
 
 
-        s.ss[address(C.unripeLP())].stalkPerBdvPerSeason = 4;
+        s.ss[address(C.unripeLP())].stalkPerBdvPerSeason = 2;
         s.ss[address(C.unripeLP())].stalkPerBdv = 1;
         s.ss[address(C.unripeLP())].lastUpdateSeason = s.season.current;
         s.ss[address(C.unripeLP())].lastCumulativeGrownStalkPerBdv = 0;
-        s.ss[address(C.unripeLP())].legacySeedsPerBdv = 2;
+        s.ss[address(C.unripeLP())].legacySeedsPerBdv = 4;
 
         //emit event for unripe LP from 4 to 2 grown stalk per bdv per season
         emit UpdatedStalkPerBdvPerSeason(address(C.unripeLP()), 2, s.season.current);

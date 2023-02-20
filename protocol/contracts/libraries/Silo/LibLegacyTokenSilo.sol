@@ -164,7 +164,7 @@ library LibLegacyTokenSilo {
      * ```
      */
     function balanceOfGrownStalk(address account)
-        public
+        internal
         view
         returns (uint256)
     {
