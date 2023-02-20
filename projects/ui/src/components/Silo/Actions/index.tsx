@@ -67,9 +67,9 @@ const SiloActions : FC<{
               fromToken={props.token}
             />
           ) : null}
-          {tab === 2 ? (
+          {tab === 2 && token ? (
             <Transfer
-              token={props.token}
+              token={token as ERC20Token}
             />
           ) : null}
           {tab === 3 ? (

@@ -1,8 +1,8 @@
 import BigNumber from 'bignumber.js';
-import { Token } from '~/classes';
-import { FormState } from '~/components/Common/Form';
+import { Token } from '@beanstalk/sdk';
+import { FormStateNew } from '~/components/Common/Form';
 import { DepositCrate } from '~/state/farmer/silo';
-import { STALK_PER_SEED_PER_SEASON } from '~/util';
+import { STALK_PER_SEED_PER_SEASON, tokenValueToBN } from '~/util';
 import { sortCratesBySeason } from './Utils';
 
 /**
@@ -41,7 +41,9 @@ export function selectCratesToWithdraw(
     // Stalk is removed for two reasons:
     //  'base stalk' associated with the initial deposit is forfeited
     //  'accrued stalk' earned from Seeds over time is forfeited.
-    const baseStalkToRemove     = token.getStalk(crateBDVToRemove); // more or less, BDV * 1
+    const baseStalkToRemove     = tokenValueToBN(
+      token.getStalk(token.amount(crateBDVToRemove.toString()))
+    ); // more or less, BDV * 1
     const accruedStalkToRemove  = crateSeedsToRemove.times(elapsedSeasons).times(STALK_PER_SEED_PER_SEASON); // FIXME: use constant
     const crateStalkToRemove    = baseStalkToRemove.plus(accruedStalkToRemove);
 
@@ -79,7 +81,7 @@ export function selectCratesToWithdraw(
  */
 export function withdraw(
   from: Token,
-  tokens: FormState['tokens'],
+  tokens: FormStateNew['tokens'],
   depositedCrates: DepositCrate[],
   currentSeason: BigNumber,
 ) {
@@ -103,7 +105,7 @@ export function withdraw(
     amount: deltaAmount,
     bdv:    deltaBDV,
     stalk:  deltaStalk,
-    seeds:  from.getSeeds(deltaBDV),
+    seeds:  tokenValueToBN(from.getSeeds(from.amount(deltaBDV.toString()))),
     actions: [],
     deltaCrates,
   };
