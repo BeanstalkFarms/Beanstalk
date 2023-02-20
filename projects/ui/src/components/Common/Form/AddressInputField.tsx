@@ -26,7 +26,10 @@ import { FC } from '~/types';
 
 export type AddressInputFieldProps = (
   Partial<TextFieldProps>
-  & { name: string }
+  & { 
+  name: string,
+  validAddress?: (v: boolean) => void 
+  }
 );
 
 export const ETHEREUM_ADDRESS_CHARS = /([0][x]?[a-fA-F0-9]{0,42})$/;
@@ -51,10 +54,12 @@ const AddressInputFieldInner : FC<FieldProps & AddressInputFieldProps> = ({
   field,
   meta,
   form,
+  validAddress,
   ...props
 }) => {
   const chainId = useChainId();
   const isValid = field.value?.length === 42 && !meta.error;
+  validAddress?.((field.value?.length === 42 && !meta.error) ? true : false)
   const onChange = useCallback((e: any) => {
     // Allow field to change if the value has been removed, or if
     // a valid address character has been input.

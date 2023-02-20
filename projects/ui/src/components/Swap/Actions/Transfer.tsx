@@ -111,6 +111,9 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
   const selectedTokens = (
     tokenSelect === 'tokensIn' ? values.tokensIn.map((x) => x.token) : []
   );
+
+  const [validAddress, setValidAddress] = useState<null | boolean>(false);
+
   const handleCloseTokenSelect = useCallback(() => setTokenSelect(null), []);
   
   const handleShowTokenSelect  = useCallback((which: 'tokensIn') => () => setTokenSelect(which), []);
@@ -144,9 +147,15 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
       ? amount.gt(0) && balanceInMax.gte(amount)
       : true
   );
+
+  const handleAddressChange = useCallback((v: any) => {
+    setValidAddress(v)
+  }, [])
+
   const addressCheck = (
-    destination.length == 42
+    destination.length == 42 && validAddress
   )
+
   const isValid = (
     amountsCheck
     && enoughBalanceCheck
@@ -216,7 +225,7 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
         {/* Output */}
         <>
         <FieldWrapper label="Transfer to">
-            <AddressInputField name="destination" />
+            <AddressInputField name="destination" validAddress={handleAddressChange}/>
         </FieldWrapper>
           <FarmModeField
             name="toMode"
@@ -346,7 +355,7 @@ const Transfer: FC<{}> = () => {
         if (!tokenAmount) throw new Error('No input amount set.');
         if (!account) throw new Error('Connect a wallet first.');
         if (!recipient) throw new Error('Enter an address to transfer to.');
-        if (approving) throw new Error('Approving spending allowance...')
+        if (approving) return;
 
         txToast = new TransactionToast({
           loading: 'Transferring...',
@@ -368,8 +377,12 @@ const Transfer: FC<{}> = () => {
           amount: undefined,
         });
       } catch (err) {
-        txToast ? txToast.error(err) : toast.error(parseError(err));
-        console.log(err)
+        if (txToast) {
+          txToast.error(err)
+        } else {
+          let errorToast = new TransactionToast({success: '', loading: ''}) //change later
+          errorToast.error(err)
+        }
         formActions.setSubmitting(false);
       }
     },
