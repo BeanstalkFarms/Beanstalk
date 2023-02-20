@@ -34,6 +34,7 @@ import "../LibSafeMath128.sol";
 library LibSilo {
     using SafeMath for uint256;
     using LibPRBMath for uint256;
+    using LibSafeMath128 for uint128;
     
     //////////////////////// EVENTS ////////////////////////    
 
@@ -155,8 +156,8 @@ library LibSilo {
             if (block.number - s.season.sunriseBlock <= 25) {
                 uint256 rootsWithoutEarned = s.s.roots.add(s.newEarnedRoots).mul(stalk).div(s.s.stalk - (s.newEarnedStalk));
                 uint256 deltaRoots = rootsWithoutEarned - roots;
-                s.newEarnedRoots = s.newEarnedRoots.add(deltaRoots);
-                s.a[account].deltaRoots = deltaRoots;
+                s.newEarnedRoots = s.newEarnedRoots.add(uint128(deltaRoots));
+                s.a[account].deltaRoots = uint128(deltaRoots);
             } 
         }
 
