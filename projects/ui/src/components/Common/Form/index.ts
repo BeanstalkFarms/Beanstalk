@@ -158,7 +158,7 @@ export type ClaimAndPlantFormState = {
       required?: ClaimPlantAction[];
     }
   };
-} & BalanceFromFragment;
+}
 
 // ----------------------------------------------------------------------
 

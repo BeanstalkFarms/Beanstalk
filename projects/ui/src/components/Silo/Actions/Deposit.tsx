@@ -15,6 +15,7 @@ import {
 } from '~/components/Common/Form/TokenSelectDialog';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import {
+  BalanceFromFragment,
   ClaimAndPlantFormState,
   FormStateNew,
   SettingInput,
@@ -58,7 +59,8 @@ import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPla
 // -----------------------------------------------------------------------
 
 type DepositFormValues = FormStateNew &
- ClaimAndPlantFormState & {
+ ClaimAndPlantFormState
+ & BalanceFromFragment & {
     settings: {
       slippage: number;
     };
@@ -382,7 +384,6 @@ const Deposit: FC<{
     }
 
     const deposit = await getWorkflow(tokenIn, tokenOut, balanceFrom);
-
     const estimate = await deposit.estimate(totalAmountIn);
   
     if (!estimate) {

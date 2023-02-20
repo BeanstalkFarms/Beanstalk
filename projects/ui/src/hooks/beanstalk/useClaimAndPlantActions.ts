@@ -323,7 +323,7 @@ export function buildClaimPlantWithFarm(
   /** 
    * the workflow to be executed after the primary actions
    */
-  operation: FarmWorkflow,
+  operation: FarmWorkflow | StepGenerator<BasicPreparedResult>[],
   /**
    * the amount to be inputed when executing the workflow
    */
@@ -356,7 +356,12 @@ export function buildClaimPlantWithFarm(
   });
 
   workflow.add(injectOnlyLocal('pre-x', amountIn), { onlyLocal: true });
-  workflow.add([...operation.generators]);
+
+  if (operation instanceof FarmWorkflow) {
+    workflow.add([...operation.generators]);
+  } else {
+    workflow.add([...operation]);
+  }
 
   Object.values(secondaryActions).forEach(({ txn }) => { 
     workflow.add([...txn.steps]);

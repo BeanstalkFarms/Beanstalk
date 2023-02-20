@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Switch, Tooltip, Typography, Stack } from '@mui/material';
+import { Switch, Typography } from '@mui/material';
 import { useFormikContext } from 'formik';
 import AddIcon from '@mui/icons-material/Add';
 import BigNumber from 'bignumber.js';
@@ -18,6 +18,15 @@ import useTimedRefresh from '~/hooks/app/useTimedRefresh';
 type ClaimAndPlantGasResult = Partial<{
   [key in ClaimPlantAction]?: BigNumber;
 }>;
+
+const sortOrder: { [key in ClaimPlantAction]: number } = {
+  [ClaimPlantAction.MOW]: 0,
+  [ClaimPlantAction.PLANT]: 1,
+  [ClaimPlantAction.ENROOT]: 2,
+  [ClaimPlantAction.CLAIM]: 3,
+  [ClaimPlantAction.HARVEST]: 4,
+  [ClaimPlantAction.RINSE]: 5
+};
 
 const ClaimAndPlantAdditionalOptions: React.FC<{
   actions: ClaimPlantActionMap;
@@ -39,26 +48,16 @@ const ClaimAndPlantAdditionalOptions: React.FC<{
 
   const options = useMemo(() => {
     // the options are the complement of possible actions to values.options
-    const _options = new Set(
-      Object.keys(ClaimPlantAction) as ClaimPlantAction[]
-    );
+    const _options = new Set(Object.keys(ClaimPlantAction) as ClaimPlantAction[]);
     farmActions.options.forEach((opt) => _options.delete(opt));
-    return _options;
+
+    return [..._options].sort((a, b) => sortOrder[a] - sortOrder[b]);
   }, [farmActions.options]);
 
   const [required, enabled, allToggled] = useMemo(() => {
-    const _required = new Set(
-      farmActions.additional.required?.filter(
-        (opt) => claimPlantOptions[opt].enabled
-      )
-    );
-
-    const _enabled = Array.from(options).filter(
-      (opt) => claimPlantOptions[opt].enabled
-    );
-
+    const _required = new Set(farmActions.additional.required?.filter((opt) => claimPlantOptions[opt].enabled));
+    const _enabled = options.filter((opt) => claimPlantOptions[opt].enabled);
     const _allToggled = _enabled.every((action) => local.has(action));
-
     return [_required, _enabled, _allToggled];
   }, [farmActions.additional.required, options, claimPlantOptions, local]);
 
@@ -90,20 +89,20 @@ const ClaimAndPlantAdditionalOptions: React.FC<{
   };
 
   const estimateGas = useCallback(async () => {
-    if (!options.size || !Object.keys(actions).length) return;
+    if (!enabled.length || !Object.keys(actions).length) return;
 
-    const optionKeys = [...options];
+    const optionKeys = [...enabled];
     const estimates = await Promise.all(
       optionKeys.map((opt) => actions[opt]().txn.estimateGas())
     ).then((results) =>
-      results.reduce<ClaimAndPlantGasResult>((prev, curr, i) => {
-        prev[optionKeys[i]] = new BigNumber(curr.toString());
-        return prev;
-      }, {})
+      results.reduce<ClaimAndPlantGasResult>((prev, curr, i) => ({
+        ...prev,
+        [optionKeys[i]]: new BigNumber(curr.toString()),
+      }), {})
     );
 
     setGasEstimates(estimates);
-  }, [actions, options]);
+  }, [actions, enabled]);
 
   useTimedRefresh(estimateGas, 2 * 1000, open);
 
@@ -124,8 +123,8 @@ const ClaimAndPlantAdditionalOptions: React.FC<{
     if (isRemoving) {
       affected.forEach((option) => copy.delete(option));
     } else {
-      affected.forEach(
-        (option) => enabled.includes(option) && copy.add(option)
+      affected.forEach((option) => 
+        enabled.includes(option) && copy.add(option)
       );
     }
     setHovered(copy);
@@ -162,26 +161,18 @@ const ClaimAndPlantAdditionalOptions: React.FC<{
       options={options}
       selected={local}
       onToggle={handleOnToggle}
-      render={(item, selected) => {
-        const option = claimPlantOptions[item];
-
-        return (
-          <Tooltip title={!option.enabled ? `Nothing to ${option.title}` : ''}>
-            <Stack width="100%">
-              <ClaimPlantOptionCard
-                option={item}
-                summary={option}
-                selected={selected}
-                required={required.has(item)}
-                gas={gasEstimates[item] || undefined}
-                isHovered={hovered.has(item)}
-                onMouseOver={() => handleMouseEvent(item, false)}
-                onMouseLeave={() => handleMouseEvent(item, true)}
-              />
-            </Stack>
-          </Tooltip>
-        );
-      }}
+      render={(item, selected) => (
+        <ClaimPlantOptionCard
+          option={item}
+          summary={claimPlantOptions[item]}
+          selected={selected}
+          required={required.has(item)}
+          gas={gasEstimates[item] || undefined}
+          isHovered={hovered.has(item)}
+          onMouseOver={() => handleMouseEvent(item, false)}
+          onMouseLeave={() => handleMouseEvent(item, true)}
+          />
+        )}
     />
   );
 };

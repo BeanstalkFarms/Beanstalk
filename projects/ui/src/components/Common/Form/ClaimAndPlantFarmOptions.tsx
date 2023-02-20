@@ -11,19 +11,19 @@ import useToggle from '~/hooks/display/useToggle';
 
 const presets = {
   claim: {
-    options: new Set([
+    options: [
       ClaimPlantAction.RINSE,
       ClaimPlantAction.HARVEST,
       ClaimPlantAction.CLAIM,
-    ]),
+    ],
     variant: 'pill',
-  } as const,
+  },
   plant: {
-    options: new Set([
+    options: [
       ClaimPlantAction.PLANT
-    ]),
+    ],
     variant: 'card',
-  } as const,
+  },
 };
 
 const ClaimAndPlantFarmActions: React.FC<{

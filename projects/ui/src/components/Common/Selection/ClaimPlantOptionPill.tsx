@@ -1,5 +1,5 @@
 import React from 'react';
-import { ButtonProps, Typography } from '@mui/material';
+import { Box, ButtonProps, Tooltip, Typography } from '@mui/material';
 import { ClaimPlantAction } from '~/hooks/beanstalk/useClaimAndPlantActions';
 import { ClaimPlantActionSummary } from '~/hooks/farmer/useFarmerClaimAndPlantOptions';
 import { displayFullBN } from '~/util';
@@ -36,7 +36,7 @@ type Props = {
   summary: ClaimPlantActionSummary;
   selected: boolean;
   required?: boolean;
-} & Partial<ButtonProps['onClick']>
+} & Partial<ButtonProps['onClick']>;
 
 const ClaimPlantAccordionPill: React.FC<Props> = ({
   option,
@@ -45,25 +45,33 @@ const ClaimPlantAccordionPill: React.FC<Props> = ({
   ...props
 }) => {
   const disabled = !summary?.enabled || summary?.claimable?.amount?.lte(0);
-  if (!('claimable' in summary)) return null;
-  if (summary.claimable === undefined) return null;
+  if (!('claimable' in summary) || !summary.claimable) return null;
 
   return (
-    <SelectionItem {...props} selected={selected} disabled={disabled} variant="pill">
-      <Row gap={0.5} sx={{ width: 'fit-content' }}>
-        <TokenIcon
-          token={summary.claimable.token}
-          logoOverride={
-            icons[option as keyof typeof icons]?.[
-              selected && !disabled ? 'selected' : 'grey'
-            ] || undefined
-          }
-        />
-        <Typography variant="bodySmall">
-          + {displayFullBN(summary.claimable.amount, 2)}
-        </Typography>
-      </Row>
-    </SelectionItem>
+    <Tooltip title={disabled ? `Nothing to ${summary.title.toLowerCase()}` : ''}>
+      <Box>
+        <SelectionItem
+          {...props}
+          selected={selected}
+          disabled={disabled}
+          variant="pill"
+        >
+          <Row gap={0.5} sx={{ width: 'fit-content' }}>
+            <TokenIcon
+              token={summary.claimable.token}
+              logoOverride={
+                icons[option as keyof typeof icons]?.[
+                  selected && !disabled ? 'selected' : 'grey'
+                ] || undefined
+              }
+            />
+            <Typography variant="bodySmall">
+              + {displayFullBN(summary.claimable.amount, 2)}
+            </Typography>
+          </Row>
+        </SelectionItem>
+      </Box>
+    </Tooltip>
   );
 };
 

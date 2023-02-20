@@ -48,7 +48,7 @@ export type SelectionAccordionProps<T> = {
   /**
    * the items to be displayed in the accordion
    */
-  options: Set<T>;
+  options: T[];
   /**
    * the orientation of the items in the accordion
    */
@@ -83,11 +83,11 @@ export default function SelectionAccordion<T>({
 }: SelectionAccordionProps<T>) {
   const selectedText = useMemo(() => {
     const activeItems = selected.size;
-    if (options.size === 1) {
+    if (options.length === 1) {
       return `${activeItems === 0 ? 'None' : activeItems} selected`;
     }
     return `${activeItems || 0} selected`;
-  }, [options.size, selected.size]);
+  }, [options.length, selected.size]);
 
   return (
     <Stack>
@@ -149,7 +149,7 @@ export default function SelectionAccordion<T>({
           <Stack width="100%" gap={1}>
             {subtitle && (<>{subtitle}</>)}
             <Stack width="100%" gap={1} direction={direction}>
-              {Array.from(options.values()).map((item, i) => {
+              {options.map((item, i) => {
                 const active = selected.has(item);
                 const component = render(item, active);
                 if (!component) return null;

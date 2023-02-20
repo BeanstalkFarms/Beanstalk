@@ -34,7 +34,7 @@ type Props = {
   selected: boolean;
   gas?: BigNumber;
   required?: boolean;
-} & Omit<SelectionItemProps, 'checkIcon' | 'title' | 'variant'>
+} & Omit<SelectionItemProps, 'checkIcon' | 'title' | 'variant'>;
 
 const tooltipIconProps = {
   sx: {
@@ -52,55 +52,61 @@ const ClaimPlantOptionCard: React.FC<Props> = ({
   gas,
   ...props
 }) => (
-  <SelectionItem
-    {...props}
-    selected={selected}
-    checkIcon="top-left"
-    disabled={!summary.enabled}
-    title={
-      <Row width="100%" justifyContent="space-between">
-        <Row gap={0.5}>
-          {required && (
-          <img src={LockIcon} alt="" css={{ width: '1rem', height: '1rem' }} />
-        )}
-          <Typography color="inherit">
-            {summary.title}
-            <Tooltip title={summary.tooltip}>
-              <HelpOutlineIcon {...tooltipIconProps} />
-            </Tooltip>
-          </Typography>
-        </Row>
-        <GasTag gasLimit={gas || null} />
-      </Row>
-    }
-    sx={{
-      opacity: required && selected ? 0.75 : 1,
-      cursor: required ? 'default' : 'pointer',
-    }}
-  >
-    <Stack gap={0.5}>
-      {summary.summary.map(({ token, description, amount, tooltip }, i) => (
-        <Row justifyContent="space-between" key={description + i.toString}>
-          <Row gap={0.5}>
-            <TokenIcon
-              token={token}
-              logoOverride={
-                icons[token.symbol as keyof typeof icons] || undefined
-              }
-            />
-            <Typography>
-              {description}
-              <Tooltip title={tooltip} placement="bottom">
-                <HelpOutlineIcon {...tooltipIconProps} />
-              </Tooltip>
-            </Typography>
+  <Tooltip title={!summary.enabled ? `Nothing to ${summary.title.toLowerCase()}` : ''}>
+    <Stack width="100%">
+      <SelectionItem
+        {...props}
+        selected={selected}
+        checkIcon="top-left"
+        disabled={!summary.enabled}
+        title={
+          <Row width="100%" justifyContent="space-between">
+            <Row gap={0.5}>
+              {required && (
+                <img
+                  src={LockIcon}
+                  alt=""
+                  css={{ width: '1rem', height: '1rem' }}
+                />
+              )}
+              <Typography color="inherit">
+                {summary.title}
+                <Tooltip title={summary.tooltip}>
+                  <HelpOutlineIcon {...tooltipIconProps} />
+                </Tooltip>
+              </Typography>
+            </Row>
+            <GasTag gasLimit={gas || null} />
           </Row>
-          <Typography>{displayFullBN(amount, 2)}</Typography>
-        </Row>
-      ))}
-      <Row />
+        }
+        sx={{
+          opacity: required && selected ? 0.75 : 1,
+          cursor: required ? 'default' : 'pointer',
+        }}
+      >
+        <Stack gap={0.5}>
+          {summary.summary.map(({ token, description, amount, tooltip }, i) => (
+            <Row justifyContent="space-between" key={description + i.toString}>
+              <Row gap={0.5}>
+                <TokenIcon
+                  token={token}
+                  logoOverride={icons[token.symbol as keyof typeof icons] || undefined}
+                />
+                <Typography>
+                  {description}
+                  <Tooltip title={tooltip} placement="bottom">
+                    <HelpOutlineIcon {...tooltipIconProps} />
+                  </Tooltip>
+                </Typography>
+              </Row>
+              <Typography>{displayFullBN(amount, 2)}</Typography>
+            </Row>
+          ))}
+          <Row />
+        </Stack>
+      </SelectionItem>
     </Stack>
-  </SelectionItem>
+  </Tooltip>
 );
 
 export default ClaimPlantOptionCard;
