@@ -57,7 +57,7 @@ const ClaimAndPlantAdditionalOptions: React.FC<{
   const [required, enabled, allToggled] = useMemo(() => {
     const _required = new Set(farmActions.additional.required?.filter((opt) => claimPlantOptions[opt].enabled));
     const _enabled = options.filter((opt) => claimPlantOptions[opt].enabled);
-    const _allToggled = _enabled.every((action) => local.has(action));
+    const _allToggled = _enabled.every((action) => local.has(action)) && _enabled.length > 0;
     return [_required, _enabled, _allToggled];
   }, [farmActions.additional.required, options, claimPlantOptions, local]);
 

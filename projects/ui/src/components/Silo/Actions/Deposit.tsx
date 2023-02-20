@@ -431,8 +431,8 @@ const Deposit: FC<{
 
         const work = claimPlant.buildWorkflow(
           sdk.farm.create(),
-          claimPlant.toActionMap(values.farmActions.selected),
-          claimPlant.toActionMap(values.farmActions.additional.selected),
+          claimPlant.buildActions(values.farmActions.selected),
+          claimPlant.buildActions(values.farmActions.additional.selected),
           deposit.workflow,
           amountIn,
         );

@@ -43,7 +43,7 @@ const SiloActions : FC<{
   // temp solution
   const token = useMemo(() => {
     const match = sdk.tokens.findBySymbol(props.token.symbol);
-    if (match) return match as ERC20Token | NativeToken;
+    if (match) return match;
     return undefined;
   }, [props.token.symbol, sdk.tokens]);
 
@@ -59,7 +59,7 @@ const SiloActions : FC<{
         </ModuleTabs>
         <ModuleContent>
           {tab === 0 && token ? (
-            <Deposit token={token} />
+            <Deposit token={token as ERC20Token | NativeToken} />
           ) : null}
           {tab === 1 ? (
             <Convert
@@ -72,9 +72,9 @@ const SiloActions : FC<{
               token={token as ERC20Token}
             />
           ) : null}
-          {tab === 3 ? (
+          {tab === 3 && token ? (
             <Withdraw
-              token={props.token}
+              token={token as ERC20Token}
             />
           ) : null}
           {tab === 4 ? (

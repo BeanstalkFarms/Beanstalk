@@ -98,26 +98,19 @@ const harvest: ClaimPlantFunctions<ClaimPlantAction.HARVEST> = (sdk, { plotIds, 
 const claim: ClaimPlantFunctions<ClaimPlantAction.CLAIM> = (sdk, { seasons, amount, toMode }) => {
   const { beanstalk } = sdk.contracts;
   if (seasons.length === 0) {
-    const callData = beanstalk.interface.encodeFunctionData('claimWithdrawal', [
-      sdk.tokens.BEAN.address,
-      seasons[0],
-      toMode || FarmToMode.INTERNAL,
-    ]);
-
     return {
       txn: {
-        callData,
+        callData: beanstalk.interface.encodeFunctionData('claimWithdrawal', [
+          sdk.tokens.BEAN.address,
+          seasons[0],
+          toMode || FarmToMode.INTERNAL,
+        ]),
         steps: [
-          async (_amountInStep: ethers.BigNumber, _context: any) => ({
-            name: 'claimWithdrawal',
-            amountOut: amount?.toBigNumber() || _amountInStep,
-            prepare: () => ({
-              target: beanstalk.address,
-              callData
-            }),
-            decode: (data: string) => beanstalk.interface.decodeFunctionData('claimWithdrawal', data),
-            decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('claimWithdrawal', result),
-          }),
+          new sdk.farm.actions.ClaimWithdrawal(
+            sdk.tokens.BEAN.address,
+            seasons[0],
+            toMode || FarmToMode.INTERNAL,
+          )
         ],
         estimateGas: () => beanstalk.estimateGas.claimWithdrawal(sdk.tokens.BEAN.address, seasons[0], toMode || FarmToMode.INTERNAL)
       },
@@ -417,7 +410,7 @@ export default function useFarmerClaimAndPlantActions(sdk: BeanstalkSDK) {
   }, [account, cratesForEnroot, farmerBarn.balances, farmerField.harvestablePlots, farmerSilo.balances, sdk]);
 
   // reduce an array of actions to a map of the actions for each step
-  const toActionMap = useCallback((actions: ClaimPlantAction[]) => 
+  const buildActions = useCallback((actions: ClaimPlantAction[]) => 
     actions.reduce<ClaimPlantActionDataMap>((prev, curr) => {
       prev[curr] = claimAndPlantActions[curr]();
       return prev;
@@ -427,7 +420,7 @@ export default function useFarmerClaimAndPlantActions(sdk: BeanstalkSDK) {
 
   return { 
     actions: claimAndPlantActions,
-    toActionMap,
+    buildActions,
     isClaimAction,
     isPlantAction,
     injectOnlyLocal,

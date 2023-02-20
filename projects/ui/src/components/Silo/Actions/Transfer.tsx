@@ -5,7 +5,6 @@ import BigNumber from 'bignumber.js';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import toast from 'react-hot-toast';
 import { ERC20Token, Token } from '@beanstalk/sdk';
-import { ethers } from 'ethers';
 import FieldWrapper from '~/components/Common/Form/FieldWrapper';
 import AddressInputField from '~/components/Common/Form/AddressInputField';
 import {
@@ -21,8 +20,6 @@ import { FarmerSilo } from '~/state/farmer/silo';
 import useFarmerSiloBalances from '~/hooks/farmer/useFarmerSiloBalances';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import { useFetchBeanstalkSilo } from '~/state/beanstalk/silo/updater';
-import { useSigner } from '~/hooks/ledger/useSigner';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import BeanstalkSDK from '~/lib/Beanstalk';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import TxnSeparator from '~/components/Common/Form/TxnSeparator';
@@ -220,10 +217,6 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
   const sdk = useSdk();
   const claimPlant = useFarmerClaimAndPlantActions(sdk);
 
-  /// Ledger
-  const { data: signer } = useSigner();
-  const beanstalk = useBeanstalkContract(signer);
-
   /// Beanstalk
   const season = useSeason();
 
@@ -266,8 +259,9 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
         siloBalances[token.address]?.deposited.crates,
         season,
       );
+      const account = await sdk.getAccount();
         
-      if (!signer) throw new Error('Missing signer');
+      if (!account) throw new Error('Missing signer');
       if (!withdrawResult) throw new Error('Nothing to Transfer.');
       if (!values.to) throw new Error('Please enter a valid recipient address.');
 
@@ -281,47 +275,59 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
           amounts,
         },
       });
-
-      const account = await sdk.getAccount();
-  
-      let transferStep;
+      
+      const transfer = sdk.farm.create();
 
       if (seasons.length === 0) {
         throw new Error('Malformatted crates.');
       } else if (seasons.length === 1) {
-        transferStep = async (_amountInStep: ethers.BigNumber, _context: any) => ({
-          name: 'transferDeposit',
-          amountOut: _amountInStep || token.amount(0).toBigNumber(),
-          prepare: () => ({
-            target: sdk.contracts.beanstalk.address,
-            callData: sdk.contracts.beanstalk.interface.encodeFunctionData('transferDeposit', [
-              account,
-              values.to,
-              token.address,
-              seasons[0],
-              amounts[0],
-            ])
-          }),
-          decode: (data: string) => beanstalk.interface.decodeFunctionData('transferDeposit', data),
-          decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('transferDeposit', result),
-        });
+        transfer.add(new sdk.farm.actions.TransferDeposit(
+          account,
+          values.to,
+          token.address,
+          seasons[0],
+          amounts[0],
+        ));
+        // transferStep = async (_amountInStep: ethers.BigNumber, _context: any) => ({
+        //   name: 'transferDeposit',
+        //   amountOut: _amountInStep || token.amount(0).toBigNumber(),
+        //   prepare: () => ({
+        //     target: sdk.contracts.beanstalk.address,
+        //     callData: sdk.contracts.beanstalk.interface.encodeFunctionData('transferDeposit', [
+        //       account,
+        //       values.to,
+        //       token.address,
+        //       seasons[0],
+        //       amounts[0],
+        //     ])
+        //   }),
+        //   decode: (data: string) => beanstalk.interface.decodeFunctionData('transferDeposit', data),
+        //   decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('transferDeposit', result),
+        // });
       } else {
-        transferStep = async (_amountInStep: ethers.BigNumber, _context: any) => ({
-          name: 'transferDeposits',
-          amountOut: _amountInStep || token.amount(0).toBigNumber(),
-          prepare: () => ({
-            target: sdk.contracts.beanstalk.address,
-            callData: sdk.contracts.beanstalk.interface.encodeFunctionData('transferDeposits', [
-              account,
-              values.to,
-              token.address,
-              seasons,
-              amounts,
-            ])
-          }),
-          decode: (data: string) => beanstalk.interface.decodeFunctionData('transferDeposits', data),
-          decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('transferDeposits', result),
-        });
+        transfer.add(new sdk.farm.actions.TransferDeposits(
+          account,
+          values.to,
+          token.address,
+          seasons,
+          amounts,
+        ));
+        // transferStep = async (_amountInStep: ethers.BigNumber, _context: any) => ({
+        //   name: 'transferDeposits',
+        //   amountOut: _amountInStep || token.amount(0).toBigNumber(),
+        //   prepare: () => ({
+        //     target: sdk.contracts.beanstalk.address,
+        //     callData: sdk.contracts.beanstalk.interface.encodeFunctionData('transferDeposits', [
+        //       account,
+        //       values.to,
+        //       token.address,
+        //       seasons,
+        //       amounts,
+        //     ])
+        //   }),
+        //   decode: (data: string) => beanstalk.interface.decodeFunctionData('transferDeposits', data),
+        //   decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('transferDeposits', result),
+        // });
       }
 
       txToast = new TransactionToast({
@@ -331,9 +337,9 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
 
       const work = claimPlant.buildWorkflow(
         sdk.farm.create(),
-        claimPlant.toActionMap(values.farmActions.selected),
-        claimPlant.toActionMap(values.farmActions.additional.selected),
-        [transferStep],
+        claimPlant.buildActions(values.farmActions.selected),
+        claimPlant.buildActions(values.farmActions.additional.selected),
+        transfer,
         token.amount(0)
       );
 
@@ -355,7 +361,7 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
       txToast ? txToast.error(err) : toast.error(parseError(err));
       formActions.setSubmitting(false);
     }
-  }, [middleware, token, siloBalances, season, signer, sdk, claimPlant, refetchFarmerSilo, refetchSilo, beanstalk.interface]);
+  }, [middleware, token, siloBalances, season, sdk, claimPlant, refetchFarmerSilo, refetchSilo]);
 
   return (
     <Formik
