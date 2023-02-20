@@ -163,7 +163,7 @@ library LibSilo {
         s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
 
         s.s.roots = s.s.roots.add(roots);
-        s.a[account].roots = s.a[account].roots.add(uint128(roots));
+        s.a[account].roots = s.a[account].roots.add(roots);
 
         emit StalkBalanceChanged(account, int256(stalk), int256(roots));
     }
@@ -335,22 +335,5 @@ library LibSilo {
         returns (uint256)
     {
         return seeds.mul(seasons);
-    }
-
-    // at start of season, this should be 100% of s.newEarnedStalk
-    // at end of season, this should be 0% of s.newEarnedStalk
-    function getVestingEarnedStalk() internal view returns (uint256 vestingEarnedStalk){
-        AppStorage storage s = LibAppStorage.diamondStorage();
-         // calculate the effective stalk 
-        uint256 percentSeasonRemaining =
-            1e18 - LibPRBMath.min(
-                    (block.timestamp - s.season.timestamp) * 1e18 / 3600, 
-                    1e18
-                );
-        vestingEarnedStalk = 
-            uint256(s.newEarnedStalk).mulDiv(
-                percentSeasonRemaining,
-                1e18
-            );
     }
 }
