@@ -126,6 +126,10 @@ contract Silo is SiloExit {
 
     function __mow(address account, address token) private {
         console.log('__mow, current season:', s.season.current);
+
+        //require that user account seeds be zero
+        require(s.a[account].s.seeds == 0, 'silo migration needed');
+
         // If this `account` has no BDV, skip to save gas. Still need to update lastCumulativeGrownStalkPerBdv (happen on initial deposit, since mow is called before any deposit)
         if (s.a[account].mowStatuses[token].bdv == 0) {
             console.log('mow status bdv was zero for token: ', token);
@@ -142,6 +146,63 @@ contract Silo is SiloExit {
         LibSilo.mintStalk(account, balanceOfGrownStalk(account, token));
         s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
     }
+
+    //make some kind of init function for when silov3 is deployed
+    //should take all their deposits, add them up and setup MowStatuses
+    //will need every season
+    //if the user has seeds, they havne't migrated
+    //array of deposit seasons
+    //array of tokens with deposit seasons
+    //make sure bdv of everything lines up with the number of seeds they should have
+    function _mowAndMigrate(address account, address[] calldata tokens, uint32[][] calldata seasons) internal {
+        require(tokens.length == seasons.length, "inputs not same length");
+
+        //see if msg.sender has already migrated or not by checking seed balance
+        require(s.a[account].s.seeds > 0, "no migration needed");
+
+        //TODOSEEDS: require that a season of plenty is not currently happening?
+        //do a legacy mow using the old silo seasons deposits
+        s.a[account].lastUpdate = _season();
+        LibSilo.mintStalk(account, LibLegacyTokenSilo.balanceOfGrownStalk(account));
+        //at this point we've completed the guts of the old mow function, now we need to do the migration
+
+        uint256 seedsTotalBasedOnInputDeposits = 0;
+
+        for (uint256 i = 0; i < tokens.length; i++) {
+            address token = tokens[i];
+            uint32[] memory seasonDepositsForToken = seasons[i];
+            //get how many seeds there should be per bdv
+            uint32 seedPerBdv = s.ss[address(token)].legacySeedsPerBdv;
+            uint256 totalBdv = 0;
+
+            for (uint256 j = 0; j < seasonDepositsForToken.length; j++) {
+                uint32 season = seasonDepositsForToken[j];
+
+                //get bdv amount for this deposit
+                (, uint256 bdv) = LibLegacyTokenSilo.tokenDeposit(account, token, season);
+
+                //add to running total of seeds
+                seedsTotalBasedOnInputDeposits += bdv * seedPerBdv;
+
+                //add to running total of bdv
+                totalBdv += bdv;
+            }
+
+            console.log('totalBdv: ', totalBdv);
+
+            //init mow status for this token
+            s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
+            s.a[account].mowStatuses[token].bdv = uint128(totalBdv);
+            
+        }
+        
+        //verify user account seeds total equals seedsTotalBasedOnInputDeposits
+        require(s.a[account].s.seeds == seedsTotalBasedOnInputDeposits, "seeds don't match");
+
+        //and wipe out old seed balances (all your seeds are belong to grownStalkPerBdv)
+        s.a[account].s.seeds = 0;
+    }
+
 
     //////////////////////// INTERNAL: PLANT ////////////////////////
 

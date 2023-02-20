@@ -152,6 +152,56 @@ library LibLegacyTokenSilo {
         );
     }
 
+    /**
+     * @notice Returns the balance of Grown Stalk for `account`. Grown Stalk is 
+     * earned each Season from Seeds and must be Mown via `SiloFacet-mow` to 
+     * apply it to a user's balance.
+     * @dev The balance of Grown Stalk for an account can be calculated as:
+     *
+     * ```
+     * elapsedSeasons = currentSeason - lastUpdatedSeason
+     * grownStalk = balanceOfSeeds * elapsedSeasons
+     * ```
+     */
+    function balanceOfGrownStalk(address account)
+        public
+        view
+        returns (uint256)
+    {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return
+            stalkReward(
+                s.a[account].s.seeds,
+                s.season.current - s.a[account].lastUpdate
+            );
+    }
+
+    /**
+     * @param seeds The number of Seeds held.
+     * @param seasons The number of Seasons that have elapsed.
+     *
+     * @dev Calculates the Stalk that has Grown from a given number of Seeds
+     * over a given number of Seasons.
+     *
+     * Each Seed yields 1E-4 (0.0001, or 1 / 10_000) Stalk per Season.
+     *
+     * Seasons is measured to 0 decimals. There are no fractional Seasons.
+     * Seeds are measured to 6 decimals.
+     * Stalk is measured to 10 decimals.
+     * 
+     * Example:
+     *  - `seeds = 1E6` (1 Seed)
+     *  - `seasons = 1` (1 Season)
+     *  - The result is `1E6 * 1 = 1E6`. Since Stalk is measured to 10 decimals,
+     *    this is `1E6/1E10 = 1E-4` Stalk.
+     */
+    function stalkReward(uint256 seeds, uint32 seasons)
+        internal
+        pure
+        returns (uint256)
+    {
+        return seeds.mul(seasons);
+    }
 
     function isDepositSeason(IERC20 token, int128 grownStalkPerBdv)
         internal
@@ -186,17 +236,17 @@ library LibLegacyTokenSilo {
 
         //find the difference between the input season and the Silo v3 epoch season
 
-        console.log('seasonToGrownStalkPerBdv C.siloV3StartSeason(): ', C.siloV3StartSeason());
+        console.log('seasonToGrownStalkPerBdv s.season.grownStalkPerBdvStartSeason: ', s.season.grownStalkPerBdvStartSeason);
         console.log('seasonToGrownStalkPerBdv season: ', season);
         console.log('seasonToGrownStalkPerBdv s.season.current: ', s.season.current);
         console.log('seasonToGrownStalkPerBdv seedsPerBdv: ', seedsPerBdv);
         
-        int128 firstPart = int128(season)-int128(C.siloV3StartSeason());
+        int128 firstPart = int128(season)-int128(s.season.grownStalkPerBdvStartSeason);
         console.log('seasonToGrownStalkPerBdv firstPart: ');
         console.logInt(firstPart);
 
         //using regular - here because we want it to overflow negative
-        grownStalkPerBdv = (int128(season)-int128(C.siloV3StartSeason())).mul(int128(seedsPerBdv));
+        grownStalkPerBdv = (int128(season)-int128(s.season.grownStalkPerBdvStartSeason)).mul(int128(seedsPerBdv));
     }
 
     function grownStalkPerBdvToSeason(IERC20 token, int128 grownStalkPerBdv)
@@ -226,7 +276,7 @@ library LibLegacyTokenSilo {
         console.log('diff: ');
         console.logInt(diff);
         //using regular + here becauase we want to "overflow" (which for signed just means add negative)
-        season = uint256(int128(C.siloV3StartSeason())+diff).toUint32();
+        season = uint256(int128(s.season.grownStalkPerBdvStartSeason)+diff).toUint32();
         console.log('grownStalkPerBdvToSeason season: ', season);
         // season = seasonAs256.toUint32();
     }

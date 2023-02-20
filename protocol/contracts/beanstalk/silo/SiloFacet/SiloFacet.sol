@@ -336,9 +336,17 @@ contract SiloFacet is TokenSilo {
         _mow(account, token);
     }
 
-    // function mowMultiple(address account, address token) external payable {
-        // _mow(account, token);
-    // }
+    //function to mow multiple tokens given an address
+    function mowMultiple(address account, address[] calldata tokens) external payable {
+        for (uint256 i; i < tokens.length; ++i) {
+            _mow(account, tokens[i]);
+        }
+    }
+
+    //function to mow and migrate
+    function mowAndMigrate(address[] calldata tokens, uint32[][] calldata seasons) external payable {
+        _mowAndMigrate(msg.sender, tokens, seasons);
+    }
 
     /** 
      * @notice Claim Earned Beans and their associated Stalk for 

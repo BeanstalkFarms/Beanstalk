@@ -225,6 +225,7 @@ contract Storage {
         uint32 rainStart; // rainStart stores the most recent Season in which Rain started.
         bool raining; // True if it is Raining (P < 1, Pod Rate Excessively Low).
         bool fertilizing; // True if Beanstalk has Fertilizer left to be paid off.
+        uint16 grownStalkPerBdvStartSeason; //season in which the grownStalkPerBdv storage method starts
         uint256 start; // The timestamp of the Beanstalk deployment rounded down to the nearest hour.
         uint256 period; // The length of each season in Beanstalk.
         uint256 timestamp; // The timestamp of the start of the current Season.
@@ -275,15 +276,15 @@ contract Storage {
          */
         bytes4 selector;
         /*
-         * @dev The Stalk Per BDV that the Silo grants in exchange for Depositing this Token.
-         * previously just called stalk.
-         */
-        uint32 stalkPerBdv;
-        /*
          * @dev The Stalk Per BDV Per Season represents how much Stalk one BDV of the underlaying deposited token grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored as 1e10, so 1 legacy
          seed would be 1e6 * 1e10.
          */
         uint32 stalkPerBdvPerSeason;
+        /*
+         * @dev The Stalk Per BDV that the Silo grants in exchange for Depositing this Token.
+         * previously just called stalk.
+         */
+        uint32 stalkPerBdv;
         /*
          * @dev The last season in which the Cumulative Grown Stalk Per BDV was updated
          */
