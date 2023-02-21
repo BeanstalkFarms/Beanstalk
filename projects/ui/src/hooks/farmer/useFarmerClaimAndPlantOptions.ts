@@ -1,8 +1,7 @@
 import { useCallback, useMemo } from 'react';
-import { BeanstalkSDK, Token } from '@beanstalk/sdk';
+import { Token } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import { ZERO_BN } from '~/constants';
-import { ClaimPlantAction } from '~/hooks/beanstalk/useClaimAndPlantActions';
 import useSdk from '../sdk';
 
 import useFarmerFertilizer from './useFarmerFertilizer';
@@ -10,6 +9,7 @@ import useFarmerField from './useFarmerField';
 import useFarmerSilo from './useFarmerSilo';
 import useRevitalized from './useRevitalized';
 import { normalizeBN } from '~/util';
+import { ClaimPlantAction } from '~/util/ClaimPlant';
 
 export type ClaimPlantActionSummary = {
   /** */
@@ -73,10 +73,9 @@ export type ClaimPlantOptionsMap = {
  * - amounts: the amounts of BEAN, SEEDS, and STALK being claimed / planted
  * - claimable?: the amount of beans that can be used upon performing claim / plant action
  */
-export default function useFarmerClaimAndPlantOptions(_sdk?: BeanstalkSDK) {
-  /// Beanstalk SDK
-  const _SDK = useSdk();
-  const sdk = useMemo(() => _sdk || _SDK, [_SDK, _sdk]);
+export default function useFarmerClaimAndPlantOptions() {
+  /// 
+  const sdk = useSdk();
 
   /// Farmer
   const farmerSilo = useFarmerSilo();
@@ -200,7 +199,7 @@ export default function useFarmerClaimAndPlantOptions(_sdk?: BeanstalkSDK) {
         title: 'Claim',
         tooltip: 'tooltip',
         enabled: claimableBeans.gt(0),
-        implied: [],
+        implied: [ClaimPlantAction.MOW],
         claimable: {
           token: BEAN,
           amount: claimableBeans,

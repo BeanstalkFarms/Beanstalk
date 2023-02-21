@@ -265,7 +265,7 @@ const Deposit: FC<{
   token: whitelistedToken 
 }) => {
   const sdk = useSdk();
-  const claimPlant = useFarmerClaimAndPlantActions(sdk);
+  const claimPlant = useFarmerClaimAndPlantActions();
 
   /// FIXME: name
   /// FIXME: finish deposit functionality for other tokens

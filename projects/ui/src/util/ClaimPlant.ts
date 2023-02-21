@@ -301,8 +301,9 @@ class ClaimPlant {
      */
      const enrooting = ClaimPlantAction.ENROOT in primaryActions || ClaimPlantAction.ENROOT in secondaryActions;
      const planting = ClaimPlantAction.PLANT in primaryActions || ClaimPlantAction.PLANT in secondaryActions;
+     const claimingWithdrawals = ClaimPlantAction.CLAIM in primaryActions || ClaimPlantAction.CLAIM in secondaryActions;
   
-    if (enrooting || planting) {
+    if (enrooting || planting || claimingWithdrawals) {
       if (ClaimPlantAction.MOW in primaryActions) delete primaryActions[ClaimPlantAction.MOW];
       if (ClaimPlantAction.MOW in secondaryActions) delete secondaryActions[ClaimPlantAction.MOW];
     }

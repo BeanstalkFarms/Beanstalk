@@ -386,7 +386,7 @@ const Convert : FC<{
   fromToken
 }) => {
   const sdk = useSdk();
-  const claimPlant = useClaimAndPlantActions(sdk);
+  const claimPlant = useClaimAndPlantActions();
   
   /// Token List
   const [tokenList, initialTokenOut] = useMemo(() => {

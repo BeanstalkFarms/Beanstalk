@@ -1,13 +1,9 @@
-import {
-  BeanstalkSDK,
-  TokenValue,
-} from '@beanstalk/sdk';
 import { useCallback, useMemo } from 'react';
 import BigNumber from 'bignumber.js';
 import ClaimPlant, { 
-  ClaimPlantAction, 
   ClaimPlantActionMap, 
-  ClaimPlantActionData
+  ClaimPlantActionData,
+  ClaimPlantAction
 } from '~/util/ClaimPlant';
 import useAccount from '~/hooks/ledger/useAccount';
 import useBDV from './useBDV';
@@ -19,6 +15,7 @@ import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import { useFetchFarmerBarn } from '~/state/farmer/barn/updater';
 import { useFetchFarmerField } from '~/state/farmer/field/updater';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
+import useSdk from '../sdk';
 
 type ClaimPlantRefetchConfig = { 
   farmerSilo?: (() => Promise<any>) | (() => void); 
@@ -38,28 +35,11 @@ const claimPlantRefetchConfig: Record<ClaimPlantAction, (keyof ClaimPlantRefetch
   [ClaimPlantAction.RINSE]:   ['farmerBalances', 'beanstalkBarn'],
 };
 
-function isClaimAction(action: ClaimPlantAction) {
-  return (action === ClaimPlantAction.RINSE || action === ClaimPlantAction.HARVEST || action === ClaimPlantAction.CLAIM);
-}
-
-function isPlantAction(action: ClaimPlantAction) {
-  return (action === ClaimPlantAction.MOW || action === ClaimPlantAction.PLANT || action === ClaimPlantAction.ENROOT);
-}
-
-function injectOnlyLocal(name: string, amount: TokenValue) {
-  return async () => ({
-    name,
-    amountOut: amount.toBigNumber(),
-    prepare: () => ({ target: '', callData: '' }),
-    decode: () => undefined,
-    decodeResult: () => undefined,
-  });
-}
-
 // -------------------------------------------------------------------------
 
 // take in sdk as a param to allow for testing
-export default function useClaimAndPlantActions(sdk: BeanstalkSDK) {
+export default function useClaimAndPlantActions() {
+  const sdk = useSdk();
   /// Farmer
   const account = useAccount();
 
@@ -167,7 +147,5 @@ export default function useClaimAndPlantActions(sdk: BeanstalkSDK) {
     actions: claimAndPlantActions,
     refetch,
     buildActions,
-    isClaimAction,
-    isPlantAction,
   };
 }

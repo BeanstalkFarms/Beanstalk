@@ -279,7 +279,7 @@ const Claim : FC<{
   siloBalance,
 }) => {
   const sdk = useSdk();
-  const claimPlant = useClaimAndPlantActions(sdk);
+  const claimPlant = useClaimAndPlantActions();
 
   ///
   const middleware = useFormMiddleware();

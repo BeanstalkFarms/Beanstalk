@@ -282,7 +282,7 @@ const WithdrawForm : FC<
 
 const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
   const sdk = useSdk();
-  const claimPlant = useFarmerClaimAndPlantActions(sdk);
+  const claimPlant = useFarmerClaimAndPlantActions();
   
   /// Beanstalk
   const season = useSeason();

@@ -2,22 +2,20 @@ import React, { useCallback, useMemo } from 'react';
 import { Accordion, AccordionDetails, Box, Stack, Typography } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
-import { useAccount as useWagmiAccount, useProvider } from 'wagmi';
+import { useProvider } from 'wagmi';
 import toast from 'react-hot-toast';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import {
+  ClaimAndPlantFormState,
   SmartSubmitButton, TokenInputField, TokenOutputField,
   TxnPreview,
   TxnSeparator
 } from '~/components/Common/Form';
-import { useSigner } from '~/hooks/ledger/useSigner';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import { ActionType } from '~/util/Actions';
 import Farm, { FarmToMode } from '~/lib/Beanstalk/Farm';
 import {
   displayFullBN,
-  parseError,
-  toStringBaseUnitBN
+  parseError
 } from '~/util';
 import useFarmerField from '~/hooks/farmer/useFarmerField';
 import { useFetchFarmerField } from '~/state/farmer/field/updater';
@@ -32,13 +30,16 @@ import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import Row from '~/components/Common/Row';
 import TokenIcon from '~/components/Common/TokenIcon';
+import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
+import useSdk from '~/hooks/sdk';
+import useClaimAndPlantActions from '~/hooks/beanstalk/useClaimAndPlantActions';
 
 // -----------------------------------------------------------------------
 
 type HarvestFormValues = {
   amount: BigNumber;
   destination: FarmToMode | undefined;
-}
+} & ClaimAndPlantFormState;
 
 type Props = FormikProps<HarvestFormValues> & {
   harvestablePods: BigNumber;
@@ -194,11 +195,11 @@ const HarvestForm: FC<Props> = ({
 };
 
 const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
+  const sdk = useSdk();
+  const claimPlant = useClaimAndPlantActions();
+
   ///
-  const account = useWagmiAccount();
   const provider = useProvider();
-  const { data: signer } = useSigner();
-  const beanstalk = useBeanstalkContract(signer);
 
   /// Farm
   const farm = useMemo(() => new Farm(provider), [provider]);
@@ -213,6 +214,14 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
   const initialValues: HarvestFormValues = useMemo(() => ({
     amount: farmerField.harvestablePods || null,
     destination: undefined,
+    farmActions: {
+      options: [],
+      selected: [],
+      additional: {
+        selected: [],
+        exclude: [ClaimPlantAction.HARVEST]
+      }
+    }
   }), [farmerField.harvestablePods]);
 
   /// Handlers
@@ -224,9 +233,10 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
       let txToast;
       try {
         middleware.before();
+        const account = await sdk.getAccount(); 
+        if (!account) throw new Error('Wallet connection required.');
         if (!farmerField.harvestablePods.gt(0)) throw new Error('No Harvestable Pods.');
         if (!farmerField.harvestablePlots) throw new Error('No Harvestable Plots.');
-        if (!account?.address) throw new Error('Connect a wallet first.');
         if (!values.destination) throw new Error('No destination set.');
 
         txToast = new TransactionToast({
@@ -234,19 +244,32 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
           success: `Harvest successful. Added ${displayFullBN(farmerField.harvestablePods, PODS.displayDecimals)} Beans to your ${copy.MODES[values.destination]}.`,
         });
 
-        const txn = await beanstalk.harvest(
-          Object.keys(farmerField.harvestablePlots).map((harvestIndex) =>
-            toStringBaseUnitBN(harvestIndex, 6)
+        const { workflow: harvest } = ClaimPlant.getAction(ClaimPlantAction.HARVEST)(sdk, { 
+          plotIds: Object.keys(farmerField.harvestablePlots).map(
+            (harvestIdx) => sdk.tokens.PODS.amount(harvestIdx.toString()).blockchainString
           ),
-          values.destination
+          toMode: values.destination
+        });
+
+        const { execute, actionsPerformed } = await ClaimPlant.build(
+          sdk,
+          claimPlant.buildActions(values.farmActions.selected),
+          claimPlant.buildActions(values.farmActions.additional.selected),
+          harvest,
+          sdk.tokens.BEAN.amount(0), // no amount in
+          { slippage: 0.1 }
         );
+
+        const txn = await execute();
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
-        await Promise.all([
-          refetchFarmerField(),
-          refetchFarmerBalances()
-        ]);
+
+        await claimPlant.refetch(actionsPerformed, {
+          farmerField: refetchFarmerField,
+          farmerBalances: refetchFarmerBalances
+        });
+
         txToast.success(receipt);
         formActions.resetForm();
       } catch (err) {
@@ -255,13 +278,13 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
       }
     },
     [
-      account?.address,
-      beanstalk,
-      farmerField.harvestablePlots,
-      farmerField.harvestablePods,
-      refetchFarmerBalances,
-      refetchFarmerField,
-      middleware,
+      middleware, 
+      sdk, 
+      farmerField.harvestablePods, 
+      farmerField.harvestablePlots, 
+      claimPlant, 
+      refetchFarmerField, 
+      refetchFarmerBalances
     ]
   );
 

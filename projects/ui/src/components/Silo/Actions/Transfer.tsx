@@ -216,7 +216,7 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
 
 const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
   const sdk = useSdk();
-  const claimPlant = useFarmerClaimAndPlantActions(sdk);
+  const claimPlant = useFarmerClaimAndPlantActions();
 
   /// Beanstalk
   const season = useSeason();
@@ -238,9 +238,7 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
     ],
     to: '',
     farmActions: {
-      options: [
-        ClaimPlantAction.PLANT,
-      ],
+      options: [ClaimPlantAction.PLANT],
       selected: [],
       additional: {
         selected: [],
