@@ -13,16 +13,6 @@ export function handleBoreWell(event: BoreWell): void {
 
   let well = createWell(event.params.well, event.params.implementation, event.params.tokens);
 
-  let wellContract = ERC20.bind(event.params.well);
-
-  let nameCall = wellContract.try_name();
-  if (nameCall.reverted) well.name = "";
-  else well.name = nameCall.value;
-
-  let symbolCall = wellContract.try_symbol();
-  if (symbolCall.reverted) well.symbol = "";
-  else well.symbol = symbolCall.value;
-
   well.aquifer = event.address;
 
   // A bit crude, but it works
