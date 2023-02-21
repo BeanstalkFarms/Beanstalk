@@ -110,7 +110,7 @@ const ClaimAndPlantAdditionalOptions: React.FC<{
 
     const optionKeys = [...enabled];
     const estimates = await Promise.all(
-      optionKeys.map((opt) => actions[opt]().txn.estimateGas())
+      optionKeys.map((opt) => actions[opt]().estimateGas())
     ).then((results) =>
       results.reduce<ClaimAndPlantGasResult>((prev, curr, i) => ({
         ...prev,
