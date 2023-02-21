@@ -5,12 +5,11 @@ import BigNumber from 'bignumber.js';
 import { Token, ERC20Token, NativeToken } from '@beanstalk/sdk';
 import TokenInputField, { TokenInputProps } from '~/components/Common/Form/TokenInputField';
 import TokenAdornment, { TokenAdornmentProps } from '~/components/Common/Form/TokenAdornment';
-import { QuoteSettings } from '~/hooks/ledger/useQuote';
 import { displayFullBN } from '~/util/Tokens';
 import { FormStateNew, FormTokenStateNew } from '.';
 import Row from '~/components/Common/Row';
 
-import useQuoteWithParams, { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
+import useQuoteWithParams, { QuoteHandlerWithParams, QuoteSettingsNew } from '~/hooks/ledger/useQuoteWithParams';
 
 type TokenQuoteProviderWithParamsCustomProps<T> = {
   /** Field name */
@@ -30,7 +29,7 @@ type TokenQuoteProviderWithParamsCustomProps<T> = {
   /** */
   displayQuote?: false | ((state: BigNumber | undefined, tokenOut: Token) => React.ReactElement | undefined)
   /** */
-  quoteSettings?: Partial<QuoteSettings>
+  quoteSettings?: Partial<QuoteSettingsNew>
   /** */
   TokenAdornmentProps?: Partial<TokenAdornmentProps>
   /** */
@@ -109,7 +108,7 @@ export default function TokenQuoteProviderWithParams<T>({
     console.debug(`[TokenQuoteProvider] update ${name}.amountOut =>`, result?.amountOut?.toString());
     setFieldValue(`${name}.amountOut`, result?.amountOut); // calculated amountOut
     setFieldValue(`${name}.value`, result?.value);  // ether value used
-    setFieldValue(`${name}.steps`, result?.steps);  // steps
+    setFieldValue(`${name}.steps`, result?.workflow?.generators);  // steps
   }, [name, setFieldValue, result]);
   useEffect(() => {
     console.debug(`[TokenQuoteProvider] update ${name}.quoting =>`, quoting);

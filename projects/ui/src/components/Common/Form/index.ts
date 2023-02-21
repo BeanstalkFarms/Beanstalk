@@ -5,6 +5,7 @@ import { ClaimPlantAction } from '~/hooks/beanstalk/useClaimAndPlantActions';
 import { QuoteHandlerResult } from '~/hooks/ledger/useQuote';
 import { FarmToMode } from '~/lib/Beanstalk/Farm';
 import { BalanceFrom } from './BalanceFromRow';
+import { QuoteHandlerResultNew } from '~/hooks/ledger/useQuoteWithParams';
 
 /**
  * 
@@ -55,7 +56,7 @@ export type FormTokenStateNew = (
     amount:    BigNumber | undefined;
   } & {
     quoting?:  boolean;
-  } & Partial<QuoteHandlerResult>
+  } & Partial<QuoteHandlerResultNew>
 )
 
 // /** Some `amountOut` received for inputting `amount` of this token into a function. */
@@ -109,13 +110,6 @@ export type BalanceFromFragment = {
   balanceFrom: BalanceFrom;
 };
 
-export type AdditionalBalanceFragment = {
-  /** */
-  additionMax: BigNumber;
-  /** */
-  additionApplied: BigNumber;
-}
-
 /**
  *
  */
@@ -156,6 +150,10 @@ export type ClaimAndPlantFormState = {
        * Ex: If the user is performing a silo deposit, the we required 'MOW' as well if grown stalk > 0
        */
       required?: ClaimPlantAction[];
+      /**
+       * 
+       */
+      exclude?: ClaimPlantAction[];
     }
   };
 }

@@ -1,9 +1,15 @@
-import { ERC20Token, NativeToken } from '@beanstalk/sdk';
+import { ERC20Token, FarmWorkflow, NativeToken } from '@beanstalk/sdk';
 import { BigNumber } from 'bignumber.js';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import debounce from 'lodash/debounce';
 import toast from 'react-hot-toast';
-import { QuoteHandlerResult } from './useQuote';
+import { ethers } from 'ethers';
+
+export type QuoteHandlerResultNew = {
+  amountOut: BigNumber;
+  value?: ethers.BigNumber;
+  workflow?: FarmWorkflow;
+};
 
 export type QuoteHandlerWithParams<T> = (
   tokenIn: ERC20Token | NativeToken,
@@ -11,15 +17,15 @@ export type QuoteHandlerWithParams<T> = (
   /** Calculate `amountOut` of this `tokenOut`. */
   tokenOut: ERC20Token | NativeToken,
   ...parameters: T[]
-) => Promise<null | QuoteHandlerResult['amountOut'] | QuoteHandlerResult>;
+) => Promise<null | QuoteHandlerResultNew['amountOut'] | QuoteHandlerResultNew>;
 
-export type QuoteSettings = {
+export type QuoteSettingsNew = {
   /** The number of milliseconds to wait before calling */
   debounceMs : number;
   /** If true, returns amountOut = amountIn when tokenOut = tokenIn. Otherwise returns void. */
   ignoreSameToken : boolean;
   /** */
-  onReset: () => QuoteHandlerResult | null;
+  onReset: () => QuoteHandlerResultNew | null;
 }
 
 const baseSettings = {
@@ -29,6 +35,9 @@ const baseSettings = {
 };
 
 /**
+ * NOTE: 
+ *  - this is essentially the same thing as useQuote but configured to use with tokens from the SDK
+ *  - It also accepts one additional generic parameter. 
  * 
  * @param tokenOut 
  * @param quoteHandler A function that returns a quoted amountOut value.
@@ -38,13 +47,13 @@ const baseSettings = {
 export default function useQuoteWithParams<T>(
   tokenOut: ERC20Token | NativeToken,
   quoteHandler: QuoteHandlerWithParams<T>,
-  _settings?: Partial<QuoteSettings>,
+  _settings?: Partial<QuoteSettingsNew>,
 ) : [
-  result: QuoteHandlerResult | null,
+  result: QuoteHandlerResultNew | null,
   quoting: boolean,
   refreshAmountOut: (_tokenIn: ERC20Token | NativeToken, _amountIn: BigNumber, params: T) => void,
 ] {
-  const [result, setResult]   = useState<QuoteHandlerResult | null>(null);
+  const [result, setResult]   = useState<QuoteHandlerResultNew | null>(null);
   const [quoting, setQuoting] = useState<boolean>(false);
   const settings              = useMemo(() => ({ ...baseSettings, ..._settings }), [_settings]);
   const abortController       = useRef<null | AbortController>(null);

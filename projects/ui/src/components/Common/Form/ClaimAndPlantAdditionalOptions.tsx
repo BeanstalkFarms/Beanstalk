@@ -15,9 +15,7 @@ import { ClaimAndPlantFormState } from '.';
 import useToggle from '~/hooks/display/useToggle';
 import useTimedRefresh from '~/hooks/app/useTimedRefresh';
 
-type ClaimAndPlantGasResult = Partial<{
-  [key in ClaimPlantAction]?: BigNumber;
-}>;
+type ClaimAndPlantGasResult = { [key in ClaimPlantAction]?: BigNumber };
 
 const sortOrder: { [key in ClaimPlantAction]: number } = {
   [ClaimPlantAction.MOW]: 0,
@@ -50,9 +48,10 @@ const ClaimAndPlantAdditionalOptions: React.FC<{
     // the options are the complement of possible actions to values.options
     const _options = new Set(Object.keys(ClaimPlantAction) as ClaimPlantAction[]);
     farmActions.options.forEach((opt) => _options.delete(opt));
+    farmActions.additional.exclude?.forEach((opt) => _options.delete(opt));
 
     return [..._options].sort((a, b) => sortOrder[a] - sortOrder[b]);
-  }, [farmActions.options]);
+  }, [farmActions.additional.exclude, farmActions.options]);
 
   const [required, enabled, allToggled] = useMemo(() => {
     const _required = new Set(farmActions.additional.required?.filter((opt) => claimPlantOptions[opt].enabled));
@@ -88,6 +87,24 @@ const ClaimAndPlantAdditionalOptions: React.FC<{
     setFieldValue('farmActions.additional.selected', newSet);
   };
 
+  const handleMouseEvent = useCallback((item: ClaimPlantAction, isRemoving: boolean) => {
+    // if (!claimPlantOptions[item].enabled) return;
+    const copy = new Set(hovered);
+    const affected = [item, ...claimPlantOptions[item].implied];
+    if (isRemoving) {
+      affected.forEach((option) => { 
+        if (!required.has(option)) {
+          copy.delete(option);
+        }
+      });
+    } else {
+      affected.forEach((option) => 
+        enabled.includes(option) && copy.add(option)
+      );
+    }
+    setHovered(copy);
+  }, [claimPlantOptions, enabled, hovered, required]);
+
   const estimateGas = useCallback(async () => {
     if (!enabled.length || !Object.keys(actions).length) return;
 
@@ -115,20 +132,6 @@ const ClaimAndPlantAdditionalOptions: React.FC<{
       setFieldValue('farmActions.additional.selected', [...updatedSelected]);
     }
   }, [local, required, setFieldValue]);
-
-  const handleMouseEvent = useCallback((item: ClaimPlantAction, isRemoving: boolean) => {
-    if (!claimPlantOptions[item].enabled) return;
-    const copy = new Set([...hovered]);
-    const affected = [item, ...claimPlantOptions[item].implied];
-    if (isRemoving) {
-      affected.forEach((option) => copy.delete(option));
-    } else {
-      affected.forEach((option) => 
-        enabled.includes(option) && copy.add(option)
-      );
-    }
-    setHovered(copy);
-  }, [claimPlantOptions, enabled, hovered]);
 
   return (
     <SelectionAccordion<ClaimPlantAction>

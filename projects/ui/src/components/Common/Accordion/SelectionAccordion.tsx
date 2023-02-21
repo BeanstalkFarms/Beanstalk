@@ -32,7 +32,7 @@ export type SelectionAccordionProps<T> = {
   /**
    * render function
    */
-  render: (i: T, selected: boolean) => JSX.Element | null;
+  render: (i: T, selected: boolean, index: number) => JSX.Element | null;
   /**
    * function to handle the selection of the items
    */
@@ -151,7 +151,7 @@ export default function SelectionAccordion<T>({
             <Stack width="100%" gap={1} direction={direction}>
               {options.map((item, i) => {
                 const active = selected.has(item);
-                const component = render(item, active);
+                const component = render(item, active, i);
                 if (!component) return null;
                 return React.cloneElement(component, {
                   id: `selection-item-${i}`,
