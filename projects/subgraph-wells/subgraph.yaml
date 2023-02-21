@@ -6,9 +6,9 @@ dataSources:
     name: Aquifer
     network: mainnet
     source:
-      address: "0xD1760AA0FCD9e64bA4ea43399Ad789CFd63C7809"
+      address: "0x74ef2B06A1D2035C33244A4a263FF00B84504865"
       abi: Aquifer
-      startBlock: 16578800
+      startBlock: 16650000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -45,7 +45,7 @@ templates:
           file: ./abis/ERC20.json
       eventHandlers:
         - event: AddLiquidity(uint256[],uint256)
-          handler: handleAddDeposit
+          handler: handleAddLiquidity
         - event: Approval(indexed address,indexed address,uint256)
           handler: handleApproval
         - event: RemoveLiquidity(uint256,uint256[])
