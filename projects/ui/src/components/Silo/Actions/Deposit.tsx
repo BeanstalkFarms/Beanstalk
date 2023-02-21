@@ -43,7 +43,6 @@ import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import useFarmerClaimableBeanAssets from '~/hooks/farmer/useFarmerClaimableBeanAssets';
-import ClaimableAssets from '../ClaimableAssets';
 import TokenOutputsField from '~/components/Common/Form/TokenOutputsField';
 
 // -----------------------------------------------------------------------
@@ -165,10 +164,6 @@ const DepositForm : FC<
             balanceFrom={values.balanceFrom}
           />
         ))}
-        <ClaimableAssets
-          balances={claimable.assets}
-          farmerBalances={balances}
-        />
         {isReady ? (
           <>
             <TxnSeparator />
