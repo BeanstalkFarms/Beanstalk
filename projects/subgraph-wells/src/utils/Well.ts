@@ -1,6 +1,7 @@
 import { Address, BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 import { BoreWellWellFunctionStruct } from "../../generated/Aquifer/Aquifer";
 import { Well, WellDailySnapshot, WellFunction, WellHourlySnapshot } from "../../generated/schema";
+import { ERC20 } from "../../generated/templates/Well/ERC20";
 import { BEAN_ERC20 } from "./Constants";
 import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
 import {
@@ -22,6 +23,16 @@ export function createWell(wellAddress: Address, implementation: Address, inputT
   }
 
   well = new Well(wellAddress);
+
+  let wellContract = ERC20.bind(wellAddress);
+
+  let nameCall = wellContract.try_name();
+  if (nameCall.reverted) well.name = "";
+  else well.name = nameCall.value;
+
+  let symbolCall = wellContract.try_symbol();
+  if (symbolCall.reverted) well.symbol = "";
+  else well.symbol = symbolCall.value;
 
   well.aquifer = Bytes.empty();
   well.implementation = implementation;
