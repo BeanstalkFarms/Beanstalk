@@ -127,9 +127,8 @@ contract Silo is SiloExit {
     function _mow(address account) internal {
         uint32 _lastUpdate = lastUpdate(account);
 
-        // If `account` was already updated this Season, there's no Stalk to Mow.
-        // _lastUpdate > _season() should not be possible, but it is checked anyway.
         if (_lastUpdate >= _season()) return;
+
 
         // Increments `plenty` for `account` if a Flood has occured.
         // Saves Rain Roots for `account` if it is Raining.
@@ -147,7 +146,11 @@ contract Silo is SiloExit {
     function __mow(address account) private {
         // If this `account` has no Seeds, skip to save gas.
         if (s.a[account].s.seeds == 0) return;
-        LibSilo.mintStalk(account, balanceOfGrownStalk(account));
+
+        // per the zero withdraw update, if a user plants within the morning, 
+        // addtional roots will need to be issued, to properly calculate the earned beans. 
+        // thus, a different mint stalk function is used to differ between deposits.
+        LibSilo.mintGrownStalkAndGrownRoots(account, balanceOfGrownStalk(account));
     }
 
     //////////////////////// INTERNAL: PLANT ////////////////////////
@@ -159,13 +162,15 @@ contract Silo is SiloExit {
      * For more info on Planting, see: {SiloFacet-plant}
      */
     function _plant(address account) internal returns (uint256 beans) {
-        // Need to Mow for `account` before we calculate the balance of 
-        // Earned Beans.
+        // per the zero withdraw update, planting is handled differently 
+        // depending whether or not the user plants during the vesting period of beanstalk. 
+        // during the vesting period, the earned beans are not issued to the user.
+        // thus, the roots calculated for a given user is different. 
+        // This is handled by the super mow function, which stores the difference in roots.
         _mow(account);
-        uint256 accountStalk = s.a[account].s.stalk;
-
-        // Calculate balance of Earned Beans.
+        uint256 accountStalk =  s.a[account].s.stalk;
         beans = _balanceOfEarnedBeans(account, accountStalk);
+
         if (beans == 0) return 0;
 
         // Reduce the Silo's supply of Earned Beans.

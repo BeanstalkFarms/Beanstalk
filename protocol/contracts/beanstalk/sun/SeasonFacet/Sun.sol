@@ -125,6 +125,7 @@ contract Sun is Oracle {
         // This is used in _balanceOfEarnedBeans() to linearly distrubute 
         // beans over the course of the season.
         s.newEarnedStalk = uint128(seasonStalk);
+        s.newEarnedRoots = 0;
 
         s.siloBalances[C.beanAddress()].deposited = s
             .siloBalances[C.beanAddress()]

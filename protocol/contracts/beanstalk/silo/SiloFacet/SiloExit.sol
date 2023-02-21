@@ -29,6 +29,8 @@ contract SiloExit is ReentrancyGuard {
     using LibSafeMath128 for uint128;
     using LibPRBMath for uint256;
 
+    uint256 constant private EARNED_BEAN_VESTING_BLOCKS = 25; //  5 minutes
+
     /**
      * @dev Stores account-level Season of Plenty balances.
      * 
@@ -106,6 +108,7 @@ contract SiloExit is ReentrancyGuard {
     /**
      * @notice Returns the balance of Stalk for `account`. 
      * Does NOT include Grown Stalk.
+     * DOES include Earned Stalk.
      * @dev Earned Stalk earns Bean Mints, but Grown Stalk does not due to
      * computational complexity.
      */
@@ -156,14 +159,43 @@ contract SiloExit is ReentrancyGuard {
     /**
      * @notice Returns the balance of Earned Beans for `account`. Earned Beans
      * are the Beans distributed to Stalkholders during {Sun-rewardToSilo}.
+     * @dev in the case where a user calls balanceOfEarned beans during the vesting period,
+     * we have to manually calculate the deltaRoots and newEarnedRoots, as they are not stored in the state.
+     * this is done in {_calcRoots} and {_balanceOfEarnedBeansVested}.
      */
     function balanceOfEarnedBeans(address account)
         public
         view
         returns (uint256 beans)
     {
-        beans = _balanceOfEarnedBeans(account, s.a[account].s.stalk);
+        
+        // if the function is called within the morning, then we have to manually calculate the deltaRoots and newEarnedRoots
+        // due to the fact that in the typical {_balanceOfEarnedBeans} function, the user and totalRoots are updated.abi
+        if(block.number - s.season.sunriseBlock <= EARNED_BEAN_VESTING_BLOCKS){
+            (uint256 deltaRoots, uint256 newEarnedRoots) = _calcRoots(account);
+            beans = _balanceOfEarnedBeansVested(account, s.a[account].s.stalk, deltaRoots, newEarnedRoots);
+        } else {
+            beans = _balanceOfEarnedBeans(account, s.a[account].s.stalk);
+        }
     }
+    
+    function _calcRoots(address account) private view returns (uint256 delta_roots, uint256 newEarnedRoots) {
+        uint256 _stalk = balanceOfGrownStalk(account);
+        if(_stalk == 0) {
+            // user already mow'd, no need to recalculate
+            delta_roots = s.a[account].deltaRoots;
+            newEarnedRoots = s.newEarnedRoots;
+        } else {
+            delta_roots = s.s.roots.add(s.newEarnedRoots).mulDiv(
+                _stalk, 
+                s.s.stalk - s.newEarnedStalk, 
+                LibPRBMath.Rounding.Up
+            );
+            newEarnedRoots = uint256(s.newEarnedRoots).add(delta_roots);
+        }
+    }
+           
+        
 
     /**
      * @dev Internal function to compute `account` balance of Earned Beans.
@@ -175,31 +207,28 @@ contract SiloExit is ReentrancyGuard {
      * divided by the number of Stalk per Bean.
      * The earned beans from the latest season 
      */
-    function _balanceOfEarnedBeans(address account, uint256 accountStalk)
+    function _balanceOfEarnedBeans(address account, uint256 accountStalk) 
         internal
         view
-        returns (uint256 beans)
-    {
+        returns (uint256 beans) {
         // There will be no Roots before the first Deposit is made.
         if (s.s.roots == 0) return 0;
 
-        // Calculate the % season remaining in the season, where 100% is 1e18.
-        uint256 percentSeasonRemaining =
-            1e18 - LibPRBMath.min(
-                    (block.timestamp - s.season.timestamp) * 1e18 / 3600, 
-                    1e18
-                );
-        
-        // vestingEarnedStalk
-        uint256 vestingEarnedStalk = uint256(s.newEarnedStalk).mul(percentSeasonRemaining).div(1e18);
-        // Determine expected user Stalk based on Roots balance.
-        // `balanceOfStalk / totalStalk = balanceOfRoots / totalRoots`
-        uint256 stalk = 
-            s.s.stalk.sub(vestingEarnedStalk).mulDiv(
+        uint256 stalk;
+        if(block.number - s.season.sunriseBlock <= EARNED_BEAN_VESTING_BLOCKS){
+            stalk = s.s.stalk.sub(s.newEarnedStalk).mulDiv(
+                s.a[account].roots.add(s.a[account].deltaRoots), // add the delta roots of the user
+                s.s.roots.add(s.newEarnedRoots), // add delta of global roots 
+                LibPRBMath.Rounding.Up
+            );
+        } else {
+            stalk = s.s.stalk.mulDiv(
                 s.a[account].roots,
                 s.s.roots,
                 LibPRBMath.Rounding.Up
             );
+        }
+        
         // Beanstalk rounds down when minting Roots. Thus, it is possible that
         // balanceOfRoots / totalRoots * totalStalk < s.a[account].s.stalk.
         // As `account` Earned Balance balance should never be negative, 
@@ -212,6 +241,37 @@ contract SiloExit is ReentrancyGuard {
 
         return beans;
     }
+
+    function _balanceOfEarnedBeansVested(
+        address account, 
+        uint256 accountStalk, 
+        uint256 deltaRoots, 
+        uint256 newEarnedRoots
+        ) private view returns (uint256 beans) {
+        if (s.s.roots == 0) return 0;
+
+        // Calculate the % season remaining in the season, where 100% is 1e18.
+        uint256 stalk;
+        uint256 grownStalk = balanceOfGrownStalk(account);
+        stalk = s.s.stalk.add(grownStalk).sub(s.newEarnedStalk).mulDiv(
+            s.a[account].roots.add(deltaRoots),
+            s.s.roots.add(newEarnedRoots),
+            LibPRBMath.Rounding.Up
+        ); 
+        // Beanstalk rounds down when minting Roots. Thus, it is possible that
+        // balanceOfRoots / totalRoots * totalStalk < s.a[account].s.stalk.
+        // As `account` Earned Balance balance should never be negative, 
+        // Beanstalk returns 0 instead.
+        if (stalk <= accountStalk) return 0;
+
+        // Calculate Earned Stalk and convert to Earned Beans.
+        beans = (stalk - accountStalk.add(grownStalk)).div(C.getStalkPerBean()); // Note: SafeMath is redundant here.
+        if (beans > s.earnedBeans) return s.earnedBeans;
+
+        return beans;
+
+    }
+
 
     /**
      * @notice Return the `account` balance of Earned Stalk, the Stalk

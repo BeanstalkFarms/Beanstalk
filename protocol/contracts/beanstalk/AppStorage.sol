@@ -107,8 +107,7 @@ contract Account {
         uint32 lastUpdate; // The Season in which the Farmer last updated their Silo.
         uint32 lastSop; // The last Season that a SOP occured at the time the Farmer last updated their Silo.
         uint32 lastRain; // The last Season that it started Raining at the time the Farmer last updated their Silo.
-        uint32 lastSIs; // DEPRECATED – In Silo V1.2, the Silo reward mechanism was updated to no longer need to store the number of the Supply Increases at the time the Farmer last updated their Silo.
-        uint32 proposedUntil; // DEPRECATED – Replant removed on-chain governance including the ability to propose BIPs.
+        uint128 deltaRoots; // the number of roots to add, in the case where a farmer has mowed in the morning 
         SeasonOfPlenty deprecated; // DEPRECATED – Replant reset the Season of Plenty mechanism
         uint256 roots; // A Farmer's Root balance.
         uint256 wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
@@ -217,6 +216,8 @@ contract Storage {
         uint32 rainStart; // rainStart stores the most recent Season in which Rain started.
         bool raining; // True if it is Raining (P < 1, Pod Rate Excessively Low).
         bool fertilizing; // True if Beanstalk has Fertilizer left to be paid off.
+        uint32 sunriseBlock;
+        bool abovePeg;
         uint256 start; // The timestamp of the Beanstalk deployment rounded down to the nearest hour.
         uint256 period; // The length of each season in Beanstalk.
         uint256 timestamp; // The timestamp of the start of the current Season.
@@ -357,6 +358,7 @@ struct AppStorage {
     uint128 fFirst; // The lowest active Fertilizer Id (start of linked list that is stored by nextFid). 
     uint128 fLast; // The highest active Fertilizer Id (end of linked list that is stored by nextFid). 
     uint128 bpf; // The cumulative Beans Per Fertilizer (bfp) minted over all Season.
+    uint128 newEarnedRoots; // the number of roots to add to the global roots, in the case the user plants in the morning. // placed here to save a storage slot.s
     uint256 recapitalized; // The nubmer of USDC that has been recapitalized in the Barn Raise.
     uint256 isFarm; // Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
     address ownerCandidate; // Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
