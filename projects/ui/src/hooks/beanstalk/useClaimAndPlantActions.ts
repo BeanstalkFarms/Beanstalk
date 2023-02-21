@@ -69,10 +69,10 @@ type ClaimPlantFunctions<T extends ClaimPlantAction> = (
 ) => ClaimPlantActionData;
 
 type ClaimPlantRefetchConfig = { 
-  farmerSilo?: () => Promise<any>; 
-  farmerField?: () => Promise<any>; 
-  farmerBalances?: () => Promise<any>;
-  beanstalkBarn?: () => Promise<any>;
+  farmerSilo?: (() => Promise<any>) | (() => void); 
+  farmerField?: (() => Promise<any>) | (() => void); 
+  farmerBalances?: (() => Promise<any>) | (() => void); 
+  beanstalkBarn?: (() => Promise<any>) | (() => void);
 };
 
 const harvest: ClaimPlantFunctions<ClaimPlantAction.HARVEST> = (sdk, { plotIds, amount, toMode }) => {
@@ -450,7 +450,7 @@ export default function useClaimAndPlantActions(sdk: BeanstalkSDK) {
     /** Which app refetch functions are already being called to prevent unnecessary duplicated calls */
     config?: ClaimPlantRefetchConfig,
     /** additional functions to fetch */
-    additional?: (() => Promise<any>)[],
+    additional?: ((() => Promise<any>) | (() => void))[],
   ) => {
     const refetchFunctions = [...actions].reduce<ClaimPlantRefetchConfig>((prev, action) => {
       claimPlantRefetchConfig[action].forEach((k) => {

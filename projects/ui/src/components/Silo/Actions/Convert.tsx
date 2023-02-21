@@ -3,31 +3,24 @@ import { Accordion, AccordionDetails, Alert, Box, Stack, Typography } from '@mui
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import { ethers } from 'ethers';
 import toast from 'react-hot-toast';
+import { Token, ERC20Token, NativeToken } from '@beanstalk/sdk';
+import { ethers } from 'ethers';
 import TokenOutputField from '~/components/Common/Form/TokenOutputField';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
-import { FormState, SettingInput, SmartSubmitButton, TxnSettings } from '~/components/Common/Form';
-import TokenQuoteProvider from '~/components/Common/Form/TokenQuoteProvider';
+import { ClaimAndPlantFormState, FormStateNew, SettingInput, SmartSubmitButton, TxnSettings } from '~/components/Common/Form';
 import TxnPreview from '~/components/Common/Form/TxnPreview';
-import Token, { ERC20Token, NativeToken } from '~/classes/Token';
-import Pool from '~/classes/Pool';
 import TxnSeparator from '~/components/Common/Form/TxnSeparator';
 import PillRow from '~/components/Common/Form/PillRow';
-import TokenSelectDialog, { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
-import { BEAN, BEAN_CRV3_LP, SEEDS, STALK, UNRIPE_BEAN, UNRIPE_BEAN_CRV3 } from '~/constants/tokens';
+import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
+import { STALK } from '~/constants/tokens';
 import BeanstalkSDK from '~/lib/Beanstalk';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import { displayFullBN, MaxBN, MinBN, toStringBaseUnitBN } from '~/util/Tokens';
-import { Beanstalk } from '~/generated/index';
-import { QuoteHandler } from '~/hooks/ledger/useQuote';
 import { ZERO_BN } from '~/constants';
 import Farm from '~/lib/Beanstalk/Farm';
-import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useToggle from '~/hooks/display/useToggle';
-import { useSigner } from '~/hooks/ledger/useSigner';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
-import { tokenResult, parseError } from '~/util';
+import { parseError, tokenValueToBN, bnToTokenValue } from '~/util';
 import { FarmerSilo } from '~/state/farmer/silo';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { convert, Encoder as ConvertEncoder } from '~/lib/Beanstalk/Silo/Convert';
@@ -41,16 +34,23 @@ import IconWrapper from '~/components/Common/IconWrapper';
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
+import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
+import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
+import useSdk, { getNewToOldToken } from '~/hooks/sdk';
+import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
+import useClaimAndPlantActions, { ClaimPlantAction, ClaimPlantActionMap } from '~/hooks/beanstalk/useClaimAndPlantActions';
+import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
+import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 
 // -----------------------------------------------------------------------
 
-type ConvertFormValues = FormState & {
+type ConvertFormValues = FormStateNew & {
   settings: {
     slippage: number;
   };
   maxAmountIn: BigNumber | undefined;
   tokenOut: Token | undefined;
-};
+} & ClaimAndPlantFormState;
 
 // -----------------------------------------------------------------------
 
@@ -68,21 +68,22 @@ const ConvertForm : FC<
     tokenList: (ERC20Token | NativeToken)[];
     /** Farmer's silo balances */
     siloBalances: FarmerSilo['balances'];
-    beanstalk: Beanstalk;
-    handleQuote: QuoteHandler;
+    handleQuote: QuoteHandlerWithParams<{}>;
     currentSeason: BigNumber;
+    claimPlantActions: ClaimPlantActionMap;
   }
 > = ({
   tokenList,
   siloBalances,
-  beanstalk,
   handleQuote,
   currentSeason,
+  claimPlantActions,
   // Formik
   values,
   isSubmitting,
   setFieldValue,
 }) => {
+  const sdk = useSdk();
   /// Local state
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const getBDV = useBDV();
@@ -118,8 +119,8 @@ const ConvertForm : FC<
       console.debug('[Convert] setting conversion, ', tokenOut, isQuoting);
       setConversion(
         convert(
-          tokenIn,   // from
-          tokenOut,  // to
+          getNewToOldToken(tokenIn),   // from
+          getNewToOldToken(tokenOut),  // to
           _amountIn, // amount
           siloBalance?.deposited.crates || [], // depositedCrates
           currentSeason,
@@ -162,16 +163,15 @@ const ConvertForm : FC<
         ZERO_BN
       );
       deltaStalk = MaxBN(
-        tokenOut.getStalk(deltaBDV),
+        tokenValueToBN(tokenOut.getStalk(bnToTokenValue(tokenOut, deltaBDV))),
         ZERO_BN
       );
       deltaSeedsPerBDV = (
-        tokenOut.getSeeds()
-          .minus(tokenIn.getSeeds())
+        tokenOut.getSeeds().sub(tokenValueToBN(tokenIn.getSeeds()).toNumber())
       );
       deltaSeeds = (
-        tokenOut.getSeeds(bdvOut)  // seeds for depositing this token with new BDV
-          .minus(conversion.seeds.abs())   // seeds lost when converting
+        tokenValueToBN(tokenOut.getSeeds(bnToTokenValue(tokenOut, bdvOut))  // seeds for depositing this token with new BDV
+          .sub(bnToTokenValue(tokenOut, conversion.seeds.abs())))   // seeds lost when converting
       );
       //
       console.log(`BDV: ${getBDV(tokenOut)}`);
@@ -201,23 +201,30 @@ const ConvertForm : FC<
     (async () => {
       if (tokenOut) {
         const _maxAmountIn = (
-          await beanstalk.getMaxAmountIn(
+          await sdk.contracts.beanstalk.getMaxAmountIn(
             tokenIn.address,
             tokenOut.address,
           )
-          .then(tokenResult(tokenIn))
+          .then((amt) => tokenValueToBN(tokenIn.amount(amt.toString())))
           .catch(() => ZERO_BN) // if calculation fails, consider this pathway unavailable
         );
         setFieldValue('maxAmountIn', _maxAmountIn);
       }
     })();
-  }, [beanstalk, setFieldValue, tokenIn, tokenOut]);
+  }, [sdk.contracts.beanstalk, setFieldValue, tokenIn, tokenOut]);
 
   const maxAmountUsed = (amountIn && maxAmountIn) ? amountIn.div(maxAmountIn) : null;
 
+  const quoteProviderParams = useMemo(() => {
+    const t = '';
+    return {
+      params: {}
+    };
+  }, []);
+
   return (
     <Form noValidate autoComplete="off">
-      <TokenSelectDialog
+      <TokenSelectDialogNew
         open={isTokenSelectVisible}
         handleClose={hideTokenSelect}
         handleSubmit={handleSelectTokenOut}
@@ -227,7 +234,7 @@ const ConvertForm : FC<
       />
       <Stack gap={1}>
         {/* Input token */}
-        <TokenQuoteProvider
+        <TokenQuoteProviderWithParams<{}>
           name="tokens.0"
           tokenOut={(tokenOut || tokenIn) as ERC20Token}
           max={MinBN(values.maxAmountIn || ZERO_BN, depositedAmount)}
@@ -247,6 +254,10 @@ const ConvertForm : FC<
             !values.maxAmountIn         // still loading `maxAmountIn`
             || values.maxAmountIn.eq(0) // = 0 means we can't make this conversion
           )}
+          belowComponent={
+            <ClaimAndPlantFarmActions preset="plant" />
+          }
+          {...quoteProviderParams}
         />
         {/* Output token */}
         {depositedAmount.gt(0) ? (
@@ -278,7 +289,7 @@ const ConvertForm : FC<
           <>
             <TxnSeparator mt={-1} />
             <TokenOutputField
-              token={tokenOut}
+              token={getNewToOldToken(tokenOut)}
               amount={amountOut || ZERO_BN}
               amountSecondary={bdvOut ? `~${displayFullBN(bdvOut, 2)} BDV` : undefined}
             />
@@ -302,7 +313,7 @@ const ConvertForm : FC<
               </Box>
               <Box sx={{ flex: 1 }}>
                 <TokenOutputField
-                  token={SEEDS}
+                  token={getNewToOldToken(sdk.tokens.SEEDS)}
                   amount={deltaSeeds || ZERO_BN}
                   amountTooltip={(
                     <>
@@ -324,6 +335,9 @@ const ConvertForm : FC<
                 </Alert>
               </Box>
             ) : null}
+            <ClaimAndPlantAdditionalOptions 
+              actions={claimPlantActions}
+            />
             <Box>
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />
@@ -366,40 +380,31 @@ const ConvertForm : FC<
 // -----------------------------------------------------------------------
 
 const Convert : FC<{
-  pool: Pool;
   fromToken: ERC20Token | NativeToken;
 }> = ({
-  pool,
   fromToken
 }) => {
-  /// Tokens
-  const getChainToken = useGetChainToken();
-  const Bean          = getChainToken(BEAN);
-  const BeanCrv3      = getChainToken(BEAN_CRV3_LP);
-  const urBean        = getChainToken(UNRIPE_BEAN);
-  const urBeanCrv3    = getChainToken(UNRIPE_BEAN_CRV3);
-
-  /// Ledger
-  const { data: signer }  = useSigner();
-  const beanstalk         = useBeanstalkContract(signer);
+  const sdk = useSdk();
+  const claimPlant = useClaimAndPlantActions(sdk);
   
   /// Token List
   const [tokenList, initialTokenOut] = useMemo(() => {
-    const allTokens = (fromToken === urBean || fromToken === urBeanCrv3)
+    const t = sdk.tokens;
+    const allTokens = fromToken.isUnripe
       ? [
-        urBean,
-        urBeanCrv3,
+        t.UNRIPE_BEAN,
+        t.UNRIPE_BEAN_CRV3,
       ]
       : [
-        Bean,
-        BeanCrv3,
+        t.BEAN,
+        t.BEAN_CRV3_LP,
       ];
     const _tokenList = allTokens.filter((_token) => _token !== fromToken);
     return [
       _tokenList,     // all available tokens to convert to
       _tokenList[0],  // tokenOut is the first available token that isn't the fromToken
     ];
-  }, [urBean, urBeanCrv3, Bean, BeanCrv3, fromToken]);
+  }, [sdk.tokens, fromToken]);
 
   /// Beanstalk
   const season = useSeason();
@@ -430,35 +435,47 @@ const Convert : FC<{
     maxAmountIn:    undefined,
     // Token Outputs
     tokenOut:       initialTokenOut,
+    farmActions: {
+      options: [ClaimPlantAction.PLANT],
+      selected: [],
+      additional: {
+        selected: [],
+        required: [ClaimPlantAction.MOW]
+      }
+    },
+
   }), [fromToken, initialTokenOut]);
 
   /// Handlers
   // This handler does not run when _tokenIn = _tokenOut (direct deposit)
-  const handleQuote = useCallback<QuoteHandler>(
-    async (_tokenIn, _amountIn, _tokenOut) => beanstalk.getAmountOut(
+  const handleQuote = useCallback<QuoteHandlerWithParams<{}>>(
+    async (_tokenIn, _amountIn, _tokenOut) => sdk.contracts.beanstalk.getAmountOut(
       _tokenIn.address,
       _tokenOut.address,
       toStringBaseUnitBN(_amountIn, _tokenIn.decimals),
-    ).then(tokenResult(_tokenOut)),
-    [beanstalk]
+    ).then((amt) => tokenValueToBN(_tokenOut.fromBlockchain(amt))),
+    [sdk.contracts.beanstalk]
   );
 
   const onSubmit = useCallback(async (values: ConvertFormValues, formActions: FormikHelpers<ConvertFormValues>) => {
     let txToast;
     try {
+      const { BEAN, BEAN_CRV3_LP, UNRIPE_BEAN, UNRIPE_BEAN_CRV3 } = sdk.tokens;
+      const { beanstalk } = sdk.contracts;
+
       middleware.before();
+      const slippage = values?.settings?.slippage;
       if (!values.settings.slippage) throw new Error('No slippage value set.');
       if (!values.tokenOut) throw new Error('No output token selected');
       if (!values.tokens[0].amount?.gt(0)) throw new Error('No amount input');
       if (!values.tokens[0].amountOut) throw new Error('No quote available.');
-      
-      const tokenIn   = values.tokens[0].token;     // converting from token
-      const amountIn  = values.tokens[0].amount;    // amount of from token
-      const tokenOut  = values.tokenOut;            // converting to token
-      const amountOut = values.tokens[0].amountOut; // amount of to token
-      const amountInStr  = tokenIn.stringify(amountIn);
+      const tokenIn   = values.tokens[0].token as ERC20Token; // converting from token
+      const amountIn  = values.tokens[0].amount;              // amount of from token
+      const tokenOut  = values.tokenOut;                      // converting to token
+      const amountOut = values.tokens[0].amountOut;           // amount of to token
+      const amountInStr  = tokenIn.amount(amountIn.toString()).blockchainString;
       const amountOutStr = Farm.slip(
-        ethers.BigNumber.from(tokenOut.stringify(amountOut)),
+        tokenOut.amount(amountOut.toString()).toBigNumber(),
         values.settings.slippage / 100
       ).toString();
       
@@ -466,8 +483,8 @@ const Convert : FC<{
       if (!depositedCrates) throw new Error('No deposited crates available.');
 
       const conversion = BeanstalkSDK.Silo.Convert.convert(
-        tokenIn,  // from
-        tokenOut, // to
+        getNewToOldToken(tokenIn),  // from
+        getNewToOldToken(tokenOut), // to
         amountIn,
         depositedCrates,
         season,
@@ -483,23 +500,24 @@ const Convert : FC<{
       /// to calculate available conversions and the respective
       /// encoding strategy. Just gotta get to Replant...
       let convertData;
-      if (tokenIn === urBean && tokenOut === urBeanCrv3) {
+
+      if (tokenIn.equals(UNRIPE_BEAN) && tokenOut.equals(UNRIPE_BEAN_CRV3)) {
         convertData = ConvertEncoder.unripeBeansToLP(
           amountInStr,      // amountBeans
           amountOutStr,     // minLP
         );
-      } else if (tokenIn === urBeanCrv3 && tokenOut === urBean) {
+      } else if (tokenIn.equals(UNRIPE_BEAN_CRV3) && tokenOut.equals(UNRIPE_BEAN)) {
         convertData = ConvertEncoder.unripeLPToBeans(
           amountInStr,      // amountLP
           amountOutStr,     // minBeans
         );
-      } else if (tokenIn === Bean && tokenOut === BeanCrv3) {
+      } else if (tokenIn.equals(BEAN) && tokenOut.equals(BEAN_CRV3_LP)) {
         convertData = ConvertEncoder.beansToCurveLP(
           amountInStr,      // amountBeans
           amountOutStr,     // minLP
           tokenOut.address, // output token address = pool address
         );
-      } else if (tokenIn === BeanCrv3 && tokenOut === Bean) {
+      } else if (tokenIn.equals(BEAN_CRV3_LP) && tokenOut.equals(BEAN)) {
         convertData = ConvertEncoder.curveLPToBeans(
           amountInStr,      // amountLP
           amountOutStr,     // minBeans
@@ -510,7 +528,7 @@ const Convert : FC<{
       }
 
       const crates  = conversion.deltaCrates.map((crate) => crate.season.toString());
-      const amounts = conversion.deltaCrates.map((crate) => tokenIn.stringify(crate.amount.abs()));
+      const amounts = conversion.deltaCrates.map((crate) => tokenIn.amount(crate.amount.abs().toString()).blockchainString);
 
       console.debug('[Convert] executing', {
         tokenIn,
@@ -526,18 +544,43 @@ const Convert : FC<{
         amounts,
       });
 
-      const txn = await beanstalk.convert(
+      const callData = beanstalk.interface.encodeFunctionData('convert', [
         convertData,
         crates,
         amounts
+      ]);
+
+      const work = sdk.farm.create().add(
+        async (_amountInStep: ethers.BigNumber, _context: any) => ({
+          name: 'convert',
+          amountOut: _amountInStep,
+          prepare: () => ({
+            target: beanstalk.address,
+            callData: callData,
+          }),
+          decode: (data: string) => beanstalk.interface.decodeFunctionData('convert', data),
+          decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('convert', result)
+        })
       );
+
+      const { execute, actionsPerformed } = await claimPlant.buildWorkflow(
+        sdk,
+        claimPlant.buildActions(values.farmActions.selected),
+        claimPlant.buildActions(values.farmActions.additional.selected),
+        work,
+        tokenIn.amount(amountIn.toString()),
+        { slippage }
+      );
+
+      const txn = await execute();
       txToast.confirming(txn);
 
       const receipt = await txn.wait();
-      await Promise.all([
-        refetchFarmerSilo(),  // update farmer silo since we just moved deposits around
-        refetchPools(),       // update prices to account for pool conversion
-      ]);
+      
+      await claimPlant.refetch(actionsPerformed, { 
+        farmerSilo: refetchFarmerSilo, // update farmer silo since we just moved deposits around
+      }, [refetchPools]);  // update prices to account for pool conversion
+
       txToast.success(receipt);
       formActions.resetForm({
         values: {
@@ -550,7 +593,7 @@ const Convert : FC<{
       txToast ? txToast.error(err) : toast.error(parseError(err));
       formActions.setSubmitting(false);
     }
-  }, [farmerSiloBalances, farmerSilo.beans.earned, season, urBean, urBeanCrv3, Bean, BeanCrv3, beanstalk, refetchFarmerSilo, refetchPools, initialValues, middleware]);
+  }, [sdk, middleware, farmerSiloBalances, season, claimPlant, refetchFarmerSilo, refetchPools, initialValues]);
 
   return (
     <Formik initialValues={initialValues} onSubmit={onSubmit}>
@@ -563,8 +606,8 @@ const Convert : FC<{
             handleQuote={handleQuote}
             tokenList={tokenList as (ERC20Token | NativeToken)[]}
             siloBalances={farmerSiloBalances}
-            beanstalk={beanstalk}
             currentSeason={season}
+            claimPlantActions={claimPlant.actions}
             {...formikProps}
           />
         </>

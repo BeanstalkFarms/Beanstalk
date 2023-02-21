@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Box, Tab } from '@mui/material';
-import { ERC20Token, NativeToken } from '@beanstalk/sdk';
+import { ERC20Token } from '@beanstalk/sdk';
 import { Pool } from '~/classes';
 import { ERC20Token as ERC20TokenOld } from '~/classes/Token';
 import { FarmerSiloBalance } from '~/state/farmer/silo';
@@ -42,7 +42,7 @@ const SiloActions : FC<{
 
   // temp solution
   const token = useMemo(() => {
-    const match = sdk.tokens.findBySymbol(props.token.symbol);
+    const match = sdk.tokens.findBySymbol(props.token.symbol) as ERC20Token;
     return match;
   }, [props.token.symbol, sdk.tokens]);
 
@@ -58,27 +58,28 @@ const SiloActions : FC<{
         </ModuleTabs>
         <ModuleContent>
           {tab === 0 && token ? (
-            <Deposit token={token as ERC20Token | NativeToken} />
+            <Deposit 
+              token={token} 
+            />
           ) : null}
-          {tab === 1 ? (
+          {tab === 1 && token ? (
             <Convert
-              pool={props.pool}
-              fromToken={props.token}
+              fromToken={token}
             />
           ) : null}
           {tab === 2 && token ? (
             <Transfer
-              token={token as ERC20Token}
+              token={token}
             />
           ) : null}
           {tab === 3 && token ? (
             <Withdraw
-              token={token as ERC20Token}
+              token={token}
             />
           ) : null}
           {tab === 4 && token ? (
             <Claim
-              token={token as ERC20Token}
+              token={token}
               siloBalance={props.siloBalance}
             />
           ) : null}

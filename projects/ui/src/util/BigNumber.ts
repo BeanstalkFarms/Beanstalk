@@ -1,4 +1,4 @@
-import { TokenValue } from '@beanstalk/sdk';
+import { Token, TokenValue } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import { ZERO_BN } from '~/constants';
 
@@ -26,4 +26,9 @@ export function tokenValueToBN(
 ) {
   if (value instanceof BigNumber) return value;
   return new BigNumber(value.toHuman());
+}
+
+export function bnToTokenValue(token: Token, value: TokenValue | BigNumber) {
+  if (value instanceof TokenValue) return value;
+  return token.amount(value.toString());
 }
