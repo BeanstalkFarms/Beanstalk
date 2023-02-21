@@ -1,8 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { BeanstalkSDK, Token } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
-import { useFetchFarmerField } from '../../state/farmer/field/updater';
-import { useFetchFarmerBarn } from '~/state/farmer/barn/updater';
 import { ZERO_BN } from '~/constants';
 import { ClaimPlantAction } from '~/hooks/beanstalk/useClaimAndPlantActions';
 import useSdk from '../sdk';
@@ -12,8 +10,6 @@ import useFarmerField from './useFarmerField';
 import useFarmerSilo from './useFarmerSilo';
 import useRevitalized from './useRevitalized';
 import { normalizeBN } from '~/util';
-import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
-import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 
 export type ClaimPlantActionSummary = {
   /** */
@@ -82,7 +78,7 @@ export default function useFarmerClaimAndPlantOptions(_sdk?: BeanstalkSDK) {
   const _SDK = useSdk();
   const sdk = useMemo(() => _sdk || _SDK, [_SDK, _sdk]);
 
-  /// Farmer data
+  /// Farmer
   const farmerSilo = useFarmerSilo();
   const farmerField = useFarmerField();
   const farmerBarn = useFarmerFertilizer();
@@ -247,46 +243,4 @@ export default function useFarmerClaimAndPlantOptions(_sdk?: BeanstalkSDK) {
   }, [options, sdk.tokens.BEAN]);
 
   return { options, getBeansClaiming };
-}
-
-export const ClaimPlantPresets = {
-  deposit: {
-    actions: [
-      ClaimPlantAction.MOW,
-      ClaimPlantAction.PLANT,
-      ClaimPlantAction.ENROOT,
-      ClaimPlantAction.CLAIM,
-      ClaimPlantAction.HARVEST,
-      ClaimPlantAction.RINSE,
-    ],
-    required: [ClaimPlantAction.MOW],
-  },
-};
-
-export function useClaimPlantRefetch() {
-  // Fetchers
-  const [refetchFarmerSilo]     = useFetchFarmerSilo();
-  const [refetchFarmerBalances] = useFetchFarmerBalances();
-  const [refetchFarmerField]    = useFetchFarmerField();
-  const [fefetchBarn]           = useFetchFarmerBarn();
-
-  const refetchMap = useMemo(() => ({
-    [ClaimPlantAction.MOW]:     [refetchFarmerSilo],
-    [ClaimPlantAction.PLANT]:   [refetchFarmerSilo],
-    [ClaimPlantAction.ENROOT]:  [refetchFarmerSilo],
-    [ClaimPlantAction.HARVEST]: [refetchFarmerField, refetchFarmerBalances],
-    [ClaimPlantAction.RINSE]:   [fefetchBarn, refetchFarmerBalances],
-    [ClaimPlantAction.CLAIM]:   [refetchFarmerSilo, refetchFarmerBalances],
-  }), [fefetchBarn, refetchFarmerBalances, refetchFarmerField, refetchFarmerSilo]);
-
-  const fetch = useCallback((options: ClaimPlantAction[]) => {
-    const promises = new Set<() => Promise<any>>();
-    options.forEach((option) => {
-      refetchMap[option].forEach((promise) => promises.add(promise));
-    });
-
-    return promises;
-  }, [refetchMap]);
-
-  return [fetch] as const;
 }

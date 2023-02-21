@@ -330,11 +330,12 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
 
       if (!withdrawResult) throw new Error('Nothing to Withdraw.');
       
-      // let call;
       const seasons = withdrawResult.deltaCrates.map((crate) => crate.season.toString());
       const amounts = withdrawResult.deltaCrates.map((crate) => toStringBaseUnitBN(crate.amount.abs(), token.decimals));
       
       const withdraw = sdk.farm.create();
+
+      // Optimize call based on number of crates
       if (seasons.length === 0) {
         throw new Error('Malformatted crates.');
       } else if (seasons.length === 1) {
@@ -353,12 +354,13 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
         ));
       }
 
-      const work = claimPlant.buildWorkflow(
-        sdk.farm.create(),
+      const { execute, actionsPerformed } = await claimPlant.buildWorkflow(
+        sdk,
         claimPlant.buildActions(values.farmActions.selected),
         claimPlant.buildActions(values.farmActions.additional.selected),
         withdraw,
-        token.amount(0)
+        token.amount(0),
+        { slippage: 0.1 }
       );
       
       console.debug('[silo/withdraw] withdrawing: ', {
@@ -368,47 +370,28 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
           amounts,
         },
       });
-      
-      /// Optimize the call used depending on the
-      /// number of crates.
-      // if (seasons.length === 0) {
-      //   throw new Error('Malformatted crates.');
-      // } else if (seasons.length === 1) {
-      //     console.debug('[silo/withdraw] strategy: withdrawDeposit');
-      //     call = beanstalk.withdrawDeposit(
-      //       token.address,
-      //       seasons[0],
-      //       amounts[0],
-      //     );
-      // } else {
-      //   console.debug('[silo/withdraw] strategy: withdrawDeposits');
-      //   call = beanstalk.withdrawDeposits(
-      //     token.address,
-      //     seasons,
-      //     amounts,
-      //   );
-      // }
 
       txToast = new TransactionToast({
         loading: `Withdrawing ${displayFullBN(withdrawResult.amount.abs(), token.displayDecimals, token.displayDecimals)} ${token.name} from the Silo...`,
         success: `Withdraw successful. Your ${token.name} will be available to Claim at the start of the next Season.`,
       });
-      await work.estimate(token.amount(0));
-      const txn = await work.execute(token.amount(0), { slippage: 0.1 });
+      
+      const txn = await execute();
       txToast.confirming(txn);
 
       const receipt = await txn.wait();
-      await Promise.all([
-        refetchFarmerSilo(),
-        refetchSilo(),
-      ]);
+
+      await claimPlant.refetch(actionsPerformed, { 
+        farmerSilo: refetchFarmerSilo
+      }, [refetchSilo]);
+
       txToast.success(receipt);
       formActions.resetForm();
     } catch (err) {
       txToast ? txToast.error(err) : toast.error(parseError(err));
       formActions.setSubmitting(false);
     }
-  }, [middleware, token, siloBalances, season, sdk.farm, claimPlant, refetchFarmerSilo, refetchSilo]);
+  }, [middleware, token, siloBalances, season, sdk, claimPlant, refetchFarmerSilo, refetchSilo]);
 
   return (
     <Formik initialValues={initialValues} onSubmit={onSubmit}>

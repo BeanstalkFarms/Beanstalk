@@ -429,26 +429,27 @@ const Deposit: FC<{
           success: 'Deposit successful.',
         });
 
-        const work = claimPlant.buildWorkflow(
-          sdk.farm.create(),
+        const { execute, actionsPerformed } = await claimPlant.buildWorkflow(
+          sdk,
           claimPlant.buildActions(values.farmActions.selected),
           claimPlant.buildActions(values.farmActions.additional.selected),
           deposit.workflow,
           amountIn,
+          { slippage: values.settings.slippage }
         );
 
-        await work.estimate(amountIn);
-        const txn = await work.execute(tokenIn.amount(0), { slippage: values.settings.slippage });
+        // await work.estimate(amountIn);
+        const txn = await execute();
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
-
-        await Promise.all([
-          refetchFarmerSilo(),
-          refetchFarmerBalances(),
-          refetchPools(),
-          refetchSilo(),
-        ]);
+  
+        refetchPools();
+        await claimPlant.refetch(actionsPerformed, {
+          farmerSilo: refetchFarmerSilo,
+          farmerBalances: refetchFarmerBalances,
+        }, [refetchSilo]);
+      
         txToast.success(receipt);
         formActions.resetForm();
       } catch (err) {
@@ -457,10 +458,10 @@ const Deposit: FC<{
       }
     }, [
       middleware, 
+      getWorkflow, 
       whitelistedToken, 
       claimPlant, 
-      sdk.farm, 
-      getWorkflow, 
+      sdk, 
       refetchFarmerSilo, 
       refetchFarmerBalances, 
       refetchPools, 

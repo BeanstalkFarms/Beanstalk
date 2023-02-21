@@ -43,8 +43,7 @@ const SiloActions : FC<{
   // temp solution
   const token = useMemo(() => {
     const match = sdk.tokens.findBySymbol(props.token.symbol);
-    if (match) return match;
-    return undefined;
+    return match;
   }, [props.token.symbol, sdk.tokens]);
 
   return (
@@ -77,9 +76,9 @@ const SiloActions : FC<{
               token={token as ERC20Token}
             />
           ) : null}
-          {tab === 4 ? (
+          {tab === 4 && token ? (
             <Claim
-              token={props.token}
+              token={token as ERC20Token}
               siloBalance={props.siloBalance}
             />
           ) : null}

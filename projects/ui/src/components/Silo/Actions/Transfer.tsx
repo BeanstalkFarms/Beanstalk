@@ -288,22 +288,6 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
           seasons[0],
           amounts[0],
         ));
-        // transferStep = async (_amountInStep: ethers.BigNumber, _context: any) => ({
-        //   name: 'transferDeposit',
-        //   amountOut: _amountInStep || token.amount(0).toBigNumber(),
-        //   prepare: () => ({
-        //     target: sdk.contracts.beanstalk.address,
-        //     callData: sdk.contracts.beanstalk.interface.encodeFunctionData('transferDeposit', [
-        //       account,
-        //       values.to,
-        //       token.address,
-        //       seasons[0],
-        //       amounts[0],
-        //     ])
-        //   }),
-        //   decode: (data: string) => beanstalk.interface.decodeFunctionData('transferDeposit', data),
-        //   decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('transferDeposit', result),
-        // });
       } else {
         transfer.add(new sdk.farm.actions.TransferDeposits(
           account,
@@ -312,22 +296,6 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
           seasons,
           amounts,
         ));
-        // transferStep = async (_amountInStep: ethers.BigNumber, _context: any) => ({
-        //   name: 'transferDeposits',
-        //   amountOut: _amountInStep || token.amount(0).toBigNumber(),
-        //   prepare: () => ({
-        //     target: sdk.contracts.beanstalk.address,
-        //     callData: sdk.contracts.beanstalk.interface.encodeFunctionData('transferDeposits', [
-        //       account,
-        //       values.to,
-        //       token.address,
-        //       seasons,
-        //       amounts,
-        //     ])
-        //   }),
-        //   decode: (data: string) => beanstalk.interface.decodeFunctionData('transferDeposits', data),
-        //   decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('transferDeposits', result),
-        // });
       }
 
       txToast = new TransactionToast({
@@ -335,26 +303,21 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
         success: 'Transfer successful.',
       });
 
-      const work = claimPlant.buildWorkflow(
-        sdk.farm.create(),
+      const { execute, actionsPerformed } = await claimPlant.buildWorkflow(
+        sdk,
         claimPlant.buildActions(values.farmActions.selected),
         claimPlant.buildActions(values.farmActions.additional.selected),
         transfer,
-        token.amount(0)
+        token.amount(0),
+        { slippage: 0.1 }
       );
 
-      await work.estimate(token.amount(0));
-
-      const txn = await work.execute(token.amount(0), { slippage: 0.1 });
-
-      // const txn = await call;
+      const txn = await execute();
       txToast.confirming(txn);
 
       const receipt = await txn.wait();
-      await Promise.all([
-        refetchFarmerSilo(),
-        refetchSilo(),
-      ]);
+      await claimPlant.refetch(actionsPerformed, { farmerSilo: refetchFarmerSilo }, [refetchSilo]);
+  
       txToast.success(receipt);
       formActions.resetForm();
     } catch (err) {
