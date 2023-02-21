@@ -1,11 +1,11 @@
 import BigNumber from 'bignumber.js';
 import { ERC20Token as ERC20TokenNew, NativeToken as NativeTokenNew } from '@beanstalk/sdk';
 import { ERC20Token, NativeToken } from '~/classes/Token';
-import { ClaimPlantAction } from '~/hooks/beanstalk/useClaimAndPlantActions';
 import { QuoteHandlerResult } from '~/hooks/ledger/useQuote';
 import { FarmToMode } from '~/lib/Beanstalk/Farm';
 import { BalanceFrom } from './BalanceFromRow';
 import { QuoteHandlerResultNew } from '~/hooks/ledger/useQuoteWithParams';
+import { ClaimPlantAction } from '~/util/ClaimPlant';
 
 /**
  * 

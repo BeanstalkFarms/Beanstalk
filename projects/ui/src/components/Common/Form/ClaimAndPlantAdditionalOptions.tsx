@@ -5,15 +5,13 @@ import AddIcon from '@mui/icons-material/Add';
 import BigNumber from 'bignumber.js';
 import Row from '../Row';
 import SelectionAccordion from '~/components/Common/Accordion/SelectionAccordion';
-import {
-  ClaimPlantAction,
-  ClaimPlantActionMap,
-} from '~/hooks/beanstalk/useClaimAndPlantActions';
+
 import useFarmerClaimPlantOptions from '~/hooks/farmer/useFarmerClaimAndPlantOptions';
 import ClaimPlantOptionCard from '../Selection/ClaimPlantOptionCard';
 import { ClaimAndPlantFormState } from '.';
 import useToggle from '~/hooks/display/useToggle';
 import useTimedRefresh from '~/hooks/app/useTimedRefresh';
+import { ClaimPlantAction, ClaimPlantActionMap } from '~/util/ClaimPlant';
 
 type ClaimAndPlantGasResult = { [key in ClaimPlantAction]?: BigNumber };
 

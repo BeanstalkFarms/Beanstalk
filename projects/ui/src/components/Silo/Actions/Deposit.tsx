@@ -43,10 +43,9 @@ import { useFetchBeanstalkSilo } from '~/state/beanstalk/silo/updater';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
-// import ClaimableAssets from '../ClaimableAssets';
 import TokenOutputsField from '~/components/Common/Form/TokenOutputsField';
 import useSdk from '~/hooks/sdk';
-import useFarmerClaimAndPlantActions, { ClaimPlantAction, ClaimPlantActionMap } from '~/hooks/beanstalk/useClaimAndPlantActions';
+import useFarmerClaimAndPlantActions from '~/hooks/beanstalk/useClaimAndPlantActions';
 import useGetClaimAppliedBalances from '~/hooks/farmer/useGetClaimAppliedBalances';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
@@ -55,6 +54,7 @@ import { depositSummary } from '~/lib/Beanstalk/Silo/Deposit';
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
 import useFarmerClaimAndPlantOptions from '~/hooks/farmer/useFarmerClaimAndPlantOptions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
+import ClaimPlant, { ClaimPlantActionMap, ClaimPlantAction } from '~/util/ClaimPlant';
 
 // -----------------------------------------------------------------------
 
@@ -66,7 +66,7 @@ type DepositFormValues = FormStateNew &
     };
   };
 
-type DepositQuoteHandlerParams = {
+type DepositQuoteHandler = {
   claimedBeans: BigNumber,
   balanceFrom: BalanceFrom, 
 }
@@ -80,7 +80,7 @@ const DepositForm: FC<
     amountToBdv: (amount: BigNumber) => BigNumber;
     balances: FarmerBalances;
     contract: ethers.Contract;
-    handleQuote: QuoteHandlerWithParams<DepositQuoteHandlerParams>;
+    handleQuote: QuoteHandlerWithParams<DepositQuoteHandler>;
     actionsMap: ClaimPlantActionMap;
   }
 > = ({
@@ -115,7 +115,7 @@ const DepositForm: FC<
     values.balanceFrom
   );
 
-  const quoteProviderParams: DepositQuoteHandlerParams = useMemo(() => {
+  const quoteProviderParams: DepositQuoteHandler = useMemo(() => {
     const claimedBeans = values.farmActions.selected.reduce((prev, curr) => {
       const option = options[curr];
       if (option.claimable && option.claimable.amount) {
@@ -175,7 +175,7 @@ const DepositForm: FC<
           const balance = _balance && balanceType in _balance ? _balance[balanceType] : ZERO_BN;
           const additionalBalance = applicableBalances[tokenState.token.address]?.applied;
           return (
-            <TokenQuoteProviderWithParams<DepositQuoteHandlerParams>
+            <TokenQuoteProviderWithParams<DepositQuoteHandler>
               key={`tokens.${index}`}
               name={`tokens.${index}`}
               tokenOut={whitelistedToken}
@@ -372,12 +372,12 @@ const Deposit: FC<{
 
   /// Handlers
   // This handler does not run when _tokenIn = _tokenOut (direct deposit)
-  const handleQuote = useCallback<QuoteHandlerWithParams<DepositQuoteHandlerParams>>(
-    async (tokenIn, amountIn, tokenOut, { claimedBeans, balanceFrom }
+  const handleQuote = useCallback<QuoteHandlerWithParams<DepositQuoteHandler>>(async (
+    tokenIn, amountIn, tokenOut, { claimedBeans, balanceFrom }
   ) => {
     let totalAmountIn: TokenValue;
-
-    if (sdk.tokens.BEAN.equals(tokenIn)) {    
+    const { BEAN } = sdk.tokens;
+    if (BEAN.equals(tokenIn)) {    
       totalAmountIn = tokenIn.amount(amountIn.plus(claimedBeans).toString());
     } else {
       totalAmountIn = tokenIn.amount(amountIn.toString());
@@ -394,8 +394,11 @@ const Deposit: FC<{
 
     console.debug('[chain] estimate = ', estimate);
 
-    return { amountOut: new BigNumber(estimate.toHuman()) };
-  }, [sdk.tokens.BEAN, getWorkflow]);
+    return { 
+      amountOut: new BigNumber(estimate.toHuman()),
+      workflow: deposit.workflow,
+    };
+  }, [sdk.tokens, getWorkflow]);
 
   const onSubmit = useCallback(async (values: DepositFormValues, formActions: FormikHelpers<DepositFormValues>) => {
     let txToast;
@@ -429,7 +432,7 @@ const Deposit: FC<{
           success: 'Deposit successful.',
         });
 
-        const { execute, actionsPerformed } = await claimPlant.buildWorkflow(
+        const { execute, actionsPerformed } = await ClaimPlant.build(
           sdk,
           claimPlant.buildActions(values.farmActions.selected),
           claimPlant.buildActions(values.farmActions.additional.selected),
@@ -438,17 +441,14 @@ const Deposit: FC<{
           { slippage: values.settings.slippage }
         );
 
-        // await work.estimate(amountIn);
         const txn = await execute();
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
-  
-        refetchPools();
         await claimPlant.refetch(actionsPerformed, {
           farmerSilo: refetchFarmerSilo,
           farmerBalances: refetchFarmerBalances,
-        }, [refetchSilo]);
+        }, [refetchSilo, refetchPools]);
       
         txToast.success(receipt);
         formActions.resetForm();

@@ -4,42 +4,34 @@ import { useFormikContext } from 'formik';
 import BigNumber from 'bignumber.js';
 import { Token, ERC20Token, NativeToken } from '@beanstalk/sdk';
 import TokenInputField, { TokenInputProps } from '~/components/Common/Form/TokenInputField';
-import TokenAdornment, { TokenAdornmentProps } from '~/components/Common/Form/TokenAdornment';
+import TokenAdornment from '~/components/Common/Form/TokenAdornment';
 import { displayFullBN } from '~/util/Tokens';
 import { FormStateNew, FormTokenStateNew } from '.';
 import Row from '~/components/Common/Row';
 
 import useQuoteWithParams, { QuoteHandlerWithParams, QuoteSettingsNew } from '~/hooks/ledger/useQuoteWithParams';
+import { TokenQuoteProviderCustomProps } from './TokenQuoteProvider';
 
 type TokenQuoteProviderWithParamsCustomProps<T> = {
-  /** Field name */
-  name: string;
-  /** The current form state of this token */
-  state: FormTokenStateNew;
-  /** Token which we're quoting to. Required to display a proper `amountOut` below the input. */
-  tokenOut: ERC20Token | NativeToken;
-  /** Handler to show token select */
-  showTokenSelect?: () => void;
-  /** Disable the token selector button inside the input. */
-  disableTokenSelect?: boolean;
-  /** Text to show isnide the clickable TokenAdornment */
-  tokenSelectLabel?: string | JSX.Element;
-  /** */
-  handleQuote: QuoteHandlerWithParams<T>;
-  /** */
-  displayQuote?: false | ((state: BigNumber | undefined, tokenOut: Token) => React.ReactElement | undefined)
-  /** */
-  quoteSettings?: Partial<QuoteSettingsNew>
-  /** */
-  TokenAdornmentProps?: Partial<TokenAdornmentProps>
-  /** */
-  params: T;
-};
+    /** The current form state of this token */
+    state: FormTokenStateNew;
+    /** Token which we're quoting to. Required to display a proper `amountOut` below the input. */
+    tokenOut: ERC20Token | NativeToken;
+    /** */
+    handleQuote: QuoteHandlerWithParams<T>;
+    /** */
+    displayQuote?: false | ((state: BigNumber | undefined, tokenOut: Token) => React.ReactElement | undefined)
+    /** */
+    quoteSettings?: Partial<QuoteSettingsNew>;
+    /**
+     * NOTE: MEMOIZE ME to prevent infinite render loop
+     */
+    params: T;
+} & Omit<TokenQuoteProviderCustomProps, 'state' | 'tokenOut' | 'handleQuote' | 'quoteSettings' | 'displayQuote'>
 
-type TokenQuoteWithParamsProviderProps<T> = (
-  TokenQuoteProviderWithParamsCustomProps<T>
-  & Partial<TokenInputProps>
-);
+type TokenQuoteWithParamsProviderProps<T> = 
+  TokenQuoteProviderWithParamsCustomProps<T> 
+  & Partial<TokenInputProps>;
 
 const DefaultQuoteDisplay = (amountOut: BigNumber | undefined, tokenOut: Token) => (
   amountOut ? (
@@ -48,7 +40,10 @@ const DefaultQuoteDisplay = (amountOut: BigNumber | undefined, tokenOut: Token) 
     </Typography>
   ) : undefined
 );
-
+/**
+ * NOTE: This component is the same as TokenQuoteProvider except it takes in a `params` prop and 
+ * to work with the new sdk types
+ */
 export default function TokenQuoteProviderWithParams<T>({
   /// Field
   name,
@@ -65,6 +60,7 @@ export default function TokenQuoteProviderWithParams<T>({
   quoteSettings,
   /// Parameters,
   params,
+  ///
   /// Adornment
   // TokenAdornmentProps: _TokenAdornmentProps,
   /// Other props
@@ -122,16 +118,10 @@ export default function TokenQuoteProviderWithParams<T>({
         token={state.token}
         onClick={showTokenSelect}
         disabled={isSubmitting || disableTokenSelect}
-        sx={{ 
-          // TEMP:
-          // Before Unpause, grey out the token selector
-          // if `disableTokenSelect` is provided; also
-          // reduce the opacity to make it less obvious.
-          opacity: disableTokenSelect ? 0.3 : 1,
-        }}
         size={props.size}
         buttonLabel={tokenSelectLabel}
         balanceFrom={props.balanceFrom}
+        sx={{ opacity: disableTokenSelect ? 0.3 : 1 }}
       />
     )
   }), [state.token, showTokenSelect, isSubmitting, disableTokenSelect, props.size, props.balanceFrom, tokenSelectLabel]);

@@ -31,11 +31,12 @@ import { ActionType } from '~/util/Actions';
 import TransactionToast from '~/components/Common/TxnToast';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
-import useFarmerClaimAndPlantActions, { ClaimPlantAction,  ClaimPlantActionMap } from '~/hooks/beanstalk/useClaimAndPlantActions';
+import useFarmerClaimAndPlantActions from '~/hooks/beanstalk/useClaimAndPlantActions';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import TxnOutputField, { TxnOutputFieldProps } from '~/components/Common/Form/TxnOutputField';
+import ClaimPlant, { ClaimPlantActionMap, ClaimPlantAction } from '~/util/ClaimPlant';
 
 export type TransferFormValues = FormStateNew & 
   ClaimAndPlantFormState
@@ -303,7 +304,7 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
         success: 'Transfer successful.',
       });
 
-      const { execute, actionsPerformed } = await claimPlant.buildWorkflow(
+      const { execute, actionsPerformed } = await ClaimPlant.build(
         sdk,
         claimPlant.buildActions(values.farmActions.selected),
         claimPlant.buildActions(values.farmActions.additional.selected),

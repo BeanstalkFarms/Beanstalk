@@ -38,9 +38,10 @@ import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew'
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
-import useClaimAndPlantActions, { ClaimPlantAction, ClaimPlantActionMap } from '~/hooks/beanstalk/useClaimAndPlantActions';
+import useClaimAndPlantActions from '~/hooks/beanstalk/useClaimAndPlantActions';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
+import ClaimPlant, { ClaimPlantActionMap, ClaimPlantAction } from '~/util/ClaimPlant';
 
 // -----------------------------------------------------------------------
 
@@ -563,7 +564,7 @@ const Convert : FC<{
         })
       );
 
-      const { execute, actionsPerformed } = await claimPlant.buildWorkflow(
+      const { execute, actionsPerformed } = await ClaimPlant.build(
         sdk,
         claimPlant.buildActions(values.farmActions.selected),
         claimPlant.buildActions(values.farmActions.additional.selected),

@@ -33,10 +33,11 @@ import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
-import useFarmerClaimAndPlantActions, { ClaimPlantAction, ClaimPlantActionMap } from '~/hooks/beanstalk/useClaimAndPlantActions';
+import useFarmerClaimAndPlantActions from '~/hooks/beanstalk/useClaimAndPlantActions';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import TxnOutputField from '~/components/Common/Form/TxnOutputField';
+import ClaimPlant, { ClaimPlantAction, ClaimPlantActionMap } from '~/util/ClaimPlant';
 
 // -----------------------------------------------------------------------
 
@@ -354,7 +355,7 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
         ));
       }
 
-      const { execute, actionsPerformed } = await claimPlant.buildWorkflow(
+      const { execute, actionsPerformed } = await ClaimPlant.build(
         sdk,
         claimPlant.buildActions(values.farmActions.selected),
         claimPlant.buildActions(values.farmActions.additional.selected),

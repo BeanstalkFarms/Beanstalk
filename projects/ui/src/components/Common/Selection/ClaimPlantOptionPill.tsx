@@ -1,6 +1,5 @@
 import React from 'react';
 import { Box, ButtonProps, Tooltip, Typography } from '@mui/material';
-import { ClaimPlantAction } from '~/hooks/beanstalk/useClaimAndPlantActions';
 import { ClaimPlantActionSummary } from '~/hooks/farmer/useFarmerClaimAndPlantOptions';
 import { displayFullBN } from '~/util';
 import Row from '../Row';
@@ -15,6 +14,7 @@ import sproutsIconGreen from '~/img/beanstalk/sprout-icon-green.svg';
 
 import beanIconGreen from '~/img/tokens/bean-logo-circled-wintergreen.svg';
 import beanIconGrey from '~/img/tokens/bean-logo-circled-grey.svg';
+import { ClaimPlantAction } from '~/util/ClaimPlant';
 
 const icons = {
   [ClaimPlantAction.HARVEST]: {

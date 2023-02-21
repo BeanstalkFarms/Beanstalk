@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useFormikContext } from 'formik';
 import SelectionAccordion from '~/components/Common/Accordion/SelectionAccordion';
-import { ClaimPlantAction } from '~/hooks/beanstalk/useClaimAndPlantActions';
+
 import useFarmerClaimPlantOptions from '~/hooks/farmer/useFarmerClaimAndPlantOptions';
 
 import ClaimPlantAccordionPill from '~/components/Common/Selection/ClaimPlantOptionPill';
 import ClaimPlantAccordionCard from '~/components/Common/Selection/ClaimPlantOptionCard';
 import { ClaimAndPlantFormState } from '.';
 import useToggle from '~/hooks/display/useToggle';
+import { ClaimPlantAction } from '~/util/ClaimPlant';
 
 const presets = {
   claim: {

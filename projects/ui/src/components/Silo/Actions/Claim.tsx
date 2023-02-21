@@ -30,7 +30,7 @@ import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import copy from '~/constants/copy';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
-import useClaimAndPlantActions, { ClaimPlantAction, ClaimPlantActionMap } from '~/hooks/beanstalk/useClaimAndPlantActions';
+import useClaimAndPlantActions from '~/hooks/beanstalk/useClaimAndPlantActions';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
@@ -38,6 +38,7 @@ import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 import TxnOutputField from '~/components/Common/Form/TxnOutputField';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
+import ClaimPlant, { ClaimPlantAction, ClaimPlantActionMap } from '~/util/ClaimPlant';
 
 // -----------------------------------------------------------------------
 
@@ -369,7 +370,7 @@ const Claim : FC<{
         claim.add([...values.token.workflow.generators]);
       }
 
-      const { execute, actionsPerformed } = await claimPlant.buildWorkflow(
+      const { execute, actionsPerformed } = await ClaimPlant.build(
         sdk,
         claimPlant.buildActions(values.farmActions.selected),
         claimPlant.buildActions(values.farmActions.additional.selected),

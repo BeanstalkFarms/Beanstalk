@@ -2,7 +2,6 @@ import React from 'react';
 import { Typography, Stack, Tooltip } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import BigNumber from 'bignumber.js';
-import { ClaimPlantAction } from '~/hooks/beanstalk/useClaimAndPlantActions';
 import { ClaimPlantActionSummary } from '~/hooks/farmer/useFarmerClaimAndPlantOptions';
 import { displayFullBN } from '~/util';
 import Row from '../Row';
@@ -19,6 +18,7 @@ import seedIconGrey from '~/img/beanstalk/seed-icon-grey.svg';
 import stalkIconGrey from '~/img/beanstalk/stalk-icon-grey.svg';
 import LockIcon from '~/img/misc/lock-icon.svg';
 import GasTag from '../GasTag';
+import { ClaimPlantAction } from '~/util/ClaimPlant';
 
 const icons = {
   SEED: seedIconGrey,
