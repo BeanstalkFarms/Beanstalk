@@ -127,6 +127,7 @@ export function updateWellVolumes(
   );
 
   well.reservesUSD = getCalculatedReserveUSDValues(well.tokens, well.reserves);
+  well.totalLiquidityUSD = getBigDecimalArrayTotal(well.reservesUSD);
   well.lastUpdateTimestamp = timestamp;
   well.lastUpdateBlockNumber = blockNumber;
 
