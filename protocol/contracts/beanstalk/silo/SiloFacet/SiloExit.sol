@@ -168,34 +168,8 @@ contract SiloExit is ReentrancyGuard {
         view
         returns (uint256 beans)
     {
-        
-        // if the function is called within the morning, then we have to manually calculate the deltaRoots and newEarnedRoots
-        // due to the fact that in the typical {_balanceOfEarnedBeans} function, the user and totalRoots are updated.abi
-        if(block.number - s.season.sunriseBlock <= EARNED_BEAN_VESTING_BLOCKS){
-            (uint256 deltaRoots, uint256 newEarnedRoots) = _calcRoots(account);
-            beans = _balanceOfEarnedBeansVested(account, s.a[account].s.stalk, deltaRoots, newEarnedRoots);
-        } else {
-            beans = _balanceOfEarnedBeans(account, s.a[account].s.stalk);
-        }
+        beans = _balanceOfEarnedBeans(account, s.a[account].s.stalk);
     }
-    
-    function _calcRoots(address account) private view returns (uint256 delta_roots, uint256 newEarnedRoots) {
-        uint256 _stalk = balanceOfGrownStalk(account);
-        if(_stalk == 0) {
-            // user already mow'd, no need to recalculate
-            delta_roots = s.a[account].deltaRoots;
-            newEarnedRoots = s.newEarnedRoots;
-        } else {
-            delta_roots = s.s.roots.add(s.newEarnedRoots).mulDiv(
-                _stalk, 
-                s.s.stalk - s.newEarnedStalk, 
-                LibPRBMath.Rounding.Up
-            );
-            newEarnedRoots = uint256(s.newEarnedRoots).add(delta_roots);
-        }
-    }
-           
-        
 
     /**
      * @dev Internal function to compute `account` balance of Earned Beans.
@@ -241,37 +215,6 @@ contract SiloExit is ReentrancyGuard {
 
         return beans;
     }
-
-    function _balanceOfEarnedBeansVested(
-        address account, 
-        uint256 accountStalk, 
-        uint256 deltaRoots, 
-        uint256 newEarnedRoots
-        ) private view returns (uint256 beans) {
-        if (s.s.roots == 0) return 0;
-
-        // Calculate the % season remaining in the season, where 100% is 1e18.
-        uint256 stalk;
-        uint256 grownStalk = balanceOfGrownStalk(account);
-        stalk = s.s.stalk.add(grownStalk).sub(s.newEarnedStalk).mulDiv(
-            s.a[account].roots.add(deltaRoots),
-            s.s.roots.add(newEarnedRoots),
-            LibPRBMath.Rounding.Up
-        ); 
-        // Beanstalk rounds down when minting Roots. Thus, it is possible that
-        // balanceOfRoots / totalRoots * totalStalk < s.a[account].s.stalk.
-        // As `account` Earned Balance balance should never be negative, 
-        // Beanstalk returns 0 instead.
-        if (stalk <= accountStalk) return 0;
-
-        // Calculate Earned Stalk and convert to Earned Beans.
-        beans = (stalk - accountStalk.add(grownStalk)).div(C.getStalkPerBean()); // Note: SafeMath is redundant here.
-        if (beans > s.earnedBeans) return s.earnedBeans;
-
-        return beans;
-
-    }
-
 
     /**
      * @notice Return the `account` balance of Earned Stalk, the Stalk
