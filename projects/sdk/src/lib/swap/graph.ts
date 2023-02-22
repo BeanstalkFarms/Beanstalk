@@ -117,7 +117,6 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
   // WETH <> BEAN
   graph.setEdge("WETH", "BEAN", {
     build: (account: string, from: FarmFromMode, to: FarmToMode) => {
-      console.log();
       const WELL_ADDRESS = sdk.addresses.BEANWETH_WELL.get(sdk.chainId);
       const result = [];
 
