@@ -3,7 +3,7 @@ import { BeanstalkSDK, TestUtils } from "@beanstalk/sdk";
 import { signer, account, sdk as bsdk } from "../setup";
 import { TokenValue } from "@beanstalk/sdk-core";
 
-const WELL_ADDRESS = "0xd94a92749c0bb33c4e4ba7980c6dad0e3effb720";
+const WELL_ADDRESS = process.env.WELL_ADDRESS!;
 
 main().catch((e) => {
   console.log("FAILED:");
@@ -21,7 +21,7 @@ async function main() {
   const wethAmount = WETH.amount(3);
 
   // get Well object
-  const well = sdk.getWell(WELL_ADDRESS);
+  const well = await sdk.getWell(WELL_ADDRESS);
 
   // give user tokens and set allowances
   await forkUtils.setBalance(BEAN.address, account, 10000);

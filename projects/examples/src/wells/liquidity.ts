@@ -3,7 +3,7 @@ import { BeanstalkSDK, TestUtils } from "@beanstalk/sdk";
 import { signer, provider, account, sdk as bsdk } from "../setup";
 import { TokenValue } from "@beanstalk/sdk-core";
 
-const WELL_ADDRESS = "0xd94a92749c0bb33c4e4ba7980c6dad0e3effb720";
+const WELL_ADDRESS = process.env.WELL_ADDRESS!;
 
 main().catch((e) => {
   console.log("FAILED:");
@@ -17,12 +17,11 @@ async function main() {
   const BEAN = sdk.tokens.BEAN;
   const WETH = sdk.tokens.WETH;
 
-  const beanAmount = BEAN.amount(10000);
   const wethAmount = WETH.amount(3);
+  const beanAmount = BEAN.amount(3 * 1000);
 
   // get Well object
-  const well = sdk.getWell(WELL_ADDRESS);
-  const LPTOKEN = await well.getLPToken();
+  const well = await sdk.getWell(WELL_ADDRESS);
 
   // give user tokens and set allowances
   await forkUtils.setBalance(BEAN.address, account, 10000);
@@ -38,12 +37,12 @@ async function main() {
   await tx.wait();
 
   // Get LP Balance
-  const lpbal = await (await well.getLPToken()).getBalance(account);
-  // const lpbal = LPTOKEN.amount(100)
-  console.log("\nLP Balance: ", lpbal.toHuman());
+  // const lpbal = await (await well.getLPToken()).getBalance(account);
+  // // const lpbal = LPTOKEN.amount(100)
+  // console.log("\nLP Balance: ", lpbal.toHuman());
 
   // Get Reserves
-  const reserves = await well.getReserves();
+  const reserves = well.reserves
   console.log('Reserves: ', reserves);
 
   // // RemoveLiquidityOne - BEAN
@@ -82,7 +81,7 @@ async function main() {
 
   // // RemoveLiquidity
   // console.log('\nRemoveLiquidity...');
-  // const bal = await (await well.getLPToken()).getBalance(account);
+  // const bal = await well.lpToken!.getBalance(account);
   // const quoteRm = await well.removeLiquidityQuote(bal);
   // console.log("Remove Quote", quoteRm.map((t) => t.toHuman()).join(", "));
   // const tx2 = await well.removeLiquidity(bal, quoteRm, account);
