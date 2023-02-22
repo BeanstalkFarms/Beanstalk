@@ -86,7 +86,6 @@ export function updateWellVolumes(
 ): void {
   let well = loadWell(wellAddress);
   let swapToken = loadToken(fromToken);
-  let outToken = loadToken(toToken);
 
   let fromTokenIndex = well.tokens.indexOf(fromToken);
   let toTokenIndex = well.tokens.indexOf(toToken);
@@ -110,24 +109,6 @@ export function updateWellVolumes(
   well.cumulativeVolumeReservesUSD = volumeReservesUSD;
   well.reserves = reserves;
 
-  // Update USD Values. Assumes 2 token wells currently
-  updateTokenUSD(
-    fromToken,
-    blockNumber,
-    fromToken == BEAN_ERC20
-      ? BigDecimal.fromString("1")
-      : toDecimal(reserves[toTokenIndex], outToken.decimals).div(toDecimal(reserves[fromTokenIndex], swapToken.decimals))
-  );
-  updateTokenUSD(
-    toToken,
-    blockNumber,
-    toToken == BEAN_ERC20
-      ? BigDecimal.fromString("1")
-      : toDecimal(reserves[fromTokenIndex], swapToken.decimals).div(toDecimal(reserves[toTokenIndex], outToken.decimals))
-  );
-
-  well.reservesUSD = getCalculatedReserveUSDValues(well.tokens, well.reserves);
-  well.totalLiquidityUSD = getBigDecimalArrayTotal(well.reservesUSD);
   well.lastUpdateTimestamp = timestamp;
   well.lastUpdateBlockNumber = blockNumber;
 
@@ -142,28 +123,9 @@ export function updateWellTokenBalances(wellAddress: Address, inputTokenAmounts:
     balances[i] = balances[i].plus(inputTokenAmounts[i]);
   }
 
-  let token0 = Address.fromBytes(well.tokens[0]);
-  let token1 = Address.fromBytes(well.tokens[1]);
-
-  // Update USD Values. Assumes 2 token wells currently
-  updateTokenUSD(
-    token0,
-    blockNumber,
-    token0 == BEAN_ERC20
-      ? BigDecimal.fromString("1")
-      : toDecimal(balances[1], getTokenDecimals(token1)).div(toDecimal(balances[0], getTokenDecimals(token0)))
-  );
-  updateTokenUSD(
-    token1,
-    blockNumber,
-    token1 == BEAN_ERC20
-      ? BigDecimal.fromString("1")
-      : toDecimal(balances[0], getTokenDecimals(token0)).div(toDecimal(balances[1], getTokenDecimals(token1)))
-  );
-
   well.reserves = balances;
-  well.reservesUSD = getCalculatedReserveUSDValues(well.tokens, well.reserves);
-  well.totalLiquidityUSD = getBigDecimalArrayTotal(well.reservesUSD);
+  well.lastUpdateTimestamp = timestamp;
+  well.lastUpdateBlockNumber = blockNumber;
   well.save();
 }
 
@@ -184,8 +146,24 @@ export function updateWellLiquidityTokenBalance(wellAddress: Address, deltaAmoun
   well.save();
 }
 
-export function updateWellBalancesUSD(wellAddress: Address): void {
+export function updateWellTokenUSDPrices(wellAddress: Address, blockNumber: BigInt): void {
   let well = loadWell(wellAddress);
+
+  // Update the BEAN price first as it is the reference for other USD calculations
+  updateTokenUSD(BEAN_ERC20, blockNumber, BigDecimal.fromString("1"));
+  let beanIndex = well.tokens.indexOf(BEAN_ERC20);
+  let currentBeans = toDecimal(well.reserves[beanIndex]);
+
+  for (let i = 0; i < well.tokens.length; i++) {
+    if (i == beanIndex) continue;
+    let tokenAddress = Address.fromBytes(well.tokens[i]);
+
+    updateTokenUSD(tokenAddress, blockNumber, currentBeans.div(toDecimal(well.reserves[i], getTokenDecimals(tokenAddress))));
+  }
+
+  well.reservesUSD = getCalculatedReserveUSDValues(well.tokens, well.reserves);
+  well.totalLiquidityUSD = getBigDecimalArrayTotal(well.reservesUSD);
+  well.save();
 }
 
 export function incrementWellSwap(wellAddress: Address): void {
