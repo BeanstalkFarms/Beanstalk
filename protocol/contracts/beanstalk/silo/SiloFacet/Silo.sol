@@ -128,7 +128,7 @@ contract Silo is SiloExit {
         console.log('__mow, current season:', s.season.current);
 
         //require that user account seeds be zero
-        require(s.a[account].s.seeds == 0, 'silo migration needed');
+        require(s.a[account].s.seeds == 0, 'silo migration needed'); //will require storage cold read... is there a better way?
 
         // If this `account` has no BDV, skip to save gas. Still need to update lastCumulativeGrownStalkPerBdv (happen on initial deposit, since mow is called before any deposit)
         if (s.a[account].mowStatuses[token].bdv == 0) {
@@ -195,6 +195,9 @@ contract Silo is SiloExit {
             s.a[account].mowStatuses[token].bdv = uint128(totalBdv);
             
         }
+
+        console.log('seedsTotalBasedOnInputDeposits: ', seedsTotalBasedOnInputDeposits);
+        console.log('s.a[account].s.seeds: ', s.a[account].s.seeds);
         
         //verify user account seeds total equals seedsTotalBasedOnInputDeposits
         require(s.a[account].s.seeds == seedsTotalBasedOnInputDeposits, "seeds don't match");

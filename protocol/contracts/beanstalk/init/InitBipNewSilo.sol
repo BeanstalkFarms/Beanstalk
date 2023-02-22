@@ -31,30 +31,32 @@ contract InitBipNewSilo {
         
         //update all silo info for current Silo-able assets
 
+        uint32 currentSeason = s.season.current;
+
         s.ss[C.beanAddress()].stalkPerBdvPerSeason = 2;
         s.ss[C.beanAddress()].stalkPerBdv = 1;
-        s.ss[C.beanAddress()].lastUpdateSeason = s.season.current;
+        s.ss[C.beanAddress()].lastUpdateSeason = currentSeason;
         s.ss[C.beanAddress()].lastCumulativeGrownStalkPerBdv = 0;
         s.ss[C.beanAddress()].legacySeedsPerBdv = 2;
 
 
         s.ss[C.curveMetapoolAddress()].stalkPerBdvPerSeason = 4;
         s.ss[C.curveMetapoolAddress()].stalkPerBdv = 1;
-        s.ss[C.curveMetapoolAddress()].lastUpdateSeason = s.season.current;
+        s.ss[C.curveMetapoolAddress()].lastUpdateSeason = currentSeason;
         s.ss[C.curveMetapoolAddress()].lastCumulativeGrownStalkPerBdv = 0;
         s.ss[C.curveMetapoolAddress()].legacySeedsPerBdv = 4;
 
 
         s.ss[C.unripeBeanAddress()].stalkPerBdvPerSeason = 2;
         s.ss[C.unripeBeanAddress()].stalkPerBdv = 1;
-        s.ss[C.unripeBeanAddress()].lastUpdateSeason = s.season.current;
+        s.ss[C.unripeBeanAddress()].lastUpdateSeason = currentSeason;
         s.ss[C.unripeBeanAddress()].lastCumulativeGrownStalkPerBdv = 0;
         s.ss[C.unripeBeanAddress()].legacySeedsPerBdv = 2;
 
 
         s.ss[address(C.unripeLP())].stalkPerBdvPerSeason = 2;
         s.ss[address(C.unripeLP())].stalkPerBdv = 1;
-        s.ss[address(C.unripeLP())].lastUpdateSeason = s.season.current;
+        s.ss[address(C.unripeLP())].lastUpdateSeason = currentSeason;
         s.ss[address(C.unripeLP())].lastCumulativeGrownStalkPerBdv = 0;
         s.ss[address(C.unripeLP())].legacySeedsPerBdv = 4;
 

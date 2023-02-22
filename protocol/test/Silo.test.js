@@ -308,7 +308,7 @@ describe('Silo', function () {
   });
 });
 
-describe.only('Silo V3: Grown Stalk Per Bdv deployment', function () {
+describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
   before(async function () {
 
     try {
@@ -328,7 +328,7 @@ describe.only('Silo V3: Grown Stalk Per Bdv deployment', function () {
       console.log(error);
       return
     }
-    console.log('here 1');
+
     const signer = await impersonateBeanstalkOwner()
     await mintEth(signer.address);
     await upgradeWithNewFacets({
@@ -341,21 +341,21 @@ describe.only('Silo V3: Grown Stalk Per Bdv deployment', function () {
       verbose: false,
       account: signer
     });
-    console.log('here 2');
+
     const latestBlock = await hre.ethers.provider.getBlock("latest");
     console.log('latestBlock: ', latestBlock.number);
 
     [owner,user,user2] = await ethers.getSigners();
     userAddress = user.address;
     user2Address = user2.address;
-    console.log('here 3');
+
     // const contracts = await deploy("Test", false);
     // ownerAddress = contracts.account;
     this.diamond = BEANSTALK;
-    console.log('here 3a');
+
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond);
 
-    console.log('here 4');
+
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond);
     console.log('this.silo: ', this.silo.address);
     this.bean = await ethers.getContractAt('Bean', BEAN);
@@ -365,6 +365,11 @@ describe.only('Silo V3: Grown Stalk Per Bdv deployment', function () {
 
 
     //large bean depositor is 0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4
+
+    this.depositorAddress = '0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4';
+
+    const depositorSigner = await impersonateSigner(this.depositorAddress);
+    await this.silo.connect(depositorSigner);
 
   });
 
@@ -376,8 +381,8 @@ describe.only('Silo V3: Grown Stalk Per Bdv deployment', function () {
     await revertToSnapshot(snapshotId);
   });
 
-  describe('Update Whitelist info for Silo Assets', function () {
-    it('properly updates the silo info for bean', async function () {
+  describe('properly updates the silo info', function () {
+    it('for bean', async function () {
       const settings = await this.silo.tokenSettings(this.bean.address);
 
       expect(settings['stalkPerBdvPerSeason']).to.eq(2);
@@ -387,7 +392,7 @@ describe.only('Silo V3: Grown Stalk Per Bdv deployment', function () {
       expect(settings['legacySeedsPerBdv']).to.eq(2);
     });
     
-    it('properly updates the silo info for curve metapool', async function () {
+    it('for curve metapool', async function () {
       const settings = await this.silo.tokenSettings(this.beanMetapool.address);
 
       expect(settings['stalkPerBdvPerSeason']).to.eq(4);
@@ -397,7 +402,7 @@ describe.only('Silo V3: Grown Stalk Per Bdv deployment', function () {
       expect(settings['legacySeedsPerBdv']).to.eq(4);
     });
 
-    it('properly updates the silo info for unripe bean', async function () {
+    it('for unripe bean', async function () {
       const settings = await this.silo.tokenSettings(this.unripeBean.address);
 
       expect(settings['stalkPerBdvPerSeason']).to.eq(2);
@@ -407,7 +412,7 @@ describe.only('Silo V3: Grown Stalk Per Bdv deployment', function () {
       expect(settings['legacySeedsPerBdv']).to.eq(2);
     });
 
-    it('properly updates the silo info for unripe LP', async function () {
+    it('for unripe LP', async function () {
       const settings = await this.silo.tokenSettings(this.unripeLP.address);
 
       expect(settings['stalkPerBdvPerSeason']).to.eq(2);
@@ -417,4 +422,60 @@ describe.only('Silo V3: Grown Stalk Per Bdv deployment', function () {
       expect(settings['legacySeedsPerBdv']).to.eq(4); //keep 4 here because it used to be 4, needed for seasons deposit calculations
     });
   });
+
+  describe('cumulative grown stalk per bdv values for all tokens zero', function () {
+    it('for bean', async function () {
+      expect(await this.silo.cumulativeGrownStalkPerBdv(this.bean.address)).to.eq(0);
+    });
+    it('for curve metapool', async function () {
+      expect(await this.silo.cumulativeGrownStalkPerBdv(this.beanMetapool.address)).to.eq(0);
+    });
+    it('for unripe bean', async function () {
+      expect(await this.silo.cumulativeGrownStalkPerBdv(this.unripeBean.address)).to.eq(0);
+    });
+    it('for unripe LP', async function () {
+      expect(await this.silo.cumulativeGrownStalkPerBdv(this.unripeLP.address)).to.eq(0);
+    });
+    
+  });
+
+  //get deposits for a sample big depositor, verify they can migrate their deposits correctly
+  describe.only('properly migrates deposits', function () {
+    it('for a sample depositor', async function () {
+
+      //get deposit data using a query like this: https://graph.node.bean.money/subgraphs/name/beanstalk/graphql?query=%7B%0A++silos%28orderBy%3A+stalk%2C+orderDirection%3A+desc%2C+first%3A+2%29+%7B%0A++++farmer+%7B%0A++++++id%0A++++++plots+%7B%0A++++++++season%0A++++++++source%0A++++++%7D%0A++++++silo+%7B%0A++++++++id%0A++++++%7D%0A++++++deposits+%7B%0A++++++++season%0A++++++++token%0A++++++%7D%0A++++%7D%0A++++stalk%0A++%7D%0A%7D
+
+      const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449', '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d', '0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab'];
+
+      const seasons = [
+        [
+          1964, 2281, 3615, 4641, 4673, 4820, 5359, 5869, 5988, 5991, 6031,
+          6032, 6035, 6074,
+        ],
+        [2773, 2917, 3019, 4641, 4673, 4820, 5869],
+        [6389, 7563],
+      ];
+
+      
+
+      //need an array of all the tokens that have been deposited and their corresponding seasons
+      await this.silo.mowAndMigrate(this.depositorAddress, tokens, seasons);
+
+      //now mow and it shouldn't revert
+      await this.silo.mow(this.depositorAddress, this.beanMetapool.address)
+
+
+    });
+  });
+
+  describe('reverts if you try to mow before migrating', function () {
+    it('for a sample depositor', async function () {
+      
+      //need an array of all the tokens that have been deposited and their corresponding seasons
+      await expect(this.silo.mow(this.depositorAddress, this.beanMetapool.address)).to.be.revertedWith('silo migration needed');
+
+    });
+  });
+
+
 });

@@ -125,7 +125,7 @@ contract Account {
         mapping(address => mapping(IERC20 => uint256)) tokenAllowances; // Token allowances
         uint256 depositPermitNonces; // A Farmer's current deposit permit nonce
         uint256 tokenPermitNonces; // A Farmer's current token permit nonce
-        mapping(address => mapping(int128 => Deposit)) deposits; //SiloV3 deposits stored as a map from Cumulative Grown Stalk
+        mapping(address => mapping(int128 => Deposit)) deposits; // SiloV3 Deposits stored as a map from Token address to CulmativeGrownStalk to Deposit
         mapping(address => MowStatus) mowStatuses; //Store a MowStatus for each Silo-able token
     }
 }
@@ -192,7 +192,7 @@ contract Storage {
     // Silo stores global level Silo balances.
     struct Silo {
         uint256 stalk; // The total amount of active Stalk (including Earned Stalk, excluding Grown Stalk).
-        uint256 seeds; // The total amount of active Seeds (excluding Earned Seeds). No longer used.
+        uint256 deprecated_seeds; // The total amount of active Seeds (excluding Earned Seeds). No longer used.
         uint256 roots; // Total amount of Roots.
     }
 
@@ -276,7 +276,7 @@ contract Storage {
          */
         bytes4 selector;
         /*
-         * @dev The Stalk Per BDV Per Season represents how much Stalk one BDV of the underlaying deposited token grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored as 1e10, so 1 legacy
+         * @dev The Stalk Per BDV Per Season represents how much Stalk one BDV of the underlying deposited token grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored as 1e10, so 1 legacy
          seed would be 1e6 * 1e10.
          */
         uint32 stalkPerBdvPerSeason;
@@ -296,7 +296,7 @@ contract Storage {
         /*
          * @dev This is the old seedsPerBdv value (previously 2 for Bean and 4 for LP tokens)
          */
-		uint32 legacySeedsPerBdv;
+		uint32 legacySeedsPerBdv; //TODOSEEDS move to constants to save gas
     }
 
     // UnripeSettings stores the settings for an Unripe Token in Beanstalk.
