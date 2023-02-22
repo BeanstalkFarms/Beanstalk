@@ -212,7 +212,7 @@ library LibLegacyTokenSilo {
         console.log('isDepositSeason logging grownStalkPerBdv:');
         console.logInt(grownStalkPerBdv);
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 seedsPerBdv = uint256(s.ss[address(token)].legacySeedsPerBdv);
+        uint256 seedsPerBdv = C.getSeedsPerToken(address(token));
         console.log('seedsPerBdv: ', seedsPerBdv);
         return
             grownStalkPerBdv <= 0 && //old deposits in seasons will have a negative grown stalk per bdv
@@ -225,7 +225,7 @@ library LibLegacyTokenSilo {
         returns (int128 grownStalkPerBdv)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 seedsPerBdv = uint256(s.ss[address(token)].legacySeedsPerBdv);
+        uint256 seedsPerBdv = C.getSeedsPerToken(address(token));
 
         //need current cumulativeGrownStalkPerBdv so we know what to subtract from?
         //int128 cumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(token);
@@ -258,7 +258,7 @@ library LibLegacyTokenSilo {
         console.log('grownStalkPerBdvToSeason logging grown stalk per bdv');
         console.logInt(grownStalkPerBdv);
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 seedsPerBdv = uint256(s.ss[address(token)].legacySeedsPerBdv);
+        uint256 seedsPerBdv = C.getSeedsPerToken(address(token));
 
         // uint32 lastUpdateSeasonStored = s.ss[address(token)].lastUpdateSeason;
         // console.log('grownStalkPerBdvToSeason lastUpdateSeasonStored: ', lastUpdateSeasonStored);

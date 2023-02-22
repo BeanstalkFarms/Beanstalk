@@ -94,19 +94,15 @@ library LibWhitelist {
         address token,
         bytes4 selector,
         uint32 stalkIssuedPerBdv,
-        uint32 stalkEarnedPerSeason,
-        uint32 seeds
+        uint32 stalkEarnedPerSeason
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         s.ss[token].selector = selector;
         s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
-        s.ss[token].legacySeedsPerBdv = seeds;
 
         s.ss[token].lastUpdateSeason = s.season.current;
-
-        console.log('seeds: ', seeds, ' for ', token);
 
         emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
     }

@@ -37,28 +37,24 @@ contract InitBipNewSilo {
         s.ss[C.beanAddress()].stalkIssuedPerBdv = 1;
         s.ss[C.beanAddress()].lastUpdateSeason = currentSeason;
         s.ss[C.beanAddress()].lastCumulativeGrownStalkPerBdv = 0;
-        s.ss[C.beanAddress()].legacySeedsPerBdv = 2;
 
 
         s.ss[C.curveMetapoolAddress()].stalkEarnedPerSeason = 4;
         s.ss[C.curveMetapoolAddress()].stalkIssuedPerBdv = 1;
         s.ss[C.curveMetapoolAddress()].lastUpdateSeason = currentSeason;
         s.ss[C.curveMetapoolAddress()].lastCumulativeGrownStalkPerBdv = 0;
-        s.ss[C.curveMetapoolAddress()].legacySeedsPerBdv = 4;
 
 
         s.ss[C.unripeBeanAddress()].stalkEarnedPerSeason = 2;
         s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv = 1;
         s.ss[C.unripeBeanAddress()].lastUpdateSeason = currentSeason;
         s.ss[C.unripeBeanAddress()].lastCumulativeGrownStalkPerBdv = 0;
-        s.ss[C.unripeBeanAddress()].legacySeedsPerBdv = 2;
 
 
         s.ss[address(C.unripeLP())].stalkEarnedPerSeason = 2;
         s.ss[address(C.unripeLP())].stalkIssuedPerBdv = 1;
         s.ss[address(C.unripeLP())].lastUpdateSeason = currentSeason;
         s.ss[address(C.unripeLP())].lastCumulativeGrownStalkPerBdv = 0;
-        s.ss[address(C.unripeLP())].legacySeedsPerBdv = 4;
 
         //emit event for unripe LP from 4 to 2 grown stalk per bdv per season
         emit UpdatedStalkPerBdvPerSeason(address(C.unripeLP()), 2, s.season.current);

@@ -145,7 +145,9 @@ contract Silo is SiloExit {
         // per the zero withdraw update, if a user plants within the morning, 
         // addtional roots will need to be issued, to properly calculate the earned beans. 
         // thus, a different mint stalk function is used to differ between deposits.
-        LibSilo.mintGrownStalkAndGrownRoots(account, balanceOfGrownStalk(account));
+        LibSilo.mintGrownStalkAndGrownRoots(account, balanceOfGrownStalk(account, token));
+
+
         s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
     }
 
@@ -174,7 +176,7 @@ contract Silo is SiloExit {
             address token = tokens[i];
             uint32[] memory seasonDepositsForToken = seasons[i];
             //get how many seeds there should be per bdv
-            uint32 seedPerBdv = s.ss[address(token)].legacySeedsPerBdv;
+            uint32 seedPerBdv = C.getSeedsPerToken(address(token));
             uint256 totalBdv = 0;
 
             for (uint256 j = 0; j < seasonDepositsForToken.length; j++) {
@@ -206,16 +208,7 @@ contract Silo is SiloExit {
 
         //and wipe out old seed balances (all your seeds are belong to grownStalkPerBdv)
         s.a[account].s.seeds = 0;
-    function __mow(address account) private {
-        // If this `account` has no Seeds, skip to save gas.
-        if (s.a[account].s.seeds == 0) return;
-
-        // per the zero withdraw update, if a user plants within the morning, 
-        // addtional roots will need to be issued, to properly calculate the earned beans. 
-        // thus, a different mint stalk function is used to differ between deposits.
-        LibSilo.mintGrownStalkAndGrownRoots(account, balanceOfGrownStalk(account));
     }
-
 
     //////////////////////// INTERNAL: PLANT ////////////////////////
 

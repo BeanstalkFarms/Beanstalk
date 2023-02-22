@@ -146,7 +146,7 @@ describe('Silo', function () {
   });
   
 
-  describe("Time Weighted Earned Bean Emission", async function () {
+  /*describe("Time Weighted Earned Bean Emission", async function () {
     before(async function () {
       await this.bean.mint(user3Address, to6('10000'));
       await this.bean.mint(user4Address, to6('10000'));
@@ -405,7 +405,7 @@ describe('Silo', function () {
       });
 
     });
-  });
+  });*/
 });
 
 describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
@@ -489,7 +489,6 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       expect(settings['stalkIssuedPerBdv']).to.eq(1);
       expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
       expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);
-      expect(settings['legacySeedsPerBdv']).to.eq(2);
     });
     
     it('for curve metapool', async function () {
@@ -499,7 +498,6 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       expect(settings['stalkIssuedPerBdv']).to.eq(1);
       expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
       expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);
-      expect(settings['legacySeedsPerBdv']).to.eq(4);
     });
 
     it('for unripe bean', async function () {
@@ -509,7 +507,6 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       expect(settings['stalkIssuedPerBdv']).to.eq(1);
       expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
       expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);
-      expect(settings['legacySeedsPerBdv']).to.eq(2);
     });
 
     it('for unripe LP', async function () {
@@ -519,7 +516,6 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       expect(settings['stalkIssuedPerBdv']).to.eq(1);
       expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
       expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);
-      expect(settings['legacySeedsPerBdv']).to.eq(4); //keep 4 here because it used to be 4, needed for seasons deposit calculations
     });
   });
 

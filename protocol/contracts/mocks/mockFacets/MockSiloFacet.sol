@@ -24,8 +24,8 @@ contract MockSiloFacet is SiloFacet {
     using SafeMath for uint256;
     using SafeMath for uint128;
 
-    function mockWhitelistToken(address token, bytes4 selector, uint32 stalk, uint32 stalkEarnedPerSeason, uint32 legacySeedsPerBdv) external {
-       LibWhitelist.whitelistTokenLegacy(token, selector, stalk, stalkEarnedPerSeason, legacySeedsPerBdv);
+    function mockWhitelistToken(address token, bytes4 selector, uint32 stalk, uint32 stalkEarnedPerSeason) external {
+       LibWhitelist.whitelistTokenLegacy(token, selector, stalk, stalkEarnedPerSeason);
     }
 
     function mockBDV(uint256 amount) external pure returns (uint256) {
@@ -47,7 +47,7 @@ contract MockSiloFacet is SiloFacet {
         uint256 unripeLP = getUnripeForAmount(t, amount);
         LibTokenSilo.incrementTotalDeposited(C.unripeLPAddress(), unripeLP);
         bdv = bdv.mul(C.initialRecap()).div(1e18);
-        uint256 seeds = bdv.mul(s.ss[C.unripeLPAddress()].legacySeedsPerBdv);
+        uint256 seeds = bdv.mul(C.seedsUnripeLP());
         uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalkIssuedPerBdv).add(LibSilo.stalkRewardLegacy(seeds, _season() - _s));
         LibSilo.mintStalk(msg.sender, stalk);
         uint256 newBdv = s.a[msg.sender].mowStatuses[C.unripeLPAddress()].bdv.add(amount);
@@ -61,7 +61,7 @@ contract MockSiloFacet is SiloFacet {
         LibTokenSilo.incrementTotalDeposited(C.unripeBeanAddress(), amount);
         amount = amount.mul(C.initialRecap()).div(1e18);
         console.log('mockUnripeBeanDeposit amount: ', amount);
-        uint256 seeds = amount.mul(s.ss[C.unripeBeanAddress()].legacySeedsPerBdv);
+        uint256 seeds = amount.mul(C.seedsUnripeBean());
         console.log('mockUnripeBeanDeposit _season(): ', _season());
         console.log('mockUnripeBeanDeposit _s: ', _s);
         console.log('s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv: ', s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv);

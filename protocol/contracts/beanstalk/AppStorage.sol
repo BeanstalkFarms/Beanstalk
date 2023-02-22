@@ -294,10 +294,6 @@ contract Storage {
          * @dev The cumulative amount of grown stalk per BDV for this Silo depositable token.
          */
 		int128 lastCumulativeGrownStalkPerBdv;
-        /*
-         * @dev This is the old seedsPerBdv value (previously 2 for Bean and 4 for LP tokens)
-         */
-		uint32 legacySeedsPerBdv; //TODOSEEDS move to constants to save gas
     }
 
     // UnripeSettings stores the settings for an Unripe Token in Beanstalk.
