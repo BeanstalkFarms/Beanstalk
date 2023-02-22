@@ -11,7 +11,7 @@ dataSources:
       startBlock: 16650000
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.6
+      apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
         - Aquifer
@@ -32,7 +32,7 @@ templates:
       abi: Well
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.6
+      apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
         - Well
