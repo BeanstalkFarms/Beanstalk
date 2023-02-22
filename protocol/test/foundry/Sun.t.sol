@@ -1,28 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.7.6;
+pragma experimental ABIEncoderV2;
 
-import "forge-std/Test.sol";
-import { console } from "forge-std/console.sol";
 
 import { Sun } from "~/beanstalk/sun/SeasonFacet/Sun.sol";
-import { MockSeasonFacet } from "~/mocks/mockFacets/MockSeasonFacet.sol";
-import { MockSiloFacet } from "~/mocks/mockFacets/MockSiloFacet.sol";
-import { MockFieldFacet } from "~/mocks/mockFacets/MockFieldFacet.sol";
 
 import { Utils } from "./utils/Utils.sol";
-import { InitDiamondDeployer } from "./utils/InitDiamondDeployer.sol";
+import "./utils/TestHelper.sol";
 
 import "~/beanstalk/AppStorage.sol";
 import "~/libraries/Decimal.sol";
 import "~/libraries/LibSafeMath32.sol";
 import "~/C.sol";
 
-contract SunTest is Sun, Test, InitDiamondDeployer {
+contract SunTest is Sun, TestHelper {
   using SafeMath for uint256;
   using LibSafeMath32 for uint32;
   
-  function setUp() public override {
-    InitDiamondDeployer.setUp();
+  function setUp() public {
+    setupDiamond();
     
     // Mint beans
     C.bean().mint(address(this), 1000);
@@ -141,9 +137,8 @@ contract SunTest is Sun, Test, InitDiamondDeployer {
     field.incrementTotalPodsE(pods);
     console.log("Pods outstanding: %s", pods);
 
-    (uint256 toFert, uint256 toField, uint256 toSilo, uint256 newHarvestable, uint256 soil) 
-      = _testSunrise(deltaB, newBeans, pods, false, true);
-
+    // (uint256 toFert, uint256 toField, uint256 toSilo, uint256 newHarvestable, uint256 soil) 
+    (, , uint256 toSilo, , ) = _testSunrise(deltaB, newBeans, pods, false, true);
     // @note only true if we've never minted to the silo before
     assertEq(silo.totalStalk(), toSilo * 1e4); // 6 -> 10 decimals
     assertEq(silo.totalEarnedBeans(), toSilo);
@@ -159,7 +154,9 @@ contract SunTest is Sun, Test, InitDiamondDeployer {
     field.incrementTotalPodsE(pods);
     console.log("Pods outstanding: %s", pods);
 
-    (uint256 toFert, uint256 toField, uint256 toSilo, uint256 newHarvestable, uint256 soil) 
+    // (uint256 toFert, uint256 toField, uint256 toSilo, uint256 newHarvestable, uint256 soil) 
+
+    (, , uint256 toSilo, uint256 newHarvestable,) 
       = _testSunrise(deltaB, newBeans, pods, false, true);
 
     // @note only true if we've never minted to the silo before
