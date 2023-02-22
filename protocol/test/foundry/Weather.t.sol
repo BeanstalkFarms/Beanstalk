@@ -2,13 +2,11 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import "forge-std/Test.sol";
-import { console } from "forge-std/console.sol";
 import { Weather } from "~/beanstalk/sun/SeasonFacet/Weather.sol";
-import "./utils/InitDiamondDeployer.sol";
+import "./utils/TestHelper.sol";
 import "./utils/LibConstant.sol";
 
-contract ComplexWeatherTest is Weather, Test, InitDiamondDeployer {
+contract ComplexWeatherTest is Weather, TestHelper {
   using SafeMath for uint256;
   using LibSafeMath32 for uint32;
   using Decimal for Decimal.D256;
@@ -32,8 +30,8 @@ contract ComplexWeatherTest is Weather, Test, InitDiamondDeployer {
       bool postRain;
   }
   
-  function setUp() public override{
-    InitDiamondDeployer.setUp();
+  function setUp() public {
+    setupDiamond();
     console.log("Testing for complex weather:");
 
   }
@@ -93,7 +91,7 @@ contract ComplexWeatherTest is Weather, Test, InitDiamondDeployer {
   }
 }
 
-contract ExtremeWeatherTest is Weather, Test, InitDiamondDeployer {
+contract ExtremeWeatherTest is Weather, TestHelper {
   using SafeMath for uint256;
   using LibSafeMath32 for uint32;
   struct weatherData {
@@ -114,8 +112,8 @@ contract ExtremeWeatherTest is Weather, Test, InitDiamondDeployer {
       bool postRain;
   }
   
-  function setUp() public override{
-    InitDiamondDeployer.setUp();
+  function setUp() public {
+    setupDiamond();
     _beforeExtremeWeatherTest();
     console.log("Testing for extreme weather:");
   }

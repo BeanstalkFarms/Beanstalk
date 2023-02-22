@@ -11,6 +11,8 @@ import "../LibAppStorage.sol";
 import "../LibPRBMath.sol";
 import "~/libraries/LibSafeMathSigned128.sol";
 import "hardhat/console.sol";
+import "../LibSafeMath128.sol";
+
 
 /**
  * @title LibSilo
@@ -36,6 +38,7 @@ library LibSilo {
     using SafeMath for uint128;
     using LibSafeMathSigned128 for int128;
     using LibPRBMath for uint256;
+    using LibSafeMath128 for uint128;
     
     //////////////////////// EVENTS ////////////////////////    
 
@@ -82,18 +85,60 @@ library LibSilo {
 
         // Calculate the amount of Roots for the given amount of Stalk.
         uint256 roots;
-        if (s.s.roots == 0) roots = stalk.mul(C.getRootsBase());
-        else roots = s.s.roots.mul(stalk).div(s.s.stalk);
+        if (s.s.roots == 0) {
+            roots = uint256(stalk.mul(C.getRootsBase()));
+        } else {
+            roots = s.s.roots.mul(stalk).div(s.s.stalk);
+        }
 
-        // Increase supply of Stalk; Add Stalk to the balance of `account`
         console.log('mintStalk previous total stalk s.s.stalk: ', s.s.stalk);
+        
+        // increment user and total stalk
         s.s.stalk = s.s.stalk.add(stalk);
         console.log('mintStalk new total stalk s.s.stalk: ', s.s.stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
 
         // console.log('new total stalk s.a[account].s.stalk: ', s.a[account].s.stalk);
 
-        // Increase supply of Roots; Add Roots to the balance of `account`
+        // increment user and total roots
+        s.s.roots = s.s.roots.add(roots);
+        s.a[account].roots = s.a[account].roots.add(roots);
+
+
+        emit StalkBalanceChanged(account, int256(stalk), int256(roots));
+    }
+
+
+    /**
+     * @dev mints grownStalk to `account`.
+     * per the zero-withdraw update, if a user plants during the morning,
+     * the roots needed to properly calculate the earned beans would be higher 
+     * than outside the morning. Thus, if a user mows in the morning, 
+     * additional calculation is done and stored for the {plant} function.
+     * @param account farmer
+     * @param stalk the amount of stalk to mint
+     */
+    function mintGrownStalkAndGrownRoots(address account, uint256 stalk) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        uint256 roots;
+        if (s.s.roots == 0) {
+            roots = uint256(stalk.mul(C.getRootsBase()));
+        } else  {
+            roots = s.s.roots.mul(stalk).div(s.s.stalk);
+            if (block.number - s.season.sunriseBlock <= 25) {
+                uint256 rootsWithoutEarned = s.s.roots.add(s.newEarnedRoots).mul(stalk).div(s.s.stalk - (s.newEarnedStalk));
+                uint256 deltaRoots = rootsWithoutEarned - roots;
+                s.newEarnedRoots = s.newEarnedRoots.add(uint128(deltaRoots));
+                s.a[account].deltaRoots = uint128(deltaRoots);
+            } 
+        }
+
+        // increment user and total stalk
+        s.s.stalk = s.s.stalk.add(stalk);
+        s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
+
+        // increment user and total roots
         s.s.roots = s.s.roots.add(roots);
         s.a[account].roots = s.a[account].roots.add(roots);
 
@@ -113,12 +158,27 @@ library LibSilo {
 
         console.log('burnStalk burn amount: ', stalk);
         console.log('burnStalk current total stalk s.s.stalk: ', s.s.stalk);
+       
+        uint256 roots;
         // Calculate the amount of Roots for the given amount of Stalk.
         // We round up as it prevents an account having roots but no stalk.
-         uint256 roots = s.s.roots.mulDiv(
+        
+        // if the user withdraws in the same block as sunrise, they forfeit their earned beans for that season
+        // this is distrubuted to the other users.
+        // should this be the same as the vesting period?
+        if(block.number - s.season.sunriseBlock <= 25){
+            roots = s.s.roots.mulDiv(
+            stalk,
+            s.s.stalk-s.newEarnedStalk,
+            LibPRBMath.Rounding.Up);
+
+        } else { 
+            roots = s.s.roots.mulDiv(
             stalk,
             s.s.stalk,
             LibPRBMath.Rounding.Up);
+        }
+
         if (roots > s.a[account].roots) roots = s.a[account].roots;
 
         // Decrease supply of Stalk; Remove Stalk from the balance of `account`

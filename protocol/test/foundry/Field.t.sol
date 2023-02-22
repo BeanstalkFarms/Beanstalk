@@ -2,13 +2,11 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import "forge-std/Test.sol";
-import { console } from "forge-std/console.sol";
 import { FieldFacet } from "~/beanstalk/field/FieldFacet.sol";
-import "./utils/InitDiamondDeployer.sol";
+import "./utils/TestHelper.sol";
 import "./utils/LibConstant.sol";
 
-contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
+contract FieldTest is FieldFacet, TestHelper {
   using SafeMath for uint256;
   using LibSafeMath32 for uint32;
   using Decimal for Decimal.D256;
@@ -16,8 +14,8 @@ contract FieldTest is FieldFacet, Test, InitDiamondDeployer {
   Storage.Weather weather;
   Storage.Weather weather2;
 
-  function setUp() public override{
-    InitDiamondDeployer.setUp();
+  function setUp() public {
+    setupDiamond();
     vm.prank(brean);
     C.bean().approve(address(field),100000000000 ether);
     vm.prank(siloChad);

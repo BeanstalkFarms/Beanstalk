@@ -107,9 +107,8 @@ contract Silo is SiloExit {
     function _mow(address account, address token) internal {
         uint32 _lastUpdate = lastUpdate(account);
 
-        // If `account` was already updated this Season, there's no Stalk to Mow.
-        // _lastUpdate > _season() should not be possible, but it is checked anyway.
         if (_lastUpdate >= _season()) return;
+
 
         // Increments `plenty` for `account` if a Flood has occured.
         // Saves Rain Roots for `account` if it is Raining.
@@ -140,10 +139,13 @@ contract Silo is SiloExit {
         //TODOSEEDS handle case where mow status hasn't been init'd, if last upadte season > 0 and older than update season
 
 
-        uint256 grownStalk = balanceOfGrownStalk(account, token);
+        uint256 grownStalk = balanceOfGrownStalk(account, token); // to remove 
         console.log('__mow grownStalk: ', grownStalk);
 
-        LibSilo.mintStalk(account, balanceOfGrownStalk(account, token));
+        // per the zero withdraw update, if a user plants within the morning, 
+        // addtional roots will need to be issued, to properly calculate the earned beans. 
+        // thus, a different mint stalk function is used to differ between deposits.
+        LibSilo.mintGrownStalkAndGrownRoots(account, balanceOfGrownStalk(account));
         s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
     }
 
@@ -204,6 +206,14 @@ contract Silo is SiloExit {
 
         //and wipe out old seed balances (all your seeds are belong to grownStalkPerBdv)
         s.a[account].s.seeds = 0;
+    function __mow(address account) private {
+        // If this `account` has no Seeds, skip to save gas.
+        if (s.a[account].s.seeds == 0) return;
+
+        // per the zero withdraw update, if a user plants within the morning, 
+        // addtional roots will need to be issued, to properly calculate the earned beans. 
+        // thus, a different mint stalk function is used to differ between deposits.
+        LibSilo.mintGrownStalkAndGrownRoots(account, balanceOfGrownStalk(account));
     }
 
 
@@ -215,14 +225,22 @@ contract Silo is SiloExit {
      * 
      * For more info on Planting, see: {SiloFacet-plant}
      */
+     
     function _plant(address account, address token) internal returns (uint256 beans) {
         // Need to Mow for `account` before we calculate the balance of 
         // Earned Beans. //TODOSEEDS do we need to mow all tokens?
+        
+        // per the zero withdraw update, planting is handled differently 
+        // depending whether or not the user plants during the vesting period of beanstalk. 
+        // during the vesting period, the earned beans are not issued to the user.
+        // thus, the roots calculated for a given user is different. 
+        // This is handled by the super mow function, which stores the difference in roots.
         _mow(account, token);
         uint256 accountStalk = s.a[account].s.stalk;
 
         // Calculate balance of Earned Beans.
         beans = _balanceOfEarnedBeans(account, accountStalk);
+
         if (beans == 0) return 0;
 
         // Reduce the Silo's supply of Earned Beans.
