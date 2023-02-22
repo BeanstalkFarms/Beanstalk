@@ -21,7 +21,7 @@ type ClaimPlantRefetchConfig = {
   farmerSilo?: (() => Promise<any>) | (() => void); 
   farmerField?: (() => Promise<any>) | (() => void); 
   farmerBalances?: (() => Promise<any>) | (() => void); 
-  beanstalkBarn?: (() => Promise<any>) | (() => void);
+  farmerBarn?: (() => Promise<any>) | (() => void);
 };
 
 // -------------------------------------------------------------------------
@@ -32,7 +32,7 @@ const claimPlantRefetchConfig: Record<ClaimPlantAction, (keyof ClaimPlantRefetch
   [ClaimPlantAction.ENROOT]:  ['farmerSilo'],
   [ClaimPlantAction.CLAIM]:   ['farmerSilo', 'farmerBalances'],
   [ClaimPlantAction.HARVEST]: ['farmerBalances', 'farmerField'],
-  [ClaimPlantAction.RINSE]:   ['farmerBalances', 'beanstalkBarn'],
+  [ClaimPlantAction.RINSE]:   ['farmerBalances', 'farmerBarn'],
 };
 
 // -------------------------------------------------------------------------
@@ -52,7 +52,7 @@ export default function useClaimAndPlantActions() {
   const [refetchFarmerSilo]     = useFetchFarmerSilo();
   const [refetchFarmerBalances] = useFetchFarmerBalances();
   const [refetchFarmerField]    = useFetchFarmerField();
-  const [refetchBarn]           = useFetchFarmerBarn();
+  const [refetchFarmerBarn]     = useFetchFarmerBarn();
 
   /// Helpers
   const getBDV = useBDV();
@@ -118,8 +118,8 @@ export default function useClaimAndPlantActions() {
               prev[key] = refetchFarmerBalances;
               break;
             }
-            case 'beanstalkBarn': {
-              prev[key] = refetchBarn;
+            case 'farmerBarn': {
+              prev[key] = refetchFarmerBarn;
               break;
             }
             default: 
@@ -132,7 +132,7 @@ export default function useClaimAndPlantActions() {
     return Promise.all(
       [...Object.values(refetchFunctions), ...(additional || [])].map((fn) => fn())
     );
-  }, [refetchBarn, refetchFarmerBalances, refetchFarmerField, refetchFarmerSilo]);
+  }, [refetchFarmerBarn, refetchFarmerBalances, refetchFarmerField, refetchFarmerSilo]);
 
   // reduce an array of actions to a map of the actions for each step
   const buildActions = useCallback((actions: ClaimPlantAction[]) => 

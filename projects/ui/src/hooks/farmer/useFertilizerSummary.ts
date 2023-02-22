@@ -1,9 +1,8 @@
 import BigNumber from 'bignumber.js';
-import { FormTokenState } from '~/components/Common/Form';
-import useChainConstant from '~/hooks/chain/useChainConstant';
+import useSdk, { getNewToOldToken } from '~/hooks/sdk';
+import { FormTokenStateNew } from '~/components/Common/Form';
 import useHumidity from '~/hooks/beanstalk/useHumidity';
 import { Action, ActionType } from '~/util/Actions';
-import { USDC } from '~/constants/tokens';
 
 /**
  * Summarize the Actions that will occur when making a Deposit.
@@ -14,13 +13,14 @@ import { USDC } from '~/constants/tokens';
  * @param tokens Token form state.
  */
 export default function useFertilizerSummary(
-  tokens: FormTokenState[]
+  tokens: FormTokenStateNew[]
 ) {
-  const Usdc = useChainConstant(USDC);
+  const sdk = useSdk();
+  const usdc = sdk.tokens.USDC;
   const [humidity] = useHumidity();
   const summary = tokens.reduce((agg, curr) => {
     const amount = (
-      curr.token === Usdc
+      usdc.equals(curr.token)
         ? curr.amount
         : curr.amountOut
     );
@@ -29,8 +29,8 @@ export default function useFertilizerSummary(
       if (curr.amount && curr.amountOut) {
         agg.actions.push({
           type: ActionType.SWAP,
-          tokenIn: curr.token,
-          tokenOut: Usdc,
+          tokenIn: getNewToOldToken(curr.token),
+          tokenOut: getNewToOldToken(usdc),
           amountIn: curr.amount,
           amountOut: curr.amountOut,
         });

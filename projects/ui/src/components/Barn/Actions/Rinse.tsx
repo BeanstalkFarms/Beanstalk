@@ -4,6 +4,7 @@ import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import toast from 'react-hot-toast';
 import {
+  ClaimAndPlantFormState,
   SmartSubmitButton,
   TokenAdornment,
   TokenInputField,
@@ -15,28 +16,27 @@ import TxnAccordion from '~/components/Common/TxnAccordion';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
 import TransactionToast from '~/components/Common/TxnToast';
 import useFarmerFertilizer from '~/hooks/farmer/useFarmerFertilizer';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
-import { useSigner } from '~/hooks/ledger/useSigner';
-import useAccount from '~/hooks/ledger/useAccount';
 import { FarmToMode } from '~/lib/Beanstalk/Farm';
 import { displayFullBN, parseError } from '~/util';
-import { useFetchFarmerBarn } from '~/state/farmer/barn/updater';
 import { ZERO_BN } from '~/constants';
 import { BEAN, SPROUTS } from '~/constants/tokens';
-import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import { ActionType } from '~/util/Actions';
 import copy from '~/constants/copy';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import Row from '~/components/Common/Row';
 import TokenIcon from '~/components/Common/TokenIcon';
+import ClaimPlant, { ClaimPlantAction, ClaimPlantActionMap } from '~/util/ClaimPlant';
+import useSdk from '~/hooks/sdk';
+import useClaimAndPlantActions from '~/hooks/beanstalk/useClaimAndPlantActions';
+import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 
 // ---------------------------------------------------
 
 type RinseFormValues = {
   destination: FarmToMode | undefined;
   amount: BigNumber;
-};
+} & ClaimAndPlantFormState;
 
 // ---------------------------------------------------
 
@@ -89,10 +89,13 @@ const QuickRinseForm: FC<
 };
 
 const RinseForm : FC<
-  FormikProps<RinseFormValues>
+  FormikProps<RinseFormValues> & {
+    claimPlantActions: ClaimPlantActionMap;
+  }
 > = ({
   values,
   isSubmitting,
+  claimPlantActions,
 }) => {
   /// Extract
   const amountSprouts = values.amount;
@@ -131,6 +134,9 @@ const RinseForm : FC<
             <TokenOutputField
               token={BEAN[1]}
               amount={amountSprouts}
+            />
+            <ClaimAndPlantAdditionalOptions 
+              actions={claimPlantActions}
             />
             <Box sx={{ width: '100%', mt: 0 }}>
               <TxnAccordion defaultExpanded={false}>
@@ -171,20 +177,25 @@ const RinseForm : FC<
 
 const Rinse : FC<{ quick?: boolean }> = ({ quick }) => {
   /// Wallet connection
-  const account = useAccount();
-  const { data: signer } = useSigner();
-  const beanstalk = useBeanstalkContract(signer);
+  const sdk = useSdk();
+  const claimPlant = useClaimAndPlantActions();
   
   /// Farmer
   const farmerBarn          = useFarmerFertilizer();
-  const [refetchFarmerBarn] = useFetchFarmerBarn();
-  const [refetchBalances]   = useFetchFarmerBalances();
   
   /// Form
   const middleware = useFormMiddleware();
   const initialValues : RinseFormValues = useMemo(() => ({
     destination: undefined,
     amount: farmerBarn.fertilizedSprouts,
+    farmActions: {
+      selected: [],
+      options: [],
+      additional: {
+        selected: [],
+        exclude: [ClaimPlantAction.RINSE]
+      }
+    }
   }), [farmerBarn.fertilizedSprouts]);
 
   /// Handlers
@@ -192,53 +203,63 @@ const Rinse : FC<{ quick?: boolean }> = ({ quick }) => {
     let txToast;
     try {
       middleware.before();
-
+      const account = await sdk.getAccount(); 
+      if (!account) throw new Error('Connect a wallet first.');
       if (!farmerBarn.fertilizedSprouts) throw new Error('No Sprouts to Rinse.');
       if (!values.destination) throw new Error('No destination set.');
-      if (!account) throw new Error('Connect a wallet first.');
 
       txToast = new TransactionToast({
         loading: `Rinsing ${displayFullBN(farmerBarn.fertilizedSprouts, SPROUTS.displayDecimals)} Sprouts...`,
         success: `Rinse successful. Added ${displayFullBN(farmerBarn.fertilizedSprouts, SPROUTS.displayDecimals)} Beans to your ${copy.MODES[values.destination]}.`,
       });
 
-      const txn = await beanstalk.claimFertilized(
-        farmerBarn.balances.map((bal) => bal.token.id.toString()),
-        values.destination
+      const { workflow: rinse } = ClaimPlant.getAction(ClaimPlantAction.RINSE)(sdk, { 
+        tokenIds: farmerBarn.balances.map((bal) => bal.token.id.toString()), 
+        toMode: values.destination 
+      });
+
+      const { execute, actionsPerformed } = await ClaimPlant.build(
+        sdk, 
+        claimPlant.buildActions(values.farmActions.selected),
+        claimPlant.buildActions(values.farmActions.additional.selected),
+        rinse,
+        sdk.tokens.BEAN.amount(0), // Rinse doesn't need any input so we can just use 0,
+        { slippage: 0.1 }
       );
+
+      const txn = await execute();
       txToast.confirming(txn);
 
       const receipt = await txn.wait();
-      await Promise.all([
-        refetchFarmerBarn(),
-        refetchBalances()
-      ]);
+
+      await claimPlant.refetch(actionsPerformed);
+
       txToast.success(receipt);
       formActions.resetForm({
         values: {
           destination: FarmToMode.INTERNAL,
           amount: ZERO_BN,
+          farmActions: {
+            selected: [],
+            options: [],
+            additional: {
+              selected: [],
+              exclude: [ClaimPlantAction.RINSE]
+            }
+          }
         }
       });
     } catch (err) {
       txToast ? txToast.error(err) : toast.error(parseError(err));
     }
-  }, [
-    beanstalk,
-    account,
-    farmerBarn?.balances,
-    farmerBarn?.fertilizedSprouts,
-    refetchFarmerBarn,
-    refetchBalances,
-    middleware,
-  ]);
+  }, [middleware, sdk, farmerBarn.fertilizedSprouts, farmerBarn.balances, claimPlant]);
 
   return (
     <Formik initialValues={initialValues} onSubmit={onSubmit} enableReinitialize>
       {(formikProps) => 
         (quick 
           ? <QuickRinseForm {...formikProps} /> 
-          : <RinseForm {...formikProps} />
+          : <RinseForm {...formikProps} claimPlantActions={claimPlant.actions} />
         )
       }
     </Formik>

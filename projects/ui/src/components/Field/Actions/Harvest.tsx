@@ -2,7 +2,6 @@ import React, { useCallback, useMemo } from 'react';
 import { Accordion, AccordionDetails, Box, Stack, Typography } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
-import { useProvider } from 'wagmi';
 import toast from 'react-hot-toast';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import {
@@ -12,7 +11,7 @@ import {
   TxnSeparator
 } from '~/components/Common/Form';
 import { ActionType } from '~/util/Actions';
-import Farm, { FarmToMode } from '~/lib/Beanstalk/Farm';
+import { FarmToMode } from '~/lib/Beanstalk/Farm';
 import {
   displayFullBN,
   parseError
@@ -43,7 +42,6 @@ type HarvestFormValues = {
 
 type Props = FormikProps<HarvestFormValues> & {
   harvestablePods: BigNumber;
-  farm: Farm;
 }
 
 const QuickHarvestForm: FC<Props> = ({
@@ -87,7 +85,7 @@ const QuickHarvestForm: FC<Props> = ({
             size="medium"
             tokens={[]}
             mode="auto"
-        >
+          >
             Harvest
           </SmartSubmitButton>
         </Stack>
@@ -195,14 +193,9 @@ const HarvestForm: FC<Props> = ({
 };
 
 const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
+  ///
   const sdk = useSdk();
   const claimPlant = useClaimAndPlantActions();
-
-  ///
-  const provider = useProvider();
-
-  /// Farm
-  const farm = useMemo(() => new Farm(provider), [provider]);
 
   /// Farmer
   const farmerField = useFarmerField();
@@ -234,7 +227,7 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
       try {
         middleware.before();
         const account = await sdk.getAccount(); 
-        if (!account) throw new Error('Wallet connection required.');
+        if (!account) throw new Error('Connect a wallet first.');
         if (!farmerField.harvestablePods.gt(0)) throw new Error('No Harvestable Pods.');
         if (!farmerField.harvestablePlots) throw new Error('No Harvestable Plots.');
         if (!values.destination) throw new Error('No destination set.');
@@ -246,7 +239,7 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
 
         const { workflow: harvest } = ClaimPlant.getAction(ClaimPlantAction.HARVEST)(sdk, { 
           plotIds: Object.keys(farmerField.harvestablePlots).map(
-            (harvestIdx) => sdk.tokens.PODS.amount(harvestIdx.toString()).blockchainString
+            (harvestIdx) => sdk.tokens.PODS.amount(harvestIdx.toString()).blockchainString,
           ),
           toMode: values.destination
         });
@@ -295,13 +288,11 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
           {quick ? (
             <QuickHarvestForm 
               harvestablePods={farmerField.harvestablePods}
-              farm={farm}
               {...formikProps}
             />
           ) : (
             <HarvestForm
               harvestablePods={farmerField.harvestablePods}
-              farm={farm}
               {...formikProps}
           />
           )}

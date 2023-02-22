@@ -173,14 +173,6 @@ const SowForm : FC<
     fromMode: balanceFromToMode(values.balanceFrom) 
   }), [values.balanceFrom]);
 
-  const key = values.tokens[0].token.address;
-  console.log(claimingBalances[key]);
-
-  console.log(Object.entries(claimingBalances[key]).map(([k, v]) => ({
-    k,
-    v: v.toString(),
-  })));
-
   return (
     <Form autoComplete="off">
       <TokenSelectDialogNew
@@ -375,6 +367,7 @@ const Sow : FC<{}> = () => {
       const work = sdk.farm.create();
       const isEth = sdk.tokens.ETH.symbol === _tokenIn.symbol;
       const amountIn = _tokenIn.fromHuman(_amountIn.toString());
+
       let value: ethers.BigNumber | undefined;
       let fromMode = _fromMode;
 
@@ -428,6 +421,7 @@ const Sow : FC<{}> = () => {
       if (tokenIn.equals(ETH) || WETH.equals(tokenIn)) {
         // Require a quote
         if (!formData.workflow || !formData.amountOut) throw new Error(`No quote available for ${formData.token.symbol}`);
+        console.debug('[SOW]: adding steps to workflow', formData.workflow.generators);
         formData.workflow.generators.forEach((step) => {
           sow.add(step);
         });
@@ -437,7 +431,8 @@ const Sow : FC<{}> = () => {
       } else if (!bean.equals(tokenIn)) {
         throw new Error(`Sowing via ${tokenIn.symbol} is not currently supported`);
       }
-
+      
+      console.debug('[SOW]: adding sow to workflow');
       sow.add(async (_amountInStep: ethers.BigNumber, _context: any) => ({
         name: 'sow',
         amountOut: _amountInStep,
@@ -456,6 +451,7 @@ const Sow : FC<{}> = () => {
         value: formData.value,
         slippage: values.settings.slippage,
       };
+      console.debug('[SOW]: executing ClaimPlant & SOW workflow');
       const { execute, actionsPerformed } = await ClaimPlant.build(
         sdk,
         claimPlant.buildActions(values.farmActions.selected),
@@ -464,7 +460,6 @@ const Sow : FC<{}> = () => {
         amountIn,
         overrides,
       );
-
       const txn = await execute();
       txToast.confirming(txn);
       
