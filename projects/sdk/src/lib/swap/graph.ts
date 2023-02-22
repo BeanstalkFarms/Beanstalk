@@ -112,5 +112,58 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
     to: "3CRV"
   });
 
+  ////// Wells
+
+  // WETH <> BEAN
+  graph.setEdge("WETH", "BEAN", {
+    build: (account: string, from: FarmFromMode, to: FarmToMode) => {
+      console.log();
+      const WELL_ADDRESS = sdk.addresses.BEANWETH_WELL.get(sdk.chainId);
+      const result = [];
+
+      // ALEX: You are here. testing these transfer modes, esp transfer back
+      // 
+      
+      // if the to mode is INTERNAL that means this is not the last step of a swap
+      // and we are transfering back to Pipeline then to Beanstalk INTERNAL balance
+      const transferBack = to === FarmToMode.INTERNAL;
+
+      const transfer = new sdk.farm.actions.TransferToken(
+        sdk.tokens.WETH.address,
+        sdk.contracts.pipeline.address,
+        from,
+        FarmToMode.EXTERNAL // always go to external
+      );
+
+      // If we need to transfer back from Pipeline to Beanstalk Internal,
+      // we can hardcode the modes
+      const transferToBeanstalk = new sdk.farm.actions.TransferToken(
+        sdk.tokens.WETH.address,
+        sdk.contracts.beanstalk.address,
+        FarmFromMode.EXTERNAL,
+        FarmToMode.INTERNAL
+      );
+
+      const recipient = to === FarmToMode.INTERNAL ? sdk.contracts.pipeline.address : account;
+
+      const advancedPipe = sdk.farm.createAdvancedPipe("Pipeline");
+      const approve = new sdk.farm.actions.ApproveERC20(sdk.tokens.WETH, WELL_ADDRESS);
+
+      const swap = new sdk.farm.actions.WellSwap(WELL_ADDRESS, sdk.tokens.WETH, sdk.tokens.BEAN, recipient);
+      advancedPipe.add(approve);
+      advancedPipe.add(swap);
+
+      result.push(transfer);
+      result.push(advancedPipe);
+      if (transferBack) {
+        result.push(transferToBeanstalk);
+      }
+
+      return result;
+    },
+    from: "WETH",
+    to: "BEAN"
+  });
+
   return graph;
 };
