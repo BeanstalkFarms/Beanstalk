@@ -280,7 +280,7 @@ contract Storage {
          * @dev The Stalk Per BDV Per Season represents how much Stalk one BDV of the underlying deposited token grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored as 1e10, so 1 legacy
          seed would be 1e6 * 1e10.
          */
-        uint32 stalkPerBdvPerSeason;
+        uint32 stalkEarnedPerSeason;
         /*
          * @dev The Stalk Per BDV that the Silo grants in exchange for Depositing this Token.
          * previously just called stalk.

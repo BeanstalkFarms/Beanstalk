@@ -73,7 +73,7 @@ contract SiloFacet is TokenSilo {
      * associated with it, including:
      *
      * - base Stalk, received based on the BDV of the Deposit.
-     * - Grown Stalk, grown from BDV and stalkPerBdvPerSeason while the deposit was held in the Silo.
+     * - Grown Stalk, grown from BDV and stalkEarnedPerSeason while the deposit was held in the Silo.
      *
      * Note that the Grown Stalk associated with a Deposit is a function of the 
      * delta between the current Season and the Season in which a Deposit was made.

@@ -485,7 +485,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
     it('for bean', async function () {
       const settings = await this.silo.tokenSettings(this.bean.address);
 
-      expect(settings['stalkPerBdvPerSeason']).to.eq(2);
+      expect(settings['stalkEarnedPerSeason']).to.eq(2);
       expect(settings['stalkPerBdv']).to.eq(1);
       expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
       expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);
@@ -495,7 +495,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
     it('for curve metapool', async function () {
       const settings = await this.silo.tokenSettings(this.beanMetapool.address);
 
-      expect(settings['stalkPerBdvPerSeason']).to.eq(4);
+      expect(settings['stalkEarnedPerSeason']).to.eq(4);
       expect(settings['stalkPerBdv']).to.eq(1);
       expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
       expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);
@@ -505,7 +505,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
     it('for unripe bean', async function () {
       const settings = await this.silo.tokenSettings(this.unripeBean.address);
 
-      expect(settings['stalkPerBdvPerSeason']).to.eq(2);
+      expect(settings['stalkEarnedPerSeason']).to.eq(2);
       expect(settings['stalkPerBdv']).to.eq(1);
       expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
       expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);
@@ -515,7 +515,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
     it('for unripe LP', async function () {
       const settings = await this.silo.tokenSettings(this.unripeLP.address);
 
-      expect(settings['stalkPerBdvPerSeason']).to.eq(2);
+      expect(settings['stalkEarnedPerSeason']).to.eq(2);
       expect(settings['stalkPerBdv']).to.eq(1);
       expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
       expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);

@@ -345,9 +345,9 @@ library LibTokenSilo {
      * @dev Get the number of Stalk per BDV per Season for a whitelisted token. Formerly just seeds.
      * Note this is stored as 1e6, i.e. 1_000_000 units of this is equal to 1 old seed.
      */
-    function stalkPerBdvPerSeason(address token) internal view returns (uint256) {
+    function stalkEarnedPerSeason(address token) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return uint256(s.ss[token].stalkPerBdvPerSeason);
+        return uint256(s.ss[token].stalkEarnedPerSeason);
     }
 
     /**
@@ -369,14 +369,14 @@ library LibTokenSilo {
         console.log('cumulativeGrownStalkPerBdv s.ss[address(token)].lastCumulativeGrownStalkPerBdv: ', uint256(s.ss[address(token)].lastCumulativeGrownStalkPerBdv));
         console.log('cumulativeGrownStalkPerBdv s.season.current: ', s.season.current);
         console.log('cumulativeGrownStalkPerBdv s.ss[address(token)].lastUpdateSeason: ', s.ss[address(token)].lastUpdateSeason);
-        console.log('cumulativeGrownStalkPerBdv s.ss[address(token)].stalkPerBdvPerSeason: ', s.ss[address(token)].stalkPerBdvPerSeason);
+        console.log('cumulativeGrownStalkPerBdv s.ss[address(token)].stalkEarnedPerSeason: ', s.ss[address(token)].stalkEarnedPerSeason);
 
         //need to take into account the lastUpdateSeason for this token here
 
 
         //replace the - here with sub to disable support for when the current season is less than the silov3 epoch season
         _cumulativeGrownStalkPerBdv = s.ss[address(token)].lastCumulativeGrownStalkPerBdv +
-            int128(int128(s.ss[address(token)].stalkPerBdvPerSeason).mul(int128(s.season.current)-int128(s.ss[address(token)].lastUpdateSeason)).div(1e6)) //round here
+            int128(int128(s.ss[address(token)].stalkEarnedPerSeason).mul(int128(s.season.current)-int128(s.ss[address(token)].lastUpdateSeason)).div(1e6)) //round here
         ;
     }
 
