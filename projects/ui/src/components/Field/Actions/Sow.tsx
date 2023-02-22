@@ -201,7 +201,9 @@ const SowForm : FC<
           state={values.tokens[0]}
           showTokenSelect={showTokenSelect}
           handleQuote={handleQuote}
-          params={quoteProviderParams}
+          params={{
+            fromMode: balanceFromToMode(values.balanceFrom),
+          }}
           balanceFrom={values.balanceFrom}
           additionalBalance={claimingBalances[values.tokens[0].token.address]?.applied}
           belowComponent={

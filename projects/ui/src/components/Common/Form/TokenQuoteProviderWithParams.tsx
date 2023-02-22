@@ -11,6 +11,7 @@ import Row from '~/components/Common/Row';
 
 import useQuoteWithParams, { QuoteHandlerWithParams, QuoteSettingsNew } from '~/hooks/ledger/useQuoteWithParams';
 import { TokenQuoteProviderCustomProps } from './TokenQuoteProvider';
+import useDeepCompareMemo from '~/hooks/ui/useDeepCompareMemo';
 
 type TokenQuoteProviderWithParamsCustomProps<T> = {
     /** The current form state of this token */
@@ -59,7 +60,7 @@ export default function TokenQuoteProviderWithParams<T>({
   displayQuote: _displayQuote,
   quoteSettings,
   /// Parameters,
-  params,
+  params: _params,
   ///
   /// Adornment
   // TokenAdornmentProps: _TokenAdornmentProps,
@@ -70,6 +71,7 @@ export default function TokenQuoteProviderWithParams<T>({
   // Setup a price quote for this token
   const [result, quoting, getAmountOut] = useQuoteWithParams<T>(tokenOut, handleQuote, quoteSettings);
   const { isSubmitting, setFieldValue } = useFormikContext<FormStateNew>();
+  const params = useDeepCompareMemo(() => _params, [_params]);
 
   const displayQuote = _displayQuote === undefined ? DefaultQuoteDisplay : _displayQuote;
 
