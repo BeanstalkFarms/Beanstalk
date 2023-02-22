@@ -48,7 +48,7 @@ contract MockSiloFacet is SiloFacet {
         LibTokenSilo.incrementTotalDeposited(C.unripeLPAddress(), unripeLP);
         bdv = bdv.mul(C.initialRecap()).div(1e18);
         uint256 seeds = bdv.mul(s.ss[C.unripeLPAddress()].legacySeedsPerBdv);
-        uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalkPerBdv).add(LibSilo.stalkRewardLegacy(seeds, _season() - _s));
+        uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalkIssuedPerBdv).add(LibSilo.stalkRewardLegacy(seeds, _season() - _s));
         LibSilo.mintStalk(msg.sender, stalk);
         uint256 newBdv = s.a[msg.sender].mowStatuses[C.unripeLPAddress()].bdv.add(amount);
         s.a[msg.sender].mowStatuses[C.unripeLPAddress()].bdv = uint128(newBdv);
@@ -64,8 +64,8 @@ contract MockSiloFacet is SiloFacet {
         uint256 seeds = amount.mul(s.ss[C.unripeBeanAddress()].legacySeedsPerBdv);
         console.log('mockUnripeBeanDeposit _season(): ', _season());
         console.log('mockUnripeBeanDeposit _s: ', _s);
-        console.log('s.ss[C.unripeBeanAddress()].stalkPerBdv: ', s.ss[C.unripeBeanAddress()].stalkPerBdv);
-        uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalkPerBdv).add(LibSilo.stalkRewardLegacy(seeds, _season() - _s));
+        console.log('s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv: ', s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv);
+        uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv).add(LibSilo.stalkRewardLegacy(seeds, _season() - _s));
         console.log('mockUnripeBeanDeposit stalk: ', stalk);
         LibSilo.mintStalk(msg.sender, stalk);
         uint256 newBdv = s.a[msg.sender].mowStatuses[C.unripeBeanAddress()].bdv.add(amount);

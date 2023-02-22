@@ -164,10 +164,10 @@ contract ConvertFacet is ReentrancyGuard {
         );
         LibTokenSilo.decrementTotalDeposited(token, a.tokensRemoved);
         console.log('a.stalkRemoved: ', a.stalkRemoved);
-        console.log('convert facet burn stalk:', a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalkPerBdv)));
+        console.log('convert facet burn stalk:', a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)));
         LibSilo.burnStalk(
             msg.sender,
-            a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalkPerBdv))
+            a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv))
         );
         console.log('a.stalkRemoved: ', a.stalkRemoved);
         console.log('a.bdvRemoved: ', a.bdvRemoved);
@@ -197,7 +197,7 @@ contract ConvertFacet is ReentrancyGuard {
         grownStalk = uint256(LibTokenSilo.calculateStalkFromGrownStalkIndexAndBdv(IERC20(token), _cumulativeGrownStalk, bdv));
         console.log('_depositTokens grownStalk: ', grownStalk);
 
-        uint256 stalk = bdv.mul(LibTokenSilo.stalkPerBdv(token)).add(grownStalk);
+        uint256 stalk = bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk);
         console.log('_depositTokens mint stalk: ', stalk);
         LibSilo.mintStalk(msg.sender, stalk);
 

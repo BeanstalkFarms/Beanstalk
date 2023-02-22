@@ -417,7 +417,7 @@ contract SiloFacet is TokenSilo {
         uint256 deltaBDV = newBDV.sub(ogBDV);
 
         // Mint Stalk associated with the new BDV.
-        uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalkPerBdv).add(
+        uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalkIssuedPerBdv).add(
             LibSilo.stalkReward(grownStalkPerBdv,
                                 LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)),
                                 uint128(deltaBDV))
@@ -454,7 +454,7 @@ contract SiloFacet is TokenSilo {
 
         //pulled these vars out because of "CompilerError: Stack too deep, try removing local variables."
         int128 _lastCumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)); //need for present season
-        uint32 _stalkPerBdv = s.ss[token].stalkPerBdv;
+        uint32 _stalkPerBdv = s.ss[token].stalkIssuedPerBdv;
 
         // Iterate through all grownStalkPerBdvs, redeposit the tokens with new BDV and
         // summate new Stalk.

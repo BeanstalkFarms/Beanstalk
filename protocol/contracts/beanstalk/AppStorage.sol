@@ -285,7 +285,7 @@ contract Storage {
          * @dev The Stalk Per BDV that the Silo grants in exchange for Depositing this Token.
          * previously just called stalk.
          */
-        uint32 stalkPerBdv;
+        uint32 stalkIssuedPerBdv;
         /*
          * @dev The last season in which the Cumulative Grown Stalk Per BDV was updated
          */

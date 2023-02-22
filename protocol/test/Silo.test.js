@@ -486,7 +486,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       const settings = await this.silo.tokenSettings(this.bean.address);
 
       expect(settings['stalkEarnedPerSeason']).to.eq(2);
-      expect(settings['stalkPerBdv']).to.eq(1);
+      expect(settings['stalkIssuedPerBdv']).to.eq(1);
       expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
       expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);
       expect(settings['legacySeedsPerBdv']).to.eq(2);
@@ -496,7 +496,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       const settings = await this.silo.tokenSettings(this.beanMetapool.address);
 
       expect(settings['stalkEarnedPerSeason']).to.eq(4);
-      expect(settings['stalkPerBdv']).to.eq(1);
+      expect(settings['stalkIssuedPerBdv']).to.eq(1);
       expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
       expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);
       expect(settings['legacySeedsPerBdv']).to.eq(4);
@@ -506,7 +506,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       const settings = await this.silo.tokenSettings(this.unripeBean.address);
 
       expect(settings['stalkEarnedPerSeason']).to.eq(2);
-      expect(settings['stalkPerBdv']).to.eq(1);
+      expect(settings['stalkIssuedPerBdv']).to.eq(1);
       expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
       expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);
       expect(settings['legacySeedsPerBdv']).to.eq(2);
@@ -516,7 +516,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       const settings = await this.silo.tokenSettings(this.unripeLP.address);
 
       expect(settings['stalkEarnedPerSeason']).to.eq(2);
-      expect(settings['stalkPerBdv']).to.eq(1);
+      expect(settings['stalkIssuedPerBdv']).to.eq(1);
       expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
       expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);
       expect(settings['legacySeedsPerBdv']).to.eq(4); //keep 4 here because it used to be 4, needed for seasons deposit calculations

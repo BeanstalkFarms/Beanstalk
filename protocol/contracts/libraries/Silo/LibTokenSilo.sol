@@ -93,7 +93,7 @@ library LibTokenSilo {
      * @dev Once the BDV received for Depositing `amount` of `token` is known, 
      * add a Deposit for `account` and update the total amount Deposited.
      *
-     * `s.ss[token].stalkPerBdv` stores the number of Stalk per BDV for `token`.
+     * `s.ss[token].stalkIssuedPerBdv` stores the number of Stalk per BDV for `token`.
      *
      * FIXME(discuss): If we think of Deposits like 1155s, we might call the
      * combination of "incrementTotalDeposited" and "addDepositToAccount" as 
@@ -114,7 +114,7 @@ library LibTokenSilo {
         addDepositToAccount(account, token, grownStalkPerBdv, amount, bdv); // Add to Account
 
         return (
-            bdv.mul(s.ss[token].stalkPerBdv) //formerly stalk
+            bdv.mul(s.ss[token].stalkIssuedPerBdv) //formerly stalk
         );
     }
 
@@ -353,9 +353,9 @@ library LibTokenSilo {
     /**
      * @dev Get the number of Stalk per BDV for a whitelisted token. Formerly just stalk.
      */
-    function stalkPerBdv(address token) internal view returns (uint256) {
+    function stalkIssuedPerBdv(address token) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return uint256(s.ss[token].stalkPerBdv);
+        return uint256(s.ss[token].stalkIssuedPerBdv);
     }
 
     //this returns grown stalk with no decimals

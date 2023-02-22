@@ -60,18 +60,18 @@ library LibWhitelist {
     function whitelistToken(
         address token,
         bytes4 selector,
-        uint32 stalkPerBdv,
+        uint32 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         s.ss[token].selector = selector;
-        s.ss[token].stalkPerBdv = stalkPerBdv; //previously just called "stalk"
+        s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
 
         s.ss[token].lastUpdateSeason = s.season.current;
 
-        emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkPerBdv);
+        emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
     }
     
     /**
@@ -93,14 +93,14 @@ library LibWhitelist {
     function whitelistTokenLegacy(
         address token,
         bytes4 selector,
-        uint32 stalkPerBdv,
+        uint32 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason,
         uint32 seeds
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         s.ss[token].selector = selector;
-        s.ss[token].stalkPerBdv = stalkPerBdv; //previously just called "stalk"
+        s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
         s.ss[token].legacySeedsPerBdv = seeds;
 
@@ -108,7 +108,7 @@ library LibWhitelist {
 
         console.log('seeds: ', seeds, ' for ', token);
 
-        emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkPerBdv);
+        emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
     }
 
     /**

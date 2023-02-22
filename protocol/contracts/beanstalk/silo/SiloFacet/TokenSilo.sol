@@ -323,8 +323,8 @@ contract TokenSilo is Silo {
         )
     {
         bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, grownStalkPerBdv, amount);
-        console.log('s.ss[token].stalk: ', s.ss[token].stalkPerBdv);
-        console.log('bdvRemoved.mul(s.ss[token].stalk: ', bdvRemoved.mul(s.ss[token].stalkPerBdv));
+        console.log('s.ss[token].stalk: ', s.ss[token].stalkIssuedPerBdv);
+        console.log('bdvRemoved.mul(s.ss[token].stalk: ', bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv));
         console.log('removeDepositFromAccount grownStalkPerBdv: ');
         console.logInt(grownStalkPerBdv);
 
@@ -341,7 +341,7 @@ contract TokenSilo is Silo {
 
 
         //need to get amount of stalk earned by this deposit (index of now minus index of when deposited)
-        stalkRemoved = bdvRemoved.mul(s.ss[token].stalkPerBdv).add(
+        stalkRemoved = bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv).add(
             LibSilo.stalkReward(
                 grownStalkPerBdv, //this is the index of when it was deposited
                 LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)), //this is latest for this token
@@ -380,7 +380,7 @@ contract TokenSilo is Silo {
             bdvsRemoved[i] = crateBdv;
             ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
-            console.log('s.ss[token].stalkPerBdv: ', s.ss[token].stalkPerBdv);
+            console.log('s.ss[token].stalkIssuedPerBdv: ', s.ss[token].stalkIssuedPerBdv);
             ar.stalkRemoved = ar.stalkRemoved.add(
                 LibSilo.stalkReward(
                     grownStalkPerBdvs[i],
@@ -392,7 +392,7 @@ contract TokenSilo is Silo {
         }
         console.log('1 ar.stalkRemoved: ', ar.stalkRemoved);
         ar.stalkRemoved = ar.stalkRemoved.add(
-            ar.bdvRemoved.mul(s.ss[token].stalkPerBdv)
+            ar.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)
         );
         console.log('2 ar.stalkRemoved: ', ar.stalkRemoved);
 
@@ -474,7 +474,7 @@ contract TokenSilo is Silo {
         }
 
         ar.stalkRemoved = ar.stalkRemoved.add(
-            ar.bdvRemoved.mul(s.ss[token].stalkPerBdv)
+            ar.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)
         );
 
         emit RemoveDeposits(sender, token, grownStalkPerBdvs, amounts, ar.tokensRemoved, bdvs);
