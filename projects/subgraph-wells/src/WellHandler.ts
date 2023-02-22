@@ -1,8 +1,9 @@
 import { AddLiquidity, Approval, RemoveLiquidity, RemoveLiquidityOneToken, Swap, Transfer } from "../generated/templates/Well/Well";
 import { loadOrCreateAccount } from "./utils/Account";
-import { emptyBigIntArray, ZERO_BI } from "./utils/Decimals";
+import { emptyBigIntArray, ZERO_BD, ZERO_BI } from "./utils/Decimals";
 import { recordAddLiquidityEvent, recordRemoveLiquidityEvent, recordRemoveLiquidityOneEvent } from "./utils/Liquidity";
 import { recordSwapEvent } from "./utils/Swap";
+import { getBeanPriceUDSC } from "./utils/Token";
 import {
   checkForSnapshot,
   incrementWellDeposit,
@@ -18,8 +19,6 @@ import {
 export function handleAddLiquidity(event: AddLiquidity): void {
   loadOrCreateAccount(event.transaction.from);
 
-  recordAddLiquidityEvent(event);
-
   checkForSnapshot(event.address, event.block.timestamp, event.block.number);
 
   updateWellTokenBalances(event.address, event.params.tokenAmountsIn, event.block.timestamp, event.block.number);
@@ -29,14 +28,14 @@ export function handleAddLiquidity(event: AddLiquidity): void {
   updateWellTokenUSDPrices(event.address, event.block.number);
 
   incrementWellDeposit(event.address);
+
+  recordAddLiquidityEvent(event);
 }
 
 export function handleApproval(event: Approval): void {}
 
 export function handleRemoveLiquidity(event: RemoveLiquidity): void {
   loadOrCreateAccount(event.transaction.from);
-
-  recordRemoveLiquidityEvent(event);
 
   // Treat token balances as negative since we are removing liquidity
   let balances = event.params.tokenAmountsOut;
@@ -51,6 +50,8 @@ export function handleRemoveLiquidity(event: RemoveLiquidity): void {
   updateWellTokenUSDPrices(event.address, event.block.number);
 
   incrementWellWithdraw(event.address);
+
+  recordRemoveLiquidityEvent(event);
 }
 
 export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): void {
@@ -84,8 +85,6 @@ export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): v
 export function handleSwap(event: Swap): void {
   loadOrCreateAccount(event.transaction.from);
 
-  recordSwapEvent(event);
-
   checkForSnapshot(event.address, event.block.timestamp, event.block.number);
 
   updateWellVolumes(
@@ -101,6 +100,8 @@ export function handleSwap(event: Swap): void {
   updateWellTokenUSDPrices(event.address, event.block.number);
 
   incrementWellSwap(event.address);
+
+  recordSwapEvent(event);
 }
 
 export function handleTransfer(event: Transfer): void {}
