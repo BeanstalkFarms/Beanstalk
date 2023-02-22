@@ -227,7 +227,7 @@ export default function useFarmerClaimAndPlantOptions() {
     sdk.tokens,
   ]);
 
-  const getBeansClaiming = useCallback((_options: ClaimPlantAction[] = []) => {
+  const getClaimable = useCallback((_options: ClaimPlantAction[] = []) => {
     const amount = _options.reduce((prev, curr) => {
       prev = prev.plus(normalizeBN(options[curr]?.claimable?.amount));
       return prev;
@@ -241,5 +241,5 @@ export default function useFarmerClaimAndPlantOptions() {
     };
   }, [options, sdk.tokens.BEAN]);
 
-  return { options, getBeansClaiming };
+  return { options, getClaimable };
 }

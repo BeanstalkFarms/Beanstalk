@@ -224,17 +224,7 @@ const enroot: ClaimPlantFunction<ClaimPlantAction.ENROOT> = (sdk, { crates }) =>
   };
 };
 
-function injectOnlyLocal(name: string, amount: TokenValue) {
-  return async () => ({
-    name,
-    amountOut: amount.toBigNumber(),
-    prepare: () => ({ target: '', callData: '' }),
-    decode: () => undefined,
-    decodeResult: () => undefined,
-  });
-}
-
-export type BuildClaimPlantWorkflowResult = {
+export type ClaimPlantResult = {
   estimate: ethers.BigNumber,
   execute: () => Promise<ethers.ContractTransaction>,
   actionsPerformed: Set<ClaimPlantAction>,
@@ -254,6 +244,17 @@ class ClaimPlant {
 
   static getAction(action: ClaimPlantAction) {
     return ClaimPlant.actionsMap[action] as ClaimPlantFunction<typeof action>;
+  }
+
+  static presets = {
+    claimBeans: [
+      ClaimPlantAction.RINSE,
+      ClaimPlantAction.HARVEST,
+      ClaimPlantAction.CLAIM
+    ],
+    plant: [
+      ClaimPlantAction.PLANT,
+    ]
   }
 
   static async build(
@@ -278,7 +279,7 @@ class ClaimPlant {
     options: {
       slippage: number
     }
-  ) {
+  ): Promise<ClaimPlantResult> {
     const actionsPerformed = new Set<ClaimPlantAction>([
       ...Object.keys(primaryActions), 
       ...Object.keys(_secondaryActions)
@@ -312,17 +313,28 @@ class ClaimPlant {
     const farm = sdk.farm.create();
   
     Object.values(secondaryActions).forEach((action) => { 
-      farm.add([...action.workflow.generators]);
+      action.workflow.generators.forEach((step) => {
+        farm.add(step);
+      });
     });
   
     Object.values(primaryActions).forEach((action) => {
-      farm.add([...action.workflow.generators]);
+      action.workflow.generators.forEach((step) => {
+        farm.add(step);
+      });
     });
   
-    farm.add(injectOnlyLocal('pre-x', amountIn), { onlyLocal: true });
-    farm.add([...operation.generators]);
+    farm.add(ClaimPlant.injectOnlyLocal('pre-x', amountIn), { onlyLocal: true });
+    operation.generators.forEach((step) => {
+      farm.add(step);
+    });
   
     const estimate = await farm.estimate(amountIn);
+
+    console.log(farm.summarizeSteps().map((step) => ({
+      name: step.name,
+      amount: step.amountOut.toString(),
+    })));
   
     const execute = () => farm.execute(amountIn, options);
   
@@ -331,6 +343,16 @@ class ClaimPlant {
       execute, 
       actionsPerformed
     };
+  }
+
+  static injectOnlyLocal(name: string, amount: TokenValue) {
+    return async () => ({
+      name,
+      amountOut: amount.toBigNumber(),
+      prepare: () => ({ target: '', callData: '' }),
+      decode: () => undefined,
+      decodeResult: () => undefined,
+    });
   }
 }
 

@@ -104,7 +104,7 @@ export default function TokenQuoteProviderWithParams<T>({
     console.debug(`[TokenQuoteProvider] update ${name}.amountOut =>`, result?.amountOut?.toString());
     setFieldValue(`${name}.amountOut`, result?.amountOut); // calculated amountOut
     setFieldValue(`${name}.value`, result?.value);  // ether value used
-    setFieldValue(`${name}.steps`, result?.workflow?.generators);  // steps
+    setFieldValue(`${name}.workflow`, result?.workflow);  // workflow
   }, [name, setFieldValue, result]);
   useEffect(() => {
     console.debug(`[TokenQuoteProvider] update ${name}.quoting =>`, quoting);

@@ -1,46 +1,39 @@
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { Accordion, AccordionDetails, Alert, Box, Divider, Link, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
-import React, { useCallback, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { useProvider } from 'wagmi';
 import toast from 'react-hot-toast';
+import { Token, ERC20Token, NativeToken } from '@beanstalk/sdk';
 import TransactionToast from '~/components/Common/TxnToast';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import {
-  FormState,
+  BalanceFromFragment,
+  ClaimAndPlantFormState,
+  FormStateNew,
   SettingInput,
   SlippageSettingsFragment,
   SmartSubmitButton,
   TokenOutputField,
-  TokenQuoteProvider,
-  TokenSelectDialog,
   TxnPreview,
   TxnSeparator,
   TxnSettings
 } from '~/components/Common/Form';
-import Token, { ERC20Token, NativeToken } from '~/classes/Token';
-import { Beanstalk } from '~/generated/index';
 import useToggle from '~/hooks/display/useToggle';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
-import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import usePreferredToken, { PreferredToken } from '~/hooks/farmer/usePreferredToken';
-import { QuoteHandler } from '~/hooks/ledger/useQuote';
 import useTokenMap from '~/hooks/chain/useTokenMap';
-import Farm, { ChainableFunction, FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
-import { displayBN, displayFullBN, MinBN, parseError, toStringBaseUnitBN, toTokenUnitsBN } from '~/util';
-import { useSigner } from '~/hooks/ledger/useSigner';
+import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
+import { displayBN, displayFullBN, MinBN, parseError, tokenValueToBN } from '~/util';
 import usePrice from '~/hooks/beanstalk/usePrice';
-import { optimizeFromMode } from '~/util/Farm';
 import { useFetchFarmerField } from '~/state/farmer/field/updater';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import { useFetchBeanstalkField } from '~/state/beanstalk/field/updater';
 import { useFetchPools } from '~/state/bean/pools/updater';
 import { AppState } from '~/state';
-import { BEAN, ETH, PODS, WETH } from '~/constants/tokens';
+import { BEAN, PODS } from '~/constants/tokens';
 import { ZERO_BN } from '~/constants';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import { ActionType } from '~/util/Actions';
@@ -50,21 +43,34 @@ import TokenIcon from '~/components/Common/TokenIcon';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
+import ClaimPlant, { ClaimPlantActionMap } from '~/util/ClaimPlant';
+import useSdk, { getNewToOldToken } from '~/hooks/sdk';
+import useClaimAndPlantActions from '~/hooks/beanstalk/useClaimAndPlantActions';
+import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
+import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
+import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
+import { BalanceFrom, balanceFromToMode } from '~/components/Common/Form/BalanceFromRow';
+import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
+import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
+import useFarmerClaimingBalance from '~/hooks/farmer/useFarmerClaimingBalance';
 
-type SowFormValues = FormState & {
+type SowFormValues = FormStateNew & {
   settings: SlippageSettingsFragment;
   maxAmountIn: BigNumber | undefined;
-};
+} & ClaimAndPlantFormState & BalanceFromFragment;
+
+type SowFormQuoteParams = {
+  fromMode: FarmFromMode;
+}
 
 const SowForm : FC<
   FormikProps<SowFormValues>
   & {
-    handleQuote: QuoteHandler;
+    handleQuote: QuoteHandlerWithParams<SowFormQuoteParams>;
     balances: ReturnType<typeof useFarmerBalances>;
-    beanstalk: Beanstalk;
     weather: BigNumber;
     soil: BigNumber;
-    farm: Farm;
+    claimPlantActions: ClaimPlantActionMap;
   }
 > = ({
   // Formik
@@ -72,20 +78,20 @@ const SowForm : FC<
   setFieldValue,
   //
   balances,
-  beanstalk,
+  claimPlantActions,
   weather,
   soil,
-  farm,
   handleQuote,
 }) => {
+  const sdk = useSdk();
+  const claimingBalances = useFarmerClaimingBalance();
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
 
   /// Chain
-  const getChainToken = useGetChainToken();
-  const Bean          = getChainToken(BEAN);
-  const Eth           = getChainToken<NativeToken>(ETH);
-  const Weth          = getChainToken<ERC20Token>(WETH);
-  const erc20TokenMap = useTokenMap<ERC20Token | NativeToken>([BEAN, ETH, WETH]);
+  const Bean          = sdk.tokens.BEAN;
+  const Eth           = sdk.tokens.ETH;
+  const Weth          = sdk.tokens.WETH;
+  const erc20TokenMap = useTokenMap<ERC20Token | NativeToken>([Bean, Eth, Weth]);
 
   ///
   const beanPrice      = usePrice();
@@ -97,11 +103,11 @@ const SowForm : FC<
   const tokenOut  = Bean;                       // converting to token
   const amountOut = values.tokens[0].amountOut; // amount of to token
   const maxAmountIn    = values.maxAmountIn;
-  const tokenInBalance = balances[tokenIn.address];
+  const tokenInBalance = balances[tokenIn.symbol === 'ETH' ? 'eth' : tokenIn.address];
 
   /// Calculations
   const hasSoil = soil.gt(0);
-  const beans   = (tokenIn === Bean)
+  const beans   = Bean.equals(tokenIn)
     ? amountIn  || ZERO_BN
     : amountOut || ZERO_BN;
   const isSubmittable = hasSoil && beans?.gt(0);
@@ -111,6 +117,10 @@ const SowForm : FC<
   const maxAmountUsed = (amountIn && maxAmountIn) 
     ? amountIn.div(maxAmountIn) 
     : null;
+
+  const handleSetBalanceFrom = useCallback((_balanceFrom: BalanceFrom) => {
+    setFieldValue('balanceFrom', _balanceFrom);
+  },[setFieldValue]);
 
   /// Token select
   const handleSelectTokens = useCallback((_tokens: Set<Token>) => {
@@ -133,26 +143,23 @@ const SowForm : FC<
   /// max amount that the user can input of `tokenIn`.
   useEffect(() => {
     (async () => {
+      const { BEAN: bean, ETH: eth, WETH: weth } = sdk.tokens;
       if (hasSoil) {
-        if (tokenIn === Bean) {
+        if (bean.equals(tokenIn)) {
           /// 1 SOIL is consumed by 1 BEAN
           setFieldValue('maxAmountIn', soil);
-        } else if (tokenIn === Eth || tokenIn === Weth) {
+        } else if (tokenIn.equals(eth) || weth.equals(tokenIn)) {
           /// Estimate how many ETH it will take to buy `soil` BEAN.
           /// TODO: across different forms of `tokenIn`.
           /// This (obviously) only works for Eth and Weth.
-          const estimate = await Farm.estimate(
-            farm.buyBeans(),
-            [ethers.BigNumber.from(Bean.stringify(soil))],
-            false, // forward = false -> run the calc backwards
-          );
+          const work = sdk.farm.create();
+          work.add(sdk.farm.presets.weth2bean());
+          
+          const estimate = await work.estimateReversed(bean.amount(soil.toString()));
           setFieldValue(
             'maxAmountIn',
-            toTokenUnitsBN(
-              estimate.amountOut.toString(),
-              tokenIn.decimals
-            ),
-          );
+            tokenValueToBN(bean.fromBlockchain(estimate)),
+            );
         } else {
           throw new Error(`Unsupported tokenIn: ${tokenIn.symbol}`);
         }
@@ -160,11 +167,23 @@ const SowForm : FC<
         setFieldValue('maxAmountIn', ZERO_BN);
       }
     })();
-  }, [Bean, Eth, Weth, beanstalk, hasSoil, farm, setFieldValue, soil, tokenIn, tokenOut]);
+  }, [hasSoil, setFieldValue, soil, tokenIn, tokenOut, sdk.tokens, sdk.farm]);
+
+  const quoteProviderParams = useMemo(() => ({ 
+    fromMode: balanceFromToMode(values.balanceFrom) 
+  }), [values.balanceFrom]);
+
+  const key = values.tokens[0].token.address;
+  console.log(claimingBalances[key]);
+
+  console.log(Object.entries(claimingBalances[key]).map(([k, v]) => ({
+    k,
+    v: v.toString(),
+  })));
 
   return (
     <Form autoComplete="off">
-      <TokenSelectDialog
+      <TokenSelectDialogNew
         open={isTokenSelectVisible}
         handleClose={hideTokenSelect}
         handleSubmit={handleSelectTokens}
@@ -172,9 +191,12 @@ const SowForm : FC<
         balances={balances}
         tokenList={Object.values(erc20TokenMap)}
         mode={TokenSelectMode.SINGLE}
+        balanceFrom={values.balanceFrom}
+        setBalanceFrom={handleSetBalanceFrom}
+        applicableBalances={claimingBalances}
       />
       <Stack gap={1}>
-        <TokenQuoteProvider
+        <TokenQuoteProviderWithParams<SowFormQuoteParams>
           key="tokens.0"
           name="tokens.0"
           tokenOut={Bean}
@@ -187,6 +209,12 @@ const SowForm : FC<
           state={values.tokens[0]}
           showTokenSelect={showTokenSelect}
           handleQuote={handleQuote}
+          params={quoteProviderParams}
+          balanceFrom={values.balanceFrom}
+          additionalBalance={claimingBalances[values.tokens[0].token.address]?.applied}
+          belowComponent={
+            <ClaimAndPlantFarmActions preset="claim" />
+          }
         />
         {!hasSoil ? (
           <Box>
@@ -227,6 +255,9 @@ const SowForm : FC<
                 </Alert>
               </Box>
             ) : null}
+            <ClaimAndPlantAdditionalOptions 
+              actions={claimPlantActions}
+            />
             <Box>
               <Accordion variant="outlined" color="primary">
                 <StyledAccordionSummary title="Transaction Details" />
@@ -237,7 +268,7 @@ const SowForm : FC<
                         type: ActionType.BUY_BEANS,
                         beanAmount: beans,
                         beanPrice: beanPrice,
-                        token: tokenIn,
+                        token: getNewToOldToken(tokenIn),
                         tokenAmount: amountIn || ZERO_BN
                       },
                       {
@@ -268,7 +299,7 @@ const SowForm : FC<
           color="primary"
           size="large"
           disabled={!isSubmittable}
-          contract={beanstalk}
+          contract={sdk.contracts.beanstalk}
           tokens={values.tokens}
           mode="auto"
         >
@@ -281,35 +312,9 @@ const SowForm : FC<
 
 // ---------------------------------------------------
 
-const PREFERRED_TOKENS : PreferredToken[] = [
-  {
-    token: BEAN,
-    minimum: new BigNumber(1),    // $1
-  },
-  {
-    token: ETH,
-    minimum: new BigNumber(0.001) // ~$2-4
-  },
-  {
-    token: WETH,
-    minimum: new BigNumber(0.001) // ~$2-4
-  }
-];
-
 const Sow : FC<{}> = () => {
-  /// Tokens
-  const getChainToken = useGetChainToken();
-  const Bean          = getChainToken(BEAN);
-  const Eth           = getChainToken(ETH);
-  const Weth          = getChainToken(WETH);
-
-  /// Ledger
-  const { data: signer } = useSigner();
-  const provider  = useProvider();
-  const beanstalk = useBeanstalkContract(signer);
-
-  /// Farm
-  const farm      = useMemo(() => new Farm(provider), [provider]);
+  const sdk = useSdk();
+  const claimPlant = useClaimAndPlantActions();
 
   /// Beanstalk
   const weather = useSelector<AppState, AppState['_beanstalk']['field']['weather']['yield']>((state) => state._beanstalk.field.weather.yield);
@@ -324,7 +329,23 @@ const Sow : FC<{}> = () => {
 
   /// Form
   const middleware = useFormMiddleware();
-  const baseToken = usePreferredToken(PREFERRED_TOKENS, 'use-best');
+
+  const preferredTokens: PreferredToken[] = useMemo(() => [
+    {
+      token: sdk.tokens.BEAN,
+      minimum: new BigNumber(1),    // $1
+    },
+    {
+      token: sdk.tokens.ETH,
+      minimum: new BigNumber(0.001) // ~$2-4
+    },
+    {
+      token: sdk.tokens.ETH,
+      minimum: new BigNumber(0.001) // ~$2-4
+    }
+  ], [sdk.tokens]);
+
+  const baseToken = usePreferredToken(preferredTokens, 'use-best');
   const initialValues : SowFormValues = useMemo(() => ({
     settings: {
       slippage: 0.1, // 0.1%
@@ -336,109 +357,125 @@ const Sow : FC<{}> = () => {
       },
     ],
     maxAmountIn: undefined,
+    farmActions: {
+      options: ClaimPlant.presets.claimBeans,
+      selected: [],
+      additional: {
+        selected: [],
+      }
+    },
+    balanceFrom: BalanceFrom.TOTAL
   }), [baseToken]);
 
   /// Handlers
   // This handler does not run when _tokenIn = _tokenOut
   // _tokenOut === Bean 
-  const handleQuote = useCallback<QuoteHandler>(
-    async (_tokenIn, _amountIn, _tokenOut) => {
-      const steps : ChainableFunction[] = [];
+  const handleQuote = useCallback<QuoteHandlerWithParams<SowFormQuoteParams>>(
+    async (_tokenIn, _amountIn, _tokenOut, { fromMode: _fromMode }) => {
+      const work = sdk.farm.create();
+      const isEth = sdk.tokens.ETH.symbol === _tokenIn.symbol;
+      const amountIn = _tokenIn.fromHuman(_amountIn.toString());
+      let value: ethers.BigNumber | undefined;
+      let fromMode = _fromMode;
 
-      if (_tokenIn === Eth) {
-        steps.push(...[
-          farm.wrapEth(FarmToMode.INTERNAL),       // wrap ETH to WETH (internal)
-          ...farm.buyBeans(FarmFromMode.INTERNAL)  // buy Beans using internal WETH
-        ]);
-      } else if (_tokenIn === Weth) {
-        steps.push(
-          ...farm.buyBeans(
-            optimizeFromMode(_amountIn, balances[Weth.address]),
-          )
-        );
-      } else {
+      if (isEth || sdk.tokens.WETH.equals(_tokenIn)) {
+        if (isEth) {
+          fromMode =  FarmFromMode.INTERNAL_TOLERANT;
+          value = ethers.BigNumber.from(amountIn.blockchainString);
+          work.add(new sdk.farm.actions.WrapEth(FarmToMode.INTERNAL));
+        }
+        work.add(sdk.farm.presets.weth2bean(fromMode));
+      } else if (!sdk.tokens.BEAN.equals(_tokenIn)) {
         throw new Error(`Sowing via ${_tokenIn.symbol} is not currently supported`);
       }
 
-      const amountIn = ethers.BigNumber.from(toStringBaseUnitBN(_amountIn, _tokenIn.decimals));
-      const estimate = await Farm.estimate(
-        steps,
-        [amountIn]
-      );
-      
+      const estimate = await work.estimate(amountIn);
+
       return {
-        amountOut: toTokenUnitsBN(estimate.amountOut.toString(), _tokenOut.decimals),
-        value: estimate.value,
-        steps: estimate.steps,
+        amountOut: tokenValueToBN(_tokenOut.fromBlockchain(estimate)),
+        workflow: work,
+        value: value,
       };
     },
-    [Weth, Eth, farm, balances]
+    [sdk.farm, sdk.tokens]
   );
 
   const onSubmit = useCallback(async (values: SowFormValues, formActions: FormikHelpers<SowFormValues>) => {
     let txToast;
     try {
       middleware.before();
+      const { BEAN: bean, ETH, WETH } = sdk.tokens;
 
       const formData = values.tokens[0];
       const tokenIn = formData.token;
-      const amountBeans = tokenIn === Bean ? formData.amount : formData.amountOut;
-      if (values.tokens.length > 1) throw new Error('Only one token supported at this time');
-      if (!amountBeans || amountBeans.eq(0)) throw new Error('No amount set');
+      const amountIn = formData.amount && tokenIn.amount(formData.amount.toString());
+      const amountBeans = bean.equals(tokenIn) ? formData.amount : formData.amountOut;
       
-      const data : string[] = [];
+      if (values.tokens.length > 1) throw new Error('Only one token supported at this time');
+      if (!amountIn || !amountBeans || amountBeans.eq(0)) throw new Error('No amount set'); 
+      
       const amountPods = amountBeans.times(weather.div(100).plus(1));
-      let finalFromMode : FarmFromMode;
+      const fromMode = bean.equals(tokenIn) ? balanceFromToMode(values.balanceFrom) : FarmFromMode.INTERNAL_TOLERANT;
       
       txToast = new TransactionToast({
-        loading: `Sowing ${displayFullBN(amountBeans, Bean.decimals)} Beans for ${displayFullBN(amountPods, PODS.decimals)} Pods...`,
+        loading: `Sowing ${displayFullBN(amountBeans, bean.decimals)} Beans for ${displayFullBN(amountPods, PODS.decimals)} Pods...`,
         success: 'Sow successful.',
       });
       
-      /// Sow directly from BEAN
-      if (tokenIn === Bean) {
-        // No swap occurs, so we know exactly how many beans are going in.
-        // We can select from INTERNAL, EXTERNAL, INTERNAL_EXTERNAL.
-        finalFromMode = optimizeFromMode(amountBeans, balances[Bean.address]);
-      }
-      
+      const sow = sdk.farm.create();
+ 
       /// Swap to BEAN and Sow
-      else if (tokenIn === Eth || tokenIn === Weth) {
+      if (tokenIn.equals(ETH) || WETH.equals(tokenIn)) {
         // Require a quote
-        if (!formData.steps || !formData.amountOut) throw new Error(`No quote available for ${formData.token.symbol}`);
-
-        const encoded = Farm.encodeStepsWithSlippage(
-          formData.steps,
-          values.settings.slippage / 100,
-        ); // 
-        data.push(...encoded);
-
+        if (!formData.workflow || !formData.amountOut) throw new Error(`No quote available for ${formData.token.symbol}`);
+        formData.workflow.generators.forEach((step) => {
+          sow.add(step);
+        });
+        
         // At the end of the Swap step, the assets will be in our INTERNAL balance.
         // The Swap decides where to route them from (see handleQuote).
-        finalFromMode = FarmFromMode.INTERNAL_TOLERANT;
-      } else {
+      } else if (!bean.equals(tokenIn)) {
         throw new Error(`Sowing via ${tokenIn.symbol} is not currently supported`);
       }
-      
-      data.push(
-        beanstalk.interface.encodeFunctionData('sow', [
-          toStringBaseUnitBN(amountBeans, Bean.decimals),
-          finalFromMode,
-        ])
+
+      sow.add(async (_amountInStep: ethers.BigNumber, _context: any) => ({
+        name: 'sow',
+        amountOut: _amountInStep,
+        prepare: () => ({
+          target: sdk.contracts.beanstalk.address,
+          callData: sdk.contracts.beanstalk.interface.encodeFunctionData('sow', [
+            _amountInStep,
+            fromMode,
+          ]),
+        }),
+        decode: (data: string) => sdk.contracts.beanstalk.interface.decodeFunctionResult('sow', data),
+        decodeResult: (result: string) => sdk.contracts.beanstalk.interface.decodeFunctionResult('sow', result)
+      }));
+
+      const overrides = { 
+        value: formData.value,
+        slippage: values.settings.slippage,
+      };
+      const { execute, actionsPerformed } = await ClaimPlant.build(
+        sdk,
+        claimPlant.buildActions(values.farmActions.selected),
+        claimPlant.buildActions(values.farmActions.additional.selected),
+        sow,
+        amountIn,
+        overrides,
       );
- 
-      const overrides = { value: formData.value };
-      const txn = await beanstalk.farm(data, overrides);
+
+      const txn = await execute();
       txToast.confirming(txn);
       
-      const receipt = await txn.wait();
-      await Promise.all([
-        refetchFarmerField(),     // get farmer's plots
-        refetchFarmerBalances(),  // get farmer's token balances
-        refetchBeanstalkField(),  // get beanstalk field data (ex. amount of Soil left)
-        refetchPools(),           // get price data [TODO: optimize if we bought beans]
-      ]);  
-      txToast.success(receipt);
+      const reciept = await txn.wait();
+
+      await claimPlant.refetch(actionsPerformed, { 
+        farmerField: refetchFarmerField,
+        farmerBalances: refetchFarmerBalances,
+      }, [refetchBeanstalkField, refetchPools]);
+
+      txToast.success(reciept);
       formActions.resetForm();
     } catch (err) {
       console.error(err);
@@ -446,19 +483,7 @@ const Sow : FC<{}> = () => {
     } finally {
       formActions.setSubmitting(false);
     }
-  }, [
-    beanstalk,
-    weather,
-    Bean,
-    Eth,
-    Weth,
-    balances,
-    refetchFarmerField,
-    refetchFarmerBalances,
-    refetchBeanstalkField,
-    refetchPools,
-    middleware,
-  ]);
+  }, [middleware, sdk, weather, claimPlant, refetchFarmerField, refetchFarmerBalances, refetchBeanstalkField, refetchPools]);
 
   return (
     <Formik<SowFormValues>
@@ -473,10 +498,9 @@ const Sow : FC<{}> = () => {
           <SowForm
             handleQuote={handleQuote}
             balances={balances}
-            beanstalk={beanstalk}
             weather={weather}
             soil={soil}
-            farm={farm}
+            claimPlantActions={claimPlant.actions}
             {...formikProps}
           />
         </>

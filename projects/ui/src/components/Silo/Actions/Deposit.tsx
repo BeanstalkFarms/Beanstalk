@@ -46,7 +46,6 @@ import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import TokenOutputsField from '~/components/Common/Form/TokenOutputsField';
 import useSdk from '~/hooks/sdk';
 import useFarmerClaimAndPlantActions from '~/hooks/beanstalk/useClaimAndPlantActions';
-import useGetClaimAppliedBalances from '~/hooks/farmer/useGetClaimAppliedBalances';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
@@ -55,6 +54,7 @@ import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew'
 import useFarmerClaimAndPlantOptions from '~/hooks/farmer/useFarmerClaimAndPlantOptions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import ClaimPlant, { ClaimPlantActionMap, ClaimPlantAction } from '~/util/ClaimPlant';
+import useFarmerClaimingBalance from '~/hooks/farmer/useFarmerClaimingBalance';
 
 // -----------------------------------------------------------------------
 
@@ -98,6 +98,7 @@ const DepositForm: FC<
   setFieldValue,
 }) => {
   const { options } = useFarmerClaimAndPlantOptions();
+  const additionalBalances = useFarmerClaimingBalance();
 
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const { amount, bdv, stalk, seeds, actions } = depositSummary(
@@ -108,12 +109,6 @@ const DepositForm: FC<
 
   /// Derived
   const isReady = bdv.gt(0);
-
-  const applicableBalances = useGetClaimAppliedBalances(
-    values.farmActions.options,
-    values.farmActions?.selected || [],
-    values.balanceFrom
-  );
 
   const quoteProviderParams: DepositQuoteHandler = useMemo(() => {
     const claimedBeans = values.farmActions.selected.reduce((prev, curr) => {
@@ -165,7 +160,7 @@ const DepositForm: FC<
         title="Assets"
         balanceFrom={values.balanceFrom}
         setBalanceFrom={handleSetBalanceFrom}
-        applicableBalances={applicableBalances}
+        applicableBalances={additionalBalances}
       />
       <Stack gap={1}>
         {values.tokens.map((tokenState, index) => {
@@ -173,7 +168,7 @@ const DepositForm: FC<
           const balanceType = values.balanceFrom ? values.balanceFrom : BalanceFrom.TOTAL;
           const _balance = balances?.[key];
           const balance = _balance && balanceType in _balance ? _balance[balanceType] : ZERO_BN;
-          const additionalBalance = applicableBalances[tokenState.token.address]?.applied;
+          const additionalBalance = additionalBalances[tokenState.token.address]?.applied;
           return (
             <TokenQuoteProviderWithParams<DepositQuoteHandler>
               key={`tokens.${index}`}
