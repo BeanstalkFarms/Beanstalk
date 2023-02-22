@@ -11,6 +11,7 @@ import {
   loadWell,
   updateWellLiquidityTokenBalance,
   updateWellTokenBalances,
+  updateWellTokenUSDPrices,
   updateWellVolumes
 } from "./utils/Well";
 
@@ -24,6 +25,8 @@ export function handleAddLiquidity(event: AddLiquidity): void {
   updateWellTokenBalances(event.address, event.params.tokenAmountsIn, event.block.timestamp, event.block.number);
 
   updateWellLiquidityTokenBalance(event.address, event.params.lpAmountOut, event.block.timestamp, event.block.number);
+
+  updateWellTokenUSDPrices(event.address, event.block.number);
 
   incrementWellDeposit(event.address);
 }
@@ -44,6 +47,8 @@ export function handleRemoveLiquidity(event: RemoveLiquidity): void {
   updateWellTokenBalances(event.address, balances, event.block.timestamp, event.block.number);
 
   updateWellLiquidityTokenBalance(event.address, ZERO_BI.minus(event.params.lpAmountIn), event.block.timestamp, event.block.number);
+
+  updateWellTokenUSDPrices(event.address, event.block.number);
 
   incrementWellWithdraw(event.address);
 }
@@ -71,6 +76,8 @@ export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): v
 
   updateWellLiquidityTokenBalance(event.address, ZERO_BI.minus(event.params.lpAmountIn), event.block.timestamp, event.block.number);
 
+  updateWellTokenUSDPrices(event.address, event.block.number);
+
   incrementWellWithdraw(event.address);
 }
 
@@ -90,6 +97,8 @@ export function handleSwap(event: Swap): void {
     event.block.timestamp,
     event.block.number
   );
+
+  updateWellTokenUSDPrices(event.address, event.block.number);
 
   incrementWellSwap(event.address);
 }
