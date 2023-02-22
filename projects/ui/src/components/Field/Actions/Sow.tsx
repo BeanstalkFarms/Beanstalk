@@ -412,7 +412,7 @@ const Sow : FC<{}> = () => {
       const amountBeans = bean.equals(tokenIn) ? formData.amount : formData.amountOut;
       
       if (values.tokens.length > 1) throw new Error('Only one token supported at this time');
-      if (!amountIn || !amountBeans || amountBeans.eq(0)) throw new Error('No amount set'); 
+      if (!amountIn || amountIn.lte(0) || !amountBeans || amountBeans.eq(0)) throw new Error('No amount set'); 
       
       const amountPods = amountBeans.times(weather.div(100).plus(1));
       const fromMode = bean.equals(tokenIn) ? balanceFromToMode(values.balanceFrom) : FarmFromMode.INTERNAL_TOLERANT;
