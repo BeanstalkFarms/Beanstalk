@@ -12,7 +12,7 @@ import {
   DewhitelistToken
 } from "../generated/Silo-Replanted/Beanstalk";
 import { Beanstalk, TransferDepositCall, TransferDepositsCall } from "../generated/Silo-Calls/Beanstalk";
-import { ZERO_BI } from "./utils/Decimals";
+import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFarmer } from "./utils/Farmer";
 import { loadSilo, loadSiloDailySnapshot, loadSiloHourlySnapshot } from "./utils/Silo";
 import { loadSiloAsset as loadSiloAsset, loadSiloAssetDailySnapshot, loadSiloAssetHourlySnapshot } from "./utils/SiloAsset";
@@ -27,7 +27,7 @@ import {
   StalkChange
 } from "../generated/schema";
 import { loadBeanstalk } from "./utils/Beanstalk";
-import { BEANSTALK, BEAN_ERC20, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "./utils/Constants";
+import { BEANSTALK, BEAN_ERC20, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../subgraph-core/utils/Constants";
 
 export function handleAddDeposit(event: AddDeposit): void {
   let deposit = loadSiloDeposit(event.params.account, event.params.token, event.params.season);

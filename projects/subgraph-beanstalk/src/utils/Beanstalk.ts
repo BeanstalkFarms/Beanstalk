@@ -1,6 +1,6 @@
 import { Address } from "@graphprotocol/graph-ts";
 import { Beanstalk } from "../../generated/schema";
-import { ZERO_BI } from "./Decimals";
+import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 
 export function loadBeanstalk(protocol: Address): Beanstalk {
   let beanstalk = Beanstalk.load(protocol.toHexString());

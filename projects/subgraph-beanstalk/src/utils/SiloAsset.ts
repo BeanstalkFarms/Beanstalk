@@ -1,7 +1,7 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { SiloAsset, SiloAssetHourlySnapshot, SiloAssetDailySnapshot } from "../../generated/schema";
 import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
-import { ZERO_BD, ZERO_BI } from "./Decimals";
+import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 
 export function loadSiloAsset(account: Address, token: Address): SiloAsset {
   let id = account.toHexString() + "-" + token.toHexString();

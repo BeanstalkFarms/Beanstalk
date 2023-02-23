@@ -1,7 +1,7 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Season } from "../../generated/schema";
 import { loadBeanstalk } from "./Beanstalk";
-import { ONE_BI, ZERO_BD, ZERO_BI } from "./Decimals";
+import { ONE_BI, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 
 export function loadSeason(diamondAddress: Address, id: BigInt): Season {
   let season = Season.load(id.toString());

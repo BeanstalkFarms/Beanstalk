@@ -1,7 +1,7 @@
 import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Farmer, Fertilizer, FertilizerBalance, FertilizerToken } from "../../generated/schema";
-import { ZERO_BD, ZERO_BI } from "./Decimals";
-import { BEANSTALK, INITIAL_HUMIDITY } from "./Constants";
+import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { BEANSTALK, INITIAL_HUMIDITY } from "../../../subgraph-core/utils/Constants";
 import { Beanstalk } from "../../generated/Fertilizer/Beanstalk";
 
 export function loadFertilizer(fertilizerAddress: Address): Fertilizer {
