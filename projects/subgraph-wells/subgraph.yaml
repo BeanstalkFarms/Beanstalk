@@ -17,9 +17,9 @@ dataSources:
         - Aquifer
       abis:
         - name: Aquifer
-          file: ./abis/Aquifer.json
+          file: ../subgraph-core/abis/Aquifer.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
       eventHandlers:
         - event: BoreWell(address,address,address[],(address,bytes),(address,bytes)[],bytes)
           handler: handleBoreWell
@@ -38,11 +38,11 @@ templates:
         - Well
       abis:
         - name: Well
-          file: ./abis/Well.json
+          file: ../subgraph-core/abis/Well.json
         - name: CurvePrice
-          file: ./abis/CurvePrice.json
+          file: ../subgraph-core/abis/CurvePrice.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
       eventHandlers:
         - event: AddLiquidity(uint256[],uint256)
           handler: handleAddLiquidity
