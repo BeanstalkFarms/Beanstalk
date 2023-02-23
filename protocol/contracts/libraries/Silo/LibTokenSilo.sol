@@ -153,8 +153,7 @@ library LibTokenSilo {
         console.log('--- s.a[account].deposits[token][grownStalkPerBdv].amount: ', s.a[account].deposits[token][grownStalkPerBdv].amount);
 
         //setup or update the MowStatus for this deposit. We should have _just_ mowed before calling this function.
-        uint256 updatedMowStatusBdv = s.a[account].mowStatuses[token].bdv.add(bdv.toUint128());
-        s.a[account].mowStatuses[token].bdv = uint128(updatedMowStatusBdv);
+        s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.add(bdv.toUint128());
         console.log('s.a[account].mowStatuses[token].bdv mowstatus bdv after deposit: ', uint256(s.a[account].mowStatuses[token].bdv));
         //needs to update the mow status
 
