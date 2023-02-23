@@ -69,7 +69,7 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
 
   // Results
   const withdrawResult = BeanstalkSDK.Silo.Withdraw.withdraw(
-    whitelistedToken,
+    getNewToOldToken(whitelistedToken),
     values.tokens,
     siloBalances[whitelistedToken.address]?.deposited.crates || [], // fallback
     season,
@@ -245,7 +245,7 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
     try {
       middleware.before();
       const withdrawResult = BeanstalkSDK.Silo.Withdraw.withdraw(
-        token,
+        getNewToOldToken(token),
         values.tokens,
         siloBalances[token.address]?.deposited.crates,
         season,
