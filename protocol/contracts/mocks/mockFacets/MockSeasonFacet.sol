@@ -193,7 +193,6 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.start = block.timestamp;
         s.season.timestamp = uint32(block.timestamp % 2 ** 32);
         s.s.stalk = 0;
-        s.s.seeds = 0;
         s.season.withdrawSeasons = 25;
         s.season.current = 1;
         s.paused = false;
