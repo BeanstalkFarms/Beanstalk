@@ -1,5 +1,5 @@
-import { Address, BigDecimal, BigInt, Bytes } from "@graphprotocol/graph-ts";
-import { toDecimal } from "../../src/utils/Decimals";
+import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
+import { toDecimal } from "../../../subgraph-core/utils/Decimals";
 
 export const WELL_ENTITY_TYPE = "Well";
 export const WELL_DAILY_ENTITY_TYPE = "WellDailySnapshot";

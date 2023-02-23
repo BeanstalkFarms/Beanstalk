@@ -1,6 +1,6 @@
 import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { createMockedFunction } from "matchstick-as";
-import { BEAN_ERC20, CURVE_PRICE, WETH } from "../../src/utils/Constants";
+import { BEAN_ERC20, CURVE_PRICE, WETH } from "../../../subgraph-core/utils/Constants";
 import { BEAN_USD_PRICE, WELL } from "./Constants";
 
 export function createContractCallMocks(): void {

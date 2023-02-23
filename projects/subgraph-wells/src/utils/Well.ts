@@ -2,8 +2,8 @@ import { Address, BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts
 import { BoreWellWellFunctionStruct } from "../../generated/Aquifer/Aquifer";
 import { Well, WellDailySnapshot, WellFunction, WellHourlySnapshot } from "../../generated/schema";
 import { ERC20 } from "../../generated/templates/Well/ERC20";
-import { BEAN_ERC20 } from "./Constants";
-import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
+import { BEAN_ERC20 } from "../../../subgraph-core/utils/Constants";
+import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import {
   deltaBigDecimalArray,
   deltaBigIntArray,
@@ -13,7 +13,7 @@ import {
   toDecimal,
   ZERO_BD,
   ZERO_BI
-} from "./Decimals";
+} from "../../../subgraph-core/utils/Decimals";
 import { getTokenDecimals, loadToken, updateTokenUSD } from "./Token";
 
 export function createWell(wellAddress: Address, implementation: Address, inputTokens: Address[]): Well {
