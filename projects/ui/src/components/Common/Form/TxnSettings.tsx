@@ -13,7 +13,7 @@ const PLACEMENTS = {
     pt: 1.45
   },
   'condensed-form-top-right': {
-    position: 'absolute',
+    position: 'sticky',
     top: 0,
     right: 0,
     pr: 0.8,

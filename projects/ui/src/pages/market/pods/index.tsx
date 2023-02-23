@@ -54,7 +54,7 @@ const MarketPage: React.FC<{}> = () => {
             <MarketGraphContainer chartHeight={chartHeight} />
           </Box>
           <Box sx={marketActionsV2Sx}>
-            <MarketActions />
+            <MarketActions chartHeight={chartHeight} />
           </Box>
           <Box sx={{ width: { xs: '100%', lg: LEFT_MAX_WIDTH } }}>
             <MarketActivityTable />

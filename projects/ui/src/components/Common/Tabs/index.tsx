@@ -7,17 +7,21 @@ import { FC } from '~/types';
 
 export const ChipLabel : FC<{ name: string; token?: Token }> = ({ name, children }) => (
   <Row gap={0.2}>
-    {name}&nbsp;
-    <Chip 
-      label={children} 
-      size="small" 
-      color="primary"
-      sx={{ 
-        fontWeight: 'bold', 
-        // background: BeanstalkPalette.theme.winter.primaryHover, 
-        // color: 'primary.main' 
-      }} 
-    />
+    <>
+      {name}&nbsp;
+      {children && (
+        <Chip
+          label={children}
+          size="small"
+          color="primary"
+          sx={{
+            fontWeight: 'bold',
+            // background: BeanstalkPalette.theme.winter.primaryHover,
+            // color: 'primary.main'
+          }}
+        />
+      )}
+    </>
   </Row>
 ); 
 

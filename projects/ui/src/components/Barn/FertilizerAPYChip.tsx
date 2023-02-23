@@ -12,6 +12,8 @@ const copy = {
   vAPY: 'The Variable FERT APY uses a moving average of Fertilized Sprouts during recent Seasons to estimate a future rate of return.',
 };
 
+const SECTION_MAX_WIDTH = 260;
+
 const FertilizerAPYChip: React.FC<{}> = () => {
   const sdk = useSdk();
   const yieldData = useFertilizerYieldData();
@@ -28,12 +30,14 @@ const FertilizerAPYChip: React.FC<{}> = () => {
       componentsProps={{ tooltip: { sx: { maxWidth: 'none !important' } } }}
       title={
         <Row direction={{ xs: 'column', sm: 'row' }} alignItems="flex-start">
-          <Box px={1} py={0.5} sx={{ maxWidth: 260 }}>
+          <Box px={1} py={0.5} sx={{ maxWidth: SECTION_MAX_WIDTH }}>
             <Stat
               title={
                 <Row gap={0.5}>
                   <TokenIcon token={sdk.tokens.SPROUTS} />
-                  Total Sprouts Fertilized Per Season
+                  <Typography>
+                    Total Sprouts Fertilized Per Season
+                  </Typography>
                 </Row>
               }
               subtitle={copy.fertilizedAmounts}
@@ -42,7 +46,7 @@ const FertilizerAPYChip: React.FC<{}> = () => {
               amount={displayFullBN(yieldData.beansPerSeasonEMA, 2)}
             />
           </Box>
-          <Box px={1} py={0.5} sx={{ maxWidth: 260 }}>
+          <Box px={1} py={0.5} sx={{ maxWidth: SECTION_MAX_WIDTH, alignSelf: 'center' }}>
             <Typography component="span">
               {copy.vAPY} &nbsp;
               <Link
