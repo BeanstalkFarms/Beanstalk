@@ -25,7 +25,6 @@ import TransactionToast from '~/components/Common/TxnToast';
 import { AppState } from '~/state';
 import { ActionType } from '~/util/Actions';
 import { ZERO_BN } from '~/constants';
-import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import { useFetchBeanstalkSilo } from '~/state/beanstalk/silo/updater';
 import IconWrapper from '../../Common/IconWrapper';
 import { IconSize } from '../../App/muiTheme';
@@ -55,7 +54,6 @@ const WithdrawForm : FC<
   // Formik
   values,
   isSubmitting,
-  submitForm,
   // Custom
   token: whitelistedToken,
   siloBalances,
@@ -220,7 +218,7 @@ const WithdrawForm : FC<
           balanceLabel="Deposited Balance"
           InputProps={InputProps}
           belowComponent={
-            <ClaimAndPlantFarmActions preset="plant" />
+            <ClaimAndPlantFarmActions />
           }
         />
         {isReady ? (
@@ -287,7 +285,6 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
   /// Farmer
   const farmerSilo          = useFarmerSilo();
   const siloBalances        = farmerSilo.balances;
-  const [refetchFarmerSilo] = useFetchFarmerSilo();
   const [refetchSilo]       = useFetchBeanstalkSilo();
   
   /// Form
@@ -301,14 +298,10 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
       },
     ],
     farmActions: {
-      options: [
-        ClaimPlantAction.PLANT,
-      ],
-      selected: [],
-      additional: {
-        selected: [],
-        required: [ClaimPlantAction.MOW],
-      }
+      options: ClaimPlant.presets.plant,
+      selected: undefined,
+      additional: undefined,
+      required: [ClaimPlantAction.MOW]
     },
   }), [token]);
 
@@ -354,7 +347,7 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
       const { execute, actionsPerformed } = await ClaimPlant.build(
         sdk,
         claimPlant.buildActions(values.farmActions.selected),
-        claimPlant.buildActions(values.farmActions.additional.selected),
+        claimPlant.buildActions(values.farmActions.additional),
         withdraw,
         token.amount(0),
         { slippage: 0.1 }

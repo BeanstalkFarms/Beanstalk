@@ -246,7 +246,7 @@ const ConvertForm : FC<
             || values.maxAmountIn.eq(0) // = 0 means we can't make this conversion
           )}
           belowComponent={
-            <ClaimAndPlantFarmActions preset="plant" />
+            <ClaimAndPlantFarmActions />
           }
           params={{}}
         />
@@ -424,12 +424,10 @@ const Convert : FC<{
     // Token Outputs
     tokenOut:       initialTokenOut,
     farmActions: {
-      options: [ClaimPlantAction.PLANT],
-      selected: [],
-      additional: {
-        selected: [],
-        required: [ClaimPlantAction.MOW]
-      }
+      options: ClaimPlant.presets.plant,
+      selected: undefined,
+      additional: undefined,
+      required: [ClaimPlantAction.MOW]
     },
 
   }), [fromToken, initialTokenOut]);
@@ -554,10 +552,11 @@ const Convert : FC<{
       const { execute, actionsPerformed } = await ClaimPlant.build(
         sdk,
         claimPlant.buildActions(values.farmActions.selected),
-        claimPlant.buildActions(values.farmActions.additional.selected),
+        claimPlant.buildActions(values.farmActions.additional),
         work,
         tokenIn.amount(amountIn.toString()),
-        { slippage }
+        { slippage },
+        true, // filter out mow b/c converting handles it for us
       );
 
       const txn = await execute();

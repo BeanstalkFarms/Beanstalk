@@ -246,7 +246,7 @@ const TokenSelectDialogNew : TokenSelectDialogC = React.memo(({
                         ) : null}
                         {applicableBalance?.applied.gt(0) || applicableBalance?.remaining.gt(0) ? (
                           <Tooltip
-                            title="tooltip data goes here" // TODO FIX ME
+                            title={`The amount of ${_token.symbol} you can use in conjunction with your selected balance by claiming Silo withdrawals, harvesting Pods, and rinsing Sprouts.`}
                             placement="right"
                           >
                             <HelpOutlineIcon

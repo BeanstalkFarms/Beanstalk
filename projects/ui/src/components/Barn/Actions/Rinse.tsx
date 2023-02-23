@@ -183,12 +183,10 @@ const Rinse : FC<{ quick?: boolean }> = ({ quick }) => {
     destination: undefined,
     amount: farmerBarn.fertilizedSprouts,
     farmActions: {
-      selected: [],
       options: [],
-      additional: {
-        selected: [],
-        exclude: [ClaimPlantAction.RINSE]
-      }
+      selected: undefined,
+      additional: undefined,
+      exclude: [ClaimPlantAction.RINSE]
     }
   }), [farmerBarn.fertilizedSprouts]);
 
@@ -215,7 +213,7 @@ const Rinse : FC<{ quick?: boolean }> = ({ quick }) => {
       const { execute, actionsPerformed } = await ClaimPlant.build(
         sdk, 
         claimPlant.buildActions(values.farmActions.selected),
-        claimPlant.buildActions(values.farmActions.additional.selected),
+        claimPlant.buildActions(values.farmActions.additional),
         rinse,
         sdk.tokens.BEAN.amount(0), // Rinse doesn't need any input so we can just use 0,
         { slippage: 0.1 }
@@ -234,12 +232,10 @@ const Rinse : FC<{ quick?: boolean }> = ({ quick }) => {
           destination: FarmToMode.INTERNAL,
           amount: ZERO_BN,
           farmActions: {
-            selected: [],
             options: [],
-            additional: {
-              selected: [],
-              exclude: [ClaimPlantAction.RINSE]
-            }
+            selected: undefined,
+            additional: undefined,
+            exclude: [ClaimPlantAction.RINSE]
           }
         }
       });

@@ -199,7 +199,7 @@ const SowForm : FC<
           balanceFrom={values.balanceFrom}
           additionalBalance={claimingBalances[values.tokens[0].token.address]?.applied}
           belowComponent={
-            <ClaimAndPlantFarmActions preset="claim" />
+            <ClaimAndPlantFarmActions />
           }
         />
         {!hasSoil ? (
@@ -341,10 +341,8 @@ const Sow : FC<{}> = () => {
     maxAmountIn: undefined,
     farmActions: {
       options: ClaimPlant.presets.claimBeans,
-      selected: [],
-      additional: {
-        selected: [],
-      }
+      selected: undefined,
+      additional: undefined,
     },
     balanceFrom: BalanceFrom.TOTAL
   }), [baseToken]);
@@ -445,7 +443,7 @@ const Sow : FC<{}> = () => {
       const { execute, actionsPerformed } = await ClaimPlant.build(
         sdk,
         claimPlant.buildActions(values.farmActions.selected),
-        claimPlant.buildActions(values.farmActions.additional.selected),
+        claimPlant.buildActions(values.farmActions.additional),
         sow,
         amountIn,
         overrides,

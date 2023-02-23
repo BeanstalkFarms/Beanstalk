@@ -18,7 +18,6 @@ import {
 import { ZERO_BN } from '~/constants';
 import { FarmerSilo } from '~/state/farmer/silo';
 import useFarmerSiloBalances from '~/hooks/farmer/useFarmerSiloBalances';
-import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import { useFetchBeanstalkSilo } from '~/state/beanstalk/silo/updater';
 import BeanstalkSDK from '~/lib/Beanstalk';
 import useSeason from '~/hooks/beanstalk/useSeason';
@@ -132,7 +131,7 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
           balanceLabel="Deposited Balance"
           InputProps={InputProps}
           belowComponent={
-            <ClaimAndPlantFarmActions preset="plant" />
+            <ClaimAndPlantFarmActions />
           }
         />
         {depositedBalance?.gt(0) && (
@@ -219,7 +218,6 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
 
   /// Farmer
   const siloBalances = useFarmerSiloBalances();
-  const [refetchFarmerSilo] = useFetchFarmerSilo();
   const [refetchSilo] = useFetchBeanstalkSilo();
 
   /// Form
@@ -234,12 +232,10 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
     ],
     to: '',
     farmActions: {
-      options: [ClaimPlantAction.PLANT],
-      selected: [],
-      additional: {
-        selected: [],
-        required: [ClaimPlantAction.MOW],
-      }
+      options: ClaimPlant.presets.plant,
+      selected: undefined,
+      additional: undefined,
+      required: [ClaimPlantAction.MOW],
     },
   }), [token]);
 
@@ -301,7 +297,7 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
       const { execute, actionsPerformed } = await ClaimPlant.build(
         sdk,
         claimPlant.buildActions(values.farmActions.selected),
-        claimPlant.buildActions(values.farmActions.additional.selected),
+        claimPlant.buildActions(values.farmActions.additional),
         transfer,
         token.amount(0),
         { slippage: 0.1 }

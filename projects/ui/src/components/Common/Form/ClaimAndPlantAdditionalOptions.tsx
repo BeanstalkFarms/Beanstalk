@@ -43,17 +43,17 @@ const ClaimAndPlantAdditionalOptions: React.FC<{}> = () => {
     // the options are the complement of possible actions to values.options
     const _options = new Set(Object.keys(ClaimPlantAction) as ClaimPlantAction[]);
     farmActions.options.forEach((opt) => _options.delete(opt));
-    farmActions.additional.exclude?.forEach((opt) => _options.delete(opt));
+    farmActions?.exclude?.forEach((opt) => _options.delete(opt));
 
     return [..._options].sort((a, b) => sortOrder[a] - sortOrder[b]);
-  }, [farmActions.additional.exclude, farmActions.options]);
+  }, [farmActions?.exclude, farmActions.options]);
 
   const [required, enabled, allToggled] = useMemo(() => {
-    const _required = new Set(farmActions.additional.required?.filter((opt) => claimPlantOptions[opt].enabled));
+    const _required = new Set(farmActions?.required?.filter((opt) => claimPlantOptions[opt].enabled));
     const _enabled = options.filter((opt) => claimPlantOptions[opt].enabled);
     const _allToggled = _enabled.every((action) => local.has(action)) && _enabled.length > 0;
     return [_required, _enabled, _allToggled];
-  }, [farmActions.additional.required, options, claimPlantOptions, local]);
+  }, [farmActions?.required, options, claimPlantOptions, local]);
 
   /// Handlers
   const handleOnToggle = (item: ClaimPlantAction) => {
@@ -73,13 +73,13 @@ const ClaimAndPlantAdditionalOptions: React.FC<{}> = () => {
     }
 
     setLocal(copy);
-    setFieldValue('farmActions.additional.selected', [...copy]);
+    setFieldValue('farmActions.additional', [...copy]);
   };
 
   const handleOnToggleAll = () => {
     const newSet = new Set([...(allToggled ? required : enabled)]);
     setLocal(newSet);
-    setFieldValue('farmActions.additional.selected', newSet);
+    setFieldValue('farmActions.additional', newSet);
   };
 
   const handleMouseEvent = useCallback((item: ClaimPlantAction, isRemoving: boolean) => {
@@ -119,12 +119,19 @@ const ClaimAndPlantAdditionalOptions: React.FC<{}> = () => {
   useTimedRefresh(estimateGas, 2 * 1000, open);
 
   useEffect(() => {
+    if (!options) {
+      setLocal(new Set());
+      setFieldValue('farmActions.additional', []);
+    }
+  }, [options, setFieldValue]);
+
+  useEffect(() => {
     if (!required.size) return;
     const hasAllRequired = [...required].every((opt) => local.has(opt));
     if (!hasAllRequired) {
       const updatedSelected = new Set([...local, ...required]);
       setLocal(updatedSelected);
-      setFieldValue('farmActions.additional.selected', [...updatedSelected]);
+      setFieldValue('farmActions.additional', [...updatedSelected]);
     }
   }, [local, required, setFieldValue]);
 

@@ -254,32 +254,15 @@ class ClaimPlant {
     ],
     plant: [
       ClaimPlantAction.PLANT,
-    ]
+    ],
+    none: [],
   }
 
-  static async build(
-    /** */
-    sdk: BeanstalkSDK,
-    /** 
-     * ClaimPlantActions required to precede any arbitrary function call when calling Farm
-     */
+  private static deduplicate(
     primaryActions: ClaimPlantActionDataMap,
-    /** 
-     * Additional ClaimPlantActions that don't affect the main operation
-     */
     _secondaryActions: ClaimPlantActionDataMap,
-    /** 
-     * workflow that executes some function call if performed in isolation
-     * Ex: if performing a deposit, pass in FarmWorkflow with only the steps to perform a deposit
-     */
-    operation: FarmWorkflow,
-    /** */
-    amountIn: TokenValue,
-    /** */
-    options: {
-      slippage: number
-    }
-  ): Promise<ClaimPlantResult> {
+    filterMow?: boolean
+  ) {
     const actionsPerformed = new Set<ClaimPlantAction>([
       ...Object.keys(primaryActions), 
       ...Object.keys(_secondaryActions)
@@ -304,10 +287,50 @@ class ClaimPlant {
      const planting = ClaimPlantAction.PLANT in primaryActions || ClaimPlantAction.PLANT in secondaryActions;
      const claimingWithdrawals = ClaimPlantAction.CLAIM in primaryActions || ClaimPlantAction.CLAIM in secondaryActions;
   
-    if (enrooting || planting || claimingWithdrawals) {
+    if (enrooting || planting || claimingWithdrawals || filterMow) {
       if (ClaimPlantAction.MOW in primaryActions) delete primaryActions[ClaimPlantAction.MOW];
       if (ClaimPlantAction.MOW in secondaryActions) delete secondaryActions[ClaimPlantAction.MOW];
+      actionsPerformed.delete(ClaimPlantAction.MOW);
     }
+
+    return {
+      primaryActions,
+      secondaryActions,
+      actionsPerformed,
+    };
+  }
+
+  static async build(
+    /** */
+    sdk: BeanstalkSDK,
+    /** 
+     * ClaimPlantActions required to precede any arbitrary function call when calling Farm
+     */
+    _primaryActions: ClaimPlantActionDataMap,
+    /** 
+     * Additional ClaimPlantActions that don't affect the main operation
+     */
+    _secondaryActions: ClaimPlantActionDataMap,
+    /** 
+     * workflow that executes some function call if performed in isolation
+     * Ex: if performing a deposit, pass in FarmWorkflow with only the steps to perform a deposit
+     */
+    operation: FarmWorkflow,
+    /** */
+    amountIn: TokenValue,
+    /** */
+    options: {
+      slippage: number
+    },
+    filterMow?: boolean,
+  ): Promise<ClaimPlantResult> {
+    const { 
+      primaryActions, 
+      secondaryActions, 
+      actionsPerformed 
+    } = ClaimPlant.deduplicate(_primaryActions, _secondaryActions, filterMow);
+
+    console.log('actionsPerformed: ', actionsPerformed);
   
     /// --- Construct workflow ---
     const farm = sdk.farm.create();

@@ -134,9 +134,7 @@ const BuyForm : FC<
                 fromMode: balanceFromToMode(values.balanceFrom),
                 additionalBean: additionalBalance
               }}
-              belowComponent={
-                <ClaimAndPlantFarmActions preset="claim" />
-              }
+              belowComponent={<ClaimAndPlantFarmActions />}
             />
           ); }
         )}
@@ -213,7 +211,6 @@ const Buy : FC<{}> = () => {
   
   /// Form
   const middleware = useFormMiddleware();
-
   const preferredTokens: PreferredToken[] = useMemo(() => {
     const tokens = sdk.tokens;
 
@@ -223,10 +220,9 @@ const Buy : FC<{}> = () => {
       { token: tokens.ETH, minimum: new BigNumber(0.01) },
     ];
   }, [sdk.tokens]);
-
   const baseToken = usePreferredToken(preferredTokens, 'use-best');
   const tokenOut = sdk.tokens.USDC;
-
+  
   const initialValues: BuyFormValues = useMemo(() => ({
     tokens: [
       {
@@ -237,10 +233,8 @@ const Buy : FC<{}> = () => {
     balanceFrom: BalanceFrom.TOTAL,
     farmActions: {
       options: ClaimPlant.presets.claimBeans,
-      selected: [],
-      additional: {
-        selected: [],
-      }
+      selected: undefined,
+      additional: undefined,
     },
     settings: {
       slippage: 0.1
@@ -363,8 +357,8 @@ const Buy : FC<{}> = () => {
       const options = { slippage: values.settings.slippage };
       const { execute, actionsPerformed } = await ClaimPlant.build(
         sdk,
-        claimPlant.buildActions([]),
-        claimPlant.buildActions(values.farmActions.additional.selected),
+        {}, // no actions. Handled in useQuote
+        claimPlant.buildActions(values.farmActions.additional),
         buyFert,
         tokenIn.amount(amountIn.toString()),
         options,
@@ -404,9 +398,3 @@ const Buy : FC<{}> = () => {
 };
 
 export default Buy;
-
-// export default function BuyWrapper() {
-//   const [fetch] = useRefetchFarmerBarn2();
-
-//   return <Stack>sup</Stack>;
-// }

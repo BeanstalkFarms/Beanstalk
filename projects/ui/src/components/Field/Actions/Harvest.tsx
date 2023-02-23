@@ -30,6 +30,7 @@ import TokenIcon from '~/components/Common/TokenIcon';
 import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import useSdk from '~/hooks/sdk';
 import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
+import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 
 // -----------------------------------------------------------------------
 
@@ -124,6 +125,9 @@ const HarvestForm: FC<Props> = ({
               />
             )
           }}
+          belowComponent={
+            <ClaimAndPlantFarmActions />
+          }
         />
         {/* Transaction Details */}
         {values.amount?.gt(0) ? (
@@ -204,12 +208,10 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
     amount: farmerField.harvestablePods || null,
     destination: undefined,
     farmActions: {
-      options: [],
-      selected: [],
-      additional: {
-        selected: [],
-        exclude: [ClaimPlantAction.HARVEST]
-      }
+      options: ClaimPlant.presets.none,
+      selected: undefined,
+      additional: undefined,
+      exclude: [ClaimPlantAction.HARVEST]
     }
   }), [farmerField.harvestablePods]);
 
@@ -243,7 +245,7 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
         const { execute, actionsPerformed } = await ClaimPlant.build(
           sdk,
           claimPlant.buildActions(values.farmActions.selected),
-          claimPlant.buildActions(values.farmActions.additional.selected),
+          claimPlant.buildActions(values.farmActions.additional),
           harvest,
           sdk.tokens.BEAN.amount(0), // no amount in
           { slippage: 0.1 }

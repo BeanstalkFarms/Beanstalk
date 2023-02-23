@@ -229,17 +229,17 @@ export default function useFarmerClaimAndPlantOptions() {
    * Returns the total amount of beans claimable from a list of claimable actions
    */
   const getClaimable = useCallback(
-    (_options: ClaimPlantAction[] = []) => {
-      const amount = _options.reduce((prev, curr) => {
+    (_options?: ClaimPlantAction[]) => {
+      const amount = _options?.reduce((prev, curr) => {
         const option = options[curr] as ClaimPlantItem;
         prev = prev.plus(normalizeBN(option?.claimable?.amount));
         return prev;
       }, ZERO_BN);
 
-      const tokenValue = sdk.tokens.BEAN.fromHuman(amount.toString());
+      const tokenValue = sdk.tokens.BEAN.fromHuman(amount?.toString() || '0');
 
       return {
-        bn: amount,
+        bn: amount || ZERO_BN,
         tokenValue,
       };
     },

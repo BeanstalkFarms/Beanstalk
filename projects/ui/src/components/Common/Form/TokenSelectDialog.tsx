@@ -1,12 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Button, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, Link, Box, Stack, Tooltip } from '@mui/material';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { Button, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, Link, Box, Stack } from '@mui/material';
 import { StyledDialog, StyledDialogActions, StyledDialogContent, StyledDialogTitle } from '~/components/Common/Dialog';
 import Token from '~/classes/Token';
-import { displayBN, displayFullBN } from '~/util';
+import { displayBN } from '~/util';
 import { ZERO_BN } from '~/constants';
-import { ApplicableBalance, FarmerBalances } from '~/state/farmer/balances';
+import { FarmerBalances } from '~/state/farmer/balances';
 import { FarmerSilo } from '~/state/farmer/silo';
 import { BeanstalkPalette, FontSize, IconSize } from '../../App/muiTheme';
 import Row from '~/components/Common/Row';
@@ -52,8 +51,6 @@ export type TokenSelectDialogProps<K extends keyof TokenBalanceMode> = {
   tokenList: Token[];
   /** Single or multi-select */
   mode?: TokenSelectMode;
-  /** maping of additional balances to show along with balances */
-  applicableBalances?: Record<string, ApplicableBalance>;
 }
 
 type TokenSelectDialogC = React.FC<TokenSelectDialogProps<keyof TokenBalanceMode>>;
@@ -80,7 +77,6 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
   // Tokens
   tokenList,
   mode = TokenSelectMode.MULTI,
-  applicableBalances,
 }) => {
   /// Chain Constants
   const getChainToken = useGetChainToken();
@@ -94,13 +90,6 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
     if (balancesType === 'farm') return (_balances as TokenBalanceMode['farm'])?.[addr]?.[balanceFrom] || ZERO_BN;
     return (_balances as TokenBalanceMode['silo-deposits'])?.[addr]?.deposited?.amount || ZERO_BN;
   }, [_balances, balancesType, balanceFrom]);
-
-  const getApplicableBalances = useCallback((addr: string) => {
-    if (!applicableBalances || !(addr in applicableBalances)) return undefined;
-    const applied = applicableBalances[addr].applied;
-    const remaining = applicableBalances[addr].remaining;
-    return { applied, remaining };
-  }, [applicableBalances]);
 
   // Toggle the selection state of a token.
   const toggle = useCallback((token: Token) => {
@@ -187,7 +176,6 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
         <List sx={{ p: 0 }}>
           {filteredTokenList ? filteredTokenList.map((_token) => {
             const tokenBalance = getBalance(_token.address);
-            const applicableBalance = getApplicableBalances(_token.address);
             return (
               <ListItem
                 key={_token.address}
@@ -236,32 +224,6 @@ const TokenSelectDialog : TokenSelectDialogC = React.memo(({
                         {/* Token balance */}
                         {displayBN(tokenBalance)}
                         {/* additionally applied balance */}
-                        {applicableBalance?.applied.gt(0) ? (
-                          <Typography variant="inherit" color="primary" component="span">
-                            &nbsp; + {displayFullBN(applicableBalance.applied, 2)}
-                          </Typography>
-                        ) : null}
-                        {/* remaining applicable balance */}
-                        {applicableBalance?.remaining.gt(0) ? (
-                          <Typography variant="inherit" color="text.tertiary" component="span">
-                            &nbsp; + {displayFullBN(applicableBalance.remaining, 2)}
-                          </Typography>
-                        ) : null}
-                        {applicableBalance?.applied.gt(0) || applicableBalance?.remaining.gt(0) ? (
-                          <Tooltip
-                            title="tooltip data goes here" // TODO FIX ME
-                            placement="right"
-                          >
-                            <HelpOutlineIcon
-                              sx={{
-                                color: 'text.secondary',
-                                display: 'inline',
-                                mb: 0.5,
-                                fontSize: '12px',
-                              }}
-                            />
-                          </Tooltip>
-                        ) : null}
                       </Typography>
                   ) : null}
                   </Row>

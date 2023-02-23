@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFormikContext } from 'formik';
 import SelectionAccordion from '~/components/Common/Accordion/SelectionAccordion';
 
@@ -10,37 +10,23 @@ import { ClaimAndPlantFormState } from '.';
 import useToggle from '~/hooks/display/useToggle';
 import { ClaimPlantAction } from '~/util/ClaimPlant';
 
-const presets = {
-  claim: {
-    options: [
-      ClaimPlantAction.RINSE,
-      ClaimPlantAction.HARVEST,
-      ClaimPlantAction.CLAIM,
-    ],
-    variant: 'pill',
-  },
-  plant: {
-    options: [
-      ClaimPlantAction.PLANT
-    ],
-    variant: 'card',
-  },
-};
-
-type Props = {
-  preset: keyof typeof presets;
-}
-
-const ClaimAndPlantFarmActions: React.FC<Props> = ({ preset }) => {
+const ClaimAndPlantFarmActions: React.FC<{}> = () => {
   /// Formik
   const { values: { farmActions }, setFieldValue } = useFormikContext<ClaimAndPlantFormState>();
-
+  
   /// State
   const [local, setLocal] = useState<Set<ClaimPlantAction>>(new Set(farmActions.selected));
   const [open, show, hide] = useToggle();
-
+  
   /// Helpers
   const { options } = useFarmerClaimPlantOptions();
+  const formOptions = useMemo(() => { 
+    const isPlant = farmActions.options.includes(ClaimPlantAction.PLANT);
+    return {
+      options: farmActions.options,
+      variant: isPlant ? 'card' : 'pill'
+    };
+  }, [farmActions.options]);
 
   /// Handlers
   const handleOnToggle = useCallback((item: ClaimPlantAction) => {
@@ -55,7 +41,7 @@ const ClaimAndPlantFarmActions: React.FC<Props> = ({ preset }) => {
   }, [setFieldValue, local]);
 
   useEffect(() => {
-    if (farmActions.selected.length === 0) {
+    if (!farmActions.selected) {
       setLocal(new Set());
       hide();
     }
@@ -66,7 +52,7 @@ const ClaimAndPlantFarmActions: React.FC<Props> = ({ preset }) => {
       open={open}
       onChange={open ? hide : show}
       title="Add Claimable Assets to this transaction"
-      options={presets[preset].options}
+      options={formOptions.options}
       selected={local}
       onToggle={handleOnToggle}
       sx={{ borderRadius: 1 }}
@@ -74,7 +60,7 @@ const ClaimAndPlantFarmActions: React.FC<Props> = ({ preset }) => {
       render={(item, selected) => {
         const sharedProps = { option: item, summary: options[item], selected };
 
-        switch (presets[preset].variant) {
+        switch (formOptions.variant) {
           case 'card': {
             return (
               <ClaimPlantAccordionCard {...sharedProps} />

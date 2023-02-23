@@ -46,15 +46,17 @@ type ClaimPlantRefetch = (
   additional?: (() => MayPromise<any>)[]
 ) => Promise<void>;
 
+type ClaimPlantBuildAction = (actions?: ClaimPlantAction[]) => Partial<{ 
+  [key in ClaimPlantAction]: ClaimPlantActionData 
+}>;
+
 // -------------------------------------------------------------------------
 
 // take in sdk as a param to allow for testing
 export default function useFarmerClaimPlantActions(): {
   actions: ClaimPlantActionMap;
   refetch: ClaimPlantRefetch;
-  buildActions: (
-    actions: ClaimPlantAction[]
-  ) => Partial<{ [key in ClaimPlantAction]: ClaimPlantActionData }>;
+  buildActions: ClaimPlantBuildAction;
 } {
   const sdk = useSdk();
   /// Farmer
@@ -149,10 +151,12 @@ export default function useFarmerClaimPlantActions(): {
 
       const refetchFunctions = [...actions].reduce((prev, action) => {
         actionToRefetch[action].forEach((key: FarmerRefetchFn) => {
-          if (config && config[key] && !prev[key]) {
+          if (config?.[key] && !prev[key]) {
             prev[key] = refetchMap[key];
+            console.log('fetching: ', key);
           } else if (!prev[key]) {
             prev[key] = refetchMap[key];
+            console.log('fetching: ', key);
           }
         });
 
@@ -163,6 +167,7 @@ export default function useFarmerClaimPlantActions(): {
         ...Object.values(refetchFunctions),
         ...(additional || []),
       ];
+      console.log('refetchFunctions: ', allRefetchFunctions.length);
 
       await Promise.all(allRefetchFunctions.map((fn) => fn()));
     },
@@ -174,12 +179,14 @@ export default function useFarmerClaimPlantActions(): {
     ]
   );
 
-  const buildActions = useCallback(
-    (actions: ClaimPlantAction[]) =>
-      actions.reduce((prev, curr) => {
+  const buildActions: ClaimPlantBuildAction = useCallback(
+    (actions?: ClaimPlantAction[]) => {
+      if (!actions || !actions.length) return {};
+      return actions.reduce((prev, curr) => {
         prev[curr] = claimAndPlantActions[curr]();
         return prev;
-      }, {} as Partial<{ [action in ClaimPlantAction]: ClaimPlantActionData }>),
+      }, {} as Partial<{ [action in ClaimPlantAction]: ClaimPlantActionData }>);
+    },
     [claimAndPlantActions]
   );
 

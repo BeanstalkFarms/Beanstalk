@@ -164,7 +164,7 @@ const ClaimForm : FC<
           displayQuote={false}
           {...quoteHandlerParams}
           belowComponent={
-            <ClaimAndPlantFarmActions preset="plant" />
+            <ClaimAndPlantFarmActions />
           }
         />
         <Stack gap={0}>
@@ -295,15 +295,11 @@ const Claim : FC<{
       slippage: 0.1,
     },
     farmActions: {
-      options: [
-        ClaimPlantAction.PLANT,
-      ],
-      selected: [],
-      additional: {
-        selected: [],
-        required: [ClaimPlantAction.MOW],
-        exclude: [ClaimPlantAction.CLAIM]
-      }
+      options: ClaimPlant.presets.plant,
+      selected: undefined,
+      additional: undefined,
+      required: [ClaimPlantAction.MOW],
+      exclude: [ClaimPlantAction.CLAIM]
     },
   }), [token, claimableBalance]);
 
@@ -345,10 +341,8 @@ const Claim : FC<{
           crates.map((crate) => crate.season.toString()),
           claimDestination,
         ));
-      } 
-      
-      // Claim a single withdrawal of `token` in one call. Gas efficient.
-      else {
+      } else {
+        // Claim a single withdrawal of `token` in one call. Gas efficient.
         console.debug('[Claim] claiming a single withdrawal');
         claim.add(new sdk.farm.actions.ClaimWithdrawal(
           token.address,
@@ -365,7 +359,7 @@ const Claim : FC<{
       const { execute, actionsPerformed } = await ClaimPlant.build(
         sdk,
         claimPlant.buildActions(values.farmActions.selected),
-        claimPlant.buildActions(values.farmActions.additional.selected),
+        claimPlant.buildActions(values.farmActions.additional),
         claim,
         amountIn, 
         { slippage: values.settings.slippage }

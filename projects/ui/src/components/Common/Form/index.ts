@@ -132,29 +132,24 @@ export type ClaimAndPlantFormState = {
      * NOTE: typically these are the actions that must be peformed BEFORE the user performs the 'main' action.
      * 
      */
-    selected: ClaimPlantAction[];
+    selected: ClaimPlantAction[] | undefined;
     /**
-     * 
+     * Any additional 'ClaimPlantAction's to perform that have been selected by the user.
+     * NOTE:
+     * the set of options for 'additional.selected' is the complement of 'farmActions.options'
+     * For example, if 'farmActions.options' is defined as the set of [Claim, Harvest, Rinse],
+     * the options for 'additional.selected' are the set of [Mow, Plant, Enroot]
      */
-    additional: {
-      /**
-       * Any additional 'ClaimPlantAction's to perform that have been selected by the user.
-       * NOTE:
-       * the set of options for 'additional.selected' is the complement of 'farmActions.options'
-       * For example, if 'farmActions.options' is defined as the set of [Claim, Harvest, Rinse],
-       * the options for 'additional.selected' are the set of [Mow, Plant, Enroot]
-       */
-      selected: ClaimPlantAction[];
-      /**
-       * any additional ClaimPlantActions that are required to be performed if possible.
-       * Ex: If the user is performing a silo deposit, the we required 'MOW' as well if grown stalk > 0
-       */
-      required?: ClaimPlantAction[];
-      /**
-       * 
-       */
-      exclude?: ClaimPlantAction[];
-    }
+    additional: ClaimPlantAction[] | undefined;
+    /**
+     * any additional ClaimPlantActions that are required to be performed if possible.
+     * Ex: If the user is performing a silo deposit, the we required 'MOW' as well if grown stalk > 0
+     */
+    required?: ClaimPlantAction[];
+    /**
+     * actions to exclude from the options
+     */
+    exclude?: ClaimPlantAction[];
   };
 }
 
