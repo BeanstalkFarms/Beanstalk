@@ -378,7 +378,12 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
       txToast.success(receipt);
       formActions.resetForm();
     } catch (err) {
-      txToast ? txToast.error(err) : toast.error(parseError(err));
+      if (txToast) {
+        txToast.error(err)
+      } else {
+        let errorToast = new TransactionToast({})
+        errorToast.error(err)
+      }
       formActions.setSubmitting(false);
     }
   }, [middleware, token, siloBalances, season, sdk, claimPlant, refetchSilo]);

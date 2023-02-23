@@ -329,7 +329,7 @@ const TokenInput: FC<
                 {((balance || additionalBalance?.gt(0)) && !hideBalance) && (
                   <>
                     <Tooltip title={balanceTooltip}>
-                      <Typography variant="body1" color="text.secondary">
+                      <Typography variant="body1">
                         {balanceLabel}: {(
                           balance
                             ? token
@@ -351,7 +351,7 @@ const TokenInput: FC<
                       variant="body1"
                       onClick={isInputDisabled ? undefined : handleMax}
                       color={isInputDisabled ? 'text.secondary' : 'primary'}
-                      sx={{ cursor: isInputDisabled ? 'inherit' : 'pointer' }}
+                      sx={{ cursor: isInputDisabled ? 'inherit' : 'pointer',  zIndex: 10 }}
                     >
                       (Max)
                     </Typography>

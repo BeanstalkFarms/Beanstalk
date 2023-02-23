@@ -3,6 +3,7 @@ import BigNumber from 'bignumber.js';
 import type Token from '~/classes/Token';
 import { ChainConstant, SupportedChainId } from '~/constants';
 import { toTokenUnitsBN } from './Tokens';
+import { ERROR_STRINGS } from '../constants/errors'
 
 // -------------------------
 // Chain Result Helpers
@@ -38,30 +39,119 @@ export const tokenResult = (_token: Token | ChainConstant<Token>) => {
  * Return a formatted error string from a transaction error thrown by ethers.
  * @FIXME improve parsing
  */
+interface Error {
+  message: string,
+  rawError?: string,
+}
+
 export const parseError = (error: any) => {
+
+  const errorMessage: Error = {message: ''}
+
+  const rawError = JSON.stringify(error)
+
   switch (error.code) {
-    /// ethers
+    /// Common error codes
+    case -32000:
+    case -32603:
+    case "UNPREDICTABLE_GAS_LIMIT":
     case 'UNSUPPORTED_OPERATION':
     case 'CALL_EXCEPTION':
-    case 'UNPREDICTABLE_GAS_LIMIT':
-      return `Error: ${error.reason}`;
-    
-    ///
-    case -32603:
-      if (error.data && error.data.message) {
-        const matches = (error.data.message as string).match(/(["'])(?:(?=(\\?))\2.)*?\1/);
-        return matches?.[0]?.replace(/^'(.+(?='$))'$/, '$1') || error.data.message;
+
+      if (error.reason) {
+        errorMessage.message = error.reason.replace('execution reverted: ', '')
+        return errorMessage
       }
-      return error.message.replace('execution reverted: ', '');
+      
+      if (error.data && error.data.message) {
+        errorMessage.message = error.data.message.replace('execution reverted: ', '')
+        return errorMessage
+      }
+
+      if (error.message) {
+        if (!error.message.includes("RPC '"))
+        {
+          errorMessage.message = `${error.message}.`
+          return errorMessage
+        }
+        else
+        {
+          const fixedString = error.message.split("RPC '")[1].slice(0, -1)
+          const nestedError = JSON.parse(fixedString)
+          if (nestedError) {
+            if (error.code == -32603) {
+            errorMessage.message = `${nestedError.value.data.message}.`
+            return errorMessage
+            }
+            errorMessage.message = `${nestedError.value.message}.`
+            return errorMessage
+          }
+        }
+
+        errorMessage.rawError = rawError
+        errorMessage.message = "Unhandled error."
+        return errorMessage
+      }
+
+      errorMessage.rawError = rawError
+      errorMessage.message = "Unhandled error."
+      return errorMessage
     
     /// MetaMask - RPC Error: MetaMask Tx Signature: User denied transaction signature.
     case 4001:
-      return 'You rejected the signature request.';
+    case 'ACTION_REJECTED':
+      errorMessage.message = 'You rejected the signature request.'
+      return errorMessage
 
-    /// Unknown
+    /// Unknown Error (Ideally, we shouldn't be reaching this stage)
     default:
-      if (error?.message) return `${error?.message || error?.toString()}.${error?.code ? ` (code=${error?.code})` : ''}`;    
-      return `An unknown error occurred.${error?.code ? ` (code=${error?.code})` : ''}`;
+
+      for (const key in ERROR_STRINGS) {
+        if (rawError.includes(key))
+        {
+          if (key == "CALL_EXCEPTION" && error.reason)
+          {
+            errorMessage.message = `Call Exception: ${error.reason}`
+            return errorMessage
+          }
+
+          if (key == "UNPREDICTABLE_GAS_LIMIT" && error.reason)
+          {
+            errorMessage.message = `Transaction Reverted: ${error.reason}`
+            return errorMessage
+          }
+
+          if (key == "TRANSACTION_REPLACED" && error.reason)
+          {
+            if (error.reason == "cancelled") {
+              errorMessage.message = "Transaction cancelled."
+              return errorMessage
+            }
+            if (error.reason == "replaced") {
+              errorMessage.message = "Transaction replaced by one with a higher gas price."
+              return errorMessage
+            }
+            if (error.reason == "repriced") {
+              errorMessage.message = "Transaction repriced."
+              return errorMessage
+            }
+          }
+
+          if (key == "UNSUPPORTED_OPERATION" && error.reason)
+          {
+            errorMessage.message = `Unsupported Operation: ${error.reason}`
+            return errorMessage
+          }
+
+          errorMessage.rawError = rawError
+          errorMessage.message = ERROR_STRINGS[key]
+          return errorMessage
+        }
+      }
+
+      errorMessage.rawError = rawError
+      errorMessage.message = "Unhandled error."
+      return errorMessage
   }
 };
 

@@ -230,7 +230,12 @@ const FillOrderForm: FC<{ podOrder: PodOrder }> = ({ podOrder }) => {
       // Return to market index, open Your Orders
       navigate('/market/sell');
     } catch (err) {
-      txToast?.error(err) || toast.error(parseError(err));
+      if (txToast) {
+        txToast.error(err)
+      } else {
+        let errorToast = new TransactionToast({})
+        errorToast.error(err)
+      }
     } finally {
       formActions.setSubmitting(false);
     }

@@ -3,7 +3,6 @@ import { Accordion, AccordionDetails, Box, Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
-import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 import { ERC20Token, NativeToken, Token } from '@beanstalk/sdk';
 import {
@@ -34,7 +33,6 @@ import TxnSeparator from '~/components/Common/Form/TxnSeparator';
 import useToggle from '~/hooks/display/useToggle';
 import usePreferredToken from '~/hooks/farmer/usePreferredToken';
 import useTokenMap from '~/hooks/chain/useTokenMap';
-import { parseError } from '~/util';
 import { AppState } from '~/state';
 import { useFetchPools } from '~/state/bean/pools/updater';
 import { useFetchBeanstalkSilo } from '~/state/beanstalk/silo/updater';
@@ -409,7 +407,12 @@ const Deposit: FC<{
         txToast.success(receipt);
         formActions.resetForm();
       } catch (err) {
-        txToast ? txToast.error(err) : toast.error(parseError(err));
+        if (txToast) {
+          txToast.error(err);
+        } else {
+          const errorToast = new TransactionToast({});
+          errorToast.error(err);
+        }
         formActions.setSubmitting(false);
       }
     }, [middleware, sdk, claimPlantOptions, getWorkflow, whitelistedToken, claimPlant, refetchSilo, refetchPools]

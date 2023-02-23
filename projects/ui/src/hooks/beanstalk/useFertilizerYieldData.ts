@@ -16,7 +16,8 @@ export default function useFertilizerYieldData() {
   });
 
   const yieldData = useMemo(() => {
-    // if query is fetching, return previous data to prevent 'undefined' being returned
+    // If query is fetching, return previous data to prevent 'undefined' being returned. 
+    // This prevents components from unmounting and remounting when data is fetched.
     const data = queryData?.fertilizerYield || previousData?.fertilizerYield;
     if (!data) return undefined;
     return {

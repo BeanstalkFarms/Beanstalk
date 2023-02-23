@@ -577,7 +577,12 @@ const Convert : FC<{
       });
     } catch (err) {
       console.error(err);
-      txToast ? txToast.error(err) : toast.error(parseError(err));
+      if (txToast) {
+        txToast.error(err)
+      } else {
+        let errorToast = new TransactionToast({})
+        errorToast.error(err)
+      }
       formActions.setSubmitting(false);
     }
   }, [sdk, middleware, farmerSiloBalances, season, claimPlant, refetchPools, initialValues]);
