@@ -1,5 +1,5 @@
 import { FertilizerYield } from "../../generated/schema";
-import { ZERO_BD, ZERO_BI } from "./Decimals";
+import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 
 export function loadFertilizerYield(season: i32): FertilizerYield {
   let fertilizerYield = FertilizerYield.load(season.toString());

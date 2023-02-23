@@ -1,6 +1,6 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { PodFill } from "../../generated/schema";
-import { ZERO_BI } from "./Decimals";
+import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 
 export function loadPodFill(diamondAddress: Address, index: BigInt, hash: String): PodFill {
   let id = diamondAddress.toHexString() + "-" + index.toString() + "-" + hash;

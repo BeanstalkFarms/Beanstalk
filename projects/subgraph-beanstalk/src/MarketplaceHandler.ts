@@ -25,7 +25,7 @@ import {
   PodOrderCancelled as PodOrderCancelledEvent,
   PodOrder
 } from "../generated/schema";
-import { toDecimal, ZERO_BI } from "./utils/Decimals";
+import { toDecimal, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFarmer } from "./utils/Farmer";
 import { loadPlot } from "./utils/Plot";
 import { loadPodFill } from "./utils/PodFill";

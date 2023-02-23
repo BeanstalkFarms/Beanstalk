@@ -1,8 +1,8 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Field, FieldDailySnapshot, FieldHourlySnapshot } from "../../generated/schema";
-import { BEANSTALK } from "./Constants";
+import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
 import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
-import { ZERO_BD, ZERO_BI } from "./Decimals";
+import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 
 export function loadField(account: Address): Field {
   let field = Field.load(account.toHexString());

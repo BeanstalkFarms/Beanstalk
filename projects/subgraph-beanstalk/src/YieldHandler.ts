@@ -1,7 +1,7 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Beanstalk } from "../generated/Season-Replanted/Beanstalk";
-import { BEANSTALK, FERTILIZER } from "./utils/Constants";
-import { toDecimal, ZERO_BD } from "./utils/Decimals";
+import { BEANSTALK, FERTILIZER } from "../../subgraph-core/utils/Constants";
+import { toDecimal, ZERO_BD } from "../../subgraph-core/utils/Decimals";
 import { loadFertilizer } from "./utils/Fertilizer";
 import { loadFertilizerYield } from "./utils/FertilizerYield";
 import { loadSilo, loadSiloHourlySnapshot } from "./utils/Silo";
