@@ -1,7 +1,7 @@
 import { BigInt } from "@graphprotocol/graph-ts";
 import { Deposit, Withdraw } from "../../generated/schema";
 import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken } from "../../generated/templates/Well/Well";
-import { getBigDecimalArrayTotal, ZERO_BD, ZERO_BI } from "./Decimals";
+import { getBigDecimalArrayTotal } from "../../../subgraph-core/utils/Decimals";
 import { getCalculatedReserveUSDValues, loadWell } from "./Well";
 
 export function recordAddLiquidityEvent(event: AddLiquidity): void {
