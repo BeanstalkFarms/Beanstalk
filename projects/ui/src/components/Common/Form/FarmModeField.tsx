@@ -31,15 +31,15 @@ const FarmModeField : FC<
   let label    : string | JSX.Element;
   let infoLabel: string | undefined;
   if (baseMode === FarmToMode) {
-    circDesc = _circDesc || 'Send assets to your wallet.';
-    farmDesc = _farmDesc || 'Send assets to your internal balance within Beanstalk.';
-    label    = _label    || 'Destination';
-    infoLabel= _infoLabel|| undefined;
+    circDesc  = _circDesc  || 'Send assets to your wallet.';
+    farmDesc  = _farmDesc  || 'Send assets to your internal balance within Beanstalk.';
+    label     = _label     || 'Destination';
+    infoLabel = _infoLabel || undefined;
   } else {
-    circDesc = _circDesc || 'Use assets from your wallet.';
-    farmDesc = _farmDesc || 'Use assets to your internal balance within Beanstalk.';
-    label    = _label    || 'Source';
-    infoLabel= _infoLabel|| undefined;
+    circDesc  = _circDesc  || 'Use assets from your wallet.';
+    farmDesc  = _farmDesc  || 'Use assets to your internal balance within Beanstalk.';
+    label     = _label     || 'Source';
+    infoLabel = _infoLabel || undefined;
   }
 
   const options = useMemo(() => ([

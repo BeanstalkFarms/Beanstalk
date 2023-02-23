@@ -2,7 +2,6 @@ import { Accordion, AccordionDetails, Box, Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ethers } from 'ethers';
-import toast from 'react-hot-toast';
 import { useConnect } from 'wagmi';
 import {
   FormTokenState,
@@ -17,7 +16,7 @@ import FarmModeField from '~/components/Common/Form/FarmModeField';
 import Token, { ERC20Token, NativeToken } from '~/classes/Token';
 import { Beanstalk } from '~/generated/index';
 import { ZERO_BN } from '~/constants';
-import { BEAN, CRV3, DAI, ETH, USDC, USDT, WETH } from '~/constants/tokens';
+import { BEAN, CRV3, DAI, USDC, USDT, WETH } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import useTokenMap from '~/hooks/chain/useTokenMap';
@@ -25,7 +24,7 @@ import { useSigner } from '~/hooks/ledger/useSigner';
 import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useAccount from '~/hooks/ledger/useAccount';
-import { toStringBaseUnitBN, parseError } from '~/util';
+import { toStringBaseUnitBN } from '~/util';
 import TransactionToast from '~/components/Common/TxnToast';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
@@ -34,12 +33,11 @@ import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import AddressInputField from '~/components/Common/Form/AddressInputField';
-import FieldWrapper from '~/components/Common/Form/FieldWrapper';
 
 /// ---------------------------------------------------------------
 
 type TransferFormValues = {
-  tokensIn: FormTokenState[]; //token, amount
+  tokensIn: FormTokenState[]; // token, amount
   balanceFrom: BalanceFrom;
   fromMode: FarmFromMode.INTERNAL | FarmFromMode.EXTERNAL | FarmFromMode.INTERNAL_EXTERNAL;
   toMode: FarmToMode;
@@ -71,14 +69,26 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
   const tokenIn     = stateIn.token;
   const fromMode    = values.fromMode;
   const toMode      = values.toMode;
-  const balanceFrom = values.balanceFrom;
   const amount      = stateIn.amount;
   const destination = values.destination;
-  const approving   = values.approving;
 
-  const [balanceIn, balanceInInput, balanceInMax] = useMemo(() => {
+  const balanceInMax = useMemo(() => {
     const _balanceIn = balances[tokenIn.address];
-    return [_balanceIn, _balanceIn, _balanceIn?.total || ZERO_BN] as const;
+    let _balanceInMax;
+    if (_balanceIn) {
+      switch (fromMode) {
+        case FarmFromMode.INTERNAL:
+          _balanceInMax = _balanceIn.internal;
+          return _balanceInMax;
+        case FarmFromMode.EXTERNAL:
+          _balanceInMax = _balanceIn.external;
+          return _balanceInMax;
+        default:
+          _balanceInMax = _balanceIn.total;
+          return _balanceInMax;
+      }
+    }
+    return ZERO_BN;
   }, [balances, fromMode, tokenIn.address]);
 
   const noBalance = !(balanceInMax?.gt(0));
@@ -112,8 +122,6 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
     tokenSelect === 'tokensIn' ? values.tokensIn.map((x) => x.token) : []
   );
 
-  const [validAddress, setValidAddress] = useState<null | boolean>(false);
-
   const handleCloseTokenSelect = useCallback(() => setTokenSelect(null), []);
   
   const handleShowTokenSelect  = useCallback((which: 'tokensIn') => () => setTokenSelect(which), []);
@@ -126,18 +134,18 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
         amount: undefined
       });
     }
-  }, [setFieldValue, tokenSelect, tokenIn]);
+  }, [setFieldValue, tokenSelect]);
   
   const handleApprovalMode = useCallback((v: boolean) => {
     if (v === true) {
-    setFieldValue('approving', true)
+    setFieldValue('approving', true);
    } else {
-    setFieldValue('approving', false)
+    setFieldValue('approving', false);
    }
-  }, [approving])
+  }, [setFieldValue]);
 
   /// Checks
-  const shouldApprove = (fromMode == FarmFromMode.EXTERNAL || fromMode == FarmFromMode.INTERNAL_EXTERNAL);
+  const shouldApprove = (fromMode === FarmFromMode.EXTERNAL || fromMode === FarmFromMode.INTERNAL_EXTERNAL);
 
   const amountsCheck = (
     amount?.gt(0)
@@ -148,47 +156,50 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
       : true
   );
 
-  const handleAddressChange = useCallback((v: any) => {
-    setValidAddress(v)
-  }, [])
-
   const addressCheck = (
-    destination.length == 42 && validAddress
-  )
+    destination.length === 42
+  );
+
+  const modeCheck = (
+    destination === account && fromMode !== FarmFromMode.INTERNAL_EXTERNAL
+    ? fromMode.valueOf() !== toMode.valueOf()
+    : true
+  );
 
   const isValid = (
     amountsCheck
     && enoughBalanceCheck
     && addressCheck
+    && modeCheck
   );
 
   const handleSubmitWrapper = useCallback((e: React.FormEvent) => {
     // Note: We need to wrap the formik handler to set the swapOperation form value first
     e.preventDefault();
     submitForm();
-  }, [setFieldValue, submitForm]);
+  }, [submitForm]);
 
   const handleSetBalanceFrom = useCallback((_balanceFrom: BalanceFrom) => {
     switch (_balanceFrom) {
       case BalanceFrom.INTERNAL:
         setFieldValue('balanceFrom', _balanceFrom);
         setFieldValue('fromMode', FarmFromMode.INTERNAL);
-        break
+        break;
       case BalanceFrom.EXTERNAL:
         setFieldValue('balanceFrom', _balanceFrom);
         setFieldValue('fromMode', FarmFromMode.EXTERNAL);
-        break
-      case BalanceFrom.TOTAL:
+        break;
+      default:
         setFieldValue('balanceFrom', _balanceFrom);
         setFieldValue('fromMode', FarmFromMode.INTERNAL_EXTERNAL);
-        break
+        break;
     }
   }, [setFieldValue]);
 
   return (
     <Form autoComplete="off" onSubmit={handleSubmitWrapper}>
       <TokenSelectDialog
-        title={"Select Token to Transfer"}
+        title="Select Token to Transfer"
         open={tokenSelect !== null}   // 'tokensIn' | 'tokensOut'
         handleClose={handleCloseTokenSelect}     //
         handleSubmit={handleTokenSelectSubmit}   //
@@ -217,16 +228,12 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
               )
             }}
             balanceLabel={undefined}
-            balance={
-              balanceInInput
-            }
+            balance={balanceInMax}
           />
         </>
         {/* Output */}
         <>
-        <FieldWrapper label="Transfer to">
-            <AddressInputField name="destination" validAddress={handleAddressChange}/>
-        </FieldWrapper>
+          <AddressInputField name="destination" allowTransferToSelf newLabel="Transfer to" />
           <FarmModeField
             name="toMode"
             label="Destination"
@@ -251,14 +258,15 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
                         token: tokenIn,
                         source: fromMode,
                         destination: toMode,
-                        to: destination,
+                        to: (destination === account) ? undefined : destination,
                       },
                       {
                         type: ActionType.RECEIVE_TOKEN,
                         amount: amount!,
                         token: tokenIn,
                         destination: toMode,
-                        to: destination,
+                        to: (destination === account) ? undefined : destination,
+                        hideMessage: true,
                       }
                     ]
                   }
@@ -331,7 +339,7 @@ const Transfer: FC<{}> = () => {
       toMode: FarmToMode.INTERNAL,
       destination: '',
       approving: false,
-    }), [Bean, account]);
+    }), [Bean]);
 
   const onSubmit = useCallback(
     async (values: TransferFormValues, formActions: FormikHelpers<TransferFormValues>) => {
@@ -349,7 +357,7 @@ const Transfer: FC<{}> = () => {
         const fromMode = values.fromMode;
         const toMode = values.toMode;
         
-        const amount = ethers.BigNumber.from(toStringBaseUnitBN(tokenAmount!, tokenDecimals))
+        const amount = ethers.BigNumber.from(toStringBaseUnitBN(tokenAmount!, tokenDecimals));
         const approving = values.approving;
 
         if (!tokenAmount) throw new Error('No input amount set.');
@@ -369,7 +377,7 @@ const Transfer: FC<{}> = () => {
         await Promise.all([
           refetchFarmerBalances()
         ]);
-        console.log(receipt)
+        // console.log(receipt);
         txToast.success(receipt);
         // formActions.resetForm();
         formActions.setFieldValue('tokensIn.0', {
@@ -378,15 +386,15 @@ const Transfer: FC<{}> = () => {
         });
       } catch (err) {
         if (txToast) {
-          txToast.error(err)
+          txToast.error(err);
         } else {
-          let errorToast = new TransactionToast({success: '', loading: ''}) //change later
-          errorToast.error(err)
+          const errorToast = new TransactionToast({ success: '', loading: '' }); // change later
+          errorToast.error(err);
         }
         formActions.setSubmitting(false);
       }
     },
-    [account, refetchFarmerBalances, farmerBalances, beanstalk, signer, middleware]
+    [account, refetchFarmerBalances, beanstalk, middleware]
   );
 
   return (

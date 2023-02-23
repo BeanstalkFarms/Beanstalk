@@ -1,4 +1,3 @@
-import { Typography } from '@mui/material';
 import React from 'react';
 import { Tab } from '@mui/material';
 import useTabs from '~/hooks/display/useTabs';
@@ -14,16 +13,16 @@ const SwapActions : FC<{}> = () => {
   const [tab, handleChange] = useTabs(SLUGS, 'action');
   
   return (
-  <Module>
-    <ModuleTabs value={tab} onChange={handleChange}>
+    <Module>
+      <ModuleTabs value={tab} onChange={handleChange}>
         <Tab label="Swap" />
         <Tab label="Transfer" />
-    </ModuleTabs>
-    <ModuleContent>
-      {tab === 0 ? <Swap /> : null}
-      {tab === 1 ? <Transfer /> : null}
-    </ModuleContent>
-  </Module>
+      </ModuleTabs>
+      <ModuleContent>
+        {tab === 0 ? <Swap /> : null}
+        {tab === 1 ? <Transfer /> : null}
+      </ModuleContent>
+    </Module>
   );
 };
 export default SwapActions;

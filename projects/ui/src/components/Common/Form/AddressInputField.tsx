@@ -28,17 +28,18 @@ export type AddressInputFieldProps = (
   Partial<TextFieldProps>
   & { 
   name: string,
-  validAddress?: (v: boolean) => void 
+  allowTransferToSelf?: boolean,
+  newLabel?: string
   }
 );
 
 export const ETHEREUM_ADDRESS_CHARS = /([0][x]?[a-fA-F0-9]{0,42})$/;
 
-const validateAddress = (account?: string) => (value: string) => {
+const validateAddress = (account?: string, allowTransferToSelf?: boolean) => (value: string) => {
   let error;
   if (!value) {
     error = 'Enter an address';
-  } else if (account && value?.toLowerCase() === account.toLowerCase()) {
+  } else if (account && value?.toLowerCase() === account.toLowerCase() && !allowTransferToSelf) {
     error = 'Cannot Transfer to yourself';
   // } else if (!ETHEREUM_ADDRESS_CHARS.test(value)) {
   } else if (!ethers.utils.isAddress(value)) {
@@ -50,16 +51,17 @@ const validateAddress = (account?: string) => (value: string) => {
 const AddressInputFieldInner : FC<FieldProps & AddressInputFieldProps> = ({
   name,
   disabled,
+  allowTransferToSelf,
+  newLabel,
   /// Formik
   field,
   meta,
   form,
-  validAddress,
   ...props
 }) => {
   const chainId = useChainId();
+  const account = useAccount();
   const isValid = field.value?.length === 42 && !meta.error;
-  validAddress?.((field.value?.length === 42 && !meta.error) ? true : false)
   const onChange = useCallback((e: any) => {
     // Allow field to change if the value has been removed, or if
     // a valid address character has been input.
@@ -82,33 +84,83 @@ const AddressInputFieldInner : FC<FieldProps & AddressInputFieldProps> = ({
 
   if (isValid) {
     return (
-      <OutputField sx={{ height: 67.5 /* lock to same height as input */ }}>
-        <Row spacing={1}>
-          <CheckIcon sx={{ height: 20, width: 20, fontSize: '100%' }} color="primary" />
-          <Typography>
-            <Tooltip title="View on Etherscan">
-              <Link
-                underline="hover"
-                color="text.primary"
-                href={`${CHAIN_INFO[chainId].explorer}/address/${field.value}`}
-                target="_blank"
-                rel="noreferrer"
+      <Box>
+        {newLabel ? (
+          <Typography
+            sx={{
+              fontSize: 'bodySmall',
+              px: 0.5,
+              mb: 0.25,
+            }}
+            component="span"
+            display="inline-block"
+          >
+            {newLabel}
+            {allowTransferToSelf && account ? 
+              <Typography
+                sx={{
+                  px: 0.5,
+                  cursor: 'pointer'
+                }}
+                display="inline-block"
+                color="primary"
+                onClick={() => form.setFieldValue(name, account)}
               >
-                {isMobile ? trimAddress(field.value) : field.value}
-              </Link>
-            </Tooltip>
-          </Typography>
-        </Row>
-        <Box>
-          <IconButton onClick={() => form.setFieldValue(name, '')}>
-            <CloseIcon sx={{ height: 20, width: 20, fontSize: '100%' }} />
-          </IconButton>
-        </Box>
-      </OutputField>
+                (Me)
+              </Typography> : null}
+          </Typography>) : null}
+        <OutputField sx={{ height: 67.5 /* lock to same height as input */ }}>
+          <Row spacing={1}>
+            <CheckIcon sx={{ height: 20, width: 20, fontSize: '100%' }} color="primary" />
+            <Typography>
+              <Tooltip title="View on Etherscan">
+                <Link
+                  underline="hover"
+                  color="text.primary"
+                  href={`${CHAIN_INFO[chainId].explorer}/address/${field.value}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {isMobile ? trimAddress(field.value) : field.value}
+                </Link>
+              </Tooltip>
+            </Typography>
+          </Row>
+          <Box>
+            <IconButton onClick={() => form.setFieldValue(name, '')}>
+              <CloseIcon sx={{ height: 20, width: 20, fontSize: '100%' }} />
+            </IconButton>
+          </Box>
+        </OutputField>
+      </Box>
     );
   }
   return (
     <Stack gap={0.5}>
+      {newLabel ? (
+        <Typography
+          sx={{
+            fontSize: 'bodySmall',
+            px: 0.5,
+            mb: -0.25,
+          }}
+          component="span"
+          display="inline-block"
+        >
+          {newLabel}
+          {allowTransferToSelf && account ? (
+            <Typography
+              sx={{
+                  px: 0.5,
+                  cursor: 'pointer'
+                }}
+              display="inline-block"
+              color="primary"
+              onClick={() => form.setFieldValue(name, account)}
+            >
+              (Me)
+            </Typography>) : null}
+        </Typography>) : null}
       <TextField
         fullWidth
         type="text"
@@ -134,24 +186,28 @@ const AddressInputFieldInner : FC<FieldProps & AddressInputFieldProps> = ({
 
 const AddressInputField : FC<AddressInputFieldProps> = ({
   name,
+  allowTransferToSelf,
   ...props
 }) => {
   const account = useAccount();
-  const validate = useMemo(() => validateAddress(account), [account]);
+  const validate = useMemo(() => validateAddress(account, allowTransferToSelf), [account, allowTransferToSelf]);
   return (
-    <Field
-      name={name}
-      validate={validate}
-      validateOnBlur
-    >
-      {(fieldProps: FieldProps) => (
-        <AddressInputFieldInner
-          name={name}
-          {...props}
-          {...fieldProps}
-        />
-      )}
-    </Field>
+    <Box>
+      <Field
+        name={name}
+        validate={validate}
+        validateOnBlur
+      >
+        {(fieldProps: FieldProps) => (
+          <AddressInputFieldInner
+            name={name}
+            allowTransferToSelf={allowTransferToSelf}
+            {...props}
+            {...fieldProps}
+          />
+        )}
+      </Field>
+    </Box>
   );
 };
 

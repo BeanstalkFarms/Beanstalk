@@ -68,6 +68,7 @@ export type ReceiveTokenAction = {
   token: Token;
   destination?: FarmToMode;
   to?: string;
+  hideMessage?: boolean;
 }
 
 export type TransferBalanceAction = {
@@ -235,13 +236,19 @@ export const parseActionMessage = (a: Action) => {
       return null;
     case ActionType.SWAP:
       return `Swap ${displayTokenAmount(a.amountIn, a.tokenIn)} for ${displayTokenAmount(a.amountOut, a.tokenOut)}.`;
-    case ActionType.RECEIVE_TOKEN:
-      return `Add ${displayFullBN(a.amount, a.token.displayDecimals)} ${a.token.name}${
-        a.destination ?
-          a.to ? ` to ${trimAddress(a.to, false)}'s ${copy.MODES[a.destination]}`
-          : ` to your ${copy.MODES[a.destination]}`
-        : ``
-      }.`;
+    case ActionType.RECEIVE_TOKEN: {
+      if (a.hideMessage) {
+        return null;
+      } 
+      const commonString = `Add ${displayFullBN(a.amount, a.token.displayDecimals)} ${a.token.name}`;
+      if (a.destination) {
+        if (a.to) {
+          return `${commonString} to ${trimAddress(a.to, false)}'s ${copy.MODES[a.destination]}.`;
+        }
+        return `${commonString} to your ${copy.MODES[a.destination]}.`;
+      }
+      return `${commonString}.`;
+    }
     case ActionType.TRANSFER_BALANCE:
       return a.to ? `Move ${displayTokenAmount(a.amount, a.token)} from your ${copy.MODES[a.source]} to ${trimAddress(a.to, false)}'s ${copy.MODES[a.destination]}.`
              : `Move ${displayTokenAmount(a.amount, a.token)} from your ${copy.MODES[a.source]} to your ${copy.MODES[a.destination]}.`;

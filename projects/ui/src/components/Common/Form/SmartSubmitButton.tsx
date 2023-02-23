@@ -129,7 +129,7 @@ const SmartSubmitButton : FC<{
       });
       
       // Execute
-      nowApproving?.(true)
+      nowApproving?.(true);
       const txn = await tokenContract.approve(contract.address, amount);
       txToast.confirming(txn);
       const receipt = await txn.wait();
@@ -138,7 +138,7 @@ const SmartSubmitButton : FC<{
     } catch (err) {
       txToast?.error(err) || toast.error(parseError(err));
     } finally {
-      nowApproving?.(false)
+      nowApproving?.(false);
       setFieldValue('approving', undefined);
     }
   }, [
@@ -146,7 +146,8 @@ const SmartSubmitButton : FC<{
     nextApprovalToken,
     setFieldValue,
     refetchAllowances,
-    getErc20Contract
+    getErc20Contract,
+    nowApproving
   ]);
   const handleClickApproveButton = useCallback(() => {
     if (mode === 'auto') {
