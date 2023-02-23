@@ -141,24 +141,31 @@ contract Silo is SiloExit {
 
         //require that user account seeds be zero
 
-        // If this `account` has no BDV, skip to save gas. Still need to update lastCumulativeGrownStalkPerBdv (happen on initial deposit, since mow is called before any deposit)
-        if (s.a[account].mowStatuses[token].bdv == 0) {
-            console.log('mow status bdv was zero for token: ', token);
-            s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
-            return;
+        int128 _cumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
+
+        
+        if (s.a[account].mowStatuses[token].bdv > 0) {
+             // if account mowed the same token in the same season, skip
+            if (s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv == _cumulativeGrownStalkPerBdv) {
+                console.log('mow status lastCumulativeGrownStalkPerBdv was the same for token: ', token);
+                return;
+            }
+
+            //TODOSEEDS handle case where mow status hasn't been init'd, if last upadte season > 0 and older than update season
+            uint256 grownStalk = balanceOfGrownStalk(account, token); // to remove 
+            console.log('__mow grownStalk: ', grownStalk);
+
+            // per the zero withdraw update, if a user plants within the morning, 
+            // addtional roots will need to be issued, to properly calculate the earned beans. 
+            // thus, a different mint stalk function is used to differ between deposits.
+            LibSilo.mintGrownStalkAndGrownRoots(account, balanceOfGrownStalk(account, token));            
         }
+        console.log('mow status bdv was zero for token: ', token);
 
-        //TODOSEEDS handle case where mow status hasn't been init'd, if last upadte season > 0 and older than update season
-
-
-        uint256 grownStalk = balanceOfGrownStalk(account, token); // to remove 
-        console.log('__mow grownStalk: ', grownStalk);
-
-        // per the zero withdraw update, if a user plants within the morning, 
-        // addtional roots will need to be issued, to properly calculate the earned beans. 
-        // thus, a different mint stalk function is used to differ between deposits.
-        LibSilo.mintGrownStalkAndGrownRoots(account, balanceOfGrownStalk(account, token));
-        s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
+        // If this `account` has no BDV, skip to save gas. Still need to update lastCumulativeGrownStalkPerBdv 
+        // (happen on initial deposit, since mow is called before any deposit)
+        s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv = _cumulativeGrownStalkPerBdv;
+        return;
     }
      
      
