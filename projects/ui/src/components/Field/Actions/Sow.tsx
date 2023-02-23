@@ -169,10 +169,6 @@ const SowForm : FC<
     })();
   }, [hasSoil, setFieldValue, soil, tokenIn, tokenOut, sdk.tokens, sdk.farm]);
 
-  const quoteProviderParams = useMemo(() => ({ 
-    fromMode: balanceFromToMode(values.balanceFrom) 
-  }), [values.balanceFrom]);
-
   return (
     <Form autoComplete="off">
       <TokenSelectDialogNew

@@ -354,6 +354,19 @@ class ClaimPlant {
       decodeResult: () => undefined,
     });
   }
+
+  static injectOnlyLocalAndAddAmount(name: string, amount: TokenValue) {
+    return async (_amountInStep: ethers.BigNumber, _context: any) => {
+      const total = ethers.BigNumber.from(amount.toBlockchain()).add(_amountInStep);
+      return {
+        name,
+        amountOut: total,
+        prepare: () => ({ target: '', callData: '' }),
+        decode: () => undefined,
+        decodeResult: () => undefined,
+      };
+    };
+  }
 }
 
 export default ClaimPlant;

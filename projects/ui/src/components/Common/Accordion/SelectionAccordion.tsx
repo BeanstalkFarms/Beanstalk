@@ -95,6 +95,7 @@ export default function SelectionAccordion<T>({
         expanded={open}
         onChange={onChange}
         sx={{ background: BeanstalkPalette.white, ...sx }}
+        TransitionProps={{ unmountOnExit: true }} 
       >
         <AccordionSummary
           expandIcon={
@@ -145,6 +146,7 @@ export default function SelectionAccordion<T>({
               px: 1,
             },
           }}
+          
         >
           <Stack width="100%" gap={1}>
             {subtitle && (<>{subtitle}</>)}
