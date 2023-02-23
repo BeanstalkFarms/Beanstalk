@@ -276,9 +276,6 @@ const Graph: FC<GraphProps> = ({
 
   /// Tooltip
   const {
-    tooltipOpen,
-    tooltipTop,
-    tooltipLeft,
     hideTooltip,
     showTooltip,
     tooltipData: hoveredPoint,
@@ -802,36 +799,33 @@ const Graph: FC<GraphProps> = ({
            * Show a tooltip with the number of Pods whenever a point is
            * hovered over or selected.
            */}
-          {tooltipOpen &&
-            cursorPoint &&
-            tooltipLeft != null &&
-            tooltipTop != null && (
-              <Tooltip
-                offsetLeft={10}
-                offsetTop={-40}
-                left={tooltipLeft}
-                top={tooltipTop}
-                // width={tooltipWidth}
-                applyPositionStyle
-                style={{
-                  backgroundColor: 'transparent',
-                  boxShadow: 'none',
-                  fontSize: 13,
-                }}
-              >
-                <TooltipCard>
-                  <Row gap={0.5}>
-                    <EntityIcon type={cursorPoint.type} size={20} />
-                    {cursorPoint.type === 'listing'
-                      ? displayBN(listings[cursorPoint.index].remainingAmount)
-                      : displayBN(
-                          orders[cursorPoint.index].podAmountRemaining
-                        )}{' '}
-                    Pods
-                  </Row>
-                </TooltipCard>
-              </Tooltip>
-            )}
+          {cursorPoint && (
+            <Tooltip
+              offsetLeft={10}
+              offsetTop={-40}
+              left={zoom.applyToPoint(cursorPoint.coordinate).x}
+              top={zoom.applyToPoint(cursorPoint.coordinate).y}
+              // width={tooltipWidth}
+              applyPositionStyle
+              style={{
+                backgroundColor: 'transparent',
+                boxShadow: 'none',
+                fontSize: 13,
+              }}
+            >
+              <TooltipCard>
+                <Row gap={0.5}>
+                  <EntityIcon type={cursorPoint.type} size={20} />
+                  {cursorPoint.type === 'listing'
+                    ? displayBN(listings[cursorPoint.index].remainingAmount)
+                    : displayBN(
+                        orders[cursorPoint.index].podAmountRemaining
+                      )}{' '}
+                  Pods
+                </Row>
+              </TooltipCard>
+            </Tooltip>
+          )}
           {selectedPoint && (
             <Stack sx={{ position: 'absolute', top: 0, right: 10 }}>
               <Typography
