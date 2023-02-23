@@ -139,26 +139,36 @@ contract Silo is SiloExit {
     function __mow(address account, address token) private {
         console.log('__mow, current season:', s.season.current);
 
-        //require that user account seeds be zero
-
         int128 _cumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
-
+        int128 _lastCumulativeGrownStalkPerBdv =  s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv;
+        uint256 _bdv = s.a[account].mowStatuses[token].bdv;
         
-        if (s.a[account].mowStatuses[token].bdv > 0) {
+        if (_bdv > 0) {
              // if account mowed the same token in the same season, skip
-            if (s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv == _cumulativeGrownStalkPerBdv) {
+            if (_lastCumulativeGrownStalkPerBdv == _cumulativeGrownStalkPerBdv) {
                 console.log('mow status lastCumulativeGrownStalkPerBdv was the same for token: ', token);
                 return;
             }
 
             //TODOSEEDS handle case where mow status hasn't been init'd, if last upadte season > 0 and older than update season
-            uint256 grownStalk = balanceOfGrownStalk(account, token); // to remove 
+            uint256 grownStalk = _balanceOfGrownStalk(
+                _lastCumulativeGrownStalkPerBdv,
+                _cumulativeGrownStalkPerBdv,
+                _bdv
+            ); // to remove 
             console.log('__mow grownStalk: ', grownStalk);
 
             // per the zero withdraw update, if a user plants within the morning, 
             // addtional roots will need to be issued, to properly calculate the earned beans. 
             // thus, a different mint stalk function is used to differ between deposits.
-            LibSilo.mintGrownStalkAndGrownRoots(account, balanceOfGrownStalk(account, token));            
+            LibSilo.mintGrownStalkAndGrownRoots(
+                account,
+                _balanceOfGrownStalk(
+                    _lastCumulativeGrownStalkPerBdv,
+                    _cumulativeGrownStalkPerBdv,
+                    _bdv
+                )
+            );
         }
         console.log('mow status bdv was zero for token: ', token);
 
