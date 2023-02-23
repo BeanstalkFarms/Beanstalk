@@ -1,7 +1,7 @@
 import { Bytes } from "@graphprotocol/graph-ts";
 import { PodOrder } from "../../generated/schema";
-import { BEANSTALK } from "./Constants";
-import { ZERO_BI } from "./Decimals";
+import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
+import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 
 export function loadPodOrder(orderID: Bytes): PodOrder {
   let order = PodOrder.load(orderID.toHexString());

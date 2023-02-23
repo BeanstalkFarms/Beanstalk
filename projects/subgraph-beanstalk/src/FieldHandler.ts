@@ -11,8 +11,8 @@ import {
 } from "../generated/Field/Beanstalk";
 import { CurvePrice } from "../generated/Field/CurvePrice";
 import { Harvest as HarvestEntity } from "../generated/schema";
-import { BEANSTALK, BEANSTALK_FARMS, CURVE_PRICE } from "./utils/Constants";
-import { ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "./utils/Decimals";
+import { BEANSTALK, BEANSTALK_FARMS, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
+import { ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFarmer } from "./utils/Farmer";
 import { loadField, loadFieldDaily, loadFieldHourly } from "./utils/Field";
 import { loadPlot } from "./utils/Plot";

@@ -1,6 +1,6 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { SiloDeposit } from "../../generated/schema";
-import { ZERO_BI } from "./Decimals";
+import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 
 export function loadSiloDeposit(account: Address, token: Address, season: BigInt): SiloDeposit {
   let id = account.toHexString() + "-" + token.toHexString() + "-" + season.toString();

@@ -1,7 +1,7 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { InternalBalanceChanged } from "../generated/Farm/Beanstalk";
 import { loadBeanstalk } from "./utils/Beanstalk";
-import { BEANSTALK } from "./utils/Constants";
+import { BEANSTALK } from "../../subgraph-core/utils/Constants";
 import { loadSiloAsset, loadSiloAssetDailySnapshot, loadSiloAssetHourlySnapshot } from "./utils/SiloAsset";
 import { loadFarmer } from "./utils/Farmer";
 

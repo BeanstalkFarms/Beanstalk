@@ -1,6 +1,6 @@
 import { Address } from "@graphprotocol/graph-ts";
 import { SiloWithdraw } from "../../generated/schema";
-import { ZERO_BI } from "./Decimals";
+import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 
 export function loadSiloWithdraw(account: Address, token: Address, season: i32): SiloWithdraw {
   let id = account.toHexString() + "-" + token.toHexString() + "-" + season.toString();
