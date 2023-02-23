@@ -71,6 +71,35 @@ export type ClaimPlantItems = {
   [action in ClaimPlantAction]: ClaimPlantItem;
 };
 
+const tooltips = {
+  mow: 'Add Grown Stalk to your Stalk balance. Mow is called upon any interaction with the Silo.',
+  plant:
+    'Add Plantable Seeds to your Seed balance. Also Mows Grown Stalk, Deposits Earned Beans and claims Earned Stalk.',
+  enroot:
+    'Add Revitalized Stalk and Seeds to your Stalk and Seed balances, respectively. Also Mows Grown Stalk.',
+  harvest: 'Redeem debt paid back by Beanstalk for 1 Bean',
+  rinse: 'Redeem debt paid back by Beanstalk for purchasing fertilizer',
+  claim: 'Claim Beans that have been withdrawn from the silo',
+  grownStalk:
+    'Stalk earned from Seeds. Grown Stalk does not contribute to Stalk ownership until it is Mown. Grown Stalk is Mown at the beginning of any Silo interaction.',
+  earnedBeans:
+    'The number of Beans earned since your last Plant. Upon Plant, Earned Beans are Deposited in the current Season.',
+  earnedStalk:
+    'Stalk earned from Earned Beans. Earned Stalk automatically contribute to Stalk ownership and do not require any action to claim them.',
+  earnedSeeds:
+    'Seeds earned in conjunction with Earned Beans. Plantable Seeds must be Planted in order to grow Stalk.',
+  harvestablePods:
+    'The number of Pods that have become redeemable for 1 Bean (i.e., the debt paid back by Beanstalk)',
+  rinsableSprouts:
+    'Sprouts that are redeemable for 1 Bean each. Rinsable Sprouts must be Rinsed in order to use them.',
+  claimableBeans:
+    'Beans that have been withdrawn from the silo and are ready to be claimed.',
+  revitalizedSeeds:
+    'Seeds that have vested for pre-exploit Silo Members. Revitalized Seeds are minted as the percentage of Fertilizer sold increases. Revitalized Seeds do not generate Stalk until Enrooted.',
+  revitalizedStalk:
+    'Stalk that have vested for pre-exploit Silo Members. Revitalized Stalk are minted as the percentage of Fertilizer sold increases. Revitalized Stalk does not contribute to Stalk ownership until Enrooted.',
+};
+
 export default function useFarmerClaimAndPlantOptions() {
   ///
   const sdk = useSdk();
@@ -99,7 +128,7 @@ export default function useFarmerClaimAndPlantOptions() {
     return {
       [ClaimPlantAction.MOW]: {
         title: 'Mow',
-        tooltip: 'tooltip',
+        tooltip: tooltips.mow,
         enabled: grownStalk.gt(0),
         implied: [],
         summary: [
@@ -113,25 +142,26 @@ export default function useFarmerClaimAndPlantOptions() {
       },
       [ClaimPlantAction.PLANT]: {
         title: 'Plant',
-        tooltip: 'tooltip',
+        tooltip: tooltips.plant,
         enabled: earnedSeeds.gt(0),
         implied: [ClaimPlantAction.MOW],
         summary: [
           {
             description: 'Earned Beans',
-            tooltip: 'tooltip',
+            tooltip: tooltips.earnedBeans,
             token: BEAN,
             amount: earnedBeans,
           },
           {
             description: 'Earned Stalk',
-            tooltip: 'tooltip',
+            tooltip: tooltips.earnedStalk,
+
             token: STALK,
             amount: earnedStalk,
           },
           {
             description: 'Earned Seeds',
-            tooltip: 'tooltip',
+            tooltip: tooltips.earnedSeeds,
             token: SEEDS,
             amount: earnedSeeds,
           },
@@ -139,19 +169,19 @@ export default function useFarmerClaimAndPlantOptions() {
       },
       [ClaimPlantAction.ENROOT]: {
         title: 'Enroot',
-        tooltip: 'tooltip',
+        tooltip: tooltips.enroot,
         enabled: revitalizedSeeds.gt(0) && revitalizedStalk.gt(0),
         implied: [ClaimPlantAction.MOW],
         summary: [
           {
             description: 'Revitalized Seeds',
-            tooltip: 'tooltip',
+            tooltip: tooltips.revitalizedSeeds,
             token: SEEDS,
             amount: revitalizedSeeds,
           },
           {
             description: 'Revitalized Stalk',
-            tooltip: 'tooltip',
+            tooltip: tooltips.revitalizedStalk,
             token: STALK,
             amount: revitalizedStalk,
           },
@@ -159,7 +189,7 @@ export default function useFarmerClaimAndPlantOptions() {
       },
       [ClaimPlantAction.HARVEST]: {
         title: 'Harvest',
-        tooltip: 'tooltip',
+        tooltip: tooltips.harvest,
         enabled: harvestablePods.gt(0),
         implied: [],
         claimable: {
@@ -169,7 +199,7 @@ export default function useFarmerClaimAndPlantOptions() {
         summary: [
           {
             description: 'Harvestable Pods',
-            tooltip: 'tooltip',
+            tooltip: tooltips.harvestablePods,
             token: sdk.tokens.PODS,
             amount: harvestablePods,
           },
@@ -177,7 +207,7 @@ export default function useFarmerClaimAndPlantOptions() {
       },
       [ClaimPlantAction.RINSE]: {
         title: 'Rinse',
-        tooltip: 'tooltip',
+        tooltip: tooltips.rinse,
         enabled: rinsableSprouts.gt(0),
         implied: [],
         claimable: {
@@ -187,7 +217,7 @@ export default function useFarmerClaimAndPlantOptions() {
         summary: [
           {
             description: 'Rinsable Sprouts',
-            tooltip: 'tooltip',
+            tooltip: tooltips.rinsableSprouts,
             token: sdk.tokens.SPROUTS,
             amount: rinsableSprouts,
           },
@@ -195,7 +225,7 @@ export default function useFarmerClaimAndPlantOptions() {
       },
       [ClaimPlantAction.CLAIM]: {
         title: 'Claim',
-        tooltip: 'tooltip',
+        tooltip: tooltips.claim,
         enabled: claimableBeans.gt(0),
         implied: [ClaimPlantAction.MOW],
         claimable: {
@@ -205,7 +235,7 @@ export default function useFarmerClaimAndPlantOptions() {
         summary: [
           {
             description: 'Claimable Beans',
-            tooltip: 'tooltip',
+            tooltip: tooltips.claimableBeans,
             token: BEAN,
             amount: claimableBeans,
           },
