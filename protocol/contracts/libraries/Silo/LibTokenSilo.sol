@@ -142,14 +142,17 @@ library LibTokenSilo {
         console.log('addDepositToAccount token: ', token);
         console.log('addDepositToAccount logging grown stalk per bdv:');
         console.logInt(grownStalkPerBdv);
-        console.log('addDepositToAccount updatedAmount: ', s.a[account].deposits[token][grownStalkPerBdv].amount.add(amount.toUint128()));
-        
-        s.a[account].deposits[token][grownStalkPerBdv].amount = uint128(s.a[account].deposits[token][grownStalkPerBdv].amount.add(amount.toUint128()));
-        s.a[account].deposits[token][grownStalkPerBdv].bdv = uint128(s.a[account].deposits[token][grownStalkPerBdv].bdv.add(bdv.toUint128()));
+        Account.Deposit memory d = s.a[account].deposits[token][grownStalkPerBdv];
+        console.log('addDepositToAccount updatedAmount: ', d.amount.add(amount.toUint128()));
+
+        d.amount = uint128(d.amount.add(amount.toUint128()));
+        d.bdv = uint128(d.bdv.add(bdv.toUint128()));
         console.log('addDepositToAccount bdv: ', bdv);
 
-        console.log('--- s.a[account].deposits[token][grownStalkPerBdv].bdv: ', s.a[account].deposits[token][grownStalkPerBdv].bdv);
-        console.log('--- s.a[account].deposits[token][grownStalkPerBdv].amount: ', s.a[account].deposits[token][grownStalkPerBdv].amount);
+        console.log('--- s.a[account].deposits[token][grownStalkPerBdv].bdv: ', d.bdv);
+        console.log('--- s.a[account].deposits[token][grownStalkPerBdv].amount: ', d.amount);
+
+        s.a[account].deposits[token][grownStalkPerBdv] = d;
 
         //setup or update the MowStatus for this deposit. We should have _just_ mowed before calling this function.
         s.a[account].mowStatuses[token].bdv = uint128(s.a[account].mowStatuses[token].bdv.add(bdv.toUint128()));
