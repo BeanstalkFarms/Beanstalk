@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, ButtonProps, Tooltip, Typography } from '@mui/material';
-import { ClaimPlantActionSummary } from '~/hooks/farmer/useFarmerClaimAndPlantOptions';
+import { ClaimPlantItem } from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 import { displayFullBN } from '~/util';
 import Row from '../Row';
 import TokenIcon from '../TokenIcon';
@@ -33,7 +33,7 @@ const icons = {
 
 type Props = {
   option: ClaimPlantAction;
-  summary: ClaimPlantActionSummary;
+  summary: ClaimPlantItem;
   selected: boolean;
   required?: boolean;
 } & Partial<ButtonProps['onClick']>;

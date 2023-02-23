@@ -5,7 +5,7 @@ import { BalanceFromFragment, ClaimAndPlantFormState } from '~/components/Common
 import { ZERO_BN } from '~/constants';
 import useSdk from '~/hooks/sdk';
 import { ApplicableBalance } from '~/state/farmer/balances';
-import useFarmerClaimPlantOptions from './useFarmerClaimAndPlantOptions';
+import useFarmerClaimPlantOptions from './useFarmerClaimPlantOptions';
 
 type FormContext = ClaimAndPlantFormState & BalanceFromFragment
 

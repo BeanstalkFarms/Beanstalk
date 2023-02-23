@@ -2,79 +2,77 @@ import { useCallback, useMemo } from 'react';
 import { Token } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import { ZERO_BN } from '~/constants';
-import useSdk from '../sdk';
+import useSdk from '../../sdk';
 
-import useFarmerFertilizer from './useFarmerFertilizer';
-import useFarmerField from './useFarmerField';
-import useFarmerSilo from './useFarmerSilo';
-import useRevitalized from './useRevitalized';
+import useFarmerFertilizer from '../useFarmerFertilizer';
+import useFarmerField from '../useFarmerField';
+import useFarmerSilo from '../useFarmerSilo';
+import useRevitalized from '../useRevitalized';
 import { normalizeBN } from '~/util';
 import { ClaimPlantAction } from '~/util/ClaimPlant';
 
-export type ClaimPlantActionSummary = {
-  /** */
+type ClaimableOption = {
+  /**
+   * Amount of beans claimable
+   */
+  amount: BigNumber;
+  /**
+   * Token which will be used to redeem the claimable beans
+   */
+  token: Token;
+};
+
+type ClaimPlantOptionSummary = {
+  /**
+   *
+   */
+  description: string;
+  /**
+   * Token corresponding to the amount */
+  token: Token;
+  /**
+   * Amount of the token being claimed / planted */
+  amount: BigNumber;
+  /**
+   *
+   */
+  tooltip: string;
+};
+
+export type ClaimPlantItem = {
+  /**
+   *
+   */
   title: string;
-  /** */
+  /**
+   *
+   */
   tooltip: string;
   /**
    * Whether or not this claim / plant action can be performed
    */
   enabled: boolean;
   /**
-   * actions that are performed automatically when this action is performed in the contract
+   * implied actions of a Claim/Plant Action that are performed automatically in the contract
    */
-  implied: ClaimPlantAction[],
+  implied: ClaimPlantAction[];
   /**
-   * The amounts of BEAN, SEEDS, and STALK being claimed / planted.
-   * For Example, for Enroot, this would be the amount of revitalized seeds and stalk
-   * the key is the UI title of the token being claimed / planted
+   * A summary of the assets an action intends to claim / plant.
    */
-  summary: {
-    /**
-     *
-     */
-    description: string;
-    /**
-     * Token corresponding to the amount
-     */
-    token: Token;
-    /**
-     * amount of the token being claimed / planted
-     */
-    amount: BigNumber;
-    /**
-     * 
-     */
-    tooltip: string;
-  }[];
+  summary: ClaimPlantOptionSummary[];
   /**
-   * The amount of beans that can be used upon performing claim / plant action
+   * If the action claims BEANS, the the token used to redeem, and amount of beans claimable
    * This is only applicable to CLAIM actions (CLAIM, HARVEST, RINSE)
    */
-  claimable?: {
-    /**
-     * amount of beans claimable
-     */
-    amount: BigNumber;
-    /**
-     * token which will be used to redeem the claimable beans
-     */
-    token: Token;
-  };
+  claimable?: ClaimableOption;
 };
 
-export type ClaimPlantOptionsMap = {
-  [action in ClaimPlantAction]: ClaimPlantActionSummary;
-}
+export type ClaimPlantItems = {
+  [action in ClaimPlantAction]: ClaimPlantItem;
+};
 
-/**
- * Returns an object mapping ClaimPlantAction to
- * - enabled: whether or not the action can be performed
- * - amounts: the amounts of BEAN, SEEDS, and STALK being claimed / planted
- * - claimable?: the amount of beans that can be used upon performing claim / plant action
- */
 export default function useFarmerClaimAndPlantOptions() {
-  /// 
+  ///
   const sdk = useSdk();
 
   /// Farmer
@@ -83,11 +81,11 @@ export default function useFarmerClaimAndPlantOptions() {
   const farmerBarn = useFarmerFertilizer();
   const { revitalizedStalk, revitalizedSeeds } = useRevitalized();
 
-  const options: ClaimPlantOptionsMap = useMemo(() => {
+  const options: ClaimPlantItems = useMemo(() => {
     const { SEEDS, STALK, BEAN, PODS, SPROUTS } = sdk.tokens;
 
     const grownStalk = normalizeBN(farmerSilo.stalk.grown);
-  
+
     const earnedBeans = normalizeBN(farmerSilo.beans.earned);
     const earnedStalk = normalizeBN(farmerSilo.stalk.earned);
     const earnedSeeds = normalizeBN(farmerSilo.seeds.earned);
@@ -227,19 +225,26 @@ export default function useFarmerClaimAndPlantOptions() {
     sdk.tokens,
   ]);
 
-  const getClaimable = useCallback((_options: ClaimPlantAction[] = []) => {
-    const amount = _options.reduce((prev, curr) => {
-      prev = prev.plus(normalizeBN(options[curr]?.claimable?.amount));
-      return prev;
-    }, ZERO_BN);
+  /**
+   * Returns the total amount of beans claimable from a list of claimable actions
+   */
+  const getClaimable = useCallback(
+    (_options: ClaimPlantAction[] = []) => {
+      const amount = _options.reduce((prev, curr) => {
+        const option = options[curr] as ClaimPlantItem;
+        prev = prev.plus(normalizeBN(option?.claimable?.amount));
+        return prev;
+      }, ZERO_BN);
 
-    const tokenValue = sdk.tokens.BEAN.amount(amount.toString());
+      const tokenValue = sdk.tokens.BEAN.fromHuman(amount.toString());
 
-    return {
-      bn: amount,
-      tokenValue,
-    };
-  }, [options, sdk.tokens.BEAN]);
+      return {
+        bn: amount,
+        tokenValue,
+      };
+    },
+    [options, sdk.tokens.BEAN]
+  );
 
   return { options, getClaimable };
 }

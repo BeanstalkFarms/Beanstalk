@@ -33,11 +33,11 @@ import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
-import useFarmerClaimAndPlantActions from '~/hooks/beanstalk/useClaimAndPlantActions';
+import useFarmerClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import TxnOutputField from '~/components/Common/Form/TxnOutputField';
-import ClaimPlant, { ClaimPlantAction, ClaimPlantActionMap } from '~/util/ClaimPlant';
+import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 
 // -----------------------------------------------------------------------
 
@@ -50,7 +50,6 @@ const WithdrawForm : FC<
     depositedBalance: BigNumber;
     withdrawSeasons: BigNumber;
     season: BigNumber;
-    claimPlantActions: ClaimPlantActionMap;
   }
 > = ({
   // Formik
@@ -62,7 +61,6 @@ const WithdrawForm : FC<
   siloBalances,
   depositedBalance,
   withdrawSeasons,
-  claimPlantActions,
   season,
 }) => {
   const sdk = useSdk();
@@ -229,9 +227,7 @@ const WithdrawForm : FC<
           <Stack direction="column" gap={1}>
             <TxnSeparator />
             {tokenOutputs}
-            <ClaimAndPlantAdditionalOptions
-              actions={claimPlantActions}
-            />
+            <ClaimAndPlantAdditionalOptions />
             <Box>
               <Accordion defaultExpanded variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />
@@ -383,7 +379,7 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
       const receipt = await txn.wait();
 
       await claimPlant.refetch(actionsPerformed, { 
-        farmerSilo: refetchFarmerSilo
+        farmerSilo: true
       }, [refetchSilo]);
 
       txToast.success(receipt);
@@ -392,7 +388,7 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
       txToast ? txToast.error(err) : toast.error(parseError(err));
       formActions.setSubmitting(false);
     }
-  }, [middleware, token, siloBalances, season, sdk, claimPlant, refetchFarmerSilo, refetchSilo]);
+  }, [middleware, token, siloBalances, season, sdk, claimPlant, refetchSilo]);
 
   return (
     <Formik initialValues={initialValues} onSubmit={onSubmit}>
@@ -403,7 +399,6 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
           depositedBalance={depositedBalance}
           withdrawSeasons={withdrawSeasons}
           season={season}
-          claimPlantActions={claimPlant.actions}
           {...formikProps}
         />
       )}

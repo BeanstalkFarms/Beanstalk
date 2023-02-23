@@ -19,7 +19,6 @@ import { displayFullBN, MaxBN, MinBN, toStringBaseUnitBN } from '~/util/Tokens';
 import { ZERO_BN } from '~/constants';
 import Farm from '~/lib/Beanstalk/Farm';
 import useToggle from '~/hooks/display/useToggle';
-import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import { parseError, tokenValueToBN, bnToTokenValue } from '~/util';
 import { FarmerSilo } from '~/state/farmer/silo';
 import useSeason from '~/hooks/beanstalk/useSeason';
@@ -38,10 +37,10 @@ import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew'
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
-import useClaimAndPlantActions from '~/hooks/beanstalk/useClaimAndPlantActions';
+import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
-import ClaimPlant, { ClaimPlantActionMap, ClaimPlantAction } from '~/util/ClaimPlant';
+import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 
 // -----------------------------------------------------------------------
 
@@ -71,14 +70,12 @@ const ConvertForm : FC<
     siloBalances: FarmerSilo['balances'];
     handleQuote: QuoteHandlerWithParams<{}>;
     currentSeason: BigNumber;
-    claimPlantActions: ClaimPlantActionMap;
   }
 > = ({
   tokenList,
   siloBalances,
   handleQuote,
   currentSeason,
-  claimPlantActions,
   // Formik
   values,
   isSubmitting,
@@ -216,13 +213,6 @@ const ConvertForm : FC<
 
   const maxAmountUsed = (amountIn && maxAmountIn) ? amountIn.div(maxAmountIn) : null;
 
-  const quoteProviderParams = useMemo(() => {
-    const t = '';
-    return {
-      params: {}
-    };
-  }, []);
-
   return (
     <Form noValidate autoComplete="off">
       <TokenSelectDialogNew
@@ -258,7 +248,7 @@ const ConvertForm : FC<
           belowComponent={
             <ClaimAndPlantFarmActions preset="plant" />
           }
-          {...quoteProviderParams}
+          params={{}}
         />
         {/* Output token */}
         {depositedAmount.gt(0) ? (
@@ -336,9 +326,7 @@ const ConvertForm : FC<
                 </Alert>
               </Box>
             ) : null}
-            <ClaimAndPlantAdditionalOptions 
-              actions={claimPlantActions}
-            />
+            <ClaimAndPlantAdditionalOptions />
             <Box>
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />
@@ -413,7 +401,6 @@ const Convert : FC<{
   /// Farmer
   const farmerSilo              = useFarmerSilo();
   const farmerSiloBalances      = farmerSilo.balances;
-  const [refetchFarmerSilo]     = useFetchFarmerSilo();
   const [refetchPools]          = useFetchPools();
 
   /// Form
@@ -579,7 +566,7 @@ const Convert : FC<{
       const receipt = await txn.wait();
       
       await claimPlant.refetch(actionsPerformed, { 
-        farmerSilo: refetchFarmerSilo, // update farmer silo since we just moved deposits around
+        farmerSilo: true, // update farmer silo since we just moved deposits around
       }, [refetchPools]);  // update prices to account for pool conversion
 
       txToast.success(receipt);
@@ -594,7 +581,7 @@ const Convert : FC<{
       txToast ? txToast.error(err) : toast.error(parseError(err));
       formActions.setSubmitting(false);
     }
-  }, [sdk, middleware, farmerSiloBalances, season, claimPlant, refetchFarmerSilo, refetchPools, initialValues]);
+  }, [sdk, middleware, farmerSiloBalances, season, claimPlant, refetchPools, initialValues]);
 
   return (
     <Formik initialValues={initialValues} onSubmit={onSubmit}>
@@ -608,7 +595,6 @@ const Convert : FC<{
             tokenList={tokenList as (ERC20Token | NativeToken)[]}
             siloBalances={farmerSiloBalances}
             currentSeason={season}
-            claimPlantActions={claimPlant.actions}
             {...formikProps}
           />
         </>

@@ -5,18 +5,18 @@ import { MayPromise } from '~/types';
 import useDeepCompareMemoize from './useDeepCompareMemoize';
 
 type UseEffectParams = Parameters<typeof React.useEffect>;
-type EffectCallback<V> = () => MayPromise<V>;
+type EffectCallback = () => MayPromise<void>;
 type DependencyList = UseEffectParams[1];
 
 const isFunction = (value: any) => typeof value === 'function';
 
-function useDeepCompareEffect<V>(effect: () => EffectCallback<V>, dependencies?: DependencyList): void;
-function useDeepCompareEffect<V>(
-  effect: () => EffectCallback<V>,
+function useDeepCompareEffect(effect: EffectCallback, dependencies?: DependencyList): void;
+function useDeepCompareEffect(
+  effect: EffectCallback,
   cleanFunction: () => void,
   dependencies: DependencyList
 ): void;
-function useDeepCompareEffect<V>(effect: () => EffectCallback<V>, param2?: any, param3?: any): void {
+function useDeepCompareEffect(effect: EffectCallback, param2?: any, param3?: any): void {
   const cleanFunction = isFunction(param2) ? param2 : undefined;
 
   useEffect(() => {

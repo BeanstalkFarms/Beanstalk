@@ -2,7 +2,7 @@ import React from 'react';
 import { Typography, Stack, Tooltip } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import BigNumber from 'bignumber.js';
-import { ClaimPlantActionSummary } from '~/hooks/farmer/useFarmerClaimAndPlantOptions';
+import { ClaimPlantItem } from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 import { displayFullBN } from '~/util';
 import Row from '../Row';
 import TokenIcon from '../TokenIcon';
@@ -30,7 +30,7 @@ const icons = {
 
 type Props = {
   option: ClaimPlantAction;
-  summary: ClaimPlantActionSummary;
+  summary: ClaimPlantItem;
   selected: boolean;
   gas?: BigNumber;
   required?: boolean;

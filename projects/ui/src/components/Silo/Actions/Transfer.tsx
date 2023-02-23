@@ -31,12 +31,12 @@ import { ActionType } from '~/util/Actions';
 import TransactionToast from '~/components/Common/TxnToast';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
-import useFarmerClaimAndPlantActions from '~/hooks/beanstalk/useClaimAndPlantActions';
+import useFarmerClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import TxnOutputField, { TxnOutputFieldProps } from '~/components/Common/Form/TxnOutputField';
-import ClaimPlant, { ClaimPlantActionMap, ClaimPlantAction } from '~/util/ClaimPlant';
+import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 
 export type TransferFormValues = FormStateNew & 
   ClaimAndPlantFormState
@@ -49,7 +49,6 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
   siloBalances: FarmerSilo['balances'];
   depositedBalance: BigNumber;
   season: BigNumber;
-  actionsMap: ClaimPlantActionMap;
 }> = ({
   // Formik
   values,
@@ -59,8 +58,7 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
   token: whitelistedToken,
   siloBalances,
   depositedBalance,
-  season,
-  actionsMap,
+  season
 }) => {
   const sdk = useSdk();
   // Input props
@@ -152,9 +150,7 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
                 >
                   More recent Deposits are Transferred first.
                 </Alert>
-                <ClaimAndPlantAdditionalOptions
-                  actions={actionsMap}
-                />
+                <ClaimAndPlantAdditionalOptions />
                 <Box>
                   <Accordion defaultExpanded variant="outlined">
                     <StyledAccordionSummary title="Transaction Details" />
@@ -315,7 +311,7 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
       txToast.confirming(txn);
 
       const receipt = await txn.wait();
-      await claimPlant.refetch(actionsPerformed, { farmerSilo: refetchFarmerSilo }, [refetchSilo]);
+      await claimPlant.refetch(actionsPerformed, { farmerSilo: true }, [refetchSilo]);
   
       txToast.success(receipt);
       formActions.resetForm();
@@ -323,7 +319,7 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
       txToast ? txToast.error(err) : toast.error(parseError(err));
       formActions.setSubmitting(false);
     }
-  }, [middleware, token, siloBalances, season, sdk, claimPlant, refetchFarmerSilo, refetchSilo]);
+  }, [middleware, token, siloBalances, season, sdk, claimPlant, refetchSilo]);
 
   return (
     <Formik
@@ -335,7 +331,6 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
           siloBalances={siloBalances}
           depositedBalance={depositedBalance}
           season={season}
-          actionsMap={claimPlant.actions}
           {...formikProps}
         />
       )}

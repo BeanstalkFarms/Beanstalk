@@ -28,8 +28,6 @@ import useTokenMap from '~/hooks/chain/useTokenMap';
 import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
 import { displayBN, displayFullBN, MinBN, parseError, tokenValueToBN } from '~/util';
 import usePrice from '~/hooks/beanstalk/usePrice';
-import { useFetchFarmerField } from '~/state/farmer/field/updater';
-import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import { useFetchBeanstalkField } from '~/state/beanstalk/field/updater';
 import { useFetchPools } from '~/state/bean/pools/updater';
 import { AppState } from '~/state';
@@ -43,16 +41,16 @@ import TokenIcon from '~/components/Common/TokenIcon';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
-import ClaimPlant, { ClaimPlantActionMap } from '~/util/ClaimPlant';
+import ClaimPlant from '~/util/ClaimPlant';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
-import useClaimAndPlantActions from '~/hooks/beanstalk/useClaimAndPlantActions';
+import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import { BalanceFrom, balanceFromToMode } from '~/components/Common/Form/BalanceFromRow';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
-import useFarmerClaimingBalance from '~/hooks/farmer/useFarmerClaimingBalance';
+import useFarmerClaimingBalance from '~/hooks/farmer/claim-plant/useFarmerClaimingBalance';
 
 type SowFormValues = FormStateNew & {
   settings: SlippageSettingsFragment;
@@ -70,7 +68,6 @@ const SowForm : FC<
     balances: ReturnType<typeof useFarmerBalances>;
     weather: BigNumber;
     soil: BigNumber;
-    claimPlantActions: ClaimPlantActionMap;
   }
 > = ({
   // Formik
@@ -78,7 +75,6 @@ const SowForm : FC<
   setFieldValue,
   //
   balances,
-  claimPlantActions,
   weather,
   soil,
   handleQuote,
@@ -245,9 +241,7 @@ const SowForm : FC<
                 </Alert>
               </Box>
             ) : null}
-            <ClaimAndPlantAdditionalOptions 
-              actions={claimPlantActions}
-            />
+            <ClaimAndPlantAdditionalOptions />
             <Box>
               <Accordion variant="outlined" color="primary">
                 <StyledAccordionSummary title="Transaction Details" />
@@ -314,8 +308,6 @@ const Sow : FC<{}> = () => {
   const balances                = useFarmerBalances();
   const [refetchBeanstalkField] = useFetchBeanstalkField();
   const [refetchPools]          = useFetchPools();
-  const [refetchFarmerField]    = useFetchFarmerField();
-  const [refetchFarmerBalances] = useFetchFarmerBalances();
 
   /// Form
   const middleware = useFormMiddleware();
@@ -464,8 +456,8 @@ const Sow : FC<{}> = () => {
       const reciept = await txn.wait();
 
       await claimPlant.refetch(actionsPerformed, { 
-        farmerField: refetchFarmerField,
-        farmerBalances: refetchFarmerBalances,
+        farmerField: true,
+        farmerBalances: true,
       }, [refetchBeanstalkField, refetchPools]);
 
       txToast.success(reciept);
@@ -476,7 +468,7 @@ const Sow : FC<{}> = () => {
     } finally {
       formActions.setSubmitting(false);
     }
-  }, [middleware, sdk, weather, claimPlant, refetchFarmerField, refetchFarmerBalances, refetchBeanstalkField, refetchPools]);
+  }, [middleware, sdk, weather, claimPlant, refetchBeanstalkField, refetchPools]);
 
   return (
     <Formik<SowFormValues>
@@ -493,7 +485,6 @@ const Sow : FC<{}> = () => {
             balances={balances}
             weather={weather}
             soil={soil}
-            claimPlantActions={claimPlant.actions}
             {...formikProps}
           />
         </>

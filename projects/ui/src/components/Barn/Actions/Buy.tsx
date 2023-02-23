@@ -36,12 +36,11 @@ import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew'
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import { BalanceFrom, balanceFromToMode } from '~/components/Common/Form/BalanceFromRow';
-import ClaimPlant, { ClaimPlantActionMap } from '~/util/ClaimPlant';
-import useClaimAndPlantActions from '~/hooks/beanstalk/useClaimAndPlantActions';
+import ClaimPlant from '~/util/ClaimPlant';
+import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
-import useFarmerClaimingBalance from '~/hooks/farmer/useFarmerClaimingBalance';
+import useFarmerClaimingBalance from '~/hooks/farmer/claim-plant/useFarmerClaimingBalance';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
-import useRefetchClaimAndPlant from '~/hooks/sdk/ClaimPlant/useRefetchClaimAndPlant';
 
 // ---------------------------------------------------
 
@@ -66,7 +65,6 @@ const BuyForm : FC<
     handleQuote: QuoteHandlerWithParams<BuyQuoteHandlerParams>;
     balances: FarmerBalances;
     tokenOut: ERC20Token;
-    claimPlantActions: ClaimPlantActionMap;
   }
 > = ({
   // Formik
@@ -74,7 +72,6 @@ const BuyForm : FC<
   setFieldValue,
   isSubmitting,
   // Custom
-  claimPlantActions,
   handleQuote,
   balances,
   tokenOut: token
@@ -165,7 +162,7 @@ const BuyForm : FC<
               >The amount of Fertilizer received rounds down to the nearest USDC. {usdc?.toFixed(2)} USDC = {fert?.toFixed(0)} FERT.
               </Alert>
               <Box width="100%">
-                <ClaimAndPlantAdditionalOptions actions={claimPlantActions} />
+                <ClaimAndPlantAdditionalOptions />
               </Box>
               <Box sx={{ width: '100%', mt: 0 }}>
                 <TxnAccordion defaultExpanded={false}>
@@ -205,13 +202,10 @@ const BuyForm : FC<
 };
 
 const Buy : FC<{}> = () => {
+  // 
   const sdk = useSdk();
   const claimPlant = useClaimAndPlantActions();
-  const [refetchClaimPlant] = useRefetchClaimAndPlant();
-  // Wallet connection
   const account = useAccount();
-
-  // console.log('buy rerender...');
 
   /// Farmer
   const balances = useFarmerBalances();
@@ -381,7 +375,7 @@ const Buy : FC<{}> = () => {
 
       const receipt = await txn.wait();
 
-      await refetchClaimPlant(actionsPerformed, { 
+      await claimPlant.refetch(actionsPerformed, { 
         farmerBarn: true,
         farmerBalances: true,
       }, [
@@ -393,7 +387,7 @@ const Buy : FC<{}> = () => {
       txToast ? txToast.error(err) : toast.error(parseError(err));
       console.error(err);
     }
-  }, [middleware, sdk, account, claimPlant, refetchClaimPlant, refetchAllowances]);
+  }, [middleware, sdk, account, claimPlant, refetchAllowances]);
 
   return (
     <Formik initialValues={initialValues} onSubmit={onSubmit}>
@@ -402,7 +396,6 @@ const Buy : FC<{}> = () => {
           handleQuote={handleQuote}
           balances={balances}
           tokenOut={tokenOut}
-          claimPlantActions={claimPlant.actions}
           {...formikProps}
         />
       )}
@@ -411,3 +404,9 @@ const Buy : FC<{}> = () => {
 };
 
 export default Buy;
+
+// export default function BuyWrapper() {
+//   const [fetch] = useRefetchFarmerBarn2();
+
+//   return <Stack>sup</Stack>;
+// }

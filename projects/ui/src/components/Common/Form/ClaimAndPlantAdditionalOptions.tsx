@@ -6,12 +6,13 @@ import BigNumber from 'bignumber.js';
 import Row from '../Row';
 import SelectionAccordion from '~/components/Common/Accordion/SelectionAccordion';
 
-import useFarmerClaimPlantOptions from '~/hooks/farmer/useFarmerClaimAndPlantOptions';
-import ClaimPlantOptionCard from '../Selection/ClaimPlantOptionCard';
+import useFarmerClaimPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
+import ClaimPlantOptionCard from './ClaimPlantOptionCard';
 import { ClaimAndPlantFormState } from '.';
 import useToggle from '~/hooks/display/useToggle';
 import useTimedRefresh from '~/hooks/app/useTimedRefresh';
-import { ClaimPlantAction, ClaimPlantActionMap } from '~/util/ClaimPlant';
+import { ClaimPlantAction } from '~/util/ClaimPlant';
+import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 
 type ClaimAndPlantGasResult = { [key in ClaimPlantAction]?: BigNumber };
 
@@ -24,9 +25,8 @@ const sortOrder: { [key in ClaimPlantAction]: number } = {
   [ClaimPlantAction.RINSE]: 5
 };
 
-const ClaimAndPlantAdditionalOptions: React.FC<{
-  actions: ClaimPlantActionMap;
-}> = ({ actions }) => {
+const ClaimAndPlantAdditionalOptions: React.FC<{}> = () => {
+  const { actions } = useClaimAndPlantActions();
   /// State
   const [hovered, setHovered] = useState<Set<ClaimPlantAction>>(new Set());
   const [local, setLocal] = useState<Set<ClaimPlantAction>>(new Set());
@@ -37,10 +37,7 @@ const ClaimAndPlantAdditionalOptions: React.FC<{
   const { options: claimPlantOptions } = useFarmerClaimPlantOptions();
 
   /// Formik
-  const {
-    values: { farmActions },
-    setFieldValue,
-  } = useFormikContext<ClaimAndPlantFormState>();
+  const { values: { farmActions }, setFieldValue } = useFormikContext<ClaimAndPlantFormState>();
 
   const options = useMemo(() => {
     // the options are the complement of possible actions to values.options

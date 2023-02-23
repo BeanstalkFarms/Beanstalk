@@ -2,10 +2,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useFormikContext } from 'formik';
 import SelectionAccordion from '~/components/Common/Accordion/SelectionAccordion';
 
-import useFarmerClaimPlantOptions from '~/hooks/farmer/useFarmerClaimAndPlantOptions';
+import useFarmerClaimPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 
-import ClaimPlantAccordionPill from '~/components/Common/Selection/ClaimPlantOptionPill';
-import ClaimPlantAccordionCard from '~/components/Common/Selection/ClaimPlantOptionCard';
+import ClaimPlantAccordionPill from '~/components/Common/Form/ClaimPlantOptionPill';
+import ClaimPlantAccordionCard from '~/components/Common/Form/ClaimPlantOptionCard';
 import { ClaimAndPlantFormState } from '.';
 import useToggle from '~/hooks/display/useToggle';
 import { ClaimPlantAction } from '~/util/ClaimPlant';
@@ -27,9 +27,11 @@ const presets = {
   },
 };
 
-const ClaimAndPlantFarmActions: React.FC<{
+type Props = {
   preset: keyof typeof presets;
-}> = ({ preset }) => {
+}
+
+const ClaimAndPlantFarmActions: React.FC<Props> = ({ preset }) => {
   /// Formik
   const { values: { farmActions }, setFieldValue } = useFormikContext<ClaimAndPlantFormState>();
 

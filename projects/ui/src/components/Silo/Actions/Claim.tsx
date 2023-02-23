@@ -25,12 +25,10 @@ import useToggle from '~/hooks/display/useToggle';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import PillRow from '~/components/Common/Form/PillRow';
 import TransactionToast from '~/components/Common/TxnToast';
-import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
-import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import copy from '~/constants/copy';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
-import useClaimAndPlantActions from '~/hooks/beanstalk/useClaimAndPlantActions';
+import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
@@ -38,7 +36,7 @@ import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 import TxnOutputField from '~/components/Common/Form/TxnOutputField';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
-import ClaimPlant, { ClaimPlantAction, ClaimPlantActionMap } from '~/util/ClaimPlant';
+import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 
 // -----------------------------------------------------------------------
 
@@ -64,13 +62,11 @@ const ClaimForm : FC<
   FormikProps<ClaimFormValues> & {
     token: ERC20Token;
     claimableBalance: BigNumber;
-    claimPlantActions: ClaimPlantActionMap;
   }
 > = ({
   // Custom
   token,
   claimableBalance,
-  claimPlantActions,
   // Formik
   values,
   isSubmitting,
@@ -215,9 +211,7 @@ const ClaimForm : FC<
                 }
               ]}
             />
-            <ClaimAndPlantAdditionalOptions 
-              actions={claimPlantActions}
-            />
+            <ClaimAndPlantAdditionalOptions />
             {/* <TokenOutputField
               token={tokenOut}
               amount={values.token.amountOut || ZERO_BN}
@@ -285,8 +279,6 @@ const Claim : FC<{
   const middleware = useFormMiddleware();
 
   /// Data
-  const [refetchFarmerSilo]     = useFetchFarmerSilo();
-  const [refetchFarmerBalances] = useFetchFarmerBalances();
   const claimableBalance = siloBalance?.claimable.amount;
 
   // Form
@@ -384,8 +376,8 @@ const Claim : FC<{
       const receipt = await txn.wait();
 
       await claimPlant.refetch(actionsPerformed, { 
-        farmerSilo: refetchFarmerSilo, 
-        farmerBalances: refetchFarmerBalances
+        farmerSilo: true, 
+        farmerBalances: true
       });
 
       txToast.success(receipt);
@@ -394,16 +386,7 @@ const Claim : FC<{
       txToast ? txToast.error(err) : toast.error(parseError(err));
       formActions.setSubmitting(false);
     }
-  }, [
-    middleware, 
-    siloBalance?.claimable?.crates, 
-    token, 
-    claimableBalance, 
-    sdk, 
-    claimPlant,
-    refetchFarmerSilo, 
-    refetchFarmerBalances
-  ]);
+  }, [middleware, siloBalance?.claimable?.crates, token, claimableBalance, sdk, claimPlant]);
 
   return (
     <Formik initialValues={initialValues} onSubmit={onSubmit} enableReinitialize>
@@ -416,7 +399,6 @@ const Claim : FC<{
             <ClaimForm
               token={token}
               claimableBalance={claimableBalance}
-              claimPlantActions={claimPlant.actions}
               {...formikProps}
             />
           </Stack>

@@ -45,16 +45,16 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import TokenOutputsField from '~/components/Common/Form/TokenOutputsField';
 import useSdk from '~/hooks/sdk';
-import useFarmerClaimAndPlantActions from '~/hooks/beanstalk/useClaimAndPlantActions';
+import useFarmerClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import { depositSummary } from '~/lib/Beanstalk/Silo/Deposit';
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
-import useFarmerClaimAndPlantOptions from '~/hooks/farmer/useFarmerClaimAndPlantOptions';
+import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import ClaimPlant, { ClaimPlantActionMap, ClaimPlantAction } from '~/util/ClaimPlant';
-import useFarmerClaimingBalance from '~/hooks/farmer/useFarmerClaimingBalance';
+import useFarmerClaimingBalance from '~/hooks/farmer/claim-plant/useFarmerClaimingBalance';
 
 // -----------------------------------------------------------------------
 

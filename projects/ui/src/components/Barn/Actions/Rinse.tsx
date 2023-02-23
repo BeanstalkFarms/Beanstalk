@@ -26,9 +26,9 @@ import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import Row from '~/components/Common/Row';
 import TokenIcon from '~/components/Common/TokenIcon';
-import ClaimPlant, { ClaimPlantAction, ClaimPlantActionMap } from '~/util/ClaimPlant';
+import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import useSdk from '~/hooks/sdk';
-import useClaimAndPlantActions from '~/hooks/beanstalk/useClaimAndPlantActions';
+import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 
 // ---------------------------------------------------
@@ -88,15 +88,11 @@ const QuickRinseForm: FC<
   );
 };
 
-const RinseForm : FC<
-  FormikProps<RinseFormValues> & {
-    claimPlantActions: ClaimPlantActionMap;
-  }
-> = ({
+const RinseForm : FC<FormikProps<RinseFormValues>> = ({ 
   values,
-  isSubmitting,
-  claimPlantActions,
+  isSubmitting 
 }) => {
+  const sdk = useSdk();
   /// Extract
   const amountSprouts = values.amount;
   const isSubmittable = (
@@ -119,7 +115,7 @@ const RinseForm : FC<
           InputProps={{
             endAdornment: (
               <TokenAdornment
-                token={SPROUTS}
+                token={sdk.tokens.SPROUTS}
               />
             )
           }}
@@ -135,9 +131,7 @@ const RinseForm : FC<
               token={BEAN[1]}
               amount={amountSprouts}
             />
-            <ClaimAndPlantAdditionalOptions 
-              actions={claimPlantActions}
-            />
+            <ClaimAndPlantAdditionalOptions />
             <Box sx={{ width: '100%', mt: 0 }}>
               <TxnAccordion defaultExpanded={false}>
                 <TxnPreview
@@ -259,7 +253,7 @@ const Rinse : FC<{ quick?: boolean }> = ({ quick }) => {
       {(formikProps) => 
         (quick 
           ? <QuickRinseForm {...formikProps} /> 
-          : <RinseForm {...formikProps} claimPlantActions={claimPlant.actions} />
+          : <RinseForm {...formikProps} />
         )
       }
     </Formik>

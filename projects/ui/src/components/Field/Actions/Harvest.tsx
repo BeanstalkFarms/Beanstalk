@@ -17,8 +17,6 @@ import {
   parseError
 } from '~/util';
 import useFarmerField from '~/hooks/farmer/useFarmerField';
-import { useFetchFarmerField } from '~/state/farmer/field/updater';
-import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import { BEAN, PODS } from '~/constants/tokens';
 import copy from '~/constants/copy';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
@@ -31,7 +29,7 @@ import Row from '~/components/Common/Row';
 import TokenIcon from '~/components/Common/TokenIcon';
 import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import useSdk from '~/hooks/sdk';
-import useClaimAndPlantActions from '~/hooks/beanstalk/useClaimAndPlantActions';
+import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 
 // -----------------------------------------------------------------------
 
@@ -199,8 +197,6 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
 
   /// Farmer
   const farmerField = useFarmerField();
-  const [refetchFarmerField] = useFetchFarmerField();
-  const [refetchFarmerBalances] = useFetchFarmerBalances();
 
   /// Form
   const middleware = useFormMiddleware();
@@ -259,8 +255,8 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
         const receipt = await txn.wait();
 
         await claimPlant.refetch(actionsPerformed, {
-          farmerField: refetchFarmerField,
-          farmerBalances: refetchFarmerBalances
+          farmerField: true,
+          farmerBalances: true
         });
 
         txToast.success(receipt);
@@ -270,15 +266,7 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
         formActions.setSubmitting(false);
       }
     },
-    [
-      middleware, 
-      sdk, 
-      farmerField.harvestablePods, 
-      farmerField.harvestablePlots, 
-      claimPlant, 
-      refetchFarmerField, 
-      refetchFarmerBalances
-    ]
+    [middleware, sdk, farmerField.harvestablePods, farmerField.harvestablePlots, claimPlant]
   );
 
   return (
