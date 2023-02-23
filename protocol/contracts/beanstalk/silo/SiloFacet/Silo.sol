@@ -104,30 +104,36 @@ contract Silo is SiloExit {
      *  - {_plant}
      *  - {SiloFacet-transferDeposit(s)}
      */
-    function _mow(address account, address token) internal {
+   function _mow(address account, address token) internal {
         uint32 _lastUpdate = lastUpdate(account);
 
-        if (_lastUpdate >= _season()) return;
+        //if last update > 0 and < grownStalkPerBdvStartSeason
+        //require that user account seeds be zero
+        require(_lastUpdate > 0 && _lastUpdate < s.season.grownStalkPerBdvStartSeason, 'silo migration needed'); //will require storage cold read... is there a better way?
 
+        //sop stuff only needs to be updated once per season
+        //if it started raininga nd it's still raining, or there was a sop
+        if (s.season.rainStart > s.season.grownStalkPerBdvStartSeason) {
+            if (_lastUpdate < s.season.rainStart && _lastUpdate < _season()) {
+                // Increments `plenty` for `account` if a Flood has occured.
+                // Saves Rain Roots for `account` if it is Raining.
+                handleRainAndSops(account, _lastUpdate);
 
-        // Increments `plenty` for `account` if a Flood has occured.
-        // Saves Rain Roots for `account` if it is Raining.
-        handleRainAndSops(account, _lastUpdate);
-
+                // Reset timer so that Grown Stalk for a particular Season can only be 
+                // claimed one time. 
+                s.a[account].lastUpdate = _season();
+            }
+        }
+        
         // Calculate the amount of Grown Stalk claimable by `account`.
         // Increase the account's balance of Stalk and Roots.
         __mow(account, token);
-
-        // Reset timer so that Grown Stalk for a particular Season can only be 
-        // claimed one time. 
-        s.a[account].lastUpdate = _season();
     }
 
     function __mow(address account, address token) private {
         console.log('__mow, current season:', s.season.current);
 
         //require that user account seeds be zero
-        require(s.a[account].s.seeds == 0, 'silo migration needed'); //will require storage cold read... is there a better way?
 
         // If this `account` has no BDV, skip to save gas. Still need to update lastCumulativeGrownStalkPerBdv (happen on initial deposit, since mow is called before any deposit)
         if (s.a[account].mowStatuses[token].bdv == 0) {

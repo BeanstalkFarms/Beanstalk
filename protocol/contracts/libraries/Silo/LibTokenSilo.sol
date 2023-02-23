@@ -196,12 +196,12 @@ library LibTokenSilo {
 
         console.log('--- removeDepositFromAccount s.a[account].deposits[token][grownStalkPerBdv].bdv: ', s.a[account].deposits[token][grownStalkPerBdv].bdv);
         console.log('--- removeDepositFromAccount s.a[account].deposits[token][grownStalkPerBdv].amount: ', s.a[account].deposits[token][grownStalkPerBdv].amount);
-
+        Account.Deposit memory d = s.a[account].deposits[token][grownStalkPerBdv];
         
         uint256 crateAmount;
         (crateAmount, crateBDV) = (
-            s.a[account].deposits[token][grownStalkPerBdv].amount,
-            s.a[account].deposits[token][grownStalkPerBdv].bdv
+            d.amount,
+            d.bdv
         );
 
         console.log('removeDepositFromAccount crateAmount: ', crateAmount);
@@ -212,11 +212,9 @@ library LibTokenSilo {
             console.log('removeDepositFromAccount doing partial remove');
             uint256 removedBDV = amount.mul(crateBDV).div(crateAmount);
             console.log('removedBDV: ', removedBDV);
-            uint256 updatedBDV = uint256(s.a[account].deposits[token][grownStalkPerBdv].bdv)
-                .sub(removedBDV);
+            uint256 updatedBDV = crateBDV.sub(removedBDV);
             console.log('updatedBDV: ', updatedBDV);
-            uint256 updatedAmount = uint256(s.a[account].deposits[token][grownStalkPerBdv].amount)
-                .sub(amount);
+            uint256 updatedAmount = crateAmount.sub(amount);
             console.log('updatedAmount: ', updatedAmount);
                 
             require(
@@ -224,8 +222,8 @@ library LibTokenSilo {
                 "Silo: uint128 overflow."
             );
 
-            s.a[account].deposits[token][grownStalkPerBdv].amount = uint128(updatedAmount);
-            s.a[account].deposits[token][grownStalkPerBdv].bdv = uint128(updatedBDV);
+            d.amount = uint128(updatedAmount);
+            d.bdv = uint128(updatedBDV);
 
             //verify this has to be a different var?
             uint256 updatedTotalBdvPartial = uint256(s.a[account].mowStatuses[token].bdv).sub(removedBDV);
