@@ -1,13 +1,16 @@
 import { useFormikContext } from 'formik';
 import { useMemo } from 'react';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
-import { BalanceFromFragment, ClaimAndPlantFormState } from '~/components/Common/Form';
+import {
+  BalanceFromFragment,
+  ClaimAndPlantFormState,
+} from '~/components/Common/Form';
 import { ZERO_BN } from '~/constants';
 import useSdk from '~/hooks/sdk';
 import { ApplicableBalance } from '~/state/farmer/balances';
 import useFarmerClaimPlantOptions from './useFarmerClaimPlantOptions';
 
-type FormContext = ClaimAndPlantFormState & BalanceFromFragment
+type FormContext = ClaimAndPlantFormState & BalanceFromFragment;
 
 export default function useFarmerClaimingBalance() {
   const sdk = useSdk();

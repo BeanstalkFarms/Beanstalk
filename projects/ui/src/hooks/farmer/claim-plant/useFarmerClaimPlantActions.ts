@@ -46,8 +46,8 @@ type ClaimPlantRefetch = (
   additional?: (() => MayPromise<any>)[]
 ) => Promise<void>;
 
-type ClaimPlantBuildAction = (actions?: ClaimPlantAction[]) => Partial<{ 
-  [key in ClaimPlantAction]: ClaimPlantActionData 
+type ClaimPlantBuildAction = (actions?: ClaimPlantAction[]) => Partial<{
+  [key in ClaimPlantAction]: ClaimPlantActionData;
 }>;
 
 // -------------------------------------------------------------------------
@@ -153,10 +153,8 @@ export default function useFarmerClaimPlantActions(): {
         actionToRefetch[action].forEach((key: FarmerRefetchFn) => {
           if (config?.[key] && !prev[key]) {
             prev[key] = refetchMap[key];
-            console.log('fetching: ', key);
           } else if (!prev[key]) {
             prev[key] = refetchMap[key];
-            console.log('fetching: ', key);
           }
         });
 
@@ -167,7 +165,6 @@ export default function useFarmerClaimPlantActions(): {
         ...Object.values(refetchFunctions),
         ...(additional || []),
       ];
-      console.log('refetchFunctions: ', allRefetchFunctions.length);
 
       await Promise.all(allRefetchFunctions.map((fn) => fn()));
     },

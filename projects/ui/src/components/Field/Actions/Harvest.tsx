@@ -1,21 +1,26 @@
 import React, { useCallback, useMemo } from 'react';
-import { Accordion, AccordionDetails, Box, Stack, Typography } from '@mui/material';
+import {
+  Accordion,
+  AccordionDetails,
+  Box,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import toast from 'react-hot-toast';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import {
   ClaimAndPlantFormState,
-  SmartSubmitButton, TokenInputField, TokenOutputField,
+  SmartSubmitButton,
+  TokenInputField,
+  TokenOutputField,
   TxnPreview,
-  TxnSeparator
+  TxnSeparator,
 } from '~/components/Common/Form';
 import { ActionType } from '~/util/Actions';
 import { FarmToMode } from '~/lib/Beanstalk/Farm';
-import {
-  displayFullBN,
-  parseError
-} from '~/util';
+import { displayFullBN, parseError } from '~/util';
 import useFarmerField from '~/hooks/farmer/useFarmerField';
 import { BEAN, PODS } from '~/constants/tokens';
 import copy from '~/constants/copy';
@@ -30,7 +35,7 @@ import TokenIcon from '~/components/Common/TokenIcon';
 import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import useSdk from '~/hooks/sdk';
 import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
-import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
+import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 
 // -----------------------------------------------------------------------
 
@@ -41,55 +46,48 @@ type HarvestFormValues = {
 
 type Props = FormikProps<HarvestFormValues> & {
   harvestablePods: BigNumber;
-}
+};
 
 const QuickHarvestForm: FC<Props> = ({
   // Custom
   harvestablePods,
   // Formike
   values,
-  isSubmitting
+  isSubmitting,
 }) => {
-    /// Derived
-    const amount = harvestablePods;
-    const isSubmittable = (
-      amount
-      && amount.gt(0)
-      && values.destination !== undefined
-    );
+  /// Derived
+  const amount = harvestablePods;
+  const isSubmittable =
+    amount && amount.gt(0) && values.destination !== undefined;
 
-    return (
-      <Form autoComplete="off" noValidate>
-        <Stack gap={1}>
-          <Stack px={0.5} spacing={0.5}>
-            <Row justifyContent="space-between">
-              <Typography color="primary">
-                Harvestable Pods
-              </Typography>
-              <Row gap={0.5}>
-                <TokenIcon token={PODS} />
-                <Typography variant="h3">
-                  {displayFullBN(amount, 0)}
-                </Typography>
-              </Row>
+  return (
+    <Form autoComplete="off" noValidate>
+      <Stack gap={1}>
+        <Stack px={0.5} spacing={0.5}>
+          <Row justifyContent="space-between">
+            <Typography color="primary">Harvestable Pods</Typography>
+            <Row gap={0.5}>
+              <TokenIcon token={PODS} />
+              <Typography variant="h3">{displayFullBN(amount, 0)}</Typography>
             </Row>
-            <FarmModeField name="destination" />
-          </Stack>
-          <SmartSubmitButton
-            loading={isSubmitting}
-            disabled={!isSubmittable || isSubmitting}
-            type="submit"
-            variant="contained"
-            color="primary"
-            size="medium"
-            tokens={[]}
-            mode="auto"
-          >
-            Harvest
-          </SmartSubmitButton>
+          </Row>
+          <FarmModeField name="destination" />
         </Stack>
-      </Form>
-    );
+        <SmartSubmitButton
+          loading={isSubmitting}
+          disabled={!isSubmittable || isSubmitting}
+          type="submit"
+          variant="contained"
+          color="primary"
+          size="medium"
+          tokens={[]}
+          mode="auto"
+        >
+          Harvest
+        </SmartSubmitButton>
+      </Stack>
+    </Form>
+  );
 };
 
 // -----------------------------------------------------------------------
@@ -103,11 +101,8 @@ const HarvestForm: FC<Props> = ({
 }) => {
   /// Derived
   const amount = harvestablePods;
-  const isSubmittable = (
-    amount
-    && amount.gt(0)
-    && values.destination !== undefined
-  );
+  const isSubmittable =
+    amount && amount.gt(0) && values.destination !== undefined;
 
   return (
     <Form autoComplete="off" noValidate>
@@ -119,23 +114,14 @@ const HarvestForm: FC<Props> = ({
           balanceLabel="Harvestable Balance"
           disabled
           InputProps={{
-            endAdornment: (
-              <TokenAdornment
-                token={PODS}
-              />
-            )
+            endAdornment: <TokenAdornment token={PODS} />,
           }}
-          belowComponent={
-            <ClaimAndPlantFarmActions />
-          }
         />
         {/* Transaction Details */}
         {values.amount?.gt(0) ? (
           <>
             {/* Setting: Destination */}
-            <FarmModeField
-              name="destination"
-            />
+            <FarmModeField name="destination" />
             <TxnSeparator mt={-1} />
             <TokenOutputField
               token={BEAN[1]}
@@ -155,6 +141,7 @@ const HarvestForm: FC<Props> = ({
                 page.
               </Alert>
             </Box> */}
+            <ClaimAndPlantAdditionalOptions />
             <Box>
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />
@@ -163,7 +150,7 @@ const HarvestForm: FC<Props> = ({
                     actions={[
                       {
                         type: ActionType.HARVEST,
-                        amount: amount
+                        amount: amount,
                       },
                       {
                         type: ActionType.RECEIVE_BEANS,
@@ -204,16 +191,19 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
 
   /// Form
   const middleware = useFormMiddleware();
-  const initialValues: HarvestFormValues = useMemo(() => ({
-    amount: farmerField.harvestablePods || null,
-    destination: undefined,
-    farmActions: {
-      options: ClaimPlant.presets.none,
-      selected: undefined,
-      additional: undefined,
-      exclude: [ClaimPlantAction.HARVEST]
-    }
-  }), [farmerField.harvestablePods]);
+  const initialValues: HarvestFormValues = useMemo(
+    () => ({
+      amount: farmerField.harvestablePods || null,
+      destination: undefined,
+      farmActions: {
+        options: ClaimPlant.presets.none,
+        selected: undefined,
+        additional: undefined,
+        exclude: [ClaimPlantAction.HARVEST],
+      },
+    }),
+    [farmerField.harvestablePods]
+  );
 
   /// Handlers
   const onSubmit = useCallback(
@@ -224,22 +214,35 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
       let txToast;
       try {
         middleware.before();
-        const account = await sdk.getAccount(); 
+        const account = await sdk.getAccount();
         if (!account) throw new Error('Connect a wallet first.');
-        if (!farmerField.harvestablePods.gt(0)) throw new Error('No Harvestable Pods.');
-        if (!farmerField.harvestablePlots) throw new Error('No Harvestable Plots.');
+        if (!farmerField.harvestablePods.gt(0)) {
+          throw new Error('No Harvestable Pods.');
+        }
+        if (!farmerField.harvestablePlots) {
+          throw new Error('No Harvestable Plots.');
+        }
         if (!values.destination) throw new Error('No destination set.');
 
         txToast = new TransactionToast({
-          loading: `Harvesting ${displayFullBN(farmerField.harvestablePods, PODS.displayDecimals)} Pods.`,
-          success: `Harvest successful. Added ${displayFullBN(farmerField.harvestablePods, PODS.displayDecimals)} Beans to your ${copy.MODES[values.destination]}.`,
+          loading: `Harvesting ${displayFullBN(
+            farmerField.harvestablePods,
+            PODS.displayDecimals
+          )} Pods.`,
+          success: `Harvest successful. Added ${displayFullBN(
+            farmerField.harvestablePods,
+            PODS.displayDecimals
+          )} Beans to your ${copy.MODES[values.destination]}.`,
         });
 
-        const { workflow: harvest } = ClaimPlant.getAction(ClaimPlantAction.HARVEST)(sdk, { 
+        const { workflow: harvest } = ClaimPlant.getAction(
+          ClaimPlantAction.HARVEST
+        )(sdk, {
           plotIds: Object.keys(farmerField.harvestablePlots).map(
-            (harvestIdx) => sdk.tokens.PODS.amount(harvestIdx.toString()).blockchainString,
+            (harvestIdx) =>
+              sdk.tokens.PODS.amount(harvestIdx.toString()).blockchainString
           ),
-          toMode: values.destination
+          toMode: values.destination,
         });
 
         const { execute, actionsPerformed } = await ClaimPlant.build(
@@ -258,7 +261,7 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
 
         await claimPlant.refetch(actionsPerformed, {
           farmerField: true,
-          farmerBalances: true
+          farmerBalances: true,
         });
 
         txToast.success(receipt);
@@ -268,7 +271,13 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
         formActions.setSubmitting(false);
       }
     },
-    [middleware, sdk, farmerField.harvestablePods, farmerField.harvestablePlots, claimPlant]
+    [
+      middleware,
+      sdk,
+      farmerField.harvestablePods,
+      farmerField.harvestablePlots,
+      claimPlant,
+    ]
   );
 
   return (
@@ -276,7 +285,7 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
       {(formikProps) => (
         <Stack spacing={1}>
           {quick ? (
-            <QuickHarvestForm 
+            <QuickHarvestForm
               harvestablePods={farmerField.harvestablePods}
               {...formikProps}
             />
@@ -284,7 +293,7 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
             <HarvestForm
               harvestablePods={farmerField.harvestablePods}
               {...formikProps}
-          />
+            />
           )}
         </Stack>
       )}
