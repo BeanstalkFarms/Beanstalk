@@ -162,8 +162,8 @@ contract Silo is SiloExit {
     //array of deposit seasons
     //array of tokens with deposit seasons
     //make sure bdv of everything lines up with the number of seeds they should have
-    function _mowAndMigrate(address account, address[] calldata tokens, uint32[][] calldata seasons) internal {
-        require(tokens.length == seasons.length, "inputs not same length");
+    function _mowAndMigrate(address account, address[] calldata tokens, int128[][] calldata grownStalkPerBdvs) internal {
+        require(tokens.length == grownStalkPerBdvs.length, "inputs not same length");
 
         //see if msg.sender has already migrated or not by checking seed balance
         require(s.a[account].s.seeds > 0, "no migration needed");
@@ -178,16 +178,16 @@ contract Silo is SiloExit {
 
         for (uint256 i = 0; i < tokens.length; i++) {
             address token = tokens[i];
-            uint32[] memory seasonDepositsForToken = seasons[i];
+            int128[] memory grownStalkPerBdvsForToken = grownStalkPerBdvs[i];
             //get how many seeds there should be per bdv
-            uint32 seedPerBdv = C.getSeedsPerToken(address(token));
+            uint256 seedPerBdv = C.getSeedsPerToken(address(token));
             uint256 totalBdv = 0;
 
-            for (uint256 j = 0; j < seasonDepositsForToken.length; j++) {
-                uint32 season = seasonDepositsForToken[j];
+            for (uint256 j = 0; j < grownStalkPerBdvsForToken.length; j++) {
+                int128 grownStalkPerBdv = grownStalkPerBdvsForToken[j];
 
                 //get bdv amount for this deposit
-                (, uint256 bdv) = LibLegacyTokenSilo.tokenDeposit(account, token, season);
+                (, uint256 bdv) = LibTokenSilo.tokenDeposit(account, token, grownStalkPerBdv);
 
                 //add to running total of seeds
                 seedsTotalBasedOnInputDeposits += bdv * seedPerBdv;

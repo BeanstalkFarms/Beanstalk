@@ -344,8 +344,8 @@ contract SiloFacet is TokenSilo {
     }
 
     //function to mow and migrate
-    function mowAndMigrate(address account, address[] calldata tokens, uint32[][] calldata seasons) external payable {
-        _mowAndMigrate(account, tokens, seasons);
+    function mowAndMigrate(address account, address[] calldata tokens, int128[][] calldata grownStalkPerBdvs) external payable {
+        _mowAndMigrate(account, tokens, grownStalkPerBdvs);
     }
 
     /** 
