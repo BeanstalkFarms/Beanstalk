@@ -330,12 +330,14 @@ library LibTokenSilo {
         console.log('1 tokenDeposit amount: ', amount);
         console.log('1 tokenDeposit bdv: ', bdv);
         if (LibLegacyTokenSilo.isDepositSeason(IERC20(token), grownStalkPerBdv)) {
-            console.log('yes token deposit was a season');
+            console.log('yes grownStalkPerBdv deposit was a season');
             (uint legacyAmount, uint legacyBdv) =
                 LibLegacyTokenSilo.tokenDeposit(account, address(token), LibLegacyTokenSilo.grownStalkPerBdvToSeason(IERC20(token), grownStalkPerBdv));
             amount = amount.add(legacyAmount);
             bdv = bdv.add(legacyBdv);
             
+        } else {
+            console.log('not a deposit season');
         }
         console.log('2 tokenDeposit amount: ', amount);
         console.log('2 tokenDeposit bdv: ', bdv);

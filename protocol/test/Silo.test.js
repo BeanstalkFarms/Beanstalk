@@ -466,10 +466,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
 
     //large bean depositor is 0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4
 
-    this.depositorAddress = '0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4';
 
-    const depositorSigner = await impersonateSigner(this.depositorAddress);
-    await this.silo.connect(depositorSigner);
 
   });
 
@@ -536,11 +533,54 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
   });
 
   //get deposits for a sample big depositor, verify they can migrate their deposits correctly
-  describe.only('properly migrates deposits', function () {
+  describe('properly migrates deposits', function () {
     it('for a sample depositor', async function () {
 
       //get deposit data using a query like this: https://graph.node.bean.money/subgraphs/name/beanstalk/graphql?query=%7B%0A++silos%28orderBy%3A+stalk%2C+orderDirection%3A+desc%2C+first%3A+2%29+%7B%0A++++farmer+%7B%0A++++++id%0A++++++plots+%7B%0A++++++++season%0A++++++++source%0A++++++%7D%0A++++++silo+%7B%0A++++++++id%0A++++++%7D%0A++++++deposits+%7B%0A++++++++season%0A++++++++token%0A++++++%7D%0A++++%7D%0A++++stalk%0A++%7D%0A%7D
 
+      // const depositorAddress = '0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4';
+      // const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449', '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d', '0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab'];
+
+      // const seasons = [
+      //   [
+      //     1964, 2281, 3615, 4641, 4673, 4820, 5359, 5869, 5988, 5991, 6031,
+      //     6032, 6035, 6074,
+      //   ],
+      //   [2773, 2917, 3019, 4641, 4673, 4820, 5869],
+      //   [6389, 7563],
+      // ];
+
+      const depositorAddress = '0x5e68bb3de6133baee55eeb6552704df2ec09a824';
+      const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449', '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d','0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab'];
+      const seasons = [[6074],[6061],[6137]];
+      // const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449'];
+      // const seasons = [[6074]];
+
+      for (let i = 0; i < seasons.length; i++) {
+        for (let j = 0; j < seasons[i].length; j++) {
+          const season = seasons[i][j];
+          seasons[i][j] = await this.silo.seasonToGrownStalkPerBdv(this.bean.address, season);
+        }
+      }
+      
+      console.log('modified seasons: ', seasons);
+
+      const depositorSigner = await impersonateSigner(depositorAddress);
+      await this.silo.connect(depositorSigner);
+  
+
+      //need an array of all the tokens that have been deposited and their corresponding seasons
+      await this.silo.mowAndMigrate(depositorAddress, tokens, seasons);
+
+      //now mow and it shouldn't revert
+      await this.silo.mow(depositorAddress, this.beanMetapool.address)
+
+
+    });
+
+    it.only('for a second sample depositor', async function () {
+  
+      const depositorAddress = '0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4';
       const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449', '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d', '0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab'];
 
       const seasons = [
@@ -552,16 +592,29 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         [6389, 7563],
       ];
 
+      for (let i = 0; i < seasons.length; i++) {
+        for (let j = 0; j < seasons[i].length; j++) {
+          const season = seasons[i][j];
+          seasons[i][j] = await this.silo.seasonToGrownStalkPerBdv(this.bean.address, season);
+        }
+      }
       
+      console.log('modified seasons: ', seasons);
+
+      const depositorSigner = await impersonateSigner(depositorAddress);
+      await this.silo.connect(depositorSigner);
+  
 
       //need an array of all the tokens that have been deposited and their corresponding seasons
-      await this.silo.mowAndMigrate(this.depositorAddress, tokens, seasons);
+      await this.silo.mowAndMigrate(depositorAddress, tokens, seasons);
 
       //now mow and it shouldn't revert
-      await this.silo.mow(this.depositorAddress, this.beanMetapool.address)
+      await this.silo.mow(depositorAddress, this.beanMetapool.address)
 
 
     });
+
+      
   });
 
   describe('reverts if you try to mow before migrating', function () {
