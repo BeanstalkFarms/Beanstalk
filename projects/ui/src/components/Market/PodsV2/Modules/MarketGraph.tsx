@@ -585,12 +585,17 @@ const Graph: FC<GraphProps> = ({
       }
     } else if (params.listingID) {
       const index = listings.findIndex((l) => l.id === params.listingID);
-      if (!selectedPoint || selectedPoint.index !== index) {
-        setSelectedPoint({
-          type: 'listing',
-          index,
-          coordinate: listingPositions[index],
-        });
+      const newSelectdPoint: SelectedPoint = {
+        type: 'listing',
+        index,
+        coordinate: listingPositions[index],
+      };
+      const hasPointChanged = selectedPoint
+        ? JSON.stringify(selectedPoint) !== JSON.stringify(newSelectdPoint)
+        : true;
+
+      if (hasPointChanged) {
+        setSelectedPoint(newSelectdPoint);
       }
     } else if (params.orderID) {
       const index = orders.findIndex((l) => l.id === params.orderID);
