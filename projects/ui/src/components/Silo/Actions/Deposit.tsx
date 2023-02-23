@@ -34,7 +34,6 @@ import TxnSeparator from '~/components/Common/Form/TxnSeparator';
 import useToggle from '~/hooks/display/useToggle';
 import usePreferredToken from '~/hooks/farmer/usePreferredToken';
 import useTokenMap from '~/hooks/chain/useTokenMap';
-import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import { parseError } from '~/util';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import { AppState } from '~/state';
@@ -53,7 +52,7 @@ import { depositSummary } from '~/lib/Beanstalk/Silo/Deposit';
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
 import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
-import ClaimPlant, { ClaimPlantActionMap, ClaimPlantAction } from '~/util/ClaimPlant';
+import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import useFarmerClaimingBalance from '~/hooks/farmer/claim-plant/useFarmerClaimingBalance';
 
 // -----------------------------------------------------------------------
@@ -81,7 +80,6 @@ const DepositForm: FC<
     balances: FarmerBalances;
     contract: ethers.Contract;
     handleQuote: QuoteHandlerWithParams<DepositQuoteHandler>;
-    actionsMap: ClaimPlantActionMap;
   }
 > = ({
   // Custom
@@ -90,7 +88,6 @@ const DepositForm: FC<
   amountToBdv,
   balances,
   contract,
-  actionsMap,
   handleQuote,
   // Formik
   values,
@@ -221,9 +218,7 @@ const DepositForm: FC<
                 }
               ]}
             />
-            <ClaimAndPlantAdditionalOptions
-              actions={actionsMap}
-            />
+            <ClaimAndPlantAdditionalOptions  />
             <Box>
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />
@@ -312,7 +307,6 @@ const Deposit: FC<{
 
   /// Farmer
   const balances                = useFarmerBalances();
-  const [refetchFarmerSilo]     = useFetchFarmerSilo();
   const [refetchFarmerBalances] = useFetchFarmerBalances();
   const [refetchPools]          = useFetchPools();
   const [refetchSilo]           = useFetchBeanstalkSilo();
@@ -441,8 +435,8 @@ const Deposit: FC<{
 
         const receipt = await txn.wait();
         await claimPlant.refetch(actionsPerformed, {
-          farmerSilo: refetchFarmerSilo,
-          farmerBalances: refetchFarmerBalances,
+          farmerSilo: true,
+          farmerBalances: true,
         }, [refetchSilo, refetchPools]);
       
         txToast.success(receipt);
@@ -451,17 +445,7 @@ const Deposit: FC<{
         txToast ? txToast.error(err) : toast.error(parseError(err));
         formActions.setSubmitting(false);
       }
-    }, [
-      middleware, 
-      getWorkflow, 
-      whitelistedToken, 
-      claimPlant, 
-      sdk, 
-      refetchFarmerSilo, 
-      refetchFarmerBalances, 
-      refetchPools, 
-      refetchSilo
-    ]
+    }, [middleware, getWorkflow, whitelistedToken, claimPlant, sdk, refetchPools, refetchSilo]
   );
 
   return (
@@ -482,7 +466,6 @@ const Deposit: FC<{
             whitelistedToken={whitelistedToken}
             balances={balances}
             contract={sdk.contracts.beanstalk}
-            actionsMap={claimPlant.actions}
             {...formikProps}
           />
         </>
