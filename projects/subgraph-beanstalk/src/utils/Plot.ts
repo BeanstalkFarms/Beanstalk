@@ -1,7 +1,7 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Plot } from "../../generated/schema";
-import { ADDRESS_ZERO } from "./Constants";
-import { ZERO_BI } from "./Decimals";
+import { ADDRESS_ZERO } from "../../../subgraph-core/utils/Constants";
+import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { loadField } from "./Field";
 
 export function loadPlot(diamondAddress: Address, index: BigInt): Plot {

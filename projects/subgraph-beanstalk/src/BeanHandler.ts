@@ -1,11 +1,9 @@
 import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { Transfer as LegacyTransfer } from "../generated/Bean/ERC20";
 import { Transfer } from "../generated/Bean-Replanted/ERC20";
-import { Beanstalk } from "../generated/schema";
-import { ADDRESS_ZERO, BEANSTALK } from "./utils/Constants";
-import { loadField } from "./utils/Field";
+import { ADDRESS_ZERO, BEANSTALK } from "../../subgraph-core/utils/Constants";
 import { loadSeason } from "./utils/Season";
-import { toDecimal, ZERO_BI } from "./utils/Decimals";
+import { toDecimal, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadBeanstalk } from "./utils/Beanstalk";
 
 export function handleLegacyTransfer(event: LegacyTransfer): void {

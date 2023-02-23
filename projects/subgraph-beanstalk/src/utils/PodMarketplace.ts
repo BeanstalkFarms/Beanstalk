@@ -1,7 +1,7 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { PodMarketplace, PodMarketplaceHourlySnapshot, PodMarketplaceDailySnapshot } from "../../generated/schema";
 import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
-import { ZERO_BI } from "./Decimals";
+import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { loadField } from "./Field";
 
 export function loadPodMarketplace(diamondAddress: Address): PodMarketplace {

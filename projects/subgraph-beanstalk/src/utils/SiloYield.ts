@@ -1,5 +1,5 @@
 import { SiloYield } from "../../generated/schema";
-import { ZERO_BD, ZERO_BI } from "./Decimals";
+import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 
 export function loadSiloYield(season: i32): SiloYield {
   let siloYield = SiloYield.load(season.toString());

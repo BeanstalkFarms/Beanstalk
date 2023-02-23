@@ -1,8 +1,8 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Silo, SiloHourlySnapshot, SiloDailySnapshot } from "../../generated/schema";
-import { BEANSTALK } from "./Constants";
+import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
 import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
-import { ZERO_BD, ZERO_BI } from "./Decimals";
+import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 
 export function loadSilo(account: Address): Silo {
   let silo = Silo.load(account.toHexString());
