@@ -559,7 +559,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       for (let i = 0; i < seasons.length; i++) {
         for (let j = 0; j < seasons[i].length; j++) {
           const season = seasons[i][j];
-          seasons[i][j] = await this.silo.seasonToGrownStalkPerBdv(this.bean.address, season);
+          seasons[i][j] = await this.silo.seasonToGrownStalkPerBdv(tokens[i], season);
         }
       }
       
@@ -595,7 +595,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       for (let i = 0; i < seasons.length; i++) {
         for (let j = 0; j < seasons[i].length; j++) {
           const season = seasons[i][j];
-          seasons[i][j] = await this.silo.seasonToGrownStalkPerBdv(this.bean.address, season);
+          seasons[i][j] = await this.silo.seasonToGrownStalkPerBdv(tokens[i], season);
         }
       }
       
@@ -609,9 +609,40 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       await this.silo.mowAndMigrate(depositorAddress, tokens, seasons);
 
       //now mow and it shouldn't revert
-      await this.silo.mow(depositorAddress, this.beanMetapool.address)
+      // await this.silo.mow(depositorAddress, this.beanMetapool.address)
+    });
+
+    it('for a third sample depositor', async function () {
+  
+      const depositorAddress = '0xc46c1b39e6c86115620f5297e98859529b92ad14';
+      const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449', '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d'];
 
 
+      const seasons = [
+        [
+          6008, 6074,
+        ],
+        [6004, 6008],
+      ];
+
+      for (let i = 0; i < seasons.length; i++) {
+        for (let j = 0; j < seasons[i].length; j++) {
+          const season = seasons[i][j];
+          seasons[i][j] = await this.silo.seasonToGrownStalkPerBdv(tokens[i], season);
+        }
+      }
+      
+      console.log('modified seasons: ', seasons);
+
+      const depositorSigner = await impersonateSigner(depositorAddress);
+      await this.silo.connect(depositorSigner);
+  
+
+      //need an array of all the tokens that have been deposited and their corresponding seasons
+      await this.silo.mowAndMigrate(depositorAddress, tokens, seasons);
+
+      //now mow and it shouldn't revert
+      // await this.silo.mow(depositorAddress, this.beanMetapool.address)
     });
 
       

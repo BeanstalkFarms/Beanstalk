@@ -189,6 +189,10 @@ contract Silo is SiloExit {
                 //get bdv amount for this deposit
                 (, uint256 bdv) = LibTokenSilo.tokenDeposit(account, token, grownStalkPerBdv);
 
+                uint256 seedsForDeposit = bdv * seedPerBdv;
+                console.log('_mowAndMigrate bdv: ', bdv);
+                console.log('_mowAndMigrate seedsForDeposit: ', seedsForDeposit);
+
                 //add to running total of seeds
                 seedsTotalBasedOnInputDeposits += bdv * seedPerBdv;
 

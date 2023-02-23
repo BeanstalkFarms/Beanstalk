@@ -211,7 +211,7 @@ library LibLegacyTokenSilo {
         console.log('isDepositSeason: ', address(token));
         console.log('isDepositSeason logging grownStalkPerBdv:');
         console.logInt(grownStalkPerBdv);
-        AppStorage storage s = LibAppStorage.diamondStorage();
+        
         uint256 seedsPerBdv = C.getSeedsPerToken(address(token));
         console.log('seedsPerBdv: ', seedsPerBdv);
         return
