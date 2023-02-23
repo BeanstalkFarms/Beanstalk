@@ -13,7 +13,7 @@ export const addresses = {
   BEANSTALK_PRICE: Address.make("0xF2C2b7eabcB353bF6f2128a7f8e1e32Eeb112530"),
   MATH: Address.make("0x16a903b66403d3de69db50e6d1ad0b07490b740a"),
   DEPOT: Address.make("0xDEb0f000082fD56C10f449d4f8497682494da84D"),
-  PIPELINE: Address.make("0xb1bE0000bFdcDDc92A8290202830C4Ef689dCeaa"),
+  PIPELINE: Address.make("0xb1be0000bfdcddc92a8290202830c4ef689dceaa"),
   ROOT: Address.make("0x77700005BEA4DE0A78b956517f099260C2CA9a26"),
 
   // ----------------------------------------
@@ -54,7 +54,7 @@ export const addresses = {
   // ----------------------------------------
   // Wells Contracts
   // ----------------------------------------
-  BEANWETH_WELL: Address.make("0x67baFF31318638F497f4c4894Cd73918563942c8"),
+  BEANWETH_WELL: Address.make("0xF85895D097B2C25946BB95C4d11E2F3c035F8f0C"),
 
   // ----------------------------------------
   // Common ERC-20 Tokens
