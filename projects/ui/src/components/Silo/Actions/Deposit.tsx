@@ -125,7 +125,6 @@ const DepositForm : FC<
             state={tokenState}
             showTokenSelect={showTokenSelect}
             handleQuote={handleQuote}
-            // size="small"
           />
         ))}
         {isReady ? (
