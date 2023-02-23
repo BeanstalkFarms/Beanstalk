@@ -377,7 +377,6 @@ const Transfer: FC<{}> = () => {
         await Promise.all([
           refetchFarmerBalances()
         ]);
-        // console.log(receipt);
         txToast.success(receipt);
         // formActions.resetForm();
         formActions.setFieldValue('tokensIn.0', {
