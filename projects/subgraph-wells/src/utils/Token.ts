@@ -3,8 +3,8 @@ import { log } from "matchstick-as";
 import { ERC20 } from "../../generated/Aquifer/ERC20";
 import { Token } from "../../generated/schema";
 import { CurvePrice } from "../../generated/templates/Well/CurvePrice";
-import { BEAN_ERC20, CURVE_PRICE } from "./Constants";
-import { toDecimal, ZERO_BD, ZERO_BI } from "./Decimals";
+import { BEAN_ERC20, CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
+import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 
 export function loadOrCreateToken(tokenAddress: Address): Token {
   let token = Token.load(tokenAddress);

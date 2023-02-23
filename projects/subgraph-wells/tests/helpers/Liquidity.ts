@@ -1,5 +1,5 @@
 import { Deposit, Withdraw } from "../../generated/schema";
-import { BEAN_ERC20, WETH } from "../../src/utils/Constants";
+import { BEAN_ERC20, WETH } from "../../../subgraph-core/utils/Constants";
 import { handleAddLiquidity, handleRemoveLiquidity, handleRemoveLiquidityOneToken } from "../../src/WellHandler";
 import { BEAN_SWAP_AMOUNT, SWAP_ACCOUNT, WELL, WELL_LP_AMOUNT, WETH_SWAP_AMOUNT } from "./Constants";
 import { createContractCallMocks } from "./Functions";
