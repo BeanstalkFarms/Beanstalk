@@ -424,6 +424,19 @@ library LibTokenSilo {
         return latestCumulativeGrownStalkPerBdvForToken.sub(grownStalkIndexOfDeposit).mul(int128(bdv));
     }
 
+    /// @dev is there a way to use grownStalk as the output?
+    function calculateTotalGrownStalkandGrownStalk(IERC20 token, uint256 grownStalk, uint256 bdv)
+        internal
+        view 
+        returns (uint256 _grownStalk, int128 cumulativeGrownStalk)
+    {
+        int128 latestCumulativeGrownStalkPerBdvForToken = LibTokenSilo.cumulativeGrownStalkPerBdv(token);
+        cumulativeGrownStalk = latestCumulativeGrownStalkPerBdvForToken-int128(grownStalk.div(bdv));
+        // todo: talk to pizza about depositing at mid season
+        // is it possible to skip the math calc here? 
+        _grownStalk = uint256(latestCumulativeGrownStalkPerBdvForToken.sub(cumulativeGrownStalk).mul(int128(bdv)));
+    }
+
 
     //takes in grownStalk total by a previous deposit, and a bdv, returns
     //what the grownStalkPerBdv index should be to have that same amount of grown stalk for the input token

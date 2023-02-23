@@ -192,20 +192,19 @@ contract ConvertFacet is ReentrancyGuard {
         console.log('_depositTokens bdv: ', bdv);
 
         //calculate cumulativeGrownStalk index we need to deposit at from grownStalk and bdv
-        _cumulativeGrownStalk = LibTokenSilo.grownStalkAndBdvToCumulativeGrownStalk(IERC20(token), grownStalk, bdv);
-        console.log('_depositTokens _cumulativeGrownStalk:');
-        console.logInt(_cumulativeGrownStalk);
-
-
         //if we attempt to deposit at a half-season (a grown stalk index that would fall between seasons)
         //then in affect we lose that partial season's worth of stalk when we deposit
         //so here we need to update grownStalk to be the amount you'd have with the above deposit
-        grownStalk = uint256(LibTokenSilo.calculateStalkFromGrownStalkIndexAndBdv(IERC20(token), _cumulativeGrownStalk, bdv));
+        
+        /// @dev the two functions were combined into one function to save gas.
+        // _cumulativeGrownStalk = LibTokenSilo.grownStalkAndBdvToCumulativeGrownStalk(IERC20(token), grownStalk, bdv);
+        // grownStalk = uint256(LibTokenSilo.calculateStalkFromGrownStalkIndexAndBdv(IERC20(token), _cumulativeGrownStalk, bdv));
+
+        (grownStalk, _cumulativeGrownStalk) = LibTokenSilo.calculateTotalGrownStalkandGrownStalk(IERC20(token), grownStalk, bdv);
         console.log('_depositTokens grownStalk: ', grownStalk);
 
-        uint256 stalk = bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk);
-        console.log('_depositTokens mint stalk: ', stalk);
-        LibSilo.mintStalk(msg.sender, stalk);
+        console.log('_depositTokens mint stalk: ', bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
+        LibSilo.mintStalk(msg.sender, bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
 
         LibTokenSilo.incrementTotalDeposited(token, amount);
         LibTokenSilo.addDepositToAccount(msg.sender, token, _cumulativeGrownStalk, amount, bdv);
