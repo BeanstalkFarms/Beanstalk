@@ -35,7 +35,6 @@ import "../LibSafeMath128.sol";
  */
 library LibSilo {
     using SafeMath for uint256;
-    using SafeMath for uint128;
     using LibSafeMathSigned128 for int128;
     using LibPRBMath for uint256;
     using LibSafeMath128 for uint128;

@@ -142,19 +142,20 @@ library LibTokenSilo {
         console.log('addDepositToAccount token: ', token);
         console.log('addDepositToAccount logging grown stalk per bdv:');
         console.logInt(grownStalkPerBdv);
-        uint256 updatedAmount = s.a[account].deposits[token][grownStalkPerBdv].amount.add(amount.toUint128());
-        s.a[account].deposits[token][grownStalkPerBdv].amount = uint128(updatedAmount);
-        console.log('addDepositToAccount updatedAmount: ', updatedAmount);
-        uint256 updatedTotalTokenBdv = s.a[account].deposits[token][grownStalkPerBdv].bdv.add(bdv.toUint128());
-        s.a[account].deposits[token][grownStalkPerBdv].bdv = uint128(updatedTotalTokenBdv);
+        Account.Deposit memory d = s.a[account].deposits[token][grownStalkPerBdv];
+        console.log('addDepositToAccount updatedAmount: ', d.amount.add(amount.toUint128()));
+
+        d.amount = uint128(d.amount.add(amount.toUint128()));
+        d.bdv = uint128(d.bdv.add(bdv.toUint128()));
         console.log('addDepositToAccount bdv: ', bdv);
 
-        console.log('--- s.a[account].deposits[token][grownStalkPerBdv].bdv: ', s.a[account].deposits[token][grownStalkPerBdv].bdv);
-        console.log('--- s.a[account].deposits[token][grownStalkPerBdv].amount: ', s.a[account].deposits[token][grownStalkPerBdv].amount);
+        console.log('--- s.a[account].deposits[token][grownStalkPerBdv].bdv: ', d.bdv);
+        console.log('--- s.a[account].deposits[token][grownStalkPerBdv].amount: ', d.amount);
+
+        s.a[account].deposits[token][grownStalkPerBdv] = d;
 
         //setup or update the MowStatus for this deposit. We should have _just_ mowed before calling this function.
-        uint256 updatedMowStatusBdv = s.a[account].mowStatuses[token].bdv.add(bdv.toUint128());
-        s.a[account].mowStatuses[token].bdv = uint128(updatedMowStatusBdv);
+        s.a[account].mowStatuses[token].bdv = uint128(s.a[account].mowStatuses[token].bdv.add(bdv.toUint128()));
         console.log('s.a[account].mowStatuses[token].bdv mowstatus bdv after deposit: ', uint256(s.a[account].mowStatuses[token].bdv));
         //needs to update the mow status
 
@@ -195,12 +196,12 @@ library LibTokenSilo {
 
         console.log('--- removeDepositFromAccount s.a[account].deposits[token][grownStalkPerBdv].bdv: ', s.a[account].deposits[token][grownStalkPerBdv].bdv);
         console.log('--- removeDepositFromAccount s.a[account].deposits[token][grownStalkPerBdv].amount: ', s.a[account].deposits[token][grownStalkPerBdv].amount);
-
+        Account.Deposit memory d = s.a[account].deposits[token][grownStalkPerBdv];
         
         uint256 crateAmount;
         (crateAmount, crateBDV) = (
-            s.a[account].deposits[token][grownStalkPerBdv].amount,
-            s.a[account].deposits[token][grownStalkPerBdv].bdv
+            d.amount,
+            d.bdv
         );
 
         console.log('removeDepositFromAccount crateAmount: ', crateAmount);
@@ -211,11 +212,9 @@ library LibTokenSilo {
             console.log('removeDepositFromAccount doing partial remove');
             uint256 removedBDV = amount.mul(crateBDV).div(crateAmount);
             console.log('removedBDV: ', removedBDV);
-            uint256 updatedBDV = uint256(s.a[account].deposits[token][grownStalkPerBdv].bdv)
-                .sub(removedBDV);
+            uint256 updatedBDV = crateBDV.sub(removedBDV);
             console.log('updatedBDV: ', updatedBDV);
-            uint256 updatedAmount = uint256(s.a[account].deposits[token][grownStalkPerBdv].amount)
-                .sub(amount);
+            uint256 updatedAmount = crateAmount.sub(amount);
             console.log('updatedAmount: ', updatedAmount);
                 
             require(
@@ -223,8 +222,8 @@ library LibTokenSilo {
                 "Silo: uint128 overflow."
             );
 
-            s.a[account].deposits[token][grownStalkPerBdv].amount = uint128(updatedAmount);
-            s.a[account].deposits[token][grownStalkPerBdv].bdv = uint128(updatedBDV);
+            d.amount = uint128(updatedAmount);
+            d.bdv = uint128(updatedBDV);
 
             //verify this has to be a different var?
             uint256 updatedTotalBdvPartial = uint256(s.a[account].mowStatuses[token].bdv).sub(removedBDV);
