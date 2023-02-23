@@ -24,9 +24,9 @@ async function main() {
   const well = await sdk.getWell(WELL_ADDRESS);
 
   // give user tokens and set allowances
-  await forkUtils.setBalance(BEAN.address, account, 10000);
+  await forkUtils.setBalance(BEAN.address, account, 100000);
   await BEAN.approve(well.address, TokenValue.MAX_UINT256);
-  await forkUtils.setBalance(WETH.address, account, 3);
+  await forkUtils.setBalance(WETH.address, account, 100);
   await WETH.approve(well.address, TokenValue.MAX_UINT256);
 
   // AddLiquidity
@@ -42,7 +42,7 @@ async function main() {
   // console.log("\nLP Balance: ", lpbal.toHuman());
 
   // Get Reserves
-  const reserves = well.reserves
+  const reserves = await well.getReserves()
   console.log('Reserves: ', reserves);
 
   // // RemoveLiquidityOne - BEAN
