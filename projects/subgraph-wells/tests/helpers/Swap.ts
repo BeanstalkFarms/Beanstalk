@@ -1,4 +1,4 @@
-import { BEAN_ERC20, WETH } from "../../src/utils/Constants";
+import { BEAN_ERC20, WETH } from "../../../subgraph-core/utils/Constants";
 import { handleSwap } from "../../src/WellHandler";
 import { BEAN_SWAP_AMOUNT, SWAP_ACCOUNT, WELL, WETH_SWAP_AMOUNT } from "./Constants";
 import { createContractCallMocks } from "./Functions";
