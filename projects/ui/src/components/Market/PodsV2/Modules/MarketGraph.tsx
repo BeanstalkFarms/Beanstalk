@@ -36,12 +36,15 @@ import { useNavigate } from 'react-router-dom';
 
 /// //////////////////////////////// TYPES ///////////////////////////////////
 
-type CirclePosition = {
+type CartesianCoordinate = {
   x: number;
   y: number;
+};
+
+type CirclePosition = {
   radius: number;
   id: string;
-};
+} & CartesianCoordinate;
 
 type SelectedPoint = {
   type: 'listing' | 'order';
@@ -62,6 +65,12 @@ type GraphProps = {
   height: number;
   params: { listingID?: string; orderID?: string };
 } & MarketGraphProps;
+
+type CursorLineProps = {
+  height: number;
+  xLabel: string;
+  yLabel: string;
+} & CartesianCoordinate;
 
 /// //////////////////////////////// STYLE & LAYOUT ///////////////////////////////////
 
@@ -183,6 +192,64 @@ const TooltipCard: FC<CardProps> = ({ children, sx, ...props }) => (
 );
 
 /// //////////////////////////////// GRAPH ///////////////////////////////////
+
+const CursorPositionLines: FC<CursorLineProps> = ({
+  x,
+  y,
+  xLabel,
+  yLabel,
+  height,
+}) => (
+  <>
+    <Line
+      from={{ x: 0, y }}
+      to={{ x, y }}
+      stroke={BeanstalkPalette.lightGrey}
+      strokeWidth={1}
+      pointerEvents="none"
+    />
+    <Line
+      from={{ x, y: height }}
+      to={{ x, y }}
+      stroke={BeanstalkPalette.lightGrey}
+      strokeWidth={1}
+      pointerEvents="none"
+    />
+    <Text
+      fill={BeanstalkPalette.textBlue}
+      x={x + 10}
+      y={height - axis.xHeight}
+      fontSize={14}
+    >
+      {yLabel}
+    </Text>
+    <Text
+      fill={BeanstalkPalette.textBlue}
+      x={axis.yWidth + 10}
+      y={y - 5}
+      fontSize={14}
+    >
+      {xLabel}
+    </Text>
+  </>
+);
+
+const ListingPositionLines: FC<CursorLineProps> = (props) => (
+  <CursorPositionLines {...props} />
+);
+
+const OrderPositionLines: FC<CursorLineProps> = (props) => (
+  <>
+    <rect
+      fill={`url(#${PATTERN_ID})`}
+      x={0}
+      y={props.y}
+      height={props.height - props.y}
+      width={props.x}
+    />
+    <CursorPositionLines {...props} />
+  </>
+);
 
 /**
  * @TODO
@@ -379,83 +446,6 @@ const Graph: FC<GraphProps> = ({
       ))}
     </g>
   );
-
-  const cursorPositionLines = cursorPoint ? (
-    cursorPoint?.type === 'listing' ? (
-      <g>
-        <Line
-          from={{ x: 0, y: cursorPoint.coordinate.y }}
-          to={{ x: cursorPoint.coordinate.x, y: cursorPoint.coordinate.y }}
-          stroke={BeanstalkPalette.lightGrey}
-          strokeWidth={1}
-          pointerEvents="none"
-        />
-        <Line
-          from={{ x: cursorPoint.coordinate.x, y: innerHeight }}
-          to={{ x: cursorPoint.coordinate.x, y: cursorPoint.coordinate.y }}
-          stroke={BeanstalkPalette.lightGrey}
-          strokeWidth={1}
-          pointerEvents="none"
-        />
-        <Text
-          fill={BeanstalkPalette.textBlue}
-          x={cursorPoint.coordinate.x + 10}
-          y={innerHeight - axis.xHeight}
-          fontSize={14}
-        >
-          {displayBN(listings[cursorPoint.index].placeInLine)}
-        </Text>
-        <Text
-          fill={BeanstalkPalette.textBlue}
-          x={axis.yWidth + 10}
-          y={cursorPoint.coordinate.y - 5}
-          fontSize={14}
-        >
-          {listings[cursorPoint.index].pricePerPod.toFixed(4)}
-        </Text>
-      </g>
-    ) : (
-      <g>
-        <Line
-          from={{ x: 0, y: cursorPoint.coordinate.y }}
-          to={{ x: cursorPoint.coordinate.x, y: cursorPoint.coordinate.y }}
-          stroke={BeanstalkPalette.lightGrey}
-          strokeWidth={1}
-          pointerEvents="none"
-        />
-        <Line
-          from={{ x: cursorPoint.coordinate.x, y: innerHeight }}
-          to={{ x: cursorPoint.coordinate.x, y: cursorPoint.coordinate.y }}
-          stroke={BeanstalkPalette.lightGrey}
-          strokeWidth={1}
-          pointerEvents="none"
-        />
-        <rect
-          fill={`url(#${PATTERN_ID})`}
-          x={0}
-          y={cursorPoint.coordinate.y}
-          height={innerHeight - cursorPoint.coordinate.y}
-          width={cursorPoint.coordinate.x}
-        />
-        <Text
-          fill={BeanstalkPalette.textBlue}
-          x={cursorPoint.coordinate.x + 10}
-          y={innerHeight - axis.xHeight}
-          fontSize={14}
-        >
-          {displayBN(orders[cursorPoint.index].maxPlaceInLine)}
-        </Text>
-        <Text
-          fill={BeanstalkPalette.textBlue}
-          x={axis.yWidth + 10}
-          y={cursorPoint.coordinate.y - 5}
-          fontSize={14}
-        >
-          {orders[cursorPoint.index].pricePerPod.toFixed(4)}
-        </Text>
-      </g>
-    )
-  ) : null;
 
   /// Handlers
   const handleMouseMove = useCallback(
@@ -727,7 +717,24 @@ const Graph: FC<GraphProps> = ({
             <g clipPath="url(#zoom-clip)">
               <g transform={zoom.toString()}>
                 {voroniPolygons}
-                {cursorPositionLines}
+                {cursorPoint?.type === 'listing' && (
+                  <ListingPositionLines
+                    x={cursorPoint.coordinate.x}
+                    y={cursorPoint.coordinate.y}
+                    xLabel={listings[cursorPoint.index].pricePerPod.toFixed(4)}
+                    yLabel={displayBN(listings[cursorPoint.index].placeInLine)}
+                    height={innerHeight}
+                  />
+                )}
+                {cursorPoint?.type === 'order' && (
+                  <OrderPositionLines
+                    x={cursorPoint.coordinate.x}
+                    y={cursorPoint.coordinate.y}
+                    xLabel={orders[cursorPoint.index].pricePerPod.toFixed(4)}
+                    yLabel={displayBN(orders[cursorPoint.index].maxPlaceInLine)}
+                    height={innerHeight}
+                  />
+                )}
                 {orderCircles}
                 {listingCircles}
               </g>
