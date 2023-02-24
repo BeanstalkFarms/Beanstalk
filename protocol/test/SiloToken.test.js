@@ -55,8 +55,8 @@ describe('Silo Token', function () {
       this.siloToken.address, 
       this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
       '10000',
-      1e6, //aka "1 seed"
-      '1');
+      1e6 //aka "1 seed"
+      );
 
     await this.season.siloSunrise(0);
     await this.siloToken.connect(user).approve(this.silo.address, '100000000000');

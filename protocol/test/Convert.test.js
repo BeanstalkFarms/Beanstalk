@@ -29,8 +29,7 @@ describe('Convert', function () {
       this.siloToken.address, 
       this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
       '10000', 
-      1e6, //aka "1 seed"
-      '1'
+      1e6 //aka "1 seed"
     );
 
     console.log('totalstalk 1: ', await this.silo.totalStalk());

@@ -25,7 +25,11 @@ describe('Silo', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
+    
     await this.season.teleportSunrise(10);
+
+    this.season.deployGrownStalkPerBdv();
+
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('Bean', BEAN);
     await this.season.lightSunrise();
@@ -482,8 +486,8 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
     it('for bean', async function () {
       const settings = await this.silo.tokenSettings(this.bean.address);
 
-      expect(settings['stalkEarnedPerSeason']).to.eq(2);
-      expect(settings['stalkIssuedPerBdv']).to.eq(1);
+      expect(settings['stalkEarnedPerSeason']).to.eq(2000000);
+      expect(settings['stalkIssuedPerBdv']).to.eq(10000);
       expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
       expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);
     });
@@ -491,8 +495,8 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
     it('for curve metapool', async function () {
       const settings = await this.silo.tokenSettings(this.beanMetapool.address);
 
-      expect(settings['stalkEarnedPerSeason']).to.eq(4);
-      expect(settings['stalkIssuedPerBdv']).to.eq(1);
+      expect(settings['stalkEarnedPerSeason']).to.eq(4000000);
+      expect(settings['stalkIssuedPerBdv']).to.eq(10000);
       expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
       expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);
     });
@@ -500,8 +504,8 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
     it('for unripe bean', async function () {
       const settings = await this.silo.tokenSettings(this.unripeBean.address);
 
-      expect(settings['stalkEarnedPerSeason']).to.eq(2);
-      expect(settings['stalkIssuedPerBdv']).to.eq(1);
+      expect(settings['stalkEarnedPerSeason']).to.eq(2000000);
+      expect(settings['stalkIssuedPerBdv']).to.eq(10000);
       expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
       expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);
     });
@@ -509,8 +513,8 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
     it('for unripe LP', async function () {
       const settings = await this.silo.tokenSettings(this.unripeLP.address);
 
-      expect(settings['stalkEarnedPerSeason']).to.eq(2);
-      expect(settings['stalkIssuedPerBdv']).to.eq(1);
+      expect(settings['stalkEarnedPerSeason']).to.eq(2000000);
+      expect(settings['stalkIssuedPerBdv']).to.eq(10000);
       expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
       expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);
     });
@@ -649,10 +653,13 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
   });
 
   describe('reverts if you try to mow before migrating', function () {
-    it('for a sample depositor', async function () {
+    it('for a sample whale', async function () {
       
+      const depositorAddress = '0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4';
+      const depositorSigner = await impersonateSigner(depositorAddress);
+      await this.silo.connect(depositorSigner);
       //need an array of all the tokens that have been deposited and their corresponding seasons
-      await expect(this.silo.mow(this.depositorAddress, this.beanMetapool.address)).to.be.revertedWith('silo migration needed');
+      await expect(this.silo.mow(depositorAddress, this.beanMetapool.address)).to.be.revertedWith('silo migration needed');
 
     });
   });

@@ -107,9 +107,15 @@ contract Silo is SiloExit {
    function _mow(address account, address token) internal {
         uint32 _lastUpdate = lastUpdate(account);
 
+        console.log('_lastUpdate: ', _lastUpdate);
+        console.log('s.season.grownStalkPerBdvStartSeason: ', s.season.grownStalkPerBdvStartSeason);
+
         //if last update > 0 and < grownStalkPerBdvStartSeason
         //require that user account seeds be zero
-        require(_lastUpdate > 0 && _lastUpdate < s.season.grownStalkPerBdvStartSeason, 'silo migration needed'); //will require storage cold read... is there a better way?
+        // require(_lastUpdate > 0 && _lastUpdate >= s.season.grownStalkPerBdvStartSeason, 'silo migration needed'); //will require storage cold read... is there a better way?
+
+        if((_lastUpdate != 0) && (_lastUpdate < s.season.grownStalkPerBdvStartSeason)) revert('silo migration needed');
+
 
         //sop stuff only needs to be updated once per season
         //if it started raininga nd it's still raining, or there was a sop
@@ -153,6 +159,15 @@ contract Silo is SiloExit {
         // thus, a different mint stalk function is used to differ between deposits.
         LibSilo.mintGrownStalkAndGrownRoots(account, balanceOfGrownStalk(account, token));
         s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
+    }
+     
+     
+   function migrateNoDeposits(address account) internal {
+        require(s.a[account].s.seeds == 0, "only for zero seeds");
+        uint32 _lastUpdate = lastUpdate(account);
+        require(_lastUpdate > 0 && _lastUpdate < s.season.grownStalkPerBdvStartSeason, "no migration needed");
+
+        s.a[account].lastUpdate = s.season.grownStalkPerBdvStartSeason;
     }
 
     //make some kind of init function for when silov3 is deployed

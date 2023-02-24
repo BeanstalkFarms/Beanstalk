@@ -33,26 +33,26 @@ contract InitBipNewSilo {
 
         uint32 currentSeason = s.season.current;
 
-        s.ss[C.beanAddress()].stalkEarnedPerSeason = 2;
-        s.ss[C.beanAddress()].stalkIssuedPerBdv = 1;
+        s.ss[C.beanAddress()].stalkEarnedPerSeason = 2*1e6;
+        s.ss[C.beanAddress()].stalkIssuedPerBdv = 10000;
         s.ss[C.beanAddress()].lastUpdateSeason = currentSeason;
         s.ss[C.beanAddress()].lastCumulativeGrownStalkPerBdv = 0;
 
 
-        s.ss[C.curveMetapoolAddress()].stalkEarnedPerSeason = 4;
-        s.ss[C.curveMetapoolAddress()].stalkIssuedPerBdv = 1;
+        s.ss[C.curveMetapoolAddress()].stalkEarnedPerSeason = 4*1e6;
+        s.ss[C.curveMetapoolAddress()].stalkIssuedPerBdv = 10000;
         s.ss[C.curveMetapoolAddress()].lastUpdateSeason = currentSeason;
         s.ss[C.curveMetapoolAddress()].lastCumulativeGrownStalkPerBdv = 0;
 
 
-        s.ss[C.unripeBeanAddress()].stalkEarnedPerSeason = 2;
-        s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv = 1;
+        s.ss[C.unripeBeanAddress()].stalkEarnedPerSeason = 2*1e6;
+        s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv = 10000;
         s.ss[C.unripeBeanAddress()].lastUpdateSeason = currentSeason;
         s.ss[C.unripeBeanAddress()].lastCumulativeGrownStalkPerBdv = 0;
 
 
-        s.ss[address(C.unripeLP())].stalkEarnedPerSeason = 2;
-        s.ss[address(C.unripeLP())].stalkIssuedPerBdv = 1;
+        s.ss[address(C.unripeLP())].stalkEarnedPerSeason = 2*1e6;
+        s.ss[address(C.unripeLP())].stalkIssuedPerBdv = 10000;
         s.ss[address(C.unripeLP())].lastUpdateSeason = currentSeason;
         s.ss[address(C.unripeLP())].lastCumulativeGrownStalkPerBdv = 0;
 
