@@ -107,10 +107,8 @@ contract Silo is SiloExit {
    function _mow(address account, address token) internal {
         uint32 _lastUpdate = lastUpdate(account);
 
-        //if last update > 0 and < grownStalkPerBdvStartSeason
-        //require that user account seeds be zero
-        require(_lastUpdate > 0 && _lastUpdate < s.season.grownStalkPerBdvStartSeason, 'silo migration needed'); //will require storage cold read... is there a better way?
-
+        //if last update != 0 and <= grownStalkPerBdvStartSeason
+        if((_lastUpdate != 0) && (_lastUpdate <= s.season.grownStalkPerBdvStartSeason)) revert(); //will require storage cold read... is there a better way?
         //sop stuff only needs to be updated once per season
         //if it started raininga nd it's still raining, or there was a sop
         if (s.season.rainStart > s.season.grownStalkPerBdvStartSeason) {
@@ -135,7 +133,7 @@ contract Silo is SiloExit {
 
         int128 _cumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
         int128 _lastCumulativeGrownStalkPerBdv =  s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv;
-        uint256 _bdv = s.a[account].mowStatuses[token].bdv;
+        uint128 _bdv = s.a[account].mowStatuses[token].bdv;
         
         if (_bdv > 0) {
              // if account mowed the same token in the same season, skip
