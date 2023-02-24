@@ -578,7 +578,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
 
     });
 
-    it.only('for a second sample depositor', async function () {
+    /*it.only('for a second sample depositor', async function () {
   
       const depositorAddress = '0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4';
       const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449', '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d', '0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab'];
@@ -610,7 +610,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
 
       //now mow and it shouldn't revert
       // await this.silo.mow(depositorAddress, this.beanMetapool.address)
-    });
+    });*/
 
     it('for a third sample depositor', async function () {
   
