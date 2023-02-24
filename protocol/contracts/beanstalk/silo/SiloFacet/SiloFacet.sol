@@ -487,7 +487,7 @@ contract SiloFacet is TokenSilo {
         uint32 season,
         LibTransfer.To mode
     ) external payable nonReentrant {
-        require(s.siloBalances[token].withdrawn > 0, "Silo: no withdraw available"");
+        require(s.siloBalances[token].withdrawn > 0, "Silo: no withdraw available");
 
         uint256 amount = _claimWithdrawal(msg.sender, token, season);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
@@ -498,7 +498,7 @@ contract SiloFacet is TokenSilo {
         uint32[] calldata seasons,
         LibTransfer.To mode
     ) external payable nonReentrant {
-        require(s.siloBalances[token].withdrawn > 0, "Silo: no withdraw available"");
+        require(s.siloBalances[token].withdrawn > 0, "Silo: no withdraw available");
         uint256 amount = _claimWithdrawals(msg.sender, token, seasons);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
