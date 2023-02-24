@@ -90,8 +90,6 @@ contract TokenSilo is Silo {
         uint256 amount
     );
 
-    // note add/remove withdrawal(s) are removed as claiming is removed
-    // FIXME: to discuss with subgraph team to update
 
     /**
      */
@@ -293,6 +291,42 @@ contract TokenSilo is Silo {
         LibTokenSilo.decrementTotalDeposited(token, amount); // Decrement total Deposited
         LibSilo.burnSeedsAndStalk(account, seeds, stalk); // Burn Seeds and Stalk
     }
+
+    //////////////////////// CLAIM ///////////////////////// 
+
+    // as of the zero withdraw update, claims are not used anymore. 
+    // this functionality is kept for reverse functionality.
+    function _claimWithdrawal(
+        address account,
+        address token,
+        uint32 season
+    ) internal returns (uint256) {
+        uint256 amount = _removeTokenWithdrawal(account, token, season);
+        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(
+            amount
+        );
+        emit RemoveWithdrawal(msg.sender, token, season, amount);
+        return amount;
+    }
+
+    function _claimWithdrawals(
+        address account,
+        address token,
+        uint32[] calldata seasons
+    ) internal returns (uint256 amount) {
+        for (uint256 i; i < seasons.length; ++i) {
+            amount = amount.add(
+                _removeTokenWithdrawal(account, token, seasons[i])
+            );
+        }
+        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(
+            amount
+        );
+        emit RemoveWithdrawals(msg.sender, token, seasons, amount);
+        return amount;
+    }
+
+
 
     //////////////////////// REMOVE ////////////////////////
 

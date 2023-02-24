@@ -477,4 +477,29 @@ contract SiloFacet is TokenSilo {
             newStalk.sub(ar.stalkRemoved)
         );
     }
+
+    //////////////////////// CLAIM ////////////////////////
+
+    // as of the zero withdraw update, this function is no longer used. 
+    // this is kept for backwards compatibility
+    function claimWithdrawal(
+        address token,
+        uint32 season,
+        LibTransfer.To mode
+    ) external payable nonReentrant {
+        require(s.siloBalances[token].withdrawn > 0, "Silo: no withdraw available"");
+
+        uint256 amount = _claimWithdrawal(msg.sender, token, season);
+        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
+    }
+
+    function claimWithdrawals(
+        address token,
+        uint32[] calldata seasons,
+        LibTransfer.To mode
+    ) external payable nonReentrant {
+        require(s.siloBalances[token].withdrawn > 0, "Silo: no withdraw available"");
+        uint256 amount = _claimWithdrawals(msg.sender, token, seasons);
+        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
+    }
 }
