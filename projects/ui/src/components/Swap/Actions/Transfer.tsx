@@ -3,6 +3,10 @@ import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ethers } from 'ethers';
 import { useConnect } from 'wagmi';
+import { Alert } from '@mui/lab';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { IconSize } from '~/components/App/muiTheme';
+import IconWrapper from '~/components/Common/IconWrapper';
 import {
   FormTokenState,
   SmartSubmitButton,
@@ -33,6 +37,7 @@ import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import AddressInputField from '~/components/Common/Form/AddressInputField';
+import copy from '~/constants/copy';
 
 /// ---------------------------------------------------------------
 
@@ -100,20 +105,9 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
     setFieldValue('tokenIn.0.amount', defaultValues.tokensIn[0].amount);
     setFieldValue('destination', defaultValues.destination);
   }, [defaultValues, setFieldValue]);
-  
-  /// reset to default values when user switches wallet addresses or disconnects
-  useEffect(() => {
-    handleSetDefault();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account, status]);
 
   const handleChangeToMode = useCallback((v: FarmToMode) => {
-    const newToMode = (
-      v === FarmToMode.INTERNAL
-        ? FarmToMode.INTERNAL
-        : FarmToMode.EXTERNAL
-    );
-    setFieldValue('toMode', newToMode);
+    setFieldValue('toMode', v);
   }, [setFieldValue]);
 
   /// Token Select
@@ -144,35 +138,6 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
    }
   }, [setFieldValue]);
 
-  /// Checks
-  const shouldApprove = (fromMode === FarmFromMode.EXTERNAL || fromMode === FarmFromMode.INTERNAL_EXTERNAL);
-
-  const amountsCheck = (
-    amount?.gt(0)
-  );
-  const enoughBalanceCheck = (
-    amount
-      ? amount.gt(0) && balanceInMax.gte(amount)
-      : true
-  );
-
-  const addressCheck = (
-    destination.length === 42
-  );
-
-  const modeCheck = (
-    destination === account && fromMode !== FarmFromMode.INTERNAL_EXTERNAL
-    ? fromMode.valueOf() !== toMode.valueOf()
-    : true
-  );
-
-  const isValid = (
-    amountsCheck
-    && enoughBalanceCheck
-    && addressCheck
-    && modeCheck
-  );
-
   const handleSubmitWrapper = useCallback((e: React.FormEvent) => {
     // Note: We need to wrap the formik handler to set the swapOperation form value first
     e.preventDefault();
@@ -189,12 +154,86 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
         setFieldValue('balanceFrom', _balanceFrom);
         setFieldValue('fromMode', FarmFromMode.EXTERNAL);
         break;
-      default:
+      default: // case BalanceFrom.INTERNAL_EXTERNAL
         setFieldValue('balanceFrom', _balanceFrom);
         setFieldValue('fromMode', FarmFromMode.INTERNAL_EXTERNAL);
         break;
     }
   }, [setFieldValue]);
+
+  /// reset to default values when user switches wallet addresses or disconnects
+  useEffect(() => {
+    handleSetDefault();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [account, status]);
+
+  /// behaviour when user changes destination address or fromMode
+  useEffect(() => {
+    if (values.destination.toLowerCase() === account?.toLowerCase()) {
+      switch (fromMode) {
+        case FarmFromMode.INTERNAL:
+          setFieldValue('toMode', FarmToMode.EXTERNAL);
+          break;
+        case FarmFromMode.EXTERNAL:
+          setFieldValue('toMode', FarmToMode.INTERNAL);
+          break;
+        default: // case FarmFromMode.INTERNAL_EXTERNAL
+          break;
+      }
+    }
+  }, [setFieldValue, account, values.destination, fromMode]);
+
+  /// behaviour when user changes toMode
+  useEffect(() => {
+    if (values.destination.toLowerCase() === account?.toLowerCase()) {
+      switch (toMode) {
+        case FarmToMode.INTERNAL:
+          handleSetBalanceFrom(BalanceFrom.EXTERNAL);
+          break;
+        default: // case FarmToMode.EXTERNAL
+          handleSetBalanceFrom(BalanceFrom.INTERNAL);
+          break;
+      }
+    }
+  }, [handleSetBalanceFrom, account, values.destination, toMode]);
+
+  /// Checks
+  const shouldApprove = (fromMode === FarmFromMode.EXTERNAL || fromMode === FarmFromMode.INTERNAL_EXTERNAL);
+
+  const amountsCheck = (
+    amount?.gt(0)
+  );
+  const enoughBalanceCheck = (
+    amount
+      ? amount.gt(0) && balanceInMax.gte(amount)
+      : true
+  );
+
+  const addressCheck = (
+    values.destination.length === 42
+  );
+
+  const modeCheck = (
+    destination === account && fromMode !== FarmFromMode.INTERNAL_EXTERNAL
+    ? fromMode.valueOf() !== toMode.valueOf()
+    : true
+  );
+
+  const sameAddressCheck = (
+    values.destination.toLowerCase() === account?.toLowerCase()
+  );
+
+  const internalExternalCheck = (
+    fromMode === FarmFromMode.INTERNAL_EXTERNAL
+  );
+
+  const isValid = (
+    amountsCheck
+    && enoughBalanceCheck
+    && addressCheck
+    && modeCheck
+    && (sameAddressCheck ? !internalExternalCheck : true)
+  );
 
   return (
     <Form autoComplete="off" onSubmit={handleSubmitWrapper}>
@@ -274,6 +313,22 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
               </AccordionDetails>
             </Accordion>
           </Box>
+        ) : null}
+        {sameAddressCheck && internalExternalCheck ? (
+          <Alert
+            color="warning"
+            icon={<IconWrapper boxSize={IconSize.medium}><WarningAmberIcon sx={{ fontSize: IconSize.small }} /></IconWrapper>}
+          >
+            You cannot use Combined Balance when transferring to yourself.
+          </Alert>
+        ) : null}
+        {amount?.gt(balanceInMax) ? (
+          <Alert
+            color="warning"
+            icon={<IconWrapper boxSize={IconSize.medium}><WarningAmberIcon sx={{ fontSize: IconSize.small }} /></IconWrapper>}
+          >
+            {`Transfer amount higher than your ${copy.MODES[values.fromMode]}.`}
+          </Alert>
         ) : null}
         <SmartSubmitButton
           type="submit"
