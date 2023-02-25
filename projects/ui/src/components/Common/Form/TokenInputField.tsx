@@ -316,16 +316,18 @@ const TokenInput: FC<
               }}
             />
             {/* Bottom Adornment */}
-            {(balance && !hideBalance || quote) && (
+            {(balance && !hideBalance) && (
               <Row gap={0.5} px={0.5} pt={0.75}>
                 {/* Leaving the Stack rendered regardless of whether `quote` is defined
                   * ensures that the Balance section gets flexed to the right side of
                   * the input. */}
-                <Row sx={{ flex: 1 }} spacing={1}>
-                  <Typography variant="bodySmall" color="text.secondary">
-                    {quote}
-                  </Typography>
-                </Row>
+                {quote && (
+                  <Row sx={{ flex: 1 }} spacing={1}>
+                    <Typography variant="bodySmall" color="text.secondary">
+                      {quote}
+                    </Typography>
+                  </Row>
+                )}
                 {((balance || additionalBalance?.gt(0)) && !hideBalance) && (
                   <>
                     <Tooltip title={balanceTooltip}>

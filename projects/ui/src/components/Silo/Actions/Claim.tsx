@@ -2,7 +2,6 @@ import React, { useCallback, useMemo } from 'react';
 import { Accordion, AccordionDetails, Box, Stack, Typography } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
-import toast from 'react-hot-toast';
 import { ERC20Token, Token } from '@beanstalk/sdk';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import { FarmerSiloBalance } from '~/state/farmer/silo';
@@ -18,7 +17,7 @@ import {
 } from '~/components/Common/Form';
 import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
 import { ZERO_BN } from '~/constants';
-import { displayTokenAmount, parseError, tokenValueToBN } from '~/util';
+import { displayTokenAmount, tokenValueToBN } from '~/util';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
 import TokenIcon from '~/components/Common/TokenIcon';
 import useToggle from '~/hooks/display/useToggle';
@@ -362,7 +361,8 @@ const Claim : FC<{
         claimPlant.buildActions(values.farmActions.additional),
         claim,
         amountIn, 
-        { slippage: values.settings.slippage }
+        { slippage: values.settings.slippage },
+        true,
       );
 
       const txn = await execute();
@@ -378,10 +378,10 @@ const Claim : FC<{
       formActions.resetForm();
     } catch (err) {
       if (txToast) {
-        txToast.error(err)
+        txToast.error(err);
       } else {
-        let errorToast = new TransactionToast({})
-        errorToast.error(err)
+        const errorToast = new TransactionToast({});
+        errorToast.error(err);
       }
       formActions.setSubmitting(false);
     }

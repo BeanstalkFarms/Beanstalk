@@ -22,7 +22,7 @@ import useTokenMap from '~/hooks/chain/useTokenMap';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import usePreferredToken, { PreferredToken } from '~/hooks/farmer/usePreferredToken';
 import Farm, { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
-import { displayFullBN, toStringBaseUnitBN } from '~/util';
+import { displayFullBN, tokenValueToBN, toStringBaseUnitBN } from '~/util';
 import { useFetchFarmerAllowances } from '~/state/farmer/allowances/updater';
 import { FarmerBalances } from '~/state/farmer/balances';
 import { ZERO_BN } from '~/constants';
@@ -53,7 +53,6 @@ type BuyFormValues = FormStateNew &
 
 type BuyQuoteHandlerParams = {
   fromMode: FarmFromMode;
-  additionalBean: BigNumber;
 }
 
 // ---------------------------------------------------
@@ -131,7 +130,6 @@ const BuyForm : FC<
               additionalBalance={additionalBalance}
               params={{
                 fromMode: balanceFromToMode(values.balanceFrom),
-                additionalBean: additionalBalance
               }}
               belowComponent={<ClaimAndPlantFarmActions />}
             />
@@ -244,49 +242,34 @@ const Buy : FC<{}> = () => {
   // Doesn't get called if tokenIn === tokenOut
   // aka if the user has selected USDC as input
   const handleQuote = useCallback<QuoteHandlerWithParams<BuyQuoteHandlerParams>>(async (
-    _tokenIn, _amountIn, _tokenOut, { fromMode: _fromMode, additionalBean }
+    tokenIn, amountIn, _tokenOut, { fromMode: _fromMode }
   ) => {
     if (!account) throw new Error('No account connected');
     const { ETH, WETH, BEAN, USDC } = sdk.tokens;
-    const isEth = _tokenIn.symbol === ETH.symbol;
-    const isWeth = WETH.equals(_tokenIn);
-
-    let tokenIn = _tokenIn;
-    let fromMode = _fromMode;
-    let amountIn = _amountIn;
-
-    const work = sdk.farm.create();
-    if (_tokenIn === ETH || isWeth) {
-      if (isEth) {
-        work.add(new sdk.farm.actions.WrapEth(FarmToMode.INTERNAL));
-        fromMode = FarmFromMode.INTERNAL_TOLERANT;
-      } 
-      // assume we have WETH now
-      if (additionalBean.gt(0)) {
-        // from mode is INTERNAL_TOLERANT
-        work.add(sdk.farm.presets.weth2bean(fromMode, FarmToMode.INTERNAL));
-        work.add(
-          ClaimPlant.injectOnlyLocalAndAddAmount('inject beanAmount', BEAN.fromHuman(additionalBean.toString())), 
-          { onlyLocal: true }
-        );
-        tokenIn = BEAN;
-      } else {
-        tokenIn = WETH;
-      }
-    } else if (BEAN.equals(tokenIn)) {
-      amountIn = _amountIn.plus(additionalBean);
-    } else if (!USDC.equals(tokenIn)) {
-      throw new Error(`Buying fertilizer with ${_tokenIn.symbol} is not supported at this time.`);
+    const isEth = tokenIn.symbol === ETH.symbol;
+    const isWeth = WETH.equals(tokenIn);
+    
+    if (!isEth && !isWeth && !BEAN.equals(tokenIn) && !USDC.equals(tokenIn)) {
+      throw new Error(`Buying fertilizer with ${tokenIn.symbol} is not supported at this time.`);
     }
 
-    const swap = sdk.swap.buildSwap(tokenIn, _tokenOut, account, fromMode, FarmToMode.INTERNAL);
-    work.add(swap.getFarm());
+    let value = ethers.BigNumber.from(0);
 
-    const estimate = await work.estimate(_tokenIn.amount(amountIn.toString()));
+    if (isEth) {
+      value = ethers.BigNumber.from(tokenIn.amount(amountIn.toString()).toBlockchain());
+    }
+    
+    const swap = sdk.swap.buildSwap(tokenIn, _tokenOut, account, _fromMode, FarmToMode.INTERNAL);
+    const work = sdk.farm.create();
+    const estimate = await swap.estimate(tokenIn.fromHuman(amountIn.toString()));
+    swap.getFarm().generators.forEach((gen) => {
+      work.add(gen);
+    });
 
     return {
-      amountOut: new BigNumber(_tokenOut.fromBlockchain(estimate).toHuman()),
+      amountOut: tokenValueToBN(estimate),
       workflow: work,
+      value: value,
     };
   }, [account, sdk]);
 
@@ -301,10 +284,10 @@ const Buy : FC<{}> = () => {
       if (!sdk.contracts.beanstalk) throw new Error('Unable to access contracts');
       if (!account) throw new Error('Connect a wallet first.');
 
-      const formData = values.tokens[0];
-      const tokenIn = formData.token;
-      const amountIn = formData.amount;
-      const amountUsdc = USDC.equals(tokenIn) ? formData.amount : formData.amountOut;
+      const formData = values.tokens[0]; 
+      const tokenIn = formData.token; // input token
+      const amountIn = formData.amount; // input amount in form
+      const amountUsdc = USDC.equals(tokenIn) ? amountIn : formData.amountOut;
       
       if (!amountIn || !amountUsdc) throw new Error('An error occured');
 
@@ -317,9 +300,9 @@ const Buy : FC<{}> = () => {
       let fromMode = balanceFromToMode(values.balanceFrom);
       if (!USDC.equals(tokenIn)) {
         if (!formData.workflow) throw new Error('No quote available');
-        buyFert.add(formData.workflow);
+        buyFert.add([...formData.workflow.generators]);
         fromMode = FarmFromMode.INTERNAL_TOLERANT;
-      }
+      } 
 
       const minLP = await curve.zap.callStatic.calc_token_amount(
         curve.pools.beanCrv3.address,
@@ -327,15 +310,15 @@ const Buy : FC<{}> = () => {
           // 0.866616 is the ratio to add USDC/Bean at such that post-exploit
           // delta B in the Bean:3Crv pool with A=1 equals the pre-export 
           // total delta B times the haircut. Independent of the haircut %.
-          USDC.amount(amountUsdc.times(0.866616).toString()).blockchainString, // BEAN
+          USDC.fromHuman(amountUsdc.times(0.866616).toString()).blockchainString, // BEAN
           0, // DAI
-          USDC.amount(amountUsdc.toString()).blockchainString, // USDC
+          USDC.fromHuman(amountUsdc.toString()).blockchainString, // USDC
           0, // USDT
         ],
         true, // _is_deposit
         { gasLimit: 10000000 }
       );
-
+        
       const callData =  beanstalk.interface.encodeFunctionData('mintFertilizer', [
         toStringBaseUnitBN(amountUsdc, 0),
         Farm.slip(minLP, 0.1 / 100),
@@ -353,14 +336,18 @@ const Buy : FC<{}> = () => {
         decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('mintFertilizer', result),
       }));
 
-      const options = { slippage: values.settings.slippage };
+      // buyFert.add(async () => callData);
+
+      const options = { 
+        slippage: values.settings.slippage,
+      };
       const { execute, actionsPerformed } = await ClaimPlant.build(
         sdk,
-        {}, // no actions. Handled in useQuote
+        claimPlant.buildActions(values.farmActions.selected),
         claimPlant.buildActions(values.farmActions.additional),
-        buyFert,
+        buyFert.copy(),
         tokenIn.amount(amountIn.toString()),
-        options,
+        options
       );
 
       const txn = await execute();
@@ -371,6 +358,7 @@ const Buy : FC<{}> = () => {
       await claimPlant.refetch(actionsPerformed, { 
         farmerBarn: true,
         farmerBalances: true,
+        farmerSilo: true,
       }, [
         () => refetchAllowances(account, fertilizer.address, getNewToOldToken(USDC))
       ]);

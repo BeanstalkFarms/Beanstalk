@@ -8,7 +8,6 @@ import {
 } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
-import toast from 'react-hot-toast';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import {
   ClaimAndPlantFormState,
@@ -20,7 +19,7 @@ import {
 } from '~/components/Common/Form';
 import { ActionType } from '~/util/Actions';
 import { FarmToMode } from '~/lib/Beanstalk/Farm';
-import { displayFullBN, parseError } from '~/util';
+import { displayFullBN } from '~/util';
 import useFarmerField from '~/hooks/farmer/useFarmerField';
 import { BEAN, PODS } from '~/constants/tokens';
 import copy from '~/constants/copy';
@@ -268,10 +267,10 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
         formActions.resetForm();
       } catch (err) {
         if (txToast) {
-          txToast.error(err)
+          txToast.error(err);
         } else {
-          let errorToast = new TransactionToast({})
-          errorToast.error(err)
+          const errorToast = new TransactionToast({});
+          errorToast.error(err);
         }
         formActions.setSubmitting(false);
       }

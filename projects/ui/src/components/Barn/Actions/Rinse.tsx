@@ -2,7 +2,6 @@ import React, { useCallback, useMemo } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
-import toast from 'react-hot-toast';
 import {
   ClaimAndPlantFormState,
   SmartSubmitButton,
@@ -17,7 +16,7 @@ import FarmModeField from '~/components/Common/Form/FarmModeField';
 import TransactionToast from '~/components/Common/TxnToast';
 import useFarmerFertilizer from '~/hooks/farmer/useFarmerFertilizer';
 import { FarmToMode } from '~/lib/Beanstalk/Farm';
-import { displayFullBN, parseError } from '~/util';
+import { displayFullBN } from '~/util';
 import { ZERO_BN } from '~/constants';
 import { BEAN, SPROUTS } from '~/constants/tokens';
 import { ActionType } from '~/util/Actions';
@@ -241,10 +240,10 @@ const Rinse : FC<{ quick?: boolean }> = ({ quick }) => {
       });
     } catch (err) {
       if (txToast) {
-        txToast.error(err)
+        txToast.error(err);
       } else {
-        let errorToast = new TransactionToast({})
-        errorToast.error(err)
+        const errorToast = new TransactionToast({});
+        errorToast.error(err);
       }
     }
   }, [middleware, sdk, farmerBarn.fertilizedSprouts, farmerBarn.balances, claimPlant]);

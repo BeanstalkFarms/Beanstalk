@@ -3,7 +3,6 @@ import { Accordion, AccordionDetails, Alert, Box, Divider, Stack } from '@mui/ma
 import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { useSelector } from 'react-redux';
-import toast from 'react-hot-toast';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Token, ERC20Token } from '@beanstalk/sdk';
 import { SEEDS, STALK } from '~/constants/tokens';
@@ -20,7 +19,7 @@ import {
 import BeanstalkSDK from '~/lib/Beanstalk';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { FarmerSilo } from '~/state/farmer/silo';
-import { displayFullBN, parseError, toStringBaseUnitBN } from '~/util';
+import { displayFullBN, toStringBaseUnitBN } from '~/util';
 import TransactionToast from '~/components/Common/TxnToast';
 import { AppState } from '~/state';
 import { ActionType } from '~/util/Actions';
@@ -136,31 +135,6 @@ const WithdrawForm : FC<
           }
         ]}
       />
-      {/* <Stack direction={{ xs: 'column', md: 'row' }} gap={1} justifyContent="center">
-        <Box sx={{ flex: 1 }}>
-          <TokenOutputField
-            token={STALK}
-            amount={withdrawResult.stalk}
-            amountTooltip={(
-              <>
-                <div>Withdrawing from {withdrawResult.deltaCrates.length} Deposit{withdrawResult.deltaCrates.length === 1 ? '' : 's'}:</div>
-                <Divider sx={{ opacity: 0.2, my: 1 }} />
-                {withdrawResult.deltaCrates.map((_crate, i) => (
-                  <div key={i}>
-                    Season {_crate.season.toString()}: {displayFullBN(_crate.bdv, whitelistedToken.displayDecimals)} BDV, {displayFullBN(_crate.stalk, STALK.displayDecimals)} STALK, {displayFullBN(_crate.seeds, SEEDS.displayDecimals)} SEEDS
-                  </div>
-                ))}
-              </>
-            )}
-          />
-        </Box>
-        <Box sx={{ flex: 1 }}>
-          <TokenOutputField
-            token={SEEDS}
-            amount={withdrawResult.seeds}
-          />
-        </Box>
-      </Stack> */}
       <Alert
         color="warning"
         icon={<IconWrapper boxSize={IconSize.medium}><WarningAmberIcon sx={{ fontSize: IconSize.small }} /></IconWrapper>}
@@ -350,7 +324,8 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
         claimPlant.buildActions(values.farmActions.additional),
         withdraw,
         token.amount(0),
-        { slippage: 0.1 }
+        { slippage: 0.1 },
+        true
       );
       
       console.debug('[silo/withdraw] withdrawing: ', {
@@ -379,10 +354,10 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
       formActions.resetForm();
     } catch (err) {
       if (txToast) {
-        txToast.error(err)
+        txToast.error(err);
       } else {
-        let errorToast = new TransactionToast({})
-        errorToast.error(err)
+        const errorToast = new TransactionToast({});
+        errorToast.error(err);
       }
       formActions.setSubmitting(false);
     }

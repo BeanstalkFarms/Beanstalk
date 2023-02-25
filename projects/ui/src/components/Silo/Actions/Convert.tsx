@@ -3,7 +3,6 @@ import { Accordion, AccordionDetails, Alert, Box, Stack, Typography } from '@mui
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import toast from 'react-hot-toast';
 import { Token, ERC20Token, NativeToken } from '@beanstalk/sdk';
 import { ethers } from 'ethers';
 import TokenOutputField from '~/components/Common/Form/TokenOutputField';
@@ -19,7 +18,7 @@ import { displayFullBN, MaxBN, MinBN, toStringBaseUnitBN } from '~/util/Tokens';
 import { ZERO_BN } from '~/constants';
 import Farm from '~/lib/Beanstalk/Farm';
 import useToggle from '~/hooks/display/useToggle';
-import { parseError, tokenValueToBN, bnToTokenValue } from '~/util';
+import { tokenValueToBN, bnToTokenValue } from '~/util';
 import { FarmerSilo } from '~/state/farmer/silo';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { convert, Encoder as ConvertEncoder } from '~/lib/Beanstalk/Silo/Convert';
@@ -578,10 +577,10 @@ const Convert : FC<{
     } catch (err) {
       console.error(err);
       if (txToast) {
-        txToast.error(err)
+        txToast.error(err);
       } else {
-        let errorToast = new TransactionToast({})
-        errorToast.error(err)
+        const errorToast = new TransactionToast({});
+        errorToast.error(err);
       }
       formActions.setSubmitting(false);
     }

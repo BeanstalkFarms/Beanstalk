@@ -77,8 +77,8 @@ export default function useFarmerClaimPlantActions(): {
   const getBDV = useBDV();
 
   const cratesForEnroot = useMemo(() => {
-    const tokens = [...sdk.tokens.unripeTokens];
-    return tokens.reduce((prev, token) => {
+    const unripe = [...sdk.tokens.unripeTokens];
+    return unripe.reduce((prev, token) => {
       const balance = farmerSilo.balances[token.address];
       const depositCrates = balance?.deposited.crates;
 
@@ -92,12 +92,9 @@ export default function useFarmerClaimPlantActions(): {
   }, [farmerSilo.balances, getBDV, sdk.tokens.unripeTokens]);
 
   const claimAndPlantActions: ClaimPlantActionMap = useMemo(() => {
-    if (!account) throw new Error('Wallet connection is required');
-
     const beanBalance = farmerSilo.balances[sdk.tokens.BEAN.address];
     const plots = Object.keys(farmerField.harvestablePlots);
-
-    const crates = beanBalance?.claimable?.crates || [];
+    const seasons = beanBalance?.claimable?.crates.map((c) => c.season.toString()) || [];
     const plotIds = plots.map((harvestIdx) =>
       sdk.tokens.BEAN.fromBlockchain(harvestIdx).toBlockchain()
     );
@@ -120,7 +117,7 @@ export default function useFarmerClaimPlantActions(): {
       },
       [ClaimPlantAction.CLAIM]: (params) => {
         const claim = ClaimPlant.getAction(ClaimPlantAction.CLAIM);
-        return claim(sdk, { crates, ...params });
+        return claim(sdk, { seasons, ...params });
       },
       [ClaimPlantAction.HARVEST]: (params) => {
         const harvest = ClaimPlant.getAction(ClaimPlantAction.HARVEST);
@@ -166,7 +163,7 @@ export default function useFarmerClaimPlantActions(): {
         ...(additional || []),
       ];
 
-      await Promise.all(allRefetchFunctions.map((fn) => fn()));
+      await Promise.all(allRefetchFunctions.map(async (fn) => fn()));
     },
     [
       refetchFarmerBalances,

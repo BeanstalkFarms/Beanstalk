@@ -85155,6 +85155,18 @@
             "deprecationReason": null
           },
           {
+            "name": "plugins_contains",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "scores_state",
             "description": null,
             "type": {
@@ -122060,6 +122072,22 @@
           },
           {
             "name": "members",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "moderators",
             "description": null,
             "args": [],
             "type": {

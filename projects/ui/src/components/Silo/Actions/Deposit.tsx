@@ -316,6 +316,8 @@ const Deposit: FC<{
     },
   }), [baseToken]);
 
+  console.log('rerender...');
+
   const getWorkflow = useCallback(async (
     _tokenIn: ERC20Token | NativeToken, _tokenOut: ERC20Token | NativeToken, balanceFrom: BalanceFrom,
   ) => {
@@ -389,9 +391,12 @@ const Deposit: FC<{
           sdk,
           claimPlant.buildActions(values.farmActions.selected),
           claimPlant.buildActions(values.farmActions.additional),
-          deposit.workflow,
+          deposit.workflow.copy(),
           totalAmountIn,
-          { slippage: values.settings.slippage },
+          { 
+            slippage: values.settings.slippage,  
+            // value: tokenIn.symbol === 'ETH' ? ethers.BigNumber.from(totalAmountIn.toBlockchain()) : undefined,
+          },
           true // filter out mow b/c it's already included in the deposit
         );
 
@@ -402,7 +407,7 @@ const Deposit: FC<{
         await claimPlant.refetch(actionsPerformed, {
           farmerSilo: true,
           farmerBalances: true,
-        }, [refetchSilo, refetchPools]);
+        }, [refetchSilo, refetchPools]); 
       
         txToast.success(receipt);
         formActions.resetForm();

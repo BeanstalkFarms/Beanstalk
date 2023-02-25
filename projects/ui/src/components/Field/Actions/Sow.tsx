@@ -5,7 +5,6 @@ import { ethers } from 'ethers';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { useSelector } from 'react-redux';
-import toast from 'react-hot-toast';
 import { Token, ERC20Token, NativeToken } from '@beanstalk/sdk';
 import TransactionToast from '~/components/Common/TxnToast';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
@@ -26,7 +25,7 @@ import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import usePreferredToken, { PreferredToken } from '~/hooks/farmer/usePreferredToken';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
-import { displayBN, displayFullBN, MinBN, parseError, tokenValueToBN } from '~/util';
+import { displayBN, displayFullBN, MinBN, tokenValueToBN } from '~/util';
 import usePrice from '~/hooks/beanstalk/usePrice';
 import { useFetchBeanstalkField } from '~/state/beanstalk/field/updater';
 import { useFetchPools } from '~/state/bean/pools/updater';
@@ -365,7 +364,7 @@ const Sow : FC<{}> = () => {
           value = ethers.BigNumber.from(amountIn.blockchainString);
           work.add(new sdk.farm.actions.WrapEth(FarmToMode.INTERNAL));
         }
-        work.add(sdk.farm.presets.weth2bean(fromMode));
+        work.add(sdk.farm.presets.weth2bean(fromMode, FarmToMode.INTERNAL));
       } else if (!sdk.tokens.BEAN.equals(_tokenIn)) {
         throw new Error(`Sowing via ${_tokenIn.symbol} is not currently supported`);
       }
@@ -463,10 +462,10 @@ const Sow : FC<{}> = () => {
     } catch (err) {
       console.error(err);
       if (txToast) {
-        txToast.error(err)
+        txToast.error(err);
       } else {
-        let errorToast = new TransactionToast({})
-        errorToast.error(err)
+        const errorToast = new TransactionToast({});
+        errorToast.error(err);
       }
     } finally {
       formActions.setSubmitting(false);

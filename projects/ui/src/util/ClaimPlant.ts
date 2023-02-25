@@ -54,8 +54,8 @@ type ClaimPlantFunction<T extends ClaimPlantAction> = (
 const harvest: ClaimPlantFunction<ClaimPlantAction.HARVEST> = (sdk, { plotIds, amount, toMode }) => {
   const { beanstalk } = sdk.contracts;
 
-  const farm = sdk.farm.create();
-  farm.add(async (_amountInStep: ethers.BigNumber, _context: any) => ({
+  const farm = sdk.farm.create('Harvest');
+  farm.add(async (_amountInStep: ethers.BigNumber) => ({
     name: 'harvest',
     amountOut: amount?.toBigNumber() || _amountInStep,
     prepare: () => ({
@@ -70,7 +70,7 @@ const harvest: ClaimPlantFunction<ClaimPlantAction.HARVEST> = (sdk, { plotIds, a
   }));
 
   return {
-    workflow: farm,
+    workflow: farm.copy(),
     estimateGas: () => beanstalk.estimateGas.harvest(plotIds, toMode || FarmToMode.INTERNAL)
   };
 };
@@ -78,7 +78,7 @@ const harvest: ClaimPlantFunction<ClaimPlantAction.HARVEST> = (sdk, { plotIds, a
 const claim: ClaimPlantFunction<ClaimPlantAction.CLAIM> = (sdk, { seasons, toMode }) => {
   const { beanstalk } = sdk.contracts;
   const { BEAN } = sdk.tokens;
-  const farm = sdk.farm.create();
+  const farm = sdk.farm.create('ClaimWithdrawal');
 
   if (seasons.length === 1) {
     farm.add(new sdk.farm.actions.ClaimWithdrawal(
@@ -88,27 +88,27 @@ const claim: ClaimPlantFunction<ClaimPlantAction.CLAIM> = (sdk, { seasons, toMod
     ));
 
     return { 
-      workflow: farm,
+      workflow: farm.copy(),
       estimateGas: () => beanstalk.estimateGas.claimWithdrawal(BEAN.address, seasons[0], toMode || FarmToMode.INTERNAL),
     };
   } 
-    farm.add(new sdk.farm.actions.ClaimWithdrawals(
-      sdk.tokens.BEAN.address,
-      seasons,
-      toMode || FarmToMode.INTERNAL
-    ));
+  farm.add(new sdk.farm.actions.ClaimWithdrawals(
+    sdk.tokens.BEAN.address,
+    seasons,
+    toMode || FarmToMode.INTERNAL
+  ));
 
   return {
-    workflow: farm,
+    workflow: farm.copy(),
     estimateGas: () => beanstalk.estimateGas.claimWithdrawals(BEAN.address, seasons, toMode || FarmToMode.INTERNAL),
   };
 };
 
 const rinse: ClaimPlantFunction<ClaimPlantAction.RINSE> = (sdk, { tokenIds, amount, toMode }) => {
   const { beanstalk } = sdk.contracts;
-  const farm = sdk.farm.create();
+  const farm = sdk.farm.create('ClaimFertilized');
 
-  farm.add(async (_amountInStep: ethers.BigNumber, _context: any) => ({
+  farm.add(async (_amountInStep: ethers.BigNumber) => ({
     name: 'claimFertilized',
     amountOut: amount?.toBigNumber() || _amountInStep,
     prepare: () => ({
@@ -123,16 +123,16 @@ const rinse: ClaimPlantFunction<ClaimPlantAction.RINSE> = (sdk, { tokenIds, amou
   }));
  
   return {
-    workflow: farm,
+    workflow: farm.copy(),
     estimateGas: () => beanstalk.estimateGas.claimFertilized(tokenIds, toMode || FarmToMode.INTERNAL)
   };
 };
 
 const mow: ClaimPlantFunction<ClaimPlantAction.MOW> = (sdk, { account }) => {
   const { beanstalk } = sdk.contracts;
-  const farm = sdk.farm.create();
+  const farm = sdk.farm.create('Mow');
 
-  farm.add(async (_amountInStep: ethers.BigNumber, _context: any) => ({
+  farm.add(async (_amountInStep: ethers.BigNumber) => ({
     name: 'update',
     amountOut: _amountInStep,
     prepare: () => ({
@@ -146,16 +146,16 @@ const mow: ClaimPlantFunction<ClaimPlantAction.MOW> = (sdk, { account }) => {
   }));
 
   return {
-    workflow: farm,
+    workflow: farm.copy(),
     estimateGas: () => beanstalk.estimateGas.update(account)
   };
 };
 
 const plant: ClaimPlantFunction<ClaimPlantAction.PLANT> = (sdk) => {
   const { beanstalk } = sdk.contracts;
-  const farm = sdk.farm.create();
+  const farm = sdk.farm.create('Plant');
 
-  farm.add(async (_amountInStep: ethers.BigNumber, _context: any) => ({
+  farm.add(async (_amountInStep: ethers.BigNumber) => ({
     name: 'plant',
     amountOut: _amountInStep,
     prepare: () => ({
@@ -166,16 +166,15 @@ const plant: ClaimPlantFunction<ClaimPlantAction.PLANT> = (sdk) => {
     decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('plant', result),
   }));
   return {
-    workflow: farm,
+    workflow: farm.copy(),
     estimateGas: () => beanstalk.estimateGas.plant()
   };
 };
 
 const enroot: ClaimPlantFunction<ClaimPlantAction.ENROOT> = (sdk, { crates }) => {
   const { beanstalk } = sdk.contracts;
-  const callData: string[] = []; 
-
-  const farm = sdk.farm.create();
+  const callData: string[] = [];
+  const farm = sdk.farm.create('EnrootDeposit(s)');
 
   [...sdk.tokens.unripeTokens].forEach((urToken) => {
     const _crates = crates[urToken.address];
@@ -183,13 +182,14 @@ const enroot: ClaimPlantFunction<ClaimPlantAction.ENROOT> = (sdk, { crates }) =>
       const encoded = beanstalk.interface.encodeFunctionData('enrootDeposit', [
         urToken.address,
         _crates[0].season.toString(),
-        urToken.fromHuman(_crates[0].amount.toString()).blockchainString,
+        urToken.fromHuman(_crates[0].amount.toString()).toBlockchain(),
       ]);
-      farm.add(async (_amountInStep: ethers.BigNumber, _context: any) => ({
+
+      farm.add(async (_amountInStep: ethers.BigNumber) => ({
         name: 'enrootDeposit',
         amountOut: _amountInStep,
         prepare: () => ({ 
-          target: beanstalk.address, 
+          target: beanstalk.address,
           callData: encoded
         }),
         decode: (data: string) => beanstalk.interface.decodeFunctionData('enrootDeposit', data),
@@ -200,13 +200,14 @@ const enroot: ClaimPlantFunction<ClaimPlantAction.ENROOT> = (sdk, { crates }) =>
       const encoded = beanstalk.interface.encodeFunctionData('enrootDeposits', [
         urToken.address,
         _crates.map((crate) => crate.season.toString()),
-        _crates.map((crate) => urToken.fromHuman(crate.amount.toString()).blockchainString)
+        _crates.map((crate) => urToken.fromHuman(crate.amount.toString()).toBlockchain())
       ]);
-      farm.add(async (_amountInStep: ethers.BigNumber, _context: any) => ({
+
+      farm.add(async (_amountInStep: ethers.BigNumber) => ({
         name: 'enrootDeposits',
         amountOut: _amountInStep,
         prepare: () => ({ 
-          target: beanstalk.address, 
+          target: beanstalk.address,
           callData: encoded
         }),
         decode: (data: string) => beanstalk.interface.decodeFunctionData('enrootDeposits', data),
@@ -217,7 +218,7 @@ const enroot: ClaimPlantFunction<ClaimPlantAction.ENROOT> = (sdk, { crates }) =>
   });
 
   return {
-    workflow: farm,
+    workflow: farm.copy(),
     estimateGas: () => beanstalk.estimateGas.farm([
       ...callData
     ])
@@ -321,6 +322,7 @@ class ClaimPlant {
     /** */
     options: {
       slippage: number
+      value?: ethers.BigNumber
     },
     filterMow?: boolean,
   ): Promise<ClaimPlantResult> {
@@ -329,35 +331,32 @@ class ClaimPlant {
       secondaryActions, 
       actionsPerformed 
     } = ClaimPlant.deduplicate(_primaryActions, _secondaryActions, filterMow);
-
-    console.log('actionsPerformed: ', actionsPerformed);
   
     /// --- Construct workflow ---
     const farm = sdk.farm.create();
-  
-    Object.values(secondaryActions).forEach((action) => { 
-      action.workflow.generators.forEach((step) => {
-        farm.add(step);
-      });
-    });
-  
-    Object.values(primaryActions).forEach((action) => {
-      action.workflow.generators.forEach((step) => {
-        farm.add(step);
-      });
-    });
-  
-    farm.add(ClaimPlant.injectOnlyLocal('pre-x', amountIn), { onlyLocal: true });
-    operation.generators.forEach((step) => {
-      farm.add(step);
-    });
-  
-    const estimate = await farm.estimate(amountIn);
 
-    console.log(farm.summarizeSteps().map((step) => ({
+    Object.values(secondaryActions).forEach(({ workflow }) => { 
+      farm.add(workflow.copy());
+    });
+    const primary = Object.values(primaryActions);
+    primary.forEach(({ workflow }) => {
+      farm.add(workflow.copy());
+    });
+  
+    if (primary.length > 1) {
+      farm.add(ClaimPlant.injectOnlyLocal('pre-x', amountIn), { onlyLocal: true });
+    }
+    farm.add(operation.copy());
+    
+    const estimate = await farm.estimate(amountIn);
+    
+    const summary = farm.summarizeSteps();
+    const mapped = summary.map((step) => ({
       name: step.name,
-      amount: step.amountOut.toString(),
-    })));
+      amountOut: step.amountOut.toString(),
+    }));
+    console.table(mapped);
+    console.log(farm.generators);
   
     const execute = () => farm.execute(amountIn, options);
   
@@ -369,7 +368,7 @@ class ClaimPlant {
   }
 
   static injectOnlyLocal(name: string, amount: TokenValue) {
-    return async () => ({
+    return () => ({
       name,
       amountOut: amount.toBigNumber(),
       prepare: () => ({ target: '', callData: '' }),
