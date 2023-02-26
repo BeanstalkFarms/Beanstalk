@@ -23,7 +23,7 @@ import StatHorizontal from '~/components/Common/StatHorizontal';
 
 type VoteFormValues = {
   /** For 'single-choice' proposals */
-  choice: number | number[] | undefined;
+  choice: number | undefined;
   /** For 'approval' proposals */
   choices: number[] | undefined;
 };
@@ -357,6 +357,7 @@ const Vote: FC<{
 
         const hub = 'https://hub.snapshot.org';
         const client = new snapshot.Client712(hub);
+
         const message = {
           space: proposal.space.id,
           proposal: proposal.id,
@@ -368,7 +369,7 @@ const Vote: FC<{
         const result = await client.vote(
           signer as Wallet,
           _account,
-          message
+          message as any
         );
         console.debug('[Vote] Voting result: ', result);
         await Promise.all([
