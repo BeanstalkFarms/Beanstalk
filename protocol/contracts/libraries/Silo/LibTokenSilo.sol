@@ -140,8 +140,8 @@ library LibTokenSilo {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         console.log('addDepositToAccount token: ', token);
-        console.log('addDepositToAccount logging grown stalk per bdv:');
-        console.logInt(grownStalkPerBdv);
+        console.log('addDepositToAccount at grown stalk per bdv:', uint256(grownStalkPerBdv));
+        // console.logInt();
         Account.Deposit memory d = s.a[account].deposits[token][grownStalkPerBdv];
         console.log('addDepositToAccount updatedAmount: ', d.amount.add(amount.toUint128()));
 

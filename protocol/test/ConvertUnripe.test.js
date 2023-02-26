@@ -113,6 +113,7 @@ describe('Unripe Convert', function () {
     describe('revert', async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
+        this.season.deployGrownStalkPerBdv();
       });
       it('not enough LP', async function () {
         await this.silo.connect(user).deposit(this.unripeBean.address, to6('200'), EXTERNAL);
@@ -131,6 +132,7 @@ describe('Unripe Convert', function () {
     describe('basic', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
+        this.season.deployGrownStalkPerBdv();
       });
       beforeEach(async function () {
         await this.silo.connect(user).deposit(this.unripeBean.address, to6('2000'), EXTERNAL);
@@ -168,6 +170,7 @@ describe('Unripe Convert', function () {
     describe('multiple crates', async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
+        this.season.deployGrownStalkPerBdv();
         await this.silo.connect(user).deposit(this.unripeBean.address, to6('1000'), EXTERNAL);
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
@@ -176,7 +179,9 @@ describe('Unripe Convert', function () {
 
         await this.silo.connect(user).deposit(this.unripeBean.address, to6('1000'), EXTERNAL);
 
+
         const grownStalkPerBdvUnripeBean = await this.silo.seasonToGrownStalkPerBdv(this.unripeBean.address, '14');
+        console.log('in beforeeach grownStalkPerBdvUnripeBean: ', grownStalkPerBdvUnripeBean);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeBeansToLP(to6('2500'), to6('1900')), [0, grownStalkPerBdvUnripeBean], [to6('1000'), to6('1000')])
       });
@@ -193,9 +198,10 @@ describe('Unripe Convert', function () {
 
       it('properly updates user deposits', async function () {
         const grownStalkPerBdvUnripeBean = await this.silo.seasonToGrownStalkPerBdv(this.unripeBean.address, '14');
+        console.log('in test grownStalkPerBdvUnripeBean: ', grownStalkPerBdvUnripeBean);
         expect((await this.silo.getDeposit(userAddress, this.unripeBean.address, 0))[0]).to.eq(toBean('0'));
         expect((await this.silo.getDeposit(userAddress, this.unripeBean.address, grownStalkPerBdvUnripeBean))[0]).to.eq(toBean('0'));
-        const deposit = await this.silo.getDeposit(userAddress, this.unripeLP.address, 12);
+        const deposit = await this.silo.getDeposit(userAddress, this.unripeLP.address, 4);
         expect(deposit[0]).to.eq('2008324306');
         expect(deposit[1]).to.eq(toBean('200'));
       });
@@ -205,13 +211,14 @@ describe('Unripe Convert', function () {
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
           .withArgs(userAddress, this.unripeBean.address, [0, grownStalkPerBdvUnripeBean], [to6('1000'), to6('1000')], to6('2000'), [to6('100'), to6('100')]);
         await expect(this.result).to.emit(this.silo, 'AddDeposit')
-          .withArgs(userAddress, this.unripeLP.address, 12, '2008324306', toBean('200'));
+          .withArgs(userAddress, this.unripeLP.address, 4, '2008324306', toBean('200'));
       });
     });
     //TODOSEEDS maybe write some tests that are not right on the zero index of grown stalk per bdv?
     describe("bean more vested", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
+        this.season.deployGrownStalkPerBdv();
         await this.unripe.connect(owner).addUnderlying(
           UNRIPE_BEAN,
           to6('1000')
@@ -251,6 +258,7 @@ describe('Unripe Convert', function () {
     describe("lp more vested", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
+        this.season.deployGrownStalkPerBdv();
         await this.unripe.connect(user).addUnderlyingWithRecap(
           UNRIPE_LP,
           to18('942.2960000')
@@ -289,6 +297,7 @@ describe('Unripe Convert', function () {
   describe('convert lp to beans', async function () {
     beforeEach(async function () {
       await this.season.teleportSunrise(10);
+      this.season.deployGrownStalkPerBdv();
     });
 
     describe('revert', async function () {
@@ -327,39 +336,42 @@ describe('Unripe Convert', function () {
       });
     });
 
+    //these tests use the new 2 seeds per bdv instead of previous 4 (note in the beforeEach above that deployGrownStalkPerBdv is called)
     describe('multiple crates', function () {
       beforeEach(async function () {
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
         await this.silo.connect(user).deposit(this.unripeLP.address, to6('500'), EXTERNAL);
+
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
         await this.silo.connect(user).deposit(this.unripeLP.address, to6('500'), EXTERNAL);
-        this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeLPToBeans(to6('1000'), to6('990'), this.unripeLP.address), ['0', '8'], [to6('500'), to6('500')])
+
+        this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeLPToBeans(to6('1000'), to6('990'), this.unripeLP.address), ['0', '4'], [to6('500'), to6('500')])
       });
 
       it('properly updates total values', async function () {
         expect(await this.silo.getTotalDeposited(this.unripeBean.address)).to.eq(to6('1006.18167'));
         expect(await this.silo.getTotalDeposited(this.unripeLP.address)).to.eq(to6('0'));
-        expect(await this.silo.totalStalk()).to.eq(toStalk('100.6483524501'));
-        //same as normal curve convert tests, old value was 100.6382906334 but now you get to keep more stalk
+        expect(await this.silo.totalStalk()).to.eq(toStalk('100.6282288167'));
+        //same as normal curve convert tests, old value was 100.6382906334 but now with rounding it's a bit different
       });
 
       it('properly updates user values', async function () {
-        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('100.6483524501'));
+        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('100.6282288167'));
       });
 
       it('properly updates user deposits', async function () {
-        expect((await this.silo.getDeposit(userAddress, this.unripeBean.address, 1))[0]).to.eq(to6('1006.18167'));
-        const deposit = await this.silo.getDeposit(userAddress, this.unripeLP.address, 8);
+        expect((await this.silo.getDeposit(userAddress, this.unripeBean.address, 3))[0]).to.eq(to6('1006.18167'));
+        const deposit = await this.silo.getDeposit(userAddress, this.unripeLP.address, 2);
         expect(deposit[0]).to.eq(to6('0'));
         expect(deposit[1]).to.eq(toBean('0'));
       });
 
       it('emits events', async function () {
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
-          .withArgs(userAddress, this.unripeLP.address, [0, 8], [to6('500'), to6('500')], to6('1000'), [to6('50'), to6('50')]);
+          .withArgs(userAddress, this.unripeLP.address, [0, 4], [to6('500'), to6('500')], to6('1000'), [to6('50'), to6('50')]);
         await expect(this.result).to.emit(this.silo, 'AddDeposit')
-          .withArgs(userAddress, this.unripeBean.address, 1, to6('1006.18167'), to6('100.618167'));
+          .withArgs(userAddress, this.unripeBean.address, 3, to6('1006.18167'), to6('100.618167'));
       });
     });
 

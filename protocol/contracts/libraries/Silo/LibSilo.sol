@@ -242,10 +242,10 @@ library LibSilo {
         view //change back to pure
         returns (uint256)
     {
-        console.log('stalkReward startStalkPerBDV: ');
-        console.logInt(startStalkPerBDV);
-        console.log('stalkReward endStalkPerBDV: ');
-        console.logInt(endStalkPerBDV);
+        console.log('stalkReward startStalkPerBDV: ', uint256(startStalkPerBDV));
+        // console.logInt();
+        console.log('stalkReward endStalkPerBDV: ', uint256(endStalkPerBDV));
+        // console.logInt(endStalkPerBDV);
         console.log('stalkReward bdv: ', bdv);
         int128 reward = endStalkPerBDV.sub(startStalkPerBDV).mul(int128(bdv));
         console.log('stalkReward final reward: ', uint256(reward));
