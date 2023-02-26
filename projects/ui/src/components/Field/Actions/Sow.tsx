@@ -6,7 +6,6 @@ import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useProvider } from 'wagmi';
-import toast from 'react-hot-toast';
 import TransactionToast from '~/components/Common/TxnToast';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import {
@@ -31,7 +30,7 @@ import usePreferredToken, { PreferredToken } from '~/hooks/farmer/usePreferredTo
 import { QuoteHandler } from '~/hooks/ledger/useQuote';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import Farm, { ChainableFunction, FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
-import { displayBN, displayFullBN, MinBN, parseError, toStringBaseUnitBN, toTokenUnitsBN } from '~/util';
+import { displayBN, displayFullBN, MinBN, toStringBaseUnitBN, toTokenUnitsBN } from '~/util';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import usePrice from '~/hooks/beanstalk/usePrice';
 import { optimizeFromMode } from '~/util/Farm';
@@ -443,10 +442,10 @@ const Sow : FC<{}> = () => {
     } catch (err) {
       console.error(err);
       if (txToast) {
-        txToast.error(err)
+        txToast.error(err);
       } else {
-        let errorToast = new TransactionToast({})
-        errorToast.error(err)
+        const errorToast = new TransactionToast({});
+        errorToast.error(err);
       }
     } finally {
       formActions.setSubmitting(false);

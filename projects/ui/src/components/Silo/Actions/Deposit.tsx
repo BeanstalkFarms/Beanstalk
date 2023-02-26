@@ -3,7 +3,6 @@ import { Accordion, AccordionDetails, Box, Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
-import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 import { Token } from '~/classes';
 import { BEAN, CRV3, DAI, ETH, SEEDS, STALK, UNRIPE_BEAN, UNRIPE_BEAN_CRV3, USDC, USDT, WETH } from '~/constants/tokens';
@@ -34,7 +33,6 @@ import usePreferredToken from '~/hooks/farmer/usePreferredToken';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
-import { parseError } from '~/util';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import { AppState } from '~/state';
 import { useFetchPools } from '~/state/bean/pools/updater';
@@ -524,10 +522,10 @@ const Deposit : FC<{
       formActions.resetForm();
     } catch (err) {
       if (txToast) {
-        txToast.error(err)
+        txToast.error(err);
       } else {
-        let errorToast = new TransactionToast({})
-        errorToast.error(err)
+        const errorToast = new TransactionToast({});
+        errorToast.error(err);
       }
       formActions.setSubmitting(false);
     }

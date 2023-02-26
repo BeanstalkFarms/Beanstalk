@@ -2,7 +2,6 @@ import React, { useCallback, useMemo } from 'react';
 import { Accordion, AccordionDetails, Box, Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
-import toast from 'react-hot-toast';
 import AddressInputField from '~/components/Common/Form/AddressInputField';
 import FieldWrapper from '~/components/Common/Form/FieldWrapper';
 import { PlotFragment, PlotSettingsFragment, SmartSubmitButton, TokenOutputField, TxnPreview, TxnSeparator } from '~/components/Common/Form';
@@ -15,7 +14,7 @@ import useFarmerPlots from '~/hooks/farmer/useFarmerPlots';
 import useHarvestableIndex from '~/hooks/beanstalk/useHarvestableIndex';
 import { ZERO_BN } from '~/constants';
 import { PODS } from '~/constants/tokens';
-import { displayFullBN, parseError, toStringBaseUnitBN, trimAddress } from '~/util';
+import { displayFullBN, toStringBaseUnitBN, trimAddress } from '~/util';
 import { ActionType } from '~/util/Actions';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
@@ -173,10 +172,10 @@ const Transfer: FC<{}> = () => {
       formActions.resetForm();
     } catch (err) {
       if (txToast) {
-        txToast.error(err)
+        txToast.error(err);
       } else {
-        let errorToast = new TransactionToast({})
-        errorToast.error(err)
+        const errorToast = new TransactionToast({});
+        errorToast.error(err);
       }
     }
   }, [

@@ -1,13 +1,11 @@
 import { Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useState, useMemo } from 'react';
-import toast from 'react-hot-toast';
 import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
 import { useSelector } from 'react-redux';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import { ClaimRewardsAction } from '~/lib/Beanstalk/Farm';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
-import { parseError } from '~/util';
 import { UNRIPE_TOKENS } from '~/constants/tokens';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import { selectCratesForEnroot } from '~/util/Crates';
@@ -237,10 +235,10 @@ const RewardsForm: React.FC<RewardsFormProps> = ({ open, children }) => {
         formActions.resetForm();
       } catch (err) {
         if (txToast) {
-          txToast.error(err)
+          txToast.error(err);
         } else {
-          let errorToast = new TransactionToast({})
-          errorToast.error(err)
+          const errorToast = new TransactionToast({});
+          errorToast.error(err);
         }
       }
     },

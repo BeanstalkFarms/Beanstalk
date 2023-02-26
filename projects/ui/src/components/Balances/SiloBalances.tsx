@@ -64,7 +64,7 @@ const SiloBalances: React.FC<{}> = () => {
     (state) => state._bean.unripe
   );
 
-  const farmerSilo = useSelector<AppState, AppState['_farmer']['silo']>((state) => state._farmer.silo)
+  const farmerSilo = useSelector<AppState, AppState['_farmer']['silo']>((state) => state._farmer.silo);
 
   const stalkByToken = useFarmerStalkByToken();
 
@@ -176,7 +176,7 @@ const SiloBalances: React.FC<{}> = () => {
                     textAlign="left"
                   >
                     <Typography color="text.primary">
-                    {token === Bean ? (
+                      {token === Bean ? (
                         <Tooltip
                           title={
                             <>

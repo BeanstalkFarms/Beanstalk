@@ -235,6 +235,15 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
     && (sameAddressCheck ? !internalExternalCheck : true)
   );
 
+  const Warning : FC<{}> = ({ children }) => (
+    <Alert
+      color="warning"
+      icon={<IconWrapper boxSize={IconSize.medium}><WarningAmberIcon sx={{ fontSize: IconSize.small }} /></IconWrapper>}
+    >
+      {children}
+    </Alert>
+  );
+
   return (
     <Form autoComplete="off" onSubmit={handleSubmitWrapper}>
       <TokenSelectDialog
@@ -315,20 +324,14 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
           </Box>
         ) : null}
         {sameAddressCheck && internalExternalCheck ? (
-          <Alert
-            color="warning"
-            icon={<IconWrapper boxSize={IconSize.medium}><WarningAmberIcon sx={{ fontSize: IconSize.small }} /></IconWrapper>}
-          >
+          <Warning>
             You cannot use Combined Balance when transferring to yourself.
-          </Alert>
+          </Warning>
         ) : null}
         {amount?.gt(balanceInMax) ? (
-          <Alert
-            color="warning"
-            icon={<IconWrapper boxSize={IconSize.medium}><WarningAmberIcon sx={{ fontSize: IconSize.small }} /></IconWrapper>}
-          >
+          <Warning>
             {`Transfer amount higher than your ${copy.MODES[values.fromMode]}.`}
-          </Alert>
+          </Warning>
         ) : null}
         <SmartSubmitButton
           type="submit"

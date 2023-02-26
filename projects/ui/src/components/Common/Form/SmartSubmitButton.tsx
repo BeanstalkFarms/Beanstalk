@@ -5,12 +5,11 @@ import { ethers } from 'ethers';
 import { useFormikContext } from 'formik';
 import BigNumber from 'bignumber.js';
 import { useAccount as useWagmiAccount } from 'wagmi';
-import toast from 'react-hot-toast';
 import useAllowances from '~/hooks/farmer/useAllowances';
 import useChainConstant from '~/hooks/chain/useChainConstant';
 import { useGetERC20Contract } from '~/hooks/ledger/useContract';
 import Token from '~/classes/Token';
-import { parseError, trimAddress } from '~/util';
+import { trimAddress } from '~/util';
 import { BEANSTALK_ADDRESSES, BEANSTALK_FERTILIZER_ADDRESSES } from '~/constants/addresses';
 import { CHAIN_INFO, SupportedChainId, MAX_UINT256 } from '~/constants';
 import { StyledDialog, StyledDialogActions, StyledDialogContent, StyledDialogTitle } from '../Dialog';
@@ -137,10 +136,10 @@ const SmartSubmitButton : FC<{
       txToast.success(receipt);
     } catch (err) {
       if (txToast) {
-        txToast.error(err)
+        txToast.error(err);
       } else {
-        let errorToast = new TransactionToast({})
-        errorToast.error(err)
+        const errorToast = new TransactionToast({});
+        errorToast.error(err);
       }
     } finally {
       nowApproving?.(false);

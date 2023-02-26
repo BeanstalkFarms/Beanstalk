@@ -4,7 +4,6 @@ import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { ethers } from 'ethers';
-import toast from 'react-hot-toast';
 import TokenOutputField from '~/components/Common/Form/TokenOutputField';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import { FormState, SettingInput, SmartSubmitButton, TxnSettings } from '~/components/Common/Form';
@@ -27,7 +26,7 @@ import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useToggle from '~/hooks/display/useToggle';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
-import { tokenResult, parseError } from '~/util';
+import { tokenResult } from '~/util';
 import { FarmerSilo } from '~/state/farmer/silo';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { convert, Encoder as ConvertEncoder } from '~/lib/Beanstalk/Silo/Convert';
@@ -548,10 +547,10 @@ const Convert : FC<{
     } catch (err) {
       console.error(err);
       if (txToast) {
-        txToast.error(err)
+        txToast.error(err);
       } else {
-        let errorToast = new TransactionToast({})
-        errorToast.error(err)
+        const errorToast = new TransactionToast({});
+        errorToast.error(err);
       }
       formActions.setSubmitting(false);
     }

@@ -6,11 +6,10 @@ import snapshot from '@snapshot-labs/snapshot.js';
 import { Wallet } from 'ethers';
 import BigNumber from 'bignumber.js';
 import { useSelector } from 'react-redux';
-import toast from 'react-hot-toast';
 import { useVotesQuery } from '~/generated/graphql';
 import DescriptionButton from '~/components/Common/DescriptionButton';
 import { useSigner } from '~/hooks/ledger/useSigner';
-import { displayBN, displayFullBN, parseError } from '~/util';
+import { displayBN, displayFullBN } from '~/util';
 import TransactionToast from '~/components/Common/TxnToast';
 import { Proposal } from '~/util/Governance';
 import { AppState } from '~/state';
@@ -296,10 +295,10 @@ const Vote: FC<{
       } catch (err) {
         console.error(err);
         if (txToast) {
-          txToast.error(err)
+          txToast.error(err);
         } else {
-          let errorToast = new TransactionToast({})
-          errorToast.error(err)
+          const errorToast = new TransactionToast({});
+          errorToast.error(err);
         }
         formActions.setSubmitting(false);
       }

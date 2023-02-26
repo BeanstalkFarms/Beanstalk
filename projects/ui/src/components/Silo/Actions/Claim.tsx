@@ -4,7 +4,6 @@ import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import { useProvider } from 'wagmi';
 import { ethers } from 'ethers';
-import toast from 'react-hot-toast';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import { Token } from '~/classes';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
@@ -26,7 +25,7 @@ import {
 } from '~/components/Common/Form';
 import Farm, { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
 import { ZERO_BN } from '~/constants';
-import { displayTokenAmount, toStringBaseUnitBN, toTokenUnitsBN, parseError } from '~/util';
+import { displayTokenAmount, toStringBaseUnitBN, toTokenUnitsBN } from '~/util';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
 import TokenIcon from '~/components/Common/TokenIcon';
 import useToggle from '~/hooks/display/useToggle';
@@ -371,10 +370,10 @@ const Claim : FC<{
       formActions.resetForm();
     } catch (err) {
       if (txToast) {
-        txToast.error(err)
+        txToast.error(err);
       } else {
-        let errorToast = new TransactionToast({})
-        errorToast.error(err)
+        const errorToast = new TransactionToast({});
+        errorToast.error(err);
       }
       formActions.setSubmitting(false);
     }

@@ -2,7 +2,6 @@ import React, { useCallback, useMemo } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
-import toast from 'react-hot-toast';
 import {
   SmartSubmitButton,
   TokenAdornment,
@@ -19,7 +18,7 @@ import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import useAccount from '~/hooks/ledger/useAccount';
 import { FarmToMode } from '~/lib/Beanstalk/Farm';
-import { displayFullBN, parseError } from '~/util';
+import { displayFullBN } from '~/util';
 import { useFetchFarmerBarn } from '~/state/farmer/barn/updater';
 import { ZERO_BN } from '~/constants';
 import { BEAN, SPROUTS } from '~/constants/tokens';
@@ -222,10 +221,10 @@ const Rinse : FC<{ quick?: boolean }> = ({ quick }) => {
       });
     } catch (err) {
       if (txToast) {
-        txToast.error(err)
+        txToast.error(err);
       } else {
-        let errorToast = new TransactionToast({})
-        errorToast.error(err)
+        const errorToast = new TransactionToast({});
+        errorToast.error(err);
       }
     }
   }, [
