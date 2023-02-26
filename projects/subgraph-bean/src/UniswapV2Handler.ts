@@ -1,47 +1,85 @@
-import { BigDecimal } from "@graphprotocol/graph-ts";
-import { Burn, Mint, UniswapV2Pair } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
+import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
+import { Burn, Mint, Swap, UniswapV2Pair } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
 import { ZERO_BD, ZERO_BI } from "./helpers";
-import { WETH, WETH_USDC_PAIR } from "./utils/Constants";
-import { toDecimal } from "./utils/Decimals";
+import { updateBeanValues } from "./utils/Bean";
+import { BEAN_ERC20_V1, WETH, WETH_USDC_PAIR } from "./utils/Constants";
+import { toBigInt, toDecimal } from "./utils/Decimals";
 import { loadOrCreatePool, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 import { loadOrCreateToken } from "./utils/Token";
 
+// Liquidity and cross checks happen on the Sync event handler
+export function handleSwap(event: Swap): void {
+  // Do not index post-exploit data
+  if (event.block.number >= BigInt.fromI32(14602790)) return;
+
+  let weth = loadOrCreateToken(WETH.toHexString());
+
+  let pool = loadOrCreatePool(event.address.toHexString(), event.block.number);
+
+  let usdVolume = toDecimal(event.params.amount0In.plus(event.params.amount0Out), 18).times(weth.lastPriceUSD);
+
+  // Token 0 is WETH and Token 1 is BEAN
+
+  updatePoolValues(
+    event.address.toHexString(),
+    event.block.timestamp,
+    event.block.number,
+    event.params.amount1In.plus(event.params.amount1Out),
+    usdVolume,
+    ZERO_BD,
+    pool.deltaBeans
+  );
+
+  updateBeanValues(BEAN_ERC20_V1.toHexString(), event.block.timestamp, pool.lastPrice, ZERO_BI, ZERO_BI, usdVolume, ZERO_BD);
+}
+
+// Sync is called in UniswapV2 on any liquidity or swap transaction.
+// It updates the `reserves` value on the contract.
+
 export function handleSync(event: Mint): void {
+  // Do not index post-exploit data
+  if (event.block.number >= BigInt.fromI32(14602790)) return;
 
-    let pair = UniswapV2Pair.bind(event.address)
+  let pair = UniswapV2Pair.bind(event.address);
 
-    let reserves = pair.try_getReserves()
-    if (reserves.reverted) { return }
+  let reserves = pair.try_getReserves();
+  if (reserves.reverted) {
+    return;
+  }
 
-    // Token 0 is WETH and Token 1 is BEAN
+  // Token 0 is WETH and Token 1 is BEAN
 
-    updatePriceETH()
-    let weth = loadOrCreateToken(WETH.toHexString())
+  updatePriceETH();
+  let weth = loadOrCreateToken(WETH.toHexString());
 
-    let wethBalance = toDecimal(reserves.value.value0, 18)
-    let beanBalance = toDecimal(reserves.value.value1)
+  let wethBalance = toDecimal(reserves.value.value0, 18);
+  let beanBalance = toDecimal(reserves.value.value1);
 
-    let pool = loadOrCreatePool(event.address.toHexString(), event.block.number)
-    let startLiquidityUSD = pool.liquidityUSD
-    let endLiquidityUSD = wethBalance.times(weth.lastPriceUSD).times(BigDecimal.fromString('2'))
-    let deltaLiquidityUSD = endLiquidityUSD.minus(startLiquidityUSD)
+  let pool = loadOrCreatePool(event.address.toHexString(), event.block.number);
+  let startLiquidityUSD = pool.liquidityUSD;
+  let endLiquidityUSD = wethBalance.times(weth.lastPriceUSD).times(BigDecimal.fromString("2"));
+  let deltaLiquidityUSD = endLiquidityUSD.minus(startLiquidityUSD);
+  let deltaBeans = toBigInt(beanBalance.minus(wethBalance.times(weth.lastPriceUSD)), 6);
 
-    updatePoolValues(event.address.toHexString(), event.block.timestamp, event.block.number, ZERO_BI, ZERO_BD, deltaLiquidityUSD)
+  updatePoolValues(event.address.toHexString(), event.block.timestamp, event.block.number, ZERO_BI, ZERO_BD, deltaLiquidityUSD, deltaBeans);
 
-    let oldPrice = pool.lastPrice
-    let currentBeanPrice = beanBalance.div((wethBalance).times(weth.lastPriceUSD))
+  let currentBeanPrice = beanBalance.div(wethBalance.times(weth.lastPriceUSD));
 
-    updatePoolPrice(event.address.toHexString(), event.block.timestamp, event.block.number, currentBeanPrice)
+  updatePoolPrice(event.address.toHexString(), event.block.timestamp, event.block.number, currentBeanPrice);
+
+  updateBeanValues(BEAN_ERC20_V1.toHexString(), event.block.timestamp, currentBeanPrice, ZERO_BI, ZERO_BI, ZERO_BD, deltaLiquidityUSD);
 }
 
 function updatePriceETH(): void {
-    let token = loadOrCreateToken(WETH.toHexString())
-    let pair = UniswapV2Pair.bind(WETH_USDC_PAIR)
+  let token = loadOrCreateToken(WETH.toHexString());
+  let pair = UniswapV2Pair.bind(WETH_USDC_PAIR);
 
-    let reserves = pair.try_getReserves()
-    if (reserves.reverted) { return }
+  let reserves = pair.try_getReserves();
+  if (reserves.reverted) {
+    return;
+  }
 
-    // Token 0 is USDC and Token 1 is WETH
-    token.lastPriceUSD = toDecimal(reserves.value.value0).div(toDecimal(reserves.value.value1, 18))
-    token.save()
+  // Token 0 is USDC and Token 1 is WETH
+  token.lastPriceUSD = toDecimal(reserves.value.value0).div(toDecimal(reserves.value.value1, 18));
+  token.save();
 }

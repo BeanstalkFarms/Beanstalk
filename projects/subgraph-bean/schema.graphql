@@ -1,24 +1,51 @@
 type Token @entity {
+  "Smart contract address of the token"
   id: ID!
+
+  "Number of decimals"
   decimals: BigInt!
+
+  "Last USD price calculated"
   lastPriceUSD: BigDecimal!
 }
 
 type Bean @entity {
+  "Contract address of the Bean token"
   id: ID!
-  decimals: BigInt!
+
+  "Current supply"
   supply: BigInt!
-  marketCap: BigDecimal!
-  volume: BigInt!
-  volumeUSD: BigDecimal!
-  liquidity: BigInt!
-  liquidityUSD: BigDecimal!
+
+  "Latest price seen"
   price: BigDecimal!
+
+  "Current market cap"
+  marketCap: BigDecimal!
+
+  "Cumulative volume of beans traded"
+  volume: BigInt!
+
+  "Cumulative volume in USD value"
+  volumeUSD: BigDecimal!
+
+  "Current liquidity in USD value"
+  liquidityUSD: BigDecimal!
+
+  "Cumulative number of crosses"
   crosses: Int!
+
+  "Last timestamp a cross was seen"
   lastCross: BigInt!
+  "Last season seen from Beanstalk"
   lastSeason: Int!
-  pools: [Pool!]! #@derivedFrom(field: "bean") # The pools containing the Bean token 
+
+  "Pools that include this Bean"
+  pools: [Pool!]!
+
+  "Hourly snapshot of Bean data"
   hourlySnapshot: [BeanHourlySnapshot!]! @derivedFrom(field: "bean")
+
+  "Daily snapshot of Bean data"
   dailySnapshot: [BeanDailySnapshot!]! @derivedFrom(field: "bean")
 }
 
@@ -29,14 +56,12 @@ type BeanHourlySnapshot @entity {
   marketCap: BigDecimal!
   volume: BigInt!
   volumeUSD: BigDecimal!
-  liquidity: BigInt!
   liquidityUSD: BigDecimal!
   price: BigDecimal!
   crosses: Int!
   deltaBeans: BigInt!
   deltaVolume: BigInt!
   deltaVolumeUSD: BigDecimal!
-  deltaLiquidity: BigInt!
   deltaLiquidityUSD: BigDecimal!
   deltaCrosses: Int!
   crossEvents: [Cross!]! @derivedFrom(field: "hourlySnapshot")
@@ -52,14 +77,12 @@ type BeanDailySnapshot @entity {
   marketCap: BigDecimal!
   volume: BigInt!
   volumeUSD: BigDecimal!
-  liquidity: BigInt!
   liquidityUSD: BigDecimal!
   price: BigDecimal!
   crosses: Int!
   deltaBeans: BigInt!
   deltaVolume: BigInt!
   deltaVolumeUSD: BigDecimal!
-  deltaLiquidity: BigInt!
   deltaLiquidityUSD: BigDecimal!
   deltaCrosses: Int!
   crossEvents: [Cross!]! @derivedFrom(field: "dailySnapshot")
@@ -88,7 +111,6 @@ type Pool @entity {
   lastPrice: BigDecimal!
   volume: BigInt!
   volumeUSD: BigDecimal!
-  liquidity: BigInt!
   liquidityUSD: BigDecimal!
   crosses: Int!
   crossEvents: [Cross!]! @derivedFrom(field: "pool")
@@ -103,14 +125,12 @@ type PoolHourlySnapshot @entity {
   lastPrice: BigDecimal!
   volume: BigInt!
   volumeUSD: BigDecimal!
-  liquidity: BigInt!
   liquidityUSD: BigDecimal!
   crosses: Int!
   utilization: BigDecimal!
   deltaBeans: BigInt!
   deltaVolume: BigInt!
   deltaVolumeUSD: BigDecimal!
-  deltaLiquidity: BigInt!
   deltaLiquidityUSD: BigDecimal!
   deltaCrosses: Int!
   crossEvents: [Cross!]! @derivedFrom(field: "poolHourlySnapshot")
@@ -119,21 +139,18 @@ type PoolHourlySnapshot @entity {
   updatedAt: BigInt!
 }
 
-
 type PoolDailySnapshot @entity {
   id: ID!
   pool: Pool!
   lastPrice: BigDecimal!
   volume: BigInt!
   volumeUSD: BigDecimal!
-  liquidity: BigInt!
   liquidityUSD: BigDecimal!
   crosses: Int!
   utilization: BigDecimal!
   deltaBeans: BigInt!
   deltaVolume: BigInt!
   deltaVolumeUSD: BigDecimal!
-  deltaLiquidity: BigInt!
   deltaLiquidityUSD: BigDecimal!
   deltaCrosses: Int!
   crossEvents: [Cross!]! @derivedFrom(field: "poolDailySnapshot")

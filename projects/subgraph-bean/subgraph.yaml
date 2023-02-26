@@ -3,6 +3,28 @@ schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum/contract
+    name: BeanV1
+    network: mainnet
+    source:
+      address: "0xDC59ac4FeFa32293A95889Dc396682858d52e5Db"
+      abi: Bean
+      startBlock: 12974077
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Bean
+      abis:
+        - name: Bean
+          file: ./abis/ERC20.json
+        - name: CurvePrice
+          file: ./abis/CurvePrice.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/BeanHandler.ts
+  - kind: ethereum/contract
     name: Bean
     network: mainnet
     source:
@@ -21,8 +43,8 @@ dataSources:
         - name: CurvePrice
           file: ./abis/CurvePrice.json
       eventHandlers:
-      - event: Transfer(indexed address,indexed address,uint256)
-        handler: handleTransfer
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
       file: ./src/BeanHandler.ts
   - kind: ethereum/contract
     name: Bean3CRV
@@ -43,18 +65,18 @@ dataSources:
         - name: CurvePrice
           file: ./abis/CurvePrice.json
       eventHandlers:
-      - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
-        handler: handleTokenExchange
-      - event: TokenExchangeUnderlying(indexed address,int128,uint256,int128,uint256)
-        handler: handleTokenExchangeUnderlying
-      - event: AddLiquidity(indexed address,uint256[2],uint256[2],uint256,uint256)
-        handler: handleAddLiquidity
-      - event: RemoveLiquidity(indexed address,uint256[2],uint256[2],uint256)
-        handler: handleRemoveLiquidity
-      - event: RemoveLiquidityImbalance(indexed address,uint256[2],uint256[2],uint256,uint256)
-        handler: handleRemoveLiquidityImbalance
-      - event: RemoveLiquidityOne(indexed address,uint256,uint256,uint256)
-        handler: handleRemoveLiquidityOne
+        - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
+          handler: handleTokenExchange
+        - event: TokenExchangeUnderlying(indexed address,int128,uint256,int128,uint256)
+          handler: handleTokenExchangeUnderlying
+        - event: AddLiquidity(indexed address,uint256[2],uint256[2],uint256,uint256)
+          handler: handleAddLiquidity
+        - event: RemoveLiquidity(indexed address,uint256[2],uint256[2],uint256)
+          handler: handleRemoveLiquidity
+        - event: RemoveLiquidityImbalance(indexed address,uint256[2],uint256[2],uint256,uint256)
+          handler: handleRemoveLiquidityImbalance
+        - event: RemoveLiquidityOne(indexed address,uint256,uint256,uint256)
+          handler: handleRemoveLiquidityOne
       file: ./src/Bean3CRVHandler.ts
   - kind: ethereum/contract
     name: Beanstalk
@@ -106,8 +128,8 @@ dataSources:
         #   handler: handleBurn
         # - event: Mint(indexed address,uint256,uint256)
         #   handler: handleMint
-        # - event: Swap(indexed address,uint256,uint256,uint256,uint256,indexed address)
-        #   handler: handleSwap
+        - event: Swap(indexed address,uint256,uint256,uint256,uint256,indexed address)
+          handler: handleSwap
         - event: Sync(uint112,uint112)
           handler: handleSync
         # - event: Transfer(indexed address,indexed address,uint256)
