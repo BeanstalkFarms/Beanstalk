@@ -4,6 +4,8 @@ export enum GovSpace {
   BeanstalkDAO    = 'beanstalkdao.eth',
   BeanstalkFarms  = 'beanstalkfarms.eth',
   BeanSprout      = 'wearebeansprout.eth',
+  // TEST
+  BeanstalkFarmsCommittee = 'beanstalkfarmscommittee.eth'
 }
 
 export enum GovProposalType {
@@ -14,6 +16,8 @@ export enum GovProposalType {
   BFCP_C = 'BFCP-C',
   BFCP_D = 'BFCP-D',
   BSP = 'BSP',
+  // TEST
+  BFCP_C_X = 'BFCP-C-X'
 }
 
 export const SNAPSHOT_SPACES = Object.values(GovSpace);

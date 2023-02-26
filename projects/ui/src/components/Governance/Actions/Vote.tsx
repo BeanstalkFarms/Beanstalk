@@ -6,11 +6,10 @@ import snapshot from '@snapshot-labs/snapshot.js';
 import { Wallet } from 'ethers';
 import BigNumber from 'bignumber.js';
 import { useSelector } from 'react-redux';
-import toast from 'react-hot-toast';
 import { useVotesQuery } from '~/generated/graphql';
 import DescriptionButton from '~/components/Common/DescriptionButton';
 import { useSigner } from '~/hooks/ledger/useSigner';
-import { displayBN, displayFullBN, parseError } from '~/util';
+import { arraysEqual, displayBN, displayFullBN } from '~/util';
 import TransactionToast from '~/components/Common/TxnToast';
 import { Proposal } from '~/util/Governance';
 import { AppState } from '~/state';
@@ -23,27 +22,33 @@ import useProposalBlockData from '~/hooks/beanstalk/useProposalBlockData';
 import StatHorizontal from '~/components/Common/StatHorizontal';
 
 type VoteFormValues = {
-  choice: number | undefined;
+  /** For 'single-choice' proposals */
+  choice: number | number[] | undefined;
+  /** For 'approval' proposals */
+  choices: number[] | undefined;
 };
 
 const VoteForm: FC<FormikProps<VoteFormValues> & {
   proposal: Proposal;
   quorum: ReturnType<typeof useProposalBlockData>;
-  existingChoice: number | undefined;
+  existingChoice: number | number[] | undefined;
 }> = ({
-  values,
-  setFieldValue,
-  isSubmitting,
-  proposal,
-  quorum,
-  existingChoice
-}) => {
+        values,
+        setFieldValue,
+        isSubmitting,
+        proposal,
+        quorum,
+        existingChoice
+      }) => {
   /// State
   const account = useAccount();
   const farmerSilo = useSelector<AppState, AppState['_farmer']['silo']>((state) => state._farmer.silo);
-  
+
   ///  Quorum
-  const { data: { totalStalk, stalkForQuorum, pctStalkForQuorum: quorumPct, votingPower, tag }, loading: loadingQuorum } = quorum;
+  const {
+    data: { totalStalk, stalkForQuorum, pctStalkForQuorum: quorumPct, votingPower, tag },
+    loading: loadingQuorum
+  } = quorum;
 
   /// Time
   const today = new Date();
@@ -52,22 +57,155 @@ const VoteForm: FC<FormikProps<VoteFormValues> & {
 
   /// Handlers
   const handleClick = useCallback((choice: number | undefined) => () => {
-    setFieldValue('choice', choice);
-  }, [setFieldValue]);
+    if (proposal.type === 'single-choice') {
+      setFieldValue('choice', choice);
+    }
+    if (choice && proposal.type === 'approval') {
+      if (values.choices?.includes(choice)) {
+        setFieldValue('choices', values.choices.filter((c) => c !== choice));
+      } else {
+        setFieldValue('choices', [...(values.choices ?? []), choice]);
+      }
+    }
+  }, [proposal.type, setFieldValue, values.choices]);
 
-  /// Option isn't selected or the voting period has ended
   const canVote = farmerSilo.stalk.active.gt(0);
-  const alreadyVotedThisChoice = (
-    existingChoice !== undefined
-    && existingChoice === values.choice
-  );
   const isClosed = differenceInTime <= 0;
-  const isInvalid = (
-    values.choice === undefined // no choice selected
-    || alreadyVotedThisChoice // already voted for this same choice
-    || isClosed // expired
-    || !canVote // no stalk
-  );
+
+  const createVoteButtons = () => {
+    switch (proposal.type) {
+      case 'single-choice': {
+        /// Option isn't selected or the voting period has ended
+        const alreadyVotedThisChoice = (
+          existingChoice !== undefined
+          && existingChoice === values.choice
+        );
+        const isInvalid = (
+          values.choice === undefined // no choice selected
+          || alreadyVotedThisChoice // already voted for this same choice
+          || isClosed // expired
+          || !canVote // no stalk
+        );
+        return (
+          account && proposal.choices ? (
+            <>
+              {canVote && (
+                <Stack gap={1}>
+                  {proposal.choices.map((label: string, index: number) => {
+                    const choice = index + 1;
+                    const isSelected = values.choice === choice;
+                    return (
+                      <DescriptionButton
+                        key={choice}
+                        title={`${isSelected ? '✓ ' : ''}${label}`}
+                        disabled={!canVote || isSubmitting}
+                        onClick={handleClick(isSelected ? undefined : choice)}
+                        isSelected={isSelected}
+                        sx={{ p: 1 }}
+                        StackProps={{ sx: { justifyContent: 'center' } }}
+                        TitleProps={{ variant: 'body1' }}
+                        size="medium"
+                      />
+                    );
+                  })}
+                </Stack>
+              )}
+              <LoadingButton
+                type="submit"
+                variant="contained"
+                color="primary"
+                size="medium"
+                loading={isSubmitting}
+                disabled={isInvalid || isSubmitting}
+              >
+                {canVote
+                  ? (
+                    alreadyVotedThisChoice
+                      ? `Already Voted: ${proposal.choices[(existingChoice as number) - 1]}`
+                      : 'Vote'
+                  )
+                  : 'Need Stalk to Vote'
+                }
+              </LoadingButton>
+            </>
+          ) : (
+            <WalletButton />
+          )
+        );
+      }
+      case 'approval': {
+        const isInvalid = (
+          values.choices?.length === 0 // no choice selected
+          || isClosed // expired
+          || !canVote // no stalk
+        );
+        const alreadyVotedThisChoice = (
+          existingChoice !== undefined
+          && arraysEqual(existingChoice as number[], values.choices as number[])
+        );
+        return (
+          account && proposal.choices ? (
+            <>
+              {canVote && (
+                <Stack gap={1}>
+                  {proposal.choices.map((label: string, index: number) => {
+                    const choice = index + 1;
+                    const isSelected = values.choices?.includes(choice);
+                    return (
+                      <DescriptionButton
+                        key={choice}
+                        title={`${isSelected ? '✓ ' : ''}${label}`}
+                        disabled={!canVote || isSubmitting}
+                        onClick={handleClick(choice)}
+                        isSelected={isSelected}
+                        sx={{ p: 1 }}
+                        StackProps={{ sx: { justifyContent: 'center' } }}
+                        TitleProps={{ variant: 'body1' }}
+                        size="medium"
+                      />
+                    );
+                  })}
+                </Stack>
+              )}
+              <LoadingButton
+                type="submit"
+                variant="contained"
+                color="primary"
+                size="medium"
+                loading={isSubmitting}
+                disabled={isInvalid || isSubmitting}
+              >
+                {canVote
+                  ? (
+                    alreadyVotedThisChoice
+                      ? 'Already Voted'
+                      : 'Vote'
+                  )
+                  : 'Need Stalk to Vote'
+                }
+              </LoadingButton>
+            </>
+          ) : (
+            <WalletButton />
+          )
+        );
+      }
+      default: {
+        return (
+          <Button
+            variant="contained"
+            color="primary"
+            size="medium"
+            href={proposal.link || SNAPSHOT_LINK}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Vote on Snapshot.org &rarr;
+          </Button>
+        );
+      }
+    }
+  };
 
   if (!proposal.choices) return null;
 
@@ -81,8 +219,8 @@ const VoteForm: FC<FormikProps<VoteFormValues> & {
     <Form autoComplete="off">
       <Stack gap={1}>
         {/**
-          * Progress by choice
-          */}
+         * Progress by choice
+         */}
         <Stack px={1} pb={1} gap={1.5}>
           {(votingPower && totalStalk) && (
             <StatHorizontal
@@ -139,7 +277,7 @@ const VoteForm: FC<FormikProps<VoteFormValues> & {
                     <Tooltip title={`You voted: ${proposal.choices![existingChoice - 1]}`}>
                       <span>✓&nbsp;</span>
                     </Tooltip>
-                    ) : null}
+                  ) : null}
                   {choice}
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
@@ -162,67 +300,9 @@ const VoteForm: FC<FormikProps<VoteFormValues> & {
           ))}
         </Stack>
         {/**
-          * Voting
-          */}
-        {!isClosed && (
-          proposal.type === 'single-choice' ? (
-            account ? (
-              <>
-                {canVote && (
-                  <Stack gap={1}>
-                    {proposal.choices.map((label: string, index: number) => {
-                      const choice = index + 1;
-                      const isSelected = values.choice === choice;
-                      return (
-                        <DescriptionButton
-                          key={choice}
-                          title={`${isSelected ? '✓ ' : ''}${label}`}
-                          disabled={!canVote || isSubmitting}
-                          onClick={handleClick(isSelected ? undefined : choice)}
-                          isSelected={isSelected}
-                          sx={{ p: 1 }}
-                          StackProps={{ sx: { justifyContent: 'center' } }}
-                          TitleProps={{ variant: 'body1' }}
-                          size="medium"
-                        />
-                      );
-                    })}
-                  </Stack>
-                )}
-                <LoadingButton
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                  size="medium"
-                  loading={isSubmitting}
-                  disabled={isInvalid || isSubmitting}
-                >
-                  {canVote
-                    ? (
-                      alreadyVotedThisChoice
-                        ? `Already Voted: ${proposal.choices[existingChoice - 1]}`
-                        : 'Vote'
-                    )
-                    : 'Need Stalk to Vote'
-                  }
-                </LoadingButton>
-              </>
-            ) : (
-              <WalletButton />
-            )
-          ) : (
-            <Button
-              variant="contained"
-              color="primary"
-              size="medium"
-              href={proposal.link || SNAPSHOT_LINK}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Vote on Snapshot.org &rarr;
-            </Button>
-          )
-        )}
+         * Voting
+         */}
+        {!isClosed && createVoteButtons()}
       </Stack>
     </Form>
   );
@@ -252,8 +332,10 @@ const Vote: FC<{
 
   /// Form setup
   const initialValues: VoteFormValues = useMemo(() => ({
-    choice: existingChoice
+    choice: existingChoice,
+    choices: existingChoice
   }), [existingChoice]);
+
   const onSubmit = useCallback(
     async (
       values: VoteFormValues,
@@ -263,9 +345,9 @@ const Vote: FC<{
       try {
         const _account = await signer?.getAddress();
         if (!_account) throw new Error('Missing signer.');
-        if (values.choice === undefined) throw new Error('Select a voting choice.'); // use undefined here since 'choice' can be numerical zero 
+        if (values.choice === undefined && values.choices === undefined) throw new Error('Select a voting choice.'); // use undefined here since 'choice' can be numerical zero
         if (!proposal) throw new Error('Error loading proposal data.');
-        if (proposal.type !== 'single-choice') throw new Error('Unsupported proposal type. Please vote through snapshot.org directly.');
+        if (proposal.type !== 'single-choice' && proposal.type !== 'approval') throw new Error('Unsupported proposal type. Please vote through snapshot.org directly.');
         if (!proposal?.space?.id) throw new Error('Unknown space.');
 
         txToast = new TransactionToast({
@@ -278,8 +360,8 @@ const Vote: FC<{
         const message = {
           space: proposal.space.id,
           proposal: proposal.id,
-          type: proposal.type as 'single-choice', // 'single-choice' | 'approval' | 'quadratic' | 'ranked-choice' | 'weighted' | 'basic';
-          choice: values.choice,
+          type: proposal.type as 'single-choice' | 'approval', // 'single-choice' | 'approval' | 'quadratic' | 'ranked-choice' | 'weighted' | 'basic';
+          choice: proposal.type === 'single-choice' ? values.choice : values.choices,
           app: 'snapshot'
         };
 
@@ -296,10 +378,10 @@ const Vote: FC<{
       } catch (err) {
         console.error(err);
         if (txToast) {
-          txToast.error(err)
+          txToast.error(err);
         } else {
-          let errorToast = new TransactionToast({})
-          errorToast.error(err)
+          const errorToast = new TransactionToast({});
+          errorToast.error(err);
         }
         formActions.setSubmitting(false);
       }

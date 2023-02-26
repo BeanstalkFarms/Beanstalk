@@ -10,7 +10,7 @@ import { FC } from '~/types';
 import { ChipLabel, StyledTab } from '~/components/Common/Tabs';
 
 /// Variables
-const SLUGS = ['dao', 'beanstalk-farms', 'bean-sprout'];
+const SLUGS = ['dao', 'beanstalk-farms', 'bean-sprout', 'beanstalk-farms-committee'];
 
 const Proposals: FC<{}> = () => {
   const [tab, handleChange] = useTabs(SLUGS, 'type');
@@ -67,6 +67,7 @@ const Proposals: FC<{}> = () => {
   const daoProposals = filterProposals(0);
   const beanstalkFarmsProposals = filterProposals(1);
   const beanSproutProposals = filterProposals(2);
+  const beanstalkFarmsCommittee = filterProposals(3);
 
   return (
     <Module>
@@ -92,11 +93,19 @@ const Proposals: FC<{}> = () => {
             </ChipLabel>
           }
         />
+        <StyledTab
+          label={
+            <ChipLabel name="Test Proposals">
+              {beanstalkFarmsCommittee.activeProposals || null}
+            </ChipLabel>
+          }
+        />
       </ModuleTabs>
       <ModuleContent>
         {tab === 0 && <ProposalList proposals={daoProposals.allProposals} />}
         {tab === 1 && <ProposalList proposals={beanstalkFarmsProposals.allProposals} />}
         {tab === 2 && <ProposalList proposals={beanSproutProposals.allProposals} />}
+        {tab === 3 && <ProposalList proposals={beanstalkFarmsCommittee.allProposals} />}
       </ModuleContent>
     </Module>
   );
