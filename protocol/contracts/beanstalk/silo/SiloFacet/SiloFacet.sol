@@ -365,6 +365,10 @@ contract SiloFacet is TokenSilo {
         return _plant(msg.sender);
     }
 
+    function plant(address account) external payable returns (uint256 beans) {
+        return _plant(msg.sender);
+    }
+
     /** 
      * @notice Claim rewards from a Season Of Plenty (SOP)
      * @dev FIXME(naming): rename to Flood
