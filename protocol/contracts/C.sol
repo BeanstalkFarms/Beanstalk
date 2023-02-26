@@ -10,6 +10,7 @@ import "./interfaces/ICurve.sol";
 import "./interfaces/IFertilizer.sol";
 import "./interfaces/IProxyAdmin.sol";
 import "./libraries/Decimal.sol";
+// import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -52,12 +53,6 @@ library C {
     uint256 private constant STALK_PER_BEAN = 10000;
     uint256 private constant ROOTS_BASE = 1e12;
     // uint32 private constant SILOV3_START_SEASON = 10; //maybe move to constant here eventually
-
-    // Constants for old seeds values of the original 4 whitelisted tokens
-    uint256 private constant SEEDS_BEAN = 2;
-    uint256 private constant SEEDS_LP = 4;
-    uint256 private constant SEEDS_UNRIPE_BEAN = 2;
-    uint256 private constant SEEDS_UNRIPE_LP = 4;
 
     // Exploit
     uint256 private constant UNRIPE_LP_PER_DOLLAR = 1884592; // 145_113_507_403_282 / 77_000_000
@@ -136,36 +131,6 @@ library C {
 
     function getStalkPerBean() internal pure returns (uint256) {
       return STALK_PER_BEAN;
-    }
-
-    function getSeedsBean() internal pure returns (uint256) {
-        return SEEDS_BEAN;
-    }
-
-    function getSeedsLP() internal pure returns (uint256) {
-        return SEEDS_LP;
-    }
-
-    function getSeedsUnripeBean() internal pure returns (uint256) {
-        return SEEDS_UNRIPE_BEAN;
-    }
-
-    function getSeedsUnripeLP() internal pure returns (uint256) {
-        return SEEDS_UNRIPE_LP;
-    }
-
-    function getSeedsPerToken(address token) internal pure returns (uint256) {
-        if (token == BEAN) {
-            return SEEDS_BEAN;
-        } else if (token == UNRIPE_BEAN) {
-            return SEEDS_UNRIPE_BEAN;
-        } else if (token == UNRIPE_LP) {
-            return SEEDS_UNRIPE_LP;
-        } else if (token == CURVE_BEAN_METAPOOL) {
-            return SEEDS_LP;
-        }
-        require(false, "getSeedsPerToken: Invalid");
-        return 0;
     }
 
     function getRootsBase() internal pure returns (uint256) {

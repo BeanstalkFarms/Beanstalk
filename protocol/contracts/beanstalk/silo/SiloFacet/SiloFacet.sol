@@ -504,8 +504,12 @@ contract SiloFacet is TokenSilo {
         view
         returns (uint32 season)
     {
-        require(LibLegacyTokenSilo.isDepositSeason(token, grownStalkPerBdv), "No matching season for input grownStalkPerBdv");
-        season = LibLegacyTokenSilo.grownStalkPerBdvToSeason(token, grownStalkPerBdv);
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 seedsPerBdv = getSeedsPerToken(address(token));
+
+        require(LibLegacyTokenSilo.isDepositSeason(seedsPerBdv, grownStalkPerBdv), "No matching season for input grownStalkPerBdv");
+
+        season = LibLegacyTokenSilo.grownStalkPerBdvToSeason(seedsPerBdv, grownStalkPerBdv);
     }
 
     function seasonToGrownStalkPerBdv(IERC20 token, uint32 season)
@@ -513,6 +517,12 @@ contract SiloFacet is TokenSilo {
         view
         returns (int128 grownStalkPerBdv)
     {
-        grownStalkPerBdv = LibLegacyTokenSilo.seasonToGrownStalkPerBdv(token, season);
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 seedsPerBdv = getSeedsPerToken(address(token));
+        grownStalkPerBdv = LibLegacyTokenSilo.seasonToGrownStalkPerBdv(seedsPerBdv, season);
+    }
+
+    function getSeedsPerToken(address token) public view virtual returns (uint256) {
+        return LibLegacyTokenSilo.getSeedsPerToken(token);
     }
 }

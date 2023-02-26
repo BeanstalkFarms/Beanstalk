@@ -21,16 +21,13 @@ describe('Convert', function () {
     this.convert = await ethers.getContractAt('MockConvertFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('MockToken', BEAN);
 
+    
+
     this.siloToken = await ethers.getContractFactory("MockToken");
     this.siloToken = await this.siloToken.deploy("Silo", "SILO")
     await this.siloToken.deployed()
 
-    await this.silo.mockWhitelistToken(
-      this.siloToken.address, 
-      this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
-      '10000', 
-      1e6 //aka "1 seed"
-    );
+
 
     console.log('totalstalk 1: ', await this.silo.totalStalk());
 
@@ -43,11 +40,22 @@ describe('Convert', function () {
     await this.siloToken.connect(user).approve(this.silo.address, '100000000000');
     await this.siloToken.mint(userAddress, '10000');
     await this.season.teleportSunrise(10);
-    await this.season.siloSunrise(0);
 
+    this.season.deployGrownStalkPerBdv();
+
+    await this.silo.mockWhitelistToken(
+      this.siloToken.address, 
+      this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
+      '10000', 
+      1e6 //aka "1 seed"
+    );
+
+    await this.season.siloSunrise(0);
+    console.log('await this.silo.cumulativeGrownStalkPerBdv(this.siloToken.address): ', await this.silo.cumulativeGrownStalkPerBdv(this.siloToken.address));
     await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL);
 
     await this.season.siloSunrise(0);
+    console.log('await this.silo.cumulativeGrownStalkPerBdv(this.siloToken.address): ', await this.silo.cumulativeGrownStalkPerBdv(this.siloToken.address));
 
     await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL); //something about this deposit adds extra stalk
   });
@@ -68,11 +76,12 @@ describe('Convert', function () {
 
       it('crate balance too low', async function () {
         //params are token, grownStalkPerBdv, amounts, maxtokens
-        await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['0'], ['150'], '150')).to.be.revertedWith('Silo: Crate balance too low.') //TODOSEEDS write a test that reverts with Silo: Crate balance too low.
-        // await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['0'], ['150'], '150')).to.be.revertedWith('Must line up with season')
+        // await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['0'], ['150'], '150')).to.be.revertedWith('Silo: Crate balance too low.') //before moving to constants for the original 4 whitelisted tokens (post replant), this test would revert with 'Silo: Crate balance too low.', but now it reverts with 'Must line up with season' because there's no constant seeds amount hardcoded in for this test token
+        await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['0'], ['150'], '150')).to.be.revertedWith('Must line up with season')
       });
 
       it('not enough removed', async function () {
+        console.log('await this.silo.cumulativeGrownStalkPerBdv(this.siloToken.address): ', await this.silo.cumulativeGrownStalkPerBdv(this.siloToken.address));
         await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['2'], ['100'], '150')).to.be.revertedWith('Convert: Not enough tokens removed.')
       });
     })
@@ -150,8 +159,8 @@ describe('Convert', function () {
       })
 
       it('Emits event', async function () { 
-        // console.log('checking for first emit');
-        // await expect(this.result).to.emit(this.convert, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [1, 2], ['100', '50'], '150');
+        console.log('checking for first emit');
+        await expect(this.result).to.emit(this.convert, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [1, 2], ['100', '50'], '150', ['100', '50']);
         console.log('checking for second emit');
         await expect(this.result).to.emit(this.convert, 'MockConvert').withArgs('100', '150');
       })

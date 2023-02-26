@@ -195,7 +195,7 @@ contract Silo is SiloExit {
             address token = tokens[i];
             int128[] memory grownStalkPerBdvsForToken = grownStalkPerBdvs[i];
             //get how many seeds there should be per bdv
-            uint256 seedPerBdv = C.getSeedsPerToken(address(token));
+            uint256 seedPerBdv = LibLegacyTokenSilo.getSeedsPerToken(address(token));
             uint256 totalBdv = 0;
 
             for (uint256 j = 0; j < grownStalkPerBdvsForToken.length; j++) {

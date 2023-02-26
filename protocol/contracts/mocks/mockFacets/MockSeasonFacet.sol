@@ -295,4 +295,7 @@ contract MockSeasonFacet is SeasonFacet {
 
         s.season.grownStalkPerBdvStartSeason = uint16(s.season.current);
     }
+
+    //constants for old seeds values
+    
 }

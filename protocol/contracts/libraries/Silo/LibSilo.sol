@@ -248,9 +248,11 @@ library LibSilo {
         console.logInt(endStalkPerBDV);
         console.log('stalkReward bdv: ', bdv);
         int128 reward = endStalkPerBDV.sub(startStalkPerBDV).mul(int128(bdv));
+        console.log('stalkReward final reward: ', uint256(reward));
         return uint128(reward);
     }
 
+    //at the moment this is only used for MockSiloFacet - remove somehow? just do seeds.mul(seasons) there?
     function stalkRewardLegacy(uint256 seeds, uint32 seasons)
         internal
         pure
@@ -258,4 +260,5 @@ library LibSilo {
     {
         return seeds.mul(seasons);
     }
+
 }

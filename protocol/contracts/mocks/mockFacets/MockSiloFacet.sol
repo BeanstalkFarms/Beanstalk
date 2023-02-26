@@ -47,7 +47,7 @@ contract MockSiloFacet is SiloFacet {
         uint256 unripeLP = getUnripeForAmount(t, amount);
         LibTokenSilo.incrementTotalDeposited(C.unripeLPAddress(), unripeLP);
         bdv = bdv.mul(C.initialRecap()).div(1e18);
-        uint256 seeds = bdv.mul(C.getSeedsUnripeLP());
+        uint256 seeds = bdv.mul(LibLegacyTokenSilo.getSeedsPerToken(C.unripeLPAddress()));
         uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalkIssuedPerBdv).add(LibSilo.stalkRewardLegacy(seeds, _season() - _s));
         LibSilo.mintStalk(msg.sender, stalk);
         uint256 newBdv = s.a[msg.sender].mowStatuses[C.unripeLPAddress()].bdv.add(amount);
@@ -61,7 +61,7 @@ contract MockSiloFacet is SiloFacet {
         LibTokenSilo.incrementTotalDeposited(C.unripeBeanAddress(), amount);
         amount = amount.mul(C.initialRecap()).div(1e18);
         console.log('mockUnripeBeanDeposit amount: ', amount);
-        uint256 seeds = amount.mul(C.getSeedsUnripeBean());
+        uint256 seeds = amount.mul(LibLegacyTokenSilo.getSeedsPerToken(C.unripeBeanAddress()));
         console.log('mockUnripeBeanDeposit _season(): ', _season());
         console.log('mockUnripeBeanDeposit _s: ', _s);
         console.log('s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv: ', s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv);
@@ -77,5 +77,19 @@ contract MockSiloFacet is SiloFacet {
         if (t == 0) return amount.mul(AMOUNT_TO_BDV_BEAN_ETH).div(1e18);
         else if (t == 1) return amount.mul(AMOUNT_TO_BDV_BEAN_3CRV).div(1e18);
         else return amount.mul(AMOUNT_TO_BDV_BEAN_LUSD).div(1e18);
+    }
+
+    function getSeedsPerToken(address token) public view override returns (uint256) { //could be pure without console log?
+        if (token == C.beanAddress()) {
+            return 2;
+        } else if (token == C.unripeBeanAddress()) {
+            return 2;
+        } else if (token == C.unripeLPAddress()) {
+            return 4;
+        } else if (token == C.curveMetapoolAddress()) {
+            return 4;
+        }
+        console.log('returning 1 seed here');
+        return 1; //return 1 instead of zero so we can use 1 for testing purposes on stuff that hasn't been whitelisted (like in Convert.test)
     }
 }

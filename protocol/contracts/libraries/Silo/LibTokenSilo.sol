@@ -211,27 +211,27 @@ library LibTokenSilo {
         if (amount < crateAmount) {
             console.log('removeDepositFromAccount doing partial remove');
             uint256 removedBDV = amount.mul(crateBDV).div(crateAmount);
-            console.log('removedBDV: ', removedBDV);
+            console.log('removeDepositFromAccount removedBDV: ', removedBDV);
             uint256 updatedBDV = crateBDV.sub(removedBDV);
-            console.log('updatedBDV: ', updatedBDV);
+            console.log('removeDepositFromAccount updatedBDV: ', updatedBDV);
             uint256 updatedAmount = crateAmount.sub(amount);
-            console.log('updatedAmount: ', updatedAmount);
+            console.log('removeDepositFromAccount updatedAmount: ', updatedAmount);
                 
             require(
                 updatedBDV <= uint128(-1) && updatedAmount <= uint128(-1), //this code was here before, but maybe there's a better way to do this?
                 "Silo: uint128 overflow."
             );
 
-            d.amount = uint128(updatedAmount);
-            d.bdv = uint128(updatedBDV);
+            s.a[account].deposits[token][grownStalkPerBdv].amount = uint128(updatedAmount);
+            s.a[account].deposits[token][grownStalkPerBdv].bdv = uint128(updatedBDV);
 
             //verify this has to be a different var?
             uint256 updatedTotalBdvPartial = uint256(s.a[account].mowStatuses[token].bdv).sub(removedBDV);
-            console.log('updatedTotalBdvPartial: ', updatedTotalBdvPartial);
+            console.log('removeDepositFromAccount updatedTotalBdvPartial: ', updatedTotalBdvPartial);
             //remove from the mow status bdv amount, which keeps track of total token deposited per farmer
-            console.log('s.a[account].mowStatuses[token].bdv before partial remove: ', uint256(s.a[account].mowStatuses[token].bdv));    
+            console.log('removeDepositFromAccount s.a[account].mowStatuses[token].bdv before partial remove: ', uint256(s.a[account].mowStatuses[token].bdv));    
             s.a[account].mowStatuses[token].bdv = updatedTotalBdvPartial.toUint128();
-            console.log('s.a[account].mowStatuses[token].bdv after partial remove: ', uint256(s.a[account].mowStatuses[token].bdv));    
+            console.log('removeDepositFromAccount s.a[account].mowStatuses[token].bdv after partial remove: ', uint256(s.a[account].mowStatuses[token].bdv));    
 
             return removedBDV;
         }
@@ -249,10 +249,13 @@ library LibTokenSilo {
         uint256 originalCrateBDV = crateBDV;
 
         if (amount > crateAmount) {
-            require(LibLegacyTokenSilo.isDepositSeason(IERC20(token),grownStalkPerBdv), "Must line up with season");
+            uint256 seedsPerToken = LibLegacyTokenSilo.getSeedsPerToken(token);
+            require(LibLegacyTokenSilo.isDepositSeason(seedsPerToken, grownStalkPerBdv), "Must line up with season");
             amount -= crateAmount;
+
+
             
-            uint32 season = LibLegacyTokenSilo.grownStalkPerBdvToSeason(IERC20(token), grownStalkPerBdv);
+            uint32 season = LibLegacyTokenSilo.grownStalkPerBdvToSeason(seedsPerToken, grownStalkPerBdv);
             console.log('removeDepositFromAccount season: ', season);
             crateBDV = crateBDV.add(LibLegacyTokenSilo.removeDepositFromAccount(account, token, season, amount));
         }
@@ -329,10 +332,12 @@ library LibTokenSilo {
         bdv = s.a[account].deposits[token][grownStalkPerBdv].bdv;
         console.log('1 tokenDeposit amount: ', amount);
         console.log('1 tokenDeposit bdv: ', bdv);
-        if (LibLegacyTokenSilo.isDepositSeason(IERC20(token), grownStalkPerBdv)) {
+        uint256 seedsPerToken = LibLegacyTokenSilo.getSeedsPerToken(token);
+        
+        if (LibLegacyTokenSilo.isDepositSeason(seedsPerToken, grownStalkPerBdv)) {
             console.log('yes grownStalkPerBdv deposit was a season');
             (uint legacyAmount, uint legacyBdv) =
-                LibLegacyTokenSilo.tokenDeposit(account, address(token), LibLegacyTokenSilo.grownStalkPerBdvToSeason(IERC20(token), grownStalkPerBdv));
+                LibLegacyTokenSilo.tokenDeposit(account, address(token), LibLegacyTokenSilo.grownStalkPerBdvToSeason(seedsPerToken, grownStalkPerBdv));
             amount = amount.add(legacyAmount);
             bdv = bdv.add(legacyBdv);
             

@@ -203,29 +203,33 @@ library LibLegacyTokenSilo {
         return seeds.mul(seasons);
     }
 
-    function isDepositSeason(IERC20 token, int128 grownStalkPerBdv)
+    function isDepositSeason(uint256 seedsPerBdv, int128 grownStalkPerBdv)
         internal
         view
         returns (bool)
     {
-        console.log('isDepositSeason: ', address(token));
+        // console.log('isDepositSeason: ', address(token));
         console.log('isDepositSeason logging grownStalkPerBdv:');
         console.logInt(grownStalkPerBdv);
         
-        uint256 seedsPerBdv = C.getSeedsPerToken(address(token));
-        console.log('seedsPerBdv: ', seedsPerBdv);
+        if (seedsPerBdv == 0) {
+            return false; //shortcut since we know it's a newer token?
+        }
+
+        console.log('isDepositSeason seedsPerBdv: ', seedsPerBdv);
         return
             grownStalkPerBdv <= 0 && //old deposits in seasons will have a negative grown stalk per bdv
             uint256(-grownStalkPerBdv) % seedsPerBdv == 0;
     }
 
-    function seasonToGrownStalkPerBdv(IERC20 token, uint32 season)
+    function seasonToGrownStalkPerBdv(uint256 seedsPerBdv, uint32 season)
         internal
         view
         returns (int128 grownStalkPerBdv)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 seedsPerBdv = C.getSeedsPerToken(address(token));
+        
+        require(seedsPerBdv > 0, "Silo: Token not supported");
 
         //need current cumulativeGrownStalkPerBdv so we know what to subtract from?
         //int128 cumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(token);
@@ -249,7 +253,7 @@ library LibLegacyTokenSilo {
         grownStalkPerBdv = (int128(season)-int128(s.season.grownStalkPerBdvStartSeason)).mul(int128(seedsPerBdv));
     }
 
-    function grownStalkPerBdvToSeason(IERC20 token, int128 grownStalkPerBdv)
+    function grownStalkPerBdvToSeason(uint256 seedsPerBdv, int128 grownStalkPerBdv)
         internal
         view
         returns (uint32 season)
@@ -258,12 +262,14 @@ library LibLegacyTokenSilo {
         console.log('grownStalkPerBdvToSeason logging grown stalk per bdv');
         console.logInt(grownStalkPerBdv);
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 seedsPerBdv = C.getSeedsPerToken(address(token));
+        // uint256 seedsPerBdv = getSeedsPerToken(address(token));
+
+        require(seedsPerBdv > 0, "Silo: Token not supported");
 
         // uint32 lastUpdateSeasonStored = s.ss[address(token)].lastUpdateSeason;
         // console.log('grownStalkPerBdvToSeason lastUpdateSeasonStored: ', lastUpdateSeasonStored);
 
-        console.log('grownStalkPerBdvToSeason token: ', address(token));
+        // console.log('grownStalkPerBdvToSeason token: ', address(token));
         // console.log('s.ss[address(token)]: ', s.ss[address(token)]);
         console.log('grownStalkPerBdvToSeason seedsPerBdv: ', seedsPerBdv);
         // console.log('grownStalkPerBdv: %d', grownStalkPerBdv);
@@ -279,5 +285,20 @@ library LibLegacyTokenSilo {
         season = uint256(int128(s.season.grownStalkPerBdvStartSeason)+diff).toUint32();
         console.log('grownStalkPerBdvToSeason season: ', season);
         // season = seasonAs256.toUint32();
+    }
+
+
+    //this feels gas inefficient to me, maybe there's a better way? hardcode in values here?
+    function getSeedsPerToken(address token) internal view returns (uint256) {
+        if (token == C.beanAddress()) {
+            return 2;
+        } else if (token == C.unripeBeanAddress()) {
+            return 2;
+        } else if (token == C.unripeLPAddress()) {
+            return 4;
+        } else if (token == C.curveMetapoolAddress()) {
+            return 4;
+        }
+        return 0;
     }
 }
