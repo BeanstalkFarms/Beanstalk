@@ -139,7 +139,6 @@ const VoteForm: FC<FormikProps<VoteFormValues> & {
           || isClosed // expired
           || !canVote // no stalk
         );
-        console.log('LENGTH', values.choices?.length)
         const alreadyVotedThisChoice = (
           existingChoice !== undefined
           && arraysEqual(existingChoice as number[], values.choices as number[])
