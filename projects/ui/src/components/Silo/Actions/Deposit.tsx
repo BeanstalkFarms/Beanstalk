@@ -41,7 +41,7 @@ import useFarmerClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerC
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
-import { deposit as getDepositSummary } from '~/lib/Beanstalk/Silo/Deposit';
+import { depositSummary as getDepositSummary } from '~/lib/Beanstalk/Silo/Deposit';
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
 import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
