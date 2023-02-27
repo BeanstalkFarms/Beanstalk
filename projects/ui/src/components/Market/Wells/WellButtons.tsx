@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import downloadIcon from '~/img/beanstalk/interface/download.svg';
 import Row from '~/components/Common/Row';
 
+// Buttons that appear in top right of well detail page
 const WellButtons: React.FC = () => (
   <Stack direction="row" gap={1} alignItems="end" height="100%">
     <Button

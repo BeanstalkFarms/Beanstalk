@@ -13,6 +13,7 @@ export type RewardItemProps = {
   compact?: boolean;
 }
 
+// Used on well detail page between chart and activity table
 const WellStat: React.FC<RewardItemProps> = ({
   subTitle,
   tooltip,

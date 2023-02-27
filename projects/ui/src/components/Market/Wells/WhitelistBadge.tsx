@@ -2,6 +2,8 @@ import React from 'react';
 import { Chip } from '@mui/material';
 import { BeanstalkPalette, FontSize, FontWeight } from '~/components/App/muiTheme';
 
+// Badge appears on the Well Reserves box
+// Also appear on  main explore page in the wells listing
 const WhitelistBadge: React.FC<{ isWhitelisted: boolean }> = ({ isWhitelisted }) => (
   <>
     {isWhitelisted ? (

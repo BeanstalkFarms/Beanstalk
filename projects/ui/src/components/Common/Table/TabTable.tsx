@@ -119,7 +119,7 @@ const TabTable: FC<
         onRowClick={onRowClick}
         initialState={{
           sorting: {
-            sortModel: [{ field: 'placeInLine', sort: 'asc' }],
+            sortModel: [{ field: 'Time', sort: 'asc' }],
           }
         }}
         {...props}

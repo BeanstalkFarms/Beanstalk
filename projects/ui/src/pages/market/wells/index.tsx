@@ -9,6 +9,7 @@ import PageHeader from '~/components/Common/PageHeader';
 import Price from '~/components/Analytics/Bean/Price';
 import Wells from '~/components/Market/Wells/Wells';
 
+// Wells Explorer, main wells landing page
 const WellHomePage: React.FC = () => (
   <Container maxWidth="lg">
     <Stack gap={2}>
