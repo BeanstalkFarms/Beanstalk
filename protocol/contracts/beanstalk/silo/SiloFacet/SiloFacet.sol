@@ -365,8 +365,8 @@ contract SiloFacet is TokenSilo {
         return _plant(msg.sender);
     }
 
-    function plant(address account) external payable returns (uint256 beans) {
-        return _plant(msg.sender);
+    function plantForAccount(address account) external payable returns (uint256 beans) {
+        return _plant(account);
     }
 
     /** 
