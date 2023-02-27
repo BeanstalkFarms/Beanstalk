@@ -104,6 +104,13 @@ const DepositForm: FC<
   /// Derived
   const isReady = bdv.gt(0);
 
+  const tokenIn = values.tokens?.[0]?.token;
+  const claimPlantTxnActions = getClaimPlantTxnActions(
+    values.farmActions.selected || [],
+    values.farmActions.additional || [],
+    tokenIn ? sdk.tokens.BEAN.equals(tokenIn) : false
+  );
+
   ///
   const handleSelectTokens = useCallback((_tokens: Set<Token>) => {
       // If the user has typed some existing values in,
@@ -210,7 +217,11 @@ const DepositForm: FC<
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />
                 <AccordionDetails>
-                  <TxnPreview actions={actions} />
+                  <TxnPreview 
+                    actions={actions} 
+                    preActionsWithGraphic={claimPlantTxnActions.claiming}
+                    {...claimPlantTxnActions}
+                  />
                 </AccordionDetails>
               </Accordion>
             </Box>

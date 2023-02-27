@@ -339,10 +339,21 @@ const TXN_PREVIEW_LINE_WIDTH = 5;
 
 const TxnPreview : FC<{
   actions: (Action | undefined)[]
+  preActionsWithGraphic?: Action[] // Find a better way to do this?
+  preActions?: Action[] // Find a better way to do this?
+  postActions?: Action[] // Find a better way to do this?
 }> = ({
-  actions
+  actions,
+  preActionsWithGraphic = [],
+  preActions = [],
+  postActions = []
 }) => {
-  const instructionsByType = useMemo(() =>
+  const preInstructionsByType = useMemo(() => {
+    const grouped = groupBy(preActionsWithGraphic.filter((a) => a && a.type !== ActionType.BASE) as Action[], 'type');
+    return grouped;
+  }, [preActionsWithGraphic]);
+
+  const instructionsByType = useMemo(() => 
     // actions.reduce((prev, curr) => {
     //   if (curr.type !== ActionType.BASE) {
     //     prev.grouped[curr.type] = curr;
@@ -351,6 +362,7 @@ const TxnPreview : FC<{
     //   return prev;
     // }, { grouped: {}, total: 0 }),
     // [actions]
+    
     groupBy(actions.filter((a) => a && a.type !== ActionType.BASE) as Action[], 'type'),
     [actions]
   );
@@ -364,6 +376,8 @@ const TxnPreview : FC<{
       </Typography>
     );
   }
+
+  console.log('instructions by tyhpe: ', instructionsByType);
 
   return (
     <Stack gap={1.5}>
@@ -399,23 +413,39 @@ const TxnPreview : FC<{
                 height: '100%' // of TXN_PREVIEW_HEIGHT
               }}
             >
-              {EXECUTION_STEPS.map((step, index) => (
-                instructionsByType[step] ? (
-                  <TxnStep
-                    key={index}
-                    type={step}
-                    actions={instructionsByType[step]}
-                    highlighted={highlighted}
-                  />
-                ) : null
-              ))}
+              <>
+                {preActionsWithGraphic.map(({ type }, index) => {
+                  if (preInstructionsByType[type]) {
+                    return (
+                      <TxnStep 
+                        key={`pre-${type}-${index}`}
+                        type={type}
+                        actions={preInstructionsByType[type]}
+                        highlighted={highlighted}
+                      />
+                    );
+                  }
+                  console.log('returning null');
+                  return null;
+                })}
+                {EXECUTION_STEPS.map((step, index) => (
+                  instructionsByType[step] ? (
+                    <TxnStep
+                      key={index}
+                      type={step}
+                      actions={instructionsByType[step]}
+                      highlighted={highlighted}
+                    />
+                  ) : null
+                ))}
+              </>
             </Row>
           </Box>
         </Box>
       ) : null}
       {/* Show highlightable explanations of each action */}
       <Stack>
-        {actions.map((a, index) => (
+        {[...preActions, ...actions, ...postActions].map((a, index) => (
           a !== undefined && (
             <Box
               key={index}

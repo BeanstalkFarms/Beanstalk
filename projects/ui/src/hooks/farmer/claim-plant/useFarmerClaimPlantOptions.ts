@@ -114,15 +114,6 @@ export type ClaimPlantItems = {
   [action in ClaimPlantAction]: ClaimPlantItem;
 };
 
-const isClaimSiloRewardsAction = (action: ClaimPlantAction) => {
-  const isClaimRewardsAction =
-    action === ClaimPlantAction.MOW ||
-    action === ClaimPlantAction.ENROOT ||
-    action === ClaimPlantAction.PLANT;
-
-  return isClaimRewardsAction;
-};
-
 const isClaimingBeansAction = (action: ClaimPlantAction) => {
   const isClaiming =
     action === ClaimPlantAction.CLAIM ||
@@ -257,16 +248,11 @@ export default function useFarmerClaimAndPlantOptions() {
             amount: harvestablePods,
           },
         ],
-        txActions: (params) => [
+        txActions: () => [
           {
             type: ActionType.HARVEST,
             amount: harvestablePods,
           },
-          // {
-          //   type: ActionType.RECEIVE_BEANS,
-          //   amount: harvestablePods,
-          //   destination: params?.toMode,
-          // },
         ],
       },
       [ClaimPlantAction.RINSE]: {
@@ -286,16 +272,11 @@ export default function useFarmerClaimAndPlantOptions() {
             amount: rinsableSprouts,
           },
         ],
-        txActions: (params) => [
+        txActions: () => [
           {
             type: ActionType.RINSE,
             amount: rinsableSprouts,
           },
-          // {
-          //   type: ActionType.RECEIVE_BEANS,
-          //   amount: rinsableSprouts,
-          //   destination: params?.toMode,
-          // },
         ],
       },
       [ClaimPlantAction.CLAIM]: {
@@ -315,17 +296,12 @@ export default function useFarmerClaimAndPlantOptions() {
             amount: claimableBeans,
           },
         ],
-        txActions: (params) => [
+        txActions: () => [
           {
             type: ActionType.CLAIM_WITHDRAWAL,
             amount: claimableBeans,
             token: getNewToOldToken(BEAN),
           },
-          // {
-          //   type: ActionType.RECEIVE_BEANS,
-          //   amount: claimableBeans,
-          //   destination: params?.toMode,
-          // },
         ],
       },
     };
@@ -364,66 +340,46 @@ export default function useFarmerClaimAndPlantOptions() {
   );
 
   const getTxnActions = useCallback(
-    (actions: ClaimPlantAction[], _toMode?: FarmToMode) =>
-      actions.reduce<Action[]>((prev, curr) => {
-        const option = options[curr];
-        const txnActions = isClaimSiloRewardsAction(curr)
-          ? option.txActions({ toMode: _toMode || FarmToMode.INTERNAL })
-          : option.txActions();
+    (
+      primary: ClaimPlantAction[],
+      secondary: ClaimPlantAction[],
+      graphicOnClaimBeans?: boolean
+    ) => {
+      const postStartIndex = primary.length;
+      const actions = [...primary, ...secondary].reduce<{
+        pre: Action[];
+        post: Action[];
+        claiming: Action[];
+      }>(
+        (prev, curr, idx) => {
+          const option = options[curr];
+          let _actions;
+          if (isClaimingBeansAction(curr)) {
+            _actions = option.txActions();
+            if (graphicOnClaimBeans) {
+              prev.claiming = [...prev.claiming, ..._actions];
+            }
+          } else {
+            _actions = option.txActions();
+          }
+          if (idx >= postStartIndex) {
+            prev.post = [...prev.post, ..._actions];
+          } else {
+            prev.pre = [...prev.pre, ..._actions];
+          }
+          return prev;
+        },
+        { pre: [], post: [], claiming: [] }
+      );
 
-        return prev.concat(...txnActions);
-      }, []),
+      return {
+        preActions: actions.pre,
+        postActions: actions.post,
+        claiming: actions.claiming,
+      };
+    },
     [options]
   );
 
   return { options, getClaimable, getTxnActions };
 }
-
-// const aggregateTxnActions = useCallback((
-//   _pre: ClaimPlantAction[],
-//   _post: ClaimPlantAction[],
-//   _txnActions: Action[],
-//   _tokenIn?: Token,
-//   _toMode?: FarmToMode,
-// ) => {
-//   const postStartIndex = _pre.length;
-//   const isClaimingBean = false;
-//   const actions = [..._pre, ..._post].reduce<{ pre: Action[], post: Action[] }>((prev, curr, idx) => {
-//     const option = options[curr];
-//     let _actions;
-//     if (isClaimSiloRewardsAction(curr)) {
-//       _actions = option.txActions({ toMode: _toMode || FarmToMode.INTERNAL });
-//     } else {
-//       _actions = option.txActions();
-//     }
-
-//     const claimPlantTxnActions: Action[] = isClaimSiloRewardsAction(curr)
-//       ? option.txActions({ toMode: _toMode || FarmToMode.INTERNAL })
-//       : option.txActions();
-
-//     if (idx >= postStartIndex) {
-//       prev.post = [...prev.post, ...claimPlantTxnActions];
-//     } else {
-//       prev.pre = [...prev.pre, ...claimPlantTxnActions];
-//     }
-//     return prev;
-//   }, { pre: [], post: [] });
-// }, [options]);
-
-// const combineTxnActions = useCallback(
-//   (
-//     actions: ClaimPlantAction[],
-//     txnActions: Action[],
-//     _toMode?: FarmToMode
-//   ) => {
-//     const claimPlantActions = actions.reduce<Action[]>((prev, curr) => {
-//       const option = options[curr];
-//       const claimPlantTxnActions: Action[] = isClaimSiloRewardsAction(curr)
-//         ? option.txActions({ toMode: _toMode || FarmToMode.INTERNAL })
-//         : option.txActions();
-
-//       return prev.concat(...claimPlantTxnActions);
-//     }, []);
-//   },
-//   [options]
-// );
