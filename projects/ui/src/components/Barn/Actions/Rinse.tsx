@@ -134,20 +134,16 @@ const RinseForm : FC<FormikProps<RinseFormValues>> = ({
         <FarmModeField
           name="destination"
         />
-        {/* Outputs */}
         {amountSprouts?.gt(0) ? (
           <>
             <TxnSeparator />
-            {/* Token Outputs */}
             <TokenOutput>
               <TokenOutput.Row 
                 token={BEAN}
                 amount={amountSprouts}
               />
             </TokenOutput>
-            {/* Additional Txns */}
             <ClaimAndPlantAdditionalOptions />
-            {/* Txn Summary */}
             <Box sx={{ width: '100%', mt: 0 }}>
               <TxnAccordion defaultExpanded={false}>
                 <TxnPreview

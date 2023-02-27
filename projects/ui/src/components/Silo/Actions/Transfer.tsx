@@ -1,4 +1,4 @@
-import { Accordion, AccordionDetails, Box, Divider, Stack } from '@mui/material';
+import { Box, Divider, Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useMemo } from 'react';
 import BigNumber from 'bignumber.js';
@@ -22,7 +22,6 @@ import useSeason from '~/hooks/beanstalk/useSeason';
 import TxnSeparator from '~/components/Common/Form/TxnSeparator';
 import { displayFullBN, displayTokenAmount, toStringBaseUnitBN, trimAddress } from '~/util';
 import { FontSize } from '~/components/App/muiTheme';
-import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import { ActionType } from '~/util/Actions';
 import TransactionToast from '~/components/Common/TxnToast';
 import { FC } from '~/types';
@@ -35,6 +34,7 @@ import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
+import TxnAccordion from '~/components/Common/TxnAccordion';
 
 export type TransferFormValues = FormStateNew & 
   ClaimAndPlantFormState
@@ -138,59 +138,52 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
         />
         {depositedBalance?.gt(0) && (
           <>
-            {/* To Field */}
             <FieldWrapper label="Transfer to">
               <AddressInputField name="to" />
             </FieldWrapper>
             {values.to !== '' && withdrawResult?.amount.abs().gt(0) && (
               <>
                 <TxnSeparator />
-                {/* Token Outputs */}
                 <TokenOutputs />
                 <WarningAlert>
                   More recent Deposits are Transferred first.
                 </WarningAlert>
-                {/* Additional Txns */}
                 <ClaimAndPlantAdditionalOptions />
-                {/* Txn Summary */}
                 <Box>
-                  <Accordion defaultExpanded variant="outlined">
-                    <StyledAccordionSummary title="Transaction Details" />
-                    <AccordionDetails>
-                      <TxnPreview
-                        actions={[
-                          {
-                            type: ActionType.TRANSFER,
-                            amount: withdrawResult ? withdrawResult.amount.abs() : ZERO_BN,
-                            // FIX ME
-                            token: getNewToOldToken(whitelistedToken),
-                            stalk: withdrawResult ? withdrawResult.stalk.abs() : ZERO_BN,
-                            seeds: withdrawResult ? withdrawResult?.seeds.abs() : ZERO_BN,
-                            to: values.to
-                          },
-                          {
-                            type: ActionType.BASE,
-                            message: (
-                              <>
-                                The following Deposits will be used:<br />
-                                <ul css={{ paddingLeft: '25px', marginTop: '10px', marginBottom: 0, fontSize: FontSize.sm }}>
-                                  {withdrawResult.deltaCrates.map((crate, index) => (
-                                    <li key={index}>{displayTokenAmount(crate.amount, whitelistedToken)} from Deposits in Season {crate.season.toString()}</li>
-                                  ))}
-                                </ul>
-                              </>
-                            )
-                          },
-                          {
-                            type: ActionType.END_TOKEN,
-                            // FIX ME
-                            token: getNewToOldToken(whitelistedToken)
-                          }
-                        ]}
-                        {...claimPlantTxnActions}
+                  <TxnAccordion>
+                    <TxnPreview
+                      actions={[
+                        {
+                          type: ActionType.TRANSFER,
+                          amount: withdrawResult ? withdrawResult.amount.abs() : ZERO_BN,
+                          // FIX ME
+                          token: getNewToOldToken(whitelistedToken),
+                          stalk: withdrawResult ? withdrawResult.stalk.abs() : ZERO_BN,
+                          seeds: withdrawResult ? withdrawResult?.seeds.abs() : ZERO_BN,
+                          to: values.to
+                        },
+                        {
+                          type: ActionType.BASE,
+                          message: (
+                            <>
+                              The following Deposits will be used:<br />
+                              <ul css={{ paddingLeft: '25px', marginTop: '10px', marginBottom: 0, fontSize: FontSize.sm }}>
+                                {withdrawResult.deltaCrates.map((crate, index) => (
+                                  <li key={index}>{displayTokenAmount(crate.amount, whitelistedToken)} from Deposits in Season {crate.season.toString()}</li>
+                                ))}
+                              </ul>
+                            </>
+                          )
+                        },
+                        {
+                          type: ActionType.END_TOKEN,
+                          // FIX ME
+                          token: getNewToOldToken(whitelistedToken)
+                        }
+                      ]}
+                      {...claimPlantTxnActions}
                       />
-                    </AccordionDetails>
-                  </Accordion>
+                  </TxnAccordion>
                 </Box>
               </>
             )}

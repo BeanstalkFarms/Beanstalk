@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { Accordion, AccordionDetails, Box, Stack } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
@@ -9,7 +9,6 @@ import { ERC20Token, NativeToken, Token } from '@beanstalk/sdk';
 import {
   TokenSelectMode,
 } from '~/components/Common/Form/TokenSelectDialog';
-import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import {
   BalanceFromFragment,
   ClaimAndPlantFormState,
@@ -48,6 +47,7 @@ import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPla
 import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import useFarmerClaimingBalance from '~/hooks/farmer/claim-plant/useFarmerClaimingBalance';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
+import TxnAccordion from '~/components/Common/TxnAccordion';
 
 // -----------------------------------------------------------------------
 
@@ -181,7 +181,6 @@ const DepositForm: FC<
         {isReady ? (
           <>
             <TxnSeparator />
-            {/* Token Outputs */}
             <TokenOutput>
               <TokenOutput.Row 
                 token={whitelistedToken}
@@ -211,19 +210,14 @@ const DepositForm: FC<
                 }
               />
             </TokenOutput>
-            {/* Additional Txns */}
             <ClaimAndPlantAdditionalOptions />
-            {/* Txn Summary */}
             <Box>
-              <Accordion variant="outlined">
-                <StyledAccordionSummary title="Transaction Details" />
-                <AccordionDetails>
-                  <TxnPreview 
-                    actions={actions} 
-                    {...claimPlantTxnActions}
+              <TxnAccordion defaultExpanded={false}>
+                <TxnPreview 
+                  actions={actions} 
+                  {...claimPlantTxnActions}
                   />
-                </AccordionDetails>
-              </Accordion>
+              </TxnAccordion>
             </Box>
           </>
         ) : null}
@@ -441,11 +435,7 @@ const Deposit: FC<{
       {(formikProps) => (
         <>
           <TxnSettings placement="form-top-right">
-            <SettingInput
-              name="settings.slippage"
-              label="Slippage Tolerance"
-              endAdornment="%"
-            />
+            <SettingInput name="settings.slippage" label="Slippage Tolerance" endAdornment="%" />
           </TxnSettings>
           <DepositForm
             handleQuote={handleQuote}

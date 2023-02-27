@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Accordion, AccordionDetails, Box, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import { Token, ERC20Token, NativeToken, DataSource } from '@beanstalk/sdk';
 import { ethers } from 'ethers';
-import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import { ClaimAndPlantFormState, FormStateNew, SettingInput, SmartSubmitButton, TxnSettings } from '~/components/Common/Form';
 import TxnPreview from '~/components/Common/Form/TxnPreview';
 import TxnSeparator from '~/components/Common/Form/TxnSeparator';
@@ -37,6 +36,7 @@ import useAccount from '~/hooks/ledger/useAccount';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
+import TxnAccordion from '~/components/Common/TxnAccordion';
 
 // -----------------------------------------------------------------------
 
@@ -278,7 +278,6 @@ const ConvertForm : FC<
         {(amountIn && tokenOut && maxAmountIn && amountOut?.gt(0)) ? (
           <>
             <TxnSeparator mt={-1} />
-            {/* Token Outputs */}
             <TokenOutput>
               <TokenOutput.Row 
                 token={tokenOut}
@@ -314,7 +313,6 @@ const ConvertForm : FC<
                 }
               />
             </TokenOutput>
-            {/* Warning Alert */}
             {(maxAmountUsed && maxAmountUsed.gt(0.9)) ? (
               <Box>
                 <WarningAlert>
@@ -323,29 +321,24 @@ const ConvertForm : FC<
                 </WarningAlert>
               </Box>
             ) : null}
-            {/* Additional Txns */}
             <ClaimAndPlantAdditionalOptions />
-            {/* Txn Summary */}
             <Box>
-              <Accordion variant="outlined">
-                <StyledAccordionSummary title="Transaction Details" />
-                <AccordionDetails>
-                  <TxnPreview
-                    actions={[
-                      {
-                        type: ActionType.BASE,
-                        message: `Convert ${displayFullBN(amountIn, tokenIn.displayDecimals)} ${tokenIn.name} to ${displayFullBN(amountOut, tokenIn.displayDecimals)} ${tokenOut.name}.`
-                      },
-                      {
-                        type: ActionType.UPDATE_SILO_REWARDS,
-                        stalk: deltaStalk || ZERO_BN,
-                        seeds: deltaSeeds || ZERO_BN,
-                      }
-                    ]}
-                    {...claimPlantTxnActions}
-                  />
-                </AccordionDetails>
-              </Accordion>
+              <TxnAccordion defaultExpanded={false}>
+                <TxnPreview
+                  actions={[
+                    {
+                      type: ActionType.BASE,
+                      message: `Convert ${displayFullBN(amountIn, tokenIn.displayDecimals)} ${tokenIn.name} to ${displayFullBN(amountOut, tokenIn.displayDecimals)} ${tokenOut.name}.`
+                    },
+                    {
+                      type: ActionType.UPDATE_SILO_REWARDS,
+                      stalk: deltaStalk || ZERO_BN,
+                      seeds: deltaSeeds || ZERO_BN,
+                    }
+                  ]}
+                  {...claimPlantTxnActions}
+                />
+              </TxnAccordion>
             </Box>
           </>
         ) : null}

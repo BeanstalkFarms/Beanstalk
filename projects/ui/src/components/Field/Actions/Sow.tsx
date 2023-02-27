@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { Accordion, AccordionDetails, Box, Divider, Link, Stack, Typography } from '@mui/material';
+import { Box, Divider, Link, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
@@ -30,7 +30,6 @@ import { useFetchPools } from '~/state/bean/pools/updater';
 import { AppState } from '~/state';
 import { BEAN, PODS } from '~/constants/tokens';
 import { ZERO_BN } from '~/constants';
-import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import { ActionType } from '~/util/Actions';
 import { IconSize } from '~/components/App/muiTheme';
 import TokenIcon from '~/components/Common/TokenIcon';
@@ -49,6 +48,7 @@ import useFarmerClaimingBalance from '~/hooks/farmer/claim-plant/useFarmerClaimi
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
+import TxnAccordion from '~/components/Common/TxnAccordion';
 
 type SowFormValues = FormStateNew & {
   settings: SlippageSettingsFragment;
@@ -221,7 +221,6 @@ const SowForm : FC<
         {isSubmittable ? (
           <>
             <TxnSeparator />
-            {/* Token outputs */}
             <TokenOutput>
               <TokenOutput.Row 
                 token={sdk.tokens.PODS}
@@ -229,49 +228,43 @@ const SowForm : FC<
                 amountSuffix={` @ ${displayBN(podLineLength)}`}
               />
             </TokenOutput>
-            {/* Warning alert */}
             {(maxAmountUsed && maxAmountUsed.gt(0.9)) ? (
               <WarningAlert>
                 If there is less Soil at the time of execution, this transaction will Sow Beans into the remaining Soil and send any unused Beans to your Farm Balance.
                 {/* You are Sowing {displayFullBN(maxAmountUsed.times(100), 4, 0)}% of remaining Soil.  */}
               </WarningAlert>
             ) : null}
-            {/* Additional Txns */}
             <ClaimAndPlantAdditionalOptions />
-            {/* Txn summary */}
             <Box>
-              <Accordion variant="outlined" color="primary">
-                <StyledAccordionSummary title="Transaction Details" />
-                <AccordionDetails>
-                  <TxnPreview
-                    actions={[
-                      {
-                        type: ActionType.BUY_BEANS,
-                        beanAmount: beans,
-                        beanPrice: beanPrice,
-                        token: getNewToOldToken(tokenIn),
-                        tokenAmount: amountIn || ZERO_BN
-                      },
-                      {
-                        type: ActionType.BURN_BEANS,
-                        amount: beans
-                      },
-                      {
-                        type: ActionType.RECEIVE_PODS,
-                        podAmount: numPods,
-                        placeInLine: podLineLength
-                      }
-                    ]}
-                    {...claimPlantTxnActions}
+              <TxnAccordion defaultExpanded={false}>
+                <TxnPreview
+                  actions={[
+                    {
+                      type: ActionType.BUY_BEANS,
+                      beanAmount: beans,
+                      beanPrice: beanPrice,
+                      token: getNewToOldToken(tokenIn),
+                      tokenAmount: amountIn || ZERO_BN
+                    },
+                    {
+                      type: ActionType.BURN_BEANS,
+                      amount: beans
+                    },
+                    {
+                      type: ActionType.RECEIVE_PODS,
+                      podAmount: numPods,
+                      placeInLine: podLineLength
+                    }
+                  ]}
+                  {...claimPlantTxnActions}
                   />
-                  <Divider sx={{ my: 2, opacity: 0.4 }} />
-                  <Box pb={1}>
-                    <Typography variant="body2" alignItems="center">
-                      Pods become <strong>Harvestable</strong> on a first in, first out <Link href="https://docs.bean.money/almanac/protocol/glossary#fifo" target="_blank" rel="noreferrer" underline="hover">(FIFO)</Link> basis. Upon <strong>Harvest</strong>, each Pod is redeemed for <span><TokenIcon token={BEAN[1]} css={{ height: IconSize.xs, marginTop: 2.6 }} /></span>1.
-                    </Typography>
-                  </Box>
-                </AccordionDetails>
-              </Accordion>
+                <Divider sx={{ my: 2, opacity: 0.4 }} />
+                <Box pb={1}>
+                  <Typography variant="body2" alignItems="center">
+                    Pods become <strong>Harvestable</strong> on a first in, first out <Link href="https://docs.bean.money/almanac/protocol/glossary#fifo" target="_blank" rel="noreferrer" underline="hover">(FIFO)</Link> basis. Upon <strong>Harvest</strong>, each Pod is redeemed for <span><TokenIcon token={BEAN[1]} css={{ height: IconSize.xs, marginTop: 2.6 }} /></span>1.
+                  </Typography>
+                </Box>
+              </TxnAccordion>
             </Box>
           </>
         ) : null}

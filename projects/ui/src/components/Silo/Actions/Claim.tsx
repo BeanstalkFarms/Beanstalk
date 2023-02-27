@@ -1,9 +1,8 @@
 import React, { useCallback, useMemo } from 'react';
-import { Accordion, AccordionDetails, Box, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import { ERC20Token, Token } from '@beanstalk/sdk';
-import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import { FarmerSiloBalance } from '~/state/farmer/silo';
 import { ActionType } from '~/util/Actions';
 import {
@@ -37,6 +36,7 @@ import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPla
 import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
+import TxnAccordion from '~/components/Common/TxnAccordion';
 
 // -----------------------------------------------------------------------
 
@@ -209,47 +209,40 @@ const ClaimForm : FC<
             />
           </>
         </Stack>
-        {/* Transaction Details */}
         {isSubmittable ? (
           <>
             <TxnSeparator />
-            {/* Token Output */}
             <TokenOutput>
               <TokenOutput.Row 
                 token={token}
                 amount={values.token.amountOut || ZERO_BN}
               />
             </TokenOutput>
-            {/* Additional Txns */}
             <ClaimAndPlantAdditionalOptions />
-            {/* Txn Summary */}
             <Box>
-              <Accordion variant="outlined">
-                <StyledAccordionSummary title="Transaction Details" />
-                <AccordionDetails>
-                  <TxnPreview
-                    actions={[
-                      {
-                        type: ActionType.CLAIM_WITHDRAWAL,
-                        amount: amount,
-                        token: getNewToOldToken(token),
-                        // message: `Claim ${displayTokenAmount(amount, token)}.`
-                      },
-                      token.equals(sdk.tokens.BEAN_CRV3_LP) && values.tokenOut !== token ? {
-                        type: ActionType.BASE,
-                        message: `Unpack ${displayTokenAmount(amount, token)} into ${displayTokenAmount(values.token.amountOut || ZERO_BN, tokenOut)}.`
-                      } : undefined,
-                      {
-                        type: ActionType.RECEIVE_TOKEN,
-                        token: getNewToOldToken(tokenOut),
-                        amount: values.token.amountOut || ZERO_BN,
-                        destination: values.destination,
-                      }
-                    ]}
-                    {...claimPlantTxnActions}
+              <TxnAccordion>
+                <TxnPreview
+                  actions={[
+                    {
+                      type: ActionType.CLAIM_WITHDRAWAL,
+                      amount: amount,
+                      token: getNewToOldToken(token),
+                      // message: `Claim ${displayTokenAmount(amount, token)}.`
+                    },
+                    token.equals(sdk.tokens.BEAN_CRV3_LP) && values.tokenOut !== token ? {
+                      type: ActionType.BASE,
+                      message: `Unpack ${displayTokenAmount(amount, token)} into ${displayTokenAmount(values.token.amountOut || ZERO_BN, tokenOut)}.`
+                    } : undefined,
+                    {
+                      type: ActionType.RECEIVE_TOKEN,
+                      token: getNewToOldToken(tokenOut),
+                      amount: values.token.amountOut || ZERO_BN,
+                      destination: values.destination,
+                    }
+                  ]}
+                  {...claimPlantTxnActions}
                   />
-                </AccordionDetails>
-              </Accordion>
+              </TxnAccordion>
             </Box>
           </>
         ) : null}

@@ -1,14 +1,11 @@
 import React, { useCallback, useMemo } from 'react';
 import {
-  Accordion,
-  AccordionDetails,
   Box,
   Stack,
   Typography,
 } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
-import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import {
   ClaimAndPlantFormState,
   SmartSubmitButton,
@@ -36,6 +33,7 @@ import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPl
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
+import TxnAccordion from '~/components/Common/TxnAccordion';
 
 // -----------------------------------------------------------------------
 
@@ -127,13 +125,11 @@ const HarvestForm: FC<Props> = ({
             endAdornment: <TokenAdornment token={PODS} />,
           }}
         />
-        {/* Transaction Details */}
         {values.amount?.gt(0) ? (
           <>
             {/* Setting: Destination */}
             <FarmModeField name="destination" />
             <TxnSeparator mt={-1} />
-            {/* Token Outputs */}
             <TokenOutput>
               <TokenOutput.Row 
                 token={sdk.tokens.BEAN}
@@ -154,29 +150,25 @@ const HarvestForm: FC<Props> = ({
                 page.
               </Alert>
             </Box> */}
-            {/* Additional Txns */}
             <ClaimAndPlantAdditionalOptions />
-            {/* Txn Summary */}
             <Box>
-              <Accordion variant="outlined">
-                <StyledAccordionSummary title="Transaction Details" />
-                <AccordionDetails>
-                  <TxnPreview
-                    actions={[
-                      {
-                        type: ActionType.HARVEST,
-                        amount: amount,
-                      },
-                      {
-                        type: ActionType.RECEIVE_BEANS,
-                        amount: amount,
-                        destination: values.destination,
-                      },
-                    ]}
-                    {...claimPlantTxnActions}
+              <TxnAccordion defaultExpanded={false}>
+                <TxnPreview
+                  actions={[
+                    {
+                      type: ActionType.HARVEST,
+                      amount: amount,
+                    },
+                    {
+                      type: ActionType.RECEIVE_BEANS,
+                      amount: amount,
+                      destination: values.destination,
+                    },
+                  ]}
+                  {...claimPlantTxnActions}
                   />
-                </AccordionDetails>
-              </Accordion>
+              </TxnAccordion>
+              
             </Box>
           </>
         ) : null}

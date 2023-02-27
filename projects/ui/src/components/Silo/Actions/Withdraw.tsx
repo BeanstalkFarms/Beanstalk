@@ -1,11 +1,10 @@
 import React, { useCallback, useMemo } from 'react';
-import { Accordion, AccordionDetails, Box, Divider, Stack } from '@mui/material';
+import { Box, Divider, Stack } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { useSelector } from 'react-redux';
 import { Token, ERC20Token } from '@beanstalk/sdk';
 import { SEEDS, STALK } from '~/constants/tokens';
-import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import {
   TxnPreview,
   TokenInputField,
@@ -35,6 +34,7 @@ import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
+import TxnAccordion from '~/components/Common/TxnAccordion';
 
 // -----------------------------------------------------------------------
 
@@ -105,7 +105,6 @@ const WithdrawForm : FC<
         {isReady ? (
           <Stack direction="column" gap={1}>
             <TxnSeparator />
-            {/* Token Output */}
             <TokenOutput>
               <TokenOutput.Row 
                 token={sdk.tokens.STALK}
@@ -127,40 +126,34 @@ const WithdrawForm : FC<
                 amount={withdrawResult.seeds}
               />
             </TokenOutput>
-            {/* Withdraw Alert */}
             <WarningAlert>
               You can Claim your Withdrawn assets at the start of the next Season.
             </WarningAlert>
-            {/* Additional Txns */}
             <ClaimAndPlantAdditionalOptions />
-            {/* Txn Summary */}
             <Box>
-              <Accordion defaultExpanded variant="outlined">
-                <StyledAccordionSummary title="Transaction Details" />
-                <AccordionDetails>
-                  <TxnPreview
-                    actions={[
-                      {
-                        type: ActionType.WITHDRAW,
-                        amount: withdrawResult.amount,
-                        token: getNewToOldToken(whitelistedToken),
-                      },
-                      {
-                        type: ActionType.UPDATE_SILO_REWARDS,
-                        stalk: withdrawResult.stalk,
-                        seeds: withdrawResult.seeds,
-                      },
-                      {
-                        type: ActionType.IN_TRANSIT,
-                        amount: withdrawResult.amount,
-                        token: getNewToOldToken(whitelistedToken),
-                        withdrawSeasons
-                      }
-                    ]}
-                    {...claimPlantTxnActions}
-                  />
-                </AccordionDetails>
-              </Accordion>
+              <TxnAccordion>
+                <TxnPreview
+                  actions={[
+                    {
+                      type: ActionType.WITHDRAW,
+                      amount: withdrawResult.amount,
+                      token: getNewToOldToken(whitelistedToken),
+                    },
+                    {
+                      type: ActionType.UPDATE_SILO_REWARDS,
+                      stalk: withdrawResult.stalk,
+                      seeds: withdrawResult.seeds,
+                    },
+                    {
+                      type: ActionType.IN_TRANSIT,
+                      amount: withdrawResult.amount,
+                      token: getNewToOldToken(whitelistedToken),
+                      withdrawSeasons
+                    }
+                  ]}
+                  {...claimPlantTxnActions}
+                />
+              </TxnAccordion>
             </Box>
           </Stack>
         ) : null}

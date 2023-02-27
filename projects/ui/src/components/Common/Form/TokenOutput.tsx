@@ -31,7 +31,7 @@ type Props = {
   children: React.ReactNode;
 } & SizeProps;
 
-export default function TokenOutput({ children, size }: Props) {
+export default function TokenOutput({ children, size = 'medium' }: Props) {
   const isMedium = size === 'medium';
 
   const px = isMedium ? 2 : 1;
@@ -68,6 +68,8 @@ const formatBN = (value?: BigNumber, _decimals?: number, suffix?: string) => {
     suffix || ''
   }`;
 };
+
+// TODO: Make it so 'size' prop doesn't have to be passed to it's children
 
 function TokenOutputRow({
   label,

@@ -165,11 +165,9 @@ const BuyForm : FC<
               <WarningAlert>
                 The amount of Fertilizer received rounds down to the nearest USDC. {usdc?.toFixed(2)} USDC = {fert?.toFixed(0)} FERT. 
               </WarningAlert>
-              {/* Additional Txns */}
               <Box width="100%">
                 <ClaimAndPlantAdditionalOptions />
               </Box>
-              {/* Txn summary */}
               <Box sx={{ width: '100%', mt: 0 }}>
                 <TxnAccordion defaultExpanded={false}>
                   <TxnPreview
