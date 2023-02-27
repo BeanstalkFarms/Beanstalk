@@ -141,7 +141,7 @@ contract Silo is SiloExit {
 
         int128 _cumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
         int128 _lastCumulativeGrownStalkPerBdv =  s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv;
-        uint256 _bdv = s.a[account].mowStatuses[token].bdv;
+        uint128 _bdv = s.a[account].mowStatuses[token].bdv;
         
         if (_bdv > 0) {
              // if account mowed the same token in the same season, skip

@@ -145,7 +145,7 @@ contract SiloExit is ReentrancyGuard {
     function _balanceOfGrownStalk(
         int128 lastCumulativeGrownStalkPerBdv,
         int128 endStalkPerBDV,
-        uint256 bdv
+        uint128 bdv
     ) internal view returns (uint256)
     {
         return
