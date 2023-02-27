@@ -24,7 +24,11 @@ describe('Sop', function () {
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL)
     this.beanMetapool = await ethers.getContractAt('IMockCurvePool', BEAN_3_CURVE)
 
+    this.season.deployGrownStalkPerBdv();
+    
     await this.season.siloSunrise(0)
+
+
     await this.bean.connect(user).approve(this.silo.address, '100000000000')
     await this.bean.connect(user2).approve(this.silo.address, '100000000000') 
     await this.bean.connect(user).approve(this.beanMetapool.address, '100000000000')

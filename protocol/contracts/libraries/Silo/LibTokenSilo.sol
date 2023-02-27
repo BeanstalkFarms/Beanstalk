@@ -108,7 +108,8 @@ library LibTokenSilo {
     ) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(bdv > 0, "Silo: No Beans under Token.");
-
+        console.log('depositWithBDV grownStalkPerBdv: ', uint256(grownStalkPerBdv));
+        console.logInt(grownStalkPerBdv);
         incrementTotalDeposited(token, amount); // Update Totals
 
         addDepositToAccount(account, token, grownStalkPerBdv, amount, bdv); // Add to Account
@@ -153,6 +154,10 @@ library LibTokenSilo {
         console.log('--- s.a[account].deposits[token][grownStalkPerBdv].amount: ', d.amount);
 
         s.a[account].deposits[token][grownStalkPerBdv] = d;
+
+
+        console.log('--- s.a[account].deposits[token][grownStalkPerBdv].bdv: ', s.a[account].deposits[token][grownStalkPerBdv].bdv);
+        console.log('--- s.a[account].deposits[token][grownStalkPerBdv].amount: ', s.a[account].deposits[token][grownStalkPerBdv].amount);
 
         //setup or update the MowStatus for this deposit. We should have _just_ mowed before calling this function.
         s.a[account].mowStatuses[token].bdv = uint128(s.a[account].mowStatuses[token].bdv.add(bdv.toUint128()));
@@ -384,6 +389,7 @@ library LibTokenSilo {
         _cumulativeGrownStalkPerBdv = s.ss[address(token)].lastCumulativeGrownStalkPerBdv +
             int128(int128(s.ss[address(token)].stalkEarnedPerSeason).mul(int128(s.season.current)-int128(s.ss[address(token)].lastUpdateSeason)).div(1e6)) //round here
         ;
+        console.log('cumulativeGrownStalkPerBdv _cumulativeGrownStalkPerBdv: ', uint256(_cumulativeGrownStalkPerBdv));
     }
 
     function grownStalkForDeposit(

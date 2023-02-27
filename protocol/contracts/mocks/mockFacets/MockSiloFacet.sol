@@ -42,8 +42,8 @@ contract MockSiloFacet is SiloFacet {
             s.a[msg.sender].lp.deposits[_s] += amount;
             s.a[msg.sender].lp.depositSeeds[_s] += bdv.mul(4);
         }
-        else if (t == 1) LibTokenSilo.addDepositToAccount(msg.sender, C.unripeLPPool1(), _s, amount, bdv);
-        else if (t == 2) LibTokenSilo.addDepositToAccount(msg.sender, C.unripeLPPool2(), _s, amount, bdv);
+        else if (t == 1) LibLegacyTokenSilo.addDepositToAccount(msg.sender, C.unripeLPPool1(), _s, amount, bdv);
+        else if (t == 2) LibLegacyTokenSilo.addDepositToAccount(msg.sender, C.unripeLPPool2(), _s, amount, bdv);
         uint256 unripeLP = getUnripeForAmount(t, amount);
         LibTokenSilo.incrementTotalDeposited(C.unripeLPAddress(), unripeLP);
         bdv = bdv.mul(C.initialRecap()).div(1e18);

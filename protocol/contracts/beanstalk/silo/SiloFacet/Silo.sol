@@ -120,7 +120,7 @@ contract Silo is SiloExit {
         //sop stuff only needs to be updated once per season
         //if it started raininga nd it's still raining, or there was a sop
         if (s.season.rainStart > s.season.grownStalkPerBdvStartSeason) {
-            if (_lastUpdate < s.season.rainStart && _lastUpdate < _season()) {
+            if (_lastUpdate <= s.season.rainStart && _lastUpdate <= _season()) {
                 // Increments `plenty` for `account` if a Flood has occured.
                 // Saves Rain Roots for `account` if it is Raining.
                 handleRainAndSops(account, _lastUpdate);

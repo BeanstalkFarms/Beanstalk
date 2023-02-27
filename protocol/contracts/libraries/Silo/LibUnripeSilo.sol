@@ -309,7 +309,7 @@ library LibUnripeSilo {
         returns (uint256 amount, uint256 bdv)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-
+        console.log('unripeLPDeposit: ', season);
         // Fetch the amount and BDV stored in all 3 pre-exploit LP Silo Deposit storages.
         // See {getBeanEthUnripeLP}, {getBean3CrvUnripeLP} and {getBeanLusdUnripeLP}
         (amount, bdv) = getBeanEthUnripeLP(account, season);
@@ -320,18 +320,19 @@ library LibUnripeSilo {
         amount = uint256(
             s.a[account].legacyDeposits[C.unripeLPAddress()][season].amount
         ).add(amount.add(amount1).add(amount2));
-
+        console.log('unripeLPDeposit amount: ', amount);
         // Summate the BDV acrosses all 3 pre-exploit LP Silo Deposit storages
         // and haircut by the inital recapitalization percent.
         uint256 legBdv = bdv.add(bdv1).add(bdv2)
             .mul(C.initialRecap())
             .div(C.precision());
-        
+        console.log('unripeLPDeposit legBdv: ', legBdv);
         // Summate the pre-exploit legacy BDV and the BDV stored in the
         // Unripe BEAN:3CRV Silo Deposit storage.
         bdv = uint256(
             s.a[account].legacyDeposits[C.unripeLPAddress()][season].bdv
         ).add(legBdv);
+        console.log('unripeLPDeposit bdv: ', bdv);
     }
 
     /*

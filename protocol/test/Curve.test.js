@@ -427,6 +427,7 @@ describe('Curve', function () {
   describe("farm LP and Deposit", async function () {
     beforeEach('add LP and Deposits', async function () {
       await this.season.teleportSunrise(10);
+      this.season.deployGrownStalkPerBdv();
       const addLiquidity = await this.curve.interface.encodeFunctionData("addLiquidity", [
         BEAN_3_CURVE,
         STABLE_FACTORY,

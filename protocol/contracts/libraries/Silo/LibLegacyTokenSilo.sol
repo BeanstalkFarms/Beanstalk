@@ -29,6 +29,121 @@ library LibLegacyTokenSilo {
     using SafeCast for uint256;
     using LibSafeMathSigned128 for int128;
 
+
+    //important to note that this event is only here for unit tests purposes of legacy code and to ensure unripe all works with new bdv system
+    event AddDeposit(
+        address indexed account,
+        address indexed token,
+        uint32 season,
+        uint256 amount,
+        uint256 bdv
+    );
+
+
+    //////////////////////// ACCOUNTING: TOTALS ////////////////////////
+    
+    /**
+     * @dev Increment the total amount of `token` deposited in the Silo.
+     */
+    function incrementTotalDeposited(address token, uint256 amount) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.siloBalances[token].deposited = s.siloBalances[token].deposited.add(
+            amount
+        );
+    }
+
+    /**
+     * @dev Decrement the total amount of `token` deposited in the Silo.
+     */
+    function decrementTotalDeposited(address token, uint256 amount) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.siloBalances[token].deposited = s.siloBalances[token].deposited.sub(
+            amount
+        );
+    }
+
+    //////////////////////// ADD DEPOSIT ////////////////////////
+
+    /**
+     * @return seeds The amount of Seeds received for this Deposit.
+     * @return stalk The amount of Stalk received for this Deposit.
+     * 
+     * @dev Calculate the current BDV for `amount` of `token`, then perform 
+     * Deposit accounting.
+     */
+    // function deposit(
+    //     address account,
+    //     address token,
+    //     uint32 season,
+    //     uint256 amount
+    // ) internal returns (uint256, uint256) {
+    //     uint256 bdv = beanDenominatedValue(token, amount);
+    //     return depositWithBDV(account, token, season, amount, bdv);
+    // }
+
+    /**
+     * @dev Once the BDV received for Depositing `amount` of `token` is known, 
+     * add a Deposit for `account` and update the total amount Deposited.
+     *
+     * `s.ss[token].seeds` stores the number of Seeds per BDV for `token`.
+     * `s.ss[token].stalk` stores the number of Stalk per BDV for `token`.
+     *
+     * FIXME(discuss): If we think of Deposits like 1155s, we might call the
+     * combination of "incrementTotalDeposited" and "addDepositToAccount" as 
+     * "minting a deposit".
+     */
+    // function depositWithBDV(
+    //     address account,
+    //     address token,
+    //     uint32 season,
+    //     uint256 amount,
+    //     uint256 bdv
+    // ) internal returns (uint256, uint256) {
+    //     AppStorage storage s = LibAppStorage.diamondStorage();
+    //     require(bdv > 0, "Silo: No Beans under Token.");
+
+    //     incrementTotalDeposited(token, amount); // Update Totals
+    //     addDepositToAccount(account, token, season, amount, bdv); // Add to Account
+
+    //     return (
+    //         bdv.mul(s.ss[token].seeds),
+    //         bdv.mul(s.ss[token].stalk)
+    //     );
+    // }
+
+    /**
+     * @dev Add `amount` of `token` to a user's Deposit in `season`. Requires a
+     * precalculated `bdv`.
+     *
+     * If a Deposit doesn't yet exist, one is created. Otherwise, the existing
+     * Deposit is updated.
+     * 
+     * `amount` & `bdv` are cast uint256 -> uint128 to optimize storage cost,
+     * since both values can be packed into one slot.
+     * 
+     * Unlike {removeDepositFromAccount}, this function DOES EMIT an 
+     * {AddDeposit} event. See {removeDepositFromAccount} for more details.
+     */
+    function addDepositToAccount(
+        address account,
+        address token,
+        uint32 season,
+        uint256 amount,
+        uint256 bdv
+    ) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        s.a[account].legacyDeposits[token][season].amount += uint128(amount);
+        s.a[account].legacyDeposits[token][season].bdv += uint128(bdv);
+
+        console.log('legacy addDepositToAccount season: ', season);
+        console.log('legacy addDepositToAccount amount: ', amount);
+        console.log('legacy addDepositToAccount bdv: ', bdv);
+
+        emit AddDeposit(account, token, season, amount, bdv);
+    }
+
+
     //////////////////////// REMOVE DEPOSIT ////////////////////////
 
     /**
@@ -121,6 +236,42 @@ library LibLegacyTokenSilo {
 
     //////////////////////// GETTERS ////////////////////////
 
+
+
+    /**
+     * @dev Calculate the BDV ("Bean Denominated Value") for `amount` of `token`.
+     * 
+     * Makes a call to a BDV function defined in the SiloSettings for this 
+     * `token`. See {AppStorage.sol:Storage-SiloSettings} for more information.
+     */
+    function beanDenominatedValue(address token, uint256 amount)
+        internal
+        returns (uint256 bdv)
+    {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        // BDV functions accept one argument: `uint256 amount`
+        bytes memory callData = abi.encodeWithSelector(
+            s.ss[token].selector,
+            amount
+        );
+
+        (bool success, bytes memory data) = address(this).call(
+            callData
+        );
+
+        if (!success) {
+            if (data.length == 0) revert();
+            assembly {
+                revert(add(32, data), mload(data))
+            }
+        }
+
+        assembly {
+            bdv := mload(add(data, add(0x20, 0)))
+        }
+    }
+
     /**
      * @dev Locate the `amount` and `bdv` for a user's Deposit in storage.
      *
@@ -139,6 +290,8 @@ library LibLegacyTokenSilo {
         uint32 season
     ) internal view returns (uint256, uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        console.log('tokenDeposit season: ', season);
+        console.log('tokenDeposit token: ', token);
 
         if (LibUnripeSilo.isUnripeBean(token))
             return LibUnripeSilo.unripeBeanDeposit(account, season);
@@ -146,6 +299,7 @@ library LibLegacyTokenSilo {
         if (LibUnripeSilo.isUnripeLP(token))
             return LibUnripeSilo.unripeLPDeposit(account, season);
 
+        console.log('returning legacy deposit amount');
         return (
             s.a[account].legacyDeposits[token][season].amount,
             s.a[account].legacyDeposits[token][season].bdv

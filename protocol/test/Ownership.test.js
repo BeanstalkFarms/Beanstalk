@@ -89,9 +89,9 @@ describe('Ownership', function () {
       console.log('settings[0]: ', settings[0]);
       expect(settings[0]).to.equal(this.silo.interface.getSighash("mockBDV(uint256 amount)"))
       console.log('settings[1]: ', settings[1]);
-      expect(settings[1]).to.equal(10000)
+      expect(settings[1]).to.equal(1)
       console.log('settings[2]: ', settings[2]);
-      expect(settings[2]).to.equal(1)
+      expect(settings[2]).to.equal(10000)
       await expect(this.result).to.emit(this.whitelist, 'WhitelistToken').withArgs(this.siloToken.address, 
         this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
         1,
@@ -104,7 +104,7 @@ describe('Ownership', function () {
       await expect(this.whitelist.connect(user2).updateStalkPerBdvPerSeasonForToken(this.siloToken.address, 1)).to.be.revertedWith('LibDiamond: Must be contract or owner')
     })
 
-    it('dewhitelists token', async function () {
+    it('updates stalk per bdv per season', async function () {
       //do initial whitelist so there's something to update
       this.whitelist.connect(owner).whitelistToken(
         this.siloToken.address, 
@@ -113,12 +113,13 @@ describe('Ownership', function () {
         '1')
       this.result = this.whitelist.connect(owner).updateStalkPerBdvPerSeasonForToken(
         this.siloToken.address, 
-        '5'
+        '50000'
       )
       const settings = await this.silo.tokenSettings(this.siloToken.address)
-      expect(settings[2]).to.equal(5)
+      console.log("settings: ", settings);
+      expect(settings[1]).to.equal(50000)
       const currentSeason = await this.season.season()
-      await expect(this.result).to.emit(this.whitelist, 'UpdatedStalkPerBdvPerSeason').withArgs(this.siloToken.address, 5, currentSeason)
+      await expect(this.result).to.emit(this.whitelist, 'UpdatedStalkPerBdvPerSeason').withArgs(this.siloToken.address, 50000, currentSeason)
     })
   })
 

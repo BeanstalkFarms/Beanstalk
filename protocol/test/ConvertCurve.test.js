@@ -42,7 +42,8 @@ describe('Curve Convert', function () {
     await this.bean.connect(user).approve(this.silo.address, '100000000000');
     await this.bean.connect(user2).approve(this.silo.address, '100000000000');
     await this.beanMetapool.connect(user).add_liquidity([toBean('1000'), to18('1000')], to18('2000'));
-
+    await this.season.teleportSunrise(10);
+    this.season.deployGrownStalkPerBdv();
     await this.season.teleportSunrise(12);
   });
 
