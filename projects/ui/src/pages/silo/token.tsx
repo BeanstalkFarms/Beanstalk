@@ -31,6 +31,8 @@ const guides = [
   HOW_TO_CLAIM_WITHDRAWALS,
 ];
 
+const SILO_ACTIONS_MAX_WIDTH = '470px';
+
 const TokenPage: FC<{}> = () => {
   // Constants
   const whitelist = useWhitelist();
@@ -100,7 +102,7 @@ const TokenPage: FC<{}> = () => {
           >
             <SiloAssetOverviewCard token={whitelistedToken} />
           </Stack>
-          <Stack gap={2} width="100%" sx={{ flexShrink: 2 }}>
+          <Stack gap={2} width="100%" sx={{ flexShrink: 2, maxWidth: { lg: SILO_ACTIONS_MAX_WIDTH } }}>
             <SiloActions
               pool={pool}
               token={whitelistedToken as ERC20Token}
