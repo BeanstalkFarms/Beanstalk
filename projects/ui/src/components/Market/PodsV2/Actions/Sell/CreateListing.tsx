@@ -1,8 +1,7 @@
+import React, { useCallback, useMemo } from 'react';
 import { Alert, Box, InputAdornment, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
-import React, { useCallback, useMemo } from 'react';
-import toast from 'react-hot-toast';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import {
   PlotFragment,
@@ -26,7 +25,6 @@ import { ActionType } from '~/util/Actions';
 import {
   PlotMap,
   toStringBaseUnitBN,
-  parseError,
   displayTokenAmount,
   displayBN,
   displayFullBN
@@ -265,10 +263,10 @@ const CreateListingV2: FC<{}> = () => {
       formActions.resetForm();
     } catch (err) {
       if (txToast) {
-        txToast.error(err)
+        txToast.error(err);
       } else {
-        let errorToast = new TransactionToast({})
-        errorToast.error(err)
+        const errorToast = new TransactionToast({});
+        errorToast.error(err);
       }
       console.error(err);
     }

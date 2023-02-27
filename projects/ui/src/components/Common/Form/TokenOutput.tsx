@@ -1,5 +1,11 @@
 import React from 'react';
-import { Box, Stack, Tooltip, Typography } from '@mui/material';
+import {
+  Box,
+  Stack,
+  Tooltip,
+  Typography,
+  TypographyVariant,
+} from '@mui/material';
 
 import { Token } from '@beanstalk/sdk';
 
@@ -17,14 +23,26 @@ import IconWrapper from '../IconWrapper';
 import Row from '../Row';
 import TokenIcon from '../TokenIcon';
 
-type Props = {
-  children: React.ReactNode;
+type SizeProps = {
+  size?: 'small' | 'medium';
 };
 
-export default function TokenOutput({ children }: Props) {
+type Props = {
+  children: React.ReactNode;
+} & SizeProps;
+
+export default function TokenOutput({ children, size }: Props) {
+  const isMedium = size === 'medium';
+
+  const px = isMedium ? 2 : 1;
+  const py = isMedium ? 2 : 0.5;
+  const gap = isMedium ? 1 : 0.5;
+
   return (
-    <EmbeddedCard sx={{ p: 2 }}>
-      <Stack gap={1}>{children}</Stack>
+    <EmbeddedCard sx={{ px: px, py: py }}>
+      <Stack width="100%" gap={gap}>
+        {children}
+      </Stack>
     </EmbeddedCard>
   );
 }
@@ -39,6 +57,7 @@ type TokenOutputRowProps = {
   descriptionTooltip?: string;
   delta?: BigNumber | string;
   deltaSuffix?: string;
+  size?: 'small' | 'medium';
 };
 
 const formatBN = (value?: BigNumber, _decimals?: number, suffix?: string) => {
@@ -50,7 +69,7 @@ const formatBN = (value?: BigNumber, _decimals?: number, suffix?: string) => {
   }`;
 };
 
-TokenOutput.Row = function TokenOutputRow({
+function TokenOutputRow({
   label,
   token,
   amount,
@@ -60,28 +79,41 @@ TokenOutput.Row = function TokenOutputRow({
   descriptionTooltip,
   delta,
   deltaSuffix,
+  size = 'medium',
 }: TokenOutputRowProps) {
+  const isMedium = size === 'medium';
+  const boxSize = isMedium ? IconSize.medium : IconSize.small;
+  const labelVariant = (
+    isMedium ? 'subtitle1' : 'bodySmall'
+  ) as TypographyVariant;
+  const descriptionVariant = (
+    isMedium ? 'bodySmall' : 'caption'
+  ) as TypographyVariant;
+
   return (
     <Stack width="100%" gap={0}>
       <Row width="100%" justifyContent="space-between">
         <Row gap={0.5}>
-          <IconWrapper boxSize={IconSize.medium}>
-            <TokenIcon token={token} />
+          <IconWrapper boxSize={boxSize}>
+            <TokenIcon
+              token={token}
+              css={{
+                height: size === 'small' ? IconSize.xs : undefined,
+              }}
+            />
           </IconWrapper>
-          <Typography variant="subtitle1" color="text.primary">
+          <Typography variant={labelVariant} color="text.primary">
             {label || token.symbol}
           </Typography>
         </Row>
         <Tooltip title={amountTooltip || ''}>
           <Typography
-            variant="subtitle1"
+            variant={labelVariant}
             sx={{
-                color: amount.lt(0)
-                  ? BeanstalkPalette.trueRed
-                  : 'text.secondary',
-                textAlign: 'right',
-              }}
-            >
+              color: amount.lt(0) ? BeanstalkPalette.trueRed : 'text.secondary',
+              textAlign: 'right',
+            }}
+          >
             {formatBN(amount, token.displayDecimals, amountSuffix)}
           </Typography>
         </Tooltip>
@@ -91,13 +123,13 @@ TokenOutput.Row = function TokenOutputRow({
           <Row gap={0.5}>
             <Box
               sx={{
-                width: IconSize.medium,
-                height: FontSize.lg,
+                width: size === 'medium' ? IconSize.medium : IconSize.small,
+                height: size === 'medium' ? FontSize.lg : FontSize.sm,
               }}
             />
             {description ? (
               <Typography
-                variant="bodySmall"
+                variant={descriptionVariant}
                 color="text.secondary"
                 textAlign="right"
               >
@@ -119,7 +151,7 @@ TokenOutput.Row = function TokenOutputRow({
             ) : null}
           </Row>
           {delta ? (
-            <Typography variant="bodySmall" color="text.tertiary">
+            <Typography variant={descriptionVariant} color="text.tertiary">
               {typeof delta === 'string'
                 ? delta
                 : formatBN(delta, 2, deltaSuffix)}
@@ -129,4 +161,6 @@ TokenOutput.Row = function TokenOutputRow({
       ) : null}
     </Stack>
   );
-};
+}
+
+TokenOutput.Row = TokenOutputRow;

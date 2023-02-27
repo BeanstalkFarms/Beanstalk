@@ -2,14 +2,12 @@ import { Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useMemo } from 'react';
 import BigNumber from 'bignumber.js';
-import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import PlotInputField from '~/components/Common/Form/PlotInputField';
 import TransactionToast from '~/components/Common/TxnToast';
 import {
   PlotFragment,
   PlotSettingsFragment, SmartSubmitButton,
-  TokenOutputField,
   TxnSeparator
 } from '~/components/Common/Form';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
@@ -18,7 +16,7 @@ import useHarvestableIndex from '~/hooks/beanstalk/useHarvestableIndex';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useChainConstant from '~/hooks/chain/useChainConstant';
 import { useSigner } from '~/hooks/ledger/useSigner';
-import { parseError, PlotMap } from '~/util';
+import { PlotMap } from '~/util';
 import { FarmToMode } from '~/lib/Beanstalk/Farm';
 import { BEAN, PODS } from '~/constants/tokens';
 import { ZERO_BN } from '~/constants';
@@ -27,6 +25,8 @@ import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import { PodOrder } from '~/state/farmer/market';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
+import TokenOutput from '~/components/Common/Form/TokenOutput';
+import useSdk from '~/hooks/sdk';
 
 export type FillOrderFormValues = {
   plot: PlotFragment;
@@ -48,6 +48,7 @@ const FillOrderV2Form: FC<
   plots: allPlots,  // rename to prevent collision
   harvestableIndex,
 }) => {
+  const sdk = useSdk();
   /// Derived
   const plot = values.plot;
   const [eligiblePlots, numEligiblePlots] = useMemo(() =>
@@ -86,12 +87,13 @@ const FillOrderV2Form: FC<
         {isReady && (
           <>
             <TxnSeparator mt={0} />
-            <TokenOutputField
-              token={BEAN[1]}
-              amount={beansReceived}
-              isLoading={false}
-              size="small"
-            />
+            <TokenOutput size="small">
+              <TokenOutput.Row
+                token={sdk.tokens.BEAN}
+                amount={beansReceived}
+                size="small"
+              />
+            </TokenOutput>
             {/* <Box>
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />
@@ -231,10 +233,10 @@ const FillOrderForm: FC<{ podOrder: PodOrder }> = ({ podOrder }) => {
       navigate('/market/sell');
     } catch (err) {
       if (txToast) {
-        txToast.error(err)
+        txToast.error(err);
       } else {
-        let errorToast = new TransactionToast({})
-        errorToast.error(err)
+        const errorToast = new TransactionToast({});
+        errorToast.error(err);
       }
     } finally {
       formActions.setSubmitting(false);
