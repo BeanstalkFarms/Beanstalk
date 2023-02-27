@@ -321,13 +321,11 @@ const TokenInput: FC<
                 {/* Leaving the Stack rendered regardless of whether `quote` is defined
                   * ensures that the Balance section gets flexed to the right side of
                   * the input. */}
-                {quote && (
-                  <Row sx={{ flex: 1 }} spacing={1}>
-                    <Typography variant="bodySmall" color="text.secondary">
-                      {quote}
-                    </Typography>
-                  </Row>
-                )}
+                <Row sx={{ flex: 1 }} spacing={1}>
+                  <Typography variant="bodySmall" color="text.secondary">
+                    {quote}
+                  </Typography>
+                </Row>
                 {((balance || additionalBalance?.gt(0)) && !hideBalance) && (
                   <>
                     <Tooltip title={balanceTooltip}>
