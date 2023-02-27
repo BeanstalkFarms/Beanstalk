@@ -32,10 +32,10 @@ import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuotePro
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
-import TxnOutputField from '~/components/Common/Form/TxnOutputField';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
+import TokenOutput from '~/components/Common/Form/TokenOutput';
 
 // -----------------------------------------------------------------------
 
@@ -56,6 +56,10 @@ type ClaimFormValues = {
     slippage: number;
   } 
 } & ClaimAndPlantFormState;
+
+type ClaimQuoteHandlerParams = {
+  toMode?: FarmToMode 
+}
 
 const ClaimForm : FC<
   FormikProps<ClaimFormValues> & {
@@ -91,7 +95,7 @@ const ClaimForm : FC<
   const tokenOut = values.tokenOut || (token as ERC20Token);
 
   //
-  const handleQuote = useCallback<QuoteHandlerWithParams<{ toMode?: FarmToMode }>>(
+  const handleQuote = useCallback<QuoteHandlerWithParams<ClaimQuoteHandlerParams>>(
     async (_tokenIn, _amountIn, _tokenOut, { toMode }) => {
       if (_tokenIn === _tokenOut) return { amountOut: _amountIn };
       const amountIn = _tokenIn.amount(_amountIn.toString());
@@ -128,19 +132,16 @@ const ClaimForm : FC<
 
   // This should be memoized to prevent an infinite reset loop
   const quoteHandlerParams = useMemo(() => ({
-    params: { 
-      toMode: values.destination || FarmToMode.INTERNAL,
-    },
     quoteSettings: {
       ignoreSameToken: false,
       onReset: () => ({ amountOut: claimableBalance }),
     }
-  }), [claimableBalance, values.destination]);
+  }), [claimableBalance]);
 
   return (
     <Form autoComplete="off" noValidate>
       <Stack gap={1}>
-        <TokenQuoteProviderWithParams<{ toMode?: FarmToMode }>
+        <TokenQuoteProviderWithParams<ClaimQuoteHandlerParams>
           name="token"
           tokenOut={tokenOut}
           state={values.token}
@@ -162,6 +163,9 @@ const ClaimForm : FC<
           handleQuote={handleQuote}
           displayQuote={false}
           {...quoteHandlerParams}
+          params={{
+            toMode: values.destination || FarmToMode.INTERNAL,
+          }}
           belowComponent={
             <ClaimAndPlantFarmActions />
           }
@@ -199,23 +203,16 @@ const ClaimForm : FC<
         {isSubmittable ? (
           <>
             <TxnSeparator />
-            <TxnOutputField 
-              items={[
-                {
-                  primary: {
-                    title: token.symbol,
-                    amount: values.token.amountOut || ZERO_BN,
-                    token: token,
-                  }
-                }
-              ]}
-            />
+            {/* Token Output */}
+            <TokenOutput>
+              <TokenOutput.Row 
+                token={token}
+                amount={values.token.amountOut || ZERO_BN}
+              />
+            </TokenOutput>
+            {/* Additional Txns */}
             <ClaimAndPlantAdditionalOptions />
-            {/* <TokenOutputField
-              token={tokenOut}
-              amount={values.token.amountOut || ZERO_BN}
-              isLoading={values.token.quoting}
-            /> */}
+            {/* Txn Summary */}
             <Box>
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />

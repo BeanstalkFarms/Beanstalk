@@ -7,7 +7,6 @@ import {
   SmartSubmitButton,
   TokenAdornment,
   TokenInputField,
-  TokenOutputField,
   TxnSeparator
 } from '~/components/Common/Form';
 import TxnPreview from '~/components/Common/Form/TxnPreview';
@@ -18,7 +17,6 @@ import useFarmerFertilizer from '~/hooks/farmer/useFarmerFertilizer';
 import { FarmToMode } from '~/lib/Beanstalk/Farm';
 import { displayFullBN } from '~/util';
 import { ZERO_BN } from '~/constants';
-import { BEAN, SPROUTS } from '~/constants/tokens';
 import { ActionType } from '~/util/Actions';
 import copy from '~/constants/copy';
 import { FC } from '~/types';
@@ -29,6 +27,7 @@ import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import useSdk from '~/hooks/sdk';
 import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
+import TokenOutput from '~/components/Common/Form/TokenOutput';
 
 // ---------------------------------------------------
 
@@ -45,6 +44,7 @@ const QuickRinseForm: FC<
   values,
   isSubmitting
 }) => {
+  const SPROUTS = useSdk().tokens.SPROUTS;
   /// Extract
   const amountSprouts = values.amount;
   const isSubmittable = (
@@ -91,7 +91,7 @@ const RinseForm : FC<FormikProps<RinseFormValues>> = ({
   values,
   isSubmitting 
 }) => {
-  const sdk = useSdk();
+  const { SPROUTS, BEAN } = useSdk().tokens;
   /// Extract
   const amountSprouts = values.amount;
   const isSubmittable = (
@@ -114,7 +114,7 @@ const RinseForm : FC<FormikProps<RinseFormValues>> = ({
           InputProps={{
             endAdornment: (
               <TokenAdornment
-                token={sdk.tokens.SPROUTS}
+                token={SPROUTS}
               />
             )
           }}
@@ -126,11 +126,16 @@ const RinseForm : FC<FormikProps<RinseFormValues>> = ({
         {amountSprouts?.gt(0) ? (
           <>
             <TxnSeparator />
-            <TokenOutputField
-              token={BEAN[1]}
-              amount={amountSprouts}
-            />
+            {/* Token Outputs */}
+            <TokenOutput>
+              <TokenOutput.Row 
+                token={BEAN}
+                amount={amountSprouts}
+              />
+            </TokenOutput>
+            {/* Additional Txns */}
             <ClaimAndPlantAdditionalOptions />
+            {/* Txn Summary */}
             <Box sx={{ width: '100%', mt: 0 }}>
               <TxnAccordion defaultExpanded={false}>
                 <TxnPreview
@@ -193,6 +198,7 @@ const Rinse : FC<{ quick?: boolean }> = ({ quick }) => {
   const onSubmit = useCallback(async (values: RinseFormValues, formActions: FormikHelpers<RinseFormValues>) => {
     let txToast;
     try {
+      const { SPROUTS } = sdk.tokens;
       middleware.before();
       const account = await sdk.getAccount(); 
       if (!account) throw new Error('Connect a wallet first.');
@@ -231,7 +237,7 @@ const Rinse : FC<{ quick?: boolean }> = ({ quick }) => {
           destination: FarmToMode.INTERNAL,
           amount: ZERO_BN,
           farmActions: {
-            options: [],
+            options: ClaimPlant.presets.none,
             selected: undefined,
             additional: undefined,
             exclude: [ClaimPlantAction.RINSE]

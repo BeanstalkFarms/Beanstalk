@@ -1,18 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Accordion, AccordionDetails, Alert, Box, Stack, Typography } from '@mui/material';
+import { Accordion, AccordionDetails, Box, Stack, Typography } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Token, ERC20Token, NativeToken, DataSource } from '@beanstalk/sdk';
 import { ethers } from 'ethers';
-import TokenOutputField from '~/components/Common/Form/TokenOutputField';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import { ClaimAndPlantFormState, FormStateNew, SettingInput, SmartSubmitButton, TxnSettings } from '~/components/Common/Form';
 import TxnPreview from '~/components/Common/Form/TxnPreview';
 import TxnSeparator from '~/components/Common/Form/TxnSeparator';
 import PillRow from '~/components/Common/Form/PillRow';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
-import { STALK } from '~/constants/tokens';
 import { displayFullBN, MaxBN, MinBN } from '~/util/Tokens';
 import { ZERO_BN } from '~/constants';
 import useToggle from '~/hooks/display/useToggle';
@@ -25,8 +22,6 @@ import useBDV from '~/hooks/beanstalk/useBDV';
 import TokenIcon from '~/components/Common/TokenIcon';
 import { useFetchPools } from '~/state/bean/pools/updater';
 import { ActionType } from '~/util/Actions';
-import { IconSize } from '~/components/App/muiTheme';
-import IconWrapper from '~/components/Common/IconWrapper';
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
@@ -39,6 +34,8 @@ import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarm
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import useAccount from '~/hooks/ledger/useAccount';
+import WarningAlert from '~/components/Common/Alert/WarningAlert';
+import TokenOutput from '~/components/Common/Form/TokenOutput';
 
 // -----------------------------------------------------------------------
 
@@ -241,12 +238,12 @@ const ConvertForm : FC<
             !values.maxAmountIn         // still loading `maxAmountIn`
             || values.maxAmountIn.eq(0) // = 0 means we can't make this conversion
           )}
-          belowComponent={
-            <ClaimAndPlantFarmActions />
-          }
           params={{
             slippage: values.settings.slippage
           }}
+          belowComponent={
+            <ClaimAndPlantFarmActions />
+          }
         />
         {/* Output token */}
         {depositedAmount.gt(0) ? (
@@ -259,72 +256,66 @@ const ConvertForm : FC<
             <Typography>{tokenOut?.symbol || 'Select token'}</Typography>
           </PillRow>
         ) : null}
+        {/* Warning Alert */}
         {(!canConvert && tokenOut) ? (
           <Box>
-            <Alert
-              color="warning"
-              icon={(
-                <IconWrapper boxSize={IconSize.medium}>
-                  <WarningAmberIcon sx={{ fontSize: IconSize.small, alignItems: 'flex-start' }} />
-                </IconWrapper>
-              )}
-            >
-              {tokenIn.symbol} can only be Converted to {tokenOut.symbol} when deltaB {tokenIn.isLP || tokenIn.symbol === 'urBEAN3CRV' ? '<' : '>'} 0.<br />
+            <WarningAlert iconSx={{ alignItems: 'flex-start' }}>
+              {tokenIn.symbol} can only be Converted to {tokenOut?.symbol} when deltaB {tokenIn.isLP || tokenIn.symbol === 'urBEAN3CRV' ? '<' : '>'} 0.<br />
               {/* <Typography sx={{ opacity: 0.7 }} fontSize={FontSize.sm}>Press ⌥ + 1 to see deltaB.</Typography> */}
-            </Alert>
+            </WarningAlert>
           </Box>
         ) : null}
         {(amountIn && tokenOut && maxAmountIn && amountOut?.gt(0)) ? (
           <>
             <TxnSeparator mt={-1} />
-            <TokenOutputField
-              token={getNewToOldToken(tokenOut)}
-              amount={amountOut || ZERO_BN}
-              amountSecondary={bdvOut ? `~${displayFullBN(bdvOut, 2)} BDV` : undefined}
-            />
-            <Stack direction={{ xs: 'column', md: 'row' }} gap={1} justifyContent="center">
-              <Box sx={{ flex: 1 }}>
-                <TokenOutputField
-                  token={STALK}
-                  amount={deltaStalk || ZERO_BN}
-                  amountTooltip={( 
-                    deltaBDV?.gt(0) ? (
-                      <>
-                        Converting will increase the BDV of your Deposit by {displayFullBN(deltaBDV || ZERO_BN, 6)}{deltaBDV?.gt(0) ? ', resulting in a gain of Stalk' : ''}.
-                      </>
-                    ) : (
-                      <>
-                        The BDV of your Deposit won&apos;t change with this Convert.
-                      </>
-                    )
-                  )}
-                />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <TokenOutputField
-                  token={getNewToOldToken(sdk.tokens.SEEDS)}
-                  amount={deltaSeeds || ZERO_BN}
-                  amountTooltip={(
+            {/* Token Outputs */}
+            <TokenOutput>
+              <TokenOutput.Row 
+                token={tokenOut}
+                amount={amountOut || ZERO_BN}
+                delta={bdvOut ? `~${displayFullBN(bdvOut, 2)} BDV` : undefined}
+              />
+              <TokenOutput.Row 
+                token={sdk.tokens.STALK}
+                amount={deltaStalk || ZERO_BN}
+                amountTooltip={
+                  deltaBDV?.gt(0) ? (
                     <>
-                      Converting from {tokenIn.symbol} to {tokenOut.symbol} results in {(
-                        (!deltaSeedsPerBDV || deltaSeedsPerBDV.eq(0)) 
-                          ? 'no change in SEEDS per BDV'
-                          : `a ${deltaSeedsPerBDV.gt(0) ? 'gain' : 'loss'} of ${deltaSeedsPerBDV.abs().toString()} Seeds per BDV`
-                      )}.
+                      Converting will increase the BDV of your Deposit by {displayFullBN(deltaBDV || ZERO_BN, 6)}{deltaBDV?.gt(0) ? ', resulting in a gain of Stalk' : ''}.
                     </>
-                  )}
-                />
-              </Box>
-            </Stack>
+                  ) : (
+                    <>
+                      The BDV of your Deposit won&apos;t change with this Convert.
+                    </>
+                  )
+                }
+              />
+              <TokenOutput.Row 
+                token={sdk.tokens.SEEDS}
+                amount={deltaSeeds || ZERO_BN}
+                amountTooltip={
+                  <>
+                    Converting from {tokenIn.symbol} to {tokenOut.symbol} results in {(
+                      (!deltaSeedsPerBDV || deltaSeedsPerBDV.eq(0)) 
+                        ? 'no change in SEEDS per BDV'
+                        : `a ${deltaSeedsPerBDV.gt(0) ? 'gain' : 'loss'} of ${deltaSeedsPerBDV.abs().toHuman()} Seeds per BDV`
+                    )}.
+                  </>
+                }
+              />
+            </TokenOutput>
+            {/* Warning Alert */}
             {(maxAmountUsed && maxAmountUsed.gt(0.9)) ? (
               <Box>
-                <Alert color="warning" icon={<IconWrapper boxSize={IconSize.medium}><WarningAmberIcon color="warning" sx={{ fontSize: IconSize.small }} /></IconWrapper>}>
+                <WarningAlert>
                   You are converting {displayFullBN(maxAmountUsed.times(100), 4, 0)}% of the way to the peg. 
                   When Converting all the way to the peg, the Convert may fail due to a small amount of slippage in the direction of the peg.
-                </Alert>
+                </WarningAlert>
               </Box>
             ) : null}
+            {/* Additional Txns */}
             <ClaimAndPlantAdditionalOptions />
+            {/* Txn Summary */}
             <Box>
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />

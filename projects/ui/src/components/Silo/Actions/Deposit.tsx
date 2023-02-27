@@ -5,10 +5,7 @@ import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
 import { useSelector } from 'react-redux';
 import { ERC20Token, NativeToken, Token } from '@beanstalk/sdk';
-import {
-  SEEDS,
-  STALK,
-} from '~/constants/tokens';
+
 import {
   TokenSelectMode,
 } from '~/components/Common/Form/TokenSelectDialog';
@@ -39,18 +36,18 @@ import { useFetchBeanstalkSilo } from '~/state/beanstalk/silo/updater';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { BalanceFrom, balanceFromToMode } from '~/components/Common/Form/BalanceFromRow';
-import TokenOutputsField from '~/components/Common/Form/TokenOutputsField';
 import useSdk from '~/hooks/sdk';
 import useFarmerClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
-import { depositSummary } from '~/lib/Beanstalk/Silo/Deposit';
+import { deposit as getDepositSummary } from '~/lib/Beanstalk/Silo/Deposit';
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
 import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import useFarmerClaimingBalance from '~/hooks/farmer/claim-plant/useFarmerClaimingBalance';
+import TokenOutput from '~/components/Common/Form/TokenOutput';
 
 // -----------------------------------------------------------------------
 
@@ -66,6 +63,8 @@ type DepositQuoteHandler = {
   balanceFrom: BalanceFrom, 
 }
 
+type ClaimPlantOptions = ReturnType<typeof useFarmerClaimAndPlantOptions>;
+
 // -----------------------------------------------------------------------
 
 const DepositForm: FC<
@@ -76,6 +75,7 @@ const DepositForm: FC<
     balances: FarmerBalances;
     contract: ethers.Contract;
     handleQuote: QuoteHandlerWithParams<DepositQuoteHandler>;
+    getClaimPlantTxnActions: ClaimPlantOptions['getTxnActions'];
   }
 > = ({
   // Custom
@@ -85,15 +85,17 @@ const DepositForm: FC<
   balances,
   contract,
   handleQuote,
+  getClaimPlantTxnActions,
   // Formik
   values,
   isSubmitting,
   setFieldValue,
 }) => {
+  const sdk = useSdk();
   const additionalBalances = useFarmerClaimingBalance();
 
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
-  const { amount, bdv, stalk, seeds, actions } = depositSummary(
+  const { amount, bdv, stalk, seeds, actions } = getDepositSummary(
       whitelistedToken,
       values.tokens,
       amountToBdv,
@@ -140,6 +142,7 @@ const DepositForm: FC<
         setBalanceFrom={handleSetBalanceFrom}
         applicableBalances={additionalBalances}
       />
+      {/* Input Field */}
       <Stack gap={1}>
         {values.tokens.map((tokenState, index) => {
           const key = tokenState.token.symbol === 'ETH' ? 'eth' : tokenState.token.address;
@@ -170,38 +173,39 @@ const DepositForm: FC<
         {isReady ? (
           <>
             <TxnSeparator />
-            <TokenOutputsField
-              groups={[
-                {
-                  data: [{
-                    token: whitelistedToken,
-                    amount: amount,
-                    disablePrefix: true,
-                  },
-                  {
-                    token: STALK,
-                    amount: stalk,
-                    amountTooltip: (
-                      <>
-                        1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
-                        1 BDV &rarr; {whitelistedToken.getStalk()?.toHuman()} STALK
-                      </>
-                    ),
-                  },
-                  {
-                    token: SEEDS,
-                    amount: seeds,
-                    amountTooltip: (
-                      <>
-                        1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
-                        1 BDV &rarr; {whitelistedToken.getSeeds()?.toHuman()} SEEDS
-                      </>
-                    )
-                  }]
+            {/* Token Outputs */}
+            <TokenOutput>
+              <TokenOutput.Row 
+                token={whitelistedToken}
+                label={whitelistedToken.symbol}
+                amount={amount}
+              />
+              <TokenOutput.Row 
+                token={sdk.tokens.STALK}
+                label={sdk.tokens.STALK.symbol}
+                amount={stalk}
+                amountTooltip={
+                  <>
+                    1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
+                    1 BDV &rarr; {whitelistedToken.getStalk()?.toHuman()} STALK
+                  </>
                 }
-              ]}
-            />
-            <ClaimAndPlantAdditionalOptions  />
+              />
+              <TokenOutput.Row 
+                token={sdk.tokens.SEEDS}
+                label={sdk.tokens.SEEDS.symbol}
+                amount={seeds}
+                amountTooltip={
+                  <>
+                    1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
+                    1 BDV &rarr; {whitelistedToken.getSeeds()?.toHuman()} SEEDS
+                  </>
+                }
+              />
+            </TokenOutput>
+            {/* Additional Txns */}
+            <ClaimAndPlantAdditionalOptions />
+            {/* Txn Summary */}
             <Box>
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />
@@ -309,14 +313,12 @@ const Deposit: FC<{
   ],
     balanceFrom: BalanceFrom.TOTAL,
     farmActions: {
-      options: ClaimPlant.presets.claimBeans,
+      options: ClaimPlant.presets.rinseAndHarvest,
       selected: undefined,
       additional: undefined,
       required: [ClaimPlantAction.MOW],
     },
   }), [baseToken]);
-
-  console.log('rerender...');
 
   const getWorkflow = useCallback(async (
     _tokenIn: ERC20Token | NativeToken, _tokenOut: ERC20Token | NativeToken, balanceFrom: BalanceFrom,
@@ -441,6 +443,7 @@ const Deposit: FC<{
             whitelistedToken={whitelistedToken}
             balances={balances}
             contract={sdk.contracts.beanstalk}
+            getClaimPlantTxnActions={claimPlantOptions.getTxnActions}
             {...formikProps}
           />
         </>

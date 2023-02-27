@@ -1,8 +1,8 @@
 import { useCallback, useMemo } from 'react';
-import { Token } from '@beanstalk/sdk';
+import { FarmToMode, Token } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import { ZERO_BN } from '~/constants';
-import useSdk from '../../sdk';
+import useSdk, { getNewToOldToken } from '../../sdk';
 
 import useFarmerFertilizer from '../useFarmerFertilizer';
 import useFarmerField from '../useFarmerField';
@@ -10,6 +10,45 @@ import useFarmerSilo from '../useFarmerSilo';
 import useRevitalized from '../useRevitalized';
 import { normalizeBN } from '~/util';
 import { ClaimPlantAction } from '~/util/ClaimPlant';
+import { Action, ActionType } from '~/util/Actions';
+
+const tooltips = {
+  mow: 'Add Grown Stalk to your Stalk balance. Mow is called upon any interaction with the Silo.',
+  plant:
+    'Add Plantable Seeds to your Seed balance. Also Mows Grown Stalk, Deposits Earned Beans and claims Earned Stalk.',
+  enroot:
+    'Add Revitalized Stalk and Seeds to your Stalk and Seed balances, respectively. Also Mows Grown Stalk.',
+  harvest: 'Redeem debt paid back by Beanstalk for 1 Bean',
+  rinse: 'Redeem debt paid back by Beanstalk for purchasing fertilizer',
+  claim: 'Claim Beans that have been withdrawn from the silo',
+  grownStalk:
+    'Stalk earned from Seeds. Grown Stalk does not contribute to Stalk ownership until it is Mown. Grown Stalk is Mown at the beginning of any Silo interaction.',
+  earnedBeans:
+    'The number of Beans earned since your last Plant. Upon Plant, Earned Beans are Deposited in the current Season.',
+  earnedStalk:
+    'Stalk earned from Earned Beans. Earned Stalk automatically contribute to Stalk ownership and do not require any action to claim them.',
+  earnedSeeds:
+    'Seeds earned in conjunction with Earned Beans. Plantable Seeds must be Planted in order to grow Stalk.',
+  harvestablePods:
+    'The number of Pods that have become redeemable for 1 Bean (i.e., the debt paid back by Beanstalk)',
+  rinsableSprouts:
+    'Sprouts that are redeemable for 1 Bean each. Rinsable Sprouts must be Rinsed in order to use them.',
+  claimableBeans:
+    'Beans that have been withdrawn from the silo and are ready to be claimed.',
+  revitalizedSeeds:
+    'Seeds that have vested for pre-exploit Silo Members. Revitalized Seeds are minted as the percentage of Fertilizer sold increases. Revitalized Seeds do not generate Stalk until Enrooted.',
+  revitalizedStalk:
+    'Stalk that have vested for pre-exploit Silo Members. Revitalized Stalk are minted as the percentage of Fertilizer sold increases. Revitalized Stalk does not contribute to Stalk ownership until Enrooted.',
+};
+
+type TXActionParams = {
+  [ClaimPlantAction.MOW]: never;
+  [ClaimPlantAction.PLANT]: never;
+  [ClaimPlantAction.ENROOT]: never;
+  [ClaimPlantAction.HARVEST]: { toMode?: FarmToMode };
+  [ClaimPlantAction.RINSE]: { toMode?: FarmToMode };
+  [ClaimPlantAction.CLAIM]: { toMode?: FarmToMode };
+};
 
 type ClaimableOption = {
   /**
@@ -65,39 +104,32 @@ export type ClaimPlantItem = {
    * This is only applicable to CLAIM actions (CLAIM, HARVEST, RINSE)
    */
   claimable?: ClaimableOption;
+  /**
+   *
+   */
+  txActions: (...params: TXActionParams[ClaimPlantAction][]) => Action[];
 };
 
 export type ClaimPlantItems = {
   [action in ClaimPlantAction]: ClaimPlantItem;
 };
 
-const tooltips = {
-  mow: 'Add Grown Stalk to your Stalk balance. Mow is called upon any interaction with the Silo.',
-  plant:
-    'Add Plantable Seeds to your Seed balance. Also Mows Grown Stalk, Deposits Earned Beans and claims Earned Stalk.',
-  enroot:
-    'Add Revitalized Stalk and Seeds to your Stalk and Seed balances, respectively. Also Mows Grown Stalk.',
-  harvest: 'Redeem debt paid back by Beanstalk for 1 Bean',
-  rinse: 'Redeem debt paid back by Beanstalk for purchasing fertilizer',
-  claim: 'Claim Beans that have been withdrawn from the silo',
-  grownStalk:
-    'Stalk earned from Seeds. Grown Stalk does not contribute to Stalk ownership until it is Mown. Grown Stalk is Mown at the beginning of any Silo interaction.',
-  earnedBeans:
-    'The number of Beans earned since your last Plant. Upon Plant, Earned Beans are Deposited in the current Season.',
-  earnedStalk:
-    'Stalk earned from Earned Beans. Earned Stalk automatically contribute to Stalk ownership and do not require any action to claim them.',
-  earnedSeeds:
-    'Seeds earned in conjunction with Earned Beans. Plantable Seeds must be Planted in order to grow Stalk.',
-  harvestablePods:
-    'The number of Pods that have become redeemable for 1 Bean (i.e., the debt paid back by Beanstalk)',
-  rinsableSprouts:
-    'Sprouts that are redeemable for 1 Bean each. Rinsable Sprouts must be Rinsed in order to use them.',
-  claimableBeans:
-    'Beans that have been withdrawn from the silo and are ready to be claimed.',
-  revitalizedSeeds:
-    'Seeds that have vested for pre-exploit Silo Members. Revitalized Seeds are minted as the percentage of Fertilizer sold increases. Revitalized Seeds do not generate Stalk until Enrooted.',
-  revitalizedStalk:
-    'Stalk that have vested for pre-exploit Silo Members. Revitalized Stalk are minted as the percentage of Fertilizer sold increases. Revitalized Stalk does not contribute to Stalk ownership until Enrooted.',
+const isClaimSiloRewardsAction = (action: ClaimPlantAction) => {
+  const isClaimRewardsAction =
+    action === ClaimPlantAction.MOW ||
+    action === ClaimPlantAction.ENROOT ||
+    action === ClaimPlantAction.PLANT;
+
+  return isClaimRewardsAction;
+};
+
+const isClaimingBeansAction = (action: ClaimPlantAction) => {
+  const isClaiming =
+    action === ClaimPlantAction.CLAIM ||
+    action === ClaimPlantAction.HARVEST ||
+    action === ClaimPlantAction.RINSE;
+
+  return isClaiming;
 };
 
 export default function useFarmerClaimAndPlantOptions() {
@@ -135,8 +167,14 @@ export default function useFarmerClaimAndPlantOptions() {
           {
             description: 'Grown Stalk',
             tooltip: 'tooltip',
-            token: BEAN,
+            token: STALK,
             amount: grownStalk,
+          },
+        ],
+        txActions: () => [
+          {
+            type: ActionType.MOW,
+            stalk: grownStalk,
           },
         ],
       },
@@ -166,6 +204,14 @@ export default function useFarmerClaimAndPlantOptions() {
             amount: earnedSeeds,
           },
         ],
+        txActions: () => [
+          {
+            type: ActionType.PLANT,
+            bean: earnedBeans,
+            stalk: earnedStalk,
+            seeds: earnedSeeds,
+          },
+        ],
       },
       [ClaimPlantAction.ENROOT]: {
         title: 'Enroot',
@@ -186,6 +232,13 @@ export default function useFarmerClaimAndPlantOptions() {
             amount: revitalizedStalk,
           },
         ],
+        txActions: () => [
+          {
+            type: ActionType.ENROOT,
+            seeds: revitalizedSeeds,
+            stalk: revitalizedStalk,
+          },
+        ],
       },
       [ClaimPlantAction.HARVEST]: {
         title: 'Harvest',
@@ -200,9 +253,20 @@ export default function useFarmerClaimAndPlantOptions() {
           {
             description: 'Harvestable Pods',
             tooltip: tooltips.harvestablePods,
-            token: sdk.tokens.PODS,
+            token: PODS,
             amount: harvestablePods,
           },
+        ],
+        txActions: (params) => [
+          {
+            type: ActionType.HARVEST,
+            amount: harvestablePods,
+          },
+          // {
+          //   type: ActionType.RECEIVE_BEANS,
+          //   amount: harvestablePods,
+          //   destination: params?.toMode,
+          // },
         ],
       },
       [ClaimPlantAction.RINSE]: {
@@ -218,9 +282,20 @@ export default function useFarmerClaimAndPlantOptions() {
           {
             description: 'Rinsable Sprouts',
             tooltip: tooltips.rinsableSprouts,
-            token: sdk.tokens.SPROUTS,
+            token: SPROUTS,
             amount: rinsableSprouts,
           },
+        ],
+        txActions: (params) => [
+          {
+            type: ActionType.RINSE,
+            amount: rinsableSprouts,
+          },
+          // {
+          //   type: ActionType.RECEIVE_BEANS,
+          //   amount: rinsableSprouts,
+          //   destination: params?.toMode,
+          // },
         ],
       },
       [ClaimPlantAction.CLAIM]: {
@@ -239,6 +314,18 @@ export default function useFarmerClaimAndPlantOptions() {
             token: BEAN,
             amount: claimableBeans,
           },
+        ],
+        txActions: (params) => [
+          {
+            type: ActionType.CLAIM_WITHDRAWAL,
+            amount: claimableBeans,
+            token: getNewToOldToken(BEAN),
+          },
+          // {
+          //   type: ActionType.RECEIVE_BEANS,
+          //   amount: claimableBeans,
+          //   destination: params?.toMode,
+          // },
         ],
       },
     };
@@ -276,5 +363,67 @@ export default function useFarmerClaimAndPlantOptions() {
     [options, sdk.tokens.BEAN]
   );
 
-  return { options, getClaimable };
+  const getTxnActions = useCallback(
+    (actions: ClaimPlantAction[], _toMode?: FarmToMode) =>
+      actions.reduce<Action[]>((prev, curr) => {
+        const option = options[curr];
+        const txnActions = isClaimSiloRewardsAction(curr)
+          ? option.txActions({ toMode: _toMode || FarmToMode.INTERNAL })
+          : option.txActions();
+
+        return prev.concat(...txnActions);
+      }, []),
+    [options]
+  );
+
+  return { options, getClaimable, getTxnActions };
 }
+
+// const aggregateTxnActions = useCallback((
+//   _pre: ClaimPlantAction[],
+//   _post: ClaimPlantAction[],
+//   _txnActions: Action[],
+//   _tokenIn?: Token,
+//   _toMode?: FarmToMode,
+// ) => {
+//   const postStartIndex = _pre.length;
+//   const isClaimingBean = false;
+//   const actions = [..._pre, ..._post].reduce<{ pre: Action[], post: Action[] }>((prev, curr, idx) => {
+//     const option = options[curr];
+//     let _actions;
+//     if (isClaimSiloRewardsAction(curr)) {
+//       _actions = option.txActions({ toMode: _toMode || FarmToMode.INTERNAL });
+//     } else {
+//       _actions = option.txActions();
+//     }
+
+//     const claimPlantTxnActions: Action[] = isClaimSiloRewardsAction(curr)
+//       ? option.txActions({ toMode: _toMode || FarmToMode.INTERNAL })
+//       : option.txActions();
+
+//     if (idx >= postStartIndex) {
+//       prev.post = [...prev.post, ...claimPlantTxnActions];
+//     } else {
+//       prev.pre = [...prev.pre, ...claimPlantTxnActions];
+//     }
+//     return prev;
+//   }, { pre: [], post: [] });
+// }, [options]);
+
+// const combineTxnActions = useCallback(
+//   (
+//     actions: ClaimPlantAction[],
+//     txnActions: Action[],
+//     _toMode?: FarmToMode
+//   ) => {
+//     const claimPlantActions = actions.reduce<Action[]>((prev, curr) => {
+//       const option = options[curr];
+//       const claimPlantTxnActions: Action[] = isClaimSiloRewardsAction(curr)
+//         ? option.txActions({ toMode: _toMode || FarmToMode.INTERNAL })
+//         : option.txActions();
+
+//       return prev.concat(...claimPlantTxnActions);
+//     }, []);
+//   },
+//   [options]
+// );

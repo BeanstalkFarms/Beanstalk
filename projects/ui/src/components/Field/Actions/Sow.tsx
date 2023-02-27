@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { Accordion, AccordionDetails, Alert, Box, Divider, Link, Stack, Typography } from '@mui/material';
+import { Accordion, AccordionDetails, Box, Divider, Link, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { useSelector } from 'react-redux';
 import { Token, ERC20Token, NativeToken } from '@beanstalk/sdk';
@@ -15,7 +14,6 @@ import {
   SettingInput,
   SlippageSettingsFragment,
   SmartSubmitButton,
-  TokenOutputField,
   TxnPreview,
   TxnSeparator,
   TxnSettings
@@ -35,9 +33,7 @@ import { ZERO_BN } from '~/constants';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import { ActionType } from '~/util/Actions';
 import { IconSize } from '~/components/App/muiTheme';
-import IconWrapper from '~/components/Common/IconWrapper';
 import TokenIcon from '~/components/Common/TokenIcon';
-import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import ClaimPlant from '~/util/ClaimPlant';
@@ -50,6 +46,8 @@ import { BalanceFrom, balanceFromToMode } from '~/components/Common/Form/Balance
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import useFarmerClaimingBalance from '~/hooks/farmer/claim-plant/useFarmerClaimingBalance';
+import WarningAlert from '~/components/Common/Alert/WarningAlert';
+import TokenOutput from '~/components/Common/Form/TokenOutput';
 
 type SowFormValues = FormStateNew & {
   settings: SlippageSettingsFragment;
@@ -179,6 +177,7 @@ const SowForm : FC<
         applicableBalances={claimingBalances}
       />
       <Stack gap={1}>
+        {/* Input Field */}
         <TokenQuoteProviderWithParams<SowFormQuoteParams>
           key="tokens.0"
           name="tokens.0"
@@ -203,44 +202,32 @@ const SowForm : FC<
         />
         {!hasSoil ? (
           <Box>
-            <Alert color="warning" icon={<IconWrapper boxSize={IconSize.medium}><WarningAmberIcon sx={{ fontSize: IconSize.small }} /></IconWrapper>} sx={{ color: 'black' }}>
+            <WarningAlert sx={{ color: 'black' }}>
               There is currently no Soil. <Link href="https://docs.bean.money/almanac/farm/field#soil" target="_blank" rel="noreferrer">Learn more</Link>
-            </Alert>
+            </WarningAlert>
           </Box>
         ) : null}
         {isSubmittable ? (
           <>
             <TxnSeparator />
-            <TokenOutputField
-              token={PODS}
-              amount={numPods}
-              override={(
-                <Row gap={0.5}>
-                  <TokenIcon
-                    token={PODS}
-                    css={{
-                      height: IconSize.small,
-                    }}
-                  />
-                  <Typography variant="bodyMedium">
-                    <Typography display={{ xs: 'none', sm: 'inline' }} variant="bodyMedium">{PODS.symbol} </Typography>@ {displayBN(podLineLength)}
-                  </Typography>
-                </Row>
-              )}
-            />
+            {/* Token outputs */}
+            <TokenOutput>
+              <TokenOutput.Row 
+                token={sdk.tokens.PODS}
+                amount={numPods}
+                amountSuffix={` @ ${displayBN(podLineLength)}`}
+              />
+            </TokenOutput>
+            {/* Warning alert */}
             {(maxAmountUsed && maxAmountUsed.gt(0.9)) ? (
-              <Box>
-                <Alert
-                  color="warning"
-                  icon={<IconWrapper boxSize={IconSize.medium}><WarningAmberIcon sx={{ fontSize: IconSize.small }} /></IconWrapper>}
-                  sx={{ color: 'black' }}
-                >
-                  If there is less Soil at the time of execution, this transaction will Sow Beans into the remaining Soil and send any unused Beans to your Farm Balance.
-                  {/* You are Sowing {displayFullBN(maxAmountUsed.times(100), 4, 0)}% of remaining Soil.  */}
-                </Alert>
-              </Box>
+              <WarningAlert>
+                If there is less Soil at the time of execution, this transaction will Sow Beans into the remaining Soil and send any unused Beans to your Farm Balance.
+                {/* You are Sowing {displayFullBN(maxAmountUsed.times(100), 4, 0)}% of remaining Soil.  */}
+              </WarningAlert>
             ) : null}
+            {/* Additional Txns */}
             <ClaimAndPlantAdditionalOptions />
+            {/* Txn summary */}
             <Box>
               <Accordion variant="outlined" color="primary">
                 <StyledAccordionSummary title="Transaction Details" />

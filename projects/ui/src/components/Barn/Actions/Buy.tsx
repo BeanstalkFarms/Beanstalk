@@ -1,9 +1,8 @@
 import React, { useCallback, useMemo } from 'react';
-import { Alert, Box, Divider, Link, Stack, Typography } from '@mui/material';
+import { Box, Divider, Link, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Token, ERC20Token, NativeToken } from '@beanstalk/sdk';
 import { ethers } from 'ethers';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
@@ -13,7 +12,6 @@ import TxnAccordion from '~/components/Common/TxnAccordion';
 import { BUY_FERTILIZER } from '~/components/Barn/FertilizerItemTooltips';
 import SmartSubmitButton from '~/components/Common/Form/SmartSubmitButton';
 import TransactionToast from '~/components/Common/TxnToast';
-import IconWrapper from '~/components/Common/IconWrapper';
 import { IconSize } from '~/components/App/muiTheme';
 import TokenIcon from '~/components/Common/TokenIcon';
 import useToggle from '~/hooks/display/useToggle';
@@ -40,6 +38,7 @@ import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPl
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import useFarmerClaimingBalance from '~/hooks/farmer/claim-plant/useFarmerClaimingBalance';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
+import WarningAlert from '~/components/Common/Alert/WarningAlert';
 
 // ---------------------------------------------------
 
@@ -150,15 +149,14 @@ const BuyForm : FC<
                   tooltip={BUY_FERTILIZER}
                 />
               </Box>
-              <Alert
-                color="warning"
-                icon={<IconWrapper boxSize={IconSize.medium}><WarningAmberIcon sx={{ fontSize: IconSize.small }} /></IconWrapper>}
-                sx={{ color: 'black' }}
-              >The amount of Fertilizer received rounds down to the nearest USDC. {usdc?.toFixed(2)} USDC = {fert?.toFixed(0)} FERT.
-              </Alert>
+              <WarningAlert>
+                The amount of Fertilizer received rounds down to the nearest USDC. {usdc?.toFixed(2)} USDC = {fert?.toFixed(0)} FERT. 
+              </WarningAlert>
+              {/* Additional Txns */}
               <Box width="100%">
                 <ClaimAndPlantAdditionalOptions />
               </Box>
+              {/* Txn summary */}
               <Box sx={{ width: '100%', mt: 0 }}>
                 <TxnAccordion defaultExpanded={false}>
                   <TxnPreview

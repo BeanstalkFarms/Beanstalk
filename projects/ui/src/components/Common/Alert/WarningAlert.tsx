@@ -6,29 +6,21 @@ import { IconSize } from '~/components/App/muiTheme';
 import IconWrapper from '../IconWrapper';
 
 export type WarningAlertProps = {
-  enabled?: boolean;
-  iconWrapperSx?: SxProps<Theme>;
   iconSx?: SxProps<Theme>;
 } & AlertProps;
 
 const WarningAlert: FC<WarningAlertProps> = ({
-  enabled = false,
   iconSx,
-  iconWrapperSx,
   ...alertProps
-}) => {
-  if (!enabled) return null;
-
-  return (
-    <Alert
-      color="warning"
-      icon={
-        <IconWrapper boxSize={IconSize.medium} sx={{ ...iconWrapperSx }}>
-          <WarningAmberIcon sx={{ fontSize: IconSize.small, ...iconSx }} />
-        </IconWrapper>
+}) => (
+  <Alert
+    color="warning"
+    icon={
+      <IconWrapper boxSize={IconSize.medium}>
+        <WarningAmberIcon sx={{ fontSize: IconSize.small, ...iconSx }} />
+      </IconWrapper>
       }
-      {...alertProps}
+    {...alertProps}
     />
   );
-};
 export default WarningAlert;

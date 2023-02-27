@@ -13,7 +13,6 @@ import {
   ClaimAndPlantFormState,
   SmartSubmitButton,
   TokenInputField,
-  TokenOutputField,
   TxnPreview,
   TxnSeparator,
 } from '~/components/Common/Form';
@@ -21,7 +20,7 @@ import { ActionType } from '~/util/Actions';
 import { FarmToMode } from '~/lib/Beanstalk/Farm';
 import { displayFullBN } from '~/util';
 import useFarmerField from '~/hooks/farmer/useFarmerField';
-import { BEAN, PODS } from '~/constants/tokens';
+import { PODS } from '~/constants/tokens';
 import copy from '~/constants/copy';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
 import TransactionToast from '~/components/Common/TxnToast';
@@ -35,6 +34,7 @@ import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import useSdk from '~/hooks/sdk';
 import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
+import TokenOutput from '~/components/Common/Form/TokenOutput';
 
 // -----------------------------------------------------------------------
 
@@ -98,6 +98,7 @@ const HarvestForm: FC<Props> = ({
   values,
   isSubmitting,
 }) => {
+  const sdk = useSdk();
   /// Derived
   const amount = harvestablePods;
   const isSubmittable =
@@ -122,10 +123,13 @@ const HarvestForm: FC<Props> = ({
             {/* Setting: Destination */}
             <FarmModeField name="destination" />
             <TxnSeparator mt={-1} />
-            <TokenOutputField
-              token={BEAN[1]}
-              amount={values.amount || ZERO_BN}
-            />
+            {/* Token Outputs */}
+            <TokenOutput>
+              <TokenOutput.Row 
+                token={sdk.tokens.BEAN}
+                amount={values.amount || ZERO_BN}
+              />
+            </TokenOutput>
             {/* <Box>
               <Alert
                 color="warning"
@@ -140,7 +144,9 @@ const HarvestForm: FC<Props> = ({
                 page.
               </Alert>
             </Box> */}
+            {/* Additional Txns */}
             <ClaimAndPlantAdditionalOptions />
+            {/* Txn Summary */}
             <Box>
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />

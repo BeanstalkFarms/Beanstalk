@@ -12,46 +12,62 @@ import { ClaimPlantAction } from '~/util/ClaimPlant';
 
 const ClaimAndPlantFarmActions: React.FC<{}> = () => {
   /// Formik
-  const { values: { farmActions }, setFieldValue } = useFormikContext<ClaimAndPlantFormState>();
-  
+  const formik = useFormikContext<ClaimAndPlantFormState>();
+  const { values: { farmActions }, setFieldValue } = formik;
+
   /// State
-  const [local, setLocal] = useState<Set<ClaimPlantAction>>(new Set(farmActions.selected));
+  const [local, setLocal] = useState<Set<ClaimPlantAction>>(
+    new Set(farmActions.selected || [])
+  );
   const [open, show, hide] = useToggle();
-  
+
   /// Helpers
   const { options } = useFarmerClaimPlantOptions();
-  const formOptions = useMemo(() => { 
+  
+  const formOptions = useMemo(() => {
     const isPlant = farmActions.options.includes(ClaimPlantAction.PLANT);
+    const someEnabled = farmActions.options.find((opt) => options[opt].enabled);
+
     return {
       options: farmActions.options,
-      variant: isPlant ? 'card' : 'pill'
+      variant: isPlant ? 'card' : 'pill',
+      title: isPlant 
+        ? 'Add before this transaction'
+        : 'Add Claimable Assets to this transaction',
+      noneEnabled: !someEnabled
     };
-  }, [farmActions.options]);
+  }, [farmActions.options, options]);
 
   /// Handlers
-  const handleOnToggle = useCallback((item: ClaimPlantAction) => {
-    const copy = new Set([...local]);
-    if (copy.has(item)) {
-      copy.delete(item);
-    } else {
-      copy.add(item);
-    }
-    setLocal(copy);
-    setFieldValue('farmActions.selected', Array.from(copy));
-  }, [setFieldValue, local]);
+  const handleOnToggle = useCallback(
+    (item: ClaimPlantAction) => {
+      const copy = new Set([...local]);
+      if (copy.has(item)) {
+        copy.delete(item);
+      } else {
+        copy.add(item);
+      }
+      setLocal(copy);
+      setFieldValue('farmActions.selected', Array.from(copy));
+    },
+    [setFieldValue, local]
+  );
 
+  /// Effects
   useEffect(() => {
-    if (!farmActions.selected) {
+    if (!farmActions.selected && local.size) {
       setLocal(new Set());
       hide();
     }
   }, [farmActions.selected, hide, local.size]);
 
+  if (formOptions.noneEnabled) return null;
+
   return (
     <SelectionAccordion<ClaimPlantAction>
       open={open}
       onChange={open ? hide : show}
-      title="Add Claimable Assets to this transaction"
+      title={formOptions.title}
       options={formOptions.options}
       selected={local}
       onToggle={handleOnToggle}
@@ -62,14 +78,10 @@ const ClaimAndPlantFarmActions: React.FC<{}> = () => {
 
         switch (formOptions.variant) {
           case 'card': {
-            return (
-              <ClaimPlantAccordionCard {...sharedProps} />
-            );
+            return <ClaimPlantAccordionCard {...sharedProps} />;
           }
           case 'pill': {
-            return (
-              <ClaimPlantAccordionPill {...sharedProps} />
-            );
+            return <ClaimPlantAccordionPill {...sharedProps} />;
           }
           default:
             return null;

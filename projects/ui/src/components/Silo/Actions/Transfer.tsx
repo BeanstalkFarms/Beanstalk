@@ -1,8 +1,7 @@
-import { Accordion, AccordionDetails, Alert, Box, Divider, Stack } from '@mui/material';
+import { Accordion, AccordionDetails, Box, Divider, Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useMemo } from 'react';
 import BigNumber from 'bignumber.js';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { ERC20Token, Token } from '@beanstalk/sdk';
 import FieldWrapper from '~/components/Common/Form/FieldWrapper';
 import AddressInputField from '~/components/Common/Form/AddressInputField';
@@ -22,8 +21,7 @@ import BeanstalkSDK from '~/lib/Beanstalk';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import TxnSeparator from '~/components/Common/Form/TxnSeparator';
 import { displayFullBN, displayTokenAmount, toStringBaseUnitBN, trimAddress } from '~/util';
-import IconWrapper from '~/components/Common/IconWrapper';
-import { FontSize, IconSize } from '~/components/App/muiTheme';
+import { FontSize } from '~/components/App/muiTheme';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import { ActionType } from '~/util/Actions';
 import TransactionToast from '~/components/Common/TxnToast';
@@ -33,8 +31,9 @@ import useFarmerClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerC
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
-import TxnOutputField, { TxnOutputFieldProps } from '~/components/Common/Form/TxnOutputField';
 import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
+import TokenOutput from '~/components/Common/Form/TokenOutput';
+import WarningAlert from '~/components/Common/Alert/WarningAlert';
 
 export type TransferFormValues = FormStateNew & 
   ClaimAndPlantFormState
@@ -51,7 +50,7 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
   // Formik
   values,
   isSubmitting,
-  submitForm,
+  // submitForm,
   // Custom
   token: whitelistedToken,
   siloBalances,
@@ -76,52 +75,46 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
 
   const isReady = (withdrawResult && withdrawResult.amount.lt(0));
 
-  const txnOutputData: TxnOutputFieldProps['items'] | undefined = useMemo(() => {
-    if (!isReady) return undefined;
-    if (!withdrawResult.amount || !withdrawResult.seeds || !withdrawResult.stalk) return undefined;
+  const TokenOutputs = () => {
+    if (!isReady) return null;
+    if (!withdrawResult.amount || !withdrawResult.seeds || !withdrawResult.stalk) return null;
     const { STALK, SEEDS } = sdk.tokens;
-    return [
-      {
-        primary: {
-          title: `Withdrawn ${whitelistedToken.symbol}`,
-          amount: withdrawResult.amount || ZERO_BN,
-          token: whitelistedToken,
-        },
-      },
-      {
-        primary: {
-          title: 'STALK',
-          amount: withdrawResult.stalk || ZERO_BN,
-          token: STALK,
-          amountTooltip: (
+
+    return (
+      <TokenOutput>
+        <TokenOutput.Row 
+          token={whitelistedToken}
+          amount={withdrawResult.amount || ZERO_BN}
+        />
+        <TokenOutput.Row 
+          token={STALK}
+          amount={withdrawResult.stalk || ZERO_BN}
+          amountTooltip={
             <>
-              <div>Withdrawing
-                from {withdrawResult.deltaCrates.length} Deposit{withdrawResult.deltaCrates.length === 1 ? '' : 's'}:
+              <div>
+                Withdrawing from {withdrawResult.deltaCrates.length} Deposit{withdrawResult.deltaCrates.length === 1 ? '' : 's'}:
               </div>
               <Divider sx={{ opacity: 0.2, my: 1 }} />
               {withdrawResult.deltaCrates.map((_crate, i) => (
                 <div key={i}>
                   Season {_crate.season.toString()}: {displayFullBN(_crate.bdv, whitelistedToken.displayDecimals)} BDV, {displayFullBN(_crate.stalk, STALK.displayDecimals)} STALK, {displayFullBN(_crate.seeds, SEEDS.displayDecimals)} SEEDS
                 </div>
-                ))}
+              ))}
             </>
-          )
-        },
-      },
-      {
-        primary: {
-          title: 'SEEDS',
-          amount: withdrawResult.seeds || ZERO_BN,
-          token: SEEDS,
-        }
-      }
-    ];
-  }, [isReady, sdk.tokens, whitelistedToken, withdrawResult]);
+          }
+        />
+        <TokenOutput.Row 
+          token={SEEDS}
+          amount={withdrawResult.seeds || ZERO_BN}
+        />
+      </TokenOutput>
+    );
+  };
 
   return (
     <Form autoComplete="off">
-      {/* <pre>{JSON.stringify(values, null, 2)}</pre> */}
       <Stack gap={1}>
+        {/* Input Field */}
         <TokenInputField
           name="tokens.0.amount"
           token={whitelistedToken}
@@ -135,20 +128,21 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
         />
         {depositedBalance?.gt(0) && (
           <>
+            {/* To Field */}
             <FieldWrapper label="Transfer to">
               <AddressInputField name="to" />
             </FieldWrapper>
             {values.to !== '' && withdrawResult?.amount.abs().gt(0) && (
               <>
                 <TxnSeparator />
-                {txnOutputData ? <TxnOutputField items={txnOutputData} /> : null}
-                <Alert
-                  color="warning"
-                  icon={<IconWrapper boxSize={IconSize.medium}><WarningAmberIcon sx={{ fontSize: IconSize.small }} /></IconWrapper>}
-                >
+                {/* Token Outputs */}
+                <TokenOutputs />
+                <WarningAlert>
                   More recent Deposits are Transferred first.
-                </Alert>
+                </WarningAlert>
+                {/* Additional Txns */}
                 <ClaimAndPlantAdditionalOptions />
+                {/* Txn Summary */}
                 <Box>
                   <Accordion defaultExpanded variant="outlined">
                     <StyledAccordionSummary title="Transaction Details" />

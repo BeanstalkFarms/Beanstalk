@@ -2,10 +2,9 @@ import React, { useCallback, useMemo } from 'react';
 import { Accordion, AccordionDetails, Box, Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
-import toast from 'react-hot-toast';
 import AddressInputField from '~/components/Common/Form/AddressInputField';
 import FieldWrapper from '~/components/Common/Form/FieldWrapper';
-import { PlotFragment, PlotSettingsFragment, SmartSubmitButton, TokenOutputField, TxnPreview, TxnSeparator } from '~/components/Common/Form';
+import { PlotFragment, PlotSettingsFragment, SmartSubmitButton, TxnPreview, TxnSeparator } from '~/components/Common/Form';
 import TransactionToast from '~/components/Common/TxnToast';
 import PlotInputField from '~/components/Common/Form/PlotInputField';
 import { useSigner } from '~/hooks/ledger/useSigner';
@@ -15,13 +14,15 @@ import useFarmerPlots from '~/hooks/farmer/useFarmerPlots';
 import useHarvestableIndex from '~/hooks/beanstalk/useHarvestableIndex';
 import { ZERO_BN } from '~/constants';
 import { PODS } from '~/constants/tokens';
-import { displayFullBN, parseError, toStringBaseUnitBN, trimAddress } from '~/util';
+import { displayFullBN, toStringBaseUnitBN, trimAddress } from '~/util';
 import { ActionType } from '~/util/Actions';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { useFetchFarmerField } from '~/state/farmer/field/updater';
 
 import { FC } from '~/types';
+import TokenOutput from '~/components/Common/Form/TokenOutput';
+import useSdk from '~/hooks/sdk';
 
 export type TransferFormValues = {
   plot: PlotFragment;
@@ -41,6 +42,7 @@ const TransferForm: FC<
   isValid,
   isSubmitting,
 }) => {
+  const sdk = useSdk();
   /// Data
   const plots = useFarmerPlots();
   const harvestableIndex = useHarvestableIndex();
@@ -66,13 +68,16 @@ const TransferForm: FC<
             <AddressInputField name="to" />
           </FieldWrapper>
         )}
+        {/* Txn info */}
         {(values.to && plot.amount && plot.start && plot.index) && (
           <>
             <TxnSeparator />
-            <TokenOutputField
-              amount={plot.amount.negated()}
-              token={PODS}
-            />
+            <TokenOutput>
+              <TokenOutput.Row 
+                amount={plot.amount.negated()}
+                token={sdk.tokens.PODS}
+              />
+            </TokenOutput>
             <Box>
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />
@@ -173,10 +178,10 @@ const Transfer: FC<{}> = () => {
       formActions.resetForm();
     } catch (err) {
       if (txToast) {
-        txToast.error(err)
+        txToast.error(err);
       } else {
-        let errorToast = new TransactionToast({})
-        errorToast.error(err)
+        const errorToast = new TransactionToast({});
+        errorToast.error(err);
       }
     }
   }, [

@@ -101,7 +101,7 @@ const ClaimAndPlantAdditionalOptions: React.FC<{}> = () => {
   }, [claimPlantOptions, enabled, hovered, required]);
 
   const estimateGas = useCallback(async () => {
-    if (!enabled.length || !Object.keys(actions).length) return;
+    if (!enabled.length || !Object.keys(actions).length || !open) return;
 
     const optionKeys = [...enabled];
     const estimates = await Promise.all(
@@ -114,7 +114,7 @@ const ClaimAndPlantAdditionalOptions: React.FC<{}> = () => {
     );
 
     setGasEstimates(estimates);
-  }, [actions, enabled]);
+  }, [actions, enabled, open]);
 
   useTimedRefresh(estimateGas, 2 * 1000, open);
 

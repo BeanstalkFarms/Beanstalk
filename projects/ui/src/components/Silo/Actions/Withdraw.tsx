@@ -1,9 +1,8 @@
 import React, { useCallback, useMemo } from 'react';
-import { Accordion, AccordionDetails, Alert, Box, Divider, Stack } from '@mui/material';
+import { Accordion, AccordionDetails, Box, Divider, Stack } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { useSelector } from 'react-redux';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Token, ERC20Token } from '@beanstalk/sdk';
 import { SEEDS, STALK } from '~/constants/tokens';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
@@ -25,8 +24,6 @@ import { AppState } from '~/state';
 import { ActionType } from '~/util/Actions';
 import { ZERO_BN } from '~/constants';
 import { useFetchBeanstalkSilo } from '~/state/beanstalk/silo/updater';
-import IconWrapper from '../../Common/IconWrapper';
-import { IconSize } from '../../App/muiTheme';
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
@@ -34,8 +31,9 @@ import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 import useFarmerClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
-import TxnOutputField from '~/components/Common/Form/TxnOutputField';
 import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
+import TokenOutput from '~/components/Common/Form/TokenOutput';
+import WarningAlert from '~/components/Common/Alert/WarningAlert';
 
 // -----------------------------------------------------------------------
 
@@ -61,36 +59,13 @@ const WithdrawForm : FC<
   season,
 }) => {
   const sdk = useSdk();
+  
   // Input props
   const InputProps = useMemo(() => ({
     endAdornment: (
       <TokenAdornment token={whitelistedToken} />
     )
   }), [whitelistedToken]);
-
-  // Confirmation dialog
-  // const CONFIRM_DELAY = 2000; // ms
-  // const [confirming, setConfirming] = useState(false);
-  // const [allowConfirm, setAllowConfirm] = useState(false);
-  // const [fill, setFill] = useState('');
-  // const onClose = useCallback(() => {
-  //   setConfirming(false);
-  //   setAllowConfirm(false);
-  //   setFill('');
-  // }, []);
-  // const onOpen  = useCallback(() => {
-  //   setConfirming(true);
-  //   setTimeout(() => {
-  //     setFill('fill');
-  //   }, 0);
-  //   setTimeout(() => {
-  //     setAllowConfirm(true);
-  //   }, CONFIRM_DELAY);
-  // }, []);
-  // const onSubmit = useCallback(() => {
-  //   submitForm();
-  //   onClose();
-  // }, [onClose, submitForm]);
 
   // Results
   const withdrawResult = BeanstalkSDK.Silo.Withdraw.withdraw(
@@ -101,89 +76,11 @@ const WithdrawForm : FC<
   );
   const isReady = (withdrawResult && withdrawResult.amount.lt(0));
 
-  // For the Withdraw form, move this fragment outside of the return
-  // statement because it's displayed twice (once in the form and)
-  // once in the final popup
-  const tokenOutputs = isReady ? (
-    <>
-      <TxnOutputField 
-        items={[
-          {
-            primary: {
-              title: 'STALK',
-              amount: withdrawResult.stalk,
-              token: sdk.tokens.STALK,
-              amountTooltip: (
-                <>
-                  <div>Withdrawing from {withdrawResult.deltaCrates.length} Deposit{withdrawResult.deltaCrates.length === 1 ? '' : 's'}:</div>
-                  <Divider sx={{ opacity: 0.2, my: 1 }} />
-                  {withdrawResult.deltaCrates.map((_crate, i) => (
-                    <div key={i}>
-                      Season {_crate.season.toString()}: {displayFullBN(_crate.bdv, whitelistedToken.displayDecimals)} BDV, {displayFullBN(_crate.stalk, STALK.displayDecimals)} STALK, {displayFullBN(_crate.seeds, SEEDS.displayDecimals)} SEEDS
-                    </div>
-                  ))}
-                </>
-              )
-            }
-          },
-          {
-            primary: {
-              title: 'SEEDS',
-              amount: withdrawResult.seeds,
-              token: sdk.tokens.SEEDS,
-            }
-          }
-        ]}
-      />
-      <Alert
-        color="warning"
-        icon={<IconWrapper boxSize={IconSize.medium}><WarningAmberIcon sx={{ fontSize: IconSize.small }} /></IconWrapper>}
-      >
-        You can Claim your Withdrawn assets at the start of the next Season.
-      </Alert>
-    </>
-  ) : null;
-
   return (
     <Form autoComplete="off" noValidate>
-      {/* Confirmation Dialog */}
-      {/* <StyledDialog open={confirming} onClose={onClose}>
-        <StyledDialogTitle onClose={onClose}>Confirm Silo Withdrawal</StyledDialogTitle>
-        <StyledDialogContent sx={{ pb: 1 }}>
-          <Stack direction="column" gap={1}>
-            <Box>
-              <Typography variant="body2">
-                You will forfeit .0001% ownership of Beanstalk. Withdrawing will burn your Grown Stalk & Seeds associated with your initial Deposit. 
-              </Typography>
-            </Box>
-            {tokenOutputs}
-          </Stack>
-        </StyledDialogContent>
-        <StyledDialogActions>
-          <Button disabled={!allowConfirm} type="submit" onClick={onSubmit} variant="contained" color="warning" size="large" fullWidth sx={{ position: 'relative', overflow: 'hidden' }}>
-            <Box
-              sx={{
-                background: 'rgba(0,0,0,0.03)',
-                // display: !allowConfirm ? 'none' : 'block',
-                width: '100%',
-                transition: `height ${CONFIRM_DELAY}ms linear`,
-                height: '0%',
-                position: 'absolute',
-                left: 0,
-                bottom: 0,
-                '&.fill': {
-                  transition: `height ${CONFIRM_DELAY}ms linear`,
-                  height: '100%',
-                }
-              }}
-              className={fill}
-            />
-            Confirm Withdrawal
-          </Button>
-        </StyledDialogActions>
-      </StyledDialog> */}
       {/* Form Content */}
       <Stack gap={1}>
+        {/* Input Field */}
         <TokenInputField
           name="tokens.0.amount"
           token={whitelistedToken}
@@ -198,8 +95,35 @@ const WithdrawForm : FC<
         {isReady ? (
           <Stack direction="column" gap={1}>
             <TxnSeparator />
-            {tokenOutputs}
+            {/* Token Output */}
+            <TokenOutput>
+              <TokenOutput.Row 
+                token={sdk.tokens.STALK}
+                amount={withdrawResult.stalk}
+                amountTooltip={
+                  <>
+                    <div>Withdrawing from {withdrawResult.deltaCrates.length} Deposit{withdrawResult.deltaCrates.length === 1 ? '' : 's'}:</div>
+                    <Divider sx={{ opacity: 0.2, my: 1 }} />
+                    {withdrawResult.deltaCrates.map((_crate, i) => (
+                      <div key={i}>
+                        Season {_crate.season.toString()}: {displayFullBN(_crate.bdv, whitelistedToken.displayDecimals)} BDV, {displayFullBN(_crate.stalk, STALK.displayDecimals)} STALK, {displayFullBN(_crate.seeds, SEEDS.displayDecimals)} SEEDS
+                      </div>
+                    ))}
+                  </>
+                }
+              />
+              <TokenOutput.Row 
+                token={sdk.tokens.SEEDS}
+                amount={withdrawResult.seeds}
+              />
+            </TokenOutput>
+            {/* Withdraw Alert */}
+            <WarningAlert>
+              You can Claim your Withdrawn assets at the start of the next Season.
+            </WarningAlert>
+            {/* Additional Txns */}
             <ClaimAndPlantAdditionalOptions />
+            {/* Txn Summary */}
             <Box>
               <Accordion defaultExpanded variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />
@@ -380,3 +304,64 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
 };
 
 export default Withdraw;
+
+// Confirmation dialog
+// const CONFIRM_DELAY = 2000; // ms
+// const [confirming, setConfirming] = useState(false);
+// const [allowConfirm, setAllowConfirm] = useState(false);
+// const [fill, setFill] = useState('');
+// const onClose = useCallback(() => {
+//   setConfirming(false);
+//   setAllowConfirm(false);
+//   setFill('');
+// }, []);
+// const onOpen  = useCallback(() => {
+//   setConfirming(true);
+//   setTimeout(() => {
+//     setFill('fill');
+//   }, 0);
+//   setTimeout(() => {
+//     setAllowConfirm(true);
+//   }, CONFIRM_DELAY);
+// }, []);
+// const onSubmit = useCallback(() => {
+//   submitForm();
+//   onClose();
+// }, [onClose, submitForm]);
+
+/* Confirmation Dialog */ 
+/* <StyledDialog open={confirming} onClose={onClose}>
+  <StyledDialogTitle onClose={onClose}>Confirm Silo Withdrawal</StyledDialogTitle>
+  <StyledDialogContent sx={{ pb: 1 }}>
+    <Stack direction="column" gap={1}>
+      <Box>
+        <Typography variant="body2">
+          You will forfeit .0001% ownership of Beanstalk. Withdrawing will burn your Grown Stalk & Seeds associated with your initial Deposit. 
+        </Typography>
+      </Box>
+      {tokenOutputs}
+    </Stack>
+  </StyledDialogContent>
+  <StyledDialogActions>
+    <Button disabled={!allowConfirm} type="submit" onClick={onSubmit} variant="contained" color="warning" size="large" fullWidth sx={{ position: 'relative', overflow: 'hidden' }}>
+      <Box
+        sx={{
+          background: 'rgba(0,0,0,0.03)',
+          // display: !allowConfirm ? 'none' : 'block',
+          width: '100%',
+          transition: `height ${CONFIRM_DELAY}ms linear`,
+          height: '0%',
+          position: 'absolute',
+          left: 0,
+          bottom: 0,
+          '&.fill': {
+            transition: `height ${CONFIRM_DELAY}ms linear`,
+            height: '100%',
+          }
+        }}
+        className={fill}
+      />
+      Confirm Withdrawal
+    </Button>
+  </StyledDialogActions>
+</StyledDialog> */
