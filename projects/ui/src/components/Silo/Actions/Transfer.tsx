@@ -34,6 +34,7 @@ import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPla
 import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
+import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 
 export type TransferFormValues = FormStateNew & 
   ClaimAndPlantFormState
@@ -58,6 +59,7 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
   season
 }) => {
   const sdk = useSdk();
+  const claimPlantOptions = useFarmerClaimAndPlantOptions();
   // Input props
   const InputProps = useMemo(() => ({
     endAdornment: (
@@ -72,6 +74,12 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
     siloBalances[whitelistedToken.address]?.deposited.crates || [], // fallback
     season,
   );
+
+  const claimPlantTxnActions = useMemo(
+    () => claimPlantOptions.getTxnActions(
+      values.farmActions.selected,
+      values.farmActions.additional
+  ), [claimPlantOptions, values.farmActions.additional, values.farmActions.selected]);
 
   const isReady = (withdrawResult && withdrawResult.amount.lt(0));
 
@@ -177,6 +185,7 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
                             token: getNewToOldToken(whitelistedToken)
                           }
                         ]}
+                        {...claimPlantTxnActions}
                       />
                     </AccordionDetails>
                   </Accordion>

@@ -341,10 +341,13 @@ export default function useFarmerClaimAndPlantOptions() {
 
   const getTxnActions = useCallback(
     (
-      primary: ClaimPlantAction[],
-      secondary: ClaimPlantAction[],
+      _primary: ClaimPlantAction[] | undefined,
+      _secondary: ClaimPlantAction[] | undefined,
       graphicOnClaimBeans?: boolean
     ) => {
+      const primary = _primary || [];
+      const secondary = _secondary || [];
+
       const postStartIndex = primary.length;
       const actions = [...primary, ...secondary].reduce<{
         pre: Action[];
@@ -375,7 +378,7 @@ export default function useFarmerClaimAndPlantOptions() {
       return {
         preActions: actions.pre,
         postActions: actions.post,
-        claiming: actions.claiming,
+        preActionsWithGraphic: actions.claiming,
       };
     },
     [options]

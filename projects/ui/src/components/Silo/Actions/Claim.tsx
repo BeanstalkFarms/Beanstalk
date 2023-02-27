@@ -36,6 +36,7 @@ import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarm
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
+import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 
 // -----------------------------------------------------------------------
 
@@ -76,6 +77,7 @@ const ClaimForm : FC<
   setFieldValue,
 }) => {
   const sdk = useSdk();
+  const claimPlantOptions = useFarmerClaimAndPlantOptions();
 
   //
   const pool = useMemo(() => sdk.pools.getPoolByLPToken(token), [sdk.pools, token]);
@@ -120,6 +122,12 @@ const ClaimForm : FC<
     },
     [pool, sdk.farm, sdk.contracts.curve.registries.metaFactory.address]
   );
+
+  const claimPlantTxnActions = useMemo(
+    () => claimPlantOptions.getTxnActions(
+      values.farmActions.selected,
+      values.farmActions.additional
+  ), [claimPlantOptions, values.farmActions.additional, values.farmActions.selected]);
 
   //
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
@@ -236,6 +244,7 @@ const ClaimForm : FC<
                         destination: values.destination,
                       }
                     ]}
+                    {...claimPlantTxnActions}
                   />
                 </AccordionDetails>
               </Accordion>

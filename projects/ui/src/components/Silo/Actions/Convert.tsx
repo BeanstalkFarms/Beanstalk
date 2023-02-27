@@ -36,6 +36,7 @@ import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import useAccount from '~/hooks/ledger/useAccount';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
+import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 
 // -----------------------------------------------------------------------
 
@@ -81,6 +82,7 @@ const ConvertForm : FC<
   setFieldValue,
 }) => {
   const sdk = useSdk();
+  const claimPlantOptions = useFarmerClaimAndPlantOptions();
   /// Local state
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const getBDV = useBDV();
@@ -125,6 +127,13 @@ const ConvertForm : FC<
       );
     }
   }, [currentSeason, isQuoting, siloBalance?.deposited.crates, tokenIn, tokenOut]);
+
+  const claimPlantTxnActions = useMemo(
+    () => claimPlantOptions.getTxnActions(
+      values.farmActions.selected,
+      values.farmActions.additional,
+      false
+  ), [claimPlantOptions, values.farmActions.additional, values.farmActions.selected]);
 
   /// FIXME: is there a better pattern for this?
   /// we want to refresh the conversion info only
@@ -332,6 +341,7 @@ const ConvertForm : FC<
                         seeds: deltaSeeds || ZERO_BN,
                       }
                     ]}
+                    {...claimPlantTxnActions}
                   />
                 </AccordionDetails>
               </Accordion>

@@ -34,6 +34,7 @@ import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPla
 import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
+import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 
 // -----------------------------------------------------------------------
 
@@ -59,6 +60,7 @@ const WithdrawForm : FC<
   season,
 }) => {
   const sdk = useSdk();
+  const claimPlantOptions = useFarmerClaimAndPlantOptions();
   
   // Input props
   const InputProps = useMemo(() => ({
@@ -75,6 +77,12 @@ const WithdrawForm : FC<
     season,
   );
   const isReady = (withdrawResult && withdrawResult.amount.lt(0));
+
+  const claimPlantTxnActions = useMemo(
+    () => claimPlantOptions.getTxnActions(
+      values.farmActions.selected,
+      values.farmActions.additional
+  ), [claimPlantOptions, values.farmActions.additional, values.farmActions.selected]);
 
   return (
     <Form autoComplete="off" noValidate>
@@ -147,6 +155,7 @@ const WithdrawForm : FC<
                         withdrawSeasons
                       }
                     ]}
+                    {...claimPlantTxnActions}
                   />
                 </AccordionDetails>
               </Accordion>

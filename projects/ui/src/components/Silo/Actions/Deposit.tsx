@@ -105,11 +105,12 @@ const DepositForm: FC<
   const isReady = bdv.gt(0);
 
   const tokenIn = values.tokens?.[0]?.token;
-  const claimPlantTxnActions = getClaimPlantTxnActions(
-    values.farmActions.selected || [],
-    values.farmActions.additional || [],
-    tokenIn ? sdk.tokens.BEAN.equals(tokenIn) : false
-  );
+  const claimPlantTxnActions = useMemo(
+    () => getClaimPlantTxnActions(
+      values.farmActions.selected || [],
+      values.farmActions.additional || [],
+      tokenIn ? sdk.tokens.BEAN.equals(tokenIn) : false
+  ), [getClaimPlantTxnActions, sdk.tokens.BEAN, tokenIn, values.farmActions.additional, values.farmActions.selected]);
 
   ///
   const handleSelectTokens = useCallback((_tokens: Set<Token>) => {
@@ -219,7 +220,6 @@ const DepositForm: FC<
                 <AccordionDetails>
                   <TxnPreview 
                     actions={actions} 
-                    preActionsWithGraphic={claimPlantTxnActions.claiming}
                     {...claimPlantTxnActions}
                   />
                 </AccordionDetails>
