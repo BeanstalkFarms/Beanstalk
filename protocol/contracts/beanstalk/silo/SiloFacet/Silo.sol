@@ -218,13 +218,19 @@ contract Silo is SiloExit {
             for (uint256 j = 0; j < grownStalkPerBdvsForToken.length; j++) {
                 int128 grownStalkPerBdv = grownStalkPerBdvsForToken[j];
 
-                //get bdv amount for this deposit
+                // get bdv amount for this deposit
                 (, uint256 bdv) = LibTokenSilo.tokenDeposit(account, token, grownStalkPerBdv);
 
                 uint256 seedsForDeposit = bdv * seedPerBdv;
                 console.log('_mowAndMigrate bdv: ', bdv);
                 console.log('_mowAndMigrate seedsForDeposit: ', seedsForDeposit);
 
+                // not sure whether a check for bdv == 0 is 
+                // cheaper than artitmetic checks
+                // the UI should filter out seasons w/no deposits anyways
+                if(bdv == 0) {
+                    continue;
+                }
                 //add to running total of seeds
                 seedsTotalBasedOnInputDeposits += bdv * seedPerBdv;
 
@@ -283,7 +289,7 @@ contract Silo is SiloExit {
         LibTokenSilo.addDepositToAccount(
             account,
             C.beanAddress(),
-            _season(),
+            LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)),
             beans, // amount
             beans // bdv
         );

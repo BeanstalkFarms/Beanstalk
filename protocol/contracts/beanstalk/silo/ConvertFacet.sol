@@ -199,7 +199,7 @@ contract ConvertFacet is ReentrancyGuard {
         /// @dev the two functions were combined into one function to save gas.
         // _cumulativeGrownStalk = LibTokenSilo.grownStalkAndBdvToCumulativeGrownStalk(IERC20(token), grownStalk, bdv);
         // grownStalk = uint256(LibTokenSilo.calculateStalkFromGrownStalkIndexAndBdv(IERC20(token), _cumulativeGrownStalk, bdv));
-
+        // TODO: better name for this function
         (grownStalk, _cumulativeGrownStalk) = LibTokenSilo.calculateTotalGrownStalkandGrownStalk(IERC20(token), grownStalk, bdv);
         console.log('_depositTokens grownStalk: ', grownStalk);
 
