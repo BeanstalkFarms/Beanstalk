@@ -135,10 +135,11 @@ const VoteForm: FC<FormikProps<VoteFormValues> & {
       }
       case 'approval': {
         const isInvalid = (
-          values.choices?.length === 0 // no choice selected
+          !values.choices?.length // no choice selected
           || isClosed // expired
           || !canVote // no stalk
         );
+        console.log('LENGTH', values.choices?.length)
         const alreadyVotedThisChoice = (
           existingChoice !== undefined
           && arraysEqual(existingChoice as number[], values.choices as number[])
