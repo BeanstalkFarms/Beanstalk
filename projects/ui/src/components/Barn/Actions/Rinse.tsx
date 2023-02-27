@@ -28,6 +28,7 @@ import useSdk from '~/hooks/sdk';
 import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
+import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 
 // ---------------------------------------------------
 
@@ -92,12 +93,23 @@ const RinseForm : FC<FormikProps<RinseFormValues>> = ({
   isSubmitting 
 }) => {
   const { SPROUTS, BEAN } = useSdk().tokens;
+  const claimPlantOptions = useFarmerClaimAndPlantOptions();
+
   /// Extract
   const amountSprouts = values.amount;
   const isSubmittable = (
     amountSprouts?.gt(0)
     && values.destination !== undefined
   );
+
+  /// Farm actions Txn actions
+  const claimPlantTxnActions = useMemo(() => {
+    const { additional, selected } = values.farmActions;
+    return claimPlantOptions.getTxnActions(
+      selected,
+      additional,
+    );
+  }, [claimPlantOptions, values.farmActions]);
 
   return (
     <Form autoComplete="off" noValidate>
@@ -150,6 +162,7 @@ const RinseForm : FC<FormikProps<RinseFormValues>> = ({
                       destination: values.destination,
                     },
                   ]}
+                  {...claimPlantTxnActions}
                 />
               </TxnAccordion>
             </Box>

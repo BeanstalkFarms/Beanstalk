@@ -128,12 +128,13 @@ const ConvertForm : FC<
     }
   }, [currentSeason, isQuoting, siloBalance?.deposited.crates, tokenIn, tokenOut]);
 
-  const claimPlantTxnActions = useMemo(
-    () => claimPlantOptions.getTxnActions(
-      values.farmActions.selected,
-      values.farmActions.additional,
-      false
-  ), [claimPlantOptions, values.farmActions.additional, values.farmActions.selected]);
+  const claimPlantTxnActions = useMemo(() => {
+    const { selected, additional } = values.farmActions;
+    return claimPlantOptions.getTxnActions(
+      selected,
+      additional
+    );
+  }, [claimPlantOptions, values.farmActions]);
 
   /// FIXME: is there a better pattern for this?
   /// we want to refresh the conversion info only

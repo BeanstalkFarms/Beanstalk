@@ -35,6 +35,7 @@ import useSdk from '~/hooks/sdk';
 import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
+import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 
 // -----------------------------------------------------------------------
 
@@ -99,10 +100,19 @@ const HarvestForm: FC<Props> = ({
   isSubmitting,
 }) => {
   const sdk = useSdk();
+  const claimPlantOptions = useFarmerClaimAndPlantOptions();
   /// Derived
   const amount = harvestablePods;
   const isSubmittable =
     amount && amount.gt(0) && values.destination !== undefined;
+
+    const claimPlantTxnActions = useMemo(() => {
+      const { selected, additional } = values.farmActions;
+      return claimPlantOptions.getTxnActions(
+        selected,
+        additional
+      );
+    }, [claimPlantOptions, values.farmActions]);
 
   return (
     <Form autoComplete="off" noValidate>
@@ -163,6 +173,7 @@ const HarvestForm: FC<Props> = ({
                         destination: values.destination,
                       },
                     ]}
+                    {...claimPlantTxnActions}
                   />
                 </AccordionDetails>
               </Accordion>

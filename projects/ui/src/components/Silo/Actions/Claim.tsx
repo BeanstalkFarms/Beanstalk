@@ -123,11 +123,13 @@ const ClaimForm : FC<
     [pool, sdk.farm, sdk.contracts.curve.registries.metaFactory.address]
   );
 
-  const claimPlantTxnActions = useMemo(
-    () => claimPlantOptions.getTxnActions(
-      values.farmActions.selected,
-      values.farmActions.additional
-  ), [claimPlantOptions, values.farmActions.additional, values.farmActions.selected]);
+  const claimPlantTxnActions = useMemo(() => {
+    const { selected, additional } = values.farmActions;
+    return claimPlantOptions.getTxnActions(
+      selected,
+      additional
+    );
+  }, [claimPlantOptions, values.farmActions]);
 
   //
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();

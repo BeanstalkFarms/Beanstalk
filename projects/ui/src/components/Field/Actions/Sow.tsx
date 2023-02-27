@@ -48,6 +48,7 @@ import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPla
 import useFarmerClaimingBalance from '~/hooks/farmer/claim-plant/useFarmerClaimingBalance';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
+import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 
 type SowFormValues = FormStateNew & {
   settings: SlippageSettingsFragment;
@@ -77,6 +78,7 @@ const SowForm : FC<
   handleQuote,
 }) => {
   const sdk = useSdk();
+  const claimPlantOptions = useFarmerClaimAndPlantOptions();
   const claimingBalances = useFarmerClaimingBalance();
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
 
@@ -110,6 +112,15 @@ const SowForm : FC<
   const maxAmountUsed = (amountIn && maxAmountIn) 
     ? amountIn.div(maxAmountIn) 
     : null;
+
+  const claimPlantTxnActions = useMemo(() => {
+    const { additional, selected } = values.farmActions;
+    return claimPlantOptions.getTxnActions(
+      selected,
+      additional,
+      Bean.equals(tokenIn)
+    );
+  }, [Bean, claimPlantOptions, tokenIn, values.farmActions]);
 
   const handleSetBalanceFrom = useCallback((_balanceFrom: BalanceFrom) => {
     setFieldValue('balanceFrom', _balanceFrom);
@@ -251,6 +262,7 @@ const SowForm : FC<
                         placeInLine: podLineLength
                       }
                     ]}
+                    {...claimPlantTxnActions}
                   />
                   <Divider sx={{ my: 2, opacity: 0.4 }} />
                   <Box pb={1}>

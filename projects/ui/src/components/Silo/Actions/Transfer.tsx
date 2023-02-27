@@ -75,11 +75,13 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
     season,
   );
 
-  const claimPlantTxnActions = useMemo(
-    () => claimPlantOptions.getTxnActions(
-      values.farmActions.selected,
-      values.farmActions.additional
-  ), [claimPlantOptions, values.farmActions.additional, values.farmActions.selected]);
+  const claimPlantTxnActions = useMemo(() => {
+    const { selected, additional } = values.farmActions;
+    return claimPlantOptions.getTxnActions(
+      selected,
+      additional
+    );
+  }, [claimPlantOptions, values.farmActions]);
 
   const isReady = (withdrawResult && withdrawResult.amount.lt(0));
 

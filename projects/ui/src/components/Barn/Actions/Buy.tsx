@@ -39,6 +39,7 @@ import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarm
 import useFarmerClaimingBalance from '~/hooks/farmer/claim-plant/useFarmerClaimingBalance';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
+import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 
 // ---------------------------------------------------
 
@@ -75,11 +76,23 @@ const BuyForm : FC<
 }) => {
   const sdk = useSdk();
   const claimingBalances = useFarmerClaimingBalance();
+  const claimPlantOptions = useFarmerClaimAndPlantOptions();
   const tokenMap = useTokenMap<ERC20Token | NativeToken>([sdk.tokens.BEAN, sdk.tokens.USDC, sdk.tokens.ETH]);
   const { usdc, fert, humidity, actions } = useFertilizerSummary(values.tokens);
 
   // Extract
   const isValid = fert?.gt(0);
+
+  const claimPlantTxnActions = useMemo(() => {
+    const { additional, selected } = values.farmActions;
+    const { BEAN: bean } = sdk.tokens;
+    const tokenIn = values.tokens[0].token;
+    return claimPlantOptions.getTxnActions(
+      selected,
+      additional,
+      bean.equals(tokenIn)
+    );
+  }, [claimPlantOptions, sdk.tokens, values.farmActions, values.tokens]);
 
   // Handlers
   const [showTokenSelect, handleOpen, handleClose] = useToggle();
@@ -161,6 +174,7 @@ const BuyForm : FC<
                 <TxnAccordion defaultExpanded={false}>
                   <TxnPreview
                     actions={actions}
+                    {...claimPlantTxnActions}
                   />
                   <Divider sx={{ my: 2, opacity: 0.4 }} />
                   <Box sx={{ pb: 1 }}>
