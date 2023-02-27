@@ -1,7 +1,7 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Pool, PoolDailySnapshot, PoolHourlySnapshot } from "../../generated/schema";
 import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
-import { ZERO_BD, ZERO_BI } from "./Decimals";
+import { emptyBigIntArray, ZERO_BD, ZERO_BI } from "./Decimals";
 import { getBeanTokenAddress, loadBean } from "./Bean";
 import { checkCrossAndUpdate } from "./Cross";
 
@@ -13,6 +13,7 @@ export function loadOrCreatePool(poolAddress: string, blockNumber: BigInt): Pool
 
     pool = new Pool(poolAddress);
     pool.bean = beanAddress;
+    pool.reserves = emptyBigIntArray(2);
     pool.lastSeason = bean.lastSeason;
     pool.lastPrice = ZERO_BD;
     pool.volume = ZERO_BI;
@@ -39,6 +40,7 @@ export function loadOrCreatePoolHourlySnapshot(pool: string, timestamp: BigInt, 
     let currentPool = loadOrCreatePool(pool, blockNumber);
     snapshot = new PoolHourlySnapshot(id);
     snapshot.pool = pool;
+    snapshot.reserves = currentPool.reserves;
     snapshot.lastPrice = currentPool.lastPrice;
     snapshot.volume = currentPool.volume;
     snapshot.volumeUSD = currentPool.volumeUSD;
@@ -46,6 +48,7 @@ export function loadOrCreatePoolHourlySnapshot(pool: string, timestamp: BigInt, 
     snapshot.crosses = currentPool.crosses;
     snapshot.utilization = ZERO_BD;
     snapshot.deltaBeans = ZERO_BI;
+    snapshot.deltaReserves = emptyBigIntArray(2);
     snapshot.deltaVolume = ZERO_BI;
     snapshot.deltaVolumeUSD = ZERO_BD;
     snapshot.deltaLiquidityUSD = ZERO_BD;
@@ -67,6 +70,7 @@ export function loadOrCreatePoolDailySnapshot(pool: string, timestamp: BigInt, b
     let currentPool = loadOrCreatePool(pool, blockNumber);
     snapshot = new PoolDailySnapshot(id);
     snapshot.pool = pool;
+    snapshot.reserves = currentPool.reserves;
     snapshot.lastPrice = currentPool.lastPrice;
     snapshot.volume = currentPool.volume;
     snapshot.volumeUSD = currentPool.volumeUSD;
@@ -74,6 +78,7 @@ export function loadOrCreatePoolDailySnapshot(pool: string, timestamp: BigInt, b
     snapshot.crosses = currentPool.crosses;
     snapshot.utilization = ZERO_BD;
     snapshot.deltaBeans = ZERO_BI;
+    snapshot.deltaReserves = emptyBigIntArray(2);
     snapshot.deltaVolume = ZERO_BI;
     snapshot.deltaVolumeUSD = ZERO_BD;
     snapshot.deltaLiquidityUSD = ZERO_BD;
@@ -177,4 +182,14 @@ export function updatePoolPrice(poolAddress: string, timestamp: BigInt, blockNum
   poolDaily.save();
 
   checkCrossAndUpdate(poolAddress, timestamp, blockNumber, oldPrice, price);
+}
+
+export function updatePoolReserves(poolAddress: string, deltaAmount0: BigInt, deltaAmount1: BigInt, blockNumber: BigInt): void {
+  // All pools with BEAN to date are 2 token pools
+  let pool = loadOrCreatePool(poolAddress, blockNumber);
+  let reserves = pool.reserves;
+  reserves[0] = reserves[0].plus(deltaAmount0);
+  reserves[1] = reserves[1].plus(deltaAmount1);
+  pool.reserves = reserves;
+  pool.save();
 }

@@ -1,11 +1,24 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { Burn, Mint, Swap, UniswapV2Pair } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
+import { Burn, Mint, Swap, Sync, UniswapV2Pair } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
 import { ZERO_BD, ZERO_BI } from "./helpers";
 import { updateBeanValues } from "./utils/Bean";
 import { BEAN_ERC20_V1, WETH, WETH_USDC_PAIR } from "./utils/Constants";
 import { toBigInt, toDecimal } from "./utils/Decimals";
-import { loadOrCreatePool, updatePoolPrice, updatePoolValues } from "./utils/Pool";
+import { loadOrCreatePool, updatePoolPrice, updatePoolReserves, updatePoolValues } from "./utils/Pool";
 import { loadOrCreateToken } from "./utils/Token";
+
+export function handleMint(event: Mint): void {
+  updatePoolReserves(event.address.toHexString(), event.params.amount0, event.params.amount1, event.block.number);
+}
+
+export function handleBurn(event: Burn): void {
+  updatePoolReserves(
+    event.address.toHexString(),
+    ZERO_BI.minus(event.params.amount0),
+    ZERO_BI.minus(event.params.amount1),
+    event.block.number
+  );
+}
 
 // Liquidity and cross checks happen on the Sync event handler
 export function handleSwap(event: Swap): void {
@@ -31,12 +44,19 @@ export function handleSwap(event: Swap): void {
   );
 
   updateBeanValues(BEAN_ERC20_V1.toHexString(), event.block.timestamp, pool.lastPrice, ZERO_BI, ZERO_BI, usdVolume, ZERO_BD);
+
+  updatePoolReserves(
+    event.address.toHexString(),
+    event.params.amount0In.minus(event.params.amount0Out),
+    event.params.amount1In.minus(event.params.amount1Out),
+    event.block.number
+  );
 }
 
 // Sync is called in UniswapV2 on any liquidity or swap transaction.
 // It updates the `reserves` value on the contract.
 
-export function handleSync(event: Mint): void {
+export function handleSync(event: Sync): void {
   // Do not index post-exploit data
   if (event.block.number >= BigInt.fromI32(14602790)) return;
 

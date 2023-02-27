@@ -37,3 +37,37 @@ export function toBigInt(value: BigDecimal, decimals: number = DEFAULT_DECIMALS)
   let precision = 10 * decimals;
   return BigInt.fromString(value.times(BigDecimal.fromString(precision.toString())).truncate(0).toString());
 }
+
+export function emptyBigIntArray(length: i32): BigInt[] {
+  let array = [ZERO_BI, ZERO_BI];
+  for (let i = 2; i < length; i++) array.push(ZERO_BI);
+  return array;
+}
+
+export function emptyBigDecimalArray(length: i32): BigDecimal[] {
+  let array = [ZERO_BD, ZERO_BD];
+  for (let i = 2; i < length; i++) array.push(ZERO_BD);
+  return array;
+}
+
+export function deltaBigIntArray(current: BigInt[], prior: BigInt[]): BigInt[] {
+  let finalArray = emptyBigIntArray(current.length);
+  for (let i = 0; i < current.length; i++) {
+    finalArray[i] = current[i].minus(prior[i]);
+  }
+  return finalArray;
+}
+
+export function deltaBigDecimalArray(current: BigDecimal[], prior: BigDecimal[]): BigDecimal[] {
+  let finalArray = emptyBigDecimalArray(current.length);
+  for (let i = 0; i < current.length; i++) {
+    finalArray[i] = current[i].minus(prior[i]);
+  }
+  return finalArray;
+}
+
+export function getBigDecimalArrayTotal(detail: BigDecimal[]): BigDecimal {
+  let total = ZERO_BD;
+  for (let i = 0; i < detail.length; i++) total = total.plus(detail[i]);
+  return total;
+}

@@ -107,6 +107,7 @@ type Cross @entity {
 type Pool @entity {
   id: ID!
   bean: Bean!
+  reserves: [BigInt!]!
   lastSeason: Int!
   lastPrice: BigDecimal!
   volume: BigInt!
@@ -122,6 +123,7 @@ type Pool @entity {
 type PoolHourlySnapshot @entity {
   id: ID!
   pool: Pool!
+  reserves: [BigInt!]!
   lastPrice: BigDecimal!
   volume: BigInt!
   volumeUSD: BigDecimal!
@@ -129,6 +131,7 @@ type PoolHourlySnapshot @entity {
   crosses: Int!
   utilization: BigDecimal!
   deltaBeans: BigInt!
+  deltaReserves: [BigInt!]!
   deltaVolume: BigInt!
   deltaVolumeUSD: BigDecimal!
   deltaLiquidityUSD: BigDecimal!
@@ -142,6 +145,7 @@ type PoolHourlySnapshot @entity {
 type PoolDailySnapshot @entity {
   id: ID!
   pool: Pool!
+  reserves: [BigInt!]!
   lastPrice: BigDecimal!
   volume: BigInt!
   volumeUSD: BigDecimal!
@@ -149,6 +153,7 @@ type PoolDailySnapshot @entity {
   crosses: Int!
   utilization: BigDecimal!
   deltaBeans: BigInt!
+  deltaReserves: [BigInt!]!
   deltaVolume: BigInt!
   deltaVolumeUSD: BigDecimal!
   deltaLiquidityUSD: BigDecimal!
