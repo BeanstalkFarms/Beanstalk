@@ -195,7 +195,8 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
           break;
       }
     }
-  }, [handleSetBalanceFrom, account, values.destination, toMode]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handleSetBalanceFrom, account, toMode]);
 
   /// Checks
   const shouldApprove = (fromMode === FarmFromMode.EXTERNAL || fromMode === FarmFromMode.INTERNAL_EXTERNAL);
