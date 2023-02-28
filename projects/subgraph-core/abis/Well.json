@@ -13,6 +13,12 @@
         "internalType": "uint256",
         "name": "lpAmountOut",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
       }
     ],
     "name": "AddLiquidity",
@@ -70,6 +76,12 @@
         "internalType": "uint256[]",
         "name": "tokenAmountsOut",
         "type": "uint256[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
       }
     ],
     "name": "RemoveLiquidity",
@@ -95,9 +107,46 @@
         "internalType": "uint256",
         "name": "tokenAmountOut",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
       }
     ],
     "name": "RemoveLiquidityOneToken",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "reserves",
+        "type": "uint256[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "contract IERC20",
+        "name": "toToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "minAmountOut",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      }
+    ],
+    "name": "Shift",
     "type": "event"
   },
   {
@@ -126,9 +175,28 @@
         "internalType": "uint256",
         "name": "amountOut",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
       }
     ],
     "name": "Swap",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "reserves",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "Sync",
     "type": "event"
   },
   {
@@ -188,6 +256,35 @@
       }
     ],
     "name": "addLiquidity",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "lpAmountOut",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "tokenAmountsIn",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minLpAmountOut",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      }
+    ],
+    "name": "addLiquidityFeeOnTransfer",
     "outputs": [
       {
         "internalType": "uint256",
@@ -438,6 +535,25 @@
     "inputs": [
       {
         "internalType": "contract IERC20",
+        "name": "tokenOut",
+        "type": "address"
+      }
+    ],
+    "name": "getShiftOut",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amountOut",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IERC20",
         "name": "fromToken",
         "type": "address"
       },
@@ -582,19 +698,6 @@
   {
     "inputs": [],
     "name": "numberOfTokens",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "numberOfWellFunctionBytes",
     "outputs": [
       {
         "internalType": "uint256",
@@ -768,6 +871,35 @@
   {
     "inputs": [
       {
+        "internalType": "contract IERC20",
+        "name": "tokenOut",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minAmountOut",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      }
+    ],
+    "name": "shift",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amountOut",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "recipient",
         "type": "address"
@@ -837,6 +969,45 @@
       },
       {
         "internalType": "uint256",
+        "name": "amountIn",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minAmountOut",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      }
+    ],
+    "name": "swapFromFeeOnTransfer",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amountOut",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "fromToken",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IERC20",
+        "name": "toToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
         "name": "maxAmountIn",
         "type": "uint256"
       },
@@ -873,6 +1044,13 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "sync",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1057,6 +1235,19 @@
         "internalType": "address",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "wellFunctionDataLength",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "pure",
