@@ -5,12 +5,8 @@ import {
   ToggleButtonGroup,
   ToggleButtonGroupProps,
 } from '@mui/material';
-import {
-  BeanstalkPalette,
-  hexToRgba,
-  FontSize,
-  FontWeight,
-} from '../App/muiTheme';
+import { BeanstalkPalette, FontSize, FontWeight } from '../App/muiTheme';
+import { hexToRgba } from '~/util/UI';
 
 export type IToggleGroup<T extends string | number> = ToggleButtonGroupProps & {
   options: {

@@ -3,7 +3,6 @@ import { Accordion, AccordionDetails, Alert, Box, Divider, Stack } from '@mui/ma
 import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { useSelector } from 'react-redux';
-import toast from 'react-hot-toast';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Token } from '~/classes';
 import { SEEDS, STALK } from '~/constants/tokens';
@@ -21,7 +20,7 @@ import BeanstalkSDK from '~/lib/Beanstalk';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { FarmerSilo } from '~/state/farmer/silo';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
-import { displayFullBN, parseError, toStringBaseUnitBN } from '~/util';
+import { displayFullBN, toStringBaseUnitBN } from '~/util';
 import TransactionToast from '~/components/Common/TxnToast';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import { ERC20Token } from '~/classes/Token';
@@ -330,10 +329,10 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
       formActions.resetForm();
     } catch (err) {
       if (txToast) {
-        txToast.error(err)
+        txToast.error(err);
       } else {
-        let errorToast = new TransactionToast({})
-        errorToast.error(err)
+        const errorToast = new TransactionToast({});
+        errorToast.error(err);
       }
       formActions.setSubmitting(false);
     }

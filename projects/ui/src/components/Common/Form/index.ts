@@ -1,6 +1,8 @@
 import BigNumber from 'bignumber.js';
-import { ERC20Token, NativeToken } from '~/classes/Token';
+import { BeanstalkToken, ERC20Token, NativeToken } from '~/classes/Token';
 import { QuoteHandlerResult } from '~/hooks/ledger/useQuote';
+import { FarmToMode } from '~/lib/Beanstalk/Farm';
+import { BalanceFrom } from './BalanceFromRow';
 
 /**
  * 
@@ -73,6 +75,52 @@ export type PlotSettingsFragment = {
    * Pods are being transferred, sold, etc. */
   showRangeSelect: boolean;
 }
+
+export type ClaimableBeanAssetFragment = {
+  /**
+   * claimable bean token (BEAN, PODS, or SPROUTS)
+   */
+  token: BeanstalkToken | ERC20Token;
+  /**
+   * amount to claim from (claimable beans | harvestable pods | rinsable sprouts)
+   */
+  amount: BigNumber;
+};
+
+/**
+ *
+ */
+export type ClaimableBeanAssetFormState = {
+  /** */
+  maxBeansClaimable: BigNumber;
+  /** */
+  beansClaiming: { [k: string]: ClaimableBeanAssetFragment };
+};
+
+/**
+ *
+ */
+export type BalanceFromFragment = {
+  balanceFrom: BalanceFrom;
+};
+
+export type AdditionalBalanceFragment = {
+  /** */
+  additionMax: BigNumber;
+  /** */
+  additionApplied: BigNumber;
+}
+
+/**
+ *
+ */
+export type FarmToModeFragment = {
+  destination?: FarmToMode;
+};
+
+export type FarmWithClaimFormState = BalanceFromFragment &
+  FarmToModeFragment &
+  ClaimableBeanAssetFormState;
 
 // ----------------------------------------------------------------------
 

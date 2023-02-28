@@ -6,6 +6,7 @@ import {
   ThemeOptions,
 } from '@mui/material/styles';
 import React from 'react';
+import { hexToRgba } from '~/util/UI';
 
 // --------------------------------------------------
 
@@ -87,30 +88,6 @@ declare module '@mui/material/Tooltip' {
 const BASE_FONT_SIZE = 16;
 const remBase = (n: number) => `${(n / BASE_FONT_SIZE).toFixed(4)}rem`;
 
-export const hexToRgba = (hex: string, alpha?: number) => {
-  const stripped = hex.replace('#', '').split('');
-  if (stripped.length % 3 !== 0 || stripped.length > 6) {
-    throw new Error(`unexpected invalid hex value: ${hex}`);
-  }
-
-  const isCondensedHex = stripped.length === 3;
-  const hexArr = stripped
-    .reduce((prev, curr) => {
-      if (isCondensedHex) {
-        prev += curr;
-      }
-      prev += curr;
-      return prev;
-    }, '' as string)
-    .toString();
-
-  const r = parseInt(hexArr.slice(0, 2), 16);
-  const g = parseInt(hexArr.slice(2, 4), 16);
-  const b = parseInt(hexArr.slice(4, 6), 16);
-
-  return `rgba(${r}, ${g}, ${b}, ${alpha ?? 1})`;
-};
-
 /**
  * Beanstalk's primary color pallete.
  *
@@ -138,6 +115,8 @@ export const BeanstalkPalette = {
   // Other
   grey: '#657265',
   realGrey: '#808080',
+  inputGrey: '#F0F0F0',
+  ctaGrey: '#3B3B3B',
   lightGrey: '#9E9E9E',
   lightestGrey: '#DDDDDD',
   white: '#fff',
@@ -292,6 +271,9 @@ const muiThemeBase: ThemeOptions = {
     background: {
       default: BeanstalkPalette.theme.winter.iceBlue,
       paper: BeanstalkPalette.offWhite,
+    },
+    error: {
+      main: BeanstalkPalette.theme.winter.red,
     }
   },
 

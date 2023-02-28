@@ -3,7 +3,6 @@ import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useMemo } from 'react';
 import BigNumber from 'bignumber.js';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import toast from 'react-hot-toast';
 import FieldWrapper from '~/components/Common/Form/FieldWrapper';
 import AddressInputField from '~/components/Common/Form/AddressInputField';
 import {
@@ -27,7 +26,7 @@ import BeanstalkSDK from '~/lib/Beanstalk';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import TxnSeparator from '~/components/Common/Form/TxnSeparator';
 import { SEEDS, STALK } from '~/constants/tokens';
-import { displayFullBN, displayTokenAmount, parseError, toStringBaseUnitBN, trimAddress } from '~/util';
+import { displayFullBN, displayTokenAmount, toStringBaseUnitBN, trimAddress } from '~/util';
 import IconWrapper from '~/components/Common/IconWrapper';
 import { FontSize, IconSize } from '~/components/App/muiTheme';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
@@ -289,10 +288,10 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
       formActions.resetForm();
     } catch (err) {
       if (txToast) {
-        txToast.error(err)
+        txToast.error(err);
       } else {
-        let errorToast = new TransactionToast({})
-        errorToast.error(err)
+        const errorToast = new TransactionToast({});
+        errorToast.error(err);
       }
       formActions.setSubmitting(false);
     }

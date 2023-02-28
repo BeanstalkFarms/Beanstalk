@@ -9,7 +9,9 @@ const PillDialogField : FC<{
   isOpen: boolean;
   show: () => void;
   hide: () => void;
-  label: string;
+  label: string | JSX.Element;
+  // overrides the side label of the pill but nothing else
+  infoLabel?: string | JSX.Element;
   pill: React.ReactNode;
   tooltip?: string;
   labelProps?: TypographyProps;
@@ -18,6 +20,7 @@ const PillDialogField : FC<{
   show,
   hide,
   label,
+  infoLabel,
   pill,
   tooltip,
   children,
@@ -34,6 +37,7 @@ const PillDialogField : FC<{
     </StyledDialog>
     <PillRow
       label={label}
+      infoLabel={infoLabel}
       tooltip={tooltip}
       isOpen={isOpen}
       onClick={show}

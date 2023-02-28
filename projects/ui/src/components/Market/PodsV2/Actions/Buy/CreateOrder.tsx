@@ -5,7 +5,6 @@ import React, { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { ethers } from 'ethers';
 import { useProvider } from 'wagmi';
-import toast from 'react-hot-toast';
 import TransactionToast from '~/components/Common/TxnToast';
 import TxnAccordion from '~/components/Common/TxnAccordion';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
@@ -41,7 +40,6 @@ import {
   displayFullBN,
   toStringBaseUnitBN,
   toTokenUnitsBN,
-  parseError,
   displayTokenAmount,
   displayBN,
 } from '~/util';
@@ -73,7 +71,6 @@ const PlaceInLineInputProps = {
           sx={{
             opacity: '0.4',
             // HOTFIX: Small forms
-            mt: 0.2,
             mr: -0.2,
             fontSize: 17.6,
           }}>
@@ -269,20 +266,20 @@ const CreateOrderV2Form: FC<
             </Box>
           </>
         ) : null}
-        <Box sx={{position: 'sticky', bottom: 6.5, zIndex: 10}}>
-        <SmartSubmitButton
-          loading={isSubmitting}
-          disabled={isSubmitting || !isReady}
-          type="submit"
-          variant="contained"
-          color="primary"
-          contract={contract}
-          tokens={values.tokens}
-          mode="auto"
-          sx={{width: '100%', outline: '6.5px solid white'}}
-        >
-          Order
-        </SmartSubmitButton>
+        <Box sx={{ position: 'sticky', bottom: 6.5, zIndex: 10 }}>
+          <SmartSubmitButton
+            loading={isSubmitting}
+            disabled={isSubmitting || !isReady}
+            type="submit"
+            variant="contained"
+            color="primary"
+            contract={contract}
+            tokens={values.tokens}
+            mode="auto"
+            sx={{ width: '100%', outline: '6.5px solid white' }}
+          >
+            Order
+          </SmartSubmitButton>
         </Box>
       </Stack>
     </Form>
@@ -473,10 +470,10 @@ const CreateOrder: FC<{}> = () => {
         formActions.resetForm();
       } catch (err) {
         if (txToast) {
-          txToast.error(err)
+          txToast.error(err);
         } else {
-          let errorToast = new TransactionToast({})
-          errorToast.error(err)
+          const errorToast = new TransactionToast({});
+          errorToast.error(err);
         }
         console.error(err);
       }

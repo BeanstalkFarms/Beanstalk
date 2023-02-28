@@ -1,9 +1,8 @@
 import { Accordion, AccordionDetails, Alert, Box, CircularProgress, IconButton, Link, Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ethers } from 'ethers';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import toast from 'react-hot-toast';
 import { useConnect } from 'wagmi';
 import BigNumber from 'bignumber.js';
 import { SwapOperation } from '@beanstalk/sdk';
@@ -32,7 +31,7 @@ import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useQuote, { QuoteHandler } from '~/hooks/ledger/useQuote';
 import useAccount from '~/hooks/ledger/useAccount';
-import { toStringBaseUnitBN, toTokenUnitsBN, parseError, MinBN } from '~/util';
+import { toStringBaseUnitBN, toTokenUnitsBN, MinBN } from '~/util';
 import { IconSize } from '~/components/App/muiTheme';
 import TransactionToast from '~/components/Common/TxnToast';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
@@ -734,10 +733,10 @@ const Swap: FC<{}> = () => {
         });
       } catch (err) {
         if (txToast) {
-          txToast.error(err)
+          txToast.error(err);
         } else {
-          let errorToast = new TransactionToast({})
-          errorToast.error(err)
+          const errorToast = new TransactionToast({});
+          errorToast.error(err);
         }
         formActions.setSubmitting(false);
       }

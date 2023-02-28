@@ -16,25 +16,30 @@ const FarmModeField : FC<
     farmDesc? : string;
     baseMode? : (typeof FarmFromMode | typeof FarmToMode);
     labelProps?: TypographyProps;
+    infoLabel?: string;
   }
 > = ({
   circDesc: _circDesc,
   farmDesc: _farmDesc,
   label: _label,
+  infoLabel: _infoLabel,
   baseMode = FarmToMode,  
   ...props
 }) => {
   let circDesc : string;
   let farmDesc : string;
-  let label    : string;
+  let label    : string | JSX.Element;
+  let infoLabel: string | undefined;
   if (baseMode === FarmToMode) {
-    circDesc = _circDesc || 'Send assets to your wallet.';
-    farmDesc = _farmDesc || 'Send assets to your internal balance within Beanstalk.';
-    label    = _label    || 'Destination';
+    circDesc  = _circDesc  || 'Send assets to your wallet.';
+    farmDesc  = _farmDesc  || 'Send assets to your internal balance within Beanstalk.';
+    label     = _label     || 'Destination';
+    infoLabel = _infoLabel || undefined;
   } else {
-    circDesc = _circDesc || 'Use assets from your wallet.';
-    farmDesc = _farmDesc || 'Use assets to your internal balance within Beanstalk.';
-    label    = _label    || 'Source';
+    circDesc  = _circDesc  || 'Use assets from your wallet.';
+    farmDesc  = _farmDesc  || 'Use assets to your internal balance within Beanstalk.';
+    label     = _label     || 'Source';
+    infoLabel = _infoLabel || undefined;
   }
 
   const options = useMemo(() => ([
@@ -68,6 +73,7 @@ const FarmModeField : FC<
   return (
     <PillSelectField
       label={label}
+      infoLabel={infoLabel}
       {...props}          //
       options={options}   // always deterministically set options
     />

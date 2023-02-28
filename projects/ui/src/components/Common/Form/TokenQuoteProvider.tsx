@@ -125,16 +125,10 @@ const TokenQuoteProvider : FC<TokenQuoteProviderProps> = ({
         }}
         size={props.size}
         buttonLabel={tokenSelectLabel}
+        balanceFrom={props.balanceFrom}
       />
     )
-  }), [
-    state.token,
-    showTokenSelect,
-    isSubmitting,
-    disableTokenSelect,
-    tokenSelectLabel,
-    props.size
-  ]);
+  }), [state.token, showTokenSelect, isSubmitting, disableTokenSelect, props.size, props.balanceFrom, tokenSelectLabel]);
 
   // Render info about the quote beneath the input.
   // ----------------------------------------------
@@ -160,6 +154,7 @@ const TokenQuoteProvider : FC<TokenQuoteProviderProps> = ({
       {...props}
       // Other
       balance={balance}
+      balanceFrom={props.balanceFrom}
       quote={props.quote || Quote}
       token={state.token}
     />

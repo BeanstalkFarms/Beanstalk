@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { LoadingButton } from '@mui/lab';
-import toast from 'react-hot-toast';
 import unripeBeanIcon from '~/img/tokens/unripe-bean-logo-circled.svg';
 import brownLPIcon from '~/img/tokens/unripe-lp-logo-circled.svg';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
@@ -26,7 +25,7 @@ import { useSigner } from '~/hooks/ledger/useSigner';
 import { BEAN, BEAN_CRV3_LP, BEAN_ETH_UNIV2_LP, BEAN_LUSD_LP, UNRIPE_BEAN, UNRIPE_BEAN_CRV3 } from '~/constants/tokens';
 import { UNRIPE_ASSET_TOOLTIPS } from '~/constants/tooltips';
 import { ZERO_BN } from '~/constants';
-import { displayFullBN, toTokenUnitsBN, parseError } from '~/util';
+import { displayFullBN, toTokenUnitsBN } from '~/util';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
@@ -160,9 +159,9 @@ const PickBeansDialog: FC<{
           setPicked(_picked);
         }
       } catch (err) {
-        console.error(err)
-        let errorToast = new TransactionToast({})
-        errorToast.error(err)
+        console.error(err);
+        const errorToast = new TransactionToast({});
+        errorToast.error(err);
       }
     })();
   }, [account, beanstalk, open, urBean.address, urBeanCRV3.address]);

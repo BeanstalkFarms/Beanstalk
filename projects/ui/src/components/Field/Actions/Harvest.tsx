@@ -3,7 +3,6 @@ import { Accordion, AccordionDetails, Box, Stack, Typography } from '@mui/materi
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import { useAccount as useWagmiAccount, useProvider } from 'wagmi';
-import toast from 'react-hot-toast';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import {
   SmartSubmitButton, TokenInputField, TokenOutputField,
@@ -14,11 +13,7 @@ import { useSigner } from '~/hooks/ledger/useSigner';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import { ActionType } from '~/util/Actions';
 import Farm, { FarmToMode } from '~/lib/Beanstalk/Farm';
-import {
-  displayFullBN,
-  parseError,
-  toStringBaseUnitBN
-} from '~/util';
+import { displayFullBN, toStringBaseUnitBN } from '~/util';
 import useFarmerField from '~/hooks/farmer/useFarmerField';
 import { useFetchFarmerField } from '~/state/farmer/field/updater';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
@@ -251,10 +246,10 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
         formActions.resetForm();
       } catch (err) {
         if (txToast) {
-          txToast.error(err)
+          txToast.error(err);
         } else {
-          let errorToast = new TransactionToast({})
-          errorToast.error(err)
+          const errorToast = new TransactionToast({});
+          errorToast.error(err);
         }
         formActions.setSubmitting(false);
       }
