@@ -44,15 +44,15 @@ templates:
         - name: ERC20
           file: ../subgraph-core/abis/ERC20.json
       eventHandlers:
-        - event: AddLiquidity(uint256[],uint256)
+        - event: AddLiquidity(uint256[],uint256,address)
           handler: handleAddLiquidity
         - event: Approval(indexed address,indexed address,uint256)
           handler: handleApproval
-        - event: RemoveLiquidity(uint256,uint256[])
+        - event: RemoveLiquidity(uint256,uint256[],address)
           handler: handleRemoveLiquidity
-        - event: RemoveLiquidityOneToken(uint256,address,uint256)
+        - event: RemoveLiquidityOneToken(uint256,address,uint256,address)
           handler: handleRemoveLiquidityOneToken
-        - event: Swap(address,address,uint256,uint256)
+        - event: Swap(address,address,uint256,uint256,address)
           handler: handleSwap
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
