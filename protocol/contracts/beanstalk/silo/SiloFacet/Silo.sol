@@ -215,7 +215,8 @@ contract Silo is SiloExit {
 
         uint256 seedsTotalBasedOnInputDeposits = 0;
 
-        uint32 grownStalkPerBdvStartSeason = uint32(s.season.grownStalkPerBdvStartSeason);
+        // NOTE: this was used previously in lines 240, but since then is has been replaced with the function below:
+        // uint32 grownStalkPerBdvStartSeason = uint32(s.season.grownStalkPerBdvStartSeason);
 
         for (uint256 i = 0; i < tokens.length; i++) {
             address token = tokens[i];
@@ -227,19 +228,25 @@ contract Silo is SiloExit {
                 uint32 season = seasons[i][j];
 
                 Account.Deposit memory d;
-                (d.amount, d.bdv) = LibLegacyTokenSilo.tokenDeposit(account, token, season); //Stack too deep, try removing local variables.
+                (d.amount, d.bdv) = LibLegacyTokenSilo.tokenDeposit(account, token, season);
 
 
-                uint256 seedsForDeposit = d.bdv * LibLegacyTokenSilo.getSeedsPerToken(address(token));
+                // NOTE: this was used previously in lines 240, but since then is has been replaced with the function below:
+                // uint256 seedsForDeposit = d.bdv * LibLegacyTokenSilo.getSeedsPerToken(address(token));
 
                 //calculate the amount of grown stalk for this deposit
                 // console.log('grown stalk for deposit: ', seedsForDeposit * LibLegacyTokenSilo.stalkReward(seedsForDeposit, grownStalkPerBdvStartSeason - season));
 
-                migrateData.totalGrownStalkForToken += uint128(
-                    seedsForDeposit * LibLegacyTokenSilo.stalkReward(
-                        seedsForDeposit, 
-                        grownStalkPerBdvStartSeason - season
-                    )
+                // NOTE: this is replaced with the function below, to avoid the stack too deep error: 
+                // migrateData.totalGrownStalkForToken += uint128(
+                //     seedsForDeposit * LibLegacyTokenSilo.stalkReward(
+                //         seedsForDeposit, 
+                //         grownStalkPerBdvStartSeason - season
+                //     )
+                // );
+                migrateData.totalGrownStalkForToken += _calcGrownStalkForDeposit(
+                    d.bdv * LibLegacyTokenSilo.getSeedsPerToken(address(token)),
+                    season
                 );
 
                 //withdraw this deposit
@@ -292,6 +299,14 @@ contract Silo is SiloExit {
 
         //and wipe out old seed balances (all your seeds are belong to grownStalkPerBdv)
         s.a[account].s.seeds = 0;
+    }
+
+    function _calcGrownStalkForDeposit(
+        uint256 seedsForDeposit,
+        uint32 season
+    ) internal view returns (uint128 grownStalk) {
+        uint32 grownStalkPerBdvStartSeason = uint32(s.season.grownStalkPerBdvStartSeason);
+        return uint128(seedsForDeposit * LibLegacyTokenSilo.stalkReward(seedsForDeposit, grownStalkPerBdvStartSeason - season));
     }
 
 
