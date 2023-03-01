@@ -288,17 +288,19 @@ library LibLegacyTokenSilo {
         address account,
         address token,
         uint32 season
-    ) internal view returns (uint256, uint256) {
+    ) internal view returns (uint128, uint128) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         console.log('tokenDeposit season: ', season);
         console.log('tokenDeposit token: ', token);
 
-        if (LibUnripeSilo.isUnripeBean(token))
-            return LibUnripeSilo.unripeBeanDeposit(account, season);
-
-        if (LibUnripeSilo.isUnripeLP(token))
-            return LibUnripeSilo.unripeLPDeposit(account, season);
-
+        if (LibUnripeSilo.isUnripeBean(token)){
+            (uint256 amount, uint256 bdv) = LibUnripeSilo.unripeBeanDeposit(account, season);
+            return (uint128(amount), uint128(bdv));
+        }
+        if (LibUnripeSilo.isUnripeLP(token)){
+            (uint256 amount, uint256 bdv) = LibUnripeSilo.unripeLPDeposit(account, season);
+            return (uint128(amount), uint128(bdv));
+        }
         console.log('returning legacy deposit amount');
         return (
             s.a[account].legacyDeposits[token][season].amount,

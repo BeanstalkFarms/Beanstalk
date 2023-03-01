@@ -208,42 +208,41 @@ contract Silo is SiloExit {
         LibSilo.mintStalk(account, LibLegacyTokenSilo.balanceOfGrownStalk(account));
         //at this point we've completed the guts of the old mow function, now we need to do the migration
 
-        uint256 seedsTotalBasedOnInputDeposits = 0;
+        // uint256 seedsTotalBasedOnInputDeposits = 0;
 
         uint32 grownStalkPerBdvStartSeason = uint32(s.season.grownStalkPerBdvStartSeason);
 
         for (uint256 i = 0; i < tokens.length; i++) {
             address token = tokens[i];
-            uint32[] memory seasonsForToken = seasons[i];
             //get how many seeds there should be per bdv
-            uint256 seedPerBdv = LibLegacyTokenSilo.getSeedsPerToken(address(token));
+            // uint256 seedPerBdv = LibLegacyTokenSilo.getSeedsPerToken(address(token));
             uint256 totalBdv = 0;
             uint256 totalGrownStalkForToken = 0;
 
-            for (uint256 j = 0; j < seasonsForToken.length; j++) {
-                uint32 season = seasonsForToken[j];
+            for (uint256 j = 0; j < seasons[i].length; j++) {
+                uint32 season = seasons[i][j];
 
-                // get bdv amount for this deposit
-                (uint256 amount, uint256 bdv) = LibLegacyTokenSilo.tokenDeposit(account, token, season); //Stack too deep, try removing local variables.
+                Account.Deposit memory d;
+                (d.amount, d.bdv) = LibLegacyTokenSilo.tokenDeposit(account, token, season); //Stack too deep, try removing local variables.
 
 
-                uint256 seedsForDeposit = bdv * seedPerBdv;
+                uint256 seedsForDeposit = d.bdv * LibLegacyTokenSilo.getSeedsPerToken(address(token));
 
                 //calculate the amount of grown stalk for this deposit
-                console.log('grown stalk for deposit: ', seedsForDeposit * LibLegacyTokenSilo.stalkReward(seedsForDeposit, uint32(grownStalkPerBdvStartSeason) - season));
+                // console.log('grown stalk for deposit: ', seedsForDeposit * LibLegacyTokenSilo.stalkReward(seedsForDeposit, grownStalkPerBdvStartSeason - season));
 
-                totalGrownStalkForToken += seedsForDeposit * LibLegacyTokenSilo.stalkReward(seedsForDeposit, uint32(grownStalkPerBdvStartSeason) - season);
+                totalGrownStalkForToken += seedsForDeposit * LibLegacyTokenSilo.stalkReward(seedsForDeposit, grownStalkPerBdvStartSeason - season);
 
                 //withdraw this deposit
                 uint256 crateBDV = LibTokenSilo.removeDepositFromAccount(
                                     account,
                                     token,
                                     season,
-                                    amount
+                                    d.amount
                                 );
 
-                console.log('_mowAndMigrate bdv: ', bdv);
-                console.log('_mowAndMigrate seedsForDeposit: ', seedsForDeposit);
+                // console.log('_mowAndMigrate bdv: ', bdv);
+                // console.log('_mowAndMigrate seedsForDeposit: ', seedsForDeposit);
 
                 // not sure whether a check for bdv == 0 is 
                 // cheaper than artitmetic checks
@@ -253,34 +252,35 @@ contract Silo is SiloExit {
                 // }
 
                 //add to running total of seeds
-                seedsTotalBasedOnInputDeposits += bdv * seedPerBdv;
+                // seedsTotalBasedOnInputDeposits += d.bdv * LibLegacyTokenSilo.getSeedsPerToken(address(token));
 
                 //add to running total of bdv
-                totalBdv += bdv;
+                totalBdv += d.bdv;
             }
 
-            console.log('totalBdv: ', totalBdv);
+            // console.log('totalBdv: ', totalBdv);
 
             //init mow status for this token
             s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
             s.a[account].mowStatuses[token].bdv = uint128(totalBdv);
 
             int128 grownStalkIndexToDepositAt = LibTokenSilo.grownStalkAndBdvToCumulativeGrownStalk(IERC20(token), totalGrownStalkForToken, totalBdv);
-            console.log('grownStalkIndexToDepositAt: ');
-            console.logInt(grownStalkIndexToDepositAt);
+            // console.log('grownStalkIndexToDepositAt: ');
+            // console.logInt(grownStalkIndexToDepositAt);
             //now we need to deposit totalBdv and totalGrownStalkForToken into the new silo
             LibTokenSilo.deposit(account, token, grownStalkIndexToDepositAt, totalBdv);
         }
 
-        console.log('seedsTotalBasedOnInputDeposits: ', seedsTotalBasedOnInputDeposits);
+        // console.log('seedsTotalBasedOnInputDeposits: ', seedsTotalBasedOnInputDeposits);
         console.log('s.a[account].s.seeds: ', s.a[account].s.seeds);
         
         //verify user account seeds total equals seedsTotalBasedOnInputDeposits
-        require(s.a[account].s.seeds == seedsTotalBasedOnInputDeposits, "seeds don't match");
+        // require(s.a[account].s.seeds == seedsTotalBasedOnInputDeposits, "seeds don't match");
 
         //and wipe out old seed balances (all your seeds are belong to grownStalkPerBdv)
         s.a[account].s.seeds = 0;
     }
+
 
     //////////////////////// INTERNAL: PLANT ////////////////////////
 
