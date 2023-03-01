@@ -29,6 +29,11 @@ contract Silo is SiloExit {
     using LibSafeMath128 for uint128;
 
 
+    struct MigrateData {
+        uint128 totalBdv;
+        uint128 totalGrownStalkForToken;
+    }
+
     //////////////////////// EVENTS ////////////////////////    
 
     /**
@@ -208,7 +213,7 @@ contract Silo is SiloExit {
         LibSilo.mintStalk(account, LibLegacyTokenSilo.balanceOfGrownStalk(account));
         //at this point we've completed the guts of the old mow function, now we need to do the migration
 
-        // uint256 seedsTotalBasedOnInputDeposits = 0;
+        uint256 seedsTotalBasedOnInputDeposits = 0;
 
         uint32 grownStalkPerBdvStartSeason = uint32(s.season.grownStalkPerBdvStartSeason);
 
@@ -216,8 +221,7 @@ contract Silo is SiloExit {
             address token = tokens[i];
             //get how many seeds there should be per bdv
             // uint256 seedPerBdv = LibLegacyTokenSilo.getSeedsPerToken(address(token));
-            uint256 totalBdv = 0;
-            uint256 totalGrownStalkForToken = 0;
+            MigrateData memory migrateData;
 
             for (uint256 j = 0; j < seasons[i].length; j++) {
                 uint32 season = seasons[i][j];
@@ -231,7 +235,12 @@ contract Silo is SiloExit {
                 //calculate the amount of grown stalk for this deposit
                 // console.log('grown stalk for deposit: ', seedsForDeposit * LibLegacyTokenSilo.stalkReward(seedsForDeposit, grownStalkPerBdvStartSeason - season));
 
-                totalGrownStalkForToken += seedsForDeposit * LibLegacyTokenSilo.stalkReward(seedsForDeposit, grownStalkPerBdvStartSeason - season);
+                migrateData.totalGrownStalkForToken += uint128(
+                    seedsForDeposit * LibLegacyTokenSilo.stalkReward(
+                        seedsForDeposit, 
+                        grownStalkPerBdvStartSeason - season
+                    )
+                );
 
                 //withdraw this deposit
                 uint256 crateBDV = LibTokenSilo.removeDepositFromAccount(
@@ -252,30 +261,34 @@ contract Silo is SiloExit {
                 // }
 
                 //add to running total of seeds
-                // seedsTotalBasedOnInputDeposits += d.bdv * LibLegacyTokenSilo.getSeedsPerToken(address(token));
+                seedsTotalBasedOnInputDeposits += uint256(d.bdv) * LibLegacyTokenSilo.getSeedsPerToken(address(token));
 
                 //add to running total of bdv
-                totalBdv += d.bdv;
+                migrateData.totalBdv += d.bdv;
             }
 
             // console.log('totalBdv: ', totalBdv);
 
             //init mow status for this token
             s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
-            s.a[account].mowStatuses[token].bdv = uint128(totalBdv);
+            s.a[account].mowStatuses[token].bdv = uint128(migrateData.totalBdv);
 
-            int128 grownStalkIndexToDepositAt = LibTokenSilo.grownStalkAndBdvToCumulativeGrownStalk(IERC20(token), totalGrownStalkForToken, totalBdv);
+            int128 grownStalkIndexToDepositAt = LibTokenSilo.grownStalkAndBdvToCumulativeGrownStalk(
+                IERC20(token), 
+                migrateData.totalGrownStalkForToken, 
+                migrateData.totalBdv
+            );
             // console.log('grownStalkIndexToDepositAt: ');
             // console.logInt(grownStalkIndexToDepositAt);
             //now we need to deposit totalBdv and totalGrownStalkForToken into the new silo
-            LibTokenSilo.deposit(account, token, grownStalkIndexToDepositAt, totalBdv);
+            LibTokenSilo.deposit(account, token, grownStalkIndexToDepositAt, migrateData.totalBdv);
         }
 
         // console.log('seedsTotalBasedOnInputDeposits: ', seedsTotalBasedOnInputDeposits);
         console.log('s.a[account].s.seeds: ', s.a[account].s.seeds);
         
         //verify user account seeds total equals seedsTotalBasedOnInputDeposits
-        // require(s.a[account].s.seeds == seedsTotalBasedOnInputDeposits, "seeds don't match");
+        require(s.a[account].s.seeds == seedsTotalBasedOnInputDeposits, "seeds don't match");
 
         //and wipe out old seed balances (all your seeds are belong to grownStalkPerBdv)
         s.a[account].s.seeds = 0;
