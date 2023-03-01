@@ -304,6 +304,41 @@ describe('Silo', function () {
           expect(await this.silo.connect(user2).balanceOfEarnedBeans(user2Address)).to.eq(24998780);
   
         });
+
+        it('farmer plants in vesting period, then plants again in the following season', async function () {
+          await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
+    
+          expect(await this.silo.connect(user2).balanceOfEarnedBeans(userAddress)).to.eq(0);
+          await this.silo.connect(user).plant();
+  
+          earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, season)
+          expect(earned_beans[0]).to.eq(0);
+            
+          // skip to after the vesting period:
+          await mineUpTo((await ethers.provider.getBlockNumber()) + 25 + 1);
+          expect(await this.silo.connect(userAddress).balanceOfEarnedBeans(userAddress)).to.eq(25e6);
+
+          // sunrise again 
+          await this.season.siloSunrise(to6('100'))
+          season = await this.season.season();
+
+          expect(await this.silo.connect(userAddress).balanceOfEarnedBeans(userAddress)).to.eq(25005000); 
+          // await this.silo.connect(user).plant();
+          earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, season)
+          // expect(earned_beans[0]).to.eq(25e6); // user gets the earned beans from the previous season + the beans from the current season
+
+
+
+
+          // skip to after the vesting period:
+          await mineUpTo((await ethers.provider.getBlockNumber()) + 25 + 1);
+
+          await this.silo.connect(user).plant();
+          expect(await this.silo.connect(userAddress).balanceOfEarnedBeans(userAddress)).to.eq(0);
+          earned_beans = await this.silo.getDeposit(userAddress,this.bean.address,season);
+          expect(earned_beans[0]).to.eq(50003658); // user gets the earned beans from the previous season + the beans from the current season
+          // user gets slightly more since they mowed last season. 
+        });
       })    
     })
 
@@ -400,6 +435,8 @@ describe('Silo', function () {
           expect(await this.silo.connect(user).balanceOfEarnedBeans(userAddress)).to.eq(25e6);
   
         });
+
+        
 
       });
 
