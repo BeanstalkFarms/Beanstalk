@@ -512,46 +512,45 @@ type ChartWrapperProps = {
   children: (props: ProviderChartProps) => React.ReactNode;
 };
 
+export const chartHelpers: ProviderChartProps = {
+  common: {
+    strokeBuffer,
+    margin,
+    axisHeight,
+    backgroundColor,
+    labelColor,
+    axisColor,
+    tickLabelColor,
+    yAxisWidth,
+    defaultChartStyles,
+    xTickLabelProps,
+    yTickLabelProps,
+    getChartStyles,
+  },
+  accessors: {
+    getX,
+    getY,
+    getYByAsset,
+    getD,
+    getY0,
+    getY1,
+    bisectSeason,
+    getYMin,
+    getYMax,
+  },
+  utils: {
+    generatePathFromStack,
+    generateScale,
+    getPointerValue,
+    getCurve,
+  },
+};
+
 /**
  * hook used to access commonly used chart functions and values
  */
 const ChartPropProvider: React.FC<ChartWrapperProps> = ({ children }) => {
-  const props = useMemo(
-    () => ({
-      common: {
-        strokeBuffer,
-        margin,
-        axisHeight,
-        backgroundColor,
-        labelColor,
-        axisColor,
-        tickLabelColor,
-        yAxisWidth,
-        defaultChartStyles,
-        xTickLabelProps,
-        yTickLabelProps,
-        getChartStyles,
-      },
-      accessors: {
-        getX,
-        getY,
-        getYByAsset,
-        getD,
-        getY0,
-        getY1,
-        bisectSeason,
-        getYMin,
-        getYMax,
-      },
-      utils: {
-        generatePathFromStack,
-        generateScale,
-        getPointerValue,
-        getCurve,
-      },
-    }),
-    []
-  );
+  const props = useMemo(() => chartHelpers, []);
   return (
     <>
       {children({
