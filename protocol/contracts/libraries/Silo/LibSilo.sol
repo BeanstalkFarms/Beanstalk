@@ -37,6 +37,7 @@ library LibSilo {
     using LibSafeMath128 for uint128;
     
     //////////////////////// EVENTS ////////////////////////    
+    uint256 constant EARNED_BEAN_VESTING_BLOCKS = 25;
 
     /**
      * @notice Emitted when `account` gains or loses Seeds.
