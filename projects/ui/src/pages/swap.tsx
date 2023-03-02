@@ -21,7 +21,7 @@ const SwapPage: FC<{}> = () => (
             title="The Farmers' Almanac: Swap Guides"
             guides={[
               HOW_TO_TRADE_BEANS,
-              HOW_TO_TRANSFER_FARM_BALANCE,
+              HOW_TO_TRANSFER_BALANCES,
             ]}
           />
         }
