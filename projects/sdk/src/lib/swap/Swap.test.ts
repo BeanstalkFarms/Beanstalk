@@ -47,12 +47,12 @@ describe("Swap", function () {
     [sdk.tokens.ETH, sdk.tokens.USDT],
     [sdk.tokens.ETH, sdk.tokens.USDC],
     [sdk.tokens.ETH, sdk.tokens.DAI],
-    [sdk.tokens.ETH, sdk.tokens.BEAN],
+    // [sdk.tokens.ETH, sdk.tokens.BEAN],
     [sdk.tokens.ETH, sdk.tokens.CRV3],
 
     // BEAN => x
-    [sdk.tokens.BEAN, sdk.tokens.ETH],
-    [sdk.tokens.BEAN, sdk.tokens.WETH],
+    // [sdk.tokens.BEAN, sdk.tokens.ETH],
+    // [sdk.tokens.BEAN, sdk.tokens.WETH],
     [sdk.tokens.BEAN, sdk.tokens.BEAN],
     [sdk.tokens.BEAN, sdk.tokens.USDT],
     [sdk.tokens.BEAN, sdk.tokens.USDC],

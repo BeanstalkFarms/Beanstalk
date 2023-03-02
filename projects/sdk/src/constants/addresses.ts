@@ -54,7 +54,7 @@ export const addresses = {
   // ----------------------------------------
   // Wells Contracts
   // ----------------------------------------
-  BEANWETH_WELL: Address.make("0xF85895D097B2C25946BB95C4d11E2F3c035F8f0C"),
+  BEANWETH_WELL: Address.make("0xb468647b04bf657c9ee2de65252037d781eabafd"),
 
   // ----------------------------------------
   // Common ERC-20 Tokens
