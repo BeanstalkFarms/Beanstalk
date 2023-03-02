@@ -322,7 +322,7 @@ describe('Silo', function () {
           await this.season.siloSunrise(to6('100'))
           season = await this.season.season();
 
-          expect(await this.silo.connect(userAddress).balanceOfEarnedBeans(userAddress)).to.eq(25005000); 
+          expect(await this.silo.connect(userAddress).balanceOfEarnedBeans(userAddress)).to.eq(25e6); 
           // await this.silo.connect(user).plant();
           earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, season)
           // expect(earned_beans[0]).to.eq(25e6); // user gets the earned beans from the previous season + the beans from the current season
