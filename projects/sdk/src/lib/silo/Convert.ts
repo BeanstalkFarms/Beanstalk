@@ -1,6 +1,6 @@
+import { TokenValue } from "@beanstalk/sdk-core";
 import { ContractTransaction } from "ethers";
 import { Token } from "src/classes/Token";
-import { TokenValue } from "src/classes/TokenValue";
 import { BeanstalkSDK } from "../BeanstalkSDK";
 import { ConvertEncoder } from "./ConvertEncoder";
 import { DepositCrate } from "./types";
