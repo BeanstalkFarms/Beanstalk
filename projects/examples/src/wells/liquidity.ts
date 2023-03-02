@@ -17,8 +17,8 @@ async function main() {
   const BEAN = sdk.tokens.BEAN;
   const WETH = sdk.tokens.WETH;
 
-  const wethAmount = WETH.amount(3);
-  const beanAmount = BEAN.amount(3 * 1000);
+  const wethAmount = WETH.amount(30);
+  const beanAmount = BEAN.amount(30 * 1000);
 
   // get Well object
   const well = await sdk.getWell(WELL_ADDRESS);
