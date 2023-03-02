@@ -47,18 +47,18 @@ contract SiloFacet is TokenSilo {
      * 
      * FIXME(logic): return `(amount, bdv(, season))`
      */
-    function deposit(
-        address token,
+    function depositERC20(
+        IERC20 token,
         uint256 amount,
         LibTransfer.From mode
     ) external payable nonReentrant mowSender(token) {
         amount = LibTransfer.receiveToken(
-            IERC20(token),
+            token,
             amount,
             msg.sender,
             mode
         );
-        _deposit(msg.sender, token, amount);
+        _depositERC20(msg.sender, token, amount);
     }
 
     //////////////////////// WITHDRAW ////////////////////////

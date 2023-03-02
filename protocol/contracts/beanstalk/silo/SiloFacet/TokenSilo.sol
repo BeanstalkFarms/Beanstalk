@@ -198,16 +198,16 @@ contract TokenSilo is Silo {
      * This step should enforce that new Deposits are placed into the current 
      * `LibTokenSilo.cumulativeGrownStalkPerBdv(token)`.
      */
-    function _deposit(
+    function _depositERC20(
         address account,
-        address token,
+        IERC20 token,
         uint256 amount
     ) internal {
         console.log('_deposit: ', amount);
         (uint256 stalk) = LibTokenSilo.deposit(
             account,
-            token,
-            LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)),
+            address(token),
+            LibTokenSilo.cumulativeGrownStalkPerBdv(token), // TODO: may need to generalize this for all standards, just not ERC20
             amount
         );
         console.log('_deposit now mint stalk: ', stalk);

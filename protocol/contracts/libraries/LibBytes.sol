@@ -73,4 +73,18 @@ library LibBytes {
         return memBytes;
     }
 
+    function packAddressAndCumulativeStalkPerBDV(address _address, uint96 cumulativeStalkPerBDV) internal pure returns (bytes32){
+        return bytes32(uint256(_address) << 96 | cumulativeStalkPerBDV);
+    }
+    function getAddressFromBytes(bytes32 data) internal pure returns(address) {
+        return address(bytes20(data));
+    }
+    function getCumulativeStalkPerBDVFromBytes(bytes32 data) internal pure returns(int96) {
+        return int96(int256(data));
+    }
+    function getAddressAndCumulativeStalkPerBDVFromBytes(bytes32 data) internal pure returns(address, int96) {
+        return (address(bytes20(data)), int96(int256(data)));
+    }
+
+
 }

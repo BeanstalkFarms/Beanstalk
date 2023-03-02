@@ -12,6 +12,7 @@ import "./LibUnripeSilo.sol";
 import "./LibLegacyTokenSilo.sol";
 import "~/libraries/LibSafeMathSigned128.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import "~/libraries/LibBytes.sol";
 import "hardhat/console.sol";
 
 /**
