@@ -348,6 +348,10 @@ contract SiloFacet is TokenSilo {
         _mowAndMigrate(account, tokens, seasons);
     }
 
+    function mowAndMigrateNoDeposits(address account) external payable {
+        _migrateNoDeposits(account);
+    }
+
     /** 
      * @notice Claim Earned Beans and their associated Stalk for 
      * `msg.sender`.

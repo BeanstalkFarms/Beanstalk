@@ -184,7 +184,7 @@ contract Silo is SiloExit {
     }
      
      
-   function migrateNoDeposits(address account) internal {
+   function _migrateNoDeposits(address account) internal {
         require(s.a[account].s.seeds == 0, "only for zero seeds");
         uint32 _lastUpdate = lastUpdate(account);
         require(_lastUpdate > 0 && _lastUpdate < s.season.grownStalkPerBdvStartSeason, "no migration needed");
