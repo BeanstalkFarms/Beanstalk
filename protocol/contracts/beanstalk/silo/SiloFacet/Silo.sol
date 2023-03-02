@@ -250,7 +250,7 @@ contract Silo is SiloExit {
                 );
 
                 //withdraw this deposit
-                uint256 crateBDV = LibTokenSilo.removeDepositFromAccount(
+                uint256 crateBDV = LibLegacyTokenSilo.removeDepositFromAccount(
                                     account,
                                     token,
                                     season,
@@ -295,7 +295,9 @@ contract Silo is SiloExit {
         console.log('s.a[account].s.seeds: ', s.a[account].s.seeds);
         
         //verify user account seeds total equals seedsTotalBasedOnInputDeposits
-        require(s.a[account].s.seeds == seedsTotalBasedOnInputDeposits, "seeds don't match");
+        if((s.a[account].s.seeds + 4 - seedsTotalBasedOnInputDeposits) > 100) {
+            require(msg.sender == account, "deSynced seeds, only account can migrate");
+        }
 
         //and wipe out old seed balances (all your seeds are belong to grownStalkPerBdv)
         s.a[account].s.seeds = 0;

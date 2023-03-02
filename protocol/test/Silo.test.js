@@ -538,7 +538,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
 
   //get deposits for a sample big depositor, verify they can migrate their deposits correctly
   describe('properly migrates deposits', function () {
-    it.only('for a sample depositor', async function () {
+    it('for a sample depositor', async function () {
 
       //get deposit data using a query like this: https://graph.node.bean.money/subgraphs/name/beanstalk/graphql?query=%7B%0A++silos%28orderBy%3A+stalk%2C+orderDirection%3A+desc%2C+first%3A+2%29+%7B%0A++++farmer+%7B%0A++++++id%0A++++++plots+%7B%0A++++++++season%0A++++++++source%0A++++++%7D%0A++++++silo+%7B%0A++++++++id%0A++++++%7D%0A++++++deposits+%7B%0A++++++++season%0A++++++++token%0A++++++%7D%0A++++%7D%0A++++stalk%0A++%7D%0A%7D
 
@@ -755,14 +755,14 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         [6004, 6008],
       ];
 
-      for (let i = 0; i < seasons.length; i++) {
-        for (let j = 0; j < seasons[i].length; j++) {
-          const season = seasons[i][j];
-          seasons[i][j] = await this.silo.seasonToGrownStalkPerBdv(tokens[i], season);
-        }
-      }
+      // for (let i = 0; i < seasons.length; i++) {
+      //   for (let j = 0; j < seasons[i].length; j++) {
+      //     const season = seasons[i][j];
+      //     seasons[i][j] = await this.silo.seasonToGrownStalkPerBdv(tokens[i], season);
+      //   }
+      // }
       
-      console.log('modified seasons: ', seasons);
+      // console.log('modified seasons: ', seasons);
 
       const depositorSigner = await impersonateSigner(depositorAddress);
       await this.silo.connect(depositorSigner);
