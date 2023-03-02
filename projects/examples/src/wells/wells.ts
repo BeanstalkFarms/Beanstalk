@@ -12,6 +12,9 @@ async function main() {
   const sdk = new WellsSDK({ provider });
 
   // get Well object
-  const well: Well = await sdk.getWell(WELL_ADDRESS);
+  console.log(WELL_ADDRESS);
+  const well: Well = await sdk.getWell(WELL_ADDRESS, {});
+  const name = await well.getName()
+  console.log(name);
   console.log(well);
 }
