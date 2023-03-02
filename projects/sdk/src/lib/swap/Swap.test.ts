@@ -44,6 +44,7 @@ describe("Swap", function () {
   describe.each([
     // ETH => x
     [sdk.tokens.ETH, sdk.tokens.WETH],
+    // TODO: Uncomment once wells exist in fork
     // [sdk.tokens.ETH, sdk.tokens.USDT],
     // [sdk.tokens.ETH, sdk.tokens.USDC],
     // [sdk.tokens.ETH, sdk.tokens.DAI],
