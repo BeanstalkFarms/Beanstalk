@@ -159,9 +159,6 @@ contract SiloExit is ReentrancyGuard {
     /**
      * @notice Returns the balance of Earned Beans for `account`. Earned Beans
      * are the Beans distributed to Stalkholders during {Sun-rewardToSilo}.
-     * @dev in the case where a user calls balanceOfEarned beans during the vesting period,
-     * we have to manually calculate the deltaRoots and newEarnedRoots, as they are not stored in the state.
-     * this is done in {_calcRoots} and {_balanceOfEarnedBeansVested}.
      */
     function balanceOfEarnedBeans(address account)
         public

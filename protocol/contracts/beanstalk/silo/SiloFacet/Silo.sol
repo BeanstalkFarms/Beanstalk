@@ -170,6 +170,7 @@ contract Silo is SiloExit {
         _mow(account);
         uint256 accountStalk =  s.a[account].s.stalk;
         beans = _balanceOfEarnedBeans(account, accountStalk);
+        s.a[account].deltaRoots = 0; // must be 0'd, as calling balanceOfEarnedBeans would give a invalid amount of beans. 
 
         if (beans == 0) return 0;
 
