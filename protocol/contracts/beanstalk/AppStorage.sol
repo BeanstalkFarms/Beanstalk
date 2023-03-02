@@ -58,7 +58,7 @@ contract Account {
 
     // This struct stores the mow status for each Silo-able token, for each farmer. This gets updated each time a farmer mows, or adds/removes deposits.
     struct MowStatus {
-        int128 lastCumulativeGrownStalkPerBdv; // the last cumulative grown stalk per bdv index at which the farmer mowed
+        int96 lastCumulativeGrownStalkPerBdv; // the last cumulative grown stalk per bdv index at which the farmer mowed
         uint128 bdv; // bdv of all of a farmer's deposits of this token type
     }
 
@@ -124,7 +124,7 @@ contract Account {
         mapping(address => mapping(IERC20 => uint256)) tokenAllowances; // Token allowances
         uint256 depositPermitNonces; // A Farmer's current deposit permit nonce
         uint256 tokenPermitNonces; // A Farmer's current token permit nonce
-        mapping(address => mapping(int128 => Deposit)) deposits; // SiloV3 Deposits stored as a map from Token address to CulmativeGrownStalk to Deposit
+        mapping(bytes32 => Deposit) deposits; // SiloV3 Deposits stored as a map from bytes32 to Deposit. This is an concat of the token address and the CGSPBDV for a ERC20 deposit, and a hash for an ERC721/1155 deposit.
         mapping(address => MowStatus) mowStatuses; //Store a MowStatus for each Silo-able token
     }
 }
@@ -293,7 +293,7 @@ contract Storage {
         /*
          * @dev The cumulative amount of grown stalk per BDV for this Silo depositable token.
          */
-		int128 lastCumulativeGrownStalkPerBdv;
+		int96 lastCumulativeGrownStalkPerBdv;
     }
 
     // UnripeSettings stores the settings for an Unripe Token in Beanstalk.
