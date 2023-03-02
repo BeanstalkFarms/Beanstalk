@@ -218,9 +218,16 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
    */
   {
     graph.setEdge("WETH", "BEAN", {
-      build: (account: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.well_weth2bean(account, from, to),
+      build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+        sdk.farm.presets.wellWethBean(sdk.tokens.WETH, sdk.tokens.BEAN, account, from, to),
       from: "WETH",
       to: "BEAN"
+    });
+    graph.setEdge("BEAN", "WETH", {
+      build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+        sdk.farm.presets.wellWethBean(sdk.tokens.BEAN, sdk.tokens.WETH, account, from, to),
+      from: "BEAN",
+      to: "WETH"
     });
   }
 

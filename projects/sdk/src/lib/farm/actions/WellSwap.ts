@@ -12,7 +12,10 @@ export class WellSwap extends StepClass<AdvancedPipePreparedResult> {
   }
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext): Promise<Step<AdvancedPipePreparedResult>> {
-    const well = await WellSwap.sdk.wells.getWell(this.wellAddress, { name: true });
+    const well = await WellSwap.sdk.wells.getWell(this.wellAddress, {});
+    try {
+      await well.getName();
+    } catch (err) {}
     const reversed = context.runMode === RunMode.EstimateReversed;
     WellSwap.sdk.debug(`>[${this.name}.run()]`, {
       wellName: well.name,
