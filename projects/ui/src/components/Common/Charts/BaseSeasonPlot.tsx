@@ -1,16 +1,20 @@
+import {
+  BaseChartProps,
+  BaseDataPoint,
+  ExploitLine,
+} from './ChartPropProvider';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import React, { useCallback, useMemo, useState } from 'react';
-import { ApolloError } from '@apollo/client';
-import { TimeTabStateParams } from '~/hooks/app/useTimeTabState';
-import { MinimumViableSnapshotQuery } from '~/hooks/beanstalk/useSeasonsQuery';
-
-import Row from '../Row';
 import Stat, { StatProps } from '../Stat';
-import { defaultValueFormatter } from './SeasonPlot';
-import TimeTabs from './TimeTabs';
-import { BaseChartProps, BaseDataPoint, ExploitLine } from './ChartPropProvider';
+
+import { ApolloError } from '@apollo/client';
+import { MinimumViableSnapshotQuery } from '~/hooks/beanstalk/useSeasonsQuery';
 import MultiLineChart from './MultiLineChart';
+import Row from '../Row';
 import StackedAreaChart from './StackedAreaChart';
+import { TimeTabStateParams } from '~/hooks/app/useTimeTabState';
+import TimeTabs from './TimeTabs';
+import { defaultValueFormatter } from './SeasonPlot';
 
 type BaseSeasonPlotProps = {
   /**
@@ -41,11 +45,11 @@ type BaseSeasonPlotProps = {
 };
 
 export type QueryData = {
-    data: BaseDataPoint[][];
-    loading: boolean;
-    error: ApolloError[] | undefined;
-    keys: string[];
-  }
+  data: BaseDataPoint[][];
+  loading: boolean;
+  error: ApolloError[] | undefined;
+  keys: string[];
+};
 
 type Props<T extends MinimumViableSnapshotQuery> = BaseSeasonPlotProps & {
   queryData?: QueryData;
@@ -69,7 +73,7 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
     ChartProps: chartProps,
     timeTabParams,
   } = props;
-  
+
   /// Display values
   const [displayValue, setDisplayValue] = useState<number | undefined>(
     undefined
