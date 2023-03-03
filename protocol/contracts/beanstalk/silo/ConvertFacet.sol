@@ -12,6 +12,8 @@ import "~/libraries/LibSafeMath32.sol";
 import "~/libraries/Convert/LibConvert.sol";
 import "~/libraries/LibInternal.sol";
 import "../ReentrancyGuard.sol";
+import "~/libraries/LibBytes.sol";
+
 
 /**
  * @author Publius
@@ -33,10 +35,18 @@ contract ConvertFacet is ReentrancyGuard {
     event RemoveDeposits(
         address indexed account,
         address indexed token,
-        int128[] grownStalkPerBdvs,
+        int96[] grownStalkPerBdvs,
         uint256[] amounts,
         uint256 amount,
         uint256[] bdvs
+    );
+
+    event TransferBatch(
+        address indexed operator, 
+        address indexed from, 
+        address indexed to, 
+        uint256[] ids, 
+        uint256[] values
     );
 
     struct AssetsRemoved {
@@ -47,13 +57,13 @@ contract ConvertFacet is ReentrancyGuard {
 
     function convert(
         bytes calldata convertData,
-        int128[] memory grownStalkPerBdvs,
+        int96[] memory grownStalkPerBdvs,
         uint256[] memory amounts
     )
         external
         payable
         nonReentrant
-        returns (int128 toCumulativeGrownStalk, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
+        returns (int96 toCumulativeGrownStalk, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
 
         //a mow must be done before any convert, currently this happens in the guts of each convert
@@ -94,6 +104,7 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 depositBDV;
         uint256 i = 0;
         uint256[] memory bdvsRemoved = new uint256[](grownStalkPerBdvs.length);
+        uint256[] memory depositIds = new uint256[](grownStalkPerBdvs.length);
         while ((i < grownStalkPerBdvs.length) && (a.tokensRemoved < maxTokens)) {
             console.log('grownStalkPerBdvs[i]: ');
             console.logInt(grownStalkPerBdvs[i]);
@@ -147,6 +158,10 @@ contract ConvertFacet is ReentrancyGuard {
             console.log('_withdrawTokens current a.stalkRemoved: ', a.stalkRemoved);
             
             i++;
+            depositIds[i] = uint256(LibBytes.packAddressAndCumulativeStalkPerBDV(
+                token,
+                grownStalkPerBdvs[i]
+            ));
         }
         for (i; i < grownStalkPerBdvs.length; ++i) amounts[i] = 0;
 
@@ -163,6 +178,18 @@ contract ConvertFacet is ReentrancyGuard {
             a.tokensRemoved,
             bdvsRemoved
         );
+        // we emit 2 events for ERC1155 compatibility:
+        // event 1: "Burn" ERC1155 deposit that was being converted from
+        // event 2: "Mint" ERC1155 deposit being converted into: 
+        // event 1 is emmitted here, the 2nd event is emitted in libtokensilo.addDepositToAccount
+        emit TransferBatch(
+            msg.sender, 
+            msg.sender,
+            address(0), 
+            depositIds, 
+            amounts
+        );
+        
 
         require(
             a.tokensRemoved == maxTokens,
