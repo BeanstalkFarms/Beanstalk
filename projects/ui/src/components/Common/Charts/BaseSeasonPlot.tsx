@@ -5,13 +5,14 @@ import {
 } from './ChartPropProvider';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import React, { useCallback, useMemo, useState } from 'react';
-import Stat, { StatProps } from '../Stat';
 
 import { ApolloError } from '@apollo/client';
+import ChartInfoOverlay from './ChartInfoOverlay';
 import { MinimumViableSnapshotQuery } from '~/hooks/beanstalk/useSeasonsQuery';
 import MultiLineChart from './MultiLineChart';
 import Row from '../Row';
 import StackedAreaChart from './StackedAreaChart';
+import { StatProps } from '../Stat';
 import { TimeTabStateParams } from '~/hooks/app/useTimeTabState';
 import TimeTabs from './TimeTabs';
 import { defaultValueFormatter } from './SeasonPlot';
@@ -131,30 +132,25 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
   if (!seriesInput || !queryData) {
     return null;
   }
+  const currentSeason = (
+    displaySeason !== undefined ? displaySeason : defaults.season
+  ).toFixed();
 
   return (
     <>
       <Row justifyContent="space-between" sx={{ px: 2 }}>
-        {statProps ? (
-          <Stat
-            {...statProps}
-            amount={
-              queryData?.loading ? (
-                <CircularProgress
-                  variant="indeterminate"
-                  size="1.18em"
-                  thickness={5}
-                />
-              ) : (
-                formatValue(displayValue ?? defaults.value)
-              )
-            }
-            subtitle={`Season ${(displaySeason !== undefined
-              ? displaySeason
-              : defaults.season
-            ).toFixed()}`}
+        {statProps && (
+          <ChartInfoOverlay
+            title={statProps.title}
+            titleTooltip={statProps.titleTooltip}
+            gap={statProps.gap}
+            sx={statProps.sx ?? {}}
+            isLoading={queryData?.loading}
+            amount={formatValue(displayValue ?? defaults.value)}
+            subtitle={`Season ${currentSeason}`}
           />
-        ) : null}
+        )}
+
         <Stack
           alignItems="flex-end"
           alignSelf="flex-start"
