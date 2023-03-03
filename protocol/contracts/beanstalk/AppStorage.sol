@@ -120,12 +120,14 @@ contract Account {
         mapping(address => mapping(uint32 => Deposit)) legacyDeposits; // Legacy Silo Deposits stored as a map from Token address to Season of Deposit to Deposit.
         mapping(address => mapping(uint32 => uint256)) withdrawals; // DEPRECATED - Zero withdraw eliminates a need for withdraw mapping
         SeasonOfPlenty sop; // A Farmer's Season Of Plenty storage.
-        mapping(address => mapping(address => uint256)) depositAllowances; // Spender => Silo Token
+        mapping(address => mapping(address => uint256)) legacyAllowances; // Spender => Silo Token
         mapping(address => mapping(IERC20 => uint256)) tokenAllowances; // Token allowances
         uint256 depositPermitNonces; // A Farmer's current deposit permit nonce
         uint256 tokenPermitNonces; // A Farmer's current token permit nonce
         mapping(bytes32 => Deposit) deposits; // SiloV3 Deposits stored as a map from bytes32 to Deposit. This is an concat of the token address and the CGSPBDV for a ERC20 deposit, and a hash for an ERC721/1155 deposit.
         mapping(address => MowStatus) mowStatuses; //Store a MowStatus for each Silo-able token
+        mapping(address => bool) isApprovedForAll; // ERC1155 isApprovedForAll mapping 
+        mapping(address => mapping(bytes32 => uint256)) depositAllowances; // Spender => Silo Token
     }
 }
 

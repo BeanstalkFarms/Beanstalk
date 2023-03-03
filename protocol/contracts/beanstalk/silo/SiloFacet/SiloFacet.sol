@@ -9,6 +9,10 @@ import "./TokenSilo.sol";
 import "~/beanstalk/ReentrancyGuard.sol";
 import "~/libraries/Token/LibTransfer.sol";
 import "~/libraries/Silo/LibSiloPermit.sol";
+import "~/libraries/LibBytes.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+
 
 /**
  * @title SiloFacet
@@ -24,7 +28,7 @@ import "~/libraries/Silo/LibSiloPermit.sol";
  *
  * 
  */
-contract SiloFacet is TokenSilo {
+contract SiloFacet is TokenSilo, IERC155, IERC1155Receiver {
 
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
@@ -171,7 +175,7 @@ contract SiloFacet is TokenSilo {
         address sender,
         address recipient,
         address token,
-        int128[] calldata grownStalkPerBdv,
+        int96[] calldata grownStalkPerBdv,
         uint256[] calldata amounts
     ) external payable nonReentrant returns (uint256[] memory bdvs) {
         require(amounts.length > 0, "Silo: amounts array is empty");
@@ -186,6 +190,52 @@ contract SiloFacet is TokenSilo {
         // Need to update the recipient's Silo as well.
         _mow(recipient, token);
         bdvs = _transferDeposits(sender, recipient, token, grownStalkPerBdv, amounts);
+    }
+
+    // ERC1155 safeTransferFrom
+    function safeTransferFrom(
+        address sender, 
+        address recipient, 
+        uint256 depositId, 
+        uint256 amount, 
+        bytes calldata
+    ) external nonReentrant {
+        (address token, int96 cumulativeGrownStalkPerBDV) = 
+            LibBytes.getAddressAndCumulativeStalkPerBDVFromBytes(
+                bytes32(depositId)
+            );
+        transferERC20Deposit(
+            sender, 
+            recipient,
+            token, 
+            cumulativeGrownStalkPerBDV, 
+            amount
+        );
+    }
+
+    function safeBatchTransferFrom(
+        address sender, 
+        address recipient, 
+        uint256[] calldata depositIDs, 
+        uint256[] calldata amounts, 
+        bytes calldata
+        ) external nonReentrant {
+        require(depositIDs.length == amounts.length, "Silo: depositIDs and amounts arrays must be the same length");
+        address token;
+        int96 cumulativeGrownStalkPerBDV
+        for(uint i; i < depositIDs.length; i++) {
+            (token, cumulativeGrownStalkPerBDV) = 
+                LibBytes.getAddressAndCumulativeStalkPerBDVFromBytes(
+                    bytes32(depositIDs[i])
+                );
+            transferERC20Deposit(
+                sender, 
+                recipient,
+                token, 
+                cumulativeGrownStalkPerBDV, 
+                amounts[i]
+            );
+        }
     }
 
     //////////////////////// APPROVE ////////////////////////
@@ -523,12 +573,62 @@ contract SiloFacet is TokenSilo {
         view
         returns (int128 grownStalkPerBdv)
     {
-        AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 seedsPerBdv = getSeedsPerToken(address(token));
         grownStalkPerBdv = LibLegacyTokenSilo.seasonToGrownStalkPerBdv(seedsPerBdv, season);
     }
 
     function getSeedsPerToken(address token) public view virtual returns (uint256) {
         return LibLegacyTokenSilo.getSeedsPerToken(token);
+    }
+
+    function balanceOf(
+        address account, 
+        uint256 depositId
+    ) external view returns (uint256 amount) {
+        return s.a[account].deposits[bytes32(depositId)].amount;
+    };
+
+    function balanceOfBatch(
+        address[] calldata _owners, 
+        uint256[] calldata _ids
+    ) external view returns (uint256[] memory){
+        require(_owners.length == _ids.length, "ERC1155: ids and amounts length mismatch")
+        uint256[] memory balances = new uint256[](_owners.length);
+        for (uint256 i = 0; i < _owners.length; i++) {
+            balances[i] = s.a[_owners[i]].deposits[bytes32(_ids[i])].amount;
+        }
+        return balances;
+    };
+
+    function setApprovalForAll(address spender, bool approved) external {
+        s.a[msg.sender].isApprovedForAll[spender] = approved;
+        emit ApprovalForAll(msg.sender, spender, approved);
+    }; 
+
+    function isApprovedForAll(
+        address _owner, 
+        address _operator
+    ) external view returns (bool) {
+        return s.a[_owner].isApprovedForAll[_operator];
+    };
+    
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external virtual returns (bytes4) {
+        return ERC1155TokenReceiver.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address,
+        address,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
+    ) external virtual returns (bytes4) {
+        return ERC1155TokenReceiver.onERC1155BatchReceived.selector;
     }
 }
