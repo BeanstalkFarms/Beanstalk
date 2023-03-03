@@ -397,7 +397,7 @@ contract SiloFacet is TokenSilo {
         address token,
         uint32 season,
         uint256 amount
-    ) external nonReentrant mowSender {
+    ) external payable nonReentrant mowSender {
         // First, remove Deposit and Redeposit with new BDV
         uint256 ogBDV = LibTokenSilo.removeDepositFromAccount(
             msg.sender,
@@ -439,7 +439,7 @@ contract SiloFacet is TokenSilo {
         address token,
         uint32[] calldata seasons,
         uint256[] calldata amounts
-    ) external nonReentrant mowSender {
+    ) external payable nonReentrant mowSender {
         // First, remove Deposits because every deposit is in a different season,
         // we need to get the total Stalk/Seeds, not just BDV.
         AssetsRemoved memory ar = removeDepositsFromAccount(msg.sender, token, seasons, amounts);
