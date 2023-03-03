@@ -8,7 +8,7 @@ import MarketCap from '~/components/Analytics/Bean/MarketCap';
 import Price from './Price';
 import React from 'react';
 import Supply from '~/components/Analytics/Bean/Supply';
-import Volume from '~/components/Analytics/Bean/Volume';
+import VolumeChart from '~/components/Analytics/Bean/VolumeChart';
 import useTabs from '~/hooks/display/useTabs';
 
 const SLUGS = [
@@ -46,7 +46,7 @@ const BeanAnalytics: FC<{}> = () => {
           exact height. Alternatively, the existing height prop should be renamed to chartHeight.
       */}
       {tab === 0 && <Price height={CHART_HEIGHT} />}
-      {tab === 1 && <Volume height={CHART_HEIGHT} />}
+      {tab === 1 && <VolumeChart height={375} />}
       {tab === 2 && <Liquidity height={CHART_HEIGHT} />}
       {tab === 3 && <MarketCap height={CHART_HEIGHT} />}
       {tab === 4 && <Supply height={CHART_HEIGHT} />}
