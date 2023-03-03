@@ -135,7 +135,7 @@ contract SiloFacet is TokenSilo {
      * `recipient` need their Silo updated, since both accounts experience a
      * change in deposited BDV. See {Silo-_mow}.
      */
-    function transferDeposit(
+    function transferERC20Deposit(
         address sender,
         address recipient,
         address token,

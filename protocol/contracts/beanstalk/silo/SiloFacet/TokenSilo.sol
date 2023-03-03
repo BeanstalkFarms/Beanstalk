@@ -429,7 +429,7 @@ contract TokenSilo is Silo {
         address sender,
         address recipient,
         address token,
-        int128 grownStalkPerBdvs,
+        int96 grownStalkPerBdvs,
         uint256 amount
     ) internal returns (uint256) {
         (uint256 stalk, uint256 bdv) = removeDepositFromAccount(
@@ -440,6 +440,7 @@ contract TokenSilo is Silo {
         );
         LibTokenSilo.addDepositToAccount(recipient, token, grownStalkPerBdvs, amount, bdv);
         LibSilo.transferStalk(sender, recipient, stalk);
+        bytes32 _depositIdRemoved = LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdvs);
         return bdv;
     }
 
@@ -495,6 +496,7 @@ contract TokenSilo is Silo {
             ar.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)
         );
 
+        emit TransferBatch(msg.sender, account, address(0), _depositIdRemoved, crateBdv);
         emit RemoveDeposits(sender, token, grownStalkPerBdvs, amounts, ar.tokensRemoved, bdvs);
 
         // Transfer all the Stalk
