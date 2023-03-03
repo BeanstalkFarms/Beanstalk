@@ -82,14 +82,14 @@ contract SiloFacet is TokenSilo {
      * these require less Stalk to be burned. This functionality is the default
      * provided by the Beanstalk SDK, but is NOT provided at the contract level.
      */
-    function withdrawDeposit(
-        address token,
+    function withdrawERC20Deposit(
+        IERC20 token,
         int128 grownStalkPerBdv,
         uint256 amount,
         LibTransfer.To mode
     ) external payable mowSender(token) nonReentrant {
         _withdrawDeposit(msg.sender, token, grownStalkPerBdv, amount);
-        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
+        LibTransfer.sendToken(token, amount, msg.sender, mode);
     }
 
     /** 

@@ -221,8 +221,8 @@ contract TokenSilo is Silo {
      */
     function _withdrawDeposit(
         address account,
-        address token,
-        int128 grownStalkPerBdv,
+        IERC20 token,
+        int96 grownStalkPerBdv,
         uint256 amount
     ) internal {
         // Remove the Deposit from `account`.
@@ -310,10 +310,11 @@ contract TokenSilo is Silo {
      * - {TokenSilo:_withdrawDeposit}
      * - {TokenSilo:_transferDeposit}
      */
+    // TODO: rename should this be generalized?
     function removeDepositFromAccount(
         address account,
         address token,
-        int128 grownStalkPerBdv,
+        int96 grownStalkPerBdv,
         uint256 amount
     )
         private
@@ -322,6 +323,7 @@ contract TokenSilo is Silo {
             uint256 bdvRemoved
         )
     {
+        bytes32 depositData
         bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, grownStalkPerBdv, amount);
         console.log('s.ss[token].stalk: ', s.ss[token].stalkIssuedPerBdv);
         console.log('bdvRemoved.mul(s.ss[token].stalk: ', bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv));
@@ -349,7 +351,9 @@ contract TokenSilo is Silo {
             )
         );
         console.log('removeDepositFromAccount stalkRemoved: ', stalkRemoved);
-
+        // event TransferSingle(address indexed _operator, address indexed _from, address indexed _to, uint256 _id, uint256 _value);
+        // TODO: finalize event stuff
+        emit TransferSingle(msg.sender, account, address(0), depositData, amount);
         emit RemoveDeposit(account, token, grownStalkPerBdv, amount, bdvRemoved);
     }
 
