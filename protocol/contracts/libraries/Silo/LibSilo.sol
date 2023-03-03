@@ -237,7 +237,7 @@ library LibSilo {
      * and the deposited bdv amount, and return
      *
      */
-    function stalkReward(int128 startStalkPerBDV, int128 endStalkPerBDV, uint128 bdv) //are the types what we want here?
+    function stalkReward(int96 startStalkPerBDV, int96 endStalkPerBDV, uint128 bdv) //are the types what we want here?
         internal
         view //change back to pure
         returns (uint256)
@@ -247,7 +247,7 @@ library LibSilo {
         console.log('stalkReward endStalkPerBDV: ', uint256(endStalkPerBDV));
         // console.logInt(endStalkPerBDV);
         console.log('stalkReward bdv: ', bdv);
-        int128 reward = endStalkPerBDV.sub(startStalkPerBDV).mul(int128(bdv));
+        int96 reward = endStalkPerBDV.sub(startStalkPerBDV).mul(int96(bdv));
         console.log('stalkReward final reward: ', uint256(reward));
         return uint128(reward);
     }

@@ -84,7 +84,7 @@ contract SiloFacet is TokenSilo {
      */
     function withdrawERC20Deposit(
         IERC20 token,
-        int128 grownStalkPerBdv,
+        int96 grownStalkPerBdv,
         uint256 amount,
         LibTransfer.To mode
     ) external payable mowSender(token) nonReentrant {
@@ -105,9 +105,11 @@ contract SiloFacet is TokenSilo {
      * withdraw from 1 older Deposit, rather than from multiple recent Deposits,
      * if the difference in grownStalkPerBdvs is minimal.
      */
-    function withdrawDeposits(
-        address token,
-        int128[] calldata grownStalkPerBdvs,
+    // TODO: ideally we should allow the user to withdraw different deposit types in a single call 
+    // i.e withdraw ERC20, ERC721, and ERC1155 in a single call
+    function withdrawERC20Deposits(
+        IERC20 token,
+        int96[] calldata grownStalkPerBdvs,
         uint256[] calldata amounts,
         LibTransfer.To mode
     ) external payable mowSender(token) nonReentrant {

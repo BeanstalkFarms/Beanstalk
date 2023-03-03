@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./Silo.sol";
+import "./libraries/LibBytes.sol";
 
 /**
  * @title TokenSilo
@@ -105,6 +106,15 @@ contract TokenSilo is Silo {
         address token,
         uint256 amount
     );
+
+    event TransferBatch(
+        address indexed _operator, 
+        address indexed _from, 
+        address indexed _to, 
+        uint256[] _ids, 
+        uint256[] _values
+    );
+
 
     //////////////////////// UTILITIES ////////////////////////
 
@@ -252,7 +262,7 @@ contract TokenSilo is Silo {
     function _withdrawDeposits(
         address account,
         address token,
-        int128[] calldata grownStalkPerBdvs,
+        uint96[] calldata grownStalkPerBdvs,
         uint256[] calldata amounts
     ) internal returns (uint256) {
         require(
@@ -368,12 +378,13 @@ contract TokenSilo is Silo {
     function removeDepositsFromAccount(
         address account,
         address token,
-        int128[] calldata grownStalkPerBdvs,
+        int96[] calldata grownStalkPerBdvs,
         uint256[] calldata amounts
     ) internal returns (AssetsRemoved memory ar) {
         console.log('removeDepositsFromAccount: ', account);
         //make bdv array and add here?
         uint256[] memory bdvsRemoved = new uint256[](grownStalkPerBdvs.length);
+        bytes32[] memory _depositIdRemoved = new uint256[](grownStalkPerBdvs.length);
         for (uint256 i; i < grownStalkPerBdvs.length; ++i) {
             uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 account,
@@ -382,6 +393,7 @@ contract TokenSilo is Silo {
                 amounts[i]
             );
             bdvsRemoved[i] = crateBdv;
+            _depositIdRemoved[i] = LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdvs[i]);
             ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
             console.log('s.ss[token].stalkIssuedPerBdv: ', s.ss[token].stalkIssuedPerBdv);
@@ -401,6 +413,8 @@ contract TokenSilo is Silo {
         console.log('2 ar.stalkRemoved: ', ar.stalkRemoved);
 
         //need to add BDV array here
+        // event TransferBatch(address indexed _operator, address indexed _from, address indexed _to, uint256[] _ids, uint256[] _values);
+        emit TransferBatch(msg.sender, account, address(0), _depositIdRemoved, crateBdv);
         emit RemoveDeposits(account, token, grownStalkPerBdvs, amounts, ar.tokensRemoved, bdvsRemoved);
     }
 
