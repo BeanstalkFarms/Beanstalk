@@ -3,7 +3,7 @@ import { BigNumber, CallOverrides, ContractTransaction, Overrides } from "ethers
 import { Well__factory } from "src/constants/generated";
 import { Well as WellContract } from "src/constants/generated";
 
-import { Auger } from "./Auger";
+import { Aquifer } from "./Aquifer";
 import { Pump } from "./Pump";
 import { loadToken, setReadOnly, validateAddress, validateAmount, validateToken } from "./utils";
 import { WellFunction } from "./WellFunction";
@@ -13,7 +13,7 @@ export type WellDetails = {
   tokens: ERC20Token[];
   wellFunction: WellFunction;
   pumps: Pump[];
-  auger: Auger;
+  aquifer: Aquifer;
 };
 
 export type CallStruct = {
@@ -29,7 +29,7 @@ export type PreloadOptions = {
   tokens?: boolean;
   wellFunction?: boolean;
   pumps?: boolean;
-  auger?: boolean;
+  aquifer?: boolean;
   reserves?: boolean;
 };
 
@@ -43,7 +43,7 @@ export class Well {
   public tokens: ERC20Token[] | undefined = undefined;
   public wellFunction: WellFunction | undefined = undefined;
   public pumps: Pump[] | undefined = undefined;
-  public auger: Auger | undefined = undefined;
+  public aquifer: Aquifer | undefined = undefined;
   public reserves: TokenValue[] | undefined = undefined;
 
   constructor(sdk: WellsSDK, address: string) {
@@ -75,7 +75,7 @@ export class Well {
     } else {
       if (options.name) toLoad.push(this.getName());
       if (options.lpToken) toLoad.push(this.getLPToken());
-      if (options.tokens || options.wellFunction || options.pumps || options.auger) toLoad.push(this.getWell());
+      if (options.tokens || options.wellFunction || options.pumps || options.aquifer) toLoad.push(this.getWell());
     }
 
     await Promise.all(toLoad);
@@ -149,31 +149,31 @@ export class Well {
   }
 
   /**
-   * Returns the Auger that bored this Well.
-   * The Auger is a Well factory; it creates Wells based on "templates".
+   * Returns the Aquifer that bored this Well.
+   * The Aquifer is a Well factory; it creates Wells based on "templates".
    */
-  async getAuger(): Promise<Auger> {
-    if (!this.auger) {
+  async getAquifer(): Promise<Aquifer> {
+    if (!this.aquifer) {
       await this.getWell();
     }
 
-    return this.auger!;
+    return this.aquifer!;
   }
 
   /**
    * Returns the tokens, Well function, and Pump associated with this Well.
    *
    * This is an aggregate of calling these individual methods:
-   * getTokens(), getWellFunction(), getPumps(), getAuger()
+   * getTokens(), getWellFunction(), getPumps(), getAquifer()
    *
    * Since this is one contract call, the other individual methods also
    * call this under the hood, getting other data cached for "free"
    */
   async getWell(): Promise<WellDetails> {
-    const all = this.tokens && this.wellFunction && this.pumps && this.auger;
+    const all = this.tokens && this.wellFunction && this.pumps && this.aquifer;
 
     if (!all) {
-      const { _tokens, _wellFunction, _pumps, _auger } = await this.contract.well();
+      const { _tokens, _wellFunction, _pumps, _aquifer } = await this.contract.well();
 
       if (!this.tokens) {
         await this.setTokens(_tokens);
@@ -187,12 +187,12 @@ export class Well {
         this.setPumps(_pumps);
       }
 
-      if (!this.auger) {
-        this.setAuger(_auger);
+      if (!this.aquifer) {
+        this.setAquifer(_aquifer);
       }
     }
 
-    return { tokens: this.tokens!, wellFunction: this.wellFunction!, pumps: this.pumps!, auger: this.auger! };
+    return { tokens: this.tokens!, wellFunction: this.wellFunction!, pumps: this.pumps!, aquifer: this.aquifer! };
   }
 
   private async setTokens(addresses: string[]) {
@@ -214,8 +214,8 @@ export class Well {
     setReadOnly(this, "pumps", pumps, true);
   }
 
-  private setAuger(address: string) {
-    setReadOnly(this, "auger", new Auger(this.sdk, address), true);
+  private setAquifer(address: string) {
+    setReadOnly(this, "aquifer", new Aquifer(this.sdk, address), true);
   }
 
   ////// Swap FROM
