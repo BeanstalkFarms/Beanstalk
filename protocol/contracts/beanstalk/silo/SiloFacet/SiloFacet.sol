@@ -529,4 +529,9 @@ contract SiloFacet is TokenSilo {
     function getSeedsPerToken(address token) public view virtual returns (uint256) {
         return LibLegacyTokenSilo.getSeedsPerToken(token);
     }
+
+    function grownStalkPerBdvStartSeason() public view virtual returns (uint16) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return s.season.grownStalkPerBdvStartSeason;
+    }
 }

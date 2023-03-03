@@ -377,17 +377,17 @@ library LibTokenSilo {
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // SiloSettings storage ss = s.ss[token]; //tried to use this, but I get `DeclarationError: Identifier not found or not unique.`
-        console.log('cumulativeGrownStalkPerBdv s.ss[address(token)].lastCumulativeGrownStalkPerBdv: ', uint256(s.ss[address(token)].lastCumulativeGrownStalkPerBdv));
+        console.log('cumulativeGrownStalkPerBdv s.ss[address(token)].milestoneGrownStalkPerBdv: ', uint256(s.ss[address(token)].milestoneGrownStalkPerBdv));
         console.log('cumulativeGrownStalkPerBdv s.season.current: ', s.season.current);
-        console.log('cumulativeGrownStalkPerBdv s.ss[address(token)].lastUpdateSeason: ', s.ss[address(token)].lastUpdateSeason);
+        console.log('cumulativeGrownStalkPerBdv s.ss[address(token)].milestoneSeason: ', s.ss[address(token)].milestoneSeason);
         console.log('cumulativeGrownStalkPerBdv s.ss[address(token)].stalkEarnedPerSeason: ', s.ss[address(token)].stalkEarnedPerSeason);
 
-        //need to take into account the lastUpdateSeason for this token here
+        //need to take into account the milestoneSeason for this token here
 
 
         //replace the - here with sub to disable support for when the current season is less than the silov3 epoch season
-        _cumulativeGrownStalkPerBdv = s.ss[address(token)].lastCumulativeGrownStalkPerBdv +
-            int128(int128(s.ss[address(token)].stalkEarnedPerSeason).mul(int128(s.season.current)-int128(s.ss[address(token)].lastUpdateSeason)).div(1e6)) //round here
+        _cumulativeGrownStalkPerBdv = s.ss[address(token)].milestoneGrownStalkPerBdv +
+            int128(int128(s.ss[address(token)].stalkEarnedPerSeason).mul(int128(s.season.current)-int128(s.ss[address(token)].milestoneSeason)).div(1e6)) //round here
         ;
         console.log('cumulativeGrownStalkPerBdv _cumulativeGrownStalkPerBdv: ', uint256(_cumulativeGrownStalkPerBdv));
     }

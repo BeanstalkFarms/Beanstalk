@@ -431,7 +431,7 @@ library LibLegacyTokenSilo {
         // console.log('grownStalkPerBdv: %d', grownStalkPerBdv);
         // console.log('uint256(-grownStalkPerBdv).div(seedsPerBdv): ', uint256(-grownStalkPerBdv).div(seedsPerBdv));
 
-        // uint256 seasonAs256 = uint256(int128(s.ss[address(token)].lastCumulativeGrownStalkPerBdv).sub(grownStalkPerBdv)).div(seedsPerBdv);
+        // uint256 seasonAs256 = uint256(int128(s.ss[address(token)].milestoneGrownStalkPerBdv).sub(grownStalkPerBdv)).div(seedsPerBdv);
         // console.log('seasonAs256: ', seasonAs256);
 
         int128 diff = grownStalkPerBdv.div(int128(seedsPerBdv));

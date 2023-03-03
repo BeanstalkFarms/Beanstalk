@@ -177,7 +177,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
     await mintEth(signer.address);
     await upgradeWithNewFacets({
       diamondAddress: BEANSTALK,
-      facetNames: ['SiloFacet', 'ConvertFacet', 'WhitelistFacet', 'MockAdminFacet'],
+      facetNames: ['ConvertFacet', 'WhitelistFacet', 'MockAdminFacet', 'MockSiloFacet', 'MockSeasonFacet'],
       // libraryNames: ['LibLegacyTokenSilo'],
       initFacetName: 'InitBipNewSilo',
       bip: false,
@@ -201,6 +201,8 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
 
 
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond);
+    this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond);
+    console.log('this.whitelist: ', this.whitelist);
     console.log('this.silo: ', this.silo.address);
     this.bean = await ethers.getContractAt('Bean', BEAN);
     this.beanMetapool = await ethers.getContractAt('IMockCurvePool', BEAN_3_CURVE);
@@ -228,8 +230,8 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
 
       expect(settings['stalkEarnedPerSeason']).to.eq(2000000);
       expect(settings['stalkIssuedPerBdv']).to.eq(10000);
-      expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
-      expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);
+      expect(settings['milestoneSeason']).to.eq(await this.season.season());
+      expect(settings['milestoneGrownStalkPerBdv']).to.eq(0);
     });
     
     it('for curve metapool', async function () {
@@ -237,8 +239,8 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
 
       expect(settings['stalkEarnedPerSeason']).to.eq(4000000);
       expect(settings['stalkIssuedPerBdv']).to.eq(10000);
-      expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
-      expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);
+      expect(settings['milestoneSeason']).to.eq(await this.season.season());
+      expect(settings['milestoneGrownStalkPerBdv']).to.eq(0);
     });
 
     it('for unripe bean', async function () {
@@ -246,8 +248,8 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
 
       expect(settings['stalkEarnedPerSeason']).to.eq(2000000);
       expect(settings['stalkIssuedPerBdv']).to.eq(10000);
-      expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
-      expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);
+      expect(settings['milestoneSeason']).to.eq(await this.season.season());
+      expect(settings['milestoneGrownStalkPerBdv']).to.eq(0);
     });
 
     it('for unripe LP', async function () {
@@ -255,8 +257,8 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
 
       expect(settings['stalkEarnedPerSeason']).to.eq(2000000);
       expect(settings['stalkIssuedPerBdv']).to.eq(10000);
-      expect(settings['lastUpdateSeason']).to.eq(await this.season.season());
-      expect(settings['lastCumulativeGrownStalkPerBdv']).to.eq(0);
+      expect(settings['milestoneSeason']).to.eq(await this.season.season());
+      expect(settings['milestoneGrownStalkPerBdv']).to.eq(0);
     });
   });
 
@@ -558,9 +560,6 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
 
     });*/
 
-
-    
-
       
   });
 
@@ -572,9 +571,27 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       await this.silo.connect(depositorSigner);
       //need an array of all the tokens that have been deposited and their corresponding seasons
       await expect(this.silo.mow(depositorAddress, this.beanMetapool.address)).to.be.revertedWith('silo migration needed');
-
     });
   });
 
+  describe('update grown stalk per bdv per season rate', function () {
+    it('change rate a few times and check cumulativeGrownStalkPerBdv', async function () {
+      this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond);
+      const beanstalkOwner = await impersonateBeanstalkOwner()
+      await this.season.teleportSunrise(await this.silo.grownStalkPerBdvStartSeason());
+
+      expect(await this.silo.cumulativeGrownStalkPerBdv(this.beanMetapool.address)).to.eq(0);
+
+      //change rate to 5 and check after 1 season
+      await this.whitelist.connect(beanstalkOwner).updateStalkPerBdvPerSeasonForToken(this.beanMetapool.address, 5*1e6);
+      await this.season.siloSunrise(0);
+      expect(await this.silo.cumulativeGrownStalkPerBdv(this.beanMetapool.address)).to.eq(5);
+
+      //chang rate to 1 and check after 5 seasons
+      await this.whitelist.connect(beanstalkOwner).updateStalkPerBdvPerSeasonForToken(this.beanMetapool.address, 1*1e6);
+      await this.season.fastForward(5);
+      expect(await this.silo.cumulativeGrownStalkPerBdv(this.beanMetapool.address)).to.eq(10);
+    });
+  });
 
 });

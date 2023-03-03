@@ -287,13 +287,13 @@ contract Storage {
          */
         uint32 stalkIssuedPerBdv;
         /*
-         * @dev The last season in which the Cumulative Grown Stalk Per BDV was updated
+         * @dev The last season in which the stalkEarnedPerSeason was updated
          */
-		uint32 lastUpdateSeason;
+		uint32 milestoneSeason;
         /*
-         * @dev The cumulative amount of grown stalk per BDV for this Silo depositable token.
+         * @dev The cumulative amount of grown stalk per BDV for this Silo depositable token at the last stalkEarnedPerSeason update
          */
-		int128 lastCumulativeGrownStalkPerBdv;
+		int128 milestoneGrownStalkPerBdv;
     }
 
     // UnripeSettings stores the settings for an Unripe Token in Beanstalk.

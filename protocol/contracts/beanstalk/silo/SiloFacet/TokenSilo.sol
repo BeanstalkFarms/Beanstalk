@@ -158,7 +158,7 @@ contract TokenSilo is Silo {
      *  - the BDV function selector
      *  - Stalk per BDV
      *  - stalkEarnedPerSeason
-     *  - lastUpdateSeason
+     *  - milestoneSeason
      *  - lastCumulativeGrownStalkPerBdv
      * 
      * @dev FIXME(naming) getTokenSettings ?

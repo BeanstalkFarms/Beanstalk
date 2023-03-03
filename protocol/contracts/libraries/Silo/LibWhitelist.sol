@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "../../C.sol";
 import "../LibAppStorage.sol";
 import "hardhat/console.sol";
+import "~/libraries/Silo/LibTokenSilo.sol";
 
 /**
  * @title LibWhitelist
@@ -69,19 +70,22 @@ library LibWhitelist {
         s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
 
-        s.ss[token].lastUpdateSeason = s.season.current;
+        s.ss[token].milestoneSeason = s.season.current;
 
         emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
     }
     
     /**
-     * @dev Add an ERC-20 token to the Silo Whitelist.
+     * @dev Update the stalk per bdv per season for a token.
      */
     function updateStalkPerBdvPerSeasonForToken(
         address token,
         uint32 stalkEarnedPerSeason
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
+
+        s.ss[token].milestoneGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)); //store grown stalk milestone
+        s.ss[token].milestoneSeason = s.season.current; //update milestone season as this season
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
 
         emit UpdatedStalkPerBdvPerSeason(token, stalkEarnedPerSeason, s.season.current);
@@ -102,7 +106,7 @@ library LibWhitelist {
         s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
 
-        s.ss[token].lastUpdateSeason = s.season.current;
+        s.ss[token].milestoneSeason = s.season.current;
 
         emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
     }
