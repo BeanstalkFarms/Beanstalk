@@ -51,6 +51,7 @@ type ChartStyleConfig = {
 type ChartSharedValuesProps = {
   strokeBuffer: number;
   margin: { top: number; bottom: number; left: number; right: number };
+  chartPadding: { right: number };
   axisColor: string;
   axisHeight: number;
   backgroundColor: string;
@@ -165,6 +166,10 @@ const margin = {
   bottom: 9,
   left: 0,
   right: 0,
+};
+
+const chartPadding = {
+  right: 17,
 };
 
 const chartColors = BeanstalkPalette.theme.winter.chart;
@@ -516,6 +521,7 @@ export const chartHelpers: ProviderChartProps = {
   common: {
     strokeBuffer,
     margin,
+    chartPadding,
     axisHeight,
     backgroundColor,
     labelColor,

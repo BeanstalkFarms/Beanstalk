@@ -113,6 +113,7 @@ const Graph: React.FC<GraphProps> = (props) => {
   } = props;
   const {
     margin,
+    chartPadding,
     axisHeight,
     axisColor,
     yAxisWidth,
@@ -255,7 +256,7 @@ const Graph: React.FC<GraphProps> = (props) => {
             numTicks={xTickNum}
           />
         </g>
-        <g transform={`translate(${width - 17}, 1)`}>
+        <g transform={`translate(${width - chartPadding.right}, 1)`}>
           <Axis
             key="axis"
             orientation={Orientation.right}
