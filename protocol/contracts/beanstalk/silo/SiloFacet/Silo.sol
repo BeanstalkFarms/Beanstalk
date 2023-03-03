@@ -112,14 +112,14 @@ contract Silo is SiloExit {
    function _mow(address account, address token) internal {
         uint32 _lastUpdate = lastUpdate(account);
 
-        console.log('_lastUpdate: ', _lastUpdate);
-        console.log('s.season.grownStalkPerBdvStartSeason: ', s.season.grownStalkPerBdvStartSeason);
+        console.log('_mow _lastUpdate: ', _lastUpdate);
+        console.log('_mow s.season.grownStalkPerBdvStartSeason: ', s.season.grownStalkPerBdvStartSeason);
 
         //if last update > 0 and < grownStalkPerBdvStartSeason
         //require that user account seeds be zero
         // require(_lastUpdate > 0 && _lastUpdate >= s.season.grownStalkPerBdvStartSeason, 'silo migration needed'); //will require storage cold read... is there a better way?
 
-        if((_lastUpdate != 0) && (_lastUpdate < s.season.grownStalkPerBdvStartSeason)) revert('silo migration needed');
+        if((_lastUpdate != 0) && (_lastUpdate <= s.season.grownStalkPerBdvStartSeason)) revert('silo migration needed');
 
 
         //sop stuff only needs to be updated once per season

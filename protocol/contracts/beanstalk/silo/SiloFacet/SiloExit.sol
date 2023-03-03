@@ -58,6 +58,8 @@ contract SiloExit is ReentrancyGuard {
      * @notice Get the last Season in which `account` updated their Silo.
      */
     function lastUpdate(address account) public view returns (uint32) {
+        console.log('lastUpdate account: ', account);
+        console.log('lastUpdate s.a[account].lastUpdate: ', s.a[account].lastUpdate);
         return s.a[account].lastUpdate;
     }
 

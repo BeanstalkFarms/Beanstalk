@@ -284,46 +284,19 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
 
       //get deposit data using a query like this: https://graph.node.bean.money/subgraphs/name/beanstalk/graphql?query=%7B%0A++silos%28orderBy%3A+stalk%2C+orderDirection%3A+desc%2C+first%3A+2%29+%7B%0A++++farmer+%7B%0A++++++id%0A++++++plots+%7B%0A++++++++season%0A++++++++source%0A++++++%7D%0A++++++silo+%7B%0A++++++++id%0A++++++%7D%0A++++++deposits+%7B%0A++++++++season%0A++++++++token%0A++++++%7D%0A++++%7D%0A++++stalk%0A++%7D%0A%7D
 
-      // const depositorAddress = '0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4';
-      // const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449', '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d', '0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab'];
-
-      // const seasons = [
-      //   [
-      //     1964, 2281, 3615, 4641, 4673, 4820, 5359, 5869, 5988, 5991, 6031,
-      //     6032, 6035, 6074,
-      //   ],
-      //   [2773, 2917, 3019, 4641, 4673, 4820, 5869],
-      //   [6389, 7563],
-      // ];
 
       const depositorAddress = '0x5e68bb3de6133baee55eeb6552704df2ec09a824';
       const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449', '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d','0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab'];
       const seasons = [[6074],[6061],[6137]];
-      // const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449'];
-      // const seasons = [[6074]];
-
-      // for (let i = 0; i < seasons.length; i++) {
-      //   for (let j = 0; j < seasons[i].length; j++) {
-      //     const season = seasons[i][j];
-      //     seasons[i][j] = await this.silo.seasonToGrownStalkPerBdv(tokens[i], season);
-      //   }
-      // }
-      
-      // console.log('modified seasons: ', seasons);
 
       const depositorSigner = await impersonateSigner(depositorAddress);
       await this.silo.connect(depositorSigner);
   
-      //get depositor's stalk balance pre-migrate
-      
-
       //need an array of all the tokens that have been deposited and their corresponding seasons
       await this.silo.mowAndMigrate(depositorAddress, tokens, seasons);
 
       //now mow and it shouldn't revert
       await this.silo.mow(depositorAddress, this.beanMetapool.address)
-
-
     });
 
     it('for a second sample depositor', async function () {
@@ -434,132 +407,6 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       await expect(this.silo.mowAndMigrate(depositorAddress, tokens, seasons)).to.be.revertedWith('SafeMath: division by zero');
       await expect(this.silo.mow(depositorAddress, this.beanMetapool.address)).to.be.revertedWith('silo migration needed');
     })
-
-
-
-    /*it.only('tries to find where seeds stuff goes awry', async function () {
-      console.log('start of tries to find where seeds stuff goes awry');
-      //fork off to the very first season in the array of deposits, run mow and migrate, see if seeds amount lines up
-
-
-      const depositorAddress = '0x4c180462a051ab67d8237ede2c987590df2fbbe6';
-      // const depositorAddress = '0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4';
-      
-      
-      // const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449', '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d', '0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab'];
-
-      // //15697612 is block of 7563 deposit
-      // //15697610 should be before that
-      // const seasons = [
-      //   [
-      //     1964, 2281, 3615, 4641, 4673, 4820, 5359, 5869, 5988, 5991, 6031,
-      //     6032, 6035, 6074,
-      //   ],
-      //   [2773, 2917, 3019, 4641, 4673, 4820, 5869],
-      //   [6389], //7563
-      // ];
-
-
-      //block 15277999 data
-      const seasons = [
-        [
-        2281,
-        3615,
-        4641,
-        4673,
-        4820,
-        5359,
-        5869,
-        5988,
-        5991,
-        6031,
-        6032,
-        6035
-        ],
-      ];
-
-      const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449'];
-  
-      //0x4c180462a051ab67d8237ede2c987590df2fbbe6
-      
-      // const tokens = [...new Set(data.map(item => item.token))];
-
-      // sort tokens in original order
-      const sortedData = data.slice().sort((a, b) => {
-        return tokens.indexOf(a.token) - tokens.indexOf(b.token);
-      });
-
-      // create two-dimensional array of seasons sorted by token order
-      // const seasons = sortedData.reduce((acc, curr) => {
-      //   const index = tokens.indexOf(curr.token);
-      //   if (acc[index]) {
-      //     acc[index].push(curr.season);
-      //   } else {
-      //     acc[index] = [curr.season];
-      //   }
-      //   return acc;
-      // }, []);
-      
-
-      console.log('tokens: ', tokens);
-      console.log('seasons: ', seasons);
-
-      try {
-        await network.provider.request({
-          method: "hardhat_reset",
-          params: [
-            {
-              forking: {
-                jsonRpcUrl: process.env.FORKING_RPC,
-                blockNumber: 15277999 //a random semi-recent block
-              },
-            },
-          ],
-        });
-      } catch(error) {
-        console.log('forking error in Silo V3: Grown Stalk Per Bdv:');
-        console.log(error);
-        return
-      }
-  
-      const signer = await impersonateBeanstalkOwner()
-      await mintEth(signer.address);
-      await upgradeWithNewFacets({
-        diamondAddress: BEANSTALK,
-        facetNames: ['SiloFacet', 'ConvertFacet', 'WhitelistFacet', 'MockAdminFacet'],
-        // libraryNames: ['LibLegacyTokenSilo'],
-        initFacetName: 'InitBipNewSilo',
-        bip: false,
-        object: false,
-        verbose: false,
-        account: signer
-      });
-  
-      //get current season
-      // const season = await this.season.season(); //7563
-      // console.log('season: ', season);
-
-      //attempt to migrate
-
-      for (let i = 0; i < seasons.length; i++) {
-        for (let j = 0; j < seasons[i].length; j++) {
-          const season = seasons[i][j];
-          seasons[i][j] = await this.silo.seasonToGrownStalkPerBdv(tokens[i], season);
-        }
-      }
-      
-      console.log('modified seasons: ', seasons);
-
-      const depositorSigner = await impersonateSigner(depositorAddress);
-      await this.silo.connect(depositorSigner);
-  
-
-      //need an array of all the tokens that have been deposited and their corresponding seasons
-      await this.silo.mowAndMigrate(depositorAddress, tokens, seasons);
-
-
-    });*/
-
       
   });
 
@@ -587,11 +434,36 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       await this.season.siloSunrise(0);
       expect(await this.silo.cumulativeGrownStalkPerBdv(this.beanMetapool.address)).to.eq(5);
 
-      //chang rate to 1 and check after 5 seasons
+      //change rate to 1 and check after 5 seasons
       await this.whitelist.connect(beanstalkOwner).updateStalkPerBdvPerSeasonForToken(this.beanMetapool.address, 1*1e6);
       await this.season.fastForward(5);
       expect(await this.silo.cumulativeGrownStalkPerBdv(this.beanMetapool.address)).to.eq(10);
     });
   });
 
+  describe.only('Silo interaction tests after deploying grown stalk per bdv', function () {
+    it('attempt to withdraw before migrating', async function () {
+      const depositorAddress = '0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4';
+      const depositorSigner = await impersonateSigner(depositorAddress);
+      await this.silo.connect(depositorSigner);
+      
+      const token = '0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449';
+
+      const seasons = [
+          1964, 2281
+      ];
+      
+      for (let i = 0; i < seasons.length; i++) {
+          const season = seasons[i];
+          seasons[i] = await this.silo.seasonToGrownStalkPerBdv(token, season);
+      }
+
+      //single withdraw
+      await expect(this.silo.connect(depositorSigner).withdrawDeposit(token, seasons[0], to6('1'), EXTERNAL)).to.be.revertedWith('silo migration needed')
+      
+      //multi withdraw
+      await expect(this.silo.connect(depositorSigner).withdrawDeposits(token, seasons, [to6('1'), to6('1')], EXTERNAL)).to.be.revertedWith('silo migration needed')
+    });
+    
+  });
 });
