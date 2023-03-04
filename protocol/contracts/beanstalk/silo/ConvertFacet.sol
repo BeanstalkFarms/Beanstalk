@@ -92,7 +92,7 @@ contract ConvertFacet is ReentrancyGuard {
 
     function _withdrawTokens(
         address token,
-        int128[] memory grownStalkPerBdvs,
+        int96[] memory grownStalkPerBdvs,
         uint256[] memory amounts,
         uint256 maxTokens
     ) internal returns (uint256, uint256) {
@@ -103,6 +103,7 @@ contract ConvertFacet is ReentrancyGuard {
         AssetsRemoved memory a;
         uint256 depositBDV;
         uint256 i = 0;
+        {
         uint256[] memory bdvsRemoved = new uint256[](grownStalkPerBdvs.length);
         uint256[] memory depositIds = new uint256[](grownStalkPerBdvs.length);
         while ((i < grownStalkPerBdvs.length) && (a.tokensRemoved < maxTokens)) {
@@ -164,9 +165,10 @@ contract ConvertFacet is ReentrancyGuard {
             ));
         }
         for (i; i < grownStalkPerBdvs.length; ++i) amounts[i] = 0;
+        
 
 
-            console.log('_withdrawTokens final a.stalkRemoved: ', a.stalkRemoved);
+        console.log('_withdrawTokens final a.stalkRemoved: ', a.stalkRemoved);
 
         console.log('emitting RemoveDeposits event');
         
@@ -189,7 +191,7 @@ contract ConvertFacet is ReentrancyGuard {
             depositIds, 
             amounts
         );
-        
+        }
 
         require(
             a.tokensRemoved == maxTokens,
@@ -197,7 +199,7 @@ contract ConvertFacet is ReentrancyGuard {
         );
         LibTokenSilo.decrementTotalDeposited(token, a.tokensRemoved);
         console.log('_withdrawTokens a.stalkRemoved: ', a.stalkRemoved);
-        console.log('_withdrawTokens convert facet burn stalk:', a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)));
+        // console.log('_withdrawTokens convert facet burn stalk:', a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)));
         LibSilo.burnStalk(
             msg.sender,
             a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv))
@@ -212,7 +214,7 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 amount,
         uint256 bdv,
         uint256 grownStalk //stalk grown previously by this deposit
-    ) internal returns (int128 _cumulativeGrownStalk) {
+    ) internal returns (int96 _cumulativeGrownStalk) {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
 
         console.log('_depositTokens grownStalk: ', grownStalk);
@@ -234,7 +236,11 @@ contract ConvertFacet is ReentrancyGuard {
         LibSilo.mintStalk(msg.sender, bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
 
         LibTokenSilo.incrementTotalDeposited(token, amount);
-        LibTokenSilo.addDepositToAccount(msg.sender, token, _cumulativeGrownStalk, amount, bdv);
+        bytes32 depositId = LibBytes.packAddressAndCumulativeStalkPerBDV(
+            token,
+            _cumulativeGrownStalk
+        );
+        LibTokenSilo.addDepositToAccount(msg.sender, depositId, amount, bdv);
     }
 
     function getMaxAmountIn(address tokenIn, address tokenOut)

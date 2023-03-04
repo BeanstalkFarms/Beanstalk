@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./SiloExit.sol";
 import "~/libraries/Silo/LibSilo.sol";
 import "~/libraries/Silo/LibTokenSilo.sol";
+import "~/libraries/LibBytes.sol";
 
 /**
  * @title Silo
@@ -144,8 +145,8 @@ contract Silo is SiloExit {
     function __mow(address account, address token) private {
         console.log('__mow, current season:', s.season.current);
 
-        int128 _cumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
-        int128 _lastCumulativeGrownStalkPerBdv =  s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv;
+        int96 _cumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
+        int96 _lastCumulativeGrownStalkPerBdv =  s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv;
         uint128 _bdv = s.a[account].mowStatuses[token].bdv;
         
         if (_bdv > 0) {
@@ -280,7 +281,7 @@ contract Silo is SiloExit {
             s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
             s.a[account].mowStatuses[token].bdv = uint128(migrateData.totalBdv);
 
-            int128 grownStalkIndexToDepositAt = LibTokenSilo.grownStalkAndBdvToCumulativeGrownStalk(
+            int96 grownStalkIndexToDepositAt = LibTokenSilo.grownStalkAndBdvToCumulativeGrownStalk(
                 IERC20(token), 
                 migrateData.totalGrownStalkForToken, 
                 migrateData.totalBdv
@@ -341,11 +342,14 @@ contract Silo is SiloExit {
         // Reduce the Silo's supply of Earned Beans.
         s.earnedBeans = s.earnedBeans.sub(uint128(beans));
 
+        bytes32 depositId = LibBytes.packAddressAndCumulativeStalkPerBDV(
+            C.beanAddress(), 
+            LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token))
+        );
         // Deposit Earned Beans if there are any. Note that 1 Bean = 1 BDV.
         LibTokenSilo.addDepositToAccount(
             account,
-            C.beanAddress(),
-            LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)),
+            depositId,
             beans, // amount
             beans // bdv
         );

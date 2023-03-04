@@ -11,6 +11,7 @@ import "../../C.sol";
 import "./LibUnripeSilo.sol";
 import "./LibLegacyTokenSilo.sol";
 import "~/libraries/LibSafeMathSigned128.sol";
+import "~/libraries/LibSafeMathSigned96.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import "~/libraries/LibBytes.sol";
 import "hardhat/console.sol";
@@ -31,6 +32,7 @@ library LibTokenSilo {
     using LibSafeMathSigned128 for int128;
     using SafeCast for int128;
     using SafeCast for uint256;
+    using LibSafeMathSigned96 for int96;
 
     //////////////////////// EVENTS ////////////////////////
 
@@ -40,18 +42,18 @@ library LibTokenSilo {
     event AddDeposit(
         address indexed account,
         address indexed token,
-        int128 grownStalkPerBdv,
+        int96 grownStalkPerBdv,
         uint256 amount,
         uint256 bdv
     );
 
     // added as the ERC1155 deposit upgrade
     event TransferSingle(
-        address indexed _operator, 
-        address indexed _from, 
-        address indexed _to, 
-        uint256 _id, 
-        uint256 _value
+        address indexed operator, 
+        address indexed sender, 
+        address indexed recipient, 
+        uint256 depositId, 
+        uint256 amount
     );
 
 
@@ -155,40 +157,31 @@ library LibTokenSilo {
      */
     function addDepositToAccount(
         address account,
-        bytes32 depositData
+        bytes32 depositId,
         uint256 amount,
         uint256 bdv
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        console.log('addDepositToAccount token: ', token);
-        console.log('addDepositToAccount at grown stalk per bdv:', uint256(LibBytes.getCumulativeStalkPerBDVFromBytes(depositData)));
-        // console.logInt();
-        Account.Deposit memory d = s.a[account].deposits[depositData];
-        console.log('addDepositToAccount updatedAmount: ', d.amount.add(amount.toUint128()));
+        
+        // create memory var to save gas (TODO: check if this is actually saving gas)
+        Account.Deposit memory d = s.a[account].deposits[depositId];
 
+        // add amount to the deposits... 
         d.amount = uint128(d.amount.add(amount.toUint128()));
         d.bdv = uint128(d.bdv.add(bdv.toUint128()));
-        console.log('addDepositToAccount bdv: ', bdv);
+        
+        // set it 
+        s.a[account].deposits[depositId] = d;
+        
+        // get token and GSPBDV of the depositData, for updating mow status and emitting event 
+        (address token, int96 grownStalkPerBdv) = LibBytes.getAddressAndCumulativeStalkPerBDVFromBytes(depositId);
 
-        console.log('--- s.a[account].deposits[token][grownStalkPerBdv].bdv: ', d.bdv);
-        console.log('--- s.a[account].deposits[token][grownStalkPerBdv].amount: ', d.amount);
-
-        s.a[account].deposits[depositData] = d;
-        address token = LibBytes.getAddressFromBytes(depositData);
-
-
-        console.log('--- s.a[account].deposits[token][grownStalkPerBdv].bdv: ', s.a[account].deposits[depositData].bdv);
-        console.log('--- s.a[account].deposits[token][grownStalkPerBdv].amount: ', s.a[account].deposits[depositData].amount);
-
-        //setup or update the MowStatus for this deposit. We should have _just_ mowed before calling this function.
+        // update the mow status (note: mow status is per token, not per depositId)
         s.a[account].mowStatuses[token].bdv = uint128(s.a[account].mowStatuses[token].bdv.add(bdv.toUint128()));
-        console.log('s.a[account].mowStatuses[token].bdv mowstatus bdv after deposit: ', uint256(s.a[account].mowStatuses[token].bdv));
         //needs to update the mow status
 
-        // TODO: just added the ERC1155 event, but need to discuss on how to consolate the event data
-        // emit TransferSingle(address indexed _operator, address indexed _from, address indexed _to, uint256 _id, uint256 _value)
-
-        emit TransferSingle(msg.sender, address(0), account, uint256(depositData), bdv);
+        // "adding" a deposit is equivalent to "minting" an ERC1155 token. 
+        emit TransferSingle(msg.sender, address(0), account, uint256(depositId), amount);
         emit AddDeposit(account, token, grownStalkPerBdv, amount, bdv);
     }
 
@@ -223,12 +216,12 @@ library LibTokenSilo {
         console.logInt(grownStalkPerBdv);
         console.log('removeDepositFromAccount amount: ', amount);
         AppStorage storage s = LibAppStorage.diamondStorage();
+        bytes32 depositId = LibBytes.packAddressAndCumulativeStalkPerBDV(token,grownStalkPerBdv);
 
-        console.log('--- removeDepositFromAccount s.a[account].deposits[token][grownStalkPerBdv].bdv: ', s.a[account].deposits[token][grownStalkPerBdv].bdv);
-        console.log('--- removeDepositFromAccount s.a[account].deposits[token][grownStalkPerBdv].amount: ', s.a[account].deposits[token][grownStalkPerBdv].amount);
+        console.log('--- removeDepositFromAccount s.a[account].deposits[token][grownStalkPerBdv].bdv: ', s.a[account].deposits[depositId].bdv);
+        console.log('--- removeDepositFromAccount s.a[account].deposits[token][grownStalkPerBdv].amount: ', s.a[account].deposits[depositId].amount);
     
-        bytes32 depositData = LibBytes.packAddressAndCumulativeStalkPerBDV(token,grownStalkPerBdv);
-        Account.Deposit memory d = s.a[account].deposits[token];
+        Account.Deposit memory d = s.a[account].deposits[depositId];
         
         uint256 crateAmount;
         (crateAmount, crateBDV) = (
@@ -254,8 +247,8 @@ library LibTokenSilo {
                 "Silo: uint128 overflow."
             );
 
-            s.a[account].deposits[depositData].amount = uint128(updatedAmount);
-            s.a[account].deposits[depositData].bdv = uint128(updatedBDV);
+            s.a[account].deposits[depositId].amount = uint128(updatedAmount);
+            s.a[account].deposits[depositId].bdv = uint128(updatedBDV);
 
             //verify this has to be a different var?
             uint256 updatedTotalBdvPartial = uint256(s.a[account].mowStatuses[token].bdv).sub(removedBDV);
@@ -270,7 +263,7 @@ library LibTokenSilo {
 
         console.log('removeDepositFromAccount doing full remove');
         // Full remove
-        if (crateAmount > 0) delete s.a[account].deposits[token][grownStalkPerBdv];
+        if (crateAmount > 0) delete s.a[account].deposits[depositId];
 
         // Excess remove
         // This can only occur for Unripe Beans and Unripe LP Tokens, and is a
@@ -354,14 +347,15 @@ library LibTokenSilo {
     function tokenDeposit(
         address account,
         address token,
-        int128 grownStalkPerBdv
+        int96 grownStalkPerBdv
     ) internal view returns (uint256 amount, uint256 bdv) {
         console.log('get tokenDeposit: ', account, token);
         console.log('tokenDeposit logging grown stalk per bdv:');
         console.logInt(grownStalkPerBdv);
         AppStorage storage s = LibAppStorage.diamondStorage();
-        amount = s.a[account].deposits[token][grownStalkPerBdv].amount;
-        bdv = s.a[account].deposits[token][grownStalkPerBdv].bdv;
+        bytes32 depositId = LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdv);
+        amount = s.a[account].deposits[depositId].amount;
+        bdv = s.a[account].deposits[depositId].bdv;
         console.log('1 tokenDeposit amount: ', amount);
         console.log('1 tokenDeposit bdv: ', bdv);
         uint256 seedsPerToken = LibLegacyTokenSilo.getSeedsPerToken(token);
@@ -422,14 +416,14 @@ library LibTokenSilo {
     function grownStalkForDeposit(
         address account,
         IERC20 token,
-        int128 grownStalkPerBdv
+        int96 grownStalkPerBdv
     )
         internal
         view
         returns (uint grownStalk)
     {
         // cumulativeGrownStalkPerBdv(token) > depositGrownStalkPerBdv for all valid Deposits
-        int128 _cumulativeGrownStalkPerBdv = cumulativeGrownStalkPerBdv(token);
+        int96 _cumulativeGrownStalkPerBdv = cumulativeGrownStalkPerBdv(token);
         require(grownStalkPerBdv <= _cumulativeGrownStalkPerBdv, "Silo: Invalid Deposit");
         uint deltaGrownStalkPerBdv = uint(cumulativeGrownStalkPerBdv(token).sub(grownStalkPerBdv));
         (, uint bdv) = tokenDeposit(account, address(token), grownStalkPerBdv);
@@ -455,13 +449,13 @@ library LibTokenSilo {
     function calculateTotalGrownStalkandGrownStalk(IERC20 token, uint256 grownStalk, uint256 bdv)
         internal
         view 
-        returns (uint256 _grownStalk, int128 cumulativeGrownStalk)
+        returns (uint256 _grownStalk, int96 cumulativeGrownStalk)
     {
-        int128 latestCumulativeGrownStalkPerBdvForToken = cumulativeGrownStalkPerBdv(token);
-        cumulativeGrownStalk = latestCumulativeGrownStalkPerBdvForToken-int128(grownStalk.div(bdv));
+        int96 latestCumulativeGrownStalkPerBdvForToken = cumulativeGrownStalkPerBdv(token);
+        cumulativeGrownStalk = latestCumulativeGrownStalkPerBdvForToken-int96(grownStalk.div(bdv));
         // todo: talk to pizza about depositing at mid season
         // is it possible to skip the math calc here? 
-        _grownStalk = uint256(latestCumulativeGrownStalkPerBdvForToken.sub(cumulativeGrownStalk).mul(int128(bdv)));
+        _grownStalk = uint256(latestCumulativeGrownStalkPerBdvForToken.sub(cumulativeGrownStalk).mul(int96(bdv)));
     }
 
 
@@ -470,14 +464,14 @@ library LibTokenSilo {
     function grownStalkAndBdvToCumulativeGrownStalk(IERC20 token, uint256 grownStalk, uint256 bdv)
         internal
         view
-        returns (int128 cumulativeGrownStalk)
+        returns (int96 cumulativeGrownStalk)
     {
         //first get current latest grown stalk index
-        int128 latestCumulativeGrownStalkPerBdvForToken = cumulativeGrownStalkPerBdv(token);
+        int96 latestCumulativeGrownStalkPerBdvForToken = cumulativeGrownStalkPerBdv(token);
         console.log('grownStalkAndBdvToCumulativeGrownStalk latestCumulativeGrownStalkPerBdvForToken:');
         console.logInt(latestCumulativeGrownStalkPerBdvForToken);
         //then calculate how much stalk each individual bdv has grown
-        int128 grownStalkPerBdv = int128(grownStalk.div(bdv));
+        int96 grownStalkPerBdv = int96(grownStalk.div(bdv));
         console.log('grownStalkAndBdvToCumulativeGrownStalk grownStalkPerBdv:');
         console.logInt(grownStalkPerBdv);
         //then subtract from the current latest index, so we get the index the deposit should have happened at

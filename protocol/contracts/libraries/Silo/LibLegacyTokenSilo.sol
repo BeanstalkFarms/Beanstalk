@@ -13,6 +13,7 @@ import "./LibUnripeSilo.sol";
 import "./LibTokenSilo.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import "~/libraries/LibSafeMathSigned128.sol";
+import "~/libraries/LibSafeMathSigned96.sol";
 import "hardhat/console.sol";
 
 /**
@@ -28,6 +29,7 @@ library LibLegacyTokenSilo {
     using SafeMath for uint32;
     using SafeCast for uint256;
     using LibSafeMathSigned128 for int128;
+    using LibSafeMathSigned96 for int96;
 
 
     //important to note that this event is only here for unit tests purposes of legacy code and to ensure unripe all works with new bdv system
@@ -359,7 +361,7 @@ library LibLegacyTokenSilo {
         return seeds.mul(seasons);
     }
 
-    function isDepositSeason(uint256 seedsPerBdv, int128 grownStalkPerBdv)
+    function isDepositSeason(uint256 seedsPerBdv, int96 grownStalkPerBdv)
         internal
         view
         returns (bool)
@@ -381,7 +383,7 @@ library LibLegacyTokenSilo {
     function seasonToGrownStalkPerBdv(uint256 seedsPerBdv, uint32 season)
         internal
         view
-        returns (int128 grownStalkPerBdv)
+        returns (int96 grownStalkPerBdv)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         
@@ -401,15 +403,15 @@ library LibLegacyTokenSilo {
         console.log('seasonToGrownStalkPerBdv s.season.current: ', s.season.current);
         console.log('seasonToGrownStalkPerBdv seedsPerBdv: ', seedsPerBdv);
         
-        int128 firstPart = int128(season)-int128(s.season.grownStalkPerBdvStartSeason);
+        int96 firstPart = int96(season)-int96(s.season.grownStalkPerBdvStartSeason);
         console.log('seasonToGrownStalkPerBdv firstPart: ');
         console.logInt(firstPart);
 
         //using regular - here because we want it to overflow negative
-        grownStalkPerBdv = (int128(season)-int128(s.season.grownStalkPerBdvStartSeason)).mul(int128(seedsPerBdv));
+        grownStalkPerBdv = (int96(season)-int96(s.season.grownStalkPerBdvStartSeason)).mul(int96(seedsPerBdv));
     }
 
-    function grownStalkPerBdvToSeason(uint256 seedsPerBdv, int128 grownStalkPerBdv)
+    function grownStalkPerBdvToSeason(uint256 seedsPerBdv, int96 grownStalkPerBdv)
         internal
         view
         returns (uint32 season)
@@ -434,11 +436,11 @@ library LibLegacyTokenSilo {
         // uint256 seasonAs256 = uint256(int128(s.ss[address(token)].lastCumulativeGrownStalkPerBdv).sub(grownStalkPerBdv)).div(seedsPerBdv);
         // console.log('seasonAs256: ', seasonAs256);
 
-        int128 diff = grownStalkPerBdv.div(int128(seedsPerBdv));
+        int96 diff = grownStalkPerBdv.div(int96(seedsPerBdv));
         console.log('diff: ');
         console.logInt(diff);
         //using regular + here becauase we want to "overflow" (which for signed just means add negative)
-        season = uint256(int128(s.season.grownStalkPerBdvStartSeason)+diff).toUint32();
+        season = uint256(int96(s.season.grownStalkPerBdvStartSeason) + diff).toUint32();
         console.log('grownStalkPerBdvToSeason season: ', season);
         // season = seasonAs256.toUint32();
     }

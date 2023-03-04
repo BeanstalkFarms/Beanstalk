@@ -6,7 +6,9 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./Silo.sol";
-import "./libraries/LibBytes.sol";
+import "~/libraries/LibBytes.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
 /**
  * @title TokenSilo
@@ -24,7 +26,7 @@ import "./libraries/LibBytes.sol";
  *   deposited in the Silo is decremented during withdrawal, _after_ a Withdrawal
  *   is created. See "Finish Removal".
  */
-contract TokenSilo is Silo {
+contract TokenSilo is Silo, IERC1155, IERC1155Receiver {
     uint32 private constant ASSET_PADDING = 100;
 
     using SafeMath for uint256;
@@ -49,7 +51,7 @@ contract TokenSilo is Silo {
     event AddDeposit(
         address indexed account,
         address indexed token,
-        int128 grownStalkPerBdv,
+        int96 grownStalkPerBdv,
         uint256 amount,
         uint256 bdv
     );
@@ -68,7 +70,7 @@ contract TokenSilo is Silo {
     event RemoveDeposit(
         address indexed account,
         address indexed token,
-        int128 grownStalkPerBdv,
+        int96 grownStalkPerBdv,
         uint256 amount,
         uint256 bdv
     );
@@ -89,7 +91,7 @@ contract TokenSilo is Silo {
     event RemoveDeposits(
         address indexed account,
         address indexed token,
-        int128[] grownStalkPerBdvs,
+        int96[] grownStalkPerBdvs,
         uint256[] amounts,
         uint256 amount,
         uint256[] bdvs
@@ -105,14 +107,6 @@ contract TokenSilo is Silo {
         address indexed spender,
         address token,
         uint256 amount
-    );
-
-    event TransferBatch(
-        address indexed _operator, 
-        address indexed _from, 
-        address indexed _to, 
-        uint256[] _ids, 
-        uint256[] _values
     );
 
 
@@ -142,7 +136,7 @@ contract TokenSilo is Silo {
     function getDeposit(
         address account,
         address token,
-        int128 grownStalkPerBdv
+        int96 grownStalkPerBdv
     ) external view returns (uint256, uint256) {
         return LibTokenSilo.tokenDeposit(account, token, grownStalkPerBdv);
     }
@@ -192,7 +186,10 @@ contract TokenSilo is Silo {
         address spender,
         address token
     ) public view virtual returns (uint256) {
-        return s.a[owner].depositAllowances[spender][token];
+        // token approvals are now stored as a bytes32 in preperation for multitoken standard support.
+        // thus, for ERC20 deposits, we use the token address as the approval key (no cumulativeStalkPerBDV)
+        // TODO: how should this work with ERC1155? we either have to approve all ERC1155 deposits, or approve a singular id
+        return s.a[owner].depositAllowances[spender][bytes32(uint256(token))];
     }
 
     //////////////////////// DEPOSIT ////////////////////////
@@ -208,16 +205,16 @@ contract TokenSilo is Silo {
      * This step should enforce that new Deposits are placed into the current 
      * `LibTokenSilo.cumulativeGrownStalkPerBdv(token)`.
      */
-    function _depositERC20(
+    function _deposit(
         address account,
-        IERC20 token,
+        address token,
         uint256 amount
     ) internal {
         console.log('_deposit: ', amount);
         (uint256 stalk) = LibTokenSilo.deposit(
             account,
             address(token),
-            LibTokenSilo.cumulativeGrownStalkPerBdv(token), // TODO: may need to generalize this for all standards, just not ERC20
+            LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)), // TODO: may need to generalize this for all standards, just not ERC20
             amount
         );
         console.log('_deposit now mint stalk: ', stalk);
@@ -231,14 +228,14 @@ contract TokenSilo is Silo {
      */
     function _withdrawDeposit(
         address account,
-        IERC20 token,
+        address token,
         int96 grownStalkPerBdv,
         uint256 amount
     ) internal {
         // Remove the Deposit from `account`.
         (uint256 stalkRemoved, ) = removeDepositFromAccount(
             account,
-            token,
+            address(token),
             grownStalkPerBdv,
             amount
         );
@@ -246,7 +243,7 @@ contract TokenSilo is Silo {
         // Add a Withdrawal, update totals, burn Stalk.
         _withdraw(
             account,
-            token,
+            address(token),
             amount,
             stalkRemoved
         );
@@ -262,7 +259,7 @@ contract TokenSilo is Silo {
     function _withdrawDeposits(
         address account,
         address token,
-        uint96[] calldata grownStalkPerBdvs,
+        int96[] calldata grownStalkPerBdvs,
         uint256[] calldata amounts
     ) internal returns (uint256) {
         require(
@@ -333,7 +330,6 @@ contract TokenSilo is Silo {
             uint256 bdvRemoved
         )
     {
-        bytes32 depositData
         bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, grownStalkPerBdv, amount);
         console.log('s.ss[token].stalk: ', s.ss[token].stalkIssuedPerBdv);
         console.log('bdvRemoved.mul(s.ss[token].stalk: ', bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv));
@@ -361,8 +357,9 @@ contract TokenSilo is Silo {
             )
         );
         console.log('removeDepositFromAccount stalkRemoved: ', stalkRemoved);
-        // event TransferSingle(address indexed _operator, address indexed _from, address indexed _to, uint256 _id, uint256 _value);
-        // TODO: finalize event stuff
+
+        // "removing" a deposit is equivalent to "burning" an ERC1155 token.
+        uint256 depositData = uint256(LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdv));
         emit TransferSingle(msg.sender, account, address(0), depositData, amount);
         emit RemoveDeposit(account, token, grownStalkPerBdv, amount, bdvRemoved);
     }
@@ -384,7 +381,7 @@ contract TokenSilo is Silo {
         console.log('removeDepositsFromAccount: ', account);
         //make bdv array and add here?
         uint256[] memory bdvsRemoved = new uint256[](grownStalkPerBdvs.length);
-        bytes32[] memory _depositIdRemoved = new uint256[](grownStalkPerBdvs.length);
+        uint256[] memory removedDepositIDs = new uint256[](grownStalkPerBdvs.length);
         for (uint256 i; i < grownStalkPerBdvs.length; ++i) {
             uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 account,
@@ -393,7 +390,7 @@ contract TokenSilo is Silo {
                 amounts[i]
             );
             bdvsRemoved[i] = crateBdv;
-            _depositIdRemoved[i] = LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdvs[i]);
+            removedDepositIDs[i] = uint256(LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdvs[i]));
             ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
             console.log('s.ss[token].stalkIssuedPerBdv: ', s.ss[token].stalkIssuedPerBdv);
@@ -412,9 +409,8 @@ contract TokenSilo is Silo {
         );
         console.log('2 ar.stalkRemoved: ', ar.stalkRemoved);
 
-        //need to add BDV array here
-        // event TransferBatch(address indexed _operator, address indexed _from, address indexed _to, uint256[] _ids, uint256[] _values);
-        emit TransferBatch(msg.sender, account, address(0), _depositIdRemoved, crateBdv);
+        // "removing" deposits is equivalent to "burning" a batch of ERC1155 tokens.
+        emit TransferBatch(msg.sender, account, address(0), removedDepositIDs, amounts);
         emit RemoveDeposits(account, token, grownStalkPerBdvs, amounts, ar.tokensRemoved, bdvsRemoved);
     }
 
@@ -429,18 +425,19 @@ contract TokenSilo is Silo {
         address sender,
         address recipient,
         address token,
-        int96 grownStalkPerBdvs,
+        int96 grownStalkPerBdv,
         uint256 amount
     ) internal returns (uint256) {
         (uint256 stalk, uint256 bdv) = removeDepositFromAccount(
             sender,
             token,
-            grownStalkPerBdvs,
+            grownStalkPerBdv,
             amount
         );
-        LibTokenSilo.addDepositToAccount(recipient, token, grownStalkPerBdvs, amount, bdv);
+        bytes32 _depositIdAdded = LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdv);
+        LibTokenSilo.addDepositToAccount(recipient, _depositIdAdded, amount, bdv);
         LibSilo.transferStalk(sender, recipient, stalk);
-        bytes32 _depositIdRemoved = LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdvs);
+        bytes32 _depositIdRemoved = LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdv);
         return bdv;
     }
 
@@ -453,7 +450,7 @@ contract TokenSilo is Silo {
         address sender,
         address recipient,
         address token,
-        int128[] calldata grownStalkPerBdvs,
+        int96[] calldata grownStalkPerBdvs,
         uint256[] calldata amounts
     ) internal returns (uint256[] memory) {
         require(
@@ -463,10 +460,12 @@ contract TokenSilo is Silo {
 
         AssetsRemoved memory ar;
         uint256[] memory bdvs = new uint256[](grownStalkPerBdvs.length);
+        uint256[] memory removedDepositIDs = new uint256[](grownStalkPerBdvs.length);
 
         // Similar to {removeDepositsFromAccount}, however the Deposit is also 
         // added to the recipient's account during each iteration.
         for (uint256 i; i < grownStalkPerBdvs.length; ++i) {
+            bytes32 depositID = LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdvs[i]);
             uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 sender,
                 token,
@@ -475,8 +474,7 @@ contract TokenSilo is Silo {
             );
             LibTokenSilo.addDepositToAccount(
                 recipient,
-                token,
-                grownStalkPerBdvs[i],
+                depositID,
                 amounts[i],
                 crateBdv
             );
@@ -490,13 +488,17 @@ contract TokenSilo is Silo {
                 )
             );
             bdvs[i] = crateBdv;
+            removedDepositIDs[i] = uint256(depositID);
+
         }
 
         ar.stalkRemoved = ar.stalkRemoved.add(
             ar.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)
         );
 
-        emit TransferBatch(msg.sender, account, address(0), _depositIdRemoved, crateBdv);
+        //  "removing" a deposit is equivalent to "burning" a ERC1155 token
+        // i.e, send to 0 sender
+        emit TransferBatch(msg.sender, sender, address(0), removedDepositIDs, amounts);
         emit RemoveDeposits(sender, token, grownStalkPerBdvs, amounts, ar.tokensRemoved, bdvs);
 
         // Transfer all the Stalk
@@ -525,7 +527,90 @@ contract TokenSilo is Silo {
     }
         
     function _approveDeposit(address account, address spender, address token, uint256 amount) internal {
-        s.a[account].depositAllowances[spender][token] = amount;
+        s.a[account].depositAllowances[spender][bytes32(uint256(token))] = amount;
         emit DepositApproval(account, spender, token, amount);
+    }
+    
+    //////////////////////// ERC1155 ////////////////////////
+
+    function setApprovalForAll(
+        address spender, 
+        bool approved
+    ) external override {
+        s.a[msg.sender].isApprovedForAll[spender] = approved;
+        emit ApprovalForAll(msg.sender, spender, approved);
+    }
+
+    function isApprovedForAll(
+        address _owner, 
+        address _operator
+    ) external view override returns (bool) {
+        return s.a[_owner].isApprovedForAll[_operator];
+    }
+
+    function balanceOf(
+        address account, 
+        uint256 depositId
+    ) external view override returns (uint256 amount) {
+        return s.a[account].deposits[bytes32(depositId)].amount;
+    }
+
+    function balanceOfBatch(
+        address[] calldata accounts, 
+        uint256[] calldata depositIds
+    ) external view override returns (uint256[] memory) {
+        require(
+            accounts.length == depositIds.length, 
+            "ERC1155: ids and amounts length mismatch"
+        );
+        uint256[] memory balances = new uint256[](accounts.length);
+        for (uint256 i = 0; i < accounts.length; i++) {
+            balances[i] = s.a[accounts[i]].deposits[bytes32(depositIds[i])].amount;
+        }
+        return balances;
+    }
+
+    function safeTransferFrom(address _from, address _to, uint256 _id, uint256 _value, bytes calldata _data) external virtual override {}
+
+    function safeBatchTransferFrom(
+        address _from,
+        address _to,
+        uint256[] calldata _ids,
+        uint256[] calldata _values,
+        bytes calldata _data
+    ) external virtual override {}
+
+
+
+    // TODO: need to discuss what to do on a ERC1155 transfer to the contract
+    // for now, send the ERC1155 token back to the sender
+    // or put this in siloFacet instead ~
+
+    //////////////////////// ERC1155Reciever ////////////////////////
+
+    function onERC1155Received(
+        address,
+        address from,
+        uint256 id,
+        uint256 value,
+        bytes calldata data
+    ) external override returns (bytes4) {
+        // IERC1155.safeTransferFrom(address(this), from, id, value, data);
+        return IERC1155Receiver.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address,
+        address from,
+        uint256[] calldata ids,
+        uint256[] calldata values,
+        bytes calldata data
+    ) external override returns (bytes4) {
+        // IERC1155.safeBatchTransferFrom(address(this), from, ids, values, data);
+        return IERC1155Receiver.onERC1155BatchReceived.selector;
+    }
+
+    function supportsInterface(bytes4 interfaceId) external view override returns (bool) {
+        return interfaceId == type(IERC1155).interfaceId || interfaceId == type(IERC1155Receiver).interfaceId;
     }
 }

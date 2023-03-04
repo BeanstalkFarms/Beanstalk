@@ -10,8 +10,6 @@ import "~/beanstalk/ReentrancyGuard.sol";
 import "~/libraries/Token/LibTransfer.sol";
 import "~/libraries/Silo/LibSiloPermit.sol";
 import "~/libraries/LibBytes.sol";
-import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
 
 /**
@@ -28,7 +26,7 @@ import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Re
  *
  * 
  */
-contract SiloFacet is TokenSilo, IERC155, IERC1155Receiver {
+contract SiloFacet is TokenSilo {
 
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
@@ -48,21 +46,25 @@ contract SiloFacet is TokenSilo, IERC155, IERC1155Receiver {
      *  3. Create or update a Deposit entry for `account` in the current Season.
      *  4. Mint Stalk to `account`.
      *  5. Emit an `AddDeposit` event.
+     * note: changed name to `depositERC20` as in the future, when we deposit ERC721 or ERC1155, 
+     * 1) it would need a different way to make a deposit (hashing)
+     * 2) it conserves backwards compatibility
+     * alternative solution: make the input a bytes32 depositID
      * 
      * FIXME(logic): return `(amount, bdv(, season))`
      */
     function depositERC20(
-        IERC20 token,
+        address token,
         uint256 amount,
         LibTransfer.From mode
     ) external payable nonReentrant mowSender(token) {
         amount = LibTransfer.receiveToken(
-            token,
+            IERC20(token),
             amount,
             msg.sender,
             mode
         );
-        _depositERC20(msg.sender, token, amount);
+        _deposit(msg.sender, token, amount);
     }
 
     //////////////////////// WITHDRAW ////////////////////////
@@ -85,15 +87,20 @@ contract SiloFacet is TokenSilo, IERC155, IERC1155Receiver {
      * Typically, a Farmer wants to withdraw more recent Deposits first, since
      * these require less Stalk to be burned. This functionality is the default
      * provided by the Beanstalk SDK, but is NOT provided at the contract level.
+     * 
+     * note: changed name to `withdrawERC20Deposits` as in the future, when we deposit ERC721 or ERC1155, 
+     * 1) it would need a different way to make a deposit (hashing)
+     * 2) it conserves backwards compatibility
+     * alternative solution: make the input a bytes32 depositID
      */
     function withdrawERC20Deposit(
-        IERC20 token,
+        address token,
         int96 grownStalkPerBdv,
         uint256 amount,
         LibTransfer.To mode
     ) external payable mowSender(token) nonReentrant {
         _withdrawDeposit(msg.sender, token, grownStalkPerBdv, amount);
-        LibTransfer.sendToken(token, amount, msg.sender, mode);
+        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
 
     /** 
@@ -108,11 +115,15 @@ contract SiloFacet is TokenSilo, IERC155, IERC1155Receiver {
      * For example, if a user wants to withdraw X Beans, it may be preferable to
      * withdraw from 1 older Deposit, rather than from multiple recent Deposits,
      * if the difference in grownStalkPerBdvs is minimal.
+     * 
+     * * note: changed name to `withdrawERC20Deposits` as in the future, when we deposit ERC721 or ERC1155, 
+     * 1) it would need a different way to make a deposit (hashing)
+     * 2) it conserves backwards compatibility
+     * alternative solution: make the input a bytes32 depositID
      */
-    // TODO: ideally we should allow the user to withdraw different deposit types in a single call 
     // i.e withdraw ERC20, ERC721, and ERC1155 in a single call
     function withdrawERC20Deposits(
-        IERC20 token,
+        address token,
         int96[] calldata grownStalkPerBdvs,
         uint256[] calldata amounts,
         LibTransfer.To mode
@@ -138,14 +149,18 @@ contract SiloFacet is TokenSilo, IERC155, IERC1155Receiver {
      * The {mowSender} modifier is not used here because _both_ the `sender` and
      * `recipient` need their Silo updated, since both accounts experience a
      * change in deposited BDV. See {Silo-_mow}.
+     * * note: changed name to `withdrawERC20Deposits` as in the future, when we deposit ERC721 or ERC1155, 
+     * 1) it would need a different way to make a deposit (hashing)
+     * 2) it conserves backwards compatibility later 
+     * alternative solution: make the input a bytes32 depositID
      */
     function transferERC20Deposit(
         address sender,
         address recipient,
         address token,
-        int128 grownStalkPerBdv,
+        int96 grownStalkPerBdv,
         uint256 amount
-    ) external payable nonReentrant returns (uint256 bdv) {
+    ) public payable nonReentrant returns (uint256 bdv) {
         if (sender != msg.sender) {
             _spendDepositAllowance(sender, msg.sender, token, amount);
         }
@@ -171,13 +186,13 @@ contract SiloFacet is TokenSilo, IERC155, IERC1155Receiver {
      * `recipient` need their Silo updated, since both accounts experience a
      * change in Seeds. See {Silo-_mow}.
      */
-    function transferDeposits(
+    function transferERC20Deposits(
         address sender,
         address recipient,
         address token,
         int96[] calldata grownStalkPerBdv,
         uint256[] calldata amounts
-    ) external payable nonReentrant returns (uint256[] memory bdvs) {
+    ) public payable nonReentrant returns (uint256[] memory bdvs) {
         require(amounts.length > 0, "Silo: amounts array is empty");
         for (uint256 i = 0; i < amounts.length; i++) {
             require(amounts[i] > 0, "Silo: amount in array is 0");
@@ -199,7 +214,7 @@ contract SiloFacet is TokenSilo, IERC155, IERC1155Receiver {
         uint256 depositId, 
         uint256 amount, 
         bytes calldata
-    ) external nonReentrant {
+    ) external override nonReentrant {
         (address token, int96 cumulativeGrownStalkPerBDV) = 
             LibBytes.getAddressAndCumulativeStalkPerBDVFromBytes(
                 bytes32(depositId)
@@ -219,10 +234,10 @@ contract SiloFacet is TokenSilo, IERC155, IERC1155Receiver {
         uint256[] calldata depositIDs, 
         uint256[] calldata amounts, 
         bytes calldata
-        ) external nonReentrant {
+    ) external override nonReentrant {
         require(depositIDs.length == amounts.length, "Silo: depositIDs and amounts arrays must be the same length");
         address token;
-        int96 cumulativeGrownStalkPerBDV
+        int96 cumulativeGrownStalkPerBDV;
         for(uint i; i < depositIDs.length; i++) {
             (token, cumulativeGrownStalkPerBDV) = 
                 LibBytes.getAddressAndCumulativeStalkPerBDVFromBytes(
@@ -451,7 +466,7 @@ contract SiloFacet is TokenSilo, IERC155, IERC1155Receiver {
      */
     function enrootDeposit(
         address token,
-        int128 grownStalkPerBdv,
+        int96 grownStalkPerBdv,
         uint256 amount
     ) external nonReentrant mowSender(token) {
         // First, remove Deposit and Redeposit with new BDV
@@ -467,7 +482,8 @@ contract SiloFacet is TokenSilo, IERC155, IERC1155Receiver {
         // Calculate the current BDV for `amount` of `token` and add a Deposit.
         uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
         console.log('newBDV: ', newBDV);
-        LibTokenSilo.addDepositToAccount(msg.sender, token, grownStalkPerBdv, amount, newBDV); // emits AddDeposit event
+        bytes32 depositID = LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdv);
+        LibTokenSilo.addDepositToAccount(msg.sender, depositID, amount, newBDV); // emits AddDeposit event
 
         // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
         uint256 deltaBDV = newBDV.sub(ogBDV);
@@ -497,7 +513,7 @@ contract SiloFacet is TokenSilo, IERC155, IERC1155Receiver {
      */
     function enrootDeposits(
         address token,
-        int128[] calldata grownStalkPerBdvs,
+        int96[] calldata grownStalkPerBdvs,
         uint256[] calldata amounts
     ) external nonReentrant mowSender(token) {
         // First, remove Deposits because every deposit is in a different season,
@@ -509,17 +525,17 @@ contract SiloFacet is TokenSilo, IERC155, IERC1155Receiver {
         uint256 newStalk;
 
         //pulled these vars out because of "CompilerError: Stack too deep, try removing local variables."
-        int128 _lastCumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)); //need for present season
+        int96 _lastCumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)); //need for present season
         uint32 _stalkPerBdv = s.ss[token].stalkIssuedPerBdv;
 
         // Iterate through all grownStalkPerBdvs, redeposit the tokens with new BDV and
         // summate new Stalk.
         for (uint256 i; i < grownStalkPerBdvs.length; ++i) {
             uint256 bdv = amounts[i].mul(newBDV).div(ar.tokensRemoved); // Cheaper than calling the BDV function multiple times.
+            bytes32 depositID = LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdvs[i]);
             LibTokenSilo.addDepositToAccount(
                 msg.sender,
-                token,
-                grownStalkPerBdvs[i],
+                depositID,
                 amounts[i],
                 bdv
             );
@@ -555,7 +571,7 @@ contract SiloFacet is TokenSilo, IERC155, IERC1155Receiver {
         );
     }
 
-    function grownStalkPerBdvToSeason(IERC20 token, int128 grownStalkPerBdv)
+    function grownStalkPerBdvToSeason(IERC20 token, int96 grownStalkPerBdv)
         public
         view
         returns (uint32 season)
@@ -564,14 +580,13 @@ contract SiloFacet is TokenSilo, IERC155, IERC1155Receiver {
         uint256 seedsPerBdv = getSeedsPerToken(address(token));
 
         require(LibLegacyTokenSilo.isDepositSeason(seedsPerBdv, grownStalkPerBdv), "No matching season for input grownStalkPerBdv");
-
         season = LibLegacyTokenSilo.grownStalkPerBdvToSeason(seedsPerBdv, grownStalkPerBdv);
     }
 
     function seasonToGrownStalkPerBdv(IERC20 token, uint32 season)
         public
         view
-        returns (int128 grownStalkPerBdv)
+        returns (int96 grownStalkPerBdv)
     {
         uint256 seedsPerBdv = getSeedsPerToken(address(token));
         grownStalkPerBdv = LibLegacyTokenSilo.seasonToGrownStalkPerBdv(seedsPerBdv, season);
@@ -579,56 +594,5 @@ contract SiloFacet is TokenSilo, IERC155, IERC1155Receiver {
 
     function getSeedsPerToken(address token) public view virtual returns (uint256) {
         return LibLegacyTokenSilo.getSeedsPerToken(token);
-    }
-
-    function balanceOf(
-        address account, 
-        uint256 depositId
-    ) external view returns (uint256 amount) {
-        return s.a[account].deposits[bytes32(depositId)].amount;
-    };
-
-    function balanceOfBatch(
-        address[] calldata _owners, 
-        uint256[] calldata _ids
-    ) external view returns (uint256[] memory){
-        require(_owners.length == _ids.length, "ERC1155: ids and amounts length mismatch")
-        uint256[] memory balances = new uint256[](_owners.length);
-        for (uint256 i = 0; i < _owners.length; i++) {
-            balances[i] = s.a[_owners[i]].deposits[bytes32(_ids[i])].amount;
-        }
-        return balances;
-    };
-
-    function setApprovalForAll(address spender, bool approved) external {
-        s.a[msg.sender].isApprovedForAll[spender] = approved;
-        emit ApprovalForAll(msg.sender, spender, approved);
-    }; 
-
-    function isApprovedForAll(
-        address _owner, 
-        address _operator
-    ) external view returns (bool) {
-        return s.a[_owner].isApprovedForAll[_operator];
-    };
-    
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes calldata
-    ) external virtual returns (bytes4) {
-        return ERC1155TokenReceiver.onERC1155Received.selector;
-    }
-
-    function onERC1155BatchReceived(
-        address,
-        address,
-        uint256[] calldata,
-        uint256[] calldata,
-        bytes calldata
-    ) external virtual returns (bytes4) {
-        return ERC1155TokenReceiver.onERC1155BatchReceived.selector;
     }
 }

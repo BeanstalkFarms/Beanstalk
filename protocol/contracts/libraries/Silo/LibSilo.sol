@@ -10,6 +10,7 @@ import "../../C.sol";
 import "../LibAppStorage.sol";
 import "../LibPRBMath.sol";
 import "~/libraries/LibSafeMathSigned128.sol";
+import "~/libraries/LibSafeMathSigned96.sol";
 import "hardhat/console.sol";
 import "../LibSafeMath128.sol";
 
@@ -37,6 +38,7 @@ library LibSilo {
     using SafeMath for uint256;
     using LibSafeMath128 for uint128;
     using LibSafeMathSigned128 for int128;
+    using LibSafeMathSigned96 for int96;
     using LibPRBMath for uint256;
     
     //////////////////////// EVENTS ////////////////////////    

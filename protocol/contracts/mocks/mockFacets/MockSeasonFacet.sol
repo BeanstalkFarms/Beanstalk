@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "~/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
 import "../MockToken.sol";
+import "~/libraries/LibBytes.sol";
 
 /**
  * @author Publius
@@ -163,7 +164,10 @@ contract MockSeasonFacet is SeasonFacet {
     function resetAccountToken(address account, address token) public {
         uint32 _s = season();
         for (uint32 j; j <= _s; ++j) {
-            if (s.a[account].deposits[token][j].amount > 0) delete s.a[account].deposits[token][j];
+            bytes32 depositID = LibBytes.packAddressAndCumulativeStalkPerBDV(token,j);
+            if (s.a[account].deposits[depositID].amount > 0) delete s.a[account].deposits[depositID];
+            bytes32 depositID2 = LibBytes.packAddressAndCumulativeStalkPerBDV(token,j + s.season.withdrawSeasons);
+
             if (s.a[account].withdrawals[token][j+s.season.withdrawSeasons] > 0)
                 delete s.a[account].withdrawals[token][j+s.season.withdrawSeasons];
         }
