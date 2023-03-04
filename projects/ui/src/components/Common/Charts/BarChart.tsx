@@ -177,8 +177,8 @@ const BarChart: React.FC<{
   getY: (datum: any) => number;
   xTickFormat: (datum: any) => string;
   yTickFormat: (datum: any) => string;
-  onBarHoverEnter: (datum: object) => void;
-  onBarHoverLeave: (datum: object) => void;
+  onBarHoverEnter?: (datum: object) => void;
+  onBarHoverLeave?: (datum: object) => void;
 }> = ({
   seriesData,
   width,
@@ -187,8 +187,8 @@ const BarChart: React.FC<{
   getY,
   xTickFormat,
   yTickFormat,
-  onBarHoverEnter,
-  onBarHoverLeave,
+  onBarHoverEnter = () => {},
+  onBarHoverLeave = () => {},
 }) => {
   const [activeBarIndex, setActiveBarIndex] = useState<number | undefined>(
     undefined

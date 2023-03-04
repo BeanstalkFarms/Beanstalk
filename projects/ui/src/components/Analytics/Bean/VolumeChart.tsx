@@ -151,7 +151,6 @@ const VolumeChart: FC<{ width: number; height: number }> = ({
                 onBarHoverEnter={(datum) => {
                   setHoverBar(datum as BarChartDatum);
                 }}
-                onBarHoverLeave={() => setHoverBar(undefined)}
               />
             )}
           </ParentSize>
