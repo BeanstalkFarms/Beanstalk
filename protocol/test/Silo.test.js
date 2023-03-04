@@ -8,6 +8,7 @@ const { BEAN, BEANSTALK, BCM, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP } = require('
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { upgradeWithNewFacets } = require("../scripts/diamond");
 const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers");
+const { ConvertEncoder } = require('./utils/encoder.js')
 
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
@@ -201,6 +202,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
 
 
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond);
+    this.convert = await ethers.getContractAt('ConvertFacet', this.diamond);
     this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond);
     console.log('this.whitelist: ', this.whitelist);
     console.log('this.silo: ', this.silo.address);
@@ -209,8 +211,6 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
 
-
-    //large bean depositor is 0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4
 
 
 
@@ -441,7 +441,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
     });
   });
 
-  describe.only('Silo interaction tests after deploying grown stalk per bdv', function () {
+  describe('Silo interaction tests after deploying grown stalk per bdv', function () {
     it('attempt to withdraw before migrating', async function () {
       const depositorAddress = '0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4';
       const depositorSigner = await impersonateSigner(depositorAddress);
@@ -464,6 +464,36 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       //multi withdraw
       await expect(this.silo.connect(depositorSigner).withdrawDeposits(token, seasons, [to6('1'), to6('1')], EXTERNAL)).to.be.revertedWith('silo migration needed')
     });
-    
+
+    //attempt to convert before migrating
+    it('attempt to convert unripe LP before migrating', async function () {
+
+      const depositorAddress = '0x5e68bb3de6133baee55eeb6552704df2ec09a824';
+      const token = '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d';
+      const grownStalkPerBdv =  await this.silo.seasonToGrownStalkPerBdv(token, 6061);
+      await mintEth(depositorAddress);
+
+
+      const depositorSigner = await impersonateSigner(depositorAddress);
+      await this.silo.connect(depositorSigner);
+  
+      await expect(this.convert.connect(depositorSigner).convert(ConvertEncoder.convertUnripeLPToBeans(to6('7863'), to6('7500')), [grownStalkPerBdv], [to6('7863')])).to.be.revertedWith('Silo: mow failed')
+    });
+
+    it('attempt to convert unripe bean before migrating', async function () {
+      //price of bean doesn't even have to be over 1 for this test because a mow is required before
+      //any convert, and that will fail if the silo hasn't been migrated
+      const depositorAddress = '0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4';
+
+      const token = '0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449';
+
+      const grownStalkPerBdv =  await this.silo.seasonToGrownStalkPerBdv(token, 6074);
+      await mintEth(depositorAddress);
+
+      const depositorSigner = await impersonateSigner(depositorAddress);
+      await this.silo.connect(depositorSigner);
+  
+      await expect(this.convert.connect(depositorSigner).convert(ConvertEncoder.convertUnripeLPToBeans(to6('345000'), to6('340000')), [grownStalkPerBdv], [to6('345000')])).to.be.revertedWith('Silo: mow failed')
+    });    
   });
 });

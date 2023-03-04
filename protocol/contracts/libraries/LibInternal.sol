@@ -31,6 +31,6 @@ library LibInternal {
             token
         );
         (bool success, ) = address(facet).delegatecall(callData);
-        require(success, "Silo: update failed.");
+        require(success, "Silo: mow failed");
     }
 }
