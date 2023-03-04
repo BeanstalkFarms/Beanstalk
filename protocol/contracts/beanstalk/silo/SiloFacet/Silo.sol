@@ -119,7 +119,7 @@ contract Silo is SiloExit {
         //require that user account seeds be zero
         // require(_lastUpdate > 0 && _lastUpdate >= s.season.grownStalkPerBdvStartSeason, 'silo migration needed'); //will require storage cold read... is there a better way?
 
-        if((_lastUpdate != 0) && (_lastUpdate <= s.season.grownStalkPerBdvStartSeason)) revert('silo migration needed');
+        if((_lastUpdate != 0) && (_lastUpdate < s.season.grownStalkPerBdvStartSeason)) revert('silo migration needed');
 
 
         //sop stuff only needs to be updated once per season
