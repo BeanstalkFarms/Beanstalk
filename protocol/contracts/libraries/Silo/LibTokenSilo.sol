@@ -210,37 +210,18 @@ library LibTokenSilo {
         int96 grownStalkPerBdv,
         uint256 amount
     ) internal returns (uint256 crateBDV) {
-        console.log('removeDepositFromAccount account: ', account);
-        console.log('removeDepositFromAccount token: ', token);
-        console.log('removeDepositFromAccount logging grown stalk per bdv');
-        console.logInt(grownStalkPerBdv);
-        console.log('removeDepositFromAccount amount: ', amount);
         AppStorage storage s = LibAppStorage.diamondStorage();
         bytes32 depositId = LibBytes.packAddressAndCumulativeStalkPerBDV(token,grownStalkPerBdv);
-
-        console.log('--- removeDepositFromAccount s.a[account].deposits[token][grownStalkPerBdv].bdv: ', s.a[account].deposits[depositId].bdv);
-        console.log('--- removeDepositFromAccount s.a[account].deposits[token][grownStalkPerBdv].amount: ', s.a[account].deposits[depositId].amount);
-    
         Account.Deposit memory d = s.a[account].deposits[depositId];
         
         uint256 crateAmount;
-        (crateAmount, crateBDV) = (
-            d.amount,
-            d.bdv
-        );
-
-        console.log('removeDepositFromAccount crateAmount: ', crateAmount);
-        console.log('removeDepositFromAccount crateBDV: ', crateBDV);
+        (crateAmount, crateBDV) = (d.amount,d.bdv);
 
         // Partial remove
         if (amount < crateAmount) {
-            console.log('removeDepositFromAccount doing partial remove');
             uint256 removedBDV = amount.mul(crateBDV).div(crateAmount);
-            console.log('removeDepositFromAccount removedBDV: ', removedBDV);
             uint256 updatedBDV = crateBDV.sub(removedBDV);
-            console.log('removeDepositFromAccount updatedBDV: ', updatedBDV);
             uint256 updatedAmount = crateAmount.sub(amount);
-            console.log('removeDepositFromAccount updatedAmount: ', updatedAmount);
                 
             require(
                 updatedBDV <= uint128(-1) && updatedAmount <= uint128(-1), //this code was here before, but maybe there's a better way to do this?
@@ -249,19 +230,10 @@ library LibTokenSilo {
 
             s.a[account].deposits[depositId].amount = uint128(updatedAmount);
             s.a[account].deposits[depositId].bdv = uint128(updatedBDV);
-
-            //verify this has to be a different var?
-            uint256 updatedTotalBdvPartial = uint256(s.a[account].mowStatuses[token].bdv).sub(removedBDV);
-            console.log('removeDepositFromAccount updatedTotalBdvPartial: ', updatedTotalBdvPartial);
             //remove from the mow status bdv amount, which keeps track of total token deposited per farmer
-            console.log('removeDepositFromAccount s.a[account].mowStatuses[token].bdv before partial remove: ', uint256(s.a[account].mowStatuses[token].bdv));    
-            s.a[account].mowStatuses[token].bdv = updatedTotalBdvPartial.toUint128();
-            console.log('removeDepositFromAccount s.a[account].mowStatuses[token].bdv after partial remove: ', uint256(s.a[account].mowStatuses[token].bdv));    
-
+            s.a[account].mowStatuses[token].bdv = uint128(s.a[account].mowStatuses[token].bdv.sub(removedBDV));
             return removedBDV;
         }
-
-        console.log('removeDepositFromAccount doing full remove');
         // Full remove
         if (crateAmount > 0) delete s.a[account].deposits[depositId];
 
@@ -277,23 +249,12 @@ library LibTokenSilo {
             uint256 seedsPerToken = LibLegacyTokenSilo.getSeedsPerToken(token);
             require(LibLegacyTokenSilo.isDepositSeason(seedsPerToken, grownStalkPerBdv), "Must line up with season");
             amount -= crateAmount;
-
-
-            
             uint32 season = LibLegacyTokenSilo.grownStalkPerBdvToSeason(seedsPerToken, grownStalkPerBdv);
-            console.log('removeDepositFromAccount season: ', season);
             crateBDV = crateBDV.add(LibLegacyTokenSilo.removeDepositFromAccount(account, token, season, amount));
         }
 
-
-        console.log('attempting to update mow status');
-        console.log('s.a[account].mowStatuses[token].bdv: ', uint256(s.a[account].mowStatuses[token].bdv));
-        console.log('crateAmount: ', crateAmount);
-
         uint256 updatedTotalBdv = uint256(s.a[account].mowStatuses[token].bdv).sub(originalCrateBDV); //this will `SafeMath: subtraction overflow` if amount > crateAmount, but I want it to be able to call through to the Legacy stuff below for excess remove
         s.a[account].mowStatuses[token].bdv = uint128(updatedTotalBdv);
-        console.log('removeDepositFromAccount updatedTotalBdv: ', updatedTotalBdv);
-
     }
 
     //////////////////////// GETTERS ////////////////////////
