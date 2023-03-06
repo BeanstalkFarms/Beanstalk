@@ -205,7 +205,6 @@ const BarChart: React.FC<{
 
   return (
     <svg width={width} height={height}>
-      <rect width={width} height={height} fill="url(#teal)" rx={14} />
       <YAxis />
       <XAxis />
       <Group width={width - yAxisWidth}>
