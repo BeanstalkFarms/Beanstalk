@@ -113,18 +113,18 @@ contract Silo is SiloExit {
         uint32 _lastUpdate = lastUpdate(account);
 
         console.log('_mow _lastUpdate: ', _lastUpdate);
-        console.log('_mow s.season.grownStalkPerBdvStartSeason: ', s.season.grownStalkPerBdvStartSeason);
+        console.log('_mow s.season.stemStartSeason: ', s.season.stemStartSeason);
 
-        //if last update > 0 and < grownStalkPerBdvStartSeason
+        //if last update > 0 and < stemStartSeason
         //require that user account seeds be zero
-        // require(_lastUpdate > 0 && _lastUpdate >= s.season.grownStalkPerBdvStartSeason, 'silo migration needed'); //will require storage cold read... is there a better way?
+        // require(_lastUpdate > 0 && _lastUpdate >= s.season.stemStartSeason, 'silo migration needed'); //will require storage cold read... is there a better way?
 
-        if((_lastUpdate != 0) && (_lastUpdate < s.season.grownStalkPerBdvStartSeason)) revert('silo migration needed');
+        if((_lastUpdate != 0) && (_lastUpdate < s.season.stemStartSeason)) revert('silo migration needed');
 
 
         //sop stuff only needs to be updated once per season
         //if it started raininga nd it's still raining, or there was a sop
-        if (s.season.rainStart > s.season.grownStalkPerBdvStartSeason) {
+        if (s.season.rainStart > s.season.stemStartSeason) {
             if (_lastUpdate <= s.season.rainStart && _lastUpdate <= _season()) {
                 // Increments `plenty` for `account` if a Flood has occured.
                 // Saves Rain Roots for `account` if it is Raining.
@@ -144,21 +144,21 @@ contract Silo is SiloExit {
     function __mow(address account, address token) private {
         console.log('__mow, current season:', s.season.current);
 
-        int128 _cumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
-        int128 _lastCumulativeGrownStalkPerBdv =  s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv;
+        int128 _stemTip = LibTokenSilo.stemTipForToken(IERC20(token));
+        int128 _lastStem =  s.a[account].mowStatuses[token].lastStem;
         uint128 _bdv = s.a[account].mowStatuses[token].bdv;
         
         if (_bdv > 0) {
              // if account mowed the same token in the same season, skip
-            if (_lastCumulativeGrownStalkPerBdv == _cumulativeGrownStalkPerBdv) {
-                console.log('mow status lastCumulativeGrownStalkPerBdv was the same for token: ', token);
+            if (_lastStem == _stemTip) {
+                console.log('mow status lastStem was the same for token: ', token);
                 return;
             }
 
             //TODOSEEDS handle case where mow status hasn't been init'd, if last upadte season > 0 and older than update season
             uint256 grownStalk = _balanceOfGrownStalk(
-                _lastCumulativeGrownStalkPerBdv,
-                _cumulativeGrownStalkPerBdv,
+                _lastStem,
+                _stemTip,
                 _bdv
             ); // to remove 
             console.log('__mow grownStalk: ', grownStalk);
@@ -169,17 +169,17 @@ contract Silo is SiloExit {
             LibSilo.mintGrownStalkAndGrownRoots(
                 account,
                 _balanceOfGrownStalk(
-                    _lastCumulativeGrownStalkPerBdv,
-                    _cumulativeGrownStalkPerBdv,
+                    _lastStem,
+                    _stemTip,
                     _bdv
                 )
             );
         }
         console.log('mow status bdv was zero for token: ', token);
 
-        // If this `account` has no BDV, skip to save gas. Still need to update lastCumulativeGrownStalkPerBdv 
+        // If this `account` has no BDV, skip to save gas. Still need to update lastStem 
         // (happen on initial deposit, since mow is called before any deposit)
-        s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv = _cumulativeGrownStalkPerBdv;
+        s.a[account].mowStatuses[token].lastStem = _stemTip;
         return;
     }
      
@@ -187,9 +187,9 @@ contract Silo is SiloExit {
    function _migrateNoDeposits(address account) internal {
         require(s.a[account].s.seeds == 0, "only for zero seeds");
         uint32 _lastUpdate = lastUpdate(account);
-        require(_lastUpdate > 0 && _lastUpdate < s.season.grownStalkPerBdvStartSeason, "no migration needed");
+        require(_lastUpdate > 0 && _lastUpdate < s.season.stemStartSeason, "no migration needed");
 
-        s.a[account].lastUpdate = s.season.grownStalkPerBdvStartSeason;
+        s.a[account].lastUpdate = s.season.stemStartSeason;
     }
 
     //make some kind of init function for when silov3 is deployed
@@ -216,7 +216,7 @@ contract Silo is SiloExit {
         uint256 seedsTotalBasedOnInputDeposits = 0;
 
         // NOTE: this was used previously in lines 240, but since then is has been replaced with the function below:
-        // uint32 grownStalkPerBdvStartSeason = uint32(s.season.grownStalkPerBdvStartSeason);
+        // uint32 stemStartSeason = uint32(s.season.stemStartSeason);
 
         for (uint256 i = 0; i < tokens.length; i++) {
             address token = tokens[i];
@@ -235,13 +235,13 @@ contract Silo is SiloExit {
                 // uint256 seedsForDeposit = d.bdv * LibLegacyTokenSilo.getSeedsPerToken(address(token));
 
                 //calculate the amount of grown stalk for this deposit
-                // console.log('grown stalk for deposit: ', seedsForDeposit * LibLegacyTokenSilo.stalkReward(seedsForDeposit, grownStalkPerBdvStartSeason - season));
+                // console.log('grown stalk for deposit: ', seedsForDeposit * LibLegacyTokenSilo.stalkReward(seedsForDeposit, stemStartSeason - season));
 
                 // NOTE: this is replaced with the function below, to avoid the stack too deep error: 
                 // migrateData.totalGrownStalkForToken += uint128(
                 //     seedsForDeposit * LibLegacyTokenSilo.stalkReward(
                 //         seedsForDeposit, 
-                //         grownStalkPerBdvStartSeason - season
+                //         stemStartSeason - season
                 //     )
                 // );
                 migrateData.totalGrownStalkForToken += _calcGrownStalkForDeposit(
@@ -277,7 +277,7 @@ contract Silo is SiloExit {
             // console.log('totalBdv: ', totalBdv);
 
             //init mow status for this token
-            s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
+            s.a[account].mowStatuses[token].lastStem = LibTokenSilo.stemTipForToken(IERC20(token));
             s.a[account].mowStatuses[token].bdv = uint128(migrateData.totalBdv);
 
             int128 grownStalkIndexToDepositAt = LibTokenSilo.grownStalkAndBdvToCumulativeGrownStalk(
@@ -299,7 +299,7 @@ contract Silo is SiloExit {
             require(msg.sender == account, "deSynced seeds, only account can migrate");
         }
 
-        //and wipe out old seed balances (all your seeds are belong to grownStalkPerBdv)
+        //and wipe out old seed balances (all your seeds are belong to stem)
         s.a[account].s.seeds = 0;
     }
 
@@ -307,8 +307,8 @@ contract Silo is SiloExit {
         uint256 seedsForDeposit,
         uint32 season
     ) internal view returns (uint128 grownStalk) {
-        uint32 grownStalkPerBdvStartSeason = uint32(s.season.grownStalkPerBdvStartSeason);
-        return uint128(seedsForDeposit * LibLegacyTokenSilo.stalkReward(seedsForDeposit, grownStalkPerBdvStartSeason - season));
+        uint32 stemStartSeason = uint32(s.season.stemStartSeason);
+        return uint128(seedsForDeposit * LibLegacyTokenSilo.stalkReward(seedsForDeposit, stemStartSeason - season));
     }
 
 
@@ -345,7 +345,7 @@ contract Silo is SiloExit {
         LibTokenSilo.addDepositToAccount(
             account,
             C.beanAddress(),
-            LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)),
+            LibTokenSilo.stemTipForToken(IERC20(token)),
             beans, // amount
             beans // bdv
         );

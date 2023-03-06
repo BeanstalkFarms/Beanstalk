@@ -31,7 +31,7 @@ async function bip29(mock = true, account = undefined) {
       });
 }
 
-//BIP for Silo migration to grownStalkPerBdv
+//BIP for Silo migration to stem
 async function bipNewSilo(mock = true, account = undefined) {
     if (account == undefined) {
         account = await impersonateBeanstalkOwner()

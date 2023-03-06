@@ -58,7 +58,7 @@ contract Account {
 
     // This struct stores the mow status for each Silo-able token, for each farmer. This gets updated each time a farmer mows, or adds/removes deposits.
     struct MowStatus {
-        int128 lastCumulativeGrownStalkPerBdv; // the last cumulative grown stalk per bdv index at which the farmer mowed
+        int128 lastStem; // the last cumulative grown stalk per bdv index at which the farmer mowed
         uint128 bdv; // bdv of all of a farmer's deposits of this token type
     }
 
@@ -224,7 +224,7 @@ contract Storage {
         uint32 rainStart; // rainStart stores the most recent Season in which Rain started.
         bool raining; // True if it is Raining (P < 1, Pod Rate Excessively Low).
         bool fertilizing; // True if Beanstalk has Fertilizer left to be paid off.
-        uint16 grownStalkPerBdvStartSeason; //season in which the grownStalkPerBdv storage method starts
+        uint16 stemStartSeason; //season in which the stem storage method starts
         uint32 sunriseBlock;
         bool abovePeg;
         uint256 start; // The timestamp of the Beanstalk deployment rounded down to the nearest hour.
@@ -293,7 +293,7 @@ contract Storage {
         /*
          * @dev The cumulative amount of grown stalk per BDV for this Silo depositable token at the last stalkEarnedPerSeason update
          */
-		int128 milestoneGrownStalkPerBdv;
+		int128 milestoneStem;
     }
 
     // UnripeSettings stores the settings for an Unripe Token in Beanstalk.

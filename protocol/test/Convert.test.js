@@ -31,7 +31,7 @@ describe('Convert', function () {
 
     console.log('totalstalk 1: ', await this.silo.totalStalk());
 
-    //test setup includes making 2 deposits, one at grownStalkPerBdv of 1, and another deposit at 2
+    //test setup includes making 2 deposits, one at stem of 1, and another deposit at 2
 
     await this.bean.mint(userAddress, '1000000000');
     await this.bean.mint(user2Address, '1000000000');
@@ -41,7 +41,7 @@ describe('Convert', function () {
     await this.siloToken.mint(userAddress, '10000');
     await this.season.teleportSunrise(10);
 
-    this.season.deployGrownStalkPerBdv();
+    this.season.deployStemsUpgrade();
 
     await this.silo.mockWhitelistToken(
       this.siloToken.address, 
@@ -51,11 +51,11 @@ describe('Convert', function () {
     );
 
     await this.season.siloSunrise(0);
-    console.log('await this.silo.cumulativeGrownStalkPerBdv(this.siloToken.address): ', await this.silo.cumulativeGrownStalkPerBdv(this.siloToken.address));
+    console.log('await this.silo.stemTipForToken(this.siloToken.address): ', await this.silo.stemTipForToken(this.siloToken.address));
     await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL);
 
     await this.season.siloSunrise(0);
-    console.log('await this.silo.cumulativeGrownStalkPerBdv(this.siloToken.address): ', await this.silo.cumulativeGrownStalkPerBdv(this.siloToken.address));
+    console.log('await this.silo.stemTipForToken(this.siloToken.address): ', await this.silo.stemTipForToken(this.siloToken.address));
 
     await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL); //something about this deposit adds extra stalk
   });
@@ -71,22 +71,22 @@ describe('Convert', function () {
   describe('Withdraw For Convert', async function () {
     describe("Revert", async function () {
       it('diff lengths', async function () {
-        await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['1', '2'], ['100'], '100')).to.be.revertedWith('Convert: grownStalkPerBdvs, amounts are diff lengths.')
+        await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['1', '2'], ['100'], '100')).to.be.revertedWith('Convert: stems, amounts are diff lengths.')
       });
 
       it('crate balance too low', async function () {
-        //params are token, grownStalkPerBdv, amounts, maxtokens
+        //params are token, stem, amounts, maxtokens
         // await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['0'], ['150'], '150')).to.be.revertedWith('Silo: Crate balance too low.') //before moving to constants for the original 4 whitelisted tokens (post replant), this test would revert with 'Silo: Crate balance too low.', but now it reverts with 'Must line up with season' because there's no constant seeds amount hardcoded in for this test token
         await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['0'], ['150'], '150')).to.be.revertedWith('Must line up with season')
       });
 
       it('not enough removed', async function () {
-        console.log('await this.silo.cumulativeGrownStalkPerBdv(this.siloToken.address): ', await this.silo.cumulativeGrownStalkPerBdv(this.siloToken.address));
+        console.log('await this.silo.stemTipForToken(this.siloToken.address): ', await this.silo.stemTipForToken(this.siloToken.address));
         await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['2'], ['100'], '150')).to.be.revertedWith('Convert: Not enough tokens removed.')
       });
     })
 
-    //this test withdraws from grownStalkPerBdv index of 2, verifies they are removed correctly and stalk balances updated
+    //this test withdraws from stem index of 2, verifies they are removed correctly and stalk balances updated
     describe("Withdraw 1 Crate", async function () {
       beforeEach(async function () {
         this.result = await this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['2'], ['100'], '100');
@@ -120,7 +120,7 @@ describe('Convert', function () {
       })
     })
 
-    //this test withdraws from grownStalkPerBdv indexes of 2 and 1
+    //this test withdraws from stem indexes of 2 and 1
     describe("Withdraw 1 Crate 2 input", async function () {
       beforeEach(async function () {
         this.result = await this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['2', '1'], ['100', '100'], '100');
@@ -152,7 +152,7 @@ describe('Convert', function () {
       })
     })
 
-    //withdraws less than the full deposited amount from grownStalkPerBdv indexes of 2 and 1
+    //withdraws less than the full deposited amount from stem indexes of 2 and 1
     describe("Withdraw 2 Crates exact", async function () {
       beforeEach(async function () {
         this.result = await this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['1', '2'], ['100', '50'], '150');

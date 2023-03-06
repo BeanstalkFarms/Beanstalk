@@ -34,21 +34,21 @@ contract TokenSilo is Silo {
      * @notice Emitted when `account` adds a single Deposit to the Silo.
      *
      * There is no "AddDeposits" event because there is currently no operation in which Beanstalk
-     * creates multiple Deposits in different grownStalkPerBdvs:
+     * creates multiple Deposits in different stems:
      *
      *  - `deposit()` always places the user's deposit in the current `_season()`.
      *  - `convert()` collapses multiple deposits into a single Season to prevent loss of Stalk.
      *
      * @param account The account that added a Deposit.
      * @param token Address of the whitelisted ERC20 token that was deposited.
-     * @param grownStalkPerBdv The grownStalkPerBdv index that this `amount` was added to.
-     * @param amount Amount of `token` added to `grownStalkPerBdv`.
+     * @param stem The stem index that this `amount` was added to.
+     * @param amount Amount of `token` added to `stem`.
      * @param bdv The BDV associated with `amount` of `token` at the time of Deposit.
      */
     event AddDeposit(
         address indexed account,
         address indexed token,
-        int128 grownStalkPerBdv,
+        int128 stem,
         uint256 amount,
         uint256 bdv
     );
@@ -60,14 +60,14 @@ contract TokenSilo is Silo {
      * 
      * @param account The account that removed a Deposit.
      * @param token Address of the whitelisted ERC20 token that was removed.
-     * @param grownStalkPerBdv The grownStalkPerBdv that this `amount` was removed from.
-     * @param amount Amount of `token` removed from `grownStalkPerBdv`.
+     * @param stem The stem that this `amount` was removed from.
+     * @param amount Amount of `token` removed from `stem`.
      * //add bdv here?
      */
     event RemoveDeposit(
         address indexed account,
         address indexed token,
-        int128 grownStalkPerBdv,
+        int128 stem,
         uint256 amount,
         uint256 bdv
     );
@@ -81,14 +81,14 @@ contract TokenSilo is Silo {
      *
      * @param account The account that removed Deposits.
      * @param token Address of the whitelisted ERC20 token that was removed.
-     * @param grownStalkPerBdvs grownStalkPerBdvs of Deposit to remove from.
-     * @param amounts Amounts of `token` to remove from corresponding `grownStalkPerBdvs`.
+     * @param stems stems of Deposit to remove from.
+     * @param amounts Amounts of `token` to remove from corresponding `stems`.
      * @param amount Sum of `amounts`.
      */
     event RemoveDeposits(
         address indexed account,
         address indexed token,
-        int128[] grownStalkPerBdvs,
+        int128[] stems,
         uint256[] amounts,
         uint256 amount,
         uint256[] bdvs
@@ -122,7 +122,7 @@ contract TokenSilo is Silo {
     //////////////////////// GETTERS ////////////////////////
 
     /**
-     * @notice Find the amount and BDV of `token` that `account` has Deposited in grownStalkPerBdv `grownStalkPerBdv`.
+     * @notice Find the amount and BDV of `token` that `account` has Deposited in stem `stem`.
      * 
      * Returns a deposit tuple `(uint256 amount, uint256 bdv)`.
      *
@@ -132,9 +132,9 @@ contract TokenSilo is Silo {
     function getDeposit(
         address account,
         address token,
-        int128 grownStalkPerBdv
+        int128 stem
     ) external view returns (uint256, uint256) {
-        return LibTokenSilo.tokenDeposit(account, token, grownStalkPerBdv);
+        return LibTokenSilo.tokenDeposit(account, token, stem);
     }
 
     /**
@@ -159,7 +159,7 @@ contract TokenSilo is Silo {
      *  - Stalk per BDV
      *  - stalkEarnedPerSeason
      *  - milestoneSeason
-     *  - lastCumulativeGrownStalkPerBdv
+     *  - lastStem
      * 
      * @dev FIXME(naming) getTokenSettings ?
      */
@@ -196,7 +196,7 @@ contract TokenSilo is Silo {
      *   the Deposit.
      * 
      * This step should enforce that new Deposits are placed into the current 
-     * `LibTokenSilo.cumulativeGrownStalkPerBdv(token)`.
+     * `LibTokenSilo.stemTipForToken(token)`.
      */
     function _deposit(
         address account,
@@ -207,7 +207,7 @@ contract TokenSilo is Silo {
         (uint256 stalk) = LibTokenSilo.deposit(
             account,
             token,
-            LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)),
+            LibTokenSilo.stemTipForToken(IERC20(token)),
             amount
         );
         console.log('_deposit now mint stalk: ', stalk);
@@ -222,14 +222,14 @@ contract TokenSilo is Silo {
     function _withdrawDeposit(
         address account,
         address token,
-        int128 grownStalkPerBdv,
+        int128 stem,
         uint256 amount
     ) internal {
         // Remove the Deposit from `account`.
         (uint256 stalkRemoved, ) = removeDepositFromAccount(
             account,
             token,
-            grownStalkPerBdv,
+            stem,
             amount
         );
         console.log('_withdrawDeposit stalkRemoved: ', stalkRemoved);
@@ -247,16 +247,16 @@ contract TokenSilo is Silo {
      * sum of their contents.
      *
      * Requirements:
-     * - Each item in `grownStalkPerBdvs` must have a corresponding item in `amounts`.
+     * - Each item in `stems` must have a corresponding item in `amounts`.
      */
     function _withdrawDeposits(
         address account,
         address token,
-        int128[] calldata grownStalkPerBdvs,
+        int128[] calldata stems,
         uint256[] calldata amounts
     ) internal returns (uint256) {
         require(
-            grownStalkPerBdvs.length == amounts.length,
+            stems.length == amounts.length,
             "Silo: Crates, amounts are diff lengths."
         );
 
@@ -264,7 +264,7 @@ contract TokenSilo is Silo {
         AssetsRemoved memory ar = removeDepositsFromAccount(
             account,
             token,
-            grownStalkPerBdvs,
+            stems,
             amounts
         );
 
@@ -313,7 +313,7 @@ contract TokenSilo is Silo {
     function removeDepositFromAccount(
         address account,
         address token,
-        int128 grownStalkPerBdv,
+        int128 stem,
         uint256 amount
     )
         private
@@ -322,19 +322,19 @@ contract TokenSilo is Silo {
             uint256 bdvRemoved
         )
     {
-        bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, grownStalkPerBdv, amount);
+        bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, stem, amount);
         console.log('s.ss[token].stalk: ', s.ss[token].stalkIssuedPerBdv);
         console.log('bdvRemoved.mul(s.ss[token].stalk: ', bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv));
-        console.log('removeDepositFromAccount grownStalkPerBdv: ');
-        console.logInt(grownStalkPerBdv);
+        console.log('removeDepositFromAccount stem: ');
+        console.logInt(stem);
 
-        console.log('removeDepositFromAccount cumulativeGrownStalkPerBdv: ');
-        console.logInt(LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)));
+        console.log('removeDepositFromAccount stemTipForToken: ');
+        console.logInt(LibTokenSilo.stemTipForToken(IERC20(token)));
         console.log('removeDepositFromAccount bdvRemoved: ', bdvRemoved);
 
         uint256 stalkReward = LibSilo.stalkReward(
-                grownStalkPerBdv, //this is the index of when it was deposited
-                LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)), //this is latest for this token
+                stem, //this is the index of when it was deposited
+                LibTokenSilo.stemTipForToken(IERC20(token)), //this is latest for this token
                 bdvRemoved.toUint128()
             );
         console.log('removeDepositFromAccount stalkReward: ', stalkReward);
@@ -343,14 +343,14 @@ contract TokenSilo is Silo {
         //need to get amount of stalk earned by this deposit (index of now minus index of when deposited)
         stalkRemoved = bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv).add(
             LibSilo.stalkReward(
-                grownStalkPerBdv, //this is the index of when it was deposited
-                LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)), //this is latest for this token
+                stem, //this is the index of when it was deposited
+                LibTokenSilo.stemTipForToken(IERC20(token)), //this is latest for this token
                 bdvRemoved.toUint128()
             )
         );
         console.log('removeDepositFromAccount stalkRemoved: ', stalkRemoved);
 
-        emit RemoveDeposit(account, token, grownStalkPerBdv, amount, bdvRemoved);
+        emit RemoveDeposit(account, token, stem, amount, bdvRemoved);
     }
 
     /**
@@ -364,17 +364,17 @@ contract TokenSilo is Silo {
     function removeDepositsFromAccount(
         address account,
         address token,
-        int128[] calldata grownStalkPerBdvs,
+        int128[] calldata stems,
         uint256[] calldata amounts
     ) internal returns (AssetsRemoved memory ar) {
         console.log('removeDepositsFromAccount: ', account);
         //make bdv array and add here?
-        uint256[] memory bdvsRemoved = new uint256[](grownStalkPerBdvs.length);
-        for (uint256 i; i < grownStalkPerBdvs.length; ++i) {
+        uint256[] memory bdvsRemoved = new uint256[](stems.length);
+        for (uint256 i; i < stems.length; ++i) {
             uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 account,
                 token,
-                grownStalkPerBdvs[i],
+                stems[i],
                 amounts[i]
             );
             bdvsRemoved[i] = crateBdv;
@@ -383,8 +383,8 @@ contract TokenSilo is Silo {
             console.log('s.ss[token].stalkIssuedPerBdv: ', s.ss[token].stalkIssuedPerBdv);
             ar.stalkRemoved = ar.stalkRemoved.add(
                 LibSilo.stalkReward(
-                    grownStalkPerBdvs[i],
-                    LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)),
+                    stems[i],
+                    LibTokenSilo.stemTipForToken(IERC20(token)),
                     crateBdv.toUint128()
                 )
             );
@@ -397,7 +397,7 @@ contract TokenSilo is Silo {
         console.log('2 ar.stalkRemoved: ', ar.stalkRemoved);
 
         //need to add BDV array here
-        emit RemoveDeposits(account, token, grownStalkPerBdvs, amounts, ar.tokensRemoved, bdvsRemoved);
+        emit RemoveDeposits(account, token, stems, amounts, ar.tokensRemoved, bdvsRemoved);
     }
 
     //////////////////////// TRANSFER ////////////////////////
@@ -411,16 +411,16 @@ contract TokenSilo is Silo {
         address sender,
         address recipient,
         address token,
-        int128 grownStalkPerBdvs,
+        int128 stems,
         uint256 amount
     ) internal returns (uint256) {
         (uint256 stalk, uint256 bdv) = removeDepositFromAccount(
             sender,
             token,
-            grownStalkPerBdvs,
+            stems,
             amount
         );
-        LibTokenSilo.addDepositToAccount(recipient, token, grownStalkPerBdvs, amount, bdv);
+        LibTokenSilo.addDepositToAccount(recipient, token, stems, amount, bdv);
         LibSilo.transferStalk(sender, recipient, stalk);
         return bdv;
     }
@@ -434,30 +434,30 @@ contract TokenSilo is Silo {
         address sender,
         address recipient,
         address token,
-        int128[] calldata grownStalkPerBdvs,
+        int128[] calldata stems,
         uint256[] calldata amounts
     ) internal returns (uint256[] memory) {
         require(
-            grownStalkPerBdvs.length == amounts.length,
+            stems.length == amounts.length,
             "Silo: Crates, amounts are diff lengths."
         );
 
         AssetsRemoved memory ar;
-        uint256[] memory bdvs = new uint256[](grownStalkPerBdvs.length);
+        uint256[] memory bdvs = new uint256[](stems.length);
 
         // Similar to {removeDepositsFromAccount}, however the Deposit is also 
         // added to the recipient's account during each iteration.
-        for (uint256 i; i < grownStalkPerBdvs.length; ++i) {
+        for (uint256 i; i < stems.length; ++i) {
             uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 sender,
                 token,
-                grownStalkPerBdvs[i],
+                stems[i],
                 amounts[i]
             );
             LibTokenSilo.addDepositToAccount(
                 recipient,
                 token,
-                grownStalkPerBdvs[i],
+                stems[i],
                 amounts[i],
                 crateBdv
             );
@@ -465,8 +465,8 @@ contract TokenSilo is Silo {
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
             ar.stalkRemoved = ar.stalkRemoved.add(
                 LibSilo.stalkReward(
-                    grownStalkPerBdvs[i],
-                    LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)),
+                    stems[i],
+                    LibTokenSilo.stemTipForToken(IERC20(token)),
                     crateBdv.toUint128()
                 )
             );
@@ -477,7 +477,7 @@ contract TokenSilo is Silo {
             ar.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)
         );
 
-        emit RemoveDeposits(sender, token, grownStalkPerBdvs, amounts, ar.tokensRemoved, bdvs);
+        emit RemoveDeposits(sender, token, stems, amounts, ar.tokensRemoved, bdvs);
 
         // Transfer all the Stalk
         LibSilo.transferStalk(

@@ -24,7 +24,7 @@ describe('Sop', function () {
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL)
     this.beanMetapool = await ethers.getContractAt('IMockCurvePool', BEAN_3_CURVE)
 
-    this.season.deployGrownStalkPerBdv();
+    this.season.deployStemsUpgrade();
     
     await this.season.siloSunrise(0)
 

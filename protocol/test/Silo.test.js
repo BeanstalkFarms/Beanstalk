@@ -25,7 +25,7 @@ describe('Silo', function () {
     
     await this.season.teleportSunrise(10);
 
-    this.season.deployGrownStalkPerBdv();
+    this.season.deployStemsUpgrade();
 
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('Bean', BEAN);
@@ -66,7 +66,7 @@ describe('Silo', function () {
 
   describe('Silo Balances After Withdrawal', function () {
     beforeEach(async function () {
-      await this.silo.connect(user).withdrawDeposit(this.bean.address, '2', to6('500'), EXTERNAL) //we deposited at grownStalkPerBdv of 2, need to withdraw from 2
+      await this.silo.connect(user).withdrawDeposit(this.bean.address, '2', to6('500'), EXTERNAL) //we deposited at stem of 2, need to withdraw from 2
     })
 
     it('properly updates the total balances', async function () {

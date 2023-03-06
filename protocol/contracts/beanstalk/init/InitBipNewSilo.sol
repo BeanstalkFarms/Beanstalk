@@ -36,32 +36,32 @@ contract InitBipNewSilo {
         s.ss[C.beanAddress()].stalkEarnedPerSeason = 2*1e6;
         s.ss[C.beanAddress()].stalkIssuedPerBdv = 10000;
         s.ss[C.beanAddress()].milestoneSeason = currentSeason;
-        s.ss[C.beanAddress()].milestoneGrownStalkPerBdv = 0;
+        s.ss[C.beanAddress()].milestoneStem = 0;
 
 
         s.ss[C.curveMetapoolAddress()].stalkEarnedPerSeason = 4*1e6;
         s.ss[C.curveMetapoolAddress()].stalkIssuedPerBdv = 10000;
         s.ss[C.curveMetapoolAddress()].milestoneSeason = currentSeason;
-        s.ss[C.curveMetapoolAddress()].milestoneGrownStalkPerBdv = 0;
+        s.ss[C.curveMetapoolAddress()].milestoneStem = 0;
 
 
         s.ss[C.unripeBeanAddress()].stalkEarnedPerSeason = 2*1e6;
         s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv = 10000;
         s.ss[C.unripeBeanAddress()].milestoneSeason = currentSeason;
-        s.ss[C.unripeBeanAddress()].milestoneGrownStalkPerBdv = 0;
+        s.ss[C.unripeBeanAddress()].milestoneStem = 0;
 
 
         s.ss[address(C.unripeLP())].stalkEarnedPerSeason = 2*1e6;
         s.ss[address(C.unripeLP())].stalkIssuedPerBdv = 10000;
         s.ss[address(C.unripeLP())].milestoneSeason = currentSeason;
-        s.ss[address(C.unripeLP())].milestoneGrownStalkPerBdv = 0;
+        s.ss[address(C.unripeLP())].milestoneStem = 0;
 
         //emit event for unripe LP from 4 to 2 grown stalk per bdv per season
         emit UpdatedStalkPerBdvPerSeason(address(C.unripeLP()), 2, s.season.current);
 
 
 
-        //set the grownStalkPerBdvStartSeason to the current season
-        s.season.grownStalkPerBdvStartSeason = uint16(s.season.current); //storing as uint16 to save storage space
+        //set the stemStartSeason to the current season
+        s.season.stemStartSeason = uint16(s.season.current); //storing as uint16 to save storage space
     }
 }

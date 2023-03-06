@@ -16,11 +16,11 @@ import "~/interfaces/IDelegation.sol";
 
 /// @notice Silo deposit transfer
 /// @param token a whitelisted silo token address
-/// @param grownStalkPerBdvs a list of deposit grownStalkPerBdvs
+/// @param stems a list of deposit stems
 /// @param amounts a list of deposit amount
 struct DepositTransfer {
     address token;
-    uint32[] grownStalkPerBdvs;
+    uint32[] stems;
     uint256[] amounts;
 }
 
@@ -178,37 +178,37 @@ contract Root is UUPSUpgradeable, ERC20PermitUpgradeable, OwnableUpgradeable {
 
     /// @notice Update bdv of a silo deposit and underlyingBdv
     /// @dev Will revert if bdv doesn't increase
-    function updateBdv(address token, uint32 grownStalkPerBdv) external {
-        _updateBdv(token, grownStalkPerBdv);
+    function updateBdv(address token, uint32 stem) external {
+        _updateBdv(token, stem);
     }
 
     /// @notice Update Bdv of multiple silo deposits and underlyingBdv
     /// @dev Will revert if the bdv of the deposits doesn't increase
-    function updateBdvs(address[] calldata tokens, uint128[] calldata grownStalkPerBdvs)
+    function updateBdvs(address[] calldata tokens, uint128[] calldata stems)
         external
     {
         for (uint256 i; i < tokens.length; ++i) {
-            _updateBdv(tokens[i], grownStalkPerBdvs[i]);
+            _updateBdv(tokens[i], stems[i]);
         }
     }
 
     /// @notice Update silo deposit bdv and underlyingBdv
     /// @dev Will revert if the BDV doesn't increase
-    function _updateBdv(address token, uint32 grownStalkPerBdv) internal {
+    function _updateBdv(address token, uint32 stem) internal {
         require(token != address(0), "Bdv: Non-zero token address required");
         (uint256 amount, ) = IBeanstalk(BEANSTALK_ADDRESS).getDeposit(
             address(this),
             token,
-            grownStalkPerBdv
+            stem
         );
-        uint32[] memory grownStalkPerBdvs = new uint32[](1);
-        grownStalkPerBdvs[0] = grownStalkPerBdv;
+        uint32[] memory stems = new uint32[](1);
+        stems[0] = stem;
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = amount;
         (, , , uint256 fromBdv, uint256 toBdv) = IBeanstalk(BEANSTALK_ADDRESS)
             .convert(
                 abi.encode(ConvertKind.LAMBDA_LAMBDA, amount, token),
-                grownStalkPerBdvs,
+                stems,
                 amounts
             );
         underlyingBdv += toBdv - fromBdv;

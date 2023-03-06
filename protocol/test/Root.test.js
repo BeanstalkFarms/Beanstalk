@@ -1,5 +1,5 @@
 /*
-//commenting out these tests for Silo v3 (grownStalkPerBdv transition), Root team working on new version of root token on another repo.
+//commenting out these tests for Silo v3 (stem transition), Root team working on new version of root token on another repo.
 const { expect } = require("chai");
 const { deploy } = require("../scripts/deploy.js");
 const {

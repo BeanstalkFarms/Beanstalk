@@ -113,7 +113,7 @@ describe('Unripe Convert', function () {
     describe('revert', async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
-        this.season.deployGrownStalkPerBdv();
+        this.season.deployStemsUpgrade();
       });
       it('not enough LP', async function () {
         await this.silo.connect(user).deposit(this.unripeBean.address, to6('200'), EXTERNAL);
@@ -132,7 +132,7 @@ describe('Unripe Convert', function () {
     describe('basic', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
-        this.season.deployGrownStalkPerBdv();
+        this.season.deployStemsUpgrade();
       });
       beforeEach(async function () {
         await this.silo.connect(user).deposit(this.unripeBean.address, to6('2000'), EXTERNAL);
@@ -170,7 +170,7 @@ describe('Unripe Convert', function () {
     describe('multiple crates', async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
-        this.season.deployGrownStalkPerBdv();
+        this.season.deployStemsUpgrade();
         await this.silo.connect(user).deposit(this.unripeBean.address, to6('1000'), EXTERNAL);
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
@@ -180,10 +180,10 @@ describe('Unripe Convert', function () {
         await this.silo.connect(user).deposit(this.unripeBean.address, to6('1000'), EXTERNAL);
 
 
-        const grownStalkPerBdvUnripeBean = await this.silo.seasonToGrownStalkPerBdv(this.unripeBean.address, '14');
-        console.log('in beforeeach grownStalkPerBdvUnripeBean: ', grownStalkPerBdvUnripeBean);
+        const stemUnripeBean = await this.silo.seasonToStem(this.unripeBean.address, '14');
+        console.log('in beforeeach stemUnripeBean: ', stemUnripeBean);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
-        this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeBeansToLP(to6('2500'), to6('1900')), [0, grownStalkPerBdvUnripeBean], [to6('1000'), to6('1000')])
+        this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeBeansToLP(to6('2500'), to6('1900')), [0, stemUnripeBean], [to6('1000'), to6('1000')])
       });
 
       it('properly updates total values', async function () {
@@ -197,19 +197,19 @@ describe('Unripe Convert', function () {
       });
 
       it('properly updates user deposits', async function () {
-        const grownStalkPerBdvUnripeBean = await this.silo.seasonToGrownStalkPerBdv(this.unripeBean.address, '14');
-        console.log('in test grownStalkPerBdvUnripeBean: ', grownStalkPerBdvUnripeBean);
+        const stemUnripeBean = await this.silo.seasonToStem(this.unripeBean.address, '14');
+        console.log('in test stemUnripeBean: ', stemUnripeBean);
         expect((await this.silo.getDeposit(userAddress, this.unripeBean.address, 0))[0]).to.eq(toBean('0'));
-        expect((await this.silo.getDeposit(userAddress, this.unripeBean.address, grownStalkPerBdvUnripeBean))[0]).to.eq(toBean('0'));
+        expect((await this.silo.getDeposit(userAddress, this.unripeBean.address, stemUnripeBean))[0]).to.eq(toBean('0'));
         const deposit = await this.silo.getDeposit(userAddress, this.unripeLP.address, 4);
         expect(deposit[0]).to.eq('2008324306');
         expect(deposit[1]).to.eq(toBean('200'));
       });
 
       it('emits events', async function () {
-        const grownStalkPerBdvUnripeBean = await this.silo.seasonToGrownStalkPerBdv(this.unripeBean.address, '14');
+        const stemUnripeBean = await this.silo.seasonToStem(this.unripeBean.address, '14');
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
-          .withArgs(userAddress, this.unripeBean.address, [0, grownStalkPerBdvUnripeBean], [to6('1000'), to6('1000')], to6('2000'), [to6('100'), to6('100')]);
+          .withArgs(userAddress, this.unripeBean.address, [0, stemUnripeBean], [to6('1000'), to6('1000')], to6('2000'), [to6('100'), to6('100')]);
         await expect(this.result).to.emit(this.silo, 'AddDeposit')
           .withArgs(userAddress, this.unripeLP.address, 4, '2008324306', toBean('200'));
       });
@@ -218,7 +218,7 @@ describe('Unripe Convert', function () {
     describe("bean more vested", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
-        this.season.deployGrownStalkPerBdv();
+        this.season.deployStemsUpgrade();
         await this.unripe.connect(owner).addUnderlying(
           UNRIPE_BEAN,
           to6('1000')
@@ -258,7 +258,7 @@ describe('Unripe Convert', function () {
     describe("lp more vested", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
-        this.season.deployGrownStalkPerBdv();
+        this.season.deployStemsUpgrade();
         await this.unripe.connect(user).addUnderlyingWithRecap(
           UNRIPE_LP,
           to18('942.2960000')
@@ -297,7 +297,7 @@ describe('Unripe Convert', function () {
   describe('convert lp to beans', async function () {
     beforeEach(async function () {
       await this.season.teleportSunrise(10);
-      this.season.deployGrownStalkPerBdv();
+      this.season.deployStemsUpgrade();
     });
 
     describe('revert', async function () {
@@ -336,7 +336,7 @@ describe('Unripe Convert', function () {
       });
     });
 
-    //these tests use the new 2 seeds per bdv instead of previous 4 (note in the beforeEach above that deployGrownStalkPerBdv is called)
+    //these tests use the new 2 seeds per bdv instead of previous 4 (note in the beforeEach above that deployStemsUpgrade is called)
     describe('multiple crates', function () {
       beforeEach(async function () {
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));

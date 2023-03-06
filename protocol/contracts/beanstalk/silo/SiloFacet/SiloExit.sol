@@ -135,24 +135,24 @@ contract SiloExit is ReentrancyGuard {
         view
         returns (uint256)
     {
-        //need to fetch last updated grownStalkPerBdv for this deposit and current grownStalkPerBdv
+        //need to fetch last updated stem for this deposit and current stem
         return
             _balanceOfGrownStalk(
-                s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv, //last GSPBDV farmer mowed
-                LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)), //get latest grown stalk per bdv for this token
+                s.a[account].mowStatuses[token].lastStem, //last GSPBDV farmer mowed
+                LibTokenSilo.stemTipForToken(IERC20(token)), //get latest grown stalk per bdv for this token
                 s.a[account].mowStatuses[token].bdv
             );
     }
 
     function _balanceOfGrownStalk(
-        int128 lastCumulativeGrownStalkPerBdv,
+        int128 lastStem,
         int128 endStalkPerBDV,
         uint128 bdv
     ) internal view returns (uint256)
     {
         return
             LibSilo.stalkReward(
-                lastCumulativeGrownStalkPerBdv, //last GSPBDV farmer mowed
+                lastStem, //last GSPBDV farmer mowed
                 endStalkPerBDV, //get latest grown stalk per bdv for this token
                 bdv
             );
