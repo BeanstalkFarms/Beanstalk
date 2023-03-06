@@ -251,7 +251,7 @@ contract Silo is SiloExit {
                 );
 
                 //withdraw this deposit
-                uint256 crateBDV = LibLegacyTokenSilo.removeDepositFromAccount(
+                LibLegacyTokenSilo.removeDepositFromAccount(
                                     account,
                                     token,
                                     season,
@@ -341,15 +341,12 @@ contract Silo is SiloExit {
 
         // Reduce the Silo's supply of Earned Beans.
         s.earnedBeans = s.earnedBeans.sub(uint128(beans));
-
-        bytes32 depositId = LibBytes.packAddressAndCumulativeStalkPerBDV(
-            C.beanAddress(), 
-            LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token))
-        );
+        
         // Deposit Earned Beans if there are any. Note that 1 Bean = 1 BDV.
         LibTokenSilo.addDepositToAccount(
             account,
-            depositId,
+            C.beanAddress(), 
+            LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)),
             beans, // amount
             beans // bdv
         );

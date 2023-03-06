@@ -9,7 +9,6 @@ import "./TokenSilo.sol";
 import "~/beanstalk/ReentrancyGuard.sol";
 import "~/libraries/Token/LibTransfer.sol";
 import "~/libraries/Silo/LibSiloPermit.sol";
-import "~/libraries/LibBytes.sol";
 
 
 /**
@@ -46,16 +45,14 @@ contract SiloFacet is TokenSilo {
      *  3. Create or update a Deposit entry for `account` in the current Season.
      *  4. Mint Stalk to `account`.
      *  5. Emit an `AddDeposit` event.
-     * note: changed name to `depositERC20` as in the future, when we deposit ERC721 or ERC1155, 
-     * 1) it would need a different way to make a deposit (hashing)
-     * 2) it conserves backwards compatibility
-     * alternative solution: make the input a bytes32 depositID
+     * note: changed added a generic bytes calldata to allow for ERC721 + ERC1155 deposits
      * 
      * FIXME(logic): return `(amount, bdv(, season))`
      */
-    function depositERC20(
+    function deposit(
         address token,
         uint256 amount,
+        bytes calldata,
         LibTransfer.From mode
     ) external payable nonReentrant mowSender(token) {
         amount = LibTransfer.receiveToken(
@@ -93,10 +90,11 @@ contract SiloFacet is TokenSilo {
      * 2) it conserves backwards compatibility
      * alternative solution: make the input a bytes32 depositID
      */
-    function withdrawERC20Deposit(
+    function withdrawDeposit(
         address token,
         int96 grownStalkPerBdv,
         uint256 amount,
+        bytes calldata,
         LibTransfer.To mode
     ) external payable mowSender(token) nonReentrant {
         _withdrawDeposit(msg.sender, token, grownStalkPerBdv, amount);
@@ -122,10 +120,11 @@ contract SiloFacet is TokenSilo {
      * alternative solution: make the input a bytes32 depositID
      */
     // i.e withdraw ERC20, ERC721, and ERC1155 in a single call
-    function withdrawERC20Deposits(
+    function withdrawDeposits(
         address token,
         int96[] calldata grownStalkPerBdvs,
         uint256[] calldata amounts,
+        bytes[] calldata,
         LibTransfer.To mode
     ) external payable mowSender(token) nonReentrant {
         uint256 amount = _withdrawDeposits(msg.sender, token, grownStalkPerBdvs, amounts);
@@ -154,12 +153,13 @@ contract SiloFacet is TokenSilo {
      * 2) it conserves backwards compatibility later 
      * alternative solution: make the input a bytes32 depositID
      */
-    function transferERC20Deposit(
+    function transferDeposit(
         address sender,
         address recipient,
         address token,
         int96 grownStalkPerBdv,
-        uint256 amount
+        uint256 amount,
+        bytes calldata
     ) public payable nonReentrant returns (uint256 bdv) {
         if (sender != msg.sender) {
             _spendDepositAllowance(sender, msg.sender, token, amount);
@@ -186,12 +186,13 @@ contract SiloFacet is TokenSilo {
      * `recipient` need their Silo updated, since both accounts experience a
      * change in Seeds. See {Silo-_mow}.
      */
-    function transferERC20Deposits(
+    function transferDeposits(
         address sender,
         address recipient,
         address token,
         int96[] calldata grownStalkPerBdv,
-        uint256[] calldata amounts
+        uint256[] calldata amounts,
+        bytes[] calldata
     ) public payable nonReentrant returns (uint256[] memory bdvs) {
         require(amounts.length > 0, "Silo: amounts array is empty");
         for (uint256 i = 0; i < amounts.length; i++) {
@@ -213,18 +214,19 @@ contract SiloFacet is TokenSilo {
         address recipient, 
         uint256 depositId, 
         uint256 amount, 
-        bytes calldata
+        bytes calldata depositData
     ) external override nonReentrant {
         (address token, int96 cumulativeGrownStalkPerBDV) = 
             LibBytes.getAddressAndCumulativeStalkPerBDVFromBytes(
                 bytes32(depositId)
             );
-        transferERC20Deposit(
+        transferDeposit(
             sender, 
             recipient,
             token, 
             cumulativeGrownStalkPerBDV, 
-            amount
+            amount,
+            depositData
         );
     }
 
@@ -233,7 +235,7 @@ contract SiloFacet is TokenSilo {
         address recipient, 
         uint256[] calldata depositIDs, 
         uint256[] calldata amounts, 
-        bytes calldata
+        bytes calldata depositsData
     ) external override nonReentrant {
         require(depositIDs.length == amounts.length, "Silo: depositIDs and amounts arrays must be the same length");
         address token;
@@ -243,12 +245,13 @@ contract SiloFacet is TokenSilo {
                 LibBytes.getAddressAndCumulativeStalkPerBDVFromBytes(
                     bytes32(depositIDs[i])
                 );
-            transferERC20Deposit(
+            transferDeposit(
                 sender, 
                 recipient,
                 token, 
                 cumulativeGrownStalkPerBDV, 
-                amounts[i]
+                amounts[i],
+                depositsData
             );
         }
     }
@@ -482,8 +485,7 @@ contract SiloFacet is TokenSilo {
         // Calculate the current BDV for `amount` of `token` and add a Deposit.
         uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
         console.log('newBDV: ', newBDV);
-        bytes32 depositID = LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdv);
-        LibTokenSilo.addDepositToAccount(msg.sender, depositID, amount, newBDV); // emits AddDeposit event
+        LibTokenSilo.addDepositToAccount(msg.sender, token, grownStalkPerBdv, amount, newBDV); // emits AddDeposit event
 
         // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
         uint256 deltaBDV = newBDV.sub(ogBDV);
@@ -532,10 +534,10 @@ contract SiloFacet is TokenSilo {
         // summate new Stalk.
         for (uint256 i; i < grownStalkPerBdvs.length; ++i) {
             uint256 bdv = amounts[i].mul(newBDV).div(ar.tokensRemoved); // Cheaper than calling the BDV function multiple times.
-            bytes32 depositID = LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdvs[i]);
             LibTokenSilo.addDepositToAccount(
                 msg.sender,
-                depositID,
+                token,
+                grownStalkPerBdvs[i],
                 amounts[i],
                 bdv
             );
@@ -576,7 +578,6 @@ contract SiloFacet is TokenSilo {
         view
         returns (uint32 season)
     {
-        AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 seedsPerBdv = getSeedsPerToken(address(token));
 
         require(LibLegacyTokenSilo.isDepositSeason(seedsPerBdv, grownStalkPerBdv), "No matching season for input grownStalkPerBdv");

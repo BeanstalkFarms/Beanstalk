@@ -236,11 +236,7 @@ contract ConvertFacet is ReentrancyGuard {
         LibSilo.mintStalk(msg.sender, bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
 
         LibTokenSilo.incrementTotalDeposited(token, amount);
-        bytes32 depositId = LibBytes.packAddressAndCumulativeStalkPerBDV(
-            token,
-            _cumulativeGrownStalk
-        );
-        LibTokenSilo.addDepositToAccount(msg.sender, depositId, amount, bdv);
+        LibTokenSilo.addDepositToAccount(msg.sender, token, _cumulativeGrownStalk, amount, bdv);
     }
 
     function getMaxAmountIn(address tokenIn, address tokenOut)

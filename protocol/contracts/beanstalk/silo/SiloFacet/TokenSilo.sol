@@ -6,7 +6,6 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./Silo.sol";
-import "~/libraries/LibBytes.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
@@ -186,6 +185,7 @@ contract TokenSilo is Silo, IERC1155, IERC1155Receiver {
         address spender,
         address token
     ) public view virtual returns (uint256) {
+        if(s.a[owner].isApprovedForAll[spender] == true) return type(uint256).max;
         // token approvals are now stored as a bytes32 in preperation for multitoken standard support.
         // thus, for ERC20 deposits, we use the token address as the approval key (no cumulativeStalkPerBDV)
         // TODO: how should this work with ERC1155? we either have to approve all ERC1155 deposits, or approve a singular id
@@ -213,7 +213,7 @@ contract TokenSilo is Silo, IERC1155, IERC1155Receiver {
         console.log('_deposit: ', amount);
         (uint256 stalk) = LibTokenSilo.deposit(
             account,
-            address(token),
+            token,
             LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)), // TODO: may need to generalize this for all standards, just not ERC20
             amount
         );
@@ -434,10 +434,8 @@ contract TokenSilo is Silo, IERC1155, IERC1155Receiver {
             grownStalkPerBdv,
             amount
         );
-        bytes32 _depositIdAdded = LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdv);
-        LibTokenSilo.addDepositToAccount(recipient, _depositIdAdded, amount, bdv);
+        LibTokenSilo.addDepositToAccount(recipient, token, grownStalkPerBdv, amount, bdv);
         LibSilo.transferStalk(sender, recipient, stalk);
-        bytes32 _depositIdRemoved = LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdv);
         return bdv;
     }
 
@@ -465,7 +463,7 @@ contract TokenSilo is Silo, IERC1155, IERC1155Receiver {
         // Similar to {removeDepositsFromAccount}, however the Deposit is also 
         // added to the recipient's account during each iteration.
         for (uint256 i; i < grownStalkPerBdvs.length; ++i) {
-            bytes32 depositID = LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdvs[i]);
+            uint256 depositID = uint256(LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdvs[i]));
             uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 sender,
                 token,
@@ -474,7 +472,8 @@ contract TokenSilo is Silo, IERC1155, IERC1155Receiver {
             );
             LibTokenSilo.addDepositToAccount(
                 recipient,
-                depositID,
+                token,
+                grownStalkPerBdvs[i],
                 amounts[i],
                 crateBdv
             );
@@ -488,7 +487,7 @@ contract TokenSilo is Silo, IERC1155, IERC1155Receiver {
                 )
             );
             bdvs[i] = crateBdv;
-            removedDepositIDs[i] = uint256(depositID);
+            removedDepositIDs[i] = depositID;
 
         }
 
@@ -595,7 +594,7 @@ contract TokenSilo is Silo, IERC1155, IERC1155Receiver {
         uint256 value,
         bytes calldata data
     ) external override returns (bytes4) {
-        // IERC1155.safeTransferFrom(address(this), from, id, value, data);
+        IERC1155(msg.sender).safeTransferFrom(address(this), from, id, value, data);
         return IERC1155Receiver.onERC1155Received.selector;
     }
 
@@ -606,11 +605,11 @@ contract TokenSilo is Silo, IERC1155, IERC1155Receiver {
         uint256[] calldata values,
         bytes calldata data
     ) external override returns (bytes4) {
-        // IERC1155.safeBatchTransferFrom(address(this), from, ids, values, data);
+        IERC1155(msg.sender).safeBatchTransferFrom(address(this), from, ids, values, data);
         return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
 
-    function supportsInterface(bytes4 interfaceId) external view override returns (bool) {
+    function supportsInterface(bytes4 interfaceId) external pure override returns (bool) {
         return interfaceId == type(IERC1155).interfaceId || interfaceId == type(IERC1155Receiver).interfaceId;
     }
 }

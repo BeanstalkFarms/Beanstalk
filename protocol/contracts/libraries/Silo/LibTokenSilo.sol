@@ -98,11 +98,6 @@ library LibTokenSilo {
         int96 grownStalkPerBdv,
         uint256 amount
     ) internal returns (uint256) {
-        console.log('do a deposit, account: ', account);
-        console.log('deposit token: ', token);
-        console.log('deposit logging grown stalk per bdv:');
-        console.logInt(grownStalkPerBdv);
-        console.log('deposit amount: ', amount);
         uint256 bdv = beanDenominatedValue(token, amount);
         return depositWithBDV(account, token, grownStalkPerBdv, amount, bdv);
     }
@@ -125,18 +120,9 @@ library LibTokenSilo {
         uint256 bdv
     ) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        require(bdv > 0, "Silo: No Beans under Token.");
-        console.log('depositWithBDV grownStalkPerBdv: ', uint256(grownStalkPerBdv));
         console.logInt(grownStalkPerBdv);
-        incrementTotalDeposited(token, amount); // Update Totals
-
-        // Pack the Deposit data into a single bytes32
-        bytes32 depositData = LibBytes.packAddressAndCumulativeStalkPerBDV(
-            token,
-            grownStalkPerBdv
-        );
-        addDepositToAccount(account, depositData, amount, bdv); // Add to Account
-
+        incrementTotalDeposited(token, amount); // Update Totals        
+        addDepositToAccount(account, token, grownStalkPerBdv, amount, bdv); // Add to Account
         return (
             bdv.mul(s.ss[token].stalkIssuedPerBdv) //formerly stalk
         );
@@ -157,12 +143,17 @@ library LibTokenSilo {
      */
     function addDepositToAccount(
         address account,
-        bytes32 depositId,
+        address token,
+        int96 grownStalkPerBdv,
         uint256 amount,
         uint256 bdv
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        
+        // Pack the Deposit data into a single bytes32
+        bytes32 depositId = LibBytes.packAddressAndCumulativeStalkPerBDV(
+            token,
+            grownStalkPerBdv
+        );
         // create memory var to save gas (TODO: check if this is actually saving gas)
         Account.Deposit memory d = s.a[account].deposits[depositId];
 
@@ -174,8 +165,6 @@ library LibTokenSilo {
         s.a[account].deposits[depositId] = d;
         
         // get token and GSPBDV of the depositData, for updating mow status and emitting event 
-        (address token, int96 grownStalkPerBdv) = LibBytes.getAddressAndCumulativeStalkPerBDVFromBytes(depositId);
-
         // update the mow status (note: mow status is per token, not per depositId)
         s.a[account].mowStatuses[token].bdv = uint128(s.a[account].mowStatuses[token].bdv.add(bdv.toUint128()));
         //needs to update the mow status
