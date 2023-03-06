@@ -136,10 +136,6 @@ library LibLegacyTokenSilo {
         s.a[account].legacyDeposits[token][season].amount += uint128(amount);
         s.a[account].legacyDeposits[token][season].bdv += uint128(bdv);
 
-        console.log('legacy addDepositToAccount season: ', season);
-        console.log('legacy addDepositToAccount amount: ', amount);
-        console.log('legacy addDepositToAccount bdv: ', bdv);
-
         emit AddDeposit(account, token, season, amount, bdv);
     }
 
@@ -169,7 +165,6 @@ library LibLegacyTokenSilo {
         uint32 season,
         uint256 amount
     ) internal returns (uint256 crateBDV) {
-        console.log('removeDepositFromAccount season: ', season);
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         uint256 crateAmount;
@@ -290,8 +285,6 @@ library LibLegacyTokenSilo {
         uint32 season
     ) internal view returns (uint128, uint128) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        console.log('tokenDeposit season: ', season);
-        console.log('tokenDeposit token: ', token);
 
         if (LibUnripeSilo.isUnripeBean(token)){
             (uint256 amount, uint256 bdv) = LibUnripeSilo.unripeBeanDeposit(account, season);
@@ -301,7 +294,7 @@ library LibLegacyTokenSilo {
             (uint256 amount, uint256 bdv) = LibUnripeSilo.unripeLPDeposit(account, season);
             return (uint128(amount), uint128(bdv));
         }
-        console.log('returning legacy deposit amount');
+
         return (
             s.a[account].legacyDeposits[token][season].amount,
             s.a[account].legacyDeposits[token][season].bdv
@@ -361,18 +354,13 @@ library LibLegacyTokenSilo {
 
     function isDepositSeason(uint256 seedsPerBdv, int128 stem)
         internal
-        view
+        pure
         returns (bool)
     {
-        // console.log('isDepositSeason: ', address(token));
-        console.log('isDepositSeason logging stem:');
-        console.logInt(stem);
-        
         if (seedsPerBdv == 0) {
             return false; //shortcut since we know it's a newer token?
         }
 
-        console.log('isDepositSeason seedsPerBdv: ', seedsPerBdv);
         return
             stem <= 0 && //old deposits in seasons will have a negative grown stalk per bdv
             uint256(-stem) % seedsPerBdv == 0;
@@ -387,24 +375,11 @@ library LibLegacyTokenSilo {
         
         require(seedsPerBdv > 0, "Silo: Token not supported");
 
-        //need current stemTipForToken so we know what to subtract from?
-        //int128 stemTipForToken = LibTokenSilo.stemTipForToken(token);
-
         //need to go back in time, calculate the delta between the current season and that old deposit season,
         //and that's how many seasons back we need to go. Then, multiply that by seedsPerBdv, and that's our
         //negative grown stalk index.
 
         //find the difference between the input season and the Silo v3 epoch season
-
-        console.log('seasonToStem s.season.stemStartSeason: ', s.season.stemStartSeason);
-        console.log('seasonToStem season: ', season);
-        console.log('seasonToStem s.season.current: ', s.season.current);
-        console.log('seasonToStem seedsPerBdv: ', seedsPerBdv);
-        
-        int128 firstPart = int128(season)-int128(s.season.stemStartSeason);
-        console.log('seasonToStem firstPart: ');
-        console.logInt(firstPart);
-
         //using regular - here because we want it to overflow negative
         stem = (int128(season)-int128(s.season.stemStartSeason)).mul(int128(seedsPerBdv));
     }
@@ -415,37 +390,21 @@ library LibLegacyTokenSilo {
         returns (uint32 season)
     {
         // require(stem > 0);
-        console.log('stemToSeason logging grown stalk per bdv');
-        console.logInt(stem);
         AppStorage storage s = LibAppStorage.diamondStorage();
         // uint256 seedsPerBdv = getSeedsPerToken(address(token));
 
         require(seedsPerBdv > 0, "Silo: Token not supported");
 
-        // uint32 lastUpdateSeasonStored = s.ss[address(token)].lastUpdateSeason;
-        // console.log('stemToSeason lastUpdateSeasonStored: ', lastUpdateSeasonStored);
-
-        // console.log('stemToSeason token: ', address(token));
-        // console.log('s.ss[address(token)]: ', s.ss[address(token)]);
-        console.log('stemToSeason seedsPerBdv: ', seedsPerBdv);
-        // console.log('stem: %d', stem);
-        // console.log('uint256(-stem).div(seedsPerBdv): ', uint256(-stem).div(seedsPerBdv));
-
-        // uint256 seasonAs256 = uint256(int128(s.ss[address(token)].milestoneStem).sub(stem)).div(seedsPerBdv);
-        // console.log('seasonAs256: ', seasonAs256);
 
         int128 diff = stem.div(int128(seedsPerBdv));
-        console.log('diff: ');
-        console.logInt(diff);
         //using regular + here becauase we want to "overflow" (which for signed just means add negative)
         season = uint256(int128(s.season.stemStartSeason)+diff).toUint32();
-        console.log('stemToSeason season: ', season);
         // season = seasonAs256.toUint32();
     }
 
 
     //this feels gas inefficient to me, maybe there's a better way? hardcode in values here?
-    function getSeedsPerToken(address token) internal view returns (uint256) {
+    function getSeedsPerToken(address token) internal pure returns (uint256) {
         if (token == C.beanAddress()) {
             return 2;
         } else if (token == C.unripeBeanAddress()) {

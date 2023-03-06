@@ -24,8 +24,6 @@ contract MockConvertFacet is ConvertFacet {
         uint256 maxTokens
     ) external {
         (uint256 stalkRemoved, uint256 bdvRemoved) = _withdrawTokens(token, stems, amounts, maxTokens);
-        console.log('MockConvert stalkRemoved: ', stalkRemoved);
-        console.log('MockConvert bdvRemoved: ', bdvRemoved);
         emit MockConvert(stalkRemoved, bdvRemoved);
     }
 

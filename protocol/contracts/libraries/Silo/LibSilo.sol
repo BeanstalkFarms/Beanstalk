@@ -78,8 +78,6 @@ library LibSilo {
      * For an explanation of Roots accounting, see {FIXME(doc)}.
      */
     function mintStalk(address account, uint256 stalk) internal {
-        console.log('mintStalk account: ', account);
-        console.log('mintStalk stalk: ', stalk);
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // Calculate the amount of Roots for the given amount of Stalk.
@@ -89,15 +87,10 @@ library LibSilo {
         } else {
             roots = s.s.roots.mul(stalk).div(s.s.stalk);
         }
-
-        console.log('mintStalk previous total stalk s.s.stalk: ', s.s.stalk);
         
         // increment user and total stalk
         s.s.stalk = s.s.stalk.add(stalk);
-        console.log('mintStalk new total stalk s.s.stalk: ', s.s.stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
-
-        // console.log('new total stalk s.a[account].s.stalk: ', s.a[account].s.stalk);
 
         // increment user and total roots
         s.s.roots = s.s.roots.add(roots);
@@ -154,9 +147,6 @@ library LibSilo {
     function burnStalk(address account, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return;
-
-        console.log('burnStalk burn amount: ', stalk);
-        console.log('burnStalk current total stalk s.s.stalk: ', s.s.stalk);
        
         uint256 roots;
         // Calculate the amount of Roots for the given amount of Stalk.
@@ -181,9 +171,7 @@ library LibSilo {
         if (roots > s.a[account].roots) roots = s.a[account].roots;
 
         // Decrease supply of Stalk; Remove Stalk from the balance of `account`
-        console.log('burnStalk previous total stalk s.s.stalk: ', s.s.stalk);
         s.s.stalk = s.s.stalk.sub(stalk);
-        console.log('burnStalk new stalk after burn s.s.stalk: ', s.s.stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.sub(stalk);
 
         // Decrease supply of Roots; Remove Roots from the balance of `account`
@@ -195,7 +183,6 @@ library LibSilo {
         // For more info on Rain, see {FIXME(doc)}. 
         if (s.season.raining) {
             s.r.roots = s.r.roots.sub(roots);
-            console.log('burnStalk updating s.a[account].sop.roots', s.a[account].sop.roots);
             s.a[account].sop.roots = s.a[account].roots;
         }
 
@@ -239,16 +226,10 @@ library LibSilo {
      */
     function stalkReward(int128 startStalkPerBDV, int128 endStalkPerBDV, uint128 bdv) //are the types what we want here?
         internal
-        view //change back to pure
+        pure
         returns (uint256)
     {
-        console.log('stalkReward startStalkPerBDV: ', uint256(startStalkPerBDV));
-        // console.logInt();
-        console.log('stalkReward endStalkPerBDV: ', uint256(endStalkPerBDV));
-        // console.logInt(endStalkPerBDV);
-        console.log('stalkReward bdv: ', bdv);
         int128 reward = endStalkPerBDV.sub(startStalkPerBDV).mul(int128(bdv));
-        console.log('stalkReward final reward: ', uint256(reward));
         return uint128(reward);
     }
 

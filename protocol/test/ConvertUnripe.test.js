@@ -181,7 +181,6 @@ describe('Unripe Convert', function () {
 
 
         const stemUnripeBean = await this.silo.seasonToStem(this.unripeBean.address, '14');
-        console.log('in beforeeach stemUnripeBean: ', stemUnripeBean);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeBeansToLP(to6('2500'), to6('1900')), [0, stemUnripeBean], [to6('1000'), to6('1000')])
       });
@@ -198,7 +197,7 @@ describe('Unripe Convert', function () {
 
       it('properly updates user deposits', async function () {
         const stemUnripeBean = await this.silo.seasonToStem(this.unripeBean.address, '14');
-        console.log('in test stemUnripeBean: ', stemUnripeBean);
+
         expect((await this.silo.getDeposit(userAddress, this.unripeBean.address, 0))[0]).to.eq(toBean('0'));
         expect((await this.silo.getDeposit(userAddress, this.unripeBean.address, stemUnripeBean))[0]).to.eq(toBean('0'));
         const deposit = await this.silo.getDeposit(userAddress, this.unripeLP.address, 4);

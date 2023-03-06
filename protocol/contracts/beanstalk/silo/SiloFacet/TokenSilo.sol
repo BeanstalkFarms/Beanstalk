@@ -203,14 +203,13 @@ contract TokenSilo is Silo {
         address token,
         uint256 amount
     ) internal {
-        console.log('_deposit: ', amount);
         (uint256 stalk) = LibTokenSilo.deposit(
             account,
             token,
             LibTokenSilo.stemTipForToken(IERC20(token)),
             amount
         );
-        console.log('_deposit now mint stalk: ', stalk);
+
         LibSilo.mintStalk(account, stalk);
     }
 
@@ -232,7 +231,7 @@ contract TokenSilo is Silo {
             stem,
             amount
         );
-        console.log('_withdrawDeposit stalkRemoved: ', stalkRemoved);
+
         // Add a Withdrawal, update totals, burn Stalk.
         _withdraw(
             account,
@@ -295,8 +294,6 @@ contract TokenSilo is Silo {
         uint256 stalk
     ) private {
         LibTokenSilo.decrementTotalDeposited(token, amount); // Decrement total Deposited
-        console.log('_withdraw amount: ', amount);
-        console.log('_withdraw stalk: ', stalk);
         LibSilo.burnStalk(account, stalk); // Burn Stalk
     }
 
@@ -323,21 +320,7 @@ contract TokenSilo is Silo {
         )
     {
         bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, stem, amount);
-        console.log('s.ss[token].stalk: ', s.ss[token].stalkIssuedPerBdv);
-        console.log('bdvRemoved.mul(s.ss[token].stalk: ', bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv));
-        console.log('removeDepositFromAccount stem: ');
-        console.logInt(stem);
 
-        console.log('removeDepositFromAccount stemTipForToken: ');
-        console.logInt(LibTokenSilo.stemTipForToken(IERC20(token)));
-        console.log('removeDepositFromAccount bdvRemoved: ', bdvRemoved);
-
-        uint256 stalkReward = LibSilo.stalkReward(
-                stem, //this is the index of when it was deposited
-                LibTokenSilo.stemTipForToken(IERC20(token)), //this is latest for this token
-                bdvRemoved.toUint128()
-            );
-        console.log('removeDepositFromAccount stalkReward: ', stalkReward);
 
 
         //need to get amount of stalk earned by this deposit (index of now minus index of when deposited)
@@ -348,7 +331,6 @@ contract TokenSilo is Silo {
                 bdvRemoved.toUint128()
             )
         );
-        console.log('removeDepositFromAccount stalkRemoved: ', stalkRemoved);
 
         emit RemoveDeposit(account, token, stem, amount, bdvRemoved);
     }
@@ -367,7 +349,7 @@ contract TokenSilo is Silo {
         int128[] calldata stems,
         uint256[] calldata amounts
     ) internal returns (AssetsRemoved memory ar) {
-        console.log('removeDepositsFromAccount: ', account);
+
         //make bdv array and add here?
         uint256[] memory bdvsRemoved = new uint256[](stems.length);
         for (uint256 i; i < stems.length; ++i) {
@@ -380,7 +362,7 @@ contract TokenSilo is Silo {
             bdvsRemoved[i] = crateBdv;
             ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
-            console.log('s.ss[token].stalkIssuedPerBdv: ', s.ss[token].stalkIssuedPerBdv);
+
             ar.stalkRemoved = ar.stalkRemoved.add(
                 LibSilo.stalkReward(
                     stems[i],
@@ -388,13 +370,12 @@ contract TokenSilo is Silo {
                     crateBdv.toUint128()
                 )
             );
-            console.log('ar.stalkRemoved from: ', i, ar.stalkRemoved);
+
         }
-        console.log('1 ar.stalkRemoved: ', ar.stalkRemoved);
+
         ar.stalkRemoved = ar.stalkRemoved.add(
             ar.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)
         );
-        console.log('2 ar.stalkRemoved: ', ar.stalkRemoved);
 
         //need to add BDV array here
         emit RemoveDeposits(account, token, stems, amounts, ar.tokensRemoved, bdvsRemoved);

@@ -80,11 +80,6 @@ library LibTokenSilo {
         int128 stem,
         uint256 amount
     ) internal returns (uint256) {
-        console.log('do a deposit, account: ', account);
-        console.log('deposit token: ', token);
-        console.log('deposit logging grown stalk per bdv:');
-        console.logInt(stem);
-        console.log('deposit amount: ', amount);
         uint256 bdv = beanDenominatedValue(token, amount);
         return depositWithBDV(account, token, stem, amount, bdv);
     }
@@ -108,8 +103,6 @@ library LibTokenSilo {
     ) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(bdv > 0, "Silo: No Beans under Token.");
-        console.log('depositWithBDV stem: ', uint256(stem));
-        console.logInt(stem);
         incrementTotalDeposited(token, amount); // Update Totals
 
         addDepositToAccount(account, token, stem, amount, bdv); // Add to Account
@@ -140,29 +133,16 @@ library LibTokenSilo {
         uint256 bdv
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        console.log('addDepositToAccount token: ', token);
-        console.log('addDepositToAccount at grown stalk per bdv:', uint256(stem));
-        // console.logInt();
         Account.Deposit memory d = s.a[account].deposits[token][stem];
-        console.log('addDepositToAccount updatedAmount: ', d.amount.add(amount.toUint128()));
 
         d.amount = uint128(d.amount.add(amount.toUint128()));
         d.bdv = uint128(d.bdv.add(bdv.toUint128()));
-        console.log('addDepositToAccount bdv: ', bdv);
-
-        console.log('--- s.a[account].deposits[token][stem].bdv: ', d.bdv);
-        console.log('--- s.a[account].deposits[token][stem].amount: ', d.amount);
 
         s.a[account].deposits[token][stem] = d;
 
 
-        console.log('--- s.a[account].deposits[token][stem].bdv: ', s.a[account].deposits[token][stem].bdv);
-        console.log('--- s.a[account].deposits[token][stem].amount: ', s.a[account].deposits[token][stem].amount);
-
         //setup or update the MowStatus for this deposit. We should have _just_ mowed before calling this function.
         s.a[account].mowStatuses[token].bdv = uint128(s.a[account].mowStatuses[token].bdv.add(bdv.toUint128()));
-        console.log('s.a[account].mowStatuses[token].bdv mowstatus bdv after deposit: ', uint256(s.a[account].mowStatuses[token].bdv));
-        //needs to update the mow status
 
         emit AddDeposit(account, token, stem, amount, bdv);
     }
@@ -192,15 +172,8 @@ library LibTokenSilo {
         int128 stem,
         uint256 amount
     ) internal returns (uint256 crateBDV) {
-        console.log('removeDepositFromAccount account: ', account);
-        console.log('removeDepositFromAccount token: ', token);
-        console.log('removeDepositFromAccount logging grown stalk per bdv');
-        console.logInt(stem);
-        console.log('removeDepositFromAccount amount: ', amount);
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        console.log('--- removeDepositFromAccount s.a[account].deposits[token][stem].bdv: ', s.a[account].deposits[token][stem].bdv);
-        console.log('--- removeDepositFromAccount s.a[account].deposits[token][stem].amount: ', s.a[account].deposits[token][stem].amount);
         Account.Deposit memory d = s.a[account].deposits[token][stem];
         
         uint256 crateAmount;
@@ -209,18 +182,12 @@ library LibTokenSilo {
             d.bdv
         );
 
-        console.log('removeDepositFromAccount crateAmount: ', crateAmount);
-        console.log('removeDepositFromAccount crateBDV: ', crateBDV);
 
         // Partial remove
         if (amount < crateAmount) {
-            console.log('removeDepositFromAccount doing partial remove');
             uint256 removedBDV = amount.mul(crateBDV).div(crateAmount);
-            console.log('removeDepositFromAccount removedBDV: ', removedBDV);
             uint256 updatedBDV = crateBDV.sub(removedBDV);
-            console.log('removeDepositFromAccount updatedBDV: ', updatedBDV);
             uint256 updatedAmount = crateAmount.sub(amount);
-            console.log('removeDepositFromAccount updatedAmount: ', updatedAmount);
                 
             require(
                 updatedBDV <= uint128(-1) && updatedAmount <= uint128(-1), //this code was here before, but maybe there's a better way to do this?
@@ -232,16 +199,12 @@ library LibTokenSilo {
 
             //verify this has to be a different var?
             uint256 updatedTotalBdvPartial = uint256(s.a[account].mowStatuses[token].bdv).sub(removedBDV);
-            console.log('removeDepositFromAccount updatedTotalBdvPartial: ', updatedTotalBdvPartial);
             //remove from the mow status bdv amount, which keeps track of total token deposited per farmer
-            console.log('removeDepositFromAccount s.a[account].mowStatuses[token].bdv before partial remove: ', uint256(s.a[account].mowStatuses[token].bdv));    
             s.a[account].mowStatuses[token].bdv = updatedTotalBdvPartial.toUint128();
-            console.log('removeDepositFromAccount s.a[account].mowStatuses[token].bdv after partial remove: ', uint256(s.a[account].mowStatuses[token].bdv));    
 
             return removedBDV;
         }
 
-        console.log('removeDepositFromAccount doing full remove');
         // Full remove
         if (crateAmount > 0) delete s.a[account].deposits[token][stem];
 
@@ -258,22 +221,13 @@ library LibTokenSilo {
             require(LibLegacyTokenSilo.isDepositSeason(seedsPerToken, stem), "Must line up with season");
             amount -= crateAmount;
 
-
-            
             uint32 season = LibLegacyTokenSilo.stemToSeason(seedsPerToken, stem);
-            console.log('removeDepositFromAccount season: ', season);
             crateBDV = crateBDV.add(LibLegacyTokenSilo.removeDepositFromAccount(account, token, season, amount));
         }
 
 
-        console.log('attempting to update mow status');
-        console.log('s.a[account].mowStatuses[token].bdv: ', uint256(s.a[account].mowStatuses[token].bdv));
-        console.log('crateAmount: ', crateAmount);
-
         uint256 updatedTotalBdv = uint256(s.a[account].mowStatuses[token].bdv).sub(originalCrateBDV); //this will `SafeMath: subtraction overflow` if amount > crateAmount, but I want it to be able to call through to the Legacy stuff below for excess remove
         s.a[account].mowStatuses[token].bdv = uint128(updatedTotalBdv);
-        console.log('removeDepositFromAccount updatedTotalBdv: ', updatedTotalBdv);
-
     }
 
     //////////////////////// GETTERS ////////////////////////
@@ -329,28 +283,18 @@ library LibTokenSilo {
         address token,
         int128 stem
     ) internal view returns (uint256 amount, uint256 bdv) {
-        console.log('get tokenDeposit: ', account, token);
-        console.log('tokenDeposit logging grown stalk per bdv:');
-        console.logInt(stem);
         AppStorage storage s = LibAppStorage.diamondStorage();
         amount = s.a[account].deposits[token][stem].amount;
         bdv = s.a[account].deposits[token][stem].bdv;
-        console.log('1 tokenDeposit amount: ', amount);
-        console.log('1 tokenDeposit bdv: ', bdv);
         uint256 seedsPerToken = LibLegacyTokenSilo.getSeedsPerToken(token);
         
         if (LibLegacyTokenSilo.isDepositSeason(seedsPerToken, stem)) {
-            console.log('yes stem deposit was a season');
             (uint legacyAmount, uint legacyBdv) =
                 LibLegacyTokenSilo.tokenDeposit(account, address(token), LibLegacyTokenSilo.stemToSeason(seedsPerToken, stem));
             amount = amount.add(legacyAmount);
             bdv = bdv.add(legacyBdv);
             
-        } else {
-            console.log('not a deposit season');
         }
-        console.log('2 tokenDeposit amount: ', amount);
-        console.log('2 tokenDeposit bdv: ', bdv);
     }
     /**
      * @dev Get the number of Stalk per BDV per Season for a whitelisted token. Formerly just seeds.
@@ -377,19 +321,11 @@ library LibTokenSilo {
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // SiloSettings storage ss = s.ss[token]; //tried to use this, but I get `DeclarationError: Identifier not found or not unique.`
-        console.log('stemTipForToken s.ss[address(token)].milestoneStem: ', uint256(s.ss[address(token)].milestoneStem));
-        console.log('stemTipForToken s.season.current: ', s.season.current);
-        console.log('stemTipForToken s.ss[address(token)].milestoneSeason: ', s.ss[address(token)].milestoneSeason);
-        console.log('stemTipForToken s.ss[address(token)].stalkEarnedPerSeason: ', s.ss[address(token)].stalkEarnedPerSeason);
-
-        //need to take into account the milestoneSeason for this token here
-
-
+        
         //replace the - here with sub to disable support for when the current season is less than the silov3 epoch season
         _stemTip = s.ss[address(token)].milestoneStem +
             int128(int128(s.ss[address(token)].stalkEarnedPerSeason).mul(int128(s.season.current)-int128(s.ss[address(token)].milestoneSeason)).div(1e6)) //round here
         ;
-        console.log('stemTipForToken _stemTip: ', uint256(_stemTip));
     }
 
     function grownStalkForDeposit(
@@ -406,9 +342,7 @@ library LibTokenSilo {
         require(stem <= _stemTip, "Silo: Invalid Deposit");
         uint deltaGrownStalkPerBdv = uint(stemTipForToken(token).sub(stem));
         (, uint bdv) = tokenDeposit(account, address(token), stem);
-        console.log('grownStalkForDeposit bdv: ', bdv);
         grownStalk = deltaGrownStalkPerBdv.mul(bdv);
-        console.log('grownStalkForDeposit grownStalk: ', grownStalk);
     }
 
     //this does not include stalk that has not been mowed
@@ -447,12 +381,8 @@ library LibTokenSilo {
     {
         //first get current latest grown stalk index
         int128 stemTipForToken = LibTokenSilo.stemTipForToken(token);
-        console.log('grownStalkAndBdvToCumulativeGrownStalk stemTipForToken:');
-        console.logInt(stemTipForToken);
         //then calculate how much stalk each individual bdv has grown
         int128 stem = int128(grownStalk.div(bdv));
-        console.log('grownStalkAndBdvToCumulativeGrownStalk stem:');
-        console.logInt(stem);
         //then subtract from the current latest index, so we get the index the deposit should have happened at
         //note that we want this to be able to "subtraction overflow" aka go below zero, because
         //there will be many cases where you'd want to convert and need to go far back enough in the

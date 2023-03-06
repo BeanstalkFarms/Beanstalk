@@ -409,12 +409,11 @@ contract SiloFacet is TokenSilo {
             stem,
             amount
         );
-        console.log('enrootDeposit ogBDV: ', ogBDV);
         emit RemoveDeposit(msg.sender, token, stem, amount, ogBDV); // Remove Deposit does not emit an event, while Add Deposit does.
 
         // Calculate the current BDV for `amount` of `token` and add a Deposit.
         uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
-        console.log('newBDV: ', newBDV);
+
         LibTokenSilo.addDepositToAccount(msg.sender, token, stem, amount, newBDV); // emits AddDeposit event
 
         // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
@@ -426,7 +425,7 @@ contract SiloFacet is TokenSilo {
                                 LibTokenSilo.stemTipForToken(IERC20(token)),
                                 uint128(deltaBDV))
         );
-        console.log('deltaStalk: ', deltaStalk);
+
         LibSilo.mintStalk(msg.sender, deltaStalk);
     }
 
@@ -508,7 +507,6 @@ contract SiloFacet is TokenSilo {
         view
         returns (uint32 season)
     {
-        AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 seedsPerBdv = getSeedsPerToken(address(token));
 
         require(LibLegacyTokenSilo.isDepositSeason(seedsPerBdv, stem), "No matching season for input stem");
@@ -521,7 +519,6 @@ contract SiloFacet is TokenSilo {
         view
         returns (int128 stem)
     {
-        AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 seedsPerBdv = getSeedsPerToken(address(token));
         stem = LibLegacyTokenSilo.seasonToStem(seedsPerBdv, season);
     }

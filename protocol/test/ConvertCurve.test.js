@@ -124,8 +124,8 @@ describe('Curve Convert', function () {
         const stemBean = await this.silo.seasonToStem(this.bean.address, '12');
         const stemMetapool = await this.silo.seasonToStem(this.beanMetapool.address, '12');
         this.result = await this.convert.connect(user).callStatic.convert(ConvertEncoder.convertBeansToCurveLP(toBean('100'), to18('99'), this.beanMetapool.address), [stemBean], [toBean('100')])
-        console.log('this.result.toCumulativeGrownStalk: ', this.result.toCumulativeGrownStalk);
-        console.log('stemMetapool: ', stemMetapool);
+
+
         expect(this.result.toCumulativeGrownStalk).to.be.equal(stemMetapool);
         expect(this.result.fromAmount).to.be.equal(to6('100'))
         expect(this.result.toAmount).to.be.equal('100634476734756985505')
@@ -286,7 +286,7 @@ describe('Curve Convert', function () {
         beforeEach(async function () {
           
           const stemBean = await this.silo.seasonToStem(this.bean.address, '12');
-          console.log('stemBean: ', stemBean);
+
           this.result = await this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('250'), to18('190'), this.beanMetapool.address), [stemBean], [toBean('250')])
         });
 
@@ -336,7 +336,6 @@ describe('Curve Convert', function () {
 
       describe('it converts', async function () {
         beforeEach(async function () {
-          // console.log('0 current season: ', await this.season.season());
           const stemBean10 = await this.silo.seasonToStem(this.bean.address, '10');
           const stemBean14 = await this.silo.seasonToStem(this.bean.address, '14');
           this.result = await this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('250'), to18('190'), this.beanMetapool.address), [stemBean10, stemBean14], [toBean('100'), toBean('100')])
@@ -528,7 +527,6 @@ describe('Curve Convert', function () {
 
       describe('it converts', async function () {
         beforeEach(async function () {
-          // console.log('0 current season: ', await this.season.season());
           const stemMetapool = await this.silo.seasonToStem(this.beanMetapool.address, '10');
           this.result = await this.convert.connect(user).convert(ConvertEncoder.convertCurveLPToBeans(to18('100'), toBean('99'), this.beanMetapool.address), [stemMetapool], [to18('100')])
         });

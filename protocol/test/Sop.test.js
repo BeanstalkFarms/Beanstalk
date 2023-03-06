@@ -166,21 +166,13 @@ describe('Sop', function () {
 
   describe('multiple sop', async function () {
     beforeEach(async function () {
-      console.log('stalk 1: ', await this.silo.balanceOfStalk(user2Address));
-      console.log('roots 1: ', await this.silo.balanceOfRoots(user2Address));
       await this.beanMetapool.connect(user).add_liquidity([to6('0'), to18('200')], to18('50'))
       await this.season.rainSunrise();
-      console.log('stalk 2a: ', await this.silo.balanceOfStalk(user2Address));
-      console.log('roots 2a: ', await this.silo.balanceOfRoots(user2Address));
       await this.silo.mow(user2Address, this.bean.address);
-      console.log('stalk 2b: ', await this.silo.balanceOfStalk(user2Address));
-      console.log('roots 2b: ', await this.silo.balanceOfRoots(user2Address));
       await this.season.rainSunrises(24);
       await this.season.droughtSunrise();
       await this.beanMetapool.connect(user).add_liquidity([to6('0'), to18('200')], to18('50'))
       await this.season.rainSunrises(25);
-      console.log('stalk 3: ', await this.silo.balanceOfStalk(user2Address));
-      console.log('roots 3: ', await this.silo.balanceOfRoots(user2Address));
     })
 
     it('sops p > 1', async function () {

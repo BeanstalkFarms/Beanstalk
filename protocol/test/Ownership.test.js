@@ -60,7 +60,7 @@ describe('Ownership', function () {
       it('claims ownership', async function () {
         await this.ownership.connect(owner).transferOwnership(user2Address)
         this.result = this.ownership.connect(user2).claimOwnership()
-        console.log('await this.ownership.ownerCandidate(): ', await this.ownership.ownerCandidate());
+
         expect(await this.ownership.ownerCandidate()).to.be.equal(ZERO_ADDRESS)
         expect(await this.ownership.owner()).to.be.equal(user2Address)
         await expect(this.result).to.emit(this.ownership, 'OwnershipTransferred').withArgs(ownerAddress, user2Address)
@@ -85,12 +85,12 @@ describe('Ownership', function () {
         '10000',
         '1')
       const settings = await this.silo.tokenSettings(this.siloToken.address)
-      console.log('settings: ', settings);
-      console.log('settings[0]: ', settings[0]);
+
+
       expect(settings[0]).to.equal(this.silo.interface.getSighash("mockBDV(uint256 amount)"))
-      console.log('settings[1]: ', settings[1]);
+
       expect(settings[1]).to.equal(1)
-      console.log('settings[2]: ', settings[2]);
+
       expect(settings[2]).to.equal(10000)
       await expect(this.result).to.emit(this.whitelist, 'WhitelistToken').withArgs(this.siloToken.address, 
         this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
@@ -116,7 +116,7 @@ describe('Ownership', function () {
         '50000'
       )
       const settings = await this.silo.tokenSettings(this.siloToken.address)
-      console.log("settings: ", settings);
+
       expect(settings[1]).to.equal(50000)
       const currentSeason = await this.season.season()
       await expect(this.result).to.emit(this.whitelist, 'UpdatedStalkPerBdvPerSeason').withArgs(this.siloToken.address, 50000, currentSeason)

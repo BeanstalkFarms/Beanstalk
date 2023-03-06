@@ -29,8 +29,6 @@ describe('Convert', function () {
 
 
 
-    console.log('totalstalk 1: ', await this.silo.totalStalk());
-
     //test setup includes making 2 deposits, one at stem of 1, and another deposit at 2
 
     await this.bean.mint(userAddress, '1000000000');
@@ -51,11 +49,9 @@ describe('Convert', function () {
     );
 
     await this.season.siloSunrise(0);
-    console.log('await this.silo.stemTipForToken(this.siloToken.address): ', await this.silo.stemTipForToken(this.siloToken.address));
     await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL);
 
     await this.season.siloSunrise(0);
-    console.log('await this.silo.stemTipForToken(this.siloToken.address): ', await this.silo.stemTipForToken(this.siloToken.address));
 
     await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL); //something about this deposit adds extra stalk
   });
@@ -81,7 +77,6 @@ describe('Convert', function () {
       });
 
       it('not enough removed', async function () {
-        console.log('await this.silo.stemTipForToken(this.siloToken.address): ', await this.silo.stemTipForToken(this.siloToken.address));
         await expect(this.convert.connect(user).withdrawForConvertE(this.siloToken.address, ['2'], ['100'], '150')).to.be.revertedWith('Convert: Not enough tokens removed.')
       });
     })
@@ -110,11 +105,11 @@ describe('Convert', function () {
 
       it('properly removes the crate', async function () {
         let deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 1);
-        console.log('deposit: ', deposit);
+
         expect(deposit[0]).to.eq('100');
         expect(deposit[1]).to.eq('100');
         deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 2);
-        console.log('deposit 2: ', deposit);
+
         expect(deposit[0]).to.eq('0');
         expect(deposit[1]).to.eq('0');
       })
@@ -159,9 +154,8 @@ describe('Convert', function () {
       })
 
       it('Emits event', async function () { 
-        console.log('checking for first emit');
         await expect(this.result).to.emit(this.convert, 'RemoveDeposits').withArgs(userAddress, this.siloToken.address, [1, 2], ['100', '50'], '150', ['100', '50']);
-        console.log('checking for second emit');
+
         await expect(this.result).to.emit(this.convert, 'MockConvert').withArgs('100', '150');
       })
 

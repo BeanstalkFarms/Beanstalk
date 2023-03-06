@@ -27,8 +27,6 @@ contract InitBipNewSilo {
     
     
     function init() external {
-        console.log("InitBipNewSilo.init() got called");
-        
         //update all silo info for current Silo-able assets
 
         uint32 currentSeason = s.season.current;

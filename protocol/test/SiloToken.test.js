@@ -125,7 +125,7 @@ describe('Silo Token', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
         this.season.deployStemsUpgrade();
-        console.log('await this.silo.stemTipForToken(this.siloToken.address): ', await this.silo.stemTipForToken(this.siloToken.address));
+
         this.result = await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL)
       });
   
@@ -142,9 +142,9 @@ describe('Silo Token', function () {
   
       it('properly adds the crate', async function () {
         const stem = await this.silo.seasonToStem(this.siloToken.address, '10');
-        console.log('stem: ', stem);
+
         const deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, stem);
-        console.log('deposit: ', deposit);
+
         expect(deposit[0]).to.eq('1000');
         expect(deposit[1]).to.eq('1000');
       })
@@ -226,7 +226,7 @@ describe('Silo Token', function () {
     describe('reverts', function () {
       it('reverts if amount is 0', async function () {
         const stem = await this.silo.seasonToStem(this.siloToken.address, '10');
-        console.log('stem: ', stem);
+
         await expect(this.silo.connect(user).withdrawDeposit(this.siloToken.address, stem, '1001', EXTERNAL)).to.revertedWith('Must line up with season');
         // await expect(this.silo.connect(user).withdrawDeposit(this.siloToken.address, stem, '1001', EXTERNAL)).to.revertedWith('Silo: Crate balance too low.'); //TODOSEEDS write a test that reverts with crate balance too low (needs to be deposited before grown stalk per bdv is deployed)
       });
@@ -602,11 +602,11 @@ describe('Silo Token', function () {
     describe("Just 3CRV LP Deposit", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
-        console.log('await this.silo.stemTipForToken(this.unripeLP.address): ', await this.silo.stemTipForToken(this.unripeLP.address));
+
         const stemTip = await this.silo.stemTipForToken(this.unripeLP.address);
-        console.log('stemTip: ', stemTip);
+
         const seasonToDepositIn = await this.silo.stemToSeason(this.unripeLP.address, stemTip);
-        console.log('seasonToDepositIn: ', seasonToDepositIn);
+
         await this.silo.connect(user).mockUnripeLPDeposit('1', '10', to18('10.08028951'), to6('10'))
       })
 
@@ -618,7 +618,7 @@ describe('Silo Token', function () {
 
       it('get Deposit', async function () {
         const stem = await this.silo.seasonToStem(UNRIPE_LP, '10');
-        console.log('stem: ', stem);
+
         const deposit = await this.silo.getDeposit(user.address, UNRIPE_LP, stem);
         expect(deposit[0]).to.equal(to6('10'))
         expect(deposit[1]).to.equal(prune(to6('10')))
@@ -1183,7 +1183,7 @@ describe('Silo Token', function () {
         )
 
         const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
-        console.log('stem10: ', stem10);
+
         this.result = await this.silo.connect(user).enrootDeposit(UNRIPE_BEAN, stem10, to6('10'));
       })
 

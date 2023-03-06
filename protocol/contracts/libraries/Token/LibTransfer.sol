@@ -53,7 +53,6 @@ library LibTransfer {
         address sender,
         From mode
     ) internal returns (uint256 receivedAmount) {
-        console.log('receiveToken: ', address(token));
         if (amount == 0) return 0;
         if (mode != From.EXTERNAL) {
             receivedAmount = LibBalance.decreaseInternalBalance(
@@ -65,7 +64,6 @@ library LibTransfer {
             if (amount == receivedAmount || mode == From.INTERNAL_TOLERANT)
                 return receivedAmount;
         }
-        console.log('address(this): ', address(this));
         uint256 beforeBalance = token.balanceOf(address(this));
         token.safeTransferFrom(sender, address(this), amount - receivedAmount);
         return receivedAmount.add(token.balanceOf(address(this)).sub(beforeBalance));
