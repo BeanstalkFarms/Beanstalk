@@ -114,12 +114,9 @@ contract SiloFacet is TokenSilo {
      * withdraw from 1 older Deposit, rather than from multiple recent Deposits,
      * if the difference in grownStalkPerBdvs is minimal.
      * 
-     * * note: changed name to `withdrawERC20Deposits` as in the future, when we deposit ERC721 or ERC1155, 
-     * 1) it would need a different way to make a deposit (hashing)
-     * 2) it conserves backwards compatibility
      * alternative solution: make the input a bytes32 depositID
      */
-    // i.e withdraw ERC20, ERC721, and ERC1155 in a single call
+    
     function withdrawDeposits(
         address token,
         int96[] calldata grownStalkPerBdvs,
@@ -213,7 +210,7 @@ contract SiloFacet is TokenSilo {
         address sender, 
         address recipient, 
         uint256 depositId, 
-        uint256 amount, 
+        uint256 amount,
         bytes calldata depositData
     ) external override nonReentrant {
         (address token, int96 cumulativeGrownStalkPerBDV) = 

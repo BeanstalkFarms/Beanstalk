@@ -313,6 +313,19 @@ contract Storage {
         uint256 balanceOfUnderlying; // The number of Tokens underlying the Unripe Tokens (redemption pool).
         bytes32 merkleRoot; // The Merkle Root used to validate a claim of Unripe Tokens.
     }
+    
+   /**
+    * @notice Metadata stores the metadata for a given Deposit.
+    * Deposits are stored as a bytes32, which is the hash of the Deposit's metadata for gas efficency. 
+    * In the future, there may be a need for a deposit to have metadata of the deposit. 
+    * This struct is used to store that metadata.
+    * this metadata is not initalized on deposit, but rather when someone calls "setMetadata" for the first time.
+    */
+    struct Metadata {
+        address token; // the address of the token for a deposit
+        int96 grownStalkPerBDV; // the grown stalk per BDV assoiated with the deposit
+        uint256 id; // the id of the deposit
+    }
 }
 
 struct AppStorage {
@@ -384,4 +397,5 @@ struct AppStorage {
     uint256 recapitalized; // The nubmer of USDC that has been recapitalized in the Barn Raise.
     uint256 isFarm; // Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
     address ownerCandidate; // Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
+    mapping(bytes32 => Storage.Metadata) metadata; // mapping of ERC1155 deposit to metadata of the deposit
 }
