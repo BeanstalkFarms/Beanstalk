@@ -28,8 +28,6 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
  *   is created. See "Finish Removal".
  */
 contract TokenSilo is Silo, IERC1155, IERC1155Receiver {
-    uint32 private constant ASSET_PADDING = 100;
-
     using SafeMath for uint256;
     using SafeCast for uint256;
     using LibSafeMath32 for uint32;
