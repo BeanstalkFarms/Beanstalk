@@ -187,6 +187,40 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         await this.silo.mow(depositorAddress, this.beanMetapool.address)
       });
 
+      it('for a depositor with a lot of deposits', async function () {
+        const depositorAddress = '0x77700005bea4de0a78b956517f099260c2ca9a26';
+        const tokens = ['0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab'];
+  
+        const seasons = [
+          [
+            5342, 5735, 5948, 6083, 6087, 6092, 6093, 6097, 6098, 6100, 6101,
+            6103, 6106, 6108, 6109, 6110, 6122, 6131, 6147, 6163, 6172, 6178,
+            6183, 6198, 6199, 6213, 6219, 6228, 6248, 6263, 6266, 6269, 6271,
+            6272, 6275, 6298, 6338, 6339, 6340, 6358, 6411, 6435, 6441, 6454,
+            6500, 6519, 6538, 6562, 6565, 6575, 6590, 6601, 6654, 6706, 6724,
+            6735, 6754, 6767, 6799, 6805, 6816, 6819, 6823, 6879, 6913, 6916,
+            6958, 7006, 7012, 7046, 7059, 7091, 7110, 7116, 7133, 7152, 7202,
+            7295, 7310, 7452, 7562, 7563, 7582, 7664, 7690, 7754, 7793, 7805,
+            7814, 7848, 7884, 7920, 7922, 7960, 7983, 7993, 7999, 8003, 8006,
+            8010, 8014, 8020, 8021, 8024, 8041, 8055, 8073, 8074, 8075, 8092,
+            8100, 8111, 8115, 8121, 8135, 8137, 8148, 8157, 8159, 8162, 8170,
+            8173, 8176, 8183, 8193, 8198, 8205, 8209, 8216, 8230, 8231, 8234,
+            8235, 8237, 8248, 8258, 8259, 8265, 8285, 8288, 8290, 8295, 8296,
+            8301, 8305, 8309, 8314, 8316, 8325, 8351, 8384, 8387, 8388, 8416,
+            8429, 8432, 8435, 8439, 8448, 8451, 8452, 8457, 8458, 8473, 8477,
+            8484, 8486, 8487, 8491, 8507, 8518, 8522, 8524, 8525, 8526, 8527,
+            8528, 8529, 8530, 8532, 8535, 8541, 8542, 8544, 8550, 8552, 8553,
+            8554, 8559, 8560, 8575, 8576, 8577, 8578, 8579, 8581, 8582, 8591,
+            8593, 8594,
+          ],
+        ];
+  
+        const depositorSigner = await impersonateSigner(depositorAddress);
+        await mintEth(depositorAddress);
+        await this.silo.connect(depositorSigner).mowAndMigrate(depositorAddress, tokens, seasons);
+        await this.silo.mow(depositorAddress, this.beanMetapool.address)
+      });
+
       //verify that after migration, stalk is properly calculated
       describe('verify stalk amounts after migration for a whale', function () {
         beforeEach(async function () {
@@ -275,11 +309,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449', '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d'];
         const seasons = [[5510],[6004,6846,6668]];  
         const depositorSigner = await impersonateSigner(depositorAddress);
-  
-        await user.sendTransaction({
-          to: depositorAddress,
-          value: ethers.utils.parseEther("1.0"), // Sends exactly 1.0 ether
-        });
+        await mintEth(depositorAddress);
       
         await this.silo.connect(depositorSigner).mowAndMigrate(depositorAddress, tokens, seasons);
         await this.silo.mow(depositorAddress, this.beanMetapool.address);
