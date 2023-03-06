@@ -165,7 +165,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         await this.silo.mowAndMigrate(depositorAddress, tokens, seasons);
   
         //now mow and it shouldn't revert
-        // await this.silo.mow(depositorAddress, this.beanMetapool.address)
+        await this.silo.mow(depositorAddress, this.beanMetapool.address)
       });
       
       it('for a third sample depositor', async function () {
@@ -182,13 +182,71 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         const depositorSigner = await impersonateSigner(depositorAddress);
         await this.silo.connect(depositorSigner);
     
-  
-        //need an array of all the tokens that have been deposited and their corresponding seasons
         await this.silo.mowAndMigrate(depositorAddress, tokens, seasons);
   
-        //now mow and it shouldn't revert
-        // await this.silo.mow(depositorAddress, this.beanMetapool.address)
+        await this.silo.mow(depositorAddress, this.beanMetapool.address)
       });
+
+      //verify that after migration, stalk is properly calculated
+      describe('verify stalk amounts after migration for a whale', function () {
+        beforeEach(async function () {
+            this.depositorAddress = '0x5e68bb3de6133baee55eeb6552704df2ec09a824';
+            const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449', '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d','0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab'];
+            const seasons = [[6074],[6061],[6137]];
+
+            const depositorSigner = await impersonateSigner(this.depositorAddress);
+            await this.silo.connect(depositorSigner);
+
+            this.stalkBeforeUser = await this.silo.balanceOfStalk(this.depositorAddress);
+            this.stalkBeforeTotal = await this.silo.totalStalk();
+        
+            //need an array of all the tokens that have been deposited and their corresponding seasons
+            await this.silo.mowAndMigrate(this.depositorAddress, tokens, seasons);
+        });
+
+        it('properly migrates the user balances', async function () {
+          expect(await this.silo.balanceOfStalk(this.depositorAddress)).to.eq(this.stalkBeforeUser);
+        });
+      
+        it('properly migrates the total balances', async function () {
+          expect(await this.silo.totalStalk()).to.eq(this.stalkBeforeTotal);
+        });
+      });
+
+      describe('verify stalk amounts after migration for a random depositor', function () {
+        beforeEach(async function () {
+            
+            this.depositorAddress = '0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4';
+            const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449', '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d', '0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab'];
+      
+            const seasons = [
+              [
+                1964, 2281, 3615, 4641, 4673, 4820, 5359, 5869, 5988, 5991, 6031,
+                6032, 6035, 6074,
+              ],
+              [2773, 2917, 3019, 4641, 4673, 4820, 5869],
+              [6389, 7563],
+            ];
+      
+            const depositorSigner = await impersonateSigner(this.depositorAddress);
+            await this.silo.connect(depositorSigner);
+
+            this.stalkBeforeUser = await this.silo.balanceOfStalk(this.depositorAddress);
+            this.stalkBeforeTotal = await this.silo.totalStalk();
+        
+            //need an array of all the tokens that have been deposited and their corresponding seasons
+            await this.silo.mowAndMigrate(this.depositorAddress, tokens, seasons);
+        });
+
+        it('properly migrates the user balances', async function () {
+          expect(await this.silo.balanceOfStalk(this.depositorAddress)).to.eq(this.stalkBeforeUser);
+        });
+      
+        it('properly migrates the total balances', async function () {
+          expect(await this.silo.totalStalk()).to.eq(this.stalkBeforeTotal);
+        });
+      });
+
   
       it('fails to migrate for 0 BDV crates', async function () {
         const depositorAddress = '0x5e68bb3de6133baee55eeb6552704df2ec09a824';
