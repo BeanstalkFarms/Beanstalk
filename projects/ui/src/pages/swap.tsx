@@ -5,7 +5,7 @@ import {
 import SwapActions from '~/components/Swap/Actions';
 import PageHeader from '~/components/Common/PageHeader';
 import GuideButton from '~/components/Common/Guide/GuideButton';
-import { HOW_TO_TRANSFER_FARM_BALANCE, HOW_TO_TRADE_BEANS } from '~/util/Guides';
+import { HOW_TO_TRANSFER_BALANCES, HOW_TO_TRADE_BEANS } from '~/util/Guides';
 
 import { FC } from '~/types';
 
