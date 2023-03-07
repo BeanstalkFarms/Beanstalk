@@ -1,9 +1,5 @@
 import React, { useMemo } from 'react';
-import {
-  Container,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Container, Stack, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import BigNumber from 'bignumber.js';
 import { DataGridProps } from '@mui/x-data-grid';
@@ -16,7 +12,11 @@ import FieldConditions from '../components/Field/FieldConditions';
 import { PODS } from '../constants/tokens';
 import useAccount from '../hooks/ledger/useAccount';
 import GuideButton from '~/components/Common/Guide/GuideButton';
-import { HOW_TO_HARVEST_PODS, HOW_TO_SOW_BEANS, HOW_TO_TRANSFER_PODS } from '~/util/Guides';
+import {
+  HOW_TO_HARVEST_PODS,
+  HOW_TO_SOW_BEANS,
+  HOW_TO_TRANSFER_PODS,
+} from '~/util/Guides';
 
 import { FC } from '~/types';
 
@@ -25,11 +25,12 @@ export const podlineColumns: DataGridProps['columns'] = [
     field: 'placeInLine',
     headerName: 'Place In Line',
     flex: 1,
-    renderCell: (params) => (
-      (params.value.eq(-1))
-        ? (<Typography color="primary">Harvestable</Typography>)
-        : (<Typography>{displayBN(params.value)}</Typography>)
-    )
+    renderCell: (params) =>
+      params.value.eq(-1) ? (
+        <Typography color="primary">Harvestable</Typography>
+      ) : (
+        <Typography>{displayBN(params.value)}</Typography>
+      ),
   },
   {
     field: 'amount',
@@ -40,21 +41,21 @@ export const podlineColumns: DataGridProps['columns'] = [
     headerAlign: 'right',
     valueFormatter: (params) =>
       `${displayFullBN(params.value as BigNumber, 2)}`,
-    renderCell: (params) => (
-      <Typography>
-        {params.formattedValue}
-      </Typography>
-    ),
+    renderCell: (params) => <Typography>{params.formattedValue}</Typography>,
   },
 ];
 
 const FieldPage: FC<{}> = () => {
   const account = useAccount();
   const authState = !account ? 'disconnected' : 'ready';
-  
+
   /// Data
-  const farmerField = useSelector<AppState, AppState['_farmer']['field']>((state) => state._farmer.field);
-  const beanstalkField = useSelector<AppState, AppState['_beanstalk']['field']>((state) => state._beanstalk.field);
+  const farmerField = useSelector<AppState, AppState['_farmer']['field']>(
+    (state) => state._farmer.field
+  );
+  const beanstalkField = useSelector<AppState, AppState['_beanstalk']['field']>(
+    (state) => state._beanstalk.field
+  );
   const harvestablePods = farmerField.harvestablePods;
 
   const rows: any[] = useMemo(() => {
@@ -70,7 +71,9 @@ const FieldPage: FC<{}> = () => {
       data.push(
         ...Object.keys(farmerField.plots).map((index) => ({
           id: index,
-          placeInLine: new BigNumber(index).minus(beanstalkField.harvestableIndex),
+          placeInLine: new BigNumber(index).minus(
+            beanstalkField.harvestableIndex
+          ),
           amount: new BigNumber(farmerField.plots[index]),
         }))
       );
@@ -92,7 +95,7 @@ const FieldPage: FC<{}> = () => {
               guides={[
                 HOW_TO_SOW_BEANS,
                 HOW_TO_TRANSFER_PODS,
-                HOW_TO_HARVEST_PODS
+                HOW_TO_HARVEST_PODS,
               ]}
             />
           }

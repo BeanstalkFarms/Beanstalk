@@ -22,23 +22,25 @@ export type Nft = {
   signature?: string;
 
   // winter and genesis
-  signature2?: string
-}
-
-/** Maps an NFT collection to its ETH address. */
-export const COLLECTION_ADDRESS: {[c: string]: string} = {
-  Genesis: BEANFT_GENESIS_ADDRESSES[1],
-  Winter:  BEANFT_WINTER_ADDRESSES[1]
+  signature2?: string;
 };
 
-export const ADDRESS_COLLECTION: {[c: string]: string} = {
+/** Maps an NFT collection to its ETH address. */
+export const COLLECTION_ADDRESS: { [c: string]: string } = {
+  Genesis: BEANFT_GENESIS_ADDRESSES[1],
+  Winter: BEANFT_WINTER_ADDRESSES[1],
+};
+
+export const ADDRESS_COLLECTION: { [c: string]: string } = {
   [BEANFT_GENESIS_ADDRESSES[1]]: COLLECTION_ADDRESS.Genesis,
-  [BEANFT_WINTER_ADDRESSES[1]]: COLLECTION_ADDRESS.Winter
+  [BEANFT_WINTER_ADDRESSES[1]]: COLLECTION_ADDRESS.Winter,
 };
 
 export async function loadNFTs(account: string) {
-  const nftData : Nft[] = await fetch(`/.netlify/functions/nfts?account=${account}`).then((response) => response.json());
-  
+  const nftData: Nft[] = await fetch(
+    `/.netlify/functions/nfts?account=${account}`
+  ).then((response) => response.json());
+
   if (nftData.length === 0) {
     return {
       genesis: [],
@@ -47,7 +49,7 @@ export async function loadNFTs(account: string) {
   }
 
   const genesisNFTs = nftData.filter((n) => n.subcollection === 'Genesis');
-  const winterNFTs  = nftData.filter((n) => n.subcollection === 'Winter');
+  const winterNFTs = nftData.filter((n) => n.subcollection === 'Winter');
 
   return {
     genesis: genesisNFTs,

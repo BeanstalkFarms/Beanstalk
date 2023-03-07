@@ -21,14 +21,16 @@ const store = configureStore({
       serializableCheck: false,
     }),
   ],
-  preloadedState: undefined
+  preloadedState: undefined,
 });
 
 export const save = () => saveState(store.getState());
 
-store.subscribe(throttle(() => {
-  save();
-}, 1000));
+store.subscribe(
+  throttle(() => {
+    save();
+  }, 1000)
+);
 
 export default store;
 

@@ -33,8 +33,8 @@ export type Proposal = {
     id: string;
     /**  */
     name?: string;
-  }
-}
+  };
+};
 
 /**
  * Formats date messages for governance proposal.
@@ -55,11 +55,8 @@ const SEP_MIN_INDEX = SHORTEST_TAG + 2; // "BIP" + "-N"
  */
 export const getProposalTag = (title: string) => {
   const sep = title.indexOf(':', SEP_MIN_INDEX);
-  return (
-    sep > -1
-      ? title.substring(0, sep)
-      : title
-  );
+  return sep > -1 ? title.substring(0, sep) : title;
 };
 
-export const getProposalType = (tag: string) => tag.substring(0, tag.lastIndexOf('-', tag.length - 1));
+export const getProposalType = (tag: string) =>
+  tag.substring(0, tag.lastIndexOf('-', tag.length - 1));

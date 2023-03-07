@@ -38,7 +38,7 @@ export default abstract class Pool {
   public readonly tokens: ERC20Token[];
 
   /**
-   * 
+   *
    */
   public readonly underlying: ERC20Token[];
 
@@ -70,7 +70,7 @@ export default abstract class Pool {
     address: AddressMap<string>,
     // dex: Dex,
     lpToken: ChainConstant<ERC20Token>,
-    tokens:  ChainConstant<ERC20Token>[],
+    tokens: ChainConstant<ERC20Token>[],
     metadata: {
       name: string;
       symbol: string;
@@ -86,11 +86,13 @@ export default abstract class Pool {
       // CRV3 pools can access the underlying stables [DAI, USDC, USDT].
       if (token === CRV3) {
         // FIXME: hardcoded indices for 3CRV
-        prev.push(...[
-          getChainConstant(DAI, chainId),
-          getChainConstant(USDC, chainId),
-          getChainConstant(USDT, chainId),
-        ]);
+        prev.push(
+          ...[
+            getChainConstant(DAI, chainId),
+            getChainConstant(USDC, chainId),
+            getChainConstant(USDT, chainId),
+          ]
+        );
       } else {
         prev.push(getChainConstant(token, chainId));
       }

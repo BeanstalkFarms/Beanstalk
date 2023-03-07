@@ -1,11 +1,12 @@
 import React from 'react';
-import {
-  Container, Stack,
-} from '@mui/material';
+import { Container, Stack } from '@mui/material';
 import SwapActions from '~/components/Swap/Actions';
 import PageHeader from '~/components/Common/PageHeader';
 import GuideButton from '~/components/Common/Guide/GuideButton';
-import { HOW_TO_TRANSFER_FARM_BALANCE, HOW_TO_TRADE_BEANS } from '~/util/Guides';
+import {
+  HOW_TO_TRANSFER_FARM_BALANCE,
+  HOW_TO_TRADE_BEANS,
+} from '~/util/Guides';
 
 import { FC } from '~/types';
 
@@ -19,10 +20,7 @@ const SwapPage: FC<{}> = () => (
         control={
           <GuideButton
             title="The Farmers' Almanac: Swap Guides"
-            guides={[
-              HOW_TO_TRADE_BEANS,
-              HOW_TO_TRANSFER_FARM_BALANCE,
-            ]}
+            guides={[HOW_TO_TRADE_BEANS, HOW_TO_TRANSFER_FARM_BALANCE]}
           />
         }
       />
