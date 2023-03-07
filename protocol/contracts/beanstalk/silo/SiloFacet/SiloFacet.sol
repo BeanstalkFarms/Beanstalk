@@ -213,7 +213,7 @@ contract SiloFacet is TokenSilo {
         uint256 amount,
         bytes calldata depositData
     ) external override nonReentrant {
-        require(to != address(0), "ERC1155: transfer to the zero address");
+        require(recipient != address(0), "ERC1155: transfer to the zero address");
         // allowance requirements are checked in transferDeposit
         (address token, int96 cumulativeGrownStalkPerBDV) = 
             LibBytes.getAddressAndCumulativeStalkPerBDVFromBytes(
@@ -237,7 +237,7 @@ contract SiloFacet is TokenSilo {
         bytes calldata depositsData
     ) external override nonReentrant {
         require(depositIDs.length == amounts.length, "Silo: depositIDs and amounts arrays must be the same length");
-        require(to != address(0), "ERC1155: transfer to the zero address");
+        require(recipient != address(0), "ERC1155: transfer to the zero address");
         // allowance requirements are checked in transferDeposit
         address token;
         int96 cumulativeGrownStalkPerBDV;

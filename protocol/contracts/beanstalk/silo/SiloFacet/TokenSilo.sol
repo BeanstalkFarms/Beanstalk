@@ -612,10 +612,8 @@ contract TokenSilo is Silo, IERC1155, IERC1155Receiver {
         int96 grownStalkPerBDV,
         uint256 id
     ) public returns (bool) {
-        require(
-            bytes32(depositId) == keccak256(abi.encodePacked(token, grownStalkPerBDV, id) | 
-            bytes32(depositId) == LibBytes.packAddressAndCumulativeStalkPerBDV(token,grownStalkPerBDV) |
-        ), "Silo: invalid depositId");
+        require(bytes32(depositId) == keccak256(abi.encodePacked(token, grownStalkPerBDV, id)), "Silo: invalid depositId");
+        require(bytes32(depositId) == LibBytes.packAddressAndCumulativeStalkPerBDV(token,grownStalkPerBDV), "Silo: invalid depositId");
         Storage.Metadata memory depositMetadata;
         depositMetadata.token = token;
         depositMetadata.id = id;

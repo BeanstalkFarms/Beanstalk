@@ -7,6 +7,7 @@ require("hardhat-tracer");
 require("@openzeppelin/hardhat-upgrades")
 require('dotenv').config();
 require("hardhat-preprocessor");
+require('hardhat-contract-sizer');
 
 const fs = require('fs')
 const { upgradeWithNewFacets } = require("./scripts/diamond")

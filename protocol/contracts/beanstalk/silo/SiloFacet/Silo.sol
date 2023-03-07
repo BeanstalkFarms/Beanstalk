@@ -231,20 +231,6 @@ contract Silo is SiloExit {
                 Account.Deposit memory d;
                 (d.amount, d.bdv) = LibLegacyTokenSilo.tokenDeposit(account, token, season);
 
-
-                // NOTE: this was used previously in lines 240, but since then is has been replaced with the function below:
-                // uint256 seedsForDeposit = d.bdv * LibLegacyTokenSilo.getSeedsPerToken(address(token));
-
-                //calculate the amount of grown stalk for this deposit
-                // console.log('grown stalk for deposit: ', seedsForDeposit * LibLegacyTokenSilo.stalkReward(seedsForDeposit, grownStalkPerBdvStartSeason - season));
-
-                // NOTE: this is replaced with the function below, to avoid the stack too deep error: 
-                // migrateData.totalGrownStalkForToken += uint128(
-                //     seedsForDeposit * LibLegacyTokenSilo.stalkReward(
-                //         seedsForDeposit, 
-                //         grownStalkPerBdvStartSeason - season
-                //     )
-                // );
                 migrateData.totalGrownStalkForToken += _calcGrownStalkForDeposit(
                     d.bdv * LibLegacyTokenSilo.getSeedsPerToken(address(token)),
                     season
@@ -257,16 +243,6 @@ contract Silo is SiloExit {
                                     season,
                                     d.amount
                                 );
-
-                // console.log('_mowAndMigrate bdv: ', bdv);
-                // console.log('_mowAndMigrate seedsForDeposit: ', seedsForDeposit);
-
-                // not sure whether a check for bdv == 0 is 
-                // cheaper than artitmetic checks
-                // the UI should filter out seasons w/no deposits anyways
-                // if(bdv == 0) {
-                    // continue;
-                // }
 
                 //add to running total of seeds
                 seedsTotalBasedOnInputDeposits += uint256(d.bdv) * LibLegacyTokenSilo.getSeedsPerToken(address(token));
