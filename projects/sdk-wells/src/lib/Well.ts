@@ -270,6 +270,40 @@ export class Well {
     return toToken.fromBlockchain(amount);
   }
 
+  /**
+   * Swaps from an exact amount of `fromToken` to a minimum amount of `toToken` and supports
+   * fee on transfer tokens.
+   * @param fromToken The token to swap from
+   * @param toToken The token to swap to
+   * @param amountIn The amount of `fromToken` to spend
+   * @param minAmountOut The minimum amount of `toToken` to receive
+   * @param recipient The address to receive `toToken`
+   * @return amountOut The amount of `toToken` received
+   */
+  async swapFromFeeOnTransfer(
+    fromToken: Token,
+    toToken: Token,
+    amountIn: TokenValue,
+    minAmountOut: TokenValue,
+    recipient: string,
+    overrides?: Overrides
+  ): Promise<ContractTransaction> {
+    validateToken(fromToken, "fromToken");
+    validateToken(toToken, "toToken");
+    validateAmount(amountIn, "amountIn");
+    validateAmount(minAmountOut, "minAmountOut");
+    validateAddress(recipient, "recipient");
+
+    return this.contract.swapFromFeeOnTransfer(
+      fromToken.address,
+      toToken.address,
+      amountIn.toBigNumber(),
+      minAmountOut.toBigNumber(),
+      recipient,
+      overrides ?? {}
+    );
+  }
+
   ////// Swap TO
 
   /**
@@ -344,6 +378,25 @@ export class Well {
     const result = await this.contract.getAddLiquidityOut(amountsIn, overrides ?? {});
 
     return this.lpToken!.fromBlockchain(result);
+  }
+
+  /**
+   * Adds liquidity to the Well as multiple tokens in any ratio and supports
+   * fee on transfer tokens.
+   * @param tokenAmountsIn The amount of each token to add; MUST match the indexing of {Well.tokens}
+   * @param minLpAmountOut The minimum amount of LP tokens to receive
+   * @param recipient The address to receive the LP tokens
+   */
+  addLiquidityFeeOnTransfer(
+    tokenAmountsIn: TokenValue[],
+    minLpAmountOut: TokenValue,
+    recipient: string,
+    overrides?: TxOverrides
+  ): Promise<ContractTransaction> {
+    const amountsIn = tokenAmountsIn.map((tv) => tv.toBigNumber());
+    const minLp = minLpAmountOut.toBigNumber();
+
+    return this.contract.addLiquidityFeeOnTransfer(amountsIn, minLp, recipient, overrides ?? {});
   }
 
   ////// Remove Liquidity
@@ -452,14 +505,10 @@ export class Well {
   ////// Other
 
   /**
-   * Gets the reserves of each token held by the Well.
+   * Syncs the reserves of the Well with the Well's balances of underlying tokens.
    */
-  async getReserves(overrides?: CallOverrides): Promise<TokenValue[]> {
-    const tokens = await this.getTokens();
-    const res = await this.contract.getReserves(overrides ?? {});
-    this.reserves = res.map((value: BigNumber, i: number) => tokens[i].fromBlockchain(value));
-
-    return this.reserves;
+  async sync(overrides?: CallOverrides): Promise<ContractTransaction> {
+    return this.contract.sync(overrides ?? {});
   }
 
   /**
@@ -469,5 +518,41 @@ export class Well {
    */
   async skim(address: string, overrides?: TxOverrides): Promise<ContractTransaction> {
     return this.contract.skim(address, overrides ?? {});
+  }
+
+  /**
+   * Shifts excess tokens held by the Well into `toToken` and delivers to `recipient`.
+   * @param toToken The token to shift into
+   * @param minAmountOut The minimum amount of `toToken` to receive
+   * @param recipient The address to receive the token
+   * @return amountOut The amount of `toToken` received
+   */
+  async shift(toToken: Token, minAmountOut: TokenValue, recipient: string, overrides?: CallOverrides): Promise<ContractTransaction> {
+    validateToken(toToken, "toToken");
+    validateAmount(minAmountOut, "minAmountOut");
+    validateAddress(recipient, "recipient");
+
+    return this.contract.shift(toToken.address, minAmountOut.toBigNumber(), recipient, overrides ?? {});
+  }
+
+  /**
+   * Calculates the amount of the token out received from shifting excess tokens held by the Well.
+   * @param tokenOut The token to shift into
+   * @return amountOut The amount of `tokenOut` received
+   */
+  async shiftQuote(toToken: Token): Promise<TokenValue> {
+    const amount = await this.contract.getShiftOut(toToken.address);
+    return toToken.fromBlockchain(amount);
+  }
+
+  /**
+   * Gets the reserves of each token held by the Well.
+   */
+  async getReserves(overrides?: CallOverrides): Promise<TokenValue[]> {
+    const tokens = await this.getTokens();
+    const res = await this.contract.getReserves(overrides ?? {});
+    this.reserves = res.map((value: BigNumber, i: number) => tokens[i].fromBlockchain(value));
+
+    return this.reserves;
   }
 }
