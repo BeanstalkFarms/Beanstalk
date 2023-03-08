@@ -38,7 +38,8 @@ async function go() {
   const est = await workflow.estimate(amountIn);
   console.log(`Quote: ${toToken.fromBlockchain(est).toHuman()}`);
   const tx = await workflow.execute(amountIn, { slippage: 0.1 });
-  await tx.wait();
+  const receipt = await tx.wait();
+  // console.log(receipt);
 
   // reversed
   // amountIn = toToken.amount(200)
