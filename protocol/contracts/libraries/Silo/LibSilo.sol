@@ -155,9 +155,9 @@ library LibSilo {
         } else  {
             roots = s.s.roots.mul(stalk).div(s.s.stalk);
             if (block.number - s.season.sunriseBlock <= 25) {
-                uint256 rootsWithoutEarned = s.s.roots.add(s.newEarnedRoots).mul(stalk).div(s.s.stalk - (s.newEarnedStalk));
+                uint256 rootsWithoutEarned = s.s.roots.add(s.vestingPeriodRoots).mul(stalk).div(s.s.stalk - (s.newEarnedStalk));
                 uint256 deltaRoots = rootsWithoutEarned - roots;
-                s.newEarnedRoots = s.newEarnedRoots.add(uint128(deltaRoots));
+                s.vestingPeriodRoots = s.vestingPeriodRoots.add(uint128(deltaRoots));
                 s.a[account].deltaRoots = uint128(deltaRoots);
             } 
         }
