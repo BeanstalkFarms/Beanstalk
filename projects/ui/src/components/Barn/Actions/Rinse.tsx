@@ -25,10 +25,11 @@ import Row from '~/components/Common/Row';
 import TokenIcon from '~/components/Common/TokenIcon';
 import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import useSdk from '~/hooks/sdk';
-import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
+import useFarmerClaimPlant from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlant';
+import useFarmerClaimAndPlantRefetch from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlantRefetch';
 
 // ---------------------------------------------------
 
@@ -185,7 +186,8 @@ const RinseForm : FC<FormikProps<RinseFormValues>> = ({
 const Rinse : FC<{ quick?: boolean }> = ({ quick }) => {
   /// Wallet connection
   const sdk = useSdk();
-  const claimPlant = useClaimAndPlantActions();
+  const claimPlant = useFarmerClaimPlant();
+  const [claimPlantRefetch] = useFarmerClaimAndPlantRefetch();
   
   /// Farmer
   const farmerBarn          = useFarmerFertilizer();
@@ -196,7 +198,7 @@ const Rinse : FC<{ quick?: boolean }> = ({ quick }) => {
     destination: undefined,
     amount: farmerBarn.fertilizedSprouts,
     farmActions: {
-      options: [],
+      preset: 'none',
       selected: undefined,
       additional: undefined,
       exclude: [ClaimPlantAction.RINSE]
@@ -219,15 +221,19 @@ const Rinse : FC<{ quick?: boolean }> = ({ quick }) => {
         success: `Rinse successful. Added ${displayFullBN(farmerBarn.fertilizedSprouts, SPROUTS.displayDecimals)} Beans to your ${copy.MODES[values.destination]}.`,
       });
 
-      const { workflow: rinse } = ClaimPlant.getAction(ClaimPlantAction.RINSE)(sdk, { 
+      const rinse = sdk.farm.create();
+      const { steps: rinseSteps } = ClaimPlant.getAction(ClaimPlantAction.RINSE)(sdk, { 
         tokenIds: farmerBarn.balances.map((bal) => bal.token.id.toString()), 
         toMode: values.destination 
       });
+      rinse.add(rinseSteps);
 
-      const { execute, actionsPerformed } = await ClaimPlant.build(
+      const { primaryActions, additionalActions, actionsPerformed } = claimPlant.compile(values.farmActions);
+
+      const { execute } = await ClaimPlant.build(
         sdk, 
-        claimPlant.buildActions(values.farmActions.selected),
-        claimPlant.buildActions(values.farmActions.additional),
+        primaryActions,
+        additionalActions,
         rinse,
         sdk.tokens.BEAN.amount(0), // Rinse doesn't need any input so we can just use 0,
         { slippage: 0.1 }
@@ -238,7 +244,7 @@ const Rinse : FC<{ quick?: boolean }> = ({ quick }) => {
 
       const receipt = await txn.wait();
 
-      await claimPlant.refetch(actionsPerformed);
+      await claimPlantRefetch(actionsPerformed);
 
       txToast.success(receipt);
       formActions.resetForm({
@@ -246,7 +252,7 @@ const Rinse : FC<{ quick?: boolean }> = ({ quick }) => {
           destination: FarmToMode.INTERNAL,
           amount: ZERO_BN,
           farmActions: {
-            options: ClaimPlant.presets.none,
+            preset: 'none',
             selected: undefined,
             additional: undefined,
             exclude: [ClaimPlantAction.RINSE]
@@ -261,7 +267,7 @@ const Rinse : FC<{ quick?: boolean }> = ({ quick }) => {
         errorToast.error(err);
       }
     }
-  }, [middleware, sdk, farmerBarn.fertilizedSprouts, farmerBarn.balances, claimPlant]);
+  }, [sdk, middleware, farmerBarn.fertilizedSprouts, farmerBarn.balances, claimPlant, claimPlantRefetch]);
 
   return (
     <Formik initialValues={initialValues} onSubmit={onSubmit} enableReinitialize>

@@ -3,7 +3,7 @@ import { Box, Divider, Link, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
-import { Token, ERC20Token, NativeToken } from '@beanstalk/sdk';
+import { Token, ERC20Token, NativeToken, StepGenerator } from '@beanstalk/sdk';
 import { ethers } from 'ethers';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import { BalanceFromFragment, ClaimAndPlantFormState, FormStateNew } from '~/components/Common/Form';
@@ -34,12 +34,13 @@ import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import { BalanceFrom, balanceFromToMode } from '~/components/Common/Form/BalanceFromRow';
 import ClaimPlant from '~/util/ClaimPlant';
-import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import useFarmerClaimingBalance from '~/hooks/farmer/claim-plant/useFarmerClaimingBalance';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
+import useFarmerClaimPlant from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlant';
+import useFarmerClaimAndPlantRefetch from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlantRefetch';
 
 // ---------------------------------------------------
 
@@ -209,11 +210,12 @@ const BuyForm : FC<
 const Buy : FC<{}> = () => {
   // 
   const sdk = useSdk();
-  const claimPlant = useClaimAndPlantActions();
+  const claimPlant = useFarmerClaimPlant();
   const account = useAccount();
 
   /// Farmer
   const balances = useFarmerBalances();
+  const [refetchClaimPlant] = useFarmerClaimAndPlantRefetch();
   const [refetchAllowances] = useFetchFarmerAllowances();
   
   /// Form
@@ -239,7 +241,7 @@ const Buy : FC<{}> = () => {
     ],
     balanceFrom: BalanceFrom.TOTAL,
     farmActions: {
-      options: ClaimPlant.presets.claimBeans,
+      preset: 'claimBeans',
       selected: undefined,
       additional: undefined,
     },
@@ -278,7 +280,7 @@ const Buy : FC<{}> = () => {
 
     return {
       amountOut: tokenValueToBN(estimate),
-      workflow: work,
+      steps: work.generators as StepGenerator[],
       value: value,
     };
   }, [account, sdk]);
@@ -309,8 +311,8 @@ const Buy : FC<{}> = () => {
       const buyFert = sdk.farm.create();
       let fromMode = balanceFromToMode(values.balanceFrom);
       if (!USDC.equals(tokenIn)) {
-        if (!formData.workflow) throw new Error('No quote available');
-        buyFert.add([...formData.workflow.generators]);
+        if (!formData.steps) throw new Error('No quote available');
+        buyFert.add([...formData.steps]);
         fromMode = FarmFromMode.INTERNAL_TOLERANT;
       } 
 
@@ -346,18 +348,15 @@ const Buy : FC<{}> = () => {
         decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('mintFertilizer', result),
       }));
 
-      // buyFert.add(async () => callData);
+      const { primaryActions, additionalActions, actionsPerformed } = claimPlant.compile(values.farmActions);
 
-      const options = { 
-        slippage: values.settings.slippage,
-      };
-      const { execute, actionsPerformed } = await ClaimPlant.build(
+      const { execute } = await ClaimPlant.build(
         sdk,
-        claimPlant.buildActions(values.farmActions.selected),
-        claimPlant.buildActions(values.farmActions.additional),
+        primaryActions,
+        additionalActions,
         buyFert.copy(),
         tokenIn.amount(amountIn.toString()),
-        options
+        { slippage: values.settings.slippage }
       );
 
       const txn = await execute();
@@ -365,7 +364,7 @@ const Buy : FC<{}> = () => {
 
       const receipt = await txn.wait();
 
-      await claimPlant.refetch(actionsPerformed, { 
+      await refetchClaimPlant(actionsPerformed, {
         farmerBarn: true,
         farmerBalances: true,
         farmerSilo: true,
@@ -384,7 +383,7 @@ const Buy : FC<{}> = () => {
       }
       console.error(err);
     }
-  }, [middleware, sdk, account, claimPlant, refetchAllowances]);
+  }, [middleware, sdk, account, claimPlant, refetchClaimPlant, refetchAllowances]);
 
   return (
     <Formik initialValues={initialValues} onSubmit={onSubmit}>
