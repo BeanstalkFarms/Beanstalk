@@ -1,22 +1,23 @@
+import { CurveFactory, Series } from 'd3-shape';
+import { NumberLike, scaleLinear, scaleLog, scaleTime } from '@visx/scale';
 import React, { useMemo } from 'react';
-import { Series, CurveFactory } from 'd3-shape';
-import { bisector, extent, min, max } from 'd3-array';
-import { SeriesPoint } from '@visx/shape/lib/types';
-import { scaleLinear, scaleTime, scaleLog, NumberLike } from '@visx/scale';
 import { ScaleLinear, ScaleTime } from 'd3-scale';
-import { localPoint } from '@visx/event';
-import { TickFormatter } from '@visx/axis';
-import { Line } from '@visx/shape';
+import { bisector, extent, max, min } from 'd3-array';
 import {
+  curveBasis,
   curveLinear,
+  curveMonotoneX,
+  curveNatural,
   curveStep,
   curveStepAfter,
   curveStepBefore,
-  curveNatural,
-  curveBasis,
-  curveMonotoneX,
 } from '@visx/curve';
+
 import { BeanstalkPalette } from '~/components/App/muiTheme';
+import { Line } from '@visx/shape';
+import { SeriesPoint } from '@visx/shape/lib/types';
+import { TickFormatter } from '@visx/axis';
+import { localPoint } from '@visx/event';
 
 // -------------------------------------------------------------------------
 // --------------------------------- TYPES ---------------------------------
@@ -50,6 +51,7 @@ type ChartStyleConfig = {
 type ChartSharedValuesProps = {
   strokeBuffer: number;
   margin: { top: number; bottom: number; left: number; right: number };
+  chartPadding: { right: number };
   axisColor: string;
   axisHeight: number;
   backgroundColor: string;
@@ -166,24 +168,28 @@ const margin = {
   right: 0,
 };
 
+const chartPadding = {
+  right: 17,
+};
+
 const chartColors = BeanstalkPalette.theme.winter.chart;
 const defaultChartStyles: ChartMultiStyles = {
-  0 : {
+  0: {
     stroke: BeanstalkPalette.theme.winter.primary,
     fillPrimary: chartColors.primaryLight,
     strokeWidth: 2,
   },
-  1 : {
+  1: {
     stroke: chartColors.purple,
     fillPrimary: chartColors.purpleLight,
     strokeWidth: 2,
   },
-  2 : {
+  2: {
     stroke: chartColors.green,
     fillPrimary: chartColors.greenLight,
     strokeWidth: 2,
   },
-  3 : {
+  3: {
     stroke: chartColors.yellow,
     fillPrimary: chartColors.yellowLight,
     strokeWidth: 2,
@@ -280,7 +286,8 @@ const getY = (d: BaseDataPoint) => d.value;
 /**
  * Gets the Y value for a specific stack in a stacked area chart.
  */
-const getYByAsset = (d: BaseDataPoint, asset: string) => (d[asset] ? d[asset] : 0);
+const getYByAsset = (d: BaseDataPoint, asset: string) =>
+  d[asset] ? d[asset] : 0;
 
 /**
  * access 'date' property from BaseDataPoint
@@ -406,22 +413,19 @@ const generateScale = (
       // TWAP: floor at 0, max at 1.2 * highest price
       yScale = scaleLinear<number>({
         domain: [
-          Math.max(1 - (biggestDifference * M), 0),
-          Math.min(1 + (biggestDifference * M), 1.2 * yMax)
+          Math.max(1 - biggestDifference * M, 0),
+          Math.min(1 + biggestDifference * M, 1.2 * yMax),
         ],
       });
     } else if (isStackedArea) {
       yScale = scaleLinear<number>({
         clamp: true,
-        domain: [
-          0,
-          1.05 * (max(data, getY) as number),
-        ],
+        domain: [0, 1.05 * (max(data, getY) as number)],
       });
     } else {
       const yMin = min(data, getY) as number;
       const yMax = max(data, getY) as number;
-      const M = [0.9980, 1.002]; 
+      const M = [0.998, 1.002];
 
       yScale = scaleLinear<number>({
         clamp: false,
@@ -433,10 +437,7 @@ const generateScale = (
     }
 
     // Set range for xScale
-    xScale.range([
-      0,
-      width - yAxisWidth
-    ]);
+    xScale.range([0, width - yAxisWidth]);
 
     // Set range for yScale
     yScale.range([
@@ -516,46 +517,46 @@ type ChartWrapperProps = {
   children: (props: ProviderChartProps) => React.ReactNode;
 };
 
+export const chartHelpers: ProviderChartProps = {
+  common: {
+    strokeBuffer,
+    margin,
+    chartPadding,
+    axisHeight,
+    backgroundColor,
+    labelColor,
+    axisColor,
+    tickLabelColor,
+    yAxisWidth,
+    defaultChartStyles,
+    xTickLabelProps,
+    yTickLabelProps,
+    getChartStyles,
+  },
+  accessors: {
+    getX,
+    getY,
+    getYByAsset,
+    getD,
+    getY0,
+    getY1,
+    bisectSeason,
+    getYMin,
+    getYMax,
+  },
+  utils: {
+    generatePathFromStack,
+    generateScale,
+    getPointerValue,
+    getCurve,
+  },
+};
+
 /**
  * hook used to access commonly used chart functions and values
  */
 const ChartPropProvider: React.FC<ChartWrapperProps> = ({ children }) => {
-  const props = useMemo(
-    () => ({
-      common: {
-        strokeBuffer,
-        margin,
-        axisHeight,
-        backgroundColor,
-        labelColor,
-        axisColor,
-        tickLabelColor,
-        yAxisWidth,
-        defaultChartStyles,
-        xTickLabelProps,
-        yTickLabelProps,
-        getChartStyles,
-      },
-      accessors: {
-        getX,
-        getY,
-        getYByAsset,
-        getD,
-        getY0,
-        getY1,
-        bisectSeason,
-        getYMin,
-        getYMax,
-      },
-      utils: {
-        generatePathFromStack,
-        generateScale,
-        getPointerValue,
-        getCurve,
-      },
-    }),
-    []
-  );
+  const props = useMemo(() => chartHelpers, []);
   return (
     <>
       {children({
