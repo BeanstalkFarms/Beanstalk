@@ -713,6 +713,7 @@ const muiThemeBase: ThemeOptions = {
       styleOverrides: {
         root: (t) => t.theme.unstable_sx({
           px: 1,
+          pb: 1,
         }),
       },
     },

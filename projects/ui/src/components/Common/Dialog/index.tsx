@@ -26,7 +26,7 @@ export const StyledDialogTitle : FC<{
       pl: 2,
       pr: 2,
       pt: 2,
-      pb: 1,
+      pb: 2,
       ...sx
     }}
     {...props}
