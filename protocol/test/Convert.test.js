@@ -52,12 +52,12 @@ describe('Convert', function () {
 
     await this.season.siloSunrise(0);
     console.log('await this.silo.cumulativeGrownStalkPerBdv(this.siloToken.address): ', await this.silo.cumulativeGrownStalkPerBdv(this.siloToken.address));
-    await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL);
+    await this.silo.connect(user).deposit(this.siloToken.address, '100', 0x00, EXTERNAL);
 
     await this.season.siloSunrise(0);
     console.log('await this.silo.cumulativeGrownStalkPerBdv(this.siloToken.address): ', await this.silo.cumulativeGrownStalkPerBdv(this.siloToken.address));
 
-    await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL); //something about this deposit adds extra stalk
+    await this.silo.connect(user).deposit(this.siloToken.address, '100', 0x00, EXTERNAL); //something about this deposit adds extra stalk
   });
 
   beforeEach(async function () {

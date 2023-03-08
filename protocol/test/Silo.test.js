@@ -41,8 +41,8 @@ describe('Silo', function () {
     await this.bean.mint(user2Address, to6('10000'));
     await this.silo.mow(userAddress, this.bean.address);
 
-    this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
-    this.result = await this.silo.connect(user2).deposit(this.bean.address, to6('1000'), EXTERNAL)
+    this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), 0x00, EXTERNAL)
+    this.result = await this.silo.connect(user2).deposit(this.bean.address, to6('1000'), 0x00, EXTERNAL)
   });
 
   beforeEach(async function () {
@@ -69,7 +69,7 @@ describe('Silo', function () {
 
   describe('Silo Balances After Withdrawal', function () {
     beforeEach(async function () {
-      await this.silo.connect(user).withdrawDeposit(this.bean.address, '2', to6('500'), EXTERNAL) //we deposited at grownStalkPerBdv of 2, need to withdraw from 2
+      await this.silo.connect(user).withdrawDeposit(this.bean.address, '2', to6('500'), 0x00, EXTERNAL) //we deposited at grownStalkPerBdv of 2, need to withdraw from 2
     })
 
     it('properly updates the total balances', async function () {

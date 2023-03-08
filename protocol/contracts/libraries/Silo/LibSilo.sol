@@ -124,7 +124,7 @@ library LibSilo {
 
         uint256 roots;
         if (s.s.roots == 0) {
-            roots = uint256(stalk.mul(C.getRootsBase()));
+            roots = stalk.mul(C.getRootsBase());
         } else  {
             roots = s.s.roots.mul(stalk).div(s.s.stalk);
             if (block.number - s.season.sunriseBlock <= 25) {

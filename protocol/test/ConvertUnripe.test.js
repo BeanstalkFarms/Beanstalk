@@ -116,14 +116,14 @@ describe('Unripe Convert', function () {
         this.season.deployGrownStalkPerBdv();
       });
       it('not enough LP', async function () {
-        await this.silo.connect(user).deposit(this.unripeBean.address, to6('200'), EXTERNAL);
+        await this.silo.connect(user).deposit(this.unripeBean.address, to6('200'), 0x00, EXTERNAL);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('20')], to18('15'));
         await expect(this.convert.connect(user).convert(ConvertEncoder.convertUnripeBeansToLP(to6('200'), to6('200.1')), ['0'], [to6('200')]))
           .to.be.revertedWith('Curve: Not enough LP');
       });
 
       it('p >= 1', async function () {
-        await this.silo.connect(user).deposit(this.unripeBean.address, to6('200'), EXTERNAL);
+        await this.silo.connect(user).deposit(this.unripeBean.address, to6('200'), 0x00, EXTERNAL);
         await expect(this.convert.connect(user).convert(ConvertEncoder.convertUnripeBeansToLP(to6('200'), to6('190')), ['0'], ['1000']))
           .to.be.revertedWith('Convert: P must be >= 1.');
       });
@@ -135,7 +135,7 @@ describe('Unripe Convert', function () {
         this.season.deployGrownStalkPerBdv();
       });
       beforeEach(async function () {
-        await this.silo.connect(user).deposit(this.unripeBean.address, to6('2000'), EXTERNAL);
+        await this.silo.connect(user).deposit(this.unripeBean.address, to6('2000'), 0x00, EXTERNAL);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeBeansToLP(to6('1000'), to6('1000')), ['0'], [to6('2000')])
       });
@@ -171,13 +171,13 @@ describe('Unripe Convert', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
         this.season.deployGrownStalkPerBdv();
-        await this.silo.connect(user).deposit(this.unripeBean.address, to6('1000'), EXTERNAL);
+        await this.silo.connect(user).deposit(this.unripeBean.address, to6('1000'), 0x00, EXTERNAL);
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0); //season 14
 
-        await this.silo.connect(user).deposit(this.unripeBean.address, to6('1000'), EXTERNAL);
+        await this.silo.connect(user).deposit(this.unripeBean.address, to6('1000'), 0x00, EXTERNAL);
 
 
         const grownStalkPerBdvUnripeBean = await this.silo.seasonToGrownStalkPerBdv(this.unripeBean.address, '14');
@@ -223,7 +223,7 @@ describe('Unripe Convert', function () {
           UNRIPE_BEAN,
           to6('1000')
         )
-        await this.silo.connect(user).deposit(this.unripeBean.address, to6('2000'), EXTERNAL);
+        await this.silo.connect(user).deposit(this.unripeBean.address, to6('2000'), 0x00, EXTERNAL);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeBeansToLP(to6('500'), to6('500')), ['0'], [to6('500')])
       })
@@ -263,7 +263,7 @@ describe('Unripe Convert', function () {
           UNRIPE_LP,
           to18('942.2960000')
         )
-        await this.silo.connect(user).deposit(this.unripeBean.address, to6('2000'), EXTERNAL);
+        await this.silo.connect(user).deposit(this.unripeBean.address, to6('2000'), 0x00, EXTERNAL);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeBeansToLP(to6('500'), to6('500')), ['0'], [to6('500')])
       })
@@ -303,14 +303,14 @@ describe('Unripe Convert', function () {
     describe('revert', async function () {
       it('not enough Beans', async function () {
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
-        await this.silo.connect(user).deposit(this.unripeLP.address, to6('1000'), EXTERNAL);
+        await this.silo.connect(user).deposit(this.unripeLP.address, to6('1000'), 0x00, EXTERNAL);
         await expect(this.convert.connect(user).convert(ConvertEncoder.convertUnripeLPToBeans(to6('2000'), to6('2500')), ['0'], [to6('2000')]))
           .to.be.revertedWith('Curve: Insufficient Output');
       });
 
       it('p >= 1', async function () {
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('1')], to18('0.5'));
-        await this.silo.connect(user).deposit(this.unripeLP.address, to6('1000'), EXTERNAL);
+        await this.silo.connect(user).deposit(this.unripeLP.address, to6('1000'), 0x00, EXTERNAL);
         await expect(this.convert.connect(user).convert(ConvertEncoder.convertUnripeLPToBeans(to6('2000'), to6('2500')), ['0'], [to6('2000')]))
           .to.be.revertedWith('Convert: P must be < 1.');
       });
@@ -319,7 +319,7 @@ describe('Unripe Convert', function () {
     describe('below max', function () {
       beforeEach(async function () {
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
-        await this.silo.connect(user).deposit(this.unripeLP.address, to6('1000'), EXTERNAL);
+        await this.silo.connect(user).deposit(this.unripeLP.address, to6('1000'), 0x00, EXTERNAL);
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeLPToBeans(to6('1000'), to6('990')), ['0'], [to6('1000')])
       });
 
@@ -340,11 +340,11 @@ describe('Unripe Convert', function () {
     describe('multiple crates', function () {
       beforeEach(async function () {
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
-        await this.silo.connect(user).deposit(this.unripeLP.address, to6('500'), EXTERNAL);
+        await this.silo.connect(user).deposit(this.unripeLP.address, to6('500'), 0x00, EXTERNAL);
 
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
-        await this.silo.connect(user).deposit(this.unripeLP.address, to6('500'), EXTERNAL);
+        await this.silo.connect(user).deposit(this.unripeLP.address, to6('500'), 0x00, EXTERNAL);
 
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeLPToBeans(to6('1000'), to6('990'), this.unripeLP.address), ['0', '4'], [to6('500'), to6('500')])
       });
@@ -382,7 +382,7 @@ describe('Unripe Convert', function () {
           to6('1000')
         )
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
-        await this.silo.connect(user).deposit(this.unripeLP.address, to6('1000'), EXTERNAL);
+        await this.silo.connect(user).deposit(this.unripeLP.address, to6('1000'), 0x00, EXTERNAL);
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeLPToBeans(to6('1000'), to6('1000')), ['0'], [to6('1000')])
       });
 
@@ -406,7 +406,7 @@ describe('Unripe Convert', function () {
           to18('942.2960000')
         )
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
-        await this.silo.connect(user).deposit(this.unripeLP.address, to6('1000'), EXTERNAL);
+        await this.silo.connect(user).deposit(this.unripeLP.address, to6('1000'), 0x00, EXTERNAL);
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeLPToBeans(to6('500'), to6('500')), ['0'], [to6('1000')])
       });
 

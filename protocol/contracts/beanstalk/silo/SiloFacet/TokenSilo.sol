@@ -6,8 +6,8 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./Silo.sol";
-import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import {IERC1155} from "~/interfaces/IERC1155.sol";
+import {IERC1155Receiver} from "~/interfaces/IERC1155Receiver.sol";
 import "~/libraries/LibBytes64.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
@@ -656,7 +656,7 @@ contract TokenSilo is Silo, IERC1155, IERC1155Receiver {
         return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
 
-    function supportsInterface(bytes4 interfaceId) external pure override returns (bool) {
-        return interfaceId == type(IERC1155).interfaceId || interfaceId == type(IERC1155Receiver).interfaceId;
-    }
+    // function supportsInterface(bytes4 interfaceId) external pure override returns (bool) {
+    //     return interfaceId == type(IERC1155).interfaceId || interfaceId == type(IERC1155Receiver).interfaceId;
+    // }
 }

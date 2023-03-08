@@ -157,12 +157,11 @@ contract ConvertFacet is ReentrancyGuard {
             a.bdvRemoved = a.bdvRemoved.add(depositBDV);
             console.log('_withdrawTokens depositBDV end of while loop: ', depositBDV);
             console.log('_withdrawTokens current a.stalkRemoved: ', a.stalkRemoved);
-            
-            i++;
             depositIds[i] = uint256(LibBytes.packAddressAndCumulativeStalkPerBDV(
                 token,
                 grownStalkPerBdvs[i]
             ));
+            i++;
         }
         for (i; i < grownStalkPerBdvs.length; ++i) amounts[i] = 0;
         

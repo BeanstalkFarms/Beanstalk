@@ -119,6 +119,7 @@ library LibTokenSilo {
         uint256 amount,
         uint256 bdv
     ) internal returns (uint256) {
+        require(bdv > 0, "Silo: No Beans under Token.");
         AppStorage storage s = LibAppStorage.diamondStorage();
         console.logInt(grownStalkPerBdv);
         incrementTotalDeposited(token, amount); // Update Totals        
