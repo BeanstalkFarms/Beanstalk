@@ -17,7 +17,7 @@ async function main() {
   const A = sdk.tokens.WETH;
   const B = sdk.tokens.BEAN;
 
-  const amountA = A.amount(1);
+  const amountA = A.amount(0.5);
   const amountB = B.amount(3000);
 
   // get Well object
@@ -34,14 +34,15 @@ async function main() {
   const quoteFrom = await well.swapFromQuote(A, B, amountA);
   console.log(`Quote: ${amountA.toHuman()} ${A.symbol} returns ${quoteFrom.toHuman()} ${B.symbol}`);
   const tx = await well.swapFrom(A, B, amountA, quoteFrom.subSlippage(0.1), account);
-  await tx.wait();
+  const receipt = await tx.wait();
+  // console.log(receipt);
   console.log('Done');
   
-  // Swap To : A => B
-  const quoteTo = await well.swapToQuote(A, B, amountB);
-  console.log(`Quote: Need to spend ${quoteTo.toHuman()} ${A.symbol} to receive ${amountB.toHuman()} ${B.symbol}`);
-  await forkUtils.setBalance(A.address, account, quoteTo.addSlippage(0.1));
-  const tx2 = await well.swapTo(A, B, quoteTo.addSlippage(0.1), amountB, account);
-  await tx2.wait();
-  console.log('Done');
+  // // Swap To : A => B
+  // const quoteTo = await well.swapToQuote(A, B, amountB);
+  // console.log(`Quote: Need to spend ${quoteTo.toHuman()} ${A.symbol} to receive ${amountB.toHuman()} ${B.symbol}`);
+  // await forkUtils.setBalance(A.address, account, quoteTo.addSlippage(0.1));
+  // const tx2 = await well.swapTo(A, B, quoteTo.addSlippage(0.1), amountB, account);
+  // await tx2.wait();
+  // console.log('Done');
 }
