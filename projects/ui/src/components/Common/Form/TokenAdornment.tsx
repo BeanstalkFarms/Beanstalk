@@ -30,12 +30,7 @@ const wrappedVariantSx = {
   px: 1,
   py: 0.1,
   height: 'unset',
-  border: '1px solid',
-  borderColor: 'text.light',
-  ':hover': {
-    borderColor: 'text.light',
-    backgroundColor: BeanstalkPalette.lightestBlue
-  }
+  border: ''
 };
 
 const TokenAdornment: FC<TokenAdornmentProps> = ({
@@ -57,8 +52,8 @@ const TokenAdornment: FC<TokenAdornmentProps> = ({
   return (
     <InputAdornment position="end">
       <Button
-        variant={!balanceFrom ? 'text' : 'outlined'}
-        color={!balanceFrom ? 'primary' : undefined}
+        variant={!balanceFrom ? 'text' : 'outlined-secondary'}
+        color={!balanceFrom ? 'primary' : 'secondary'}
         size={size}
         sx={{
           display: 'inline-flex',

@@ -308,7 +308,7 @@ const TokenInput: FC<
           />
           {/* Bottom Adornment */}
           {(balance && !hideBalance || quote) && (
-          <Row gap={0.5} px={0.5} pt={0.75}>
+          <Row gap={0.5} pt={0.75}>
             {/* Leaving the Stack rendered regardless of whether `quote` is defined
             * ensures that the Balance section gets flexed to the right side of
             * the input. */}
