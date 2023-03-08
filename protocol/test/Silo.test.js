@@ -147,7 +147,7 @@ describe('Silo', function () {
   });
   
 
-  describe("Time Weighted Earned Bean Emission", async function () {
+  describe("Earned Beans issuance during vesting period", async function () {
     before(async function () {
       this.result = await this.silo.connect(user3).deposit(this.bean.address, to6('1000'), EXTERNAL)
       this.result = await this.silo.connect(user4).deposit(this.bean.address, to6('1000'), EXTERNAL)
