@@ -10,6 +10,7 @@ import { RemoveLiquidityOneToken } from "./RemoveLiquidityOneToken";
 import { TransferToken } from "./TransferToken";
 import { UnwrapEth } from "./UnwrapEth";
 import { WellSwap } from "./WellSwap";
+import { WellShift } from "./WellShift";
 import { WithdrawDeposits } from "./WithdrawDeposits";
 import { WithdrawDeposit } from "./WithdrawDeposit";
 import { ClaimWithdrawals } from "./ClaimWithdrawals";
@@ -34,6 +35,7 @@ export {
   TransferToken,
   UnwrapEth,
   WellSwap,
+  WellShift,
   WithdrawDeposits,
   WithdrawDeposit,
   ClaimWithdrawals,
