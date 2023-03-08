@@ -26,7 +26,6 @@ import TransactionToast from '~/components/Common/TxnToast';
 import copy from '~/constants/copy';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
-import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
@@ -37,6 +36,8 @@ import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 import TxnAccordion from '~/components/Common/TxnAccordion';
+import useFarmerClaimPlant from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlant';
+import useFarmerClaimAndPlantRefetch from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlantRefetch';
 
 // -----------------------------------------------------------------------
 
@@ -273,7 +274,8 @@ const Claim : FC<{
   siloBalance,
 }) => {
   const sdk = useSdk();
-  const claimPlant = useClaimAndPlantActions();
+  const claimPlant = useFarmerClaimPlant();
+  const [refetchClaimPlant] = useFarmerClaimAndPlantRefetch();
 
   ///
   const middleware = useFormMiddleware();
@@ -355,21 +357,22 @@ const Claim : FC<{
         claim.add([...values.token.steps]);
       }
 
-      const { execute, actionsPerformed } = await ClaimPlant.build(
+      const compiled = claimPlant.compile(values.farmActions);
+
+      const { execute } = await ClaimPlant.build(
         sdk,
-        claimPlant.buildActions(values.farmActions.selected),
-        claimPlant.buildActions(values.farmActions.additional),
+        compiled.primaryActions,
+        compiled.additionalActions,
         claim,
         amountIn, 
         { slippage: values.settings.slippage },
-        true,
       );
 
       const txn = await execute();
       txToast.confirming(txn);
       const receipt = await txn.wait();
 
-      await claimPlant.refetch(actionsPerformed, { 
+      await refetchClaimPlant(compiled.actionsPerformed, { 
         farmerSilo: true, 
         farmerBalances: true
       });
@@ -385,7 +388,7 @@ const Claim : FC<{
       }
       formActions.setSubmitting(false);
     }
-  }, [middleware, siloBalance?.claimable?.crates, token, claimableBalance, sdk, claimPlant]);
+  }, [middleware, siloBalance?.claimable?.crates, token, claimableBalance, sdk, claimPlant, refetchClaimPlant]);
 
   return (
     <Formik initialValues={initialValues} onSubmit={onSubmit} enableReinitialize>

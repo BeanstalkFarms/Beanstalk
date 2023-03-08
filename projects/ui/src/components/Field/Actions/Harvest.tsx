@@ -29,11 +29,12 @@ import Row from '~/components/Common/Row';
 import TokenIcon from '~/components/Common/TokenIcon';
 import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import useSdk from '~/hooks/sdk';
-import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 import TxnAccordion from '~/components/Common/TxnAccordion';
+import useFarmerClaimPlant from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlant';
+import useFarmerClaimAndPlantRefetch from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlantRefetch';
 
 // -----------------------------------------------------------------------
 
@@ -192,11 +193,12 @@ const HarvestForm: FC<Props> = ({
 const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
   ///
   const sdk = useSdk();
-  const claimPlant = useClaimAndPlantActions();
-
+  const claimPlant = useFarmerClaimPlant();
+  
   /// Farmer
   const farmerField = useFarmerField();
-
+  const [refetchClaimPlant] = useFarmerClaimAndPlantRefetch();
+  
   /// Form
   const middleware = useFormMiddleware();
   const initialValues: HarvestFormValues = useMemo(
@@ -204,7 +206,7 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
       amount: farmerField.harvestablePods || null,
       destination: undefined,
       farmActions: {
-        options: ClaimPlant.presets.none,
+        preset: 'none',
         selected: undefined,
         additional: undefined,
         exclude: [ClaimPlantAction.HARVEST],
@@ -243,20 +245,24 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
           )} Beans to your ${copy.MODES[values.destination]}.`,
         });
 
-        const { workflow: harvest } = ClaimPlant.getAction(
-          ClaimPlantAction.HARVEST
-        )(sdk, {
-          plotIds: Object.keys(farmerField.harvestablePlots).map(
-            (harvestIdx) =>
-              sdk.tokens.PODS.amount(harvestIdx.toString()).blockchainString
-          ),
-          toMode: values.destination,
-        });
+        const plotIds = Object.keys(farmerField.harvestablePlots).map(
+          (harvestIdx) =>
+            sdk.tokens.PODS.amount(harvestIdx.toString()).blockchainString
+        );
 
-        const { execute, actionsPerformed } = await ClaimPlant.build(
+        const harvest = sdk.farm.create();
+        const { steps: harvestSteps } = ClaimPlant.getAction(ClaimPlantAction.HARVEST)(sdk, { 
+          plotIds, 
+          toMode: values.destination
+        });
+        harvest.add(harvestSteps);
+
+        const { primaryActions, additionalActions, actionsPerformed } = claimPlant.compile(values.farmActions);
+
+        const { execute } = await ClaimPlant.build(
           sdk,
-          claimPlant.buildActions(values.farmActions.selected),
-          claimPlant.buildActions(values.farmActions.additional),
+          primaryActions,
+          additionalActions,
           harvest,
           sdk.tokens.BEAN.amount(0), // no amount in
           { slippage: 0.1 }
@@ -267,7 +273,7 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
 
         const receipt = await txn.wait();
 
-        await claimPlant.refetch(actionsPerformed, {
+        await refetchClaimPlant(actionsPerformed, {
           farmerField: true,
           farmerBalances: true,
         });
@@ -284,13 +290,7 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
         formActions.setSubmitting(false);
       }
     },
-    [
-      middleware,
-      sdk,
-      farmerField.harvestablePods,
-      farmerField.harvestablePlots,
-      claimPlant,
-    ]
+    [middleware, sdk, farmerField.harvestablePods, farmerField.harvestablePlots, claimPlant, refetchClaimPlant]
   );
 
   return (

@@ -613,7 +613,7 @@ class ClaimPlant {
     };
   }
 
-  static async buidl(
+  static async build(
     sdk: BeanstalkSDK,
     primary: StepGenerator[],
     secondary: StepGenerator[],
@@ -650,73 +650,6 @@ class ClaimPlant {
     return {
       estimate,
       execute,
-    };
-  }
-
-  static async build(
-    /** */
-    sdk: BeanstalkSDK,
-    /**
-     * ClaimPlantActions required to precede any arbitrary function call when calling Farm
-     */
-    _primaryActions: ClaimPlantActionDataMap,
-    /**
-     * Additional ClaimPlantActions that don't affect the main operation
-     */
-    _secondaryActions: ClaimPlantActionDataMap,
-    /**
-     * workflow that executes some function call if performed in isolation
-     * Ex: if performing a deposit, pass in FarmWorkflow with only the steps to perform a deposit
-     */
-    operation: FarmWorkflow,
-    /** */
-    amountIn: TokenValue,
-    /** */
-    options: {
-      slippage: number;
-      value?: ethers.BigNumber;
-    },
-    /**
-     * If true, mow action will be filtered out.
-     * this should be true for any operation that already calls mow on the contract side i.e. Silo Deposit
-     */
-    filterMow?: boolean
-  ): Promise<ClaimPlantResult> {
-    const deduplicated = ClaimPlant.deduplicate(
-      _primaryActions,
-      _secondaryActions,
-      filterMow
-    );
-    const { primaryActions, secondaryActions, actionsPerformed } = deduplicated;
-    /// --- Construct workflow ---
-    const farm = sdk.farm.create();
-
-    const primary = Object.values(primaryActions);
-    primary.forEach(({ steps }) => {
-      farm.add(steps);
-    });
-    farm.add([...operation.generators]);
-
-    Object.values(secondaryActions).forEach(({ steps }) => {
-      farm.add(steps);
-    });
-
-    const estimate = await farm.estimate(amountIn);
-
-    const summary = farm.summarizeSteps();
-    const mapped = summary.map((step) => ({
-      name: step.name,
-      amountOut: step.amountOut.toString(),
-    }));
-    console.debug('[ClaimPlant][summary]', mapped);
-    console.debug('[ClaimPlant][generators]', farm.generators);
-
-    const execute = () => farm.execute(amountIn, options);
-
-    return {
-      estimate,
-      execute,
-      actionsPerformed,
     };
   }
 

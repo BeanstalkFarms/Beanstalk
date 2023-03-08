@@ -27,7 +27,6 @@ import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
-import useFarmerClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
 import ClaimPlant from '~/util/ClaimPlant';
@@ -35,6 +34,8 @@ import TokenOutput from '~/components/Common/Form/TokenOutput';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import TxnAccordion from '~/components/Common/TxnAccordion';
 import useFarmerClaimAndPlantTxns from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlantTxns';
+import useFarmerClaimPlant from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlant';
+import useFarmerClaimAndPlantRefetch from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlantRefetch';
 
 // -----------------------------------------------------------------------
 
@@ -171,7 +172,8 @@ const WithdrawForm : FC<
 
 const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
   const sdk = useSdk();
-  const claimPlant = useFarmerClaimAndPlantActions();
+  const claimPlant = useFarmerClaimPlant();
+  const [refetchClaimPlant] = useFarmerClaimAndPlantRefetch();
   
   /// Beanstalk
   const season = useSeason();
@@ -238,14 +240,16 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
         ));
       }
 
-      const { execute, actionsPerformed } = await ClaimPlant.build(
+      const { primaryActions, additionalActions, actionsPerformed } = 
+        claimPlant.compile(values.farmActions);
+
+      const { execute } = await ClaimPlant.build(
         sdk,
-        claimPlant.buildActions(values.farmActions.selected),
-        claimPlant.buildActions(values.farmActions.additional),
+        primaryActions,
+        additionalActions,
         withdraw,
         token.amount(0),
         { slippage: 0.1 },
-        true
       );
       
       console.debug('[silo/withdraw] withdrawing: ', {
@@ -266,7 +270,7 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
 
       const receipt = await txn.wait();
 
-      await claimPlant.refetch(actionsPerformed, { 
+      await refetchClaimPlant(actionsPerformed, { 
         farmerSilo: true
       }, [refetchSilo]);
 
@@ -281,7 +285,7 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
       }
       formActions.setSubmitting(false);
     }
-  }, [middleware, token, siloBalances, season, sdk, claimPlant, refetchSilo]);
+  }, [middleware, token, siloBalances, season, sdk, claimPlant, refetchClaimPlant, refetchSilo]);
 
   return (
     <Formik initialValues={initialValues} onSubmit={onSubmit}>

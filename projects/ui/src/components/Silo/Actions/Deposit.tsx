@@ -405,7 +405,7 @@ const Deposit: FC<{
           actionsPerformed 
         } = claimAndPlant.compile(values.farmActions);
 
-        const { execute, estimate } = await ClaimPlant.buidl(
+        const { execute, estimate } = await ClaimPlant.build(
           sdk,
           primaryActions,
           additionalActions,

@@ -532,7 +532,7 @@ const Convert : FC<{
 
       const { primaryActions, additionalActions, actionsPerformed } = claimPlant.compile(values.farmActions);
 
-      const { execute } = await ClaimPlant.buidl(
+      const { execute } = await ClaimPlant.build(
         sdk,
         primaryActions,
         additionalActions,

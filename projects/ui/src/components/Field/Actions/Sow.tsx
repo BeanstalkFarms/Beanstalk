@@ -4,7 +4,7 @@ import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { useSelector } from 'react-redux';
-import { Token, ERC20Token, NativeToken } from '@beanstalk/sdk';
+import { Token, ERC20Token, NativeToken, StepGenerator } from '@beanstalk/sdk';
 import TransactionToast from '~/components/Common/TxnToast';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import {
@@ -37,7 +37,6 @@ import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import ClaimPlant from '~/util/ClaimPlant';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
-import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
@@ -49,6 +48,8 @@ import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 import TxnAccordion from '~/components/Common/TxnAccordion';
+import useFarmerClaimPlant from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlant';
+import useFarmerClaimAndPlantRefetch from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlantRefetch';
 
 type SowFormValues = FormStateNew & {
   settings: SlippageSettingsFragment;
@@ -289,14 +290,19 @@ const SowForm : FC<
 
 const Sow : FC<{}> = () => {
   const sdk = useSdk();
-  const claimPlant = useClaimAndPlantActions();
-
+  
   /// Beanstalk
-  const weather = useSelector<AppState, AppState['_beanstalk']['field']['weather']['yield']>((state) => state._beanstalk.field.weather.yield);
-  const soil    = useSelector<AppState, AppState['_beanstalk']['field']['soil']>((state) => state._beanstalk.field.soil);
+  const weather = useSelector<AppState, AppState['_beanstalk']['field']['weather']['yield']>(
+    (state) => state._beanstalk.field.weather.yield
+  );
+  const soil    = useSelector<AppState, AppState['_beanstalk']['field']['soil']>(
+    (state) => state._beanstalk.field.soil
+  );
   
   /// Farmer
+  const claimAndPlant           = useFarmerClaimPlant();
   const balances                = useFarmerBalances();
+  const [claimAndPlantRefetch]  = useFarmerClaimAndPlantRefetch();
   const [refetchBeanstalkField] = useFetchBeanstalkField();
   const [refetchPools]          = useFetchPools();
 
@@ -331,7 +337,7 @@ const Sow : FC<{}> = () => {
     ],
     maxAmountIn: undefined,
     farmActions: {
-      options: ClaimPlant.presets.claimBeans,
+      preset: 'claimBeans',
       selected: undefined,
       additional: undefined,
     },
@@ -347,13 +353,11 @@ const Sow : FC<{}> = () => {
       const isEth = sdk.tokens.ETH.symbol === _tokenIn.symbol;
       const amountIn = _tokenIn.fromHuman(_amountIn.toString());
 
-      let value: ethers.BigNumber | undefined;
       let fromMode = _fromMode;
 
       if (isEth || sdk.tokens.WETH.equals(_tokenIn)) {
         if (isEth) {
-          fromMode =  FarmFromMode.INTERNAL_TOLERANT;
-          value = ethers.BigNumber.from(amountIn.blockchainString);
+          fromMode = FarmFromMode.INTERNAL_TOLERANT;
           work.add(new sdk.farm.actions.WrapEth(FarmToMode.INTERNAL));
         }
         work.add(sdk.farm.presets.weth2bean(fromMode, FarmToMode.INTERNAL));
@@ -365,8 +369,7 @@ const Sow : FC<{}> = () => {
 
       return {
         amountOut: tokenValueToBN(_tokenOut.fromBlockchain(estimate)),
-        workflow: work,
-        value: value,
+        steps: work.generators as StepGenerator[],
       };
     },
     [sdk.farm, sdk.tokens]
@@ -383,8 +386,12 @@ const Sow : FC<{}> = () => {
       const amountIn = formData.amount && tokenIn.amount(formData.amount.toString());
       const amountBeans = bean.equals(tokenIn) ? formData.amount : formData.amountOut;
       
-      if (values.tokens.length > 1) throw new Error('Only one token supported at this time');
-      if (!amountIn || amountIn.lte(0) || !amountBeans || amountBeans.eq(0)) throw new Error('No amount set'); 
+      if (values.tokens.length > 1) { 
+        throw new Error('Only one token supported at this time');
+      }
+      if (!amountIn || amountIn.lte(0) || !amountBeans || amountBeans.eq(0)) { 
+        throw new Error('No amount set'); 
+      }
       
       const amountPods = amountBeans.times(weather.div(100).plus(1));
       const fromMode = bean.equals(tokenIn) ? balanceFromToMode(values.balanceFrom) : FarmFromMode.INTERNAL_TOLERANT;
@@ -399,9 +406,9 @@ const Sow : FC<{}> = () => {
       /// Swap to BEAN and Sow
       if (tokenIn.equals(ETH) || WETH.equals(tokenIn)) {
         // Require a quote
-        if (!formData.workflow || !formData.amountOut) throw new Error(`No quote available for ${formData.token.symbol}`);
-        console.debug('[SOW]: adding steps to workflow', formData.workflow.generators);
-        formData.workflow.generators.forEach((step) => {
+        if (!formData.steps || !formData.amountOut) throw new Error(`No quote available for ${formData.token.symbol}`);
+        console.debug('[SOW]: adding steps to workflow', formData.steps);
+        formData.steps.forEach((step) => {
           sow.add(step);
         });
         
@@ -412,39 +419,41 @@ const Sow : FC<{}> = () => {
       }
       
       console.debug('[SOW]: adding sow to workflow');
-      sow.add(async (_amountInStep: ethers.BigNumber, _context: any) => ({
-        name: 'sow',
-        amountOut: _amountInStep,
-        prepare: () => ({
-          target: sdk.contracts.beanstalk.address,
-          callData: sdk.contracts.beanstalk.interface.encodeFunctionData('sow', [
-            _amountInStep,
-            fromMode,
-          ]),
-        }),
-        decode: (data: string) => sdk.contracts.beanstalk.interface.decodeFunctionResult('sow', data),
-        decodeResult: (result: string) => sdk.contracts.beanstalk.interface.decodeFunctionResult('sow', result)
-      }));
+      sow.add(
+        async (_amountInStep: ethers.BigNumber, _context: any) => ({
+          name: 'sow',
+          amountOut: _amountInStep,
+          prepare: () => ({
+            target: sdk.contracts.beanstalk.address,
+            callData: sdk.contracts.beanstalk.interface.encodeFunctionData('sow', [
+              _amountInStep,
+              fromMode,
+            ]),
+          }),
+          decode: (data: string) => sdk.contracts.beanstalk.interface.decodeFunctionResult('sow', data),
+          decodeResult: (result: string) => sdk.contracts.beanstalk.interface.decodeFunctionResult('sow', result)
+        })
+      );
 
-      const overrides = { 
-        value: formData.value,
-        slippage: values.settings.slippage,
-      };
-      console.debug('[SOW]: executing ClaimPlant & SOW workflow');
-      const { execute, actionsPerformed } = await ClaimPlant.build(
-        sdk,
-        claimPlant.buildActions(values.farmActions.selected),
-        claimPlant.buildActions(values.farmActions.additional),
+      const { primaryActions, additionalActions, actionsPerformed } = claimAndPlant.compile(values.farmActions);
+
+      const { execute } = await ClaimPlant.build(
+        sdk, 
+        primaryActions,
+        additionalActions,
         sow,
         amountIn,
-        overrides,
+        { slippage: values.settings.slippage }
       );
+
+      console.debug('[SOW]: executing ClaimPlant & SOW workflow');
+
       const txn = await execute();
       txToast.confirming(txn);
       
       const reciept = await txn.wait();
 
-      await claimPlant.refetch(actionsPerformed, { 
+      await claimAndPlantRefetch(actionsPerformed, { 
         farmerField: true,
         farmerBalances: true,
       }, [refetchBeanstalkField, refetchPools]);
@@ -462,7 +471,7 @@ const Sow : FC<{}> = () => {
     } finally {
       formActions.setSubmitting(false);
     }
-  }, [middleware, sdk, weather, claimPlant, refetchBeanstalkField, refetchPools]);
+  }, [middleware, sdk, weather, claimAndPlant, claimAndPlantRefetch, refetchBeanstalkField, refetchPools]);
 
   return (
     <Formik<SowFormValues>
