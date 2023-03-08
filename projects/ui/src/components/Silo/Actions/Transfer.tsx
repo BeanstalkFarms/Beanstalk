@@ -26,15 +26,16 @@ import { ActionType } from '~/util/Actions';
 import TransactionToast from '~/components/Common/TxnToast';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
-import useFarmerClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
-import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
+import ClaimPlant from '~/util/ClaimPlant';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 import TxnAccordion from '~/components/Common/TxnAccordion';
+import useFarmerClaimPlant from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlant';
+import useFarmerClaimAndPlantRefetch from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlantRefetch';
 
 export type TransferFormValues = FormStateNew & 
   ClaimAndPlantFormState
@@ -208,7 +209,8 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
 
 const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
   const sdk = useSdk();
-  const claimPlant = useFarmerClaimAndPlantActions();
+  const claimAndPlant = useFarmerClaimPlant();
+  const [refetchClaimPlant] =  useFarmerClaimAndPlantRefetch();
 
   /// Beanstalk
   const season = useSeason();
@@ -229,10 +231,9 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
     ],
     to: '',
     farmActions: {
-      options: ClaimPlant.presets.plant,
+      preset: 'plant',
       selected: undefined,
-      additional: undefined,
-      required: [ClaimPlantAction.MOW],
+      additional: undefined
     },
   }), [token]);
 
@@ -291,21 +292,26 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
         success: 'Transfer successful.',
       });
 
-      const { execute, actionsPerformed } = await ClaimPlant.build(
+      const { 
+        primaryActions, 
+        additionalActions, 
+        actionsPerformed 
+      } = claimAndPlant.compile(values.farmActions);
+
+      const { execute } = await ClaimPlant.buidl(
         sdk,
-        claimPlant.buildActions(values.farmActions.selected),
-        claimPlant.buildActions(values.farmActions.additional),
+        primaryActions,
+        additionalActions,
         transfer,
         token.amount(0),
-        { slippage: 0.1 },
-        true
+        { slippage: 0.1 }
       );
 
       const txn = await execute();
       txToast.confirming(txn);
 
       const receipt = await txn.wait();
-      await claimPlant.refetch(actionsPerformed, { farmerSilo: true }, [refetchSilo]);
+      await refetchClaimPlant(actionsPerformed, { farmerSilo: true }, [refetchSilo]);
   
       txToast.success(receipt);
       formActions.resetForm();
@@ -318,7 +324,7 @@ const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
       }
       formActions.setSubmitting(false);
     }
-  }, [middleware, token, siloBalances, season, sdk, claimPlant, refetchSilo]);
+  }, [middleware, token, siloBalances, season, sdk, claimAndPlant, refetchClaimPlant, refetchSilo]);
 
   return (
     <Formik

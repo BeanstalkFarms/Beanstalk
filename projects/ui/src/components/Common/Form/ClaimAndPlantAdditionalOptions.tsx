@@ -11,8 +11,15 @@ import ClaimPlantOptionCard from './ClaimPlantOptionCard';
 import { ClaimAndPlantFormState } from '.';
 import useToggle from '~/hooks/display/useToggle';
 import useTimedRefresh from '~/hooks/app/useTimedRefresh';
-import { ClaimPlantAction } from '~/util/ClaimPlant';
+import { ClaimPlantAction, ClaimPlantFormPresets } from '~/util/ClaimPlant';
 import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
+
+type Props = {
+  disabledActions?: {
+    action: ClaimPlantAction;
+    reason: string;
+  }[];
+}
 
 type ClaimAndPlantGasResult = { [key in ClaimPlantAction]?: BigNumber };
 
@@ -25,7 +32,9 @@ const sortOrder: { [key in ClaimPlantAction]: number } = {
   [ClaimPlantAction.RINSE]: 5
 };
 
-const ClaimAndPlantAdditionalOptions: React.FC<{}> = () => {
+const ClaimAndPlantAdditionalOptions: React.FC<Props> = ({
+  disabledActions
+}) => {
   const { actions } = useClaimAndPlantActions();
   /// State
   const [hovered, setHovered] = useState<Set<ClaimPlantAction>>(new Set());
@@ -39,21 +48,33 @@ const ClaimAndPlantAdditionalOptions: React.FC<{}> = () => {
   /// Formik
   const { values: { farmActions }, setFieldValue } = useFormikContext<ClaimAndPlantFormState>();
 
-  const options = useMemo(() => {
-    // the options are the complement of possible actions to values.options
-    const _options = new Set(Object.keys(ClaimPlantAction) as ClaimPlantAction[]);
-    farmActions.options.forEach((opt) => _options.delete(opt));
-    farmActions?.exclude?.forEach((opt) => _options.delete(opt));
+  const { options, required, enabled, allToggled, disabled } = useMemo(() => {
+    const preset = ClaimPlantFormPresets[farmActions.preset];
 
-    return [..._options].sort((a, b) => sortOrder[a] - sortOrder[b]);
-  }, [farmActions?.exclude, farmActions.options]);
+    const _options = [...preset.additional || []].sort((a, b) => sortOrder[a] - sortOrder[b]);
 
-  const [required, enabled, allToggled] = useMemo(() => {
-    const _required = new Set(farmActions?.required?.filter((opt) => claimPlantOptions[opt].enabled));
-    const _enabled = options.filter((opt) => claimPlantOptions[opt].enabled);
-    const _allToggled = _enabled.every((action) => local.has(action)) && _enabled.length > 0;
-    return [_required, _enabled, _allToggled];
-  }, [farmActions?.required, options, claimPlantOptions, local]);
+    const _required = new Set(preset.required.filter((opt) => claimPlantOptions[opt].enabled));
+
+    const _disabled = new Map<ClaimPlantAction, string>(
+      disabledActions?.map((datum) => [datum.action, datum.reason]) || []
+    );
+
+    const _enabled = _options.filter(
+      (opt) => claimPlantOptions[opt].enabled && !_disabled.has(opt)
+    );
+
+    const _allToggled = _enabled.every(
+      (action) => local.has(action) && !_disabled.has(action)
+    ) && _enabled.length > 1;
+
+    return {
+      required: _required,
+      options: _options,
+      enabled: _enabled,
+      allToggled: _allToggled,
+      disabled: _disabled
+    };
+  }, [claimPlantOptions, disabledActions, farmActions.preset, local]);
 
   /// Handlers
   const handleOnToggle = (item: ClaimPlantAction) => {
@@ -82,9 +103,8 @@ const ClaimAndPlantAdditionalOptions: React.FC<{}> = () => {
     setFieldValue('farmActions.additional', newSet);
   };
 
-  const handleMouseEvent = useCallback((item: ClaimPlantAction, isRemoving: boolean) => {
-    // if (!claimPlantOptions[item].enabled) return;
-    const copy = new Set(hovered);
+  const handleMouseEvent = (item: ClaimPlantAction, isRemoving: boolean) => {
+    const copy = new Set([...hovered]);
     const affected = [item, ...claimPlantOptions[item].implied];
     if (isRemoving) {
       affected.forEach((option) => { 
@@ -94,11 +114,13 @@ const ClaimAndPlantAdditionalOptions: React.FC<{}> = () => {
       });
     } else {
       affected.forEach((option) => 
-        enabled.includes(option) && copy.add(option)
+        enabled.includes(option) && !local.has && copy.add(option)
       );
     }
-    setHovered(copy);
-  }, [claimPlantOptions, enabled, hovered, required]);
+    if (copy.size !== hovered.size) {
+      setHovered(copy);
+    }
+  };
 
   const estimateGas = useCallback(async () => {
     if (!enabled.length || !Object.keys(actions).length || !open) return;
@@ -118,6 +140,7 @@ const ClaimAndPlantAdditionalOptions: React.FC<{}> = () => {
 
   useTimedRefresh(estimateGas, 2 * 1000, open);
 
+  // reset the local state if the form resets
   useEffect(() => {
     if (!options) {
       setLocal(new Set());
@@ -125,6 +148,7 @@ const ClaimAndPlantAdditionalOptions: React.FC<{}> = () => {
     }
   }, [options, setFieldValue]);
 
+  // update the local state to include required options
   useEffect(() => {
     if (!required.size) return;
     const hasAllRequired = [...required].every((opt) => local.has(opt));
@@ -134,6 +158,25 @@ const ClaimAndPlantAdditionalOptions: React.FC<{}> = () => {
       setFieldValue('farmActions.additional', [...updatedSelected]);
     }
   }, [local, required, setFieldValue]);
+
+  // update local state if disable actions change
+  useEffect(() => {
+    if (!disabledActions) return;
+    console.log('rendering...');
+    const removeDisabled = () => {
+      const filtered = new Set([...local]);
+      disabledActions.forEach(({ action }) => {
+        local.has(action) && filtered.delete(action);
+      });
+
+      if (filtered.size !== local.size) {
+        setLocal(filtered);
+        setFieldValue('farmActions.additional', [...filtered]);
+      }
+    };
+
+    removeDisabled();
+  }, [disabledActions, local, setFieldValue]);
 
   return (
     <SelectionAccordion<ClaimPlantAction>
@@ -153,7 +196,7 @@ const ClaimAndPlantAdditionalOptions: React.FC<{}> = () => {
           justifyContent="space-between"
           // We add a negative margin b/c the MUI switch component has padding of 12px, and
           // removing the padding from the switch component causes unexpected behavior
-          sx={{ my: '-12px' }}
+          sx={{ my: '-12px', boxSizing: 'border-box' }}
         >
           <Typography color="text.secondary">Claim All</Typography>
           <Switch
@@ -169,6 +212,8 @@ const ClaimAndPlantAdditionalOptions: React.FC<{}> = () => {
       render={(item, selected) => (
         <ClaimPlantOptionCard
           option={item}
+          disabled={disabled.has(item)}
+          disabledMessage={disabled.get(item)}
           summary={claimPlantOptions[item]}
           selected={selected}
           required={required.has(item)}
@@ -176,8 +221,8 @@ const ClaimAndPlantAdditionalOptions: React.FC<{}> = () => {
           isHovered={hovered.has(item)}
           onMouseOver={() => handleMouseEvent(item, false)}
           onMouseLeave={() => handleMouseEvent(item, true)}
-          />
-        )}
+        />
+      )}
     />
   );
 };

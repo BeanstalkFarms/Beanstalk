@@ -28,15 +28,16 @@ import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew'
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
-import useClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
-import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
+import ClaimPlant from '~/util/ClaimPlant';
 import useAccount from '~/hooks/ledger/useAccount';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 import TxnAccordion from '~/components/Common/TxnAccordion';
+import useFarmerClaimPlant from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlant';
+import useFarmerClaimAndPlantRefetch from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlantRefetch';
 
 // -----------------------------------------------------------------------
 
@@ -367,8 +368,10 @@ const Convert : FC<{
   fromToken
 }) => {
   const sdk = useSdk();
-  const claimPlant = useClaimAndPlantActions();
+  const claimPlant = useFarmerClaimPlant();
   const account = useAccount();
+
+  const [refetchClaimPlant] = useFarmerClaimAndPlantRefetch();
   
   /// Token List
   const [tokenList, initialTokenOut] = useMemo(() => {
@@ -412,10 +415,9 @@ const Convert : FC<{
     // Token Outputs
     tokenOut:       initialTokenOut,
     farmActions: {
-      options: ClaimPlant.presets.plant,
+      preset: 'plant',
       selected: undefined,
       additional: undefined,
-      required: [ClaimPlantAction.MOW]
     },
 
   }), [fromToken, initialTokenOut]);
@@ -440,7 +442,7 @@ const Convert : FC<{
 
       if (!inToken || !outToken) throw new Error('conversion unavailable');
 
-      const { minAmountOut } = await sdk.silo.siloConvert.convertEstimate(
+      const { minAmountOut } = await siloConvert.convertEstimate(
         inToken, 
         outToken, 
         inToken.amount(amountIn.toString()), 
@@ -496,13 +498,6 @@ const Convert : FC<{
         season.toNumber(),
       );
 
-      const encoded = sdk.silo.siloConvert.calculateEncoding(
-        tokenIn, 
-        tokenOut, 
-        amountIn, 
-        amountOut
-      );
-
       txToast = new TransactionToast({
         loading: 'Converting...',
         success: 'Convert successful.',
@@ -512,13 +507,17 @@ const Convert : FC<{
       const amounts = conversion.crates.map((crate) => crate.amount.toBlockchain());
 
       const callData = beanstalk.interface.encodeFunctionData('convert', [
-        encoded,
+        siloConvert.calculateEncoding(
+          tokenIn, 
+          tokenOut, 
+          amountIn, 
+          amountOut
+        ),
         crates,
         amounts
       ]);
 
-      const work = sdk.farm.create('Convert');
-      work.add(
+      const work = sdk.farm.create('Convert').add(
         async (_amountInStep: ethers.BigNumber, _context: any) => ({
           name: 'convert',
           amountOut: _amountInStep,
@@ -531,14 +530,15 @@ const Convert : FC<{
         })
       );
 
-      const { execute, actionsPerformed } = await ClaimPlant.build(
+      const { primaryActions, additionalActions, actionsPerformed } = claimPlant.compile(values.farmActions);
+
+      const { execute } = await ClaimPlant.buidl(
         sdk,
-        claimPlant.buildActions(values.farmActions.selected),
-        claimPlant.buildActions(values.farmActions.additional),
+        primaryActions,
+        additionalActions,
         work,
         amountIn,
         { slippage },
-        true, // filter out mow b/c converting handles it for us
       );
 
       const txn = await execute();
@@ -546,7 +546,7 @@ const Convert : FC<{
 
       const receipt = await txn.wait();
 
-      await claimPlant.refetch(actionsPerformed, { 
+      await refetchClaimPlant(actionsPerformed, { 
         farmerSilo: true, // update farmer silo since we just moved deposits around
       }, [refetchPools]);  // update prices to account for pool conversion
 
@@ -562,7 +562,7 @@ const Convert : FC<{
       }
       formActions.setSubmitting(false);
     }
-  }, [sdk, middleware, account, season, claimPlant, refetchPools]);
+  }, [sdk, middleware, account, season, claimPlant, refetchClaimPlant, refetchPools]);
 
   return (
     <Formik initialValues={initialValues} onSubmit={onSubmit}>

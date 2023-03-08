@@ -8,7 +8,24 @@ import ClaimPlantAccordionPill from '~/components/Common/Form/ClaimPlantOptionPi
 import ClaimPlantAccordionCard from '~/components/Common/Form/ClaimPlantOptionCard';
 import { ClaimAndPlantFormState } from '.';
 import useToggle from '~/hooks/display/useToggle';
-import { ClaimPlantAction } from '~/util/ClaimPlant';
+import { ClaimPlantAction, ClaimPlantFormPresets } from '~/util/ClaimPlant';
+
+const getConfig = (key: keyof typeof ClaimPlantFormPresets) => {
+  switch (key) {
+    case 'plant':  {
+      return {
+        variant: 'card',
+        title: 'Add before this transaction',
+      };
+    }
+    default: {
+      return {
+        variant: 'pill',
+        title: 'Add Claimable Assets to this transaction',
+      };
+    }
+  }
+};
 
 const ClaimAndPlantFarmActions: React.FC<{}> = () => {
   /// Formik
@@ -16,28 +33,24 @@ const ClaimAndPlantFarmActions: React.FC<{}> = () => {
   const { values: { farmActions }, setFieldValue } = formik;
 
   /// State
-  const [local, setLocal] = useState<Set<ClaimPlantAction>>(
-    new Set(farmActions.selected || [])
-  );
+  const [local, setLocal] = useState<Set<ClaimPlantAction>>(new Set(farmActions.selected || []));
   const [open, show, hide] = useToggle();
 
   /// Helpers
   const { options } = useFarmerClaimPlantOptions();
-  
-  const formOptions = useMemo(() => {
-    const isPlant = farmActions.options.includes(ClaimPlantAction.PLANT);
-    const someEnabled = farmActions.options.find((opt) => options[opt].enabled);
+
+  const formItems = useMemo(() => {
+    const preset = ClaimPlantFormPresets[farmActions.preset];
+    const config = getConfig(farmActions.preset);
+    const someEnabled = preset.options.find((opt) => options[opt].enabled);
 
     return {
-      options: farmActions.options,
-      variant: isPlant ? 'card' : 'pill',
-      title: isPlant 
-        ? 'Add before this transaction'
-        : 'Add Claimable Assets to this transaction',
+      ...config,
+      options: preset.options,
       noneEnabled: !someEnabled
     };
-  }, [farmActions.options, options]);
-
+  }, [farmActions.preset, options]);
+  
   /// Handlers
   const handleOnToggle = useCallback(
     (item: ClaimPlantAction) => {
@@ -61,14 +74,14 @@ const ClaimAndPlantFarmActions: React.FC<{}> = () => {
     }
   }, [farmActions.selected, hide, local.size]);
 
-  if (formOptions.noneEnabled) return null;
+  if (formItems.noneEnabled) return null;
 
   return (
     <SelectionAccordion<ClaimPlantAction>
       open={open}
       onChange={open ? hide : show}
-      title={formOptions.title}
-      options={formOptions.options}
+      title={formItems.title}
+      options={formItems.options}
       selected={local}
       onToggle={handleOnToggle}
       sx={{ borderRadius: 1 }}
@@ -76,7 +89,7 @@ const ClaimAndPlantFarmActions: React.FC<{}> = () => {
       render={(item, selected) => {
         const sharedProps = { option: item, summary: options[item], selected };
 
-        switch (formOptions.variant) {
+        switch (formItems.variant) {
           case 'card': {
             return <ClaimPlantAccordionCard {...sharedProps} />;
           }

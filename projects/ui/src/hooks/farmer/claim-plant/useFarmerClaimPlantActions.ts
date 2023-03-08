@@ -1,9 +1,10 @@
 import { useCallback, useMemo } from 'react';
 import BigNumber from 'bignumber.js';
+import { ClaimAndPlantFormState } from '~/components/Common/Form';
 import ClaimPlant, {
   ClaimPlantActionMap,
-  ClaimPlantActionData,
   ClaimPlantAction,
+  ClaimPlantActionable,
 } from '~/util/ClaimPlant';
 import useAccount from '~/hooks/ledger/useAccount';
 import useBDV from '../../beanstalk/useBDV';
@@ -17,6 +18,7 @@ import { useFetchFarmerField } from '~/state/farmer/field/updater';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import useSdk from '../../sdk';
 import { MayPromise } from '~/types';
+import { normalizeBN } from '~/util';
 
 export type FarmerRefetchFn =
   | 'farmerSilo'
@@ -47,17 +49,13 @@ type ClaimPlantRefetch = (
 ) => Promise<void>;
 
 type ClaimPlantBuildAction = (actions?: ClaimPlantAction[]) => Partial<{
-  [key in ClaimPlantAction]: ClaimPlantActionData;
+  [key in ClaimPlantAction]: ClaimPlantActionable;
 }>;
 
 // -------------------------------------------------------------------------
 
 // take in sdk as a param to allow for testing
-export default function useFarmerClaimPlantActions(): {
-  actions: ClaimPlantActionMap;
-  refetch: ClaimPlantRefetch;
-  buildActions: ClaimPlantBuildAction;
-} {
+export default function useFarmerClaimPlantActions() {
   const sdk = useSdk();
   /// Farmer
   const account = useAccount();
@@ -92,7 +90,9 @@ export default function useFarmerClaimPlantActions(): {
   }, [farmerSilo.balances, getBDV, sdk.tokens.unripeTokens]);
 
   const claimAndPlantActions: ClaimPlantActionMap = useMemo(() => {
-    const beanBalance = farmerSilo.balances[sdk.tokens.BEAN.address];
+    const { BEAN } = sdk.tokens;
+
+    const beanBalance = farmerSilo.balances[BEAN.address];
     const plots = Object.keys(farmerField.harvestablePlots);
     const seasons = beanBalance?.claimable?.crates.map((c) => c.season.toString()) || [];
     const plotIds = plots.map((harvestIdx) =>
@@ -101,6 +101,9 @@ export default function useFarmerClaimPlantActions(): {
     const fertilizerIds = farmerBarn.balances.map((bal) =>
       bal.token.id.toString()
     );
+    const harvestablePods = normalizeBN(farmerField.harvestablePods);
+    const rinsableSprouts = normalizeBN(farmerBarn.fertilizedSprouts);
+    const claimableBeans = normalizeBN(beanBalance?.claimable.amount);
 
     return {
       [ClaimPlantAction.MOW]: (params) => {
@@ -125,52 +128,56 @@ export default function useFarmerClaimPlantActions(): {
       },
       [ClaimPlantAction.RINSE]: (params) => {
         const rinse = ClaimPlant.getAction(ClaimPlantAction.RINSE);
-        return rinse(sdk, { tokenIds: fertilizerIds, ...params });
+        return rinse(sdk, {
+          tokenIds: fertilizerIds,
+          ...params,
+        });
       },
     };
   }, [
     account,
     cratesForEnroot,
     farmerBarn.balances,
+    farmerBarn.fertilizedSprouts,
     farmerField.harvestablePlots,
+    farmerField.harvestablePods,
     farmerSilo.balances,
     sdk,
   ]);
 
+  const refetchMap = useMemo(() => ({
+      farmerSilo: refetchFarmerSilo,
+      farmerField: refetchFarmerField,
+      farmerBalances: refetchFarmerBalances,
+      farmerBarn: refetchFarmerBarn,
+    }), [refetchFarmerBalances, refetchFarmerBarn, refetchFarmerField, refetchFarmerSilo]);
+
   const refetch: ClaimPlantRefetch = useCallback(
     async (actions, config, additional) => {
-      const refetchMap = {
-        farmerSilo: refetchFarmerSilo,
-        farmerField: refetchFarmerField,
-        farmerBalances: refetchFarmerBalances,
-        farmerBarn: refetchFarmerBarn,
-      };
+      const map: RefetchConfig<() => MayPromise<any>> = {};
 
-      const refetchFunctions = [...actions].reduce((prev, action) => {
-        actionToRefetch[action].forEach((key: FarmerRefetchFn) => {
-          if (config?.[key] && !prev[key]) {
-            prev[key] = refetchMap[key];
-          } else if (!prev[key]) {
-            prev[key] = refetchMap[key];
+      [...actions].forEach((action) => {
+        actionToRefetch[action]?.forEach((key: FarmerRefetchFn) => {
+          if (!config?.[key]) {
+            map[key] = refetchMap[key];
           }
         });
+      });
 
-        return prev;
-      }, {} as RefetchConfig<() => MayPromise<any>>);
+      if (config) {
+        Object.entries(config).forEach(([k, v]) => {
+          const key = k as FarmerRefetchFn;
+          if (v && !(key in map)) {
+            map[key] = refetchMap[key];
+          }
+        });
+      }
 
-      const allRefetchFunctions = [
-        ...Object.values(refetchFunctions),
-        ...(additional || []),
-      ];
-
-      await Promise.all(allRefetchFunctions.map(async (fn) => fn()));
+      await Promise.all(
+        [...Object.values(map), ...(additional || [])].map((fn) => fn())
+      );
     },
-    [
-      refetchFarmerBalances,
-      refetchFarmerBarn,
-      refetchFarmerField,
-      refetchFarmerSilo,
-    ]
+    [refetchMap]
   );
 
   const buildActions: ClaimPlantBuildAction = useCallback(
@@ -179,14 +186,35 @@ export default function useFarmerClaimPlantActions(): {
       return actions.reduce((prev, curr) => {
         prev[curr] = claimAndPlantActions[curr]();
         return prev;
-      }, {} as Partial<{ [action in ClaimPlantAction]: ClaimPlantActionData }>);
+      }, {} as Partial<{ [action in ClaimPlantAction]: ClaimPlantActionable }>);
     },
     [claimAndPlantActions]
   );
 
+  const compile = useCallback((
+    /** */
+    formState: ClaimAndPlantFormState, 
+    /** */
+    options?: { 
+      /** whether or not to filter out mow actions */
+      isMowing?: boolean
+    }
+  ) => {
+    const { farmActions } = formState;
+
+    const deduplicated = ClaimPlant.deduplicate(
+      buildActions(farmActions.selected || []),
+      buildActions(farmActions.additional || []),
+      options?.isMowing || false,
+    );
+    
+    return deduplicated;
+  }, [buildActions]);
+
   return {
     actions: claimAndPlantActions,
     refetch,
+    compile,
     buildActions,
   };
 }

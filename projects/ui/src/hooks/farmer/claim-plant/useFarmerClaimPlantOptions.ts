@@ -9,7 +9,7 @@ import useFarmerField from '../useFarmerField';
 import useFarmerSilo from '../useFarmerSilo';
 import useRevitalized from '../useRevitalized';
 import { normalizeBN } from '~/util';
-import { ClaimPlantAction } from '~/util/ClaimPlant';
+import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import { Action, ActionType } from '~/util/Actions';
 
 const tooltips = {
@@ -153,7 +153,7 @@ export default function useFarmerClaimAndPlantOptions() {
         title: 'Mow',
         tooltip: tooltips.mow,
         enabled: grownStalk.gt(0),
-        implied: [],
+        implied: ClaimPlant.config.implied[ClaimPlantAction.MOW] || [],
         summary: [
           {
             description: 'Grown Stalk',
@@ -173,7 +173,7 @@ export default function useFarmerClaimAndPlantOptions() {
         title: 'Plant',
         tooltip: tooltips.plant,
         enabled: earnedSeeds.gt(0),
-        implied: [ClaimPlantAction.MOW],
+        implied: ClaimPlant.config.implied[ClaimPlantAction.PLANT] || [],
         summary: [
           {
             description: 'Earned Beans',
@@ -208,7 +208,7 @@ export default function useFarmerClaimAndPlantOptions() {
         title: 'Enroot',
         tooltip: tooltips.enroot,
         enabled: revitalizedSeeds.gt(0) && revitalizedStalk.gt(0),
-        implied: [ClaimPlantAction.MOW],
+        implied: ClaimPlant.config.implied[ClaimPlantAction.ENROOT] || [],
         summary: [
           {
             description: 'Revitalized Seeds',
@@ -235,7 +235,7 @@ export default function useFarmerClaimAndPlantOptions() {
         title: 'Harvest',
         tooltip: tooltips.harvest,
         enabled: harvestablePods.gt(0),
-        implied: [],
+        implied: ClaimPlant.config.implied[ClaimPlantAction.HARVEST] || [],
         claimable: {
           token: PODS,
           amount: harvestablePods,
@@ -259,7 +259,7 @@ export default function useFarmerClaimAndPlantOptions() {
         title: 'Rinse',
         tooltip: tooltips.rinse,
         enabled: rinsableSprouts.gt(0),
-        implied: [],
+        implied: ClaimPlant.config.implied[ClaimPlantAction.RINSE] || [],
         claimable: {
           token: SPROUTS,
           amount: rinsableSprouts,
@@ -283,7 +283,7 @@ export default function useFarmerClaimAndPlantOptions() {
         title: 'Claim',
         tooltip: tooltips.claim,
         enabled: claimableBeans.gt(0),
-        implied: [ClaimPlantAction.MOW],
+        implied: ClaimPlant.config.implied[ClaimPlantAction.CLAIM] || [],
         claimable: {
           token: BEAN,
           amount: claimableBeans,
@@ -317,6 +317,10 @@ export default function useFarmerClaimAndPlantOptions() {
     revitalizedStalk,
     sdk.tokens,
   ]);
+
+  const getPlantableAmount = useCallback(() => {
+    
+  }, []);
 
   /**
    * Returns the total amount of beans claimable from a list of claimable actions

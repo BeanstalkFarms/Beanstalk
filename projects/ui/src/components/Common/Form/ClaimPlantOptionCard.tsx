@@ -34,6 +34,7 @@ type Props = {
   selected: boolean;
   gas?: BigNumber;
   required?: boolean;
+  disabledMessage?: string;
 } & Omit<SelectionItemProps, 'checkIcon' | 'title' | 'variant'>;
 
 const tooltipIconProps = {
@@ -49,16 +50,25 @@ const ClaimPlantOptionCard: React.FC<Props> = ({
   summary,
   selected,
   required,
+  disabledMessage,
   gas,
   ...props
 }) => (
-  <Tooltip title={!summary.enabled ? `Nothing to ${summary.title.toLowerCase()}` : ''}>
+  <Tooltip 
+    title={
+      !summary.enabled 
+        ? `Nothing to ${summary.title.toLowerCase()}`
+        : props.disabled 
+          ? disabledMessage
+          : ''
+    }
+  >
     <Stack width="100%">
       <SelectionItem
         {...props}
         selected={selected}
         checkIcon="top-left"
-        disabled={!summary.enabled}
+        disabled={props.disabled || !summary.enabled}
         title={
           <Row width="100%" justifyContent="space-between">
             <Row gap={0.5}>

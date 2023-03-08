@@ -1,4 +1,4 @@
-import { ERC20Token, FarmWorkflow, NativeToken } from '@beanstalk/sdk';
+import { ERC20Token, NativeToken, StepGenerator } from '@beanstalk/sdk';
 import { BigNumber } from 'bignumber.js';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import debounce from 'lodash/debounce';
@@ -8,7 +8,7 @@ import { ethers } from 'ethers';
 export type QuoteHandlerResultNew = {
   amountOut: BigNumber;
   value?: ethers.BigNumber;
-  workflow?: FarmWorkflow;
+  steps?: StepGenerator[];
 };
 
 export type QuoteHandlerWithParams<T> = (

@@ -30,11 +30,11 @@ import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 import useFarmerClaimAndPlantActions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantActions';
 import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
-import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
+import ClaimPlant from '~/util/ClaimPlant';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
-import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 import TxnAccordion from '~/components/Common/TxnAccordion';
+import useFarmerClaimAndPlantTxns from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlantTxns';
 
 // -----------------------------------------------------------------------
 
@@ -60,7 +60,6 @@ const WithdrawForm : FC<
   season,
 }) => {
   const sdk = useSdk();
-  const claimPlantOptions = useFarmerClaimAndPlantOptions();
   
   // Input props
   const InputProps = useMemo(() => ({
@@ -78,13 +77,7 @@ const WithdrawForm : FC<
   );
   const isReady = (withdrawResult && withdrawResult.amount.lt(0));
 
-  const claimPlantTxnActions = useMemo(() => {
-    const { selected, additional } = values.farmActions;
-    return claimPlantOptions.getTxnActions(
-      selected,
-      additional
-    );
-  }, [claimPlantOptions, values.farmActions]);
+  const txActions = useFarmerClaimAndPlantTxns();
 
   return (
     <Form autoComplete="off" noValidate>
@@ -151,7 +144,7 @@ const WithdrawForm : FC<
                       withdrawSeasons
                     }
                   ]}
-                  {...claimPlantTxnActions}
+                  {...txActions}
                 />
               </TxnAccordion>
             </Box>
@@ -200,10 +193,9 @@ const Withdraw : FC<{ token: ERC20Token; }> = ({ token }) => {
       },
     ],
     farmActions: {
-      options: ClaimPlant.presets.plant,
+      preset: 'plant',
       selected: undefined,
       additional: undefined,
-      required: [ClaimPlantAction.MOW]
     },
   }), [token]);
 

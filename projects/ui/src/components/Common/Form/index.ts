@@ -5,7 +5,7 @@ import { QuoteHandlerResult } from '~/hooks/ledger/useQuote';
 import { FarmToMode } from '~/lib/Beanstalk/Farm';
 import { BalanceFrom } from './BalanceFromRow';
 import { QuoteHandlerResultNew } from '~/hooks/ledger/useQuoteWithParams';
-import { ClaimPlantAction } from '~/util/ClaimPlant';
+import { ClaimPlantAction, ClaimPlantFormPresets } from '~/util/ClaimPlant';
 
 /**
  * 
@@ -123,10 +123,7 @@ export type ClaimAndPlantFormState = {
    * Possible Actions are [Claim, Harvest, Rinse, Mow, Plant, Enroot]
    */
   farmActions: {
-    /**
-     * The farm actions that can be performed.
-     */
-    options: ClaimPlantAction[];
+    preset: keyof typeof ClaimPlantFormPresets;
     /**
      * actions that have been selected by the user.
      * NOTE: typically these are the actions that must be peformed BEFORE the user performs the 'main' action.
@@ -141,11 +138,6 @@ export type ClaimAndPlantFormState = {
      * the options for 'additional.selected' are the set of [Mow, Plant, Enroot]
      */
     additional: ClaimPlantAction[] | undefined;
-    /**
-     * any additional ClaimPlantActions that are required to be performed if possible.
-     * Ex: If the user is performing a silo deposit, the we required 'MOW' as well if grown stalk > 0
-     */
-    required?: ClaimPlantAction[];
     /**
      * actions to exclude from the options
      */

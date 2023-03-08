@@ -377,8 +377,6 @@ const TxnPreview : FC<{
     );
   }
 
-  console.log('instructions by tyhpe: ', instructionsByType);
-
   return (
     <Stack gap={1.5}>
       {instructionGroupCount > 1 ? (

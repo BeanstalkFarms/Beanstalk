@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
-import { ERC20Token, Token } from '@beanstalk/sdk';
+import { ERC20Token, StepGenerator, Token } from '@beanstalk/sdk';
 import { FarmerSiloBalance } from '~/state/farmer/silo';
 import { ActionType } from '~/util/Actions';
 import {
@@ -117,7 +117,7 @@ const ClaimForm : FC<
       const estimate = await work.estimate(amountIn);
       return {
         amountOut: tokenValueToBN(_tokenOut.fromBlockchain(estimate)),
-        workflow: work,
+        steps: work.generators as StepGenerator[],
       };
     },
     [pool, sdk.farm, sdk.contracts.curve.registries.metaFactory.address]
@@ -295,10 +295,9 @@ const Claim : FC<{
       slippage: 0.1,
     },
     farmActions: {
-      options: ClaimPlant.presets.plant,
+      preset: 'plant',
       selected: undefined,
       additional: undefined,
-      required: [ClaimPlantAction.MOW],
       exclude: [ClaimPlantAction.CLAIM]
     },
   }), [token, claimableBalance]);
@@ -352,8 +351,8 @@ const Claim : FC<{
       }
 
       if (removeLiquidity) {
-        if (!values.token.workflow) throw new Error('No quote found.');
-        claim.add([...values.token.workflow.generators]);
+        if (!values.token.steps) throw new Error('No quote found.');
+        claim.add([...values.token.steps]);
       }
 
       const { execute, actionsPerformed } = await ClaimPlant.build(
