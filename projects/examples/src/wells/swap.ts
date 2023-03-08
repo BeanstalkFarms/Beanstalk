@@ -14,32 +14,34 @@ async function main() {
   const sdk = new WellsSDK({ signer });
   const forkUtils = new TestUtils.BlockchainUtils(bsdk);
 
-  const BEAN = sdk.tokens.BEAN;
-  const WETH = sdk.tokens.WETH;
+  const A = sdk.tokens.WETH;
+  const B = sdk.tokens.BEAN;
 
-  const beanAmount = BEAN.amount(10000);
-  const wethAmount = WETH.amount(3);
+  const amountA = A.amount(1);
+  const amountB = B.amount(3000);
 
   // get Well object
   const well = await sdk.getWell(WELL_ADDRESS);
 
   // give user tokens and set allowances
-  await forkUtils.setBalance(BEAN.address, account, 10000);
-  await BEAN.approve(well.address, TokenValue.MAX_UINT256);
-  await forkUtils.setBalance(WETH.address, account, 100);
-  await WETH.approve(well.address, TokenValue.MAX_UINT256);
+  await forkUtils.setBalance(A.address, account, amountA);
+  await A.approve(well.address, TokenValue.MAX_UINT256);
 
-  // Swap From : WETH => BEAN
-  const amountIn = WETH.amount(10);
-  const quoteFrom = await well.swapFromQuote(WETH, BEAN, amountIn);
-  console.log(`${amountIn.toHuman()} WETH returns ${quoteFrom.toHuman()} BEAN`);
-  const tx = await well.swapFrom(WETH, BEAN, amountIn, quoteFrom.subSlippage(0.1), account);
+  // await forkUtils.setBalance(B.address, account, amountB);
+  // await B.approve(well.address, TokenValue.MAX_UINT256);
+
+  // Swap From : A => B
+  const quoteFrom = await well.swapFromQuote(A, B, amountA);
+  console.log(`Quote: ${amountA.toHuman()} ${A.symbol} returns ${quoteFrom.toHuman()} ${B.symbol}`);
+  const tx = await well.swapFrom(A, B, amountA, quoteFrom.subSlippage(0.1), account);
   await tx.wait();
-
-  // Swap To : WETH => BEAN
-  const amountOut = BEAN.amount(3333);
-  const quoteTo = await well.swapToQuote(WETH, BEAN, amountOut);
-  console.log(`Need to spend ${quoteTo.toHuman()} ETH to receive ${amountOut.toHuman()} BEAN`);
-  const tx2 = await well.swapTo(WETH, BEAN, quoteTo.addSlippage(0.1), amountOut, account);
+  console.log('Done');
+  
+  // Swap To : A => B
+  const quoteTo = await well.swapToQuote(A, B, amountB);
+  console.log(`Quote: Need to spend ${quoteTo.toHuman()} ${A.symbol} to receive ${amountB.toHuman()} ${B.symbol}`);
+  await forkUtils.setBalance(A.address, account, quoteTo.addSlippage(0.1));
+  const tx2 = await well.swapTo(A, B, quoteTo.addSlippage(0.1), amountB, account);
   await tx2.wait();
+  console.log('Done');
 }
