@@ -17,6 +17,8 @@ async function main() {
   const { sdk: _sdk, stop } = await impersonate(account);
   sdk = _sdk;
 
+  sdk.DEBUG = false;
+
   await go();
 
   await stop();
@@ -25,7 +27,7 @@ async function main() {
 async function go() {
   const fromToken = sdk.tokens.WETH;
   const toToken = sdk.tokens.BEAN;
-  let amountIn = fromToken.amount(1.5);
+  let amountIn = fromToken.amount(0.5);
 
   // approve and give
   chain.setBalance(fromToken, account, amountIn);
@@ -36,7 +38,7 @@ async function go() {
   const est = await workflow.estimate(amountIn);
   console.log(`Quote: ${toToken.fromBlockchain(est).toHuman()}`);
   const tx = await workflow.execute(amountIn, { slippage: 0.1 });
-  await tx.wait()
+  await tx.wait();
 
   // reversed
   // amountIn = toToken.amount(200)
@@ -44,7 +46,6 @@ async function go() {
   // console.log(`Quote: ${fromToken.fromBlockchain(est).toHuman()}`);
   // const tx = await workflow.execute(fromToken.fromBlockchain(est), { slippage: 0.1 });
   // await tx.wait()
-
 
   console.log("Done");
 }
@@ -58,7 +59,7 @@ async function getWorkflow(from: Token, to: Token) {
     FarmFromMode.EXTERNAL,
     FarmToMode.EXTERNAL
   );
-  
+
   const advancedPipe = sdk.farm.createAdvancedPipe("Pipeline Well Swap");
   const approve = new sdk.farm.actions.ApproveERC20(from as ERC20Token, WELL_ADDRESS);
   const swap = new sdk.farm.actions.WellSwap(WELL_ADDRESS, from, to, account);

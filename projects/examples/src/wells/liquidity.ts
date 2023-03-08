@@ -24,9 +24,9 @@ async function main() {
   const well = await sdk.getWell(WELL_ADDRESS);
 
   // give user tokens and set allowances
-  await forkUtils.setBalance(BEAN.address, account, 100000);
+  await forkUtils.setBalance(BEAN.address, account, beanAmount);
   await BEAN.approve(well.address, TokenValue.MAX_UINT256);
-  await forkUtils.setBalance(WETH.address, account, 100);
+  await forkUtils.setBalance(WETH.address, account, wethAmount);
   await WETH.approve(well.address, TokenValue.MAX_UINT256);
 
   // AddLiquidity
