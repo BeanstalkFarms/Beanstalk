@@ -11,7 +11,8 @@
     "lint:fix": "npm run lint -- --fix",
     "prettier": "prettier src --check",
     "prettier:fix": "npm run prettier -- --write",
-    "format": "npm run prettier:fix && npm run lint:fix"
+    "format": "npm run prettier:fix && npm run lint:fix",
+    "pre-commit": "lint-staged"
   },
   "dependencies": {
     "react": "^18.2.0",
