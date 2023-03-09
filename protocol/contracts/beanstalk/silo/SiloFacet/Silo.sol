@@ -171,12 +171,11 @@ contract Silo is SiloExit {
         uint256 accountStalk =  s.a[account].s.stalk;
         beans = _balanceOfEarnedBeans(account, accountStalk);
         s.a[account].deltaRoots = 0; // must be 0'd, as calling balanceOfEarnedBeans would give a invalid amount of beans. 
-
         if (beans == 0) return 0;
 
         // Reduce the Silo's supply of Earned Beans.
         s.earnedBeans = s.earnedBeans.sub(uint128(beans));
-
+        
         // Deposit Earned Beans if there are any. Note that 1 Bean = 1 BDV.
         LibTokenSilo.addDepositToAccount(
             account,
@@ -200,6 +199,7 @@ contract Silo is SiloExit {
         // The following lines allocate Earned Stalk that has already been minted to `account`.
         uint256 stalk = beans.mul(C.getStalkPerBean());
         s.a[account].s.stalk = accountStalk.add(stalk);
+
 
         emit StalkBalanceChanged(account, int256(stalk), 0);
         emit Plant(account, beans);
