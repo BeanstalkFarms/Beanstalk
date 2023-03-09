@@ -1,5 +1,9 @@
+/**
+ * This tests wells using the sdk.swap functionality
+ */
+
 import { BeanstalkSDK, ERC20Token, FarmFromMode, FarmToMode, Token } from "@beanstalk/sdk";
-import { signer } from "../setup";
+import { signer, chain } from "../setup";
 
 main()
   .catch((e) => {
@@ -10,36 +14,32 @@ main()
 async function main() {
   const sdk = new BeanstalkSDK({ signer, DEBUG: false });
   sdk.DEBUG = true;
-  // await swap(sdk, sdk.tokens.USDT, sdk.tokens.USDT, "500", FarmFromMode.INTERNAL, FarmToMode.EXTERNAL);
-  // await swap(sdk, sdk.tokens.WETH, sdk.tokens.BEAN, "3");
-  // await swap(sdk, sdk.tokens.ETH, sdk.tokens.WETH, "1");
 
-  // await swap(sdk, sdk.tokens.BEAN, sdk.tokens.ETH, "300");
-  await swap(sdk, sdk.tokens.ETH, sdk.tokens.BEAN, "3");
-
-  // await estimate(sdk, sdk.tokens.WETH, sdk.tokens.BEAN, "3000");
-  // await estimate(sdk, sdk.tokens.BEAN, sdk.tokens.WETH, "3");
+  await swap(sdk, sdk.tokens.ETH, sdk.tokens.BEAN, 0.25);
 }
 
 async function swap(
   sdk: BeanstalkSDK,
   fromToken: Token,
   toToken: Token,
-  _amount: string,
+  _amount: number,
   fromMode: FarmFromMode = FarmFromMode.EXTERNAL,
   toMode: FarmToMode = FarmToMode.EXTERNAL
 ) {
   const amount = fromToken.fromHuman(_amount);
   const account = await sdk.getAccount();
+
+  // give token and approve
+  chain.setBalance(fromToken, account, amount.add(0.1));
+  if (fromToken.symbol !== "ETH") {
+    await (await (fromToken as ERC20Token).approveBeanstalk(amount.toBigNumber())).wait();
+  }
+
   const op = sdk.swap.buildSwap(fromToken, toToken, account, fromMode, toMode);
   console.log("Built swap:", op.getDisplay());
 
   const est = await op.estimate(amount);
   console.log(`Estimated: ${est.toHuman()}`);
-
-  if (fromToken.symbol !== "ETH") {
-    await (await (fromToken as ERC20Token).approve(sdk.contracts.beanstalk.address, amount.toBigNumber())).wait();
-  }
 
   const tx = await (await op.execute(amount, 1)).wait();
   console.log(`Success: ${tx.transactionHash}`);
@@ -57,7 +57,6 @@ async function estimate(
   const amountRev = toToken.fromHuman(_amount);
   const account = await sdk.getAccount();
   const op = sdk.swap.buildSwap(fromToken, toToken, account, fromMode, toMode);
-  
 
   // const est = await op.estimate(amount);
   // console.log(`Estimated: ${est.toHuman()}`);

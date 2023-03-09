@@ -6,6 +6,7 @@
     "@beanstalk/sdk-core": "workspace:*",
     "@beanstalk/wells": "workspace:*",
     "chalk": "4",
+    "dotenv": "16.0.3",
     "table": "6.8.1"
   },
   "scripts": {

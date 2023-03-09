@@ -16,12 +16,12 @@ describe("Silo Deposit", function () {
   const whiteListedTokens = Array.from(sdk.tokens.siloWhitelist);
   const bean3CrvDepositable = [
     sdk.tokens.ETH,
+    sdk.tokens.WETH,
     sdk.tokens.BEAN,
     sdk.tokens.CRV3,
     sdk.tokens.DAI,
     sdk.tokens.USDC,
-    sdk.tokens.USDT,
-    sdk.tokens.WETH
+    sdk.tokens.USDT
   ];
 
   beforeAll(async () => {

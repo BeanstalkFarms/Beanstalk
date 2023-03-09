@@ -189,6 +189,11 @@ export class BlockchainUtils {
     }
     const _balance = typeof balance === "number" ? _token.amount(balance) : balance;
     const balanceAmount = _balance.toBigNumber();
+
+    if (_token.symbol === 'ETH'){
+      return this.sdk.provider.send("hardhat_setBalance", [account, balanceAmount.toHexString()]);
+    }
+    
     const [slot, isTokenReverse] = this.getBalanceConfig(_token.address);
     const values = [account, slot];
 

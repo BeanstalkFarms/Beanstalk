@@ -22,6 +22,7 @@ export class TransferToken extends StepClass<BasicPreparedResult> {
       fromMode: this._fromMode,
       toMode: this._toMode
     });
+    
     return {
       name: this.name,
       amountOut: _amountInStep, // transfer exact amount

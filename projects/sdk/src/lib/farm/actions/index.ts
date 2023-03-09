@@ -1,27 +1,31 @@
-import { Exchange } from "./Exchange";
-import { ExchangeUnderlying } from "./ExchangeUnderlying";
-import { WrapEth } from "./WrapEth";
-import { UnwrapEth } from "./UnwrapEth";
 import { AddLiquidity } from "./AddLiquidity";
-import { RemoveLiquidityOneToken } from "./RemoveLiquidityOneToken";
-import { TransferToken } from "./TransferToken";
-import { WithdrawDeposits } from "./WithdrawDeposits";
+import { ApproveERC20 } from "./ApproveERC20";
 import { ClaimWithdrawals } from "./ClaimWithdrawals";
-import { PermitERC20 } from "./PermitERC20";
 import { Deposit } from "./Deposit";
 import { DevDebug } from "./_DevDebug";
+import { Exchange } from "./Exchange";
+import { ExchangeUnderlying } from "./ExchangeUnderlying";
+import { PermitERC20 } from "./PermitERC20";
+import { RemoveLiquidityOneToken } from "./RemoveLiquidityOneToken";
+import { TransferToken } from "./TransferToken";
+import { UnwrapEth } from "./UnwrapEth";
+import { WellSwap } from "./WellSwap";
+import { WithdrawDeposits } from "./WithdrawDeposits";
+import { WrapEth } from "./WrapEth";
 
 export {
-  Exchange,
-  ExchangeUnderlying,
-  WrapEth,
-  UnwrapEth,
   AddLiquidity,
-  RemoveLiquidityOneToken,
-  TransferToken,
-  PermitERC20,
-  WithdrawDeposits,
+  ApproveERC20,
   ClaimWithdrawals,
   Deposit,
-  DevDebug
+  DevDebug,
+  Exchange,
+  ExchangeUnderlying,
+  PermitERC20,
+  RemoveLiquidityOneToken,
+  TransferToken,
+  UnwrapEth,
+  WellSwap,
+  WithdrawDeposits,
+  WrapEth
 };
