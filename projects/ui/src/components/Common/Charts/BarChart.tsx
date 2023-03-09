@@ -81,7 +81,7 @@ const useBarChart = ({
         const x = getX(datum);
         const barWidth = xScale.bandwidth();
         const barHeight = yMax - (yScale(getY(datum)) ?? 0);
-        const xPosition = xScale(x);
+        const xPosition = xScale(x) ?? 0;
         const yPosition = yMax - barHeight;
 
         const fillColor = isActive ? 'rgba(0, 0, 0, 0.08)' : 'transparent';

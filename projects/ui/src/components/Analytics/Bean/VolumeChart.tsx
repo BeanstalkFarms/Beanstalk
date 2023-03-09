@@ -31,7 +31,7 @@ type DataByDate = {
   [key: string]: BaseDataPoint[];
 };
 
-const VolumeChart: FC<{ width: number; height: number }> = ({
+const VolumeChart: FC<{ width?: number; height: number }> = ({
   width = undefined,
   height,
 }) => {
