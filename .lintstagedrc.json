@@ -1,3 +1,5 @@
 {
-  "*": "prettier --ignore-unknown --write"
+  "*": "prettier --ignore-unknown --write",
+  "./projects/ui/src/**/*.{ts,tsx,json}": "eslint --fix",
+  "./projects/dex-ui/src/**/*.{ts,tsx,json}": "eslint --fix"
 }
