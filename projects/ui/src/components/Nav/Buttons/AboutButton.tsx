@@ -62,7 +62,7 @@ const AboutButton: FC<ButtonProps> = ({ sx }) => {
         <MenuItem key={item.path} item={item} onClick={toggleAnchor} />
       ))}
       {/* Contract Button Container */}
-      <Box sx={{ px: 1, pt: 0.75 }}>
+      <Box sx={{ px: 1, pt: 0.75, pb: 0.2 }}>
         <Button
           fullWidth
           href={`${chainInfo.explorer}/address/${beanstalkAddress}`}

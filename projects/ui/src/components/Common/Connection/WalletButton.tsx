@@ -223,6 +223,7 @@ const WalletButton: FC<{ showFullText?: boolean; } & ButtonProps> = ({ ...props 
           },
         }}
         disablePortal
+        disableScrollLock
         // Align the menu to the bottom
         // right side of the anchor button.
         anchorOrigin={{

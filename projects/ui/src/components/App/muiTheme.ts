@@ -707,7 +707,14 @@ const muiThemeBase: ThemeOptions = {
         },
       },
       styleOverrides: {
-        root: (t) => t.theme.unstable_sx({}),
+        root: (t) => t.theme.unstable_sx({
+          borderRadius: 1.8,
+        }),
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        rounded: { borderRadius: 20 },
       },
     },
     MuiDialogContent: {
