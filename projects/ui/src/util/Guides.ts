@@ -88,9 +88,9 @@ export const HOW_TO_TRADE_BEANS: Guide = {
   title: 'How to Trade Beans',
   url: 'https://docs.bean.money/almanac/guides/swap/trade-beans'
 };
-export const HOW_TO_TRANSFER_FARM_BALANCE: Guide = {
-  title: 'How to Transfer Farm Balances',
-  url: 'https://docs.bean.money/almanac/guides/swap/transfer-farm-balance'
+export const HOW_TO_TRANSFER_BALANCES: Guide = {
+  title: 'How to Transfer Balances',
+  url: 'https://docs.bean.money/almanac/guides/swap/transfer-balances'
 };
 
 // GOVERNANCE
