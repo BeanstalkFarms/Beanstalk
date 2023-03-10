@@ -19,7 +19,7 @@ const MarketGraphContainer: React.FC<{
   const marketBottomTabsOpen = openState === 1 || openState === 2;
 
   return (
-    <CondensedCard title="OVERVIEW" sx={{ height: '100%' }}>
+    <CondensedCard title="OVERVIEW" sx={{ borderRadius: 1.4, height: '100%' }}>
       {!data.loading && data.listings && data.orders ? (
         <Box 
           width="100%" 

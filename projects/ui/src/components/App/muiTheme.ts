@@ -372,8 +372,8 @@ const muiThemeBase: ThemeOptions = {
       },
       styleOverrides: {
         root: (t) => t.theme.unstable_sx({
-          border: 'none'
-
+          border: 'none',
+          borderRadius: 2,
         }),
       },
     },
@@ -700,6 +700,7 @@ const muiThemeBase: ThemeOptions = {
         transitionDuration: 0,
         PaperProps: {
           sx: {
+            borderRadius: 1.8,
             background: BeanstalkPalette.white,
             minWidth: { xs: '95%', sm: '400px' },
           },
