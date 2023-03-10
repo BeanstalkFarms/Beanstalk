@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "start": "vite --port 2424",
-    "build": "vite build",
+    "build": "tsc && vite build",
     "lint": "eslint \"src/**/**/*.ts{,x}\"",
     "lint:fix": "npm run lint -- --fix",
     "prettier": "prettier src --check",
