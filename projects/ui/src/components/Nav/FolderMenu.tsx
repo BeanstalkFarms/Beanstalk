@@ -35,6 +35,7 @@ const FolderMenu: FC<{
   onOpen?: () => void;
   hotkey: string;
   zIndex?: number;
+  zeroTopRightRadius?: boolean;
 } & ButtonProps> = ({
   startIcon,
   buttonContent,
@@ -46,6 +47,7 @@ const FolderMenu: FC<{
   onOpen,
   /** fix: overlapping price and sun folders */
   zIndex = 998,
+  zeroTopRightRadius,
   ...buttonProps
 }) => {
   // Theme
@@ -152,9 +154,9 @@ const FolderMenu: FC<{
           sx={(_theme) => ({
             background: BeanstalkPalette.white,
             width: popperWidth !== undefined ? popperWidth : '325px',
-            borderBottomLeftRadius: _theme.shape.borderRadius,
-            borderBottomRightRadius: _theme.shape.borderRadius,
-            borderTopRightRadius: _theme.shape.borderRadius,
+            borderBottomLeftRadius: 20,
+            borderBottomRightRadius: 20,
+            borderTopRightRadius: zeroTopRightRadius ? 0 : 20,
             borderColor: PAGE_BORDER_COLOR,
             borderWidth: 1,
             borderStyle: 'solid',
