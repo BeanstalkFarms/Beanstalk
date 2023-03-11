@@ -129,6 +129,7 @@ const AboutButton: FC<ButtonProps> = ({ sx }) => {
         transitionDuration={{ appear: 200, enter: 200, exit: 0 }}
         disablePortal
         disableScrollLock
+        marginThreshold={0}
         // Align the menu to the bottom-right side of the anchor button.
         anchorOrigin={{
           vertical: 'bottom',
