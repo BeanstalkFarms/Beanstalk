@@ -19,10 +19,16 @@ const PLACEMENTS = {
     pr: 0.8,
     pt: 0.4
   },
+  'inside-form-top-right': {
+    pb: 1,
+    mt: -4,
+    display: 'flex',
+    flexDirection: 'row-reverse',
+  }
 };
 
 const TxnSettings : FC<{
-  placement?: 'form-top-right' | 'condensed-form-top-right',
+  placement?: 'form-top-right' | 'condensed-form-top-right' | 'inside-form-top-right',
 }> = ({ 
   placement = 'form-top-right',
   children
