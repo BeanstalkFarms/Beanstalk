@@ -136,8 +136,13 @@ library LibUnripeSilo {
         view
         returns (uint256 amount, uint256 bdv)
     {
+        console.log('unripeBeanDeposit season: ', season);
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 legacyAmount = s.a[account].bean.deposits[season];
+        
+        console.log('unripeBeanDeposit legacyAmount: ', legacyAmount);
+
+
         // Sum the `account` pre-exploit Silo V1 Bean Balance 
         // and the Silo V2 Unripe Bean Balance
         amount = uint256(
@@ -150,6 +155,11 @@ library LibUnripeSilo {
         // (where 1 Bean = 1 BDV) times the initial recapitalization percent.
         bdv = uint256(s.a[account].legacyDeposits[C.unripeBeanAddress()][season].bdv)
             .add(legacyAmount.mul(C.initialRecap()).div(1e18));
+
+        
+        console.log('unripeBeanDeposit season: ', season);
+        console.log('unripeBeanDeposit amount: ', amount);
+        console.log('unripeBeanDeposit bdv: ', bdv);
     }
 
     //////////////////////// Unripe LP ////////////////////////

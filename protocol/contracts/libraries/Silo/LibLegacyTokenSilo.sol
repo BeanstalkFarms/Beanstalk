@@ -62,83 +62,6 @@ library LibLegacyTokenSilo {
         );
     }
 
-    //////////////////////// ADD DEPOSIT ////////////////////////
-
-    /**
-     * @return seeds The amount of Seeds received for this Deposit.
-     * @return stalk The amount of Stalk received for this Deposit.
-     * 
-     * @dev Calculate the current BDV for `amount` of `token`, then perform 
-     * Deposit accounting.
-     */
-    // function deposit(
-    //     address account,
-    //     address token,
-    //     uint32 season,
-    //     uint256 amount
-    // ) internal returns (uint256, uint256) {
-    //     uint256 bdv = beanDenominatedValue(token, amount);
-    //     return depositWithBDV(account, token, season, amount, bdv);
-    // }
-
-    /**
-     * @dev Once the BDV received for Depositing `amount` of `token` is known, 
-     * add a Deposit for `account` and update the total amount Deposited.
-     *
-     * `s.ss[token].seeds` stores the number of Seeds per BDV for `token`.
-     * `s.ss[token].stalk` stores the number of Stalk per BDV for `token`.
-     *
-     * FIXME(discuss): If we think of Deposits like 1155s, we might call the
-     * combination of "incrementTotalDeposited" and "addDepositToAccount" as 
-     * "minting a deposit".
-     */
-    // function depositWithBDV(
-    //     address account,
-    //     address token,
-    //     uint32 season,
-    //     uint256 amount,
-    //     uint256 bdv
-    // ) internal returns (uint256, uint256) {
-    //     AppStorage storage s = LibAppStorage.diamondStorage();
-    //     require(bdv > 0, "Silo: No Beans under Token.");
-
-    //     incrementTotalDeposited(token, amount); // Update Totals
-    //     addDepositToAccount(account, token, season, amount, bdv); // Add to Account
-
-    //     return (
-    //         bdv.mul(s.ss[token].seeds),
-    //         bdv.mul(s.ss[token].stalk)
-    //     );
-    // }
-
-    /**
-     * @dev Add `amount` of `token` to a user's Deposit in `season`. Requires a
-     * precalculated `bdv`.
-     *
-     * If a Deposit doesn't yet exist, one is created. Otherwise, the existing
-     * Deposit is updated.
-     * 
-     * `amount` & `bdv` are cast uint256 -> uint128 to optimize storage cost,
-     * since both values can be packed into one slot.
-     * 
-     * Unlike {removeDepositFromAccount}, this function DOES EMIT an 
-     * {AddDeposit} event. See {removeDepositFromAccount} for more details.
-     */
-    function addDepositToAccount(
-        address account,
-        address token,
-        uint32 season,
-        uint256 amount,
-        uint256 bdv
-    ) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
-        s.a[account].legacyDeposits[token][season].amount += uint128(amount);
-        s.a[account].legacyDeposits[token][season].bdv += uint128(bdv);
-
-        emit AddDeposit(account, token, season, amount, bdv);
-    }
-
 
     //////////////////////// REMOVE DEPOSIT ////////////////////////
 
@@ -239,33 +162,33 @@ library LibLegacyTokenSilo {
      * Makes a call to a BDV function defined in the SiloSettings for this 
      * `token`. See {AppStorage.sol:Storage-SiloSettings} for more information.
      */
-    function beanDenominatedValue(address token, uint256 amount)
-        internal
-        returns (uint256 bdv)
-    {
-        AppStorage storage s = LibAppStorage.diamondStorage();
+    // function beanDenominatedValue(address token, uint256 amount)
+    //     internal
+    //     returns (uint256 bdv)
+    // {
+    //     AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // BDV functions accept one argument: `uint256 amount`
-        bytes memory callData = abi.encodeWithSelector(
-            s.ss[token].selector,
-            amount
-        );
+    //     // BDV functions accept one argument: `uint256 amount`
+    //     bytes memory callData = abi.encodeWithSelector(
+    //         s.ss[token].selector,
+    //         amount
+    //     );
 
-        (bool success, bytes memory data) = address(this).call(
-            callData
-        );
+    //     (bool success, bytes memory data) = address(this).call(
+    //         callData
+    //     );
 
-        if (!success) {
-            if (data.length == 0) revert();
-            assembly {
-                revert(add(32, data), mload(data))
-            }
-        }
+    //     if (!success) {
+    //         if (data.length == 0) revert();
+    //         assembly {
+    //             revert(add(32, data), mload(data))
+    //         }
+    //     }
 
-        assembly {
-            bdv := mload(add(data, add(0x20, 0)))
-        }
-    }
+    //     assembly {
+    //         bdv := mload(add(data, add(0x20, 0)))
+    //     }
+    // }
 
     /**
      * @dev Locate the `amount` and `bdv` for a user's Deposit in storage.
@@ -312,16 +235,29 @@ library LibLegacyTokenSilo {
      * grownStalk = balanceOfSeeds * elapsedSeasons
      * ```
      */
-    function balanceOfGrownStalk(address account)
+    //TODOSEEDS calculate only up until the stems deployment season
+    function balanceOfGrownStalkUpToStemsDeployment(address account)
         internal
         view
         returns (uint256)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
+
+        console.log('balanceOfGrownStalkUpToStemsDeployment s.season.stemStartSeason: ', s.season.stemStartSeason);
+        console.log('balanceOfGrownStalkUpToStemsDeployment s.a[account].lastUpdate: ', s.a[account].lastUpdate);
+
+        // uint256 reward = stalkReward(
+        //         s.a[account].s.seeds,
+        //         s.season.stemStartSeason - s.a[account].lastUpdate
+        //     );
+        // console.log('balanceOfGrownStalkUpToStemsDeployment reward: ', reward);
+
+        uint32 stemStartSeason = uint32(s.season.stemStartSeason);
+
         return
             stalkReward(
                 s.a[account].s.seeds,
-                s.season.current - s.a[account].lastUpdate
+                s.a[account].lastUpdate-stemStartSeason
             );
     }
 
@@ -346,9 +282,11 @@ library LibLegacyTokenSilo {
      */
     function stalkReward(uint256 seeds, uint32 seasons)
         internal
-        pure
+        view //TODOSEEDS cahnge back to pure
         returns (uint256)
     {
+        console.log('stalkReward: seeds ', seeds);
+        console.log('stalkReward: seasons ', seasons);
         return seeds.mul(seasons);
     }
 
@@ -384,23 +322,23 @@ library LibLegacyTokenSilo {
         stem = (int128(season)-int128(s.season.stemStartSeason)).mul(int128(seedsPerBdv));
     }
 
-    function stemToSeason(uint256 seedsPerBdv, int128 stem)
-        internal
-        view
-        returns (uint32 season)
-    {
-        // require(stem > 0);
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        // uint256 seedsPerBdv = getSeedsPerToken(address(token));
+    // function stemToSeason(uint256 seedsPerBdv, int128 stem)
+    //     internal
+    //     view
+    //     returns (uint32 season)
+    // {
+    //     // require(stem > 0);
+    //     AppStorage storage s = LibAppStorage.diamondStorage();
+    //     // uint256 seedsPerBdv = getSeedsPerToken(address(token));
 
-        require(seedsPerBdv > 0, "Silo: Token not supported");
+    //     require(seedsPerBdv > 0, "Silo: Token not supported");
 
 
-        int128 diff = stem.div(int128(seedsPerBdv));
-        //using regular + here becauase we want to "overflow" (which for signed just means add negative)
-        season = uint256(int128(s.season.stemStartSeason)+diff).toUint32();
-        // season = seasonAs256.toUint32();
-    }
+    //     int128 diff = stem.div(int128(seedsPerBdv));
+    //     //using regular + here becauase we want to "overflow" (which for signed just means add negative)
+    //     season = uint256(int128(s.season.stemStartSeason)+diff).toUint32();
+    //     // season = seasonAs256.toUint32();
+    // }
 
 
     //this feels gas inefficient to me, maybe there's a better way? hardcode in values here?

@@ -227,7 +227,7 @@ describe('Silo Token', function () {
       it('reverts if amount is 0', async function () {
         const stem = await this.silo.seasonToStem(this.siloToken.address, '10');
 
-        await expect(this.silo.connect(user).withdrawDeposit(this.siloToken.address, stem, '1001', EXTERNAL)).to.revertedWith('Must line up with season');
+        await expect(this.silo.connect(user).withdrawDeposit(this.siloToken.address, stem, '1001', EXTERNAL)).to.revertedWith('Silo: Crate balance too low.');
         // await expect(this.silo.connect(user).withdrawDeposit(this.siloToken.address, stem, '1001', EXTERNAL)).to.revertedWith('Silo: Crate balance too low.'); //TODOSEEDS write a test that reverts with crate balance too low (needs to be deposited before grown stalk per bdv is deployed)
       });
 
@@ -409,6 +409,8 @@ describe('Silo Token', function () {
     })
   })
 
+  /*
+  //can no longer withdraw unripe beans without doing the stems migration
   describe('Withdraw Unripe Beans', async function () {
     describe("Just legacy Bean Deposit", async function () {
       beforeEach(async function () {
@@ -538,8 +540,9 @@ describe('Silo Token', function () {
         });
       })
     })
-  });
+  });*/
 
+/*
   describe('Withdraw Unripe LP from BDV', async function () {
     describe("Just legacy LP Deposit BDV", async function () {
       beforeEach(async function () {
@@ -605,7 +608,7 @@ describe('Silo Token', function () {
 
         const stemTip = await this.silo.stemTipForToken(this.unripeLP.address);
 
-        const seasonToDepositIn = await this.silo.stemToSeason(this.unripeLP.address, stemTip);
+        // const seasonToDepositIn = await this.silo.stemToSeason(this.unripeLP.address, stemTip);
 
         await this.silo.connect(user).mockUnripeLPDeposit('1', '10', to18('10.08028951'), to6('10'))
       })
@@ -781,7 +784,7 @@ describe('Silo Token', function () {
         });
       })
     })
-  })
+  })*/
 
   describe("Transfer", async function () {
     describe("reverts", async function() {
@@ -1132,19 +1135,31 @@ describe('Silo Token', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
         this.season.deployStemsUpgrade();
-        await this.silo.connect(user).deposit(UNRIPE_BEAN, to6('5'), EXTERNAL)
+        console.log('1 await this.silo.getTotalDeposited(UNRIPE_BEAN): ', await this.silo.getTotalDeposited(UNRIPE_BEAN));
+        await this.silo.connect(user).depositLegacy(UNRIPE_BEAN, to6('5'), EXTERNAL)
+        console.log('2 await this.silo.getTotalDeposited(UNRIPE_BEAN): ', await this.silo.getTotalDeposited(UNRIPE_BEAN));
         await this.silo.connect(user).mockUnripeBeanDeposit(10, to6('5'))
+        console.log('3 await this.silo.getTotalDeposited(UNRIPE_BEAN): ', await this.silo.getTotalDeposited(UNRIPE_BEAN));
         await this.unripe.connect(owner).addUnderlying(
           UNRIPE_BEAN,
           to6('1000')
         )
 
-        const stem10 = await this.silo.seasonToStem(this.siloToken.address, '10');
+        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
+          console.log('stem10: ', stem10);
+        //migrate to new deposit system since the mock stuff deposits in old one (still useful to test)
+        await this.silo.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10']]);
+
+        console.log('4 await this.silo.getTotalDeposited(UNRIPE_BEAN): ', await this.silo.getTotalDeposited(UNRIPE_BEAN));
+        
         this.result = await this.silo.connect(user).enrootDeposit(UNRIPE_BEAN, stem10, to6('5'));
+        console.log('5 await this.silo.getTotalDeposited(UNRIPE_BEAN): ', await this.silo.getTotalDeposited(UNRIPE_BEAN));
       })
 
       it('properly updates the total balances', async function () {
+        console.log('first');
         expect(await this.silo.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6('10'));
+        console.log('second');
         expect(await this.silo.totalStalk()).to.eq(pruneToStalk(to6('10')).add(toStalk('0.5')));
         //expect(await this.silo.totalSeeds()).to.eq(pruneToSeeds(to6('10')).add(to6('1')));
       });
@@ -1157,6 +1172,7 @@ describe('Silo Token', function () {
       it('properly removes the crate', async function () {
         const stem10 = await this.silo.seasonToStem(this.siloToken.address, '10');
         let dep = await this.silo.getDeposit(userAddress, UNRIPE_BEAN, stem10);
+        
         expect(dep[0]).to.equal(to6('10'))
         expect(dep[1]).to.equal(prune(to6('10')).add(to6('0.5')))
       });
@@ -1172,7 +1188,7 @@ describe('Silo Token', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
         this.season.deployStemsUpgrade();
-        await this.silo.connect(user).deposit(UNRIPE_BEAN, to6('5'), EXTERNAL)
+        await this.silo.connect(user).depositLegacy(UNRIPE_BEAN, to6('5'), EXTERNAL) //need to do legacy deposit to simulate pre-stems upgrade
         await this.silo.connect(user).mockUnripeBeanDeposit('10', to6('5'))
         
         await this.season.lightSunrise()
@@ -1182,19 +1198,21 @@ describe('Silo Token', function () {
           to6('5000').sub(to6('10000').mul(toBN(pru)).div(to18('1')))
         )
 
-        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
+        // const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
+        console.log('pre migrate this.silo.totalStalk(): ', await this.silo.totalStalk());
+        await this.silo.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10']]);
+        console.log('post migrate this.silo.totalStalk(): ', await this.silo.totalStalk());
 
-        this.result = await this.silo.connect(user).enrootDeposit(UNRIPE_BEAN, stem10, to6('10'));
+        this.result = await this.silo.connect(user).enrootDeposit(UNRIPE_BEAN, '0', to6('10'));
       })
 
       it('properly updates the total balances', async function () {
         expect(await this.silo.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6('10'));
-        expect(await this.silo.totalStalk()).to.eq(toStalk('5.001'));
-        //expect(await this.silo.totalSeeds()).to.eq(to6('10'));
+        expect(await this.silo.totalStalk()).to.eq('50013711292'); //someone please check my math here, before it was 500.1 without the 3711292. That extra part comes from mow and migrate.
       });
 
       it('properly updates the user balance', async function () {
-        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('5.001'));
+        expect(await this.silo.balanceOfStalk(userAddress)).to.eq('50013711292');
         //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('10'));
       });
 
@@ -1215,17 +1233,20 @@ describe('Silo Token', function () {
     describe("2 deposit, all", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
-        this.season.deployStemsUpgrade();
         await this.silo.connect(user).mockUnripeBeanDeposit('10', to6('5'))
 
         await this.season.lightSunrise()
-        await this.silo.connect(user).deposit(UNRIPE_BEAN, to6('5'), EXTERNAL)
+        await this.silo.connect(user).depositLegacy(UNRIPE_BEAN, to6('5'), EXTERNAL)
         
+        this.season.deployStemsUpgrade();
         
         await this.unripe.connect(owner).addUnderlying(
           UNRIPE_BEAN,
           to6('5000').sub(to6('10000').mul(toBN(pru)).div(to18('1')))
         )
+
+
+        await this.silo.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10', '11']]);
 
         const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
 

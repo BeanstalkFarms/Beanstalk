@@ -402,6 +402,8 @@ contract SiloFacet is TokenSilo {
         int128 stem,
         uint256 amount
     ) external nonReentrant mowSender(token) {
+        console.log('enrootDeposit token: ', token);
+        console.log('enrootDeposit amount: ', amount);
         // First, remove Deposit and Redeposit with new BDV
         uint256 ogBDV = LibTokenSilo.removeDepositFromAccount(
             msg.sender,
@@ -502,17 +504,17 @@ contract SiloFacet is TokenSilo {
         );
     }
 
-    function stemToSeason(IERC20 token, int128 stem)
-        public
-        view
-        returns (uint32 season)
-    {
-        uint256 seedsPerBdv = getSeedsPerToken(address(token));
+    // function stemToSeason(IERC20 token, int128 stem)
+    //     public
+    //     view
+    //     returns (uint32 season)
+    // {
+    //     uint256 seedsPerBdv = getSeedsPerToken(address(token));
 
-        require(LibLegacyTokenSilo.isDepositSeason(seedsPerBdv, stem), "No matching season for input stem");
+    //     require(LibLegacyTokenSilo.isDepositSeason(seedsPerBdv, stem), "No matching season for input stem");
 
-        season = LibLegacyTokenSilo.stemToSeason(seedsPerBdv, stem);
-    }
+    //     season = LibLegacyTokenSilo.stemToSeason(seedsPerBdv, stem);
+    // }
 
     function seasonToStem(IERC20 token, uint32 season)
         public

@@ -135,14 +135,31 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         Account.Deposit memory d = s.a[account].deposits[token][stem];
 
+        console.log('addDepositToAccount account: ', account);
+        console.log('addDepositToAccount token: ', token);
+        console.log('addDepositToAccount stem: ');
+        console.logInt(stem);
+        console.log('addDepositToAccount amount: ', amount);
+        console.log('addDepositToAccount bdv: ', bdv);
+
+        console.log('1 d.amount: ', d.amount);
+        console.log('1 d.bdv: ', d.bdv);
+
         d.amount = uint128(d.amount.add(amount.toUint128()));
         d.bdv = uint128(d.bdv.add(bdv.toUint128()));
 
+
+        console.log('2 d.amount: ', d.amount);
+        console.log('2 d.bdv: ', d.bdv);
+
         s.a[account].deposits[token][stem] = d;
 
+        console.log('before s.a[account].mowStatuses[token].bdv: ', s.a[account].mowStatuses[token].bdv);
 
         //setup or update the MowStatus for this deposit. We should have _just_ mowed before calling this function.
         s.a[account].mowStatuses[token].bdv = uint128(s.a[account].mowStatuses[token].bdv.add(bdv.toUint128()));
+
+        console.log('after s.a[account].mowStatuses[token].bdv: ', s.a[account].mowStatuses[token].bdv);
 
         emit AddDeposit(account, token, stem, amount, bdv);
     }
@@ -183,9 +200,22 @@ library LibTokenSilo {
         );
 
 
+        console.log('removeDepositFromAccount account: ', account);
+        console.log('removeDepositFromAccount amount: ', amount);
+        console.log('removeDepositFromAccount crateAmount: ', crateAmount);
+        console.log('removeDepositFromAccount crateBDV: ', crateBDV);
+        console.log('removeDepositFromAccount stem: ');
+        console.logInt(stem);
+
+        require(amount <= crateAmount, "Silo: Crate balance too low.");
+
+
+        console.log('removeDepositFromAccount s.a[account].mowStatuses[token].bdv: ', s.a[account].mowStatuses[token].bdv);
+
         // Partial remove
         if (amount < crateAmount) {
             uint256 removedBDV = amount.mul(crateBDV).div(crateAmount);
+            console.log('removeDepositFromAccount removedBDV: ', removedBDV);
             uint256 updatedBDV = crateBDV.sub(removedBDV);
             uint256 updatedAmount = crateAmount.sub(amount);
                 
@@ -196,6 +226,9 @@ library LibTokenSilo {
 
             s.a[account].deposits[token][stem].amount = uint128(updatedAmount);
             s.a[account].deposits[token][stem].bdv = uint128(updatedBDV);
+
+            console.log('removeDepositFromAccount removedBDV: ', removedBDV);
+            console.log('removeDepositFromAccount uint256(s.a[account].mowStatuses[token].bdv): ', uint256(s.a[account].mowStatuses[token].bdv));
 
             //verify this has to be a different var?
             uint256 updatedTotalBdvPartial = uint256(s.a[account].mowStatuses[token].bdv).sub(removedBDV);
@@ -208,25 +241,8 @@ library LibTokenSilo {
         // Full remove
         if (crateAmount > 0) delete s.a[account].deposits[token][stem];
 
-        // Excess remove
-        // This can only occur for Unripe Beans and Unripe LP Tokens, and is a
-        // result of using Silo V1 storage slots to store Unripe BEAN/LP
-        // Deposit information. See {AppStorage.sol:Account-State}.
-        // This is now handled by LibLegacyTokenSilo.
-        
-        uint256 originalCrateBDV = crateBDV;
 
-        if (amount > crateAmount) {
-            uint256 seedsPerToken = LibLegacyTokenSilo.getSeedsPerToken(token);
-            require(LibLegacyTokenSilo.isDepositSeason(seedsPerToken, stem), "Must line up with season");
-            amount -= crateAmount;
-
-            uint32 season = LibLegacyTokenSilo.stemToSeason(seedsPerToken, stem);
-            crateBDV = crateBDV.add(LibLegacyTokenSilo.removeDepositFromAccount(account, token, season, amount));
-        }
-
-
-        uint256 updatedTotalBdv = uint256(s.a[account].mowStatuses[token].bdv).sub(originalCrateBDV); //this will `SafeMath: subtraction overflow` if amount > crateAmount, but I want it to be able to call through to the Legacy stuff below for excess remove
+        uint256 updatedTotalBdv = uint256(s.a[account].mowStatuses[token].bdv).sub(crateBDV);
         s.a[account].mowStatuses[token].bdv = uint128(updatedTotalBdv);
     }
 
@@ -286,15 +302,6 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         amount = s.a[account].deposits[token][stem].amount;
         bdv = s.a[account].deposits[token][stem].bdv;
-        uint256 seedsPerToken = LibLegacyTokenSilo.getSeedsPerToken(token);
-        
-        if (LibLegacyTokenSilo.isDepositSeason(seedsPerToken, stem)) {
-            (uint legacyAmount, uint legacyBdv) =
-                LibLegacyTokenSilo.tokenDeposit(account, address(token), LibLegacyTokenSilo.stemToSeason(seedsPerToken, stem));
-            amount = amount.add(legacyAmount);
-            bdv = bdv.add(legacyBdv);
-            
-        }
     }
     /**
      * @dev Get the number of Stalk per BDV per Season for a whitelisted token. Formerly just seeds.
@@ -354,8 +361,8 @@ library LibTokenSilo {
         view
         returns (int128 grownStalk)
     {
-        int128 stemTipForToken = LibTokenSilo.stemTipForToken(token);
-        return stemTipForToken.sub(grownStalkIndexOfDeposit).mul(int128(bdv));
+        int128 _stemTipForToken = LibTokenSilo.stemTipForToken(token);
+        return _stemTipForToken.sub(grownStalkIndexOfDeposit).mul(int128(bdv));
     }
 
     /// @dev is there a way to use grownStalk as the output?
@@ -364,11 +371,11 @@ library LibTokenSilo {
         view 
         returns (uint256 _grownStalk, int128 cumulativeGrownStalk)
     {
-        int128 stemTipForToken = LibTokenSilo.stemTipForToken(token);
-        cumulativeGrownStalk = stemTipForToken-int128(grownStalk.div(bdv));
+        int128 _stemTipForToken = LibTokenSilo.stemTipForToken(token);
+        cumulativeGrownStalk = _stemTipForToken-int128(grownStalk.div(bdv));
         // todo: talk to pizza about depositing at mid season
         // is it possible to skip the math calc here? 
-        _grownStalk = uint256(stemTipForToken.sub(cumulativeGrownStalk).mul(int128(bdv)));
+        _grownStalk = uint256(_stemTipForToken.sub(cumulativeGrownStalk).mul(int128(bdv)));
     }
 
 
@@ -380,13 +387,13 @@ library LibTokenSilo {
         returns (int128 cumulativeGrownStalk)
     {
         //first get current latest grown stalk index
-        int128 stemTipForToken = LibTokenSilo.stemTipForToken(token);
+        int128 _stemTipForToken = LibTokenSilo.stemTipForToken(token);
         //then calculate how much stalk each individual bdv has grown
         int128 stem = int128(grownStalk.div(bdv));
         //then subtract from the current latest index, so we get the index the deposit should have happened at
         //note that we want this to be able to "subtraction overflow" aka go below zero, because
         //there will be many cases where you'd want to convert and need to go far back enough in the
         //grown stalk index to need a negative index
-        return stemTipForToken-stem;
+        return _stemTipForToken-stem;
     }
 }
