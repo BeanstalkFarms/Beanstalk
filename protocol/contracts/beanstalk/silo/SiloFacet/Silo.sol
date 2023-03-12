@@ -335,9 +335,9 @@ contract Silo is SiloExit {
 
         // Calculate balance of Earned Beans.
         beans = _balanceOfEarnedBeans(account, accountStalk);
-
+        s.a[account].deltaRoots = 0;
         if (beans == 0) return 0;
-
+        
         // Reduce the Silo's supply of Earned Beans.
         s.earnedBeans = s.earnedBeans.sub(uint128(beans));
 
@@ -349,7 +349,8 @@ contract Silo is SiloExit {
             beans, // amount
             beans // bdv
         );
-        
+        s.a[account].deltaRoots = 0; // must be 0'd, as calling balanceOfEarnedBeans would give a invalid amount of beans. 
+
         // Calculate the Plantable Seeds associated with the Earned Beans that were Deposited.
         //TODOSEEDS figure out what to do here
 
