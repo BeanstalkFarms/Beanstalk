@@ -24,10 +24,8 @@ jobs:
       - name: Install Dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
-      - name: Build SDK
-        run: yarn workspace @beanstalk/sdk generate && yarn workspace @beanstalk/sdk build
-      - name: Generate Typedefs
-        run: yarn ui:generate
+      - name: Build
+        run: yarn workspace ui build
       - name: Unit Tests
         run: yarn ui:test
       - name: Browser Tests
@@ -35,3 +33,4 @@ jobs:
         with:
           start: yarn ui:start
           command: yarn test:browser
+      

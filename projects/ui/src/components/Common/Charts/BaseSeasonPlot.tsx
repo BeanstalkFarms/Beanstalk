@@ -1,16 +1,22 @@
+import {
+  BaseChartProps,
+  BaseDataPoint,
+  ExploitLine,
+} from './ChartPropProvider';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import React, { useCallback, useMemo, useState } from 'react';
-import { ApolloError } from '@apollo/client';
-import { TimeTabStateParams } from '~/hooks/app/useTimeTabState';
-import { MinimumViableSnapshotQuery } from '~/hooks/beanstalk/useSeasonsQuery';
 
-import Row from '../Row';
-import Stat, { StatProps } from '../Stat';
-import { defaultValueFormatter } from './SeasonPlot';
-import TimeTabs from './TimeTabs';
-import { BaseChartProps, BaseDataPoint, ExploitLine } from './ChartPropProvider';
+import { ApolloError } from '@apollo/client';
+import ChartInfoOverlay from './ChartInfoOverlay';
+import { MinimumViableSnapshotQuery } from '~/hooks/beanstalk/useSeasonsQuery';
 import MultiLineChart from './MultiLineChart';
+import QueryState from './QueryState';
+import Row from '../Row';
 import StackedAreaChart from './StackedAreaChart';
+import { StatProps } from '../Stat';
+import { TimeTabStateParams } from '~/hooks/app/useTimeTabState';
+import TimeTabs from './TimeTabs';
+import { defaultValueFormatter } from './SeasonPlot';
 
 type BaseSeasonPlotProps = {
   /**
@@ -41,11 +47,11 @@ type BaseSeasonPlotProps = {
 };
 
 export type QueryData = {
-    data: BaseDataPoint[][];
-    loading: boolean;
-    error: ApolloError[] | undefined;
-    keys: string[];
-  }
+  data: BaseDataPoint[][];
+  loading: boolean;
+  error: ApolloError[] | undefined;
+  keys: string[];
+};
 
 type Props<T extends MinimumViableSnapshotQuery> = BaseSeasonPlotProps & {
   queryData?: QueryData;
@@ -69,7 +75,7 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
     ChartProps: chartProps,
     timeTabParams,
   } = props;
-  
+
   /// Display values
   const [displayValue, setDisplayValue] = useState<number | undefined>(
     undefined
@@ -127,30 +133,31 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
   if (!seriesInput || !queryData) {
     return null;
   }
+  const currentSeason = (
+    displaySeason !== undefined ? displaySeason : defaults.season
+  ).toFixed();
+
+  const containerStyle = {
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  };
 
   return (
     <>
       <Row justifyContent="space-between" sx={{ px: 2 }}>
-        {statProps ? (
-          <Stat
-            {...statProps}
-            amount={
-              queryData?.loading ? (
-                <CircularProgress
-                  variant="indeterminate"
-                  size="1.18em"
-                  thickness={5}
-                />
-              ) : (
-                formatValue(displayValue ?? defaults.value)
-              )
-            }
-            subtitle={`Season ${(displaySeason !== undefined
-              ? displaySeason
-              : defaults.season
-            ).toFixed()}`}
+        {statProps && (
+          <ChartInfoOverlay
+            title={statProps.title}
+            titleTooltip={statProps.titleTooltip}
+            gap={statProps.gap}
+            sx={statProps.sx ?? {}}
+            isLoading={queryData?.loading}
+            amount={formatValue(displayValue ?? defaults.value)}
+            subtitle={`Season ${currentSeason}`}
           />
-        ) : null}
+        )}
+
         <Stack
           alignItems="flex-end"
           alignSelf="flex-start"
@@ -164,37 +171,47 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
         </Stack>
       </Row>
       <Box width="100%" sx={{ height, position: 'relative' }}>
-        {queryData.loading || seriesInput.length === 0 || queryData.error ? (
-          <Stack height="100%" alignItems="center" justifyContent="center">
-            {queryData.error ? (
+        <QueryState
+          queryData={queryData}
+          loading={
+            <Stack sx={containerStyle}>
+              <CircularProgress variant="indeterminate" />
+            </Stack>
+          }
+          error={
+            <Stack sx={containerStyle}>
               <Typography>
                 An error occurred while loading this data.
               </Typography>
-            ) : (
-              <CircularProgress variant="indeterminate" />
-            )}
-          </Stack>
-        ) : stackedArea ? (
-          <StackedAreaChart
-            series={seriesInput}
-            keys={queryData.keys}
-            onCursor={handleCursor}
-            formatValue={formatValue}
-            {...chartProps}
-          >
-            {(childProps) => <ExploitLine {...childProps} />}
-          </StackedAreaChart>
-        ) : (
-          <MultiLineChart
-            series={seriesInput}
-            keys={queryData.keys}
-            onCursor={handleCursor}
-            formatValue={formatValue}
-            {...chartProps}
-          >
-            {(childProps) => <ExploitLine {...childProps} />}
-          </MultiLineChart>
-        )}
+            </Stack>
+          }
+          success={
+            <>
+              {stackedArea && (
+                <StackedAreaChart
+                  series={seriesInput}
+                  keys={queryData.keys}
+                  onCursor={handleCursor}
+                  formatValue={formatValue}
+                  {...chartProps}
+                >
+                  {(childProps) => <ExploitLine {...childProps} />}
+                </StackedAreaChart>
+              )}
+              {!stackedArea && (
+                <MultiLineChart
+                  series={seriesInput}
+                  keys={queryData.keys}
+                  onCursor={handleCursor}
+                  formatValue={formatValue}
+                  {...chartProps}
+                >
+                  {(childProps) => <ExploitLine {...childProps} />}
+                </MultiLineChart>
+              )}
+            </>
+          }
+        />
       </Box>
     </>
   );

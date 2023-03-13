@@ -431,6 +431,7 @@ const Claim: FC<{
           const errorToast = new TransactionToast({});
           errorToast.error(err);
         }
+      } finally {
         formActions.setSubmitting(false);
       }
     },

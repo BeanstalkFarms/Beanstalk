@@ -5,6 +5,7 @@ const MODES = {
   [FarmFromMode.INTERNAL]:  'Farm Balance',
   [FarmToMode.EXTERNAL]:    'Circulating Balance',
   [FarmFromMode.EXTERNAL]:  'Circulating Balance',
+  [FarmFromMode.INTERNAL_EXTERNAL]:  'Combined Balance',
 };
 
 const copy = {

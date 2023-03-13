@@ -4,7 +4,14 @@ import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { useSelector } from 'react-redux';
-import { Token, ERC20Token, NativeToken, StepGenerator } from '@beanstalk/sdk';
+import {
+  Token,
+  ERC20Token,
+  NativeToken,
+  StepGenerator,
+  FarmFromMode,
+  FarmToMode,
+} from '@beanstalk/sdk';
 import TransactionToast from '~/components/Common/TxnToast';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import {
@@ -24,7 +31,6 @@ import usePreferredToken, {
   PreferredToken,
 } from '~/hooks/farmer/usePreferredToken';
 import useTokenMap from '~/hooks/chain/useTokenMap';
-import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
 import { displayBN, displayFullBN, MinBN, tokenValueToBN } from '~/util';
 import usePrice from '~/hooks/beanstalk/usePrice';
 import { useFetchBeanstalkField } from '~/state/beanstalk/field/updater';

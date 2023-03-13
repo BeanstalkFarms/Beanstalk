@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
+import { FarmToMode } from '@beanstalk/sdk';
 import {
   FormTxnsFormState,
   SmartSubmitButton,
@@ -10,7 +11,6 @@ import {
   TxnSeparator,
 } from '~/components/Common/Form';
 import { ActionType } from '~/util/Actions';
-import { FarmToMode } from '~/lib/Beanstalk/Farm';
 import { displayFullBN } from '~/util';
 import useFarmerField from '~/hooks/farmer/useFarmerField';
 import { PODS } from '~/constants/tokens';
@@ -242,10 +242,8 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
             sdk.tokens.PODS.amount(harvestIdx.toString()).blockchainString
         );
 
-        const harvestFormTxnFunction = FormTxnBuilder.getFunction(
-          FormTxn.HARVEST
-        );
-        const harvest = harvestFormTxnFunction(sdk, {
+        const txnFunction = FormTxnBuilder.getFunction(FormTxn.HARVEST);
+        const harvest = txnFunction(sdk, {
           plotIds,
           toMode: values.destination,
         }).getSteps();
@@ -278,6 +276,7 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
           const errorToast = new TransactionToast({});
           errorToast.error(err);
         }
+      } finally {
         formActions.setSubmitting(false);
       }
     },

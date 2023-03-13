@@ -3,7 +3,6 @@ import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import toast from 'react-hot-toast';
 import {
   FormState,
   SmartSubmitButton,
@@ -29,7 +28,7 @@ import useAccount from '~/hooks/ledger/useAccount';
 import usePreferredToken, { PreferredToken } from '~/hooks/farmer/usePreferredToken';
 import { FarmToMode } from '~/lib/Beanstalk/Farm';
 import { ActionType } from '~/util/Actions';
-import { displayBN, displayFullBN, optimizeFromMode, parseError, toStringBaseUnitBN } from '~/util';
+import { displayBN, displayFullBN, optimizeFromMode, toStringBaseUnitBN } from '~/util';
 import { UNRIPE_BEAN, UNRIPE_BEAN_CRV3, UNRIPE_TOKENS } from '~/constants/tokens';
 import { ZERO_BN } from '~/constants';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
@@ -251,10 +250,10 @@ const Chop: FC<{}> = () => {
         formActions.resetForm();
       } catch (err) {
         if (txToast) {
-          txToast.error(err)
+          txToast.error(err);
         } else {
-          let errorToast = new TransactionToast({})
-          errorToast.error(err)
+          const errorToast = new TransactionToast({});
+          errorToast.error(err);
         }
         formActions.setSubmitting(false);
       }

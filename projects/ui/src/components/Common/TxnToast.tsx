@@ -2,7 +2,6 @@ import React, { useCallback } from 'react';
 import { ContractReceipt, ContractTransaction } from 'ethers';
 import toast from 'react-hot-toast';
 import { Box, IconButton, Link, Typography } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import ClearIcon from '@mui/icons-material/Clear';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import useChainConstant from '~/hooks/chain/useChainConstant';
@@ -20,7 +19,6 @@ function dismissErrors(id?: any) {
 export function ToastAlert({ desc, hash, msg, rawError, id }: { desc?: string, hash?: string, msg?: string, rawError?: string, id?: any }) {
   const handleClick = useCallback(() => (id !== null ? dismissErrors(id) : dismissErrors()), [id]);
   const chainInfo = useChainConstant(CHAIN_INFO);
-  const theme = useTheme();
   return (
     <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', flexDirection: 'row' }}>
       <Typography sx={{ pl: 1, pr: 2, flex: 1, textAlign: 'center' }}>
