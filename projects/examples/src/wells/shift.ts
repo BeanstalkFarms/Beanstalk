@@ -41,30 +41,23 @@ async function go() {
   const receipt = await tx.wait();
   // console.log(receipt);
 
-  // reversed
-  // amountIn = toToken.amount(200)
-  // const est = await workflow.estimateReversed(amountIn);
-  // console.log(`Quote: ${fromToken.fromBlockchain(est).toHuman()}`);
-  // const tx = await workflow.execute(fromToken.fromBlockchain(est), { slippage: 0.1 });
-  // await tx.wait()
-
   console.log("Done");
 }
 
 async function getWorkflow(from: Token, to: Token) {
   const workflow = sdk.farm.create("Swap");
 
+  // Transfer from user to Well
   const transfer = new sdk.farm.actions.TransferToken(
     from.address,
-    sdk.contracts.pipeline.address,
+    WELL_ADDRESS,
     FarmFromMode.EXTERNAL,
     FarmToMode.EXTERNAL
   );
 
   const advancedPipe = sdk.farm.createAdvancedPipe("Pipeline Well Swap");
-  const approve = new sdk.farm.actions.ApproveERC20(from as ERC20Token, WELL_ADDRESS);
-  const swap = new sdk.farm.actions.WellSwap(WELL_ADDRESS, from, to, account);
-  advancedPipe.add(approve);
+  const swap = new sdk.farm.actions.WellShift(WELL_ADDRESS, to, account);
+
   advancedPipe.add(swap);
 
   workflow.add(transfer);

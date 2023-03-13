@@ -13,8 +13,6 @@ async function main() {
 
   // get Well object
   console.log(WELL_ADDRESS);
-  const well: Well = await sdk.getWell(WELL_ADDRESS, {});
-  const name = await well.getName()
-  console.log(name);
+  const well: Well = await sdk.getWell(WELL_ADDRESS);
   console.log(well);
 }

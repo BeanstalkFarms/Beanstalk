@@ -3,7 +3,7 @@ import { BigNumber, CallOverrides, ContractTransaction, Overrides } from "ethers
 import { Well__factory } from "src/constants/generated";
 import { Well as WellContract } from "src/constants/generated";
 
-import { Auger } from "./Auger";
+import { Aquifer } from "./Aquifer";
 import { Pump } from "./Pump";
 import { loadToken, setReadOnly, validateAddress, validateAmount, validateToken } from "./utils";
 import { WellFunction } from "./WellFunction";
@@ -13,7 +13,7 @@ export type WellDetails = {
   tokens: ERC20Token[];
   wellFunction: WellFunction;
   pumps: Pump[];
-  auger: Auger;
+  aquifer: Aquifer;
 };
 
 export type CallStruct = {
@@ -29,7 +29,7 @@ export type PreloadOptions = {
   tokens?: boolean;
   wellFunction?: boolean;
   pumps?: boolean;
-  auger?: boolean;
+  aquifer?: boolean;
   reserves?: boolean;
 };
 
@@ -43,7 +43,7 @@ export class Well {
   public tokens: ERC20Token[] | undefined = undefined;
   public wellFunction: WellFunction | undefined = undefined;
   public pumps: Pump[] | undefined = undefined;
-  public auger: Auger | undefined = undefined;
+  public aquifer: Aquifer | undefined = undefined;
   public reserves: TokenValue[] | undefined = undefined;
 
   constructor(sdk: WellsSDK, address: string) {
@@ -75,7 +75,7 @@ export class Well {
     } else {
       if (options.name) toLoad.push(this.getName());
       if (options.lpToken) toLoad.push(this.getLPToken());
-      if (options.tokens || options.wellFunction || options.pumps || options.auger) toLoad.push(this.getWell());
+      if (options.tokens || options.wellFunction || options.pumps || options.aquifer) toLoad.push(this.getWell());
     }
 
     await Promise.all(toLoad);
@@ -149,31 +149,31 @@ export class Well {
   }
 
   /**
-   * Returns the Auger that bored this Well.
-   * The Auger is a Well factory; it creates Wells based on "templates".
+   * Returns the Aquifer that bored this Well.
+   * The Aquifer is a Well factory; it creates Wells based on "templates".
    */
-  async getAuger(): Promise<Auger> {
-    if (!this.auger) {
+  async getAquifer(): Promise<Aquifer> {
+    if (!this.aquifer) {
       await this.getWell();
     }
 
-    return this.auger!;
+    return this.aquifer!;
   }
 
   /**
    * Returns the tokens, Well function, and Pump associated with this Well.
    *
    * This is an aggregate of calling these individual methods:
-   * getTokens(), getWellFunction(), getPumps(), getAuger()
+   * getTokens(), getWellFunction(), getPumps(), getAquifer()
    *
    * Since this is one contract call, the other individual methods also
    * call this under the hood, getting other data cached for "free"
    */
   async getWell(): Promise<WellDetails> {
-    const all = this.tokens && this.wellFunction && this.pumps && this.auger;
+    const all = this.tokens && this.wellFunction && this.pumps && this.aquifer;
 
     if (!all) {
-      const { _tokens, _wellFunction, _pumps, _auger } = await this.contract.well();
+      const { _tokens, _wellFunction, _pumps, _aquifer } = await this.contract.well();
 
       if (!this.tokens) {
         await this.setTokens(_tokens);
@@ -187,12 +187,12 @@ export class Well {
         this.setPumps(_pumps);
       }
 
-      if (!this.auger) {
-        this.setAuger(_auger);
+      if (!this.aquifer) {
+        this.setAquifer(_aquifer);
       }
     }
 
-    return { tokens: this.tokens!, wellFunction: this.wellFunction!, pumps: this.pumps!, auger: this.auger! };
+    return { tokens: this.tokens!, wellFunction: this.wellFunction!, pumps: this.pumps!, aquifer: this.aquifer! };
   }
 
   private async setTokens(addresses: string[]) {
@@ -214,8 +214,8 @@ export class Well {
     setReadOnly(this, "pumps", pumps, true);
   }
 
-  private setAuger(address: string) {
-    setReadOnly(this, "auger", new Auger(this.sdk, address), true);
+  private setAquifer(address: string) {
+    setReadOnly(this, "aquifer", new Aquifer(this.sdk, address), true);
   }
 
   ////// Swap FROM
@@ -268,6 +268,40 @@ export class Well {
     const amount = await this.contract.getSwapOut(fromToken.address, toToken.address, amountIn.toBigNumber(), overrides ?? {});
 
     return toToken.fromBlockchain(amount);
+  }
+
+  /**
+   * Swaps from an exact amount of `fromToken` to a minimum amount of `toToken` and supports
+   * fee on transfer tokens.
+   * @param fromToken The token to swap from
+   * @param toToken The token to swap to
+   * @param amountIn The amount of `fromToken` to spend
+   * @param minAmountOut The minimum amount of `toToken` to receive
+   * @param recipient The address to receive `toToken`
+   * @return amountOut The amount of `toToken` received
+   */
+  async swapFromFeeOnTransfer(
+    fromToken: Token,
+    toToken: Token,
+    amountIn: TokenValue,
+    minAmountOut: TokenValue,
+    recipient: string,
+    overrides?: Overrides
+  ): Promise<ContractTransaction> {
+    validateToken(fromToken, "fromToken");
+    validateToken(toToken, "toToken");
+    validateAmount(amountIn, "amountIn");
+    validateAmount(minAmountOut, "minAmountOut");
+    validateAddress(recipient, "recipient");
+
+    return this.contract.swapFromFeeOnTransfer(
+      fromToken.address,
+      toToken.address,
+      amountIn.toBigNumber(),
+      minAmountOut.toBigNumber(),
+      recipient,
+      overrides ?? {}
+    );
   }
 
   ////// Swap TO
@@ -344,6 +378,25 @@ export class Well {
     const result = await this.contract.getAddLiquidityOut(amountsIn, overrides ?? {});
 
     return this.lpToken!.fromBlockchain(result);
+  }
+
+  /**
+   * Adds liquidity to the Well as multiple tokens in any ratio and supports
+   * fee on transfer tokens.
+   * @param tokenAmountsIn The amount of each token to add; MUST match the indexing of {Well.tokens}
+   * @param minLpAmountOut The minimum amount of LP tokens to receive
+   * @param recipient The address to receive the LP tokens
+   */
+  addLiquidityFeeOnTransfer(
+    tokenAmountsIn: TokenValue[],
+    minLpAmountOut: TokenValue,
+    recipient: string,
+    overrides?: TxOverrides
+  ): Promise<ContractTransaction> {
+    const amountsIn = tokenAmountsIn.map((tv) => tv.toBigNumber());
+    const minLp = minLpAmountOut.toBigNumber();
+
+    return this.contract.addLiquidityFeeOnTransfer(amountsIn, minLp, recipient, overrides ?? {});
   }
 
   ////// Remove Liquidity
@@ -452,14 +505,10 @@ export class Well {
   ////// Other
 
   /**
-   * Gets the reserves of each token held by the Well.
+   * Syncs the reserves of the Well with the Well's balances of underlying tokens.
    */
-  async getReserves(overrides?: CallOverrides): Promise<TokenValue[]> {
-    const tokens = await this.getTokens();
-    const res = await this.contract.getReserves(overrides ?? {});
-    this.reserves = res.map((value: BigNumber, i: number) => tokens[i].fromBlockchain(value));
-
-    return this.reserves;
+  async sync(overrides?: CallOverrides): Promise<ContractTransaction> {
+    return this.contract.sync(overrides ?? {});
   }
 
   /**
@@ -469,5 +518,41 @@ export class Well {
    */
   async skim(address: string, overrides?: TxOverrides): Promise<ContractTransaction> {
     return this.contract.skim(address, overrides ?? {});
+  }
+
+  /**
+   * Shifts excess tokens held by the Well into `toToken` and delivers to `recipient`.
+   * @param toToken The token to shift into
+   * @param minAmountOut The minimum amount of `toToken` to receive
+   * @param recipient The address to receive the token
+   * @return amountOut The amount of `toToken` received
+   */
+  async shift(toToken: Token, minAmountOut: TokenValue, recipient: string, overrides?: CallOverrides): Promise<ContractTransaction> {
+    validateToken(toToken, "toToken");
+    validateAmount(minAmountOut, "minAmountOut");
+    validateAddress(recipient, "recipient");
+
+    return this.contract.shift(toToken.address, minAmountOut.toBigNumber(), recipient, overrides ?? {});
+  }
+
+  /**
+   * Calculates the amount of the token out received from shifting excess tokens held by the Well.
+   * @param tokenOut The token to shift into
+   * @return amountOut The amount of `tokenOut` received
+   */
+  async shiftQuote(toToken: Token): Promise<TokenValue> {
+    const amount = await this.contract.getShiftOut(toToken.address);
+    return toToken.fromBlockchain(amount);
+  }
+
+  /**
+   * Gets the reserves of each token held by the Well.
+   */
+  async getReserves(overrides?: CallOverrides): Promise<TokenValue[]> {
+    const tokens = await this.getTokens();
+    const res = await this.contract.getReserves(overrides ?? {});
+    this.reserves = res.map((value: BigNumber, i: number) => tokens[i].fromBlockchain(value));
+
+    return this.reserves;
   }
 }
