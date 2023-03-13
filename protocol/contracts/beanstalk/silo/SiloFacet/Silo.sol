@@ -34,6 +34,16 @@ contract Silo is SiloExit {
         uint128 totalGrownStalk;
     }
 
+    struct PerDepositData {
+        uint32 season;
+        uint128 amount;
+    }
+
+    struct PerTokenData {
+        address token;
+        int128 stemTip;
+    }
+
 
     //////////////////////// EVENTS ////////////////////////    
 
@@ -195,16 +205,14 @@ contract Silo is SiloExit {
     //make sure bdv of everything lines up with the number of seeds they should have
 
     //add amounts as an input here? so we don't have to call tokenDeposit()
-    function _mowAndMigrate(address account, address[] calldata tokens, uint32[][] calldata seasons) internal {
-        console.log('account: ', account);
-        // console.log('seasons: ', seasons);
+    function _mowAndMigrate(address account, address[] calldata tokens, uint32[][] calldata seasons, uint256[][] calldata amounts) internal {
 
         require(tokens.length == seasons.length, "inputs not same length");
 
 
         //see if msg.sender has already migrated or not by checking seed balance
         require(s.a[account].s.seeds > 0, "no migration needed");
-        uint32 _lastUpdate = lastUpdate(account);
+        // uint32 _lastUpdate = lastUpdate(account);
         // require(_lastUpdate > 0 && _lastUpdate < s.season.stemStartSeason, "no migration needed");
 
 
@@ -222,66 +230,59 @@ contract Silo is SiloExit {
 
 
         for (uint256 i = 0; i < tokens.length; i++) {
-            address token = tokens[i];
-            int128 stemTip = LibTokenSilo.stemTipForToken(IERC20(token));
+            PerTokenData memory perTokenData;
+            perTokenData.token = tokens[i];
+            perTokenData.stemTip = LibTokenSilo.stemTipForToken(IERC20(perTokenData.token));
+
+
+            // address token = tokens[i];
+            // int128 stemTip = LibTokenSilo.stemTipForToken(IERC20(token));
             
 
             for (uint256 j = 0; j < seasons[i].length; j++) {
-                uint32 season = seasons[i][j];
+                PerDepositData memory perDepositData;
+                perDepositData.season = seasons[i][j];
+                perDepositData.amount = uint128(amounts[i][j]);
 
-                Account.Deposit memory d;
-                (d.amount, d.bdv) = LibLegacyTokenSilo.tokenDeposit(account, token, season);
+                // uint32 season = seasons[i][j];
+                // uint128 amount = uint128(amounts[i][j]);
 
-                if (d.amount == 0) {
+                // Account.Deposit memory d;
+                // (d.amount, d.bdv) = LibLegacyTokenSilo.tokenDeposit(account, token, season);
+
+
+                if (perDepositData.amount == 0) {
                     continue; //for some reason subgraph gives us deposits with 0 in it sometimes, save gas and skip it (also fixes div by zero bug if it continues on)
                 }
 
+                //withdraw this deposit
+                uint256 crateBDV = LibLegacyTokenSilo.removeDepositFromAccount(
+                                    account,
+                                    perTokenData.token,
+                                    perDepositData.season,
+                                    perDepositData.amount
+                                );
+
+
                 uint128 grownStalk = _calcGrownStalkForDeposit(
-                    d.bdv * LibLegacyTokenSilo.getSeedsPerToken(address(token)),
-                    season
+                    crateBDV * LibLegacyTokenSilo.getSeedsPerToken(address(perTokenData.token)),
+                    perDepositData.season
                 );
-                console.log('grownStalk pre migration: ', grownStalk);
 
                 //also need to calculate how much stalk has grown since the migration
-                uint128 stalkGrownSinceStemStartSeason = uint128(LibSilo.stalkReward(0, stemTip, d.bdv));
+                uint128 stalkGrownSinceStemStartSeason = uint128(LibSilo.stalkReward(0, perTokenData.stemTip, uint128(crateBDV)));
                 grownStalk += stalkGrownSinceStemStartSeason;
                 migrateData.totalGrownStalk += stalkGrownSinceStemStartSeason;
-                console.log('stalkGrownSinceStemStartSeason: ', stalkGrownSinceStemStartSeason);
-
-
-                //withdraw this deposit
-                LibLegacyTokenSilo.removeDepositFromAccount(
-                                    account,
-                                    token,
-                                    season,
-                                    d.amount
-                                );
                 
                 //add to new silo
-                LibTokenSilo.addDepositToAccount(account, token, LibTokenSilo.grownStalkAndBdvToCumulativeGrownStalk(IERC20(token), grownStalk, d.bdv), d.amount, d.bdv);
-
+                LibTokenSilo.addDepositToAccount(account, perTokenData.token, LibTokenSilo.grownStalkAndBdvToCumulativeGrownStalk(IERC20(perTokenData.token), grownStalk, crateBDV), perDepositData.amount, crateBDV);
 
                 //add to running total of seeds
-                migrateData.totalSeeds += uint128(uint256(d.bdv) * LibLegacyTokenSilo.getSeedsPerToken(address(token)));
-
+                migrateData.totalSeeds += uint128(uint256(crateBDV) * LibLegacyTokenSilo.getSeedsPerToken(address(perTokenData.token)));
             }
 
-
-
             //init mow status for this token
-            s.a[account].mowStatuses[token].lastStem = LibTokenSilo.stemTipForToken(IERC20(token));
-
-            // s.a[account].mowStatuses[token].bdv = uint128(totalBdv); //this gets updated in each LibTokenSilo.deposit() call
-
-            // int128 grownStalkIndexToDepositAt = LibTokenSilo.grownStalkAndBdvToCumulativeGrownStalk(
-            //     IERC20(token), 
-            //     migrateData.totalGrownStalkForToken, 
-            //     migrateData.totalBdv
-            // );
-            // console.log('grownStalkIndexToDepositAt: ');
-            // console.logInt(grownStalkIndexToDepositAt);
-            //now we need to deposit totalBdv and totalGrownStalkForToken into the new silo
-            // LibTokenSilo.deposit(account, token, grownStalkIndexToDepositAt, migrateData.totalBdv);
+            s.a[account].mowStatuses[perTokenData.token].lastStem = perTokenData.stemTip;
         }
 
         //user deserves stalk grown between stemStartSeason and now

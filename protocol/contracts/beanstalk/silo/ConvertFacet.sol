@@ -169,7 +169,6 @@ contract ConvertFacet is ReentrancyGuard {
     ) internal returns (int128 _cumulativeGrownStalk) {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
 
-
         //calculate cumulativeGrownStalk index we need to deposit at from grownStalk and bdv
         //if we attempt to deposit at a half-season (a grown stalk index that would fall between seasons)
         //then in affect we lose that partial season's worth of stalk when we deposit

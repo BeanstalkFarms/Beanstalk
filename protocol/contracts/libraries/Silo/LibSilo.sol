@@ -229,8 +229,6 @@ library LibSilo {
         returns (uint256)
     {
         int128 reward = endStalkPerBDV.sub(startStalkPerBDV).mul(int128(bdv));
-        // console.log('stalkReward reward: ');
-        // console.logInt(reward);
         return uint128(reward);
     }
 

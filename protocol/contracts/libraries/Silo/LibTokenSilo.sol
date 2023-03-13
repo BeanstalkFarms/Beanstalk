@@ -135,31 +135,13 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         Account.Deposit memory d = s.a[account].deposits[token][stem];
 
-        console.log('addDepositToAccount account: ', account);
-        console.log('addDepositToAccount token: ', token);
-        console.log('addDepositToAccount stem: ');
-        console.logInt(stem);
-        console.log('addDepositToAccount amount: ', amount);
-        console.log('addDepositToAccount bdv: ', bdv);
-
-        console.log('1 d.amount: ', d.amount);
-        console.log('1 d.bdv: ', d.bdv);
-
         d.amount = uint128(d.amount.add(amount.toUint128()));
         d.bdv = uint128(d.bdv.add(bdv.toUint128()));
 
-
-        console.log('2 d.amount: ', d.amount);
-        console.log('2 d.bdv: ', d.bdv);
-
         s.a[account].deposits[token][stem] = d;
-
-        console.log('before s.a[account].mowStatuses[token].bdv: ', s.a[account].mowStatuses[token].bdv);
 
         //setup or update the MowStatus for this deposit. We should have _just_ mowed before calling this function.
         s.a[account].mowStatuses[token].bdv = uint128(s.a[account].mowStatuses[token].bdv.add(bdv.toUint128()));
-
-        console.log('after s.a[account].mowStatuses[token].bdv: ', s.a[account].mowStatuses[token].bdv);
 
         emit AddDeposit(account, token, stem, amount, bdv);
     }
@@ -199,23 +181,11 @@ library LibTokenSilo {
             d.bdv
         );
 
-
-        console.log('removeDepositFromAccount account: ', account);
-        console.log('removeDepositFromAccount amount: ', amount);
-        console.log('removeDepositFromAccount crateAmount: ', crateAmount);
-        console.log('removeDepositFromAccount crateBDV: ', crateBDV);
-        console.log('removeDepositFromAccount stem: ');
-        console.logInt(stem);
-
         require(amount <= crateAmount, "Silo: Crate balance too low.");
-
-
-        console.log('removeDepositFromAccount s.a[account].mowStatuses[token].bdv: ', s.a[account].mowStatuses[token].bdv);
 
         // Partial remove
         if (amount < crateAmount) {
             uint256 removedBDV = amount.mul(crateBDV).div(crateAmount);
-            console.log('removeDepositFromAccount removedBDV: ', removedBDV);
             uint256 updatedBDV = crateBDV.sub(removedBDV);
             uint256 updatedAmount = crateAmount.sub(amount);
                 
@@ -226,9 +196,6 @@ library LibTokenSilo {
 
             s.a[account].deposits[token][stem].amount = uint128(updatedAmount);
             s.a[account].deposits[token][stem].bdv = uint128(updatedBDV);
-
-            console.log('removeDepositFromAccount removedBDV: ', removedBDV);
-            console.log('removeDepositFromAccount uint256(s.a[account].mowStatuses[token].bdv): ', uint256(s.a[account].mowStatuses[token].bdv));
 
             //verify this has to be a different var?
             uint256 updatedTotalBdvPartial = uint256(s.a[account].mowStatuses[token].bdv).sub(removedBDV);

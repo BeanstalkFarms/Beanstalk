@@ -344,8 +344,8 @@ contract SiloFacet is TokenSilo {
     }
 
     //function to mow and migrate
-    function mowAndMigrate(address account, address[] calldata tokens, uint32[][] calldata seasons) external payable {
-        _mowAndMigrate(account, tokens, seasons);
+    function mowAndMigrate(address account, address[] calldata tokens, uint32[][] calldata seasons, uint256[][] calldata amounts) external payable {
+        _mowAndMigrate(account, tokens, seasons, amounts);
     }
 
     function mowAndMigrateNoDeposits(address account) external payable {
@@ -402,8 +402,6 @@ contract SiloFacet is TokenSilo {
         int128 stem,
         uint256 amount
     ) external nonReentrant mowSender(token) {
-        console.log('enrootDeposit token: ', token);
-        console.log('enrootDeposit amount: ', amount);
         // First, remove Deposit and Redeposit with new BDV
         uint256 ogBDV = LibTokenSilo.removeDepositFromAccount(
             msg.sender,

@@ -58,8 +58,6 @@ contract MockSiloFacet is SiloFacet {
    function mockUnripeBeanDeposit(uint32 _s, uint256 amount) external {
         _mow(msg.sender, C.unripeBeanAddress());
         s.a[msg.sender].bean.deposits[_s] += amount;
-        console.log('mockUnripeBeanDeposit: _s: ', _s);
-        console.log('mockUnripeBeanDeposit: amount: ', amount);
         LibTokenSilo.incrementTotalDeposited(C.unripeBeanAddress(), amount);
         amount = amount.mul(C.initialRecap()).div(1e18);
         uint256 seeds = amount.mul(LibLegacyTokenSilo.getSeedsPerToken(C.unripeBeanAddress()));
@@ -220,6 +218,48 @@ contract MockSiloFacet is SiloFacet {
         assembly {
             bdv := mload(add(data, add(0x20, 0)))
         }
+    }
+
+    /**
+     * @dev Locate the `amount` and `bdv` for a user's Deposit in storage.
+     *
+     * Silo V2 Deposits are stored within each {Account} as a mapping of:
+     *  `address token => uint32 season => { uint128 amount, uint128 bdv }`
+     *
+     * Unripe BEAN and Unripe LP are handled independently so that data
+     * stored in the legacy Silo V1 format and the new Silo V2 format can
+     * be appropriately merged. See {LibUnripeSilo} for more information.
+     *
+     * FIXME(naming): rename to `getDeposit()`?
+     */
+    function getDepositLegacy(
+        address account,
+        address token,
+        uint32 season
+    ) external view returns (uint128, uint128) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        if (LibUnripeSilo.isUnripeBean(token)){
+            (uint256 amount, uint256 bdv) = LibUnripeSilo.unripeBeanDeposit(account, season);
+            return (uint128(amount), uint128(bdv));
+        }
+        if (LibUnripeSilo.isUnripeLP(token)){
+            (uint256 amount, uint256 bdv) = LibUnripeSilo.unripeLPDeposit(account, season);
+            return (uint128(amount), uint128(bdv));
+        }
+
+        return (
+            s.a[account].legacyDeposits[token][season].amount,
+            s.a[account].legacyDeposits[token][season].bdv
+        );
+    }
+
+    function balanceOfSeeds(address account) public view returns (uint256) {
+        return s.a[account].s.seeds;
+    }
+    
+    function totalSeeds() public view returns (uint256) {
+        return s.s.deprecated_seeds;
     }
 
     function getSeedsPerToken(address token) public pure override returns (uint256) { //could be pure without console log?

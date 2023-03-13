@@ -134,12 +134,22 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         const depositorAddress = '0x5e68bb3de6133baee55eeb6552704df2ec09a824';
         const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449', '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d','0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab'];
         const seasons = [[6074],[6061],[6137]];
+
+        const amounts = [];
+        for(let i=0; i<seasons.length; i++) {
+          const newSeason = [];
+          for(let j=0; j<seasons[i].length; j++) {
+            const deposit = await this.silo.getDepositLegacy(depositorAddress, tokens[i], seasons[i][j]);
+            newSeason.push(deposit[0].toString());
+          }
+          amounts.push(newSeason);
+        }
   
         const depositorSigner = await impersonateSigner(depositorAddress);
         await this.silo.connect(depositorSigner);
     
         //need an array of all the tokens that have been deposited and their corresponding seasons
-        await this.silo.mowAndMigrate(depositorAddress, tokens, seasons);
+        await this.silo.mowAndMigrate(depositorAddress, tokens, seasons, amounts);
   
         //now mow and it shouldn't revert
         await this.silo.mow(depositorAddress, this.beanMetapool.address)
@@ -180,11 +190,22 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
           ],
           [6004, 6008],
         ];
+
+        const amounts = [];
+        for(let i=0; i<seasons.length; i++) {
+          const newSeason = [];
+          for(let j=0; j<seasons[i].length; j++) {
+            const deposit = await this.silo.getDepositLegacy(depositorAddress, tokens[i], seasons[i][j]);
+            newSeason.push(deposit[0].toString());
+          }
+          amounts.push(newSeason);
+        }
+
   
         const depositorSigner = await impersonateSigner(depositorAddress);
         await this.silo.connect(depositorSigner);
     
-        await this.silo.mowAndMigrate(depositorAddress, tokens, seasons);
+        await this.silo.mowAndMigrate(depositorAddress, tokens, seasons, amounts);
   
         await this.silo.mow(depositorAddress, this.beanMetapool.address)
       });
@@ -216,10 +237,20 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
             8593, 8594,
           ],
         ];
-  
+
+        const amounts = [];
+        for(let i=0; i<seasons.length; i++) {
+          const newSeason = [];
+          for(let j=0; j<seasons[i].length; j++) {
+            const deposit = await this.silo.getDepositLegacy(depositorAddress, tokens[i], seasons[i][j]);
+            newSeason.push(deposit[0].toString());
+          }
+          amounts.push(newSeason);
+        }
+
         const depositorSigner = await impersonateSigner(depositorAddress);
         await mintEth(depositorAddress);
-        await this.silo.connect(depositorSigner).mowAndMigrate(depositorAddress, tokens, seasons);
+        await this.silo.connect(depositorSigner).mowAndMigrate(depositorAddress, tokens, seasons, amounts);
         await this.silo.mow(depositorAddress, this.beanMetapool.address)
       });
 
@@ -230,6 +261,17 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
             const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449', '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d','0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab'];
             const seasons = [[6074],[6061],[6137]];
 
+            const amounts = [];
+            for(let i=0; i<seasons.length; i++) {
+              const newSeason = [];
+              for(let j=0; j<seasons[i].length; j++) {
+                const deposit = await this.silo.getDepositLegacy(this.depositorAddress, tokens[i], seasons[i][j]);
+                newSeason.push(deposit[0].toString());
+              }
+              amounts.push(newSeason);
+            }
+    
+
             const depositorSigner = await impersonateSigner(this.depositorAddress);
             await this.silo.connect(depositorSigner);
 
@@ -237,7 +279,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
             this.stalkBeforeTotal = await this.silo.totalStalk();
         
             //need an array of all the tokens that have been deposited and their corresponding seasons
-            await this.silo.mowAndMigrate(this.depositorAddress, tokens, seasons);
+            await this.silo.mowAndMigrate(this.depositorAddress, tokens, seasons, amounts);
         });
 
         it('properly migrates the user balances', async function () {
@@ -304,7 +346,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449', '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d'];
         const seasons = [[5510],[6004,6846,6668]];  
       
-        await expect(this.silo.mowAndMigrate(depositorAddress, tokens, seasons)).to.be.revertedWith("deSynced seeds, only account can migrate");
+        await expect(this.silo.mowAndMigrate(depositorAddress, tokens, seasons)).to.be.revertedWith("deSynced seeds, account can migrate");
         await expect(this.silo.mow(depositorAddress, this.beanMetapool.address)).to.be.revertedWith('silo migration needed');
       })
   
@@ -320,12 +362,23 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       })*/
   
       it('fails to migrate for incorrect season input', async function () {
+        
         const depositorAddress = '0x5e68bb3de6133baee55eeb6552704df2ec09a824';
-        const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449', '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d','0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab'];
-        const seasons = [[1],[1],[1]];
+        const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449', '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d'];
+        const seasons = [[6074],[6061],];
+
+        const amounts = [];
+        for(let i=0; i<seasons.length; i++) {
+          const newSeason = [];
+          for(let j=0; j<seasons[i].length; j++) {
+            const deposit = await this.silo.getDepositLegacy(depositorAddress, tokens[i], seasons[i][j]);
+            newSeason.push(deposit[0].toString());
+          }
+          amounts.push(newSeason);
+        }
     
         //need an array of all the tokens that have been deposited and their corresponding seasons
-        await expect(this.silo.mowAndMigrate(depositorAddress, tokens, seasons)).to.be.revertedWith('seeds misaligned');
+        await expect(this.silo.mowAndMigrate(depositorAddress, tokens, seasons, seasons)).to.be.revertedWith('seeds misaligned');
         await expect(this.silo.mow(depositorAddress, this.beanMetapool.address)).to.be.revertedWith('silo migration needed');
       })
     });
@@ -432,6 +485,6 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         await this.silo.connect(depositorSigner);
     
         await expect(this.convert.connect(depositorSigner).convert(ConvertEncoder.convertUnripeBeansToLP(to6('345000'), to6('340000')), [stem], [to6('345000')])).to.be.revertedWith('Silo: mow failed')
-      });    
+      });
     });
   });

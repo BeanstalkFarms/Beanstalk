@@ -243,15 +243,6 @@ library LibLegacyTokenSilo {
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        console.log('balanceOfGrownStalkUpToStemsDeployment s.season.stemStartSeason: ', s.season.stemStartSeason);
-        console.log('balanceOfGrownStalkUpToStemsDeployment s.a[account].lastUpdate: ', s.a[account].lastUpdate);
-
-        // uint256 reward = stalkReward(
-        //         s.a[account].s.seeds,
-        //         s.season.stemStartSeason - s.a[account].lastUpdate
-        //     );
-        // console.log('balanceOfGrownStalkUpToStemsDeployment reward: ', reward);
-
         uint32 stemStartSeason = uint32(s.season.stemStartSeason);
 
         return
@@ -285,8 +276,6 @@ library LibLegacyTokenSilo {
         view //TODOSEEDS cahnge back to pure
         returns (uint256)
     {
-        console.log('stalkReward: seeds ', seeds);
-        console.log('stalkReward: seasons ', seasons);
         return seeds.mul(seasons);
     }
 
