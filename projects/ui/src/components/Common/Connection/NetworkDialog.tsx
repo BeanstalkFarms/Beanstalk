@@ -35,7 +35,7 @@ const NetworkDialog: React.FC<DialogProps & {
   );
 
   return (
-    <Dialog onClose={handleClose} open={open} {...props}>
+    <Dialog onClose={handleClose} open={open} disableScrollLock {...props}>
       <StyledDialogTitle onClose={handleClose}>
         Select Network
       </StyledDialogTitle>

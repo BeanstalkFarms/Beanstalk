@@ -91,7 +91,7 @@ const SettingsDialog : FC<{ open: boolean; onClose?: () => void; }> = ({ open, o
   }, [siloBalances]);
 
   return (
-    <StyledDialog open={open} onClose={onClose}>
+    <StyledDialog open={open} onClose={onClose} disableScrollLock>
       <StyledDialogTitle onClose={onClose}>Settings</StyledDialogTitle>
       <StyledDialogContent sx={{ px: 2, pb: 2 }}>
         <Stack gap={2}>
