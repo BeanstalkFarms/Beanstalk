@@ -391,7 +391,7 @@ const Claim : FC<{
     <Formik initialValues={initialValues} onSubmit={onSubmit} enableReinitialize>
       {(formikProps) => (
         <>
-          <TxnSettings placement="form-top-right">
+          <TxnSettings placement="inside-form-top-right">
             <SettingInput name="settings.slippage" label="Slippage Tolerance" endAdornment="%" />
           </TxnSettings>
           <Stack spacing={1}>
