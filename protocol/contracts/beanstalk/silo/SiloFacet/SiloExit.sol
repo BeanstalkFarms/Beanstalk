@@ -29,8 +29,6 @@ contract SiloExit is ReentrancyGuard {
     using LibSafeMath128 for uint128;
     using LibPRBMath for uint256;
 
-    uint256 constant private EARNED_BEAN_VESTING_BLOCKS = 25; //  5 minutes
-
     /**
      * @dev Stores account-level Season of Plenty balances.
      * 
@@ -50,6 +48,8 @@ contract SiloExit is ReentrancyGuard {
         // `account` balance of unclaimed Bean:3Crv from Seasons of Plenty.
         uint256 plenty; 
     }
+        
+    uint256 constant EARNED_BEAN_VESTING_BLOCKS = 25;
 
     //////////////////////// UTILTIES ////////////////////////
 
@@ -185,20 +185,43 @@ contract SiloExit is ReentrancyGuard {
         // There will be no Roots before the first Deposit is made.
         if (s.s.roots == 0) return 0;
 
-        uint256 stalk;
+        // // @audit seems like this is just inversing the logic that lives in mow() , which is called immediately before.
+        // uint256 stalk;
+        // if(return block.number - s.season.sunriseBlock <= EARNED_BEAN_VESTING_BLOCKS){
+        //     stalk = s.s.stalk.sub(s.newEarnedStalk).mulDiv(
+        //         s.a[account].roots.add(s.a[account].deltaRoots), // add the delta roots of the user
+        //         s.s.roots.add(s.vestingPeriodRoots), // add delta of global roots 
+        //         LibPRBMath.Rounding.Up
+        //     );
+        // } else {
+        //     stalk = s.s.stalk.mulDiv(
+        //         s.a[account].roots,
+        //         s.s.roots,
+        //         LibPRBMath.Rounding.Up
+        //     );
+        // }
+
+        // Calculate how much Stalk an account should have, based on Roots, Silo newEarnedStalk, and vesting period.
+        // If a user attempts to access Earned Beans before the vesting period completes they will not receive any
+        // of the earned beans in this season.
+        // Note: Assuming the compiler will optimize away overhead of intermediate variables here. They improve clarity.
+        uint256 unvestedStalk;
+        uint256 vestedAndUnvestedStalk = s.s.stalk.mulDiv(
+            s.a[account].roots,
+            s.s.roots,
+            LibPRBMath.Rounding.Up
+        );
+        // If it is morning, all Earned Stalk this season is unvested.
         if(block.number - s.season.sunriseBlock <= EARNED_BEAN_VESTING_BLOCKS){
-            stalk = s.s.stalk.sub(s.newEarnedStalk).mulDiv(
-                s.a[account].roots.add(s.a[account].deltaRoots), // add the delta roots of the user
-                s.s.roots.add(s.vestingPeriodRoots), // add delta of global roots 
-                LibPRBMath.Rounding.Up
-            );
-        } else {
-            stalk = s.s.stalk.mulDiv(
+            uint256 prevSeasonStalk = s.s.stalk.sub(s.newEarnedStalk).mulDiv(
                 s.a[account].roots,
                 s.s.roots,
+                // s.s.roots.sub(s.newCollectedEarnedRoots),
                 LibPRBMath.Rounding.Up
             );
+            unvestedStalk = vestedAndUnvestedStalk - prevSeasonStalk;
         }
+        uint256 stalk = vestedAndUnvestedStalk.sub(unvestedStalk);
         
         // Beanstalk rounds down when minting Roots. Thus, it is possible that
         // balanceOfRoots / totalRoots * totalStalk < s.a[account].s.stalk.

@@ -263,15 +263,17 @@ describe('Silo', function () {
           season = await this.season.season();
           await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
 
+          // New season has begun, but no Earned Beans have yet vested.
           expect(await this.silo.connect(user).balanceOfEarnedBeans(userAddress)).to.eq(0); // harvested last season 
           expect(await this.silo.connect(user2).balanceOfEarnedBeans(user2Address)).to.eq(25e6); // not harvested yet 
           expect(await this.silo.connect(user3).balanceOfEarnedBeans(user3Address)).to.eq(25e6); // 
           expect(await this.silo.connect(user4).balanceOfEarnedBeans(user4Address)).to.eq(25e6);
         
-          await this.silo.connect(user).plant(); // root increased by Y, stalk increased by 2
+          // await this.silo.connect(user).plant(); // root increased by Y, stalk increased by 2 // stalk increased by (125/425)*100{Earned, unvested} + 125/10_000 {grown}
           earned_beans = await this.silo.getDeposit(user2Address,this.bean.address,season);
           expect(earned_beans[0]).to.eq(0);
 
+          expect(await this.silo.connect(user2).balanceOfEarnedBeans(user2Address)).to.eq(25e6); // 25 vested and some amount yet unvested 
           await this.silo.connect(user2).plant(); // root increased by Y, stalk increased by 4
           earned_beans = await this.silo.getDeposit(user2Address,this.bean.address,season);
           expect(earned_beans[0]).to.eq(25e6);

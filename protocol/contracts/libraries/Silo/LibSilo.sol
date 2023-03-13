@@ -36,8 +36,7 @@ library LibSilo {
     using LibPRBMath for uint256;
     using LibSafeMath128 for uint128;
     
-    //////////////////////// EVENTS ////////////////////////    
-    uint256 constant EARNED_BEAN_VESTING_BLOCKS = 25;
+    //////////////////////// EVENTS ////////////////////////
 
     /**
      * @notice Emitted when `account` gains or loses Seeds.
@@ -149,18 +148,23 @@ library LibSilo {
     function mintGrownStalkAndGrownRoots(address account, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
+        // uint256 roots;
+        // if (s.s.roots == 0) {
+        //     roots = uint256(stalk.mul(C.getRootsBase()));
+        // } else {
+        //     roots = s.s.roots.mul(stalk).div(s.s.stalk);
+        //     if (block.number - s.season.sunriseBlock <= 25) {
+        //         uint256 noSeigniorageRoots = s.s.roots.add(s.vestingPeriodRoots).mul(stalk).div(s.s.stalk - s.newEarnedStalk);
+        //         uint256 deltaRoots = noSeigniorageRoots - roots;
+        //         s.vestingPeriodRoots = s.vestingPeriodRoots.add(uint128(deltaRoots)); // only track roots that would have been realized through Earned Beans
+        //         // @audit this state is used in only one place, which immediately follows a call of this function. no need to save it in state.
+        //         s.a[account].deltaRoots = uint128(deltaRoots);
+        //     } 
+        // }
+        
         uint256 roots;
-        if (s.s.roots == 0) {
-            roots = uint256(stalk.mul(C.getRootsBase()));
-        } else  {
-            roots = s.s.roots.mul(stalk).div(s.s.stalk);
-            if (block.number - s.season.sunriseBlock <= 25) {
-                uint256 rootsWithoutEarned = s.s.roots.add(s.vestingPeriodRoots).mul(stalk).div(s.s.stalk - (s.newEarnedStalk));
-                uint256 deltaRoots = rootsWithoutEarned - roots;
-                s.vestingPeriodRoots = s.vestingPeriodRoots.add(uint128(deltaRoots));
-                s.a[account].deltaRoots = uint128(deltaRoots);
-            } 
-        }
+        if (s.s.roots == 0) roots = stalk.mul(C.getRootsBase());
+        else roots = s.s.roots.mul(stalk).div(s.s.stalk);
 
         // increment user and total stalk
         s.s.stalk = s.s.stalk.add(stalk);
@@ -184,7 +188,7 @@ library LibSilo {
         uint256 stalk
     ) internal {
         burnSeeds(account, seeds);
-        burnStalk(account, stalk); // also burns Roots
+        burnStalkAndRoots(account, stalk); // also burns Roots
     }
     
     /**
@@ -205,30 +209,36 @@ library LibSilo {
      *
      * For an explanation of Roots accounting, see {FIXME(doc)}.
      */
-    function burnStalk(address account, uint256 stalk) private {
+    function burnStalkAndRoots(address account, uint256 stalk) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return;
-
        
         uint256 roots;
         // Calculate the amount of Roots for the given amount of Stalk.
         // We round up as it prevents an account having roots but no stalk.
         
-        // if the user withdraws in the same block as sunrise, they forfeit their earned beans for that season
-        // this is distrubuted to the other users.
-        // should this be the same as the vesting period?
-        if(block.number - s.season.sunriseBlock <= 25){
-            roots = s.s.roots.mulDiv(
-            stalk,
-            s.s.stalk-s.newEarnedStalk,
-            LibPRBMath.Rounding.Up);
+        // @audit - withdrawer will lose all seasonal Earned Beans at withdraw time, rather than just the ones associated with the withdraw.
 
-        } else { 
-            roots = s.s.roots.mulDiv(
-            stalk,
-            s.s.stalk,
-            LibPRBMath.Rounding.Up);
-        }
+        /// @audit the way roots while vesting is calculated here is different than above. Why is a an unexpected
+        ///        amount of roots being burned here?
+
+        /// @audit @fix no adjustments are needed here, because the user cannot claim their Earned beans in the morning,
+        ///         therefore they will not see those earned beans in their stalk or root balances.
+
+        // if the user withdraws in the morning, they forfeit their earned beans for that season
+        // this is distributed to the other users.
+        // if(block.number - s.season.sunriseBlock <= 25){
+        //     roots = s.s.roots.mulDiv(
+        //     stalk, // adjusting the stalk denominator but not the numerator seems like it may have unexpected results.
+        //     s.s.stalk-s.newEarnedStalk,
+        //     LibPRBMath.Rounding.Up);
+
+        // } else { 
+        //     roots = s.s.roots.mulDiv(
+        //     stalk,
+        //     s.s.stalk,
+        //     LibPRBMath.Rounding.Up);
+        // }
 
         if (roots > s.a[account].roots) roots = s.a[account].roots;
 

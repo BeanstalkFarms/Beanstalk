@@ -304,7 +304,7 @@ contract TokenSilo is Silo {
         uint256 seeds
     ) private {
         LibTokenSilo.decrementTotalDeposited(token, amount); // Decrement total Deposited
-        LibSilo.burnSeedsAndStalk(account, seeds, stalk); // Burn Seeds and Stalk
+        LibSilo.burnSeedsAndStalk(account, seeds, stalk); // Burn Seeds and Stalk and Roots
     }
 
     //////////////////////// CLAIM ///////////////////////// 
