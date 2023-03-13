@@ -218,13 +218,6 @@ const Rinse: FC<{ quick?: boolean }> = ({ quick }) => {
           toMode: values.destination,
         }).getSteps();
 
-        const rinse = sdk.farm.create();
-        const rinseSteps = FormTxnBuilder.getFunction(FormTxn.RINSE)(sdk, {
-          tokenIds: farmerBarn.balances.map((bal) => bal.token.id.toString()),
-          toMode: values.destination,
-        }).getSteps();
-        rinse.add(rinseSteps);
-
         const { execute, performed } = await FormTxnBuilder.compile(
           sdk,
           values.farmActions,

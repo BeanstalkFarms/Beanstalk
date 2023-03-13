@@ -140,7 +140,8 @@ const BuyForm: FC<
           const balanceKey =
             state.token.symbol === 'ETH' ? 'eth' : state.token.address;
           const additionalBalance =
-            additionalBalances[sdk.tokens.BEAN.address]?.applied || ZERO_BN;
+            additionalBalances.balances[sdk.tokens.BEAN.address]?.applied ||
+            ZERO_BN;
           return (
             <TokenQuoteProviderWithParams<BuyQuoteHandlerParams>
               key={state.token.address}
