@@ -1,6 +1,5 @@
 import React from 'react';
 import { Box, ButtonProps, Tooltip, Typography } from '@mui/material';
-import { ClaimPlantItem } from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 import { displayFullBN } from '~/util';
 import Row from '../Row';
 import TokenIcon from '../TokenIcon';
@@ -14,31 +13,32 @@ import sproutsIconGreen from '~/img/beanstalk/sprout-icon-green.svg';
 
 import beanIconGreen from '~/img/tokens/bean-logo-circled-wintergreen.svg';
 import beanIconGrey from '~/img/tokens/bean-logo-circled-grey.svg';
-import { ClaimPlantAction } from '~/util/ClaimPlant';
+import { FormTxn } from '~/util/FormTxns';
+import { FormTxnSummary } from '~/hooks/farmer/form-txn/useFarmerFormTxnsSummary';
 
 const icons = {
-  [ClaimPlantAction.HARVEST]: {
+  [FormTxn.HARVEST]: {
     selected: podIconGreen,
     grey: podIconGrey,
   },
-  [ClaimPlantAction.RINSE]: {
+  [FormTxn.RINSE]: {
     selected: sproutsIconGreen,
     grey: sproutsIconGrey,
   },
-  [ClaimPlantAction.CLAIM]: {
+  [FormTxn.CLAIM]: {
     selected: beanIconGreen,
     grey: beanIconGrey,
   },
 };
 
 type Props = {
-  option: ClaimPlantAction;
-  summary: ClaimPlantItem;
+  option: FormTxn;
+  summary: FormTxnSummary;
   selected: boolean;
   required?: boolean;
 } & Partial<ButtonProps['onClick']>;
 
-const ClaimPlantAccordionPill: React.FC<Props> = ({
+const FormTxnOptionPill: React.FC<Props> = ({
   option,
   summary,
   selected,
@@ -75,4 +75,4 @@ const ClaimPlantAccordionPill: React.FC<Props> = ({
   );
 };
 
-export default ClaimPlantAccordionPill;
+export default FormTxnOptionPill;

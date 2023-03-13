@@ -2,7 +2,6 @@ import React from 'react';
 import { Typography, Stack, Tooltip } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import BigNumber from 'bignumber.js';
-import { ClaimPlantItem } from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 import { displayFullBN } from '~/util';
 import Row from '../Row';
 import TokenIcon from '../TokenIcon';
@@ -18,7 +17,8 @@ import seedIconGrey from '~/img/beanstalk/seed-icon-grey.svg';
 import stalkIconGrey from '~/img/beanstalk/stalk-icon-grey.svg';
 import LockIcon from '~/img/misc/lock-icon.svg';
 import GasTag from '../GasTag';
-import { ClaimPlantAction } from '~/util/ClaimPlant';
+import { FormTxn } from '~/util/FormTxns';
+import { FormTxnSummary } from '~/hooks/farmer/form-txn/useFarmerFormTxnsSummary';
 
 const icons = {
   SEED: seedIconGrey,
@@ -29,8 +29,8 @@ const icons = {
 };
 
 type Props = {
-  option: ClaimPlantAction;
-  summary: ClaimPlantItem;
+  option: FormTxn;
+  summary: FormTxnSummary;
   selected: boolean;
   gas?: BigNumber;
   required?: boolean;
@@ -46,7 +46,7 @@ const tooltipIconProps = {
   },
 };
 
-const ClaimPlantOptionCard: React.FC<Props> = ({
+const FormTxnOptionCard: React.FC<Props> = ({
   summary,
   selected,
   required,
@@ -54,13 +54,13 @@ const ClaimPlantOptionCard: React.FC<Props> = ({
   gas,
   ...props
 }) => (
-  <Tooltip 
+  <Tooltip
     title={
-      !summary.enabled 
+      !summary.enabled
         ? `Nothing to ${summary.title.toLowerCase()}`
-        : props.disabled 
-          ? disabledMessage
-          : ''
+        : props.disabled
+        ? disabledMessage
+        : ''
     }
   >
     <Stack width="100%">
@@ -72,7 +72,7 @@ const ClaimPlantOptionCard: React.FC<Props> = ({
         title={
           <Row width="100%" justifyContent="space-between">
             <Row gap={0.5}>
-              {required && (
+              {required && summary.enabled && (
                 <img
                   src={LockIcon}
                   alt=""
@@ -100,7 +100,9 @@ const ClaimPlantOptionCard: React.FC<Props> = ({
               <Row gap={0.5}>
                 <TokenIcon
                   token={token}
-                  logoOverride={icons[token.symbol as keyof typeof icons] || undefined}
+                  logoOverride={
+                    icons[token.symbol as keyof typeof icons] || undefined
+                  }
                 />
                 <Typography>
                   {description}
@@ -119,4 +121,4 @@ const ClaimPlantOptionCard: React.FC<Props> = ({
   </Tooltip>
 );
 
-export default ClaimPlantOptionCard;
+export default FormTxnOptionCard;

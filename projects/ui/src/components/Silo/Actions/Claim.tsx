@@ -12,7 +12,7 @@ import {
   SettingInput,
   SmartSubmitButton,
   FormTokenStateNew,
-  ClaimAndPlantFormState
+  FormTxnsFormState,
 } from '~/components/Common/Form';
 import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
 import { ZERO_BN } from '~/constants';
@@ -30,14 +30,13 @@ import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuotePro
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
-import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
-import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
-import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
-import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 import TxnAccordion from '~/components/Common/TxnAccordion';
-import useFarmerClaimPlant from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlant';
-import useFarmerClaimAndPlantRefetch from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlantRefetch';
+import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
+import FormTxnsPrimaryOptions from '~/components/Common/Form/FormTxnsPrimaryOptions';
+import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
+import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
+import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
 
 // -----------------------------------------------------------------------
 
@@ -46,7 +45,7 @@ type ClaimFormValues = {
    * When claiming, there is only one input token
    * (the claimable LP token). the amount of this
    * token is always the full claimable balance.
-   * 
+   *
    * In this case, token.amountOut is the amount received
    * for converting LP into `tokenOut`.
    */
@@ -56,14 +55,14 @@ type ClaimFormValues = {
 } & {
   settings: {
     slippage: number;
-  } 
-} & ClaimAndPlantFormState;
+  };
+} & FormTxnsFormState;
 
 type ClaimQuoteHandlerParams = {
-  toMode?: FarmToMode 
-}
+  toMode?: FarmToMode;
+};
 
-const ClaimForm : FC<
+const ClaimForm: FC<
   FormikProps<ClaimFormValues> & {
     token: ERC20Token;
     claimableBalance: BigNumber;
@@ -78,76 +77,85 @@ const ClaimForm : FC<
   setFieldValue,
 }) => {
   const sdk = useSdk();
-  const claimPlantOptions = useFarmerClaimAndPlantOptions();
 
   //
-  const pool = useMemo(() => sdk.pools.getPoolByLPToken(token), [sdk.pools, token]);
-  const claimableTokens = useMemo(() => ([
-    token,
-    ...(token.isLP && pool?.tokens || []),
-  ]), [pool, token]);
+  const pool = useMemo(
+    () => sdk.pools.getPoolByLPToken(token),
+    [sdk.pools, token]
+  );
+  const claimableTokens = useMemo(
+    () => [token, ...((token.isLP && pool?.tokens) || [])],
+    [pool, token]
+  );
 
   //
   const amount = claimableBalance;
-  const isSubmittable = (
-    amount
-    && amount.gt(0)
-    && values.destination !== undefined
-    && (token.isLP ? values.tokenOut !== undefined : true)
-  );
+  const isSubmittable =
+    amount &&
+    amount.gt(0) &&
+    values.destination !== undefined &&
+    (token.isLP ? values.tokenOut !== undefined : true);
   const tokenOut = values.tokenOut || (token as ERC20Token);
 
   //
-  const handleQuote = useCallback<QuoteHandlerWithParams<ClaimQuoteHandlerParams>>(
+  const handleQuote = useCallback<
+    QuoteHandlerWithParams<ClaimQuoteHandlerParams>
+  >(
     async (_tokenIn, _amountIn, _tokenOut, { toMode }) => {
       if (_tokenIn === _tokenOut) return { amountOut: _amountIn };
       const amountIn = _tokenIn.amount(_amountIn.toString());
 
-      // Require pooldata to be loaded first. 
+      const { curve } = sdk.contracts;
+
+      // Require pooldata to be loaded first.
       if (!pool || !_tokenIn.isLP) return null;
 
-      const work = sdk.farm.create().add(
-        new sdk.farm.actions.RemoveLiquidityOneToken(
-          pool.address,
-          sdk.contracts.curve.registries.metaFactory.address,
-          _tokenOut.address,
-          FarmFromMode.INTERNAL,
-          toMode
-        )
-      );
+      const work = sdk.farm
+        .create()
+        .add(
+          new sdk.farm.actions.RemoveLiquidityOneToken(
+            pool.address,
+            curve.registries.metaFactory.address,
+            _tokenOut.address,
+            FarmFromMode.INTERNAL,
+            toMode
+          )
+        );
       const estimate = await work.estimate(amountIn);
+
       return {
         amountOut: tokenValueToBN(_tokenOut.fromBlockchain(estimate)),
         steps: work.generators as StepGenerator[],
       };
     },
-    [pool, sdk.farm, sdk.contracts.curve.registries.metaFactory.address]
+    [sdk.contracts, sdk.farm, pool]
   );
 
-  const claimPlantTxnActions = useMemo(() => {
-    const { selected, additional } = values.farmActions;
-    return claimPlantOptions.getTxnActions(
-      selected,
-      additional
-    );
-  }, [claimPlantOptions, values.farmActions]);
+  // Selected FormTxn Actions
+  const formTxnActions = useFarmerFormTxnsActions();
 
   //
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
 
   //
-  const handleSelectTokens = useCallback((_tokens: Set<Token>) => {
-    const _token = Array.from(_tokens)[0];
-    setFieldValue('tokenOut', _token);
-  }, [setFieldValue]);
+  const handleSelectTokens = useCallback(
+    (_tokens: Set<Token>) => {
+      const _token = Array.from(_tokens)[0];
+      setFieldValue('tokenOut', _token);
+    },
+    [setFieldValue]
+  );
 
   // This should be memoized to prevent an infinite reset loop
-  const quoteHandlerParams = useMemo(() => ({
-    quoteSettings: {
-      ignoreSameToken: false,
-      onReset: () => ({ amountOut: claimableBalance }),
-    }
-  }), [claimableBalance]);
+  const quoteHandlerParams = useMemo(
+    () => ({
+      quoteSettings: {
+        ignoreSameToken: false,
+        onReset: () => ({ amountOut: claimableBalance }),
+      },
+    }),
+    [claimableBalance]
+  );
 
   return (
     <Form autoComplete="off" noValidate>
@@ -159,8 +167,8 @@ const ClaimForm : FC<
           // This input is always disabled but we use
           // the underlying handleQuote functionality
           // for consistency with other forms.
-          disabled 
-          // 
+          disabled
+          //
           balance={amount || ZERO_BN}
           balanceLabel="Claimable Balance"
           // -----
@@ -177,25 +185,26 @@ const ClaimForm : FC<
           params={{
             toMode: values.destination || FarmToMode.INTERNAL,
           }}
-          belowComponent={
-            <ClaimAndPlantFarmActions />
-          }
+          belowComponent={<FormTxnsPrimaryOptions />}
         />
         <Stack gap={0}>
           {/* Setting: Destination */}
-          <FarmModeField
-            name="destination"
-          />
+          <FarmModeField name="destination" />
           {/* Setting: Claim LP */}
           <>
             {token.isLP ? (
               <PillRow
                 isOpen={isTokenSelectVisible}
                 label="Claim LP as"
-                onClick={showTokenSelect}> 
+                onClick={showTokenSelect}
+              >
                 {values.tokenOut && <TokenIcon token={values.tokenOut} />}
                 <Typography variant="body1">
-                  {values.tokenOut ? values.tokenOut.symbol : (<>Select Output</>)}
+                  {values.tokenOut ? (
+                    values.tokenOut.symbol
+                  ) : (
+                    <>Select Output</>
+                  )}
                 </Typography>
               </PillRow>
             ) : null}
@@ -214,12 +223,12 @@ const ClaimForm : FC<
           <>
             <TxnSeparator />
             <TokenOutput>
-              <TokenOutput.Row 
+              <TokenOutput.Row
                 token={token}
                 amount={values.token.amountOut || ZERO_BN}
               />
             </TokenOutput>
-            <ClaimAndPlantAdditionalOptions />
+            <FormTxnsSecondaryOptions />
             <Box>
               <TxnAccordion>
                 <TxnPreview
@@ -230,19 +239,28 @@ const ClaimForm : FC<
                       token: getNewToOldToken(token),
                       // message: `Claim ${displayTokenAmount(amount, token)}.`
                     },
-                    token.equals(sdk.tokens.BEAN_CRV3_LP) && values.tokenOut !== token ? {
-                      type: ActionType.BASE,
-                      message: `Unpack ${displayTokenAmount(amount, token)} into ${displayTokenAmount(values.token.amountOut || ZERO_BN, tokenOut)}.`
-                    } : undefined,
+                    token.equals(sdk.tokens.BEAN_CRV3_LP) &&
+                    values.tokenOut !== token
+                      ? {
+                          type: ActionType.BASE,
+                          message: `Unpack ${displayTokenAmount(
+                            amount,
+                            token
+                          )} into ${displayTokenAmount(
+                            values.token.amountOut || ZERO_BN,
+                            tokenOut
+                          )}.`,
+                        }
+                      : undefined,
                     {
                       type: ActionType.RECEIVE_TOKEN,
                       token: getNewToOldToken(tokenOut),
                       amount: values.token.amountOut || ZERO_BN,
                       destination: values.destination,
-                    }
+                    },
                   ]}
-                  {...claimPlantTxnActions}
-                  />
+                  {...formTxnActions}
+                />
               </TxnAccordion>
             </Box>
           </>
@@ -266,136 +284,180 @@ const ClaimForm : FC<
 
 // -----------------------------------------------------------------------
 
-const Claim : FC<{
+const Claim: FC<{
   token: ERC20Token;
   siloBalance: FarmerSiloBalance;
-}> = ({
-  token,
-  siloBalance,
-}) => {
+}> = ({ token, siloBalance }) => {
   const sdk = useSdk();
-  const claimPlant = useFarmerClaimPlant();
-  const [refetchClaimPlant] = useFarmerClaimAndPlantRefetch();
 
-  ///
+  /// Form Txns Actions
+  const formTxns = useFarmerFormTxns();
+
+  /// Middleware
   const middleware = useFormMiddleware();
 
   /// Data
   const claimableBalance = siloBalance?.claimable.amount;
+  const isBean = sdk.tokens.BEAN.equals(token);
 
   // Form
-  const initialValues : ClaimFormValues = useMemo(() => ({
-    // Input token values
-    token: {
-      token: token,
-      amount: claimableBalance,
-      amountOut: claimableBalance
-    },
-    destination: undefined,
-    tokenOut: undefined,
-    settings: {
-      slippage: 0.1,
-    },
-    farmActions: {
-      preset: 'plant',
-      selected: undefined,
-      additional: undefined,
-      exclude: [ClaimPlantAction.CLAIM]
-    },
-  }), [token, claimableBalance]);
+  const initialValues: ClaimFormValues = useMemo(
+    () => ({
+      // Input token values
+      token: {
+        token: token,
+        amount: claimableBalance,
+        amountOut: claimableBalance,
+      },
+      destination: undefined,
+      tokenOut: undefined,
+      settings: {
+        slippage: 0.1,
+      },
+      farmActions: {
+        preset: 'noPrimary',
+        primary: undefined,
+        secondary: undefined,
+        exclude: isBean ? [FormTxn.CLAIM] : undefined,
+      },
+    }),
+    [token, claimableBalance, isBean]
+  );
 
-  const onSubmit = useCallback(async (values: ClaimFormValues, formActions: FormikHelpers<ClaimFormValues>) => {
-    let txToast;
-    try {
-      middleware.before();
-      const crates = siloBalance?.claimable?.crates;
-      const amountIn = values.token.token.fromHuman(values.token.amount?.toString() || '0');
+  const onSubmit = useCallback(
+    async (
+      values: ClaimFormValues,
+      formActions: FormikHelpers<ClaimFormValues>
+    ) => {
+      let txToast;
+      try {
+        middleware.before();
+        const crates = siloBalance?.claimable?.crates;
+        const amountIn = values.token.token.fromHuman(
+          values.token.amount?.toString() || '0'
+        );
 
-      if (!crates || crates.length === 0 || amountIn.lte(0)) throw new Error('Nothing to claim');
-      if (!values.destination) throw new Error('Select a balance to claim to');
+        if (!crates || crates.length === 0 || amountIn.lte(0)) {
+          throw new Error('Nothing to claim');
+        }
+        if (!values.destination) {
+          throw new Error('Select a balance to claim to');
+        }
 
-      const tokenIn = values.token.token as ERC20Token;
-      const tokenOut = (values.tokenOut || tokenIn) as ERC20Token; // FIXME: `token` will always be set
+        const tokenIn = values.token.token as ERC20Token;
+        const tokenOut = (values.tokenOut || tokenIn) as ERC20Token; // FIXME: `token` will always be set
 
-      if (!tokenOut) throw new Error('Select an output token'); 
+        if (!tokenOut) throw new Error('Select an output token');
 
-      // If the user wants to swap their LP token for something else,
-      // we send their Claimable `token` to their internal balance for
-      // ease of interaction and gas efficiency.
-      const removeLiquidity  = token.isLP && !tokenIn.equals(tokenOut);
-      const claimDestination = removeLiquidity ? FarmToMode.INTERNAL : values.destination;
+        // If the user wants to swap their LP token for something else,
+        // we send their Claimable `token` to their internal balance for
+        // ease of interaction and gas efficiency.
+        const removeLiquidity = token.isLP && !tokenIn.equals(tokenOut);
+        const claimDestination = removeLiquidity
+          ? FarmToMode.INTERNAL
+          : values.destination;
 
-      console.debug(`[Claim] claimDestination = ${claimDestination}, crates = `, crates);
+        console.debug(
+          `[Claim] claimDestination = ${claimDestination}, crates = `,
+          crates
+        );
 
-      txToast = new TransactionToast({
-        loading: `Claiming ${displayTokenAmount(claimableBalance, token)} from the Silo...`,
-        success: `Claim successful. Added ${displayTokenAmount(values.token.amountOut || ZERO_BN, tokenOut)} to your ${copy.MODES[values.destination]}.`,
-      });
+        txToast = new TransactionToast({
+          loading: `Claiming ${displayTokenAmount(
+            claimableBalance,
+            token
+          )} from the Silo...`,
+          success: `Claim successful. Added ${displayTokenAmount(
+            values.token.amountOut || ZERO_BN,
+            tokenOut
+          )} to your ${copy.MODES[values.destination]}.`,
+        });
 
-      const claim = sdk.farm.create();
-      
-      // Claim multiple withdrawals of `token` in one call
-      if (crates.length > 1) {
-        console.debug(`[Claim] claiming ${crates.length} withdrawals`);
-        claim.add(new sdk.farm.actions.ClaimWithdrawals(
-          token.address,
-          crates.map((crate) => crate.season.toString()),
-          claimDestination,
-        ));
-      } else {
-        // Claim a single withdrawal of `token` in one call. Gas efficient.
-        console.debug('[Claim] claiming a single withdrawal');
-        claim.add(new sdk.farm.actions.ClaimWithdrawal(
-          token.address,
-          crates[0].season.toString(),
-          claimDestination,
-        ));
+        const claim = sdk.farm.create();
+
+        // Claim multiple withdrawals of `token` in one call
+        if (crates.length > 1) {
+          console.debug(`[Claim] claiming ${crates.length} withdrawals`);
+          claim.add(
+            new sdk.farm.actions.ClaimWithdrawals(
+              token.address,
+              crates.map((crate) => crate.season.toString()),
+              claimDestination
+            )
+          );
+        } else {
+          // Claim a single withdrawal of `token` in one call. Gas efficient.
+          console.debug('[Claim] claiming a single withdrawal');
+          claim.add(
+            new sdk.farm.actions.ClaimWithdrawal(
+              token.address,
+              crates[0].season.toString(),
+              claimDestination
+            )
+          );
+        }
+
+        if (removeLiquidity) {
+          if (!values.token.steps) throw new Error('No quote found.');
+          claim.add([...values.token.steps]);
+        }
+
+        console.log(claim);
+
+        const { execute, performed } = await FormTxnBuilder.compile(
+          sdk,
+          values.farmActions,
+          formTxns.getGenerators,
+          claim,
+          amountIn,
+          values.settings.slippage
+        );
+
+        const txn = await execute();
+        txToast.confirming(txn);
+        const receipt = await txn.wait();
+
+        await formTxns.refetch(performed, {
+          farmerSilo: true,
+          farmerBalances: true,
+        });
+
+        txToast.success(receipt);
+        formActions.resetForm();
+      } catch (err) {
+        if (txToast) {
+          txToast.error(err);
+        } else {
+          const errorToast = new TransactionToast({});
+          errorToast.error(err);
+        }
+        formActions.setSubmitting(false);
       }
-
-      if (removeLiquidity) {
-        if (!values.token.steps) throw new Error('No quote found.');
-        claim.add([...values.token.steps]);
-      }
-
-      const compiled = claimPlant.compile(values.farmActions);
-
-      const { execute } = await ClaimPlant.build(
-        sdk,
-        compiled.primaryActions,
-        compiled.additionalActions,
-        claim,
-        amountIn, 
-        { slippage: values.settings.slippage },
-      );
-
-      const txn = await execute();
-      txToast.confirming(txn);
-      const receipt = await txn.wait();
-
-      await refetchClaimPlant(compiled.actionsPerformed, { 
-        farmerSilo: true, 
-        farmerBalances: true
-      });
-
-      txToast.success(receipt);
-      formActions.resetForm();
-    } catch (err) {
-      if (txToast) {
-        txToast.error(err);
-      } else {
-        const errorToast = new TransactionToast({});
-        errorToast.error(err);
-      }
-      formActions.setSubmitting(false);
-    }
-  }, [middleware, siloBalance?.claimable?.crates, token, claimableBalance, sdk, claimPlant, refetchClaimPlant]);
+    },
+    [
+      middleware,
+      siloBalance?.claimable?.crates,
+      token,
+      claimableBalance,
+      sdk,
+      formTxns,
+    ]
+  );
 
   return (
-    <Formik initialValues={initialValues} onSubmit={onSubmit} enableReinitialize>
+    <Formik
+      initialValues={initialValues}
+      onSubmit={onSubmit}
+      enableReinitialize
+    >
       {(formikProps) => (
         <>
           <TxnSettings placement="form-top-right">
-            <SettingInput name="settings.slippage" label="Slippage Tolerance" endAdornment="%" />
+            <SettingInput
+              name="settings.slippage"
+              label="Slippage Tolerance"
+              endAdornment="%"
+            />
           </TxnSettings>
           <Stack spacing={1}>
             <ClaimForm

@@ -329,23 +329,25 @@ const TokenInput: FC<
                 {((balance || additionalBalance?.gt(0)) && !hideBalance) && (
                   <>
                     <Tooltip title={balanceTooltip}>
-                      <Typography variant="body1">
-                        {balanceLabel}: {(
-                          balance
-                            ? token
-                              // If `token` is provided, use its requested decimals
-                              ? `${displayFullBN(balance, token.displayDecimals)}`
-                              // Otherwise... *shrug*
-                              // : balance.toString()
-                              : `${displayFullBN(balance, 2)}`
-                            : '0'
-                        )}
-                        {additionalBalance?.gt(0) ? (
-                          <Typography component="span" color="primary">
-                            &nbsp;+ {displayFullBN(additionalBalance, token?.displayDecimals || 2)}
-                          </Typography>
-                        ) : null}
-                      </Typography>
+                      <Box sx={{ display: 'inline', whiteSpace: 'nowrap' }}>
+                        <Typography variant="body1">
+                          {balanceLabel}: {(
+                            balance
+                              ? token
+                                // If `token` is provided, use its requested decimals
+                                ? `${displayFullBN(balance, token.displayDecimals)}`
+                                // Otherwise... *shrug*
+                                // : balance.toString()
+                                : `${displayFullBN(balance, 2)}`
+                              : '0'
+                          )}
+                          {additionalBalance?.gt(0) ? (
+                            <Typography component="span" color="primary">
+                              &nbsp;+ {displayFullBN(additionalBalance, token?.displayDecimals || 2)}
+                            </Typography>
+                          ) : null}
+                        </Typography>
+                      </Box>
                     </Tooltip>
                     <Typography
                       variant="body1"

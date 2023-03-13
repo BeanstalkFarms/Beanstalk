@@ -9,7 +9,7 @@ import useFarmerField from '../useFarmerField';
 import useFarmerSilo from '../useFarmerSilo';
 import useRevitalized from '../useRevitalized';
 import { normalizeBN } from '~/util';
-import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
+import { FormTxn } from '~/util/FormTxns';
 import { Action, ActionType } from '~/util/Actions';
 
 const tooltips = {
@@ -42,12 +42,12 @@ const tooltips = {
 };
 
 type TXActionParams = {
-  [ClaimPlantAction.MOW]: never;
-  [ClaimPlantAction.PLANT]: never;
-  [ClaimPlantAction.ENROOT]: never;
-  [ClaimPlantAction.HARVEST]: { toMode?: FarmToMode };
-  [ClaimPlantAction.RINSE]: { toMode?: FarmToMode };
-  [ClaimPlantAction.CLAIM]: { toMode?: FarmToMode };
+  [FormTxn.MOW]: never;
+  [FormTxn.PLANT]: never;
+  [FormTxn.ENROOT]: never;
+  [FormTxn.HARVEST]: { toMode?: FarmToMode };
+  [FormTxn.RINSE]: { toMode?: FarmToMode };
+  [FormTxn.CLAIM]: { toMode?: FarmToMode };
 };
 
 type ClaimableOption = {
@@ -61,7 +61,7 @@ type ClaimableOption = {
   token: Token;
 };
 
-type ClaimPlantOptionSummary = {
+type FormTxnOptionSummary = {
   /**
    *
    */
@@ -78,7 +78,7 @@ type ClaimPlantOptionSummary = {
   tooltip: string;
 };
 
-export type ClaimPlantItem = {
+export type FormTxnSummary = {
   /**
    *
    */
@@ -92,13 +92,13 @@ export type ClaimPlantItem = {
    */
   enabled: boolean;
   /**
-   * implied actions of a Claim/Plant Action that are performed automatically in the contract
+   * implied actions of a form Action that are performed automatically in the contract
    */
-  implied: ClaimPlantAction[];
+  implied: FormTxn[];
   /**
    * A summary of the assets an action intends to claim / plant.
    */
-  summary: ClaimPlantOptionSummary[];
+  summary: FormTxnOptionSummary[];
   /**
    * If the action claims BEANS, the the token used to redeem, and amount of beans claimable
    * This is only applicable to CLAIM actions (CLAIM, HARVEST, RINSE)
@@ -107,23 +107,14 @@ export type ClaimPlantItem = {
   /**
    *
    */
-  txActions: (...params: TXActionParams[ClaimPlantAction][]) => Action[];
+  txActions: (...params: TXActionParams[FormTxn][]) => Action[];
 };
 
-export type ClaimPlantItems = {
-  [action in ClaimPlantAction]: ClaimPlantItem;
+export type FormTxnSummaryMap = {
+  [action in FormTxn]: FormTxnSummary;
 };
 
-const isClaimingBeansAction = (action: ClaimPlantAction) => {
-  const isClaiming =
-    action === ClaimPlantAction.CLAIM ||
-    action === ClaimPlantAction.HARVEST ||
-    action === ClaimPlantAction.RINSE;
-
-  return isClaiming;
-};
-
-export default function useFarmerClaimAndPlantOptions() {
+export default function useFarmerFormTxnsSummary() {
   ///
   const sdk = useSdk();
 
@@ -133,7 +124,7 @@ export default function useFarmerClaimAndPlantOptions() {
   const farmerBarn = useFarmerFertilizer();
   const { revitalizedStalk, revitalizedSeeds } = useRevitalized();
 
-  const options: ClaimPlantItems = useMemo(() => {
+  const summary: FormTxnSummaryMap = useMemo(() => {
     const { SEEDS, STALK, BEAN, PODS, SPROUTS } = sdk.tokens;
 
     const grownStalk = normalizeBN(farmerSilo.stalk.grown);
@@ -149,11 +140,11 @@ export default function useFarmerClaimAndPlantOptions() {
     );
 
     return {
-      [ClaimPlantAction.MOW]: {
+      [FormTxn.MOW]: {
         title: 'Mow',
         tooltip: tooltips.mow,
         enabled: grownStalk.gt(0),
-        implied: ClaimPlant.config.implied[ClaimPlantAction.MOW] || [],
+        implied: [],
         summary: [
           {
             description: 'Grown Stalk',
@@ -169,11 +160,11 @@ export default function useFarmerClaimAndPlantOptions() {
           },
         ],
       },
-      [ClaimPlantAction.PLANT]: {
+      [FormTxn.PLANT]: {
         title: 'Plant',
         tooltip: tooltips.plant,
         enabled: earnedSeeds.gt(0),
-        implied: ClaimPlant.config.implied[ClaimPlantAction.PLANT] || [],
+        implied: [],
         summary: [
           {
             description: 'Earned Beans',
@@ -204,11 +195,11 @@ export default function useFarmerClaimAndPlantOptions() {
           },
         ],
       },
-      [ClaimPlantAction.ENROOT]: {
+      [FormTxn.ENROOT]: {
         title: 'Enroot',
         tooltip: tooltips.enroot,
         enabled: revitalizedSeeds.gt(0) && revitalizedStalk.gt(0),
-        implied: ClaimPlant.config.implied[ClaimPlantAction.ENROOT] || [],
+        implied: [],
         summary: [
           {
             description: 'Revitalized Seeds',
@@ -231,11 +222,11 @@ export default function useFarmerClaimAndPlantOptions() {
           },
         ],
       },
-      [ClaimPlantAction.HARVEST]: {
+      [FormTxn.HARVEST]: {
         title: 'Harvest',
         tooltip: tooltips.harvest,
         enabled: harvestablePods.gt(0),
-        implied: ClaimPlant.config.implied[ClaimPlantAction.HARVEST] || [],
+        implied: [],
         claimable: {
           token: PODS,
           amount: harvestablePods,
@@ -255,11 +246,11 @@ export default function useFarmerClaimAndPlantOptions() {
           },
         ],
       },
-      [ClaimPlantAction.RINSE]: {
+      [FormTxn.RINSE]: {
         title: 'Rinse',
         tooltip: tooltips.rinse,
         enabled: rinsableSprouts.gt(0),
-        implied: ClaimPlant.config.implied[ClaimPlantAction.RINSE] || [],
+        implied: [],
         claimable: {
           token: SPROUTS,
           amount: rinsableSprouts,
@@ -279,11 +270,11 @@ export default function useFarmerClaimAndPlantOptions() {
           },
         ],
       },
-      [ClaimPlantAction.CLAIM]: {
+      [FormTxn.CLAIM]: {
         title: 'Claim',
         tooltip: tooltips.claim,
         enabled: claimableBeans.gt(0),
-        implied: ClaimPlant.config.implied[ClaimPlantAction.CLAIM] || [],
+        implied: [],
         claimable: {
           token: BEAN,
           amount: claimableBeans,
@@ -318,17 +309,13 @@ export default function useFarmerClaimAndPlantOptions() {
     sdk.tokens,
   ]);
 
-  const getPlantableAmount = useCallback(() => {
-    
-  }, []);
-
   /**
    * Returns the total amount of beans claimable from a list of claimable actions
    */
   const getClaimable = useCallback(
-    (_options?: ClaimPlantAction[]) => {
+    (_options?: FormTxn[]) => {
       const amount = _options?.reduce((prev, curr) => {
-        const option = options[curr] as ClaimPlantItem;
+        const option = summary[curr] as FormTxnSummary;
         prev = prev.plus(normalizeBN(option?.claimable?.amount));
         return prev;
       }, ZERO_BN);
@@ -340,53 +327,8 @@ export default function useFarmerClaimAndPlantOptions() {
         tokenValue,
       };
     },
-    [options, sdk.tokens.BEAN]
+    [summary, sdk.tokens.BEAN]
   );
 
-  const getTxnActions = useCallback(
-    (
-      _primary: ClaimPlantAction[] | undefined,
-      _secondary: ClaimPlantAction[] | undefined,
-      graphicOnClaimBeans?: boolean
-    ) => {
-      const primary = _primary || [];
-      const secondary = _secondary || [];
-
-      const postStartIndex = primary.length;
-      const actions = [...primary, ...secondary].reduce<{
-        pre: Action[];
-        post: Action[];
-        claiming: Action[];
-      }>(
-        (prev, curr, idx) => {
-          const option = options[curr];
-          let _actions;
-          if (isClaimingBeansAction(curr)) {
-            _actions = option.txActions();
-            if (graphicOnClaimBeans) {
-              prev.claiming = [...prev.claiming, ..._actions];
-            }
-          } else {
-            _actions = option.txActions();
-          }
-          if (idx >= postStartIndex) {
-            prev.post = [...prev.post, ..._actions];
-          } else {
-            prev.pre = [...prev.pre, ..._actions];
-          }
-          return prev;
-        },
-        { pre: [], post: [], claiming: [] }
-      );
-
-      return {
-        preActions: actions.pre,
-        postActions: actions.post,
-        preActionsWithGraphic: actions.claiming,
-      };
-    },
-    [options]
-  );
-
-  return { options, getClaimable, getTxnActions };
+  return { summary, getClaimable };
 }

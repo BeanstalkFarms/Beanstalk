@@ -1,63 +1,61 @@
 import BigNumber from 'bignumber.js';
-import { ERC20Token as ERC20TokenNew, NativeToken as NativeTokenNew } from '@beanstalk/sdk';
+import {
+  ERC20Token as ERC20TokenNew,
+  NativeToken as NativeTokenNew,
+} from '@beanstalk/sdk';
 import { ERC20Token, NativeToken } from '~/classes/Token';
 import { QuoteHandlerResult } from '~/hooks/ledger/useQuote';
 import { FarmToMode } from '~/lib/Beanstalk/Farm';
 import { BalanceFrom } from './BalanceFromRow';
 import { QuoteHandlerResultNew } from '~/hooks/ledger/useQuoteWithParams';
-import { ClaimPlantAction, ClaimPlantFormPresets } from '~/util/ClaimPlant';
+import { FormTxnBuilderInterface } from '~/util/FormTxns';
 
 /**
- * 
+ *
  */
 export type FormState = {
   /** */
   tokens: FormTokenState[];
   /** */
-  approving?: FormApprovingState; 
-}
+  approving?: FormApprovingState;
+};
 
 export type FormStateNew = {
   tokens: FormTokenStateNew[];
   approving?: FormApprovingStateNew;
-}
+};
 
 /// FIXME: use type composition instead of this
 export type FormStateWithPlotSelect = FormState & {
   plot?: BigNumber;
-}
+};
 
 /**
  * Fragment: A single Token stored within a form.
  */
-export type FormTokenState = (
+export type FormTokenState =
   /// Form inputs
   {
     /** The selected token. */
-    token:      ERC20Token | NativeToken;
+    token: ERC20Token | NativeToken;
     /** The amount of the selected token, usually input by the user.
      * @value undefined if the input is empty */
-    amount:     BigNumber | undefined;
-  } 
-  /// Quoting
-  & {
+    amount: BigNumber | undefined;
+  } & { /// Quoting
     /** Whether we're currently looking up a quoted `amountOut` for this token. */
-    quoting?:   boolean;
-  } & Partial<QuoteHandlerResult>
-);
+    quoting?: boolean;
+  } & Partial<QuoteHandlerResult>;
 
 /**
  * Fragment: A single Token stored within a form.
  * NOTE: Duplicated from FromTokenState but to use types from @beanstalk/sdk
  */
-export type FormTokenStateNew = (
-  {
-    token:     ERC20TokenNew | NativeTokenNew;
-    amount:    BigNumber | undefined;
-  } & {
-    quoting?:  boolean;
-  } & Partial<QuoteHandlerResultNew>
-)
+export type FormTokenStateNew = {
+  token: ERC20TokenNew | NativeTokenNew;
+  amount: BigNumber | undefined;
+} & {
+  quoting?: boolean;
+} & Partial<QuoteHandlerResultNew>;
 
 // /** Some `amountOut` received for inputting `amount` of this token into a function. */
 // amountOut?: BigNumber;
@@ -70,38 +68,38 @@ export type FormApprovingState = {
   /** */
   contract: string;
   /** */
-  token:    ERC20Token | NativeToken;
+  token: ERC20Token | NativeToken;
   /** */
-  amount:   BigNumber;
-}
+  amount: BigNumber;
+};
 
 export type FormApprovingStateNew = {
   contract: string;
-  token:    ERC20TokenNew | NativeTokenNew;
-  amount:   BigNumber;
-}
+  token: ERC20TokenNew | NativeTokenNew;
+  amount: BigNumber;
+};
 
 export type PlotFragment = {
   /** The absolute index of the plot. @decimals 6 */
-  index:  string    | null;
+  index: string | null;
   /** The user's selected start position. @decimals 6 */
-  start:  BigNumber | null;
+  start: BigNumber | null;
   /** The user's selected end position. @decimals 6 */
-  end:    BigNumber | null;
+  end: BigNumber | null;
   /** end - start. @decimals 6 */
   amount: BigNumber | null;
-}
+};
 
 export type SlippageSettingsFragment = {
   /** When performing a swap of some kind, set the slippage
    * value applied to all exchanges. */
   slippage: number;
-}
+};
 export type PlotSettingsFragment = {
   /** Let the Farmer select the exact range from which their
    * Pods are being transferred, sold, etc. */
   showRangeSelect: boolean;
-}
+};
 
 /**
  *
@@ -117,33 +115,12 @@ export type FarmToModeFragment = {
   destination?: FarmToMode;
 };
 
-export type ClaimAndPlantFormState = {
+export type FormTxnsFormState = {
   /**
-   * actions to be performed with any given transaction (e.g. deposit, convert, harvest, etc). 
-   * Possible Actions are [Claim, Harvest, Rinse, Mow, Plant, Enroot]
+   * actions added in conjunction to an arbitrary txn (e.g. deposit, convert, harvest, etc).
    */
-  farmActions: {
-    preset: keyof typeof ClaimPlantFormPresets;
-    /**
-     * actions that have been selected by the user.
-     * NOTE: typically these are the actions that must be peformed BEFORE the user performs the 'main' action.
-     * 
-     */
-    selected: ClaimPlantAction[] | undefined;
-    /**
-     * Any additional 'ClaimPlantAction's to perform that have been selected by the user.
-     * NOTE:
-     * the set of options for 'additional.selected' is the complement of 'farmActions.options'
-     * For example, if 'farmActions.options' is defined as the set of [Claim, Harvest, Rinse],
-     * the options for 'additional.selected' are the set of [Mow, Plant, Enroot]
-     */
-    additional: ClaimPlantAction[] | undefined;
-    /**
-     * actions to exclude from the options
-     */
-    exclude?: ClaimPlantAction[];
-  };
-}
+  farmActions: FormTxnBuilderInterface;
+};
 
 // ----------------------------------------------------------------------
 

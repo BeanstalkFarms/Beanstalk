@@ -1,20 +1,15 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
 import { useSelector } from 'react-redux';
-import {
-  ERC20Token,
-  NativeToken,
-  Token,
-} from '@beanstalk/sdk';
-
+import { ERC20Token, NativeToken, Token } from '@beanstalk/sdk';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import {
   BalanceFromFragment,
-  ClaimAndPlantFormState,
   FormStateNew,
+  FormTxnsFormState,
   SettingInput,
   TxnSettings,
 } from '~/components/Common/Form';
@@ -34,28 +29,30 @@ import { useFetchPools } from '~/state/bean/pools/updater';
 import { useFetchBeanstalkSilo } from '~/state/beanstalk/silo/updater';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
-import { BalanceFrom, balanceFromToMode } from '~/components/Common/Form/BalanceFromRow';
+import {
+  BalanceFrom,
+  balanceFromToMode,
+} from '~/components/Common/Form/BalanceFromRow';
 import useSdk from '~/hooks/sdk';
-import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import { depositSummary as getDepositSummary } from '~/lib/Beanstalk/Silo/Deposit';
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
-import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
-import ClaimPlant, { ClaimPlantAction } from '~/util/ClaimPlant';
-import useFarmerClaimingBalance from '~/hooks/farmer/claim-plant/useFarmerClaimingBalance';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import TxnAccordion from '~/components/Common/TxnAccordion';
-import useFarmerClaimAndPlant from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlant';
 import { tokenValueToBN } from '~/util';
 import useAccount from '~/hooks/ledger/useAccount';
-import useFarmerClaimAndPlantRefetch from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlantRefetch';
-import useFarmerClaimAndPlantTxns from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlantTxns';
+import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
+import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
+import useFarmerFormTxnBalances from '~/hooks/farmer/form-txn/useFarmerFormTxnBalances';
+import useFarmerFormTxnActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
+import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
+import FormTxnsPrimaryOptions from '~/components/Common/Form/FormTxnsPrimaryOptions';
 
 // -----------------------------------------------------------------------
 
 type DepositFormValues = FormStateNew &
-  ClaimAndPlantFormState &
+  FormTxnsFormState &
   BalanceFromFragment & {
     settings: {
       slippage: number;
@@ -64,6 +61,13 @@ type DepositFormValues = FormStateNew &
 
 type DepositQuoteHandler = {
   balanceFrom: BalanceFrom;
+};
+
+const defaultFarmActionsFormState = {
+  preset: 'claim',
+  primary: undefined,
+  secondary: undefined,
+  implied: [FormTxn.MOW],
 };
 
 // -----------------------------------------------------------------------
@@ -90,11 +94,13 @@ const DepositForm: FC<
   isSubmitting,
   setFieldValue,
 }) => {
+  ///
   const sdk = useSdk();
-  const additionalBalances = useFarmerClaimingBalance();
-  const txnActions = useFarmerClaimAndPlantTxns(
-    sdk.tokens.BEAN.equals(values.tokens[0].token) || false
-  );
+  const { balances: additionalBalances } = useFarmerFormTxnBalances();
+
+  const txnActions = useFarmerFormTxnActions({
+    showGraphicOnClaim: sdk.tokens.BEAN.equals(values.tokens[0].token) || false,
+  });
 
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const { amount, bdv, stalk, seeds, actions } = getDepositSummary(
@@ -106,7 +112,16 @@ const DepositForm: FC<
   /// Derived
   const isReady = bdv.gt(0);
 
-  ///
+  // Memoized params for TokenQuoteProviderWithParams.
+  // If not memoized, it'll cause an infinite loop
+  const quoteProviderParams = useMemo(
+    () => ({
+      balanceFrom: values.balanceFrom,
+    }),
+    [values.balanceFrom]
+  );
+
+  /// Handlers
   const handleSelectTokens = useCallback(
     (_tokens: Set<Token>) => {
       // If the user has typed some existing values in,
@@ -128,36 +143,37 @@ const DepositForm: FC<
     [values.tokens, setFieldValue]
   );
 
-  const handleSetBalanceFrom = useCallback((_balanceFrom: BalanceFrom) => {
-    setFieldValue('balanceFrom', _balanceFrom);
-  }, [setFieldValue]);
+  const handleSetBalanceFrom = useCallback(
+    (_balanceFrom: BalanceFrom) => {
+      setFieldValue('balanceFrom', _balanceFrom);
+    },
+    [setFieldValue]
+  );
 
-  const params = useMemo(() => {
-    const _params = {
-      balanceFrom: values.balanceFrom,
-    };
-    return _params;
-  }, [values.balanceFrom]);
+  /// Effects
+  // Reset the form farmActions whenever the tokenIn changes
+  const currTokenSymbol = values.tokens[0].token.symbol;
+  const [cachedTokenSymbol, setCachedTokenSymbol] = useState(currTokenSymbol);
+  useEffect(() => {
+    if (cachedTokenSymbol !== currTokenSymbol) {
+      setCachedTokenSymbol(currTokenSymbol);
+      setFieldValue('farmActions', defaultFarmActionsFormState);
+    }
+  }, [cachedTokenSymbol, currTokenSymbol, setFieldValue]);
 
   const disabledActions = useMemo(() => {
-    if (values.tokens[0].token.symbol === 'ETH') {
-      return [{
-        action: ClaimPlantAction.ENROOT,
-        reason: 'Depositing ETH and Enrooting is not supported',
-      }];
-    }
-    return [];
-  }, [values.tokens]);
-
-  const tokenIn = values.tokens[0].token.symbol;
-
-  useEffect(() => {
-      setFieldValue('farmActions', {
-        preset: 'rinseAndHarvest',
-        selected: undefined,
-        additional: undefined,
-      });
-  }, [setFieldValue, tokenIn]);
+    const isEth = currTokenSymbol === 'ETH';
+    const _disabled = isEth
+      ? [
+          {
+            action: FormTxn.ENROOT,
+            reason:
+              'Enrooting while using ETH to deposit is currently not supported',
+          },
+        ]
+      : undefined;
+    return _disabled;
+  }, [currTokenSymbol]);
 
   return (
     <Form noValidate autoComplete="off">
@@ -177,11 +193,20 @@ const DepositForm: FC<
       {/* Input Field */}
       <Stack gap={1}>
         {values.tokens.map((tokenState, index) => {
-          const key = tokenState.token.symbol === 'ETH' ? 'eth' : tokenState.token.address;
-          const balanceType = values.balanceFrom ? values.balanceFrom : BalanceFrom.TOTAL;
+          const key =
+            tokenState.token.symbol === 'ETH'
+              ? 'eth'
+              : tokenState.token.address;
+          const balanceType = values.balanceFrom
+            ? values.balanceFrom
+            : BalanceFrom.TOTAL;
           const _balance = balances?.[key];
-          const balance = _balance && balanceType in _balance ? _balance[balanceType] : ZERO_BN;
-          const additionalBalance = additionalBalances[tokenState.token.address]?.applied;
+          const balance =
+            _balance && balanceType in _balance
+              ? _balance[balanceType]
+              : ZERO_BN;
+          const additionalBalance =
+            additionalBalances[tokenState.token.address]?.applied;
 
           return (
             <TokenQuoteProviderWithParams<DepositQuoteHandler>
@@ -194,8 +219,8 @@ const DepositForm: FC<
               handleQuote={handleQuote}
               additionalBalance={additionalBalance}
               balanceFrom={values.balanceFrom}
-              params={params}
-              belowComponent={<ClaimAndPlantFarmActions />}
+              params={quoteProviderParams}
+              belowComponent={<FormTxnsPrimaryOptions />}
             />
           );
         })}
@@ -214,8 +239,12 @@ const DepositForm: FC<
                 amount={stalk}
                 amountTooltip={
                   <>
-                    1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
-                    1 BDV&rarr;{whitelistedToken.getStalk()?.toHuman()} STALK
+                    1 {whitelistedToken.symbol} ={' '}
+                    {displayFullBN(amountToBdv(new BigNumber(1)))} BDV
+                    <br />1 BDV&rarr;{whitelistedToken
+                      .getStalk()
+                      ?.toHuman()}{' '}
+                    STALK
                   </>
                 }
               />
@@ -225,15 +254,17 @@ const DepositForm: FC<
                 amount={seeds}
                 amountTooltip={
                   <>
-                    1 {whitelistedToken.symbol} = {displayFullBN(amountToBdv(new BigNumber(1)))} BDV<br />
-                    1 BDV&rarr;{whitelistedToken.getSeeds()?.toHuman()} SEEDS
+                    1 {whitelistedToken.symbol} ={' '}
+                    {displayFullBN(amountToBdv(new BigNumber(1)))} BDV
+                    <br />1 BDV&rarr;{whitelistedToken
+                      .getSeeds()
+                      ?.toHuman()}{' '}
+                    SEEDS
                   </>
                 }
               />
             </TokenOutput>
-            <ClaimAndPlantAdditionalOptions 
-              disabledActions={disabledActions} 
-            />
+            <FormTxnsSecondaryOptions disabledActions={disabledActions} />
             <Box>
               <TxnAccordion defaultExpanded={false}>
                 <TxnPreview actions={actions} {...txnActions} />
@@ -265,10 +296,10 @@ const Deposit: FC<{
   token: ERC20Token | NativeToken;
 }> = ({ token: whitelistedToken }) => {
   const sdk = useSdk();
-  const claimAndPlant = useFarmerClaimAndPlant();
   const account = useAccount();
-  
-  const [claimPlantRefetch] = useFarmerClaimAndPlantRefetch();
+
+  ///
+  const formTxns = useFarmerFormTxns();
 
   /// FIXME: name
   /// FIXME: finish deposit functionality for other tokens
@@ -302,11 +333,19 @@ const Deposit: FC<{
     return [_tokenList, _tokenList.map((t) => ({ token: t }))];
   }, [whitelistedToken, allAvailableTokens]);
 
-  const baseToken = usePreferredToken(preferredTokens, 'use-best') as ERC20Token | NativeToken;
+  const baseToken = usePreferredToken(preferredTokens, 'use-best') as
+    | ERC20Token
+    | NativeToken;
 
   /// Beanstalk
-  const bdvPerToken = useSelector<AppState, AppState['_beanstalk']['silo']['balances'][string]['bdvPerToken'] | BigNumber>(
-    (state) => state._beanstalk.silo.balances[whitelistedToken.address]?.bdvPerToken || ZERO_BN
+  const bdvPerToken = useSelector<
+    AppState,
+    | AppState['_beanstalk']['silo']['balances'][string]['bdvPerToken']
+    | BigNumber
+  >(
+    (state) =>
+      state._beanstalk.silo.balances[whitelistedToken.address]?.bdvPerToken ||
+      ZERO_BN
   );
 
   const amountToBdv = useCallback(
@@ -335,9 +374,10 @@ const Deposit: FC<{
       ],
       balanceFrom: BalanceFrom.TOTAL,
       farmActions: {
-        preset: 'rinseAndHarvest',
-        selected: undefined,
-        additional: undefined,
+        preset: 'claim',
+        primary: undefined,
+        secondary: undefined,
+        implied: [FormTxn.MOW],
       },
     }),
     [baseToken]
@@ -362,10 +402,9 @@ const Deposit: FC<{
           `Depositing ${tokenOut.symbol} to the Silo via ${tokenIn.symbol} is currently unsupported.`
         );
       }
-
       console.debug('[chain] estimate = ', estimate);
       return {
-        amountOut: tokenValueToBN(estimate)
+        amountOut: tokenValueToBN(estimate),
       };
     },
     [account, sdk.silo]
@@ -399,19 +438,13 @@ const Deposit: FC<{
         const deposit = sdk.silo.buildDeposit(whitelistedToken, account);
         deposit.setInputToken(tokenIn, balanceFromToMode(values.balanceFrom));
 
-        const { 
-          primaryActions, 
-          additionalActions, 
-          actionsPerformed 
-        } = claimAndPlant.compile(values.farmActions);
-
-        const { execute, estimate } = await ClaimPlant.build(
+        const { execute, estimate, performed } = await FormTxnBuilder.compile(
           sdk,
-          primaryActions,
-          additionalActions,
+          values.farmActions,
+          formTxns.getGenerators,
           deposit.workflow,
           amountIn,
-          { slippage: values.settings.slippage }
+          values.settings.slippage
         );
 
         const estimateBN = tokenValueToBN(
@@ -431,8 +464,8 @@ const Deposit: FC<{
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
-        await claimPlantRefetch(
-          actionsPerformed,
+        await formTxns.refetch(
+          performed,
           {
             farmerSilo: true,
             farmerBalances: true,
@@ -452,7 +485,15 @@ const Deposit: FC<{
         formActions.setSubmitting(false);
       }
     },
-    [middleware, account, whitelistedToken, sdk, claimAndPlant, claimPlantRefetch, refetchSilo, refetchPools]
+    [
+      middleware,
+      account,
+      sdk,
+      whitelistedToken,
+      formTxns,
+      refetchSilo,
+      refetchPools,
+    ]
   );
 
   return (

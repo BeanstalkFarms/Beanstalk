@@ -2,9 +2,20 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
-import { Token, ERC20Token, NativeToken, DataSource } from '@beanstalk/sdk';
-import { ethers } from 'ethers';
-import { ClaimAndPlantFormState, FormStateNew, SettingInput, SmartSubmitButton, TxnSettings } from '~/components/Common/Form';
+import {
+  Token,
+  ERC20Token,
+  NativeToken,
+  DataSource,
+  StepGenerator,
+} from '@beanstalk/sdk';
+import {
+  FormStateNew,
+  FormTxnsFormState,
+  SettingInput,
+  SmartSubmitButton,
+  TxnSettings,
+} from '~/components/Common/Form';
 import TxnPreview from '~/components/Common/Form/TxnPreview';
 import TxnSeparator from '~/components/Common/Form/TxnSeparator';
 import PillRow from '~/components/Common/Form/PillRow';
@@ -28,16 +39,18 @@ import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew'
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
-import ClaimAndPlantFarmActions from '~/components/Common/Form/ClaimAndPlantFarmOptions';
-import ClaimAndPlantAdditionalOptions from '~/components/Common/Form/ClaimAndPlantAdditionalOptions';
-import ClaimPlant from '~/util/ClaimPlant';
 import useAccount from '~/hooks/ledger/useAccount';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
-import useFarmerClaimAndPlantOptions from '~/hooks/farmer/claim-plant/useFarmerClaimPlantOptions';
 import TxnAccordion from '~/components/Common/TxnAccordion';
-import useFarmerClaimPlant from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlant';
-import useFarmerClaimAndPlantRefetch from '~/hooks/farmer/claim-plant/useFarmerClaimAndPlantRefetch';
+
+import useFarmerDepositCrateFromPlant from '~/hooks/farmer/useFarmerDepositCrateFromPlant';
+import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
+import useFarmerFormTxnBalances from '~/hooks/farmer/form-txn/useFarmerFormTxnBalances';
+import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
+import FormTxnsPrimaryOptions from '~/components/Common/Form/FormTxnsPrimaryOptions';
+import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
+import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
 
 // -----------------------------------------------------------------------
 
@@ -47,23 +60,21 @@ type ConvertFormValues = FormStateNew & {
   };
   maxAmountIn: BigNumber | undefined;
   tokenOut: Token | undefined;
-} & ClaimAndPlantFormState;
+} & FormTxnsFormState;
 
-type ConvertQuoteHandlerParams = {
-  slippage: number; 
-}
+type ConvertQuoteHandlerParams = { slippage: number; isPlanting: boolean };
 
 // -----------------------------------------------------------------------
 
 const INIT_CONVERSION = {
   amount: ZERO_BN,
-  bdv:    ZERO_BN,
-  stalk:  ZERO_BN,
-  seeds:  ZERO_BN,
-  actions: []
+  bdv: ZERO_BN,
+  stalk: ZERO_BN,
+  seeds: ZERO_BN,
+  actions: [],
 };
 
-const ConvertForm : FC<
+const ConvertForm: FC<
   FormikProps<ConvertFormValues> & {
     /** List of tokens that can be converted to. */
     tokenList: (ERC20Token | NativeToken)[];
@@ -83,59 +94,76 @@ const ConvertForm : FC<
   setFieldValue,
 }) => {
   const sdk = useSdk();
-  const claimPlantOptions = useFarmerClaimAndPlantOptions();
   /// Local state
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const getBDV = useBDV();
 
   /// Extract values from form state
-  const tokenIn   = values.tokens[0].token;     // converting from token
-  const amountIn  = values.tokens[0].amount;    // amount of from token
-  const tokenOut  = values.tokenOut;            // converting to token
+  const tokenIn = values.tokens[0].token; // converting from token
+  const amountIn = values.tokens[0].amount; // amount of from token
+  const tokenOut = values.tokenOut; // converting to token
   const amountOut = values.tokens[0].amountOut; // amount of to token
-  const maxAmountIn     = values.maxAmountIn;
-  const canConvert      = maxAmountIn?.gt(0) || false;
-  const siloBalance     = siloBalances[tokenIn.address]; // FIXME: this is mistyped, may not exist
+  const maxAmountIn = values.maxAmountIn;
+  const canConvert = maxAmountIn?.gt(0) || false;
+  const siloBalance = siloBalances[tokenIn.address]; // FIXME: this is mistyped, may not exist
   const depositedAmount = siloBalance?.deposited.amount || ZERO_BN;
   const isQuoting = values.tokens[0].quoting || false;
 
   /// Derived form state
-  let isReady        = false;
-  let buttonLoading  = false;
-  let buttonContent  = 'Convert';
-  let bdvOut;     // the BDV received after re-depositing `amountOut` of `tokenOut`.
-  let bdvIn;
-  let deltaBDV : (BigNumber | undefined); // the change in BDV during the convert. should always be >= 0.
+  let isReady = false;
+  let buttonLoading = false;
+  let buttonContent = 'Convert';
+  let bdvOut; // the BDV received after re-depositing `amountOut` of `tokenOut`.
+  // let bdvIn;
+  let deltaBDV: BigNumber | undefined; // the change in BDV during the convert. should always be >= 0.
   let deltaStalk; // the change in Stalk during the convert. should always be >= 0.
   let deltaSeedsPerBDV; // change in seeds per BDV for this pathway. ex: bean (2 seeds) -> bean:3crv (4 seeds) = +2 seeds.
   let deltaSeeds; // the change in seeds during the convert.
 
+  const plantCrate = useFarmerDepositCrateFromPlant();
+  const { plantableBalance } = useFarmerFormTxnBalances();
+  const txnActions = useFarmerFormTxnsActions();
+
+  const shouldAppendPlantDepositCrate =
+    values.farmActions.primary?.includes(FormTxn.PLANT) &&
+    sdk.tokens.BEAN.equals(tokenIn);
+
   ///
   const [conversion, setConversion] = useState(INIT_CONVERSION);
-  const runConversion = useCallback((_amountIn: BigNumber) => {
-    if (!tokenOut) {
-      setConversion(INIT_CONVERSION);
-    } else if (tokenOut && !isQuoting) {
-      console.debug('[Convert] setting conversion, ', tokenOut, isQuoting);
-      setConversion(
-        convert(
-          getNewToOldToken(tokenIn),   // from
-          getNewToOldToken(tokenOut),  // to
-          _amountIn, // amount
-          siloBalance?.deposited.crates || [], // depositedCrates
-          currentSeason,
-        )
-      );
-    }
-  }, [currentSeason, isQuoting, siloBalance?.deposited.crates, tokenIn, tokenOut]);
+  const runConversion = useCallback(
+    (_amountIn: BigNumber) => {
+      if (!tokenOut) {
+        setConversion(INIT_CONVERSION);
+      } else if (tokenOut && !isQuoting) {
+        console.debug('[Convert] setting conversion, ', tokenOut, isQuoting);
 
-  const claimPlantTxnActions = useMemo(() => {
-    const { selected, additional } = values.farmActions;
-    return claimPlantOptions.getTxnActions(
-      selected,
-      additional
-    );
-  }, [claimPlantOptions, values.farmActions]);
+        const crates = [...(siloBalance?.deposited.crates || [])]; // depositedCrates
+        // only append the plant deposit crate if SILO:BEAN is being converted
+        if (shouldAppendPlantDepositCrate) {
+          crates.push(plantCrate.crate.asBN);
+        }
+
+        setConversion(
+          convert(
+            getNewToOldToken(tokenIn), // from
+            getNewToOldToken(tokenOut), // to
+            _amountIn, // amount
+            crates, // depositedCrates
+            currentSeason
+          )
+        );
+      }
+    },
+    [
+      tokenOut,
+      isQuoting,
+      siloBalance?.deposited.crates,
+      shouldAppendPlantDepositCrate,
+      tokenIn,
+      currentSeason,
+      plantCrate.crate.asBN,
+    ]
+  );
 
   /// FIXME: is there a better pattern for this?
   /// we want to refresh the conversion info only
@@ -161,40 +189,41 @@ const ConvertForm : FC<
     }
   } else if (!canConvert) {
     // buttonContent = 'Pathway unavailable';
-  } else  {
+  } else {
     buttonContent = 'Convert';
     if (tokenOut && amountOut?.gt(0)) {
-      isReady    = true;
-      bdvOut     = getBDV(tokenOut).times(amountOut);
-      deltaBDV   = MaxBN(
-        bdvOut.minus(conversion.bdv.abs()),
-        ZERO_BN
-      );
+      isReady = true;
+      bdvOut = getBDV(tokenOut).times(amountOut);
+      deltaBDV = MaxBN(bdvOut.minus(conversion.bdv.abs()), ZERO_BN);
       deltaStalk = MaxBN(
         tokenValueToBN(tokenOut.getStalk(bnToTokenValue(tokenOut, deltaBDV))),
         ZERO_BN
       );
-      deltaSeedsPerBDV = (
-        tokenOut.getSeeds().sub(tokenValueToBN(tokenIn.getSeeds()).toNumber())
-      );
-      deltaSeeds = (
-        tokenValueToBN(tokenOut.getSeeds(bnToTokenValue(tokenOut, bdvOut))  // seeds for depositing this token with new BDV
-          .sub(bnToTokenValue(tokenOut, conversion.seeds.abs())))   // seeds lost when converting
-      );
+      deltaSeedsPerBDV = tokenOut
+        .getSeeds()
+        .sub(tokenValueToBN(tokenIn.getSeeds()).toNumber());
+      deltaSeeds = tokenValueToBN(
+        tokenOut
+          .getSeeds(bnToTokenValue(tokenOut, bdvOut)) // seeds for depositing this token with new BDV
+          .sub(bnToTokenValue(tokenOut, conversion.seeds.abs()))
+      ); // seeds lost when converting
     }
   }
-  
+
   /// When a new output token is selected, reset maxAmountIn.
-  const handleSelectTokenOut = useCallback(async (_tokens: Set<Token>) => {
-    const arr = Array.from(_tokens);
-    if (arr.length !== 1) throw new Error();
-    const _tokenOut = arr[0];
-    /// only reset if the user clicked a different token
-    if (tokenOut !== _tokenOut) {
-      setFieldValue('tokenOut', _tokenOut);
-      setFieldValue('maxAmountIn', null);
-    }
-  }, [setFieldValue, tokenOut]);
+  const handleSelectTokenOut = useCallback(
+    async (_tokens: Set<Token>) => {
+      const arr = Array.from(_tokens);
+      if (arr.length !== 1) throw new Error();
+      const _tokenOut = arr[0];
+      /// only reset if the user clicked a different token
+      if (tokenOut !== _tokenOut) {
+        setFieldValue('tokenOut', _tokenOut);
+        setFieldValue('maxAmountIn', null);
+      }
+    },
+    [setFieldValue, tokenOut]
+  );
 
   /// When `tokenIn` or `tokenOut` changes, refresh the
   /// max amount that the user can input of `tokenIn`.
@@ -202,20 +231,24 @@ const ConvertForm : FC<
   useEffect(() => {
     (async () => {
       if (tokenOut) {
-        const _maxAmountIn = (
-          await sdk.contracts.beanstalk.getMaxAmountIn(
-            tokenIn.address,
-            tokenOut.address,
-          )
+        const _maxAmountIn = await sdk.contracts.beanstalk
+          .getMaxAmountIn(tokenIn.address, tokenOut.address)
           .then((amt) => tokenValueToBN(tokenIn.amount(amt.toString())))
-          .catch(() => ZERO_BN) // if calculation fails, consider this pathway unavailable
-        );
+          .catch(() => ZERO_BN); // if calculation fails, consider this pathway unavailable
         setFieldValue('maxAmountIn', _maxAmountIn);
       }
     })();
   }, [sdk.contracts.beanstalk, setFieldValue, tokenIn, tokenOut]);
 
-  const maxAmountUsed = (amountIn && maxAmountIn) ? amountIn.div(maxAmountIn) : null;
+  const quoteHandlerParams = useMemo(
+    () => ({
+      slippage: values.settings.slippage,
+      isPlanting: values.farmActions.primary?.includes(FormTxn.PLANT) || false,
+    }),
+    [values.farmActions.primary, values.settings.slippage]
+  );
+  const maxAmountUsed =
+    amountIn && maxAmountIn ? amountIn.div(maxAmountIn) : null;
 
   return (
     <Form noValidate autoComplete="off">
@@ -229,7 +262,7 @@ const ConvertForm : FC<
       />
       <Stack gap={1}>
         {/* Input token */}
-        <TokenQuoteProviderWithParams<ConvertQuoteHandlerParams>
+        <TokenQuoteProviderWithParams
           name="tokens.0"
           tokenOut={(tokenOut || tokenIn) as ERC20Token}
           max={MinBN(values.maxAmountIn || ZERO_BN, depositedAmount)}
@@ -237,23 +270,23 @@ const ConvertForm : FC<
           balanceLabel="Deposited Balance"
           state={values.tokens[0]}
           handleQuote={handleQuote}
-          displayQuote={(_amountOut) => (
-            (_amountOut && deltaBDV) && (
+          displayQuote={(_amountOut) =>
+            _amountOut &&
+            deltaBDV && (
               <Typography variant="body1">
                 ~{displayFullBN(conversion.bdv.abs(), 2)} BDV
               </Typography>
             )
-          )}
+          }
           tokenSelectLabel={tokenIn.symbol}
-          disabled={(
-            !values.maxAmountIn         // still loading `maxAmountIn`
-            || values.maxAmountIn.eq(0) // = 0 means we can't make this conversion
-          )}
-          params={{
-            slippage: values.settings.slippage
-          }}
-          belowComponent={
-            <ClaimAndPlantFarmActions />
+          disabled={
+            !values.maxAmountIn || // still loading `maxAmountIn`
+            values.maxAmountIn.eq(0) // = 0 means we can't make this conversion
+          }
+          params={quoteHandlerParams}
+          belowComponent={<FormTxnsPrimaryOptions />}
+          additionalBalance={
+            plantableBalance[tokenIn.address]?.applied || undefined
           }
         />
         {/* Output token */}
@@ -268,76 +301,94 @@ const ConvertForm : FC<
           </PillRow>
         ) : null}
         {/* Warning Alert */}
-        {(!canConvert && tokenOut) ? (
+        {!canConvert && tokenOut ? (
           <Box>
             <WarningAlert iconSx={{ alignItems: 'flex-start' }}>
-              {tokenIn.symbol} can only be Converted to {tokenOut?.symbol} when deltaB {tokenIn.isLP || tokenIn.symbol === 'urBEAN3CRV' ? '<' : '>'} 0.<br />
+              {tokenIn.symbol} can only be Converted to {tokenOut?.symbol} when
+              deltaB{' '}
+              {tokenIn.isLP || tokenIn.symbol === 'urBEAN3CRV' ? '<' : '>'} 0.
+              <br />
               {/* <Typography sx={{ opacity: 0.7 }} fontSize={FontSize.sm}>Press ⌥ + 1 to see deltaB.</Typography> */}
             </WarningAlert>
           </Box>
         ) : null}
-        {(amountIn && tokenOut && maxAmountIn && amountOut?.gt(0)) ? (
+        {amountIn && tokenOut && maxAmountIn && amountOut?.gt(0) ? (
           <>
             <TxnSeparator mt={-1} />
             <TokenOutput>
-              <TokenOutput.Row 
+              <TokenOutput.Row
                 token={tokenOut}
                 amount={amountOut || ZERO_BN}
                 delta={bdvOut ? `~${displayFullBN(bdvOut, 2)} BDV` : undefined}
               />
-              <TokenOutput.Row 
+              <TokenOutput.Row
                 token={sdk.tokens.STALK}
                 amount={deltaStalk || ZERO_BN}
                 amountTooltip={
                   deltaBDV?.gt(0) ? (
                     <>
-                      Converting will increase the BDV of your Deposit by {displayFullBN(deltaBDV || ZERO_BN, 6)}{deltaBDV?.gt(0) ? ', resulting in a gain of Stalk' : ''}.
+                      Converting will increase the BDV of your Deposit by{' '}
+                      {displayFullBN(deltaBDV || ZERO_BN, 6)}
+                      {deltaBDV?.gt(0) ? ', resulting in a gain of Stalk' : ''}.
                     </>
                   ) : (
                     <>
-                      The BDV of your Deposit won&apos;t change with this Convert.
+                      The BDV of your Deposit won&apos;t change with this
+                      Convert.
                     </>
                   )
                 }
               />
-              <TokenOutput.Row 
+              <TokenOutput.Row
                 token={sdk.tokens.SEEDS}
                 amount={deltaSeeds || ZERO_BN}
                 amountTooltip={
                   <>
-                    Converting from {tokenIn.symbol} to {tokenOut.symbol} results in {(
-                      (!deltaSeedsPerBDV || deltaSeedsPerBDV.eq(0)) 
-                        ? 'no change in SEEDS per BDV'
-                        : `a ${deltaSeedsPerBDV.gt(0) ? 'gain' : 'loss'} of ${deltaSeedsPerBDV.abs().toHuman()} Seeds per BDV`
-                    )}.
+                    Converting from {tokenIn.symbol} to {tokenOut.symbol}{' '}
+                    results in{' '}
+                    {!deltaSeedsPerBDV || deltaSeedsPerBDV.eq(0)
+                      ? 'no change in SEEDS per BDV'
+                      : `a ${
+                          deltaSeedsPerBDV.gt(0) ? 'gain' : 'loss'
+                        } of ${deltaSeedsPerBDV.abs().toHuman()} Seeds per BDV`}
+                    .
                   </>
                 }
               />
             </TokenOutput>
-            {(maxAmountUsed && maxAmountUsed.gt(0.9)) ? (
+            {maxAmountUsed && maxAmountUsed.gt(0.9) ? (
               <Box>
                 <WarningAlert>
-                  You are converting {displayFullBN(maxAmountUsed.times(100), 4, 0)}% of the way to the peg. 
-                  When Converting all the way to the peg, the Convert may fail due to a small amount of slippage in the direction of the peg.
+                  You are converting{' '}
+                  {displayFullBN(maxAmountUsed.times(100), 4, 0)}% of the way to
+                  the peg. When Converting all the way to the peg, the Convert
+                  may fail due to a small amount of slippage in the direction of
+                  the peg.
                 </WarningAlert>
               </Box>
             ) : null}
-            <ClaimAndPlantAdditionalOptions />
+            <FormTxnsSecondaryOptions />
             <Box>
               <TxnAccordion defaultExpanded={false}>
                 <TxnPreview
                   actions={[
                     {
                       type: ActionType.BASE,
-                      message: `Convert ${displayFullBN(amountIn, tokenIn.displayDecimals)} ${tokenIn.name} to ${displayFullBN(amountOut, tokenIn.displayDecimals)} ${tokenOut.name}.`
+                      message: `Convert ${displayFullBN(
+                        amountIn,
+                        tokenIn.displayDecimals
+                      )} ${tokenIn.name} to ${displayFullBN(
+                        amountOut,
+                        tokenIn.displayDecimals
+                      )} ${tokenOut.name}.`,
                     },
                     {
                       type: ActionType.UPDATE_SILO_REWARDS,
                       stalk: deltaStalk || ZERO_BN,
                       seeds: deltaSeeds || ZERO_BN,
-                    }
+                    },
                   ]}
-                  {...claimPlantTxnActions}
+                  {...txnActions}
                 />
               </TxnAccordion>
             </Box>
@@ -362,17 +413,13 @@ const ConvertForm : FC<
 
 // -----------------------------------------------------------------------
 
-const Convert : FC<{
+const Convert: FC<{
   fromToken: ERC20Token | NativeToken;
-}> = ({
-  fromToken
-}) => {
+}> = ({ fromToken }) => {
   const sdk = useSdk();
-  const claimPlant = useFarmerClaimPlant();
-  const account = useAccount();
 
-  const [refetchClaimPlant] = useFarmerClaimAndPlantRefetch();
-  
+  const formTxnBuilder = useFarmerFormTxns();
+
   /// Token List
   const [tokenList, initialTokenOut] = useMemo(() => {
     const { BEAN, BEAN_CRV3_LP, UNRIPE_BEAN, UNRIPE_BEAN_CRV3 } = sdk.tokens;
@@ -381,8 +428,8 @@ const Convert : FC<{
       : [BEAN, BEAN_CRV3_LP];
     const _tokenList = allTokens.filter((_token) => !_token.equals(fromToken));
     return [
-      _tokenList,     // all available tokens to convert to
-      _tokenList[0],  // tokenOut is the first available token that isn't the fromToken
+      _tokenList, // all available tokens to convert to
+      _tokenList[0], // tokenOut is the first available token that isn't the fromToken
     ];
   }, [sdk.tokens, fromToken]);
 
@@ -390,186 +437,283 @@ const Convert : FC<{
   const season = useSeason();
 
   /// Farmer
-  const farmerSilo              = useFarmerSilo();
-  const farmerSiloBalances      = farmerSilo.balances;
-  const [refetchPools]          = useFetchPools();
+  const farmerSilo = useFarmerSilo();
+  const farmerSiloBalances = farmerSilo.balances;
+  const account = useAccount();
+
+  const [refetchPools] = useFetchPools();
+
+  const defaultFarmActionsFormState = useMemo(() => {
+    const shouldChange = true;
+    const { isLP, isUnripe } = fromToken;
+    if (!shouldChange) {
+      return {
+        preset: 'plant',
+        primary: undefined,
+        secondary: undefined,
+        implied: [FormTxn.MOW],
+      };
+    }
+
+    // only show the 'plant' option in primary options if the token is BEAN
+    const presetKey = isUnripe || isLP ? 'noPrimary' : 'plant';
+
+    return {
+      preset: presetKey,
+      primary: undefined,
+      secondary: undefined,
+    };
+  }, [fromToken]);
 
   /// Form
-  const middleware    = useFormMiddleware();
-  const initialValues : ConvertFormValues = useMemo(() => ({
-    // Settings
-    settings: {
-      slippage: 0.1,
-    },
-    // Token Inputs
-    tokens: [
-      {
-        token:      fromToken,
-        amount:     undefined,
-        quoting:    false,
-        amountOut:  undefined,
+  const middleware = useFormMiddleware();
+  const initialValues: ConvertFormValues = useMemo(
+    () => ({
+      // Settings
+      settings: {
+        slippage: 0.1,
       },
-    ],
-    // Convert data
-    maxAmountIn:    undefined,
-    // Token Outputs
-    tokenOut:       initialTokenOut,
-    farmActions: {
-      preset: 'plant',
-      selected: undefined,
-      additional: undefined,
-    },
+      // Token Inputs
+      tokens: [
+        {
+          token: fromToken,
+          amount: undefined,
+          quoting: false,
+          amountOut: undefined,
+        },
+      ],
+      // Convert data
+      maxAmountIn: undefined,
+      // Token Outputs
+      tokenOut: initialTokenOut,
+      farmActions: defaultFarmActionsFormState,
+    }),
+    [defaultFarmActionsFormState, fromToken, initialTokenOut]
+  );
 
-  }), [fromToken, initialTokenOut]);
+  /**
+   * SDK.SILO.CONVERT.convertEstimate has all the logic for this,
+   * but we need to add additional crates if the user is planting
+   */
+  const handleConversion = useCallback(
+    async (
+      tokenIn: Token,
+      _amountIn: BigNumber,
+      tokenOut: Token,
+      slippage: number,
+      isPlanting: boolean
+    ) => {
+      if (!account) {
+        throw new Error('Signer required');
+      }
 
-  /// Handlers
-  // This handler does not run when _tokenIn = _tokenOut (direct deposit)
-  const handleQuote = useCallback<QuoteHandlerWithParams<ConvertQuoteHandlerParams>>(
-    async (tokenIn, amountIn, tokenOut, { slippage }) => {
       const siloConvert = sdk.silo.siloConvert;
+      // we define this here b/c siloConvert expects token instances from it's own class
       const whitelist = [
-        siloConvert.Bean, 
-        siloConvert.BeanCrv3, 
-        siloConvert.urBean, 
-        siloConvert.urBeanCrv3
+        siloConvert.Bean,
+        siloConvert.BeanCrv3,
+        siloConvert.urBean,
+        siloConvert.urBeanCrv3,
       ];
 
-      const [inToken, outToken] = whitelist.reduce((prev, curr) => {
-        prev[0] = curr.equals(tokenIn) ? curr : prev[0];
-        prev[1] = curr.equals(tokenOut) ? curr : prev[1];
-        return prev;
-      }, [null, null] as [Token | null, Token | null]);
+      const [inToken, outToken] = whitelist.reduce(
+        (prev, curr) => {
+          prev[0] = curr.equals(tokenIn) ? curr : prev[0];
+          prev[1] = curr.equals(tokenOut) ? curr : prev[1];
+          return prev;
+        },
+        [null, null] as [Token | null, Token | null]
+      );
 
       if (!inToken || !outToken) throw new Error('conversion unavailable');
 
-      const { minAmountOut } = await siloConvert.convertEstimate(
-        inToken, 
-        outToken, 
-        inToken.amount(amountIn.toString()), 
-        slippage
+      const amountIn = inToken.amount(_amountIn.toString());
+      const { deposited } = await sdk.silo.getBalance(inToken, account, {
+        source: DataSource.LEDGER,
+      });
+      const depositCrates = [...deposited.crates];
+
+      // if the user is planting
+      if (isPlanting && sdk.tokens.BEAN.equals(inToken)) {
+        const plantCrate = await FormTxnBuilder.makePlantCrate(sdk, account);
+        depositCrates.push(plantCrate.crate);
+      }
+
+      const conversion = siloConvert.calculateConvert(
+        inToken,
+        outToken,
+        amountIn,
+        depositCrates,
+        season.toNumber()
       );
 
+      const amountOutBN = await sdk.contracts.beanstalk.getAmountOut(
+        tokenIn.address,
+        tokenOut.address,
+        conversion.amount.toBigNumber()
+      );
+      const amountOut = outToken.fromBlockchain(amountOutBN);
+      const minAmountOut = amountOut.pct(100 - slippage);
+
+      return {
+        minAmountOut,
+        conversion,
+        crates: depositCrates,
+      };
+    },
+    [account, sdk, season]
+  );
+
+  /// Handlers
+  // This handler does not run when _tokenIn = _tokenOut (direct deposit)
+  const handleQuote = useCallback<
+    QuoteHandlerWithParams<ConvertQuoteHandlerParams>
+  >(
+    async (tokenIn, _amountIn, tokenOut, { slippage, isPlanting }) => {
+      const { minAmountOut } = await handleConversion(
+        tokenIn,
+        _amountIn,
+        tokenOut,
+        slippage,
+        isPlanting
+      );
       return tokenValueToBN(minAmountOut);
     },
-    [sdk]
+    [handleConversion]
   );
 
   // const tkIn = sdk.tokens.siloWhitelist.has(fromToken);
   // console.log('tk in is in whitelist:', tkIn);
 
-  const onSubmit = useCallback(async (values: ConvertFormValues, formActions: FormikHelpers<ConvertFormValues>) => {
-    let txToast;
-    try {
-      const { beanstalk } = sdk.contracts;
-      middleware.before();
+  const onSubmit = useCallback(
+    async (
+      values: ConvertFormValues,
+      formActions: FormikHelpers<ConvertFormValues>
+    ) => {
+      let txToast;
+      try {
+        const { beanstalk } = sdk.contracts;
+        middleware.before();
 
-      const slippage = values?.settings?.slippage;
-      if (!account) throw new Error('Wallet connection required');
-      if (!values.settings.slippage) throw new Error('No slippage value set.');
-      if (!values.tokenOut) throw new Error('No output token selected');
-      if (!values.tokens[0].amount?.gt(0)) throw new Error('No amount input');
-      if (!values.tokens[0].amountOut) throw new Error('No quote available.');
+        const formData = values.tokens[0];
+        const slippage = values?.settings?.slippage;
+        const tokenIn = formData.token;
+        const tokenOut = values.tokenOut;
+        const _amountIn = formData.amount;
+        const _amountOut = formData.amountOut;
 
-      const siloConvert = sdk.silo.siloConvert;
-      // we define this here b/c otherwise txn errors out b/c siloConvert expects token instances from it's own class
-      const whitelist = [siloConvert.Bean, siloConvert.BeanCrv3, siloConvert.urBean, siloConvert.urBeanCrv3];
-      const _tkIn = values.tokens[0].token;
-      const _tkOut = values.tokenOut;
-    
-      const [tokenIn, tokenOut] = whitelist.reduce((prev, curr) => {
-        prev[0] = curr.equals(_tkIn) ? curr : prev[0];
-        prev[1] = curr.equals(_tkOut) ? curr : prev[1];
-        return prev;
-      }, [null, null] as [Token | null, Token | null]);
+        if (!account) {
+          throw new Error('Wallet connection required');
+        }
+        if (!slippage) {
+          throw new Error('No slippage value set.');
+        }
+        if (!tokenOut) {
+          throw new Error('No output token selected');
+        }
+        if (!_amountIn) {
+          throw new Error('No amount input');
+        }
+        if (!_amountOut) {
+          throw new Error('No quote available.');
+        }
 
-      if (!tokenIn || !tokenOut) throw new Error('Token not whitelisted.');
-      await siloConvert.validateTokens(tokenIn, tokenOut);
-      const balances = await sdk.silo.getBalance(tokenIn, account, { source: DataSource.LEDGER });
+        const siloConvert = sdk.silo.siloConvert;
 
-      const amountIn  = tokenIn.amount(values.tokens[0].amount.toString());           // amount of from token
-      const amountOut = tokenOut.amount(values.tokens[0].amountOut.toString());       // amount of to token
-      const depositedCrates = balances.deposited.crates;
+        if (!tokenIn || !tokenOut) throw new Error('Token not whitelisted.');
+        const amountIn = tokenIn.amount(_amountIn.toString()); // amount of from token
+        const amountOut = tokenOut.amount(_amountOut.toString());
 
-      const conversion = siloConvert.calculateConvert(
-        tokenIn,
-        tokenOut,
-        amountIn,
-        depositedCrates,
-        season.toNumber(),
-      );
+        const isPlanting =
+          values.farmActions.primary?.includes(FormTxn.PLANT) || false;
 
-      txToast = new TransactionToast({
-        loading: 'Converting...',
-        success: 'Convert successful.',
-      });
+        const { conversion } = await handleConversion(
+          tokenIn,
+          _amountIn,
+          tokenOut,
+          slippage,
+          isPlanting
+        );
 
-      const crates  = conversion.crates.map((crate) => crate.season.toString());
-      const amounts = conversion.crates.map((crate) => crate.amount.toBlockchain());
+        txToast = new TransactionToast({
+          loading: 'Converting...',
+          success: 'Convert successful.',
+        });
 
-      const callData = beanstalk.interface.encodeFunctionData('convert', [
-        siloConvert.calculateEncoding(
-          tokenIn, 
-          tokenOut, 
-          amountIn, 
-          amountOut
-        ),
-        crates,
-        amounts
-      ]);
+        const crates = conversion.crates.map((crate) =>
+          crate.season.toString()
+        );
+        const amounts = conversion.crates.map((crate) =>
+          crate.amount.toBlockchain()
+        );
 
-      const work = sdk.farm.create('Convert').add(
-        async (_amountInStep: ethers.BigNumber, _context: any) => ({
+        const callData = beanstalk.interface.encodeFunctionData('convert', [
+          siloConvert.calculateEncoding(tokenIn, tokenOut, amountIn, amountOut),
+          crates,
+          amounts,
+        ]);
+
+        const convertStep: StepGenerator = async (_amountInStep, _context) => ({
           name: 'convert',
           amountOut: _amountInStep,
           prepare: () => ({
             target: beanstalk.address,
             callData: callData,
           }),
-          decode: (data: string) => beanstalk.interface.decodeFunctionData('convert', data),
-          decodeResult: (result: string) => beanstalk.interface.decodeFunctionResult('convert', result)
-        })
-      );
+          decode: (data: string) =>
+            beanstalk.interface.decodeFunctionData('convert', data),
+          decodeResult: (result: string) =>
+            beanstalk.interface.decodeFunctionResult('convert', result),
+        });
 
-      const { primaryActions, additionalActions, actionsPerformed } = claimPlant.compile(values.farmActions);
+        const { execute, performed } = await FormTxnBuilder.compile(
+          sdk,
+          values.farmActions,
+          formTxnBuilder.getGenerators,
+          [convertStep],
+          amountIn,
+          slippage
+        );
 
-      const { execute } = await ClaimPlant.build(
-        sdk,
-        primaryActions,
-        additionalActions,
-        work,
-        amountIn,
-        { slippage },
-      );
+        const txn = await execute();
+        txToast.confirming(txn);
 
-      const txn = await execute();
-      txToast.confirming(txn);
+        const receipt = await txn.wait();
 
-      const receipt = await txn.wait();
+        await formTxnBuilder.refetch(
+          performed,
+          {
+            farmerSilo: true, // update farmer silo since we just moved deposits around
+          },
+          [refetchPools]
+        ); // update prices to account for pool conversion
 
-      await refetchClaimPlant(actionsPerformed, { 
-        farmerSilo: true, // update farmer silo since we just moved deposits around
-      }, [refetchPools]);  // update prices to account for pool conversion
-
-      txToast.success(receipt);
-      formActions.resetForm();
-    } catch (err) {
-      console.error(err);
-      if (txToast) {
-        txToast.error(err);
-      } else {
-        const errorToast = new TransactionToast({});
-        errorToast.error(err);
+        txToast.success(receipt);
+        formActions.resetForm();
+      } catch (err) {
+        console.error(err);
+        if (txToast) {
+          txToast.error(err);
+        } else {
+          const errorToast = new TransactionToast({});
+          errorToast.error(err);
+        }
+        formActions.setSubmitting(false);
       }
-      formActions.setSubmitting(false);
-    }
-  }, [sdk, middleware, account, season, claimPlant, refetchClaimPlant, refetchPools]);
+    },
+    [sdk, middleware, account, formTxnBuilder, handleConversion, refetchPools]
+  );
 
   return (
     <Formik initialValues={initialValues} onSubmit={onSubmit}>
       {(formikProps) => (
         <>
           <TxnSettings placement="form-top-right">
-            <SettingInput name="settings.slippage" label="Slippage Tolerance" endAdornment="%" />
+            <SettingInput
+              name="settings.slippage"
+              label="Slippage Tolerance"
+              endAdornment="%"
+            />
           </TxnSettings>
           <ConvertForm
             handleQuote={handleQuote}

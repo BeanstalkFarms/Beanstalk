@@ -22,11 +22,11 @@ export type SelectionAccordionItemProps<T> = {
 
 export type SelectionAccordionProps<T> = {
   /**
-   * 
+   *
    */
   open: boolean;
-  /** 
-   * 
+  /**
+   *
    */
   onChange: () => void;
   /**
@@ -95,7 +95,8 @@ export default function SelectionAccordion<T>({
         expanded={open}
         onChange={onChange}
         sx={{ background: BeanstalkPalette.white, ...sx }}
-        TransitionProps={{ unmountOnExit: true }} 
+        TransitionProps={{ unmountOnExit: true }}
+        defaultExpanded={false}
       >
         <AccordionSummary
           expandIcon={
@@ -146,10 +147,9 @@ export default function SelectionAccordion<T>({
               px: 1,
             },
           }}
-          
         >
           <Stack width="100%" gap={1}>
-            {subtitle && (<>{subtitle}</>)}
+            {subtitle && <>{subtitle}</>}
             <Stack width="100%" gap={1} direction={direction}>
               {options.map((item, i) => {
                 const active = selected.has(item);
