@@ -560,7 +560,7 @@ const Convert : FC<{
     <Formik initialValues={initialValues} onSubmit={onSubmit}>
       {(formikProps) => (
         <>
-          <TxnSettings placement="form-top-right">
+          <TxnSettings placement="inside-form-top-right">
             <SettingInput name="settings.slippage" label="Slippage Tolerance" endAdornment="%" />
           </TxnSettings>
           <ConvertForm
