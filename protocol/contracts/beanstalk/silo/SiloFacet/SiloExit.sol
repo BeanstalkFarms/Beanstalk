@@ -121,23 +121,18 @@ contract SiloExit is ReentrancyGuard {
      * @notice Returns the balance of Grown Stalk for `account`. Grown Stalk is 
      * earned each Season from BDV and must be Mown via `SiloFacet-mow` to 
      * apply it to a user's balance.
-     * @dev The balance of Grown Stalk for an account can be calculated as:
-     *
-     * ```
-     * elapsedSeasons = currentSeason - lastUpdateSeason
-     * grownStalk = balanceOfSeeds * elapsedSeasons
-     * ```
+     * 
+     * @dev This passes in the last stem the user mowed at and the current stem
      */
     function balanceOfGrownStalk(address account, address token)
         public
         view
         returns (uint256)
     {
-        //need to fetch last updated stem for this deposit and current stem
         return
             _balanceOfGrownStalk(
-                s.a[account].mowStatuses[token].lastStem, //last GSPBDV farmer mowed
-                LibTokenSilo.stemTipForToken(IERC20(token)), //get latest grown stalk per bdv for this token
+                s.a[account].mowStatuses[token].lastStem, //last stem farmer mowed
+                LibTokenSilo.stemTipForToken(IERC20(token)), //get latest stem for this token
                 s.a[account].mowStatuses[token].bdv
             );
     }

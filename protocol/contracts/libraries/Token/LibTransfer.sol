@@ -12,7 +12,6 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "../../interfaces/IBean.sol";
 import "./LibBalance.sol";
-import "hardhat/console.sol";
 
 library LibTransfer {
     using SafeERC20 for IERC20;

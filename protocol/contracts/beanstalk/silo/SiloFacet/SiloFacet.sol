@@ -500,18 +500,6 @@ contract SiloFacet is TokenSilo {
         );
     }
 
-    // function stemToSeason(IERC20 token, int128 stem)
-    //     public
-    //     view
-    //     returns (uint32 season)
-    // {
-    //     uint256 seedsPerBdv = getSeedsPerToken(address(token));
-
-    //     require(LibLegacyTokenSilo.isDepositSeason(seedsPerBdv, stem), "No matching season for input stem");
-
-    //     season = LibLegacyTokenSilo.stemToSeason(seedsPerBdv, stem);
-    // }
-
     function seasonToStem(IERC20 token, uint32 season)
         public
         view

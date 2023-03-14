@@ -191,7 +191,7 @@ contract Storage {
     // Silo stores global level Silo balances.
     struct Silo {
         uint256 stalk; // The total amount of active Stalk (including Earned Stalk, excluding Grown Stalk).
-        uint256 deprecated_seeds; // The total amount of active Seeds (excluding Earned Seeds). No longer used.
+        uint256 deprecated_seeds; // The total amount of active Seeds (excluding Earned Seeds). No longer used. Balance is wiped to 0 on mowAndMigrate.
         uint256 roots; // Total amount of Roots.
     }
 
@@ -224,7 +224,7 @@ contract Storage {
         uint32 rainStart; // rainStart stores the most recent Season in which Rain started.
         bool raining; // True if it is Raining (P < 1, Pod Rate Excessively Low).
         bool fertilizing; // True if Beanstalk has Fertilizer left to be paid off.
-        uint16 stemStartSeason; //season in which the stem storage method starts
+        uint16 stemStartSeason; //season in which the stem storage method was introduced
         uint32 sunriseBlock;
         bool abovePeg;
         uint256 start; // The timestamp of the Beanstalk deployment rounded down to the nearest hour.
@@ -277,8 +277,9 @@ contract Storage {
          */
         bytes4 selector;
         /*
-         * @dev The Stalk Per BDV Per Season represents how much Stalk one BDV of the underlying deposited token grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored as 1e10, so 1 legacy
-         seed would be 1e6 * 1e10.
+         * @dev The Stalk Per BDV Per Season represents how much Stalk one BDV of the underlying deposited token
+         * grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored
+         *  as 1e10, so 1 legacy seed would be 1e6 * 1e10.
          */
         uint32 stalkEarnedPerSeason;
         /*
@@ -287,7 +288,7 @@ contract Storage {
          */
         uint32 stalkIssuedPerBdv;
         /*
-         * @dev The last season in which the stalkEarnedPerSeason was updated
+         * @dev The last season in which the stalkEarnedPerSeason for this token was updated
          */
 		uint32 milestoneSeason;
         /*

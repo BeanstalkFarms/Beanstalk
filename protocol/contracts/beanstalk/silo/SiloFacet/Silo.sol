@@ -9,7 +9,6 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./SiloExit.sol";
 import "~/libraries/Silo/LibSilo.sol";
 import "~/libraries/Silo/LibTokenSilo.sol";
-import "hardhat/console.sol";
 
 /**
  * @title Silo
@@ -97,7 +96,7 @@ contract Silo is SiloExit {
     //////////////////////// INTERNAL: MOW ////////////////////////
 
     /**
-     * @dev Claims the Grown Stalk for `msg.sender`.
+     * @dev Claims the Grown Stalk for `msg.sender`. Requires token address to mow.
      */
     modifier mowSender(address token) {
         _mow(msg.sender, token);
@@ -192,15 +191,24 @@ contract Silo is SiloExit {
         s.a[account].lastUpdate = s.season.stemStartSeason;
     }
 
-    //make some kind of init function for when silov3 is deployed
-    //should take all their deposits, add them up and setup MowStatuses
-    //will need every season
-    //if the user has seeds, they havne't migrated
-    //array of deposit seasons
-    //array of tokens with deposit seasons
-    //make sure bdv of everything lines up with the number of seeds they should have
 
-    //add amounts as an input here? so we don't have to call tokenDeposit()
+    /** 
+     * @notice Migrates farmer's deposits from old (seasons based) to new silo (stems based).
+     * @param account Address of the account to migrate
+     * @param tokens Array of tokens to migrate
+     * @param seasons The seasons in which the deposits were made
+     * @param amounts The amounts of those deposits which are to be migrated
+     *
+     *
+     * @dev When migrating an account, you must submit all of the account's deposits,
+     * or the migration will not pass because the seed check will fail. The seed check
+     * adds up the BDV of all submitted deposits, and multiples by the corresponding
+     * seed amount for each token type, then compares that to the total seeds stored for that user.
+     * If everything matches, we know all deposits were submitted, and the migration is valid.
+     *
+     * Deposits are migrated to the stem storage system on a 1:1 basis. Accounts with
+     * lots of deposits may take a considerable amount of gas to migrate.
+     */
     function _mowAndMigrate(address account, address[] calldata tokens, uint32[][] calldata seasons, uint256[][] calldata amounts) internal {
 
         require(tokens.length == seasons.length, "inputs not same length");
@@ -221,31 +229,16 @@ contract Silo is SiloExit {
         
         MigrateData memory migrateData;
 
-        // NOTE: this was used previously in lines 240, but since then is has been replaced with the function below:
-        // uint32 stemStartSeason = uint32(s.season.stemStartSeason);
-
-
+        //use of PerTokenData and PerDepositData structs to save on stack depth
         for (uint256 i = 0; i < tokens.length; i++) {
             PerTokenData memory perTokenData;
             perTokenData.token = tokens[i];
             perTokenData.stemTip = LibTokenSilo.stemTipForToken(IERC20(perTokenData.token));
 
-
-            // address token = tokens[i];
-            // int128 stemTip = LibTokenSilo.stemTipForToken(IERC20(token));
-            
-
             for (uint256 j = 0; j < seasons[i].length; j++) {
                 PerDepositData memory perDepositData;
                 perDepositData.season = seasons[i][j];
                 perDepositData.amount = uint128(amounts[i][j]);
-
-                // uint32 season = seasons[i][j];
-                // uint128 amount = uint128(amounts[i][j]);
-
-                // Account.Deposit memory d;
-                // (d.amount, d.bdv) = LibLegacyTokenSilo.tokenDeposit(account, token, season);
-
 
                 if (perDepositData.amount == 0) {
                     continue; //for some reason subgraph gives us deposits with 0 in it sometimes, save gas and skip it (also fixes div by zero bug if it continues on)
@@ -260,6 +253,7 @@ contract Silo is SiloExit {
                                 );
 
 
+                //calculate how much stalk has grown for this deposit
                 uint128 grownStalk = _calcGrownStalkForDeposit(
                     crateBDV * LibLegacyTokenSilo.getSeedsPerToken(address(perTokenData.token)),
                     perDepositData.season
@@ -282,7 +276,6 @@ contract Silo is SiloExit {
         }
 
         //user deserves stalk grown between stemStartSeason and now
-        console.log('final migrateData.totalGrownStalk: ', migrateData.totalGrownStalk);
         LibSilo.mintGrownStalkAndGrownRoots(account, migrateData.totalGrownStalk);
 
         //verify user account seeds total equals seedsTotalBasedOnInputDeposits
@@ -291,8 +284,6 @@ contract Silo is SiloExit {
         // }
         
         //require exact seed match
-        console.log('s.a[account].s.seeds: ', s.a[account].s.seeds);
-        console.log('migrateData.totalSeeds: ', migrateData.totalSeeds);
         require(s.a[account].s.seeds == migrateData.totalSeeds, "seeds misaligned");
 
         //and wipe out old seed balances (all your seeds are belong to stem)

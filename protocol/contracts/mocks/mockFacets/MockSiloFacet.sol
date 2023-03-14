@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../beanstalk/silo/SiloFacet/SiloFacet.sol";
 import "../../libraries/Silo/LibWhitelist.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -25,7 +24,7 @@ contract MockSiloFacet is SiloFacet {
     using SafeMath for uint128;
 
     function mockWhitelistToken(address token, bytes4 selector, uint32 stalk, uint32 stalkEarnedPerSeason) external {
-       LibWhitelist.whitelistTokenLegacy(token, selector, stalk, stalkEarnedPerSeason);
+       whitelistTokenLegacy(token, selector, stalk, stalkEarnedPerSeason);
     }
 
     function mockBDV(uint256 amount) external pure returns (uint256) {
@@ -260,6 +259,25 @@ contract MockSiloFacet is SiloFacet {
     
     function totalSeeds() public view returns (uint256) {
         return s.s.deprecated_seeds;
+    }
+
+    //function not needed because we'll manually setup these initial values from the bip script?
+    //however it's referenced in the InitWhitelist.sol code
+    function whitelistTokenLegacy(
+        address token,
+        bytes4 selector,
+        uint32 stalkIssuedPerBdv,
+        uint32 stalkEarnedPerSeason
+    ) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        s.ss[token].selector = selector;
+        s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
+        s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
+
+        s.ss[token].milestoneSeason = s.season.current;
+
+        // emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
     }
 
     function getSeedsPerToken(address token) public pure override returns (uint256) { //could be pure without console log?

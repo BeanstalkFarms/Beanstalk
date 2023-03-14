@@ -322,7 +322,7 @@ describe('Convert', function () {
         ['2'],
         ['100']
       )
-      expect(this.result.toCumulativeGrownStalk).to.be.equal(2)
+      expect(this.result.toStem).to.be.equal(2)
       expect(this.result.toAmount).to.be.equal('100')
     })
 

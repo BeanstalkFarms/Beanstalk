@@ -10,7 +10,6 @@ import "./interfaces/ICurve.sol";
 import "./interfaces/IFertilizer.sol";
 import "./interfaces/IProxyAdmin.sol";
 import "./libraries/Decimal.sol";
-// import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -52,7 +51,6 @@ library C {
     uint256 private constant SEEDS_PER_BEAN = 2;
     uint256 private constant STALK_PER_BEAN = 10000;
     uint256 private constant ROOTS_BASE = 1e12;
-    // uint32 private constant SILOV3_START_SEASON = 10; //maybe move to constant here eventually
 
     // Exploit
     uint256 private constant UNRIPE_LP_PER_DOLLAR = 1884592; // 145_113_507_403_282 / 77_000_000
@@ -264,9 +262,4 @@ library C {
     function soilCoefficientLow() internal pure returns (uint256) {
         return SOIL_COEFFICIENT_LOW;
     }
-
-    //can be added after initial deploy for gas savings
-    // function siloV3StartSeason() internal pure returns (uint32) {
-    //     return SILOV3_START_SEASON;
-    // }
 }

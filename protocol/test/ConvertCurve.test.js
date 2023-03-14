@@ -126,7 +126,7 @@ describe('Curve Convert', function () {
         this.result = await this.convert.connect(user).callStatic.convert(ConvertEncoder.convertBeansToCurveLP(toBean('100'), to18('99'), this.beanMetapool.address), [stemBean], [toBean('100')])
 
 
-        expect(this.result.toCumulativeGrownStalk).to.be.equal(stemMetapool);
+        expect(this.result.toStem).to.be.equal(stemMetapool);
         expect(this.result.fromAmount).to.be.equal(to6('100'))
         expect(this.result.toAmount).to.be.equal('100634476734756985505')
         expect(this.result.fromBdv).to.be.equal(to6('100'))

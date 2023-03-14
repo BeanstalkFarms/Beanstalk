@@ -13,7 +13,6 @@ import "./LibUnripeSilo.sol";
 import "./LibTokenSilo.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import "~/libraries/LibSafeMathSigned128.sol";
-import "hardhat/console.sol";
 
 /**
  * @title LibLegacyTokenSilo
@@ -38,29 +37,6 @@ library LibLegacyTokenSilo {
         uint256 amount,
         uint256 bdv
     );
-
-
-    //////////////////////// ACCOUNTING: TOTALS ////////////////////////
-    
-    /**
-     * @dev Increment the total amount of `token` deposited in the Silo.
-     */
-    function incrementTotalDeposited(address token, uint256 amount) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        s.siloBalances[token].deposited = s.siloBalances[token].deposited.add(
-            amount
-        );
-    }
-
-    /**
-     * @dev Decrement the total amount of `token` deposited in the Silo.
-     */
-    function decrementTotalDeposited(address token, uint256 amount) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        s.siloBalances[token].deposited = s.siloBalances[token].deposited.sub(
-            amount
-        );
-    }
 
 
     //////////////////////// REMOVE DEPOSIT ////////////////////////
@@ -202,7 +178,7 @@ library LibLegacyTokenSilo {
      *
      * FIXME(naming): rename to `getDeposit()`?
      */
-    function tokenDeposit(
+    /*function tokenDeposit(
         address account,
         address token,
         uint32 season
@@ -222,7 +198,7 @@ library LibLegacyTokenSilo {
             s.a[account].legacyDeposits[token][season].amount,
             s.a[account].legacyDeposits[token][season].bdv
         );
-    }
+    }*/
 
     /**
      * @notice Returns the balance of Grown Stalk for `account` up until the

@@ -7,7 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import "../../C.sol";
 import "../LibAppStorage.sol";
-import "hardhat/console.sol";
 import "~/libraries/Silo/LibTokenSilo.sol";
 
 /**

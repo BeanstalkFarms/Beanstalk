@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import {IBean} from "../../interfaces/IBean.sol";
 import {AppStorage} from "../AppStorage.sol";
 import "~/C.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius

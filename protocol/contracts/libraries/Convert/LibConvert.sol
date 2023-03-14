@@ -50,44 +50,6 @@ library LibConvert {
         }
     }
 
-    /*function getConvertData(bytes calldata convertData)
-        internal 
-        returns (
-            LibConvertData.ConvertKind kind,
-            address tokenOut,
-            address tokenIn,
-            uint256 outAmount,
-            uint256 inAmount
-        )
-    {
-        kind = convertData.convertKind();
-
-
-
-
-    }*/
-
-    /*function getFromTokenAddress(bytes calldata convertData)
-        internal
-        pure
-        returns (address fromToken) {
-        LibConvertData.ConvertKind kind = convertData.convertKind();
-        
-        if (kind == LibConvertData.ConvertKind.BEANS_TO_CURVE_LP) {
-            return C.beanAddress();
-        } else if (kind == LibConvertData.ConvertKind.CURVE_LP_TO_BEANS) {
-            return C.curveMetapoolAddress();
-        } else if (kind == LibConvertData.ConvertKind.UNRIPE_BEANS_TO_UNRIPE_LP) {
-            return C.unripeBeanAddress();
-        } else if (kind == LibConvertData.ConvertKind.UNRIPE_LP_TO_UNRIPE_BEANS) {
-            return C.unripeLPAddress();
-        } else if (kind == LibConvertData.ConvertKind.LAMBDA_LAMBDA) {
-            //how can I get the incoming token type?
-        } else {
-            revert("getFromTokenAddress: Token not supported");
-        }
-    }*/
-
     function getMaxAmountIn(address tokenIn, address tokenOut)
         internal
         view

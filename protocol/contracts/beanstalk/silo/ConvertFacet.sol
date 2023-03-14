@@ -53,7 +53,7 @@ contract ConvertFacet is ReentrancyGuard {
         external
         payable
         nonReentrant
-        returns (int128 toCumulativeGrownStalk, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
+        returns (int128 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
         address toToken; address fromToken; uint256 grownStalk;
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(
@@ -70,7 +70,7 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
         toBdv = newBdv > fromBdv ? newBdv : fromBdv;
 
-        toCumulativeGrownStalk = _depositTokens(toToken, toAmount, toBdv, grownStalk);
+        toStem = _depositTokens(toToken, toAmount, toBdv, grownStalk);
 
         emit Convert(msg.sender, fromToken, toToken, fromAmount, toAmount);
     }
@@ -172,7 +172,7 @@ contract ConvertFacet is ReentrancyGuard {
         /// @dev the two functions were combined into one function to save gas.
         // _cumulativeGrownStalk = LibTokenSilo.grownStalkAndBdvToCumulativeGrownStalk(IERC20(token), grownStalk, bdv);
         // grownStalk = uint256(LibTokenSilo.calculateStalkFromStemAndBdv(IERC20(token), _cumulativeGrownStalk, bdv));
-        // TODO: better name for this function
+        // TODO: better name for this function?
         (grownStalk, _cumulativeGrownStalk) = LibTokenSilo.calculateTotalGrownStalkandGrownStalk(IERC20(token), grownStalk, bdv);
 
         LibSilo.mintStalk(msg.sender, bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));

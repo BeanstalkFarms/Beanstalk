@@ -11,7 +11,6 @@ import "~/libraries/LibSafeMath128.sol";
 import "~/C.sol";
 import "~/libraries/LibFertilizer.sol";
 import "./Oracle.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius
