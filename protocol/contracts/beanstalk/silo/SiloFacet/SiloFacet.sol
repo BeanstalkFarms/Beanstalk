@@ -481,9 +481,7 @@ contract SiloFacet is TokenSilo {
             );
         }
 
-
         // Mint Stalk associated with the delta BDV.
-        // TODOSEEDS make sure this function reverts if conditions aren't right
         LibSilo.mintStalk(
             msg.sender,
             newStalk.sub(ar.stalkRemoved)

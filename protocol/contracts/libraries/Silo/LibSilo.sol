@@ -39,13 +39,6 @@ library LibSilo {
     using LibPRBMath for uint256;
     
     //////////////////////// EVENTS ////////////////////////    
-
-    //TODOSEEDS what should we emit here? presumably now seeds could change every season even
-    //should probably include token, grown stalk index, current season?
-    event SeedsBalanceChanged(
-        address indexed account,
-        int256 delta
-    );
      
      /**
      * @notice Emitted when `account` gains or loses Stalk.

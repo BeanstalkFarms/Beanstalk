@@ -228,7 +228,6 @@ describe('Silo Token', function () {
         const stem = await this.silo.seasonToStem(this.siloToken.address, '10');
 
         await expect(this.silo.connect(user).withdrawDeposit(this.siloToken.address, stem, '1001', EXTERNAL)).to.revertedWith('Silo: Crate balance too low.');
-        // await expect(this.silo.connect(user).withdrawDeposit(this.siloToken.address, stem, '1001', EXTERNAL)).to.revertedWith('Silo: Crate balance too low.'); //TODOSEEDS write a test that reverts with crate balance too low (needs to be deposited before grown stalk per bdv is deployed)
       });
 
       it('reverts if deposits + withdrawals is a different length', async function () {

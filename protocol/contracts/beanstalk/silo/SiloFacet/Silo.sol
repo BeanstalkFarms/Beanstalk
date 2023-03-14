@@ -154,7 +154,6 @@ contract Silo is SiloExit {
     }
 
     function __mow(address account, address token) private {
-
         int128 _stemTip = LibTokenSilo.stemTipForToken(IERC20(token));
         int128 _lastStem =  s.a[account].mowStatuses[token].lastStem;
         uint128 _bdv = s.a[account].mowStatuses[token].bdv;
@@ -164,9 +163,6 @@ contract Silo is SiloExit {
             if (_lastStem == _stemTip) {
                 return;
             }
-
-            //TODOSEEDS handle case where mow status hasn't been init'd, if last upadte season > 0 and older than update season
-
 
             // per the zero withdraw update, if a user plants within the morning, 
             // addtional roots will need to be issued, to properly calculate the earned beans. 
@@ -324,7 +320,7 @@ contract Silo is SiloExit {
      
     function _plant(address account, address token) internal returns (uint256 beans) {
         // Need to Mow for `account` before we calculate the balance of 
-        // Earned Beans. //TODOSEEDS do we need to mow all tokens?
+        // Earned Beans.
         
         // per the zero withdraw update, planting is handled differently 
         // depending whether or not the user plants during the vesting period of beanstalk. 
@@ -351,14 +347,6 @@ contract Silo is SiloExit {
             beans // bdv
         );
         s.a[account].deltaRoots = 0; // must be 0'd, as calling balanceOfEarnedBeans would give a invalid amount of beans. 
-
-        // Calculate the Plantable Seeds associated with the Earned Beans that were Deposited.
-        //TODOSEEDS figure out what to do here
-
-        // Plantable Seeds don't generate Grown Stalk until they are Planted (i.e., not auto-compounding). 
-        // Plantable Seeds are not included in the Seed supply, so new Seeds must be minted during `plant()`.
-        // (Notice that {Sun.sol:rewardToSilo} does not mint any Seeds, even though it updates Earned Beans.)
-        // LibSilo.mintSeeds(account, seeds); // mints to `account` and updates totals
 
         // Earned Stalk associated with Earned Beans generate more Earned Beans automatically (i.e., auto compounding).
         // Earned Stalk are minted when Earned Beans are minted during Sunrise. See {Sun.sol:rewardToSilo} for details.

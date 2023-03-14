@@ -322,7 +322,6 @@ library LibTokenSilo {
     //this does not include stalk that has not been mowed
     //this function is used to convert, to see how much stalk would have been grown by a deposit at a 
     //given grown stalk index
-    //TODOSEEDS this takes uint256 but grown stalk is always stored as int128, problem?
     function calculateStalkFromStemAndBdv(IERC20 token, int128 grownStalkIndexOfDeposit, uint256 bdv)
         internal
         view

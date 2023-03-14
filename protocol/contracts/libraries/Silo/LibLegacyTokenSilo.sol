@@ -225,9 +225,8 @@ library LibLegacyTokenSilo {
     }
 
     /**
-     * @notice Returns the balance of Grown Stalk for `account`. Grown Stalk is 
-     * earned each Season from Seeds and must be Mown via `SiloFacet-mow` to 
-     * apply it to a user's balance.
+     * @notice Returns the balance of Grown Stalk for `account` up until the
+     * Stems deployment season.
      * @dev The balance of Grown Stalk for an account can be calculated as:
      *
      * ```
@@ -235,7 +234,6 @@ library LibLegacyTokenSilo {
      * grownStalk = balanceOfSeeds * elapsedSeasons
      * ```
      */
-    //TODOSEEDS calculate only up until the stems deployment season
     function balanceOfGrownStalkUpToStemsDeployment(address account)
         internal
         view
@@ -273,7 +271,7 @@ library LibLegacyTokenSilo {
      */
     function stalkReward(uint256 seeds, uint32 seasons)
         internal
-        view //TODOSEEDS cahnge back to pure
+        pure
         returns (uint256)
     {
         return seeds.mul(seasons);
