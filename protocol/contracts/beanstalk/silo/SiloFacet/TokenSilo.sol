@@ -7,9 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import "./Silo.sol";
 import {IERC1155} from "~/interfaces/IERC1155.sol";
-import {IERC1155Receiver} from "~/interfaces/IERC1155Receiver.sol";
-import "~/libraries/LibBytes64.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
  * @title TokenSilo
@@ -27,11 +24,12 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
  *   deposited in the Silo is decremented during withdrawal, _after_ a Withdrawal
  *   is created. See "Finish Removal".
  */
-contract TokenSilo is Silo, IERC1155, IERC1155Receiver {
+contract TokenSilo is Silo, IERC1155 {
     using SafeMath for uint256;
     using SafeCast for uint256;
     using LibSafeMath32 for uint32;
-    using Strings for uint256;
+
+    
 
     /**
      * @notice Emitted when `account` adds a single Deposit to the Silo.
@@ -586,77 +584,10 @@ contract TokenSilo is Silo, IERC1155, IERC1155Receiver {
         bytes calldata _data
     ) external virtual override {}
 
-    function tokenURI(uint256 depositId) external view returns (string memory) {
-        Storage.Metadata memory depositMetadata = getDepositData(depositId);
-        require(depositMetadata.id != 0, "Silo: metadata does not exist");
-        bytes memory attributes = abi.encodePacked(
-            '{',
-                '"token deposit address":', uint256(depositMetadata.token).toString(), '",',
-                '"id":', depositMetadata.id.toString(), '",', 
-                '"CumulativeGrownStalkPerBDV":', uint256(depositMetadata.grownStalkPerBDV).toString(), '",',
-            '}'
-        );
-        return string(abi.encodePacked("data:application/json;base64,",LibBytes64.encode(abi.encodePacked(
-                '{',
-                    '"name": Beanstalk Deposit',
-                    '"description": A Beanstalk Deposit',
-                    bytes(attributes).length > 0 ? string(abi.encodePacked(', "attributes": ', attributes)) : '',
-                '}'
-            ))
-        ));
-    }
-
-    function setMetadata(
-        uint256 depositId,
+    function getDepositId(
         address token, 
-        int96 grownStalkPerBDV,
-        uint256 id
-    ) public returns (bool) {
-        require(bytes32(depositId) == keccak256(abi.encodePacked(token, grownStalkPerBDV, id)), "Silo: invalid depositId");
-        require(bytes32(depositId) == LibBytes.packAddressAndCumulativeStalkPerBDV(token,grownStalkPerBDV), "Silo: invalid depositId");
-        Storage.Metadata memory depositMetadata;
-        depositMetadata.token = token;
-        depositMetadata.id = id;
-        depositMetadata.grownStalkPerBDV = grownStalkPerBDV;
-        s.metadata[bytes32(depositId)] = depositMetadata;
-        return true;
+        int96 grownStalkPerBDV
+    ) external pure returns (bytes32) {
+        return LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBDV);
     }
-
-    function getDepositData(uint256 depositId) public view returns (Storage.Metadata memory) {
-        return s.metadata[bytes32(depositId)];
-    }
-
-
-
-    // TODO: need to discuss what to do on a ERC1155 transfer to the contract
-    // for now, send the ERC1155 token back to the sender
-    // or put this in siloFacet instead ~
-
-    //////////////////////// ERC1155Reciever ////////////////////////
-
-    function onERC1155Received(
-        address,
-        address from,
-        uint256 id,
-        uint256 value,
-        bytes calldata data
-    ) external override returns (bytes4) {
-        IERC1155(msg.sender).safeTransferFrom(address(this), from, id, value, data);
-        return IERC1155Receiver.onERC1155Received.selector;
-    }
-
-    function onERC1155BatchReceived(
-        address,
-        address from,
-        uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
-    ) external override returns (bytes4) {
-        IERC1155(msg.sender).safeBatchTransferFrom(address(this), from, ids, values, data);
-        return IERC1155Receiver.onERC1155BatchReceived.selector;
-    }
-
-    // function supportsInterface(bytes4 interfaceId) external pure override returns (bool) {
-    //     return interfaceId == type(IERC1155).interfaceId || interfaceId == type(IERC1155Receiver).interfaceId;
-    // }
 }

@@ -103,6 +103,7 @@ contract MockSeasonFacet is SeasonFacet {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
         s.season.timestamp = block.timestamp;
+        s.season.sunriseBlock = uint32(block.number);
     }
 
     function farmSunrises(uint256 number) public {

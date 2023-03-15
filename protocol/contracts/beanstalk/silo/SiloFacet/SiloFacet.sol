@@ -206,13 +206,16 @@ contract SiloFacet is TokenSilo {
     }
 
     // ERC1155 safeTransferFrom
+
+    /// @dev ERC1155 safeTransferFrom does not need reentrancy protection,
+    // as the transferDeposit function already has this protection.
     function safeTransferFrom(
         address sender, 
         address recipient, 
         uint256 depositId, 
         uint256 amount,
         bytes calldata depositData
-    ) external override nonReentrant {
+    ) external override {
         require(recipient != address(0), "ERC1155: transfer to the zero address");
         // allowance requirements are checked in transferDeposit
         (address token, int96 cumulativeGrownStalkPerBDV) = 
@@ -229,13 +232,15 @@ contract SiloFacet is TokenSilo {
         );
     }
 
+    // unlike transferDeposits, safeBatchTransferFrom does not assume the deposits come from the same token,
+    // and must emit 2 transfer events per deposit. 
     function safeBatchTransferFrom(
         address sender, 
         address recipient, 
         uint256[] calldata depositIDs, 
         uint256[] calldata amounts, 
         bytes calldata depositsData
-    ) external override nonReentrant {
+    ) external override {
         require(depositIDs.length == amounts.length, "Silo: depositIDs and amounts arrays must be the same length");
         require(recipient != address(0), "ERC1155: transfer to the zero address");
         // allowance requirements are checked in transferDeposit

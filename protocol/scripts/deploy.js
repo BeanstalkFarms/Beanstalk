@@ -113,10 +113,12 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     fertilizerFacet,
     tokenFacet,
     unripeFacet,
-    whitelistFacet
+    whitelistFacet,
+    metadataFacet
   ] = mock ? await deployFacets(
     verbose,
-    [ 'BDVFacet',
+    [ 
+      'BDVFacet',
       'CurveFacet',
       'MockConvertFacet',
       'FarmFacet',
@@ -130,10 +132,13 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'OwnershipFacet',
       'TokenFacet',
       'MockUnripeFacet',
-      'WhitelistFacet'],
+      'WhitelistFacet',
+      'MetadataFacet'
+    ],
   ) : await deployFacets(
     verbose,
-    [ 'BDVFacet',
+    [ 
+      'BDVFacet',
       'CurveFacet',
       'ConvertFacet',
       'FarmFacet',
@@ -147,7 +152,9 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'FertilizerFacet',
       'TokenFacet',
       'UnripeFacet',
-      'WhitelistFacet'],
+      'WhitelistFacet',
+      'MetadataFacet'
+    ],
   )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/init/InitDiamond.sol:InitDiamond'
   // eslint-disable-next-line no-unused-vars
@@ -183,7 +190,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['FertilizerFacet', fertilizerFacet],
       ['TokenFacet', tokenFacet],
       ['UnripeFacet', unripeFacet],
-      ['WhitelistFacet', whitelistFacet]
+      ['WhitelistFacet', whitelistFacet],
+      ['MetadataFacet', metadataFacet]
     ],
     owner: account,
     args: args,
