@@ -1,6 +1,7 @@
 /**
  * SPDX-License-Identifier: MIT
- **/
+ *
+ */
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
@@ -22,14 +23,13 @@ import "~/libraries/Silo/LibTokenSilo.sol";
  * For backwards compatibility, a Flood is sometimes referred to by its old name
  * "Season of Plenty".
  */
- 
+
 contract Silo is SiloExit {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using LibSafeMath128 for uint128;
 
-
-    //////////////////////// EVENTS ////////////////////////    
+    //////////////////////// EVENTS ////////////////////////
 
     /**
      * @notice Emitted when the Seeds associated with the Earned Beans of
@@ -129,6 +129,7 @@ contract Silo is SiloExit {
 
         if (_lastUpdate >= _season()) return;
 
+        s.a[account].seasonInitRoots = uint128(s.a[account].roots);
 
         // Increments `plenty` for `account` if a Flood has occured.
         // Saves Rain Roots for `account` if it is Raining.

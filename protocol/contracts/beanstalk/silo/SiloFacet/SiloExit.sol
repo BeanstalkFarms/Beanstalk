@@ -214,8 +214,8 @@ contract SiloExit is ReentrancyGuard {
         // If it is morning, all Earned Stalk this season is unvested.
         if(block.number - s.season.sunriseBlock <= EARNED_BEAN_VESTING_BLOCKS){
             uint256 prevSeasonStalk = s.s.stalk.sub(s.newEarnedStalk).mulDiv(
-                s.a[account].roots,
-                s.s.roots,
+                s.a[account].seasonInitRoots, // need the user roots at season init, which has to go in mow (grown) which brings us back to the same Brean impl approximately
+                s.seasonInitRoots,
                 // s.s.roots.sub(s.newCollectedEarnedRoots),
                 LibPRBMath.Rounding.Up
             );

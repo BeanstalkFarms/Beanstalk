@@ -212,11 +212,13 @@ library LibSilo {
     function burnStalkAndRoots(address account, uint256 stalk) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return;
-       
-        uint256 roots;
+
+        uint256 roots = s.s.roots.mul(stalk).div(s.s.stalk);
+
+        // uint256 roots;
         // Calculate the amount of Roots for the given amount of Stalk.
         // We round up as it prevents an account having roots but no stalk.
-        
+
         // @audit - withdrawer will lose all seasonal Earned Beans at withdraw time, rather than just the ones associated with the withdraw.
 
         /// @audit the way roots while vesting is calculated here is different than above. Why is a an unexpected

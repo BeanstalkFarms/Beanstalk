@@ -123,6 +123,7 @@ contract Sun is Oracle {
         // `s.newEarnedStalk` is an accounting mechanism that tracks the number
         // of Earned stalk that is allocated during the season.
         s.newEarnedStalk = uint128(seasonStalk);
+        s.seasonInitRoots = uint128(s.s.roots);
         // s.vestingPeriodRoots = 0;
 
         s.siloBalances[C.beanAddress()].deposited = s
