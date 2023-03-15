@@ -74,7 +74,6 @@ const textFieldStyles = {
   }
 } as const;
 
-
 const AddressInputFieldInner : FC<FieldProps & AddressInputFieldProps> = ({
   name,
   disabled,
@@ -190,7 +189,7 @@ const AddressInputFieldInner : FC<FieldProps & AddressInputFieldProps> = ({
             </Typography>) : null}
         </Typography>) : null}
       <BorderEffect disabled={isValid || disabled}>
-        <Box width="100%" sx={{px: 2}}>
+        <Box width="100%" sx={{ px: 2 }}>
           <TextField
             fullWidth
             type="text"
@@ -203,7 +202,7 @@ const AddressInputFieldInner : FC<FieldProps & AddressInputFieldProps> = ({
             value={field.value}
             onBlur={field.onBlur}
             onChange={onChange}
-            sx={{...textFieldStyles, ...sx}}
+            sx={{ ...textFieldStyles, ...sx }}
           />
         </Box>
       </BorderEffect>

@@ -6,9 +6,8 @@ import {
   Button,
   ButtonProps,
   Card,
-  Divider, Drawer,
+  Divider,
   ListItemText,
-  Menu,
   MenuItem,
   MenuList,
   Typography,
@@ -27,11 +26,11 @@ import useToggle from '~/hooks/display/useToggle';
 import useAccount from '~/hooks/ledger/useAccount';
 import { CHAIN_INFO } from '~/constants';
 import WalletDialog from './WalletDialog';
-import DropdownIcon from '~/components/Common/DropdownIcon';
 import PickBeansDialog from '~/components/Farmer/Unripe/PickDialog';
 import AddressIcon from '~/components/Common/AddressIcon';
 import useGlobal from '~/hooks/app/useGlobal';
 import Row from '~/components/Common/Row';
+import FolderMenu from '~/components/Nav/FolderMenu';
 
 import { FC } from '~/types';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
@@ -85,7 +84,7 @@ const WalletButton: FC<{ showFullText?: boolean; } & ButtonProps> = ({ ...props 
   }
 
   const menu = (
-    <MenuList sx={{ minWidth: 250, background: BeanstalkPalette.white, border: '1px solid', borderColor: 'divider' }} component={Card}>
+    <MenuList sx={{ minWidth: 250, background: BeanstalkPalette.white }} component={Card}>
       <MenuItem onClick={() => {
         toggleMenuAnchor();
         setSettingsOpen(true);
@@ -183,60 +182,24 @@ const WalletButton: FC<{ showFullText?: boolean; } & ButtonProps> = ({ ...props 
   return (
     <>
       {/* Wallet Button */}
-      <Button
-        disableFocusRipple
-        variant="contained"
-        color="light"
+      <FolderMenu
+        buttonContent={
+          <Typography variant="bodyMedium" display={{ xs: 'none', sm: 'block' }}>
+            {/* Use `accountRaw` to match capitalization of wallet provider
+              * assert existence of accountRaw.address since we check `account` prior. */}
+            {trimAddress(IMPERSONATED_ACCOUNT || address || '')}
+          </Typography>
+        }
         startIcon={<AddressIcon address={account} />}
-        endIcon={<DropdownIcon open={menuVisible} />}
-        {...props}
-        onClick={toggleMenuAnchor}
-        sx={import.meta.env.VITE_OVERRIDE_FARMER_ACCOUNT ? {
-          color: 'text.primary',
-          borderBottomColor: 'red',
-          borderBottomWidth: 2,
-          borderBottomStyle: 'solid',
-          ...props.sx,
-        } : props.sx}
-      >
-        <Typography variant="bodyMedium" display={{ xs: 'none', sm: 'block' }}>
-          {/* Use `accountRaw` to match capitalization of wallet provider
-            * assert existence of accountRaw.address since we check `account` prior. */}
-          {trimAddress(IMPERSONATED_ACCOUNT || address || '')}
-        </Typography>
-      </Button>
-      {/* Mobile: Drawer */}
-      <Drawer anchor="bottom" open={menuVisible} onClose={toggleMenuAnchor} sx={{ display: { xs: 'block', lg: 'none' } }}>
-        {menu}
-      </Drawer>
-      {/* Popup Menu */}
-      <Menu
-        sx={{ display: { xs: 'none', lg: 'block' } }}
-        elevation={0}
-        anchorEl={menuAnchor}
-        open={menuVisible}
+        popoverContent={menu}
+        drawerContent={menu}
+        onOpen={toggleMenuAnchor}
         onClose={toggleMenuAnchor}
-        MenuListProps={{
-          sx: {
-            py: 0,
-            mt: 0,
-          },
-        }}
-        disablePortal
-        disableScrollLock
-        // Align the menu to the bottom
-        // right side of the anchor button.
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-      >
-        {menu}
-      </Menu>
+        popperWidth="260px"
+        hotkey="opt+2, alt+2"
+        popoverPlacement="bottom-end"
+        zeroTopRightRadius
+      />
       {/* Pick Beans Dialog */}
       <PickBeansDialog
         open={picking}
