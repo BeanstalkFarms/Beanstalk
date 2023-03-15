@@ -11,7 +11,7 @@ import "../LibAppStorage.sol";
 import "../LibPRBMath.sol";
 import "~/libraries/LibSafeMathSigned128.sol";
 import "../LibSafeMath128.sol";
-
+import "./LibTokenSilo.sol";
 
 /**
  * @title LibSilo
@@ -34,9 +34,11 @@ import "../LibSafeMath128.sol";
  */
 library LibSilo {
     using SafeMath for uint256;
+    // using SafeMath for uint128;
     using LibSafeMath128 for uint128;
     using LibSafeMathSigned128 for int128;
     using LibPRBMath for uint256;
+    using SafeCast for uint256;
     
     //////////////////////// EVENTS ////////////////////////    
      
@@ -61,6 +63,29 @@ library LibSilo {
         int256 delta,
         int256 deltaRoots
     );
+
+    event RemoveDeposit(
+        address indexed account,
+        address indexed token,
+        int128 stem,
+        uint256 amount,
+        uint256 bdv
+    );
+
+    event RemoveDeposits(
+        address indexed account,
+        address indexed token,
+        int128[] stems,
+        uint256[] amounts,
+        uint256 amount,
+        uint256[] bdvs
+    );
+
+    struct AssetsRemoved {
+        uint256 tokensRemoved;
+        uint256 stalkRemoved;
+        uint256 bdvRemoved;
+    }
 
     //////////////////////// MINT ////////////////////////
 
@@ -207,6 +232,274 @@ library LibSilo {
         s.a[recipient].s.stalk = s.a[recipient].s.stalk.add(stalk);
         s.a[recipient].roots = s.a[recipient].roots.add(roots);
         emit StalkBalanceChanged(recipient, int256(stalk), int256(roots));
+    }
+
+    /**
+     * @dev Claims the Grown Stalk for `account` and applies it to their Stalk
+     * balance.
+     *
+     * 
+     *
+     * This is why `_mow()` must be called before any actions that change Seeds,
+     * including:
+     *  - {SiloFacet-deposit}
+     *  - {SiloFacet-withdrawDeposit}
+     *  - {SiloFacet-withdrawDeposits}
+     *  - {_plant}
+     *  - {SiloFacet-transferDeposit(s)}
+     */
+   function _mow(address account, address token) internal {
+        uint32 _lastUpdate = lastUpdate(account);
+
+
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        //if last update > 0 and < stemStartSeason
+        //require that user account seeds be zero
+        // require(_lastUpdate > 0 && _lastUpdate >= s.season.stemStartSeason, 'silo migration needed'); //will require storage cold read... is there a better way?
+
+        //maybe instead of checking lastUpdate here, which is no longer used going forwards since mowStatus will keep track of each individual "last mow time" by storing the stem tip at time of mow
+
+        
+
+        if((_lastUpdate != 0) && (_lastUpdate < s.season.stemStartSeason)) revert('silo migration needed');
+
+
+        //sop stuff only needs to be updated once per season
+        //if it started raininga nd it's still raining, or there was a sop
+        if (s.season.rainStart > s.season.stemStartSeason) {
+            if (_lastUpdate <= s.season.rainStart && _lastUpdate <= s.season.current) {
+                // Increments `plenty` for `account` if a Flood has occured.
+                // Saves Rain Roots for `account` if it is Raining.
+                handleRainAndSops(account, _lastUpdate);
+
+                // Reset timer so that Grown Stalk for a particular Season can only be 
+                // claimed one time. 
+                s.a[account].lastUpdate = s.season.current;
+            }
+        }
+        
+        // Calculate the amount of Grown Stalk claimable by `account`.
+        // Increase the account's balance of Stalk and Roots.
+        __mow(account, token);
+
+        //was hoping to not have to update lastUpdate, but if you don't, then it's 0 for new depositors, this messes up mow and migrate in unit tests, maybe better to just set this manually for tests?
+        //anyone that would have done any deposit has to go through mowSender which would have init'd it above zero in the pre-migration days
+        s.a[account].lastUpdate = s.season.current;
+    }
+
+    function __mow(address account, address token) private {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        int128 _stemTip = LibTokenSilo.stemTipForToken(IERC20(token));
+        int128 _lastStem =  s.a[account].mowStatuses[token].lastStem;
+        uint128 _bdv = s.a[account].mowStatuses[token].bdv;
+        
+        if (_bdv > 0) {
+             // if account mowed the same token in the same season, skip
+            if (_lastStem == _stemTip) {
+                return;
+            }
+
+            // per the zero withdraw update, if a user plants within the morning, 
+            // addtional roots will need to be issued, to properly calculate the earned beans. 
+            // thus, a different mint stalk function is used to differ between deposits.
+            LibSilo.mintGrownStalkAndGrownRoots(
+                account,
+                _balanceOfGrownStalk(
+                    _lastStem,
+                    _stemTip,
+                    _bdv
+                )
+            );
+        }
+
+        // If this `account` has no BDV, skip to save gas. Still need to update lastStem 
+        // (happen on initial deposit, since mow is called before any deposit)
+        s.a[account].mowStatuses[token].lastStem = _stemTip;
+        return;
+    }
+
+    function lastUpdate(address account) public view returns (uint32) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return s.a[account].lastUpdate;
+    }
+
+
+    /**
+     * FIXME(refactor): replace `lastUpdate()` -> `_lastUpdate()` and rename this param?
+     */
+    function handleRainAndSops(address account, uint32 _lastUpdate) private {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        // If no roots, reset Sop counters variables
+        if (s.a[account].roots == 0) {
+            s.a[account].lastSop = s.season.rainStart;
+            s.a[account].lastRain = 0;
+            return;
+        }
+        // If a Sop has occured since last update, calculate rewards and set last Sop.
+        if (s.season.lastSopSeason > _lastUpdate) {
+            s.a[account].sop.plenty = balanceOfPlenty(account);
+            s.a[account].lastSop = s.season.lastSop;
+        }
+        if (s.season.raining) {
+            // If rain started after update, set account variables to track rain.
+            if (s.season.rainStart > _lastUpdate) {
+                s.a[account].lastRain = s.season.rainStart;
+                s.a[account].sop.roots = s.a[account].roots;
+            }
+            // If there has been a Sop since rain started,
+            // save plentyPerRoot in case another SOP happens during rain.
+            if (s.season.lastSop == s.season.rainStart) {
+                s.a[account].sop.plentyPerRoot = s.sops[s.season.lastSop];
+            }
+        } else if (s.a[account].lastRain > 0) {
+            // Reset Last Rain if not raining.
+            s.a[account].lastRain = 0;
+        }
+    }
+
+    function _balanceOfGrownStalk(
+        int128 lastStem,
+        int128 endStalkPerBDV,
+        uint128 bdv
+    ) internal view returns (uint256)
+    {
+        return
+            stalkReward(
+                lastStem, //last GSPBDV farmer mowed
+                endStalkPerBDV, //get latest grown stalk per bdv for this token
+                bdv
+            );
+    } 
+
+    function balanceOfPlenty(address account)
+        public
+        view
+        returns (uint256 plenty)
+    {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        Account.State storage a = s.a[account];
+        plenty = a.sop.plenty;
+        uint256 previousPPR;
+
+        // If lastRain > 0, then check if SOP occured during the rain period.
+        if (s.a[account].lastRain > 0) {
+            // if the last processed SOP = the lastRain processed season,
+            // then we use the stored roots to get the delta.
+            if (a.lastSop == a.lastRain) previousPPR = a.sop.plentyPerRoot;
+            else previousPPR = s.sops[a.lastSop];
+            uint256 lastRainPPR = s.sops[s.a[account].lastRain];
+
+            // If there has been a SOP duing the rain sesssion since last update, process SOP.
+            if (lastRainPPR > previousPPR) {
+                uint256 plentyPerRoot = lastRainPPR - previousPPR;
+                previousPPR = lastRainPPR;
+                plenty = plenty.add(
+                    plentyPerRoot.mul(s.a[account].sop.roots).div(
+                        C.getSopPrecision()
+                    )
+                );
+            }
+        } else {
+            // If it was not raining, just use the PPR at previous SOP.
+            previousPPR = s.sops[s.a[account].lastSop];
+        }
+
+        // Handle and SOPs that started + ended before after last Silo update.
+        if (s.season.lastSop > lastUpdate(account)) {
+            uint256 plentyPerRoot = s.sops[s.season.lastSop].sub(previousPPR);
+            plenty = plenty.add(
+                plentyPerRoot.mul(s.a[account].roots).div(
+                    C.getSopPrecision()
+                )
+            );
+        }
+    }
+
+        //////////////////////// REMOVE ////////////////////////
+
+    /**
+     * @dev Removes from a single Deposit, emits the RemoveDeposit event,
+     * and returns the Stalk/BDV that were removed.
+     *
+     * Used in:
+     * - {TokenSilo:_withdrawDeposit}
+     * - {TokenSilo:_transferDeposit}
+     */
+    function _removeDepositFromAccount(
+        address account,
+        address token,
+        int128 stem,
+        uint256 amount
+    )
+        internal
+        returns (
+            uint256 stalkRemoved,
+            uint256 bdvRemoved
+        )
+    {
+        bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, stem, amount);
+
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        //need to get amount of stalk earned by this deposit (index of now minus index of when deposited)
+        stalkRemoved = bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv).add(
+            LibSilo.stalkReward(
+                stem, //this is the index of when it was deposited
+                LibTokenSilo.stemTipForToken(IERC20(token)), //this is latest for this token
+                bdvRemoved.toUint128()
+            )
+        );
+
+        emit RemoveDeposit(account, token, stem, amount, bdvRemoved);
+    }
+
+    /**
+     * @dev Removes from multiple Deposits, emits the RemoveDeposits
+     * event, and returns the Stalk/BDV that were removed.
+     * 
+     * Used in:
+     * - {TokenSilo:_withdrawDeposits}
+     * - {SiloFacet:enrootDeposits}
+     */
+    function _removeDepositsFromAccount(
+        address account,
+        address token,
+        int128[] calldata stems,
+        uint256[] calldata amounts
+    ) internal returns (AssetsRemoved memory ar) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        //make bdv array and add here?
+        uint256[] memory bdvsRemoved = new uint256[](stems.length);
+        for (uint256 i; i < stems.length; ++i) {
+            uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
+                account,
+                token,
+                stems[i],
+                amounts[i]
+            );
+            bdvsRemoved[i] = crateBdv;
+            ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
+            ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
+
+            ar.stalkRemoved = ar.stalkRemoved.add(
+                LibSilo.stalkReward(
+                    stems[i],
+                    LibTokenSilo.stemTipForToken(IERC20(token)),
+                    crateBdv.toUint128()
+                )
+            );
+
+        }
+
+        ar.stalkRemoved = ar.stalkRemoved.add(
+            ar.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)
+        );
+
+        //need to add BDV array here
+        emit RemoveDeposits(account, token, stems, amounts, ar.tokensRemoved, bdvsRemoved);
     }
     
     //////////////////////// UTILITIES ////////////////////////

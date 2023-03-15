@@ -99,87 +99,8 @@ contract Silo is SiloExit {
      * @dev Claims the Grown Stalk for `msg.sender`. Requires token address to mow.
      */
     modifier mowSender(address token) {
-        _mow(msg.sender, token);
+        LibSilo._mow(msg.sender, token);
         _;
-    }
-
-    /**
-     * @dev Claims the Grown Stalk for `account` and applies it to their Stalk
-     * balance.
-     *
-     * 
-     *
-     * This is why `_mow()` must be called before any actions that change Seeds,
-     * including:
-     *  - {SiloFacet-deposit}
-     *  - {SiloFacet-withdrawDeposit}
-     *  - {SiloFacet-withdrawDeposits}
-     *  - {_plant}
-     *  - {SiloFacet-transferDeposit(s)}
-     */
-   function _mow(address account, address token) internal {
-        uint32 _lastUpdate = lastUpdate(account);
-
-        //if last update > 0 and < stemStartSeason
-        //require that user account seeds be zero
-        // require(_lastUpdate > 0 && _lastUpdate >= s.season.stemStartSeason, 'silo migration needed'); //will require storage cold read... is there a better way?
-
-        //maybe instead of checking lastUpdate here, which is no longer used going forwards since mowStatus will keep track of each individual "last mow time" by storing the stem tip at time of mow
-
-        if((_lastUpdate != 0) && (_lastUpdate < s.season.stemStartSeason)) revert('silo migration needed');
-
-
-        //sop stuff only needs to be updated once per season
-        //if it started raininga nd it's still raining, or there was a sop
-        if (s.season.rainStart > s.season.stemStartSeason) {
-            if (_lastUpdate <= s.season.rainStart && _lastUpdate <= _season()) {
-                // Increments `plenty` for `account` if a Flood has occured.
-                // Saves Rain Roots for `account` if it is Raining.
-                handleRainAndSops(account, _lastUpdate);
-
-                // Reset timer so that Grown Stalk for a particular Season can only be 
-                // claimed one time. 
-                s.a[account].lastUpdate = _season();
-            }
-        }
-        
-        // Calculate the amount of Grown Stalk claimable by `account`.
-        // Increase the account's balance of Stalk and Roots.
-        __mow(account, token);
-
-        //was hoping to not have to update lastUpdate, but if you don't, then it's 0 for new depositors, this messes up mow and migrate in unit tests, maybe better to just set this manually for tests?
-        //anyone that would have done any deposit has to go through mowSender which would have init'd it above zero in the pre-migration days
-        s.a[account].lastUpdate = _season();
-    }
-
-    function __mow(address account, address token) private {
-        int128 _stemTip = LibTokenSilo.stemTipForToken(IERC20(token));
-        int128 _lastStem =  s.a[account].mowStatuses[token].lastStem;
-        uint128 _bdv = s.a[account].mowStatuses[token].bdv;
-        
-        if (_bdv > 0) {
-             // if account mowed the same token in the same season, skip
-            if (_lastStem == _stemTip) {
-                return;
-            }
-
-            // per the zero withdraw update, if a user plants within the morning, 
-            // addtional roots will need to be issued, to properly calculate the earned beans. 
-            // thus, a different mint stalk function is used to differ between deposits.
-            LibSilo.mintGrownStalkAndGrownRoots(
-                account,
-                _balanceOfGrownStalk(
-                    _lastStem,
-                    _stemTip,
-                    _bdv
-                )
-            );
-        }
-
-        // If this `account` has no BDV, skip to save gas. Still need to update lastStem 
-        // (happen on initial deposit, since mow is called before any deposit)
-        s.a[account].mowStatuses[token].lastStem = _stemTip;
-        return;
     }
      
      
@@ -318,7 +239,7 @@ contract Silo is SiloExit {
         // during the vesting period, the earned beans are not issued to the user.
         // thus, the roots calculated for a given user is different. 
         // This is handled by the super mow function, which stores the difference in roots.
-        _mow(account, token);
+        LibSilo._mow(account, token);
         uint256 accountStalk = s.a[account].s.stalk;
 
         // Calculate balance of Earned Beans.
@@ -366,36 +287,5 @@ contract Silo is SiloExit {
         emit ClaimPlenty(account, plenty);
     }
 
-    /**
-     * FIXME(refactor): replace `lastUpdate()` -> `_lastUpdate()` and rename this param?
-     */
-    function handleRainAndSops(address account, uint32 _lastUpdate) private {
-        // If no roots, reset Sop counters variables
-        if (s.a[account].roots == 0) {
-            s.a[account].lastSop = s.season.rainStart;
-            s.a[account].lastRain = 0;
-            return;
-        }
-        // If a Sop has occured since last update, calculate rewards and set last Sop.
-        if (s.season.lastSopSeason > _lastUpdate) {
-            s.a[account].sop.plenty = balanceOfPlenty(account);
-            s.a[account].lastSop = s.season.lastSop;
-        }
-        if (s.season.raining) {
-            // If rain started after update, set account variables to track rain.
-            if (s.season.rainStart > _lastUpdate) {
-                s.a[account].lastRain = s.season.rainStart;
-                s.a[account].sop.roots = s.a[account].roots;
-            }
-            // If there has been a Sop since rain started,
-            // save plentyPerRoot in case another SOP happens during rain.
-            if (s.season.lastSop == s.season.rainStart) {
-                s.a[account].sop.plentyPerRoot = s.sops[s.season.lastSop];
-            }
-        } else if (s.a[account].lastRain > 0) {
-            // Reset Last Rain if not raining.
-            s.a[account].lastRain = 0;
-        }
-    }
 
 }

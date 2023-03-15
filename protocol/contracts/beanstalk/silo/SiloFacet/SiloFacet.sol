@@ -143,9 +143,9 @@ contract SiloFacet is TokenSilo {
         if (sender != msg.sender) {
             _spendDepositAllowance(sender, msg.sender, token, amount);
         }
-        _mow(sender, token);
+        LibSilo._mow(sender, token);
         // Need to update the recipient's Silo as well.
-        _mow(recipient, token);
+        LibSilo._mow(recipient, token);
         bdv = _transferDeposit(sender, recipient, token, stem, amount);
     }
 
@@ -180,9 +180,9 @@ contract SiloFacet is TokenSilo {
             }
         }
        
-        _mow(sender, token);
+        LibSilo._mow(sender, token);
         // Need to update the recipient's Silo as well.
-        _mow(recipient, token);
+        LibSilo._mow(recipient, token);
         bdvs = _transferDeposits(sender, recipient, token, stem, amounts);
     }
 
@@ -333,13 +333,13 @@ contract SiloFacet is TokenSilo {
      * @dev See {Silo-_mow}.
      */
     function mow(address account, address token) external payable {
-        _mow(account, token);
+        LibSilo._mow(account, token);
     }
 
     //function to mow multiple tokens given an address
     function mowMultiple(address account, address[] calldata tokens) external payable {
         for (uint256 i; i < tokens.length; ++i) {
-            _mow(account, tokens[i]);
+            LibSilo._mow(account, tokens[i]);
         }
     }
 
@@ -348,6 +348,7 @@ contract SiloFacet is TokenSilo {
         _mowAndMigrate(account, tokens, seasons, amounts);
     }
 
+    //cheaper function to mow and migrate if you have no deposits
     function mowAndMigrateNoDeposits(address account) external payable {
         _migrateNoDeposits(account);
     }
@@ -379,113 +380,6 @@ contract SiloFacet is TokenSilo {
      */
     function claimPlenty() external payable {
         _claimPlenty(msg.sender);
-    }
-
-    //////////////////////// UPDATE UNRIPE DEPOSITS ////////////////////////
-
-    /**
-     * @notice Update the BDV of an Unripe Deposit. Allows the user to claim
-     * Stalk as the BDV of Unripe tokens increases during the Barn
-     * Raise. This was introduced as a part of the Replant.
-     *
-     * @dev Should revert if `ogBDV > newBDV`. A user cannot lose BDV during an
-     * Enroot operation.
-     *
-     * Gas optimization: We neglect to check if `token` is whitelisted. If a
-     * token is not whitelisted, it cannot be Deposited, and thus cannot be Removed.
-     * 
-     * {LibTokenSilo-removeDepositFromAccount} should revert if there isn't
-     * enough balance of `token` to remove.
-     */
-    function enrootDeposit(
-        address token,
-        int128 stem,
-        uint256 amount
-    ) external nonReentrant mowSender(token) {
-        // First, remove Deposit and Redeposit with new BDV
-        uint256 ogBDV = LibTokenSilo.removeDepositFromAccount(
-            msg.sender,
-            token,
-            stem,
-            amount
-        );
-        emit RemoveDeposit(msg.sender, token, stem, amount, ogBDV); // Remove Deposit does not emit an event, while Add Deposit does.
-
-        // Calculate the current BDV for `amount` of `token` and add a Deposit.
-        uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
-
-        LibTokenSilo.addDepositToAccount(msg.sender, token, stem, amount, newBDV); // emits AddDeposit event
-
-        // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
-        uint256 deltaBDV = newBDV.sub(ogBDV);
-
-        // Mint Stalk associated with the new BDV.
-        uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalkIssuedPerBdv).add(
-            LibSilo.stalkReward(stem,
-                                LibTokenSilo.stemTipForToken(IERC20(token)),
-                                uint128(deltaBDV))
-        );
-
-        LibSilo.mintStalk(msg.sender, deltaStalk);
-    }
-
-    /** 
-     * @notice Update the BDV of Unripe Deposits. Allows the user to claim Stalk
-     * as the BDV of Unripe tokens increases during the Barn Raise.
-     * This was introduced as a part of the Replant.
-     *
-     * @dev Should revert if `ogBDV > newBDV`. A user cannot lose BDV during an
-     * Enroot operation.
-     *
-     * Gas optimization: We neglect to check if `token` is whitelisted. If a
-     * token is not whitelisted, it cannot be Deposited, and thus cannot be Removed.
-     * {removeDepositsFromAccount} should revert if there isn't enough balance of `token`
-     * to remove.
-     */
-    function enrootDeposits(
-        address token,
-        int128[] calldata stems,
-        uint256[] calldata amounts
-    ) external nonReentrant mowSender(token) {
-        // First, remove Deposits because every deposit is in a different season,
-        // we need to get the total Stalk, not just BDV.
-        AssetsRemoved memory ar = removeDepositsFromAccount(msg.sender, token, stems, amounts);
-
-        // Get new BDV
-        uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
-        uint256 newStalk;
-
-        //pulled these vars out because of "CompilerError: Stack too deep, try removing local variables."
-        int128 _lastStem = LibTokenSilo.stemTipForToken(IERC20(token)); //need for present season
-        uint32 _stalkPerBdv = s.ss[token].stalkIssuedPerBdv;
-
-        // Iterate through all stems, redeposit the tokens with new BDV and
-        // summate new Stalk.
-        for (uint256 i; i < stems.length; ++i) {
-            uint256 bdv = amounts[i].mul(newBDV).div(ar.tokensRemoved); // Cheaper than calling the BDV function multiple times.
-            LibTokenSilo.addDepositToAccount(
-                msg.sender,
-                token,
-                stems[i],
-                amounts[i],
-                bdv
-            );
-            newStalk = newStalk.add(
-                bdv.mul(_stalkPerBdv).add(
-                    LibSilo.stalkReward(
-                        stems[i],
-                        _lastStem,
-                        uint128(bdv)
-                    )
-                )
-            );
-        }
-
-        // Mint Stalk associated with the delta BDV.
-        LibSilo.mintStalk(
-            msg.sender,
-            newStalk.sub(ar.stalkRemoved)
-        );
     }
 
     //////////////////////// GETTERS ////////////////////////

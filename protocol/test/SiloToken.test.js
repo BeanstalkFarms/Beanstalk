@@ -34,6 +34,7 @@ describe('Silo Token', function () {
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
+    this.convert = await ethers.getContractAt('MockConvertFacet', this.diamond.address);
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address);
 
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
@@ -1148,7 +1149,7 @@ describe('Silo Token', function () {
         //migrate to new deposit system since the mock stuff deposits in old one (still useful to test)
         await this.silo.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10']], [[to6('10')]]);
         
-        this.result = await this.silo.connect(user).enrootDeposit(UNRIPE_BEAN, stem10, to6('5'));
+        this.result = await this.convert.connect(user).enrootDeposit(UNRIPE_BEAN, stem10, to6('5'));
       })
 
       it('properly updates the total balances', async function () {
@@ -1193,7 +1194,7 @@ describe('Silo Token', function () {
 
         await this.silo.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10']], [[to6('10')]]);
 
-        this.result = await this.silo.connect(user).enrootDeposit(UNRIPE_BEAN, '0', to6('10'));
+        this.result = await this.convert.connect(user).enrootDeposit(UNRIPE_BEAN, '0', to6('10'));
       })
 
       it('properly updates the total balances', async function () {
@@ -1241,7 +1242,7 @@ describe('Silo Token', function () {
         const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
 
         const stem11 = await this.silo.seasonToStem(UNRIPE_BEAN, '11');
-        this.result = await this.silo.connect(user).enrootDeposits(UNRIPE_BEAN, [stem10, stem11], [to6('5'), to6('5')]);
+        this.result = await this.convert.connect(user).enrootDeposits(UNRIPE_BEAN, [stem10, stem11], [to6('5'), to6('5')]);
       })
 
       it('properly updates the total balances', async function () {

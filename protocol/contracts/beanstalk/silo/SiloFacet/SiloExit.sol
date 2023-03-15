@@ -130,26 +130,13 @@ contract SiloExit is ReentrancyGuard {
         returns (uint256)
     {
         return
-            _balanceOfGrownStalk(
+            LibSilo._balanceOfGrownStalk(
                 s.a[account].mowStatuses[token].lastStem, //last stem farmer mowed
                 LibTokenSilo.stemTipForToken(IERC20(token)), //get latest stem for this token
                 s.a[account].mowStatuses[token].bdv
             );
     }
 
-    function _balanceOfGrownStalk(
-        int128 lastStem,
-        int128 endStalkPerBDV,
-        uint128 bdv
-    ) internal view returns (uint256)
-    {
-        return
-            LibSilo.stalkReward(
-                lastStem, //last GSPBDV farmer mowed
-                endStalkPerBDV, //get latest grown stalk per bdv for this token
-                bdv
-            );
-    } 
     
     /**
      * @notice Returns the balance of Earned Beans for `account`. Earned Beans
@@ -244,42 +231,7 @@ contract SiloExit is ReentrancyGuard {
         view
         returns (uint256 plenty)
     {
-        Account.State storage a = s.a[account];
-        plenty = a.sop.plenty;
-        uint256 previousPPR;
-
-        // If lastRain > 0, then check if SOP occured during the rain period.
-        if (s.a[account].lastRain > 0) {
-            // if the last processed SOP = the lastRain processed season,
-            // then we use the stored roots to get the delta.
-            if (a.lastSop == a.lastRain) previousPPR = a.sop.plentyPerRoot;
-            else previousPPR = s.sops[a.lastSop];
-            uint256 lastRainPPR = s.sops[s.a[account].lastRain];
-
-            // If there has been a SOP duing the rain sesssion since last update, process SOP.
-            if (lastRainPPR > previousPPR) {
-                uint256 plentyPerRoot = lastRainPPR - previousPPR;
-                previousPPR = lastRainPPR;
-                plenty = plenty.add(
-                    plentyPerRoot.mul(s.a[account].sop.roots).div(
-                        C.getSopPrecision()
-                    )
-                );
-            }
-        } else {
-            // If it was not raining, just use the PPR at previous SOP.
-            previousPPR = s.sops[s.a[account].lastSop];
-        }
-
-        // Handle and SOPs that started + ended before after last Silo update.
-        if (s.season.lastSop > lastUpdate(account)) {
-            uint256 plentyPerRoot = s.sops[s.season.lastSop].sub(previousPPR);
-            plenty = plenty.add(
-                plentyPerRoot.mul(balanceOfRoots(account)).div(
-                    C.getSopPrecision()
-                )
-            );
-        }
+        return LibSilo.balanceOfPlenty(account);
     }
 
     /**

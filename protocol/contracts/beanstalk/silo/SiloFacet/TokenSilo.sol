@@ -113,11 +113,11 @@ contract TokenSilo is Silo {
      *
      * FIXME(naming): `tokensRemoved` -> `amountsRemoved`.
      */
-    struct AssetsRemoved {
-        uint256 tokensRemoved;
-        uint256 stalkRemoved;
-        uint256 bdvRemoved;
-    }
+    // struct AssetsRemoved {
+    //     uint256 tokensRemoved;
+    //     uint256 stalkRemoved;
+    //     uint256 bdvRemoved;
+    // }
 
     //////////////////////// GETTERS ////////////////////////
 
@@ -225,7 +225,7 @@ contract TokenSilo is Silo {
         uint256 amount
     ) internal {
         // Remove the Deposit from `account`.
-        (uint256 stalkRemoved, ) = removeDepositFromAccount(
+        (uint256 stalkRemoved, ) = LibSilo._removeDepositFromAccount(
             account,
             token,
             stem,
@@ -260,7 +260,7 @@ contract TokenSilo is Silo {
         );
 
         // Remove the Deposits from `account`.
-        AssetsRemoved memory ar = removeDepositsFromAccount(
+        LibSilo.AssetsRemoved memory ar = LibSilo._removeDepositsFromAccount(
             account,
             token,
             stems,
@@ -297,89 +297,6 @@ contract TokenSilo is Silo {
         LibSilo.burnStalk(account, stalk); // Burn Stalk
     }
 
-    //////////////////////// REMOVE ////////////////////////
-
-    /**
-     * @dev Removes from a single Deposit, emits the RemoveDeposit event,
-     * and returns the Stalk/BDV that were removed.
-     *
-     * Used in:
-     * - {TokenSilo:_withdrawDeposit}
-     * - {TokenSilo:_transferDeposit}
-     */
-    function removeDepositFromAccount(
-        address account,
-        address token,
-        int128 stem,
-        uint256 amount
-    )
-        private
-        returns (
-            uint256 stalkRemoved,
-            uint256 bdvRemoved
-        )
-    {
-        bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, stem, amount);
-
-
-
-        //need to get amount of stalk earned by this deposit (index of now minus index of when deposited)
-        stalkRemoved = bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv).add(
-            LibSilo.stalkReward(
-                stem, //this is the index of when it was deposited
-                LibTokenSilo.stemTipForToken(IERC20(token)), //this is latest for this token
-                bdvRemoved.toUint128()
-            )
-        );
-
-        emit RemoveDeposit(account, token, stem, amount, bdvRemoved);
-    }
-
-    /**
-     * @dev Removes from multiple Deposits, emits the RemoveDeposits
-     * event, and returns the Stalk/BDV that were removed.
-     * 
-     * Used in:
-     * - {TokenSilo:_withdrawDeposits}
-     * - {SiloFacet:enrootDeposits}
-     */
-    function removeDepositsFromAccount(
-        address account,
-        address token,
-        int128[] calldata stems,
-        uint256[] calldata amounts
-    ) internal returns (AssetsRemoved memory ar) {
-
-        //make bdv array and add here?
-        uint256[] memory bdvsRemoved = new uint256[](stems.length);
-        for (uint256 i; i < stems.length; ++i) {
-            uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
-                account,
-                token,
-                stems[i],
-                amounts[i]
-            );
-            bdvsRemoved[i] = crateBdv;
-            ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
-            ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
-
-            ar.stalkRemoved = ar.stalkRemoved.add(
-                LibSilo.stalkReward(
-                    stems[i],
-                    LibTokenSilo.stemTipForToken(IERC20(token)),
-                    crateBdv.toUint128()
-                )
-            );
-
-        }
-
-        ar.stalkRemoved = ar.stalkRemoved.add(
-            ar.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)
-        );
-
-        //need to add BDV array here
-        emit RemoveDeposits(account, token, stems, amounts, ar.tokensRemoved, bdvsRemoved);
-    }
 
     //////////////////////// TRANSFER ////////////////////////
 
@@ -395,7 +312,7 @@ contract TokenSilo is Silo {
         int128 stems,
         uint256 amount
     ) internal returns (uint256) {
-        (uint256 stalk, uint256 bdv) = removeDepositFromAccount(
+        (uint256 stalk, uint256 bdv) = LibSilo._removeDepositFromAccount(
             sender,
             token,
             stems,
@@ -423,7 +340,7 @@ contract TokenSilo is Silo {
             "Silo: Crates, amounts are diff lengths."
         );
 
-        AssetsRemoved memory ar;
+        LibSilo.AssetsRemoved memory ar;
         uint256[] memory bdvs = new uint256[](stems.length);
 
         // Similar to {removeDepositsFromAccount}, however the Deposit is also 
