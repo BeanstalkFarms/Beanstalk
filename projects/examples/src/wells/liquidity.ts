@@ -30,11 +30,11 @@ async function main() {
   await WETH.approve(well.address, TokenValue.MAX_UINT256);
 
   // AddLiquidity
-  console.log('\nAdd Liquidity...');
-  const quote = await well.addLiquidityQuote([beanAmount, wethAmount]);
-  console.log(`Quote: ${quote.toHuman()} LP`);
-  const tx = await well.addLiquidity([beanAmount, wethAmount], quote, account);
-  await tx.wait();
+  // console.log('\nAdd Liquidity...');
+  // const quote = await well.addLiquidityQuote([beanAmount, wethAmount]);
+  // console.log(`Quote: ${quote.toHuman()} LP`);
+  // const tx = await well.addLiquidity([beanAmount, wethAmount], quote, account);
+  // await tx.wait();
 
   // Get LP Balance
   // const lpbal = await (await well.getLPToken()).getBalance(account);
@@ -79,11 +79,11 @@ async function main() {
 
   // const tx8 = await well.skim(account);
 
-  // // RemoveLiquidity
-  // console.log('\nRemoveLiquidity...');
-  // const bal = await well.lpToken!.getBalance(account);
-  // const quoteRm = await well.removeLiquidityQuote(bal);
-  // console.log("Remove Quote", quoteRm.map((t) => t.toHuman()).join(", "));
-  // const tx2 = await well.removeLiquidity(bal, quoteRm, account);
-  // await tx2.wait();
+  // RemoveLiquidity
+  console.log('\nRemoveLiquidity...');
+  const bal = await well.lpToken!.getBalance(account);
+  const quoteRm = await well.removeLiquidityQuote(bal);
+  console.log("Remove Quote", quoteRm.map((t) => t.toHuman()).join(", "));
+  const tx2 = await well.removeLiquidity(bal, quoteRm, account);
+  await tx2.wait();
 }
