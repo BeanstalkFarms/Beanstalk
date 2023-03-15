@@ -1,0 +1,29 @@
+name: Continuous Integration - DEX-UI
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'projects/dex-ui/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: DEX-UI CI Validation
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+      - name: Cache Node Modules
+        id: node-modules-cache
+        uses: actions/cache@v3
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Install Dependencies
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        run: yarn install --immutable
+      - name: Confirm DEX-UI Build 
+        run: yarn workspace dex-ui build
+
