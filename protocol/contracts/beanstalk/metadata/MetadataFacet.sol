@@ -6,11 +6,14 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../AppStorage.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC1155Receiver} from "~/interfaces/IERC1155Receiver.sol";
 import {IERC1155} from "~/interfaces/IERC1155.sol";
 import {LibBytes} from "~/libraries/LibBytes.sol";
 import {LibBytes64} from "~/libraries/LibBytes64.sol";
 import {LibStrings} from "~/libraries/LibStrings.sol";
+import {LibLegacyTokenSilo} from "~/libraries/Silo/LibLegacyTokenSilo.sol";
+import {LibTokenSilo} from "~/libraries/Silo/LibTokenSilo.sol";
 
 /**
  * @title MetadataFacet
@@ -46,6 +49,8 @@ contract MetadataFacet is IERC1155Receiver {
                 '"token address": "', LibStrings.toHexString(uint256(depositMetadata.token), 20),
                 '", "id": ', depositMetadata.id.toString(),
                 ', "stem": ', uint256(depositMetadata.grownStalkPerBDV).toString(),
+                ', "total stalk": ', uint256(LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(depositMetadata.token))).toString(),
+                ', "seeds per BDV": ', uint256(LibLegacyTokenSilo.getSeedsPerToken(depositMetadata.token)).toString(),
             '}'
         );
         return string(abi.encodePacked("data:application/json;base64,",LibBytes64.encode(abi.encodePacked(
