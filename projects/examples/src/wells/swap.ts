@@ -17,7 +17,7 @@ async function main() {
   const A = sdk.tokens.WETH;
   const B = sdk.tokens.BEAN;
 
-  const amountA = A.amount(0.5);
+  const amountA = A.amount(1);
   const amountB = B.amount(3000);
 
   // get Well object
@@ -33,10 +33,10 @@ async function main() {
   // Swap From : A => B
   const quoteFrom = await well.swapFromQuote(A, B, amountA);
   console.log(`Quote: ${amountA.toHuman()} ${A.symbol} returns ${quoteFrom.toHuman()} ${B.symbol}`);
-  const tx = await well.swapFrom(A, B, amountA, quoteFrom.subSlippage(0.1), account);
-  const receipt = await tx.wait();
+  // const tx = await well.swapFrom(A, B, amountA, quoteFrom.subSlippage(0.1), account);
+  // const receipt = await tx.wait();
   // console.log(receipt);
-  console.log('Done');
+  // console.log('Done');
   
   // // Swap To : A => B
   // const quoteTo = await well.swapToQuote(A, B, amountB);

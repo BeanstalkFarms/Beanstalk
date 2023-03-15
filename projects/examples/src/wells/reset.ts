@@ -19,8 +19,10 @@ async function main() {
 
   const k = 10;
 
-  const amountB = B.amount(k); // WETH
-  const amountA = A.amount(k * 1000); // BEAN  (1:1000 ratio)
+  const total = 1_000_000
+
+  const amountA = A.amount(total/2);                // BEAN  (1:1000 ratio)
+  const amountB = B.amount(total/2/1677.896805);    // WETH
 
   // get Well object
   const well = await sdk.getWell(WELL_ADDRESS);
