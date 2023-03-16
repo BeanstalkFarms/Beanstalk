@@ -258,6 +258,37 @@ contract SiloExit is ReentrancyGuard {
         sop.plentyPerRoot = s.a[account].sop.plentyPerRoot;
     }
 
+
+    //////////////////////// STEM ////////////////////////
+
+    function stemTipForToken(IERC20 token)
+        public
+        view
+        returns (int128 _stemTip)
+    {
+        _stemTip = LibTokenSilo.stemTipForToken(
+            token
+        );
+    }
+
+    function seasonToStem(IERC20 token, uint32 season)
+        public
+        view
+        returns (int128 stem)
+    {
+        uint256 seedsPerBdv = getSeedsPerToken(address(token));
+        stem = LibLegacyTokenSilo.seasonToStem(seedsPerBdv, season);
+    }
+
+    function getSeedsPerToken(address token) public view virtual returns (uint256) {
+        return LibLegacyTokenSilo.getSeedsPerToken(token);
+    }
+
+    function stemStartSeason() public view virtual returns (uint16) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return s.season.stemStartSeason;
+    }
+
     //////////////////////// INTERNAL ////////////////////////
 
     /**

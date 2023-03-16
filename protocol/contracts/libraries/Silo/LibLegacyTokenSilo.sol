@@ -11,6 +11,7 @@ import "../LibAppStorage.sol";
 import "../../C.sol";
 import "./LibUnripeSilo.sol";
 import "./LibTokenSilo.sol";
+import "./LibSilo.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import "~/libraries/LibSafeMathSigned128.sol";
 
@@ -37,6 +38,21 @@ library LibLegacyTokenSilo {
         uint256 amount,
         uint256 bdv
     );
+
+    struct MigrateData {
+        uint128 totalSeeds;
+        uint128 totalGrownStalk;
+    }
+
+    struct PerDepositData {
+        uint32 season;
+        uint128 amount;
+    }
+
+    struct PerTokenData {
+        address token;
+        int128 stemTip;
+    }
 
 
     //////////////////////// REMOVE DEPOSIT ////////////////////////
@@ -302,6 +318,161 @@ library LibLegacyTokenSilo {
     //     season = uint256(int128(s.season.stemStartSeason)+diff).toUint32();
     //     // season = seasonAs256.toUint32();
     // }
+
+
+    function lastUpdate(address account) public view returns (uint32) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return s.a[account].lastUpdate;
+    }
+
+
+   function _migrateNoDeposits(address account) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        require(s.a[account].s.seeds == 0, "only for zero seeds");
+        uint32 _lastUpdate = lastUpdate(account);
+        require(_lastUpdate > 0 && _lastUpdate < s.season.stemStartSeason, "no migration needed");
+
+        s.a[account].lastUpdate = s.season.stemStartSeason;
+    }
+
+
+    /** 
+     * @notice Migrates farmer's deposits from old (seasons based) to new silo (stems based).
+     * @param account Address of the account to migrate
+     * @param tokens Array of tokens to migrate
+     * @param seasons The seasons in which the deposits were made
+     * @param amounts The amounts of those deposits which are to be migrated
+     *
+     *
+     * @dev When migrating an account, you must submit all of the account's deposits,
+     * or the migration will not pass because the seed check will fail. The seed check
+     * adds up the BDV of all submitted deposits, and multiples by the corresponding
+     * seed amount for each token type, then compares that to the total seeds stored for that user.
+     * If everything matches, we know all deposits were submitted, and the migration is valid.
+     *
+     * Deposits are migrated to the stem storage system on a 1:1 basis. Accounts with
+     * lots of deposits may take a considerable amount of gas to migrate.
+     */
+    function _mowAndMigrate(address account, address[] calldata tokens, uint32[][] calldata seasons, uint256[][] calldata amounts) internal {
+
+        require(tokens.length == seasons.length, "inputs not same length");
+
+        // AppStorage storage s = LibAppStorage.diamondStorage();
+
+        //see if msg.sender has already migrated or not by checking seed balance
+        require(balanceOfSeeds(account) > 0, "no migration needed");
+        // uint32 _lastUpdate = lastUpdate(account);
+        // require(_lastUpdate > 0 && _lastUpdate < s.season.stemStartSeason, "no migration needed");
+
+
+        //TODOSEEDS: require that a season of plenty is not currently happening?
+        //do a legacy mow using the old silo seasons deposits
+        updateLastUpdateToNow(account); //do we want to store last update season as current season or as s.season.stemStartSeason?
+        LibSilo.mintGrownStalkAndGrownRoots(account, LibLegacyTokenSilo.balanceOfGrownStalkUpToStemsDeployment(account)); //should only mint stalk up to stemStartSeason
+        //at this point we've completed the guts of the old mow function, now we need to do the migration
+        
+        
+        MigrateData memory migrateData;
+
+        //use of PerTokenData and PerDepositData structs to save on stack depth
+        for (uint256 i = 0; i < tokens.length; i++) {
+            PerTokenData memory perTokenData;
+            perTokenData.token = tokens[i];
+            perTokenData.stemTip = LibTokenSilo.stemTipForToken(IERC20(perTokenData.token));
+
+            for (uint256 j = 0; j < seasons[i].length; j++) {
+                PerDepositData memory perDepositData;
+                perDepositData.season = seasons[i][j];
+                perDepositData.amount = uint128(amounts[i][j]);
+
+                if (perDepositData.amount == 0) {
+                    continue; //for some reason subgraph gives us deposits with 0 in it sometimes, save gas and skip it (also fixes div by zero bug if it continues on)
+                }
+
+                //withdraw this deposit
+                uint256 crateBDV = LibLegacyTokenSilo.removeDepositFromAccount(
+                                    account,
+                                    perTokenData.token,
+                                    perDepositData.season,
+                                    perDepositData.amount
+                                );
+
+
+                //calculate how much stalk has grown for this deposit
+                uint128 grownStalk = _calcGrownStalkForDeposit(
+                    crateBDV * LibLegacyTokenSilo.getSeedsPerToken(address(perTokenData.token)),
+                    perDepositData.season
+                );
+
+                //also need to calculate how much stalk has grown since the migration
+                uint128 stalkGrownSinceStemStartSeason = uint128(LibSilo.stalkReward(0, perTokenData.stemTip, uint128(crateBDV)));
+                grownStalk += stalkGrownSinceStemStartSeason;
+                migrateData.totalGrownStalk += stalkGrownSinceStemStartSeason;
+                
+                //add to new silo
+                LibTokenSilo.addDepositToAccount(account, perTokenData.token, LibTokenSilo.grownStalkAndBdvToCumulativeGrownStalk(IERC20(perTokenData.token), grownStalk, crateBDV), perDepositData.amount, crateBDV);
+
+                //add to running total of seeds
+                migrateData.totalSeeds += uint128(uint256(crateBDV) * LibLegacyTokenSilo.getSeedsPerToken(address(perTokenData.token)));
+            }
+
+            //init mow status for this token
+            // s.a[account].mowStatuses[perTokenData.token].lastStem = perTokenData.stemTip;
+            setMowStatus(account, perTokenData.token, perTokenData.stemTip);
+
+        }
+
+        //user deserves stalk grown between stemStartSeason and now
+        LibSilo.mintGrownStalkAndGrownRoots(account, migrateData.totalGrownStalk);
+
+        //verify user account seeds total equals seedsTotalBasedOnInputDeposits
+        // if((s.a[account].s.seeds + 4 - seedsTotalBasedOnInputDeposits) > 100) {
+        //     require(msg.sender == account, "deSynced seeds, only account can migrate");
+        // }
+        
+        //require exact seed match
+        require(balanceOfSeeds(account) == migrateData.totalSeeds, "seeds misaligned");
+
+        //and wipe out old seed balances (all your seeds are belong to stem)
+        // s.a[account].s.seeds = 0;
+        setBalanceOfSeeds(account, 0);
+    }
+
+    function setMowStatus(address account, address token, int128 stemTip) internal returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.a[account].mowStatuses[token].lastStem = stemTip;
+    }
+
+    function _season() internal view returns (uint32) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return s.season.current;
+    }
+
+    function balanceOfSeeds(address account) internal view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return s.a[account].s.seeds;
+    }
+
+    function setBalanceOfSeeds(address account, uint256 seeds) internal returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.a[account].s.seeds = seeds;
+    }
+
+    function updateLastUpdateToNow(address account) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.a[account].lastUpdate = _season();
+    }
+
+    //calculates grown stalk up until stemStartSeason
+    function _calcGrownStalkForDeposit(
+        uint256 seedsForDeposit,
+        uint32 season
+    ) internal view returns (uint128 grownStalk) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint32 stemStartSeason = uint32(s.season.stemStartSeason);
+        return uint128(LibLegacyTokenSilo.stalkReward(seedsForDeposit, stemStartSeason - season));
+    }
+
 
 
     //this feels gas inefficient to me, maybe there's a better way? hardcode in values here?

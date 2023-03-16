@@ -343,15 +343,6 @@ contract SiloFacet is TokenSilo {
         }
     }
 
-    //function to mow and migrate
-    function mowAndMigrate(address account, address[] calldata tokens, uint32[][] calldata seasons, uint256[][] calldata amounts) external payable {
-        _mowAndMigrate(account, tokens, seasons, amounts);
-    }
-
-    //cheaper function to mow and migrate if you have no deposits
-    function mowAndMigrateNoDeposits(address account) external payable {
-        _migrateNoDeposits(account);
-    }
 
     /** 
      * @notice Claim Earned Beans and their associated Stalk for 
@@ -382,33 +373,4 @@ contract SiloFacet is TokenSilo {
         _claimPlenty(msg.sender);
     }
 
-    //////////////////////// GETTERS ////////////////////////
-
-    function stemTipForToken(IERC20 token)
-        public
-        view
-        returns (int128 _stemTip)
-    {
-        _stemTip = LibTokenSilo.stemTipForToken(
-            token
-        );
-    }
-
-    function seasonToStem(IERC20 token, uint32 season)
-        public
-        view
-        returns (int128 stem)
-    {
-        uint256 seedsPerBdv = getSeedsPerToken(address(token));
-        stem = LibLegacyTokenSilo.seasonToStem(seedsPerBdv, season);
-    }
-
-    function getSeedsPerToken(address token) public view virtual returns (uint256) {
-        return LibLegacyTokenSilo.getSeedsPerToken(token);
-    }
-
-    function stemStartSeason() public view virtual returns (uint16) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.season.stemStartSeason;
-    }
 }

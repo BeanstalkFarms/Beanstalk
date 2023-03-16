@@ -12,6 +12,7 @@ import "../LibPRBMath.sol";
 import "~/libraries/LibSafeMathSigned128.sol";
 import "../LibSafeMath128.sol";
 import "./LibTokenSilo.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 
 /**
  * @title LibSilo
@@ -324,7 +325,6 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.a[account].lastUpdate;
     }
-
 
     /**
      * FIXME(refactor): replace `lastUpdate()` -> `_lastUpdate()` and rename this param?
