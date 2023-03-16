@@ -193,7 +193,7 @@ const FormTxnsSecondaryOptions: React.FC<Props> = ({ disabledActions }) => {
           justifyContent="space-between"
           // We add a negative margin b/c the MUI switch component has padding of 12px, and
           // removing the padding from the switch component causes unexpected behavior
-          sx={{ my: '-12px', boxSizing: 'border-box' }}
+          // sx={{ my: '-12px', boxSizing: 'border-box' }}
         >
           <Typography color="text.secondary">Claim All</Typography>
           <Switch

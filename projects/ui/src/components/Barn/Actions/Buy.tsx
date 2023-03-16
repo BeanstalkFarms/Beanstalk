@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Divider, Link, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -47,7 +47,7 @@ import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnAc
 import useFarmerFormTxnBalances from '~/hooks/farmer/form-txn/useFarmerFormTxnBalances';
 import FormTxnsPrimaryOptions from '~/components/Common/Form/FormTxnsPrimaryOptions';
 import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
-import { FormTxnBuilder } from '~/util/FormTxns';
+import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
 import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
 
 // ---------------------------------------------------
@@ -62,6 +62,12 @@ type BuyFormValues = FormStateNew &
 
 type BuyQuoteHandlerParams = {
   fromMode: FarmFromMode;
+};
+
+const defaultFarmActionsFormState = {
+  preset: 'claim',
+  primary: undefined,
+  secondary: undefined,
 };
 
 // ---------------------------------------------------
@@ -116,6 +122,31 @@ const BuyForm: FC<
   const handleSetBalanceFrom = (balanceFrom: BalanceFrom) => {
     setFieldValue('balanceFrom', balanceFrom);
   };
+
+  /// Effects
+  // Reset the form farmActions whenever the tokenIn changes
+  const currTokenSymbol = values.tokens[0].token.symbol;
+  const [cachedTokenSymbol, setCachedTokenSymbol] = useState(currTokenSymbol);
+  useEffect(() => {
+    if (cachedTokenSymbol !== currTokenSymbol) {
+      setCachedTokenSymbol(currTokenSymbol);
+      setFieldValue('farmActions', defaultFarmActionsFormState);
+    }
+  }, [cachedTokenSymbol, currTokenSymbol, setFieldValue]);
+
+  const disabledActions = useMemo(() => {
+    const isEth = currTokenSymbol === 'ETH';
+    const _disabled = isEth
+      ? [
+          {
+            action: FormTxn.ENROOT,
+            reason:
+              'Enrooting while using ETH to Buy Fertilizer is currently not supported',
+          },
+        ]
+      : undefined;
+    return _disabled;
+  }, [currTokenSymbol]);
 
   return (
     <Form autoComplete="off" noValidate>
@@ -185,7 +216,9 @@ const BuyForm: FC<
                 USDC. {usdc?.toFixed(2)} USDC = {fert?.toFixed(0)} FERT.
               </WarningAlert>
               <Box width="100%">
-                <FormTxnsSecondaryOptions />
+                <FormTxnsSecondaryOptions
+                  disabledActions={disabledActions}
+                />
               </Box>
               <Box sx={{ width: '100%', mt: 0 }}>
                 <TxnAccordion defaultExpanded={false}>

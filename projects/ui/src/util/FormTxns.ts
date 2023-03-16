@@ -393,34 +393,47 @@ export class FormTxnBuilder {
     amountIn: TokenValue | undefined,
     slippage: number
   ) {
-    const allActions = new Set([
-      ...(data.primary || []),
-      ...(data.secondary || []),
-    ]);
+    const primary = new Set(data.primary || []);
+    const secondary = new Set(data.secondary || []);
+    const allActions = new Set([...primary, ...secondary]);
 
-    const removeList = new Set(data.implied || []);
+    /// deduplicate
+    // if an action is in both primary and secondary, remove it from secondary
+    [...primary].forEach((action) => {
+      secondary.has(action) && secondary.delete(action);
+    });
+
+    /// deduplicate implied actions
+
     [...allActions].forEach((action) => {
       FormTxnBuilder.implied[action]?.forEach((implied) => {
-        !removeList.has(implied) && removeList.add(implied);
+        allActions.has(implied) && allActions.delete(implied);
+        primary.has(implied) && primary.delete(implied);
+        secondary.has(implied) && secondary.delete(implied);
       });
+    });
+    const removeItems = [...(data.exclude || []), ...(data.implied || [])];
+
+    removeItems.forEach((toRemove) => {
+      allActions.has(toRemove) && allActions.delete(toRemove);
+      primary.has(toRemove) && primary.delete(toRemove);
+      secondary.has(toRemove) && secondary.delete(toRemove);
     });
 
     const farm = sdk.farm.create();
 
-    const getSteps = (actions?: FormTxn[]) => {
+    const getSteps = (actions?: Set<FormTxn>) => {
       let generators: StepGenerator[] = [];
-      actions?.forEach((action) => {
-        if (!removeList.has(action)) {
-          generators = [...generators, ...getGenerators(action)];
-        }
+      [...(actions || [])]?.forEach((action) => {
+        generators = [...generators, ...getGenerators(action)];
       });
       return generators;
     };
 
     farm.add([
-      ...getSteps(data?.primary),
+      ...getSteps(primary),
       ...(operation instanceof FarmWorkflow ? operation.generators : operation),
-      ...getSteps(data?.secondary),
+      ...getSteps(secondary),
     ]);
 
     const estimate = await farm.estimate(amountIn || TokenValue.ZERO);

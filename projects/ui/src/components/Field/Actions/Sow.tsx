@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Divider, Link, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
@@ -57,7 +57,7 @@ import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnAc
 import useFarmerFormTxnBalances from '~/hooks/farmer/form-txn/useFarmerFormTxnBalances';
 import FormTxnsPrimaryOptions from '~/components/Common/Form/FormTxnsPrimaryOptions';
 import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
-import { FormTxnBuilder } from '~/util/FormTxns';
+import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
 import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
 import useTemperature from '~/hooks/beanstalk/useTemperature';
 
@@ -69,6 +69,12 @@ type SowFormValues = FormStateNew & {
 
 type SowFormQuoteParams = {
   fromMode: FarmFromMode;
+};
+
+const defaultFarmActionsFormState = {
+  preset: 'claim',
+  primary: undefined,
+  secondary: undefined,
 };
 
 const SowForm: FC<
@@ -204,6 +210,31 @@ const SowForm: FC<
     [values.balanceFrom]
   );
 
+  /// Effects
+  // Reset the form farmActions whenever the tokenIn changes
+  const currTokenSymbol = values.tokens[0].token.symbol;
+  const [cachedTokenSymbol, setCachedTokenSymbol] = useState(currTokenSymbol);
+  useEffect(() => {
+    if (cachedTokenSymbol !== currTokenSymbol) {
+      setCachedTokenSymbol(currTokenSymbol);
+      setFieldValue('farmActions', defaultFarmActionsFormState);
+    }
+  }, [cachedTokenSymbol, currTokenSymbol, setFieldValue]);
+
+  const disabledActions = useMemo(() => {
+    const isEth = currTokenSymbol === 'ETH';
+    const _disabled = isEth
+      ? [
+          {
+            action: FormTxn.ENROOT,
+            reason:
+              'Enrooting while using ETH to deposit is currently not supported',
+          },
+        ]
+      : undefined;
+    return _disabled;
+  }, [currTokenSymbol]);
+
   return (
     <Form autoComplete="off">
       <TokenSelectDialogNew
@@ -272,7 +303,9 @@ const SowForm: FC<
                 {/* You are Sowing {displayFullBN(maxAmountUsed.times(100), 4, 0)}% of remaining Soil.  */}
               </WarningAlert>
             ) : null}
-            <FormTxnsSecondaryOptions />
+            <FormTxnsSecondaryOptions
+              disabledActions={disabledActions}
+            />
             <Box>
               <TxnAccordion defaultExpanded={false}>
                 <TxnPreview
@@ -394,9 +427,7 @@ const Sow: FC<{}> = () => {
       ],
       maxAmountIn: undefined,
       farmActions: {
-        preset: 'claim',
-        primary: undefined,
-        secondary: undefined,
+        ...defaultFarmActionsFormState
       },
       balanceFrom: BalanceFrom.TOTAL,
     }),
