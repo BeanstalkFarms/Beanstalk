@@ -57,8 +57,9 @@ contract MetadataFacet is IERC1155Receiver {
                 '{',
                     '"name": "Beanstalk Deposit", ',
                     '"description": "A Beanstalk Deposit", ',
-                    bytes(attributes).length > 0 ? string(abi.encodePacked('"attributes": ', attributes)) : '',
-                '}'
+                    string(abi.encodePacked('"attributes": ', attributes)),
+                    string(abi.encodePacked(', "image": "', imageURI())),
+                '"}'
             ))
         ));
     }
@@ -84,6 +85,10 @@ contract MetadataFacet is IERC1155Receiver {
 
     function getDepositMetadata(uint256 depositId) public view returns (Storage.Metadata memory) {
         return s.metadata[bytes32(depositId)];
+    }
+    
+    function imageURI() public pure returns (string memory){
+        return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzgiIGhlaWdodD0iMzkiIHZpZXdCb3g9IjAgMCAzOCAzOSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3QgeT0iMC41MTk1MzEiIHdpZHRoPSIzNy45NjI5IiBoZWlnaHQ9IjM3Ljk2MjkiIHJ4PSIxOC45ODE0IiBmaWxsPSIjM0VCOTRFIi8+CjxwYXRoIGQ9Ik0yNC4zMTM1IDQuNTE5NTNMMTMuMjI5IDM0LjEzMjhDMTMuMjI5IDM0LjEzMjggMC45Mzg4NDIgMTMuMTY2NyAyNC4zMTM1IDQuNTE5NTNaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTUuODA0NyAzMi4yOTU1TDIzLjU5NDIgMTEuMTI3QzIzLjU5NDIgMTEuMTI3IDM3Ljk0OTcgMjIuNzQwNCAxNS44MDQ3IDMyLjI5NTVaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4=";
     }
 
     //////////////////////// ERC1155Reciever ////////////////////////
