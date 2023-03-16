@@ -34,6 +34,7 @@ describe('Silo Token', function () {
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
+    this.approval = await ethers.getContractAt('ApprovalFacet', this.diamond.address);
     this.convert = await ethers.getContractAt('MockConvertFacet', this.diamond.address);
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address);
 
